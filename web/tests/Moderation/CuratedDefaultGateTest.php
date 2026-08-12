@@ -103,7 +103,7 @@ final class CuratedDefaultGateTest extends WebTestCase
         /** @var Connection $db */
         $db = static::getContainer()->get(Connection::class);
 
-        return (bool) $db->fetchOne('SELECT curated_default FROM region WHERE id = :id', ['id' => $regionId]);
+        return 'curated' === $db->fetchOne('SELECT default_map_mode FROM region WHERE id = :id', ['id' => $regionId]);
     }
 
     /** The desk renders the token; read it back the way the browser would. */
@@ -140,6 +140,69 @@ final class CuratedDefaultGateTest extends WebTestCase
         self::assertStringContainsString('3 more block(s) need at least 5', $html);
     }
 
+    /**
+     * The MIDDLE rung has its own bar (owner 2026-08-12). A region with a
+     * handful of vouched-for places may open in Confirmed long before it has a
+     * best-of — and one with none may not, because "opens in Confirmed" would
+     * then promise a screen with nothing on it, which is the trap the whole
+     * gate exists for, one rung lower.
+     */
+    public function testTheConfirmedRungHasItsOwnGate(): void
+    {
+        $client = static::createClient();
+        $thin = $this->seedRegion('gate-thin');
+        $this->addConfirmedItems((int) $thin->getId(), 2);
+        $lively = $this->seedRegion('gate-lively');
+        $this->addConfirmedItems((int) $lively->getId(), 10);
+        $curator = $this->curator('gate-confirmed@example.com', admin: true);
+        $client->loginUser($curator, 'main');
+
+        $token = $this->tokenFromDesk($client);
+
+        $client->request('POST', '/moderate/regions/curated-default', [
+            '_token' => $token, 'region' => (int) $thin->getId(), 'mode' => 'confirmed',
+        ], [], ['HTTP_SEC_FETCH_SITE' => 'same-origin']);
+        self::assertResponseRedirects();
+        self::assertSame('everything', $this->defaultMode((int) $thin->getId()),
+            'two confirmed places is not a Confirmed map');
+
+        $client->request('POST', '/moderate/regions/curated-default', [
+            '_token' => $token, 'region' => (int) $lively->getId(), 'mode' => 'confirmed',
+        ], [], ['HTTP_SEC_FETCH_SITE' => 'same-origin']);
+        self::assertResponseRedirects();
+        self::assertSame('confirmed', $this->defaultMode((int) $lively->getId()));
+
+        // And down again, whatever the counts say: the gate stops premature
+        // promises, it never traps a region in a mode.
+        $client->request('POST', '/moderate/regions/curated-default', [
+            '_token' => $token, 'region' => (int) $lively->getId(), 'mode' => 'everything',
+        ], [], ['HTTP_SEC_FETCH_SITE' => 'same-origin']);
+        self::assertSame('everything', $this->defaultMode((int) $lively->getId()));
+    }
+
+    /** $n places somebody has vouched for — verified, the map's own test. */
+    private function addConfirmedItems(int $regionId, int $n): void
+    {
+        /** @var Connection $db */
+        $db = static::getContainer()->get(Connection::class);
+        for ($i = 0; $i < $n; ++$i) {
+            $db->executeStatement(
+                "INSERT INTO item (letter, name, source, source_ref, state, country_code, attributes, region_id, geom, created_at, updated_at)
+                 VALUES ('C', 'tap', 'manual', :ref, 'verified', 'BE', '{}'::jsonb, :r,
+                         ST_SetSRID(ST_MakePoint(5.0, 50.0), 4326), NOW(), NOW())",
+                ['ref' => 'conf:'.$regionId.':'.$i, 'r' => $regionId],
+            );
+        }
+    }
+
+    private function defaultMode(int $regionId): string
+    {
+        /** @var Connection $db */
+        $db = static::getContainer()->get(Connection::class);
+
+        return (string) $db->fetchOne('SELECT default_map_mode FROM region WHERE id = :id', ['id' => $regionId]);
+    }
+
     public function testEnablingAnUnreadyRegionIsRefusedEvenWhenPostedDirectly(): void
     {
         $client = static::createClient();
@@ -152,7 +215,7 @@ final class CuratedDefaultGateTest extends WebTestCase
 
         $token = $this->tokenFromDesk($client);
         $client->request('POST', '/moderate/regions/curated-default', [
-            '_token' => $token, 'region' => (int) $unready->getId(), 'enable' => '1',
+            '_token' => $token, 'region' => (int) $unready->getId(), 'mode' => 'curated',
         ], [], ['HTTP_SEC_FETCH_SITE' => 'same-origin']);
 
         self::assertResponseRedirects();
@@ -170,14 +233,14 @@ final class CuratedDefaultGateTest extends WebTestCase
 
         $token = $this->tokenFromDesk($client);
         $client->request('POST', '/moderate/regions/curated-default', [
-            '_token' => $token, 'region' => (int) $region->getId(), 'enable' => '1',
+            '_token' => $token, 'region' => (int) $region->getId(), 'mode' => 'curated',
         ], [], ['HTTP_SEC_FETCH_SITE' => 'same-origin']);
         self::assertTrue($this->curatedDefault((int) $region->getId()));
 
         // Disabling is never gated: the threshold exists to stop premature
         // ENABLING, not to trap a region in a mode its content no longer supports.
         $client->request('POST', '/moderate/regions/curated-default', [
-            '_token' => $token, 'region' => (int) $region->getId(), 'enable' => '0',
+            '_token' => $token, 'region' => (int) $region->getId(), 'mode' => 'everything',
         ], [], ['HTTP_SEC_FETCH_SITE' => 'same-origin']);
         self::assertFalse($this->curatedDefault((int) $region->getId()));
     }
@@ -199,7 +262,7 @@ final class CuratedDefaultGateTest extends WebTestCase
 
         $token = $this->tokenFromDesk($client);
         $client->request('POST', '/moderate/regions/curated-default', [
-            '_token' => $token, 'region' => (int) $lopsided->getId(), 'enable' => '1',
+            '_token' => $token, 'region' => (int) $lopsided->getId(), 'mode' => 'curated',
         ], [], ['HTTP_SEC_FETCH_SITE' => 'same-origin']);
 
         self::assertResponseRedirects();
@@ -230,7 +293,7 @@ final class CuratedDefaultGateTest extends WebTestCase
 
         $token = $this->tokenFromDesk($client);
         $client->request('POST', '/moderate/regions/curated-default', [
-            '_token' => $token, 'region' => (int) $theirs->getId(), 'enable' => '1',
+            '_token' => $token, 'region' => (int) $theirs->getId(), 'mode' => 'curated',
         ], [], ['HTTP_SEC_FETCH_SITE' => 'same-origin']);
 
         self::assertResponseStatusCodeSame(403);

@@ -35,21 +35,21 @@ final class RegionRegistryProvider
      * list is normal (a region imported before the outline column existed); the
      * client falls back to the bbox centre.
      *
-     * `curatedDefault` is the moderator flag that makes the map OPEN this
+     * `defaultMode` is the moderator setting that makes the map OPEN this
      * region in Curated mode;
      * false everywhere until a region earns it, and the global default is
      * Everything.
      *
-     * @return list<array{id: int, slug: string, countryCode: string, bbox: array{0: float, 1: float, 2: float, 3: float}, adj: list<int>, outline: list<list<float>>, curatedDefault: bool}>
+     * @return list<array{id: int, slug: string, countryCode: string, bbox: array{0: float, 1: float, 2: float, 3: float}, adj: list<int>, outline: list<list<float>>, defaultMode: string}>
      */
     public function all(): array
     {
-        /** @var list<array{id: int, slug: string, cc: string, w: float, s: float, e: float, n: float, adj: string, outline: ?string, curated_default: bool}> $rows */
+        /** @var list<array{id: int, slug: string, cc: string, w: float, s: float, e: float, n: float, adj: string, outline: ?string, default_map_mode: string}> $rows */
         $rows = $this->db->fetchAllAssociative(
             'SELECT id, slug, country_code AS cc,
                     ST_XMin(geom) AS w, ST_YMin(geom) AS s, ST_XMax(geom) AS e, ST_YMax(geom) AS n,
                     to_json(COALESCE(adj, ARRAY[]::int[])) AS adj,
-                    outline, curated_default
+                    outline, default_map_mode
              FROM region
              WHERE geom IS NOT NULL AND country_code <> \'\'
                AND '.OperationalRegions::predicate('region').'
@@ -68,7 +68,10 @@ final class RegionRegistryProvider
                 'bbox' => [(float) $r['w'], (float) $r['s'], (float) $r['e'], (float) $r['n']],
                 'adj' => array_map('intval', json_decode((string) $r['adj'], true, 512, \JSON_THROW_ON_ERROR)),
                 'outline' => \is_array($outline) ? $outline : [],
-                'curatedDefault' => (bool) $r['curated_default'],
+                // The mode this region OPENS in, as the toggle's own token
+                // ('curated' | 'confirmed' | 'all'); 'everything' is stored and
+                // 'all' is what the client calls it (MapViewMode::clientToken).
+                'defaultMode' => 'everything' === $r['default_map_mode'] ? 'all' : (string) $r['default_map_mode'],
             ];
         }, $rows);
     }

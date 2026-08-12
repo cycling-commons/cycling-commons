@@ -105,6 +105,51 @@ final class CuratedReadiness
         return $this->reportFor($regionId)['ready'];
     }
 
+    /** How many confirmed places a region needs before it may OPEN in Confirmed. */
+    public function confirmedThreshold(): int
+    {
+        return $this->settings->get(SettingsRegistry::MAP_CONFIRMED_THRESHOLD);
+    }
+
+    /**
+     * How many places in each region somebody has vouched for.
+     *
+     * The same test the map's Confirmed mode draws and the drawer's badge reads
+     * (`CatalogProvider`: verified state, PIVOT provenance, or any confirmation
+     * that is not the submitter's own form answer) — one definition, so the desk
+     * cannot promise a mode that then shows something else.
+     *
+     * @param list<int> $regionIds
+     *
+     * @return array<int, int> region id → count, every requested region present
+     */
+    public function confirmedCounts(array $regionIds): array
+    {
+        $counts = array_fill_keys($regionIds, 0);
+        if ([] === $regionIds) {
+            return $counts;
+        }
+
+        /** @var list<array{region_id: int, n: int}> $rows */
+        $rows = $this->db->fetchAllAssociative(
+            'SELECT i.region_id, COUNT(*) AS n
+               FROM item i
+              WHERE i.region_id IN (:ids)
+                AND i.state IN '.ItemState::servedSqlTuple()."
+                AND (i.state = 'verified' OR i.source = 'pivot'
+                     OR EXISTS (SELECT 1 FROM item_confirmation c
+                                 WHERE c.item_id = i.id AND c.source <> 'form'))
+              GROUP BY i.region_id",
+            ['ids' => $regionIds],
+            ['ids' => ArrayParameterType::INTEGER],
+        );
+        foreach ($rows as $row) {
+            $counts[(int) $row['region_id']] = (int) $row['n'];
+        }
+
+        return $counts;
+    }
+
     /**
      * The full picture for one region: per-block counts, the total, how far off
      * each requirement is, and the verdict.

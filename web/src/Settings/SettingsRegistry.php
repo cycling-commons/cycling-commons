@@ -49,6 +49,7 @@ use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
  */
 final class SettingsRegistry
 {
+    public const string MAP_CONFIRMED_THRESHOLD = 'map.confirmed_default_threshold';
     public const string MAP_CURATED_THRESHOLD = 'map.curated_default_threshold';
     public const string MAP_CURATED_MIN_BLOCKS = 'map.curated_default_min_blocks';
     public const string MAP_CURATED_MIN_PER_BLOCK = 'map.curated_default_min_per_block';
@@ -76,6 +77,10 @@ final class SettingsRegistry
         $table = [
             // A region cannot need fewer than one curated item, and a four-digit
             // total would gate every region in the world out of Curated forever.
+            // 1 lets a single confirmed place open a region in Confirmed —
+            // thin, but a legitimate call for a young region with an active
+            // rider; 0 would mean "open in a mode that shows nothing".
+            [self::MAP_CONFIRMED_THRESHOLD, 1, 1000, self::GROUP_MAP],
             [self::MAP_CURATED_THRESHOLD, 1, 1000, self::GROUP_MAP],
             // 1 reverts the gate to a pure total; the ceiling is the number of
             // blocks that exist, so the gate can never demand an eighth block.

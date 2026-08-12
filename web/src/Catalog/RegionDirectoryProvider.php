@@ -20,13 +20,13 @@ use Symfony\Component\Intl\Countries;
  *
  *  - **maturity** — how much rider knowledge the region holds:
  *    `onboarded` → `growing` (anything verified) → `established`
- *    (`curated_default`, which the curator desk will only let a moderator set
+ *    (`default_map_mode`, which the curator desk will only let a moderator raise
  *    once the region passes a readiness count of curated places and
  *    rider-backed routes — so the top rung is earned by riders, not declared).
  *  - **stewardship** — who is looking after it: `curated` with its own curator,
  *    `countrywide` when only a country-scoped moderator covers it, else `none`.
  *
- * These were ONE field derived from `curated_default`, and the legend then
+ * These were ONE field derived from the region's default mode, and the legend then
  * described it as "a curator maintains this region" — which that flag does not
  * mean. A busy region can have nobody looking after it and a curated one can be
  * empty; collapsing the two makes both unsayable.
@@ -46,7 +46,7 @@ final class RegionDirectoryProvider
     }
 
     private const BASE_SELECT = '
-        SELECT r.id, r.slug, r.area_km2, r.country_code, r.curated_default,
+        SELECT r.id, r.slug, r.area_km2, r.country_code, r.default_map_mode,
                EXISTS (SELECT 1 FROM moderator_area ma WHERE ma.region_id = r.id)              AS curator_local,
                EXISTS (SELECT 1 FROM moderator_area ma WHERE ma.country_code = r.country_code) AS curator_national,
                COALESCE(iv.n, 0) AS items_verified,
@@ -155,7 +155,7 @@ final class RegionDirectoryProvider
             // having been `growing` first, because the desk gates the flag on a
             // readiness count (map-and-search.md §4.2).
             'tier' => match (true) {
-                (bool) $row['curated_default'] => 'established',
+                'curated' === $row['default_map_mode'] => 'established',
                 $verified > 0 => 'growing',
                 default => 'onboarded',
             },

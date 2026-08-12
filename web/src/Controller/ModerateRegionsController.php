@@ -15,7 +15,6 @@ use App\Pagination\PageSize;
 use App\Routing\LocalePrefix;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
-use Doctrine\DBAL\ParameterType;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -24,14 +23,24 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
- * Curator Regions desk — the only place `region.curated_default` is set.
+ * Curator Regions desk — the only place `region.default_map_mode` is set.
  *
- * The toggle is GATED, which is the whole point (owner decision "B"): a region
- * cannot be made to open in Curated mode until it actually has enough curated
- * best-of content, so the flag can never be set prematurely and recreate the
- * empty-map trap the global default was flipped to avoid. The readiness count
- * is shown next to the threshold whether or not the gate is open, so a curator
- * can see how far off a region is.
+ * The choice is GATED, which is the whole point (owner decision "B"): a region
+ * cannot be made to open in a mode it has nothing to show in, so the setting
+ * can never be raised prematurely and recreate the empty-map trap the global
+ * default was flipped to avoid. Both counts are shown next to their thresholds
+ * whether or not the gate is open, so a curator can see how far off a region is.
+ *
+ * Three rungs since 2026-08-12, and each has its own bar:
+ *  - **Everything** — always available; it is what every region starts in.
+ *  - **Confirmed** — needs `map.confirmed_default_threshold` places somebody
+ *    has vouched for. No breadth rule: it is not a selection, so a region whose
+ *    confirmations are all water taps is still saying something true.
+ *  - **Best of** — needs the breadth-and-depth readiness count, unchanged.
+ *
+ * A region can always be moved DOWN, whatever its counts: the gate exists to
+ * stop premature promises, never to trap a region in a mode its content no
+ * longer supports.
  *
  * Scoped like every other desk: a curator sees only their assigned regions;
  * a global curator or an admin sees all of them.
@@ -86,10 +95,13 @@ final class ModerateRegionsController extends AbstractController
         $rows = \array_slice($rows, $pager['offset'], $pager['perPage']);
 
         $reports = $this->readiness->reportForRegions(array_map(static fn (array $r): int => $r['id'], $rows));
+        // The middle rung's count, batched the same way and for the same reason.
+        $confirmedCounts = $this->readiness->confirmedCounts(array_map(static fn (array $r): int => $r['id'], $rows));
+        $confirmedThreshold = $this->readiness->confirmedThreshold();
         $threshold = $this->readiness->threshold();
         $minPerBlock = $this->readiness->minPerBlock();
 
-        $regions = array_map(static function (array $r) use ($reports, $minPerBlock, $translator): array {
+        $regions = array_map(static function (array $r) use ($reports, $minPerBlock, $translator, $confirmedCounts, $confirmedThreshold): array {
             $rep = $reports[$r['id']];
             // Per-BLOCK, so a moderator can see WHICH kind of content the region
             // is short of, not just that a number is too low (owner request,
@@ -111,7 +123,11 @@ final class ModerateRegionsController extends AbstractController
                 'slug' => $r['slug'],
                 'countryCode' => $r['countryCode'],
                 'label' => $translator->trans('region.'.$r['slug'].'.label'),
-                'curatedDefault' => $r['curatedDefault'],
+                'defaultMode' => $r['defaultMode'],
+                'confirmed' => $confirmedCounts[$r['id']] ?? 0,
+                'confirmedThreshold' => $confirmedThreshold,
+                'canConfirmed' => 'confirmed' === $r['defaultMode']
+                    || ($confirmedCounts[$r['id']] ?? 0) >= $confirmedThreshold,
                 'count' => $rep['total'],
                 'blocks' => $blocks,
                 'blocksMet' => $rep['blocksMet'],
@@ -122,7 +138,7 @@ final class ModerateRegionsController extends AbstractController
                 // its count later drops below the threshold — the gate exists to
                 // stop premature ENABLING, never to trap a region in a mode its
                 // content no longer supports.
-                'canToggle' => $r['curatedDefault'] || $rep['ready'],
+                'canCurated' => 'curated' === $r['defaultMode'] || $rep['ready'],
             ];
         }, $rows);
 
@@ -134,6 +150,7 @@ final class ModerateRegionsController extends AbstractController
             'countries' => $countries,
             'country' => $country,
             'threshold' => $threshold,
+            'confirmed_threshold' => $confirmedThreshold,
             'min_blocks' => $this->readiness->minBlocks(),
             'min_per_block' => $minPerBlock,
             'pager' => $pager,
@@ -143,7 +160,7 @@ final class ModerateRegionsController extends AbstractController
     }
 
     #[Route('/moderate/regions/curated-default', name: 'moderate_regions_curated_default', methods: ['POST'])]
-    public function setCuratedDefault(Request $request): Response
+    public function setDefaultMode(Request $request): Response
     {
         /** @var User $user */
         $user = $this->getUser();
@@ -151,28 +168,34 @@ final class ModerateRegionsController extends AbstractController
             throw $this->createAccessDeniedException('Invalid CSRF token.');
         }
         $regionId = $request->request->getInt('region');
-        $enable = '1' === (string) $request->request->get('enable');
+        $mode = (string) $request->request->get('mode');
+        if (!\in_array($mode, ['everything', 'confirmed', 'curated'], true)) {
+            return $this->redirectToRoute('moderate_regions');
+        }
 
         // Jurisdiction, then the gate. Both are re-checked here rather than
-        // trusted from the rendered form: the desk hides an unavailable toggle,
+        // trusted from the rendered form: the desk hides an unavailable choice,
         // but a POST is a POST.
         if (!$this->scopeProvider->allowsRegion($this->scopeProvider->scopeFor($user), $regionId)) {
             throw $this->createAccessDeniedException('Region outside your moderation area.');
         }
-        if ($enable && !$this->readiness->isReady($regionId)) {
+        if ('curated' === $mode && !$this->readiness->isReady($regionId)) {
             $this->addFlash('danger', 'moderate_regions.flash_not_ready');
+
+            return $this->redirectToRoute('moderate_regions');
+        }
+        if ('confirmed' === $mode
+            && ($this->readiness->confirmedCounts([$regionId])[$regionId] ?? 0) < $this->readiness->confirmedThreshold()) {
+            $this->addFlash('danger', 'moderate_regions.flash_not_confirmed');
 
             return $this->redirectToRoute('moderate_regions');
         }
 
         $this->db->executeStatement(
-            'UPDATE region SET curated_default = :v WHERE id = :id',
-            ['v' => $enable, 'id' => $regionId],
-            // ParameterType::BOOLEAN, not PDO::PARAM_BOOL: DBAL 4 types are its
-            // own enum and an int here fatals inside ExpandArrayParameters.
-            ['v' => ParameterType::BOOLEAN],
+            'UPDATE region SET default_map_mode = :v WHERE id = :id',
+            ['v' => $mode, 'id' => $regionId],
         );
-        $this->addFlash('success', $enable ? 'moderate_regions.flash_enabled' : 'moderate_regions.flash_disabled');
+        $this->addFlash('success', 'moderate_regions.flash_mode_'.$mode);
 
         return $this->redirectToRoute('moderate_regions');
     }
@@ -180,12 +203,12 @@ final class ModerateRegionsController extends AbstractController
     /**
      * The regions this curator may act on, in the registry's own order.
      *
-     * @return list<array{id: int, slug: string, countryCode: string, curatedDefault: bool}>
+     * @return list<array{id: int, slug: string, countryCode: string, defaultMode: string}>
      */
     private function visibleRegions(User $user): array
     {
         $scope = $this->scopeProvider->scopeFor($user);
-        $sql = "SELECT id, slug, country_code AS cc, curated_default
+        $sql = "SELECT id, slug, country_code AS cc, default_map_mode
                   FROM region
                  WHERE geom IS NOT NULL AND country_code <> ''"
             .' AND '.OperationalRegions::predicate('region');
@@ -209,14 +232,14 @@ final class ModerateRegionsController extends AbstractController
         }
         $sql .= ' ORDER BY area_km2 DESC, slug';
 
-        /** @var list<array{id: int|string, slug: string, cc: string, curated_default: bool}> $rows */
+        /** @var list<array{id: int|string, slug: string, cc: string, default_map_mode: string}> $rows */
         $rows = $this->db->fetchAllAssociative($sql, $params, $types);
 
         return array_map(static fn (array $r): array => [
             'id' => (int) $r['id'],
             'slug' => (string) $r['slug'],
             'countryCode' => (string) $r['cc'],
-            'curatedDefault' => (bool) $r['curated_default'],
+            'defaultMode' => (string) $r['default_map_mode'],
         ], $rows);
     }
 }

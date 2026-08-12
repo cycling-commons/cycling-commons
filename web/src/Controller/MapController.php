@@ -102,7 +102,7 @@ final class MapController extends AbstractController
                 // precedence.
                 // 'auto' — the default, and the only value an anonymous visitor
                 // ever sees — hands the decision down to the active region's
-                // curatedDefault, then to the global Everything default.
+                // the region's own defaultMode, then to the global Everything default.
                 'mapMode' => $user instanceof User
                     ? $user->getDefaultMapMode()->value
                     : MapViewMode::Auto->value,

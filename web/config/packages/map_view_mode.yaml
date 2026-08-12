@@ -21,6 +21,12 @@
 # (system-configuration.md §2). Edit here to move the default a fresh database
 # starts from; edit in the admin to change what production is doing now.
 parameters:
+    # The MIDDLE rung (2026-08-12). Confirmed needs no breadth rule: it is not a
+    # curated selection, it is "everything somebody vouched for", and a region
+    # whose confirmations are all water taps is still telling a rider something
+    # true. It needs only to be non-empty enough not to look broken — the same
+    # trap the Best-of gate exists for, one rung lower.
+    map.confirmed_default_threshold: 10
     # Curated best-of items the region needs in total.
     map.curated_default_threshold: 25
     # ...spread over at least this many blocks...

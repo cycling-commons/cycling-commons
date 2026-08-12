@@ -43,8 +43,10 @@ final class RegionRegistryProviderTest extends KernelTestCase
         // The view-mode flag rides the registry too.
         // False on import: a
         // region opens in Everything until a moderator earns it otherwise.
-        self::assertArrayHasKey('curatedDefault', $square);
-        self::assertFalse($square['curatedDefault']);
+        // The mode a region OPENS in, as the map toggle's own token — every
+        // region starts in Everything ('all') until a curator raises it.
+        self::assertArrayHasKey('defaultMode', $square);
+        self::assertSame('all', $square['defaultMode']);
         // bbox [west, south, east, north] of the fixture square [4,50]-[5,51].
         self::assertEqualsWithDelta(4.0, $square['bbox'][0], 0.001);
         self::assertEqualsWithDelta(50.0, $square['bbox'][1], 0.001);

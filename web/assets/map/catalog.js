@@ -170,11 +170,17 @@ export function resolveInitialMode(prefs, scope, registry){
       if(stored === 'curated' || stored === 'confirmed' || stored === 'all') return stored;
     }
   }
-  // A single named region can carry the flag; a country/Everywhere/My-area
+  // A single named region can carry the setting; a country/Everywhere/My-area
   // scope spans many regions with no one answer, so it stays on Everything.
   if(scope && scope.kind === 'region' && scope.regionIds && scope.regionIds.length === 1){
     const r = (registry || []).find(x => x.id === scope.regionIds[0]);
-    if(r && r.curatedDefault) return 'curated';
+    /* Three rungs since 2026-08-12: the registry hands over the region's own
+       toggle token ('curated' | 'confirmed' | 'all'), gated on the Regions
+       desk, rather than a boolean that could only say best-of-or-nothing. An
+       unknown value falls through to Everything, which is the honest default
+       for a region nobody has vouched for. */
+    const m = r && r.defaultMode;
+    if(m === 'curated' || m === 'confirmed') return m;
   }
   return 'all';
 }

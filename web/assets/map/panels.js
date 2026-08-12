@@ -29,6 +29,7 @@ import { CATALOG, catalogUtility, catalogVotable, catalogModeration,
 import { PREFS, addHeatmap, updateHeatFilter, layerCounts, updateCounts, render,
          applyStaysAccessFilter, syncFacetChips, prefFilterEnabled, setPrefFilter, PREF_FILTER_KEY } from './render.js';
 import { mapToast, clearRevealPin } from './drawer.js';
+import { refilterClusters, updateConfMarkers } from './osm-pools.js';
 import { curScope, inScope } from './scope-ui.js';
 import { surfaceTilesConfigured, setSurfaceTiles, surfaceTilesVisible,
          toggleSurfaceClass, setStudyMode, studyModeOn } from './surface-tiles.js';
@@ -291,6 +292,11 @@ export function initBestOf(){
     document.querySelectorAll('#mode button').forEach(x=>x.classList.remove('on'));
     b.classList.add('on'); setMode(b.dataset.m);
     persistMode(b.dataset.m);   // profile for a rider, localStorage for a visitor
+    /* The curated POOL pins are a clustered source, filtered at setData time —
+       so a mode change has to rebuild them, exactly as a scope change does.
+       Without this, Confirmed kept drawing the unconfirmed pins it excludes
+       (and the rail, which now counts them, would have disagreed with itself). */
+    refilterClusters(); updateConfMarkers();
     clearRevealPin();   // decision C: mode change clears any reveal pin
     const bf=document.getElementById('bestFacets'); if(bf) bf.hidden = (mode()!=='curated');
     updateSubtitle();

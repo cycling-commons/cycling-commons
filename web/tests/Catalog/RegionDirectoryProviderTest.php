@@ -27,7 +27,7 @@ final class RegionDirectoryProviderTest extends KernelTestCase
         $em->flush();
         if ($curated) {
             static::getContainer()->get(Connection::class)
-                ->executeStatement('UPDATE region SET curated_default = TRUE WHERE id = ?', [$r->getId()]);
+                ->executeStatement("UPDATE region SET default_map_mode = 'curated' WHERE id = ?", [$r->getId()]);
         }
 
         return (int) $r->getId();
@@ -64,7 +64,7 @@ final class RegionDirectoryProviderTest extends KernelTestCase
         self::assertArrayNotHasKey('belgium-t', $bySlug);
 
         // Maturity is about CONTENT: onboarded → growing → established, the top
-        // rung being curated_default, which the desk only lets a moderator set
+        // rung being default_map_mode = curated, which the desk only lets a moderator set
         // once the region passes a readiness count. So it is earned by riders,
         // which is why it belongs on this ladder and not beside it.
         self::assertSame('established', $bySlug['wallonia-t']['tier']);

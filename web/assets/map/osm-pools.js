@@ -18,7 +18,7 @@
 import { map, flyToPin } from './map-init.js';
 import { showTip, hideTip } from './sheet.js';
 import { D } from './i18n.js';
-import { layerByKey, active } from './catalog.js';
+import { layerByKey, active, mode } from './catalog.js';
 import { inScope } from './scope-ui.js';
 import { mintWaterDrops, pinEl, clusterEl } from './icons.js';
 import { staysAccessible } from './render.js';
@@ -31,6 +31,46 @@ export function addWaterOsm(){
   if(!window.CC_WATER_OSM || osmLayers['water']) return;
   osmLayers['water']={data:CC_WATER_OSM, water:true};
   mintWaterDrops();
+}
+
+/* What of a pool is on screen, in one place.
+
+   These pools are the CURATED items (catalog.json's C/D/E/G/H/I/J/M) and they
+   draw as clustered DOM pins, outside render()'s featureVisible() walk — which
+   is why the rail counted them nowhere and read "0/1481" in Confirmed while the
+   map plainly showed pins (owner-reported 2026-08-12).
+
+   Two gates, and both belong here rather than at each setData call:
+     - the region scope, as before;
+     - the view mode: **Confirmed** means somebody vouched for it, so an
+       approved-but-unconfirmed item (the faded "help confirm" pin) is not in
+       it. Best of and Everything both draw the whole pool, because a utility
+       is not an editorial pick and never filtered to `cur`. */
+export function poolVisible(f){
+  const p = f.properties || {};
+  if(!inScope(p.rid)) return false;
+  return mode() !== 'confirmed' || !!p.v || !!p.cur;
+}
+
+/** How many of a layer's pool pins are drawn right now — the rail's count. */
+export function confShownCount(key){
+  const st = confState[key+'-conf'];
+  if(!st) return 0;
+
+  return st.confirmed.filter(poolVisible).length;
+}
+
+/* And how many the layer HOLDS in scope, for the other half of `shown/total`.
+   Scope only, never the mode: a total that shrank with the filter would make
+   every mode read n/n and tell a rider nothing about what they are not seeing.
+   Disjoint from the coverage total by construction — the coverage tiles drop
+   every ref we serve as an item (coverage-provider.md §6), so adding the two
+   counts each place once. */
+export function confTotalCount(key){
+  const st = confState[key+'-conf'];
+  if(!st) return 0;
+
+  return st.confirmed.filter(f => inScope((f.properties||{}).rid)).length;
 }
 
 // registry of the bulk-OSM POI pools: feeds the confirmed-pin cluster
@@ -65,7 +105,7 @@ export function setupConfClusters(){
     const srcId=key+'-conf';
     if(!curated.length || map.getSource(srcId)) return;
     map.addSource(srcId,{type:'geojson', cluster:true, clusterRadius:48, clusterMaxZoom:13,
-      data:{type:'FeatureCollection', features:curated.filter(f=>inScope(f.properties.rid))}});
+      data:{type:'FeatureCollection', features:curated.filter(poolVisible)}});
     // invisible layer so the clustered source loads tiles (querySourceFeatures needs rendered tiles)
     map.addLayer({id:srcId+'-hit', type:'circle', source:srcId, paint:{'circle-radius':0,'circle-opacity':0}});
     confState[srcId]={key, layer:layerByKey[key], info, onScreen:{}, confirmed:curated};
@@ -98,7 +138,7 @@ export function addCuratedFeature(key, feature){
   if(st){
     st.confirmed = info.data.features;
     const src = map.getSource(srcId);
-    if(src) src.setData({type:'FeatureCollection', features: st.confirmed.filter(f => inScope(f.properties.rid))});
+    if(src) src.setData({type:'FeatureCollection', features: st.confirmed.filter(poolVisible)});
   } else {
     // The pool had no features at boot, so it has no cluster source yet —
     // setupConfClusters() skips empty pools. It has one now.
@@ -108,14 +148,14 @@ export function addCuratedFeature(key, feature){
   return true;
 }
 
-// Region scope changed → rebuild each cluster source from its full confirmed
-// set, keeping only in-scope features, so cluster counts + leaf pins match the
-// scope (map-and-search.md §4.5). updateConfMarkers repaints on the
-// resulting sourcedata/idle.
+// Region scope OR view mode changed → rebuild each cluster source from its full
+// confirmed set, keeping what poolVisible() allows, so cluster counts and leaf
+// pins match both gates (map-and-search.md §4.5, §4.2). updateConfMarkers
+// repaints on the resulting sourcedata/idle.
 export function refilterClusters(){
   Object.keys(confState).forEach(srcId=>{
     const st=confState[srcId], src=map.getSource(srcId);
-    if(src) src.setData({type:'FeatureCollection', features:st.confirmed.filter(f=>inScope(f.properties.rid))});
+    if(src) src.setData({type:'FeatureCollection', features:st.confirmed.filter(poolVisible)});
   });
 }
 export function confLeafPin(st, p, co){

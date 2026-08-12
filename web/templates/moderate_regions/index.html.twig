@@ -119,22 +119,34 @@
             </div>
           {% endif %}
         </div>
-        <span class="rg-state {{ r.curatedDefault ? 'rg-state--on' : 'rg-state--off' }}">
-          {{ (r.curatedDefault ? 'moderate_regions.opens_curated' : 'moderate_regions.opens_everything')|trans }}
+        <span class="rg-state {{ r.defaultMode == 'everything' ? 'rg-state--off' : 'rg-state--on' }}">
+          {{ ('moderate_regions.opens_' ~ r.defaultMode)|trans }}
         </span>
-        <div class="rg-act">
-          {% if r.canToggle %}
-            <form method="post" action="{{ path('moderate_regions_curated_default') }}">
-              <input type="hidden" name="_token" value="{{ csrf_token('region-curated-default') }}">
-              <input type="hidden" name="region" value="{{ r.id }}">
-              <input type="hidden" name="enable" value="{{ r.curatedDefault ? '0' : '1' }}">
-              <button type="submit" class="btn-act btn-decide">
-                {{ (r.curatedDefault ? 'moderate_regions.action_disable' : 'moderate_regions.action_enable')|trans }}
-              </button>
-            </form>
-          {% else %}
-            <span class="rg-locked">{{ 'moderate_regions.locked'|trans({'%threshold%': threshold, '%blocks%': min_blocks, '%per_block%': min_per_block}) }}</span>
-          {% endif %}
+        {# Three rungs, three buttons, and each says what it costs. A locked one
+           stays visible with its own reason under it: a curator working a young
+           region should be able to see what it is short of, not just that they
+           cannot press anything (owner 2026-08-12). #}
+        <div class="rg-act rg-modes">
+          {% for m in ['everything', 'confirmed', 'curated'] %}
+            {% set allowed = m == 'everything' or (m == 'confirmed' ? r.canConfirmed : r.canCurated) %}
+            {% if m == r.defaultMode %}
+              <span class="rg-mode rg-mode--is">{{ ('moderate_regions.mode_' ~ m)|trans }}</span>
+            {% elseif allowed %}
+              <form method="post" action="{{ path('moderate_regions_curated_default') }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('region-curated-default') }}">
+                <input type="hidden" name="region" value="{{ r.id }}">
+                <input type="hidden" name="mode" value="{{ m }}">
+                <button type="submit" class="btn-act btn-secondary rg-mode">{{ ('moderate_regions.mode_' ~ m)|trans }}</button>
+              </form>
+            {% else %}
+              <span class="rg-mode rg-mode--locked"
+                    title="{{ m == 'confirmed'
+                      ? 'moderate_regions.locked_confirmed'|trans({'%threshold%': confirmed_threshold, '%count%': r.confirmed})
+                      : 'moderate_regions.locked'|trans({'%threshold%': threshold, '%blocks%': min_blocks, '%per_block%': min_per_block}) }}">
+                {{ ('moderate_regions.mode_' ~ m)|trans }}
+              </span>
+            {% endif %}
+          {% endfor %}
         </div>
       </div>
     {% endfor %}

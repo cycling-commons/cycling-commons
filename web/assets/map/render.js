@@ -22,7 +22,7 @@ import { escPend, safeHref, stars, slug, txtOn, gradColor, DIFF_PURPLE, haversin
 import { CATALOG, active, layerByKey, mode, LETTER_KEY, KEY_LETTER } from './catalog.js';
 import { inScope, curScope } from './scope-ui.js';
 import { pinEl, miniIcon } from './icons.js';
-import { updateConfMarkers } from './osm-pools.js';
+import { updateConfMarkers, confShownCount, confTotalCount } from './osm-pools.js';
 import { covShownCount, coverageTotal, syncCoverageLayers, covIconFilter,
          COVERAGE_CCS, COVERAGE_ON } from './coverage.js';
 import { openDrawer } from './drawer.js';
@@ -531,8 +531,13 @@ export function layerCounts(layer){
   // The pending layer answers to the curator's moderation area, not the map's
   // region scope (see featureVisible) — so its total is its whole set.
   const curated=layer.pendingLayer ? layer.features.length : layer.features.filter(f=>inScope(f.rid)).length;
-  const shown=layer.features.filter(f=>featureVisible(layer,f)).length + covShownCount(layer.key);
-  return {shown, total:curated+covTotal};
+  /* Three tiers draw a layer, so three tiers count it: the features render()
+     walks, the coverage tiles, and the curated POOL pins (osm-pools.js), which
+     live outside both and were counted nowhere — the rail said 0/1481 under a
+     map showing pins (owner-reported 2026-08-12). */
+  const shown=layer.features.filter(f=>featureVisible(layer,f)).length
+    + covShownCount(layer.key) + confShownCount(layer.key);
+  return {shown, total:curated+covTotal+confTotalCount(layer.key)};
 }
 export function updateCounts(){
   CATALOG.forEach(layer=>{
