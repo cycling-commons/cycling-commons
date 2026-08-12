@@ -144,13 +144,31 @@ final class ItemConfirmationControllerTest extends WebTestCase
         self::assertSame('existence', $data['stanceKind']);
     }
 
-    public function testVotableItemHasNoConfirmationEndpoint(): void
+    public function testAVotableItemIsConfirmableToo(): void
     {
+        /* This used to assert the opposite — a climb was votable and therefore
+           NOT confirmable. The rule changed on 2026-08-12: "could it vanish"
+           was the wrong test, and a confirmation is a rider saying *I was there
+           and this is right*, which a climb can be wrong about like anything
+           else. Voting ranks a region's best; confirming vouches for the entry.
+           They are different questions and one never excluded the other. */
         $client = static::createClient();
         $em = static::getContainer()->get(EntityManagerInterface::class);
-        $climb = $this->item($em, 'B'); // votable → not confirmable
+        $climb = $this->item($em, 'B');
 
         $client->request('GET', '/items/'.$climb->getId().'/confirmations');
+        self::assertResponseIsSuccessful();
+    }
+
+    public function testARouteHasNoConfirmationEndpoint(): void
+    {
+        // K · routes are not items and never had one — the endpoint is keyed on
+        // the item table, so this stays a 404 for a reason that has not changed.
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $surface = $this->item($em, 'A');   // segment-located: not a place you stand at
+
+        $client->request('GET', '/items/'.$surface->getId().'/confirmations');
         self::assertResponseStatusCodeSame(404);
     }
 

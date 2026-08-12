@@ -214,17 +214,24 @@ enum ItemType: string
     {
         return match ($this) {
             self::WaterFood => [ConfirmationStance::Potable, ConfirmationStance::NotPotable],
-            /* "Is it still here?" is not a question only utilities can be asked
-               (owner-reported 2026-08-12: a second rider could do nothing at a
-               viewpoint). A view gets built out, a monument gets fenced off, a
-               café closes — and the rider standing there is the only person who
-               knows. Confirming is not voting: voting ranks the best of a
-               region, confirming says the place still exists, and a letter can
-               want both. Climbs are deliberately still out — a mountain does
-               not go anywhere. */
+            /* Every place a rider can stand next to can be confirmed.
+
+               The first version of this excluded climbs on the grounds that "a
+               mountain does not go anywhere" — and the owner pointed at a
+               castle, which does not go anywhere either and was confirmable
+               (2026-08-12). The rule was wrong, not the exception: **"could it
+               vanish" is the wrong test.** A confirmation is a rider saying *I
+               was there and this is right* — that the place exists, that it is
+               where we say, that it is what we call it. A climb can be wrong
+               about all three, and nobody standing at the foot of it is
+               short of an opinion.
+
+               Confirming is still not voting. Voting ranks a region's best;
+               confirming vouches for the entry. A letter can want both, and
+               most do. */
             self::BikeServices, self::Hazards, self::GettingThere, self::Shelter,
             self::PublicToilets, self::ScenicViews, self::HistoryCulture,
-            self::WhereToSleep => [ConfirmationStance::Exists],
+            self::WhereToSleep, self::Climbs => [ConfirmationStance::Exists],
             default => [],
         };
     }

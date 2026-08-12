@@ -1625,6 +1625,35 @@ publicly-served states for everyone else, and the pending drawer was offering an
 that submission on the desk, so nothing is exposed that they cannot see — and
 the alternative was bouncing a typo back to the rider as a needs-info.
 
+### A curator's confirmation verifies the item (2026-08-12)
+
+Repetition by strangers is the only real check this project has — a photo can be
+generated, a place invented — which is why several unrelated riders mean
+something and one does not.
+
+It is the wrong instrument for a castle. Some entries a curator settles by
+looking (a listed monument, a station, a fountain in a town square), and making
+them wait for three riders to pass by is ceremony rather than verification
+(owner 2026-08-12). So a curator's own confirmation moves the item from
+`unverified` to `verified` in one press, recorded in the item's change history as
+an act of theirs rather than happening quietly.
+
+**Not a new moderation mechanic**, deliberately: it is the same confirm control
+every rider uses, weighted by who pressed it. Nothing queues, nothing is
+approved, and a curator who is wrong is corrected like anything else. Three
+guards, each of which would otherwise be a quiet way to launder a claim:
+
+- a `form`-sourced answer never verifies, even from a curator — a submitter is
+  not a witness to their own submission;
+- a **warning** never verifies (`not_potable` says the water is bad, not that the
+  entry is good);
+- an already-verified item is not re-promoted, so the history carries one row.
+
+Note what this exposed: **items never became `verified` from rider
+confirmations at all.** Only routes have a threshold (`route.ride_verify_threshold`).
+The tally is shown in the drawer and promotes nothing — a gap worth its own
+decision, not one to settle inside a curator shortcut.
+
 ### Confirming widened, and reached OSM places (2026-08-12)
 
 **A place that can be gone can be confirmed** — not only utilities. A viewpoint

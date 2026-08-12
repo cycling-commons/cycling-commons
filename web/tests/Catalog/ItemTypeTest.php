@@ -101,26 +101,31 @@ final class ItemTypeTest extends TestCase
         self::assertFalse(ItemType::Climbs->hasTrackUpload());
     }
 
-    public function testAPlaceThatCanBeGoneCanBeConfirmed(): void
+    public function testEveryPlaceARiderCanStandNextToIsConfirmable(): void
     {
-        /* "Is it still here?" is not a question only utilities can be asked
-           (owner 2026-08-12: a second rider could do nothing at a viewpoint).
-           A view gets built out, a monument fenced off, a gîte closed — and the
-           rider standing there is the only one who knows.
+        /* The first cut of this excluded climbs — "a mountain does not go
+           anywhere" — and the owner pointed at a castle, which does not go
+           anywhere either and was confirmable (2026-08-12). "Could it vanish"
+           is the wrong test.
 
-           Confirming is not voting. Voting ranks a region's best; confirming
-           says the place still exists, and a letter can want both. */
-        foreach ([ItemType::ScenicViews, ItemType::HistoryCulture, ItemType::WhereToSleep] as $type) {
-            self::assertTrue($type->isConfirmable(), $type->value.' is a place that can vanish');
-            self::assertTrue($type->isVotable(), 'and one worth ranking — both, not either');
+           A confirmation is a rider saying *I was there and this is right*:
+           that the place exists, that it is where we say, that it is what we
+           call it. A climb can be wrong about all three. */
+        foreach (ItemType::cases() as $type) {
+            if (ItemType::QualityRides === $type || LocationMode::Segment === $type->locationMode()) {
+                continue;   // a ride and a stretch are not a place you stand at
+            }
+            self::assertTrue($type->isConfirmable(), $type->value.' should be confirmable');
         }
     }
 
-    public function testAMountainIsNotConfirmable(): void
+    public function testConfirmingAndVotingAreDifferentQuestions(): void
     {
-        // A climb does not go anywhere. Offering "still here?" on one would be
-        // asking a question with only one possible answer.
-        self::assertFalse(ItemType::Climbs->isConfirmable());
+        // Voting ranks a region's best; confirming vouches for the entry. Most
+        // letters want both, and one never implies the other.
         self::assertTrue(ItemType::Climbs->isVotable());
+        self::assertTrue(ItemType::Climbs->isConfirmable());
+        self::assertFalse(ItemType::WaterFood->isVotable(), 'completeness, not quality');
+        self::assertTrue(ItemType::WaterFood->isConfirmable());
     }
 }

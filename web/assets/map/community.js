@@ -36,14 +36,15 @@ const _rcTokens={};   // route id → CSRF token from the last snapshot
    vote block. Confirmation is a SEPARATE question and the two overlap: voting
    ranks a region's best, confirming says the place is still there.
 
-   Scenic views, history and stays are both — a viewpoint gets built out, a
-   monument fenced off, a gîte closed, and the rider standing there is the only
-   one who knows (owner-reported 2026-08-12: a second rider could do nothing at
-   a viewpoint). Climbs stay vote-only: a mountain does not go anywhere.
+   EVERY point letter is confirmable, including climbs. "Could it vanish" was
+   the wrong test — a castle does not go anywhere either, and it is confirmable
+   (owner 2026-08-12). A confirmation is a rider saying *I was there and this is
+   right*: that it exists, that it is where we say, that it is what we call it.
+   A climb can be wrong about all three.
 
    Mirrors ItemType::isVotable()/isConfirmable(); keys are CATALOG layer keys. */
 export const CC_VOTABLE=new Set(['climbs','stays','scenic','history']);
-export const CC_CONFIRMABLE=new Set(['water','services','hazards','transit','shelter','toilets','scenic','history','stays']);
+export const CC_CONFIRMABLE=new Set(['water','services','hazards','transit','shelter','toilets','scenic','history','stays','climbs']);
 const _cfTokens={};   // item id → CSRF token from the last confirmations snapshot
 
 export function routeCommunityPanel(id, state){

@@ -8,8 +8,10 @@ namespace App\Community;
 
 use App\Catalog\ConfirmationSource;
 use App\Catalog\ConfirmationStance;
+use App\Catalog\Entity\ChangeHistory;
 use App\Catalog\Entity\Item;
 use App\Catalog\Entity\ItemConfirmation;
+use App\Catalog\ItemState;
 use App\Catalog\ItemType;
 use App\Entity\User;
 use Doctrine\DBAL\Connection;
@@ -57,7 +59,52 @@ final class ItemConfirmationService
             } else {
                 $this->em->persist(new ItemConfirmation((int) $item->getId(), (int) $user->getId(), $stance, $source));
             }
+
+            $this->verifyIfCurator($item, $user, $stance, $source);
         });
+    }
+
+    /**
+     * A curator's own confirmation verifies the item outright.
+     *
+     * The question a confirmation answers is "is this real, and is it right" —
+     * and the honest answer for most things is *we cannot know until several
+     * unrelated people say so*. A photo can be generated; a place can be
+     * invented. Repetition by strangers is the only check this project has, and
+     * that is why it exists.
+     *
+     * But it is the wrong instrument for a castle (owner 2026-08-12). Some
+     * things a curator can settle by looking — a listed monument, a station, a
+     * public fountain in a town square — and making them wait for three riders
+     * to pass by is ceremony, not verification. So a curator standing behind an
+     * entry IS the verification, once, and it is recorded as an act of theirs in
+     * the item's history rather than happening quietly.
+     *
+     * Deliberately NOT a new moderation mechanic: it is the same confirm control
+     * every rider uses, weighted by who pressed it. Nothing queues, nothing is
+     * approved, and a curator who is wrong is corrected the way anything else is.
+     * A `form`-sourced answer never verifies — the submitter is not a witness to
+     * their own submission.
+     */
+    private function verifyIfCurator(Item $item, User $user, ConfirmationStance $stance, ConfirmationSource $source): void
+    {
+        if (ConfirmationSource::Drawer !== $source
+            || ItemState::Unverified !== $item->getState()
+            || ConfirmationStance::NotPotable === $stance) {   // a warning is not a vouching
+            return;
+        }
+        $roles = $user->getRoles();
+        if (!\in_array('ROLE_CURATOR', $roles, true) && !\in_array('ROLE_ADMIN', $roles, true)) {
+            return;
+        }
+
+        $item->setState(ItemState::Verified);
+        $this->em->persist((new ChangeHistory())
+            ->setItemId((int) $item->getId())
+            ->setField('state')
+            ->setOldValue(ItemState::Unverified->value)
+            ->setNewValue(ItemState::Verified->value)
+            ->setChangedBy((int) $user->getId()));
     }
 
     /**
