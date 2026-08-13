@@ -610,15 +610,32 @@ the newest rung of that same ladder.
   `surface-quality.test.cjs`. The legend explains the ticks in one non-filter
   note row (`.skey-note`); hiding a class hides its ticks via the layer
   filter, not a legend row of their own.
+- **The tile lines dedupe against curated refs** (2026-08-13), the same rule
+  the coverage points have always had: a way already answered as one of our A
+  items is filtered out of the classified skin, the to-do arm and the quality
+  ticks (`surfDedupeFilter`, re-applied on every toggle since the refs arrive
+  with the catalog fetch). Before this, a rider's approved asphalt stretch
+  kept its red "Surface not recorded" dashes under the green curated line —
+  the map contradicting itself about a road somebody had just answered.
+- **A tile-line click hands the wizard the WHOLE way** (2026-08-13): vector
+  tiles clip geometry at tile borders, so the clicked feature is only one
+  tile's fragment — pins built from it covered part of the road, and a
+  boundary sliver produced a wizard with no line at all. `fullWayEnds`
+  (surface-tiles.js) reassembles the way from every loaded tile via
+  `querySourceFeatures` and takes the farthest-apart endpoint pair; the
+  corridor click uses the same helper.
 - **The cycle-route network layer** (`web/assets/map/routes-tiles.js`, behind
   the ⤳ Routes control, off by default) draws signed `route=bicycle`/`route=mtb`
   corridors plus knooppunt number badges from their own PMTiles artifact
   (`routes_<cc>` line layers + `knoop_<cc>` point layers —
   [coverage-provider.md](coverage-provider.md) §4). The benchmark is
   OpenCycleMap and the brief is **readable by default, detail on demand**:
-  three visual families (national icn/ncn purple, regional rcn/lcn/other blue,
-  MTB earth-brown), wide translucent corridor lines so the basemap road stays
-  legible inside them, and number badges only from z13. Clicking a corridor
+  three visual families (national icn/ncn rose-red, regional rcn/lcn/other
+  purple — the OpenCycleMap associations; a first cut had regional in blue and
+  it read as grey-green over polder fields), wide translucent corridor lines
+  so the basemap road stays legible inside them, and number badges from z12
+  with symbol collision doing the culling (a first cut held them to z13 and
+  read as "there are no knooppunt numbers" at planning zoom). Clicking a corridor
   opens the surface drawer for that **way** — the layer exists to close the
   loop with the surface skin (a signed way with no recorded surface is exactly
   the road worth asking about), so the improve action is the ordinary

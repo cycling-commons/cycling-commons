@@ -8,7 +8,7 @@
    purple/red corridors and knooppunt numbers are what make a map feel like it
    knows where to ride — and the brief is READABLE BY DEFAULT: CyclOSM renders
    the same data and was rejected as unreadable at scale, so corridors are
-   translucent, badges wait for z13, and the whole layer is off until asked.
+   translucent, badges wait for z12, and the whole layer is off until asked.
 
    What the layer is FOR is the loop with the surface skin: rendering networks
    is borrowed, the trust layer is the product. Clicking a corridor opens the
@@ -20,7 +20,7 @@ import { map, flyToPin } from './map-init.js';
 import { D } from './i18n.js';
 import { layerByKey } from './catalog.js';
 import { openDrawer } from './drawer.js';
-import { segmentEnds } from './surface-tiles.js';
+import { fullWayEnds } from './surface-tiles.js';
 
 /* Same two-gate pattern as the surface skin, for the same reasons: the rail
    button asks "does an artifact exist?" (configured), the add path asks "can I
@@ -35,30 +35,37 @@ export const ROUTES_TILE_SOURCE = 'routes-tiles';
 
 /* Three visual families, not six network values: a rider plans against
    "national route", "regional network", "MTB" — icn/ncn merge, rcn/lcn/other
-   merge. The purple is deliberate inheritance: the cycleway class freed it
-   when colour became surface-only (owner 2026-08-12), and purple corridors are
-   the OpenCycleMap association riders already carry. Keys are contract
+   merge. The colours are the OpenCycleMap associations riders already carry
+   (the owner's benchmark: "purple/red corridors are what makes a map feel
+   like it knows where to ride"): the REGIONAL/node network — the one that
+   dominates the Low Countries — is purple, national long-distance routes are
+   rose-red. The first cut had regional in blue and it read as grey-green over
+   polder fields (owner feedback 2026-08-13: "most routes are green instead of
+   purple"); a translucent line's colour has to survive blending with the
+   basemap, not just look right on a swatch. Keys are contract
    routes.networks, pinned by routes-zooms.test.cjs. */
 export const NET_STYLE = {
-  icn: { group: 'national', color: '#7A4FCF' },
-  ncn: { group: 'national', color: '#7A4FCF' },
-  rcn: { group: 'regional', color: '#3E7CB8' },
-  lcn: { group: 'regional', color: '#3E7CB8' },
-  other: { group: 'regional', color: '#3E7CB8' },
+  icn: { group: 'national', color: '#C84E64' },
+  ncn: { group: 'national', color: '#C84E64' },
+  rcn: { group: 'regional', color: '#7A4FCF' },
+  lcn: { group: 'regional', color: '#7A4FCF' },
+  other: { group: 'regional', color: '#7A4FCF' },
   mtb: { group: 'mtb', color: '#8A5A32' },
 };
 const GROUPS = [
-  { key: 'national', nets: ['icn', 'ncn'], color: '#7A4FCF' },
-  { key: 'regional', nets: ['rcn', 'lcn', 'other'], color: '#3E7CB8' },
+  { key: 'national', nets: ['icn', 'ncn'], color: '#C84E64' },
+  { key: 'regional', nets: ['rcn', 'lcn', 'other'], color: '#7A4FCF' },
   { key: 'mtb', nets: ['mtb'], color: '#8A5A32' },
 ];
 /* Where the knooppunt badges appear. The ARTIFACT carries the points from z11
-   (contract routes.nodes.minZoom — cheap, and leaves room to lower this after
-   riding with it); the CLIENT waits for z13, where a number is a sign beside a
-   junction rather than confetti over a province. routes-zooms.test.cjs pins
-   the client floor to at least the artifact's, or the badges would be asked
+   (contract routes.nodes.minZoom), and the client now shows them from z12:
+   the numbers ARE how riders navigate these networks, and a first cut that
+   held them to z13 read as "there are no knooppunt numbers" at planning zoom
+   (owner feedback 2026-08-13). Symbol collision culls what does not fit, so
+   dense areas stay readable and thin out as you zoom. routes-zooms.test.cjs
+   pins this floor to at least the artifact's, or the badges would be asked
    for at zooms the tiles do not carry. */
-const BADGE_MIN_ZOOM = 13;
+const BADGE_MIN_ZOOM = 12;
 const LINE_PREFIX = 'rttile-';
 const KNOOP_PREFIX = 'rtknoop-';
 
@@ -111,12 +118,14 @@ export function addRoutesTiles() {
         paint: {
           'line-color': g.color,
           // A corridor, not a wire: wide and translucent, so the basemap's
-          // road stays legible inside it — the OpenCycleMap reading.
-          'line-width': ['interpolate', ['linear'], ['zoom'], 8, 1.6, 11, 3, 14, 6],
-          'line-opacity': ['interpolate', ['linear'], ['zoom'], 8, 0.38, 12, 0.5],
+          // road stays legible inside it — the OpenCycleMap reading. Raised
+          // from the first cut's 0.38/0.5 (owner 2026-08-13: "make them a bit
+          // less transparent so they are better to see").
+          'line-width': ['interpolate', ['linear'], ['zoom'], 8, 1.8, 11, 3.2, 14, 6],
+          'line-opacity': ['interpolate', ['linear'], ['zoom'], 8, 0.55, 12, 0.72],
         },
       }, under);
-      map.on('click', id, e => openRouteDrawer(e.features[0].properties, e.lngLat, e.features[0].geometry));
+      map.on('click', id, e => openRouteDrawer(e.features[0].properties, e.lngLat, e.features[0].geometry, srcLayer));
       map.on('mouseenter', id, () => { map.getCanvas().style.cursor = 'pointer'; });
       map.on('mouseleave', id, () => { map.getCanvas().style.cursor = ''; });
     });
@@ -138,10 +147,12 @@ export function addRoutesTiles() {
       minzoom: BADGE_MIN_ZOOM,
       layout: { visibility: 'none' },
       paint: {
-        'circle-radius': 9,
+        // Grows with zoom so the z12 planning view stays a scatter of small
+        // discs rather than a wall of buttons.
+        'circle-radius': ['interpolate', ['linear'], ['zoom'], 12, 6.5, 15, 9],
         'circle-color': '#FFFFFF',
         'circle-stroke-width': 2,
-        'circle-stroke-color': '#3E7CB8',
+        'circle-stroke-color': '#7A4FCF',
       },
     }, under);
     map.addLayer({
@@ -155,11 +166,11 @@ export function addRoutesTiles() {
         // The basemap's own glyph stack — the map already loads it, and a
         // badge is a label, not brand typography.
         'text-font': ['Noto Sans Bold'],
-        'text-size': 11,
+        'text-size': ['interpolate', ['linear'], ['zoom'], 12, 10, 15, 11.5],
         'text-allow-overlap': false,
         visibility: 'none',
       },
-      paint: { 'text-color': '#1F4E75' },
+      paint: { 'text-color': '#5B3A9E' },
     }, under);
     map.on('click', discId, e => openKnoopDrawer(e.features[0].properties, e.lngLat));
     map.on('mouseenter', discId, () => { map.getCanvas().style.cursor = 'pointer'; });
@@ -201,7 +212,7 @@ export function netLabel(net) {
  * with both pins already on the stretch. The route facts (network, code,
  * every membership) are the drawer rows.
  */
-export function openRouteDrawer(p, lngLat, geometry) {
+export function openRouteDrawer(p, lngLat, geometry, sourceLayer) {
   const layer = layerByKey.surface;
   if (!layer) return;
   const rec = [{ label: D.routeNetwork || 'Network', value: netLabel(p.net), method: 'OSM' }];
@@ -221,7 +232,8 @@ export function openRouteDrawer(p, lngLat, geometry) {
     headline: p.rr && p.name ? p.name + ' · ' + p.rr : name,
     osmName: p.name || '',
     geom: { ll: [lngLat.lat, lngLat.lng] },
-    segmentEnds: segmentEnds(geometry),
+    // The whole way across tiles, not the clicked fragment (fullWayEnds).
+    segmentEnds: fullWayEnds(ROUTES_TILE_SOURCE, sourceLayer, p.ref, geometry),
     record: rec,
     // What a click is FOR: this stretch probably has no recorded surface (a
     // signed route with none is the to-do arm's headline case), and the same

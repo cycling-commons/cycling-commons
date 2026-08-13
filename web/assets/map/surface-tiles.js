@@ -166,7 +166,8 @@ export function addSurfaceTiles() {
         layout: { 'line-cap': st.cap || 'round', 'line-join': 'round', visibility: 'none' },
         paint,
       });
-      map.on('click', id, e => openSurfaceDrawer(e.features[0].properties, e.lngLat, e.features[0].geometry));
+      map.on('click', id, e => openSurfaceDrawer(e.features[0].properties, e.lngLat, e.features[0].geometry,
+        { source: SURFACE_TILE_SOURCE, sourceLayer: srcLayer }));
       map.on('mouseenter', id, () => { map.getCanvas().style.cursor = 'pointer'; });
       map.on('mouseleave', id, () => { map.getCanvas().style.cursor = ''; });
     });
@@ -201,14 +202,28 @@ export function addSurfaceTiles() {
   added = true;
 }
 
+/* Curated-ref dedupe for the LINE layers — the same rule the coverage points
+   have had all along (osm-data-architecture.md §8): a way already answered as
+   one of our items draws once, as curated. Without it, a rider's approved
+   asphalt stretch kept its red "Surface not recorded" dashes UNDERNEATH the
+   green curated line, and the map contradicted itself about a road somebody
+   had just answered (owner-reported 2026-08-13, the Zuiderdijk). Applied in
+   applyClassVisibility rather than baked in at addLayer time, because the
+   skin's layers mount at map load while CC_CURATED_REFS arrives with the
+   catalog fetch — re-filtering on every toggle keeps the two in step. */
+function surfDedupeFilter() {
+  return ['!', ['in', ['get', 'ref'], ['literal', Array.from(window.CC_CURATED_REFS || [])]]];
+}
+
 /* The tick layer's filter: only features that HAVE a smoothness (absence stays
    absent), minus whatever classes the legend has ticked off — a tick floating
-   over a hidden gravel line would claim a road the rider asked not to see. */
+   over a hidden gravel line would claim a road the rider asked not to see —
+   and minus curated-answered ways (surfDedupeFilter). */
 function qualityFilter() {
   const off = [...classesOff];
-  return off.length
-    ? ['all', ['has', 'sm'], ['!', ['in', ['get', 'cls'], ['literal', off]]]]
-    : ['has', 'sm'];
+  const base = ['all', ['has', 'sm'], surfDedupeFilter()];
+  if (off.length) base.push(['!', ['in', ['get', 'cls'], ['literal', off]]]);
+  return base;
 }
 
 /** Is the to-do artifact configured (an URL, not necessarily loaded)? */
@@ -276,7 +291,8 @@ export function addUntaggedTiles() {
       },
     }, under);
     map.on('click', id, e => openSurfaceDrawer(
-      { ...e.features[0].properties, cls: 'unverified' }, e.lngLat, e.features[0].geometry));
+      { ...e.features[0].properties, cls: 'unverified' }, e.lngLat, e.features[0].geometry,
+      { source: SURFACE_TODO_SOURCE, sourceLayer: srcLayer }));
     map.on('mouseenter', id, () => { map.getCanvas().style.cursor = 'pointer'; });
     map.on('mouseleave', id, () => { map.getCanvas().style.cursor = ''; });
   });
@@ -461,7 +477,7 @@ export function roadTypeLabel(hw) {
   return k ? (D[k] || k) : null;
 }
 
-export function openSurfaceDrawer(p, lngLat, geometry) {
+export function openSurfaceDrawer(p, lngLat, geometry, tileCtx) {
   const layer = layerByKey.surface;
   if (!layer) return;
   const label = classLabel(p.cls);
@@ -499,8 +515,11 @@ export function openSurfaceDrawer(p, lngLat, geometry) {
   // The way already has ends. Hand them to the wizard so it opens with both
   // pins placed on the stretch the rider clicked, ready to be dragged, instead
   // of a blank map asking for two taps — we know more than that, and throwing
-  // it away invites a worse answer than the one we already have.
-  const ends = segmentEnds(geometry);
+  // it away invites a worse answer than the one we already have. The WHOLE
+  // way, reassembled across tiles, not the clicked fragment (see fullWayEnds).
+  const ends = tileCtx
+    ? fullWayEnds(tileCtx.source, tileCtx.sourceLayer, p.ref, geometry)
+    : segmentEnds(geometry);
 
   // The street's own name leads when it has one. The basemap has been printing
   // it under our line all along, so a drawer headlined "Paved · asphalt" on a
@@ -561,6 +580,8 @@ function applyClassVisibility() {
       const cls = l.id.slice('surftile-'.length).replace(/-[a-z]{2}$/, '');
       map.setLayoutProperty(l.id, 'visibility',
         visible && surfaceClassEnabled(cls) ? 'visible' : 'none');
+      // Class filter + curated dedupe, refreshed together (see surfDedupeFilter).
+      map.setFilter(l.id, ['all', ['==', ['get', 'cls'], cls], surfDedupeFilter()]);
     } else if (l.id.startsWith(QUALITY_PREFIX)) {
       /* The ticks ride the skin as a whole — they are an annotation on the
          class lines, not a class of their own, so there is no legend row to
@@ -585,6 +606,9 @@ function applyClassVisibility() {
          the gravel ones. */
       map.setLayoutProperty(l.id, 'visibility',
         visible && surfaceClassEnabled('unverified') ? 'visible' : 'none');
+      // An answered way is no longer homework: the red dash must not contradict
+      // the curated line drawn over the same road (see surfDedupeFilter).
+      map.setFilter(l.id, surfDedupeFilter());
     } else if (l.id.startsWith('surface-cls-')) {
       // The curated A layer. Hidden per class too, but never gated on the tile
       // toggle — these are our own items and stay on when the skin is off.
@@ -677,9 +701,6 @@ export function setStudyMode(on) {
  * A tile feature can arrive as a LineString or, where the way crosses a tile
  * boundary, a MultiLineString — take the outermost ends of the whole thing so
  * the pins land on the stretch the rider actually sees.
- *
- * Exported for routes-tiles.js: a route corridor click opens the same surface
- * wizard, and its pins deserve the same head start.
  */
 export function segmentEnds(geometry) {
   if (!geometry) return null;
@@ -688,4 +709,51 @@ export function segmentEnds(geometry) {
   const flat = parts.flat();
   if (flat.length < 2) return null;
   return { a: flat[0], b: flat[flat.length - 1] };
+}
+
+/**
+ * The WHOLE way's ends, reassembled from every loaded tile fragment.
+ *
+ * A vector tile clips geometry at its border, so the clicked feature is only
+ * the fragment inside one tile: pins built from it covered part of the road
+ * ("but it is not the full piece" — owner, 2026-08-13), and a click landing
+ * on a boundary sliver produced a wizard with no line at all.
+ * querySourceFeatures returns the way's fragment from every LOADED tile, so
+ * gathering all of them and taking the endpoint pair farthest apart
+ * approximates the way's true extent — exact for anything road-shaped, and
+ * for a pathological hairpin still a far better head start than one tile's
+ * worth. Falls back to the clicked fragment when the source has nothing
+ * (never in practice: the rider is looking at the tiles they clicked).
+ *
+ * Exported for routes-tiles.js: a route corridor click opens the same surface
+ * wizard, and its pins deserve the same full stretch.
+ */
+export function fullWayEnds(sourceId, sourceLayer, ref, clickedGeometry) {
+  const parts = [];
+  try {
+    for (const f of map.querySourceFeatures(sourceId, {
+      sourceLayer, filter: ['==', ['get', 'ref'], ref],
+    })) {
+      const g = f.geometry;
+      if (g.type === 'LineString') parts.push(g.coordinates);
+      else if (g.type === 'MultiLineString') parts.push(...g.coordinates);
+    }
+  } catch (e) { /* source not loaded yet — fall through to the fragment */ }
+  const endpoints = parts.filter(p => p.length >= 2).flatMap(p => [p[0], p[p.length - 1]]);
+  if (endpoints.length < 2) return segmentEnds(clickedGeometry);
+  // Farthest-apart endpoint pair, planar with latitude correction — fragments
+  // repeat across tiles and share near-identical cut points, so the true way
+  // ends are exactly the two survivors that no neighbouring fragment repeats.
+  const k = Math.cos(endpoints[0][1] * Math.PI / 180);
+  let best = null;
+  let bd = -1;
+  for (let i = 0; i < endpoints.length; i++) {
+    for (let j = i + 1; j < endpoints.length; j++) {
+      const dx = (endpoints[i][0] - endpoints[j][0]) * k;
+      const dy = endpoints[i][1] - endpoints[j][1];
+      const d = dx * dx + dy * dy;
+      if (d > bd) { bd = d; best = { a: endpoints[i], b: endpoints[j] }; }
+    }
+  }
+  return best;
 }
