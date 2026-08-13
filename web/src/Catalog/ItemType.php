@@ -205,8 +205,8 @@ enum ItemType: string
      * The community-confirmation stances a rider may take on this type
      * (spec: utilities are confirmed, not voted). Drinking water carries a
      * potability judgement; other point utilities carry a plain existence
-     * confirmation. Votable types (see {@see isVotable()}) and the measured
-     * road-surface segment carry none: they are empty here.
+     * confirmation; a road-surface segment carries it as "as described".
+     * Votable-only types (see {@see isVotable()}) are empty here.
      *
      * @return list<ConfirmationStance>
      */
@@ -231,7 +231,16 @@ enum ItemType: string
                most do. */
             self::BikeServices, self::Hazards, self::GettingThere, self::Shelter,
             self::PublicToilets, self::ScenicViews, self::HistoryCulture,
-            self::WhereToSleep, self::Climbs => [ConfirmationStance::Exists],
+            self::WhereToSleep, self::Climbs,
+            /* A surface segment joined 2026-08-13, by the same correction that
+               brought climbs in: it was excluded as "measured", but a rider
+               who rode the stretch is exactly who can vouch that it is as
+               described — and the drawer's status line was literally saying
+               "not confirmed yet" to a second rider with no way to answer
+               (owner-reported). The tile drawer's confirm flow had promised
+               "from then on the ordinary one-tap item confirmation applies";
+               this makes that true. */
+            self::RoadSurface => [ConfirmationStance::Exists],
             default => [],
         };
     }

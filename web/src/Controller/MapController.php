@@ -260,6 +260,10 @@ final class MapController extends AbstractController
             // its drawer rows (surface-tiles.js SM_LABEL collapses the OSM
             // vocabulary to the form's five values for display).
             'smoothness' => 'd_smoothness', 'mtbScale' => 'd_mtb_scale',
+            // A-item confirmation panel (community.js stanceKind 'accuracy'):
+            // the question is "as described?", not "still here?".
+            'asDescribed' => 'd_as_described', 'surfaceCfQ' => 'd_surface_cf_q',
+            'surfaceCfA' => 'd_surface_cf_a',
             // Route-network drawer (routes-tiles.js): corridor + knooppunt.
             'routeNetwork' => 'd_route_network', 'routeRef' => 'd_route_ref',
             'routesHere' => 'd_routes_here', 'routeSurfaceHint' => 'd_route_surface_hint',

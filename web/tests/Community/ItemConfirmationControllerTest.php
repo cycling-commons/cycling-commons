@@ -160,16 +160,23 @@ final class ItemConfirmationControllerTest extends WebTestCase
         self::assertResponseIsSuccessful();
     }
 
-    public function testARouteHasNoConfirmationEndpoint(): void
+    public function testASurfaceSegmentIsConfirmableAsDescribed(): void
     {
-        // K · routes are not items and never had one — the endpoint is keyed on
-        // the item table, so this stays a 404 for a reason that has not changed.
+        // A stretch joined the confirmable set 2026-08-13 (owner-reported: the
+        // drawer said "not confirmed yet" to a second rider with no way to
+        // answer). Its panel words itself as accuracy — "as described", not
+        // "still here" — because a road rarely leaves; what a rider vouches
+        // for is the description they rode.
         $client = static::createClient();
         $em = static::getContainer()->get(EntityManagerInterface::class);
-        $surface = $this->item($em, 'A');   // segment-located: not a place you stand at
+        $surface = $this->item($em, 'A');
 
         $client->request('GET', '/items/'.$surface->getId().'/confirmations');
-        self::assertResponseStatusCodeSame(404);
+        self::assertResponseIsSuccessful();
+        /** @var array{stances: array<string, int>, stanceKind: string} $data */
+        $data = json_decode((string) $client->getResponse()->getContent(), true);
+        self::assertSame('accuracy', $data['stanceKind']);
+        self::assertArrayHasKey('exists', $data['stances']);
     }
 
     public function testUnservedItemIs404(): void

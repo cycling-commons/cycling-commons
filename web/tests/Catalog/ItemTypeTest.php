@@ -112,11 +112,15 @@ final class ItemTypeTest extends TestCase
            that the place exists, that it is where we say, that it is what we
            call it. A climb can be wrong about all three. */
         foreach (ItemType::cases() as $type) {
-            if (ItemType::QualityRides === $type || LocationMode::Segment === $type->locationMode()) {
-                continue;   // a ride and a stretch are not a place you stand at
+            if (ItemType::QualityRides === $type) {
+                continue;   // a ride is voted on, never confirmed
             }
             self::assertTrue($type->isConfirmable(), $type->value.' should be confirmable');
         }
+        // A stretch joined 2026-08-13: a rider who rode it is exactly who can
+        // vouch it is as described — the drawer said "not confirmed yet" to a
+        // second rider with no way to answer (owner-reported).
+        self::assertTrue(ItemType::RoadSurface->isConfirmable());
     }
 
     public function testConfirmingAndVotingAreDifferentQuestions(): void

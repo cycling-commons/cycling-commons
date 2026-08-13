@@ -648,7 +648,9 @@ function buildRecord(layer, f){
      Same three words as the OSM row, same field, same queue — but an EDIT, not
      a confirmation, because it is a claim about the place rather than a vote
      on it. Signed-in riders only, for the same reason the OSM row is. */
-  const stateRow = (CC_CONFIRMABLE.has(layer.key) && f.id!=null && window.CC_CONFIRM_TOKEN)
+  // Not for a surface stretch: a road is not a place that is "gone", and its
+  // closures ride the seasonalClosure field through the ordinary edit form.
+  const stateRow = (CC_CONFIRMABLE.has(layer.key) && layer.key!=='surface' && f.id!=null && window.CC_CONFIRM_TOKEN)
     ? `<div class="cc-osmcf" data-item-cond="${f.id}">`
         + (CC_BREAKABLE.has(layer.key)
             ? `<button type="button" class="cc-d-act confirm-osm-warn" data-osm-stance="out_of_order">⚠ ${D.osmBroken||'Out of order'}</button>`
@@ -669,7 +671,10 @@ function buildRecord(layer, f){
      Water asks a different question from everything else — "is it drinkable",
      not "is it here" — and it is the same pair C's own panel asks once the
      place is ours, so the vocabulary never changes under a rider. */
-  const osmConfirm = (CC_CONFIRMABLE.has(layer.key) && f.id==null && f.osmRef)
+  // Surface tile LINES keep their own confirm flow (surface-tiles.js
+  // confirmClass → the wizard's one-step-shorter submission that MINTS the
+  // item); the OSM-point one-tap row here is for points.
+  const osmConfirm = (CC_CONFIRMABLE.has(layer.key) && layer.key!=='surface' && f.id==null && f.osmRef)
     ? (!window.CC_CONFIRM_TOKEN
         /* Anonymous: the same line the item panel shows, not a dead button. A
            rider who cannot answer should be told why in one clause. */

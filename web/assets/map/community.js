@@ -44,7 +44,12 @@ const _rcTokens={};   // route id → CSRF token from the last snapshot
 
    Mirrors ItemType::isVotable()/isConfirmable(); keys are CATALOG layer keys. */
 export const CC_VOTABLE=new Set(['climbs','stays','scenic','history']);
-export const CC_CONFIRMABLE=new Set(['water','services','hazards','transit','shelter','toilets','scenic','history','stays','climbs']);
+// 'surface' joined 2026-08-13 (owner-reported: the drawer said "not confirmed
+// yet" to a second rider with no way to answer). Its panel words itself as
+// "as described" (stanceKind 'accuracy'); the gone/closed condition row and
+// the OSM-point one-tap row stay OFF for it — a stretch is not a place that
+// vanishes, and the tile drawer has its own surface confirm flow.
+export const CC_CONFIRMABLE=new Set(['water','services','hazards','transit','shelter','toilets','scenic','history','stays','climbs','surface']);
 /* Where "out of order" is a thing that can happen. A tap, a pump and a toilet
    have working parts; a viewpoint does not, and offering a rider a button that
    cannot be true of what they are looking at teaches them to distrust the rest
@@ -144,6 +149,11 @@ function paintRouteCommunity(box, s){
 const CC_CF_STANCES={
   potability:[['potable',`✓ ${D.potable||'Potable'}`],['not_potable',`✗ ${D.notPotable||'Not potable'}`]],
   existence:[['exists',`✓ ${D.confirmHere||'Confirm it’s here'}`]],
+  // A surface segment: the stance is the same `exists` record, but the words
+  // are "as described" — a road rarely leaves; what a rider vouches for is
+  // the description they rode (owner-reported 2026-08-13: the drawer said
+  // "not confirmed yet" to a second rider with no way to answer).
+  accuracy:[['exists',`✓ ${D.asDescribed||'As I rode it'}`]],
 };
 export function hydrateItemConfirm(id){
   const box=document.querySelector(`.cc-cf[data-item="${id}"]`); if(!box) return;
@@ -167,8 +177,12 @@ function paintItemConfirm(box, s){
   // "is the water drinkable?" over your own answer reads as though the answer
   // never landed.
   const heading = s.mine
-    ? (s.stanceKind==='potability' ? (D.waterA||'Drinking water') : (D.hereA||'Still here'))
-    : (s.stanceKind==='potability' ? (D.waterQ||'Is the water drinkable?') : (D.hereQ||'Is this still here?'));
+    ? (s.stanceKind==='potability' ? (D.waterA||'Drinking water')
+      : s.stanceKind==='accuracy' ? (D.surfaceCfA||'Surface')
+      : (D.hereA||'Still here'))
+    : (s.stanceKind==='potability' ? (D.waterQ||'Is the water drinkable?')
+      : s.stanceKind==='accuracy' ? (D.surfaceCfQ||'Is it as described?')
+      : (D.hereQ||'Is this still here?'));
   const btns=defs.map(([v,l])=>{
     const n=(s.stances&&s.stances[v])||0;
     const mine=s.mine===v?' is-mine':'';

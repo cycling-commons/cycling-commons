@@ -292,6 +292,21 @@ Segment-located types never resolve through `coverage_poi` — it is the point
 index, and surface lines never enter PostGIS. The submission keeps a point (its
 start, which is what resolves the region); the **item** gets the LineString.
 
+## Confirmation: "as described", since 2026-08-13
+
+A surface item is confirmable like every other letter, by the same correction
+that brought climbs in ("could it vanish" is the wrong test): a rider who rode
+the stretch is exactly who can vouch for it, and the drawer's status line was
+saying "not confirmed yet" to a second rider with no way to answer
+(owner-reported). The stance is the ordinary `exists` record; only the WORDS
+differ — the panel asks *"Is it as described?"* with *"✓ As I rode it"*
+(`stanceKind: accuracy`, ItemConfirmationController → community.js), because a
+road rarely leaves. The gone/closed condition row and the OSM one-tap row stay
+off for A: a stretch is not a place that vanishes, closures ride the
+`seasonalClosure` field, and the tile lines keep their own confirm flow. A
+drawer confirmation counts toward the `v` derivation as usual, so a confirmed
+stretch surfaces in Confirmed mode.
+
 ## Read view (drawer "current details")
 - Surface
 - Smoothness

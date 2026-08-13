@@ -111,7 +111,14 @@ final class ItemConfirmationController extends AbstractController
     {
         return [
             ...$this->confirmations->snapshot($item, $user),
-            'stanceKind' => ItemType::WaterFood === ItemType::fromParam($item->getLetter()) ? 'potability' : 'existence',
+            // 'accuracy' for a surface segment: the question is not "is it
+            // still here" (a road rarely leaves) but "is it as described",
+            // and the panel words itself accordingly (community.js).
+            'stanceKind' => match (ItemType::fromParam($item->getLetter())) {
+                ItemType::WaterFood => 'potability',
+                ItemType::RoadSurface => 'accuracy',
+                default => 'existence',
+            },
         ];
     }
 
