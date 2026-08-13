@@ -220,13 +220,16 @@ function paintItemConfirm(box, s){
   // what changed belongs in the EDIT FORM, which feeds the one moderation
   // pipeline — a comment box here would have been a second entry point to the
   // moderators. So a negative answer points at the edit button instead.
+  // Two lines, LAST in the panel (owner 2026-08-13): the question, then the
+  // action — sitting directly above the drawer's own "Edit this item" button
+  // it points at.
   const useEdit = (s.mine && CC_CF_NEGATIVE.has(s.mine))
-    ? `<div class="cc-cf-use-edit">${D.cfUseEdit||'Something changed? Use ✎ Edit this item to correct the record.'}</div>`
+    ? `<div class="cc-cf-use-edit"><span>${D.cfUseEditQ||'Something changed?'}</span><span>${D.cfUseEdit||'Use ✎ Edit this item to correct the record.'}</span></div>`
     : '';
   box.querySelector('[data-cf-body]').innerHTML = s.mine
-    ? `<div class="cc-cf-h">${heading} ${total}</div>${useEdit}
+    ? `<div class="cc-cf-h">${heading} ${total}</div>
        <button type="button" class="cc-cf-change" data-cf-change>${D.changeAnswer||'Change my answer'}</button>
-       <div class="cc-cf-more" hidden>${yours}<div class="cc-cf-row">${btns}</div></div>`
+       <div class="cc-cf-more" hidden>${yours}<div class="cc-cf-row">${btns}</div></div>${useEdit}`
     : `<div class="cc-cf-h">${heading} ${total}</div><div class="cc-cf-row">${btns}</div>`;
   box.querySelector('.cc-cf-login').hidden = authed;
 }
