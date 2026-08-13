@@ -173,7 +173,13 @@ final class MapController extends AbstractController
             // needs-info rows too, which the general layer leaves out — see
             // SubmissionQueue::pendingForMap().
             $focus = $request->query->getInt('pending');
-            $params['pending'] = $queue->pendingForMap($scopeProvider->scopeFor($user), $focus > 0 ? $focus : null);
+            $scope = $scopeProvider->scopeFor($user);
+            $params['pending'] = $queue->pendingForMap($scope, $focus > 0 ? $focus : null);
+            // Places approved as gone, CURATORS ONLY: hidden from the public
+            // payload for good, but a curator has to be able to SEE them or a
+            // rebuilt tap could never be reactivated (owner 2026-08-13).
+            // Ghost layer; reactivation is the ordinary edit form.
+            $params['gone'] = $catalogProvider->goneForMap($scope);
         }
 
         $params['scout_review'] = $scoutReview;
@@ -221,6 +227,8 @@ final class MapController extends AbstractController
             'history' => 'item_type.history-culture.label',
             'experience' => 'item_type.quality-rides.label',
             'pending' => 'map.pending_review',
+            // The curator ghost layer of gone places (goneForMap).
+            'gone' => 'map.gone_places',
         ];
 
         // Drawer namespace: JS-side name => map.d_* translation id.

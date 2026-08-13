@@ -1584,6 +1584,7 @@ map:
   street_level: 'Straatbeeld'
   surfaces: 'Ondergrond'
   route_network: 'Routes'
+  gone_places: 'Verwijderde plekken'
   legend_quality: 'Streepjes: kwaliteit van het wegdek (glad → ruw), waar bekend'
   mly_title: 'Mapillary · straatbeeld'
   mly_loading: 'Straatbeeld laden…'

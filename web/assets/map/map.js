@@ -320,6 +320,33 @@ import { initLayerList, initMapCtrl, initRailChrome, initBestOf,
     active.add('pending');
   }
 
+  // Places approved as "Not there anymore" — the curator GHOST layer (owner
+  // 2026-08-13). A gone item is hidden from the public payload for good, and
+  // that answered removal but not RETURN: a rebuilt tap could never be found
+  // to reactivate. Curators see them as faint ⌀ pins; the drawer's ordinary
+  // "Edit this item" (typed per feature via f.letter) is the reactivation —
+  // set the condition back, submit, moderate. No new mechanic.
+  if(window.CC_IS_CURATOR && Array.isArray(window.CC_GONE) && window.CC_GONE.length){
+    const gf = window.CC_GONE.map(g=>({
+      id:g.id, letter:g.letter, name:g.name,
+      headline:`${trVal('Not there anymore')} · ${g.since}`,
+      cur:false, geom:{ll:[g.lat, g.lng]},
+      record:[
+        (()=>{ const lyr=CATALOG.find(l=>l.letter===g.letter)||{};
+          const nm=LAYER_L10N[lyr.key]||lyr.label||g.letter;
+          return {label:D.type||'Type', value:(lyr.icon?lyr.icon+' ':'')+nm}; })(),
+        {label:D.status||'Status', value:trVal('Not there anymore')},
+        {label:D.age||'Age', value:g.since},
+        {label:D.where||'Where', value:g.cc}
+      ],
+      source:'Removed from the map · curator view'
+    }));
+    const goneLayer = { key:'gone', letter:'⌀', label:LAYER_L10N.gone||'Removed places', color:'#8a8d7d', icon:'⌀', kind:'point', exp:false, pendingLayer:true, features:gf };
+    CATALOG.push(goneLayer);
+    layerByKey['gone'] = goneLayer;
+    // OFF by default: it is an archive to consult, not a queue to work.
+  }
+
   // Community loop + moderation submit (community.js): the delegated listeners.
   initCommunity();
 

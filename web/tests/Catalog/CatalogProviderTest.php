@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace App\Tests\Catalog;
 
 use App\Catalog\CatalogProvider;
+use App\Moderation\ModerationScope;
 use App\World\Entity\Country;
 use App\World\Entity\Subdivision;
 use Doctrine\ORM\EntityManagerInterface;
@@ -506,6 +507,34 @@ final class CatalogProviderTest extends KernelTestCase
         // A stored cls (the harvested rows) is never second-guessed.
         $fixture = $this->payload()['A'][0];
         self::assertArrayHasKey('cls', $fixture);
+    }
+
+    /**
+     * A gone place is hidden from riders for good but must stay FINDABLE by
+     * curators, or a rebuilt tap could never be reactivated (owner
+     * 2026-08-13): goneForMap serves the curator ghost layer, scoped like the
+     * pending queue; the public payload keeps excluding the item.
+     */
+    public function testGonePlacesServeTheCuratorGhostLayerOnly(): void
+    {
+        $db = $this->em->getConnection();
+        $db->executeStatement(
+            "INSERT INTO item (letter, name, geom, country_code, state, source, source_ref, attributes, created_at, updated_at)
+             VALUES ('C', 'GoneTap', ST_GeomFromText('POINT(4.45 50.65)', 4326), 'BE',
+                     'unverified', 'osm', 'node/999002',
+                     '{\"t\": \"Drinking water\", \"condition\": \"Not there anymore\"}', now(), now())",
+        );
+        $provider = static::getContainer()->get(CatalogProvider::class);
+
+        $gone = $provider->goneForMap(ModerationScope::global());
+        $mine = array_values(array_filter($gone, static fn (array $g): bool => 'GoneTap' === $g['name']));
+        self::assertCount(1, $mine);
+        self::assertSame('C', $mine[0]['letter']);
+        self::assertEqualsWithDelta(50.65, $mine[0]['lat'], 0.001);
+
+        // Still invisible to riders: the served payload keeps excluding it.
+        $served = array_column($this->payload()['C']['features'], 'properties');
+        self::assertNotContains('GoneTap', array_column($served, 'n'));
     }
 
     /**

@@ -1587,6 +1587,7 @@ map:
   street_level: 'Straßenansicht'
   surfaces: 'Beläge'
   route_network: 'Routen'
+  gone_places: 'Entfernte Orte'
   legend_quality: 'Striche: Belagsqualität (glatt → rau), wo erfasst'
   mly_title: 'Mapillary · Straßenansicht'
   mly_loading: 'Straßenansicht lädt…'

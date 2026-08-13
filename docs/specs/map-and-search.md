@@ -635,6 +635,17 @@ the newest rung of that same ladder.
   (surface-tiles.js) reassembles the way from every loaded tile via
   `querySourceFeatures` and takes the farthest-apart endpoint pair; the
   corridor click uses the same helper.
+- **The curator ghost layer of gone places** (2026-08-13): an item approved
+  as "Not there anymore" is hidden from the public payload for good (its row
+  and the reporter's submission mapping stay; its OSM ref stays claimed), but
+  hidden-everywhere answered removal and not RETURN — a rebuilt tap could
+  never be found to reactivate. `CatalogProvider::goneForMap()` hands
+  curators these as `window.CC_GONE` (same curator-only channel as
+  CC_PENDING, scoped like the pending queue); the map shows them as a
+  "Removed places" moderation-group layer, off by default. Reactivation is
+  the ordinary edit form — the drawer's edit link types itself per feature
+  (`f.letter`) — setting the condition back, through the one moderation
+  pipeline.
 - **The cycle-route network layer** (`web/assets/map/routes-tiles.js`, behind
   the ⤳ Routes control, off by default) draws signed `route=bicycle`/`route=mtb`
   corridors plus knooppunt number badges from their own PMTiles artifact

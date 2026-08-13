@@ -372,6 +372,10 @@ window.CC_VENDOR = {{ {
 <script nonce="{{ csp_nonce() }}">
   window.CC_IS_CURATOR = true;
   window.CC_PENDING = {{ pending|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
+  {# Places approved as "Not there anymore" — the curator ghost layer, so a
+     rebuilt place can be found and reactivated via the ordinary edit form.
+     Riders never receive this: the public payload hides gone items for good. #}
+  window.CC_GONE = {{ gone|default([])|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
   {# The map drawer is now the ONLY place a submission is approved/rejected
      (the queue list carries no decision form anymore) — so the decision CSRF
      token is emitted here directly, not scraped from the /moderate page.

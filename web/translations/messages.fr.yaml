@@ -1584,6 +1584,7 @@ map:
   street_level: 'Vue immersive'
   surfaces: 'Revêtements'
   route_network: 'Itinéraires'
+  gone_places: 'Lieux retirés'
   legend_quality: 'Traits : qualité du revêtement (lisse → dégradé), là où elle est renseignée'
   mly_title: 'Mapillary · vue immersive'
   mly_loading: 'Chargement de la vue immersive…'

@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Catalog;
 
+use App\Moderation\ModerationScope;
 use App\Service\BuildVersion;
 use Doctrine\DBAL\Connection;
 
@@ -84,6 +85,54 @@ final class CatalogProvider
     public function json(): string
     {
         return json_encode($this->payload(), \JSON_THROW_ON_ERROR | \JSON_UNESCAPED_SLASHES | \JSON_UNESCAPED_UNICODE | \JSON_PRESERVE_ZERO_FRACTION);
+    }
+
+    /**
+     * The places approved as "Not there anymore", for CURATOR eyes only.
+     *
+     * A gone item is hidden from the served payload (itemRows) while its row
+     * — and the reporter's submission mapping — stays in the table for good.
+     * That made it invisible EVERYWHERE, which answered removal but not
+     * return: if the tap is rebuilt or the shop reopens, nobody could ever
+     * find the hidden item to reactivate it (owner 2026-08-13). So the map
+     * page hands curators these as a ghost layer, scoped like the pending
+     * queue; reactivation is the ordinary edit form setting the condition
+     * back — no new mechanic.
+     *
+     * @return list<array{id: int, letter: string, name: string, cc: string, lat: float, lng: float, since: string}>
+     */
+    public function goneForMap(ModerationScope $scope, int $limit = 500): array
+    {
+        $where = "i.attributes->>'condition' = 'Not there anymore'";
+        $params = ['limit' => $limit];
+        $types = ['limit' => \Doctrine\DBAL\ParameterType::INTEGER];
+        $frag = $scope->sqlFragment('i');
+        if ('' !== $frag['sql']) {
+            $where .= ' AND '.$frag['sql'];
+            $params += $frag['params'];
+            $types += $frag['types'];
+        }
+
+        /** @var list<array{id: int|string, letter: string, name: string, cc: string, lat: float|string, lng: float|string, since: string}> $rows */
+        $rows = $this->db->fetchAllAssociative(
+            "SELECT i.id, i.letter, i.name, i.country_code AS cc,
+                    ST_Y(ST_PointOnSurface(i.geom)) AS lat, ST_X(ST_PointOnSurface(i.geom)) AS lng,
+                    to_char(i.updated_at, 'YYYY-MM-DD') AS since
+             FROM item i WHERE {$where}
+             ORDER BY i.updated_at DESC LIMIT :limit",
+            $params,
+            $types,
+        );
+
+        return array_map(static fn (array $r): array => [
+            'id' => (int) $r['id'],
+            'letter' => (string) $r['letter'],
+            'name' => (string) $r['name'],
+            'cc' => (string) $r['cc'],
+            'lat' => (float) $r['lat'],
+            'lng' => (float) $r['lng'],
+            'since' => (string) $r['since'],
+        ], $rows);
     }
 
     /**

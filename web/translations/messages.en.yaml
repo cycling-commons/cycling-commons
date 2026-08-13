@@ -1906,6 +1906,7 @@ map:
   street_level: 'Street-level'
   surfaces: 'Surfaces'
   route_network: 'Routes'
+  gone_places: 'Removed places'
   legend_quality: 'Ticks: surface quality (smooth → rough), where recorded'
   mly_title: 'Mapillary · street-level'
   mly_loading: 'Loading street-level…'

@@ -676,11 +676,20 @@
   .cc-h-meta{flex:1 0 100%;font-family:var(--mono);font-size:.6rem;color:rgba(239,230,212,.45)}
   .cc-d-act{display:inline-block;margin-top:1.2rem;margin-right:.5rem;font-family:var(--mono);font-size:.64rem;letter-spacing:.08em;
     text-transform:uppercase;color:var(--ink);background:var(--trail);padding:.5rem .8rem;border-radius:5px}
+  /* The approve-and-confirm tick: quiet, spaced, never competing with the
+     decision buttons below it (owner 2026-08-13: smaller text, some space). */
+  .cc-mod-also{display:flex;gap:.45rem;align-items:flex-start;margin:.65rem 0 .55rem;
+    font-size:.78rem;font-weight:400;line-height:1.35;color:rgba(239,230,212,.85);cursor:pointer}
+  .cc-mod-also input{margin-top:.15rem;flex:none}
   /* The two one-tap answers on an OSM place. They are <button>s, not links, so
      they need the resets a link never did — and they sit in their own row, so
      the base rule's stacking margins would double up here. */
   .cc-osmcf{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:1.2rem}
-  .cc-osmcf .cc-d-act{margin:0;border:1px solid transparent;cursor:pointer;font-family:var(--mono)}
+  /* Sans, sentence case, a step bigger — mono small-caps at .64rem was hard to
+     read on these (owner 2026-08-13), and the panel's Yes/No buttons already
+     set the readable style, so the one-tap row matches it. */
+  .cc-osmcf .cc-d-act{margin:0;border:1px solid transparent;cursor:pointer;
+    font-family:var(--sans);font-weight:700;font-size:.8rem;letter-spacing:0;text-transform:none}
   .cc-osmcf .cc-d-act[disabled]{opacity:.5;cursor:default}
   /* The receipt after a tap. Mono green on the drawer's dark green is a
      low-contrast pair, so it does not also get to be tiny (owner 2026-08-12):

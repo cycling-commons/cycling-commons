@@ -1919,6 +1919,7 @@ map:
   street_level: 'A pie de calle'
   surfaces: 'Firmes'
   route_network: 'Rutas'
+  gone_places: 'Lugares retirados'
   legend_quality: 'Marcas: calidad del firme (liso → irregular), donde está registrada'
   mly_title: 'Mapillary · a pie de calle'
   mly_loading: 'Cargando la vista a pie de calle…'

@@ -438,8 +438,10 @@ function buildRecord(layer, f){
       // openDrawer's GET /routes/{id}/community (P3-D3) — riders never edit.
       edit = routeCommunityPanel(f.id, f.state);
     } else {
+      // f.letter wins over the layer's: a mixed-letter layer (the curator
+      // ghost layer of gone places) must open each item's OWN form.
       const editQ = `item=${f.id}&name=${encodeURIComponent(f.name)}`
-        + `&type=${layer.letter}`
+        + `&type=${f.letter || layer.letter}`
         + (ell ? `&lat=${ell[0]}&lng=${ell[1]}` : '');
       edit = `<a class="cc-d-act edit" href="/improve?${editQ}">✎ ${D.editItem||'Edit this item'}</a>`;
       /* Direct "this pin is wrong" path — only when we know where it is, and
@@ -627,9 +629,14 @@ function buildRecord(layer, f){
        existing weighted-by-who-pressed-it rule, reached from the decision
        instead of a second visit to the drawer. Not for water (its stances are
        potability judgements, not vouchings) and not for K (voted, never
-       confirmed). Unticked by default: knowing the place is the claim, and it
-       must be made actively. */
-    const alsoConfirm = ('C' !== s.letter && 'K' !== s.letter)
+       confirmed) — and not when the proposed change ASSERTS ABSENCE (a
+       closed/gone condition): vouching "I know this place, counts as
+       verified" while approving its disappearance contradicts itself (owner
+       2026-08-13). Unticked by default: knowing the place is the claim, and
+       it must be made actively. */
+    const NEGATIVE_NOW = ['Out of order', 'Closed', 'Not there anymore', 'Gone — clear now', 'Reduced'];
+    const assertsAbsence = chList.some(c => NEGATIVE_NOW.includes(c.now));
+    const alsoConfirm = ('C' !== s.letter && 'K' !== s.letter && !assertsAbsence)
       ? `<label class="cc-mod-also"><input type="checkbox" class="cc-mod-confirm-cb"> ${D.alsoConfirm||'Also confirm — I know this place (counts as verified)'}</label>`
       : '';
     moderate = `<div class="cc-mod" data-id="${escPend(s.id)}">
