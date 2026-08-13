@@ -95,7 +95,6 @@ class ItemConfirmation
         return $this;
     }
 
-
     public function getSource(): ConfirmationSource
     {
         return $this->source;

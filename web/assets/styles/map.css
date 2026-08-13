@@ -318,9 +318,13 @@
   /* Waiting on the rider: the same card, but never mistakable for one that
      has not been looked at yet — it only appears via the desk's own link. */
   .cc-mod-badge.waiting{background:var(--ochre);color:var(--ink)}
-  .cc-mod-asked,.cc-mod-replied{font-size:.82rem;line-height:1.5;padding:.5rem .7rem;border-radius:0 5px 5px 0;margin:.45rem 0}
+  .cc-mod-asked,.cc-mod-replied,.cc-mod-prior{font-size:.82rem;line-height:1.5;padding:.5rem .7rem;border-radius:0 5px 5px 0;margin:.45rem 0}
   .cc-mod-asked{background:rgba(20,22,14,.05);border-left:2px solid var(--ochre)}
   .cc-mod-replied{background:rgba(20,22,14,.05);border-left:2px solid var(--spruce)}
+  /* A decision already on record for this place — clay, and directly under the
+     badge, because it changes what this decision IS rather than adding context
+     to it (SubmissionQueue::priorRejections). */
+  .cc-mod-prior{background:rgba(184,89,58,.07);border-left:2px solid var(--clay)}
   .cc-mod-asked-h{font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;color:#595c4d;display:block}
   .cc-mod-photos{display:flex;flex-wrap:wrap;gap:.5rem;margin:.5rem 0}
   .cc-mod-photo{display:flex;flex-direction:column;gap:.2rem;width:120px;font-size:.68rem}

@@ -2131,6 +2131,7 @@ map:
   d_waiting_on_rider: 'A la espera del ciclista'
   d_you_asked: 'Preguntaste'
   d_rider_replied: 'El ciclista respondió'
+  d_prior_rejected: 'Rechazado anteriormente'
   d_needs_info_note: 'Pregúntale al ciclista lo que necesitas saber — un «faltan datos» sin pregunta no le dice nada.'
   d_rode_this: 'La he rodado'
   d_bike_type_ph: 'Tipo de bici…'
@@ -2365,6 +2366,7 @@ moderate:
     trashed: 'En la papelera'
   answered: 'Respondido'
   rider_reply: 'El ciclista respondió'
+  prior_rejection: 'Rechazado anteriormente'
 moderate_routes:
   title: 'Escritorio de moderación de rutas'
   kicker: 'Cola de rutas'

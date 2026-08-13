@@ -43,7 +43,7 @@ final class SubmissionQueue
     ) {
     }
 
-    /** @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,when:string,body:string,was:string,now:string,status:string,asked:?string,riderReply:?string,photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>}> */
+    /** @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,when:string,body:string,was:string,now:string,status:string,asked:?string,riderReply:?string,priorRejection:?array{when:string,note:?string},photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>}> */
     public function filtered(ModerationScope $scope, ?string $country, ?string $region, ?string $type, ?string $q = null, int $page = 1, int $perPage = self::PER_PAGE): array
     {
         [$where, $params] = $this->openFilters($country, $region, $type, $q);
@@ -122,7 +122,7 @@ final class SubmissionQueue
      * — the submission looked lost. The scope guard still applies, so a
      * curator cannot reach a submission outside their areas by guessing ids.
      *
-     * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,when:string,body:string,was:string,now:string,status:string,asked:?string,riderReply:?string,photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>}>
+     * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,when:string,body:string,was:string,now:string,status:string,asked:?string,riderReply:?string,priorRejection:?array{when:string,note:?string},photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>}>
      */
     public function pendingForMap(ModerationScope $scope, ?int $focusId = null): array
     {
@@ -494,7 +494,7 @@ final class SubmissionQueue
      *                                     via $params, never interpolated
      * @param array<string, mixed> $params bound query parameters
      *
-     * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,when:string,body:string,was:string,now:string,status:string,asked:?string,riderReply:?string,photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>}>
+     * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,when:string,body:string,was:string,now:string,status:string,asked:?string,riderReply:?string,priorRejection:?array{when:string,note:?string},photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>}>
      *
      * The returned row is a deliberate shared view-model: the SAME shape is
      * consumed by both moderate/index.html.twig AND map.js (as JSON). The
@@ -535,8 +535,12 @@ final class SubmissionQueue
             static fn (array $r): int => (int) $r['id'],
             $rows,
         ));
+        $rejectedByItem = $this->priorRejections(array_values(array_unique(array_filter(array_map(
+            static fn (array $r): ?int => null !== $r['item_id'] ? (int) $r['item_id'] : null,
+            $rows,
+        )))));
 
-        return array_map(function (array $r) use ($now, $photosBySubmission): array {
+        return array_map(function (array $r) use ($now, $photosBySubmission, $rejectedByItem): array {
             [$was, $new] = $this->diffStrings((string) $r['changes']);
 
             return [
@@ -561,6 +565,14 @@ final class SubmissionQueue
                 'status' => (string) $r['status'],
                 'asked' => null !== $r['decision_note'] && '' !== $r['decision_note'] ? (string) $r['decision_note'] : null,
                 'riderReply' => null !== $r['rider_reply'] ? (string) $r['rider_reply'] : null,
+                /* The decision this curator may be about to reverse. A rejected
+                   materialization is REVIVED rather than twinned, so the old
+                   report and its rejection hang off the same item id — which is
+                   what makes overturning possible, and is useless if the row
+                   only ever shows the new report (found 2026-08-12 while fixing
+                   the revive). Null for the common case: an item nobody has
+                   turned down before. */
+                'priorRejection' => null !== $r['item_id'] ? ($rejectedByItem[(int) $r['item_id']] ?? null) : null,
                 'photos' => $photosBySubmission[(int) $r['id']] ?? [],
                 /* The proposed SHAPE, for the drawer's before/after switch.
                    Coordinates in a text diff are not reviewable: a curator
@@ -669,6 +681,57 @@ final class SubmissionQueue
         }
 
         return $bySubmission;
+    }
+
+    /**
+     * The most recent REJECTION already on record for each of these items.
+     *
+     * A rejection is a decision about one report, not a permanent silence on a
+     * place, so a rejected row is revived when somebody proposes it again
+     * (CatalogContributionService). That is the right behaviour and it creates
+     * this problem: the queue row carries the new report and says nothing about
+     * the verdict it is asking a curator to overturn, who then has to go
+     * looking for a decision they do not know exists.
+     *
+     * Newest rejection per item, and only rejections — an approval is the
+     * item's ordinary history and is already on the card as the change list.
+     * `decided_at` can be null on rows written before it was recorded, so the
+     * id breaks the tie rather than the row dropping out of the ordering.
+     *
+     * @param list<int> $itemIds
+     *
+     * @return array<int, array{when:string, note:?string}>
+     */
+    private function priorRejections(array $itemIds): array
+    {
+        if ([] === $itemIds) {
+            return [];
+        }
+
+        $rows = $this->db->fetchAllAssociative(
+            'SELECT DISTINCT ON (s.item_id) s.item_id, s.decided_at, s.decision_note
+             FROM submission s
+             WHERE s.item_id IN (:ids) AND s.status = \'rejected\'
+             ORDER BY s.item_id, s.decided_at DESC NULLS LAST, s.id DESC',
+            ['ids' => $itemIds],
+            ['ids' => ArrayParameterType::INTEGER],
+        );
+
+        $byItem = [];
+        foreach ($rows as $row) {
+            $note = trim((string) ($row['decision_note'] ?? ''));
+            $byItem[(int) $row['item_id']] = [
+                // ISO, formatted by the reader's own date preference at render
+                // time (`cc_date` on the desk, CC_DATE_FORMAT in the drawer) —
+                // never pre-formatted here.
+                'when' => null !== $row['decided_at']
+                    ? (new \DateTimeImmutable((string) $row['decided_at']))->format(\DateTimeInterface::ATOM)
+                    : '',
+                'note' => '' !== $note ? $note : null,
+            ];
+        }
+
+        return $byItem;
     }
 
     /**

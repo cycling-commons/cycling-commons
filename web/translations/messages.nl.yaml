@@ -1791,6 +1791,7 @@ map:
   d_waiting_on_rider: 'Wacht op de fietser'
   d_you_asked: 'Jij vroeg'
   d_rider_replied: 'De fietser antwoordde'
+  d_prior_rejected: 'Eerder afgewezen'
   d_needs_info_note: 'Vraag de fietser wat je wilt weten — een infoverzoek zonder vraag zegt hen niets.'
   d_rode_this: 'Ik heb dit gereden'
   d_bike_type_ph: 'Fietstype…'
@@ -2329,6 +2330,7 @@ moderate:
     trashed: 'Verwijderd'
   answered: 'Beantwoord'
   rider_reply: 'De fietser heeft geantwoord'
+  prior_rejection: 'Eerder afgewezen'
 moderate_routes:
   title: 'Routes moderatiewachtrij'
   kicker: 'Routeswachtrij'

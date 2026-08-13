@@ -2118,6 +2118,7 @@ map:
   d_waiting_on_rider: 'Waiting on the rider'
   d_you_asked: 'You asked'
   d_rider_replied: 'Rider replied'
+  d_prior_rejected: 'Previously rejected'
   d_needs_info_note: 'Ask the rider what you need to know — a needs-info with no question tells them nothing.'
   d_rode_this: 'I rode this'
   d_bike_type_ph: 'Bike type…'
@@ -2352,6 +2353,7 @@ moderate:
     trashed: 'Trashed'
   answered: 'Answered'
   rider_reply: 'Rider replied'
+  prior_rejection: 'Previously rejected'
 moderate_routes:
   title: 'Routes moderation desk'
   kicker: 'Routes queue'

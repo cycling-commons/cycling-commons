@@ -596,6 +596,17 @@ function buildRecord(layer, f){
       ? `<div class="cc-mod-asked"><span class="cc-mod-asked-h">${D.youAsked||'You asked'}</span> ${escPend(s.asked)}</div>` : '';
     const replied = s.riderReply
       ? `<div class="cc-mod-replied"><span class="cc-mod-asked-h">${D.riderReplied||'Rider replied'}</span> ${escPend(s.riderReply)}</div>` : '';
+    /* A verdict already on record for this place. Decisions are made here, on
+       the map — so this is where a curator has to meet the rejection they are
+       about to overturn. A rejected place is REVIVED rather than twinned when
+       somebody proposes it again, which is what makes overturning possible and
+       is also what hides it: the card carries the new report and nothing else
+       (found 2026-08-12 while fixing the revive). The date goes through
+       window.ccDate so it reads the way every other date on the page does. */
+    const prior = s.priorRejection
+      ? `<div class="cc-mod-prior"><span class="cc-mod-asked-h">${D.priorRejected||'Previously rejected'}</span>${
+          s.priorRejection.when && window.ccDate ? ' · ' + escPend(window.ccDate(s.priorRejection.when)) : ''}${
+          s.priorRejection.note ? ' · ' + escPend(s.priorRejection.note) : ''}</div>` : '';
     /* WHAT is being changed, shown against WHAT the item already says.
        A curator who does not personally know the Côte de la Redoute was given
        a title, a pseudonym, an age and a region — and asked to approve. The
@@ -646,7 +657,7 @@ function buildRecord(layer, f){
       ? `<label class="cc-mod-also"><input type="checkbox" class="cc-mod-confirm-cb"> ${D.alsoConfirm||'Also confirm — I know this place (counts as verified)'}</label>`
       : '';
     moderate = `<div class="cc-mod" data-id="${escPend(s.id)}">
-      ${badge}${body}${diff}${shapeSwitch}${context}${asked}${replied}${modPhotos}
+      ${badge}${prior}${body}${diff}${shapeSwitch}${context}${asked}${replied}${modPhotos}
       <textarea class="cc-mod-note" placeholder="${D.modNotePh||'Optional note — a reason, or context…'}"></textarea>
       ${alsoConfirm}
       <div class="cc-mod-acts">

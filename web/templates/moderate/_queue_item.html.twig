@@ -177,6 +177,19 @@
     </div>
   </div>
 
+  {# The decision this curator may be about to reverse. A rejected place is
+     revived rather than twinned when somebody proposes it again, so the old
+     report and its rejection hang off the same item — and until this line
+     existed the row showed only the new report, leaving the curator to
+     overturn a verdict they did not know was there (found 2026-08-12 while
+     fixing the revive). The note is the previous curator's own words. #}
+  {% if item.priorRejection %}
+    <p class="q-prior-reject">
+      <strong>{{ 'moderate.prior_rejection'|trans }}</strong>
+      {%- if item.priorRejection.when %} &middot; {{ item.priorRejection.when|cc_date }}{% endif -%}
+      {%- if item.priorRejection.note %} &middot; {{ item.priorRejection.note }}{% endif -%}
+    </p>
+  {% endif %}
   {% if item.body %}
     <p class="q-body">{{ item.body }}</p>
   {% endif %}

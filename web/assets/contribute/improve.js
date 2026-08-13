@@ -948,6 +948,15 @@
         });
       }
 
+      // A blank stretch asks for its START, not for "the location". The Twig
+      // template renders `readout_initial` — the POINT wording — and in segment
+      // mode nothing overwrote it until the first tap, so the rider was told to
+      // set a location on a step that wants two. Both prefill paths set their
+      // own readout on `load`, so only the blank case is answered here.
+      if (LOCATE === 'segment' && !hasSegment && !itemSeg && ro) {
+        ro.textContent = t('readout_segment_start');
+      }
+
       // Pre-place a known stretch, then frame it. placeAt() handles the marker,
       // the drag handler, the readout and the drawn line, so the prefill is the
       // same code path a tap takes — no second way for a segment to exist.

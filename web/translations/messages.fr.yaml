@@ -1791,6 +1791,7 @@ map:
   d_waiting_on_rider: 'En attente du cycliste'
   d_you_asked: 'Vous avez demandé'
   d_rider_replied: 'Le cycliste a répondu'
+  d_prior_rejected: 'Précédemment rejeté'
   d_needs_info_note: 'Demandez au cycliste ce qu''il vous manque — une demande d''info sans question ne lui apprend rien.'
   d_rode_this: 'Je l''ai roulé'
   d_bike_type_ph: 'Type de vélo…'
@@ -2329,6 +2330,7 @@ moderate:
     trashed: 'Supprimé'
   answered: 'Répondu'
   rider_reply: 'Le cycliste a répondu'
+  prior_rejection: 'Précédemment rejeté'
 moderate_routes:
   title: 'File de modération des itinéraires'
   kicker: 'File des itinéraires'

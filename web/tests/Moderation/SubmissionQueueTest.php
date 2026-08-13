@@ -154,6 +154,57 @@ final class SubmissionQueueTest extends KernelTestCase
         self::assertSame(4242, $bound['itemId']);
     }
 
+    /**
+     * A place a curator already turned down, proposed again. The rejected row
+     * is REVIVED rather than twinned, so both reports hang off one item id —
+     * and the queue row has to say so, or the curator overturns a decision
+     * without knowing there was one (found 2026-08-12 while fixing the revive).
+     */
+    public function testPriorRejectionTravelsWithTheRow(): void
+    {
+        $old = $this->seed('new', 'BE', SubmissionStatus::Rejected, 'Turned down once');
+        $old->setItemId(9001)
+            ->setDecisionNote('the tap is a garden hose')
+            ->setDecidedAt(new \DateTimeImmutable('2026-06-01 09:00'));
+        $fresh = $this->seed('new', 'BE', SubmissionStatus::Pending, 'Proposed again');
+        $fresh->setItemId(9001);
+        // An unrelated pending row on another item must stay clean: the lookup
+        // is keyed by item, not by "some rejection exists somewhere".
+        $this->seed('new', 'BE', SubmissionStatus::Pending, 'Never rejected');
+        $this->em->flush();
+
+        $rows = [];
+        foreach ($this->queue->filtered(ModerationScope::global(), null, null, null) as $row) {
+            $rows[$row['title']] = $row;
+        }
+
+        self::assertArrayHasKey('priorRejection', $rows['Proposed again']);
+        self::assertSame('the tap is a garden hose', $rows['Proposed again']['priorRejection']['note']);
+        self::assertStringStartsWith('2026-06-01', $rows['Proposed again']['priorRejection']['when']);
+        self::assertNull($rows['Never rejected']['priorRejection']);
+        // And the decision surface reads the same rows the desk does.
+        $onMap = array_column($this->queue->pendingForMap(ModerationScope::global()), 'priorRejection', 'title');
+        self::assertNotNull($onMap['Proposed again']);
+    }
+
+    /** Only the newest rejection: an item turned down twice shows the last word. */
+    public function testPriorRejectionTakesTheMostRecentDecision(): void
+    {
+        foreach ([['2026-03-01 09:00', 'first no'], ['2026-05-01 09:00', 'second no']] as [$when, $note]) {
+            $this->seed('new', 'BE', SubmissionStatus::Rejected, 'Old '.$note)
+                ->setItemId(9002)->setDecisionNote($note)->setDecidedAt(new \DateTimeImmutable($when));
+        }
+        $this->seed('new', 'BE', SubmissionStatus::Pending, 'Third try')->setItemId(9002);
+        $this->em->flush();
+
+        $row = array_values(array_filter(
+            $this->queue->filtered(ModerationScope::global(), null, null, null),
+            static fn (array $r): bool => 'Third try' === $r['title'],
+        ))[0];
+
+        self::assertSame('second no', $row['priorRejection']['note']);
+    }
+
     public function testCountriesAreSortedDistinct(): void
     {
         $this->seed('new', 'NL');

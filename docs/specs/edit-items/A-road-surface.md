@@ -113,6 +113,16 @@ The wizard's readout, after a prefill, says the stretch is prefilled and that
 **either pin can be dragged** to cover more or less of the road — the hint the
 one-way-per-click behaviour taught us riders need.
 
+**And with no prefill it asks for the START (fixed 2026-08-14).** The Locate
+step's markup is rendered by Twig with `improve.step1.readout_initial` — "Tap
+the map to set the location", the *point* wording — and in segment mode
+nothing overwrote it until the first tap, so a rider adding a stretch from
+scratch was told to set one location on a step that wants two.
+`readout_segment_start` / `readout_segment_end` already existed in all five
+locales and were only ever reached from `syncLoc()`; the blank segment case
+now sets the first of them at init. Both prefill paths still write their own
+readout on `load`, so nothing about a prefilled stretch changed.
+
 ## The wizard follows the road, not the router (built 2026-08-14)
 
 The wizard used to snap the two pins with one router call, and the router

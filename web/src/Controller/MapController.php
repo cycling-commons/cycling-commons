@@ -23,9 +23,9 @@ use App\Moderation\ModerationScopeProvider;
 use App\Moderation\SubmissionQueue;
 use App\Scout\ScoutTag;
 use App\Security\TwoFactorPolicy;
+use App\Service\BaseAreaResolver;
 use App\Settings\SettingsProviderInterface;
 use App\Settings\SettingsRegistry;
-use App\Service\BaseAreaResolver;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -329,6 +329,9 @@ final class MapController extends AbstractController
             'decisionErr' => 'd_decision_err', 'decisionRecorded' => 'd_decision_recorded',
             'decisionAsked' => 'd_decision_asked', 'needsInfoNote' => 'd_needs_info_note',
             'waitingOnRider' => 'd_waiting_on_rider', 'youAsked' => 'd_you_asked', 'riderReplied' => 'd_rider_replied',
+            // The verdict a curator may be about to overturn, on the card where
+            // the decision is actually made (SubmissionQueue::priorRejections).
+            'priorRejected' => 'd_prior_rejected',
             // Pending rider photos in the moderation panel
             // (docs/specs/photo-uploads.md §5). The distance string carries a
             // literal {m} the drawer substitutes — the Twig desk list uses the

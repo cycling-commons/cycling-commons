@@ -568,10 +568,30 @@ are **presentational**; the authorization boundary is moderator-area scoping
 shape returned by `SubmissionQueue` is a deliberate shared view-model consumed
 by both `moderate/index.html.twig` and `map.js` (as `CC_PENDING` JSON):
 `{id, itemId, type, letter, country, region, title, lat, lng, who, when,
-body, was, now, riderReply}` — `who` is the stable pseudonym
+body, was, now, riderReply, priorRejection}` — `who` is the stable pseudonym
 `RiderPseudonym::for()` (`rider#<hash4>`), `was`/`now` are the server-joined
 diff strings. Contributor identity is never exposed to curators beyond the
 pseudonym.
+
+**`priorRejection` — the decision this curator may be about to reverse
+(2026-08-14).** A rejected place is **revived, not twinned**, when somebody
+proposes it again (`CatalogContributionService::submitDraft()`, 2026-08-12 —
+the unique key spans `(source, source_ref, letter)` and counts rejected rows,
+so twinning was a constraint error in the rider's face), and the earlier
+report and its rejection therefore hang off the
+same item id. That is exactly what makes overturning possible, and it is also
+what hid it: the row carried the new report and nothing else, leaving the
+curator to reverse a verdict they did not know existed. `SubmissionQueue`
+now reads the **newest** `rejected` submission per item id in one query
+(`priorRejections()`, `DISTINCT ON (item_id)`, `decided_at DESC NULLS LAST,
+id DESC`) and travels `{when, note}` — an ISO timestamp formatted at render
+time by the reader's own date preference (`cc_date` on the desk,
+`window.ccDate` in the drawer), and the previous curator's own words. `null`
+for the ordinary case. It renders on **both** surfaces, because the desk is
+where a curator triages and the drawer is where the decision is actually
+made (§5.1): `.q-prior-reject` on the card and `.cc-mod-prior` directly under
+the pending badge. It stays visible in list density, unlike body/diff/photos
+— it changes what the decision *is*, not the context it is made in.
 
 **Queue item layout (2026-08-02, owner).** The desk is a queue worked dozens
 at a time, so the row is sized for that:
