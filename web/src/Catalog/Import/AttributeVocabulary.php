@@ -29,7 +29,10 @@ final class AttributeVocabulary
         // 'segment': the add-wizard's two drawn endpoints
         // ({a:[lng,lat], b:[lng,lat]}, CatalogContributionService::submitAdd) —
         // a NEW road-surface stretch has no other geometry to fall back on.
-        'A' => ['cls', 'photoFile', 'photoCredit', 'photoUser', 'photoLicense', 'segment'],
+        // 'waysSpanned': the OSM way refs a run-prefilled stretch covers
+        // (run-chaining, owner 2026-08-13) — nobody types it, but it must
+        // survive so curatedRefs() can retire every covered red dash.
+        'A' => ['cls', 'photoFile', 'photoCredit', 'photoUser', 'photoLicense', 'segment', 'waysSpanned'],
         // 'attribution' (not 'source'): the climbs export preserves the citation
         // as `attribution` since `source` is reserved for provenance
         // (App\Catalog\ItemSource).

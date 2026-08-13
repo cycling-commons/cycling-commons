@@ -218,6 +218,17 @@ import { initLayerList, initMapCtrl, initRailChrome, initBestOf,
       // segregated / seasonalClosure. Per-row OSM provenance now lives only
       // on the Source line.
       const rec = schemaRows('A', s, s.id);
+      // Length leads the record (owner 2026-08-13: the drawer showed no
+      // length at all): great-circle over the drawn path, in the rider's
+      // unit. Client-side, because the path is already here.
+      const _km = (s.path||[]).reduce((acc,p,i,a)=>{
+        if(!i) return 0;
+        const [la1,lo1]=a[i-1],[la2,lo2]=p, r=Math.PI/180;
+        const dp=(la2-la1)*r, dl=(lo2-lo1)*r;
+        const h=Math.sin(dp/2)**2+Math.cos(la1*r)*Math.cos(la2*r)*Math.sin(dl/2)**2;
+        return acc+6371*2*Math.asin(Math.sqrt(h));
+      },0);
+      if(_km>0.01) rec.unshift({label:D.length||'Length', value:uKm(_km)});
       return {
         id:s.id, rid:s.rid, name:s.name, headline:`${trVal(s.surface)} · ${trVal(s.smoothness)}`, cur:(s.cls!=='paved'), edit:'road-surface',
         geom:{path:s.path}, surfaceClass:s.cls, width:s.width,

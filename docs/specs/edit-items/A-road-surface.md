@@ -72,6 +72,47 @@ line draws on top of the tile line; the tile stays underneath as OSM's answer.
 ends, so `sa`/`sb` place both pins on it, draggable — the rider adjusts rather
 than re-taps from a blank map. A wrong-but-close start beats an empty one.
 
+## Run-chaining: one click prefills the whole unrecorded run (built 2026-08-13)
+
+OSM splits a road wherever any tag changes, so a 16 km dijk is dozens of ways —
+one of them 30 m. A rider who clicks a red to-do dash used to get exactly that
+one way prefilled, and a rider who does not know the pins can be dragged gives
+up right there (owner-reported 2026-08-13). Now a **to-do click prefills the
+whole unrecorded run**: every same-named neighbour way, chained end to end
+(`unrecordedRunEnds` in `web/assets/map/surface-tiles.js`).
+
+- **The name is the join key** — no name, no chain (single-way fallback).
+- **Endpoint proximity is the chain**: BFS from the clicked way over each
+  candidate way's outermost endpoint pair, ~35 m tolerance (tile quantization
+  means junction nodes rarely share exact coordinates).
+- **The road-type group is the honest boundary.** `highway` values map to
+  groups (main / local / residential / track / path / cycleway); the chain only
+  crosses ways in the *same* group. Where a dijk road continues as a same-named
+  cycleway the chain **breaks on purpose** (owner decision 2026-08-13): that
+  part is car-free and deserves its own item with its own answers. tertiary and
+  unclassified are both "a local road" and do chain.
+- **Only unrecorded ways chain** — candidates come from the to-do source, so
+  the run stops where somebody has already answered. A classified (skin) click
+  keeps its own way (`fullWayEnds`), unchanged.
+
+**Every covered red dash retires, not just the clicked one.** The run's way
+refs ride the wizard URL (`&srefs=way/…,way/…`, capped at 120), the controller
+re-validates them (pattern `way/\d+`, dedupe, cap — malformed entries are
+*dropped*, never fatal: they only retire dashes), and the materialized item
+stores them as `attributes.waysSpanned` (allow-listed in `AttributeVocabulary`
+— nobody types it, but it must survive). `CatalogProvider::curatedRefs()`
+unions these spanned refs into the catalog's `refs` list, so the to-do dash of
+every way the item covers stops contradicting the answer. Pinned by
+`CatalogContributionServiceTest` (storage + validation + refs union).
+
+**Seeing what you selected.** Opening an A drawer highlights the segment's own
+path on the map (orange halo under the class line — `showSurfaceSelection` in
+`web/assets/map/render.js`; cleared on drawer close), and the drawer's record
+leads with a **Length** row (great-circle over the drawn path, rider's unit).
+The wizard's readout, after a prefill, says the stretch is prefilled and that
+**either pin can be dragged** to cover more or less of the road — the hint the
+one-way-per-click behaviour taught us riders need.
+
 ## Names, road type, and what we are allowed to assume (2026-08-12)
 
 **The tile carries the way's `name`.** The basemap had been printing "Rue du

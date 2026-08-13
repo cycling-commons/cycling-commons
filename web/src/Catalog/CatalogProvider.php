@@ -260,12 +260,20 @@ final class CatalogProvider
      */
     private function curatedRefs(): array
     {
-        $sql = "SELECT DISTINCT i.source_ref FROM item i WHERE i.source = 'osm' AND i.state IN ".ItemState::servedSqlTuple();
-        $sql .= ' AND NOT (i.letter IN '.CoverageRetirement::lettersSqlTuple()
+        $refs = "SELECT DISTINCT i.source_ref AS ref FROM item i WHERE i.source = 'osm' AND i.state IN ".ItemState::servedSqlTuple()
+            .' AND NOT (i.letter IN '.CoverageRetirement::lettersSqlTuple()
             .' AND '.CoverageRetirement::untouchedOsmSql('i').')';
+        // Plus every way ref a served segment item SPANS (attributes
+        // waysSpanned, owner 2026-08-13): a run-prefilled item covers many
+        // OSM ways under one source_ref, and each covered way's tile line
+        // must retire — a red dash under a green answer contradicts it.
+        // jsonb_exists(), not the `?` operator: DBAL reads a bare `?` as a
+        // positional placeholder (the known DBAL trap).
+        $spanned = "SELECT DISTINCT jsonb_array_elements_text(i.attributes->'waysSpanned') AS ref"
+            ." FROM item i WHERE jsonb_exists(i.attributes, 'waysSpanned') AND i.state IN ".ItemState::servedSqlTuple();
 
         /* @var list<string> */
-        return $this->db->fetchFirstColumn($sql.' ORDER BY i.source_ref');
+        return $this->db->fetchFirstColumn('SELECT ref FROM ('.$refs.' UNION '.$spanned.') AS u ORDER BY ref');
     }
 
     /**

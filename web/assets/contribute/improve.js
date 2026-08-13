@@ -717,6 +717,11 @@
           syncLoc();
           drawSeg();
           snapSeg();
+          // Say the one thing riders do not discover on their own (owner
+          // 2026-08-13): the pins can be dragged to cover more or less of the
+          // road — the line re-follows the road on every drag.
+          var _ro = document.getElementById('wz-readout');
+          if (_ro) _ro.textContent = t('readout_segment_prefilled');
           var b = new maplibregl.LngLatBounds(segA, segA);
           b.extend(segB);
           wmap.fitBounds(b, { padding: 60, maxZoom: 16, duration: 0 });

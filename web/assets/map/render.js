@@ -243,6 +243,30 @@ export function liftInfoLayersAboveRoutes(){
   dynamicIds.filter(id=>id.startsWith('route-climbs-')).forEach(liftGroup);
   ['mly-cov','mly-img'].forEach(id=>{ if(map.getLayer(id)) map.moveLayer(id); });
 }
+/* The selected SURFACE segment, made visible as a shape (owner 2026-08-13:
+   "in the map you can't see how long the surface item is you selected").
+   One dedicated geojson source updated on drawer-open with the selected
+   segment's own path, drawn as a bright halo under the class line; cleared by
+   closeDrawer()/the next open. A paint-property dance like highlightRoute's
+   is impossible here — every segment shares one consolidated source. */
+export function showSurfaceSelection(path){
+  const data={type:'Feature',properties:{},geometry:{type:'LineString',coordinates:(path||[]).map(p=>[p[1],p[0]])}};
+  const src=map.getSource('surface-sel-src');
+  if(src){ src.setData(data); }
+  else {
+    map.addSource('surface-sel-src',{type:'geojson',data});
+    map.addLayer({id:'surface-sel',type:'line',source:'surface-sel-src',
+      layout:{'line-cap':'round','line-join':'round'},
+      paint:{'line-color':'#FF5A1F','line-width':10,'line-opacity':.45,'line-blur':2}});
+  }
+  // Under the class lines, so the segment's own colour stays readable inside
+  // the halo.
+  if(map.getLayer('surface-sel') && map.getLayer('surface-cls-paved')) map.moveLayer('surface-sel','surface-case');
+  map.setLayoutProperty('surface-sel','visibility','visible');
+}
+export function clearSurfaceSelection(){
+  if(map.getLayer('surface-sel')) map.setLayoutProperty('surface-sel','visibility','none');
+}
 export function highlightRoute(selId){
   selectedRouteLayerId=selId;
   routeLineIds().forEach(id=>{

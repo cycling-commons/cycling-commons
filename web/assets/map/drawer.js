@@ -25,7 +25,7 @@ import { CATALOG, CITIES } from './catalog.js';
 import { pinEl } from './icons.js';
 import { sheet } from './sheet.js';
 import { openLightbox } from './lightbox.js';
-import { highlightRoute, clearRouteHighlight } from './render.js';
+import { highlightRoute, clearRouteHighlight, showSurfaceSelection, clearSurfaceSelection } from './render.js';
 import { clearSelectedCoverageIcon, invalidateCoverageDrawer } from './coverage.js';
 import { setSurfaceTiles, surfaceTilesVisible, surfaceTilesConfigured } from './surface-tiles.js';
 import { isPicking, cancelPicking } from './picking.js';
@@ -468,6 +468,12 @@ function buildRecord(layer, f){
     if(f.segmentEnds){
       const p2 = c => `${c[0].toFixed(6)},${c[1].toFixed(6)}`;
       refQ += `&sa=${encodeURIComponent(p2(f.segmentEnds.a))}&sb=${encodeURIComponent(p2(f.segmentEnds.b))}`;
+    }
+    // The run's spanned way refs ride the URL (capped): the materialized item
+    // stores them so every covered way's red dash retires, not just the
+    // clicked one's.
+    if(Array.isArray(f.spannedRefs) && f.spannedRefs.length > 1){
+      refQ += `&srefs=${encodeURIComponent(f.spannedRefs.slice(0, 120).join(','))}`;
     }
     // What OSM says about this way is a CURRENT DETAIL, so the form shows it —
     // on the edit link too, not only on the confirm one. "Fix details" opening
@@ -1080,6 +1086,10 @@ export function openDrawer(layer, f){
     clearHighlight();                    // routes read as the wide line halo, not a point halo
   } else {
     clearRouteHighlight();
+    // The selected surface segment lights up as a SHAPE, so its extent — and
+    // therefore its length — is visible on the map (owner 2026-08-13).
+    if(layer.key==='surface' && f.geom && Array.isArray(f.geom.path) && f.geom.path.length>1) showSurfaceSelection(f.geom.path);
+    else clearSurfaceSelection();
     // Pulsing selection halo on the clicked point — curated AND OSM — so the
     // selected place stands out; persists while the drawer is open and is
     // cleared by closeDrawer()/the next open. highlightAt(null) no-ops.
@@ -1146,6 +1156,7 @@ export function closeDrawer(){
   clearSelectedCoverageIcon();                        // remove the selected coverage POI's persistent icon overlay
   clearRevealPin();
   clearRouteHighlight();
+  clearSurfaceSelection();
   clearCorrections();
   clearPendingShape();                               // drop the before/after climb overlay with the card that owns it
   setPendingShape(null);

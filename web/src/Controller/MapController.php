@@ -275,6 +275,7 @@ final class MapController extends AbstractController
             // its drawer rows (surface-tiles.js SM_LABEL collapses the OSM
             // vocabulary to the form's five values for display).
             'smoothness' => 'd_smoothness', 'mtbScale' => 'd_mtb_scale',
+            'length' => 'd_length',
             // A-item confirmation panel (community.js stanceKind 'accuracy'):
             // the question is "as described?", not "still here?" — with a
             // negative stance that may carry a why for the curators, and the

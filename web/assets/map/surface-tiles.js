@@ -515,11 +515,18 @@ export function openSurfaceDrawer(p, lngLat, geometry, tileCtx) {
   // The way already has ends. Hand them to the wizard so it opens with both
   // pins placed on the stretch the rider clicked, ready to be dragged, instead
   // of a blank map asking for two taps — we know more than that, and throwing
-  // it away invites a worse answer than the one we already have. The WHOLE
-  // way, reassembled across tiles, not the clicked fragment (see fullWayEnds).
-  const ends = tileCtx
-    ? fullWayEnds(tileCtx.source, tileCtx.sourceLayer, p.ref, geometry)
-    : segmentEnds(geometry);
+  // it away invites a worse answer than the one we already have. A TO-DO
+  // click prefills the whole unrecorded same-named run (unrecordedRunEnds);
+  // a classified click keeps its own way (fullWayEnds).
+  let ends, spannedRefs;
+  if (tileCtx && tileCtx.source === SURFACE_TODO_SOURCE) {
+    const run = unrecordedRunEnds(tileCtx.source, tileCtx.sourceLayer, p, geometry);
+    ends = run.ends; spannedRefs = run.refs;
+  } else if (tileCtx) {
+    ends = fullWayEnds(tileCtx.source, tileCtx.sourceLayer, p.ref, geometry);
+  } else {
+    ends = segmentEnds(geometry);
+  }
 
   // The street's own name leads when it has one. The basemap has been printing
   // it under our line all along, so a drawer headlined "Paved · asphalt" on a
@@ -538,6 +545,10 @@ export function openSurfaceDrawer(p, lngLat, geometry, tileCtx) {
     osmName: p.name || '',
     geom: { ll: [lngLat.lat, lngLat.lng] },
     segmentEnds: ends,
+    // Every way ref the prefilled run spans — the wizard passes them on, the
+    // materialized item stores them, and the red dashes of ALL of them stop
+    // contradicting the answer (curatedRefs()).
+    spannedRefs,
     // Confirming OSM is the same submission as correcting it, with the class
     // already chosen — the first confirmation is what MINTS our own A item, and
     // from then on the ordinary one-tap item confirmation applies to that item.
@@ -728,6 +739,96 @@ export function segmentEnds(geometry) {
  * Exported for routes-tiles.js: a route corridor click opens the same surface
  * wizard, and its pins deserve the same full stretch.
  */
+/* The ROAD-TYPE GROUP an OSM highway value belongs to, for run-chaining.
+   tertiary and unclassified are both "a local road" and chain; a cycleway is
+   its own thing — at the point where a dijk road continues as a same-named
+   cycleway, the chain BREAKS on purpose (owner 2026-08-13): that part is
+   car-free and deserves its own item with its own answers. */
+function roadGroup(hw) {
+  const G = { primary:'main', primary_link:'main', secondary:'main', secondary_link:'main',
+    tertiary:'local', tertiary_link:'local', unclassified:'local', road:'local',
+    residential:'residential', living_street:'residential',
+    track:'track', path:'path', footway:'path', bridleway:'path',
+    cycleway:'cycleway' };
+  return G[hw] || hw || 'other';
+}
+
+/**
+ * The whole UNRECORDED RUN a clicked to-do way belongs to: every same-named,
+ * same-road-group, still-unrecorded neighbour chained end to end.
+ *
+ * One click on a 16 km dijk used to prefill one OSM way — sometimes 30 m —
+ * and a rider who does not know the pins can be dragged gives up right there
+ * (owner 2026-08-13). The name is the join key, endpoint proximity is the
+ * chain (tile quantization + junction nodes, so a small tolerance), and the
+ * road-type group is the honest boundary: the run stops where the road stops
+ * being the same kind of road, and where somebody has already answered
+ * (candidates come from the TO-DO source only). Returns the run's outermost
+ * ends plus every way ref it spans — the wizard gets both.
+ */
+export function unrecordedRunEnds(sourceId, sourceLayer, props, clickedGeometry) {
+  const single = () => ({ ends: fullWayEnds(sourceId, sourceLayer, props.ref, clickedGeometry), refs: [props.ref] });
+  if (!props.name) return single();   // no join key, no chain
+  const group = roadGroup(props.hw);
+  let feats = [];
+  try {
+    feats = map.querySourceFeatures(sourceId, { sourceLayer, filter: ['==', ['get', 'name'], props.name] });
+  } catch (e) { return single(); }
+  // Collect per-way parts (fragments repeat across tiles).
+  const ways = new Map();
+  for (const f of feats) {
+    const fp = f.properties || {};
+    if (roadGroup(fp.hw) !== group) continue;
+    const g = f.geometry;
+    const parts = g.type === 'LineString' ? [g.coordinates] : g.type === 'MultiLineString' ? g.coordinates : [];
+    const w = ways.get(fp.ref) || [];
+    for (const part of parts) if (part.length >= 2) w.push(part);
+    ways.set(fp.ref, w);
+  }
+  if (!ways.has(props.ref) || !ways.get(props.ref).length) return single();
+  // Each way's own outermost ends (farthest endpoint pair).
+  const k = Math.cos((clickedGeometry && clickedGeometry.coordinates
+    ? (clickedGeometry.type === 'LineString' ? clickedGeometry.coordinates[0][1] : clickedGeometry.coordinates[0][0][1])
+    : 52) * Math.PI / 180);
+  const d2 = (a, b) => { const dx = (a[0]-b[0])*k, dy = a[1]-b[1]; return dx*dx + dy*dy; };
+  const wayEnds = new Map();
+  for (const [ref, parts] of ways) {
+    const eps = parts.flatMap(pp => [pp[0], pp[pp.length-1]]);
+    let best = null, bd = -1;
+    for (let i = 0; i < eps.length; i++) for (let j = i+1; j < eps.length; j++) {
+      const d = d2(eps[i], eps[j]);
+      if (d > bd) { bd = d; best = [eps[i], eps[j]]; }
+    }
+    if (best) wayEnds.set(ref, best);
+  }
+  // Chain: BFS from the clicked way over endpoint proximity (~35 m — tile
+  // quantization means junction nodes rarely land on identical coordinates).
+  const TOL = 35 / 111320;                     // metres → degrees of latitude
+  const tol2 = TOL * TOL;
+  const component = new Set([props.ref]);
+  let frontier = [props.ref];
+  while (frontier.length) {
+    const next = [];
+    for (const refA of frontier) {
+      const ea = wayEnds.get(refA); if (!ea) continue;
+      for (const [refB, eb] of wayEnds) {
+        if (component.has(refB)) continue;
+        if (ea.some(a => eb.some(b => d2(a, b) <= tol2))) { component.add(refB); next.push(refB); }
+      }
+    }
+    frontier = next;
+  }
+  // The run's outermost ends: farthest pair across the component's endpoints.
+  const eps = [...component].flatMap(r => wayEnds.get(r) || []);
+  if (eps.length < 2) return single();
+  let best = null, bd = -1;
+  for (let i = 0; i < eps.length; i++) for (let j = i+1; j < eps.length; j++) {
+    const d = d2(eps[i], eps[j]);
+    if (d > bd) { bd = d; best = { a: eps[i], b: eps[j] }; }
+  }
+  return { ends: best, refs: [...component] };
+}
+
 export function fullWayEnds(sourceId, sourceLayer, ref, clickedGeometry) {
   const parts = [];
   try {

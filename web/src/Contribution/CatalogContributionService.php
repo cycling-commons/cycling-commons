@@ -202,6 +202,21 @@ final class CatalogContributionService implements ContributionStubInterface
             if (\is_string($rawSegment) && '' !== $rawSegment) {
                 $attributes['segment'] = $this->decodeSegment($rawSegment);
             }
+            // The way refs the prefilled run spans (owner 2026-08-13): stored
+            // so curatedRefs() can retire the red dash of EVERY covered way,
+            // not just the clicked one — a 16 km item that silenced one 30 m
+            // way kept contradicting itself along the rest. Re-validated here
+            // (the controller already filtered): pattern, dedupe, cap.
+            $rawSpanned = $payload['_ways_spanned'] ?? null;
+            if (\is_string($rawSpanned) && '' !== $rawSpanned) {
+                $spanned = array_values(array_unique(array_filter(
+                    explode(',', $rawSpanned),
+                    static fn (string $r): bool => 1 === preg_match('~^way/\d{1,16}$~', $r),
+                )));
+                if ([] !== $spanned) {
+                    $attributes['waysSpanned'] = \array_slice($spanned, 0, 120);
+                }
+            }
         }
 
         // Materialize-on-edit (osm-data-architecture.md §6): the controller

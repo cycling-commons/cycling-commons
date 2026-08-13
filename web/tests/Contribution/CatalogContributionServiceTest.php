@@ -296,6 +296,68 @@ final class CatalogContributionServiceTest extends KernelTestCase
         ], $this->user());
     }
 
+    /**
+     * A run-prefilled segment add carries the way refs it spans
+     * (`_ways_spanned`, from the to-do click's run-chaining): valid refs are
+     * stored deduped on attributes.waysSpanned, malformed entries are dropped
+     * rather than rejected — they only retire red dashes, so a bad entry must
+     * never sink the contribution itself.
+     */
+    public function testAddSegmentStoresValidatedWaysSpanned(): void
+    {
+        $this->wallonia();
+        $receipt = $this->service->submit('add', [
+            'type' => 'road-surface',
+            'segment' => '{"a":[5.86,50.47],"b":[5.87,50.48]}',
+            '_osm_ref' => 'way/111',
+            '_ways_spanned' => 'way/111,way/222,way/222,node/333,rubbish,way/444',
+            'details' => ['name' => 'Zuiderdijk run', 'surface' => 'Asphalt'],
+        ], $this->user());
+
+        $item = $this->em->find(Item::class, $this->em->find(Submission::class, $receipt->submissionId)->getItemId());
+        self::assertSame(['way/111', 'way/222', 'way/444'], $item->getAttributes()['waysSpanned']);
+    }
+
+    public function testAddSegmentWithoutSpannedRefsStoresNoAttribute(): void
+    {
+        $this->wallonia();
+        $receipt = $this->service->submit('add', [
+            'type' => 'road-surface',
+            'segment' => '{"a":[5.86,50.47],"b":[5.87,50.48]}',
+            '_ways_spanned' => 'node/1,garbage',
+            'details' => ['name' => 'Single way', 'surface' => 'Asphalt'],
+        ], $this->user());
+
+        $item = $this->em->find(Item::class, $this->em->find(Submission::class, $receipt->submissionId)->getItemId());
+        self::assertArrayNotHasKey('waysSpanned', $item->getAttributes());
+    }
+
+    /**
+     * Once the item is served, EVERY way ref it spans appears in the
+     * catalog's `refs` list (CatalogProvider::curatedRefs) — not just the
+     * clicked way's source_ref — so all covered red dashes retire.
+     */
+    public function testWaysSpannedRefsRetireInCatalogRefs(): void
+    {
+        $this->wallonia();
+        $receipt = $this->service->submit('add', [
+            'type' => 'road-surface',
+            'segment' => '{"a":[5.86,50.47],"b":[5.87,50.48]}',
+            '_osm_ref' => 'way/111',
+            '_ways_spanned' => 'way/111,way/222,way/444',
+            'details' => ['name' => 'Zuiderdijk run', 'surface' => 'Asphalt'],
+        ], $this->user());
+
+        $item = $this->em->find(Item::class, $this->em->find(Submission::class, $receipt->submissionId)->getItemId());
+        $item->setState(ItemState::Verified);
+        $this->em->flush();
+
+        $refs = json_decode(static::getContainer()->get(\App\Catalog\CatalogProvider::class)->json(), true)['refs'];
+        self::assertContains('way/111', $refs);
+        self::assertContains('way/222', $refs, 'a spanned (non-clicked) way must retire too');
+        self::assertContains('way/444', $refs);
+    }
+
     public function testSubmittedItemsAreNotServed(): void
     {
         // Spec §8: state=submitted never reaches /map/catalog.json.

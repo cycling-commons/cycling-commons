@@ -250,7 +250,20 @@ final class ContributeController extends AbstractController
             try {
                 // The ref comes from the (re-validated) query string, never a
                 // form field — the POST posts back to the same URL.
-                $receipt = $this->contributionStub->submit('add', ['type' => $type->value, '_osm_ref' => $ref] + $data, $user);
+                // The way refs the prefilled run spans (?srefs=, from the
+                // to-do click's run-chaining). Query string like the ref
+                // itself — the POST posts back to the same URL. Trust with
+                // bounds: they only retire red dashes, so malformed entries
+                // are dropped rather than rejected, and the list is capped.
+                $srefs = array_values(array_unique(array_filter(
+                    explode(',', (string) $request->query->get('srefs', '')),
+                    static fn (string $r): bool => 1 === preg_match('~^way/\d{1,16}$~', $r),
+                )));
+                $receipt = $this->contributionStub->submit('add', [
+                    'type' => $type->value,
+                    '_osm_ref' => $ref,
+                    '_ways_spanned' => implode(',', \array_slice($srefs, 0, 120)),
+                ] + $data, $user);
 
                 return $this->renderAddPlace($type, receipt: $receipt);
             } catch (TooManyRequestsHttpException) {
