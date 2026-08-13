@@ -74,7 +74,13 @@ final class DecisionMessagesTest extends WebTestCase
     private function messagesFor(int $userId): array
     {
         /** @var list<UserMessage> $rows */
-        $rows = $this->em()->getRepository(UserMessage::class)->findBy(['userId' => $userId]);
+        // Ordered, not just fetched. An unordered findBy() whose result is then
+        // read positionally is the shape that made ThirdPartyReportTest fail
+        // once in a full-suite run and never again (2026-08-09): Postgres is
+        // free to return rows in any order, and it agreed with the assertion
+        // for months first. Every case here happens to assert exactly one row
+        // today — this is what keeps the second one from reopening the bug.
+        $rows = $this->em()->getRepository(UserMessage::class)->findBy(['userId' => $userId], ['id' => 'ASC']);
 
         return $rows;
     }
