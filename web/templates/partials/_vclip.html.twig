@@ -1,0 +1,25 @@
+{# One-line clamp for long attribute values, click to expand.
+
+   A drawn segment's raw geometry is a legitimate part of the record — riders
+   and curators both audit it — but as a thirty-line JSON wall it drowned every
+   other row on the page (owner-reported 2026-08-13). Values the templates mark
+   `vclip` render as ONE line ending in an ellipsis; a click (or Enter, they
+   are focusable) toggles the full value. Pure presentation: the full text is
+   always in the DOM, so copy/search/screen readers see everything.
+
+   Include ONCE per page that uses the class. #}
+<style>
+  .vclip{display:block;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+  .vclip.open{white-space:pre-wrap;overflow:visible;word-break:break-word}
+</style>
+<script nonce="{{ csp_nonce() }}">
+  document.addEventListener('click', function (e) {
+    var v = e.target.closest('.vclip');
+    if (v) { v.classList.toggle('open'); v.setAttribute('aria-expanded', v.classList.contains('open') ? 'true' : 'false'); }
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    var v = e.target.closest ? e.target.closest('.vclip') : null;
+    if (v) { e.preventDefault(); v.classList.toggle('open'); v.setAttribute('aria-expanded', v.classList.contains('open') ? 'true' : 'false'); }
+  });
+</script>

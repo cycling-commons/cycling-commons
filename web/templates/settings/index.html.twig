@@ -20,6 +20,12 @@
   .pill{font-family:var(--mono);font-size:.58rem;text-transform:uppercase;letter-spacing:.08em;padding:.25rem .5rem;border-radius:30px}
   .pill.yes{color:var(--paper);background:var(--spruce-lift)} .pill.no{color:#5a4410;background:rgba(200,146,58,.22)} .pill.role{color:var(--paper);background:var(--ink);margin-left:.2rem}
 
+  /* Every explanatory line on this page reads in ONE secondary style. The
+     class was referenced but never defined, so half the help text rendered at
+     full body size while .hint/.help-text rendered small — three body styles
+     on one page (owner feedback 2026-08-13). */
+  .fhelp{font-size:.82rem;color:#595c4d;line-height:1.5}
+
   .field{margin-bottom:1.3rem}
   .field label{display:block;font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:#5a5d4d;margin-bottom:.4rem}
   .field input[type=text],
@@ -422,19 +428,19 @@
     <div class="submit-row"><button type="submit" class="btn">{{ 'settings.submit_password'|trans }}</button></div>
   {{ form_end(passwordForm) }}
 
-  {# 2FA #}
-  <div style="margin-top:1.6rem;padding-top:1.2rem;border-top:1px solid rgba(20,22,14,.1)">
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.75rem 0">
-      <span>
-        <b style="display:block;font-size:.95rem">{{ 'settings.twofa_label'|trans }}</b>
-        <small style="color:#595c4d;font-size:.82rem">
-          {% if cc_user.twoFaEnabled and cc_user.totpSecret %}{{ 'settings.twofa_enabled'|trans }}{% else %}{{ 'settings.twofa_disabled'|trans }}{% endif %}
-        </small>
-      </span>
-      <a href="{{ path('2fa_setup') }}" style="font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--clay)">
-        {% if cc_user.twoFaEnabled and cc_user.totpSecret %}{{ 'settings.twofa_manage'|trans }}{% else %}{{ 'settings.twofa_setup'|trans }}{% endif %}
-      </a>
-    </div>
+  {# 2FA. Same shape as the export section below — mono section heading, one
+     .fhelp line, a left-aligned button — instead of the bold/small flex row
+     with a small-caps link floating right, which was both a third text style
+     on one page and a control nobody's eye landed on (owner feedback
+     2026-08-13). #}
+  <div style="margin-top:1.6rem;padding-top:1.2rem;border-top:1px solid rgba(20,22,14,.1)" id="twofa">
+    <h2 class="sec">{{ 'settings.twofa_label'|trans }}</h2>
+    <p class="fhelp" style="margin:0 0 1rem">
+      {% if cc_user.twoFaEnabled and cc_user.totpSecret %}{{ 'settings.twofa_enabled'|trans }}{% else %}{{ 'settings.twofa_disabled'|trans }}{% endif %}
+    </p>
+    <a href="{{ path('2fa_setup') }}" class="btn" style="display:inline-block;text-decoration:none">
+      {% if cc_user.twoFaEnabled and cc_user.totpSecret %}{{ 'settings.twofa_manage'|trans }}{% else %}{{ 'settings.twofa_setup'|trans }}{% endif %}
+    </a>
   </div>
 
   {# ── Download my data (docs/specs/account-and-auth.md §11) ──

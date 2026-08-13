@@ -23,7 +23,7 @@ import { initPlanner } from './planner.js';
 import { render } from './render.js';
 import { COVERAGE_ON, addCoverage, widenForDeepLink, openCoverageFeatureByName,
          fetchCoverageCounts, covShownCount } from './coverage.js';
-import { addSurfaceTiles } from './surface-tiles.js';
+import { addSurfaceTiles, setSurfaceTiles, surfaceTilesVisible } from './surface-tiles.js';
 import { schemaRows, initDrawerChrome } from './drawer.js';
 import { initPicking } from './picking.js';
 import { resolveLocalFeature, resolveLocalFeatureById, openFeatureByName, openFeatureById,
@@ -205,8 +205,13 @@ import { initLayerList, initMapCtrl, initRailChrome, initBestOf,
     };
     });
   }
-  // populate A · Road surface from the hand-picked OSM segments
-  if(window.CC_SURFACE){
+  // populate A · Road surface from the served segments. A FUNCTION, because it
+  // runs twice: at boot, and again when the catalog hot-refreshes on tab
+  // return (catalog-load.js) — a moderator who approves a surface submission
+  // in the desk tab and switches back to the map must see the new line without
+  // hunting for F5 (owner-reported 2026-08-13, twice).
+  function populateSurfaceA(){
+    if(!window.CC_SURFACE) return;
     layerByKey['surface'].features = CC_SURFACE.segments.map(s=>{
       // Registry-driven rows (CC_FIELD_SCHEMA[A]) — value or "add" prompt per field.
       // Fields: surface / smoothness / width / traffic / note / lit /
@@ -223,6 +228,7 @@ import { initLayerList, initMapCtrl, initRailChrome, initBestOf,
       };
     });
   }
+  populateSurfaceA();
   // F · Hazards & conditions — served items (map-and-search.md §4.5 Task A).
   // Hazards have no coverage tile layer and no OSM bulk pool, so they render as
   // CATALOG point features (like climbs), sourced from the served payload
@@ -351,5 +357,18 @@ import { initLayerList, initMapCtrl, initRailChrome, initBestOf,
   initMapillaryDock();
 
   initPlanner();   // illustrative Spa planner chips (planner.js)
+
+  // The catalog hot-refresh hook (catalog-load.js calls it after re-assigning
+  // the CC_* globals on tab return with a changed payload). A window global on
+  // purpose — catalog-load is a classic pre-module script and cannot import;
+  // same pattern as window.__ccMap. Scope: the SURFACE features re-map and the
+  // tile dedupe filters re-apply (a just-approved way loses its red dash the
+  // same moment its green line appears); other letters pick their new data up
+  // on the next natural re-render or reload.
+  window.__ccApplyCatalog = () => {
+    populateSurfaceA();
+    setSurfaceTiles(surfaceTilesVisible());   // re-applies surfDedupeFilter with the fresh refs
+    render();
+  };
 
   // initial render runs from map.on('load') above (sources need the style loaded)

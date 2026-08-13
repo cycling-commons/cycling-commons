@@ -186,10 +186,12 @@
      showed a title and nothing else, and a curator was asked to approve a
      change the page never named (owner-reported 2026-08-03). The struck-out
      line only appears when there is something to strike out. #}
+  {# Long values (a drawn segment's geometry) clamp to one line, click to
+     expand — partials/_vclip.html.twig, included by moderate/index. #}
   {% if item.now %}
     <div class="q-diff">
-      {% if item.was %}<div class="q-was">{{ item.was }}</div>{% endif %}
-      <div class="q-now">{{ item.now }}</div>
+      {% if item.was %}<div class="q-was{% if item.was|length > 110 %} vclip" tabindex="0" role="button" aria-expanded="false{% endif %}">{{ item.was }}</div>{% endif %}
+      <div class="q-now{% if item.now|length > 110 %} vclip" tabindex="0" role="button" aria-expanded="false{% endif %}">{{ item.now }}</div>
     </div>
   {% endif %}
   {% if item.photos|length > 0 %}

@@ -135,6 +135,17 @@ watched their contribution "disappear" until the cache expired
 a takedown deletes without moving any timestamp; the build version is in it
 because a deploy can change what the same rows serialize to.
 
+An **already-open map tab hot-refreshes on tab return** (2026-08-13): the
+versioned URL keeps fresh page loads honest, but a moderator's loop is
+approve-in-the-desk-tab → switch back to the open map, and that tab never
+refetched anything. catalog-load.js keeps the boot ETag and revalidates on
+`visibilitychange`/`focus` (throttled); a 304 costs headers, a change
+re-assigns the CC_* globals and calls `window.__ccApplyCatalog` (registered
+by map.js): the surface features re-map, the tile dedupe filters re-apply —
+so a just-approved way's green line appears and its red dash disappears in
+the same moment — and `render()` runs. Other letters pick their new data up
+on the next reload.
+
 ## 4. The rail
 
 ### 4.1 Layer toggles

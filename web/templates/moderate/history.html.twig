@@ -162,7 +162,10 @@
              Redoute") tells a curator nothing they can check (owner-reported
              2026-08-03). Same before/after the queue card shows. #}
           {% if h.now %}
-            <li class="hist-diff">{% if h.was %}<span class="hist-was">{{ h.was }}</span> {% endif %}<span class="hist-now">{{ h.now }}</span></li>
+            {# Long values (a drawn segment's geometry) clamp to one line,
+               click to expand — partials/_vclip.html.twig. #}
+            {% set hlong = (h.now ~ (h.was ?? ''))|length > 110 %}
+            <li class="hist-diff{% if hlong %} vclip" tabindex="0" role="button" aria-expanded="false{% endif %}">{% if h.was %}<span class="hist-was">{{ h.was }}</span> {% endif %}<span class="hist-now">{{ h.now }}</span></li>
           {% endif %}
           {% if h.note %}<li class="hist-note">{{ h.note }}</li>{% endif %}
           {# The full exchange, folded away. The row stays one line because most
@@ -196,4 +199,5 @@
 
   {% include 'partials/_pager.html.twig' with {pager: pager, route: 'moderate_history', params: hparams} %}
 </div>
+{% include 'partials/_vclip.html.twig' %}
 {% endblock %}

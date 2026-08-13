@@ -65,47 +65,87 @@
   // not queue behind it.
   buildMap();
 
+  // The globals assignment, shared between the boot fetch and the tab-return
+  // hot refresh below.
+  function applyCatalog(d) {
+    window.CC_SURFACE = { segments: d.A };
+    window.CC_CLIMBS = d.B;
+    window.CC_WATER_OSM = d.C;
+    window.CC_SERVICES_OSM = d.D;
+    window.CC_STAYS_OSM = d.E.osm;
+    window.CC_STAYS_PIVOT = d.E.pivot;
+    window.CC_HAZARDS = d.F;
+    window.CC_TRANSIT_OSM = d.G;
+    window.CC_SHELTER_OSM = d.H;
+    window.CC_SCENIC_OSM = d.I;
+    window.CC_HISTORY_OSM = d.J;
+    // `heat` is deliberately absent: the ~6,600 heat points moved to
+    // /map/heat.json (window.CC_HEAT_URL) so they stop riding the critical
+    // payload for a layer that is Off by default. render.js's addHeatmap()
+    // fetches them the first time somebody switches it on.
+    window.CC_ROUTES = { routes: d.K };
+    window.CC_TOILETS_OSM = d.M;
+    // Coverage dedupe (coverage-provider.md §6): the set
+    // of source_refs already served as items — the coverage tile layers
+    // filter these out so an object never draws twice (once as a tile dot,
+    // once as a served pool feature). The CatalogProvider ships `refs` from
+    // plan Task 13 on; until then (and on payloads without it) [] simply
+    // means "filter nothing", which is correct — no refs, no possible twin.
+    window.CC_CURATED_REFS = d.refs || [];
+    // Stays merge: tag PIVOT features and append them to the OSM stays
+    // collection once (drives the Tourisme-Wallonie attribution branch).
+    var O = window.CC_STAYS_OSM, P = window.CC_STAYS_PIVOT;
+    if (O && P && !O._pivot) {
+      P.features.forEach(function (f) { f.properties.src = 'pivot'; });
+      O.features = O.features.concat(P.features);
+      O._pivot = 1;
+    }
+  }
+
+  var catalogEtag = null;
   fetch(window.CC_CATALOG_URL)
     .then(function (r) {
       if (!r.ok) { throw new Error('catalog.json HTTP ' + r.status); }
+      catalogEtag = r.headers.get('ETag');
       return r.json();
     })
-    .then(function (d) {
-      window.CC_SURFACE = { segments: d.A };
-      window.CC_CLIMBS = d.B;
-      window.CC_WATER_OSM = d.C;
-      window.CC_SERVICES_OSM = d.D;
-      window.CC_STAYS_OSM = d.E.osm;
-      window.CC_STAYS_PIVOT = d.E.pivot;
-      window.CC_HAZARDS = d.F;
-      window.CC_TRANSIT_OSM = d.G;
-      window.CC_SHELTER_OSM = d.H;
-      window.CC_SCENIC_OSM = d.I;
-      window.CC_HISTORY_OSM = d.J;
-      // `heat` is deliberately absent: the ~6,600 heat points moved to
-      // /map/heat.json (window.CC_HEAT_URL) so they stop riding the critical
-      // payload for a layer that is Off by default. render.js's addHeatmap()
-      // fetches them the first time somebody switches it on.
-      window.CC_ROUTES = { routes: d.K };
-      window.CC_TOILETS_OSM = d.M;
-      // Coverage dedupe (coverage-provider.md §6): the set
-      // of source_refs already served as items — the coverage tile layers
-      // filter these out so an object never draws twice (once as a tile dot,
-      // once as a served pool feature). The CatalogProvider ships `refs` from
-      // plan Task 13 on; until then (and on payloads without it) [] simply
-      // means "filter nothing", which is correct — no refs, no possible twin.
-      window.CC_CURATED_REFS = d.refs || [];
-      // Stays merge: tag PIVOT features and append them to the OSM stays
-      // collection once (drives the Tourisme-Wallonie attribution branch).
-      var O = window.CC_STAYS_OSM, P = window.CC_STAYS_PIVOT;
-      if (O && P && !O._pivot) {
-        P.features.forEach(function (f) { f.properties.src = 'pivot'; });
-        O.features = O.features.concat(P.features);
-        O._pivot = 1;
-      }
-    })
+    .then(applyCatalog)
     .catch(function (e) {
       console.error('Catalog load failed — map layers unavailable.', e);
     })
     .then(boot);
+
+  // ── Tab-return hot refresh ────────────────────────────────────────────────
+  // The versioned URL (?v=) keeps a fresh PAGE LOAD honest, but a moderator's
+  // loop is approve-in-the-desk-tab, switch back to the already-open map — and
+  // that tab never refetches anything, so the just-approved line stayed
+  // invisible until an F5 nobody thinks of (owner-reported 2026-08-13, twice).
+  // On tab return (throttled), revalidate the catalog against the ETag we
+  // booted with: 304 costs headers, a change re-applies the globals and hands
+  // the map the refresh hook map.js registered (window.__ccApplyCatalog —
+  // surface features + dedupe filters + render).
+  var lastCheck = 0;
+  function recheckCatalog() {
+    if (document.visibilityState !== 'visible' || !catalogEtag) { return; }
+    var now = Date.now();
+    if (now - lastCheck < 15000) { return; }
+    lastCheck = now;
+    fetch(window.CC_CATALOG_URL, {
+      cache: 'no-store',
+      headers: { 'If-None-Match': catalogEtag },
+    })
+      .then(function (r) {
+        if (r.status === 304 || !r.ok) { return null; }
+        catalogEtag = r.headers.get('ETag');
+        return r.json();
+      })
+      .then(function (d) {
+        if (!d) { return; }
+        applyCatalog(d);
+        if (window.__ccApplyCatalog) { window.__ccApplyCatalog(); }
+      })
+      .catch(function () { /* transient — the next tab return retries */ });
+  }
+  document.addEventListener('visibilitychange', recheckCatalog);
+  window.addEventListener('focus', recheckCatalog);
 }());

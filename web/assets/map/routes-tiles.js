@@ -57,15 +57,16 @@ const GROUPS = [
   { key: 'regional', nets: ['rcn', 'lcn', 'other'], color: '#7A4FCF' },
   { key: 'mtb', nets: ['mtb'], color: '#8A5A32' },
 ];
-/* Where the knooppunt badges appear. The ARTIFACT carries the points from z11
-   (contract routes.nodes.minZoom), and the client now shows them from z12:
-   the numbers ARE how riders navigate these networks, and a first cut that
-   held them to z13 read as "there are no knooppunt numbers" at planning zoom
-   (owner feedback 2026-08-13). Symbol collision culls what does not fit, so
-   dense areas stay readable and thin out as you zoom. routes-zooms.test.cjs
-   pins this floor to at least the artifact's, or the badges would be asked
-   for at zooms the tiles do not carry. */
-const BADGE_MIN_ZOOM = 12;
+/* Where the knooppunt badges appear. The ARTIFACT carries the points from z10
+   (contract routes.nodes.minZoom, lowered twice on owner feedback 2026-08-13):
+   the numbers ARE how riders navigate these networks, and z10 is where
+   planning starts — a first cut held them to z13 and read as "there are no
+   knooppunt numbers" at exactly the zooms that matter. Small at z10, a step
+   bigger from z12 ("a bit bigger from zoom 12"); symbol collision culls what
+   does not fit, so dense areas stay readable and fill in as you zoom.
+   routes-zooms.test.cjs pins this floor to at least the artifact's, or the
+   badges would be asked for at zooms the tiles do not carry. */
+const BADGE_MIN_ZOOM = 10;
 const LINE_PREFIX = 'rttile-';
 const KNOOP_PREFIX = 'rtknoop-';
 
@@ -147,9 +148,9 @@ export function addRoutesTiles() {
       minzoom: BADGE_MIN_ZOOM,
       layout: { visibility: 'none' },
       paint: {
-        // Grows with zoom so the z12 planning view stays a scatter of small
-        // discs rather than a wall of buttons.
-        'circle-radius': ['interpolate', ['linear'], ['zoom'], 12, 6.5, 15, 9],
+        // Small at planning zoom, a clear step bigger from z12 (owner
+        // 2026-08-13) — discs grow with the reading distance.
+        'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 5.5, 12, 8.5, 15, 10],
         'circle-color': '#FFFFFF',
         'circle-stroke-width': 2,
         'circle-stroke-color': '#7A4FCF',
@@ -166,7 +167,7 @@ export function addRoutesTiles() {
         // The basemap's own glyph stack — the map already loads it, and a
         // badge is a label, not brand typography.
         'text-font': ['Noto Sans Bold'],
-        'text-size': ['interpolate', ['linear'], ['zoom'], 12, 10, 15, 11.5],
+        'text-size': ['interpolate', ['linear'], ['zoom'], 10, 9, 12, 11.5, 15, 13],
         'text-allow-overlap': false,
         visibility: 'none',
       },

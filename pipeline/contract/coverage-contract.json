@@ -388,8 +388,8 @@
       "ref"
     ],
     "nodes": {
-      "_comment": "Knooppunten: nodes carrying rcn_ref/lcn_ref, emitted as points with their number in `nr`. minZoom keeps a country's thousands of numbers out of the planning-zoom tiles; the client draws the badges later still (routes-tiles.js), and the two are pinned by routes-zooms.test.cjs.",
-      "minZoom": 11,
+      "_comment": "Knooppunten: nodes carrying rcn_ref/lcn_ref, emitted as points with their number in `nr`. minZoom keeps a country's thousands of numbers out of the low planning zooms; the client draws the badges from here up (routes-tiles.js, symbol collision culls what does not fit), and the two are pinned by routes-zooms.test.cjs. Lowered 11->10 on owner feedback 2026-08-13: the numbers are how riders plan, and z10 is where planning starts.",
+      "minZoom": 10,
       "tileProps": [
         "net",
         "nr",
