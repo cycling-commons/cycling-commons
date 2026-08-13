@@ -83,7 +83,10 @@ final class ItemConfirmationController extends AbstractController
 
         $wasVerified = ItemState::Verified === $item->getState();
         try {
-            $this->confirmations->record($item, $user, $stance);
+            // The optional "why" behind a negative answer (owner 2026-08-13);
+            // the service ignores it for every positive stance.
+            $this->confirmations->record($item, $user, $stance,
+                note: (string) $request->request->get('note', ''));
         } catch (\InvalidArgumentException) {
             // Stance not offered for this item's type.
             return $this->json(['error' => 'invalid_stance'], 422);
@@ -109,7 +112,7 @@ final class ItemConfirmationController extends AbstractController
      */
     private function payload(Item $item, ?User $user): array
     {
-        return [
+        $payload = [
             ...$this->confirmations->snapshot($item, $user),
             // 'accuracy' for a surface segment: the question is not "is it
             // still here" (a road rarely leaves) but "is it as described",
@@ -120,6 +123,25 @@ final class ItemConfirmationController extends AbstractController
                 default => 'existence',
             },
         ];
+        // The "why" behind negative answers, CURATORS ONLY: free text is never
+        // rendered publicly (one-way-to-moderate — an unmoderated channel is
+        // no channel), but the people who curate the entry need to read what a
+        // rider says differs.
+        if ($this->isGranted('ROLE_CURATOR')) {
+            /** @var list<array{note: string, updated_at: string}> $rows */
+            $rows = $this->em->getConnection()->fetchAllAssociative(
+                'SELECT note, updated_at FROM item_confirmation
+                 WHERE item_id = :id AND note IS NOT NULL
+                 ORDER BY updated_at DESC LIMIT 5',
+                ['id' => (int) $item->getId()],
+            );
+            $payload['notes'] = array_map(static fn (array $r): array => [
+                'note' => (string) $r['note'],
+                'when' => (string) $r['updated_at'],
+            ], $rows);
+        }
+
+        return $payload;
     }
 
     /** A served, confirmable item (non-votable utility); 404 otherwise. */

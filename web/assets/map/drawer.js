@@ -620,9 +620,22 @@ function buildRecord(layer, f){
     const badge = 'needs_info' === s.status
       ? `<div class="cc-mod-badge waiting">? ${D.waitingOnRider||'Waiting on the rider'}</div>`
       : `<div class="cc-mod-badge">⚑ ${I18N.pendingReview||'Pending review'}</div>`;
+    /* Approve & confirm in one stroke (owner 2026-08-13: "I know these roads
+       by hand"). A curator who personally knows the place can tick this and
+       their approval ALSO records their curator confirmation, which verifies
+       the item outright (ItemConfirmationService::verifyIfCurator) — the
+       existing weighted-by-who-pressed-it rule, reached from the decision
+       instead of a second visit to the drawer. Not for water (its stances are
+       potability judgements, not vouchings) and not for K (voted, never
+       confirmed). Unticked by default: knowing the place is the claim, and it
+       must be made actively. */
+    const alsoConfirm = ('C' !== s.letter && 'K' !== s.letter)
+      ? `<label class="cc-mod-also"><input type="checkbox" class="cc-mod-confirm-cb"> ${D.alsoConfirm||'Also confirm — I know this place (counts as verified)'}</label>`
+      : '';
     moderate = `<div class="cc-mod" data-id="${escPend(s.id)}">
       ${badge}${body}${diff}${shapeSwitch}${context}${asked}${replied}${modPhotos}
       <textarea class="cc-mod-note" placeholder="${D.modNotePh||'Optional note — a reason, or context…'}"></textarea>
+      ${alsoConfirm}
       <div class="cc-mod-acts">
         <button class="cc-mod-btn approve" data-decision="approve">✓ ${D.approve||'Approve'}</button>
         <button class="cc-mod-btn info" data-decision="needs_info">? ${D.needsInfo||'Needs info'}</button>

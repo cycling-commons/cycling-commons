@@ -7,7 +7,11 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Catalog\CatalogProvider;
+use App\Catalog\ConfirmationStance;
+use App\Catalog\Entity\Item;
+use App\Catalog\ItemType;
 use App\Catalog\SubmissionType;
+use App\Community\ItemConfirmationService;
 use App\Entity\User;
 use App\Form\ModerationDecisionType;
 use App\Media\Entity\MediaUpload;
@@ -60,6 +64,7 @@ final class ModerateController extends AbstractController
         private readonly MediaEscalationService $escalations,
         private readonly UrgentWithholdBreaker $breaker,
         private readonly EntityManagerInterface $em,
+        private readonly ItemConfirmationService $confirmations,
         private readonly PageSize $pageSize,
     ) {
     }
@@ -245,7 +250,7 @@ final class ModerateController extends AbstractController
             || \in_array('application/json', $request->getAcceptableContentTypes(), true);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            /** @var array{submission_id: string|int, decision: string, note: ?string, media_reject: ?string} $data */
+            /** @var array{submission_id: string|int, decision: string, note: ?string, media_reject: ?string, and_confirm: ?string} $data */
             $data = $form->getData();
             /** @var User $user */
             $user = $this->getUser();
@@ -278,6 +283,23 @@ final class ModerateController extends AbstractController
                 }
 
                 return $this->redirectToRoute('moderate');
+            }
+
+            /* Approve & confirm in one stroke (owner 2026-08-13: "I know these
+               roads by hand"). The curator's own confirmation is recorded
+               AFTER the approval materialized the item, and it verifies
+               through the existing weighted-by-who-pressed-it rule
+               (ItemConfirmationService::verifyIfCurator) — no new mechanic,
+               the same record every rider makes, reached from the decision.
+               Best-effort on purpose: a letter whose stances do not include
+               `exists` (water) simply skips, and a failure here must never
+               undo a decision that already stands. */
+            if ('approve' === $data['decision'] && '1' === ($data['and_confirm'] ?? null) && null !== $submission->getItemId()) {
+                $item = $this->em->find(Item::class, $submission->getItemId());
+                if (null !== $item && \in_array(ConfirmationStance::Exists, ItemType::fromParam($item->getLetter())->confirmationStances(), true)) {
+                    $this->confirmations->record($item, $user, ConfirmationStance::Exists);
+                    $this->em->flush();
+                }
             }
 
             if ($wantsJson) {

@@ -225,6 +225,17 @@ final class SettingsController extends AbstractController
             return $this->redirectToRoute('settings', ['tab' => 'security']);
         }
 
+        // The password comes BEFORE the code (owner 2026-08-13): requesting a
+        // deletion code is the first step of destroying an account, and an
+        // open session on a shared machine must not be enough to start it —
+        // the same gate the data export has.
+        $password = (string) $request->request->get('current_password', '');
+        if ('' === $password || !$this->passwordHasher->isPasswordValid($user, $password)) {
+            $this->addFlash('error', 'flash.current_password_incorrect');
+
+            return $this->redirectToRoute('settings', ['tab' => 'security']);
+        }
+
         $this->deletionService->requestDeletion($user);
         $this->addFlash('success', 'flash.deletion_code_sent');
 

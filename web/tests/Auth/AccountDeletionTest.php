@@ -267,11 +267,21 @@ final class AccountDeletionTest extends WebTestCase
         // silently the next time one is added above it.
         $token = $crawler->filter('form[action$="/settings/delete-request"] input[name="_token"]')->attr('value');
 
-        $client->request('POST', '/settings/delete-request', ['_token' => $token]);
+        // The password rides the request since 2026-08-13 (owner): an open
+        // session on a shared machine must not be enough to start a deletion.
+        $client->request('POST', '/settings/delete-request', ['_token' => $token, 'current_password' => $plain]);
 
         self::assertResponseRedirects('/settings?tab=security');
         $client->followRedirect();
         self::assertSelectorTextContains('.flash-success', 'Check your email');
+
+        // Without the password (or with a wrong one) no code is sent.
+        $crawler = $client->request('GET', '/settings');
+        $token = $crawler->filter('form[action$="/settings/delete-request"] input[name="_token"]')->attr('value');
+        $client->request('POST', '/settings/delete-request', ['_token' => $token, 'current_password' => 'wrong-password']);
+        self::assertResponseRedirects('/settings?tab=security');
+        $client->followRedirect();
+        self::assertSelectorExists('.flash-error');
 
         $user = $this->fetchUser($email);
         self::assertNotNull($user);

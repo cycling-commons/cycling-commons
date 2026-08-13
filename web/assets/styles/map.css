@@ -739,6 +739,20 @@
   .cc-cf-btn:hover:not(:disabled){background:var(--trail);color:var(--ink)}
   .cc-cf-btn:disabled{cursor:default;color:var(--glacier);border-color:rgba(143,182,168,.5)}
   .cc-cf-btn.is-mine{background:var(--trail);color:var(--ink)}
+  /* The vouching is the button people should SEE (owner 2026-08-13): the
+     positive stance fills orange; the negative keeps the outline. */
+  .cc-cf-btn.cf-yes{background:var(--trail);color:var(--ink)}
+  .cc-cf-btn.cf-yes:hover:not(:disabled){background:#ff703d;border-color:#ff703d}
+  .cc-cf-btn.cf-yes:disabled{background:rgba(143,182,168,.25);border-color:transparent}
+  /* The optional "why" behind a negative answer — for the curators only, and
+     the placeholder says so. */
+  .cc-cf-why{margin:.5rem 0;display:flex;flex-direction:column;gap:.4rem}
+  .cc-cf-why-t{width:100%;min-height:2.6rem;background:rgba(239,230,212,.06);border:1px solid rgba(239,230,212,.25);
+    border-radius:5px;color:var(--paper);font-family:var(--sans);font-size:.82rem;padding:.45rem .6rem;resize:vertical}
+  .cc-cf-why-t:focus{outline:none;border-color:var(--trail)}
+  .cc-cf-notes{margin-top:.6rem;padding:.5rem .7rem;background:rgba(217,45,32,.08);border-radius:5px}
+  .cc-cf-notes-h{display:block;font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;color:rgba(239,230,212,.7);margin-bottom:.3rem}
+  .cc-cf-note{font-size:.82rem;color:var(--paper);line-height:1.4;margin:.15rem 0}
   .cc-cf-n{font-family:var(--mono);font-size:.74rem;font-weight:600;opacity:.85}
   .cc-cf-login{font-size:.82rem;color:rgba(239,230,212,.8);margin-top:.4rem}
   .cc-cf-login a{color:var(--trail)}

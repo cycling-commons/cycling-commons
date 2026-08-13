@@ -231,7 +231,7 @@ enum ItemType: string
                most do. */
             self::BikeServices, self::Hazards, self::GettingThere, self::Shelter,
             self::PublicToilets, self::ScenicViews, self::HistoryCulture,
-            self::WhereToSleep, self::Climbs,
+            self::WhereToSleep, self::Climbs => [ConfirmationStance::Exists],
             /* A surface segment joined 2026-08-13, by the same correction that
                brought climbs in: it was excluded as "measured", but a rider
                who rode the stretch is exactly who can vouch that it is as
@@ -239,8 +239,10 @@ enum ItemType: string
                "not confirmed yet" to a second rider with no way to answer
                (owner-reported). The tile drawer's confirm flow had promised
                "from then on the ordinary one-tap item confirmation applies";
-               this makes that true. */
-            self::RoadSurface => [ConfirmationStance::Exists],
+               this makes that true. Its "no" is a stance of its own, like
+               water's: the stretch is there, but not as described — and may
+               carry a note for the curators. */
+            self::RoadSurface => [ConfirmationStance::Exists, ConfirmationStance::NotAsDescribed],
             default => [],
         };
     }

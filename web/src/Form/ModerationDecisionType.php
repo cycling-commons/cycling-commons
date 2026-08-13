@@ -46,6 +46,15 @@ final class ModerationDecisionType extends AbstractType
                     new NotBlank(message: 'moderate.error.decision_required'),
                 ],
             ])
+            // Approve & confirm in one stroke (owner 2026-08-13): '1' means
+            // the curator also stands behind the entry personally, and their
+            // confirmation is recorded after the approval (which verifies —
+            // ItemConfirmationService::verifyIfCurator). Hidden rather than a
+            // checkbox type: the drawer posts it programmatically.
+            ->add('and_confirm', HiddenType::class, [
+                'label' => false,
+                'required' => false,
+            ])
             ->add('note', TextareaType::class, [
                 'label' => false,
                 'required' => false,

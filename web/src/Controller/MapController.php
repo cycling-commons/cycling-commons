@@ -261,9 +261,14 @@ final class MapController extends AbstractController
             // vocabulary to the form's five values for display).
             'smoothness' => 'd_smoothness', 'mtbScale' => 'd_mtb_scale',
             // A-item confirmation panel (community.js stanceKind 'accuracy'):
-            // the question is "as described?", not "still here?".
+            // the question is "as described?", not "still here?" — with a
+            // negative stance that may carry a why for the curators, and the
+            // curator-only notes block that reads them back.
             'asDescribed' => 'd_as_described', 'surfaceCfQ' => 'd_surface_cf_q',
-            'surfaceCfA' => 'd_surface_cf_a',
+            'surfaceCfA' => 'd_surface_cf_a', 'notAsDescribed' => 'd_not_as_described',
+            'cfWhyPh' => 'd_cf_why_ph', 'cfWhySend' => 'd_cf_why_send',
+            'cfWhySent' => 'd_cf_why_sent', 'cfNotesH' => 'd_cf_notes_h',
+            'alsoConfirm' => 'd_also_confirm',
             // Route-network drawer (routes-tiles.js): corridor + knooppunt.
             'routeNetwork' => 'd_route_network', 'routeRef' => 'd_route_ref',
             'routesHere' => 'd_routes_here', 'routeSurfaceHint' => 'd_route_surface_hint',

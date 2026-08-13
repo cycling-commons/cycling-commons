@@ -464,13 +464,18 @@
   {# ── Danger zone ── #}
   <div class="danger-zone" id="delete">
     <h2 class="sec">{{ 'settings.section_danger'|trans }}</h2>
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:1.2rem">
-      <div>
-        <b style="display:block;font-size:.95rem">{{ 'settings.delete_account_b'|trans }}</b>
-        <small style="color:#595c4d;font-size:.82rem">{{ 'settings.delete_account_small'|trans }}</small>
-      </div>
+    <div style="margin-bottom:1.2rem">
+      <b style="display:block;font-size:.95rem">{{ 'settings.delete_account_b'|trans }}</b>
+      <p class="fhelp" style="margin:.2rem 0 .9rem">{{ 'settings.delete_account_small'|trans }}</p>
+      {# The password comes BEFORE the code (owner 2026-08-13): requesting a
+         deletion code starts destroying an account, and an open session on a
+         shared machine must not be enough — same gate as the data export. #}
       <form method="post" action="{{ path('settings_delete_request') }}">
         <input type="hidden" name="_token" value="{{ csrf_token('delete_request') }}">
+        <div class="field" style="margin-bottom:.8rem;max-width:320px">
+          <label for="delete_password">{{ 'settings.label_export_password'|trans }}</label>
+          <input type="password" id="delete_password" name="current_password" autocomplete="current-password" required>
+        </div>
         <button type="submit" class="btn-danger">{{ 'settings.submit_delete_request'|trans }}</button>
       </form>
     </div>

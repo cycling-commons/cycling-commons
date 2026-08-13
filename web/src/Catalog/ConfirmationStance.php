@@ -20,4 +20,9 @@ enum ConfirmationStance: string
     case Potable = 'potable';
     case NotPotable = 'not_potable';
     case Exists = 'exists';
+    /* A road-surface segment's "no": the stretch is there, but not as the
+       entry describes it (owner 2026-08-13). Like NotPotable it is a warning,
+       not a vouching — it counts in the public tally but never verifies — and
+       it may carry a note telling the curators what differs. */
+    case NotAsDescribed = 'not_as_described';
 }

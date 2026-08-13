@@ -307,6 +307,19 @@ off for A: a stretch is not a place that vanishes, closures ride the
 drawer confirmation counts toward the `v` derivation as usual, so a confirmed
 stretch surfaces in Confirmed mode.
 
+Refined the same evening (owner): the panel is an explicit **yes/no pair**
+("✓ Yes — as I rode it", filled orange as the button people should see, and
+"✗ No — not as described", `ConfirmationStance::NotAsDescribed`). The "no"
+never verifies (a warning is not a vouching, same rule as `not_potable`) and
+may carry an optional **why** (≤500 chars, `item_confirmation.note`,
+migration `Version20260813210000`): free text FOR THE CURATORS — shown back
+only in the curator-only `notes` block of the confirmations payload, never
+rendered publicly (one-way-to-moderate). And the moderation drawer gained
+**Approve & confirm** — a tick on the decision that also records the
+curator's own confirmation, which verifies outright through the existing
+weighted-by-who-pressed-it rule ("I know these roads by hand"); offered for
+every letter whose stances include `exists` (not water, not K).
+
 ## Read view (drawer "current details")
 - Surface
 - Smoothness
