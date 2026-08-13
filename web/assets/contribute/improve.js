@@ -288,6 +288,9 @@
       zoom: hasCoords ? 14 : 12,
       attributionControl: false
     });
+    // Probe handle, same convention as the map page's __ccMap: browser smoke
+    // tests need project()/unproject() to aim real events at the drawn line.
+    window.__ccWizMap = wmap;
     wmap.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
     wmap.addControl(new maplibregl.AttributionControl({ customAttribution: '© OpenStreetMap contributors · ODbL' }), 'bottom-right');
     wmap.on('load', function () {
@@ -459,19 +462,70 @@
         return ll.lat.toFixed(4) + '°N ' + ll.lng.toFixed(4) + '°E';
       };
 
-      /* The road between the two pins, as the router drew it.
+      /* The road between the pins, one LEG at a time.
 
          A straight chord between two taps crosses fields, houses and the wrong
          bank of a river: on a map that reads as a mistake, because it is one.
-         So the stretch is snapped with the SAME bicycle router the climb editor
-         uses (/contribute/route → our Valhalla), and `snapped` holds its path.
-         Null means we have not asked yet or the answer was "no road", and then
-         the straight line stays and the rider is told — never a shape presented
-         as the road that isn't. */
-      var snapped = null;
-      var snapSeq = 0;
-      var snapCtl = null;
+         So each leg is snapped with the SAME bicycle router the climb editor
+         uses (/contribute/route → our Valhalla). A leg's line being null means
+         we have not asked yet or the answer was "no road" — the straight
+         chord stays and the rider is told, never a shape presented as the
+         road that isn't.
+
+         WHY legs and not one route (owner-reported 2026-08-13): the router
+         answers "fastest a→b" while a rider dragging a pin is saying "this
+         road" — one long drag rerouted the whole Zuiderdijk inland. Control
+         points (right-click / long-press the line) cut the stretch into legs;
+         a drag recalculates ONLY the legs touching the dragged point, so the
+         part the rider already shaped stays put. And a stretch opened from
+         the map is SEEDED with the road's own tile geometry (src 'seed'), so
+         its shape is right before the router is ever asked. */
+      var legs = [];      // legs[i] between waypoint i and i+1: {line, src}
+      var ctrls = [];     // control-point markers, in order along the stretch
       var SNAP_TIMEOUT_MS = 8000;
+      var latK = null;    // cos(lat), for planar distances in degrees
+      var dd2 = function (a, b) {
+        if (latK === null) latK = Math.cos((wmap ? wmap.getCenter().lat : a[1]) * Math.PI / 180);
+        var dx = (a[0] - b[0]) * latK;
+        var dy = a[1] - b[1];
+        return dx * dx + dy * dy;
+      };
+      var TRIM_NEAR2 = Math.pow(30 / 111320, 2);   // ~30 m: "still on the drawn line"
+
+      /* Waypoints in stretch order: start pin, control points, end pin. */
+      var waypoints = function () {
+        return placed.length < 2 ? [] : [placed[0]].concat(ctrls).concat([placed[1]]);
+      };
+      var legLine = function (i) {
+        var w = waypoints();
+        var l = legs[i];
+        if (l && l.line && l.line.length > 1) return l.line;
+        return [w[i].getLngLat().toArray(), w[i + 1].getLngLat().toArray()];
+      };
+      /* The whole drawn stretch: legs joined, duplicate joint vertices dropped. */
+      var fullLine = function () {
+        var w = waypoints();
+        if (w.length < 2) return null;
+        var out = [];
+        for (var i = 0; i < w.length - 1; i++) {
+          var L = legLine(i);
+          if (out.length && dd2(out[out.length - 1], L[0]) < 1e-14) L = L.slice(1);
+          out = out.concat(L);
+        }
+        return out;
+      };
+      var anyRouted = function () {
+        return legs.some(function (l) { return l && l.line && l.line.length > 1; });
+      };
+      /* The server caps a segment line's vertices; a many-leg stretch must
+         arrive under it. Even sampling, endpoints always kept. */
+      var capLine = function (line, max) {
+        if (!line || line.length <= max) return line;
+        var out = [];
+        var step = (line.length - 1) / (max - 1);
+        for (var i = 0; i < max; i++) out.push(line[Math.round(i * step)]);
+        return out;
+      };
 
       /* The drawn stretch covers the road it describes.
 
@@ -493,7 +547,7 @@
         if (wmap.getLayer(id)) wmap.removeLayer(id);
         if (wmap.getSource(id)) wmap.removeSource(id);
         if (placed.length < 2) return;
-        var coords = snapped || placed.map(function (m) { return m.getLngLat().toArray(); });
+        var coords = fullLine();
         wmap.addSource(id, { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: coords } } });
         wmap.addLayer({
           id: id, type: 'line', source: id,
@@ -536,17 +590,20 @@
         }, 'top-left');
       };
 
-      /* Ask the router for the road between the pins. Sequence-guarded and
-         abortable because dragging a pin fires this repeatedly, and a slow
-         earlier answer arriving last would draw a stretch the rider has already
-         moved away from. */
-      var snapSeg = function () {
-        var seq = ++snapSeq;
-        if (snapCtl) { snapCtl.abort(); snapCtl = null; }
-        if (placed.length < 2) { snapped = null; return; }
-        var a = placed[0].getLngLat().toArray();
-        var b = placed[1].getLngLat().toArray();
-        var ctl = snapCtl = new AbortController();
+      /* Ask the router for the road of ONE leg. Sequence-guarded and abortable
+         per leg — dragging fires this repeatedly, and a slow earlier answer
+         arriving last would draw a shape the rider has already moved away
+         from. The seq/ctl live on the leg object, not on an index: control
+         points splice the legs array while requests are in flight. */
+      var snapLeg = function (leg) {
+        var i = legs.indexOf(leg);
+        var w = waypoints();
+        if (i < 0 || w.length < i + 2) return;
+        var seq = (leg._seq = (leg._seq || 0) + 1);
+        if (leg._ctl) { leg._ctl.abort(); }
+        var a = w[i].getLngLat().toArray();
+        var b = w[i + 1].getLngLat().toArray();
+        var ctl = leg._ctl = new AbortController();
         var timer = setTimeout(function () { ctl.abort(); }, SNAP_TIMEOUT_MS);
         fetch('/contribute/route', {
           method: 'POST',
@@ -558,20 +615,64 @@
           return r.json();
         }).then(function (d) {
           clearTimeout(timer);
-          if (seq !== snapSeq) return;   // superseded by a newer drag
+          if (seq !== leg._seq || legs.indexOf(leg) < 0) return;   // superseded
           var line = d && d.code === 'Ok' && d.routes && d.routes[0]
             && d.routes[0].geometry && d.routes[0].geometry.coordinates;
-          if (!line || line.length < 2) { snapped = null; toast(t('toast_segment_straight')); }
-          else { snapped = line; }
+          if (!line || line.length < 2) { leg.line = null; leg.src = null; toast(t('toast_segment_straight')); }
+          else { leg.line = line; leg.src = 'route'; }
           syncLoc();
           drawSeg();
         }).catch(function () {
           clearTimeout(timer);
-          if (seq !== snapSeq) return;
-          snapped = null;
+          if (seq !== leg._seq || legs.indexOf(leg) < 0) return;
+          leg.line = null; leg.src = null;
           toast(t('toast_segment_straight'));
           syncLoc();
           drawSeg();
+        });
+      };
+
+      /* Route every leg that has no line yet — the whole stretch on fresh
+         taps, only the gaps after a control-point change. */
+      var snapSeg = function () {
+        if (placed.length < 2) return;
+        legs.forEach(function (leg) { if (!leg.line) snapLeg(leg); });
+      };
+
+      /* A drag moved one waypoint; only the legs TOUCHING it change. And when
+         the new position still lies on a leg's existing line, the leg is
+         TRIMMED to it instead of re-routed — dragging a pin back along the
+         road must never invite the router to redraw the road (the pin snaps
+         onto the line, so what you see is exactly what is kept). */
+      var legUpdateForWaypoint = function (m) {
+        var w = waypoints();
+        var wi = w.indexOf(m);
+        if (wi < 0) return;
+        var idx = [];
+        if (wi > 0) idx.push(wi - 1);          // m is this leg's END
+        if (wi < w.length - 1) idx.push(wi);   // m is this leg's START
+        idx.forEach(function (li) {
+          var leg = legs[li];
+          if (!leg) return;
+          var pt = m.getLngLat().toArray();
+          if (leg.line && leg.line.length > 1) {
+            var bi = -1, bd = Infinity;
+            for (var i = 0; i < leg.line.length; i++) {
+              var d = dd2(leg.line[i], pt);
+              if (d < bd) { bd = d; bi = i; }
+            }
+            if (bd <= TRIM_NEAR2) {
+              var cut = (li === wi) ? leg.line.slice(bi) : leg.line.slice(0, bi + 1);
+              if (cut.length > 1) {
+                leg.line = cut;
+                var tip = (li === wi) ? cut[0] : cut[cut.length - 1];
+                m.setLngLat({ lng: tip[0], lat: tip[1] });
+                return;
+              }
+            }
+          }
+          leg.line = null; leg.src = null;
+          snapLeg(leg);
         });
       };
 
@@ -588,10 +689,12 @@
             if (ro) ro.textContent = placed.length === 1 ? t('readout_segment_end') : t('readout_segment_start');
           } else {
             WZ.loc = { type: 'segment', a: placed[0].getLngLat().toArray(), b: placed[1].getLngLat().toArray() };
-            // `line` only when the router answered: the server treats its
-            // absence as "no road found", which is exactly what it means.
+            // `line` only when some leg has a real shape (router or seed): the
+            // server treats its absence as "no road found", which is exactly
+            // what it means. Chord-only legs ride along inside the joined
+            // line — a control point on a chord is still the rider's shape.
             var seg = { a: WZ.loc.a, b: WZ.loc.b };
-            if (snapped && snapped.length > 1) seg.line = snapped;
+            if (anyRouted()) seg.line = capLine(fullLine(), 2900);
             if (fSeg) fSeg.value = JSON.stringify(seg);
             if (ro) ro.textContent = '✓ ' + fmt(placed[0].getLngLat()) + ' → ' + fmt(placed[1].getLngLat());
           }
@@ -654,7 +757,8 @@
       var pushHistory = function (moved, from) {
         hist.push({
           pts: placed.map(function (m) { return (moved && m === moved && from) ? from : m.getLngLat().toArray(); }),
-          line: snapped
+          cpts: ctrls.map(function (c) { return (moved && c === moved && from) ? from : c.getLngLat().toArray(); }),
+          legs: legs.map(function (l) { return { line: l.line, src: l.src }; })
         });
         if (undoCtl) undoCtl.hidden = false;
       };
@@ -667,10 +771,55 @@
         m.on('dragend', function () {
           pushHistory(m, dragFrom);
           dragFrom = null;
-          snapped = null; syncLoc(); drawSeg(); announceMove(); snapSeg();
+          legUpdateForWaypoint(m);
+          syncLoc(); drawSeg(); announceMove();
         });
         placed.push(m);
         return m;
+      };
+
+      /* A control point: a small round handle, draggable like the pins;
+         right-click (or long-press) removes it. Placed via rightClickAt(). */
+      var mkCtrl = function (lngLat) {
+        var el = document.createElement('div');
+        el.className = 'wz-ctrlpt';
+        el.title = t('ctrl_remove_title');
+        var m = new maplibregl.Marker({ element: el, draggable: true }).setLngLat(lngLat).addTo(wmap);
+        m.on('dragstart', function () { dragFrom = m.getLngLat().toArray(); });
+        m.on('dragend', function () {
+          pushHistory(m, dragFrom);
+          dragFrom = null;
+          legUpdateForWaypoint(m);
+          syncLoc(); drawSeg(); announceMove();
+        });
+        el.addEventListener('contextmenu', function (ev) {
+          ev.preventDefault();
+          ev.stopPropagation();
+          removeCtrl(m);
+        });
+        armLongPress(el, function () { removeCtrl(m); });
+        return m;
+      };
+
+      var removeCtrl = function (cm) {
+        var ci = ctrls.indexOf(cm);
+        if (ci < 0) return;
+        pushHistory();
+        var l1 = legs[ci], l2 = legs[ci + 1];
+        var merged = { line: null, src: null };
+        if (l1 && l2 && l1.line && l2.line) {
+          // Both halves have real shapes: joining them IS the merged road —
+          // no reason to ask the router to redraw what the rider shaped.
+          merged.line = l1.line.concat(l2.line.slice(1));
+          merged.src = l1.src === l2.src ? l1.src : 'mixed';
+        }
+        legs.splice(ci, 2, merged);
+        ctrls.splice(ci, 1);
+        cm.remove();
+        if (!merged.line) snapLeg(merged);
+        syncLoc();
+        drawSeg();
+        toast(t('toast_ctrl_removed'));
       };
 
       var undo = function () {
@@ -678,8 +827,11 @@
         if (!prev) return;
         placed.forEach(function (m) { m.remove(); });
         placed.length = 0;
+        ctrls.forEach(function (c) { c.remove(); });
+        ctrls.length = 0;
         prev.pts.forEach(function (pt) { addMarker({ lng: pt[0], lat: pt[1] }); });
-        snapped = prev.line;
+        (prev.cpts || []).forEach(function (pt) { ctrls.push(mkCtrl({ lng: pt[0], lat: pt[1] })); });
+        legs = prev.legs.map(function (l) { return { line: l.line, src: l.src }; });
         if (undoCtl) undoCtl.hidden = 0 === hist.length;
         syncLoc();
         drawSeg();
@@ -691,10 +843,68 @@
         pushHistory();
         if (placed.length >= need) { placed.forEach(function (m) { m.remove(); }); placed.length = 0; }
         addMarker(lngLat);
-        snapped = null;
+        // Fresh taps start a fresh stretch: no controls, one unrouted leg.
+        ctrls.forEach(function (c) { c.remove(); });
+        ctrls.length = 0;
+        legs = placed.length === 2 ? [{ line: null, src: null }] : [];
         syncLoc();
         drawSeg();
         snapSeg();
+      };
+
+      /* Right-click (long-press on touch) pins a CONTROL POINT on the drawn
+         line (owner design 2026-08-13): the route must pass through it, and a
+         drag recalculates only up to the nearest control — the rest of the
+         stretch stays exactly as shaped. The click must land ON the line
+         (35 px), so a stray right-click never restructures the stretch. */
+      var rightClickAt = function (lngLat, screenPt) {
+        if (confirmView || placed.length < 2) return;
+        var best = null;
+        for (var li = 0; li < legs.length; li++) {
+          var L = legLine(li);
+          for (var vi = 0; vi < L.length; vi++) {
+            var p = wmap.project({ lng: L[vi][0], lat: L[vi][1] });
+            var dx = p.x - screenPt.x, dy = p.y - screenPt.y;
+            var d = dx * dx + dy * dy;
+            if (!best || d < best.d) best = { d: d, li: li, vi: vi, pt: L[vi] };
+          }
+        }
+        if (!best || best.d > 35 * 35) return;
+        var L2 = legLine(best.li);
+        if (L2.length < 3) return;                       // nothing between the ends to pin
+        if (best.vi < 1) best.vi = 1;
+        if (best.vi > L2.length - 2) best.vi = L2.length - 2;
+        pushHistory();
+        var leg = legs[best.li];
+        var hasLine = leg && leg.line && leg.line.length > 1;
+        var head = { line: hasLine ? leg.line.slice(0, best.vi + 1) : null, src: hasLine ? leg.src : null };
+        var tail = { line: hasLine ? leg.line.slice(best.vi) : null, src: hasLine ? leg.src : null };
+        legs.splice(best.li, 1, head, tail);
+        ctrls.splice(best.li, 0, mkCtrl({ lng: L2[best.vi][0], lat: L2[best.vi][1] }));
+        if (!head.line) snapLeg(head);
+        if (!tail.line) snapLeg(tail);
+        syncLoc();
+        drawSeg();
+        toast(t('toast_ctrl_added'));
+      };
+
+      /* Long-press = right-click on touch: one finger, still (≤8 px), 600 ms. */
+      var armLongPress = function (el, fire) {
+        var timer = null, sx = 0, sy = 0;
+        el.addEventListener('touchstart', function (ev) {
+          if (ev.touches.length !== 1) return;
+          sx = ev.touches[0].clientX; sy = ev.touches[0].clientY;
+          timer = setTimeout(function () { timer = null; fire(sx, sy); }, 600);
+        }, { passive: true });
+        el.addEventListener('touchmove', function (ev) {
+          if (!timer || ev.touches.length !== 1) return;
+          if (Math.abs(ev.touches[0].clientX - sx) > 8 || Math.abs(ev.touches[0].clientY - sy) > 8) {
+            clearTimeout(timer); timer = null;
+          }
+        }, { passive: true });
+        ['touchend', 'touchcancel'].forEach(function (n) {
+          el.addEventListener(n, function () { if (timer) { clearTimeout(timer); timer = null; } });
+        });
       };
 
       wmap.on('click', function (e) { placeAt(e.lngLat); });
@@ -702,7 +912,32 @@
       // Segment mode only: a point item draws no line, so a control offering to
       // hide one would be a button that does nothing on most of the wizard's
       // types.
-      if (LOCATE === 'segment') mountSegPeek();
+      if (LOCATE === 'segment') {
+        mountSegPeek();
+        // The DOM event, not MapLibre's map-level 'contextmenu': the library
+        // withholds that one behind its right-drag-rotate bookkeeping, and a
+        // control point must land on a plain right-CLICK every time. The
+        // rcDown guard keeps a right-drag's release (which still emits a DOM
+        // contextmenu) from dropping a point nobody asked for — and
+        // preventDefault keeps the browser menu from covering the map right
+        // where the point appears.
+        var rcDown = null;
+        wmap.getCanvas().addEventListener('mousedown', function (ev) {
+          if (ev.button === 2) rcDown = { x: ev.clientX, y: ev.clientY };
+        });
+        wmap.getCanvas().addEventListener('contextmenu', function (ev) {
+          ev.preventDefault();
+          if (rcDown && (Math.abs(ev.clientX - rcDown.x) > 8 || Math.abs(ev.clientY - rcDown.y) > 8)) return;
+          var rect = wmap.getCanvas().getBoundingClientRect();
+          var pt = { x: ev.clientX - rect.left, y: ev.clientY - rect.top };
+          rightClickAt(wmap.unproject(pt), pt);
+        });
+        armLongPress(wmap.getCanvas(), function (cx, cy) {
+          var rect = wmap.getCanvas().getBoundingClientRect();
+          var pt = { x: cx - rect.left, y: cy - rect.top };
+          rightClickAt(wmap.unproject(pt), pt);
+        });
+      }
 
       // Pre-place a known stretch, then frame it. placeAt() handles the marker,
       // the drag handler, the readout and the drawn line, so the prefill is the
@@ -714,9 +949,25 @@
           // asked for.
           addMarker({ lng: segA[0], lat: segA[1] });
           addMarker({ lng: segB[0], lat: segB[1] });
+          /* The map page hands over the stretch's actual TILE GEOMETRY
+             (sessionStorage, too many vertices for the URL). When it matches
+             the sa/sb this page opened with, the line starts as the road the
+             tiles know — src 'seed' — and the router is never asked to guess
+             it. Guards: endpoints must match (~20 m) and the seed must be
+             fresh, so a seed from an older click can never dress up a
+             different stretch. */
+          var seed = null;
+          try { seed = JSON.parse(sessionStorage.getItem('ccSegSeed') || 'null'); } catch (e) { seed = null; }
+          var nearEnd = function (p, q) {
+            return p && q && Math.abs(p[0] - q[0]) < 2e-4 && Math.abs(p[1] - q[1]) < 2e-4;
+          };
+          var seedOk = seed && seed.line && seed.line.length > 1
+            && nearEnd(seed.a, segA) && nearEnd(seed.b, segB)
+            && (Date.now() - (seed.ts || 0)) < 15 * 60 * 1000;
+          legs = [seedOk ? { line: seed.line, src: 'seed' } : { line: null, src: null }];
           syncLoc();
           drawSeg();
-          snapSeg();
+          if (!seedOk) snapSeg();
           // Say the one thing riders do not discover on their own (owner
           // 2026-08-13): the pins can be dragged to cover more or less of the
           // road — the line re-follows the road on every drag.
@@ -771,7 +1022,9 @@
           pushHistory();
           placed.forEach(function (m) { m.remove(); });
           placed.length = 0;
-          snapped = null;
+          ctrls.forEach(function (c) { c.remove(); });
+          ctrls.length = 0;
+          legs = [];
           drawSeg();
           syncLoc();
         });

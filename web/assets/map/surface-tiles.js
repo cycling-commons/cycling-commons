@@ -518,15 +518,31 @@ export function openSurfaceDrawer(p, lngLat, geometry, tileCtx) {
   // it away invites a worse answer than the one we already have. A TO-DO
   // click prefills the whole unrecorded same-named run (unrecordedRunEnds);
   // a classified click keeps its own way (fullWayEnds).
-  let ends, spannedRefs;
+  let ends, spannedRefs, seedLine = null;
   if (tileCtx && tileCtx.source === SURFACE_TODO_SOURCE) {
     const run = unrecordedRunEnds(tileCtx.source, tileCtx.sourceLayer, p, geometry);
-    ends = run.ends; spannedRefs = run.refs;
+    ends = run.ends; spannedRefs = run.refs; seedLine = run.line || null;
   } else if (tileCtx) {
-    ends = fullWayEnds(tileCtx.source, tileCtx.sourceLayer, p.ref, geometry);
+    // The stitched line, when the fragments join, gives BOTH the seed and
+    // more truthful ends than the farthest-pair heuristic.
+    seedLine = fullWayLine(tileCtx.source, tileCtx.sourceLayer, p.ref);
+    ends = seedLine
+      ? { a: seedLine[0], b: seedLine[seedLine.length - 1] }
+      : fullWayEnds(tileCtx.source, tileCtx.sourceLayer, p.ref, geometry);
   } else {
     ends = segmentEnds(geometry);
   }
+  // Hand the stretch's actual shape to the wizard — sessionStorage, not the
+  // URL: hundreds of vertices. Seeded, the wizard draws the road as the tiles
+  // know it instead of asking the router for a route that may not follow it.
+  // Cleared when there is no seed, so the wizard never picks up a stale one.
+  try {
+    if (seedLine && ends) {
+      sessionStorage.setItem('ccSegSeed', JSON.stringify({ a: ends.a, b: ends.b, line: seedLine, ts: Date.now() }));
+    } else {
+      sessionStorage.removeItem('ccSegSeed');
+    }
+  } catch (e) { /* storage blocked — the wizard falls back to the router */ }
 
   // The street's own name leads when it has one. The basemap has been printing
   // it under our line all along, so a drawer headlined "Paved · asphalt" on a
@@ -753,6 +769,96 @@ function roadGroup(hw) {
   return G[hw] || hw || 'other';
 }
 
+/* Join the tile FRAGMENTS of one way into one line. Clipping cuts a way at
+   tile borders but never moves its vertices, so the seam vertices repeat
+   exactly (up to tile-grid quantization, a metre or two) — a ~5 m tolerance
+   finds the seam even where clip buffers overlap. Returns null when the
+   fragments will not join: a refused seed beats a guessed shape. */
+function stitchParts(parts, d2) {
+  const J2 = (5 / 111320) ** 2;
+  const rem = parts.filter(p => p.length >= 2).sort((a, b) => b.length - a.length);
+  if (!rem.length) return null;
+  let line = rem.shift().slice();
+  while (rem.length) {
+    let progress = false;
+    for (let i = 0; i < rem.length; i++) {
+      const ext = extendWith(line, rem[i], d2, J2);
+      if (ext) { line = ext; rem.splice(i, 1); progress = true; break; }
+      if (containedIn(line, rem[i], d2, J2)) { rem.splice(i, 1); progress = true; break; }
+    }
+    if (!progress) return null;
+  }
+  return line;
+}
+
+/* Graft `part` onto either end of `line`, in either orientation, cutting the
+   clip-buffer overlap at the nearest shared vertex. Null when it touches
+   neither end. */
+function extendWith(line, part, d2, J2) {
+  for (const cand of [part, part.slice().reverse()]) {
+    const e = line[line.length - 1];
+    let bi = -1, bd = Infinity;
+    for (let i = 0; i < cand.length; i++) { const d = d2(cand[i], e); if (d < bd) { bd = d; bi = i; } }
+    if (bd <= J2 && bi < cand.length - 1) return line.concat(cand.slice(bi + 1));
+    const s = line[0];
+    bi = -1; bd = Infinity;
+    for (let i = 0; i < cand.length; i++) { const d = d2(cand[i], s); if (d < bd) { bd = d; bi = i; } }
+    if (bd <= J2 && bi > 0) return cand.slice(0, bi).concat(line);
+  }
+  return null;
+}
+
+/* A fragment both of whose endpoints already lie on the line is an overlap
+   duplicate from a neighbouring tile's buffer — drop it, don't graft it. */
+function containedIn(line, part, d2, J2) {
+  return [part[0], part[part.length - 1]].every(p => line.some(v => d2(v, p) <= J2));
+}
+
+/* Order a component's stitched ways end to end into the run's actual PATH.
+   Starts from a degree-1 tip (a true end touches nothing) and walks nearest
+   endpoints. At a fork it takes one arm and stops when nothing joins — the
+   returned refs then cover exactly what the line covers, which keeps the
+   spanned-refs dedupe honest for same-named parallel roads. Null when no way
+   stitched, or the run is a loop. */
+function walkRun(component, stitched, d2, tol2) {
+  const refs = [...component].filter(r => { const l = stitched.get(r); return l && l.length >= 2; });
+  if (refs.length !== component.size) return null;
+  const endsOf = r => { const l = stitched.get(r); return [l[0], l[l.length - 1]]; };
+  const all = refs.flatMap(r => endsOf(r).map(pt => ({ r, pt })));
+  const degree = pt => all.reduce((n, o) => n + (d2(o.pt, pt) <= tol2 ? 1 : 0), 0);
+  let start = null;
+  for (const o of all) if (degree(o.pt) === 1) { start = o; break; }
+  if (!start) return null;
+  const unused = new Set(refs);
+  let line = stitched.get(start.r).slice();
+  if (d2(line[0], start.pt) > d2(line[line.length - 1], start.pt)) line.reverse();
+  unused.delete(start.r);
+  const order = [start.r];
+  while (unused.size) {
+    const tail = line[line.length - 1];
+    let next = null, nd = Infinity;
+    for (const r of unused) {
+      for (const pt of endsOf(r)) { const d = d2(pt, tail); if (d < nd) { nd = d; next = r; } }
+    }
+    if (nd > tol2) break;
+    let l = stitched.get(next).slice();
+    if (d2(l[0], tail) > d2(l[l.length - 1], tail)) l.reverse();
+    line = line.concat(l.slice(1));
+    unused.delete(next); order.push(next);
+  }
+  return { line, refs: order };
+}
+
+/* Cap a seed line's vertex count (sessionStorage payload + the server's
+   segment-point limit) by even sampling — endpoints always survive. */
+function capLine(line, max) {
+  if (!line || line.length <= max) return line;
+  const out = [];
+  const step = (line.length - 1) / (max - 1);
+  for (let i = 0; i < max; i++) out.push(line[Math.round(i * step)]);
+  return out;
+}
+
 /**
  * The whole UNRECORDED RUN a clicked to-do way belongs to: every same-named,
  * same-road-group, still-unrecorded neighbour chained end to end.
@@ -818,7 +924,24 @@ export function unrecordedRunEnds(sourceId, sourceLayer, props, clickedGeometry)
     }
     frontier = next;
   }
-  // The run's outermost ends: farthest pair across the component's endpoints.
+  // The run's actual PATH, when the fragments assemble: stitched per way,
+  // then walked end to end. The wizard seeds its drawn line from this instead
+  // of asking the router — which answers "fastest a→b" and on a long run
+  // leaves the road entirely (owner-reported 2026-08-13). When the walk
+  // succeeds, ends and refs come FROM the walked line, so on a fork (two
+  // same-named parallel roads) the item spans exactly the arm it draws.
+  const stitched = new Map();
+  for (const ref of component) stitched.set(ref, stitchParts(ways.get(ref) || [], d2));
+  const walked = walkRun(component, stitched, d2, tol2);
+  if (walked && walked.refs.includes(props.ref) && walked.line.length >= 2) {
+    return {
+      ends: { a: walked.line[0], b: walked.line[walked.line.length - 1] },
+      refs: walked.refs,
+      line: capLine(walked.line, 1200),
+    };
+  }
+  // No honest path (a loop, or fragments that would not join): the previous
+  // behaviour — farthest endpoint pair over the whole component, no seed.
   const eps = [...component].flatMap(r => wayEnds.get(r) || []);
   if (eps.length < 2) return single();
   let best = null, bd = -1;
@@ -827,6 +950,26 @@ export function unrecordedRunEnds(sourceId, sourceLayer, props, clickedGeometry)
     if (d > bd) { bd = d; best = { a: eps[i], b: eps[j] }; }
   }
   return { ends: best, refs: [...component] };
+}
+
+/* One way's whole stitched line, for classified (skin) clicks — same seed
+   benefit as a run, one way's worth. Null when the fragments will not join. */
+export function fullWayLine(sourceId, sourceLayer, ref) {
+  const parts = [];
+  try {
+    for (const f of map.querySourceFeatures(sourceId, {
+      sourceLayer, filter: ['==', ['get', 'ref'], ref],
+    })) {
+      const g = f.geometry;
+      if (g.type === 'LineString') parts.push(g.coordinates);
+      else if (g.type === 'MultiLineString') parts.push(...g.coordinates);
+    }
+  } catch (e) { return null; }
+  if (!parts.length) return null;
+  const k = Math.cos(parts[0][0][1] * Math.PI / 180);
+  const d2 = (a, b) => { const dx = (a[0] - b[0]) * k, dy = a[1] - b[1]; return dx * dx + dy * dy; };
+  const line = stitchParts(parts, d2);
+  return line && line.length >= 2 ? capLine(line, 1200) : null;
 }
 
 export function fullWayEnds(sourceId, sourceLayer, ref, clickedGeometry) {

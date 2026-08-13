@@ -113,6 +113,56 @@ The wizard's readout, after a prefill, says the stretch is prefilled and that
 **either pin can be dragged** to cover more or less of the road — the hint the
 one-way-per-click behaviour taught us riders need.
 
+## The wizard follows the road, not the router (built 2026-08-14)
+
+The wizard used to snap the two pins with one router call, and the router
+answers the question it is asked: *fastest a→b*. On a long stretch that is not
+the road the rider is pointing at — dragging a pin along the Zuiderdijk first
+rerouted the middle onto the parallel road under the dijk, then left the dijk
+entirely via the N307 (owner-reported 2026-08-13). Three mechanisms fix this,
+all in `web/assets/contribute/improve.js`:
+
+**1 · Geometry-seeded prefill.** A map click that opens the wizard already
+knows the road's shape: the run's tile fragments are stitched per way
+(`stitchParts`) and walked end to end (`walkRun`) in
+`web/assets/map/surface-tiles.js`, and the assembled path travels to the
+wizard via `sessionStorage` (`ccSegSeed` — hundreds of vertices, too many for
+the URL). When the seed's endpoints match the `sa`/`sb` the wizard opened
+with (~20 m) and the seed is fresh (15 min), the drawn line IS the tile
+geometry (leg src `seed`) and the router is never asked. When the walk
+succeeds, `ends` and the spanned refs come *from the walked line*, so on a
+fork (two same-named parallel roads) the item spans exactly the arm it draws.
+Classified (skin) clicks get the same seed for their single way
+(`fullWayLine`). A stale, mismatched or missing seed falls back to the
+router, exactly as before.
+
+**2 · Control points, and legs.** Right-click (long-press on touch) on the
+drawn line pins a **control point** (owner design 2026-08-13): a small round
+handle, draggable like the pins, right-click again to remove. The stretch is
+now a list of **legs** between waypoints (start pin · control points · end
+pin); each leg holds its own line (`seed`/`route`/chord). A drag recalculates
+**only the legs touching the dragged point** — everything the rider already
+shaped stays put. Removing a control point joins its two legs' lines as they
+are (no re-route). The DOM `contextmenu` event is used, not MapLibre's
+map-level one (the library withholds it behind right-drag-rotate
+bookkeeping), with an 8 px guard so a right-drag's release never drops a
+point, and the click must land within 35 px of the line.
+
+**3 · Trim, not re-route.** Dragging an endpoint to a position still on its
+leg's existing line (~30 m) **trims** the line to that point and snaps the
+pin onto it — covering less of a prefilled run costs zero router calls and
+keeps the exact shape. Only a drag *off* the line asks the router, and only
+for that leg.
+
+The submitted `segment.line` is the joined legs, capped under the server's
+3000-point limit (client caps at 2900; the seed itself is capped at 1200 at
+assembly). The server contract is unchanged — `a`, `b`, `line` — control
+points are a client-side editing tool and are not stored. Undo snapshots
+pins, control points and legs together. Probe note: the wizard map exposes
+`window.__ccWizMap` (same convention as the map page's `__ccMap`), and
+real-input events do not reach the wizard canvas under Playwright — verify
+listeners with synthetic DOM events, real feel in a real browser.
+
 ## Names, road type, and what we are allowed to assume (2026-08-12)
 
 **The tile carries the way's `name`.** The basemap had been printing "Rue du
