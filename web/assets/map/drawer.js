@@ -718,7 +718,15 @@ function buildRecord(layer, f){
         + `<button type="button" class="cc-d-act confirm-osm-gone" data-osm-stance="gone">✕ ${D.osmGone||'Not there anymore'}</button>`
       + '</div>')
     : '';
-  const act = edit + osmConfirm + stateRow + vote;
+  /* Three distinct parts, not one interleaved pile (owner 2026-08-13):
+     1 · the community voice (confirm panel + vote),
+     2 · change the record (edit / fix location),
+     3 · report a state change (closed / not there anymore).
+     Each renders as its own separated band; empty parts vanish. */
+  const grp = (html, cls) => html ? `<div class="cc-d-grp${cls?' '+cls:''}">${html}</div>` : '';
+  const act = grp(confirmPanel + vote, 'cc-d-grp-community')
+    + grp(edit, 'cc-d-grp-edit')
+    + grp(osmConfirm + stateRow, 'cc-d-grp-state');
   const desc = f.desc ? `<p class="cc-d-desc">${escPend(f.desc)}${f.descTr?` <span class="cc-d-tr">· auto-translated</span>`:''}</p>` : '';
   // C1-T3 (spec W5): an empty placeholder for the async "Recent changes"
   // section — openDrawer() fetches GET /map/item/{id}/history after this
@@ -742,7 +750,7 @@ function buildRecord(layer, f){
   return `<span class="cc-d-type" style="--c:${layer.color};color:${txtOn(layer.color)}"><i class="cc-g">${layer.icon}</i> ${layer.label}</span>
     <div class="cc-d-name">${escPend(f.name)}</div>${cur}${photo}${desc}${diff}${elev}${len}${grad}
     <ul class="cc-d-rec">${rows}</ul>${fresh}${up}
-    <div class="cc-d-src">${D.source||'Source'} · ${srcLine(f, osmHref)}</div>${confirmPanel}${act}${moderate}${histSlot}`;
+    <div class="cc-d-src">${D.source||'Source'} · ${srcLine(f, osmHref)}</div>${act}${moderate}${histSlot}`;
 }
 // C1-T3: renders one change_history row. Every interpolated value is
 // user-contributed (old/new attribute values, and `who`/`when`/`changedAt`

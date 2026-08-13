@@ -189,12 +189,13 @@ function paintItemConfirm(box, s){
       : s.stanceKind==='accuracy' ? (D.surfaceCfQ||'Is it as described?')
       : (D.hereQ||'Is this still here?'));
   const btns=defs.map(([v,l])=>{
-    const n=(s.stances&&s.stances[v])||0;
     const mine=s.mine===v?' is-mine':'';
     // The vouching is the button people should SEE (owner 2026-08-13): the
     // positive stance renders filled orange, the negative stays an outline.
     const primary=CC_CF_NEGATIVE.has(v)?'':' cf-yes';
-    return `<button class="cc-cf-btn${primary}${mine}" data-cf-act="${v}"${authed?'':' disabled'}>${l} <span class="cc-cf-n">${n}</span></button>`;
+    // No counter ON the button (owner 2026-08-13) — the tally lives in the
+    // panel heading; a number inside the control read as part of its label.
+    return `<button class="cc-cf-btn${primary}${mine}" data-cf-act="${v}"${authed?'':' disabled'}>${l}</button>`;
   }).join('');
   const total = s.total ? `<span class="cc-cf-total">· ${tpl((s.total===1?D.confirmedOne:D.confirmedMany)||`{n} rider${s.total===1?'':'s'} confirmed`, {n:s.total})}</span>` : '';
   // The label of their own stance, for the "you answered" line behind the

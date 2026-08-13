@@ -736,6 +736,14 @@
   .cc-rc-login a{color:var(--trail)}
   .cc-rc-anon .cc-rc-ride,.cc-rc-anon .cc-rc-vote,.cc-rc-anon .cc-rc-suggest{opacity:.5;pointer-events:none}
   /* Community confirmation panel (water potability / "still here?"). */
+  /* The drawer's three action bands (owner 2026-08-13): community voice,
+     change-the-record, report-a-state-change — each separated by a hairline,
+     with the members' own stacking margins normalized inside. */
+  .cc-d-grp{margin-top:.95rem;padding-top:.95rem;border-top:1px solid rgba(239,230,212,.12)}
+  .cc-d-grp .cc-d-act{margin-top:0}
+  .cc-d-grp .cc-osmcf{margin-top:0}
+  .cc-d-grp .cc-cf{margin-top:0}
+  .cc-d-grp-community .cc-d-act{margin-top:.7rem}
   .cc-cf{margin-top:.7rem}
   .cc-cf-h{font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;color:rgba(239,230,212,.8);margin-bottom:.45rem}
   .cc-cf-yours{font-family:var(--mono);font-size:.66rem;letter-spacing:.04em;color:var(--glacier);margin-top:.45rem}
