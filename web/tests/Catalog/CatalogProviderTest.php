@@ -478,4 +478,78 @@ final class CatalogProviderTest extends KernelTestCase
         self::assertIsInt($route['rid']);
         self::assertGreaterThan(0, $route['rid']);
     }
+
+    /**
+     * A materialized A item (the confirm/correct flow) stores the FORM
+     * vocabulary — surface: 'Asphalt' — and no `cls`, because `cls` was a
+     * harvester attribute. The client keys the drawn class layer on `cls`, so
+     * without a serve-time derivation every rider-contributed segment fell
+     * into the grey 'other' fallback instead of its class colour
+     * (owner-reported 2026-08-13: the approved Zuiderdijk drew as no-class).
+     */
+    public function testAMaterializedSegmentServesADerivedClass(): void
+    {
+        $db = $this->em->getConnection();
+        // The exact attribute shape ContributeController materializes: form
+        // vocabulary, segment geometry, no cls.
+        $db->executeStatement(
+            "INSERT INTO item (letter, name, geom, country_code, state, source, source_ref, attributes, created_at, updated_at)
+             VALUES ('A', 'Testdijk', ST_GeomFromText('LINESTRING(4.4 50.6, 4.5 50.7)', 4326), 'BE',
+                     'unverified', 'osm', 'way/999001',
+                     '{\"surface\": \"Asphalt\", \"smoothness\": \"Excellent\", \"segment\": {\"a\": [4.4, 50.6], \"b\": [4.5, 50.7], \"line\": [[4.4, 50.6], [4.5, 50.7]]}}',
+                     now(), now())",
+        );
+        $segs = array_column($this->payload()['A'], null, 'name');
+        self::assertArrayHasKey('Testdijk', $segs);
+        self::assertSame('paved', $segs['Testdijk']['cls'] ?? null,
+            'a rider-materialized Asphalt segment must draw in the paved class, not the other fallback');
+        // A stored cls (the harvested rows) is never second-guessed.
+        $fixture = $this->payload()['A'][0];
+        self::assertArrayHasKey('cls', $fixture);
+    }
+
+    /**
+     * The version tag is what busts the browser's hour-long catalog.json cache
+     * the moment the catalog actually changes (owner-reported 2026-08-13: an
+     * approved submission "disappeared" — the item was in the DB and in the
+     * payload, but the rider's browser replayed the pre-approval JSON for up
+     * to an hour). /map embeds the tag as ?v= on CC_CATALOG_URL, so a change
+     * mints a new URL and the stale cache entry is simply never asked for.
+     */
+    public function testVersionTagFollowsEveryCatalogMutationPath(): void
+    {
+        $provider = static::getContainer()->get(CatalogProvider::class);
+        $db = $this->em->getConnection();
+
+        $v0 = $provider->versionTag();
+        self::assertMatchesRegularExpression('/^[0-9a-f]{8,}$/', $v0, 'a compact hex tag, URL-safe');
+        self::assertSame($v0, $provider->versionTag(), 'stable while nothing changes');
+
+        // An UPDATE (moderation decision, materialize-on-edit, closure expiry
+        // sweep — they all touch updated_at).
+        $db->executeStatement("UPDATE item SET updated_at = updated_at + interval '1 second' WHERE id = (SELECT min(id) FROM item)");
+        $v1 = $provider->versionTag();
+        self::assertNotSame($v0, $v1, 'an item update must mint a new version');
+
+        // A DELETE without any other change (takedown, trash purge): max
+        // timestamps do not move, so the tag must also see the row count — a
+        // removed item kept alive by a cached payload is the takedown-critical
+        // case.
+        $db->executeStatement('DELETE FROM item WHERE id = (SELECT max(id) FROM item)');
+        $v2 = $provider->versionTag();
+        self::assertNotSame($v1, $v2, 'an item delete must mint a new version');
+
+        // A confirmation flips the served verified flag without touching item.
+        // user_id 1 exists in the test DB, same shape ManualSourceTest uses.
+        $db->executeStatement(
+            "INSERT INTO item_confirmation (item_id, user_id, stance, created_at, updated_at)
+             SELECT min(id), 1, 'exists', now(), now() FROM item",
+        );
+        $v3 = $provider->versionTag();
+        self::assertNotSame($v2, $v3, 'a confirmation must mint a new version');
+
+        // K rides the same payload: a route change must mint one too.
+        $db->executeStatement("UPDATE recommended_route SET updated_at = updated_at + interval '1 second' WHERE id = (SELECT min(id) FROM recommended_route)");
+        self::assertNotSame($v3, $provider->versionTag(), 'a route update must mint a new version');
+    }
 }

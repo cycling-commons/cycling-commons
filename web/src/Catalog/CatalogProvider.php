@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Catalog;
 
+use App\Service\BuildVersion;
 use Doctrine\DBAL\Connection;
 
 /**
@@ -26,8 +27,10 @@ final class CatalogProvider
      */
     public const array POOL_LETTERS = ['C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'M'];
 
-    public function __construct(private readonly Connection $db)
-    {
+    public function __construct(
+        private readonly Connection $db,
+        private readonly BuildVersion $buildVersion,
+    ) {
     }
 
     /**
@@ -81,6 +84,52 @@ final class CatalogProvider
     public function json(): string
     {
         return json_encode($this->payload(), \JSON_THROW_ON_ERROR | \JSON_UNESCAPED_SLASHES | \JSON_UNESCAPED_UNICODE | \JSON_PRESERVE_ZERO_FRACTION);
+    }
+
+    /**
+     * A compact tag that changes whenever the payload would.
+     *
+     * /map embeds it as `?v=` on CC_CATALOG_URL, and that is the whole cache
+     * story: catalog.json is deliberately browser-cached for an hour (it is
+     * the critical-path payload), so without a versioned URL a rider whose
+     * submission was just approved reloads into the PRE-approval JSON and
+     * watches their contribution "disappear" until the hour runs out
+     * (owner-reported 2026-08-13, the Zuiderdijk approval). A new tag mints a
+     * new URL; the stale cache entry is simply never asked for again, while
+     * an unchanged catalog keeps hitting the browser cache exactly as before.
+     *
+     * Three tables feed the payload, each sampled as (row count, latest
+     * change): `item` (every letter's rows — moderation decisions,
+     * materialize-on-edit and the closure-expiry sweep all bump updated_at),
+     * `item_confirmation` (flips the served `v` flag without touching item),
+     * and `recommended_route` (K). The COUNT is not decoration: a takedown
+     * deletes a row without moving any max(updated_at), and a removed item
+     * kept alive by a cached payload is the one staleness with legal weight.
+     *
+     * The BUILD version rides the hash too: a deploy can change what the same
+     * rows serialize to (the very fix that introduced this method changed the
+     * A shape without touching a row), and a data-only tag would let the
+     * browser replay the pre-deploy payload for an hour after every release.
+     *
+     * Computed per /map render, uncached: three aggregate scans over tables
+     * whose biggest is ~10^4-10^5 rows — small against the page's existing
+     * region queries, and a server-side TTL here would just reintroduce a
+     * shorter version of the very window this exists to close.
+     */
+    public function versionTag(): string
+    {
+        /** @var list<mixed> $row */
+        $row = $this->db->fetchNumeric(
+            'SELECT (SELECT count(*) FROM item),
+                    (SELECT coalesce(max(updated_at)::text, \'\') FROM item),
+                    (SELECT count(*) FROM item_confirmation),
+                    (SELECT coalesce(max(created_at)::text, \'\') FROM item_confirmation),
+                    (SELECT count(*) FROM recommended_route),
+                    (SELECT coalesce(max(updated_at)::text, \'\') FROM recommended_route)',
+        ) ?: [];
+        $row[] = $this->buildVersion->stamp()['number'];
+
+        return substr(hash('xxh128', implode('|', array_map(strval(...), $row))), 0, 16);
     }
 
     /**
@@ -338,6 +387,19 @@ final class CatalogProvider
         foreach ($this->itemRows('A') as $row) {
             // srcType is the raw ItemSource enum value (see featureCollection()).
             $seg = ['id' => (int) $row['id'], 'name' => $row['name'], 'srcType' => $row['source']] + $this->decode($row['attributes']);
+            // The map draws a segment in the class layer `cls` names, but only
+            // HARVESTED rows ever stored one — a rider-materialized segment
+            // (the confirm/correct flow) stores the form vocabulary and no
+            // cls, and drew in the grey 'other' fallback (owner-reported
+            // 2026-08-13, the approved Zuiderdijk). Derived at serve time so
+            // every past and future row heals at once; a stored cls is never
+            // second-guessed.
+            if (!isset($seg['cls'])) {
+                $cls = SurfaceVocabulary::tileClassFor(\is_string($seg['surface'] ?? null) ? $seg['surface'] : null);
+                if (null !== $cls) {
+                    $seg['cls'] = $cls;
+                }
+            }
             // Real community-tier signal, same derivation as featureCollection()
             // (map-and-search.md §12); absent key = community, byte-stable.
             if ($row['verified']) {

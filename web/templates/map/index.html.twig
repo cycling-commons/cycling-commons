@@ -419,7 +419,11 @@ window.CC_VENDOR = {{ {
      smoke sweep (web/tests/browser/map-smoke.js) needs to assert on layers and
      sources. Production ships neither the flag nor the handle. #}
   {% if app.environment != 'prod' %}window.CC_DEBUG = true;{% endif %}
-  window.CC_CATALOG_URL = {{ path('map_catalog')|json_encode(constant('JSON_UNESCAPED_SLASHES'))|raw }};
+  {# ?v= busts the browser's hour-long catalog cache the moment the catalog
+     changes (CatalogProvider::versionTag) — without it, a rider whose
+     submission was just approved reloads into the pre-approval payload and
+     watches their contribution "disappear" until the max-age runs out. #}
+  window.CC_CATALOG_URL = {{ (path('map_catalog') ~ '?v=' ~ catalog_version)|json_encode(constant('JSON_UNESCAPED_SLASHES'))|raw }};
   {# The heat points live off the critical payload; fetched on the first heatmap-On only. #}
   window.CC_HEAT_URL = {{ path('map_heat')|json_encode(constant('JSON_UNESCAPED_SLASHES'))|raw }};
   window.CC_MAP_SRC = {{ asset('map/map.js')|json_encode(constant('JSON_UNESCAPED_SLASHES'))|raw }};

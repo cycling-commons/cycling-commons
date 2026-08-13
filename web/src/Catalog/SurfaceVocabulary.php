@@ -103,6 +103,34 @@ final class SurfaceVocabulary
         return self::TILE_CLASS[$cls] ?? null;
     }
 
+    /** @var array<string, string> Stored A-layer surface label → map class.
+     *
+     *  The other direction from TILE_CLASS, and wider: it has to cover every
+     *  label that can sit in item.attributes.surface — the DECLARABLE
+     *  vocabulary the forms write AND the harvester-only spellings the
+     *  Wallonia rows carry — because the map draws a segment in the class
+     *  layer this names. A label absent here falls through to the client's
+     *  'other' fallback, which is exactly what happened to every
+     *  rider-materialized segment before serve-time derivation existed
+     *  (owner-reported 2026-08-13): the confirm/correct flow stores the form
+     *  vocabulary and no `cls`, so an approved Asphalt stretch drew grey. */
+    public const array TO_TILE_CLASS = [
+        'Asphalt' => 'paved', 'Concrete' => 'paved', 'Paving stones' => 'paved',
+        'Cycleway · RAVeL' => 'paved',
+        'Sett — pavé' => 'pave', 'Sett (pavé)' => 'pave',
+        'Cobblestone' => 'pave', 'Unhewn cobblestone' => 'pave',
+        'Compacted' => 'gravel', 'Fine gravel' => 'gravel', 'Gravel' => 'gravel',
+        'Dirt' => 'dirt',
+        'Rock' => 'rock',
+        'Surface unverified' => 'unverified',
+    ];
+
+    /** The map class a stored surface label draws in, or null when unknown. */
+    public static function tileClassFor(?string $surface): ?string
+    {
+        return null === $surface ? null : (self::TO_TILE_CLASS[trim($surface)] ?? null);
+    }
+
     /** @param array{covered:int, parts:list<array{surface:string, pct:int|float}>}|null $profile */
     public static function suggestFromProfile(?array $profile): ?string
     {

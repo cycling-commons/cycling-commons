@@ -365,6 +365,17 @@ GeoJSON source + one shared casing layer) because MapLibre cannot data-drive
 distinguishes gravel/pavé/dirt from solid paved must live at the layer level.
 Line width scales from the `width=` tag.
 
+**The class (`cls`) is derived at serve time when a row lacks one**
+(2026-08-13): only harvested rows ever stored a `cls` attribute, so a
+rider-materialized segment (the confirm/correct flow stores the form
+vocabulary — `surface: 'Asphalt'` — and nothing else) drew in the grey
+`other` fallback instead of its class colour. `CatalogProvider::
+surfaceSegments()` now fills a missing `cls` from
+`SurfaceVocabulary::TO_TILE_CLASS` (the stored-label → map-class inverse of
+`TILE_CLASS`, covering both the declarable vocabulary and the harvester-only
+spellings); a stored `cls` is never second-guessed, and an unknown label
+still falls through to `other` rather than being guessed.
+
 ## Implementation
 - **Demo:** registry entry `road-surface` in `atlas/demo/edit-items.js` (hand-picked fixture data); segment geometry in `atlas/demo/surface-data.js`.
 - **Production:** sourced via the `tools/wallonia` harvest today; region-bbox bulk harvesting is

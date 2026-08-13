@@ -115,13 +115,25 @@ Implementation surfaces: `web/assets/map/map.js` (all client behaviour),
 
 | Endpoint | Purpose | Caching |
 |---|---|---|
-| `GET /map/catalog.json` | whole served catalog, letters keyed (transitional, §7.1) | public, ETag, max-age 3600 |
+| `GET /map/catalog.json` | whole served catalog, letters keyed (transitional, §7.1) | public, ETag, max-age 3600, **URL-versioned** |
 | `GET /map/item/{id}/history` | per-item change log for the drawer's "Recent changes"; empty list (200) for never-edited items, never 404 | public, ETag, max-age 60 |
 | `GET /map/best-of?season=&bike=` | ranked verified-route ids for the Curated facet (§4.2) | public, ETag, max-age 300 |
 
 All three are exact-path `PUBLIC_ACCESS` in `security.yaml` (the scheb
 lazy-firewall caching gotcha — see
 [account-and-auth.md](account-and-auth.md) §5).
+
+**catalog.json is fetched through a versioned URL** (2026-08-13): /map embeds
+`CC_CATALOG_URL = /map/catalog.json?v=<tag>` where the tag
+(`CatalogProvider::versionTag()`) hashes the feeding tables' row counts +
+latest change (`item`, `item_confirmation`, `recommended_route`) plus the
+build version. The hour-long max-age is the deliberate critical-path
+optimisation; the tag is what keeps it honest — without it, a rider whose
+submission was just approved reloaded into the pre-approval payload and
+watched their contribution "disappear" until the cache expired
+(owner-reported, the Zuiderdijk approval). Row counts are in the hash because
+a takedown deletes without moving any timestamp; the build version is in it
+because a deploy can change what the same rows serialize to.
 
 ## 4. The rail
 

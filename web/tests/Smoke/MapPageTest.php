@@ -89,7 +89,14 @@ final class MapPageTest extends WebTestCase
         $html = (string) $client->getResponse()->getContent();
 
         self::assertStringContainsString('window.CC_CATALOG_URL', $html);
-        self::assertStringContainsString('/map/catalog.json', $html);
+        // Versioned, not bare: catalog.json is browser-cached for an hour, and
+        // the ?v= tag (CatalogProvider::versionTag) is what makes an approved
+        // submission appear on the next page load instead of "disappearing"
+        // into the stale cache until it expires (owner-reported 2026-08-13).
+        self::assertMatchesRegularExpression(
+            '~window\.CC_CATALOG_URL = "/map/catalog\.json\?v=[0-9a-f]{8,}"~',
+            $html,
+        );
         self::assertStringContainsString('window.CC_MAP_SRC', $html);
         self::assertStringContainsString('map/catalog-load', $html);
         self::assertStringNotContainsString('src="/assets/data/', $html);
