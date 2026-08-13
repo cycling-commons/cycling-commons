@@ -249,6 +249,11 @@
     <div class="rail-foot">
       <div class="res"><b id="count">0</b> {{ 'map.places_shown'|trans }}</div>
     </div>
+    {# Which data builds THIS page is actually drawing (owner 2026-08-13):
+       catalog version tag + the artifact stamps parsed from the loaded URLs.
+       Splits every "I don't see X" report into stale-cache vs server in one
+       glance — a rider screenshots the line, we compare with the bucket. #}
+    <div class="data-versions" id="dataVersions" title="{{ 'map.data_versions_title'|trans }}"></div>
   </aside>
 
   <!-- ============ MAP ============ -->

@@ -203,7 +203,10 @@
                 <dl>
                   {% for row in diff %}
                     <dt>{{ row.label }}</dt>
-                    <dd>
+                    {# Long values (a drawn segment's geometry) clamp to one
+                       line, click to expand — partials/_vclip.html.twig. #}
+                    {% set mlong = (row.now ~ (row.was ?? ''))|length > 110 %}
+                    <dd{% if mlong %} class="vclip" tabindex="0" role="button" aria-expanded="false"{% endif %}>
                       {%- if row.was is not null %}<span class="was">{{ row.was }}</span>{% endif -%}
                       <span class="now">{{ row.now }}</span>
                     </dd>
@@ -249,4 +252,5 @@
   {% endif %}
 
 </div>
+{% include 'partials/_vclip.html.twig' %}
 {% endblock %}

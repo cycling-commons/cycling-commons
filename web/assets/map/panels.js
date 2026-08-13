@@ -164,6 +164,28 @@ export function initMapCtrl(){
 }
 
 export function initRailChrome(){
+  // Data-version readout (owner 2026-08-13): which artifact builds THIS page
+  // is actually drawing — the catalog's ?v= tag plus the build stamp parsed
+  // from each loaded artifact URL. When a rider says "I don't see X", this
+  // line splits stale-cache from server in one glance; 'FAILED' on the
+  // catalog explains an empty map by itself.
+  const dv=document.getElementById('dataVersions');
+  if(dv){
+    const stamp=(u,re)=>{ const m=String(u||'').match(re); return m?m[1]:'—'; };
+    const state=window.CC_CATALOG_STATE||'…';
+    const cat=state==='ok' ? stamp(window.CC_CATALOG_URL,/v=([0-9a-f]+)/) : state;
+    [['catalog',cat,state!=='ok'],
+     ['surface',stamp(window.CC_SURFACE_URL,/\/(\d{8}-\d{4})\//),false],
+     ['routes',stamp(window.CC_ROUTES_URL,/\/(\d{8}-\d{4})\//),false],
+     ['coverage',stamp(window.CC_COVERAGE_URL,/\/(\d{8}-\d{4})\.pmtiles/),false],
+    ].forEach(([k,v,bad],i)=>{
+      if(i) dv.appendChild(document.createTextNode(' · '));
+      dv.appendChild(document.createTextNode(k+' '));
+      const s=document.createElement('span'); if(bad) s.className='dv-bad';
+      s.textContent=v; dv.appendChild(s);
+    });
+  }
+
   // mobile: filters bottom-sheet — the rail-foot peek toggles it
   app=document.querySelector('.app');
 

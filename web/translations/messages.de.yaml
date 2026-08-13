@@ -1194,7 +1194,9 @@ profile:
 settings:
   delete:
     keep_media_credit: 'Meinen Namen auf meinen Fotos behalten'
-    keep_media_credit_help: 'Deine freigegebenen Fotos bleiben ohnehin im Commons — sie stehen unter CC BY-SA 4.0. Dies entscheidet nur, ob sie dich weiterhin nennen. Lässt du das Häkchen weg, werden sie ab dann einer anonymen Radfahrerin oder einem anonymen Radfahrer zugeschrieben, auch in bereits heruntergeladenen Kopien.'
+    keep_media_credit_help: 'Deine freigegebenen Fotos bleiben ohnehin im Commons — sie stehen unter CC BY-SA 4.0. Dies entscheidet nur, ob sie dich weiterhin nennen. Wählst du Nein, werden sie ab dann einer anonymen Radfahrerin oder einem anonymen Radfahrer zugeschrieben, auch in bereits heruntergeladenen Kopien.'
+    keep_media_credit_yes: 'Ja — mein Name bleibt dabei'
+    keep_media_credit_no: 'Nein — einer anonymen Radfahrerin oder einem anonymen Radfahrer zuschreiben'
   eyebrow: 'Dein Profil'
   heading: 'Einstellungen'
   tab_profile: 'Profil'
@@ -1577,6 +1579,7 @@ map:
   legend_rock: 'Fels'
   legend_unverified: 'Belag nicht erfasst'
   study_mode: 'Studienmodus · Basiskarte aus'
+  data_versions_title: 'Die Datenstände, die diese Seite anzeigt. Vergleiche mit einem anderen Gerät oder dem Server, um veralteten Cache von fehlenden Daten zu unterscheiden.'
   base_aria: 'Basiskarte und Overlays'
   base_layers_aria: 'Kartenebenen'
   base_map: 'Karte'

@@ -1200,7 +1200,9 @@ profile:
 settings:
   delete:
     keep_media_credit: 'Mantener mi nombre en las fotos que aporté'
-    keep_media_credit_help: 'Tus fotos aprobadas se quedan en el Commons en cualquier caso — están licenciadas bajo CC BY-SA 4.0. Esto solo decide si siguen llevando tu nombre. Si lo dejas sin marcar, a partir de entonces se atribuirán a un ciclista anónimo, también en las copias que la gente ya se haya descargado.'
+    keep_media_credit_help: 'Tus fotos aprobadas se quedan en el Commons en cualquier caso — están licenciadas bajo CC BY-SA 4.0. Esto solo decide si siguen llevando tu nombre. Elige No y a partir de entonces se atribuirán a un ciclista anónimo, también en las copias que la gente ya se haya descargado.'
+    keep_media_credit_yes: 'Sí — conservar mi nombre en ellas'
+    keep_media_credit_no: 'No — atribuirlas a un ciclista anónimo'
   eyebrow: 'Tu perfil'
   heading: 'Ajustes'
   tab_profile: 'Perfil'
@@ -1909,6 +1911,7 @@ map:
   legend_rock: 'Roca'
   legend_unverified: 'Firme sin registrar'
   study_mode: 'Modo estudio · ocultar el mapa base'
+  data_versions_title: 'Las versiones de datos que muestra esta página. Compárala con otro dispositivo o el servidor para distinguir una caché obsoleta de datos que faltan.'
   base_aria: 'Mapa base y capas superpuestas'
   base_layers_aria: 'Capas del mapa'
   base_map: 'Mapa'

@@ -1194,7 +1194,9 @@ profile:
 settings:
   delete:
     keep_media_credit: 'Garder mon nom sur les photos que j''ai contribuées'
-    keep_media_credit_help: 'Vos photos approuvées restent dans le Commons dans tous les cas — elles sont sous licence CC BY-SA 4.0. Ceci décide seulement si elles continuent de vous nommer. Laissez la case décochée et elles seront attribuées à un cycliste anonyme à partir de là, y compris dans les copies déjà téléchargées.'
+    keep_media_credit_help: 'Vos photos approuvées restent dans le Commons dans tous les cas — elles sont sous licence CC BY-SA 4.0. Ceci décide seulement si elles continuent de vous nommer. Choisissez Non et elles seront attribuées à un cycliste anonyme à partir de là, y compris dans les copies déjà téléchargées.'
+    keep_media_credit_yes: 'Oui — gardez mon nom dessus'
+    keep_media_credit_no: 'Non — attribuez-les à un cycliste anonyme'
   eyebrow: 'Votre profil'
   heading: 'Paramètres'
   tab_profile: 'Profil'
@@ -1574,6 +1576,7 @@ map:
   legend_rock: 'Rocher'
   legend_unverified: 'Revêtement non renseigné'
   study_mode: 'Mode étude · masquer le fond'
+  data_versions_title: 'Les versions de données affichées par cette page. Comparez avec un autre appareil ou le serveur pour distinguer un cache périmé de données manquantes.'
   base_aria: 'Fond de carte et surcouches'
   base_layers_aria: 'Couches de la carte'
   base_map: 'Carte'

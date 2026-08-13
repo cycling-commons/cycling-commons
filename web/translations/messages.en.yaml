@@ -1198,7 +1198,9 @@ profile:
 settings:
   delete:
     keep_media_credit: 'Keep my name on the photos I contributed'
-    keep_media_credit_help: 'Your approved photos stay in the Commons either way — they are licensed CC BY-SA 4.0. This only decides whether they keep naming you. Leave it unticked and they are credited to an anonymous rider from then on, including in copies people have already downloaded.'
+    keep_media_credit_help: 'Your approved photos stay in the Commons either way — they are licensed CC BY-SA 4.0. This only decides whether they keep naming you. Choose No and they are credited to an anonymous rider from then on, including in copies people have already downloaded.'
+    keep_media_credit_yes: 'Yes — keep my name on them'
+    keep_media_credit_no: 'No — credit them to an anonymous rider'
   eyebrow: 'Your profile'
   heading: 'Settings'
   tab_profile: 'Profile'
@@ -1896,6 +1898,7 @@ map:
   legend_rock: 'Rock'
   legend_unverified: 'Surface not recorded'
   study_mode: 'Study mode · hide basemap'
+  data_versions_title: 'The data builds this page is drawing. Compare with another device or the server to tell a stale cache from missing data.'
   base_aria: 'Base map and overlays'
   base_layers_aria: 'Map layers'
   base_map: 'Map'

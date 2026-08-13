@@ -1194,7 +1194,9 @@ profile:
 settings:
   delete:
     keep_media_credit: 'Mijn naam op mijn bijgedragen foto''s houden'
-    keep_media_credit_help: 'Je goedgekeurde foto''s blijven hoe dan ook in de Commons — ze staan onder CC BY-SA 4.0. Dit bepaalt alleen of ze je naam blijven vermelden. Laat het vinkje uit en ze worden vanaf dan toegeschreven aan een anonieme fietser, ook in kopieën die mensen al hebben gedownload.'
+    keep_media_credit_help: 'Je goedgekeurde foto''s blijven hoe dan ook in de Commons — ze staan onder CC BY-SA 4.0. Dit bepaalt alleen of ze je naam blijven vermelden. Kies Nee en ze worden vanaf dan toegeschreven aan een anonieme fietser, ook in kopieën die mensen al hebben gedownload.'
+    keep_media_credit_yes: 'Ja — houd mijn naam erbij'
+    keep_media_credit_no: 'Nee — schrijf ze toe aan een anonieme fietser'
   eyebrow: 'Jouw profiel'
   heading: 'Instellingen'
   tab_profile: 'Profiel'
@@ -1574,6 +1576,7 @@ map:
   legend_rock: 'Rots'
   legend_unverified: 'Wegdek niet vermeld'
   study_mode: 'Studiemodus · achtergrond uit'
+  data_versions_title: 'De dataversies die deze pagina toont. Vergelijk met een ander apparaat of de server om een verouderde cache van ontbrekende data te onderscheiden.'
   base_aria: 'Basiskaart en overlays'
   base_layers_aria: 'Kaartlagen'
   base_map: 'Kaart'

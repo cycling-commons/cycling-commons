@@ -109,8 +109,14 @@
       catalogEtag = r.headers.get('ETag');
       return r.json();
     })
-    .then(applyCatalog)
+    .then(function (d) {
+      applyCatalog(d);
+      // Read by the rail's data-version readout: 'ok' or the failure text —
+      // a fully-empty map with 'catalog FAILED' on it answers itself.
+      window.CC_CATALOG_STATE = 'ok';
+    })
     .catch(function (e) {
+      window.CC_CATALOG_STATE = 'FAILED: ' + (e && e.message ? e.message : e);
       console.error('Catalog load failed — map layers unavailable.', e);
     })
     .then(boot);

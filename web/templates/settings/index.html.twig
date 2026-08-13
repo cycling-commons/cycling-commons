@@ -489,15 +489,24 @@
         {% if has_approved_photos %}
           {# docs/specs/photo-uploads.md §6. Offered only to a rider who actually
              has approved photos AND a public profile — anyone else would be
-             answering a question that means nothing for them. Unticked by
-             default: anonymize is what happens if they say nothing. #}
-          <div class="field" style="margin-bottom:.8rem">
+             answering a question that means nothing for them. An EXPLICIT
+             yes/no pair with no default (owner 2026-08-13): attribution on
+             deletion is a real decision, and a pre-unticked checkbox let it be
+             made by not noticing. `required` blocks the submit until one is
+             chosen; the server still fails closed to anonymize if the field is
+             absent (consent-fail-closed). #}
+          <fieldset class="field" style="margin-bottom:.8rem;border:none;padding:0">
+            <legend style="font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:#5a5d4d;margin-bottom:.4rem">{{ 'settings.delete.keep_media_credit'|trans }}</legend>
+            <label style="display:flex;gap:.5rem;align-items:flex-start;margin-bottom:.35rem">
+              <input type="radio" name="keep_media_credit" value="1" required>
+              <span>{{ 'settings.delete.keep_media_credit_yes'|trans }}</span>
+            </label>
             <label style="display:flex;gap:.5rem;align-items:flex-start">
-              <input type="checkbox" name="keep_media_credit" value="1">
-              <span>{{ 'settings.delete.keep_media_credit'|trans }}</span>
+              <input type="radio" name="keep_media_credit" value="0" required>
+              <span>{{ 'settings.delete.keep_media_credit_no'|trans }}</span>
             </label>
             <p class="fhelp">{{ 'settings.delete.keep_media_credit_help'|trans }}</p>
-          </div>
+          </fieldset>
         {% endif %}
         <button type="submit" class="btn-danger">{{ 'settings.submit_delete_confirm'|trans }}</button>
       </form>

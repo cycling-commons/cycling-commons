@@ -233,6 +233,11 @@
   #mode button.on{background:var(--trail);color:var(--ink);font-weight:700}
   .hint{font-size:.78rem;color:rgba(239,230,212,.5);margin-top:.6rem;line-height:1.5}
 
+  /* The data-version readout under the places count: deliberately faint —
+     it is a diagnostic, not content — but selectable for a bug report. */
+  .data-versions{font-family:var(--mono);font-size:.58rem;letter-spacing:.04em;
+    color:rgba(239,230,212,.45);padding:0 1.4rem 1rem;word-break:break-word;user-select:text}
+  .data-versions .dv-bad{color:var(--trail)}
   .rail-foot{padding:1.1rem 1.4rem;border-top:1px solid rgba(239,230,212,.14);display:flex;align-items:center;justify-content:space-between;gap:.6rem}
   .rail-foot .res{font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;color:rgba(239,230,212,.7)}
   .rail-foot .res b{color:var(--trail);font-size:1.15rem}
