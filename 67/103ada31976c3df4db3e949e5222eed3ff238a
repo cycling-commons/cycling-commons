@@ -1,0 +1,26 @@
+web/tests/Moderation/RouteDecisionMessagesTest.php
+  s_1c0464d81ce126::t_96bd709ce4a743 81-87
+web/tests/Moderation/DecisionMessagesTest.php
+  s_1c0464d81ce126::t_96bd709ce4a743 77-83
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "67103ada31976c3df4db3e949e5222eed3ff238a",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_1c0464d81ce126": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "04feb771-c203-4977-b898-3414026fd58f",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
