@@ -73,7 +73,6 @@ final class CatalogFormRegistry
                     // the translation both directions.
                     CatalogField::select('roadType', 'Road type', RoadType::DECLARABLE),
                     CatalogField::select('smoothness', 'Smoothness', ['Excellent', 'Good', 'Intermediate', 'Bad', 'Very bad']),
-                    CatalogField::text('width', 'Width (m)', default: '3.0'),
                     // 'Car-free', not 'Car-free (RAVeL)'. RAVeL is one region's
                     // brand for its greenway network and this layer now serves
                     // twelve countries, so the parenthetical was both parochial
@@ -89,7 +88,6 @@ final class CatalogFormRegistry
                     // panes merge into one flat attribute set on submit — so
                     // moving it changes nothing about storage.
                     CatalogField::select('segregated', 'Segregated from cars?', self::UNKNOWN_YES_NO),
-                    CatalogField::textarea('note', 'Note', 'e.g. resurfaced in 2025, or pavé through the village'),
                 ],
                 addFields: [
                     CatalogField::select('lit', 'Lit at night?', self::UNKNOWN_YES_NO),
@@ -98,6 +96,13 @@ final class CatalogFormRegistry
                     // 2026-08-12). It is the logging season, when a forest track
                     // is shut for felling and hauling.
                     CatalogField::select('seasonalClosure', 'Seasonal closure?', ['None', 'Winter', 'Forestry work']),
+                    // Width and Note close the form, side by side (owner
+                    // 2026-08-14): width is barely useful to a cyclist and had
+                    // been shipping a made-up 3.0 default nobody measured —
+                    // the default is gone (blank means "not stated", which is
+                    // the truth), and the field may go entirely later.
+                    CatalogField::text('width', 'Width (m)'),
+                    CatalogField::textarea('note', 'Note', 'e.g. resurfaced in 2025, or pavé through the village'),
                 ],
             ),
 

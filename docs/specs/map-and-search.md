@@ -732,10 +732,17 @@ the newest rung of that same ladder.
   dark, not 400,000 line geometries they cannot read at that zoom. Shading is
   the **share**, not the absolute kilometres, so a dense city cell does not
   out-shout the empty countryside that actually needs surveying.
-  One legend row drives both: the grid stops at exactly the zoom the lines
+  The grid stops at exactly the zoom the lines
   start (contract `gaps.maxZoom` == `todo.minZoom`, pinned on both sides by
-  `web/tests/js/surface-zooms.test.cjs`), so a rider ticks *Surface not
-  recorded* once and gets squares at country zoom, roads once they zoom in.
+  `web/tests/js/surface-zooms.test.cjs`). **The grid is opt-in since
+  2026-08-14** (`#skeyGaps`, below Study mode in the legend, shown only while
+  the skin is on): arriving with the skin, the squares tinted whole regions
+  pink at planning zoom — and translucent red over blue water reads PURPLE,
+  which the owner took for a CyclOSM basemap layer. It is a contributor's
+  question ("where is recording needed?"), not a rider's, so it waits behind
+  a toggle whose label says what the squares mean. The *Surface not recorded*
+  legend row still gates it too: that class off hides the unrecorded arm in
+  every form, lines and squares alike.
   Clicking a square opens a drawer with the numbers and **no "improve this"
   bridge** — a square is 6 km of countryside, not a road, and the honest next
   step is to go and ride it rather than to invent an answer for a road you have

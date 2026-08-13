@@ -29,10 +29,12 @@ import { CATALOG, catalogUtility, catalogVotable, catalogModeration,
 import { PREFS, addHeatmap, updateHeatFilter, layerCounts, updateCounts, render,
          applyStaysAccessFilter, syncFacetChips, prefFilterEnabled, setPrefFilter, PREF_FILTER_KEY } from './render.js';
 import { mapToast, clearRevealPin } from './drawer.js';
+import { scenicGlyph } from './icons.js';
 import { refilterClusters, updateConfMarkers } from './osm-pools.js';
 import { curScope, inScope } from './scope-ui.js';
 import { surfaceTilesConfigured, setSurfaceTiles, surfaceTilesVisible,
-         toggleSurfaceClass, setStudyMode, studyModeOn } from './surface-tiles.js';
+         toggleSurfaceClass, setStudyMode, studyModeOn,
+         setGapsGrid, gapsGridOn } from './surface-tiles.js';
 import { routesTilesConfigured, setRoutesTiles, routesTilesVisible } from './routes-tiles.js';
 
 // Bindings a later init reads, so they cannot stay `const` inside the init that
@@ -61,7 +63,11 @@ export function initLayerList(){
     if(!active.has(layer.key)) el.classList.add('off');
     const _lc=layerCounts(layer);
     const ct=`${_lc.shown}/${_lc.total}`;
-    el.innerHTML=`<span class="sw"><i class="sw-g">${layer.icon}</i></span><span class="nm">${layer.label}</span><span class="ct">${ct}</span>`;
+    // Scenic wears the drawn camera here too: the row's silhouette filter
+    // flattens the 📷 emoji to a blank rounded box, exactly as it did on the
+    // map pins (owner 2026-08-14).
+    const glyph = layer.key==='scenic' ? scenicGlyph(13) : layer.icon;
+    el.innerHTML=`<span class="sw"><i class="sw-g">${glyph}</i></span><span class="nm">${layer.label}</span><span class="ct">${ct}</span>`;
     el.onclick=()=>{ if(active.has(layer.key)){active.delete(layer.key);el.classList.add('off')} else {active.add(layer.key);el.classList.remove('off')} syncLayersAll(); render(); };
     lc.appendChild(el);
   };
@@ -107,12 +113,26 @@ export function initLayerList(){
      blank page, and a rider who lands there has no way to tell whether the
      feature is broken or the layer is missing. So the control follows the layer:
      disabled while the skin is off, and switched off with it. */
+  const gapsBtn=document.getElementById('skeyGaps');
   const syncStudyGate=()=>{
-    if(!studyBtn) return;
-    const on=surfaceTilesVisible();
-    studyBtn.disabled=!on;
-    if(!on && studyModeOn()){ setStudyMode(false); studyBtn.setAttribute('aria-pressed','false'); }
+    if(studyBtn){
+      const on=surfaceTilesVisible();
+      studyBtn.disabled=!on;
+      if(!on && studyModeOn()){ setStudyMode(false); studyBtn.setAttribute('aria-pressed','false'); }
+    }
+    // The gaps toggle exists only while the skin is on (owner 2026-08-14):
+    // it is a question about this layer, and a control for an absent layer
+    // reads as broken. Hidden rather than disabled — with the skin off there
+    // is nothing to explain.
+    if(gapsBtn) gapsBtn.hidden=!surfaceTilesVisible();
   };
+  if(gapsBtn){
+    gapsBtn.onclick=()=>{
+      const on=setGapsGrid(!gapsGridOn());
+      gapsBtn.setAttribute('aria-pressed', on?'true':'false');
+      gapsBtn.classList.toggle('on', on);
+    };
+  }
 
   if(surfBtn && surfaceTilesConfigured()){
     surfBtn.hidden=false;

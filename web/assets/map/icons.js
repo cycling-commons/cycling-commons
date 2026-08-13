@@ -57,7 +57,11 @@ export const SERVICE_GLYPH={shop:'⚙', station:'⚒', pump:'⊕'};
 // (evenodd), used by both the DOM pins (inline SVG) and the canvas discs
 // (Path2D). 24×24 viewBox.
 export const CAMERA_PATH='M9 4h6l1.5 2.5H20a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8.5a2 2 0 0 1 2-2h3.5L9 4Zm3 4.6a4.7 4.7 0 1 0 0 9.4 4.7 4.7 0 0 0 0-9.4Zm0 2a2.7 2.7 0 1 1 0 5.4 2.7 2.7 0 0 1 0-5.4Z';
-const cameraSvg=fill=>`<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill-rule="evenodd" fill="${fill}" d="${CAMERA_PATH}"/></svg>`;
+const cameraSvg=(fill,size)=>`<svg viewBox="0 0 24 24" width="${size||15}" height="${size||15}" aria-hidden="true"><path fill-rule="evenodd" fill="${fill}" d="${CAMERA_PATH}"/></svg>`;
+// The rail's layer row (and anything else that renders layer.icon through the
+// silhouette filter): the filter flattens whatever fill we pick, so
+// currentColor is fine — what matters is the SHAPE being a camera.
+export const scenicGlyph=size=>cameraSvg('currentColor', size);
 // small recognisable marker for UNVERIFIED items: paper disc + category-colour ring + the category glyph.
 // glyph/suffix let a layer mint more than one disc variant (e.g. services' per-serviceKind icons) off the
 // same colour/id scheme — suffix keeps the cache id distinct so each variant is registered once.

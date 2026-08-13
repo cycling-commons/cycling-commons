@@ -261,6 +261,19 @@ export const gapsConfigured = () =>
 
 let untaggedAdded = false;
 let gapsAdded = false;
+/* The gaps grid is OPT-IN (owner 2026-08-14): at planning zoom the red
+   squares tinted a whole region pink — and over water the translucent red
+   reads PURPLE, which riders took for somebody else's basemap layer. The
+   grid answers a contributor's question ("where is recording needed?"), not
+   a rider's, so it waits behind its own legend toggle instead of arriving
+   with the skin. */
+let gapsOn = false;
+export const gapsGridOn = () => gapsOn;
+export function setGapsGrid(on) {
+  gapsOn = !!on;
+  applyClassVisibility();
+  return gapsOn;
+}
 
 /* Where a lazily-mounted surface layer belongs in the stack.
 
@@ -641,12 +654,12 @@ function applyClassVisibility() {
       map.setLayoutProperty(l.id, 'visibility', visible ? 'visible' : 'none');
       map.setFilter(l.id, qualityFilter());
     } else if (l.id === GAPS_FILL || l.id === GAPS_LINE) {
-      /* The grid is the to-do arm at planning zoom, so it obeys exactly the
-         same row. Its own maxzoom does the rest: tick "not recorded" on and a
-         rider gets squares over the country and roads once they zoom in,
-         without ever choosing between two controls for one question. */
+      /* The grid is the to-do arm at planning zoom — but behind its own
+         legend toggle (gapsOn), off by default. It still obeys the
+         "not recorded" legend row: a rider who ticked that class off has
+         asked not to see the unrecorded arm in any form. */
       map.setLayoutProperty(l.id, 'visibility',
-        visible && surfaceClassEnabled('unverified') ? 'visible' : 'none');
+        visible && gapsOn && surfaceClassEnabled('unverified') ? 'visible' : 'none');
     } else if (l.id.startsWith(TODO_PREFIX)) {
       /* "Surface not recorded" is a legend CLASS like the other six, not a
          control of its own (owner, 2026-08-12). It happens to live in a second

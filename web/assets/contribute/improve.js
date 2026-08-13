@@ -475,7 +475,7 @@
          WHY legs and not one route (owner-reported 2026-08-13): the router
          answers "fastest a→b" while a rider dragging a pin is saying "this
          road" — one long drag rerouted the whole Zuiderdijk inland. Control
-         points (right-click / long-press the line) cut the stretch into legs;
+         points (right-click the line) cut the stretch into legs;
          a drag recalculates ONLY the legs touching the dragged point, so the
          part the rider already shaped stays put. And a stretch opened from
          the map is SEEDED with the road's own tile geometry (src 'seed'), so
@@ -779,7 +779,7 @@
       };
 
       /* A control point: a small round handle, draggable like the pins;
-         right-click (or long-press) removes it. Placed via rightClickAt(). */
+         right-click removes it. Placed via rightClickAt(). */
       var mkCtrl = function (lngLat) {
         var el = document.createElement('div');
         el.className = 'wz-ctrlpt';
@@ -797,7 +797,6 @@
           ev.stopPropagation();
           removeCtrl(m);
         });
-        armLongPress(el, function () { removeCtrl(m); });
         return m;
       };
 
@@ -852,7 +851,7 @@
         snapSeg();
       };
 
-      /* Right-click (long-press on touch) pins a CONTROL POINT on the drawn
+      /* Right-click pins a CONTROL POINT on the drawn
          line (owner design 2026-08-13): the route must pass through it, and a
          drag recalculates only up to the nearest control — the rest of the
          stretch stays exactly as shaped. The click must land ON the line
@@ -888,24 +887,10 @@
         toast(t('toast_ctrl_added'));
       };
 
-      /* Long-press = right-click on touch: one finger, still (≤8 px), 600 ms. */
-      var armLongPress = function (el, fire) {
-        var timer = null, sx = 0, sy = 0;
-        el.addEventListener('touchstart', function (ev) {
-          if (ev.touches.length !== 1) return;
-          sx = ev.touches[0].clientX; sy = ev.touches[0].clientY;
-          timer = setTimeout(function () { timer = null; fire(sx, sy); }, 600);
-        }, { passive: true });
-        el.addEventListener('touchmove', function (ev) {
-          if (!timer || ev.touches.length !== 1) return;
-          if (Math.abs(ev.touches[0].clientX - sx) > 8 || Math.abs(ev.touches[0].clientY - sy) > 8) {
-            clearTimeout(timer); timer = null;
-          }
-        }, { passive: true });
-        ['touchend', 'touchcancel'].forEach(function (n) {
-          el.addEventListener(n, function () { if (timer) { clearTimeout(timer); timer = null; } });
-        });
-      };
+      /* Right-click ONLY (owner 2026-08-14): a long-press variant shipped and
+         did not work reliably, and a gesture that fires sometimes teaches
+         riders the feature is flaky — so it is gone, code and copy both,
+         until a touch answer is designed properly. */
 
       wmap.on('click', function (e) { placeAt(e.lngLat); });
 
@@ -930,11 +915,6 @@
           if (rcDown && (Math.abs(ev.clientX - rcDown.x) > 8 || Math.abs(ev.clientY - rcDown.y) > 8)) return;
           var rect = wmap.getCanvas().getBoundingClientRect();
           var pt = { x: ev.clientX - rect.left, y: ev.clientY - rect.top };
-          rightClickAt(wmap.unproject(pt), pt);
-        });
-        armLongPress(wmap.getCanvas(), function (cx, cy) {
-          var rect = wmap.getCanvas().getBoundingClientRect();
-          var pt = { x: cx - rect.left, y: cy - rect.top };
           rightClickAt(wmap.unproject(pt), pt);
         });
       }

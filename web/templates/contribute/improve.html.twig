@@ -40,6 +40,10 @@
   .fgrid{display:grid;grid-template-columns:1fr 1fr;gap:0 2.4rem}
   @media(max-width:720px){.fgrid{grid-template-columns:1fr}}
   .fgrid .field:has(textarea),.fgrid .field:has(input[type=checkbox]){grid-column:1/-1}
+  /* A · road surface: Note shares the closing row with Width instead of
+     spanning (the wide-desktop grid; the one-column phone layout is untouched). */
+  .fgrid-a .field[data-f="note"]:has(textarea){grid-column:auto}
+  .fgrid-a .field[data-f="note"] textarea{min-height:52px}
   .field input,.field textarea{width:100%;background:transparent;border:none;border-bottom:1.5px solid rgba(20,22,14,.25);font-family:var(--sans);font-size:1rem;padding:.45rem 0;outline:none;color:var(--ink)}
   .field select{width:100%;max-width:22rem}  /* look is global (atlas.css) */
   .field textarea{border:1.5px solid rgba(20,22,14,.25);border-radius:6px;padding:.7rem;min-height:80px;resize:vertical}
@@ -493,15 +497,18 @@
        OSM spot everything is missing, so "Fix the current details" headed a
        group of empty fields and "Add missing details" headed the rest. The
        rider fills in what they know either way. #}
-    <div class="fgrid">
+    {# fgrid-a: the road-surface form ends Width | Note on ONE row (owner
+       2026-08-14) — the generic textarea-spans-both-columns rule is undone for
+       A's note so it sits beside width instead of below it. #}
+    <div class="fgrid{{ item_type.letter == 'A' ? ' fgrid-a' }}">
     {% for child in form.details %}
-      <div class="field">
+      <div class="field" data-f="{{ child.vars.name }}">
         {{ form_label(child) }}
         {{ form_widget(child) }}
       </div>
     {% endfor %}
     {% for child in form.extras %}
-      <div class="field">
+      <div class="field" data-f="{{ child.vars.name }}">
         {{ form_label(child) }}
         {{ form_widget(child) }}
       </div>

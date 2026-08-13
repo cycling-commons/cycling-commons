@@ -136,9 +136,12 @@ Classified (skin) clicks get the same seed for their single way
 (`fullWayLine`). A stale, mismatched or missing seed falls back to the
 router, exactly as before.
 
-**2 · Control points, and legs.** Right-click (long-press on touch) on the
-drawn line pins a **control point** (owner design 2026-08-13): a small round
-handle, draggable like the pins, right-click again to remove. The stretch is
+**2 · Control points, and legs.** Right-click on the drawn line pins a
+**control point** (owner design 2026-08-13): a small round handle, draggable
+like the pins, right-click again to remove. Right-click ONLY — a long-press
+touch variant shipped and did not fire reliably, so it was removed, code and
+copy both (owner 2026-08-14); a gesture that works sometimes teaches riders
+the feature is flaky. Touch support returns when it can be designed properly. The stretch is
 now a list of **legs** between waypoints (start pin · control points · end
 pin); each leg holds its own line (`seed`/`route`/chord). A drag recalculates
 **only the legs touching the dragged point** — everything the rider already
@@ -149,8 +152,8 @@ bookkeeping), with an 8 px guard so a right-drag's release never drops a
 point, and the click must land within 35 px of the line. Because this is the
 one gesture nobody discovers on their own, segment mode shows a **static help
 line under the map** (owner request 2026-08-14): set a control point with
-right-click/long-press, everything up to it keeps its shape on a drag, the
-same gesture on the point removes it — always visible, not a toast that is
+right-click, everything up to it keeps its shape on a drag, the same
+gesture on the point removes it — always visible, not a toast that is
 gone before it is needed (`improve.step1.ctrl_point_help`).
 
 **3 · Trim, not re-route.** Dragging an endpoint to a position still on its

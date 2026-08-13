@@ -287,6 +287,13 @@
       <div class="skey-note"><span class="skey-ticks" aria-hidden="true"></span>{{ 'map.legend_quality'|trans }}</div>
       {# Study mode belongs with the key: it is about reading these classes. #}
       <button type="button" class="skey-study" id="skeyStudy" aria-pressed="false">{{ 'map.study_mode'|trans }}</button>
+      {# The gaps grid, opt-in (owner 2026-08-14): at planning zoom the red
+         squares tinted whole regions pink (purple over water) and read as
+         somebody else's basemap. Off by default; the label says what the
+         squares MEAN, so the toggle is its own legend. Revealed by panels.js
+         only while the surface skin is on. #}
+      <button type="button" class="skey-study" id="skeyGaps" aria-pressed="false" hidden
+        title="{{ 'map.gaps_grid_title'|trans }}">{{ 'map.gaps_grid'|trans }}</button>
     </div>
     <div class="map-ctrl" aria-label="{{ 'map.base_aria'|trans }}">
       <button class="mc-toggle" id="mcToggle" type="button" aria-label="{{ 'map.base_layers_aria'|trans }}" aria-expanded="false">
