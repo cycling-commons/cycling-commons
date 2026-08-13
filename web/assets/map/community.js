@@ -17,7 +17,6 @@
    entry; their order relative to each other never mattered, because they match
    disjoint selectors ([data-cf-act], [data-rc-act], .cc-rc-invalid). */
 import { I18N, D, tpl, CC_SEASON_LABEL } from './i18n.js';
-import { escPend } from './util.js';
 import { CATALOG, layerByKey, LETTER_KEY } from './catalog.js';
 import { render } from './render.js';
 import { mapToast, closeDrawer, openDrawer, osmDrawer, renderPendingContext } from './drawer.js';
@@ -155,8 +154,8 @@ const CC_CF_STANCES={
   // for is the description they rode (owner-reported 2026-08-13). The "no" is
   // a stance of its own and may carry a note for the curators (the why box
   // below).
-  accuracy:[['exists',`✓ ${D.asDescribed||'Yes — as I rode it'}`],
-            ['not_as_described',`✗ ${D.notAsDescribed||'No — not as described'}`]],
+  accuracy:[['exists',`✓ ${D.asDescribed||'Yes'}`],
+            ['not_as_described',`✗ ${D.notAsDescribed||'No'}`]],
 };
 // Negative stances: never verify, and they are the ones that may carry a
 // "why" for the curators.
@@ -217,24 +216,18 @@ function paintItemConfirm(box, s){
   // What you answered, and the buttons to change it, appear only if you ask
   // for them — a rider who has already answered came to look at the place,
   // and everything shown to them by default is noise on top of it.
-  // A negative answer may explain itself (owner 2026-08-13): an optional why,
-  // sent to the CURATORS — the note is never rendered publicly
-  // (one-way-to-moderate), which is why the panel says so.
-  const why = (s.mine && CC_CF_NEGATIVE.has(s.mine))
-    ? `<div class="cc-cf-why"><textarea class="cc-cf-why-t" maxlength="500" rows="2" placeholder="${escPend(D.cfWhyPh||'What differs? Optional — goes to the curators only.')}"></textarea>
-       <button type="button" class="cc-cf-btn" data-cf-why>${D.cfWhySend||'Send to curators'}</button></div>`
+  // A "no" is a yes/no answer, nothing more (owner 2026-08-13, second pass):
+  // what changed belongs in the EDIT FORM, which feeds the one moderation
+  // pipeline — a comment box here would have been a second entry point to the
+  // moderators. So a negative answer points at the edit button instead.
+  const useEdit = (s.mine && CC_CF_NEGATIVE.has(s.mine))
+    ? `<div class="cc-cf-use-edit">${D.cfUseEdit||'Something changed? Use ✎ Edit this item to correct the record.'}</div>`
     : '';
-  // The whys, CURATORS ONLY (the server sends `notes` to nobody else).
-  const notes = (Array.isArray(s.notes) && s.notes.length)
-    ? `<div class="cc-cf-notes"><span class="cc-cf-notes-h">${D.cfNotesH||'Riders who said no'}</span>${
-        s.notes.map(n=>`<div class="cc-cf-note">${escPend(n.note)}</div>`).join('')}</div>`
-    : '';
-  box.dataset.cfMine = s.mine || '';
   box.querySelector('[data-cf-body]').innerHTML = s.mine
-    ? `<div class="cc-cf-h">${heading} ${total}</div>${why}
+    ? `<div class="cc-cf-h">${heading} ${total}</div>${useEdit}
        <button type="button" class="cc-cf-change" data-cf-change>${D.changeAnswer||'Change my answer'}</button>
-       <div class="cc-cf-more" hidden>${yours}<div class="cc-cf-row">${btns}</div></div>${notes}`
-    : `<div class="cc-cf-h">${heading} ${total}</div><div class="cc-cf-row">${btns}</div>${notes}`;
+       <div class="cc-cf-more" hidden>${yours}<div class="cc-cf-row">${btns}</div></div>`
+    : `<div class="cc-cf-h">${heading} ${total}</div><div class="cc-cf-row">${btns}</div>`;
   box.querySelector('.cc-cf-login').hidden = authed;
 }
 
@@ -429,24 +422,6 @@ export function initCommunity(){
           mapToast(D.toastThanks||'Thanks — recorded.', {center:true});
         })
         .catch(()=>{ box.querySelectorAll('.cc-cf-btn').forEach(b=>b.disabled=false); mapToast(D.toastErr||'Could not record that — please try again.'); });
-    });
-    // The optional "why" behind a negative answer: re-posts the same stance
-    // with the note; the service keeps the stance and stores the why for the
-    // curators (never rendered publicly).
-    document.addEventListener('click', e=>{
-      const btn=e.target.closest('[data-cf-why]'); if(!btn) return;
-      const box=btn.closest('.cc-cf'); if(!box) return;
-      const id=box.getAttribute('data-item'), token=_cfTokens[id], stance=box.dataset.cfMine;
-      const ta=box.querySelector('.cc-cf-why-t');
-      const note=(ta&&ta.value||'').trim();
-      if(!token||!stance||!note) { if(ta) ta.focus(); return; }
-      btn.disabled=true;
-      const body=new URLSearchParams(); body.set('_token', token); body.set('stance', stance); body.set('note', note);
-      fetch(`/items/${id}/confirm`, {method:'POST', credentials:'same-origin',
-        headers:{'X-Requested-With':'XMLHttpRequest','Accept':'application/json','Content-Type':'application/x-www-form-urlencoded'}, body:body.toString()})
-        .then(r=>{ if(!r.ok) throw new Error(String(r.status)); return r.json(); })
-        .then(s=>{ paintItemConfirm(box, s); mapToast(D.cfWhySent||'Sent to the curators — thanks.', {center:true}); })
-        .catch(()=>{ btn.disabled=false; mapToast(D.toastErr||'Could not record that — please try again.'); });
     });
     /* One-tap confirmation of an OSM place. It is not a confirmation yet — it
        is the submission that makes one possible, so the toast says "a curator

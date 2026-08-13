@@ -43,16 +43,6 @@ class ItemConfirmation
     private ConfirmationStance $stance;
 
     /**
-     * The rider's "why", offered only with a negative stance (a surface
-     * segment's "not as described" — owner 2026-08-13). Free text FOR THE
-     * CURATORS: it is never rendered publicly, because public free text
-     * without moderation would be a second, unmoderated publishing channel
-     * (one-way-to-moderate). Null for every positive answer.
-     */
-    #[ORM\Column(type: Types::STRING, length: 500, nullable: true)]
-    private ?string $note = null;
-
-    /**
      * Where the answer came from. A form-sourced row is the submitter's own
      * answer on the improve form: kept so they are never asked it again, but
      * left out of the tally and the verified derivation, because it is the
@@ -105,18 +95,6 @@ class ItemConfirmation
         return $this;
     }
 
-    public function getNote(): ?string
-    {
-        return $this->note;
-    }
-
-    public function setNote(?string $note): static
-    {
-        $this->note = $note;
-        $this->updatedAt = new \DateTimeImmutable();
-
-        return $this;
-    }
 
     public function getSource(): ConfirmationSource
     {

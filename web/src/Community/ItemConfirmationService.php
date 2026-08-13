@@ -37,34 +37,19 @@ final class ItemConfirmationService
      * item's type does not offer (e.g. Potable on a bike-service point, or any
      * stance on a votable type).
      */
-    public function record(Item $item, User $user, ConfirmationStance $stance, ConfirmationSource $source = ConfirmationSource::Drawer, ?string $note = null): void
+    public function record(Item $item, User $user, ConfirmationStance $stance, ConfirmationSource $source = ConfirmationSource::Drawer): void
     {
         $allowed = ItemType::fromParam($item->getLetter())->confirmationStances();
         if (!\in_array($stance, $allowed, true)) {
             throw new \InvalidArgumentException(sprintf('Stance "%s" is not offered for a %s item.', $stance->value, $item->getLetter()));
         }
-        // The "why" belongs to a negative answer only (owner 2026-08-13): a
-        // note on a vouching would be a comment field, which the drawer is not.
-        $note = \in_array($stance, [ConfirmationStance::NotPotable, ConfirmationStance::NotAsDescribed], true)
-            ? (null !== $note && '' !== trim($note) ? mb_substr(trim($note), 0, 500) : null)
-            : null;
 
-        $this->em->wrapInTransaction(function () use ($item, $user, $stance, $source, $note): void {
+        $this->em->wrapInTransaction(function () use ($item, $user, $stance, $source): void {
             $existing = $this->em->getRepository(ItemConfirmation::class)
                 ->findOneBy(['itemId' => (int) $item->getId(), 'userId' => (int) $user->getId()]);
 
             if (null !== $existing) {
                 $existing->setStance($stance);
-                // The note follows the stance: switching back to a vouching
-                // clears it (computed null above); a new "why" replaces the
-                // old; a re-press WITHOUT a note keeps the one already given —
-                // the panel records the stance first and offers the note
-                // after, and the second request must not erase the first.
-                if (null !== $note) {
-                    $existing->setNote($note);
-                } elseif (!\in_array($stance, [ConfirmationStance::NotPotable, ConfirmationStance::NotAsDescribed], true)) {
-                    $existing->setNote(null);
-                }
                 // A drawer answer promotes a form-sourced row (the submitter has
                 // now confirmed as a rider); a form answer never demotes a real
                 // confirmation back out of the tally.
@@ -72,9 +57,7 @@ final class ItemConfirmationService
                     $existing->setSource($source);
                 }
             } else {
-                $confirmation = new ItemConfirmation((int) $item->getId(), (int) $user->getId(), $stance, $source);
-                $confirmation->setNote($note);
-                $this->em->persist($confirmation);
+                $this->em->persist(new ItemConfirmation((int) $item->getId(), (int) $user->getId(), $stance, $source));
             }
 
             $this->verifyIfCurator($item, $user, $stance, $source);

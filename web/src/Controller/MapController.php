@@ -266,9 +266,7 @@ final class MapController extends AbstractController
             // curator-only notes block that reads them back.
             'asDescribed' => 'd_as_described', 'surfaceCfQ' => 'd_surface_cf_q',
             'surfaceCfA' => 'd_surface_cf_a', 'notAsDescribed' => 'd_not_as_described',
-            'cfWhyPh' => 'd_cf_why_ph', 'cfWhySend' => 'd_cf_why_send',
-            'cfWhySent' => 'd_cf_why_sent', 'cfNotesH' => 'd_cf_notes_h',
-            'alsoConfirm' => 'd_also_confirm',
+            'cfUseEdit' => 'd_cf_use_edit', 'alsoConfirm' => 'd_also_confirm',
             // Route-network drawer (routes-tiles.js): corridor + knooppunt.
             'routeNetwork' => 'd_route_network', 'routeRef' => 'd_route_ref',
             'routesHere' => 'd_routes_here', 'routeSurfaceHint' => 'd_route_surface_hint',
