@@ -1,0 +1,80 @@
+web/assets/styles/map.css
+  s_4e536eec984e8d::t_4109b74b9e9f72 742-755
+web/translations/messages.fr.yaml
+  s_4e536eec984e8d::t_6a7f4c0c6a6324 1699-1705
+  s_4e536eec984e8d::t_6a470804d0e7ef 1707
+web/assets/map/community.js
+  s_4e536eec984e8d::t_15129b466d4f23 433-450
+  s_4e536eec984e8d::t_0b67300d5d2435 327-330
+  s_4e536eec984e8d::t_fb9559318cea21 20
+  s_4e536eec984e8d::t_4941605f701975 153-159,161-163,195-198,220-232,234,236-237
+web/src/Catalog/ItemType.php
+  s_4e536eec984e8d::t_bad51b155996a7 234,242-245
+web/translations/messages.nl.yaml
+  s_4e536eec984e8d::t_6a7f4c0c6a6324 1699-1705
+  s_4e536eec984e8d::t_6a470804d0e7ef 1707
+web/translations/messages.es.yaml
+  s_4e536eec984e8d::t_6a7f4c0c6a6324 2034-2040
+  s_4e536eec984e8d::t_6a470804d0e7ef 2042
+web/assets/map/drawer.js
+  s_4e536eec984e8d::t_b8debb453d498d 623-634,638
+web/src/Controller/ItemConfirmationController.php
+  s_4e536eec984e8d::t_446d3f4db41191 115,126-144
+  s_4e536eec984e8d::t_118dd29e56523a 86-89
+web/src/Community/ItemConfirmationService.php
+  s_4e536eec984e8d::t_53b07ba97fc2c3 40,46-50,52,58-67,75-77
+  s_4e536eec984e8d::t_6ac79cb719eb14 110-112
+web/src/Controller/ModerateController.php
+  s_4e536eec984e8d::t_2542730f7b32b4 253
+  s_4e536eec984e8d::t_db87e1d697df4b 288-304
+  s_4e536eec984e8d::t_a322c50d9d539d 10-12,14,67
+web/src/Controller/SettingsController.php
+  s_4e536eec984e8d::t_3e64734e64b2f8 228-235
+  s_4e536eec984e8d::t_fb61c9982b1bb9 225-227
+web/templates/settings/index.html.twig
+  s_4e536eec984e8d::t_8daf02e97914d5 467-472,475-478
+web/translations/messages.de.yaml
+  s_4e536eec984e8d::t_6a470804d0e7ef 1710
+  s_4e536eec984e8d::t_6a7f4c0c6a6324 1702-1708
+web/translations/messages.en.yaml
+  s_4e536eec984e8d::t_6a7f4c0c6a6324 2021-2027
+  s_4e536eec984e8d::t_6a470804d0e7ef 2029
+docs/specs/edit-items/A-road-surface.md
+  s_4e536eec984e8d::t_26d1e09f7f9d0b 310-322
+web/src/Catalog/ConfirmationStance.php
+  s_4e536eec984e8d::t_a9f045d9e3c8f3 23-27
+web/src/Form/ModerationDecisionType.php
+  s_4e536eec984e8d::t_7ab5bed6ce003e 49-57
+web/src/Catalog/Entity/ItemConfirmation.php
+  s_4e536eec984e8d::t_e1b3b05072a285 108-120
+  s_4e536eec984e8d::t_269433a599b8c3 42,45-53
+  s_4e536eec984e8d::t_66d15ca0905732 54
+web/migrations/Version20260813210000.php
+  s_4e536eec984e8d::t_e8fcecb1c35e10 1-42
+web/src/Controller/MapController.php
+  s_4e536eec984e8d::t_f4dcd53a3da3be 264-266,268-271
+web/tests/Auth/AccountDeletionTest.php
+  s_4e536eec984e8d::t_b8f507aa755616 270-272,278-284
+  s_4e536eec984e8d::t_a7aeffd94a183c 285
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "b8e70442c0e0ab37a8e941ab7844e4bb5022ef74",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_4e536eec984e8d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ef3615e2-4e64-4afe-8b18-be74e8cc28ce",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
