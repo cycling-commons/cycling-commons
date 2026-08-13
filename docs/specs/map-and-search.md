@@ -738,7 +738,7 @@ the newest rung of that same ladder.
   2026-08-14** (`#skeyGaps`, below Study mode in the legend, shown only while
   the skin is on): arriving with the skin, the squares tinted whole regions
   pink at planning zoom — and translucent red over blue water reads PURPLE,
-  which the owner took for a CyclOSM basemap layer. It is a contributor's
+  a colour with no legend row of its own. It is a contributor's
   question ("where is recording needed?"), not a rider's, so it waits behind
   a toggle whose label says what the squares mean. The *Surface not recorded*
   legend row still gates it too: that class off hides the unrecorded arm in
