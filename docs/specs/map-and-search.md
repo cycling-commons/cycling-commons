@@ -620,7 +620,17 @@ the newest rung of that same ladder.
   values; the drawer collapses them to the form's five for display), pinned by
   `surface-quality.test.cjs`. The legend explains the ticks in one non-filter
   note row (`.skey-note`); hiding a class hides its ticks via the layer
-  filter, not a legend row of their own.
+  filter, not a legend row of their own. **Curated items get the same ticks**
+  (2026-08-14): the rider-recorded smoothness rides the consolidated A source
+  as `sm` and draws as `surface-q` in `render.js` (five form values, same
+  palette — `CURATED_SM_TONE`, kept in step with `SM_TONE` by hand because
+  surface-tiles imports render). A rider who had just recorded a road as
+  Excellent saw no ticks on it while the legend promised them "where
+  recorded" (owner-reported). Unlike the skin's thin light lines, the curated
+  lines are wide and dark, so the curated ticks carry a cream casing tick
+  underneath (`surface-q-case`, dash scaled by the width ratio so the two
+  patterns stay in step) — an excellent-green tick on the paved slate is
+  invisible without it.
 - **The tile lines dedupe against curated refs** (2026-08-13), the same rule
   the coverage points have always had: a way already answered as one of our A
   items is filtered out of the classified skin, the to-do arm and the quality

@@ -231,7 +231,7 @@ import { initLayerList, initMapCtrl, initRailChrome, initBestOf,
       if(_km>0.01) rec.unshift({label:D.length||'Length', value:uKm(_km)});
       return {
         id:s.id, rid:s.rid, name:s.name, headline:`${trVal(s.surface)} · ${trVal(s.smoothness)}`, cur:(s.cls!=='paved'), edit:'road-surface',
-        geom:{path:s.path}, surfaceClass:s.cls, width:s.width,
+        geom:{path:s.path}, surfaceClass:s.cls, width:s.width, smoothness:s.smoothness,
         photo: s.photoFile ? wc(s.photoFile, s.photoCredit, s.photoUser, s.photoLicense) : undefined,
         // C1-T4 (W6): a rider-added/edited surface segment isn't OSM.
         source:(s.srcType==='user'||s.srcType==='manual') ? sourceLabel(s.srcType) : 'OSM (surface=*)',

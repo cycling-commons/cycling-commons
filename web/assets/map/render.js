@@ -240,6 +240,9 @@ export function liftInfoLayersAboveRoutes(){
   // consolidated A-layer (C3): one shared casing + one layer per surface class
   if(map.getLayer('surface-case')) map.moveLayer('surface-case');
   surfaceClsLayerIds().forEach(id=>{ if(map.getLayer(id)) map.moveLayer(id); });
+  // quality ticks stay above the class lines they stitch over
+  if(map.getLayer('surface-q-case')) map.moveLayer('surface-q-case');
+  if(map.getLayer('surface-q')) map.moveLayer('surface-q');
   dynamicIds.filter(id=>id.startsWith('route-climbs-')).forEach(liftGroup);
   ['mly-cov','mly-img'].forEach(id=>{ if(map.getLayer(id)) map.moveLayer(id); });
 }
@@ -374,13 +377,24 @@ export const surfaceStyle=cls=>SURFACE_STYLE[cls]||{color:'#4E8C84'};
 // and resolve the clicked feature via properties.idx.
 export const SURFACE_CLS=Object.keys(SURFACE_STYLE).concat('other');   // 'other' = unknown class → default solid teal
 export const surfaceClsLayerIds=()=>SURFACE_CLS.map(c=>'surface-cls-'+c);
+/* Quality tones for the curated ticks — the A form's five smoothness values.
+   Kept in step with surface-tiles.js SM_TONE (the OSM-skin ticks), which maps
+   OSM's eight raw values onto the same palette; not imported from there
+   because surface-tiles imports THIS module. */
+const CURATED_SM_TONE={excellent:'#1E8E4F',good:'#5FA845',intermediate:'#D9A62E',bad:'#D4763B',very_bad:'#C2402F'};
 export function renderSurfaceLayer(layer, visible){
   const feats=[];
   if(visible) layer.features.forEach((f,i)=>{
     if(!(mode()==='confirmed' ? (f.v||f.cur) : ((mode()==='all')||!layer.exp||f.cur))) return;   // same visibility rule as featureVisible()
     if(!inScope(f.rid)) return;                        // region scope gate (map-and-search.md §4.5)
+    // The recorded smoothness rides along as a tone key, so OUR items get the
+    // same quality ticks the OSM skin has — a rider who just recorded a road
+    // as Excellent saw no ticks on it while the legend promised them "where
+    // recorded" (owner-reported 2026-08-14).
+    const sm=(f.smoothness||'').toLowerCase().replace(/\s+/g,'_');
     feats.push({type:'Feature',
-      properties:{idx:i, cls:SURFACE_STYLE[f.surfaceClass]?f.surfaceClass:'other'},
+      properties:{idx:i, cls:SURFACE_STYLE[f.surfaceClass]?f.surfaceClass:'other',
+        ...(CURATED_SM_TONE[sm]?{sm}:{})},
       geometry:{type:'LineString',coordinates:f.geom.path.map(p=>[p[1],p[0]])}});
   });
   const data={type:'FeatureCollection',features:feats};
@@ -403,6 +417,33 @@ export function renderSurfaceLayer(layer, visible){
     map.on('mousemove',id,e=>{ const f=featAt(e); if(f) showTip(f.headline||featureSummary(f,D)||f.name, e.lngLat); });   // surface type (e.g. "Asphalt · Excellent") on hover
     map.on('mouseleave',id,()=>{ map.getCanvas().style.cursor=''; hideTip(); });
   });
+  // The quality ticks over OUR lines — same stitch as the OSM skin's surfq-
+  // layers (surface-tiles.js): short butt-capped dashes in the smoothness
+  // tone, only where a smoothness is recorded, from z13 (below that they
+  // would be confetti). Wider than the skin's because the curated lines
+  // underneath are wider — and with a cream casing tick underneath, because
+  // the excellent/good greens sit on the paved slate and vanish without one
+  // (the skin's thin light lines don't have that problem). The casing's dash
+  // is the tick's scaled by the width ratio: dash units are line-widths, so
+  // equal physical periods keep the two patterns in step.
+  map.addLayer({id:'surface-q-case',type:'line',source:'surface-src',
+    minzoom:13,
+    filter:['has','sm'],
+    layout:{'line-cap':'butt'},
+    paint:{
+      'line-color':'#FBF4E4',
+      'line-width':7,
+      'line-dasharray':[0.6*4.5/7, 2.8*4.5/7],
+      'line-opacity':0.9}});
+  map.addLayer({id:'surface-q',type:'line',source:'surface-src',
+    minzoom:13,
+    filter:['has','sm'],
+    layout:{'line-cap':'butt'},
+    paint:{
+      'line-color':['match',['get','sm'],...Object.entries(CURATED_SM_TONE).flat(),'rgba(0,0,0,0)'],
+      'line-width':4.5,
+      'line-dasharray':[0.6,2.8],
+      'line-opacity':0.95}});
   return feats.length;
 }
 /* null = that chip group is not on the page, which means NO filter — not "an
