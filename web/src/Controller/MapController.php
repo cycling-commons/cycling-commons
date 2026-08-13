@@ -23,6 +23,8 @@ use App\Moderation\ModerationScopeProvider;
 use App\Moderation\SubmissionQueue;
 use App\Scout\ScoutTag;
 use App\Security\TwoFactorPolicy;
+use App\Settings\SettingsProviderInterface;
+use App\Settings\SettingsRegistry;
 use App\Service\BaseAreaResolver;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -57,13 +59,13 @@ final class MapController extends AbstractController
      */
     #[Route('/scout/review', name: 'scout_review')]
     #[IsGranted('ROLE_USER')]
-    public function scoutReview(Request $request, SubmissionQueue $queue, CatalogSchemaProvider $schema, TranslatorInterface $translator, ModerationScopeProvider $scopeProvider, TwoFactorPolicy $twoFactorPolicy, CoverageManifest $coverage, SurfaceManifest $surface, RoutesManifest $routes, RegionRegistryProvider $regions, CatalogProvider $catalogProvider): Response
+    public function scoutReview(Request $request, SubmissionQueue $queue, CatalogSchemaProvider $schema, TranslatorInterface $translator, ModerationScopeProvider $scopeProvider, TwoFactorPolicy $twoFactorPolicy, CoverageManifest $coverage, SurfaceManifest $surface, RoutesManifest $routes, RegionRegistryProvider $regions, CatalogProvider $catalogProvider, SettingsProviderInterface $settings): Response
     {
-        return $this->map($request, $queue, $schema, $translator, $scopeProvider, $twoFactorPolicy, $coverage, $surface, $routes, $regions, $catalogProvider, scoutReview: true);
+        return $this->map($request, $queue, $schema, $translator, $scopeProvider, $twoFactorPolicy, $coverage, $surface, $routes, $regions, $catalogProvider, $settings, scoutReview: true);
     }
 
     #[Route('/map', name: 'map')]
-    public function map(Request $request, SubmissionQueue $queue, CatalogSchemaProvider $schema, TranslatorInterface $translator, ModerationScopeProvider $scopeProvider, TwoFactorPolicy $twoFactorPolicy, CoverageManifest $coverage, SurfaceManifest $surface, RoutesManifest $routes, RegionRegistryProvider $regions, CatalogProvider $catalogProvider, bool $scoutReview = false): Response
+    public function map(Request $request, SubmissionQueue $queue, CatalogSchemaProvider $schema, TranslatorInterface $translator, ModerationScopeProvider $scopeProvider, TwoFactorPolicy $twoFactorPolicy, CoverageManifest $coverage, SurfaceManifest $surface, RoutesManifest $routes, RegionRegistryProvider $regions, CatalogProvider $catalogProvider, SettingsProviderInterface $settings, bool $scoutReview = false): Response
     {
         $user = $this->getUser();
         $regionRows = array_map(
@@ -151,6 +153,11 @@ final class MapController extends AbstractController
             // manifest-or-pin resolution as the surface arms. Null means the
             // Routes toggle is simply not offered.
             'routes_tiles_url' => $routes->tilesUrl(),
+            // Seasonal voting go-live dial (owner 2026-08-13): until an
+            // admin flips community.voting_live, every vote call-to-action
+            // stays hidden — a button for a round that does not exist yet
+            // reads as broken, the same rule as unbuilt tile artifacts.
+            'voting_live' => 1 === $settings->get(SettingsRegistry::COMMUNITY_VOTING_LIVE),
             // Versions the catalog.json URL (?v=), so an approved submission
             // shows on the next page load instead of hiding behind the
             // browser's hour-long payload cache — see

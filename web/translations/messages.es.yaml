@@ -2021,7 +2021,7 @@ map:
   d_source: 'Fuente'
   d_edit_item: 'Editar este elemento'
   d_fix_location: 'Corregir la ubicación'
-  d_vote_round: 'Votar en esta ronda'
+  d_vote_round: 'Vótalo en esta ronda'
   d_download_gpx: 'Descargar GPX'
   d_proposed_change: 'Cambio propuesto'
   d_shape_on_map: 'Forma en el mapa'
@@ -2911,7 +2911,11 @@ admin:
       moderation: 'Moderación'
       media: 'Fotos'
       alerts: 'Alertas'
+      community: 'Comunidad'
     field:
+      community_voting_live:
+        label: 'La votación de temporada está activa'
+        help: 'Ponlo a 1 cuando las rondas de votación estén abiertas. A 0, toda llamada a votar en el mapa queda oculta — un botón para una ronda que no existe parece roto.'
       map_curated_default_threshold:
         label: 'Preparación del modo curado: elementos totales'
         help: 'Cuántos elementos curados necesita una región en total antes de que un curador pueda abrirla en modo Curado por defecto. Bájalo para desbloquear antes las regiones jóvenes; súbelo para mantener el listón de calidad.'

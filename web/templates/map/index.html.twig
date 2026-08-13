@@ -435,6 +435,9 @@ window.CC_VENDOR = {{ {
   window.CC_CATALOG_URL = {{ (path('map_catalog') ~ '?v=' ~ catalog_version)|json_encode(constant('JSON_UNESCAPED_SLASHES'))|raw }};
   {# The heat points live off the critical payload; fetched on the first heatmap-On only. #}
   window.CC_HEAT_URL = {{ path('map_heat')|json_encode(constant('JSON_UNESCAPED_SLASHES'))|raw }};
+  {# Seasonal voting go-live (community.voting_live): false hides every vote
+     call-to-action on the map. #}
+  window.CC_VOTING_LIVE = {{ voting_live|default(false) ? 'true' : 'false' }};
   window.CC_MAP_SRC = {{ asset('map/map.js')|json_encode(constant('JSON_UNESCAPED_SLASHES'))|raw }};
   window.CC_FIELD_SCHEMA = {{ field_schema|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
   {# Locale bundle for the strings map.js renders itself (layer list, subtitle,

@@ -2008,7 +2008,7 @@ map:
   d_source: 'Source'
   d_edit_item: 'Edit this item'
   d_fix_location: 'Fix location'
-  d_vote_round: 'Vote in this round'
+  d_vote_round: 'Vote for it in this round'
   d_download_gpx: 'Download GPX'
   d_proposed_change: 'Proposed change'
   d_shape_on_map: 'Shape on the map'
@@ -2896,7 +2896,11 @@ admin:
       moderation: 'Moderation'
       media: 'Photos'
       alerts: 'Alerts'
+      community: 'Community'
     field:
+      community_voting_live:
+        label: 'Seasonal voting is live'
+        help: 'Set to 1 when the voting rounds are open. At 0 every vote call-to-action on the map stays hidden — a button for a round that does not exist reads as broken.'
       map_curated_default_threshold:
         label: 'Curated-mode readiness: total items'
         help: 'How many curated items a region needs in total before a curator may open it in Curated mode by default. Lower it to unlock young regions sooner; raise it to hold the line on quality.'

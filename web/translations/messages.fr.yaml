@@ -1686,7 +1686,7 @@ map:
   d_source: 'Source'
   d_edit_item: 'Modifier cet élément'
   d_fix_location: 'Corriger l''emplacement'
-  d_vote_round: 'Voter dans ce tour'
+  d_vote_round: 'Votez pour ce lieu dans ce tour'
   d_download_gpx: 'Télécharger le GPX'
   d_proposed_change: 'Modification proposée'
   d_shape_on_map: 'Tracé sur la carte'
@@ -2870,7 +2870,11 @@ admin:
       moderation: 'Modération'
       media: 'Photos'
       alerts: 'Alertes'
+      community: 'Communauté'
     field:
+      community_voting_live:
+        label: 'Le vote saisonnier est actif'
+        help: 'Mettez 1 quand les tours de vote sont ouverts. À 0, chaque appel au vote sur la carte reste masqué — un bouton pour un tour qui n''existe pas semble cassé.'
       map_curated_default_threshold:
         label: 'Éligibilité au mode Sélection : total d’éléments'
         help: 'Nombre total d’éléments sélectionnés qu’une région doit atteindre avant qu’un curateur puisse l’ouvrir en mode Sélection par défaut. Abaissez-le pour débloquer plus tôt les jeunes régions, augmentez-le pour maintenir le niveau d’exigence.'

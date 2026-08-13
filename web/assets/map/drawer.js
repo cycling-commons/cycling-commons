@@ -654,7 +654,10 @@ function buildRecord(layer, f){
   }
   // Only votable point types get the vote CTA. Utilities are confirmed, not
   // voted — the erroneous vote link used to show on water/services/etc.
-  const vote = (f.cur && CC_VOTABLE.has(layer.key)) ? `<a class="cc-d-act" href="/vote">▲ ${D.voteRound||'Vote in this round'}</a>` : '';
+  // Gated on the voting-live dial (owner 2026-08-13): a vote button for a
+  // round that does not exist yet reads as broken, so until an admin flips
+  // community.voting_live it renders nowhere.
+  const vote = (window.CC_VOTING_LIVE && f.cur && CC_VOTABLE.has(layer.key)) ? `<a class="cc-d-act cc-d-vote" href="/vote">▲ ${D.voteRound||'Vote for it in this round'}</a>` : '';
   // Non-votable utilities carry a community confirmation panel (water:
   // potable/not-potable, others: "still here?"), hydrated async on open.
   const confirmPanel = (CC_CONFIRMABLE.has(layer.key) && f.id!=null)

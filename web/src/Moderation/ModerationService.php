@@ -335,7 +335,13 @@ final class ModerationService
             ->setField($field)
             ->setOldValue($old)
             ->setNewValue($new)
-            ->setChangedBy((int) $curator->getId()));
+            /* The CREATOR is credited, not the approver (owner 2026-08-13:
+               "we do not credit the creator of the surface item"). Every row
+               here applies a change the SUBMITTER authored - the curator only
+               let it through, and their act is already recorded where desk
+               acts belong (submission.decided_by, the desk history). The
+               public change log is provenance of the content. */
+            ->setChangedBy($submission->getUserId()));
     }
 
     /**

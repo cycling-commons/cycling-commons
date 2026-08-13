@@ -688,7 +688,7 @@
   /* Sans, sentence case, a step bigger — mono small-caps at .64rem was hard to
      read on these (owner 2026-08-13), and the panel's Yes/No buttons already
      set the readable style, so the one-tap row matches it. */
-  .cc-osmcf .cc-d-act{margin:0;border:1px solid transparent;cursor:pointer;
+  .cc-osmcf .cc-d-act{margin:0;border:1px solid transparent;cursor:pointer;padding:.55rem 1rem;
     font-family:var(--sans);font-weight:700;font-size:.8rem;letter-spacing:0;text-transform:none}
   .cc-osmcf .cc-d-act[disabled]{opacity:.5;cursor:default}
   /* The receipt after a tap. Mono green on the drawer's dark green is a
@@ -744,6 +744,9 @@
   .cc-d-grp .cc-osmcf{margin-top:0}
   .cc-d-grp .cc-cf{margin-top:0}
   .cc-d-grp-community .cc-d-act{margin-top:.7rem}
+  /* The vote CTA reads like the confirm buttons beside it (owner 2026-08-13):
+     sans bold, sentence case — one family for the community band. */
+  .cc-d-vote{font-family:var(--sans);font-weight:700;font-size:.8rem;letter-spacing:0;text-transform:none;padding:.55rem 1rem}
   .cc-cf{margin-top:.7rem}
   .cc-cf-h{font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;color:rgba(239,230,212,.8);margin-bottom:.45rem}
   .cc-cf-yours{font-family:var(--mono);font-size:.66rem;letter-spacing:.04em;color:var(--glacier);margin-top:.45rem}
@@ -751,7 +754,7 @@
   .cc-cf-change{margin-top:.5rem;padding:0;border:0;background:none;font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;color:var(--glacier);cursor:pointer;text-decoration:underline;text-underline-offset:2px}
   .cc-cf-change:hover{color:var(--trail)}
   .cc-cf-row{display:flex;flex-wrap:wrap;gap:.5rem}
-  .cc-cf-btn{flex:none;padding:.45rem .8rem;border-radius:5px;border:1px solid var(--trail);background:transparent;
+  .cc-cf-btn{flex:none;padding:.55rem 1rem;border-radius:5px;border:1px solid var(--trail);background:transparent;
     color:var(--trail);font-family:var(--sans);font-weight:700;font-size:.8rem;line-height:1;cursor:pointer;display:inline-flex;align-items:center;gap:.4rem}
   .cc-cf-btn:hover:not(:disabled){background:var(--trail);color:var(--ink)}
   .cc-cf-btn:disabled{cursor:default;color:var(--glacier);border-color:rgba(143,182,168,.5)}

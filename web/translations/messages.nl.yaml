@@ -1686,7 +1686,7 @@ map:
   d_source: 'Bron'
   d_edit_item: 'Dit element bewerken'
   d_fix_location: 'Locatie corrigeren'
-  d_vote_round: 'Stem in deze ronde'
+  d_vote_round: 'Stem hierop in deze ronde'
   d_download_gpx: 'GPX downloaden'
   d_proposed_change: 'Voorgestelde wijziging'
   d_shape_on_map: 'Vorm op de kaart'
@@ -2870,7 +2870,11 @@ admin:
       moderation: 'Moderatie'
       media: 'Foto''s'
       alerts: 'Waarschuwingen'
+      community: 'Community'
     field:
+      community_voting_live:
+        label: 'Seizoensstemmen is live'
+        help: 'Zet op 1 wanneer de stemrondes open zijn. Op 0 blijft elke stem-knop op de kaart verborgen — een knop voor een ronde die niet bestaat lijkt kapot.'
       map_curated_default_threshold:
         label: 'Klaar voor Selectie-modus: totaal aantal items'
         help: 'Hoeveel geselecteerde items een regio in totaal nodig heeft voordat een curator hem standaard in Selectie-modus mag openen. Verlaag het om jonge regio’s eerder vrij te geven, verhoog het om de lat hoog te houden.'

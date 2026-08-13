@@ -47,10 +47,12 @@ final class ChangeHistoryView
     public function forItem(int $itemId, int $limit = 50): array
     {
         $rows = $this->db->fetchAllAssociative(
-            'SELECT field, old_value, new_value, changed_by, changed_at
-             FROM change_history
-             WHERE item_id = :itemId
-             ORDER BY changed_at DESC, id DESC
+            'SELECT ch.field, ch.old_value, ch.new_value, ch.changed_by, ch.changed_at,
+                    u.display_name, COALESCE(u.public_profile, false) AS public_profile
+             FROM change_history ch
+             LEFT JOIN users u ON u.id = ch.changed_by
+             WHERE ch.item_id = :itemId
+             ORDER BY ch.changed_at DESC, ch.id DESC
              LIMIT :limit',
             ['itemId' => $itemId, 'limit' => $limit],
             ['itemId' => ParameterType::INTEGER, 'limit' => ParameterType::INTEGER],
@@ -71,9 +73,17 @@ final class ChangeHistoryView
                 // person who does not exist and publish it on the item's
                 // change log — a fabricated contributor, on the one surface
                 // whose whole job is provenance.
+                /* A PUBLIC profile is credited by name (owner 2026-08-13):
+                   the rider chose to stand behind their contributions, and a
+                   pseudonym over a public byline hides what they asked to
+                   show. Private profiles keep the stable pseudonym; the
+                   system actor keeps its label; a deleted account (no user
+                   row) falls back to the pseudonym too. */
                 'who' => ChangeHistory::SYSTEM_ACTOR === (int) $r['changed_by']
                     ? self::SYSTEM_LABEL
-                    : RiderPseudonym::for($r['changed_by']),
+                    : ($r['public_profile'] && \is_string($r['display_name']) && '' !== $r['display_name']
+                        ? $r['display_name']
+                        : RiderPseudonym::for($r['changed_by'])),
                 'when' => RelativeTime::ago($changedAt, $now),
                 'changedAt' => $changedAt->format(\DateTimeInterface::ATOM),
             ];

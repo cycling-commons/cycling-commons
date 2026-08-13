@@ -59,12 +59,14 @@ final class SettingsRegistry
     public const string MEDIA_URGENT_BREAKER_HOURLY = 'media.urgent_breaker_hourly';
     public const string MEDIA_URGENT_BREAKER_DAILY = 'media.urgent_breaker_daily';
     public const string ALERT_EMAILS = 'app.alert_emails';
+    public const string COMMUNITY_VOTING_LIVE = 'community.voting_live';
 
     public const string GROUP_MAP = 'map';
     public const string GROUP_ROUTES = 'routes';
     public const string GROUP_MODERATION = 'moderation';
     public const string GROUP_MEDIA = 'media';
     public const string GROUP_ALERTS = 'alerts';
+    public const string GROUP_COMMUNITY = 'community';
 
     /** @var array<string, SettingDefinition> keyed by setting key, in render order */
     private array $definitions = [];
@@ -104,6 +106,11 @@ final class SettingsRegistry
             // day could produce" — past them the budget is not a budget.
             [self::MEDIA_URGENT_BREAKER_HOURLY, 0, 500, self::GROUP_MEDIA],
             [self::MEDIA_URGENT_BREAKER_DAILY, 0, 2000, self::GROUP_MEDIA],
+            // Whether seasonal voting is LIVE (owner 2026-08-13). 0 hides the
+            // map's vote call-to-action everywhere; 1 shows it. A 0/1 dial
+            // rather than an env flag because go-live is an editorial moment,
+            // not a deploy (vote-feature-deferred: ballots ship post-launch).
+            [self::COMMUNITY_VOTING_LIVE, 0, 1, self::GROUP_COMMUNITY],
         ];
 
         foreach ($table as [$key, $min, $max, $group]) {
