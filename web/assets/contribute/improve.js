@@ -939,6 +939,35 @@
         });
       }
 
+      // Editing an EXISTING segment item: the stretch it already has IS the
+      // location, so the map opens with the stored line drawn and both pins
+      // placed (owner-reported 2026-08-14: "editing a surface item does not
+      // show its track in the edit map"). The stored ATTRIBUTE's own values —
+      // a, b, line verbatim — so an untouched edit reposts exactly what is
+      // stored and records no phantom geometry change; INITIAL_GEOM is
+      // re-snapshotted after the hydrate for the same reason.
+      var itemSeg = (!hasSegment && LOCATE === 'segment' && (window.CC_ITEM || {}).segment
+        && Array.isArray(window.CC_ITEM.segment.a) && Array.isArray(window.CC_ITEM.segment.b))
+        ? window.CC_ITEM.segment : null;
+      if (itemSeg) {
+        wmap.on('load', function () {
+          addMarker({ lng: itemSeg.a[0], lat: itemSeg.a[1] });
+          addMarker({ lng: itemSeg.b[0], lat: itemSeg.b[1] });
+          legs = [Array.isArray(itemSeg.line) && itemSeg.line.length > 1
+            ? { line: itemSeg.line, src: 'seed' }
+            : { line: null, src: null }];
+          syncLoc();
+          drawSeg();
+          INITIAL_GEOM = geomSnapshot();
+          var b = new maplibregl.LngLatBounds(itemSeg.a, itemSeg.a);
+          b.extend(itemSeg.b);
+          (itemSeg.line || []).forEach(function (pt) { b.extend(pt); });
+          wmap.fitBounds(b, { padding: 60, maxZoom: 16, duration: 0 });
+          var _ro = document.getElementById('wz-readout');
+          if (_ro) _ro.textContent = t('readout_segment_prefilled');
+        });
+      }
+
       // Pre-place a known stretch, then frame it. placeAt() handles the marker,
       // the drag handler, the readout and the drawn line, so the prefill is the
       // same code path a tap takes — no second way for a segment to exist.

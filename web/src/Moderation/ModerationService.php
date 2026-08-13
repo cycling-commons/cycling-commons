@@ -318,6 +318,16 @@ final class ModerationService
                 unset($attributes[$field]);
             } else {
                 $attributes[$field] = $now;
+                // A redrawn stretch changes the item's GEOMETRY too: the map
+                // reads the line from geom, not from the attribute, so an
+                // approved segment edit that only updated attributes would
+                // keep drawing the old road. Same derivation as submitDraft:
+                // the routed/seeded line when there is one, the a→b chord
+                // otherwise.
+                if ('segment' === $field && \is_array($now) && isset($now['a'], $now['b'])) {
+                    $path = \is_array($now['line'] ?? null) ? $now['line'] : [$now['a'], $now['b']];
+                    $item->setGeom(json_encode(['type' => 'LineString', 'coordinates' => $path], \JSON_THROW_ON_ERROR));
+                }
             }
             $changed = true;
             $this->history($item, $submission, $curator, $field, $actualOld, $now);

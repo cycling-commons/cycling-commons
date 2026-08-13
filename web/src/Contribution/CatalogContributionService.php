@@ -398,6 +398,20 @@ final class CatalogContributionService implements ContributionStubInterface
         } catch (\InvalidArgumentException) {
             $this->reject('contribute.error.invalid_geometry', 'route');
         }
+
+        // A road surface's drawn stretch is a top-level hidden field too
+        // (`segment`, {a,b,line?}), like the climb shape above: merged so a
+        // redrawn line is recorded in $changes and applied on approve
+        // (ModerationService rebuilds the item's LineString from it). Without
+        // this the wizard said the new stretch would be recorded while the
+        // server silently dropped the field — the C6 class of bug. Gated on
+        // the letter: only segment-located items carry one. An UNCHANGED
+        // prefill records nothing: the wizard reposts the stored attribute's
+        // own values, and the change loop compares them equal.
+        $rawSegment = $payload['segment'] ?? null;
+        if ('A' === $item->getLetter() && \is_string($rawSegment) && '' !== $rawSegment) {
+            $proposed['segment'] = $this->decodeSegment($rawSegment);
+        }
         /* Max gradient follows the steepest-ramp marker — but only when the
            marker actually MOVED.
 

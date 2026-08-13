@@ -50,6 +50,14 @@ export function mintWaterDrops(){
 // installed at all — `fc-list | grep -i emoji` is empty — so 🛠/💨, and even the
 // pre-existing 💧/⛺/🚆/⛑/📷/🏛/⛰ layer icons, all silhouette as blank tofu boxes here).
 export const SERVICE_GLYPH={shop:'⚙', station:'⚒', pump:'⊕'};
+// I · scenic views: the 📷 emoji silhouettes as a blank rounded box on dark
+// pins (the white-icon filter flattens the colour emoji to its outline, and a
+// camera emoji's outline IS a rounded box — owner: "make scenic view icon a
+// camera"). So the camera is drawn as a real vector shape: body + lens hole
+// (evenodd), used by both the DOM pins (inline SVG) and the canvas discs
+// (Path2D). 24×24 viewBox.
+export const CAMERA_PATH='M9 4h6l1.5 2.5H20a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8.5a2 2 0 0 1 2-2h3.5L9 4Zm3 4.6a4.7 4.7 0 1 0 0 9.4 4.7 4.7 0 0 0 0-9.4Zm0 2a2.7 2.7 0 1 1 0 5.4 2.7 2.7 0 0 1 0-5.4Z';
+const cameraSvg=fill=>`<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill-rule="evenodd" fill="${fill}" d="${CAMERA_PATH}"/></svg>`;
 // small recognisable marker for UNVERIFIED items: paper disc + category-colour ring + the category glyph.
 // glyph/suffix let a layer mint more than one disc variant (e.g. services' per-serviceKind icons) off the
 // same colour/id scheme — suffix keeps the cache id distinct so each variant is registered once.
@@ -66,13 +74,25 @@ export function miniIcon(key, glyph, suffix){
   x.fillStyle=color; x.fill();
   x.lineWidth=1.6*S; x.strokeStyle='rgba(20,22,14,.85)'; x.stroke();
   // category glyph as a flat silhouette (white on dark discs, ink on light) — matches the pins' icon treatment
-  const gc=document.createElement('canvas'); gc.width=D; gc.height=D; const gx=gc.getContext('2d');
-  gx.font=`${12.5*S}px "Apple Color Emoji","Noto Color Emoji","Segoe UI Emoji","Noto Sans Symbols2",system-ui,sans-serif`;
-  gx.textAlign='center'; gx.textBaseline='middle';
-  gx.fillText(glyph || (layer||{}).icon||'•', R, R+1*S);
-  const gd=gx.getImageData(0,0,D,D), gp=gd.data;
-  for(let i=0;i<gp.length;i+=4){ if(gp[i+3]>25){ gp[i]=dark?255:20; gp[i+1]=dark?255:22; gp[i+2]=dark?255:14; gp[i+3]=255; } }
-  gx.putImageData(gd,0,0); x.drawImage(gc,0,0);
+  if(key==='scenic' && !glyph){
+    // the drawn camera (see CAMERA_PATH): a Path2D fill, because the emoji's
+    // silhouette is a blank box
+    const side=13*S, sc=side/24;
+    x.save();
+    x.translate(R-side/2, R-side/2);
+    x.scale(sc, sc);
+    x.fillStyle=dark?'#fff':'#14160e';
+    x.fill(new Path2D(CAMERA_PATH), 'evenodd');
+    x.restore();
+  } else {
+    const gc=document.createElement('canvas'); gc.width=D; gc.height=D; const gx=gc.getContext('2d');
+    gx.font=`${12.5*S}px "Apple Color Emoji","Noto Color Emoji","Segoe UI Emoji","Noto Sans Symbols2",system-ui,sans-serif`;
+    gx.textAlign='center'; gx.textBaseline='middle';
+    gx.fillText(glyph || (layer||{}).icon||'•', R, R+1*S);
+    const gd=gx.getImageData(0,0,D,D), gp=gd.data;
+    for(let i=0;i<gp.length;i+=4){ if(gp[i+3]>25){ gp[i]=dark?255:20; gp[i+1]=dark?255:22; gp[i+2]=dark?255:14; gp[i+3]=255; } }
+    gx.putImageData(gd,0,0); x.drawImage(gc,0,0);
+  }
   map.addImage(id,{width:D,height:D,data:new Uint8Array(x.getImageData(0,0,D,D).data.buffer)},{pixelRatio:S});
   return id;
 }
@@ -96,6 +116,9 @@ export function pinEl(layer,cur,props){
   const d=document.createElement('div');
   d.className='cc-pin'+(cur?' cur':'')+(layer.pendingLayer?' pending':''); d.style.setProperty('--c',layer.color);
   const white = txtOn(layer.color)==='#fff';   // dark pins (e.g. purple climbs) → white icon
+  // Scenic gets the drawn camera (no filter — the SVG carries its own fill);
+  // every other layer keeps the glyph + silhouette-filter treatment.
+  if(layer.key==='scenic'){ d.innerHTML=`<span>${cameraSvg(white?'#fff':'#20241c')}</span>`; return d; }
   d.innerHTML=`<span${white?' style="filter:brightness(0) invert(1)"':''}>${pinGlyph(layer, props)}</span>`; return d;
 }
 

@@ -630,7 +630,17 @@ the newest rung of that same ladder.
   lines are wide and dark, so the curated ticks carry a cream casing tick
   underneath (`surface-q-case`, dash scaled by the width ratio so the two
   patterns stay in step) — an excellent-green tick on the paved slate is
-  invisible without it.
+  invisible without it. The tile skin's ticks got the same casing the same
+  day (`surfq-case-<cc>`, id kept under the `surfq-` prefix so
+  applyClassVisibility toggles and re-filters it with the ticks).
+- **Class lines are SOLID; the dash channel belongs to quality**
+  (owner 2026-08-14): once ticks stitched over the lines, gravel's own ochre
+  dashes and an amber quality tick were two dash patterns fighting on one
+  line — and "smooth gravel vs rough gravel" is exactly what the ticks
+  exist to say. `SURFACE_STYLE` now carries colour only for
+  paved/gravel/pave/dirt/rock (curated layer, tile skin and the legend
+  swatches all read it); `unverified` keeps its red dash, because that dash
+  IS its meaning and it never draws ticks.
 - **The tile lines dedupe against curated refs** (2026-08-13), the same rule
   the coverage points have always had: a way already answered as one of our A
   items is filtered out of the classified skin, the to-do arm and the quality

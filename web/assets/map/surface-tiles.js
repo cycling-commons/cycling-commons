@@ -178,6 +178,30 @@ export function addSurfaceTiles() {
     // rather than as a second line. Dash units are line-widths, so the
     // spacing arithmetic lives with the width.
     const qid = QUALITY_PREFIX + (srcLayer === 'surface' ? 'all' : srcLayer.slice(8));
+    // Cream casing tick UNDER each colour tick (2026-08-14, same as the
+    // curated layer's surface-q-case): an amber tick on the ochre gravel line
+    // is invisible without it. Casing dash = tick dash scaled by the width
+    // ratio, so both patterns share one physical period and stay in step.
+    // The id keeps the surfq- prefix so applyClassVisibility toggles and
+    // re-filters it with the ticks.
+    const qcase = QUALITY_PREFIX + 'case-' + (srcLayer === 'surface' ? 'all' : srcLayer.slice(8));
+    if (!map.getLayer(qcase)) {
+      map.addLayer({
+        id: qcase,
+        type: 'line',
+        source: SURFACE_TILE_SOURCE,
+        'source-layer': srcLayer,
+        minzoom: SM_MIN_ZOOM,
+        filter: qualityFilter(),
+        layout: { 'line-cap': 'butt', visibility: 'none' },
+        paint: {
+          'line-color': '#FBF4E4',
+          'line-width': 5.5,
+          'line-dasharray': [0.6 * 3.5 / 5.5, 2.8 * 3.5 / 5.5],
+          'line-opacity': 0.9,
+        },
+      });
+    }
     if (!map.getLayer(qid)) {
       map.addLayer({
         id: qid,

@@ -290,7 +290,7 @@
      improve.js step 1: a climb (letter B) mounts the shared three-point
      editor instead of the single-pin Locate (Task 5). Only emitted here —
      the unbound branch above never reaches this template region. #}
-  <script nonce="{{ csp_nonce() }}">window.CC_ITEM = {{ {letter: item_type.letter, lat: item_lat|default(null), lng: item_lng|default(null), route: current.route|default(null), grad: current.grad|default(null), steep: current.steep|default(null), steepPoint: current.steepPoint|default(null)}|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
+  <script nonce="{{ csp_nonce() }}">window.CC_ITEM = {{ {letter: item_type.letter, lat: item_lat|default(null), lng: item_lng|default(null), route: current.route|default(null), grad: current.grad|default(null), steep: current.steep|default(null), steepPoint: current.steepPoint|default(null), segment: current.segment|default(null)}|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
   <script nonce="{{ csp_nonce() }}">window.CC_MEDIA = {{ {
     tokenUrl: path('media_token'),
     uploadUrl: path('media_photos_upload'),

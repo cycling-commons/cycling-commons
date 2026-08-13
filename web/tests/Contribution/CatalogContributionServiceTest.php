@@ -358,6 +358,59 @@ final class CatalogContributionServiceTest extends KernelTestCase
         self::assertContains('way/444', $refs);
     }
 
+    /**
+     * A redrawn stretch on an EXISTING surface item is a recorded change —
+     * the segment hidden field is merged into the diff like the climb shape
+     * is (before this, the wizard said the new line would be recorded while
+     * the server silently dropped the field).
+     */
+    public function testImproveSegmentChangeIsRecorded(): void
+    {
+        $item = $this->item('A', '{"type":"LineString","coordinates":[[5.86,50.47],[5.87,50.48]]}', [
+            'surface' => 'Asphalt',
+            'segment' => ['a' => [5.86, 50.47], 'b' => [5.87, 50.48]],
+        ]);
+        $id = $item->getId();
+        $this->em->clear();
+
+        $receipt = $this->service->submit('improve', [
+            '_item_id' => $id,
+            'segment' => '{"a":[5.86,50.47],"b":[5.88,50.49]}',
+            'details' => ['surface' => 'Asphalt'],
+        ], $this->user());
+
+        $sub = $this->em->find(Submission::class, $receipt->submissionId);
+        self::assertNotNull($sub);
+        $changes = $sub->getChanges();
+        self::assertArrayHasKey('segment', $changes);
+        self::assertSame([5.88, 50.49], $changes['segment']['now']['b']);
+    }
+
+    /**
+     * Reposting the stored segment untouched records NO phantom geometry
+     * change — with nothing else edited, the submission is refused outright.
+     */
+    public function testImproveResendingIdenticalSegmentChangesNothing(): void
+    {
+        $item = $this->item('A', '{"type":"LineString","coordinates":[[5.86,50.47],[5.87,50.48]]}', [
+            'surface' => 'Asphalt',
+            'segment' => ['a' => [5.86, 50.47], 'b' => [5.87, 50.48], 'line' => [[5.86, 50.47], [5.865, 50.475], [5.87, 50.48]]],
+        ]);
+        $id = $item->getId();
+        $this->em->clear();
+
+        try {
+            $this->service->submit('improve', [
+                '_item_id' => $id,
+                'segment' => '{"a":[5.86,50.47],"b":[5.87,50.48],"line":[[5.86,50.47],[5.865,50.475],[5.87,50.48]]}',
+                'details' => ['surface' => 'Asphalt'],
+            ], $this->user());
+            self::fail('an unchanged segment must not be recorded as a change');
+        } catch (ValidationFailedException $e) {
+            self::assertStringContainsString('contribute.error.nothing_changed', (string) $e->getViolations());
+        }
+    }
+
     public function testSubmittedItemsAreNotServed(): void
     {
         // Spec §8: state=submitted never reaches /map/catalog.json.

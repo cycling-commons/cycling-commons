@@ -216,6 +216,50 @@ final class ImproveBindingTest extends WebTestCase
     }
 
     /**
+     * An approved SEGMENT edit rebuilds the item's LineString: the map draws
+     * the line from geom, not from the attribute, so applying only
+     * attributes.segment would keep showing the old road (2026-08-14, part of
+     * "editing a surface item does not show its track").
+     */
+    public function testApprovedSegmentEditRebuildsTheItemGeometry(): void
+    {
+        self::bootKernel();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $service = static::getContainer()->get(\App\Service\ContributionStubInterface::class);
+        $moderation = static::getContainer()->get(ModerationService::class);
+
+        $item = (new Item())->setLetter('A')->setName('Testdijk')
+            ->setGeom('{"type":"LineString","coordinates":[[5.86,50.47],[5.87,50.48]]}')->setCountryCode('BE')
+            ->setState(ItemState::Unverified)->setSource(ItemSource::User)->setSourceRef('test-seg')
+            ->setAttributes(['surface' => 'Asphalt', 'segment' => ['a' => [5.86, 50.47], 'b' => [5.87, 50.48]]]);
+        $user = (new User())->setEmail('improver-a@test.test');
+        $user->setPassword('x');
+        $em->persist($item);
+        $em->persist($user);
+        $em->flush();
+
+        $receipt = $service->submit('improve', [
+            '_item_id' => $item->getId(), 'type' => 'road-surface',
+            'segment' => '{"a":[5.86,50.47],"b":[5.90,50.50],"line":[[5.86,50.47],[5.88,50.485],[5.90,50.50]]}',
+            'details' => ['surface' => 'Asphalt'],
+        ], $user);
+
+        $curator = (new User())->setEmail('curator-a@test.test');
+        $curator->setPassword('x');
+        $em->persist($curator);
+        $em->flush();
+
+        $moderation->decide((int) $receipt->submissionId, 'approve', $curator, null);
+
+        $em->refresh($item);
+        $geom = json_decode((string) $item->getGeom(), true);
+        self::assertSame('LineString', $geom['type']);
+        self::assertCount(3, $geom['coordinates'], 'geom rebuilt from the redrawn line, not left at the old shape');
+        self::assertEqualsWithDelta(5.90, $geom['coordinates'][2][0], 1e-9);
+        self::assertSame([5.90, 50.50], $item->getAttributes()['segment']['b']);
+    }
+
+    /**
      * A rider revising an undecided submission AMENDS it (owner decision,
      * 2026-08-04) — "he needs to update his update".
      *

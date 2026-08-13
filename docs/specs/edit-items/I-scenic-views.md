@@ -53,3 +53,7 @@ Location metadata (EXIF GPS) is stripped from uploaded photos before storage —
 ## Implementation
 - **Demo:** registry entry `signal-de-botrange` in `atlas/demo/edit-items.js` (hand-picked fixture data).
 - **Production:** OSM tourism=viewpoint / natural=peak mirrored + community edits.
+- **Map icon: a drawn camera** (owner 2026-08-14), not the 📷 emoji — the
+  pins render glyphs as flat silhouettes, and a camera emoji's silhouette is
+  a blank rounded box. `CAMERA_PATH` in `web/assets/map/icons.js` feeds both
+  the DOM pins (inline SVG) and the canvas discs (Path2D, evenodd lens hole).

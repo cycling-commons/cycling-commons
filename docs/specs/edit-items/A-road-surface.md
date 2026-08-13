@@ -163,7 +163,23 @@ The submitted `segment.line` is the joined legs, capped under the server's
 3000-point limit (client caps at 2900; the seed itself is capped at 1200 at
 assembly). The server contract is unchanged — `a`, `b`, `line` — control
 points are a client-side editing tool and are not stored. Undo snapshots
-pins, control points and legs together. Probe note: the wizard map exposes
+pins, control points and legs together.
+
+**Editing an existing A item shows its stretch (2026-08-14).** The improve
+form for `?item=` used to open segment mode on an empty map ("editing a
+surface item does not show its track" — owner). Now `CC_ITEM.segment`
+carries the stored attribute, and the wizard opens with both pins placed and
+the stored line drawn as a `seed` leg — the stored attribute's *own values*,
+so an untouched edit reposts exactly what is stored, `INITIAL_GEOM` is
+re-snapshotted after the hydrate, and no phantom geometry change is ever
+recorded (pinned by `CatalogContributionServiceTest`). The other half is the
+server: `submitImprove` merges the `segment` hidden field into the diff the
+way it merges the climb shape (letter-gated to A) — before this the wizard
+said the new stretch would be recorded while the server silently dropped the
+field, the C6 class of bug — and on approve `ModerationService::applyEdit`
+**rebuilds the item's LineString** from the new segment (line when present,
+a→b chord otherwise; pinned by `ImproveBindingTest`), because the map draws
+from geom, and applying only the attribute would keep showing the old road. Probe note: the wizard map exposes
 `window.__ccWizMap` (same convention as the map page's `__ccMap`), and
 real-input events do not reach the wizard canvas under Playwright — verify
 listeners with synthetic DOM events, real feel in a real browser.

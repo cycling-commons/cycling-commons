@@ -359,12 +359,18 @@ export function drawLine(id, latlngs, color, layer, f){
    and the purple line could not say which. Road type is its own channel now —
    a pale core drawn inside whatever surface colour the way has (CYCLEWAY_CORE
    below, surface-tiles.js). */
+/* SOLID colour per class (owner 2026-08-14): the dash channel now belongs to
+   the QUALITY ticks alone — a gravel road can be smooth or rough, and an
+   amber tick over dashed ochre was two dash patterns fighting on one line.
+   Colour answers "what is it", the stitch answers "how does it ride". The one
+   exception is `unverified`, whose red dash IS its meaning ("nobody has
+   said") — it draws no quality ticks, so nothing competes. */
 export const SURFACE_STYLE={
-  paved:{color:'#4E6E66'},                           // asphalt/concrete — solid slate
-  gravel:{color:'#C8923A',dash:[2,1.5],cap:'butt'},  // gravel/compacted — dashed ochre
-  pave:{color:'#6E7B96',dash:[1,1.5],cap:'butt'},    // sett/cobbles (pavé) — square slate-grey dashes (matches the legend; distinct from brown ground)
-  dirt:{color:'#6E5849',dash:[2,1.5],cap:'butt'},    // dirt — dashed brown
-  rock:{color:'#5F5A54',dash:[1,2],cap:'butt'},      // rock — rough technical, dark grey dots
+  paved:{color:'#4E6E66'},                           // asphalt/concrete — slate
+  gravel:{color:'#C8923A'},                          // gravel/compacted — ochre
+  pave:{color:'#6E7B96'},                            // sett/cobbles (pavé) — slate-grey
+  dirt:{color:'#6E5849'},                            // dirt — brown
+  rock:{color:'#5F5A54'},                            // rock — dark grey
   unverified:{color:'#D92D20',dash:[2.5,2.5],cap:'butt'} // OSM has no surface tag — red dashes over the white casing ("needs a tag")
 };
 export const surfaceStyle=cls=>SURFACE_STYLE[cls]||{color:'#4E8C84'};
