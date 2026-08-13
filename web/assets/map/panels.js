@@ -174,16 +174,36 @@ export function initRailChrome(){
     const stamp=(u,re)=>{ const m=String(u||'').match(re); return m?m[1]:'—'; };
     const state=window.CC_CATALOG_STATE||'…';
     const cat=state==='ok' ? stamp(window.CC_CATALOG_URL,/v=([0-9a-f]+)/) : state;
-    [['catalog',cat,state!=='ok'],
-     ['surface',stamp(window.CC_SURFACE_URL,/\/(\d{8}-\d{4})\//),false],
-     ['routes',stamp(window.CC_ROUTES_URL,/\/(\d{8}-\d{4})\//),false],
-     ['coverage',stamp(window.CC_COVERAGE_URL,/\/(\d{8}-\d{4})\.pmtiles/),false],
-    ].forEach(([k,v,bad],i)=>{
-      if(i) dv.appendChild(document.createTextNode(' · '));
-      dv.appendChild(document.createTextNode(k+' '));
-      const s=document.createElement('span'); if(bad) s.className='dv-bad';
-      s.textContent=v; dv.appendChild(s);
-    });
+    // Rendered as a FUNCTION and re-rendered on scope changes: the first
+    // real report this line answered (owner 2026-08-13) had two browsers on
+    // IDENTICAL builds — the difference was a stale region scope in one of
+    // them hiding every feature (a scoped rail legitimately reads 0/0). The
+    // client state is as load-bearing as the data versions, so it rides the
+    // same line.
+    const renderVersions=()=>{
+      dv.innerHTML='';
+      const sc=curScope();
+      [['catalog',cat,state!=='ok'],
+       ['surface',stamp(window.CC_SURFACE_URL,/\/(\d{8}-\d{4})\//),false],
+       ['routes',stamp(window.CC_ROUTES_URL,/\/(\d{8}-\d{4})\//),false],
+       ['coverage',stamp(window.CC_COVERAGE_URL,/\/(\d{8}-\d{4})\.pmtiles/),false],
+       ['scope',(sc&&sc.kind)?(sc.slug||sc.countryCode||sc.kind):'everywhere',false],
+       ['mode',mode()||'—',false],
+      ].forEach(([k,v,bad],i)=>{
+        if(i) dv.appendChild(document.createTextNode(' · '));
+        dv.appendChild(document.createTextNode(k+' '));
+        const s=document.createElement('span'); if(bad) s.className='dv-bad';
+        s.textContent=v; dv.appendChild(s);
+      });
+    };
+    renderVersions();
+    // Once more after the boot sequence settles: initRailChrome runs before
+    // the view mode is resolved (initBestOf), and the line must show the mode
+    // the map actually opened in, not the pre-resolution default.
+    setTimeout(renderVersions,0);
+    document.addEventListener('cc:scopechange',renderVersions);
+    // Mode buttons re-render it too (setMode has no event of its own).
+    document.querySelectorAll('#mode button').forEach(b=>b.addEventListener('click',()=>setTimeout(renderVersions,0)));
   }
 
   // mobile: filters bottom-sheet — the rail-foot peek toggles it
