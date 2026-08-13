@@ -2,12 +2,15 @@
 {#
    The Scout mark. `size` is the rendered edge in px (default 76).
 
-   Still the 500x500 JPG straight from brand-src, which is 104 kB of solid flat
-   colour — a format that costs the most for exactly the kind of art that
-   should cost the least. Replacing it is on the backlog; nothing here changes
-   when it does, since only the file behind `src` moves.
+   SVG (2026-08-14), traced from the raster by `brand-src/gen_scout_logo.py`:
+   4 kB where the 500x500 JPG was 104 kB, and crisp at any pixel density
+   instead of a fixed 500 px master shown at 64-80. A pin, three rings and a
+   wordmark in two flat colours is the art JPEG compresses worst and vector
+   describes best. The orange tile is part of the file, so the two pages that
+   include this are unchanged — taking the tile off (a `<rect>` in the SVG) is
+   a one-line change whenever the dark hero wants the mark bare.
 #}
 {% set size = size|default(76) %}
-<img class="scout-logo" src="{{ asset('brand/scout-logo.jpg') }}" alt="{{ 'scout.logo_alt'|trans }}"
+<img class="scout-logo" src="{{ asset('brand/scout-logo.svg') }}" alt="{{ 'scout.logo_alt'|trans }}"
      width="{{ size }}" height="{{ size }}" loading="lazy" decoding="async"
      style="width:{{ size }}px;height:{{ size }}px">
