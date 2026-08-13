@@ -1532,6 +1532,7 @@ improve:
     toast_ctrl_added: 'Point pinned — the stretch now keeps its shape up to here'
     toast_ctrl_removed: 'Pinned point removed'
     ctrl_remove_title: 'Drag to reshape · right-click to remove'
+    ctrl_point_help: 'Pin the line: right-click (or long-press) the drawn line to set a control point — when you drag a pin, everything up to the control point keeps its shape. Right-click (or long-press) the point again to remove it.'
     seg_hide: 'Hide line'
     seg_show: 'Show line'
     seg_hide_title: 'Take the line off to see the road underneath'

@@ -1943,6 +1943,7 @@ improve:
     toast_ctrl_added: 'Punkt festgesetzt — der Abschnitt behält seine Form bis hierher'
     toast_ctrl_removed: 'Festgesetzter Punkt entfernt'
     ctrl_remove_title: 'Ziehen zum Umformen · Rechtsklick zum Entfernen'
+    ctrl_point_help: 'Linie fixieren: Rechtsklick (oder langes Drücken) auf die gezeichnete Linie setzt einen Kontrollpunkt — beim Ziehen eines Pins behält alles bis zum Kontrollpunkt seine Form. Rechtsklick (oder langes Drücken) auf den Punkt entfernt ihn wieder.'
     seg_hide: 'Linie ausblenden'
     seg_show: 'Linie einblenden'
     seg_hide_title: 'Linie wegnehmen, um die Straße darunter zu sehen'

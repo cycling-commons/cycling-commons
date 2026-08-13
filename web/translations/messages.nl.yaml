@@ -1940,6 +1940,7 @@ improve:
     toast_ctrl_added: 'Punt vastgezet — het stuk houdt zijn vorm tot hier'
     toast_ctrl_removed: 'Vastgezet punt verwijderd'
     ctrl_remove_title: 'Slepen om te vervormen · rechtsklik om te verwijderen'
+    ctrl_point_help: 'Zet de lijn vast: rechtsklik (of druk lang) op de getekende lijn voor een controlepunt — als je een speld sleept, houdt alles tot aan het controlepunt zijn vorm. Rechtsklik (of druk lang) op het punt om het weer te verwijderen.'
     seg_hide: 'Lijn verbergen'
     seg_show: 'Lijn tonen'
     seg_hide_title: 'Haal de lijn weg om de weg eronder te zien'

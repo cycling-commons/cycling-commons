@@ -1940,6 +1940,7 @@ improve:
     toast_ctrl_added: 'Point fixé — le tronçon garde sa forme jusqu''ici'
     toast_ctrl_removed: 'Point fixé supprimé'
     ctrl_remove_title: 'Glisser pour remodeler · clic droit pour supprimer'
+    ctrl_point_help: 'Fixez la ligne : clic droit (ou appui long) sur la ligne dessinée pose un point de contrôle — quand vous faites glisser une épingle, tout ce qui précède le point garde sa forme. Clic droit (ou appui long) sur le point pour le supprimer.'
     seg_hide: 'Masquer le tracé'
     seg_show: 'Afficher le tracé'
     seg_hide_title: 'Retirer le tracé pour voir la route en dessous'

@@ -470,6 +470,13 @@
       <span id="wzUndo" role="button" tabindex="0" hidden>{{ 'js.climb_undo'|trans }}</span>
       <span id="wzReset" role="button" tabindex="0">{{ 'improve.step1.reset'|trans }}</span>
     </div>
+    {% if item_type.locationMode.value == 'segment' %}
+      {# The one gesture nobody discovers on their own (owner 2026-08-14):
+         control points exist, and the same gesture removes them. Static text,
+         always visible in segment mode — a hint inside a toast is gone before
+         it is needed. #}
+      <div class="covnote">{{ 'improve.step1.ctrl_point_help'|trans }}</div>
+    {% endif %}
     {% if add_mode|default(false) %}
       {# Unhidden by improve.js when the known-places overlay has dots in view. #}
       <div class="covnote" id="wz-known" hidden>{{ 'contribute.add.known_note'|trans }}</div>

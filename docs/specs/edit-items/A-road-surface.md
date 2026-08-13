@@ -146,7 +146,12 @@ shaped stays put. Removing a control point joins its two legs' lines as they
 are (no re-route). The DOM `contextmenu` event is used, not MapLibre's
 map-level one (the library withholds it behind right-drag-rotate
 bookkeeping), with an 8 px guard so a right-drag's release never drops a
-point, and the click must land within 35 px of the line.
+point, and the click must land within 35 px of the line. Because this is the
+one gesture nobody discovers on their own, segment mode shows a **static help
+line under the map** (owner request 2026-08-14): set a control point with
+right-click/long-press, everything up to it keeps its shape on a drag, the
+same gesture on the point removes it — always visible, not a toast that is
+gone before it is needed (`improve.step1.ctrl_point_help`).
 
 **3 · Trim, not re-route.** Dragging an endpoint to a position still on its
 leg's existing line (~30 m) **trims** the line to that point and snaps the
