@@ -894,7 +894,7 @@ function historyRow(h){
   if(h.field === 'state'){
     return `<li class="cc-h-row">
       <span class="cc-h-field">${escPend(D.stateField||'Status')}</span>
-      <span class="cc-h-diff">${escPend(stateWord(h.oldValue))} → ${escPend(stateWord(h.newValue))}</span>
+      <span class="cc-h-diff"><span class="cc-mod-was">${escPend(stateWord(h.oldValue))}</span><span class="arw">→</span><span class="cc-mod-now">${escPend(stateWord(h.newValue))}</span></span>
       <span class="cc-h-meta">${escPend(whoLabel(h.who))} · <time datetime="${escPend(h.changedAt)}">${escPend(h.when)}</time></span>
     </li>`;
   }
@@ -904,7 +904,7 @@ function historyRow(h){
     : (isEmpty(h.newValue) ? '—' : escPend(h.newValue));
   return `<li class="cc-h-row">
     <span class="cc-h-field">${escPend(h.field)}</span>
-    <span class="cc-h-diff">${ov} → ${nv}</span>
+    <span class="cc-h-diff"><span class="cc-mod-was">${ov}</span><span class="arw">→</span><span class="cc-mod-now">${nv}</span></span>
     <span class="cc-h-meta">${escPend(whoLabel(h.who))} · <time datetime="${escPend(h.changedAt)}">${escPend(h.when)}</time></span>
   </li>`;
 }

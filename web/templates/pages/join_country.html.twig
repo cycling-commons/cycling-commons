@@ -7,7 +7,7 @@
   /* Decorative required marker — the input's `required` attribute is what
      assistive tech announces, so the star is aria-hidden. */
   .field label .req{color:var(--trail);font-size:.95em;margin-left:.1rem}
-  .field input[type=text],.field input:not([type]),.field textarea{width:100%;background:transparent;border:1.5px solid rgba(20,22,14,.25);border-radius:6px;font-family:var(--sans);font-size:1rem;padding:.55rem .7rem;outline:none;color:var(--ink)}
+  .field input[type=text],.field input[type=password],.field input:not([type]),.field textarea{width:100%;background:transparent;border:1.5px solid rgba(20,22,14,.25);border-radius:6px;font-family:var(--sans);font-size:1rem;padding:.55rem .7rem;outline:none;color:var(--ink)}
   .field textarea{min-height:100px;resize:vertical}
   .field select{width:100%;max-width:22rem;padding:.5rem .6rem}
   .field input:focus,.field textarea:focus,.field select:focus{border-color:var(--trail)}
@@ -58,22 +58,39 @@
       <div class="field">
         <label for="region">{{ 'join.scope_label'|trans }}</label>
         <select id="region" name="region">
-          <option value=""{{ wanted ? '' : ' selected' }}>{{ 'join.scope_whole_country'|trans }}</option>
-          {% for r in regions %}<option value="{{ r.id }}"{{ wanted and wanted.id == r.id ? ' selected' : '' }}>{{ r.name }}</option>{% endfor %}
+          {# A rejected submit re-renders with what they chose, not with the
+             query-string default: losing the selection would be a second
+             punishment for one typo. #}
+          {% set picked = sent.region is defined and sent.region is not empty ? sent.region : (wanted ? wanted.id : null) %}
+          <option value=""{{ picked ? '' : ' selected' }}>{{ 'join.scope_whole_country'|trans }}</option>
+          {% for r in regions %}<option value="{{ r.id }}"{{ picked == r.id ? ' selected' : '' }}>{{ r.name }}</option>{% endfor %}
         </select>
       </div>
       <div class="field">
         <label for="osm">{{ 'join.osm_label'|trans }}</label>
-        <input id="osm" name="osm" maxlength="64">
+        <input id="osm" name="osm" maxlength="64" value="{{ sent.osm|default('') }}">
       </div>
       <div class="field">
         <label for="social">{{ 'join.social_label'|trans }}</label>
-        <input id="social" name="social" maxlength="255" inputmode="url">
+        <input id="social" name="social" maxlength="255" inputmode="url" value="{{ sent.social|default('') }}">
       </div>
       <div class="field">
         <label for="about">{{ 'join.about_label'|trans }} <span class="req" aria-hidden="true">*</span></label>
-        <textarea id="about" name="about" maxlength="1200" required></textarea>
+        <textarea id="about" name="about" maxlength="1200" required>{{ sent.about|default('') }}</textarea>
       </div>
+      {# Confirm the password only when the session is merely remembered, and
+         only HERE, at the moment of commitment. Asking at the door is what made
+         no sense: this is a form somebody thinks about and fills in. By the
+         time they press the button they have decided, and putting a name
+         forward as a curator should not be possible from an unattended
+         browser. #}
+      {% if needs_reauth %}
+        <div class="field">
+          <label for="password">{{ 'join.password_label'|trans }} <span class="req" aria-hidden="true">*</span></label>
+          <input id="password" name="password" type="password" autocomplete="current-password" required>
+          <p class="hint" style="margin:.4rem 0 0;font-size:.88rem">{{ 'join.password_hint'|trans }}</p>
+        </div>
+      {% endif %}
       <button type="submit" class="btn btn-p">{{ 'join.submit_application'|trans }}</button>
     </form>
   {% endif %}

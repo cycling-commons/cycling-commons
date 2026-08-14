@@ -19,6 +19,8 @@ framework:
                 adapter: cache.app
             cache.curator_application_limiter:
                 adapter: cache.app
+            cache.curator_reauth_limiter:
+                adapter: cache.app
             cache.media_upload_limiter:
                 adapter: cache.app
             cache.data_export_limiter:
@@ -83,6 +85,16 @@ framework:
             limit: 3
             interval: '1 day'
             cache_pool: cache.curator_application_limiter
+        # Confirming a password before sending an application from a
+        # remember-me session (account-and-auth.md). Its own limiter, never the
+        # application's: that one allows 3 a DAY, so two typos would have cost a
+        # rider their ability to apply until tomorrow. Sized like the firewall's
+        # own login throttling instead, because that is what this is.
+        curator_reauth:
+            policy: sliding_window
+            limit: 5
+            interval: '15 minutes'
+            cache_pool: cache.curator_reauth_limiter
         # Photo uploads (photo-uploads.md §7): generous for a real day of
         # contributing, bounded against bulk abuse. Each accepted upload costs
         # an Imagick decode plus three encodes, so this is a compute gate as
@@ -152,6 +164,8 @@ when@test:
                 cache.country_interest_limiter:
                     adapter: cache.adapter.array
                 cache.curator_application_limiter:
+                    adapter: cache.adapter.array
+                cache.curator_reauth_limiter:
                     adapter: cache.adapter.array
                 cache.media_upload_limiter:
                     adapter: cache.adapter.array

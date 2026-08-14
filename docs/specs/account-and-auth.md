@@ -269,6 +269,7 @@ codes and disables the flag — audited, confirm-gated.
 | `logout` | CSRF on, target `home` |
 | `remember_me` | lifetime `604800` (7 days), `samesite: lax`, `secure: auto` |
 | `/login` shortcut | fires on **`IS_AUTHENTICATED_FULLY`**, never on `getUser()` (below) |
+| `/join/{cc}` | `ROLE_USER`; password re-confirmed **on submit** when the session is only remembered (below) |
 | `login_throttling` | `max_attempts: 5` (§3) |
 | `two_factor` | scheb interstitial (`2fa_login` / `2fa_login_check`) |
 
@@ -293,18 +294,36 @@ exact-path `PUBLIC_ACCESS` entry **and** (if it is not already under a bypassed
 prefix) a `TwoFactorSetupEnforcer` bypass — "no rule matches" is not enough
 under the lazy firewall.
 
-**The login page's "already signed in" shortcut tests `IS_AUTHENTICATED_FULLY`,
-not `getUser()`.** With remember-me on a 7-day lifetime, a returning rider holds
-a real user object while being only `IS_AUTHENTICATED_REMEMBERED`. Every page
-that asks for FULLY — the curator application at `/join/{cc}` is the one riders
-actually reach for — sends exactly that visitor to `/login` to upgrade. Testing
-`getUser()` treated them as needing nothing, flashed *"you are already signed
-in"* and redirected home: told they were done while the page they asked for went
-on refusing them, with no way through (owner-reported 2026-08-14; reproduced by
-dropping the session cookie and keeping `REMEMBERME`). A remembered rider now
-gets the form, and the firewall's stored target path carries them to where they
-were going once they submit it. `/register` keeps the plain `getUser()` test —
-somebody who is remembered does not need an account.
+**Re-authentication is asked for at the moment of commitment, never at the
+door.** With remember-me on a 7-day lifetime, a returning rider holds a real
+user object while being only `IS_AUTHENTICATED_REMEMBERED`. `/join/{cc}` (the
+curator application) used to demand `IS_AUTHENTICATED_FULLY` — the only place
+in the codebase that did — which sent that rider to `/login` merely to *look at*
+a form. The owner's objection was the right one: "why am I going to login when I
+want to apply for curation of a region when I am already logged in — this does
+not make sense to a normal user." It did not, and the demand was inconsistent:
+the same remembered session may change settings, set a base location, propose
+places and upload photos, all `ROLE_USER`. So the page is `ROLE_USER` too, and
+the password is confirmed **on submit**, only when the session is remembered:
+
+- The field renders only for a remembered session; a fully-authenticated rider
+  never sees it.
+- A wrong answer writes nothing and re-renders the form with the rider's typing
+  and their region selection intact — a typo costs the retry and nothing else.
+- It is checked **before** the application limiter is consumed and guarded by
+  `curator_reauth` (5 per 15 min) rather than `curator_application` (3 per
+  **day**), because charging failed passwords against the latter would cost a
+  rider their ability to apply at all.
+
+**The login page's "already signed in" shortcut still tests
+`IS_AUTHENTICATED_FULLY`, not `getUser()`.** Nothing routinely triggers it now,
+but it was a genuine dead end: a merely-remembered visitor sent to `/login` was
+told *"you are already signed in"* and redirected home — told they were done
+while the page they asked for went on refusing them, with no way through
+(reproduced by dropping the session cookie and keeping `REMEMBERME`). A
+remembered rider gets the form, and the firewall's stored target path carries
+them onward. This is what any future FULLY page will need. `/register` keeps the
+plain `getUser()` test — somebody who is remembered does not need an account.
 
 **Boundary rule:** EasyAdmin `/admin` (`ROLE_ADMIN`) is dry record/user
 administration only. Curator content review is the branded in-product

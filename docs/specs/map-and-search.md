@@ -1066,7 +1066,15 @@ and…"* cannot tell what was actually changed (owner-reported 2026-08-14). So
 like, opening a native `<dialog>` with every change in full and nothing
 clamped. Native, so Esc, focus trapping and the backdrop are the platform's
 rather than ours; rebuilt on each open from the rows last rendered, so it costs
-no second fetch and cannot show a stale log.
+no second fetch and cannot show a stale log. It carries `margin:auto`
+explicitly — a modal `<dialog>` is centred by that UA rule, and the `*{margin:0}`
+reset at the top of `map.css` had been taking it away and pinning the panel to
+the top left.
+
+Every change, in the dialog and in the drawer list alike, uses the **moderator
+cards' from-to treatment** (`.cc-mod-was` / `.cc-mod-now`): the old value struck
+through and quiet, the new one in the site orange. One vocabulary for "this
+became that", wherever a reader meets it.
 
 ### 6.4 Drawer accessibility
 

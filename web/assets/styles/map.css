@@ -696,7 +696,12 @@
   .cc-d-hist-h:focus-visible{outline:2px solid var(--trail);outline-offset:2px;border-radius:3px}
   /* The full log. A native <dialog>, so Esc and the backdrop are the
      platform's; only the panel inside is ours. */
-  .cc-hist-dlg{border:none;padding:0;background:transparent;max-width:min(560px,92vw);width:100%}
+  /* `margin:auto` is what centres a modal <dialog>, and the `*{margin:0}` reset
+     at the top of this file had taken it away, pinning the panel to the top
+     left of the viewport. Restated here rather than exempting <dialog> from the
+     reset, which would change every future dialog at a distance. */
+  .cc-hist-dlg{border:none;padding:0;background:transparent;margin:auto;
+    max-width:min(560px,92vw);width:100%;max-height:86vh}
   .cc-hist-dlg::backdrop{background:rgba(16,30,22,.62)}
   .cc-hist-dlg-in{background:var(--ink);color:var(--paper);border:1px solid rgba(239,230,212,.18);
     border-radius:12px;padding:1.2rem 1.3rem 1.4rem;box-shadow:0 24px 60px -20px rgba(0,0,0,.7);
@@ -707,6 +712,11 @@
   .cc-hist-dlg-x{background:none;border:none;color:rgba(239,230,212,.7);font-size:1rem;
     cursor:pointer;line-height:1;padding:.2rem}
   .cc-hist-dlg-x:hover{color:var(--trail)}
+  /* Same from-to treatment the moderator cards use (.cc-mod-was / .cc-mod-now):
+     the old value struck through and quiet, the new one in the site orange, so
+     a reader sees WHICH WAY a change went before reading either value. The
+     arrow's own rule is scoped to .cc-mod-chg, so it is restated here. */
+  .cc-h-diff .arw{color:#9a9d8c;margin:0 .3rem}
   /* The whole point of the dialog: nothing clamped. */
   .cc-hist-full .cc-h-diff{display:block;-webkit-line-clamp:none;overflow:visible}
   .cc-d-hist-list{list-style:none;margin:0;padding:0}
