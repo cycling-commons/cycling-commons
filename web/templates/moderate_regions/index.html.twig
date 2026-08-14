@@ -222,7 +222,9 @@
       {% endfor %}
     {% endfor %}
   </div>
-  {% include 'partials/_pager.html.twig' with {pager: pager, route: 'moderate_regions', params: pager_params} %}
+  {# No pager (owner, 2026-08-14). This is a settings desk, not a queue: the
+     list is one collapsed row per onboarded country, and paging it turned
+     "which regions open in Best of" into a question spanning three URLs. #}
   {% endif %}
 </div>
 {% endblock %}

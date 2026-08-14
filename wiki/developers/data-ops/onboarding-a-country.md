@@ -26,6 +26,7 @@ One sequence for every country. ⚑ marks a human judgment call.
 | 5 | **Seed** | Import the artifacts as `Region` rows. |
 | 6 | **Coverage** | Add the Geofabrik region to the harvest, then run it. |
 | 6b | **Elevation** | Check the country's box already has DEM tiles; install them if not. |
+| 6c | **The other tile sets** | Coverage is not the only per-country artifact: build the road-surface and cycle-route tiles too. |
 | 7 | ⚑ **Moderators** | Assign region atoms to moderators. |
 | 8 | **Specs** | Record the rollout. |
 
@@ -162,6 +163,26 @@ make coverage-refresh regions=europe/belgium,europe/netherlands,europe/germany,e
 Once it completes, the new country's regions appear in the scope selector automatically — the client
 region registry is served straight from the `region` table — and its POIs render from the rebuilt
 tiles.
+
+## Step 6c — the other tile sets
+
+Step 6 builds the POI coverage tiles. **Two more tile sets are built per country**, from
+the same Geofabrik extract and taking the same `regions=` list:
+
+<!-- CODE-ILLUSTRATIVE the two builds a new country also needs -->
+```bash
+make surface-tiles regions=south-america/chile   # road surface: classified, to-do, gap grid
+make routes-tiles  regions=south-america/chile   # cycle-route network + junction numbers
+```
+
+A country with coverage but without these looks *broken* rather than incomplete: the
+Surfaces skin is blank over it while every neighbouring country is coloured, and node
+networks simply are not there. Because every country onboarded before 2026-08-14 has all
+three artifacts, the missing ones read as a bug in the layer rather than as work nobody
+did.
+
+Both manifests publish a `country_codes` list, so whether a country is covered is a
+question with a factual answer rather than an assumption. Check it before and after.
 
 ## Step 6b — elevation
 

@@ -10,8 +10,6 @@ use App\Catalog\CuratedReadiness;
 use App\Catalog\OperationalRegions;
 use App\Entity\User;
 use App\Moderation\ModerationScopeProvider;
-use App\Pagination\Pager;
-use App\Pagination\PageSize;
 use App\Routing\LocalePrefix;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
@@ -51,22 +49,12 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 #[IsGranted('ROLE_CURATOR')]
 final class ModerateRegionsController extends AbstractController
 {
-    /**
-     * COUNTRIES per page, not regions (2026-08-14). The desk groups by country
-     * and a country is never split across pages, so the unit of paging had to
-     * become the group. 25 fits every onboarded country on one page today,
-     * which is the point: the previous 25-REGIONS page showed four countries
-     * and hid fifteen.
-     */
-    public const int PER_PAGE = 25;
-
     private const string CSRF_TOKEN_ID = 'region-curated-default';
 
     public function __construct(
         private readonly Connection $db,
         private readonly ModerationScopeProvider $scopeProvider,
         private readonly CuratedReadiness $readiness,
-        private readonly PageSize $pageSize,
     ) {
     }
 
@@ -93,28 +81,22 @@ final class ModerateRegionsController extends AbstractController
             ));
         }
 
-        /* PAGED BY COUNTRY, NOT BY REGION (owner-reported 2026-08-14: "where
-           are all the other countries, this does not work with pagination").
-           Slicing a flat region list cut Japan's 47 prefectures across two
-           pages and pushed every country after J off page 1 entirely, so a desk
-           that had just been grouped by country hid most of the countries.
+        /* NOT PAGED (owner, 2026-08-14: "Pagination for Regions just remove it,
+           it makes no sense"). It was paged by region, which broke the moment
+           the desk grouped by country: 25 regions was four countries with
+           fifteen hidden, and Japan's 47 prefectures spanned two pages. Paging
+           by country fixed the splitting and was still the wrong shape — this
+           is a settings desk, not a queue. A curator comes here to find one
+           country and flip one region, and a pager turns "which regions open in
+           Best of" into a question you have to visit three URLs to answer.
 
-           A country is therefore the unit of paging: never split, and the page
-           still has a hard bound because the rows behind it are bounded by the
-           countries on it. Readiness is still measured AFTER the slice, so only
-           the regions actually on the page cost anything.
-
-           `$rows` stays in continent/country/area order from the SQL above, so
-           grouping preserves it and the country order across pages is stable. */
-        $byCountry = [];
-        foreach ($rows as $r) {
-            $byCountry[$r['countryCode']][] = $r;
-        }
-        $pager = Pager::of($request->query->getInt('page', 1), \count($byCountry), $this->pageSize->resolve(self::PER_PAGE));
-        $rows = array_merge(...array_values(
-            \array_slice($byCountry, $pager['offset'], $pager['perPage'], true)
-        ) ?: [[]]);
-
+           It is bounded by construction, which is why dropping the pager does
+           not reopen the unbounded-list problem the pagination sweep closed:
+           the list is one collapsed row per ONBOARDED COUNTRY, a number that
+           grows by deliberate human act a few times a year and stands at 19.
+           The region cards inside are collapsed by default. Both readiness
+           queries are batched (one GROUP BY over every id), so the whole desk
+           costs two queries whatever its length. */
         $reports = $this->readiness->reportForRegions(array_map(static fn (array $r): int => $r['id'], $rows));
         // The middle rung's count, batched the same way and for the same reason.
         $confirmedCounts = $this->readiness->confirmedCounts(array_map(static fn (array $r): int => $r['id'], $rows));
@@ -215,8 +197,6 @@ final class ModerateRegionsController extends AbstractController
             'confirmed_threshold' => $confirmedThreshold,
             'min_blocks' => $this->readiness->minBlocks(),
             'min_per_block' => $minPerBlock,
-            'pager' => $pager,
-            'pager_params' => '' === $country ? [] : ['country' => $country],
             'mod_scope_names' => $this->scopeProvider->describe($user, $this->scopeProvider->scopeFor($user)),
         ]);
     }
@@ -272,10 +252,10 @@ final class ModerateRegionsController extends AbstractController
         $scope = $this->scopeProvider->scopeFor($user);
         /* Continent and country come from the World reference bundle, LEFT
            JOINed so a region whose country is somehow not in it still lists
-           (under the "—" group) rather than vanishing from a moderation
-           surface. Sorting here rather than in PHP keeps the pager honest:
-           the slice below happens before the readiness reports are built, so
-           the ORDER BY has to be the final display order. */
+           (under the "-" group) rather than vanishing from a moderation
+           surface. Sorted in SQL rather than in PHP because a PHP sort would
+           need the translator (region labels are translated) and would have to
+           run before the grouping anyway. */
         $sql = "SELECT r.id, r.slug, r.country_code AS cc, r.default_map_mode,
                        COALESCE(cont.name, '') AS continent,
                        COALESCE(wc.name, r.country_code) AS country_name,

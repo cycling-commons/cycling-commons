@@ -7,7 +7,6 @@ declare(strict_types=1);
 namespace App\Tests\Moderation;
 
 use App\Catalog\Entity\Region;
-use App\Controller\ModerateRegionsController;
 use App\Entity\User;
 use App\Moderation\Entity\ModeratorArea;
 use Doctrine\DBAL\Connection;
@@ -301,26 +300,24 @@ final class CuratedDefaultGateTest extends WebTestCase
     }
 
     /**
-     * The desk pages BY COUNTRY, and a country is never split across pages.
+     * The desk is NOT paged: every onboarded country is on the one page.
      *
-     * It used to page by region, which is what broke once the desk grouped:
-     * 25 regions was four countries and fifteen hidden, and Japan's 47
-     * prefectures spanned two pages (owner-reported 2026-08-14). The unit of
-     * paging has to be the unit of grouping.
+     * It used to page by region, which broke the moment the desk grouped by
+     * country: 25 regions was four countries with fifteen hidden, and Japan's
+     * 47 prefectures spanned two pages. Paging by country fixed the splitting
+     * and was still wrong shape for a settings desk (owner, 2026-08-14:
+     * "Pagination for Regions just remove it, it makes no sense").
      *
-     * The country filter survives the paging: the pager's links carry it, or a
-     * curator who narrowed to one country would silently be paged back into
-     * every other one.
+     * This test is the guard against it coming back: seed more countries than
+     * any plausible page size and assert every one of them renders at once.
+     * The country FILTER is a different thing and still works.
      */
-    public function testTheDeskPagesByCountryAndTheCountryFilterSurvivesIt(): void
+    public function testTheDeskShowsEveryCountryWithoutPaging(): void
     {
         $client = static::createClient();
-        // One country per page-unit, two regions each, so a page boundary that
-        // split a country would show an odd number of cards.
         $countries = ['AR', 'AT', 'AU', 'BG', 'BR', 'CN', 'CZ', 'DK', 'EE', 'FI',
             'GR', 'HR', 'HU', 'IE', 'IN', 'IS', 'KE', 'LT', 'LV', 'MA',
             'MX', 'NO', 'PE', 'PL', 'PT', 'RO', 'SE'];
-        self::assertGreaterThan(ModerateRegionsController::PER_PAGE, \count($countries));
         foreach ($countries as $i => $cc) {
             $this->seedRegion(sprintf('paged-a-%02d', $i), $cc);
             $this->seedRegion(sprintf('paged-b-%02d', $i), $cc);
@@ -329,33 +326,25 @@ final class CuratedDefaultGateTest extends WebTestCase
 
         $client->request('GET', '/moderate/regions');
         self::assertResponseIsSuccessful();
-        $first = (string) $client->getResponse()->getContent();
-        self::assertSame(
-            ModerateRegionsController::PER_PAGE,
-            substr_count($first, '<details class="rg-country"'),
-            'page one holds exactly a page of COUNTRIES',
+        $body = (string) $client->getResponse()->getContent();
+
+        self::assertGreaterThanOrEqual(
+            \count($countries),
+            substr_count($body, '<details class="rg-country"'),
+            'every seeded country is on the one page',
         );
-        // Two regions per seeded country, so an even count proves no country
-        // was cut in half by the slice.
-        self::assertSame(0, substr_count($first, 'class="rg-item"') % 2, 'no country is split across pages');
-        self::assertStringContainsString('page=2', $first, 'and says there is more');
+        self::assertGreaterThanOrEqual(
+            \count($countries) * 2,
+            substr_count($body, 'class="rg-item"'),
+            'and so is every one of their regions',
+        );
+        self::assertStringNotContainsString('page=2', $body, 'nothing offers a second page');
 
-        $client->request('GET', '/moderate/regions?page=2');
+        // The country filter is a separate thing and still narrows.
+        $client->request('GET', '/moderate/regions?country=AR');
         self::assertResponseIsSuccessful();
-        $second = (string) $client->getResponse()->getContent();
-        self::assertGreaterThan(0, substr_count($second, '<details class="rg-country"'));
-        self::assertSame(0, substr_count($second, 'class="rg-item"') % 2, 'nor on the last page');
-
-        // Out of range lands on the last page, not on an empty desk.
-        $client->request('GET', '/moderate/regions?page=99');
-        self::assertResponseIsSuccessful();
-        $last = (string) $client->getResponse()->getContent();
-        self::assertGreaterThan(0, substr_count($last, '<details class="rg-country"'), 'the last page is not empty');
-        self::assertSame(0, substr_count($last, 'class="rg-item"') % 2, 'and still holds whole countries');
-
-        $client->request('GET', '/moderate/regions?country=BE');
-        self::assertResponseIsSuccessful();
-        self::assertStringContainsString('country=BE', (string) $client->getResponse()->getContent(),
-            'the pager carries the filter it is paging');
+        $filtered = (string) $client->getResponse()->getContent();
+        self::assertSame(1, substr_count($filtered, '<details class="rg-country"'), 'the filter narrows to one country');
+        self::assertSame(2, substr_count($filtered, 'class="rg-item"'), 'showing only its regions');
     }
 }

@@ -22,9 +22,38 @@ One fixed sequence for every country/state. ⚑ marks a human judgment.
 | 4 | Export Overture geojson (levels 2 + 4) | `make divisions-data c="NL"` — always emits the L2 country outline alongside the operating-level divisions, same run, same command |
 | 5 | Seed `Region` rows | stage artifacts (including the L2 outline), `app:catalog:import` (see below) — upsert-by-slug, so re-running is safe |
 | 6 | Coverage | add the Geofabrik region to `COVERAGE_REGIONS` **and** `COUNTRY_BY_REGION` (`pipeline/coverage/load.py`) — a missing entry now hard-fails that region's coverage run (`resolve_country`, the nearest-region-wins ownership rule) rather than silently disabling ownership — then `make coverage-refresh regions=europe/netherlands` |
-| 6b | **Elevation** | check the country's box already has GLO-30 tiles, and install them if not — `tools/elevation/dem-install.sh <continent> <PRESET>` **on the Valhalla host**. See "Elevation is step 6b" below |
+| 6b | **Elevation** | check the country's box already has GLO-30 tiles, and install them if not: `tools/elevation/dem-install.sh <continent> <PRESET>` **on the Valhalla host**. See "Elevation is step 6b" below |
+| 6c | **The other tile artifacts** | `make surface-tiles regions=<geofabrik>` and `make routes-tiles regions=<geofabrik>`. Coverage is not the only per-country tile set. See below |
 | 7 | ⚑ Moderators | assign 2–4 region atoms per moderator (admin; `moderator_area` rows) |
 | 8 | Specs | record the rollout in `docs/specs/` (region-scoping §7, coverage-provider) |
+
+### Step 6c: coverage is not the only per-country tile set
+
+**Added 2026-08-14, after the same question was asked about it.** Step 6 builds
+`coverage.pmtiles`, the POI plane. Two more tile sets are built per country and
+neither is in step 6:
+
+| Artifact | Command | What a country without it loses |
+|---|---|---|
+| Road surface (3 files: classified, to-do, gaps) | `make surface-tiles regions=<geofabrik>` | the Surfaces skin is blank there: no road-surface colouring, no "needs recording" arm, no gap grid |
+| Cycle-route network | `make routes-tiles regions=<geofabrik>` | no node networks, no numbered junctions, no named routes (RAVeL, knooppunten, EuroVelo) |
+
+Both read the same Geofabrik extract as coverage and take the same `regions=`
+list, so onboarding a country is three builds, not one.
+
+**Check what the manifests already carry before assuming:** each publishes a
+`country_codes` list, so the honest test is whether the new country is in it.
+
+```bash
+curl -s "$COVERAGE_PUBLIC_BASE_URL/surface/manifest.json" | python3 -m json.tool | grep -A20 country_codes
+curl -s "$COVERAGE_PUBLIC_BASE_URL/routes/manifest.json"  | python3 -m json.tool | grep -A20 country_codes
+```
+
+On 2026-08-14 both listed exactly the twelve countries onboarded before that
+day, which is what makes this a step rather than a note: every older country
+has all three artifacts, so a new country missing two of them is invisible by
+comparison, and the failure looks like "the surface layer is broken in Chile"
+rather than "nobody built it".
 
 ### Elevation is step 6b, not an afterthought
 
