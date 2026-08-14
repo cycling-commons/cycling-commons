@@ -73,11 +73,27 @@ repos:
         files: ^wiki/.*\.md$
         pass_filenames: false
 
+      # ALWAYS runs, deliberately, rather than triggering on a path filter.
+      #
+      # It used to fire only on `web/**.{php,js}` and `pipeline/**.py`, which
+      # silently missed six files the wiki actually quotes — among them
+      # tools/divisions/config.py, developers/docker/compose.yaml and
+      # web/translations/messages.en.yaml. Three of those were edited in one
+      # day (2026-08-14) with no warning: the wiki could have gone stale and
+      # the hook would have reported nothing, which is worse than having no
+      # hook, because the silence reads as an all-clear.
+      #
+      # A filter listing every quoted path is a second copy of a list that
+      # lives in the wiki's own CODE-FROM markers, and it drifts the same way.
+      # The check reads those markers itself and takes **77 ms** over the whole
+      # wiki, so there is nothing to optimise: running it every time is cheaper
+      # than maintaining the filter, and cannot develop a blind spot.
+      # (`pass_filenames: false` — it never used the staged list anyway.)
       - id: warn-wiki-code-drift
         name: does this code change make the wiki stale? (warning only)
         entry: tools/check-wiki-code-drift.py --warn-only
         language: python
-        files: ^(web/.*\.(php|js)|pipeline/.*\.py)$
+        always_run: true
         pass_filenames: false
       # five (en/fr/nl/de/es). Runs only when translation files are staged;
       # skips gracefully without php/vendor (CI still enforces it).
