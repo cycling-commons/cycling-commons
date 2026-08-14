@@ -105,16 +105,19 @@ final class ModerateController extends AbstractController
         $region = $request->query->getString('region');
         $type = $request->query->getString('type');
         $page = max(1, $request->query->getInt('page', 1));
+        // ?by=<user id> — "show me what this person has submitted", the question
+        // the curator-application desk links here to ask. 0 means absent.
+        $byUser = $request->query->getInt('by') ?: null;
         $me = $mine ? $user->getId() : null;
         $perPage = $this->pageSize->resolve(SubmissionQueue::PER_PAGE);
-        $total = $this->queue->countHistory($scope, $me, $status ?: null, $q ?: null, $country ?: null, $region ?: null, $type ?: null);
+        $total = $this->queue->countHistory($scope, $me, $status ?: null, $q ?: null, $country ?: null, $region ?: null, $type ?: null, $byUser);
 
         return $this->render('moderate/history.html.twig', [
             'page_title' => 'meta.moderate_history_title',
             'page_description' => 'meta.moderate_history_description',
             'nav_active' => 'moderate_history',
-            'history' => $this->queue->history($scope, $me, $status ?: null, $q ?: null, $page, $perPage, $country ?: null, $region ?: null, $type ?: null),
-            'history_filters' => ['mine' => $mine, 'status' => $status, 'q' => $q, 'country' => $country, 'region' => $region, 'type' => $type],
+            'history' => $this->queue->history($scope, $me, $status ?: null, $q ?: null, $page, $perPage, $country ?: null, $region ?: null, $type ?: null, $byUser),
+            'history_filters' => ['mine' => $mine, 'status' => $status, 'q' => $q, 'country' => $country, 'region' => $region, 'type' => $type, 'by' => $byUser],
             // Option lists describe the SETTLED set here, not the open queue —
             // a country with no open work can still have a record worth reading.
             'countries' => $this->queue->countries($scope, settled: true),

@@ -3171,6 +3171,8 @@ admin:
     status_approved: 'Angenommen'
     status_declined: 'Abgelehnt'
     status_withdrawn: 'Zurückgezogen'
+    see_submissions: 'Ihre Einreichungen ansehen'
+    see_profile: 'Öffentliches Profil'
     approve: 'Genehmigen'
     decline: 'Ablehnen'
     already_decided: 'Diese Bewerbung wurde bereits von jemand anderem entschieden — es wurde nichts geändert.'

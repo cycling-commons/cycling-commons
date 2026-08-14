@@ -1562,6 +1562,18 @@ promised time on it. Three details that are easy to get wrong:
   application "to curate NL" had arrived: the wrong scope, and a database code
   rather than a place.
 
+**The desk links to the person's record.** The evidence line answers *how many*
+submissions they have had approved; `?by=<user id>` on `/moderate/history`
+answers *which ones*, which is the question a reviewer actually has in front of
+an application. Filtered on `submission.user_id` by id, never by display name -
+names stopped being unique on 2026-07-31. Trash rows are suppressed under this
+filter for the same reason they are suppressed under a title search: the
+`trash_submission` audit is content-free by design (§6) and records no
+submitter, so merging it in would put strangers' trashed rows under "see their
+submissions" while somebody is deciding whether to trust that person. The link
+sits in the opened body, not on the name in the summary - a link inside
+`<summary>` fights the disclosure for the same click.
+
 **A pending application replaces the form.** `/join/{cc}` reads
 `pendingApplication()` on every render, not off the success flash, and shows
 the state instead of the form. It renders **`join.message.received` itself** —

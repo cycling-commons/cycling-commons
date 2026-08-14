@@ -92,7 +92,20 @@
                         </p>
                     {% endif %}
 
-                    <p class="mb-1">{{ 'admin.curator.evidence'|trans({'%approved%': row.evidence.approved, '%total%': row.evidence.total}) }}</p>
+                    <p class="mb-1">
+                        {{ 'admin.curator.evidence'|trans({'%approved%': row.evidence.approved, '%total%': row.evidence.total}) }}
+                        {# The count answers "how many"; this answers "which ones",
+                           which is the question a reviewer actually has in front of
+                           an application (owner 2026-08-14). Deliberately not on the
+                           name in the summary row: a link inside <summary> fights
+                           the disclosure for the same click. #}
+                        {% if row.user %}
+                            &middot; <a href="{{ path('moderate_history', {by: row.user.id}) }}" target="_blank" rel="noopener">{{ 'admin.curator.see_submissions'|trans }}</a>
+                            {% if row.user.publicProfile %}
+                                &middot; <a href="{{ path('rider_profile', {uuid: row.user.uuid}) }}" target="_blank" rel="noopener">{{ 'admin.curator.see_profile'|trans }}</a>
+                            {% endif %}
+                        {% endif %}
+                    </p>
 
                     <p class="mb-1">
                         {{ 'admin.curator.scope_label'|trans }}:

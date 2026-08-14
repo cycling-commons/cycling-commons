@@ -3209,6 +3209,8 @@ admin:
     status_approved: 'Aceptada'
     status_declined: 'Rechazada'
     status_withdrawn: 'Retirada'
+    see_submissions: 'Ver sus propuestas'
+    see_profile: 'Perfil público'
     approve: 'Aprobar'
     decline: 'Rechazar'
     already_decided: 'Esa solicitud ya la decidió otra persona — no se ha cambiado nada.'

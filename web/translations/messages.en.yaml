@@ -3194,6 +3194,8 @@ admin:
     status_approved: 'Accepted'
     status_declined: 'Declined'
     status_withdrawn: 'Withdrawn'
+    see_submissions: 'See their submissions'
+    see_profile: 'Public profile'
     approve: 'Approve'
     decline: 'Decline'
     already_decided: 'That application was already decided by someone else — nothing was changed.'

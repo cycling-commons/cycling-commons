@@ -181,9 +181,9 @@ final class SubmissionQueue
      *
      * @return list<array{id:int,itemId:?int,title:string,type:string,was:string,now:string,who:string,when:string,status:string,decidedBy:?string,note:?string,riderReply:?string,photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,thread:list<array{who:string,body:string,when:string}>,sortAt:int}>
      */
-    public function history(ModerationScope $scope, ?int $decidedBy = null, ?string $status = null, ?string $q = null, int $page = 1, int $perPage = self::PER_PAGE, ?string $country = null, ?string $region = null, ?string $type = null): array
+    public function history(ModerationScope $scope, ?int $decidedBy = null, ?string $status = null, ?string $q = null, int $page = 1, int $perPage = self::PER_PAGE, ?string $country = null, ?string $region = null, ?string $type = null, ?int $byUser = null): array
     {
-        [$where, $params, $types] = $this->settledFilters($scope, $decidedBy, $status, $q, $country, $region, $type);
+        [$where, $params, $types] = $this->settledFilters($scope, $decidedBy, $status, $q, $country, $region, $type, $byUser);
         $params['lim'] = $perPage;
         $params['off'] = self::offset($page, $perPage);
 
@@ -276,7 +276,12 @@ final class SubmissionQueue
         // ...and never under a title search: a trash audit row is content-free
         // by design (§6), so it has no title to match and would surface as an
         // unexplained hit on every query.
-        if (null === $status && (null === $q || '' === trim($q)) && 1 === max(1, $page)) {
+        // ...nor under a per-person filter, for the same reason one rung up: the
+        // audit records the reference and the type and NOT who sent it, so it
+        // cannot be attributed to anybody. Merged in anyway, it would put three
+        // strangers' trashed rows under "see their submissions" while a reviewer
+        // is deciding whether to trust that person (found 2026-08-14).
+        if (null === $status && (null === $q || '' === trim($q)) && null === $byUser && 1 === max(1, $page)) {
             $out = array_merge($out, $this->trashed($decidedBy, $perPage, $now));
             usort($out, static fn (array $a, array $b): int => $b['sortAt'] <=> $a['sortAt']);
             $out = \array_slice($out, 0, $perPage);
@@ -286,9 +291,9 @@ final class SubmissionQueue
     }
 
     /** How many settled submissions match, for the pager. */
-    public function countHistory(ModerationScope $scope, ?int $decidedBy = null, ?string $status = null, ?string $q = null, ?string $country = null, ?string $region = null, ?string $type = null): int
+    public function countHistory(ModerationScope $scope, ?int $decidedBy = null, ?string $status = null, ?string $q = null, ?string $country = null, ?string $region = null, ?string $type = null, ?int $byUser = null): int
     {
-        [$where, $params, $types] = $this->settledFilters($scope, $decidedBy, $status, $q, $country, $region, $type);
+        [$where, $params, $types] = $this->settledFilters($scope, $decidedBy, $status, $q, $country, $region, $type, $byUser);
 
         return (int) $this->db->fetchOne(
             'SELECT COUNT(*) FROM submission s LEFT JOIN region r ON r.id = s.region_id WHERE '.implode(' AND ', $where),
@@ -302,7 +307,7 @@ final class SubmissionQueue
      *
      * @return array{0: list<string>, 1: array<string, mixed>, 2: array<string, mixed>}
      */
-    private function settledFilters(ModerationScope $scope, ?int $decidedBy, ?string $status, ?string $q, ?string $country = null, ?string $region = null, ?string $type = null): array
+    private function settledFilters(ModerationScope $scope, ?int $decidedBy, ?string $status, ?string $q, ?string $country = null, ?string $region = null, ?string $type = null, ?int $byUser = null): array
     {
         $where = ["s.status IN ('approved', 'rejected')", 's.escalated_at IS NULL'];
         $params = [];
@@ -325,6 +330,14 @@ final class SubmissionQueue
         if (null !== $decidedBy) {
             $where[] = 's.decided_by = :me';
             $params['me'] = $decidedBy;
+        }
+        /* One person's record. `decided_by` above is who ANSWERED; this is who
+           SENT, which is the question a reviewer reading a curator application
+           actually has: what has this rider contributed? An id, never a name -
+           display names stopped being unique on 2026-07-31. */
+        if (null !== $byUser) {
+            $where[] = 's.user_id = :byUser';
+            $params['byUser'] = $byUser;
         }
         // Anything other than the two real states is ignored rather than
         // trusted into the SQL — the value arrives from a query string.

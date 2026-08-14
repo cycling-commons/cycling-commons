@@ -3168,6 +3168,8 @@ admin:
     status_approved: 'Geaccepteerd'
     status_declined: 'Afgewezen'
     status_withdrawn: 'Ingetrokken'
+    see_submissions: 'Bekijk hun inzendingen'
+    see_profile: 'Openbaar profiel'
     approve: 'Goedkeuren'
     decline: 'Afwijzen'
     already_decided: 'Die aanvraag is al door iemand anders afgehandeld — er is niets gewijzigd.'

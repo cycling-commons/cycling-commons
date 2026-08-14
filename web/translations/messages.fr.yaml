@@ -3168,6 +3168,8 @@ admin:
     status_approved: 'Acceptée'
     status_declined: 'Refusée'
     status_withdrawn: 'Retirée'
+    see_submissions: 'Voir leurs contributions'
+    see_profile: 'Profil public'
     approve: 'Approuver'
     decline: 'Refuser'
     already_decided: 'Cette candidature a déjà été traitée par quelqu’un d’autre — rien n’a été modifié.'
