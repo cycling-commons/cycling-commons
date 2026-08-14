@@ -513,6 +513,36 @@ rest of moderation uses — §5c holds. They are deliberately **not** region-sco
 like the submission queue: a rights request is on a legal clock, not editorial
 work to be shared out by jurisdiction.
 
+**The desk keeps a history, and it is read from the event log
+(2026-08-14).** Until then the desk showed only OPEN requests, so an answered
+one vanished the moment it was answered — and this desk empties itself by
+design, so the screen went back to "Nothing to answer" with no trace that
+anything had been decided. The owner hit exactly that: *"we had one request
+that was rejected and now we do not know of it."* Nothing had been lost;
+`grant()`, `decline()` and `dismissAsAbuse()` had been writing
+`media_moderation_event` rows all along, and there was simply nowhere to read
+them (`MediaTakedownService::decidedCards()`).
+
+Two things about it are load-bearing:
+
+- **It reads the EVENT, not the upload.** A granted takedown deletes its
+  objects and can take the row with them, and a decline clears the markers, so
+  the upload can no longer say what happened to it. The event outlives the
+  thing it describes. Where the photo is gone the row says so rather than
+  showing a dead thumbnail.
+- **"When it came in" also comes from the event log**, not from
+  `takedown_requested_at`. That column is the obvious source and is wrong in
+  both directions for the same reasons: it is cleared or deleted precisely
+  once the request is answered. The intake event (`takedown_requested` or
+  `third_party_reported`) is written once and never touched, so the row pairs
+  each decision with the last intake before it. The **wait** is then computed
+  rather than left to the reader, because "answered in 4 hours" and "answered
+  in 11 days" are different facts about a desk on a legal clock and neither is
+  legible as two timestamps to subtract.
+
+Curator names on the history follow the same rule as everywhere else: shown
+only where that curator has made their profile public.
+
 A photo that depicts **third parties** — whose rights do not depend on the
 uploader's account at all — has its own route: §6c.
 
