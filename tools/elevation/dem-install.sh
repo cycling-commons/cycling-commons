@@ -96,11 +96,19 @@ log "converted $made .hgt, $(du -sh "$HGT" | cut -f1)"
 # filesystem is 25.9 MB per tile of nothing. The .tif staging area is what to
 # keep if anything — it is what a re-convert would need.
 #
-# Valhalla's skadi opens a tile lazily, on the first request that needs it, so
-# new files are visible WITHOUT restarting the service. Verify with a /height
-# for a known summit rather than assuming (see the runbook); do not restart
-# valhalla.service to "make it pick them up" — one unit serves every continent
-# and every project on this box.
+# THE INSTANCE MUST BE RESTARTED. Valhalla builds its elevation index at
+# startup, so a running container answers `null` for a tile that is sitting in
+# its own mount, readable, the whole time. An earlier version of this comment
+# claimed skadi opens tiles lazily and no restart was needed; that is wrong,
+# and it was wrong in the most expensive direction — 1,458 tiles installed on
+# 2026-08-14 and every probe still returned null until the containers were
+# restarted. `to-hgt.sh` said "restart Valhalla" all along.
+#
+# Restart PER CONTINENT, never the systemd unit: each continent is its own
+# container (valhalla-africa, valhalla-south-america, …) and the unit's
+# ExecStart starts all six, so `systemctl restart valhalla` interrupts routing
+# for every continent and every project on the box. `docker restart
+# valhalla-<continent>` touches one.
 mkdir -p "$DEST"
 moved=0
 while IFS= read -r f; do
@@ -111,13 +119,19 @@ log "instance $CONT now holds $(find "$DEST" -name '*.hgt' | wc -l) tiles, $(du 
 
 cat <<EOF
 
-NEXT, and neither is optional:
-  1. Add this continent to ELEVATION_URLS in web/.env.<env>.local if it is not
-     there. An instance with tiles that the app never asks is the same as no
-     tiles: the box falls back to the DEFAULT instance, which answers null for
-     ground it does not hold, and ElevationClient refuses the reply.
-  2. Verify with a real summit whose height you know:
+NEXT, and none of the three is optional:
+  1. RESTART THIS CONTINENT'S INSTANCE. Valhalla indexes elevation at startup,
+     so until it restarts it answers null for tiles it can already read:
+         docker restart valhalla-$CONT
+     Per continent — NOT 'systemctl restart valhalla', which starts all six and
+     so interrupts routing for every continent on the box.
+  2. Add this continent to ELEVATION_URLS in the environment's local env file
+     if it is not there. An instance with tiles that the app never asks is the
+     same as no tiles: the box falls back to the DEFAULT instance, which
+     answers null for ground it does not hold, and ElevationClient refuses it.
+  3. Verify with a real summit whose height you know — AFTER the restart:
      curl -sG --data-urlencode 'json={"shape":[{"lat":..,"lon":..}]}' \\
        http://127.0.0.1:<port>/height
-     A null means the tile is missing; a plausible number means it is live.
+     A null means the tile is missing OR the instance has not been restarted;
+     a plausible number means it is live.
 EOF

@@ -201,6 +201,12 @@ It fetches the Copernicus GLO-30 GeoTIFFs, converts them to the `.hgt` format Va
 service reads, and moves the result into that instance's `elevation_data`. All three stages resume,
 so an interrupted run picks up where it stopped.
 
+**Then restart that continent's instance, or nothing changes.** Valhalla builds its elevation index
+at startup, so a running instance answers `null` for a tile sitting readable in its own mount. Each
+continent is a separate container, so restart the one you touched — `docker restart
+valhalla-<continent>` — and never the systemd unit, which starts all six and would interrupt routing
+for every continent on the box.
+
 Two details worth knowing rather than rediscovering:
 
 - **The conversion runs in a container.** The routing host has no GDAL on purpose — it is a routing
