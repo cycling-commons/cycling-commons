@@ -1564,7 +1564,13 @@ promised time on it. Three details that are easy to get wrong:
 
 **A pending application replaces the form.** `/join/{cc}` reads
 `pendingApplication()` on every render, not off the success flash, and shows
-what was sent and when instead of the form. That answers the rider who returns
+the state instead of the form. It renders **`join.message.received` itself** —
+the same key the email carries — rather than page-specific copy saying the same
+thing: two wordings for one fact is how a page and an inbox start disagreeing,
+and stacked under a heading that had already said it, the screen told the rider
+three times that their application had arrived. For the same reason the success
+flash is suppressed while that block shows (drained either way, so it cannot
+reappear later). That answers the rider who returns
 tomorrow as well as the one who just pressed the button: a second pending
 application is refused anyway, so handing somebody a form that cannot be sent
 is a worse answer than telling them theirs is already in.

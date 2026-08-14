@@ -577,8 +577,6 @@ join:
   submit_request: 'Enviar'
   scope_label: '¿Qué curarías?'
   scope_whole_country: 'Todo el país'
-  pending_body_region: 'Tu solicitud para cuidar %region% está con los curadores, enviada el %date%. La leerán y te responderán.'
-  pending_body_country: 'Tu solicitud para cuidar %country% está con los curadores, enviada el %date%. La leerán y te responderán.'
   pending_cta: 'Volver al mapa'
   pending_h: 'Tu solicitud está registrada'
   password_label: 'Confirma tu contraseña'
@@ -591,7 +589,7 @@ join:
   submit_application: 'Solicitar curaduría'
   flash:
     interest_recorded: 'Registrado. Gracias.'
-    application_sent: 'Gracias por ofrecerte a cuidarla. Tu solicitud está registrada, y un curador la leerá y te responderá.'
+    application_sent: 'Gracias por ofrecerte voluntario. Nos alegra tenerte aquí.'
   error:
     too_many: 'Por hoy es suficiente. Inténtalo mañana.'
     note_link: 'En este campo no se aceptan enlaces.'

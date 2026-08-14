@@ -576,8 +576,6 @@ join:
   submit_request: 'Envoyer'
   scope_label: 'Que souhaitez-vous curer ?'
   scope_whole_country: 'Le pays entier'
-  pending_body_region: 'Votre candidature pour vous occuper de %region% est chez les curateurs, envoyée le %date%. Ils la liront et reviendront vers vous.'
-  pending_body_country: 'Votre candidature pour vous occuper de %country% est chez les curateurs, envoyée le %date%. Ils la liront et reviendront vers vous.'
   pending_cta: 'Retour à la carte'
   pending_h: 'Votre candidature est enregistrée'
   password_label: 'Confirmez votre mot de passe'
@@ -590,7 +588,7 @@ join:
   submit_application: 'Candidater pour curer'
   flash:
     interest_recorded: 'Enregistré. Merci.'
-    application_sent: 'Merci de proposer de vous en occuper. Votre candidature est enregistrée, et un curateur la lira et reviendra vers vous.'
+    application_sent: 'Merci de vous porter volontaire. Nous sommes heureux de vous compter parmi nous.'
   error:
     too_many: 'Cela suffit pour aujourd''hui. Réessayez demain.'
     note_link: 'Les liens ne sont pas acceptés dans ce champ.'

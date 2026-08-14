@@ -576,8 +576,6 @@ join:
   submit_request: 'Senden'
   scope_label: 'Was möchtest du kuratieren?'
   scope_whole_country: 'Das ganze Land'
-  pending_body_region: 'Deine Bewerbung für %region% liegt bei den Kuratoren, gesendet am %date%. Sie lesen sie und melden sich bei dir.'
-  pending_body_country: 'Deine Bewerbung für %country% liegt bei den Kuratoren, gesendet am %date%. Sie lesen sie und melden sich bei dir.'
   pending_cta: 'Zurück zur Karte'
   pending_h: 'Deine Bewerbung ist da'
   password_label: 'Bestätige dein Passwort'
@@ -590,7 +588,7 @@ join:
   submit_application: 'Als Kurator bewerben'
   flash:
     interest_recorded: 'Notiert. Danke.'
-    application_sent: 'Schön, dass du dich darum kümmern willst. Deine Bewerbung ist da, und ein Kurator liest sie und meldet sich bei dir.'
+    application_sent: 'Danke, dass du dich meldest. Schön, dass du da bist.'
   error:
     too_many: 'Das reicht für heute. Versuch es morgen erneut.'
     note_link: 'Links werden in diesem Feld nicht akzeptiert.'

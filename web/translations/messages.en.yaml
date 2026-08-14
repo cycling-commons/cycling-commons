@@ -576,8 +576,6 @@ join:
   submit_request: 'Send'
   scope_label: 'What would you curate?'
   scope_whole_country: 'The whole country'
-  pending_body_region: 'Your application to look after %region% is with the curators, sent %date%. They will read it and come back to you.'
-  pending_body_country: 'Your application to look after %country% is with the curators, sent %date%. They will read it and come back to you.'
   pending_cta: 'Back to the map'
   pending_h: 'Your application is in'
   password_label: 'Confirm your password'
@@ -590,7 +588,7 @@ join:
   submit_application: 'Apply to curate'
   flash:
     interest_recorded: 'Recorded. Thank you.'
-    application_sent: 'Thank you for offering to look after it. Your application is in, and a curator will read it and come back to you.'
+    application_sent: 'Thank you for volunteering. We are glad you are here.'
   error:
     too_many: 'That is enough for today. Try again tomorrow.'
     note_link: 'Links are not accepted in this field.'

@@ -2,6 +2,11 @@
 {% extends 'base.html.twig' %}
 {% block head_styles %}
 <style>
+  /* h1.disp (atlas.css) carries no bottom margin, so whatever follows sits
+     flush against it — the success flash under "Your application is in" read as
+     part of the heading. Scoped here rather than changed globally: every other
+     page's spacing is somebody else's decision. */
+  main h1.disp{margin-bottom:1.5rem}
   .field{margin-bottom:1.3rem}
   .field label{display:block;font-family:var(--mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:#5a5d4d;margin-bottom:.4rem}
   /* Decorative required marker — the input's `required` attribute is what
@@ -43,7 +48,10 @@
 
   {% if error %}<p class="form-error" role="alert">{{ error }}</p>{% endif %}
 
-  {% for msg in app.flashes('success') %}<p class="flash-success" role="alert">{{ msg }}</p>{% endfor %}
+  {# Not beside the pending block: that block already thanks them and says what
+     happens next, so the flash would be the third telling on one screen. Still
+     drained either way, so it cannot reappear on the next page. #}
+  {% for msg in app.flashes('success') %}{% if not pending_app %}<p class="flash-success" role="alert">{{ msg }}</p>{% endif %}{% endfor %}
   {% for msg in app.flashes('error') %}<p class="flash-error" role="alert">{{ msg }}</p>{% endfor %}
 
   {% if not onboarded %}
@@ -60,11 +68,13 @@
     </form>
   {% elseif pending_app %}
     {# Already with the curators: their application back, not the form again. #}
+    {# The SAME words the email carries (join.message.received), not a second
+       telling of the same thing: two wordings for one fact is how a page and
+       an inbox start disagreeing, and it read as doubled copy under a heading
+       that had already said it. #}
     {% set asked = regions|filter(r => r.id == pending_app.requested_region_id)|first %}
     <p class="hint" style="margin-top:0">
-      {{ asked
-        ? 'join.pending_body_region'|trans({'%region%': asked.name, '%date%': pending_app.created_at|cc_date})
-        : 'join.pending_body_country'|trans({'%country%': country.name, '%date%': pending_app.created_at|cc_date}) }}
+      {{ 'join.message.received'|trans({'%scope%': asked ? asked.name : country.name}) }}
     </p>
     <a class="btn btn-p" href="{{ path('map') }}">{% trans %}join.pending_cta{% endtrans %}</a>
   {% else %}

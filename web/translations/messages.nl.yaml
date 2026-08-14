@@ -576,8 +576,6 @@ join:
   submit_request: 'Versturen'
   scope_label: 'Wat zou je willen cureren?'
   scope_whole_country: 'Het hele land'
-  pending_body_region: 'Je aanmelding om %region% te beheren ligt bij de curatoren, verstuurd op %date%. Ze lezen hem en komen bij je terug.'
-  pending_body_country: 'Je aanmelding om %country% te beheren ligt bij de curatoren, verstuurd op %date%. Ze lezen hem en komen bij je terug.'
   pending_cta: 'Terug naar de kaart'
   pending_h: 'Je aanmelding staat klaar'
   password_label: 'Bevestig je wachtwoord'
@@ -590,7 +588,7 @@ join:
   submit_application: 'Solliciteer als curator'
   flash:
     interest_recorded: 'Genoteerd. Bedankt.'
-    application_sent: 'Fijn dat je dit op je wilt nemen. Je aanmelding staat klaar, en een curator leest hem en komt bij je terug.'
+    application_sent: 'Bedankt dat je je aanmeldt. Fijn dat je er bent.'
   error:
     too_many: 'Dat is genoeg voor vandaag. Probeer het morgen opnieuw.'
     note_link: 'Links worden in dit veld niet geaccepteerd.'
