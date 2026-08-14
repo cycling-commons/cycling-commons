@@ -23,6 +23,45 @@ node compare-sources.js <reference_hgt_dir> ./data/dem/hgt   # prove it first
 
 Then copy the `.hgt` files to the Valhalla host and restart it.
 
+`dem-install.sh` is those three stages plus the install, for one continent, as
+one resumable command — it is what onboarding step 6b runs
+(`tools/divisions/README.md`). Use it rather than the pieces unless you are
+debugging one of them.
+
+## Trying it locally
+
+**Everything here runs from a checkout.** The defaults are the production
+routing host's layout, but each is an env override, so nothing needs that host
+— or root — to be exercised:
+
+```bash
+DEM_STAGE=./data/dem VALHALLA_DATA=./data \
+  ./dem-install.sh valhalla RWANDA
+```
+
+That fetches the GeoTIFFs to `./data/dem/valhalla/tif`, converts them in the
+GDAL container, and installs the `.hgt` into `./data/valhalla/elevation_data` —
+which is exactly where the dev stack's own Valhalla looks, since
+`compose.yaml` mounts `./data/valhalla` as `/custom_files`. So
+`make up-routing` afterwards gives you a local instance answering `/height`
+for that ground, and the whole step-6b procedure can be rehearsed before
+anyone touches production.
+
+Pick a small preset to try it on. `RWANDA` is 12 tiles / ~300 MB and finishes
+in about a minute; `CANADAEAST` is 394 tiles and would spend an evening.
+
+Two things that only bite outside the routing host, both now handled but worth
+knowing if you edit the script:
+
+- **`DEM_BIN` defaults to the script's own directory**, not `$DEM_STAGE/bin`.
+  On the host all four scripts are copied into `/opt/dem/bin` together; from a
+  checkout the siblings are simply next to it.
+- **The GDAL container needs the scripts mounted as well as the data.** When
+  `$DEM_BIN` is outside `$DEM_STAGE` — which is the normal case for a checkout
+  — it gets its own read-only mount. Without it the run fails on
+  `to-hgt.sh: No such file or directory`, which reads like a missing script
+  and is really a missing mount.
+
 ### Which host, and which instance
 
 The project runs **one Valhalla per continent**, each reading only the tiles in

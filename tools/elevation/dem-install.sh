@@ -28,8 +28,18 @@
 # conversion runs.
 set -uo pipefail
 
+# Defaults are the production routing host's layout, and every one of them is
+# an env override so a contributor can run the whole thing against the dev
+# stack instead (tools/elevation/README.md "Trying it locally"):
+#
+#   DEM_STAGE=./data/dem VALHALLA_DATA=./data \
+#     tools/elevation/dem-install.sh valhalla SLOVENIA
+#
+# BIN defaults to THIS SCRIPT'S OWN directory, not $STAGE/bin, so a plain
+# checkout works — the sibling scripts are right there. On the routing host all
+# four are copied into /opt/dem/bin together, which satisfies it the same way.
 STAGE="${DEM_STAGE:-/opt/dem}"
-BIN="${DEM_BIN:-$STAGE/bin}"
+BIN="${DEM_BIN:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
 VALHALLA_DATA="${VALHALLA_DATA:-/opt/valhalla/data}"
 GDAL_IMAGE="${GDAL_IMAGE:-ghcr.io/osgeo/gdal:ubuntu-small-latest}"
 CONVERT_CPUS="${CONVERT_CPUS:-6}"
@@ -63,8 +73,20 @@ log "staged $tifs GeoTIFF(s), $(du -sh "$TIF" | cut -f1)"
 # neighbours, .hgt tiles overlapping by one row and column — carry real values
 # instead of nodata. That is why the whole continent is converted at once and
 # not per country.
+#
+# The script itself has to be visible INSIDE the container too. On the routing
+# host $BIN lives under $STAGE (/opt/dem/bin) so one mount covers both; from a
+# checkout it does not, and mounting only the stage dir fails with a
+# "No such file or directory" on to-hgt.sh that reads like a missing script
+# rather than a missing mount. So $BIN is mounted separately unless it is
+# already inside $STAGE.
+mounts=(-v "$STAGE:$STAGE")
+case "$BIN/" in
+  "$STAGE"/*) ;;                                   # already covered
+  *) mounts+=(-v "$BIN:$BIN:ro") ;;
+esac
 log "convert $CONT in $GDAL_IMAGE (--cpus=$CONVERT_CPUS)"
-docker run --rm --cpus="$CONVERT_CPUS" -v "$STAGE:$STAGE" "$GDAL_IMAGE" \
+docker run --rm --cpus="$CONVERT_CPUS" "${mounts[@]}" "$GDAL_IMAGE" \
   bash "$BIN/to-hgt.sh" "$TIF" "$HGT" || die "conversion failed for $CONT"
 made=$(find "$HGT" -name '*.hgt' | wc -l)
 log "converted $made .hgt, $(du -sh "$HGT" | cut -f1)"
