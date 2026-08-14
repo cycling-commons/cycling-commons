@@ -245,6 +245,7 @@ final class MapController extends AbstractController
             'verify' => 'd_verify', 'distance' => 'd_distance', 'startsAt' => 'd_starts_at',
             'townsOnRoute' => 'd_towns_on_route', 'surfaces' => 'd_surfaces', 'submittedBy' => 'd_submitted_by', 'itemToday' => 'd_item_today',
             'age' => 'd_age', 'where' => 'd_where', 'place' => 'd_place', 'wallonia' => 'd_wallonia',
+            'close' => 'd_close',
             'officialRegistry' => 'd_official_registry', 'confirmed' => 'd_confirmed', 'simulated' => 'd_simulated',
             'drinkingWater' => 'd_drinking_water', 'headlineDrinking' => 'd_headline_drinking',
             'potableOsm' => 'd_potable_osm', 'potableOsmNo' => 'd_potable_osm_no', 'verifyWater' => 'd_verify_water',

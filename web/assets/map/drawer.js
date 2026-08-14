@@ -459,12 +459,18 @@ function buildRecord(layer, f){
   const byName = f.uploader ? (f.uploader.public ? f.uploader.name : null)
                             : (f.by ? f.byName : null);
   const hasBy = f.uploader ? true : (f.by != null);
-  const up = hasBy
-    ? (byName
-        ? `<div class="cc-up">${D.sharedBy||'Shared by'} <b>${escPend(byName)}</b>${
-            byUuid ? ` · <a href="/riders/${encodeURIComponent(byUuid)}">${D.viewProfile||'view profile'}</a>` : ''}</div>`
-        : `<div class="cc-up">${D.sharedAnon||'Shared anonymously'}</div>`)
-    : '';
+  /* The PERSON is the source; how it reached us is the line under it (owner
+     2026-08-14: "Source XanderK / Tagged while riding, with Scout"). It read
+     as two competing claims - "shared by X" above "source: Scout" - when they
+     answer one question between them: a rider added this, and this is how.
+     So the Source line names them, their name IS the profile link (no
+     separate "view profile"), and the provenance citation drops to a quieter
+     line beneath. Nothing to name (a harvested row) keeps the citation on the
+     Source line itself, where it has always been. */
+  const who = byName
+    ? (byUuid ? `<a href="/riders/${encodeURIComponent(byUuid)}">${escPend(byName)}</a>` : escPend(byName))
+    : (hasBy ? (D.sharedAnon||'Shared anonymously') : '');
+  const up = '';   // folded into the source block below
   // The edit-bridge opens /improve bound to the item's real DB id, which
   // loads that exact item and prefills the form with its current values
   // (spec §6/§8) — no id, no edit link (a name-slug guess is never a
@@ -842,7 +848,8 @@ function buildRecord(layer, f){
   return `<div class="cc-d-head"><span class="cc-d-type" style="--c:${layer.color};color:${txtOn(layer.color)}"><i class="cc-g">${layer.icon}</i> ${layer.label}</span>${share}</div>
     <div class="cc-d-name">${escPend(f.name)}</div>${cur}${photo}${desc}${diff}${elev}${len}${grad}
     <ul class="cc-d-rec">${rows}</ul>${fresh}${up}
-    <div class="cc-d-src">${D.source||'Source'} · ${srcLine(f, osmHref)}</div>${act}${moderate}${histSlot}`;
+    <div class="cc-d-src">${D.source||'Source'} · ${who || srcLine(f, osmHref)}${
+      who ? `<div class="cc-d-prov">${srcLine(f, osmHref)}</div>` : ''}</div>${act}${moderate}${histSlot}`;
 }
 // C1-T3: renders one change_history row. Every interpolated value is
 // user-contributed (old/new attribute values, and `who`/`when`/`changedAt`
@@ -905,7 +912,47 @@ function historyRow(h){
 // acceptance: "no changes yet" is silence, not a section.
 function renderHistoryList(history){
   if(!Array.isArray(history) || !history.length) return '';
-  return `<h4 class="cc-d-hist-h">${D.recentChanges||'Recent changes'}</h4><ul class="cc-d-hist-list">${history.map(historyRow).join('')}</ul>`;
+  /* The heading opens the full log (owner 2026-08-14). The list below stays
+     clamped to two lines per change, which is right for a drawer: a long
+     description edit would otherwise push everything under it off the screen.
+     But clamped is not the same as unavailable - a rider reading "View from
+     'Zuiderdijk' left The Markermeer and…" cannot tell what was actually
+     changed. The heading is the way to the whole thing, so it stops being a
+     label and becomes the control it already looked like. */
+  _histCache = history;
+  return `<button type="button" class="cc-d-hist-h" data-hist-all
+            aria-haspopup="dialog">${D.recentChanges||'Recent changes'} <span aria-hidden="true">↗</span></button>`
+    + `<ul class="cc-d-hist-list">${history.map(historyRow).join('')}</ul>`;
+}
+
+/* The rows last rendered, so the dialog can show them in full without a second
+   fetch. One item's history is open at a time - the drawer only shows one
+   place - so a single slot is the whole cache it needs. */
+let _histCache = null;
+
+/* The full log, in a native <dialog>: Esc, focus trapping and the backdrop all
+   come from the platform rather than from us re-implementing them. Rebuilt on
+   each open because the history behind it may have been refetched. */
+function openHistoryDialog(){
+  if(!Array.isArray(_histCache) || !_histCache.length) return;
+  let dlg = document.getElementById('cc-hist-dlg');
+  if(!dlg){
+    dlg = document.createElement('dialog');
+    dlg.id = 'cc-hist-dlg';
+    dlg.className = 'cc-hist-dlg';
+    document.body.appendChild(dlg);
+    // Click the backdrop (never a child) to dismiss.
+    dlg.addEventListener('click', (e) => { if(e.target === dlg) dlg.close(); });
+  }
+  dlg.innerHTML = `<div class="cc-hist-dlg-in">
+      <div class="cc-hist-dlg-top">
+        <h4>${escPend(D.recentChanges||'Recent changes')}</h4>
+        <button type="button" class="cc-hist-dlg-x" data-hist-close
+                aria-label="${escPend(D.close||'Close')}">✕</button>
+      </div>
+      <ul class="cc-d-hist-list cc-hist-full">${_histCache.map(historyRow).join('')}</ul>
+    </div>`;
+  dlg.showModal();
 }
 // Fetches an item's change log (C1-T2's GET /map/item/{id}/history) and
 // fills the drawer's history slot. Lazy/async on purpose — never blocks
@@ -941,6 +988,15 @@ function loadItemHistory(itemId){
    otherwise, and a selectable prompt as the last resort — clipboard access is
    refused outright in some embedded browsers, and failing silently would look
    like a dead button. */
+// Same delegation for the history dialog: the heading is re-rendered whenever
+// the drawer refetches, so nothing may bind to the element itself.
+document.addEventListener('click', (e) => {
+  if (!e.target || !e.target.closest) return;
+  if (e.target.closest('[data-hist-all]')) { e.preventDefault(); openHistoryDialog(); return; }
+  const x = e.target.closest('[data-hist-close]');
+  if (x) { e.preventDefault(); const d = document.getElementById('cc-hist-dlg'); if (d) d.close(); }
+});
+
 document.addEventListener('click', (e) => {
   const btn = e.target && e.target.closest ? e.target.closest('[data-share]') : null;
   if (!btn) return;

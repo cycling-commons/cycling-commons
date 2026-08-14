@@ -57,7 +57,7 @@ final class JoinCountryController extends AbstractController
         $onboarded = false !== $db->fetchOne('SELECT 1 FROM region WHERE country_code = ? LIMIT 1', [$code]);
         $regions = $onboarded
             ? $db->fetchAllAssociative(
-                'SELECT id, name FROM region WHERE country_code = ? AND '
+                'SELECT id, name, slug FROM region WHERE country_code = ? AND '
                 .OperationalRegions::predicate('region')
                 .' ORDER BY admin_level ASC NULLS LAST, name ASC',
                 [$code],
@@ -142,12 +142,37 @@ final class JoinCountryController extends AbstractController
             }
         }
 
+        /* WHICH REGION THEY CAME FROM (owner 2026-08-14: "I am on the North
+           Holland page, so presumably the user wants to join this region").
+
+           The picker has always been here; nothing ever pointed at a row in
+           it, so a rider who clicked "do you want to join?" underneath one
+           region's name arrived at a country-level page and had to find their
+           region again in a list of twelve. `?region=<slug>` preselects it and
+           lets the page say the region's name back to them.
+
+           Validated against the regions ALREADY fetched for this country, not
+           trusted: an id from another country (or a slug that is not
+           operational here) simply falls back to the whole-country default,
+           which is also what the form does when the parameter is absent. */
+        $wantedSlug = trim($request->query->getString('region'));
+        $wanted = null;
+        if ('' !== $wantedSlug) {
+            foreach ($regions as $r) {
+                if ($wantedSlug === $r['slug']) {
+                    $wanted = $r;
+                    break;
+                }
+            }
+        }
+
         return $this->render('pages/join_country.html.twig', [
             'page_title' => 'meta.join_country_title',
             'page_description' => 'meta.join_country_description',
             'country' => $country,
             'onboarded' => $onboarded,
             'regions' => $regions,
+            'wanted' => $wanted,
             'error' => $error,
         ]);
     }

@@ -666,6 +666,10 @@
   .cc-d-fresh{margin-top:1rem;font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;text-transform:uppercase}
   .cc-d-fresh.fresh{color:#7fcf9a}.cc-d-fresh.ageing{color:var(--ochre)}.cc-d-fresh.stale{color:var(--clay)}
   .cc-d-src{margin-top:1rem;font-size:.72rem;color:rgba(239,230,212,.55);line-height:1.5}
+  /* The named rider is the source; HOW it reached us sits under them, quieter,
+     because it qualifies the line above rather than competing with it. */
+  .cc-d-src a{color:var(--glacier);text-decoration:underline;text-underline-offset:2px}
+  .cc-d-prov{margin-top:.15rem;color:rgba(239,230,212,.42)}
   /* Share sits on the source line rather than with the actions: it is about
      THIS VIEW, not about changing anything, and the action row is where the
      verbs that alter data live. Quiet until hovered, and a real 32px target. */
@@ -683,7 +687,28 @@
   /* C1-T3 (spec W5): per-item "Recent changes" — filled async by map.js's
      loadItemHistory() into #cc-d-hist-slot; empty until the fetch resolves
      (and stays empty/no heading if the item has no history). */
-  .cc-d-hist-h{font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--clay);margin:1.3rem 0 .5rem}
+  /* A button now, not a heading: it opens the full log. Styled as the heading
+     always was, so the section still reads as a section. */
+  .cc-d-hist-h{display:block;font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--clay);margin:1.3rem 0 .5rem;
+    background:none;border:none;padding:0;cursor:pointer;text-align:left}
+  .cc-d-hist-h:hover{color:var(--trail)}
+  .cc-d-hist-h:focus-visible{outline:2px solid var(--trail);outline-offset:2px;border-radius:3px}
+  /* The full log. A native <dialog>, so Esc and the backdrop are the
+     platform's; only the panel inside is ours. */
+  .cc-hist-dlg{border:none;padding:0;background:transparent;max-width:min(560px,92vw);width:100%}
+  .cc-hist-dlg::backdrop{background:rgba(16,30,22,.62)}
+  .cc-hist-dlg-in{background:var(--ink);color:var(--paper);border:1px solid rgba(239,230,212,.18);
+    border-radius:12px;padding:1.2rem 1.3rem 1.4rem;box-shadow:0 24px 60px -20px rgba(0,0,0,.7);
+    max-height:80vh;overflow:auto}
+  .cc-hist-dlg-top{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:.4rem}
+  .cc-hist-dlg-top h4{font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--clay);margin:0}
+  .cc-hist-dlg-x{background:none;border:none;color:rgba(239,230,212,.7);font-size:1rem;
+    cursor:pointer;line-height:1;padding:.2rem}
+  .cc-hist-dlg-x:hover{color:var(--trail)}
+  /* The whole point of the dialog: nothing clamped. */
+  .cc-hist-full .cc-h-diff{display:block;-webkit-line-clamp:none;overflow:visible}
   .cc-d-hist-list{list-style:none;margin:0;padding:0}
   .cc-h-row{display:flex;flex-wrap:wrap;gap:.1rem .5rem;padding:.5rem 0;border-bottom:1px solid rgba(239,230,212,.1);font-size:.85rem}
   .cc-h-field{flex:1 0 100%;font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;color:rgba(239,230,212,.55)}

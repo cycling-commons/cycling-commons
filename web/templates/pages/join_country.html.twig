@@ -21,7 +21,14 @@
 {% block body %}
 <main class="wrap" style="padding-top:2.5rem;padding-bottom:3.5rem;max-width:640px">
   {% if onboarded %}
-    <h1 class="disp" style="font-size:clamp(1.9rem,4vw,2.6rem)">{{ 'join.headline_curate'|trans({'%country%': country.name}) }}</h1>
+    {# Say the region's name back when they arrived from its page. The
+       country-level headline ("Nobody is curating Netherlands yet") is both
+       wrong and discouraging for someone who came from North Holland to
+       volunteer for North Holland: the country may well have a curator
+       already, and it is the region that is short of one. #}
+    <h1 class="disp" style="font-size:clamp(1.9rem,4vw,2.6rem)">{{ wanted
+      ? 'join.headline_curate_region'|trans({'%region%': wanted.name})
+      : 'join.headline_curate'|trans({'%country%': country.name}) }}</h1>
     <p class="hint">{{ 'join.evidence_hint'|trans }}
        <a href="{{ path('improve') }}">{{ 'join.evidence_link'|trans }}</a></p>
   {% else %}
@@ -51,8 +58,8 @@
       <div class="field">
         <label for="region">{{ 'join.scope_label'|trans }}</label>
         <select id="region" name="region">
-          <option value="">{{ 'join.scope_whole_country'|trans }}</option>
-          {% for r in regions %}<option value="{{ r.id }}">{{ r.name }}</option>{% endfor %}
+          <option value=""{{ wanted ? '' : ' selected' }}>{{ 'join.scope_whole_country'|trans }}</option>
+          {% for r in regions %}<option value="{{ r.id }}"{{ wanted and wanted.id == r.id ? ' selected' : '' }}>{{ r.name }}</option>{% endfor %}
         </select>
       </div>
       <div class="field">

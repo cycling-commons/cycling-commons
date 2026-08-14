@@ -268,6 +268,7 @@ codes and disables the flag — audited, confirm-gated.
 | `form_login` | CSRF on, `success_handler: App\Security\LoginSuccessHandler` |
 | `logout` | CSRF on, target `home` |
 | `remember_me` | lifetime `604800` (7 days), `samesite: lax`, `secure: auto` |
+| `/login` shortcut | fires on **`IS_AUTHENTICATED_FULLY`**, never on `getUser()` (below) |
 | `login_throttling` | `max_attempts: 5` (§3) |
 | `two_factor` | scheb interstitial (`2fa_login` / `2fa_login_check`) |
 
@@ -291,6 +292,19 @@ Rule of thumb encoded above: any *cacheable public* endpoint needs an explicit
 exact-path `PUBLIC_ACCESS` entry **and** (if it is not already under a bypassed
 prefix) a `TwoFactorSetupEnforcer` bypass — "no rule matches" is not enough
 under the lazy firewall.
+
+**The login page's "already signed in" shortcut tests `IS_AUTHENTICATED_FULLY`,
+not `getUser()`.** With remember-me on a 7-day lifetime, a returning rider holds
+a real user object while being only `IS_AUTHENTICATED_REMEMBERED`. Every page
+that asks for FULLY — the curator application at `/join/{cc}` is the one riders
+actually reach for — sends exactly that visitor to `/login` to upgrade. Testing
+`getUser()` treated them as needing nothing, flashed *"you are already signed
+in"* and redirected home: told they were done while the page they asked for went
+on refusing them, with no way through (owner-reported 2026-08-14; reproduced by
+dropping the session cookie and keeping `REMEMBERME`). A remembered rider now
+gets the form, and the firewall's stored target path carries them to where they
+were going once they submit it. `/register` keeps the plain `getUser()` test —
+somebody who is remembered does not need an account.
 
 **Boundary rule:** EasyAdmin `/admin` (`ROLE_ADMIN`) is dry record/user
 administration only. Curator content review is the branded in-product

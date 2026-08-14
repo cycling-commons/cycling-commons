@@ -48,6 +48,17 @@
     color:var(--paper);white-space:nowrap;vertical-align:.06em}
   .rsteward-d{color:rgba(239,230,212,.62)}
   .rsteward-sep{color:rgba(239,230,212,.35);padding:0 .1rem}
+  /* One person = one pair of chips, kept together on a line break. The name
+     chip carries the emphasis; the reach chip is the quiet qualifier beside
+     it, joined to it rather than spaced away. */
+  .rsteward-people{display:inline-flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin-right:.15rem}
+  .rsteward-person{display:inline-flex;align-items:center;white-space:nowrap}
+  .rsteward-name{border-radius:999px 0 0 999px;border-right:none;color:var(--paper);
+    text-decoration:none;font-weight:600;letter-spacing:.06em}
+  a.rsteward-name:hover{background:rgba(239,230,212,.16);border-color:rgba(239,230,212,.5)}
+  .rsteward-name.is-anon{color:rgba(239,230,212,.72);font-weight:400}
+  .rsteward-reach{border-radius:0 999px 999px 0;background:transparent;
+    color:rgba(239,230,212,.6);letter-spacing:.08em}
   .rhero-top{display:flex;align-items:flex-start;gap:1.5rem;flex-wrap:wrap}
   .rhero-top > .rhero-head{flex:1 1 260px;min-width:0}
   @media(max-width:640px){.rshape{margin-left:0}.rshape svg{width:104px;height:78px}}
@@ -100,48 +111,45 @@
      taken this on" looked identical to a page that had not finished loading.
      Placed directly above the buttons, so "Volunteer as curator" reads as the
      reply to it. #}
+  {# THE PEOPLE FIRST, THEN THEIR REACH (owner 2026-08-14). Restructured from a
+     sentence into chips: a name is a thing you click, and a reach is a
+     property of the person, so each curator carries their own reach chip
+     rather than the region carrying one status word for all of them. A curator
+     who has not made their profile public is still counted and still shown -
+     as "A curator", unlinked - because the fact that somebody looks after this
+     region is not theirs to withhold, only their name is. #}
   <div class="rsteward">
     <span class="rsteward-h">{% trans %}regions.steward_h{% endtrans %}</span>
     <span class="rsteward-body">
-      {# The status as a chip, the explanation beside it on one line (owner
-         2026-08-14). It reads as a label on the region rather than as the
-         first clause of the sentence, which is what "Country-wide:" did.
-         Its own steward_line_* copy, not the legend's status_*_desc: the
-         legend is a glossary of terms and wants fragments, this is a page
-         about ONE region and wants sentences. #}
-      <span class="rsteward-chip">{{ ('regions.status_' ~ region.stewardship)|trans }}</span>
-      <span class="rsteward-d">{{ ('regions.steward_line_' ~ region.stewardship)|trans }}</span>
-      {# The people, named only where they have made their profile public
-         (RegionDirectoryProvider::curators). A curator who has not is counted
-         by the status above but never named here. #}
-      {% set named = region.curators|filter(c => c.name is not empty) %}
-      {% if named is not empty %}
-        {# Labelled, because a bare name at the end of the sentence reads as
-           part of it: "…looking for local curators. Curator" gave no clue that
-           the last word was a person. The label is a prefix rather than a
-           placeholder so the names can stay real links. #}
-        <span class="rsteward-sep" aria-hidden="true">·</span>
-        <span class="rsteward-who">{% trans %}regions.steward_by{% endtrans %}{{ ' ' }}
-          {%- for c in named -%}
-            {%- if not loop.first %}, {% endif -%}
-            {%- if c.uuid -%}
-              <a href="{{ path('rider_profile', {uuid: c.uuid}) }}">{{ c.name }}</a>
-            {%- else -%}{{ c.name }}{%- endif -%}
+      {% if region.curators is not empty %}
+        <span class="rsteward-people">
+          {%- for c in region.curators -%}
+            <span class="rsteward-person">
+              {%- if c.uuid -%}
+                <a class="rsteward-chip rsteward-name" href="{{ path('rider_profile', {uuid: c.uuid}) }}">{{ c.name }}</a>
+              {%- else -%}
+                <span class="rsteward-chip rsteward-name is-anon">{% trans %}regions.steward_unnamed{% endtrans %}</span>
+              {%- endif -%}
+              {# Their reach, in their own words: this region, or the country. #}
+              <span class="rsteward-chip rsteward-reach">{{ c.scope == 'local'
+                ? 'regions.reach_region'|trans
+                : 'regions.reach_country'|trans }}</span>
+            </span>
           {%- endfor -%}
         </span>
       {% endif %}
-      {# Every state that is short of a local curator ends with the way in.
-         "Want to join?" beside the fact is what turns a status line into an
-         invitation, and it is the same question the button below asks. #}
+      {# The sentence that remains is the one about what is MISSING. A region
+         with its own curator needs none; every other state ends in the way in,
+         pointed at THIS region, not merely at its country. #}
       {% if region.stewardship != 'curated' %}
-        <span class="rsteward-sep" aria-hidden="true">·</span>
-        <a class="rsteward-cta" href="{{ path('join_country', {cc: region.countryCode}) }}">{% trans %}regions.steward_join{% endtrans %}</a>
+        <span class="rsteward-d">{{ ('regions.steward_line_' ~ region.stewardship)|trans }}</span>
+        <a class="rsteward-cta" href="{{ path('join_country', {cc: region.countryCode}) }}?region={{ region.slug }}">{% trans %}regions.steward_join{% endtrans %}</a>
       {% endif %}
     </span>
   </div>
   <div style="display:flex;gap:.8rem;margin-top:1.8rem;flex-wrap:wrap">
     <a class="btn btn-p" href="{{ path('map') }}?scope=region:{{ region.slug }}">{% trans %}region.cta_map{% endtrans %}</a>
-    <a class="btn btn-g" style="border-color:rgba(239,230,212,.4);color:var(--paper)" href="{{ path('join_country', {cc: region.countryCode}) }}">{% trans %}region.cta_apply{% endtrans %}</a>
+    <a class="btn btn-g" style="border-color:rgba(239,230,212,.4);color:var(--paper)" href="{{ path('join_country', {cc: region.countryCode}) }}?region={{ region.slug }}">{% trans %}region.cta_apply{% endtrans %}</a>
   </div>
 </div></div>
 

@@ -24,10 +24,22 @@ final class SecurityController extends AbstractController
     ], name: 'login')]
     public function login(AuthenticationUtils $authenticationUtils): Response
     {
-        // Say why. A signed-in visitor who types /login (or follows a stale
-        // bookmark) landed on the homepage with no explanation, which reads as
-        // a broken link rather than an answered request.
-        if ($this->getUser()) {
+        /* Say why. A signed-in visitor who types /login (or follows a stale
+           bookmark) landed on the homepage with no explanation, which reads as
+           a broken link rather than an answered request.
+
+           FULLY, not merely `getUser()` (owner-reported 2026-08-14). A rider
+           returning on a remember-me cookie holds a user object but is only
+           IS_AUTHENTICATED_REMEMBERED, and every page that asks for FULLY -
+           the curator application at /join/{cc} is the one they hit - sends
+           them here to upgrade. `getUser()` treated that as "you are already
+           signed in", flashed exactly that, and dropped them on the homepage:
+           told they needed nothing, while the page they asked for was still
+           refusing them, and with no way through. The remembered rider now
+           gets the form, which is what they were sent here for; the target
+           path the firewall stored survives, so logging in lands them where
+           they were going. */
+        if ($this->isGranted('IS_AUTHENTICATED_FULLY')) {
             $this->addFlash('notice', 'flash.already_signed_in');
 
             return $this->redirectToRoute('home');

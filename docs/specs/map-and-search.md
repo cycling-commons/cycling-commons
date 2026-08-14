@@ -324,6 +324,31 @@ across all five.
   will. Same three-state model as the profile page's curating invitation
   ([account-and-auth.md](account-and-auth.md) §9).
 
+  **On a region's own page the people come first, then their reach.** "Who
+  looks after it" is a row of chips, not a sentence: a curator's name is a
+  thing you click, so it is a chip linking to `/riders/{uuid}`, and each name
+  carries its own **reach** chip beside it - *This region* or *Country-wide* -
+  because reach is a property of the person, not of the region. A curator
+  without a public profile is still shown, as an unlinked *A curator*: that
+  somebody looks after this region is not theirs to withhold, only their name
+  is. The sentence that survives is the one about what is **missing**, and it
+  is shown only for a region short of its own curator; country-wide cover says
+  the vacancy out loud ("a curator is covering the whole country, we are
+  actively looking for regional curators"), because that state is where the
+  page most needs a volunteer.
+
+  **The way in points at the region, not merely at its country.** The CTA
+  carries `?region=<slug>` to `/join/{cc}`, which preselects that row in the
+  application's scope picker and titles the page *Help curate <region>*. The
+  picker had always been there and nothing ever pointed at a row in it, so a
+  rider clicking "do you want to join?" under North Holland's name arrived at a
+  country page headed "Nobody is curating Netherlands yet" - discouraging,
+  usually untrue (the country may have a curator; it is the *region* that is
+  short of one), and leaving them to find their region again in a list of
+  twelve. The slug is validated against the operational regions already fetched
+  for that country, so a foreign or non-operational id falls back to the
+  whole-country default rather than being trusted.
+
   **On a region's own page the three states are sentences, not glossary
   entries.** `/regions` is a directory and wants fragments a reader scans down
   a column; `/regions/{slug}` is about one place and wants a line that answers
@@ -970,6 +995,15 @@ carries. The owner's own scenic addition therefore credited *OpenStreetMap
 fallback, on a place OSM had never heard of (reported 2026-08-14). Harvested and
 derived rows (`osm`/`pivot`/`wikidata`/`auto`) keep their real citation.
 
+**The person IS the source; how it reached us is the line beneath.** The Source
+line reads *Source · XanderK*, the name itself being the profile link, with the
+provenance citation ("tagged while riding, with Scout") dropped to a quieter
+line under it. They were two lines making two competing claims - *shared by X*
+above *source: Scout* - when between them they answer one question: a rider
+added this, and this is how it arrived. A row with nobody to name (anything
+harvested) keeps the citation on the Source line itself, where it has always
+been; a rider without a public profile reads *Source · shared anonymously*.
+
 **Who added it is a line of its own.** A point item has no creator column - the
 person is on the submission that minted it - so `CatalogProvider::itemRows()`
 joins the earliest `type='new'` submission (via the indexed
@@ -1022,6 +1056,17 @@ item id — a name-slug guess is never a faithful target.
 fetched after, each race-guarded (a bumped request token drops stale
 responses) and silent on fetch failure — enhancements never block the drawer.
 Empty history renders nothing ("no changes yet" is silence, not a section).
+
+**The heading opens the full log.** In the drawer each change is clamped to two
+lines, which is right there - one long description edit would otherwise push
+everything below it off the screen - but clamped is not the same as
+unavailable: a rider reading *"View from 'Zuiderdijk' left The Markermeer
+and…"* cannot tell what was actually changed (owner-reported 2026-08-14). So
+"Recent changes" stops being a label and becomes the control it already looked
+like, opening a native `<dialog>` with every change in full and nothing
+clamped. Native, so Esc, focus trapping and the backdrop are the platform's
+rather than ours; rebuilt on each open from the rows last rendered, so it costs
+no second fetch and cannot show a stale log.
 
 ### 6.4 Drawer accessibility
 
