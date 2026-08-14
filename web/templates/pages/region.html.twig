@@ -8,13 +8,31 @@
   .rstats .s b{font-family:var(--serif);font-size:1.8rem;display:block}
   .rstats .s span{font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(239,230,212,.6)}
   .kinds{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:.6rem;margin-top:1.4rem}
-  .kinds .k{display:flex;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid rgba(20,22,14,.1);font-size:.95rem}
-  .kinds .k .c{font-family:var(--mono);font-size:.8rem;color:#595c4d}
+  .kinds .k{display:flex;justify-content:space-between;align-items:baseline;gap:.6rem;padding:.5rem 0;border-bottom:1px solid rgba(20,22,14,.1);font-size:.95rem}
+  .kinds .k .c{font-family:var(--mono);font-size:.8rem;color:#595c4d;white-space:nowrap}
+  /* Verified reads as the achievement, coverage as the backdrop it sits on. */
+  .kinds .k .c b{color:var(--trail);font-weight:700}
+  .kinds .k .c i{font-style:normal;color:#8a8d7d}
+  .kinds-note{font-size:.84rem;color:#595c4d;margin:.9rem 0 0;line-height:1.6;max-width:64ch}
+  /* The country in outline with this region filled. Inline SVG, no request and
+     no JavaScript: a region page is read once, often on a phone, and the
+     button beside it opens the real map for anyone who wants to pan. */
+  .rshape{flex:0 0 auto;margin-left:auto}
+  .rshape svg{display:block;width:132px;height:99px;overflow:visible}
+  .rshape .co-out{fill:rgba(239,230,212,.10);stroke:rgba(239,230,212,.38);stroke-width:.8;
+    stroke-linejoin:round;vector-effect:non-scaling-stroke}
+  .rshape .rg-in{fill:var(--clay);fill-opacity:.9;stroke:var(--paper);stroke-width:.8;
+    stroke-linejoin:round;vector-effect:non-scaling-stroke}
+  .rhero-top{display:flex;align-items:flex-start;gap:1.5rem;flex-wrap:wrap}
+  .rhero-top > .rhero-head{flex:1 1 260px;min-width:0}
+  @media(max-width:640px){.rshape{margin-left:0}.rshape svg{width:104px;height:78px}}
 </style>
 {% endblock %}
 {% block body %}
 
 <div class="rhero"><div class="wrap">
+  <div class="rhero-top">
+    <div class="rhero-head">
   <div class="co">
     <img src="{{ asset(region.flag) }}" alt="" width="20" height="15">
     <span>{{ region.countryName }}</span>
@@ -22,6 +40,19 @@
     {% if region.stewardship != 'none' %}<span>· {{ ('regions.status_' ~ region.stewardship)|trans }}</span>{% endif %}
   </div>
   <h1 class="disp">{{ ('region.' ~ region.slug ~ '.label')|trans }}</h1>
+    </div>
+    {# Where this region sits in its country. Decorative: the shapes carry no
+       information the text does not, so it is aria-hidden rather than given a
+       label nobody needs read to them. #}
+    {% if silhouette %}
+      <figure class="rshape" aria-hidden="true">
+        <svg viewBox="0 0 {{ silhouette.width }} {{ silhouette.height }}" role="presentation" focusable="false">
+          {% if silhouette.country %}<path class="co-out" d="{{ silhouette.country }}" fill-rule="evenodd"/>{% endif %}
+          {% if silhouette.region %}<path class="rg-in" d="{{ silhouette.region }}" fill-rule="evenodd"/>{% endif %}
+        </svg>
+      </figure>
+    {% endif %}
+  </div>
   <div class="rstats">
     <div class="s"><b>{{ region.itemsVerified }}</b><span>{% trans %}region.stat_items{% endtrans %}</span></div>
     <div class="s"><b>{{ region.routes }}</b><span>{% trans %}region.stat_routes{% endtrans %}</span></div>
@@ -37,10 +68,24 @@
   {% if region.byKind is not empty %}
     <div class="kicker">{% trans %}region.by_kind_h{% endtrans %}</div>
     <div class="kinds">
+      {# TWO numbers, not one. The first is what somebody has stood at and
+         checked; the second is what OpenStreetMap knows is there and the map
+         draws underneath. Showing only the first told a rider that Wallonia
+         holds 2 water points when the map there draws 1,650. They are not
+         summed: "checked" and "known about" are the distinction the whole
+         Best of / Confirmed / Everything ladder is built on. #}
       {% for kind in region.byKind %}
-        <div class="k"><span>{{ kind.labelKey|trans }}</span><span class="c">{{ kind.count }}</span></div>
+        <div class="k">
+          <span>{{ kind.labelKey|trans }}</span>
+          <span class="c">
+            {%- if kind.count > 0 %}<b>{{ kind.count }}</b> {{ 'region.kind_verified'|trans }}{% endif -%}
+            {%- if kind.count > 0 and kind.coverage > 0 %} · {% endif -%}
+            {%- if kind.coverage > 0 %}<i>{{ kind.coverage }} {{ 'region.kind_coverage'|trans }}</i>{% endif -%}
+          </span>
+        </div>
       {% endfor %}
     </div>
+    <p class="kinds-note">{{ 'region.by_kind_note'|trans }}</p>
   {% else %}
     <div class="kicker">{% trans %}region.empty_h{% endtrans %}</div>
     <p style="max-width:62ch;line-height:1.6">{% trans %}region.empty_p{% endtrans %}</p>

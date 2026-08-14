@@ -7,6 +7,7 @@ namespace App\Controller;
 use App\Catalog\ContributorWallProvider;
 use App\Catalog\CoverageStatsProvider;
 use App\Catalog\RegionDirectoryProvider;
+use App\Catalog\RegionSilhouette;
 use App\Pagination\Pager;
 use App\Pagination\PageSize;
 use App\Routing\LocalePrefix;
@@ -91,7 +92,7 @@ final class PageController extends AbstractController
     }
 
     #[Route('/regions/{slug}', name: 'region_detail', requirements: ['slug' => '[a-z0-9-]+'])]
-    public function regionDetail(string $slug, Request $request, RegionDirectoryProvider $directory): Response
+    public function regionDetail(string $slug, Request $request, RegionDirectoryProvider $directory, RegionSilhouette $silhouette): Response
     {
         $region = $directory->region($slug, $request->getLocale());
         if (null === $region) {
@@ -103,6 +104,11 @@ final class PageController extends AbstractController
             'page_description' => 'meta.region_description',
             'nav_active' => 'regions',
             'region' => $region,
+            // The country in outline with this region filled: inline SVG built
+            // from `region.outline`, so it costs no request and no JavaScript.
+            // Null when neither shape is usable, and the template omits the
+            // figure rather than drawing an empty box.
+            'silhouette' => $silhouette->forRegion((int) $region['id'], (string) $region['countryCode']),
         ]);
     }
 

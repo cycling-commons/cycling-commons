@@ -108,6 +108,19 @@ final class RegionDirectoryProvider
         return $list;
     }
 
+    /**
+     * Does the pipeline-owned coverage table exist yet?
+     *
+     * Memoized per instance: the provider is a per-request service, so this is
+     * one information_schema lookup per page rather than one per region.
+     */
+    private ?bool $coverageTable = null;
+
+    private function hasCoverageTable(): bool
+    {
+        return $this->coverageTable ??= $this->db->createSchemaManager()->tablesExist(['coverage_poi']);
+    }
+
     /** @return array<string, mixed>|null */
     public function region(string $slug, string $locale): ?array
     {
@@ -120,21 +133,62 @@ final class RegionDirectoryProvider
             return null;
         }
 
-        $byKind = [];
-        $kindRows = $this->db->fetchAllKeyValue(
+        /* TWO NUMBERS PER KIND, not one (owner, 2026-08-14: "What riders find
+           here looks a bit minimal now as it does not mention the base OSM
+           layer only the confirmed items").
+
+           Wallonia read "Water & food 2" while the map there draws 1,650 water
+           points, because this counted `item` rows in state `verified` and
+           nothing else. That is the CURATED plane; the reference plane is
+           `coverage_poi`, which is most of what a rider actually sees.
+           Reporting only the first told a rider the region was nearly empty
+           when the map is not.
+
+           They stay two numbers rather than a sum: they mean different things.
+           Verified is "somebody stood here and checked"; coverage is "OSM knows
+           about this". Adding them would erase exactly the distinction the
+           three view modes are built on. */
+        $verifiedRows = $this->db->fetchAllKeyValue(
             'SELECT letter, COUNT(*) FROM item WHERE region_id = :id AND state = \'verified\' GROUP BY letter ORDER BY letter',
             ['id' => (int) $row['id']],
         );
+        /* ASKED BEFORE QUERYING, not caught after. coverage_poi is
+           pipeline-owned DDL and does not exist on a fresh contributor stack or
+           in the test database, so this has to degrade to the verified counts
+           alone rather than 500.
+           A try/catch around the SELECT is the obvious shape and it does not
+           work: Postgres aborts the entire transaction on a failed statement,
+           so every later query in the same request fails too with "current
+           transaction is aborted" — which is what the test suite showed,
+           because DAMA wraps each test in one. Catching the exception left the
+           page just as broken and hid the cause. */
+        $coverageRows = $this->hasCoverageTable()
+            ? $this->db->fetchAllKeyValue(
+                'SELECT letter, COUNT(*) FROM coverage_poi WHERE region_id = :id GROUP BY letter ORDER BY letter',
+                ['id' => (int) $row['id']],
+            )
+            : [];
+
+        $byKind = [];
         foreach (ItemType::cases() as $type) {
-            $n = (int) ($kindRows[$type->letter()] ?? 0);
-            if ($n > 0) {
-                $byKind[] = ['labelKey' => $type->labelKey(), 'count' => $n];
+            $verifiedN = (int) ($verifiedRows[$type->letter()] ?? 0);
+            $coverageN = (int) ($coverageRows[$type->letter()] ?? 0);
+            // A kind with neither is genuinely absent here and is left out; one
+            // with only coverage still belongs, because a rider can ride to it.
+            if ($verifiedN > 0 || $coverageN > 0) {
+                $byKind[] = [
+                    'labelKey' => $type->labelKey(),
+                    'count' => $verifiedN,
+                    'coverage' => $coverageN,
+                ];
             }
         }
 
         $cc = (string) $row['country_code'];
 
         return $this->shape($row) + [
+            // The silhouette needs the row id to read `region.outline`.
+            'id' => (int) $row['id'],
             'countryCode' => $cc,
             'countryName' => Countries::exists($cc) ? Countries::getName($cc, $locale) : (string) $row['country_name_en'],
             'flag' => 'flags/'.strtolower($cc).'.svg',
