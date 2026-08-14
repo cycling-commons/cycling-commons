@@ -62,7 +62,7 @@
     const co = document.getElementById('regionCoords');
     if (co) {
       if (isMy) { co.textContent = `◎ ${myLine}`; }
-      else { const b = window.CCScope.bbox(); co.textContent = b ? `◎ ${lbl} · ${((b[1] + b[3]) / 2).toFixed(2)}°N ${((b[0] + b[2]) / 2).toFixed(2)}°E` : `◎ ${lbl}`; }
+      else { const b = window.CCScope.viewBbox(); co.textContent = b ? `◎ ${lbl} · ${((b[1] + b[3]) / 2).toFixed(2)}°N ${((b[0] + b[2]) / 2).toFixed(2)}°E` : `◎ ${lbl}`; }
     }
     const stt = document.getElementById('searchTitle');
     if (stt) stt.textContent = isMy ? myLine : ((s && s.kind === 'everywhere') ? (I18N.searchEverywhere || 'Search everywhere') : tpl(I18N.searchIn || 'Search in {area}', { area: lbl }));

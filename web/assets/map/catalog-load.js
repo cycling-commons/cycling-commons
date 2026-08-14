@@ -36,7 +36,12 @@
   function buildMap() {
     if (window.__ccMapInstance || typeof maplibregl === 'undefined') return;
     if (!document.getElementById('map')) return;
-    var bb = window.CCScope ? window.CCScope.bbox() : null;
+    // viewBbox, not bbox: the FRAMING box, which is the region's main landmass
+    // rather than its true extent. A scope on Western Cape or Valparaíso would
+    // otherwise open on open ocean, because both own a distant island (see
+    // CCScope.viewBbox). Guarded so a stale cached scope.js without the method
+    // still opens the way it always did.
+    var bb = window.CCScope ? (window.CCScope.viewBbox ? window.CCScope.viewBbox() : window.CCScope.bbox()) : null;
     window.__ccMapOpts = {
       container: 'map', style: 'https://tiles.openfreemap.org/styles/liberty',
       // Initial viewport = the active scope's bbox (Wallonia by default; a

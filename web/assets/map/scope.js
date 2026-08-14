@@ -535,6 +535,34 @@
       return Number.isFinite(w) ? [w, s, e, n] : null;
     },
 
+    /** Where to POINT THE CAMERA for this scope, which is not always bbox().
+     *
+     *  bbox() is the true extent and has to stay that way: membership tests and
+     *  the nearest-region ranking read it. But a region that owns a distant
+     *  island has a true extent mostly made of sea, and framing on it shows the
+     *  sea. Western Cape reaches 46.98°S for the Prince Edward Islands, so
+     *  scoping to it centred the map 800 km off Cape Town on blank water
+     *  reading "0 places shown"; Valparaíso reaches 109.45°W for Easter Island
+     *  and lands mid-Pacific. Both arrived with the 2026-08-14 rollout.
+     *
+     *  `r.view` is the largest outline ring's box (RegionRegistryProvider),
+     *  i.e. the mainland, and falls back to `r.bbox` when a region has no
+     *  usable outline — so this is never worse than what it replaced.
+     */
+    viewBbox() {
+      if (scope && scope.kind === 'myArea' && scope.myArea) return this.bbox();
+      const rs = this.regions();
+      if (!rs.length) return null;
+      let w = Infinity; let s = Infinity; let e = -Infinity; let n = -Infinity;
+      for (const r of rs) {
+        const b = r.view || r.bbox;
+        if (!b) continue;
+        w = Math.min(w, b[0]); s = Math.min(s, b[1]);
+        e = Math.max(e, b[2]); n = Math.max(n, b[3]);
+      }
+      return Number.isFinite(w) ? [w, s, e, n] : this.bbox();
+    },
+
     /** [lng, lat] centre of the active scope, or null for Everywhere.
      *
      *  This is the anchor the contextual chip block ranks "closest regions"

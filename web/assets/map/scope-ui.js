@@ -213,7 +213,7 @@ export function applyScope(s, opts){
     // need this call — the standalone fetchCoverageCounts() below runs once
     // the layers exist, already reading the initial scope.
     fetchCoverageCounts();
-    const bb = window.CCScope && window.CCScope.bbox(); if(bb) map.fitBounds([[bb[0],bb[1]],[bb[2],bb[3]]],{padding:24});
+    const bb = window.CCScope && window.CCScope.viewBbox(); if(bb) map.fitBounds([[bb[0],bb[1]],[bb[2],bb[3]]],{padding:24});
     // One render per scope switch (review 07-20 info d): in Everything mode
     // refreshBestOf() IS the render (its non-curated branch renders
     // synchronously); in Curated we render now for instant A–J + K feedback
