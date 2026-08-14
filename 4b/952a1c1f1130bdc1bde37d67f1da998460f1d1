@@ -1,0 +1,74 @@
+web/translations/messages.en.yaml
+  s_1c0464d81ce126::t_b5e77c41003113 661
+  s_1c0464d81ce126::t_0214ae6fee092d 2039-2040
+  s_1c0464d81ce126::t_c60792ffab8105 1280
+  s_1c0464d81ce126::t_ae7de04a40f407 662-665
+web/assets/map/render.js
+  s_1c0464d81ce126::t_891202d322e4a5 815
+  s_1c0464d81ce126::t_0d8167d0f7a827 27
+  s_1c0464d81ce126::t_39a869098d59f0 796-814,816-818
+web/translations/messages.fr.yaml
+  s_1c0464d81ce126::t_b5e77c41003113 661
+  s_1c0464d81ce126::t_b61c11834df302 660,662-665
+  s_1c0464d81ce126::t_0214ae6fee092d 1715-1716
+  s_1c0464d81ce126::t_c60792ffab8105 1276
+web/translations/messages.nl.yaml
+  s_1c0464d81ce126::t_b5e77c41003113 661
+  s_1c0464d81ce126::t_b61c11834df302 662-664
+  s_1c0464d81ce126::t_c60792ffab8105 1276
+  s_1c0464d81ce126::t_0214ae6fee092d 1715-1716
+web/assets/map/map.js
+  s_1c0464d81ce126::t_322dca15e64cc5 23
+  s_1c0464d81ce126::t_b07397f172c8ce 76-80
+web/templates/pages/region.html.twig
+  s_1c0464d81ce126::t_98137395fcb170 109-113
+  s_1c0464d81ce126::t_95bd96b1b3ed31 23-27
+  s_1c0464d81ce126::t_fc34b5793beb77 41-43,45-48
+  s_1c0464d81ce126::t_c11c725c09f669 50
+  s_1c0464d81ce126::t_287a2578fadb37 159-165
+  s_1c0464d81ce126::t_551b079a182a98 127
+  s_1c0464d81ce126::t_a88ab315852e6e 114
+  s_1c0464d81ce126::t_59ed0f4ac64821 96-103
+web/translations/messages.de.yaml
+  s_1c0464d81ce126::t_b61c11834df302 662-665
+  s_1c0464d81ce126::t_b5e77c41003113 661
+  s_1c0464d81ce126::t_0214ae6fee092d 1718-1719
+  s_1c0464d81ce126::t_c60792ffab8105 1276
+web/assets/styles/map.css
+  s_1c0464d81ce126::t_f9a02992deded6 241,244-248
+web/templates/map/index.html.twig
+  s_1c0464d81ce126::t_dfe39f1c35866b 251-257
+web/src/Controller/MapController.php
+  s_1c0464d81ce126::t_e468d3ff587acd 469-474
+docs/specs/map-and-search.md
+  s_1c0464d81ce126::t_7a1883d88f886e 327-341
+  s_1c0464d81ce126::t_2527af9feda96a 342-352
+web/translations/messages.es.yaml
+  s_1c0464d81ce126::t_0214ae6fee092d 2051-2052
+  s_1c0464d81ce126::t_b61c11834df302 663-666
+  s_1c0464d81ce126::t_b5e77c41003113 662
+  s_1c0464d81ce126::t_c60792ffab8105 1282
+docs/specs/coverage-provider.md
+  s_1c0464d81ce126::t_169c6426db03b4 431-443
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "4b952a1c1f1130bdc1bde37d67f1da998460f1d1",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_1c0464d81ce126": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "04feb771-c203-4977-b898-3414026fd58f",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
