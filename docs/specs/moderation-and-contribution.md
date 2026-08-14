@@ -1299,6 +1299,27 @@ through the NULL column.
 A user's scope is the union of their rows. Rows are storable for any user but
 inert without `ROLE_CURATOR`.
 
+**Assigning them has two surfaces.** `/admin/user/moderator_areas` is the
+per-user picker (the form `setModeratorAreas()` posts to), and
+`/admin/moderator-areas` is the overview: every elevated account with the
+regions it covers and a link into that picker. The overview exists because
+assignment was reachable only from one user's own page, so "which regions have a
+curator?" could be answered only by opening people one at a time - and nothing
+in the admin menu pointed at either (owner-reported 2026-08-14). An empty
+assignment renders as **Global (sees everything)**, never as "none": empty means
+global, which is the opposite, and getting that backwards would misread the most
+consequential row on the page.
+
+**Neither surface may hydrate `Region` entities.** A `Region` carries its `geom`
+polygon; the 271 rows onboarded by 2026-08-14 hold ~217 MB of geometry between
+them, and the picker page died with `Allowed memory size of 134217728 bytes
+exhausted` building a `<select>` that needs three columns. Both now select
+`id, name, country_code` through DBAL - the picker rendering in ~8 MiB, grouped
+into `optgroup`s by country. Raising `memory_limit` only moves the wall: every
+onboarded country adds geometry, and this page is
+[onboarding playbook](../../tools/divisions/README.md) step 7, so it sits on the
+path of every new country.
+
 ### 9.2 Scope semantics
 
 - **Unassigned = global**: a curator with zero rows moderates everything
@@ -1561,6 +1582,26 @@ promised time on it. Three details that are easy to get wrong:
   `country_code`, so a rider who volunteered for North Holland was told their
   application "to curate NL" had arrived: the wrong scope, and a database code
   rather than a place.
+
+**The applications desk is a list that opens.** Every application used to
+render expanded, so a reviewer scrolled past everything to reach the one they
+meant, and it read `pending()` - a decided application simply vanished, leaving
+nowhere to see what had been answered. It now lists **every** application,
+newest first, one row each carrying the name, the scope and an
+**Open / Accepted / Declined** pill, with the detail behind a `<details>`
+disclosure (keyboard- and screen-reader-native, survives the CSP without a
+script, and opened by find-in-page). A decided row shows the record - status,
+when, the note - instead of the controls, because `approve()` guards on
+`Pending` and offering buttons that can only error is worse than offering none.
+
+**Two buttons fill the note; nothing sends until a decision is pressed.** The
+note is a textarea, not a single line, because the approval carries a welcome
+and the rulebook link. The templates are **English literals in the template, not
+catalogue keys**: a translated default resolves in the *reviewer's* locale, so a
+Dutch reviewer would post Dutch to a Spanish rider and call it localisation. The
+reviewer edits freely before sending, and line breaks survive - the note is
+plain text where it is typed, converted only at render (`nl2br` in the email,
+`white-space: pre-line` on the messages page).
 
 **A change of areas is told to the person it happens to.** A moderator's scope
 decides what they can see and act on, so a silent change means finding out by

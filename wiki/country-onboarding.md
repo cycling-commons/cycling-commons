@@ -10,15 +10,31 @@ country you don't see there yet can get added.
 
 ## The stages a region moves through
 
-Every region on the map sits in exactly one of four stages, and `/regions`
-shows the country tier right on each region's chip:
+Every region on the map is described by **two independent things**, and
+`/regions` shows them as two columns rather than one ladder: how much the
+region holds, and who looks after it. They really are independent — a busy
+region can have nobody looking after it, and a freshly curated one can hold
+almost nothing yet.
+
+**How much it holds**
 
 | Stage | What it means |
 |---|---|
 | **Not on the map yet** | The country hasn't been onboarded. It doesn't appear on `/regions`, but you can still ask for it — see below. |
 | **Onboarded** | The region is live on the map from the day it's added — full read/write, full contribution flow — but riders haven't confirmed anything there yet. |
 | **Growing** | Riders have started adding and confirming places. The commons for that region is no longer empty. |
-| **Curated** | A curator maintains the region and the map opens there in **Best of** view by default — best climbs, best stays, best views, ranked rather than just listed. |
+| **Established** | Enough verified places and rider-backed routes that the map opens there in **Best of** view by default — best climbs, best stays, best views, ranked rather than just listed. It is earned rather than declared: a curator can only set it once the region passes a readiness count. |
+
+**Who looks after it**
+
+| Cover | What it means |
+|---|---|
+| **Curated** | The region has its own curator. |
+| **Country-wide** | A curator covers the whole country, and this region has no local curator yet. Real cover, and deliberately said differently: somebody who rides there sees what a country-wide view never will. |
+| **No curator yet** | Nobody has taken this region on. Riders can still add and confirm places, and the region page says so with a way in. |
+
+A region page names its curators where they have made their profile public,
+each with the reach they hold.
 
 The important part: **the map serves every onboarded region from day one.**
 Onboarding is not a waiting room before the map "turns on" — it's the
@@ -65,11 +81,20 @@ applying) is the strongest way to support your case.
 Applying needs an account. If you hit the application page signed out, the
 site walks you through creating one — including the email confirmation —
 and then brings you **back to the application** to finish it. Once
-submitted, the application and its status (pending, approved, declined)
-live on your profile, alongside any note the reviewer leaves.
+submitted, you get an acknowledgement in your messages (and by email), and the
+application and its status (pending, approved, declined) live on your profile,
+alongside any note the reviewer leaves. While it is being read, the application
+page shows you what you sent rather than an empty form.
+
+**Curating requires two-factor authentication.** It is not optional and it is
+not a setting: the moderation desks are unreachable until it is set up, because
+a curator can approve, reject and permanently destroy other people's
+contributions, and an account that can do that is worth stealing. You are asked
+to set it up the first time you sign in after approval.
 
 Approval scopes a curator to a place — a whole country, or one region within
-it, whichever you asked for. A curator reviews the queue of flagged and
+it, whichever you asked for; the application form asks which. If your areas
+change later, you are told which regions you now cover. A curator reviews the queue of flagged and
 proposed changes for their scope; they don't get any special power over
 regions outside it, and curating one country's queue never quietly becomes
 authority over the whole Commons. See [Governance](governance.md) for how
