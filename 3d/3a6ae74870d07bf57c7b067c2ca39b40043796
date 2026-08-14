@@ -1,0 +1,74 @@
+web/translations/messages.nl.yaml
+  s_1c0464d81ce126::t_e03d0cdd76f55c 1882
+  s_1c0464d81ce126::t_9ca7a459d87f36 573
+  s_1c0464d81ce126::t_98a19a0d454cb6 662-664,667
+web/templates/pages/join_country.html.twig
+  s_1c0464d81ce126::t_eb1a3902d37fa6 61-62
+  s_1c0464d81ce126::t_23cd67f75b145c 24-31
+web/assets/styles/map.css
+  s_1c0464d81ce126::t_a7826557e1ba48 669-672
+  s_1c0464d81ce126::t_059c7549fa26c4 690-711
+web/tests/Security/LoginPageTest.php
+  s_1c0464d81ce126::t_404cf199aa1ee7 52
+  s_1c0464d81ce126::t_95ea5679a258b0 1-51,53-101
+web/src/Controller/JoinCountryController.php
+  s_1c0464d81ce126::t_2bf1d14bd63195 145-168,175
+  s_1c0464d81ce126::t_172b18971ec24b 60
+web/templates/pages/region.html.twig
+  s_1c0464d81ce126::t_bb442e6d760801 51-61
+  s_1c0464d81ce126::t_582b90e5b4374a 114-120,124-137,141-143,145-146
+  s_1c0464d81ce126::t_290da8ccf0a7d2 152
+web/translations/messages.fr.yaml
+  s_1c0464d81ce126::t_98a19a0d454cb6 662-664,667
+  s_1c0464d81ce126::t_e03d0cdd76f55c 1882
+  s_1c0464d81ce126::t_9ca7a459d87f36 573
+web/src/Controller/MapController.php
+  s_1c0464d81ce126::t_e03d0cdd76f55c 248
+docs/specs/map-and-search.md
+  s_1c0464d81ce126::t_f46e46adb32862 1060-1070
+  s_1c0464d81ce126::t_b2e5b42b415232 998-1006
+  s_1c0464d81ce126::t_5d1b7ce31a4575 327-351
+web/src/Controller/SecurityController.php
+  s_1c0464d81ce126::t_82cf73ae9a46e9 27-42
+web/translations/messages.en.yaml
+  s_1c0464d81ce126::t_e03d0cdd76f55c 2209
+  s_1c0464d81ce126::t_9ca7a459d87f36 573
+  s_1c0464d81ce126::t_98a19a0d454cb6 662-664,667
+docs/specs/account-and-auth.md
+  s_1c0464d81ce126::t_92c2045768a762 271
+  s_1c0464d81ce126::t_8b8744ae2c130d 296-308
+web/translations/messages.de.yaml
+  s_1c0464d81ce126::t_98a19a0d454cb6 662-664,667
+  s_1c0464d81ce126::t_e03d0cdd76f55c 1885
+  s_1c0464d81ce126::t_9ca7a459d87f36 573
+web/translations/messages.es.yaml
+  s_1c0464d81ce126::t_9ca7a459d87f36 574
+  s_1c0464d81ce126::t_e03d0cdd76f55c 2222
+  s_1c0464d81ce126::t_98a19a0d454cb6 663-665,668
+web/assets/map/drawer.js
+  s_1c0464d81ce126::t_b31f45ef1ab664 915-955
+  s_1c0464d81ce126::t_0bd75700f332eb 851-852
+  s_1c0464d81ce126::t_5d2360bb5bf4c7 991-999
+  s_1c0464d81ce126::t_707950fe4db043 462-473
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "3d3a6ae74870d07bf57c7b067c2ca39b40043796",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_1c0464d81ce126": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "04feb771-c203-4977-b898-3414026fd58f",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
