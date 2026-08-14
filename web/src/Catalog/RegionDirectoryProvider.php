@@ -118,7 +118,17 @@ final class RegionDirectoryProvider
 
     private function hasCoverageTable(): bool
     {
-        return $this->coverageTable ??= $this->db->createSchemaManager()->tablesExist(['coverage_poi']);
+        // `to_regclass`, NOT the schema manager. config/packages/doctrine.yaml
+        // sets `schema_filter: '~^(?!topology\.|coverage_)~'` so that Doctrine's
+        // schema tooling never touches the pipeline's tables — and
+        // createSchemaManager()->tablesExist() honours that filter, so it
+        // answers FALSE for a coverage_poi that is sitting right there with two
+        // million rows in it. That silently zeroed every coverage count on the
+        // region pages, which looked like the feature had never been built.
+        // to_regclass asks Postgres directly, returns NULL rather than raising
+        // (so it cannot poison the transaction), and is unaffected by any
+        // Doctrine configuration.
+        return $this->coverageTable ??= null !== $this->db->fetchOne("SELECT to_regclass('public.coverage_poi')");
     }
 
     /** @return array<string, mixed>|null */
