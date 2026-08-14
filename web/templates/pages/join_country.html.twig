@@ -19,7 +19,7 @@
   .field.check label{display:flex;align-items:center;gap:.5rem;font-family:var(--sans);font-size:.95rem;letter-spacing:normal;text-transform:none;color:var(--ink)}
   .hint{font-family:var(--sans);font-size:1rem;color:#6b6e5c;margin:.8rem 0 1.4rem;line-height:1.6}
   .hint a{color:var(--clay);text-decoration:underline;text-underline-offset:3px}
-  .form-error,.flash-error{background:rgba(181,83,46,.12);border-left:3px solid var(--clay);color:#6b3016;padding:.7rem 1rem;border-radius:0 5px 5px 0;font-size:.9rem;margin-bottom:1.4rem}
+  .form-error,.flash-error{background:rgba(179,38,30,.1);border-left:3px solid var(--danger);color:var(--danger-ink);padding:.7rem 1rem;border-radius:0 5px 5px 0;font-size:.9rem;margin-bottom:1.4rem}
   .flash-success{background:rgba(44,84,64,.12);border-left:3px solid var(--trail);color:#1f3a2c;padding:.7rem 1rem;border-radius:0 5px 5px 0;font-size:.9rem;margin-bottom:1.4rem}
 </style>
 {% endblock %}
@@ -76,7 +76,6 @@
     <p class="hint" style="margin-top:0">
       {{ 'join.message.received'|trans({'%scope%': asked ? asked.name : country.name}) }}
     </p>
-    <a class="btn btn-p" href="{{ path('map') }}">{% trans %}join.pending_cta{% endtrans %}</a>
   {% else %}
     <form method="post" data-form="curator-application">
       <input type="hidden" name="_token" value="{{ csrf_token('curator-application') }}">

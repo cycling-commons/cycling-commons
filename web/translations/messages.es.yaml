@@ -577,7 +577,6 @@ join:
   submit_request: 'Enviar'
   scope_label: '¿Qué curarías?'
   scope_whole_country: 'Todo el país'
-  pending_cta: 'Volver al mapa'
   pending_h: 'Tu solicitud está registrada'
   password_label: 'Confirma tu contraseña'
   password_hint: 'Has iniciado sesión desde una sesión guardada. Confirmar tu contraseña asegura que esta solicitud es realmente tuya.'

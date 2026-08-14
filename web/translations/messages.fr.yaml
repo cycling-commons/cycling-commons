@@ -576,7 +576,6 @@ join:
   submit_request: 'Envoyer'
   scope_label: 'Que souhaitez-vous curer ?'
   scope_whole_country: 'Le pays entier'
-  pending_cta: 'Retour à la carte'
   pending_h: 'Votre candidature est enregistrée'
   password_label: 'Confirmez votre mot de passe'
   password_hint: 'Vous êtes connecté depuis une session enregistrée. Confirmer votre mot de passe garantit que cette candidature vient bien de vous.'

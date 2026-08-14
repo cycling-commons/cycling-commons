@@ -576,7 +576,6 @@ join:
   submit_request: 'Versturen'
   scope_label: 'Wat zou je willen cureren?'
   scope_whole_country: 'Het hele land'
-  pending_cta: 'Terug naar de kaart'
   pending_h: 'Je aanmelding staat klaar'
   password_label: 'Bevestig je wachtwoord'
   password_hint: 'Je bent ingelogd vanuit een opgeslagen sessie. Met je wachtwoord bevestig je dat deze aanmelding echt van jou komt.'

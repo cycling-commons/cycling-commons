@@ -576,7 +576,6 @@ join:
   submit_request: 'Send'
   scope_label: 'What would you curate?'
   scope_whole_country: 'The whole country'
-  pending_cta: 'Back to the map'
   pending_h: 'Your application is in'
   password_label: 'Confirm your password'
   password_hint: 'You are signed in from a saved session. Confirming your password makes sure this application is really from you.'

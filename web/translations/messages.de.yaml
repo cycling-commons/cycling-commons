@@ -576,7 +576,6 @@ join:
   submit_request: 'Senden'
   scope_label: 'Was möchtest du kuratieren?'
   scope_whole_country: 'Das ganze Land'
-  pending_cta: 'Zurück zur Karte'
   pending_h: 'Deine Bewerbung ist da'
   password_label: 'Bestätige dein Passwort'
   password_hint: 'Du bist über eine gespeicherte Sitzung angemeldet. Mit deinem Passwort bestätigst du, dass diese Bewerbung wirklich von dir stammt.'

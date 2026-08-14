@@ -47,6 +47,13 @@
   .acct-dropdown a:hover,.acct-dropdown button:hover{background:rgba(20,22,14,.06)}
   .acct-sec{font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:#8a8674;padding:.5rem .7rem .25rem;pointer-events:none}
   .acct-sec:first-child{padding-top:.25rem}
+  /* The unread pill beside "Messages". map.css carries its own copy of the
+     shared account chip's rules, and this one was missing, so on /map alone the
+     count rendered as bare text welded to the label: "Messages5"
+     (owner-reported 2026-08-14). Kept identical to atlas.css. */
+  .acct-dropdown .acct-count{display:inline-flex;align-items:center;justify-content:center;min-width:1.2rem;height:1.2rem;
+    margin-left:.45rem;padding:0 .35rem;border-radius:999px;background:var(--trail);color:var(--ink);
+    font-family:var(--mono);font-size:.62rem;font-weight:700;line-height:1;vertical-align:middle}
   .acct-dropdown a.acct-sep{margin-top:.25rem;border-top:1px solid rgba(20,22,14,.1);padding-top:.6rem}
   .acct-dropdown form{margin:.25rem 0 0;padding-top:.25rem;border-top:1px solid rgba(20,22,14,.1)}
   .acct-dropdown form button{color:var(--clay)!important}

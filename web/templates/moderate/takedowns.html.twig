@@ -45,7 +45,7 @@
   .empty-queue .ic{font-size:1.6rem;color:var(--trail)}
   .empty-queue h3{font-family:var(--serif);font-size:1.3rem;margin:.5rem 0 .3rem;color:var(--ink)}
   .flash-success{background:rgba(46,125,50,.12);border:1px solid rgba(46,125,50,.4);color:#2c5440;border-radius:6px;padding:.8rem 1rem;margin-bottom:1.4rem;font-size:.9rem}
-  .flash-error{background:rgba(181,83,46,.12);border:1px solid rgba(181,83,46,.4);color:#6b3016;border-radius:6px;padding:.8rem 1rem;margin-bottom:1.4rem;font-size:.9rem}
+  .flash-error{background:rgba(179,38,30,.1);border:1px solid rgba(179,38,30,.45);color:var(--danger-ink);border-radius:6px;padding:.8rem 1rem;margin-bottom:1.4rem;font-size:.9rem}
 </style>
 {% endblock %}
 {% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate_takedowns', mod_scope_names: mod_scope_names is defined ? mod_scope_names : null, mod_submission_count: mod_submission_count is defined ? mod_submission_count : null, mod_route_count: mod_route_count is defined ? mod_route_count : null, mod_takedown_count: mod_takedown_count is defined ? mod_takedown_count : null} %}{% endblock %}
