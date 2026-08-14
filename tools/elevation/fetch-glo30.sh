@@ -42,7 +42,30 @@ case "${1:-}" in
   JAPAN)     BBOX="24,122,46,146" ;;
   USWEST)    BBOX="32,-125,43,-113" ;;   # California
   USROCKY)   BBOX="36,-110,42,-101" ;;   # Colorado
-  "")      echo "usage: $0 <BE|NL|LU|BENELUX|EUROPE|AUSTRALIA|JAPAN|USWEST|USROCKY|min_lat,min_lon,max_lat,max_lon> [out_dir]" >&2; exit 2 ;;
+  # The 2026-08-14 rollout. Same rule as above — the onboarded ground, not the
+  # continent — and the same reason: ~25 MB of .hgt per degree cell whether or
+  # not a climb is in it. NOTE which Valhalla instance each feeds
+  # (App\Elevation\ElevationEndpoints::BOXES): SLOVENIA is inside the `europe`
+  # box and so belongs to the DEFAULT instance, while the other five feed
+  # instances that are currently EMPTY and are not even listed in
+  # ELEVATION_URLS — until they are, a climb there resolves to the default,
+  # gets all-zeros back, and is honestly refused a profile by
+  # ElevationClient::MIN_NONZERO_SHARE.
+  SLOVENIA)  BBOX="45,13,47,17" ;;
+  RWANDA)    BBOX="-3,28,-1,31" ;;
+  # South Africa including Lesotho and Eswatini, which the Geofabrik extract
+  # bundles anyway; the Prince Edward Islands (46S) are deliberately out.
+  SOUTHAFRICA) BBOX="-35,16,-22,33" ;;
+  COLOMBIA)  BBOX="-5,-82,13,-66" ;;
+  # Mainland Chile only. Easter Island (27S 109W) is 3,500 km offshore and
+  # would cost a whole column of cells for one volcano.
+  CHILE)     BBOX="-56,-76,-17,-66" ;;
+  # Both main islands. The Chatham Islands (44S 176.5W) cross the antimeridian
+  # and need their own explicit bbox — the loop below counts up from LON0.
+  NEWZEALAND) BBOX="-48,166,-34,179" ;;
+  CANADAWEST) BBOX="48,-140,61,-113" ;;  # British Columbia
+  CANADAEAST) BBOX="44,-80,63,-56" ;;    # Québec
+  "")      echo "usage: $0 <BE|NL|LU|BENELUX|EUROPE|AUSTRALIA|JAPAN|USWEST|USROCKY|SLOVENIA|RWANDA|SOUTHAFRICA|COLOMBIA|CHILE|NEWZEALAND|CANADAWEST|CANADAEAST|min_lat,min_lon,max_lat,max_lon> [out_dir]" >&2; exit 2 ;;
   *)       BBOX="$1" ;;
 esac
 
