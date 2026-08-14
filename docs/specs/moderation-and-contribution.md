@@ -1562,6 +1562,19 @@ promised time on it. Three details that are easy to get wrong:
   application "to curate NL" had arrived: the wrong scope, and a database code
   rather than a place.
 
+**`?by=<user id>` filters both desks** - the open queue and the settled
+history - so "what has this person sent, and what of theirs is still waiting"
+is answerable from one link. The queue says when it is filtered and offers a
+way back to everyone; a desk silently showing four items when the real queue
+holds twenty-four would be worse than no filter at all.
+
+**Every history row names the item's TYPE.** The title alone hides what a row
+is about: "Schellinkhouterdijk" says nothing, while an unnamed item reads
+"Water & food" and was clear for free - so the type was visible only on the
+rows that did not need it. `SubmissionQueue::history()` resolves it from
+`submission.letter` via `ItemType::fromLetter()`, and the template omits it
+when it would merely repeat the title.
+
 **The desk links to the person's record.** The evidence line answers *how many*
 submissions they have had approved; `?by=<user id>` on `/moderate/history`
 answers *which ones*, which is the question a reviewer actually has in front of

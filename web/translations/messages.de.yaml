@@ -2519,6 +2519,8 @@ moderate:
     apply: 'Anwenden'
     search: 'Suchen'
     search_ph: 'Titel des Eintrags…'
+    by_user: 'Nur die Einreichungen einer Person.'
+    by_user_clear: 'Alle anzeigen'
   overview:
     showing: '%shown% von %total% ausstehend'
   msg:
@@ -3172,6 +3174,7 @@ admin:
     status_declined: 'Abgelehnt'
     status_withdrawn: 'Zurückgezogen'
     see_submissions: 'Ihre Einreichungen ansehen'
+    see_open: 'Noch offen'
     see_profile: 'Öffentliches Profil'
     approve: 'Genehmigen'
     decline: 'Ablehnen'

@@ -149,7 +149,11 @@
                the map just opened at the default scope with nothing selected.
                Only APPROVED rows link: a rejected item is not on the map, and a
                link that lands nowhere is worse than no link. #}
-            <span class="hist-title">{% if h.itemId and h.status == 'approved' %}<a href="{{ path('map') }}?item={{ h.itemId }}" target="_blank" rel="noopener">{{ h.title }}</a>{% else %}{{ h.title }}{% endif %}{% if h.status == 'trashed' and h.type %} <span class="hist-kind">{{ ('moderate.type.' ~ h.type)|trans }}</span>{% endif %}</span>
+            <span class="hist-title">{% if h.itemId and h.status == 'approved' %}<a href="{{ path('map') }}?item={{ h.itemId }}" target="_blank" rel="noopener">{{ h.title }}</a>{% else %}{{ h.title }}{% endif %}{% if h.status == 'trashed' and h.type %} <span class="hist-kind">{{ ('moderate.type.' ~ h.type)|trans }}</span>{% endif %}
+              {# The item's own kind. A custom title hides what a row is about;
+                 an unnamed one already reads as its type, so repeating it there
+                 would print "Water & food WATER & FOOD". #}
+              {% if h.typeLabel is defined and h.typeLabel and (h.typeLabel|trans) != h.title %}<span class="hist-kind">{{ h.typeLabel|trans }}</span>{% endif %}</span>
             {# A trashed row carries no title and no rider: the audit is
                content-free by design, so all there is to show is who did it. #}
             <span class="hist-meta">{{ h.who }}{% if h.decidedBy %}{% if h.who %} · {% endif %}{{ 'moderate.history.by'|trans({'%who%': h.decidedBy}) }}{% endif %}</span>

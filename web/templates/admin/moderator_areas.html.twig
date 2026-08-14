@@ -13,8 +13,15 @@
       <div class="col-md-6">
         <label class="form-label" for="areas-regions">{{ 'admin.areas.regions'|trans }}</label>
         <select class="form-select" id="areas-regions" name="regions[]" multiple size="10">
-          {% for r in regions %}
-            <option value="{{ r.id }}" {{ r.id in assignedRegions ? 'selected' }}>{{ r.name }} ({{ r.countryCode ?: '—' }})</option>
+          {# Grouped by country: a flat list of 271 regions is not a picker.
+             Rows are COLUMN ARRAYS now, not Region entities - hydrating those
+             pulled every polygon and killed the page (see the controller). #}
+          {% for cc, group in regions %}
+            <optgroup label="{{ cc ?: '—' }}">
+              {% for r in group %}
+                <option value="{{ r.id }}" {{ r.id in assignedRegions ? 'selected' }}>{{ r.name }}</option>
+              {% endfor %}
+            </optgroup>
           {% endfor %}
         </select>
       </div>

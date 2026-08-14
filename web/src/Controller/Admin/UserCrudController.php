@@ -284,10 +284,34 @@ final class UserCrudController extends AbstractCrudController
             );
         }
 
+        /* COLUMNS, not entities (fixed 2026-08-14 after this page started
+           500ing with "Allowed memory size of 134217728 bytes exhausted").
+
+           `findBy()` hydrates every Region, and a Region carries its `geom`
+           polygon: 271 rows hold 217 MB of geometry between them, so the page
+           blew the 128 MB limit building a <select> that needs three columns.
+           It was survivable at a dozen regions and became fatal with the
+           worldwide rollout - and this page is playbook step 7
+           (tools/divisions/README.md), so it sits on the path of onboarding
+           every new country.
+
+           Raising memory_limit would only move the wall further out; not
+           fetching the geometry removes it. Ordered by country then name so
+           the picker groups the way a reviewer reads it. */
+        $regionRows = $em->getConnection()->fetchAllAssociative(
+            'SELECT id, name, country_code FROM region ORDER BY country_code ASC, name ASC'
+        );
+        // Grouped here rather than in Twig: there is no core `group_by` filter,
+        // and the shape the picker wants is a controller concern anyway.
+        $regions = [];
+        foreach ($regionRows as $r) {
+            $regions[(string) $r['country_code']][] = $r;
+        }
+
         return $this->render('admin/moderator_areas.html.twig', [
             'target' => $target,
             'countries' => $em->getRepository(Country::class)->findBy([], ['name' => 'ASC']),
-            'regions' => $em->getRepository(Region::class)->findBy([], ['name' => 'ASC']),
+            'regions' => $regions,
             'assigned' => $em->getRepository(ModeratorArea::class)->findBy(['userId' => (int) $target->getId()]),
         ]);
     }

@@ -2516,6 +2516,8 @@ moderate:
     apply: 'Appliquer'
     search: 'Rechercher'
     search_ph: 'Titre de l''élément…'
+    by_user: 'Contributions d''une seule personne.'
+    by_user_clear: 'Afficher tout le monde'
   overview:
     showing: '%shown% sur %total% en attente'
   msg:
@@ -3169,6 +3171,7 @@ admin:
     status_declined: 'Refusée'
     status_withdrawn: 'Retirée'
     see_submissions: 'Voir leurs contributions'
+    see_open: 'Encore en attente'
     see_profile: 'Profil public'
     approve: 'Approuver'
     decline: 'Refuser'

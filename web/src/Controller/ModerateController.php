@@ -82,6 +82,7 @@ final class ModerateController extends AbstractController
             $request->query->getString('type'),
             q: $request->query->getString('q'),
             page: $request->query->getInt('page', 1),
+            byUser: $request->query->getInt('by') ?: null,
         );
     }
 
@@ -232,14 +233,15 @@ final class ModerateController extends AbstractController
         int $status = Response::HTTP_OK,
         string $q = '',
         int $page = 1,
+        ?int $byUser = null,
     ): Response {
         /** @var User $user */
         $user = $this->getUser();
         $scope = $this->scopeProvider->scopeFor($user);
         $page = max(1, $page);
         $perPage = $this->pageSize->resolve(SubmissionQueue::PER_PAGE);
-        $matching = $this->queue->countFiltered($scope, $country ?: null, $region ?: null, $type ?: null, $q ?: null);
-        $items = $this->queue->filtered($scope, $country ?: null, $region ?: null, $type ?: null, $q ?: null, $page, $perPage);
+        $matching = $this->queue->countFiltered($scope, $country ?: null, $region ?: null, $type ?: null, $q ?: null, $byUser);
+        $items = $this->queue->filtered($scope, $country ?: null, $region ?: null, $type ?: null, $q ?: null, $page, $perPage, $byUser);
 
         // No per-item decision forms here anymore: submissions are approved
         // ONLY from the map drawer (so a curator always sees the item in place
@@ -250,7 +252,7 @@ final class ModerateController extends AbstractController
             'nav_active' => 'moderate',
             'items' => $items,
             'total' => $this->queue->total($scope),
-            'filters' => ['country' => $country, 'region' => $region, 'type' => $type, 'q' => $q],
+            'filters' => ['country' => $country, 'region' => $region, 'type' => $type, 'q' => $q, 'by' => $byUser],
             'pager' => Pager::of($page, $matching, $perPage),
             'matching' => $matching,
             'countries' => $this->queue->countries($scope),

@@ -101,6 +101,9 @@
                            the disclosure for the same click. #}
                         {% if row.user %}
                             &middot; <a href="{{ path('moderate_history', {by: row.user.id}) }}" target="_blank" rel="noopener">{{ 'admin.curator.see_submissions'|trans }}</a>
+                            {# Both halves of the record: what was decided, and what
+                               of theirs is still waiting on a curator. #}
+                            &middot; <a href="{{ path('moderate', {by: row.user.id}) }}" target="_blank" rel="noopener">{{ 'admin.curator.see_open'|trans }}</a>
                             {% if row.user.publicProfile %}
                                 &middot; <a href="{{ path('rider_profile', {uuid: row.user.uuid}) }}" target="_blank" rel="noopener">{{ 'admin.curator.see_profile'|trans }}</a>
                             {% endif %}

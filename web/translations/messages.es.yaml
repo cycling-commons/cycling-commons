@@ -2552,6 +2552,8 @@ moderate:
     apply: 'Aplicar'
     search: 'Buscar'
     search_ph: 'Título del elemento…'
+    by_user: 'Solo las propuestas de una persona.'
+    by_user_clear: 'Mostrar a todos'
   overview:
     showing: 'mostrando %shown% de %total% pendientes'
   msg:
@@ -3210,6 +3212,7 @@ admin:
     status_declined: 'Rechazada'
     status_withdrawn: 'Retirada'
     see_submissions: 'Ver sus propuestas'
+    see_open: 'Aún pendientes'
     see_profile: 'Perfil público'
     approve: 'Aprobar'
     decline: 'Rechazar'

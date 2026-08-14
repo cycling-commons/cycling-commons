@@ -2539,6 +2539,8 @@ moderate:
     apply: 'Apply'
     search: 'Search'
     search_ph: 'Item title…'
+    by_user: 'Showing one contributor''s submissions only.'
+    by_user_clear: 'Show everyone'
   overview:
     showing: 'showing %shown% of %total% pending'
   msg:
@@ -3195,6 +3197,7 @@ admin:
     status_declined: 'Declined'
     status_withdrawn: 'Withdrawn'
     see_submissions: 'See their submissions'
+    see_open: 'Still waiting'
     see_profile: 'Public profile'
     approve: 'Approve'
     decline: 'Decline'

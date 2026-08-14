@@ -76,9 +76,24 @@
     <label class="mod-search">{{ 'moderate.filter.search'|trans }}
       <input type="search" name="q" value="{{ filters.q }}" placeholder="{{ 'moderate.filter.search_ph'|trans }}">
     </label>
+    {# ?by=<id> survives the filter form, so narrowing by country does not
+       silently widen the desk back to everybody. #}
+    {% if filters.by %}<input type="hidden" name="by" value="{{ filters.by }}">{% endif %}
     <noscript><button type="submit" class="btn-act btn-needs-info">{{ 'moderate.filter.apply'|trans }}</button></noscript>
     <button type="submit" class="btn-act btn-secondary mod-go">{{ 'moderate.filter.apply'|trans }}</button>
   </form>
+
+  {# A queue showing one person's work has to SAY so. Without this the desk
+     looks like the whole queue and a curator would reasonably conclude there
+     were four things left to do (owner-linked from the applications desk). #}
+  {% if filters.by %}
+    <p class="mod-byuser" role="status">
+      {{ 'moderate.filter.by_user'|trans }}
+      <a href="{{ path('moderate', filters.country or filters.region or filters.type or filters.q
+        ? {country: filters.country, region: filters.region, type: filters.type, q: filters.q}
+        : {}) }}">{{ 'moderate.filter.by_user_clear'|trans }}</a>
+    </p>
+  {% endif %}
 
   {# Density switch: cards (full review context) ↔ list (one line per
      submission, for a triage pass). Rendered only when there is a queue to

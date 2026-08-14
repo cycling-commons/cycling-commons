@@ -2516,6 +2516,8 @@ moderate:
     apply: 'Toepassen'
     search: 'Zoeken'
     search_ph: 'Titel van het item…'
+    by_user: 'Alleen de inzendingen van één bijdrager.'
+    by_user_clear: 'Toon iedereen'
   overview:
     showing: '%shown% van %total% in behandeling'
   msg:
@@ -3169,6 +3171,7 @@ admin:
     status_declined: 'Afgewezen'
     status_withdrawn: 'Ingetrokken'
     see_submissions: 'Bekijk hun inzendingen'
+    see_open: 'Nog open'
     see_profile: 'Openbaar profiel'
     approve: 'Goedkeuren'
     decline: 'Afwijzen'

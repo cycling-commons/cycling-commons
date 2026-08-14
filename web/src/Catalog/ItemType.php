@@ -78,6 +78,23 @@ enum ItemType: string
         return self::BikeServices;
     }
 
+    /**
+     * The type a catalog letter belongs to, or null for a letter nothing uses.
+     *
+     * The inverse of {@see letter()}. Written because three call sites had each
+     * open-coded the same `foreach (self::cases())` walk to answer it.
+     */
+    public static function fromLetter(string $letter): ?self
+    {
+        foreach (self::cases() as $case) {
+            if ($case->letter() === $letter) {
+                return $case;
+            }
+        }
+
+        return null;
+    }
+
     /** The monotonic catalog letter A–K. */
     public function letter(): string
     {

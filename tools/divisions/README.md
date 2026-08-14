@@ -10,7 +10,7 @@ Every onboarding run seeds **levels 2 + 4 by default**: the Overture
 "Operational vs infrastructure rows" below for why the L2 row exists and
 where it must never appear.
 
-## Onboarding a country or state (the playbook)
+## Onboarding a country or state (the onboarding playbook)
 
 One fixed sequence for every country/state. ⚑ marks a human judgment.
 

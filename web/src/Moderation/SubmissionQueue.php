@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Moderation;
 
+use App\Catalog\ItemType;
 use App\Catalog\RiderPseudonym;
 use App\Contribution\ChangeValue;
 use App\Media\MediaStorage;
@@ -44,17 +45,17 @@ final class SubmissionQueue
     }
 
     /** @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,when:string,body:string,was:string,now:string,status:string,asked:?string,riderReply:?string,priorRejection:?array{when:string,note:?string},photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>}> */
-    public function filtered(ModerationScope $scope, ?string $country, ?string $region, ?string $type, ?string $q = null, int $page = 1, int $perPage = self::PER_PAGE): array
+    public function filtered(ModerationScope $scope, ?string $country, ?string $region, ?string $type, ?string $q = null, int $page = 1, int $perPage = self::PER_PAGE, ?int $byUser = null): array
     {
-        [$where, $params] = $this->openFilters($country, $region, $type, $q);
+        [$where, $params] = $this->openFilters($country, $region, $type, $q, $byUser);
 
         return $this->rows($scope, implode(' AND ', $where), $params, $perPage, self::offset($page, $perPage));
     }
 
     /** How many open submissions match, for the pager. */
-    public function countFiltered(ModerationScope $scope, ?string $country, ?string $region, ?string $type, ?string $q = null): int
+    public function countFiltered(ModerationScope $scope, ?string $country, ?string $region, ?string $type, ?string $q = null, ?int $byUser = null): int
     {
-        [$where, $params] = $this->openFilters($country, $region, $type, $q);
+        [$where, $params] = $this->openFilters($country, $region, $type, $q, $byUser);
         $frag = $scope->sqlFragment('s');
         if ('' !== $frag['sql']) {
             $where[] = $frag['sql'];
@@ -74,7 +75,7 @@ final class SubmissionQueue
      *
      * @return array{0: list<string>, 1: array<string, mixed>}
      */
-    private function openFilters(?string $country, ?string $region, ?string $type, ?string $q): array
+    private function openFilters(?string $country, ?string $region, ?string $type, ?string $q, ?int $byUser = null): array
     {
         // s.escalated_at IS NULL: a submission under legal hold leaves the
         // desk entirely (docs/specs/photo-uploads.md §6d) — it is an admin's
@@ -99,6 +100,14 @@ final class SubmissionQueue
             // in the BOUND VALUE, never concatenated into the SQL.
             $where[] = 's.title ILIKE :q';
             $params['q'] = '%'.str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], trim($q)).'%';
+        }
+        /* One person's open work, the same filter the settled history takes.
+           A reviewer who has just read somebody's record usually wants the
+           other half of it: what of theirs is still waiting. By id, never by
+           display name. */
+        if (null !== $byUser) {
+            $where[] = 's.user_id = :byUser';
+            $params['byUser'] = $byUser;
         }
 
         return [$where, $params];
@@ -188,7 +197,7 @@ final class SubmissionQueue
         $params['off'] = self::offset($page, $perPage);
 
         $rows = $this->db->fetchAllAssociative(
-            'SELECT s.id, s.item_id, s.title, s.type, s.status, s.user_id, s.decided_at, s.decision_note,
+            'SELECT s.id, s.item_id, s.title, s.type, s.letter, s.status, s.user_id, s.decided_at, s.decision_note,
                     s.changes, u.display_name AS decided_by_name,
                     su.public_profile, su.display_name, su.uuid AS user_uuid,
                     rr.body_text AS rider_reply
@@ -234,6 +243,14 @@ final class SubmissionQueue
                 'itemId' => null !== $r['item_id'] ? (int) $r['item_id'] : null,
                 'title' => (string) $r['title'],
                 'type' => (string) $r['type'],
+                /* WHAT KIND of place this is, beside the title. A row reading
+                   "Schellinkhouterdijk" says nothing about what was proposed,
+                   while an unnamed one reads "Water & food" and is instantly
+                   clear - so the type showed up only on the rows that did not
+                   need it (owner 2026-08-14). Resolved from the letter here,
+                   where the enum lives, rather than mapped again in Twig.
+                   Null for a letter no type claims, and the template omits it. */
+                'typeLabel' => ItemType::fromLetter((string) $r['letter'])?->labelKey(),
                 'was' => $was,
                 'now' => $new,
                 'photos' => $photosBySubmission[(int) $r['id']] ?? [],
