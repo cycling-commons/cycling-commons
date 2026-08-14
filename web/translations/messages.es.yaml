@@ -3428,6 +3428,7 @@ moderate_regions:
   block_met: 'este bloque llega a sus %n%'
   need_total: 'faltan %n% elecciones curadas'
   need_blocks: 'a %n% bloque(s) más les faltan al menos %per_block%'
+  country_tally: '%ready% de %total% listas'
   opens_curated: 'Abre en Lo mejor'
   flash_not_confirmed: 'Esa región tiene muy pocos sitios confirmados para abrir en Confirmado.'
   flash_mode_everything: 'Esta región ahora abre en Todo.'

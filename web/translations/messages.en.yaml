@@ -3413,6 +3413,7 @@ moderate_regions:
   block_met: 'this block carries its %n%'
   need_total: '%n% more curated picks needed'
   need_blocks: '%n% more block(s) need at least %per_block%'
+  country_tally: '%ready% of %total% ready'
   opens_curated: 'Opens in Best of'
   flash_not_confirmed: 'That region has too few confirmed places to open in Confirmed.'
   flash_mode_everything: 'This region now opens in Everything.'

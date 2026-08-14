@@ -26,8 +26,29 @@
   .rg-continent{font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;
     color:#8a8d7d;margin:1.9rem 0 .1rem;padding-bottom:.35rem;border-bottom:1px solid rgba(20,22,14,.14)}
   .rg-list > .rg-continent:first-child{margin-top:0}
-  .rg-country{font-family:var(--serif);font-size:.95rem;font-weight:600;color:var(--ink);
-    margin:.9rem 0 .1rem;display:flex;align-items:center;gap:.45rem}
+  /* The country is the click target, so it has to look like one: a full-width
+     row with a hover state and a marker that turns. Sized to be comfortably
+     tappable (44px) — this is a list a curator works down. */
+  .rg-country > summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:.5rem;
+    min-height:44px;padding:.35rem .55rem;border-radius:7px;
+    font-family:var(--serif);font-size:.95rem;font-weight:600;color:var(--ink)}
+  .rg-country > summary::-webkit-details-marker{display:none}
+  .rg-country > summary::marker{content:''}
+  .rg-country > summary:hover{background:rgba(20,22,14,.05)}
+  .rg-country > summary:focus-visible{outline:2px solid var(--trail);outline-offset:2px}
+  /* The disclosure triangle, drawn rather than inherited so it can rotate. */
+  .rg-country > summary::before{content:'\25B8';font-size:.7rem;color:#8a8d7d;
+    transition:transform .12s ease;flex:0 0 auto}
+  .rg-country[open] > summary::before{transform:rotate(90deg)}
+  .rg-flag{border-radius:2px;box-shadow:0 0 0 1px rgba(0,0,0,.08);flex:0 0 auto}
+  .rg-country-name{flex:0 1 auto;min-width:0}
+  /* Pushed right: it is the answer to "anything to do here", not a title. */
+  .rg-tally{margin-left:auto;font-family:var(--mono);font-size:.62rem;letter-spacing:.04em;color:#595c4d}
+  .rg-country[open] > summary{margin-bottom:.5rem}
+  /* The cards indent under their country so the grouping survives scrolling
+     past the heading. */
+  .rg-country > .rg-item{margin-left:1.15rem}
+  .rg-country > .rg-item + .rg-item{margin-top:.7rem}
   .rg-meter{margin-top:.45rem;display:flex;align-items:center;gap:.6rem}
   .rg-bar{flex:0 0 140px;height:6px;border-radius:3px;background:rgba(28,58,42,.16);overflow:hidden}
   .rg-bar i{display:block;height:100%;background:var(--spruce);border-radius:3px}
@@ -108,24 +129,26 @@
       <p>{{ 'moderate_regions.empty_body'|trans }}</p>
     </div>
   {% else %}
-  {# Grouped continent → country → region (owner, 2026-08-14). The rows arrive
-     from the controller already in that order, so the headers are emitted on
-     CHANGE rather than by nesting loops — which means a group split across two
-     pages still opens with its own heading on the second page instead of a
-     column of orphaned regions under nothing. #}
+  {# Grouped continent → country → region, each country collapsible (owner,
+     2026-08-14). Native <details>, so it works with no JS and under the CSP —
+     the same affordance the moderation desk's action panels already use.
+     Closed by default: 19 countries of regions is several screens before a
+     curator reaches anything. The summary carries the counts so a shut group
+     still answers "is there anything to do here". #}
   <div class="rg-list">
-    {% set prev_continent = null %}
-    {% set prev_country = null %}
-    {% for r in regions %}
-      {% if r.continent != prev_continent %}
-        <h2 class="rg-continent">{{ r.continent ?: '—' }}</h2>
-        {% set prev_continent = r.continent %}
-        {% set prev_country = null %}
-      {% endif %}
-      {% if r.countryName != prev_country %}
-        <h3 class="rg-country">{{ r.countryName }} <span class="rg-cc">{{ r.countryCode }}</span></h3>
-        {% set prev_country = r.countryName %}
-      {% endif %}
+    {% for cont in continents %}
+      <h2 class="rg-continent">{{ cont.name ?: '—' }}</h2>
+      {% for c in cont.countries %}
+        <details class="rg-country"{{ c.open ? ' open' }}>
+          <summary>
+            {% if c.flag %}<img class="rg-flag" src="{{ asset(c.flag) }}" alt="" width="20" height="15" loading="lazy">{% endif %}
+            <span class="rg-country-name">{{ c.name }}</span>
+            <span class="rg-cc">{{ c.code }}</span>
+            {# What a closed group still has to tell you: how many regions, and
+               how many already clear the curated gate. #}
+            <span class="rg-tally">{{ 'moderate_regions.country_tally'|trans({'%ready%': c.ready, '%total%': c.total}) }}</span>
+          </summary>
+          {% for r in c.regions %}
       <div class="rg-item">
         <div class="rg-body">
           {# No country badge here any more: the country heading directly above
@@ -166,8 +189,13 @@
            stays visible with its own reason under it: a curator working a young
            region should be able to see what it is short of, not just that they
            cannot press anything (owner 2026-08-12). #}
+        {# Same order as the MAP's own view-mode toggle (map/index.html.twig:
+           curated · confirmed · all), so a curator setting a region's default
+           is choosing from the rungs in the order they will meet them on the
+           map. They read narrowest-first, which is also the order the readiness
+           gates unlock in. #}
         <div class="rg-act rg-modes">
-          {% for m in ['everything', 'confirmed', 'curated'] %}
+          {% for m in ['curated', 'confirmed', 'everything'] %}
             {% set allowed = m == 'everything' or (m == 'confirmed' ? r.canConfirmed : r.canCurated) %}
             {% if m == r.defaultMode %}
               <span class="rg-mode rg-mode--is">{{ ('moderate_regions.mode_' ~ m)|trans }}</span>
@@ -189,6 +217,9 @@
           {% endfor %}
         </div>
       </div>
+          {% endfor %}
+        </details>
+      {% endfor %}
     {% endfor %}
   </div>
   {% include 'partials/_pager.html.twig' with {pager: pager, route: 'moderate_regions', params: pager_params} %}

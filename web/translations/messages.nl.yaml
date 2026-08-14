@@ -3387,6 +3387,7 @@ moderate_regions:
   block_met: 'dit blok haalt zijn %n%'
   need_total: 'nog %n% samengestelde plekken nodig'
   need_blocks: 'nog %n% blok(ken) moeten minstens %per_block% halen'
+  country_tally: '%ready% van %total% klaar'
   opens_curated: 'Opent in Best-of'
   flash_not_confirmed: 'Die regio heeft te weinig bevestigde plekken om in Bevestigd te openen.'
   flash_mode_everything: 'Deze regio opent nu in Alles.'

@@ -3387,6 +3387,7 @@ moderate_regions:
   block_met: 'ce bloc atteint ses %n%'
   need_total: '%n% choix curatés supplémentaires nécessaires'
   need_blocks: '%n% bloc(s) de plus doivent atteindre %per_block%'
+  country_tally: '%ready% sur %total% prêtes'
   opens_curated: 'Ouvre en Best-of'
   flash_not_confirmed: 'Cette région a trop peu de lieux confirmés pour ouvrir en Confirmé.'
   flash_mode_everything: 'Cette région ouvre maintenant en Tout.'

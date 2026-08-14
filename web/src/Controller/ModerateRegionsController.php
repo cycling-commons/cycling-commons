@@ -126,6 +126,7 @@ final class ModerateRegionsController extends AbstractController
                 // the template renders; the rows arrive already in that order.
                 'continent' => $r['continent'],
                 'countryName' => $r['countryName'],
+                'flag' => $r['flag'],
                 'label' => $translator->trans('region.'.$r['slug'].'.label'),
                 'defaultMode' => $r['defaultMode'],
                 'confirmed' => $confirmedCounts[$r['id']] ?? 0,
@@ -146,11 +147,47 @@ final class ModerateRegionsController extends AbstractController
             ];
         }, $rows);
 
+        /* Continent → country → regions, as a real nested structure rather than
+           change-detection in the template: each country is a collapsible
+           <details>, and a <details> cannot be opened and closed across
+           iterations of a flat loop without emitting unbalanced tags.
+
+           Collapsed by default, because 19 countries of regions is several
+           screens of vertical scroll before a curator finds anything (owner,
+           2026-08-14). Two exceptions, both cases where a shut group would
+           leave the page looking empty: a country the filter has narrowed to,
+           and the only country on the page. The summary carries the counts, so
+           a closed group still answers "is there anything to do here". */
+        $groups = [];
+        foreach ($regions as $r) {
+            $groups[$r['continent']][$r['countryCode']]['name'] = $r['countryName'];
+            $groups[$r['continent']][$r['countryCode']]['flag'] = $r['flag'];
+            $groups[$r['continent']][$r['countryCode']]['regions'][] = $r;
+        }
+        $continents = [];
+        foreach ($groups as $continentName => $byCountry) {
+            $countryList = [];
+            foreach ($byCountry as $cc => $g) {
+                $ready = \count(array_filter($g['regions'], static fn (array $x): bool => (bool) $x['ready']));
+                $countryList[] = [
+                    'code' => $cc,
+                    'name' => $g['name'],
+                    'flag' => $g['flag'],
+                    'regions' => $g['regions'],
+                    'total' => \count($g['regions']),
+                    'ready' => $ready,
+                    'open' => '' !== $country || 1 === \count($byCountry) && 1 === \count($groups),
+                ];
+            }
+            $continents[] = ['name' => $continentName, 'countries' => $countryList];
+        }
+
         return $this->render('moderate_regions/index.html.twig', [
             'page_title' => 'moderate_regions.title',
             'page_description' => 'moderate_regions.lead',
             'nav_active' => 'moderate',
             'regions' => $regions,
+            'continents' => $continents,
             'countries' => $countries,
             'country' => $country,
             'threshold' => $threshold,
@@ -207,7 +244,7 @@ final class ModerateRegionsController extends AbstractController
     /**
      * The regions this curator may act on, in the registry's own order.
      *
-     * @return list<array{id: int, slug: string, countryCode: string, defaultMode: string, continent: string, countryName: string}>
+     * @return list<array{id: int, slug: string, countryCode: string, defaultMode: string, continent: string, countryName: string, flag: ?string}>
      */
     private function visibleRegions(User $user): array
     {
@@ -220,7 +257,8 @@ final class ModerateRegionsController extends AbstractController
            the ORDER BY has to be the final display order. */
         $sql = "SELECT r.id, r.slug, r.country_code AS cc, r.default_map_mode,
                        COALESCE(cont.name, '') AS continent,
-                       COALESCE(wc.name, r.country_code) AS country_name
+                       COALESCE(wc.name, r.country_code) AS country_name,
+                       wc.iso2 AS world_iso2
                   FROM region r
              LEFT JOIN world_country wc ON wc.iso2 = r.country_code
              LEFT JOIN world_continent cont ON cont.id = wc.continent_id
@@ -257,7 +295,7 @@ final class ModerateRegionsController extends AbstractController
            an unmatched country lands at the end, not above Africa. */
         $sql .= " ORDER BY NULLIF(cont.name, '') NULLS LAST, country_name, r.area_km2 DESC, r.slug";
 
-        /** @var list<array{id: int|string, slug: string, cc: string, default_map_mode: string, continent: string, country_name: string}> $rows */
+        /** @var list<array{id: int|string, slug: string, cc: string, default_map_mode: string, continent: string, country_name: string, world_iso2: ?string}> $rows */
         $rows = $this->db->fetchAllAssociative($sql, $params, $types);
 
         return array_map(static fn (array $r): array => [
@@ -267,6 +305,12 @@ final class ModerateRegionsController extends AbstractController
             'defaultMode' => (string) $r['default_map_mode'],
             'continent' => (string) $r['continent'],
             'countryName' => (string) $r['country_name'],
+            // Only when the World bundle actually matched: a code with no
+            // country row has no flag file either, and a broken image on a
+            // moderation surface is worse than no flag.
+            'flag' => null !== $r['world_iso2']
+                ? 'flags/'.strtolower((string) $r['world_iso2']).'.svg'
+                : null,
         ], $rows);
     }
 }
