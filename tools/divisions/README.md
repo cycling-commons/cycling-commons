@@ -60,6 +60,64 @@ country onboards later, demand-driven.
 | 2026-08-06 | FR / CH / GB / IT / AU / JP | régions / cantons / nations / regioni / states / prefectures | 13 / 26 / 4 / 20 / 8 / 47 | |
 | 2026-08-06 | US | L4, `--only` | 2 | California + Colorado; first state-level run |
 | 2026-08-08 | **ES** | L4 comunidades autónomas | **19** | ISO 3166-2:ES exactly |
+| 2026-08-14 | **SI** | **L2 country** | **1** | second country to operate at L2 — see below |
+| 2026-08-14 | RW | L4 provinces | 5 | native Kinyarwanda slugs — see below |
+| 2026-08-14 | ZA | L4 provinces | 9 | extract bundles Lesotho + Eswatini |
+| 2026-08-14 | CO | L4 departamentos + D.C. | 33 | three slugs suffixed `-co` |
+| 2026-08-14 | CL | L4 regiones | 16 | three official long forms shortened |
+| 2026-08-14 | NZ | L4 regions | 17 | straddles the antimeridian |
+| 2026-08-14 | CA | L4, `--only` | 2 | British Columbia + Québec |
+
+**The 2026-08-14 rollout (7 countries, 83 operating rows, three new
+continents).** Five judgment calls worth not re-deriving:
+
+**Slovenia is the second country to operate at L2**, and only the second after
+Luxembourg. Its ISO 3166-2 level is 212 občine of 7–555 km² (probe:
+`web/var/scaffold/si/areas.md`) with no intermediate level carrying ISO
+identity — the 12 statistical regions are NUTS-3, not administrative. Slovenia
+itself is **20,274 km², inside the advisory band**, so the country is a region
+of exactly the right size. Synthetic macro-regions were the alternative and
+this README reserves those for when no official level fits; here one does.
+
+**Rwanda takes NATIVE Kinyarwanda slugs** (`iburasirazuba`, `amajyaruguru`,
+`iburengerazuba`, `amajyepfo`) against the usual established-English-exonym
+preference, because Rwanda's English names are *Eastern*, *Northern*,
+*Western* and *Southern* — words belonging to no country in particular. A slug
+is permanent GLOBAL identity, so `eastern` would need a suffix the first time
+any other country onboards a compass-named division. `kigali` is the exception
+in the other direction: the city's name is the same in every language.
+
+**Colombia suffixes three slugs for collisions with countries nobody has
+onboarded** — `amazonas-co` (Brazil, Peru and Venezuela all have one),
+`cordoba-co` (Argentina) and `bolivar-co` (Venezuela). This follows
+`la-rioja-es`, which was suffixed for Argentina's La Rioja while AR was, and
+still is, unonboarded: a slug cannot change later without orphaning its row,
+so the collision is answered when it is seen rather than when it bites.
+
+**Chile and New Zealand needed the review step for exactly what it is for.**
+The scaffolder emitted `aisen-del-general-carlos-ibanez-del-campo`,
+`libertador-general-bernardo-o-higgins` and `region-metropolitana-de-santiago`
+— official long forms nobody says — now `aysen`, `o-higgins` and
+`region-metropolitana`. New Zealand's `hawke-s-bay` was an apostrophe
+artifact, not a name, and `greater-wellington` is the regional COUNCIL;
+ISO NZ-WGN is Wellington.
+
+**New Zealand's bbox is 355° wide on purpose.** The Chatham Islands sit at
+~176.5°W while the mainland ends at 178.7°E, so the country straddles the
+antimeridian and no honest `[xmin…xmax]` box is narrow. A mainland-only box
+reads faster and silently drops NZ-CIT, leaving a hole in the country's
+tessellation. It is a read predicate for the Overture export only — it costs
+one slower scan at onboarding time and never touches coverage ownership.
+
+**Morocco was the first choice for Africa and was swapped for Rwanda.**
+Overture returns 12 ISO-coded régions plus an **uncoded** Western Sahara
+polygon (268,025 km²), and two of the 12 — Laâyoune-Sakia El Hamra and
+Dakhla-Oued Ed-Dahab — lie inside that territory. The importer requires an ISO
+code, so the uncoded row would have dropped automatically by the
+`Plazas de Soberanía` precedent, which has the effect of publishing one side
+of a territorial dispute on a public map without anyone deciding to. That is
+an owner decision, not a default; it was asked and answered by choosing a
+country with no such question (owner, 2026-08-14).
 
 **Spain (2026-08-08).** The 17 comunidades autónomas plus Ceuta and Melilla.
 `Plazas de Soberanía` is deliberately not seeded — 1 km², no ISO 3166-2 code, so

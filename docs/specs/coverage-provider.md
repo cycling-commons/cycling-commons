@@ -52,7 +52,13 @@ Invariants:
   read time and deduped by ref (coverage-provider.md §5).
 - **Regions are independent.** Each Geofabrik region (`COVERAGE_REGIONS`, comma-
   separated, e.g. `europe/belgium,europe/netherlands`) refreshes as a whole on its
-  own run; regions can stagger across the week. *Border caveat:* Geofabrik
+  own run; regions can stagger across the week. **Every onboarded country must
+  appear in that list**, and a country can be onboarded without appearing in it:
+  Spain was added to `COUNTRY_BY_REGION` on 2026-08-08 and not to
+  `COVERAGE_REGIONS`, so from then until 2026-08-14 nothing following the
+  committed config ever refreshed its 234,958 POIs. The two lists are the same
+  fact written twice and drift silently — `COUNTRY_BY_REGION` hard-fails on an
+  unknown region, but neither errors on a *missing* one. *Border caveat:* Geofabrik
   extracts overlap in a border buffer, so one OSM entity can arrive staged in
   two adjacent extracts with the same `(ref, letter)`. Ownership is decided at
   staging, by geometry, not by write order: each staged row is
@@ -371,7 +377,8 @@ prod runs it as a scheduled job on the worker server (topology owned by
 [dev-environment.md §9](dev-environment.md)). Runbook:
 `developers/coverage-batch.md`. Pipeline env contract (set in
 `developers/docker/compose.yaml` / `.env.example`): `COVERAGE_REGIONS`
-(default `europe/belgium,europe/netherlands,europe/germany`), `COVERAGE_WORKDIR` (`/data/work`, named scratch
+(the committed default names **every onboarded country's Geofabrik extract**,
+21 of them as of 2026-08-14), `COVERAGE_WORKDIR` (`/data/work`, named scratch
 volume), `COVERAGE_PBF_PATH` (optional local override), `COVERAGE_S3_ENDPOINT`,
 `COVERAGE_S3_BUCKET` (`cc-maps`), `COVERAGE_S3_KEY`, `COVERAGE_S3_SECRET`,
 `COVERAGE_S3_REGION` (signing only, default `us-east-1`),
