@@ -25,6 +25,12 @@ enum UserMessageKind: string
     case RouteRetired = 'route_retired';
     case CorrectionDone = 'correction_done';
     case CorrectionDismissed = 'correction_dismissed';
+    /* An automatic receipt, not a person writing: sent the moment a curator
+       application arrives, so the wait for a human decision does not start in
+       silence. Its own kind rather than CuratorMessage because the subject
+       line is derived from the kind, and "Message from a curator" is not what
+       this is (owner 2026-08-14). */
+    case CuratorApplicationReceived = 'curator_app_received';
     case CuratorMessage = 'curator_message';
     case RiderReply = 'rider_reply';
     /** Outcomes of a photo takedown request (docs/specs/photo-uploads.md §6b). */

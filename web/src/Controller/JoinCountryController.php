@@ -232,6 +232,14 @@ final class JoinCountryController extends AbstractController
             // Only a remembered session is asked to confirm; a fully
             // authenticated one never sees the field.
             'needs_reauth' => $onboarded && !$this->isGranted('IS_AUTHENTICATED_FULLY'),
+            /* An application already with the curators replaces the form
+               (owner 2026-08-14: "hide the application form once successfully
+               submitted"). Read fresh on every render rather than keyed off
+               the success flash, so it also answers the rider who comes back
+               tomorrow: the service refuses a second pending application
+               anyway, and handing somebody an empty form that cannot be sent
+               is a worse answer than telling them theirs is already in. */
+            'pending_app' => $onboarded ? $applications->pendingApplication((int) $user->getId(), $code) : null,
             // What they typed, so a rejected submit costs the retry and
             // nothing else. Never the password.
             'sent' => $request->isMethod('POST') ? [

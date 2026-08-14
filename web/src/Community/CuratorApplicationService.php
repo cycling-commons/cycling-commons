@@ -126,6 +126,27 @@ final class CuratorApplicationService
             throw new CuratorApplicationException('already_pending', 'You already have an application pending for this country.');
         }
 
+        /* Acknowledge the sending, not just the deciding (owner-reported
+           2026-08-14: "I do not see any mail about my successful application").
+
+           Approve and decline have always notified; submitting told the rider
+           nothing beyond a flash they lose on the next click. That is the wrong
+           silence: a volunteer has just handed over their name and their
+           reasons, and review is a human step with no promised time on it, so
+           the gap between sending and hearing back is exactly the stretch where
+           a person wonders whether it arrived at all.
+
+           Same rails as the decisions, so it is one record and one wording: a
+           dashboard message row, which MessageMailer then delivers to their
+           inbox with a link back to it (moderation-and-contribution.md §7.8). */
+        $this->notify($app, 'join.message.received', UserMessageKind::CuratorApplicationReceived);
+        // Flushed explicitly. The decision paths get this for free from their
+        // wrapInTransaction (which flushes on commit); here the application's
+        // own flush has already happened above, so without this the message is
+        // persisted and never written, the row never reaches the dashboard and
+        // MessageMailer has nothing to deliver.
+        $this->em->flush();
+
         return $app;
     }
 
@@ -319,20 +340,46 @@ final class CuratorApplicationService
         return ['total' => (int) ($row['total'] ?? 0), 'approved' => (int) ($row['approved'] ?? 0)];
     }
 
-    private function notify(CuratorApplication $app, string $bodyKey): void
+    private function notify(CuratorApplication $app, string $bodyKey, UserMessageKind $kind = UserMessageKind::CuratorMessage): void
     {
         $this->messages->sendSystem(
             $app->getUserId(),
-            UserMessageKind::CuratorMessage,
+            $kind,
             // 'curator_application' does not fit user_message.channel's
             // varchar(12); this is the abbreviation that does.
             'curator_app',
             (int) $app->getId(),
             $app->getCountryCode(),
             $bodyKey,
-            ['%country%' => $app->getCountryCode()],
+            ['%scope%' => $this->scopeLabel($app)],
             $app->getDecisionNote(),
         );
+    }
+
+    /**
+     * What the applicant actually asked to look after, in words.
+     *
+     * The message used to interpolate `$app->getCountryCode()`, so a rider who
+     * volunteered for North Holland was told their application "to curate NL"
+     * had arrived (owner-reported 2026-08-14): the wrong scope AND a database
+     * code rather than a place. The requested region wins when there is one,
+     * because that is what they asked for; the country's name is the answer
+     * when they applied country-wide, and the bare code survives only as the
+     * last resort for a country row that has gone missing.
+     */
+    private function scopeLabel(CuratorApplication $app): string
+    {
+        $regionId = $app->getRequestedRegionId();
+        if (null !== $regionId) {
+            $name = $this->db->fetchOne('SELECT name FROM region WHERE id = ?', [$regionId]);
+            if (false !== $name) {
+                return (string) $name;
+            }
+        }
+
+        $name = $this->db->fetchOne('SELECT name FROM world_country WHERE iso2 = ?', [$app->getCountryCode()]);
+
+        return false !== $name ? (string) $name : $app->getCountryCode();
     }
 
     private function countryIsOnboarded(string $cc): bool
@@ -356,9 +403,38 @@ final class CuratorApplicationService
 
     private function hasPending(int $userId, string $cc): bool
     {
-        return false !== $this->db->fetchOne(
-            "SELECT 1 FROM curator_application WHERE user_id = ? AND country_code = ? AND status = 'pending' LIMIT 1",
+        return null !== $this->pendingApplication($userId, $cc);
+    }
+
+    /**
+     * The rider's own pending application for this country, if any.
+     *
+     * Public because the join page asks it before rendering: somebody who has
+     * already applied should read what they sent and when, not be handed the
+     * same empty form again (owner 2026-08-14). It answers the same question
+     * hasPending() does, and returns the row so the page can say which scope
+     * they asked for.
+     *
+     * @return array{id: int, requested_region_id: ?int, created_at: string}|null
+     */
+    public function pendingApplication(int $userId, string $cc): ?array
+    {
+        $row = $this->db->fetchAssociative(
+            "SELECT id, requested_region_id, created_at
+               FROM curator_application
+              WHERE user_id = ? AND country_code = ? AND status = 'pending'
+              LIMIT 1",
             [$userId, $cc],
         );
+
+        if (false === $row) {
+            return null;
+        }
+
+        return [
+            'id' => (int) $row['id'],
+            'requested_region_id' => null === $row['requested_region_id'] ? null : (int) $row['requested_region_id'],
+            'created_at' => (string) $row['created_at'],
+        ];
     }
 }

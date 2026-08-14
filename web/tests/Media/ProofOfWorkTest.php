@@ -24,10 +24,23 @@ final class ProofOfWorkTest extends KernelTestCase
         $this->pow = static::getContainer()->get(ProofOfWork::class);
     }
 
-    /** Brute-forces a stamp the way a browser does — the cheap half is verification, not this. */
+    /* Brute-forces a stamp the way a browser does — the cheap half is
+       verification, not this.
+
+       The bound is a runaway guard, NOT a budget. Finding a 20-bit stamp takes
+       about 2^20 ≈ 1.05M hashes on average, but the search is memoryless: the
+       chance of going 5M nonces without a hit is e^(-5/1.05) ≈ 0.85% per call,
+       and this file solves several, so roughly one full run in twenty failed on
+       nothing at all (seen 2026-08-14). A real browser has no such cap — it
+       hashes until it lands one — so the failure was the test's alone.
+
+       Raising it costs nothing: the loop returns the instant it finds a stamp,
+       so the extra headroom is only ever reached in the tail it exists to
+       cover. At 30M the odds of a spurious failure are e^-28.6, about one run
+       in 2.6 trillion. */
     private function solve(string $challenge): string
     {
-        for ($nonce = 0; $nonce < 5_000_000; ++$nonce) {
+        for ($nonce = 0; $nonce < 30_000_000; ++$nonce) {
             $digest = hash('sha256', $challenge.'.'.$nonce, true);
             $bits = 0;
             foreach (str_split($digest) as $byte) {

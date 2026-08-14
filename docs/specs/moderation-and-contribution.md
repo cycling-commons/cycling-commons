@@ -1538,6 +1538,37 @@ and prior experience (the `join.about_label` question), and only mentions
 that existing contributions are gladly looked at. The reviewer-side
 evidence pane is unchanged.
 
+**The sending is acknowledged, not just the deciding.** Submitting sends the
+applicant a dashboard message (`UserMessageKind::CuratorApplicationReceived`,
+`join.message.received`), which `MessageMailer` then delivers to their inbox
+with a link back to it. Approve and decline had always notified; submitting
+told the rider nothing beyond a flash they lose on the next click
+(owner-reported 2026-08-14). That is the wrong silence — a volunteer has just
+handed over their name and their reasons, and review is a human step with no
+promised time on it. Three details that are easy to get wrong:
+
+- It gets **its own kind**, not `CuratorMessage`: the email subject is derived
+  from the kind, and "Message from a curator" is not what an automatic receipt
+  is. A new kind must also be shelved in `MessageCategory::kinds()` or it
+  appears on no dashboard shelf.
+- The message needs an **explicit flush**. The decision paths get one free from
+  their `wrapInTransaction`; here the application's own flush has already
+  happened, so without it the row is persisted and never written, and the
+  mailer has nothing to deliver.
+- All three messages interpolate `%scope%` — the **requested region's name**
+  when there is one, else the country's — resolved by
+  `CuratorApplicationService::scopeLabel()`. They used to interpolate the raw
+  `country_code`, so a rider who volunteered for North Holland was told their
+  application "to curate NL" had arrived: the wrong scope, and a database code
+  rather than a place.
+
+**A pending application replaces the form.** `/join/{cc}` reads
+`pendingApplication()` on every render, not off the success flash, and shows
+what was sent and when instead of the form. That answers the rider who returns
+tomorrow as well as the one who just pressed the button: a second pending
+application is refused anyway, so handing somebody a form that cannot be sent
+is a worse answer than telling them theirs is already in.
+
 **Applicant-facing status.** The profile dashboard's
 Contributions pane closes with a **Curator applications** section
 (`ProfileController`, [account-and-auth.md](account-and-auth.md) dashboard

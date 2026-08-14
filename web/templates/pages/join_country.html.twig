@@ -26,11 +26,17 @@
        wrong and discouraging for someone who came from North Holland to
        volunteer for North Holland: the country may well have a curator
        already, and it is the region that is short of one. #}
-    <h1 class="disp" style="font-size:clamp(1.9rem,4vw,2.6rem)">{{ wanted
-      ? 'join.headline_curate_region'|trans({'%region%': wanted.name})
-      : 'join.headline_curate'|trans({'%country%': country.name}) }}</h1>
-    <p class="hint">{{ 'join.evidence_hint'|trans }}
-       <a href="{{ path('improve') }}">{{ 'join.evidence_link'|trans }}</a></p>
+    <h1 class="disp" style="font-size:clamp(1.9rem,4vw,2.6rem)">{{ pending_app
+      ? 'join.pending_h'|trans
+      : (wanted
+        ? 'join.headline_curate_region'|trans({'%region%': wanted.name})
+        : 'join.headline_curate'|trans({'%country%': country.name})) }}</h1>
+    {# The "show us your edits" nudge belongs to somebody who is about to
+       apply, not to somebody whose application is already being read. #}
+    {% if not pending_app %}
+      <p class="hint">{{ 'join.evidence_hint'|trans }}
+         <a href="{{ path('improve') }}">{{ 'join.evidence_link'|trans }}</a></p>
+    {% endif %}
   {% else %}
     <h1 class="disp" style="font-size:clamp(1.9rem,4vw,2.6rem)">{{ 'join.headline_request'|trans({'%country%': country.name}) }}</h1>
   {% endif %}
@@ -52,6 +58,15 @@
       </div>
       <button type="submit" class="btn btn-p">{{ 'join.submit_request'|trans }}</button>
     </form>
+  {% elseif pending_app %}
+    {# Already with the curators: their application back, not the form again. #}
+    {% set asked = regions|filter(r => r.id == pending_app.requested_region_id)|first %}
+    <p class="hint" style="margin-top:0">
+      {{ asked
+        ? 'join.pending_body_region'|trans({'%region%': asked.name, '%date%': pending_app.created_at|cc_date})
+        : 'join.pending_body_country'|trans({'%country%': country.name, '%date%': pending_app.created_at|cc_date}) }}
+    </p>
+    <a class="btn btn-p" href="{{ path('map') }}">{% trans %}join.pending_cta{% endtrans %}</a>
   {% else %}
     <form method="post" data-form="curator-application">
       <input type="hidden" name="_token" value="{{ csrf_token('curator-application') }}">
