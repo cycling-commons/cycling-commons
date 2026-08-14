@@ -428,6 +428,19 @@ explain. The heatmap and the icons **cross-fade at ~z9** (heat layer `maxzoom
 earlier measured cluster zoom-table for one spot (Schwaan, DE) that
 characterised bubble-dissolution behaviour which no longer exists.
 
+**Below z6 the map says so.** The tileset is built z6-14, so at z5 and wider
+there is no coverage data to draw at any scope, and the map drew nothing and
+explained nothing. That silence is indistinguishable from a country whose
+harvest failed, and it cost two separate owner bug reports ("no POI in South
+Africa", then the same for Northern Cape at z5.5) that each ran all the way
+through the pipeline, the tiles and the scope filter before landing on the
+zoom. The rail foot now carries a one-line hint under the count
+(`render.js updateZoomHint`, fired on `zoomend`): below z6 "zoom in to see the
+full-coverage layers", between z6 and z9 "shown as density here, zoom in for
+individual places", and nothing from z9 up where the icons themselves are the
+answer. It is suppressed when the rider has turned every coverage layer off,
+so it never nags about layers nobody asked for.
+
 **Layers stay per (letter, country)** (`<letter>_<cc>`, unstamped rows bucket
 under `<letter>_zz`) — this split is now unrelated to clustering (there is
 none); it keeps a letter's icons filterable per country and drives the

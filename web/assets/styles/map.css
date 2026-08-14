@@ -238,9 +238,14 @@
   .data-versions{font-family:var(--mono);font-size:.58rem;letter-spacing:.04em;
     color:rgba(239,230,212,.45);padding:0 1.4rem 1rem;word-break:break-word;user-select:text}
   .data-versions .dv-bad{color:var(--trail)}
-  .rail-foot{padding:1.1rem 1.4rem;border-top:1px solid rgba(239,230,212,.14);display:flex;align-items:center;justify-content:space-between;gap:.6rem}
+  .rail-foot{padding:1.1rem 1.4rem;border-top:1px solid rgba(239,230,212,.14);display:flex;align-items:center;justify-content:space-between;gap:.6rem;flex-wrap:wrap}
   .rail-foot .res{font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;color:rgba(239,230,212,.7)}
   .rail-foot .res b{color:var(--trail);font-size:1.15rem}
+  /* Own line under the count: says why the coverage layers are drawing nothing
+     when the rider is zoomed out past the tileset's floor (render.js
+     updateZoomHint). Hidden by the [hidden] attribute at every other zoom, so
+     it costs no height once the rider is in range. */
+  .rail-foot .zoom-hint{flex:0 0 100%;font-family:var(--mono);font-size:.62rem;line-height:1.35;letter-spacing:.04em;color:var(--glacier);opacity:.9}
   .export{background:var(--trail);color:var(--ink);font-family:var(--sans);font-weight:700;font-size:.78rem;padding:.55rem .85rem;border-radius:5px;border:none;cursor:pointer;white-space:nowrap}
   .export:hover{background:#ff703d}
 

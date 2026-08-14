@@ -24,7 +24,7 @@ import { inScope, curScope } from './scope-ui.js';
 import { pinEl, miniIcon } from './icons.js';
 import { updateConfMarkers, confShownCount, confTotalCount } from './osm-pools.js';
 import { covShownCount, coverageTotal, syncCoverageLayers, covIconFilter,
-         COVERAGE_CCS, COVERAGE_ON } from './coverage.js';
+         COVERAGE_CCS, COVERAGE_ON, COVERAGE_KEYS } from './coverage.js';
 import { openDrawer } from './drawer.js';
 
 export const PREFS = window.CC_PREFS || {bikes: [], styles: []};
@@ -793,4 +793,27 @@ export function render(){
   if(selectedRouteLayerId && map.getLayer(selectedRouteLayerId)) highlightRoute(selectedRouteLayerId);
   document.getElementById('count').textContent=n;
   updateCounts();   // legend shows shown/total, refreshed on mode + layer changes
+  updateZoomHint();
+}
+
+/* Say why the map is empty when the reason is the zoom.
+   The coverage tileset is built z6-14 and its icon layers start at z9, so
+   below z6 there is no coverage data to draw and between z6 and z9 there is
+   only the density blur. Both are deliberate, and both look exactly like
+   missing data: the owner reported "no POIs" twice, once at z6.6 and once at
+   z5.5, and each took a dig through the pipeline, the tiles and the scope
+   filter to land on "that is the zoom". The map should have said so.
+   Only shown while at least one full-coverage layer is on, so it never
+   nags a rider who has deliberately turned them all off. */
+export function updateZoomHint(){
+  const el = document.getElementById('zoomHint');
+  if(!el) return;
+  const z = map.getZoom();
+  const anyCoverage = COVERAGE_KEYS.some(([key]) => active.has(key));
+  const msg = !anyCoverage ? ''
+    : z < 6 ? (I18N.zoomForCoverage || 'Zoom in to see the full-coverage layers')
+    : z < 9 ? (I18N.zoomForPlaces || 'Shown as density here, zoom in for individual places')
+    : '';
+  el.textContent = msg;
+  el.hidden = !msg;
 }

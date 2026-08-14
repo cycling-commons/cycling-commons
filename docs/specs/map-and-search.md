@@ -324,6 +324,32 @@ across all five.
   will. Same three-state model as the profile page's curating invitation
   ([account-and-auth.md](account-and-auth.md) §9).
 
+  **On a region's own page the three states are sentences, not glossary
+  entries.** `/regions` is a directory and wants fragments a reader scans down
+  a column; `/regions/{slug}` is about one place and wants a line that answers
+  the question it is under. So the page has its own `regions.steward_line_*`
+  copy rather than reusing the legend's `status_*_desc`, and the state itself
+  is a **chip** ahead of it (`COUNTRY-WIDE`), not the sentence's first clause
+  — as a clause it read like a definition of a term the reader had not been
+  given. The `countrywide` line says the vacancy out loud ("a curator is
+  covering the whole country, we are actively looking for local curators"),
+  because that state is the one where the page most needs a volunteer.
+  Curators are **named** where their profile is public
+  (`RegionDirectoryProvider::curators`), behind a `Looked after by` label: a
+  bare name trailing the sentence read as part of it. Every state short of
+  `curated` ends in the same invitation, linking to `join_country`.
+
+  **"What riders find here" reports two numbers per kind, never their sum.**
+  `N in the Commons` is what somebody has stood at and a curator approved;
+  `N on the map` is what OpenStreetMap knows is there and the coverage layer
+  draws underneath. Showing only the first told a reader that Wallonia holds
+  2 water points where the map draws 1,650. They are not added together:
+  *checked* and *known about* is the distinction the whole Best of / Confirmed
+  / Everything ladder rests on. The sentence defining the two terms marks them
+  up as `<code>`, in the message rather than the template, because the terms
+  are different words in each of the five locales; it renders through `|rich`,
+  whose sanitiser allow-lists `<code>` and nothing that can carry script.
+
 ### 4.2b Basemap labels follow the site language
 
 The place names baked into the **basemap** — countries, states, cities, streets —

@@ -20,6 +20,11 @@
   .kinds .k .c b{color:var(--trail);font-weight:700}
   .kinds .k .c i{font-style:normal}
   .kinds-note{font-size:.84rem;color:#595c4d;margin:.9rem 0 0;line-height:1.6;max-width:64ch}
+  /* The two terms this sentence defines, set apart from the sentence that
+     defines them. Padding rather than bare <code>: the mono glyphs sit tight
+     against the surrounding prose and the word boundary disappears. */
+  .kinds-note code{font-family:var(--mono);font-size:.78rem;padding:.08em .34em;border-radius:4px;
+    background:rgba(89,92,77,.11);color:#3f4236;white-space:nowrap}
   /* The country in outline with this region filled. Inline SVG, no request and
      no JavaScript: a region page is read once, often on a phone, and the
      button beside it opens the real map for anyone who wants to pan. */
@@ -33,10 +38,16 @@
      question it answers is one a rider asks before trusting anything else here. */
   .rsteward{margin-top:1.5rem;display:flex;flex-wrap:wrap;align-items:baseline;gap:.5rem;
     font-size:.88rem;color:rgba(239,230,212,.75);line-height:1.5}
-  .rsteward-h{font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;
-    color:rgba(239,230,212,.5)}
+  /* The heading owns its line; the chip and its sentence share the next one. */
+  .rsteward-h{flex:0 0 100%;font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;
+    text-transform:uppercase;color:rgba(239,230,212,.5)}
   .rsteward b{color:var(--paper);font-weight:600}
+  .rsteward-chip{display:inline-block;margin-right:.45rem;padding:.16rem .5rem;border-radius:999px;
+    border:1px solid rgba(239,230,212,.28);background:rgba(239,230,212,.07);
+    font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--paper);white-space:nowrap;vertical-align:.06em}
   .rsteward-d{color:rgba(239,230,212,.62)}
+  .rsteward-sep{color:rgba(239,230,212,.35);padding:0 .1rem}
   .rhero-top{display:flex;align-items:flex-start;gap:1.5rem;flex-wrap:wrap}
   .rhero-top > .rhero-head{flex:1 1 260px;min-width:0}
   @media(max-width:640px){.rshape{margin-left:0}.rshape svg{width:104px;height:78px}}
@@ -82,14 +93,25 @@
   <div class="rsteward">
     <span class="rsteward-h">{% trans %}regions.steward_h{% endtrans %}</span>
     <span class="rsteward-body">
-      <b>{{ ('regions.status_' ~ region.stewardship)|trans }}:</b>
-      <span class="rsteward-d">{{ ('regions.status_' ~ region.stewardship ~ '_desc')|trans }}</span>
+      {# The status as a chip, the explanation beside it on one line (owner
+         2026-08-14). It reads as a label on the region rather than as the
+         first clause of the sentence, which is what "Country-wide:" did.
+         Its own steward_line_* copy, not the legend's status_*_desc: the
+         legend is a glossary of terms and wants fragments, this is a page
+         about ONE region and wants sentences. #}
+      <span class="rsteward-chip">{{ ('regions.status_' ~ region.stewardship)|trans }}</span>
+      <span class="rsteward-d">{{ ('regions.steward_line_' ~ region.stewardship)|trans }}</span>
       {# The people, named only where they have made their profile public
          (RegionDirectoryProvider::curators). A curator who has not is counted
          by the status above but never named here. #}
       {% set named = region.curators|filter(c => c.name is not empty) %}
       {% if named is not empty %}
-        <span class="rsteward-who">
+        {# Labelled, because a bare name at the end of the sentence reads as
+           part of it: "…looking for local curators. Curator" gave no clue that
+           the last word was a person. The label is a prefix rather than a
+           placeholder so the names can stay real links. #}
+        <span class="rsteward-sep" aria-hidden="true">·</span>
+        <span class="rsteward-who">{% trans %}regions.steward_by{% endtrans %}{{ ' ' }}
           {%- for c in named -%}
             {%- if not loop.first %}, {% endif -%}
             {%- if c.uuid -%}
@@ -102,6 +124,7 @@
          "Want to join?" beside the fact is what turns a status line into an
          invitation, and it is the same question the button below asks. #}
       {% if region.stewardship != 'curated' %}
+        <span class="rsteward-sep" aria-hidden="true">·</span>
         <a class="rsteward-cta" href="{{ path('join_country', {cc: region.countryCode}) }}">{% trans %}regions.steward_join{% endtrans %}</a>
       {% endif %}
     </span>
@@ -133,7 +156,13 @@
         </div>
       {% endfor %}
     </div>
-    <p class="kinds-note">{{ 'region.by_kind_note'|trans }}</p>
+    {# The two terms are marked up as <code> so the sentence DEFINING them shows
+       which words it is defining (owner 2026-08-14). The markup lives in the
+       message, not here, because the terms are different words in every locale
+       and a template-side replace would have to know all five; `rich` runs it
+       through the sanitiser, which allow-lists <code> and nothing that could
+       carry script. #}
+    <p class="kinds-note">{{ 'region.by_kind_note'|trans|rich }}</p>
   {% else %}
     <div class="kicker">{% trans %}region.empty_h{% endtrans %}</div>
     <p style="max-width:62ch;line-height:1.6">{% trans %}region.empty_p{% endtrans %}</p>

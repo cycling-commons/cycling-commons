@@ -20,7 +20,7 @@ import { trimEnds } from './item-index.js';
 import { sheet, initSheet } from './sheet.js';
 import { initLightbox } from './lightbox.js';
 import { initPlanner } from './planner.js';
-import { render } from './render.js';
+import { render, updateZoomHint } from './render.js';
 import { COVERAGE_ON, addCoverage, widenForDeepLink, openCoverageFeatureByName,
          fetchCoverageCounts, covShownCount } from './coverage.js';
 import { addSurfaceTiles, setSurfaceTiles, surfaceTilesVisible } from './surface-tiles.js';
@@ -73,6 +73,11 @@ import { initLayerList, initMapCtrl, initRailChrome, initBestOf,
     let _confRAF=null;
     const scheduleConfMarkers=()=>{ if(_confRAF) return; _confRAF=requestAnimationFrame(()=>{ _confRAF=null; updateConfMarkers(); }); };
     map.on('moveend', scheduleConfMarkers); map.on('idle', scheduleConfMarkers);
+    // The coverage zoom hint follows the zoom, not the filters, so render()'s
+    // own call is not enough — a rider who only scrolls the wheel never
+    // re-renders. zoomend is the cheap moment: the hint reads map.getZoom()
+    // and toggles one line of text.
+    map.on('zoomend', updateZoomHint);
     // Coverage counts fetched once at load (and again on each scope change via
     // applyScope). No moveend/idle refresh: the coverage 'shown' is the
     // scope-aware count (covShownCount), not a viewport-render count, so it

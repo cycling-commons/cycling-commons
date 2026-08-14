@@ -466,6 +466,12 @@ final class MapController extends AbstractController
             'myAreaSetAnon' => $t->trans('map.my_area_set_anon'),
             'outsideArea' => $t->trans('map.outside_area'),
             'areaDismiss' => $t->trans('map.area_dismiss'),
+            // Why the full-coverage layers can draw nothing (render.js
+            // updateZoomHint): the coverage tileset is built z6-14 and its
+            // per-place icons start at z9, so a rider looking at a whole
+            // country sees an empty map that is working exactly as designed.
+            'zoomForCoverage' => $t->trans('map.zoom_for_coverage'),
+            'zoomForPlaces' => $t->trans('map.zoom_for_places'),
             'seasons' => [
                 'spring' => $t->trans('map.season_spring'),
                 'summer' => $t->trans('map.season_summer'),

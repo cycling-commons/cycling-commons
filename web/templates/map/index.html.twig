@@ -248,6 +248,13 @@
     </div>
     <div class="rail-foot">
       <div class="res"><b id="count">0</b> {{ 'map.places_shown'|trans }}</div>
+      {# Why the map can be empty at low zoom (owner-reported 2026-08-14, twice,
+         once for South Africa and once for Northern Cape). The coverage
+         TILESET starts at z6 and its individual icons at z9, so below those the
+         map draws nothing at all — correctly, and silently, which is
+         indistinguishable from missing data. Two reports and a long dig said
+         that silence is the bug. Filled by render.js on every zoom. #}
+      <div class="zoom-hint" id="zoomHint" hidden></div>
     </div>
     {# Which data builds THIS page is actually drawing (owner 2026-08-13):
        catalog version tag + the artifact stamps parsed from the loaded URLs.
