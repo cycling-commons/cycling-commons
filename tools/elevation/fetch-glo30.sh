@@ -51,8 +51,14 @@ case "${1:-}" in
   # ELEVATION_URLS — until they are, a climb there resolves to the default,
   # gets all-zeros back, and is honestly refused a profile by
   # ElevationClient::MIN_NONZERO_SHARE.
+  # NOTE on the upper bounds below: the loop runs `seq LAT0 $((LAT1-1))`, and a
+  # cell is named for its SOUTH-WEST corner — so LAT1/LON1 must be one degree
+  # PAST the ground you want, or the last strip is silently missing. Three of
+  # these were wrong on first write (RW's northern strip, CO's Caribbean coast,
+  # CL's Cape Horn) and the gap only ever shows up later as a climb with no
+  # profile, which is why it is spelled out here.
   SLOVENIA)  BBOX="45,13,47,17" ;;
-  RWANDA)    BBOX="-3,28,-1,31" ;;
+  RWANDA)    BBOX="-3,28,0,32" ;;
   # South Africa including Lesotho and Eswatini, which the Geofabrik extract
   # bundles anyway; the Prince Edward Islands (46S) are deliberately out.
   SOUTHAFRICA) BBOX="-35,16,-22,33" ;;

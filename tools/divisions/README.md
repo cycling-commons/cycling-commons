@@ -22,8 +22,55 @@ One fixed sequence for every country/state. ⚑ marks a human judgment.
 | 4 | Export Overture geojson (levels 2 + 4) | `make divisions-data c="NL"` — always emits the L2 country outline alongside the operating-level divisions, same run, same command |
 | 5 | Seed `Region` rows | stage artifacts (including the L2 outline), `app:catalog:import` (see below) — upsert-by-slug, so re-running is safe |
 | 6 | Coverage | add the Geofabrik region to `COVERAGE_REGIONS` **and** `COUNTRY_BY_REGION` (`pipeline/coverage/load.py`) — a missing entry now hard-fails that region's coverage run (`resolve_country`, the nearest-region-wins ownership rule) rather than silently disabling ownership — then `make coverage-refresh regions=europe/netherlands` |
+| 6b | **Elevation** | check the country's box already has GLO-30 tiles, and install them if not — `tools/elevation/dem-install.sh <continent> <PRESET>` **on the Valhalla host**. See "Elevation is step 6b" below |
 | 7 | ⚑ Moderators | assign 2–4 region atoms per moderator (admin; `moderator_area` rows) |
 | 8 | Specs | record the rollout in `docs/specs/` (region-scoping §7, coverage-provider) |
+
+### Elevation is step 6b, not an afterthought
+
+**Added 2026-08-14 because it was missing.** Seven countries onboarded that day
+and every one of them but Slovenia had no elevation data, which nobody noticed
+until the owner asked — the procedure existed only as scripts on the host and
+lines in a shell history, so each rollout rediscovered it.
+
+**A country with no DEM gets no climb profiles.** Not wrong ones: an
+`ElevationEndpoints` box with no configured instance falls back to the default,
+which answers `null` for ground it does not hold, and `ElevationClient` refuses
+any reply with a non-numeric sample. So the failure is silent and honest, which
+is exactly why it survives a rollout unnoticed.
+
+**Check before you fetch** — the box may already cover the country. Slovenia
+needed nothing because the EUROPE tile set already reaches it. One request
+against a summit whose height you know settles it:
+
+```bash
+curl -sG --data-urlencode 'json={"shape":[{"lat":46.06,"lon":14.51}]}' \
+  http://127.0.0.1:8002/height        # Ljubljana -> 299, so Slovenia is covered
+```
+
+`null` means no tile. Then, **on the Valhalla host**:
+
+```bash
+tools/elevation/dem-install.sh africa RWANDA SOUTHAFRICA
+```
+
+which fetches the GeoTIFFs, converts them to `.hgt` in the `osgeo/gdal`
+container (the host has no GDAL on purpose — it is a routing box, and the
+container is capped with `--cpus` so live routing keeps its share), and moves
+the result into that instance's `elevation_data`. Presets live in
+`fetch-glo30.sh`; add one per country rather than passing raw bboxes, so the
+next person inherits the box you worked out.
+
+**Two traps this step carries.**
+- **The preset's upper bounds must be one degree PAST the ground you want**, because
+  a cell is named for its south-west corner and the fetch loop runs
+  `seq LAT0 $((LAT1-1))`. Three presets were wrong on first write — Rwanda's
+  northern strip, Colombia's Caribbean coast, Chile's Cape Horn — and the gap
+  only ever shows up later as one climb with no profile.
+- **A continent with tiles the app never asks for is the same as no tiles.**
+  `ELEVATION_URLS` must name the instance, or the box falls through to the
+  default. `africa` and `south-america` instances existed and were empty AND
+  unlisted for months.
 
 **Operating-level rule (tools/divisions/README.md):** seed at the
 official administrative level whose subdivisions are of reasonable riding
