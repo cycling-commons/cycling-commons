@@ -147,6 +147,22 @@ final class ModerateController extends AbstractController
             $this->pageSize->resolve(MediaTakedownService::PER_PAGE),
         );
 
+        /* The ANSWERED requests, below the open ones (owner-reported
+           2026-08-14: "we had one request that was rejected and now we do not
+           know of it"). This desk empties itself by design, so without a
+           history a decided request left no trace on the only page anyone
+           looks at — while every other desk has one. The decisions were being
+           written to the event log the whole time; nothing was lost, there was
+           just nowhere to see it.
+
+           Its own page parameter, so paging the history cannot scroll the open
+           requests out from under a curator halfway through answering one. */
+        $historyPager = Pager::of(
+            $request->query->getInt('hpage', 1),
+            $this->takedowns->decidedCount(),
+            $this->pageSize->resolve(MediaTakedownService::PER_PAGE),
+        );
+
         return $this->render('moderate/takedowns.html.twig', [
             'page_title' => 'meta.moderate_takedowns_title',
             'page_description' => 'meta.moderate_takedowns_description',
@@ -154,6 +170,8 @@ final class ModerateController extends AbstractController
             'takedowns' => $this->takedowns->pendingCards($pager['page'], $pager['perPage']),
             'urgent_breaker_open' => $this->breaker->isOpen(),
             'pager' => $pager,
+            'decided' => $this->takedowns->decidedCards($historyPager['page'], $historyPager['perPage']),
+            'history_pager' => $historyPager,
             ...$this->deskBadges($user, $scope),
         ]);
     }

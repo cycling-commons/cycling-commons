@@ -2467,6 +2467,12 @@ moderate:
     note_placeholder: 'Note to the rider (optional)'
     grant: 'Remove the photo'
     decline: 'Decline and republish'
+    history_heading: 'Answered'
+    history_lead: 'Every request that has been decided, newest first. A granted one deleted its photo, so only the record of it remains.'
+    action_takedown_granted: 'Granted'
+    action_takedown_declined: 'Declined'
+    action_takedown_dismissed_as_abuse: 'Dismissed as abuse'
+    photo_gone: 'photo deleted'
     granted: 'The photo has been removed and the rider told.'
     declined: 'The request was declined and the photo is published again.'
   type:

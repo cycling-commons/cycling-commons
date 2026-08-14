@@ -2447,6 +2447,12 @@ moderate:
     note_placeholder: 'Nachricht an die Person (optional)'
     grant: 'Foto entfernen'
     decline: 'Ablehnen und wieder veröffentlichen'
+    history_heading: 'Erledigt'
+    history_lead: 'Alle bereits entschiedenen Anfragen, die neueste zuerst. Eine stattgegebene Anfrage hat ihr Foto gelöscht, es bleibt nur der Eintrag.'
+    action_takedown_granted: 'Stattgegeben'
+    action_takedown_declined: 'Abgelehnt'
+    action_takedown_dismissed_as_abuse: 'Als Missbrauch verworfen'
+    photo_gone: 'Foto gelöscht'
     granted: 'Das Foto wurde entfernt und die Person benachrichtigt.'
     declined: 'Der Antrag wurde abgelehnt und das Foto ist wieder veröffentlicht.'
   type:

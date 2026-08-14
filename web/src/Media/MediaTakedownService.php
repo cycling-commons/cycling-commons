@@ -11,8 +11,11 @@ use App\Entity\User;
 use App\Media\Entity\MediaUpload;
 use App\Messaging\MessageService;
 use App\Messaging\UserMessageKind;
+use Doctrine\DBAL\ArrayParameterType;
+use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\Uid\Uuid;
 
 /**
  * "That photo is of me — take it down" (docs/specs/photo-uploads.md §6b).
@@ -74,6 +77,7 @@ final class MediaTakedownService
 
     public function __construct(
         private readonly EntityManagerInterface $em,
+        private readonly Connection $db,
         private readonly MediaEventLog $events,
         private readonly MediaDisposalService $disposal,
         private readonly MediaDecisionService $decisions,
@@ -419,6 +423,83 @@ final class MediaTakedownService
     private static function offset(int $page, int $perPage): int
     {
         return max(0, (max(1, $page) - 1) * max(1, $perPage));
+    }
+
+    /** The three ways a rights request ends. */
+    private const array DECIDED_ACTIONS = [
+        MediaAction::TakedownGranted,
+        MediaAction::TakedownDeclined,
+        MediaAction::TakedownDismissedAsAbuse,
+    ];
+
+    /**
+     * Rights requests that have been ANSWERED, newest first.
+     *
+     * The desk had no history at all until 2026-08-14, so a declined request
+     * simply vanished: the owner hit exactly that ("we had one request that was
+     * rejected and now we do not know of it"). The decisions were being
+     * recorded the whole time as `media_moderation_event` rows, written by
+     * grant()/decline()/dismissAsAbuse() — nothing was lost, there was just no
+     * way to look at it.
+     *
+     * Read from the EVENT LOG rather than from the upload, and that is the
+     * point: a granted takedown deletes its objects and clears its markers, so
+     * the upload row can no longer say what happened to it. The event can, and
+     * outlives the thing it describes.
+     *
+     * Deliberately not region-scoped, like the pending desk above: a rights
+     * request is not editorial work shared out by jurisdiction.
+     *
+     * @return list<array{action: string, note: ?string, decidedAt: \DateTimeImmutable, actor: ?string, uuid: string, itemName: string, gone: bool}>
+     */
+    public function decidedCards(int $page = 1, int $perPage = self::PER_PAGE): array
+    {
+        /** @var list<array{action: string, note: ?string, created_at: string, display_name: ?string, public_profile: ?bool, media_id: string}> $rows */
+        $rows = $this->db->fetchAllAssociative(
+            'SELECT e.action, e.note, e.created_at, e.media_id,
+                    u.display_name, u.public_profile
+               FROM media_moderation_event e
+          LEFT JOIN users u ON u.id = e.actor_id
+              WHERE e.action IN (:actions)
+           ORDER BY e.created_at DESC, e.id DESC
+              LIMIT :lim OFFSET :off',
+            [
+                'actions' => self::DECIDED_ACTIONS,
+                'lim' => max(1, $perPage),
+                'off' => self::offset($page, $perPage),
+            ],
+            ['actions' => ArrayParameterType::STRING],
+        );
+
+        $cards = [];
+        foreach ($rows as $r) {
+            $upload = $this->em->getRepository(MediaUpload::class)->find(Uuid::fromString((string) $r['media_id']));
+            $cards[] = [
+                'action' => (string) $r['action'],
+                'note' => null !== $r['note'] && '' !== $r['note'] ? (string) $r['note'] : null,
+                'decidedAt' => new \DateTimeImmutable((string) $r['created_at']),
+                // Same pseudonymity rule as the submission queue: a curator's
+                // name shows only where they made it public.
+                'actor' => ($r['public_profile'] ?? false) ? (string) ($r['display_name'] ?? '') : null,
+                'uuid' => (string) $r['media_id'],
+                'itemName' => null !== $upload ? ($this->item($upload)?->getName() ?? '') : '',
+                // A granted request destroys the photo, so there is nothing to
+                // link to. Saying so is the honest version of a dead thumbnail.
+                'gone' => null === $upload,
+            ];
+        }
+
+        return $cards;
+    }
+
+    /** How many rights requests have been answered, for the pager. */
+    public function decidedCount(): int
+    {
+        return (int) $this->db->fetchOne(
+            'SELECT COUNT(*) FROM media_moderation_event WHERE action IN (:actions)',
+            ['actions' => self::DECIDED_ACTIONS],
+            ['actions' => ArrayParameterType::STRING],
+        );
     }
 
     /**

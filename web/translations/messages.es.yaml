@@ -2480,6 +2480,12 @@ moderate:
     note_placeholder: 'Nota para el ciclista (opcional)'
     grant: 'Retirar la foto'
     decline: 'Rechazar y volver a publicar'
+    history_heading: 'Resueltas'
+    history_lead: 'Todas las solicitudes ya decididas, la más reciente primero. Una aceptada borró su foto, así que solo queda el registro.'
+    action_takedown_granted: 'Aceptada'
+    action_takedown_declined: 'Rechazada'
+    action_takedown_dismissed_as_abuse: 'Descartada por abuso'
+    photo_gone: 'foto borrada'
     granted: 'La foto se ha retirado y se ha avisado al ciclista.'
     declined: 'La solicitud se ha rechazado y la foto vuelve a estar publicada.'
   type:

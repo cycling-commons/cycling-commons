@@ -14,6 +14,23 @@
   .td-lead{font-size:.86rem;color:#4a4d40;margin:.3rem 0 1rem;line-height:1.5}
   .td-lead a{color:var(--clay);text-decoration:underline;text-underline-offset:2px}
   .td-card{border-top:1px solid rgba(20,22,14,.12);padding:.9rem 0}
+  /* Answered requests: a log, not cards. There is nothing to decide here and
+     usually nothing left to look at, so it is sized to be read down quickly
+     and to sit clearly below the work. */
+  .td-history{margin-top:2.4rem;border-top:1px solid rgba(20,22,14,.14);padding-top:1.2rem}
+  .td-history-h{font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:#8a8d7d;margin:0}
+  .td-history-lead{font-size:.82rem;color:#595c4d;margin:.35rem 0 .9rem;line-height:1.5}
+  .td-log{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.5rem}
+  .td-log-row{display:flex;flex-wrap:wrap;align-items:baseline;gap:.5rem;font-size:.84rem;
+    padding:.5rem .7rem;border-radius:6px;background:rgba(20,22,14,.04)}
+  .td-log-verb{font-family:var(--mono);font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;
+    padding:.15rem .45rem;border-radius:3px;background:rgba(20,22,14,.1);color:#4a4d40}
+  /* Granted is the one that destroyed something; it reads differently. */
+  .td-log-row--takedown_granted .td-log-verb{background:rgba(184,89,58,.16);color:var(--clay)}
+  .td-log-when{font-family:var(--mono);font-size:.62rem;color:#8a8d7d}
+  .td-log-item{font-weight:600;color:var(--ink)}
+  .td-log-gone,.td-log-who{font-family:var(--mono);font-size:.6rem;color:#8a8d7d}
+  .td-log-note{flex:1 0 100%;margin:.3rem 0 0;font-size:.84rem;line-height:1.5;color:#4a4d40}
   .td-body{display:flex;gap:.9rem;align-items:flex-start}
   .td-body img{width:110px;height:82px;object-fit:cover;border-radius:5px;flex:0 0 auto}
   .td-reason{font-size:.9rem;line-height:1.5;margin:.3rem 0;white-space:pre-wrap}
@@ -124,6 +141,35 @@
     {% endfor %}
     {% include 'partials/_pager.html.twig' with {pager: pager, route: 'moderate_takedowns', params: {}} %}
   </section>
+  {% endif %}
+
+  {# ── Answered requests ──────────────────────────────────────────────────
+     OUTSIDE the empty/else above, deliberately: this desk empties itself by
+     design, so the history has to show on exactly the screen the empty state
+     is on. Without it a decided request left no trace anywhere a curator
+     looks (owner-reported 2026-08-14). #}
+  {% if decided is not empty %}
+    <section class="td-history">
+      <h2 class="td-history-h">{{ 'moderate.takedown.history_heading'|trans }}</h2>
+      <p class="td-history-lead">{{ 'moderate.takedown.history_lead'|trans }}</p>
+      <ul class="td-log">
+        {% for d in decided %}
+          <li class="td-log-row td-log-row--{{ d.action }}">
+            <span class="td-log-verb">{{ ('moderate.takedown.action_' ~ d.action)|trans }}</span>
+            <span class="td-log-when">{{ d.decidedAt|cc_datetime }}</span>
+            {% if d.itemName %}<span class="td-log-item">{{ d.itemName }}</span>{% endif %}
+            {# A granted request destroys the photo, so there is nothing to
+               link to. Saying so beats a dead thumbnail. #}
+            {% if d.gone %}<span class="td-log-gone">{{ 'moderate.takedown.photo_gone'|trans }}</span>{% endif %}
+            {% if d.actor %}<span class="td-log-who">{{ d.actor }}</span>{% endif %}
+            {% if d.note %}<p class="td-log-note">{{ d.note }}</p>{% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+      {# `key: 'hpage'` — its own query parameter, so paging the history cannot
+         scroll the open requests out from under a curator mid-decision. #}
+      {% include 'partials/_pager.html.twig' with {pager: history_pager, route: 'moderate_takedowns', params: {}, key: 'hpage', show_size: false} %}
+    </section>
   {% endif %}
 </div>
 {% endblock %}

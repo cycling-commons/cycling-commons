@@ -2444,6 +2444,12 @@ moderate:
     note_placeholder: 'Note au cycliste (facultatif)'
     grant: 'Retirer la photo'
     decline: 'Refuser et republier'
+    history_heading: 'Traitées'
+    history_lead: 'Toutes les demandes déjà tranchées, la plus récente en premier. Une demande acceptée a supprimé sa photo : il nen reste que la trace.'
+    action_takedown_granted: 'Acceptée'
+    action_takedown_declined: 'Refusée'
+    action_takedown_dismissed_as_abuse: 'Classée comme abus'
+    photo_gone: 'photo supprimée'
     granted: 'La photo a été retirée et le cycliste prévenu.'
     declined: 'La demande a été refusée et la photo est de nouveau publiée.'
   type:

@@ -2444,6 +2444,12 @@ moderate:
     note_placeholder: 'Bericht aan de fietser (optioneel)'
     grant: 'Foto verwijderen'
     decline: 'Afwijzen en opnieuw publiceren'
+    history_heading: 'Afgehandeld'
+    history_lead: 'Elk verzoek waarover al beslist is, nieuwste eerst. Een toegewezen verzoek heeft de foto verwijderd, dus alleen het spoor blijft over.'
+    action_takedown_granted: 'Toegewezen'
+    action_takedown_declined: 'Afgewezen'
+    action_takedown_dismissed_as_abuse: 'Afgedaan als misbruik'
+    photo_gone: 'foto verwijderd'
     granted: 'De foto is verwijderd en de fietser is op de hoogte gebracht.'
     declined: 'Het verzoek is afgewezen en de foto is weer gepubliceerd.'
   type:
