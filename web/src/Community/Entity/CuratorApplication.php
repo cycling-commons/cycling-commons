@@ -203,6 +203,21 @@ class CuratorApplication
         return $this->decisionNote;
     }
 
+    /* The other two halves of the decision. `decide()` has always written all
+       three, but only the note could be read back, so the admin desk could show
+       WHAT was answered and not when or by whom. Added when the desk started
+       listing decided applications rather than only the queue (2026-08-14). */
+
+    public function getDecidedAt(): ?\DateTimeImmutable
+    {
+        return $this->decidedAt;
+    }
+
+    public function getDecidedBy(): ?int
+    {
+        return $this->decidedBy;
+    }
+
     public function getCreatedAt(): \DateTimeImmutable
     {
         return $this->createdAt;

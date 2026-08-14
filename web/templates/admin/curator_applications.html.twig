@@ -4,24 +4,68 @@
    Purpose-built rather than an EasyAdmin CRUD: the reviewer needs a person,
    their track record, their OSM standing and their words side by side to
    make one judgement — not rows to sort and delete.
+
+   A LIST THAT OPENS, not a wall of expanded cards (owner 2026-08-14). Every
+   application used to render in full, so a reviewer with a dozen of them
+   scrolled past everything to find the one they meant. The row carries what
+   picks a person out — name, scope, when — and the rest waits behind a click.
+
+   `<details>`/`<summary>` rather than a JS disclosure: it is one element, it
+   is keyboard- and screen-reader-native, it survives the CSP without a script,
+   and browser find-in-page opens it. Only the two prefill buttons need JS, and
+   they degrade to doing nothing rather than to a broken form.
 #}
 {% extends '@EasyAdmin/page/content.html.twig' %}
 
 {% block content_title %}{{ 'admin.curator.title'|trans }}{% endblock %}
 
 {% block main %}
+    <style nonce="{{ csp_nonce() }}">
+      .cur-row{border:1px solid rgba(0,0,0,.125);border-radius:.375rem;margin-bottom:.5rem;background:var(--bs-body-bg,#fff)}
+      .cur-row > summary{cursor:pointer;padding:.7rem .9rem;display:flex;flex-wrap:wrap;align-items:baseline;gap:.5rem;list-style:none}
+      .cur-row > summary::-webkit-details-marker{display:none}
+      /* The twisty, drawn rather than left to the platform so it can sit where
+         the row reads from and turn on open. */
+      .cur-row > summary::before{content:"▸";display:inline-block;transition:transform .12s;opacity:.55}
+      .cur-row[open] > summary::before{transform:rotate(90deg)}
+      .cur-row > summary:hover{background:rgba(0,0,0,.03)}
+      .cur-name{font-weight:600;font-size:1.02rem}
+      .cur-meta{opacity:.7;font-size:.86rem}
+      .cur-body{padding:0 .9rem .9rem;border-top:1px solid rgba(0,0,0,.08)}
+      .cur-tpl{display:flex;flex-wrap:wrap;gap:.4rem;margin:.6rem 0 .4rem}
+      /* Open is the one that wants the eye; the settled two are quiet. */
+      .cur-st-pending{background:#0d6efd}
+      .cur-st-approved{background:#198754}
+      .cur-st-declined{background:#6c757d}
+      .cur-st-withdrawn{background:#adb5bd;color:#212529}
+      .cur-decided{border-left:3px solid rgba(0,0,0,.15);padding-left:.7rem;margin-top:.4rem}
+    </style>
+
     <div class="col-lg-9">
         {% if rows is empty %}
             <p class="text-muted">{{ 'admin.curator.empty'|trans }}</p>
         {% endif %}
 
         {% for row in rows %}
-            <div class="card mb-3">
-                <div class="card-body">
-                    {% if row.user %}
-                        <h5 class="card-title mb-1">{{ row.user.displayName }}</h5>
-                        <p class="text-muted small mb-2">{{ row.user.email }}</p>
+            {# The scope in words, reused by the row, the detail and both
+                 message templates, so all four can never disagree. #}
+            {% set scope = row.regionGone
+                ? 'admin.curator.region_gone'|trans
+                : (row.regionName ?: 'join.scope_whole_country'|trans) %}
+            <details class="cur-row">
+                <summary>
+                    <span class="cur-name">{{ row.user ? row.user.displayName : 'admin.curator.applicant_gone'|trans }}</span>
+                    <span class="cur-meta">{{ scope }} ({{ row.app.countryCode }})</span>
+                    {# The answer, on the row itself. The desk lists decided
+                       applications now, so "which of these still needs me?" has to
+                       be readable without opening anything. #}
+                    <span class="badge cur-st cur-st-{{ row.app.status.value }}">{{ ('admin.curator.status_' ~ row.app.status.value)|trans }}</span>
+                    <span class="cur-meta ms-auto">{{ row.app.createdAt|cc_date }}</span>
+                </summary>
 
+                <div class="cur-body">
+                    {% if row.user %}
+                        <p class="text-muted small mb-2">{{ row.user.email }}</p>
                         <p class="mb-1">
                             {% if row.user.emailVerified %}
                                 <span class="badge bg-success">{{ 'admin.curator.email_verified'|trans }}</span>
@@ -52,13 +96,7 @@
 
                     <p class="mb-1">
                         {{ 'admin.curator.scope_label'|trans }}:
-                        {% if row.regionGone %}
-                            <span class="text-danger">{{ 'admin.curator.region_gone'|trans }}</span>
-                        {% elseif row.regionName %}
-                            {{ row.regionName }}
-                        {% else %}
-                            {{ 'join.scope_whole_country'|trans }}
-                        {% endif %}
+                        {% if row.regionGone %}<span class="text-danger">{{ scope }}</span>{% else %}{{ scope }}{% endif %}
                         ({{ row.app.countryCode }})
                     </p>
 
@@ -92,16 +130,79 @@
                         <span>{{ row.app.about }}</span>
                     </p>
 
-                    <form method="post" class="d-flex align-items-center gap-2">
+                    {% if row.app.status.value != 'pending' %}
+                        {# Answered: the record, not the controls. Re-deciding is
+                           refused by the service anyway (approve() guards on
+                           Pending), so offering the buttons would only produce an
+                           error the reviewer did not ask for. #}
+                        <div class="cur-decided">
+                            <p class="mb-1">{{ ('admin.curator.status_' ~ row.app.status.value)|trans }}
+                                {% if row.app.decidedAt %}&middot; {{ row.app.decidedAt|cc_datetime }}{% endif %}</p>
+                            {% if row.app.decisionNote %}
+                                <p class="mb-0 text-muted small">{{ row.app.decisionNote }}</p>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                    <form method="post">
                         <input type="hidden" name="_token" value="{{ csrf_token(csrf_token_id) }}">
                         <input type="hidden" name="application" value="{{ row.app.id }}">
-                        <input type="text" name="note" maxlength="500" class="form-control form-control-sm" placeholder="{{ 'admin.curator.note_placeholder'|trans }}">
-                        <button name="decision" value="approve" class="btn btn-sm btn-success">{{ 'admin.curator.approve'|trans }}</button>
-                        <button name="decision" value="decline" class="btn btn-sm btn-outline-danger">{{ 'admin.curator.decline'|trans }}</button>
+
+                        {# A DRAFT, not a decision. These fill the box; nothing is sent
+                           until the reviewer presses Approve or Decline, so the standard
+                           wording can be edited, added to, or thrown away first. The
+                           note travels to the applicant as the decision message
+                           (CuratorApplicationService::notify). #}
+                        {# ENGLISH, and deliberately not in the message catalogues
+                           (owner 2026-08-14: "all moderator communication from the
+                           admin is in english"). A translated default would be
+                           rendered in the REVIEWER's locale, not the applicant's, so
+                           a Dutch reviewer would have posted Dutch to a Spanish
+                           rider and called it localisation. One working language for
+                           what a moderator says, and the reviewer edits freely
+                           before sending. The button labels above are UI chrome and
+                           stay translated. #}
+                        <div class="cur-tpl">
+                            <button type="button" class="btn btn-sm btn-outline-success"
+                                    data-note-fill="{{ "Welcome aboard. You are now a curator for " ~ scope ~ ".\n\nHow to get started:\n\n1. Read the moderation rulebook: " ~ url('moderate_rulebook') ~ "\n2. Open your curator desk: " ~ url('moderate') ~ "\n\nIf anything is unclear, just reply to this message." }}"
+                                    >{{ 'admin.curator.tpl_approve_btn'|trans }}</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary"
+                                    data-note-fill="{{ "Thank you for offering to look after " ~ scope ~ ".\n\nWe are not taking this one forward for now. You are welcome to apply again later." }}"
+                                    >{{ 'admin.curator.tpl_decline_btn'|trans }}</button>
+                        </div>
+
+                        {# A textarea, not a one-line input: the approval carries a
+                           welcome and a link to the rulebook, which never fitted in a
+                           single visible line and could not be read back before sending. #}
+                        <textarea name="note" rows="5" maxlength="500" class="form-control form-control-sm mb-2"
+                                  placeholder="{{ 'admin.curator.note_placeholder'|trans }}"></textarea>
+
+                        <div class="d-flex gap-2">
+                            <button name="decision" value="approve" class="btn btn-sm btn-success">{{ 'admin.curator.approve'|trans }}</button>
+                            <button name="decision" value="decline" class="btn btn-sm btn-outline-danger">{{ 'admin.curator.decline'|trans }}</button>
+                        </div>
                     </form>
+                    {% endif %}
                 </div>
-            </div>
+            </details>
         {% endfor %}
         {% include 'admin/_pager.html.twig' with {pager: pager, route: 'admin_curator_applications', params: {}} %}
     </div>
+
+    {# Delegated, so it binds once for every row on the page and keeps working
+       for rows revealed later. Nonce'd rather than inline-attributed: the CSP
+       has no 'unsafe-inline' and NoInlineEventHandlersTest enforces it. #}
+    <script nonce="{{ csp_nonce() }}">
+      document.addEventListener('click', function (e) {
+        var btn = e.target.closest ? e.target.closest('[data-note-fill]') : null;
+        if (!btn) return;
+        var form = btn.closest('form');
+        var box = form && form.querySelector('textarea[name="note"]');
+        if (!box) return;
+        box.value = btn.getAttribute('data-note-fill');
+        box.focus();
+        // Caret at the end, so typing a personal line continues the message
+        // rather than landing in front of it.
+        box.setSelectionRange(box.value.length, box.value.length);
+      });
+    </script>
 {% endblock %}

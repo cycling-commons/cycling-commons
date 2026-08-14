@@ -323,6 +323,37 @@ final class CuratorApplicationService
     }
 
     /**
+     * Every application, newest first — the admin desk's list.
+     *
+     * The desk used to read `pending()`, so a decided application simply
+     * vanished from it and there was nowhere to see what had been answered or
+     * how (owner 2026-08-14: "clearly add their status Open, accepted or
+     * declined and order by latest first"). Newest first because the desk is
+     * worked from the top: the oldest-first order that suits a QUEUE is the
+     * wrong one for a record.
+     *
+     * `pending()` keeps its own meaning for anything that genuinely wants the
+     * queue, and `pendingCount()` still drives the sidebar's waiting count.
+     *
+     * @return list<CuratorApplication>
+     */
+    public function recent(int $page = 1, int $perPage = self::PER_PAGE): array
+    {
+        return $this->em->getRepository(CuratorApplication::class)->findBy(
+            [],
+            ['createdAt' => 'DESC', 'id' => 'DESC'],
+            max(1, $perPage),
+            max(0, (max(1, $page) - 1) * max(1, $perPage)),
+        );
+    }
+
+    /** How many applications there are in total, for the desk's pager. */
+    public function totalCount(): int
+    {
+        return $this->em->getRepository(CuratorApplication::class)->count([]);
+    }
+
+    /**
      * Evidence read live rather than snapshotted (§8), so the reviewer always
      * sees the applicant's current standing.
      *

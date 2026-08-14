@@ -331,12 +331,15 @@ final class DashboardController extends AbstractDashboardController
 
         $pager = Pager::of(
             $request->query->getInt('page', 1),
-            $applications->pendingCount(),
+            // Every application, not just the waiting ones: a decided one used
+            // to disappear from this desk, so there was nowhere to see what had
+            // been answered or how (owner 2026-08-14).
+            $applications->totalCount(),
             $pageSize->resolve(CuratorApplicationService::PER_PAGE),
         );
 
         $rows = [];
-        foreach ($applications->pending($pager['page'], $pager['perPage']) as $app) {
+        foreach ($applications->recent($pager['page'], $pager['perPage']) as $app) {
             // requested_region_id carries no FK, so a region deleted after
             // submission does not null the column out — it dangles. That
             // must render as its own state, not fall through to "whole

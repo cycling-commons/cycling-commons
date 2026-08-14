@@ -58,7 +58,10 @@
   .msg-photo img{width:120px;height:90px;object-fit:cover;border-radius:5px;display:block}
   .msg-map-link{display:inline-block;margin-top:.45rem;font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--clay)}
   .msg-map-link:hover{color:var(--trail)}
-  .msg-note{font-size:.88rem;line-height:1.55;color:#4a4d40;background:var(--paper);border-left:2px solid var(--glacier);padding:.6rem .85rem;border-radius:0 5px 5px 0;margin-top:.55rem}
+  /* pre-line, so the line breaks a curator typed survive into the message.
+     Not pre-wrap: runs of spaces should still collapse, only the newlines are
+     meaningful. */
+  .msg-note{font-size:.88rem;line-height:1.55;color:#4a4d40;background:var(--paper);border-left:2px solid var(--glacier);padding:.6rem .85rem;border-radius:0 5px 5px 0;margin-top:.55rem;white-space:pre-line}
   .msg-subject{color:var(--clay);text-decoration:underline;text-underline-offset:2px}
   .msg-subject:hover{color:var(--trail)}
   /* The reader's own answer, inside the card holding the question. */
