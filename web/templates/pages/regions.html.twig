@@ -8,6 +8,14 @@
   .rhero h1{font-family:var(--serif);font-weight:500;font-size:clamp(2.4rem,5vw,4.2rem);line-height:1.03;letter-spacing:-.025em;margin-bottom:.9rem}
   .rhero p{max-width:62ch;color:rgba(239,230,212,.85);line-height:1.6;font-size:1.15rem}
   .rhero p b{color:var(--paper)}
+  /* The compact country invite. Smaller than the lead and set on its own rule,
+     so it reads as an aside to the page rather than as a second lead sentence.
+     Wraps to two lines on a phone instead of squeezing the link. */
+  .rhero-invite{display:flex;flex-wrap:wrap;align-items:baseline;gap:.2rem .6rem;margin-top:1.4rem;
+    padding-top:1.1rem;border-top:1px solid rgba(239,230,212,.18);font-size:.95rem}
+  .rhero-invite b{color:var(--paper);font-weight:600}
+  .rhero-invite a{color:var(--trail);text-decoration:underline;text-underline-offset:3px}
+  .rhero-invite a:hover{color:var(--paper)}
 
   .rwrap{max-width:1000px;margin:0 auto;padding:2.2rem clamp(1.25rem,4vw,3rem) 3rem}
 
@@ -77,6 +85,16 @@
   <div class="kicker" style="color:var(--trail)">{% trans %}regions.kicker{% endtrans %}</div>
   <h1>{% trans %}regions.title{% endtrans %}</h1>
   <p>{{ 'regions.lead'|trans|rich }}</p>
+  {# The same invitation as #your-country at the foot of the page, compressed to
+     one line and put where a reader looks FIRST (owner 2026-08-15). The full
+     block keeps the country typeahead and stays where it is; this is a pointer
+     to it, not a second copy of it, so there is one input and one place the
+     answer is given. Anchor rather than a duplicated form: two search boxes for
+     the same question is how they drift apart. #}
+  <p class="rhero-invite">
+    <b>{% trans %}regions.your_country_h{% endtrans %}</b>
+    <a href="#your-country">{% trans %}regions.your_country_top{% endtrans %}</a>
+  </p>
 </div></div>
 
 <div class="rwrap">

@@ -73,6 +73,34 @@ final class ContentPagesTest extends WebTestCase
         self::assertSelectorTextContains('h1', 'The whole Commons');
     }
 
+    /**
+     * A site directory whose links go nowhere is worse than no directory: it
+     * teaches a reader the section is unbuilt. Five of the cards shipped with
+     * `href="#"` while every one of those pages existed and was routable
+     * (found 2026-08-15), so the shape of that bug is pinned here rather than
+     * left to the next reader to notice.
+     */
+    public function testEveryCardOnThePagesDirectoryLeadsSomewhere(): void
+    {
+        $client = static::createClient();
+        $crawler = $client->request('GET', '/pages');
+        self::assertResponseIsSuccessful();
+
+        $hrefs = $crawler->filter('.pg a')->extract(['href']);
+        self::assertNotEmpty($hrefs, 'the directory grid rendered no cards at all');
+        foreach ($hrefs as $href) {
+            self::assertNotSame('#', $href, 'a directory card still points at nothing');
+            self::assertStringStartsWith('/', (string) $href);
+        }
+
+        // The surfaces that were missing entirely until the same audit. Named
+        // one by one, because "some links exist" is what the bug looked like.
+        foreach (['/join', '/scout', '/propose-route', '/messages', '/settings', '/privacy', '/terms',
+            '/contribute', '/add-climb', '/improve', '/moderate'] as $path) {
+            self::assertContains($path, $hrefs, $path.' is a live surface and belongs in the directory');
+        }
+    }
+
     public function testUnknownPathReturns404(): void
     {
         $client = static::createClient();

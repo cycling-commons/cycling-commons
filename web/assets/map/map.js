@@ -32,7 +32,7 @@ import { initCommunity, initCuratorKeys } from './community.js';
 import { initSearchUi } from './search-ui.js';
 import { initScoutReview } from './scout-review.js';
 import { initLayerList, initMapCtrl, initRailChrome, initBestOf,
-         initChips, initViewMode } from './panels.js';
+         initChips, initViewMode, initAddClimbHere } from './panels.js';
 
   // Scope model + rail + header (scope-ui.js).
   initScope();
@@ -392,6 +392,8 @@ import { initLayerList, initMapCtrl, initRailChrome, initBestOf,
   initScopeRail();   // rail buttons + the cc:scopechange -> applyScope path (scope-ui.js)
 
   initAreaNudge();   // pan-away widen prompt for a My-area scope (scope-ui.js)
+
+  initAddClimbHere();   // rail "Add a climb here", seeded with the live view (panels.js)
 
   initChips();          // every chip group; MUST follow initScopeRail/initAreaNudge (panels.js)
 

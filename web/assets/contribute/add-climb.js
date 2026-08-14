@@ -111,10 +111,20 @@
   if (nextBtn) nextBtn.addEventListener('click', onNext);
 
   /* ---------- step 1: draw the segment (shared three-point editor) ---------- */
+  /* Open where the rider was already looking, when /map sent them here
+     (window.CC_CLIMB_VIEW, validated server-side in
+     ContributeController::startView). The fallback is the old hardcoded
+     Wallonia centre, which is right for nobody once the map covers 19
+     countries but is what a direct /add-climb visit has always had, and
+     replacing it is a separate decision. Camera only: the foot and summit
+     markers stay unset, because one centre cannot say which end this is. */
+  var seed = window.CC_CLIMB_VIEW;
   var cmap = new maplibregl.Map({
     container: 'cmap',
     style: 'https://tiles.openfreemap.org/styles/liberty',
-    center: [5.74, 50.49], zoom: 11, attributionControl: false
+    center: seed ? [seed.lng, seed.lat] : [5.74, 50.49],
+    zoom: seed ? seed.zoom : 11,
+    attributionControl: false
   });
   cmap.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
   cmap.addControl(new maplibregl.AttributionControl({ customAttribution: '© OpenStreetMap contributors · ODbL' }), 'bottom-right');

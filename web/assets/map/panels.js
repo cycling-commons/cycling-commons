@@ -126,6 +126,22 @@ export function initLayerList(){
     // reads as broken. Hidden rather than disabled — with the skin off there
     // is nothing to explain.
     if(gapsBtn) gapsBtn.hidden=!surfaceTilesVisible();
+    /* The basemap road key (owner 2026-08-14). Three conditions, and all three
+       are the same one asked about different things: is the rider reading
+       liberty's road colours right now?
+         - the surface skin is on, which is when those colours start competing
+           with ours for the same lines;
+         - Study mode is off, because it strips the basemap out entirely and
+           solves the confusion the opposite way;
+         - the base is Map, not Satellite, which replaces the palette with
+           photographs.
+       A key for colours that are not on screen is worse than no key: it
+       describes a map the rider is not looking at. */
+    const baseKey=document.getElementById('skeyBase');
+    if(baseKey){
+      const sat=!!document.querySelector('.map-wrap.sat');
+      baseKey.hidden = !(surfaceTilesVisible() && !studyModeOn() && !sat);
+    }
   };
   if(gapsBtn){
     gapsBtn.onclick=()=>{
@@ -156,7 +172,9 @@ export function initLayerList(){
   document.querySelectorAll('.skey-row[data-surf-cls]').forEach(b=>{
     b.onclick=()=>{ b.setAttribute('aria-pressed', toggleSurfaceClass(b.dataset.surfCls) ? 'true' : 'false'); };
   });
-  if(studyBtn) studyBtn.onclick=()=>{ studyBtn.setAttribute('aria-pressed', setStudyMode(!studyModeOn()) ? 'true' : 'false'); };
+  // syncStudyGate() after the toggle, not before: Study mode hides the basemap,
+  // so its own key has to leave with it.
+  if(studyBtn) studyBtn.onclick=()=>{ studyBtn.setAttribute('aria-pressed', setStudyMode(!studyModeOn()) ? 'true' : 'false'); syncStudyGate(); };
   syncStudyGate();
 
   document.querySelectorAll('#baseSeg button').forEach(b=>b.onclick=()=>{
@@ -165,6 +183,7 @@ export function initLayerList(){
     const sat=b.dataset.b==='satellite';
     if(map.getLayer('satellite')) map.setLayoutProperty('satellite','visibility', sat?'visible':'none');
     document.querySelector('.map-wrap').classList.toggle('sat', sat);
+    syncStudyGate();   // satellite replaces liberty's palette, so its key goes too
   });
 }
 
@@ -527,4 +546,33 @@ export function initChips(){
     if (a) a.href = '/join/' + encodeURIComponent(cc);
     row.hidden = false;
   })();
+}
+
+/* "Add a climb here": keep the rail's link pointed at what the map is showing.
+
+   The wizard's own map used to open on a hardcoded Wallonia centre wherever
+   the rider arrived from, so somebody who had just been looking at the climb
+   had to find it a second time (owner 2026-08-14). The link carries the
+   centre and zoom instead, and ContributeController::startView() validates
+   them before the wizard's map reads them.
+
+   Rewritten on 'move' rather than built once: the rider pans while deciding,
+   and a link captured at page load would send them wherever they happened to
+   land first. Coordinates are rounded to 5 decimals (about a metre), which is
+   far finer than a climb foot needs and keeps the URL readable.
+
+   Only the CAMERA travels. Seeding the foot pin from the centre was the
+   tempting version and it is wrong: one point cannot say which end of the
+   climb it is, and a pin the rider did not place is a claim they did not
+   make. */
+export function initAddClimbHere(){
+  const a=document.getElementById('addClimbHere');
+  if(!a) return;   // anonymous rider: the block is not rendered at all
+  const base=a.getAttribute('href').split('?')[0];
+  const sync=()=>{
+    const c=map.getCenter();
+    a.href=`${base}?lat=${c.lat.toFixed(5)}&lng=${c.lng.toFixed(5)}&z=${map.getZoom().toFixed(1)}`;
+  };
+  map.on('move', sync);
+  sync();
 }

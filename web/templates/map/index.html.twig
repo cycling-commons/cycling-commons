@@ -81,6 +81,26 @@
         <div class="cc-ride-status" id="rcStatus" role="status" hidden></div>
         <p class="cc-ride-note">{{ 'ride_check.notice'|trans }}</p>
       </div>
+
+      {# "Add a climb here" (owner asked 2026-08-14: "how do we add a new climb
+         via the map as a normal user"). Until now the answer was that you
+         cannot: the map's only contribution affordance is the /contribute link
+         in the map-top box, so a rider had to leave, find the climb wizard, and
+         then re-locate the climb from scratch in its own small map while having
+         been looking straight at it.
+
+         Riders only, like the ride-check block above it, because /add-climb is
+         ROLE_USER and offering a link that lands on a login wall is worse than
+         not offering it. Anonymous riders still reach it through /contribute,
+         which lists it.
+
+         The href is rewritten by panels.js initAddClimbHere() on every map
+         move, so what the wizard opens on is what the rider was looking at. #}
+      <div class="grp cc-addclimb">
+        <h3>{{ 'map.add_climb_heading'|trans }}</h3>
+        <a class="cc-addclimb-go" id="addClimbHere" href="{{ path('add_climb') }}">{{ 'map.add_climb_here'|trans }}</a>
+        <p class="cc-addclimb-note">{{ 'map.add_climb_note'|trans }}</p>
+      </div>
       {% endif %}
 
       {# Region scope selector (map-and-search.md §4.5 Phase 2): the area
@@ -301,6 +321,40 @@
          only while the surface skin is on. #}
       <button type="button" class="skey-study" id="skeyGaps" aria-pressed="false" hidden
         title="{{ 'map.gaps_grid_title'|trans }}">{{ 'map.gaps_grid'|trans }}</button>
+      {# The BASE MAP's own road colours (owner 2026-08-14). Our key explains our
+         classes; the OpenFreeMap/OSM "liberty" palette underneath stays visible
+         around and under our lines and nothing said what THOSE colours meant, so
+         a rider studying surfaces was reading two colour systems and had a key
+         for one.
+
+         The four rows are read off the liberty style itself
+         (tiles.openfreemap.org/styles/liberty, checked 2026-08-15), never
+         guessed: road_motorway #fc8, road_trunk_primary + road_secondary_tertiary
+         #fea, road_minor + road_service_track #fff over a #cfcdca casing, and
+         road_path_pedestrian white with a [1, 0.7] dash. Minor roads and
+         tracks share one row because they share one colour, differing only in
+         width - inventing two swatches would be a legend for a distinction the
+         map does not draw.
+
+         Collapsed by default: it answers a question the rider may not have, and
+         the surface key above it is the one they came for. panels.js
+         syncStudyGate() reveals the whole block only while the skin is on, the
+         basemap is actually visible (Study mode hides it, satellite replaces
+         it), because a key for something you cannot see is noise. #}
+      <details class="skey-base" id="skeyBase" hidden>
+        <summary>{{ 'map.base_roads'|trans }}</summary>
+        {# `skey-brow`, not `skey-row`: the surface rows are BUTTONS that filter
+           the map and carry a tick to say so. These four explain somebody
+           else's basemap and can filter nothing, so they must not borrow the
+           affordance. #}
+        <div class="skey">
+          <div class="skey-brow"><span class="skey-bln" style="--sc:#fc8;--scc:#e9ac77"></span><span>{{ 'map.base_roads_motorway'|trans }}<small>motorway</small></span></div>
+          <div class="skey-brow"><span class="skey-bln" style="--sc:#fea;--scc:#e9ac77"></span><span>{{ 'map.base_roads_through'|trans }}<small>trunk · primary · secondary · tertiary</small></span></div>
+          <div class="skey-brow"><span class="skey-bln" style="--sc:#fff;--scc:#cfcdca"></span><span>{{ 'map.base_roads_quiet'|trans }}<small>residential · service · track</small></span></div>
+          <div class="skey-brow"><span class="skey-bln bdash" style="--sc:#fff;--scc:#cfcdca"></span><span>{{ 'map.base_roads_path'|trans }}<small>path · pedestrian</small></span></div>
+        </div>
+        <p class="skey-base-note">{{ 'map.base_roads_note'|trans }}</p>
+      </details>
     </div>
     <div class="map-ctrl" aria-label="{{ 'map.base_aria'|trans }}">
       <button class="mc-toggle" id="mcToggle" type="button" aria-label="{{ 'map.base_layers_aria'|trans }}" aria-expanded="false">

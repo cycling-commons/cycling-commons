@@ -561,11 +561,34 @@ the newest rung of that same ladder.
   (`cc-area-prompt-dismissed`). Setting it calls the myArea endpoint (logged
   in) or writes the anonymous circle (logged out), then activates the
   `myArea` scope immediately.
-- **Pan-away nudge:** while a myArea scope is active, panning the map centre
-  past **1.5× the radius** from the circle's centre surfaces a dismissable
-  "Outside your area" nudge (`map.outside_area`) with a widen action
-  (`CCScope.widen()`); it never auto-widens the map itself, and fires **once
-  per page load** (re-dismissing doesn't re-arm until reload).
+- **Pan-away nudge:** one chip (`.cc-area-nudge`, `scope-ui.js`
+  `initAreaNudge()`), two arms, because the rider is asking the same question
+  ("why is there nothing here?") from two kinds of scope. It never auto-widens;
+  the rider taps. A dismissal lasts **until the scope changes**, which re-arms
+  it (a dismissal answers "not for THIS scope", and a scope the rider never saw
+  must not inherit it).
+  - **myArea:** panning the map centre past **1.5× the radius** from the
+    circle's centre surfaces "Outside your area" (`map.outside_area`) with a
+    widen action to the **next** rung (`CCScope.widen()`).
+  - **Named scope (region/country):** when the viewport bbox stops
+    **intersecting** `CCScope.bbox()` at all, the chip reads
+    `map.scope_miss` ("Nothing here in {area}") with a one-tap
+    `map.scope_miss_go` ("Show {area}", filled with the Everywhere label) that
+    calls `CCScope.setEverywhere()`. Intersection, **not** "is the centre
+    outside": if the two boxes do not overlap then nothing in scope can be on
+    screen, which is exactly the claim the message makes; a centre test would
+    fire with half the scope still visible and stay silent in a bbox corner
+    with no data near it. Everywhere cannot miss, so it is excluded; myArea has
+    its own arm above. Evaluated on `moveend` **and** once on `idle`, because a
+    deep link can land outside the saved scope with no move ever happening.
+    Antimeridian: bboxes are unnormalized `[w,s,e,n]`, so a viewport straddling
+    ±180° can read as non-overlapping; the outcome is a chip that does not
+    appear, never a wrong one.
+
+  *Why it exists:* coverage and catalog layers are scope-filtered, correctly and
+  deliberately, so panning to South Africa under a Netherlands scope drew an
+  empty map with the rail reading `0 places shown` and nothing naming the cause.
+  It read as broken data and cost a real dig from the inside (2026-08-14).
 - **Out-of-scope town opens transiently widen:**
   town search is scope-exempt (a place is an explicit location choice), so
   opening a town whose coordinates fall **outside the current scope's bbox**
@@ -777,6 +800,26 @@ the newest rung of that same ladder.
   the basemap to show nothing, and a rider landing on a blank page cannot tell
   whether the feature is broken or the layer is missing. The control disables
   with the layer and switches off with it.
+- **The BASE MAP's own road colours have a key too** (`#skeyBase`, a collapsed
+  `<details>` at the foot of the legend, 2026-08-15). Our key explains our
+  classes; the OpenFreeMap "liberty" palette underneath stays visible around and
+  under our lines, and nothing said what *those* colours meant, so a rider
+  studying surfaces was reading two colour systems with a key for one. Four
+  rows, read off the liberty style itself rather than guessed (checked
+  2026-08-15): `road_motorway` **#fc8**, `road_trunk_primary` +
+  `road_secondary_tertiary` **#fea**, `road_minor` + `road_service_track`
+  **#fff** over a **#cfcdca** casing, and `road_path_pedestrian` white with a
+  `[1, 0.7]` dash. Minor roads and tracks share **one** row because they share
+  one colour and differ only in width; two swatches would be a legend for a
+  distinction the map does not draw. Each row names the rider's word first and
+  the OSM classes beside it, and the block closes on the one thing that matters
+  here: those colours say how big a road is, never what it is made of.
+  Rows are `.skey-brow`, **not** `.skey-row`: the surface rows are buttons that
+  filter the map and carry a tick to say so, and these can filter nothing.
+  Revealed by `panels.js` `syncStudyGate()` only while **the skin is on, Study
+  mode is off, and the base is Map**, since Study mode hides the basemap and
+  satellite replaces it, and a key for colours that are not on screen describes
+  a map the rider is not looking at.
 - **`unverified` is labelled "Surface not recorded"**, not "unverified" — the
   class means OSM records no `surface` tag there, and riders are precisely who
   *verifies* things, so the old word claimed the opposite of what it meant
@@ -1234,6 +1277,38 @@ is the pending permalink contract):
 | `?feature=<name>` | exact-name match over `CATALOG` features: activates the layer if hidden, opens the drawer, flies to the pin. The profile-card → map contract. (Coverage POIs become linkable via the coverage plan's index-then-endpoint fallback.) |
 | `?pending=<id>` | curator deep link from the /moderate queue: activates the ⚑ layer, opens the submission drawer |
 | `?route=<id>` | opens that K route **selected** (curator Routes desk link): currently force-switches to Everything so an un-voted route can render, then highlights + shows the curator corrections overlay. The force-switch is slated to become a reveal pin (§12). |
+
+### 8.1 "Add a climb here": the map is a starting point, not only a reader
+
+*(owner asked 2026-08-14: "how do we add a new climb via the map as a normal
+user". The answer was that you cannot. Every other letter had a bridge: a
+surface line has click-to-Edit, an item has "Edit this item", a coverage POI
+opens the wizard with its ref and geometry seeded, while a climb had only the
+`/contribute` link in the map-top box. A rider had to leave, find the wizard,
+and then re-locate the climb from scratch in its own small map having just been
+looking straight at it.)*
+
+- **Where:** a `.grp.cc-addclimb` block in the rail, directly under ride-check,
+  inside the same `ROLE_USER` gate. `/add-climb` is `ROLE_USER`, and a link
+  that lands on a login wall is worse than no link; anonymous riders reach it
+  through `/contribute`, which lists it.
+- **What travels:** the **camera only**. `panels.js` `initAddClimbHere()`
+  rewrites the href on every `move` to
+  `/add-climb?lat=&lng=&z=`, coordinates rounded to 5 decimals (about a metre).
+  Rewritten on move rather than captured at load, because the rider pans while
+  deciding.
+- **What does NOT travel:** the foot pin. Seeding it from the map centre was
+  the tempting version and it is wrong twice: one point cannot say which end of
+  the climb it is, and a pin the rider did not place is a claim they did not
+  make. This is the same rule the wizard's own paste-a-coordinate path already
+  follows.
+- **Server side:** `ContributeController::startView()` validates and returns
+  `{lat, lng, zoom}` or `null`; the template emits `window.CC_CLIMB_VIEW` only
+  when non-null and `add-climb.js` falls back to its own default centre
+  otherwise. Latitude/longitude out of range or non-numeric gives `null`
+  (a junk link degrades to the old behaviour, never to a broken map); zoom is
+  **clamped** to 3–18 rather than rejected, because a bad zoom in an otherwise
+  good link should not throw the coordinates away.
 
 ## 9. Ride-check ("what's along my GPX?")
 

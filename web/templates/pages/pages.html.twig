@@ -24,23 +24,30 @@
     <a href="{{ path('home') }}"><div class="card"><div class="lab">{% trans %}pages.lab_public{% endtrans %}</div><h4>{% trans %}pages.card_landing_h{% endtrans %}</h4><p>{% trans %}pages.card_landing_p{% endtrans %}</p></div></a>
     <a href="{{ path('map') }}"><div class="card"><div class="lab">{% trans %}pages.lab_public{% endtrans %}</div><h4>{% trans %}pages.card_map_h{% endtrans %}</h4><p>{% trans %}pages.card_map_p{% endtrans %}</p></div></a>
     <a href="{{ path('regions') }}"><div class="card"><div class="lab">{% trans %}pages.lab_public{% endtrans %}</div><h4>{% trans %}pages.card_region_h{% endtrans %}</h4><p>{% trans %}pages.card_region_p{% endtrans %}</p></div></a>
-    <a href="#"><div class="card"><div class="lab">{% trans %}pages.lab_contributor{% endtrans %}</div><h4>{% trans %}pages.card_contribute_h{% endtrans %}</h4><p>{% trans %}pages.card_contribute_p{% endtrans %}</p></div></a>
-    <a href="#"><div class="card"><div class="lab">{% trans %}pages.lab_contributor{% endtrans %}</div><h4>{% trans %}pages.card_addclimb_h{% endtrans %}</h4><p>{% trans %}pages.card_addclimb_p{% endtrans %}</p></div></a>
+    <a href="{{ path('contribute') }}"><div class="card"><div class="lab">{% trans %}pages.lab_contributor{% endtrans %}</div><h4>{% trans %}pages.card_contribute_h{% endtrans %}</h4><p>{% trans %}pages.card_contribute_p{% endtrans %}</p></div></a>
+    <a href="{{ path('add_climb') }}"><div class="card"><div class="lab">{% trans %}pages.lab_contributor{% endtrans %}</div><h4>{% trans %}pages.card_addclimb_h{% endtrans %}</h4><p>{% trans %}pages.card_addclimb_p{% endtrans %}</p></div></a>
     <a href="{{ path('vote') }}"><div class="card"><div class="lab">{% trans %}pages.lab_contributor{% endtrans %}</div><h4>{% trans %}pages.card_vote_h{% endtrans %}</h4><p>{% trans %}pages.card_vote_p{% endtrans %}</p></div></a>
-    <a href="#"><div class="card"><div class="lab">{% trans %}pages.lab_contributor{% endtrans %}</div><h4>{% trans %}pages.card_improve_h{% endtrans %}</h4><p>{% trans %}pages.card_improve_p{% endtrans %}</p></div></a>
+    <a href="{{ path('improve') }}"><div class="card"><div class="lab">{% trans %}pages.lab_contributor{% endtrans %}</div><h4>{% trans %}pages.card_improve_h{% endtrans %}</h4><p>{% trans %}pages.card_improve_p{% endtrans %}</p></div></a>
+    <a href="{{ path('propose_route') }}"><div class="card"><div class="lab">{% trans %}pages.lab_contributor{% endtrans %}</div><h4>{% trans %}pages.card_route_h{% endtrans %}</h4><p>{% trans %}pages.card_route_p{% endtrans %}</p></div></a>
     {# A site directory entry, so it stays for everyone — but pointed where the
        reader can actually go. /login sends a signed-in visitor to the homepage
        with no explanation, which in a list of destinations is the one thing a
        link must not do. #}
     <a href="{{ app.user ? path('profile') : path('login') }}"><div class="card"><div class="lab">{% trans %}pages.lab_account{% endtrans %}</div><h4>{% trans %}pages.card_login_h{% endtrans %}</h4><p>{% trans %}pages.card_login_p{% endtrans %}</p></div></a>
-    <a href="#"><div class="card"><div class="lab">{% trans %}pages.lab_curator{% endtrans %}</div><h4>{% trans %}pages.card_moderate_h{% endtrans %}</h4><p>{% trans %}pages.card_moderate_p{% endtrans %}</p></div></a>
+    <a href="{{ path('moderate') }}"><div class="card"><div class="lab">{% trans %}pages.lab_curator{% endtrans %}</div><h4>{% trans %}pages.card_moderate_h{% endtrans %}</h4><p>{% trans %}pages.card_moderate_p{% endtrans %}</p></div></a>
     <a href="{{ path('developers') }}"><div class="card"><div class="lab">{% trans %}pages.lab_opendata{% endtrans %}</div><h4>{% trans %}pages.card_developers_h{% endtrans %}</h4><p>{% trans %}pages.card_developers_p{% endtrans %}</p></div></a>
     <a href="{{ path('licenses') }}"><div class="card"><div class="lab">{% trans %}pages.lab_opendata{% endtrans %}</div><h4>{% trans %}pages.card_licenses_h{% endtrans %}</h4><p>{% trans %}pages.card_licenses_p{% endtrans %}</p></div></a>
     <a href="{{ path('credits') }}"><div class="card"><div class="lab">{% trans %}pages.lab_transparency{% endtrans %}</div><h4>{% trans %}pages.card_credits_h{% endtrans %}</h4><p>{% trans %}pages.card_credits_p{% endtrans %}</p></div></a>
     <a href="{{ path('coverage') }}"><div class="card"><div class="lab">{% trans %}pages.lab_transparency{% endtrans %}</div><h4>{% trans %}pages.card_coverage_h{% endtrans %}</h4><p>{% trans %}pages.card_coverage_p{% endtrans %}</p></div></a>
     <a href="{{ path('contributors') }}"><div class="card"><div class="lab">{% trans %}pages.lab_community{% endtrans %}</div><h4>{% trans %}pages.card_contributors_h{% endtrans %}</h4><p>{% trans %}pages.card_contributors_p{% endtrans %}</p></div></a>
-    <a href="#"><div class="card"><div class="lab">{% trans %}pages.lab_community{% endtrans %}</div><h4>{% trans %}pages.card_profile_h{% endtrans %}</h4><p>{% trans %}pages.card_profile_p{% endtrans %}</p></div></a>
+    <a href="{{ path('profile') }}"><div class="card"><div class="lab">{% trans %}pages.lab_community{% endtrans %}</div><h4>{% trans %}pages.card_profile_h{% endtrans %}</h4><p>{% trans %}pages.card_profile_p{% endtrans %}</p></div></a>
     <a href="{{ path('about') }}"><div class="card"><div class="lab">{% trans %}pages.lab_identity{% endtrans %}</div><h4>{% trans %}pages.card_about_h{% endtrans %}</h4><p>{% trans %}pages.card_about_p{% endtrans %}</p></div></a>
+    <a href="{{ path('join') }}"><div class="card"><div class="lab">{% trans %}pages.lab_public{% endtrans %}</div><h4>{% trans %}pages.card_join_h{% endtrans %}</h4><p>{% trans %}pages.card_join_p{% endtrans %}</p></div></a>
+    <a href="{{ path('scout') }}"><div class="card"><div class="lab">{% trans %}pages.lab_public{% endtrans %}</div><h4>{% trans %}pages.card_scout_h{% endtrans %}</h4><p>{% trans %}pages.card_scout_p{% endtrans %}</p></div></a>
+    <a href="{{ path('messages') }}"><div class="card"><div class="lab">{% trans %}pages.lab_account{% endtrans %}</div><h4>{% trans %}pages.card_messages_h{% endtrans %}</h4><p>{% trans %}pages.card_messages_p{% endtrans %}</p></div></a>
+    <a href="{{ path('settings') }}"><div class="card"><div class="lab">{% trans %}pages.lab_account{% endtrans %}</div><h4>{% trans %}pages.card_settings_h{% endtrans %}</h4><p>{% trans %}pages.card_settings_p{% endtrans %}</p></div></a>
+    <a href="{{ path('privacy') }}"><div class="card"><div class="lab">{% trans %}pages.lab_legal{% endtrans %}</div><h4>{% trans %}pages.card_privacy_h{% endtrans %}</h4><p>{% trans %}pages.card_privacy_p{% endtrans %}</p></div></a>
+    <a href="{{ path('terms') }}"><div class="card"><div class="lab">{% trans %}pages.lab_legal{% endtrans %}</div><h4>{% trans %}pages.card_terms_h{% endtrans %}</h4><p>{% trans %}pages.card_terms_p{% endtrans %}</p></div></a>
   </div>
 </div></section>
 {% endblock %}

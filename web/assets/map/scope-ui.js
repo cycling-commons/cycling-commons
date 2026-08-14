@@ -269,14 +269,19 @@ export function initScopeRail(){
   window.addEventListener('cc:scopechange', e=>{ renderScopeChips(); applyScope(e.detail, {fit:true}); });
 }
 
-// Pan-away widen nudge (map-and-search.md §4.5 "Deep links & far panning"):
-// when a My-area scope is active and the map centre drifts past 1.5× the circle
-// radius, surface a one-tap widen prompt — NEVER auto-widen, the rider taps. It
-// hides again once the centre comes back inside; once dismissed or acted on it
-// stays gone for the rest of the page load (no per-moveend nagging).
+// Pan-away nudge (map-and-search.md §4.5 "Deep links & far panning"). One chip,
+// two arms, because they are the same rider question ("why is there nothing
+// here?") asked from two scopes:
+//   myArea  - the centre drifts past 1.5x the circle radius: offer the NEXT
+//             wider rung.
+//   region/country - the viewport stops overlapping the scope's bbox at all:
+//             offer Everywhere, the rung that cannot miss.
+// NEVER auto-widen; the rider taps. The chip hides again by itself once the
+// condition clears, and a dismissal lasts until the scope changes (no
+// per-moveend nagging, but a new scope re-arms it).
 export function initAreaNudge(){
   if(!window.CCScope) return;
-  let nudge=null, dismissed=false;
+  let nudge=null, dismissed=false, onGo=null;
   const build=()=>{
     nudge=document.createElement('div'); nudge.id='cc-area-nudge'; nudge.className='cc-area-nudge'; nudge.hidden=true;
     const msg=document.createElement('span'); msg.className='cc-nudge-msg';
@@ -285,33 +290,90 @@ export function initAreaNudge(){
     x.setAttribute('aria-label', I18N.areaDismiss||'Dismiss');
     nudge.append(msg,go,x);
     (document.querySelector('.map-wrap')||document.body).appendChild(nudge);
-    go.onclick=()=>{ dismissed=true; nudge.hidden=true; window.CCScope.widen(); };   // the rider chose to widen
+    // The action is set per show() because the two cases widen to different
+    // rungs; the button itself is built once so focus and layout are stable.
+    go.onclick=()=>{ dismissed=true; nudge.hidden=true; if(onGo) onGo(); };
     x.onclick=()=>{ dismissed=true; nudge.hidden=true; };
   };
   const hide=()=>{ if(nudge) nudge.hidden=true; };
-  const show=()=>{
+  const show=(msg, goLabel, action)=>{
     if(!nudge) build();
-    nudge.querySelector('.cc-nudge-msg').textContent = I18N.outsideArea||'Outside your area';
+    nudge.querySelector('.cc-nudge-msg').textContent = msg;
+    nudge.querySelector('.cc-nudge-go').textContent = goLabel;
+    onGo = action;
+    nudge.hidden=false;
+  };
+  const showWiden=()=>{
     const nw=window.CCScope.nextWider();
     // Reuse the search-widen label so the nudge names the target rung; Everywhere
     // has no rail label to interpolate, so it reads "Search everywhere".
-    nudge.querySelector('.cc-nudge-go').textContent = (nw && nw.kind==='everywhere')
-      ? (I18N.searchEverywhere||'Search everywhere')
-      : tpl(I18N.searchWiden||'Search in {area} instead', {area:scopeLabel(nw)});
-    nudge.hidden=false;
+    show(
+      I18N.outsideArea||'Outside your area',
+      (nw && nw.kind==='everywhere')
+        ? (I18N.searchEverywhere||'Search everywhere')
+        : tpl(I18N.searchWiden||'Search in {area} instead', {area:scopeLabel(nw)}),
+      ()=>window.CCScope.widen()
+    );
   };
-  map.on('moveend',()=>{
+  /* Say WHY the map is empty when the reason is that the rider has panned off
+     their own scope (TODO 2026-08-14, from "I see no POI in South Africa" with
+     a Netherlands scope). The catalog and coverage layers are scope-filtered,
+     correctly and deliberately, so the map goes blank and the rail reads
+     "0 places shown" with nothing anywhere naming the cause. It reads as broken
+     data; it cost a real dig from the inside, and a rider would just leave.
+
+     The test is INTERSECTION, not "is the centre outside": if the viewport and
+     the scope's bbox do not overlap at all then nothing in scope can possibly
+     be on screen, which is exactly the claim the message makes. A centre-based
+     test would fire while half the screen still showed the scope, and would
+     stay silent when the centre sat in a bbox corner with no data near it.
+
+     Named scopes only (region/country). Everywhere cannot miss, and myArea has
+     its own radius-based arm above, which offers the next rung up rather than
+     the top one.
+
+     Antimeridian: bboxes here are unnormalized [w,s,e,n], so a viewport
+     straddling ±180° can read as non-overlapping. The outcome is a chip that
+     does not appear, never a wrong one, and no onboarded region crosses it. */
+  const scopeMiss=()=>{
     const s=curScope();
-    if(!s||s.kind!=='myArea'||!s.myArea){ hide(); return; }
-    const c=map.getCenter(), ctr=s.myArea.center;   // ctr = [lat, lng]
-    // Equirectangular ground distance (km) from the map centre to the home
-    // circle centre — plenty accurate at riding scale.
-    const dLat=(c.lat-ctr[0])*111.32;
-    const dLng=(c.lng-ctr[1])*111.32*Math.cos(ctr[0]*Math.PI/180);
-    const dist=Math.sqrt(dLat*dLat+dLng*dLng);
-    if(dist > 1.5*s.myArea.radiusKm){ if(!dismissed) show(); }
-    else hide();
-  });
+    if(!s||s.kind==='everywhere'||s.kind==='myArea') return false;
+    const b=window.CCScope.bbox();
+    if(!b) return false;
+    const v=map.getBounds();
+    return v.getWest()>b[2] || v.getEast()<b[0] || v.getSouth()>b[3] || v.getNorth()<b[1];
+  };
+  const evaluate=()=>{
+    const s=curScope();
+    if(s && s.kind==='myArea' && s.myArea){
+      const c=map.getCenter(), ctr=s.myArea.center;   // ctr = [lat, lng]
+      // Equirectangular ground distance (km) from the map centre to the home
+      // circle centre, which is plenty accurate at riding scale.
+      const dLat=(c.lat-ctr[0])*111.32;
+      const dLng=(c.lng-ctr[1])*111.32*Math.cos(ctr[0]*Math.PI/180);
+      const dist=Math.sqrt(dLat*dLat+dLng*dLng);
+      if(dist > 1.5*s.myArea.radiusKm){ if(!dismissed) showWiden(); } else hide();
+      return;
+    }
+    if(scopeMiss()){
+      if(dismissed) return;
+      const ev=I18N.everywhereLabel||'Everywhere';   // the rail's own word for the top rung
+      show(
+        tpl(I18N.scopeMiss||'Nothing here in {area}', {area:scopeLabel(s)}),
+        tpl(I18N.scopeMissGo||'Show {area}', {area:ev}),
+        ()=>window.CCScope.setEverywhere()
+      );
+      return;
+    }
+    hide();
+  };
+  map.on('moveend', evaluate);
+  // A deep link can land outside the saved scope with no move ever happening,
+  // which is the same blank map arrived at by a different door.
+  map.once('idle', evaluate);
+  // Re-arm on every scope change: a dismissal answers "not for THIS scope", and
+  // keeping it forever would silence the chip for a scope the rider never saw.
+  window.addEventListener('cc:scopechange', ()=>{ dismissed=false; hide(); });
 }
 
 // Click-to-scope, moved here with corrections.js (§9): it reads the correction

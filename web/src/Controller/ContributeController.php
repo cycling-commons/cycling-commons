@@ -71,6 +71,7 @@ final class ContributeController extends AbstractController
     #[IsGranted('ROLE_USER')]
     public function addClimb(Request $request): Response
     {
+        $view = self::startView($request);
         $form = $this->createForm(AddClimbType::class);
         $form->handleRequest($request);
 
@@ -85,22 +86,68 @@ final class ContributeController extends AbstractController
             } catch (TooManyRequestsHttpException) {
                 $this->addFlash('error', 'contribute.error.rate_limited');
 
-                return $this->renderAddClimb(form: $form);
+                return $this->renderAddClimb(form: $form, view: $view);
             } catch (ValidationFailedException $e) {
                 foreach ($e->getViolations() as $violation) {
                     $form->addError(new FormError((string) $violation->getMessage()));
                 }
 
-                return $this->renderAddClimb(form: $form);
+                return $this->renderAddClimb(form: $form, view: $view);
             }
 
             return $this->renderAddClimb(receipt: $receipt);
         }
 
-        return $this->renderAddClimb(form: $form);
+        return $this->renderAddClimb(form: $form, view: $view);
     }
 
-    private function renderAddClimb(?ContributionReceipt $receipt = null, ?FormInterface $form = null): Response
+    /**
+     * Where the wizard's own map should open, when the rider arrived from /map.
+     *
+     * The wizard used to open on a hardcoded Wallonia centre wherever the rider
+     * came from, so somebody who had just been looking at the climb on /map had
+     * to find it a second time in a small map with no scope and no layers
+     * (owner 2026-08-14: "how do we add a new climb via the map as a normal
+     * user"). The map's "Add a climb here" link now hands over the position it
+     * was showing.
+     *
+     * VIEW ONLY. It moves the camera and nothing else: the foot and summit stay
+     * the three-point editor's to place, because a single centre cannot say
+     * which end of the climb it is (the same rule the wizard's own
+     * paste-a-coordinate path already follows).
+     *
+     * Validated, never trusted: this arrives from the URL bar as readily as
+     * from our own link. Out-of-range or non-numeric values give null, which
+     * the template reads as "use the default", so a junk link degrades to the
+     * old behaviour rather than to a broken map.
+     *
+     * @return array{lat: float, lng: float, zoom: float}|null
+     */
+    private static function startView(Request $request): ?array
+    {
+        $lat = $request->query->get('lat');
+        $lng = $request->query->get('lng');
+        if (!is_numeric($lat) || !is_numeric($lng)) {
+            return null;
+        }
+        $lat = (float) $lat;
+        $lng = (float) $lng;
+        if ($lat < -90.0 || $lat > 90.0 || $lng < -180.0 || $lng > 180.0) {
+            return null;
+        }
+        $z = $request->query->get('z');
+        // Clamped, not rejected: a zoom outside the slider's range is a bad
+        // number in an otherwise good link, and the coordinates are the part
+        // that matters. 13 matches what the link hands over for a wide view.
+        $zoom = is_numeric($z) ? max(3.0, min(18.0, (float) $z)) : 13.0;
+
+        return ['lat' => $lat, 'lng' => $lng, 'zoom' => $zoom];
+    }
+
+    /**
+     * @param array{lat: float, lng: float, zoom: float}|null $view
+     */
+    private function renderAddClimb(?ContributionReceipt $receipt = null, ?FormInterface $form = null, ?array $view = null): Response
     {
         return $this->render('contribute/add_climb.html.twig', [
             'page_title' => 'meta.add_climb_title',
@@ -108,6 +155,7 @@ final class ContributeController extends AbstractController
             'nav_active' => 'add_climb',
             'receipt' => $receipt,
             'form' => $form,
+            'start_view' => $view,
         ]);
     }
 

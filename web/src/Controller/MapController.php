@@ -466,6 +466,13 @@ final class MapController extends AbstractController
             'myAreaSet' => $t->trans('map.my_area_set'),
             'myAreaSetAnon' => $t->trans('map.my_area_set_anon'),
             'outsideArea' => $t->trans('map.outside_area'),
+            // The same chip's other arm (scope-ui.js initAreaNudge): a named
+            // scope whose bbox the viewport no longer touches at all, which
+            // draws an empty map that reads as missing data rather than as the
+            // filter working. {area} is the scope label; the button's {area} is
+            // 'everywhereLabel' above, so the top rung is named once.
+            'scopeMiss' => $t->trans('map.scope_miss'),
+            'scopeMissGo' => $t->trans('map.scope_miss_go'),
             'areaDismiss' => $t->trans('map.area_dismiss'),
             // Why the full-coverage layers can draw nothing (render.js
             // updateZoomHint): the coverage tileset is built z6-14 and its

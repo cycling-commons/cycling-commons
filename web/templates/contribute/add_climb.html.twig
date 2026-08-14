@@ -148,6 +148,15 @@
   <h1 class="disp">{{ 'add_climb.title'|trans }}</h1>
   <p class="sub">{{ 'add_climb.lead'|trans }}</p>
 
+  {# Where the wizard's map opens, when the rider came from /map's "Add a climb
+     here" (ContributeController::startView). Camera only: it never places the
+     foot or the summit, because one centre cannot say which end of the climb it
+     is. Absent (the direct /add-climb visit) leaves add-climb.js on its own
+     default centre. #}
+  {% if start_view %}
+  <script nonce="{{ csp_nonce() }}">window.CC_CLIMB_VIEW = {{ start_view|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
+  {% endif %}
+
   {# Translated marker labels for the shared climb editor (foot/summit/steepest) — read as a fallback by climb-editor.js when a mount call doesn't pass opts.labels explicitly. #}
   <script nonce="{{ csp_nonce() }}">window.CC_EDITOR_LABELS = {{ {foot: 'js.climb_marker_foot'|trans, summit: 'js.climb_marker_summit'|trans, steepest: 'js.climb_marker_steepest'|trans}|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
 
