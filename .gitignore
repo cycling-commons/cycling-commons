@@ -97,3 +97,10 @@ developers/docker/backups/
 # Elevation rasters staged by tools/elevation (GLO-30 GeoTIFF + generated .hgt).
 # Tens of GB, re-downloadable from the AWS Open Data bucket — never committed.
 data/dem/
+# Valhalla tile + elevation trees. developers/docker/data/ (line 6) already
+# covers where the dev stack actually mounts them; this catches a repo-root
+# ./data/valhalla, which is what you get by pointing dem-install.sh's
+# VALHALLA_DATA at ./data — a plausible mistake worth ~300 MB of binary per
+# small country, and the reason a checked-in .hgt is a near miss rather than
+# an unimaginable one.
+data/valhalla/

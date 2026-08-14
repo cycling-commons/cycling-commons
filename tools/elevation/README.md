@@ -35,17 +35,24 @@ routing host's layout, but each is an env override, so nothing needs that host
 — or root — to be exercised:
 
 ```bash
-DEM_STAGE=./data/dem VALHALLA_DATA=./data \
+DEM_STAGE=./data/dem VALHALLA_DATA=./developers/docker/data \
   ./dem-install.sh valhalla RWANDA
 ```
 
 That fetches the GeoTIFFs to `./data/dem/valhalla/tif`, converts them in the
-GDAL container, and installs the `.hgt` into `./data/valhalla/elevation_data` —
-which is exactly where the dev stack's own Valhalla looks, since
-`compose.yaml` mounts `./data/valhalla` as `/custom_files`. So
+GDAL container, and installs the `.hgt` into
+`./developers/docker/data/valhalla/elevation_data` — which is exactly where the
+dev stack's own Valhalla looks, since `compose.yaml` mounts
+`./data/valhalla` as `/custom_files` **relative to `developers/docker/`**. So
 `make up-routing` afterwards gives you a local instance answering `/height`
 for that ground, and the whole step-6b procedure can be rehearsed before
 anyone touches production.
+
+**Both of those paths are gitignored, and that is not incidental** — one
+continent is tens of GB of binary that is re-downloadable from a public bucket
+in an afternoon. `data/dem/` and `developers/docker/data/` are both ignored;
+if you point `VALHALLA_DATA` somewhere else, check `git status` before you
+commit.
 
 Pick a small preset to try it on. `RWANDA` is 12 tiles / ~300 MB and finishes
 in about a minute; `CANADAEAST` is 394 tiles and would spend an evening.
