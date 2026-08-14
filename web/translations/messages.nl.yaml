@@ -600,7 +600,7 @@ join:
     osm_handle_too_long: 'Die OpenStreetMap-gebruikersnaam is te lang.'
     social_url_invalid: 'Die link ziet er niet uit als een geldig webadres.'
   message:
-    approved: 'Je aanmelding om %scope% te beheren is goedgekeurd. Welkom aan boord.'
+    approved: 'Je aanmelding om %scope% te beheren is goedgekeurd. Welkom in de kopgroep.'
     received: 'Fijn dat je %scope% wilt beheren. Je aanmelding is binnen en een curator leest hem. Het antwoord verschijnt op je berichtenpagina, en we mailen je zodra het er is.'
     declined: 'Je aanmelding om %scope% te beheren is deze keer niet goedgekeurd.'
 contributors:
@@ -1727,6 +1727,7 @@ map:
   outside_area: 'Buiten je gebied'
   zoom_for_coverage: 'Zoom in om de volledige-dekkingslagen te zien'
   zoom_for_places: 'Hier als dichtheid getoond, zoom in voor afzonderlijke plekken'
+  pending_follows_areas: 'Te beoordelen volgt je moderatiegebieden, niet het kaartbereik'
   area_dismiss: 'Sluiten'
   empty_scope_invite: 'Hier is nog niets samengesteld — help het op te starten.'
   search_placeholder: 'Zoek een helling, stad, uitzichtpunt…'

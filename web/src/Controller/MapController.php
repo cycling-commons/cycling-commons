@@ -473,6 +473,9 @@ final class MapController extends AbstractController
             // country sees an empty map that is working exactly as designed.
             'zoomForCoverage' => $t->trans('map.zoom_for_coverage'),
             'zoomForPlaces' => $t->trans('map.zoom_for_places'),
+            // The pending layer answers to the curator's areas, not the map
+            // scope (render.js featureVisible), which reads as a leak.
+            'pendingFollowsAreas' => $t->trans('map.pending_follows_areas'),
             'seasons' => [
                 'spring' => $t->trans('map.season_spring'),
                 'summer' => $t->trans('map.season_summer'),

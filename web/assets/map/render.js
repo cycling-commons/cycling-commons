@@ -810,7 +810,18 @@ export function updateZoomHint(){
   if(!el) return;
   const z = map.getZoom();
   const anyCoverage = COVERAGE_KEYS.some(([key]) => active.has(key));
-  const msg = !anyCoverage ? ''
+  /* The pending layer follows the CURATOR'S AREAS, not the map's region scope
+     (featureVisible), so scoping the map to one region and still seeing pins
+     somewhere else is correct and looks exactly like a bug - the owner read it
+     as one on 2026-08-14 while scoped to Free State with a queue in North
+     Holland. Say which it is; the alternative is re-scoping the queue, which is
+     the thing that made "Pending review 0/0" on 2026-08-12. */
+  const pendingLayer = CATALOG.find(l => l.pendingLayer);
+  const pendingOff = !!pendingLayer && active.has(pendingLayer.key)
+    && (pendingLayer.features || []).length > 0
+    && !!curScope() && curScope().kind !== 'everywhere';
+  const msg = pendingOff ? (I18N.pendingFollowsAreas || 'Pending review follows your moderation areas, not the map scope')
+    : !anyCoverage ? ''
     : z < 6 ? (I18N.zoomForCoverage || 'Zoom in to see the full-coverage layers')
     : z < 9 ? (I18N.zoomForPlaces || 'Shown as density here, zoom in for individual places')
     : '';

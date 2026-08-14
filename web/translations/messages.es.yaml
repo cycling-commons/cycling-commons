@@ -601,7 +601,7 @@ join:
     osm_handle_too_long: 'Ese nombre de usuario de OpenStreetMap es demasiado largo.'
     social_url_invalid: 'Ese enlace no parece una dirección web válida.'
   message:
-    approved: 'Tu solicitud para curar %scope% fue aprobada. Bienvenido a bordo.'
+    approved: 'Tu solicitud para curar %scope% fue aprobada. Bienvenido al pelotón.'
     received: 'Gracias por ofrecerte a cuidar %scope%. Tu solicitud ha llegado y un curador la leerá. Su respuesta aparecerá en tu página de mensajes, y te avisaremos por correo cuando lo haga.'
     declined: 'Tu solicitud para curar %scope% no fue aprobada esta vez.'
 contributors:
@@ -2063,6 +2063,7 @@ map:
   outside_area: 'Fuera de tu zona'
   zoom_for_coverage: 'Acerca el zoom para ver las capas de cobertura completa'
   zoom_for_places: 'Aquí se muestra como densidad, acerca el zoom para ver cada lugar'
+  pending_follows_areas: 'Pendientes sigue tus áreas de moderación, no el ámbito del mapa'
   area_dismiss: 'Descartar'
   empty_scope_invite: 'Aquí todavía no hay nada curado — ayuda a empezarlo.'
   search_placeholder: 'Busca un puerto, un pueblo, un mirador…'

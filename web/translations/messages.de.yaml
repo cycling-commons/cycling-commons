@@ -600,7 +600,7 @@ join:
     osm_handle_too_long: 'Dieser OpenStreetMap-Benutzername ist zu lang.'
     social_url_invalid: 'Dieser Link sieht nicht wie eine gültige Webadresse aus.'
   message:
-    approved: 'Deine Bewerbung als Kurator für %scope% wurde angenommen. Willkommen an Bord.'
+    approved: 'Deine Bewerbung als Kurator für %scope% wurde angenommen. Willkommen im Feld.'
     received: 'Schön, dass du dich um %scope% kümmern willst. Deine Bewerbung ist angekommen und ein Kurator liest sie. Die Antwort erscheint auf deiner Nachrichtenseite, und wir schicken dir eine E-Mail, sobald sie da ist.'
     declined: 'Deine Bewerbung als Kurator für %scope% wurde diesmal nicht angenommen.'
 contributors:
@@ -1730,6 +1730,7 @@ map:
   outside_area: 'Außerhalb deines Gebiets'
   zoom_for_coverage: 'Zoome hinein, um die Ebenen mit vollständiger Abdeckung zu sehen'
   zoom_for_places: 'Hier als Dichte dargestellt, zoome für einzelne Orte hinein'
+  pending_follows_areas: 'Zu prüfen folgt deinen Moderationsgebieten, nicht dem Kartenbereich'
   area_dismiss: 'Schließen'
   empty_scope_invite: 'Hier ist noch nichts kuratiert — hilf mit, damit anzufangen.'
   search_placeholder: 'Anstieg, Ort oder Aussichtspunkt suchen…'

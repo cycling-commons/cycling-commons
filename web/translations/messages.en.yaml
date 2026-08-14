@@ -600,7 +600,7 @@ join:
     osm_handle_too_long: 'That OpenStreetMap username is too long.'
     social_url_invalid: 'That link does not look like a valid web address.'
   message:
-    approved: 'Your application to curate %scope% was approved. Welcome aboard.'
+    approved: 'Your application to curate %scope% was approved. Welcome to the paceline.'
     received: 'Thank you for offering to look after %scope%. Your application has arrived and a curator will read it. Their answer will appear on your messages page, and we will email you when it does.'
     declined: 'Your application to curate %scope% was not approved this time.'
 contributors:
@@ -2051,6 +2051,7 @@ map:
   outside_area: 'Outside your area'
   zoom_for_coverage: 'Zoom in to see the full-coverage layers'
   zoom_for_places: 'Shown as density here, zoom in for individual places'
+  pending_follows_areas: 'Pending review follows your moderation areas, not the map scope'
   area_dismiss: 'Dismiss'
   empty_scope_invite: 'Nothing curated here yet — help start it.'
   search_placeholder: 'Search a climb, town, viewpoint…'

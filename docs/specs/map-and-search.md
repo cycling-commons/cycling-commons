@@ -859,6 +859,19 @@ Two scopes for one question is one too many, and the server's is the one with
 authority. `featureVisible()` returns true for `pendingLayer` before any gate,
 and `layerCounts()` counts its whole set.
 
+**And the rail says so** (2026-08-14). The cost of that exemption is that
+scoping the map to one region while a queue sits in another looks exactly like
+a scope leak: the owner read it as one, scoped to Free State with sixteen
+pending submissions in North Holland. Both readings cannot be right, and the
+2026-08-12 decision is the one to keep - re-scoping the queue is what produced
+"Pending review 0/0" in the first place. So the rail's hint line names it
+instead: *"Pending review follows your moderation areas, not the map scope"*,
+shown while the layer is on, holds something, and the map is scoped narrower
+than Everywhere. Same slot as the coverage zoom hints
+([coverage-provider.md](coverage-provider.md)), and it takes precedence over
+them - a rider who is also a curator is more likely to be confused by pins in
+the wrong country than by an empty one.
+
 ## 6. Selection model: tooltip + drawer
 
 ### 6.1 Interaction contract
