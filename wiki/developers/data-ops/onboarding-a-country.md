@@ -175,6 +175,14 @@ make surface-tiles regions=south-america/chile   # road surface: classified, to-
 make routes-tiles  regions=south-america/chile   # cycle-route network + junction numbers
 ```
 
+!!! danger "Pass every region, not just the new one"
+    Coverage accumulates in a database, so refreshing one country and rebuilding its
+    tiles is correct. **Surface and routes use no database**: they read the extracts you
+    name and publish an artifact containing exactly those. Building them one country at a
+    time *replaces* the previous artifact instead of adding to it, and the manifest ends
+    up listing only the country you built last. Always rebuild these two with the whole
+    `COVERAGE_REGIONS` list, then check `country_codes` in each manifest.
+
 A country with coverage but without these looks *broken* rather than incomplete: the
 Surfaces skin is blank over it while every neighbouring country is coloured, and node
 networks simply are not there. Because every country onboarded before 2026-08-14 has all

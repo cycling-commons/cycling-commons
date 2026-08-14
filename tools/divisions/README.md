@@ -41,6 +41,26 @@ neither is in step 6:
 Both read the same Geofabrik extract as coverage and take the same `regions=`
 list, so onboarding a country is three builds, not one.
 
+> **PASS EVERY REGION, NOT JUST THE NEW ONE.** This is the trap, and it cost a
+> rebuild on 2026-08-14. Coverage accumulates in `coverage_poi`, so
+> `make coverage-refresh regions=<one>` reloads one country and then rebuilds
+> the tiles *from the whole table* — per-region runs are correct and are what
+> the rollout memory recommends. **Surface and routes have no database at all**
+> (`Dated/2026-08-09-surface-line-tiles-design.md`): they read the PBFs named
+> in `regions=` and publish an artifact containing exactly those. Running them
+> one country at a time therefore REPLACES the previous artifact rather than
+> adding to it, and the manifest ends up listing only the last country built,
+> with the older artifacts pruned. Always rebuild these two with the full
+> `COVERAGE_REGIONS` list:
+>
+> ```bash
+> make surface-tiles regions="$(the whole comma-separated list)"
+> make routes-tiles  regions="$(the whole comma-separated list)"
+> ```
+>
+> Check `country_codes` in each manifest afterwards. One entry where you
+> expected nineteen is this mistake.
+
 **Check what the manifests already carry before assuming:** each publishes a
 `country_codes` list, so the honest test is whether the new country is in it.
 
