@@ -450,19 +450,40 @@ final class MediaTakedownService
      * Deliberately not region-scoped, like the pending desk above: a rights
      * request is not editorial work shared out by jurisdiction.
      *
-     * @return list<array{action: string, note: ?string, decidedAt: \DateTimeImmutable, actor: ?string, uuid: string, itemName: string, gone: bool}>
+     * @return list<array{action: string, note: ?string, requestedAt: ?\DateTimeImmutable, decidedAt: \DateTimeImmutable, waitedHours: ?int, actor: ?string, uuid: string, itemName: string, gone: bool}>
      */
     public function decidedCards(int $page = 1, int $perPage = self::PER_PAGE): array
     {
-        /** @var list<array{action: string, note: ?string, created_at: string, display_name: ?string, public_profile: ?bool, media_id: string}> $rows */
+        /* WHEN IT CAME IN comes from the event log, not from the upload row.
+           The obvious source is `media_upload.takedown_requested_at`, and it is
+           wrong twice over: granting DELETES the objects and can take the row
+           with them, and declining CLEARS the markers, so the one column that
+           would answer "when was this asked" is gone in both directions
+           precisely once the request is answered. The request event is written
+           at intake and never touched again, so the lateral picks the last one
+           before this decision, which is the request this decision answers.
+
+           @var list<array{action: string, note: ?string, created_at: string, display_name: ?string, public_profile: ?bool, media_id: string, requested_at: ?string}> $rows */
         $rows = $this->db->fetchAllAssociative(
-            'SELECT e.action, e.note, e.created_at, e.media_id,
-                    u.display_name, u.public_profile
+            "SELECT e.action, e.note, e.created_at, e.media_id,
+                    u.display_name, u.public_profile,
+                    req.created_at AS requested_at
                FROM media_moderation_event e
           LEFT JOIN users u ON u.id = e.actor_id
+          LEFT JOIN LATERAL (
+                  SELECT r.created_at
+                    FROM media_moderation_event r
+                   WHERE r.media_id = e.media_id
+                     -- Both doors into this desk: the uploader asking, and a
+                     -- third party reporting (photo-uploads.md §6b/§6c).
+                     AND r.action IN ('takedown_requested', 'third_party_reported')
+                     AND r.created_at <= e.created_at
+                ORDER BY r.created_at DESC, r.id DESC
+                   LIMIT 1
+               ) req ON TRUE
               WHERE e.action IN (:actions)
            ORDER BY e.created_at DESC, e.id DESC
-              LIMIT :lim OFFSET :off',
+              LIMIT :lim OFFSET :off",
             [
                 'actions' => self::DECIDED_ACTIONS,
                 'lim' => max(1, $perPage),
@@ -474,10 +495,22 @@ final class MediaTakedownService
         $cards = [];
         foreach ($rows as $r) {
             $upload = $this->em->getRepository(MediaUpload::class)->find(Uuid::fromString((string) $r['media_id']));
+            $requestedAt = null !== $r['requested_at']
+                ? new \DateTimeImmutable((string) $r['requested_at'])
+                : null;
+            $decidedAt = new \DateTimeImmutable((string) $r['created_at']);
             $cards[] = [
                 'action' => (string) $r['action'],
                 'note' => null !== $r['note'] && '' !== $r['note'] ? (string) $r['note'] : null,
-                'decidedAt' => new \DateTimeImmutable((string) $r['created_at']),
+                'requestedAt' => $requestedAt,
+                'decidedAt' => $decidedAt,
+                // How long it sat. A rights request runs against a legal clock,
+                // so "answered in 4 hours" and "answered in 11 days" are
+                // different facts about this desk, and neither is visible from
+                // two timestamps a reader has to subtract.
+                'waitedHours' => null !== $requestedAt
+                    ? max(0, (int) round(($decidedAt->getTimestamp() - $requestedAt->getTimestamp()) / 3600))
+                    : null,
                 // Same pseudonymity rule as the submission queue: a curator's
                 // name shows only where they made it public.
                 'actor' => ($r['public_profile'] ?? false) ? (string) ($r['display_name'] ?? '') : null,

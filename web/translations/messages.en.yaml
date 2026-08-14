@@ -2480,6 +2480,11 @@ moderate:
     action_takedown_declined: 'Declined'
     action_takedown_dismissed_as_abuse: 'Dismissed as abuse'
     photo_gone: 'photo deleted'
+    log_in: 'in %when%'
+    log_out: 'answered %when%'
+    log_waited_h: '%n%h wait'
+    log_waited_d: '%n%d wait'
+    log_by: 'by %who%'
     granted: 'The photo has been removed and the rider told.'
     declined: 'The request was declined and the photo is published again.'
   type:

@@ -2457,6 +2457,11 @@ moderate:
     action_takedown_declined: 'Refusée'
     action_takedown_dismissed_as_abuse: 'Classée comme abus'
     photo_gone: 'photo supprimée'
+    log_in: 'reçue %when%'
+    log_out: 'traitée %when%'
+    log_waited_h: '%n% h dattente'
+    log_waited_d: '%n% j dattente'
+    log_by: 'par %who%'
     granted: 'La photo a été retirée et le cycliste prévenu.'
     declined: 'La demande a été refusée et la photo est de nouveau publiée.'
   type:

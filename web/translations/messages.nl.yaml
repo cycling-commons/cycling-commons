@@ -2457,6 +2457,11 @@ moderate:
     action_takedown_declined: 'Afgewezen'
     action_takedown_dismissed_as_abuse: 'Afgedaan als misbruik'
     photo_gone: 'foto verwijderd'
+    log_in: 'binnen %when%'
+    log_out: 'behandeld %when%'
+    log_waited_h: '%n% u wachttijd'
+    log_waited_d: '%n% d wachttijd'
+    log_by: 'door %who%'
     granted: 'De foto is verwijderd en de fietser is op de hoogte gebracht.'
     declined: 'Het verzoek is afgewezen en de foto is weer gepubliceerd.'
   type:

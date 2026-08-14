@@ -2493,6 +2493,11 @@ moderate:
     action_takedown_declined: 'Rechazada'
     action_takedown_dismissed_as_abuse: 'Descartada por abuso'
     photo_gone: 'foto borrada'
+    log_in: 'recibida %when%'
+    log_out: 'resuelta %when%'
+    log_waited_h: '%n% h de espera'
+    log_waited_d: '%n% d de espera'
+    log_by: 'por %who%'
     granted: 'La foto se ha retirado y se ha avisado al ciclista.'
     declined: 'La solicitud se ha rechazado y la foto vuelve a estar publicada.'
   type:
