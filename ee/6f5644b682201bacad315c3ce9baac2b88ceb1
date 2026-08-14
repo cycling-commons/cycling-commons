@@ -1,0 +1,29 @@
+tools/divisions/README.md
+  s_1c0464d81ce126::t_eb0be7005db797 25,29-73
+  s_1c0464d81ce126::t_7dc68805ba05e4 74
+tools/elevation/dem-install.sh
+  s_1c0464d81ce126::t_8ecc8b8f6ae75d 1-101
+tools/elevation/fetch-glo30.sh
+  s_1c0464d81ce126::t_9e71dd78817cc3 54-59,61
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "ee6f5644b682201bacad315c3ce9baac2b88ceb1",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_1c0464d81ce126": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "04feb771-c203-4977-b898-3414026fd58f",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
