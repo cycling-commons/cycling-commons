@@ -78,10 +78,20 @@
       </figure>
     {% endif %}
   </div>
+  {# THE SAME THREE FIGURES AS /coverage, in the same order (owner 2026-08-14).
+     That page opens with reference places, catalog items and routes; a region
+     page that opened with only the last two made the region look like it holds
+     a handful of things when the map there draws thousands. Same labels too,
+     so a reader moving between the two pages is not asked to learn the
+     vocabulary twice. #}
   <div class="rstats">
+    <div class="s"><b>{{ region.coveragePois|number_format(0, '.', ',') }}</b><span>{% trans %}coverage.kpi_pois{% endtrans %}</span></div>
     <div class="s"><b>{{ region.itemsVerified }}</b><span>{% trans %}region.stat_items{% endtrans %}</span></div>
     <div class="s"><b>{{ region.routes }}</b><span>{% trans %}region.stat_routes{% endtrans %}</span></div>
-    {% if region.areaKm2 %}<div class="s"><b>{{ region.areaKm2|cc_km2 }}</b><span>{{ cc_area_suffix() }}</span></div>{% endif %}
+    {# The label is the noun, not the unit: cc_km2 already appends the suffix,
+       so "372,910 km²" sat above a second "KM²". The other three stats name
+       what they count and this one now does too. #}
+    {% if region.areaKm2 %}<div class="s"><b>{{ region.areaKm2|cc_km2 }}</b><span>{% trans %}region.stat_area{% endtrans %}</span></div>{% endif %}
   </div>
   {# WHO LOOKS AFTER IT, as a sentence (owner: "I do not see if there is a
      curator for the region yet"). The kicker above carries the same fact as a

@@ -339,6 +339,14 @@ across all five.
   bare name trailing the sentence read as part of it. Every state short of
   `curated` ends in the same invitation, linking to `join_country`.
 
+  **The hero opens with the same three figures as `/coverage`**, in the same
+  order and under the same labels: reference places on file, verified items,
+  routes. A region page that opened with only the last two made a region
+  holding thousands of reference places look like it held three, and asked a
+  reader moving between the two pages to learn the vocabulary twice. The total
+  is summed from the per-letter counts the by-kind block already fetches, not
+  queried again, and is zero when the pipeline's `coverage_poi` is absent.
+
   **"What riders find here" reports two numbers per kind, never their sum.**
   `N in the Commons` is what somebody has stood at and a curator approved;
   `N on the map` is what OpenStreetMap knows is there and the coverage layer

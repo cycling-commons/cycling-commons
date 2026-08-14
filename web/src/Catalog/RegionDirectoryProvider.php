@@ -273,6 +273,14 @@ final class RegionDirectoryProvider
             'countryName' => Countries::exists($cc) ? Countries::getName($cc, $locale) : (string) $row['country_name_en'],
             'flag' => 'flags/'.strtolower($cc).'.svg',
             'byKind' => $byKind,
+            /* The hero's own reference-plane total, so the region page opens
+               with the same three figures as /coverage (owner 2026-08-14:
+               "show same block as coverage on the region page"). Summed from
+               the per-letter counts already fetched above rather than queried
+               again — same rows, same WHERE, one round trip. Zero when the
+               pipeline table is absent, which is the same degradation byKind
+               makes. */
+            'coveragePois' => array_sum(array_map('intval', $coverageRows)),
         ];
     }
 

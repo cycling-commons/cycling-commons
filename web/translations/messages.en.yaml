@@ -1273,6 +1273,7 @@ region:
   # not part of the region detail page anymore, kept for that consumer.
   cta_vote: 'Vote this round'
   stat_items: 'Verified items'
+  stat_area: 'Area'
   stat_routes: 'Routes'
   by_kind_h: 'What riders find here'
   kind_verified: 'in the Commons'

@@ -1269,6 +1269,7 @@ region:
   # not part of the region detail page anymore, kept for that consumer.
   cta_vote: 'Voter ce tour'
   stat_items: 'Éléments vérifiés'
+  stat_area: 'Superficie'
   stat_routes: 'Itinéraires'
   by_kind_h: 'Ce que les cyclistes trouvent ici'
   kind_verified: 'dans le Commons'

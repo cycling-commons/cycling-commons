@@ -1269,6 +1269,7 @@ region:
   # not part of the region detail page anymore, kept for that consumer.
   cta_vote: 'Stem deze ronde'
   stat_items: 'Geverifieerde items'
+  stat_area: 'Oppervlakte'
   stat_routes: 'Routes'
   by_kind_h: 'Wat fietsers hier vinden'
   kind_verified: 'in de Commons'

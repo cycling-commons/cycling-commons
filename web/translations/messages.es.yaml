@@ -1275,6 +1275,7 @@ region:
   # conserva para ese consumidor.
   cta_vote: 'Votar esta ronda'
   stat_items: 'Elementos verificados'
+  stat_area: 'Superficie'
   stat_routes: 'Rutas'
   by_kind_h: 'Qué encuentran aquí los ciclistas'
   kind_verified: 'en el Commons'

@@ -1269,6 +1269,7 @@ region:
   # not part of the region detail page anymore, kept for that consumer.
   cta_vote: 'An dieser Runde abstimmen'
   stat_items: 'Geprüfte Einträge'
+  stat_area: 'Fläche'
   stat_routes: 'Routen'
   by_kind_h: 'Was Radfahrende hier finden'
   kind_verified: 'im Commons'
