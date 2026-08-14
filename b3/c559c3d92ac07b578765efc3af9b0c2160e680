@@ -1,0 +1,28 @@
+wiki/country-onboarding.md
+  s_1c0464d81ce126::t_39726cdcb21268 13-19,26-37
+  s_1c0464d81ce126::t_b6e6681bd60bb7 84-93,96-97
+docs/specs/moderation-and-contribution.md
+  s_1c0464d81ce126::t_f60df0779240ac 1302-1322
+  s_1c0464d81ce126::t_abec6408e2b359 1586-1605
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "b3c559c3d92ac07b578765efc3af9b0c2160e680",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_1c0464d81ce126": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "04feb771-c203-4977-b898-3414026fd58f",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
