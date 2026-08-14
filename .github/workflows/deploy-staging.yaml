@@ -1,9 +1,36 @@
+# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
 name: Deploy — staging
+
+# Deploys to the shared web infrastructure: two web hosts behind a load
+# balancer, NOT the single box the old workflow targeted. That one leaned on a
+# forced `ssh deploy@host staging` command belonging to another project's
+# deploy script; here each domain is deployed explicitly with
+# deploy-symfony.sh.
+#
+# Required secrets:
+#   DEPLOY_SSH_KEY     private key authorized for the deploy user on BOTH hosts
+#   DEPLOY_HOST_WEB1   web-1 address
+#   DEPLOY_HOST_WEB2   web-2 address
+#   DEPLOY_PORT        SSH port
+#   DEPLOY_USER        deploy
+#
+# Deliberately NOT required: a GitHub token. deploy-symfony.sh only rewrites the
+# clone URL when GITHUB_PAT is set; unset, it clones the plain HTTPS URL, which
+# git resolves through the deploy user's credential helper on the host - already
+# rendered from the vault as deploy-bot. The credential stays server-side and is
+# rotated in one place, and CI cannot leak what it never holds.
+# Requires: deploy-bot has read access to this repo while it is private.
+#
+# Deliberately NOT required: a staging basic-auth password. `/health` carries
+# `auth_basic off` in the staging vhost template, so the health check below
+# reaches it unauthenticated. A sibling project's workflow passes a
+# STAGING_HTPASSWD secret that does not exist and has never mattered, for
+# exactly this reason.
 
 on:
   push:
-    branches: [staging]     # auto-deploy on every push/merge to staging
-  workflow_dispatch:        # also runnable manually from the Actions tab
+    branches: [staging]
+  workflow_dispatch:
 
 concurrency:
   group: deploy-staging
@@ -12,18 +39,94 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: wiki
+            domain: staging-wiki.cyclingcommons.org
+          - name: app
+            domain: staging.cyclingcommons.org
+    name: ${{ matrix.name }} → ${{ matrix.domain }}
+
     steps:
-      - name: Trigger deploy over SSH
+      - name: Set up SSH
         env:
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
-          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
-          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
-          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          PORT: ${{ secrets.DEPLOY_PORT }}
+          WEB1: ${{ secrets.DEPLOY_HOST_WEB1 }}
+          WEB2: ${{ secrets.DEPLOY_HOST_WEB2 }}
         run: |
           set -euo pipefail
           mkdir -p ~/.ssh && chmod 700 ~/.ssh
-          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -p "$DEPLOY_PORT" "$DEPLOY_HOST" >> ~/.ssh/known_hosts 2>/dev/null
-          ssh -i ~/.ssh/id_ed25519 -p "$DEPLOY_PORT" -o IdentitiesOnly=yes \
-            "$DEPLOY_USER@$DEPLOY_HOST" staging
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          for h in "$WEB1" "$WEB2"; do
+            ssh-keyscan -p "$PORT" "$h" >> ~/.ssh/known_hosts 2>/dev/null
+          done
+
+      # Sequential, and `set -e` means a failure on web-1 stops before web-2.
+      # This is the guard against the failure mode that once left a sibling
+      # project's production release on one host for three months: a half-completed
+      # two-host deploy must fail the workflow, not pass quietly.
+      - name: Deploy to both web hosts
+        env:
+          PORT: ${{ secrets.DEPLOY_PORT }}
+          USER: ${{ secrets.DEPLOY_USER }}
+          WEB1: ${{ secrets.DEPLOY_HOST_WEB1 }}
+          WEB2: ${{ secrets.DEPLOY_HOST_WEB2 }}
+        run: |
+          set -euo pipefail
+          REPO_URL="${{ github.server_url }}/${{ github.repository }}.git"
+          BRANCH="${{ github.ref_name }}"
+          for host in "$WEB1" "$WEB2"; do
+            echo "::group::${{ matrix.domain }} → $host"
+            ssh -i ~/.ssh/deploy_key -p "$PORT" -o IdentitiesOnly=yes \
+              "$USER@$host" \
+              "deploy-symfony.sh '${{ matrix.domain }}' '$REPO_URL' '$BRANCH'"
+            echo "::endgroup::"
+          done
+
+      # deploy-symfony.sh already health-checks each host locally and rolls back
+      # on failure. This checks the public path through the load balancer, which
+      # the per-host check cannot see. No credentials: staging sits behind basic
+      # auth, but `/health` carries `auth_basic off` in the vhost template, which
+      # is why this curl needs none (see the note at the top).
+      - name: Health check through the load balancer
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 15); do
+            if curl -sf -o /dev/null "https://${{ matrix.domain }}/health"; then
+              echo "healthy"
+              exit 0
+            fi
+            echo "waiting… ($i/15)"
+            sleep 2
+          done
+          echo "health check FAILED for ${{ matrix.domain }}"
+          exit 1
+
+      # Both hosts sit behind one load balancer, so they must run the same
+      # release. Comparing the `current` symlink targets is the cheapest way to
+      # prove the deploy actually completed everywhere — status codes alone
+      # cannot tell you the hosts disagree.
+      - name: Verify both hosts run the same release
+        env:
+          PORT: ${{ secrets.DEPLOY_PORT }}
+          USER: ${{ secrets.DEPLOY_USER }}
+          WEB1: ${{ secrets.DEPLOY_HOST_WEB1 }}
+          WEB2: ${{ secrets.DEPLOY_HOST_WEB2 }}
+        run: |
+          set -euo pipefail
+          read_release() {
+            ssh -i ~/.ssh/deploy_key -p "$PORT" -o IdentitiesOnly=yes \
+              "$USER@$1" "readlink /var/www/${{ matrix.domain }}/current"
+          }
+          R1="$(read_release "$WEB1")"
+          R2="$(read_release "$WEB2")"
+          echo "web-1: $R1"
+          echo "web-2: $R2"
+          if [ "$R1" != "$R2" ]; then
+            echo "HOSTS DIVERGED — the load balancer would serve two different releases"
+            exit 1
+          fi
