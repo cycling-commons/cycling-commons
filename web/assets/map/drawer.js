@@ -17,7 +17,7 @@
    Nothing is injected any more: every module this one reaches into has landed,
    so initDrawer() is gone and only initDrawerChrome() remains (§9). */
 import { I18N, D, tpl, trVal, sourceLabel, isRiderSource, DIFF_LABELS } from './i18n.js';
-import { escPend, safeHref, stars, slug, txtOn, gradColor, DIFF_PURPLE, ccUrl, attachPhotos, haversine } from './util.js';
+import { escPend, safeHref, stars, txtOn, gradColor, DIFF_PURPLE, ccUrl, attachPhotos, haversine } from './util.js';
 import { openClimbProfile } from './climb-profile.js';
 import { uKm, uM, uElev, uKmValue, uElevValue, uDistUnit } from './units.js';
 import { map } from './map-init.js';
@@ -144,6 +144,14 @@ function srcLine(f, osmHref){
   let s=escPend(f.source)
     .replace(/^(OpenStreetMap|OSM)/, `<a href="${osmHref}" target="_blank" rel="noopener" ${link}>$1</a>`)
     .replace(/(Géoportail de la Wallonie)/, `<a href="https://geoportail.wallonie.be/catalogue/91721175-5f01-410c-8c78-37c1d1893ba2.html" target="_blank" rel="noopener" ${link}>$1</a>`);
+  /* "Scout" is a thing a reader can be told about, so it links to the page that
+     tells them (owner 2026-08-14). Gated on the item's PROVENANCE, not on the
+     word appearing in the string: a free-text citation that happens to contain
+     "Scout" is not a reference to ours. All five locales keep the brand name
+     untranslated, so one pattern covers them. Same tab - it is our own page. */
+  if(f.srcType==='scout'){
+    s=s.replace(/\bScout\b/, `<a href="/scout" ${link}>Scout</a>`);
+  }
   if(f.demSource){
     s += ' · ' + tpl(D.elevFrom||'elevation from {s}',
       {s:`<a href="https://dataspace.copernicus.eu/explore-data/data-collections/copernicus-contributing-missions/collections-description/COP-DEM" target="_blank" rel="noopener" ${link}>${escPend(f.demSource)}</a>`});
@@ -255,6 +263,13 @@ export function osmDrawer(layer, p, ll, src){
   const d={name:p.n||p.t||lbl, headline:typeLbl+' · '+originLbl, cur:!!p.v, geom:{ll:[ll.lat,ll.lng]}, record:rec,
     source: pivot?'Tourisme Wallonie (TW) — CC-BY 4.0 · PIVOT / Géoportail de la Wallonie'
       :(community?sourceLabel(p.srcType):(src||sourceLabel(p.srcType)||'OpenStreetMap'))};
+  // Provenance rides along so the record HTML can reason about it (srcLine's
+  // Scout link); the drawer object is built here, not from the raw feature.
+  if(p.srcType) d.srcType=p.srcType;
+  // Same reason for the contributor: these layers are served as bulk-OSM, so
+  // the rider who added a place through them reaches the drawer only if this
+  // builder carries them over (CatalogProvider serves by/byName/byUuid).
+  if(p.by!=null){ d.by=p.by; if(p.byName) d.byName=p.byName; if(p.byUuid) d.byUuid=p.byUuid; }
   if(p.id!=null) d.id=p.id;          // real DB item id — the edit-bridge's `?item=` target
   else if(p.ref) d.osmRef=p.ref;     // uncurated coverage POI — materialize-on-edit target
   if(p.desc) d.desc=p.desc;
@@ -303,6 +318,13 @@ export function waterDrawer(p, ll){
   const d={name:p.n||p.t||D.drinkingWater||'Drinking water', headline:(D.headlineDrinking||'drinking water')+' · '+(community?sourceLabel(p.srcType):'OSM'), cur:!!p.v, geom:{ll:[ll.lat,ll.lng]},
     record:rec,
     source: community?sourceLabel(p.srcType):'OpenStreetMap (amenity=drinking_water / drinking_water=yes)'};
+  // Provenance rides along so the record HTML can reason about it (srcLine's
+  // Scout link); the drawer object is built here, not from the raw feature.
+  if(p.srcType) d.srcType=p.srcType;
+  // Same reason for the contributor: these layers are served as bulk-OSM, so
+  // the rider who added a place through them reaches the drawer only if this
+  // builder carries them over (CatalogProvider serves by/byName/byUuid).
+  if(p.by!=null){ d.by=p.by; if(p.byName) d.byName=p.byName; if(p.byUuid) d.byUuid=p.byUuid; }
   if(p.id!=null) d.id=p.id;          // real DB item id — the edit-bridge's `?item=` target
   else if(p.ref) d.osmRef=p.ref;     // uncurated coverage POI — materialize-on-edit target
   // Same photo handling as osmDrawer — waterDrawer never copied this over,
@@ -420,9 +442,27 @@ function buildRecord(layer, f){
      drawn from. Falls back to the line for climbs not yet re-measured. */
   const climbKm = (f.length ? Number(f.length) / 1000 : 0) || routeLengthKm(f.route);
   const len = climbKm ? `<div class="cc-elev-cap">${D.climbLength||'Length'} · ${uKm(climbKm)}</div>` : '';
-  const up = f.uploader
-    ? (f.uploader.public
-        ? `<div class="cc-up">${D.sharedBy||'Shared by'} <b>${escPend(f.uploader.name)}</b> · <a href="/profile?u=${slug(f.uploader.name)}">${D.viewProfile||'view profile'}</a></div>`
+  /* WHO SHARED IT. Two sources, one line.
+
+     `f.uploader` is the route payload's own shape (an object in the item's
+     attributes); `f.by`/`byName`/`byUuid` is the point-item shape, joined from
+     the submission that minted it (CatalogProvider::itemRows). A point item
+     had no such line at all, so an addition a rider tagged while riding read
+     as if it had arrived from nowhere (owner 2026-08-14).
+
+     `by: 0` is a rider who has not made their profile public: still a rider's
+     contribution, still said out loud, just not named. The profile link is
+     /riders/<uuid>, the public profile route - the old /profile?u=<slug> went
+     to the READER's own account page, and display names stopped being unique
+     on 2026-07-31, so a name slug was never a way to find a person. */
+  const byUuid = f.uploader ? null : f.byUuid;
+  const byName = f.uploader ? (f.uploader.public ? f.uploader.name : null)
+                            : (f.by ? f.byName : null);
+  const hasBy = f.uploader ? true : (f.by != null);
+  const up = hasBy
+    ? (byName
+        ? `<div class="cc-up">${D.sharedBy||'Shared by'} <b>${escPend(byName)}</b>${
+            byUuid ? ` · <a href="/riders/${encodeURIComponent(byUuid)}">${D.viewProfile||'view profile'}</a>` : ''}</div>`
         : `<div class="cc-up">${D.sharedAnon||'Shared anonymously'}</div>`)
     : '';
   // The edit-bridge opens /improve bound to the item's real DB id, which
@@ -777,9 +817,21 @@ function buildRecord(layer, f){
      drawer even when the recipient's saved scope is on another continent. */
   const shareQ = f.id != null ? `item=${encodeURIComponent(f.id)}`
     : (f.name ? `feature=${encodeURIComponent(f.name)}` : '');
+  /* The icon alone (owner 2026-08-14). The share glyph is one of the few that
+     genuinely needs no caption - it means the same thing on every phone the
+     rider owns - and the word next to it made a chip that competed with the
+     type chip beside it. Icon-only means the label has to move somewhere a
+     screen reader still reaches, so it goes to aria-label as well as title;
+     the <svg> is aria-hidden so the button announces once, not twice. */
+  const shareLbl = escPend(D.share||'Share');
   const share = shareQ
     ? `<button type="button" class="cc-d-share" data-share="${escPend(shareQ)}"
-         title="${escPend(D.shareHint||'Copy a link that opens this place')}">↗ ${D.share||'Share'}</button>`
+         aria-label="${shareLbl}" title="${escPend(D.shareHint||'Copy a link that opens this place')}">
+         <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+           <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+           <path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/>
+         </svg></button>`
     : '';
   /* Share sits in the HEADER, not down on the source line (owner 2026-08-14).
      Sharing a place is something a rider decides the moment they recognise it,

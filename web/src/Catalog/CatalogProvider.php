@@ -195,10 +195,34 @@ final class CatalogProvider
      */
     private function itemRows(string $letter, ?string $source = null, ?string $excludeSource = null, ?int $onlyId = null): array
     {
+        /* WHO ADDED THIS PLACE (owner 2026-08-14: "tagged via Scout but added
+           by a rider, so show the rider name").
+
+           A point item has no creator column - the person is on the submission
+           that minted it, which the item points back at as `sub:<id>`. The
+           join is on `submission.item_id` rather than by parsing that string:
+           it is indexed (`idx_submission_item`), and a guarded cast of
+           free-text source_ref is exactly the kind of thing that works until a
+           row says something else. `type = 'new'` is the CREATING submission,
+           never a later edit, and the earliest one wins because a rejected
+           proposal may be revived rather than twinned
+           (CatalogContributionService), so an item can have more than one.
+
+           Harvested rows join to nothing and stay anonymous, which is correct:
+           OSM did not "share" anything with us. */
         $sql = 'SELECT i.id, i.name, ST_AsGeoJSON(i.geom) AS geom, i.attributes, i.source_ref, i.source, s.name AS prov, i.region_id,
+                       contributor.display_name AS by_name, contributor.public_profile AS by_public, contributor.uuid AS by_uuid,
                        (i.state = \'verified\' OR i.source = \'pivot\' OR EXISTS (SELECT 1 FROM item_confirmation c WHERE c.item_id = i.id AND c.source <> \'form\')) AS verified
                 FROM item i
                 LEFT JOIN world_subdivision s ON s.id = i.subdivision_id
+                LEFT JOIN LATERAL (
+                    SELECT u.display_name, u.public_profile, u.uuid
+                      FROM submission sub
+                      JOIN users u ON u.id = sub.user_id
+                     WHERE sub.item_id = i.id AND sub.type = \'new\'
+                  ORDER BY sub.id
+                     LIMIT 1
+                ) contributor ON true
                 WHERE i.letter = :letter AND i.state IN '.ItemState::servedSqlTuple();
         $params = ['letter' => $letter];
         if (null !== $source) {
@@ -352,6 +376,23 @@ final class CatalogProvider
         // Lets the drawer show "Rider-contributed" for user/manual items
         // instead of a hardcoded per-layer OSM string (map.js sourceLabel()).
         $props['srcType'] = $row['source'];
+        /* The rider who added it, named only with their consent.
+           `public_profile` is the gate the profile page itself uses, and it is
+           read as a fail-closed default: a row that joined to nobody, or a
+           rider who has not made their profile public, yields `by:0` and the
+           drawer says "shared anonymously" rather than nothing at all - the
+           contribution is still a rider's, and saying so without naming them
+           is the whole point of the flag. The uuid rides along only for a
+           public profile, because it is the link target; display names are not
+           unique and are not identity. */
+        if (null !== ($row['by_name'] ?? null)) {
+            $public = (bool) $row['by_public'];
+            $props['by'] = $public ? 1 : 0;
+            if ($public) {
+                $props['byName'] = (string) $row['by_name'];
+                $props['byUuid'] = (string) $row['by_uuid'];
+            }
+        }
         // Real community-tier signal (map-and-search.md
         // §12): v:1 = verified state OR at least one rider confirmation.
         // Absent key = community tier (keeps unverified payloads byte-stable).

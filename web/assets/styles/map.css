@@ -672,10 +672,12 @@
   /* Type chip + share, one row. The right padding keeps the row clear of the
      absolutely-positioned close X (and of its sticky float on mobile). */
   .cc-d-head{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;padding-right:2.2rem}
-  .cc-d-share{display:inline-flex;align-items:center;gap:.25rem;min-height:32px;
-    padding:.2rem .5rem;border:1px solid rgba(239,230,212,.28);border-radius:5px;background:transparent;
-    font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;
-    color:rgba(239,230,212,.75);cursor:pointer}
+  /* Icon-only: a square target rather than a text chip, so it reads as an
+     action beside the type chip instead of competing with it. Kept at 32px,
+     which is the tap target, not the glyph. */
+  .cc-d-share{display:inline-flex;align-items:center;justify-content:center;
+    width:32px;height:32px;padding:0;border:1px solid rgba(239,230,212,.28);border-radius:5px;
+    background:transparent;color:rgba(239,230,212,.75);cursor:pointer}
   .cc-d-share:hover{background:rgba(239,230,212,.1);color:var(--paper)}
   .cc-d-share:focus-visible{outline:2px solid var(--trail);outline-offset:2px}
   /* C1-T3 (spec W5): per-item "Recent changes" — filled async by map.js's

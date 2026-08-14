@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace App\Tests\Catalog;
 
 use App\Catalog\CatalogProvider;
+use App\Entity\User;
 use App\Moderation\ModerationScope;
 use App\World\Entity\Country;
 use App\World\Entity\Subdivision;
@@ -535,6 +536,55 @@ final class CatalogProviderTest extends KernelTestCase
         // Still invisible to riders: the served payload keeps excluding it.
         $served = array_column($this->payload()['C']['features'], 'properties');
         self::assertNotContains('GoneTap', array_column($served, 'n'));
+    }
+
+    /**
+     * The rider who added a place is named on it, with their consent.
+     *
+     * A point item has no creator column - the person is on the submission
+     * that minted it - so an addition tagged while riding read as if it had
+     * arrived from nowhere (owner-reported 2026-08-14: "tagged via Scout but
+     * added by a rider, so show the rider name"). `public_profile` is the
+     * gate, and it fails closed: a rider who has not made their profile public
+     * still gets `by`, so the drawer can say the contribution was a rider's
+     * without naming them.
+     */
+    public function testAnAddedPlaceNamesItsContributorWhenTheyAllowIt(): void
+    {
+        $db = $this->em->getConnection();
+        foreach ([['Publicly', true], ['Privately', false]] as [$who, $public]) {
+            $user = (new User())->setEmail(strtolower($who).'.contributor@example.test')
+                ->setDisplayName($who.' Named');
+            $user->setEmailVerified(true)->setRoles([])->setPassword('x')->setPublicProfile($public);
+            $this->em->persist($user);
+            $this->em->flush();
+
+            $db->executeStatement(
+                "INSERT INTO item (letter, name, geom, country_code, state, source, source_ref, attributes, created_at, updated_at)
+                 VALUES ('I', :name, ST_GeomFromText('POINT(4.46 50.66)', 4326), 'BE',
+                         'unverified', 'scout', :ref, '{}', now(), now())",
+                ['name' => $who.' Added', 'ref' => 'sub:contrib-'.strtolower($who)],
+            );
+            $itemId = (int) $db->fetchOne('SELECT id FROM item WHERE name = :n', ['n' => $who.' Added']);
+            $db->executeStatement(
+                "INSERT INTO submission (type, letter, item_id, user_id, status, title, geom, country_code, changes, payload, created_at)
+                 VALUES ('new', 'I', :item, :uid, 'approved', :title, ST_GeomFromText('POINT(4.46 50.66)', 4326), 'BE', '{}', '{}', now())",
+                ['item' => $itemId, 'uid' => $user->getId(), 'title' => $who.' Added'],
+            );
+        }
+
+        $props = [];
+        foreach ($this->payload()['I']['features'] as $f) {
+            $props[$f['properties']['n'] ?? ''] = $f['properties'];
+        }
+
+        self::assertSame(1, $props['Publicly Added']['by']);
+        self::assertSame('Publicly Named', $props['Publicly Added']['byName']);
+        self::assertNotEmpty($props['Publicly Added']['byUuid'], 'the uuid is the profile link target');
+
+        self::assertSame(0, $props['Privately Added']['by'], 'still a rider\'s, still said');
+        self::assertArrayNotHasKey('byName', $props['Privately Added'], 'never named without consent');
+        self::assertArrayNotHasKey('byUuid', $props['Privately Added']);
     }
 
     /**

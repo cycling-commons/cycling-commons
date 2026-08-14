@@ -970,8 +970,33 @@ carries. The owner's own scenic addition therefore credited *OpenStreetMap
 fallback, on a place OSM had never heard of (reported 2026-08-14). Harvested and
 derived rows (`osm`/`pivot`/`wikidata`/`auto`) keep their real citation.
 
+**Who added it is a line of its own.** A point item has no creator column - the
+person is on the submission that minted it - so `CatalogProvider::itemRows()`
+joins the earliest `type='new'` submission (via the indexed
+`submission.item_id`, never by parsing `source_ref`) and serves `by` / `byName`
+/ `byUuid`. `public_profile` is the gate and it fails closed: a rider who has
+not made their profile public still yields `by: 0`, so the drawer says *shared
+anonymously* rather than nothing at all - the contribution is still a rider's,
+and saying so without naming them is what the flag is for. Harvested rows join
+to nothing and carry no key; OSM did not share anything with us. Before this,
+an addition tagged while riding read as though it had arrived from nowhere
+(owner-reported 2026-08-14). The profile link is `/riders/{uuid}`: display names
+stopped being unique on 2026-07-31, so the old `/profile?u=<slug>` was never a
+way to find a person - it went to the *reader's* own account page. The
+bulk-OSM drawer builders (`osmDrawer`, `waterDrawer`) construct their own
+object, so they must copy these keys over explicitly, as they do `srcType`.
+
+**Scout is a link.** The provenance label for `scout` ends in the product name,
+and it points at `/scout`, the page that explains what it is. Gated on the
+item's `srcType`, not on the word appearing in the citation string: a free-text
+attribution that happens to contain "Scout" is not a reference to ours. All five
+locales keep the brand name untranslated, so one pattern covers them.
+
 **Share sits in the drawer header**, beside the type chip, not on the source
-line where it first landed. Sharing is something a rider decides the moment
+line where it first landed. It is the **icon alone** - the share glyph means the
+same thing on every phone a rider owns, and the word beside it made a second
+chip competing with the type chip. Icon-only moves the label to `aria-label`
+(and `title`), with the `<svg>` `aria-hidden` so the button announces once. Sharing is something a rider decides the moment
 they recognise the place, and the source line is below the photo, the
 description and every record row — a scroll away from the name being shared on
 any drawer with content. It stays out of the footer action row, which is for
