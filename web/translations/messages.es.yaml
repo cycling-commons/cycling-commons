@@ -659,6 +659,7 @@ regions:
   status_countrywide: 'De ámbito nacional'
   status_countrywide_desc: 'cubierta por un curador de todo el país, sin curador local por ahora'
   steward_h: 'Quién la cuida'
+  steward_join: '¿Te apuntas?'
   status_none: 'Sin curador todavía'
   status_none_desc: 'nadie se ha hecho cargo de esta región. Aun así se pueden añadir y confirmar lugares aquí.'
   tier_growing: 'Creciendo'

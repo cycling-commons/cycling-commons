@@ -658,6 +658,7 @@ regions:
   status_countrywide: 'Landesweit'
   status_countrywide_desc: 'von einem Kurator für das ganze Land betreut, noch ohne lokalen Kurator'
   steward_h: 'Wer kümmert sich'
+  steward_join: 'Mitmachen?'
   status_none: 'Noch kein Kurator'
   status_none_desc: 'niemand hat diese Region übernommen. Fahrende können hier trotzdem Orte hinzufügen und bestätigen.'
   tier_growing: 'Wachsend'

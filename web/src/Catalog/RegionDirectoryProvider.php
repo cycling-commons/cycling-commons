@@ -131,6 +131,59 @@ final class RegionDirectoryProvider
         return $this->coverageTable ??= null !== $this->db->fetchOne("SELECT to_regclass('public.coverage_poi')");
     }
 
+    /**
+     * Who looks after this region, by name where they have said we may.
+     *
+     * NAMING A CURATOR IS AN OPT-IN, and this is a public page, so the rule is
+     * the strict one used on the moderation desks and the contributors wall:
+     * `public_profile` is an explicit choice that already puts a rider's name
+     * on `/riders/{uuid}`, and only that choice puts it here. A curator without
+     * it is counted but not named — the region still says somebody looks after
+     * it, which is the fact a visitor needs, without publishing who.
+     *
+     * The pseudonym (`rider#1a2b`) is deliberately NOT used as a fallback: it
+     * is a moderation-desk device for telling two submitters apart, and on a
+     * public page it would only look like a name that had been withheld.
+     *
+     * Local first, then country-wide: a region with its own curator is looked
+     * after more closely than one covered from the capital, and the order says
+     * so without needing a second label.
+     *
+     * @return list<array{name: string, uuid: ?string, scope: string}>
+     */
+    private function curators(int $regionId, string $countryCode): array
+    {
+        $rows = $this->db->fetchAllAssociative(
+            "SELECT u.display_name, u.public_profile, u.uuid,
+                    CASE WHEN ma.region_id IS NOT NULL THEN 'local' ELSE 'country' END AS scope
+               FROM moderator_area ma
+               JOIN users u ON u.id = ma.user_id
+              WHERE ma.region_id = :rid OR ma.country_code = :cc
+           ORDER BY scope, u.display_name",
+            ['rid' => $regionId, 'cc' => $countryCode],
+        );
+
+        $out = [];
+        $seen = [];
+        foreach ($rows as $r) {
+            // One person may hold both a region and their country; name them once.
+            $uuid = (string) ($r['uuid'] ?? '');
+            if ('' !== $uuid && isset($seen[$uuid])) {
+                continue;
+            }
+            $seen[$uuid] = true;
+            $public = (bool) ($r['public_profile'] ?? false);
+            $name = trim((string) ($r['display_name'] ?? ''));
+            $out[] = [
+                'name' => $public && '' !== $name ? $name : '',
+                'uuid' => $public && '' !== $uuid ? $uuid : null,
+                'scope' => (string) $r['scope'],
+            ];
+        }
+
+        return $out;
+    }
+
     /** @return array<string, mixed>|null */
     public function region(string $slug, string $locale): ?array
     {
@@ -199,6 +252,7 @@ final class RegionDirectoryProvider
         return $this->shape($row) + [
             // The silhouette needs the row id to read `region.outline`.
             'id' => (int) $row['id'],
+            'curators' => $this->curators((int) $row['id'], $cc),
             'countryCode' => $cc,
             'countryName' => Countries::exists($cc) ? Countries::getName($cc, $locale) : (string) $row['country_name_en'],
             'flag' => 'flags/'.strtolower($cc).'.svg',

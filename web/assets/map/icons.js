@@ -62,6 +62,26 @@ const cameraSvg=(fill,size)=>`<svg viewBox="0 0 24 24" width="${size||15}" heigh
 // silhouette filter): the filter flattens whatever fill we pick, so
 // currentColor is fine — what matters is the SHAPE being a camera.
 export const scenicGlyph=size=>cameraSvg('currentColor', size);
+
+// M · public toilets: 🚻 has exactly the camera's problem one letter later.
+// The emoji is two human figures side by side; flattened by the white-icon
+// filter its outline is a filled rectangle, so the rail row and the map pin
+// both showed a featureless block (owner 2026-08-14: "toilets still has a
+// general icon in filter list and on the map").
+//
+// Drawn as a toilet seen from the SIDE rather than as the pictogram pair: at
+// 13px two human figures collapse into a smudge, and a side profile cannot be
+// mistaken for the shelter or stays glyphs the way a figure can. Same 24×24
+// viewBox and the same single-path treatment as CAMERA_PATH, so it mints
+// through the identical canvas/DOM paths with no new machinery.
+//
+// Two masses and nothing else: a tall cistern and a wide bowl. Three shapes
+// were tried and rendered side by side at 26px before choosing — a front view
+// (cistern, seat ring, pedestal) turned to mush, and a bowl alone read as a
+// cup. Detail is what dies first at rail size, so there is none here.
+export const TOILET_PATH='M5 3h5.6v8H5zM4 12h16a1 1 0 0 1 1 1.1c-.3 3.4-2.3 6-4.9 7.1v1.3a.9.9 0 0 1-.9.9H8.8a.9.9 0 0 1-.9-.9v-1.3C5.3 19.1 3.3 16.5 3 13.1A1 1 0 0 1 4 12z';
+const toiletSvg=(fill,size)=>`<svg viewBox="0 0 24 24" width="${size||15}" height="${size||15}" aria-hidden="true"><path fill-rule="evenodd" fill="${fill}" d="${TOILET_PATH}"/></svg>`;
+export const toiletGlyph=size=>toiletSvg('currentColor', size);
 // small recognisable marker for UNVERIFIED items: paper disc + category-colour ring + the category glyph.
 // glyph/suffix let a layer mint more than one disc variant (e.g. services' per-serviceKind icons) off the
 // same colour/id scheme — suffix keeps the cache id distinct so each variant is registered once.
@@ -78,15 +98,17 @@ export function miniIcon(key, glyph, suffix){
   x.fillStyle=color; x.fill();
   x.lineWidth=1.6*S; x.strokeStyle='rgba(20,22,14,.85)'; x.stroke();
   // category glyph as a flat silhouette (white on dark discs, ink on light) — matches the pins' icon treatment
-  if(key==='scenic' && !glyph){
-    // the drawn camera (see CAMERA_PATH): a Path2D fill, because the emoji's
-    // silhouette is a blank box
+  // Two letters draw a real vector instead of a glyph, for the same reason:
+  // their emoji flatten to a featureless box under the silhouette treatment.
+  // I gets the camera, M the toilet (see CAMERA_PATH / TOILET_PATH).
+  const drawn = !glyph && (key==='scenic' ? CAMERA_PATH : key==='toilets' ? TOILET_PATH : null);
+  if(drawn){
     const side=13*S, sc=side/24;
     x.save();
     x.translate(R-side/2, R-side/2);
     x.scale(sc, sc);
     x.fillStyle=dark?'#fff':'#14160e';
-    x.fill(new Path2D(CAMERA_PATH), 'evenodd');
+    x.fill(new Path2D(drawn), 'evenodd');
     x.restore();
   } else {
     const gc=document.createElement('canvas'); gc.width=D; gc.height=D; const gx=gc.getContext('2d');
@@ -120,9 +142,13 @@ export function pinEl(layer,cur,props){
   const d=document.createElement('div');
   d.className='cc-pin'+(cur?' cur':'')+(layer.pendingLayer?' pending':''); d.style.setProperty('--c',layer.color);
   const white = txtOn(layer.color)==='#fff';   // dark pins (e.g. purple climbs) → white icon
-  // Scenic gets the drawn camera (no filter — the SVG carries its own fill);
-  // every other layer keeps the glyph + silhouette-filter treatment.
+  // Scenic and toilets get a drawn vector (no filter, the SVG carries its own
+  // fill); every other layer keeps the glyph + silhouette-filter treatment.
+  // Both emoji flatten to a featureless box under that filter, which is the
+  // whole reason these two are special-cased here, in the rail row and on the
+  // canvas discs — three places, one cause.
   if(layer.key==='scenic'){ d.innerHTML=`<span>${cameraSvg(white?'#fff':'#20241c')}</span>`; return d; }
+  if(layer.key==='toilets'){ d.innerHTML=`<span>${toiletSvg(white?'#fff':'#20241c')}</span>`; return d; }
   d.innerHTML=`<span${white?' style="filter:brightness(0) invert(1)"':''}>${pinGlyph(layer, props)}</span>`; return d;
 }
 

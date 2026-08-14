@@ -29,7 +29,7 @@ import { CATALOG, catalogUtility, catalogVotable, catalogModeration,
 import { PREFS, addHeatmap, updateHeatFilter, layerCounts, updateCounts, render,
          applyStaysAccessFilter, syncFacetChips, prefFilterEnabled, setPrefFilter, PREF_FILTER_KEY } from './render.js';
 import { mapToast, clearRevealPin } from './drawer.js';
-import { scenicGlyph } from './icons.js';
+import { scenicGlyph, toiletGlyph } from './icons.js';
 import { refilterClusters, updateConfMarkers } from './osm-pools.js';
 import { curScope, inScope } from './scope-ui.js';
 import { surfaceTilesConfigured, setSurfaceTiles, surfaceTilesVisible,
@@ -66,7 +66,8 @@ export function initLayerList(){
     // Scenic wears the drawn camera here too: the row's silhouette filter
     // flattens the 📷 emoji to a blank rounded box, exactly as it did on the
     // map pins (owner 2026-08-14).
-    const glyph = layer.key==='scenic' ? scenicGlyph(13) : layer.icon;
+    const glyph = layer.key==='scenic' ? scenicGlyph(13)
+      : layer.key==='toilets' ? toiletGlyph(13) : layer.icon;
     el.innerHTML=`<span class="sw"><i class="sw-g">${glyph}</i></span><span class="nm">${layer.label}</span><span class="ct">${ct}</span>`;
     el.onclick=()=>{ if(active.has(layer.key)){active.delete(layer.key);el.classList.add('off')} else {active.add(layer.key);el.classList.remove('off')} syncLayersAll(); render(); };
     lc.appendChild(el);

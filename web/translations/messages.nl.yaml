@@ -658,6 +658,7 @@ regions:
   status_countrywide: 'Landelijk'
   status_countrywide_desc: 'gedekt door een curator voor het hele land, nog zonder lokale curator'
   steward_h: 'Wie zorgt hiervoor'
+  steward_join: 'Wil je meedoen?'
   status_none: 'Nog geen curator'
   status_none_desc: 'niemand heeft deze regio op zich genomen. Fietsers kunnen hier nog steeds plekken toevoegen en bevestigen.'
   tier_growing: 'Groeiend'

@@ -658,6 +658,7 @@ regions:
   status_countrywide: 'Country-wide'
   status_countrywide_desc: 'covered by a curator for the whole country, with no local curator yet'
   steward_h: 'Who looks after it'
+  steward_join: 'Want to join?'
   status_none: 'No curator yet'
   status_none_desc: 'nobody has taken this region on. Riders can still add and confirm places here.'
   tier_growing: 'Growing'

@@ -658,6 +658,7 @@ regions:
   status_countrywide: 'Nationale'
   status_countrywide_desc: 'couverte par un curateur pour tout le pays, sans curateur local pour linstant'
   steward_h: 'Qui sen occupe'
+  steward_join: 'Envie de participer ?'
   status_none: 'Pas encore de curateur'
   status_none_desc: 'personne na encore pris cette région en charge. Les cyclistes peuvent quand même y ajouter et confirmer des lieux.'
   tier_growing: 'En croissance'

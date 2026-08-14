@@ -81,8 +81,30 @@
      reply to it. #}
   <div class="rsteward">
     <span class="rsteward-h">{% trans %}regions.steward_h{% endtrans %}</span>
-    <b>{{ ('regions.status_' ~ region.stewardship)|trans }}</b>
-    <span class="rsteward-d">{{ ('regions.status_' ~ region.stewardship ~ '_desc')|trans }}</span>
+    <span class="rsteward-body">
+      <b>{{ ('regions.status_' ~ region.stewardship)|trans }}:</b>
+      <span class="rsteward-d">{{ ('regions.status_' ~ region.stewardship ~ '_desc')|trans }}</span>
+      {# The people, named only where they have made their profile public
+         (RegionDirectoryProvider::curators). A curator who has not is counted
+         by the status above but never named here. #}
+      {% set named = region.curators|filter(c => c.name is not empty) %}
+      {% if named is not empty %}
+        <span class="rsteward-who">
+          {%- for c in named -%}
+            {%- if not loop.first %}, {% endif -%}
+            {%- if c.uuid -%}
+              <a href="{{ path('rider_profile', {uuid: c.uuid}) }}">{{ c.name }}</a>
+            {%- else -%}{{ c.name }}{%- endif -%}
+          {%- endfor -%}
+        </span>
+      {% endif %}
+      {# Every state that is short of a local curator ends with the way in.
+         "Want to join?" beside the fact is what turns a status line into an
+         invitation, and it is the same question the button below asks. #}
+      {% if region.stewardship != 'curated' %}
+        <a class="rsteward-cta" href="{{ path('join_country', {cc: region.countryCode}) }}">{% trans %}regions.steward_join{% endtrans %}</a>
+      {% endif %}
+    </span>
   </div>
   <div style="display:flex;gap:.8rem;margin-top:1.8rem;flex-wrap:wrap">
     <a class="btn btn-p" href="{{ path('map') }}?scope=region:{{ region.slug }}">{% trans %}region.cta_map{% endtrans %}</a>
