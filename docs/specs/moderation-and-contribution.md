@@ -1113,6 +1113,32 @@ Five things this sweep settled that a page-size change alone would not have:
    onboarded region on earth (Japan alone is 47 prefectures) and each row costs
    a readiness count, so the page is taken before `reportForRegions()` runs.
 
+   **This is also what fixes the desk's ordering (2026-08-14).** The list is
+   grouped **continent → country → region**, and because the slice happens
+   before the reports are built, the `ORDER BY` has to *be* the display order —
+   sorting after the slice would shuffle rows within a page while leaving the
+   page boundaries wrong. So the grouping is a SQL sort (continent name,
+   country name, then `area_km2 DESC`) with the nesting assembled from the
+   already-ordered rows. Continent and country come from the World reference
+   bundle, LEFT JOINed: a region whose country is missing from it groups under
+   `—` at the end rather than disappearing off a moderation surface.
+   Within a country the order stays area-descending — region *labels* are
+   translated, so sorting by them would mean sorting in PHP, which the slice
+   forbids.
+
+   **Each country is a collapsed `<details>`** (owner, 2026-08-14): at 19
+   countries the grouping alone still left several screens before a curator
+   reached anything. It opens when the country filter has narrowed to it, or
+   when it is the only country on the page — the two cases where a shut group
+   would make the desk look empty. The `<summary>` carries `N of M ready`, so a
+   closed group still answers *is there anything to do here*; a collapse that
+   hides the number you came for is not a saving.
+
+   The three mode buttons follow the **map's own order** — Best of · Confirmed
+   · Everything (`map/index.html.twig`) — where the desk had them reversed. A
+   curator setting a region's default now meets the rungs in the order the map
+   presents them, which is also the order their gates unlock in.
+
 5. **The contributors wall's filters moved to the server.** The name search and
    country select were JS over the rendered rows. Once the wall pages, a
    client-side filter answers "no such rider" about riders who are merely on
