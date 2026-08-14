@@ -25,6 +25,7 @@ One sequence for every country. ⚑ marks a human judgment call.
 | 4 | **Export** | `make divisions-data c="XX"` queries Overture and writes `region-<slug>.geojson` artifacts. |
 | 5 | **Seed** | Import the artifacts as `Region` rows. |
 | 6 | **Coverage** | Add the Geofabrik region to the harvest, then run it. |
+| 6b | **Elevation** | Check the country's box already has DEM tiles; install them if not. |
 | 7 | ⚑ **Moderators** | Assign region atoms to moderators. |
 | 8 | **Specs** | Record the rollout. |
 
@@ -118,9 +119,7 @@ tells the pipeline which country an extract owns:
 COUNTRY_BY_REGION = {
     "europe/belgium": "BE", "europe/netherlands": "NL", "europe/germany": "DE",
     "europe/luxembourg": "LU",
-    # 2026-08-06 rollout.
-    "europe/france": "FR", "europe/switzerland": "CH", "europe/italy": "IT",
-    "europe/great-britain": "GB",
+    ...
     # Northern Ireland has no extract of its own — Geofabrik ships it inside the
     # all-Ireland one, which also covers the Republic. Ireland is NOT onboarded,
     # so nearest-region-wins deletes Republic rows for having no onboarded region
@@ -128,14 +127,18 @@ COUNTRY_BY_REGION = {
     # the snap hands them to northern-ireland. That band is mis-stamped GB until
     # Ireland is onboarded, which re-harvests it with correct region stamps.
     "europe/ireland-and-northern-ireland": "GB",
-    "australia-oceania/australia": "AU",
-    "asia/japan": "JP",
+    ...
     # State-level onboarding: only the two seeded states, not a north-america/us
     # ancestor, so an unonboarded state's extract still hard-fails resolve_country
     # instead of silently harvesting as US.
     "north-america/us/california": "US", "north-america/us/colorado": "US",
+    ...
 }
 ```
+
+The elisions are load-bearing: the dict grows with every rollout, and a quote
+that listed every entry would read as complete and be wrong within a month.
+Open the file for the current list.
 
 A country whose regions live inside a **shared** extract (Northern Ireland above) is the case to
 watch: ownership is decided by nearest onboarded region, so the un-onboarded half of the extract is
@@ -159,6 +162,59 @@ make coverage-refresh regions=europe/belgium,europe/netherlands,europe/germany,e
 Once it completes, the new country's regions appear in the scope selector automatically — the client
 region registry is served straight from the `region` table — and its POIs render from the rebuilt
 tiles.
+
+## Step 6b — elevation
+
+Coverage fills the country with points. **Elevation is what lets a climb in it have a gradient
+profile**, and it is a separate dataset on a separate host, so it is a separate step.
+
+This step exists because it was missed. Seven countries were onboarded on 2026-08-14 and only one of
+them had elevation — the procedure lived as scripts on the routing host and lines in a shell history,
+so each rollout rediscovered it and that one didn't.
+
+**Why it fails quietly.** Elevation is served by one Valhalla instance per continent, each holding
+only the tiles in its own directory. `ElevationEndpoints` picks the instance from the shape's first
+point; a continent with no configured instance falls back to the **default**, which answers `null`
+for ground it does not hold, and the client refuses any reply with a non-numeric sample. So a climb
+in an uncovered country gets **no profile rather than a wrong one** — the right failure, and an
+invisible one.
+
+**Check before you fetch.** The box may already cover the country: Slovenia needed nothing, because
+the Europe tile set already reaches it. Ask for a summit whose height you know.
+
+<!-- CODE-ILLUSTRATIVE one /height call against a known point -->
+```bash
+curl -sG --data-urlencode 'json={"shape":[{"lat":46.06,"lon":14.51}]}' \
+  http://127.0.0.1:8002/height
+# {"height":[299]}  -> Ljubljana, so Slovenia is covered
+# {"height":[null]} -> no tile; install below
+```
+
+If it comes back `null`, run the installer **on the Valhalla host**:
+
+<!-- CODE-ILLUSTRATIVE the installer, run on the routing host -->
+```bash
+tools/elevation/dem-install.sh africa RWANDA SOUTHAFRICA
+```
+
+It fetches the Copernicus GLO-30 GeoTIFFs, converts them to the `.hgt` format Valhalla's elevation
+service reads, and moves the result into that instance's `elevation_data`. All three stages resume,
+so an interrupted run picks up where it stopped.
+
+Two details worth knowing rather than rediscovering:
+
+- **The conversion runs in a container.** The routing host has no GDAL on purpose — it is a routing
+  box, not a GIS box — so `osgeo/gdal` supplies the tools for the length of the job and leaves
+  nothing behind. It is CPU-capped, because that host is serving live routing while the conversion
+  runs.
+- **The whole continent is converted at once**, never per country. `.hgt` tiles overlap by one row
+  and one column, so a tile cut in isolation gets nodata along its north and east edges. Cutting
+  every tile from one mosaic of the continent's GeoTIFFs is what gives those edges real values.
+
+!!! warning "Tiles the app never asks for are the same as no tiles"
+    The instance must also be named in `ELEVATION_URLS`, or the box falls through to the default and
+    the tiles you just installed are never queried. The `africa` and `south-america` instances
+    existed, were empty, *and* were unlisted for months — three ways of being absent at once.
 
 ## Where to go deeper
 
