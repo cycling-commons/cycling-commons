@@ -648,7 +648,7 @@ regions:
   count_region: '%n% Region'
   count_regions: '%n% Regionen'
   legend_title: 'Regionsstatus'
-  legend_lead: 'Zwei getrennte Dinge — eine Region kann viel vom einen und nichts vom anderen haben.'
+  legend_lead: 'Zwei getrennte Dinge: eine Region kann viel vom einen und nichts vom anderen haben.'
   legend_col_maturity: 'Wie viel es gibt'
   legend_col_stewardship: 'Wer sich kümmert'
   tier_established: 'Etabliert'

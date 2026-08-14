@@ -648,7 +648,7 @@ regions:
   count_region: '%n% regio'
   count_regions: '%n% regio''s'
   legend_title: 'Regiostatus'
-  legend_lead: 'Twee losse dingen — een regio kan volop van het een hebben en niets van het ander.'
+  legend_lead: 'Twee losse dingen: een regio kan volop van het een hebben en niets van het ander.'
   legend_col_maturity: 'Hoeveel er is'
   legend_col_stewardship: 'Wie ervoor zorgt'
   tier_established: 'Gevestigd'

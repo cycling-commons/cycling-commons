@@ -649,7 +649,7 @@ regions:
   count_region: '%n% región'
   count_regions: '%n% regiones'
   legend_title: 'Estado de la región'
-  legend_lead: 'Son dos cosas distintas — una región puede tener mucho de una y nada de la otra.'
+  legend_lead: 'Son dos cosas distintas: una región puede tener mucho de una y nada de la otra.'
   legend_col_maturity: 'Cuánto contiene'
   legend_col_stewardship: 'Quién la cuida'
   tier_established: 'Consolidada'

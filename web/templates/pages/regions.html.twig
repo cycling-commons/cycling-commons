@@ -53,6 +53,12 @@
   .reg.tier-growing .tag-tier{background:var(--trail);color:var(--ink)}
   .reg.tier-established .tag-tier{background:var(--ochre);color:#14160E}
   .reg .tag-countrywide{background:rgba(122,155,168,.28)}
+  /* "No curator yet" is an opening, not an alarm: outlined rather than filled,
+     so it reads as an empty slot beside the two filled badges that mean
+     somebody is already there. It must be VISIBLE though, which is the whole
+     point of drawing it at all. */
+  .reg .tag-none{background:transparent;box-shadow:inset 0 0 0 1px rgba(184,89,58,.45);color:var(--clay)}
+  .reg.has-curator .tag-none{box-shadow:inset 0 0 0 1px rgba(239,230,212,.4);color:rgba(239,230,212,.8)}
 
   .empty{color:#7a7d6c;font-size:.9rem;padding:2rem 0}
 
@@ -93,6 +99,12 @@
       <div class="lh">{% trans %}regions.legend_col_stewardship{% endtrans %}</div>
       <span><b>{% trans %}regions.status_curated{% endtrans %}</b> {% trans %}regions.status_curated_desc{% endtrans %}</span>
       <span><b>{% trans %}regions.status_countrywide{% endtrans %}</b> {% trans %}regions.status_countrywide_desc{% endtrans %}</span>
+      {# The third state was missing from the legend as well as from the cards,
+         so COUNTRY-WIDE was a badge a reader could meet with nothing to
+         compare it against (owner: "how can people know what country wide
+         means"). All three are listed now, and the legend is the only place
+         that says what any of them mean. #}
+      <span><b>{% trans %}regions.status_none{% endtrans %}</b> {% trans %}regions.status_none_desc{% endtrans %}</span>
     </div>
   </div>
 
@@ -121,9 +133,13 @@
              href="{{ path('region_detail', {slug: reg.slug}) }}">
             <span>{{ ('region.' ~ reg.slug ~ '.label')|trans }}</span>
             <span class="tag tag-tier">{{ ('regions.tier_' ~ reg.tier)|trans }}</span>
-            {% if reg.stewardship != 'none' %}
-              <span class="tag tag-{{ reg.stewardship }}">{{ ('regions.status_' ~ reg.stewardship)|trans }}</span>
-            {% endif %}
+            {# The stewardship badge is shown for EVERY region, including the
+               ones nobody looks after (owner, 2026-08-14). It used to be hidden
+               when there was no curator, so "nobody has taken this on" was
+               drawn as blank space next to regions that had a badge — which
+               reads as an oversight, not as a fact. It is the one status a
+               reader can act on, so it is the one that must not be silent. #}
+            <span class="tag tag-{{ reg.stewardship }}">{{ ('regions.status_' ~ reg.stewardship)|trans }}</span>
             {% if reg.itemsVerified > 0 %}<span class="km">{{ (reg.itemsVerified == 1 ? 'regions.items_one' : 'regions.items_many')|trans({'%n%': reg.itemsVerified}) }}</span>{% endif %}
             {% if reg.routes > 0 %}<span class="km">{{ (reg.routes == 1 ? 'regions.routes_one' : 'regions.routes_many')|trans({'%n%': reg.routes}) }}</span>{% endif %}
             {% if reg.areaKm2 %}<span class="km">{{ reg.areaKm2|cc_km2 }}</span>{% endif %}

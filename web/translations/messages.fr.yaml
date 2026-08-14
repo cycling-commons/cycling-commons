@@ -648,7 +648,7 @@ regions:
   count_region: '%n% région'
   count_regions: '%n% régions'
   legend_title: 'Statut des régions'
-  legend_lead: 'Deux choses distinctes — une région peut avoir beaucoup de l''une et rien de l''autre.'
+  legend_lead: 'Deux choses distinctes: une région peut avoir beaucoup de l''une et rien de l''autre.'
   legend_col_maturity: 'Ce qu''elle contient'
   legend_col_stewardship: 'Qui s''en occupe'
   tier_established: 'Établie'
