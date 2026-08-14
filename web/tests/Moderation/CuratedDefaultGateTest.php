@@ -51,11 +51,11 @@ final class CuratedDefaultGateTest extends WebTestCase
         return $user;
     }
 
-    private function seedRegion(string $slug): Region
+    private function seedRegion(string $slug, string $countryCode = 'BE'): Region
     {
         /** @var EntityManagerInterface $em */
         $em = static::getContainer()->get(EntityManagerInterface::class);
-        $region = (new Region())->setSlug($slug)->setName(ucfirst($slug))->setCountryCode('BE')
+        $region = (new Region())->setSlug($slug)->setName(ucfirst($slug))->setCountryCode($countryCode)
             ->setGeom('{"type":"MultiPolygon","coordinates":[[[[4.0,49.5],[6.5,49.5],[6.5,51.0],[4.0,51.0],[4.0,49.5]]]]}');
         $em->persist($region);
         $em->flush();
@@ -301,19 +301,29 @@ final class CuratedDefaultGateTest extends WebTestCase
     }
 
     /**
-     * The desk pages. A global curator sees every onboarded region on earth —
-     * Japan alone is 47 prefectures — and each row costs a readiness count, so
-     * the slice happens before the counting and page two is reachable.
+     * The desk pages BY COUNTRY, and a country is never split across pages.
+     *
+     * It used to page by region, which is what broke once the desk grouped:
+     * 25 regions was four countries and fifteen hidden, and Japan's 47
+     * prefectures spanned two pages (owner-reported 2026-08-14). The unit of
+     * paging has to be the unit of grouping.
      *
      * The country filter survives the paging: the pager's links carry it, or a
      * curator who narrowed to one country would silently be paged back into
      * every other one.
      */
-    public function testTheDeskPagesAndTheCountryFilterSurvivesIt(): void
+    public function testTheDeskPagesByCountryAndTheCountryFilterSurvivesIt(): void
     {
         $client = static::createClient();
-        for ($i = 0; $i < ModerateRegionsController::PER_PAGE + 2; ++$i) {
-            $this->seedRegion(sprintf('paged-region-%02d', $i));
+        // One country per page-unit, two regions each, so a page boundary that
+        // split a country would show an odd number of cards.
+        $countries = ['AR', 'AT', 'AU', 'BG', 'BR', 'CN', 'CZ', 'DK', 'EE', 'FI',
+            'GR', 'HR', 'HU', 'IE', 'IN', 'IS', 'KE', 'LT', 'LV', 'MA',
+            'MX', 'NO', 'PE', 'PL', 'PT', 'RO', 'SE'];
+        self::assertGreaterThan(ModerateRegionsController::PER_PAGE, \count($countries));
+        foreach ($countries as $i => $cc) {
+            $this->seedRegion(sprintf('paged-a-%02d', $i), $cc);
+            $this->seedRegion(sprintf('paged-b-%02d', $i), $cc);
         }
         $client->loginUser($this->curator('gate-paging@example.com'), 'main');
 
@@ -322,19 +332,26 @@ final class CuratedDefaultGateTest extends WebTestCase
         $first = (string) $client->getResponse()->getContent();
         self::assertSame(
             ModerateRegionsController::PER_PAGE,
-            substr_count($first, 'class="rg-item"'),
-            'page one holds exactly a page',
+            substr_count($first, '<details class="rg-country"'),
+            'page one holds exactly a page of COUNTRIES',
         );
+        // Two regions per seeded country, so an even count proves no country
+        // was cut in half by the slice.
+        self::assertSame(0, substr_count($first, 'class="rg-item"') % 2, 'no country is split across pages');
         self::assertStringContainsString('page=2', $first, 'and says there is more');
 
         $client->request('GET', '/moderate/regions?page=2');
         self::assertResponseIsSuccessful();
-        self::assertSame(2, substr_count((string) $client->getResponse()->getContent(), 'class="rg-item"'));
+        $second = (string) $client->getResponse()->getContent();
+        self::assertGreaterThan(0, substr_count($second, '<details class="rg-country"'));
+        self::assertSame(0, substr_count($second, 'class="rg-item"') % 2, 'nor on the last page');
 
         // Out of range lands on the last page, not on an empty desk.
         $client->request('GET', '/moderate/regions?page=99');
         self::assertResponseIsSuccessful();
-        self::assertSame(2, substr_count((string) $client->getResponse()->getContent(), 'class="rg-item"'));
+        $last = (string) $client->getResponse()->getContent();
+        self::assertGreaterThan(0, substr_count($last, '<details class="rg-country"'), 'the last page is not empty');
+        self::assertSame(0, substr_count($last, 'class="rg-item"') % 2, 'and still holds whole countries');
 
         $client->request('GET', '/moderate/regions?country=BE');
         self::assertResponseIsSuccessful();

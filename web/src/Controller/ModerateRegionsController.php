@@ -51,7 +51,13 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 #[IsGranted('ROLE_CURATOR')]
 final class ModerateRegionsController extends AbstractController
 {
-    /** Regions per page. Matches the submission and route desks. */
+    /**
+     * COUNTRIES per page, not regions (2026-08-14). The desk groups by country
+     * and a country is never split across pages, so the unit of paging had to
+     * become the group. 25 fits every onboarded country on one page today,
+     * which is the point: the previous 25-REGIONS page showed four countries
+     * and hid fifteen.
+     */
     public const int PER_PAGE = 25;
 
     private const string CSRF_TOKEN_ID = 'region-curated-default';
@@ -87,12 +93,27 @@ final class ModerateRegionsController extends AbstractController
             ));
         }
 
-        // Sliced BEFORE the readiness reports are built, not after: a global
-        // curator sees every onboarded region on earth (Japan alone is 47),
-        // and every one of them costs a content count. The page is what gets
-        // measured.
-        $pager = Pager::of($request->query->getInt('page', 1), \count($rows), $this->pageSize->resolve(self::PER_PAGE));
-        $rows = \array_slice($rows, $pager['offset'], $pager['perPage']);
+        /* PAGED BY COUNTRY, NOT BY REGION (owner-reported 2026-08-14: "where
+           are all the other countries, this does not work with pagination").
+           Slicing a flat region list cut Japan's 47 prefectures across two
+           pages and pushed every country after J off page 1 entirely, so a desk
+           that had just been grouped by country hid most of the countries.
+
+           A country is therefore the unit of paging: never split, and the page
+           still has a hard bound because the rows behind it are bounded by the
+           countries on it. Readiness is still measured AFTER the slice, so only
+           the regions actually on the page cost anything.
+
+           `$rows` stays in continent/country/area order from the SQL above, so
+           grouping preserves it and the country order across pages is stable. */
+        $byCountry = [];
+        foreach ($rows as $r) {
+            $byCountry[$r['countryCode']][] = $r;
+        }
+        $pager = Pager::of($request->query->getInt('page', 1), \count($byCountry), $this->pageSize->resolve(self::PER_PAGE));
+        $rows = array_merge(...array_values(
+            \array_slice($byCountry, $pager['offset'], $pager['perPage'], true)
+        ) ?: [[]]);
 
         $reports = $this->readiness->reportForRegions(array_map(static fn (array $r): int => $r['id'], $rows));
         // The middle rung's count, batched the same way and for the same reason.

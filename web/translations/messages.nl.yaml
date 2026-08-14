@@ -383,9 +383,9 @@ pages:
   card_landing_h: 'Startpagina'
   card_landing_p: 'Het verhaal: wat het is, waarom één open atlas, partners en geen silo''s.'
   card_map_h: 'Kaart'
-  card_map_p: 'Interactieve kaart met discipline- en laagfilters en gecureerde/alles-modi.'
+  card_map_p: 'Interactieve kaart met discipline- en laagfilters en Best-of/alles-modi.'
   card_region_h: 'Regio-atlas'
-  card_region_p: 'Het gecureerde beste van een regio, dekking, versheid en bijdragers.'
+  card_region_p: 'Het best-of van een regio, dekking, versheid en bijdragers.'
   card_contribute_h: 'Bijdragen'
   card_contribute_p: 'De categoriekiezer: kies een laag (A–L) en voeg een item toe of bewerk het.'
   card_addclimb_h: 'Klim toevoegen'
@@ -627,7 +627,7 @@ developers:
   ep3_path: '/v1/regions/{id}'
   ep3_desc: 'regiopolygoon + dekkingsstatistieken'
   ep4_path: '/v1/regions/{id}/best'
-  ep4_desc: 'het gecureerde beste van een regio'
+  ep4_desc: 'het best-of van een regio'
   ep5_path: '/v1/routes/{id}.gpx'
   ep5_desc: 'routedetail + GPX-download'
   ep6_path: 'coverage.pmtiles'
@@ -643,7 +643,7 @@ developers:
 regions:
   kicker: 'De atlas, per regio'
   title: 'Regio''s'
-  lead: 'Dit zijn de landen die al op de Commons staan, regio per regio. Elke regio linkt rechtstreeks naar de kaart — en staat de jouwe er nog niet bij, dan kun je daar hieronder iets aan doen.'
+  lead: 'Dit zijn de landen die al op de Commons staan, regio per regio. Elke regio heeft een eigen pagina, met wat daar op de kaart staat en hoe je begint. Staat de jouwe er nog niet bij, dan kun je daar hieronder iets aan doen.'
   no_regions: 'Geen regio''s geladen.'
   count_region: '%n% regio'
   count_regions: '%n% regio''s'
@@ -652,7 +652,7 @@ regions:
   legend_col_maturity: 'Hoeveel er is'
   legend_col_stewardship: 'Wie ervoor zorgt'
   tier_established: 'Gevestigd'
-  tier_established_desc: 'genoeg geverifieerde plekken en door fietsers gesteunde routes dat de kaart hier alleen gecureerd opent'
+  tier_established_desc: 'genoeg geverifieerde plekken en door fietsers gesteunde routes dat de kaart hier alleen in Best-of opent'
   status_curated: 'Gecureerd'
   status_curated_desc: 'een curator zorgt voor deze regio'
   status_countrywide: 'Landelijk'
@@ -1661,7 +1661,7 @@ add_climb:
     node_approved_l: 'Komt in de "Alles"-achterstand van de Commons'
     node_eligible_t: 'Verkiesbaar'
     node_eligible_l: 'Klaar voor de seizoensronde (gaat na de lancering open)'
-    node_curated_t: 'Gecureerd'
+    node_curated_t: 'Best-of'
     node_curated_l: 'Gestemd tot het beste van de regio'
     branch_lead: '…of, vanuit de beoordeling'
     branch_needs_info_b: '⟲ Meer info nodig'
@@ -2737,7 +2737,7 @@ meta:
   about_title: 'Cycling Commons — Over'
   about_description: 'Cycling Commons is een open, door de gemeenschap gebouwde kaart van de mooiste fietsroutes ter wereld. Open data die iedereen kan gebruiken, beheerd door de fietsers die het bouwen.'
   regions_title: 'Cycling Commons — Regio''s'
-  regions_description: 'De landen en regio''s die al op Cycling Commons staan, met live dekking en directe links naar de kaart.'
+  regions_description: 'De landen en regio''s die al op Cycling Commons staan, elk met een eigen pagina en wat daar op de kaart staat.'
   coverage_title: 'Cycling Commons — Dekking'
   coverage_description: 'Hoe volledig is de kaart? Zie wat er gedekt is, wat er ontbreekt en waar jij kunt helpen — transparante monitoring van de open fiets-Commons.'
   developers_title: 'Cycling Commons — Ontwikkelaars'
@@ -3081,13 +3081,13 @@ admin:
         label: 'Seizoensstemmen is live'
         help: 'Zet op 1 wanneer de stemrondes open zijn. Op 0 blijft elke stem-knop op de kaart verborgen — een knop voor een ronde die niet bestaat lijkt kapot.'
       map_curated_default_threshold:
-        label: 'Klaar voor Selectie-modus: totaal aantal items'
+        label: 'Klaar voor Best-of: totaal aantal items'
         help: 'Hoeveel geselecteerde items een regio in totaal nodig heeft voordat een curator hem standaard in Selectie-modus mag openen. Verlaag het om jonge regio’s eerder vrij te geven, verhoog het om de lat hoog te houden.'
       map_curated_default_min_blocks:
-        label: 'Klaar voor Selectie-modus: soorten items'
+        label: 'Klaar voor Best-of: soorten items'
         help: 'Hoeveel verschillende blokken (wegdek, klimmen, slapen, uitzichten, erfgoed, beste routes) elk hun eigen minimum moeten halen. Zet het op 1 om er weer een kaal totaal van te maken.'
       map_curated_default_min_per_block:
-        label: 'Klaar voor Selectie-modus: items per soort'
+        label: 'Klaar voor Best-of: items per soort'
         help: 'Wat een blok nodig heeft om mee te tellen voor de eis hierboven. Samen voorkomen deze twee dat één volle laag een regio in zijn eentje draagt.'
       route_region_active_cap:
         label: 'Actieve routes per regio'
@@ -3381,8 +3381,8 @@ item_type:
 'Yes — open structure': 'Ja — open structuur'
 moderate_regions:
   kicker: 'Regio-instellingen'
-  title: 'Welke regio''s in Selectie openen.'
-  lead: 'De kaart opent standaard in Alles, zodat een bezoeker altijd alle gegevens ziet. Een regio kan in plaats daarvan in Selectie openen zodra die %threshold% samengestelde plekken heeft, verdeeld over minstens %blocks% blokken van %per_block% — zo draagt geen enkele laag een regio alleen en komt niemand aan op een lege kaart.'
+  title: 'Welke regio''s in Best-of openen.'
+  lead: 'De kaart opent standaard in Alles, zodat een bezoeker altijd alle gegevens ziet. Een regio kan in plaats daarvan in Best-of openen zodra die %threshold% samengestelde plekken heeft, verdeeld over minstens %blocks% blokken van %per_block%, zo draagt geen enkele laag een regio alleen en komt niemand aan op een lege kaart.'
   readiness: '%count% van %threshold% samengesteld'
   block_met: 'dit blok haalt zijn %n%'
   need_total: 'nog %n% samengestelde plekken nodig'
@@ -3402,7 +3402,7 @@ moderate_regions:
   locked: 'Heeft %threshold% plekken nodig over %blocks% blokken van %per_block%'
   empty_heading: 'Geen regio''s hier'
   empty_body: 'Nog geen regio valt binnen jouw moderatiegebied.'
-  flash_not_ready: 'Die regio heeft de samenstellingsdrempel nog niet bereikt.'
+  flash_not_ready: 'Die regio heeft de Best-of-drempel nog niet bereikt.'
 
 # Shared by every submission receipt (contribute/_receipt_mark.html.twig); the per-page
 # improve.receipt.* / vote.receipt.* groups stay separate.

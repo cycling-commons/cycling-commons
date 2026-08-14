@@ -383,9 +383,9 @@ pages:
   card_landing_h: 'Startseite'
   card_landing_p: 'Das Konzept: was es ist, warum ein offener Atlas, Partner statt Silos.'
   card_map_h: 'Karte'
-  card_map_p: 'Interaktive Karte mit Disziplin- und Ebenenfiltern sowie kuratierten/vollständigen Modi.'
+  card_map_p: 'Interaktive Karte mit Disziplin- und Ebenenfiltern sowie Best-of- und Vollmodus.'
   card_region_h: 'Regionsatlas'
-  card_region_p: 'Das kuratierte Beste einer Region, Abdeckung, Aktualität und Beitragende.'
+  card_region_p: 'Das Best-of einer Region, Abdeckung, Aktualität und Beitragende.'
   card_contribute_h: 'Beitragen'
   card_contribute_p: 'Die Kategorieauswahl: wähle eine Ebene (A–L) und füge ein Element hinzu oder bearbeite es.'
   card_addclimb_h: 'Anstieg hinzufügen'
@@ -627,7 +627,7 @@ developers:
   ep3_path: '/v1/regions/{id}'
   ep3_desc: 'Regionspolygon + Abdeckungsstatistiken'
   ep4_path: '/v1/regions/{id}/best'
-  ep4_desc: 'das kuratierte Beste einer Region'
+  ep4_desc: 'das Best-of einer Region'
   ep5_path: '/v1/routes/{id}.gpx'
   ep5_desc: 'Routendetail + GPX-Download'
   ep6_path: 'coverage.pmtiles'
@@ -643,7 +643,7 @@ developers:
 regions:
   kicker: 'Der Atlas, nach Region'
   title: 'Regionen'
-  lead: 'Das sind die Länder, die bereits im Commons sind, Region für Region. Jede Region führt direkt zur Karte — und fehlt deine noch, kannst du das unten ändern.'
+  lead: 'Das sind die Länder, die bereits im Commons sind, Region für Region. Jede Region hat eine eigene Seite mit dem, was dort auf der Karte steht, und einem Einstieg. Fehlt deine noch, kannst du das unten ändern.'
   no_regions: 'Keine Regionen geladen.'
   count_region: '%n% Region'
   count_regions: '%n% Regionen'
@@ -652,7 +652,7 @@ regions:
   legend_col_maturity: 'Wie viel es gibt'
   legend_col_stewardship: 'Wer sich kümmert'
   tier_established: 'Etabliert'
-  tier_established_desc: 'genug geprüfte Orte und von Fahrenden getragene Routen, dass die Karte hier nur kuratiert öffnet'
+  tier_established_desc: 'genug geprüfte Orte und von Fahrenden getragene Routen, dass die Karte hier nur in Best-of öffnet'
   status_curated: 'Kuratiert'
   status_curated_desc: 'jemand kümmert sich um diese Region'
   status_countrywide: 'Landesweit'
@@ -2740,7 +2740,7 @@ meta:
   about_title: 'Cycling Commons — Über uns'
   about_description: 'Cycling Commons ist eine offene, gemeinschaftlich erstellte Karte der besten Radstrecken der Welt. Offene Daten für alle, verwaltet von den Radfahrenden, die sie aufbauen.'
   regions_title: 'Cycling Commons — Regionen'
-  regions_description: 'Die Länder und Regionen, die bereits im Cycling Commons sind, mit Live-Abdeckung und direkten Links zur Karte.'
+  regions_description: 'Die Länder und Regionen, die bereits bei Cycling Commons sind, jeweils mit eigener Seite und dem, was dort auf der Karte steht.'
   coverage_title: 'Cycling Commons — Abdeckung'
   coverage_description: 'Wie vollständig ist die Karte? Sieh, was abgedeckt ist, wo es dünn ist und wo du helfen kannst — transparente Überwachung des offenen Cycling Commons.'
   developers_title: 'Cycling Commons — Entwickler'
@@ -3084,13 +3084,13 @@ admin:
         label: 'Saisonales Voting ist live'
         help: 'Auf 1 setzen, wenn die Abstimmungsrunden offen sind. Bei 0 bleibt jeder Vote-Aufruf auf der Karte verborgen — ein Knopf für eine Runde, die es nicht gibt, wirkt kaputt.'
       map_curated_default_threshold:
-        label: 'Reife für den Auswahlmodus: Gesamtzahl'
+        label: 'Reife für Best-of: Gesamtzahl'
         help: 'Wie viele kuratierte Einträge eine Region insgesamt braucht, bevor ein Kurator sie standardmäßig im Auswahlmodus öffnen darf. Niedriger, um junge Regionen früher freizugeben; höher, um den Qualitätsanspruch zu halten.'
       map_curated_default_min_blocks:
-        label: 'Reife für den Auswahlmodus: Arten von Einträgen'
+        label: 'Reife für Best-of: Arten von Einträgen'
         help: 'Wie viele verschiedene Blöcke (Belag, Anstiege, Übernachtung, Aussichten, Kultur, beste Routen) jeweils ihr eigenes Minimum erreichen müssen. Auf 1 gesetzt, zählt wieder nur die Gesamtzahl.'
       map_curated_default_min_per_block:
-        label: 'Reife für den Auswahlmodus: Einträge je Art'
+        label: 'Reife für Best-of: Einträge je Art'
         help: 'Was ein Block braucht, um für die Anforderung darüber zu zählen. Zusammen verhindern beide Zahlen, dass eine einzige Ebene eine Region allein trägt.'
       route_region_active_cap:
         label: 'Aktive Routen je Region'
@@ -3384,8 +3384,8 @@ item_type:
 'Yes — open structure': 'Ja — offene Struktur'
 moderate_regions:
   kicker: 'Regionseinstellungen'
-  title: 'Welche Regionen in der Auswahl starten.'
-  lead: 'Die Karte startet standardmäßig in Alles, damit Besucher immer die vollständigen Daten sehen. Eine Region kann stattdessen in der Auswahl starten, sobald sie %threshold% kuratierte Einträge hat, verteilt auf mindestens %blocks% Blöcke mit je %per_block% — so trägt keine einzelne Ebene eine Region allein und niemand landet auf einer leer wirkenden Karte.'
+  title: 'Welche Regionen in Best-of starten.'
+  lead: 'Die Karte startet standardmäßig in Alles, damit Besucher immer die vollständigen Daten sehen. Eine Region kann stattdessen in Best-of starten, sobald sie %threshold% kuratierte Einträge hat, verteilt auf mindestens %blocks% Blöcke mit je %per_block%, so trägt keine einzelne Ebene eine Region allein und niemand landet auf einer leer wirkenden Karte.'
   readiness: '%count% von %threshold% kuratiert'
   block_met: 'dieser Block erreicht seine %n%'
   need_total: 'noch %n% kuratierte Einträge nötig'
@@ -3405,7 +3405,7 @@ moderate_regions:
   locked: 'Benötigt %threshold% Einträge über %blocks% Blöcke mit je %per_block%'
   empty_heading: 'Keine Regionen hier'
   empty_body: 'Noch keine Region fällt in deinen Moderationsbereich.'
-  flash_not_ready: 'Diese Region hat die Kuratierungsschwelle noch nicht erreicht.'
+  flash_not_ready: 'Diese Region hat die Best-of-Schwelle noch nicht erreicht.'
 
 # Shared by every submission receipt (contribute/_receipt_mark.html.twig); the per-page
 # improve.receipt.* / vote.receipt.* groups stay separate.

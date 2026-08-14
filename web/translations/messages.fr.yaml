@@ -385,7 +385,7 @@ pages:
   card_map_h: 'Carte'
   card_map_p: 'Carte interactive avec filtres de discipline et de couche, modes curateur/tout afficher.'
   card_region_h: 'Atlas régional'
-  card_region_p: 'Le meilleur d''une région sélectionné, sa couverture, sa fraîcheur et ses contributeurs.'
+  card_region_p: 'Le best-of d''une région, sa couverture, sa fraîcheur et ses contributeurs.'
   card_contribute_h: 'Contribuer'
   card_contribute_p: 'Le sélecteur de catégorie : choisissez une couche (A–L) et ajoutez ou modifiez un élément.'
   card_addclimb_h: 'Ajouter un col'
@@ -627,7 +627,7 @@ developers:
   ep3_path: '/v1/regions/{id}'
   ep3_desc: 'polygone de la région + statistiques de couverture'
   ep4_path: '/v1/regions/{id}/best'
-  ep4_desc: 'le meilleur curé d''une région'
+  ep4_desc: 'le best-of d''une région'
   ep5_path: '/v1/routes/{id}.gpx'
   ep5_desc: 'détail de l''itinéraire + téléchargement GPX'
   ep6_path: 'coverage.pmtiles'
@@ -643,7 +643,7 @@ developers:
 regions:
   kicker: 'L''atlas, par région'
   title: 'Régions'
-  lead: 'Voici les pays déjà présents sur le Commons, région par région. Chaque région mène directement à la carte — et si la vôtre n''y est pas encore, vous pouvez y remédier ci-dessous.'
+  lead: 'Voici les pays déjà présents sur le Commons, région par région. Chaque région a sa propre page, avec ce qui figure sur la carte et par où commencer. Si la vôtre n''y est pas encore, vous pouvez y remédier ci-dessous.'
   no_regions: 'Aucune région chargée.'
   count_region: '%n% région'
   count_regions: '%n% régions'
@@ -652,7 +652,7 @@ regions:
   legend_col_maturity: 'Ce qu''elle contient'
   legend_col_stewardship: 'Qui s''en occupe'
   tier_established: 'Établie'
-  tier_established_desc: 'assez de lieux vérifiés et d''itinéraires soutenus par les cyclistes pour que la carte s''y ouvre en vue Sélection'
+  tier_established_desc: 'assez de lieux vérifiés et d''itinéraires soutenus par les cyclistes pour que la carte s''y ouvre en Best-of'
   status_curated: 'Animée'
   status_curated_desc: 'un curateur s''occupe de cette région'
   status_countrywide: 'Nationale'
@@ -1661,7 +1661,7 @@ add_climb:
     node_approved_l: 'Rejoint l''archive "Tout" du Commons'
     node_eligible_t: 'Éligible'
     node_eligible_l: 'En attente du tour saisonnier (ouvre après le lancement)'
-    node_curated_t: 'Curé'
+    node_curated_t: 'Best-of'
     node_curated_l: 'Voté dans le meilleur de la région'
     branch_lead: '…ou, après révision'
     branch_needs_info_b: '⟲ Informations manquantes'
@@ -2737,7 +2737,7 @@ meta:
   about_title: 'Cycling Commons — À propos'
   about_description: 'Cycling Commons est une carte ouverte et collaborative des meilleurs itinéraires cyclistes du monde. Des données libres utilisables par tous, gouvernées par les cyclistes qui les construisent.'
   regions_title: 'Cycling Commons — Régions'
-  regions_description: 'Les pays et régions déjà présents sur le Cycling Commons, avec la couverture en direct et des liens directs vers la carte.'
+  regions_description: 'Les pays et régions déjà présents sur Cycling Commons, chacun avec sa page et ce qui figure sur la carte.'
   coverage_title: 'Cycling Commons — Couverture'
   coverage_description: 'Quelle est la complétude de la carte ? Découvrez ce qui est couvert, ce qui manque et où vous pouvez aider — un suivi transparent du Commons cycliste ouvert.'
   developers_title: 'Cycling Commons — Développeurs'
@@ -3081,13 +3081,13 @@ admin:
         label: 'Le vote saisonnier est actif'
         help: 'Mettez 1 quand les tours de vote sont ouverts. À 0, chaque appel au vote sur la carte reste masqué — un bouton pour un tour qui n''existe pas semble cassé.'
       map_curated_default_threshold:
-        label: 'Éligibilité au mode Sélection : total d’éléments'
+        label: 'Éligibilité au Best-of : total d’éléments'
         help: 'Nombre total d’éléments sélectionnés qu’une région doit atteindre avant qu’un curateur puisse l’ouvrir en mode Sélection par défaut. Abaissez-le pour débloquer plus tôt les jeunes régions, augmentez-le pour maintenir le niveau d’exigence.'
       map_curated_default_min_blocks:
-        label: 'Éligibilité au mode Sélection : types d’éléments'
+        label: 'Éligibilité au Best-of : types d’éléments'
         help: 'Nombre de blocs différents (revêtement, cols, hébergements, panoramas, patrimoine, meilleurs itinéraires) devant chacun atteindre leur propre minimum. Réglez sur 1 pour revenir à un simple total.'
       map_curated_default_min_per_block:
-        label: 'Éligibilité au mode Sélection : éléments par type'
+        label: 'Éligibilité au Best-of : éléments par type'
         help: 'Ce qu’un bloc doit contenir pour compter dans l’exigence ci-dessus. Ensemble, ces deux nombres empêchent qu’une seule couche porte une région à elle seule.'
       route_region_active_cap:
         label: 'Itinéraires actifs par région'
@@ -3381,8 +3381,8 @@ item_type:
 'Yes — open structure': 'Oui — structure ouverte'
 moderate_regions:
   kicker: 'Réglages de région'
-  title: 'Quelles régions s''ouvrent en Sélection.'
-  lead: 'La carte s''ouvre par défaut sur Tout, pour qu''un visiteur voie toujours l''ensemble des données. Une région peut s''ouvrir sur la Sélection dès qu''elle compte %threshold% choix curatés répartis sur au moins %blocks% blocs de %per_block% — ainsi aucune couche ne porte seule une région et personne n''arrive sur une carte qui semble vide.'
+  title: 'Quelles régions s''ouvrent en Best-of.'
+  lead: 'La carte s''ouvre par défaut sur Tout, pour qu''un visiteur voie toujours l''ensemble des données. Une région peut s''ouvrir en Best-of dès qu''elle compte %threshold% choix curatés répartis sur au moins %blocks% blocs de %per_block%, ainsi aucune couche ne porte seule une région et personne n''arrive sur une carte qui semble vide.'
   readiness: '%count% sur %threshold% curatés'
   block_met: 'ce bloc atteint ses %n%'
   need_total: '%n% choix curatés supplémentaires nécessaires'
@@ -3402,7 +3402,7 @@ moderate_regions:
   locked: 'Nécessite %threshold% choix sur %blocks% blocs de %per_block%'
   empty_heading: 'Aucune région ici'
   empty_body: 'Aucune région ne relève encore de votre zone de modération.'
-  flash_not_ready: 'Cette région n''a pas encore atteint le seuil de curation.'
+  flash_not_ready: 'Cette région n''a pas encore atteint le seuil du Best-of.'
 
 # Shared by every submission receipt (contribute/_receipt_mark.html.twig); the per-page
 # improve.receipt.* / vote.receipt.* groups stay separate.

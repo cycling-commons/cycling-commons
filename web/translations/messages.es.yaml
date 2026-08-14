@@ -384,9 +384,9 @@ pages:
   card_landing_h: 'Portada'
   card_landing_p: 'La propuesta: qué es, por qué un único atlas abierto, socios en lugar de silos.'
   card_map_h: 'Mapa'
-  card_map_p: 'Mapa interactivo con filtros de disciplina y de capa y modos curado/todo.'
+  card_map_p: 'Mapa interactivo con filtros de disciplina y de capa y modos Lo mejor/todo.'
   card_region_h: 'Atlas de la región'
-  card_region_p: 'Lo mejor curado de una región, su cobertura, su frescura y sus colaboradores.'
+  card_region_p: 'Lo mejor de una región, su cobertura, su frescura y sus colaboradores.'
   card_contribute_h: 'Aportar'
   card_contribute_p: 'El selector de categoría: elige una capa (A–L) y añade o edita un elemento.'
   card_addclimb_h: 'Añadir un puerto'
@@ -628,7 +628,7 @@ developers:
   ep3_path: '/v1/regions/{id}'
   ep3_desc: 'polígono de la región + estadísticas de cobertura'
   ep4_path: '/v1/regions/{id}/best'
-  ep4_desc: 'lo mejor curado de una región'
+  ep4_desc: 'lo mejor de una región'
   ep5_path: '/v1/routes/{id}.gpx'
   ep5_desc: 'detalle de la ruta + descarga en GPX'
   ep6_path: 'coverage.pmtiles'
@@ -644,7 +644,7 @@ developers:
 regions:
   kicker: 'El atlas, por regiones'
   title: 'Regiones'
-  lead: 'Estos son los países que ya están en el Commons, región a región. Cada región enlaza directamente con el mapa — y si la tuya todavía no está, abajo puedes cambiarlo.'
+  lead: 'Estos son los países que ya están en el Commons, región a región. Cada región tiene su propia página, con lo que hay en el mapa y por dónde empezar. Si la tuya todavía no está, abajo puedes cambiarlo.'
   no_regions: 'No hay regiones cargadas.'
   count_region: '%n% región'
   count_regions: '%n% regiones'
@@ -653,7 +653,7 @@ regions:
   legend_col_maturity: 'Cuánto contiene'
   legend_col_stewardship: 'Quién la cuida'
   tier_established: 'Consolidada'
-  tier_established_desc: 'tiene suficientes lugares verificados y rutas avaladas por ciclistas como para que el mapa se abra aquí mostrando solo lo curado'
+  tier_established_desc: 'tiene suficientes lugares verificados y rutas avaladas por ciclistas como para que el mapa se abra aquí en Lo mejor'
   status_curated: 'Curada'
   status_curated_desc: 'un curador se ocupa de esta región'
   status_countrywide: 'De ámbito nacional'
@@ -1678,7 +1678,7 @@ add_climb:
     node_approved_l: 'Se incorpora a la reserva «Todo» del Commons'
     node_eligible_t: 'Elegible'
     node_eligible_l: 'A la espera de la ronda estacional (abre tras el lanzamiento)'
-    node_curated_t: 'Curado'
+    node_curated_t: 'Lo mejor'
     node_curated_l: 'Votado hasta lo mejor de la región'
     branch_lead: '…o, desde la revisión'
     branch_needs_info_b: '⟲ Faltan datos'
@@ -2774,7 +2774,7 @@ meta:
   about_title: 'Cycling Commons — Quiénes somos'
   about_description: 'Cycling Commons es un mapa abierto, construido por la comunidad, de lo mejor que se puede rodar en el mundo. Datos abiertos que cualquiera puede usar, gobernados por los ciclistas que los construyen.'
   regions_title: 'Cycling Commons — Regiones'
-  regions_description: 'Los países y las regiones que ya están en Cycling Commons, con su cobertura en vivo y enlaces directos al mapa.'
+  regions_description: 'Los países y regiones que ya están en Cycling Commons, cada uno con su página y lo que hay en el mapa.'
   coverage_title: 'Cycling Commons — Cobertura'
   coverage_description: '¿Cómo de completo está el mapa? Mira qué está cubierto, qué está flojo y dónde ayudar — seguimiento transparente del Commons ciclista abierto.'
   developers_title: 'Cycling Commons — Desarrolladores'
@@ -3122,13 +3122,13 @@ admin:
         label: 'La votación de temporada está activa'
         help: 'Ponlo a 1 cuando las rondas de votación estén abiertas. A 0, toda llamada a votar en el mapa queda oculta — un botón para una ronda que no existe parece roto.'
       map_curated_default_threshold:
-        label: 'Preparación del modo curado: elementos totales'
+        label: 'Preparación de Lo mejor: elementos totales'
         help: 'Cuántos elementos curados necesita una región en total antes de que un curador pueda abrirla en modo Curado por defecto. Bájalo para desbloquear antes las regiones jóvenes; súbelo para mantener el listón de calidad.'
       map_curated_default_min_blocks:
-        label: 'Preparación del modo curado: tipos de cosas'
+        label: 'Preparación de Lo mejor: tipos de cosas'
         help: 'Cuántos bloques distintos (firme, puertos, alojamientos, paisaje, historia, mejores rutas) deben alcanzar cada uno su propio mínimo. Ponlo a 1 para que la preparación vuelva a ser un simple total.'
       map_curated_default_min_per_block:
-        label: 'Preparación del modo curado: elementos por tipo'
+        label: 'Preparación de Lo mejor: elementos por tipo'
         help: 'Qué necesita un bloque para contar de cara al requisito de arriba. Juntos, estos dos impiden que una sola capa completa sostenga una región por sí sola.'
       route_region_active_cap:
         label: 'Rutas activas por región'
@@ -3422,8 +3422,8 @@ item_type:
 'Yes — open structure': 'Sí — estructura abierta'
 moderate_regions:
   kicker: 'Ajustes de la región'
-  title: 'Qué regiones se abren en Curado.'
-  lead: 'El mapa se abre en Todo por defecto, así que quien llega ve siempre los datos completos. Una región puede configurarse para abrirse en Lo mejor curado cuando tenga %threshold% elecciones curadas repartidas por al menos %blocks% bloques de %per_block% — así ninguna capa suelta puede sostener una región y nadie llega a un mapa que parece vacío.'
+  title: 'Qué regiones se abren en Lo mejor.'
+  lead: 'El mapa se abre en Todo por defecto, así que quien llega ve siempre los datos completos. Una región puede configurarse para abrirse en Lo mejor cuando tenga %threshold% elecciones curadas repartidas por al menos %blocks% bloques de %per_block%, así ninguna capa suelta puede sostener una región y nadie llega a un mapa que parece vacío.'
   readiness: '%count% de %threshold% curados'
   block_met: 'este bloque llega a sus %n%'
   need_total: 'faltan %n% elecciones curadas'
@@ -3443,7 +3443,7 @@ moderate_regions:
   locked: 'Necesita %threshold% elecciones repartidas por %blocks% bloques de %per_block%'
   empty_heading: 'Aquí no hay regiones'
   empty_body: 'Todavía no hay ninguna región dentro de tu zona de moderación.'
-  flash_not_ready: 'Esa región todavía no ha alcanzado el umbral de curaduría.'
+  flash_not_ready: 'Esa región todavía no ha alcanzado el umbral de Lo mejor.'
 
 # Compartido por todos los acuses de recibo de envío
 # (contribute/_receipt_mark.html.twig); los grupos por página improve.receipt.* /

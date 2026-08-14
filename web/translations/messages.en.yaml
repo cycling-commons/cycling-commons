@@ -383,9 +383,9 @@ pages:
   card_landing_h: 'Landing'
   card_landing_p: 'The pitch: what it is, why one open atlas, partners not silos.'
   card_map_h: 'Map'
-  card_map_p: 'Interactive map with discipline + layer filters and curated/everything modes.'
+  card_map_p: 'Interactive map with discipline + layer filters and best-of/everything modes.'
   card_region_h: 'Region atlas'
-  card_region_p: 'A region''s curated best-of, coverage, freshness and contributors.'
+  card_region_p: 'A region''s best-of, coverage, freshness and contributors.'
   card_contribute_h: 'Contribute'
   card_contribute_p: 'The category chooser: pick a layer (A–L) and add or edit an item.'
   card_addclimb_h: 'Add a climb'
@@ -627,7 +627,7 @@ developers:
   ep3_path: '/v1/regions/{id}'
   ep3_desc: 'region polygon + coverage stats'
   ep4_path: '/v1/regions/{id}/best'
-  ep4_desc: 'the curated best-of for a region'
+  ep4_desc: 'the best-of for a region'
   ep5_path: '/v1/routes/{id}.gpx'
   ep5_desc: 'route detail + GPX download'
   ep6_path: 'coverage.pmtiles'
@@ -643,7 +643,7 @@ developers:
 regions:
   kicker: 'The atlas, by region'
   title: 'Regions'
-  lead: 'These are the countries already on the Commons, region by region. Every region links straight into the map — and if yours is not here yet, you can change that below.'
+  lead: 'These are the countries already on the Commons, region by region. Each region has its own page, with what is on the map there and a way in. If yours is not here yet, you can change that below.'
   no_regions: 'No regions loaded.'
   count_region: '%n% region'
   count_regions: '%n% regions'
@@ -652,7 +652,7 @@ regions:
   legend_col_maturity: 'How much it holds'
   legend_col_stewardship: 'Who looks after it'
   tier_established: 'Established'
-  tier_established_desc: 'enough verified places and rider-backed routes that the map opens here showing curated only'
+  tier_established_desc: 'enough verified places and rider-backed routes that the map opens here showing Best of only'
   status_curated: 'Curated'
   status_curated_desc: 'a curator looks after this region'
   status_countrywide: 'Country-wide'
@@ -1669,7 +1669,7 @@ add_climb:
     node_approved_l: 'Joins the "Everything" backlog of the Commons'
     node_eligible_t: 'Eligible'
     node_eligible_l: 'In line for the seasonal round (opens after launch)'
-    node_curated_t: 'Curated'
+    node_curated_t: 'Best of'
     node_curated_l: 'Voted up into the region''s best-of'
     branch_lead: '…or, from review'
     branch_needs_info_b: '⟲ Needs info'
@@ -2760,7 +2760,7 @@ meta:
   about_title: 'Cycling Commons — About'
   about_description: 'Cycling Commons is an open, community-built map of the world''s best riding. Open data anyone can use, governed by the riders who build it.'
   regions_title: 'Cycling Commons — Regions'
-  regions_description: 'The countries and regions already on the Cycling Commons, with live coverage and links straight into the map.'
+  regions_description: 'The countries and regions already on the Cycling Commons, each with its own page and what is on the map there.'
   coverage_title: 'Cycling Commons — Coverage'
   coverage_description: 'How complete is the map? See what''s covered, what''s thin, and where to help — transparent monitoring of the open cycling Commons.'
   developers_title: 'Cycling Commons — Developers'
@@ -3107,13 +3107,13 @@ admin:
         label: 'Seasonal voting is live'
         help: 'Set to 1 when the voting rounds are open. At 0 every vote call-to-action on the map stays hidden — a button for a round that does not exist reads as broken.'
       map_curated_default_threshold:
-        label: 'Curated-mode readiness: total items'
+        label: 'Best of readiness: total items'
         help: 'How many curated items a region needs in total before a curator may open it in Curated mode by default. Lower it to unlock young regions sooner; raise it to hold the line on quality.'
       map_curated_default_min_blocks:
-        label: 'Curated-mode readiness: kinds of thing'
+        label: 'Best of readiness: kinds of thing'
         help: 'How many different blocks (surface, climbs, stays, scenic, history, best-of routes) must each carry their own minimum. Set it to 1 to make readiness a plain total again.'
       map_curated_default_min_per_block:
-        label: 'Curated-mode readiness: items per kind'
+        label: 'Best of readiness: items per kind'
         help: 'What a block needs before it counts towards the requirement above. Together these two stop one full layer from carrying a region on its own.'
       route_region_active_cap:
         label: 'Active routes per region'
@@ -3407,8 +3407,8 @@ item_type:
 'Yes — open structure': 'Yes — open structure'
 moderate_regions:
   kicker: 'Region settings'
-  title: 'Which regions open in Curated.'
-  lead: 'The map opens in Everything by default, so a visitor always sees the full data. A region can be set to open in Curated best-of instead once it has %threshold% curated picks spread over at least %blocks% blocks of %per_block% — so no single layer can carry a region and no one arrives to an empty-looking map.'
+  title: 'Which regions open in Best of.'
+  lead: 'The map opens in Everything by default, so a visitor always sees the full data. A region can be set to open in Best of instead once it has %threshold% curated picks spread over at least %blocks% blocks of %per_block%, so no single layer can carry a region and no one arrives to an empty-looking map.'
   readiness: '%count% of %threshold% curated'
   block_met: 'this block carries its %n%'
   need_total: '%n% more curated picks needed'
@@ -3428,7 +3428,7 @@ moderate_regions:
   locked: 'Needs %threshold% picks over %blocks% blocks of %per_block%'
   empty_heading: 'No regions here'
   empty_body: 'No region falls inside your moderation area yet.'
-  flash_not_ready: 'That region has not reached the curated threshold yet.'
+  flash_not_ready: 'That region has not reached the Best of threshold yet.'
 
 # Shared by every submission receipt (contribute/_receipt_mark.html.twig); the per-page
 # improve.receipt.* / vote.receipt.* groups stay separate.

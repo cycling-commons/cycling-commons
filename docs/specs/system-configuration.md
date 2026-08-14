@@ -9,7 +9,8 @@
 > `/admin/system-config`.
 
 The site runs on a handful of editorial numbers: how much curated content a
-region needs before it may open in Curated mode, how many routes a region may
+region needs before it may open in **Best of** (the rider-facing name for the
+mode whose identifier is `curated`, see map-and-search.md), how many routes a region may
 have live at once, how many riders must confirm a route before it verifies
 itself, how long decided moderation rows are kept. This document is the
 contract for where those numbers live, who may change them, and what happens

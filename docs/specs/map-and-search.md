@@ -253,6 +253,29 @@ on the next reload.
   token); on fetch failure Curated shows no picks rather than a stale set.
 - A rider with **exactly one** saved bike preselects the Bike facet; multi-bike
   riders keep the neutral `all` (the facet is single-valued).
+**NAMING: the mode is called "Best of" to riders, `curated` to the code.**
+Riders never see the word *Curated* as a mode name in any locale: it is
+**Best of** (en), **Best-of** (fr/nl/de), **Lo mejor** (es), from
+`map.curated` / `moderate_regions.mode_curated`. The identifier stays
+`curated` everywhere it is an identifier: the `default_map_mode` column value,
+the `?mode=` parameter, the `data-m="curated"` attribute, the translation KEYS
+and the readiness settings (`map.curated_default_*`). This spec says "Curated
+mode" for the code path; that is the identifier, not the label.
+
+Do not "fix" one to match the other in either direction, and beware two words
+that look like the same rename and are not:
+- **`regions.status_curated`, "Curated"** is a region's **stewardship**
+  status, meaning *a curator looks after this region*. Nothing to do with the
+  map mode.
+- **"curated picks"** is content a curator marked, which is what the readiness
+  gate counts. Also not the mode.
+
+A half-finished rename was found on 2026-08-14: the map said Best of while the
+Regions desk, the region-status legend, the admin settings labels and the
+add-climb journey diagram still said Curated / Sélection / Selectie / Auswahl /
+Curado, so one product had two names for one thing in five languages. Fixed
+across all five.
+
 - **Which mode the map OPENS in.** The global default is
   **Everything**, not Curated: Curated hides every non-curated experiential item,
   so on an under-curated region it showed a near-empty map behind a rail counting
