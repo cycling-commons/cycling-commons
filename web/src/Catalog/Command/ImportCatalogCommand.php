@@ -535,6 +535,37 @@ final class ImportCatalogCommand extends Command
      * Kept as a constant because Version20260727120000 backfills existing rows
      * with the identical statement, and the two must not drift.
      */
+    /**
+     * EVERY GEOGRAPHY AREA IS COMPUTED ONCE PER PART. That is the whole reason
+     * this is shaped the way it is, and it is not a micro-optimisation.
+     *
+     * The first version put `ST_Area(r.geom::geography) * 0.01` in the WHERE —
+     * a correlated reference to the OUTER row, re-evaluated for every part
+     * `ST_Dump` produced, each time casting the entire multipolygon to
+     * geography and measuring it. Cost is therefore parts × cost(whole
+     * geometry), which is quadratic in the thing that makes a country big.
+     *
+     * Measured on `united-states` alone (6,128 parts, 136,302 points):
+     * **>600 s and still running**, against **653 ms** once the area is
+     * computed once. It is not "slow" — a rollout adding Canada (an outline
+     * with more parts still) never finishes, and the 2026-08-14 import sat on
+     * this statement for 80 minutes before it was diagnosed.
+     *
+     * The replacement is `sum(a) OVER ()`: a multipolygon's area IS the sum of
+     * its parts' areas, so the total comes free from values already computed
+     * per part. `max(a) OVER ()` reuses the same column rather than measuring
+     * a second time. The window sits in a subquery and the filter outside it,
+     * so both windows see every part — including the ones the filter drops,
+     * which is what keeps `total` equal to the whole region's area.
+     *
+     * `a` stays the area of the UNSIMPLIFIED part while `g` is the simplified
+     * shape, exactly as before: the size test decides whether a part is worth
+     * keeping, and simplification must not be able to shrink a part out of the
+     * answer.
+     *
+     * Kept as a constant because Version20260727120000 backfills existing rows
+     * with the identical statement, and the two must not drift.
+     */
     public const OUTLINE_SQL = <<<'SQL'
         UPDATE region r SET outline = COALESCE((
             SELECT json_agg(ring)
@@ -548,14 +579,19 @@ final class ImportCatalogCommand extends Command
                     ) pt
                 ) AS ring
                 FROM (
-                    SELECT ST_SimplifyPreserveTopology(d.geom, 0.05) AS g,
-                           ST_Area(d.geom::geography) AS a,
-                           max(ST_Area(d.geom::geography)) OVER () AS mx
-                    FROM ST_Dump(r.geom) d
+                    SELECT parts.g,
+                           parts.a,
+                           max(parts.a) OVER () AS mx,
+                           sum(parts.a) OVER () AS total
+                    FROM (
+                        SELECT ST_SimplifyPreserveTopology(d.geom, 0.05) AS g,
+                               ST_Area(d.geom::geography) AS a
+                        FROM ST_Dump(r.geom) d
+                    ) parts
                 ) z
                 WHERE z.g IS NOT NULL
                   AND GeometryType(z.g) = 'POLYGON'
-                  AND z.a >= LEAST(GREATEST(ST_Area(r.geom::geography) * 0.01, 5e6), z.mx)
+                  AND z.a >= LEAST(GREATEST(z.total * 0.01, 5e6), z.mx)
             ) rings
         ), '[]'::json)::jsonb
         WHERE r.geom IS NOT NULL
