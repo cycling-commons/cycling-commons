@@ -64,6 +64,7 @@ enum MessageCategory: string
             self::General => [
                 UserMessageKind::CuratorMessage,
                 UserMessageKind::CuratorApplicationReceived,
+                UserMessageKind::ModeratorAreasChanged,
             ],
         };
     }

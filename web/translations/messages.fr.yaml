@@ -2748,6 +2748,7 @@ messages:
   kind_correction_done: 'Correction traitée — merci !'
   kind_correction_dismissed: 'Correction rejetée'
   kind_curator_app_received: 'Votre candidature de curateur'
+  kind_areas_changed: 'Your moderation areas'
   kind_curator_message: 'Message d''un curateur'
   kind_rider_reply: 'Réponse du cycliste'
   kind_media_takedown_granted: 'Votre photo a été retirée'
@@ -2757,6 +2758,7 @@ messages:
   kind_media_restored_after_review: 'Votre photo est de retour sur la carte'
   body:
     submission_approved: 'Votre contribution %title% a été approuvée et est désormais visible sur la carte. Merci d''améliorer le Commons !'
+    areas_changed: 'An admin changed the areas you moderate. You now look after %areas%.'
     submission_rejected: 'Votre contribution %title% n''a pas été retenue.'
     submission_needs_info: 'Un curateur a besoin de précisions sur %title% avant de statuer. Vous pouvez répondre ci-dessous.'
     route_approved: 'Votre itinéraire %name% a été approuvé et apparaît désormais sur la carte comme itinéraire proposé. Merci !'

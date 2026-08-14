@@ -1562,6 +1562,25 @@ promised time on it. Three details that are easy to get wrong:
   application "to curate NL" had arrived: the wrong scope, and a database code
   rather than a place.
 
+**A change of areas is told to the person it happens to.** A moderator's scope
+decides what they can see and act on, so a silent change means finding out by
+noticing a desk has gone quiet, or that somewhere new has appeared in it with no
+explanation (owner 2026-08-14). `UserAdminService::setModeratorAreas()` compares
+a sorted fingerprint of the areas before and after, and on a real change sends
+`UserMessageKind::ModeratorAreasChanged` — a dashboard row that `MessageMailer`
+then delivers by email, so one send covers both surfaces. Re-saving the same set
+(or the same set in another order) says nothing. Sent AFTER the transaction: the
+notice is not part of the assignment, and a mail-layer problem must never roll
+back a scope change an admin has already made.
+
+The message names the areas in **words**, resolved at send time, and an empty
+assignment reads *everywhere* rather than "nothing" — empty means global, which
+is the opposite. It is **English in every catalogue**, like the curator
+decision templates: internal communication with moderators has one working
+language, and a translated string would resolve in the *admin's* locale at the
+moment of saving, so a Dutch admin would write a Dutch word into a message an
+English or Spanish moderator then reads.
+
 **`?by=<user id>` filters both desks** - the open queue and the settled
 history - so "what has this person sent, and what of theirs is still waiting"
 is answerable from one link. The queue says when it is filtered and offers a

@@ -2751,6 +2751,7 @@ messages:
   kind_correction_done: 'Korrektur bearbeitet — danke!'
   kind_correction_dismissed: 'Korrektur verworfen'
   kind_curator_app_received: 'Deine Bewerbung als Kurator'
+  kind_areas_changed: 'Your moderation areas'
   kind_curator_message: 'Nachricht von einem Kurator'
   kind_rider_reply: 'Antwort des Fahrers'
   kind_media_takedown_granted: 'Dein Foto wurde entfernt'
@@ -2760,6 +2761,7 @@ messages:
   kind_media_restored_after_review: 'Dein Foto ist wieder auf der Karte'
   body:
     submission_approved: 'Dein Beitrag %title% wurde angenommen und ist jetzt live auf der Karte. Danke, dass du den Commons verbesserst!'
+    areas_changed: 'An admin changed the areas you moderate. You now look after %areas%.'
     submission_rejected: 'Dein Beitrag %title% wurde nicht angenommen.'
     submission_needs_info: 'Ein Kurator benötigt weitere Informationen zu %title%, bevor entschieden werden kann. Du kannst unten antworten.'
     route_approved: 'Deine Route %name% wurde angenommen und erscheint jetzt als vorgeschlagene Route auf der Karte. Danke!'

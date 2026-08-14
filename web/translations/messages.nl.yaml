@@ -2748,6 +2748,7 @@ messages:
   kind_correction_done: 'Correctie verwerkt — bedankt!'
   kind_correction_dismissed: 'Correctie afgewezen'
   kind_curator_app_received: 'Je aanmelding als curator'
+  kind_areas_changed: 'Your moderation areas'
   kind_curator_message: 'Bericht van een curator'
   kind_rider_reply: 'Antwoord van de fietser'
   kind_media_takedown_granted: 'Je foto is verwijderd'
@@ -2757,6 +2758,7 @@ messages:
   kind_media_restored_after_review: 'Je foto staat weer op de kaart'
   body:
     submission_approved: 'Jouw bijdrage %title% is goedgekeurd en staat nu live op de kaart. Bedankt voor het verbeteren van de Commons!'
+    areas_changed: 'An admin changed the areas you moderate. You now look after %areas%.'
     submission_rejected: 'Jouw bijdrage %title% is niet aanvaard.'
     submission_needs_info: 'Een curator heeft meer informatie nodig over %title% voordat er beslist wordt. Je kunt hieronder antwoorden.'
     route_approved: 'Jouw route %name% is goedgekeurd en staat nu als voorgestelde route op de kaart. Bedankt!'

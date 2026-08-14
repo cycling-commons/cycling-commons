@@ -31,6 +31,10 @@ enum UserMessageKind: string
        line is derived from the kind, and "Message from a curator" is not what
        this is (owner 2026-08-14). */
     case CuratorApplicationReceived = 'curator_app_received';
+    /* An admin changed which regions this moderator covers. Their scope decides
+       what they can see and act on, so a silent change means finding out by
+       noticing a desk has gone quiet (owner 2026-08-14). */
+    case ModeratorAreasChanged = 'areas_changed';
     case CuratorMessage = 'curator_message';
     case RiderReply = 'rider_reply';
     /** Outcomes of a photo takedown request (docs/specs/photo-uploads.md §6b). */

@@ -2771,6 +2771,7 @@ messages:
   kind_correction_done: 'Correction actioned — thank you!'
   kind_correction_dismissed: 'Correction dismissed'
   kind_curator_app_received: 'Your curator application'
+  kind_areas_changed: 'Your moderation areas'
   kind_curator_message: 'Message from a curator'
   kind_rider_reply: 'Reply from the rider'
   kind_media_takedown_granted: 'Your photo has been removed'
@@ -2780,6 +2781,7 @@ messages:
   kind_media_restored_after_review: 'Your photo is back on the map'
   body:
     submission_approved: 'Your contribution %title% was approved and is now live on the map. Thank you for improving the Commons!'
+    areas_changed: 'An admin changed the areas you moderate. You now look after %areas%.'
     submission_rejected: 'Your contribution %title% was not accepted.'
     submission_needs_info: 'A curator needs more information about %title% before deciding. You can reply below.'
     route_approved: 'Your route %name% was approved and now shows on the map as a proposed route. Thank you!'

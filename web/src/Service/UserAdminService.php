@@ -8,6 +8,8 @@ namespace App\Service;
 
 use App\Catalog\Entity\Region;
 use App\Entity\User;
+use App\Messaging\MessageService;
+use App\Messaging\UserMessageKind;
 use App\Moderation\Entity\ModeratorArea;
 use App\Repository\UserRepository;
 use App\World\Entity\Country;
@@ -41,6 +43,7 @@ final class UserAdminService
         private readonly UserRepository $users,
         private readonly AdminActionLogger $logger,
         private readonly UserDeletionService $deletion,
+        private readonly MessageService $messages,
     ) {
     }
 
@@ -164,6 +167,12 @@ final class UserAdminService
             [] !== $countryCodes ? implode(', ', $countryCodes) : 'none',
         );
 
+        /* WHAT THEY COVERED BEFORE, read while the old rows still exist. The
+           comparison decides whether this is worth telling them about: saving
+           the form unchanged (or re-saving after a typo) must not post a
+           "your areas changed" message that describes no change. */
+        $before = $this->areaKeys((int) $target->getId());
+
         // Rows and audit are one transaction: commit() below opens its own
         // wrapInTransaction, but Doctrine's connection nests transactions
         // by ref-count rather than starting a second one, so this stays atomic
@@ -180,6 +189,87 @@ final class UserAdminService
             }
             $this->commit($actor, self::MODERATOR_AREAS, $target, $note);
         });
+
+        /* TELL THE PERSON (owner 2026-08-14: "if we update a moderator to have
+           less or more regions send them a message"). Their scope decides what
+           they can see and act on, so a silent change means finding out by
+           noticing a desk has gone quiet, or that somewhere new has appeared in
+           it with no explanation.
+
+           After the transaction, not inside it: the message is a notification,
+           not part of the assignment, and a mail-layer problem must never roll
+           back a scope change an admin has already made. Names, not ids, and
+           resolved here because the message is rendered long after this runs.
+           The dashboard row is what MessageMailer then delivers by email, so
+           one call covers both surfaces the owner asked for. */
+        $after = $this->areaKeys((int) $target->getId());
+        if ($before !== $after) {
+            $this->messages->sendSystem(
+                (int) $target->getId(),
+                UserMessageKind::ModeratorAreasChanged,
+                'areas',
+                (int) $target->getId(),
+                '',
+                'messages.body.areas_changed',
+                ['%areas%' => $this->areaNames($regionIds, $countryCodes)],
+            );
+            $this->em->flush();
+        }
+    }
+
+    /**
+     * A stable, comparable fingerprint of what somebody moderates.
+     *
+     * Sorted so that saving the same set in a different order is not mistaken
+     * for a change, and prefixed so region 7 can never collide with a country
+     * code that happens to stringify the same way.
+     *
+     * @return list<string>
+     */
+    private function areaKeys(int $userId): array
+    {
+        $keys = [];
+        foreach ($this->em->getRepository(ModeratorArea::class)->findBy(['userId' => $userId]) as $area) {
+            $keys[] = null !== $area->getRegionId() ? 'r:'.$area->getRegionId() : 'c:'.$area->getCountryCode();
+        }
+        sort($keys);
+
+        return $keys;
+    }
+
+    /**
+     * The areas in words, for the message.
+     *
+     * Empty means GLOBAL, not "none" — that is what an empty assignment does
+     * (see the picker's own note), and telling somebody they now cover nothing
+     * when they in fact cover everything would be the worst possible way to be
+     * wrong about it.
+     *
+     * @param list<int>    $regionIds
+     * @param list<string> $countryCodes
+     */
+    private function areaNames(array $regionIds, array $countryCodes): string
+    {
+        if ([] === $regionIds && [] === $countryCodes) {
+            /* English, not translated (owner 2026-08-14: internal communication
+               with moderators is English only). Using the translator here was
+               worse than inconsistent, it was wrong: it would have resolved in
+               the ADMIN's locale at the moment of saving, so a Dutch admin
+               would have written a Dutch word into a message an English or
+               Spanish moderator then reads. */
+            return 'everywhere';
+        }
+
+        $names = [];
+        foreach ($this->em->getRepository(Region::class)->findBy(['id' => $regionIds]) as $region) {
+            $names[] = $region->getName();
+        }
+        foreach ($this->em->getRepository(Country::class)->findBy(['iso2' => $countryCodes]) as $country) {
+            $names[] = $country->getName();
+        }
+        sort($names);
+
+        return implode(', ', $names);
     }
 
     // ── Guardrails ────────────────────────────────────────────────────────────

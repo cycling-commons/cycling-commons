@@ -2785,6 +2785,7 @@ messages:
   kind_correction_done: 'Corrección aplicada — ¡gracias!'
   kind_correction_dismissed: 'Corrección descartada'
   kind_curator_app_received: 'Tu solicitud de curador'
+  kind_areas_changed: 'Your moderation areas'
   kind_curator_message: 'Mensaje de un curador'
   kind_rider_reply: 'Respuesta del ciclista'
   kind_media_takedown_granted: 'Tu foto se ha retirado'
@@ -2794,6 +2795,7 @@ messages:
   kind_media_restored_after_review: 'Tu foto vuelve a estar en el mapa'
   body:
     submission_approved: 'Tu aportación %title% se ha aprobado y ya está publicada en el mapa. ¡Gracias por mejorar el Commons!'
+    areas_changed: 'An admin changed the areas you moderate. You now look after %areas%.'
     submission_rejected: 'Tu aportación %title% no se ha aceptado.'
     submission_needs_info: 'Un curador necesita más información sobre %title% antes de decidir. Puedes responder abajo.'
     route_approved: 'Tu ruta %name% se ha aprobado y ya aparece en el mapa como ruta propuesta. ¡Gracias!'
