@@ -252,4 +252,29 @@ enum ItemType: string
     {
         return [] !== $this->confirmationStances();
     }
+
+    /**
+     * True when 'Out of order' can be true of this type.
+     *
+     * A tap, a pump and a toilet have working parts and can be broken while
+     * still standing exactly where the map says. A viewpoint, a shelter, a
+     * monument and a station platform cannot: they are there, or shut, or
+     * gone. Offering a rider an answer that cannot be true of what they are
+     * looking at teaches them to distrust the rest of the row.
+     *
+     * The client has drawn this line since 2026-08-12 (`CC_BREAKABLE`,
+     * community.js) and the wizard had not, so the form offered what the map
+     * refused (owner-reported 2026-08-14). This method is the server's copy of
+     * that set, used both to pick the form's menu
+     * ({@see CatalogFormRegistry}) and to refuse the stance at the confirm
+     * endpoint, so the narrower menu is a rule rather than a suggestion the UI
+     * makes.
+     */
+    public function canBreak(): bool
+    {
+        return match ($this) {
+            self::WaterFood, self::BikeServices, self::PublicToilets => true,
+            default => false,
+        };
+    }
 }

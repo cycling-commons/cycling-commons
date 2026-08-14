@@ -16,7 +16,7 @@
 
    Nothing is injected any more: every module this one reaches into has landed,
    so initDrawer() is gone and only initDrawerChrome() remains (§9). */
-import { I18N, D, tpl, trVal, sourceLabel, DIFF_LABELS } from './i18n.js';
+import { I18N, D, tpl, trVal, sourceLabel, isRiderSource, DIFF_LABELS } from './i18n.js';
 import { escPend, safeHref, stars, slug, txtOn, gradColor, DIFF_PURPLE, ccUrl, attachPhotos, haversine } from './util.js';
 import { openClimbProfile } from './climb-profile.js';
 import { uKm, uM, uElev, uKmValue, uElevValue, uDistUnit } from './units.js';
@@ -218,7 +218,7 @@ export function osmDrawer(layer, p, ll, src){
   // when served through a bulk-OSM layer — the per-fact "Type"/"Listed" method
   // tags below are unchanged (Phase C2 scope), only the headline + source line
   // are corrected here.
-  const community = p.srcType==='user' || p.srcType==='manual';
+  const community = isRiderSource(p.srcType);
   const originLbl = pivot?'Tourisme Wallonie':(community?sourceLabel(p.srcType):'OSM');
   // D · services carries a serviceKind (shop/station/pump) — when present, the localized
   // kind label takes precedence over the raw OSM p.t value for the type row + headline
@@ -294,7 +294,7 @@ export function waterDrawer(p, ll){
         ? {label:D.potable||'Potable', value:D.potableOsmNo||'Tagged not drinkable in OSM — not utility-verified; avoid unless confirmed on the spot', method:'unverified'}
         : {label:D.potable||'Potable', value:D.potableOsm||'Tagged drinkable in OSM — not utility-verified; confirm on the spot', method:'unverified'});
   // C1-T4 (W6): see osmDrawer — a rider-added/edited water point isn't OSM.
-  const community = p.srcType==='user' || p.srcType==='manual';
+  const community = isRiderSource(p.srcType);
   const rec=[{label:D.type||'Type', value:(p.type||p.t) ? trVal(p.type||p.t) : (D.drinkingWater||'Drinking water'), method: p.type?undefined:'OSM'}, potable,
     {label:D.verify||'Verify', value:D.verifyWater||'Cross-check tap-water quality with the regional utility / fountain directory', links:WATER_CHECK_LINKS[p.cc]||[]}];
   // Registry-driven rows for the remaining WaterFood fields (seasonal/note/
@@ -781,10 +781,16 @@ function buildRecord(layer, f){
     ? `<button type="button" class="cc-d-share" data-share="${escPend(shareQ)}"
          title="${escPend(D.shareHint||'Copy a link that opens this place')}">↗ ${D.share||'Share'}</button>`
     : '';
-  return `<span class="cc-d-type" style="--c:${layer.color};color:${txtOn(layer.color)}"><i class="cc-g">${layer.icon}</i> ${layer.label}</span>
+  /* Share sits in the HEADER, not down on the source line (owner 2026-08-14).
+     Sharing a place is something a rider decides the moment they recognise it,
+     and the source line is below the photo, the description and every record
+     row — on a long drawer it was a scroll away from the name it shares. Next
+     to the type chip it is visible the instant the drawer opens, and it stays
+     out of the action row, which is for verbs that change data. */
+  return `<div class="cc-d-head"><span class="cc-d-type" style="--c:${layer.color};color:${txtOn(layer.color)}"><i class="cc-g">${layer.icon}</i> ${layer.label}</span>${share}</div>
     <div class="cc-d-name">${escPend(f.name)}</div>${cur}${photo}${desc}${diff}${elev}${len}${grad}
     <ul class="cc-d-rec">${rows}</ul>${fresh}${up}
-    <div class="cc-d-src">${D.source||'Source'} · ${srcLine(f, osmHref)}${share}</div>${act}${moderate}${histSlot}`;
+    <div class="cc-d-src">${D.source||'Source'} · ${srcLine(f, osmHref)}</div>${act}${moderate}${histSlot}`;
 }
 // C1-T3: renders one change_history row. Every interpolated value is
 // user-contributed (old/new attribute values, and `who`/`when`/`changedAt`

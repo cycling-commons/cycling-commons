@@ -5,7 +5,7 @@
 
    Loaded as an ES module: catalog-load.js injects it with type="module" once
    the catalog fetch has populated the CC_* globals this file reads. */
-import { I18N, LAYER_L10N, D, tpl, VALUE_TR, trVal, sourceLabel } from './i18n.js';
+import { I18N, LAYER_L10N, D, tpl, VALUE_TR, trVal, sourceLabel, isRiderSource } from './i18n.js';
 import { wc, pinPoint } from './util.js';
 import { uKm } from './units.js';
 import { map, initMapControls, addSatellite, markStyleReady, initCoordPopup,
@@ -128,10 +128,10 @@ import { initLayerList, initMapCtrl, initRailChrome, initBestOf,
   // populate K · Recommended routes with every uploaded sample route + its cyclist-experience attributes
   // C1-T4 (W6): CC_CLIMBS' 'source' field is the free-text citation ('OSM roads ·
   // geometry handmade', etc.); srcType is the real ItemSource value. A rider-
-  // added/edited climb (user/manual) must not keep an OSM-flavoured citation —
+  // added/edited climb (user/manual/scout) must not keep an OSM-flavoured citation —
   // swap the cc-d-src line to the plain rider-contributed label for those only.
   if(window.CC_CLIMBS){
-    const climbSrc = CC_CLIMBS.map(c => (c.srcType==='user'||c.srcType==='manual')
+    const climbSrc = CC_CLIMBS.map(c => isRiderSource(c.srcType)
       ? Object.assign({}, c, {source: sourceLabel(c.srcType)}) : c);
     layerByKey['climbs'].features = layerByKey['climbs'].features.concat(climbSrc);
   }
@@ -168,7 +168,7 @@ import { initLayerList, initMapCtrl, initRailChrome, initBestOf,
       photo:r.photo||wc('Liège-Bastogne-Liège 2014 Echappée du jour Côte de Wanne.JPG','Les Meloures','Les Meloures','CC BY-SA 3.0'),
       // C1-T4 (W6): 'Contributed GPX' is an accurate detail for the pipeline's
       // usual auto-derived routes; a rider-added/edited one gets the plain label.
-      source:(r.srcType==='user'||r.srcType==='manual') ? sourceLabel(r.srcType) : (D.contributedGpx||'Contributed GPX (GPS track only)'),
+      source:isRiderSource(r.srcType) ? sourceLabel(r.srcType) : (D.contributedGpx||'Contributed GPX (GPS track only)'),
       // C2-T7 (spec §W2): every row below is a real QualityRides registry
       // attribute (CatalogFormRegistry::for(QualityRides), forwarded by
       // CatalogProvider::routes()) — the previous Quietness/Scenic
@@ -239,7 +239,7 @@ import { initLayerList, initMapCtrl, initRailChrome, initBestOf,
         geom:{path:s.path}, surfaceClass:s.cls, width:s.width, smoothness:s.smoothness,
         photo: s.photoFile ? wc(s.photoFile, s.photoCredit, s.photoUser, s.photoLicense) : undefined,
         // C1-T4 (W6): a rider-added/edited surface segment isn't OSM.
-        source:(s.srcType==='user'||s.srcType==='manual') ? sourceLabel(s.srcType) : 'OSM (surface=*)',
+        source:isRiderSource(s.srcType) ? sourceLabel(s.srcType) : 'OSM (surface=*)',
         record:rec
       };
     });

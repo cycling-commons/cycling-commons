@@ -352,6 +352,34 @@ final class OsmConfirmTest extends WebTestCase
         );
     }
 
+    /**
+     * A viewpoint cannot be out of order (owner-reported 2026-08-14: "those are
+     * strange options for Scenery"). The map has never drawn the button for a
+     * type with no working parts, and the endpoint now agrees, so the stored
+     * vocabulary cannot drift past what the form is able to express.
+     */
+    public function testAViewpointCannotBeReportedOutOfOrder(): void
+    {
+        $client = static::createClient();
+        $this->login($client, 'viewpoint');
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $item = (new Item())->setLetter('I')->setName('Zuiderdijk')
+            ->setGeom('{"type":"Point","coordinates":[5.13,52.62]}')->setCountryCode('NL')
+            ->setState(ItemState::Unverified)->setSource(ItemSource::Scout)->setAttributes([]);
+        $em->persist($item);
+        $em->flush();
+        $id = (int) $item->getId();
+        $token = $this->mapToken($client);
+
+        $client->request('POST', '/items/'.$id.'/condition', ['_token' => $token, 'stance' => 'out_of_order']);
+        self::assertResponseStatusCodeSame(422, 'a view has no working parts to break');
+
+        // The answers that CAN be true of it are untouched.
+        $client->request('POST', '/items/'.$id.'/condition', ['_token' => $token, 'stance' => 'closed']);
+        self::assertResponseIsSuccessful();
+        self::assertSame(1, $em->getRepository(Submission::class)->count(['itemId' => $id]));
+    }
+
     public function testTheSameReportTwiceIsNotTwoRowsInTheQueue(): void
     {
         $client = static::createClient();

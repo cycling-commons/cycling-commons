@@ -115,6 +115,13 @@ final class OsmConfirmController extends AbstractController
         if (null === $type || !$type->isConfirmable()) {
             return $this->json(['error' => 'not_confirmable'], 422);
         }
+        // 'Out of order' needs working parts, and a viewpoint has none
+        // (ItemType::canBreak). The map has never drawn this button for such a
+        // type, so refusing it here costs no real caller anything and stops the
+        // stored vocabulary from drifting past what the form can express.
+        if ('out_of_order' === $stance && !$type->canBreak()) {
+            return $this->json(['error' => 'invalid_stance'], 422);
+        }
 
         /* Already said, by this rider or by anyone: the map is not a tally of
            how many people watched the same tap break. A second report of the
@@ -204,6 +211,13 @@ final class OsmConfirmController extends AbstractController
         }
         if (null === $type || !$type->isConfirmable()) {
             return $this->json(['error' => 'not_confirmable'], 422);
+        }
+        // 'Out of order' needs working parts, and a viewpoint has none
+        // (ItemType::canBreak). The map has never drawn this button for such a
+        // type, so refusing it here costs no real caller anything and stops the
+        // stored vocabulary from drifting past what the form can express.
+        if ('out_of_order' === $stance && !$type->canBreak()) {
+            return $this->json(['error' => 'invalid_stance'], 422);
         }
 
         /* A name is required, and most OSM taps have none. The layer's own

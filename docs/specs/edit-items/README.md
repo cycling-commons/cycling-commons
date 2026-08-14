@@ -229,7 +229,10 @@ The map's three view modes read this ladder from the top down: **Best of**
 - **A confirmation can also be negative.** `condition` (*Out of order · Closed ·
   Not there anymore*) travels as an ordinary edit, not a stance, and a place
   reported gone leaves the map without handing itself back to OSM
-  ([catalog-data-model.md](../catalog-data-model.md) §7).
+  ([catalog-data-model.md](../catalog-data-model.md) §7). *Out of order* is
+  offered only by the types that have working parts to break — C, D and M
+  (`ItemType::canBreak()`); G, H, I and J get the same vocabulary one answer
+  shorter.
 
 **View modes** (Best of · Confirmed · Everything) are owned by
 [map-and-search.md](../map-and-search.md) §4.2; in these terms, **Best of** surfaces

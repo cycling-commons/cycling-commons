@@ -49,6 +49,24 @@ final class CatalogFormRegistry
     private const array CONDITION = ['As mapped', 'Out of order', 'Closed', 'Not there anymore'];
 
     /**
+     * The same vocabulary, minus the answer that cannot be true here.
+     *
+     * 'Out of order' needs working parts. A tap, a pump and a toilet have
+     * them; a viewpoint, a shelter, a monument and a station platform do not,
+     * and the wizard offered a rider standing at a viewpoint the choice of
+     * calling the view broken (owner-reported 2026-08-14, "those are strange
+     * options for Scenery"). The map's one-tap row has drawn this line since
+     * 2026-08-12 - `CC_BREAKABLE` in community.js, whose comment uses this
+     * exact example - so the form was the odd one out, offering by form what
+     * the map refused to offer by tap.
+     *
+     * Same VALUES as CONDITION, deliberately: this is a narrower menu, never a
+     * second vocabulary, so a tap and a form edit still cannot disagree about
+     * what "gone" is called. Keep the two lists in step with `CC_BREAKABLE`.
+     */
+    private const array CONDITION_NO_PARTS = ['As mapped', 'Closed', 'Not there anymore'];
+
+    /**
      * Opening hours is intentionally NOT free text: specific weekly hours change
      * without notice and we can't verify them, so we only record what stays true,
      * round-the-clock or "check the source", and default to Unknown.
@@ -284,7 +302,7 @@ final class CatalogFormRegistry
                     CatalogField::select('bikesOnBoard', 'Bikes on board', ['Allowed with supplement', 'Allowed, free', 'Restricted at peak', 'Not allowed']),
                     CatalogField::select('stepFree', 'Step-free access', self::UNKNOWN_YES_NO),
                     CatalogField::select('bikeParking', 'Bike parking at station', ['Unknown', 'Covered racks', 'Open racks', 'None']),
-                    CatalogField::select('condition', 'Still as mapped?', self::CONDITION),
+                    CatalogField::select('condition', 'Still as mapped?', self::CONDITION_NO_PARTS),
                     CatalogField::textarea('note', 'Note for riders', 'e.g. which platform for the climbs'),
                 ],
                 addFields: [
@@ -298,7 +316,7 @@ final class CatalogFormRegistry
                     CatalogField::select('shelterType', 'Shelter type', ['Refuge / chapel', 'Bus shelter', 'Café (seasonal)', 'Picnic hut']),
                     CatalogField::select('alwaysAccessible', 'Always accessible?', ['Yes — open structure', 'Daytime only', 'Seasonal', 'Unknown']),
                     CatalogField::select('waterNearby', 'Water nearby?', self::UNKNOWN_YES_NO),
-                    CatalogField::select('condition', 'Still as mapped?', self::CONDITION),
+                    CatalogField::select('condition', 'Still as mapped?', self::CONDITION_NO_PARTS),
                     CatalogField::textarea('note', 'Note for riders', 'How useful is it in bad weather?'),
                 ],
                 addFields: [
@@ -313,7 +331,7 @@ final class CatalogFormRegistry
                     CatalogField::select('type', 'Type', ['Viewpoint / high point', 'Monument', 'Heritage site', 'Nature reserve']),
                     CatalogField::select('bikeAccess', 'Access for bikes', ['Roadside', 'Short walk', 'Path only']),
                     CatalogField::text('whatYouSee', 'What can you see?'),
-                    CatalogField::select('condition', 'Still as mapped?', self::CONDITION),
+                    CatalogField::select('condition', 'Still as mapped?', self::CONDITION_NO_PARTS),
                     CatalogField::textarea('note', 'Anything to add?', 'A useful tip about this spot'),
                 ],
                 addFields: [
@@ -327,7 +345,7 @@ final class CatalogFormRegistry
                     CatalogField::text('name', 'Name', display: false),
                     CatalogField::select('type', 'Type', ['Heritage site', 'Museum', 'Monument', 'Religious site']),
                     CatalogField::select('bikeParking', 'Bike parking', self::UNKNOWN_YES_NO),
-                    CatalogField::select('condition', 'Still as mapped?', self::CONDITION),
+                    CatalogField::select('condition', 'Still as mapped?', self::CONDITION_NO_PARTS),
                     CatalogField::textarea('note', 'Anything to add?', 'A useful tip about this spot'),
                 ],
                 addFields: [

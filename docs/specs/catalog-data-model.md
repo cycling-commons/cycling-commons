@@ -330,6 +330,19 @@ same key with the same vocabulary, which is what keeps a tap and a form edit
 from becoming two different records of one fact
 ([moderation-and-contribution.md](moderation-and-contribution.md) §10.4).
 
+**One vocabulary, two menu lengths.** *Out of order* needs working parts. A
+tap, a pump and a toilet have them; a viewpoint, a shelter, a monument and a
+station platform do not, so those four types offer
+`CatalogFormRegistry::CONDITION_NO_PARTS` (*As mapped · Closed · Not there
+anymore*) instead. This is a narrower menu, never a second vocabulary: the
+values are identical, so a tap and a form edit still cannot disagree about what
+"gone" is called. `ItemType::canBreak()` is the server's single source of
+truth, used both to pick the menu and to refuse the stance at the confirm
+endpoint; the client mirrors it as `CC_BREAKABLE` (community.js). The client
+had drawn this line since 2026-08-12 while the wizard had not, so the form
+offered a rider standing at a viewpoint the chance to call the view broken
+(owner-reported 2026-08-14). Keep the three in step.
+
 **No default.** A default would make every untouched edit form assert "as
 mapped" about a place its editor never looked at, and turn a no-op edit into a
 change the intake refuses. Silence means nobody has said.

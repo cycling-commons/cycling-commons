@@ -34,7 +34,7 @@ article, where repeating the panel title would be redundant.
 | Type | select(Viewpoint / high point / Monument / Heritage site / Nature reserve) (tourism=viewpoint) | `[OSM]` |
 | Access for bikes | select(Roadside / Short walk / Path only) | `[edit]` |
 | What can you see? | input | `[edit]` |
-| Still as mapped? | select(As mapped / Out of order / Closed / Not there anymore) | `[tap]` |
+| Still as mapped? | select(As mapped / Closed / Not there anymore) | `[tap]` |
 | Anything to add? | textarea | `[edit]` |
 
 ### Add missing  (type-specific)

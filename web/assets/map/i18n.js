@@ -37,6 +37,17 @@ const SOURCE_LABELS = {
   scout:D.srcScout||'Tagged while riding, with Scout'
 };
 export const sourceLabel = raw => SOURCE_LABELS[raw] || null;
+/* Which provenances are a RIDER's, so a drawer never credits OpenStreetMap for
+   somebody's own contribution. Named as a set rather than tested inline,
+   because it was tested inline in four places and every one of them read
+   `srcType==='user'||srcType==='manual'` — which silently omitted `scout`,
+   the source that a tag dropped while riding actually carries. The owner's own
+   scenic addition therefore read "Source · OpenStreetMap (tourism=viewpoint /
+   natural=peak / waterway=waterfall)": the per-layer OSM fallback, on a place
+   OSM has never heard of. Harvested and derived rows (osm/pivot/wikidata/auto)
+   keep their real citation. */
+const RIDER_SOURCES = new Set(['user', 'manual', 'scout']);
+export const isRiderSource = raw => RIDER_SOURCES.has(raw);
 // Climb difficulty 1-5 → localized label (the drawer's difficulty badge and the
 // route filter share this scale); index 0 is the empty "unset" slot.
 export const DIFF_LABELS=['','Easy','Moderate','Challenging','Hard','Very hard'].map(l=>l?trVal(l):l);

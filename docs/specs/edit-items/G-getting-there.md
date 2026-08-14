@@ -23,7 +23,7 @@ Multimodal access points — stations with bikes-on-train, the gateway to the cl
 | Bikes on board | select(Allowed with supplement / Allowed, free / Restricted at peak / Not allowed) | `[OSM]` |
 | Step-free access | select(Unknown / Yes / No) (wheelchair=) | `[OSM]` |
 | Bike parking at station | select(Unknown / Covered racks / Open racks / None) | `[OSM]` |
-| Still as mapped? | select(As mapped / Out of order / Closed / Not there anymore) | `[tap]` |
+| Still as mapped? | select(As mapped / Closed / Not there anymore) | `[tap]` |
 | Note | textarea | `[edit]` |
 
 ### Add missing  (type-specific)

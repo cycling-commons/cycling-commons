@@ -961,6 +961,24 @@ view and PIVOT to the Géoportail catalogue entry. `srcType` (the item's real
 `ItemSource`) overrides the OSM-flavoured headline/source for rider-contributed
 items served through bulk-OSM layers.
 
+**Rider-contributed is a set, not a pair.** `isRiderSource()` (i18n.js) owns it:
+`user`, `manual` and `scout`. The test used to be written inline as
+`srcType==='user'||srcType==='manual'` in four separate places, every one of
+which omitted `scout` — the provenance a tag dropped while riding actually
+carries. The owner's own scenic addition therefore credited *OpenStreetMap
+(tourism=viewpoint / natural=peak / waterway=waterfall)*: the per-layer OSM
+fallback, on a place OSM had never heard of (reported 2026-08-14). Harvested and
+derived rows (`osm`/`pivot`/`wikidata`/`auto`) keep their real citation.
+
+**Share sits in the drawer header**, beside the type chip, not on the source
+line where it first landed. Sharing is something a rider decides the moment
+they recognise the place, and the source line is below the photo, the
+description and every record row — a scroll away from the name being shared on
+any drawer with content. It stays out of the footer action row, which is for
+verbs that change data. It copies `?item=<id>` (or `?feature=<name>` for a
+coverage POI with no catalog id), both read on load by map.js, which widens the
+scope first so the link opens for a recipient whose saved scope is elsewhere.
+
 Footer actions are per-type:
 
 | Feature | Actions |

@@ -669,7 +669,10 @@
   /* Share sits on the source line rather than with the actions: it is about
      THIS VIEW, not about changing anything, and the action row is where the
      verbs that alter data live. Quiet until hovered, and a real 32px target. */
-  .cc-d-share{margin-left:.6rem;display:inline-flex;align-items:center;gap:.25rem;min-height:32px;
+  /* Type chip + share, one row. The right padding keeps the row clear of the
+     absolutely-positioned close X (and of its sticky float on mobile). */
+  .cc-d-head{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;padding-right:2.2rem}
+  .cc-d-share{display:inline-flex;align-items:center;gap:.25rem;min-height:32px;
     padding:.2rem .5rem;border:1px solid rgba(239,230,212,.28);border-radius:5px;background:transparent;
     font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;
     color:rgba(239,230,212,.75);cursor:pointer}
