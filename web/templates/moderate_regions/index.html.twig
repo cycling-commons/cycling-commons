@@ -19,6 +19,15 @@
   .rg-body{flex:1 1 240px;min-width:0}
   .rg-name{font-family:var(--serif);font-weight:600;font-size:1.05rem;display:flex;align-items:center;gap:.5rem}
   .rg-cc{font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;color:#8a8d7d;border:1px solid rgba(20,22,14,.2);border-radius:3px;padding:.05rem .3rem}
+  /* Continent → country → region. Two heading levels that have to be tellable
+     apart at a glance while a curator scans, without either competing with the
+     region names that are the actual content: the continent is a quiet
+     small-caps rule, the country is the one that reads as a label. */
+  .rg-continent{font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;
+    color:#8a8d7d;margin:1.9rem 0 .1rem;padding-bottom:.35rem;border-bottom:1px solid rgba(20,22,14,.14)}
+  .rg-list > .rg-continent:first-child{margin-top:0}
+  .rg-country{font-family:var(--serif);font-size:.95rem;font-weight:600;color:var(--ink);
+    margin:.9rem 0 .1rem;display:flex;align-items:center;gap:.45rem}
   .rg-meter{margin-top:.45rem;display:flex;align-items:center;gap:.6rem}
   .rg-bar{flex:0 0 140px;height:6px;border-radius:3px;background:rgba(28,58,42,.16);overflow:hidden}
   .rg-bar i{display:block;height:100%;background:var(--spruce);border-radius:3px}
@@ -99,11 +108,30 @@
       <p>{{ 'moderate_regions.empty_body'|trans }}</p>
     </div>
   {% else %}
+  {# Grouped continent → country → region (owner, 2026-08-14). The rows arrive
+     from the controller already in that order, so the headers are emitted on
+     CHANGE rather than by nesting loops — which means a group split across two
+     pages still opens with its own heading on the second page instead of a
+     column of orphaned regions under nothing. #}
   <div class="rg-list">
+    {% set prev_continent = null %}
+    {% set prev_country = null %}
     {% for r in regions %}
+      {% if r.continent != prev_continent %}
+        <h2 class="rg-continent">{{ r.continent ?: '—' }}</h2>
+        {% set prev_continent = r.continent %}
+        {% set prev_country = null %}
+      {% endif %}
+      {% if r.countryName != prev_country %}
+        <h3 class="rg-country">{{ r.countryName }} <span class="rg-cc">{{ r.countryCode }}</span></h3>
+        {% set prev_country = r.countryName %}
+      {% endif %}
       <div class="rg-item">
         <div class="rg-body">
-          <div class="rg-name">{{ r.label }} <span class="rg-cc">{{ r.countryCode }}</span></div>
+          {# No country badge here any more: the country heading directly above
+             carries it, and repeating it on every card was the same two letters
+             three times down a screen. #}
+          <div class="rg-name">{{ r.label }}</div>
           {# The count is shown whether or not the gate is open, so a curator can
              see how far a region still has to go — not just that it is locked. #}
           <div class="rg-meter">

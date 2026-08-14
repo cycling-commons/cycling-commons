@@ -122,6 +122,10 @@ final class ModerateRegionsController extends AbstractController
                 'id' => $r['id'],
                 'slug' => $r['slug'],
                 'countryCode' => $r['countryCode'],
+                // Carried through for the continent → country → region grouping
+                // the template renders; the rows arrive already in that order.
+                'continent' => $r['continent'],
+                'countryName' => $r['countryName'],
                 'label' => $translator->trans('region.'.$r['slug'].'.label'),
                 'defaultMode' => $r['defaultMode'],
                 'confirmed' => $confirmedCounts[$r['id']] ?? 0,
@@ -203,26 +207,36 @@ final class ModerateRegionsController extends AbstractController
     /**
      * The regions this curator may act on, in the registry's own order.
      *
-     * @return list<array{id: int, slug: string, countryCode: string, defaultMode: string}>
+     * @return list<array{id: int, slug: string, countryCode: string, defaultMode: string, continent: string, countryName: string}>
      */
     private function visibleRegions(User $user): array
     {
         $scope = $this->scopeProvider->scopeFor($user);
-        $sql = "SELECT id, slug, country_code AS cc, default_map_mode
-                  FROM region
-                 WHERE geom IS NOT NULL AND country_code <> ''"
-            .' AND '.OperationalRegions::predicate('region');
+        /* Continent and country come from the World reference bundle, LEFT
+           JOINed so a region whose country is somehow not in it still lists
+           (under the "—" group) rather than vanishing from a moderation
+           surface. Sorting here rather than in PHP keeps the pager honest:
+           the slice below happens before the readiness reports are built, so
+           the ORDER BY has to be the final display order. */
+        $sql = "SELECT r.id, r.slug, r.country_code AS cc, r.default_map_mode,
+                       COALESCE(cont.name, '') AS continent,
+                       COALESCE(wc.name, r.country_code) AS country_name
+                  FROM region r
+             LEFT JOIN world_country wc ON wc.iso2 = r.country_code
+             LEFT JOIN world_continent cont ON cont.id = wc.continent_id
+                 WHERE r.geom IS NOT NULL AND r.country_code <> ''"
+            .' AND '.OperationalRegions::predicate('r');
         $params = [];
         $types = [];
         if (!$scope->global) {
             $clauses = [];
             if ([] !== $scope->regionIds) {
-                $clauses[] = 'id IN (:rids)';
+                $clauses[] = 'r.id IN (:rids)';
                 $params['rids'] = $scope->regionIds;
                 $types['rids'] = ArrayParameterType::INTEGER;
             }
             if ([] !== $scope->countryCodes) {
-                $clauses[] = 'UPPER(country_code) IN (:ccs)';
+                $clauses[] = 'UPPER(r.country_code) IN (:ccs)';
                 $params['ccs'] = $scope->countryCodes;
                 $types['ccs'] = ArrayParameterType::STRING;
             }
@@ -230,9 +244,20 @@ final class ModerateRegionsController extends AbstractController
             // resolvable — show no regions rather than silently showing all.
             $sql .= ' AND ('.([] === $clauses ? 'FALSE' : implode(' OR ', $clauses)).')';
         }
-        $sql .= ' ORDER BY area_km2 DESC, slug';
+        /* Continent, then country, then the biggest region first — the grouping
+           the page renders (owner request 2026-08-14: "group this per continent
+           and country and state"). A flat `area_km2 DESC` put Western Australia,
+           Queensland and Québec adjacent, which reads as an ordering accident
+           when the list spans six continents.
 
-        /** @var list<array{id: int|string, slug: string, cc: string, default_map_mode: string}> $rows */
+           Area DESC is KEPT as the within-country order rather than swapped for
+           alphabetical: it is the existing convention, it needs no translation
+           to sort by, and it puts the region a curator is most likely to be
+           looking for at the top of its country. Empty continent sorts last so
+           an unmatched country lands at the end, not above Africa. */
+        $sql .= " ORDER BY NULLIF(cont.name, '') NULLS LAST, country_name, r.area_km2 DESC, r.slug";
+
+        /** @var list<array{id: int|string, slug: string, cc: string, default_map_mode: string, continent: string, country_name: string}> $rows */
         $rows = $this->db->fetchAllAssociative($sql, $params, $types);
 
         return array_map(static fn (array $r): array => [
@@ -240,6 +265,8 @@ final class ModerateRegionsController extends AbstractController
             'slug' => (string) $r['slug'],
             'countryCode' => (string) $r['cc'],
             'defaultMode' => (string) $r['default_map_mode'],
+            'continent' => (string) $r['continent'],
+            'countryName' => (string) $r['country_name'],
         ], $rows);
     }
 }
