@@ -767,10 +767,24 @@ function buildRecord(layer, f){
     || ((f.geom && f.geom.ll)
       ? `https://www.openstreetmap.org/query?lat=${f.geom.ll[0]}&lon=${f.geom.ll[1]}#map=18/${f.geom.ll[0]}/${f.geom.ll[1]}`
       : 'https://www.openstreetmap.org');
+  /* A LINK TO THIS EXACT PLACE (owner 2026-08-14: "we must add a hotlink to
+     these pages and its drawer open so people can share them").
+     The deep links already existed and nothing offered them, so the only way
+     to send someone a place was to describe it. `?item=<id>` is preferred
+     because an id survives a rename; `?feature=<name>` is the fallback that
+     also covers coverage POIs, which have no catalog id. Both are read on load
+     by map.js, which calls widenForDeepLink() first — so the link opens the
+     drawer even when the recipient's saved scope is on another continent. */
+  const shareQ = f.id != null ? `item=${encodeURIComponent(f.id)}`
+    : (f.name ? `feature=${encodeURIComponent(f.name)}` : '');
+  const share = shareQ
+    ? `<button type="button" class="cc-d-share" data-share="${escPend(shareQ)}"
+         title="${escPend(D.shareHint||'Copy a link that opens this place')}">↗ ${D.share||'Share'}</button>`
+    : '';
   return `<span class="cc-d-type" style="--c:${layer.color};color:${txtOn(layer.color)}"><i class="cc-g">${layer.icon}</i> ${layer.label}</span>
     <div class="cc-d-name">${escPend(f.name)}</div>${cur}${photo}${desc}${diff}${elev}${len}${grad}
     <ul class="cc-d-rec">${rows}</ul>${fresh}${up}
-    <div class="cc-d-src">${D.source||'Source'} · ${srcLine(f, osmHref)}</div>${act}${moderate}${histSlot}`;
+    <div class="cc-d-src">${D.source||'Source'} · ${srcLine(f, osmHref)}${share}</div>${act}${moderate}${histSlot}`;
 }
 // C1-T3: renders one change_history row. Every interpolated value is
 // user-contributed (old/new attribute values, and `who`/`when`/`changedAt`
@@ -860,6 +874,28 @@ function loadItemHistory(itemId){
       }
     });
 }
+
+/* Share: copy a deep link to the open place.
+   Delegated off `document`, like every other drawer control, so it survives
+   the drawer being re-rendered and needs no inline handler under the CSP.
+   The native share sheet first where there is one (a phone, which is where a
+   rider actually is when they want to send somebody a water tap), clipboard
+   otherwise, and a selectable prompt as the last resort — clipboard access is
+   refused outright in some embedded browsers, and failing silently would look
+   like a dead button. */
+document.addEventListener('click', (e) => {
+  const btn = e.target && e.target.closest ? e.target.closest('[data-share]') : null;
+  if (!btn) return;
+  e.preventDefault();
+  const url = location.origin + location.pathname + '?' + btn.getAttribute('data-share');
+  const done = () => mapToast((D && D.shareCopied) || 'Link copied');
+  if (navigator.share) { navigator.share({ url }).then(done, () => {}); return; }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url).then(done, () => window.prompt((D && D.share) || 'Share', url));
+    return;
+  }
+  window.prompt((D && D.share) || 'Share', url);
+});
 
 /* `opts.center` lifts the toast to the middle of the screen. Reserved for
    moments that are worth a beat — a rider's confirmation being recorded — so

@@ -661,6 +661,15 @@
   .cc-d-fresh{margin-top:1rem;font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;text-transform:uppercase}
   .cc-d-fresh.fresh{color:#7fcf9a}.cc-d-fresh.ageing{color:var(--ochre)}.cc-d-fresh.stale{color:var(--clay)}
   .cc-d-src{margin-top:1rem;font-size:.72rem;color:rgba(239,230,212,.55);line-height:1.5}
+  /* Share sits on the source line rather than with the actions: it is about
+     THIS VIEW, not about changing anything, and the action row is where the
+     verbs that alter data live. Quiet until hovered, and a real 32px target. */
+  .cc-d-share{margin-left:.6rem;display:inline-flex;align-items:center;gap:.25rem;min-height:32px;
+    padding:.2rem .5rem;border:1px solid rgba(239,230,212,.28);border-radius:5px;background:transparent;
+    font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;
+    color:rgba(239,230,212,.75);cursor:pointer}
+  .cc-d-share:hover{background:rgba(239,230,212,.1);color:var(--paper)}
+  .cc-d-share:focus-visible{outline:2px solid var(--trail);outline-offset:2px}
   /* C1-T3 (spec W5): per-item "Recent changes" — filled async by map.js's
      loadItemHistory() into #cc-d-hist-slot; empty until the fetch resolves
      (and stays empty/no heading if the item has no history). */

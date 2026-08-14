@@ -211,8 +211,24 @@ final class RegionDirectoryProvider
            Verified is "somebody stood here and checked"; coverage is "OSM knows
            about this". Adding them would erase exactly the distinction the
            three view modes are built on. */
+        /* SERVED states, not verified-only (owner-reported 2026-08-14: "I added
+           one onto the map as a custom item with a photo, why do I not see that
+           reflected on the region page").
+
+           Their scenic item is `unverified`: approved, drawn on the map,
+           carrying a photo and a rider confirmation. Counting verified-only
+           reported North Holland as having ZERO scenic views while the rider
+           was looking at theirs on the map. A page headed "what riders find
+           here" has to mean what is FINDABLE, and served is exactly the set the
+           map draws — which is why the route count on this same page has always
+           used it (see the 2026-07-30 design note).
+
+           The hero's "verified items" stat and the maturity TIER keep the
+           stricter reading: those are editorial signals about how much has been
+           vouched for, and they say "verified" on the label. */
         $verifiedRows = $this->db->fetchAllKeyValue(
-            'SELECT letter, COUNT(*) FROM item WHERE region_id = :id AND state = \'verified\' GROUP BY letter ORDER BY letter',
+            'SELECT letter, COUNT(*) FROM item WHERE region_id = :id AND state IN '
+            .ItemState::servedSqlTuple().' GROUP BY letter ORDER BY letter',
             ['id' => (int) $row['id']],
         );
         /* ASKED BEFORE QUERYING, not caught after. coverage_poi is

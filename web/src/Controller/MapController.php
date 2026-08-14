@@ -332,6 +332,9 @@ final class MapController extends AbstractController
             // The verdict a curator may be about to overturn, on the card where
             // the decision is actually made (SubmissionQueue::priorRejections).
             'priorRejected' => 'd_prior_rejected',
+            // Copy a deep link to the open place, so a rider can send somebody
+            // a water tap instead of describing where it is.
+            'share' => 'd_share', 'shareHint' => 'd_share_hint', 'shareCopied' => 'd_share_copied',
             // Pending rider photos in the moderation panel
             // (docs/specs/photo-uploads.md §5). The distance string carries a
             // literal {m} the drawer substitutes — the Twig desk list uses the
