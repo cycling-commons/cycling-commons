@@ -22,7 +22,7 @@ use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
  * written here is what `MessageMailer` then delivers by email, so one send
  * covers both surfaces.
  *
- * @see \App\Service\UserAdminService::setModeratorAreas()
+ * @see UserAdminService::setModeratorAreas()
  */
 final class ModeratorAreaNoticeTest extends KernelTestCase
 {

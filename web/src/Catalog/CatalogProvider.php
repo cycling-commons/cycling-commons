@@ -191,7 +191,7 @@ final class CatalogProvider
      * own contribution into a verified pin with nobody else ever having seen
      * the place (ConfirmationSource).
      *
-     * @return list<array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null, region_id: int|null, verified: bool}>
+     * @return list<array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null, region_id: int|null, verified: bool, by_name: string|null, by_public: bool|null, by_uuid: string|null}>
      */
     private function itemRows(string $letter, ?string $source = null, ?string $excludeSource = null, ?int $onlyId = null): array
     {
@@ -263,7 +263,7 @@ final class CatalogProvider
            handed back to the reference layer. */
         $sql .= " AND COALESCE(i.attributes->>'condition', '') <> 'Not there anymore'";
 
-        /* @var list<array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null, region_id: int|null, verified: bool}> */
+        /* @var list<array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null, region_id: int|null, verified: bool, by_name: string|null, by_public: bool|null, by_uuid: string|null}> */
         return $this->db->fetchAllAssociative($sql.' ORDER BY i.id', $params);
     }
 
@@ -358,7 +358,7 @@ final class CatalogProvider
      * The per-row mapping shared by the bulk payload and featureForItem(), so
      * a live-inserted feature can never drift from the served one.
      *
-     * @param array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null, region_id: int|null, verified: bool} $row
+     * @param array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null, region_id: int|null, verified: bool, by_name: string|null, by_public: bool|null, by_uuid: string|null} $row
      *
      * @return array{type: string, properties: array<string, mixed>, geometry: mixed}
      */
@@ -440,7 +440,12 @@ final class CatalogProvider
      * second mapper is what stops the live-updated climb drifting from the
      * served one.
      *
-     * @param array{id: int, name: string, geom: string, attributes: string, source: string, region_id: int|null, verified: bool} $row
+     * Unsealed (`...`) because both callers hand over the FULL served row,
+     * which carries the columns this mapper does not read (source_ref, prov,
+     * the contributor join). Sealing it would force a caller to strip fields
+     * before calling, which is work done only to satisfy a docblock.
+     *
+     * @param array{id: int, name: string, geom: string, attributes: string, source: string, region_id: int|null, verified: bool, ...} $row
      *
      * @return array<string, mixed>
      */

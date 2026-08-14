@@ -354,7 +354,7 @@ final class CatalogProviderTest extends KernelTestCase
      *  the same shape imports use — never the raw legacy string. */
     public function testProposedRouteServesCanonicalDifficulty(): void
     {
-        $user = (new \App\Entity\User())->setEmail('difficulty-proposer@test.test');
+        $user = (new User())->setEmail('difficulty-proposer@test.test');
         $user->setPassword('x');
         $this->em->persist($user);
         $this->em->flush();
