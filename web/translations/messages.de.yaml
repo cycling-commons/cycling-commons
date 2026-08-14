@@ -600,9 +600,9 @@ join:
     osm_handle_too_long: 'Dieser OpenStreetMap-Benutzername ist zu lang.'
     social_url_invalid: 'Dieser Link sieht nicht wie eine gültige Webadresse aus.'
   message:
-    approved: 'Deine Bewerbung als Kurator für %scope% wurde angenommen. Willkommen im Feld.'
+    approved: 'Your application to curate %scope% was approved. Welcome to the paceline.'
     received: 'Schön, dass du dich um %scope% kümmern willst. Deine Bewerbung ist angekommen und ein Kurator liest sie. Die Antwort erscheint auf deiner Nachrichtenseite, und wir schicken dir eine E-Mail, sobald sie da ist.'
-    declined: 'Deine Bewerbung als Kurator für %scope% wurde diesmal nicht angenommen.'
+    declined: 'Your application to curate %scope% was not approved this time.'
 contributors:
   kicker: 'Beitragende'
   title: 'Von Fahrern gebaut.'
@@ -2553,6 +2553,7 @@ moderate:
     list: 'Liste'
   rulebook:
     private: 'Nur für Moderatoren — nicht im öffentlichen Wiki'
+    download: 'Download the rulebook (PDF)'
     kicker: 'Moderation'
     title: 'Moderatoren-Regelwerk'
   history:

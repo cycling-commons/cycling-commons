@@ -2573,6 +2573,7 @@ moderate:
     list: 'List'
   rulebook:
     private: 'Moderators only — not on the public wiki'
+    download: 'Download the rulebook (PDF)'
     kicker: 'Moderation'
     title: 'Moderator rulebook'
   history:

@@ -32,6 +32,7 @@ use App\Pagination\PageSize;
 use App\Routing\LocalePrefix;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -66,6 +67,8 @@ final class ModerateController extends AbstractController
         private readonly EntityManagerInterface $em,
         private readonly ItemConfirmationService $confirmations,
         private readonly PageSize $pageSize,
+        #[Autowire('%env(default::CC_RULEBOOK_PDF_URL)%')]
+        private readonly ?string $rulebookPdfUrl = null,
     ) {
     }
 
@@ -200,6 +203,13 @@ final class ModerateController extends AbstractController
             'page_title' => 'meta.moderate_rulebook_title',
             'page_description' => 'meta.moderate_rulebook_description',
             'nav_active' => 'moderate_rulebook',
+            /* The owner-managed PDF of these same rules, kept on the server
+               rather than in this repository: the template below is readable by
+               anyone once the repo is public, and a rulebook is a script for
+               talking a curator into a removal (owner 2026-08-14). Empty =>
+               no link, so an unconfigured environment shows nothing rather than
+               a dead download. Nothing here writes or validates the file. */
+            'rulebook_pdf' => $this->rulebookPdfUrl,
             ...$this->deskBadges($user, $scope),
         ]);
     }

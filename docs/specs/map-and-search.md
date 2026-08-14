@@ -872,6 +872,12 @@ than Everywhere. Same slot as the coverage zoom hints
 them - a rider who is also a curator is more likely to be confused by pins in
 the wrong country than by an empty one.
 
+**And the map wears it.** `#map` takes `.cc-curator-mode` under the same
+condition, drawing an orange ring inset around the canvas: the hint explains the
+pins, the ring says which mode you are in without reading anything (owner
+2026-08-14). Inset `box-shadow`, never a real border - a border resizes the
+canvas and makes MapLibre re-measure on every toggle.
+
 ## 6. Selection model: tooltip + drawer
 
 ### 6.1 Interaction contract

@@ -600,9 +600,9 @@ join:
     osm_handle_too_long: 'Die OpenStreetMap-gebruikersnaam is te lang.'
     social_url_invalid: 'Die link ziet er niet uit als een geldig webadres.'
   message:
-    approved: 'Je aanmelding om %scope% te beheren is goedgekeurd. Welkom in de kopgroep.'
+    approved: 'Your application to curate %scope% was approved. Welcome to the paceline.'
     received: 'Fijn dat je %scope% wilt beheren. Je aanmelding is binnen en een curator leest hem. Het antwoord verschijnt op je berichtenpagina, en we mailen je zodra het er is.'
-    declined: 'Je aanmelding om %scope% te beheren is deze keer niet goedgekeurd.'
+    declined: 'Your application to curate %scope% was not approved this time.'
 contributors:
   kicker: 'Bijdragers'
   title: 'Gebouwd door fietsers.'
@@ -2550,6 +2550,7 @@ moderate:
     list: 'Lijst'
   rulebook:
     private: 'Alleen voor moderatoren — niet op de publieke wiki'
+    download: 'Download the rulebook (PDF)'
     kicker: 'Moderatie'
     title: 'Moderatorhandboek'
   history:

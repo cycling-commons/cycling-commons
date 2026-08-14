@@ -252,6 +252,14 @@
      when the rider is zoomed out past the tileset's floor (render.js
      updateZoomHint). Hidden by the [hidden] attribute at every other zoom, so
      it costs no height once the rider is in range. */
+  /* CURATOR MODE. The pending queue deliberately ignores the map's region scope
+     (render.js featureVisible), so a curator scoped to one region legitimately
+     sees pins in another - which reads as a scope leak until you know. The hint
+     line under the count explains it; this border says it at a glance.
+     inset, not a real border: a border would resize the canvas and force
+     MapLibre to re-measure on every toggle. */
+  #map.cc-curator-mode::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:400;
+    box-shadow:inset 0 0 0 3px var(--trail);border-radius:inherit}
   .rail-foot .zoom-hint{flex:0 0 100%;font-family:var(--mono);font-size:.62rem;line-height:1.35;letter-spacing:.04em;color:var(--glacier);opacity:.9}
   .export{background:var(--trail);color:var(--ink);font-family:var(--sans);font-weight:700;font-size:.78rem;padding:.55rem .85rem;border-radius:5px;border:none;cursor:pointer;white-space:nowrap}
   .export:hover{background:#ff703d}

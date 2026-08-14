@@ -27,6 +27,8 @@
   .mh .role-badge{display:inline-flex;align-items:center;gap:.4rem;font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;background:var(--spruce-lift);color:var(--paper);padding:.22rem .55rem;border-radius:30px;margin-top:.5rem}
 
   .rb{max-width:74ch;margin:0 0 3rem}
+  .rb-pdf{margin:.2rem 0 1.2rem;font-family:var(--mono);font-size:.72rem;letter-spacing:.06em}
+  .rb-pdf a{color:var(--clay);text-decoration:underline;text-underline-offset:3px}
   .rb .lead{font-size:1rem;line-height:1.6;color:#4a4d40;margin-bottom:2rem}
   .rb section{margin-bottom:2.4rem;scroll-margin-top:5rem}
   .rb h2{font-family:var(--serif);font-weight:600;font-size:1.25rem;margin-bottom:.5rem;color:var(--ink)}
@@ -59,6 +61,18 @@
 <div class="wrap" id="main">
   <div class="rb">
     <span class="private">&#9679; {{ 'moderate.rulebook.private'|trans }}</span>
+    {# THE PDF, when there is one. The page below stays the source a curator
+       reads day to day; the download is the same rules in a file that lives on
+       the server rather than in this repository, because this template is
+       readable by anyone once the repo is public and a rulebook is a script for
+       talking a curator into a removal (owner 2026-08-14).
+
+       Rendered only when CC_RULEBOOK_PDF_URL is set, so an unconfigured
+       environment shows nothing rather than a dead link. Owner-managed: nothing
+       here writes, uploads or validates it. #}
+    {% if rulebook_pdf %}
+      <p class="rb-pdf"><a href="{{ rulebook_pdf }}" rel="noopener">{{ 'moderate.rulebook.download'|trans }}</a></p>
+    {% endif %}
     <p class="lead">The short, always-current rules for everyone holding a curator or moderator role. If a situation is not covered here, ask in the curator channel before acting — this page is the do's and don'ts, not a replacement for judgement.</p>
 
     <section id="verbs">

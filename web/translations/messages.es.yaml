@@ -601,9 +601,9 @@ join:
     osm_handle_too_long: 'Ese nombre de usuario de OpenStreetMap es demasiado largo.'
     social_url_invalid: 'Ese enlace no parece una dirección web válida.'
   message:
-    approved: 'Tu solicitud para curar %scope% fue aprobada. Bienvenido al pelotón.'
+    approved: 'Your application to curate %scope% was approved. Welcome to the paceline.'
     received: 'Gracias por ofrecerte a cuidar %scope%. Tu solicitud ha llegado y un curador la leerá. Su respuesta aparecerá en tu página de mensajes, y te avisaremos por correo cuando lo haga.'
-    declined: 'Tu solicitud para curar %scope% no fue aprobada esta vez.'
+    declined: 'Your application to curate %scope% was not approved this time.'
 contributors:
   kicker: 'Colaboradores'
   title: 'Hecho por ciclistas.'
@@ -2586,6 +2586,7 @@ moderate:
     list: 'Lista'
   rulebook:
     private: 'Solo para moderadores — no está en la wiki pública'
+    download: 'Download the rulebook (PDF)'
     kicker: 'Moderación'
     title: 'Manual del moderador'
   history:
