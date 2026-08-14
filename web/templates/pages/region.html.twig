@@ -7,12 +7,18 @@
   .rstats{display:flex;gap:2.4rem;flex-wrap:wrap;margin-top:1.6rem;padding-top:1.4rem;border-top:1px solid rgba(239,230,212,.18)}
   .rstats .s b{font-family:var(--serif);font-size:1.8rem;display:block}
   .rstats .s span{font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(239,230,212,.6)}
-  .kinds{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:.6rem;margin-top:1.4rem}
-  .kinds .k{display:flex;justify-content:space-between;align-items:baseline;gap:.6rem;padding:.5rem 0;border-bottom:1px solid rgba(20,22,14,.1);font-size:.95rem}
-  .kinds .k .c{font-family:var(--mono);font-size:.8rem;color:#595c4d;white-space:nowrap}
-  /* Verified reads as the achievement, coverage as the backdrop it sits on. */
+  /* Label on its own line, figures under it. The two-number version outgrew a
+     single row: "1 checked · 1483 on the map" beside a label in a 220px column
+     wrapped "Water &/food" and ran the count into the next column. Stacking
+     removes the collision for any string length, which matters across five
+     locales where "on the map" is "sur la carte" and "auf der Karte". */
+  .kinds{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:0 2rem;margin-top:1.2rem}
+  .kinds .k{display:flex;flex-direction:column;gap:.15rem;padding:.65rem 0;
+    border-bottom:1px solid rgba(20,22,14,.1);font-size:.95rem}
+  .kinds .k .c{font-family:var(--mono);font-size:.72rem;color:#8a8d7d;letter-spacing:.02em}
+  /* Checked reads as the achievement, coverage as the backdrop it sits on. */
   .kinds .k .c b{color:var(--trail);font-weight:700}
-  .kinds .k .c i{font-style:normal;color:#8a8d7d}
+  .kinds .k .c i{font-style:normal}
   .kinds-note{font-size:.84rem;color:#595c4d;margin:.9rem 0 0;line-height:1.6;max-width:64ch}
   /* The country in outline with this region filled. Inline SVG, no request and
      no JavaScript: a region page is read once, often on a phone, and the
@@ -23,6 +29,14 @@
     stroke-linejoin:round;vector-effect:non-scaling-stroke}
   .rshape .rg-in{fill:var(--clay);fill-opacity:.9;stroke:var(--paper);stroke-width:.8;
     stroke-linejoin:round;vector-effect:non-scaling-stroke}
+  /* Who looks after this region. A quiet line, but a full sentence: the
+     question it answers is one a rider asks before trusting anything else here. */
+  .rsteward{margin-top:1.5rem;display:flex;flex-wrap:wrap;align-items:baseline;gap:.5rem;
+    font-size:.88rem;color:rgba(239,230,212,.75);line-height:1.5}
+  .rsteward-h{font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;
+    color:rgba(239,230,212,.5)}
+  .rsteward b{color:var(--paper);font-weight:600}
+  .rsteward-d{color:rgba(239,230,212,.62)}
   .rhero-top{display:flex;align-items:flex-start;gap:1.5rem;flex-wrap:wrap}
   .rhero-top > .rhero-head{flex:1 1 260px;min-width:0}
   @media(max-width:640px){.rshape{margin-left:0}.rshape svg{width:104px;height:78px}}
@@ -57,6 +71,18 @@
     <div class="s"><b>{{ region.itemsVerified }}</b><span>{% trans %}region.stat_items{% endtrans %}</span></div>
     <div class="s"><b>{{ region.routes }}</b><span>{% trans %}region.stat_routes{% endtrans %}</span></div>
     {% if region.areaKm2 %}<div class="s"><b>{{ region.areaKm2|cc_km2 }}</b><span>{{ cc_area_suffix() }}</span></div>{% endif %}
+  </div>
+  {# WHO LOOKS AFTER IT, as a sentence (owner: "I do not see if there is a
+     curator for the region yet"). The kicker above carries the same fact as a
+     single word — CURATED, COUNTRY-WIDE — which does not read as an answer to
+     that question, and the `none` case rendered NOTHING at all, so "nobody has
+     taken this on" looked identical to a page that had not finished loading.
+     Placed directly above the buttons, so "Volunteer as curator" reads as the
+     reply to it. #}
+  <div class="rsteward">
+    <span class="rsteward-h">{% trans %}regions.steward_h{% endtrans %}</span>
+    <b>{{ ('regions.status_' ~ region.stewardship)|trans }}</b>
+    <span class="rsteward-d">{{ ('regions.status_' ~ region.stewardship ~ '_desc')|trans }}</span>
   </div>
   <div style="display:flex;gap:.8rem;margin-top:1.8rem;flex-wrap:wrap">
     <a class="btn btn-p" href="{{ path('map') }}?scope=region:{{ region.slug }}">{% trans %}region.cta_map{% endtrans %}</a>
