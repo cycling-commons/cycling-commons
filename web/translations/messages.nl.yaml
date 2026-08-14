@@ -1346,6 +1346,9 @@ security:
     already_verified: 'Al geverifieerd?'
     sign_in_link: 'Inloggen'
 twofactor:
+  unavailable_h: 'Tweestapsverificatie staat hier uit'
+  unavailable_lead: 'In deze omgeving is de tweede factor uitgeschakeld, dus er valt nu niets in te stellen.'
+  unavailable_note: 'Op de live site moeten curatoren en beheerders tweestapsverificatie instellen voordat ze bij de moderatiedesks kunnen.'
   login:
     panel_h1: 'Nog één stap.'
     panel_p: 'Voer de code uit je authenticator-app in om het inloggen te voltooien.'
@@ -2515,7 +2518,7 @@ moderate:
     all: 'Alle'
     apply: 'Toepassen'
     search: 'Zoeken'
-    search_ph: 'Titel van het item…'
+    search_ph: 'Titel of bijdrager…'
     by_user: 'Alleen de inzendingen van één bijdrager.'
     by_user_clear: 'Toon iedereen'
   overview:
@@ -2550,7 +2553,7 @@ moderate:
     title: 'Moderatorhandboek'
   history:
     kicker: 'Moderatie · register'
-    heading: 'Al afgehandeld'
+    heading: 'Reeds afgehandelde inzendingen'
     thread: '%count% bericht(en) in deze uitwisseling'
     said_curator: 'Gevraagd'
     said_rider: 'Fietser'
@@ -3035,6 +3038,7 @@ admin:
     curator_applications: 'Curatoraanvragen'
     withheld_photos: 'Offline gehouden foto''s'
     escalated: 'Geëscaleerd (vast)'
+    moderator_areas: 'Moderatiegebieden'
   action:
     unlock: 'Account ontgrendelen'
     disarm_2fa: '2FA uitschakelen'
@@ -3077,6 +3081,12 @@ admin:
     settings_reset: 'Instelling teruggezet op de standaardwaarde.'
     settings_invalid: 'Er is niets opgeslagen — controleer de hieronder gemarkeerde waarden.'
   areas:
+    overview_lead: 'Welke curator welke regio''s dekt. Toewijzen is stap 7 van het onboarding-playbook.'
+    overview_empty: 'Nog geen curatoren of beheerders.'
+    col_person: 'Persoon'
+    col_areas: 'Gebieden'
+    global: 'Globaal (ziet alles)'
+    assign: 'Gebieden toewijzen'
     title: 'Moderatiegebieden toewijzen'
     help: 'Kies de regio''s en/of hele landen die deze curator modereert. De unie geldt; items buiten elke regio blijven zichtbaar voor alle curatoren.'
     regions: 'Regio''s'

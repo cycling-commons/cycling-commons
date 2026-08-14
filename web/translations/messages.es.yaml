@@ -1352,6 +1352,9 @@ security:
     already_verified: '¿Ya lo has verificado?'
     sign_in_link: 'Iniciar sesión'
 twofactor:
+  unavailable_h: 'La verificación en dos pasos está desactivada aquí'
+  unavailable_lead: 'En este entorno el segundo factor está desactivado, así que ahora mismo no hay nada que configurar.'
+  unavailable_note: 'En el sitio en vivo, los curadores y administradores deben configurar la verificación en dos pasos antes de acceder a los escritorios de moderación.'
   login:
     panel_h1: 'Un paso más.'
     panel_p: 'Introduce el código de tu aplicación de autenticación para terminar de iniciar sesión.'
@@ -2551,7 +2554,7 @@ moderate:
     all: 'Todos'
     apply: 'Aplicar'
     search: 'Buscar'
-    search_ph: 'Título del elemento…'
+    search_ph: 'Título o colaborador…'
     by_user: 'Solo las propuestas de una persona.'
     by_user_clear: 'Mostrar a todos'
   overview:
@@ -2586,7 +2589,7 @@ moderate:
     title: 'Manual del moderador'
   history:
     kicker: 'Moderación · registro'
-    heading: 'Ya resuelto'
+    heading: 'Propuestas ya resueltas'
     thread: '%count% mensaje(s) en este intercambio'
     said_curator: 'Preguntó'
     said_rider: 'Ciclista'
@@ -3076,6 +3079,7 @@ admin:
     curator_applications: 'Solicitudes de curaduría'
     withheld_photos: 'Fotos ocultas'
     escalated: 'Escaladas (retenidas)'
+    moderator_areas: 'Áreas de moderación'
   action:
     unlock: 'Desbloquear la cuenta'
     disarm_2fa: 'Desarmar la 2FA'
@@ -3118,6 +3122,12 @@ admin:
     settings_reset: 'Ajuste devuelto a su valor por defecto.'
     settings_invalid: 'No se ha guardado nada — revisa los valores marcados abajo.'
   areas:
+    overview_lead: 'Qué curador cubre qué regiones. Asignarlas es el paso 7 del manual de incorporación.'
+    overview_empty: 'Aún no hay curadores ni administradores.'
+    col_person: 'Persona'
+    col_areas: 'Áreas'
+    global: 'Global (lo ve todo)'
+    assign: 'Asignar áreas'
     title: 'Asignar zonas de moderación'
     help: 'Elige las regiones y/o los países enteros que modera este curador. Se aplica la unión de todos ellos; los elementos que quedan fuera de toda región siguen siendo visibles para todos los curadores.'
     regions: 'Regiones'

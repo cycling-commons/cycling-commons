@@ -1350,6 +1350,9 @@ security:
     already_verified: 'Already verified?'
     sign_in_link: 'Sign in'
 twofactor:
+  unavailable_h: 'Two-factor is switched off here'
+  unavailable_lead: 'This environment has the second factor disabled, so there is nothing to enrol in right now.'
+  unavailable_note: 'On the live site, curators and admins must set up two-factor before they can reach the moderation desks.'
   login:
     panel_h1: 'One more step.'
     panel_p: 'Enter the code from your authenticator app to finish signing in.'
@@ -2538,7 +2541,7 @@ moderate:
     all: 'All'
     apply: 'Apply'
     search: 'Search'
-    search_ph: 'Item title…'
+    search_ph: 'Item title or contributor…'
     by_user: 'Showing one contributor''s submissions only.'
     by_user_clear: 'Show everyone'
   overview:
@@ -2573,7 +2576,7 @@ moderate:
     title: 'Moderator rulebook'
   history:
     kicker: 'Moderation · record'
-    heading: 'Already settled'
+    heading: 'Already settled submissions'
     thread: '%count% message(s) in this exchange'
     said_curator: 'Asked'
     said_rider: 'Rider'
@@ -3061,6 +3064,7 @@ admin:
     curator_applications: 'Curator applications'
     withheld_photos: 'Withheld photos'
     escalated: 'Escalated (held)'
+    moderator_areas: 'Moderator areas'
   action:
     unlock: 'Unlock account'
     disarm_2fa: 'Disarm 2FA'
@@ -3103,6 +3107,12 @@ admin:
     settings_reset: 'Setting reset to its default.'
     settings_invalid: 'Nothing was saved — check the values marked below.'
   areas:
+    overview_lead: 'Which curator covers which regions. Assigning is onboarding playbook step 7.'
+    overview_empty: 'No curators or admins yet.'
+    col_person: 'Person'
+    col_areas: 'Areas'
+    global: 'Global (sees everything)'
+    assign: 'Assign areas'
     title: 'Assign moderation areas'
     help: 'Pick the regions and/or whole countries this curator moderates. The union applies; items outside every region remain visible to all curators.'
     regions: 'Regions'

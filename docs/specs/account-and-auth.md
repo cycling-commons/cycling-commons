@@ -294,6 +294,21 @@ exact-path `PUBLIC_ACCESS` entry **and** (if it is not already under a bypassed
 prefix) a `TwoFactorSetupEnforcer` bypass — "no rule matches" is not enough
 under the lazy firewall.
 
+**A second factor that cannot be enrolled is never demanded.**
+`TwoFactorPolicy::requiresSetup()` is false when the TOTP provider is absent.
+`when@dev` switches it off for local convenience
+(`config/packages/scheb_2fa.yaml`), which also removes
+`TotpAuthenticatorInterface` — and two things then went wrong together, locking
+a newly approved curator out of the entire dev stack (owner-reported
+2026-08-14): `TwoFactorController::setup()` REQUIRED that service and so
+answered 500, while `TwoFactorSetupEnforcer` sent every not-yet-enrolled curator
+to exactly that page on every request. The setup action now takes the service as
+nullable and renders `security/2fa_unavailable.html.twig` instead, which also
+states the live rule ("curators and admins must set up two-factor before they
+can reach the moderation desks"). Nothing changes where the provider is on:
+`when@dev` cannot reach prod or staging, and the mandate itself is untouched —
+`isMandatoryFor()` still answers true for every curator.
+
 **Re-authentication is asked for at the moment of commitment, never at the
 door.** With remember-me on a 7-day lifetime, a returning rider holds a real
 user object while being only `IS_AUTHENTICATED_REMEMBERED`. `/join/{cc}` (the

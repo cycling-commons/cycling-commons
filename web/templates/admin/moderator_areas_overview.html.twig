@@ -1,0 +1,54 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{#
+   Who covers what. The assignment form is per user and lives on that user's own
+   page, so "which regions have a curator?" could only be answered by opening
+   people one at a time — and nothing in the menu pointed anywhere near it
+   (owner 2026-08-14). This is the overview onboarding playbook step 7
+   (tools/divisions/README.md) needs.
+#}
+{% extends '@EasyAdmin/page/content.html.twig' %}
+
+{% block content_title %}{{ 'admin.menu.moderator_areas'|trans }}{% endblock %}
+
+{% block main %}
+  <div class="col-lg-9">
+    <p class="text-muted">{{ 'admin.areas.overview_lead'|trans }}</p>
+
+    {% if rows is empty %}
+      <p class="text-muted">{{ 'admin.areas.overview_empty'|trans }}</p>
+    {% else %}
+      <table class="table">
+        <thead>
+          <tr>
+            <th>{{ 'admin.areas.col_person'|trans }}</th>
+            <th>{{ 'admin.areas.col_areas'|trans }}</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+            <tr>
+              <td>
+                <strong>{{ row.user.displayName }}</strong><br>
+                <span class="text-muted small">{{ row.user.email }}</span>
+              </td>
+              <td>
+                {% if row.areas is empty %}
+                  {# Empty means global, not unassigned — the same rule
+                     setModeratorAreas() applies. Saying "none" would read as
+                     the opposite of what it does. #}
+                  <span class="badge bg-warning text-dark">{{ 'admin.areas.global'|trans }}</span>
+                {% else %}
+                  {% for a in row.areas %}<span class="badge bg-secondary">{{ a }}</span> {% endfor %}
+                {% endif %}
+              </td>
+              <td class="text-end">
+                <a href="{{ ea_url().setController('App\\Controller\\Admin\\UserCrudController').setAction('moderator_areas').setEntityId(row.user.id) }}">{{ 'admin.areas.assign'|trans }}</a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% endif %}
+  </div>
+{% endblock %}

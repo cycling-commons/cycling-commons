@@ -104,6 +104,7 @@ final class DashboardController extends AbstractDashboardController
         yield MenuItem::linkToRoute(new TranslatableMessage('admin.menu.system_config'), 'fa fa-sliders', 'admin_system_config');
         yield MenuItem::linkToRoute(new TranslatableMessage('admin.menu.curator_applications'), 'fa fa-user-check', 'admin_curator_applications');
         yield MenuItem::linkToRoute(new TranslatableMessage('admin.menu.withheld_photos'), 'fa fa-image-slash', 'admin_withheld_photos');
+        yield MenuItem::linkToRoute(new TranslatableMessage('admin.menu.moderator_areas'), 'fa fa-map-location-dot', 'admin_moderator_areas_overview');
         yield MenuItem::linkToRoute(new TranslatableMessage('admin.menu.escalated'), 'fa fa-shield-halved', 'admin_escalated');
     }
 
@@ -483,6 +484,45 @@ final class DashboardController extends AbstractDashboardController
      * material is the kind that had to be reported, the authority it was
      * reported to decides when it may go.
      */
+    /**
+     * Who covers what — the overview playbook step 7 never had.
+     *
+     * Assigning areas has always been a per-user action buried on a user's own
+     * page, so there was no way to answer "which regions have a curator?"
+     * except by opening people one at a time, and nothing in the menu pointed
+     * at it at all (owner-reported 2026-08-14). This lists every elevated
+     * account with its areas and links each to the existing assignment form.
+     *
+     * Read-only: it changes nothing itself, so it needs no CSRF and no POST.
+     */
+    #[AdminRoute('/moderator-areas', 'moderator_areas_overview', options: ['methods' => ['GET']])]
+    public function moderatorAreasOverview(EntityManagerInterface $em): Response
+    {
+        // Names only, never the geometry: a Region carries its polygon and
+        // hydrating them all is what made the assignment page run out of
+        // memory (see UserCrudController::moderator_areas).
+        $regionNames = $em->getConnection()->fetchAllKeyValue('SELECT id, name FROM region');
+
+        $rows = [];
+        foreach ($em->getRepository(User::class)->findAll() as $user) {
+            $roles = $user->getRoles();
+            if (!\in_array('ROLE_CURATOR', $roles, true) && !\in_array('ROLE_ADMIN', $roles, true)) {
+                continue;
+            }
+            $areas = [];
+            foreach ($em->getRepository(ModeratorArea::class)->findBy(['userId' => (int) $user->getId()]) as $area) {
+                $areas[] = null !== $area->getRegionId()
+                    ? ($regionNames[$area->getRegionId()] ?? sprintf('#%d', $area->getRegionId()))
+                    : (string) $area->getCountryCode();
+            }
+            sort($areas);
+            $rows[] = ['user' => $user, 'areas' => $areas, 'roles' => $roles];
+        }
+        usort($rows, static fn (array $a, array $b): int => strcasecmp($a['user']->getDisplayName(), $b['user']->getDisplayName()));
+
+        return $this->render('admin/moderator_areas_overview.html.twig', ['rows' => $rows]);
+    }
+
     #[AdminRoute('/escalated', 'escalated', options: ['methods' => ['GET', 'POST']])]
     public function escalated(Request $request, MediaEscalationService $escalations, ModerationService $moderation, EntityManagerInterface $em, TranslatorInterface $translator, PageSize $pageSize): Response
     {

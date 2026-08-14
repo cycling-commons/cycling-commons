@@ -98,7 +98,14 @@ final class SubmissionQueue
             // Case-insensitive contains on the submission's own title, which is
             // the item name a curator is looking for. ILIKE with the wildcards
             // in the BOUND VALUE, never concatenated into the SQL.
-            $where[] = 's.title ILIKE :q';
+            /* Title OR submitter. Searching a curator application's applicant by
+               name found nothing, because this only ever matched the item's
+               title - and "who sent this" is a question a desk gets asked
+               constantly (owner 2026-08-14). Matching the display name also
+               reaches riders with NO public profile: the name is stored either
+               way, and `public_profile` gates the public page, never the
+               moderator's view of their own queue. */
+            $where[] = '(s.title ILIKE :q OR EXISTS (SELECT 1 FROM users qu WHERE qu.id = s.user_id AND qu.display_name ILIKE :q))';
             $params['q'] = '%'.str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], trim($q)).'%';
         }
         /* One person's open work, the same filter the settled history takes.
@@ -363,7 +370,8 @@ final class SubmissionQueue
             $params['st'] = $status;
         }
         if (null !== $q && '' !== trim($q)) {
-            $where[] = 's.title ILIKE :q';
+            // Same widening as the open queue: title OR submitter's name.
+            $where[] = '(s.title ILIKE :q OR EXISTS (SELECT 1 FROM users qu WHERE qu.id = s.user_id AND qu.display_name ILIKE :q))';
             $params['q'] = '%'.str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], trim($q)).'%';
         }
         $frag = $scope->sqlFragment('s');

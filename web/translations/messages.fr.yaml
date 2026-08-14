@@ -1346,6 +1346,9 @@ security:
     already_verified: 'Déjà vérifié ?'
     sign_in_link: 'Se connecter'
 twofactor:
+  unavailable_h: 'La double authentification est désactivée ici'
+  unavailable_lead: 'Cet environnement a le second facteur désactivé : il n''y a rien à configurer pour le moment.'
+  unavailable_note: 'Sur le site en ligne, les curateurs et les administrateurs doivent configurer la double authentification avant d''accéder aux bureaux de modération.'
   login:
     panel_h1: 'Une étape de plus.'
     panel_p: 'Entrez le code de votre application d''authentification pour terminer la connexion.'
@@ -2515,7 +2518,7 @@ moderate:
     all: 'Tous'
     apply: 'Appliquer'
     search: 'Rechercher'
-    search_ph: 'Titre de l''élément…'
+    search_ph: 'Titre ou contributeur…'
     by_user: 'Contributions d''une seule personne.'
     by_user_clear: 'Afficher tout le monde'
   overview:
@@ -2550,7 +2553,7 @@ moderate:
     title: 'Manuel du modérateur'
   history:
     kicker: 'Modération · registre'
-    heading: 'Déjà traité'
+    heading: 'Contributions déjà traitées'
     thread: '%count% message(s) dans cet échange'
     said_curator: 'Demandé'
     said_rider: 'Cycliste'
@@ -3035,6 +3038,7 @@ admin:
     curator_applications: 'Candidatures de curateurs'
     withheld_photos: 'Photos retenues'
     escalated: 'Escaladés (bloqués)'
+    moderator_areas: 'Zones de modération'
   action:
     unlock: 'Déverrouiller le compte'
     disarm_2fa: 'Désactiver la 2FA'
@@ -3077,6 +3081,12 @@ admin:
     settings_reset: 'Réglage remis à sa valeur par défaut.'
     settings_invalid: 'Rien n’a été enregistré — vérifiez les valeurs signalées ci-dessous.'
   areas:
+    overview_lead: 'Quel curateur couvre quelles régions. L''attribution est l''étape 7 du playbook d''intégration.'
+    overview_empty: 'Pas encore de curateurs ni d''administrateurs.'
+    col_person: 'Personne'
+    col_areas: 'Zones'
+    global: 'Global (voit tout)'
+    assign: 'Attribuer des zones'
     title: 'Attribuer des zones de modération'
     help: 'Choisissez les régions et/ou pays entiers que ce curateur modère. L''union s''applique ; les éléments hors de toute région restent visibles par tous les curateurs.'
     regions: 'Régions'

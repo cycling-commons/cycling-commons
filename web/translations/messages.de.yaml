@@ -1346,6 +1346,9 @@ security:
     already_verified: 'Bereits bestätigt?'
     sign_in_link: 'Anmelden'
 twofactor:
+  unavailable_h: 'Zwei-Faktor ist hier ausgeschaltet'
+  unavailable_lead: 'In dieser Umgebung ist der zweite Faktor deaktiviert, es gibt also gerade nichts einzurichten.'
+  unavailable_note: 'Auf der Live-Seite müssen Kuratoren und Admins Zwei-Faktor einrichten, bevor sie die Moderations-Desks erreichen.'
   login:
     panel_h1: 'Noch ein Schritt.'
     panel_p: 'Gib den Code aus deiner Authentifizierungs-App ein, um die Anmeldung abzuschließen.'
@@ -2518,7 +2521,7 @@ moderate:
     all: 'Alle'
     apply: 'Anwenden'
     search: 'Suchen'
-    search_ph: 'Titel des Eintrags…'
+    search_ph: 'Titel oder Beitragende…'
     by_user: 'Nur die Einreichungen einer Person.'
     by_user_clear: 'Alle anzeigen'
   overview:
@@ -2553,7 +2556,7 @@ moderate:
     title: 'Moderatoren-Regelwerk'
   history:
     kicker: 'Moderation · Register'
-    heading: 'Bereits erledigt'
+    heading: 'Bereits erledigte Einreichungen'
     thread: '%count% Nachricht(en) in diesem Austausch'
     said_curator: 'Gefragt'
     said_rider: 'Fahrer'
@@ -3038,6 +3041,7 @@ admin:
     curator_applications: 'Kuratorbewerbungen'
     withheld_photos: 'Zurückgehaltene Fotos'
     escalated: 'Eskaliert (gesperrt)'
+    moderator_areas: 'Moderationsgebiete'
   action:
     unlock: 'Konto entsperren'
     disarm_2fa: '2FA deaktivieren'
@@ -3080,6 +3084,12 @@ admin:
     settings_reset: 'Einstellung auf den Standardwert zurückgesetzt.'
     settings_invalid: 'Es wurde nichts gespeichert — prüfen Sie die unten markierten Werte.'
   areas:
+    overview_lead: 'Welcher Kurator welche Regionen abdeckt. Das Zuweisen ist Schritt 7 des Onboarding-Playbooks.'
+    overview_empty: 'Noch keine Kuratoren oder Admins.'
+    col_person: 'Person'
+    col_areas: 'Gebiete'
+    global: 'Global (sieht alles)'
+    assign: 'Gebiete zuweisen'
     title: 'Moderationsgebiete zuweisen'
     help: 'Wähle die Regionen und/oder ganze Länder, die diese Kuratorin/dieser Kurator moderiert. Es gilt die Vereinigung; Elemente außerhalb jeder Region bleiben für alle sichtbar.'
     regions: 'Regionen'

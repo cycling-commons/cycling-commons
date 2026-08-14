@@ -44,9 +44,21 @@ final class TwoFactorController extends AbstractController
     #[IsGranted('ROLE_USER')]
     public function setup(
         Request $request,
-        TotpAuthenticatorInterface $totpAuthenticator,
         EntityManagerInterface $entityManager,
+        ?TotpAuthenticatorInterface $totpAuthenticator = null,
     ): Response {
+        /* NULLABLE, because the provider can be off. `when@dev` disables TOTP
+           for local convenience (config/packages/scheb_2fa.yaml), and with it
+           this service - so requiring it here turned "2FA is off" into a 500 on
+           a page the enforcer sends people to. A newly approved curator was
+           then locked out of every page on the dev stack (owner-reported
+           2026-08-14). Say so instead; prod and staging never take this branch. */
+        if (null === $totpAuthenticator) {
+            return $this->render('security/2fa_unavailable.html.twig', [
+                'page_title' => 'meta.twofa_setup_title',
+                'page_description' => 'meta.twofa_setup_description',
+            ]);
+        }
         // Defence-in-depth beyond the access_control regex: never dereference a
         // null user. IsGranted above already guarantees authentication;
         // this keeps the invariant explicit at the code boundary.
