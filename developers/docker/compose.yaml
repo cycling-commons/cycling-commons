@@ -138,7 +138,14 @@ services:
       # Coverage batch (docs/specs/coverage-provider.md §3).
       # Defaults target the bundled MinIO (profile: storage, root creds from
       # .env); prod overrides point at the CC Hetzner bucket.
-      COVERAGE_REGIONS: ${COVERAGE_REGIONS:-europe/belgium,europe/netherlands,europe/germany,europe/luxembourg,europe/france,europe/switzerland,europe/great-britain,europe/ireland-and-northern-ireland,europe/italy,australia-oceania/australia,asia/japan,north-america/us/california,north-america/us/colorado}
+      #
+      # This list must name every ONBOARDED country's Geofabrik extract, or
+      # that country's coverage is never refreshed by anything that follows the
+      # committed config. `europe/spain` was missing from 2026-08-08 (the ES
+      # onboarding added it to COUNTRY_BY_REGION and not here), so Spain's
+      # 234,958 POIs were only ever refreshed by an explicit `regions=` — the
+      # exact silent-gap this list exists to prevent.
+      COVERAGE_REGIONS: ${COVERAGE_REGIONS:-europe/belgium,europe/netherlands,europe/germany,europe/luxembourg,europe/france,europe/switzerland,europe/great-britain,europe/ireland-and-northern-ireland,europe/italy,europe/spain,europe/slovenia,africa/rwanda,africa/south-africa,south-america/colombia,south-america/chile,australia-oceania/australia,australia-oceania/new-zealand,asia/japan,north-america/us/california,north-america/us/colorado,north-america/canada/british-columbia,north-america/canada/quebec}
       COVERAGE_WORKDIR: /data/work
       COVERAGE_PBF_PATH: ${COVERAGE_PBF_PATH:-}
       COVERAGE_S3_ENDPOINT: ${COVERAGE_S3_ENDPOINT:-http://minio:9000}

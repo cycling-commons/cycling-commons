@@ -62,6 +62,24 @@ COUNTRY_BY_REGION = {
     # 2026-08-08 rollout. The Geofabrik extract covers the mainland, the
     # Balearics and the Canaries — the same three areas the ES bbox spans.
     "europe/spain": "ES",
+    # ——— 2026-08-14 rollout ———
+    "europe/slovenia": "SI",
+    "africa/rwanda": "RW",
+    # Geofabrik's South Africa extract BUNDLES Lesotho and Eswatini, the same
+    # shared-extract case as Northern Ireland: neither is onboarded, so
+    # nearest-region-wins deletes their rows for having no onboarded region
+    # within BOUNDARY_SNAP_DEG — except in the ~1 km band along the borders,
+    # which is mis-stamped ZA until one of them is onboarded. Lesotho is
+    # entirely enclosed by South Africa, so its band is its whole perimeter.
+    "africa/south-africa": "ZA",
+    "south-america/colombia": "CO",
+    "south-america/chile": "CL",
+    "australia-oceania/new-zealand": "NZ",
+    # Province-level onboarding, like the two US states: only the provinces
+    # actually seeded, so an unonboarded province's extract still hard-fails
+    # resolve_country instead of silently harvesting as CA.
+    "north-america/canada/british-columbia": "CA",
+    "north-america/canada/quebec": "CA",
 }
 
 # Per-session resource budget applied to the harvest connection at startup.

@@ -63,6 +63,21 @@
     // in a country we have nothing for yet, so falling through to the default
     // is more honest than guessing a home country whose whole map is dimmed.
     'America/Los_Angeles': 'US', 'America/Denver': 'US',
+    // ——— 2026-08-14 rollout ———
+    'Europe/Ljubljana': 'SI',
+    'Africa/Kigali': 'RW',
+    'Africa/Johannesburg': 'ZA',
+    'America/Bogota': 'CO',
+    // Chile's mainland is America/Santiago; Easter Island, part of the
+    // Valparaíso region, runs two hours behind on Pacific/Easter.
+    'America/Santiago': 'CL', 'Pacific/Easter': 'CL',
+    // Same shape for New Zealand: the Chatham Islands are their own region AND
+    // their own zone, 45 minutes ahead of the mainland.
+    'Pacific/Auckland': 'NZ', 'Pacific/Chatham': 'NZ',
+    // Only the two onboarded provinces' zones, as for the US. British Columbia
+    // is America/Vancouver; Québec reports America/Toronto (America/Montreal
+    // is a link to it that some browsers still resolve to, so both are listed).
+    'America/Vancouver': 'CA', 'America/Toronto': 'CA', 'America/Montreal': 'CA',
   };
   const currentTimezone = () => {
     if (typeof globalThis !== 'undefined' && globalThis.__ccTz) return globalThis.__ccTz; // test hook

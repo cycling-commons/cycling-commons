@@ -348,6 +348,198 @@ COUNTRY_CONFIG = {
         },
         "bbox": [-18.26, 27.54, 4.43, 43.89],
     },
+    # ——— 2026-08-14 rollout: Slovenia, Rwanda, South Africa, Colombia, Chile,
+    #     New Zealand, and two Canadian provinces ———
+    #
+    # Slovenia — the SECOND country to operate at L2, and for the same reason
+    # Luxembourg does. Its official ISO 3166-2 level is 212 občine (probe:
+    # web/var/scaffold/si/areas.md), every one of them 7–555 km² and so an order
+    # of magnitude below the riding-size band; there is no intermediate level
+    # carrying ISO identity (the 12 statistical regions are NUTS-3, not
+    # administrative). Slovenia itself is 20,271 km² — INSIDE the advisory band
+    # — so the country is a region of exactly the right size. Synthetic
+    # macro-regions were the alternative and the playbook reserves those for
+    # when no official level fits; here one does.
+    "SI": {
+        "subtype": "country",
+        "slugs": {"SI": "slovenia"},
+        "names": {"SI": "Slovenia"},
+        "bbox": [13.28, 45.32, 16.7, 46.98],
+    },
+    # Rwanda — 5 provinces (4 + the City of Kigali), all below the band, which
+    # is fine: moderation composes upward and the whole country is 26,338 km².
+    #
+    # NATIVE Kinyarwanda slugs, against the usual "established English exonym
+    # first" preference, because here the English names are *Eastern*,
+    # *Northern*, *Western* and *Southern* — words that belong to no country in
+    # particular. A slug is permanent GLOBAL identity, so `eastern` would have
+    # to become `eastern-province-rw` the first time any other country onboards
+    # a compass-named division, and the DE/NL precedent already prefers the
+    # native form. `kigali` is the exception in the other direction: the city's
+    # name is the same in every language.
+    "RW": {
+        "subtype": "region",
+        "slugs": {
+            "RW-01": "kigali", "RW-02": "iburasirazuba", "RW-03": "amajyaruguru",
+            "RW-04": "iburengerazuba", "RW-05": "amajyepfo",
+        },
+        "names": {
+            "RW-01": "City of Kigali", "RW-02": "Eastern Province",
+            "RW-03": "Northern Province", "RW-04": "Western Province",
+            "RW-05": "Southern Province",
+        },
+        "bbox": [28.76, -2.94, 31.0, -0.95],
+    },
+    # South Africa — 9 provinces, ISO 3166-2:ZA exactly. English is an official
+    # language and these ARE the native English names, so no slug was rewritten.
+    # NOTE for the coverage step: the Geofabrik `africa/south-africa` extract
+    # bundles Lesotho and Eswatini, the same shared-extract case Northern
+    # Ireland taught us — neither is onboarded, so nearest-region-wins deletes
+    # their rows except in the snap band along the borders.
+    "ZA": {
+        "subtype": "region",
+        "slugs": {
+            "ZA-EC": "eastern-cape", "ZA-FS": "free-state", "ZA-GP": "gauteng",
+            "ZA-KZN": "kwazulu-natal", "ZA-LP": "limpopo", "ZA-MP": "mpumalanga",
+            "ZA-NC": "northern-cape", "ZA-NW": "north-west", "ZA-WC": "western-cape",
+        },
+        "names": {
+            "ZA-EC": "Eastern Cape", "ZA-FS": "Free State", "ZA-GP": "Gauteng",
+            "ZA-KZN": "KwaZulu-Natal", "ZA-LP": "Limpopo", "ZA-MP": "Mpumalanga",
+            "ZA-NC": "Northern Cape", "ZA-NW": "North West", "ZA-WC": "Western Cape",
+        },
+        # South to 47.08°S for the Prince Edward Islands, which are part of
+        # the Western Cape and 1,700 km off the mainland.
+        "bbox": [16.35, -47.08, 38.1, -22.03],
+    },
+    # Colombia — 32 departamentos + the Distrito Capital, ISO 3166-2:CO exactly.
+    # Native Spanish slugs (the Spain precedent).
+    #
+    # Three carry a -co suffix for collisions with countries that are NOT
+    # onboarded, following `la-rioja-es` (suffixed for Argentina's La Rioja
+    # while AR was, and still is, unonboarded): Amazonas is also a state of
+    # Brazil, Peru and Venezuela; Córdoba a province of Argentina; Bolívar a
+    # state of Venezuela. A slug cannot be changed later without orphaning the
+    # region row, so the collision is answered now rather than when it bites.
+    # `bogota` and `san-andres-y-providencia` are shortened from Overture's
+    # administrative long forms to the names people actually use.
+    "CO": {
+        "subtype": "region",
+        "slugs": {
+            "CO-AMA": "amazonas-co", "CO-ANT": "antioquia", "CO-ARA": "arauca",
+            "CO-ATL": "atlantico", "CO-BOL": "bolivar-co", "CO-BOY": "boyaca",
+            "CO-CAL": "caldas", "CO-CAQ": "caqueta", "CO-CAS": "casanare",
+            "CO-CAU": "cauca", "CO-CES": "cesar", "CO-CHO": "choco",
+            "CO-COR": "cordoba-co", "CO-CUN": "cundinamarca", "CO-DC": "bogota",
+            "CO-GUA": "guainia", "CO-GUV": "guaviare", "CO-HUI": "huila",
+            "CO-LAG": "la-guajira", "CO-MAG": "magdalena", "CO-MET": "meta",
+            "CO-NAR": "narino", "CO-NSA": "norte-de-santander", "CO-PUT": "putumayo",
+            "CO-QUI": "quindio", "CO-RIS": "risaralda", "CO-SAN": "santander",
+            "CO-SAP": "san-andres-y-providencia", "CO-SUC": "sucre",
+            "CO-TOL": "tolima", "CO-VAC": "valle-del-cauca", "CO-VAU": "vaupes",
+            "CO-VID": "vichada",
+        },
+        "names": {
+            "CO-AMA": "Amazonas", "CO-ANT": "Antioquia", "CO-ARA": "Arauca",
+            "CO-ATL": "Atlántico", "CO-BOL": "Bolívar", "CO-BOY": "Boyacá",
+            "CO-CAL": "Caldas", "CO-CAQ": "Caquetá", "CO-CAS": "Casanare",
+            "CO-CAU": "Cauca", "CO-CES": "Cesar", "CO-CHO": "Chocó",
+            "CO-COR": "Córdoba", "CO-CUN": "Cundinamarca", "CO-DC": "Bogotá",
+            "CO-GUA": "Guainía", "CO-GUV": "Guaviare", "CO-HUI": "Huila",
+            "CO-LAG": "La Guajira", "CO-MAG": "Magdalena", "CO-MET": "Meta",
+            "CO-NAR": "Nariño", "CO-NSA": "Norte de Santander", "CO-PUT": "Putumayo",
+            "CO-QUI": "Quindío", "CO-RIS": "Risaralda", "CO-SAN": "Santander",
+            "CO-SAP": "San Andrés y Providencia", "CO-SUC": "Sucre",
+            "CO-TOL": "Tolima", "CO-VAC": "Valle del Cauca", "CO-VAU": "Vaupés",
+            "CO-VID": "Vichada",
+        },
+        "bbox": [-81.84, -4.33, -66.75, 13.49],
+    },
+    # Chile — 16 regiones, ISO 3166-2:CL exactly. Three slugs rewritten from
+    # Overture's official long forms to the names in ordinary use: `aysen`
+    # (Aysén del General Carlos Ibáñez del Campo — Carretera Austral country),
+    # `o-higgins` (Libertador General Bernardo O'Higgins) and
+    # `region-metropolitana` (Región Metropolitana de Santiago).
+    #
+    # Two things worth knowing about the geometry. CL-MA is named "Magallanes y
+    # de la Antártica Chilena" but Overture's polygon is 131,834 km² — the
+    # MAINLAND region only, without the Antarctic claim, which would have added
+    # ~1.25 M km² and a region reaching the South Pole. And the bbox opens to
+    # 109.55°W for Easter Island, part of Valparaíso: 43° of longitude, nowhere
+    # near the 358.9° US span that defeated the GiST prefilter in the 08-06 run.
+    "CL": {
+        "subtype": "region",
+        "slugs": {
+            "CL-AI": "aysen", "CL-AN": "antofagasta", "CL-AP": "arica-y-parinacota",
+            "CL-AR": "la-araucania", "CL-AT": "atacama", "CL-BI": "biobio",
+            "CL-CO": "coquimbo", "CL-LI": "o-higgins", "CL-LL": "los-lagos",
+            "CL-LR": "los-rios", "CL-MA": "magallanes", "CL-ML": "maule",
+            "CL-NB": "nuble", "CL-RM": "region-metropolitana", "CL-TA": "tarapaca",
+            "CL-VS": "valparaiso",
+        },
+        "names": {
+            "CL-AI": "Aysén", "CL-AN": "Antofagasta", "CL-AP": "Arica y Parinacota",
+            "CL-AR": "La Araucanía", "CL-AT": "Atacama", "CL-BI": "Biobío",
+            "CL-CO": "Coquimbo", "CL-LI": "O'Higgins", "CL-LL": "Los Lagos",
+            "CL-LR": "Los Ríos", "CL-MA": "Magallanes", "CL-ML": "Maule",
+            "CL-NB": "Ñuble", "CL-RM": "Región Metropolitana", "CL-TA": "Tarapacá",
+            "CL-VS": "Valparaíso",
+        },
+        "bbox": [-109.55, -56.62, -66.32, -17.4],
+    },
+    # New Zealand — 16 regions plus the Chatham Islands Territory, ISO 3166-2:NZ
+    # exactly. Three slugs rewritten: `hawkes-bay` (the scaffolder's
+    # `hawke-s-bay` is an apostrophe artifact, not a name), `chatham-islands`,
+    # and `wellington` — ISO NZ-WGN is Wellington; "Greater Wellington" is the
+    # regional council, not the region. Macrons live in the LABELS
+    # (Manawatū-Whanganui), never in a slug.
+    "NZ": {
+        "subtype": "region",
+        "slugs": {
+            "NZ-AUK": "auckland", "NZ-BOP": "bay-of-plenty", "NZ-CAN": "canterbury",
+            "NZ-CIT": "chatham-islands", "NZ-GIS": "gisborne", "NZ-HKB": "hawkes-bay",
+            "NZ-MBH": "marlborough", "NZ-MWT": "manawatu-whanganui", "NZ-NSN": "nelson",
+            "NZ-NTL": "northland", "NZ-OTA": "otago", "NZ-STL": "southland",
+            "NZ-TAS": "tasman", "NZ-TKI": "taranaki", "NZ-WGN": "wellington",
+            "NZ-WKO": "waikato", "NZ-WTC": "west-coast",
+        },
+        "names": {
+            "NZ-AUK": "Auckland", "NZ-BOP": "Bay of Plenty", "NZ-CAN": "Canterbury",
+            "NZ-CIT": "Chatham Islands", "NZ-GIS": "Gisborne", "NZ-HKB": "Hawke's Bay",
+            "NZ-MBH": "Marlborough", "NZ-MWT": "Manawatū-Whanganui", "NZ-NSN": "Nelson",
+            "NZ-NTL": "Northland", "NZ-OTA": "Otago", "NZ-STL": "Southland",
+            "NZ-TAS": "Tasman", "NZ-TKI": "Taranaki", "NZ-WGN": "Wellington",
+            "NZ-WKO": "Waikato", "NZ-WTC": "West Coast",
+        },
+        # 355° wide, and deliberately so: the Chatham Islands sit at ~176.5°W
+        # while the mainland ends at 178.7°E, so New Zealand STRADDLES THE
+        # ANTIMERIDIAN and no honest [xmin…xmax] box is narrow. A mainland-only
+        # box would read faster and silently drop NZ-CIT, leaving a hole in the
+        # country's tessellation. This is a read predicate for the Overture
+        # export only — it costs one slower scan at onboarding time and never
+        # touches coverage ownership, which works from the region polygons
+        # themselves (the L2 outline that would repeat the US bbox problem is
+        # excluded there by the operational-region filter).
+        "bbox": [-176.99, -47.39, 178.68, -34.29],
+    },
+    # Canada — province-level onboarding on the US precedent (`--only`), not the
+    # whole country: British Columbia and Québec first, the rest demand-driven.
+    # Both are far above the advisory band (947,379 and 1,509,940 km²) and both
+    # are chosen for a real cycling reason rather than a size one — Vancouver
+    # Island and the Sea-to-Sky for BC, and for Québec the Route verte, at
+    # ~5,300 km the largest signed cycle network in the Americas.
+    #
+    # Geofabrik splits Canada by province, so coverage onboards them singly
+    # exactly as California and Colorado do.
+    "CA": {
+        "subtype": "region",
+        "slugs": {"CA-BC": "british-columbia", "CA-QC": "quebec"},
+        "names": {"CA-BC": "British Columbia", "CA-QC": "Québec"},
+        # BC + QC only, not the probe's whole-Canada box: the two provinces
+        # together span -139.06…-57.1 and 41.68…62.59°N, so the read predicate
+        # stays tight even though the country reaches 83°N.
+        "bbox": [-139.06, 41.68, -57.1, 62.59],
+    },
 }
 
 # Level-2 country identity every onboarding run emits ALONGSIDE the operating
@@ -373,4 +565,17 @@ COUNTRY_L2 = {
     # is never operational while California and Colorado exist at level 4.
     "US": ("united-states", "United States"),
     "ES": ("spain", "Spain"),
+    # 2026-08-14 rollout. Slovenia's operating subtype is already `country`, so
+    # like Luxembourg it is not emitted twice — the entry keeps the invariant
+    # "every configured country has an L2 identity" testable.
+    "SI": ("slovenia", "Slovenia"),
+    "RW": ("rwanda", "Rwanda"),
+    "ZA": ("south-africa", "South Africa"),
+    "CO": ("colombia", "Colombia"),
+    "CL": ("chile", "Chile"),
+    "NZ": ("new-zealand", "New Zealand"),
+    # Infrastructure only, like the US outline: the Canadian outline covers 11
+    # provinces and territories nobody has onboarded, and is never operational
+    # while British Columbia and Québec exist at level 4.
+    "CA": ("canada", "Canada"),
 }

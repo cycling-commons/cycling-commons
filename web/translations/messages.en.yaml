@@ -1062,6 +1062,201 @@ region:
     label: 'Valencian Community'
   all_es:
     label: 'All Spain'
+  # Slovenia — one country row (subtype=country, the Luxembourg precedent).
+  slovenia:
+    label: 'Slovenia'
+  all_si:
+    label: 'All Slovenia'
+  # Rwanda — 5 provinces. Slugs are Kinyarwanda (a compass name is not a
+  # global identity); the labels are the ordinary translated forms.
+  kigali:
+    label: 'City of Kigali'
+  iburasirazuba:
+    label: 'Eastern Province'
+  amajyaruguru:
+    label: 'Northern Province'
+  iburengerazuba:
+    label: 'Western Province'
+  amajyepfo:
+    label: 'Southern Province'
+  all_rw:
+    label: 'All Rwanda'
+  # South Africa — 9 provinces. The four compass-named Capes and the Free
+  # State translate; Gauteng, Limpopo, Mpumalanga and KwaZulu-Natal do not.
+  eastern-cape:
+    label: 'Eastern Cape'
+  free-state:
+    label: 'Free State'
+  gauteng:
+    label: 'Gauteng'
+  kwazulu-natal:
+    label: 'KwaZulu-Natal'
+  limpopo:
+    label: 'Limpopo'
+  mpumalanga:
+    label: 'Mpumalanga'
+  northern-cape:
+    label: 'Northern Cape'
+  north-west:
+    label: 'North West'
+  western-cape:
+    label: 'Western Cape'
+  all_za:
+    label: 'All South Africa'
+  # Colombia — 32 departamentos + Bogotá. Every one is a Spanish proper
+  # noun with no exonym in the other four languages, so the native form
+  # travels unchanged rather than being invented.
+  amazonas-co:
+    label: 'Amazonas'
+  antioquia:
+    label: 'Antioquia'
+  arauca:
+    label: 'Arauca'
+  atlantico:
+    label: 'Atlántico'
+  bolivar-co:
+    label: 'Bolívar'
+  boyaca:
+    label: 'Boyacá'
+  caldas:
+    label: 'Caldas'
+  caqueta:
+    label: 'Caquetá'
+  casanare:
+    label: 'Casanare'
+  cauca:
+    label: 'Cauca'
+  cesar:
+    label: 'Cesar'
+  choco:
+    label: 'Chocó'
+  cordoba-co:
+    label: 'Córdoba'
+  cundinamarca:
+    label: 'Cundinamarca'
+  bogota:
+    label: 'Bogotá'
+  guainia:
+    label: 'Guainía'
+  guaviare:
+    label: 'Guaviare'
+  huila:
+    label: 'Huila'
+  la-guajira:
+    label: 'La Guajira'
+  magdalena:
+    label: 'Magdalena'
+  meta:
+    label: 'Meta'
+  narino:
+    label: 'Nariño'
+  norte-de-santander:
+    label: 'Norte de Santander'
+  putumayo:
+    label: 'Putumayo'
+  quindio:
+    label: 'Quindío'
+  risaralda:
+    label: 'Risaralda'
+  santander:
+    label: 'Santander'
+  san-andres-y-providencia:
+    label: 'San Andrés y Providencia'
+  sucre:
+    label: 'Sucre'
+  tolima:
+    label: 'Tolima'
+  valle-del-cauca:
+    label: 'Valle del Cauca'
+  vaupes:
+    label: 'Vaupés'
+  vichada:
+    label: 'Vichada'
+  all_co:
+    label: 'All Colombia'
+  # Chile — 16 regiones, native throughout for the same reason. The one
+  # exception is the Región Metropolitana, whose name IS a description.
+  aysen:
+    label: 'Aysén'
+  antofagasta:
+    label: 'Antofagasta'
+  arica-y-parinacota:
+    label: 'Arica y Parinacota'
+  la-araucania:
+    label: 'La Araucanía'
+  atacama:
+    label: 'Atacama'
+  biobio:
+    label: 'Biobío'
+  coquimbo:
+    label: 'Coquimbo'
+  o-higgins:
+    label: 'O''Higgins'
+  los-lagos:
+    label: 'Los Lagos'
+  los-rios:
+    label: 'Los Ríos'
+  magallanes:
+    label: 'Magallanes'
+  maule:
+    label: 'Maule'
+  nuble:
+    label: 'Ñuble'
+  region-metropolitana:
+    label: 'Santiago Metropolitan Region'
+  tarapaca:
+    label: 'Tarapacá'
+  valparaiso:
+    label: 'Valparaíso'
+  all_cl:
+    label: 'All Chile'
+  # New Zealand — 16 regions + the Chatham Islands. English proper nouns
+  # throughout; only the island group has established exonyms. Macrons
+  # belong in the LABEL (Manawatū-Whanganui), never in the slug.
+  auckland:
+    label: 'Auckland'
+  bay-of-plenty:
+    label: 'Bay of Plenty'
+  canterbury:
+    label: 'Canterbury'
+  chatham-islands:
+    label: 'Chatham Islands'
+  gisborne:
+    label: 'Gisborne'
+  hawkes-bay:
+    label: 'Hawke''s Bay'
+  marlborough:
+    label: 'Marlborough'
+  manawatu-whanganui:
+    label: 'Manawatū-Whanganui'
+  nelson:
+    label: 'Nelson'
+  northland:
+    label: 'Northland'
+  otago:
+    label: 'Otago'
+  southland:
+    label: 'Southland'
+  tasman:
+    label: 'Tasman'
+  taranaki:
+    label: 'Taranaki'
+  wellington:
+    label: 'Wellington'
+  waikato:
+    label: 'Waikato'
+  west-coast:
+    label: 'West Coast'
+  all_nz:
+    label: 'All New Zealand'
+  # Canada — British Columbia and Québec only (province-level onboarding,
+  # the US precedent). Both have real exonyms in all five languages.
+  british-columbia:
+    label: 'British Columbia'
+  quebec:
+    label: 'Québec'
+  all_ca:
+    label: 'All Canada'
   everywhere:
     label: 'Everywhere'
   cta_map: 'Open this region on the map'
