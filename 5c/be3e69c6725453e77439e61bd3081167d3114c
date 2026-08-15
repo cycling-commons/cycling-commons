@@ -1,0 +1,28 @@
+mkdocs.yml
+  s_1cc0641c44ce5a::t_9a3c1d081506e2 58-66
+overrides/partials/copyright.html
+  s_1cc0641c44ce5a::t_21f962a886d441 1-22
+.github/workflows/ci-wiki.yml
+  s_1cc0641c44ce5a::t_8865792d484d39 35-37
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "5cbe3e69c6725453e77439e61bd3081167d3114c",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_1cc0641c44ce5a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9a97433f-3f94-4f05-ac5b-c757059d3493",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
