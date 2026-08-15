@@ -167,8 +167,23 @@
   .skey-brow{display:flex;align-items:center;gap:.7rem;font-size:.75rem;color:var(--paper);opacity:.85;line-height:1.3}
   .skey-brow small{display:block;font-family:var(--mono);font-size:.55rem;letter-spacing:.05em;
     color:var(--glacier);opacity:.8;margin-top:.1rem}
+  /* The zoom the colour appears at, set apart from the OSM class list beside
+     it: same line, because they answer one question together (what is this,
+     and when can I see it), but the number is the part a rider compares
+     against the map's own zoom badge. */
+  .skey-brow small b{margin-left:.45rem;padding:0 .25rem;border-radius:3px;font-weight:400;
+    background:rgba(239,230,212,.14);color:var(--paper);opacity:.9}
   .skey-bln{width:34px;height:8px;border-radius:2px;flex:none;background:var(--sc);border:1px solid var(--scc)}
   .skey-bln.bdash{background:repeating-linear-gradient(90deg,var(--sc) 0 5px,transparent 5px 8px);border-style:dashed}
+  /* The bare casing, drawn as what it is: a hairline, not a road-width band.
+     Showing it at the same 8px as the filled classes would be the same lie the
+     first version of this key told. */
+  .skey-bln.bthin{height:2px;border-radius:1px;border:none;background:var(--sc)}
+  /* Live "and right now you are below that" line (panels.js
+     syncBaseZoomNote). Trail-coloured because it is about the CURRENT view,
+     not a permanent property of the basemap like the note under it. */
+  .skey-base-zoom{margin:.6rem .2rem 0;font-size:.66rem;line-height:1.4;color:var(--trail)}
+  .skey-base-zoom[hidden]{display:none}
   .skey-base-note{margin:.6rem .2rem 0;font-size:.66rem;line-height:1.4;color:var(--glacier);opacity:.85}
   .skey-ln{width:34px;height:4px;border-radius:2px;flex:none;background:var(--sc)}
   /* Gaps are TRANSPARENT, not white.

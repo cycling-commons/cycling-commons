@@ -350,15 +350,39 @@
       <details class="skey-base" id="skeyBase" open hidden>
         <summary>{{ 'map.base_roads'|trans }}</summary>
         {# `skey-brow`, not `skey-row`: the surface rows are BUTTONS that filter
-           the map and carry a tick to say so. These four explain somebody
-           else's basemap and can filter nothing, so they must not borrow the
-           affordance. #}
+           the map and carry a tick to say so. These explain somebody else's
+           basemap and can filter nothing, so they must not borrow the
+           affordance.
+
+           EVERY ROW CARRIES THE ZOOM ITS COLOUR APPEARS AT, because the first
+           version of this key described colours the rider could not see (owner
+           2026-08-15: "where can I find any of those colors on the map, I
+           mostly see very thin grey roads"). Liberty draws each class as a
+           grey casing first and fills the colour in later: a residential road
+           has no white in it until z13.5, and a service road or track none
+           until z15.5, so at planning zoom the map is mostly #cfcdca outlines.
+           The numbers below are the fill-width breakpoints read off the style
+           itself, rounded to the zoom a rider would actually notice.
+
+           Quiet streets and tracks are two rows now, not one. They share a
+           colour, which was the earlier argument for merging them, but they do
+           NOT share a zoom - and the zoom is the half a rider is missing. #}
         <div class="skey">
-          <div class="skey-brow"><span class="skey-bln" style="--sc:#fc8;--scc:#e9ac77"></span><span>{{ 'map.base_roads_motorway'|trans }}<small>motorway</small></span></div>
-          <div class="skey-brow"><span class="skey-bln" style="--sc:#fea;--scc:#e9ac77"></span><span>{{ 'map.base_roads_through'|trans }}<small>trunk · primary · secondary · tertiary</small></span></div>
-          <div class="skey-brow"><span class="skey-bln" style="--sc:#fff;--scc:#cfcdca"></span><span>{{ 'map.base_roads_quiet'|trans }}<small>residential · service · track</small></span></div>
-          <div class="skey-brow"><span class="skey-bln bdash" style="--sc:#fff;--scc:#cfcdca"></span><span>{{ 'map.base_roads_path'|trans }}<small>path · pedestrian</small></span></div>
+          <div class="skey-brow"><span class="skey-bln" style="--sc:#fc8;--scc:#e9ac77"></span><span>{{ 'map.base_roads_motorway'|trans }}<small>motorway<b>z5+</b></small></span></div>
+          <div class="skey-brow"><span class="skey-bln" style="--sc:#fea;--scc:#e9ac77"></span><span>{{ 'map.base_roads_through'|trans }}<small>trunk · primary · secondary · tertiary<b>z7+</b></small></span></div>
+          <div class="skey-brow"><span class="skey-bln" style="--sc:#fff;--scc:#cfcdca"></span><span>{{ 'map.base_roads_quiet'|trans }}<small>residential · unclassified<b>z14+</b></small></span></div>
+          <div class="skey-brow"><span class="skey-bln" style="--sc:#fff;--scc:#cfcdca"></span><span>{{ 'map.base_roads_track'|trans }}<small>service · track<b>z16+</b></small></span></div>
+          <div class="skey-brow"><span class="skey-bln bdash" style="--sc:#fff;--scc:#cfcdca"></span><span>{{ 'map.base_roads_path'|trans }}<small>path · pedestrian<b>z14+</b></small></span></div>
+          {# The line the rider is ACTUALLY looking at below z14, and the one
+             the first version left out entirely: the casing, on its own, with
+             no fill in it yet. #}
+          <div class="skey-brow"><span class="skey-bln bthin" style="--sc:#cfcdca;--scc:#cfcdca"></span><span>{{ 'map.base_roads_outline'|trans }}<small>{{ 'map.base_roads_outline_sub'|trans }}</small></span></div>
         </div>
+        {# Live, from the map's own zoom (panels.js syncBaseZoomNote): the
+           static key cannot say "and right now you are below that", which is
+           the sentence the owner needed. Same house pattern as the rail's
+           zoom-hint line under the place count. #}
+        <p class="skey-base-zoom" id="skeyBaseZoom" hidden></p>
         <p class="skey-base-note">{{ 'map.base_roads_note'|trans }}</p>
       </details>
     </div>

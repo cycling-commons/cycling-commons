@@ -815,11 +815,34 @@ the newest rung of that same ladder.
   2026-08-15): `road_motorway` **#fc8**, `road_trunk_primary` +
   `road_secondary_tertiary` **#fea**, `road_minor` + `road_service_track`
   **#fff** over a **#cfcdca** casing, and `road_path_pedestrian` white with a
-  `[1, 0.7]` dash. Minor roads and tracks share **one** row because they share
-  one colour and differ only in width; two swatches would be a legend for a
-  distinction the map does not draw. Each row names the rider's word first and
-  the OSM classes beside it, and the block closes on the one thing that matters
-  here: those colours say how big a road is, never what it is made of.
+  `[1, 0.7]` dash. Each row names the rider's word first and the OSM classes
+  beside it, and the block closes on the one thing that matters here: those
+  colours say how big a road is, never what it is made of.
+
+  **Every row carries the zoom its colour appears at, and this is the half the
+  first version got wrong** (owner 2026-08-15: "where can I find any of those
+  colors on the map, I mostly see very thin grey roads"). Liberty draws a road
+  as a grey **casing** (#cfcdca) first and fills the colour in much later: the
+  fill-width interpolations are `13.5 -> 0` for `road_minor` and `15.5 -> 0`
+  for `road_service_track`, and `road_path_pedestrian` has `minzoom: 14`. So
+  between roughly z12 and z14 a residential street genuinely has **no white in
+  it**, below z15 a track draws **nothing at all**, and the key was naming
+  colours the rider could not see. The palette was read off the style; the
+  widths should have been read with it. Three consequences:
+  - a `z5+` / `z7+` / `z14+` / `z16+` badge on each row, taken from those
+    breakpoints rather than picked to look tidy;
+  - a **sixth row for the bare casing** (`map.base_roads_outline`), drawn as a
+    2 px hairline rather than a road-width band, because it is the line the
+    rider is actually looking at at planning zoom;
+  - a **live line** (`#skeyBaseZoom`, `panels.js` `syncBaseZoomNote()`, bound
+    to `zoomend`) saying "and right now you are below that": below z14
+    `map.base_roads_zoom_low`, below z16 `map.base_roads_zoom_mid`, hidden
+    above. Same house pattern as the rail's zoom hint under the place count:
+    name the zoom, never let the map look broken.
+
+  Quiet streets and service roads/tracks are **two rows**, not one. They share
+  a colour, which was the original argument for merging them, but they do not
+  share a zoom, and the zoom is the half a rider is missing.
   Rows are `.skey-brow`, **not** `.skey-row`: the surface rows are buttons that
   filter the map and carry a tick to say so, and these can filter nothing.
   Revealed by `panels.js` `syncStudyGate()` only while **the skin is on, Study
