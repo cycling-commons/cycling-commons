@@ -106,11 +106,13 @@ jobs:
           echo "health check FAILED for ${{ matrix.domain }}"
           exit 1
 
-      # Both hosts sit behind one load balancer, so they must run the same
-      # release. Comparing the `current` symlink targets is the cheapest way to
-      # prove the deploy actually completed everywhere — status codes alone
-      # cannot tell you the hosts disagree.
-      - name: Verify both hosts run the same release
+      # Both hosts sit behind one load balancer, so they must serve the same
+      # code. The release DIRECTORY names cannot be compared for that: each
+      # host stamps its own release from its own clock, so the names always
+      # differ by the seconds between the two sequential deploys (proven on
+      # the first two runs of this workflow, which failed on nothing else).
+      # The deployed commit is the fact that has to agree, so compare that.
+      - name: Verify both hosts run the same commit
         env:
           PORT: ${{ secrets.DEPLOY_PORT }}
           USER: ${{ secrets.DEPLOY_USER }}
@@ -118,15 +120,19 @@ jobs:
           WEB2: ${{ secrets.DEPLOY_HOST_WEB2 }}
         run: |
           set -euo pipefail
-          read_release() {
+          # A release is a git clone today; if the deploy script ever strips
+          # .git and leaves a REVISION file (the usual deployer trade), the
+          # check keeps working - both forms name the deployed commit.
+          read_commit() {
             ssh -i ~/.ssh/deploy_key -p "$PORT" -o IdentitiesOnly=yes \
-              "$USER@$1" "readlink /var/www/${{ matrix.domain }}/current"
+              "$USER@$1" \
+              "cd /var/www/${{ matrix.domain }}/current && { cat REVISION 2>/dev/null || git rev-parse HEAD; }"
           }
-          R1="$(read_release "$WEB1")"
-          R2="$(read_release "$WEB2")"
-          echo "web-1: $R1"
-          echo "web-2: $R2"
-          if [ "$R1" != "$R2" ]; then
-            echo "HOSTS DIVERGED — the load balancer would serve two different releases"
+          C1="$(read_commit "$WEB1")"
+          C2="$(read_commit "$WEB2")"
+          echo "web-1: $C1"
+          echo "web-2: $C2"
+          if [ "$C1" != "$C2" ]; then
+            echo "HOSTS DIVERGED - the load balancer would serve two different commits"
             exit 1
           fi
