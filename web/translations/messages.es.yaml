@@ -700,7 +700,7 @@ regions:
   routes_one: '%n% ruta'
   routes_many: '%n% rutas'
   your_country_h: '¿No ves tu país?'
-  your_country_top: 'Cuéntanos dónde ruedas, o preséntate como curador.'
+  your_country_cta: 'Solicita tu país'
   your_country_p: 'El Commons crece país a país. Dinos dónde ruedas — o preséntate para curarlo.'
   your_country_placeholder: 'Escribe tu país…'
   your_country_noscript: 'Ver todas las formas de participar'

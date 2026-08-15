@@ -699,7 +699,7 @@ regions:
   routes_one: '%n% itinéraire'
   routes_many: '%n% itinéraires'
   your_country_h: 'Votre pays n''y est pas ?'
-  your_country_top: 'Dites-nous où vous roulez, ou proposez-vous comme curateur.'
+  your_country_cta: 'Demander votre pays'
   your_country_p: 'Le Commons grandit pays par pays. Dites-nous où vous roulez — ou devenez-en le curateur bénévole.'
   your_country_placeholder: 'Saisissez votre pays…'
   your_country_noscript: 'Voir toutes les façons de participer'
