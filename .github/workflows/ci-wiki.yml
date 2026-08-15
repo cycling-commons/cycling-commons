@@ -32,7 +32,9 @@ on:
       - 'web/**/*.js'
       - 'pipeline/**/*.py'
   push:
-    branches: [main]
+    # staging and symfony-base are deploy sources (deploy-staging.yaml) —
+    # without them here, a push could deploy code that never passed CI.
+    branches: [main, staging, symfony-base]
     paths:
       - 'wiki/**'
       - 'mkdocs.yml'

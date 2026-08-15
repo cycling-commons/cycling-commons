@@ -1,0 +1,22 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{#- Material's copyright partial, extended with the build stamp from
+    mkdocs.yml `extra.build` (filled by the deploy script via DEPLOY_REVISION /
+    DEPLOY_DATE): version = the wiki commit the site was built from, date =
+    when it was last deployed. Local builds show "dev" and no date. -#}
+<div class="md-copyright">
+  {% if config.copyright %}
+    <div class="md-copyright__highlight">
+      {{ config.copyright }}
+    </div>
+  {% endif %}
+  {% if not config.extra.generator == false %}
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  {% endif %}
+  <div>
+    Version {{ config.extra.build.revision }}{% if config.extra.build.date %}
+    · updated {{ config.extra.build.date }}{% endif %}
+  </div>
+</div>

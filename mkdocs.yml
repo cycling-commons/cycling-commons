@@ -55,6 +55,15 @@ theme:
     - search.highlight
     - toc.follow
 
+# Build stamp, shown in the footer (overrides/partials/copyright.html). The
+# deploy script exports DEPLOY_REVISION/DEPLOY_DATE just before the mkdocs
+# build hook runs, so every deployed page names the exact commit it was built
+# from. Local builds have neither variable and show "dev".
+extra:
+  build:
+    revision: !ENV [DEPLOY_REVISION, 'dev']
+    date: !ENV [DEPLOY_DATE, '']
+
 extra_javascript:
   # Bump ?v= when diagrams.js changes — MkDocs does not fingerprint extra_*.
   - javascripts/diagrams.js?v=3
