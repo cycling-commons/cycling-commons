@@ -1,0 +1,38 @@
+docs/specs/catalog-data-model.md
+  s_6df2cc515a46f1::t_5c0f22152182ca 198-216
+web/src/Catalog/Command/SeedManualCatalogCommand.php
+  s_6df2cc515a46f1::t_68d16e5f2faa88 544-551,554-562
+  s_6df2cc515a46f1::t_55861ffa748d13 552-553
+web/tests/Catalog/Import/MeasuredKeysTest.php
+  s_6df2cc515a46f1::t_3b01cc439698d2 25
+  s_6df2cc515a46f1::t_a57f63e051e29f 24
+  s_6df2cc515a46f1::t_ecb2249768ca83 1-23,26-44
+web/src/Catalog/Import/ItemUpsert.php
+  s_6df2cc515a46f1::t_9c1843b521e876 20-23
+  s_6df2cc515a46f1::t_5df108bfde51eb 67,111
+  s_6df2cc515a46f1::t_7cf9062078d624 32-53,62-66,68-70
+  s_6df2cc515a46f1::t_0a8d22fa052e4d 107-110,112-113
+web/tests/Catalog/SeedManualCatalogCommandTest.php
+  s_6df2cc515a46f1::t_7169e41a2c375f 178-251
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "648af98a03187fe2d2413b3ddea063c4ccb9f2b6",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_6df2cc515a46f1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "907293b2-2684-4cac-bda9-fddc2074641e",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
