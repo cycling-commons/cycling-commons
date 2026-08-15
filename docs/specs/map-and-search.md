@@ -806,59 +806,20 @@ the newest rung of that same ladder.
   the basemap to show nothing, and a rider landing on a blank page cannot tell
   whether the feature is broken or the layer is missing. The control disables
   with the layer and switches off with it.
-- **The BASE MAP's own road colours have a key too** (`#skeyBase`, a collapsed
-  `<details>` at the foot of the legend, 2026-08-15). Our key explains our
-  classes; the OpenFreeMap "liberty" palette underneath stays visible around and
-  under our lines, and nothing said what *those* colours meant, so a rider
-  studying surfaces was reading two colour systems with a key for one. Four
-  rows, read off the liberty style itself rather than guessed (checked
-  2026-08-15): `road_motorway` **#fc8**, `road_trunk_primary` +
-  `road_secondary_tertiary` **#fea**, `road_minor` + `road_service_track`
-  **#fff** over a **#cfcdca** casing, and `road_path_pedestrian` white with a
-  `[1, 0.7]` dash. Each row names the rider's word first and the OSM classes
-  beside it, and the block closes on the one thing that matters here: those
-  colours say how big a road is, never what it is made of.
-
-  **Every row carries the zoom its colour appears at, and this is the half the
-  first version got wrong** (owner 2026-08-15: "where can I find any of those
-  colors on the map, I mostly see very thin grey roads"). Liberty draws a road
-  as a grey **casing** (#cfcdca) first and fills the colour in much later: the
-  fill-width interpolations are `13.5 -> 0` for `road_minor` and `15.5 -> 0`
-  for `road_service_track`, and `road_path_pedestrian` has `minzoom: 14`. So
-  between roughly z12 and z14 a residential street genuinely has **no white in
-  it**, below z15 a track draws **nothing at all**, and the key was naming
-  colours the rider could not see. The palette was read off the style; the
-  widths should have been read with it. Three consequences:
-  - a `z5+` / `z7+` / `z14+` / `z16+` badge on each row, taken from those
-    breakpoints rather than picked to look tidy;
-  - a **sixth row for the bare casing** (`map.base_roads_outline`), drawn as a
-    2 px hairline rather than a road-width band, because it is the line the
-    rider is actually looking at at planning zoom;
-  - a **live line** (`#skeyBaseZoom`, `panels.js` `syncBaseZoomNote()`, bound
-    to `zoomend`) saying "and right now you are below that": below z14
-    `map.base_roads_zoom_low`, below z16 `map.base_roads_zoom_mid`, hidden
-    above. Same house pattern as the rail's zoom hint under the place count:
-    name the zoom, never let the map look broken.
-
-  Quiet streets and service roads/tracks are **two rows**, not one. They share
-  a colour, which was the original argument for merging them, but they do not
-  share a zoom, and the zoom is the half a rider is missing.
-  Rows are `.skey-brow`, **not** `.skey-row`: the surface rows are buttons that
-  filter the map and carry a tick to say so, and these can filter nothing.
-  Revealed by `panels.js` `syncStudyGate()` only while **the skin is on, Study
-  mode is off, and the base is Map**, since Study mode hides the basemap and
-  satellite replaces it, and a key for colours that are not on screen describes
-  a map the rider is not looking at.
-  **Open by default, with a drawn chevron** (2026-08-15). It shipped collapsed
-  and the owner's first report was that they could not see it at all, for two
-  compounding reasons: a block that only appears with the Surfaces skin on is
-  rare enough without also being shut, and `display:flex` on a `<summary>`
-  suppresses Chrome's disclosure triangle, so the closed row was styled exactly
-  like the panel's other section headings and read as a dead label rather than
-  a control. The chevron is drawn in CSS (`::before`, rotating on `[open]`)
-  because the native marker cannot survive the flex row the glyph alignment
-  needs. It stays a `<details>`, so closing it gives the map back: the panel is
-  574 px tall open and 407 px closed.
+- **A key for the BASE MAP's own road colours was built and removed the same
+  day (2026-08-15).** It explained liberty's importance-palette (motorway #fc8,
+  through-roads #fea, white-over-grey minors), grew zoom badges and a live
+  "you are below that zoom" line when it turned out those colours barely exist
+  at planning zoom - and was then withdrawn, because the diagnosis moved: the
+  problem is not that the base palette is unexplained, it is that THREE road
+  colour systems share one canvas (liberty's importance colours, the thin OSM
+  surface skin, the thick curated lines - the curated casing is 8 px at every
+  zoom over liberty's 2.5 px residential fill at z14, layer slot ~614 over
+  ~45-55, so ours buries theirs wherever we have data). The owner's direction,
+  recorded in docs/TODO.md ("Surfaces view: blank the base map's roads - one
+  colour system"), is to hide liberty's road linework while the skin is on and
+  offer a toggle to bring the full road system back; the key only makes sense
+  as part of that build, so it waits for it.
 - **`unverified` is labelled "Surface not recorded"**, not "unverified" — the
   class means OSM records no `surface` tag there, and riders are precisely who
   *verifies* things, so the old word claimed the opposite of what it meant

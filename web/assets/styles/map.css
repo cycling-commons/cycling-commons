@@ -140,51 +140,6 @@
      inert, so nobody presses it twice wondering why nothing happened. */
   .skey-study:disabled{opacity:.35;cursor:not-allowed}
   .skey-study[aria-pressed="true"]{background:var(--trail);border-color:var(--trail);color:var(--ink)}
-  /* The BASE MAP's road key (templates/map/index.html.twig, revealed by
-     panels.js syncStudyGate). Collapsed by default and visually quieter than
-     the surface key above it: it explains a map we do not draw, so it must
-     never compete with the one we do. `--scc` is the liberty casing colour,
-     drawn as a real border because that is how the basemap draws it. */
-  .skey-base{margin-top:.7rem;border-top:1px solid rgba(239,230,212,.14);padding-top:.6rem}
-  .skey-base[hidden]{display:none}
-  /* `display:flex` on a <summary> suppresses the disclosure triangle in
-     Chrome, and this summary is styled exactly like the panel's other section
-     headings - so collapsed, it read as a dead label and nobody could tell it
-     opened (owner 2026-08-15: "I do not see the new legends"). The chevron is
-     drawn here rather than left to the native marker, because the native one
-     is gone the moment the row is a flex container and the row has to be one
-     to align the glyph with the text. */
-  .skey-base>summary{font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;
-    color:var(--glacier);cursor:pointer;padding:.35rem .2rem;min-height:1.8rem;display:flex;align-items:center;
-    gap:.45rem;list-style:none}
-  .skey-base>summary::-webkit-details-marker{display:none}
-  .skey-base>summary::before{content:'';flex:none;width:.34rem;height:.34rem;
-    border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;
-    transform:rotate(-45deg);transition:transform .15s}
-  .skey-base[open]>summary::before{transform:rotate(45deg)}
-  .skey-base>summary:hover{color:var(--trail)}
-  .skey-base>summary:focus-visible{outline:2px solid var(--trail);outline-offset:1px;border-radius:4px}
-  .skey-brow{display:flex;align-items:center;gap:.7rem;font-size:.75rem;color:var(--paper);opacity:.85;line-height:1.3}
-  .skey-brow small{display:block;font-family:var(--mono);font-size:.55rem;letter-spacing:.05em;
-    color:var(--glacier);opacity:.8;margin-top:.1rem}
-  /* The zoom the colour appears at, set apart from the OSM class list beside
-     it: same line, because they answer one question together (what is this,
-     and when can I see it), but the number is the part a rider compares
-     against the map's own zoom badge. */
-  .skey-brow small b{margin-left:.45rem;padding:0 .25rem;border-radius:3px;font-weight:400;
-    background:rgba(239,230,212,.14);color:var(--paper);opacity:.9}
-  .skey-bln{width:34px;height:8px;border-radius:2px;flex:none;background:var(--sc);border:1px solid var(--scc)}
-  .skey-bln.bdash{background:repeating-linear-gradient(90deg,var(--sc) 0 5px,transparent 5px 8px);border-style:dashed}
-  /* The bare casing, drawn as what it is: a hairline, not a road-width band.
-     Showing it at the same 8px as the filled classes would be the same lie the
-     first version of this key told. */
-  .skey-bln.bthin{height:2px;border-radius:1px;border:none;background:var(--sc)}
-  /* Live "and right now you are below that" line (panels.js
-     syncBaseZoomNote). Trail-coloured because it is about the CURRENT view,
-     not a permanent property of the basemap like the note under it. */
-  .skey-base-zoom{margin:.6rem .2rem 0;font-size:.66rem;line-height:1.4;color:var(--trail)}
-  .skey-base-zoom[hidden]{display:none}
-  .skey-base-note{margin:.6rem .2rem 0;font-size:.66rem;line-height:1.4;color:var(--glacier);opacity:.85}
   .skey-ln{width:34px;height:4px;border-radius:2px;flex:none;background:var(--sc)}
   /* Gaps are TRANSPARENT, not white.
      They used to be painted #FBF4E4 to match the white casing the curated A

@@ -126,23 +126,6 @@ export function initLayerList(){
     // reads as broken. Hidden rather than disabled — with the skin off there
     // is nothing to explain.
     if(gapsBtn) gapsBtn.hidden=!surfaceTilesVisible();
-    /* The basemap road key (owner 2026-08-14). Three conditions, and all three
-       are the same one asked about different things: is the rider reading
-       liberty's road colours right now?
-         - the surface skin is on, which is when those colours start competing
-           with ours for the same lines;
-         - Study mode is off, because it strips the basemap out entirely and
-           solves the confusion the opposite way;
-         - the base is Map, not Satellite, which replaces the palette with
-           photographs.
-       A key for colours that are not on screen is worse than no key: it
-       describes a map the rider is not looking at. */
-    const baseKey=document.getElementById('skeyBase');
-    if(baseKey){
-      const sat=!!document.querySelector('.map-wrap.sat');
-      baseKey.hidden = !(surfaceTilesVisible() && !studyModeOn() && !sat);
-      if(!baseKey.hidden) syncBaseZoomNote();
-    }
   };
   if(gapsBtn){
     gapsBtn.onclick=()=>{
@@ -176,9 +159,6 @@ export function initLayerList(){
   // syncStudyGate() after the toggle, not before: Study mode hides the basemap,
   // so its own key has to leave with it.
   if(studyBtn) studyBtn.onclick=()=>{ studyBtn.setAttribute('aria-pressed', setStudyMode(!studyModeOn()) ? 'true' : 'false'); syncStudyGate(); };
-  // The base-map key's live line answers "why is it all grey RIGHT NOW", so it
-  // has to follow the camera, not only the controls.
-  map.on('zoomend', syncBaseZoomNote);
   syncStudyGate();
 
   document.querySelectorAll('#baseSeg button').forEach(b=>b.onclick=()=>{
@@ -579,34 +559,4 @@ export function initAddClimbHere(){
   };
   map.on('move', sync);
   sync();
-}
-
-/* Why the basemap is mostly thin grey lines right now.
-
-   The base-map key lists the colour of each road class, and the owner's first
-   question about it was the right one: "where can I find any of those colors on
-   the map, I mostly see very thin grey roads" (2026-08-15). They were not
-   missing anything. Liberty draws every road as a grey casing (#cfcdca) first
-   and fills the colour in at a much later zoom - the fill WIDTH interpolations
-   are 13.5 -> 0 for `road_minor` and 15.5 -> 0 for `road_service_track`, and
-   `road_path_pedestrian` has minzoom 14 - so between roughly z12 and z14 a
-   residential street genuinely has no white in it, and below z15 a track draws
-   nothing at all.
-
-   A static key cannot say "and right now you are below that", which is exactly
-   the sentence that was missing. This is the same answer the rail's zoom-hint
-   line gives for our own coverage layers: name the zoom, do not let the map
-   look broken.
-
-   Thresholds are the style's own breakpoints, not round numbers picked to look
-   tidy; if the basemap style changes, these move with it. */
-export function syncBaseZoomNote(){
-  const el=document.getElementById('skeyBaseZoom');
-  if(!el) return;
-  const z=map.getZoom();
-  const msg = z < 14 ? (I18N.baseRoadsZoomLow||'')
-    : z < 16 ? (I18N.baseRoadsZoomMid||'')
-    : '';
-  el.textContent=msg;
-  el.hidden=!msg;
 }

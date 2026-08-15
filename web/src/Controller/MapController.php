@@ -483,14 +483,6 @@ final class MapController extends AbstractController
             // The pending layer answers to the curator's areas, not the map
             // scope (render.js featureVisible), which reads as a leak.
             'pendingFollowsAreas' => $t->trans('map.pending_follows_areas'),
-            // Why the BASEMAP is mostly grey hairlines at planning zoom
-            // (panels.js syncBaseZoomNote). Liberty fills a road's colour in
-            // far later than it draws the road: residential at z13.5, service
-            // and track at z15.5, paths not at all below z14. The static key
-            // cannot say "and you are below that", which is the half a rider
-            // is missing.
-            'baseRoadsZoomLow' => $t->trans('map.base_roads_zoom_low'),
-            'baseRoadsZoomMid' => $t->trans('map.base_roads_zoom_mid'),
             'seasons' => [
                 'spring' => $t->trans('map.season_spring'),
                 'summer' => $t->trans('map.season_summer'),
