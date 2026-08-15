@@ -30,7 +30,10 @@ export const trVal = v => VALUE_TR[v] || v;
 // OpenStreetMap just because it happens to live in a bulk-OSM layer.
 const SOURCE_LABELS = {
   osm:'OpenStreetMap', pivot:'Tourisme Wallonie (CC-BY)', wikidata:'Wikidata',
-  auto:D.srcAuto||'Derived by the pipeline', user:D.srcRider||'Rider-contributed', manual:D.srcRider||'Rider-contributed',
+  // `manual` is a row WE seeded by hand (SeedManualCatalogCommand) — it stays
+  // in RIDER_SOURCES so it never falls back to an OSM citation, but the label
+  // must not claim a rider added it: nobody contributed the Furka Pass.
+  auto:D.srcAuto||'Derived by the pipeline', user:D.srcRider||'Rider-contributed', manual:D.srcManual||'Hand-curated',
   // Says HOW it arrived, never that anything was checked: the server never saw
   // the ride file (Dated/2026-08-09-scout-cc-tagger-plan.md §3). "Tagged while
   // riding" is the true and useful thing; "verified ride" would be neither.

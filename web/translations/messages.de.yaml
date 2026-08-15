@@ -1930,6 +1930,7 @@ map:
   d_community_report: 'Community-Meldung'
   d_report_photo: 'Dieses Foto melden'
   d_src_auto: 'Von der Pipeline abgeleitet'
+  d_src_manual: 'Von Hand kuratiert'
   d_src_rider: 'Von Fahrern beigetragen'
   d_src_scout: 'Unterwegs getaggt, mit Scout'
   d_source: 'Quelle'

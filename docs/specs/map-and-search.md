@@ -1057,6 +1057,20 @@ carries. The owner's own scenic addition therefore credited *OpenStreetMap
 fallback, on a place OSM had never heard of (reported 2026-08-14). Harvested and
 derived rows (`osm`/`pivot`/`wikidata`/`auto`) keep their real citation.
 
+**In the set is not the same as sharing the label.** `manual` is a row the
+project seeded by hand (`SeedManualCatalogCommand`); it belongs in
+`isRiderSource()` so it never falls back to an OSM citation, but until
+2026-08-16 it also borrowed `user`'s label, so the Furka Pass read *Source ·
+Rider-contributed* - a false claim, since no rider added it (owner-reported the
+night the CH climbs were recomputed). `manual` now has its own label,
+`d_src_manual` "Hand-curated", in five locales. Seeded rows join to no
+submission, so they carry no `by` key and never claim *shared anonymously*
+either; nothing needs assigning to a curator account for the line to be
+honest. `web/tests/js/source-labels.test.cjs` pins the whole chain: every
+`ItemSource` case has its own `SOURCE_LABELS` entry, `manual` reads
+`D.srcManual` and never `D.srcRider`, and the key exists in controller wiring
+and all five locale files.
+
 **The person IS the source; how it reached us is the line beneath.** The Source
 line reads *Source · XanderK*, the name itself being the profile link, with the
 provenance citation ("tagged while riding, with Scout") dropped to a quieter

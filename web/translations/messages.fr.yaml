@@ -1927,6 +1927,7 @@ map:
   d_community_report: 'Signalement de la communauté'
   d_report_photo: 'Signaler cette photo'
   d_src_auto: 'Dérivé par le pipeline'
+  d_src_manual: 'Sélectionné à la main'
   d_src_rider: 'Contribué par un cycliste'
   d_src_scout: 'Balisé en roulant, avec Scout'
   d_source: 'Source'

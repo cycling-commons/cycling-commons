@@ -2254,6 +2254,7 @@ map:
   d_community_report: 'Community report'
   d_report_photo: 'Report this photo'
   d_src_auto: 'Derived by the pipeline'
+  d_src_manual: 'Hand-curated'
   d_src_rider: 'Rider-contributed'
   d_src_scout: 'Tagged while riding, with Scout'
   d_source: 'Source'
