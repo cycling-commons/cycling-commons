@@ -31,6 +31,9 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  * before writing it is the normal way to run it (climb-elevation.md §7).
  *
  * @see docs/specs/climb-elevation.md §7
+ *
+ * @api Console entry point, wired by Symfony's DI - `@api` tells Psalm this is
+ *      live, not dead code.
  */
 #[AsCommand(name: 'app:climbs:recompute', description: 'Re-measure climb gradients from the elevation source')]
 final class RecomputeClimbProfilesCommand extends Command

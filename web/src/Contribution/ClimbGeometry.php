@@ -44,7 +44,7 @@ final class ClimbGeometry
     /**
      * @param array<string, mixed> $payload
      *
-     * @return array{route?: list<array{0:float,1:float}>, grad?: list<int|float>, steep?: array{at:array{0:float,1:float}, pct:string, manual:bool}}
+     * @return array{route?: list<array{0:float,1:float}>, grad?: list<int|float>, steep?: array{at:array{0:float,1:float}, pct:string, manual:bool}, steepPoint?: array{at:array{0:float,1:float}, pct:string, note:string}, avg?: string}
      */
     public static function fromPayload(array $payload): array
     {

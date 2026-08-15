@@ -149,6 +149,13 @@ final class ScoutTag
      * Narrowing (DETAIL_LETTERS) decides what is offered FIRST; it never decides
      * what is allowed. The rider is correcting their own tag, and a form that
      * refuses the correction is worse than one that guessed wrong to begin with.
+     *
+     * $type and $detail are deliberately part of the signature and deliberately
+     * unread: this is the intake contract ("may THIS tag refile to THAT
+     * letter?"), and today's rule happens not to vary by them. Callers must not
+     * have to know that.
+     *
+     * @psalm-suppress UnusedParam
      */
     public static function allows(string $type, string $letter, ?int $detail = null): bool
     {

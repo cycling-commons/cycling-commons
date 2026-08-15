@@ -65,9 +65,11 @@ final class ElevationClient
     /**
      * @param list<array{0: float, 1: float}> $coords [lat, lng] pairs
      *
-     * @return array{elevations: list<float>, source: string}|null null when
-     *                                                             elevation cannot be established -- the caller must show no profile
-     *                                                             rather than a guessed one (climb-elevation.md §2d)
+     * @return array{elevations: non-empty-list<float>, source: string}|null
+     *                                                                       null when elevation cannot be established -- the caller must show no
+     *                                                                       profile rather than a guessed one (climb-elevation.md §2d).
+     *                                                                       Non-empty is a real guarantee: [] input returns null, and a reply
+     *                                                                       is rejected unless its count matches the request's.
      */
     public function heights(array $coords): ?array
     {

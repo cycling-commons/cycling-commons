@@ -163,7 +163,7 @@ final class DashboardController extends AbstractDashboardController
     ): Response {
         /** @var User $actor */
         $actor = $this->getUser();
-        /** @var array<string, int|string> $values effective values, or the raw input when it failed validation */
+        // Effective values, or the raw input when it failed validation.
         $values = $settings->all();
         /** @var array<string, string> $errors key => message, rendered under the field */
         $errors = [];

@@ -1,7 +1,15 @@
 <?xml version="1.0"?>
 <!-- SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 -->
+<!--
+    strictBinaryOperands: Psalm 6 flipped this default to true, which flags
+    every int/float mix ("$total / $bins") as InvalidOperand - 53 findings at
+    once, all in the elevation/geometry math, none of them a bug: int+float
+    arithmetic is well-defined PHP and PHPStan (level max) accepts it. Casting
+    each site would be noise that hides the real findings. Deliberately off.
+-->
 <psalm
     errorLevel="4"
+    strictBinaryOperands="false"
     resolveFromConfigFile="true"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xmlns="https://getpsalm.org/schema/config"

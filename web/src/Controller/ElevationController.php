@@ -32,6 +32,9 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
  * Contributor-only: it is an editor tool, not public map data, and it costs an
  * upstream request per call. Rate limiting rides on the same login the
  * contribute flow already requires.
+ *
+ * @api Instantiated by Symfony's router - `@api` tells Psalm this is a live
+ *      entry point, not dead code.
  */
 final class ElevationController extends AbstractController
 {

@@ -472,7 +472,6 @@ final class ContributeController extends AbstractController
 
            Only the `now` side is overlaid: `was` is the item, which $current
            already carries. */
-        $openSubmission = null;
         if (null !== $item->getId() && $this->getUser() instanceof User) {
             /** @var User $rider */
             $rider = $this->getUser();

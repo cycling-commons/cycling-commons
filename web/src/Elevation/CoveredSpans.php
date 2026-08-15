@@ -103,7 +103,10 @@ final class CoveredSpans
 
         $cum = [0.0];
         for ($i = 1, $n = \count($shape); $i < $n; ++$i) {
-            $cum[$i] = $cum[$i - 1] + self::haversine($shape[$i - 1], $shape[$i]);
+            // Append rather than write $cum[$i]: same order, same values, but
+            // Psalm can keep treating $cum as a list instead of losing the
+            // shape at the first non-literal key.
+            $cum[] = $cum[$i - 1] + self::haversine($shape[$i - 1], $shape[$i]);
         }
         $total = $cum[\count($cum) - 1];
         if ($total <= 0.0) {

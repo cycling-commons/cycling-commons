@@ -58,7 +58,6 @@ final readonly class SubmissionChangeSummary
         $labels = $this->labels($submission->getLetter());
         $rows = [];
 
-        /** @var array<string, mixed> $changes */
         $changes = $submission->getChanges();
         foreach ($changes as $field => $pair) {
             if (!\is_array($pair)) {

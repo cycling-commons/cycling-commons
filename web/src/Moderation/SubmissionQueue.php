@@ -44,7 +44,7 @@ final class SubmissionQueue
     ) {
     }
 
-    /** @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,when:string,body:string,was:string,now:string,status:string,asked:?string,riderReply:?string,priorRejection:?array{when:string,note:?string},photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>}> */
+    /** @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,whoUuid:string,when:string,body:string,was:string,now:string,status:string,asked:?string,riderReply:?string,priorRejection:?array{when:string,note:?string},photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,shape:?array{before: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}, after: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}},changes:list<array{key:string,was:?string,now:string}>}> */
     public function filtered(ModerationScope $scope, ?string $country, ?string $region, ?string $type, ?string $q = null, int $page = 1, int $perPage = self::PER_PAGE, ?int $byUser = null): array
     {
         [$where, $params] = $this->openFilters($country, $region, $type, $q, $byUser);
@@ -138,7 +138,7 @@ final class SubmissionQueue
      * — the submission looked lost. The scope guard still applies, so a
      * curator cannot reach a submission outside their areas by guessing ids.
      *
-     * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,when:string,body:string,was:string,now:string,status:string,asked:?string,riderReply:?string,priorRejection:?array{when:string,note:?string},photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>}>
+     * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,whoUuid:string,when:string,body:string,was:string,now:string,status:string,asked:?string,riderReply:?string,priorRejection:?array{when:string,note:?string},photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,shape:?array{before: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}, after: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}},changes:list<array{key:string,was:?string,now:string}>}>
      */
     public function pendingForMap(ModerationScope $scope, ?int $focusId = null): array
     {
@@ -532,7 +532,7 @@ final class SubmissionQueue
      *                                     via $params, never interpolated
      * @param array<string, mixed> $params bound query parameters
      *
-     * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,when:string,body:string,was:string,now:string,status:string,asked:?string,riderReply:?string,priorRejection:?array{when:string,note:?string},photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>}>
+     * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,whoUuid:string,when:string,body:string,was:string,now:string,status:string,asked:?string,riderReply:?string,priorRejection:?array{when:string,note:?string},photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,shape:?array{before: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}, after: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}},changes:list<array{key:string,was:?string,now:string}>}>
      *
      * The returned row is a deliberate shared view-model: the SAME shape is
      * consumed by both moderate/index.html.twig AND map.js (as JSON). The
@@ -799,7 +799,7 @@ final class SubmissionQueue
      * route is dropped: there is nothing to draw, and an empty overlay reads as
      * "the climb has no line" rather than "this field was not touched".
      *
-     * @return array{before: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}}, after: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}}}|null
+     * @return array{before: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}, after: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}}|null
      */
     private static function shapeSides(string $changesJson): ?array
     {

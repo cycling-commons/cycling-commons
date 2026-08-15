@@ -167,7 +167,6 @@ final class CatalogProvider
      */
     public function versionTag(): string
     {
-        /** @var list<mixed> $row */
         $row = $this->db->fetchNumeric(
             'SELECT (SELECT count(*) FROM item),
                     (SELECT coalesce(max(updated_at)::text, \'\') FROM item),

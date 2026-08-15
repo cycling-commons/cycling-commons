@@ -26,6 +26,9 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  * `app:media:gc` — the decay promise in wiki/data-priority.md is only kept by
  * something that actually runs. Until a timer exists, the map read path sweeps
  * opportunistically at most once an hour.
+ *
+ * @api Console entry point, wired by Symfony's DI - `@api` tells Psalm this is
+ *      live, not dead code.
  */
 #[AsCommand(
     name: 'app:catalog:expire-closures',
@@ -38,11 +41,13 @@ final class ExpireClosuresCommand extends Command
         parent::__construct();
     }
 
+    #[\Override]
     protected function configure(): void
     {
         $this->addOption('write', null, InputOption::VALUE_NONE, 'Actually retire them (default is a dry run)');
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);

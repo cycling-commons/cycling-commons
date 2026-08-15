@@ -55,6 +55,7 @@ final class SystemSettings implements SettingsProviderInterface
     }
 
     /** The text half of the two typed accessors (SettingDefinition docblock). */
+    #[\Override]
     public function getString(string $key): string
     {
         $value = $this->effective($key);

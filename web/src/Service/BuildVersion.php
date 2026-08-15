@@ -51,6 +51,11 @@ final class BuildVersion
         ?callable $run = null,
     ) {
         $this->run = $run ?? static function (string $cmd): ?string {
+            /* Psalm flags every shell_exec as unsafe. This one runs only the
+               fixed `git log`/`git describe` strings composed in version()
+               below - no user input reaches it, and the test seam ($run)
+               exists precisely so tests never shell out. */
+            /** @psalm-suppress ForbiddenCode */
             $out = @shell_exec($cmd.' 2>/dev/null');
 
             return \is_string($out) && '' !== trim($out) ? trim($out) : null;

@@ -243,9 +243,9 @@ final class ClimbProfiler
      * subtracts — so summing raw deltas inflates the figure on exactly the
      * wooded climbs whose readings are least trustworthy.
      *
-     * @param list<array{0: float, 1: float}> $pts
-     * @param list<float>                     $elev
-     * @param list<float>                     $cum
+     * @param non-empty-list<array{0: float, 1: float}> $pts
+     * @param non-empty-list<float>                     $elev
+     * @param non-empty-list<float>                     $cum
      */
     private static function avgGradient(array $pts, array $elev, array $cum, float $total): float
     {
@@ -265,12 +265,12 @@ final class ClimbProfiler
     }
 
     /**
-     * @param list<array{0: float, 1: float}> $pts
-     * @param list<float>                     $elev
-     * @param list<float>                     $cum
-     * @param list<array{0: float, 1: float}> $skip covered [startM, endM] spans;
-     *                                              a window overlapping one is not a candidate, because over a
-     *                                              tunnel the DEM is reading the mountain and not the road
+     * @param non-empty-list<array{0: float, 1: float}> $pts
+     * @param non-empty-list<float>                     $elev
+     * @param non-empty-list<float>                     $cum
+     * @param list<array{0: float, 1: float}>           $skip covered [startM, endM] spans;
+     *                                                        a window overlapping one is not a candidate, because over a
+     *                                                        tunnel the DEM is reading the mountain and not the road
      *
      * @return array{g: float, at: array{0: float, 1: float}}
      */
@@ -313,7 +313,7 @@ final class ClimbProfiler
             // stretch we publish, not at the artifact we just discarded, or the
             // map disagrees with the number beside it.
             usort($seen, static fn (array $a, array $b): int => $a['g'] <=> $b['g']);
-            $pick = $seen[(int) min(\count($seen) - 1, (int) floor(\count($seen) * self::STEEPEST_PERCENTILE))];
+            $pick = $seen[min(\count($seen) - 1, (int) floor(\count($seen) * self::STEEPEST_PERCENTILE))];
             $best = $pick['g'];
             $at = $pick['at'];
         }
@@ -350,9 +350,9 @@ final class ClimbProfiler
      * Covering the full line also means a trailing descent is coloured as one
      * rather than inheriting the last climbing band.
      *
-     * @param list<array{0: float, 1: float}> $pts
-     * @param list<float>                     $elev
-     * @param list<float>                     $cum
+     * @param non-empty-list<array{0: float, 1: float}> $pts
+     * @param non-empty-list<float>                     $elev
+     * @param non-empty-list<float>                     $cum
      *
      * @return list<int>
      */
@@ -366,7 +366,7 @@ final class ClimbProfiler
             // and that quantisation is enough to under-read the peak: La
             // Redoute's darkest band came out 15% beside a marker reading 17%,
             // which is a whole colour step.
-            $out[] = (int) max(-35, min(35, (int) round(
+            $out[] = max(-35, min(35, (int) round(
                 self::sustainedAtDistance($pts, $elev, $cum, $span, $d + $step / 2),
             )));
         }
@@ -393,9 +393,9 @@ final class ClimbProfiler
     }
 
     /**
-     * @param list<array{0: float, 1: float}> $pts
-     * @param list<float>                     $elev
-     * @param list<float>                     $cum
+     * @param non-empty-list<array{0: float, 1: float}> $pts
+     * @param non-empty-list<float>                     $elev
+     * @param non-empty-list<float>                     $cum
      *
      * @return list<int>
      */
@@ -412,7 +412,7 @@ final class ClimbProfiler
             }
             $s = self::at($pts, $elev, $cum, $from)['elev'];
             $e = self::at($pts, $elev, $cum, $to)['elev'];
-            $out[] = (int) max(-35, min(35, (int) round((($e - $s) / $w) * 100)));
+            $out[] = max(-35, min(35, (int) round((($e - $s) / $w) * 100)));
         }
 
         return $out;
@@ -438,9 +438,9 @@ final class ClimbProfiler
      * So: read elevation at 200 points, but take each one's distance from the
      * full-resolution line it was sampled from.
      *
-     * @param list<array{0: float, 1: float}> $coords
+     * @param non-empty-list<array{0: float, 1: float}> $coords
      *
-     * @return array{pts: list<array{0: float, 1: float}>, cum: list<float>}
+     * @return array{pts: non-empty-list<array{0: float, 1: float}>, cum: non-empty-list<float>}
      */
     private static function sampleWithDistance(array $coords, int $max): array
     {
@@ -462,7 +462,7 @@ final class ClimbProfiler
     }
 
     /**
-     * @param list<array{0: float, 1: float}> $pts
+     * @param non-empty-list<array{0: float, 1: float}> $pts
      *
      * @return list<float>
      */
@@ -493,9 +493,9 @@ final class ClimbProfiler
     /**
      * Elevation and coordinate at a given along-route distance.
      *
-     * @param list<array{0: float, 1: float}> $pts
-     * @param list<float>                     $elev
-     * @param list<float>                     $cum
+     * @param non-empty-list<array{0: float, 1: float}> $pts
+     * @param non-empty-list<float>                     $elev
+     * @param non-empty-list<float>                     $cum
      *
      * @return array{elev: float, coord: array{0: float, 1: float}}
      */
@@ -533,10 +533,10 @@ final class ClimbProfiler
      * slices of the WHOLE climb, so extending a climb widens every bin and
      * averages a short ramp flat.
      *
-     * @param list<array{0: float, 1: float}> $pts
-     * @param list<float>                     $elev
-     * @param list<float>                     $cum
-     * @param array{0: float, 1: float}       $coord
+     * @param non-empty-list<array{0: float, 1: float}> $pts
+     * @param non-empty-list<float>                     $elev
+     * @param non-empty-list<float>                     $cum
+     * @param array{0: float, 1: float}                 $coord
      */
     private static function sustainedAt(array $pts, array $elev, array $cum, float $total, array $coord): float
     {
@@ -561,9 +561,9 @@ final class ClimbProfiler
      * what lets the line's colour bands be measured at their own centres rather
      * than at whichever sample happens to be nearest.
      *
-     * @param list<array{0: float, 1: float}> $pts
-     * @param list<float>                     $elev
-     * @param list<float>                     $cum
+     * @param non-empty-list<array{0: float, 1: float}> $pts
+     * @param non-empty-list<float>                     $elev
+     * @param non-empty-list<float>                     $cum
      */
     private static function sustainedAtDistance(array $pts, array $elev, array $cum, float $total, float $centre): float
     {

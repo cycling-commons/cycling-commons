@@ -105,7 +105,7 @@ final class ItemConfirmationController extends AbstractController
      * The public snapshot plus the stance kind ('potability' for water,
      * 'existence' for other utilities) — the shape both endpoints return.
      *
-     * @return array{stances: array<string, int>, total: int, mine: ?string, stanceKind: string}
+     * @return array{stances: array<string, int>, total: int, mine: ?string, mineSource: ?string, stanceKind: string}
      */
     private function payload(Item $item, ?User $user): array
     {
