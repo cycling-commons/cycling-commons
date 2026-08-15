@@ -105,6 +105,7 @@ final class DashboardController extends AbstractDashboardController
         yield MenuItem::linkToRoute(new TranslatableMessage('admin.menu.curator_applications'), 'fa fa-user-check', 'admin_curator_applications');
         yield MenuItem::linkToRoute(new TranslatableMessage('admin.menu.withheld_photos'), 'fa fa-image-slash', 'admin_withheld_photos');
         yield MenuItem::linkToRoute(new TranslatableMessage('admin.menu.moderator_areas'), 'fa fa-map-location-dot', 'admin_moderator_areas_overview');
+        yield MenuItem::linkToRoute(new TranslatableMessage('admin.menu.moderation_activity'), 'fa fa-chart-column', 'admin_moderation_activity');
         yield MenuItem::linkToRoute(new TranslatableMessage('admin.menu.escalated'), 'fa fa-shield-halved', 'admin_escalated');
     }
 
@@ -521,6 +522,34 @@ final class DashboardController extends AbstractDashboardController
         usort($rows, static fn (array $a, array $b): int => strcasecmp($a['user']->getDisplayName(), $b['user']->getDisplayName()));
 
         return $this->render('admin/moderator_areas_overview.html.twig', ['rows' => $rows]);
+    }
+
+    /**
+     * Moderation workload, per month × per REGION - deliberately never per
+     * moderator (owner 2026-08-13): the view exists to see how much work is
+     * being done and where, not to watch individuals; in a region with few
+     * moderators a per-moderator graph would be the same thing with extra
+     * steps. Moderators are told this view exists (the rulebook names it) -
+     * an openly-stated workload view is management, a quiet one is
+     * surveillance. Read-only.
+     */
+    #[AdminRoute('/moderation-activity', 'moderation_activity', options: ['methods' => ['GET']])]
+    public function moderationActivity(EntityManagerInterface $em): Response
+    {
+        $rows = $em->getConnection()->fetchAllAssociative(<<<'SQL'
+            SELECT to_char(date_trunc('month', s.decided_at), 'YYYY-MM') AS month,
+                   COALESCE(r.name, s.country_code, '?') AS region,
+                   COUNT(*) FILTER (WHERE s.status = 'approved') AS approved,
+                   COUNT(*) FILTER (WHERE s.status = 'rejected') AS rejected
+            FROM submission s
+            LEFT JOIN region r ON r.id = s.region_id
+            WHERE s.decided_at IS NOT NULL
+              AND s.decided_at >= date_trunc('month', NOW()) - INTERVAL '11 months'
+            GROUP BY 1, 2
+            ORDER BY 1 DESC, 2
+            SQL);
+
+        return $this->render('admin/moderation_activity.html.twig', ['rows' => $rows]);
     }
 
     #[AdminRoute('/escalated', 'escalated', options: ['methods' => ['GET', 'POST']])]

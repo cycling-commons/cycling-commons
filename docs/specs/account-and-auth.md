@@ -513,10 +513,27 @@ Mechanism when built: idempotent scheduled command; localized notices via
   is replaced by a hint; there is no preview of a non-existent page. Settings
   is the link's only home (deliberately removed from the profile dashboard).
 - **Shown** (allow-list): display name, country flag (if set), member-since
-  (month + year from `createdAt`), riding-preference chips, count of
-  **Approved** submissions, and up to **10** most recent **Verified** routes
+  (month + year from `createdAt`), riding-preference chips, the contribution
+  counters (below), and up to **10** most recent **Verified** routes
   by name, each deep-linked to the map via `?route=` (limit is the `findBy`
   third argument in `RiderProfileController::show()`).
+- **Contribution counters (built 2026-08-16, owner boundaries 2026-08-13).**
+  Four tiles: *Places added* (approved `type=new` submissions), *Edits
+  accepted* (approved `type=edit`), *Photos shared* (approved media whose
+  objects still exist - a granted takedown deletes them and a deleted photo
+  stops scoring), *On-the-spot checks* (all `item_confirmation` rows, every
+  stance merged into ONE counter because three counters invite gaming the
+  easiest; the seasonal waterpoint round joins this counter when it is
+  built). The boundaries are editorial: **approved work only** (a pending
+  counter is a spam incentive with a scoreboard), **votes stay private** (an
+  opinion is not a contribution), **moderation counts stay admin-only** - per
+  month x per REGION, never per moderator, on `/admin/moderation-activity`
+  (`DashboardController::moderationActivity()`), and the moderator rulebook
+  names that view because an openly-stated workload view is management and a
+  quiet one is surveillance. All four tiles render at zero: a visible zero
+  says what CAN be contributed. The headline "N accepted contributions" is
+  places + edits. Pinned by `RiderProfileTest::testCountersCountApprovedWorkOnly`
+  and `ModerationActivityPageTest`.
 - **Pending-route count spans both pre-Verified states** — `Submitted` +
   `Unverified` — but Submitted route **names never render** (un-vetted);
   rejected submissions never appear (not Approved). State machine:

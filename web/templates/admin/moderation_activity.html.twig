@@ -1,0 +1,40 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{#
+   Moderation workload per month × per REGION, last 12 months. Deliberately
+   never per moderator (owner 2026-08-13): this answers "how much work, and
+   where", not "who". The rulebook tells moderators the view exists.
+#}
+{% extends '@EasyAdmin/page/content.html.twig' %}
+
+{% block content_title %}{{ 'admin.menu.moderation_activity'|trans }}{% endblock %}
+
+{% block main %}
+  <div class="col-lg-9">
+    <p class="text-muted">{{ 'admin.modactivity.lead'|trans }}</p>
+
+    {% if rows is empty %}
+      <p class="text-muted">{{ 'admin.modactivity.empty'|trans }}</p>
+    {% else %}
+      <table class="table">
+        <thead>
+          <tr>
+            <th>{{ 'admin.modactivity.col_month'|trans }}</th>
+            <th>{{ 'admin.modactivity.col_region'|trans }}</th>
+            <th class="text-end">{{ 'admin.modactivity.col_approved'|trans }}</th>
+            <th class="text-end">{{ 'admin.modactivity.col_rejected'|trans }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+            <tr>
+              <td>{{ row.month }}</td>
+              <td>{{ row.region }}</td>
+              <td class="text-end">{{ row.approved }}</td>
+              <td class="text-end">{{ row.rejected }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% endif %}
+  </div>
+{% endblock %}

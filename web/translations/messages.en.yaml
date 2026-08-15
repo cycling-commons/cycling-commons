@@ -1426,6 +1426,11 @@ profile:
   public_contributions_one: '%count% accepted contribution'
   public_contributions_many: '%count% accepted contributions'
   public_preferences: 'Rides & bikes'
+  counters_h: 'Contributions'
+  counter_places: 'Places added'
+  counter_edits: 'Edits accepted'
+  counter_photos: 'Photos shared'
+  counter_checks: 'On-the-spot checks'
   public_routes: 'Routes'
   public_no_routes: 'No verified routes yet.'
   public_pending_one: '%count% proposed route awaiting verification'
@@ -3093,6 +3098,7 @@ admin:
     withheld_photos: 'Withheld photos'
     escalated: 'Escalated (held)'
     moderator_areas: 'Moderator areas'
+    moderation_activity: 'Moderation activity'
   action:
     unlock: 'Unlock account'
     disarm_2fa: 'Disarm 2FA'
@@ -3134,6 +3140,13 @@ admin:
     settings_unchanged: 'Nothing changed.'
     settings_reset: 'Setting reset to its default.'
     settings_invalid: 'Nothing was saved — check the values marked below.'
+  modactivity:
+    lead: 'Decided submissions per month and per region, last 12 months. Deliberately per region, never per moderator: this view answers how much work is being done and where, not who does it. The moderator rulebook says this view exists.'
+    empty: 'Nothing decided in the last 12 months.'
+    col_month: 'Month'
+    col_region: 'Region'
+    col_approved: 'Approved'
+    col_rejected: 'Rejected'
   areas:
     overview_lead: 'Which curator covers which regions. Assigning is onboarding playbook step 7.'
     overview_empty: 'No curators or admins yet.'

@@ -5,10 +5,18 @@
 namespace App\Tests\Controller;
 
 use App\Catalog\BikeType;
+use App\Catalog\ConfirmationStance;
+use App\Catalog\Entity\ItemConfirmation;
 use App\Catalog\Entity\RecommendedRoute;
+use App\Catalog\Entity\Submission;
 use App\Catalog\ItemSource;
 use App\Catalog\ItemState;
+use App\Catalog\SubmissionStatus;
+use App\Catalog\SubmissionType;
 use App\Entity\User;
+use App\Media\Entity\ConsentRecord;
+use App\Media\Entity\MediaUpload;
+use App\Media\MediaConsent;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -143,6 +151,85 @@ final class RiderProfileTest extends WebTestCase
         self::assertStringNotContainsString('Secret Unverified Loop', $html, 'not-yet-verified route names must never render');
         self::assertStringContainsString('Vetted Condroz Classic', $html, 'verified routes render by name');
         self::assertStringContainsString('?route='.$verified->getId(), $html, 'verified route links to the map');
+    }
+
+    /**
+     * The contribution counters count APPROVED work only (owner 2026-08-13):
+     * a counter of pending submissions is a spam incentive with a scoreboard.
+     * Checks merge every verify-reality act into one number, photos with
+     * deleted objects (granted takedown) stop scoring, and all four tiles
+     * render even at zero.
+     */
+    public function testCountersCountApprovedWorkOnly(): void
+    {
+        $client = static::createClient();
+        $user = $this->makeUser('counting-rider@example.com', 'Counting Rider', true);
+        $uid = (int) $user->getId();
+        /** @var EntityManagerInterface $em */
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+
+        $mk = static function (SubmissionType $type, SubmissionStatus $status, int $uid): Submission {
+            return (new Submission())->setType($type)->setLetter('C')->setUserId($uid)
+                ->setStatus($status)->setTitle('row')
+                ->setGeom('{"type":"Point","coordinates":[6.0,50.4]}')->setCountryCode('BE')
+                ->setChanges([])->setPayload([]);
+        };
+        $em->persist($mk(SubmissionType::NewItem, SubmissionStatus::Approved, $uid));
+        $em->persist($mk(SubmissionType::NewItem, SubmissionStatus::Approved, $uid));
+        $em->persist($mk(SubmissionType::Edit, SubmissionStatus::Approved, $uid));
+        $em->persist($mk(SubmissionType::NewItem, SubmissionStatus::Pending, $uid));   // never scores
+        $em->persist($mk(SubmissionType::Edit, SubmissionStatus::Rejected, $uid));     // never scores
+        $em->flush();
+
+        // A live approved photo scores; one whose objects a granted takedown
+        // deleted does not; a pending one does not.
+        $consent = new ConsentRecord(Uuid::v4(), $uid, MediaConsent::KIND, MediaConsent::VERSION, MediaConsent::hash('x'));
+        $em->persist($consent);
+        $live = new MediaUpload(Uuid::v4(), $uid, $consent->getId(), 'EU', 1200, 900, 4242);
+        $live->approve(null);
+        $em->persist($live);
+        $gone = new MediaUpload(Uuid::v4(), $uid, $consent->getId(), 'EU', 1200, 900, 4242);
+        $gone->approve(null);
+        $gone->markObjectsDeleted();
+        $em->persist($gone);
+        $em->persist(new MediaUpload(Uuid::v4(), $uid, $consent->getId(), 'EU', 1200, 900, 4242));
+        $em->flush();
+
+        // Two checks, two items (one confirmation per item and rider), one
+        // per stance: both stances are the same verify-reality activity and
+        // must land in the SAME counter.
+        $mkItem = static fn (string $ref): int => (int) $em->getConnection()->fetchOne(
+            "INSERT INTO item (letter, name, geom, country_code, state, source, source_ref, attributes, created_at, updated_at, imported_at)
+             VALUES ('C', 'Counter Tap', ST_SetSRID(ST_MakePoint(6.0, 50.4), 4326), 'BE', 'unverified', 'osm', :ref, '{}', NOW(), NOW(), NOW())
+             RETURNING id",
+            ['ref' => $ref],
+        );
+        $em->persist(new ItemConfirmation($mkItem('osm:node:990001'), $uid, ConfirmationStance::Exists));
+        $em->persist(new ItemConfirmation($mkItem('osm:node:990002'), $uid, ConfirmationStance::Potable));
+        $em->flush();
+
+        $client->request('GET', '/riders/'.$user->getUuid());
+
+        self::assertResponseIsSuccessful();
+        $html = (string) $client->getResponse()->getContent();
+        self::assertMatchesRegularExpression('/<span class="rp-stat-n">2<\/span><span class="rp-stat-l">Places added<\/span>/', $html);
+        self::assertMatchesRegularExpression('/<span class="rp-stat-n">1<\/span><span class="rp-stat-l">Edits accepted<\/span>/', $html);
+        self::assertMatchesRegularExpression('/<span class="rp-stat-n">1<\/span><span class="rp-stat-l">Photos shared<\/span>/', $html);
+        self::assertMatchesRegularExpression('/<span class="rp-stat-n">2<\/span><span class="rp-stat-l">On-the-spot checks<\/span>/', $html);
+        self::assertStringContainsString('3 accepted contributions', $html, 'the headline total is places + edits, approved only');
+    }
+
+    public function testCountersRenderAtZero(): void
+    {
+        $client = static::createClient();
+        $user = $this->makeUser('zero-rider@example.com', 'Zero Rider', true);
+
+        $client->request('GET', '/riders/'.$user->getUuid());
+
+        self::assertResponseIsSuccessful();
+        $html = (string) $client->getResponse()->getContent();
+        self::assertStringContainsString('Places added', $html, 'a visible zero says what CAN be contributed');
+        self::assertStringContainsString('On-the-spot checks', $html);
     }
 
     public function testLocalizedPathWorks(): void

@@ -5,9 +5,7 @@
 namespace App\Controller;
 
 use App\Catalog\Entity\RecommendedRoute;
-use App\Catalog\Entity\Submission;
 use App\Catalog\ItemState;
-use App\Catalog\SubmissionStatus;
 use App\Entity\User;
 use App\Routing\LocalePrefix;
 use Doctrine\ORM\EntityManagerInterface;
@@ -35,12 +33,38 @@ final class RiderProfileController extends AbstractController
             throw $this->createNotFoundException('No public profile.');
         }
 
-        $contribCount = (int) $em->createQueryBuilder()
-            ->select('COUNT(s.id)')->from(Submission::class, 's')
-            ->where('s.userId = :uid')->andWhere('s.status = :st')
-            ->setParameter('uid', (int) $rider->getId())
-            ->setParameter('st', SubmissionStatus::Approved)
-            ->getQuery()->getSingleScalarResult();
+        /* The counter boundaries are editorial and deliberate (docs/TODO.md,
+           owner 2026-08-13): count APPROVED work only - a counter of pending
+           submissions is a spam incentive with a scoreboard; votes stay
+           private (an opinion is not a contribution); moderation counts stay
+           admin-only. "Checks" merges every verify-reality act (confirmations
+           of any stance) into ONE counter, because three separate ones invite
+           gaming the easiest. */
+        $db = $em->getConnection();
+        /** @var array<string, int> $byType */
+        $byType = [];
+        foreach ($db->fetchAllAssociative(
+            "SELECT type, COUNT(*) AS n FROM submission WHERE user_id = :uid AND status = 'approved' GROUP BY type",
+            ['uid' => (int) $rider->getId()],
+        ) as $row) {
+            $byType[(string) $row['type']] = (int) $row['n'];
+        }
+        $counters = [
+            'places' => $byType['new'] ?? 0,
+            'edits' => $byType['edit'] ?? 0,
+            // Photos still standing: a granted takedown deletes the objects
+            // (objects_deleted_at), and a deleted photo is not a contribution
+            // a profile should keep scoring.
+            'photos' => (int) $db->fetchOne(
+                "SELECT COUNT(*) FROM media_upload WHERE user_id = :uid AND status = 'approved' AND objects_deleted_at IS NULL",
+                ['uid' => (int) $rider->getId()],
+            ),
+            'checks' => (int) $db->fetchOne(
+                'SELECT COUNT(*) FROM item_confirmation WHERE user_id = :uid',
+                ['uid' => (int) $rider->getId()],
+            ),
+        ];
+        $contribCount = $counters['places'] + $counters['edits'];
 
         // Verified routes are shown by name; anything not yet fully verified
         // only as a count (spec: never leak un-vetted route names on a public
@@ -65,6 +89,7 @@ final class RiderProfileController extends AbstractController
             'nav_active' => '',
             'rider' => $rider,
             'contrib_count' => $contribCount,
+            'counters' => $counters,
             'routes' => $routes,
             'pending_count' => $pendingCount,
         ]);

@@ -13,6 +13,10 @@
   .rp-chip{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;padding:.35rem .75rem;border:1px solid rgba(20,22,14,.25);border-radius:30px}
   .rp-routes li{margin:.35rem 0}
   .rp-empty{font-size:.9rem;color:#595c4d}
+  .rp-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(8.5rem,1fr));gap:.6rem}
+  .rp-stat{border:1px solid rgba(20,22,14,.14);border-radius:8px;padding:.7rem .8rem}
+  .rp-stat-n{display:block;font-family:var(--serif);font-size:1.6rem;font-weight:600;line-height:1.1}
+  .rp-stat-l{font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:#5a5d4d}
 </style>
 {% endblock %}
 
@@ -33,6 +37,17 @@
       {% for rs in rider.ridingStyles %}<span class="rp-chip">{{ ('form.riding_' ~ rs.value|lower)|trans }}</span>{% endfor %}
     </div>
   {% endif %}
+
+  {# Approved work only, deliberately (owner 2026-08-13): pending submissions
+     never score, votes stay private, moderation counts stay admin-only. All
+     four render even at zero - a visible zero says what CAN be contributed. #}
+  <h2 class="rp-sec">{{ 'profile.counters_h'|trans }}</h2>
+  <div class="rp-stats">
+    <div class="rp-stat"><span class="rp-stat-n">{{ counters.places }}</span><span class="rp-stat-l">{{ 'profile.counter_places'|trans }}</span></div>
+    <div class="rp-stat"><span class="rp-stat-n">{{ counters.edits }}</span><span class="rp-stat-l">{{ 'profile.counter_edits'|trans }}</span></div>
+    <div class="rp-stat"><span class="rp-stat-n">{{ counters.photos }}</span><span class="rp-stat-l">{{ 'profile.counter_photos'|trans }}</span></div>
+    <div class="rp-stat"><span class="rp-stat-n">{{ counters.checks }}</span><span class="rp-stat-l">{{ 'profile.counter_checks'|trans }}</span></div>
+  </div>
 
   <h2 class="rp-sec">{{ 'profile.public_routes'|trans }}</h2>
   {% if routes is not empty %}

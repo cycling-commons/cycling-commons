@@ -1422,6 +1422,11 @@ profile:
   public_contributions_one: '%count% geaccepteerde bijdrage'
   public_contributions_many: '%count% geaccepteerde bijdragen'
   public_preferences: 'Ritten & fietsen'
+  counters_h: 'Bijdragen'
+  counter_places: 'Plekken toegevoegd'
+  counter_edits: 'Bewerkingen aanvaard'
+  counter_photos: 'Foto''s gedeeld'
+  counter_checks: 'Controles ter plaatse'
   public_routes: 'Routes'
   public_no_routes: 'Nog geen geverifieerde routes.'
   public_pending_one: '%count% voorgestelde route wacht op verificatie'
@@ -3067,6 +3072,7 @@ admin:
     withheld_photos: 'Offline gehouden foto''s'
     escalated: 'Geëscaleerd (vast)'
     moderator_areas: 'Moderatiegebieden'
+    moderation_activity: 'Moderatieactiviteit'
   action:
     unlock: 'Account ontgrendelen'
     disarm_2fa: '2FA uitschakelen'
@@ -3108,6 +3114,13 @@ admin:
     settings_unchanged: 'Er is niets gewijzigd.'
     settings_reset: 'Instelling teruggezet op de standaardwaarde.'
     settings_invalid: 'Er is niets opgeslagen — controleer de hieronder gemarkeerde waarden.'
+  modactivity:
+    lead: 'Besliste inzendingen per maand en per regio, laatste 12 maanden. Bewust per regio, nooit per moderator: deze weergave beantwoordt hoeveel werk er wordt gedaan en waar, niet wie het doet. Het moderatorenreglement vermeldt dat deze weergave bestaat.'
+    empty: 'Niets beslist in de laatste 12 maanden.'
+    col_month: 'Maand'
+    col_region: 'Regio'
+    col_approved: 'Goedgekeurd'
+    col_rejected: 'Afgewezen'
   areas:
     overview_lead: 'Welke curator welke regio''s dekt. Toewijzen is stap 7 van het onboarding-playbook.'
     overview_empty: 'Nog geen curatoren of beheerders.'

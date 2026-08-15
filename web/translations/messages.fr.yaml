@@ -1422,6 +1422,11 @@ profile:
   public_contributions_one: '%count% contribution acceptée'
   public_contributions_many: '%count% contributions acceptées'
   public_preferences: 'Pratique & vélos'
+  counters_h: 'Contributions'
+  counter_places: 'Lieux ajoutés'
+  counter_edits: 'Modifications acceptées'
+  counter_photos: 'Photos partagées'
+  counter_checks: 'Vérifications sur place'
   public_routes: 'Itinéraires'
   public_no_routes: 'Pas encore d''itinéraire vérifié.'
   public_pending_one: '%count% itinéraire proposé en attente de vérification'
@@ -3067,6 +3072,7 @@ admin:
     withheld_photos: 'Photos retenues'
     escalated: 'Escaladés (bloqués)'
     moderator_areas: 'Zones de modération'
+    moderation_activity: 'Activité de modération'
   action:
     unlock: 'Déverrouiller le compte'
     disarm_2fa: 'Désactiver la 2FA'
@@ -3108,6 +3114,13 @@ admin:
     settings_unchanged: 'Aucun changement.'
     settings_reset: 'Réglage remis à sa valeur par défaut.'
     settings_invalid: 'Rien n’a été enregistré — vérifiez les valeurs signalées ci-dessous.'
+  modactivity:
+    lead: "Contributions tranchées par mois et par région, sur les 12 derniers mois. Par région, jamais par modérateur, à dessein : cette vue répond à la question du volume de travail et de sa localisation, pas de qui le fait. Le guide des modérateurs mentionne son existence."
+    empty: 'Rien de tranché sur les 12 derniers mois.'
+    col_month: 'Mois'
+    col_region: 'Région'
+    col_approved: 'Approuvées'
+    col_rejected: 'Refusées'
   areas:
     overview_lead: 'Quel curateur couvre quelles régions. L''attribution est l''étape 7 du playbook d''intégration.'
     overview_empty: 'Pas encore de curateurs ni d''administrateurs.'

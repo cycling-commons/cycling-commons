@@ -1428,6 +1428,11 @@ profile:
   public_contributions_one: '%count% aportación aceptada'
   public_contributions_many: '%count% aportaciones aceptadas'
   public_preferences: 'Salidas y bicis'
+  counters_h: 'Contribuciones'
+  counter_places: 'Lugares añadidos'
+  counter_edits: 'Ediciones aceptadas'
+  counter_photos: 'Fotos compartidas'
+  counter_checks: 'Comprobaciones sobre el terreno'
   public_routes: 'Rutas'
   public_no_routes: 'Todavía no hay rutas verificadas.'
   public_pending_one: '%count% ruta propuesta a la espera de verificación'
@@ -3108,6 +3113,7 @@ admin:
     withheld_photos: 'Fotos ocultas'
     escalated: 'Escaladas (retenidas)'
     moderator_areas: 'Áreas de moderación'
+    moderation_activity: 'Actividad de moderación'
   action:
     unlock: 'Desbloquear la cuenta'
     disarm_2fa: 'Desarmar la 2FA'
@@ -3149,6 +3155,13 @@ admin:
     settings_unchanged: 'No ha cambiado nada.'
     settings_reset: 'Ajuste devuelto a su valor por defecto.'
     settings_invalid: 'No se ha guardado nada — revisa los valores marcados abajo.'
+  modactivity:
+    lead: 'Contribuciones decididas por mes y por región, últimos 12 meses. Por región y nunca por moderador, a propósito: esta vista responde cuánto trabajo se hace y dónde, no quién lo hace. El reglamento de moderación menciona que esta vista existe.'
+    empty: 'Nada decidido en los últimos 12 meses.'
+    col_month: 'Mes'
+    col_region: 'Región'
+    col_approved: 'Aprobadas'
+    col_rejected: 'Rechazadas'
   areas:
     overview_lead: 'Qué curador cubre qué regiones. Asignarlas es el paso 7 del manual de incorporación.'
     overview_empty: 'Aún no hay curadores ni administradores.'

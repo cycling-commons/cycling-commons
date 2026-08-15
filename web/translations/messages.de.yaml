@@ -1422,6 +1422,11 @@ profile:
   public_contributions_one: '%count% angenommener Beitrag'
   public_contributions_many: '%count% angenommene Beiträge'
   public_preferences: 'Fahrten & Räder'
+  counters_h: 'Beiträge'
+  counter_places: 'Orte hinzugefügt'
+  counter_edits: 'Änderungen angenommen'
+  counter_photos: 'Fotos geteilt'
+  counter_checks: 'Kontrollen vor Ort'
   public_routes: 'Routen'
   public_no_routes: 'Noch keine verifizierten Routen.'
   public_pending_one: '%count% vorgeschlagene Route wartet auf Verifizierung'
@@ -3070,6 +3075,7 @@ admin:
     withheld_photos: 'Zurückgehaltene Fotos'
     escalated: 'Eskaliert (gesperrt)'
     moderator_areas: 'Moderationsgebiete'
+    moderation_activity: 'Moderationsaktivität'
   action:
     unlock: 'Konto entsperren'
     disarm_2fa: '2FA deaktivieren'
@@ -3111,6 +3117,13 @@ admin:
     settings_unchanged: 'Nichts geändert.'
     settings_reset: 'Einstellung auf den Standardwert zurückgesetzt.'
     settings_invalid: 'Es wurde nichts gespeichert — prüfen Sie die unten markierten Werte.'
+  modactivity:
+    lead: 'Entschiedene Einreichungen pro Monat und Region, letzte 12 Monate. Bewusst pro Region, nie pro Moderator: diese Ansicht beantwortet, wie viel Arbeit anfällt und wo, nicht wer sie macht. Das Moderations-Regelwerk nennt diese Ansicht.'
+    empty: 'Nichts entschieden in den letzten 12 Monaten.'
+    col_month: 'Monat'
+    col_region: 'Region'
+    col_approved: 'Angenommen'
+    col_rejected: 'Abgelehnt'
   areas:
     overview_lead: 'Welcher Kurator welche Regionen abdeckt. Das Zuweisen ist Schritt 7 des Onboarding-Playbooks.'
     overview_empty: 'Noch keine Kuratoren oder Admins.'
