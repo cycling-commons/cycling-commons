@@ -413,7 +413,7 @@
      chip-orange action. */
   .cc-area-nudge{position:absolute;top:1.2rem;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:.55rem;background:var(--ink);color:var(--paper);padding:.4rem .5rem .4rem .85rem;border-radius:30px;box-shadow:0 10px 28px -10px rgba(0,0,0,.55);z-index:1100;max-width:92vw}
   .cc-area-nudge[hidden]{display:none}
-  /* The out-of-scope arm interpolates a region name ("Nothing here in
+  /* The out-of-scope arm interpolates a region name ("Only showing
      Baden-Wurttemberg"), which is far longer than the fixed My-area line the
      pill was built for, so it has to be allowed to wrap rather than push its
      own button off the edge. */

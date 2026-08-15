@@ -2077,7 +2077,7 @@ map:
   my_area_set: 'Mi zona guardada'
   my_area_set_anon: 'Mi zona fijada en este dispositivo'
   outside_area: 'Fuera de tu zona'
-  scope_miss: 'Aquí no hay nada en {area}'
+  scope_miss: 'Solo se muestra {area}'
   scope_miss_go: 'Mostrar {area}'
   add_climb_heading: 'Añadir un puerto'
   add_climb_here: 'Añadir un puerto aquí'

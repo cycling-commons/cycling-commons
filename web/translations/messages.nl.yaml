@@ -1741,7 +1741,7 @@ map:
   my_area_set: 'Mijn gebied opgeslagen'
   my_area_set_anon: 'Mijn gebied ingesteld op dit apparaat'
   outside_area: 'Buiten je gebied'
-  scope_miss: 'Hier niets in {area}'
+  scope_miss: 'Alleen {area} wordt getoond'
   scope_miss_go: '{area} tonen'
   add_climb_heading: 'Klim toevoegen'
   add_climb_here: 'Voeg hier een klim toe'

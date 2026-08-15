@@ -572,13 +572,19 @@ the newest rung of that same ladder.
     widen action to the **next** rung (`CCScope.widen()`).
   - **Named scope (region/country):** when the viewport bbox stops
     **intersecting** `CCScope.bbox()` at all, the chip reads
-    `map.scope_miss` ("Nothing here in {area}") with a one-tap
+    `map.scope_miss` ("Only showing {area}") with a one-tap
     `map.scope_miss_go` ("Show {area}", filled with the Everywhere label) that
-    calls `CCScope.setEverywhere()`. Intersection, **not** "is the centre
-    outside": if the two boxes do not overlap then nothing in scope can be on
-    screen, which is exactly the claim the message makes; a centre test would
-    fire with half the scope still visible and stay silent in a bbox corner
-    with no data near it. Everywhere cannot miss, so it is excluded; myArea has
+    calls `CCScope.setEverywhere()`.
+    **The message names the filter, not the place** (owner 2026-08-15). It
+    first read "Nothing here in Free State", which is a claim about the
+    *region* and a false one: the map is blank because the scope is drawing one
+    region, not because the region the rider is looking at holds nothing. Say
+    what the map is doing; that is both true and the thing the rider can act
+    on.
+    Intersection, **not** "is the centre outside": if the two boxes do not
+    overlap then nothing in scope can be on screen, which is the condition the
+    chip is answering; a centre test would fire with half the scope still
+    visible and stay silent in a bbox corner with no data near it. Everywhere cannot miss, so it is excluded; myArea has
     its own arm above. Evaluated on `moveend` **and** once on `idle`, because a
     deep link can land outside the saved scope with no move ever happening.
     Antimeridian: bboxes are unnormalized `[w,s,e,n]`, so a viewport straddling

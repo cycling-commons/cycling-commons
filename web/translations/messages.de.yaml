@@ -1744,7 +1744,7 @@ map:
   my_area_set: 'Mein Gebiet gespeichert'
   my_area_set_anon: 'Mein Gebiet auf diesem Gerät festgelegt'
   outside_area: 'Außerhalb deines Gebiets'
-  scope_miss: 'Hier nichts in {area}'
+  scope_miss: 'Es wird nur {area} angezeigt'
   scope_miss_go: '{area} anzeigen'
   add_climb_heading: 'Anstieg hinzufügen'
   add_climb_here: 'Hier einen Anstieg hinzufügen'

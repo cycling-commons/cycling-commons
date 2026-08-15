@@ -359,7 +359,12 @@ export function initAreaNudge(){
       if(dismissed) return;
       const ev=I18N.everywhereLabel||'Everywhere';   // the rail's own word for the top rung
       show(
-        tpl(I18N.scopeMiss||'Nothing here in {area}', {area:scopeLabel(s)}),
+        /* "Only showing {area}", not "Nothing here in {area}" (owner
+           2026-08-15). The second is a claim about the PLACE and it is false:
+           the map is blank because the scope is drawing one region, not
+           because the region the rider is looking at is empty. Naming the
+           filter is both true and the thing they can act on. */
+        tpl(I18N.scopeMiss||'Only showing {area}', {area:scopeLabel(s)}),
         tpl(I18N.scopeMissGo||'Show {area}', {area:ev}),
         ()=>window.CCScope.setEverywhere()
       );

@@ -2065,7 +2065,7 @@ map:
   my_area_set: 'My area saved'
   my_area_set_anon: 'My area set on this device'
   outside_area: 'Outside your area'
-  scope_miss: 'Nothing here in {area}'
+  scope_miss: 'Only showing {area}'
   scope_miss_go: 'Show {area}'
   add_climb_heading: 'Add a climb'
   add_climb_here: 'Add a climb here'

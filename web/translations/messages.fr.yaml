@@ -1741,7 +1741,7 @@ map:
   my_area_set: 'Ma zone est enregistrée'
   my_area_set_anon: 'Ma zone est définie sur cet appareil'
   outside_area: 'Hors de votre zone'
-  scope_miss: 'Rien ici dans {area}'
+  scope_miss: 'Affichage limité à {area}'
   scope_miss_go: 'Afficher {area}'
   add_climb_heading: 'Ajouter un col'
   add_climb_here: 'Ajouter un col ici'
