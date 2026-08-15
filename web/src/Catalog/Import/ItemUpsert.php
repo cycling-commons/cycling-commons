@@ -17,6 +17,10 @@ namespace App\Catalog\Import;
  * (ModerationService::applyEdit) - keeps its DB content and only refreshes
  * imported_at, so a re-run never clobbers a moderation-approved edit.
  *
+ * For climbs (letter B) with an unchanged `route` line, the recompute-owned
+ * measurement keys ({@see self::MEASURED_KEYS}) survive the attribute
+ * replacement in BOTH statements - see the const docblock for why.
+ *
  * Bind: letter, name, geom (GeoJSON string), cc, sub, state, source, ref, attrs.
  *
  * @see docs/specs/catalog-data-model.md §3
@@ -25,6 +29,28 @@ namespace App\Catalog\Import;
  */
 final class ItemUpsert
 {
+    /**
+     * Attribute keys OWNED by `app:climbs:recompute --write`, never by a seed
+     * definition. The seeds deliberately type no numbers (the Wallonia pins
+     * shipped hand-authored gradients that turned out wrong), so on a re-seed
+     * these keys are carried over from the existing row instead of being
+     * wiped with the rest of the attributes JSON - a re-seed on 2026-08-09
+     * silently unmeasured four of the six Swiss passes this way, twice.
+     *
+     * Carried over ONLY while the seeded `route` line is byte-identical: a
+     * measurement is a claim about one specific line, and keeping it across a
+     * redraw is the Roche-aux-Faucons failure (numbers from a line that moved).
+     * A changed line drops them, and the seed command warns which climbs are
+     * left unmeasured so the recompute is never forgotten silently.
+     *
+     * MeasuredKeysTest pins this list against what the recompute actually
+     * writes, and against both SQL constants below.
+     */
+    public const array MEASURED_KEYS = [
+        'length', 'gain', 'footEle', 'summitEle', 'avgGradient', 'maxGradient',
+        'grad', 'lineGrad', 'demSource', 'binM', 'steepWindowM', 'steep',
+    ];
+
     public const string SQL = <<<'SQL'
         INSERT INTO item (letter, name, geom, country_code, subdivision_id, state, source, source_ref, attributes, created_at, updated_at, imported_at)
         VALUES (:letter, :name, ST_SetSRID(ST_GeomFromGeoJSON(:geom), 4326), :cc, :sub, :state, :source, :ref, :attrs, NOW(), NOW(), NOW())
@@ -33,7 +59,15 @@ final class ItemUpsert
           geom = CASE WHEN EXISTS (SELECT 1 FROM change_history ch WHERE ch.item_id = item.id) THEN item.geom ELSE EXCLUDED.geom END,
           country_code = CASE WHEN EXISTS (SELECT 1 FROM change_history ch WHERE ch.item_id = item.id) THEN item.country_code ELSE EXCLUDED.country_code END,
           subdivision_id = CASE WHEN EXISTS (SELECT 1 FROM change_history ch WHERE ch.item_id = item.id) THEN item.subdivision_id ELSE EXCLUDED.subdivision_id END,
-          attributes = CASE WHEN EXISTS (SELECT 1 FROM change_history ch WHERE ch.item_id = item.id) THEN item.attributes ELSE EXCLUDED.attributes END,
+          attributes = CASE WHEN EXISTS (SELECT 1 FROM change_history ch WHERE ch.item_id = item.id) THEN item.attributes
+                            ELSE EXCLUDED.attributes || CASE
+                              WHEN item.letter = 'B' AND item.attributes -> 'route' = EXCLUDED.attributes -> 'route'
+                              THEN (SELECT COALESCE(jsonb_object_agg(mk, item.attributes -> mk), '{}'::jsonb)
+                                    FROM unnest(ARRAY['length','gain','footEle','summitEle','avgGradient','maxGradient','grad','lineGrad','demSource','binM','steepWindowM','steep']) AS mk
+                                    WHERE jsonb_exists(item.attributes, mk))
+                              ELSE '{}'::jsonb
+                            END
+                       END,
           updated_at = CASE WHEN EXISTS (SELECT 1 FROM change_history ch WHERE ch.item_id = item.id) THEN item.updated_at
                             WHEN (item.name, ST_AsEWKB(item.geom), item.country_code, item.subdivision_id, item.attributes)
                             IS DISTINCT FROM (EXCLUDED.name, ST_AsEWKB(EXCLUDED.geom), EXCLUDED.country_code, EXCLUDED.subdivision_id, EXCLUDED.attributes)
@@ -70,7 +104,13 @@ final class ItemUpsert
           geom = EXCLUDED.geom,
           country_code = EXCLUDED.country_code,
           subdivision_id = EXCLUDED.subdivision_id,
-          attributes = EXCLUDED.attributes,
+          attributes = EXCLUDED.attributes || CASE
+            WHEN item.letter = 'B' AND item.attributes -> 'route' = EXCLUDED.attributes -> 'route'
+            THEN (SELECT COALESCE(jsonb_object_agg(mk, item.attributes -> mk), '{}'::jsonb)
+                  FROM unnest(ARRAY['length','gain','footEle','summitEle','avgGradient','maxGradient','grad','lineGrad','demSource','binM','steepWindowM','steep']) AS mk
+                  WHERE jsonb_exists(item.attributes, mk))
+            ELSE '{}'::jsonb
+          END,
           updated_at = CASE WHEN (item.name, ST_AsEWKB(item.geom), item.country_code, item.subdivision_id, item.attributes)
                             IS DISTINCT FROM (EXCLUDED.name, ST_AsEWKB(EXCLUDED.geom), EXCLUDED.country_code, EXCLUDED.subdivision_id, EXCLUDED.attributes)
                        THEN NOW() ELSE item.updated_at END,

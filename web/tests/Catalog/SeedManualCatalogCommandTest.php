@@ -176,6 +176,80 @@ final class SeedManualCatalogCommandTest extends KernelTestCase
     }
 
     /**
+     * A re-seed replaces the attributes JSON, but the measured climb values
+     * in it come from `app:climbs:recompute --write`, not from the seed - a
+     * re-seed on 2026-08-09 silently unmeasured four of the six Swiss passes.
+     * While the seeded `route` line is unchanged, ItemUpsert::MEASURED_KEYS
+     * must survive; seed-owned keys still refresh.
+     */
+    public function testReseedKeepsMeasuredValuesWhileTheLineIsUnchanged(): void
+    {
+        $this->runSeed()->assertCommandIsSuccessful();
+
+        $furka = $this->em->getRepository(Item::class)->findOneBy(['sourceRef' => 'manual:furka-pass']);
+        self::assertNotNull($furka);
+        $attrs = $furka->getAttributes();
+        self::assertArrayNotHasKey('length', $attrs, 'the seed itself must not type numbers');
+        $attrs['length'] = 10597.0;
+        $attrs['gain'] = 648.0;
+        $attrs['avgGradient'] = '6.4%';
+        $attrs['lineGrad'] = [5, 6, 7];
+        $attrs['demSource'] = 'Copernicus DEM GLO-30';
+        $furka->setAttributes($attrs);
+        $this->em->flush();
+        $this->em->clear();
+
+        $this->runSeed()->assertCommandIsSuccessful();
+
+        $furka = $this->em->getRepository(Item::class)->findOneBy(['sourceRef' => 'manual:furka-pass']);
+        self::assertNotNull($furka);
+        $attrs = $furka->getAttributes();
+        self::assertSame(10597.0, $attrs['length'], 'measured length must survive a re-seed');
+        self::assertSame(648.0, $attrs['gain']);
+        self::assertSame('6.4%', $attrs['avgGradient']);
+        self::assertSame([5, 6, 7], $attrs['lineGrad']);
+        self::assertSame('Copernicus DEM GLO-30', $attrs['demSource']);
+        self::assertArrayHasKey('route', $attrs, 'seed-owned keys still come from the seed');
+    }
+
+    /**
+     * The other half of the same rule: a measurement is a claim about ONE
+     * line. When the stored route no longer matches the seeded route (the
+     * seed definition was redrawn), carrying the numbers over would be the
+     * Roche-aux-Faucons failure - stored figures measured off a line that
+     * moved. They must drop, and the command must say which climbs are left
+     * unmeasured so the recompute is never forgotten silently.
+     */
+    public function testReseedDropsMeasuredValuesWhenTheLineChanged(): void
+    {
+        $this->runSeed()->assertCommandIsSuccessful();
+
+        $furka = $this->em->getRepository(Item::class)->findOneBy(['sourceRef' => 'manual:furka-pass']);
+        self::assertNotNull($furka);
+        $attrs = $furka->getAttributes();
+        $attrs['route'] = [[46.5, 8.4], [46.6, 8.5]]; // measured off a different line than the seed now defines
+        $attrs['length'] = 12345.0;
+        $attrs['lineGrad'] = [9, 9];
+        $furka->setAttributes($attrs);
+        $this->em->flush();
+        $this->em->clear();
+
+        $tester = $this->runSeed();
+        $tester->assertCommandIsSuccessful();
+
+        $furka = $this->em->getRepository(Item::class)->findOneBy(['sourceRef' => 'manual:furka-pass']);
+        self::assertNotNull($furka);
+        $attrs = $furka->getAttributes();
+        self::assertArrayNotHasKey('length', $attrs, 'numbers measured off a replaced line must not survive');
+        self::assertArrayNotHasKey('lineGrad', $attrs);
+        self::assertNotSame([[46.5, 8.4], [46.6, 8.5]], $attrs['route'], 'the seed line wins');
+
+        $display = $tester->getDisplay();
+        self::assertStringContainsString('recompute', $display, 'the seeder must name the follow-up command');
+        self::assertStringContainsString('Furka Pass', $display, 'the unmeasured climb must be named');
+    }
+
+    /**
      * C4-T11 dedup fix: items 11018/11019/11021 ("Abri Jean Poumay",
      * "Belvédère de la Hoëgne", "Signal de Botrange") duplicated existing OSM
      * rows and double/triple-rendered on the map. The seeder must skip any

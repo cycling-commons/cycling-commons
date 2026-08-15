@@ -195,11 +195,25 @@ about to overwrite. The `change_history` rows are left intact: the edit stays in
 the audit trail, only the current content is replaced. No other seeding command
 has this option, and there is no all-refs form.
 
-Note that the shielded columns include `attributes`, which is also where
-`app:climbs:recompute` stores a climb's measured `length`/`gain`/gradients. An
-overwrite therefore resets those to whatever the seed carries (usually nothing),
-so **re-run `app:climbs:recompute --write` after any climb overwrite** or the
-drawer will render an unmeasured climb.
+4. **Measured climb values survive a re-seed while the line stands**
+   (added 2026-08-16). `attributes` is also where `app:climbs:recompute
+   --write` stores a climb's measurements, and the seeds deliberately type no
+   numbers - so a plain attribute replacement un-measures every unshielded
+   climb, which is exactly what a re-seed did on 2026-08-09 (four of the six
+   Swiss passes, and once before that). Both SQL statements now carry the
+   recompute-owned keys (`ItemUpsert::MEASURED_KEYS`: length, gain, footEle,
+   summitEle, avgGradient, maxGradient, grad, lineGrad, demSource, binM,
+   steepWindowM, steep) over from the existing row, but ONLY when the row is
+   letter B and its stored `route` is byte-identical to the seeded one: a
+   measurement is a claim about one specific line, and keeping it across a
+   redraw is the Roche-aux-Faucons failure (stored numbers from a line that
+   moved). A changed line drops the measurements, and `seed-manual` ends by
+   naming every manual climb left without `lineGrad` and the recompute
+   command to run - with the reminder that the recompute needs the elevation
+   source up, because it writes zeros rather than erroring when Valhalla
+   answers nulls. `MeasuredKeysTest` pins the key list against both SQL
+   constants and against what the recompute actually writes;
+   `SeedManualCatalogCommandTest` pins both halves of the route rule.
 
 ## 4. Lifecycle states (`App\Catalog\ItemState`)
 

@@ -541,6 +541,25 @@ final class SeedManualCatalogCommand extends Command
         }
         $io->success(sprintf('Seeded %d manual demo pin(s) across %d letter(s).', array_sum($counts), \count($counts)));
 
+        /* Measured values survive a re-seed only while the seeded line is
+           unchanged (ItemUpsert::MEASURED_KEYS); a redrawn climb drops them,
+           correctly - they were measured off a line that no longer exists.
+           Saying so here is what keeps that drop from being silent: two
+           earlier re-seeds left the Swiss passes unmeasured for days because
+           nothing said the numbers were gone. */
+        /** @var list<string> $unmeasured */
+        $unmeasured = $this->db->fetchFirstColumn(
+            // jsonb_exists, not the ? operator: DBAL reads ? as a placeholder.
+            "SELECT name FROM item WHERE source = 'manual' AND letter = 'B' AND NOT jsonb_exists(attributes, 'lineGrad') ORDER BY name",
+        );
+        if ([] !== $unmeasured) {
+            $io->warning(sprintf(
+                '%d climb(s) carry no measured gradients (new line, or never measured): %s. Run app:climbs:recompute --write, with the elevation source up - it answers zeros when Valhalla is down.',
+                \count($unmeasured),
+                implode(', ', $unmeasured),
+            ));
+        }
+
         return Command::SUCCESS;
     }
 
