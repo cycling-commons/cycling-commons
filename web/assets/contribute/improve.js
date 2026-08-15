@@ -542,6 +542,10 @@
       var segHidden = false;
 
       var drawSeg = function () {
+        // Hoist-guarded: syncAddPt is assigned later in this scope, and this
+        // runs before the early returns so the button's state tracks the
+        // stretch even when there is no line to draw.
+        if (syncAddPt) syncAddPt();
         if (!wmap.isStyleLoaded()) { wmap.once('idle', drawSeg); return; }
         var id = 'seg';
         if (wmap.getLayer(id)) wmap.removeLayer(id);
@@ -778,8 +782,36 @@
         return m;
       };
 
+      /* "Add a point" mode (the touch answer, owner 2026-08-14): while armed,
+         a plain tap pins a control point on the line and a tap on a point
+         removes it. A mode button rather than a long-press because the
+         long-press variant fought MapLibre's own touch handlers and fired
+         only sometimes — it was removed 2026-08-14 for exactly that. While
+         armed, a tap that misses the line does NOTHING: falling through to
+         placeAt would let one stray thumb wipe the whole shaped stretch. */
+      var armed = false;
+      var addPtBtn = document.getElementById('wzAddPt');
+      var ctrlHelp = document.getElementById('wzCtrlHelp');
+      var setArmed = function (on) {
+        armed = on;
+        if (addPtBtn) {
+          addPtBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+          addPtBtn.classList.toggle('on', on);
+        }
+        if (ctrlHelp) ctrlHelp.textContent = on ? t('ctrl_point_armed') : t('ctrl_point_help');
+      };
+      /* Kept in step by drawSeg(): the button is live exactly while there is
+         a line to tap, and losing the line (Reset, re-placing pins) disarms. */
+      var syncAddPt = function () {
+        if (!addPtBtn) return;
+        var usable = placed.length === 2 && !confirmView;
+        addPtBtn.disabled = !usable;
+        if (!usable && armed) setArmed(false);
+      };
+
       /* A control point: a small round handle, draggable like the pins;
-         right-click removes it. Placed via rightClickAt(). */
+         right-click removes it — or a tap while "Add a point" is armed.
+         Placed via rightClickAt(). */
       var mkCtrl = function (lngLat) {
         var el = document.createElement('div');
         el.className = 'wz-ctrlpt';
@@ -793,6 +825,14 @@
           syncLoc(); drawSeg(); announceMove();
         });
         el.addEventListener('contextmenu', function (ev) {
+          ev.preventDefault();
+          ev.stopPropagation();
+          removeCtrl(m);
+        });
+        // The marker element sits above the canvas, so an armed tap on the
+        // point lands here, never on the map click handler below.
+        el.addEventListener('click', function (ev) {
+          if (!armed) return;
           ev.preventDefault();
           ev.stopPropagation();
           removeCtrl(m);
@@ -892,7 +932,10 @@
          riders the feature is flaky — so it is gone, code and copy both,
          until a touch answer is designed properly. */
 
-      wmap.on('click', function (e) { placeAt(e.lngLat); });
+      wmap.on('click', function (e) {
+        if (armed) { rightClickAt(e.lngLat, e.point); return; }
+        placeAt(e.lngLat);
+      });
 
       // Segment mode only: a point item draws no line, so a control offering to
       // hide one would be a button that does nothing on most of the wizard's
@@ -907,6 +950,9 @@
         // preventDefault keeps the browser menu from covering the map right
         // where the point appears.
         var rcDown = null;
+        if (addPtBtn) {
+          addPtBtn.addEventListener('click', function () { setArmed(!armed); });
+        }
         wmap.getCanvas().addEventListener('mousedown', function (ev) {
           if (ev.button === 2) rcDown = { x: ev.clientX, y: ev.clientY };
         });

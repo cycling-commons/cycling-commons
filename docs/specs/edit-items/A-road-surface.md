@@ -148,10 +148,27 @@ router, exactly as before.
 
 **2 · Control points, and legs.** Right-click on the drawn line pins a
 **control point** (owner design 2026-08-13): a small round handle, draggable
-like the pins, right-click again to remove. Right-click ONLY — a long-press
-touch variant shipped and did not fire reliably, so it was removed, code and
-copy both (owner 2026-08-14); a gesture that works sometimes teaches riders
-the feature is flaky. Touch support returns when it can be designed properly. The stretch is
+like the pins, right-click again to remove. A long-press touch variant
+shipped and did not fire reliably, so it was removed, code and copy both
+(owner 2026-08-14); a gesture that works sometimes teaches riders the
+feature is flaky.
+
+**Touch route (built 2026-08-16): the "Add a point" MODE BUTTON**, the
+design the owner's candidate list called safest - discoverable, works with
+any pointer, and never fights MapLibre for a gesture. `#wzAddPt` sits beside
+the help line, disabled until both pins are placed. Pressed (aria-pressed,
+wearing the line's own colour like the Hide-line peek button), it arms the
+mode: a tap on the line pins a control point through the SAME
+`rightClickAt()` path as the pointer route, a tap on an existing point
+removes it (the marker element sits above the canvas, so that tap never
+reaches the map handler), and pressing the button again disarms. Two rules
+carry the safety: while armed, a tap that MISSES the line does nothing -
+falling through to `placeAt()` would let one stray thumb wipe the whole
+shaped stretch - and losing the line (Reset, re-placing pins, the compact
+confirm view) disarms and disables the button via `syncAddPt()` on every
+`drawSeg()`. The help line swaps to `improve.step1.ctrl_point_armed` while
+armed, so the active mode explains itself. Structural pins:
+`web/tests/js/wizard-addpoint.test.cjs`. The stretch is
 now a list of **legs** between waypoints (start pin · control points · end
 pin); each leg holds its own line (`seed`/`route`/chord). A drag recalculates
 **only the legs touching the dragged point** — everything the rider already

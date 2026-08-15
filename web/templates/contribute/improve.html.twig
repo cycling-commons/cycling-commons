@@ -366,6 +366,8 @@
     toast_ctrl_added: 'improve.step1.toast_ctrl_added'|trans,
     toast_ctrl_removed: 'improve.step1.toast_ctrl_removed'|trans,
     ctrl_remove_title: 'improve.step1.ctrl_remove_title'|trans,
+    ctrl_point_help: 'improve.step1.ctrl_point_help'|trans,
+    ctrl_point_armed: 'improve.step1.ctrl_point_armed'|trans,
     seg_hide: 'improve.step1.seg_hide'|trans,
     seg_show: 'improve.step1.seg_show'|trans,
     seg_hide_title: 'improve.step1.seg_hide_title'|trans,
@@ -482,8 +484,14 @@
       {# The one gesture nobody discovers on their own (owner 2026-08-14):
          control points exist, and the same gesture removes them. Static text,
          always visible in segment mode — a hint inside a toast is gone before
-         it is needed. #}
-      <div class="covnote">{{ 'improve.step1.ctrl_point_help'|trans }}</div>
+         it is needed. The "Add a point" mode button is the touch answer
+         (owner 2026-08-14, built 2026-08-16): tap to arm, tap the line to pin
+         a point, tap a point to remove it — no gesture to discover, works
+         with any pointer, and it never fights MapLibre for a long-press. #}
+      <div class="covnote wz-ctrlrow">
+        <button type="button" id="wzAddPt" aria-pressed="false" disabled>{{ 'improve.step1.ctrl_point_btn'|trans }}</button>
+        <span id="wzCtrlHelp">{{ 'improve.step1.ctrl_point_help'|trans }}</span>
+      </div>
     {% endif %}
     {% if add_mode|default(false) %}
       {# Unhidden by improve.js when the known-places overlay has dots in view. #}
