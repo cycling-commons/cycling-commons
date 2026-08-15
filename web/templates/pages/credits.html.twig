@@ -60,6 +60,13 @@
       <div class="who"><a href="https://commons.wikimedia.org/">Wikimedia Commons</a><span class="req">{% trans %}credits.req_badge{% endtrans %}</span><span class="lic">{% trans %}credits.lic_per_photo{% endtrans %}</span></div>
       <p>{% trans %}credits.wikimedia_p{% endtrans %}</p>
     </div>
+    {# CC BY-SA requires attribution wherever the text is reused; each region
+       page carries its own per-article line, and this row is the site-wide
+       half of that credit. #}
+    <div class="crow">
+      <div class="who"><a href="https://www.wikipedia.org/">Wikipedia</a><span class="req">{% trans %}credits.req_badge{% endtrans %}</span><span class="lic">CC BY-SA 4.0</span></div>
+      <p>{% trans %}credits.wikipedia_p{% endtrans %}</p>
+    </div>
     {# The Copernicus programme's licence conditions require this credit on
        derived products — the climb gradients are exactly that. #}
     <div class="crow">

@@ -364,6 +364,26 @@ across all five.
   bare name trailing the sentence read as part of it. Every state short of
   `curated` ends in the same invitation, linking to `join_country`.
 
+  **An encyclopedic lead under the hero (built 2026-08-16, owner idea
+  2026-08-14).** A region page with three verified items has little to say;
+  a short Wikipedia lead gives it context. The licence weigh decided the
+  shape: Wikidata descriptions were rejected (CC0 but one terse line),
+  **images are skipped deliberately** (the silhouette already fills that
+  role, and summary thumbnails carry per-file licences nothing verifies),
+  and the text is the local Wikipedia's REST-summary `extract`, VERBATIM -
+  an unedited excerpt keeps CC BY-SA 4.0 reuse simple: the page renders the
+  attribution (article link + licence link) from the SAME stored entry as
+  the text, and `/credits` carries the site-wide Wikipedia row.
+  **Build time, never runtime**: `tools/wikimedia/region_context.py` matches
+  regions to Wikidata by ISO 3166-2 (`P300`), follows sitelinks per locale,
+  and writes the reviewable `tools/wikimedia/out/region-context.json`;
+  `app:regions:import-context` loads it into `region.context` (JSONB,
+  `Version20260816020000`) and refuses any extract arriving without its
+  citation. Render falls back locale -> en -> section absent.
+  `RegionDirectoryProvider::region()` reads the column outside `BASE_SELECT`
+  so the directory list never pays for text blobs. Pinned by
+  `ImportRegionContextCommandTest` and `RegionsPagesTest`.
+
   **The hero opens with the same three figures as `/coverage`**, in the same
   order and under the same labels: reference places on file, verified items,
   routes. A region page that opened with only the last two made a region

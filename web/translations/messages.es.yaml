@@ -338,6 +338,7 @@ credits:
   protomaps_p: 'El formato de archivo único PMTiles que hay detrás de las capas de cobertura.'
   lic_per_photo: 'licencia por foto · crédito en cada foto'
   wikimedia_p: 'Las fotos iniciales de puertos y lugares proceden de Wikimedia Commons; cada foto lleva su propio crédito de autor y licencia en el panel.'
+  wikipedia_p: 'Las páginas de región abren con una breve introducción enciclopédica de la Wikipedia local, obtenida al construir el sitio y mostrada literalmente; cada página enlaza el artículo exacto que cita.'
   copernicus_p: 'Modelo de elevación detrás de las pendientes. "produced using Copernicus WorldDEM-30 © DLR e.V. 2010-2014 and © Airbus Defence and Space GmbH 2014-2018 provided under COPERNICUS by the European Union and ESA; all rights reserved". The organisations in charge of the Copernicus programme by law or by delegation do not incur any liability for any use of the Copernicus WorldDEM-30.'
   req_badge: 'aviso obligatorio'
   req_legend: 'marca una atribución que la licencia o condiciones de esa fuente exigen legalmente — la redacción es suya, no nuestra, y no debe editarse. Todo lo demás en esta página es un agradecimiento.'
@@ -1293,6 +1294,8 @@ region:
     label: 'Todo Canadá'
   everywhere:
     label: 'Todo el mundo'
+  about_h: 'Sobre esta región'
+  about_source: 'Texto de Wikipedia:'
   cta_map: 'Abrir esta región en el mapa'
   cta_apply: 'Presentarse como curador'
   # Todavía lo usa la tarjeta Votar de contribute/index.html.twig (el texto del

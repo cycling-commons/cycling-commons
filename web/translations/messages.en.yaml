@@ -337,6 +337,7 @@ credits:
   protomaps_p: 'The PMTiles single-file archive format behind the coverage overlays.'
   lic_per_photo: 'per-photo licence · credit shown on each photo'
   wikimedia_p: 'Seeded climb and place photos come from Wikimedia Commons; every photo carries its own author credit and licence in the drawer.'
+  wikipedia_p: 'Region pages open with a short encyclopedic lead from the local Wikipedia, fetched at build time and shown verbatim; each page links the exact article it quotes.'
   copernicus_p: 'Elevation model behind the climb gradients. "produced using Copernicus WorldDEM-30 © DLR e.V. 2010-2014 and © Airbus Defence and Space GmbH 2014-2018 provided under COPERNICUS by the European Union and ESA; all rights reserved". The organisations in charge of the Copernicus programme by law or by delegation do not incur any liability for any use of the Copernicus WorldDEM-30.'
   req_badge: 'required notice'
   req_legend: 'marks an attribution the licence or terms of that source legally require — the wording there is theirs, not ours, and must not be edited. Everything else on this page is a thank-you.'
@@ -1292,6 +1293,8 @@ region:
     label: 'All Canada'
   everywhere:
     label: 'Everywhere'
+  about_h: 'About this region'
+  about_source: 'Text from Wikipedia:'
   cta_map: 'Open this region on the map'
   cta_apply: 'Volunteer as curator'
   # Still used by contribute/index.html.twig's Vote card ("go" link text) —

@@ -265,7 +265,30 @@ final class RegionDirectoryProvider
 
         $cc = (string) $row['country_code'];
 
+        /* Build-time Wikipedia lead for the reader's locale, English when
+           their language has no article, nothing when the region has none -
+           the page then simply omits the section. Fetched here and not in
+           BASE_SELECT because the directory LIST never renders it, and text
+           blobs on every list row would be paid for nothing. The url/title
+           travel with the extract: the text is CC BY-SA 4.0 and the
+           attribution line must never drift from what it credits. */
+        $context = null;
+        $contextJson = $this->db->fetchOne('SELECT context FROM region WHERE id = :id', ['id' => (int) $row['id']]);
+        if (\is_string($contextJson) && '' !== $contextJson) {
+            $all = json_decode($contextJson, true);
+            if (\is_array($all)) {
+                $entry = $all[$locale] ?? $all['en'] ?? null;
+                if (\is_array($entry)
+                    && \is_string($entry['extract'] ?? null)
+                    && \is_string($entry['url'] ?? null)
+                    && \is_string($entry['title'] ?? null)) {
+                    $context = ['extract' => $entry['extract'], 'url' => $entry['url'], 'title' => $entry['title']];
+                }
+            }
+        }
+
         return $this->shape($row) + [
+            'context' => $context,
             // The silhouette needs the row id to read `region.outline`.
             'id' => (int) $row['id'],
             'curators' => $this->curators((int) $row['id'], $cc),

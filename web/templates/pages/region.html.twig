@@ -62,6 +62,10 @@
   .rhero-top{display:flex;align-items:flex-start;gap:1.5rem;flex-wrap:wrap}
   .rhero-top > .rhero-head{flex:1 1 260px;min-width:0}
   @media(max-width:640px){.rshape{margin-left:0}.rshape svg{width:104px;height:78px}}
+  .rg-about{padding-bottom:0}
+  .rg-about-text{max-width:46rem;font-size:1.02rem;line-height:1.65;margin:.4rem 0 .5rem}
+  .rg-about-attrib{font-family:var(--mono);font-size:.66rem;letter-spacing:.06em;color:#5a5d4d}
+  .rg-about-attrib a{color:inherit}
 </style>
 {% endblock %}
 {% block body %}
@@ -152,6 +156,21 @@
     <a class="btn btn-g" style="border-color:rgba(239,230,212,.4);color:var(--paper)" href="{{ path('join_country', {cc: region.countryCode}) }}?region={{ region.slug }}">{% trans %}region.cta_apply{% endtrans %}</a>
   </div>
 </div></div>
+
+{# A short encyclopedic lead, harvested at BUILD time (never fetched live) in
+   the reader's locale with an English fallback. Verbatim, with its
+   attribution rendered from the SAME stored entry as the text: the extract
+   is CC BY-SA 4.0 and the credit line must never drift from what it credits.
+   A region without an article simply has no section. #}
+{% if region.context %}
+  <section class="pad rg-about"><div class="wrap">
+    <div class="kicker">{% trans %}region.about_h{% endtrans %}</div>
+    <p class="rg-about-text">{{ region.context.extract }}</p>
+    <p class="rg-about-attrib">{% trans %}region.about_source{% endtrans %}
+      <a href="{{ region.context.url }}" rel="noopener noreferrer">{{ region.context.title }}</a>
+      · <a href="https://creativecommons.org/licenses/by-sa/4.0/" rel="noopener noreferrer">CC BY-SA 4.0</a></p>
+  </div></section>
+{% endif %}
 
 <section class="pad"><div class="wrap">
   {% if region.byKind is not empty %}

@@ -69,6 +69,53 @@ final class RegionsPagesTest extends WebTestCase
         self::assertStringContainsString('/join/BE', $html, 'curator door');
     }
 
+    /**
+     * The build-time Wikipedia lead: shown verbatim in the reader's locale
+     * with an English fallback, always with the attribution line rendered
+     * from the SAME stored entry (the text is CC BY-SA 4.0), and simply
+     * absent when the region has none.
+     */
+    public function testDetailPageRendersWikipediaContextWithAttribution(): void
+    {
+        $client = static::createClient();
+        $id = $this->seedRegion('ctx-page-region', 'BE', 4);
+        static::getContainer()->get(Connection::class)->executeStatement(
+            'UPDATE region SET context = :ctx WHERE id = :id',
+            ['id' => $id, 'ctx' => json_encode([
+                'en' => ['title' => 'Ctxland', 'extract' => 'Ctxland is a rolling test province.', 'url' => 'https://en.wikipedia.org/wiki/Ctxland'],
+                'fr' => ['title' => 'Ctxlande', 'extract' => 'La Ctxlande est une province de test.', 'url' => 'https://fr.wikipedia.org/wiki/Ctxlande'],
+            ], \JSON_THROW_ON_ERROR)],
+        );
+
+        $client->request('GET', '/regions/ctx-page-region');
+        self::assertResponseIsSuccessful();
+        $html = (string) $client->getResponse()->getContent();
+        self::assertStringContainsString('Ctxland is a rolling test province.', $html);
+        self::assertStringContainsString('https://en.wikipedia.org/wiki/Ctxland', $html, 'the attribution links the exact article');
+        self::assertStringContainsString('CC BY-SA 4.0', $html, 'the licence is named beside the text');
+
+        // French readers get the French article, not the English one.
+        $client->request('GET', '/fr/regions/ctx-page-region');
+        $html = (string) $client->getResponse()->getContent();
+        self::assertStringContainsString('La Ctxlande est une province de test.', $html);
+        self::assertStringContainsString('https://fr.wikipedia.org/wiki/Ctxlande', $html);
+
+        // A locale without an article falls back to English rather than to nothing.
+        $client->request('GET', '/de/regions/ctx-page-region');
+        self::assertStringContainsString('Ctxland is a rolling test province.', (string) $client->getResponse()->getContent());
+    }
+
+    public function testDetailPageWithoutContextOmitsTheSection(): void
+    {
+        $client = static::createClient();
+        $this->seedRegion('ctx-less-region', 'BE', 4);
+
+        $client->request('GET', '/regions/ctx-less-region');
+        self::assertResponseIsSuccessful();
+        // The heading string, not the CSS class: the style block always ships.
+        self::assertStringNotContainsString('About this region', (string) $client->getResponse()->getContent());
+    }
+
     public function testDetailPage404sForInfrastructureAndUnknownSlugs(): void
     {
         $client = static::createClient();
