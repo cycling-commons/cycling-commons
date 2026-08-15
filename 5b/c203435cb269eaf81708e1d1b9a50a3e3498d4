@@ -1,0 +1,24 @@
+docs/specs/map-and-search.md
+  s_211a43b5d2da58::t_22fcbc2401eb5a 809-822
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "5bc203435cb269eaf81708e1d1b9a50a3e3498d4",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_211a43b5d2da58": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "959456e4-f02b-4488-9392-9a9990cd2581",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
