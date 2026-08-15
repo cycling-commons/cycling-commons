@@ -2263,6 +2263,8 @@ map:
   d_contributed_gpx: 'Contributed GPX (GPS track only)'
   d_community_report: 'Community report'
   d_report_photo: 'Report this photo'
+  d_lnk_official: 'Official site'
+  d_lnk_wikipedia: 'Wikipedia'
   d_src_auto: 'Derived by the pipeline'
   d_src_manual: 'Hand-curated'
   d_src_rider: 'Rider-contributed'

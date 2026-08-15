@@ -323,7 +323,7 @@ error at the front door, never a passthrough.** The allowlist per letter is
 - the letter's editable field names from `CatalogFormRegistry` (the same
   registry that derives forms, drawers, and review steps — edit-items/README.md);
 - shared display keys (`AttributeVocabulary::COMMON`: `t`, `town`, `web`, `c`,
-  `sim`, `r`, `desc`, `descTr`, `photo`, `photos`);
+  `sim`, `r`, `desc`, `descTr`, `photo`, `photos`, `links`);
 - a few per-letter fixture extras (`AttributeVocabulary::EXTRAS`), notably
   `B`'s `attribution` (the fixture's free-text citation — renamed because
   `source` is reserved for provenance; `CatalogProvider::climbs()` renames it
@@ -333,6 +333,46 @@ error at the front door, never a passthrough.** The allowlist per letter is
 
 `AttributeVocabulary::assertValid()` throws listing every unknown key; the
 import transaction rolls back.
+
+### `links` — outbound pointers to the pages that describe a place (2026-08-16)
+
+A castle, a hotel, a city: the item is a short entry about a place other
+people have written whole pages about, and `links` points OUT at them. Two
+levels, deliberately (owner scope 2026-08-14: several different SITES, each
+possibly in several languages):
+
+```
+links: [ { label?, urls: [ { url, locale? }, … ] }, … ]
+```
+
+One entry per DESTINATION in display order; the urls inside an entry are the
+same page in different languages; a locale-less url is the entry's default.
+`App\Catalog\Import\OutboundLinks::assertValid()` gates every write path:
+https only (these values end in `<a href>` on the public map), at most 4
+destinations, 6 language variants each, and the same host may hold at most 2
+entries - the caps ARE the anti-spam design, cheaper than moderating an
+advert afterwards. The drawer half is `web/assets/map/links.js`
+(`itemLinks()`): every entry renders, resolved to the reader's locale
+(exact → locale-less default → `en` → first), showing the bare domain beside
+the label, with `rel="noopener noreferrer nofollow"` on every record-row
+link (nofollow also kills the SEO incentive for submitting links at all).
+
+**The free first fill**: `tools/wikimedia/item_links.py` reads every
+wikidata-seeded row's Q-id, pulls the official website (P856) and the
+Wikipedia sitelinks, and writes the reviewable
+`tools/wikimedia/out/item-links.json`; `app:items:import-links` loads it,
+matched by the STORED `source_ref` (two shapes exist in the wild), skipping
+rows with an approved curator edit. Riders can meanwhile type the single
+`web` "Official site" field, now on `I`/`J` too.
+
+**Deliberately not built yet** (docs/TODO.md keeps the tail): the wizard's
+repeatable multi-locale links editor, and the reputation-list layers (Google
+Safe Browsing at submit + render, urlscan.io preview on the queue card) -
+the shipped layers are the cheap ones (https-only, caps, same-host rule,
+bare-domain display, nofollow), applied first as designed.
+
+Pinned by `OutboundLinksTest`, `ImportItemLinksCommandTest` and
+`web/tests/js/links.test.mjs`.
 
 ### `condition` — the one field that removes a place
 

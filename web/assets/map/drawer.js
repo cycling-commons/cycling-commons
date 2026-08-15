@@ -23,6 +23,7 @@ import { uKm, uM, uElev, uKmValue, uElevValue, uDistUnit } from './units.js';
 import { map } from './map-init.js';
 import { CATALOG, CITIES } from './catalog.js';
 import { pinEl } from './icons.js';
+import { itemLinks } from './links.js';
 import { sheet } from './sheet.js';
 import { openLightbox } from './lightbox.js';
 import { highlightRoute, clearRouteHighlight, showSurfaceSelection, clearSurfaceSelection } from './render.js';
@@ -89,6 +90,15 @@ export function schemaRows(letter, src, id, opts){
       const href = `/improve?item=${encodeURIComponent(id)}&type=${encodeURIComponent(letter)}&field=${encodeURIComponent(f.key)}`;
       rows.push({label:f.label, html:true, empty:true, value:`<a class="cc-d-add" href="${href}">＋ ${D.add||'add'}</a>`});
     }
+  });
+  /* Outbound links (links.js shape) render one row per DESTINATION, resolved
+     to the reader's locale. Hooked here rather than in each drawer builder so
+     every letter gets them from the one code path. Known labels localize
+     through D; an unknown label is a rider's own words and stays verbatim. */
+  const KNOWN_LINK_LABELS = {'Official site': D.lnkOfficial, 'Wikipedia': D.lnkWikipedia};
+  itemLinks(src.links, document.documentElement.lang || 'en').forEach(l => {
+    rows.push({label: KNOWN_LINK_LABELS[l.label] || l.label, value: l.domain,
+      links: [{label: D.visitSite || 'Visit site', href: l.href}]});
   });
   return rows;
 }
@@ -197,7 +207,10 @@ export function renderPendingContext(side){
     an escaping rule gets forgotten in one of them. */
 function recRowsHtml(recs){
   return recs.map(r => {
-    const links = r.links ? ' ' + r.links.map(l=>`<a class="cc-d-link" href="${safeHref(l.href)}" target="_blank" rel="noopener">${escPend(l.label)} ↗</a>`).join('') : '';
+    // noreferrer + nofollow joined noopener 2026-08-16: record-row links are
+    // outbound and some are rider-submitted — nofollow also kills the SEO-spam
+    // incentive for submitting links at all.
+    const links = r.links ? ' ' + r.links.map(l=>`<a class="cc-d-link" href="${safeHref(l.href)}" target="_blank" rel="noopener noreferrer nofollow">${escPend(l.label)} ↗</a>`).join('') : '';
     // r.html is the explicit trusted-markup channel (like r.links): honored
     // only for rows whose markup the builder constructs itself with EVERY
     // interpolation escPend-escaped (RIDE_CITIES city links, bike-type

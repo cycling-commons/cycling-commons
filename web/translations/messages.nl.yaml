@@ -1934,6 +1934,8 @@ map:
   d_contributed_gpx: 'Bijgedragen GPX (alleen GPS-track)'
   d_community_report: 'Melding uit de gemeenschap'
   d_report_photo: 'Deze foto melden'
+  d_lnk_official: 'Officiële site'
+  d_lnk_wikipedia: 'Wikipedia'
   d_src_auto: 'Afgeleid door de pipeline'
   d_src_manual: 'Met de hand samengesteld'
   d_src_rider: 'Bijgedragen door een renner'

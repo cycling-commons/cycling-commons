@@ -23,7 +23,11 @@ final class AttributeVocabulary
 {
     // 'photos' (plural) sits alongside singular 'photo': a gallery of 2+ images
     // for a pin - map.js's photoList(f) already prefers f.photos over f.photo.
-    private const array COMMON = ['t', 'town', 'web', 'c', 'sim', 'r', 'desc', 'descTr', 'photo', 'photos'];
+    // 'links': outbound links to the pages that describe the place (an
+    // official site, a Wikipedia article) - two-level shape, validated by
+    // {@see OutboundLinks} on every write path; the drawer renders each entry
+    // resolved to the reader's locale (web/assets/map/links.js).
+    private const array COMMON = ['t', 'town', 'web', 'c', 'sim', 'r', 'desc', 'descTr', 'photo', 'photos', 'links'];
 
     private const array EXTRAS = [
         // 'segment': the add-wizard's two drawn endpoints

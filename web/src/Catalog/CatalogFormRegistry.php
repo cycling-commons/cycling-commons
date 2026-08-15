@@ -337,6 +337,12 @@ final class CatalogFormRegistry
                 addFields: [
                     CatalogField::select('bestLight', 'Best light / time', ['Any', 'Morning', 'Golden hour', 'Sunset']),
                     CatalogField::select('bench', 'Bench?', self::UNKNOWN_YES_NO),
+                    // The shared 'web' key (see WhereToSleep's note): a place
+                    // other people wrote whole pages about should be able to
+                    // point at its official one. The multi-destination `links`
+                    // attribute is import-fed (OutboundLinks); this is the one
+                    // a rider can type.
+                    CatalogField::url('web', 'Official site', placeholder: 'https://… (the place’s own site)'),
                 ],
             ),
 
@@ -352,6 +358,9 @@ final class CatalogFormRegistry
                     CatalogField::select('openingHours', 'Opening hours', self::OPENING_HOURS, default: 'Unknown'),
                     CatalogField::select('entryFee', 'Entry fee?', ['Free', 'Paid', 'Unknown']),
                     CatalogField::text('cyclingStory', 'Cycling story / link', placeholder: 'A heritage note worth riding past for'),
+                    // Same rationale as ScenicViews: the Muiderslot has an
+                    // official castle site, and the drawer should say so.
+                    CatalogField::url('web', 'Official site', placeholder: 'https://… (the place’s own site)'),
                 ],
             ),
 
