@@ -826,6 +826,16 @@ the newest rung of that same ladder.
   mode is off, and the base is Map**, since Study mode hides the basemap and
   satellite replaces it, and a key for colours that are not on screen describes
   a map the rider is not looking at.
+  **Open by default, with a drawn chevron** (2026-08-15). It shipped collapsed
+  and the owner's first report was that they could not see it at all, for two
+  compounding reasons: a block that only appears with the Surfaces skin on is
+  rare enough without also being shut, and `display:flex` on a `<summary>`
+  suppresses Chrome's disclosure triangle, so the closed row was styled exactly
+  like the panel's other section headings and read as a dead label rather than
+  a control. The chevron is drawn in CSS (`::before`, rotating on `[open]`)
+  because the native marker cannot survive the flex row the glyph alignment
+  needs. It stays a `<details>`, so closing it gives the map back: the panel is
+  574 px tall open and 407 px closed.
 - **`unverified` is labelled "Surface not recorded"**, not "unverified" — the
   class means OSM records no `surface` tag there, and riders are precisely who
   *verifies* things, so the old word claimed the opposite of what it meant

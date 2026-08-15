@@ -341,7 +341,13 @@
          syncStudyGate() reveals the whole block only while the skin is on, the
          basemap is actually visible (Study mode hides it, satellite replaces
          it), because a key for something you cannot see is noise. #}
-      <details class="skey-base" id="skeyBase" hidden>
+      {# `open` by default (owner 2026-08-15). It shipped collapsed on the
+         argument that it answers a question the rider may not have, and the
+         owner's first report was that they could not see it at all: a block
+         that only appears with the Surfaces skin on is already rare enough
+         without also being shut. It stays a <details> so anybody who wants the
+         map back can close it. #}
+      <details class="skey-base" id="skeyBase" open hidden>
         <summary>{{ 'map.base_roads'|trans }}</summary>
         {# `skey-brow`, not `skey-row`: the surface rows are BUTTONS that filter
            the map and carry a tick to say so. These four explain somebody
