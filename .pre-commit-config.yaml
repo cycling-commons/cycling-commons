@@ -34,6 +34,19 @@ repos:
         pass_filenames: false
         always_run: true
 
+      # Full PHPStan + Psalm before code leaves the machine. ci-app.yml runs
+      # the same analyzers, but staging/symfony-base pushes deploy right away,
+      # so the push itself is the last moment to catch a red analysis. Fires
+      # only when the outgoing commits touch the app (PHP, deps, or analyzer
+      # config); the run itself is always full-project — see the script.
+      - id: app-analysis-prepush
+        name: PHPStan + Psalm (full run over web/)
+        entry: tools/analysis-prepush.sh
+        language: script
+        stages: [pre-push]
+        files: ^web/(.*\.php|composer\.lock|phpstan\.dist\.neon|psalm\.xml)$
+        pass_filenames: false
+
       # Wiki prose is CC BY-SA 4.0 (README §License): every wiki/**/*.md must
       # open with its SPDX header. Runs only when wiki pages are staged, so a
       # new page can't land headerless; the rendered site footer comes from
