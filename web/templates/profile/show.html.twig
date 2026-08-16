@@ -286,6 +286,27 @@
           </div>
         {% endfor %}
       {% endif %}
+      {# PLACES NEAR YOU WORTH A LOOK (owner 2026-08-12). The map's orange ring
+         is a passive colour; this is the half a rider can act on deliberately.
+         Above their own confirmations on purpose: this is a thing to DO, and
+         the list below it is a record of things already done.
+         Absent entirely without a base location - there is no "near you" to
+         answer, and a national list of old taps is a chore, which is what this
+         nudge must never become. #}
+      {% if stale_nearby is not empty %}
+        <h2 class="sec-h">{{ 'account.stale_nearby_h'|trans }}</h2>
+        <p class="note">{{ 'account.stale_nearby_body'|trans }}</p>
+        {% for s in stale_nearby %}
+          <div class="item">
+            <span class="tag">{{ s.typeLabelKey|trans }}</span>
+            <h4>{{ s.name }}</h4>
+            <span class="item-where">{{ 'account.stale_nearby_km'|trans({'%km%': s.km}) }}</span>
+            <span class="item-links"><a href="{{ path('map') }}?feature={{ s.name|url_encode }}"
+              target="_blank" rel="noopener">{{ 'account.link_map'|trans }} &#8599;</a></span>
+            <time class="co" datetime="{{ s.last_confirmed|date('c') }}">{{ 'account.stale_nearby_last'|trans }} {{ s.last_confirmed|cc_date }}</time>
+          </div>
+        {% endfor %}
+      {% endif %}
       {% if confirmations is not empty %}
         <h2 class="sec-h">{{ 'account.votes_places_h'|trans }}</h2>
         {% for c in confirmations %}

@@ -61,6 +61,7 @@ rather than a second copy drifting in PHP.
 | `map.curated_default_threshold` | 25 | 1–1000 | map | `CuratedReadiness` |
 | `map.curated_default_min_blocks` | 3 | 1–6 | map | `CuratedReadiness` |
 | `map.curated_default_min_per_block` | 5 | 1–100 | map | `CuratedReadiness` |
+| `map.confirmation_stale_months` | 6 | 1–60 | map | `ConfirmationFreshness` |
 | `route.region_active_cap` | 30 | 1–1000 | routes | `RouteModerationService`, `RouteQueue` |
 | `route.ride_verify_threshold` | 3 | 1–100 | routes | `RouteCommunityService` |
 | `moderation.retention_months` | 3 | 1–120 | moderation | `RetentionService` |

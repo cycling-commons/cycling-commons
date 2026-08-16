@@ -2741,6 +2741,10 @@ account:
   votes_note: 'Tus votos son privados. El Commons registra <b>que</b> votaste y <b>cuándo</b> — nunca un registro público de <b>qué</b> votaste.'
   votes_routes_h: 'Papeletas de rutas'
   votes_places_h: 'Confirmaciones de lugares'
+  stale_nearby_h: "Merece un vistazo cerca de ti"
+  stale_nearby_body: "Nadie ha comprobado estos lugares desde hace tiempo. Si pasas por uno, un solo toque le dice a todos que sigue ahí."
+  stale_nearby_km: "a %km% km"
+  stale_nearby_last: "comprobado por última vez el"
   stance_potable: 'Potable'
   stance_not_potable: 'No potable'
   stance_exists: 'Sigue ahí'
@@ -3235,6 +3239,9 @@ admin:
       map_curated_default_min_per_block:
         label: 'Preparación de Lo mejor: elementos por tipo'
         help: 'Qué necesita un bloque para contar de cara al requisito de arriba. Juntos, estos dos impiden que una sola capa completa sostenga una región por sí sola.'
+      map_confirmation_stale_months:
+        label: "Las confirmaciones caducan a los (meses)"
+        help: "Cuánto tiempo cuenta la comprobación de una fuente, tienda, aseo o peligro por parte de un ciclista. Pasado ese plazo el mapa rodea la chincheta con un anillo naranja, para que quien pase sepa que merece un vistazo. Una comprobación reinicia el contador. Los lugares que no cambian - puertos, miradores, patrimonio - nunca caducan."
       route_region_active_cap:
         label: 'Rutas activas por región'
         help: 'Cuántas rutas puede tener publicadas a la vez una región. A un curador que apruebe por encima del tope se le bloquea y se le pide que retire algo primero.'

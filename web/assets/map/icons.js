@@ -140,7 +140,16 @@ function pinGlyph(layer, props){
 }
 export function pinEl(layer,cur,props){
   const d=document.createElement('div');
-  d.className='cc-pin'+(cur?' cur':'')+(layer.pendingLayer?' pending':''); d.style.setProperty('--c',layer.color);
+  /* Stale = an orange ring (owner 2026-08-12). A rider passing a place should be
+     able to see, without opening anything, that the last check on it is old
+     enough to be worth repeating. Only the STALE band gets it: `ageing` is a
+     state the drawer explains in words, and a second ring colour would be one
+     more thing to learn from a map that has to be readable at a glance.
+     The server decides who takes a state at all - never-confirmed items and
+     letters whose confirmations do not go off carry no `freshness` key, which
+     is what stops the whole map turning orange (ConfirmationFreshness). */
+  const stale = props && props.freshness && props.freshness.state==='stale';
+  d.className='cc-pin'+(cur?' cur':'')+(layer.pendingLayer?' pending':'')+(stale?' stale':''); d.style.setProperty('--c',layer.color);
   const white = txtOn(layer.color)==='#fff';   // dark pins (e.g. purple climbs) → white icon
   // Scenic and toilets get a drawn vector (no filter, the SVG carries its own
   // fill); every other layer keeps the glyph + silhouette-filter treatment.

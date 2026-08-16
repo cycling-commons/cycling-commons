@@ -280,6 +280,11 @@
      draw tofu boxes on any machine whose browser has no colour-emoji font —
      which is silent: the pin still renders, it just says nothing. */
   .cc-g{font-family:var(--emoji);font-style:normal}
+  /* "Somebody checked this, but a while ago." The ring replaces the paper
+     border rather than adding a second one: an outline outside the drop shadow
+     read as a selection state, which is what .cur already means. Trail orange,
+     the colour every "your turn" affordance on the site uses. */
+  .cc-pin.stale{border-color:var(--trail);box-shadow:0 3px 8px rgba(20,22,14,.4),0 0 0 1px rgba(255,90,31,.45)}
   .cc-pin.cur::after{content:"";position:absolute;width:6px;height:6px;background:var(--paper);border-radius:50%;top:-3px;right:-3px;transform:rotate(45deg)}
   .cc-pin.pending{border-color:#D92D20;border-width:3px}
   /* community tier (07-15 decisions B/D): same per-type marker, lighter — no new icon set.

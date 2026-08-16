@@ -53,6 +53,7 @@ final class SettingsRegistry
     public const string MAP_CURATED_THRESHOLD = 'map.curated_default_threshold';
     public const string MAP_CURATED_MIN_BLOCKS = 'map.curated_default_min_blocks';
     public const string MAP_CURATED_MIN_PER_BLOCK = 'map.curated_default_min_per_block';
+    public const string MAP_CONFIRMATION_STALE_MONTHS = 'map.confirmation_stale_months';
     public const string ROUTE_REGION_ACTIVE_CAP = 'route.region_active_cap';
     public const string ROUTE_RIDE_VERIFY_THRESHOLD = 'route.ride_verify_threshold';
     public const string MODERATION_RETENTION_MONTHS = 'moderation.retention_months';
@@ -88,6 +89,15 @@ final class SettingsRegistry
             // blocks that exist, so the gate can never demand an eighth block.
             [self::MAP_CURATED_MIN_BLOCKS, 1, \count(CuratedReadiness::BLOCKS), self::GROUP_MAP],
             [self::MAP_CURATED_MIN_PER_BLOCK, 1, 100, self::GROUP_MAP],
+            // How long a confirmation stays worth something before the map
+            // nudges (owner 2026-08-12: "six months"). A dial and not a
+            // constant because six months is an editorial guess about how fast
+            // the built world changes, and the honest place to change a guess
+            // is a settings page rather than a deploy. 1 month is aggressive
+            // but coherent for a fast-moving region; 60 months is "effectively
+            // never", which is a legitimate way to turn the nudge off without
+            // removing it from the code.
+            [self::MAP_CONFIRMATION_STALE_MONTHS, 1, 60, self::GROUP_MAP],
             // 0 would freeze every region's queue outright, which is a job for
             // disabling proposals, not for the cap.
             [self::ROUTE_REGION_ACTIVE_CAP, 1, 1000, self::GROUP_ROUTES],

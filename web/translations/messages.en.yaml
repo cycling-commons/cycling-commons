@@ -2727,6 +2727,10 @@ account:
   votes_note: 'Your votes are private. The Commons records <b>that</b> you voted and <b>when</b> — never a public record of <b>what</b> you voted for.'
   votes_routes_h: 'Route ballots'
   votes_places_h: 'Place confirmations'
+  stale_nearby_h: "Worth a look near you"
+  stale_nearby_body: "Nobody has checked these places for a while. If you ride past one, a single tap tells everyone else it is still there."
+  stale_nearby_km: "%km% km away"
+  stale_nearby_last: "last checked"
   stance_potable: 'Potable'
   stance_not_potable: 'Not potable'
   stance_exists: 'Still there'
@@ -3220,6 +3224,9 @@ admin:
       map_curated_default_min_per_block:
         label: 'Best of readiness: items per kind'
         help: 'What a block needs before it counts towards the requirement above. Together these two stop one full layer from carrying a region on its own.'
+      map_confirmation_stale_months:
+        label: "Confirmations go stale after (months)"
+        help: "How long a rider's check on a tap, shop, toilet or hazard counts for. Past this the map gives the pin an orange ring, so a rider passing it knows it is worth a look. One check resets the clock. Places that do not change - climbs, viewpoints, history - never go stale."
       route_region_active_cap:
         label: 'Active routes per region'
         help: 'How many routes a region may have live at once. A curator approving beyond the cap is blocked and asked to retire something first.'

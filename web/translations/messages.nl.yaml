@@ -2704,6 +2704,10 @@ account:
   votes_note: 'Jouw stemmen zijn privé. De Commons registreert <b>dat</b> je hebt gestemd en <b>wanneer</b> — nooit een openbaar overzicht van <b>wat</b> je hebt gestemd.'
   votes_routes_h: 'Routestemmen'
   votes_places_h: 'Plekbevestigingen'
+  stale_nearby_h: "De moeite waard bij jou in de buurt"
+  stale_nearby_body: "Niemand heeft deze plekken al een tijd gecontroleerd. Kom je er langs, dan vertelt één tik iedereen dat de plek er nog is."
+  stale_nearby_km: "%km% km verderop"
+  stale_nearby_last: "laatst gecontroleerd op"
   stance_potable: 'Drinkbaar'
   stance_not_potable: 'Niet drinkbaar'
   stance_exists: 'Nog aanwezig'
@@ -3194,6 +3198,9 @@ admin:
       map_curated_default_min_per_block:
         label: 'Klaar voor Best-of: items per soort'
         help: 'Wat een blok nodig heeft om mee te tellen voor de eis hierboven. Samen voorkomen deze twee dat één volle laag een regio in zijn eentje draagt.'
+      map_confirmation_stale_months:
+        label: "Bevestigingen verlopen na (maanden)"
+        help: "Hoe lang de controle van een fietser op een kraan, winkel, toilet of gevaar meetelt. Daarna geeft de kaart de speld een oranje ring, zodat een fietser die langskomt weet dat het de moeite waard is om te kijken. Eén controle zet de klok terug. Plekken die niet veranderen - beklimmingen, uitzichten, erfgoed - verlopen nooit."
       route_region_active_cap:
         label: 'Actieve routes per regio'
         help: 'Hoeveel routes een regio tegelijk live mag hebben. Een curator die boven het plafond goedkeurt, wordt geblokkeerd en gevraagd eerst iets uit roulatie te nemen.'

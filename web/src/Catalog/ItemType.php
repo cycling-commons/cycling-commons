@@ -271,6 +271,45 @@ enum ItemType: string
     }
 
     /**
+     * True when a confirmation of this type GOES OFF - when "somebody checked
+     * this" stops being worth much after a while, so the map is right to nudge.
+     *
+     * A narrower question than {@see isConfirmable()}, and deliberately a
+     * separate list rather than a reuse of it. Every place a rider can stand
+     * next to is confirmable, because a rider standing there can say the entry
+     * is wrong about anything; but **a tap breaks, a shop shuts, a hazard
+     * clears - a viewpoint does not stop being a view.** Ageing a viewpoint
+     * would put an orange border on most of the map six months after launch,
+     * and an orange that means "everything" means nothing, which is the trap
+     * this whole signal has to survive (docs/TODO.md, 2026-08-12).
+     *
+     * So: the built world ages, the landscape does not. Climbs, scenic views
+     * and history sit out - a col is where it was, and if the entry is wrong
+     * about it that is a correction, not a staleness.
+     *
+     * `ClosureLifetime` is the same idea already built for one letter: a
+     * closure retires itself, and a confirmation ages itself.
+     */
+    public function confirmationAges(): bool
+    {
+        return match ($this) {
+            // A tap, a shop, a toilet, a shelter, a bed, a station: all built,
+            // all maintained by somebody, all able to stop existing quietly.
+            self::WaterFood, self::BikeServices, self::WhereToSleep,
+            self::GettingThere, self::Shelter, self::PublicToilets => true,
+            // A hazard is the strongest case of all: the whole value of the
+            // report is that it is CURRENT, and a cleared hazard left standing
+            // is worse than no hazard at all.
+            self::Hazards => true,
+            // Roads get resurfaced, and a surface report is a description of a
+            // condition rather than of a place.
+            self::RoadSurface => true,
+            // Climbs, scenic views, history: confirmable, never stale.
+            default => false,
+        };
+    }
+
+    /**
      * True when 'Out of order' can be true of this type.
      *
      * A tap, a pump and a toilet have working parts and can be broken while

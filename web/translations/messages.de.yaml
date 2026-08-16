@@ -2707,6 +2707,10 @@ account:
   votes_note: 'Deine Stimmen sind privat. The Commons speichert <b>dass</b> du abgestimmt hast und <b>wann</b> — niemals ein öffentliches Protokoll darüber, <b>wofür</b> du gestimmt hast.'
   votes_routes_h: 'Routen-Stimmen'
   votes_places_h: 'Orts-Bestätigungen'
+  stale_nearby_h: "Einen Blick wert, in deiner Nähe"
+  stale_nearby_body: "Diese Orte hat länger niemand kontrolliert. Wenn du vorbeikommst, sagt ein einziger Tipp allen anderen, dass es sie noch gibt."
+  stale_nearby_km: "%km% km entfernt"
+  stale_nearby_last: "zuletzt kontrolliert am"
   stance_potable: 'Trinkbar'
   stance_not_potable: 'Nicht trinkbar'
   stance_exists: 'Noch vorhanden'
@@ -3197,6 +3201,9 @@ admin:
       map_curated_default_min_per_block:
         label: 'Reife für Best-of: Einträge je Art'
         help: 'Was ein Block braucht, um für die Anforderung darüber zu zählen. Zusammen verhindern beide Zahlen, dass eine einzige Ebene eine Region allein trägt.'
+      map_confirmation_stale_months:
+        label: "Bestätigungen veralten nach (Monaten)"
+        help: "Wie lange die Kontrolle einer Radfahrerin an einem Wasserhahn, Laden, WC oder einer Gefahr zählt. Danach gibt die Karte der Nadel einen orangen Ring, damit Vorbeifahrende wissen, dass ein Blick lohnt. Eine Kontrolle setzt die Uhr zurück. Orte, die sich nicht ändern - Anstiege, Aussichtspunkte, Geschichte - veralten nie."
       route_region_active_cap:
         label: 'Aktive Routen je Region'
         help: 'Wie viele Routen eine Region gleichzeitig veröffentlicht haben darf. Wer über die Obergrenze hinaus freigibt, wird gestoppt und gebeten, zuerst etwas außer Dienst zu stellen.'

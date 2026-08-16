@@ -31,6 +31,7 @@ final class CatalogProvider
     public function __construct(
         private readonly Connection $db,
         private readonly BuildVersion $buildVersion,
+        private readonly ConfirmationFreshness $freshness,
     ) {
     }
 
@@ -190,7 +191,7 @@ final class CatalogProvider
      * own contribution into a verified pin with nobody else ever having seen
      * the place (ConfirmationSource).
      *
-     * @return list<array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null, region_id: int|null, verified: bool, by_name: string|null, by_public: bool|null, by_uuid: string|null}>
+     * @return list<array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null, region_id: int|null, verified: bool, by_name: string|null, by_public: bool|null, by_uuid: string|null, letter: string, last_confirmed: string|null}>
      */
     private function itemRows(string $letter, ?string $source = null, ?string $excludeSource = null, ?int $onlyId = null): array
     {
@@ -209,9 +210,17 @@ final class CatalogProvider
 
            Harvested rows join to nothing and stay anonymous, which is correct:
            OSM did not "share" anything with us. */
-        $sql = 'SELECT i.id, i.name, ST_AsGeoJSON(i.geom) AS geom, i.attributes, i.source_ref, i.source, s.name AS prov, i.region_id,
+        $sql = 'SELECT i.id, i.name, i.letter, ST_AsGeoJSON(i.geom) AS geom, i.attributes, i.source_ref, i.source, s.name AS prov, i.region_id,
                        contributor.display_name AS by_name, contributor.public_profile AS by_public, contributor.uuid AS by_uuid,
-                       (i.state = \'verified\' OR i.source = \'pivot\' OR EXISTS (SELECT 1 FROM item_confirmation c WHERE c.item_id = i.id AND c.source <> \'form\')) AS verified
+                       (i.state = \'verified\' OR i.source = \'pivot\' OR EXISTS (SELECT 1 FROM item_confirmation c WHERE c.item_id = i.id AND c.source <> \'form\')) AS verified,
+                       /* When somebody last stood here. `form` excluded for the
+                          same reason it is excluded from `verified` above: the
+                          submitter answering their own improve form is not a
+                          second pair of eyes, and letting it reset the clock
+                          would let a contributor keep their own pin fresh for
+                          ever without anyone visiting. */
+                       (SELECT max(c2.created_at) FROM item_confirmation c2
+                         WHERE c2.item_id = i.id AND c2.source <> \'form\') AS last_confirmed
                 FROM item i
                 LEFT JOIN world_subdivision s ON s.id = i.subdivision_id
                 LEFT JOIN LATERAL (
@@ -262,7 +271,7 @@ final class CatalogProvider
            handed back to the reference layer. */
         $sql .= " AND COALESCE(i.attributes->>'condition', '') <> 'Not there anymore'";
 
-        /* @var list<array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null, region_id: int|null, verified: bool, by_name: string|null, by_public: bool|null, by_uuid: string|null}> */
+        /* @var list<array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null, region_id: int|null, verified: bool, by_name: string|null, by_public: bool|null, by_uuid: string|null, letter: string, last_confirmed: string|null}> */
         return $this->db->fetchAllAssociative($sql.' ORDER BY i.id', $params);
     }
 
@@ -357,7 +366,7 @@ final class CatalogProvider
      * The per-row mapping shared by the bulk payload and featureForItem(), so
      * a live-inserted feature can never drift from the served one.
      *
-     * @param array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null, region_id: int|null, verified: bool, by_name: string|null, by_public: bool|null, by_uuid: string|null} $row
+     * @param array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null, region_id: int|null, verified: bool, by_name: string|null, by_public: bool|null, by_uuid: string|null, letter: string, last_confirmed: string|null} $row
      *
      * @return array{type: string, properties: array<string, mixed>, geometry: mixed}
      */
@@ -397,6 +406,25 @@ final class CatalogProvider
         // Absent key = community tier (keeps unverified payloads byte-stable).
         if ($row['verified']) {
             $props['v'] = 1;
+        }
+        /* HOW OLD THE LAST CHECK IS (owner 2026-08-12). Only for letters whose
+           confirmations go off, and only where somebody has actually
+           confirmed: ConfirmationFreshness carries that reasoning. The key is
+           ABSENT for everything else, so every item this does not apply to
+           stays byte-identical to what it served before this existed.
+
+           The drawer has rendered `f.freshness` since it was written and
+           nothing ever produced it - the map template says so in as many words
+           ("f.freshness is produced by no server path either"). This is that
+           path, so the drawer's freshness line lights up with no client
+           change. */
+        $type = ItemType::fromLetter((string) $row['letter']);
+        if (null !== $type && null !== $row['last_confirmed']) {
+            $last = new \DateTimeImmutable((string) $row['last_confirmed']);
+            $state = $this->freshness->state($type, $last, new \DateTimeImmutable());
+            if (null !== $state) {
+                $props['freshness'] = ['state' => $state, 'lastConfirmed' => $last->format('Y-m-d')];
+            }
         }
         // The DB item id always makes $props non-empty, so it always
         // encodes as a JSON object, never `[]` (GeoJSON requires an

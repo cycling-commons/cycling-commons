@@ -1438,6 +1438,66 @@ a payload fetched before their own confirmation.
 the row and never double-counts (`ItemConfirmationService::record()` rejects
 stances the item's type does not offer).
 
+### 10.1a A confirmation goes off, and the map says so (built 2026-08-16)
+
+An item confirmed half a year ago is not the same claim as one confirmed last
+week, and until this the map drew them identically (owner 2026-08-12). A
+**stale item's pin gains an orange ring**, so a rider passing it can see,
+without opening anything, that it is worth a look. **One confirmation resets
+the clock** - the point is a nudge, not a chore.
+
+**The failure this had to be designed against is not a wrong date.** It is
+that six months after launch most of the map is orange, and an orange that
+means "everything" means nothing. Three rules keep the signal narrow, and all
+three live in `ConfirmationFreshness`:
+
+1. **Never confirmed is not stale, it is UNVERIFIED.** An item nobody has
+   stood next to already has its own state and its own signal (`v` absent in
+   the payload, `stateUnverified` in the drawer). Ageing something that was
+   never fresh would paint every harvested OSM row orange on day one.
+2. **Only letters whose confirmations GO OFF**, which is a NEW and narrower
+   predicate than §10.1's stance list: `ItemType::confirmationAges()`. Every
+   place a rider can stand next to is *confirmable* - that is §10.1's point -
+   but **a tap breaks, a shop shuts, a hazard clears; a viewpoint does not
+   stop being a view.** So C, D, F, G, H, M, W and A age; B, I and J never do.
+   Reusing `confirmationStances()` here would have aged the whole map, because
+   the 2026-08-12 decision deliberately widened it to nearly every letter.
+3. **`source <> 'form'`**, as everywhere else: a submitter answering their own
+   improve form ([§6.3](#63-the-submitters-own-answer--item_confirmationsource))
+   is not somebody having checked, and letting it reset the clock would let a
+   contributor keep their own pin fresh for ever without anyone visiting.
+
+**Three bands, one dial.** `map.confirmation_stale_months` sits on
+/admin/system-config beside the other editorial dials (default 6), because six
+months is a guess about how fast the built world changes and a guess belongs
+where it can be revised rather than redeployed. The middle band is half the
+window - a six-month dial reads fresh for three months, ageing for three, then
+stale - so `ageing` needs no second dial to explain it. Only **stale** gets the
+ring: `ageing` is a state the drawer explains in words, and a second ring
+colour would be one more thing to learn from a map that has to be readable at a
+glance.
+
+**The drawer's freshness line was dead code until now.** `drawer.js` has
+rendered `f.freshness` since it was written and nothing ever produced it - the
+map template says so in as many words ("`f.freshness` is produced by no server
+path either"). `CatalogProvider::feature()` is that path; the drawer lit up
+with no client change. The key is **absent** for every item rules 1 and 2
+exclude, so those payloads stay byte-identical to what they served before.
+
+**The rider's half.** The ring is a passive colour; `/profile` carries the half
+a rider can act on - a short "worth a look near you" list, stale places inside
+their own base-location radius, soonest-forgotten first. It is absent entirely
+without a base location: there is no "near you" to answer, and a national list
+of old taps is a chore, which is the thing this must never become. It applies
+**the same three rules as the map** - two surfaces disagreeing about what stale
+means would be worse than either being wrong - and cuts on a DATE
+(`ConfirmationFreshness::staleBefore()`) rather than on a state computed per
+row.
+
+Related: `ClosureLifetime` is the same idea already built for one letter - a
+closure retires itself, and a confirmation ages itself. Pinned by
+`ConfirmationFreshnessTest`.
+
 ### 10.2 Endpoint contract (`ItemConfirmationController`)
 
 - `GET /items/{id}/confirmations` — `PUBLIC_ACCESS` (explicit rule in

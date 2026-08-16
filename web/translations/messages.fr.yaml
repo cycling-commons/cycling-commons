@@ -2704,6 +2704,10 @@ account:
   votes_note: 'Vos votes sont privés. Le Commons enregistre <b>que</b> vous avez voté et <b>quand</b> — jamais un relevé public de <b>ce</b> pour quoi vous avez voté.'
   votes_routes_h: 'Votes d''itinéraires'
   votes_places_h: 'Confirmations de lieux'
+  stale_nearby_h: "À vérifier près de chez vous"
+  stale_nearby_body: "Personne n'a vérifié ces lieux depuis un moment. Si vous passez devant l'un d'eux, un seul geste indique à tous les autres qu'il est toujours là."
+  stale_nearby_km: "à %km% km"
+  stale_nearby_last: "vérifié pour la dernière fois le"
   stance_potable: 'Potable'
   stance_not_potable: 'Non potable'
   stance_exists: 'Toujours là'
@@ -3194,6 +3198,9 @@ admin:
       map_curated_default_min_per_block:
         label: 'Éligibilité au Best-of : éléments par type'
         help: 'Ce qu’un bloc doit contenir pour compter dans l’exigence ci-dessus. Ensemble, ces deux nombres empêchent qu’une seule couche porte une région à elle seule.'
+      map_confirmation_stale_months:
+        label: "Les confirmations expirent après (mois)"
+        help: "Combien de temps compte la vérification d'un point d'eau, d'un magasin, de toilettes ou d'un danger par un cycliste. Au-delà, la carte entoure le repère d'un anneau orange, pour qu'un cycliste qui passe sache qu'il vaut la peine d'y jeter un œil. Une vérification remet le compteur à zéro. Les lieux qui ne changent pas - cols, points de vue, patrimoine - n'expirent jamais."
       route_region_active_cap:
         label: 'Itinéraires actifs par région'
         help: 'Nombre d’itinéraires qu’une région peut afficher simultanément. Un curateur qui approuve au-delà du plafond est bloqué et invité à en retirer un d’abord.'

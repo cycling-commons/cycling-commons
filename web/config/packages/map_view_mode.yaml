@@ -34,3 +34,7 @@ parameters:
     # ...each carrying at least this much. 3 x 5 = 15 of the 25 must come from
     # three different kinds of thing, so no single layer can carry a region.
     map.curated_default_min_per_block: 5
+    # Months before a confirmation reads as stale on the map. Halved is
+    # "check it twice a year"; the ageing band sits at half of it, so a
+    # six-month dial means fresh for three, ageing for three, then stale.
+    map.confirmation_stale_months: 6

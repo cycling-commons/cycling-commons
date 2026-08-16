@@ -4,8 +4,10 @@
 
 namespace App\Controller;
 
+use App\Catalog\ConfirmationFreshness;
 use App\Catalog\Entity\RecommendedRoute;
 use App\Catalog\Entity\Submission;
+use App\Catalog\ItemState;
 use App\Catalog\ItemType;
 use App\Catalog\SubmissionStatus;
 use App\Contribution\SubmissionChangeSummary;
@@ -90,6 +92,7 @@ final class ProfileController extends AbstractController
         Connection $db,
         SubmissionChangeSummary $changes,
         PageSize $pageSize,
+        ConfirmationFreshness $freshness,
     ): Response {
         /** @var User $user */
         $user = $this->getUser();
@@ -233,6 +236,16 @@ final class ProfileController extends AbstractController
                 ['uid' => $userId],
             ),
             'confirmations' => $this->confirmations($db, $userId),
+            /* PLACES NEAR YOU WORTH A LOOK (owner 2026-08-12, the second half
+               of the staleness item). The orange ring on the map is a passive
+               colour; this is the half a rider can act on deliberately - "have
+               a look at these if you are nearby".
+
+               Only where the rider has set a base location. Without one there
+               is no "near you" to answer, and a national list of stale taps is
+               a chore rather than a nudge, which is the exact thing this
+               feature is not supposed to become. */
+            'stale_nearby' => $this->staleNearby($db, $user, $freshness),
             // The answer to "where is my curator request?" lives on the landing
             // pane.
             'curator_applications' => $db->fetchAllAssociative(
@@ -365,6 +378,70 @@ final class ProfileController extends AbstractController
         }
 
         return ['state' => 'unknown', 'slug' => '', 'country' => ''];
+    }
+
+    /**
+     * The user's place confirmations ("still here?" / potability stances,
+     * moderation-and-contribution.md §1.6) with the item-type label key
+     * resolved from the catalog letter.
+     *
+     * @return list<array<string, mixed>>
+     */
+    /**
+     * Stale places inside the rider's own area, soonest-forgotten first.
+     *
+     * Three narrowings, and each is the same one the map makes, on purpose -
+     * two surfaces disagreeing about what "stale" means would be worse than
+     * either being wrong:
+     *  - only letters whose confirmations go off ({@see ItemType::confirmationAges()});
+     *  - only items somebody has actually confirmed, because a never-confirmed
+     *    item is unverified rather than stale;
+     *  - only `source <> 'form'` confirmations, so a submitter answering their
+     *    own improve form cannot keep their own pin off this list.
+     *
+     * The cut is a DATE comparison against `ConfirmationFreshness::staleBefore`
+     * rather than a state computed per row, so this is one indexed pass over
+     * `item_confirmation` however long the list would have been.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function staleNearby(Connection $db, User $user, ConfirmationFreshness $freshness): array
+    {
+        $ages = array_values(array_filter(
+            array_map(static fn (ItemType $t): string => $t->letter(), ItemType::cases()),
+            static fn (string $l): bool => ItemType::fromLetter($l)?->confirmationAges() ?? false,
+        ));
+        if ([] === $ages) {
+            return [];
+        }
+        $rows = $db->fetchAllAssociative(
+            'SELECT i.id, i.name, i.letter, last.at AS last_confirmed,
+                    round((ST_Distance(i.geom::geography, u.base_point::geography) / 1000)::numeric, 1) AS km
+               FROM users u
+               JOIN item i ON i.letter IN (:letters) AND i.state IN '.ItemState::servedSqlTuple()."
+               JOIN LATERAL (
+                    SELECT max(c.created_at) AS at FROM item_confirmation c
+                     WHERE c.item_id = i.id AND c.source <> 'form'
+               ) last ON last.at IS NOT NULL
+              WHERE u.id = :uid
+                AND u.base_point IS NOT NULL
+                AND last.at < :cut
+                AND ST_DWithin(i.geom::geography, u.base_point::geography, u.base_radius_km * 1000)
+              ORDER BY last.at ASC, i.id ASC
+              LIMIT 12",
+            [
+                'uid' => (int) $user->getId(),
+                'letters' => $ages,
+                'cut' => $freshness->staleBefore(new \DateTimeImmutable())->format('Y-m-d H:i:s'),
+            ],
+            ['letters' => ArrayParameterType::STRING],
+        );
+        foreach ($rows as &$row) {
+            $row['typeLabelKey'] = ItemType::fromParam((string) $row['letter'])->labelKey();
+        }
+
+        /* @var list<array<string, mixed>> */
+        return $rows;
     }
 
     /**
