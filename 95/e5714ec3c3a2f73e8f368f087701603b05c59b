@@ -1,0 +1,70 @@
+web/src/Catalog/RegionDirectoryProvider.php
+  s_631e076c2244f0::t_6b8a3756c811f8 338-352,354-355
+  s_631e076c2244f0::t_1a9acf513e7f87 353
+  s_631e076c2244f0::t_c25fdd4fe3d327 275-288
+web/templates/pages/region.html.twig
+  s_631e076c2244f0::t_91e7a3494c1c26 183-198
+web/tests/Moderation/RegionAboutTextTest.php
+  s_631e076c2244f0::t_0989283b7dd73a 1-84,86-112,114-303
+  s_631e076c2244f0::t_7b10036ae6f3a5 85
+  s_631e076c2244f0::t_1a9acf513e7f87 113
+web/src/Catalog/RegionLead.php
+  s_631e076c2244f0::t_00243e96bc1caa 1-59,64-158
+  s_631e076c2244f0::t_44634d01aef96c 60-63
+web/templates/moderate_regions/about.html.twig
+  s_631e076c2244f0::t_8662ed7bf9f6c3 49-51,55
+  s_631e076c2244f0::t_43025658eeeba7 84
+  s_631e076c2244f0::t_19708bf7661d8a 1-26,30-48,52-54,56-65,67-83,85-89
+  s_631e076c2244f0::t_b7df159789021d 27-29
+  s_631e076c2244f0::t_70ef826e56714c 66
+web/templates/profile/show.html.twig
+  s_631e076c2244f0::t_f776661ac8ad33 125-127,129-130,132-133
+  s_631e076c2244f0::t_ad56cf833264f0 295-296
+  s_631e076c2244f0::t_226ef82f5fe565 282-283
+  s_631e076c2244f0::t_a17d5abc7b58b6 212-213
+web/translations/messages.de.yaml
+  s_631e076c2244f0::t_08000d68a33980 1294-1295,3524-3536
+web/translations/messages.en.yaml
+  s_631e076c2244f0::t_08000d68a33980 1298-1299,3547-3559
+web/translations/messages.fr.yaml
+  s_631e076c2244f0::t_08000d68a33980 1294-1295,3521-3533
+web/templates/moderate_regions/index.html.twig
+  s_631e076c2244f0::t_d4016e6e3eed89 219-226
+web/templates/contribute/improve.html.twig
+  s_631e076c2244f0::t_74036b6b31b6d1 262-264
+web/migrations/Version20260816120000.php
+  s_631e076c2244f0::t_200880ecf13434 1-54
+web/translations/messages.es.yaml
+  s_631e076c2244f0::t_08000d68a33980 1299-1300,3562-3574
+web/src/Controller/ModerateRegionsController.php
+  s_631e076c2244f0::t_6f117ccccb3ea0 54-61
+  s_631e076c2244f0::t_1a9acf513e7f87 401
+  s_631e076c2244f0::t_318dda0d7c03e1 254-264,267-400,402-404
+  s_631e076c2244f0::t_dab07c0843b88c 11
+  s_631e076c2244f0::t_db5f176302b4ee 265-266
+docs/specs/map-and-search.md
+  s_631e076c2244f0::t_61092afd53c057 387-423
+web/translations/messages.nl.yaml
+  s_631e076c2244f0::t_08000d68a33980 1294-1295,3521-3533
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "95e5714ec3c3a2f73e8f368f087701603b05c59b",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_631e076c2244f0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "33015a85-b6d4-4b35-a02a-ce97c6036810",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
