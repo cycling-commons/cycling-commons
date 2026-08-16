@@ -430,6 +430,36 @@ matches the two-level shape without teaching a rider the words "entry" and
   the reason said once ("the official site has its own field above"), or the
   rider meets a validation error for obeying the form.
 
+**2. Google Safe Browsing — THE CLIENT IS BUILT (2026-08-16), the two call
+sites are not.** `App\Catalog\Links\SafeBrowsing` is the reusable core:
+batched Lookup-API calls, a three-state verdict (`safe`/`unsafe`/`unknown`) so
+an outage can never read as clean, a suffix-matched host allowlist that a
+look-alike domain cannot spoof, `worst()` for the queue card, and OFF with an
+empty `SAFE_BROWSING_KEY` rather than quietly passing everything. Pinned by
+`SafeBrowsingTest`.
+
+**What is left is a STORAGE decision, and building it wrongly would be worse
+than not having it.** The verdict has to be cached, and it must NOT live inside
+the `links` attribute: `links` flows through the wizard's change diff, so a
+verdict written there would surface as a rider-made edit on a moderation card
+and manufacture curator work out of a background check. The two candidates,
+both real:
+
+  - a `link_verdict` table keyed by url, with its timestamp - shared across
+    every item that points at the same page, which is also what makes the
+    scheduled re-check one sweep rather than one per item; or
+  - a sibling attribute (`linksChecked`) excluded from the diff by name - fewer
+    moving parts, but it re-checks the same Wikipedia url once per item and
+    puts an exclusion rule inside a generic loop.
+
+The first is recommended. Either way the call sites are then: **submit** writes
+the verdict and never blocks (fail open), the **moderation card** reads it, the
+**map payload** withholds a url whose last verdict is `unsafe` (fail closed,
+`CatalogProvider::feature()`), and a scheduled sweep beside the GC timers is
+what makes "again at render" true over time.
+
+Design as written:
+
 **2. Google Safe Browsing, at submit AND at render.**
 
 Both, and the pair is the point: a URL that was clean when it was submitted is

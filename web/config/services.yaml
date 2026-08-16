@@ -63,6 +63,14 @@ services:
             $projectDir: '%kernel.project_dir%'
             $envFallback: '%env(default::APP_BUILD_VERSION)%'
 
+    # Google Safe Browsing for rider-submitted links. Empty key = the layer is
+    # OFF and every verdict is "unknown", which the two callers then treat in
+    # OPPOSITE directions (fail open at submit, fail closed at render). See
+    # App\Catalog\Links\SafeBrowsing.
+    App\Catalog\Links\SafeBrowsing:
+        arguments:
+            $apiKey: '%env(SAFE_BROWSING_KEY)%'
+
     App\Elevation\ElevationClient:
         arguments:
             $valhallaUrl: '%env(ELEVATION_URL)%'
