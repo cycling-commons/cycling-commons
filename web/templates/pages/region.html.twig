@@ -62,7 +62,15 @@
   .rhero-top{display:flex;align-items:flex-start;gap:1.5rem;flex-wrap:wrap}
   .rhero-top > .rhero-head{flex:1 1 260px;min-width:0}
   @media(max-width:640px){.rshape{margin-left:0}.rshape svg{width:104px;height:78px}}
-  .rg-about{padding-bottom:0}
+  /* The about block and the section under it are one reading flow, not two
+     chapters (owner 2026-08-16: the gap read as dead space). Selector
+     shapes are deliberate: atlas.css sets section.pad:has(+ section.pad)
+     padding-bottom at (0,2,2) specificity, which silently beat both a lone
+     class and section.rg-about when this was first written - the zero has
+     to ride the same :has() shape to win the tie as the later sheet. */
+  section.rg-about{padding-bottom:0}
+  section.rg-about:has(+ section.pad){padding-bottom:0}
+  section.rg-about+section.pad{padding-top:clamp(1.2rem,2.5vw,1.75rem)}
   .rg-about-text{max-width:46rem;font-size:1.02rem;line-height:1.65;margin:.4rem 0 .5rem}
   .rg-about-attrib{font-family:var(--mono);font-size:.66rem;letter-spacing:.06em;color:#5a5d4d}
   .rg-about-attrib a{color:inherit}
