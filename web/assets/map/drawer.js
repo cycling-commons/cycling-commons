@@ -80,7 +80,7 @@ export function schemaRows(letter, src, id, opts){
       } else if(f.kind === 'rating'){
         rows.push({label:f.label, value: /^[1-5]$/.test(String(v)) ? stars(Number(v)) : v});
       } else if(f.kind === 'url'){
-        rows.push({label:f.label, value:String(v).replace(/^https?:\/\//,'').replace(/\/$/,''), links:[{label:D.visitSite||'Visit site', href:v}]});
+        rows.push({label:f.label, html:true, value:linkValue(v, String(v).replace(/^https?:\/\//,'').replace(/\/$/,''))});
       } else if(f.kind === 'textarea'){
         // Prose, not a fact: a right-aligned ragged-left paragraph squeezed
         // beside its label was unreadable (owner 2026-08-16). Full width,
@@ -102,10 +102,17 @@ export function schemaRows(letter, src, id, opts){
      through D; an unknown label is a rider's own words and stays verbatim. */
   const KNOWN_LINK_LABELS = {'Official site': D.lnkOfficial, 'Wikipedia': D.lnkWikipedia};
   itemLinks(src.links, document.documentElement.lang || 'en').forEach(l => {
-    rows.push({label: KNOWN_LINK_LABELS[l.label] || l.label, value: l.domain,
-      links: [{label: D.visitSite || 'Visit site', href: l.href}]});
+    rows.push({label: KNOWN_LINK_LABELS[l.label] || l.label, html:true, value: linkValue(l.href, l.domain)});
   });
   return rows;
+}
+
+/* A URL value rendered as its own link: the visible domain IS the anchor
+   (owner 2026-08-16: the separate "Visit site" chip next to it was a second
+   control for the same click). Everything interpolated is escaped/sanitised
+   here, which is what earns the html:true channel. */
+function linkValue(href, text){
+  return `<a class="cc-d-a" href="${safeHref(href)}" target="_blank" rel="noopener noreferrer nofollow">${escPend(text)} ↗</a>`;
 }
 /* The steepest-ramp figure carries the width it was measured over — "13% over
    820 ft" — because its LABEL cannot (CatalogFormRegistry's note on that field
@@ -268,7 +275,7 @@ export function osmDrawer(layer, p, ll, src){
   // The simulated demo Status/Rating rows are gone — simulated flags die
   // (map-and-search.md §12); their payload keys stay for byte-stability but
   // nothing reads them.
-  if(p.web) rec.push({label:D.website||'Website', value:p.web.replace(/^https?:\/\//,'').replace(/\/$/,''), links:[{label:D.visitSite||'Visit site',href:p.web}]});
+  if(p.web) rec.push({label:D.website||'Website', html:true, value:linkValue(p.web, p.web.replace(/^https?:\/\//,'').replace(/\/$/,''))});
   // Registry-driven attribute rows (single source of truth = CatalogFormRegistry,
   // served as CC_FIELD_SCHEMA). Filled rows replace any structural row of the
   // same label (e.g. a curated 'Type' overriding the raw OSM one); unset fields

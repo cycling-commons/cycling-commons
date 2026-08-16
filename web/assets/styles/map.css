@@ -668,6 +668,9 @@
   .cc-d-rec li{display:flex;gap:.8rem;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid rgba(239,230,212,.12);font-size:.9rem}
   .cc-d-rec .k{color:rgba(239,230,212,.6);font-family:var(--mono);font-size:.64rem;letter-spacing:.06em;text-transform:uppercase;flex:none;max-width:46%}
   .cc-d-rec .v{text-align:right;font-weight:400;color:rgba(239,230,212,.78);line-height:1.5}
+  /* A URL value that IS the link: the domain underlined, no separate chip. */
+  .cc-d-a{color:inherit;text-decoration:underline;text-underline-offset:2px}
+  .cc-d-a:hover{color:#fff}
   /* Prose rows (textarea fields): full width, flowing from the left, no
      label — a paragraph right-aligned beside a label was unreadable. */
   .cc-d-rec li.wide{display:block}
