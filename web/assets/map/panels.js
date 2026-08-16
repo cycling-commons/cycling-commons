@@ -145,10 +145,20 @@ export function initLayerList(){
   // artifact exists — a control for tiles that were never built reads as
   // broken, not absent.
   const routesBtn=document.getElementById('ovRoutes');
+  // The key follows the layer, exactly as the gaps toggle does: three colours
+  // and a numbered badge explained while they are on screen, and nothing added
+  // to the legend for everyone else. Owner-asked 2026-08-16, after reading the
+  // node network off a screenshot and having to be told what the colours meant.
+  const routesKey=document.getElementById('routesKey');
+  const syncRoutesKey=()=>{ if(routesKey) routesKey.hidden=!routesTilesVisible(); };
   if(routesBtn && routesTilesConfigured()){
     routesBtn.hidden=false;
-    routesBtn.onclick=()=>{ routesBtn.classList.toggle('on', setRoutesTiles(!routesTilesVisible())); };
+    routesBtn.onclick=()=>{
+      routesBtn.classList.toggle('on', setRoutesTiles(!routesTilesVisible()));
+      syncRoutesKey();
+    };
   }
+  syncRoutesKey();
 
   // Legend-as-filter + study mode. Both live on the legend because that is
   // where the classes are named; the class filter works with the tile skin off

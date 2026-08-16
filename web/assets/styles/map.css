@@ -141,6 +141,20 @@
   .skey-study:disabled{opacity:.35;cursor:not-allowed}
   .skey-study[aria-pressed="true"]{background:var(--trail);border-color:var(--trail);color:var(--ink)}
   .skey-ln{width:34px;height:4px;border-radius:2px;flex:none;background:var(--sc)}
+  /* Cycle-route key. Same swatch and rhythm as the surface rows so one legend
+     reads as one legend, and deliberately NOT a button: these three explain
+     what the map draws, they do not filter it. No checkmark, no hover, no
+     press state - the affordance has to match what happens. */
+  .rkey{margin-top:.95rem;padding-top:.85rem;border-top:1px solid rgba(239,230,212,.14)}
+  .rkey-row{display:flex;align-items:center;gap:.7rem;font-size:.8rem;color:var(--paper);
+    padding:.15rem .2rem;line-height:1.35}
+  /* The knooppunt badge, in miniature: white disc, route-purple ring and
+     numeral, which is exactly how routes-tiles.js draws it on the map. A
+     rider should be able to point at the key and then at the map. */
+  .rkey-node{flex:none;display:flex;align-items:center;justify-content:center;
+    width:17px;height:17px;margin-left:8px;margin-right:9px;
+    background:#FFFFFF;color:#5B3A9E;border:1.5px solid #7A4FCF;border-radius:50%;
+    font-family:var(--mono);font-size:.56rem;line-height:1}
   /* Gaps are TRANSPARENT, not white.
      They used to be painted #FBF4E4 to match the white casing the curated A
      layer draws under its lines — true of that layer, and false of everything

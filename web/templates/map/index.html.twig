@@ -321,6 +321,32 @@
          only while the surface skin is on. #}
       <button type="button" class="skey-study" id="skeyGaps" aria-pressed="false" hidden
         title="{{ 'map.gaps_grid_title'|trans }}">{{ 'map.gaps_grid'|trans }}</button>
+      {# Cycle-route key. Revealed by panels.js only while the routes overlay is
+         on, the same rule the gaps toggle follows: a key for an absent layer
+         explains nothing and makes the legend longer for everyone.
+
+         THREE rows, not six networks. A rider plans against "national route",
+         "regional network", "mountain bike"; icn/ncn and rcn/lcn/other merge in
+         routes-tiles.js GROUPS and the key has to say what the map draws, not
+         what the extractor stored. The colours here are pinned against that
+         file by routes-legend.test.cjs - a key that drifts from the map is
+         worse than none.
+
+         These rows do NOT filter, unlike the surface rows above. They carry no
+         checkmark and no press state for exactly that reason. #}
+      <div class="rkey" id="routesKey" hidden>
+        <h4>{{ 'map.route_network'|trans }}</h4>
+        <div class="skey">
+          <div class="rkey-row"><span class="skey-ln" style="--sc:#C84E64"></span>{{ 'map.legend_route_national'|trans }}</div>
+          <div class="rkey-row"><span class="skey-ln" style="--sc:#7A4FCF"></span>{{ 'map.legend_route_regional'|trans }}</div>
+          <div class="rkey-row"><span class="skey-ln" style="--sc:#8A5A32"></span>{{ 'map.legend_route_mtb'|trans }}</div>
+        </div>
+        {# The numbered badges are what the node network IS - most of a Dutch or
+           Belgian screen is these - so the key names them rather than leaving a
+           rider to work out that the circles are junctions. An explanation, in
+           the quality-note style. #}
+        <div class="skey-note"><span class="rkey-node" aria-hidden="true">7</span>{{ 'map.legend_route_node'|trans }}</div>
+      </div>
     </div>
     <div class="map-ctrl" aria-label="{{ 'map.base_aria'|trans }}">
       <button class="mc-toggle" id="mcToggle" type="button" aria-label="{{ 'map.base_layers_aria'|trans }}" aria-expanded="false">
