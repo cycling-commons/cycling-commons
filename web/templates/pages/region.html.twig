@@ -12,9 +12,12 @@
      wrapped "Water &/food" and ran the count into the next column. Stacking
      removes the collision for any string length, which matters across five
      locales where "on the map" is "sur la carte" and "auf der Karte". */
-  {# margin-top 1rem, not 1.2: it collapses with the kicker's own 1rem, so
-     anything above it makes this header's below-gap the odd one out. #}
-  .kinds{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:0 2rem;margin-top:1rem}
+  {# -.65rem: each row wears .65rem top padding (the row separators need it),
+     so the first row's TEXT sat 9px lower under its header than the About
+     paragraph does under its own. A negative margin collapses additively
+     with the kicker's 1rem (1rem - .65rem), cancelling exactly the first
+     row's padding - the ink-to-ink gap under both headers measures equal. #}
+  .kinds{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:0 2rem;margin-top:-.65rem}
   .kinds .k{display:flex;flex-direction:column;gap:.15rem;padding:.65rem 0;
     border-bottom:1px solid rgba(20,22,14,.1);font-size:.95rem}
   .kinds .k .c{font-family:var(--mono);font-size:.72rem;color:#8a8d7d;letter-spacing:.02em}
