@@ -137,10 +137,16 @@ when@test:
             arguments:
                 $storages:
                     EU: '@media.storage.eu'
+                # LITERALS, not %env()%: real environment variables beat every
+                # .env* file, so inside the dev container the compose-provided
+                # MEDIA_PUBLIC_BASE (the MinIO port) silently replaced
+                # .env.test's https://media.test and failed the URL tests on
+                # exactly one machine. The suite's fixture values belong to the
+                # suite.
                 $publicBases:
-                    EU: '%env(MEDIA_PUBLIC_BASE)%/cc-media-eu'
-                $publicBase: '%media.public_base%'
-                $defaultContinent: '%media.default_continent%'
+                    EU: 'https://media.test/cc-media-eu'
+                $publicBase: 'https://media.test'
+                $defaultContinent: 'EU'
 
         App\Media\ContinentResolver:
             public: true
