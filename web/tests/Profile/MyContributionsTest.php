@@ -85,4 +85,41 @@ final class MyContributionsTest extends WebTestCase
         self::assertStringContainsString('My castle edit', $html, 'garbage filter = unfiltered, never empty');
         self::assertStringContainsString('My fountain edit', $html);
     }
+
+    /**
+     * The withdrawn toggle combines with the category chips (owner
+     * 2026-08-16): both are plain GET params, ANDed; every chip href carries
+     * the other filter so switching one never resets the other.
+     */
+    public function testWithdrawnFilterCombinesWithCategory(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $me = (new User())->setEmail('wfilter-me@subs.test');
+        $me->setPassword('x');
+        $em->persist($me);
+        $em->flush();
+
+        $mk = static function (string $letter, string $title, SubmissionStatus $status) use ($em, $me): void {
+            $em->persist((new Submission())->setType(SubmissionType::Edit)->setLetter($letter)
+                ->setUserId((int) $me->getId())->setStatus($status)->setTitle($title)
+                ->setGeom('{"type":"Point","coordinates":[6.0,50.4]}')->setCountryCode('BE')
+                ->setChanges([])->setPayload([]));
+        };
+        $mk('J', 'Castle pending', SubmissionStatus::Pending);
+        $mk('J', 'Castle withdrawn', SubmissionStatus::Withdrawn);
+        $mk('C', 'Fountain withdrawn', SubmissionStatus::Withdrawn);
+        $em->flush();
+        $client->loginUser($me);
+
+        $html = (string) $client->request('GET', '/profile?status=withdrawn')->html();
+        self::assertStringContainsString('Castle withdrawn', $html);
+        self::assertStringContainsString('Fountain withdrawn', $html);
+        self::assertStringNotContainsString('Castle pending', $html);
+
+        $html = (string) $client->request('GET', '/profile?status=withdrawn&letter=J')->html();
+        self::assertStringContainsString('Castle withdrawn', $html, 'both filters AND together');
+        self::assertStringNotContainsString('Fountain withdrawn', $html);
+        self::assertStringContainsString('letter=C&amp;status=withdrawn', $html, 'category chips keep the status filter');
+    }
 }

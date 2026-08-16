@@ -110,10 +110,14 @@ final class WithdrawSubmissionTest extends WebTestCase
             'no withdraw button on a decided row');
 
         $pending = $this->submission($me, SubmissionStatus::Pending);
-        $crawler = $client->request('GET', '/profile');
+        // Withdraw FROM a category-filtered view: the redirect must land back
+        // on the same filter (owner 2026-08-16: "the system loses the
+        // selected category").
+        $crawler = $client->request('GET', '/profile?letter=J');
         $form = $crawler->filter('form[action$="/profile/withdraw/'.$pending->getId().'"]')->form();
         $client->submit($form);
         self::assertResponseRedirects();
+        self::assertStringContainsString('letter=J', (string) $client->getResponse()->headers->get('Location'));
         $em->clear();
         self::assertSame(SubmissionStatus::Withdrawn, $em->find(Submission::class, (int) $pending->getId())->getStatus());
         self::assertSame(SubmissionStatus::Approved, $em->find(Submission::class, (int) $sub->getId())->getStatus());

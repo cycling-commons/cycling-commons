@@ -70,7 +70,16 @@ final class ProfileController extends AbstractController
             $this->addFlash('notice', 'flash.withdraw_too_late');
         }
 
-        return $this->redirectToRoute('profile', [], Response::HTTP_SEE_OTHER);
+        // Land back on the SAME filtered view (owner 2026-08-16: withdrawing
+        // used to drop the selected category). The form posts the active
+        // filters along; show() re-validates them, so garbage just falls
+        // back to unfiltered.
+        $params = array_filter([
+            'letter' => $request->request->getString('letter'),
+            'status' => $request->request->getString('status'),
+        ], static fn (string $v): bool => '' !== $v);
+
+        return $this->redirectToRoute('profile', $params, Response::HTTP_SEE_OTHER);
     }
 
     #[Route('/profile', name: 'profile')]
@@ -93,13 +102,16 @@ final class ProfileController extends AbstractController
         if (!\in_array($letterFilter, array_map(static fn (ItemType $t): string => $t->letter(), ItemType::cases()), true)) {
             $letterFilter = '';
         }
+        // The withdrawn toggle combines with the category chips (owner
+        // 2026-08-16): both are plain GET params, ANDed in the query.
+        $statusFilter = 'withdrawn' === $request->query->getString('status') ? 'withdrawn' : '';
 
         // Lazy retention filter (correct even if no sweep has run yet, M8
         // phase 1): a rejected submission past the cutoff must never render
         // here, whether or not RetentionService::sweep() has deleted it. The
         // count applies the SAME filter as the page query - a total that counts
         // rows the list refuses to show would page into empty tails.
-        $contributionsQuery = static function (EntityManagerInterface $em) use ($userId, $retention, $letterFilter) {
+        $contributionsQuery = static function (EntityManagerInterface $em) use ($userId, $retention, $letterFilter, $statusFilter) {
             $qb = $em->createQueryBuilder()
                 ->from(Submission::class, 's')
                 ->where('s.userId = :uid')
@@ -111,6 +123,9 @@ final class ProfileController extends AbstractController
                 ->setParameter('cutoff', $retention->cutoff());
             if ('' !== $letterFilter) {
                 $qb->andWhere('s.letter = :letter')->setParameter('letter', $letterFilter);
+            }
+            if ('' !== $statusFilter) {
+                $qb->andWhere('s.status = :status')->setParameter('status', SubmissionStatus::Withdrawn);
             }
 
             return $qb;
@@ -163,6 +178,7 @@ final class ProfileController extends AbstractController
                 ItemType::cases(),
             ))),
             'letter_filter' => $letterFilter,
+            'status_filter' => $statusFilter,
             // The conversation attached to each submission, so a contribution
             // row can show it the way the curator's desk shows the rider's
             // reply. Without this the rider saw a "needs info" chip and had no
