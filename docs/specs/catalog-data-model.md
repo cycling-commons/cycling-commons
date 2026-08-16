@@ -373,14 +373,94 @@ links entry. `app:items:import-links` loads it, matched by the STORED
 ONLY when empty (a harvested or rider-typed value wins over Wikidata's
 claim), and rows with an approved curator edit are skipped entirely.
 
-**Deliberately not built yet** (docs/TODO.md keeps the tail): the wizard's
-repeatable multi-locale links editor, and the reputation-list layers (Google
-Safe Browsing at submit + render, urlscan.io preview on the queue card) -
-the shipped layers are the cheap ones (https-only, caps, same-host rule,
-bare-domain display, nofollow), applied first as designed.
-
 Pinned by `OutboundLinksTest`, `ImportItemLinksCommandTest` and
 `web/tests/js/links.test.mjs`.
+
+#### The rest of it, specified (2026-08-16)
+
+The shipped layers are the cheap ones - https-only, caps, same-host rule,
+bare-domain display, nofollow - applied first as the item designed. Three
+pieces remain, and this is what each has to be. **They are independent: the
+editor can ship without the reputation layers and vice versa**, which is the
+reason to write them separately rather than as one "finish links" task.
+
+**1. The wizard's repeatable multi-locale editor.**
+
+Today `links` can only arrive from the importer. The wizard needs a field that
+matches the two-level shape without teaching a rider the words "entry" and
+"variant".
+
+- **A new `FieldKind::Links`**, not a reuse. Every existing kind renders one
+  input for one scalar (`MultiSelect` is the closest and it is still one
+  control over a fixed vocabulary); this is a nested repeatable over free text,
+  and the registry's per-kind `switch` in `ImproveType` is where the difference
+  belongs rather than inside a `Text` field that behaves unlike every other
+  `Text` field.
+- **Shape on the wire: one hidden JSON input**, written by the editor script
+  and parsed server-side, exactly as the climb `route` and the segment shapes
+  already travel. A `links[0][urls][1][url]` name grid would put the nesting in
+  the HTTP layer where PHP's array parsing, not `OutboundLinks`, would decide
+  what a malformed post means.
+- **The server never trusts it.** `OutboundLinks::assertValid()` already gates
+  every write path and MUST gate this one - the caps are the anti-spam design,
+  and a client-side cap is a suggestion. A post that fails validation returns
+  the form with the rider's input intact and the specific rule named ("at most
+  4 places to link to"), never a silently truncated list.
+- **What the rider sees**: a list of *places to link to*, each with a label and
+  one url; "add another language" reveals a per-locale row inside that entry.
+  Locale defaults to the wizard's own locale, and the locale-less slot is
+  offered as "any language", which is what it means at render time.
+- **Counts come from the constants**, not from copy: `MAX_ENTRIES`,
+  `MAX_URLS_PER_ENTRY` and `MAX_LABEL_LENGTH` render into the field's help text
+  and its `maxlength`, so raising a cap is one edit rather than three.
+- **"Official site" stays refused** at the field as well as at the gate, with
+  the reason said once ("the official site has its own field above"), or the
+  rider meets a validation error for obeying the form.
+
+**2. Google Safe Browsing, at submit AND at render.**
+
+Both, and the pair is the point: a URL that was clean when it was submitted is
+exactly how a link farm gets past a one-time check, and a check only at render
+lets a hostile URL sit in the moderation queue where a curator clicks it first.
+
+- **Flag, never silently reject** (the item's own rule). A flagged submission
+  still reaches the queue, carrying the verdict on the card, because a false
+  positive that vanishes is indistinguishable from a bug.
+- **Fail OPEN at submit, fail CLOSED at render.** They are different questions.
+  A rider must not lose their contribution because a Google endpoint is down,
+  so an unreachable lookup at submit stores the link and marks the verdict
+  unknown for the curator. On the public map the same unknown must not become a
+  clean bill of health - a link whose last verdict was "unsafe" is withheld
+  until a later check clears it. This asymmetry is deliberate and is the one
+  thing to get right.
+- **Cache the verdict with the link**, with its timestamp, so the render check
+  is a stored read rather than an outbound call in a rider's hot path. A
+  scheduled re-check (operations.md §1, beside the GC timers) is what makes
+  "again at render" true over time; the render path itself never blocks on
+  Google.
+- **An allowlist skips the friction** for wikipedia.org and the official
+  tourism domains, because those are the links the importer produces in bulk
+  and re-checking them is spending a quota on a known answer.
+- **The API key is an env var with no safe default** and belongs in the
+  deploy-prerequisites list; absent, the layer is OFF and says so at boot
+  rather than silently passing everything.
+
+**3. urlscan.io preview on the queue card.**
+
+The look-without-visiting option, and it is worth building only after (2): a
+screenshot is a moderator convenience, whereas the reputation list is the thing
+that stops a bad click.
+
+- **A stored screenshot reference on the submission**, fetched by the worker
+  tier (media-storage-architecture.md) when a submission carrying links is
+  queued - never fetched by the moderation page, or the desk's render time
+  depends on a third party.
+- **The image is proxied, never hot-linked**: an `<img>` pointing at urlscan
+  would tell them which of our moderators is looking at what, and it is one
+  more CSP host.
+- **Local antivirus is the wrong tool here** and is not part of this: it scans
+  files, not pages. The reputation-list + sandboxed-preview pair is the
+  applicable one, which is why `ClamAvScanner` (photos) and this share nothing.
 
 ### `condition` — the one field that removes a place
 
