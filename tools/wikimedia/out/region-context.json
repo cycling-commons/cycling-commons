@@ -539,6 +539,33 @@
    "url": "https://nl.wikipedia.org/wiki/Auckland_(regio)"
   }
  },
+ "australia": {
+  "de": {
+   "extract": "Australien ist ein Staat auf der Südhalbkugel der Erde, der das Festland des australischen Kontinents, die ihm südlich vorgelagerte Insel Tasmanien, die subantarktische Macquarieinsel mit ihren Nebeninseln und als Außengebiete die pazifische Norfolkinsel, die Kokosinseln, die Weihnachtsinsel, die Ashmore- und Cartierinseln sowie Heard und die McDonaldinseln im Indischen Ozean umfasst. Seit 1933 erhebt das Land auch Ansprüche auf das Australische Antarktis-Territorium. Mit dem Antarktis-Vertrag wurde die Geltendmachung für unbestimmte Zeit aufgeschoben. Die Nachbarstaaten Australiens sind Neuseeland im Südosten sowie Indonesien, Osttimor und Papua-Neuguinea im Norden.",
+   "title": "Australien",
+   "url": "https://de.wikipedia.org/wiki/Australien"
+  },
+  "en": {
+   "extract": "Australia, officially the Commonwealth of Australia, is a country comprising the mainland of the Australian continent, the island of Tasmania and numerous smaller islands. It has a land area of 7,688,287 km2 (2,968,464 sq mi), making it the sixth-largest country in the world, and is the world's flattest and driest inhabited continent. It is a megadiverse country, and its size gives it a wide variety of landscapes and climates, including deserts in the interior and tropical rainforests along the coast.",
+   "title": "Australia",
+   "url": "https://en.wikipedia.org/wiki/Australia"
+  },
+  "es": {
+   "extract": "Australia, oficialmente, la Mancomunidad de Australia, es un país soberano que abarca la Australia continental, la isla de Tasmania y numerosas islas menores. Con una superficie de 7 741 220 km², Australia es el país más grande de Oceanía y el sexto más grande del mundo. Asimismo, es el continente habitado más plano y más seco, con los suelos menos fértiles. Es un país megadiverso, y su tamaño le confiere una gran variedad de paisajes y climas, con desiertos en el centro, selvas tropicales en el noreste y cordilleras en el sureste.",
+   "title": "Australia",
+   "url": "https://es.wikipedia.org/wiki/Australia"
+  },
+  "fr": {
+   "extract": "L'Australie, en forme longue le Commonwealth d'Australie, est un pays d'Océanie, situé entre les océans Pacifique et Indien. Elle comprend la partie continentale du continent australien, l'île de Tasmanie ainsi que de nombreuses petites îles. Elle est entourée par l'Indonésie, le Timor oriental et la Papouasie-Nouvelle-Guinée au nord, les îles Salomon, le Vanuatu et la Nouvelle-Calédonie au nord-est et la Nouvelle-Zélande au sud-est. L'État le plus proche de l'Australie est la Papouasie-Nouvelle-Guinée, toutes deux séparées par le détroit de Torrès, large en son point le plus étroit de seulement 40 km.",
+   "title": "Australie",
+   "url": "https://fr.wikipedia.org/wiki/Australie"
+  },
+  "nl": {
+   "extract": "Australië, officieel het Gemenebest van Australië, is een land op het zuidelijk halfrond bestaande uit het Australische vasteland en een groot aantal eilanden in de Indische en Grote Oceaan, waarvan Tasmanië het grootste is. Het land ligt ten noordwesten van Nieuw-Zeeland en ten zuiden van Indonesië, Oost-Timor en Papoea-Nieuw-Guinea. Het heeft een oppervlakte van 7.692.000 km² en is daarmee het op vijf na grootste land ter wereld qua oppervlakte. Van de circa 27 miljoen inwoners woont het grootste deel in en nabij de grote steden, zoals Sydney, Melbourne, Brisbane, Perth en Adelaide. De hoofdstad is Canberra.",
+   "title": "Australië (land)",
+   "url": "https://nl.wikipedia.org/wiki/Australi%C3%AB_(land)"
+  }
+ },
  "australian-capital-territory": {
   "de": {
    "extract": "Das Australian Capital Territory ist ein australisches Territorium, in dem die Hauptstadt Canberra liegt.",
@@ -780,6 +807,33 @@
    "extract": "De Vrijstaat Beieren is qua oppervlakte de grootste deelstaat van de Bondsrepubliek Duitsland. De deelstaat ligt in het zuidoosten van het land. De hoofdstad is München. Het huidige Beieren is ontstaan uit het historische hertogdom Beieren, dat deel uitmaakte van de Beierse Kreits.",
    "title": "Beieren",
    "url": "https://nl.wikipedia.org/wiki/Beieren"
+  }
+ },
+ "belgium": {
+  "de": {
+   "extract": "Belgien ist ein föderaler Staat in Westeuropa. Es liegt zwischen der Nordsee und den Ardennen und grenzt an die Niederlande, Deutschland, Luxemburg und Frankreich. Belgien zählte am 1. Januar 2024 rund 11,8 Millionen Einwohner auf einer Fläche von 30.688 Quadratkilometern. Mit 383 Einwohnern pro Quadratkilometer zählt Belgien zu den am dichtesten besiedelten Staaten. Der Grad der Urbanisierung Belgiens ist mit fast 98 Prozent der höchste in Europa. Brüssel ist die Hauptstadt und Sitz der belgischen Königsfamilie, der Föderalregierung sowie Zentrum der Region Brüssel-Hauptstadt. Die bevölkerungsreichste Stadt ist Antwerpen, gefolgt von Gent, Charleroi, Lüttich (Liège) und Brüssel, während Brüssel und die umgebenden Gemeinden mit insgesamt ca. 1,25 Millionen Einwohnern den größten Ballungsraum bilden. Die Region Brüssel-Hauptstadt umfasst die Stadt Brüssel selbst sowie 18 unabhängige kommunale Einheiten; deren Einwohner werden vom Belgischen Statistikamt separat erfasst.",
+   "title": "Belgien",
+   "url": "https://de.wikipedia.org/wiki/Belgien"
+  },
+  "en": {
+   "extract": "Belgium, officially the Kingdom of Belgium, is a country in Northwestern Europe. Situated in a coastal lowland region known as the Low Countries, it is bordered by the Netherlands to the north, Germany to the east, Luxembourg to the southeast, France to the south, and the North Sea to the west. Belgium covers an area of 30,689 km2 (11,849 sq mi) and has a population of more than 11.8 million; its population density of 383/km2 (990/sq mi) ranks 22nd in the world and sixth in Europe. The capital and largest metropolitan region is Brussels; other major cities are Antwerp, Ghent, Charleroi, Liège, Bruges, Namur, and Leuven.",
+   "title": "Belgium",
+   "url": "https://en.wikipedia.org/wiki/Belgium"
+  },
+  "es": {
+   "extract": "Bélgica, oficialmente Reino de Bélgica, es uno de los veintisiete Estados soberanos que forman la Unión Europea, situado en Europa noroccidental. El país cubre una superficie de 30 528 km² y poseía en el año 2023 una población de 11 754 004habitantes. Su capital y la conurbación más poblada es Bruselas, mientras que su ciudad (municipio) más poblada es Amberes.",
+   "title": "Bélgica",
+   "url": "https://es.wikipedia.org/wiki/B%C3%A9lgica"
+  },
+  "fr": {
+   "extract": "La Belgique (en néerlandais : België /ˈbɛlɣiǝ/ ; en allemand : Belgien /ˈbɛlgiən/ ; en wallon : Beldjike /bɛlˈdʒik/, en forme longue le royaume de Belgique, est un pays d'Europe de l'Ouest, bordé par la France, les Pays-Bas, l'Allemagne, le Luxembourg et la mer du Nord. La Belgique couvre une superficie de 30 688 km2 avec une population de 11 825 551 habitants au 1er janvier 2025, soit une densité de 385 habitants/km2. Politiquement, il s'agit d'une monarchie constitutionnelle fédérale à régime parlementaire. Sa capitale est Bruxelles ; les autres grandes villes sont Anvers, Gand, Charleroi, Liège, Bruges, Namur et Louvain.",
+   "title": "Belgique",
+   "url": "https://fr.wikipedia.org/wiki/Belgique"
+  },
+  "nl": {
+   "extract": "België, officieel het Koninkrijk België, is een West-Europees land dat aan de Noordzee ligt en aan Nederland, Duitsland, Luxemburg en Frankrijk grenst. Het land is 30.689 km² groot en heeft een bevolking van meer dan 11.868 miljoen inwoners. Brussel is de hoofdstad van België en tevens het bestuurlijk centrum van de Europese Unie en de NAVO.",
+   "title": "België",
+   "url": "https://nl.wikipedia.org/wiki/Belgi%C3%AB"
   }
  },
  "berlin": {
@@ -1194,6 +1248,33 @@
    "url": "https://nl.wikipedia.org/wiki/Campani%C3%AB"
   }
  },
+ "canada": {
+  "de": {
+   "extract": "Kanada ist ein föderaler Staat in Nordamerika, der zwischen dem Atlantik im Osten und dem Pazifik im Westen liegt und nordwärts bis zum Arktischen Ozean reicht. Bundeshauptstadt ist Ottawa, die bevölkerungsreichste Stadt ist Toronto.",
+   "title": "Kanada",
+   "url": "https://de.wikipedia.org/wiki/Kanada"
+  },
+  "en": {
+   "extract": "Canada is a country in North America. Its ten provinces and three territories extend from the Atlantic Ocean to the Pacific Ocean and northward into the Arctic Ocean, making it the second-largest country by total area, with the longest coastline of any country. Its border with the United States is the longest international land border. The country is characterized by a wide range of both meteorologic and geological regions. With a population of over 41 million, it has widely varying population densities, with the majority residing in its urban areas and large areas being sparsely populated. Its capital is Ottawa and its three largest metropolitan areas are Toronto, Montreal, and Vancouver.",
+   "title": "Canada",
+   "url": "https://en.wikipedia.org/wiki/Canada"
+  },
+  "es": {
+   "extract": "Canadá es un país soberano ubicado en América del Norte, cuya forma de gobierno es la monarquía parlamentaria federal. Su territorio está organizado en diez provincias y tres territorios. Su capital es la ciudad de Ottawa y su ciudad más poblada es Toronto, seguida por Montreal y Vancouver.",
+   "title": "Canadá",
+   "url": "https://es.wikipedia.org/wiki/Canad%C3%A1"
+  },
+  "fr": {
+   "extract": "Le Canada est un pays d'Amérique septentrionale constitué de dix provinces et de trois territoires.",
+   "title": "Canada",
+   "url": "https://fr.wikipedia.org/wiki/Canada"
+  },
+  "nl": {
+   "extract": "Canada is een land in het noorden van Noord-Amerika. De hoofdstad van Canada is Ottawa en de grootste steden zijn Toronto, Montréal, Vancouver en Calgary. Canada is met een oppervlakte van 9.984.670 km² op Rusland na het grootste land ter wereld.",
+   "title": "Canada",
+   "url": "https://nl.wikipedia.org/wiki/Canada"
+  }
+ },
  "canarias": {
   "de": {
    "extract": "Die Kanarischen Inseln oder Kanaren sind eine geologisch zu Afrika, politisch zu Spanien und biogeografisch zu Makaronesien gehörende, aus acht bewohnten und einer Reihe unbewohnter Inseln bestehende Inselgruppe im östlichen Zentralatlantik, etwa 100 bis 500 Kilometer westlich der Küste von Marokko.\nDie Autonome Gemeinschaft der Kanaren ist eine der 17 Autonomen Gemeinschaften Spaniens. Diese wiederum besteht aus zwei Provinzen: der Provinz Santa Cruz de Tenerife und der Provinz Las Palmas, deren Verwaltungssitz in Las Palmas auf Gran Canaria ist.",
@@ -1572,6 +1653,33 @@
    "url": "https://nl.wikipedia.org/wiki/Chiba_(prefectuur)"
   }
  },
+ "chile": {
+  "de": {
+   "extract": "Chile, amtlich República de Chile, ist ein Staat im Südwesten Südamerikas, der den westlichen Rand des Südkegels (Cono Sur) des Kontinents bildet. Chile erstreckt sich in Nord-Süd-Richtung zwischen den Breitengraden 17° 30′ S und 56° 0′ S. Somit beträgt die Nord-Süd-Ausdehnung rund 4200 Kilometer. In west-östlicher Richtung liegt Chile zwischen dem 76. und dem 64. westlichen Längengrad und besitzt eine Ausdehnung von durchschnittlich weniger als 200 Kilometern. Wegen dieser – durch seine Lage am Westhang der Andenkordillere bedingten – ungewöhnlichen Form wird Chile schon seit seiner Entdeckung häufig „das langgestreckte Land“ genannt.",
+   "title": "Chile",
+   "url": "https://de.wikipedia.org/wiki/Chile"
+  },
+  "en": {
+   "extract": "Chile, officially the Republic of Chile, is a country in the Southern Cone of western South America. It is the southernmost country in the world and the closest to Antarctica, extending along a narrow strip of land between the Andes Mountains and the Pacific Ocean. According to the 2024 census, Chile had an enumerated population of 18.5 million. The country covers a territorial area of 756,102 square kilometers (291,933 sq mi), sharing borders with Peru to the north, Bolivia to the northeast, Argentina to the east, and the Drake Passage to the south. It also administers several Pacific islands, including Juan Fernández, Isla Salas y Gómez, Desventuradas, and Easter Island, and claims about 1,250,000 square kilometers (480,000 sq mi) of Antarctica as the Chilean Antarctic Territory. The capital and largest city is Santiago, and the official and national language is Spanish.",
+   "title": "Chile",
+   "url": "https://en.wikipedia.org/wiki/Chile"
+  },
+  "es": {
+   "extract": "Chile, oficialmente República de Chile, es un Estado soberano ubicado en el extremo sudoeste de América del Sur. Adopta la forma de gobierno republicana, democrática, presidencialista y unitaria. Su capital y ciudad más poblada es Santiago.",
+   "title": "Chile",
+   "url": "https://es.wikipedia.org/wiki/Chile"
+  },
+  "fr": {
+   "extract": "Le Chili, en forme longue la république du Chili, est un pays d’Amérique du Sud partageant ses frontières avec le Pérou et la Bolivie au nord et avec l’Argentine au nord-est, à l'est et au sud-est. Tout son territoire forme une étroite bande continentale allant du désert d'Atacama, au nord, jusqu'au cap Horn, au sud, étant exclusivement bordé par l'océan Pacifique sur sa façade ouest. L'île de Pâques, située à 3 000 km à l'ouest de Valparaíso dans l'océan Pacifique, fait partie du Chili depuis 1888. De même, le Chili possède depuis 1935 l'archipel Juan Fernández situé à environ 700 kilomètres à l'ouest du pays abritant la célèbre île Robinson Crusoé. La superficie totale du pays est de 756 102 km2. La capitale du Chili est Santiago. Les autres villes importantes sont le grand port maritime de Valparaíso, la célèbre station balnéaire de Viña del Mar et la ville industrielle d'Antofagasta. Punta Arenas est la plus grande ville des terres australes du continent américain.",
+   "title": "Chili",
+   "url": "https://fr.wikipedia.org/wiki/Chili"
+  },
+  "nl": {
+   "extract": "Chili, officieel de Republiek Chili, is een land in Zuid-Amerika met als buurlanden Peru, Bolivia en Argentinië. Het ligt tussen de Grote Oceaan en de Andes. De hoofdstad is Santiago, het parlement zetelt in Valparaíso. Het land maakt ook aanspraak op een stuk van Antarctica. Om deze reden staat de obelisk die het officiële geografische middelpunt van Chili markeert ook in het zuiden, bij de stad Punta Arenas, vlak bij Vuurland. De Juan Fernández-archipel, Desventuradaseilanden, Salas y Gómez en Paaseiland, dat zeer ver ten westen van het vasteland ligt, horen ook bij Chili.",
+   "title": "Chili",
+   "url": "https://nl.wikipedia.org/wiki/Chili"
+  }
+ },
  "choco": {
   "de": {
    "extract": "Das Departamento del Chocó ist ein Departamento im Nordwesten Kolumbiens. Es grenzt im Westen an den Pazifik und an Panama und im Norden an den Atlantik. Östlich liegen die Departamentos Antioquia und Risaralda. Im Süden grenzt Chocó an das Departamento Valle del Cauca. Neben der Hauptstadt Quibdó existieren in Chocó noch 29 weitere Municipios. Bei der Volkszählung 2018 lebten 534.826 Menschen in Chocó.",
@@ -1597,6 +1705,33 @@
    "extract": "Chocó is een departement in het noordwesten van Colombia. Het is het enige departement met zowel een kustlijn aan de Caribische Zee als aan de Grote Oceaan. Het departement grenst ook aan Panama, dat tot 1903 ook een Colombiaans departement was.",
    "title": "Chocó",
    "url": "https://nl.wikipedia.org/wiki/Choc%C3%B3"
+  }
+ },
+ "colombia": {
+  "de": {
+   "extract": "Kolumbien ist eine Republik im nördlichen Teil von Südamerika und bevölkerungsmäßig der zweitgrößte und flächenmäßig viertgrößte Staat Südamerikas. Er grenzt sowohl an den Pazifischen Ozean als auch an das Karibische Meer und auf dem Festland im Nordwesten an Panama, im Osten an Venezuela, im Südosten an Brasilien, im Süden an Peru und im Südwesten an Ecuador. Bogotá ist wirtschaftliches und kulturelles Zentrum Kolumbiens sowie Hauptstadt des Landes.",
+   "title": "Kolumbien",
+   "url": "https://de.wikipedia.org/wiki/Kolumbien"
+  },
+  "en": {
+   "extract": "Colombia, officially the Republic of Colombia, is a country located in South America, with insular regions in North America. Colombia's mainland is bordered by the Caribbean Sea to the north, Venezuela to the east, Brazil to the southeast, Peru and Ecuador to the south and southwest, the Pacific Ocean to the west, and Panama to the northwest. Colombia is divided into 32 departments. The Capital District of Bogotá is the country's largest city hosting the main financial and cultural hub. Other urban areas include Medellín, Cali, Barranquilla, Cartagena, Bucaramanga, Pereira, Santa Marta, Cúcuta, Ibagué, Villavicencio and Manizales. It covers an area of 1,141,748 square kilometers and has a population of around 52 million. Its rich cultural heritage—including language, religion, cuisine, and art—reflects its history as a colony, fusing cultural elements brought by immigration from Europe and the Middle East, with those brought by the African diaspora, as well as with those of Indigenous civilizations that predate colonization. Spanish is the official language, although Creole, English and 64 other languages are recognized regionally.",
+   "title": "Colombia",
+   "url": "https://en.wikipedia.org/wiki/Colombia"
+  },
+  "es": {
+   "extract": "Colombia, oficialmente la República de Colombia, es un país soberano situado en la región noroccidental de América del Sur. Se constituye en un Estado unitario, democrático y social de derecho, organizado en 32 departamentos y el distrito Capital de Bogotá. Es el único país sudamericano con costas tanto en el océano Pacífico y océano Atlántico.",
+   "title": "Colombia",
+   "url": "https://es.wikipedia.org/wiki/Colombia"
+  },
+  "fr": {
+   "extract": "La Colombie, en forme longue la république de Colombie est une république unitaire d'Amérique du Sud comprenant 32 départements. Le pays est situé dans le Nord-Ouest du continent sud-américain ; il est bordé à l'ouest par l'océan Pacifique, au nord-ouest par le Panama, au nord par la mer des Caraïbes, au nord-est par le Venezuela, au sud-est par le Brésil, au sud par le Pérou et au sud-ouest par l'Équateur. La Colombie est le 26e plus grand pays par sa superficie et le 4e en Amérique du Sud. Avec plus de 51 millions d'habitants, la Colombie est le 28e pays le plus peuplé du monde et le 2e de tous les pays de langue espagnole après le Mexique. La Colombie est une moyenne puissance, la 4e plus grande économie d'Amérique latine, et la 3e en Amérique du Sud. La production de café, de fleurs, d'émeraudes, de charbon et de pétrole forme le principal secteur de l'économie colombienne.",
+   "title": "Colombie",
+   "url": "https://fr.wikipedia.org/wiki/Colombie"
+  },
+  "nl": {
+   "extract": "De Republiek Colombia is een land in het noordwesten van Zuid-Amerika. De hoofdstad is Bogota. Het land grenst in het noorden aan de Caraïbische Zee, in het oosten aan Venezuela, in het zuidoosten aan Brazilië, in het zuiden aan Peru en Ecuador en in het westen aan Panama en de Grote Oceaan. Met circa 50 miljoen inwoners is Colombia het derde land naar inwonertal van Latijns-Amerika.",
+   "title": "Colombia",
+   "url": "https://nl.wikipedia.org/wiki/Colombia"
   }
  },
  "colorado": {
@@ -1977,6 +2112,33 @@
    "url": "https://nl.wikipedia.org/wiki/Flevoland"
   }
  },
+ "france": {
+  "de": {
+   "extract": "Frankreich, amtlich la République française, ist ein interkontinentaler Einheitsstaat in Westeuropa mit Überseegebieten. Sein Staatsgebiet befindet sich auf allen Kontinenten mit Ausnahme von Asien.",
+   "title": "Frankreich",
+   "url": "https://de.wikipedia.org/wiki/Frankreich"
+  },
+  "en": {
+   "extract": "France, officially the French Republic, is a country primarily located in Western Europe. Its overseas regions and territories include French Guiana in South America, Saint Pierre and Miquelon in the North Atlantic, the French West Indies, and many islands in Oceania and the Indian Ocean. Metropolitan France shares borders with Belgium and Luxembourg to the north, Germany to the northeast, Switzerland to the east, Italy and Monaco to the southeast, Andorra and Spain to the south, and a maritime border with the United Kingdom to the northwest. Its metropolitan area extends from the Rhine to the Atlantic Ocean and from the Mediterranean Sea to the English Channel and the North Sea. Its 18 integral regions—five of which are overseas—span a combined area of 632,702 km2 (244,288 sq mi), with a total population estimated at over 69.1 million in 2026. Its capital, largest city and main cultural and economic centre is Paris, with a metropolitan population of over 13 million.",
+   "title": "France",
+   "url": "https://en.wikipedia.org/wiki/France"
+  },
+  "es": {
+   "extract": "Francia, oficialmente República Francesa, es un país soberano transcontinental que se extiende por Europa Occidental y por regiones y territorios de ultramar en América y los océanos Atlántico, Pacífico e Índico. Es uno de los veintisiete Estados soberanos que integran la Unión Europea. Se constituye en república semipresidencialista unitaria con capital en París, la mayor ciudad del país y principal centro cultural y comercial; otras zonas urbanas importantes son Marsella, Lyon, Toulouse, Lille, Burdeos, Montpellier y Niza. La Francia metropolitana se extiende desde el río Rin hasta el océano Atlántico y desde el mar Mediterráneo y los montes Pirineos hasta el canal de la Mancha y el mar del Norte. Los territorios de ultramar incluyen la Guayana Francesa en América del Sur, San Pedro y Miquelón en el Atlántico Norte, las Antillas francesas y muchas islas en Oceanía y el océano Índico. Debido a sus diversos territorios costeros, Francia posee la mayor zona económica exclusiva del mundo. Sus dieciocho regiones integrales abarcan una superficie combinada de 643 801 km2 y más de 68 millones de personas. Culturalmente, pertenece a la Europa latina.",
+   "title": "Francia",
+   "url": "https://es.wikipedia.org/wiki/Francia"
+  },
+  "fr": {
+   "extract": "La France, en forme longue la République française, est un État souverain transcontinental dont le territoire métropolitain s'étend en Europe de l'Ouest et dont le territoire ultramarin s'étend dans les océans Indien, Atlantique et Pacifique, ainsi qu'en Antarctique et en Amérique du Sud. Le pays a des frontières terrestres avec la Belgique, le Luxembourg, l'Allemagne, la Suisse, l'Italie, l'Espagne, Monaco et l'Andorre en Europe, auxquelles s'ajoutent les frontières terrestres avec le Brésil, le Suriname et les Pays-Bas aux Amériques. La France dispose d'importantes façades maritimes sur l'Atlantique, la Méditerranée, le Pacifique et l'océan Indien, lui permettant de bénéficier de la deuxième zone économique exclusive la plus vaste au monde.",
+   "title": "France",
+   "url": "https://fr.wikipedia.org/wiki/France"
+  },
+  "nl": {
+   "extract": "Frankrijk, officieel de Franse Republiek, is een land in West-Europa en qua oppervlakte het op twee na grootste Europese land. Qua inwoneraantal is Frankrijk het op een na grootste land binnen de Europese Unie. Frankrijk ligt tussen het Kanaal, de Atlantische Oceaan en de Golf van Biskaje, België en Luxemburg, Duitsland, Zwitserland en Italië en Spanje, Andorra, de Middellandse Zee en Monaco. Ook het eiland Corsica in de Middellandse Zee behoort tot Frankrijk, alsook vele overzeese gebieden. Frankrijk maakt aanspraak op een deel van Antarctica: Adélieland.",
+   "title": "Frankrijk",
+   "url": "https://nl.wikipedia.org/wiki/Frankrijk"
+  }
+ },
  "free-state": {
   "de": {
    "extract": "Freistaat ist eine südafrikanische Provinz in der Mitte der Republik. Sie ist in vier Distrikte mit 18 Gemeinden und einer Metropolgemeinde aufgeteilt.",
@@ -2272,6 +2434,33 @@
    "extract": "Genève is een kanton in het westen van Zwitserland en telt 531.102 inwoners. (31-12-2024)",
    "title": "Genève (kanton)",
    "url": "https://nl.wikipedia.org/wiki/Gen%C3%A8ve_(kanton)"
+  }
+ },
+ "germany": {
+  "de": {
+   "extract": "Deutschland ist ein Bundesstaat in Mitteleuropa. Es besteht aus 16 Ländern und ist als freiheitlich-demokratischer und sozialer Rechtsstaat verfasst. Die 1949 gegründete Bundesrepublik Deutschland stellt die jüngste Ausprägung des 1871 erstmals gegründeten deutschen Nationalstaats dar. Im Rahmen der Wiedervereinigung Deutschlands wurde Berlin 1990 Bundeshauptstadt und 1991 zum Parlaments- und Regierungssitz bestimmt.",
+   "title": "Deutschland",
+   "url": "https://de.wikipedia.org/wiki/Deutschland"
+  },
+  "en": {
+   "extract": "Germany, officially the Federal Republic of Germany, is a country in Western and Central Europe. It lies between the Baltic Sea and the North Sea to the north with the Alps to the south. Its 16 constituent states have a total population of over 83 million, making it the most populous member state of the European Union (EU). Germany borders Denmark to the north; Poland and the Czech Republic to the east; Austria and Switzerland to the south; and France, Luxembourg, Belgium, and the Netherlands to the west. The nation's capital and most populous city is Berlin and its main financial centre is Frankfurt; the largest urban area is the Ruhr.",
+   "title": "Germany",
+   "url": "https://en.wikipedia.org/wiki/Germany"
+  },
+  "es": {
+   "extract": "Alemania, oficialmente la República Federal de Alemania, es un país de Europa central y el Estado de la Unión Europea con mayor población y PIB. Constituido en Estado social y democrático de derecho, su forma de gobierno es la república parlamentaria y federal. Su capital es Berlín. Está formado por dieciséis estados federados (Bundesländer) y limita al norte con el mar del Norte, Dinamarca, Suecia y el mar Báltico; al este con Polonia y la República Checa; al sur con Austria y Suiza; y al oeste con Francia, Luxemburgo, Bélgica y los Países Bajos. El municipio Büsingen am Hochrhein, enclavado en Suiza, también forma parte de Alemania. El territorio de Alemania abarca 357 376 km² de extensión y posee un clima templado. Con más de 84 millones de habitantes, es el país más poblado entre los Estados de la Unión Europea, y es el hogar del tercer mayor grupo de emigrantes internacionales. En 2014 Alemania fue el segundo destino de las migraciones más popular del mundo, después de Estados Unidos.",
+   "title": "Alemania",
+   "url": "https://es.wikipedia.org/wiki/Alemania"
+  },
+  "fr": {
+   "extract": "L'Allemagne, en forme longue la République fédérale d'Allemagne, est un État d'Europe centrale, et selon certaines définitions d'Europe de l'Ouest, entouré par la mer du Nord, le Danemark et la mer Baltique au nord, par la Pologne à l'est-nord-est, la Tchéquie à l'est-sud-est, l'Autriche au sud-sud-est, la Suisse au sud-sud-ouest, la France au sud-ouest, la Belgique et le Luxembourg à l'ouest, enfin par les Pays-Bas à l'ouest-nord-ouest. Décentralisée et fédérale, l'Allemagne compte quatre villes de plus d'un million d'habitants, par ordre décroissant la capitale Berlin, Hambourg, Munich et Cologne, mais les quatre plus grandes agglomérations sont Rhin-Ruhr, Francfort-sur-le-Main, Berlin et Stuttgart. Le siège du Gouvernement est situé dans la ville de Berlin et dans la ville fédérale de Bonn, ancienne capitale de la République fédérale d'Allemagne. Francfort-sur-le-Main est considérée comme la capitale financière de l'Allemagne et abrite le siège de la Banque centrale européenne. La langue officielle du pays est principalement l'allemand, à côté d'autres langues régionales ou minoritaires.",
+   "title": "Allemagne",
+   "url": "https://fr.wikipedia.org/wiki/Allemagne"
+  },
+  "nl": {
+   "extract": "De Bondsrepubliek Duitsland (BRD), kortweg Duitsland, is een land in West- en of Centraal-Europa. Het heeft een grondgebied van 357.022 km² en grenst in het noorden aan de Oostzee, de Noordzee en Denemarken, in het oosten aan Polen en Tsjechië, in het zuiden aan Oostenrijk en Zwitserland en in het westen aan Frankrijk, Luxemburg, België en Nederland. Duitsland heeft met 83.222.442 inwoners de grootste bevolking van alle landen in de Europese Unie. De hoofdstad en grootste stad van het land is Berlijn.",
+   "title": "Duitsland",
+   "url": "https://nl.wikipedia.org/wiki/Duitsland"
   }
  },
  "gifu": {
@@ -2826,6 +3015,33 @@
    "url": "https://nl.wikipedia.org/wiki/%C3%8Ele-de-France"
   }
  },
+ "illes-balears": {
+  "de": {
+   "extract": "Die Balearischen Inseln oder Balearen sind eine Inselgruppe im westlichen Mittelmeer und eine autonome Gemeinschaft Spaniens. Zur autonomen Gemeinschaft gehören neben den Gymnesischen Inseln Mallorca, Menorca und Cabrera auch die Pityusen mit Ibiza und Formentera. Größte Insel ist Mallorca mit 3.604 Quadratkilometern.",
+   "title": "Balearische Inseln",
+   "url": "https://de.wikipedia.org/wiki/Balearische_Inseln"
+  },
+  "en": {
+   "extract": "The Balearic Islands are an archipelago in the western Mediterranean Sea, near the eastern coast of the Iberian Peninsula. The archipelago forms a province and autonomous community of Spain. Palma de Mallorca is its capital and largest city.",
+   "title": "Balearic Islands",
+   "url": "https://en.wikipedia.org/wiki/Balearic_Islands"
+  },
+  "es": {
+   "extract": "Las Islas Baleares son una comunidad autónoma uniprovincial española, compuesta por las islas del archipiélago balear. Se encuentran situadas en el mar Mediterráneo, frente a la costa oriental de la península Ibérica. Es el segundo archipiélago más extenso y poblado de España, tras Canarias. Su capital es Palma.",
+   "title": "Islas Baleares",
+   "url": "https://es.wikipedia.org/wiki/Islas_Baleares"
+  },
+  "fr": {
+   "extract": "Les îles Baléares sont l'une des 17 communautés autonomes d'Espagne. Il s'agit d'un archipel situé dans l'ouest de la mer Méditerranée et séparé de l'Espagne continentale par la mer des Baléares.",
+   "title": "Îles Baléares",
+   "url": "https://fr.wikipedia.org/wiki/%C3%8Eles_Bal%C3%A9ares"
+  },
+  "nl": {
+   "extract": "De Balearen is een eilandengroep in de Middellandse Zee, ten oosten van het Spaanse vasteland. De eilandengroep vormt een van de zeventien autonome regio's van Spanje en is tevens een provincie. De hoofdstad is Palma.",
+   "title": "Balearen",
+   "url": "https://nl.wikipedia.org/wiki/Balearen"
+  }
+ },
  "ishikawa": {
   "de": {
    "extract": "Ishikawa ist eine Präfektur Japans. Sie liegt in der Region Hokuriku bzw. großräumiger Tōkai-Hokuriku, Hokuriku-Shin’etsu, Chūbu, Zentraljapan oder Westjapan auf der Insel Honshū. Sitz der Präfekturverwaltung und größte Stadt ist die kreisfreie Stadt Kanazawa.",
@@ -2853,6 +3069,33 @@
    "url": "https://nl.wikipedia.org/wiki/Ishikawa_(prefectuur)"
   }
  },
+ "italy": {
+  "de": {
+   "extract": "Italien, amtlich Italienische Republik, ist ein Staat in Südeuropa. Mit knapp 59 Millionen Einwohnern ist es das viertbevölkerungsreichste vollständig zu Europa zählende Land. Die Hauptstadt und bevölkerungsreichste Stadt ist Rom und das Wirtschafts- und Finanzzentrum ist Mailand.",
+   "title": "Italien",
+   "url": "https://de.wikipedia.org/wiki/Italien"
+  },
+  "en": {
+   "extract": "Italy, officially the Italian Republic, is a country in Southern and Western Europe. It consists of a peninsula that extends into the Mediterranean Sea, with the Alps on its northern land border, as well as nearly 800 islands, notably Sicily and Sardinia. Italy shares land borders with France to the west; Switzerland and Austria to the north; Slovenia to the east; and the two enclaves of Vatican City and San Marino. It is the tenth-largest country in Europe by area, covering 301,340 km2 (116,350 sq mi), and the third-most populous member state of the European Union, with nearly 59 million inhabitants. Rome is the capital of Italy; other major cities include Milan, Naples, Turin, Palermo, Bologna, Florence, Genoa, Bari, and Venice.",
+   "title": "Italy",
+   "url": "https://en.wikipedia.org/wiki/Italy"
+  },
+  "es": {
+   "extract": "Italia,, es un país soberano ubicado en Europa meridional, y uno de los \nveintisiete Estados miembros de la Unión Europea. Está constituido en una república parlamentaria compuesta por veinte regiones, integradas a su vez por ciento diez provincias. Su capital y ciudad más poblada es Roma. Aunque casi todo su territorio se encuentra en el continente europeo, Italia es un país transcontinental: pues a él pertenecen algunas pequeñas islas africanas, próximas a la costa de Túnez.",
+   "title": "Italia",
+   "url": "https://es.wikipedia.org/wiki/Italia"
+  },
+  "fr": {
+   "extract": "L'Italie, en forme longue la République italienne, est un État souverain d'Europe du Sud. Son territoire comprend une partie continentale, une péninsule située au centre de la mer Méditerranée ainsi qu'une partie insulaire constituée par les deux plus grandes îles de cette mer, la Sicile et la Sardaigne, et d'autres îles plus petites. Elle est rattachée au reste du continent par le massif des Alpes. Le territoire italien correspond approximativement à la région géographique homonyme. Le pays possède des frontières terrestres avec la France, la Suisse, l'Autriche et la Slovénie ainsi que des frontières internes avec Saint-Marin et le Vatican. En 2025, l'Italie compte 58 934 177 habitants et a une superficie de 302 073 km2.",
+   "title": "Italie",
+   "url": "https://fr.wikipedia.org/wiki/Italie"
+  },
+  "nl": {
+   "extract": "Italië, officieel de Republiek Italië, is een land in Zuid-Europa. Het noorden van Italië grenst aan Frankrijk, Zwitserland, Oostenrijk en Slovenië. De rest van het land wordt omringd door de Tyrreense, de Middellandse, de Ionische en Adriatische Zee. De eilanden Sicilië, Sardinië en Elba en een aantal kleinere eilanden behoren ook tot Italië.",
+   "title": "Italië",
+   "url": "https://nl.wikipedia.org/wiki/Itali%C3%AB"
+  }
+ },
  "iwate": {
   "de": {
    "extract": "Die Präfektur Iwate ist eine der 47 Präfekturen Japans und liegt in der Region Tōhoku. Sitz der Präfekturverwaltung ist Morioka. Iwate ist Partnerpräfektur des deutschen Bundeslandes Rheinland-Pfalz.",
@@ -2878,6 +3121,33 @@
    "extract": "De prefectuur Iwate is een Japanse prefectuur in de regio Tohoku in Honshu. Iwate heeft een oppervlakte van 15.278,85 km² en had op 1 maart 2008 een bevolking van ongeveer 1.360.344 inwoners. De hoofdstad is de stad Morioka.",
    "title": "Iwate (prefectuur)",
    "url": "https://nl.wikipedia.org/wiki/Iwate_(prefectuur)"
+  }
+ },
+ "japan": {
+  "de": {
+   "extract": "Japan ist ein 14.125 Inseln umfassender ostasiatischer Staat, angrenzend an den Pazifik, der indirekt im Norden und Nordwesten an Russland, im Westen an Nord- und Südkorea und im Südwesten an Taiwan und China grenzt. Er ist von der Fläche her der viertgrößte und von der Bevölkerung her der zweitgrößte Inselstaat der Welt. De-facto-Hauptstadt und größte urbane Siedlung ist das als politische Einheit im Zweiten Weltkrieg abgeschaffte Tokio; de jure existiert ein „Hauptstadtgebiet“ aus acht Präfekturen inklusive Tokio.",
+   "title": "Japan",
+   "url": "https://de.wikipedia.org/wiki/Japan"
+  },
+  "en": {
+   "extract": "Japan is an island country in East Asia. Located in the Pacific Ocean off the northeast coast of the Asian mainland, it is bordered to the west by the Sea of Japan, the Sea of Okhotsk in the north, and the East China Sea in the south. The Japanese archipelago consists of four major islands alongside over 14,000 smaller islands. Japan is divided into 47 administrative prefectures and eight traditional regions, and around 75% of its terrain is mountainous and heavily forested, concentrating its agriculture and highly urbanized population along its eastern coastal plains. With a population of almost 123 million as of 2026, it is the world's 11th most populous country. Tokyo is the country's capital and largest city.",
+   "title": "Japan",
+   "url": "https://en.wikipedia.org/wiki/Japan"
+  },
+  "es": {
+   "extract": "Japón es un país insular en Asia Oriental ubicado en el noroeste del océano Pacífico. Limita con el mar del Japón al oeste y se extiende desde el mar de Ojotsk en el norte hasta el mar de la China Oriental y Taiwán en el sur. Su territorio comprende un archipiélago de 14 125 islas que cubren 377 978 km² sobre el denominado Anillo de Fuego del Pacífico. Las cinco islas principales del país, de norte a sur, son Hokkaidō, Honshū, Shikoku, Kyūshū y Okinawa.",
+   "title": "Japón",
+   "url": "https://es.wikipedia.org/wiki/Jap%C3%B3n"
+  },
+  "fr": {
+   "extract": "Le Japon est un pays insulaire de l'Asie de l'Est, situé entre la mer du Japon et l'océan Pacifique, à l'est de la Chine, de la Corée du Sud et de la Corée du Nord, au sud de la Russie, et au nord-est de Taïwan.",
+   "title": "Japon",
+   "url": "https://fr.wikipedia.org/wiki/Japon"
+  },
+  "nl": {
+   "extract": "Japan is een land en een eilandstaat ten oosten van het Aziatische continent. Het land wordt gevormd door 14.125 eilanden in de Grote Oceaan. De grootste eilanden zijn Hokkaido, Honshu, Shikoku en Kyushu, die samen 97% van de totale oppervlakte van Japan innemen. De hoofdstad en grootste stad van Japan is Tokio. De omringende agglomeratie Groot-Tokio is met bijna 40 miljoen inwoners de op een na grootste metropool ter wereld. Het gehele land telt 125.507.472 (2020) inwoners.",
+   "title": "Japan",
+   "url": "https://nl.wikipedia.org/wiki/Japan"
   }
  },
  "jura": {
@@ -3391,6 +3661,33 @@
    "extract": "Los Ríos is een van de zestien regio's van Chili, met als hoofdstad Valdivia. De regio telt 384.837 inwoners (2017) en grenst aan Araucanía (IX) (noorden), Argentinië (oosten), Los Lagos (X) (zuiden) en de Grote Oceaan (westen). De regio werd in oktober 2007 gecreëerd; voorheen was het een provincie van Los Lagos onder de naam Valdivia.",
    "title": "Los Ríos (regio)",
    "url": "https://nl.wikipedia.org/wiki/Los_R%C3%ADos_(regio)"
+  }
+ },
+ "luxembourg": {
+  "de": {
+   "extract": "Das Großherzogtum Luxemburg ist ein demokratischer Staat in Form einer konstitutionellen Monarchie im Westen Mitteleuropas. Die Stadt Luxemburg ist der Parlaments- und Regierungssitz des 681.973 Einwohner zählenden Landes. Das Großherzogtum gehört zum mitteldeutschen Sprachraum. Nationalsprache ist Luxemburgisch; Verwaltungs- und Amtssprachen sind außerdem Standarddeutsch und Französisch.",
+   "title": "Luxemburg",
+   "url": "https://de.wikipedia.org/wiki/Luxemburg"
+  },
+  "en": {
+   "extract": "Luxembourg, officially the Grand Duchy of Luxembourg, is a landlocked country in Western Europe. It is bordered by Belgium to the west and north, Germany to the east, and France to the south and west. Its capital and most populous city, Luxembourg City, is one of the four institutional seats of the European Union and hosts several EU institutions, notably the Court of Justice of the European Union, the highest judicial authority in the EU.",
+   "title": "Luxembourg",
+   "url": "https://en.wikipedia.org/wiki/Luxembourg"
+  },
+  "es": {
+   "extract": "Luxemburgo, denominado oficialmente Gran Ducado de Luxemburgo, es uno de los veintisiete estados soberanos que forman la Unión Europea. Se trata de un estado sin litoral, rodeado por Alemania, Bélgica y Francia. Luxemburgo cuenta con una población de 690 959 habitantes sobre un área de 2586 km².",
+   "title": "Luxemburgo",
+   "url": "https://es.wikipedia.org/wiki/Luxemburgo"
+  },
+  "fr": {
+   "extract": "Le Luxembourg, en forme longue le Grand-Duché de Luxembourg ou grand-duché de Luxembourg est, comme la Suisse, un pays sans littoral de l'Europe de l'Ouest. C'est par la Moselle rivière frontalière avec l'Allemagne puis affluent du Rhin que son accès à la mer est cependant possible. Il est donc inclus entre l'Allemagne à l'est, la Belgique à l'ouest et la France au sud. Il comprend deux régions principales : l'Oesling au nord, qui est une partie du massif de l'Ardenne, et le Gutland au sud, prolongement de la Lorraine au sens géologique du terme. Le Luxembourg compte 693 916 habitants au 30 juin 2026, et s'étend sur 2 586 km2, ce qui fait de lui l'une des plus petites nations souveraines d'Europe.",
+   "title": "Luxembourg",
+   "url": "https://fr.wikipedia.org/wiki/Luxembourg"
+  },
+  "nl": {
+   "extract": "Luxemburg, officieel het Groothertogdom Luxemburg, is een land in het westen van Europa dat grenst aan België, Duitsland en Frankrijk. Met een oppervlakte van 2.586 km² en meer dan 672.000 inwoners is het groothertogdom op Malta na het kleinste land binnen de Europese Unie. De hoofdstad en grootste stad van het land is de gelijknamige stad Luxemburg.",
+   "title": "Luxemburg (land)",
+   "url": "https://nl.wikipedia.org/wiki/Luxemburg_(land)"
   }
  },
  "luzern": {
@@ -4004,6 +4301,33 @@
    "url": "https://nl.wikipedia.org/wiki/Nelson_(regio)"
   }
  },
+ "netherlands": {
+  "de": {
+   "extract": "Das Königreich der Niederlande, niederländisch Koninkrijk der Nederlanden, englisch Kingdom of the Netherlands, friesisch Keninkryk fan de Nederlannen, Papiamentu Reino Hulandes, ist ein Staat, der aus den Niederlanden und mehreren Inseln in der Karibik besteht. Der Name ist einerseits der formelle Staatsname der Niederlande, andererseits bezeichnet er die politische Konstruktion, mit der die Niederlande ihre Beziehungen zu den Inseln in der Karibik regeln, die zu den Niederlanden gehören.",
+   "title": "Königreich der Niederlande",
+   "url": "https://de.wikipedia.org/wiki/K%C3%B6nigreich_der_Niederlande"
+  },
+  "en": {
+   "extract": "The Kingdom of the Netherlands, commonly known simply as the Netherlands, is a sovereign state consisting of a collection of constituent territories united under the monarch of the Netherlands, who functions as head of state. The realm is not a federation; it is a unitary monarchy with its largest subdivision, the eponymous Netherlands, predominantly located in Northwestern Europe and with three smaller island territories located in the Caribbean.",
+   "title": "Kingdom of the Netherlands",
+   "url": "https://en.wikipedia.org/wiki/Kingdom_of_the_Netherlands"
+  },
+  "es": {
+   "extract": "El Reino de los Países Bajos, es un Estado soberano transcontinental cuya forma de gobierno es la monarquía constitucional.",
+   "title": "Reino de los Países Bajos",
+   "url": "https://es.wikipedia.org/wiki/Reino_de_los_Pa%C3%ADses_Bajos"
+  },
+  "fr": {
+   "extract": "Les Pays-Bas, en forme longue le royaume des Pays-Bas, parfois appelés la Hollande par métonymie, sont un pays transcontinental dont le territoire métropolitain est situé en Europe du Nord-Ouest et le territoire d'outre-mer, dans les Antilles.",
+   "title": "Pays-Bas",
+   "url": "https://fr.wikipedia.org/wiki/Pays-Bas"
+  },
+  "nl": {
+   "extract": "Het Koninkrijk der Nederlanden, dat bestaat sinds 1815, is een soevereine staat waarbinnen sinds 2010 vier landen worden onderscheiden: Nederland, Aruba, Curaçao en Sint Maarten. Deze landen zijn nominaal gelijkwaardige onderdelen van het koninkrijk, maar met verschillende staatkundige posities: de Caribische landen zijn autonoom door het Statuut voor het Koninkrijk der Nederlanden, sinds 1954 het leidende document voor het koninkrijk, maar ze beslissen ook mee over door het Statuut benoemde koninkrijksaangelegenheden, voor zover die aangelegenheden deze drie gebieden raken.",
+   "title": "Koninkrijk der Nederlanden",
+   "url": "https://nl.wikipedia.org/wiki/Koninkrijk_der_Nederlanden"
+  }
+ },
  "neuchatel": {
   "de": {
    "extract": "Neuenburg (Kürzel NE; schweizerdeutsch Nöieburg; französisch, italienisch und rätoromanisch Neuchâtel [nœʃɑtɛl, nøʃɑtɛl]), amtlich französisch République et Canton de Neuchâtel (Republik und Kanton Neuenburg), ist ein Kanton in der Romandie, dem frankophonen Landesteil der Schweiz, und zählt zur Grossregion Espace Mittelland und der Hauptstadtregion Schweiz. Der Hauptort und gleichzeitig die nach der Einwohnerzahl grösste Gemeinde ist die gleichnamige Stadt Neuenburg (Neuchâtel).",
@@ -4056,6 +4380,33 @@
    "extract": "New South Wales, vaak afgekort tot NSW, is een deelstaat van Australië. De hoofdstad is Sydney, de grootste stad in Oceanië.",
    "title": "New South Wales",
    "url": "https://nl.wikipedia.org/wiki/New_South_Wales"
+  }
+ },
+ "new-zealand": {
+  "de": {
+   "extract": "Neuseeland ist ein geographisch isolierter Inselstaat im südlichen Pazifik. Er besteht aus einer Nord- und einer Südinsel sowie zahlreichen kleineren Inseln. Die nächstgelegenen größeren Landmassen befinden sich im Westen mit dem australischen Kontinent, im Norden mit der französischen Insel Neukaledonien und den Inselstaaten Tonga und Fidschi sowie im Süden mit dem Kontinent Antarktika.",
+   "title": "Neuseeland",
+   "url": "https://de.wikipedia.org/wiki/Neuseeland"
+  },
+  "en": {
+   "extract": "New Zealand is an island country in the southwestern Pacific Ocean. It comprises two main landmasses—the North Island and the South Island —and over 700 smaller islands. It is the sixth-largest island country by area and lies east of Australia across the Tasman Sea and south of the islands of New Caledonia, Fiji, and Tonga. The country's varied topography and sharp mountain peaks, including the Southern Alps, owe much to tectonic uplift and volcanic eruptions. New Zealand's capital city is Wellington, and its most populous city is Auckland.",
+   "title": "New Zealand",
+   "url": "https://en.wikipedia.org/wiki/New_Zealand"
+  },
+  "es": {
+   "extract": "Nueva Zelanda es un país soberano insular ubicado en Oceanía, localizado en el suroeste del océano Pacífico, cerca de Australia y constituido en una monarquía parlamentaria. Está formado por dos grandes islas: la isla Norte y la isla Sur, junto a un gran número de islas menores, destacándose entre ellas la isla Stewart y las islas Chatham. El Reino de Nueva Zelanda también incluye las islas Cook y Niue, el archipiélago Tokelau y la dependencia antártica Ross. La capital de Nueva Zelanda es la ciudad de Wellington, situada en la isla Norte.",
+   "title": "Nueva Zelanda",
+   "url": "https://es.wikipedia.org/wiki/Nueva_Zelanda"
+  },
+  "fr": {
+   "extract": "La Nouvelle-Zélande est un pays insulaire d'Océanie situé dans l'Est de la mer de Tasman. Elle est constituée de deux îles principales : l'île du Nord et l'île du Sud, ainsi que de 700 plus petites îles. Se situant à environ 1 450 km au sud-sud-est de la Grande Terre, en Nouvelle-Calédonie, dont elle est séparée par l'océan Pacifique Sud et à 1 491 km à l'est-sud-est de la Tasmanie, elle se trouve également à 1 595 km de Vanuatu, à 1 645 km au sud-est de l'Australie continentale et à environ 1 860 km au sud-sud-est des Fidji et des Tonga. La topographie variée du pays et ses pics montagneux, dont ceux des Alpes du Sud, doivent beaucoup au soulèvement tectonique et aux éruptions volcaniques. Sa capitale est Wellington et sa plus grande ville est Auckland. La plus grande ville de l'île du sud est Christchurch.",
+   "title": "Nouvelle-Zélande",
+   "url": "https://fr.wikipedia.org/wiki/Nouvelle-Z%C3%A9lande"
+  },
+  "nl": {
+   "extract": "Nieuw-Zeeland is een land in het zuidwesten van de Grote Oceaan. Het bestaat uit twee grote eilanden en een aantal kleinere eilanden. Nieuw-Zeeland is een constitutionele monarchie, lid van het Gemenebest van Naties. Daarmee is Charles III het staatshoofd. Hij wordt vertegenwoordigd door een gouverneur-generaal. Nieuw-Zeeland vormt de zuidwestelijke hoek van Polynesië en maakt zo ook deel uit van Oceanië.",
+   "title": "Nieuw-Zeeland",
+   "url": "https://nl.wikipedia.org/wiki/Nieuw-Zeeland"
   }
  },
  "nidwalden": {
@@ -5030,6 +5381,33 @@
    "url": "https://nl.wikipedia.org/wiki/Risaralda_(departement)"
   }
  },
+ "rwanda": {
+  "de": {
+   "extract": "Ruanda oder Rwanda [ˈʁu̯anda] ist ein dicht bevölkerter Binnenstaat in Ostafrika bzw. Zentralafrika. Er grenzt an Burundi, die Demokratische Republik Kongo, Uganda und Tansania. Wegen seiner hügeligen Landschaft wird Ruanda auch „Land der tausend Hügel“ genannt. Auf dem Staatsgebiet verläuft die afrikanische Hauptwasserscheide zwischen den Einzugsgebieten des Nils und des Kongos.",
+   "title": "Ruanda",
+   "url": "https://de.wikipedia.org/wiki/Ruanda"
+  },
+  "en": {
+   "extract": "Rwanda, officially the Republic of Rwanda, is a landlocked country in East Africa. Its geography is dominated by mountains in the west and savanna in the southeast. The largest and most notable lakes are mainly in the western and northern regions of the country, and several volcanoes that form part of the Virunga volcanic chain are primarily in the northwest. The climate is considered tropical highland, with two rainy seasons and two dry seasons each year. Its capital and largest city is Kigali, located at the centre of the country, at 1,567 metres above sea level. Rwanda lies a few degrees south of the Equator in the Great Rift Valley of East Africa. Rwanda is bordered by Uganda to the north, Tanzania to the east, Burundi to the south, and the Democratic Republic of the Congo to the west. With a population of about 14 million people living within a total area of 26,338 square kilometres (10,169 sq mi), of which land accounts for about 93.7%, Rwanda is the 21st most densely populated country in the world, with an average of about 578 people per square kilometre.",
+   "title": "Rwanda",
+   "url": "https://en.wikipedia.org/wiki/Rwanda"
+  },
+  "es": {
+   "extract": "Ruanda, cuyo nombre oficial es República de Rwanda, es un país en África Oriental, África Central o África centro-este sin salida al mar. Limita al norte con Uganda, al este con Tanzania, al sur con Burundi y al oeste con la República Democrática del Congo. Es un pequeño país ubicado en la región de los Grandes Lagos de África; conocido como las «nieblas de África», también por su fauna salvaje, principalmente por sus gorilas de montaña, por sus ciudades típicas y por los parques nacionales y parajes naturales que ofrece su paisaje montañoso. Su terreno fértil y montañoso, que le da el título de «Tierra de las mil colinas», debe soportar las poblaciones más densas del continente africano.",
+   "title": "Ruanda",
+   "url": "https://es.wikipedia.org/wiki/Ruanda"
+  },
+  "fr": {
+   "extract": "Le Rwanda, en forme longue la république du Rwanda, surnommé le « pays des mille collines », est un pays d'Afrique de l'Est. En 2026, la population du pays comptait 14 803 020 habitants. Le Rwanda étend ses 26 338 km2 dans la région des Grands Lacs. Il partage des frontières avec, au nord, l'Ouganda, à l'est, la Tanzanie, au sud, le Burundi, et à l'ouest, la république démocratique du Congo. Sa capitale Kigali est située au centre du pays.",
+   "title": "Rwanda",
+   "url": "https://fr.wikipedia.org/wiki/Rwanda"
+  },
+  "nl": {
+   "extract": "Rwanda, officieel de Republiek Rwanda, is een binnenstaat in de Grote Slenk in Oost-Afrika, waar het Grote Merengebied en Zuidoost-Afrika samenkomen. Het ligt enkele graden ten zuiden van de evenaar, en grenst aan Congo-Kinshasa in het westen, Oeganda in het noorden, Tanzania in het oosten, en Burundi in het zuiden. Rwanda's geografie wordt gedomineerd door bergen in het westen en savanne in het zuidoosten, met talrijke meren verspreid over het land. Het klimaat varieert van gematigd tot subtropisch en kent jaarlijks twee regenseizoenen en twee droge seizoenen. Rwanda is het dichtstbevolkte land van het Afrikaanse vasteland en, onder landen groter dan 10.000 km², het vijfde dichtstbevolkte land ter wereld. De hoofdstad en grootste stad is Kigali.",
+   "title": "Rwanda",
+   "url": "https://nl.wikipedia.org/wiki/Rwanda"
+  }
+ },
  "saarland": {
   "de": {
    "extract": "Das Saarland ist ein Land im Südwesten der Bundesrepublik Deutschland. Das kleinste der Flächenländer und hinsichtlich der Einwohnerzahl mit rund einer Million das nach Bremen zweitkleinste Land grenzt im Norden und Osten an das Land Rheinland-Pfalz, im Süden an die französische Region Grand Est mit deren Département Moselle und im Westen an das Großherzogtum Luxemburg. Gemeinsam mit diesen Nachbarn und der belgischen Region Wallonien bildet das Saarland die europäische Großregion, in der etwa 11,9 Millionen Menschen leben.",
@@ -5462,6 +5840,33 @@
    "url": "https://nl.wikipedia.org/wiki/Sicili%C3%AB"
   }
  },
+ "slovenia": {
+  "de": {
+   "extract": "Slowenien ist ein Staat in Mitteleuropa mit rund zwei Millionen Einwohnern, der im Westen an Italien und das Mittelmeer, im Norden an Österreich, im Osten an Ungarn und im Süden an Kroatien grenzt. Hauptstadt und zugleich größte Stadt des Landes ist das zentral gelegene Ljubljana. Weitere wichtige Städte sind Maribor, Celje, Kranj, Koper und Velenje. Im Jahr 2004 trat Slowenien der EU und der NATO bei, 2007 auch der Eurozone. Das Land ist eine demokratisch verfasste parlamentarische Republik.",
+   "title": "Slowenien",
+   "url": "https://de.wikipedia.org/wiki/Slowenien"
+  },
+  "en": {
+   "extract": "Slovenia, officially the Republic of Slovenia, is a country in Central Europe. It borders Italy to the west, Austria to the north, Hungary to the northeast, and Croatia to the south and southeast; its southwestern boundary consists of a 46.6-kilometre (29.0 mi) coastline on the Adriatic Sea. The country is mostly mountainous and forested, covering 20,271 square kilometres (7,827 sq mi), with a population of approximately 2.1 million people. Slovene is the official language. Slovenia has a predominantly temperate continental climate, with the exception of the Slovene Littoral and the Julian Alps. Ljubljana, the capital and largest city, is geographically situated near the centre of the country. Other larger urban centers include Maribor, Ptuj, Kranj, Celje, Koper, Novo Mesto, Velenje, Nova Gorica, Sežana, Murska Sobota, and Jesenice.",
+   "title": "Slovenia",
+   "url": "https://en.wikipedia.org/wiki/Slovenia"
+  },
+  "es": {
+   "extract": "Eslovenia, cuyo nombre oficial es República de Eslovenia es un país ubicado en Europa Central, siendo uno de los veintisiete Estados soberanos que forman la Unión Europea. Limita con Italia al oeste; con el mar Adriático, al suroeste; con Croacia al sur y al este; con Hungría, al noreste; y con Austria, al norte. Tiene una población de 2.123.949 habitantes a fecha del 1 de enero de 2024. La capital y ciudad más poblada es Liubliana.",
+   "title": "Eslovenia",
+   "url": "https://es.wikipedia.org/wiki/Eslovenia"
+  },
+  "fr": {
+   "extract": "La Slovénie, en forme longue la république de Slovénie, est un pays d’Europe centrale au carrefour des principales cultures européennes. Sa capitale est Ljubljana. Le pays partage ses frontières avec l'Italie à l'ouest, l’Autriche au nord, la Hongrie à l'est-nord-est et la Croatie au sud-est. La Slovénie dispose au sud-ouest d'un littoral d'une quarantaine de kilomètres sur la mer Adriatique. Comptant environ deux millions d'habitants, la Slovénie est un État membre de l'Organisation du traité de l'Atlantique nord (OTAN) depuis le 29 mars 2004 et de l'Union européenne (UE) depuis le 1er mai 2004.",
+   "title": "Slovénie",
+   "url": "https://fr.wikipedia.org/wiki/Slov%C3%A9nie"
+  },
+  "nl": {
+   "extract": "Slovenië, officieel de Republiek Slovenië, is een land in Midden-Europa aan de zuidoostelijke rand van de Alpen en is lid van de Europese Unie. Het wordt begrensd door Oostenrijk in het noorden, Italië en de Adriatische Zee in het westen, Kroatië in het zuiden en oosten en Hongarije in het noordoosten. Het land is klein, dichtbebost en bergachtig. In het westen heeft het land een korte Adriatische kust. De grens met Oostenrijk wordt grotendeels gevormd door de waterscheiding van de bergkam van de Karawanken, met toppen boven de 2000 m, die deel uitmaken van de Alpen. De hoofdstad en tevens grootste stad is Ljubljana.",
+   "title": "Slovenië",
+   "url": "https://nl.wikipedia.org/wiki/Sloveni%C3%AB"
+  }
+ },
  "solothurn": {
   "de": {
    "extract": "Solothurn ist ein Kanton in der Schweiz. Er zählt aufgrund seiner Gliederung teilweise zur Grossregion Espace Mittelland und teilweise zur Nordwestschweiz. Der Hauptort ist die gleichnamige Stadt Solothurn, der bevölkerungsreichste Ort hingegen Olten, dann folgt Grenchen.",
@@ -5487,6 +5892,33 @@
    "extract": "Solothurn is een kanton in het noordwesten van Zwitserland. Het is een deel van de Zwitserse Hoogvlakte. Van de 289.792 inwoners (31-12-2024) is 42,7% Rooms-katholiek en 28,8% protestant (2003).",
    "title": "Solothurn (kanton)",
    "url": "https://nl.wikipedia.org/wiki/Solothurn_(kanton)"
+  }
+ },
+ "south-africa": {
+  "de": {
+   "extract": "Die Republik Südafrika (RSA) ist ein Staat im südlichen Afrika. Er ist der am weitesten entwickelte Wirtschaftsraum des afrikanischen Kontinents.",
+   "title": "Südafrika",
+   "url": "https://de.wikipedia.org/wiki/S%C3%BCdafrika"
+  },
+  "en": {
+   "extract": "South Africa, officially the Republic of South Africa (RSA), is the southernmost country in Africa. The country consists of nine provinces, and is bounded to the south by 2,798 kilometres of coastline that stretches along the South Atlantic and Indian Ocean; to the north by the neighbouring countries of Namibia, Botswana, and Zimbabwe; and to the east and northeast by Mozambique and Eswatini. South Africa also encloses Lesotho. Covering an area of 1,221,037 square kilometres, the country has a population of over 63 million people, making it the sixth-most populated country in Africa, and 24th-most in the world.",
+   "title": "South Africa",
+   "url": "https://en.wikipedia.org/wiki/South_Africa"
+  },
+  "es": {
+   "extract": "Sudáfrica o, en uso minoritario, Suráfrica, y oficialmente la República de Sudáfrica, es un país soberano, situado en África austral y cuya forma de gobierno es la república parlamentaria. Su territorio está organizado en nueve provincias. Su capitalidad tiene un estatus especial, pues la componen tres ciudades: Pretoria, sede del poder ejecutivo; Bloemfontein, sede del poder judicial; y Ciudad del Cabo, sede del poder legislativo. Asimismo, la ciudad más poblada del país es Johannesburgo, siendo esta, además, una de las 40 áreas metropolitanas más grandes del mundo.",
+   "title": "Sudáfrica",
+   "url": "https://es.wikipedia.org/wiki/Sud%C3%A1frica"
+  },
+  "fr": {
+   "extract": "L'Afrique du Sud, en forme longue la république d'Afrique du Sud, est un pays d'Afrique australe. Sa capitale administrative est Pretoria. Il est frontalier à l'ouest-nord-ouest avec la Namibie, au nord et au nord-nord-est avec le Botswana, au nord-est avec le Zimbabwe et à l'est-nord-est avec le Mozambique et l'Eswatini. Le Lesotho est pour sa part un État enclavé dans le territoire sud-africain.",
+   "title": "Afrique du Sud",
+   "url": "https://fr.wikipedia.org/wiki/Afrique_du_Sud"
+  },
+  "nl": {
+   "extract": "Zuid-Afrika, officieel de Republiek Zuid-Afrika, is een land dat aan de zuidpunt van Afrika ligt. Het land grenst in het noorden aan Namibië, Botswana en Zimbabwe, in het oosten aan Mozambique en Swaziland (Eswatini). De onafhankelijke staat Lesotho wordt in zijn geheel door Zuid-Afrika omsloten.",
+   "title": "Zuid-Afrika",
+   "url": "https://nl.wikipedia.org/wiki/Zuid-Afrika"
   }
  },
  "south-australia": {
@@ -5543,6 +5975,33 @@
    "url": "https://nl.wikipedia.org/wiki/Southland_(Nieuw-Zeeland)"
   }
  },
+ "spain": {
+  "de": {
+   "extract": "Spanien ist ein Staat auf der Iberischen Halbinsel im Südwesten Europas, mit den Balearischen Inseln im Mittelmeer, den Kanarischen Inseln im Atlantik und zwei Exklaven in Nordafrika.",
+   "title": "Spanien",
+   "url": "https://de.wikipedia.org/wiki/Spanien"
+  },
+  "en": {
+   "extract": "Spain, officially the Kingdom of Spain, is a country in Southern and Western Europe with territories in North Africa. Featuring the southernmost point of continental Europe, it is the largest country in Southern Europe and the fourth-most populous European Union (EU) member state. Spanning the majority of the Iberian Peninsula, its territory also includes the Canary Islands, in the Eastern Atlantic Ocean; the Balearic Islands, in the Western Mediterranean Sea; and the autonomous cities of Ceuta and Melilla, in mainland Africa. Peninsular Spain is bordered to the north by France, Andorra, and the Bay of Biscay; to the east and south by the Mediterranean Sea, Gibraltar and Morocco ; and to the west by Portugal and the Atlantic Ocean. Spain's capital and largest city is Madrid; other major urban areas include Barcelona, Valencia, Zaragoza, Seville, Bilbao, Málaga, Murcia, Palma de Mallorca and Las Palmas.",
+   "title": "Spain",
+   "url": "https://en.wikipedia.org/wiki/Spain"
+  },
+  "es": {
+   "extract": "España, formalmente Reino de España, es un país soberano transcontinental situado principalmente en el suroeste de Europa y, en menor medida, en el norte de África. Constituido en un Estado social y Estado de Derecho, su forma de gobierno es la monarquía parlamentaria. Es uno de los veintisiete Estados de la Unión Europea y su capital y ciudad más poblada es Madrid.",
+   "title": "España",
+   "url": "https://es.wikipedia.org/wiki/Espa%C3%B1a"
+  },
+  "fr": {
+   "extract": "L'Espagne, en forme longue le royaume d'Espagne, est un État souverain transcontinental d'Europe du Sud-Ouest, qui occupe la plus grande partie de la péninsule Ibérique. Sa superficie est de 505 990 km2.",
+   "title": "Espagne",
+   "url": "https://fr.wikipedia.org/wiki/Espagne"
+  },
+  "nl": {
+   "extract": "Spanje, officieel het Koninkrijk Spanje, is een land in het zuidwesten van Europa met 49.128.297 inwoners, een oppervlakte van 505.992 km² en met hoofdstad Madrid. Het land beslaat grofweg 80% van het Iberisch Schiereiland. Buiten dat horen ook de eilandengroep Balearen in de Middellandse Zee, de Canarische Eilanden in de Atlantische Oceaan en de Spaanse exclaves in Noord-Afrika bij het land.",
+   "title": "Spanje",
+   "url": "https://nl.wikipedia.org/wiki/Spanje"
+  }
+ },
  "st-gallen": {
   "de": {
    "extract": "St. Gallen ist ein Kanton in der Deutschschweiz und liegt in der Region Ostschweiz. Der Hauptort ist die gleichnamige Stadt St. Gallen.",
@@ -5595,6 +6054,33 @@
    "extract": "Sucre is een departement van Colombia, gelegen in het noorden van het land. De hoofdstad van het departement is de stad Sincelejo. In Sucre wonen ca. 0,8 miljoen mensen (2005).",
    "title": "Sucre (departement)",
    "url": "https://nl.wikipedia.org/wiki/Sucre_(departement)"
+  }
+ },
+ "switzerland": {
+  "de": {
+   "extract": "Die Schweiz, amtlich Schweizerische Eidgenossenschaft, ist ein föderalistischer, demokratischer Staat in Mitteleuropa. Er grenzt im Norden an Deutschland, im Osten an Österreich und Liechtenstein, im Süden an Italien und im Westen an Frankreich.",
+   "title": "Schweiz",
+   "url": "https://de.wikipedia.org/wiki/Schweiz"
+  },
+  "en": {
+   "extract": "Switzerland, officially the Swiss Confederation, is a landlocked country located at the intersection of Central, Western, and Southern Europe. It is bordered by Germany to the north, France to the west, Austria and Liechtenstein to the east, and Italy to the south. Switzerland is geographically divided among the Swiss Alps, the Swiss Plateau, and the Jura Mountains; the Alps cover most of the country's territory, whereas the majority of its 9 million people are concentrated on the plateau, which hosts many of the largest cities and economic centres, including Zurich, Geneva, Basel, Bern, Lausanne, Winterthur, and Lucerne.",
+   "title": "Switzerland",
+   "url": "https://en.wikipedia.org/wiki/Switzerland"
+  },
+  "es": {
+   "extract": "Suiza, oficialmente la Confederación Suiza, es un país sin salida al mar ubicado en Europa central y que cuenta con una población de 9 048 905 habitantes (2024). Suiza es un Estado federal con 26 cantones y cuenta con cuatro idiomas oficiales: alemán, francés, italiano y romanche.",
+   "title": "Suiza",
+   "url": "https://es.wikipedia.org/wiki/Suiza"
+  },
+  "fr": {
+   "extract": "La Suisse, en forme longue la Confédération suisse, est un État fédéral d'Europe centrale et de l'Ouest, formé de 26 cantons, avec Berne pour capitale de facto.",
+   "title": "Suisse",
+   "url": "https://fr.wikipedia.org/wiki/Suisse"
+  },
+  "nl": {
+   "extract": "Zwitserland, officieel de Zwitserse Bondsstaat, is een land in het westen van Europa met als buren Duitsland in het noorden, Frankrijk in het westen, Italië in het zuiden, Oostenrijk en Liechtenstein in het oosten.",
+   "title": "Zwitserland",
+   "url": "https://nl.wikipedia.org/wiki/Zwitserland"
   }
  },
  "taranaki": {
@@ -6027,6 +6513,60 @@
    "extract": "Umbrië, \"het land van Franciscus van Assisi\", is een regio met groene, zacht glooiende heuvels begroeid met vooral wijn- en olijfgaarden, maar er zijn ook akkers met tarwe, suikerbieten, tabak en zonnebloemen. De regio bevindt zich in Centraal-Italië, in de vallei van de rivier de Tiber met het stuwmeer Lago di Corbara. Umbrië, ook wel het groene hart van Italië genoemd, heeft een zacht mediterraan klimaat zodat de zomers droog en zonnig zijn. De winters kunnen behoorlijk koud en nat zijn, zeker op grotere hoogte zoals in de bergen van de Apennijnen. Umbrië grenst in het westen aan Toscane, in het oosten aan Marche en de Apennijnen en in het zuiden aan Lazio. De oppervlakte van de regio bedraagt 8456 km² en eind 2013 had krap 900.000 inwoners. Umbrië wordt gekenmerkt door oude ommuurde steden op heuvels met steile straten die getuigen van een rijke cultuurgeschiedenis.",
    "title": "Umbrië",
    "url": "https://nl.wikipedia.org/wiki/Umbri%C3%AB"
+  }
+ },
+ "united-kingdom": {
+  "de": {
+   "extract": "Das Vereinigte Königreich Großbritannien und Nordirland, kurz Vereinigtes Königreich, ist ein auf den Britischen Inseln vor der Nordwestküste Kontinentaleuropas gelegener Staat, der den größten Inselstaat Europas bildet.",
+   "title": "Vereinigtes Königreich",
+   "url": "https://de.wikipedia.org/wiki/Vereinigtes_K%C3%B6nigreich"
+  },
+  "en": {
+   "extract": "The United Kingdom of Great Britain and Northern Ireland, commonly known as the United Kingdom (UK) or Britain, is a country in northwestern Europe, off the coast of the continental mainland. It comprises England, Scotland, Wales and Northern Ireland, with a population of over 69 million in 2024. The UK includes the island of Great Britain, the north-eastern part of the island of Ireland, and most of the smaller islands within the British Isles, covering 94,354 square miles (244,376 km2). It shares a land border with the Republic of Ireland and is surrounded by the Atlantic Ocean, the North Sea, the English Channel, the Celtic Sea and the Irish Sea, while maintaining sovereignty over the Crown Dependencies and the British Overseas Territories. The capital and largest city of England and the UK is London; Edinburgh, Cardiff and Belfast are the national capitals of Scotland, Wales and Northern Ireland, respectively.",
+   "title": "United Kingdom",
+   "url": "https://en.wikipedia.org/wiki/United_Kingdom"
+  },
+  "es": {
+   "extract": "El Reino Unido (RU), oficialmente el Reino Unido de Gran Bretaña e Irlanda del Norte, es un país soberano e insular ubicado al noroeste de la Europa continental. Su territorio está formado geográficamente por la isla de Gran Bretaña, el noreste de la isla de Irlanda y pequeñas islas adyacentes. Su capital y ciudad más poblada es Londres. Desde la independencia de la República de Irlanda, Irlanda del Norte ha sido la única parte del país con una frontera terrestre, hasta la inauguración del Eurotúnel, que es conocido por unir por tierra a la isla de Gran Bretaña con Francia y las tierras continentales europeas. Gran Bretaña limita al norte y al oeste con el océano Atlántico, al este con el mar del Norte, al sur con el canal de la Mancha y al oeste con el mar de Irlanda. El inglés es el idioma de facto y como tal comprende una de las naciones centrales de la angloesfera.",
+   "title": "Reino Unido",
+   "url": "https://es.wikipedia.org/wiki/Reino_Unido"
+  },
+  "fr": {
+   "extract": "Le Royaume-Uni, en forme longue le Royaume-Uni de Grande-Bretagne et d'Irlande du Nord, est un pays d'Europe de l'Ouest ou, selon d'autres définitions, d'Europe du Nord, situé au nord-ouest de l'Europe continentale. Le Royaume-Uni est formé de quatre nations constitutives : l'Angleterre, l'Écosse, le pays de Galles et l'Irlande du Nord. Le Royaume-Uni comprend l'île de Grande-Bretagne, la partie nord-est de l'île d'Irlande — appelée Irlande du Nord — et de nombreuses petites îles autour des deux principales îles de l'archipel britannique. L'Irlande du Nord partage une frontière terrestre avec la république d'Irlande.",
+   "title": "Royaume-Uni",
+   "url": "https://fr.wikipedia.org/wiki/Royaume-Uni"
+  },
+  "nl": {
+   "extract": "Het Verenigd Koninkrijk, officieel het Verenigd Koninkrijk van Groot-Brittannië en Noord-Ierland, afgekort VK, is een soevereine staat in West-Europa met ongeveer 67,9 miljoen inwoners, gelegen tussen de Noordzee en de Atlantische Oceaan.",
+   "title": "Verenigd Koninkrijk",
+   "url": "https://nl.wikipedia.org/wiki/Verenigd_Koninkrijk"
+  }
+ },
+ "united-states": {
+  "de": {
+   "extract": "Die Vereinigten Staaten von Amerika, kurz Vereinigte Staaten oder Amerika genannt, sind ihrer Verfassung zufolge eine demokratische, föderal aufgebaute Republik in Nordamerika mit einigen Inseln in Ozeanien. Sie besteht aus 50 Bundesstaaten, der Hauptstadt Washington, D.C., die einen eigenen Bundesdistrikt darstellt, sowie aus fünf größeren Territorien und neun Inselterritorien.",
+   "title": "Vereinigte Staaten",
+   "url": "https://de.wikipedia.org/wiki/Vereinigte_Staaten"
+  },
+  "en": {
+   "extract": "The United States of America (USA), also known as the United States (U.S.) or America, is a country primarily located in North America. It is a federal republic consisting of 50 states and a federal capital district, Washington, D.C. The 48 contiguous states border Canada to the north and Mexico to the south, with the semi-exclave of Alaska in the northwest and the archipelago of Hawaii in the Pacific Ocean. The United States also asserts sovereignty over five major island territories and various uninhabited islands in Oceania and the Caribbean. It is a megadiverse country, with the world's fourth-largest land area and third-largest population, exceeding 341 million.",
+   "title": "United States",
+   "url": "https://en.wikipedia.org/wiki/United_States"
+  },
+  "es": {
+   "extract": "Estados Unidos, oficialmente Estados Unidos de América, es una federación constituida en una república constitucional compuesta por cincuenta estados y un distrito federal. Limita al norte con Canadá y al sur con México. Su capital es Washington D. C. y su ciudad más poblada es Nueva York. La mayor parte del país se ubica en el medio de América del Norte ―donde se encuentran sus cuarenta y ocho estados contiguos y Washington D. C.―, entre los océanos Pacífico y Atlántico.",
+   "title": "Estados Unidos",
+   "url": "https://es.wikipedia.org/wiki/Estados_Unidos"
+  },
+  "fr": {
+   "extract": "Les États-Unis, en forme longue les États-Unis d'Amérique, également appelés de manière informelle les USA ou l'Amérique, ou familièrement les States, sont un État transcontinental dont une large majorité du territoire se situe en Amérique du Nord. Les États-Unis ont la structure politique d'une république et d'un État fédéral à régime présidentiel, composé de cinquante États. La capitale fédérale, Washington, est située dans le district de Columbia, une zone enclavée dans l'Union, mais hors des cinquante États. Les États-Unis adoptent l'anglais comme langue officielle le 1er mars 2025, l'anglais américain ayant servi de facto de langue nationale depuis l'indépendance du pays. La monnaie est le dollar américain.",
+   "title": "États-Unis",
+   "url": "https://fr.wikipedia.org/wiki/%C3%89tats-Unis"
+  },
+  "nl": {
+   "extract": "De Verenigde Staten (VS), officieel de Verenigde Staten van Amerika, is een federatie van 50 staten, verschillende overzeese territoria en het District of Columbia, grotendeels in Noord-Amerika gelegen. De Verenigde Staten zijn met ruim 332 miljoen inwoners (2020) het op twee na volkrijkste land ter wereld, na China en India. Tevens is het het op twee na grootste land in oppervlakte, na Rusland en Canada.",
+   "title": "Verenigde Staten",
+   "url": "https://nl.wikipedia.org/wiki/Verenigde_Staten"
   }
  },
  "uri": {

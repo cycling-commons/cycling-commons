@@ -42,15 +42,26 @@ import urllib.request
 
 UA = "CyclingCommons-region-context/1.0 (https://cyclingcommons.org; info@cyclingcommons.org)"
 SPARQL = "https://query.wikidata.org/sparql"
+API = "https://www.wikidata.org/w/api.php"
 LOCALES = ["en", "fr", "nl", "de", "es"]
 OUT = pathlib.Path(__file__).resolve().parent / "out" / "region-context.json"
+
+# Reviewed exceptions: ISO codes whose P300/P297 sits on a Wikidata item with
+# no sitelinks (usually a data-modelling duplicate), mapped to the item whose
+# articles a reader actually wants. ES-IB's P300 lives on Q107356467 (empty);
+# the Balearic Islands articles live on Q5765.
+QID_OVERRIDES = {"ES-IB": "Q5765"}
 
 # One query for every ISO code at once: P300 is unique per item, and asking
 # region-by-region is 271 round trips against a rate-limited endpoint.
 QUERY = """
 SELECT ?iso ?item %(site_vars)s WHERE {
   VALUES ?iso { %(isos)s }
-  ?item wdt:P300 ?iso.
+  # P300 = ISO 3166-2 (subdivisions); P297 = ISO 3166-1 alpha-2 (countries).
+  # The country-level rows (slug 'slovenia', iso 'SI') carry the bare country
+  # code, which only P297 knows - matching P300 alone left every country page
+  # without its lead (owner-reported 2026-08-16).
+  ?item wdt:P300|wdt:P297 ?iso.
   %(site_optionals)s
 }
 """
@@ -92,6 +103,17 @@ def sitelinks_by_iso(isos: list[str]) -> dict[str, dict[str, str]]:
             if titles:
                 out[iso] = titles
         time.sleep(1)
+    # Reviewed overrides fill in via sitelinks on the named item.
+    for iso, qid in QID_OVERRIDES.items():
+        if iso in out or iso not in isos:
+            continue
+        url = API + "?" + urllib.parse.urlencode({
+            "action": "wbgetentities", "ids": qid, "props": "sitelinks", "format": "json",
+        })
+        sl = ((_get(url).get("entities") or {}).get(qid) or {}).get("sitelinks") or {}
+        titles = {lc: sl[f"{lc}wiki"]["title"] for lc in LOCALES if f"{lc}wiki" in sl}
+        if titles:
+            out[iso] = titles
     return out
 
 
@@ -157,6 +179,14 @@ def main() -> int:
         print(f"{slug} ({iso}): {', '.join(sorted(entry)) or 'nothing'}", file=sys.stderr)
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
+    # A PARTIAL run (--iso) merges into the existing artifact instead of
+    # replacing it: re-harvesting one region must never silently discard the
+    # other 250 committed entries - which is exactly what the first ES-IB
+    # re-run did. A full run still replaces wholesale.
+    if args.iso and OUT.exists():
+        existing = json.loads(OUT.read_text(encoding="utf-8"))
+        existing.update(artifact)
+        artifact = existing
     OUT.write_text(json.dumps(artifact, ensure_ascii=False, indent=1, sort_keys=True) + "\n", encoding="utf-8")
     print(f"wrote {OUT} - {len(artifact)} regions, {len(misses)} without a Wikidata match"
           + (f" ({', '.join(misses[:10])}{'…' if len(misses) > 10 else ''})" if misses else ""), file=sys.stderr)
