@@ -81,12 +81,14 @@ test('the knooppunt swatch matches the badge the map draws', () => {
 test('the key follows the layer it explains', () => {
   assert.match(twig, /<div class="rkey" id="routesKey" hidden>/,
     'the key must start hidden - it explains a layer that is off by default');
-  assert.match(panels, /routesKey\.hidden\s*=\s*!routesTilesVisible\(\)/,
+  assert.match(panels, /routesKey\.hidden=!routesTilesVisible\(\)/,
     'the key has to hide again with the layer, or it explains an empty map');
   // Once on load and once per toggle: a key that only syncs on click is wrong
-  // for anyone who arrives with the layer already on.
-  assert.ok((panels.match(/syncRoutesKey\(\)/g) || []).length >= 2,
-    'syncRoutesKey must run on init as well as on toggle');
+  // for anyone who arrives with the layer already on. syncLegend() is shared
+  // with the surface key now, so it also runs from the counts event and from
+  // the surfaces toggle - three or more, never one.
+  assert.ok((panels.match(/syncLegend\(\)/g) || []).length >= 3,
+    'syncLegend must run on init as well as on every toggle that changes the map');
 });
 
 test('the route rows do not pretend to be filters', () => {

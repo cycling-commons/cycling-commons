@@ -137,7 +137,7 @@ export function initLayerList(){
 
   if(surfBtn && surfaceTilesConfigured()){
     surfBtn.hidden=false;
-    surfBtn.onclick=()=>{ surfBtn.classList.toggle('on', setSurfaceTiles(!surfaceTilesVisible())); syncStudyGate(); };
+    surfBtn.onclick=()=>{ surfBtn.classList.toggle('on', setSurfaceTiles(!surfaceTilesVisible())); syncStudyGate(); syncLegend(); };
   }
 
   // Cycle-route network (routes-tiles.js). Same rules as the surface skin: off
@@ -145,20 +145,41 @@ export function initLayerList(){
   // artifact exists — a control for tiles that were never built reads as
   // broken, not absent.
   const routesBtn=document.getElementById('ovRoutes');
-  // The key follows the layer, exactly as the gaps toggle does: three colours
-  // and a numbered badge explained while they are on screen, and nothing added
-  // to the legend for everyone else. Owner-asked 2026-08-16, after reading the
-  // node network off a screenshot and having to be told what the colours meant.
-  const routesKey=document.getElementById('routesKey');
-  const syncRoutesKey=()=>{ if(routesKey) routesKey.hidden=!routesTilesVisible(); };
   if(routesBtn && routesTilesConfigured()){
     routesBtn.hidden=false;
     routesBtn.onclick=()=>{
       routesBtn.classList.toggle('on', setRoutesTiles(!routesTilesVisible()));
-      syncRoutesKey();
+      syncLegend();
     };
   }
-  syncRoutesKey();
+
+  /* THE LEGEND SHOWS ONLY WHAT IS ON THE MAP (owner 2026-08-16).
+     Each key follows the thing it explains, and the panel itself follows the
+     keys - six surface colours were being explained beside a map with no
+     surfaces on it, which teaches a rider to read the legend as decoration.
+
+     The surface key answers to TWO sources, because it is one key for two
+     layers: the tile skin, and the curated Road-surface layer. Either one on
+     screen earns it. `shown > 0` rather than merely "the layer is ticked",
+     because a region with no surfaces mapped is exactly the case in the
+     owner's screenshot: the row read 0/0 and the key still explained six
+     colours nobody could point at. */
+  const surfaceKey=document.getElementById('surfaceKey'), routesKey=document.getElementById('routesKey');
+  const surfaceLayer=layerByKey['surface'];   // a lookup object, not a function
+  const surfaceOnMap=()=>surfaceTilesVisible()
+    || (!!surfaceLayer && active.has('surface') && layerCounts(surfaceLayer).shown > 0);
+  function syncLegend(){
+    if(surfaceKey) surfaceKey.hidden=!surfaceOnMap();
+    if(routesKey) routesKey.hidden=!routesTilesVisible();
+    // Nothing left to explain: the panel goes rather than sitting there as an
+    // empty box with a collapse control on it.
+    const legendEl=document.querySelector('.legend');
+    if(legendEl) legendEl.hidden=!!(surfaceKey?.hidden && routesKey?.hidden);
+  }
+  // Counts change with scope, mode, best-of and every layer toggle; render.js
+  // announces it from the one place they are all recomputed.
+  document.addEventListener('cc:counts', syncLegend);
+  syncLegend();
 
   // Legend-as-filter + study mode. Both live on the legend because that is
   // where the classes are named; the class filter works with the tile skin off

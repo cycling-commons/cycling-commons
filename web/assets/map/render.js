@@ -622,6 +622,13 @@ export function updateCounts(){
     const c=layerCounts(layer), el=document.querySelector(`#layers .layer[data-key="${layer.key}"] .ct`);
     if(el) el.textContent=`${c.shown}/${c.total}`;
   });
+  /* "What is actually on screen" just changed - a scope move, a mode switch, a
+     layer toggle, a best-of refresh. The legend needs to know, because a key
+     for a layer with nothing on the map explains nothing (panels.js
+     syncLegend). An event rather than a direct call: render.js must not import
+     the chrome it is drawn under, and every path that changes the counts
+     already comes through here. */
+  document.dispatchEvent(new CustomEvent('cc:counts'));
 }
 export function render(){
   // Style-load race (surfaced by the consolidated A-source, C3): the initial

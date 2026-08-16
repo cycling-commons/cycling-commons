@@ -306,7 +306,13 @@
       <div class="lg-body" id="lgBody">
       {# The key serves BOTH the curated A layer and the Surfaces tile skin —
          same seven classes, same colours, deliberately (SURFACE_STYLE is
-         shared). Dropping the "· A" because it is no longer only A's key. #}
+         shared). Dropping the "· A" because it is no longer only A's key.
+
+         Wrapped and hidden by panels.js when NEITHER is on screen (owner
+         2026-08-16): with the skin off and the Road-surface layer empty or
+         switched off, six colours were being explained for a map that had none
+         of them on it. #}
+      <div class="skey-block" id="surfaceKey">
       <h4>{{ 'item_type.road-surface.label'|trans }}</h4>
       <div class="skey">
         <button type="button" class="skey-row" data-surf-cls="paved" aria-pressed="true"><span class="skey-ln" style="--sc:#4E6E66"></span>{{ 'map.legend_paved'|trans }}</button>
@@ -329,6 +335,7 @@
          only while the surface skin is on. #}
       <button type="button" class="skey-study" id="skeyGaps" aria-pressed="false" hidden
         title="{{ 'map.gaps_grid_title'|trans }}">{{ 'map.gaps_grid'|trans }}</button>
+      </div>
       {# Cycle-route key. Revealed by panels.js only while the routes overlay is
          on, the same rule the gaps toggle follows: a key for an absent layer
          explains nothing and makes the legend longer for everyone.

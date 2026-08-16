@@ -82,6 +82,39 @@ test('aria-expanded follows the panel, in both directions', () => {
   assert.match(twig, /aria-controls="lgBody"/);
 });
 
+/* The legend shows only what is on the map (owner 2026-08-16): six surface
+   colours were being explained beside a region with none of them, which teaches
+   a rider to read the legend as decoration. */
+test('the surface key answers to BOTH the tile skin and the curated layer', () => {
+  const m = panels.match(/const surfaceOnMap=\(\)=>([\s\S]*?);\n/);
+  assert.ok(m, 'surfaceOnMap not found');
+  assert.match(m[1], /surfaceTilesVisible\(\)/, 'the tile skin earns the key');
+  assert.match(m[1], /active\.has\('surface'\)/, "so does the curated layer being switched on");
+  assert.match(m[1], /layerCounts\(surfaceLayer\)\.shown > 0/,
+    'a ticked layer with nothing in scope reads 0/0 - that is the case that started this');
+});
+
+test('an empty legend hides itself rather than sitting there as a box', () => {
+  assert.match(panels, /legendEl\.hidden=!!\(surfaceKey\?\.hidden && routesKey\?\.hidden\)/);
+});
+
+test('the legend re-syncs from the one place the counts are recomputed', () => {
+  const render = read('assets/map/render.js');
+  assert.match(render, /document\.dispatchEvent\(new CustomEvent\('cc:counts'\)\)/,
+    'updateCounts must announce; scope, mode, best-of and layer toggles all pass through it');
+  assert.match(panels, /document\.addEventListener\('cc:counts', syncLegend\)/);
+  // An event, not an import: render.js must not reach for the chrome it is
+  // drawn under.
+  assert.doesNotMatch(render, /from '\.\/panels\.js'/);
+});
+
+test('the surface layer is looked up as an object, not called as a function', () => {
+  // layerByKey is Object.fromEntries(...), and calling it threw at init - which
+  // took the whole legend sync down with it, silently, behind one console line.
+  assert.match(panels, /layerByKey\['surface'\]/);
+  assert.doesNotMatch(panels, /layerByKey\('surface'\)/);
+});
+
 test('the panel is capped so one long note cannot set its width', () => {
   assert.match(css, /\.legend\{[^}]*max-width:min\(17\.5rem,44vw\)/s,
     'the quality-ticks sentence was setting the panel width; it must wrap instead');
