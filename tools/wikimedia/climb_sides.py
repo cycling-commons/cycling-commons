@@ -33,13 +33,24 @@ genuinely climbing but flatter lower section trips it early. There is no
 threshold that is right for every col, which is the honest reason this writes a
 review file instead of importing.
 
+## Road bike, not "a bike"
+
+Costing is `bicycle` with **`bicycle_type: Road`, `avoid_bad_surfaces: 1.0` and
+`use_roads: 1.0`**, and that is load-bearing. The first harvest used plain
+bicycle costing and came back with the Camino de Santiago FOOTPATH beside the
+N-135 as 47% of the climb to Roncevaux, and a hiking trail at the Col de
+l'Iseran. The router was not wrong - a bike can ride those - but a pass climb is
+a paved road, and a line that wanders off it is not the climb whatever the
+arithmetic says. With the three options above, Roncevaux comes back 0% off-road.
+
 ## What it cannot do, and why every row still needs an eye
 
-The router will happily leave a col down a farm track or a dead end, and this
+Even so, the router can leave a col down a dead end or a service spur, and this
 has no way to know that a road is not the road. Each side is reported with its
 length, drop and average gradient, and the artifact is a **review file, not an
 import**: a 40 km "side" at 1.2% is a valley road, and a 900 m one at 14% is a
-driveway. Both look like climbs to arithmetic.
+driveway. Both look like climbs to arithmetic. `climb_audit.py` is the second
+opinion - it asks the road graph what each line actually runs on.
 
 Continent matters: pass `--valhalla` for anything outside Europe (web/.env
 ELEVATION_URLS lists one endpoint per continent).
@@ -74,10 +85,26 @@ BY_COUNTRY = {
 }
 
 
+# ROAD-BIKE costing, and this is not cosmetic. Plain `bicycle` costing sent the
+# 2026-08-16 harvest down the Camino de Santiago footpath beside the N-135 to
+# Roncevaux (47% of that "climb" was path) and onto a hiking trail at the Col de
+# l'Iseran. The router was doing its job - a bike CAN ride those - but a pass
+# climb is a paved road, and a line that leaves it is not the climb whatever the
+# arithmetic says. With these three options Roncevaux comes back 0% off-road.
+#
+# Deliberately DIFFERENT from climb_line.py, which keeps plain `bicycle` costing
+# to match the editor's own RouteSnapper: some stored climbs really are
+# greenways (Hockai's whole line is a RAVeL), and a road-bike profile would
+# refuse them. The harvester is looking for mountain passes and can be stricter
+# than the editor; the editor must not be stricter than its riders.
+ROAD_BIKE = {"bicycle_type": "Road", "avoid_bad_surfaces": 1.0, "use_roads": 1.0}
+
+
 def route(a, b, base):
     body = json.dumps({
         "locations": [{"lat": a[0], "lon": a[1]}, {"lat": b[0], "lon": b[1]}],
         "costing": "bicycle",
+        "costing_options": {"bicycle": ROAD_BIKE},
     }).encode()
     req = urllib.request.Request(base.rstrip("/") + "/route", data=body,
                                  headers={"Content-Type": "application/json"})

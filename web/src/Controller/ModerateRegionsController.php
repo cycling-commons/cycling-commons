@@ -300,6 +300,17 @@ final class ModerateRegionsController extends AbstractController
                 'slug' => $slug,
                 'label' => $translator->trans('region.'.$slug.'.label'),
                 'countryCode' => $region['country_code'],
+                // Country ahead of the region name: "Eastern Province" alone is
+                // ambiguous across nineteen countries, and a curator who lands
+                // here from a filtered desk needs to see WHICH one at a glance.
+                'countryName' => $region['country_name'],
+                // Only when the World bundle actually matched — a code with no
+                // country row has no flag file, and a broken image on a
+                // moderation surface is worse than no flag (same rule as the
+                // desk's own rows).
+                'flag' => null !== $region['world_iso2']
+                    ? 'flags/'.strtolower($region['world_iso2']).'.svg'
+                    : null,
             ],
             'locales' => $locales,
             'max_len' => self::ABOUT_MAX,
@@ -365,14 +376,21 @@ final class ModerateRegionsController extends AbstractController
      * One region by slug, refused unless it is inside this curator's areas and
      * is a region the desk operates on at all.
      *
-     * @return array{id: int, country_code: string, context: ?string, context_curated: ?string}
+     * @return array{id: int, country_code: string, country_name: string, world_iso2: ?string, context: ?string, context_curated: ?string}
      */
     private function regionForCurator(string $slug, User $user): array
     {
+        /* Country name and flag come from the World reference bundle, LEFT
+           JOINed exactly as the desk list does it, so a region whose country is
+           somehow not in the bundle still opens (falling back to its code and
+           no flag) rather than 404ing on a moderation surface. */
         $row = $this->db->fetchAssociative(
-            'SELECT id, country_code, context, context_curated FROM region
-              WHERE slug = :slug AND geom IS NOT NULL AND country_code <> \'\''
-            .' AND '.OperationalRegions::predicate('region'),
+            'SELECT r.id, r.country_code, r.context, r.context_curated,
+                    COALESCE(wc.name, r.country_code) AS country_name, wc.iso2 AS world_iso2
+               FROM region r
+          LEFT JOIN world_country wc ON wc.iso2 = r.country_code
+              WHERE r.slug = :slug AND r.geom IS NOT NULL AND r.country_code <> \'\''
+            .' AND '.OperationalRegions::predicate('r'),
             ['slug' => $slug],
         );
         if (false === $row) {
@@ -386,6 +404,8 @@ final class ModerateRegionsController extends AbstractController
         return [
             'id' => $id,
             'country_code' => (string) $row['country_code'],
+            'country_name' => (string) $row['country_name'],
+            'world_iso2' => \is_string($row['world_iso2']) ? $row['world_iso2'] : null,
             'context' => \is_string($row['context']) ? $row['context'] : null,
             'context_curated' => \is_string($row['context_curated']) ? $row['context_curated'] : null,
         ];
