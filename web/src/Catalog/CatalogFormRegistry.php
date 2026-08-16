@@ -332,7 +332,7 @@ final class CatalogFormRegistry
                     CatalogField::select('bikeAccess', 'Access for bikes', ['Roadside', 'Short walk', 'Path only']),
                     CatalogField::text('whatYouSee', 'What can you see?'),
                     CatalogField::select('condition', 'Still as mapped?', self::CONDITION_NO_PARTS),
-                    CatalogField::textarea('note', 'Anything to add?', 'A useful tip about this spot'),
+                    CatalogField::textarea('note', 'Description', 'A useful tip about this spot'),
                 ],
                 addFields: [
                     CatalogField::select('bestLight', 'Best light / time', ['Any', 'Morning', 'Golden hour', 'Sunset']),
@@ -352,7 +352,7 @@ final class CatalogFormRegistry
                     CatalogField::select('type', 'Type', ['Heritage site', 'Museum', 'Monument', 'Religious site']),
                     CatalogField::select('bikeParking', 'Bike parking', self::UNKNOWN_YES_NO),
                     CatalogField::select('condition', 'Still as mapped?', self::CONDITION_NO_PARTS),
-                    CatalogField::textarea('note', 'Anything to add?', 'A useful tip about this spot'),
+                    CatalogField::textarea('note', 'Description', 'A useful tip about this spot'),
                 ],
                 addFields: [
                     CatalogField::select('openingHours', 'Opening hours', self::OPENING_HOURS, default: 'Unknown'),

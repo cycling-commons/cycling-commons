@@ -81,6 +81,11 @@ export function schemaRows(letter, src, id, opts){
         rows.push({label:f.label, value: /^[1-5]$/.test(String(v)) ? stars(Number(v)) : v});
       } else if(f.kind === 'url'){
         rows.push({label:f.label, value:String(v).replace(/^https?:\/\//,'').replace(/\/$/,''), links:[{label:D.visitSite||'Visit site', href:v}]});
+      } else if(f.kind === 'textarea'){
+        // Prose, not a fact: a right-aligned ragged-left paragraph squeezed
+        // beside its label was unreadable (owner 2026-08-16). Full width,
+        // flowing from the left, no label — the text explains itself.
+        rows.push({wide:true, label:f.label, value:tv(v)});
       } else {
         rows.push({label:f.label, value:steepValue(letter, f.key, tv(v), src)});
       }
@@ -226,6 +231,10 @@ function recRowsHtml(recs){
       ? `<span class="m as" role="button" tabindex="0" aria-expanded="false" aria-label="${escPend(D.assumedAria||'How we worked this out')}">!</span>`
       : '';
     const why = r.assumed ? `<p class="cc-d-why" hidden>${escPend(r.assumed)}</p>` : '';
+    if(r.wide){
+      // A label-less full-width prose row (textarea-kind fields).
+      return `<li class="wide${r.changed?' chg':''}"><span class="v">${r.html?r.value:escPend(r.value)}${assumed}${links}</span>${why}</li>`;
+    }
     return `<li class="${r.empty?'empty':''}${r.changed?' chg':''}"><span class="k">${escPend(r.label)}</span><span class="v${r.warn?' warn':''}">${r.html?r.value:escPend(r.value)}${r.method?`<span class="m">${r.method}</span>`:''}${assumed}${links}</span>${why}</li>`;
   }).join('');
 }
