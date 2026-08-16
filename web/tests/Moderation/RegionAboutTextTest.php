@@ -131,6 +131,15 @@ final class RegionAboutTextTest extends WebTestCase
         // A locale with no article says so plainly rather than showing a blank.
         self::assertStringContainsString('Wikipedia has no article for this region', $html);
         self::assertNotNull($region->getId());
+
+        /* THE MODERATOR SHELL, and this is a regression guard rather than a
+           nicety (owner-reported 2026-08-16). A desk template that omits the
+           `chrome` block silently falls back to the PUBLIC header, so a curator
+           who opens one region loses every way back to the desks - and it fails
+           silently, because the page still renders and still works. */
+        self::assertStringContainsString('dtabs-modmode', $html, 'the moderator tab bar must be here');
+        self::assertStringContainsString('/moderate/regions" class="dtab-mod on', $html,
+            'and the Regions tab stays lit: this is a sub-page of that desk');
     }
 
     /**

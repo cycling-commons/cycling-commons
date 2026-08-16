@@ -303,6 +303,9 @@ final class ModerateRegionsController extends AbstractController
             ],
             'locales' => $locales,
             'max_len' => self::ABOUT_MAX,
+            // The shell chrome names the curator's areas, the same as on the
+            // desk this page is reached from.
+            'mod_scope_names' => $this->scopeProvider->describe($user, $this->scopeProvider->scopeFor($user)),
         ]);
     }
 
