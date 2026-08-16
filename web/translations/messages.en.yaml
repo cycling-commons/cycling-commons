@@ -1295,6 +1295,8 @@ region:
     label: 'Everywhere'
   about_h: 'About this region'
   about_source: 'Text from Wikipedia:'
+  about_source_adapted: "Adapted from Wikipedia by this region's curators:"
+  about_source_curator: "Written by this region's curators."
   cta_map: 'Open this region on the map'
   cta_apply: 'Volunteer as curator'
   # Still used by contribute/index.html.twig's Vote card ("go" link text) —
@@ -3542,6 +3544,19 @@ moderate_regions:
   empty_heading: 'No regions here'
   empty_body: 'No region falls inside your moderation area yet.'
   flash_not_ready: 'That region has not reached the Best of threshold yet.'
+  about:
+    kicker: "Region settings"
+    title: "The text on the region page"
+    lead: "The short lead a reader meets at the top of the region page, in each language. Leave a language empty and the page keeps the Wikipedia text we harvested. What you write here replaces it, and it survives the next Wikipedia import."
+    link: "About text"
+    no_article: "Wikipedia has no article for this region in this language, so the page shows nothing here until you write something."
+    placeholder: "Leave empty to keep the Wikipedia text."
+    derived_label: "I edited the Wikipedia text above instead of writing my own. The page then keeps the Wikipedia credit and says the text was changed."
+    derived_unavailable: "There is no Wikipedia text here to adapt, so this counts as your own writing and carries no Wikipedia credit."
+    save: "Save the text"
+    back: "Back to the regions desk"
+    flash_saved: "The region text is saved."
+    flash_too_long: "That is too long for a lead. Keep it under 1200 characters."
 
 # Shared by every submission receipt (contribute/_receipt_mark.html.twig); the per-page
 # improve.receipt.* / vote.receipt.* groups stay separate.

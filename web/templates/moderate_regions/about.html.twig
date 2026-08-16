@@ -1,0 +1,89 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{% extends 'base.html.twig' %}
+{% block head_styles %}
+{% include 'account/_shell_styles.html.twig' %}
+<style>
+  .mh{padding:2rem 0 1.4rem}
+  .mh .kicker{font-family:var(--mono);font-size:.64rem;letter-spacing:.16em;text-transform:uppercase;color:var(--clay);margin-bottom:.6rem}
+  .mh h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4vw,2.4rem);line-height:1.08;margin-bottom:.4rem;color:var(--ink)}
+  .mh .lead{color:#4a4d40;max-width:60ch;line-height:1.6}
+  .mh .role-badge{display:inline-flex;align-items:center;gap:.4rem;font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;background:var(--spruce-lift);color:var(--paper);padding:.22rem .55rem;border-radius:30px;margin-top:.7rem}
+
+  .ab-list{margin:1.8rem 0 2rem;display:flex;flex-direction:column;gap:1rem}
+  .ab-slot{border:1px solid rgba(20,22,14,.12);border-radius:8px;background:var(--paper);padding:1rem 1.2rem}
+  .ab-lang{font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:#8a8d7d;margin-bottom:.6rem}
+  /* The harvested lead sits ABOVE the box, quoted and quiet: it is reference
+     material, not an editable field, and it has to be readable at a glance
+     for the curator to judge whether they are adapting it or replacing it. */
+  .ab-wiki{border-left:3px solid rgba(20,22,14,.14);padding:.1rem 0 .1rem .8rem;margin:0 0 .8rem;color:#4a4d40;font-size:.9rem;line-height:1.55}
+  .ab-wiki a{color:#4a4d40}
+  .ab-none{color:#8a8d7d;font-style:italic;font-size:.85rem;margin:0 0 .8rem}
+  .ab-slot textarea{width:100%;font-family:var(--sans);font-size:.95rem;line-height:1.55;padding:.7rem;
+    border:1px solid rgba(20,22,14,.25);border-radius:6px;background:var(--paper);color:var(--ink);min-height:7rem;resize:vertical}
+  .ab-derived{display:flex;align-items:flex-start;gap:.5rem;margin-top:.7rem;font-size:.85rem;color:#4a4d40;line-height:1.5}
+  .ab-derived input{margin-top:.25rem;flex:0 0 auto}
+  .ab-derived--off{color:#8a8d7d}
+  .ab-acts{display:flex;gap:.8rem;align-items:center;flex-wrap:wrap;margin:0 0 3rem}
+  /* The field label: the language heading above already names the slot for a
+     sighted reader, so this exists only for a screen reader. */
+  .ab-slot .vh{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="mh">
+  <div class="wrap">
+    <div class="kicker">{{ 'moderate_regions.about.kicker'|trans }}</div>
+    <h1>{{ region.label }}</h1>
+    <p class="lead">{{ 'moderate_regions.about.lead'|trans }}</p>
+    <div><span class="role-badge">&#9876; {{ 'moderate.role_label'|trans }}</span></div>
+  </div>
+</div>
+
+<div class="wrap" id="main">
+  {% for msg in app.flashes('success') %}<div class="flash-success" role="alert">{{ msg|trans }}</div>{% endfor %}
+  {% for msg in app.flashes('danger') %}<div class="flash-error" role="alert">{{ msg|trans }}</div>{% endfor %}
+
+  <form method="post" action="{{ path('moderate_regions_about_save', {slug: region.slug}) }}">
+    <input type="hidden" name="_token" value="{{ csrf_token('region-about-text') }}">
+    {# Endonyms, exactly as the language menu spells them: a curator picking the
+       Dutch slot looks for "Nederlands", whatever language the desk is in. #}
+    {% set _langs = {'en': 'English', 'fr': 'Français', 'nl': 'Nederlands', 'de': 'Deutsch', 'es': 'Español'} %}
+    <div class="ab-list">
+      {% for l in locales %}
+        <div class="ab-slot">
+          <div class="ab-lang">{{ _langs[l.code]|default(l.code) }}</div>
+          {# What Wikipedia gave us for THIS language, verbatim and credited,
+             so the curator decides against the real text rather than against a
+             memory of it. A language with no article says so plainly: that is
+             the case only a local curator can fill. #}
+          {% if l.wiki %}
+            <blockquote class="ab-wiki">{{ l.wiki.extract }}
+              <br><a href="{{ l.wiki.url }}" target="_blank" rel="noopener noreferrer">{{ l.wiki.title }} &#8599;</a></blockquote>
+          {% else %}
+            <p class="ab-none">{{ 'moderate_regions.about.no_article'|trans }}</p>
+          {% endif %}
+          <label class="vh" for="text_{{ l.code }}">{{ region.label }} — {{ _langs[l.code]|default(l.code) }}</label>
+          <textarea id="text_{{ l.code }}" name="text_{{ l.code }}" maxlength="{{ max_len }}"
+                    placeholder="{{ 'moderate_regions.about.placeholder'|trans }}">{{ l.text }}</textarea>
+          {# The licence question, asked in plain words rather than as the word
+             "derivative". Only offered where there is an article to adapt —
+             elsewhere the box would invite a citation we cannot honour. #}
+          {% if l.canDerive %}
+            <label class="ab-derived">
+              <input type="checkbox" name="derived_{{ l.code }}" value="1"{{ l.derived ? ' checked' }}>
+              <span>{{ 'moderate_regions.about.derived_label'|trans }}</span>
+            </label>
+          {% else %}
+            <p class="ab-derived ab-derived--off">{{ 'moderate_regions.about.derived_unavailable'|trans }}</p>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+    <div class="ab-acts">
+      <button type="submit" class="btn-act">{{ 'moderate_regions.about.save'|trans }}</button>
+      <a class="btn-act btn-secondary" href="{{ path('moderate_regions') }}?country={{ region.countryCode }}">{{ 'moderate_regions.about.back'|trans }}</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

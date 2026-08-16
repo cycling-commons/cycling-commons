@@ -1291,6 +1291,8 @@ region:
     label: 'Partout'
   about_h: 'À propos de cette région'
   about_source: 'Texte de Wikipédia :'
+  about_source_adapted: "Adapté de Wikipédia par les curateurs de cette région :"
+  about_source_curator: "Écrit par les curateurs de cette région."
   cta_map: 'Ouvrir cette région sur la carte'
   cta_apply: 'Devenir curateur bénévole'
   # Still used by contribute/index.html.twig's Vote card ("go" link text) —
@@ -3516,6 +3518,19 @@ moderate_regions:
   empty_heading: 'Aucune région ici'
   empty_body: 'Aucune région ne relève encore de votre zone de modération.'
   flash_not_ready: 'Cette région n''a pas encore atteint le seuil du Best-of.'
+  about:
+    kicker: "Réglages de la région"
+    title: "Le texte de la page région"
+    lead: "Le court chapeau que le lecteur trouve en haut de la page région, dans chaque langue. Laissez une langue vide et la page garde le texte Wikipédia que nous avons récolté. Ce que vous écrivez ici le remplace, et survit à la prochaine importation Wikipédia."
+    link: "Texte de présentation"
+    no_article: "Wikipédia n'a pas d'article sur cette région dans cette langue, donc la page n'affiche rien ici tant que vous n'écrivez pas."
+    placeholder: "Laissez vide pour garder le texte Wikipédia."
+    derived_label: "J'ai modifié le texte Wikipédia ci-dessus au lieu d'écrire le mien. La page garde alors le crédit Wikipédia et indique que le texte a été modifié."
+    derived_unavailable: "Il n'y a pas de texte Wikipédia à adapter ici, cela compte donc comme votre propre écriture et ne porte aucun crédit Wikipédia."
+    save: "Enregistrer le texte"
+    back: "Retour au bureau des régions"
+    flash_saved: "Le texte de la région est enregistré."
+    flash_too_long: "C'est trop long pour un chapeau. Restez sous 1200 caractères."
 
 # Shared by every submission receipt (contribute/_receipt_mark.html.twig); the per-page
 # improve.receipt.* / vote.receipt.* groups stay separate.

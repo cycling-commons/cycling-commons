@@ -259,7 +259,9 @@
   <section class="improve-unbound" data-improve-unbound>
     <h2>{{ 'improve.unbound_title'|trans }}</h2>
     <p>{{ 'improve.unbound_body'|trans }}</p>
-    <a class="btn" href="{{ path('map') }}">{{ 'improve.unbound_cta'|trans }}</a>
+    {# New tab: the reader arrived here from a row they were working through. #}
+    <a class="btn" href="{{ path('map') }}"
+       target="_blank" rel="noopener">{{ 'improve.unbound_cta'|trans }} &#8599;</a>
   </section>
 </div>
 {% elseif receipt is not null %}

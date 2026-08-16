@@ -122,10 +122,15 @@
           </h4>
           {% if sub_live %}
             <span class="item-links">
+              {# The map opens in its own tab: this list is a work queue, and a
+                 rider checking one row should come back to it, not to a fresh
+                 /profile. Same convention as the desk (moderate/_queue_item). #}
               {% if sub_pending_new %}
-                <a href="{{ path('map') }}?pending={{ sub.id }}">{{ 'account.link_map'|trans }}</a>
+                <a href="{{ path('map') }}?pending={{ sub.id }}"
+                   target="_blank" rel="noopener">{{ 'account.link_map'|trans }} &#8599;</a>
               {% else %}
-                <a href="{{ path('map') }}?feature={{ sub.title|url_encode }}">{{ 'account.link_map'|trans }}</a>
+                <a href="{{ path('map') }}?feature={{ sub.title|url_encode }}"
+                   target="_blank" rel="noopener">{{ 'account.link_map'|trans }} &#8599;</a>
               {% endif %}
               <a href="{{ path('improve') }}?item={{ sub.itemId }}&amp;type={{ sub.letter }}">{{ 'account.link_edit'|trans }}</a>
             </span>
@@ -204,7 +209,8 @@
         <h4>{{ p.name }}</h4>
         {% if p.state.value in ['verified', 'unverified'] %}
           <span class="item-links">
-            <a href="{{ path('map') }}?route={{ p.id }}">{{ 'account.link_map'|trans }}</a>
+            <a href="{{ path('map') }}?route={{ p.id }}"
+               target="_blank" rel="noopener">{{ 'account.link_map'|trans }} &#8599;</a>
           </span>
         {% endif %}
         <time class="co" datetime="{{ p.createdAt|date('c') }}">{{ p.createdAt|cc_date }}</time>
@@ -273,7 +279,8 @@
           <div class="item">
             <span class="tag tag-route">{{ 'nav.routes'|trans }}</span>
             <h4>{{ v.name }}</h4>
-            <span class="item-links"><a href="{{ path('map') }}?route={{ v.route_id }}">{{ 'account.link_map'|trans }}</a></span>
+            <span class="item-links"><a href="{{ path('map') }}?route={{ v.route_id }}"
+              target="_blank" rel="noopener">{{ 'account.link_map'|trans }} &#8599;</a></span>
             <span class="co">{{ v.season }} · {{ v.bike_type }}</span>
             <time class="co" datetime="{{ v.created_at|date('c') }}">{{ v.created_at|cc_date }}</time>
           </div>
@@ -285,7 +292,8 @@
           <div class="item">
             <span class="tag">{{ c.typeLabelKey|trans }}</span>
             <h4>{{ c.name }}</h4>
-            <span class="item-links"><a href="{{ path('map') }}?feature={{ c.name|url_encode }}">{{ 'account.link_map'|trans }}</a></span>
+            <span class="item-links"><a href="{{ path('map') }}?feature={{ c.name|url_encode }}"
+              target="_blank" rel="noopener">{{ 'account.link_map'|trans }} &#8599;</a></span>
             <time class="co" datetime="{{ c.created_at|date('c') }}">{{ c.created_at|cc_date }}</time>
             <span class="pill {{ c.stance == 'not_potable' ? 'rej' : 'ok' }}">{{ ('account.stance_' ~ c.stance)|trans }}</span>
           </div>

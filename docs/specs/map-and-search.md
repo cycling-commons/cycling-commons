@@ -384,6 +384,43 @@ across all five.
   so the directory list never pays for text blobs. Pinned by
   `ImportRegionContextCommandTest` and `RegionsPagesTest`.
 
+  **A curator can override that lead (built 2026-08-16, owner same day).** The
+  harvest is a starting point, not the last word: a curator who knows the
+  region should be able to replace it, or fill a language Wikipedia has no
+  article in. The override lives in its OWN column, `region.context_curated`
+  (JSONB, `Version20260816120000`), NOT inside `region.context` - the importer
+  replaces `context` wholesale on every run, so an override kept there would
+  live exactly until the next harvest. A second column is the same "store only
+  our additions beside the upstream copy" shape the catalog uses for OSM, and
+  it survives `app:regions:import-context` by construction rather than by a
+  guard somebody has to remember (the `change_history` shield in `ItemUpsert`
+  is the precedent it deliberately does not need).
+
+  Shape per locale: `{text, derived, userId, at}`. **`derived` is the licence
+  question and the reason this is not one text column.** A Wikipedia extract is
+  CC BY-SA 4.0, so what the curator did to it decides what the page must say:
+  an ADAPTED text keeps the citation (the licence follows a derivative) and
+  the page adds `region.about_source_adapted`, which states the text was
+  changed; an ORIGINAL text carries no Wikipedia credit at all and renders
+  `region.about_source_curator` instead. Crediting a source for words that did
+  not come from it is the worse of the two errors, so a `derived` claim is
+  honoured only where there IS an article to adapt - the reader's locale, or
+  English, since translating the English lead is itself a derivative work.
+  Where neither exists the claim is dropped rather than pointed at nothing.
+
+  `RegionLead::resolve()` owns the whole decision, and its order is not the
+  obvious one: a curator lead in the READER's locale wins, but a Wikipedia
+  article in the reader's locale beats a curator lead written in a language
+  they may not read; English is the last resort on both sides in the same
+  pairing. Emptying every box removes the override entirely (the column goes
+  back to NULL and the harvest returns by itself), so undoing needs no
+  re-import. Edited on its own page, `/moderate/regions/{slug}/about`, linked
+  from each region card on the Regions desk and gated by moderator areas,
+  re-checked on the POST like every other moderation write; the page quotes
+  the harvested text per language so the curator judges against the real
+  article. Leads are capped at 1,200 characters and an overlong one is
+  refused, not truncated. Pinned by `RegionAboutTextTest`.
+
   **The hero opens with the same three figures as `/coverage`**, in the same
   order and under the same labels: reference places on file, verified items,
   routes. A region page that opened with only the last two made a region

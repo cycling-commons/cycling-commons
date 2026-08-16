@@ -1291,6 +1291,8 @@ region:
     label: 'Overal'
   about_h: 'Over deze regio'
   about_source: 'Tekst van Wikipedia:'
+  about_source_adapted: "Door de curatoren van deze regio bewerkt uit Wikipedia:"
+  about_source_curator: "Geschreven door de curatoren van deze regio."
   cta_map: 'Open deze regio op de kaart'
   cta_apply: 'Word vrijwillig curator'
   # Still used by contribute/index.html.twig's Vote card ("go" link text) —
@@ -3516,6 +3518,19 @@ moderate_regions:
   empty_heading: 'Geen regio''s hier'
   empty_body: 'Nog geen regio valt binnen jouw moderatiegebied.'
   flash_not_ready: 'Die regio heeft de Best-of-drempel nog niet bereikt.'
+  about:
+    kicker: "Regio-instellingen"
+    title: "De tekst op de regiopagina"
+    lead: "De korte inleiding die een lezer boven aan de regiopagina ziet, per taal. Laat een taal leeg en de pagina houdt de Wikipedia-tekst die wij hebben opgehaald. Wat je hier schrijft vervangt die tekst, en blijft staan na de volgende Wikipedia-import."
+    link: "Regiotekst"
+    no_article: "Wikipedia heeft in deze taal geen artikel over deze regio, dus de pagina laat hier niets zien tot je iets schrijft."
+    placeholder: "Laat leeg om de Wikipedia-tekst te houden."
+    derived_label: "Ik heb de Wikipedia-tekst hierboven bewerkt in plaats van zelf te schrijven. De pagina houdt dan de Wikipedia-vermelding en meldt dat de tekst is gewijzigd."
+    derived_unavailable: "Er is hier geen Wikipedia-tekst om te bewerken, dus dit telt als je eigen tekst en krijgt geen Wikipedia-vermelding."
+    save: "Tekst opslaan"
+    back: "Terug naar de regiobalie"
+    flash_saved: "De regiotekst is opgeslagen."
+    flash_too_long: "Dat is te lang voor een inleiding. Houd het onder 1200 tekens."
 
 # Shared by every submission receipt (contribute/_receipt_mark.html.twig); the per-page
 # improve.receipt.* / vote.receipt.* groups stay separate.

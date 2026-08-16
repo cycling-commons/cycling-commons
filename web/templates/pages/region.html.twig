@@ -180,10 +180,22 @@
 {% if region.context %}
   <section class="pad rg-about"><div class="wrap">
     <div class="kicker">{% trans %}region.about_h{% endtrans %}</div>
-    <p class="rg-about-text">{{ region.context.extract }}</p>
-    <p class="rg-about-attrib">{% trans %}region.about_source{% endtrans %}
-      <a href="{{ region.context.url }}" rel="noopener noreferrer">{{ region.context.title }}</a>
-      · <a href="https://creativecommons.org/licenses/by-sa/4.0/" rel="noopener noreferrer">CC BY-SA 4.0</a></p>
+    <p class="rg-about-text">{{ region.context.text }}</p>
+    {# Three credit lines, because three things can be true and only one of
+       them at a time. A curator who ADAPTED the article keeps the CC BY-SA
+       citation - the licence follows a derivative - but the line must say the
+       text was changed, or a reader credits our edit to Wikipedia. A curator
+       who WROTE the lead gets no Wikipedia credit at all: claiming a source
+       for text that did not come from it is the worse error of the two. #}
+    {% if region.context.url %}
+      <p class="rg-about-attrib">
+        {%- if region.context.adapted %}{% trans %}region.about_source_adapted{% endtrans %}
+        {%- else %}{% trans %}region.about_source{% endtrans %}{% endif %}
+        <a href="{{ region.context.url }}" rel="noopener noreferrer">{{ region.context.title }}</a>
+        · <a href="https://creativecommons.org/licenses/by-sa/4.0/" rel="noopener noreferrer">CC BY-SA 4.0</a></p>
+    {% elseif region.context.curated %}
+      <p class="rg-about-attrib">{% trans %}region.about_source_curator{% endtrans %}</p>
+    {% endif %}
   </div></section>
 {% endif %}
 

@@ -216,6 +216,14 @@
             {% endif %}
           {% endfor %}
         </div>
+        {# The region's own lead text. Its own page rather than five textareas
+           on a card that already carries a meter, six block counts and three
+           mode buttons — and the harvested article needs somewhere to be READ
+           before a curator decides to adapt or replace it. #}
+        <div class="rg-act">
+          <a class="btn-act btn-secondary rg-mode"
+             href="{{ path('moderate_regions_about', {slug: r.slug}) }}">{{ 'moderate_regions.about.link'|trans }}</a>
+        </div>
       </div>
           {% endfor %}
         </details>

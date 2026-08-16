@@ -272,20 +272,20 @@ final class RegionDirectoryProvider
            blobs on every list row would be paid for nothing. The url/title
            travel with the extract: the text is CC BY-SA 4.0 and the
            attribution line must never drift from what it credits. */
-        $context = null;
-        $contextJson = $this->db->fetchOne('SELECT context FROM region WHERE id = :id', ['id' => (int) $row['id']]);
-        if (\is_string($contextJson) && '' !== $contextJson) {
-            $all = json_decode($contextJson, true);
-            if (\is_array($all)) {
-                $entry = $all[$locale] ?? $all['en'] ?? null;
-                if (\is_array($entry)
-                    && \is_string($entry['extract'] ?? null)
-                    && \is_string($entry['url'] ?? null)
-                    && \is_string($entry['title'] ?? null)) {
-                    $context = ['extract' => $entry['extract'], 'url' => $entry['url'], 'title' => $entry['title']];
-                }
-            }
-        }
+        /* Two stores, one lead: a curator override on the Regions desk beats
+           the harvest for the locale it was written in, and RegionLead decides
+           which of them the reader gets and what credit line it must carry
+           (adapted text keeps the Wikipedia citation and says so; original
+           text carries none). */
+        $ctx = $this->db->fetchAssociative(
+            'SELECT context, context_curated FROM region WHERE id = :id',
+            ['id' => (int) $row['id']],
+        );
+        $context = RegionLead::resolve(
+            self::decodeJson(\is_array($ctx) ? $ctx['context'] : null),
+            self::decodeJson(\is_array($ctx) ? $ctx['context_curated'] : null),
+            $locale,
+        );
 
         return $this->shape($row) + [
             'context' => $context,
@@ -334,5 +334,23 @@ final class RegionDirectoryProvider
             'itemsVerified' => $verified,
             'routes' => (int) $row['routes'],
         ];
+    }
+
+    /**
+     * A JSONB column as an array, or null for anything that is not one.
+     * Malformed stored JSON degrades to "this region has no lead" rather than
+     * to a 500 on a public page.
+     *
+     * @return array<string, mixed>|null
+     */
+    private static function decodeJson(mixed $raw): ?array
+    {
+        if (!\is_string($raw) || '' === $raw) {
+            return null;
+        }
+        $decoded = json_decode($raw, true);
+
+        /* @var array<string, mixed>|null */
+        return \is_array($decoded) ? $decoded : null;
     }
 }

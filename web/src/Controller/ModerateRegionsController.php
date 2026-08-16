@@ -8,6 +8,7 @@ namespace App\Controller;
 
 use App\Catalog\CuratedReadiness;
 use App\Catalog\OperationalRegions;
+use App\Catalog\RegionLead;
 use App\Entity\User;
 use App\Moderation\ModerationScopeProvider;
 use App\Routing\LocalePrefix;
@@ -50,6 +51,14 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 final class ModerateRegionsController extends AbstractController
 {
     private const string CSRF_TOKEN_ID = 'region-curated-default';
+    private const string CSRF_ABOUT_ID = 'region-about-text';
+
+    /**
+     * A lead is a paragraph, not an essay. The Wikipedia extracts this sits
+     * beside run 150-400 characters; the cap is generous against those and
+     * still says "this is the lead, the map is the page".
+     */
+    private const int ABOUT_MAX = 1200;
 
     public function __construct(
         private readonly Connection $db,
@@ -240,6 +249,157 @@ final class ModerateRegionsController extends AbstractController
         $this->addFlash('success', 'moderate_regions.flash_mode_'.$mode);
 
         return $this->redirectToRoute('moderate_regions');
+    }
+
+    /**
+     * The about-text editor for one region: five locale slots, each with the
+     * harvested Wikipedia lead shown beside the box a curator types into.
+     *
+     * Its own page rather than a control on the desk card. The desk is a list
+     * of nineteen countries of regions and each row already carries a meter,
+     * six block counts and three mode buttons; five textareas per row would
+     * bury the setting it exists for. A page also gives the harvested text
+     * somewhere to be READ, which is the thing a curator needs in front of
+     * them to decide whether they are adapting it or replacing it.
+     */
+    #[Route('/moderate/regions/{slug}/about', name: 'moderate_regions_about', requirements: ['slug' => '[a-z0-9-]+'], methods: ['GET'])]
+    public function about(string $slug, TranslatorInterface $translator): Response
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+        $region = $this->regionForCurator($slug, $user);
+
+        $wiki = self::decodeJson($region['context']);
+        $curated = self::decodeJson($region['context_curated']);
+
+        $locales = [];
+        foreach (RegionLead::LOCALES as $locale) {
+            $own = RegionLead::override($curated, $locale);
+            $harvest = $wiki[$locale] ?? null;
+            $locales[] = [
+                'code' => $locale,
+                'text' => $own['text'] ?? '',
+                'derived' => $own['derived'] ?? false,
+                // What the harvest holds for this locale, so the curator can
+                // read the thing they are about to override or adapt.
+                'wiki' => \is_array($harvest) && \is_string($harvest['extract'] ?? null)
+                    ? ['extract' => $harvest['extract'], 'url' => (string) ($harvest['url'] ?? ''), 'title' => (string) ($harvest['title'] ?? '')]
+                    : null,
+                // "I adapted the article" can only be claimed where an article
+                // exists to adapt - this locale's, or English (translating the
+                // English lead is a derivative work too).
+                'canDerive' => RegionLead::hasSource($wiki, $locale),
+            ];
+        }
+
+        return $this->render('moderate_regions/about.html.twig', [
+            'page_title' => 'moderate_regions.about.title',
+            'nav_active' => 'moderate',
+            'region' => [
+                'id' => $region['id'],
+                'slug' => $slug,
+                'label' => $translator->trans('region.'.$slug.'.label'),
+                'countryCode' => $region['country_code'],
+            ],
+            'locales' => $locales,
+            'max_len' => self::ABOUT_MAX,
+        ]);
+    }
+
+    #[Route('/moderate/regions/{slug}/about', name: 'moderate_regions_about_save', requirements: ['slug' => '[a-z0-9-]+'], methods: ['POST'])]
+    public function saveAbout(string $slug, Request $request): Response
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+        if (!$this->isCsrfTokenValid(self::CSRF_ABOUT_ID, (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Invalid CSRF token.');
+        }
+        // Jurisdiction re-checked on the POST, not trusted from the form that
+        // rendered it — the same rule the mode buttons follow.
+        $region = $this->regionForCurator($slug, $user);
+        $wiki = self::decodeJson($region['context']);
+
+        $curated = [];
+        $now = new \DateTimeImmutable();
+        foreach (RegionLead::LOCALES as $locale) {
+            $text = trim((string) $request->request->get('text_'.$locale, ''));
+            if ('' === $text) {
+                // An emptied box REMOVES the override rather than storing "",
+                // which is how a curator undoes one: the harvested lead comes
+                // back on the next render, and nothing has to be re-imported.
+                continue;
+            }
+            if (mb_strlen($text) > self::ABOUT_MAX) {
+                $this->addFlash('danger', 'moderate_regions.about.flash_too_long');
+
+                return $this->redirectToRoute('moderate_regions_about', ['slug' => $slug]);
+            }
+            // A claim of adaptation is only honoured where there is something
+            // to adapt; otherwise it silently becomes original work, which is
+            // the safe direction (no citation is better than a false one).
+            $derived = $request->request->has('derived_'.$locale) && RegionLead::hasSource($wiki, $locale);
+            $curated[$locale] = [
+                'text' => $text,
+                'derived' => $derived,
+                'userId' => $user->getId(),
+                'at' => $now->format(\DateTimeInterface::ATOM),
+            ];
+        }
+
+        $this->db->executeStatement(
+            'UPDATE region SET context_curated = :ctx, updated_at = NOW() WHERE id = :id',
+            // All five boxes emptied means "no override at all" — NULL, not an
+            // empty object, so the column reads the same as a region nobody has
+            // ever edited.
+            ['ctx' => [] === $curated ? null : json_encode($curated, \JSON_THROW_ON_ERROR), 'id' => $region['id']],
+        );
+        $this->addFlash('success', 'moderate_regions.about.flash_saved');
+
+        return $this->redirectToRoute('moderate_regions_about', ['slug' => $slug]);
+    }
+
+    /**
+     * One region by slug, refused unless it is inside this curator's areas and
+     * is a region the desk operates on at all.
+     *
+     * @return array{id: int, country_code: string, context: ?string, context_curated: ?string}
+     */
+    private function regionForCurator(string $slug, User $user): array
+    {
+        $row = $this->db->fetchAssociative(
+            'SELECT id, country_code, context, context_curated FROM region
+              WHERE slug = :slug AND geom IS NOT NULL AND country_code <> \'\''
+            .' AND '.OperationalRegions::predicate('region'),
+            ['slug' => $slug],
+        );
+        if (false === $row) {
+            throw $this->createNotFoundException('No such region.');
+        }
+        $id = (int) $row['id'];
+        if (!$this->scopeProvider->allowsRegion($this->scopeProvider->scopeFor($user), $id)) {
+            throw $this->createAccessDeniedException('Region outside your moderation area.');
+        }
+
+        return [
+            'id' => $id,
+            'country_code' => (string) $row['country_code'],
+            'context' => \is_string($row['context']) ? $row['context'] : null,
+            'context_curated' => \is_string($row['context_curated']) ? $row['context_curated'] : null,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private static function decodeJson(?string $raw): ?array
+    {
+        if (null === $raw || '' === $raw) {
+            return null;
+        }
+        $decoded = json_decode($raw, true);
+
+        /* @var array<string, mixed>|null */
+        return \is_array($decoded) ? $decoded : null;
     }
 
     /**

@@ -1291,6 +1291,8 @@ region:
     label: 'Überall'
   about_h: 'Über diese Region'
   about_source: 'Text aus Wikipedia:'
+  about_source_adapted: "Von den Kuratoren dieser Region aus Wikipedia bearbeitet:"
+  about_source_curator: "Von den Kuratoren dieser Region geschrieben."
   cta_map: 'Diese Region auf der Karte öffnen'
   cta_apply: 'Ehrenamtlich Kurator werden'
   # Still used by contribute/index.html.twig's Vote card ("go" link text) —
@@ -3519,6 +3521,19 @@ moderate_regions:
   empty_heading: 'Keine Regionen hier'
   empty_body: 'Noch keine Region fällt in deinen Moderationsbereich.'
   flash_not_ready: 'Diese Region hat die Best-of-Schwelle noch nicht erreicht.'
+  about:
+    kicker: "Regionseinstellungen"
+    title: "Der Text auf der Regionsseite"
+    lead: "Der kurze Vorspann, den Lesende oben auf der Regionsseite finden, je Sprache. Lass eine Sprache leer, dann behält die Seite den Wikipedia-Text, den wir geerntet haben. Was du hier schreibst, ersetzt ihn und überlebt den nächsten Wikipedia-Import."
+    link: "Regionstext"
+    no_article: "Wikipedia hat in dieser Sprache keinen Artikel zu dieser Region, die Seite zeigt hier also nichts, bis du etwas schreibst."
+    placeholder: "Leer lassen, um den Wikipedia-Text zu behalten."
+    derived_label: "Ich habe den Wikipedia-Text oben bearbeitet, statt einen eigenen zu schreiben. Die Seite behält dann den Wikipedia-Nachweis und sagt, dass der Text geändert wurde."
+    derived_unavailable: "Hier gibt es keinen Wikipedia-Text zum Bearbeiten, das zählt also als eigener Text und trägt keinen Wikipedia-Nachweis."
+    save: "Text speichern"
+    back: "Zurück zum Regionen-Schreibtisch"
+    flash_saved: "Der Regionstext ist gespeichert."
+    flash_too_long: "Das ist zu lang für einen Vorspann. Bleib unter 1200 Zeichen."
 
 # Shared by every submission receipt (contribute/_receipt_mark.html.twig); the per-page
 # improve.receipt.* / vote.receipt.* groups stay separate.

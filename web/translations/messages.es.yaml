@@ -1296,6 +1296,8 @@ region:
     label: 'Todo el mundo'
   about_h: 'Sobre esta región'
   about_source: 'Texto de Wikipedia:'
+  about_source_adapted: "Adaptado de Wikipedia por los curadores de esta región:"
+  about_source_curator: "Escrito por los curadores de esta región."
   cta_map: 'Abrir esta región en el mapa'
   cta_apply: 'Presentarse como curador'
   # Todavía lo usa la tarjeta Votar de contribute/index.html.twig (el texto del
@@ -3557,6 +3559,19 @@ moderate_regions:
   empty_heading: 'Aquí no hay regiones'
   empty_body: 'Todavía no hay ninguna región dentro de tu zona de moderación.'
   flash_not_ready: 'Esa región todavía no ha alcanzado el umbral de Lo mejor.'
+  about:
+    kicker: "Ajustes de la región"
+    title: "El texto de la página de región"
+    lead: "La entradilla breve que el lector encuentra al principio de la página de región, en cada idioma. Deja un idioma vacío y la página conserva el texto de Wikipedia que recogimos. Lo que escribas aquí lo sustituye, y sobrevive a la siguiente importación de Wikipedia."
+    link: "Texto de la región"
+    no_article: "Wikipedia no tiene artículo sobre esta región en este idioma, así que la página no muestra nada aquí hasta que escribas algo."
+    placeholder: "Déjalo vacío para conservar el texto de Wikipedia."
+    derived_label: "He editado el texto de Wikipedia de arriba en lugar de escribir el mío. La página conserva entonces el crédito de Wikipedia e indica que el texto se cambió."
+    derived_unavailable: "Aquí no hay texto de Wikipedia que adaptar, así que cuenta como escritura propia y no lleva crédito de Wikipedia."
+    save: "Guardar el texto"
+    back: "Volver al escritorio de regiones"
+    flash_saved: "El texto de la región está guardado."
+    flash_too_long: "Es demasiado largo para una entradilla. Mantenlo por debajo de 1200 caracteres."
 
 # Compartido por todos los acuses de recibo de envío
 # (contribute/_receipt_mark.html.twig); los grupos por página improve.receipt.* /
