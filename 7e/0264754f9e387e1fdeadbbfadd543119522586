@@ -1,0 +1,31 @@
+web/tests/js/legend-collapse.test.cjs
+  s_df9a7eaed39865::t_75ccd67446d707 1-88
+web/assets/map/panels.js
+  s_df9a7eaed39865::t_fff33ca457c206 273-283,285-293
+web/assets/styles/map.css
+  s_df9a7eaed39865::t_1c1f3cf47de1b3 452-464,468-470,489-493
+web/templates/map/index.html.twig
+  s_df9a7eaed39865::t_b21d8e4da226af 296-303,306
+  s_df9a7eaed39865::t_8b076018d043d8 358
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "7e0264754f9e387e1fdeadbbfadd543119522586",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_df9a7eaed39865": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "22e36216-d269-4ffd-b95a-9b6bbdf16f97",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
