@@ -23,10 +23,21 @@
   // element already carries id="main" (some pages put it on a plain wrapper),
   // else the first sibling after the nav, else the first <section>, else
   // <body>. Preferring an existing #main keeps us from stamping a duplicate id.
+  //
+  // The sibling walk SKIPS announcement bars, and that is a fix rather than a
+  // nicety: the flash notice is rendered between the nav and the page body, so
+  // on the two pages that have no #main of their own (the improve and
+  // add-climb wizards, whose root is #wiz) a page carrying a flash sent "Skip
+  // to content" to a one-line "your changes were saved" and stamped id="main"
+  // onto it. The skip link is the one control a keyboard user has for getting
+  // past the header, and it was landing on the header's own message.
+  const SKIP_OVER='[role="status"],[role="alert"],.cc-notice,script,style,template';
   let target=document.querySelector('main, [role="main"]')||document.getElementById('main');
   if(!target){
     const nav=document.querySelector('nav, .topnav, .top');
-    target=(nav&&nav.nextElementSibling)||document.querySelector('section')||document.body;
+    let next=nav&&nav.nextElementSibling;
+    while(next&&next.matches(SKIP_OVER)) next=next.nextElementSibling;
+    target=next||document.querySelector('section')||document.body;
   }
   if(!target.id) target.id='main';
   target.setAttribute('tabindex','-1');
