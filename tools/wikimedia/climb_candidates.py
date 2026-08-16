@@ -85,6 +85,13 @@ COUNTRY_QID = {
     "BE": "Q31", "NL": "Q55", "DE": "Q183", "LU": "Q32", "FR": "Q142",
     "CH": "Q39", "GB": "Q145", "IT": "Q38", "AU": "Q408", "JP": "Q17",
     "US": "Q30", "ES": "Q29",
+    # The 2026-08-14 rollout's seven, added 2026-08-16 so the probe covers
+    # every onboarded country rather than the twelve that existed when it was
+    # written. Availability is not promised - see the table above; ZA, CL, CO
+    # and NZ have real pass roads, RW and SI fewer, and a country with none
+    # returns an empty list rather than an error.
+    "CA": "Q16", "CL": "Q298", "CO": "Q739", "NZ": "Q664",
+    "RW": "Q1037", "SI": "Q215", "ZA": "Q258",
 }
 
 # Anything further apart than this is worth a human look at where the line ends.
