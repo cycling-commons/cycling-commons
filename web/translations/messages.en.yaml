@@ -2769,6 +2769,8 @@ account:
   sub_status_rejected: 'Rejected'
   sub_status_needs_info: 'Needs info'
   sub_status_withdrawn: 'Withdrawn'
+  filter_all: 'All'
+  filter_kind_aria: 'Filter contributions by category'
   withdraw: 'Withdraw'
   withdraw_confirm: 'Take back this submission? It leaves the review queue and the map; you can always submit it again.'
   answer_curator: 'Answer the curator'

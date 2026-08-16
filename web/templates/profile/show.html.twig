@@ -72,6 +72,17 @@
     <h2 class="sec-h">{{ 'account.contributions_title'|trans }}</h2>
     {% for msg in app.flashes('success') %}<div class="flash-success" role="alert">{{ msg|trans }}</div>{% endfor %}
     {% for msg in app.flashes('notice') %}<div class="flash-success" role="alert">{{ msg|trans }}</div>{% endfor %}
+    {# Category filter (owner 2026-08-16): plain GET links so a filtered list
+       can be bookmarked; chips render only for letters this rider has, and
+       only when there is more than one - a filter with one option is noise. #}
+    {% if letter_chips|length > 1 %}
+      <nav class="lfilter" aria-label="{{ 'account.filter_kind_aria'|trans }}">
+        <a class="lchip {{ letter_filter == '' ? 'on' }}" href="{{ path('profile') }}">{{ 'account.filter_all'|trans }}</a>
+        {% for c in letter_chips %}
+          <a class="lchip {{ letter_filter == c.letter ? 'on' }}" href="{{ path('profile', {letter: c.letter}) }}">{{ c.labelKey|trans }}</a>
+        {% endfor %}
+      </nav>
+    {% endif %}
     {% if contributions is empty %}
       <div class="empty-state">
         <p>{{ 'account.contributions_empty'|trans }}</p>
@@ -152,7 +163,7 @@
       {% endfor %}
       {# Paging the contributions pane keeps `rpage` so moving through one list
          never resets the other — they share a URL. #}
-      {% include 'partials/_pager.html.twig' with {pager: pager, route: 'profile', params: {rpage: route_pager.page}} %}
+      {% include 'partials/_pager.html.twig' with {pager: pager, route: 'profile', params: {rpage: route_pager.page}|merge(letter_filter ? {letter: letter_filter} : {})} %}
     {% endif %}
 
     {% if route_proposals is not empty %}
@@ -171,7 +182,7 @@
         <span class="pill {{ route_pill[p.state.value] ?? 'pend' }}">{{ ('account.route_state_' ~ p.state.value)|trans }}</span>
       </div>
     {% endfor %}
-    {% include 'partials/_pager.html.twig' with {pager: route_pager, route: 'profile', params: {page: pager.page}, key: 'rpage'} %}
+    {% include 'partials/_pager.html.twig' with {pager: route_pager, route: 'profile', params: {page: pager.page}|merge(letter_filter ? {letter: letter_filter} : {}), key: 'rpage'} %}
     {% endif %}
 
     {# ── Curating.

@@ -86,20 +86,43 @@ final class ProfileController extends AbstractController
         $user = $this->getUser();
         $userId = (int) $user->getId();
 
+        // Category filter (owner 2026-08-16: "only the roads or scenic views
+        // I added"). Chips render only for letters this rider actually has,
+        // so the guard just has to keep garbage out of the query.
+        $letterFilter = strtoupper(trim($request->query->getString('letter')));
+        if (!\in_array($letterFilter, array_map(static fn (ItemType $t): string => $t->letter(), ItemType::cases()), true)) {
+            $letterFilter = '';
+        }
+
         // Lazy retention filter (correct even if no sweep has run yet, M8
         // phase 1): a rejected submission past the cutoff must never render
         // here, whether or not RetentionService::sweep() has deleted it. The
         // count applies the SAME filter as the page query - a total that counts
         // rows the list refuses to show would page into empty tails.
-        $contributionsQuery = static fn (EntityManagerInterface $em) => $em->createQueryBuilder()
-            ->from(Submission::class, 's')
-            ->where('s.userId = :uid')
-            ->andWhere('(s.status NOT IN (:swept) OR s.decidedAt IS NULL OR s.decidedAt >= :cutoff)')
-            ->setParameter('uid', $userId)
-            // Withdrawn rides the same retention clock as rejected (the sweep
-            // deletes both), so the lazy filter must hide both past the cutoff.
-            ->setParameter('swept', [SubmissionStatus::Rejected, SubmissionStatus::Withdrawn])
-            ->setParameter('cutoff', $retention->cutoff());
+        $contributionsQuery = static function (EntityManagerInterface $em) use ($userId, $retention, $letterFilter) {
+            $qb = $em->createQueryBuilder()
+                ->from(Submission::class, 's')
+                ->where('s.userId = :uid')
+                ->andWhere('(s.status NOT IN (:swept) OR s.decidedAt IS NULL OR s.decidedAt >= :cutoff)')
+                ->setParameter('uid', $userId)
+                // Withdrawn rides the same retention clock as rejected (the sweep
+                // deletes both), so the lazy filter must hide both past the cutoff.
+                ->setParameter('swept', [SubmissionStatus::Rejected, SubmissionStatus::Withdrawn])
+                ->setParameter('cutoff', $retention->cutoff());
+            if ('' !== $letterFilter) {
+                $qb->andWhere('s.letter = :letter')->setParameter('letter', $letterFilter);
+            }
+
+            return $qb;
+        };
+
+        // The chips: which categories this rider has contributed to at all
+        // (unfiltered - the filter must not hide its own alternatives).
+        /** @var list<string> $letters */
+        $letters = $db->fetchFirstColumn(
+            'SELECT DISTINCT letter FROM submission WHERE user_id = :uid ORDER BY letter',
+            ['uid' => $userId],
+        );
 
         $pager = Pager::of(
             $request->query->getInt('page', 1),
@@ -131,6 +154,15 @@ final class ProfileController extends AbstractController
             'contributions' => $contributions,
             'pager' => $pager,
             'route_pager' => $routePager,
+            // Category chips: one per letter this rider has contributed to,
+            // labelled by the item type's own key, plus the active filter.
+            'letter_chips' => array_values(array_filter(array_map(
+                static fn (ItemType $t): ?array => \in_array($t->letter(), $letters, true)
+                    ? ['letter' => $t->letter(), 'labelKey' => $t->labelKey()]
+                    : null,
+                ItemType::cases(),
+            ))),
+            'letter_filter' => $letterFilter,
             // The conversation attached to each submission, so a contribution
             // row can show it the way the curator's desk shows the rider's
             // reply. Without this the rider saw a "needs info" chip and had no

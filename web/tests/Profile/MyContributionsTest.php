@@ -50,4 +50,39 @@ final class MyContributionsTest extends WebTestCase
         self::assertStringContainsString('photo please', $html);
         self::assertStringNotContainsString('Their climb', $html);
     }
+
+    /**
+     * The category filter (owner 2026-08-16): ?letter=J shows only that
+     * kind, the chips render only for letters this rider has, and a garbage
+     * letter falls back to the unfiltered list rather than an empty one.
+     */
+    public function testContributionsFilterByCategory(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $me = (new User())->setEmail('filter-me@subs.test');
+        $me->setPassword('x');
+        $em->persist($me);
+        $em->flush();
+
+        $mk = static function (string $letter, string $title) use ($em, $me): void {
+            $em->persist((new Submission())->setType(SubmissionType::Edit)->setLetter($letter)
+                ->setUserId((int) $me->getId())->setStatus(SubmissionStatus::Pending)->setTitle($title)
+                ->setGeom('{"type":"Point","coordinates":[6.0,50.4]}')->setCountryCode('BE')
+                ->setChanges([])->setPayload([]));
+        };
+        $mk('J', 'My castle edit');
+        $mk('C', 'My fountain edit');
+        $em->flush();
+
+        $client->loginUser($me);
+        $html = (string) $client->request('GET', '/profile?letter=J')->html();
+        self::assertStringContainsString('My castle edit', $html);
+        self::assertStringNotContainsString('My fountain edit', $html);
+        self::assertStringContainsString('?letter=C', $html, 'the other category stays one click away');
+
+        $html = (string) $client->request('GET', '/profile?letter=%27%22zz')->html();
+        self::assertStringContainsString('My castle edit', $html, 'garbage filter = unfiltered, never empty');
+        self::assertStringContainsString('My fountain edit', $html);
+    }
 }

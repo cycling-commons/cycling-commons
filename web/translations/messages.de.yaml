@@ -2749,6 +2749,8 @@ account:
   sub_status_rejected: 'Abgelehnt'
   sub_status_needs_info: 'Info benötigt'
   sub_status_withdrawn: 'Zurückgezogen'
+  filter_all: 'Alle'
+  filter_kind_aria: 'Beiträge nach Kategorie filtern'
   withdraw: 'Zurückziehen'
   withdraw_confirm: 'Diesen Beitrag zurückziehen? Er verschwindet aus der Warteschlange und von der Karte; du kannst ihn jederzeit erneut einreichen.'
   answer_curator: 'Der Kuratorin antworten'

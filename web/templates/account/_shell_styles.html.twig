@@ -76,6 +76,14 @@
   .pager-at{margin:0 auto 0 0;display:flex;flex-direction:column;gap:.15rem;line-height:1.35}
   .pager-range{color:var(--ink);font-size:.72rem}
   .pager-of{color:#595c4d;font-size:.6rem;letter-spacing:.06em;text-transform:uppercase}
+  /* Category filter chips on the contributions list: same quiet chip family
+     as Withdraw; the active one wears the ink. */
+  .lfilter{display:flex;flex-wrap:wrap;gap:.4rem;margin:0 0 1rem}
+  .lchip{border:1px solid rgba(20,22,14,.3);border-radius:30px;padding:.25rem .65rem;
+    font-family:var(--mono);font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;
+    color:#595c4d;text-decoration:none}
+  .lchip:hover{border-color:var(--clay);color:var(--clay)}
+  .lchip.on{background:var(--ink);border-color:var(--ink);color:var(--paper)}
   /* Withdraw: the rider's own exit on an undecided contribution row. Styled
      as a quiet bordered chip beside the status pill, never a primary action. */
   .withdraw-form{display:inline;margin-left:.4rem}
