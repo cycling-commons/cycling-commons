@@ -14,6 +14,21 @@ boundary, key immutability, and the proxy in front of it all.
 Written 2026-08-11 from settled infrastructure decisions. The hosting shape
 below is given, not proposed.
 
+**Build state (2026-08-16): tasks 1 and 3 of the plan are LIVE.** The async
+tier exists - Messenger with a Redis-stream `async` transport, a `doctrine://`
+failure transport, sync in test (`config/packages/messenger.yaml`); the dev
+stack runs `worker` + `clamav` containers, and the dev private bucket
+(`cc-media-private`, NO anonymous policy) is bootstrapped. The scanner is
+built and verified both ways (`App\Media\Scan\ClamAvScanner`: INSTREAM or
+`clamscan`, `CLAMAV_REQUIRED` fail-closed semantics pinned by
+`ClamAvScannerTest`; EICAR live against the sidecar). The mailer is pinned to
+direct sending (`mailer.yaml message_bus: false`) so installing the bus
+changed nothing that was not asked to change. **The upload flow itself is
+still synchronous** - tasks 2, 4, 5, 6 (quarantine write, release handler,
+immutable keys, wizard pending state) are one coherent next change;
+`ScanAndReleaseUploadHandler` is their landing site and nothing dispatches
+its message yet.
+
 ---
 
 ## 1. The hosting shape, and the one constraint that drives everything

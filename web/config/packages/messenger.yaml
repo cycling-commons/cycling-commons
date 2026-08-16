@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+#
+# The async tier (media-storage-architecture.md; plan task 1). One bus, one
+# Redis-stream transport, a failure transport - and NO when@prod gating: the
+# same env-driven single-path rule the storage layer follows, for the same
+# reason (there is no when@staging block anywhere in config/). The DSN is the
+# difference between environments, not the wiring.
+#
+# The retry strategy is for the SCANNER's failure mode: a clamd blip should
+# not reject a rider's photo, so a handler error retries with a growing delay
+# and only then lands on the failure transport, where messenger:failed:*
+# commands can inspect and re-dispatch it. An infected verdict is NOT an
+# error - the handler settles it in one pass.
+framework:
+    messenger:
+        failure_transport: failed
+
+        transports:
+            async:
+                dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
+                retry_strategy:
+                    max_retries: 3
+                    delay: 5000
+                    multiplier: 4
+            failed: 'doctrine://default?queue_name=failed'
+
+        routing:
+            App\Media\Message\ScanAndReleaseUpload: async
+
+# The suite runs every handler inline and needs no consumer: hermetic, and a
+# dispatch in a DAMA transaction is rolled back with everything else.
+when@test:
+    framework:
+        messenger:
+            transports:
+                async: 'sync://'

@@ -117,6 +117,16 @@ services:
             $publicBase: '%media.public_base%'
             $defaultContinent: '%media.default_continent%'
 
+    # The release gate's scanner (media plan task 3). CLAMAV_REQUIRED decides
+    # what "no scanner" means: true throws (every real environment - it sits
+    # on the deploy checklist beside APP_SECRET), false answers a logged
+    # skipped-verdict so contributor stacks without ClamAV still upload.
+    App\Media\Scan\VirusScannerInterface: '@App\Media\Scan\ClamAvScanner'
+    App\Media\Scan\ClamAvScanner:
+        arguments:
+            $tcpAddr: '%env(CLAMAV_TCP_ADDR)%'
+            $required: '%env(bool:CLAMAV_REQUIRED)%'
+
 when@test:
     services:
         # Fetched directly by the media tests. Repeated in full rather than

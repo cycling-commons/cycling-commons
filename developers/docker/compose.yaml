@@ -91,9 +91,11 @@ services:
       MEDIA_S3_KEY: "${MEDIA_S3_KEY:-${MINIO_ROOT_USER:-ccadmin}}"
       MEDIA_S3_SECRET: "${MEDIA_S3_SECRET:-${MINIO_ROOT_PASSWORD:-ccadminsecret}}"
       MEDIA_S3_BUCKET_EU: "${MEDIA_S3_BUCKET_EU:-cc-media-eu}"
+      MEDIA_S3_BUCKET_PRIVATE: "${MEDIA_S3_BUCKET_PRIVATE:-cc-media-private}"
       MEDIA_PUBLIC_BASE: "${MEDIA_PUBLIC_BASE:-http://localhost:9100}"
       MEDIA_CSP_HOST: "${MEDIA_CSP_HOST:-http://localhost:9100}"
       MEDIA_DEFAULT_CONTINENT: "${MEDIA_DEFAULT_CONTINENT:-EU}"
+      MESSENGER_TRANSPORT_DSN: "${MESSENGER_TRANSPORT_DSN:-redis://redis:6379/cc_messages}"
     volumes:
       - ../../web:/app
       - cc_api_vendor:/app/vendor   # keep built vendor/ from being shadowed by the bind mount
@@ -106,6 +108,62 @@ services:
         condition: service_healthy
       mailpit:
         condition: service_started
+
+  # ---- the async tier: one messenger consumer (media scan-and-release, and
+  # everything else the worker host will run). Same image and env as `app`,
+  # different entrypoint. THIS is the container that gets the scanner; the web
+  # container keeps neither proc_open nor clamd access.
+  # stop_grace_period must stay comfortably above the slowest handler (the
+  # scan + re-encode of a 15 MB photo, bounded by the 60s time-limit below):
+  # a deploy that kills a message mid-flight orphans it.
+  worker:
+    build: ../../web
+    command: ["php", "bin/console", "messenger:consume", "async", "--time-limit=3600", "--memory-limit=256M", "-vv"]
+    stop_grace_period: 90s
+    environment:
+      APP_ENV: dev
+      APP_DEBUG: "1"
+      APP_SECRET: ${APP_SECRET:-dev-not-secret-change-me}
+      APP_CACHE_DIR: /tmp/cc-cache
+      APP_LOG_DIR: /tmp/cc-log
+      DATABASE_URL: "postgresql://${POSTGRES_USER:-cc}:${POSTGRES_PASSWORD:-cc}@db:5432/${POSTGRES_DB:-cyclingcommons}?serverVersion=18&charset=utf8"
+      REDIS_URL: "${REDIS_URL:-redis://redis:6379}"
+      MESSENGER_TRANSPORT_DSN: "${MESSENGER_TRANSPORT_DSN:-redis://redis:6379/cc_messages}"
+      MAILER_DSN: "${MAILER_DSN:-smtp://mailpit:1025}"
+      CLAMAV_TCP_ADDR: "${CLAMAV_TCP_ADDR:-clamav:3310}"
+      CLAMAV_REQUIRED: "${CLAMAV_REQUIRED:-1}"
+      MEDIA_S3_ENDPOINT: "${MEDIA_S3_ENDPOINT:-http://minio:9000}"
+      MEDIA_S3_REGION: "${MEDIA_S3_REGION:-us-east-1}"
+      MEDIA_S3_KEY: "${MEDIA_S3_KEY:-${MINIO_ROOT_USER:-ccadmin}}"
+      MEDIA_S3_SECRET: "${MEDIA_S3_SECRET:-${MINIO_ROOT_PASSWORD:-ccadminsecret}}"
+      MEDIA_S3_BUCKET_EU: "${MEDIA_S3_BUCKET_EU:-cc-media-eu}"
+      MEDIA_S3_BUCKET_PRIVATE: "${MEDIA_S3_BUCKET_PRIVATE:-cc-media-private}"
+      MEDIA_PUBLIC_BASE: "${MEDIA_PUBLIC_BASE:-http://localhost:9100}"
+      MEDIA_CSP_HOST: "${MEDIA_CSP_HOST:-http://localhost:9100}"
+      MEDIA_DEFAULT_CONTINENT: "${MEDIA_DEFAULT_CONTINENT:-EU}"
+    volumes:
+      - ../../web:/app
+      - cc_api_vendor:/app/vendor
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      clamav:
+        condition: service_healthy
+
+  # ---- virus scanner sidecar (media plan task 3). clamd takes ~a minute to
+  # load signatures on first start; the generous healthcheck start_period is
+  # that, not slowness. The worker waits for healthy so a scan never races the
+  # signature load.
+  clamav:
+    image: clamav/clamav:stable
+    healthcheck:
+      test: ["CMD-SHELL", "clamdcheck.sh || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 12
+      start_period: 180s
 
   web:
     image: nginx:alpine
@@ -249,6 +307,11 @@ services:
   # not created here — pipeline/coverage/publish.py::ensure_bucket already does
   # that for itself, and duplicating it would give two owners for one bucket.
   #
+  # The PRIVATE bucket gets NO anonymous policy, and that is the point: an
+  # unscanned upload sits there world-unreadable until the worker's clean
+  # verdict physically moves derivatives to the public bucket (media plan
+  # task 2).
+  #
   # Exits immediately after; `mb --ignore-existing` makes reruns free. Skipped
   # entirely when the storage profile is off, which is exactly the topology
   # where MEDIA_S3_* points at a MinIO the developer already runs and manages.
@@ -262,7 +325,8 @@ services:
       sh -c "
       mc alias set cc http://minio:9000 '${MINIO_ROOT_USER:-ccadmin}' '${MINIO_ROOT_PASSWORD:-ccadminsecret}' &&
       mc mb --ignore-existing cc/${MEDIA_S3_BUCKET_EU:-cc-media-eu} &&
-      mc anonymous set download cc/${MEDIA_S3_BUCKET_EU:-cc-media-eu}
+      mc anonymous set download cc/${MEDIA_S3_BUCKET_EU:-cc-media-eu} &&
+      mc mb --ignore-existing cc/${MEDIA_S3_BUCKET_PRIVATE:-cc-media-private}
       "
 
 volumes:

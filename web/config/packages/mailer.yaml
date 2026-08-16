@@ -1,3 +1,11 @@
+# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
 framework:
     mailer:
         dsn: '%env(MAILER_DSN)%'
+        # Direct sending, deliberately: installing Messenger (media plan task
+        # 1) silently reroutes every mail through the bus when a bus exists,
+        # which is a behaviour change nothing asked for - moderation alerts
+        # would start depending on a running consumer, and the escalation
+        # tests saw every mail twice (queued + sent). If mail ever moves to
+        # the async tier, it moves on purpose, by routing SendEmailMessage.
+        message_bus: false
