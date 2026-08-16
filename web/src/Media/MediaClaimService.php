@@ -29,7 +29,6 @@ use Symfony\Component\Uid\Uuid;
 final class MediaClaimService
 {
     public const int MAX_PER_SUBMISSION = 6;
-    private const int EARTH_RADIUS_M = 6_371_000;
 
     public function __construct(
         private readonly EntityManagerInterface $em,
@@ -61,7 +60,12 @@ final class MediaClaimService
             if (null === $upload) {
                 throw new \InvalidArgumentException(\sprintf('Unknown upload %s.', $id->toRfc4122()));
             }
-            if (MediaStatus::Pending !== $upload->getStatus()) {
+            // PendingScan counts as claimable, and has to: the wizard stops
+            // WAITING for a slow scan after 30 seconds, it does not throw the
+            // photo away (docs/specs/photo-uploads.md §4). Refusing here would
+            // turn a scanner that took half a minute into a lost contribution
+            // and a failed submit.
+            if (!\in_array($upload->getStatus(), [MediaStatus::Pending, MediaStatus::PendingScan], true)) {
                 throw new \InvalidArgumentException(\sprintf('Upload %s is already decided.', $id->toRfc4122()));
             }
             if (null !== $upload->getSubmissionId()) {
@@ -72,28 +76,9 @@ final class MediaClaimService
             }
 
             $upload->claim($submissionId);
-            $upload->resolveGps(self::distanceM($upload->getGpsLat(), $upload->getGpsLng(), $pinLat, $pinLng));
+            $upload->resolveGps(GpsDistance::metres($upload->getGpsLat(), $upload->getGpsLng(), $pinLat, $pinLng));
             $this->events->append($upload->getId(), (int) $by->getId(), MediaAction::Claimed);
         }
-    }
-
-    /**
-     * How far the shot was taken from the pin, in whole metres — the only thing
-     * that survives of the photo's coordinates. Null whenever either end is
-     * missing: an absent distance is honest, a zero would be a claim.
-     */
-    private static function distanceM(?float $photoLat, ?float $photoLng, ?float $pinLat, ?float $pinLng): ?int
-    {
-        if (null === $photoLat || null === $photoLng || null === $pinLat || null === $pinLng) {
-            return null;
-        }
-
-        $halfLat = \sin(deg2rad($pinLat - $photoLat) / 2.0);
-        $halfLng = \sin(deg2rad($pinLng - $photoLng) / 2.0);
-        $a = $halfLat * $halfLat
-            + \cos(deg2rad($photoLat)) * \cos(deg2rad($pinLat)) * $halfLng * $halfLng;
-
-        return (int) round(2.0 * (float) self::EARTH_RADIUS_M * \asin(min(1.0, \sqrt($a))));
     }
 
     /** @return list<Uuid> */

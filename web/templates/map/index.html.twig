@@ -544,6 +544,7 @@ window.CC_VENDOR = {{ {
   <script nonce="{{ csp_nonce() }}">window.CC_MEDIA = {{ {
     tokenUrl: path('media_token'),
     uploadUrl: path('media_photos_upload'),
+    stateUrl: path('media_photos_state', {id: '__ID__'}),
     consentUrl: path('media_consent'),
     consentCurrentUrl: path('media_consent_current'),
     termsUrl: path('terms'),
@@ -563,6 +564,8 @@ window.CC_VENDOR = {{ {
       siteTerms: 'media.consent.site_terms'|trans,
       remove: 'improve.step3.remove_photo'|trans,
       tooMany: 'improve.step3.too_many_photos'|trans,
+      checking: 'media.pending.checking'|trans,
+      stillChecking: 'media.pending.still_checking'|trans,
       errors: {
         consent_required: 'media.error.consent_required'|trans,
         missing_file: 'media.error.missing_file'|trans,
@@ -571,6 +574,7 @@ window.CC_VENDOR = {{ {
         photo_format: 'media.error.photo_format'|trans,
         photo_unreadable: 'media.error.photo_unreadable'|trans,
         photo_too_small: 'media.error.photo_too_small'|trans,
+        photo_rejected: 'media.error.photo_rejected'|trans,
         rate_limited: 'media.error.rate_limited'|trans,
         unknown: 'media.error.unknown'|trans
       }

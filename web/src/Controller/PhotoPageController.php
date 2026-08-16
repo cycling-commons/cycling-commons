@@ -66,6 +66,10 @@ final class PhotoPageController extends AbstractController
         // hand strangers a lever the design exists to deny them.
         if (null === $upload
             || MediaStatus::Approved !== $upload->getStatus()
+            // Nothing published: quarantined, or refused before it ever was
+            // (media-storage-architecture.md §3). Same page, same answer -
+            // there is no photo at this address.
+            || !$upload->hasPublishedObjects()
             || null !== $upload->getObjectsDeletedAt()
             || $upload->isTakedownWithheld()
             // Under legal hold (photo-uploads.md §6d): out of reach of the
@@ -90,7 +94,7 @@ final class PhotoPageController extends AbstractController
         }
 
         $attribution = $this->attribution($upload);
-        $continent = $upload->getContinent();
+        $shard = $upload->getStorageShard();
         $prefix = $upload->getPathPrefix();
 
         return $this->render('media/photo.html.twig', [
@@ -101,9 +105,9 @@ final class PhotoPageController extends AbstractController
             'can_request_takedown' => $this->isUploader($upload),
             'photo_uuid' => $upload->getId()->toRfc4122(),
             'photo' => [
-                'sm' => $this->storage->url($continent, $prefix, 'sm'),
-                'lg' => $this->storage->url($continent, $prefix, 'lg'),
-                'orig' => $this->storage->url($continent, $prefix, 'orig'),
+                'sm' => $this->storage->url($shard, $prefix, 'sm'),
+                'lg' => $this->storage->url($shard, $prefix, 'lg'),
+                'orig' => $this->storage->url($shard, $prefix, 'orig'),
                 'width' => $upload->getWidth(),
                 'height' => $upload->getHeight(),
                 'license' => MediaDecisionService::LICENSE,

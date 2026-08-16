@@ -330,8 +330,13 @@ final class MessagesController extends AbstractController
 
         $urls = [];
         foreach ($this->em->getRepository(MediaUpload::class)->findBy(['id' => $ids]) as $upload) {
+            if (!$upload->hasPublishedObjects()) {
+                // Still quarantined: there is no thumbnail yet, and a broken
+                // image beside a message reads as data loss.
+                continue;
+            }
             $urls[$upload->getId()->toRfc4122()] = $this->mediaStorage->url(
-                $upload->getContinent(),
+                $upload->getStorageShard(),
                 $upload->getPathPrefix(),
                 'sm',
             );

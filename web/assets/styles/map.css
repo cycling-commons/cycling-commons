@@ -350,6 +350,12 @@
      badge, because it changes what this decision IS rather than adding context
      to it (SubmissionQueue::priorRejections). */
   .cc-mod-prior{background:rgba(184,89,58,.07);border-left:2px solid var(--clay)}
+  /* The Safe Browsing warning on a submission's proposed links
+     (catalog-data-model.md §7). Two weights: `unsafe` is "do not click",
+     `unknown` is "we could not ask". Neither is a rejection. */
+  .cc-mod-linkflag{font-size:.82rem;line-height:1.5;padding:.5rem .7rem;border-radius:0 5px 5px 0;margin:.45rem 0}
+  .cc-mod-linkflag-unsafe{background:rgba(217,45,32,.12);border-left:2px solid #D92D20}
+  .cc-mod-linkflag-unknown{background:rgba(239,230,212,.07);border-left:2px solid rgba(239,230,212,.35)}
   .cc-mod-asked-h{font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;color:#595c4d;display:block}
   .cc-mod-photos{display:flex;flex-wrap:wrap;gap:.5rem;margin:.5rem 0}
   .cc-mod-photo{display:flex;flex-direction:column;gap:.2rem;width:120px;font-size:.68rem}
@@ -591,6 +597,16 @@
     font-size:.68rem;color:rgba(239,230,212,.75)}
   .scout-media .chip-bar{flex:none;width:56px;height:3px;background:rgba(239,230,212,.2);border-radius:2px}
   .scout-media .chip-bar i{display:block;height:100%;background:var(--trail);border-radius:2px}
+  /* The wait between "received" and "on the map"
+     (media-storage-architecture.md §3.3). The thumbnail is the rider's OWN
+     file until the served one replaces it, so it is dimmed rather than hidden:
+     the picture is real, its place in the Commons is not settled yet. */
+  .scout-media .chip-note{flex:none;font-size:.62rem;color:rgba(239,230,212,.62);white-space:nowrap}
+  .scout-media .chip.checking{border-color:rgba(239,230,212,.34)}
+  .scout-media .chip.checking .chip-thumb img{opacity:.6;animation:scout-chip-breathe 1.6s ease-in-out infinite}
+  .scout-media .chip.waiting .chip-thumb img{opacity:.72}
+  @keyframes scout-chip-breathe{0%,100%{opacity:.6}50%{opacity:.95}}
+  @media(prefers-reduced-motion:reduce){.scout-media .chip.checking .chip-thumb img{animation:none}}
   .scout-media .chip-x{flex:none;background:none;border:none;color:rgba(239,230,212,.7);
     font-size:.9rem;line-height:1;cursor:pointer;padding:.1rem .3rem}
   .scout-media .chip-x:hover{color:var(--trail)}

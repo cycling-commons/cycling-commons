@@ -18,6 +18,26 @@ namespace App\Media;
 final class MediaAction
 {
     public const string Uploaded = 'uploaded';
+    /**
+     * The worker scanned the quarantined bytes and physically released the
+     * derivatives (docs/specs/media-storage-architecture.md §3). The note
+     * carries the verdict - "clean", or "skipped: no scanner" on a
+     * contributor stack with CLAMAV_REQUIRED off, because a clean-by-default
+     * answer must never be readable afterwards as a real one.
+     */
+    public const string Released = 'released';
+    /**
+     * The scanner found something. The object was deleted in the same pass,
+     * the note names the signature, and the rider was told.
+     */
+    public const string ScanInfected = 'scan_infected';
+    /**
+     * The bytes could not be turned into a photo - the decode failed, or the
+     * file was a decompression bomb the endpoint deliberately no longer looks
+     * at (docs/specs/media-storage-architecture.md §3.2). Not a moderation
+     * decision and not an infection; the note carries the reason code.
+     */
+    public const string ScanUnreadable = 'scan_unreadable';
     public const string Claimed = 'claimed';
     public const string Approved = 'approved';
     public const string Rejected = 'rejected';

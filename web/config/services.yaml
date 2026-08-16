@@ -122,6 +122,7 @@ services:
                 EU: '@media.storage.eu'
             $publicBases:
                 EU: '%env(MEDIA_PUBLIC_BASE)%/cc-media-eu'
+            $private: '@media.storage.private'
             $publicBase: '%media.public_base%'
             $defaultContinent: '%media.default_continent%'
 
@@ -137,6 +138,19 @@ services:
 
 when@test:
     services:
+        # Fetched directly by the link-verdict tests.
+        App\Catalog\Links\LinkVerdictStore:
+            public: true
+            autowire: true
+
+        # A scanner the suite can steer, over the real one
+        # (media-storage-architecture.md §3.1). It lives HERE and not in
+        # config/packages/test/services.yaml because this file is loaded last:
+        # the binding above would win over anything a package file said.
+        App\Tests\Media\FakeScanner:
+            public: true
+        App\Media\Scan\VirusScannerInterface: '@App\Tests\Media\FakeScanner'
+
         # Fetched directly by the media tests. Repeated in full rather than
         # patched with `public: true`, because a second definition of the same
         # id REPLACES the first — it does not merge into it.
@@ -153,6 +167,7 @@ when@test:
                 # suite.
                 $publicBases:
                     EU: 'https://media.test/cc-media-eu'
+                $private: '@media.storage.private'
                 $publicBase: 'https://media.test'
                 $defaultContinent: 'EU'
 

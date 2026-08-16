@@ -12,6 +12,8 @@ use App\Catalog\Import\OutboundLinks;
 use App\Catalog\ItemSource;
 use App\Catalog\ItemState;
 use App\Catalog\ItemType;
+use App\Catalog\Links\LinkVerdictStore;
+use App\Catalog\Links\SafeBrowsing;
 use App\Catalog\LocationMode;
 use App\Catalog\SubmissionStatus;
 use App\Catalog\SubmissionType;
@@ -66,6 +68,8 @@ final class CatalogContributionService implements ContributionStubInterface
         private readonly RateLimiterFactoryInterface $contributionSubmitLimiter,
         private readonly MediaClaimService $mediaClaims,
         private readonly ClimbProfiler $profiler,
+        private readonly SafeBrowsing $safeBrowsing,
+        private readonly LinkVerdictStore $linkVerdicts,
     ) {
     }
 
@@ -780,8 +784,42 @@ final class CatalogContributionService implements ContributionStubInterface
         }
 
         $proposed['links'] = $decoded;
+        $this->checkLinks($decoded);
 
         return $proposed;
+    }
+
+    /**
+     * The SUBMIT-side Safe Browsing call (App\Catalog\Links\SafeBrowsing).
+     *
+     * **It fails OPEN, and never blocks.** A rider must not lose a
+     * contribution because a Google endpoint is down, or slow, or out of
+     * quota. Whatever comes back is recorded against the url; whether it
+     * changes anything is the curator's call on the queue card, and the map's
+     * own fail-CLOSED check at render is the backstop.
+     *
+     * Flag, never silently reject: a submission with an unsafe link still
+     * reaches the queue carrying its verdict, because a false positive that
+     * vanishes is indistinguishable from a bug.
+     *
+     * The verdict is stored in `link_verdict`, NOT in the `links` attribute.
+     * `links` flows through the change diff, so a verdict written there would
+     * show up on a moderation card as a rider-made edit and manufacture
+     * curator work out of a background check.
+     */
+    private function checkLinks(mixed $links): void
+    {
+        $urls = SafeBrowsing::urlsIn($links);
+        if ([] === $urls) {
+            return;
+        }
+
+        try {
+            $this->linkVerdicts->record($this->safeBrowsing->check($urls));
+        } catch (\Throwable) {
+            // Deliberately swallowed. This is a background check riding along
+            // with a rider's save; nothing about it may cost them the save.
+        }
     }
 
     private function reject(string $message, string $field): never

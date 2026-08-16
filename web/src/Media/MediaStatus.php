@@ -14,7 +14,23 @@ namespace App\Media;
  */
 enum MediaStatus: string
 {
+    /**
+     * Received, quarantined, not yet scanned
+     * (docs/specs/media-storage-architecture.md §3). Nothing is published: the
+     * raw bytes sit in the private bucket and the row has no revision, so
+     * there is no URL to build and no object for anyone to reach. The worker
+     * moves it to Pending on a clean verdict, or to Rejected on an infected
+     * one.
+     */
+    case PendingScan = 'pending_scan';
+    /** Scanned, published, awaiting a curator. */
     case Pending = 'pending';
     case Approved = 'approved';
     case Rejected = 'rejected';
+
+    /** Nothing has been published for this photo yet. */
+    public function isQuarantined(): bool
+    {
+        return self::PendingScan === $this;
+    }
 }

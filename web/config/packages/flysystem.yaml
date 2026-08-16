@@ -9,12 +9,12 @@
 # which in production is the owner-run caching proxy routing on the first path
 # segment (the continent code).
 #
-# There is deliberately no when@prod and no when@dev block. This project runs a
-# real staging environment and has no when@staging block anywhere in config/
-# (`grep -rho 'when@[a-z]*' config/ | sort -u` returns only dev, prod, test), so
-# anything gated on when@prod silently falls through to the base configuration
-# on staging — which for storage would mean writing rider photos onto a staging
-# box's local disk. Env-driven configuration cannot have that gap.
+# There is deliberately no when@prod and no when@dev block. Storage stays purely
+# env-driven: one code path, the bucket decided by MEDIA_S3_*. Gating it on
+# when@prod would mean a second, near-duplicate block under when@staging (which
+# staging now needs — see routing/doctrine/asset_mapper), and the day someone
+# updates one and not the other, staging writes rider photos onto a box's local
+# disk. Env-driven configuration cannot have that gap.
 #
 # when@test is the one exception: the in-memory adapter keeps suites hermetic.
 #
@@ -28,8 +28,27 @@ flysystem:
                 client: 'media.s3_client'
                 bucket: '%env(MEDIA_S3_BUCKET_EU)%'
 
+        # The quarantine, and only the quarantine
+        # (media-storage-architecture.md §2.2). ONE bucket, not one per
+        # continent: nothing here is ever addressed by a browser, so there is
+        # no proxy to route and no region to be near - an unscanned object
+        # lives here for the seconds between the upload and the worker's
+        # verdict, and then it is deleted.
+        #
+        # The bucket carries NO anonymous-read policy. That is the whole
+        # point: a quarantine prefix inside the anonymous-read public bucket
+        # would be world-readable the moment it was written, which is exactly
+        # the state scanning exists to prevent.
+        media.storage.private:
+            adapter: 'asyncaws'
+            options:
+                client: 'media.s3_client'
+                bucket: '%env(MEDIA_S3_BUCKET_PRIVATE)%'
+
 when@test:
     flysystem:
         storages:
             media.storage.eu:
+                adapter: 'memory'
+            media.storage.private:
                 adapter: 'memory'

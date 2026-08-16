@@ -1994,8 +1994,12 @@ media:
     photo_format: 'Ese tipo de archivo no se puede usar. Las fotos pueden ser JPEG, PNG, WebP o HEIC.'
     photo_unreadable: 'Ese archivo no se ha podido leer como una foto.'
     photo_too_small: 'Esa foto es demasiado pequeña — el lado más corto debe tener al menos 200 píxeles.'
+    photo_rejected: 'No hemos podido aceptar esa foto. Nuestras comprobaciones encontraron algo en el archivo o no pudieron leerlo como imagen. Prueba con otra.'
     rate_limited: 'Has llegado al límite diario de subidas — sigue mañana.'
     unknown: 'La subida ha fallado. Inténtalo otra vez.'
+  pending:
+    checking: 'Comprobando…'
+    still_checking: 'Todavía comprobando. Envía tu aportación ya, te avisaremos.'
   takedown:
     summary: 'Pedir que se retire esta foto'
     intro: 'Si esta foto te muestra a ti, o cualquier otra cosa sobre ti que no querías publicar, la retiraremos. Cuéntanos qué es y sale del mapa de inmediato, mientras un curador lee tu mensaje.'
@@ -2288,6 +2292,8 @@ map:
   d_community_report: 'Informe de la comunidad'
   d_report_photo: 'Informar sobre esta foto'
   d_lnk_wikipedia: 'Wikipedia'
+  d_links_unsafe: 'Un enlace de esta aportación está en una lista de sitios no seguros. No lo abras.'
+  d_links_unknown: 'Los enlaces de esta aportación no se han podido comprobar. Ábrelos con cuidado.'
   d_src_auto: 'Derivado por la canalización'
   d_src_manual: 'Seleccionado a mano'
   d_src_rider: 'Aportado por un ciclista'
@@ -2651,6 +2657,9 @@ moderate:
   answered: 'Respondido'
   rider_reply: 'El ciclista respondió'
   prior_rejection: 'Rechazado anteriormente'
+  links:
+    unsafe: 'Un enlace de esta aportación está en una lista de sitios no seguros. No lo abras.'
+    unknown: 'Los enlaces de esta aportación no se han podido comprobar. Ábrelos con cuidado.'
 moderate_routes:
   title: 'Escritorio de moderación de rutas'
   kicker: 'Cola de rutas'
@@ -2848,6 +2857,8 @@ messages:
   kind_media_removed_on_report: 'Se ha retirado una de tus fotos'
   kind_media_hidden_pending_review: 'Una de tus fotos está oculta temporalmente'
   kind_media_restored_after_review: 'Tu foto vuelve a estar en el mapa'
+  kind_media_ready: 'Tu foto está en el mapa'
+  kind_media_scan_rejected: 'No hemos podido aceptar esa foto'
   body:
     submission_approved: 'Tu aportación %title% se ha aprobado y ya está publicada en el mapa. ¡Gracias por mejorar el Commons!'
     areas_changed: 'An admin changed the areas you moderate. You now look after %areas%.'
@@ -2863,6 +2874,8 @@ messages:
     media_removed_on_report: 'Se ha retirado una de tus fotos tras un informe que decía que muestra a una persona identificable que no dio su permiso para publicarla. Esto va de esa imagen concreta, no de tu aportación — gracias por ella. No podemos decirte quién lo informó, ni en un sentido ni en el otro: a esa persona tampoco se le dijo quién la había subido. Si crees que la retirada está mal, responde a este mensaje y un curador lo leerá.'
     media_hidden_pending_review: 'Alguien ha informado sobre una de tus fotos y, por lo que dice el informe, la hemos ocultado del mapa de inmediato mientras un curador la revisa. Oculta no es retirada: la foto sigue siendo tuya, sigue almacenada y no se ha borrado nada. Si el informe no se sostiene, vuelve en unos días y te lo diremos. Solo un curador puede retirar una foto, nunca un informe por sí solo — y no podemos decirte quién lo hizo, igual que a esa persona no se le dijo quién la había subido.'
     media_restored_after_review: 'El informe sobre tu foto no se ha sostenido, así que vuelve a estar en el mapa exactamente como estaba. Gracias por tu paciencia — ocultarla primero es como nos aseguramos de que una queja auténtica nunca se quede publicada durante días, y eso hace que alguna foto de vez en cuando desaparezca un tiempo para nada.'
+    media_ready: 'Las comprobaciones de tu foto terminaron después de que dejaras de esperar. Ya está en el mapa y pasa por una persona curadora como cualquier otra aportación.'
+    media_scan_rejected: 'No hemos podido aceptar esa foto. Nuestras comprobaciones encontraron algo en el archivo o no pudieron leerlo como imagen. Nadie ha mirado la imagen: es una comprobación automática del archivo en sí. Prueba con otra foto, o con la misma guardada de nuevo como JPEG.'
   reply_label: 'Tu respuesta'
   what_you_changed: 'Lo que cambiaste'
   reply_send: 'Enviar la respuesta'

@@ -72,7 +72,11 @@ final class MediaPersistenceTest extends KernelTestCase
         self::assertSame(MediaStatus::Pending, $found->getStatus());
         self::assertNull($found->getSubmissionId());
         self::assertNull($found->getDecidedAt());
-        self::assertSame('photos/'.$id->toRfc4122(), $found->getPathPrefix());
+        self::assertMatchesRegularExpression(
+            '#^published/'.preg_quote($id->toRfc4122(), '#').'/[0-9a-f]{8}$#',
+            $found->getPathPrefix(),
+            'the key carries a revision, so it never changes meaning',
+        );
         self::assertSame('2025-10', $found->getTakenAt()?->format('Y-m'));
         self::assertEqualsWithDelta(50.4917, (float) $found->getGpsLat(), 0.0001);
 

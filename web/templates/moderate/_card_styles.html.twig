@@ -52,6 +52,13 @@
      decision IS, not just the context it is made in. */
   .q-prior-reject{font-size:.84rem;line-height:1.5;color:#4a4d40;background:var(--paper-deep);border-left:2px solid var(--clay);padding:.45rem .8rem;border-radius:0 5px 5px 0;margin-bottom:.7rem}
   .q-prior-reject strong{color:var(--clay);font-weight:700}
+  /* The Safe Browsing warning on a submission's proposed links
+     (catalog-data-model.md §7). Two weights, because the two verdicts ask for
+     different behaviour: `unsafe` is "do not click", `unknown` is "we could
+     not ask". Neither is a rejection - the card is here to be decided. */
+  .q-link-flag{font-size:.84rem;line-height:1.5;padding:.45rem .8rem;border-radius:0 5px 5px 0;margin-bottom:.7rem}
+  .q-link-unsafe{color:#7d2018;background:rgba(163,52,43,.09);border-left:2px solid #a3342b}
+  .q-link-unknown{color:#4a4d40;background:var(--paper-deep);border-left:2px solid var(--glacier)}
   .q-actions{margin-top:.9rem;border-top:1px solid rgba(20,22,14,.1);padding-top:.9rem}
   .q-act-form textarea{display:none}
   .q-decision-row{display:flex;align-items:center;gap:.6rem;margin-bottom:.7rem}

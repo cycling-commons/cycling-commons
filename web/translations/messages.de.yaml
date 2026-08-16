@@ -1940,6 +1940,8 @@ map:
   d_community_report: 'Community-Meldung'
   d_report_photo: 'Dieses Foto melden'
   d_lnk_wikipedia: 'Wikipedia'
+  d_links_unsafe: 'Ein Link in diesem Beitrag steht auf einer Liste bekannter unsicherer Seiten. Nicht anklicken.'
+  d_links_unknown: 'Die Links in diesem Beitrag konnten nicht geprüft werden. Öffne sie mit Vorsicht.'
   d_src_auto: 'Von der Pipeline abgeleitet'
   d_src_manual: 'Von Hand kuratiert'
   d_src_rider: 'Von Fahrern beigetragen'
@@ -2404,8 +2406,12 @@ media:
     photo_format: 'Dieser Dateityp lässt sich nicht verwenden. Fotos dürfen JPEG, PNG, WebP oder HEIC sein.'
     photo_unreadable: 'Diese Datei konnte nicht als Foto gelesen werden.'
     photo_too_small: 'Dieses Foto ist zu klein — die kürzere Seite muss mindestens 200 Pixel haben.'
+    photo_rejected: 'Wir konnten dieses Foto nicht annehmen. Unsere Prüfungen haben etwas in der Datei gefunden oder konnten sie nicht als Bild lesen. Versuch es mit einem anderen.'
     rate_limited: 'Tageslimit für Uploads erreicht — bitte morgen weitermachen.'
     unknown: 'Der Upload ist fehlgeschlagen. Bitte versuche es erneut.'
+  pending:
+    checking: 'Wird geprüft…'
+    still_checking: 'Wird noch geprüft. Schick deinen Beitrag ruhig jetzt ab, wir sagen dir Bescheid.'
   takedown:
     summary: 'Entfernung dieses Fotos beantragen'
     intro: 'Wenn dieses Foto dich zeigt oder etwas anderes über dich, das du nicht veröffentlichen wolltest, nehmen wir es herunter. Sag uns, worum es geht: Es verschwindet sofort von der Karte, während ein Kurator deine Nachricht liest.'
@@ -2618,6 +2624,9 @@ moderate:
   answered: 'Beantwortet'
   rider_reply: 'Der Fahrer hat geantwortet'
   prior_rejection: 'Zuvor abgelehnt'
+  links:
+    unsafe: 'Ein Link in diesem Beitrag steht auf einer Liste bekannter unsicherer Seiten. Nicht anklicken.'
+    unknown: 'Die Links in diesem Beitrag konnten nicht geprüft werden. Öffne sie mit Vorsicht.'
 moderate_routes:
   title: 'Routen-Moderationswarteschlange'
   kicker: 'Routenwarteschlange'
@@ -2814,6 +2823,8 @@ messages:
   kind_media_removed_on_report: 'Eines deiner Fotos wurde entfernt'
   kind_media_hidden_pending_review: 'Eines deiner Fotos ist vorübergehend verborgen'
   kind_media_restored_after_review: 'Dein Foto ist wieder auf der Karte'
+  kind_media_ready: 'Dein Foto ist auf der Karte'
+  kind_media_scan_rejected: 'Wir konnten dieses Foto nicht annehmen'
   body:
     submission_approved: 'Dein Beitrag %title% wurde angenommen und ist jetzt live auf der Karte. Danke, dass du den Commons verbesserst!'
     areas_changed: 'An admin changed the areas you moderate. You now look after %areas%.'
@@ -2829,6 +2840,8 @@ messages:
     media_removed_on_report: 'Eines deiner Fotos wurde nach einer Meldung entfernt, dass es eine erkennbare Person zeigt, die der Veröffentlichung nicht zugestimmt hat. Es geht um dieses eine Bild, nicht um deinen Beitrag — danke dafür. Wer gemeldet hat, können wir nicht sagen, in keine Richtung: Die Person hat auch nicht erfahren, wer hochgeladen hat. Hältst du die Entfernung für falsch, antworte auf diese Nachricht; ein Kurator liest sie.'
     media_hidden_pending_review: 'Jemand hat eines deiner Fotos gemeldet, und wegen dessen, was die Meldung behauptet, haben wir es sofort von der Karte verborgen, während eine kuratierende Person es prüft. Verborgen ist nicht entfernt: Das Foto bleibt deins, ist weiterhin gespeichert, und nichts wurde gelöscht. Hält die Meldung nicht stand, ist es binnen Tagen zurück und wir sagen dir Bescheid. Nur eine kuratierende Person kann ein Foto entfernen, niemals eine Meldung allein — und wir können dir nicht sagen, wer gemeldet hat, so wie dieser Person nicht gesagt wurde, wer hochgeladen hat.'
     media_restored_after_review: 'Die Meldung zu deinem Foto hielt nicht stand, es ist also wieder auf der Karte, genau wie zuvor. Danke für deine Geduld — erst zu verbergen ist der Weg, mit dem eine echte Beschwerde nie tagelang online bleibt, und das heißt, dass gelegentlich ein Foto eine Weile umsonst verschwindet.'
+    media_ready: 'Die Prüfungen deines Fotos waren fertig, nachdem du aufgehört hattest zu warten. Es ist jetzt auf der Karte und geht wie jeder andere Beitrag an eine Kuratorin oder einen Kurator.'
+    media_scan_rejected: 'Wir konnten dieses Foto nicht annehmen. Unsere Prüfungen haben entweder etwas in der Datei gefunden oder konnten sie gar nicht als Bild lesen. Niemand hat sich das Bild angesehen: das ist eine automatische Prüfung der Datei selbst. Versuche es mit einem anderen Foto oder mit demselben, erneut als JPEG gespeichert.'
   reply_label: 'Deine Antwort'
   what_you_changed: 'Was du geändert hast'
   reply_send: 'Antwort senden'

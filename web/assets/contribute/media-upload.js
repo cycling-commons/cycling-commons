@@ -1,13 +1,31 @@
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
 /* The wizard's real photo uploads (docs/specs/photo-uploads.md §4).
-   Classic script, mounted by improve.js through window.Cc — the same idiom
+
+   The upload is ASYNCHRONOUS (media-storage-architecture.md §3.3): the server
+   answers "received, checking" and the photo appears when a worker has scanned
+   it. Two decisions shape everything below, both the owner's (2026-08-16):
+
+   (a) OPTIMISTIC PREVIEW. While the worker runs, the chip shows the rider's
+       OWN file through URL.createObjectURL, swapped for the served URL when
+       it resolves. It is never another rider's unscanned bytes, because those
+       bytes never leave the uploader's browser.
+
+   (b) A 30-SECOND PATIENCE LIMIT, and what it is NOT. Past it the wizard stops
+       WAITING and says "we will let you know". It does not fail the upload:
+       the id stays in the hidden field, the photo is still submitted with the
+       contribution, the worker finishes on its own schedule, and the rider is
+       told when it lands. This is a client-side limit and never a server
+       timeout - nothing here may cause a scan to be abandoned. Getting that
+       backwards turns a slow scan into a lost contribution.
+
+   Classic script, mounted by improve.js through window.Cc, the same idiom
    climb-editor.js uses, because the contribute templates load plain scripts,
    not modules.
 
    Consent is fail-closed here as everywhere: consentId starts null, is set
    ONLY from a server acknowledgement, and the file input plus drop zone stay
    disabled until it is. A failed consent POST keeps them disabled and shows
-   the error in the modal. Nothing is remembered in localStorage — the source
+   the error in the modal. Nothing is remembered in localStorage: the source
    of truth is the server's consent ledger, re-read on every visit. */
 (function () {
   'use strict';
@@ -17,6 +35,11 @@
     var cfg = window.CC_MEDIA || {};
     var T = cfg.i18n || {};
     var MAX = cfg.max || 6;
+    /* (b) above. Mirrored in ScanAndReleaseUploadHandler::PATIENCE_S, which
+       uses it for ONE thing: deciding whether the rider has to be told by
+       message that their photo landed after they stopped watching. */
+    var PATIENCE_MS = 30000;
+    var POLL_MS = 1200;
 
     var input = document.getElementById('file-photo');
     var zone = document.getElementById('drop-photo');
@@ -227,8 +250,14 @@
        arrives without it. Announced as a DOM event rather than a return value
        because the queue changes from three different places (enqueue, succeed,
        fail) and every one of them must move the button. */
+    /* 'uploading' = bytes in flight. 'checking' = the worker has them and the
+       rider is still watching. Both hold Next, because a rider who presses it
+       mid-flight submits a form whose hidden ids may not include the photo
+       they are watching. 'waiting' does NOT hold it: the id is already in the
+       field and the rider was told we will follow up, so making them sit
+       there would be the timeout this deliberately is not. */
     function announceBusy() {
-      var busy = items.some(function (i) { return 'uploading' === i.state; });
+      var busy = items.some(function (i) { return 'uploading' === i.state || 'checking' === i.state; });
       document.dispatchEvent(new CustomEvent('cc:media-busy', { detail: { busy: busy } }));
     }
 
@@ -260,6 +289,8 @@
     }
 
     function removeItem(item) {
+      item.state = 'removed';   // stops any poll still in flight
+      releaseBlob(item);
       announceBusy();
       // Forgetting the id is all that is needed: an unclaimed object becomes an
       // orphan and is collected after seven days (docs/specs/photo-uploads.md §6).
@@ -277,31 +308,118 @@
       item.row.classList.add('indeterminate');
     }
 
-    function succeed(item, data) {
+    /* The server has the bytes and is checking them. The id counts from this
+       moment: it goes into the hidden field now, so a rider who submits while
+       the worker is still running still submits the photo. */
+    function received(item, data, file) {
       item.id = data.id;
-      item.sm = data.sm;
-      item.state = 'done';
+      item.state = 'checking';
       item.row.classList.remove('indeterminate');
-      item.row.classList.add('done');
+      item.row.classList.add('checking');
+      setThumb(item, localPreview(item, file), item.name);
+      var bar = item.row.querySelector('.chip-bar');
+      if (bar) bar.outerHTML = '<span class="chip-note">' + esc(t('checking', 'Checking…')) + '</span>';
+      syncHidden();
+      pollState(item, Date.now());
+    }
+
+    /* (a): the rider's own file, straight from their disk, never uploaded to
+       anyone to be shown back. Revoked when the served URL replaces it, and on
+       removal, so a wizard left open all afternoon holds no blobs. */
+    function localPreview(item, file) {
+      if (!file || !window.URL || !window.URL.createObjectURL) return null;
+      item.blobUrl = window.URL.createObjectURL(file);
+      return item.blobUrl;
+    }
+
+    function releaseBlob(item) {
+      if (item.blobUrl && window.URL && window.URL.revokeObjectURL) {
+        window.URL.revokeObjectURL(item.blobUrl);
+      }
+      item.blobUrl = null;
+    }
+
+    function setThumb(item, src, alt) {
+      if (!src) return;
       var thumb = item.row.querySelector('.chip-thumb');
-      if (thumb) {
-        var img = document.createElement('img');
-        img.src = data.sm;
-        img.alt = item.name;
+      if (!thumb) return;
+      var img = thumb.querySelector('img');
+      if (!img) {
+        img = document.createElement('img');
         img.loading = 'lazy';
         thumb.appendChild(img);
       }
-      var bar = item.row.querySelector('.chip-bar');
-      if (bar && bar.parentNode) bar.parentNode.removeChild(bar);
+      img.src = src;
+      img.alt = alt;
+    }
+
+    /* The checks finished while the rider was still here. */
+    function landed(item, data) {
+      item.sm = data.sm;
+      item.state = 'done';
+      item.row.classList.remove('checking');
+      item.row.classList.add('done');
+      setThumb(item, data.sm, item.name);
+      releaseBlob(item);
+      var note = item.row.querySelector('.chip-note');
+      if (note && note.parentNode) note.parentNode.removeChild(note);
       syncHidden();
+    }
+
+    /* (b): we stop watching, we do not stop caring. The photo keeps its id and
+       travels with the submission; the local preview stays on screen because
+       it is still the truest picture of what was sent. */
+    function stopWaiting(item) {
+      item.state = 'waiting';
+      item.row.classList.remove('checking');
+      item.row.classList.add('waiting');
+      var note = item.row.querySelector('.chip-note');
+      if (note) note.textContent = t('stillChecking', 'Still checking. We will let you know.');
+      syncHidden();
+    }
+
+    /* Poll rather than push: one small JSON read every second or so, for at
+       most half a minute, against a server that answers from one row. A socket
+       for this would be more machinery than the question deserves. */
+    function pollState(item, startedAt) {
+      if ('checking' !== item.state) return;   // removed, or already resolved
+      if (Date.now() - startedAt >= PATIENCE_MS) { stopWaiting(item); return; }
+
+      window.setTimeout(function () {
+        if ('checking' !== item.state) return;
+        fetch(stateUrl(item.id), {
+          credentials: 'same-origin',
+          headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+        })
+          .then(function (res) { if (!res.ok) throw new Error('state'); return res.json(); })
+          .then(function (data) {
+            if ('checking' !== item.state) return;
+            if (data && data.ready) { landed(item, data); return; }
+            if (data && data.error) { fail(item, data.error); return; }
+            pollState(item, startedAt);
+          })
+          // A blip is not an answer: keep asking until the window closes.
+          .catch(function () { pollState(item, startedAt); });
+      }, POLL_MS);
+    }
+
+    function stateUrl(id) {
+      return cfg.stateUrl
+        ? cfg.stateUrl.replace('__ID__', encodeURIComponent(id))
+        : cfg.uploadUrl + '/' + encodeURIComponent(id);
     }
 
     function fail(item, reason) {
       item.state = 'error';
+      /* A photo the worker refused is not part of this contribution. Dropping
+         the id here is what keeps the submission from carrying a dead one. */
+      item.id = null;
+      releaseBlob(item);
       item.row.classList.remove('indeterminate');
+      item.row.classList.remove('checking');
       item.row.classList.add('failed');
-      var bar = item.row.querySelector('.chip-bar');
-      if (bar) bar.outerHTML = '<span class="chip-err">' + esc(errorText(reason)) + '</span>';
+      var slot = item.row.querySelector('.chip-bar') || item.row.querySelector('.chip-note');
+      if (slot) slot.outerHTML = '<span class="chip-err">' + esc(errorText(reason)) + '</span>';
       syncHidden();
     }
 
@@ -348,7 +466,7 @@
             var payload = {};
             try { payload = JSON.parse(xhr.responseText || '{}'); } catch (e) { payload = {}; }
             if (xhr.status >= 200 && xhr.status < 300 && payload.id) {
-              succeed(item, payload);
+              received(item, payload, file);
             } else if (401 === xhr.status || 403 === xhr.status) {
               csrfToken = null;            // stale token: the next attempt re-fetches
               fail(item, 'unknown');

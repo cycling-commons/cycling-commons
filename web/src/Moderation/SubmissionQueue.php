@@ -7,8 +7,11 @@ declare(strict_types=1);
 namespace App\Moderation;
 
 use App\Catalog\ItemType;
+use App\Catalog\Links\LinkVerdictStore;
+use App\Catalog\Links\SafeBrowsing;
 use App\Catalog\RiderPseudonym;
 use App\Contribution\ChangeValue;
+use App\Media\Entity\MediaUpload;
 use App\Media\MediaStorage;
 use App\Messaging\UserMessageKind;
 use Doctrine\DBAL\ArrayParameterType;
@@ -41,10 +44,11 @@ final class SubmissionQueue
         private readonly Connection $db,
         private readonly ClockInterface $clock,
         private readonly MediaStorage $mediaStorage,
+        private readonly LinkVerdictStore $linkVerdicts,
     ) {
     }
 
-    /** @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,whoUuid:string,when:string,body:string,was:string,now:string,status:string,asked:?string,riderReply:?string,priorRejection:?array{when:string,note:?string},photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,shape:?array{before: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}, after: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}},changes:list<array{key:string,was:?string,now:string}>}> */
+    /** @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,whoUuid:string,when:string,body:string,was:string,now:string,status:string,asked:?string,riderReply:?string,priorRejection:?array{when:string,note:?string},photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,shape:?array{before: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}, after: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}},changes:list<array{key:string,was:?string,now:string}>,linkFlag:?string}> */
     public function filtered(ModerationScope $scope, ?string $country, ?string $region, ?string $type, ?string $q = null, int $page = 1, int $perPage = self::PER_PAGE, ?int $byUser = null): array
     {
         [$where, $params] = $this->openFilters($country, $region, $type, $q, $byUser);
@@ -138,7 +142,7 @@ final class SubmissionQueue
      * — the submission looked lost. The scope guard still applies, so a
      * curator cannot reach a submission outside their areas by guessing ids.
      *
-     * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,whoUuid:string,when:string,body:string,was:string,now:string,status:string,asked:?string,riderReply:?string,priorRejection:?array{when:string,note:?string},photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,shape:?array{before: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}, after: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}},changes:list<array{key:string,was:?string,now:string}>}>
+     * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,whoUuid:string,when:string,body:string,was:string,now:string,status:string,asked:?string,riderReply:?string,priorRejection:?array{when:string,note:?string},photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,shape:?array{before: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}, after: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}},changes:list<array{key:string,was:?string,now:string}>,linkFlag:?string}>
      */
     public function pendingForMap(ModerationScope $scope, ?int $focusId = null): array
     {
@@ -552,7 +556,7 @@ final class SubmissionQueue
      *                                     via $params, never interpolated
      * @param array<string, mixed> $params bound query parameters
      *
-     * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,whoUuid:string,when:string,body:string,was:string,now:string,status:string,asked:?string,riderReply:?string,priorRejection:?array{when:string,note:?string},photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,shape:?array{before: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}, after: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}},changes:list<array{key:string,was:?string,now:string}>}>
+     * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,whoUuid:string,when:string,body:string,was:string,now:string,status:string,asked:?string,riderReply:?string,priorRejection:?array{when:string,note:?string},photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,shape:?array{before: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}, after: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}},changes:list<array{key:string,was:?string,now:string}>,linkFlag:?string}>
      *
      * The returned row is a deliberate shared view-model: the SAME shape is
      * consumed by both moderate/index.html.twig AND map.js (as JSON). The
@@ -598,7 +602,9 @@ final class SubmissionQueue
             $rows,
         )))));
 
-        return array_map(function (array $r) use ($now, $photosBySubmission, $rejectedByItem): array {
+        $linkFlags = $this->linkFlags($rows);
+
+        return array_map(function (array $r) use ($now, $photosBySubmission, $rejectedByItem, $linkFlags): array {
             [$was, $new] = $this->diffStrings((string) $r['changes']);
 
             return [
@@ -651,8 +657,59 @@ final class SubmissionQueue
                    (owner, 2026-08-03). Labels stay client-side: the drawer
                    already has localised ones in CC_FIELD_SCHEMA. */
                 'changes' => self::changeRows((string) $r['changes']),
+                /* The Safe Browsing verdict on the links THIS submission
+                   proposes (App\Catalog\Links\SafeBrowsing). Null when it
+                   proposes none, which is almost every card.
+
+                   Read here rather than written into the `links` attribute at
+                   submit, and that is the whole reason the verdict lives in its
+                   own table: `links` flows through the change diff above, so a
+                   verdict stored inside it would render as a rider-made edit
+                   and manufacture curator work out of a background check.
+
+                   FLAG, never silently reject (owner's rule). The submission
+                   is in the queue either way, carrying its verdict, because a
+                   false positive that vanishes is indistinguishable from a
+                   bug. */
+                'linkFlag' => $linkFlags[(int) $r['id']] ?? null,
             ];
         }, $rows);
+    }
+
+    /**
+     * The worst link verdict per submission, in ONE query for the whole page.
+     *
+     * Keyed by url in the store, so a page of twenty cards pointing at the same
+     * handful of sites costs one lookup rather than twenty.
+     *
+     * @param list<array<string, mixed>> $rows
+     *
+     * @return array<int, string>
+     */
+    private function linkFlags(array $rows): array
+    {
+        $bySubmission = [];
+        foreach ($rows as $r) {
+            /** @var array<string, mixed> $changes */
+            $changes = json_decode((string) $r['changes'], true) ?: [];
+            $links = \is_array($changes['links'] ?? null) ? ($changes['links']['now'] ?? null) : null;
+            $urls = SafeBrowsing::urlsIn($links);
+            if ([] !== $urls) {
+                $bySubmission[(int) $r['id']] = $urls;
+            }
+        }
+        if ([] === $bySubmission) {
+            return [];
+        }
+
+        $verdicts = $this->linkVerdicts->verdictsFor(array_values(array_unique(array_merge(...array_values($bySubmission)))));
+
+        $flags = [];
+        foreach ($bySubmission as $id => $urls) {
+            $flags[$id] = SafeBrowsing::worst(array_intersect_key($verdicts, array_flip($urls)));
+        }
+
+        return $flags;
     }
 
     /**
@@ -713,11 +770,16 @@ final class SubmissionQueue
            (photo-uploads.md §6), so listing it would put a broken thumbnail on
            an audit trail, which reads as data loss rather than as disposal
            working. */
+        /* `pending_scan` is deliberately in neither list. Those rows have no
+           objects at all yet (media-storage-architecture.md §3), so there is
+           nothing to link a thumbnail to - and the revision filter below says
+           the same thing a second time, in the one place a missing revision
+           would otherwise become a broken image on a curator's card. */
         $statuses = $settled ? ['approved'] : ['pending'];
         $rows = $this->db->fetchAllAssociative(
-            'SELECT id, submission_id, continent, taken_at, gps_distance_m
+            'SELECT id, submission_id, storage_shard, revision, taken_at, gps_distance_m
              FROM media_upload
-             WHERE status IN (:statuses) AND submission_id IN (:ids)
+             WHERE status IN (:statuses) AND revision IS NOT NULL AND submission_id IN (:ids)
              ORDER BY created_at ASC, id ASC',
             ['ids' => $submissionIds, 'statuses' => $statuses],
             ['ids' => ArrayParameterType::INTEGER, 'statuses' => ArrayParameterType::STRING],
@@ -729,10 +791,11 @@ final class SubmissionQueue
             $takenAt = null !== $row['taken_at']
                 ? (new \DateTimeImmutable((string) $row['taken_at']))->format('Y-m')
                 : null;
+            $prefix = MediaUpload::prefixFor($id, (string) $row['revision']);
             $bySubmission[(int) $row['submission_id']][] = [
                 'id' => $id,
-                'sm' => $this->mediaStorage->url((string) $row['continent'], 'photos/'.$id, 'sm'),
-                'lg' => $this->mediaStorage->url((string) $row['continent'], 'photos/'.$id, 'lg'),
+                'sm' => $this->mediaStorage->url((string) $row['storage_shard'], $prefix, 'sm'),
+                'lg' => $this->mediaStorage->url((string) $row['storage_shard'], $prefix, 'lg'),
                 'takenAt' => $takenAt,
                 'distanceM' => null !== $row['gps_distance_m'] ? (int) $row['gps_distance_m'] : null,
             ];

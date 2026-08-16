@@ -67,7 +67,14 @@ final class MediaDecisionService
         // neither approve it onto the map nor reject it into the retention
         // sweep that would eventually delete it. It stays exactly where it is
         // until an admin says otherwise.
-        $uploads = array_values(array_filter($uploads, static fn (MediaUpload $u): bool => !$u->isEscalated()));
+        // ...and a photo with nothing published cannot be approved onto an
+        // item: there is no URL to attach. Only a legacy row awaiting the
+        // one-off backfill reaches this, since a quarantined row is not
+        // Pending; it is left exactly where it is either way.
+        $uploads = array_values(array_filter(
+            $uploads,
+            static fn (MediaUpload $u): bool => !$u->isEscalated() && $u->hasPublishedObjects(),
+        ));
         if ([] === $uploads) {
             return null;
         }
@@ -120,11 +127,11 @@ final class MediaDecisionService
     public function describe(MediaUpload $upload): array
     {
         $prefix = $upload->getPathPrefix();
-        $continent = $upload->getContinent();
+        $shard = $upload->getStorageShard();
 
         $photo = [
-            'sm' => $this->storage->url($continent, $prefix, 'sm'),
-            'lg' => $this->storage->url($continent, $prefix, 'lg'),
+            'sm' => $this->storage->url($shard, $prefix, 'sm'),
+            'lg' => $this->storage->url($shard, $prefix, 'lg'),
             'credit' => $this->credit($upload),
             'license' => self::LICENSE,
         ];

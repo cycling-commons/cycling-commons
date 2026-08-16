@@ -190,6 +190,17 @@
       {%- if item.priorRejection.note %} &middot; {{ item.priorRejection.note }}{% endif -%}
     </p>
   {% endif %}
+  {# The reputation check on the links this submission proposes
+     (catalog-data-model.md §7). FLAG, never a silent rejection: the submission
+     is here either way, and a curator about to click a rider's link is
+     entitled to know what the check said - including that it could not answer.
+     The map already withholds an `unsafe` url from readers, so this is a
+     warning to a curator, not the control. #}
+  {% if item.linkFlag is defined and item.linkFlag in ['unsafe', 'unknown'] %}
+    <p class="q-link-flag q-link-{{ item.linkFlag }}">
+      <strong>{{ ('moderate.links.' ~ item.linkFlag)|trans }}</strong>
+    </p>
+  {% endif %}
   {% if item.body %}
     <p class="q-body">{{ item.body }}</p>
   {% endif %}

@@ -205,6 +205,18 @@
   @keyframes chip-pulse{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}
   .chip.failed{border-color:#a3342b;color:#a3342b}
   .chip-err{font-size:.72rem}
+  /* The wait between "received" and "on the map"
+     (media-storage-architecture.md §3.3). Two states, deliberately different
+     in weight: `checking` is live and breathes, `waiting` is settled and
+     still, because the rider has been told they can move on. Neither is an
+     error, so neither borrows the failed colour. */
+  .chip-note{font-size:.72rem;color:#595c4d;white-space:nowrap}
+  .chip.checking{border-color:var(--glacier)}
+  .chip.checking .chip-thumb img{opacity:.62;animation:chip-breathe 1.6s ease-in-out infinite}
+  .chip.waiting{border-color:rgba(20,22,14,.22)}
+  .chip.waiting .chip-thumb img{opacity:.72}
+  @keyframes chip-breathe{0%,100%{opacity:.62}50%{opacity:.95}}
+  @media(prefers-reduced-motion:reduce){.chip.checking .chip-thumb img{animation:none}}
   .chip-x{border:0;background:none;cursor:pointer;font-size:1rem;line-height:1;color:#595c4d}
   @media(prefers-reduced-motion:reduce){.chip.indeterminate .chip-bar i{animation:none}}
   .notice{background:var(--paper-deep);border-left:2px solid var(--glacier);padding:.8rem 1rem;font-size:.82rem;color:#4a4d40;border-radius:0 6px 6px 0;margin-top:1rem;line-height:1.5}
@@ -271,6 +283,12 @@
   .cc-toast{position:fixed;left:50%;bottom:1.5rem;transform:translateX(-50%) translateY(1rem);background:var(--ink);color:var(--paper);padding:.7rem 1.1rem;border-radius:8px;font-size:.85rem;max-width:90vw;text-align:center;box-shadow:0 10px 28px -10px rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:3000}
   .cc-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
+  /* The top gap is atlas.css's `.wrap#main` rule now, shared with every other
+     page that opens straight on a wrap. What is left here is the FLOOR: this
+     explainer is three short lines, and without it the footer crowds them. */
+  .improve-unbound{margin-bottom:clamp(2.5rem,8vw,4rem)}
+  .improve-unbound h2{margin-top:0}
+
   .btn:focus-visible,#wzReset:focus-visible,.drop:focus-visible{outline:2px solid var(--trail);outline-offset:2px;border-radius:4px}
   @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
@@ -327,6 +345,7 @@
   <script nonce="{{ csp_nonce() }}">window.CC_MEDIA = {{ {
     tokenUrl: path('media_token'),
     uploadUrl: path('media_photos_upload'),
+    stateUrl: path('media_photos_state', {id: '__ID__'}),
     consentUrl: path('media_consent'),
     consentCurrentUrl: path('media_consent_current'),
     termsUrl: path('terms'),
@@ -346,6 +365,8 @@
       siteTerms: 'media.consent.site_terms'|trans,
       remove: 'improve.step3.remove_photo'|trans,
       tooMany: 'improve.step3.too_many_photos'|trans,
+      checking: 'media.pending.checking'|trans,
+      stillChecking: 'media.pending.still_checking'|trans,
       errors: {
         consent_required: 'media.error.consent_required'|trans,
         missing_file: 'media.error.missing_file'|trans,
@@ -354,6 +375,7 @@
         photo_format: 'media.error.photo_format'|trans,
         photo_unreadable: 'media.error.photo_unreadable'|trans,
         photo_too_small: 'media.error.photo_too_small'|trans,
+        photo_rejected: 'media.error.photo_rejected'|trans,
         rate_limited: 'media.error.rate_limited'|trans,
         unknown: 'media.error.unknown'|trans
       }

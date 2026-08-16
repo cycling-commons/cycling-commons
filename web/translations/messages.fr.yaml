@@ -1937,6 +1937,8 @@ map:
   d_community_report: 'Signalement de la communauté'
   d_report_photo: 'Signaler cette photo'
   d_lnk_wikipedia: 'Wikipédia'
+  d_links_unsafe: 'Un lien de cette contribution figure sur une liste de sites dangereux. Ne l''ouvrez pas.'
+  d_links_unknown: 'Les liens de cette contribution n''ont pas pu être vérifiés. Ouvrez-les avec prudence.'
   d_src_auto: 'Dérivé par le pipeline'
   d_src_manual: 'Sélectionné à la main'
   d_src_rider: 'Contribué par un cycliste'
@@ -2401,8 +2403,12 @@ media:
     photo_format: 'Ce type de fichier n''est pas utilisable. Les photos peuvent être en JPEG, PNG, WebP ou HEIC.'
     photo_unreadable: 'Ce fichier n''a pas pu être lu comme une photo.'
     photo_too_small: 'Cette photo est trop petite — le côté le plus court doit faire au moins 200 pixels.'
+    photo_rejected: 'Nous n''avons pas pu accepter cette photo. Nos vérifications ont trouvé quelque chose dans le fichier, ou n''ont pas pu le lire comme une image. Essayez-en une autre.'
     rate_limited: 'Limite d''envois quotidienne atteinte — continuez demain.'
     unknown: 'L''envoi a échoué. Réessayez.'
+  pending:
+    checking: 'Vérification…'
+    still_checking: 'Vérification en cours. Envoyez votre contribution maintenant, nous vous tiendrons au courant.'
   takedown:
     summary: 'Demander le retrait de cette photo'
     intro: 'Si cette photo vous montre, ou montre autre chose vous concernant que vous ne vouliez pas publier, nous la retirerons. Dites-nous ce dont il s''agit : elle disparaît immédiatement de la carte pendant qu''un curateur lit votre message.'
@@ -2615,6 +2621,9 @@ moderate:
   answered: 'Répondu'
   rider_reply: 'Le cycliste a répondu'
   prior_rejection: 'Précédemment rejeté'
+  links:
+    unsafe: 'Un lien de cette contribution figure sur une liste de sites dangereux. Ne l''ouvrez pas.'
+    unknown: 'Les liens de cette contribution n''ont pas pu être vérifiés. Ouvrez-les avec prudence.'
 moderate_routes:
   title: 'File de modération des itinéraires'
   kicker: 'File des itinéraires'
@@ -2811,6 +2820,8 @@ messages:
   kind_media_removed_on_report: 'Une de vos photos a été retirée'
   kind_media_hidden_pending_review: 'Une de vos photos est temporairement masquée'
   kind_media_restored_after_review: 'Votre photo est de retour sur la carte'
+  kind_media_ready: 'Votre photo est sur la carte'
+  kind_media_scan_rejected: 'Nous n''avons pas pu accepter cette photo'
   body:
     submission_approved: 'Votre contribution %title% a été approuvée et est désormais visible sur la carte. Merci d''améliorer le Commons !'
     areas_changed: 'An admin changed the areas you moderate. You now look after %areas%.'
@@ -2826,6 +2837,8 @@ messages:
     media_removed_on_report: 'Une de vos photos a été retirée après un signalement indiquant qu''elle montre une personne identifiable qui n''a pas consenti à être publiée. Cela concerne cette seule image, pas votre contribution — merci pour elle. Nous ne pouvons pas dire qui a signalé, dans aucun sens : cette personne n''a pas su non plus qui avait téléversé. Si vous pensez que le retrait est une erreur, répondez à ce message et un curateur le lira.'
     media_hidden_pending_review: 'Quelqu''un a signalé une de vos photos et, vu ce qu''affirme le signalement, nous l''avons immédiatement masquée sur la carte le temps qu''un curateur l''examine. Masquée n''est pas supprimée : la photo reste la vôtre, elle est toujours stockée, rien n''a été effacé. Si le signalement ne tient pas, elle revient sous quelques jours et nous vous le dirons. Seul un curateur peut retirer une photo, jamais un signalement à lui seul — et nous ne pouvons pas vous dire qui a signalé, tout comme cette personne n''a pas su qui avait téléversé.'
     media_restored_after_review: 'Le signalement concernant votre photo n''a pas tenu : elle est de retour sur la carte, exactement comme avant. Merci de votre patience — masquer d''abord est ce qui garantit qu''une plainte authentique ne reste jamais en ligne des jours, et cela implique qu''une photo est parfois retirée un temps pour rien.'
+    media_ready: 'Les vérifications de votre photo se sont terminées après que vous avez cessé d''attendre. Elle est maintenant sur la carte et passe devant un curateur comme toute autre contribution.'
+    media_scan_rejected: 'Nous n''avons pas pu accepter cette photo. Nos vérifications ont trouvé quelque chose dans le fichier, ou n''ont pas pu le lire comme une image. Personne n''a regardé l''image : c''est un contrôle automatique du fichier lui-même. Essayez une autre photo, ou la même enregistrée à nouveau en JPEG.'
   reply_label: 'Votre réponse'
   what_you_changed: 'Ce que vous avez modifié'
   reply_send: 'Envoyer la réponse'

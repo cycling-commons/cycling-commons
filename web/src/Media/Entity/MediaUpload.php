@@ -51,11 +51,38 @@ class MediaUpload
     #[ORM\Column(name: 'consent_record_id', type: 'uuid')]
     private Uuid $consentRecordId;
 
-    /** Storage shard: the two-letter continent code this object lives in. */
+    /** Where the photo WAS: the two-letter continent code intake resolved. */
     #[ORM\Column(type: Types::STRING, length: 2)]
     private string $continent;
 
-    #[ORM\Column(type: Types::STRING, length: 10, enumType: MediaStatus::class)]
+    /**
+     * Where the bytes ACTUALLY WENT: the key into MediaStorage's map of public
+     * storages, decided once at intake and never re-derived
+     * (docs/specs/media-storage-architecture.md §2.1, §4).
+     *
+     * The same string as the continent today, and deliberately its own column.
+     * A continent with no bucket of its own falls back to the default shard, so
+     * deriving the address from the continent addressed a public base with
+     * nothing behind it; and when §2.1's numbered buckets arrive, "existing
+     * objects never move" is only true if the address comes from what was
+     * recorded when the object was written.
+     */
+    #[ORM\Column(name: 'storage_shard', type: Types::STRING, length: 16)]
+    private string $storageShard;
+
+    /**
+     * The processing run that produced the published objects - the `<rev>` in
+     * published/<uuid>/<rev>/… (docs/specs/media-storage-architecture.md §4).
+     * Minted per run, so reprocessing writes a NEW key and no reader ever sees
+     * an object change under a key it already holds.
+     *
+     * Null means nothing is published: the row is still quarantined and has no
+     * URL to build. Not a legacy shape - an absence.
+     */
+    #[ORM\Column(type: Types::STRING, length: 12, nullable: true)]
+    private ?string $revision = null;
+
+    #[ORM\Column(type: Types::STRING, length: 16, enumType: MediaStatus::class)]
     private MediaStatus $status = MediaStatus::Pending;
 
     #[ORM\Column(type: Types::INTEGER)]
@@ -215,6 +242,8 @@ class MediaUpload
         $this->userId = $userId;
         $this->consentRecordId = $consentRecordId;
         $this->continent = strtoupper($continent);
+        $this->storageShard = strtoupper($continent);
+        $this->revision = self::mintRevision();
         $this->width = $width;
         $this->height = $height;
         $this->bytes = $bytes;
@@ -224,10 +253,145 @@ class MediaUpload
         $this->createdAt = new \DateTimeImmutable();
     }
 
-    /** Object key prefix inside the continent's bucket. */
+    /**
+     * Intake's constructor (docs/specs/media-storage-architecture.md §3): the
+     * web tier knows who, how many bytes and which shard, and nothing else. It
+     * has not decoded anything - it physically cannot - so the dimensions, the
+     * capture date and the revision are all the worker's to fill in.
+     *
+     * $bytes is what ARRIVED, replaced at release by the size of the stored
+     * original. A quarantined row that never releases still says truthfully
+     * how much of the rider's data we are holding.
+     */
+    public static function quarantined(
+        Uuid $id,
+        int $userId,
+        Uuid $consentRecordId,
+        string $continent,
+        string $shard,
+        int $bytes,
+    ): self {
+        $upload = new self($id, $userId, $consentRecordId, $continent, 0, 0, $bytes);
+        $upload->storageShard = strtoupper($shard);
+        $upload->revision = null;
+        $upload->status = MediaStatus::PendingScan;
+
+        return $upload;
+    }
+
+    /**
+     * The worker's clean verdict, applied: the derivatives are already in the
+     * public bucket under this revision, so the row can now point at them.
+     *
+     * The revision is minted by the caller and passed in, because the objects
+     * have to be written BEFORE the row claims they exist - the release gate is
+     * physical (docs/specs/media-storage-architecture.md §3), and a row that
+     * pointed at a key nothing had written yet would be exactly the flag-shaped
+     * gate the architecture refuses.
+     */
+    public function release(string $revision, int $width, int $height, int $bytes, ?\DateTimeImmutable $takenAt): void
+    {
+        $this->revision = $revision;
+        $this->width = $width;
+        $this->height = $height;
+        $this->bytes = $bytes;
+        $this->takenAt = $takenAt;
+        $this->status = MediaStatus::Pending;
+    }
+
+    /**
+     * The revision alone, for the one-off backfill onto immutable keys
+     * (MediaBackfillKeysCommand). Deliberately NOT release(): those rows are
+     * already approved, rejected or awaiting a curator, and release() would
+     * put every one of them back in the queue.
+     */
+    public function stampRevision(string $revision): void
+    {
+        $this->revision = $revision;
+    }
+
+    /**
+     * The scanner found something, or the bytes were not a photo at all. The
+     * objects are gone in the same pass, so the row is a tombstone from birth:
+     * it never had a revision and never will.
+     */
+    public function rejectUnreleased(): void
+    {
+        $this->status = MediaStatus::Rejected;
+        $this->decidedAt = new \DateTimeImmutable();
+        $this->objectsDeletedAt = new \DateTimeImmutable();
+    }
+
+    /**
+     * The worker's decode found coordinates the web tier could not read, and
+     * they point at a different continent than the default it had to assume.
+     *
+     * Only legal while nothing is published - which is the only time it is
+     * ever called. Once objects exist under a shard, that shard IS the
+     * address, and §2.1's "existing objects never move" says plainly what
+     * moving it would break.
+     */
+    public function reshard(string $continent, string $shard): void
+    {
+        if (null !== $this->revision) {
+            throw new \LogicException(\sprintf('Upload %s has published objects; its shard is now its address.', $this->id->toRfc4122()));
+        }
+        $this->continent = strtoupper($continent);
+        $this->storageShard = strtoupper($shard);
+    }
+
+    /** A fresh, short, opaque token - one per processing run (§4). */
+    public static function mintRevision(): string
+    {
+        return bin2hex(random_bytes(4));
+    }
+
+    /**
+     * Object key prefix inside the shard's bucket
+     * (docs/specs/media-storage-architecture.md §4).
+     *
+     * Throws while the row is quarantined, and that is the point: there are no
+     * objects yet, so every honest answer is "there is no address". A caller
+     * that can see quarantined rows asks hasPublishedObjects() first.
+     */
     public function getPathPrefix(): string
     {
-        return 'photos/'.$this->id->toRfc4122();
+        if (null === $this->revision) {
+            throw new \LogicException(\sprintf('Upload %s has published nothing yet, so it has no object prefix.', $this->id->toRfc4122()));
+        }
+
+        return self::prefixFor($this->id->toRfc4122(), $this->revision);
+    }
+
+    /**
+     * The same key, assembled from raw column values - for the two readers that
+     * work in SQL rather than entities (SubmissionQueue, DataExportService) and
+     * must not load a thousand entities to build a thumbnail URL.
+     */
+    public static function prefixFor(string $uuid, string $revision): string
+    {
+        return 'published/'.$uuid.'/'.$revision;
+    }
+
+    public function hasPublishedObjects(): bool
+    {
+        return null !== $this->revision;
+    }
+
+    public function getRevision(): ?string
+    {
+        return $this->revision;
+    }
+
+    public function getStorageShard(): string
+    {
+        return $this->storageShard;
+    }
+
+    /** The private-storage key of the unscanned bytes, while they exist. */
+    public function getQuarantineKey(): string
+    {
+        return $this->id->toRfc4122();
     }
 
     public function claim(int $submissionId): void
@@ -246,6 +410,25 @@ class MediaUpload
         $this->gpsDistanceM = $distanceM;
         $this->gpsLat = null;
         $this->gpsLng = null;
+    }
+
+    /**
+     * The worker hands back what the EXIF held, for a row that has NOT been
+     * claimed yet - the claim is what destroys it.
+     *
+     * Only ever called on an unclaimed row. A row claimed while it was still
+     * quarantined has already had resolveGps() run against nulls, and writing
+     * coordinates onto it afterwards would resurrect exactly the data intake
+     * promised to destroy (docs/specs/photo-uploads.md §3); the handler
+     * computes the distance itself in that case and calls resolveGps().
+     */
+    public function rememberGps(?float $lat, ?float $lng): void
+    {
+        if (null !== $this->submissionId) {
+            throw new \LogicException('Coordinates must never be written onto a claimed upload.');
+        }
+        $this->gpsLat = $lat;
+        $this->gpsLng = $lng;
     }
 
     public function approve(?int $itemId): void

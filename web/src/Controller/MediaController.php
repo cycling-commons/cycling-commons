@@ -14,10 +14,10 @@ use App\Media\Entity\MediaUpload;
 use App\Media\MediaAction;
 use App\Media\MediaConsent;
 use App\Media\MediaEventLog;
+use App\Media\MediaStatus;
 use App\Media\MediaStorage;
+use App\Media\Message\ScanAndReleaseUpload;
 use App\Media\PhotoProcessor;
-use App\Media\PhotoRejected;
-use App\Media\XmpRights;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -25,6 +25,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
@@ -48,14 +49,25 @@ final class MediaController extends AbstractController
 {
     public const string CSRF_INTENTION = 'media-upload';
 
+    /**
+     * The declared types the endpoint will accept without decoding anything.
+     *
+     * A sniff of the leading bytes (finfo, no decoder involved), not a
+     * filename, and deliberately not proof: the real answer comes from the
+     * worker's decode. It is here only so the obvious wrong thing - a PDF, a
+     * ZIP, a video - is refused while the rider is still watching, instead of
+     * costing a quarantine write, a scan and a message round trip to say the
+     * same thing a minute later.
+     */
+    private const array SNIFFED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif', 'image/avif'];
+
     public function __construct(
         private readonly ConsentService $consent,
-        private readonly PhotoProcessor $processor,
         private readonly MediaStorage $storage,
         private readonly ContinentResolver $continents,
-        private readonly XmpRights $rights,
         private readonly MediaEventLog $events,
         private readonly EntityManagerInterface $em,
+        private readonly MessageBusInterface $bus,
     ) {
     }
 
@@ -101,10 +113,19 @@ final class MediaController extends AbstractController
     }
 
     /**
-     * One photo per request. The order of the checks is deliberate: identity,
-     * then token, then consent, then the cheap byte-count gate, then the
-     * limiter, and only then the expensive decode — so an abusive caller never
-     * gets the server to spend an Imagick decode on their behalf.
+     * One photo per request, and the request no longer processes it
+     * (docs/specs/media-storage-architecture.md §3).
+     *
+     * Everything this endpoint does is something the web tier can do safely:
+     * identity, token, consent, the byte cap, the limiter, a type sniff, a
+     * write of the RAW bytes into the private bucket, one row, one message.
+     * It never decodes an image and never publishes anything - it physically
+     * cannot scan, and a tier that cannot scan must not be allowed to publish.
+     *
+     * The order of the checks is still deliberate, and for the same reason as
+     * before: an abusive caller must not get the server to spend anything on
+     * their behalf, and now the cheapest gate of all - never touching the
+     * pixels - is the default.
      */
     #[Route('/media/photos', name: 'media_photos_upload', methods: ['POST'])]
     public function upload(Request $request, RateLimiterFactoryInterface $mediaUploadLimiter): JsonResponse
@@ -140,52 +161,102 @@ final class MediaController extends AbstractController
             return $this->json(['error' => 'rate_limited'], Response::HTTP_TOO_MANY_REQUESTS);
         }
 
-        // The id exists before the bytes do: the rights packet names the
-        // photo's own page, so the uuid has to be minted first
-        // (docs/specs/photo-uploads.md §1.3c).
-        $mediaId = Uuid::v4();
-
-        try {
-            $processed = $this->processor->process(
-                (string) file_get_contents($file->getPathname()),
-                $this->rights->forPhoto($mediaId),
-            );
-        } catch (PhotoRejected $rejected) {
-            return $this->json(['error' => $rejected->reason], Response::HTTP_UNPROCESSABLE_ENTITY);
+        // finfo on the leading bytes, never the filename, and never a decode.
+        if (!\in_array((string) $file->getMimeType(), self::SNIFFED_TYPES, true)) {
+            return $this->json(['error' => 'photo_format'], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        // Shard resolution (docs/specs/photo-uploads.md §3): the wizard's pin
-        // wins, because it is where the rider says the place IS; the photo's own
-        // coordinates are the fallback; then the configured default.
+        // The id exists before the bytes do: the rights packet names the
+        // photo's own page, so the uuid has to be minted first
+        // (docs/specs/photo-uploads.md §1.3c). The packet itself is written by
+        // the worker, which is where the encoding now happens.
+        $mediaId = Uuid::v4();
+
+        /* Shard resolution (docs/specs/photo-uploads.md §3): the wizard's pin
+           wins, because it is where the rider says the place IS. The photo's
+           own coordinates are the fallback - and reading them needs the decode
+           this tier no longer does, so the pin is all there is here. The
+           message carries the pin so the worker can finish the question with
+           the EXIF half once it has it, and shardFor() is asked BEFORE the row
+           exists because the row records where the bytes actually went. */
         $pinLat = $this->coordinate($request, 'lat');
         $pinLng = $this->coordinate($request, 'lng');
-        $continent = (null !== $pinLat && null !== $pinLng)
-            ? $this->continents->resolve($pinLat, $pinLng)
-            : $this->continents->resolve($processed->gpsLat, $processed->gpsLng);
+        $continent = $this->continents->resolve($pinLat, $pinLng);
 
-        $upload = new MediaUpload(
+        $upload = MediaUpload::quarantined(
             $mediaId,
             (int) $user->getId(),
             $consent->getId(),
             $continent,
-            $processed->width,
-            $processed->height,
-            \strlen($processed->orig),
-            $processed->takenAt,
-            $processed->gpsLat,
-            $processed->gpsLng,
+            $this->storage->shardFor($continent),
+            (int) $file->getSize(),
         );
 
-        $this->storage->store($continent, $upload->getPathPrefix(), $processed);
+        /* Bytes into the private bucket FIRST, row second. The other order
+           leaves a row promising a scan of an object that was never written,
+           and the handler's "still quarantined?" guard would read that as a
+           release that already happened. */
+        $this->storage->writeQuarantine($upload->getQuarantineKey(), (string) file_get_contents($file->getPathname()));
         $this->em->persist($upload);
         $this->events->append($upload->getId(), (int) $user->getId(), MediaAction::Uploaded);
         $this->em->flush();
 
-        return $this->json([
+        /* AFTER the flush, never before: the async transport is a Redis stream
+           a consumer is already tailing, so a message dispatched ahead of the
+           commit races a worker that would not find the row. */
+        $this->bus->dispatch(new ScanAndReleaseUpload($mediaId->toRfc4122(), $pinLat, $pinLng));
+
+        return $this->json($this->state($upload), Response::HTTP_ACCEPTED);
+    }
+
+    /**
+     * What became of one upload - the wizard's poll while the worker runs
+     * (docs/specs/photo-uploads.md §4).
+     *
+     * Owner-scoped: a rider may ask about their own upload and nothing else.
+     * A stranger's id answers 404 rather than 403, because "that is not yours"
+     * is itself an answer about somebody else's photo.
+     */
+    #[Route('/media/photos/{id}', name: 'media_photos_state', methods: ['GET'])]
+    public function photoState(string $id): JsonResponse
+    {
+        $user = $this->requireUser();
+        $upload = Uuid::isValid($id) ? $this->em->find(MediaUpload::class, Uuid::fromString($id)) : null;
+        if (null === $upload || $upload->getUserId() !== (int) $user->getId()) {
+            return $this->json(['error' => 'not_found'], Response::HTTP_NOT_FOUND);
+        }
+
+        return $this->json($this->state($upload));
+    }
+
+    /**
+     * The one shape both the upload response and the poll answer with, so the
+     * wizard has a single thing to read.
+     *
+     * `ready` is derived from the objects existing, not from the status
+     * column: the release gate is physical
+     * (docs/specs/media-storage-architecture.md §3), and a client told "ready"
+     * by a flag is a client that can be told it by a flag alone.
+     *
+     * @return array<string, mixed>
+     */
+    private function state(MediaUpload $upload): array
+    {
+        $state = [
             'id' => $upload->getId()->toRfc4122(),
-            'sm' => $this->storage->url($continent, $upload->getPathPrefix(), 'sm'),
-            'lg' => $this->storage->url($continent, $upload->getPathPrefix(), 'lg'),
-        ]);
+            'status' => $upload->getStatus()->value,
+            'ready' => $upload->hasPublishedObjects(),
+        ];
+        if ($upload->hasPublishedObjects()) {
+            $state['sm'] = $this->storage->url($upload->getStorageShard(), $upload->getPathPrefix(), 'sm');
+            $state['lg'] = $this->storage->url($upload->getStorageShard(), $upload->getPathPrefix(), 'lg');
+        } elseif (MediaStatus::Rejected === $upload->getStatus()) {
+            // The worker refused it. The reason lives in the event log; the
+            // rider gets the one word that tells them to try another photo.
+            $state['error'] = 'photo_rejected';
+        }
+
+        return $state;
     }
 
     private function coordinate(Request $request, string $key): ?float

@@ -1982,8 +1982,16 @@ media:
     photo_format: 'That file type cannot be used. Photos may be JPEG, PNG, WebP or HEIC.'
     photo_unreadable: 'That file could not be read as a photo.'
     photo_too_small: 'That photo is too small — the shortest side must be at least 200 pixels.'
+    photo_rejected: 'We could not accept that photo. Our checks either found something in the file or could not read it as an image. Please try a different one.'
     rate_limited: 'Daily upload limit reached — please continue tomorrow.'
     unknown: 'The upload failed. Please try again.'
+  # The wait between "received" and "on the map"
+  # (docs/specs/media-storage-architecture.md §3.3). The second line is the one
+  # that has to be right: it is not a failure, and the rider does not have to
+  # do anything.
+  pending:
+    checking: 'Checking…'
+    still_checking: 'Still checking. Send your contribution now, we will let you know.'
   takedown:
     summary: 'Ask for this photo to be removed'
     intro: 'If this photo shows you, or anything else about you that you did not mean to publish, we will take it down. Tell us what it is and it comes off the map straight away, while a curator reads your message.'
@@ -2275,6 +2283,8 @@ map:
   d_community_report: 'Community report'
   d_report_photo: 'Report this photo'
   d_lnk_wikipedia: 'Wikipedia'
+  d_links_unsafe: 'A link in this submission is on a known-unsafe list. Do not click it.'
+  d_links_unknown: 'The links in this submission could not be checked. Open them with care.'
   d_src_auto: 'Derived by the pipeline'
   d_src_manual: 'Hand-curated'
   d_src_rider: 'Rider-contributed'
@@ -2638,6 +2648,9 @@ moderate:
   answered: 'Answered'
   rider_reply: 'Rider replied'
   prior_rejection: 'Previously rejected'
+  links:
+    unsafe: 'A link in this submission is on a known-unsafe list. Do not click it.'
+    unknown: 'The links in this submission could not be checked. Open them with care.'
 moderate_routes:
   title: 'Routes moderation desk'
   kicker: 'Routes queue'
@@ -2834,6 +2847,8 @@ messages:
   kind_media_removed_on_report: 'One of your photos has been removed'
   kind_media_hidden_pending_review: 'One of your photos is temporarily hidden'
   kind_media_restored_after_review: 'Your photo is back on the map'
+  kind_media_ready: 'Your photo is on the map'
+  kind_media_scan_rejected: 'We could not accept that photo'
   body:
     submission_approved: 'Your contribution %title% was approved and is now live on the map. Thank you for improving the Commons!'
     areas_changed: 'An admin changed the areas you moderate. You now look after %areas%.'
@@ -2849,6 +2864,8 @@ messages:
     media_removed_on_report: 'One of your photos has been removed after a report that it shows an identifiable person who did not agree to be published. This is about that one image, not your contribution — thank you for it. We cannot tell you who reported it, in either direction: they were not told who uploaded it. If you think the removal is wrong, reply to this message and a curator will read it.'
     media_hidden_pending_review: 'Somebody has reported one of your photos, and because of what the report claims we have hidden it from the map straight away while a curator looks. Hidden is not removed: the photo is still yours, still stored, and nothing has been deleted. If the report does not hold up it goes back within days and we will tell you. Only a curator can remove a photo, never a report on its own — and we cannot tell you who reported it, just as they were not told who uploaded it.'
     media_restored_after_review: 'The report about your photo did not hold up, so it is back on the map exactly as it was. Thank you for your patience — hiding it first is how we make sure a genuine complaint is never left up for days, and it means the occasional photo comes down for a while for nothing.'
+    media_ready: 'The checks on your photo finished after you had stopped waiting. It is on the map now, and it goes to a curator like every other contribution.'
+    media_scan_rejected: 'We could not accept that photo. Our checks either found something in the file or could not read it as an image at all. Nobody looked at the picture: this is an automatic check on the file itself. Please try a different photo, or the same one saved again as JPEG.'
   reply_label: 'Your reply'
   what_you_changed: 'What you changed'
   reply_send: 'Send reply'

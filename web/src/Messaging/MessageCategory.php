@@ -55,6 +55,12 @@ enum MessageCategory: string
                 // rider did — unlike the report-driven trio below.
                 UserMessageKind::MediaTakedownGranted,
                 UserMessageKind::MediaTakedownDeclined,
+                // The rider offered a photo, and this is what became of it:
+                // it finished checking after they had stopped waiting, or the
+                // worker refused the file. Contributions, not Notices -
+                // nothing arrived unbidden, they sent us the photo.
+                UserMessageKind::MediaReady,
+                UserMessageKind::MediaScanRejected,
             ],
             self::Notices => [
                 UserMessageKind::MediaRemovedOnReport,

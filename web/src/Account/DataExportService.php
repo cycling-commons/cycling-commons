@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace App\Account;
 
 use App\Entity\User;
+use App\Media\Entity\MediaUpload;
 use App\Media\MediaStorage;
 use Doctrine\DBAL\Connection;
 use Psr\Clock\ClockInterface;
@@ -258,7 +259,8 @@ final class DataExportService
     private function stagePhotos(int $userId, \ZipArchive $zip): array
     {
         $uploads = $this->db->fetchAllAssociative(
-            'SELECT id, continent, status, width, height, bytes, taken_at, gps_distance_m,
+            'SELECT id, continent, storage_shard, revision, status, width, height, bytes,
+                    taken_at, gps_distance_m,
                     submission_id, item_id, created_at, decided_at, objects_deleted_at,
                     takedown_requested_at, takedown_reason
              FROM media_upload WHERE user_id = ? ORDER BY created_at',
@@ -277,9 +279,17 @@ final class DataExportService
             );
             $upload['file'] = null;
 
-            $source = null !== $upload['objects_deleted_at']
+            /* No revision means nothing was ever published for this upload -
+               it is still quarantined, or the worker refused it. The index row
+               still ships (the rider is entitled to know we hold it and what
+               became of it); there is simply no file to attach. */
+            $source = (null !== $upload['objects_deleted_at'] || null === $upload['revision'])
                 ? null
-                : $this->storage->readStream((string) $upload['continent'], 'photos/'.$uuid, self::PHOTO_VARIANT);
+                : $this->storage->readStream(
+                    (string) $upload['storage_shard'],
+                    MediaUpload::prefixFor($uuid, (string) $upload['revision']),
+                    self::PHOTO_VARIANT,
+                );
 
             if (null !== $source) {
                 $temp = tempnam(sys_get_temp_dir(), 'cc-photo-');

@@ -2,3 +2,12 @@
 services:
     App\Tests\Auth\SpyDeletionHook:
         tags: ['app.user_deletion_hook']
+
+    # The release handler, reachable by the tests that play the worker
+    # (media-storage-architecture.md §3). An ALIAS rather than a second
+    # definition: redefining the id would replace the real wiring instead of
+    # exposing it.
+    test.media.release_handler:
+        alias: App\Media\MessageHandler\ScanAndReleaseUploadHandler
+        public: true
+

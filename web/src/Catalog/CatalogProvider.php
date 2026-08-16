@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Catalog;
 
+use App\Catalog\Links\LinkVerdictStore;
 use App\Moderation\ModerationScope;
 use App\Service\BuildVersion;
 use Doctrine\DBAL\Connection;
@@ -32,6 +33,7 @@ final class CatalogProvider
         private readonly Connection $db,
         private readonly BuildVersion $buildVersion,
         private readonly ConfirmationFreshness $freshness,
+        private readonly LinkVerdictStore $linkVerdicts,
     ) {
     }
 
@@ -684,9 +686,34 @@ final class CatalogProvider
     }
 
     /** @return array<string, mixed> */
+    /**
+     * One decode for every served payload, and the RENDER-side half of the
+     * Safe Browsing pair (App\Catalog\Links\SafeBrowsing).
+     *
+     * It fails CLOSED: a url whose last verdict was UNSAFE is stripped out of
+     * `links` before it can reach an `<a href>` on the public map. Here rather
+     * than at each caller because this method is the one chokepoint every
+     * served attribute set passes through, and a withhold any one forgotten
+     * path could skip is not a withhold.
+     *
+     * UNKNOWN still renders. Withholding everything unchecked would empty the
+     * map the day a key expired, which is the failure mode a security control
+     * is not allowed to have - the SUBMIT side is where unknown is treated
+     * generously, and it fails open for the opposite reason.
+     *
+     * @return array<string, mixed>
+     */
     private function decode(string $json): array
     {
-        /* @var array<string, mixed> */
-        return json_decode($json, true, 512, \JSON_THROW_ON_ERROR);
+        /** @var array<string, mixed> $attrs */
+        $attrs = json_decode($json, true, 512, \JSON_THROW_ON_ERROR);
+        if (isset($attrs['links'])) {
+            $attrs['links'] = $this->linkVerdicts->withhold($attrs['links']);
+            if ([] === $attrs['links']) {
+                unset($attrs['links']);
+            }
+        }
+
+        return $attrs;
     }
 }

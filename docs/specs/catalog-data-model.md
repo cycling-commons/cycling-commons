@@ -430,6 +430,68 @@ matches the two-level shape without teaching a rider the words "entry" and
   the reason said once ("the official site has its own field above"), or the
   rider meets a validation error for obeying the form.
 
+**2. Google Safe Browsing - BUILT, all four call sites (2026-08-16).**
+`App\Catalog\Links\SafeBrowsing` is the reusable core: batched Lookup-API
+calls, a three-state verdict (`safe`/`unsafe`/`unknown`) so an outage can never
+read as clean, a suffix-matched host allowlist that a look-alike domain cannot
+spoof, `worst()` for the queue card, and OFF with an empty `SAFE_BROWSING_KEY`
+rather than quietly passing everything. Pinned by `SafeBrowsingTest`.
+
+**The verdict lives in its own table, keyed by url** (`link_verdict`,
+`App\Catalog\Links\LinkVerdictStore`, `Version20260816220000`), and the
+alternative was refused for a concrete reason: a verdict written inside the
+`links` attribute would flow through the wizard's change diff and surface on a
+moderation card as a rider-made edit, manufacturing curator work out of a
+background check. Keying by url also makes the fact shared by every item
+pointing at the same page, which is what turns the scheduled re-check into ONE
+sweep over distinct urls rather than one per item. The primary key is a sha256
+of the url, because a btree key over unbounded TEXT has a size limit a long url
+could cross - and a rider's save must never be lost to an index detail.
+
+The four call sites:
+
+| where | direction | what it does |
+|---|---|---|
+| **submit** (`CatalogContributionService::checkLinks`) | fail OPEN, never blocks | asks, records whatever comes back, and swallows every error: nothing about a background check may cost a rider their save |
+| **the queue card** (`SubmissionQueue::linkFlags`, `linkFlag` on the row) | flag, never reject | shows the worst verdict for the links THIS submission proposes, `unsafe` and `unknown` differently, on both the desk template and the map drawer |
+| **the map payload** (`CatalogProvider::decode()`) | fail CLOSED | strips a url whose last verdict is `unsafe` out of `links` before it can reach an `<a href>`; an entry left with no urls disappears. One chokepoint, because a withhold any forgotten path could skip is not a withhold |
+| **the sweep** (`app:links:recheck`, beside the GC timers) | - | re-asks about verdicts older than a week AND about urls in served items that were never checked at all; a no-op when the key is empty, so nothing is ever stamped as if it had been checked |
+
+`SAFE_BROWSING_KEY` is on the deploy-prerequisites list (operations.md §3).
+
+Design as written:
+
+Today `links` can only arrive from the importer. The wizard needs a field that
+matches the two-level shape without teaching a rider the words "entry" and
+"variant".
+
+- **A new `FieldKind::Links`**, not a reuse. Every existing kind renders one
+  input for one scalar (`MultiSelect` is the closest and it is still one
+  control over a fixed vocabulary); this is a nested repeatable over free text,
+  and the registry's per-kind `switch` in `ImproveType` is where the difference
+  belongs rather than inside a `Text` field that behaves unlike every other
+  `Text` field.
+- **Shape on the wire: one hidden JSON input**, written by the editor script
+  and parsed server-side, exactly as the climb `route` and the segment shapes
+  already travel. A `links[0][urls][1][url]` name grid would put the nesting in
+  the HTTP layer where PHP's array parsing, not `OutboundLinks`, would decide
+  what a malformed post means.
+- **The server never trusts it.** `OutboundLinks::assertValid()` already gates
+  every write path and MUST gate this one - the caps are the anti-spam design,
+  and a client-side cap is a suggestion. A post that fails validation returns
+  the form with the rider's input intact and the specific rule named ("at most
+  4 places to link to"), never a silently truncated list.
+- **What the rider sees**: a list of *places to link to*, each with a label and
+  one url; "add another language" reveals a per-locale row inside that entry.
+  Locale defaults to the wizard's own locale, and the locale-less slot is
+  offered as "any language", which is what it means at render time.
+- **Counts come from the constants**, not from copy: `MAX_ENTRIES`,
+  `MAX_URLS_PER_ENTRY` and `MAX_LABEL_LENGTH` render into the field's help text
+  and its `maxlength`, so raising a cap is one edit rather than three.
+- **"Official site" stays refused** at the field as well as at the gate, with
+  the reason said once ("the official site has its own field above"), or the
+  rider meets a validation error for obeying the form.
+
 **2. Google Safe Browsing — THE CLIENT IS BUILT (2026-08-16), the two call
 sites are not.** `App\Catalog\Links\SafeBrowsing` is the reusable core:
 batched Lookup-API calls, a three-state verdict (`safe`/`unsafe`/`unknown`) so
@@ -476,11 +538,11 @@ lets a hostile URL sit in the moderation queue where a curator clicks it first.
   clean bill of health - a link whose last verdict was "unsafe" is withheld
   until a later check clears it. This asymmetry is deliberate and is the one
   thing to get right.
-- **Cache the verdict with the link**, with its timestamp, so the render check
-  is a stored read rather than an outbound call in a rider's hot path. A
-  scheduled re-check (operations.md §1, beside the GC timers) is what makes
-  "again at render" true over time; the render path itself never blocks on
-  Google.
+- **Cache the verdict**, with its timestamp, so the render check is a stored
+  read rather than an outbound call in a rider's hot path. Built as a table
+  keyed by url, for the reasons above. A scheduled re-check (operations.md §1,
+  beside the GC timers) is what makes "again at render" true over time; the
+  render path itself never blocks on Google.
 - **An allowlist skips the friction** for wikipedia.org and the official
   tourism domains, because those are the links the importer produces in bulk
   and re-checking them is spending a quota on a known answer.

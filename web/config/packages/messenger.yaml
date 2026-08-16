@@ -3,8 +3,8 @@
 # The async tier (media-storage-architecture.md; plan task 1). One bus, one
 # Redis-stream transport, a failure transport - and NO when@prod gating: the
 # same env-driven single-path rule the storage layer follows, for the same
-# reason (there is no when@staging block anywhere in config/). The DSN is the
-# difference between environments, not the wiring.
+# reason (a prod block would need a duplicate staging twin to stay honest). The
+# DSN is the difference between environments, not the wiring.
 #
 # The retry strategy is for the SCANNER's failure mode: a clamd blip should
 # not reject a rider's photo, so a handler error retries with a growing delay
@@ -27,10 +27,14 @@ framework:
         routing:
             App\Media\Message\ScanAndReleaseUpload: async
 
-# The suite runs every handler inline and needs no consumer: hermetic, and a
-# dispatch in a DAMA transaction is rolled back with everything else.
+# The suite holds messages instead of running them, and that is the point: the
+# flow under test is ASYNCHRONOUS, so a sync transport would make the one state
+# the architecture exists to create - received, quarantined, nothing published -
+# unobservable from a test. Hermetic either way, and no consumer is needed:
+# tests drain the transport deliberately, which is also how they assert that a
+# redelivered message changes nothing.
 when@test:
     framework:
         messenger:
             transports:
-                async: 'sync://'
+                async: 'in-memory://'

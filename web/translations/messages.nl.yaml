@@ -1937,6 +1937,8 @@ map:
   d_community_report: 'Melding uit de gemeenschap'
   d_report_photo: 'Deze foto melden'
   d_lnk_wikipedia: 'Wikipedia'
+  d_links_unsafe: 'Een link in deze bijdrage staat op een lijst van onveilige sites. Niet openen.'
+  d_links_unknown: 'De links in deze bijdrage konden niet gecontroleerd worden. Open ze voorzichtig.'
   d_src_auto: 'Afgeleid door de pipeline'
   d_src_manual: 'Met de hand samengesteld'
   d_src_rider: 'Bijgedragen door een renner'
@@ -2401,8 +2403,12 @@ media:
     photo_format: 'Dat bestandstype kan niet worden gebruikt. Foto''s mogen JPEG, PNG, WebP of HEIC zijn.'
     photo_unreadable: 'Dat bestand kon niet als foto worden gelezen.'
     photo_too_small: 'Die foto is te klein — de kortste zijde moet minstens 200 pixels zijn.'
+    photo_rejected: 'We konden die foto niet accepteren. Onze controles vonden iets in het bestand, of konden het niet als afbeelding lezen. Probeer een andere.'
     rate_limited: 'Daglimiet voor uploads bereikt — ga morgen verder.'
     unknown: 'Het uploaden is mislukt. Probeer het opnieuw.'
+  pending:
+    checking: 'Bezig met controleren…'
+    still_checking: 'Nog bezig met controleren. Stuur je bijdrage gerust nu in, we laten het je weten.'
   takedown:
     summary: 'Vraag om deze foto te verwijderen'
     intro: 'Als deze foto jou toont, of iets anders over jou dat je niet wilde publiceren, halen we hem weg. Vertel ons wat het is: hij verdwijnt meteen van de kaart terwijl een curator je bericht leest.'
@@ -2615,6 +2621,9 @@ moderate:
   answered: 'Beantwoord'
   rider_reply: 'De fietser heeft geantwoord'
   prior_rejection: 'Eerder afgewezen'
+  links:
+    unsafe: 'Een link in deze bijdrage staat op een lijst van onveilige sites. Niet openen.'
+    unknown: 'De links in deze bijdrage konden niet gecontroleerd worden. Open ze voorzichtig.'
 moderate_routes:
   title: 'Routes moderatiewachtrij'
   kicker: 'Routeswachtrij'
@@ -2811,6 +2820,8 @@ messages:
   kind_media_removed_on_report: 'Een van je foto''s is verwijderd'
   kind_media_hidden_pending_review: 'Een van je foto''s is tijdelijk verborgen'
   kind_media_restored_after_review: 'Je foto staat weer op de kaart'
+  kind_media_ready: 'Je foto staat op de kaart'
+  kind_media_scan_rejected: 'We konden die foto niet accepteren'
   body:
     submission_approved: 'Jouw bijdrage %title% is goedgekeurd en staat nu live op de kaart. Bedankt voor het verbeteren van de Commons!'
     areas_changed: 'An admin changed the areas you moderate. You now look after %areas%.'
@@ -2826,6 +2837,8 @@ messages:
     media_removed_on_report: 'Een van je foto''s is verwijderd na een melding dat er een herkenbare persoon op staat die niet met publicatie heeft ingestemd. Dit gaat over dat ene beeld, niet over je bijdrage — dank daarvoor. We kunnen niet zeggen wie de melding deed, in geen van beide richtingen: die persoon weet ook niet wie de foto uploadde. Vind je de verwijdering onterecht, reageer dan op dit bericht; een curator leest het.'
     media_hidden_pending_review: 'Iemand heeft een van je foto''s gemeld, en vanwege wat de melding beweert hebben we hem meteen van de kaart verborgen terwijl een curator ernaar kijkt. Verborgen is niet verwijderd: de foto blijft van jou, staat er nog, en er is niets gewist. Houdt de melding geen stand, dan staat hij binnen enkele dagen terug en laten we het je weten. Alleen een curator kan een foto verwijderen, nooit een melding op zichzelf — en we kunnen je niet zeggen wie meldde, net zoals die persoon niet te horen kreeg wie uploadde.'
     media_restored_after_review: 'De melding over je foto hield geen stand, dus hij staat weer op de kaart, precies zoals hij was. Dank voor je geduld — eerst verbergen is hoe we zorgen dat een echte klacht nooit dagenlang blijft staan, en dat betekent dat er af en toe een foto voor niets even weg is.'
+    media_ready: 'De controles van je foto waren klaar nadat je gestopt was met wachten. Hij staat nu op de kaart en gaat net als elke andere bijdrage naar een curator.'
+    media_scan_rejected: 'We konden die foto niet accepteren. Onze controles vonden iets in het bestand, of konden het helemaal niet als afbeelding lezen. Niemand heeft naar de foto gekeken: dit is een automatische controle van het bestand zelf. Probeer een andere foto, of dezelfde opnieuw opgeslagen als JPEG.'
   reply_label: 'Jouw antwoord'
   what_you_changed: 'Wat je hebt gewijzigd'
   reply_send: 'Antwoord versturen'

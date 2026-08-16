@@ -70,7 +70,7 @@ final class MediaDisposalService
 
             return;
         }
-        $this->storage->deletePrefix($upload->getContinent(), $upload->getPathPrefix());
+        $this->destroyObjects($upload);
         $this->em->remove($upload);   // media_moderation_event cascades
     }
 
@@ -85,9 +85,32 @@ final class MediaDisposalService
 
             return;
         }
-        $this->storage->deletePrefix($upload->getContinent(), $upload->getPathPrefix());
+        $this->destroyObjects($upload);
         $upload->markObjectsDeleted();
         $this->events->append($upload->getId(), null, MediaAction::ObjectsDeleted);
+    }
+
+    /**
+     * Every object this upload owns, in BOTH buckets
+     * (docs/specs/media-storage-architecture.md §2).
+     *
+     * The quarantine delete is unconditional and the published delete is not,
+     * and that asymmetry is the point: a row that never released has no
+     * published prefix to ask for - getPathPrefix() would throw - while a row
+     * that did release may still be holding quarantined bytes if the worker
+     * died between the write and the cleanup. Deleting from a bucket with
+     * nothing in it costs one no-op; forgetting a bucket leaves a rider's
+     * unscanned file behind after they asked us to destroy it.
+     *
+     * Hetzner Object Storage has no versioning (§2.3), so these deletes are
+     * real and immediate. Every caller above already treats them that way.
+     */
+    private function destroyObjects(MediaUpload $upload): void
+    {
+        $this->storage->deleteQuarantine($upload->getQuarantineKey());
+        if ($upload->hasPublishedObjects()) {
+            $this->storage->deletePrefix($upload->getStorageShard(), $upload->getPathPrefix());
+        }
     }
 
     public function collectOrphans(): int
@@ -97,9 +120,9 @@ final class MediaDisposalService
         /** @var list<MediaUpload> $orphans */
         $orphans = $this->em->createQuery(
             'SELECT m FROM '.MediaUpload::class.' m
-             WHERE m.status = :pending AND m.submissionId IS NULL AND m.createdAt < :cutoff',
+             WHERE m.status IN (:pending) AND m.submissionId IS NULL AND m.createdAt < :cutoff',
         )
-            ->setParameter('pending', MediaStatus::Pending)
+            ->setParameter('pending', [MediaStatus::Pending, MediaStatus::PendingScan])
             ->setParameter('cutoff', $cutoff)
             ->getResult();
 
@@ -208,7 +231,7 @@ final class MediaDisposalService
             return;
         }
 
-        $target = $this->storage->url($upload->getContinent(), $upload->getPathPrefix(), 'sm');
+        $target = $this->storage->url($upload->getStorageShard(), $upload->getPathPrefix(), 'sm');
         $changed = false;
         foreach ($photos as $index => $photo) {
             if (\is_array($photo) && ($photo['sm'] ?? null) === $target && '' !== ($photo['credit'] ?? '')) {

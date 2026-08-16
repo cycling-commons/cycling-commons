@@ -14,20 +14,21 @@ boundary, key immutability, and the proxy in front of it all.
 Written 2026-08-11 from settled infrastructure decisions. The hosting shape
 below is given, not proposed.
 
-**Build state (2026-08-16): tasks 1 and 3 of the plan are LIVE.** The async
-tier exists - Messenger with a Redis-stream `async` transport, a `doctrine://`
-failure transport, sync in test (`config/packages/messenger.yaml`); the dev
-stack runs `worker` + `clamav` containers, and the dev private bucket
-(`cc-media-private`, NO anonymous policy) is bootstrapped. The scanner is
-built and verified both ways (`App\Media\Scan\ClamAvScanner`: INSTREAM or
-`clamscan`, `CLAMAV_REQUIRED` fail-closed semantics pinned by
-`ClamAvScannerTest`; EICAR live against the sidecar). The mailer is pinned to
-direct sending (`mailer.yaml message_bus: false`) so installing the bus
-changed nothing that was not asked to change. **The upload flow itself is
-still synchronous** - tasks 2, 4, 5, 6 (quarantine write, release handler,
-immutable keys, wizard pending state) are one coherent next change;
-`ScanAndReleaseUploadHandler` is their landing site and nothing dispatches
-its message yet.
+**Build state (2026-08-16): the whole quarantine is LIVE.** The async tier
+exists (Messenger, a Redis-stream `async` transport, a `doctrine://` failure
+transport, in-memory in test); the dev stack runs `worker` + `clamav`
+containers and bootstraps the private bucket (`cc-media-private`, NO anonymous
+policy); the scanner is built and pinned both ways (`App\Media\Scan\ClamAvScanner`,
+`CLAMAV_REQUIRED` fail-closed semantics, EICAR proven live against the
+sidecar). And as of this round the flow itself moved: `POST /media/photos`
+writes the RAW bytes to the private bucket and dispatches,
+`ScanAndReleaseUploadHandler` scans, decodes and physically releases the
+derivatives under an immutable `published/<uuid>/<rev>/` key, and the wizard
+shows a pending state it resolves by polling. The mailer stays pinned to direct
+sending (`mailer.yaml message_bus: false`) so installing the bus changed
+nothing that was not asked to change.
+
+**One deviation from this document, stated plainly** - see §2.2.
 
 ---
 
@@ -95,9 +96,24 @@ anonymous-read bucket is a contradiction: the object is world-readable the
 moment it is written, which is precisely the state scanning exists to prevent.
 So the raw upload lands in the private bucket, and only the worker can read it.
 
-Clean originals stay private too. They are not needed by any browser — every
-rendered size is a derivative — and keeping the highest-resolution copy out of
-anonymous reach costs nothing.
+**"Clean originals stay private too" was NOT implemented, and should not be.**
+The sentence rested on "they are not needed by any browser", and that premise
+was wrong twice over.
+
+- The `orig.webp` variant *is* linked to a browser: the photo page offers it as
+  "download the original", which is the CC BY-SA reuse story working as
+  designed. Making it private would be a product regression dressed as
+  hardening. It stays in the public bucket with `lg` and `sm`.
+- The raw uploaded file is a different thing again, and keeping *it* would be
+  worse than pointless: it still carries the EXIF, including the GPS, that
+  [`photo-uploads.md`](photo-uploads.md) §3 promises riders is destroyed. An
+  archival copy of exactly the data we said we deleted is not a cheap safety
+  net, it is a broken promise with a backup.
+
+So the private bucket holds the quarantine and nothing else. The raw bytes are
+deleted the moment the derivatives exist; there is no clean-original archive.
+Revisit only alongside a decision to keep raw uploads at all, which would be a
+change to §3 of the product spec, not to this one.
 
 ### 2.3 Backups
 
@@ -192,13 +208,26 @@ Per photo, the database records the bucket, the revision and the continent —
 so a photo remains addressable after buckets are added (§2.1) and after a
 reprocess, without any global lookup table.
 
-### 4.1 What changes from today
+### 4.1 What changed, and the one-off that made it true
 
-The current layout is `photos/<uuid>/orig.webp | lg.webp | sm.webp` inside the
-continent bucket — a fixed set of names under a per-photo prefix. It is
-**mutable by construction**: reprocessing overwrites in place. It works today
-because nothing reprocesses and nothing caches aggressively. Both of those are
-about to stop being true.
+The old layout was `photos/<uuid>/orig.webp | lg.webp | sm.webp` inside the
+continent bucket - a fixed set of names under a per-photo prefix, **mutable by
+construction**: reprocessing overwrote in place.
+
+`app:media:backfill-keys` moved the existing rows: copy each set to
+`published/<uuid>/<rev>/`, stamp the revision, then delete the old prefix. Copy,
+row, delete, in that order - any other has a window in which the row names
+objects that are not there, and a proxy that caches a 404 for a year is worse
+than running an idempotent command twice. **It is a deploy prerequisite, not an
+optional tidy-up:** the migration that adds the column deliberately leaves
+`revision` NULL, so an un-backfilled photo reads as "nothing published" until
+the command has run.
+
+The alternative - teaching the URL builder to recognise the old shape - was
+refused. A permanent legacy branch is exactly the "tolerate the old shape"
+pattern the dead-code sweep spent a session removing, and this is a handful of
+rows: no production photos exist yet, which is why this had to land before any
+real traffic.
 
 ## 5. Serving
 
@@ -214,21 +243,24 @@ Hetzner does not want high request rates hitting object storage directly.
 - Long-lived caching is safe only because of §4. If keys ever become mutable
   again, the caching has to go with them.
 
-## 6. What is already true today
+## 6. Build ledger
 
-Recorded so the plan is not mistaken for a rewrite. Verified 2026-08-11:
+Recorded so the history is not lost. Verified 2026-08-11, updated 2026-08-16.
 
 | | |
 |---|---|
-| Per-continent storages and public bases | **built** (`MediaStorage`, `ContinentResolver`, `flysystem.yaml`) |
+| Per-shard storages and public bases | **built** (`MediaStorage`, `ContinentResolver`, `flysystem.yaml`) |
 | Proxy-first URLs, never S3 direct | **built** (`MEDIA_PUBLIC_BASE`) |
 | CSP host env-backed, not admin-editable | **built** (`MEDIA_CSP_HOST`) |
-| Re-encode to WebP, EXIF stripped, pixel + dimension caps | **built** (`PhotoProcessor`) |
+| Re-encode to WebP, EXIF stripped, pixel + dimension caps | **built** (`PhotoProcessor`, now on the worker) |
 | Consent, moderation, takedown, disposal, GC | **built** (`photo-uploads.md`) |
-| Virus scanning | **absent** — no scanner, no ClamAV anywhere in the repo |
-| Async workers | **absent** — no Messenger config, no transport, no worker container |
-| Private bucket / quarantine | **absent** — uploads land in the public bucket immediately |
-| Immutable keys | **absent** — fixed variant names, overwritten in place |
+| Virus scanning | **built** 2026-08-16 (`ClamAvScanner`, `clamav` sidecar) |
+| Async workers | **built** 2026-08-16 (Messenger + Redis stream + `worker` container) |
+| Private bucket / quarantine | **built** 2026-08-16 (`media.storage.private`, `quarantine/<uuid>`) |
+| Release gate on the worker | **built** 2026-08-16 (`ScanAndReleaseUploadHandler`) |
+| Immutable keys | **built** 2026-08-16 (`published/<uuid>/<rev>/`, `app:media:backfill-keys`) |
+| Wizard pending state | **built** 2026-08-16 (optimistic preview, 30 s patience limit) |
+| Clean-original archive | **deliberately not built** - see §2.2 |
 | Nightly restic backups | infra, outside this repo |
 
 ## 7. Related

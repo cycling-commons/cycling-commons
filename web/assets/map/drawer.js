@@ -691,6 +691,16 @@ function buildRecord(layer, f){
       ? `<div class="cc-mod-prior"><span class="cc-mod-asked-h">${D.priorRejected||'Previously rejected'}</span>${
           s.priorRejection.when && window.ccDate ? ' · ' + escPend(window.ccDate(s.priorRejection.when)) : ''}${
           s.priorRejection.note ? ' · ' + escPend(s.priorRejection.note) : ''}</div>` : '';
+    /* The reputation check on the links this submission proposes
+       (catalog-data-model.md §7). FLAG, never a silent rejection: the card is
+       here either way, and a curator about to click a rider's link is entitled
+       to know what the check said - including that it could not answer. The
+       map already withholds an `unsafe` url from readers, so this warns the
+       one person who is going to click it anyway. */
+    const linkFlag = ('unsafe' === s.linkFlag || 'unknown' === s.linkFlag)
+      ? `<div class="cc-mod-linkflag cc-mod-linkflag-${s.linkFlag}">${
+          escPend(('unsafe' === s.linkFlag ? D.linksUnsafe : D.linksUnknown) || '')}</div>`
+      : '';
     /* WHAT is being changed, shown against WHAT the item already says.
        A curator who does not personally know the Côte de la Redoute was given
        a title, a pseudonym, an age and a region — and asked to approve. The
@@ -749,7 +759,7 @@ function buildRecord(layer, f){
        but a control that always fails is worse than no control. */
     moderate = window.CC_IS_CURATOR
       ? `<div class="cc-mod" data-id="${escPend(s.id)}">
-      ${badge}${prior}${body}${diff}${shapeSwitch}${context}${asked}${replied}${modPhotos}
+      ${badge}${prior}${linkFlag}${body}${diff}${shapeSwitch}${context}${asked}${replied}${modPhotos}
       <textarea class="cc-mod-note" placeholder="${D.modNotePh||'Optional note — a reason, or context…'}"></textarea>
       ${alsoConfirm}
       <div class="cc-mod-acts">

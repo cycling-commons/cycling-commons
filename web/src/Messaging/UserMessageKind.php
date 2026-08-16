@@ -57,6 +57,22 @@ enum UserMessageKind: string
     case MediaHiddenPendingReview = 'media_hidden_pending_review';
     /** …and the other half of that promise: it is back. */
     case MediaRestoredAfterReview = 'media_restored_after_review';
+    /**
+     * The checks finished after the wizard had stopped waiting
+     * (docs/specs/media-storage-architecture.md §3.3). Sent ONLY when the
+     * release took longer than the wizard's patience window, because that is
+     * exactly when a rider was promised "we will let you know" - a message for
+     * every photo that cleared in milliseconds would be noise nobody asked
+     * for.
+     */
+    case MediaReady = 'media_ready';
+    /**
+     * The worker refused the file: the scanner found something, or the bytes
+     * would not decode into a photo at all. Its own kind, and not a rejection
+     * by a curator - nobody looked at it, and the rider's next step is to send
+     * a different file rather than to argue with a decision.
+     */
+    case MediaScanRejected = 'media_scan_rejected';
 
     /** @return list<string> @api */
     public static function values(): array

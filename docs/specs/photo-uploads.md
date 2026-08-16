@@ -116,9 +116,26 @@ context). Media licensing context lives in the site licences
 - `MEDIA_PUBLIC_BASE`'s host is added to the **C**ontent-**S**ecurity-**P**olicy (CSP) `img-src` the same
   env-backed way as `coverage.csp_host` (never admin-editable — a writable
   CSP host is an XSS surface, system-configuration.md rationale).
-- Object layout: `photos/<uuid>/orig.webp | lg.webp | sm.webp` **inside the
-  continent's bucket**; the public URL prepends the continent:
-  `<MEDIA_PUBLIC_BASE>/<cont>/photos/<uuid>/<variant>.webp`.
+- **A second, PRIVATE storage holds the quarantine** (`MEDIA_S3_BUCKET_PRIVATE`,
+  one bucket, no per-continent split, and **no anonymous-read policy at all**).
+  Unscanned bytes land there and nowhere else, for the seconds between the
+  upload and the worker's verdict; see
+  [`media-storage-architecture.md`](media-storage-architecture.md) §2.2 for why
+  a quarantine *prefix* inside the anonymous-read public bucket would be a
+  contradiction. Key: `quarantine/<uuid>`.
+- Object layout: `published/<uuid>/<rev>/orig.webp | lg.webp | sm.webp`
+  **inside the shard's bucket**; the public URL prepends the shard:
+  `<MEDIA_PUBLIC_BASE>/<shard>/published/<uuid>/<rev>/<variant>.webp`. `<rev>`
+  is a short opaque token minted per processing run, so a published key never
+  changes meaning and the proxy in front of it can cache for a year
+  (media-storage-architecture.md §4). Photos written before that rule existed
+  sat at the mutable `photos/<uuid>/…`; `app:media:backfill-keys` moved them,
+  once, and there is no legacy branch in the URL builder.
+- **The shard is recorded per photo, not derived from the continent**
+  (`storage_shard`). The two are the same string today. They were already not
+  the same for a continent with no bucket of its own: the object went to the
+  default shard while the row still said the continent, so the URL addressed a
+  public base with nothing behind it.
 - **Public base is resolved per continent, not by string-concatenating a
   single base.** In production the continent is a path segment the owner-run
   proxy routes on; against raw MinIO in development it is part of the bucket
@@ -147,44 +164,98 @@ context). Media licensing context lives in the site licences
 (`media-upload` intention), rate-limited (`media_upload`,
 sliding window, 30/day per user). One photo per request, multipart; the
 wizard sends its current pin `lat`/`lng` alongside (step 1 precedes step 3).
-The storage continent resolves in order: the
-**pin coordinates** when present, else the photo's **EXIF GPS** (harvested
-in §3 step 1 anyway), else `MEDIA_DEFAULT_CONTINENT`. The resolved code is
-stored on the row (`continent CHAR(2)`).
 
-Validation (server-side, content-sniffed via finfo — never the extension):
-- Formats in: JPEG, PNG, WebP, HEIC. HEIC is accepted **only when** the
-  Imagick HEIC delegate is present (the web Dockerfile gains libheif);
-  otherwise the endpoint returns a clear `photo_format` error — honest
-  degradation, never a silent drop.
-- ≤ 15 MB (the GPX-cap precedent); shortest side ≥ 200 px.
-- Corrupt/undecodable files reject with `photo_unreadable`.
+**The endpoint does not process the photo.** It writes the raw bytes into the
+private bucket, records the row as `pending_scan`, dispatches a message, and
+answers `202 Accepted`. Everything below step "Persistence" happens on the
+worker, which is the only tier that can scan: the web tier's `disable_functions`
+excludes `proc_open`, and a tier that cannot scan must not be allowed to
+publish ([`media-storage-architecture.md`](media-storage-architecture.md) §1,
+§3). The decode moved with it, which is also where a decompression bomb now
+lands: on a worker built to be restarted, not on a host serving pages (§3.2
+there).
 
-Processing (synchronous, Imagick + ext-exif):
-1. **Extract** from the original bytes (spec §1.3b): `taken_at`
-   (DateTimeOriginal) and the GPS coordinates —
-   held privately on the row until intake. (Camera make/model is
-   deliberately NOT harvested — no real use, and device model is a
+Validation the web tier CAN do, in this order, cheapest first:
+- identity, CSRF token, consent record;
+- ≤ 15 MB (the GPX-cap precedent), including the `UPLOAD_ERR_*_SIZE` case;
+- the daily rate limit;
+- a **type sniff** via finfo on the leading bytes, never the extension: JPEG,
+  PNG, WebP, HEIC/HEIF, AVIF. This is a courtesy, not proof - it refuses the
+  obvious wrong thing (a PDF, a ZIP, a video) while the rider is still
+  watching, instead of spending a quarantine write and a scan to say the same
+  thing a minute later. The real answer is the worker's decode.
+
+Shard resolution: the **pin coordinates** when present, else
+`MEDIA_DEFAULT_CONTINENT`. The photo's own **EXIF GPS** needs a decode, so the
+endpoint cannot reach it; the message carries the pin transiently and the
+worker finishes the question with the EXIF half after it decodes. A photo whose
+shard is corrected that way has published nothing yet, which is the only time a
+shard may change at all.
+
+**Persistence at intake:** a `media_upload` row —
+`id (uuid) · user_id · status = 'pending_scan' · continent (CHAR(2), where the
+photo IS) · storage_shard (where the bytes WENT) · revision (NULL - nothing is
+published) · width = 0 · height = 0 · bytes (what arrived) ·
+consent_record_id (FK, NOT NULL) · created_at`, plus the raw object at
+`quarantine/<uuid>` in the private bucket. Written in that order, bytes first:
+a row promising a scan of an object that was never written would read to the
+handler as a release that had already happened.
+
+**Response:** `202 Accepted`, `{id, status: 'pending_scan', ready: false}`. The
+wizard polls `GET /media/photos/{id}` (owner-scoped; a stranger's id answers
+404, because "that is not yours" is itself an answer about somebody else's
+photo) for the same shape, which carries `sm` and `lg` once `ready` is true.
+`ready` is derived from the objects existing, never from the status column: the
+release gate is physical, and a client told "ready" by a flag is a client that
+can be told it by a flag alone.
+
+### 3a. What the worker does
+
+`ScanAndReleaseUpload` → `ScanAndReleaseUploadHandler`. No-op unless the row is
+still `pending_scan` **and** the quarantine object is still there, which is what
+makes a Messenger redelivery harmless.
+
+1. **Scan** the bytes (ClamAV INSTREAM). An *infected* verdict is terminal in
+   one pass: the object is deleted, the row is rejected and tombstoned, the
+   rider is told (`media_scan_rejected`). A scanner **error** is not a verdict -
+   the exception escapes, Messenger retries, the bytes stay quarantined
+   (media-storage-architecture.md §3.1).
+2. **Extract** from the original bytes (spec §1.3b): `taken_at`
+   (DateTimeOriginal) and the GPS coordinates. (Camera make/model is
+   deliberately NOT harvested - no real use, and device model is a
    fingerprinting crumb.)
-2. Auto-orient (bake the EXIF orientation into pixels).
-3. **Strip all metadata from the stored files** — EXIF (incl. GPS), IPTC,
+3. Auto-orient (bake the EXIF orientation into pixels).
+4. **Strip all metadata from the stored files** - EXIF (incl. GPS), IPTC,
    XMP, ICC beyond sRGB.
-4. Downscale to ≤ 3840 px longest side → `orig.webp` (quality ~85).
-5. Derivatives: 1400 px wide → `lg.webp` (q82), 520 px wide → `sm.webp`
-   (q80). Never upscale — a 900 px upload gets orig=lg=900 px, sm=520 px.
-6. **Write the authored rights packet** (§1.3c) into `orig` and `lg` — the two
+5. Downscale to ≤ 3840 px longest side → `orig.webp` (quality ~85).
+6. Derivatives: 1400 px wide → `lg.webp` (q82), 520 px wide → `sm.webp`
+   (q80). Never upscale - a 900 px upload gets orig=lg=900 px, sm=520 px.
+7. **Write the authored rights packet** (§1.3c) into `orig` and `lg` - the two
    variants a reuser plausibly saves. Not into `sm`: the packet is ~1.1 KB and
    a 520 px thumbnail encodes to well under a kilobyte, so it would more than
    triple the file for a variant nobody redistributes. WebP carries XMP
    natively in its container, so this costs no format compromise.
+8. **Release**: write the three variants under a freshly minted
+   `published/<uuid>/<rev>/`, then stamp the revision, dimensions, byte size
+   and capture date on the row and set it `pending`, then delete the quarantine
+   object. Objects first, row second, quarantine last - the order IS the gate.
+9. A file that will not decode ends like an infected one: object deleted, row
+   rejected, rider told. The reason code lands in the event log
+   (`scan_unreadable`), not in a response nobody is waiting for.
 
-Persistence: a `media_upload` row —
-`id (uuid) · user_id · status (pending|approved|rejected) · continent
-(CHAR(2), the storage shard) · width · height ·
-bytes · taken_at (nullable) · gps_lat/gps_lng (nullable,
-PRIVATE — cleared at intake) · gps_distance_m (nullable, computed at intake)
-· consent_record_id (FK, NOT NULL — see below) · created_at ·
-submission_id (nullable, set at submit)`.
+Only `orig`, `lg` and `sm` are published; the raw upload is destroyed, never
+archived. Keeping it would keep the EXIF - including the GPS - that step 4
+promises to destroy, which is why the "clean originals stay private too" line
+in media-storage-architecture.md §2.2 is not implemented as written (see the
+note there).
+
+**Where the coordinates go.** They are used exactly once and then destroyed,
+and the async flow adds one case the synchronous one never had. An unclaimed
+row gets the coordinates written to it, and the claim destroys them as before.
+A row **claimed while it was still quarantined** has already been through
+`MediaClaimService`, which ran that destruction against columns the decode had
+not filled yet - so the handler computes `gps_distance_m` itself, from the
+submission's own pin, and the coordinates never reach the database at all.
 
 Four further columns exist, each forced by a rule §6 states rather than by a
 design preference of its own:
@@ -206,11 +277,6 @@ licence grant survives the account. When the phase-2 write API lands,
 external consent rows are keyed `api_app_id` + `external_author_ref` instead
 of `user_id` ([public-api.md §8](public-api.md)): the partner app presents
 the same contract wording and asserts the version its user ticked in-app.
-At intake (claim), the distance photo-GPS → submission pin is computed into
-`gps_distance_m` and the raw coordinates are **nulled in the same
-transaction**; an unclaimed upload's coordinates disappear with it at orphan
-**g**arbage **c**ollection (GC). Response: `{id, sm, lg}` URLs (under
-`MEDIA_PUBLIC_BASE`).
 
 ## 4. Wizard integration
 
@@ -218,9 +284,29 @@ transaction**; an unclaimed upload's coordinates disappear with it at orphan
   accept="image/jpeg,image/png,image/webp,image/heic" multiple>` + drag/drop;
   each file POSTs immediately with a **per-file upload progress bar** on its
   queue chip (XHR upload progress — real bytes, not a spinner; indeterminate
-  pulse when the browser can't compute length), then the chip shows the real
-  `sm` thumbnail, with per-file success/error state. The fake `IMG_1003.jpg`
+  pulse when the browser can't compute length). The fake `IMG_1003.jpg`
   generator dies.
+- **The upload is asynchronous, so the chip has a pending state**
+  (media-storage-architecture.md §3.3). Two owner decisions, 2026-08-16:
+  - **Optimistic preview.** While the worker runs, the chip shows the rider's
+    OWN file via `URL.createObjectURL`, dimmed and breathing, and swaps it for
+    the served `sm` when the poll resolves. It is never another rider's
+    unscanned bytes, because those bytes never leave the uploader's browser.
+  - **A 30-second patience limit — and it is not a timeout.** Past it the
+    wizard stops *waiting* and says "still checking, send your contribution
+    now, we will let you know". It does **not** fail the upload: the id is
+    already in the hidden field, the photo travels with the submission, the
+    worker finishes on its own schedule, and the rider gets a `media_ready`
+    message if it lands after they stopped watching. Nothing about the 30
+    seconds may cause a scan to be abandoned; getting that backwards turns a
+    slow scan into a lost contribution. `ScanAndReleaseUploadHandler` mirrors
+    the number for exactly one purpose: deciding whether that message is owed.
+  - Next is held while a photo is `uploading` or `checking`, and released once
+    it is `waiting`, `done` or failed. A photo the worker refuses drops its id,
+    so a refused file is never submitted.
+- Polling, not push: one small JSON read of `GET /media/photos/{id}` about once
+  a second, for at most half a minute, answered from one row. A socket for this
+  would be more machinery than the question deserves.
 - Cap **6 photos per submission** (client-enforced, server re-checked at
   intake). Removing a chip forgets the id (the object becomes an orphan and
   is GC'd, §6).
