@@ -952,6 +952,12 @@ pager's control POSTs to `settings_rows_per_page`, writes the same column, and
 returns to the list — via a submitted `back` field, not `Referer`, and only
 relative paths are honoured, or a logged-in POST becomes an open redirect.
 
+**One count line, never two** (owner 2026-08-16). The pager used to stack
+"Showing 1–20 of 33" over "Page 1 of 2 · 33 in total"; both ended in the same
+total, so the pair read as a stutter. Multi-page lists keep only the
+page-of-pages line; a single-page list keeps only the row range, which there
+doubles as the answer to "why is there no page two".
+
 ## 10. Self-service account deletion (GDPR Art. 17)
 
 Two-step flow in `SettingsController` (danger zone, Security tab), both steps

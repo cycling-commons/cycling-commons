@@ -43,17 +43,20 @@
       </div>
     {% endif %}
 
-    {# Says which rows are in front of the reader, not just which page number
-       they are on: "26–50 of 213" answers "have I seen the rest?" and
-       "page 2 of 9" does not. #}
+    {# ONE count line, never two (owner 2026-08-16: "double text, keep the
+       lower one" - both lines ended in the same total, so the pair read as a
+       stutter). Multi-page lists get "Page 1 of 2 · 33 in total"; a
+       single-page list keeps the row range, which is then the only line and
+       doubles as the answer to "why is there no page two". #}
     <p class="pager-at">
-      <span class="pager-range">{{ 'pager.range'|trans({
-        '%from%': pager.total > 0 ? (pager.page - 1) * pager.perPage + 1 : 0,
-        '%to%': min(pager.page * pager.perPage, pager.total),
-        '%total%': pager.total,
-      }) }}</span>
       {% if pager.pages > 1 %}
         <span class="pager-of">{{ 'pager.at'|trans({'%page%': pager.page, '%pages%': pager.pages, '%total%': pager.total}) }}</span>
+      {% else %}
+        <span class="pager-range">{{ 'pager.range'|trans({
+          '%from%': pager.total > 0 ? (pager.page - 1) * pager.perPage + 1 : 0,
+          '%to%': min(pager.page * pager.perPage, pager.total),
+          '%total%': pager.total,
+        }) }}</span>
       {% endif %}
     </p>
 
