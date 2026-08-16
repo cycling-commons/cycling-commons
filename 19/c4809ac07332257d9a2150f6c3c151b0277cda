@@ -1,0 +1,69 @@
+docs/specs/system-configuration.md
+  s_631e076c2244f0::t_b1c250d62b6f2e 64
+web/src/Controller/ProfileController.php
+  s_631e076c2244f0::t_dabf85f02192fa 7,10
+  s_631e076c2244f0::t_44f0aeeae7615c 239-248,383-411,413-417,419-420,422-442,444-446
+  s_631e076c2244f0::t_30eddace95b634 412,418,421,443
+  s_631e076c2244f0::t_456abd670a90ac 95
+web/assets/map/icons.js
+  s_631e076c2244f0::t_b7c9516740c48a 143-152
+web/translations/messages.en.yaml
+  s_631e076c2244f0::t_2a4c62e401f0d9 3227-3229
+  s_631e076c2244f0::t_ff0e38402b968b 2730-2733
+web/translations/messages.es.yaml
+  s_631e076c2244f0::t_ff0e38402b968b 2744-2747
+  s_631e076c2244f0::t_2a4c62e401f0d9 3242-3244
+web/src/Catalog/ItemType.php
+  s_631e076c2244f0::t_e326bcb80f45d4 274-311
+  s_631e076c2244f0::t_acbaca8e4bb522 273
+web/translations/messages.fr.yaml
+  s_631e076c2244f0::t_2a4c62e401f0d9 3201-3203
+  s_631e076c2244f0::t_ff0e38402b968b 2707-2710
+web/templates/profile/show.html.twig
+  s_631e076c2244f0::t_41894f78f95751 289-309
+web/config/packages/map_view_mode.yaml
+  s_631e076c2244f0::t_da20da42b6ec83 37-40
+web/src/Catalog/ConfirmationFreshness.php
+  s_631e076c2244f0::t_39dee6aa8b8b1e 9,56
+  s_631e076c2244f0::t_ecb1080eb9b14b 1-8,10-44,49-55,57-107
+  s_631e076c2244f0::t_76068b5af31450 45-48
+docs/specs/moderation-and-contribution.md
+  s_631e076c2244f0::t_e6c73b3544f1e4 1441-1500
+web/src/Settings/SettingsRegistry.php
+  s_631e076c2244f0::t_da20da42b6ec83 56,92-100
+web/translations/messages.nl.yaml
+  s_631e076c2244f0::t_ff0e38402b968b 2707-2710
+  s_631e076c2244f0::t_2a4c62e401f0d9 3201-3203
+web/tests/Catalog/ConfirmationFreshnessTest.php
+  s_631e076c2244f0::t_8c599f1686e56c 1-119
+web/src/Catalog/CatalogProvider.php
+  s_631e076c2244f0::t_0fa9b4ecfdc8da 34,215-223
+  s_631e076c2244f0::t_4ad02b04263e46 194,213,274,369,410-427
+  s_631e076c2244f0::t_c1ca23b5632844 428
+web/translations/messages.de.yaml
+  s_631e076c2244f0::t_ff0e38402b968b 2710-2713
+  s_631e076c2244f0::t_2a4c62e401f0d9 3204-3206
+web/assets/styles/map.css
+  s_631e076c2244f0::t_b7c9516740c48a 283-287
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "19c4809ac07332257d9a2150f6c3c151b0277cda",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_631e076c2244f0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "33015a85-b6d4-4b35-a02a-ce97c6036810",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
