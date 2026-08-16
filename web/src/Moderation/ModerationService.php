@@ -158,6 +158,50 @@ final class ModerationService
     }
 
     /**
+     * A rider takes back their own undecided submission (owner 2026-08-16).
+     *
+     * Withdrawal reuses the REJECT mechanics on purpose - a new-item's
+     * materialized row goes to state Rejected (so the map drops it, the OSM
+     * ref stays claimed for a possible revive, exactly like a rejection) and
+     * pending photos are rejected into the retention sweep - but it is not a
+     * decision: no curator, no scope check, no outcome message to the person
+     * who did it themselves, and it never counts in moderation activity
+     * (that view filters approved/rejected). `withdrawn` is terminal;
+     * decidedBy records the rider, decidedAt starts the retention clock.
+     *
+     * @throws AlreadyDecidedException  when the submission is already settled
+     * @throws NotTheSubmitterException when it is somebody else's
+     */
+    public function withdraw(int $submissionId, User $rider): Submission
+    {
+        return $this->em->wrapInTransaction(function () use ($submissionId, $rider): Submission {
+            $submission = $this->em->find(Submission::class, $submissionId, LockMode::PESSIMISTIC_WRITE);
+            if (null === $submission) {
+                throw new \InvalidArgumentException(sprintf('Unknown submission %d', $submissionId));
+            }
+            if ($submission->getUserId() !== (int) $rider->getId()) {
+                throw new NotTheSubmitterException(sprintf('Submission %d is not %d\'s to withdraw', $submissionId, (int) $rider->getId()));
+            }
+            if (!\in_array($submission->getStatus(), [SubmissionStatus::Pending, SubmissionStatus::NeedsInfo], true)) {
+                throw new AlreadyDecidedException(sprintf('Submission %d is already %s', $submissionId, $submission->getStatus()->value));
+            }
+
+            $item = null !== $submission->getItemId() ? $this->em->find(Item::class, $submission->getItemId()) : null;
+
+            $submission->setStatus(SubmissionStatus::Withdrawn);
+            if (null !== $item && SubmissionType::NewItem === $submission->getType()) {
+                $item->setState(ItemState::Rejected);
+            }
+            $this->mediaDecisions->apply($submission, $item, 'reject', $rider, null);
+
+            $submission->setDecidedBy((int) $rider->getId())
+                ->setDecidedAt(new \DateTimeImmutable());
+
+            return $submission;
+        });
+    }
+
+    /**
      * Trash (M9): a hard, permanent delete of a submission row in ANY status.
      * Spam and abuse need no state check, unlike a route proposal. Audited
      * content-free FIRST (AdminActionLogger::log() flushes its own row inside

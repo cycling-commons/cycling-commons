@@ -10,6 +10,9 @@ use App\Catalog\ItemType;
 use App\Catalog\SubmissionStatus;
 use App\Contribution\SubmissionChangeSummary;
 use App\Entity\User;
+use App\Moderation\AlreadyDecidedException;
+use App\Moderation\ModerationService;
+use App\Moderation\NotTheSubmitterException;
 use App\Moderation\RetentionService;
 use App\Pagination\Pager;
 use App\Pagination\PageSize;
@@ -42,6 +45,34 @@ final class ProfileController extends AbstractController
      */
     private const int PER_PAGE = 20;
 
+    /**
+     * A rider takes back their own undecided submission (owner 2026-08-16).
+     * POST + CSRF; the service enforces ownership and the undecided state, so
+     * a forged or stale form ends in a flash, never a half-withdrawal.
+     */
+    #[Route('/profile/withdraw/{id}', name: 'profile_withdraw', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function withdraw(int $id, Request $request, ModerationService $moderation): Response
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+        if (!$this->isCsrfTokenValid('withdraw'.$id, (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Invalid CSRF token.');
+        }
+
+        try {
+            $moderation->withdraw($id, $user);
+            $this->addFlash('success', 'flash.withdrawn');
+        } catch (NotTheSubmitterException) {
+            throw $this->createAccessDeniedException('Not yours to withdraw.');
+        } catch (AlreadyDecidedException) {
+            // A curator got there first - the list the rider lands back on
+            // shows the real outcome, which says more than any error could.
+            $this->addFlash('notice', 'flash.withdraw_too_late');
+        }
+
+        return $this->redirectToRoute('profile', [], Response::HTTP_SEE_OTHER);
+    }
+
     #[Route('/profile', name: 'profile')]
     public function show(
         Request $request,
@@ -63,9 +94,11 @@ final class ProfileController extends AbstractController
         $contributionsQuery = static fn (EntityManagerInterface $em) => $em->createQueryBuilder()
             ->from(Submission::class, 's')
             ->where('s.userId = :uid')
-            ->andWhere('(s.status != :rejected OR s.decidedAt IS NULL OR s.decidedAt >= :cutoff)')
+            ->andWhere('(s.status NOT IN (:swept) OR s.decidedAt IS NULL OR s.decidedAt >= :cutoff)')
             ->setParameter('uid', $userId)
-            ->setParameter('rejected', SubmissionStatus::Rejected)
+            // Withdrawn rides the same retention clock as rejected (the sweep
+            // deletes both), so the lazy filter must hide both past the cutoff.
+            ->setParameter('swept', [SubmissionStatus::Rejected, SubmissionStatus::Withdrawn])
             ->setParameter('cutoff', $retention->cutoff());
 
         $pager = Pager::of(

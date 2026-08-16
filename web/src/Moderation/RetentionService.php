@@ -74,7 +74,9 @@ final class RetentionService
             // retention window on purpose (docs/specs/photo-uploads.md §6d).
             // The sweep is the one deletion path that runs unattended, so it
             // is also the one most likely to quietly destroy evidence.
-            "DELETE FROM submission WHERE status = 'rejected' AND decided_at < :cutoff AND escalated_at IS NULL",
+            // withdrawn rides the same clock as rejected: both are content
+            // that is not going to the map, kept only briefly as a record.
+            "DELETE FROM submission WHERE status IN ('rejected', 'withdrawn') AND decided_at < :cutoff AND escalated_at IS NULL",
             ['cutoff' => $cutoff],
         );
 

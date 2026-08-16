@@ -35,4 +35,14 @@
     var initial = new URLSearchParams(window.location.search).get('tab');
     if (initial && document.getElementById('p-' + initial)) activate(initial);
   });
+
+  // One confirm() for every form that declares one (the withdraw button).
+  // Delegated + CSP-safe: the sentence lives on the form as data-confirm, so
+  // the template carries the words and no inline handler is needed.
+  ready(function () {
+    document.addEventListener('submit', function (e) {
+      var f = e.target;
+      if (f && f.dataset && f.dataset.confirm && !window.confirm(f.dataset.confirm)) e.preventDefault();
+    });
+  });
 })();

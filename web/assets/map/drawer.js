@@ -275,7 +275,13 @@ export function osmDrawer(layer, p, ll, src){
   // The simulated demo Status/Rating rows are gone — simulated flags die
   // (map-and-search.md §12); their payload keys stay for byte-stability but
   // nothing reads them.
-  if(p.web) rec.push({label:D.website||'Website', html:true, value:linkValue(p.web, p.web.replace(/^https?:\/\//,'').replace(/\/$/,''))});
+  // Only when the letter's own schema does NOT declare a web field: schemas
+  // that do (E's Website, I/J's Official site) render it via schemaRows below,
+  // and the old dedupe-by-label broke the moment I/J's label stopped being
+  // "Website" — the drawer showed the same URL twice under two names
+  // (owner-reported 2026-08-16).
+  const schemaHasWeb = (((window.CC_FIELD_SCHEMA||{})[(layer||{}).letter])||[]).some(f=>f.key==='web');
+  if(p.web && !schemaHasWeb) rec.push({label:D.website||'Website', html:true, value:linkValue(p.web, p.web.replace(/^https?:\/\//,'').replace(/\/$/,''))});
   // Registry-driven attribute rows (single source of truth = CatalogFormRegistry,
   // served as CC_FIELD_SCHEMA). Filled rows replace any structural row of the
   // same label (e.g. a curated 'Type' overriding the raw OSM one); unset fields

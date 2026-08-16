@@ -68,8 +68,10 @@
   {# ── Contributions — real data only (submissions + route proposals). The old
      preview stat tiles + sample rows were identical for every user; removed. #}
   <section class="dpane on" id="p-contrib">
-    {% set sub_pill = {'approved': 'ok', 'pending': 'pend', 'needs_info': 'pend', 'rejected': 'rej'} %}
+    {% set sub_pill = {'approved': 'ok', 'pending': 'pend', 'needs_info': 'pend', 'rejected': 'rej', 'withdrawn': 'rej'} %}
     <h2 class="sec-h">{{ 'account.contributions_title'|trans }}</h2>
+    {% for msg in app.flashes('success') %}<div class="flash-success" role="alert">{{ msg|trans }}</div>{% endfor %}
+    {% for msg in app.flashes('notice') %}<div class="flash-success" role="alert">{{ msg|trans }}</div>{% endfor %}
     {% if contributions is empty %}
       <div class="empty-state">
         <p>{{ 'account.contributions_empty'|trans }}</p>
@@ -94,6 +96,16 @@
           {% endif %}
           <time class="co" datetime="{{ sub.createdAt|date('c') }}">{{ sub.createdAt|cc_date }}</time>
           <span class="pill {{ sub_pill[sub.status.value] ?? 'pend' }}">{{ ('account.sub_status_' ~ sub.status.value)|trans }}</span>
+          {# The rider's own exit, only while nobody has decided (owner
+             2026-08-16). The service re-checks state under a row lock, so a
+             race with a curator ends in a flash, never a half-withdrawal. #}
+          {% if sub.status.value in ['pending', 'needs_info'] %}
+            <form class="withdraw-form" method="post" action="{{ path('profile_withdraw', {id: sub.id}) }}"
+                  data-confirm="{{ 'account.withdraw_confirm'|trans }}">
+              <input type="hidden" name="_token" value="{{ csrf_token('withdraw' ~ sub.id) }}">
+              <button type="submit" class="withdraw-btn">{{ 'account.withdraw'|trans }}</button>
+            </form>
+          {% endif %}
           {# WHAT was contributed, not just which place it was about. Without
              this, two edits to the same climb are the same row twice, and the
              rider has no way to tell which of their own changes a curator

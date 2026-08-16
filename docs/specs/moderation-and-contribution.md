@@ -449,7 +449,7 @@ then `/vote` should stop calling this service at all.
 | `letter` | varchar(1) | effective range A–J (K bypasses this table) |
 | `item_id` | bigint NULL | set for `edit` at submit; set for `new` when the item row is created in the same transaction |
 | `user_id` | bigint | submitter — deliberately **no FK** (survives account deletion as anonymous data; see §5.6) |
-| `status` | varchar(12), enum `SubmissionStatus` | `pending` \| `approved` \| `rejected` \| `needs_info` |
+| `status` | varchar(12), enum `SubmissionStatus` | `pending` \| `approved` \| `rejected` \| `needs_info` \| `withdrawn` (§3.4) |
 | `title` | varchar(200) | queue/drawer display |
 | `geom` | geometry(Geometry, 4326) | pending-pin location — always a Point in practice |
 | `country_code` / `region_id` | varchar(2) / bigint NULL | resolved at submit (§2) |
@@ -481,6 +481,24 @@ transaction**. `submitted` and `rejected` items are excluded from the public
 catalog payload (serving contract:
 [catalog-data-model.md](catalog-data-model.md) §4, §9); `submitted` items feed
 only the curator pending layer (§6).
+
+### 3.4 Withdraw — the rider's own exit (built 2026-08-16)
+
+A rider may take back their own submission while it is `pending` or
+`needs_info` (owner 2026-08-16): a Withdraw chip on the /profile
+contributions row, POST + per-row CSRF to `profile_withdraw`, handled by
+`ModerationService::withdraw()`. It reuses the REJECT mechanics on purpose -
+same row lock, a `new`-item's minted row goes to state `rejected` (off the
+map, OSM ref stays claimed for a possible revive, exactly like a rejection),
+pending photos are rejected into the retention sweep - but it is NOT a
+decision: only the submitter may do it (`NotTheSubmitterException`), there is
+no scope check, no outcome message to the person who did it themselves, and
+`withdrawn` never counts in the admin moderation-activity view (which filters
+approved/rejected). `decided_by` records the rider and `decided_at` starts
+the retention clock: the sweep and /profile's lazy filter treat `withdrawn`
+exactly like `rejected`. A race with a curator ends in a flash and the real
+outcome, never a half-withdrawal (`AlreadyDecidedException` under the lock).
+Pinned by `WithdrawSubmissionTest`.
 
 ## 4. Apply-on-approve and change history
 
