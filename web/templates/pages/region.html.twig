@@ -70,7 +70,9 @@
      to ride the same :has() shape to win the tie as the later sheet. */
   section.rg-about{padding-bottom:0}
   section.rg-about:has(+ section.pad){padding-bottom:0}
-  section.rg-about+section.pad{padding-top:clamp(1.2rem,2.5vw,1.75rem)}
+  /* The same clamp as .rhero+section.pad, so hero->About and About->next
+     header breathe identically at every width (owner 2026-08-16). */
+  section.rg-about+section.pad{padding-top:clamp(1.75rem,3.5vw,2.75rem)}
   .rg-about-text{max-width:46rem;font-size:1.02rem;line-height:1.65;margin:.4rem 0 .5rem}
   .rg-about-attrib{font-family:var(--mono);font-size:.66rem;letter-spacing:.06em;color:#5a5d4d}
   .rg-about-attrib a{color:inherit}
