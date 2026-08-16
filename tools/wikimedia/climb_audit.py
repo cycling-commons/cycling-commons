@@ -42,7 +42,7 @@ import sys
 import urllib.request
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-from climb_sides import BY_COUNTRY, VALHALLA  # noqa: E402
+from climb_sides import BY_COUNTRY, ROAD_BIKE, VALHALLA  # noqa: E402
 
 PSQL = ["docker", "exec", "cycling-commons-dev-db-1", "psql", "-U", "cc", "-d", "cyclingcommons", "-tAc"]
 
@@ -87,6 +87,12 @@ def trace(line, base, max_points=280):
     body = json.dumps({
         "shape": [{"lat": p[0], "lon": p[1]} for p in shape],
         "costing": "bicycle",
+        # The SAME road-bike costing the harvest routed with. Map-matching is a
+        # routing problem too, so a trace run under a laxer profile can snap a
+        # perfectly good road line onto the footpath running beside it and then
+        # report the line as off-road - the audit inventing the very defect it
+        # exists to find.
+        "costing_options": {"bicycle": ROAD_BIKE},
         "shape_match": "map_snap",
         "filters": {"attributes": ["edge.road_class", "edge.surface", "edge.use",
                                    "edge.names", "edge.length"], "action": "include"},
@@ -113,6 +119,27 @@ def trace(line, base, max_points=280):
         "top_class": classes.most_common(1)[0][0] if classes else "?",
         "road": names.most_common(1)[0][0] if names else "",
     }
+
+
+def published_metres(ele, measured):
+    """Wikidata's elevation in METRES, or None when it cannot be trusted.
+
+    Wikidata stores a quantity with a unit and `climb_candidates.py` keeps only
+    the number, so US passes arrive in FEET: Independence Pass reads 12103
+    against our measured 3687, and the summit check then reports it as 8,416 m
+    off the col - a units bug wearing the costume of a data defect.
+
+    The ratio is the tell. 3.28 is feet-per-metre and nothing else lands there,
+    so a published/measured ratio near it is a unit, not a disagreement.
+    """
+    if not ele or not measured:
+        return None
+    ratio = ele / measured
+    if 3.0 < ratio < 3.6:
+        return ele / 3.28084
+    # Anything else wildly out of scale is not a comparison worth making; say
+    # nothing rather than raise a confident wrong alarm.
+    return ele if 0.5 < ratio < 2.0 else None
 
 
 def existing_climbs():
@@ -201,12 +228,22 @@ def main() -> int:
                 if t["unpaved_pct"] >= 35:
                     verdict = "CHECK"
                     why.append(f"{t['unpaved_pct']}% unpaved - a famous gravel pass, or a mistake")
-                ele = col.get("ele")
+                ele = published_metres(col.get("ele"), side["summit_ele"])
                 if ele:
                     gap = abs(side["summit_ele"] - ele)
                     if gap > SUMMIT_TOLERANCE_M:
                         verdict = "CHECK"
                         why.append(f"tops out {gap:.0f} m from the published col ({side['summit_ele']} vs {ele:.0f} m)")
+                # A side that stops far short of a much longer one on the same
+                # col is usually the descent-stop cutting at a terrace rather
+                # than a genuinely short side. Bernina came back 4 km against a
+                # real 30; the numbers are self-consistent, which is exactly why
+                # nothing else catches it.
+                longest = max((o["length_m"] for o in col["sides"]), default=0)
+                if side["length_m"] < 5000 and longest >= side["length_m"] * 2.5:
+                    verdict = "CHECK"
+                    why.append(f"only {side['length_m'] / 1000:.1f} km against {longest / 1000:.1f} km "
+                               "on another side - the cut may have landed on a terrace")
                 if t["not_road_pct"] >= 8:
                     verdict = "CHECK"
                     why.append(f"{t['not_road_pct']}% off-road")
