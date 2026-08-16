@@ -1,0 +1,66 @@
+web/src/Moderation/NotTheSubmitterException.php
+  s_6df2cc515a46f1::t_02bc247164d7e6 1-18
+web/templates/account/_shell_styles.html.twig
+  s_6df2cc515a46f1::t_a4ae03ea0fccea 79-85
+web/src/Moderation/RetentionService.php
+  s_6df2cc515a46f1::t_c3cd53e9da81a9 77-79
+web/tests/Moderation/WithdrawSubmissionTest.php
+  s_6df2cc515a46f1::t_4c143365e6cb5f 1-121
+web/translations/messages.en.yaml
+  s_6df2cc515a46f1::t_f289d07a068ca7 2771-2773,2920
+  s_6df2cc515a46f1::t_0e89840941ffae 2921
+web/translations/messages.de.yaml
+  s_6df2cc515a46f1::t_f289d07a068ca7 2751-2753,2900
+  s_6df2cc515a46f1::t_0e89840941ffae 2901
+web/templates/profile/show.html.twig
+  s_6df2cc515a46f1::t_9ed18b2d502284 99-108
+  s_6df2cc515a46f1::t_efeda5dfa87855 71,73-74
+web/src/Catalog/SubmissionStatus.php
+  s_6df2cc515a46f1::t_e9d36f95544080 12-15,25
+web/assets/js/account.js
+  s_6df2cc515a46f1::t_31391bdbf0356f 38-47
+web/translations/messages.fr.yaml
+  s_6df2cc515a46f1::t_f289d07a068ca7 2748-2750,2897
+  s_6df2cc515a46f1::t_0e89840941ffae 2898
+web/src/Controller/ProfileController.php
+  s_6df2cc515a46f1::t_a0db7337448f02 13-15
+  s_6df2cc515a46f1::t_5a36eb43888ad9 48-63,65-69,71-75
+  s_6df2cc515a46f1::t_94c662496a954b 97,99-101
+  s_6df2cc515a46f1::t_498cff7ee5c498 64,70
+web/translations/messages.nl.yaml
+  s_6df2cc515a46f1::t_f289d07a068ca7 2748-2750,2897
+  s_6df2cc515a46f1::t_0e89840941ffae 2898
+docs/specs/moderation-and-contribution.md
+  s_6df2cc515a46f1::t_a03246dd8d8d3b 452
+  s_6df2cc515a46f1::t_b3b0712c8c624b 485-502
+web/assets/map/drawer.js
+  s_6df2cc515a46f1::t_0737897d964f31 278-284
+web/translations/messages.es.yaml
+  s_6df2cc515a46f1::t_0e89840941ffae 2935
+  s_6df2cc515a46f1::t_f289d07a068ca7 2785-2787,2934
+web/src/Moderation/ModerationService.php
+  s_6df2cc515a46f1::t_e797915a32aac7 172-173
+  s_6df2cc515a46f1::t_5049b44c8bd74f 161-171,174-203
+  s_6df2cc515a46f1::t_5769e8f70f19da 160
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "b8a485a1c06e732e647e3c27f8125697ee95eb61",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_6df2cc515a46f1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "907293b2-2684-4cac-bda9-fddc2074641e",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
