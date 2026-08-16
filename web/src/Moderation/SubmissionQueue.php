@@ -154,6 +154,26 @@ final class SubmissionQueue
     }
 
     /**
+     * A rider's OWN undecided submissions, for their map (owner 2026-08-16:
+     * a pending contribution was invisible to the person who made it - only
+     * curators got the pending layer). Same row shape as pendingForMap, so
+     * the client renders one layer either way; scoped by user, not by
+     * moderation areas (their own rows are theirs to see wherever they are),
+     * and needs-info rows ride along - those are exactly the ones waiting on
+     * the rider.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function ownPendingForMap(int $userId): array
+    {
+        return $this->rows(
+            ModerationScope::global(),
+            "s.user_id = :own AND s.status IN ('pending', 'needs_info') AND s.escalated_at IS NULL",
+            ['own' => $userId],
+        );
+    }
+
+    /**
      * The human-readable before/after for a submission's `changes` blob.
      *
      * Shared by the queue rows and the history so a settled submission reads

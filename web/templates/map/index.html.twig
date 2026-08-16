@@ -402,9 +402,14 @@ window.CC_VENDOR = {{ {
   mapillaryJs: asset('lib/mapillary-js-4.1.2.js'),
   mapillaryCss: asset('lib/mapillary-js-4.1.2.css')
 }|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
-{% if is_granted('ROLE_CURATOR') and pending is defined %}
+{% if pending is defined %}
 <script nonce="{{ csp_nonce() }}">
-  window.CC_IS_CURATOR = true;
+  {# CC_IS_CURATOR is the moderation-chrome switch; a rider gets their OWN
+     pending rows (MapController) but never this flag, so the pending pins
+     render without any decide controls. The flag comes from the CONTROLLER,
+     never is_granted() here: a setup-pending curator holds the role but not
+     the capability (the 2FA policy applies in exactly one place). #}
+  {% if pending_is_curator|default(false) %}window.CC_IS_CURATOR = true;{% endif %}
   window.CC_PENDING = {{ pending|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
   {# Places approved as "Not there anymore" — the curator ghost layer, so a
      rebuilt place can be found and reactivated via the ordinary edit form.

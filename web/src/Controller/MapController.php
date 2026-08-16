@@ -182,11 +182,22 @@ final class MapController extends AbstractController
             $focus = $request->query->getInt('pending');
             $scope = $scopeProvider->scopeFor($user);
             $params['pending'] = $queue->pendingForMap($scope, $focus > 0 ? $focus : null);
+            // The template must NOT re-derive this with is_granted(): a
+            // setup-pending curator holds the role but not the capability,
+            // and only this branch has applied the 2FA policy.
+            $params['pending_is_curator'] = true;
             // Places approved as gone, CURATORS ONLY: hidden from the public
             // payload for good, but a curator has to be able to SEE them or a
             // rebuilt tap could never be reactivated (owner 2026-08-13).
             // Ghost layer; reactivation is the ordinary edit form.
             $params['gone'] = $catalogProvider->goneForMap($scope);
+        } elseif ($user instanceof User) {
+            // A rider's OWN undecided submissions (owner 2026-08-16): the
+            // pending pin was invisible to the person who made it. Same layer,
+            // their rows only; the template emits it WITHOUT CC_IS_CURATOR, so
+            // none of the moderation chrome renders and no decision endpoint
+            // would accept them anyway.
+            $params['pending'] = $queue->ownPendingForMap((int) $user->getId());
         }
 
         $params['scout_review'] = $scoutReview;

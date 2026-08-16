@@ -155,6 +155,20 @@ final class ProfileController extends AbstractController
             ->getQuery()
             ->getResult();
 
+        /* WHERE each contribution is, as words (owner 2026-08-16: Scout rows
+           all read "Scenery" and nothing else). The region stamp is already
+           on the row; names only, one query for the page - never the Region
+           entity, whose geometry is the moderator-areas OOM lesson. */
+        $regionIds = array_values(array_unique(array_filter(array_map(
+            static fn (Submission $s): ?int => $s->getRegionId(),
+            $contributions,
+        ))));
+        $regionNames = [] === $regionIds ? [] : $db->fetchAllKeyValue(
+            'SELECT id, name FROM region WHERE id IN (:ids)',
+            ['ids' => $regionIds],
+            ['ids' => ArrayParameterType::INTEGER],
+        );
+
         $routePager = Pager::of(
             $request->query->getInt('rpage', 1),
             (int) $em->getRepository(RecommendedRoute::class)->count(['proposedBy' => $userId]),
@@ -179,6 +193,7 @@ final class ProfileController extends AbstractController
             ))),
             'letter_filter' => $letterFilter,
             'status_filter' => $statusFilter,
+            'region_names' => $regionNames,
             // The conversation attached to each submission, so a contribution
             // row can show it the way the curator's desk shows the rider's
             // reply. Without this the rider saw a "needs info" chip and had no

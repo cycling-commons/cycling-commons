@@ -291,7 +291,11 @@ import { initLayerList, initMapCtrl, initRailChrome, initBestOf,
   }
   // Curator-only pending submissions (injected by MapController for ROLE_CURATOR only).
   // Off the public map by design — riders never receive window.CC_PENDING.
-  if(window.CC_IS_CURATOR && Array.isArray(window.CC_PENDING)){
+  // CC_PENDING alone builds the layer: curators get the scope's whole queue,
+  // a rider gets their OWN rows (owner 2026-08-16 - a pending contribution
+  // was invisible to the person who made it). CC_IS_CURATOR only switches
+  // the moderation chrome (drawer.js), never the pins.
+  if(Array.isArray(window.CC_PENDING)){
     /* The review pin has to land on the pin the curator is being sent to look
        at. It used to sit at the submission's own point, which for an EDIT is
        the item's stored anchor — and a climb's anchor is its SUMMIT while its

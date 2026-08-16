@@ -740,7 +740,15 @@ function buildRecord(layer, f){
     const alsoConfirm = ('C' !== s.letter && 'K' !== s.letter && !assertsAbsence)
       ? `<label class="cc-mod-also"><input type="checkbox" class="cc-mod-confirm-cb"> ${D.alsoConfirm||'Also confirm — I know this place (counts as verified)'}</label>`
       : '';
-    moderate = `<div class="cc-mod" data-id="${escPend(s.id)}">
+    /* The moderation chrome is CURATOR-ONLY. A rider receives their OWN
+       pending pins now (owner 2026-08-16 - a pending contribution was
+       invisible to the person who made it), and their card is a preview:
+       badge, proposed change, shape switch and the conversation - never the
+       decide buttons, the note box, the prior-rejection triage or the photo
+       untick controls. The endpoint would refuse a rider's decision anyway,
+       but a control that always fails is worse than no control. */
+    moderate = window.CC_IS_CURATOR
+      ? `<div class="cc-mod" data-id="${escPend(s.id)}">
       ${badge}${prior}${body}${diff}${shapeSwitch}${context}${asked}${replied}${modPhotos}
       <textarea class="cc-mod-note" placeholder="${D.modNotePh||'Optional note — a reason, or context…'}"></textarea>
       ${alsoConfirm}
@@ -751,6 +759,9 @@ function buildRecord(layer, f){
       </div>
       <div class="cc-mod-preview">${D.modKeys||'A · approve · R · reject — recorded, not yet persisted.'}</div>
       ${modHist}
+    </div>`
+      : `<div class="cc-mod" data-id="${escPend(s.id)}">
+      ${badge}${body}${diff}${shapeSwitch}${context}${asked}${replied}
     </div>`;
   }
   // Only votable point types get the vote CTA. Utilities are confirmed, not

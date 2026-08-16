@@ -25,6 +25,7 @@
   .item .tag{font-family:var(--mono);font-size:.58rem;padding:.25rem .45rem;border-radius:3px;white-space:nowrap;text-transform:uppercase;letter-spacing:.06em;background:var(--spruce);color:var(--paper)}
   .item .tag-route{background:var(--trail);color:var(--ink)}
   .item h4{flex:1;font-size:1rem;font-weight:500;min-width:8rem}
+  .item-where{display:block;font-family:var(--mono);font-size:.62rem;letter-spacing:.04em;color:#595c4d;margin-top:.15rem}
   .item .co{font-family:var(--mono);font-size:.62rem;color:#595c4d}
   .item-links{display:inline-flex;gap:.9rem}
   .item-links a{font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;color:var(--clay);white-space:nowrap}
@@ -97,18 +98,35 @@
       </div>
     {% else %}
       {% for sub in contributions %}
-        {# links only when the item is actually reachable: an edit always targets
-           a live item; a new item is on the map once approved. Routes (letter K)
-           have no item-edit binding — handled in the route-proposals list. #}
-        {% set sub_live = sub.itemId is not null and sub.letter != 'K' and (sub.type.value == 'edit' or sub.status.value == 'approved') %}
+        {# Map + Edit render for every item-bound row, PENDING included (owner
+           2026-08-16: "while an item is waiting for review I should be able
+           to edit it"). A pending new item is not served by name, so its map
+           link is the pending deep-link the desk uses; the edit wizard binds
+           the submitter's own Submitted item. Routes (letter K) have no
+           item-edit binding — handled in the route-proposals list. #}
+        {% set sub_live = sub.itemId is not null and sub.letter != 'K' %}
+        {% set sub_pending_new = sub.type.value == 'new' and sub.status.value in ['pending', 'needs_info'] %}
         {# Anchor for the messages page, whose cards link back to the
            contribution they are about. #}
         <div class="item" id="sub-{{ sub.id }}">
           <span class="tag">{{ ('account.sub_type_' ~ sub.type.value)|trans }}</span>
-          <h4>{{ sub.title }}</h4>
+          <h4>{{ sub.title }}
+            {# WHERE it is, as words: Scout rows all read "Scenery" and
+               nothing else (owner 2026-08-16). Region + country come from
+               the row's own stamps; town-level needs the gazetteer
+               (docs/TODO.md "Nearby town on a queue row"). #}
+            {% set rname = sub.regionId ? region_names[sub.regionId] ?? null : null %}
+            {% if rname or sub.countryCode %}
+              <span class="item-where">{{ [rname, sub.countryCode]|filter(v => v)|join(' · ') }}</span>
+            {% endif %}
+          </h4>
           {% if sub_live %}
             <span class="item-links">
-              <a href="{{ path('map') }}?feature={{ sub.title|url_encode }}">{{ 'account.link_map'|trans }}</a>
+              {% if sub_pending_new %}
+                <a href="{{ path('map') }}?pending={{ sub.id }}">{{ 'account.link_map'|trans }}</a>
+              {% else %}
+                <a href="{{ path('map') }}?feature={{ sub.title|url_encode }}">{{ 'account.link_map'|trans }}</a>
+              {% endif %}
               <a href="{{ path('improve') }}?item={{ sub.itemId }}&amp;type={{ sub.letter }}">{{ 'account.link_edit'|trans }}</a>
             </span>
           {% endif %}

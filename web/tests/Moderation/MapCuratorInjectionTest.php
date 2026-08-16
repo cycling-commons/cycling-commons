@@ -96,11 +96,13 @@ final class MapCuratorInjectionTest extends WebTestCase
      * /map is a public page on the 2FA-enforcer's bypass list, so the gate has
      * to live in the controller, not the request enforcer.
      */
-    public function testSetupPendingCuratorMapHasNoPendingData(): void
+    public function testSetupPendingCuratorMapHasNoCuratorCapability(): void
     {
         $client = static::createClient();
         // curator: true seeds a TOTP secret + enabled; here we want the
-        // opposite — an elevated user who still owes 2FA setup.
+        // opposite - an elevated user who still owes 2FA setup. They fall
+        // back to RIDER-grade data: their own rows only (here none), never
+        // the queue and never the moderation chrome.
         $this->login($client, 'map-curator-no2fa@example.com', ['ROLE_CURATOR'], false);
         $this->seedSubmission('Should Stay Hidden');
 
@@ -108,22 +110,39 @@ final class MapCuratorInjectionTest extends WebTestCase
 
         self::assertResponseIsSuccessful();
         $body = (string) $client->getResponse()->getContent();
-        self::assertStringNotContainsString('CC_PENDING', $body);
         self::assertStringNotContainsString('CC_IS_CURATOR', $body);
         self::assertStringNotContainsString('Should Stay Hidden', $body);
     }
 
-    public function testPlainRiderMapHasNoPendingData(): void
+    /**
+     * A rider's map carries their OWN pending rows (owner 2026-08-16: a
+     * pending contribution was invisible to the person who made it) - and
+     * ONLY their own: no other rider's title, and never the moderation flag.
+     */
+    public function testPlainRiderMapCarriesOwnPendingRowsOnly(): void
     {
         $client = static::createClient();
         $this->login($client, 'map-rider@example.com', [], false);
+        $this->seedSubmission('Somebody Elses Climb'); // user_id 3, another rider
+        /** @var EntityManagerInterface $em */
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $me = $em->getRepository(User::class)->findOneBy(['email' => 'map-rider@example.com']);
+        $own = (new Submission())
+            ->setType(SubmissionType::NewItem)->setLetter('I')->setUserId((int) $me->getId())
+            ->setStatus(SubmissionStatus::Pending)->setTitle('My Own Viewpoint')
+            ->setGeom('{"type":"Point","coordinates":[6.0208,50.7549]}')
+            ->setCountryCode('NL')->setChanges([])->setPayload([]);
+        $em->persist($own);
+        $em->flush();
 
         $client->request('GET', '/map');
 
         self::assertResponseIsSuccessful();
         $body = (string) $client->getResponse()->getContent();
-        self::assertStringNotContainsString('CC_PENDING', $body);
-        self::assertStringNotContainsString('CC_IS_CURATOR', $body);
+        self::assertStringContainsString('CC_PENDING', $body);
+        self::assertStringContainsString('My Own Viewpoint', $body);
+        self::assertStringNotContainsString('Somebody Elses Climb', $body, "never another rider's row");
+        self::assertStringNotContainsString('CC_IS_CURATOR', $body, 'never the moderation chrome switch');
     }
 
     public function testAnonymousMapHasNoPendingData(): void

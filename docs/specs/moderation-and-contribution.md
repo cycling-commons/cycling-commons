@@ -482,6 +482,25 @@ catalog payload (serving contract:
 [catalog-data-model.md](catalog-data-model.md) §4, §9); `submitted` items feed
 only the curator pending layer (§6).
 
+### 3.3b The submitter keeps their hands on a pending item (built 2026-08-16)
+
+Two owner rules from the same review: "while an item is waiting for review I
+should be able to edit it", and the pending pin must be visible to its maker.
+The improve wizard now binds a `Submitted`-state item for its SUBMITTER too
+(not just curators): ownership is any submission of theirs on that item id,
+nothing is exposed that is not their own data, and the edit lands as one more
+submission on the same queue. And `/map` serves a rider their OWN
+pending/needs-info rows (`SubmissionQueue::ownPendingForMap()`, scoped by
+user - their rows are theirs wherever they are) as the same pending layer -
+WITHOUT `CC_IS_CURATOR`, which is now set by the CONTROLLER only where the
+2FA policy was applied (a setup-pending curator holds the role, not the
+capability), so a rider's pending card is a preview: badge, proposed change,
+shape switch, conversation - never decide controls. The /profile rows link
+Map (pending deep-link) and Edit for every item-bound row, and carry the
+region + country stamps as words (town-level waits on the gazetteer item).
+Pinned by `MapCuratorInjectionTest` (own rows only, no chrome flag, no
+capability before 2FA) and `MyContributionsTest`.
+
 ### 3.4 Withdraw — the rider's own exit (built 2026-08-16)
 
 A rider may take back their own submission while it is `pending` or

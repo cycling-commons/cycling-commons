@@ -416,9 +416,19 @@ final class ContributeController extends AbstractController
                "pick a place to improve" — a control that cannot work
                (owner-reported 2026-08-12). Nothing is exposed that the curator
                cannot already see, and the alternative is bouncing a typo back
-               to the rider as a needs-info. */
+               to the rider as a needs-info.
+
+               **And except for the SUBMITTER** (owner 2026-08-16: "while an
+               item is waiting for review I should be able to edit it"). The
+               data is their own; the edit lands as one more submission on the
+               same queue, so moderation still sees everything. */
             $states = [ItemState::Unverified, ItemState::Verified];
-            if ($this->isGranted('ROLE_CURATOR')) {
+            $user = $this->getUser();
+            if ($this->isGranted('ROLE_CURATOR')
+                || ($user instanceof User && $em->getConnection()->fetchOne(
+                    'SELECT 1 FROM submission WHERE item_id = :id AND user_id = :uid LIMIT 1',
+                    ['id' => (int) $itemParam, 'uid' => (int) $user->getId()],
+                ))) {
                 $states[] = ItemState::Submitted;
             }
             $item = $em->getRepository(Item::class)->findOneBy([
