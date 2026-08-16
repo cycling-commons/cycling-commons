@@ -27,6 +27,7 @@ import { itemLinks } from './links.js';
 import { sheet } from './sheet.js';
 import { openLightbox } from './lightbox.js';
 import { highlightRoute, clearRouteHighlight, showSurfaceSelection, clearSurfaceSelection } from './render.js';
+import { clearRouteSelection } from './routes-tiles.js';
 import { clearSelectedCoverageIcon, invalidateCoverageDrawer } from './coverage.js';
 import { setSurfaceTiles, surfaceTilesVisible, surfaceTilesConfigured } from './surface-tiles.js';
 import { isPicking, cancelPicking } from './picking.js';
@@ -1310,6 +1311,7 @@ export function openDrawer(layer, f){
     clearHighlight();                    // routes read as the wide line halo, not a point halo
   } else {
     clearRouteHighlight();
+    clearRouteSelection();
     // The selected surface segment lights up as a SHAPE, so its extent — and
     // therefore its length — is visible on the map (owner 2026-08-13).
     if(layer.key==='surface' && f.geom && Array.isArray(f.geom.path) && f.geom.path.length>1) showSurfaceSelection(f.geom.path);
@@ -1380,6 +1382,7 @@ export function closeDrawer(){
   clearSelectedCoverageIcon();                        // remove the selected coverage POI's persistent icon overlay
   clearRevealPin();
   clearRouteHighlight();
+  clearRouteSelection();   // the OSM corridor highlight (routes-tiles.js), not the K layer above
   clearSurfaceSelection();
   clearCorrections();
   clearPendingShape();                               // drop the before/after climb overlay with the card that owns it

@@ -69,6 +69,16 @@ const GROUPS = [
 const BADGE_MIN_ZOOM = 10;
 const LINE_PREFIX = 'rttile-';
 const KNOOP_PREFIX = 'rtknoop-';
+/* The corridor's own width and opacity, named once so the "dim everything
+   else" pass can put them back EXACTLY. Retyping them at the restore site is
+   how a dim becomes permanent after somebody tunes the paint. */
+const LINE_WIDTH = ['interpolate', ['linear'], ['zoom'], 8, 1.8, 11, 3.2, 14, 6];
+const LINE_OPACITY = ['interpolate', ['linear'], ['zoom'], 8, 0.55, 12, 0.72];
+/* Low enough that the chosen route reads as the only one on the map, high
+   enough that the network it belongs to is still legible around it - a rider
+   following LF1 still wants to see where it crosses everything else. */
+const DIM_OPACITY = 0.14;
+const DIM_BADGE = 0.3;
 
 let added = false;
 let visible = false;
@@ -122,14 +132,45 @@ export function addRoutesTiles() {
           // road stays legible inside it — the OpenCycleMap reading. Raised
           // from the first cut's 0.38/0.5 (owner 2026-08-13: "make them a bit
           // less transparent so they are better to see").
-          'line-width': ['interpolate', ['linear'], ['zoom'], 8, 1.8, 11, 3.2, 14, 6],
-          'line-opacity': ['interpolate', ['linear'], ['zoom'], 8, 0.55, 12, 0.72],
+          'line-width': LINE_WIDTH,
+          'line-opacity': LINE_OPACITY,
         },
       }, under);
       map.on('click', id, e => openRouteDrawer(e.features[0].properties, e.lngLat, e.features[0].geometry, srcLayer));
       map.on('mouseenter', id, () => { map.getCanvas().style.cursor = 'pointer'; });
       map.on('mouseleave', id, () => { map.getCanvas().style.cursor = ''; });
     });
+
+    /* THE SELECTED ROUTE, drawn once per country ABOVE its three families.
+       One layer rather than three: the colour comes from the feature's own
+       network, so a highlighted LF route stays the national pink it was.
+
+       It starts matching nothing. Filters, not a separate source, because the
+       whole route is already in these tiles - selecting it is a question about
+       what is drawn, not a fetch. */
+    const selId = LINE_PREFIX + 'sel-' + cc;
+    if (!map.getLayer(selId)) {
+      map.addLayer({
+        id: selId,
+        type: 'line',
+        source: ROUTES_TILE_SOURCE,
+        'source-layer': srcLayer,
+        filter: MATCH_NOTHING,
+        layout: { 'line-cap': 'round', 'line-join': 'round', visibility: 'none' },
+        paint: {
+          'line-color': ['match', ['get', 'net'],
+            'icn', GROUPS[0].color, 'ncn', GROUPS[0].color,
+            'mtb', GROUPS[2].color, GROUPS[1].color],
+          // Wider than the corridor it replaces and fully opaque: the point of
+          // a selection is that the eye finds the line without hunting.
+          'line-width': ['interpolate', ['linear'], ['zoom'], 8, 3.2, 11, 5.5, 14, 9],
+          'line-opacity': 1,
+        },
+      }, under);
+      map.on('click', selId, e => openRouteDrawer(e.features[0].properties, e.lngLat, e.features[0].geometry, srcLayer));
+      map.on('mouseenter', selId, () => { map.getCanvas().style.cursor = 'pointer'; });
+      map.on('mouseleave', selId, () => { map.getCanvas().style.cursor = ''; });
+    }
   });
 
   // Knooppunt badges: a numbered disc, the compromise between OpenCycleMap's
@@ -187,6 +228,10 @@ export const routesTilesVisible = () => visible;
 export function setRoutesTiles(on) {
   if (!routesTilesAvailable()) return false;
   if (!added) addRoutesTiles();
+  // Switching the network off drops the selection with it: coming back to a
+  // dimmed map with one route lit, having forgotten choosing it, reads as a
+  // broken layer.
+  if (!on) clearRouteSelection();
   visible = !!on;
   const style = map.getStyle();
   if (style) {
@@ -197,6 +242,92 @@ export function setRoutesTiles(on) {
     });
   }
   return visible;
+}
+
+/* A filter that is false for every feature. `['boolean', false]` would be
+   simpler and MapLibre rejects it in a filter slot; comparing a property to a
+   value no network can hold is the portable way to say "nothing yet". */
+const MATCH_NOTHING = ['==', ['get', 'net'], '\u0000none'];
+
+let selectedRoute = null;   // {net, rr} or null
+
+/**
+ * Highlight ONE signed route and dim everything else (owner 2026-08-17).
+ *
+ * Clicking a corridor used to answer only "what is this stretch". The question
+ * a rider actually has in front of a Dutch screen is "where does THIS one go",
+ * and the answer was buried in a hundred overlapping purple lines.
+ *
+ * Matched by (net, rr) rather than by way id, which is what makes it the whole
+ * route instead of the clicked fragment. `refs` is checked too: a way carrying
+ * three routes has only one of them in `rr`, so the Zuiderdijk would drop out
+ * of its own LF route without this arm. The comparison is padded with the
+ * delimiter on both sides, or "ncn LF1" would also select "ncn LF10".
+ *
+ * **Honest limit:** the highlight paints what is in LOADED tiles. Pan to a
+ * part of the route the map has not fetched and it lights up when it arrives.
+ * There is no way around that short of shipping route geometry separately, and
+ * at the planning zooms this layer is built for (z8-13) a national route is
+ * mostly on screen already.
+ *
+ * A route with no code cannot be identified, so it selects nothing rather than
+ * guessing - and nothing dims, so the map does not look broken.
+ */
+export function selectRoute(net, rr) {
+  if (!added || !net || !rr) { clearRouteSelection(); return false; }
+  selectedRoute = { net, rr };
+
+  const key = String(net) + ' ' + String(rr);
+  const filter = ['any',
+    ['all', ['==', ['get', 'net'], net], ['==', ['get', 'rr'], rr]],
+    ['in', '|' + key + '|', ['concat', '|', ['coalesce', ['get', 'refs'], ''], '|']],
+  ];
+  eachRouteLayer((id, kind) => {
+    if (kind === 'sel') { map.setFilter(id, filter); return; }
+    if (kind === 'line') { map.setPaintProperty(id, 'line-opacity', DIM_OPACITY); return; }
+    if (kind === 'disc') {
+      map.setPaintProperty(id, 'circle-opacity', DIM_BADGE);
+      map.setPaintProperty(id, 'circle-stroke-opacity', DIM_BADGE);
+      return;
+    }
+    map.setPaintProperty(id, 'text-opacity', DIM_BADGE);
+  });
+  return true;
+}
+
+/** Put the network back exactly as it was. Idempotent: closeDrawer calls it. */
+export function clearRouteSelection() {
+  if (!added || selectedRoute === null) return;
+  selectedRoute = null;
+  eachRouteLayer((id, kind) => {
+    if (kind === 'sel') { map.setFilter(id, MATCH_NOTHING); return; }
+    if (kind === 'line') { map.setPaintProperty(id, 'line-opacity', LINE_OPACITY); return; }
+    if (kind === 'disc') {
+      map.setPaintProperty(id, 'circle-opacity', 1);
+      map.setPaintProperty(id, 'circle-stroke-opacity', 1);
+      return;
+    }
+    map.setPaintProperty(id, 'text-opacity', 1);
+  });
+}
+
+/** Which route is lit, for anything that needs to ask. */
+export const selectedRouteRef = () => selectedRoute;
+
+/**
+ * Every layer this module owns, tagged by what it is. One walk, so a new
+ * country's layers are covered the moment they are added and neither the
+ * select nor the clear can miss one.
+ */
+function eachRouteLayer(fn) {
+  const layers = map.getStyle()?.layers || [];
+  layers.forEach(l => {
+    if (!map.getLayer(l.id)) return;
+    if (l.id.startsWith(LINE_PREFIX + 'sel-')) fn(l.id, 'sel');
+    else if (l.id.startsWith(LINE_PREFIX)) fn(l.id, 'line');
+    else if (l.id.startsWith(KNOOP_PREFIX + 'disc-')) fn(l.id, 'disc');
+    else if (l.id.startsWith(KNOOP_PREFIX)) fn(l.id, 'nr');
+  });
 }
 
 /** Localised label for a network value, falling back to the raw key. */
@@ -245,6 +376,12 @@ export function openRouteDrawer(p, lngLat, geometry, sourceLayer) {
     osmUrl: p.ref ? 'https://www.openstreetmap.org/' + p.ref : undefined,
     osmRef: p.ref,
   });
+  /* AFTER openDrawer, never before. openDrawer clears the corridor selection
+     on its way in - which is right, because opening a climb's drawer must not
+     leave a route lit behind it - so setting the highlight first would have it
+     wiped one line later. The drawer says what this stretch is; the map then
+     says where the whole route goes. */
+  selectRoute(p.net, p.rr);
   flyToPin([lngLat.lng, lngLat.lat]);
 }
 
