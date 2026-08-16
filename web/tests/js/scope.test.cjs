@@ -128,6 +128,16 @@ test('widen ladder: region -> its country -> everywhere; canWiden tracks it', ()
   assert.deepEqual(CCScope.widen(), { kind: 'everywhere', regionIds: [], countryCode: null });
 });
 
+test('a single-region country widens straight to everywhere', () => {
+  // Luxembourg's one region IS the country: the country rung is the same
+  // polygon wearing a different label, and "Search in All Luxembourg
+  // instead" from it widened nothing (owner-reported 2026-08-16).
+  boot({ regionsList: REGIONS.concat([{ id: 54, slug: 'luxembourg', countryCode: 'LU', bbox: [5.7, 49.4, 6.5, 50.2] }]) });
+  CCScope.setRegion('luxembourg');
+  assert.equal(CCScope.nextWider().kind, 'everywhere', 'the chip must not offer the same area again');
+  assert.deepEqual(CCScope.widen(), { kind: 'everywhere', regionIds: [], countryCode: null });
+});
+
 test('nextWider previews without applying', () => {
   boot();
   CCScope.setRegion('brussels');

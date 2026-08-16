@@ -18,7 +18,18 @@
    rebuildItemIndex() from the entry's sidebar-search block. */
 import { CATALOG, layerByKey } from './catalog.js';
 import { slug, haversine, featurePoint } from './util.js';
-import { openLocalFeature, openStayPivot } from './places.js';
+import { openLocalFeature, openStayPivot, openPoolFeature } from './places.js';
+
+// The bulk-pool globals, read at BUILD time (never captured at module eval:
+// catalog-load fills them asynchronously, and a snapshot taken before that
+// would index nothing forever). Keys match layerByKey/osm-pools' OSM_BULK,
+// plus water, which osm-pools registers separately.
+const POOL_GLOBALS = [
+  ['water', 'CC_WATER_OSM'], ['services', 'CC_SERVICES_OSM'],
+  ['scenic', 'CC_SCENIC_OSM'], ['history', 'CC_HISTORY_OSM'],
+  ['stays', 'CC_STAYS_OSM'], ['shelter', 'CC_SHELTER_OSM'],
+  ['transit', 'CC_TRANSIT_OSM'], ['toilets', 'CC_TOILETS_OSM'],
+];
 
 // ---- Unified searchable-item index (spec 2026-07-14 §3.1) ----
 // Every curated/DB-backed item exactly once: CATALOG features (curated:
@@ -95,6 +106,24 @@ export function buildItemIndex(){
       verified:!!p.v,   // v = real state/confirmation signal from CatalogProvider
       hlOff: p.v ? [0,-16] : [0,0],   // pin offset keys on the real promotion signal (c is dead, see the re-key step)
       go:()=>openStayPivot(f)});
+  });
+  /* DB-backed items served through the bulk-OSM pools (a wikidata-seeded
+     castle, a rider-added water point). These letters never reach CATALOG's
+     feature arrays, so "Bourscheid Castle" — an item of ours with a photo, a
+     description and links — was findable on the map and invisible to the
+     search box (owner-reported 2026-08-16). Only rows with a DB id are
+     indexed: raw OSM coverage stays a live /map/coverage/search lookup, and
+     the byId/byName dedup above keeps a curated twin from listing twice. */
+  POOL_GLOBALS.forEach(([key, g])=>{
+    const layer=layerByKey[key]; if(!layer) return;
+    (((window[g]||{}).features)||[]).forEach(f=>{ const p=f.properties;
+      if(!p || !p.n || p.id==null) return;
+      const c=f.geometry && f.geometry.coordinates; if(!c || c.length<2) return;
+      push({name:p.n, key:slug(p.n+' '+(p.town||'')+' '+layer.label), kind:layer.label, badge:layer.icon,
+        color:layer.color, letter:layer.letter, ll:[+c[1],+c[0]], id:p.id, rid:p.rid,
+        verified:!!p.v, hlOff: p.v ? [0,-16] : [0,0],
+        go:()=>openPoolFeature(key, f)});
+    });
   });
   return out;
 }

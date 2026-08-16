@@ -129,6 +129,15 @@
   };
 
   const regionScope = (r) => ({ kind: 'region', regionIds: [r.id], countryCode: r.countryCode || null });
+  // Does stepping up to the country rung actually ADD area? False when the
+  // region scope already holds every region its country has — the
+  // single-region-country case (Luxembourg), where the country rung is the
+  // same polygon wearing a different label.
+  const countryRungWidens = (s) => {
+    if (!s || !s.countryCode || !byCountry.has(s.countryCode)) return false;
+    const held = s.regionIds || [];
+    return (byCountry.get(s.countryCode) || []).some((r) => held.indexOf(r.id) < 0);
+  };
   const countryScope = (cc) => ({ kind: 'country', regionIds: (byCountry.get(cc) || []).map((r) => r.id), countryCode: cc });
   const everywhereScope = () => ({ kind: 'everywhere', regionIds: [], countryCode: null });
 
@@ -466,7 +475,11 @@
     setEverywhere() { return this.set(everywhereScope()); },
 
     /** One rung wider: region -> its country -> everywhere; myArea -> its single
-     *  registry-known country (if exactly one) -> everywhere. */
+     *  registry-known country (if exactly one) -> everywhere.
+     *  A region scope that ALREADY covers every region its country has skips
+     *  the country rung: Luxembourg has one region (the country itself), and
+     *  "Search in All Luxembourg instead" from it widened nothing
+     *  (owner-reported 2026-08-16). */
     widen() {
       if (!scope || scope.kind === 'everywhere') return this.get();
       if (scope.kind === 'country') return this.setEverywhere();
@@ -474,7 +487,7 @@
         const cc = singleMyAreaCountry();
         return cc ? this.setCountry(cc) : this.setEverywhere();
       }
-      return (scope.countryCode && byCountry.has(scope.countryCode)) ? this.setCountry(scope.countryCode) : this.setEverywhere();
+      return countryRungWidens(scope) ? this.setCountry(scope.countryCode) : this.setEverywhere();
     },
     canWiden() { return !!scope && scope.kind !== 'everywhere'; },
 
@@ -486,7 +499,7 @@
         const cc = singleMyAreaCountry();
         return cc ? countryScope(cc) : everywhereScope();
       }
-      return (scope.countryCode && byCountry.has(scope.countryCode)) ? countryScope(scope.countryCode) : everywhereScope();
+      return countryRungWidens(scope) ? countryScope(scope.countryCode) : everywhereScope();
     },
 
     /** Region registry objects currently in scope (for spotlight + labels). */
