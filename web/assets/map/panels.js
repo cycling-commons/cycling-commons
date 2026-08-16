@@ -270,9 +270,27 @@ export function initRailChrome(){
     });
   }
 
-  // mobile: road-surface legend collapses to an icon (mirrors #mcToggle)
+  /* The legend collapses on EVERY screen (owner 2026-08-16), not only on
+     phones: a rider who has learnt the colours wants the corner of the map
+     back. One class, `collapsed`, hides #lgBody wherever it is applied - which
+     also means a key section added later cannot be forgotten out of a hide
+     list, the way the routes key just was.
+
+     The starting state differs by room, not by preference: a phone opens
+     collapsed because the panel would cover the map it explains, a laptop
+     opens expanded because there is space and the key is the point. Read once
+     at init; resizing does not re-decide, because after the first tap the
+     state belongs to the reader. */
   const lgToggle=document.getElementById('lgToggle'), legend=document.querySelector('.legend');
-  if(lgToggle && legend) lgToggle.onclick=()=>{ const o=legend.classList.toggle('open'); lgToggle.setAttribute('aria-expanded',o?'true':'false'); };
+  if(lgToggle && legend){
+    const sync=()=>{
+      const open=!legend.classList.contains('collapsed');
+      lgToggle.setAttribute('aria-expanded', open?'true':'false');
+    };
+    legend.classList.toggle('collapsed', window.matchMedia('(max-width:760px)').matches);
+    sync();
+    lgToggle.onclick=()=>{ legend.classList.toggle('collapsed'); sync(); };
+  }
 
   // mobile: top-bar nav hamburger -> dropdown
   const railHead=document.querySelector('.rail-head'), railBurger=document.getElementById('railBurger');

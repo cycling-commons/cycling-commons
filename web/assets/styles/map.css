@@ -449,11 +449,25 @@
   /* Live zoom readout — a maplibregl bottom-left control (map.js), so it inherits
      the control margin/stacking; only appearance is styled here. */
   .zoom-badge{background:rgba(20,22,14,.9);color:var(--paper);font-family:var(--mono);font-size:.72rem;letter-spacing:.04em;line-height:1;padding:.28rem .5rem;border-radius:6px;pointer-events:none;box-shadow:0 2px 6px -2px rgba(0,0,0,.5)}
-  .legend{position:absolute;bottom:1.2rem;right:1.2rem;background:rgba(20,22,14,.95);color:var(--paper);border-radius:8px;padding:.9rem 1.1rem;z-index:1000}
+  /* Narrower on purpose (owner 2026-08-16): the quality-ticks note is one long
+     sentence and it was setting the panel's width, so a key of six short rows
+     took a third of a laptop's map. Capped, and the note wraps to two lines -
+     the sentence is a footnote, not a column guide. */
+  .legend{position:absolute;bottom:1.2rem;right:1.2rem;background:rgba(20,22,14,.95);color:var(--paper);border-radius:8px;padding:.9rem 1.1rem;z-index:1000;
+    max-width:min(17.5rem,44vw)}
+  /* The collapse control, on every screen rather than only on phones. Its own
+     row, right-aligned, so it reads as this panel's control and needs no
+     absolute positioning to stay clear of the headings. */
+  .legend .lg-toggle{margin-left:auto;margin-bottom:.2rem}
+  .legend.collapsed{padding:.3rem;max-width:none}
+  .legend.collapsed .lg-toggle{margin-bottom:0}
+  .legend.collapsed .lg-body{display:none}
   .legend h4{font-family:var(--mono);font-size:.6rem;letter-spacing:.16em;color:var(--glacier);margin-bottom:.6rem;text-transform:uppercase}
   .legend .row{display:flex;align-items:center;gap:.5rem;font-size:.78rem;margin:.25rem 0}
   .legend .d{width:10px;height:10px;border-radius:50%;background:var(--c)}
-  .legend .lg-toggle{display:none;align-items:center;justify-content:center;width:1.8rem;height:1.8rem;padding:0;background:transparent;border:none;border-radius:6px;color:var(--paper);cursor:pointer}
+  .legend .lg-toggle{display:flex;align-items:center;justify-content:center;width:1.8rem;height:1.8rem;padding:0;background:transparent;border:none;border-radius:6px;color:var(--paper);cursor:pointer}
+  .legend .lg-toggle:hover{background:rgba(239,230,212,.1)}
+  .legend .lg-toggle:focus-visible{outline:2px solid var(--trail);outline-offset:1px}
   /* on-map base/overlay switcher (top-right) — like a normal map's layer control */
   .map-ctrl{position:absolute;top:1.2rem;right:1.2rem;z-index:1000;display:flex;flex-direction:column;gap:.4rem;background:rgba(20,22,14,.95);border-radius:8px;padding:.5rem;min-width:9.5rem}
   .map-ctrl .mc-seg{display:flex;border:1px solid rgba(239,230,212,.25);border-radius:6px;overflow:hidden}
@@ -472,10 +486,11 @@
     .map-ctrl:not(.open) .mc-seg,.map-ctrl:not(.open) .mc-ov{display:none}
     .map-ctrl.open{min-width:9.5rem}
     /* road-surface legend collapses to an icon, left of the layers icon */
-    .legend{bottom:auto;top:.8rem;right:3.3rem;padding:.25rem;min-width:0}
-    .legend .lg-toggle{display:flex}
-    .legend:not(.open) h4,.legend:not(.open) .skey,.legend:not(.open) .skey-note,.legend:not(.open) .skey-study{display:none}
-    .legend.open{right:.8rem;padding:.7rem .9rem}
+    /* Phones start collapsed (panels.js decides), and the collapsed panel parks
+       beside the layers icon rather than over the map. Expanded, it takes the
+       corner. One class drives both, so nothing can be half-open. */
+    .legend{bottom:auto;top:.8rem;right:.8rem;padding:.7rem .9rem;min-width:0;max-width:min(17.5rem,72vw)}
+    .legend.collapsed{top:.8rem;right:3.3rem;padding:.25rem}
   }
 
   .map-top{position:absolute;top:1.2rem;left:1.2rem;z-index:1000;background:rgba(239,230,212,.95);border-radius:8px;padding:.7rem 1rem}

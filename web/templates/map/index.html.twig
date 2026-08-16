@@ -293,9 +293,17 @@
       <a class="add-climb" href="{{ path('contribute') }}">{{ 'map.contribute'|trans }}</a>
     </div>
     <div class="legend">
-      <button class="lg-toggle" id="lgToggle" type="button" aria-label="{{ 'map.legend_aria'|trans }}" aria-expanded="false">
+      {# Collapsible on every screen, not just phones (owner 2026-08-16). The
+         key is a reference, not a permanent fixture: a rider who has learnt
+         the colours wants the map back, and on a laptop the panel covers a
+         real corner of it. One class does it everywhere - `collapsed` on the
+         panel, `#lgBody` hidden - so a new key section can never be forgotten
+         out of the hide list the way `.rkey` just was. #}
+      <button class="lg-toggle" id="lgToggle" type="button" aria-controls="lgBody"
+              aria-label="{{ 'map.legend_aria'|trans }}" aria-expanded="true">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
       </button>
+      <div class="lg-body" id="lgBody">
       {# The key serves BOTH the curated A layer and the Surfaces tile skin —
          same seven classes, same colours, deliberately (SURFACE_STYLE is
          shared). Dropping the "· A" because it is no longer only A's key. #}
@@ -346,6 +354,7 @@
            rider to work out that the circles are junctions. An explanation, in
            the quality-note style. #}
         <div class="skey-note"><span class="rkey-node" aria-hidden="true">7</span>{{ 'map.legend_route_node'|trans }}</div>
+      </div>
       </div>
     </div>
     <div class="map-ctrl" aria-label="{{ 'map.base_aria'|trans }}">
