@@ -39,6 +39,8 @@ import math
 import pathlib
 import subprocess
 import sys
+import time
+import urllib.parse
 import urllib.request
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
@@ -142,6 +144,38 @@ def published_metres(ele, measured):
     return ele if 0.5 < ratio < 2.0 else None
 
 
+NOMINATIM = "https://nominatim.openstreetmap.org/reverse"
+UA = "CyclingCommons-climb-audit/1.0 (https://cyclingcommons.org; info@cyclingcommons.org)"
+
+
+def foot_place(lat, lng):
+    """The settlement a side STARTS from, which is how riders name a climb.
+
+    "Stelvio Pass" is two different climbs and nobody calls them side 0 and side
+    1 - they are Stelvio from Prato and Stelvio from Bormio. A pass with two
+    sides therefore needs two names, and the only honest source for them is
+    where the road actually begins.
+
+    Village -> town -> city -> municipality, in that order: a foot in the
+    valley is usually a hamlet, and falling back to the municipality gives the
+    name a local would use when the hamlet is too small to be listed. Returns
+    None rather than a guess, and the caller leaves the side unnamed.
+    """
+    url = NOMINATIM + "?" + urllib.parse.urlencode({
+        "lat": f"{lat:.6f}", "lon": f"{lng:.6f}", "format": "json", "zoom": "13",
+    })
+    req = urllib.request.Request(url, headers={"User-Agent": UA})
+    try:
+        with urllib.request.urlopen(req, timeout=30) as fh:
+            addr = json.load(fh).get("address", {})
+    except Exception:
+        return None
+    for key in ("village", "town", "city", "hamlet", "suburb", "municipality", "county"):
+        if addr.get(key):
+            return addr[key]
+    return None
+
+
 def existing_climbs():
     """Climbs already in the catalogue, as (name, lat, lng) - never re-seed one."""
     sql = ("SELECT json_agg(json_build_object('name', name, 'lat', ST_Y(geom), 'lng', ST_X(geom)))::text "
@@ -158,6 +192,9 @@ def main() -> int:
     ap.add_argument("--dir", default="tools/wikimedia/out", help="where the climb-sides-*.json live")
     ap.add_argument("--out", help="write the review table here (markdown)")
     ap.add_argument("--json-out", help="write the judged data here")
+    ap.add_argument("--name-feet", action="store_true",
+                    help="reverse-geocode each surviving foot, so a two-sided pass gets two names "
+                         "(one Nominatim call per row at 1/s - opt in)")
     args = ap.parse_args()
 
     have = existing_climbs()
@@ -249,6 +286,18 @@ def main() -> int:
                     why.append(f"{t['not_road_pct']}% off-road")
         r["verdict"], r["why"] = verdict, why
 
+    if args.name_feet:
+        # Only the survivors: a DROP is a footpath and a DUPLICATE is already
+        # named, so geocoding either spends Nominatim's one-per-second budget
+        # on rows nobody will seed.
+        wanted = [r for r in rows if r["verdict"] in ("KEEP", "CHECK")]
+        print(f"naming {len(wanted)} feet", file=sys.stderr)
+        for n, r in enumerate(wanted, 1):
+            r["foot_place"] = foot_place(*r["side"]["foot"])
+            time.sleep(1.1)  # Nominatim's published limit is 1 request/second.
+            if n % 20 == 0:
+                print(f"  {n}/{len(wanted)}", file=sys.stderr)
+
     order = {"KEEP": 0, "CHECK": 1, "DUPLICATE": 2, "DROP": 3}
     rows.sort(key=lambda r: (order[r["verdict"]], r["cc"], r["col"]["name"]))
 
@@ -267,12 +316,13 @@ def main() -> int:
         if not picked:
             continue
         lines += [f"## {v} ({len(picked)})", "",
-                  "| cc | pass | km | gain | avg | road | surface | note |",
-                  "|---|---|---:|---:|---:|---|---|---|"]
+                  "| cc | pass | from | km | gain | avg | road | surface | note |",
+                  "|---|---|---|---:|---:|---:|---|---|---|"]
         for r in picked:
             s, t = r["side"], r["trace"]
             lines.append(
-                f"| {r['cc']} | {r['col']['name']} | {s['length_m'] / 1000:.1f} | {s['gain_m']} m "
+                f"| {r['cc']} | {r['col']['name']} | {r.get('foot_place') or '-'} "
+                f"| {s['length_m'] / 1000:.1f} | {s['gain_m']} m "
                 f"| {s['avg_pct']}% | {t['top_class']} {('· ' + t['road']) if t['road'] else ''} "
                 f"| {t['unpaved_pct'] if t['unpaved_pct'] is not None else '?'}% unpaved "
                 f"| {'; '.join(r['why'])} |")
@@ -290,6 +340,7 @@ def main() -> int:
     if args.json_out:
         payload = [{"cc": r["cc"], "name": r["col"]["name"], "qid": r["col"].get("qid"),
                     "summit": r["col"]["summit"], "ele": r["col"].get("ele"),
+                    "side_index": r["idx"], "foot_place": r.get("foot_place"),
                     "verdict": r["verdict"], "why": r["why"], "trace": r["trace"],
                     **{k: v for k, v in r["side"].items()}}
                    for r in rows]

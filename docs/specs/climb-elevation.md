@@ -1259,6 +1259,72 @@ Neither tool computes a gradient. `app:climbs:recompute --id N --write` stays
 the only thing that writes measurements, so there is still exactly one place
 the published numbers come from.
 
+### 7b. Seeding passes at scale (built 2026-08-16)
+
+§7a draws ONE line. The catalogue also needed a hundred, and the gap that had
+blocked that for months was never the geometry: `climb_candidates.py` says it
+plainly - "Wikidata knows the col, not where the climb begins".
+
+`tools/wikimedia/climb_sides.py` asks the question the other way round and
+needs neither a published length nor Overpass. **A pass climb is not "N km of
+road" - it is the road from the valley to the col.** So it leaves the col in
+every direction, follows each road DOWN, and stops where the descending stops.
+That point is the foot, its distance is the length, and because a col has two
+or more roads leaving it, **every side comes back without anyone choosing one**
+- which is what makes "Stelvio from Prato" and "Stelvio from Bormio" two rows
+instead of an argument.
+
+**Road-bike costing is load-bearing, not a preference.** The first run used
+plain `bicycle` costing and returned the Camino de Santiago FOOTPATH beside the
+N-135 as 47% of the climb to Roncevaux, plus a hiking trail at the Col de
+l'Iseran. The router was not wrong - a bike can ride those - but a pass climb is
+a paved road. `bicycle_type: Road`, `avoid_bad_surfaces: 1.0`, `use_roads: 1.0`
+brings Roncevaux back at 0% off-road. This is DELIBERATELY stricter than
+`climb_line.py`, which must match the editor's own `RouteSnapper`: some stored
+climbs really are greenways (Hockai's whole line is a RAVeL), and the harvester
+may be stricter than the editor while the editor may never be stricter than its
+riders.
+
+**`climb_audit.py` is the second opinion, and it is a different instrument.**
+Arithmetic cannot tell a driveway from a col road - "a 40 km side at 1.2% is a
+valley road and a 900 m one at 14% is a driveway, and both look like climbs to
+arithmetic". Valhalla's `trace_attributes` snaps each stored line back onto the
+road graph and reports what every edge IS: `road_class`, `surface`, `use`, and
+the road's name. A via ferrata says so. It traces with the SAME costing the
+harvest routed with, because map-matching is a routing problem too and a laxer
+profile can snap a good road line onto the footpath beside it - the audit
+inventing the very defect it exists to find.
+
+Four verdicts, of which only CHECK is a judgement a person must make: DROP (the
+trace proves it is not a road), DUPLICATE (a border col in two countries' files,
+or a row already in the catalogue), CHECK, KEEP. On the 2026-08-16 run: 74 KEEP,
+21 CHECK, 15 DUPLICATE, 8 DROP - the eight being two hiking trails, a via
+ferrata at 20.5%, a railway pass, a forest road and a walking trail.
+
+**Two traps the review surfaced, both fixed in the tool.** Wikidata publishes US
+elevations in FEET, so Independence Pass read 12103 against a measured 3687 and
+the summit check called it 8 km off the col - a units bug wearing the costume of
+a data defect, caught by the feet-per-metre ratio because nothing else lands
+there. And a side much shorter than another side of the same col is usually the
+descent-stop cutting at a terrace rather than a genuinely short side; Bernina
+came back 4 km against a real 30, self-consistent enough that nothing else would
+have caught it.
+
+`app:catalog:seed-climbs` imports the reviewed artifact, KEEP-only by default,
+and **refuses DROP outright** rather than offering it behind a flag. It writes
+one item per side, identified `wikidata:<qid>:<side>` so a re-run upserts each
+side onto itself, geometry at the line's own summit rather than Wikidata's
+coordinate (the pin and the numbers then describe the same point), and
+`state = unverified` like every seeded row. It writes NO gradients: recompute
+remains the only writer, and the command says so on the way out. Naming is a
+rider question rather than a data one - "Stelvio Pass" names a col, "Stelvio
+Pass from Prato" names a climb - so the foot is reverse-geocoded into the
+artifact and tidied at import: an administrative area is dropped rather than
+shortened ("from Pitkin County" is not how anyone says it), a place already
+inside the pass name is not repeated, and two sides that would still collide are
+told apart by their road, or by their length when they share one. Pinned by
+`SeedClimbsCommandTest`.
+
 ---
 
 ## 8. Testing

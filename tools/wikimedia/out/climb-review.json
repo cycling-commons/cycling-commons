@@ -8,6 +8,8 @@
       10.0275
     ],
     "ele": 2328.0,
+    "side_index": 0,
+    "foot_place": "Poschiavo",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -1622,6 +1624,8 @@
       7.17041
     ],
     "ele": 2469.0,
+    "side_index": 0,
+    "foot_place": "Chamoille d'Orsières",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -7660,6 +7664,8 @@
       7.17041
     ],
     "ele": 2469.0,
+    "side_index": 1,
+    "foot_place": "Étroubles",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -11434,6 +11440,8 @@
       9.69583
     ],
     "ele": 1815.0,
+    "side_index": 0,
+    "foot_place": "Stampa",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -15848,6 +15856,8 @@
       9.172
     ],
     "ele": 2065.0,
+    "side_index": 0,
+    "foot_place": "Hinterrhein",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -19902,6 +19912,8 @@
       9.172
     ],
     "ele": 2065.0,
+    "side_index": 1,
+    "foot_place": "San Bernardino",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -23824,6 +23836,8 @@
       8.03168
     ],
     "ele": 2006.0,
+    "side_index": 1,
+    "foot_place": "Gondo",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -26206,6 +26220,8 @@
       9.33039
     ],
     "ele": 2113.0,
+    "side_index": 0,
+    "foot_place": "Sufers",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -30576,6 +30592,8 @@
       -71.94403
     ],
     "ele": 1305.0,
+    "side_index": 0,
+    "foot_place": "Puyehue",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -31562,6 +31580,8 @@
       -71.94403
     ],
     "ele": 1305.0,
+    "side_index": 1,
+    "foot_place": null,
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -32952,6 +32972,8 @@
       -70.09213
     ],
     "ele": 3175.0,
+    "side_index": 0,
+    "foot_place": "Río Blanco",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -38526,6 +38548,8 @@
       -70.07122
     ],
     "ele": 3832.0,
+    "side_index": 1,
+    "foot_place": "Distrito Potrerillos",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -40856,6 +40880,8 @@
       8.05278
     ],
     "ele": 1231.0,
+    "side_index": 0,
+    "foot_place": "Hinterzarten",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -42178,6 +42204,8 @@
       8.2942
     ],
     "ele": 786.0,
+    "side_index": 0,
+    "foot_place": "Gutach (Schwarzwaldbahn)",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -43488,6 +43516,8 @@
       8.2942
     ],
     "ele": 786.0,
+    "side_index": 1,
+    "foot_place": "Remsbach",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -44302,6 +44332,8 @@
       8.0655
     ],
     "ele": null,
+    "side_index": 0,
+    "foot_place": "Kirrweiler",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -45736,6 +45768,8 @@
       10.43293
     ],
     "ele": 1175.0,
+    "side_index": 0,
+    "foot_place": "Schattwald",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -46034,6 +46068,8 @@
       8.22139
     ],
     "ele": 915.0,
+    "side_index": 0,
+    "foot_place": "Waldulm",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -48196,6 +48232,8 @@
       -5.94222
     ],
     "ele": 1570.0,
+    "side_index": 0,
+    "foot_place": "Morcín",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -51886,6 +51924,8 @@
       -4.98587
     ],
     "ele": 1134.0,
+    "side_index": 0,
+    "foot_place": "Cangas de Onís",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -55932,6 +55972,8 @@
       -0.99372
     ],
     "ele": 1577.0,
+    "side_index": 0,
+    "foot_place": "9. fazeria",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -58206,6 +58248,8 @@
       0.98332
     ],
     "ele": 2072.0,
+    "side_index": 0,
+    "foot_place": "Naut Aran",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -61492,6 +61536,8 @@
       -0.41857
     ],
     "ele": 1794.0,
+    "side_index": 0,
+    "foot_place": "Laruns",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -63662,6 +63708,8 @@
       -4.00359
     ],
     "ele": 1858.0,
+    "side_index": 0,
+    "foot_place": "Becerril de la Sierra",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -66136,6 +66184,8 @@
       -4.00359
     ],
     "ele": 1858.0,
+    "side_index": 1,
+    "foot_place": "Real Sitio de San Ildefonso",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -68706,6 +68756,8 @@
       -1.32417
     ],
     "ele": 1057.0,
+    "side_index": 0,
+    "foot_place": "Luzaide / Valcarlos",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -71760,6 +71812,8 @@
       -0.52581
     ],
     "ele": 1632.0,
+    "side_index": 0,
+    "foot_place": "Urdos",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -74658,6 +74712,8 @@
       -0.52581
     ],
     "ele": 1632.0,
+    "side_index": 1,
+    "foot_place": "Canfranc",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -76536,6 +76592,8 @@
       7.03083
     ],
     "ele": 2764.0,
+    "side_index": 0,
+    "foot_place": "La Daille",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -80122,6 +80180,8 @@
       7.03083
     ],
     "ele": 2764.0,
+    "side_index": 1,
+    "foot_place": "Bessans",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -83400,6 +83460,8 @@
       6.37528
     ],
     "ele": 1993.0,
+    "side_index": 0,
+    "foot_place": "Saint-Avre",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -89218,6 +89280,8 @@
       6.37528
     ],
     "ele": 1993.0,
+    "side_index": 1,
+    "foot_place": "Bonneval",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -93528,6 +93592,8 @@
       5.76165
     ],
     "ele": 1498.0,
+    "side_index": 0,
+    "foot_place": "Anglefort",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -96326,6 +96392,8 @@
       5.76165
     ],
     "ele": 1498.0,
+    "side_index": 1,
+    "foot_place": "Lochieu",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -97592,6 +97660,8 @@
       0.14806
     ],
     "ele": 2115.0,
+    "side_index": 0,
+    "foot_place": "Campan",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -101946,6 +102016,8 @@
       0.14806
     ],
     "ele": 2115.0,
+    "side_index": 1,
+    "foot_place": "Luz-Saint-Sauveur",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -106320,6 +106392,8 @@
       6.88389
     ],
     "ele": 2188.0,
+    "side_index": 0,
+    "foot_place": "Arc 1600",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -112498,6 +112572,8 @@
       6.88389
     ],
     "ele": 2188.0,
+    "side_index": 1,
+    "foot_place": "Morgex",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -117660,6 +117736,8 @@
       6.9009
     ],
     "ele": 2081.0,
+    "side_index": 0,
+    "foot_place": "Lanslevillard",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -119882,6 +119960,8 @@
       1.69087
     ],
     "ele": null,
+    "side_index": 0,
+    "foot_place": "Les Cabannes",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -123304,6 +123384,8 @@
       -3.19895
     ],
     "ele": 356.0,
+    "side_index": 0,
+    "foot_place": "Rosthwaite",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -124994,6 +125076,8 @@
       -3.19895
     ],
     "ele": 356.0,
+    "side_index": 1,
+    "foot_place": "Cumberland",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -125808,6 +125892,8 @@
       -3.11861
     ],
     "ele": 393.0,
+    "side_index": 0,
+    "foot_place": "Little Langdale",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -127522,6 +127608,8 @@
       6.97944
     ],
     "ele": 2744.0,
+    "side_index": 0,
+    "foot_place": "Sampeyre",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -131464,6 +131552,8 @@
       6.97944
     ],
     "ele": 2744.0,
+    "side_index": 1,
+    "foot_place": "Château-Queyras",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -135774,6 +135864,8 @@
       10.48806
     ],
     "ele": 2618.0,
+    "side_index": 0,
+    "foot_place": "San Nicolò",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -139172,6 +139264,8 @@
       10.48806
     ],
     "ele": 2618.0,
+    "side_index": 1,
+    "foot_place": "Ponte di Legno",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -142806,6 +142900,8 @@
       10.29838
     ],
     "ele": 1852.0,
+    "side_index": 0,
+    "foot_place": "Tiolo",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -145272,6 +145368,8 @@
       10.29838
     ],
     "ele": 1852.0,
+    "side_index": 1,
+    "foot_place": "Incudine",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -147194,6 +147292,8 @@
       11.81358
     ],
     "ele": 2239.0,
+    "side_index": 0,
+    "foot_place": "Arabba",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -149320,6 +149420,8 @@
       11.75722
     ],
     "ele": 2218.0,
+    "side_index": 0,
+    "foot_place": "Lajen - Laion",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -154198,6 +154300,8 @@
       10.454
     ],
     "ele": 2758.0,
+    "side_index": 0,
+    "foot_place": "Agums - Agumes",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -166064,6 +166168,8 @@
       10.454
     ],
     "ele": 2758.0,
+    "side_index": 1,
+    "foot_place": "Taufers im Münstertal - Tubre",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -173774,6 +173880,8 @@
       11.09667
     ],
     "ele": 2474.0,
+    "side_index": 0,
+    "foot_place": "Rabenstein - Corvara in Passiria",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -176532,6 +176640,8 @@
       10.43389
     ],
     "ele": 2501.0,
+    "side_index": 0,
+    "foot_place": "Bormio",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -181150,6 +181260,8 @@
       10.43389
     ],
     "ele": 2501.0,
+    "side_index": 1,
+    "foot_place": "Müstair",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -187004,6 +187116,8 @@
       139.01214
     ],
     "ele": 759.0,
+    "side_index": 0,
+    "foot_place": "南足柄市",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -189014,6 +189128,8 @@
       142.76497
     ],
     "ele": 644.0,
+    "side_index": 0,
+    "foot_place": "新得町",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -190052,6 +190168,8 @@
       171.56
     ],
     "ele": 920.0,
+    "side_index": 0,
+    "foot_place": "Westland District",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -192182,6 +192300,8 @@
       172.72
     ],
     "ele": 634.0,
+    "side_index": 0,
+    "foot_place": "Tasman District",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -192840,6 +192960,8 @@
       171.74194
     ],
     "ele": 942.0,
+    "side_index": 0,
+    "foot_place": "Selwyn District",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -193914,6 +194036,8 @@
       13.64217
     ],
     "ele": 2055.0,
+    "side_index": 0,
+    "foot_place": "Cave del Predil / Raibl / Rabelj / Rabil",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -198332,6 +198456,8 @@
       14.585
     ],
     "ele": 1338.0,
+    "side_index": 0,
+    "foot_place": "Podolševa",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -200626,6 +200752,8 @@
       13.57818
     ],
     "ele": 1156.0,
+    "side_index": 0,
+    "foot_place": "Kal-Koritnica",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -203028,6 +203156,8 @@
       13.57818
     ],
     "ele": 1156.0,
+    "side_index": 1,
+    "foot_place": "Cave del Predil / Raibl / Rabelj / Rabil",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -204862,6 +204992,8 @@
       15.2064
     ],
     "ele": 670.0,
+    "side_index": 0,
+    "foot_place": "Stammeregg",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -205796,6 +205928,8 @@
       14.5272
     ],
     "ele": 1215.0,
+    "side_index": 0,
+    "foot_place": "Blasnitzen/Plaznica",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -210586,6 +210720,8 @@
       13.74479
     ],
     "ele": 1611.0,
+    "side_index": 0,
+    "foot_place": "Bovec",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -214996,6 +215132,8 @@
       13.74479
     ],
     "ele": 1611.0,
+    "side_index": 1,
+    "foot_place": "Kranjska Gora",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -218366,6 +218504,8 @@
       13.75156
     ],
     "ele": 1071.0,
+    "side_index": 0,
+    "foot_place": "Korpitsch",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -219604,6 +219744,8 @@
       -106.564
     ],
     "ele": 12103.0,
+    "side_index": 0,
+    "foot_place": "Pitkin County",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -221330,6 +221472,8 @@
       -106.564
     ],
     "ele": 12103.0,
+    "side_index": 1,
+    "foot_place": "Lake County",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -222516,6 +222660,8 @@
       22.40111
     ],
     "ele": 730.0,
+    "side_index": 0,
+    "foot_place": "Garden Route District Municipality",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -225678,6 +225824,8 @@
       18.9283
     ],
     "ele": 420.0,
+    "side_index": 0,
+    "foot_place": "Sir Lowry's Pass",
     "verdict": "KEEP",
     "why": [],
     "trace": {
@@ -227188,6 +227336,8 @@
       152.41444
     ],
     "ele": 755.0,
+    "side_index": 0,
+    "foot_place": null,
     "verdict": "CHECK",
     "why": [
       "tops out 161 m from the published col (594 vs 755 m)"
@@ -227692,6 +227842,8 @@
       -135.13806
     ],
     "ele": 873.0,
+    "side_index": 0,
+    "foot_place": "Skagway",
     "verdict": "CHECK",
     "why": [
       "tops out 126 m from the published col (999 vs 873 m)"
@@ -228204,6 +228356,8 @@
       8.03168
     ],
     "ele": 2006.0,
+    "side_index": 0,
+    "foot_place": "Geimen",
     "verdict": "CHECK",
     "why": [
       "9.4% off-road"
@@ -232744,6 +232898,8 @@
       9.33039
     ],
     "ele": 2113.0,
+    "side_index": 1,
+    "foot_place": "Madesimo",
     "verdict": "CHECK",
     "why": [
       "only 4.2 km against 12.8 km on another side - the cut may have landed on a terrace"
@@ -233888,6 +234044,8 @@
       -69.85
     ],
     "ele": 4780.0,
+    "side_index": 0,
+    "foot_place": "Vicuña",
     "verdict": "CHECK",
     "why": [
       "tops out 206 m from the published col (4574 vs 4780 m)"
@@ -236744,6 +236902,8 @@
       -71.13611
     ],
     "ele": 1895.0,
+    "side_index": 0,
+    "foot_place": "Antuco",
     "verdict": "CHECK",
     "why": [
       "the router could not match this line to any road"
@@ -237205,6 +237365,8 @@
       -70.07122
     ],
     "ele": 3832.0,
+    "side_index": 0,
+    "foot_place": "Río Blanco",
     "verdict": "CHECK",
     "why": [
       "8.4% off-road"
@@ -244517,6 +244679,8 @@
       10.20194
     ],
     "ele": 1692.0,
+    "side_index": 0,
+    "foot_place": "Faistenoy",
     "verdict": "CHECK",
     "why": [
       "tops out 303 m from the published col (1389 vs 1692 m)",
@@ -247326,6 +247490,8 @@
       -0.99372
     ],
     "ele": 1577.0,
+    "side_index": 1,
+    "foot_place": "Larrau",
     "verdict": "CHECK",
     "why": [
       "only 4.0 km against 10.8 km on another side - the cut may have landed on a terrace"
@@ -248102,6 +248268,8 @@
       0.98332
     ],
     "ele": 2072.0,
+    "side_index": 1,
+    "foot_place": "la Guingueta d'Àneu",
     "verdict": "CHECK",
     "why": [
       "9.1% off-road"
@@ -251218,6 +251386,8 @@
       -1.32417
     ],
     "ele": 1057.0,
+    "side_index": 1,
+    "foot_place": "Auritz / Burguete",
     "verdict": "CHECK",
     "why": [
       "only 3.9 km against 12.0 km on another side - the cut may have landed on a terrace"
@@ -251766,6 +251936,8 @@
       6.77417
     ],
     "ele": 1148.0,
+    "side_index": 0,
+    "foot_place": "Plancher-les-Mines",
     "verdict": "CHECK",
     "why": [
       "20.7% off-road"
@@ -252938,6 +253110,8 @@
       -3.19712
     ],
     "ele": 393.0,
+    "side_index": 0,
+    "foot_place": "Boot",
     "verdict": "CHECK",
     "why": [
       "tops out 125 m from the published col (268 vs 393 m)"
@@ -253886,6 +254060,8 @@
       11.09667
     ],
     "ele": 2474.0,
+    "side_index": 1,
+    "foot_place": "Sölden",
     "verdict": "CHECK",
     "why": [
       "only 4.8 km against 12.3 km on another side - the cut may have landed on a terrace"
@@ -254626,6 +254802,8 @@
       139.01214
     ],
     "ele": 759.0,
+    "side_index": 1,
+    "foot_place": "小山町",
     "verdict": "CHECK",
     "why": [
       "only 4.5 km against 12.1 km on another side - the cut may have landed on a terrace",
@@ -255687,6 +255865,8 @@
       139.01389
     ],
     "ele": null,
+    "side_index": 1,
+    "foot_place": "三島市",
     "verdict": "CHECK",
     "why": [
       "15.5% off-road"
@@ -258207,6 +258387,8 @@
       139.01389
     ],
     "ele": null,
+    "side_index": 2,
+    "foot_place": "箱根町",
     "verdict": "CHECK",
     "why": [
       "only 2.2 km against 13.2 km on another side - the cut may have landed on a terrace"
@@ -258671,6 +258853,8 @@
       137.60548
     ],
     "ele": null,
+    "side_index": 1,
+    "foot_place": "松本市",
     "verdict": "CHECK",
     "why": [
       "13.5% off-road"
@@ -260327,6 +260511,8 @@
       143.03806
     ],
     "ele": 1230.0,
+    "side_index": 0,
+    "foot_place": "浦河町",
     "verdict": "CHECK",
     "why": [
       "tops out 72 m from the published col (1302 vs 1230 m)"
@@ -261123,6 +261309,8 @@
       143.03806
     ],
     "ele": 1230.0,
+    "side_index": 1,
+    "foot_place": "広尾町",
     "verdict": "CHECK",
     "why": [
       "tops out 72 m from the published col (1302 vs 1230 m)"
@@ -261523,6 +261711,8 @@
       14.26663
     ],
     "ele": 1367.0,
+    "side_index": 0,
+    "foot_place": "Ravne",
     "verdict": "CHECK",
     "why": [
       "tops out 337 m from the published col (1030 vs 1367 m)"
@@ -263363,6 +263553,8 @@
       5.88064
     ],
     "ele": 556.0,
+    "side_index": 0,
+    "foot_place": null,
     "verdict": "DUPLICATE",
     "why": [
       "already in the catalogue as \"Col du Rosier\""
@@ -263851,6 +264043,8 @@
       8.41667
     ],
     "ele": 2429.0,
+    "side_index": 0,
+    "foot_place": null,
     "verdict": "DUPLICATE",
     "why": [
       "already in the catalogue as \"Furka Pass\""
@@ -267755,6 +267949,8 @@
       8.41667
     ],
     "ele": 2429.0,
+    "side_index": 1,
+    "foot_place": null,
     "verdict": "DUPLICATE",
     "why": [
       "already in the catalogue as \"Furka Pass\""
@@ -270895,6 +271091,8 @@
       8.56167
     ],
     "ele": 2106.0,
+    "side_index": 0,
+    "foot_place": null,
     "verdict": "DUPLICATE",
     "why": [
       "already in the catalogue as \"Gotthard Pass\""
@@ -277315,6 +277513,8 @@
       8.56167
     ],
     "ele": 2106.0,
+    "side_index": 1,
+    "foot_place": null,
     "verdict": "DUPLICATE",
     "why": [
       "already in the catalogue as \"Gotthard Pass\""
@@ -279967,6 +280167,8 @@
       8.34528
     ],
     "ele": 2164.0,
+    "side_index": 0,
+    "foot_place": null,
     "verdict": "DUPLICATE",
     "why": [
       "already in the catalogue as \"Grimsel Pass\""
@@ -287415,6 +287617,8 @@
       8.34528
     ],
     "ele": 2164.0,
+    "side_index": 1,
+    "foot_place": null,
     "verdict": "DUPLICATE",
     "why": [
       "already in the catalogue as \"Grimsel Pass\""
@@ -289691,6 +289895,8 @@
       -0.52581
     ],
     "ele": 1632.0,
+    "side_index": 0,
+    "foot_place": null,
     "verdict": "DUPLICATE",
     "why": [
       "same Wikidata item as ES Somport"
@@ -292591,6 +292797,8 @@
       -0.52581
     ],
     "ele": 1632.0,
+    "side_index": 1,
+    "foot_place": null,
     "verdict": "DUPLICATE",
     "why": [
       "same Wikidata item as ES Somport"
@@ -294471,6 +294679,8 @@
       7.17041
     ],
     "ele": 2469.0,
+    "side_index": 0,
+    "foot_place": null,
     "verdict": "DUPLICATE",
     "why": [
       "same Wikidata item as CH Great St Bernard Pass"
@@ -300511,6 +300721,8 @@
       7.17041
     ],
     "ele": 2469.0,
+    "side_index": 1,
+    "foot_place": null,
     "verdict": "DUPLICATE",
     "why": [
       "same Wikidata item as CH Great St Bernard Pass"
@@ -304287,6 +304499,8 @@
       6.88389
     ],
     "ele": 2188.0,
+    "side_index": 0,
+    "foot_place": null,
     "verdict": "DUPLICATE",
     "why": [
       "same Wikidata item as FR Little St Bernard Pass"
@@ -310467,6 +310681,8 @@
       6.88389
     ],
     "ele": 2188.0,
+    "side_index": 1,
+    "foot_place": null,
     "verdict": "DUPLICATE",
     "why": [
       "same Wikidata item as FR Little St Bernard Pass"
@@ -315631,6 +315847,8 @@
       -135.23861
     ],
     "ele": 1067.0,
+    "side_index": 0,
+    "foot_place": null,
     "verdict": "DUPLICATE",
     "why": [
       "same Wikidata item as CA Chilkoot Pass"
@@ -316071,6 +316289,8 @@
       -135.13806
     ],
     "ele": 873.0,
+    "side_index": 0,
+    "foot_place": null,
     "verdict": "DUPLICATE",
     "why": [
       "same Wikidata item as CA White Pass"
@@ -316583,6 +316803,8 @@
       -135.23861
     ],
     "ele": 1067.0,
+    "side_index": 0,
+    "foot_place": null,
     "verdict": "DROP",
     "why": [
       "54.1% of it is track/path/driveway, not a road"
@@ -317023,6 +317245,8 @@
       -116.75223
     ],
     "ele": 1539.0,
+    "side_index": 0,
+    "foot_place": null,
     "verdict": "DROP",
     "why": [
       "74.1% of it is track/path/driveway, not a road"
@@ -318971,6 +319195,8 @@
       7.96139
     ],
     "ele": 2061.0,
+    "side_index": 0,
+    "foot_place": null,
     "verdict": "DROP",
     "why": [
       "38.3% of it is track/path/driveway, not a road"
@@ -321683,6 +321909,8 @@
       139.01389
     ],
     "ele": null,
+    "side_index": 0,
+    "foot_place": null,
     "verdict": "DROP",
     "why": [
       "54.2% of it is track/path/driveway, not a road"
@@ -324787,6 +325015,8 @@
       137.60548
     ],
     "ele": null,
+    "side_index": 0,
+    "foot_place": null,
     "verdict": "DROP",
     "why": [
       "32.5% of it is track/path/driveway, not a road"
@@ -327295,6 +327525,8 @@
       14.01972
     ],
     "ele": 1586.0,
+    "side_index": 0,
+    "foot_place": null,
     "verdict": "DROP",
     "why": [
       "68.2% of it is track/path/driveway, not a road"
@@ -327839,6 +328071,8 @@
       14.5272
     ],
     "ele": 1215.0,
+    "side_index": 1,
+    "foot_place": null,
     "verdict": "DROP",
     "why": [
       "41.8% of it is track/path/driveway, not a road"
@@ -328583,6 +328817,8 @@
       22.42028
     ],
     "ele": 455.0,
+    "side_index": 0,
+    "foot_place": null,
     "verdict": "DROP",
     "why": [
       "100.0% of it is track/path/driveway, not a road"
