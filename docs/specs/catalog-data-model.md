@@ -384,7 +384,20 @@ pieces remain, and this is what each has to be. **They are independent: the
 editor can ship without the reputation layers and vice versa**, which is the
 reason to write them separately rather than as one "finish links" task.
 
-**1. The wizard's repeatable multi-locale editor.**
+**1. The wizard's repeatable multi-locale editor — BUILT 2026-08-16.** What
+follows was the design; it shipped as written, on I and J. `FieldKind::Links`
+renders one hidden JSON field marked `data-links-editor`, `links-editor.js`
+builds the control beside it, and `CatalogContributionService::decodeLinks()`
+parses it **before the change diff** - after it, a save that touched nothing
+would compare a JSON string to a stored array, report a change every time, and
+send a curator work that does not exist. `OutboundLinks::assertValid()` gates
+it, because the browser's caps are a courtesy and the wizard must not be the
+one door that skips the rule. An emptied editor posts `''` and normalises to
+null, so taking a link down is a real edit. The validator's message is NOT
+echoed back: every one of its rules is already enforced in the browser, so a
+rider can only reach it by posting by hand, and that is the case where naming
+internals is a favour to the wrong person. Pinned by
+`OutboundLinksEditorTest`. Design as written:
 
 Today `links` can only arrive from the importer. The wizard needs a field that
 matches the two-level shape without teaching a rider the words "entry" and

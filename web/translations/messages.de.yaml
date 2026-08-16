@@ -2285,6 +2285,14 @@ improve:
     what_changed_required: 'Bitte beschreibe, was du hinzufügst oder änderst.'
     what_changed_too_long: 'Die Beschreibung darf höchstens 2000 Zeichen lang sein.'
     note_too_long: 'Der Hinweis darf höchstens 2000 Zeichen lang sein.'
+  links:
+    add_entry: "Seite hinzufügen"
+    add_language: "weitere Sprache hinzufügen"
+    remove_entry: "Diese Seite entfernen"
+    remove_url: "Diese Adresse entfernen"
+    label_placeholder: "Was ist das für eine Seite? z. B. Wikipedia"
+    any_language: "beliebige Sprache"
+    full: "Mehr Seiten kann ein Ort nicht verlinken (%n%)."
 contribute_hub:
   kicker: 'Beitragen'
   title: 'Was möchtest du hinzufügen?'
@@ -2359,6 +2367,7 @@ contribute:
     already_materialized: 'Dieser Ort ist bereits im Commons — öffne ihn auf der Karte und bearbeite ihn dort.'
     nothing_changed: 'Noch hat sich nichts geändert — ändere ein Detail, füge ein Foto hinzu oder verschiebe die Markierung, bevor du absendest.'
     invalid_geometry: 'Die gezeichnete Form konnte nicht gelesen werden — zeichne sie neu und versuche es erneut.'
+    invalid_links: "Diese Links konnten nicht gelesen werden. Prüfe, ob jede Adresse mit https:// beginnt, und versuche es erneut."
     media_invalid: 'Eines der angehängten Fotos konnte nicht verwendet werden — entferne es und versuche es erneut.'
 media:
   page:

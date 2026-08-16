@@ -209,6 +209,23 @@ final class ImproveType extends AbstractType
                 'choices' => array_combine($field->choices, $field->choices),
                 'data' => \is_array($current[$field->name] ?? null) ? $current[$field->name] : [],
             ]),
+            /* The two-level links editor. One HIDDEN field carrying JSON, and
+               the widget a rider actually uses is built beside it by
+               links-editor.js - the same shape the climb `route` and the
+               segment endpoints already travel in. A `links[0][urls][1][url]`
+               name grid would put the nesting in the HTTP layer, where PHP's
+               array parsing rather than OutboundLinks would decide what a
+               malformed post means. The current value is re-encoded rather
+               than passed through, so the editor always parses one known
+               shape. */
+            FieldKind::Links => $builder->add($field->name, HiddenType::class, [
+                'label' => $field->label,
+                'required' => false,
+                'data' => \is_array($current[$field->name] ?? null)
+                    ? json_encode($current[$field->name], \JSON_THROW_ON_ERROR | \JSON_UNESCAPED_SLASHES | \JSON_UNESCAPED_UNICODE)
+                    : '',
+                'attr' => ['data-links-editor' => $field->label],
+            ]),
             FieldKind::Textarea => $builder->add($field->name, TextareaType::class, [
                 'label' => $field->label,
                 'required' => false,

@@ -347,10 +347,16 @@ final class CatalogFormRegistry
                     CatalogField::select('bench', 'Bench?', self::UNKNOWN_YES_NO),
                     // The shared 'web' key (see WhereToSleep's note): a place
                     // other people wrote whole pages about should be able to
-                    // point at its official one. The multi-destination `links`
-                    // attribute is import-fed (OutboundLinks); this is the one
-                    // a rider can type.
+                    // point at its official one. ONE storage slot per fact -
+                    // the official site is this field and never a `links`
+                    // entry, which is why OutboundLinks refuses an entry
+                    // labelled "Official site" (catalog-data-model.md §7).
                     CatalogField::url('web', 'Official site', placeholder: 'https://… (the place’s own site)'),
+                    // Everything ELSE worth pointing at: the Wikipedia article,
+                    // the heritage body, the tourist office. Rider-editable
+                    // since 2026-08-16; it was import-only before, so a rider
+                    // who knew the page had nowhere to put it.
+                    CatalogField::links('links', 'Other pages about this place'),
                 ],
             ),
 
@@ -369,6 +375,10 @@ final class CatalogFormRegistry
                     // Same rationale as ScenicViews: the Muiderslot has an
                     // official castle site, and the drawer should say so.
                     CatalogField::url('web', 'Official site', placeholder: 'https://… (the place’s own site)'),
+                    // And its Wikipedia article, and the heritage body's page.
+                    // The Muiderslot example in catalog-data-model.md §7 is
+                    // exactly this letter.
+                    CatalogField::links('links', 'Other pages about this place'),
                 ],
             ),
 

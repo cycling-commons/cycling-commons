@@ -8,6 +8,7 @@ namespace App\Contribution;
 
 use App\Catalog\Entity\Item;
 use App\Catalog\Entity\Submission;
+use App\Catalog\Import\OutboundLinks;
 use App\Catalog\ItemSource;
 use App\Catalog\ItemState;
 use App\Catalog\ItemType;
@@ -185,6 +186,8 @@ final class CatalogContributionService implements ContributionStubInterface
             // must not mint an unnamed item.
             $this->reject('contribute.error.name_required', 'details');
         }
+
+        $proposed = $this->decodeLinks($proposed);
 
         $attributes = [];
         foreach ($proposed as $field => $raw) {
@@ -423,6 +426,11 @@ final class CatalogContributionService implements ContributionStubInterface
            marker IS restating the max gradient; a rider who leaves it alone is
            not. */
         $proposed = $this->deriveClimbProfile($proposed, $item->getAttributes());
+        /* BEFORE the diff, not after. `links` is stored as an array and posted
+           as a JSON string; comparing the two would report a change on every
+           save even when the rider touched nothing, and every one of those
+           would reach a curator as work. */
+        $proposed = $this->decodeLinks($proposed);
 
         $currentAttrs = $item->getAttributes();
         $changes = [];
@@ -727,6 +735,55 @@ final class CatalogContributionService implements ContributionStubInterface
      * violation message as a FormError, so intake rejections read like every
      * other field error rather than a 500.
      */
+    /**
+     * Turns the links editor's one hidden JSON field into the array the rest of
+     * the pipeline stores (catalog-data-model.md §7 `links`).
+     *
+     * The client cap is a suggestion and this is the rule: `OutboundLinks`
+     * already gates every other write path, and the wizard must not become the
+     * one door that skips it. Both the shape and the caps are re-checked here
+     * on a value the browser wrote.
+     *
+     * An emptied editor posts '' and becomes null, which `normalizeEmpty`
+     * records as a removal - so clearing every link is a real edit rather than
+     * a silent no-op.
+     *
+     * @param array<string, mixed> $proposed
+     *
+     * @return array<string, mixed>
+     */
+    private function decodeLinks(array $proposed): array
+    {
+        $raw = $proposed['links'] ?? null;
+        // Absent, or already an array (an internal caller rather than the
+        // wizard). Nothing to decode either way.
+        if (!\is_string($raw)) {
+            return $proposed;
+        }
+        if ('' === trim($raw)) {
+            $proposed['links'] = null;
+
+            return $proposed;
+        }
+
+        try {
+            $decoded = json_decode($raw, true, 512, \JSON_THROW_ON_ERROR);
+            OutboundLinks::assertValid($decoded);
+        } catch (\JsonException|\InvalidArgumentException) {
+            /* The rule is NOT named back to the rider, deliberately. Every one
+               of OutboundLinks' messages describes a cap the editor already
+               enforces in the browser, so a rider can only reach this by
+               posting by hand - and a hand-crafted post is the case where
+               echoing the validator's internals is a favour to the wrong
+               person. */
+            $this->reject('contribute.error.invalid_links', 'links');
+        }
+
+        $proposed['links'] = $decoded;
+
+        return $proposed;
+    }
+
     private function reject(string $message, string $field): never
     {
         throw new ValidationFailedException($message, new ConstraintViolationList([new ConstraintViolation($message, $message, [], $message, $field, null)]));

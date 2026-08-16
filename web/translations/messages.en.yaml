@@ -1861,6 +1861,14 @@ improve:
     what_changed_required: 'Please describe what you are adding or changing.'
     what_changed_too_long: 'Description must be 2000 characters or fewer.'
     note_too_long: 'Note must be 2000 characters or fewer.'
+  links:
+    add_entry: "add a page"
+    add_language: "add another language"
+    remove_entry: "Remove this page"
+    remove_url: "Remove this address"
+    label_placeholder: "What is this page? e.g. Wikipedia"
+    any_language: "any language"
+    full: "That is the most pages one place can link to (%n%)."
 contribute_hub:
   kicker: 'Contribute'
   title: 'What would you like to add?'
@@ -1935,6 +1943,7 @@ contribute:
     already_materialized: 'This place is already in the Commons — open it on the map and edit it there.'
     nothing_changed: 'Nothing has changed yet — edit a detail, add a photo, or move the pin before you send it.'
     invalid_geometry: 'The drawn shape could not be read — redraw it and try again.'
+    invalid_links: "Those links could not be read. Check each address starts with https:// and try again."
     media_invalid: 'One of the attached photos could not be used — remove it and try again.'
 media:
   page:

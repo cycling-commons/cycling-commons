@@ -1452,6 +1452,17 @@
     });
   }
 
+  // The outbound-links editor (catalog-data-model.md §7 `links`). Mounted by
+  // the marker attribute rather than by field name, because the registry
+  // decides which letters carry one and the wizard should not hold a second
+  // copy of that list.
+  if (window.Cc && window.Cc.mountLinksEditor) {
+    var linkFields = document.querySelectorAll('#wiz input[data-links-editor]');
+    for (var li = 0; li < linkFields.length; li++) {
+      window.Cc.mountLinksEditor(linkFields[li]);
+    }
+  }
+
   // Wire up the photo link button
   var btnLinkPhoto = document.getElementById('btn-link-photo');
   if (btnLinkPhoto) btnLinkPhoto.addEventListener('click', function () { linkMedia('photo'); });

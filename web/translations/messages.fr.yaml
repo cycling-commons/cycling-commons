@@ -2282,6 +2282,14 @@ improve:
     what_changed_required: 'Veuillez décrire ce que vous ajoutez ou modifiez.'
     what_changed_too_long: 'La description doit comporter 2000 caractères ou moins.'
     note_too_long: 'La note doit comporter 2000 caractères ou moins.'
+  links:
+    add_entry: "ajouter une page"
+    add_language: "ajouter une autre langue"
+    remove_entry: "Retirer cette page"
+    remove_url: "Retirer cette adresse"
+    label_placeholder: "Quelle est cette page ? ex. Wikipédia"
+    any_language: "toutes langues"
+    full: "C'est le maximum de pages qu'un lieu peut relier (%n%)."
 contribute_hub:
   kicker: 'Contribuer'
   title: 'Que souhaitez-vous ajouter ?'
@@ -2356,6 +2364,7 @@ contribute:
     already_materialized: 'Ce lieu est déjà dans le Commons — ouvrez-le sur la carte et modifiez-le là-bas.'
     nothing_changed: 'Rien n''a encore changé — modifiez un détail, ajoutez une photo ou déplacez l''épingle avant d''envoyer.'
     invalid_geometry: 'La forme dessinée n’a pas pu être lue — redessinez-la et réessayez.'
+    invalid_links: "Ces liens n'ont pas pu être lus. Vérifiez que chaque adresse commence par https:// et réessayez."
     media_invalid: 'Une des photos jointes n''a pas pu être utilisée — retirez-la et réessayez.'
 media:
   page:

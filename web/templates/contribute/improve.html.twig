@@ -71,6 +71,29 @@
   .field input[type=checkbox]:checked + label{background:var(--trail);border-color:var(--trail);color:var(--ink)}
   .field input[type=checkbox]:focus-visible + label{outline:2px solid var(--trail);outline-offset:2px}
 
+  /* Outbound-links editor: a nested repeatable, so it spans both grid columns
+     and each destination is a bordered card. Without the span every url row
+     wraps inside a half-width column and the editor reads as broken. */
+  .fgrid .field-links{grid-column:1/-1}
+  .lk-editor{display:flex;flex-direction:column;gap:.9rem;margin-top:.2rem}
+  .lk-entry{border:1px solid rgba(20,22,14,.16);border-radius:8px;padding:.9rem 1rem;background:var(--paper)}
+  .lk-label{font-weight:600}
+  .lk-url{display:flex;align-items:center;gap:.6rem;margin-top:.5rem}
+  .lk-url-input{flex:1 1 auto;min-width:0}
+  .lk-locale{flex:0 0 auto;width:auto;min-width:9rem}
+  .lk-x{flex:0 0 auto;border:none;background:transparent;color:var(--clay);font-size:1.1rem;line-height:1;cursor:pointer;padding:.2rem .35rem}
+  .lk-x:hover{color:var(--danger, #8b1a1a)}
+  .lk-actions{display:flex;gap:1rem;flex-wrap:wrap;margin-top:.7rem}
+  .lk-add,.lk-drop{border:none;background:transparent;cursor:pointer;padding:0;
+    font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase}
+  .lk-add{color:var(--clay)}
+  .lk-drop{color:#9a9d8c}
+  .lk-add:hover,.lk-drop:hover{text-decoration:underline}
+  .lk-add-entry{align-self:flex-start}
+  /* Say WHY the add button is gone. A control that vanishes at a threshold
+     reads as a bug. */
+  .lk-full{font-family:var(--mono);font-size:.62rem;color:#9a9d8c;margin:0}
+
   /* step 1 map */
   #wmap{height:clamp(420px,74vh,720px);border-radius:8px;overflow:hidden;border:1px solid rgba(20,22,14,.15);margin-bottom:.8rem;background:var(--paper-deep)}
   #wmap.confirm{height:clamp(280px,40vh,420px)}
@@ -394,6 +417,25 @@
     chip_host_fallback: 'improve.step3.chip_host_fallback'|trans,
     nothing_changed: 'contribute.error.nothing_changed'|trans
   }|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
+  {# The outbound-links editor's own bag: its caps come from OutboundLinks so
+     raising one is a single edit rather than three, and the language names are
+     endonyms, matching the language menu. #}
+  <script nonce="{{ csp_nonce() }}">window.CC_LINKS = {{ {
+    maxEntries: constant('App\\Catalog\\Import\\OutboundLinks::MAX_ENTRIES'),
+    maxUrls: constant('App\\Catalog\\Import\\OutboundLinks::MAX_URLS_PER_ENTRY'),
+    maxLabel: constant('App\\Catalog\\Import\\OutboundLinks::MAX_LABEL_LENGTH'),
+    locales: constant('App\\Catalog\\Import\\OutboundLinks::LOCALES'),
+    localeNames: {'en': 'English', 'fr': 'Français', 'nl': 'Nederlands', 'de': 'Deutsch', 'es': 'Español'},
+    i18n: {
+      addEntry: 'improve.links.add_entry'|trans,
+      addLanguage: 'improve.links.add_language'|trans,
+      removeEntry: 'improve.links.remove_entry'|trans,
+      removeUrl: 'improve.links.remove_url'|trans,
+      labelPlaceholder: 'improve.links.label_placeholder'|trans,
+      anyLanguage: 'improve.links.any_language'|trans,
+      full: 'improve.links.full'|trans({'%n%': constant('App\\Catalog\\Import\\OutboundLinks::MAX_ENTRIES')})
+    }
+  }|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
   {# Translated marker labels for the shared climb editor (foot/summit/steepest) — read as a fallback by climb-editor.js when a mount call doesn't pass opts.labels explicitly. #}
   <script nonce="{{ csp_nonce() }}">window.CC_EDITOR_LABELS = {{ {foot: 'js.climb_marker_foot'|trans, summit: 'js.climb_marker_summit'|trans, steepest: 'js.climb_marker_steepest'|trans}|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
 
@@ -516,13 +558,15 @@
        A's note so it sits beside width instead of below it. #}
     <div class="fgrid{{ item_type.letter == 'A' ? ' fgrid-a' }}">
     {% for child in form.details %}
-      <div class="field" data-f="{{ child.vars.name }}">
+      {# A links editor is a nested repeatable, not a control: it spans both
+         columns the way a textarea does, or every row inside it wraps. #}
+      <div class="field{{ child.vars.attr['data-links-editor'] is defined ? ' field-links' }}" data-f="{{ child.vars.name }}">
         {{ form_label(child) }}
         {{ form_widget(child) }}
       </div>
     {% endfor %}
     {% for child in form.extras %}
-      <div class="field" data-f="{{ child.vars.name }}">
+      <div class="field{{ child.vars.attr['data-links-editor'] is defined ? ' field-links' }}" data-f="{{ child.vars.name }}">
         {{ form_label(child) }}
         {{ form_widget(child) }}
       </div>
@@ -706,6 +750,7 @@
 {# review-card.js registers window.Cc.reviewCard — the review step's DOM
    builders, which improve.js requires (it has no innerHTML fallback and no
    escaper of its own), so it has to be defined first. #}
+<script src="{{ asset('contribute/links-editor.js') }}"></script>
 <script src="{{ asset('contribute/review-card.js') }}"></script>
 <script src="{{ asset('contribute/improve.js') }}"></script>
 {% endblock %}

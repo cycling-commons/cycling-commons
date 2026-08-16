@@ -86,4 +86,17 @@ final readonly class CatalogField
     {
         return new self($name, $label, FieldKind::MultiSelect, choices: $choices);
     }
+
+    /**
+     * The outbound-links editor: several destinations, each in several
+     * languages ({@see FieldKind::Links}).
+     *
+     * No placeholder and no default. The control is not a text box, so a
+     * placeholder would have nowhere to sit, and an item with no links must
+     * store no `links` key at all rather than an empty list.
+     */
+    public static function links(string $name, string $label): self
+    {
+        return new self($name, $label, FieldKind::Links);
+    }
 }

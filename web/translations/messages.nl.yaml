@@ -2282,6 +2282,14 @@ improve:
     what_changed_required: 'Beschrijf wat je toevoegt of wijzigt.'
     what_changed_too_long: 'De beschrijving mag maximaal 2000 tekens bevatten.'
     note_too_long: 'De notitie mag maximaal 2000 tekens bevatten.'
+  links:
+    add_entry: "pagina toevoegen"
+    add_language: "nog een taal toevoegen"
+    remove_entry: "Deze pagina verwijderen"
+    remove_url: "Dit adres verwijderen"
+    label_placeholder: "Wat is deze pagina? bijv. Wikipedia"
+    any_language: "elke taal"
+    full: "Dit is het maximum aantal pagina's dat één plek kan linken (%n%)."
 contribute_hub:
   kicker: 'Bijdragen'
   title: 'Wat wil je toevoegen?'
@@ -2356,6 +2364,7 @@ contribute:
     already_materialized: 'Deze plek staat al in de Commons — open die op de kaart en bewerk die daar.'
     nothing_changed: 'Er is nog niets gewijzigd — pas een gegeven aan, voeg een foto toe of verplaats de speld voordat je verstuurt.'
     invalid_geometry: 'De getekende vorm kon niet worden gelezen — teken hem opnieuw en probeer het nogmaals.'
+    invalid_links: "Deze links konden niet worden gelezen. Controleer of elk adres met https:// begint en probeer opnieuw."
     media_invalid: 'Een van de bijgevoegde foto''s kon niet worden gebruikt — verwijder hem en probeer het opnieuw.'
 media:
   page:

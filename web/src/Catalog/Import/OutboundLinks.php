@@ -34,7 +34,15 @@ final class OutboundLinks
     public const int MAX_URLS_PER_ENTRY = 6;
     public const int MAX_ENTRIES_PER_HOST = 2;
     public const int MAX_LABEL_LENGTH = 40;
-    private const array LOCALES = ['en', 'fr', 'nl', 'de', 'es'];
+    /**
+     * The locales a url may be tagged with: the site's own set.
+     *
+     * Public since 2026-08-16 so the wizard's editor builds its language picker
+     * from the same list the validator refuses everything else against - two
+     * copies of this would drift the day a sixth language is added, and the
+     * drift would show up as a rider's saved link silently rejected.
+     */
+    public const array LOCALES = ['en', 'fr', 'nl', 'de', 'es'];
 
     /**
      * @throws \InvalidArgumentException naming the first violation
