@@ -1212,6 +1212,53 @@ unlabelled bars with no axis and no silhouette.
 Order matters: steps 2 and 3 are what *"only use the measured data"* means, and
 the chart is only honest once they are done.
 
+### 7a. Drawing the line without the editor (built 2026-08-16)
+
+Step 2 can only reach a climb that HAS a route, and the migration left eight
+Belgian climbs with none - nothing to measure and nothing for the map to draw.
+Drawing them in the browser editor is right for one climb and wrong for eight:
+a hand-drawn line is also how both logged endpoint defects got in (La Redoute's
+361 m of trailing descent, [§4a](#4a-the-line-must-end-at-the-summit), and
+Roche-aux-Faucons stored backwards).
+
+`tools/wikimedia/climb_line.py` routes foot -> summit through **the same
+Valhalla with the same `bicycle` costing** the editor's snap uses
+(`RouteSnapper`), so it produces the line the editor would have produced, and
+makes "redraw it to the real col" a rerunnable act rather than a memory of
+where somebody clicked. Four modes, and each names a defect rather than a
+gesture:
+
+- **`--extend`** - the line stops short of the top. Routes only from the stored
+  last point to the new summit and appends. **Not a redraw**, deliberately: a
+  whole-line reroute can legitimately come back on a DIFFERENT road (Gotthard
+  has the cobbled Tremola and the modern road, 2 km apart in length), which
+  would silently replace a curator's choice of road with the router's.
+- **`--trim-crest-within-km KM`** - the line runs ON past the top, over a
+  descent and up a second rise, so [§4a](#4a-the-line-must-end-at-the-summit)'s
+  trailing-descent rule cannot save it: the tail is not noise, it is a
+  different hill. Cuts at the highest point inside the window. Deterministic,
+  so no eyeballed index.
+- **`--reverse`** - routing is not symmetric. Côte des Forges came back 2.01 km
+  of detour foot -> summit where summit -> foot is the 1.48 km road the climb
+  actually is (one-ways and turn restrictions). The climb is the road either
+  way and storage order is ours, so it asks downhill and flips.
+- **`--find-foot KM`** - `climb_foot.py` is the better finder (it walks a real
+  road graph and knows a junction from a driveway) but it needs Overpass, which
+  answered 504 for half of the 2026-08-16 batch. This fires routes at a ring of
+  bearings and cuts each returned line at the published length. It canNOT tell
+  a valley road from a driveway, so every candidate prints with its gradient
+  and **a human picks** - a candidate whose gradient is nothing like the
+  published figure took the wrong road.
+
+`tools/wikimedia/climb_profile_probe.py` is the diagnosis half: it prints WHERE
+a bad segment sits, because a -12% at 200 m and a -12% at 4 km mean opposite
+things - a dip in the road versus a line drawn over the top. That distinction
+is what settled Roche-aux-Faucons.
+
+Neither tool computes a gradient. `app:climbs:recompute --id N --write` stays
+the only thing that writes measurements, so there is still exactly one place
+the published numbers come from.
+
 ---
 
 ## 8. Testing
