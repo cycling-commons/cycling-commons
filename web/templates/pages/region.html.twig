@@ -12,7 +12,9 @@
      wrapped "Water &/food" and ran the count into the next column. Stacking
      removes the collision for any string length, which matters across five
      locales where "on the map" is "sur la carte" and "auf der Karte". */
-  .kinds{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:0 2rem;margin-top:1.2rem}
+  {# margin-top 1rem, not 1.2: it collapses with the kicker's own 1rem, so
+     anything above it makes this header's below-gap the odd one out. #}
+  .kinds{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:0 2rem;margin-top:1rem}
   .kinds .k{display:flex;flex-direction:column;gap:.15rem;padding:.65rem 0;
     border-bottom:1px solid rgba(20,22,14,.1);font-size:.95rem}
   .kinds .k .c{font-family:var(--mono);font-size:.72rem;color:#8a8d7d;letter-spacing:.02em}
