@@ -16,19 +16,22 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 /**
- * Loads the item-links artifact (tools/wikimedia/item_links.py) into the
- * `links` attribute of wikidata-seeded items: the official site (P856) and
- * the Wikipedia article with its language variants - the two-level shape's
- * free first fill.
+ * Loads the item-links artifact (tools/wikimedia/item_links.py) into
+ * wikidata-seeded items. ONE storage slot per fact (owner 2026-08-16): the
+ * official website (P856) goes to the editable `web` attribute - the same
+ * slot the OSM harvest and the wizard's Website field use, and only when it
+ * is empty, because a harvested or rider-typed value wins over Wikidata's
+ * claim - while `links` carries the OTHER destinations (the Wikipedia
+ * article with its language variants).
  *
- * BUILD-time import of a committed, human-reviewed file. Every entry passes
- * {@see OutboundLinks::assertValid} - the same caps and https-only rule every
- * other write path enforces - and rows are matched by their STORED
- * source_ref (two shapes exist: bare `Q…` on climbs, `wikidata:Q…` on
- * places), never by parsing formats here.
+ * BUILD-time import of a committed, human-reviewed file. Every links entry
+ * passes {@see OutboundLinks::assertValid} (which also REFUSES an
+ * Official-site label - that fact has its slot), and rows are matched by
+ * their STORED source_ref (two shapes exist: bare `Q…` on climbs,
+ * `wikidata:Q…` on places), never by parsing formats here.
  *
- * Rows carrying a curator-edited `links` are left alone: an approved edit
- * outranks a harvest, same rule as ItemUpsert's shield.
+ * Rows carrying a curator edit are left alone: an approved edit outranks a
+ * harvest, same rule as ItemUpsert's shield.
  *
  * @api Console command.
  */
@@ -72,17 +75,32 @@ final class ImportItemLinksCommand extends Command
         $written = 0;
         $shielded = 0;
         $unknown = [];
-        foreach ($artifact as $ref => $links) {
+        foreach ($artifact as $ref => $entry) {
             $ref = (string) $ref;
-            try {
-                OutboundLinks::assertValid($links);
-            } catch (\InvalidArgumentException $e) {
-                $io->error(sprintf('%s: %s', $ref, $e->getMessage()));
+            if (!\is_array($entry) || [] !== array_diff(array_keys($entry), ['web', 'links'])) {
+                $io->error(sprintf('%s: entries carry only web and/or links.', $ref));
 
                 return Command::FAILURE;
             }
+            $web = $entry['web'] ?? null;
+            if (null !== $web && (!\is_string($web) || !str_starts_with($web, 'https://'))) {
+                $io->error(sprintf('%s: web must be an https url.', $ref));
+
+                return Command::FAILURE;
+            }
+            $links = $entry['links'] ?? null;
+            if (null !== $links) {
+                try {
+                    OutboundLinks::assertValid($links);
+                } catch (\InvalidArgumentException $e) {
+                    $io->error(sprintf('%s: %s', $ref, $e->getMessage()));
+
+                    return Command::FAILURE;
+                }
+            }
             $row = $this->db->fetchAssociative(
-                "SELECT id, EXISTS (SELECT 1 FROM change_history ch WHERE ch.item_id = item.id) AS edited
+                "SELECT id, jsonb_exists(attributes, 'web') AS has_web,
+                        EXISTS (SELECT 1 FROM change_history ch WHERE ch.item_id = item.id) AS edited
                  FROM item WHERE source = 'wikidata' AND source_ref = :ref",
                 ['ref' => $ref],
             );
@@ -94,10 +112,22 @@ final class ImportItemLinksCommand extends Command
                 ++$shielded;
                 continue;
             }
-            $this->db->executeStatement(
-                "UPDATE item SET attributes = jsonb_set(attributes, '{links}', :links::jsonb), updated_at = NOW() WHERE id = :id",
-                ['links' => json_encode($links, \JSON_THROW_ON_ERROR), 'id' => (int) $row['id']],
-            );
+            if (null !== $links) {
+                $this->db->executeStatement(
+                    "UPDATE item SET attributes = jsonb_set(attributes, '{links}', :links::jsonb), updated_at = NOW() WHERE id = :id",
+                    ['links' => json_encode($links, \JSON_THROW_ON_ERROR), 'id' => (int) $row['id']],
+                );
+            }
+            // The official website goes to the ONE editable slot every other
+            // fill path uses (owner 2026-08-16: one field only) - and only
+            // when it is empty: an OSM-harvested or rider-typed value wins
+            // over Wikidata's claim.
+            if (null !== $web && !(bool) $row['has_web']) {
+                $this->db->executeStatement(
+                    "UPDATE item SET attributes = jsonb_set(attributes, '{web}', :web::jsonb), updated_at = NOW() WHERE id = :id",
+                    ['web' => json_encode($web, \JSON_THROW_ON_ERROR), 'id' => (int) $row['id']],
+                );
+            }
             ++$written;
         }
 

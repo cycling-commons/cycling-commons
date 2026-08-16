@@ -65,14 +65,20 @@ def refs_from_db(dsn: str) -> dict[str, str]:
     return out
 
 
-def links_for(entity: dict) -> list[dict]:
-    links: list[dict] = []
-    # Official site first: it is the destination a rider most wants.
+def entry_for(entity: dict) -> dict:
+    """{web?, links?}: ONE storage slot per fact (owner 2026-08-16).
+
+    The official website (P856) goes to the item's editable `web` attribute -
+    the same slot the OSM harvest and the wizard's Website field use - never
+    into `links`, or the drawer ends up with two fields for one fact and the
+    rider can only edit one of them. `links` carries the OTHER destinations
+    (the Wikipedia article with its language variants)."""
+    out: dict = {}
     claims = (entity.get("claims") or {}).get("P856") or []
     for claim in claims:
         value = ((claim.get("mainsnak") or {}).get("datavalue") or {}).get("value")
         if isinstance(value, str) and value.startswith("https://"):
-            links.append({"label": "Official site", "urls": [{"url": value}]})
+            out["web"] = value
             break
     sitelinks = entity.get("sitelinks") or {}
     urls = []
@@ -82,8 +88,8 @@ def links_for(entity: dict) -> list[dict]:
             title = urllib.parse.quote(str(sl["title"]).replace(" ", "_"), safe="")
             urls.append({"url": f"https://{lc}.wikipedia.org/wiki/{title}", "locale": lc})
     if urls:
-        links.append({"label": "Wikipedia", "urls": urls})
-    return links
+        out["links"] = [{"label": "Wikipedia", "urls": urls}]
+    return out
 
 
 def main() -> int:
@@ -104,7 +110,7 @@ def main() -> int:
             "props": "sitelinks|claims", "format": "json",
         })
         for qid, entity in (_get(url).get("entities") or {}).items():
-            found = links_for(entity)
+            found = entry_for(entity)
             if found:
                 for ref in by_qid.get(qid, []):
                     artifact[ref] = found

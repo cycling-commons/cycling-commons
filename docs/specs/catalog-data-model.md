@@ -357,13 +357,21 @@ advert afterwards. The drawer half is `web/assets/map/links.js`
 the label, with `rel="noopener noreferrer nofollow"` on every record-row
 link (nofollow also kills the SEO incentive for submitting links at all).
 
+**ONE storage slot per fact (owner 2026-08-16).** The official website is
+NOT a links entry: it lives in the editable `web` attribute - the same slot
+the OSM harvest and the wizard's Website/Official-site field use - and
+`OutboundLinks` REFUSES an entry labelled "Official site", because two
+fields for one fact means the rider can only edit one of them. `links`
+carries the OTHER destinations.
+
 **The free first fill**: `tools/wikimedia/item_links.py` reads every
-wikidata-seeded row's Q-id, pulls the official website (P856) and the
-Wikipedia sitelinks, and writes the reviewable
-`tools/wikimedia/out/item-links.json`; `app:items:import-links` loads it,
-matched by the STORED `source_ref` (two shapes exist in the wild), skipping
-rows with an approved curator edit. Riders can meanwhile type the single
-`web` "Official site" field, now on `I`/`J` too.
+wikidata-seeded row's Q-id and writes the reviewable
+`tools/wikimedia/out/item-links.json` as `{ref: {web?, links?}}`: the
+official website (P856) destined for `web`, the Wikipedia sitelinks as one
+links entry. `app:items:import-links` loads it, matched by the STORED
+`source_ref` (two shapes exist in the wild): `links` replaces, `web` fills
+ONLY when empty (a harvested or rider-typed value wins over Wikidata's
+claim), and rows with an approved curator edit are skipped entirely.
 
 **Deliberately not built yet** (docs/TODO.md keeps the tail): the wizard's
 repeatable multi-locale links editor, and the reputation-list layers (Google

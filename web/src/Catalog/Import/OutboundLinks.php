@@ -56,6 +56,13 @@ final class OutboundLinks
             if (isset($entry['label']) && (!\is_string($entry['label']) || mb_strlen($entry['label']) > self::MAX_LABEL_LENGTH)) {
                 throw new \InvalidArgumentException(sprintf('links[%d]: label must be a string of at most %d characters', $i, self::MAX_LABEL_LENGTH));
             }
+            if (isset($entry['label']) && 'official site' === strtolower(trim($entry['label']))) {
+                // ONE storage slot per fact (owner 2026-08-16): the official
+                // website lives in the editable `web` attribute, never as a
+                // links entry - two fields for one fact means the rider can
+                // only edit one of them.
+                throw new \InvalidArgumentException(sprintf('links[%d]: the official site belongs in the web attribute, not in links', $i));
+            }
             if ([] !== array_diff(array_keys($entry), ['label', 'urls'])) {
                 throw new \InvalidArgumentException(sprintf('links[%d]: only label and urls are allowed', $i));
             }

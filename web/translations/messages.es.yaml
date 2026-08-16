@@ -2276,7 +2276,6 @@ map:
   d_contributed_gpx: 'GPX aportado (solo el track de GPS)'
   d_community_report: 'Informe de la comunidad'
   d_report_photo: 'Informar sobre esta foto'
-  d_lnk_official: 'Sitio oficial'
   d_lnk_wikipedia: 'Wikipedia'
   d_src_auto: 'Derivado por la canalización'
   d_src_manual: 'Seleccionado a mano'

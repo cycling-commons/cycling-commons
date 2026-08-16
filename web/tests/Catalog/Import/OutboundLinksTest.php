@@ -19,12 +19,14 @@ final class OutboundLinksTest extends TestCase
 {
     public function testTheCanonicalShapePasses(): void
     {
+        // No Official-site entry, deliberately: that fact lives in the
+        // editable `web` attribute (one slot per fact, owner 2026-08-16).
         OutboundLinks::assertValid([
-            ['label' => 'Official site', 'urls' => [['url' => 'https://muiderslot.nl']]],
             ['label' => 'Wikipedia', 'urls' => [
                 ['url' => 'https://en.wikipedia.org/wiki/Muiderslot', 'locale' => 'en'],
                 ['url' => 'https://nl.wikipedia.org/wiki/Muiderslot', 'locale' => 'nl'],
             ]],
+            ['label' => 'Heritage register', 'urls' => [['url' => 'https://monumenten.example/muiderslot']]],
         ]);
         $this->addToAssertionCount(1);
     }
@@ -42,6 +44,10 @@ final class OutboundLinksTest extends TestCase
         yield 'empty urls' => [[['urls' => []]], 'between 1 and'];
         yield 'stray keys' => [[['urls' => [['url' => 'https://example.com']], 'seo' => 'x']], 'only label and urls'];
         yield 'unknown locale' => [[['urls' => [['url' => 'https://example.com', 'locale' => 'xx']]]], 'unknown locale'];
+        yield 'official site is a reserved fact with its own slot' => [
+            [['label' => 'Official site', 'urls' => [['url' => 'https://example.com']]]],
+            'belongs in the web attribute',
+        ];
         yield 'same host flooding the list' => [
             [
                 ['urls' => [['url' => 'https://spam.example/a']]],

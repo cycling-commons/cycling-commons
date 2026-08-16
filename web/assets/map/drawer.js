@@ -100,14 +100,11 @@ export function schemaRows(letter, src, id, opts){
      to the reader's locale. Hooked here rather than in each drawer builder so
      every letter gets them from the one code path. Known labels localize
      through D; an unknown label is a rider's own words and stays verbatim. */
-  const KNOWN_LINK_LABELS = {'Official site': D.lnkOfficial, 'Wikipedia': D.lnkWikipedia};
-  // An item can hold the same site twice: `web` (OSM tag or rider-typed) and
-  // the wikidata import's Official-site entry. One row wins - the editable
-  // web field - and the links entry stands down when it points at the same
-  // place (compared without scheme/www/trailing-slash noise).
-  const bareUrl = u => String(u||'').toLowerCase().replace(/^https?:\/\/(www\.)?/,'').replace(/\/$/,'');
+  // The official site is NOT a links entry: one storage slot per fact
+  // (owner 2026-08-16) - it lives in the editable `web` attribute, which
+  // renders as its own row above. links carries the other destinations.
+  const KNOWN_LINK_LABELS = {'Wikipedia': D.lnkWikipedia};
   itemLinks(src.links, document.documentElement.lang || 'en').forEach(l => {
-    if (src.web && bareUrl(l.href) === bareUrl(src.web)) return;
     rows.push({label: KNOWN_LINK_LABELS[l.label] || l.label, html:true, value: linkValue(l.href, l.domain)});
   });
   return rows;

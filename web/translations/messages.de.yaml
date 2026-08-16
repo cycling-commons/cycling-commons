@@ -1937,7 +1937,6 @@ map:
   d_contributed_gpx: 'Beigetragene GPX (nur GPS-Track)'
   d_community_report: 'Community-Meldung'
   d_report_photo: 'Dieses Foto melden'
-  d_lnk_official: 'Offizielle Website'
   d_lnk_wikipedia: 'Wikipedia'
   d_src_auto: 'Von der Pipeline abgeleitet'
   d_src_manual: 'Von Hand kuratiert'

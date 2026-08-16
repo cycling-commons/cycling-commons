@@ -52,19 +52,47 @@ final class ImportItemLinksCommandTest extends KernelTestCase
     }
 
     private const array LINKS = [
-        ['label' => 'Official site', 'urls' => [['url' => 'https://muiderslot.nl']]],
         ['label' => 'Wikipedia', 'urls' => [['url' => 'https://nl.wikipedia.org/wiki/Muiderslot', 'locale' => 'nl']]],
     ];
+    private const array ENTRY = ['web' => 'https://muiderslot.nl', 'links' => self::LINKS];
 
-    public function testLinksLandBesideExistingAttributes(): void
+    public function testWebFillsItsOwnSlotAndLinksLandBesideExistingAttributes(): void
     {
         $id = $this->makeItem('wikidata:Q999901');
 
-        $this->run_(['wikidata:Q999901' => self::LINKS])->assertCommandIsSuccessful();
+        $this->run_(['wikidata:Q999901' => self::ENTRY])->assertCommandIsSuccessful();
 
         $attrs = json_decode((string) $this->db->fetchOne('SELECT attributes FROM item WHERE id = :id', ['id' => $id]), true);
         self::assertSame('Castle', $attrs['t'], 'existing attributes survive');
         self::assertEquals(self::LINKS, $attrs['links']);
+        // ONE slot per fact: the official site lands in the editable web
+        // attribute, never as a links entry.
+        self::assertSame('https://muiderslot.nl', $attrs['web']);
+    }
+
+    public function testAnExistingWebValueIsNeverOverwritten(): void
+    {
+        $id = $this->makeItem('wikidata:Q999904');
+        $this->db->executeStatement(
+            'UPDATE item SET attributes = jsonb_set(attributes, \'{web}\', \'"https://osm-harvested.example"\') WHERE id = :id',
+            ['id' => $id],
+        );
+
+        $this->run_(['wikidata:Q999904' => self::ENTRY])->assertCommandIsSuccessful();
+
+        $attrs = json_decode((string) $this->db->fetchOne('SELECT attributes FROM item WHERE id = :id', ['id' => $id]), true);
+        self::assertSame('https://osm-harvested.example', $attrs['web'], 'a harvested or rider value wins over the Wikidata claim');
+    }
+
+    public function testAnOfficialSiteLinksEntryIsRefused(): void
+    {
+        $this->makeItem('wikidata:Q999905');
+
+        $tester = $this->run_(['wikidata:Q999905' => ['links' => [
+            ['label' => 'Official site', 'urls' => [['url' => 'https://muiderslot.nl']]],
+        ]]]);
+
+        self::assertSame(1, $tester->getStatusCode(), 'the official site has its own slot; two fields for one fact is the bug this refuses');
     }
 
     public function testACuratorEditedRowIsLeftAlone(): void
@@ -75,7 +103,7 @@ final class ImportItemLinksCommandTest extends KernelTestCase
             ['id' => $id],
         );
 
-        $tester = $this->run_(['wikidata:Q999902' => self::LINKS]);
+        $tester = $this->run_(['wikidata:Q999902' => self::ENTRY]);
 
         $tester->assertCommandIsSuccessful();
         $attrs = json_decode((string) $this->db->fetchOne('SELECT attributes FROM item WHERE id = :id', ['id' => $id]), true);
@@ -87,7 +115,7 @@ final class ImportItemLinksCommandTest extends KernelTestCase
     {
         $id = $this->makeItem('wikidata:Q999903');
 
-        $tester = $this->run_(['wikidata:Q999903' => [['urls' => [['url' => 'http://not-https.example']]]]]);
+        $tester = $this->run_(['wikidata:Q999903' => ['links' => [['urls' => [['url' => 'http://not-https.example']]]]]]);
 
         self::assertSame(1, $tester->getStatusCode());
         $attrs = json_decode((string) $this->db->fetchOne('SELECT attributes FROM item WHERE id = :id', ['id' => $id]), true);
