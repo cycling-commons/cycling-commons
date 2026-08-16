@@ -256,18 +256,38 @@ final class CatalogContributionServiceTest extends KernelTestCase
         }
     }
 
-    public function testAPhotoAloneIsAChange(): void
+    /**
+     * A pasted image URL is not a contribution (owner 2026-08-16).
+     *
+     * It used to be: `photoUrl` counted as "something changed" and was then
+     * discarded - no column, no diff, no moderation card, nothing on approve.
+     * The rider was told their link had been received and it had not. The
+     * field is gone from the form, and this is the third door behind it
+     * (CatalogContributionService::REFUSED_KEYS): even handed straight to the
+     * service, the key is dropped before anything reads the payload.
+     *
+     * The replacement is specced in docs/TODO.md as "Photo by Commons link":
+     * allowlisted, licence-checked, and FETCHED into the same quarantine and
+     * scan every upload goes through.
+     */
+    public function testAPastedPhotoUrlIsNotAChangeAndIsDroppedFromThePayload(): void
     {
         $item = $this->item('B', '{"type":"Point","coordinates":[5.24,50.51]}', ['surface' => 'Asphalt']);
 
-        // Nothing edited, but a photo link is a contribution in its own right.
-        $receipt = $this->service->submit('improve', [
-            '_item_id' => $item->getId(),
-            'details' => ['surface' => 'Asphalt'],
-            'photoUrl' => 'https://commons.wikimedia.org/wiki/File:X.jpg',
-        ], $this->user());
+        try {
+            $this->service->submit('improve', [
+                '_item_id' => $item->getId(),
+                'details' => ['surface' => 'Asphalt'],
+                // Hostile on purpose: whatever it is, it must not survive.
+                'photoUrl' => 'javascript:alert(document.cookie)',
+            ], $this->user());
+            self::fail('a pasted photo url must not carry an otherwise-empty edit');
+        } catch (ValidationFailedException $e) {
+            self::assertStringContainsString('contribute.error.nothing_changed', (string) $e->getViolations());
+        }
 
-        self::assertNotNull($this->em->find(Submission::class, $receipt->submissionId));
+        self::assertSame(0, $this->em->getRepository(Submission::class)->count([]),
+            'nothing was stored, so nothing can carry the url');
     }
 
     public function testImproveClearingPrefilledAttributeRecordsRemoval(): void

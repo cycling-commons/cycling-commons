@@ -550,34 +550,32 @@ final class ImproveTest extends WebTestCase
     }
 
     /**
-     * #12: photoUrl is a shared media field whose value is persisted
-     * into the submission payload for later review/render. A non-http(s)
-     * scheme (javascript:) must be rejected by validation — never persisted.
+     * #12 revisited (owner 2026-08-16): there is no photo-URL field any more.
+     *
+     * The original test pinned that a `javascript:` scheme in `photoUrl` was
+     * rejected by validation. The field itself is now gone - it promised a
+     * licence check nothing performed, offered hosts the CSP cannot display,
+     * and its value was discarded after being counted as "you changed
+     * something". So the pin moves up a level: the input must not be on the
+     * page at all, which is the only version of this that cannot be bypassed.
+     *
+     * The service-side belt is pinned separately, in
+     * CatalogContributionServiceTest: a payload carrying `photoUrl` has the
+     * key dropped before anything reads it.
      */
-    public function testJavascriptSchemeInPhotoUrlIsRejectedAndNeverPersisted(): void
+    public function testTheWizardOffersNoPhotoUrlFieldAtAll(): void
     {
         $client = static::createClient();
         $this->loginFreshUser($client, 'photo-xss');
         $item = $this->createItem('D', ['correction' => 'Nothing yet.'], name: 'Repair point');
 
-        $crawler = $client->request('GET', '/improve?item='.$item->getId());
+        $client->request('GET', '/improve?item='.$item->getId());
         self::assertResponseIsSuccessful();
 
-        $form = $crawler->selectButton('Next →')->form([
-            'improve[details][correction]' => 'Added a pump.',
-            'improve[photoUrl]' => 'javascript:alert(document.cookie)',
-            'improve[lat]' => '50.45',
-            'improve[lng]' => '5.62',
-            'improve[place]' => 'Spa, Wallonia',
-        ]);
-        $client->submit($form);
-
-        self::assertResponseStatusCodeSame(422);
-        self::assertSelectorNotExists('.receipt');
-        $submissions = static::getContainer()
-            ->get(EntityManagerInterface::class)
-            ->getRepository(\App\Catalog\Entity\Submission::class)
-            ->count([]);
-        self::assertSame(0, $submissions);
+        self::assertSelectorNotExists('input[name="improve[photoUrl]"]');
+        // The Link button and its source note went with it - a control for a
+        // field that does not exist reads as broken, not absent.
+        self::assertSelectorNotExists('#btn-link-photo');
+        self::assertSelectorNotExists('#lnk-photo');
     }
 }

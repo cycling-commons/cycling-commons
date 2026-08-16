@@ -1807,22 +1807,9 @@ improve:
     photo_label: 'Add a photo — optional'
     photo_drop: 'Drop photos here, or click to choose'
     photo_types: 'JPG · PNG · WebP · HEIC · your own photos only'
-    photo_url_placeholder: '…or paste a photo URL (Flickr, Wikimedia, your site)'
-    link_btn: 'Link'
     # The source note under the photo-URL field, built by improve.js from the
     # pasted host. %source% is the site name and is emphasised by putting it in
     # its own element — the string itself never carries markup.
-    link_recognised: '%source% recognised — %note%.'
-    link_unknown_note: 'Unknown source — you’ll need to confirm the rights-holder and licence yourself before this can go public.'
-    link_note_wikimedia: 'author & licence read from the Commons file page and validated automatically'
-    link_note_wikipedia: 'author & licence read from Wikimedia and validated automatically'
-    link_note_flickr: 'rights-holder & licence read from Flickr and validated automatically'
-    link_note_unsplash: 'Unsplash licence detected automatically'
-    link_note_youtube: 'channel & licence read from YouTube — Creative Commons clips only'
-    link_note_vimeo: 'creator & licence read from Vimeo — Creative Commons clips only'
-    chip_link: '%host% link'
-    chip_needs_licence: '%host% · needs licence'
-    chip_host_fallback: 'link'
     remove_photo: 'Remove this photo'
     too_many_photos: 'Six photos per submission — remove one first.'
     notice_b: 'Photos are licensed CC BY-SA 4.0.'

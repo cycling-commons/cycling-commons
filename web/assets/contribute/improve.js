@@ -111,7 +111,7 @@
   // links = photo LINKS, which this file owns. Two arrays because onChange
   // replaces its list every time: a link pushed into the same array vanished
   // the moment the next photo finished uploading.
-  var WZ = { cur: 1, last: 4, loc: null, media: [], links: [] };
+  var WZ = { cur: 1, last: 4, loc: null, media: [] };
   // Uploads are owned by media-upload.js; nothing here queues anything.
 
   // Update subject hidden field with the item id
@@ -229,7 +229,7 @@
 
   function nothingChanged() {
     if (ADD) return false;                       // a new place is all change
-    if (WZ.media.length || WZ.links.length) return false;
+    if (WZ.media.length) return false;
     if (pinMoved() || geomChanged()) return false;
     return detailsSnapshot() === INITIAL_DETAILS;
   }
@@ -1318,13 +1318,12 @@
 
     // Photos are shown, not listed. A filename tells a rider nothing about
     // whether they picked the right shot; the thumbnail is the only version of
-    // this row worth reading. Links have no thumbnail, so they keep their text.
-    // The heading is server-rendered so it stays translated — this file has no
-    // message bag of its own.
+    // this row worth reading. The heading is server-rendered so it stays
+    // translated — this file has no message bag of its own.
     var block = document.getElementById('reviewMedia');
     var list = document.getElementById('reviewMediaList');
     if (!block || !list) return;
-    var all = WZ.media.concat(WZ.links);
+    var all = WZ.media;
     block.hidden = !all.length;
     RC.clear(list);
     all.forEach(function (m) { list.appendChild(RC.mediaFigure(m)); });
@@ -1361,86 +1360,6 @@
     _toastT = setTimeout(function () { t.classList.remove('show'); }, 2800);
   }
 
-  /* A linked photo is not an upload and must not look like one: no progress
-     bar, no thumbnail, a distinct 🔗 mark. */
-  function noteLink(label) {
-    var chip = document.createElement('span');
-    chip.className = 'chip';
-    chip.textContent = '🔗 ' + label;
-    // WZ.links carries the same text into the review strip, where
-    // reviewCard.mediaFigure() renders it as a caption.
-    var host = document.getElementById('q-photo');
-    if (host) host.appendChild(chip);
-    WZ.links.push('🔗 ' + label);
-  }
-
-  /* The hosts we can read rights from automatically. The site NAMES are proper
-     nouns and stay here as data; the note explaining what we read from each is
-     copy, so it lives in the catalogue (`improve.step3.link_note_*`) and
-     arrives as text — the `&amp;` these notes used to carry was an artefact of
-     being written straight into innerHTML. */
-  var KNOWN_SOURCES = {
-    'commons.wikimedia.org': { name: 'Wikimedia Commons', note: 'link_note_wikimedia' },
-    'wikipedia.org': { name: 'Wikipedia', note: 'link_note_wikipedia' },
-    'flickr.com': { name: 'Flickr', note: 'link_note_flickr' },
-    'unsplash.com': { name: 'Unsplash', note: 'link_note_unsplash' },
-    'youtube.com': { name: 'YouTube', note: 'link_note_youtube' },
-    'vimeo.com': { name: 'Vimeo', note: 'link_note_vimeo' }
-  };
-
-  /* The ✓ / ⚠ that opens a source note. Its own element, deliberately: a glyph
-     glued onto the front of a translated sentence is one more thing a
-     catalogue edit can lose, and one more reason for a string to look like it
-     may contain markup. */
-  function srcMark(glyph) {
-    var el = document.createElement('span');
-    el.className = 'mark';
-    el.textContent = glyph + ' ';
-    return el;
-  }
-
-  function linkMedia(kind) {
-    var inputEl = document.getElementById('lnk-' + kind);
-    if (!inputEl) return;
-    var url = inputEl.value.trim();
-    if (!url) return;
-    var run = function () {
-      var note = document.getElementById('srcn-' + kind);
-      var host = '';
-      try { host = new URL(url).hostname.replace(/^www\./, ''); } catch (e) { host = ''; }
-      // Exact host or a true subdomain — a bare endsWith would match e.g. "notflickr.com".
-      var key = Object.keys(KNOWN_SOURCES).find(function (k) { return host === k || host.endsWith('.' + k); });
-      if (key) {
-        var s = KNOWN_SOURCES[key];
-        if (note) {
-          note.className = 'src-note ok';
-          RC.clear(note);
-          note.appendChild(srcMark('✓'));
-          // The source name is emphasised without any string carrying markup:
-          // the translated sentence is split on %source% and the name goes into
-          // its own <b> as text.
-          note.appendChild(RC.emphasised(
-            t('link_recognised', { '%note%': t(s.note) }), '%source%', s.name
-          ));
-        }
-        noteLink(t('chip_link', { '%host%': host }));
-      } else {
-        if (note) {
-          note.className = 'src-note manual';
-          RC.clear(note);
-          note.appendChild(srcMark('⚠'));
-          var warn = document.createElement('span');
-          warn.textContent = t('link_unknown_note');
-          note.appendChild(warn);
-        }
-        noteLink(t('chip_needs_licence', { '%host%': host || t('chip_host_fallback') }));
-      }
-      inputEl.value = '';
-      inputEl.focus();
-    };
-    run();
-  }
-
   // Real uploads (docs/specs/photo-uploads.md §4). The module owns the drop
   // zone, the file input, the consent gate and the per-file progress bars; the
   // wizard only needs the names for its review step.
@@ -1462,10 +1381,6 @@
       window.Cc.mountLinksEditor(linkFields[li]);
     }
   }
-
-  // Wire up the photo link button
-  var btnLinkPhoto = document.getElementById('btn-link-photo');
-  if (btnLinkPhoto) btnLinkPhoto.addEventListener('click', function () { linkMedia('photo'); });
 
   // If not in add mode, step 1 has no map gate — allow immediate Next.
   if (LOCATE === 'off') {

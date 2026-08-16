@@ -73,11 +73,35 @@ final class CatalogContributionService implements ContributionStubInterface
     ) {
     }
 
+    /**
+     * Payload keys this service REFUSES, whatever sends them.
+     *
+     * `photoUrl` is the one entry and it is a deliberate belt to the braces:
+     * the field is gone from ImproveType, so `$form->getData()` cannot produce
+     * it and a hand-posted `improve[photoUrl]` fails the form's extra-fields
+     * check. This is the third door, for the day somebody puts the input back
+     * on the page without reading why it left (owner 2026-08-16). A
+     * rider-pasted image URL is not a contribution this codebase can accept:
+     * nothing validates the host, nothing reads the licence, the CSP cannot
+     * display most of them, and none of our media safeguards - the scan, the
+     * re-encode, the EXIF strip - touch bytes we never receive. The honest
+     * version fetches the file instead; see docs/TODO.md "Photo by Commons
+     * link".
+     */
+    private const array REFUSED_KEYS = ['photoUrl'];
+
     #[\Override]
     public function submit(string $kind, array $payload, ?User $by): ContributionReceipt
     {
         if (null === $by) {
             throw new \LogicException('Contributions require an authenticated user.');
+        }
+
+        // Dropped silently rather than rejected: a submission is a rider's
+        // work, and refusing the whole thing over a field they cannot see
+        // would punish them for our leftover markup.
+        foreach (self::REFUSED_KEYS as $key) {
+            unset($payload[$key]);
         }
 
         return match ($kind) {
@@ -828,14 +852,21 @@ final class CatalogContributionService implements ContributionStubInterface
     }
 
     /**
-     * Does this edit carry a photo — an upload or a link?
+     * Does this edit carry a photo?
+     *
+     * Uploads only. `photoUrl` used to count here and nowhere else in the
+     * codebase - it let a rider past the "did you change anything" gate and
+     * was then discarded: no column, no diff, no moderation card, nothing on
+     * approve. The field is gone from the form (owner 2026-08-16); the
+     * replacement is specced in docs/TODO.md as "Photo by Commons link", and
+     * it will arrive as a real upload through the quarantine, not as a string
+     * in this payload.
      *
      * @param array<string, mixed> $payload
      */
     private static function hasMedia(array $payload): bool
     {
-        return '' !== trim((string) ($payload['mediaIds'] ?? ''))
-            || '' !== trim((string) ($payload['photoUrl'] ?? ''));
+        return '' !== trim((string) ($payload['mediaIds'] ?? ''));
     }
 
     /**

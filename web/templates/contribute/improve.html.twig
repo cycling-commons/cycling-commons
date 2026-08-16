@@ -156,11 +156,6 @@
   .ulq{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.8rem}
   .ulq .chip{font-family:var(--mono);font-size:.6rem;letter-spacing:.04em;padding:.3rem .5rem;border-radius:5px;background:var(--paper-deep);border:1px solid rgba(20,22,14,.18);display:flex;align-items:center;gap:.35rem}
   .ulq .chip .dot{width:6px;height:6px;border-radius:50%;background:var(--ochre)}
-  .linkrow{display:flex;gap:.5rem;margin-top:.8rem}
-  .linkrow input{flex:1;background:transparent;border:none;border-bottom:1.5px solid rgba(20,22,14,.25);font-family:var(--sans);font-size:.9rem;padding:.4rem 0;outline:none}
-  .linkrow input:focus{border-color:var(--trail)}
-  .src-note{font-size:.78rem;color:#4a4d40;margin-top:.5rem;line-height:1.5}
-  .src-note.ok{color:var(--spruce-lift)}.src-note.manual{color:var(--clay)}
 
   /* modal */
   .modal{position:fixed;inset:0;background:rgba(16,30,22,.55);z-index:2000;display:none;align-items:center;justify-content:center;padding:1.2rem}
@@ -426,17 +421,6 @@
     search_coords_go: 'improve.step1.search_coords_go'|trans,
     label_location: 'improve.review.label_location'|trans,
     loc_climb: 'improve.review.loc_climb'|trans,
-    link_recognised: 'improve.step3.link_recognised'|trans,
-    link_unknown_note: 'improve.step3.link_unknown_note'|trans,
-    link_note_wikimedia: 'improve.step3.link_note_wikimedia'|trans,
-    link_note_wikipedia: 'improve.step3.link_note_wikipedia'|trans,
-    link_note_flickr: 'improve.step3.link_note_flickr'|trans,
-    link_note_unsplash: 'improve.step3.link_note_unsplash'|trans,
-    link_note_youtube: 'improve.step3.link_note_youtube'|trans,
-    link_note_vimeo: 'improve.step3.link_note_vimeo'|trans,
-    chip_link: 'improve.step3.chip_link'|trans,
-    chip_needs_licence: 'improve.step3.chip_needs_licence'|trans,
-    chip_host_fallback: 'improve.step3.chip_host_fallback'|trans,
     nothing_changed: 'contribute.error.nothing_changed'|trans
   }|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
   {# The outbound-links editor's own bag: its caps come from OutboundLinks so
@@ -655,16 +639,18 @@
         <small>{{ 'improve.step3.photo_types'|trans }}</small>
       </div>
       <div class="ulq" id="q-photo"></div>
-      <div class="linkrow">
-        {# `id` is a form-view variable, not an attribute: passing it inside
-           `attr` is silently dropped, so this input rendered as
-           #improve_photoUrl and improve.js's getElementById('lnk-photo') found
-           nothing — the Link button did nothing at all, and the source note
-           under it never appeared. #}
-        {{ form_widget(form.photoUrl, {id: 'lnk-photo', attr: {placeholder: 'improve.step3.photo_url_placeholder'|trans}}) }}
-        <button class="btn btn-p" type="button" id="btn-link-photo">{{ 'improve.step3.link_btn'|trans }}</button>
-      </div>
-      <div class="src-note" id="srcn-photo"></div>
+      {# The "paste a photo URL" row is GONE (owner 2026-08-16), and removed
+         rather than hidden: it promised three things the code never did. It
+         said Commons links had their "author & licence read from the Commons
+         file page and validated automatically" - nothing read that page. It
+         offered Flickr and "your site" - hosts the CSP img-src cannot even
+         display. And the pasted url was used for exactly one thing, deciding
+         whether the rider had changed anything, before being discarded: no
+         column, no diff, no moderation card, nothing on approve.
+         The honest version is specced in docs/TODO.md, "Photo by Commons
+         link": allowlisted to Wikimedia Commons, licence read from the API,
+         and the image FETCHED into our own quarantine-scan-publish pipeline
+         rather than hot-linked from somebody else's server. #}
       {{ form_widget(form.mediaIds) }}
     </div>
     <div class="notice"><b>{{ 'improve.step3.notice_b'|trans }}</b> {{ 'improve.step3.notice'|trans }}</div>

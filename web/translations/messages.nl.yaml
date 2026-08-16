@@ -2234,22 +2234,9 @@ improve:
     photo_label: 'Foto toevoegen — optioneel'
     photo_drop: 'Sleep foto''s hierheen, of klik om te kiezen'
     photo_types: 'JPG · PNG · WebP · HEIC · alleen jouw eigen foto''s'
-    photo_url_placeholder: '…of plak een foto-URL (Flickr, Wikimedia, jouw site)'
-    link_btn: 'Koppelen'
     # De bronnotitie onder het URL-veld, door improve.js opgebouwd uit de
     # geplakte host. %source% is de sitenaam en wordt benadrukt in een eigen
     # element — de tekst zelf bevat nooit opmaak.
-    link_recognised: '%source% herkend — %note%.'
-    link_unknown_note: 'Onbekende bron — je moet de rechthebbende en de licentie zelf bevestigen voordat dit openbaar kan worden.'
-    link_note_wikimedia: 'auteur & licentie worden van de Commons-bestandspagina gelezen en automatisch gecontroleerd'
-    link_note_wikipedia: 'auteur & licentie worden van Wikimedia gelezen en automatisch gecontroleerd'
-    link_note_flickr: 'rechthebbende & licentie worden van Flickr gelezen en automatisch gecontroleerd'
-    link_note_unsplash: 'Unsplash-licentie automatisch herkend'
-    link_note_youtube: 'kanaal & licentie worden van YouTube gelezen — alleen Creative Commons-clips'
-    link_note_vimeo: 'maker & licentie worden van Vimeo gelezen — alleen Creative Commons-clips'
-    chip_link: '%host%-link'
-    chip_needs_licence: '%host% · licentie nodig'
-    chip_host_fallback: 'link'
     remove_photo: 'Deze foto verwijderen'
     too_many_photos: 'Zes foto''s per bijdrage — verwijder er eerst één.'
     notice_b: 'Foto''s staan onder de CC BY-SA 4.0-licentie.'

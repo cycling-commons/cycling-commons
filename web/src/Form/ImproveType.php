@@ -125,17 +125,6 @@ final class ImproveType extends AbstractType
             // Opaque feature reference (which specific item is being edited),
             // filled by JS from ?item=. This is distinct from the catalog type.
             ->add('subject', HiddenType::class, ['required' => false])
-            ->add('photoUrl', UrlType::class, [
-                'label' => false,
-                'required' => false,
-                // Don't let FixUrlProtocolListener turn an empty optional field
-                // into the bare string "http://".
-                'default_protocol' => null,
-                // UrlType is only a widget. Validate server-side so a
-                // javascript:/data:/file: scheme or an unbounded string can
-                // never reach the submission payload.
-                'constraints' => self::mediaUrlConstraints(),
-            ])
             // The uuids of this submission's real uploads
             // (docs/specs/photo-uploads.md §4), filled by
             // assets/contribute/media-upload.js as a JSON list. Nothing here is
@@ -252,20 +241,6 @@ final class ImproveType extends AbstractType
                 'constraints' => CatalogFieldConstraints::for($field),
             ]),
         };
-    }
-
-    /** @return list<\Symfony\Component\Validator\Constraint> */
-    private static function mediaUrlConstraints(): array
-    {
-        return [
-            new \Symfony\Component\Validator\Constraints\Url(
-                message: 'contribute.error.invalid_url',
-                protocols: ['http', 'https'],
-                requireTld: true,
-                tldMessage: 'contribute.error.invalid_url',
-            ),
-            new Length(max: 500, maxMessage: 'contribute.error.field_too_long'),
-        ];
     }
 
     #[\Override]

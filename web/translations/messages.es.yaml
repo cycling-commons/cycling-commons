@@ -1818,22 +1818,9 @@ improve:
     photo_label: 'Añadir una foto — opcional'
     photo_drop: 'Suelta aquí las fotos, o pulsa para elegirlas'
     photo_types: 'JPG · PNG · WebP · HEIC · solo tus propias fotos'
-    photo_url_placeholder: '…o pega la URL de una foto (Flickr, Wikimedia, tu web)'
-    link_btn: 'Enlazar'
     # La nota de fuente bajo el campo de URL de foto, que improve.js construye a
     # partir del dominio pegado. %source% es el nombre del sitio y se resalta
     # metiéndolo en su propio elemento — la cadena en sí nunca lleva marcado.
-    link_recognised: '%source% reconocido — %note%.'
-    link_unknown_note: 'Fuente desconocida — tendrás que confirmar tú mismo el titular de los derechos y la licencia antes de que esto pueda publicarse.'
-    link_note_wikimedia: 'autor y licencia leídos de la página del archivo en Commons y validados automáticamente'
-    link_note_wikipedia: 'autor y licencia leídos de Wikimedia y validados automáticamente'
-    link_note_flickr: 'titular de los derechos y licencia leídos de Flickr y validados automáticamente'
-    link_note_unsplash: 'licencia de Unsplash detectada automáticamente'
-    link_note_youtube: 'canal y licencia leídos de YouTube — solo clips con Creative Commons'
-    link_note_vimeo: 'autor y licencia leídos de Vimeo — solo clips con Creative Commons'
-    chip_link: 'enlace de %host%'
-    chip_needs_licence: '%host% · falta la licencia'
-    chip_host_fallback: 'enlace'
     remove_photo: 'Quitar esta foto'
     too_many_photos: 'Seis fotos por envío — quita una primero.'
     notice_b: 'Las fotos se licencian bajo CC BY-SA 4.0.'
