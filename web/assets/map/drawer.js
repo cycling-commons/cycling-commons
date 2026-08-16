@@ -879,7 +879,11 @@ function buildRecord(layer, f){
      screen reader still reaches, so it goes to aria-label as well as title;
      the <svg> is aria-hidden so the button announces once, not twice. */
   const shareLbl = escPend(D.share||'Share');
-  const share = shareQ
+  /* Only PUBLISHED items may be shared (owner 2026-08-16). A pending or
+     gone-layer card (both wear pendingLayer) is not publicly served, so its
+     link would open nothing for the recipient - offering it shares a claim
+     the map does not yet (or no longer) makes. */
+  const share = (shareQ && !layer.pendingLayer)
     ? `<button type="button" class="cc-d-share" data-share="${escPend(shareQ)}"
          aria-label="${shareLbl}" title="${escPend(D.shareHint||'Copy a link that opens this place')}">
          <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" fill="none"
