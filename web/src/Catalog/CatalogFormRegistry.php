@@ -195,6 +195,11 @@ final class CatalogFormRegistry
                 addFields: [
                     CatalogField::select('bottleFill', 'Bottle-fill friendly?', self::UNKNOWN_YES_NO),
                     CatalogField::select('cost', 'Cost', ['Free', 'Customers only']),
+                    // Every letter whose pool the OSM harvest can fill with a
+                    // website tag offers the field back (owner 2026-08-16: if
+                    // the system fills data automatically, riders must be able
+                    // to edit it).
+                    CatalogField::url('web', 'Website', placeholder: 'https://… (the place’s own site)'),
                 ],
             ),
 
@@ -212,6 +217,7 @@ final class CatalogFormRegistry
                 addFields: [
                     CatalogField::select('changingTable', 'Baby changing table?', self::UNKNOWN_YES_NO),
                     CatalogField::select('shower', 'Shower available?', self::UNKNOWN_YES_NO),
+                    CatalogField::url('web', 'Website', placeholder: 'https://… (the place’s own site)'),
                 ],
             ),
 
@@ -308,6 +314,7 @@ final class CatalogFormRegistry
                 addFields: [
                     CatalogField::select('liftRamp', 'Lift / ramp?', self::UNKNOWN_YES_NO),
                     CatalogField::select('bikeTicket', 'Bike ticket needed?', self::UNKNOWN_YES_NO),
+                    CatalogField::url('web', 'Website', placeholder: 'https://… (the place’s own site)'),
                 ],
             ),
 
@@ -322,6 +329,7 @@ final class CatalogFormRegistry
                 addFields: [
                     CatalogField::select('seating', 'Bench / seating?', self::UNKNOWN_YES_NO),
                     CatalogField::select('phoneSignal', 'Phone signal?', self::UNKNOWN_YES_NO),
+                    CatalogField::url('web', 'Website', placeholder: 'https://… (the place’s own site)'),
                 ],
             ),
 
