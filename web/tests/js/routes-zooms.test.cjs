@@ -28,6 +28,41 @@ test('every contract network has a style, and no invented ones', () => {
     'an unstyled network is an invisible corridor; an extra one is a promise nobody keeps');
 });
 
+/* Two line floors on one archive (contract routes `_zoomComment`, 2026-08-17).
+   The client deliberately owns NO zoom rule for them: a network with no
+   features in a z6 tile draws nothing by itself, so there is nothing here to
+   drift from the build. These pins say that out loud, because the obvious
+   "fix" for a thin low-zoom map is to add a minzoom in the style, and that is
+   exactly what would put the two back out of step. */
+test('the corridor layers carry no minzoom of their own', () => {
+  const layerBlock = source.match(/GROUPS\.forEach\(g => \{([\s\S]*?)\n {4}\}\);/);
+  assert.ok(layerBlock, 'the group layer block was not found');
+  assert.doesNotMatch(layerBlock[1], /minzoom/,
+    'the build decides which network exists at which zoom; a style minzoom is a second, silent opinion');
+});
+
+test('the archive reaches as low as its lowest feature', () => {
+  const r = contract.routes;
+  // A way stamped z5 inside an archive that starts at z8 is written to no tile
+  // at all, and the symptom is the bug this replaced: an empty map at planning
+  // zoom.
+  assert.ok(r.minZoom <= r.planningMinZoom, 'planning routes would land in no tile');
+  assert.ok(r.minZoom <= r.localMinZoom);
+  assert.ok(r.planningMinZoom < r.localMinZoom, 'two floors, or there is nothing to separate');
+});
+
+test('the planning networks are the ones the key calls national and international', () => {
+  // The low floor and the pink line have to name the same thing, or the legend
+  // explains a colour that is not the one surviving at that zoom.
+  const groups = source.match(/const GROUPS = \[(.*?)\n\];/s);
+  assert.ok(groups, 'GROUPS not found');
+  const national = groups[1].match(/key: 'national', nets: \[([^\]]*)\]/);
+  assert.ok(national, "the 'national' group was not found");
+  const nets = national[1].split(',').map(x => x.trim().replace(/'/g, ''));
+  assert.deepEqual([...nets].sort(), [...contract.routes.planningNetworks].sort(),
+    'the group that survives to z5 must be the group the legend calls national & international');
+});
+
 test('the badge floor sits at or above the artifact node floor', () => {
   const m = source.match(/^const BADGE_MIN_ZOOM = (\d+);/m);
   assert.ok(m, 'BADGE_MIN_ZOOM not found in routes-tiles.js');

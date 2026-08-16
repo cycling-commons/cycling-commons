@@ -190,7 +190,27 @@ class _MemberPass(osmium.SimpleHandler):
         self._emit_way(RouteWay(f"way/{w.id}", ranked[0], tuple(ranked[1:]), coords))
 
 
-def feature_json_way(way: RouteWay, *, ridtok: str = "", cctok: str = "") -> str:
+def way_min_zoom(net: str, contract: Contract) -> int:
+    """The zoom this way first appears at.
+
+    Two floors on one archive (contract routes `_zoomComment`), stamped per
+    feature exactly as the knooppunt nodes are. An international or national
+    route is what a rider plans with at the zoom where a country fits on the
+    screen; a local connector at that zoom is ink, not information — and
+    shipping all of them from z5 would put millions of lines in a handful of
+    tiles for a picture nobody can read.
+
+    A way is judged on its BEST membership, which is the one whose colour it
+    draws in: a lane that carries both EuroVelo 12 and a village loop is part
+    of EuroVelo 12 at planning zoom, and dropping it would break the very line
+    the low floor exists to show."""
+    return (contract.routes["planningMinZoom"]
+            if net in contract.routes["planningNetworks"]
+            else contract.routes["localMinZoom"])
+
+
+def feature_json_way(way: RouteWay, contract: Contract, *,
+                     ridtok: str = "", cctok: str = "") -> str:
     """One member way as a GeoJSON Feature line for tippecanoe.
 
     Scope tokens ride every feature exactly as they do on the surface arms
@@ -208,6 +228,7 @@ def feature_json_way(way: RouteWay, *, ridtok: str = "", cctok: str = "") -> str
         props["refs"] = "|".join(m.label() for m in (way.best, *way.others))
     return json.dumps({
         "type": "Feature",
+        "tippecanoe": {"minzoom": way_min_zoom(way.best.net, contract)},
         "properties": props,
         "geometry": {"type": "LineString",
                      "coordinates": [[round(x, 6), round(y, 6)] for x, y in way.coords]},
@@ -257,7 +278,7 @@ def extract_region(pbf_path: Path, contract: Contract, *,
     with ways_out.open("w", encoding="utf-8") as wf, \
             nodes_out.open("w", encoding="utf-8") as nf:
         def emit_way(way: RouteWay) -> None:
-            wf.write(feature_json_way(way, ridtok=ridtok, cctok=cctok) + "\n")
+            wf.write(feature_json_way(way, contract, ridtok=ridtok, cctok=cctok) + "\n")
             counts["ways"] += 1
 
         def emit_node(node: RouteNode) -> None:

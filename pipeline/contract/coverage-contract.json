@@ -378,7 +378,14 @@
       "mtb",
       "other"
     ],
-    "minZoom": 8,
+    "_zoomComment": "TWO FLOORS on one archive, the same trick the knooppunt nodes already use. `minZoom` is the ARCHIVE floor and is now 5, because an international route is a thing a rider plans at the zoom where a country fits on the screen - and below 8 the layer used to be simply absent, which reads as broken rather than as out of range (owner 2026-08-17). What keeps that from meaning 2.7 million local lines at z5 is `planningNetworks`: only those get the low floor, stamped per feature; everything else keeps `localMinZoom` and appears exactly where it always did. The client needs no zoom rule of its own - a network with no features in a z6 tile draws nothing.",
+    "minZoom": 5,
+    "planningNetworks": [
+      "icn",
+      "ncn"
+    ],
+    "planningMinZoom": 5,
+    "localMinZoom": 8,
     "maxZoom": 13,
     "tileProps": [
       "net",

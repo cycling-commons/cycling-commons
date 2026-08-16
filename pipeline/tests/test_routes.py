@@ -77,7 +77,7 @@ def _zuiderdijk_way():
 
 
 def test_a_way_feature_carries_the_tile_contract(contract):
-    feature = json.loads(feature_json_way(_zuiderdijk_way(), ridtok="|7|", cctok="|NL|"))
+    feature = json.loads(feature_json_way(_zuiderdijk_way(), load_contract(), ridtok="|7|", cctok="|NL|"))
     props = feature["properties"]
     # The strongest membership colours the line; every membership reaches the
     # drawer via refs. `ref` is the ELEMENT ref — same key, same meaning as the
@@ -99,10 +99,61 @@ def test_a_single_route_way_omits_refs():
     # Most ways carry one route; repeating it as refs would be dead weight in
     # every tile a rider downloads.
     way = RouteWay("way/42", Membership("rcn", "09-80", "", "node"), (), [(5.1, 52.6), (5.2, 52.7)])
-    props = json.loads(feature_json_way(way))["properties"]
+    props = json.loads(feature_json_way(way, load_contract()))["properties"]
     assert "refs" not in props and "name" not in props
     assert props["ref"] == "way/42"
     assert props["rk"] == "node"
+
+
+def test_planning_routes_reach_the_low_zooms_and_local_ones_do_not(contract):
+    """Two floors on one archive (contract routes `_zoomComment`).
+
+    An international route is what a rider plans with at the zoom where a
+    country fits on the screen. Below zoom 8 the whole layer used to be absent,
+    which reads as broken rather than as out of range (owner 2026-08-17). The
+    low floor is for the planning networks ONLY: shipping millions of local
+    connectors from z5 would put an unreadable smear in a handful of tiles.
+    """
+    planning = contract.routes["planningMinZoom"]
+    local = contract.routes["localMinZoom"]
+    assert planning < local, "two floors, or there is nothing to stamp"
+
+    def floor_of(net):
+        way = RouteWay("way/1", Membership(net, "X", "", "route"), (), [(5.1, 52.6), (5.2, 52.7)])
+        return json.loads(feature_json_way(way, contract))["tippecanoe"]["minzoom"]
+
+    for net in contract.routes["planningNetworks"]:
+        assert floor_of(net) == planning, f"{net} is a planning network"
+    for net in set(contract.routes["networks"]) - set(contract.routes["planningNetworks"]):
+        assert floor_of(net) == local, f"{net} must stay at the local floor"
+
+
+def test_the_archive_reaches_as_low_as_its_lowest_feature(contract):
+    """A per-feature floor below the ARCHIVE floor is a feature in no tile.
+
+    tippecanoe builds `routes.minZoom`..`maxZoom`; a way stamped z5 inside an
+    archive that starts at z8 is simply never written, and the symptom is the
+    exact bug this replaced - an empty map at planning zoom.
+    """
+    routes = contract.routes
+    assert routes["minZoom"] <= routes["planningMinZoom"]
+    assert routes["minZoom"] <= routes["localMinZoom"]
+    assert routes["nodes"]["minZoom"] <= routes["maxZoom"]
+
+
+def test_a_way_carrying_a_planning_route_keeps_the_low_floor(contract):
+    """Judged on the BEST membership, which is the one it draws in.
+
+    A lane carrying both EuroVelo 12 and a village loop is part of EuroVelo 12
+    at planning zoom. Dropping it because of its weaker membership would break
+    the very line the low floor exists to show.
+    """
+    way = RouteWay("way/41",
+                   Membership("icn", "EV12", "North Sea Cycle Route", "route"),
+                   (Membership("lcn", "DuiZee", "", "route"),),
+                   [(5.1, 52.6), (5.2, 52.7)])
+    assert json.loads(feature_json_way(way, contract))["tippecanoe"]["minzoom"] \
+        == contract.routes["planningMinZoom"]
 
 
 def test_a_node_feature_carries_its_number_and_its_floor(contract):

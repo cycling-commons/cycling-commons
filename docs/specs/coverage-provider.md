@@ -518,7 +518,23 @@ non-empty) is NOT prop-less — it hides under a region scope (matching
   Geofabrik extracts, zero PostGIS), one line feature per **member way**
   (props `net`/`rr`/`rk`/`refs` + the element `ref`, contract `routes` key)
   plus knooppunt nodes as points (`nr`; in-artifact from
-  `routes.nodes.minZoom` via a per-feature tippecanoe floor). Published as
+  `routes.nodes.minZoom` via a per-feature tippecanoe floor).
+  **The archive carries TWO line floors (2026-08-17), on the same per-feature
+  trick the nodes use.** It builds from `routes.minZoom` = 5, and every way is
+  stamped `routes.planningMinZoom` (5) when its strongest membership is in
+  `routes.planningNetworks` (`icn`, `ncn`) and `routes.localMinZoom` (8)
+  otherwise. An international route is what a rider plans with at the zoom
+  where a country fits on the screen, and below 8 the whole layer used to be
+  simply absent — which reads as broken rather than as out of range. Shipping
+  every local connector from z5 instead would put millions of lines into a
+  handful of tiles for a picture nobody can read. **The client needs no zoom
+  rule of its own**: a network with no features in a z6 tile draws nothing, so
+  `routes-tiles.js` carries no minzoom and cannot drift from the build. Judged
+  on the way's BEST membership, so a lane carrying both EuroVelo 12 and a
+  village loop stays part of EuroVelo 12 at planning zoom. Cost, measured: a z5
+  tile is ~1.0 MB and a z6 tile ~0.6 MB (`--no-tile-size-limit` is deliberate
+  here — a dropped line is a route that vanishes), which is why the layer stays
+  opt-in and off by default. Published as
   `routes/<stamp>/routes.pmtiles` with a stable `routes/manifest.json`
   (`{"tiles":{"routes":url}, "counts":{"ways":n,"nodes":n},
   "country_codes":[…]}`), read server-side by `App\Coverage\RoutesManifest`
