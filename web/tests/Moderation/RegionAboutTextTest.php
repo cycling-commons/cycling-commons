@@ -140,6 +140,18 @@ final class RegionAboutTextTest extends WebTestCase
         self::assertStringContainsString('dtabs-modmode', $html, 'the moderator tab bar must be here');
         self::assertStringContainsString('/moderate/regions" class="dtab-mod on', $html,
             'and the Regions tab stays lit: this is a sub-page of that desk');
+
+        /* Country, flag and a way back (owner 2026-08-16). A region name alone
+           is ambiguous across nineteen countries, and the only way out used to
+           be a button under five language boxes. The back link carries the
+           country so it returns to the filtered desk, not to all of them. */
+        self::assertStringContainsString('ab-country', $html);
+        self::assertStringContainsString('Belgium', $html, 'the country is named above the region');
+        // AssetMapper hashes the filename, so match the stem: /assets/flags/be-<hash>.svg
+        self::assertMatchesRegularExpression('#class="ab-flag" src="[^"]*/flags/be-[^"]*\.svg"#', $html,
+            'and carries its flag');
+        self::assertStringContainsString('class="ab-back" href="/moderate/regions?country=BE"', $html,
+            'the way back returns to the country the curator came from');
     }
 
     /**
