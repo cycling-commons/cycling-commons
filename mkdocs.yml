@@ -115,6 +115,10 @@ nav:
           - Onboarding a new country: developers/data-ops/onboarding-a-country.md
           - Building elevation tiles: developers/data-ops/elevation-tiles.md
           - Building road-surface tiles: developers/data-ops/surface-tiles.md
+      - Public API:
+          - Start here: developers/api/index.md
+          - Serving map data: developers/api/serving-map-data.md
+          - Worked example, a route planner: developers/api/worked-example-route-planner.md
 
 markdown_extensions:
   - admonition

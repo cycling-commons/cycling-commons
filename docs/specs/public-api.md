@@ -147,6 +147,12 @@ or field-level changes land in both places, and
 `tests/Smoke/ApiReferenceTest.php` pins the `/developers` teaser page to the
 contract so they cannot drift.
 
+The developer-facing plain-language explanation (the two transports, both PoC
+endpoints with worked requests, and a full consumer walk-through) lives on the
+wiki under `wiki/developers/api/` (published at
+wiki.cyclingcommons.org/developers/api/). The wiki teaches; this spec and the
+OpenAPI document remain the contract of record.
+
 ## 3. Auth & metering — two mechanisms
 
 The transport split forces two enforcement paths. A single issued key carries
