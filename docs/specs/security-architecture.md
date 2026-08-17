@@ -91,9 +91,9 @@ reading):
 | Directive | Value | Why |
 |---|---|---|
 | `default-src` | `'self'` | Deny-by-default baseline |
-| `script-src` | `'self' 'nonce-<per-request>' https://unpkg.com` (+ `'unsafe-eval'` on `/map` only — security-architecture.md §2.4) | No `'unsafe-inline'`. unpkg serves maplibre-gl and mapillary-js, both SRI-pinned at the include site (security-architecture.md §2.5) |
-| `style-src` | `'self' 'unsafe-inline' https://unpkg.com` | Map/site JS sets many `style` attributes and MapLibre/mapillary inject inline styles; a style nonce cannot cover attribute styles. Script execution is the boundary, not styling |
-| `img-src` | `'self' data: blob: https://commons.wikimedia.org https://upload.wikimedia.org https://*.mapillary.com https://*.fbcdn.net` | Wikimedia `Special:FilePath` 302s to `upload.wikimedia.org` and CSP checks every hop, so both hosts are listed; `data:`/`blob:` for MapLibre sprites and generated icons |
+| `script-src` | `'self' 'nonce-<per-request>'` (+ `'unsafe-eval'` on `/map` only — security-architecture.md §2.4) | No `'unsafe-inline'` and **no third-party script host at all** since 2026-08-09: the libraries are vendored same-origin (security-architecture.md §2.5) |
+| `style-src` | `'self' 'unsafe-inline'` | Map/site JS sets many `style` attributes and MapLibre/mapillary inject inline styles; a style nonce cannot cover attribute styles. Script execution is the boundary, not styling |
+| `img-src` | `'self' data: blob: https://commons.wikimedia.org https://upload.wikimedia.org https://*.mapillary.com https://*.fbcdn.net` (+ `MEDIA_CSP_HOST` when set — rider photos, photo-uploads.md §2) | Wikimedia `Special:FilePath` 302s to `upload.wikimedia.org` and CSP checks every hop, so both hosts are listed; `data:`/`blob:` for MapLibre sprites and generated icons |
 | `font-src` | `'self'` | |
 | `connect-src` | see host table below | |
 | `worker-src` | `blob:` | MapLibre spawns its worker from a blob URL |
@@ -109,14 +109,17 @@ reading):
 |---|---|
 | `'self'` | Own JSON/GPX endpoints |
 | `https://tiles.openfreemap.org` | Basemap vector tiles |
-| `https://server.arcgisonline.com` | Satellite imagery |
+| `https://ibasemaps-api.arcgis.com` | Satellite imagery (keyed since 2026-08-09; the old keyless `server.arcgisonline.com` host is gone with it) |
 | `https://*.mapillary.com` | Mapillary API + tiles (street-level) |
 | `https://*.fbcdn.net` | Mapillary image bytes (Meta CDN), fetched by mapillary-js |
-| `https://nominatim.openstreetmap.org` | Geocoding |
-| `https://photon.komoot.io` | Geocoding (search-as-you-type) |
-| `https://router.project-osrm.org` | Routing (contribute editor) |
-| `https://api.open-meteo.com` | Elevation |
+| `https://photon.komoot.io` | Geocoding (search-as-you-type; Nominatim was dropped from the policy with the OSM-POI search rework) |
 | `https://analytics.bikecoders.life` | Self-hosted Umami analytics |
+| `COVERAGE_CSP_HOST` (env, when set) | Coverage PMTiles byte-range reads straight off the bucket/CDN (coverage-provider.md §4) |
+
+Two former hosts are deliberately absent: `router.project-osrm.org` and
+`api.open-meteo.com` — routing snap moved behind our own endpoints and
+elevation moved server-side (climb-elevation.md), so the browser no longer
+talks to either.
 
 Adding a third-party integration means extending this enumeration
 deliberately — nothing outside it can be fetched, and that is the point.
@@ -145,25 +148,19 @@ document" rule is required, and it needs new infrastructure
 `new Function()` removes the need entirely — worth checking on each
 mapillary-js upgrade.
 
-### 2.5 Subresource integrity (SRI) on unpkg
+### 2.5 Vendored libraries (SRI on unpkg, superseded 2026-08-09)
 
-Everything loaded from `https://unpkg.com` is version- and hash-pinned with
-`integrity` + `crossorigin="anonymous"`:
-
-- **maplibre-gl@5.24.0** (JS + CSS) — static tags in
-  `web/templates/map/index.html.twig`,
-  `web/templates/contribute/improve.html.twig`,
-  `web/templates/contribute/add_climb.html.twig`.
-- **mapillary-js@4.1.2** (JS + CSS) — injected at runtime by
-  `loadMapillaryJs()` in `web/assets/map/map.js`, which sets `integrity` and
-  `crossOrigin` on the created elements. Rationale in-code: a MITM-ed or
-  compromised unpkg response must not run in the origin that holds the
-  curator session and moderation CSRF token.
-
-Upgrading either library means updating the pinned hash everywhere it
-appears; an unpinned unpkg script would execute (the host is allowed), so SRI
-discipline is part of the contract, enforced by review rather than CSP
-`require-sri-for` (not shipped in browsers).
+The third-party libraries are **vendored same-origin** under
+`web/assets/lib/` (`maplibre-gl-5.24.0`, `mapillary-js-4.1.2`,
+`pmtiles-4.4.1`, `redoc-standalone-2.5.3`, `scout-fit`), so `script-src`
+carries no third-party host and no SRI hashes are needed: the bytes are ours,
+served from our own origin, pinned by the repository itself. mapillary-js is
+still injected lazily (`web/assets/map/mapillary.js`) but from
+`/assets/lib/…`, not a CDN. This replaced the earlier unpkg + SRI-pin
+arrangement: a compromised CDN response is no longer a case that needs
+defending against, because no CDN is in the policy at all. Upgrading a
+library means replacing the vendored file and the version-suffixed filename
+everywhere it appears.
 
 ### 2.6 Test anchoring
 
@@ -171,7 +168,7 @@ discipline is part of the contract, enforced by review rather than CSP
 
 | Test | Asserts |
 |---|---|
-| `testHtmlResponseCarriesCspWithNonce` | Header present on HTML; `default-src 'self'`; `object-src 'none'`; `script-src 'self' 'nonce-…' https://unpkg.com`; **no** `'unsafe-inline'` in script-src |
+| `testHtmlResponseCarriesCspWithNonce` | Header present on HTML; `default-src 'self'`; `object-src 'none'`; `script-src 'self' 'nonce-…'` and **no** unpkg host; **no** `'unsafe-inline'` in script-src |
 | `testUnsafeEvalIsScopedToTheMapPage` | `'unsafe-eval'` present on `/map`, absent on `/` |
 | `testEveryInlineScriptCarriesTheHeaderNonce` | On `/`, `/map`, `/regions`, `/contributors`: every `<script>` without `src` carries exactly the header's nonce |
 | `testNonHtmlResponsesSkipCsp` | `/map/catalog.json` has no CSP header |
@@ -291,7 +288,7 @@ Configuration: `web/config/packages/csrf.yaml`.
   **statelessly** (Symfony's same-origin/double-submit check — no session
   write, which keeps responses cacheable and JSON endpoints session-free):
   `submit`, `authenticate`, `logout`, `route-community`, `ride-check`,
-  `elevation`.
+  `elevation`, `scout-tags`.
 - Token ids **not** in that list fall back to Symfony's default
   session-backed storage.
 
@@ -330,10 +327,14 @@ Instances:
 | `ride-check` | `App\Controller\RideCheckController` | `POST /map/ride-check` | [map-and-search.md](map-and-search.md) |
 | `elevation` | `App\Controller\ElevationController` | `POST /contribute/elevation` | [climb-elevation.md](climb-elevation.md) |
 | `item-confirm` | `App\Controller\ItemConfirmationController` | `GET /items/{id}/confirmations`, `POST /items/{id}/confirm` | [moderation-and-contribution.md](moderation-and-contribution.md) |
+| `scout-tags` | `App\Controller\ScoutIntakeController` | `POST /scout/tags` | [map-and-search.md](map-and-search.md) |
 
 **As-built deviation:** `item-confirm` follows every element of the pattern
 *except* that it is not listed in `stateless_token_ids`, so its tokens are
-session-backed (see Open questions).
+session-backed (see Open questions). `scout-tags` (added by the 2026-08-16
+review's info batch) deviates on element 4 only: it keeps its `IsGranted`
+attribute plus the `access_control` backstop (anonymous = login redirect, not
+a clean 401) because its caller is page JS behind a logged-in map session.
 
 ### 5.2 Stateless CSRF outside the JSON pattern
 
@@ -419,14 +420,14 @@ refuses**: over budget the report still files and still pins to the desk, it
 simply hides nothing.
 
 
-Storage note: `route_propose`, `route_suggest`, `ride_check`,
+Storage note: `route_propose`, `route_suggest`, `ride_check`, `elevation`,
 `country_interest` and `curator_application` each use their own dedicated
-cache pool (`cache.<name>_limiter`, filesystem adapter) that `when@test`
-swaps to the array adapter — the default filesystem pool persists across
-phpunit runs while DAMA reuses user ids, which would leak limiter counters
-between runs and flake tests. A new per-user limiter should copy this
-pool-plus-test-override shape. (`contribution_submit` predates the
-convention and uses the default pool.)
+cache pool (`cache.<name>_limiter`, inheriting `cache.app` — Redis in
+dev/prod, and the array adapter in test via that inheritance) that `when@test`
+additionally overrides to the array adapter — a persistent pool would carry
+limiter counters across phpunit runs while DAMA reuses user ids, which flakes
+tests. A new per-user limiter should copy this pool-plus-test-override shape.
+(`contribution_submit` predates the convention and uses the default pool.)
 
 Login throttling is Symfony's built-in limiter and is inventoried in
 [account-and-auth.md](account-and-auth.md) §3, not here.

@@ -165,7 +165,7 @@ notes.
 **Before flipping `COVERAGE_TILES=1` in prod:** verify client-IP propagation
 for the per-IP `coverage_read` limiter
 ([security-architecture.md](../docs/specs/security-architecture.md) §7) —
-`SYMFONY_TRUSTED_PROXIES`/`X-Forwarded-For` must be correctly wired through
+`TRUSTED_PROXIES` (the app-side config landed 2026-08-17: `when@prod`/`when@staging` framework blocks, operations.md §3)/`X-Forwarded-For` must be correctly wired through
 the LB → nginx frontends chain
 ([dev-environment.md](../docs/specs/dev-environment.md) §9) so
 `Request::getClientIp()` (`CoverageController::rateLimited()`) resolves the
