@@ -1,0 +1,52 @@
+docs/specs/security-architecture.md
+  s_dd35dcc1b6eafa::t_665a574d7c2704 284-285,303-305,322,389
+web/config/packages/rate_limiter.yaml
+  s_dd35dcc1b6eafa::t_85db7eddd4b2f7 16-17,67-76,174
+  s_dd35dcc1b6eafa::t_77449e8f8ef432 175
+web/assets/contribute/climb-elevation.js
+  s_dd35dcc1b6eafa::t_040fa895a0fd79 35-37
+web/tests/Controller/ElevationControllerTest.php
+  s_dd35dcc1b6eafa::t_19028c3155df15 54,58-60
+  s_dd35dcc1b6eafa::t_c737479c2dc23d 57,75,84,96,124
+  s_dd35dcc1b6eafa::t_5ae3471fe519a2 1-10,12-45,47-53,55-56,61-74,76-83,85-95,97-123,125-130
+  s_dd35dcc1b6eafa::t_e5729523c5fd95 46
+  s_dd35dcc1b6eafa::t_b49f92c77c0cce 11
+web/src/Controller/ElevationController.php
+  s_dd35dcc1b6eafa::t_b47450e26df0b9 51-59,61
+  s_dd35dcc1b6eafa::t_6758348a33e841 91-92,95-98
+  s_dd35dcc1b6eafa::t_0df149f837c721 36-38
+  s_dd35dcc1b6eafa::t_4df27d9aff440c 46-50,60,62-63
+  s_dd35dcc1b6eafa::t_ad24d5352ece5d 93-94
+  s_dd35dcc1b6eafa::t_32b64898eb46ca 15-16
+  s_dd35dcc1b6eafa::t_89df781e44412a 11
+  s_dd35dcc1b6eafa::t_8c0a5b62641776 17
+web/config/packages/csrf.yaml
+  s_dd35dcc1b6eafa::t_1cd7702bd4177a 14
+web/templates/contribute/improve.html.twig
+  s_dd35dcc1b6eafa::t_a8f6d20a6d248c 447-449
+docs/specs/climb-elevation.md
+  s_dd35dcc1b6eafa::t_c027e6433becab 92-95
+web/templates/contribute/add_climb.html.twig
+  s_dd35dcc1b6eafa::t_a8f6d20a6d248c 162-164
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "b7be40808b5ff42c46636b6c24ff0bc76c53c2fd",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_dd35dcc1b6eafa": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "958971ba-400e-4707-b3a9-3af88bc7731b",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
