@@ -953,7 +953,10 @@ a pager, and sending them off to find a settings tab is the kind of
 correct-but-useless routing that means the setting never gets changed. The
 pager's control POSTs to `settings_rows_per_page`, writes the same column, and
 returns to the list — via a submitted `back` field, not `Referer`, and only
-relative paths are honoured, or a logged-in POST becomes an open redirect.
+relative paths are honoured (the strict allowlist regex shared with
+`LocaleController::isSafeInternalPath` — no `//`, no backslash, no control
+characters anywhere, `\A…\z` anchored; review 2026-08-16 finding 8), or a
+logged-in POST becomes an open redirect.
 The pager shows one count line: page-of-pages on multi-page lists, the row
 range on single-page ones.
 

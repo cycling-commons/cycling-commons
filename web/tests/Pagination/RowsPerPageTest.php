@@ -147,7 +147,11 @@ final class RowsPerPageTest extends WebTestCase
         $client->loginUser($rider, 'main');
         $token = $this->tokenFromAPager($client, (int) $rider->getId());
 
-        foreach (['https://evil.example/', '//evil.example/', 'javascript:alert(1)'] as $hostile) {
+        // The control-character payloads are review 2026-08-16 finding 8:
+        // browsers strip tab/CR/LF inside URLs before resolving, so a smuggled
+        // "/\t//host" would leave the browser protocol-relative. The trailing
+        // "\n" one pins the \A...\z anchoring ($ matches before a final newline).
+        foreach (['https://evil.example/', '//evil.example/', 'javascript:alert(1)', "/\t//evil.example", "/\n//evil.example", "/messages\n.evil.example"] as $hostile) {
             $client->request('POST', '/settings/rows-per-page', [
                 '_token' => $token, 'rows' => '25', 'back' => $hostile,
             ], [], ['HTTP_SEC_FETCH_SITE' => 'same-origin']);

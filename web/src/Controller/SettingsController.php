@@ -204,8 +204,13 @@ final class SettingsController extends AbstractController
         }
 
         $back = (string) $request->request->get('back', '');
-        // A single leading slash, and no scheme-relative `//host` form.
-        $safe = 1 === preg_match('#^/(?!/)[^\\\\]*$#', $back);
+        // A single leading slash, no scheme-relative `//host` form, and no C0
+        // control or DEL anywhere: browsers strip tab/CR/LF inside URLs before
+        // resolving, so "/\t//evil.example" would otherwise leave the browser
+        // protocol-relative (review 2026-08-16 finding 8 — same regex as
+        // LocaleController::isSafeInternalPath, \A/\z anchored because $
+        // matches before a trailing newline and would let "/x\n" through).
+        $safe = 1 === preg_match('#\A/(?![/\\\\])[^\x00-\x1F\x7F\\\\]*\z#', $back);
 
         return $this->redirect($safe ? $back : $this->generateUrl('settings'));
     }

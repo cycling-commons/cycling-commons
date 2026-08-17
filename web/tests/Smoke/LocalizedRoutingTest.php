@@ -146,4 +146,24 @@ final class LocalizedRoutingTest extends WebTestCase
         self::assertStringStartsNotWith('//', $location);
         self::assertStringNotContainsString('evil.example', $location);
     }
+
+    /**
+     * Review 2026-08-16 finding 8: browsers strip tab/CR/LF inside URLs before
+     * resolving, so "/\t//evil.example" would leave the browser as
+     * protocol-relative "//evil.example" — the exact redirect the `//` prefix
+     * check exists to block. Control characters must fail the allowlist
+     * wherever they sit in the string; backslashes too (browsers normalise
+     * them to slashes).
+     */
+    public function testLocaleSwitchRejectsControlCharacterSmuggling(): void
+    {
+        $client = static::createClient();
+        foreach (["/\t//evil.example", "/\r\n//evil.example", '/\\evil.example', "/regions\t.evil.example"] as $payload) {
+            $client->request('GET', '/i18n/fr', ['to' => $payload]);
+            self::assertResponseStatusCodeSame(302);
+            $location = $client->getResponse()->headers->get('Location');
+            self::assertIsString($location);
+            self::assertStringNotContainsString('evil.example', $location, var_export($payload, true).' must not survive into the redirect');
+        }
+    }
 }

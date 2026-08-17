@@ -50,11 +50,17 @@ final class LocaleController extends AbstractController
     /**
      * A path we may redirect to must be root-relative and not protocol-relative
      * (`//host`) or a backslash trick — otherwise it is an open-redirect vector.
+     *
+     * One strict regex, not prefix checks (review 2026-08-16 finding 8):
+     * browsers strip tab/CR/LF *inside* URLs before resolving them, so
+     * "/\t//evil.example" passes a `//` prefix check yet leaves the browser as
+     * protocol-relative "//evil.example". Hence no C0 control or DEL anywhere
+     * in the string, no second character `/`, and no backslash at any position
+     * (browsers normalise `\` to `/` in URLs, so "/\evil.example"-style
+     * payloads are the same trick in another coat).
      */
     private function isSafeInternalPath(string $path): bool
     {
-        return str_starts_with($path, '/')
-            && !str_starts_with($path, '//')
-            && !str_starts_with($path, '/\\');
+        return 1 === preg_match('#\A/(?![/\\\\])[^\x00-\x1F\x7F\\\\]*\z#', $path);
     }
 }
