@@ -1,0 +1,32 @@
+docs/specs/operations.md
+  s_dd35dcc1b6eafa::t_3a7990eee0b6c5 188-195
+web/.env.staging
+  s_dd35dcc1b6eafa::t_d8e5a498416c1a 17-19
+  h_fb5318cde6cf17 20-21
+web/.env.prod
+  s_dd35dcc1b6eafa::t_d8e5a498416c1a 2-4
+  h_fb5318cde6cf17 1,5
+web/config/packages/framework.yaml
+  s_dd35dcc1b6eafa::t_363b04824e0fb3 30-39
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "a7e933a77f50b96e0162f7dac65481dad9c59cf3",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_dd35dcc1b6eafa": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "958971ba-400e-4707-b3a9-3af88bc7731b",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
