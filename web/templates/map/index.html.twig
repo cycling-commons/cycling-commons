@@ -31,7 +31,9 @@
 <link rel="stylesheet" href="{{ asset('styles/map.css') }}" />
 <link rel="icon" href="/favicon.ico" sizes="32x32" />
 <link rel="icon" type="image/svg+xml" href="{{ asset('brand/logo-favicon.svg') }}" />
-<script defer src="{{ asset('js/analytics.js') }}"></script>
+{# nonce: the loader hands it to the cross-origin Umami script it injects
+   (assets/js/analytics.js) - without it, script-src silently blocks analytics. #}
+<script defer src="{{ asset('js/analytics.js') }}" nonce="{{ csp_nonce() }}"></script>
 <script defer src="{{ asset('js/nav-menus.js') }}"></script>
 </head>
 <body>

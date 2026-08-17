@@ -83,6 +83,14 @@ shared between:
 is a broken page under enforcement, which is why the test suite walks pages
 and asserts nonce coverage (security-architecture.md §2.6).
 
+One cross-origin script rides the nonce instead of a host entry: the Umami
+loader (`web/assets/js/analytics.js`) hands its own nonce
+(`document.currentScript.nonce`, supplied by the nonced include tag) to the
+`analytics.bikecoders.life/script.js` element it injects — whitelisting
+exactly that element per response without widening `script-src`
+(review 2026-08-16 deferred item 1, pulled forward;
+`tests/Security/AnalyticsNonceTest.php`).
+
 ### 2.3 Directive table
 
 As emitted by `CspSubscriber` (the file is the contract; this table is its
