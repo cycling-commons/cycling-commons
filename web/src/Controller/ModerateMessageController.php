@@ -163,7 +163,11 @@ final class ModerateMessageController extends AbstractController
         $referer = $request->headers->get('referer');
         if (null !== $referer) {
             $path = parse_url($referer, PHP_URL_PATH);
-            if (\is_string($path) && 1 === preg_match('#^(/(fr|nl|de|es))?/moderate(/|$)#', $path)) {
+            // Wildcard locale group, not the literal list (owner, 2026-08-17,
+            // same convention as security.yaml): a new locale must not
+            // silently break back-to-the-desk-row. Still safe: the target
+            // must begin with a /moderate path, so it can never leave us.
+            if (\is_string($path) && 1 === preg_match('#^(/[a-z]{2})?/moderate(/|$)#', $path)) {
                 $query = parse_url($referer, PHP_URL_QUERY);
 
                 return $this->redirect($path.(\is_string($query) ? '?'.$query : ''));

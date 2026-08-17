@@ -161,6 +161,41 @@ final class CuratorMessageTest extends WebTestCase
         self::assertSame('Could you share a photo of the gate?', $m->getBodyText());
     }
 
+    /**
+     * Redirect-after-POST honours the desk row's Referer path for ANY locale
+     * prefix (wildcard convention, owner 2026-08-17) — and only for /moderate
+     * paths, so a forged Referer cannot steer the curator elsewhere.
+     */
+    public function testReplyReturnsToTheDeskRowForAnyLocale(): void
+    {
+        $client = static::createClient();
+        $curator = $this->curator();
+        $rider = $this->rider('sub-referer');
+        $sub = $this->seedSubmission((int) $rider->getId());
+        $client->loginUser($curator);
+
+        $post = fn (string $referer) => $client->request('POST', '/moderate/message', [
+            'channel' => 'submission',
+            'id' => (string) $sub->getId(),
+            'body' => 'Where exactly is the pump?',
+            '_token' => $this->messageToken($client),
+        ], [], ['HTTP_REFERER' => $referer]);
+
+        // A locale that does not exist yet still matches the wildcard: the
+        // day it becomes real, back-to-the-row keeps working unedited.
+        $post('http://localhost/ja/moderate/submissions?f=pending');
+        self::assertResponseRedirects('/ja/moderate/submissions?f=pending');
+
+        $post('http://localhost/fr/moderate/submissions');
+        self::assertResponseRedirects('/fr/moderate/submissions');
+
+        // A Referer outside /moderate falls back to the desk, never elsewhere.
+        $post('http://localhost/settings');
+        self::assertResponseRedirects();
+        $location = (string) $client->getResponse()->headers->get('Location');
+        self::assertStringNotContainsString('/settings', $location);
+    }
+
     public function testCuratorMessagesARouteCorrectionsRider(): void
     {
         $client = static::createClient();
