@@ -4,7 +4,7 @@
 
 This page is the detail behind the [mental model](index.md): why there are two transports, what
 each endpoint returns, and what your app is expected to do with it. Everything here describes the
-**v0 proof of concept**; the drafted v1 surface is larger (see
+**proof-of-concept subset of v1**; the full drafted v1 surface is larger (see
 [the API reference](https://cyclingcommons.org/developers/api)).
 
 ## Why two transports
@@ -32,7 +32,7 @@ and changes daily, it stays REST. The Commons applies the same split to its own 
 One call gives your app everything it needs to wire both overlays. Fetch it at startup and cache
 it for an hour (the response allows exactly that).
 
-<!-- CODE-ILLUSTRATIVE example request; endpoint is the v0 PoC contract -->
+<!-- CODE-ILLUSTRATIVE example request; endpoint is the proof-of-concept subset of the v1 contract -->
 ```text
 GET https://cyclingcommons.org/v1/map-config
 ```

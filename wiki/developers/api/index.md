@@ -9,11 +9,12 @@ application programming interface (API).
 
 !!! warning "Status: proof of concept"
 
-    The endpoints described in this section are the **v0 proof of concept**: a small, working
-    subset of the full v1 contract drafted in the
-    [interactive API reference](https://cyclingcommons.org/developers/api). Shapes described here
-    are implemented first and stabilised as they prove out. Expect additive change; expect the
-    occasional breaking change until the v1 label lands. The contract of record is
+    The endpoints described in this section are a **proof of concept**: a small, working subset
+    of the full v1 contract drafted in the
+    [interactive API reference](https://cyclingcommons.org/developers/api). The URLs already live
+    under the `/v1` prefix because that is the namespace these endpoints graduate into; the prefix
+    names the target contract, not a stability promise. Until v1 is declared stable, expect
+    additive change and the occasional breaking change. The contract of record is
     `docs/specs/public-api.md` in the repository.
 
 ## The mental model
