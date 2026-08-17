@@ -281,7 +281,8 @@ Configuration: `web/config/packages/csrf.yaml`.
 - `framework.csrf_protection.stateless_token_ids` lists the ids validated
   **statelessly** (Symfony's same-origin/double-submit check — no session
   write, which keeps responses cacheable and JSON endpoints session-free):
-  `submit`, `authenticate`, `logout`, `route-community`, `ride-check`.
+  `submit`, `authenticate`, `logout`, `route-community`, `ride-check`,
+  `elevation`.
 - Token ids **not** in that list fall back to Symfony's default
   session-backed storage.
 
@@ -299,7 +300,9 @@ docblock). Elements:
    POST (the public item-confirmations snapshot omits it for anonymous
    viewers). (ride-check has no snapshot endpoint; its token ships in the
    page instead, via `csrf_token('ride-check')` into `window.CC_RIDECHECK`
-   inside a nonced inline script — `web/templates/map/index.html.twig`.)
+   inside a nonced inline script — `web/templates/map/index.html.twig`.
+   `elevation` does the same: `window.CC_ELEV_TOKEN` in both climb-editor
+   templates, sent as the `X-CC-Token` header.)
 4. **In-controller auth gate, clean 401**: a `requireUser()` helper checks
    `isGranted('ROLE_USER')` *and* the user instance, and throws
    `HttpException(401, 'authentication_required')` otherwise — a JSON client
@@ -316,6 +319,7 @@ Instances:
 |---|---|---|---|
 | `route-community` | `App\Controller\RouteCommunityController` | `GET /routes/{id}/community`, `GET …/corrections`, `POST …/rode-it`, `…/vote`, `…/suggest` | [route-domain.md](route-domain.md) |
 | `ride-check` | `App\Controller\RideCheckController` | `POST /map/ride-check` | [map-and-search.md](map-and-search.md) |
+| `elevation` | `App\Controller\ElevationController` | `POST /contribute/elevation` | [climb-elevation.md](climb-elevation.md) |
 | `item-confirm` | `App\Controller\ItemConfirmationController` | `GET /items/{id}/confirmations`, `POST /items/{id}/confirm` | [moderation-and-contribution.md](moderation-and-contribution.md) |
 
 **As-built deviation:** `item-confirm` follows every element of the pattern
@@ -382,6 +386,7 @@ budgeted there is a site-wide capability, not one caller's share of it.
 | `route_propose` | sliding_window | 3 / 1 day | `user-<id>` | Route proposal intake (GPX upload) — `App\Contribution\RouteProposalService::propose()`; proposals are heavier than pin edits, the supply gate starts at intake | `TooManyRequestsHttpException` → flash (`ProposeRouteController`) |
 | `route_suggest` | sliding_window | 5 / 1 day | `user-<id>` | Route correction channel — `App\Community\RouteCommunityService::recordSuggestion()`; the suggest channel is the flood vector (each pending row is a curator task); vote/rode-it are self-bounded by UNIQUE constraints instead | `429 {"error":"rate_limited"}` (`RouteCommunityController::suggest`) |
 | `ride_check` | sliding_window | 20 / 1 day | `user-<id>` | GPX ride-check compute — `App\Controller\RideCheckController::check()`; read-only (parse + two PostGIS corridor queries, nothing persisted), hence more generous than intake | `429` JSON with translated `contribute.error.rate_limited` |
+| `elevation` | sliding_window | 30 / 1 minute | `user-<id>` | Climb-editor elevation profiling — `App\Controller\ElevationController::elevation()`; every call is an upstream Valhalla request (shared infrastructure), so the budget is per minute: generous for a rider redrawing a climb, a wall for a loop (review 2026-08-16 finding 5) | `429 {"error":"rate_limited"}` |
 | `coverage_read` | sliding_window | 120 / 1 min | per **IP** (anonymous) | Coverage read endpoints — the app's first anonymous-read limiter, consistent with the no-scraping access terms ([osm-data-architecture.md](osm-data-architecture.md) §7) | `429 JSON {"error":"rate_limited"}` (`CoverageController::rateLimited()`) |
 | `country_interest` | sliding_window | 10 / 1 day | `user-<id>` | Country-interest submissions — `App\Controller\JoinCountryController::index()`, country not yet onboarded ([moderation-and-contribution.md](moderation-and-contribution.md) §11) | Flash `join.error.too_many`, redirect back to the form (`JoinCountryController`) |
 | `curator_application` | sliding_window | 3 / 1 day | `user-<id>` | Curator-application submissions — same controller, country onboarded; the tighter of the two, since an application is a task for a human reviewer, not just a counter ([moderation-and-contribution.md](moderation-and-contribution.md) §11) | Flash `join.error.too_many`, redirect back to the form |

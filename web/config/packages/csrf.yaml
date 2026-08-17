@@ -11,6 +11,7 @@ framework:
             - logout
             - route-community
             - ride-check
+            - elevation
             - my-area
             - country-interest
             - curator-application

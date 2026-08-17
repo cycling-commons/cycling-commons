@@ -159,6 +159,9 @@
 
   {# Translated marker labels for the shared climb editor (foot/summit/steepest) — read as a fallback by climb-editor.js when a mount call doesn't pass opts.labels explicitly. #}
   <script nonce="{{ csp_nonce() }}">window.CC_EDITOR_LABELS = {{ {foot: 'js.climb_marker_foot'|trans, summit: 'js.climb_marker_summit'|trans, steepest: 'js.climb_marker_steepest'|trans}|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
+  {# The stateless 'elevation' CSRF token climb-elevation.js sends as
+     X-CC-Token (config/packages/csrf.yaml stateless_token_ids). #}
+  <script nonce="{{ csp_nonce() }}">window.CC_ELEV_TOKEN = {{ csrf_token('elevation')|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
 
   {# Every string add-climb.js renders itself, serialised the same way as the
      bag above and as improve.html.twig's (docs/plans/2026-08-01-improve-js-i18n.md).

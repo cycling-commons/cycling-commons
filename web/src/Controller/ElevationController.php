@@ -8,11 +8,14 @@ namespace App\Controller;
 
 use App\Elevation\ClimbProfiler;
 use App\Elevation\ElevationClient;
+use App\Entity\User;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
  * The measured profile of a drawn climb line.
@@ -30,8 +33,9 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
  * One implementation now serves both the editor and the sweep.
  *
  * Contributor-only: it is an editor tool, not public map data, and it costs an
- * upstream request per call. Rate limiting rides on the same login the
- * contribute flow already requires.
+ * upstream request per call — which is why login alone is not enough and the
+ * `elevation` limiter (per user, per minute) sits in front of the profiler
+ * (review 2026-08-16 finding 5).
  *
  * @api Instantiated by Symfony's router - `@api` tells Psalm this is a live
  *      entry point, not dead code.
@@ -39,9 +43,24 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 final class ElevationController extends AbstractController
 {
     #[Route('/contribute/elevation', name: 'contribute_elevation', methods: ['POST'])]
-    #[IsGranted('ROLE_USER')]
-    public function elevation(Request $request, ClimbProfiler $profiler): JsonResponse
-    {
+    public function elevation(
+        Request $request,
+        ClimbProfiler $profiler,
+        RateLimiterFactoryInterface $elevationLimiter,
+    ): JsonResponse {
+        // THE stateless-CSRF JSON pattern (security-architecture.md §5.1),
+        // added by review 2026-08-16 finding 5: clean 401 (a JSON client must
+        // never be 302-redirected to a login page), then the stateless header
+        // token — login is a person, not a permission slip for cross-origin
+        // POSTs. The wizard templates mint CC_ELEV_TOKEN.
+        $user = $this->getUser();
+        if (!$this->isGranted('ROLE_USER') || !$user instanceof User) {
+            throw new HttpException(Response::HTTP_UNAUTHORIZED, 'authentication_required');
+        }
+        if (!$this->isCsrfTokenValid('elevation', (string) $request->headers->get('X-CC-Token'))) {
+            throw $this->createAccessDeniedException('Invalid CSRF token.');
+        }
+
         $payload = json_decode($request->getContent(), true);
         $raw = \is_array($payload) ? ($payload['coords'] ?? null) : null;
         if (!\is_array($raw) || [] === $raw || \count($raw) > ElevationClient::MAX_POINTS) {
@@ -67,6 +86,14 @@ final class ElevationController extends AbstractController
         $rawSteep = $payload['steepAt'] ?? null;   // $payload is already known to be an array here
         if (isset($rawSteep[0], $rawSteep[1]) && is_numeric($rawSteep[0]) && is_numeric($rawSteep[1])) {
             $steepAt = [(float) $rawSteep[0], (float) $rawSteep[1]];
+        }
+
+        // Consumed after the cheap validation and before the expensive part:
+        // a malformed request costs no budget, a well-formed one costs exactly
+        // one upstream Valhalla call. Keyed per user, which is correct
+        // independently of proxy-IP resolution.
+        if (!$elevationLimiter->create('user-'.(string) $user->getId())->consume()->isAccepted()) {
+            return new JsonResponse(['error' => 'rate_limited'], 429);
         }
 
         $profile = $profiler->profile($coords, $steepAt);

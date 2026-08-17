@@ -32,7 +32,9 @@
     if (steepAt) body.steepAt = [steepAt[1], steepAt[0]];
     return fetch('/contribute/elevation', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      // X-CC-Token: the stateless 'elevation' CSRF token the wizard template
+      // mints (server refuses without it - ElevationController).
+      headers: { 'Content-Type': 'application/json', 'X-CC-Token': window.CC_ELEV_TOKEN || '' },
       body: JSON.stringify(body),
       signal: signal
     }).then(function (r) {

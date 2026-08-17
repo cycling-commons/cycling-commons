@@ -89,8 +89,10 @@ The profile comes from `profileFromRoute()` in
 line at 100 points and called open-meteo's elevation endpoint from the browser,
 which serves Copernicus GLO-90 — a **D**igital **E**levation **M**odel (DEM) on a
 roughly 90 m grid. It now posts to our own `/contribute/elevation`, which reads
-[§2a](#2a-the-source)'s source through Valhalla; everything below is what the
-90 m grid produced, and why the source had to change.
+[§2a](#2a-the-source)'s source through Valhalla (guarded by the stateless
+`elevation` CSRF token — `window.CC_ELEV_TOKEN`, sent as `X-CC-Token` — and a
+per-user per-minute limiter: security-architecture.md §5.1/§7); everything
+below is what the 90 m grid produced, and why the source had to change.
 
 Sampling every 25 m into a 90 m grid produces a staircase. Measured on La
 Redoute's stored route:
