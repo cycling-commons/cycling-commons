@@ -12,6 +12,14 @@ web/composer.json
     }
   },
   "sessions": {
+    "s_c6f332c201127d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "374bfb7f-30b7-4d17-9aa0-1346f5c8f29d",
+        "model": "claude-fable-5"
+      },
+      "human_author": null
+    },
     "s_dd35dcc1b6eafa": {
       "agent_id": {
         "tool": "claude",
