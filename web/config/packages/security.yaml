@@ -90,6 +90,11 @@ security:
         # as /map/catalog.json above.
         - { path: '^/map/coverage/(search|nearby|counts)$', roles: PUBLIC_ACCESS }
         - { path: '^/map/coverage/poi/(node|way)/\d+$', roles: PUBLIC_ACCESS }
+        # Public API v1 (public-api.md §2.2 PoC): anonymous, CORS-open,
+        # cacheable JSON for external consumers. Explicit PUBLIC_ACCESS for the
+        # same scheb lazy-firewall cacheability reason as /map/catalog.json
+        # above: a session read here would mark every /v1 response private.
+        - { path: ^/v1/, roles: PUBLIC_ACCESS }
         # /2fa/setup is reached by a FULLY authenticated user (elevated role, no secret yet) → ROLE_USER.
         # Must precede the ^/2fa rule below, which guards scheb's interstitial (/2fa, /2fa_check)
         # where the token is only IS_AUTHENTICATED_2FA_IN_PROGRESS, not yet fully authenticated.

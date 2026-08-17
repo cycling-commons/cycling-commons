@@ -92,8 +92,11 @@ different looks (§7).
 `cc-maps` Hetzner Object Storage bucket behind CDN, served by HTTP byte-range —
 the artifact and infra already exist ([coverage-provider.md](coverage-provider.md),
 [osm-data-architecture.md §5](osm-data-architecture.md)). Route tiles
-(`routes.pmtiles`) are a v1 open decision (§9); until then routes are REST/GeoJSON
-only (§2.2).
+(`routes.pmtiles`) exist since 2026-08-13 and the PoC serves them to external
+consumers unkeyed, discovered through `/v1/map-config` (see the PoC note in
+§2.2); whether they stay unkeyed at v1 remains the §9 decision. Browsers never
+read the storage bucket directly: every tile URL points at the nginx-fronted
+tiles host, where caching and cross-origin headers are controlled.
 
 **The tile schema is the contract.** Each tileset publishes a **TileJSON**
 (`minzoom`, `maxzoom`, `bounds`, `attribution`, and `vector_layers` with each
@@ -120,6 +123,7 @@ contract.
 
 | Method | Endpoint | Purpose |
 |--------|----------|---------|
+| GET | `/v1/map-config` | **implemented (PoC)**, the consumer bootstrap: routes-tiles URL + source-layer contract, route style groups, category table (A–M), attribution string |
 | GET | `/v1/catalog` | item-type catalogue (letters A–L, `serviceKind`, vocabularies, tiers) — the labels and rendering metadata a consumer needs |
 | GET | `/v1/search?bbox=&q=&letter=&tier=&limit=&cursor=` | search / browse coverage → GeoJSON `FeatureCollection` (reference-only) |
 | GET | `/v1/items/{id}` (`?hydrate=osm`) | single-item detail: our enrichment, provenance, verification state |
@@ -128,6 +132,19 @@ contract.
 | GET | `/v1/regions/{id}/best` | the curated best-of for a region — the public face of the rankings domain ([route-domain.md](route-domain.md)); response composition is an open decision (§9) |
 | GET | `/v1/routes?bbox=` · `/v1/routes/{id}` · `/v1/routes/{id}.gpx` | the K route domain + GPX download |
 | POST | `/v1/contributions` **(phase-2, §8)** | write path → the existing submission / moderation loop |
+
+**PoC status (2026-08-18).** Two endpoints are implemented and live in the
+app: `/v1/map-config` and the `/v1/search` subset `bbox` + `letter` + `limit`
+(`q`/`tier`/`hydrate`/`cursor` stay draft; `bbox` spans at most 10x10 degrees;
+`letter` widened to A-M for M · public toilets). Both are open read-only (no
+keys yet, `security: []` in the OpenAPI), CORS `Access-Control-Allow-Origin: *`
+(`PublicApiCorsSubscriber`), per-IP `public_api_read` limiter (120/min, own
+pool), ETag + `public` caching with the explicit `^/v1/` PUBLIC_ACCESS entry in
+security.yaml. Responses are built by `Api\V1\PublicItemsProvider` through the
+`ItemFeature` DTO: the DTO half of the
+[personal-data boundary](public-api-personal-data-boundary.md) is enforced, the
+dedicated Postgres role half stays deferred. The consumer-facing explanation
+lives at `wiki/developers/api/`.
 
 **Conventions.** `bbox=minLon,minLat,maxLon,maxLat`. Collections paginate by
 opaque `cursor` (not offset), capped by `limit`. Coordinates are WGS84
@@ -311,7 +328,9 @@ provenance — the app-scoped reference below restores exactly that.
 ## 9. Open decisions (pending owner)
 
 - **Route tiles at v1** (§2.1): ship `routes.pmtiles` in v1, or keep routes
-  REST/GeoJSON-only until a later version.
+  REST/GeoJSON-only until a later version. *Resolved for the PoC (2026-08-18):
+  the artifact exists and is served unkeyed via `/v1/map-config`; the open
+  half is whether v1 keys it.*
 - **Key/URL scheme for tiles** (§3): key path segment vs. signed URL, and the
   referer-allowlist policy.
 - **Best-of response composition** (§2.2): what `/v1/regions/{id}/best`

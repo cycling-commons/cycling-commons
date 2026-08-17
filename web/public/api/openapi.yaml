@@ -65,6 +65,10 @@ info:
 servers:
   - url: https://api.cyclingcommons.org
     description: Planned production origin — not live yet.
+  - url: https://cyclingcommons.org
+    description: >-
+      PoC origin: the implemented /v1 subset (map-config, search) is served
+      by the main app while the dedicated API origin is not live.
 
 security:
   - appKey: []
@@ -106,15 +110,46 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '429': { $ref: '#/components/responses/RateLimited' }
 
+  /v1/map-config:
+    get:
+      tags: [Catalog]
+      operationId: getMapConfig
+      summary: Map bootstrap for external consumers
+      security: []   # PoC: open read-only; keys arrive with the v1 label
+      description: >
+        **Implemented (PoC).** Everything an external map needs to wire the
+        Commons overlays in one call: the current routes PMTiles URL (null
+        when no tileset is published, then skip the routes overlay), the
+        per-country source-layer naming contract, the route style groups,
+        the category table (letters A-M with colours and glyphs), and the
+        attribution string the consumer must display. Cacheable for an hour;
+        the tiles URL changes when a new build is published, which is why
+        consumers read it here instead of hardcoding it.
+      responses:
+        '200':
+          description: The bootstrap payload.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MapConfig'
+        '429': { $ref: '#/components/responses/RateLimited' }
+
   /v1/search:
     get:
       tags: [Coverage]
       operationId: searchCoverage
       summary: Search / browse coverage
+      security: []   # PoC: open read-only; keys arrive with the v1 label
       description: >
         Find coverage items by bounding box, free text, catalogue letter and
         tier. Returns a GeoJSON `FeatureCollection` of reference-only
         features. At least one of `bbox` or `q` is required.
+
+
+        **Implemented (PoC subset):** `bbox` + `letter` + `limit`, both
+        required except `limit`; `bbox` is capped at a 10×10-degree span
+        (`bbox_too_large`). `q`, `tier`, `hydrate` and `cursor` are drafted
+        but not yet implemented.
       parameters:
         - $ref: '#/components/parameters/bbox'
         - name: q
@@ -387,7 +422,7 @@ components:
       description: Catalogue letter (see `/v1/catalog`).
       schema:
         type: string
-        pattern: '^[A-L]$'
+        pattern: '^[A-M]$'
       example: C
     tier:
       name: tier
@@ -482,6 +517,63 @@ components:
       description: >
         `community` is contributed knowledge; `curated` is
         curator-verified.
+
+    MapConfig:
+      type: object
+      description: >
+        The consumer bootstrap (implemented, PoC). Rendering metadata only:
+        tiles and GeoJSON carry data, never styling, so this is where the
+        Commons look is offered for consumers that want to match it.
+      required: [version, attribution, routes, categories]
+      properties:
+        version: { type: string, example: '0.1' }
+        attribution:
+          type: string
+          description: The string a consumer must display while Commons overlays are visible.
+          example: '© Cycling Commons contributors (ODbL) · © OpenStreetMap contributors'
+        routes:
+          type: object
+          properties:
+            tilesUrl:
+              type: [string, 'null']
+              description: Current routes PMTiles archive; null when none is published.
+            countries:
+              type: array
+              items: { type: string }
+              description: Lowercase country codes; one source-layer per country.
+              example: [be, nl, de]
+            sourceLayers:
+              type: object
+              description: 'Naming contract: replace `{cc}` with each country code.'
+              properties:
+                lines: { type: string, example: 'routes_{cc}' }
+                nodes: { type: string, example: 'knoop_{cc}' }
+            style:
+              type: object
+              properties:
+                groups:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      key: { type: string, example: national }
+                      nets:
+                        type: array
+                        items: { type: string }
+                        example: [icn, ncn]
+                      color: { type: string, example: '#C84E64' }
+                badgeMinZoom: { type: integer, example: 10 }
+        categories:
+          type: array
+          items:
+            type: object
+            properties:
+              letter: { type: string, example: C }
+              key: { type: string, example: water }
+              label: { type: string, example: Water & food }
+              color: { type: string, example: '#8FB6A8' }
+              glyph: { type: string, example: 💧 }
+              kind: { type: string, enum: [point, line, surface] }
 
     Catalog:
       type: object

@@ -37,6 +37,8 @@ framework:
                 adapter: cache.app
             cache.media_pow:
                 adapter: cache.app
+            cache.public_api_limiter:
+                adapter: cache.app
     rate_limiter:
         contribution_submit:
             policy: sliding_window
@@ -160,6 +162,14 @@ framework:
             limit: 1
             interval: '1 hour'
             cache_pool: cache.media_urgent_alert_limiter
+        # Public API v1 (public-api.md §2.2 PoC): same shape as coverage_read
+        # but its own pool, so external consumers never eat the site map's
+        # budget and a noisy integration throttles only itself.
+        public_api_read:
+            policy: sliding_window
+            limit: 120
+            interval: '1 minute'
+            cache_pool: cache.public_api_limiter
 
 when@test:
     framework:
@@ -194,4 +204,6 @@ when@test:
                 cache.media_urgent_alert_limiter:
                     adapter: cache.adapter.array
                 cache.media_pow:
+                    adapter: cache.adapter.array
+                cache.public_api_limiter:
                     adapter: cache.adapter.array
