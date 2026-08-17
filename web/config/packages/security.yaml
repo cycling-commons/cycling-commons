@@ -30,10 +30,15 @@ security:
                 check_path: 2fa_login_check
 
     access_control:
-        # Localized routes carry an optional /fr|/nl|/de|/es prefix (English is clean); the
-        # `(/(fr|nl|de|es))?` group keeps these rules matching both. `logout`, `verify`,
-        # scheb's `/2fa` interstitial, `/api`, and `/admin` stay unprefixed (see i18n design).
-        - { path: '^(/(fr|nl|de|es))?/(login|register|reset-password)', roles: PUBLIC_ACCESS }
+        # Localized routes carry an optional two-letter locale prefix (English is
+        # clean); the `(/[a-z]{2})?` group keeps these rules matching both. A
+        # WILDCARD, not the literal locale list (owner, 2026-08-17): a new
+        # locale (ja, zh, ...) must not silently fall outside these rules the
+        # day it lands. Routing runs before the firewall, so a prefix that is
+        # not a real locale 404s and the wider match never serves anything.
+        # `logout`, `verify`, scheb's `/2fa` interstitial, `/api`, and `/admin`
+        # stay unprefixed (see i18n design).
+        - { path: '^(/[a-z]{2})?/(login|register|reset-password)', roles: PUBLIC_ACCESS }
         - { path: ^/verify, roles: PUBLIC_ACCESS }
         # Crawler entry points. Explicit PUBLIC_ACCESS for the same scheb
         # lazy-firewall reason as /map/catalog.json below — a session read here
@@ -41,7 +46,7 @@ security:
         - { path: '^/(robots\.txt|sitemap\.xml)$', roles: PUBLIC_ACCESS }
         # Public rider profiles (spec 2026-07-14): explicit PUBLIC_ACCESS for the
         # same scheb lazy-firewall reason as /map/catalog.json below.
-        - { path: '^(/(fr|nl|de|es))?/riders/', roles: PUBLIC_ACCESS }
+        - { path: '^(/[a-z]{2})?/riders/', roles: PUBLIC_ACCESS }
         # Explicit PUBLIC_ACCESS (not just "no rule matches") so scheb's lazy-firewall
         # TwoFactorAccessListener treats the path as publicly accessible and skips
         # tokenStorage->getToken() — otherwise it forces a session read on every
@@ -88,10 +93,19 @@ security:
         # /2fa/setup is reached by a FULLY authenticated user (elevated role, no secret yet) → ROLE_USER.
         # Must precede the ^/2fa rule below, which guards scheb's interstitial (/2fa, /2fa_check)
         # where the token is only IS_AUTHENTICATED_2FA_IN_PROGRESS, not yet fully authenticated.
-        - { path: '^(/(fr|nl|de|es))?/2fa/setup', roles: ROLE_USER }
+        - { path: '^(/[a-z]{2})?/2fa/setup', roles: ROLE_USER }
         - { path: ^/2fa, roles: IS_AUTHENTICATED_2FA_IN_PROGRESS }
-        - { path: '^(/(fr|nl|de|es))?/(profile|settings)', roles: ROLE_USER }
-        - { path: '^(/(fr|nl|de|es))?/moderate', roles: ROLE_CURATOR }
+        - { path: '^(/[a-z]{2})?/(profile|settings)', roles: ROLE_USER }
+        # Backstops mirroring the controllers' own IsGranted attributes (review
+        # 2026-08-16 finding 7): if a route is ever added to these controllers
+        # without the attribute, it stays behind login anyway. Deliberately NOT
+        # listed: /media/* and /contribute/elevation - they follow THE
+        # stateless-JSON pattern (security-architecture.md §5.1) whose clean
+        # in-controller 401 an access_control rule would replace with a 302 to
+        # the login page; their auth is pinned by their own controller tests.
+        - { path: '^(/[a-z]{2})?/messages', roles: ROLE_USER }
+        - { path: ^/scout/tags, roles: ROLE_USER }
+        - { path: '^(/[a-z]{2})?/moderate', roles: ROLE_CURATOR }
         - { path: ^/admin, roles: ROLE_ADMIN }
 
     role_hierarchy:

@@ -273,20 +273,23 @@ codes and disables the flag — audited, confirm-gated.
 | `login_throttling` | `max_attempts: 5` (§3) |
 | `two_factor` | scheb interstitial (`2fa_login` / `2fa_login_check`) |
 
-`access_control` (ordered; localized routes carry an optional `/fr|/nl|/de`
-prefix — English paths are clean; `logout`, `verify`, `/2fa` interstitial,
-`/api`, `/admin` stay unprefixed):
+`access_control` (ordered; localized routes carry an optional two-letter
+locale prefix matched by the WILDCARD group `(/[a-z]{2})?` — a literal locale
+list would silently exclude the next locale added (owner, 2026-08-17); English
+paths are clean; `logout`, `verify`, `/2fa` interstitial, `/api`, `/admin`
+stay unprefixed):
 
 | Path pattern | Access |
 |---|---|
-| `(/fr\|/nl\|/de)?/(login\|register\|reset-password)` | `PUBLIC_ACCESS` |
+| `(/[a-z]{2})?/(login\|register\|reset-password)` | `PUBLIC_ACCESS` |
 | `^/verify` | `PUBLIC_ACCESS` |
-| `(/fr\|/nl\|/de)?/riders/` | `PUBLIC_ACCESS` (public rider profiles, §7) |
+| `(/[a-z]{2})?/riders/` | `PUBLIC_ACCESS` (public rider profiles, §7) |
 | `^/map/catalog\.json$`, `^/map/best-of$`, `^/map/item/\d+/history$`, `^/routes/\d+\.gpx$`, `^/items/\d+/confirmations$` | `PUBLIC_ACCESS` — **exact-path, explicitly public** so scheb's lazy-firewall `TwoFactorAccessListener` skips the session read that would downgrade `Cache-Control` to private (data contracts: [catalog-data-model.md](catalog-data-model.md), [route-domain.md](route-domain.md), [moderation-and-contribution.md](moderation-and-contribution.md)) |
-| `(/fr\|/nl\|/de)?/2fa/setup` | `ROLE_USER` — must precede the interstitial rule: setup is reached *fully* authenticated |
+| `(/[a-z]{2})?/2fa/setup` | `ROLE_USER` — must precede the interstitial rule: setup is reached *fully* authenticated |
 | `^/2fa` | `IS_AUTHENTICATED_2FA_IN_PROGRESS` (scheb interstitial) |
-| `(/fr\|/nl\|/de)?/(profile\|settings)` | `ROLE_USER` |
-| `(/fr\|/nl\|/de)?/moderate` | `ROLE_CURATOR` |
+| `(/[a-z]{2})?/(profile\|settings)` | `ROLE_USER` |
+| `(/[a-z]{2})?/messages`, `^/scout/tags` | `ROLE_USER` — backstops mirroring the controllers' `IsGranted` attributes (review 2026-08-16 finding 7). `/media/*` and `/contribute/elevation` are deliberately absent: THE stateless-JSON pattern ([security-architecture.md](security-architecture.md) §5.1) owns their clean 401s, and an `access_control` rule would turn those into login redirects |
+| `(/[a-z]{2})?/moderate` | `ROLE_CURATOR` |
 | `^/admin` | `ROLE_ADMIN` |
 
 Rule of thumb encoded above: any *cacheable public* endpoint needs an explicit
