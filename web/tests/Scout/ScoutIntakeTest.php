@@ -44,7 +44,26 @@ final class ScoutIntakeTest extends WebTestCase
     /** @param array<string, mixed> $payload */
     private function post(KernelBrowser $client, array $payload): void
     {
-        $client->request('POST', '/scout/tags', [], [], ['CONTENT_TYPE' => 'application/json'], json_encode($payload, \JSON_THROW_ON_ERROR));
+        // Token + same-origin signal: the stateless 'scout-tags' CSRF check
+        // (review 2026-08-16 info note) refuses the POST without them.
+        $token = static::getContainer()->get(\Symfony\Component\Security\Csrf\CsrfTokenManagerInterface::class)->getToken('scout-tags')->getValue();
+        $client->request('POST', '/scout/tags', [], [], [
+            'CONTENT_TYPE' => 'application/json',
+            'HTTP_X_CC_TOKEN' => $token,
+            'HTTP_SEC_FETCH_SITE' => 'same-origin',
+        ], json_encode($payload, \JSON_THROW_ON_ERROR));
+    }
+
+    public function testACrossSitePostWithoutTheTokenIs403(): void
+    {
+        $client = static::createClient();
+        $this->login($client, 'csrf');
+        $client->request('POST', '/scout/tags', [], [], [
+            'CONTENT_TYPE' => 'application/json',
+            'HTTP_X_CC_TOKEN' => 'nope',
+            'HTTP_SEC_FETCH_SITE' => 'cross-site',
+        ], json_encode(['tag' => 'notice', 'letter' => 'F', 'lat' => 50.5, 'lng' => 6.05, 'details' => ['name' => 'X']], \JSON_THROW_ON_ERROR));
+        self::assertResponseStatusCodeSame(403);
     }
 
     public function testAnApprovedTagBecomesAnOrdinarySubmission(): void

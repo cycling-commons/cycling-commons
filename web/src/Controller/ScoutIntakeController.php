@@ -59,6 +59,15 @@ final class ScoutIntakeController extends AbstractController
     #[IsGranted('ROLE_USER')]
     public function submit(Request $request): JsonResponse
     {
+        // Stateless header token (review 2026-08-16 info note): this POST used
+        // to lean on SameSite=lax alone, which made it the one JSON intake
+        // without a token — inconsistency reads as an oversight to the next
+        // reader. Same X-CC-Token convention as ride-check/elevation; the map
+        // template mints CC_SCOUT_TOKEN.
+        if (!$this->isCsrfTokenValid('scout-tags', (string) $request->headers->get('X-CC-Token'))) {
+            throw $this->createAccessDeniedException('Invalid CSRF token.');
+        }
+
         /** @var array<string, mixed>|null $payload */
         $payload = json_decode($request->getContent(), true);
         if (!\is_array($payload)) {

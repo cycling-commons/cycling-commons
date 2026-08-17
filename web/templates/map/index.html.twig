@@ -574,6 +574,9 @@ window.CC_VENDOR = {{ {
      rides; it does not need a tile artifact to exist. #}
   window.CC_SCOUT_TAGS = {{ scout_tags|default({})|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
   window.CC_SCOUT_DETAILS = {{ scout_details|default({})|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
+  {# The stateless 'scout-tags' CSRF token scout-review.js sends as X-CC-Token
+     (config/packages/csrf.yaml stateless_token_ids). #}
+  window.CC_SCOUT_TOKEN = {{ csrf_token('scout-tags')|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
 </script>
 {# The photo-intake config below is one queue for a WHOLE RIDE, not for one
    place — a rider reviewing thirty tags may photograph several of them, hence

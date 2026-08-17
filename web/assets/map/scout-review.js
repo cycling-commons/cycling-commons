@@ -373,7 +373,9 @@ async function sendOne(entry, button, li) {
   try {
     const res = await fetch('/scout/tags', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      // X-CC-Token: the stateless 'scout-tags' CSRF token the map template
+      // mints (server refuses without it - ScoutIntakeController).
+      headers: { 'Content-Type': 'application/json', 'X-CC-Token': window.CC_SCOUT_TOKEN || '' },
       // Exactly the wire contract: no track, no polyline, no device id.
       body: JSON.stringify({
         tag: entry.tag,

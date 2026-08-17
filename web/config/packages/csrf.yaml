@@ -12,6 +12,7 @@ framework:
             - route-community
             - ride-check
             - elevation
+            - scout-tags
             - my-area
             - country-interest
             - curator-application

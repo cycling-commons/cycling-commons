@@ -1,5 +1,5 @@
 {
-    "name": "cyclingcommons/api",
+    "name": "cyclingcommons/web",
     "description": "Cycling Commons serving API (Symfony) — dev scaffold",
     "type": "project",
     "license": "proprietary",

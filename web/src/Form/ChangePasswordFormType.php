@@ -11,6 +11,7 @@ use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints\Length;
 use Symfony\Component\Validator\Constraints\NotBlank;
+use Symfony\Component\Validator\Constraints\NotCompromisedPassword;
 
 final class ChangePasswordFormType extends AbstractType
 {
@@ -30,6 +31,12 @@ final class ChangePasswordFormType extends AbstractType
                 'constraints' => [
                     new NotBlank(message: 'Please enter a new password.'),
                     new Length(min: 12, minMessage: 'Password must be at least {{ limit }} characters.'),
+                    // k-anonymity: only the first five SHA-1 hex chars leave
+                    // the server (haveibeenpwned range API), so this fits the
+                    // privacy stance. skipOnError: an API outage must never
+                    // block a signup or a password change. Disabled in test
+                    // (validator.yaml when@test).
+                    new NotCompromisedPassword(skipOnError: true, message: 'This password appears in a known data breach. Please choose a different one.'),
                 ],
             ],
             'second_options' => [

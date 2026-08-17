@@ -93,7 +93,11 @@ reference only**: never a dependency, no code copied.
 
 - Fields: email, display name (2–100 chars, `RegistrationFormType`), repeated
   password (**min 12 chars**, `Length(min: 12)` in
-  `web/src/Form/RegistrationFormType.php`), an **age declaration** and an
+  `web/src/Form/RegistrationFormType.php`, plus `NotCompromisedPassword`
+  (review 2026-08-16 info note) on all three password forms — k-anonymity: only
+  the first five SHA-1 hex chars reach haveibeenpwned; `skipOnError` so an API
+  outage never blocks anyone; disabled in test via `validator.yaml`
+  `when@test`), an **age declaration** and an
   agree-terms checkbox. Preferences are *not* asked at registration —
   friction-free by design (§9).
 
