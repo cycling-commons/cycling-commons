@@ -60,6 +60,15 @@ rather than being restated here.
   defaults to a document and gets the policy.
 - The policy is **enforced**, not report-only.
 
+Beside it, `App\EventSubscriber\SecurityHeadersSubscriber` (review 2026-08-16
+finding 4) stamps the baseline hardening trio — `X-Content-Type-Options:
+nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, and a
+`Permissions-Policy` with camera/microphone/geolocation all locked — on
+**every** main response, explicitly including the non-HTML responses the CSP
+skip above exempts. HSTS is nginx's, not the app's: operations.md §4 has the
+ownership table, `docs/plans/handoffs/2026-08-17-nginx-headers-devops.md` the
+host-side work. Tests: `tests/Security/SecurityHeadersTest.php`.
+
 ### 2.2 The per-request nonce
 
 `App\Security\Csp\CspNonce` (`web/src/Security/Csp/CspNonce.php`) holds one
