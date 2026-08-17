@@ -425,13 +425,15 @@ Login throttling is Symfony's built-in limiter and is inventoried in
   so it uses session-backed tokens as built. Harmless today (only logged-in
   users POST, so a session exists), but either the id should be added to the
   list or the "stateless" wording corrected.
-- **`coverage_read` prod client-IP propagation** — the limiter is shipped
-  (`web/config/packages/rate_limiter.yaml`, `CoverageController::rateLimited()`,
-  keyed on `Request::getClientIp()`); whether that resolves the real rider IP
-  behind the prod LB + nginx frontends (`SYMFONY_TRUSTED_PROXIES`/
-  `X-Forwarded-For`) is unverified until flipped in prod — checklist item in
-  `developers/coverage-batch.md`. Until then, anonymous traffic could share
-  one bucket and 429 site-wide.
+- **`coverage_read` prod client-IP propagation** — the config side is now
+  shipped (review 2026-08-16 finding 3): `when@prod` framework config trusts
+  `%env(TRUSTED_PROXIES)%` with `trusted_headers` locked to
+  `x-forwarded-for`/`x-forwarded-proto`, so `Request::getClientIp()` resolves
+  the rider once the hosts set `TRUSTED_PROXIES` to the cluster's private CIDR
+  (operations.md §3). Still open for prod flip: set that value and verify
+  nginx forwards `X-Forwarded-For` from the LB — checklist item in
+  `developers/coverage-batch.md`. Until verified, anonymous traffic could
+  share one bucket and 429 site-wide.
 - **CSP on empty-`Content-Type` responses** — `CspSubscriber` treats a
   response without a `Content-Type` as a document and stamps the policy.
   Believed to affect no current endpoint; whether that default should be

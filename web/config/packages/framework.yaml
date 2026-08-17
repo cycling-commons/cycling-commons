@@ -14,3 +14,16 @@ framework:
         handler_id: '%env(REDIS_URL)%'
         cookie_secure: auto
         cookie_samesite: lax
+
+# Proxy trust is prod-only: dev talks to PHP-FPM directly and must keep seeing
+# the real peer address (review 2026-08-16 finding 3). Without this, behind the
+# LB + nginx frontends getClientIp() returns the proxy, so every per-IP rate
+# limiter (coverage_read, media_report*) collapses into one shared bucket.
+when@prod:
+    framework:
+        # The cluster's private network: the load balancer and both nginx
+        # frontends. Never REMOTE_ADDR alone once a second hop exists.
+        trusted_proxies: '%env(TRUSTED_PROXIES)%'
+        # Locked to exactly the two headers nginx sets. Anything wider
+        # (Forwarded, X-Forwarded-Host) is spoof surface we do not use.
+        trusted_headers: ['x-forwarded-for', 'x-forwarded-proto']
