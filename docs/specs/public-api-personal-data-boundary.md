@@ -229,8 +229,10 @@ everything else to forbid.
 ### 3.3 Namespace rule
 
 All data-API serving code lives under **`App\Api\`** (controllers, DTOs,
-query services, the wrapper). Today's `ApiController` (db-check) moves there
-when the first real endpoint is built. The namespace is the deptrac layer
+query services, the wrapper). The namespace starts empty: `ApiController` now
+holds only the `/health` probe, its `/api/db-check` sibling having been
+deleted as an unauthenticated information leak (2026-08-16 web review,
+finding 1). The namespace is the deptrac layer
 boundary, so this is a structural rule, not a taste rule: API code outside
 `App\Api\` is invisible to layer 3.
 
@@ -359,8 +361,9 @@ independently landable:
 
 1. Role + grants: init script, runbook note, grants migration, grant-drift
    test (§2, §5.1). *Landable before any API code exists.*
-2. `api_read` connection + `PublicReadConnection` + `App\Api\` namespace move
-   of the db-check controller (§3).
+2. `api_read` connection + `PublicReadConnection` + the `App\Api\` namespace
+   (§3). (The db-check controller this step was to move was deleted by the
+   2026-08-16 web review; the namespace starts empty.)
 3. Deptrac dependency, `deptrac.yaml`, CI gate (§4).
 4. First real endpoint lands already inside the fence; response-contract test
    comes with it (§5.2).
