@@ -27,3 +27,13 @@ when@prod:
         # Locked to exactly the two headers nginx sets. Anything wider
         # (Forwarded, X-Forwarded-Host) is spoof surface we do not use.
         trusted_headers: ['x-forwarded-for', 'x-forwarded-proto']
+
+# Staging is a deployed environment behind the same proxy chain and must behave
+# like prod. Symfony has no `when@prod|staging`, so the block is mirrored
+# deliberately (same convention as doctrine.yaml / asset_mapper.yaml). Without
+# it staging quietly ignores TRUSTED_PROXIES and keys per-IP limiters on the
+# proxy address.
+when@staging:
+    framework:
+        trusted_proxies: '%env(TRUSTED_PROXIES)%'
+        trusted_headers: ['x-forwarded-for', 'x-forwarded-proto']
