@@ -1,0 +1,32 @@
+web/tests/Pagination/RowsPerPageTest.php
+  s_dd35dcc1b6eafa::t_58f93cc14b1253 150-154
+docs/specs/account-and-auth.md
+  s_dd35dcc1b6eafa::t_63ce3a10aac6f6 956-959
+web/src/Controller/SettingsController.php
+  s_dd35dcc1b6eafa::t_6f584dd188afa8 207-213
+web/tests/Smoke/LocalizedRoutingTest.php
+  s_dd35dcc1b6eafa::t_d6d46ed494e15e 149-168
+web/src/Controller/LocaleController.php
+  s_dd35dcc1b6eafa::t_cb333743881218 53-60,64
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "2ad78f6147989b46f0fb0c8820e75fdbe2aa7855",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_dd35dcc1b6eafa": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "958971ba-400e-4707-b3a9-3af88bc7731b",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
