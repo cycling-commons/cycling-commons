@@ -1,0 +1,37 @@
+web/composer.json
+  s_dd35dcc1b6eafa::t_4e3e8ecee33ca9 3
+wiki/developers/api/index.md
+  s_c6f332c201127d::t_559a79fb161cd3 12-17
+wiki/developers/api/serving-map-data.md
+  s_c6f332c201127d::t_d5c0e456410b2e 7
+  s_c6f332c201127d::t_c8828b20fdecf1 35
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "45d25205307d8cf21f14ca5b4009541ebf80ddaa",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_c6f332c201127d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "374bfb7f-30b7-4d17-9aa0-1346f5c8f29d",
+        "model": "claude-fable-5"
+      },
+      "human_author": null
+    },
+    "s_dd35dcc1b6eafa": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "958971ba-400e-4707-b3a9-3af88bc7731b",
+        "model": "claude-fable-5"
+      },
+      "human_author": null
+    }
+  }
+}
