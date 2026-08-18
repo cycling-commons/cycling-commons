@@ -185,12 +185,18 @@ Validation the web tier CAN do, in this order, cheapest first:
   watching, instead of spending a quarantine write and a scan to say the same
   thing a minute later. The real answer is the worker's decode.
 
-Shard resolution: the **pin coordinates** when present, else
-`MEDIA_DEFAULT_CONTINENT`. The photo's own **EXIF GPS** needs a decode, so the
-endpoint cannot reach it; the message carries the pin transiently and the
-worker finishes the question with the EXIF half after it decodes. A photo whose
-shard is corrected that way has published nothing yet, which is the only time a
-shard may change at all.
+Shard resolution: the **pin coordinates**, which are **required** (owner
+2026-08-18): every photo is uploaded for a located place, so a missing or
+out-of-range pin is a `missing_location` 422, refused by the wizard
+client-side first and by the endpoint regardless. The photo's own **EXIF GPS**
+is the second verification, never the address: it needs a decode the endpoint
+does not do, so the message carries the pin transiently and the worker records
+the EXIF-to-pin distance after it decodes (the worker's pinless resharding arm
+survives only for messages queued before the pin became required). A photo
+whose shard changes that way has published nothing yet, which is the only time
+a shard may change at all. `MEDIA_DEFAULT_CONTINENT` remains only for a valid
+pin that resolves to no onboarded region (sea, un-onboarded country), never
+for an absent one.
 
 **Persistence at intake:** a `media_upload` row —
 `id (uuid) · user_id · status = 'pending_scan' · continent (CHAR(2), where the

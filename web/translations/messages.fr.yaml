@@ -2391,6 +2391,7 @@ media:
   error:
     consent_required: 'Acceptez d''abord la licence photo — vous pourrez ensuite ajouter des photos.'
     missing_file: 'Aucune photo reçue. Choisissez un fichier et réessayez.'
+    missing_location: 'Indiquez d''abord l''emplacement du lieu, puis ajoutez des photos.'
     photo_too_large: 'Cette photo dépasse 15 Mo. Utilisez une version plus légère.'
     photo_too_many_pixels: 'Cette photo comporte trop de pixels — plus de 50 mégapixels. Veuillez utiliser une version plus petite.'
     photo_format: 'Ce type de fichier n''est pas utilisable. Les photos peuvent être en JPEG, PNG, WebP ou HEIC.'

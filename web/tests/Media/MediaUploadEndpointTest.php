@@ -302,7 +302,7 @@ final class MediaUploadEndpointTest extends WebTestCase
 
         $client->request(
             'POST', '/media/photos',
-            ['_token' => $token, 'consentId' => $consentId],
+            ['_token' => $token, 'consentId' => $consentId, 'lat' => '50.47', 'lng' => '5.86'],
             ['photo' => $this->photoFile()],
         );
         $id = (string) $this->json($client)['id'];
@@ -333,7 +333,7 @@ final class MediaUploadEndpointTest extends WebTestCase
 
         $client->request(
             'POST', '/media/photos',
-            ['_token' => $token, 'consentId' => $consentId],
+            ['_token' => $token, 'consentId' => $consentId, 'lat' => '50.47', 'lng' => '5.86'],
             ['photo' => $this->photoFile()],
         );
         self::assertResponseStatusCodeSame(202, 'the endpoint cannot know yet, and must not pretend to');
@@ -372,7 +372,7 @@ final class MediaUploadEndpointTest extends WebTestCase
 
         $client->request(
             'POST', '/media/photos',
-            ['_token' => $token, 'consentId' => $consentId],
+            ['_token' => $token, 'consentId' => $consentId, 'lat' => '50.47', 'lng' => '5.86'],
             ['photo' => $this->photoFile()],
         );
         $id = (string) $this->json($client)['id'];
@@ -425,7 +425,7 @@ final class MediaUploadEndpointTest extends WebTestCase
 
         $client->request(
             'POST', '/media/photos',
-            ['_token' => $token, 'consentId' => $record->getId()->toRfc4122()],
+            ['_token' => $token, 'consentId' => $record->getId()->toRfc4122(), 'lat' => '50.47', 'lng' => '5.86'],
             ['photo' => $this->photoFile()],
         );
 
@@ -467,10 +467,43 @@ final class MediaUploadEndpointTest extends WebTestCase
         $token = $this->token($client);
         $consentId = $this->consentId($client, $token);
 
-        $client->request('POST', '/media/photos', ['_token' => $token, 'consentId' => $consentId]);
+        $client->request('POST', '/media/photos', ['_token' => $token, 'consentId' => $consentId, 'lat' => '50.47', 'lng' => '5.86']);
 
         self::assertResponseStatusCodeSame(422);
         self::assertSame('missing_file', $this->json($client)['error']);
+    }
+
+    /**
+     * The pin is required (owner 2026-08-18): every photo is uploaded for a
+     * located place, the EXIF GPS is only the second verification. Without
+     * this, a pinless upload of an EXIF-less photo would silently record the
+     * default continent, the exact lie ContinentResolver refuses to tell.
+     */
+    public function testAnUploadWithoutAPinIsRefusedAndStoresNothing(): void
+    {
+        $client = static::createClient();
+        $this->login($client, 'nopin');
+        $token = $this->token($client);
+        $consentId = $this->consentId($client, $token);
+
+        $client->request(
+            'POST', '/media/photos',
+            ['_token' => $token, 'consentId' => $consentId],
+            ['photo' => $this->photoFile()],
+        );
+
+        self::assertResponseStatusCodeSame(422);
+        self::assertSame('missing_location', $this->json($client)['error']);
+        self::assertSame(0, $this->storedCount());
+
+        // Out-of-range coordinates are the same refusal, not a resolver guess.
+        $client->request(
+            'POST', '/media/photos',
+            ['_token' => $token, 'consentId' => $consentId, 'lat' => '91.0', 'lng' => '5.86'],
+            ['photo' => $this->photoFile()],
+        );
+        self::assertResponseStatusCodeSame(422);
+        self::assertSame('missing_location', $this->json($client)['error']);
     }
 
     public function testAGifIsRefusedByItsContentNotItsName(): void
@@ -491,7 +524,7 @@ final class MediaUploadEndpointTest extends WebTestCase
 
         $client->request(
             'POST', '/media/photos',
-            ['_token' => $token, 'consentId' => $consentId],
+            ['_token' => $token, 'consentId' => $consentId, 'lat' => '50.47', 'lng' => '5.86'],
             ['photo' => new UploadedFile($path, 'ride.jpg', 'image/jpeg', null, true)],
         );
 
@@ -526,7 +559,7 @@ final class MediaUploadEndpointTest extends WebTestCase
 
         $client->request(
             'POST', '/media/photos',
-            ['_token' => $token, 'consentId' => $consentId],
+            ['_token' => $token, 'consentId' => $consentId, 'lat' => '50.47', 'lng' => '5.86'],
             ['photo' => $this->photoFile(300, 150)],
         );
         self::assertResponseStatusCodeSame(202);
@@ -559,7 +592,7 @@ final class MediaUploadEndpointTest extends WebTestCase
 
         $client->request(
             'POST', '/media/photos',
-            ['_token' => $token, 'consentId' => $consentId],
+            ['_token' => $token, 'consentId' => $consentId, 'lat' => '50.47', 'lng' => '5.86'],
             ['photo' => new UploadedFile($path, 'huge.jpg', 'image/jpeg', null, true)],
         );
 
@@ -617,7 +650,7 @@ final class MediaUploadEndpointTest extends WebTestCase
 
         $client->request(
             'POST', '/media/photos',
-            ['_token' => 'seeded-token', 'consentId' => $consent->getId()->toRfc4122()],
+            ['_token' => 'seeded-token', 'consentId' => $consent->getId()->toRfc4122(), 'lat' => '50.47', 'lng' => '5.86'],
             ['photo' => $this->photoFile(400, 300)],
         );
 

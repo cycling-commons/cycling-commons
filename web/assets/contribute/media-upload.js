@@ -437,15 +437,21 @@
     }
 
     function upload(file, item) {
+      /* The pin is REQUIRED (server: missing_location 422): every photo
+         belongs to a located place, and the EXIF GPS is only the second
+         verification. Refusing here saves the rider a full upload that the
+         server would refuse anyway. */
+      var lat = pin('lat');
+      var lng = pin('lng');
+      if (!lat || !lng) { fail(item, 'missing_location'); return Promise.resolve(); }
       return ensureToken().then(function (token) {
         return new Promise(function (resolve) {
           var form = new FormData();
           form.append('photo', file);
           form.append('_token', token);
           form.append('consentId', consentId);
-          var lat = pin('lat');
-          var lng = pin('lng');
-          if (lat && lng) { form.append('lat', lat); form.append('lng', lng); }
+          form.append('lat', lat);
+          form.append('lng', lng);
 
           var xhr = new XMLHttpRequest();
           xhr.open('POST', cfg.uploadUrl, true);

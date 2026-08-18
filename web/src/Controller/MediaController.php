@@ -174,13 +174,21 @@ final class MediaController extends AbstractController
 
         /* Shard resolution (docs/specs/photo-uploads.md §3): the wizard's pin
            wins, because it is where the rider says the place IS. The photo's
-           own coordinates are the fallback - and reading them needs the decode
-           this tier no longer does, so the pin is all there is here. The
-           message carries the pin so the worker can finish the question with
-           the EXIF half once it has it, and shardFor() is asked BEFORE the row
-           exists because the row records where the bytes actually went. */
+           own coordinates are a second VERIFICATION (the worker records the
+           EXIF-to-pin distance), never the address. The message carries the
+           pin so the worker can finish that verification once it has the
+           decode, and shardFor() is asked BEFORE the row exists because the
+           row records where the bytes actually went. */
         $pinLat = $this->coordinate($request, 'lat');
         $pinLng = $this->coordinate($request, 'lng');
+        /* The pin is REQUIRED (owner 2026-08-18): every photo is uploaded for
+           a located place, so a missing pin is a broken caller, not a case to
+           absorb. Without this guard a pinless upload of a photo with no EXIF
+           GPS would silently record the default continent, which is exactly
+           the lie the resolver refuses to tell for unresolvable points. */
+        if (null === $pinLat || null === $pinLng || abs($pinLat) > 90.0 || abs($pinLng) > 180.0) {
+            return $this->json(['error' => 'missing_location'], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
         $continent = $this->continents->resolve($pinLat, $pinLng);
 
         $upload = MediaUpload::quarantined(

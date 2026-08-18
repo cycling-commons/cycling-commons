@@ -1963,6 +1963,7 @@ media:
   error:
     consent_required: 'Agree to the photo licence first — then you can add photos.'
     missing_file: 'No photo arrived. Please pick a file and try again.'
+    missing_location: 'Set the place''s location first, then add photos.'
     photo_too_large: 'That photo is over 15 MB. Please use a smaller version.'
     photo_too_many_pixels: 'That photo has too many pixels — over 50 megapixels. Please use a smaller version.'
     photo_format: 'That file type cannot be used. Photos may be JPEG, PNG, WebP or HEIC.'
