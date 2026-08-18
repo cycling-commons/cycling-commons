@@ -17,6 +17,7 @@ use App\Media\Message\ScanAndReleaseUpload;
 use App\Media\PhotoProcessor;
 use App\Media\PhotoRejected;
 use App\Media\ProcessedPhoto;
+use App\Media\ShardUnavailable;
 use App\Media\Scan\VirusScannerInterface;
 use App\Media\XmpRights;
 use App\Messaging\MessageService;
@@ -152,8 +153,15 @@ final readonly class ScanAndReleaseUploadHandler
            coordinates exist only after this decode. Legal precisely because
            nothing is published yet. */
         if (null === $message->pinLat || null === $message->pinLng) {
+            // Pre-2026-08-18 messages only: the pin is required at intake now.
             $continent = $this->continents->resolve($processed->gpsLat, $processed->gpsLng);
-            $upload->reshard($continent, $this->storage->shardFor($continent));
+            try {
+                $upload->reshard($continent, $this->storage->shardFor($continent));
+            } catch (ShardUnavailable) {
+                // The true continent still goes on the row; the bytes keep the
+                // shard intake recorded, because that bucket verifiably exists.
+                $upload->reshard($continent, $upload->getStorageShard());
+            }
         }
 
         $revision = MediaUpload::mintRevision();

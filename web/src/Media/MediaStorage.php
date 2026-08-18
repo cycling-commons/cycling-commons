@@ -25,12 +25,12 @@ use League\Flysystem\FilesystemOperator;
  *
  * A SHARD, not a continent. The two are the same string today (one bucket per
  * continent), and they stop being the same the moment §2.1's numbered buckets
- * arrive. The distinction already earns its place: a photo resolved to a
- * continent with no storage of its own falls back to the default shard, and
- * before this the row still recorded the *continent* - so the object was
- * written to the default bucket and addressed at a public base that had
- * nothing behind it. shardFor() answers where the bytes will actually go, and
- * that answer is what the row stores.
+ * arrive. A continent with no storage of its own REFUSES the upload
+ * (ShardUnavailable; owner 2026-08-18: "storage must fail") rather than
+ * borrowing the default bucket: the borrow would scatter a region's photos
+ * across shards and turn the eventual bucket's arrival into a migration.
+ * shardFor() answers where the bytes will actually go, and that answer is
+ * what the row stores.
  *
  * The browser-facing base is looked up PER SHARD rather than assembled by
  * concatenating one base with a shard segment, because no single string
@@ -81,12 +81,18 @@ final class MediaStorage
      * re-derived afterwards: §2.1's promise that existing objects never move
      * when a bucket is added is only true if a photo's address comes from what
      * was recorded when it was written, not from today's configuration.
+     *
+     * @throws ShardUnavailable when the continent has no provisioned bucket -
+     *                          the upload is refused, never redirected
      */
     public function shardFor(string $continent): string
     {
         $code = strtoupper($continent);
+        if (!isset($this->storages[$code])) {
+            throw new ShardUnavailable($code);
+        }
 
-        return isset($this->storages[$code]) ? $code : strtoupper($this->defaultContinent);
+        return $code;
     }
 
     /* ---------- the quarantine (private storage) ---------- */
@@ -240,10 +246,11 @@ final class MediaStorage
 
     private function filesystemFor(string $shard): FilesystemOperator
     {
+        // The shard on a row was validated at intake; one missing here means
+        // a storage was removed from config while rows still point at it.
+        // Failing loudly beats silently writing into another shard's bucket.
         $code = strtoupper($shard);
 
-        return $this->storages[$code]
-            ?? $this->storages[strtoupper($this->defaultContinent)]
-            ?? throw new \LogicException(\sprintf('No media storage configured for shard "%s" and no default storage either.', $code));
+        return $this->storages[$code] ?? throw new ShardUnavailable($code);
     }
 }

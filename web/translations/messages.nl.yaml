@@ -2392,6 +2392,7 @@ media:
     consent_required: 'Ga eerst akkoord met de fotolicentie — daarna kun je foto''s toevoegen.'
     missing_file: 'Er kwam geen foto binnen. Kies een bestand en probeer het opnieuw.'
     missing_location: 'Stel eerst de locatie van de plek in en voeg daarna foto''s toe.'
+    storage_unavailable: 'Foto''s kunnen voor deze regio nog niet worden opgeslagen. Probeer het later opnieuw.'
     photo_too_large: 'Die foto is groter dan 15 MB. Gebruik een kleinere versie.'
     photo_too_many_pixels: 'Die foto heeft te veel pixels — meer dan 50 megapixel. Gebruik een kleinere versie.'
     photo_format: 'Dat bestandstype kan niet worden gebruikt. Foto''s mogen JPEG, PNG, WebP of HEIC zijn.'

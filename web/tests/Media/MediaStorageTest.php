@@ -8,6 +8,7 @@ namespace App\Tests\Media;
 
 use App\Media\ContinentResolver;
 use App\Media\MediaStorage;
+use App\Media\ShardUnavailable;
 use App\Media\ProcessedPhoto;
 use League\Flysystem\FilesystemOperator;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
@@ -87,14 +88,18 @@ final class MediaStorageTest extends KernelTestCase
         $this->storage->url('EU', 'photos/abc', 'huge');
     }
 
-    public function testAnUnonboardedContinentFallsBackToTheDefaultStorage(): void
+    public function testAContinentWithoutABucketRefusesInsteadOfBorrowing(): void
     {
+        // Owner 2026-08-18: "storage must fail". Writing into another
+        // continent's bucket would scatter a region's photos across shards.
+        $this->expectException(ShardUnavailable::class);
         $this->storage->store('AQ', 'photos/south', self::photo());
+    }
 
-        self::assertTrue(
-            $this->filesystem->fileExists('photos/south/orig.webp'),
-            'a continent with no bucket yet writes into the default shard rather than failing the upload',
-        );
+    public function testShardForRefusesAContinentWithoutABucket(): void
+    {
+        $this->expectException(ShardUnavailable::class);
+        $this->storage->shardFor('AQ');
     }
 
     public function testUnresolvableCoordinatesFallBackToTheDefaultContinent(): void

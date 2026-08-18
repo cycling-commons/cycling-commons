@@ -61,11 +61,12 @@ class MediaUpload
      * (docs/specs/media-storage-architecture.md §2.1, §4).
      *
      * The same string as the continent today, and deliberately its own column.
-     * A continent with no bucket of its own falls back to the default shard, so
-     * deriving the address from the continent addressed a public base with
-     * nothing behind it; and when §2.1's numbered buckets arrive, "existing
-     * objects never move" is only true if the address comes from what was
-     * recorded when the object was written.
+     * A continent with no bucket of its own refuses the upload outright
+     * (ShardUnavailable; owner 2026-08-18), so every stored row is fully
+     * self-contained: the shard it records is a bucket that existed when the
+     * bytes were written, and when §2.1's numbered buckets arrive, "existing
+     * objects never move" is only true because the address comes from what
+     * was recorded then, not from today's configuration.
      */
     #[ORM\Column(name: 'storage_shard', type: Types::STRING, length: 16)]
     private string $storageShard;

@@ -25,9 +25,11 @@ context). Media licensing context lives in the site licences
    segment (`<MEDIA_PUBLIC_BASE>/eu/…`, `/na/…`). The app resolves each
    upload's continent from the wizard's pin coordinates (world reference
    data: country → continent), stores the code on the row, and routes
-   writes through a per-continent storage map; unresolvable coordinates
-   (or none yet) fall back to `MEDIA_DEFAULT_CONTINENT` (EU). Adding a
-   continent is one bucket + one config entry — no code.
+   writes through a per-continent storage map. The pin is required
+   (missing_location); a valid pin that resolves to no onboarded region
+   falls back to `MEDIA_DEFAULT_CONTINENT` (EU); a resolved continent with
+   no bucket refuses (`storage_unavailable`, never a borrow). Adding a
+   continent is one bucket + one config entry.
 3. **Keep a stripped original — capped at 4K.** The stored "original" is
    re-encoded with all embedded metadata removed and downscaled to at most
    **3840 px on the longest side**. Nothing larger is ever stored.
@@ -86,8 +88,8 @@ context). Media licensing context lives in the site licences
 - **Flysystem** with S3 adapters, **one storage per continent**:
   `MEDIA_S3_ENDPOINT`, `MEDIA_S3_KEY`, `MEDIA_S3_SECRET`, `MEDIA_S3_REGION`
   (shared credentials) + `MEDIA_S3_BUCKET_EU` (and later `_NA`, `_AS`, … as
-  continents onboard; unset = continent falls back to
-  `MEDIA_DEFAULT_CONTINENT`'s storage).
+  continents onboard; a continent without a bucket refuses uploads,
+  media-storage-architecture.md §2.1).
 - **Configured by environment variables, not by `when@` blocks** — the
   coverage precedent (`pipeline/coverage/publish.py`, whose own comment notes
   that the signing region is "ignored by MinIO, accepted by Hetzner"). One
@@ -132,10 +134,11 @@ context). Media licensing context lives in the site licences
   sat at the mutable `photos/<uuid>/…`; `app:media:backfill-keys` moved them,
   once, and there is no legacy branch in the URL builder.
 - **The shard is recorded per photo, not derived from the continent**
-  (`storage_shard`). The two are the same string today. They were already not
-  the same for a continent with no bucket of its own: the object went to the
-  default shard while the row still said the continent, so the URL addressed a
-  public base with nothing behind it.
+  (`storage_shard`). The two are the same string today. A continent with no
+  bucket of its own REFUSES the upload (`storage_unavailable`; owner
+  2026-08-18: "storage must fail", never a borrow of another continent's
+  bucket), so every stored row is fully self-contained: the shard it records
+  is a bucket that existed when the bytes were written.
 - **Public base is resolved per continent, not by string-concatenating a
   single base.** In production the continent is a path segment the owner-run
   proxy routes on; against raw MinIO in development it is part of the bucket

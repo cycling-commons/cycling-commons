@@ -18,6 +18,7 @@ use App\Media\MediaStatus;
 use App\Media\MediaStorage;
 use App\Media\Message\ScanAndReleaseUpload;
 use App\Media\PhotoProcessor;
+use App\Media\ShardUnavailable;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -190,13 +191,22 @@ final class MediaController extends AbstractController
             return $this->json(['error' => 'missing_location'], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
         $continent = $this->continents->resolve($pinLat, $pinLng);
+        try {
+            $shard = $this->storage->shardFor($continent);
+        } catch (ShardUnavailable) {
+            /* A cleanly resolved continent with no provisioned bucket refuses
+               the upload (owner 2026-08-18: "storage must fail") instead of
+               borrowing another continent's bucket. Provisioning the bucket
+               is what turns this refusal off. */
+            return $this->json(['error' => 'storage_unavailable'], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
 
         $upload = MediaUpload::quarantined(
             $mediaId,
             (int) $user->getId(),
             $consent->getId(),
             $continent,
-            $this->storage->shardFor($continent),
+            $shard,
             (int) $file->getSize(),
         );
 

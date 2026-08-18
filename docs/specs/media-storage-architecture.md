@@ -94,6 +94,23 @@ onboarding is documented as "add a bucket, add a storage, add one line". What
 changes is only the naming (a region *and* an ordinal) and that the chosen
 bucket becomes a stored fact per photo.
 
+Two rulings that complete the model (owner 2026-08-18):
+
+- **A continent without a provisioned bucket refuses the upload**
+  (`ShardUnavailable` in `MediaStorage`, `storage_unavailable` at the
+  endpoint). Never a fallback into another continent's bucket: the borrow
+  would scatter one region's photos across shards and turn the eventual
+  bucket's arrival into a migration instead of a provisioning action.
+  Provisioning the bucket is what turns the refusal off.
+- **The ordinal has no representation in code or config.** It lives only
+  inside the deployed bucket NAME (the value of the shard's env var). A
+  numbered successor is onboarded like a new continent: a new env var, a new
+  Flysystem storage, one line in each `MediaStorage` map, and the
+  continent-to-active-shard choice repointed. Rows written before keep
+  addressing the old bucket because the shard is a stored fact per photo.
+  The quarantine stays ONE general bucket with no numbering: it holds bytes
+  only for the seconds between upload and scan verdict (§2.2).
+
 ### 2.2 The private bucket earns its place — but not for moderation
 
 The open question was whether a private bucket is needed at all, given that
