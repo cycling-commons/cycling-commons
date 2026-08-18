@@ -3,8 +3,8 @@
 // stretch's two taps, and the device→map-class tables the colours hang on.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { DEVICE_CLASS, DEVICE_DECLARABLE, MAX_SEGMENT_POINTS, cutTrack, downsample }
-  from '../../assets/map/scout-segments.js';
+import { DEVICE_CLASS, DEVICE_DECLARABLE, MAX_SEGMENT_POINTS, cutTrack, downsample,
+  nearestTrackIndex, sliceTrack } from '../../assets/map/scout-segments.js';
 
 const at = s => new Date('2026-08-15T10:00:00Z'.replace('00:00', String(s).padStart(2, '0') + ':00'));
 const track = [
@@ -68,4 +68,23 @@ test('downsampling keeps both endpoints and respects the cap', () => {
   assert.equal(out.length, MAX_SEGMENT_POINTS);
   assert.deepEqual(out[0], [0, 0]);
   assert.deepEqual(out[out.length - 1], [9999, 9999]);
+});
+
+test('a dragged endpoint snaps to the nearest track point', () => {
+  assert.equal(nearestTrackIndex(track, { lng: 6.012, lat: 50.12 }), 1);
+  assert.equal(nearestTrackIndex(track, { lng: 6.05, lat: 50.5 }), 4);
+});
+
+test('slicing by index keeps track points as the endpoints', () => {
+  const g = sliceTrack(track, 1, 3);
+  assert.ok(g);
+  assert.deepEqual(g.a, [6.01, 50.1]);
+  assert.deepEqual(g.b, [6.03, 50.3]);
+  assert.equal(g.line.length, 3);
+});
+
+test('a slice needs at least two points and stays inside the ride', () => {
+  assert.equal(sliceTrack(track, 2, 2), null);
+  assert.equal(sliceTrack(track, 3, 9), null);
+  assert.equal(sliceTrack(track, -1, 2), null);
 });

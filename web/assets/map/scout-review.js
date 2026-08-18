@@ -27,7 +27,7 @@ import { uSpeed } from './units.js';
 import { parseFit, extractTags, buildSurfaceSegments, countVehicles, MESG, semiToDeg,
          fitToDate, POI_RESUPPLY, OSM_SURFACE, LEGACY_RESUPPLY, SURF_TYPE } from '../lib/scout-fit.js';
 import { surfaceStyle } from './render.js';
-import { DEVICE_CLASS, DEVICE_DECLARABLE, cutTrack } from './scout-segments.js';
+import { DEVICE_CLASS, DEVICE_DECLARABLE, cutTrack, nearestTrackIndex, sliceTrack } from './scout-segments.js';
 
 const RIDE_SRC = 'cc-scout-ride';
 const RIDE_LINE = 'cc-scout-ride-line';
@@ -594,7 +594,9 @@ function sendStretch(entry, button, li) {
     entry.sending = false;
     entry.approved = wire.approved || entry.approved;
     entry.name = wire.name;
-    if (entry.approved && entry.markers) entry.markers.forEach(m => m.getElement().classList.add('done'));
+    if (entry.approved && entry.markers) {
+      entry.markers.forEach(m => { m.getElement().classList.add('done'); m.setDraggable(false); });
+    }
     const done = el('scoutDone');
     if (done) done.textContent = String(tags.filter(x => x.approved).length + stretches.filter(x => x.approved).length);
   });
@@ -693,14 +695,29 @@ function openCardFor(entry) {
   if (li) { li.classList.add('open'); li.scrollIntoView({ block: 'nearest' }); }
 }
 
-/* The stretch's number on both of its ends. Not draggable: the endpoints are
-   the rider's taps, and the line between them is the ride itself. */
+/* The stretch's number on both of its ends - and both ends DRAG, along the
+   ride only (owner, 2026-08-18): a tap is where the rider's thumb reached
+   the bars, not always where the surface really changed, so the circles
+   shorten or lengthen the stretch. Clamped to the track on purpose - unlike
+   a point pin, a stretch endpoint IS a place on the ridden road, and the
+   line between the two is re-cut from the ride itself on every drop. Start
+   can never pass end; a sent stretch locks. */
 function placeStretchMarkers() {
   stretches.forEach(entry => {
     if (!entry.geom) return;
     [['seg-start', entry.geom.a], ['seg-end', entry.geom.b]].forEach(([cls, at]) => {
-      const m = new maplibregl.Marker({ element: stretchPinEl(entry, cls), anchor: 'center' })
+      const m = new maplibregl.Marker({ element: stretchPinEl(entry, cls), anchor: 'center', draggable: !entry.approved })
         .setLngLat(at).addTo(map);
+      m.on('dragend', () => {
+        const isStart = 'seg-start' === cls;
+        let idx = nearestTrackIndex(track, m.getLngLat());
+        idx = isStart ? Math.min(idx, entry.endIdx - 1) : Math.max(idx, entry.startIdx + 1);
+        if (isStart) entry.startIdx = idx; else entry.endIdx = idx;
+        const geom = sliceTrack(track, entry.startIdx, entry.endIdx);
+        if (geom) entry.geom = geom;
+        m.setLngLat([track[idx].lng, track[idx].lat]);
+        refreshStretches();
+      });
       m.getElement().addEventListener('click', () => openCardFor(entry));
       segMarkers.push(m);
       (entry.markers = entry.markers || []).push(m);
@@ -753,15 +770,23 @@ function show(parsed) {
      the ride strictly between the two taps - coordinates only, no times -
      and is the ONE deliberate exception to "the ride never leaves the
      browser": a rider-approved excerpt, sent only when they press send. */
-  stretches = (parsed.segments || []).map(seg => ({
-    seg,
-    cls: DEVICE_CLASS[seg.type] || 'gravel',
-    surface: DEVICE_DECLARABLE[seg.type] || '',
-    osmSurface: OSM_SURFACE[seg.type] || '',
-    geom: cutTrack(parsed.track, seg),
-    name: '',
-    approved: false,
-  }));
+  stretches = (parsed.segments || []).map(seg => {
+    const geom = cutTrack(parsed.track, seg);
+    return {
+      seg,
+      cls: DEVICE_CLASS[seg.type] || 'gravel',
+      surface: DEVICE_DECLARABLE[seg.type] || '',
+      osmSurface: OSM_SURFACE[seg.type] || '',
+      geom,
+      /* The endpoints as track INDICES, so dragging can shorten or lengthen
+         the stretch along the ride (owner, 2026-08-18) with ordering as a
+         number comparison. */
+      startIdx: geom ? nearestTrackIndex(parsed.track, { lng: geom.a[0], lat: geom.a[1] }) : -1,
+      endIdx: geom ? nearestTrackIndex(parsed.track, { lng: geom.b[0], lat: geom.b[1] }) : -1,
+      name: '',
+      approved: false,
+    };
+  });
   /* One chronological list: a stretch sits at its start tap, a point at its
      tap, and the numbering walks the ride in order - so "4" on the map is the
      fourth thing that happened, whether it is a spot or a stretch. */

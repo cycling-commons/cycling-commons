@@ -94,3 +94,31 @@ export function downsample(line, max) {
   out[out.length - 1] = line[line.length - 1];
   return out;
 }
+
+/* Nearest track index to a dragged point - the snap that keeps a stretch
+   endpoint ON the ride. Plain equirectangular distance is plenty at drag
+   scale; the win of an index over a coordinate is that ordering ("start
+   before end") becomes a number comparison. */
+export function nearestTrackIndex(track, lngLat) {
+  let best = -1;
+  let bestD = Infinity;
+  const cos = Math.cos((lngLat.lat * Math.PI) / 180);
+  for (let i = 0; i < track.length; i++) {
+    const dx = (track[i].lng - lngLat.lng) * cos;
+    const dy = track[i].lat - lngLat.lat;
+    const d = dx * dx + dy * dy;
+    if (d < bestD) { bestD = d; best = i; }
+  }
+  return best;
+}
+
+/* The stretch between two track INDICES - the dragged-endpoint counterpart of
+   cutTrack's time window. The endpoints are track points themselves, so the
+   intake's endpoint-drift check holds by construction. */
+export function sliceTrack(track, i0, i1) {
+  if (i0 < 0 || i1 >= track.length || i1 - i0 < 1) return null;
+  const line = [];
+  for (let i = i0; i <= i1; i++) line.push([track[i].lng, track[i].lat]);
+  const sampled = downsample(line, MAX_SEGMENT_POINTS);
+  return { a: sampled[0], b: sampled[sampled.length - 1], line: sampled };
+}

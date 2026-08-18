@@ -1922,7 +1922,13 @@ because it will draw ochre on the map once approved. Points and stretches
 share ONE chronological numbering (a stretch sits at its start tap), and a
 stretch wears its number on BOTH ends — a green circle where it starts, a red
 one where it ends (owner, 2026-08-18) — so "4" on the map reads as "stretch 4
-runs from here to here" and matches card 4 in the list. The card is titled
+runs from here to here" and matches card 4 in the list. Both circles **drag,
+along the ride only** (owner, same day): a tap is where the thumb reached the
+bars, not always where the surface changed, so dragging an end snaps it to
+the nearest track point and re-cuts the line from the ride (`sliceTrack`) —
+start can never pass end, and a sent stretch locks. Deliberately the opposite
+of point pins (which drag free): a stretch endpoint IS a place on the ridden
+road. The card is titled
 "Surface" and is fixed to A
 (a stretch cannot be re-filed onto a point letter, and surface *transitions*
 no longer appear as bogus point cards defaulting to Water & food —
