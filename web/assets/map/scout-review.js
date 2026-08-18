@@ -25,16 +25,26 @@ import { map } from './map-init.js';
 import { D, tpl } from './i18n.js';
 import { uSpeed } from './units.js';
 import { parseFit, extractTags, buildSurfaceSegments, countVehicles, MESG, semiToDeg,
-         fitToDate, POI_RESUPPLY, OSM_SURFACE, LEGACY_RESUPPLY } from '../lib/scout-fit.js';
+         fitToDate, POI_RESUPPLY, OSM_SURFACE, LEGACY_RESUPPLY, SURF_TYPE } from '../lib/scout-fit.js';
+import { surfaceStyle } from './render.js';
+import { DEVICE_CLASS, DEVICE_DECLARABLE, cutTrack } from './scout-segments.js';
 
 const RIDE_SRC = 'cc-scout-ride';
 const RIDE_LINE = 'cc-scout-ride-line';
+const SEG_SRC = 'cc-scout-seg';
+const SEG_CASE = 'cc-scout-seg-case';
+const SEG_CLS = ['paved', 'pave', 'gravel', 'dirt', 'rock'];
 const RED = '#D92D20';
 let passMarkers = [];
 
 /** Tag markers, in file order. Each is {tag, lngLat, marker, at, approved}. */
 let tags = [];
 let track = [];
+/** Surface stretches (plan task 6): view-models over buildSurfaceSegments(). */
+let stretches = [];
+/** Points and stretches in ride order - the numbering the map and list share. */
+let order = [];
+let segMarkers = [];
 
 const el = id => document.getElementById(id);
 const t = (k, fallback) => (D && D[k]) || fallback;
@@ -118,13 +128,23 @@ function readFit(buffer) {
      It is not ours to second-guess, and showing it would ask them to decide
      again about something they already un-decided. */
   const tags = raw
-    .filter(t => !t.cancelled && t.lat != null && t.lon != null)
+    /* Surface TRANSITIONS (detail 1-8) and END (9) belong to the stretches
+       below, not the point list - showing them twice made every stretch also
+       a bogus point card defaulting to Water & food (owner, 2026-08-18). A
+       bare surface tap (no detail) stays a point: it marks a spot, not a
+       stretch. */
+    .filter(t => !t.cancelled && t.lat != null && t.lon != null
+      && !(t.type === SURF_TYPE && t.detail >= 1))
     .map(t => {
       const legacy = LEGACY_RESUPPLY[t.type];
       const detail = legacy || t.detail;
       const tag = POI_TO_TAG[t.type] || 'other';
       const offered = lettersFor(tag, detail);
-      const letter = offered[0] || 'C';
+      /* 'other' starts UNCHOSEN: the device recorded "something", and
+         defaulting it to Water & food would invent an answer the rider never
+         gave (owner, 2026-08-18). Every other tag type has a meaningful best
+         guess, which stays preselected. */
+      const letter = 'other' === tag ? '' : (offered[0] || 'C');
       return {
         tag,
         letter,
@@ -169,6 +189,46 @@ function drawRide() {
   const b = new maplibregl.LngLatBounds([track[0].lng, track[0].lat], [track[0].lng, track[0].lat]);
   track.forEach(p => b.extend([p.lng, p.lat]));
   map.fitBounds(b, { padding: 80, duration: 0 });
+}
+
+/* The stretches, in the SAME palette the map's surface legend uses
+   (render.js SURFACE_STYLE): a gravel stretch draws ochre here because it
+   will draw ochre on the map once approved. Pale casing under class-coloured
+   lines, exactly like the curated A layer. */
+function stretchFeatures() {
+  return stretches
+    .filter(x => x.geom && !x.dismissed)
+    .map((x, i) => ({
+      type: 'Feature',
+      properties: { cls: x.cls, idx: i },
+      geometry: { type: 'LineString', coordinates: x.geom.line },
+    }));
+}
+
+/* Dismissals thin the drawn set without rebuilding layers. */
+function refreshStretches() {
+  const src = map.getSource(SEG_SRC);
+  if (src) src.setData({ type: 'FeatureCollection', features: stretchFeatures() });
+}
+
+function drawStretches() {
+  if (!stretches.length) return;
+  const feats = stretchFeatures();
+  if (!feats.length) return;
+  map.addSource(SEG_SRC, { type: 'geojson', data: { type: 'FeatureCollection', features: feats } });
+  map.addLayer({
+    id: SEG_CASE, type: 'line', source: SEG_SRC,
+    layout: { 'line-cap': 'round', 'line-join': 'round' },
+    paint: { 'line-color': '#FBF4E4', 'line-width': 9, 'line-opacity': 0.9 },
+  });
+  SEG_CLS.forEach(cls => {
+    map.addLayer({
+      id: SEG_SRC + '-' + cls, type: 'line', source: SEG_SRC,
+      filter: ['==', ['get', 'cls'], cls],
+      layout: { 'line-cap': 'round', 'line-join': 'round' },
+      paint: { 'line-color': surfaceStyle(cls).color, 'line-width': 5, 'line-opacity': 1 },
+    });
+  });
 }
 
 /* Where a vehicle passed you.
@@ -239,10 +299,17 @@ function clearRide() {
   passMarkers.forEach(m => m.remove());
   passMarkers = [];
   tags.forEach(entry => { if (entry.marker) entry.marker.remove(); });
+  segMarkers.forEach(m => m.remove());
+  segMarkers = [];
   tags = [];
   track = [];
+  stretches = [];
+  order = [];
   if (map.getLayer(RIDE_LINE)) map.removeLayer(RIDE_LINE);
   if (map.getSource(RIDE_SRC)) map.removeSource(RIDE_SRC);
+  SEG_CLS.forEach(cls => { if (map.getLayer(SEG_SRC + '-' + cls)) map.removeLayer(SEG_SRC + '-' + cls); });
+  if (map.getLayer(SEG_CASE)) map.removeLayer(SEG_CASE);
+  if (map.getSource(SEG_SRC)) map.removeSource(SEG_SRC);
   const list = el('scoutList');
   if (list) list.hidden = true;
   const tagList = el('scoutTags');
@@ -256,37 +323,62 @@ function clearRide() {
   msg('');
 }
 
-function pinEl(entry, index) {
+function pinEl(entry) {
   const d = document.createElement('div');
   d.className = 'scout-pin' + (entry.approved ? ' done' : '');
-  d.textContent = String(index + 1);
+  d.textContent = String(entry.n);
   d.title = entry.tag;
   return d;
 }
 
-/** A tag is a point ON A RIDE: dragging is clamped to the track, never free.
-    Letting one drift into the field beside the road is how a water point ends
-    up in a hedge (plan task 5). */
-function nearestOnTrack(lngLat) {
-  if (!track.length) return lngLat;
-  let best = track[0];
-  let bestD = Infinity;
-  for (const p of track) {
-    const dx = (p.lng - lngLat.lng) * Math.cos(p.lat * Math.PI / 180);
-    const dy = p.lat - lngLat.lat;
-    const d = dx * dx + dy * dy;
-    if (d < bestD) { bestD = d; best = p; }
-  }
-  return { lng: best.lng, lat: best.lat };
+/* A stretch is two places, not one: its number rides on BOTH ends - green
+   where it starts, red where it ends (owner, 2026-08-18) - so "4" on the map
+   reads as "stretch 4 runs from here to here". */
+function stretchPinEl(entry, cls) {
+  const d = document.createElement('div');
+  d.className = 'scout-pin ' + cls + (entry.approved ? ' done' : '');
+  d.textContent = String(entry.n);
+  d.title = t('scoutTag_surface', 'Surface');
+  return d;
+}
+
+/* Icon buttons (owner, 2026-08-18): the card's controls are one row - a
+   small name field with a camera and a send button beside it. Static inline
+   SVG, never user content; the words move into title/aria-label so nothing
+   is lost to a screen reader. */
+const SVG_CAM = '<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M9 3 7.2 5H4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-3.2L15 3H9zm3 5.5A4.5 4.5 0 1 1 7.5 13 4.5 4.5 0 0 1 12 8.5zm0 2A2.5 2.5 0 1 0 14.5 13 2.5 2.5 0 0 0 12 10.5z"/></svg>';
+const SVG_SEND = '<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M2.4 20.6 22 12 2.4 3.4l-.01 6.68L16 12 2.39 13.92z"/></svg>';
+const SVG_SENT = '<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg>';
+
+function sendBtnState(button, state) {
+  button.disabled = 'idle' !== state;
+  button.classList.toggle('sending', 'sending' === state);
+  button.innerHTML = 'sent' === state ? SVG_SENT : SVG_SEND;
+  button.title = 'sent' === state ? t('scoutSent', 'Sent')
+    : 'sending' === state ? t('scoutSending', 'Sending…')
+    : t('scoutApprove', 'Approve and send');
+  button.setAttribute('aria-label', button.title);
+}
+
+function photoBtnState(button, n) {
+  button.classList.toggle('has', n > 0);
+  button.innerHTML = SVG_CAM;
+  button.title = n > 1 ? tplCount(t('scoutPhotosAttached', '{n} photos attached'), n)
+    : 1 === n ? t('scoutPhotoAttached', 'Photo attached')
+    : t('scoutAddPhoto', 'Add a photo');
+  button.setAttribute('aria-label', button.title);
 }
 
 function renderList() {
   const list = el('scoutTags');
   if (!list) return;
   list.textContent = '';
-  tags.forEach((entry, i) => {
+
+  const buildPoint = (entry) => {
     const li = document.createElement('li');
     li.className = 'scout-tag' + (entry.approved ? ' done' : '');
+    li.dataset.n = String(entry.n);
+    li.appendChild(removeBtn(entry));
 
     /* Open, all of them. A collapsed list hides exactly the thing a rider came
        to check — that thirteen tags are the right thirteen things — behind
@@ -295,7 +387,7 @@ function renderList() {
     const head = document.createElement('button');
     head.type = 'button';
     head.className = 'scout-tag-head';
-    head.textContent = (i + 1) + ' · ' + (t('scoutTag_' + entry.tag, entry.tag));
+    head.textContent = entry.n + ' · ' + (t('scoutTag_' + entry.tag, entry.tag));
     head.addEventListener('click', () => map.flyTo({ center: [entry.lng, entry.lat], zoom: 16 }));
     li.appendChild(head);
     li.classList.add('open');
@@ -305,51 +397,164 @@ function renderList() {
 
     // What it is: the letters this tag type may become, and nothing else — the
     // same list the server validates against.
-    const letters = lettersFor(entry.tag, entry.detail);
+    /* 'Other' has no category on the device and none here either (owner,
+       2026-08-18): it is a free-text observation. The server auto-files it as
+       an F notice and the curator's read of the description is the filing
+       decision - so this card is just the text field. Every other tag type
+       keeps its category dropdown. */
+    if ('other' !== entry.tag) {
+      const letters = lettersFor(entry.tag, entry.detail);
+      const sel = document.createElement('select');
+      sel.className = 'scout-letter';
+      letters.forEach(L => {
+        const o = document.createElement('option');
+        o.value = L;
+        o.textContent = t('scoutLetter_' + L, L);
+        if (L === entry.letter) o.selected = true;
+        sel.appendChild(o);
+      });
+      sel.addEventListener('change', () => { entry.letter = sel.value; });
+      body.appendChild(sel);
+    }
+
+    const row = document.createElement('div');
+    row.className = 'scout-row';
+
+    const name = document.createElement('input');
+    name.type = 'text';
+    name.className = 'scout-name';
+    name.placeholder = 'other' === entry.tag
+      ? t('scoutDescribe', 'Describe what you saw…')
+      : t('scoutNamePh', 'Name it');
+    name.value = entry.name || '';
+    name.addEventListener('input', () => { entry.name = name.value; });
+    row.appendChild(name);
+
+    const photo = document.createElement('button');
+    photo.type = 'button';
+    photo.className = 'scout-photo';
+    photoBtnState(photo, entry.mediaIds ? 1 : 0);
+    photo.addEventListener('click', () => requestPhotoFor(entry, photo));
+    row.appendChild(photo);
+
+    const approve = document.createElement('button');
+    approve.type = 'button';
+    approve.className = 'scout-approve';
+    sendBtnState(approve, entry.approved ? 'sent' : 'idle');
+    approve.addEventListener('click', () => sendOne(entry, approve, li));
+    row.appendChild(approve);
+
+    body.appendChild(row);
+
+    li.appendChild(body);
+    list.appendChild(li);
+  };
+
+  /* A stretch card (plan task 6). No letter dropdown: a stretch IS road
+     surface - the one segment-located letter - so the card states it instead
+     of asking. The surface dropdown reuses the A form's own vocabulary
+     (CC_FIELD_SCHEMA.A), preselected with what the rider chose on the device. */
+  const surfChoices = (((window.CC_FIELD_SCHEMA || {}).A) || []).find(f => f['key'] === 'surface');
+  const buildStretch = (entry) => {
+    const li = document.createElement('li');
+    li.className = 'scout-tag open' + (entry.approved ? ' done' : '');
+    li.dataset.n = String(entry.n);
+    li.appendChild(removeBtn(entry));
+
+    const head = document.createElement('button');
+    head.type = 'button';
+    head.className = 'scout-tag-head';
+    head.textContent = entry.n + ' · ' + t('scoutTag_surface', 'Surface');
+    head.addEventListener('click', () => {
+      if (!entry.geom) return;
+      const b = new maplibregl.LngLatBounds(entry.geom.a, entry.geom.a);
+      entry.geom.line.forEach(c => b.extend(c));
+      map.fitBounds(b, { padding: 100 });
+    });
+    li.appendChild(head);
+
+    const body = document.createElement('div');
+    body.className = 'scout-tag-body';
+
     const sel = document.createElement('select');
     sel.className = 'scout-letter';
-    letters.forEach(L => {
+    const choices = surfChoices ? Object.keys(surfChoices.choices || {}) : [];
+    (choices.length ? choices : [entry.surface].filter(Boolean)).forEach(label => {
       const o = document.createElement('option');
-      o.value = L;
-      o.textContent = t('scoutLetter_' + L, L);
-      if (L === entry.letter) o.selected = true;
+      o.value = label;
+      o.textContent = label;
+      if (label === entry.surface) o.selected = true;
       sel.appendChild(o);
     });
-    sel.addEventListener('change', () => { entry.letter = sel.value; });
+    sel.addEventListener('change', () => { entry.surface = sel.value; });
     body.appendChild(sel);
+
+    const row = document.createElement('div');
+    row.className = 'scout-row';
 
     const name = document.createElement('input');
     name.type = 'text';
     name.className = 'scout-name';
     name.placeholder = t('scoutNamePh', 'Name it');
-    name.value = entry.name || '';
     name.addEventListener('input', () => { entry.name = name.value; });
-    body.appendChild(name);
+    row.appendChild(name);
+
+    if (entry.seg.unterminated) {
+      const warn = document.createElement('div');
+      warn.className = 'scout-fact';
+      warn.textContent = t('scoutStretchToEnd', 'No END tap: the stretch runs to the end of the ride. Check the line before sending.');
+      body.appendChild(warn);
+    }
 
     const photo = document.createElement('button');
     photo.type = 'button';
     photo.className = 'scout-photo';
-    photo.textContent = entry.mediaIds
-      ? t('scoutPhotoAttached', 'Photo attached')
-      : t('scoutAddPhoto', 'Add a photo');
+    photoBtnState(photo, entry.mediaIds ? 1 : 0);
     photo.addEventListener('click', () => requestPhotoFor(entry, photo));
-    body.appendChild(photo);
+    row.appendChild(photo);
 
     const approve = document.createElement('button');
     approve.type = 'button';
     approve.className = 'scout-approve';
-    approve.textContent = entry.approved ? t('scoutSent', 'Sent') : t('scoutApprove', 'Approve and send');
-    approve.disabled = !!entry.approved;
-    approve.addEventListener('click', () => sendOne(entry, approve, li));
-    body.appendChild(approve);
+    sendBtnState(approve, entry.approved ? 'sent' : 'idle');
+    if (!entry.geom) approve.disabled = true;
+    approve.addEventListener('click', () => sendStretch(entry, approve, li));
+    row.appendChild(approve);
+
+    body.appendChild(row);
 
     li.appendChild(body);
     list.appendChild(li);
-  });
+  };
+
+  order.forEach(x => { if (!x.ref.dismissed) ('point' === x.kind ? buildPoint : buildStretch)(x.ref); });
+
+  const live = [...tags, ...stretches].filter(x => !x.dismissed);
   const total = el('scoutTotal');
   const done = el('scoutDone');
-  if (total) total.textContent = String(tags.length);
-  if (done) done.textContent = String(tags.filter(x => x.approved).length);
+  if (total) total.textContent = String(live.length);
+  if (done) done.textContent = String(live.filter(x => x.approved).length);
+}
+
+/* Waving a tag away (owner, 2026-08-18): it leaves THIS review - card,
+   pin(s) and line - and nothing else. The tag still lives in the rider's own
+   ride file, which we never had a copy of, so opening the file again brings
+   it back. Nothing is sent, nothing is deleted anywhere. */
+function removeBtn(entry) {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'scout-remove';
+  b.textContent = '\u00d7';
+  b.title = t('scoutRemove', 'Remove this tag from the review');
+  b.setAttribute('aria-label', b.title);
+  b.addEventListener('click', () => {
+    entry.dismissed = true;
+    if (entry.marker) entry.marker.remove();
+    if (entry.markers) entry.markers.forEach(m => m.remove());
+    refreshStretches();
+    renderList();
+  });
+  return b;
 }
 
 /* A name we can stand behind when the rider gives none.
@@ -365,11 +570,53 @@ function fallbackName(entry) {
   return detail ? kind + ' · ' + detail : kind;
 }
 
+/* A stretch is sent through the same wire as a point tag, plus the
+   `segment` excerpt and the surface the rider settled on. The name falls
+   back like a point tag's: "Surface · gravel" beats an empty refusal. */
+function sendStretch(entry, button, li) {
+  if (entry.approved || entry.sending) return Promise.resolve();
+  entry.sending = true;
+  const wire = {
+    tag: 'surface',
+    letter: 'A',
+    lat: entry.geom.a[1],
+    lng: entry.geom.a[0],
+    at: entry.seg.startTime ? entry.seg.startTime.toISOString() : '',
+    name: (entry.name || '').trim(),
+    osmSurface: entry.osmSurface,
+    surface: entry.surface,
+    segment: entry.geom,
+    mediaIds: entry.mediaIds,
+    marker: null,
+  };
+  if (!wire.name) wire.name = fallbackName(wire);
+  return sendOne(wire, button, li).then(() => {
+    entry.sending = false;
+    entry.approved = wire.approved || entry.approved;
+    entry.name = wire.name;
+    if (entry.approved && entry.markers) entry.markers.forEach(m => m.getElement().classList.add('done'));
+    const done = el('scoutDone');
+    if (done) done.textContent = String(tags.filter(x => x.approved).length + stretches.filter(x => x.approved).length);
+  });
+}
+
 /** One tag, one request — see ScoutIntakeController for why not a batch. */
 async function sendOne(entry, button, li) {
+  /* One tag, ONE submission. The guard lives on the entry, not the button:
+     the button disables itself, but "Send the rest" walking the list while a
+     single send is still in flight would post the same tag twice - and the
+     server mints a fresh submission for every POST, so a double send is a
+     duplicate a curator has to reject (owner, 2026-08-18). */
+  if (entry.approved || entry.sending) return;
+  /* An Other tag IS its description - "Other" as a name tells the curator
+     nothing, so an empty field refuses instead of falling back. */
+  if ('other' === entry.tag && !(entry.name || '').trim()) {
+    msg(t('scoutNeedName', 'Give the tag a name before sending it.'), true);
+    return;
+  }
+  entry.sending = true;
   if (!entry.name || !entry.name.trim()) entry.name = fallbackName(entry);
-  button.disabled = true;
-  button.textContent = t('scoutSending', 'Sending…');
+  sendBtnState(button, 'sending');
   try {
     const res = await fetch('/scout/tags', {
       method: 'POST',
@@ -383,7 +630,17 @@ async function sendOne(entry, button, li) {
         lat: entry.lat,
         lng: entry.lng,
         observedAt: entry.at || '',
-        details: { name: entry.name.trim() },
+        details: Object.assign(
+          { name: entry.name.trim() },
+          // The surface the rider settled on in the stretch card - the A
+          // form's own vocabulary. The server prefers this over osmSurface.
+          entry.surface ? { surface: entry.surface } : {},
+        ),
+        /* The rider-approved excerpt between the two taps: {a, b, line} in
+           [lng, lat] pairs, coordinates only - the deliberate exception to
+           "no track keys" above, validated end-to-end by the same
+           decodeSegment the map wizard uses. */
+        segment: entry.segment ? JSON.stringify(entry.segment) : undefined,
         // The surface the rider picked on the device, in OSM's own vocabulary.
         // The server maps it to the declarable label; an unknown value is
         // dropped there rather than trusted.
@@ -400,32 +657,54 @@ async function sendOne(entry, button, li) {
     entry.approved = true;
     if (li) li.classList.add('done');
     if (entry.marker) entry.marker.getElement().classList.add('done');
-    button.textContent = t('scoutSent', 'Sent');
+    sendBtnState(button, 'sent');
     msg('');
   } catch (e) {
-    button.disabled = false;
-    button.textContent = t('scoutApprove', 'Approve and send');
+    sendBtnState(button, 'idle');
     msg(t('scoutSendFailed', 'That tag could not be sent — try again.'), true);
   }
+  entry.sending = false;
   const done = el('scoutDone');
   if (done) done.textContent = String(tags.filter(x => x.approved).length);
 }
 
 function placeTags() {
-  tags.forEach((entry, i) => {
-    const m = new maplibregl.Marker({ element: pinEl(entry, i), draggable: true, anchor: 'center' })
+  tags.forEach(entry => {
+    const m = new maplibregl.Marker({ element: pinEl(entry), draggable: true, anchor: 'center' })
       .setLngLat([entry.lng, entry.lat]).addTo(map);
     m.on('dragend', () => {
-      const snapped = nearestOnTrack(m.getLngLat());
-      m.setLngLat([snapped.lng, snapped.lat]);
-      entry.lng = snapped.lng;
-      entry.lat = snapped.lat;
+      /* Free placement (owner, 2026-08-18, reversing the 2026-08-12 clamp):
+         the ride is where the rider WAS, not where the thing IS - a castle
+         tagged from the road stands beside it, and clamping the pin to the
+         track made the correct position unreachable. The rider reviewing
+         their own ride is the authority on where it belongs. */
+      const p = m.getLngLat();
+      entry.lng = p.lng;
+      entry.lat = p.lat;
     });
-    m.getElement().addEventListener('click', () => {
-      const li = el('scoutTags') && el('scoutTags').children[i];
-      if (li) { li.classList.add('open'); li.scrollIntoView({ block: 'nearest' }); }
-    });
+    m.getElement().addEventListener('click', () => openCardFor(entry));
     entry.marker = m;
+  });
+}
+
+function openCardFor(entry) {
+  const list = el('scoutTags');
+  const li = list && list.querySelector('[data-n="' + entry.n + '"]');
+  if (li) { li.classList.add('open'); li.scrollIntoView({ block: 'nearest' }); }
+}
+
+/* The stretch's number on both of its ends. Not draggable: the endpoints are
+   the rider's taps, and the line between them is the ride itself. */
+function placeStretchMarkers() {
+  stretches.forEach(entry => {
+    if (!entry.geom) return;
+    [['seg-start', entry.geom.a], ['seg-end', entry.geom.b]].forEach(([cls, at]) => {
+      const m = new maplibregl.Marker({ element: stretchPinEl(entry, cls), anchor: 'center' })
+        .setLngLat(at).addTo(map);
+      m.getElement().addEventListener('click', () => openCardFor(entry));
+      segMarkers.push(m);
+      (entry.markers = entry.markers || []).push(m);
+    });
   });
 }
 
@@ -447,9 +726,6 @@ function renderRideFacts(parsed) {
   if (parsed.unplaceable > 0) {
     lines.push(tplCount(t('scoutNoFix', '{n} tag(s) had no GPS fix and cannot be placed'), parsed.unplaceable));
   }
-  if (parsed.segments && parsed.segments.length) {
-    lines.push(tplCount(t('scoutStretches', '{n} surface stretch(es) recorded — send these from the map for now'), parsed.segments.length));
-  }
   lines.forEach(text => {
     const p = document.createElement('p');
     p.className = 'scout-fact';
@@ -469,15 +745,44 @@ function show(parsed) {
   track = parsed.track;
   tags = parsed.tags.map(w => ({
     ...w,
-    letter: w.letter || ((window.CC_SCOUT_TAGS || {})[w.tag] || ['C'])[0],
+    letter: 'other' === w.tag ? (w.letter || '')
+      : (w.letter || ((window.CC_SCOUT_TAGS || {})[w.tag] || ['C'])[0]),
     approved: false,
   }));
+  /* Each stretch becomes a card + a coloured line. The geometry is cut from
+     the ride strictly between the two taps - coordinates only, no times -
+     and is the ONE deliberate exception to "the ride never leaves the
+     browser": a rider-approved excerpt, sent only when they press send. */
+  stretches = (parsed.segments || []).map(seg => ({
+    seg,
+    cls: DEVICE_CLASS[seg.type] || 'gravel',
+    surface: DEVICE_DECLARABLE[seg.type] || '',
+    osmSurface: OSM_SURFACE[seg.type] || '',
+    geom: cutTrack(parsed.track, seg),
+    name: '',
+    approved: false,
+  }));
+  /* One chronological list: a stretch sits at its start tap, a point at its
+     tap, and the numbering walks the ride in order - so "4" on the map is the
+     fourth thing that happened, whether it is a spot or a stretch. */
+  const when = x => 'stretch' === x.kind
+    ? (x.ref.seg.startTime ? x.ref.seg.startTime.getTime() : 0)
+    : (x.ref.at ? Date.parse(x.ref.at) : 0);
+  order = [
+    ...tags.map(ref => ({ kind: 'point', ref })),
+    ...stretches.map(ref => ({ kind: 'stretch', ref })),
+  ].sort((a, b) => when(a) - when(b));
+  order.forEach((x, i) => { x.ref.n = i + 1; });
+
   drawRide();
+  drawStretches();
   placeTags();
+  placeStretchMarkers();
   renderList();
   const list = el('scoutList');
   if (list) list.hidden = false;
-  msg(tags.length ? '' : t('scoutNoTags', 'That ride has no tags in it — nothing to review.'), !tags.length);
+  const empty = !tags.length && !stretches.length;
+  msg(empty ? t('scoutNoTags', 'That ride has no tags in it — nothing to review.') : '', empty);
 }
 
 function loadFile(file) {
@@ -544,11 +849,7 @@ function mountPhotos() {
       const all = have.concat(fresh);
       photoTarget.mediaIds = JSON.stringify(all);
       const n = all.length;
-      if (photoButton) {
-        photoButton.textContent = n > 1
-          ? tplCount(t('scoutPhotosAttached', '{n} photos attached'), n)
-          : t('scoutPhotoAttached', 'Photo attached');
-      }
+      if (photoButton) photoBtnState(photoButton, n);
       numberQueue();
     },
   });
@@ -578,7 +879,7 @@ function requestPhotoFor(entry, button) {
   if (!media || !input) return;
   photoTarget = entry;
   photoButton = button;
-  photoIndex = tags.indexOf(entry) + 1;
+  photoIndex = entry.n || (tags.indexOf(entry) + 1);
   // Revealed rather than always shown: the consent notice and the queue are
   // meaningful only once somebody has asked to add a picture.
   media.hidden = false;
@@ -590,17 +891,21 @@ function requestPhotoFor(entry, button) {
   setTimeout(() => media.scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 250);
 }
 
-/** Send everything still outstanding, in order. */
+/** Send everything still outstanding, in ride order. Cards are found by
+    their number, never by list position: dismissals and interleaved
+    stretches make positions lie. */
 async function sendAll(button) {
-  const rows = [...document.querySelectorAll('.scout-tag')];
+  const list = el('scoutTags');
   button.disabled = true;
   button.textContent = t('scoutSending', 'Sending…');
-  for (let i = 0; i < tags.length; i++) {
-    const entry = tags[i];
-    if (entry.approved) continue;
-    const li = rows[i];
+  for (const x of order) {
+    const entry = x.ref;
+    if (entry.approved || entry.dismissed) continue;
+    const li = list && list.querySelector('[data-n="' + entry.n + '"]');
     const rowBtn = li && li.querySelector('.scout-approve');
-    if (rowBtn) await sendOne(entry, rowBtn, li);
+    if (!rowBtn) continue;
+    if ('stretch' === x.kind) await sendStretch(entry, rowBtn, li);
+    else await sendOne(entry, rowBtn, li);
   }
   button.disabled = false;
   button.textContent = t('scoutSendAll', 'Send the rest');
@@ -623,24 +928,13 @@ export function initScoutReview() {
   const closeBtn = el('scoutClose');
   if (closeBtn) {
     closeBtn.addEventListener('click', () => {
-      const unsent = tags.filter(x => !x.approved).length;
+      const unsent = [...tags, ...stretches].filter(x => !x.approved && !x.dismissed).length;
       if (unsent > 0 && !window.confirm(tpl(t('scoutCloseUnsent', 'Close the review? {n} tag(s) have not been sent — they stay in your ride file, so you can open it here again later.'), { n: unsent }))) return;
       clearRide();
       panel.hidden = true;
     });
   }
 
-  /* Keep the mark square against the text beside it. Its height is whatever the
-     title and lead wrap to - which changes with the locale, the panel width and
-     the mobile layout - and CSS cannot transfer that back into a width here,
-     so it is measured. Cheap: one observer, one custom property. */
-  const markbox = panel.querySelector('.scout-markbox');
-  const headtext = panel.querySelector('.scout-headtext');
-  if (markbox && headtext && typeof ResizeObserver !== 'undefined') {
-    const square = () => markbox.style.setProperty('--scout-mark', headtext.offsetHeight + 'px');
-    new ResizeObserver(square).observe(headtext);
-    square();
-  }
   mountPhotos();
   const sendAllBtn = el('scoutSendAll');
   if (sendAllBtn) sendAllBtn.addEventListener('click', () => sendAll(sendAllBtn));

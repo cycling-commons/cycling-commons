@@ -159,7 +159,14 @@ final class ScoutTag
      */
     public static function allows(string $type, string $letter, ?int $detail = null): bool
     {
-        // A is not reachable from here at all — see offerFor().
+        // A is reachable ONLY as a surface stretch (plan task 6): the intake
+        // demands the segment excerpt alongside it, so a point tag still
+        // cannot become road surface. Point tags re-file within REFILE_LETTERS,
+        // where A deliberately does not appear — see offerFor().
+        if ('A' === $letter) {
+            return 'surface' === $type;
+        }
+
         return \in_array($letter, self::REFILE_LETTERS, true);
     }
 
@@ -171,11 +178,12 @@ final class ScoutTag
      */
     public static function offerFor(string $type, ?int $detail = null): array
     {
-        /* A is deliberately absent from every offer for now: the intake cannot
-           store a segment from a single tapped point, so offering it would end
-           in a refusal at the last step. A surface tag still LISTS — the rider
-           may have meant a viewpoint — it simply cannot become road surface
-           here yet (plan task 6). */
+        /* A is deliberately absent from every offer: an offer feeds the POINT
+           tag dropdown, and a single tapped point cannot become a stretch of
+           road. Surface STRETCHES (a start/END pair) reach A through their own
+           cards, which carry the segment excerpt the intake demands — that
+           path is fixed to A and never consults this offer (plan task 6,
+           built 2026-08-18). */
         $best = array_values(array_filter(
             self::lettersFor($type, $detail),
             static fn (string $l): bool => 'A' !== $l,

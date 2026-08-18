@@ -47,6 +47,12 @@ final class ScoutIntakeController extends AbstractController
      * can quietly break is not a promise, so the endpoint REFUSES a payload
      * carrying any of these rather than ignoring the extra field — ignoring is
      * how a trace starts arriving and nobody notices for a year.
+     *
+     * `segment` (plan task 6) is NOT a breach of that promise and is
+     * deliberately absent from this list: it is the rider-approved excerpt
+     * between a surface stretch's two taps — the same line they would draw in
+     * the map wizard — coordinates only, no timestamps, accepted only for the
+     * one segment-located letter and only when they press send on that card.
      */
     private const array TRACK_KEYS = ['track', 'points', 'trkpt', 'polyline', 'records', 'route', 'coordinates', 'gpx', 'fit'];
 
@@ -88,6 +94,16 @@ final class ScoutIntakeController extends AbstractController
 
         $type = (string) ($payload['tag'] ?? '');
         $letter = (string) ($payload['letter'] ?? '');
+        /* 'Other' carries no category from the device and, since 2026-08-18
+           (owner), no category question in review either: it is a free-text
+           observation. It auto-files as an F notice — "a rider noted
+           something here", hazardType Other — and the curator's read of the
+           description is the filing decision. One way to moderate holds: an
+           ordinary submission, no new desk mechanics. */
+        $autoFiledOther = 'other' === $type && '' === $letter;
+        if ($autoFiledOther) {
+            $letter = 'F';
+        }
         // The device's sub-menu value — which POTHOLES, which CLOSED FOR, which
         // SCENERY. It decides both what the tag may become and what it already
         // answers, so it travels with the tag rather than being re-asked.
@@ -102,18 +118,25 @@ final class ScoutIntakeController extends AbstractController
             return new JsonResponse(['error' => 'bad_tag'], 400);
         }
 
-        /* A · road surface is SEGMENT-located: it needs a start and an end, and
-           this endpoint carries one tapped point. Accepting it would mint an
-           item with Point geometry that CatalogProvider::surfaceSegments()
-           skips by design — a contribution that succeeds, says so, and then
-           never appears anywhere. Refused until the start/END pairing this
-           parser already computes is wired through
-           (Dated/2026-08-09-scout-cc-tagger-plan.md task 6). */
+        /* A · road surface is SEGMENT-located (plan task 6, built 2026-08-18):
+           it must arrive WITH the rider-approved excerpt between the two taps
+           — {a, b, line} in [lng, lat] pairs, the same shape the map wizard
+           sends, fully re-validated by CatalogContributionService::
+           decodeSegment (point cap, endpoint drift). Coordinates only, no
+           timestamps: the excerpt is road data the rider chose to publish;
+           the timings stay movement data and never leave the browser. A point
+           letter carrying a segment is refused the other way around — a point
+           has no business shipping a line. */
+        $rawSegment = $payload['segment'] ?? null;
         if (LocationMode::Segment === $itemType->locationMode()) {
-            return new JsonResponse([
-                'error' => 'segment_not_supported',
-                'detail' => 'A surface stretch needs a start and an end; add it from the map for now.',
-            ], 422);
+            if (!\is_string($rawSegment) || '' === trim($rawSegment)) {
+                return new JsonResponse([
+                    'error' => 'segment_required',
+                    'detail' => 'A surface stretch needs its start/END pair and the ridden line between them.',
+                ], 422);
+            }
+        } elseif (null !== $rawSegment) {
+            return new JsonResponse(['error' => 'bad_tag'], 400);
         }
 
         $lat = $payload['lat'] ?? null;
@@ -130,7 +153,9 @@ final class ScoutIntakeController extends AbstractController
            thing twice; a value we do not recognise is dropped rather than
            guessed, and then the form asks. */
         $osmSurface = (string) ($payload['osmSurface'] ?? '');
-        if ('A' === $letter && '' !== $osmSurface) {
+        if ('A' === $letter && '' !== $osmSurface && !isset($details['surface'])) {
+            // Only when the rider left the dropdown alone: an explicit choice
+            // in details.surface outranks the device's recording.
             $declarable = SurfaceVocabulary::fromOsmValue($osmSurface);
             if (null !== $declarable) {
                 $details['surface'] = $declarable;
@@ -146,6 +171,10 @@ final class ScoutIntakeController extends AbstractController
             if ('F' === $letter) {
                 $details[$field] = $value;
             }
+        }
+        if ($autoFiledOther && !isset($details['hazardType'])) {
+            // The honest F answer for "something a rider noted": Other.
+            $details['hazardType'] = 'Other';
         }
         $details[Item::NAME_FIELD] = trim((string) ($details[Item::NAME_FIELD] ?? ''));
         if ('' === $details[Item::NAME_FIELD]) {
@@ -176,6 +205,14 @@ final class ScoutIntakeController extends AbstractController
                    registry change of its own; recording it now means the fact
                    is not lost in the meantime. */
                 'observedAt' => $observedDate,
+                /* The raw OSM surface value the device recorded, kept verbatim
+                   in the submission payload beside the declarable label: this
+                   data is meant to be fit to hand back to OSM one day (owner,
+                   2026-08-18), and `surface=gravel` is the OSM-side fact while
+                   'Gravel' is only our rendering of it. */
+                'osmSurface' => '' !== $osmSurface ? $osmSurface : null,
+                // The rider-approved excerpt; decodeSegment() re-validates it.
+                'segment' => \is_string($rawSegment) ? $rawSegment : null,
                 'lat' => (float) $lat,
                 'lng' => (float) $lng,
                 'mode' => 'add',

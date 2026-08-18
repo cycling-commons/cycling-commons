@@ -546,21 +546,16 @@
   .scout-head{display:flex;align-items:stretch;gap:.75rem;margin-bottom:.8rem}
   .scout-headtext{min-width:0}
   .scout-head h2{margin:0 0 .25rem;font-size:1.05rem}
-  .scout-sub{margin:0;font-size:.78rem;color:rgba(239,230,212,.7);line-height:1.45}
   .scout-drop{border:1px dashed rgba(239,230,212,.35);border-radius:8px;padding:.9rem;text-align:center}
   .scout-drop.over{border-color:var(--trail);background:rgba(255,90,31,.08)}
   .scout-pick{background:var(--trail);color:#fff;border:none;border-radius:6px;padding:.5rem .9rem;
     font-family:var(--mono);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
   .scout-hint{margin:.6rem 0 0;font-size:.7rem;color:rgba(239,230,212,.6);line-height:1.4}
-  /* The box is as tall as the block it labels - the title plus the lines under
-     it - and square. The height comes from stretching in the flex row; the
-     WIDTH is measured in (scout-review.js, --scout-mark), because a flex item
-     resolves its width before that stretched height exists, so `aspect-ratio`
-     alone leaves a tall thin sliver. The fallback keeps it square-ish if the
-     script never runs. The image is taken out of flow so its own 400px
-     intrinsic width cannot drive the layout instead. */
-  .scout-markbox{flex:0 0 auto;align-self:stretch;position:relative;
-    width:var(--scout-mark,3rem);border-radius:8px;overflow:hidden;min-height:2.4rem}
+  /* A fixed small square beside the title (owner 2026-08-18: half the old
+     mark, lead paragraph gone) - no measuring, no observer. The image stays
+     out of flow so its 400px intrinsic width cannot drive the layout. */
+  .scout-markbox{flex:0 0 auto;position:relative;width:2.2rem;height:2.2rem;
+    border-radius:6px;overflow:hidden}
   .scout-mark{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;margin:0}
   /* Before/after for a MOVED PIN. A ring, not a pin: the item's own marker
      stays readable underneath, which is the comparison being asked for. */
@@ -578,7 +573,7 @@
   .scout-count{margin:.9rem 0 .5rem;font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;
     text-transform:uppercase;color:rgba(239,230,212,.65)}
   .scout-list ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.35rem}
-  .scout-tag{border:1px solid rgba(239,230,212,.16);border-radius:7px;overflow:hidden;
+  .scout-tag{position:relative;border:1px solid rgba(239,230,212,.16);border-radius:7px;overflow:hidden;
     background:var(--spruce)}
   .scout-tag.done{border-color:rgba(127,207,154,.5)}
   .scout-tag-head{width:100%;text-align:left;background:none;border:none;color:var(--paper);
@@ -595,13 +590,19 @@
     border-radius:5px;color:var(--paper);font-family:inherit;font-size:.78rem;padding:.35rem .45rem}
   .scout-letter option{background:#1B1E15;color:var(--paper)}
   .scout-letter option:checked{background:var(--spruce-lift);color:var(--paper)}
-  .scout-approve{background:var(--trail);color:#fff;border:none;border-radius:5px;padding:.4rem .6rem;
-    font-family:var(--mono);font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
+  /* One control row per card (owner 2026-08-18): the name field with the
+     camera and send ICON buttons at its right. The words live in
+     title/aria-label. */
+  .scout-row{display:flex;gap:.35rem;align-items:center;min-width:0}
+  .scout-row .scout-name{flex:1;min-width:0}
+  .scout-approve,.scout-photo{flex:0 0 auto;width:1.9rem;height:1.9rem;padding:0;
+    display:inline-flex;align-items:center;justify-content:center;border-radius:5px;cursor:pointer}
+  .scout-approve{background:var(--trail);color:#fff;border:none}
   .scout-approve:disabled{background:rgba(127,207,154,.35);cursor:default}
-  .scout-photo{background:none;border:1px solid rgba(239,230,212,.28);border-radius:5px;
-    color:var(--paper);font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;
-    text-transform:uppercase;padding:.35rem .5rem;cursor:pointer}
+  .scout-approve.sending{opacity:.6}
+  .scout-photo{background:none;border:1px solid rgba(239,230,212,.28);color:var(--paper)}
   .scout-photo:hover{border-color:var(--trail)}
+  .scout-photo.has{border-color:var(--trail);color:var(--trail)}
   .scout-sendall{margin-top:.8rem;margin-bottom:.2rem;width:100%;background:var(--trail);color:#fff;border:none;
     border-radius:6px;padding:.55rem;font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;
     text-transform:uppercase;cursor:pointer}
@@ -657,6 +658,17 @@
     display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:.62rem;
     border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35);cursor:pointer}
   .scout-pin.done{background:#2E8B57}
+  /* Wave a tag away: it leaves the review, the ride file keeps it. */
+  .scout-remove{position:absolute;top:.3rem;right:.35rem;z-index:2;width:1.3rem;height:1.3rem;
+    border:0;border-radius:50%;background:transparent;color:rgba(239,230,212,.6);
+    font-size:.95rem;line-height:1;cursor:pointer}
+  .scout-remove:hover{background:rgba(217,45,32,.25);color:#fff}
+  /* A surface stretch wears its number on BOTH ends: green where it starts,
+     red where it ends (owner, 2026-08-18) - so one number reads as
+     "from here to here". Sent turns both the usual done-green. */
+  .scout-pin.seg-start{background:#1E8E4F}
+  .scout-pin.seg-end{background:#D92D20}
+  .scout-pin.seg-start.done,.scout-pin.seg-end.done{background:#2E8B57;opacity:.75}
   /* A vehicle that passed the rider. Quiet on purpose: it is context for the
      ride, not something to act on, so it must never out-shout the red tag pins
      that DO need a decision. Not clickable for the same reason. */

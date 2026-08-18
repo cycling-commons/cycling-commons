@@ -114,6 +114,127 @@ final class ScoutIntakeTest extends WebTestCase
         self::assertSame('2026-01-12', $submission->getPayload()['observedAt'] ?? null);
     }
 
+    /** @return array{a: array{float, float}, b: array{float, float}, line: list<array{float, float}>} */
+    private static function stretchGeometry(): array
+    {
+        return [
+            'a' => [6.040, 50.490],
+            'b' => [6.050, 50.492],
+            'line' => [[6.040, 50.490], [6.045, 50.491], [6.050, 50.492]],
+        ];
+    }
+
+    public function testASurfaceStretchBecomesAnASubmission(): void
+    {
+        // Plan task 6: a start/END pair plus the ridden line between them is
+        // the one way letter A is reachable from Scout.
+        $client = static::createClient();
+        $this->login($client, 'stretch');
+
+        $this->post($client, [
+            'tag' => 'surface', 'letter' => 'A', 'lat' => 50.490, 'lng' => 6.040,
+            'observedAt' => '2026-08-15T10:00:00Z',
+            'details' => ['name' => 'Kwelderweg'],
+            'osmSurface' => 'gravel',
+            'segment' => json_encode(self::stretchGeometry(), \JSON_THROW_ON_ERROR),
+        ]);
+
+        self::assertResponseIsSuccessful();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $submission = $em->getRepository(Submission::class)->findOneBy(['title' => 'Kwelderweg']);
+        self::assertNotNull($submission, 'a stretch lands in the ordinary queue');
+        self::assertSame('A', $submission->getLetter());
+
+        /** @var Item $item */
+        $item = $em->getRepository(Item::class)->find($submission->getItemId());
+        $attrs = $item->getAttributes();
+        // The excerpt survived decodeSegment: endpoints and the ridden line.
+        self::assertSame([6.040, 50.490], $attrs['segment']['a'] ?? null);
+        self::assertSame([6.050, 50.492], $attrs['segment']['b'] ?? null);
+        self::assertCount(3, $attrs['segment']['line'] ?? []);
+        // The device's OSM value became the declarable label...
+        self::assertSame('Gravel', $attrs['surface'] ?? null);
+        // ...and the raw OSM-side fact is kept verbatim for the day this data
+        // goes back to OSM (owner, 2026-08-18).
+        self::assertSame('gravel', $submission->getPayload()['osmSurface'] ?? null);
+    }
+
+    public function testAnExplicitSurfaceChoiceOutranksTheDevice(): void
+    {
+        $client = static::createClient();
+        $this->login($client, 'stretch-choice');
+
+        $this->post($client, [
+            'tag' => 'surface', 'letter' => 'A', 'lat' => 50.490, 'lng' => 6.040,
+            'details' => ['name' => 'Slaperdijk', 'surface' => 'Compacted'],
+            'osmSurface' => 'gravel',
+            'segment' => json_encode(self::stretchGeometry(), \JSON_THROW_ON_ERROR),
+        ]);
+
+        self::assertResponseIsSuccessful();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $submission = $em->getRepository(Submission::class)->findOneBy(['title' => 'Slaperdijk']);
+        self::assertNotNull($submission);
+        /** @var Item $item */
+        $item = $em->getRepository(Item::class)->find($submission->getItemId());
+        self::assertSame('Compacted', $item->getAttributes()['surface'] ?? null, 'the rider corrected the device; their word wins');
+    }
+
+    public function testASurfaceStretchWithoutTheLineIsRefused(): void
+    {
+        $client = static::createClient();
+        $this->login($client, 'stretch-noline');
+
+        $this->post($client, [
+            'tag' => 'surface', 'letter' => 'A', 'lat' => 50.490, 'lng' => 6.040,
+            'details' => ['name' => 'Nowhere'],
+        ]);
+
+        self::assertResponseStatusCodeSame(422);
+        /** @var array{error: string} $body */
+        $body = json_decode((string) $client->getResponse()->getContent(), true);
+        self::assertSame('segment_required', $body['error']);
+    }
+
+    public function testAnOtherTagAutoFilesAsANotice(): void
+    {
+        /* 'Other' asks for words, not a category (owner, 2026-08-18): no
+           letter arrives, the server files it as an F notice with hazardType
+           Other, and the curator's read of the description decides. */
+        $client = static::createClient();
+        $this->login($client, 'other-note');
+
+        $this->post($client, [
+            'tag' => 'other', 'letter' => '', 'lat' => 50.49, 'lng' => 6.04,
+            'details' => ['name' => 'Loose planks on the small bridge'],
+        ]);
+
+        self::assertResponseIsSuccessful();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $submission = $em->getRepository(Submission::class)->findOneBy(['title' => 'Loose planks on the small bridge']);
+        self::assertNotNull($submission);
+        self::assertSame('F', $submission->getLetter());
+        /** @var Item $item */
+        $item = $em->getRepository(Item::class)->find($submission->getItemId());
+        self::assertSame('Other', $item->getAttributes()['hazardType'] ?? null);
+    }
+
+    public function testAPointTagMayNotCarryASegment(): void
+    {
+        // The other direction of the same fence: a point letter shipping a
+        // line would be an open geometry channel.
+        $client = static::createClient();
+        $this->login($client, 'point-line');
+
+        $this->post($client, [
+            'tag' => 'resupply', 'letter' => 'C', 'lat' => 50.49, 'lng' => 6.04,
+            'details' => ['name' => 'Fontaine'],
+            'segment' => json_encode(self::stretchGeometry(), \JSON_THROW_ON_ERROR),
+        ]);
+
+        self::assertResponseStatusCodeSame(400);
+    }
+
     /**
      * @return iterable<string, array{string}>
      */
@@ -234,16 +355,15 @@ final class ScoutIntakeTest extends WebTestCase
             ->getRepository(Submission::class)->count(['title' => 'Waterkering']));
     }
 
-    public function testASurfaceStretchIsRefusedRatherThanStoredAsAPoint(): void
+    public function testASurfaceTapAloneIsStillRefusedAsAPoint(): void
     {
-        /* A · road surface is SEGMENT-located. This endpoint carries one tapped
-           point, and an item minted from it gets Point geometry — which
-           CatalogProvider::surfaceSegments() skips by design. Accepting it would
-           produce a contribution that succeeds, tells the rider so, and then
-           never appears anywhere, which is the worst of the three outcomes.
-
-           Refused until the start/END pairing the parser already computes is
-           wired through (plan task 6). */
+        /* A · road surface is SEGMENT-located. A single tapped point minted as
+           an A item would get Point geometry — which
+           CatalogProvider::surfaceSegments() skips by design: a contribution
+           that succeeds, tells the rider so, and then never appears anywhere.
+           Since plan task 6 (built 2026-08-18) A is reachable, but ONLY with
+           the segment excerpt — this guard is what keeps the old failure mode
+           impossible. */
         $client = static::createClient();
         $this->login($client, 'osmsurface');
 
@@ -253,7 +373,10 @@ final class ScoutIntakeTest extends WebTestCase
             'osmSurface' => 'cobblestone',
         ]);
 
-        self::assertResponseStatusCodeSame(400, 'A is not offered from a point at all');
+        self::assertResponseStatusCodeSame(422, 'A without the ridden line is refused');
+        /** @var array{error: string} $body */
+        $body = json_decode((string) $client->getResponse()->getContent(), true);
+        self::assertSame('segment_required', $body['error']);
         self::assertSame(0, static::getContainer()->get(EntityManagerInterface::class)
             ->getRepository(Submission::class)->count(['title' => 'Cobbled stretch']));
     }

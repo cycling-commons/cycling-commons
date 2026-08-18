@@ -1905,6 +1905,46 @@ expire and nothing to delete. That is a property of the code, not a policy:
 ignoring the extra field — ignoring is how a trace starts arriving and nobody
 notices for a year. Four of those keys are covered by tests.
 
+The one deliberate exception is **`segment`** (task 6 below): the
+rider-approved excerpt of ridden line between a surface stretch's two taps —
+the same line they would draw in the map wizard, coordinates only (no
+timestamps), accepted only for letter A and only when the rider presses send on
+that stretch's card. The stretch is road data the rider chose to publish; the
+timings stay movement data and never leave the browser.
+
+**Surface stretches are A submissions (plan task 6, built 2026-08-18).** A
+surface tag is a *transition*: a start type opens a stretch, END (or the next
+transition, or the end of the ride) closes it. The review panel turns each
+pair into its own card and its own line on the map, drawn in the **same
+palette the map's surface legend uses** (`render.js` `SURFACE_STYLE` via
+`scout-segments.js` `DEVICE_CLASS`) — a gravel stretch draws ochre in review
+because it will draw ochre on the map once approved. Points and stretches
+share ONE chronological numbering (a stretch sits at its start tap), and a
+stretch wears its number on BOTH ends — a green circle where it starts, a red
+one where it ends (owner, 2026-08-18) — so "4" on the map reads as "stretch 4
+runs from here to here" and matches card 4 in the list. The card is titled
+"Surface" and is fixed to A
+(a stretch cannot be re-filed onto a point letter, and surface *transitions*
+no longer appear as bogus point cards defaulting to Water & food —
+owner-reported 2026-08-18); its surface dropdown is the A form's own
+vocabulary, preselected from the device's OSM value, and an explicit choice
+outranks the device at intake. Sending posts the ordinary tag wire plus
+`segment` = `{a, b, line}` in `[lng, lat]` pairs, cut from the ride strictly
+between the taps (`scout-segments.js` `cutTrack`, tap points win the
+endpoints, ≤ 3000 points) and re-validated by the same
+`CatalogContributionService::decodeSegment` the map wizard uses (endpoint
+drift ≤ 1 km). A stretch with **no END tap** runs to the next transition or
+the ride's end and its card says so, telling the rider to check the line
+before sending — the plan's "ask in the viewer", answered by showing rather
+than prompting. The raw OSM value (`surface=gravel`) is kept **verbatim in
+the submission payload** beside the declarable label, because this data is
+meant to be fit to hand back to OSM one day (owner, 2026-08-18) and the OSM
+spelling is the OSM-side fact. A surface tap with no stretch is still refused
+as an A point (`segment_required`), and a point letter carrying a `segment`
+is refused outright. Tests: `ScoutIntakeTest` (stretch → A submission with
+segment + surface, choice outranks device, refusals both ways) and
+`tests/js/scout-segments.test.mjs` (cutting, endpoints, cap, no timestamps).
+
 **It runs on the real map**, not a stripped editor map (owner, 2026-08-12): a
 rider fixing a tag needs to see what is already mapped around it — the water
 point twenty metres away that makes theirs a duplicate, the surface line they
@@ -1912,13 +1952,19 @@ are about to contradict. That judgement is the task.
 
 **Tags are red until they are resolved.** Red is the one colour the map does not
 use for a place, so a rider scanning a ride can find what still needs them; a
-sent tag turns green. Dragging a tag is **clamped to the ride line**, because a
-tag is a point on a ride and letting it drift into the field beside the road is
-how a water point ends up in a hedge.
+sent tag turns green. Dragging a tag is **free** (owner 2026-08-18, reversing
+the 2026-08-12 clamp): the ride is where the rider *was*, not where the thing
+*is* — a castle tagged from the road stands beside it, and the clamp made the
+correct position unreachable. The rider reviewing their own ride is the
+authority on where it belongs.
 
 **One tag, one request, one decision.** No batch verb: a ride is thirty separate
 judgements by the rider, and a bulk call makes partial failure unreportable
-("nine of thirty went in — which nine?"). Every tag becomes an ordinary
+("nine of thirty went in — which nine?"). And one tag, ONE submission: the
+in-flight/sent guard lives on the entry itself, not the button (owner
+2026-08-18) — the server mints a fresh submission for every POST, so *Send the
+rest* racing a still-in-flight single send would otherwise post a duplicate a
+curator has to reject. Every tag becomes an ordinary
 submission in the ordinary queue, and nothing about the moderation side changes
 — *one way to moderate* binds here too.
 
@@ -1931,18 +1977,33 @@ ordinary submission, and a Scout ride-claim exactly one *I rode this*.
 of Scout's six tag types to the catalog letters it may become, the review panel
 offers exactly that list, and the endpoint validates against the same constant —
 so the panel can never present a choice the server refuses. `resupply` may be
-water or a bike service; `other` may be almost anything, which is why it is
-resolved by the rider rather than guessed by us.
+water or a bike service. `other` is the exception since 2026-08-18 (owner):
+it carries no category on the device and asks for none in review — its card is
+a free-text description only, and the intake auto-files it as an **F notice**
+with `hazardType: Other`, the curator's read of the text being the filing
+decision. An empty description refuses to send: "Other" as a name tells the
+curator nothing.
 
 **The review screen shows everything at once** (2026-08-12). Rows are open, not
 collapsed: a rider came to check that thirteen tags are the right thirteen
 things, and hiding that behind thirteen clicks defeats the screen. Each row
-carries its letter, its name and a photo button; **Send the rest** clears
-whatever is still outstanding, in order.
+carries its letter and one compact control row — the name field with a camera
+and a send icon button at its right (owner 2026-08-18; the words live in the
+buttons' title/aria-label, and the send icon walks send → sending → sent as a
+plane, a dimmed plane, a check); **Send the rest** clears whatever is still
+outstanding, in order.
 
+- **A tag can be waved away** (owner 2026-08-18): a ✕ on each card removes
+  it from THIS review — card, pin(s), and a stretch's line — and nothing
+  else. Nothing is sent and nothing is deleted anywhere: the tag lives in the
+  rider's own ride file, so opening the file again brings it back. Dismissed
+  tags leave the counts and the close-confirm's "unsent" number. Cards are
+  addressed by their ride-order number (`data-n`), never by list position —
+  dismissals and interleaved stretch cards make positions lie, which is also
+  why *Send the rest* walks the shared order.
 - **Dragging a pin needs no save.** The position updates the moment the drag
   ends and travels with that tag's own Approve — there is no separate commit,
-  and no state that can be left behind. Dragging is clamped to the ride line.
+  and no state that can be left behind. Dragging is free (see above).
 - **An unnamed spot is still sendable.** A blank name becomes the tag's own kind
   ("Scenery", "Surface · gravel") rather than blocking the send or writing
   "Untitled" — the type already says more than a placeholder can, and the rider
@@ -1981,12 +2042,12 @@ whatever is still outstanding, in order.
   so opening it again another day brings back everything not yet sent — and the
   confirm dialog says so, naming how many are outstanding. Reading a new ride
   clears first, so two rides can never be drawn over each other.
-- **The Scout mark is as tall as the block it labels** — title and lead together
-  — rather than a bullet beside the heading. Its height comes from the flex row
-  and its **width is measured back** into a custom property, because a flex item
-  fixes its width before the stretched height exists; `aspect-ratio` alone
-  leaves a thin sliver. Measuring also keeps it square when the copy wraps
-  differently in another locale.
+- **The Scout mark is a fixed small square beside the title** (owner
+  2026-08-18: half the old mark, and the lead paragraph is gone — it explained
+  what the panel already shows, and the privacy promise lives on `/scout`
+  where a first-time rider actually reads it). This replaced the
+  measured-width mechanism the taller mark needed; the ResizeObserver went
+  with it.
 - **The category dropdown is opaque.** A translucent control mixed with the
   system white behind the native popup and rendered pale cream on pale grey;
   both the closed control and its `option`s now state their own colours.

@@ -14,13 +14,13 @@
      panel to act on it. The review ends; the map is what is left. #}
   <button type="button" class="scout-close" id="scoutClose"
           title="{{ 'scout.review_close'|trans }}" aria-label="{{ 'scout.review_close'|trans }}">&times;</button>
-  {# The mark sits BESIDE the three lines, not above them: it is a label for the
-     card, and stacked it read as a heading of its own (owner 2026-08-12). #}
+  {# A small mark beside the title, nothing more (owner 2026-08-18): the lead
+     paragraph explained what the panel already shows, and the privacy promise
+     lives on /scout where a first-time rider actually reads it. #}
   <div class="scout-head">
     <span class="scout-markbox"><img class="scout-mark" src="{{ asset('brand/scout-logo.svg') }}" alt=""></span>
     <div class="scout-headtext">
       <h2>{{ 'scout.review_title'|trans }}</h2>
-      <p class="scout-sub">{{ 'scout.review_lead'|trans }}</p>
     </div>
   </div>
 
