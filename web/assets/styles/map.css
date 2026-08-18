@@ -1039,7 +1039,7 @@
      not a byline. Running them beside the title saved a little height and made
      the numbers the smallest thing on a 1500 px panel. */
   .cc-cp-head{margin-bottom:.5rem;padding-right:2.2rem;flex:0 0 auto}
-  .cc-cp-title{font-family:var(--display);font-size:1.5rem;line-height:1.15;color:var(--ink)}
+  .cc-cp-title{font-family:var(--serif);font-size:1.5rem;line-height:1.15;color:var(--ink)}
   .cc-cp-sub{font-family:var(--mono);font-size:.95rem;letter-spacing:.04em;
     text-transform:uppercase;color:#4a4d40;margin-top:.3rem}
   .cc-cp-stage{overflow-x:auto;flex:1 1 auto;min-height:0;display:flex}
