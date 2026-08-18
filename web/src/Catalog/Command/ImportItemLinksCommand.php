@@ -82,11 +82,16 @@ final class ImportItemLinksCommand extends Command
 
                 return Command::FAILURE;
             }
-            $web = $entry['web'] ?? null;
-            if (null !== $web && (!\is_string($web) || !str_starts_with($web, 'https://'))) {
-                $io->error(sprintf('%s: web must be an https url.', $ref));
+            // Assigned inside the isset branch so the string|null union is
+            // visible to psalm - the ?? form read as never-null downstream.
+            $web = null;
+            if (isset($entry['web'])) {
+                if (!\is_string($entry['web']) || !str_starts_with($entry['web'], 'https://')) {
+                    $io->error(sprintf('%s: web must be an https url.', $ref));
 
-                return Command::FAILURE;
+                    return Command::FAILURE;
+                }
+                $web = $entry['web'];
             }
             $links = $entry['links'] ?? null;
             if (null !== $links) {

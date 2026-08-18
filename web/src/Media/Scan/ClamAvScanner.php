@@ -96,12 +96,18 @@ final class ClamAvScanner implements VirusScannerInterface
     /** @param resource|string $bytes */
     private function scanBinary(mixed $bytes): ScanVerdict
     {
+        /* A PATH walk in PHP, not `command -v` through a shell: discovering a
+           binary needs no subprocess at all, and psalm rightly dislikes
+           shell_exec. The scan itself still exec()s the found binary below,
+           argument-escaped. */
         $binary = null;
+        $path = getenv('PATH') ?: '';
         foreach (['clamscan', 'clamdscan'] as $candidate) {
-            $found = trim((string) @shell_exec('command -v '.escapeshellarg($candidate).' 2>/dev/null'));
-            if ('' !== $found) {
-                $binary = $candidate;
-                break;
+            foreach (explode(\PATH_SEPARATOR, $path) as $dir) {
+                if ('' !== $dir && is_executable($dir.\DIRECTORY_SEPARATOR.$candidate)) {
+                    $binary = $candidate;
+                    break 2;
+                }
             }
         }
         if (null === $binary) {
