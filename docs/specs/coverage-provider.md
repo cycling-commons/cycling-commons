@@ -78,10 +78,12 @@ Invariants:
   yet. A staged row that falls in no onboarded region at all is dropped rather
   than kept with a NULL region. Planet scale is config + disk, gated on a
   measured dry-run (see Open questions).
-- **Own object-storage bucket** (`cc-maps`) from day one, separate from any
-  shared basemap bucket, so coverage cost stays observable. Dev mirrors it with
-  the existing MinIO compose profile (`developers/docker/compose.yaml`,
-  profile `storage`).
+- **Own object-storage bucket** from day one, separate from any
+  shared basemap bucket, so coverage cost stays observable. The production
+  bucket's name is deployment configuration, never repository content
+  (media-storage-architecture.md §2.0 owns that rule); the dev stack's MinIO
+  mirror is named `cc-maps` (`developers/docker/compose.yaml`, profile
+  `storage`).
 
 ## 2. Coverage cache schema: `coverage_poi`
 
@@ -380,7 +382,7 @@ prod runs it as a scheduled job on the worker server (topology owned by
 (the committed default names **every onboarded country's Geofabrik extract**,
 21 of them as of 2026-08-14), `COVERAGE_WORKDIR` (`/data/work`, named scratch
 volume), `COVERAGE_PBF_PATH` (optional local override), `COVERAGE_S3_ENDPOINT`,
-`COVERAGE_S3_BUCKET` (`cc-maps`), `COVERAGE_S3_KEY`, `COVERAGE_S3_SECRET`,
+`COVERAGE_S3_BUCKET` (dev: `cc-maps`; prod name is deployment config), `COVERAGE_S3_KEY`, `COVERAGE_S3_SECRET`,
 `COVERAGE_S3_REGION` (signing only, default `us-east-1`),
 `COVERAGE_PUBLIC_BASE_URL`.
 

@@ -132,7 +132,8 @@ a weekly per-region batch (`pipeline/coverage/`, regions from
 → pyosmium → the **`coverage_poi`** PostGIS table (atomic per-region swap),
 then tippecanoe builds **`coverage.pmtiles`** from the full index, go-pmtiles
 verifies it, and the artifact + manifest upload to the Cycling Commons' **own
-Hetzner Object Storage bucket** (`cc-maps`) — deliberately separate from any
+Hetzner Object Storage bucket** (name: deployment config, dev MinIO:
+`cc-maps`) — deliberately separate from any
 shared basemap bucket so coverage cost stays observable
 (coverage-provider.md §1). Symfony serves search / nearby /
 counts / drawer detail from `coverage_poi` (`/map/coverage/*`); the map reads

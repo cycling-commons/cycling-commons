@@ -133,7 +133,7 @@ proven at the Hetzner bucket, or the coverage layer silently renders nothing
 (range failure) or is CORS-blocked with console errors. Same two-curl matrix
 the dev pass ran against MinIO:
 
-    PM_URL=$(curl -s https://<bucket-or-proxy>/cc-maps/coverage/manifest.json | jq -r '.url')
+    PM_URL=$(curl -s https://<tiles-host>/<bucket>/coverage/manifest.json | jq -r '.url')
     curl -sI -H "Range: bytes=0-16383" "$PM_URL" | grep -iE '^HTTP|^content-range|^content-length'
     curl -sI -H "Origin: https://<prod host>" -H "Range: bytes=0-16383" "$PM_URL" \
       | grep -iE '^HTTP|^access-control-allow-origin'
@@ -145,7 +145,7 @@ the second. If CORS is missing, two remediation paths:
 1. **Bucket-level CORS** (Hetzner Object Storage is S3-compatible):
 
         aws s3api put-bucket-cors --endpoint-url https://<endpoint> \
-          --bucket cc-maps --cors-configuration '{
+          --bucket <bucket> --cors-configuration '{
           "CORSRules": [{
             "AllowedOrigins": ["https://<prod host>"],
             "AllowedMethods": ["GET", "HEAD"],

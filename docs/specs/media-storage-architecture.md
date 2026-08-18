@@ -54,10 +54,26 @@ web tier promises.
 
 Hetzner Object Storage, provisioned by infra.
 
-| Bucket | Access | Holds |
+### 2.0 Bucket names are deployment configuration, never repository content
+
+Decided 2026-08-18 (owner): concrete bucket names and object-storage
+hostnames never appear in this repository, in any spec, doc, comment or
+committed env file. Two reasons. First, every bucket is served through the
+nginx proxy (the browser never addresses object storage), and publishing the
+names would hand out the one thing needed to bypass that proxy. Second, the
+names are not needed here: the code reads them from environment variables,
+and each deployment's values live in its server-side `.local` env or secret
+store. The dev stack's MinIO bucket names (e.g. `cc-maps`, `cc-media-eu`)
+are exempt: they exist only on developer machines. Obscurity is the second
+lock, not the first: the buckets additionally carry policies that make
+direct reads fail (private buckets: no anonymous access at all; public
+buckets: anonymous read intended to be restricted to the proxy hosts once
+the provider's policy support for source conditions is verified).
+
+| Bucket (shape, not the deployed name) | Access | Holds |
 |---|---|---|
-| `cyclingcommons-private-{prod,staging}` | private | quarantine (unscanned bytes) + clean originals |
-| `cyclingcommons-media-public-{prod,stg}-<REGION>-<NN>` | anonymous-read | published derivatives only |
+| one private bucket per environment | private | quarantine (unscanned bytes) + clean originals |
+| one public bucket per shard and environment, numbered | anonymous-read via proxy | published derivatives only |
 
 ### 2.1 Public buckets are numbered and regional from the start
 

@@ -89,7 +89,7 @@ however it wants. This is what makes the tiles reusable across consumers with
 different looks (§7).
 
 **Artifacts.** `coverage.pmtiles` (coverage POIs + coverage polygons) on the
-`cc-maps` Hetzner Object Storage bucket behind CDN, served by HTTP byte-range —
+Cycling Commons tiles bucket behind the nginx-fronted tiles host, served by HTTP byte-range —
 the artifact and infra already exist ([coverage-provider.md](coverage-provider.md),
 [osm-data-architecture.md §5](osm-data-architecture.md)). Route tiles
 (`routes.pmtiles`) exist since 2026-08-13 and the PoC serves them to external
