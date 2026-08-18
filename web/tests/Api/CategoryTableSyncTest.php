@@ -24,7 +24,7 @@ final class CategoryTableSyncTest extends TestCase
         $js = (string) file_get_contents(__DIR__.'/../../assets/map/catalog.js');
 
         preg_match_all(
-            "/key:'(?<key>\\w+)',\\s*letter:'(?<letter>[A-M])',\\s*label:LAYER_L10N\\.\\w+\\|\\|'(?<label>[^']+)',\\s*color:'(?<color>#[0-9A-Fa-f]{6})',\\s*icon:'(?<icon>[^']+)',\\s*kind:'(?<kind>\\w+)'/u",
+            "/key:'(?<key>\\w+)',\\s*letter:'(?<letter>[A-M])',\\s*label:LAYER_L10N\\.\\w+\\|\\|'(?<label>[^']+)',\\s*color:'(?<color>#[0-9A-Fa-f]{6})',\\s*icon:'(?<icon>[^']+)',\\s*kind:'(?<kind>\\w+)',\\s*exp:(?<exp>true|false)/u",
             $js,
             $matches,
             \PREG_SET_ORDER,
@@ -37,6 +37,9 @@ final class CategoryTableSyncTest extends TestCase
             'color' => $m['color'],
             'glyph' => $m['icon'],
             'kind' => $m['kind'],
+            // catalog.js `exp` is what the map's Best of mode SHOWS; the API
+            // publishes it under the consumer-facing name.
+            'bestOf' => 'true' === $m['exp'],
         ], $matches);
 
         self::assertNotEmpty($fromJs, 'the CATALOG regex no longer matches catalog.js: update the parser AND check CategoryTable');
@@ -65,5 +68,15 @@ final class CategoryTableSyncTest extends TestCase
 
         self::assertSame(1, preg_match('/const BADGE_MIN_ZOOM = (\d+)/', $js, $badge));
         self::assertSame(CategoryTable::ROUTE_BADGE_MIN_ZOOM, (int) $badge[1], 'ROUTE_BADGE_MIN_ZOOM drifted from routes-tiles.js BADGE_MIN_ZOOM');
+    }
+
+    public function testCoverageLettersMirrorCoverageJs(): void
+    {
+        $js = (string) file_get_contents(__DIR__.'/../../assets/map/coverage.js');
+
+        self::assertSame(1, preg_match('/export const COVERAGE_KEYS=\[(.+?)\];/', $js, $keys));
+        preg_match_all("/\\['\\w+','([a-m])'\\]/", $keys[1], $letters);
+
+        self::assertSame($letters[1], CategoryTable::COVERAGE_LETTERS, 'COVERAGE_LETTERS drifted from assets/map/coverage.js COVERAGE_KEYS');
     }
 }

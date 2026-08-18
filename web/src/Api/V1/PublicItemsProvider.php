@@ -32,39 +32,53 @@ final class PublicItemsProvider
     }
 
     /**
-     * @param array{0: float, 1: float, 2: float, 3: float} $bbox minLon,minLat,maxLon,maxLat (WGS84)
+     * @param string|null                                   $letter one catalogue letter, or null for all letters
+     * @param array{0: float, 1: float, 2: float, 3: float} $bbox   minLon,minLat,maxLon,maxLat (WGS84)
+     * @param 'community'|'curated'|null                    $tier   null serves both tiers
      *
      * @return list<ItemFeature>
      */
-    public function featuresInBbox(string $letter, array $bbox, int $limit): array
+    public function featuresInBbox(?string $letter, array $bbox, int $limit, ?string $tier = null): array
     {
         // The verified derivation is itemRows()'s, minus the contributor join
         // (map-and-search.md §12): verified state, PIVOT provenance, or a
-        // non-form confirmation.
-        $sql = 'SELECT i.id, i.name, i.letter, ST_AsGeoJSON(i.geom) AS geom,
-                       (i.state = \'verified\' OR i.source = \'pivot\' OR EXISTS (SELECT 1 FROM item_confirmation c WHERE c.item_id = i.id AND c.source <> \'form\')) AS verified
+        // non-form confirmation. Named once so the SELECT column and the tier
+        // filter can never disagree.
+        $verified = '(i.state = \'verified\' OR i.source = \'pivot\' OR EXISTS (SELECT 1 FROM item_confirmation c WHERE c.item_id = i.id AND c.source <> \'form\'))';
+
+        $sql = 'SELECT i.id, i.name, i.letter, ST_AsGeoJSON(i.geom) AS geom, '.$verified.' AS verified
                 FROM item i
-                WHERE i.letter = :letter AND i.state IN '.ItemState::servedSqlTuple().'
+                WHERE i.state IN '.ItemState::servedSqlTuple().'
                   AND i.geom && ST_MakeEnvelope(:minLon, :minLat, :maxLon, :maxLat, 4326)';
-        if (\in_array($letter, CoverageRetirement::LETTERS, true)) {
-            $sql .= ' AND NOT ('.CoverageRetirement::untouchedOsmSql('i').')';
+        $params = [
+            'minLon' => $bbox[0],
+            'minLat' => $bbox[1],
+            'maxLon' => $bbox[2],
+            'maxLat' => $bbox[3],
+            'lim' => $limit,
+        ];
+
+        if (null !== $letter) {
+            $sql .= ' AND i.letter = :letter';
+            $params['letter'] = $letter;
+            if (\in_array($letter, CoverageRetirement::LETTERS, true)) {
+                $sql .= ' AND NOT ('.CoverageRetirement::untouchedOsmSql('i').')';
+            }
+        } else {
+            // All letters: the retirement exclusion stays scoped to the
+            // coverage letters, exactly as the per-letter branch composes it.
+            $sql .= ' AND NOT (i.letter IN '.CoverageRetirement::lettersSqlTuple().' AND ('.CoverageRetirement::untouchedOsmSql('i').'))';
+        }
+        if ('curated' === $tier) {
+            $sql .= ' AND '.$verified;
+        } elseif ('community' === $tier) {
+            $sql .= ' AND NOT '.$verified;
         }
         $sql .= " AND COALESCE(i.attributes->>'condition', '') <> 'Not there anymore'
                   ORDER BY i.id
                   LIMIT :lim";
 
-        $rows = $this->db->fetchAllAssociative(
-            $sql,
-            [
-                'letter' => $letter,
-                'minLon' => $bbox[0],
-                'minLat' => $bbox[1],
-                'maxLon' => $bbox[2],
-                'maxLat' => $bbox[3],
-                'lim' => $limit,
-            ],
-            ['lim' => ParameterType::INTEGER],
-        );
+        $rows = $this->db->fetchAllAssociative($sql, $params, ['lim' => ParameterType::INTEGER]);
 
         $features = [];
         foreach ($rows as $row) {

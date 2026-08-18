@@ -134,9 +134,13 @@ contract.
 | POST | `/v1/contributions` **(phase-2, §8)** | write path → the existing submission / moderation loop |
 
 **PoC status (2026-08-18).** Two endpoints are implemented and live in the
-app: `/v1/map-config` and the `/v1/search` subset `bbox` + `letter` + `limit`
-(`q`/`tier`/`hydrate`/`cursor` stay draft; `bbox` spans at most 10x10 degrees;
-`letter` widened to A-M for M · public toilets). Both are open read-only (no
+app: `/v1/map-config` (routes tiles, coverage tiles, category table with the
+Best of flag, attribution) and the `/v1/search` subset `bbox` + optional
+`letter` + optional `tier` + `limit` (`q`/`hydrate`/`cursor` stay draft; `bbox`
+spans at most 10x10 degrees; `letter` widened to A-M for M · public toilets;
+absent letter = all letters in one response). The config carries enough for a
+consumer to reproduce the map's three view modes (Best of / Confirmed /
+Everything, §2.1 tiles + the tier filter + the `bestOf` category flag). Both are open read-only (no
 keys yet, `security: []` in the OpenAPI), CORS `Access-Control-Allow-Origin: *`
 (`PublicApiCorsSubscriber`), per-IP `public_api_read` limiter (120/min, own
 pool), ETag + `public` caching with the explicit `^/v1/` PUBLIC_ACCESS entry in

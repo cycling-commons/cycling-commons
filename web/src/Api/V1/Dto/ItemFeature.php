@@ -16,7 +16,7 @@ namespace App\Api\V1\Dto;
 final readonly class ItemFeature
 {
     /**
-     * @param array<string, mixed> $geometry decoded GeoJSON geometry
+     * @param array<string, mixed>  $geometry decoded GeoJSON geometry
      * @param 'community'|'curated' $tier
      */
     public function __construct(

@@ -121,10 +121,12 @@ paths:
         Commons overlays in one call: the current routes PMTiles URL (null
         when no tileset is published, then skip the routes overlay), the
         per-country source-layer naming contract, the route style groups,
-        the category table (letters A-M with colours and glyphs), and the
-        attribution string the consumer must display. Cacheable for an hour;
-        the tiles URL changes when a new build is published, which is why
-        consumers read it here instead of hardcoding it.
+        the coverage (raw-OSM) PMTiles URL with its per-letter source-layer
+        contract, the category table (letters A-M with colours, glyphs and
+        the Best of flag), and the attribution string the consumer must
+        display. Cacheable for an hour; the tile URLs change when a new
+        build is published, which is why consumers read them here instead of
+        hardcoding them.
       responses:
         '200':
           description: The bootstrap payload.
@@ -146,10 +148,10 @@ paths:
         features. At least one of `bbox` or `q` is required.
 
 
-        **Implemented (PoC subset):** `bbox` + `letter` + `limit`, both
-        required except `limit`; `bbox` is capped at a 10×10-degree span
-        (`bbox_too_large`). `q`, `tier`, `hydrate` and `cursor` are drafted
-        but not yet implemented.
+        **Implemented (PoC subset):** `bbox` (required, capped at a
+        10x10-degree span, `bbox_too_large`), `letter` (optional; absent =
+        all letters), `tier` (optional) and `limit`. `q`, `hydrate` and
+        `cursor` are drafted but not yet implemented.
       parameters:
         - $ref: '#/components/parameters/bbox'
         - name: q
@@ -563,6 +565,28 @@ components:
                         example: [icn, ncn]
                       color: { type: string, example: '#C84E64' }
                 badgeMinZoom: { type: integer, example: 10 }
+        coverage:
+          type: object
+          description: The dense raw-OSM layer as data-only vector tiles.
+          properties:
+            tilesUrl:
+              type: [string, 'null']
+              description: Current coverage PMTiles archive; null when none is published.
+            countries:
+              type: array
+              items: { type: string }
+              description: Lowercase country codes plus the 'zz' unstamped bucket.
+              example: [be, nl, de, zz]
+            sourceLayers:
+              type: object
+              properties:
+                points: { type: string, example: '{letter}_{cc}' }
+            letters:
+              type: array
+              items: { type: string }
+              description: Lowercase catalogue letters the artifact carries.
+              example: [c, d, e, g, h, i, j, m]
+            minZoom: { type: integer, example: 9 }
         categories:
           type: array
           items:
@@ -574,6 +598,9 @@ components:
               color: { type: string, example: '#8FB6A8' }
               glyph: { type: string, example: 💧 }
               kind: { type: string, enum: [point, line, surface] }
+              bestOf:
+                type: boolean
+                description: Whether the Commons map's Best of view shows this category.
 
     Catalog:
       type: object

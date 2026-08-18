@@ -55,10 +55,17 @@ GET https://cyclingcommons.org/v1/map-config
       "badgeMinZoom": 10
     }
   },
+  "coverage": {
+    "tilesUrl": "https://tiles.cyclingcommons.org/coverage/20260814/coverage.pmtiles",
+    "countries": ["be", "nl", "de", "zz"],
+    "sourceLayers": { "points": "{letter}_{cc}" },
+    "letters": ["c", "d", "e", "g", "h", "i", "j", "m"],
+    "minZoom": 9
+  },
   "categories": [
-    { "letter": "C", "key": "water",    "label": "Water & food",   "color": "#8FB6A8", "glyph": "💧", "kind": "point" },
-    { "letter": "D", "key": "services", "label": "Bike services",  "color": "#6b6f5e", "glyph": "⚙",  "kind": "point" },
-    { "letter": "M", "key": "toilets",  "label": "Public toilets", "color": "#4E6E8C", "glyph": "🚻", "kind": "point" }
+    { "letter": "C", "key": "water",    "label": "Water & food",   "color": "#8FB6A8", "glyph": "💧", "kind": "point", "bestOf": false },
+    { "letter": "E", "key": "stays",    "label": "Where to sleep", "color": "#B5532E", "glyph": "⛺", "kind": "point", "bestOf": true },
+    { "letter": "M", "key": "toilets",  "label": "Public toilets", "color": "#4E6E8C", "glyph": "🚻", "kind": "point", "bestOf": false }
   ]
 }
 ```
@@ -81,13 +88,19 @@ Field by field:
   the Commons map without copying constants by hand. Using it is optional; the tiles do not care
   how you paint them. `badgeMinZoom` is the zoom from which the tiles carry junction-node points
   (the numbered "knooppunt" badges); below it they simply are not in the tiles.
+- **`coverage`**: the dense "everything" layer, raw OpenStreetMap coverage as a second PMTiles
+  archive. Source-layers are named per letter and country (`c_be`, `d_nl`, ...); the `zz` bucket
+  holds rows not stamped with a country, so append it as the country list already does. Individual
+  points exist in the tiles from `minZoom` (9). Colour them by letter from the category table.
+  Like the routes URL, `tilesUrl` can be null; skip the layer then.
 - **`categories`**: the full category table, letters A through M: machine key, English label,
-  colour, glyph, and kind (`point`, `line`, or `surface`). Use it to colour markers and build a
-  legend. Labels are English in the proof of concept; localised labels are a v1 concern.
+  colour, glyph, kind (`point`, `line`, or `surface`), and `bestOf` (whether the Commons map's
+  Best of view shows this category). Use it to colour markers, build a legend, and reproduce the
+  view modes below. Labels are English in the proof of concept; localised labels are a v1 concern.
 
 ## `GET /v1/search`: items by viewport
 
-Ask for one bounding box and one category letter; receive GeoJSON.
+Ask for one bounding box, and optionally a category letter and a tier; receive GeoJSON.
 
 <!-- CODE-ILLUSTRATIVE example request; bbox is Brussels and surroundings -->
 ```text
@@ -97,7 +110,8 @@ GET https://cyclingcommons.org/v1/search?bbox=4.30,50.70,4.50,50.90&letter=C&lim
 | Parameter | Required | Meaning |
 |-----------|----------|---------|
 | `bbox` | yes | `minLon,minLat,maxLon,maxLat`, WGS84 (EPSG:4326). Maximum span 10 by 10 degrees. |
-| `letter` | yes | One catalogue letter, `A` through `M` (see `categories` in the map config). |
+| `letter` | no | One catalogue letter, `A` through `M` (see `categories` in the map config). Absent = all letters in one response. |
+| `tier` | no | `community` or `curated`. Absent = both. `curated` means a human vouched for the item: a curator verified it or a rider confirmed it on the spot. |
 | `limit` | no | Maximum features returned. Default 100, maximum 500. |
 
 <!-- CODE-ILLUSTRATIVE example response, abridged to one feature -->
@@ -121,9 +135,8 @@ The response is a standard GeoJSON `FeatureCollection` with two foreign members,
 `id`, `letter`, `name`, and `tier` (`community` or `curated`, so you can rank or style verified
 items differently). The content type is `application/geo+json`.
 
-The intended calling pattern is one request per visible category each time the map settles after a
-pan or zoom (debounced), from a sensible minimum zoom (the Commons uses 8 for its own item
-layers). Do not crawl a country through this endpoint; that is what the exports are for.
+The intended calling pattern is one all-letters request each time the map settles after a pan or
+zoom (debounced), from a sensible minimum zoom (the Commons uses 8 for its own item layers). Do not crawl a country through this endpoint; that is what the exports are for.
 
 **Errors** are JSON with conventional status codes:
 
@@ -136,8 +149,20 @@ layers). Do not crawl a country through this endpoint; that is what the exports 
 |--------|---------|------|
 | 400 | `invalid_bbox` | Missing, malformed, or out-of-range `bbox`. |
 | 400 | `bbox_too_large` | Span over 10 by 10 degrees. |
-| 400 | `invalid_letter` | `letter` missing or not `A` through `M`. |
+| 400 | `invalid_letter` | `letter` given but not `A` through `M`. |
+| 400 | `invalid_tier` | `tier` given but not `community` or `curated`. |
 | 429 | `rate_limited` | Over 120 requests per minute from one address. Back off and retry. |
+
+## Mirroring the Commons view modes
+
+The Commons map offers three views, and the config carries everything needed to reproduce them:
+
+- **Everything** (the Commons default): draw the `coverage` tiles (the raw import, coloured by
+  letter) plus all items from `/v1/search` with no `tier` filter.
+- **Confirmed**: drop the coverage tiles; fetch `/v1/search?tier=curated`, the places a human
+  vouched for.
+- **Best of**: the confirmed set narrowed to the categories with `bestOf: true` in the category
+  table; a client-side filter on the `letter` property is enough, no second request.
 
 ## How it is served, and what that means for you
 

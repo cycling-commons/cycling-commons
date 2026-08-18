@@ -71,6 +71,17 @@ final class PublicApiController extends AbstractController
                     'badgeMinZoom' => CategoryTable::ROUTE_BADGE_MIN_ZOOM,
                 ],
             ],
+            // The dense "everything" layer: raw OSM coverage as tiles, one
+            // source-layer per (letter, country) plus the unstamped bucket.
+            // Colour by letter from `categories`; individual points exist in
+            // the tiles from minZoom.
+            'coverage' => [
+                'tilesUrl' => $coverageManifest->currentTileUrl(),
+                'countries' => [...array_map(strtolower(...), $coverageManifest->countryCodes()), CategoryTable::COVERAGE_UNSTAMPED_BUCKET],
+                'sourceLayers' => ['points' => '{letter}_{cc}'],
+                'letters' => CategoryTable::COVERAGE_LETTERS,
+                'minZoom' => CategoryTable::COVERAGE_MIN_ZOOM,
+            ],
             'categories' => CategoryTable::CATEGORIES,
         ];
 
@@ -79,9 +90,10 @@ final class PublicApiController extends AbstractController
 
     /**
      * Viewport GeoJSON over the curated item table (public-api.md §2.2
-     * /v1/search, PoC subset: bbox + letter + limit; q/tier/hydrate/cursor
-     * stay draft). Letters without item-table rows (A, K live elsewhere)
-     * answer an empty collection, not an error: valid letter, nothing there.
+     * /v1/search, PoC subset: bbox + optional letter + optional tier + limit;
+     * q/hydrate/cursor stay draft). Letters without item-table rows (A, K
+     * live elsewhere) answer an empty collection, not an error: valid
+     * letter, nothing there.
      */
     #[Route('/v1/search', name: 'api_v1_search', methods: ['GET'])]
     public function search(Request $request, PublicItemsProvider $items, RateLimiterFactoryInterface $publicApiReadLimiter): Response
@@ -92,11 +104,18 @@ final class PublicApiController extends AbstractController
 
         $query = $request->query->all();
 
+        // Optional since the mode-slider round: absent = all letters, one
+        // viewport request instead of one per letter. /D so a trailing
+        // newline can't ride past $ (the CoverageController scopeParams()
+        // lesson).
         $letter = $query['letter'] ?? null;
-        // /D so a trailing newline can't ride past $ (the CoverageController
-        // scopeParams() lesson).
-        if (!\is_string($letter) || 1 !== preg_match('/^[A-M]$/D', $letter)) {
-            return $this->badRequest('invalid_letter', 'letter is required: one catalogue letter A-M (see /v1/map-config categories)');
+        if (null !== $letter && (!\is_string($letter) || 1 !== preg_match('/^[A-M]$/D', $letter))) {
+            return $this->badRequest('invalid_letter', 'letter must be one catalogue letter A-M (see /v1/map-config categories), or absent for all');
+        }
+
+        $tier = $query['tier'] ?? null;
+        if (null !== $tier && (!\is_string($tier) || !\in_array($tier, ['community', 'curated'], true))) {
+            return $this->badRequest('invalid_tier', 'tier must be community or curated, or absent for both');
         }
 
         $bbox = $this->parseBbox(\is_string($query['bbox'] ?? null) ? $query['bbox'] : '');
@@ -115,7 +134,7 @@ final class PublicApiController extends AbstractController
 
         $payload = [
             'type' => 'FeatureCollection',
-            'features' => array_map(static fn ($f) => $f->toGeoJson(), $items->featuresInBbox($letter, $bbox, $limit)),
+            'features' => array_map(static fn ($f) => $f->toGeoJson(), $items->featuresInBbox($letter, $bbox, $limit, $tier)),
             'licence' => 'ODbL-1.0',
             'attribution' => CategoryTable::ATTRIBUTION,
         ];

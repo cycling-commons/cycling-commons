@@ -36,9 +36,14 @@ final class PublicApiV1Test extends WebTestCase
         /** @var array<string, mixed> $config */
         $config = json_decode((string) $response->getContent(), true, 512, \JSON_THROW_ON_ERROR);
         self::assertCount(12, $config['categories']);
+        self::assertArrayHasKey('bestOf', $config['categories'][0]);
         self::assertSame('routes_{cc}', $config['routes']['sourceLayers']['lines']);
         self::assertArrayHasKey('tilesUrl', $config['routes']);   // null here: no manifest in test env
         self::assertCount(3, $config['routes']['style']['groups']);
+        self::assertSame('{letter}_{cc}', $config['coverage']['sourceLayers']['points']);
+        self::assertSame(['c', 'd', 'e', 'g', 'h', 'i', 'j', 'm'], $config['coverage']['letters']);
+        self::assertContains('zz', $config['coverage']['countries']);
+        self::assertSame(9, $config['coverage']['minZoom']);
         self::assertStringContainsString('Cycling Commons', (string) $config['attribution']);
         self::assertStringContainsString('OpenStreetMap', (string) $config['attribution']);
 
@@ -99,6 +104,25 @@ final class PublicApiV1Test extends WebTestCase
         /** @var array<string, mixed> $empty */
         $empty = json_decode((string) $client->getResponse()->getContent(), true, 512, \JSON_THROW_ON_ERROR);
         self::assertSame([], $empty['features']);
+
+        // No letter = all letters in one response (the mode-slider round);
+        // this box only holds the two D fixtures, so the counts match.
+        $client->request('GET', '/v1/search?bbox=4.0,50.0,5.0,51.0');
+        self::assertResponseIsSuccessful();
+        /** @var array<string, mixed> $all */
+        $all = json_decode((string) $client->getResponse()->getContent(), true, 512, \JSON_THROW_ON_ERROR);
+        self::assertCount(2, $all['features']);
+
+        // The tier filter: the seed promotes every fixture to verified, so
+        // curated returns them all and community returns none.
+        $client->request('GET', '/v1/search?bbox=4.0,50.0,5.0,51.0&tier=curated');
+        /** @var array<string, mixed> $curated */
+        $curated = json_decode((string) $client->getResponse()->getContent(), true, 512, \JSON_THROW_ON_ERROR);
+        self::assertCount(2, $curated['features']);
+        $client->request('GET', '/v1/search?bbox=4.0,50.0,5.0,51.0&tier=community');
+        /** @var array<string, mixed> $community */
+        $community = json_decode((string) $client->getResponse()->getContent(), true, 512, \JSON_THROW_ON_ERROR);
+        self::assertSame([], $community['features']);
     }
 
     public function testSearchRejectsBadParametersWithCorsOnTheError(): void
@@ -106,7 +130,7 @@ final class PublicApiV1Test extends WebTestCase
         $client = static::createClient();
 
         $cases = [
-            ['/v1/search', 'invalid_letter'],                                   // nothing at all
+            ['/v1/search', 'invalid_bbox'],                                     // nothing at all (letter is optional now)
             ['/v1/search?letter=Z&bbox=4.0,50.0,5.0,51.0', 'invalid_letter'],   // letter outside A-M
             ['/v1/search?letter=C', 'invalid_bbox'],                            // bbox missing
             ['/v1/search?letter=C&bbox=1,2,3', 'invalid_bbox'],                 // three numbers
@@ -114,6 +138,7 @@ final class PublicApiV1Test extends WebTestCase
             ['/v1/search?letter=C&bbox=5.0,50.0,4.0,51.0', 'invalid_bbox'],     // min >= max
             ['/v1/search?letter=C&bbox=190,50.0,195,51.0', 'invalid_bbox'],     // off the planet
             ['/v1/search?letter=C&bbox=0,0,60,60', 'bbox_too_large'],           // continent-sized
+            ['/v1/search?bbox=4.0,50.0,5.0,51.0&tier=gold', 'invalid_tier'],    // unknown tier
         ];
 
         foreach ($cases as [$url, $error]) {

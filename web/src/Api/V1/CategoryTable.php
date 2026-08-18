@@ -35,18 +35,18 @@ final class CategoryTable
      * @var list<array{letter: string, key: string, label: string, color: string, glyph: string, kind: string}>
      */
     public const array CATEGORIES = [
-        ['letter' => 'A', 'key' => 'surface', 'label' => 'Road surface', 'color' => '#4E8C84', 'glyph' => '▰', 'kind' => 'surface'],
-        ['letter' => 'B', 'key' => 'climbs', 'label' => 'Climbs', 'color' => '#6A2C8F', 'glyph' => '⛰', 'kind' => 'point'],
-        ['letter' => 'C', 'key' => 'water', 'label' => 'Water & food', 'color' => '#8FB6A8', 'glyph' => '💧', 'kind' => 'point'],
-        ['letter' => 'M', 'key' => 'toilets', 'label' => 'Public toilets', 'color' => '#4E6E8C', 'glyph' => '🚻', 'kind' => 'point'],
-        ['letter' => 'D', 'key' => 'services', 'label' => 'Bike services', 'color' => '#6b6f5e', 'glyph' => '⚙', 'kind' => 'point'],
-        ['letter' => 'E', 'key' => 'stays', 'label' => 'Where to sleep', 'color' => '#B5532E', 'glyph' => '⛺', 'kind' => 'point'],
-        ['letter' => 'F', 'key' => 'hazards', 'label' => 'Hazards & conditions', 'color' => '#C8923A', 'glyph' => '⚠', 'kind' => 'point'],
-        ['letter' => 'G', 'key' => 'transit', 'label' => 'Getting there', 'color' => '#3E7D8C', 'glyph' => '🚆', 'kind' => 'point'],
-        ['letter' => 'H', 'key' => 'shelter', 'label' => 'Shelter', 'color' => '#9A8FB6', 'glyph' => '⛑', 'kind' => 'point'],
-        ['letter' => 'I', 'key' => 'scenic', 'label' => 'Scenic views', 'color' => '#2C5440', 'glyph' => '📷', 'kind' => 'point'],
-        ['letter' => 'J', 'key' => 'history', 'label' => 'History & culture', 'color' => '#6E5849', 'glyph' => '🏛', 'kind' => 'point'],
-        ['letter' => 'K', 'key' => 'experience', 'label' => 'Recommended routes', 'color' => '#FF5A1F', 'glyph' => '★', 'kind' => 'line'],
+        ['letter' => 'A', 'key' => 'surface', 'label' => 'Road surface', 'color' => '#4E8C84', 'glyph' => '▰', 'kind' => 'surface', 'bestOf' => true],
+        ['letter' => 'B', 'key' => 'climbs', 'label' => 'Climbs', 'color' => '#6A2C8F', 'glyph' => '⛰', 'kind' => 'point', 'bestOf' => true],
+        ['letter' => 'C', 'key' => 'water', 'label' => 'Water & food', 'color' => '#8FB6A8', 'glyph' => '💧', 'kind' => 'point', 'bestOf' => false],
+        ['letter' => 'M', 'key' => 'toilets', 'label' => 'Public toilets', 'color' => '#4E6E8C', 'glyph' => '🚻', 'kind' => 'point', 'bestOf' => false],
+        ['letter' => 'D', 'key' => 'services', 'label' => 'Bike services', 'color' => '#6b6f5e', 'glyph' => '⚙', 'kind' => 'point', 'bestOf' => false],
+        ['letter' => 'E', 'key' => 'stays', 'label' => 'Where to sleep', 'color' => '#B5532E', 'glyph' => '⛺', 'kind' => 'point', 'bestOf' => true],
+        ['letter' => 'F', 'key' => 'hazards', 'label' => 'Hazards & conditions', 'color' => '#C8923A', 'glyph' => '⚠', 'kind' => 'point', 'bestOf' => false],
+        ['letter' => 'G', 'key' => 'transit', 'label' => 'Getting there', 'color' => '#3E7D8C', 'glyph' => '🚆', 'kind' => 'point', 'bestOf' => false],
+        ['letter' => 'H', 'key' => 'shelter', 'label' => 'Shelter', 'color' => '#9A8FB6', 'glyph' => '⛑', 'kind' => 'point', 'bestOf' => false],
+        ['letter' => 'I', 'key' => 'scenic', 'label' => 'Scenic views', 'color' => '#2C5440', 'glyph' => '📷', 'kind' => 'point', 'bestOf' => true],
+        ['letter' => 'J', 'key' => 'history', 'label' => 'History & culture', 'color' => '#6E5849', 'glyph' => '🏛', 'kind' => 'point', 'bestOf' => true],
+        ['letter' => 'K', 'key' => 'experience', 'label' => 'Recommended routes', 'color' => '#FF5A1F', 'glyph' => '★', 'kind' => 'line', 'bestOf' => false],
     ];
 
     /**
@@ -65,4 +65,22 @@ final class CategoryTable
 
     /** Zoom from which the tiles carry knooppunt badge points (routes-tiles.js BADGE_MIN_ZOOM). */
     public const int ROUTE_BADGE_MIN_ZOOM = 10;
+
+    /**
+     * The catalogue letters the coverage artifact carries, lowercase because
+     * they name its source-layers ('<letter>_<cc>'). Mirrored from
+     * assets/map/coverage.js COVERAGE_KEYS and pinned by the sync test.
+     *
+     * @var list<string>
+     */
+    public const array COVERAGE_LETTERS = ['c', 'd', 'e', 'g', 'h', 'i', 'j', 'm'];
+
+    /**
+     * The 'zz' source-layer bucket holds rows not stamped with a country;
+     * consumers append it to the country list so those rows still render.
+     */
+    public const string COVERAGE_UNSTAMPED_BUCKET = 'zz';
+
+    /** Zoom from which the coverage artifact carries individual points (coverage.js icon minzoom). */
+    public const int COVERAGE_MIN_ZOOM = 9;
 }
