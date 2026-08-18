@@ -1988,7 +1988,13 @@ it carries no category on the device and asks for none in review — its card is
 a free-text description only, and the intake auto-files it as an **F notice**
 with `hazardType: Other`, the curator's read of the text being the filing
 decision. An empty description refuses to send: "Other" as a name tells the
-curator nothing.
+curator nothing. A **bare surface tap** (the device's type picker timed out:
+"surface, here", no type, no stretch) is **hidden from the review and counted
+in the panel's fact lines** (owner 2026-08-18: "if it times out just hide
+it") — it cannot become an A point, and its old fallback dropdown defaulted
+to Water & food inside a card titled Surface, which read as a bug because it
+was one. Counted, never silent: a rider who counts thirteen taps and sees
+twelve cards deserves the difference named.
 
 **The review screen shows everything at once** (2026-08-12). Rows are open, not
 collapsed: a rider came to check that thirteen tags are the right thirteen

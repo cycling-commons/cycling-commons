@@ -327,6 +327,7 @@ final class MapController extends AbstractController
             'scoutCloseUnsent' => 'd_scout_close_unsent', 'scoutNoFix' => 'd_scout_no_fix',
             'scoutStretchToEnd' => 'd_scout_stretch_to_end',
             'scoutDescribe' => 'd_scout_describe', 'scoutRemove' => 'd_scout_remove',
+            'scoutBareSurface' => 'd_scout_bare_surface',
             'scoutSendAll' => 'd_scout_send_all',
             'roadMain' => 'd_road_main', 'roadLocal' => 'd_road_local',
             'roadResidential' => 'd_road_residential', 'roadTrack' => 'd_road_track',

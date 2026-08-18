@@ -526,6 +526,13 @@
     max-height:calc(100% - 2rem);overflow-y:auto;background:var(--ink);color:var(--paper);
     border:1px solid rgba(239,230,212,.12);
     border-radius:10px;box-shadow:0 12px 30px rgba(0,0,0,.45);padding:1rem;
+    /* stable: the scrollbar's slot is reserved whether or not it shows.
+       Without it, deleting a card could tip the content under the panel
+       height, the thin scrollbar vanished (or appeared), and every card
+       jumped 10px in width while the transparent track exposed the ink
+       background as a dark band (owner-reported 2026-08-18, "black
+       vertical bar behind each item"). */
+    scrollbar-gutter:stable;
     scrollbar-width:thin;scrollbar-color:var(--spruce-lift) transparent}
   /* Centred against the whole three-line block, not pinned to the first line:
      the mark labels the card, and top-aligned it read as a bullet on the

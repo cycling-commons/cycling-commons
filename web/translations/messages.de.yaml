@@ -2026,6 +2026,7 @@ map:
   d_scout_stretch_to_end: 'Kein ENDE-Tipp: der Abschnitt läuft bis zum Ende der Fahrt. Prüfe die Linie vor dem Senden.'
   d_scout_describe: 'Beschreibe, was du gesehen hast…'
   d_scout_remove: 'Diesen Tag aus der Durchsicht entfernen'
+  d_scout_bare_surface: 'Ausgeblendet: {n} Belag-Tipps ohne Typ (die Auswahl lief ab)'
   d_scout_send_all: 'Den Rest senden'
   d_scout_close_unsent: 'Prüfung schließen? {n} Tag(s) wurden nicht gesendet — sie bleiben in deiner Fahrtdatei, du kannst sie hier später erneut öffnen.'
   d_scout_letter_A: 'Belag'

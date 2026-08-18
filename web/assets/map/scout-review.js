@@ -127,14 +127,19 @@ function readFit(buffer) {
      same tile twice — Scout's own undo rule, applied by the vendored parser.
      It is not ours to second-guess, and showing it would ask them to decide
      again about something they already un-decided. */
+  /* A BARE surface tap (the type picker timed out: "surface, here" - no
+     type, no stretch) is hidden from the review (owner, 2026-08-18: "if it
+     times out just hide it") - but counted below, because a rider who
+     counts thirteen taps and sees twelve cards deserves the difference
+     named, not left to look like a parser bug. */
+  const bareSurface = raw.filter(t => !t.cancelled && t.type === SURF_TYPE && !(t.detail >= 1)).length;
+
   const tags = raw
-    /* Surface TRANSITIONS (detail 1-8) and END (9) belong to the stretches
-       below, not the point list - showing them twice made every stretch also
-       a bogus point card defaulting to Water & food (owner, 2026-08-18). A
-       bare surface tap (no detail) stays a point: it marks a spot, not a
-       stretch. */
-    .filter(t => !t.cancelled && t.lat != null && t.lon != null
-      && !(t.type === SURF_TYPE && t.detail >= 1))
+    /* Surface tags never join the point list: transitions (detail 1-8) and
+       END (9) belong to the stretches below - showing them twice made every
+       stretch also a bogus point card defaulting to Water & food (owner,
+       2026-08-18) - and the bare tap is hidden (see above). */
+    .filter(t => !t.cancelled && t.lat != null && t.lon != null && t.type !== SURF_TYPE)
     .map(t => {
       const legacy = LEGACY_RESUPPLY[t.type];
       const detail = legacy || t.detail;
@@ -143,7 +148,7 @@ function readFit(buffer) {
       /* 'other' starts UNCHOSEN: the device recorded "something", and
          defaulting it to Water & food would invent an answer the rider never
          gave (owner, 2026-08-18). Every other tag type has a meaningful best
-         guess, which stays preselected. */
+         guess, which stays preselected. Surface tags never reach this list. */
       const letter = 'other' === tag ? '' : (offered[0] || 'C');
       return {
         tag,
@@ -161,7 +166,7 @@ function readFit(buffer) {
       };
     });
 
-  return { track, tags, segments, radar, unplaceable };
+  return { track, tags, segments, radar, unplaceable, bareSurface };
 }
 
 function msg(text, isError) {
@@ -173,6 +178,30 @@ function msg(text, isError) {
 }
 
 /* ── drawing ─────────────────────────────────────────────────────────────── */
+
+/* The review rides ON TOP - always. The map keeps adding layers after the
+   ride is drawn (catalog loads, surface skin, the region-scope mask), and
+   every one of them lands above the scout layers, burying the coloured
+   stretches and letting the scope mask dim the ride to near-black
+   (owner-reported 2026-08-18, "black area on the ride"). A rider reviewing
+   THEIR ride must see it over everything, scope mask included - the pins
+   are DOM markers and always float; the lines now do the same. Guarded so
+   the styledata hook cannot loop: moveLayer only when the tail is wrong. */
+function raiseScoutLayers() {
+  const ids = [RIDE_LINE, SEG_CASE, ...SEG_CLS.map(c => SEG_SRC + '-' + c)]
+    .filter(id => map.getLayer(id));
+  if (!ids.length) return;
+  const style = map.getStyle().layers.map(l => l.id);
+  const tail = style.slice(-ids.length);
+  if (ids.length === tail.length && ids.every((id, i) => tail[i] === id)) return;
+  ids.forEach(id => map.moveLayer(id));
+}
+let raiseHooked = false;
+function hookRaise() {
+  if (raiseHooked) return;
+  raiseHooked = true;
+  map.on('styledata', raiseScoutLayers);
+}
 function drawRide() {
   if (map.getLayer(RIDE_LINE)) map.removeLayer(RIDE_LINE);
   if (map.getSource(RIDE_SRC)) map.removeSource(RIDE_SRC);
@@ -397,12 +426,12 @@ function renderList() {
 
     // What it is: the letters this tag type may become, and nothing else — the
     // same list the server validates against.
-    /* 'Other' has no category on the device and none here either (owner,
-       2026-08-18): it is a free-text observation. The server auto-files it as
-       an F notice and the curator's read of the description is the filing
-       decision - so this card is just the text field. Every other tag type
-       keeps its category dropdown. */
-    if ('other' !== entry.tag) {
+    /* A letterless entry ('Other', or a bare surface tap) is a free-text
+       observation (owner, 2026-08-18): the server auto-files it as an F
+       notice and the curator's read of the description is the filing
+       decision - so its card is just the text field. Everything else keeps
+       its category dropdown. */
+    if (entry.letter) {
       const letters = lettersFor(entry.tag, entry.detail);
       const sel = document.createElement('select');
       sel.className = 'scout-letter';
@@ -423,9 +452,9 @@ function renderList() {
     const name = document.createElement('input');
     name.type = 'text';
     name.className = 'scout-name';
-    name.placeholder = 'other' === entry.tag
-      ? t('scoutDescribe', 'Describe what you saw…')
-      : t('scoutNamePh', 'Name it');
+    name.placeholder = entry.letter
+      ? t('scoutNamePh', 'Name it')
+      : t('scoutDescribe', 'Describe what you saw…');
     name.value = entry.name || '';
     name.addEventListener('input', () => { entry.name = name.value; });
     row.appendChild(name);
@@ -610,9 +639,10 @@ async function sendOne(entry, button, li) {
      server mints a fresh submission for every POST, so a double send is a
      duplicate a curator has to reject (owner, 2026-08-18). */
   if (entry.approved || entry.sending) return;
-  /* An Other tag IS its description - "Other" as a name tells the curator
-     nothing, so an empty field refuses instead of falling back. */
-  if ('other' === entry.tag && !(entry.name || '').trim()) {
+  /* A letterless tag IS its description - "Other" or "Surface" as a name
+     tells the curator nothing, so an empty field refuses instead of
+     falling back. */
+  if ('' === entry.letter && !(entry.name || '').trim()) {
     msg(t('scoutNeedName', 'Give the tag a name before sending it.'), true);
     return;
   }
@@ -743,6 +773,9 @@ function renderRideFacts(parsed) {
   if (parsed.unplaceable > 0) {
     lines.push(tplCount(t('scoutNoFix', '{n} tag(s) had no GPS fix and cannot be placed'), parsed.unplaceable));
   }
+  if (parsed.bareSurface > 0) {
+    lines.push(tplCount(t('scoutBareSurface', 'Hidden: {n} surface tap(s) carried no type (the picker timed out)'), parsed.bareSurface));
+  }
   lines.forEach(text => {
     const p = document.createElement('p');
     p.className = 'scout-fact';
@@ -801,6 +834,8 @@ function show(parsed) {
 
   drawRide();
   drawStretches();
+  raiseScoutLayers();
+  hookRaise();
   placeTags();
   placeStretchMarkers();
   renderList();

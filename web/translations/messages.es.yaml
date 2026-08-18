@@ -2365,6 +2365,7 @@ map:
   d_scout_stretch_to_end: 'Sin toque de FIN: el tramo llega hasta el final de la ruta. Revisa la línea antes de enviar.'
   d_scout_describe: 'Describe lo que viste…'
   d_scout_remove: 'Quitar esta etiqueta de la revisión'
+  d_scout_bare_surface: 'Ocultos: {n} toques de firme sin tipo (el selector caducó)'
   d_scout_send_all: 'Enviar el resto'
   d_scout_close_unsent: 'Cerrar la revisión? {n} etiqueta(s) no se han enviado — siguen en tu archivo de ruta, así que puedes volver a abrirlo aquí más tarde.'
   d_scout_letter_A: 'Firme'

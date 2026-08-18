@@ -2023,6 +2023,7 @@ map:
   d_scout_stretch_to_end: 'Geen EINDE-tik: het stuk loopt door tot het einde van de rit. Controleer de lijn voor het versturen.'
   d_scout_describe: 'Beschrijf wat je zag…'
   d_scout_remove: 'Verwijder deze tag uit de review'
+  d_scout_bare_surface: 'Verborgen: {n} wegdek-tikken zonder type (de kiezer verliep)'
   d_scout_send_all: 'Stuur de rest'
   d_scout_close_unsent: 'Review sluiten? {n} tag(s) zijn niet verstuurd — ze blijven in je ritbestand, dus je kunt het hier later opnieuw openen.'
   d_scout_letter_A: 'Wegdek'

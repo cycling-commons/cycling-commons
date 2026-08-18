@@ -2356,6 +2356,7 @@ map:
   d_scout_stretch_to_end: 'No END tap: the stretch runs to the end of the ride. Check the line before sending.'
   d_scout_describe: 'Describe what you saw…'
   d_scout_remove: 'Remove this tag from the review'
+  d_scout_bare_surface: 'Hidden: {n} surface taps carried no type (the picker timed out)'
   d_scout_send_all: 'Send the rest'
   d_scout_close_unsent: 'Close the review? {n} tag(s) have not been sent — they stay in your ride file, so you can open it here again later.'
   d_scout_letter_A: 'Road surface'

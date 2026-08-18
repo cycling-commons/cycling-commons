@@ -2023,6 +2023,7 @@ map:
   d_scout_stretch_to_end: 'Pas de tap FIN : le tronçon court jusqu’à la fin de la sortie. Vérifiez la ligne avant l’envoi.'
   d_scout_describe: 'Décrivez ce que vous avez vu…'
   d_scout_remove: 'Retirer ce tag de la revue'
+  d_scout_bare_surface: 'Masqués : {n} taps revêtement sans type (le sélecteur a expiré)'
   d_scout_send_all: 'Envoyer le reste'
   d_scout_close_unsent: 'Fermer la relecture ? {n} tag(s) n''ont pas été envoyés — ils restent dans votre fichier de sortie, vous pourrez le rouvrir ici plus tard.'
   d_scout_letter_A: 'Revêtement'
