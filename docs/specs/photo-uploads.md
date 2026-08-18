@@ -26,10 +26,12 @@ context). Media licensing context lives in the site licences
    upload's continent from the wizard's pin coordinates (world reference
    data: country → continent), stores the code on the row, and routes
    writes through a per-continent storage map. The pin is required
-   (missing_location); a valid pin that resolves to no onboarded region
-   falls back to `MEDIA_DEFAULT_CONTINENT` (EU); a resolved continent with
-   no bucket refuses (`storage_unavailable`, never a borrow). Adding a
-   continent is one bucket + one config entry.
+   (missing_location); a pin that resolves to no continent (the sea, a
+   point outside every onboarded region) refuses too
+   (location_unresolvable; owner 2026-08-18: "not part of a continent, we
+   can not accept it" - there is no default continent); and a resolved
+   continent with no bucket refuses as well (`storage_unavailable`, never
+   a borrow). Adding a continent is one bucket + one config entry.
 3. **Keep a stripped original — capped at 4K.** The stored "original" is
    re-encoded with all embedded metadata removed and downscaled to at most
    **3840 px on the longest side**. Nothing larger is ever stored.
@@ -197,9 +199,9 @@ does not do, so the message carries the pin transiently and the worker records
 the EXIF-to-pin distance after it decodes (the worker's pinless resharding arm
 survives only for messages queued before the pin became required). A photo
 whose shard changes that way has published nothing yet, which is the only time
-a shard may change at all. `MEDIA_DEFAULT_CONTINENT` remains only for a valid
-pin that resolves to no onboarded region (sea, un-onboarded country), never
-for an absent one.
+a shard may change at all. There is no default continent (removed 2026-08-18):
+a pin that resolves to no continent at all is a `location_unresolvable`
+refusal, not a shard assignment.
 
 **Persistence at intake:** a `media_upload` row —
 `id (uuid) · user_id · status = 'pending_scan' · continent (CHAR(2), where the

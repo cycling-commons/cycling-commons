@@ -124,7 +124,6 @@ services:
                 EU: '%env(MEDIA_PUBLIC_BASE)%/cc-media-eu'
             $private: '@media.storage.private'
             $publicBase: '%media.public_base%'
-            $defaultContinent: '%media.default_continent%'
 
     # The release gate's scanner (media plan task 3). CLAMAV_REQUIRED decides
     # what "no scanner" means: true throws (every real environment - it sits
@@ -169,7 +168,6 @@ when@test:
                     EU: 'https://media.test/cc-media-eu'
                 $private: '@media.storage.private'
                 $publicBase: 'https://media.test'
-                $defaultContinent: 'EU'
 
         App\Media\ContinentResolver:
             public: true

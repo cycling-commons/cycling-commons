@@ -94,7 +94,6 @@ services:
       MEDIA_S3_BUCKET_PRIVATE: "${MEDIA_S3_BUCKET_PRIVATE:-cc-media-private}"
       MEDIA_PUBLIC_BASE: "${MEDIA_PUBLIC_BASE:-http://localhost:9100}"
       MEDIA_CSP_HOST: "${MEDIA_CSP_HOST:-http://localhost:9100}"
-      MEDIA_DEFAULT_CONTINENT: "${MEDIA_DEFAULT_CONTINENT:-EU}"
       MESSENGER_TRANSPORT_DSN: "${MESSENGER_TRANSPORT_DSN:-redis://redis:6379/cc_messages}"
     volumes:
       - ../../web:/app
@@ -140,7 +139,6 @@ services:
       MEDIA_S3_BUCKET_PRIVATE: "${MEDIA_S3_BUCKET_PRIVATE:-cc-media-private}"
       MEDIA_PUBLIC_BASE: "${MEDIA_PUBLIC_BASE:-http://localhost:9100}"
       MEDIA_CSP_HOST: "${MEDIA_CSP_HOST:-http://localhost:9100}"
-      MEDIA_DEFAULT_CONTINENT: "${MEDIA_DEFAULT_CONTINENT:-EU}"
     volumes:
       - ../../web:/app
       - cc_api_vendor:/app/vendor

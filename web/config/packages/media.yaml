@@ -10,9 +10,6 @@
 # admin-editable: a writable CSP host is an XSS-relaxation surface
 # (system-configuration.md rationale).
 #
-# media.default_continent catches uploads whose location cannot be resolved
-# (no pin yet, no EXIF GPS, or a point outside every onboarded region).
-#
 # The two auto-withhold circuit-breaker budgets (photo-uploads.md §6c) are the
 # DEFAULTS for runtime-editable settings of the same names
 # (system-configuration.md §2): the site-wide ceiling on how many photos an
@@ -23,7 +20,6 @@
 parameters:
     media.public_base: '%env(MEDIA_PUBLIC_BASE)%'
     media.csp_host: '%env(MEDIA_CSP_HOST)%'
-    media.default_continent: '%env(MEDIA_DEFAULT_CONTINENT)%'
     media.urgent_breaker_hourly: 10
     media.urgent_breaker_daily: 25
     # Default recipients for operational alerts (the breaker opening, and every

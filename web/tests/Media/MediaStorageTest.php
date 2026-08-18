@@ -102,12 +102,14 @@ final class MediaStorageTest extends KernelTestCase
         $this->storage->shardFor('AQ');
     }
 
-    public function testUnresolvableCoordinatesFallBackToTheDefaultContinent(): void
+    public function testUnresolvableCoordinatesResolveToNoContinentAtAll(): void
     {
+        // Owner 2026-08-18: "not part of a continent, we can not accept it".
+        // Null, never a default: the caller refuses the upload.
         $resolver = static::getContainer()->get(ContinentResolver::class);
 
-        self::assertSame('EU', $resolver->resolve(null, null));
-        self::assertSame('EU', $resolver->resolve(0.0, 0.0), 'the Atlantic is in no region');
-        self::assertSame('EU', $resolver->resolve(\NAN, 5.0));
+        self::assertNull($resolver->resolve(null, null));
+        self::assertNull($resolver->resolve(0.0, 0.0), 'the Atlantic is in no region');
+        self::assertNull($resolver->resolve(\NAN, 5.0));
     }
 }

@@ -59,8 +59,27 @@ final class MediaUploadEndpointTest extends WebTestCase
         return $user;
     }
 
+    /**
+     * The continent chain the resolver walks for the test pin (50.47, 5.86):
+     * region polygon → country BE → continent EU. There is no default
+     * continent (owner 2026-08-18), so a pin outside every region refuses
+     * the upload; these tests must stand on a real, resolvable region
+     * exactly as production pins do.
+     */
+    private function seedContinentChain(): void
+    {
+        static::getContainer()->get(EntityManagerInterface::class)->getConnection()->executeStatement(<<<'SQL'
+            INSERT INTO world_continent (id, code, name) VALUES (990, 'EU', 'Europe') ON CONFLICT DO NOTHING;
+            INSERT INTO world_country (id, iso2, iso3, name, continent_id) VALUES (991, 'BE', 'BEL', 'Belgium', 990) ON CONFLICT DO NOTHING;
+            INSERT INTO region (id, slug, name, geom, area_km2, created_at, updated_at, country_code, admin_level, default_map_mode)
+            VALUES (992, 'upload-square', 'Upload Square', ST_SetSRID(ST_MakeEnvelope(5.0, 50.0, 6.5, 51.0), 4326), 100, now(), now(), 'BE', 4, 'auto')
+            ON CONFLICT DO NOTHING;
+            SQL);
+    }
+
     private function login(KernelBrowser $client, string $tag): User
     {
+        $this->seedContinentChain();
         $user = $this->makeUser("upload-{$tag}@example.com");
         $crawler = $client->request('GET', '/login');
         $form = $crawler->selectButton('Sign in')->form([
@@ -475,9 +494,8 @@ final class MediaUploadEndpointTest extends WebTestCase
 
     /**
      * The pin is required (owner 2026-08-18): every photo is uploaded for a
-     * located place, the EXIF GPS is only the second verification. Without
-     * this, a pinless upload of an EXIF-less photo would silently record the
-     * default continent, the exact lie ContinentResolver refuses to tell.
+     * located place, the EXIF GPS is only the second verification. A photo
+     * that cannot be placed on a continent is refused, never defaulted.
      */
     public function testAnUploadWithoutAPinIsRefusedAndStoresNothing(): void
     {
@@ -504,6 +522,17 @@ final class MediaUploadEndpointTest extends WebTestCase
         );
         self::assertResponseStatusCodeSame(422);
         self::assertSame('missing_location', $this->json($client)['error']);
+
+        // A valid pin in the middle of the Atlantic belongs to no continent:
+        // refused outright, never assigned a default (owner 2026-08-18).
+        $client->request(
+            'POST', '/media/photos',
+            ['_token' => $token, 'consentId' => $consentId, 'lat' => '0.0', 'lng' => '-30.0'],
+            ['photo' => $this->photoFile()],
+        );
+        self::assertResponseStatusCodeSame(422);
+        self::assertSame('location_unresolvable', $this->json($client)['error']);
+        self::assertSame(0, $this->storedCount());
     }
 
     public function testAGifIsRefusedByItsContentNotItsName(): void

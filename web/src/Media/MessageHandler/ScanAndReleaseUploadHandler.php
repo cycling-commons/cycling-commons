@@ -155,12 +155,14 @@ final readonly class ScanAndReleaseUploadHandler
         if (null === $message->pinLat || null === $message->pinLng) {
             // Pre-2026-08-18 messages only: the pin is required at intake now.
             $continent = $this->continents->resolve($processed->gpsLat, $processed->gpsLng);
-            try {
-                $upload->reshard($continent, $this->storage->shardFor($continent));
-            } catch (ShardUnavailable) {
-                // The true continent still goes on the row; the bytes keep the
-                // shard intake recorded, because that bucket verifiably exists.
-                $upload->reshard($continent, $upload->getStorageShard());
+            if (null !== $continent) {
+                try {
+                    $upload->reshard($continent, $this->storage->shardFor($continent));
+                } catch (ShardUnavailable) {
+                    // The true continent still goes on the row; the bytes keep
+                    // the shard intake recorded: that bucket verifiably exists.
+                    $upload->reshard($continent, $upload->getStorageShard());
+                }
             }
         }
 

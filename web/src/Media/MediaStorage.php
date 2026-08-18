@@ -70,7 +70,6 @@ final class MediaStorage
         private readonly array $publicBases,
         private readonly FilesystemOperator $private,
         private readonly string $publicBase,
-        private readonly string $defaultContinent,
     ) {
     }
 

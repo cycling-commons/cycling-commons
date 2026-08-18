@@ -94,7 +94,14 @@ onboarding is documented as "add a bucket, add a storage, add one line". What
 changes is only the naming (a region *and* an ordinal) and that the chosen
 bucket becomes a stored fact per photo.
 
-Two rulings that complete the model (owner 2026-08-18):
+Three rulings that complete the model (owner 2026-08-18):
+
+- **There is no default continent.** `MEDIA_DEFAULT_CONTINENT` is removed. A
+  pin that resolves to no continent (the sea, a point outside every
+  onboarded region) is a `location_unresolvable` refusal at the endpoint:
+  everything acceptable is linked to a continent through the world reference
+  data, so an unresolvable point is unacceptable content, not a routing
+  question.
 
 - **A continent without a provisioned bucket refuses the upload**
   (`ShardUnavailable` in `MediaStorage`, `storage_unavailable` at the

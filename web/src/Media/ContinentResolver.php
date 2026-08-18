@@ -7,7 +7,6 @@ declare(strict_types=1);
 namespace App\Media;
 
 use Doctrine\DBAL\Connection;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
  * Which bucket a photo belongs in (docs/specs/photo-uploads.md §1.2): a point
@@ -17,10 +16,11 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
  * Smallest-area-wins mirrors {@see \App\Contribution\SpatialResolver}, so a
  * point inside both an operational region and its containing infrastructure-only
  * country outline anchors to the smaller one. A point in the sea, in a country
- * that has not been onboarded, or with no coordinates at all resolves to
- * MEDIA_DEFAULT_CONTINENT — honestly, without guessing a nearest country: the
- * shard is a storage detail, and a wrong guess would be a lie recorded on the
- * row.
+ * that has not been onboarded, or with no coordinates at all resolves to NULL
+ * (owner 2026-08-18: "not part of a continent, we can not accept it") - never
+ * a default and never a nearest-country guess: the continent is recorded on
+ * the row, and a guess would be a lie stored forever. The caller refuses the
+ * upload instead.
  *
  * @api Called by MediaController when persisting an upload.
  */
@@ -28,16 +28,13 @@ final class ContinentResolver
 {
     public function __construct(
         private readonly Connection $db,
-        #[Autowire('%media.default_continent%')]
-        private readonly string $defaultContinent,
     ) {
     }
 
-    public function resolve(?float $lat, ?float $lng): string
+    public function resolve(?float $lat, ?float $lng): ?string
     {
-        $fallback = strtoupper($this->defaultContinent);
         if (null === $lat || null === $lng || !is_finite($lat) || !is_finite($lng)) {
-            return $fallback;
+            return null;
         }
 
         $code = $this->db->fetchOne(
@@ -51,6 +48,6 @@ final class ContinentResolver
             ['lng' => $lng, 'lat' => $lat],
         );
 
-        return \is_string($code) && 2 === \strlen($code) ? strtoupper($code) : $fallback;
+        return \is_string($code) && 2 === \strlen($code) ? strtoupper($code) : null;
     }
 }

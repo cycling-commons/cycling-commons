@@ -2396,6 +2396,7 @@ media:
     missing_file: 'Es ist kein Foto angekommen. Bitte wähle eine Datei und versuche es erneut.'
     missing_location: 'Leg zuerst den Standort des Ortes fest und füge dann Fotos hinzu.'
     storage_unavailable: 'Fotos können für diese Region noch nicht gespeichert werden. Versuch es später erneut.'
+    location_unresolvable: 'Dieser Ort gehört zu keiner bekannten Region, daher kann das Foto nicht gespeichert werden.'
     photo_too_large: 'Dieses Foto ist größer als 15 MB. Bitte nutze eine kleinere Version.'
     photo_too_many_pixels: 'Dieses Foto hat zu viele Pixel — über 50 Megapixel. Bitte verwende eine kleinere Version.'
     photo_format: 'Dieser Dateityp lässt sich nicht verwenden. Fotos dürfen JPEG, PNG, WebP oder HEIC sein.'

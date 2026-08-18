@@ -184,13 +184,18 @@ final class MediaController extends AbstractController
         $pinLng = $this->coordinate($request, 'lng');
         /* The pin is REQUIRED (owner 2026-08-18): every photo is uploaded for
            a located place, so a missing pin is a broken caller, not a case to
-           absorb. Without this guard a pinless upload of a photo with no EXIF
-           GPS would silently record the default continent, which is exactly
-           the lie the resolver refuses to tell for unresolvable points. */
+           absorb, and a photo that cannot be placed is refused outright
+           (location_unresolvable below). */
         if (null === $pinLat || null === $pinLng || abs($pinLat) > 90.0 || abs($pinLng) > 180.0) {
             return $this->json(['error' => 'missing_location'], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
         $continent = $this->continents->resolve($pinLat, $pinLng);
+        if (null === $continent) {
+            /* A pin in the sea or outside every onboarded region belongs to
+               no continent, and a photo we cannot place is a photo we do not
+               accept (owner 2026-08-18). Never a default shard. */
+            return $this->json(['error' => 'location_unresolvable'], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
         try {
             $shard = $this->storage->shardFor($continent);
         } catch (ShardUnavailable) {
