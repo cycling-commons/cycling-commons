@@ -231,7 +231,7 @@ final class MediaDisposalService
             return;
         }
 
-        $target = $this->storage->url($upload->getStorageShard(), $upload->getPathPrefix(), 'sm');
+        $target = $this->storage->url($upload->getStorageBucket(), $upload->getPathPrefix(), 'sm');
         $changed = false;
         foreach ($photos as $index => $photo) {
             if (\is_array($photo) && ($photo['sm'] ?? null) === $target && '' !== ($photo['credit'] ?? '')) {

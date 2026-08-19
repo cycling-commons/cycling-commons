@@ -157,12 +157,11 @@ final readonly class ScanAndReleaseUploadHandler
             $continent = $this->continents->resolve($processed->gpsLat, $processed->gpsLng);
             if (null !== $continent) {
                 try {
-                    [$shard, $bucket] = $this->storage->activeFor($continent);
-                    $upload->reshard($continent, $shard, $bucket);
+                    $upload->reshard($continent, $this->storage->bucketFor($continent));
                 } catch (ShardUnavailable) {
                     // The true continent still goes on the row; the bytes keep
-                    // the address intake recorded: that bucket verifiably exists.
-                    $upload->reshard($continent, $upload->getStorageShard(), $upload->getStorageBucket());
+                    // the bucket intake recorded: that one verifiably exists.
+                    $upload->reshard($continent, $upload->getStorageBucket());
                 }
             }
         }

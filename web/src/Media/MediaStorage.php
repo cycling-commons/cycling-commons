@@ -26,20 +26,20 @@ use League\Flysystem\FilesystemOperator;
  *   the web tier, read and deleted by the worker, reachable by nobody else:
  *   the bucket carries no anonymous-read policy at all (§2.2).
  *
- * The row is fully self-contained (owner 2026-08-20): it stores the FULL
- * bucket name its objects live in, plus the shard tag (EU-01) whose
- * lowercase form is the public URL segment. Storage operations address the
- * recorded bucket by name, building a filesystem for it on demand, so a
- * retired bucket needs no config entry to stay readable forever. Which
- * bucket a continent's NEW photos go to is the env pair
- * MEDIA_S3_PUBLIC_BUCKET_<CC> + MEDIA_ACTIVE_SHARD_<CC>, bumped together
- * when a continent advances a generation. A continent whose pair is unset
- * REFUSES the upload (ShardUnavailable; owner 2026-08-18: "storage must
- * fail"), never borrows another bucket.
+ * The FULL bucket name is the one key (owner 2026-08-20): writing uses the
+ * continent's MEDIA_S3_PUBLIC_BUCKET_<CC> value verbatim, the row stores
+ * it, and reading addresses the recorded name, building a filesystem on
+ * demand - a retired bucket needs no config entry to stay readable forever.
+ * A continent whose bucket var is unset REFUSES the upload
+ * (ShardUnavailable; owner 2026-08-18: "storage must fail"), never borrows
+ * another bucket.
  *
- * The browser-facing URL is <MEDIA_PUBLIC_BASE>/<lowercase shard>/<key>;
- * the proxy maps that segment to the bucket, so no bucket name is ever
- * public (media-storage-architecture.md §2.0).
+ * The browser-facing URL is <MEDIA_PUBLIC_BASE>/<segment>/<key>, where the
+ * segment is the bucket name's LAST FIVE characters - the naming convention
+ * ...-<cc>-<nn> (cyclingcommons-media-public-staging-eu-01, never more than
+ * 99 generations per continent) makes that a pure one-to-one read, no
+ * assembly. The proxy maps each segment to its bucket, so no bucket name is
+ * ever public (media-storage-architecture.md §2.0).
  *
  * These paths are guessing-infeasible, NOT unguessable, and they are not
  * access control. A UUIDv4 carries ~122 random bits so blind enumeration is
@@ -67,14 +67,12 @@ final class MediaStorage
     private array $filesystems;
 
     /**
-     * @param array<string, string>             $activeShards  continent => shard tag (EU-01) NEW photos record
      * @param array<string, string>             $activeBuckets continent => full bucket name NEW photos write to
      * @param array<string, FilesystemOperator> $filesystems   bucket name => filesystem; the test seam (prod
      *                                                         builds S3 filesystems lazily from $client)
      */
     public function __construct(
         private readonly ?S3Client $client,
-        private readonly array $activeShards,
         private readonly array $activeBuckets,
         private readonly string $privateBucket,
         private readonly string $publicBase,
@@ -84,29 +82,25 @@ final class MediaStorage
     }
 
     /**
-     * Where a continent's NEW photos go right now: the shard tag and the full
-     * bucket name, as one pair.
+     * The full bucket name a continent's NEW photos write to right now.
      *
-     * Called once, at intake, and BOTH answers are STORED on the row. Never
+     * Called once, at intake, and the answer is STORED on the row. Never
      * re-derived afterwards: "existing objects never move" is only true if a
      * photo's address comes from what was recorded when it was written, not
      * from today's configuration.
      *
-     * @return array{0: string, 1: string} [shard tag, bucket name]
-     *
-     * @throws ShardUnavailable when the continent's env pair is unset -
+     * @throws ShardUnavailable when the continent's bucket var is unset -
      *                          the upload is refused, never redirected
      */
-    public function activeFor(string $continent): array
+    public function bucketFor(string $continent): string
     {
-        $cc = strtoupper($continent);
-        $shard = $this->activeShards[$cc] ?? '';
-        $bucket = $this->activeBuckets[$cc] ?? '';
-        if ('' === $shard || '' === $bucket) {
-            throw new ShardUnavailable('' === $shard ? $cc : $shard);
+        $bucket = $this->activeBuckets[strtoupper($continent)] ?? '';
+        if ('' === $bucket) {
+            throw new ShardUnavailable(strtoupper($continent));
         }
+        self::assertSegmentable($bucket);
 
-        return [strtoupper($shard), $bucket];
+        return $bucket;
     }
 
     /* ---------- the quarantine (private storage) ---------- */
@@ -240,13 +234,28 @@ final class MediaStorage
         }
     }
 
-    public function url(string $shard, string $prefix, string $variant): string
+    public function url(string $bucket, string $prefix, string $variant): string
     {
         self::assertVariant($variant);
+        self::assertSegmentable($bucket);
 
-        // The lowercase shard tag is the proxy-routed path segment; the
-        // bucket name never appears in a URL (§2.0).
-        return rtrim($this->publicBase, '/').'/'.strtolower($shard).'/'.$prefix.'/'.$variant.'.webp';
+        // The proxy-routed path segment is the bucket name's last five
+        // characters (<cc>-<nn>); the name itself never appears in a URL
+        // (§2.0).
+        return rtrim($this->publicBase, '/').'/'.substr($bucket, -5).'/'.$prefix.'/'.$variant.'.webp';
+    }
+
+    /**
+     * The naming convention the URL segment depends on: every public bucket
+     * name ends in -<cc>-<nn> (owner 2026-08-20, "never more than 99
+     * generations per continent"). A name outside it would emit a broken
+     * URL silently, so it refuses loudly instead.
+     */
+    private static function assertSegmentable(string $bucket): void
+    {
+        if (1 !== preg_match('/-[a-z]{2}-\d{2}$/D', $bucket)) {
+            throw new \InvalidArgumentException(\sprintf('Public media bucket "%s" must end in -<cc>-<nn> (e.g. -eu-01); its last five characters are the public URL segment.', $bucket));
+        }
     }
 
     private static function assertVariant(string $variant): void

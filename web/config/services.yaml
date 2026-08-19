@@ -109,22 +109,15 @@ services:
               pathStyleEndpoint: true
 
     # Where each CONTINENT's new photos go (media-storage-architecture.md
-    # §2.1): the env pair per continent names the shard tag (EU-01, the
-    # lowercase URL segment) and the FULL bucket. Both are stored on the row
-    # at intake, so retired buckets need no entry here to stay addressable -
-    # storage builds a filesystem for any recorded bucket name on demand.
-    # Advancing a continent = bump its env pair + add the nginx location for
-    # the new segment; nothing here changes shape.
+    # §2.1): one env var per continent, the FULL bucket name, used verbatim
+    # for writes and stored verbatim on the row - retired buckets need no
+    # entry here to stay addressable, storage builds a filesystem for any
+    # recorded name on demand. The name's last five characters (-eu-01) are
+    # the public URL segment, so advancing a continent = bump its var + add
+    # the nginx location for the new segment; nothing here changes shape.
     App\Media\MediaStorage:
         arguments:
             $client: '@media.s3_client'
-            $activeShards:
-                AF: '%env(MEDIA_ACTIVE_SHARD_AF)%'
-                AS: '%env(MEDIA_ACTIVE_SHARD_AS)%'
-                EU: '%env(MEDIA_ACTIVE_SHARD_EU)%'
-                NA: '%env(MEDIA_ACTIVE_SHARD_NA)%'
-                OC: '%env(MEDIA_ACTIVE_SHARD_OC)%'
-                SA: '%env(MEDIA_ACTIVE_SHARD_SA)%'
             $activeBuckets:
                 AF: '%env(MEDIA_S3_PUBLIC_BUCKET_AF)%'
                 AS: '%env(MEDIA_S3_PUBLIC_BUCKET_AS)%'
@@ -173,8 +166,6 @@ when@test:
                 # and an unknown bucket name is a refusal, which the suite
                 # relies on.
                 $client: null
-                $activeShards:
-                    EU: 'EU-01'
                 $activeBuckets:
                     EU: 'test-bucket-eu-01'
                 $privateBucket: 'test-bucket-private'

@@ -82,7 +82,7 @@ final class MediaEscalationTest extends KernelTestCase
         $this->em->persist($item);
         $this->em->flush();
 
-        $upload = new MediaUpload(Uuid::v4(), (int) $owner->getId(), $consent->getId(), 'EU', 1200, 900, 4242, shard: 'EU-01', bucket: 'test-bucket-eu-01');
+        $upload = new MediaUpload(Uuid::v4(), (int) $owner->getId(), $consent->getId(), 'EU', 1200, 900, 4242, bucket: 'test-bucket-eu-01');
         $this->em->persist($upload);
         $upload->approve($item->getId());
         $this->em->flush();

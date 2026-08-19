@@ -89,13 +89,12 @@ context). Media licensing context lives in the site licences
 
 - **Flysystem** with S3 adapters, **one storage per continent**:
   `MEDIA_S3_ENDPOINT`, `MEDIA_S3_KEY`, `MEDIA_S3_SECRET`, `MEDIA_S3_REGION`
-  (shared credentials) + one pair per continent:
-  `MEDIA_S3_PUBLIC_BUCKET_<CC>` (the FULL bucket name new photos write to)
-  and `MEDIA_ACTIVE_SHARD_<CC>` (the shard tag, lowercased into the public
-  URL segment). Both are stored on the row at intake, so the row is fully
-  self-contained and retired buckets stay addressable without config. A
-  continent whose pair is unset refuses uploads
-  (media-storage-architecture.md §2.1).
+  (shared credentials) + one var per continent:
+  `MEDIA_S3_PUBLIC_BUCKET_<CC>`, the FULL bucket name new photos write to,
+  stored verbatim on the row - the one key. Its last five characters
+  (`-eu-01`) are the public URL segment, so names must end `-<cc>-<nn>`.
+  Retired buckets stay addressable without config. A continent whose var is
+  unset refuses uploads (media-storage-architecture.md §2.1).
 - **Configured by environment variables, not by `when@` blocks** — the
   coverage precedent (`pipeline/coverage/publish.py`, whose own comment notes
   that the signing region is "ignored by MinIO, accepted by Hetzner"). One

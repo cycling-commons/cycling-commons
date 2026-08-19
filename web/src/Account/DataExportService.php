@@ -259,7 +259,7 @@ final class DataExportService
     private function stagePhotos(int $userId, \ZipArchive $zip): array
     {
         $uploads = $this->db->fetchAllAssociative(
-            'SELECT id, continent, storage_shard, storage_bucket, revision, status, width, height, bytes,
+            'SELECT id, continent, storage_bucket, revision, status, width, height, bytes,
                     taken_at, gps_distance_m,
                     submission_id, item_id, created_at, decided_at, objects_deleted_at,
                     takedown_requested_at, takedown_reason

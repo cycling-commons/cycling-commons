@@ -127,11 +127,11 @@ final class MediaDecisionService
     public function describe(MediaUpload $upload): array
     {
         $prefix = $upload->getPathPrefix();
-        $shard = $upload->getStorageShard();
+        $bucket = $upload->getStorageBucket();
 
         $photo = [
-            'sm' => $this->storage->url($shard, $prefix, 'sm'),
-            'lg' => $this->storage->url($shard, $prefix, 'lg'),
+            'sm' => $this->storage->url($bucket, $prefix, 'sm'),
+            'lg' => $this->storage->url($bucket, $prefix, 'lg'),
             'credit' => $this->credit($upload),
             'license' => self::LICENSE,
         ];

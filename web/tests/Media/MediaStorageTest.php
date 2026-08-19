@@ -63,29 +63,36 @@ final class MediaStorageTest extends KernelTestCase
     {
         self::assertSame(
             'https://media.test/img/eu-01/photos/abc/sm.webp',
-            $this->storage->url('EU-01', 'photos/abc', 'sm'),
+            $this->storage->url('test-bucket-eu-01', 'photos/abc', 'sm'),
         );
         self::assertSame(
             'https://media.test/img/eu-01/photos/abc/lg.webp',
-            $this->storage->url('eu-01', 'photos/abc', 'lg'),
-            'the continent code is case-insensitive at the call site',
+            $this->storage->url('test-bucket-eu-01', 'photos/abc', 'lg'),
         );
     }
 
-    public function testTheUrlIsTheBasePlusTheLowercaseShardSegment(): void
+    public function testTheUrlSegmentIsTheBucketNamesLastFiveCharacters(): void
     {
         self::assertSame(
             'https://media.test/img/oc-01/photos/abc/orig.webp',
-            $this->storage->url('OC-01', 'photos/abc', 'orig'),
-            'one shape everywhere: <base>/<lowercase shard>/<key>, the segment the proxy routes on',
+            $this->storage->url('any-bucket-name-ending-oc-01', 'photos/abc', 'orig'),
+            'one shape everywhere: <base>/<last five of the bucket name>/<key>, the segment the proxy routes on',
         );
+    }
+
+    public function testABucketNameOutsideTheConventionRefusesToBuildAUrl(): void
+    {
+        // A silent bad segment would 404 every photo; refusing loudly is the
+        // guard on the -<cc>-<nn> naming convention the segment depends on.
+        $this->expectException(\InvalidArgumentException::class);
+        $this->storage->url('bucket-without-the-suffix', 'photos/abc', 'orig');
     }
 
     public function testAnUnknownVariantIsARefusalNotAGuess(): void
     {
         $this->expectException(\InvalidArgumentException::class);
 
-        $this->storage->url('EU-01', 'photos/abc', 'huge');
+        $this->storage->url('test-bucket-eu-01', 'photos/abc', 'huge');
     }
 
     public function testAnUnknownBucketRefusesInsteadOfGuessing(): void
@@ -96,16 +103,16 @@ final class MediaStorageTest extends KernelTestCase
         $this->storage->store('bucket-nobody-provisioned', 'photos/south', self::photo());
     }
 
-    public function testActiveForRefusesAContinentWithoutItsEnvPair(): void
+    public function testBucketForRefusesAContinentWithoutItsVar(): void
     {
         $this->expectException(ShardUnavailable::class);
-        $this->storage->activeFor('AQ');
+        $this->storage->bucketFor('AQ');
     }
 
-    public function testActiveForAnswersTheShardAndBucketPair(): void
+    public function testBucketForAnswersTheFullBucketName(): void
     {
-        self::assertSame(['EU-01', 'test-bucket-eu-01'], $this->storage->activeFor('EU'));
-        self::assertSame(['EU-01', 'test-bucket-eu-01'], $this->storage->activeFor('eu'), 'case-insensitive at the call site');
+        self::assertSame('test-bucket-eu-01', $this->storage->bucketFor('EU'));
+        self::assertSame('test-bucket-eu-01', $this->storage->bucketFor('eu'), 'case-insensitive at the call site');
     }
 
     public function testUnresolvableCoordinatesResolveToNoContinentAtAll(): void

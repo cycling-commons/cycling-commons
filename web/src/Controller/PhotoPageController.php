@@ -94,7 +94,7 @@ final class PhotoPageController extends AbstractController
         }
 
         $attribution = $this->attribution($upload);
-        $shard = $upload->getStorageShard();
+        $bucket = $upload->getStorageBucket();
         $prefix = $upload->getPathPrefix();
 
         return $this->render('media/photo.html.twig', [
@@ -105,9 +105,9 @@ final class PhotoPageController extends AbstractController
             'can_request_takedown' => $this->isUploader($upload),
             'photo_uuid' => $upload->getId()->toRfc4122(),
             'photo' => [
-                'sm' => $this->storage->url($shard, $prefix, 'sm'),
-                'lg' => $this->storage->url($shard, $prefix, 'lg'),
-                'orig' => $this->storage->url($shard, $prefix, 'orig'),
+                'sm' => $this->storage->url($bucket, $prefix, 'sm'),
+                'lg' => $this->storage->url($bucket, $prefix, 'lg'),
+                'orig' => $this->storage->url($bucket, $prefix, 'orig'),
                 'width' => $upload->getWidth(),
                 'height' => $upload->getHeight(),
                 'license' => MediaDecisionService::LICENSE,

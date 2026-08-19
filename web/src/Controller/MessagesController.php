@@ -338,7 +338,7 @@ final class MessagesController extends AbstractController
                 continue;
             }
             $urls[$upload->getId()->toRfc4122()] = $this->mediaStorage->url(
-                $upload->getStorageShard(),
+                $upload->getStorageBucket(),
                 $upload->getPathPrefix(),
                 'sm',
             );

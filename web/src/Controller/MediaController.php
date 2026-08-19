@@ -197,7 +197,7 @@ final class MediaController extends AbstractController
             return $this->json(['error' => 'location_unresolvable'], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
         try {
-            [$shard, $bucket] = $this->storage->activeFor($continent);
+            $bucket = $this->storage->bucketFor($continent);
         } catch (ShardUnavailable) {
             /* A cleanly resolved continent with no provisioned bucket refuses
                the upload (owner 2026-08-18: "storage must fail") instead of
@@ -211,7 +211,6 @@ final class MediaController extends AbstractController
             (int) $user->getId(),
             $consent->getId(),
             $continent,
-            $shard,
             $bucket,
             (int) $file->getSize(),
         );
@@ -272,8 +271,8 @@ final class MediaController extends AbstractController
             'ready' => $upload->hasPublishedObjects(),
         ];
         if ($upload->hasPublishedObjects()) {
-            $state['sm'] = $this->storage->url($upload->getStorageShard(), $upload->getPathPrefix(), 'sm');
-            $state['lg'] = $this->storage->url($upload->getStorageShard(), $upload->getPathPrefix(), 'lg');
+            $state['sm'] = $this->storage->url($upload->getStorageBucket(), $upload->getPathPrefix(), 'sm');
+            $state['lg'] = $this->storage->url($upload->getStorageBucket(), $upload->getPathPrefix(), 'lg');
         } elseif (MediaStatus::Rejected === $upload->getStatus()) {
             // The worker refused it. The reason lives in the event log; the
             // rider gets the one word that tells them to try another photo.

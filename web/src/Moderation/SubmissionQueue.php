@@ -777,7 +777,7 @@ final class SubmissionQueue
            would otherwise become a broken image on a curator's card. */
         $statuses = $settled ? ['approved'] : ['pending'];
         $rows = $this->db->fetchAllAssociative(
-            'SELECT id, submission_id, storage_shard, revision, taken_at, gps_distance_m
+            'SELECT id, submission_id, storage_bucket, revision, taken_at, gps_distance_m
              FROM media_upload
              WHERE status IN (:statuses) AND revision IS NOT NULL AND submission_id IN (:ids)
              ORDER BY created_at ASC, id ASC',
@@ -794,8 +794,8 @@ final class SubmissionQueue
             $prefix = MediaUpload::prefixFor($id, (string) $row['revision']);
             $bySubmission[(int) $row['submission_id']][] = [
                 'id' => $id,
-                'sm' => $this->mediaStorage->url((string) $row['storage_shard'], $prefix, 'sm'),
-                'lg' => $this->mediaStorage->url((string) $row['storage_shard'], $prefix, 'lg'),
+                'sm' => $this->mediaStorage->url((string) $row['storage_bucket'], $prefix, 'sm'),
+                'lg' => $this->mediaStorage->url((string) $row['storage_bucket'], $prefix, 'lg'),
                 'takenAt' => $takenAt,
                 'distanceM' => null !== $row['gps_distance_m'] ? (int) $row['gps_distance_m'] : null,
             ];

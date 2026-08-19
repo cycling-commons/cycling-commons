@@ -114,25 +114,27 @@ Three rulings that complete the model (owner 2026-08-18):
   would scatter one region's photos across shards and turn the eventual
   bucket's arrival into a migration instead of a provisioning action.
   Provisioning the bucket is what turns the refusal off.
-- **The row is fully self-contained** (owner 2026-08-20, final shape): it
-  stores the FULL bucket name its objects live in plus the shard tag
-  (`EU-01`), one-to-one, nothing assembled from parts. Storage addresses the
-  recorded bucket by name, building a filesystem on demand, so a retired
-  bucket needs no config to stay readable forever. The env pair per
-  continent (`MEDIA_S3_PUBLIC_BUCKET_<CC>` = full name,
-  `MEDIA_ACTIVE_SHARD_<CC>` = tag) names where NEW photos go; all six
-  continents (AF/AS/EU/NA/OC/SA) are defined up front with real buckets.
-  Continents advance independently (EU can be on `-03` while Africa sits on
-  `-01`): bump the pair, add one nginx location, done - no code, no config
-  shape change, no moved object.
-- **The public URL never names a bucket** (§2.0): it is
-  `<MEDIA_PUBLIC_BASE>/<lowercase shard>/<key>`, e.g.
-  `https://staging-media.cyclingcommons.org/img/eu-01/published/...`, and
-  devops maps each segment to its bucket at the proxy - one location per
-  bucket generation, kept alive as long as rows name it. The quarantine
-  stays ONE bucket per environment (`MEDIA_S3_PRIVATE_BUCKET`), no
-  numbering: it holds bytes only for the seconds between upload and scan
-  verdict (§2.2).
+- **The full bucket name is the ONE key** (owner 2026-08-20, final shape):
+  writing uses the continent's `MEDIA_S3_PUBLIC_BUCKET_<CC>` value verbatim,
+  the row stores it verbatim, reading addresses the recorded name (a
+  filesystem is built on demand, so a retired bucket needs no config to stay
+  readable forever). Nothing else exists: no shard variable, no shard
+  column, nothing assembled from parts. All six continents (AF/AS/EU/NA/
+  OC/SA) are defined up front with real buckets. Continents advance
+  independently (EU can be on `-03` while Africa sits on `-01`): bump the
+  var, add one nginx location, done - no code, no config shape change, no
+  moved object.
+- **Bucket names MUST end in `-<cc>-<nn>`**
+  (`cyclingcommons-media-public-staging-eu-01`; never more than 99
+  generations per continent): the name's LAST FIVE characters are the public
+  URL segment, `<MEDIA_PUBLIC_BASE>/<segment>/<key>`, e.g.
+  `https://staging-media.cyclingcommons.org/img/eu-01/published/...`. The
+  code refuses a name outside the convention rather than emitting a broken
+  URL. The public URL never names a bucket (§2.0); devops maps each segment
+  to its bucket at the proxy - one location per generation, kept alive as
+  long as rows name it. The quarantine stays ONE bucket per environment
+  (`MEDIA_S3_PRIVATE_BUCKET`), no numbering and no segment: it holds bytes
+  only for the seconds between upload and scan verdict (§2.2).
 
 ### 2.2 The private bucket earns its place — but not for moderation
 

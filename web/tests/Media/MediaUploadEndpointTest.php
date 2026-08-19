@@ -242,10 +242,9 @@ final class MediaUploadEndpointTest extends WebTestCase
         self::assertSame($consentId, $row->getConsentRecordId()->toRfc4122());
         self::assertNull($row->getRevision(), 'no revision means nothing published');
         self::assertMatchesRegularExpression('#^[A-Z]{2}$#', $row->getContinent());
-        // The shard is the continent's ACTIVE bucket generation, a permanent
-        // alias of exactly one bucket (media-storage-architecture.md §2.1).
         self::assertSame('EU', $row->getContinent());
-        self::assertSame('EU-01', $row->getStorageShard());
+        // The full bucket name is the one key (media-storage-architecture.md
+        // §2.1): used verbatim for the write, stored verbatim on the row.
         self::assertSame('test-bucket-eu-01', $row->getStorageBucket(), 'the row records the FULL bucket name');
 
         // Exactly one private object, and NOTHING public. Asserted against the
