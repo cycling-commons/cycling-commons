@@ -72,8 +72,8 @@ versioned prefix plus `surface/manifest.json`.
 | `--no-publish` | build without uploading or moving the manifest (size experiments) |
 
 The app reads the manifest through `App\Coverage\SurfaceManifest`, so a rebuild
-needs no config change. `SURFACE_MANIFEST_URL` points at it server-side;
-`SURFACE_TILES_URL` / `SURFACE_TODO_URL` / `SURFACE_GAPS_URL` pin a specific
+needs no config change. `ROAD_SURFACE_MANIFEST_URL` points at it server-side;
+`ROAD_SURFACE_TILES_URL` / `ROAD_SURFACE_TODO_URL` / `ROAD_SURFACE_GAPS_URL` pin a specific
 build and **override** the manifest when set — useful for bisecting, and the
 likeliest cause of "we published but the map still shows the old tiles".
 

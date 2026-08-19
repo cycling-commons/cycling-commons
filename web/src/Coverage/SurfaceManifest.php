@@ -29,8 +29,8 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
  * have just recorded still need recording — so the arms move together or not
  * at all.
  *
- * **The env vars still win when set.** SURFACE_TILES_URL / SURFACE_TODO_URL /
- * SURFACE_GAPS_URL pin a specific build, which is what you want when bisecting
+ * **The env vars still win when set.** ROAD_SURFACE_TILES_URL / ROAD_SURFACE_TODO_URL /
+ * ROAD_SURFACE_GAPS_URL pin a specific build, which is what you want when bisecting
  * a rendering problem or serving an artifact that was never published. Empty
  * (the default) means "follow the manifest".
  *
@@ -165,7 +165,7 @@ final class SurfaceManifest
 
     /**
      * Cache key derived from the manifest URL (hex digest, PSR-6-safe), so
-     * repointing SURFACE_MANIFEST_URL takes effect on the next request rather
+     * repointing ROAD_SURFACE_MANIFEST_URL takes effect on the next request rather
      * than after CACHE_TTL. The shape segment retires old-shaped entries if the
      * cached value ever changes shape — bump it when that happens.
      */

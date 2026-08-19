@@ -17,10 +17,10 @@ parameters:
     # build and win when set: the hatch for bisecting a rendering problem, or
     # for serving an artifact that was never published. Empty = follow the
     # manifest.
-    surface.manifest_url: '%env(SURFACE_MANIFEST_URL)%'
-    surface.tiles_url: '%env(SURFACE_TILES_URL)%'
-    surface.todo_url: '%env(SURFACE_TODO_URL)%'
-    surface.gaps_url: '%env(SURFACE_GAPS_URL)%'
+    surface.manifest_url: '%env(ROAD_SURFACE_MANIFEST_URL)%'
+    surface.tiles_url: '%env(ROAD_SURFACE_TILES_URL)%'
+    surface.todo_url: '%env(ROAD_SURFACE_TODO_URL)%'
+    surface.gaps_url: '%env(ROAD_SURFACE_GAPS_URL)%'
     # Cycle-route network tiles (route=bicycle/mtb corridors + knooppunten).
     # Same manifest-or-pin contract as the surface set, its own manifest
     # because the two builds run as separate invocations.
