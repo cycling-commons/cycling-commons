@@ -1,0 +1,33 @@
+web/src/Coverage/SurfaceManifest.php
+  s_c6f332c201127d::t_f041d7703e3349 32-33,168
+web/config/packages/coverage.yaml
+  s_c6f332c201127d::t_f041d7703e3349 20-23
+web/.env
+  s_c6f332c201127d::t_f041d7703e3349 61-62,66,69
+developers/coverage-batch.md
+  s_c6f332c201127d::t_f041d7703e3349 75-76
+web/.env.staging
+  s_c6f332c201127d::t_f041d7703e3349 64-65,69,72
+  h_fb5318cde6cf17 94,141
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "7345f439c2add6526c6e220854abbd80844c6319",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_c6f332c201127d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "374bfb7f-30b7-4d17-9aa0-1346f5c8f29d",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
