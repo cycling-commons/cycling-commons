@@ -53,7 +53,7 @@ final class MediaEscalationTest extends KernelTestCase
         $this->takedowns = static::getContainer()->get(MediaTakedownService::class);
         $this->disposal = static::getContainer()->get(MediaDisposalService::class);
         $this->storage = static::getContainer()->get(MediaStorage::class);
-        $this->filesystem = static::getContainer()->get('media.storage.eu');
+        $this->filesystem = static::getContainer()->get('media.storage.eu01');
     }
 
     private function rider(string $email): User
@@ -82,12 +82,12 @@ final class MediaEscalationTest extends KernelTestCase
         $this->em->persist($item);
         $this->em->flush();
 
-        $upload = new MediaUpload(Uuid::v4(), (int) $owner->getId(), $consent->getId(), 'EU', 1200, 900, 4242);
+        $upload = new MediaUpload(Uuid::v4(), (int) $owner->getId(), $consent->getId(), 'EU', 1200, 900, 4242, shard: 'EU-01');
         $this->em->persist($upload);
         $upload->approve($item->getId());
         $this->em->flush();
 
-        $this->storage->store('EU', $upload->getPathPrefix(), new ProcessedPhoto('O', 'L', 'S', 1200, 900));
+        $this->storage->store('EU-01', $upload->getPathPrefix(), new ProcessedPhoto('O', 'L', 'S', 1200, 900));
         $item->setAttributes(['photos' => [static::getContainer()->get(MediaDecisionService::class)->describe($upload)]]);
         $this->em->flush();
 

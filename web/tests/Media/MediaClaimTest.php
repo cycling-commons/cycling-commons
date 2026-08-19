@@ -56,8 +56,7 @@ final class MediaClaimTest extends KernelTestCase
 
         $upload = new MediaUpload(
             Uuid::v4(), (int) $owner->getId(), $consent->getId(), 'EU',
-            1200, 900, 4242, new \DateTimeImmutable('2025-10-04 09:12:33'), $lat, $lng,
-        );
+            1200, 900, 4242, new \DateTimeImmutable('2025-10-04 09:12:33'), $lat, $lng, shard: 'EU-01');
         $this->em->persist($upload);
         $this->em->flush();
 

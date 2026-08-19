@@ -123,7 +123,7 @@ final class SubmissionEscalationTest extends KernelTestCase
 
         $consent = new ConsentRecord(Uuid::v4(), (int) $author->getId(), MediaConsent::KIND, MediaConsent::VERSION, MediaConsent::hash('x'));
         $this->em->persist($consent);
-        $upload = new MediaUpload(Uuid::v4(), (int) $author->getId(), $consent->getId(), 'EU', 900, 600, 4242);
+        $upload = new MediaUpload(Uuid::v4(), (int) $author->getId(), $consent->getId(), 'EU', 900, 600, 4242, shard: 'EU-01');
         $this->em->persist($upload);
         $upload->claim($id);
         $this->em->flush();

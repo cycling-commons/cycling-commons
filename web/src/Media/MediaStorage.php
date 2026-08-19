@@ -23,11 +23,12 @@ use League\Flysystem\FilesystemOperator;
  *   the web tier, read and deleted by the worker, reachable by nobody else:
  *   the bucket carries no anonymous-read policy at all (§2.2).
  *
- * A SHARD, not a continent. The two are the same string today (one bucket per
- * continent), and they stop being the same the moment §2.1's numbered buckets
- * arrive. A continent with no storage of its own REFUSES the upload
- * (ShardUnavailable; owner 2026-08-18: "storage must fail") rather than
- * borrowing the default bucket: the borrow would scatter a region's photos
+ * A SHARD, not a continent. A shard code (EU-01) is a permanent alias of
+ * exactly one bucket generation; the row stores it, and together with the
+ * config map that IS the photo's full bucket location, forever. A continent
+ * with no active shard, or an active shard with no storage, REFUSES the
+ * upload (ShardUnavailable; owner 2026-08-18: "storage must fail") rather
+ * than borrowing another bucket: the borrow would scatter a region's photos
  * across shards and turn the eventual bucket's arrival into a migration.
  * shardFor() answers where the bytes will actually go, and that answer is
  * what the row stores.
@@ -62,12 +63,14 @@ final class MediaStorage
     private const string QUARANTINE_PREFIX = 'quarantine/';
 
     /**
-     * @param array<string, FilesystemOperator> $storages    shard code => public storage
-     * @param array<string, string>             $publicBases shard code => browser-facing base URL
+     * @param array<string, FilesystemOperator> $storages     shard code => public storage (permanent alias, never repointed)
+     * @param array<string, string>             $publicBases  shard code => browser-facing base URL
+     * @param array<string, string>             $activeShards continent => the shard NEW photos write to
      */
     public function __construct(
         private readonly array $storages,
         private readonly array $publicBases,
+        private readonly array $activeShards,
         private readonly FilesystemOperator $private,
         private readonly string $publicBase,
     ) {
@@ -86,12 +89,12 @@ final class MediaStorage
      */
     public function shardFor(string $continent): string
     {
-        $code = strtoupper($continent);
-        if (!isset($this->storages[$code])) {
-            throw new ShardUnavailable($code);
+        $shard = $this->activeShards[strtoupper($continent)] ?? null;
+        if (null === $shard || !isset($this->storages[strtoupper($shard)])) {
+            throw new ShardUnavailable($shard ?? strtoupper($continent));
         }
 
-        return $code;
+        return strtoupper($shard);
     }
 
     /* ---------- the quarantine (private storage) ---------- */

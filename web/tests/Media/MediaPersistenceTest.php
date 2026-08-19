@@ -62,7 +62,7 @@ final class MediaPersistenceTest extends KernelTestCase
     {
         $consent = $this->consent();
         $id = Uuid::v4();
-        $upload = new MediaUpload($id, 7, $consent->getId(), 'EU', 3840, 2560, 123456, new \DateTimeImmutable('2025-10-04 09:12:33'), 50.4917, 5.8533);
+        $upload = new MediaUpload($id, 7, $consent->getId(), 'EU', 3840, 2560, 123456, new \DateTimeImmutable('2025-10-04 09:12:33'), 50.4917, 5.8533, shard: 'EU-01');
         $this->em->persist($upload);
         $this->em->flush();
         $this->em->clear();
@@ -107,7 +107,7 @@ final class MediaPersistenceTest extends KernelTestCase
     {
         $consent = $this->consent();
         $id = Uuid::v4();
-        $upload = new MediaUpload($id, 7, $consent->getId(), 'EU', 900, 600, 4242);
+        $upload = new MediaUpload($id, 7, $consent->getId(), 'EU', 900, 600, 4242, shard: 'EU-01');
         $upload->approve(99);
         $this->em->persist($upload);
         $this->em->flush();
@@ -127,7 +127,7 @@ final class MediaPersistenceTest extends KernelTestCase
     {
         $consent = $this->consent();
         $id = Uuid::v4();
-        $this->em->persist(new MediaUpload($id, 7, $consent->getId(), 'EU', 900, 600, 4242));
+        $this->em->persist(new MediaUpload($id, 7, $consent->getId(), 'EU', 900, 600, 4242, shard: 'EU-01'));
         $this->em->persist(new MediaModerationEvent($id, null, MediaAction::Uploaded));
         $this->em->persist(new MediaModerationEvent($id, 7, MediaAction::Claimed));
         $this->em->persist(new MediaModerationEvent($id, 5, MediaAction::Approved, 'Nice shot'));
@@ -150,7 +150,7 @@ final class MediaPersistenceTest extends KernelTestCase
     {
         $consent = $this->consent();
         $id = Uuid::v4();
-        $upload = new MediaUpload($id, 7, $consent->getId(), 'EU', 900, 600, 4242);
+        $upload = new MediaUpload($id, 7, $consent->getId(), 'EU', 900, 600, 4242, shard: 'EU-01');
         $this->em->persist($upload);
         $this->em->persist(new MediaModerationEvent($id, null, MediaAction::Uploaded));
         $this->em->flush();

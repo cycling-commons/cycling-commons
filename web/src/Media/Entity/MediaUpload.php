@@ -238,12 +238,18 @@ class MediaUpload
         ?\DateTimeImmutable $takenAt = null,
         ?float $gpsLat = null,
         ?float $gpsLng = null,
+        // The shard the object physically lives in (a bucket-generation
+        // alias like EU-01, never a bare continent code in the numbered
+        // model). Null keeps the continent as shard for entity-level tests
+        // that never touch storage; every row that reaches a bucket comes
+        // from quarantined()/reshard(), which always pass the real shard.
+        ?string $shard = null,
     ) {
         $this->id = $id;
         $this->userId = $userId;
         $this->consentRecordId = $consentRecordId;
         $this->continent = strtoupper($continent);
-        $this->storageShard = strtoupper($continent);
+        $this->storageShard = strtoupper($shard ?? $continent);
         $this->revision = self::mintRevision();
         $this->width = $width;
         $this->height = $height;

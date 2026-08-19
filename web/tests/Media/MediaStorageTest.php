@@ -30,7 +30,7 @@ final class MediaStorageTest extends KernelTestCase
     {
         self::bootKernel();
         $this->storage = static::getContainer()->get(MediaStorage::class);
-        $this->filesystem = static::getContainer()->get('media.storage.eu');
+        $this->filesystem = static::getContainer()->get('media.storage.eu01');
     }
 
     private static function photo(): ProcessedPhoto
@@ -40,13 +40,13 @@ final class MediaStorageTest extends KernelTestCase
 
     public function testStoresTheTrioReadsBackAndDeletes(): void
     {
-        $this->storage->store('EU', 'photos/abc', self::photo());
+        $this->storage->store('EU-01', 'photos/abc', self::photo());
 
         self::assertTrue($this->filesystem->fileExists('photos/abc/orig.webp'));
         self::assertSame('LARGE', $this->filesystem->read('photos/abc/lg.webp'));
         self::assertSame('SMALL', $this->filesystem->read('photos/abc/sm.webp'));
 
-        $this->storage->deletePrefix('EU', 'photos/abc');
+        $this->storage->deletePrefix('EU-01', 'photos/abc');
 
         self::assertFalse($this->filesystem->fileExists('photos/abc/orig.webp'));
         self::assertFalse($this->filesystem->fileExists('photos/abc/sm.webp'));
@@ -54,7 +54,7 @@ final class MediaStorageTest extends KernelTestCase
 
     public function testDeletingAPrefixThatIsAlreadyGoneIsNotAnError(): void
     {
-        $this->storage->deletePrefix('EU', 'photos/never-existed');
+        $this->storage->deletePrefix('EU-01', 'photos/never-existed');
 
         self::assertFalse($this->filesystem->fileExists('photos/never-existed/orig.webp'));
     }
@@ -62,12 +62,12 @@ final class MediaStorageTest extends KernelTestCase
     public function testAnOnboardedContinentUsesItsOwnPublicBase(): void
     {
         self::assertSame(
-            'https://media.test/cc-media-eu/photos/abc/sm.webp',
-            $this->storage->url('EU', 'photos/abc', 'sm'),
+            'https://media.test/cc-media-eu-01/photos/abc/sm.webp',
+            $this->storage->url('EU-01', 'photos/abc', 'sm'),
         );
         self::assertSame(
-            'https://media.test/cc-media-eu/photos/abc/lg.webp',
-            $this->storage->url('eu', 'photos/abc', 'lg'),
+            'https://media.test/cc-media-eu-01/photos/abc/lg.webp',
+            $this->storage->url('eu-01', 'photos/abc', 'lg'),
             'the continent code is case-insensitive at the call site',
         );
     }
@@ -85,7 +85,7 @@ final class MediaStorageTest extends KernelTestCase
     {
         $this->expectException(\InvalidArgumentException::class);
 
-        $this->storage->url('EU', 'photos/abc', 'huge');
+        $this->storage->url('EU-01', 'photos/abc', 'huge');
     }
 
     public function testAContinentWithoutABucketRefusesInsteadOfBorrowing(): void

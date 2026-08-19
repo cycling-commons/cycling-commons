@@ -132,7 +132,7 @@ final class MediaUploadEndpointTest extends WebTestCase
     private function publicFs(): FilesystemOperator
     {
         /** @var FilesystemOperator $fs */
-        $fs = static::getContainer()->get('media.storage.eu');
+        $fs = static::getContainer()->get('media.storage.eu01');
 
         return $fs;
     }
@@ -242,7 +242,10 @@ final class MediaUploadEndpointTest extends WebTestCase
         self::assertSame($consentId, $row->getConsentRecordId()->toRfc4122());
         self::assertNull($row->getRevision(), 'no revision means nothing published');
         self::assertMatchesRegularExpression('#^[A-Z]{2}$#', $row->getContinent());
-        self::assertSame($row->getContinent(), $row->getStorageShard());
+        // The shard is the continent's ACTIVE bucket generation, a permanent
+        // alias of exactly one bucket (media-storage-architecture.md §2.1).
+        self::assertSame('EU', $row->getContinent());
+        self::assertSame('EU-01', $row->getStorageShard());
 
         // Exactly one private object, and NOTHING public. Asserted against the
         // buckets, not against the response body: the response is what the

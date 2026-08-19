@@ -41,7 +41,7 @@ final class PhotoPageTest extends WebTestCase
         $consent = new ConsentRecord(Uuid::v4(), $ownerId, MediaConsent::KIND, MediaConsent::VERSION, MediaConsent::hash('x'));
         $em->persist($consent);
 
-        $upload = new MediaUpload(Uuid::v4(), $ownerId, $consent->getId(), 'EU', 1200, 900, 4242);
+        $upload = new MediaUpload(Uuid::v4(), $ownerId, $consent->getId(), 'EU', 1200, 900, 4242, shard: 'EU-01');
         $em->persist($upload);
         $em->flush();
 

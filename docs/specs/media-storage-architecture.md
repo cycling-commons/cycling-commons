@@ -72,15 +72,13 @@ the provider's policy support for source conditions is verified).
 
 | Bucket (shape, not the deployed name) | Access | Holds |
 |---|---|---|
-| one private bucket, shared by environments | private | quarantine (unscanned bytes) + clean originals |
-| one public bucket per shard, numbered, shared by environments | anonymous-read via proxy | published derivatives only |
+| one private bucket per environment | private | quarantine (unscanned bytes) + clean originals |
+| one public bucket per shard per environment, numbered | anonymous-read via proxy | published derivatives only |
 
-Environments share buckets rather than owning their own (owner 2026-08-18:
-"no extra buckets for staging"). Each environment writes under its own
-top-level key folder, set by `MEDIA_S3_PREFIX` (`staging`, `production`;
-empty in dev, whose MinIO buckets are local). The prefix is applied by the
-Flysystem adapters, so no code sees it; the media proxy adds the same folder
-when routing the public path segment to the bucket, so no URL carries it.
+Each environment owns its own buckets (owner 2026-08-18, superseding the
+same-day shared-bucket idea): a staging mistake can never touch production
+objects. The variable NAMES are identical across environments; only the
+values (the deployed bucket names) differ per server.
 
 ### 2.1 Public buckets are numbered and regional from the start
 
@@ -116,14 +114,18 @@ Three rulings that complete the model (owner 2026-08-18):
   would scatter one region's photos across shards and turn the eventual
   bucket's arrival into a migration instead of a provisioning action.
   Provisioning the bucket is what turns the refusal off.
-- **The ordinal has no representation in code or config.** It lives only
-  inside the deployed bucket NAME (the value of the shard's env var). A
-  numbered successor is onboarded like a new continent: a new env var, a new
-  Flysystem storage, one line in each `MediaStorage` map, and the
-  continent-to-active-shard choice repointed. Rows written before keep
-  addressing the old bucket because the shard is a stored fact per photo.
-  The quarantine stays ONE general bucket with no numbering: it holds bytes
-  only for the seconds between upload and scan verdict (§2.2).
+- **A shard code is a permanent alias of exactly one bucket generation**
+  (built 2026-08-19: `EU-01` in `$storages`/`$publicBases`, bucket from
+  `MEDIA_S3_PUBLIC_BUCKET_EU_01`). The row stores the shard code, and
+  together with the never-repointed config entry that IS the photo's full
+  bucket location, forever. Continents advance independently (EU can be on
+  `-03` while Africa sits on `-01`): a successor is onboarded with a new env
+  var, a new Flysystem storage, one line in each `MediaStorage` map, one new
+  nginx location for its path segment (`/cc-media-eu-02/`), and then the
+  `MEDIA_ACTIVE_SHARD_EU` pointer moves. Old entries and old proxy locations
+  stay for as long as rows name them. The quarantine stays ONE bucket per
+  environment with no numbering: it holds bytes only for the seconds between
+  upload and scan verdict (§2.2).
 
 ### 2.2 The private bucket earns its place — but not for moderation
 

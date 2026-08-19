@@ -77,7 +77,7 @@ services:
       # the `storage` profile entirely), override in developers/docker/.env,
       # following the MAILER_DSN precedent above:
       #   MEDIA_S3_ENDPOINT=http://host.docker.internal:9000
-      #   MEDIA_S3_KEY=…  MEDIA_S3_SECRET=…  MEDIA_S3_BUCKET_EU=cc-media-eu
+      #   MEDIA_S3_KEY=…  MEDIA_S3_SECRET=…  MEDIA_S3_PUBLIC_BUCKET_EU_01=cc-media-eu-01
       #   MEDIA_PUBLIC_BASE=http://localhost:9000
       #   MEDIA_CSP_HOST=http://localhost:9000
       # Those belong HERE, not in web/.env.dev.local: compose injects them as
@@ -90,9 +90,9 @@ services:
       MEDIA_S3_REGION: "${MEDIA_S3_REGION:-us-east-1}"
       MEDIA_S3_KEY: "${MEDIA_S3_KEY:-${MINIO_ROOT_USER:-ccadmin}}"
       MEDIA_S3_SECRET: "${MEDIA_S3_SECRET:-${MINIO_ROOT_PASSWORD:-ccadminsecret}}"
-      MEDIA_S3_BUCKET_EU: "${MEDIA_S3_BUCKET_EU:-cc-media-eu}"
+      MEDIA_S3_PUBLIC_BUCKET_EU_01: "${MEDIA_S3_PUBLIC_BUCKET_EU_01:-cc-media-eu-01}"
+      MEDIA_ACTIVE_SHARD_EU: "${MEDIA_ACTIVE_SHARD_EU:-EU-01}"
       MEDIA_S3_BUCKET_PRIVATE: "${MEDIA_S3_BUCKET_PRIVATE:-cc-media-private}"
-      MEDIA_S3_PREFIX: "${MEDIA_S3_PREFIX:-}"
       MEDIA_PUBLIC_BASE: "${MEDIA_PUBLIC_BASE:-http://localhost:9100}"
       MEDIA_CSP_HOST: "${MEDIA_CSP_HOST:-http://localhost:9100}"
       MESSENGER_TRANSPORT_DSN: "${MESSENGER_TRANSPORT_DSN:-redis://redis:6379/cc_messages}"
@@ -136,9 +136,9 @@ services:
       MEDIA_S3_REGION: "${MEDIA_S3_REGION:-us-east-1}"
       MEDIA_S3_KEY: "${MEDIA_S3_KEY:-${MINIO_ROOT_USER:-ccadmin}}"
       MEDIA_S3_SECRET: "${MEDIA_S3_SECRET:-${MINIO_ROOT_PASSWORD:-ccadminsecret}}"
-      MEDIA_S3_BUCKET_EU: "${MEDIA_S3_BUCKET_EU:-cc-media-eu}"
+      MEDIA_S3_PUBLIC_BUCKET_EU_01: "${MEDIA_S3_PUBLIC_BUCKET_EU_01:-cc-media-eu-01}"
+      MEDIA_ACTIVE_SHARD_EU: "${MEDIA_ACTIVE_SHARD_EU:-EU-01}"
       MEDIA_S3_BUCKET_PRIVATE: "${MEDIA_S3_BUCKET_PRIVATE:-cc-media-private}"
-      MEDIA_S3_PREFIX: "${MEDIA_S3_PREFIX:-}"
       MEDIA_PUBLIC_BASE: "${MEDIA_PUBLIC_BASE:-http://localhost:9100}"
       MEDIA_CSP_HOST: "${MEDIA_CSP_HOST:-http://localhost:9100}"
     volumes:
@@ -324,8 +324,8 @@ services:
     entrypoint: >
       sh -c "
       mc alias set cc http://minio:9000 '${MINIO_ROOT_USER:-ccadmin}' '${MINIO_ROOT_PASSWORD:-ccadminsecret}' &&
-      mc mb --ignore-existing cc/${MEDIA_S3_BUCKET_EU:-cc-media-eu} &&
-      mc anonymous set download cc/${MEDIA_S3_BUCKET_EU:-cc-media-eu} &&
+      mc mb --ignore-existing cc/${MEDIA_S3_PUBLIC_BUCKET_EU_01:-cc-media-eu-01} &&
+      mc anonymous set download cc/${MEDIA_S3_PUBLIC_BUCKET_EU_01:-cc-media-eu-01} &&
       mc mb --ignore-existing cc/${MEDIA_S3_BUCKET_PRIVATE:-cc-media-private}
       "
 

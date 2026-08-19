@@ -59,7 +59,7 @@ final class UrgentWithholdAlertTest extends KernelTestCase
         $email = $sent[0]->getMessage();
         self::assertInstanceOf(Email::class, $email);
         self::assertStringContainsString('circuit breaker is OPEN', (string) $email->getSubject());
-        self::assertSame(['development@cyclingcommons.org'], array_map(
+        self::assertSame(['alerts@cyclingcommons.test'], array_map(
             static fn (Address $a): string => $a->getAddress(),
             $email->getTo(),
         ));

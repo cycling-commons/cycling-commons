@@ -185,14 +185,14 @@ final class RiderProfileTest extends WebTestCase
         // deleted does not; a pending one does not.
         $consent = new ConsentRecord(Uuid::v4(), $uid, MediaConsent::KIND, MediaConsent::VERSION, MediaConsent::hash('x'));
         $em->persist($consent);
-        $live = new MediaUpload(Uuid::v4(), $uid, $consent->getId(), 'EU', 1200, 900, 4242);
+        $live = new MediaUpload(Uuid::v4(), $uid, $consent->getId(), 'EU', 1200, 900, 4242, shard: 'EU-01');
         $live->approve(null);
         $em->persist($live);
-        $gone = new MediaUpload(Uuid::v4(), $uid, $consent->getId(), 'EU', 1200, 900, 4242);
+        $gone = new MediaUpload(Uuid::v4(), $uid, $consent->getId(), 'EU', 1200, 900, 4242, shard: 'EU-01');
         $gone->approve(null);
         $gone->markObjectsDeleted();
         $em->persist($gone);
-        $em->persist(new MediaUpload(Uuid::v4(), $uid, $consent->getId(), 'EU', 1200, 900, 4242));
+        $em->persist(new MediaUpload(Uuid::v4(), $uid, $consent->getId(), 'EU', 1200, 900, 4242, shard: 'EU-01'));
         $em->flush();
 
         // Two checks, two items (one confirmation per item and rider), one

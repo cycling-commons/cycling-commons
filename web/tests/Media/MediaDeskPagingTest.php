@@ -75,13 +75,13 @@ final class MediaDeskPagingTest extends KernelTestCase
         $this->em->persist($item);
         $this->em->flush();
 
-        $upload = new MediaUpload(Uuid::v4(), (int) $owner->getId(), $consent->getId(), 'EU', 1200, 900, 4242);
+        $upload = new MediaUpload(Uuid::v4(), (int) $owner->getId(), $consent->getId(), 'EU', 1200, 900, 4242, shard: 'EU-01');
         $this->em->persist($upload);
         $this->em->persist(new MediaModerationEvent($upload->getId(), (int) $owner->getId(), MediaAction::Uploaded));
         $upload->approve($item->getId());
         $this->em->flush();
 
-        $this->storage->store('EU', $upload->getPathPrefix(), new ProcessedPhoto('O', 'L', 'S', 1200, 900));
+        $this->storage->store('EU-01', $upload->getPathPrefix(), new ProcessedPhoto('O', 'L', 'S', 1200, 900));
         $item->setAttributes(['photos' => [static::getContainer()->get(MediaDecisionService::class)->describe($upload)]]);
         $this->em->flush();
 

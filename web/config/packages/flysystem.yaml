@@ -22,17 +22,16 @@
 # App\Media\MediaStorage $storages map in services.yaml. No code changes.
 flysystem:
     storages:
-        media.storage.eu:
+        # One storage per bucket GENERATION (media-storage-architecture.md
+        # §2.1): the shard code EU-01 is a permanent alias of exactly this
+        # bucket, and rows that recorded it stay addressable forever. When
+        # EU-02 arrives it gets its own env var, its own storage here, and
+        # its own map lines in services.yaml; this entry never changes.
+        media.storage.eu01:
             adapter: 'asyncaws'
             options:
                 client: 'media.s3_client'
-                bucket: '%env(MEDIA_S3_BUCKET_EU)%'
-                # Environment folder inside the SHARED bucket (owner
-                # 2026-08-18: no extra buckets for staging): staging and
-                # production write under their own top-level key prefix.
-                # Transparent to all code; the media proxy adds the same
-                # folder when routing /cc-media-eu/ to the bucket.
-                prefix: '%env(MEDIA_S3_PREFIX)%'
+                bucket: '%env(MEDIA_S3_PUBLIC_BUCKET_EU_01)%'
 
         # The quarantine, and only the quarantine
         # (media-storage-architecture.md §2.2). ONE bucket, not one per
@@ -50,13 +49,11 @@ flysystem:
             options:
                 client: 'media.s3_client'
                 bucket: '%env(MEDIA_S3_BUCKET_PRIVATE)%'
-                # Same environment folder as the public side, same reason.
-                prefix: '%env(MEDIA_S3_PREFIX)%'
 
 when@test:
     flysystem:
         storages:
-            media.storage.eu:
+            media.storage.eu01:
                 adapter: 'memory'
             media.storage.private:
                 adapter: 'memory'
