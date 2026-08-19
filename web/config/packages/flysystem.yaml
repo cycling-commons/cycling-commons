@@ -27,6 +27,12 @@ flysystem:
             options:
                 client: 'media.s3_client'
                 bucket: '%env(MEDIA_S3_BUCKET_EU)%'
+                # Environment folder inside the SHARED bucket (owner
+                # 2026-08-18: no extra buckets for staging): staging and
+                # production write under their own top-level key prefix.
+                # Transparent to all code; the media proxy adds the same
+                # folder when routing /cc-media-eu/ to the bucket.
+                prefix: '%env(MEDIA_S3_PREFIX)%'
 
         # The quarantine, and only the quarantine
         # (media-storage-architecture.md §2.2). ONE bucket, not one per
@@ -44,6 +50,8 @@ flysystem:
             options:
                 client: 'media.s3_client'
                 bucket: '%env(MEDIA_S3_BUCKET_PRIVATE)%'
+                # Same environment folder as the public side, same reason.
+                prefix: '%env(MEDIA_S3_PREFIX)%'
 
 when@test:
     flysystem:

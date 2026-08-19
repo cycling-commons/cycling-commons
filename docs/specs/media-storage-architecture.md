@@ -72,8 +72,15 @@ the provider's policy support for source conditions is verified).
 
 | Bucket (shape, not the deployed name) | Access | Holds |
 |---|---|---|
-| one private bucket per environment | private | quarantine (unscanned bytes) + clean originals |
-| one public bucket per shard and environment, numbered | anonymous-read via proxy | published derivatives only |
+| one private bucket, shared by environments | private | quarantine (unscanned bytes) + clean originals |
+| one public bucket per shard, numbered, shared by environments | anonymous-read via proxy | published derivatives only |
+
+Environments share buckets rather than owning their own (owner 2026-08-18:
+"no extra buckets for staging"). Each environment writes under its own
+top-level key folder, set by `MEDIA_S3_PREFIX` (`staging`, `production`;
+empty in dev, whose MinIO buckets are local). The prefix is applied by the
+Flysystem adapters, so no code sees it; the media proxy adds the same folder
+when routing the public path segment to the bucket, so no URL carries it.
 
 ### 2.1 Public buckets are numbered and regional from the start
 

@@ -92,6 +92,7 @@ services:
       MEDIA_S3_SECRET: "${MEDIA_S3_SECRET:-${MINIO_ROOT_PASSWORD:-ccadminsecret}}"
       MEDIA_S3_BUCKET_EU: "${MEDIA_S3_BUCKET_EU:-cc-media-eu}"
       MEDIA_S3_BUCKET_PRIVATE: "${MEDIA_S3_BUCKET_PRIVATE:-cc-media-private}"
+      MEDIA_S3_PREFIX: "${MEDIA_S3_PREFIX:-}"
       MEDIA_PUBLIC_BASE: "${MEDIA_PUBLIC_BASE:-http://localhost:9100}"
       MEDIA_CSP_HOST: "${MEDIA_CSP_HOST:-http://localhost:9100}"
       MESSENGER_TRANSPORT_DSN: "${MESSENGER_TRANSPORT_DSN:-redis://redis:6379/cc_messages}"
@@ -137,6 +138,7 @@ services:
       MEDIA_S3_SECRET: "${MEDIA_S3_SECRET:-${MINIO_ROOT_PASSWORD:-ccadminsecret}}"
       MEDIA_S3_BUCKET_EU: "${MEDIA_S3_BUCKET_EU:-cc-media-eu}"
       MEDIA_S3_BUCKET_PRIVATE: "${MEDIA_S3_BUCKET_PRIVATE:-cc-media-private}"
+      MEDIA_S3_PREFIX: "${MEDIA_S3_PREFIX:-}"
       MEDIA_PUBLIC_BASE: "${MEDIA_PUBLIC_BASE:-http://localhost:9100}"
       MEDIA_CSP_HOST: "${MEDIA_CSP_HOST:-http://localhost:9100}"
     volumes:

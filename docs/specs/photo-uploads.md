@@ -91,7 +91,9 @@ context). Media licensing context lives in the site licences
   `MEDIA_S3_ENDPOINT`, `MEDIA_S3_KEY`, `MEDIA_S3_SECRET`, `MEDIA_S3_REGION`
   (shared credentials) + `MEDIA_S3_BUCKET_EU` (and later `_NA`, `_AS`, … as
   continents onboard; a continent without a bucket refuses uploads,
-  media-storage-architecture.md §2.1).
+  media-storage-architecture.md §2.1) + `MEDIA_S3_PREFIX` (the environment's
+  top-level key folder inside the shared buckets: `staging`, `production`,
+  empty in dev — media-storage-architecture.md §2.0).
 - **Configured by environment variables, not by `when@` blocks** — the
   coverage precedent (`pipeline/coverage/publish.py`, whose own comment notes
   that the signing region is "ignored by MinIO, accepted by Hetzner"). One
