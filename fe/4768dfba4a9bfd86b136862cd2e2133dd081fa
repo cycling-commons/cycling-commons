@@ -1,0 +1,90 @@
+web/tests/Media/PhotoPageTest.php
+  s_c6f332c201127d::t_6c41122c7809da 44
+web/src/Account/DataExportService.php
+  s_c6f332c201127d::t_ce1693f1db1c2d 262
+web/src/Media/MediaStorage.php
+  s_c6f332c201127d::t_ce1693f1db1c2d 29-35,37-42,85,87,92,95,97-99,101,103,237,240-246,248-258
+web/src/Controller/MediaController.php
+  s_c6f332c201127d::t_ce1693f1db1c2d 200,274-275
+web/tests/Media/MediaReportEndpointTest.php
+  s_c6f332c201127d::t_6c41122c7809da 55
+web/tests/Media/MediaEscalationTest.php
+  s_c6f332c201127d::t_6c41122c7809da 85
+web/tests/Controller/RiderProfileTest.php
+  s_c6f332c201127d::t_6c41122c7809da 188,191,195
+web/tests/Media/ThirdPartyReportTest.php
+  s_c6f332c201127d::t_6c41122c7809da 82,228
+web/src/Controller/MessagesController.php
+  s_c6f332c201127d::t_ce1693f1db1c2d 341
+web/.env.staging
+  s_c6f332c201127d::t_39b253c1b4c135 111,113-118
+web/src/Controller/PhotoPageController.php
+  s_c6f332c201127d::t_ce1693f1db1c2d 97,108-110
+web/tests/Media/MediaModerationTest.php
+  s_c6f332c201127d::t_6c41122c7809da 93
+docs/specs/media-storage-architecture.md
+  s_c6f332c201127d::t_134a620498daca 117-137
+docs/specs/operations.md
+  s_c6f332c201127d::t_134a620498daca 198-199
+web/.env
+  s_c6f332c201127d::t_b287c189a0849a 109-114
+web/tests/Media/MediaStorageTest.php
+  s_c6f332c201127d::t_6c41122c7809da 66,70,74,78-79,83-90,95,106,109,112,114-115
+web/src/Media/MediaDecisionService.php
+  s_c6f332c201127d::t_ce1693f1db1c2d 130,133-134
+web/tests/Media/MediaPersistenceTest.php
+  s_c6f332c201127d::t_6c41122c7809da 65,110,130,153
+web/migrations/Version20260820002000.php
+  s_c6f332c201127d::t_ce1693f1db1c2d 1-28
+web/src/Media/MessageHandler/ScanAndReleaseUploadHandler.php
+  s_c6f332c201127d::t_ce1693f1db1c2d 160,163-164
+web/tests/Media/MediaClaimTest.php
+  s_c6f332c201127d::t_6c41122c7809da 59
+web/src/Media/Entity/MediaUpload.php
+  s_c6f332c201127d::t_ce1693f1db1c2d 348,351
+web/tests/Media/MediaMessageTest.php
+  s_c6f332c201127d::t_6c41122c7809da 77
+web/tests/Media/MediaTakedownEndpointTest.php
+  s_c6f332c201127d::t_6c41122c7809da 56
+web/tests/Media/MediaUploadEndpointTest.php
+  s_c6f332c201127d::t_6c41122c7809da 246-247
+web/src/Moderation/SubmissionQueue.php
+  s_c6f332c201127d::t_570c4ea0741627 780,797-798
+web/tests/Media/MediaTakedownTest.php
+  s_c6f332c201127d::t_6c41122c7809da 79
+web/tests/Media/MediaDisposalTest.php
+  s_c6f332c201127d::t_6c41122c7809da 69,218-219,260-261
+web/config/services.yaml
+  s_c6f332c201127d::t_ce1693f1db1c2d 112-117
+web/src/Media/MediaDisposalService.php
+  s_c6f332c201127d::t_ce1693f1db1c2d 234
+web/tests/Moderation/SubmissionEscalationTest.php
+  s_c6f332c201127d::t_6c41122c7809da 126
+web/tests/Account/DataExportTest.php
+  s_c6f332c201127d::t_6c41122c7809da 106
+docs/specs/photo-uploads.md
+  s_c6f332c201127d::t_134a620498daca 92-97
+web/tests/Media/MediaDeskPagingTest.php
+  s_c6f332c201127d::t_6c41122c7809da 78
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "fe4768dfba4a9bfd86b136862cd2e2133dd081fa",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_c6f332c201127d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "374bfb7f-30b7-4d17-9aa0-1346f5c8f29d",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
