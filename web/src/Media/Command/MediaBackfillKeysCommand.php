@@ -98,7 +98,7 @@ final class MediaBackfillKeysCommand extends Command
                 continue;
             }
 
-            $copied = $this->storage->copyVariants($upload->getStorageShard(), $legacy, $target);
+            $copied = $this->storage->copyVariants($upload->getStorageBucket(), $legacy, $target);
             if (0 === $copied) {
                 $io->writeln(\sprintf('  %s  no objects found at %s - left alone', $uuid, $legacy));
                 ++$empty;
@@ -109,7 +109,7 @@ final class MediaBackfillKeysCommand extends Command
             $this->em->flush();
 
             // Only now, with the row pointing at objects that exist.
-            $this->storage->deletePrefix($upload->getStorageShard(), $legacy);
+            $this->storage->deletePrefix($upload->getStorageBucket(), $legacy);
             ++$moved;
         }
 

@@ -109,7 +109,7 @@ final class MediaDisposalService
     {
         $this->storage->deleteQuarantine($upload->getQuarantineKey());
         if ($upload->hasPublishedObjects()) {
-            $this->storage->deletePrefix($upload->getStorageShard(), $upload->getPathPrefix());
+            $this->storage->deletePrefix($upload->getStorageBucket(), $upload->getPathPrefix());
         }
     }
 

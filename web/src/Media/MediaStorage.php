@@ -6,6 +6,9 @@ declare(strict_types=1);
 
 namespace App\Media;
 
+use AsyncAws\S3\S3Client;
+use League\Flysystem\AsyncAwsS3\AsyncAwsS3Adapter;
+use League\Flysystem\Filesystem;
 use League\Flysystem\FilesystemException;
 use League\Flysystem\FilesystemOperator;
 
@@ -23,22 +26,20 @@ use League\Flysystem\FilesystemOperator;
  *   the web tier, read and deleted by the worker, reachable by nobody else:
  *   the bucket carries no anonymous-read policy at all (§2.2).
  *
- * A SHARD, not a continent. A shard code (EU-01) is a permanent alias of
- * exactly one bucket generation; the row stores it, and together with the
- * config map that IS the photo's full bucket location, forever. A continent
- * with no active shard, or an active shard with no storage, REFUSES the
- * upload (ShardUnavailable; owner 2026-08-18: "storage must fail") rather
- * than borrowing another bucket: the borrow would scatter a region's photos
- * across shards and turn the eventual bucket's arrival into a migration.
- * shardFor() answers where the bytes will actually go, and that answer is
- * what the row stores.
+ * The row is fully self-contained (owner 2026-08-20): it stores the FULL
+ * bucket name its objects live in, plus the shard tag (EU-01) whose
+ * lowercase form is the public URL segment. Storage operations address the
+ * recorded bucket by name, building a filesystem for it on demand, so a
+ * retired bucket needs no config entry to stay readable forever. Which
+ * bucket a continent's NEW photos go to is the env pair
+ * MEDIA_S3_PUBLIC_BUCKET_<CC> + MEDIA_ACTIVE_SHARD_<CC>, bumped together
+ * when a continent advances a generation. A continent whose pair is unset
+ * REFUSES the upload (ShardUnavailable; owner 2026-08-18: "storage must
+ * fail"), never borrows another bucket.
  *
- * The browser-facing base is looked up PER SHARD rather than assembled by
- * concatenating one base with a shard segment, because no single string
- * expresses both deployments: in production the shard is a path segment the
- * owner-run proxy routes on, while against raw MinIO in dev it is baked into
- * the bucket name. Shards with no entry of their own fall back to
- * <publicBase>/<shard>, which is the production shape.
+ * The browser-facing URL is <MEDIA_PUBLIC_BASE>/<lowercase shard>/<key>;
+ * the proxy maps that segment to the bucket, so no bucket name is ever
+ * public (media-storage-architecture.md §2.0).
  *
  * These paths are guessing-infeasible, NOT unguessable, and they are not
  * access control. A UUIDv4 carries ~122 random bits so blind enumeration is
@@ -62,39 +63,50 @@ final class MediaStorage
     /** Where an unscanned upload waits, in the private storage and nowhere else. */
     private const string QUARANTINE_PREFIX = 'quarantine/';
 
+    /** @var array<string, FilesystemOperator> bucket name => filesystem, built on demand */
+    private array $filesystems;
+
     /**
-     * @param array<string, FilesystemOperator> $storages     shard code => public storage (permanent alias, never repointed)
-     * @param array<string, string>             $publicBases  shard code => browser-facing base URL
-     * @param array<string, string>             $activeShards continent => the shard NEW photos write to
+     * @param array<string, string>             $activeShards  continent => shard tag (EU-01) NEW photos record
+     * @param array<string, string>             $activeBuckets continent => full bucket name NEW photos write to
+     * @param array<string, FilesystemOperator> $filesystems   bucket name => filesystem; the test seam (prod
+     *                                                         builds S3 filesystems lazily from $client)
      */
     public function __construct(
-        private readonly array $storages,
-        private readonly array $publicBases,
+        private readonly ?S3Client $client,
         private readonly array $activeShards,
-        private readonly FilesystemOperator $private,
+        private readonly array $activeBuckets,
+        private readonly string $privateBucket,
         private readonly string $publicBase,
+        array $filesystems = [],
     ) {
+        $this->filesystems = $filesystems;
     }
 
     /**
-     * Which shard a continent's photos are written to right now.
+     * Where a continent's NEW photos go right now: the shard tag and the full
+     * bucket name, as one pair.
      *
-     * Called once, at intake, and the answer is STORED on the row. Never
-     * re-derived afterwards: §2.1's promise that existing objects never move
-     * when a bucket is added is only true if a photo's address comes from what
-     * was recorded when it was written, not from today's configuration.
+     * Called once, at intake, and BOTH answers are STORED on the row. Never
+     * re-derived afterwards: "existing objects never move" is only true if a
+     * photo's address comes from what was recorded when it was written, not
+     * from today's configuration.
      *
-     * @throws ShardUnavailable when the continent has no provisioned bucket -
+     * @return array{0: string, 1: string} [shard tag, bucket name]
+     *
+     * @throws ShardUnavailable when the continent's env pair is unset -
      *                          the upload is refused, never redirected
      */
-    public function shardFor(string $continent): string
+    public function activeFor(string $continent): array
     {
-        $shard = $this->activeShards[strtoupper($continent)] ?? null;
-        if (null === $shard || !isset($this->storages[strtoupper($shard)])) {
-            throw new ShardUnavailable($shard ?? strtoupper($continent));
+        $cc = strtoupper($continent);
+        $shard = $this->activeShards[$cc] ?? '';
+        $bucket = $this->activeBuckets[$cc] ?? '';
+        if ('' === $shard || '' === $bucket) {
+            throw new ShardUnavailable('' === $shard ? $cc : $shard);
         }
 
-        return strtoupper($shard);
+        return [strtoupper($shard), $bucket];
     }
 
     /* ---------- the quarantine (private storage) ---------- */
@@ -103,9 +115,9 @@ final class MediaStorage
     public function writeQuarantine(string $mediaId, mixed $bytes): void
     {
         if (\is_string($bytes)) {
-            $this->private->write(self::QUARANTINE_PREFIX.$mediaId, $bytes);
+            $this->filesystemFor($this->privateBucket)->write(self::QUARANTINE_PREFIX.$mediaId, $bytes);
         } else {
-            $this->private->writeStream(self::QUARANTINE_PREFIX.$mediaId, $bytes);
+            $this->filesystemFor($this->privateBucket)->writeStream(self::QUARANTINE_PREFIX.$mediaId, $bytes);
         }
     }
 
@@ -117,7 +129,7 @@ final class MediaStorage
     public function quarantineExists(string $mediaId): bool
     {
         try {
-            return $this->private->fileExists(self::QUARANTINE_PREFIX.$mediaId);
+            return $this->filesystemFor($this->privateBucket)->fileExists(self::QUARANTINE_PREFIX.$mediaId);
         } catch (FilesystemException) {
             return false;
         }
@@ -135,7 +147,7 @@ final class MediaStorage
     public function readQuarantine(string $mediaId): ?string
     {
         try {
-            return $this->private->read(self::QUARANTINE_PREFIX.$mediaId);
+            return $this->filesystemFor($this->privateBucket)->read(self::QUARANTINE_PREFIX.$mediaId);
         } catch (FilesystemException) {
             return null;
         }
@@ -145,7 +157,7 @@ final class MediaStorage
     public function deleteQuarantine(string $mediaId): void
     {
         try {
-            $this->private->delete(self::QUARANTINE_PREFIX.$mediaId);
+            $this->filesystemFor($this->privateBucket)->delete(self::QUARANTINE_PREFIX.$mediaId);
         } catch (FilesystemException) {
             // Already gone. Nothing to undo, nothing to report.
         }
@@ -153,9 +165,9 @@ final class MediaStorage
 
     /* ---------- published objects (public storage) ---------- */
 
-    public function store(string $shard, string $prefix, ProcessedPhoto $photo): void
+    public function store(string $bucket, string $prefix, ProcessedPhoto $photo): void
     {
-        $filesystem = $this->filesystemFor($shard);
+        $filesystem = $this->filesystemFor($bucket);
         $filesystem->write($prefix.'/orig.webp', $photo->orig);
         $filesystem->write($prefix.'/lg.webp', $photo->lg);
         $filesystem->write($prefix.'/sm.webp', $photo->sm);
@@ -170,9 +182,9 @@ final class MediaStorage
      * - a copy, not a move, so a failure halfway leaves the source intact and
      * the command can simply run again.
      */
-    public function copyVariants(string $shard, string $fromPrefix, string $toPrefix): int
+    public function copyVariants(string $bucket, string $fromPrefix, string $toPrefix): int
     {
-        $filesystem = $this->filesystemFor($shard);
+        $filesystem = $this->filesystemFor($bucket);
         $copied = 0;
         foreach (self::VARIANTS as $variant) {
             try {
@@ -194,10 +206,10 @@ final class MediaStorage
      * runs from a garbage collector, a Trash action and an account deletion,
      * and none of them may fail because the objects are already gone.
      */
-    public function deletePrefix(string $shard, string $prefix): void
+    public function deletePrefix(string $bucket, string $prefix): void
     {
         try {
-            $this->filesystemFor($shard)->deleteDirectory($prefix);
+            $this->filesystemFor($bucket)->deleteDirectory($prefix);
         } catch (FilesystemException) {
             // Already absent, or the shard is unreachable. The row-side
             // bookkeeping is the source of truth; a retry sweeps again.
@@ -217,12 +229,12 @@ final class MediaStorage
      *
      * @api Called by DataExportService.
      */
-    public function readStream(string $shard, string $prefix, string $variant)
+    public function readStream(string $bucket, string $prefix, string $variant)
     {
         self::assertVariant($variant);
 
         try {
-            return $this->filesystemFor($shard)->readStream($prefix.'/'.$variant.'.webp');
+            return $this->filesystemFor($bucket)->readStream($prefix.'/'.$variant.'.webp');
         } catch (FilesystemException) {
             return null;
         }
@@ -232,11 +244,9 @@ final class MediaStorage
     {
         self::assertVariant($variant);
 
-        $code = strtoupper($shard);
-        $base = $this->publicBases[$code]
-            ?? rtrim($this->publicBase, '/').'/'.strtolower($code);
-
-        return rtrim($base, '/').'/'.$prefix.'/'.$variant.'.webp';
+        // The lowercase shard tag is the proxy-routed path segment; the
+        // bucket name never appears in a URL (§2.0).
+        return rtrim($this->publicBase, '/').'/'.strtolower($shard).'/'.$prefix.'/'.$variant.'.webp';
     }
 
     private static function assertVariant(string $variant): void
@@ -246,13 +256,21 @@ final class MediaStorage
         }
     }
 
-    private function filesystemFor(string $shard): FilesystemOperator
+    private function filesystemFor(string $bucket): FilesystemOperator
     {
-        // The shard on a row was validated at intake; one missing here means
-        // a storage was removed from config while rows still point at it.
-        // Failing loudly beats silently writing into another shard's bucket.
-        $code = strtoupper($shard);
+        if ('' === $bucket) {
+            // A row minted before the bucket column existed, or a caller bug.
+            // Failing loudly beats writing into a guessed bucket.
+            throw new ShardUnavailable('(no bucket recorded)');
+        }
+        if (isset($this->filesystems[$bucket])) {
+            return $this->filesystems[$bucket];
+        }
+        if (null === $this->client) {
+            // Test wiring: only preloaded in-memory buckets exist.
+            throw new ShardUnavailable($bucket);
+        }
 
-        return $this->storages[$code] ?? throw new ShardUnavailable($code);
+        return $this->filesystems[$bucket] = new Filesystem(new AsyncAwsS3Adapter($this->client, $bucket));
     }
 }

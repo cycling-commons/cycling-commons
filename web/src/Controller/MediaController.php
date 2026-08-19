@@ -197,7 +197,7 @@ final class MediaController extends AbstractController
             return $this->json(['error' => 'location_unresolvable'], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
         try {
-            $shard = $this->storage->shardFor($continent);
+            [$shard, $bucket] = $this->storage->activeFor($continent);
         } catch (ShardUnavailable) {
             /* A cleanly resolved continent with no provisioned bucket refuses
                the upload (owner 2026-08-18: "storage must fail") instead of
@@ -212,6 +212,7 @@ final class MediaController extends AbstractController
             $consent->getId(),
             $continent,
             $shard,
+            $bucket,
             (int) $file->getSize(),
         );
 

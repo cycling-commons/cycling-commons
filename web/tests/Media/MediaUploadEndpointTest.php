@@ -246,6 +246,7 @@ final class MediaUploadEndpointTest extends WebTestCase
         // alias of exactly one bucket (media-storage-architecture.md §2.1).
         self::assertSame('EU', $row->getContinent());
         self::assertSame('EU-01', $row->getStorageShard());
+        self::assertSame('test-bucket-eu-01', $row->getStorageBucket(), 'the row records the FULL bucket name');
 
         // Exactly one private object, and NOTHING public. Asserted against the
         // buckets, not against the response body: the response is what the

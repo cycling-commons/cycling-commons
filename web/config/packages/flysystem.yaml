@@ -1,54 +1,17 @@
 # SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
-# Rider photo storage, one storage per continent (photo-uploads.md §1.2, §2).
+# Rider photo storage (photo-uploads.md §2, media-storage-architecture.md §2.1).
 #
-# Every environment except test talks S3 through media.s3_client: dev points it
-# at the dev stack's MinIO, staging and production at their own Cycling Commons
-# buckets. One code path, endpoint and credentials supplied by the environment —
-# the same arrangement pipeline/coverage/publish.py already uses. Riders'
-# browsers never address the bucket directly; they fetch from MEDIA_PUBLIC_BASE,
-# which in production is the owner-run caching proxy routing on the first path
-# segment (the continent code).
+# There are deliberately NO storages declared for dev/staging/prod: MediaStorage
+# addresses buckets BY THE FULL NAME each row records, building an S3-backed
+# filesystem on demand from media.s3_client (services.yaml). A bundle storage
+# per bucket would have to be repointed or grown as generations advance, which
+# is exactly the coupling the recorded-bucket-name model removes.
 #
-# There is deliberately no when@prod and no when@dev block. Storage stays purely
-# env-driven: one code path, the bucket decided by MEDIA_S3_*. Gating it on
-# when@prod would mean a second, near-duplicate block under when@staging (which
-# staging now needs — see routing/doctrine/asset_mapper), and the day someone
-# updates one and not the other, staging writes rider photos onto a box's local
-# disk. Env-driven configuration cannot have that gap.
-#
-# when@test is the one exception: the in-memory adapter keeps suites hermetic.
-#
-# Onboarding a continent: add a bucket, add a storage here, add one line to the
-# App\Media\MediaStorage $storages map in services.yaml. No code changes.
+# when@test is the one exception: the suite preloads these two in-memory
+# filesystems into MediaStorage under fixture bucket names, keeping tests
+# hermetic; an unknown bucket name is then a refusal, which tests rely on.
 flysystem:
-    storages:
-        # One storage per bucket GENERATION (media-storage-architecture.md
-        # §2.1): the shard code EU-01 is a permanent alias of exactly this
-        # bucket, and rows that recorded it stay addressable forever. When
-        # EU-02 arrives it gets its own env var, its own storage here, and
-        # its own map lines in services.yaml; this entry never changes.
-        media.storage.eu01:
-            adapter: 'asyncaws'
-            options:
-                client: 'media.s3_client'
-                bucket: '%env(MEDIA_S3_PUBLIC_BUCKET_EU_01)%'
-
-        # The quarantine, and only the quarantine
-        # (media-storage-architecture.md §2.2). ONE bucket, not one per
-        # continent: nothing here is ever addressed by a browser, so there is
-        # no proxy to route and no region to be near - an unscanned object
-        # lives here for the seconds between the upload and the worker's
-        # verdict, and then it is deleted.
-        #
-        # The bucket carries NO anonymous-read policy. That is the whole
-        # point: a quarantine prefix inside the anonymous-read public bucket
-        # would be world-readable the moment it was written, which is exactly
-        # the state scanning exists to prevent.
-        media.storage.private:
-            adapter: 'asyncaws'
-            options:
-                client: 'media.s3_client'
-                bucket: '%env(MEDIA_S3_BUCKET_PRIVATE)%'
+    storages: []
 
 when@test:
     flysystem:

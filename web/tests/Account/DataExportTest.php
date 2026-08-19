@@ -103,7 +103,7 @@ final class DataExportTest extends WebTestCase
         $consent = new ConsentRecord(Uuid::v4(), $userId, MediaConsent::KIND, MediaConsent::VERSION, MediaConsent::hash('contract text'));
         $em->persist($consent);
 
-        $upload = new MediaUpload(Uuid::v4(), $userId, $consent->getId(), 'EU', 1200, 900, 4242, shard: 'EU-01');
+        $upload = new MediaUpload(Uuid::v4(), $userId, $consent->getId(), 'EU', 1200, 900, 4242, shard: 'EU-01', bucket: 'test-bucket-eu-01');
         $em->persist($upload);
         $em->persist(new MediaModerationEvent($upload->getId(), $userId, MediaAction::Uploaded));
 
@@ -120,7 +120,7 @@ final class DataExportTest extends WebTestCase
         $em->flush();
 
         static::getContainer()->get(MediaStorage::class)
-            ->store('EU-01', $upload->getPathPrefix(), new ProcessedPhoto('ORIGINAL-BYTES', 'LG', 'SM', 1200, 900));
+            ->store('test-bucket-eu-01', $upload->getPathPrefix(), new ProcessedPhoto('ORIGINAL-BYTES', 'LG', 'SM', 1200, 900));
 
         return $upload;
     }

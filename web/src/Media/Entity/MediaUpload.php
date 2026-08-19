@@ -72,6 +72,16 @@ class MediaUpload
     private string $storageShard;
 
     /**
+     * The FULL name of the bucket the published objects live in (owner
+     * 2026-08-20: the row is one-to-one self-contained; nothing is assembled
+     * from parts). Recorded at intake from the continent's active env pair;
+     * a retired bucket therefore needs no config entry to stay addressable.
+     * Empty only on rows minted before the column existed.
+     */
+    #[ORM\Column(name: 'storage_bucket', type: Types::STRING, length: 63, options: ['default' => ''])]
+    private string $storageBucket = '';
+
+    /**
      * The processing run that produced the published objects - the `<rev>` in
      * published/<uuid>/<rev>/… (docs/specs/media-storage-architecture.md §4).
      * Minted per run, so reprocessing writes a NEW key and no reader ever sees
@@ -244,12 +254,14 @@ class MediaUpload
         // that never touch storage; every row that reaches a bucket comes
         // from quarantined()/reshard(), which always pass the real shard.
         ?string $shard = null,
+        string $bucket = '',
     ) {
         $this->id = $id;
         $this->userId = $userId;
         $this->consentRecordId = $consentRecordId;
         $this->continent = strtoupper($continent);
         $this->storageShard = strtoupper($shard ?? $continent);
+        $this->storageBucket = $bucket;
         $this->revision = self::mintRevision();
         $this->width = $width;
         $this->height = $height;
@@ -276,10 +288,12 @@ class MediaUpload
         Uuid $consentRecordId,
         string $continent,
         string $shard,
+        string $bucket,
         int $bytes,
     ): self {
         $upload = new self($id, $userId, $consentRecordId, $continent, 0, 0, $bytes);
         $upload->storageShard = strtoupper($shard);
+        $upload->storageBucket = $bucket;
         $upload->revision = null;
         $upload->status = MediaStatus::PendingScan;
 
@@ -338,13 +352,14 @@ class MediaUpload
      * address, and §2.1's "existing objects never move" says plainly what
      * moving it would break.
      */
-    public function reshard(string $continent, string $shard): void
+    public function reshard(string $continent, string $shard, string $bucket): void
     {
         if (null !== $this->revision) {
             throw new \LogicException(\sprintf('Upload %s has published objects; its shard is now its address.', $this->id->toRfc4122()));
         }
         $this->continent = strtoupper($continent);
         $this->storageShard = strtoupper($shard);
+        $this->storageBucket = $bucket;
     }
 
     /** A fresh, short, opaque token - one per processing run (§4). */
@@ -388,6 +403,11 @@ class MediaUpload
     public function getRevision(): ?string
     {
         return $this->revision;
+    }
+
+    public function getStorageBucket(): string
+    {
+        return $this->storageBucket;
     }
 
     public function getStorageShard(): string

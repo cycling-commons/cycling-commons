@@ -89,11 +89,13 @@ context). Media licensing context lives in the site licences
 
 - **Flysystem** with S3 adapters, **one storage per continent**:
   `MEDIA_S3_ENDPOINT`, `MEDIA_S3_KEY`, `MEDIA_S3_SECRET`, `MEDIA_S3_REGION`
-  (shared credentials) + one var per bucket generation
-  (`MEDIA_S3_PUBLIC_BUCKET_EU_01`, later `_NA_01`, `_EU_02`, … - each a
-  permanent alias, never repointed) + `MEDIA_ACTIVE_SHARD_EU` (which shard a
-  continent's NEW photos write to). A continent without an active shard
-  refuses uploads (media-storage-architecture.md §2.1).
+  (shared credentials) + one pair per continent:
+  `MEDIA_S3_PUBLIC_BUCKET_<CC>` (the FULL bucket name new photos write to)
+  and `MEDIA_ACTIVE_SHARD_<CC>` (the shard tag, lowercased into the public
+  URL segment). Both are stored on the row at intake, so the row is fully
+  self-contained and retired buckets stay addressable without config. A
+  continent whose pair is unset refuses uploads
+  (media-storage-architecture.md §2.1).
 - **Configured by environment variables, not by `when@` blocks** — the
   coverage precedent (`pipeline/coverage/publish.py`, whose own comment notes
   that the signing region is "ignored by MinIO, accepted by Hetzner"). One
@@ -122,7 +124,7 @@ context). Media licensing context lives in the site licences
 - `MEDIA_PUBLIC_BASE`'s host is added to the **C**ontent-**S**ecurity-**P**olicy (CSP) `img-src` the same
   env-backed way as `coverage.csp_host` (never admin-editable — a writable
   CSP host is an XSS surface, system-configuration.md rationale).
-- **A second, PRIVATE storage holds the quarantine** (`MEDIA_S3_BUCKET_PRIVATE`,
+- **A second, PRIVATE storage holds the quarantine** (`MEDIA_S3_PRIVATE_BUCKET`,
   one bucket, no per-continent split, and **no anonymous-read policy at all**).
   Unscanned bytes land there and nowhere else, for the seconds between the
   upload and the worker's verdict; see

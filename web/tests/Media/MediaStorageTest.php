@@ -40,13 +40,13 @@ final class MediaStorageTest extends KernelTestCase
 
     public function testStoresTheTrioReadsBackAndDeletes(): void
     {
-        $this->storage->store('EU-01', 'photos/abc', self::photo());
+        $this->storage->store('test-bucket-eu-01', 'photos/abc', self::photo());
 
         self::assertTrue($this->filesystem->fileExists('photos/abc/orig.webp'));
         self::assertSame('LARGE', $this->filesystem->read('photos/abc/lg.webp'));
         self::assertSame('SMALL', $this->filesystem->read('photos/abc/sm.webp'));
 
-        $this->storage->deletePrefix('EU-01', 'photos/abc');
+        $this->storage->deletePrefix('test-bucket-eu-01', 'photos/abc');
 
         self::assertFalse($this->filesystem->fileExists('photos/abc/orig.webp'));
         self::assertFalse($this->filesystem->fileExists('photos/abc/sm.webp'));
@@ -54,7 +54,7 @@ final class MediaStorageTest extends KernelTestCase
 
     public function testDeletingAPrefixThatIsAlreadyGoneIsNotAnError(): void
     {
-        $this->storage->deletePrefix('EU-01', 'photos/never-existed');
+        $this->storage->deletePrefix('test-bucket-eu-01', 'photos/never-existed');
 
         self::assertFalse($this->filesystem->fileExists('photos/never-existed/orig.webp'));
     }
@@ -62,22 +62,22 @@ final class MediaStorageTest extends KernelTestCase
     public function testAnOnboardedContinentUsesItsOwnPublicBase(): void
     {
         self::assertSame(
-            'https://media.test/cc-media-eu-01/photos/abc/sm.webp',
+            'https://media.test/img/eu-01/photos/abc/sm.webp',
             $this->storage->url('EU-01', 'photos/abc', 'sm'),
         );
         self::assertSame(
-            'https://media.test/cc-media-eu-01/photos/abc/lg.webp',
+            'https://media.test/img/eu-01/photos/abc/lg.webp',
             $this->storage->url('eu-01', 'photos/abc', 'lg'),
             'the continent code is case-insensitive at the call site',
         );
     }
 
-    public function testAContinentWithoutItsOwnBaseFallsBackToAPathSegment(): void
+    public function testTheUrlIsTheBasePlusTheLowercaseShardSegment(): void
     {
         self::assertSame(
-            'https://media.test/oc/photos/abc/orig.webp',
-            $this->storage->url('OC', 'photos/abc', 'orig'),
-            'the fallback is the production shape: the continent as a proxy-routed path segment',
+            'https://media.test/img/oc-01/photos/abc/orig.webp',
+            $this->storage->url('OC-01', 'photos/abc', 'orig'),
+            'one shape everywhere: <base>/<lowercase shard>/<key>, the segment the proxy routes on',
         );
     }
 
@@ -88,18 +88,24 @@ final class MediaStorageTest extends KernelTestCase
         $this->storage->url('EU-01', 'photos/abc', 'huge');
     }
 
-    public function testAContinentWithoutABucketRefusesInsteadOfBorrowing(): void
+    public function testAnUnknownBucketRefusesInsteadOfGuessing(): void
     {
-        // Owner 2026-08-18: "storage must fail". Writing into another
-        // continent's bucket would scatter a region's photos across shards.
+        // Owner 2026-08-18: "storage must fail". In the suite only the
+        // preloaded in-memory buckets exist; a name outside them refuses.
         $this->expectException(ShardUnavailable::class);
-        $this->storage->store('AQ', 'photos/south', self::photo());
+        $this->storage->store('bucket-nobody-provisioned', 'photos/south', self::photo());
     }
 
-    public function testShardForRefusesAContinentWithoutABucket(): void
+    public function testActiveForRefusesAContinentWithoutItsEnvPair(): void
     {
         $this->expectException(ShardUnavailable::class);
-        $this->storage->shardFor('AQ');
+        $this->storage->activeFor('AQ');
+    }
+
+    public function testActiveForAnswersTheShardAndBucketPair(): void
+    {
+        self::assertSame(['EU-01', 'test-bucket-eu-01'], $this->storage->activeFor('EU'));
+        self::assertSame(['EU-01', 'test-bucket-eu-01'], $this->storage->activeFor('eu'), 'case-insensitive at the call site');
     }
 
     public function testUnresolvableCoordinatesResolveToNoContinentAtAll(): void

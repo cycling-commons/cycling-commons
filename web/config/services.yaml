@@ -108,23 +108,31 @@ services:
               accessKeySecret: '%env(MEDIA_S3_SECRET)%'
               pathStyleEndpoint: true
 
-    # Shard code -> its Flysystem storage AND its browser-facing base URL.
-    # This map IS the shard routing table (media-storage-architecture.md §2.1):
-    # a shard code (EU-01) is a permanent alias of exactly one bucket, so an
-    # entry is never repointed and never removed while rows still name it.
-    # Onboarding a bucket generation adds one storage in flysystem.yaml, one
-    # line in each map here, and one nginx location for its path segment.
-    # $activeShards says which shard each CONTINENT's new photos write to;
-    # advancing EU to EU-02 is a pointer change here, old rows untouched.
+    # Where each CONTINENT's new photos go (media-storage-architecture.md
+    # §2.1): the env pair per continent names the shard tag (EU-01, the
+    # lowercase URL segment) and the FULL bucket. Both are stored on the row
+    # at intake, so retired buckets need no entry here to stay addressable -
+    # storage builds a filesystem for any recorded bucket name on demand.
+    # Advancing a continent = bump its env pair + add the nginx location for
+    # the new segment; nothing here changes shape.
     App\Media\MediaStorage:
         arguments:
-            $storages:
-                'EU-01': '@media.storage.eu01'
-            $publicBases:
-                'EU-01': '%env(MEDIA_PUBLIC_BASE)%/cc-media-eu-01'
+            $client: '@media.s3_client'
             $activeShards:
+                AF: '%env(MEDIA_ACTIVE_SHARD_AF)%'
+                AS: '%env(MEDIA_ACTIVE_SHARD_AS)%'
                 EU: '%env(MEDIA_ACTIVE_SHARD_EU)%'
-            $private: '@media.storage.private'
+                NA: '%env(MEDIA_ACTIVE_SHARD_NA)%'
+                OC: '%env(MEDIA_ACTIVE_SHARD_OC)%'
+                SA: '%env(MEDIA_ACTIVE_SHARD_SA)%'
+            $activeBuckets:
+                AF: '%env(MEDIA_S3_PUBLIC_BUCKET_AF)%'
+                AS: '%env(MEDIA_S3_PUBLIC_BUCKET_AS)%'
+                EU: '%env(MEDIA_S3_PUBLIC_BUCKET_EU)%'
+                NA: '%env(MEDIA_S3_PUBLIC_BUCKET_NA)%'
+                OC: '%env(MEDIA_S3_PUBLIC_BUCKET_OC)%'
+                SA: '%env(MEDIA_S3_PUBLIC_BUCKET_SA)%'
+            $privateBucket: '%env(MEDIA_S3_PRIVATE_BUCKET)%'
             $publicBase: '%media.public_base%'
 
     # The release gate's scanner (media plan task 3). CLAMAV_REQUIRED decides
@@ -158,20 +166,22 @@ when@test:
         App\Media\MediaStorage:
             public: true
             arguments:
-                $storages:
-                    'EU-01': '@media.storage.eu01'
                 # LITERALS, not %env()%: real environment variables beat every
                 # .env* file, so inside the dev container the compose-provided
-                # MEDIA_PUBLIC_BASE (the MinIO port) silently replaced
-                # .env.test's https://media.test and failed the URL tests on
-                # exactly one machine. The suite's fixture values belong to the
-                # suite.
-                $publicBases:
-                    'EU-01': 'https://media.test/cc-media-eu-01'
+                # values would silently replace .env.test's fixtures. No S3
+                # client either: only the preloaded in-memory buckets exist,
+                # and an unknown bucket name is a refusal, which the suite
+                # relies on.
+                $client: null
                 $activeShards:
                     EU: 'EU-01'
-                $private: '@media.storage.private'
-                $publicBase: 'https://media.test'
+                $activeBuckets:
+                    EU: 'test-bucket-eu-01'
+                $privateBucket: 'test-bucket-private'
+                $publicBase: 'https://media.test/img'
+                $filesystems:
+                    'test-bucket-eu-01': '@media.storage.eu01'
+                    'test-bucket-private': '@media.storage.private'
 
         App\Media\ContinentResolver:
             public: true

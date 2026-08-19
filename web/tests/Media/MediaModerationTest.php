@@ -90,7 +90,7 @@ final class MediaModerationTest extends KernelTestCase
 
         $upload = new MediaUpload(
             Uuid::v4(), (int) $this->rider->getId(), $consent->getId(), 'EU',
-            1200, 900, 4242, $takenAt, shard: 'EU-01');
+            1200, 900, 4242, $takenAt, shard: 'EU-01', bucket: 'test-bucket-eu-01');
         $upload->claim((int) $submission->getId());
         $upload->resolveGps($distanceM);
         $this->em->persist($upload);
