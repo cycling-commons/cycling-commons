@@ -54,7 +54,14 @@ final class ModeratorAreaNoticeTest extends KernelTestCase
     {
         return self::getContainer()->get(EntityManagerInterface::class)
             ->getRepository(UserMessage::class)
-            ->findBy(['userId' => (int) $u->getId(), 'kind' => UserMessageKind::ModeratorAreasChanged]);
+            ->findBy(
+                ['userId' => (int) $u->getId(), 'kind' => UserMessageKind::ModeratorAreasChanged],
+                // Oldest first, explicitly: without an ORDER BY, Postgres is
+                // free to hand back rows in any order it likes, and `end()`
+                // below then reads whichever notice the planner felt like
+                // putting last. Green here, red on CI, for no code reason.
+                ['id' => 'ASC'],
+            );
     }
 
     public function testGainingAndLosingRegionsBothTellThem(): void
