@@ -327,6 +327,15 @@
         {{ form_help(profileForm.defaultMapMode) }}
         {{ form_errors(profileForm.defaultMapMode) }}
       </div>
+      {# The map chrome theme (rail/drawer/legend). Same profile-not-browser
+         rule as the map mode above; the map's own sun/moon toggle writes the
+         same field. #}
+      <div class="field">
+        {{ form_label(profileForm.mapTheme) }}
+        {{ form_widget(profileForm.mapTheme) }}
+        {{ form_help(profileForm.mapTheme) }}
+        {{ form_errors(profileForm.mapTheme) }}
+      </div>
       {# Separate from the language choice on purpose: reading the site in
          English says nothing about wanting 2026-08-01 over 01-08-2026. #}
       <div class="field">

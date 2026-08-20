@@ -727,6 +727,52 @@ the newest rung of that same ladder.
   a same-wound hole as a solid dark wedge (an intermittent, zoom-out-only
   artifact otherwise). Country / My-area / Everywhere spotlights are unchanged.
 
+### 4.6 Chrome theme: dark and light
+
+The map page's chrome (rail, drawer, legend, panels, popups) ships in two
+themes. Dark is the default and is the look the page has always had; light
+inverts the ground: paper (`--paper`) carries the chrome, ink (`--ink`)
+carries the text, trail orange stays the accent. The basemap tiles are the
+same in both themes: liberty is a light style already, so only the chrome
+changes.
+
+Mechanism, one attribute end to end:
+
+- **Tokens.** `map.css` defines chrome tokens (`--chrome-bg`, `--chrome-fg`,
+  `--chrome-fg-solid`, `--chrome-glass`, `--chrome-head`, plus lift/well/field
+  grounds and deep-on-cream partners for every pale-on-dark accent) in
+  `:root` with the dark values, and redefines them under
+  `html[data-map-theme="light"]`. No chrome rule reads the brand literals
+  directly anymore; a rule that does stays dark in light mode
+  (pinned by `tests/js/map-theme.test.cjs`). The nav wordmark is the one
+  asset swap: `brand/logo-nav-light.svg` (ink letterforms) replaces the
+  cream-lettered `logo-nav.svg` via `content:url()` in light mode, because
+  an image cannot follow CSS tokens. Constant surfaces stay constant
+  by reading the brand tokens, not the chrome tokens: on-map badges
+  (steepest/summit), toast, tooltip, scrims, the lightbox and the
+  paper-panelled climb profile.
+- **Contrast floor.** Chrome TEXT set from the fg token never drops below
+  alpha `.65` - the lowest value that keeps AA's 4.5:1 on both grounds
+  (a `.5` alpha measures ~4.4:1 dark and ~3.2:1 light). `color:` declarations
+  only; borders and backgrounds are decorative, and off/disabled rows dim via
+  `opacity`, which is a control state, not body copy. Scrollbar thumbs keep a
+  `.55` floor (components need 3:1). Pinned by `tests/js/map-theme.test.cjs`.
+- **Toggle.** A sun/moon MapLibre control (bottom-left, `assets/map/theme.js`)
+  flips the attribute. Its glyph and label name the theme a press will GIVE
+  you (`map.theme_to_light` / `map.theme_to_dark`).
+- **Persistence.** Same profile-over-localStorage rule as the view mode
+  (§4.2): a logged-in rider's choice POSTs to `/map/theme`
+  (`MapThemeController`, stateless CSRF id `map-theme`, `users.map_theme`,
+  `MapTheme` enum: `dark` | `light`) and follows them across devices; an
+  anonymous visitor's choice stays in localStorage (`cc:mapTheme`). The
+  choice is also editable on the settings page (`SettingsType::mapTheme`).
+- **First paint.** The server renders the attribute into `<html>`
+  (`data-map-theme`), so a rider's stored choice never flashes dark. For
+  anonymous visitors the server always renders `dark` and a tiny inline head
+  script promotes their localStorage choice before the stylesheets paint;
+  the script is emitted only in the visitor branch, so a shared device's
+  localStorage can never override a logged-in rider's profile value.
+
 ## 5. Layer rendering strategy
 
 - **Point features (curated/confirmed)** render as **DOM markers**

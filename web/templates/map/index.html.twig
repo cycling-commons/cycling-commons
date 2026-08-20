@@ -1,6 +1,10 @@
 {# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
 <!DOCTYPE html>
-<html lang="{{ app.request.locale|default('en') }}">
+{# data-map-theme keys the light chrome palette in map.css. The server renders
+   the logged-in rider's stored choice, so the first paint is already right.
+   Anonymous visitors always arrive as "dark"; the inline head script below
+   promotes their localStorage choice before first paint. #}
+<html lang="{{ app.request.locale|default('en') }}" data-map-theme="{{ map_theme }}">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -26,6 +30,15 @@
 <meta name="twitter:description" content="Explore the Commons on one open map — climbs, water, viewpoints, bike-friendly stays and road conditions. Filter by surface, traffic and what matters to your ride." />
 <meta name="twitter:image" content="https://cyclingcommons.org/brand/og/map.jpg" />
 
+{% if not is_granted('ROLE_USER') %}
+<script nonce="{{ csp_nonce() }}">
+  {# Anonymous theme boot: promote a localStorage choice onto <html> BEFORE
+     the stylesheets paint, so a returning light-mode visitor never flashes
+     dark. Logged-in riders skip this — the server attribute is their profile
+     truth and must not be overridden by a shared device's localStorage. #}
+  try{var t=localStorage.getItem('cc:mapTheme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-map-theme',t);}catch(e){}
+</script>
+{% endif %}
 <link rel="stylesheet" href="{{ asset('lib/maplibre-gl-5.24.0.css') }}" />
 <link rel="stylesheet" href="{{ asset('styles/fonts.css') }}" />
 <link rel="stylesheet" href="{{ asset('styles/map.css') }}" />
@@ -503,6 +516,13 @@ window.CC_VENDOR = {{ {
   window.CC_MAP_MODE = {
     url: {{ path('map_view_mode')|json_encode(constant('JSON_UNESCAPED_SLASHES'))|raw }},
     token: {{ csrf_token('map-view-mode')|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }}
+  };
+  {# Chrome-theme persistence: same profile-over-localStorage rule as
+     CC_MAP_MODE above. Riders-only block — theme.js falls back to
+     localStorage when this is absent. #}
+  window.CC_MAP_THEME = {
+    url: {{ path('map_theme')|json_encode(constant('JSON_UNESCAPED_SLASHES'))|raw }},
+    token: {{ csrf_token('map-theme')|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }}
   };
 </script>
 {% endif %}

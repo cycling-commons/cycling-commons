@@ -10,6 +10,7 @@ use App\Account\ElevationUnit;
 use App\Account\RowsPerPage;
 use App\Account\TimeFormat;
 use App\Catalog\BikeType;
+use App\Catalog\MapTheme;
 use App\Catalog\MapViewMode;
 use App\Catalog\RidingStyle;
 use App\Entity\User;
@@ -209,6 +210,16 @@ final class SettingsType extends AbstractType
                     MapViewMode::Everything => 'form.map_mode_everything',
                     MapViewMode::Confirmed => 'form.map_mode_confirmed',
                     MapViewMode::Curated => 'form.map_mode_curated',
+                },
+            ])
+            ->add('mapTheme', EnumType::class, [
+                'class' => MapTheme::class,
+                'label' => 'form.label_map_theme',
+                'help' => 'form.help_map_theme',
+                'required' => true,
+                'choice_label' => static fn (MapTheme $t): string => match ($t) {
+                    MapTheme::Dark => 'form.map_theme_dark',
+                    MapTheme::Light => 'form.map_theme_light',
                 },
             ])
             ->add('publicProfile', CheckboxType::class, [

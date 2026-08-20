@@ -5,6 +5,7 @@
 namespace App\Tests\Auth;
 
 use App\Catalog\Entity\Region;
+use App\Catalog\MapTheme;
 use App\Entity\User;
 use App\Repository\UserRepository;
 use App\Service\BaseLocationService;
@@ -171,6 +172,35 @@ final class ProfileSettingsTest extends WebTestCase
         $user = $this->fetchUser($email);
         self::assertSame('New Name', $user->getDisplayName());
         self::assertTrue($user->isPublicProfile());
+    }
+
+    /**
+     * The map chrome theme is editable on the settings page, not only via the
+     * map's own toggle — every profile-stored choice must have its settings
+     * field (house rule: system-filled must be editable).
+     */
+    public function testSettingsUpdatePersistsMapTheme(): void
+    {
+        $client = static::createClient();
+
+        $email = 'settings-theme@example.com';
+        $plain = $this->createUser($email, 'securepass12345!', 'Theme Rider');
+        $this->loginAs($client, $email, $plain);
+
+        $crawler = $client->request('GET', '/settings');
+        self::assertResponseIsSuccessful();
+
+        $form = $crawler->selectButton('Save profile')->form([
+            'settings[mapTheme]' => 'light',
+        ]);
+        $client->submit($form);
+
+        self::assertResponseRedirects('/settings');
+        $client->followRedirect();
+        self::assertResponseIsSuccessful();
+
+        $user = $this->fetchUser($email);
+        self::assertSame(MapTheme::Light, $user->getMapTheme());
     }
 
     public function testSettingsUpdateCanTogglePublicProfileOff(): void

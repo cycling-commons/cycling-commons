@@ -11,6 +11,7 @@ use App\Catalog\CatalogProvider;
 use App\Catalog\CatalogSchemaProvider;
 use App\Catalog\ChangeHistoryView;
 use App\Catalog\ClosureExpiryService;
+use App\Catalog\MapTheme;
 use App\Catalog\MapViewMode;
 use App\Catalog\RegionBoundaryProvider;
 use App\Catalog\RegionRegistryProvider;
@@ -119,6 +120,15 @@ final class MapController extends AbstractController
                 // device picked.
                 'authed' => $user instanceof User,
             ],
+            // Map chrome theme (map-and-search.md §4.6): rendered as the
+            // data-map-theme attribute on <html>, so the first paint is
+            // already themed and light mode never flashes dark. Anonymous
+            // visitors always render dark server-side; their light choice,
+            // if any, lives in localStorage and the inline head script
+            // applies it before first paint.
+            'map_theme' => $user instanceof User
+                ? $user->getMapTheme()->value
+                : MapTheme::Dark->value,
             // "My area" base location (map-and-search.md §4.5): the
             // stored coarse point + derived region/country set, or null for
             // anonymous. Anonymous-safe to compute (null, not omitted) — the
@@ -483,6 +493,10 @@ final class MapController extends AbstractController
             // Note: the chip's own label ('map.set_my_area') is twig-rendered
             // (templates/map/index.html.twig), not read from this payload —
             // map.js never touches I18N.setMyArea.
+            // Chrome-theme toggle labels (theme.js): each names the theme a
+            // press will GIVE you, like the base switcher's buttons.
+            'themeToLight' => $t->trans('map.theme_to_light'),
+            'themeToDark' => $t->trans('map.theme_to_dark'),
             'myAreaSet' => $t->trans('map.my_area_set'),
             'myAreaSetAnon' => $t->trans('map.my_area_set_anon'),
             'outsideArea' => $t->trans('map.outside_area'),

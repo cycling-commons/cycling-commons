@@ -11,6 +11,53 @@
        equivalent in assets/map/icons.js (mintMini), which mints the same glyphs
        for the tile layers; emoji-font-stack.test.cjs asserts the two agree. */
     --emoji:"Apple Color Emoji","Noto Color Emoji","Segoe UI Emoji","Noto Sans Symbols2",system-ui,sans-serif;
+    /* ---------- CHROME THEME TOKENS (map-and-search.md §4.6) ----------
+       The rail, drawer, legend and panels around the map canvas read these,
+       never the brand literals above, so html[data-map-theme="light"] can
+       flip the whole chrome in one place. Channel triplets (--chrome-fg,
+       --chrome-glass, --chrome-glass-deep, --paper-glass) exist for the
+       alpha variants: rgb(var(--chrome-fg) / .5) replaces rgb(var(--chrome-fg) / .5).
+       Dark is the default and matches the pre-theme look exactly. */
+    --chrome-bg:#101E16;              /* solid chrome ground (= --ink) */
+    --chrome-fg:239 230 212;          /* chrome text channels (= --paper) */
+    --chrome-fg-solid:#EFE6D4;        /* full-strength chrome text */
+    --chrome-glass:20 22 14;          /* translucent panel ground */
+    --chrome-glass-deep:20 33 24;     /* search-results well */
+    --paper-glass:239 230 212;        /* .map-top: cream in BOTH themes */
+    --chrome-head:#8FB6A8;            /* mono section headings (= --glacier) */
+    --chrome-lift:#2C5440;            /* raised/active surface (= --spruce-lift) */
+    --chrome-well:#1C3A2A;            /* inset card ground (= --spruce) */
+    --chrome-field:#1B1E15;           /* opaque native form controls */
+    --chrome-mut:#9a9d8c;             /* struck-through / muted diff text */
+    --chrome-red:#F97066;             /* readable reject-red on the chrome */
+    --chrome-amber:#E8A33D;           /* caution text (assumptions, warnings) */
+    --chrome-warm:#F0B45E;  --chrome-warm-hi:#F7C87E;   /* "shut today" outline pair */
+    --chrome-rose:#E88A7D;  --chrome-rose-hi:#F2A79B;   /* "not there anymore" pair */
+    --chrome-green:#7fcf9a; --chrome-green-hi:#A6E3BC;  /* done/fresh confirmations */
+    --chrome-orange-soft:#FF8A52;     /* curated tag on the drawer */
+    --chrome-link:#7FC9E0;            /* city link on the drawer */
+  }
+  /* The light twin. Same brand, inverted ground: paper carries the chrome, ink
+     carries the text, trail orange stays the accent. Every pale-on-dark accent
+     gains a deep-on-cream partner; nothing else in the file knows the theme. */
+  html[data-map-theme="light"]{
+    --chrome-bg:#EFE6D4;
+    --chrome-fg:16 30 22;
+    --chrome-fg-solid:#101E16;
+    --chrome-glass:239 230 212;
+    --chrome-glass-deep:233 222 199;
+    --chrome-head:#33584A;
+    --chrome-lift:#CBDCCE;
+    --chrome-well:#E2D5BC;
+    --chrome-field:#FBF4E4;
+    --chrome-mut:#67695B;
+    --chrome-red:#B4231A;
+    --chrome-amber:#8F5A12;
+    --chrome-warm:#8F5A12;  --chrome-warm-hi:#6E4409;
+    --chrome-rose:#A63A28;  --chrome-rose-hi:#8C2F1F;
+    --chrome-green:#1E7A46; --chrome-green-hi:#166B3B;
+    --chrome-orange-soft:#C2410C;
+    --chrome-link:#176A88;
   }
   *{margin:0;padding:0;box-sizing:border-box}
   html{height:100%;overflow:hidden}   /* never let the page itself scroll (drawer/dock translate off-screen → would otherwise create scroll, shoving the overlay off the top) */
@@ -19,14 +66,21 @@
   .mono{font-family:var(--mono);text-transform:uppercase;letter-spacing:.14em}
   a{color:inherit;text-decoration:none}
 
+  /* The nav wordmark hardcodes the cream letterforms (brand/logo-nav.svg), so
+     on the light chrome it vanished into the paper. logo-nav-light.svg is the
+     same art with ink letters; content:url() swaps the replaced image without
+     touching the markup, and asset-mapper rewrites the relative URL the same
+     way it does for the font files in fonts.css. */
+  html[data-map-theme="light"] .brand img{content:url("../brand/logo-nav-light.svg")}
+
   /* ---------- RAIL ---------- */
-  .rail{background:var(--ink);color:var(--paper);display:flex;flex-direction:column;border-right:1px solid var(--spruce-lift);z-index:1000}
-  .rail-head{padding:1.3rem 1.4rem;border-bottom:1px solid rgba(239,230,212,.14)}
+  .rail{background:var(--chrome-bg);color:var(--chrome-fg-solid);display:flex;flex-direction:column;border-right:1px solid var(--chrome-lift);z-index:1000}
+  .rail-head{padding:1.3rem 1.4rem;border-bottom:1px solid rgb(var(--chrome-fg) / .14)}
   .rail-head .brand{font-family:var(--serif);font-weight:600;font-size:1.55rem}
   .rail-head .brand b{color:var(--trail);font-style:italic}
-  .rail-head .co{font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;color:rgba(239,230,212,.5);margin-top:.3rem;text-transform:uppercase}
+  .rail-head .co{font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;color:rgb(var(--chrome-fg) / .68);margin-top:.3rem;text-transform:uppercase}
   .rail-nav{display:flex;flex-wrap:wrap;gap:.2rem .9rem;margin-top:.8rem}
-  .rail-nav a{font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(239,230,212,.6);transition:color .2s}
+  .rail-nav a{font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:rgb(var(--chrome-fg) / .72);transition:color .2s}
   .rail-nav a:hover,.rail-nav a.on{color:var(--trail)}
   /* logged-in account chip + dropdown (partials/_account_chip.html.twig) — copied from
      atlas.css since this page is standalone and doesn't load it (Task 7: map page gains
@@ -34,17 +88,17 @@
      The rail is already dark like atlas.css's --ink topnav, so the chip's default (dark-nav)
      styling applies as-is — no page-specific overrides needed. */
   .acct-menu{position:relative;flex:none}
-  .acct-chip{display:inline-flex;align-items:center;gap:.5rem;background:none;border:1.5px solid rgba(239,230,212,.4);border-radius:999px;padding:.26rem .7rem .26rem .28rem;color:var(--paper);cursor:pointer;font-family:var(--sans);font-size:.9rem;line-height:1;transition:border-color .2s}
+  .acct-chip{display:inline-flex;align-items:center;gap:.5rem;background:none;border:1.5px solid rgb(var(--chrome-fg) / .4);border-radius:999px;padding:.26rem .7rem .26rem .28rem;color:var(--chrome-fg-solid);cursor:pointer;font-family:var(--sans);font-size:.9rem;line-height:1;transition:border-color .2s}
   .acct-chip:hover,.acct-chip[aria-expanded=true]{border-color:var(--trail)}
   .acct-chip .av{width:30px;height:30px;border-radius:50%;background:var(--trail);color:var(--ink);display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-weight:600;font-size:.82rem;flex:none}
-  .acct-bulb{position:absolute;top:-4px;left:22px;z-index:2;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:var(--trail);color:var(--ink);border:2px solid var(--ink);font-family:var(--mono);font-size:.6rem;font-weight:700;display:flex;align-items:center;justify-content:center;pointer-events:none}
+  .acct-bulb{position:absolute;top:-4px;left:22px;z-index:2;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:var(--trail);color:var(--ink);border:2px solid var(--chrome-bg);font-family:var(--mono);font-size:.6rem;font-weight:700;display:flex;align-items:center;justify-content:center;pointer-events:none}
   .acct-chip .acct-name{max-width:14ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .acct-chip .acct-caret{opacity:.65;transition:transform .18s}
   .acct-chip[aria-expanded=true] .acct-caret{transform:rotate(180deg)}
-  .acct-dropdown{position:absolute;top:calc(100% + .55rem);right:0;min-width:200px;background:var(--paper);border:1px solid rgba(20,22,14,.12);border-radius:8px;box-shadow:0 14px 36px -12px rgba(0,0,0,.5);padding:.4rem;z-index:600}
+  .acct-dropdown{position:absolute;top:calc(100% + .55rem);right:0;min-width:200px;background:var(--paper);border:1px solid rgba(16,30,22,.12);border-radius:8px;box-shadow:0 14px 36px -12px rgba(0,0,0,.5);padding:.4rem;z-index:600}
   .acct-dropdown[hidden]{display:none}
   .acct-dropdown a,.acct-dropdown button{display:block;width:100%;box-sizing:border-box;text-align:left;background:none;border:0;font-family:var(--sans);font-size:.9rem;color:var(--ink)!important;opacity:1!important;padding:.55rem .7rem;border-radius:5px;cursor:pointer;text-decoration:none;white-space:nowrap}
-  .acct-dropdown a:hover,.acct-dropdown button:hover{background:rgba(20,22,14,.06)}
+  .acct-dropdown a:hover,.acct-dropdown button:hover{background:rgba(16,30,22,.06)}
   .acct-sec{font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:#8a8674;padding:.5rem .7rem .25rem;pointer-events:none}
   .acct-sec:first-child{padding-top:.25rem}
   /* The unread pill beside "Messages". map.css carries its own copy of the
@@ -54,15 +108,15 @@
   .acct-dropdown .acct-count{display:inline-flex;align-items:center;justify-content:center;min-width:1.2rem;height:1.2rem;
     margin-left:.45rem;padding:0 .35rem;border-radius:999px;background:var(--trail);color:var(--ink);
     font-family:var(--mono);font-size:.62rem;font-weight:700;line-height:1;vertical-align:middle}
-  .acct-dropdown a.acct-sep{margin-top:.25rem;border-top:1px solid rgba(20,22,14,.1);padding-top:.6rem}
-  .acct-dropdown form{margin:.25rem 0 0;padding-top:.25rem;border-top:1px solid rgba(20,22,14,.1)}
+  .acct-dropdown a.acct-sep{margin-top:.25rem;border-top:1px solid rgba(16,30,22,.1);padding-top:.6rem}
+  .acct-dropdown form{margin:.25rem 0 0;padding-top:.25rem;border-top:1px solid rgba(16,30,22,.1)}
   .acct-dropdown form button{color:var(--clay)!important}
   /* Language switcher (shared partials/_lang_menu.html.twig) — same pill/dropdown
      pattern as the account chip; dropdown reuses .acct-dropdown above. Sits
      right of the logo in .rail-brandrow (desktop rail AND the mobile top bar). */
   .rail-brandrow{display:flex;align-items:center;justify-content:space-between;gap:.8rem}
   .lang-menu{position:relative;flex:none}
-  .lang-chip{display:inline-flex;align-items:center;gap:.32rem;background:none;border:1.5px solid rgba(239,230,212,.4);border-radius:999px;padding:.3rem .55rem;color:var(--paper);cursor:pointer;font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;line-height:1;transition:border-color .2s}
+  .lang-chip{display:inline-flex;align-items:center;gap:.32rem;background:none;border:1.5px solid rgb(var(--chrome-fg) / .4);border-radius:999px;padding:.3rem .55rem;color:var(--chrome-fg-solid);cursor:pointer;font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;line-height:1;transition:border-color .2s}
   .lang-chip:hover,.lang-chip[aria-expanded=true]{border-color:var(--trail)}
   .lang-chip svg{opacity:.7;flex:none}
   .lang-chip[aria-expanded=true] .lang-caret{transform:rotate(180deg)}
@@ -87,31 +141,31 @@
     .rail .acct-menu{margin-top:.6rem}
   }
   @media(max-width:560px){.acct-chip .acct-name,.acct-chip .acct-caret{display:none}.acct-chip{padding:.26rem;border-radius:50%}}
-  .rail-burger{display:none;align-items:center;justify-content:center;width:2.4rem;height:2.4rem;padding:0;background:transparent;border:none;border-radius:6px;color:var(--paper);cursor:pointer;-webkit-tap-highlight-color:transparent}
-  .rail-scroll{flex:1;min-height:0;overflow-y:auto;padding:1.2rem 1.4rem;scrollbar-width:thin;scrollbar-color:rgba(239,230,212,.45) transparent}
+  .rail-burger{display:none;align-items:center;justify-content:center;width:2.4rem;height:2.4rem;padding:0;background:transparent;border:none;border-radius:6px;color:var(--chrome-fg-solid);cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .rail-scroll{flex:1;min-height:0;overflow-y:auto;padding:1.2rem 1.4rem;scrollbar-width:thin;scrollbar-color:rgb(var(--chrome-fg) / .55) transparent}
   .rail-scroll::-webkit-scrollbar{width:9px}
   .rail-scroll::-webkit-scrollbar-track{background:rgba(0,0,0,.2)}
-  .rail-scroll::-webkit-scrollbar-thumb{background:rgba(239,230,212,.42);border-radius:5px;border:2px solid transparent;background-clip:padding-box}
-  .rail-scroll::-webkit-scrollbar-thumb:hover{background:rgba(239,230,212,.6);background-clip:padding-box}
+  .rail-scroll::-webkit-scrollbar-thumb{background:rgb(var(--chrome-fg) / .55);border-radius:5px;border:2px solid transparent;background-clip:padding-box}
+  .rail-scroll::-webkit-scrollbar-thumb:hover{background:rgb(var(--chrome-fg) / .6);background-clip:padding-box}
   .grp{margin-bottom:1.7rem}
-  .grp h3{font-family:var(--mono);font-size:.66rem;letter-spacing:.18em;color:var(--glacier);margin-bottom:.8rem;text-transform:uppercase}
+  .grp h3{font-family:var(--mono);font-size:.66rem;letter-spacing:.18em;color:var(--chrome-head);margin-bottom:.8rem;text-transform:uppercase}
   /* Empty-scope invite (moderation-and-contribution.md
      §10.1): same quiet single-line rail typography as .hint below, but a real
      link — underlined, brightens to --trail on hover like the other rail links. */
   .rail-invite{margin-bottom:1.7rem;font-size:.78rem;line-height:1.5}
-  .rail-invite a{color:rgba(239,230,212,.75);text-decoration:underline;text-underline-offset:2px;transition:color .2s}
+  .rail-invite a{color:rgb(var(--chrome-fg) / .75);text-decoration:underline;text-underline-offset:2px;transition:color .2s}
   .rail-invite a:hover{color:var(--trail)}
   .grp h3.dl-head{display:flex;align-items:center;gap:.6rem}
-  .dl-all{margin-left:auto;background:transparent;border:1px solid rgba(239,230,212,.25);color:var(--glacier);font-family:var(--mono);font-size:.54rem;letter-spacing:.08em;text-transform:uppercase;padding:.2rem .45rem;border-radius:4px;cursor:pointer;transition:all .15s}
+  .dl-all{margin-left:auto;background:transparent;border:1px solid rgb(var(--chrome-fg) / .25);color:var(--chrome-head);font-family:var(--mono);font-size:.54rem;letter-spacing:.08em;text-transform:uppercase;padding:.2rem .45rem;border-radius:4px;cursor:pointer;transition:all .15s}
   .dl-all:hover{border-color:var(--trail);color:var(--trail)}
   /* road-surface key — how the A·Road surface layer is drawn (colour + line pattern); shown in the on-map legend */
   .skey{display:flex;flex-direction:column;gap:.55rem;margin-top:.1rem}
   /* Rows are buttons now: the key doubles as a filter (tick gravel alone and
      the map shows gravel alone, in both the tile skin and our own items). */
-  .skey-row{display:flex;align-items:center;gap:.7rem;font-size:.8rem;color:var(--paper);
+  .skey-row{display:flex;align-items:center;gap:.7rem;font-size:.8rem;color:var(--chrome-fg-solid);
     background:none;border:none;padding:.15rem .2rem;margin:-.15rem -.2rem;width:calc(100% + .4rem);
     text-align:left;cursor:pointer;border-radius:4px;font-family:inherit;min-height:1.9rem}
-  .skey-row:hover{background:rgba(239,230,212,.08)}
+  .skey-row:hover{background:rgb(var(--chrome-fg) / .08)}
   .skey-row:focus-visible{outline:2px solid var(--trail);outline-offset:1px}
   .skey-row[aria-pressed="false"]{opacity:.4}
   .skey-row[aria-pressed="false"] .skey-ln{filter:grayscale(1)}
@@ -120,20 +174,20 @@
      Filled when the class is shown, an empty box when it is filtered out — the
      same shape either way, so the row does not jump as it toggles. */
   .skey-row::before{content:'\2713';font-size:.78rem;line-height:1;flex:none;width:.9rem;
-    color:var(--paper);opacity:.85;transition:opacity .12s}
+    color:var(--chrome-fg-solid);opacity:.85;transition:opacity .12s}
   .skey-row[aria-pressed="false"]::before{content:'';opacity:0}
   .skey-row[aria-pressed="false"]{opacity:.45}
   .skey-row:hover::before{opacity:1}
   /* The quality-tick note: an explanation, not a filter row — dimmer, no
      checkmark, and a miniature of the ticks themselves (green → amber → red
      stitches) so the legend teaches what the map shows. */
-  .skey-note{display:flex;align-items:center;gap:.7rem;font-size:.68rem;color:var(--paper);
+  .skey-note{display:flex;align-items:center;gap:.7rem;font-size:.68rem;color:var(--chrome-fg-solid);
     opacity:.75;margin-top:.55rem;padding:0 .3rem;line-height:1.35}
   .skey-ticks{width:34px;height:4px;border-radius:2px;flex:none;
     background:linear-gradient(90deg,#1E8E4F 0 3px,transparent 3px 12px,
       #D9A62E 12px 15px,transparent 15px 23px,#C2402F 23px 26px,transparent 26px 34px)}
-  .skey-study{margin-top:.7rem;width:100%;background:none;border:1px solid rgba(239,230,212,.28);
-    border-radius:5px;color:var(--paper);font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;
+  .skey-study{margin-top:.7rem;width:100%;background:none;border:1px solid rgb(var(--chrome-fg) / .28);
+    border-radius:5px;color:var(--chrome-fg-solid);font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;
     text-transform:uppercase;padding:.45rem .5rem;cursor:pointer;min-height:2rem}
   .skey-study:hover:not(:disabled){border-color:var(--trail)}
   /* Off with the layer it studies: visibly unavailable rather than silently
@@ -145,8 +199,8 @@
      reads as one legend, and deliberately NOT a button: these three explain
      what the map draws, they do not filter it. No checkmark, no hover, no
      press state - the affordance has to match what happens. */
-  .rkey{margin-top:.95rem;padding-top:.85rem;border-top:1px solid rgba(239,230,212,.14)}
-  .rkey-row{display:flex;align-items:center;gap:.7rem;font-size:.8rem;color:var(--paper);
+  .rkey{margin-top:.95rem;padding-top:.85rem;border-top:1px solid rgb(var(--chrome-fg) / .14)}
+  .rkey-row{display:flex;align-items:center;gap:.7rem;font-size:.8rem;color:var(--chrome-fg-solid);
     padding:.15rem .2rem;line-height:1.35}
   /* The knooppunt badge, in miniature: white disc, route-purple ring and
      numeral, which is exactly how routes-tiles.js draws it on the map. A
@@ -165,40 +219,40 @@
      information; the casing is a rendering nicety of one layer. */
   .skey-ln.dash{background:repeating-linear-gradient(90deg,var(--sc) 0 8px,transparent 8px 13px)}
   .skey-ln.dot{background:repeating-linear-gradient(90deg,var(--sc) 0 3px,transparent 3px 7px)}
-  .search{width:100%;background:transparent;border:none;border-bottom:1.5px solid rgba(239,230,212,.3);color:var(--paper);font-family:var(--sans);font-size:.95rem;padding:.5rem 0;outline:none}
-  .search::placeholder{color:rgba(239,230,212,.45)}
+  .search{width:100%;background:transparent;border:none;border-bottom:1.5px solid rgb(var(--chrome-fg) / .3);color:var(--chrome-fg-solid);font-family:var(--sans);font-size:.95rem;padding:.5rem 0;outline:none}
+  .search::placeholder{color:rgb(var(--chrome-fg) / .65)}
   .search:focus{border-color:var(--trail)}
   /* live search results (towns + named Commons features) — in-flow under the input so the scroll
      container never clips them */
-  .search-res{list-style:none;margin:.5rem 0 0;max-height:300px;overflow-y:auto;border:1px solid rgba(239,230,212,.16);border-radius:8px;background:rgba(20,33,24,.55)}
+  .search-res{list-style:none;margin:.5rem 0 0;max-height:300px;overflow-y:auto;border:1px solid rgb(var(--chrome-fg) / .16);border-radius:8px;background:rgb(var(--chrome-glass-deep) / .55)}
   .search-res li{margin:0}
-  .search-res button{display:flex;align-items:center;gap:.55rem;width:100%;text-align:left;background:none;border:none;border-bottom:1px solid rgba(239,230,212,.07);color:var(--paper);font-family:var(--sans);font-size:.86rem;padding:.5rem .55rem;cursor:pointer;transition:background .12s}
+  .search-res button{display:flex;align-items:center;gap:.55rem;width:100%;text-align:left;background:none;border:none;border-bottom:1px solid rgb(var(--chrome-fg) / .07);color:var(--chrome-fg-solid);font-family:var(--sans);font-size:.86rem;padding:.5rem .55rem;cursor:pointer;transition:background .12s}
   .search-res li:last-child button{border-bottom:none}
   .search-res button:hover,.search-res button.hl{background:rgba(255,90,31,.14)}
   .search-res .sw{flex:0 0 auto;width:20px;height:20px;display:flex;align-items:center;justify-content:center;border-radius:5px;font-size:.66rem;font-weight:700;font-family:var(--emoji)}
   .search-res .snm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .search-res .sub{flex:0 0 auto;font-family:var(--mono);font-size:.54rem;letter-spacing:.08em;text-transform:uppercase;color:rgba(239,230,212,.45)}
-  .search-res .scomm{margin-left:.45rem;font-family:var(--mono);font-size:.5rem;letter-spacing:.08em;text-transform:uppercase;color:rgba(239,230,212,.45);border:1px solid rgba(239,230,212,.22);border-radius:8px;padding:.08rem .35rem;vertical-align:middle}
-  .search-empty{padding:.6rem .55rem;font-size:.8rem;color:rgba(239,230,212,.5)}
+  .search-res .sub{flex:0 0 auto;font-family:var(--mono);font-size:.54rem;letter-spacing:.08em;text-transform:uppercase;color:rgb(var(--chrome-fg) / .65)}
+  .search-res .scomm{margin-left:.45rem;font-family:var(--mono);font-size:.5rem;letter-spacing:.08em;text-transform:uppercase;color:rgb(var(--chrome-fg) / .65);border:1px solid rgb(var(--chrome-fg) / .22);border-radius:8px;padding:.08rem .35rem;vertical-align:middle}
+  .search-empty{padding:.6rem .55rem;font-size:.8rem;color:rgb(var(--chrome-fg) / .68)}
   /* Widen chip (map-and-search.md §4.5): the one-tap "search wider" ladder,
      visually set apart from result rows (top border, glacier accent, mono). */
-  .search-widen{border-top:1px solid rgba(239,230,212,.16)}
-  .search-widen button{width:100%;display:flex;align-items:center;gap:.4rem;background:none;border:none;color:var(--glacier);font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;padding:.55rem;cursor:pointer;transition:background .12s}
+  .search-widen{border-top:1px solid rgb(var(--chrome-fg) / .16)}
+  .search-widen button{width:100%;display:flex;align-items:center;gap:.4rem;background:none;border:none;color:var(--chrome-head);font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;padding:.55rem;cursor:pointer;transition:background .12s}
   .search-widen button::before{content:'⊕';font-size:.8rem}
   .search-widen button:hover{background:rgba(255,90,31,.14)}
   /* grouped results (spec 2026-07-14 §3.3): sticky per-layer headers between rows */
-  .search-res .sgrp{position:sticky;top:0;background:rgba(20,33,24,.94);font-family:var(--mono);font-size:.56rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(239,230,212,.55);padding:.35rem .55rem .25rem;border-bottom:1px solid rgba(239,230,212,.1)}
+  .search-res .sgrp{position:sticky;top:0;background:rgb(var(--chrome-glass-deep) / .94);font-family:var(--mono);font-size:.56rem;letter-spacing:.1em;text-transform:uppercase;color:rgb(var(--chrome-fg) / .68);padding:.35rem .55rem .25rem;border-bottom:1px solid rgb(var(--chrome-fg) / .1)}
 
   .chips{display:flex;flex-wrap:wrap;gap:.4rem}
-  .chip{font-family:var(--mono);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;padding:.35rem .65rem;border:1px solid rgba(239,230,212,.25);border-radius:30px;cursor:pointer;transition:all .18s;user-select:none}
-  .chip:hover{border-color:var(--paper)}
+  .chip{font-family:var(--mono);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;padding:.35rem .65rem;border:1px solid rgb(var(--chrome-fg) / .25);border-radius:30px;cursor:pointer;transition:all .18s;user-select:none}
+  .chip:hover{border-color:var(--chrome-fg-solid)}
   .chip.on{background:var(--trail);border-color:var(--trail);color:var(--ink)}
 
   /* Layer-group heading inside #layers (utilities / rider picks / moderation).
      Quieter than .grp h3 above it — this is a divider within one panel, not a
      new panel; the first one sits flush because the panel heading precedes it. */
   .lgrp{font-family:var(--mono);font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;
-        color:rgba(239,230,212,.42);margin:.9rem 0 .35rem}
+        color:rgb(var(--chrome-fg) / .65);margin:.9rem 0 .35rem}
   .lgrp:first-child{margin-top:0}
   .layer{display:flex;align-items:center;gap:.7rem;padding:.45rem 0;cursor:pointer;user-select:none}
   .layer .sw{width:21px;height:21px;border-radius:5px;flex-shrink:0;border:1.5px solid var(--c);background:var(--c);display:flex;align-items:center;justify-content:center;font-size:.78rem;line-height:1;color:var(--ic,#fff);transition:all .18s}
@@ -206,11 +260,11 @@
   .layer.off .sw{opacity:.45}
   .layer .nm{flex:1;font-size:.92rem}
   .layer.off .nm{opacity:.45}
-  .layer .ct{font-family:var(--mono);font-size:.66rem;color:rgba(239,230,212,.5)}
+  .layer .ct{font-family:var(--mono);font-size:.66rem;color:rgb(var(--chrome-fg) / .68)}
 
-  .toggle{display:flex;border:1px solid rgba(239,230,212,.25);border-radius:6px;overflow:hidden}
-  .toggle button{flex:1;background:transparent;color:var(--paper);font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;padding:.55rem;border:none;cursor:pointer;transition:all .18s}
-  .toggle button.on{background:var(--spruce-lift)}
+  .toggle{display:flex;border:1px solid rgb(var(--chrome-fg) / .25);border-radius:6px;overflow:hidden}
+  .toggle button{flex:1;background:transparent;color:var(--chrome-fg-solid);font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;padding:.55rem;border:none;cursor:pointer;transition:all .18s}
+  .toggle button.on{background:var(--chrome-lift)}
   /* Region scope selector (map-and-search.md §4.5): 5 options, so it wraps
      into a chip grid instead of the 2-up segmented pill .toggle assumes. */
   .scope-toggle{display:flex;flex-wrap:wrap;gap:.35rem}
@@ -220,9 +274,9 @@
      of .scope-toggle above, so flex:1 1 auto and the .35rem gap apply between the
      chips exactly as they do for the two static buttons either side of it. */
   #scopeChips{display:contents}
-  .scope-toggle button{flex:1 1 auto;min-width:calc(33.3% - .35rem);background:transparent;color:var(--paper);font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;padding:.5rem .3rem;border:1px solid rgba(239,230,212,.25);border-radius:6px;cursor:pointer;transition:all .18s}
-  .scope-toggle button:hover{border-color:rgba(239,230,212,.5)}
-  .scope-toggle button.on{background:var(--spruce-lift);border-color:var(--glacier);color:var(--paper)}
+  .scope-toggle button{flex:1 1 auto;min-width:calc(33.3% - .35rem);background:transparent;color:var(--chrome-fg-solid);font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;padding:.5rem .3rem;border:1px solid rgb(var(--chrome-fg) / .25);border-radius:6px;cursor:pointer;transition:all .18s}
+  .scope-toggle button:hover{border-color:rgb(var(--chrome-fg) / .5)}
+  .scope-toggle button.on{background:var(--chrome-lift);border-color:var(--chrome-head);color:var(--chrome-fg-solid)}
   /* Compass grid (owner request, map-and-search.md §4.5
      "Compass grid layout"): only rendered when the active scope is a single
      region (map.js renderScopeChips) — the selected region sits centre, each
@@ -252,15 +306,15 @@
      orange fill like .chip.on (not the subtle spruce the other toggles use) */
   #mode{border-color:var(--trail)}
   #mode button.on{background:var(--trail);color:var(--ink);font-weight:700}
-  .hint{font-size:.78rem;color:rgba(239,230,212,.5);margin-top:.6rem;line-height:1.5}
+  .hint{font-size:.78rem;color:rgb(var(--chrome-fg) / .68);margin-top:.6rem;line-height:1.5}
 
   /* The data-version readout under the places count: deliberately faint —
      it is a diagnostic, not content — but selectable for a bug report. */
   .data-versions{font-family:var(--mono);font-size:.58rem;letter-spacing:.04em;
-    color:rgba(239,230,212,.45);padding:0 1.4rem 1rem;word-break:break-word;user-select:text}
+    color:rgb(var(--chrome-fg) / .65);padding:0 1.4rem 1rem;word-break:break-word;user-select:text}
   .data-versions .dv-bad{color:var(--trail)}
-  .rail-foot{padding:1.1rem 1.4rem;border-top:1px solid rgba(239,230,212,.14);display:flex;align-items:center;justify-content:space-between;gap:.6rem;flex-wrap:wrap}
-  .rail-foot .res{font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;color:rgba(239,230,212,.7)}
+  .rail-foot{padding:1.1rem 1.4rem;border-top:1px solid rgb(var(--chrome-fg) / .14);display:flex;align-items:center;justify-content:space-between;gap:.6rem;flex-wrap:wrap}
+  .rail-foot .res{font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;color:rgb(var(--chrome-fg) / .7)}
   .rail-foot .res b{color:var(--trail);font-size:1.15rem}
   /* Own line under the count: says why the coverage layers are drawing nothing
      when the rider is zoomed out past the tileset's floor (render.js
@@ -274,7 +328,7 @@
      MapLibre to re-measure on every toggle. */
   #map.cc-curator-mode::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:400;
     box-shadow:inset 0 0 0 3px var(--trail);border-radius:inherit}
-  .rail-foot .zoom-hint{flex:0 0 100%;font-family:var(--mono);font-size:.62rem;line-height:1.35;letter-spacing:.04em;color:var(--glacier);opacity:.9}
+  .rail-foot .zoom-hint{flex:0 0 100%;font-family:var(--mono);font-size:.62rem;line-height:1.35;letter-spacing:.04em;color:var(--chrome-head);opacity:.9}
   .export{background:var(--trail);color:var(--ink);font-family:var(--sans);font-weight:700;font-size:.78rem;padding:.55rem .85rem;border-radius:5px;border:none;cursor:pointer;white-space:nowrap}
   .export:hover{background:#ff703d}
 
@@ -288,7 +342,7 @@
 
   /* tilted teardrop: the 50% 50% 50% 0 radius makes the drop point down-left (the look we want) with
      NO rotate — so the glyph inside stays upright on its own (don't rotate .cc-pin or the span) */
-  .cc-pin{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50% 50% 50% 0;background:var(--c);box-shadow:0 3px 8px rgba(20,22,14,.4);border:2px solid var(--paper)}
+  .cc-pin{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50% 50% 50% 0;background:var(--c);box-shadow:0 3px 8px rgba(16,30,22,.4);border:2px solid var(--paper)}
   .cc-pin span{font-size:.85rem;line-height:1;font-family:var(--emoji)}
   /* Every remaining surface that prints a category glyph. Without --emoji these
      draw tofu boxes on any machine whose browser has no colour-emoji font —
@@ -298,7 +352,7 @@
      border rather than adding a second one: an outline outside the drop shadow
      read as a selection state, which is what .cur already means. Trail orange,
      the colour every "your turn" affordance on the site uses. */
-  .cc-pin.stale{border-color:var(--trail);box-shadow:0 3px 8px rgba(20,22,14,.4),0 0 0 1px rgba(255,90,31,.45)}
+  .cc-pin.stale{border-color:var(--trail);box-shadow:0 3px 8px rgba(16,30,22,.4),0 0 0 1px rgba(255,90,31,.45)}
   .cc-pin.cur::after{content:"";position:absolute;width:6px;height:6px;background:var(--paper);border-radius:50%;top:-3px;right:-3px;transform:rotate(45deg)}
   .cc-pin.pending{border-color:#D92D20;border-width:3px}
   /* community tier (07-15 decisions B/D): same per-type marker, lighter — no new icon set.
@@ -313,40 +367,40 @@
   .cc-pin.community{opacity:.95 !important;border-style:dashed;border-color:var(--ochre)}
   .cc-pin.community::after{content:"?";position:absolute;width:13px;height:13px;top:-5px;right:-5px;
     background:var(--ochre);color:#14160E;border-radius:50%;font-family:var(--mono);font-size:9px;
-    font-weight:700;line-height:13px;text-align:center;box-shadow:0 1px 3px rgba(20,22,14,.5)}
+    font-weight:700;line-height:13px;text-align:center;box-shadow:0 1px 3px rgba(16,30,22,.5)}
   /* one-off reveal pin (decision C): community look + the selection pulse */
   .cc-pin.reveal::before{content:"";position:absolute;left:50%;top:50%;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;border:2px solid rgba(255,90,31,.6);animation:cc-pulse 1.25s infinite}
   .cc-mod{margin-top:1rem;border:1px solid rgba(217,45,32,.4);border-left:3px solid #D92D20;border-radius:0 8px 8px 0;padding:.9rem 1rem;background:rgba(217,45,32,.05)}
-  .cc-mod-badge{font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:#F97066;margin-bottom:.5rem}   /* readable red on the dark drawer (was #D92D20) */
+  .cc-mod-badge{font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--chrome-red);margin-bottom:.5rem}   /* readable red on the dark drawer (was #D92D20) */
   .cc-mod-body{font-size:.85rem;line-height:1.5;margin-bottom:.6rem}
     /* The target item's own record inside a pending card — quieter than the
      proposed change above it: this is the context, not the question. */
-  .cc-mod-ctx{margin:.7rem 0 0;border-top:1px solid rgba(239,230,212,.14);padding-top:.6rem}
-  .cc-mod-ctx-h{font-family:var(--mono);font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(239,230,212,.5);margin-bottom:.35rem}
+  .cc-mod-ctx{margin:.7rem 0 0;border-top:1px solid rgb(var(--chrome-fg) / .14);padding-top:.6rem}
+  .cc-mod-ctx-h{font-family:var(--mono);font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:rgb(var(--chrome-fg) / .68);margin-bottom:.35rem}
   .cc-mod-ctx .cc-d-rec{margin:0}
-  .cc-mod-diff{background:rgba(20,22,14,.05);border-radius:5px;padding:.5rem .7rem;font-size:.82rem;margin-bottom:.6rem}
+  .cc-mod-diff{background:rgb(var(--chrome-fg) / .05);border-radius:5px;padding:.5rem .7rem;font-size:.82rem;margin-bottom:.6rem}
   /* Before/after for a proposed climb shape. The switch redraws the line on
      the MAP — coordinates in the text diff above are not reviewable. */
   /* Grouped, per field. One run-on sentence of every changed value was
      technically complete and practically unreadable. */
   .cc-mod-chg{display:grid;grid-template-columns:auto 1fr;gap:.2rem .7rem;margin:.35rem 0 0}
   .cc-mod-chg dt{font-family:var(--mono);font-size:.58rem;letter-spacing:.06em;text-transform:uppercase;
-    color:#9a9d8c;align-self:baseline;padding-top:.15rem;white-space:nowrap}
+    color:var(--chrome-mut);align-self:baseline;padding-top:.15rem;white-space:nowrap}
   .cc-mod-chg dd{margin:0;min-width:0;overflow-wrap:anywhere;font-size:.82rem;line-height:1.45}
-  .cc-mod-chg .was{color:#8a8d7d;text-decoration:line-through}
-  .cc-mod-chg .arw{color:#9a9d8c;margin:0 .3rem}
+  .cc-mod-chg .was{color:var(--chrome-mut);text-decoration:line-through}
+  .cc-mod-chg .arw{color:var(--chrome-mut);margin:0 .3rem}
   .cc-mod-chg .now{color:var(--trail)}
   /* A row showing a PROPOSED value rather than the item's own. Orange, so it
      reads as a proposal at a glance and never as recorded fact. */
   .cc-d-rec li.chg .v{color:var(--trail);font-weight:600}
   .cc-d-rec li.chg .k::after{content:"●";color:var(--trail);font-size:.5rem;margin-left:.3rem;vertical-align:middle}
   .cc-mod-shape{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin:0 0 .6rem}
-  .cc-mod-shape-h{font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;color:#9a9d8c}
-  .cc-mod-shape-btns{display:inline-flex;border:1px solid rgba(239,230,212,.28);border-radius:30px;overflow:hidden}
+  .cc-mod-shape-h{font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;color:var(--chrome-mut)}
+  .cc-mod-shape-btns{display:inline-flex;border:1px solid rgb(var(--chrome-fg) / .28);border-radius:30px;overflow:hidden}
   .cc-shape-btn{font-family:var(--mono);font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;
-    padding:.3rem .7rem;background:transparent;color:rgba(239,230,212,.75);border:0;cursor:pointer;min-height:30px}
-  .cc-shape-btn+.cc-shape-btn{border-left:1px solid rgba(239,230,212,.28)}
-  .cc-shape-btn:hover:not(:disabled){background:rgba(239,230,212,.10);color:var(--paper)}
+    padding:.3rem .7rem;background:transparent;color:rgb(var(--chrome-fg) / .75);border:0;cursor:pointer;min-height:30px}
+  .cc-shape-btn+.cc-shape-btn{border-left:1px solid rgb(var(--chrome-fg) / .28)}
+  .cc-shape-btn:hover:not(:disabled){background:rgb(var(--chrome-fg) / .10);color:var(--chrome-fg-solid)}
   .cc-shape-btn.on{background:#B25BE8;color:#14160E;font-weight:700}
   .cc-shape-btn:disabled{opacity:.35;cursor:default}
   .cc-shape-btn:focus-visible{outline:2px solid var(--trail);outline-offset:-2px}
@@ -358,8 +412,8 @@
      has not been looked at yet — it only appears via the desk's own link. */
   .cc-mod-badge.waiting{background:var(--ochre);color:var(--ink)}
   .cc-mod-asked,.cc-mod-replied,.cc-mod-prior{font-size:.82rem;line-height:1.5;padding:.5rem .7rem;border-radius:0 5px 5px 0;margin:.45rem 0}
-  .cc-mod-asked{background:rgba(20,22,14,.05);border-left:2px solid var(--ochre)}
-  .cc-mod-replied{background:rgba(20,22,14,.05);border-left:2px solid var(--spruce)}
+  .cc-mod-asked{background:rgb(var(--chrome-fg) / .05);border-left:2px solid var(--ochre)}
+  .cc-mod-replied{background:rgb(var(--chrome-fg) / .05);border-left:2px solid var(--spruce)}
   /* A decision already on record for this place — clay, and directly under the
      badge, because it changes what this decision IS rather than adding context
      to it (SubmissionQueue::priorRejections). */
@@ -369,8 +423,8 @@
      `unknown` is "we could not ask". Neither is a rejection. */
   .cc-mod-linkflag{font-size:.82rem;line-height:1.5;padding:.5rem .7rem;border-radius:0 5px 5px 0;margin:.45rem 0}
   .cc-mod-linkflag-unsafe{background:rgba(217,45,32,.12);border-left:2px solid #D92D20}
-  .cc-mod-linkflag-unknown{background:rgba(239,230,212,.07);border-left:2px solid rgba(239,230,212,.35)}
-  .cc-mod-asked-h{font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;color:#595c4d;display:block}
+  .cc-mod-linkflag-unknown{background:rgb(var(--chrome-fg) / .07);border-left:2px solid rgb(var(--chrome-fg) / .35)}
+  .cc-mod-asked-h{font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;color:var(--chrome-mut);display:block}
   .cc-mod-photos{display:flex;flex-wrap:wrap;gap:.5rem;margin:.5rem 0}
   .cc-mod-photo{display:flex;flex-direction:column;gap:.2rem;width:120px;font-size:.68rem}
   .cc-mod-photo img{width:120px;height:90px;object-fit:cover;border-radius:5px;display:block}
@@ -378,15 +432,15 @@
      photo to judge it. Bare button, so it looks exactly like the old img. */
   .cc-mod-photo-zoom{display:block;padding:0;border:0;background:none;cursor:zoom-in;border-radius:5px;position:relative}
   .cc-mod-photo-zoom:focus-visible{outline:2px solid var(--ochre);outline-offset:2px}
-  .cc-mod-photo-zoom::after{content:"⤢";position:absolute;right:.25rem;bottom:.25rem;font-size:.7rem;line-height:1;padding:.15rem .3rem;border-radius:4px;background:rgba(20,22,14,.6);color:var(--paper);opacity:0;transition:opacity .12s}
+  .cc-mod-photo-zoom::after{content:"⤢";position:absolute;right:.25rem;bottom:.25rem;font-size:.7rem;line-height:1;padding:.15rem .3rem;border-radius:4px;background:rgb(var(--chrome-glass) / .6);color:var(--chrome-fg-solid);opacity:0;transition:opacity .12s}
   .cc-mod-photo-zoom:hover::after,.cc-mod-photo-zoom:focus-visible::after{opacity:1}
-  .cc-mod-photo-meta{color:#595c4d;line-height:1.3}
+  .cc-mod-photo-meta{color:var(--chrome-mut);line-height:1.3}
   .cc-mod-photo-keep{display:flex;align-items:center;gap:.25rem}
-  .cc-mod-diff-h{font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:#8a8d7d;margin-bottom:.3rem}
-  .cc-mod-was{color:#8a8d7d;text-decoration:line-through}
+  .cc-mod-diff-h{font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--chrome-mut);margin-bottom:.3rem}
+  .cc-mod-was{color:var(--chrome-mut);text-decoration:line-through}
   .cc-mod-now{color:var(--trail)}
-  .cc-mod-initial{font-size:.82rem;color:rgba(239,230,212,.7);font-style:italic;margin:0}
-  .cc-mod-note{width:100%;min-height:52px;border:1px solid rgba(20,22,14,.2);border-radius:6px;padding:.5rem;font-family:var(--sans);font-size:.85rem;margin-bottom:.6rem;resize:vertical}
+  .cc-mod-initial{font-size:.82rem;color:rgb(var(--chrome-fg) / .7);font-style:italic;margin:0}
+  .cc-mod-note{width:100%;min-height:52px;border:1px solid rgba(16,30,22,.2);border-radius:6px;padding:.5rem;font-family:var(--sans);font-size:.85rem;margin-bottom:.6rem;resize:vertical}
   /* "Needs info" sent with an empty note: the question is the whole point of
      that decision, so the box says so rather than the POST failing silently. */
   .cc-mod-note.cc-mod-invalid{border-color:var(--clay);box-shadow:0 0 0 2px rgba(181,83,46,.35)}
@@ -398,13 +452,13 @@
   .cc-mod-btn{font-family:var(--sans);font-weight:700;font-size:.8rem;padding:.5rem .8rem;border-radius:5px;border:none;cursor:pointer;transition:background .15s,color .15s,box-shadow .15s}
   .cc-mod-btn.approve{background:var(--trail);color:var(--ink)}
   .cc-mod-btn.approve:hover{background:#ff703d}
-  .cc-mod-btn.info{background:transparent;color:rgba(239,230,212,.85);border:1.5px solid rgba(239,230,212,.45)}
-  .cc-mod-btn.info:hover{border-color:var(--paper);color:var(--paper)}
-  .cc-mod-btn.reject{background:transparent;color:#F97066;border:1.5px solid #F97066}
+  .cc-mod-btn.info{background:transparent;color:rgb(var(--chrome-fg) / .85);border:1.5px solid rgb(var(--chrome-fg) / .45)}
+  .cc-mod-btn.info:hover{border-color:var(--chrome-fg-solid);color:var(--chrome-fg-solid)}
+  .cc-mod-btn.reject{background:transparent;color:var(--chrome-red);border:1.5px solid var(--chrome-red)}
   .cc-mod-btn.reject:hover{background:rgba(249,112,102,.14)}
   .cc-mod-btn.armed{box-shadow:0 0 0 3px rgba(255,90,31,.45)}   /* keyboard-armed decision — Enter in the note sends it */
   .cc-mod-btn:disabled{opacity:.5;cursor:not-allowed}
-  .cc-mod-preview{font-family:var(--mono);font-size:.6rem;color:rgba(239,230,212,.55);margin-top:.5rem}
+  .cc-mod-preview{font-family:var(--mono);font-size:.6rem;color:rgb(var(--chrome-fg) / .68);margin-top:.5rem}
   .cc-toast{position:fixed;left:50%;bottom:1.5rem;transform:translateX(-50%) translateY(1rem);background:var(--ink);color:var(--paper);padding:.7rem 1.1rem;border-radius:8px;font-size:.85rem;max-width:90vw;text-align:center;box-shadow:0 10px 28px -10px rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:3000}
   .cc-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
   /* A confirmation recorded is worth a beat in the middle of the screen, not a
@@ -415,7 +469,7 @@
      a dismissible chip in the Region rail group; the ✕ matches the rail's muted
      control language. */
   .cc-area-prompt{margin-top:.55rem;align-items:center}
-  .cc-area-x{background:transparent;border:none;color:var(--paper);opacity:.55;cursor:pointer;font-size:.8rem;line-height:1;padding:.2rem .3rem;transition:opacity .15s}
+  .cc-area-x{background:transparent;border:none;color:var(--chrome-fg-solid);opacity:.55;cursor:pointer;font-size:.8rem;line-height:1;padding:.2rem .3rem;transition:opacity .15s}
   .cc-area-x:hover{opacity:1}
   /* Pan-away widen nudge (map-and-search.md §4.5 "Deep links & far panning"):
      a floating one-tap widen prompt over the map, styled like the toast + a
@@ -433,27 +487,36 @@
   .cc-nudge-go{font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;background:var(--trail);color:var(--ink);border:none;border-radius:20px;padding:.35rem .65rem;cursor:pointer}
   .cc-nudge-x{background:transparent;border:none;color:var(--paper);opacity:.55;cursor:pointer;font-size:.8rem;line-height:1;padding:.1rem .25rem;transition:opacity .15s}
   .cc-nudge-x:hover{opacity:1}
-  .cc-cluster{display:flex;align-items:center;justify-content:center;min-width:28px;height:28px;padding:0 7px;border-radius:15px;background:var(--c);color:#fff;font:600 13px/1 'Spline Sans Mono',ui-monospace,monospace;border:2px solid rgba(255,255,255,.85);box-shadow:0 2px 6px rgba(20,22,14,.45);cursor:pointer}
+  .cc-cluster{display:flex;align-items:center;justify-content:center;min-width:28px;height:28px;padding:0 7px;border-radius:15px;background:var(--c);color:#fff;font:600 13px/1 'Spline Sans Mono',ui-monospace,monospace;border:2px solid rgba(255,255,255,.85);box-shadow:0 2px 6px rgba(16,30,22,.45);cursor:pointer}
 
-  .maplibregl-popup-content{background:var(--ink);color:var(--paper);border-radius:8px;box-shadow:0 12px 30px -10px rgba(20,22,14,.6);padding:.9rem 1.1rem}
-  .maplibregl-popup-anchor-top .maplibregl-popup-tip{border-bottom-color:var(--ink)}
-  .maplibregl-popup-anchor-bottom .maplibregl-popup-tip{border-top-color:var(--ink)}
-  .maplibregl-popup-anchor-left .maplibregl-popup-tip{border-right-color:var(--ink)}
-  .maplibregl-popup-anchor-right .maplibregl-popup-tip{border-left-color:var(--ink)}
-  .pop .pop-co{font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;color:var(--glacier);text-transform:uppercase}
+  .maplibregl-popup-content{background:var(--chrome-bg);color:var(--chrome-fg-solid);border-radius:8px;box-shadow:0 12px 30px -10px rgba(16,30,22,.6);padding:.9rem 1.1rem}
+  .maplibregl-popup-anchor-top .maplibregl-popup-tip{border-bottom-color:var(--chrome-bg)}
+  .maplibregl-popup-anchor-bottom .maplibregl-popup-tip{border-top-color:var(--chrome-bg)}
+  .maplibregl-popup-anchor-left .maplibregl-popup-tip{border-right-color:var(--chrome-bg)}
+  .maplibregl-popup-anchor-right .maplibregl-popup-tip{border-left-color:var(--chrome-bg)}
+  .pop .pop-co{font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;color:var(--chrome-head);text-transform:uppercase}
   .pop h4{font-family:var(--serif);font-weight:600;font-size:1.25rem;margin:.2rem 0 .5rem}
   .pop .pop-tags{display:flex;gap:.3rem;flex-wrap:wrap;margin-bottom:.6rem}
-  .pop .pop-tags span{font-family:var(--mono);font-size:.58rem;padding:.15rem .35rem;border:1px solid rgba(239,230,212,.3);border-radius:3px;color:rgba(239,230,212,.8)}
+  .pop .pop-tags span{font-family:var(--mono);font-size:.58rem;padding:.15rem .35rem;border:1px solid rgb(var(--chrome-fg) / .3);border-radius:3px;color:rgb(var(--chrome-fg) / .8)}
   .pop .pop-vote{font-family:var(--mono);font-size:.62rem;color:var(--trail);letter-spacing:.08em;cursor:pointer}
 
   /* Live zoom readout — a maplibregl bottom-left control (map.js), so it inherits
      the control margin/stacking; only appearance is styled here. */
-  .zoom-badge{background:rgba(20,22,14,.9);color:var(--paper);font-family:var(--mono);font-size:.72rem;letter-spacing:.04em;line-height:1;padding:.28rem .5rem;border-radius:6px;pointer-events:none;box-shadow:0 2px 6px -2px rgba(0,0,0,.5)}
+  .zoom-badge{background:rgb(var(--chrome-glass) / .9);color:var(--chrome-fg-solid);font-family:var(--mono);font-size:.72rem;letter-spacing:.04em;line-height:1;padding:.28rem .5rem;border-radius:6px;pointer-events:none;box-shadow:0 2px 6px -2px rgba(0,0,0,.5)}
+  /* Chrome-theme toggle (assets/map/theme.js) — a maplibregl bottom-left
+     control like the zoom badge above, stacked with the nav buttons. The
+     glyph is ☀ in dark mode and ☾ in light mode: it shows the theme a press
+     will GIVE you, matching how the base/satellite switcher names targets. */
+  .theme-toggle{width:29px;height:29px;display:flex;align-items:center;justify-content:center;
+    background:rgb(var(--chrome-glass) / .9);color:var(--chrome-fg-solid);border:none;border-radius:6px;
+    font-family:var(--emoji);font-size:.85rem;line-height:1;cursor:pointer;box-shadow:0 2px 6px -2px rgba(0,0,0,.5)}
+  .theme-toggle:hover{color:var(--trail)}
+  .theme-toggle:focus-visible{outline:2px solid var(--trail);outline-offset:1px}
   /* Narrower on purpose (owner 2026-08-16): the quality-ticks note is one long
      sentence and it was setting the panel's width, so a key of six short rows
      took a third of a laptop's map. Capped, and the note wraps to two lines -
      the sentence is a footnote, not a column guide. */
-  .legend{position:absolute;bottom:1.2rem;right:1.2rem;background:rgba(20,22,14,.95);color:var(--paper);border-radius:8px;padding:.9rem 1.1rem;z-index:1000;
+  .legend{position:absolute;bottom:1.2rem;right:1.2rem;background:rgb(var(--chrome-glass) / .95);color:var(--chrome-fg-solid);border-radius:8px;padding:.9rem 1.1rem;z-index:1000;
     max-width:min(17.5rem,44vw)}
   /* The collapse control, on every screen rather than only on phones. Its own
      row, right-aligned, so it reads as this panel's control and needs no
@@ -462,23 +525,23 @@
   .legend.collapsed{padding:.3rem;max-width:none}
   .legend.collapsed .lg-toggle{margin-bottom:0}
   .legend.collapsed .lg-body{display:none}
-  .legend h4{font-family:var(--mono);font-size:.6rem;letter-spacing:.16em;color:var(--glacier);margin-bottom:.6rem;text-transform:uppercase}
+  .legend h4{font-family:var(--mono);font-size:.6rem;letter-spacing:.16em;color:var(--chrome-head);margin-bottom:.6rem;text-transform:uppercase}
   .legend .row{display:flex;align-items:center;gap:.5rem;font-size:.78rem;margin:.25rem 0}
   .legend .d{width:10px;height:10px;border-radius:50%;background:var(--c)}
-  .legend .lg-toggle{display:flex;align-items:center;justify-content:center;width:1.8rem;height:1.8rem;padding:0;background:transparent;border:none;border-radius:6px;color:var(--paper);cursor:pointer}
-  .legend .lg-toggle:hover{background:rgba(239,230,212,.1)}
+  .legend .lg-toggle{display:flex;align-items:center;justify-content:center;width:1.8rem;height:1.8rem;padding:0;background:transparent;border:none;border-radius:6px;color:var(--chrome-fg-solid);cursor:pointer}
+  .legend .lg-toggle:hover{background:rgb(var(--chrome-fg) / .1)}
   .legend .lg-toggle:focus-visible{outline:2px solid var(--trail);outline-offset:1px}
   /* on-map base/overlay switcher (top-right) — like a normal map's layer control */
-  .map-ctrl{position:absolute;top:1.2rem;right:1.2rem;z-index:1000;display:flex;flex-direction:column;gap:.4rem;background:rgba(20,22,14,.95);border-radius:8px;padding:.5rem;min-width:9.5rem}
-  .map-ctrl .mc-seg{display:flex;border:1px solid rgba(239,230,212,.25);border-radius:6px;overflow:hidden}
-  .map-ctrl .mc-seg button{flex:1;background:transparent;color:var(--paper);font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;padding:.42rem .3rem;border:none;cursor:pointer;transition:background .18s}
-  .map-ctrl .mc-seg button.on{background:var(--spruce-lift)}
-  .map-ctrl .mc-ov{display:flex;align-items:center;gap:.45rem;background:transparent;border:1px solid rgba(239,230,212,.2);border-radius:6px;color:var(--paper);font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;padding:.42rem .5rem;cursor:pointer;opacity:.7;transition:all .18s}
+  .map-ctrl{position:absolute;top:1.2rem;right:1.2rem;z-index:1000;display:flex;flex-direction:column;gap:.4rem;background:rgb(var(--chrome-glass) / .95);border-radius:8px;padding:.5rem;min-width:9.5rem}
+  .map-ctrl .mc-seg{display:flex;border:1px solid rgb(var(--chrome-fg) / .25);border-radius:6px;overflow:hidden}
+  .map-ctrl .mc-seg button{flex:1;background:transparent;color:var(--chrome-fg-solid);font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;padding:.42rem .3rem;border:none;cursor:pointer;transition:background .18s}
+  .map-ctrl .mc-seg button.on{background:var(--chrome-lift)}
+  .map-ctrl .mc-ov{display:flex;align-items:center;gap:.45rem;background:transparent;border:1px solid rgb(var(--chrome-fg) / .2);border-radius:6px;color:var(--chrome-fg-solid);font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;padding:.42rem .5rem;cursor:pointer;opacity:.7;transition:all .18s}
   .map-ctrl .mc-ov:hover{opacity:1}
   .map-ctrl .mc-ov.on{opacity:1;background:rgba(62,125,79,.28);border-color:#3e7d4f}
   .map-ctrl .mc-ov.mc-off,.map-ctrl .mc-ov.mc-off:hover{opacity:.38;cursor:not-allowed}
   .map-ctrl .mc-ic{font-size:.82rem}
-  .map-ctrl .mc-toggle{display:none;align-items:center;justify-content:center;width:1.8rem;height:1.8rem;padding:0;background:transparent;border:none;border-radius:6px;color:var(--paper);cursor:pointer}
+  .map-ctrl .mc-toggle{display:none;align-items:center;justify-content:center;width:1.8rem;height:1.8rem;padding:0;background:transparent;border:none;border-radius:6px;color:var(--chrome-fg-solid);cursor:pointer}
   /* mobile: collapse the panel to a small layers icon; tap to expand */
   @media(max-width:760px){
     .map-ctrl{min-width:0;gap:.35rem;top:.8rem;right:.8rem;padding:.25rem}
@@ -493,7 +556,7 @@
     .legend.collapsed{top:.8rem;right:3.3rem;padding:.25rem}
   }
 
-  .map-top{position:absolute;top:1.2rem;left:1.2rem;z-index:1000;background:rgba(239,230,212,.95);border-radius:8px;padding:.7rem 1rem}
+  .map-top{position:absolute;top:1.2rem;left:1.2rem;z-index:1000;background:rgb(var(--paper-glass) / .95);border-radius:8px;padding:.7rem 1rem}
   .map-top .rg{font-family:var(--serif);font-weight:600;font-size:1.05rem}
   .map-top .sub{font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;color:#5a5d4d;text-transform:uppercase;margin-top:.15rem}
   .map-top .add-climb{display:inline-block;margin-top:.6rem;font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);background:var(--trail);padding:.4rem .7rem;border-radius:5px;font-weight:500}
@@ -523,8 +586,8 @@
      z-index sits above the map controls and below the drawer (1200), because
      opening a place from the panel must still put the drawer on top. */
   .scout-panel{position:absolute;top:1rem;left:1rem;z-index:1100;width:min(23rem,calc(100% - 2rem));
-    max-height:calc(100% - 2rem);overflow-y:auto;background:var(--ink);color:var(--paper);
-    border:1px solid rgba(239,230,212,.12);
+    max-height:calc(100% - 2rem);overflow-y:auto;background:var(--chrome-bg);color:var(--chrome-fg-solid);
+    border:1px solid rgb(var(--chrome-fg) / .12);
     border-radius:10px;box-shadow:0 12px 30px rgba(0,0,0,.45);padding:1rem;
     /* stable: the scrollbar's slot is reserved whether or not it shows.
        Without it, deleting a card could tip the content under the panel
@@ -533,7 +596,7 @@
        background as a dark band (owner-reported 2026-08-18, "black
        vertical bar behind each item"). */
     scrollbar-gutter:stable;
-    scrollbar-width:thin;scrollbar-color:var(--spruce-lift) transparent}
+    scrollbar-width:thin;scrollbar-color:var(--chrome-lift) transparent}
   /* Centred against the whole three-line block, not pinned to the first line:
      the mark labels the card, and top-aligned it read as a bullet on the
      heading (owner 2026-08-12). */
@@ -542,9 +605,9 @@
      is not one. */
   .scout-close{position:sticky;top:0;float:right;margin:-.35rem -.35rem 0 .5rem;z-index:2;
     width:28px;height:28px;line-height:1;display:flex;align-items:center;justify-content:center;
-    background:rgba(239,230,212,.08);color:var(--paper);border:1px solid rgba(239,230,212,.18);
+    background:rgb(var(--chrome-fg) / .08);color:var(--chrome-fg-solid);border:1px solid rgb(var(--chrome-fg) / .18);
     border-radius:6px;font-size:1.15rem;cursor:pointer}
-  .scout-close:hover{background:rgba(239,230,212,.16)}
+  .scout-close:hover{background:rgb(var(--chrome-fg) / .16)}
   /* The mark is as tall as the block it labels — title AND the lines under it
      (owner 2026-08-12) — so it reads as the card's identity rather than as a
      bullet beside the heading. Stretching rather than a fixed height keeps
@@ -553,11 +616,11 @@
   .scout-head{display:flex;align-items:stretch;gap:.75rem;margin-bottom:.8rem}
   .scout-headtext{min-width:0}
   .scout-head h2{margin:0 0 .25rem;font-size:1.05rem}
-  .scout-drop{border:1px dashed rgba(239,230,212,.35);border-radius:8px;padding:.9rem;text-align:center}
+  .scout-drop{border:1px dashed rgb(var(--chrome-fg) / .35);border-radius:8px;padding:.9rem;text-align:center}
   .scout-drop.over{border-color:var(--trail);background:rgba(255,90,31,.08)}
   .scout-pick{background:var(--trail);color:#fff;border:none;border-radius:6px;padding:.5rem .9rem;
     font-family:var(--mono);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
-  .scout-hint{margin:.6rem 0 0;font-size:.7rem;color:rgba(239,230,212,.6);line-height:1.4}
+  .scout-hint{margin:.6rem 0 0;font-size:.7rem;color:rgb(var(--chrome-fg) / .72);line-height:1.4}
   /* A fixed small square beside the title (owner 2026-08-18: half the old
      mark, lead paragraph gone) - no measuring, no observer. The image stays
      out of flow so its 400px intrinsic width cannot drive the layout. */
@@ -567,25 +630,25 @@
   /* Before/after for a MOVED PIN. A ring, not a pin: the item's own marker
      stays readable underneath, which is the comparison being asked for. */
   .cc-pending-point{width:26px;height:26px;border-radius:50%;box-sizing:border-box;
-    box-shadow:0 0 0 2px rgba(20,22,14,.35)}
+    box-shadow:0 0 0 2px rgba(16,30,22,.35)}
   .cc-pending-point--after{border:4px solid #B25BE8;background:rgba(178,91,232,.18)}
   .cc-pending-point--before{border:4px dashed #8a8d7d;background:rgba(138,141,125,.16)}
   /* What the ride carries besides its tags. Stated, never sent. */
   .scout-facts{margin:.7rem 0 0;display:flex;flex-direction:column;gap:.3rem}
-  .scout-fact{margin:0;font-size:.72rem;line-height:1.4;color:#E8A33D;
+  .scout-fact{margin:0;font-size:.72rem;line-height:1.4;color:var(--chrome-amber);
     background:rgba(232,163,61,.08);border-left:2px solid rgba(232,163,61,.5);
     padding:.35rem .55rem;border-radius:0 3px 3px 0}
-  .scout-msg{margin:.7rem 0 0;font-size:.76rem;color:rgba(239,230,212,.8)}
-  .scout-msg.err{color:#E8A33D}
+  .scout-msg{margin:.7rem 0 0;font-size:.76rem;color:rgb(var(--chrome-fg) / .8)}
+  .scout-msg.err{color:var(--chrome-amber)}
   .scout-count{margin:.9rem 0 .5rem;font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;
-    text-transform:uppercase;color:rgba(239,230,212,.65)}
+    text-transform:uppercase;color:rgb(var(--chrome-fg) / .65)}
   .scout-list ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.35rem}
-  .scout-tag{position:relative;border:1px solid rgba(239,230,212,.16);border-radius:7px;overflow:hidden;
-    background:var(--spruce)}
+  .scout-tag{position:relative;border:1px solid rgb(var(--chrome-fg) / .16);border-radius:7px;overflow:hidden;
+    background:var(--chrome-well)}
   .scout-tag.done{border-color:rgba(127,207,154,.5)}
-  .scout-tag-head{width:100%;text-align:left;background:none;border:none;color:var(--paper);
+  .scout-tag-head{width:100%;text-align:left;background:none;border:none;color:var(--chrome-fg-solid);
     font-family:inherit;font-size:.8rem;padding:.5rem .6rem;cursor:pointer}
-  .scout-tag.done .scout-tag-head{color:#7fcf9a}
+  .scout-tag.done .scout-tag-head{color:var(--chrome-green)}
   .scout-tag-body{display:none;flex-direction:column;gap:.4rem;padding:0 .6rem .6rem}
   .scout-tag.open .scout-tag-body{display:flex}
   /* A translucent background is fine for the closed control and wrong for the
@@ -593,10 +656,10 @@
      white behind, and the options come out pale cream on pale grey (owner
      2026-08-12). Both are opaque now, and the options say what they are on
      rather than inheriting. */
-  .scout-letter,.scout-name{background:#1B1E15;border:1px solid rgba(239,230,212,.22);
-    border-radius:5px;color:var(--paper);font-family:inherit;font-size:.78rem;padding:.35rem .45rem}
-  .scout-letter option{background:#1B1E15;color:var(--paper)}
-  .scout-letter option:checked{background:var(--spruce-lift);color:var(--paper)}
+  .scout-letter,.scout-name{background:var(--chrome-field);border:1px solid rgb(var(--chrome-fg) / .22);
+    border-radius:5px;color:var(--chrome-fg-solid);font-family:inherit;font-size:.78rem;padding:.35rem .45rem}
+  .scout-letter option{background:var(--chrome-field);color:var(--chrome-fg-solid)}
+  .scout-letter option:checked{background:var(--chrome-lift);color:var(--chrome-fg-solid)}
   /* One control row per card (owner 2026-08-18): the name field with the
      camera and send ICON buttons at its right. The words live in
      title/aria-label. */
@@ -607,7 +670,7 @@
   .scout-approve{background:var(--trail);color:#fff;border:none}
   .scout-approve:disabled{background:rgba(127,207,154,.35);cursor:default}
   .scout-approve.sending{opacity:.6}
-  .scout-photo{background:none;border:1px solid rgba(239,230,212,.28);color:var(--paper)}
+  .scout-photo{background:none;border:1px solid rgb(var(--chrome-fg) / .28);color:var(--chrome-fg-solid)}
   .scout-photo:hover{border-color:var(--trail)}
   .scout-photo.has{border-color:var(--trail);color:var(--trail)}
   .scout-sendall{margin-top:.8rem;margin-bottom:.2rem;width:100%;background:var(--trail);color:#fff;border:none;
@@ -615,9 +678,9 @@
     text-transform:uppercase;cursor:pointer}
   .scout-sendall:disabled{opacity:.5;cursor:default}
   /* The uploader's own markup, revealed only when a row asks for a photo. */
-  .scout-media{margin-top:.9rem;border-top:1px solid rgba(239,230,212,.14);padding-top:.8rem}
-  .scout-media .drop{border:1px dashed rgba(239,230,212,.35);border-radius:8px;padding:.7rem;
-    text-align:center;font-size:.74rem;color:rgba(239,230,212,.75);cursor:pointer}
+  .scout-media{margin-top:.9rem;border-top:1px solid rgb(var(--chrome-fg) / .14);padding-top:.8rem}
+  .scout-media .drop{border:1px dashed rgb(var(--chrome-fg) / .35);border-radius:8px;padding:.7rem;
+    text-align:center;font-size:.74rem;color:rgb(var(--chrome-fg) / .75);cursor:pointer}
   .scout-media .drop:hover{border-color:var(--trail)}
   /* media-upload.js's chips are styled INSIDE the improve template's own
      <style>, so out here they had no size rule at all and a phone photo
@@ -625,26 +688,26 @@
      (owner-reported 2026-08-12). Sized here for the panel. */
   .scout-media .ulq{display:flex;flex-direction:column;gap:.35rem;margin-top:.6rem}
   .scout-media .chip{position:relative;display:flex;align-items:center;gap:.5rem;
-    background:var(--spruce);border:1px solid rgba(239,230,212,.16);border-radius:6px;
-    padding:.3rem .4rem;font-size:.72rem;color:var(--paper)}
+    background:var(--chrome-well);border:1px solid rgb(var(--chrome-fg) / .16);border-radius:6px;
+    padding:.3rem .4rem;font-size:.72rem;color:var(--chrome-fg-solid)}
   .scout-media .chip-thumb{flex:none;width:44px;height:44px;border-radius:4px;overflow:hidden;
     background:rgba(0,0,0,.25)}
   .scout-media .chip-thumb img{width:44px;height:44px;object-fit:cover;display:block}
   .scout-media .chip-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-    font-size:.68rem;color:rgba(239,230,212,.75)}
-  .scout-media .chip-bar{flex:none;width:56px;height:3px;background:rgba(239,230,212,.2);border-radius:2px}
+    font-size:.68rem;color:rgb(var(--chrome-fg) / .75)}
+  .scout-media .chip-bar{flex:none;width:56px;height:3px;background:rgb(var(--chrome-fg) / .2);border-radius:2px}
   .scout-media .chip-bar i{display:block;height:100%;background:var(--trail);border-radius:2px}
   /* The wait between "received" and "on the map"
      (media-storage-architecture.md §3.3). The thumbnail is the rider's OWN
      file until the served one replaces it, so it is dimmed rather than hidden:
      the picture is real, its place in the Commons is not settled yet. */
-  .scout-media .chip-note{flex:none;font-size:.62rem;color:rgba(239,230,212,.62);white-space:nowrap}
-  .scout-media .chip.checking{border-color:rgba(239,230,212,.34)}
+  .scout-media .chip-note{flex:none;font-size:.62rem;color:rgb(var(--chrome-fg) / .72);white-space:nowrap}
+  .scout-media .chip.checking{border-color:rgb(var(--chrome-fg) / .34)}
   .scout-media .chip.checking .chip-thumb img{opacity:.6;animation:scout-chip-breathe 1.6s ease-in-out infinite}
   .scout-media .chip.waiting .chip-thumb img{opacity:.72}
   @keyframes scout-chip-breathe{0%,100%{opacity:.6}50%{opacity:.95}}
   @media(prefers-reduced-motion:reduce){.scout-media .chip.checking .chip-thumb img{animation:none}}
-  .scout-media .chip-x{flex:none;background:none;border:none;color:rgba(239,230,212,.7);
+  .scout-media .chip-x{flex:none;background:none;border:none;color:rgb(var(--chrome-fg) / .7);
     font-size:.9rem;line-height:1;cursor:pointer;padding:.1rem .3rem}
   .scout-media .chip-x:hover{color:var(--trail)}
   /* Which tag it belongs to, on the picture itself — a ride can carry photos
@@ -655,8 +718,8 @@
     display:flex;align-items:center;justify-content:center;border:1px solid #fff}
   /* The standing licence notice: one line of context, not a paragraph that
      outweighs the photos it is about. */
-  .scout-media .consent-gate{font-size:.68rem;line-height:1.4;color:rgba(239,230,212,.62)}
-  .scout-media .consent-gate a,.scout-media .consent-gate summary{color:rgba(239,230,212,.8);font-size:.68rem}
+  .scout-media .consent-gate{font-size:.68rem;line-height:1.4;color:rgb(var(--chrome-fg) / .72)}
+  .scout-media .consent-gate a,.scout-media .consent-gate summary{color:rgb(var(--chrome-fg) / .8);font-size:.68rem}
   .scout-media .consent-gate p{margin:.2rem 0}
   /* Red because it is UNRESOLVED, not because it is wrong: red is the one
      colour the map does not use for a place, so a rider can find what still
@@ -667,7 +730,7 @@
   .scout-pin.done{background:#2E8B57}
   /* Wave a tag away: it leaves the review, the ride file keeps it. */
   .scout-remove{position:absolute;top:.3rem;right:.35rem;z-index:2;width:1.3rem;height:1.3rem;
-    border:0;border-radius:50%;background:transparent;color:rgba(239,230,212,.6);
+    border:0;border-radius:50%;background:transparent;color:rgb(var(--chrome-fg) / .72);
     font-size:.95rem;line-height:1;cursor:pointer}
   .scout-remove:hover{background:rgba(217,45,32,.25);color:#fff}
   /* A surface stretch wears its number on BOTH ends: green where it starts,
@@ -680,7 +743,7 @@
      ride, not something to act on, so it must never out-shout the red tag pins
      that DO need a decision. Not clickable for the same reason. */
   .scout-pass{display:flex;align-items:center;gap:.25rem;padding:.1rem .3rem;border-radius:4px;
-    background:rgba(20,22,14,.82);color:rgba(239,230,212,.9);border:1px solid rgba(239,230,212,.18);
+    background:rgb(var(--chrome-glass) / .82);color:rgb(var(--chrome-fg) / .9);border:1px solid rgb(var(--chrome-fg) / .18);
     font-family:var(--mono);font-size:.55rem;letter-spacing:.02em;white-space:nowrap;
     pointer-events:auto;cursor:default}
   .scout-pass svg{flex:0 0 auto;opacity:.85}
@@ -688,41 +751,41 @@
     .scout-panel{top:auto;bottom:0;left:0;right:0;width:auto;max-height:62svh;
       border-radius:12px 12px 0 0;border-width:1px 0 0}
   }
-  .mly-dock{position:absolute;left:0;right:0;bottom:0;height:clamp(280px,44vh,480px);z-index:1300;background:var(--ink);
-    border-top:1px solid var(--spruce-lift);box-shadow:0 -12px 30px -16px rgba(0,0,0,.6);
+  .mly-dock{position:absolute;left:0;right:0;bottom:0;height:clamp(280px,44vh,480px);z-index:1300;background:var(--chrome-bg);
+    border-top:1px solid var(--chrome-lift);box-shadow:0 -12px 30px -16px rgba(0,0,0,.6);
     transform:translateY(102%);transition:transform .28s ease, top .28s ease, left .28s ease, right .28s ease, bottom .28s ease;
     display:flex;flex-direction:column}
   .mly-dock.open{transform:none}
-  .mly-dock.full{top:4vh;left:4vw;right:4vw;bottom:4vh;height:auto;border-radius:10px;border:1px solid var(--spruce-lift)}
+  .mly-dock.full{top:4vh;left:4vw;right:4vw;bottom:4vh;height:auto;border-radius:10px;border:1px solid var(--chrome-lift)}
   /* user-resizable dock height: grab strip straddling the top edge (drag,
      ↑/↓ when focused, double-click resets). Hidden in fullscreen (height:auto). */
   .mly-grip{position:absolute;top:-6px;left:0;right:0;height:14px;cursor:ns-resize;z-index:4;touch-action:none}
-  .mly-grip::after{content:"";position:absolute;left:50%;top:5px;transform:translateX(-50%);width:44px;height:4px;border-radius:2px;background:rgba(239,230,212,.35)}
+  .mly-grip::after{content:"";position:absolute;left:50%;top:5px;transform:translateX(-50%);width:44px;height:4px;border-radius:2px;background:rgb(var(--chrome-fg) / .35)}
   .mly-grip:hover::after,.mly-grip:focus-visible::after{background:var(--trail)}
   .mly-dock.full .mly-grip{display:none}
-  .mly-bar{display:flex;align-items:center;gap:.6rem;padding:.5rem .8rem;border-bottom:1px solid rgba(239,230,212,.14);flex-shrink:0;position:relative;z-index:3}
-  .mly-bar .mly-t{font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--glacier);flex:1}
-  .mly-bar button{background:none;border:1px solid rgba(239,230,212,.25);color:var(--paper);border-radius:5px;
+  .mly-bar{display:flex;align-items:center;gap:.6rem;padding:.5rem .8rem;border-bottom:1px solid rgb(var(--chrome-fg) / .14);flex-shrink:0;position:relative;z-index:3}
+  .mly-bar .mly-t{font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--chrome-head);flex:1}
+  .mly-bar button{background:none;border:1px solid rgb(var(--chrome-fg) / .25);color:var(--chrome-fg-solid);border-radius:5px;
     width:30px;height:26px;cursor:pointer;font-size:.9rem;line-height:1;transition:all .18s}
-  .mly-bar button:hover{border-color:var(--paper);color:var(--trail)}
+  .mly-bar button:hover{border-color:var(--chrome-fg-solid);color:var(--trail)}
   .mly-view{flex:1;min-height:0;position:relative;background:#000}
-  .mly-loading{position:absolute;inset:0;z-index:2;display:none;flex-direction:column;align-items:center;justify-content:center;gap:.9rem;background:var(--ink);color:var(--glacier);font-family:var(--mono);font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;text-align:center;padding:1rem}
+  .mly-loading{position:absolute;inset:0;z-index:2;display:none;flex-direction:column;align-items:center;justify-content:center;gap:.9rem;background:var(--chrome-bg);color:var(--chrome-head);font-family:var(--mono);font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;text-align:center;padding:1rem}
   .mly-dock.loading .mly-loading{display:flex}
-  .mly-spin{width:28px;height:28px;border:3px solid rgba(143,182,168,.25);border-top-color:var(--glacier);border-radius:50%;animation:mly-spin .8s linear infinite}
+  .mly-spin{width:28px;height:28px;border:3px solid rgba(143,182,168,.25);border-top-color:var(--chrome-head);border-radius:50%;animation:mly-spin .8s linear infinite}
   @keyframes mly-spin{to{transform:rotate(360deg)}}
   .toggle button:disabled{opacity:.4;cursor:not-allowed}
   .toggle button:disabled:hover{background:transparent}
   .cc-pin.cam span{font-size:.9rem}
 
   .cc-drawer{position:absolute;top:0;right:0;height:100%;width:min(380px,90vw);z-index:1200;
-    background:var(--ink);color:var(--paper);box-shadow:-12px 0 36px -16px rgba(0,0,0,.6);
-    transform:translateX(102%);transition:transform .26s ease;overflow-y:auto;padding:1.4rem 1.4rem 2rem;scrollbar-width:thin;scrollbar-color:var(--spruce-lift) transparent}
+    background:var(--chrome-bg);color:var(--chrome-fg-solid);box-shadow:-12px 0 36px -16px rgba(0,0,0,.6);
+    transform:translateX(102%);transition:transform .26s ease;overflow-y:auto;padding:1.4rem 1.4rem 2rem;scrollbar-width:thin;scrollbar-color:var(--chrome-lift) transparent}
   .cc-drawer::-webkit-scrollbar{width:6px}
-  .cc-drawer::-webkit-scrollbar-thumb{background:var(--spruce-lift);border-radius:3px}
+  .cc-drawer::-webkit-scrollbar-thumb{background:var(--chrome-lift);border-radius:3px}
   .cc-drawer.open{transform:none}
   .cc-drawer:focus{outline:none}           /* panel receives focus on open for a11y; no visible ring on the container */
   .cc-drawer.dragging{transition:none}     /* track the finger 1:1 while drag-dismissing (mobile) */
-  .cc-drawer-x{position:absolute;top:.9rem;right:1.4rem;background:none;border:none;color:rgba(239,230,212,.7);
+  .cc-drawer-x{position:absolute;top:.9rem;right:1.4rem;background:none;border:none;color:rgb(var(--chrome-fg) / .7);
     font-size:1rem;cursor:pointer;line-height:1}
   .cc-drawer-x:hover{color:var(--trail)}
   .cc-drawer-x:focus{outline:none}                                           /* no square when focused on open */
@@ -732,42 +795,42 @@
   .cc-d-type{font-family:var(--mono);font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);
     background:var(--c,#FF5A1F);display:inline-block;padding:.25rem .55rem;border-radius:4px}
   .cc-d-name{font-family:var(--serif);font-weight:600;font-size:1.55rem;line-height:1.1;margin:.7rem 0 .2rem}
-  .cc-d-cur{font-family:var(--mono);font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;color:#FF8A52;font-weight:600}
+  .cc-d-cur{font-family:var(--mono);font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;color:var(--chrome-orange-soft);font-weight:600}
   .cc-d-rec{list-style:none;margin:1.1rem 0 0;padding:0}
-  .cc-d-rec li{display:flex;gap:.8rem;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid rgba(239,230,212,.12);font-size:.9rem}
-  .cc-d-rec .k{color:rgba(239,230,212,.6);font-family:var(--mono);font-size:.64rem;letter-spacing:.06em;text-transform:uppercase;flex:none;max-width:46%}
-  .cc-d-rec .v{text-align:right;font-weight:400;color:rgba(239,230,212,.78);line-height:1.5}
+  .cc-d-rec li{display:flex;gap:.8rem;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid rgb(var(--chrome-fg) / .12);font-size:.9rem}
+  .cc-d-rec .k{color:rgb(var(--chrome-fg) / .72);font-family:var(--mono);font-size:.64rem;letter-spacing:.06em;text-transform:uppercase;flex:none;max-width:46%}
+  .cc-d-rec .v{text-align:right;font-weight:400;color:rgb(var(--chrome-fg) / .78);line-height:1.5}
   /* A URL value that IS the link: the domain underlined, no separate chip. */
   .cc-d-a{color:inherit;text-decoration:underline;text-underline-offset:2px}
-  .cc-d-a:hover{color:#fff}
+  .cc-d-a:hover{color:var(--chrome-fg-solid)}
   /* Prose rows (textarea fields): full width, flowing from the left, no
      label — a paragraph right-aligned beside a label was unreadable. */
   .cc-d-rec li.wide{display:block}
   .cc-d-rec li.wide .v{display:block;text-align:left;line-height:1.6}
-  .cc-d-rec .v.warn{color:#E8A33D;font-weight:600}
+  .cc-d-rec .v.warn{color:var(--chrome-amber);font-weight:600}
   .cc-d-rec .m{display:inline-block;margin-left:.4rem;font-family:var(--mono);font-size:.52rem;letter-spacing:.06em;
-    text-transform:uppercase;color:var(--glacier);border:1px solid rgba(143,182,168,.5);border-radius:3px;padding:0 .25rem}
+    text-transform:uppercase;color:var(--chrome-head);border:1px solid rgba(143,182,168,.5);border-radius:3px;padding:0 .25rem}
   /* The assumption badge reads as a caution, never as a source: ochre against
      the glacier-green [OSM] badge beside it, so the two are told apart before
      either is read. Hover reveals on a pointer; tap toggles on a touch screen. */
-  .cc-d-rec .m.as{color:#E8A33D;border-color:rgba(232,163,61,.55);cursor:pointer;font-weight:700}
+  .cc-d-rec .m.as{color:var(--chrome-amber);border-color:rgba(232,163,61,.55);cursor:pointer;font-weight:700}
   .cc-d-rec .m.as:hover,.cc-d-rec .m.as:focus-visible{background:rgba(232,163,61,.16)}
   .cc-d-rec li:hover .cc-d-why{display:block}
-  .cc-d-why{margin:.35rem 0 .1rem;font-size:.72rem;line-height:1.45;color:#E8A33D;
+  .cc-d-why{margin:.35rem 0 .1rem;font-size:.72rem;line-height:1.45;color:var(--chrome-amber);
     background:rgba(232,163,61,.08);border-left:2px solid rgba(232,163,61,.5);padding:.4rem .6rem;border-radius:0 3px 3px 0}
   .cc-d-why[hidden]{display:none}
   .cc-d-rec li:hover .cc-d-why[hidden]{display:block}
-  .cc-d-rec li.empty .k{color:rgba(239,230,212,.6)}
-  .cc-d-add{color:rgba(239,230,212,.62);font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;text-decoration:none;border-bottom:1px dashed rgba(239,230,212,.45);transition:color .15s,border-color .15s}
+  .cc-d-rec li.empty .k{color:rgb(var(--chrome-fg) / .72)}
+  .cc-d-add{color:rgb(var(--chrome-fg) / .72);font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;text-decoration:none;border-bottom:1px dashed rgb(var(--chrome-fg) / .45);transition:color .15s,border-color .15s}
   .cc-d-add:hover{color:var(--trail);border-color:var(--trail)}
   .cc-d-add:focus-visible{outline:2px solid var(--trail);outline-offset:2px;border-radius:3px}
   .cc-d-fresh{margin-top:1rem;font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;text-transform:uppercase}
-  .cc-d-fresh.fresh{color:#7fcf9a}.cc-d-fresh.ageing{color:var(--ochre)}.cc-d-fresh.stale{color:var(--clay)}
-  .cc-d-src{margin-top:1rem;font-size:.72rem;color:rgba(239,230,212,.55);line-height:1.5}
+  .cc-d-fresh.fresh{color:var(--chrome-green)}.cc-d-fresh.ageing{color:var(--ochre)}.cc-d-fresh.stale{color:var(--clay)}
+  .cc-d-src{margin-top:1rem;font-size:.72rem;color:rgb(var(--chrome-fg) / .68);line-height:1.5}
   /* The named rider is the source; HOW it reached us sits under them, quieter,
      because it qualifies the line above rather than competing with it. */
-  .cc-d-src a{color:var(--glacier);text-decoration:underline;text-underline-offset:2px}
-  .cc-d-prov{margin-top:.15rem;color:rgba(239,230,212,.42)}
+  .cc-d-src a{color:var(--chrome-head);text-decoration:underline;text-underline-offset:2px}
+  .cc-d-prov{margin-top:.15rem;color:rgb(var(--chrome-fg) / .65)}
   /* Share sits on the source line rather than with the actions: it is about
      THIS VIEW, not about changing anything, and the action row is where the
      verbs that alter data live. Quiet until hovered, and a real 32px target. */
@@ -778,9 +841,9 @@
      action beside the type chip instead of competing with it. Kept at 32px,
      which is the tap target, not the glyph. */
   .cc-d-share{display:inline-flex;align-items:center;justify-content:center;
-    width:32px;height:32px;padding:0;border:1px solid rgba(239,230,212,.28);border-radius:5px;
-    background:transparent;color:rgba(239,230,212,.75);cursor:pointer}
-  .cc-d-share:hover{background:rgba(239,230,212,.1);color:var(--paper)}
+    width:32px;height:32px;padding:0;border:1px solid rgb(var(--chrome-fg) / .28);border-radius:5px;
+    background:transparent;color:rgb(var(--chrome-fg) / .75);cursor:pointer}
+  .cc-d-share:hover{background:rgb(var(--chrome-fg) / .1);color:var(--chrome-fg-solid)}
   .cc-d-share:focus-visible{outline:2px solid var(--trail);outline-offset:2px}
   /* C1-T3 (spec W5): per-item "Recent changes" — filled async by map.js's
      loadItemHistory() into #cc-d-hist-slot; empty until the fetch resolves
@@ -801,41 +864,41 @@
   .cc-hist-dlg{border:none;padding:0;background:transparent;margin:auto;
     max-width:min(560px,92vw);width:100%;max-height:86vh}
   .cc-hist-dlg::backdrop{background:rgba(16,30,22,.62)}
-  .cc-hist-dlg-in{background:var(--ink);color:var(--paper);border:1px solid rgba(239,230,212,.18);
+  .cc-hist-dlg-in{background:var(--chrome-bg);color:var(--chrome-fg-solid);border:1px solid rgb(var(--chrome-fg) / .18);
     border-radius:12px;padding:1.2rem 1.3rem 1.4rem;box-shadow:0 24px 60px -20px rgba(0,0,0,.7);
     max-height:80vh;overflow:auto}
   .cc-hist-dlg-top{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:.4rem}
   .cc-hist-dlg-top h4{font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;
     text-transform:uppercase;color:var(--clay);margin:0}
-  .cc-hist-dlg-x{background:none;border:none;color:rgba(239,230,212,.7);font-size:1rem;
+  .cc-hist-dlg-x{background:none;border:none;color:rgb(var(--chrome-fg) / .7);font-size:1rem;
     cursor:pointer;line-height:1;padding:.2rem}
   .cc-hist-dlg-x:hover{color:var(--trail)}
   /* Same from-to treatment the moderator cards use (.cc-mod-was / .cc-mod-now):
      the old value struck through and quiet, the new one in the site orange, so
      a reader sees WHICH WAY a change went before reading either value. The
      arrow's own rule is scoped to .cc-mod-chg, so it is restated here. */
-  .cc-h-diff .arw{color:#9a9d8c;margin:0 .3rem}
+  .cc-h-diff .arw{color:var(--chrome-mut);margin:0 .3rem}
   /* The whole point of the dialog: nothing clamped. */
   .cc-hist-full .cc-h-diff{display:block;-webkit-line-clamp:none;overflow:visible}
   .cc-d-hist-list{list-style:none;margin:0;padding:0}
-  .cc-h-row{display:flex;flex-wrap:wrap;gap:.1rem .5rem;padding:.5rem 0;border-bottom:1px solid rgba(239,230,212,.1);font-size:.85rem}
-  .cc-h-field{flex:1 0 100%;font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;color:rgba(239,230,212,.55)}
+  .cc-h-row{display:flex;flex-wrap:wrap;gap:.1rem .5rem;padding:.5rem 0;border-bottom:1px solid rgb(var(--chrome-fg) / .1);font-size:.85rem}
+  .cc-h-field{flex:1 0 100%;font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;color:rgb(var(--chrome-fg) / .68)}
   /* Clamped to two lines because a geometry change is a coordinate array, and
      printed in full it buries every other entry in the log under a wall of
      numbers nobody reads (owner-reported 2026-08-04). Two lines is enough to
      see WHICH field moved and roughly where; the detail belongs on the map,
      not in a change list. Clamping in CSS rather than truncating the string
      keeps the full value selectable and searchable. */
-  .cc-h-diff{flex:1 0 100%;color:rgba(239,230,212,.82);
+  .cc-h-diff{flex:1 0 100%;color:rgb(var(--chrome-fg) / .82);
     display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
     overflow:hidden;overflow-wrap:anywhere}
-  .cc-h-meta{flex:1 0 100%;font-family:var(--mono);font-size:.6rem;color:rgba(239,230,212,.45)}
+  .cc-h-meta{flex:1 0 100%;font-family:var(--mono);font-size:.6rem;color:rgb(var(--chrome-fg) / .65)}
   .cc-d-act{display:inline-block;margin-top:1.2rem;margin-right:.5rem;font-family:var(--mono);font-size:.64rem;letter-spacing:.08em;
     text-transform:uppercase;color:var(--ink);background:var(--trail);padding:.5rem .8rem;border-radius:5px}
   /* The approve-and-confirm tick: quiet, spaced, never competing with the
      decision buttons below it (owner 2026-08-13: smaller text, some space). */
   .cc-mod-also{display:flex;gap:.45rem;align-items:flex-start;margin:.65rem 0 .55rem;
-    font-size:.78rem;font-weight:400;line-height:1.35;color:rgba(239,230,212,.85);cursor:pointer}
+    font-size:.78rem;font-weight:400;line-height:1.35;color:rgb(var(--chrome-fg) / .85);cursor:pointer}
   .cc-mod-also input{margin-top:.15rem;flex:none}
   /* The two one-tap answers on an OSM place. They are <button>s, not links, so
      they need the resets a link never did — and they sit in their own row, so
@@ -851,28 +914,28 @@
      low-contrast pair, so it does not also get to be tiny (owner 2026-08-12):
      bigger, lighter, and with room to breathe under the buttons it replaces. */
   .cc-osmcf-done{font-family:var(--mono);font-size:.8rem;line-height:1.5;letter-spacing:.04em;
-    color:#A6E3BC;padding:.55rem 0}
+    color:var(--chrome-green-hi);padding:.55rem 0}
   /* "Not potable" is a warning, not a second recommendation — filled amber on
      filled orange was unreadable (owner-reported 2026-08-12). Outline it: the
      one you are expected to press stays the solid one. */
-  .cc-d-act.confirm-osm-no,.cc-d-act.confirm-osm-warn{background:transparent;color:#F0B45E;border-color:rgba(240,180,94,.6)}
-  .cc-d-act.confirm-osm-no:hover,.cc-d-act.confirm-osm-warn:hover{background:rgba(240,180,94,.14);color:#F7C87E}
+  .cc-d-act.confirm-osm-no,.cc-d-act.confirm-osm-warn{background:transparent;color:var(--chrome-warm);border-color:rgba(240,180,94,.6)}
+  .cc-d-act.confirm-osm-no:hover,.cc-d-act.confirm-osm-warn:hover{background:rgba(240,180,94,.14);color:var(--chrome-warm-hi)}
   /* "Not there anymore" removes a place from the map. It is the heaviest thing
      a rider can say here, so it does not wear the same amber as "shut today". */
-  .cc-d-act.confirm-osm-gone{background:transparent;color:#E88A7D;border-color:rgba(232,138,125,.55)}
-  .cc-d-act.confirm-osm-gone:hover{background:rgba(232,138,125,.14);color:#F2A79B}
-  .cc-d-act.edit{background:transparent;color:var(--paper);border:1px solid rgba(239,230,212,.45)}
+  .cc-d-act.confirm-osm-gone{background:transparent;color:var(--chrome-rose);border-color:rgba(232,138,125,.55)}
+  .cc-d-act.confirm-osm-gone:hover{background:rgba(232,138,125,.14);color:var(--chrome-rose-hi)}
+  .cc-d-act.edit{background:transparent;color:var(--chrome-fg-solid);border:1px solid rgb(var(--chrome-fg) / .45)}
   .cc-d-act.edit:hover{border-color:var(--trail);color:var(--trail)}
-  .cc-d-act.fixloc{background:transparent;color:rgba(239,230,212,.85);border:1px solid rgba(239,230,212,.3)}
+  .cc-d-act.fixloc{background:transparent;color:rgb(var(--chrome-fg) / .85);border:1px solid rgb(var(--chrome-fg) / .3)}
   .cc-d-act.fixloc:hover{border-color:var(--trail);color:var(--trail)}
   /* Route domain phase 3 (spec §7): rode-it/vote/suggest community panel. */
   .cc-rc{display:flex;flex-direction:column;gap:.75rem;margin-top:.6rem}
-  .cc-rc-l{font-family:var(--mono);font-size:.64rem;letter-spacing:.06em;text-transform:uppercase;color:rgba(239,230,212,.6);font-weight:600;display:block;margin-bottom:.45rem}
-  .cc-rc-count{font-family:var(--sans);text-transform:none;letter-spacing:0;font-weight:400;color:rgba(239,230,212,.5)}
+  .cc-rc-l{font-family:var(--mono);font-size:.64rem;letter-spacing:.06em;text-transform:uppercase;color:rgb(var(--chrome-fg) / .72);font-weight:600;display:block;margin-bottom:.45rem}
+  .cc-rc-count{font-family:var(--sans);text-transform:none;letter-spacing:0;font-weight:400;color:rgb(var(--chrome-fg) / .68)}
   .cc-rc-row{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
   /* Form fields: light cream field on the dark drawer, matching the app inputs. */
   .cc-rc select,.cc-rc textarea{font-family:var(--sans);font-size:.85rem;color:var(--ink);background:var(--paper);
-    border:1px solid rgba(239,230,212,.25);border-radius:5px;padding:.45rem .55rem;line-height:1.3}
+    border:1px solid rgb(var(--chrome-fg) / .25);border-radius:5px;padding:.45rem .55rem;line-height:1.3}
   .cc-rc select:focus,.cc-rc textarea:focus{outline:none;border-color:var(--trail)}
   /* "must pick a bike type" warning — red border until the rider chooses. */
   .cc-rc select.cc-rc-invalid{border-color:var(--clay);box-shadow:0 0 0 2px rgba(181,83,46,.35)}
@@ -884,18 +947,18 @@
   .cc-rc-btn{flex:none;padding:.45rem .85rem;border-radius:5px;border:1px solid var(--trail);background:transparent;
     color:var(--trail);font-family:var(--sans);font-weight:700;font-size:.8rem;line-height:1;cursor:pointer}
   .cc-rc-btn:hover:not(:disabled){background:var(--trail);color:var(--ink)}
-  .cc-rc-btn:disabled{cursor:default;color:var(--glacier);border-color:rgba(143,182,168,.5)}
+  .cc-rc-btn:disabled{cursor:default;color:var(--chrome-head);border-color:rgba(143,182,168,.5)}
   .cc-rc-suggest{margin-top:.1rem}
-  .cc-rc-suggest summary{font-family:var(--mono);font-size:.64rem;letter-spacing:.06em;text-transform:uppercase;color:var(--paper);cursor:pointer;padding:.2rem 0}
+  .cc-rc-suggest summary{font-family:var(--mono);font-size:.64rem;letter-spacing:.06em;text-transform:uppercase;color:var(--chrome-fg-solid);cursor:pointer;padding:.2rem 0}
   .cc-rc-suggest summary:hover{color:var(--trail)}
-  .cc-rc-login{font-size:.82rem;color:rgba(239,230,212,.8)}
+  .cc-rc-login{font-size:.82rem;color:rgb(var(--chrome-fg) / .8)}
   .cc-rc-login a{color:var(--trail)}
   .cc-rc-anon .cc-rc-ride,.cc-rc-anon .cc-rc-vote,.cc-rc-anon .cc-rc-suggest{opacity:.5;pointer-events:none}
   /* Community confirmation panel (water potability / "still here?"). */
   /* The drawer's three action bands (owner 2026-08-13): community voice,
      change-the-record, report-a-state-change — each separated by a hairline,
      with the members' own stacking margins normalized inside. */
-  .cc-d-grp{margin-top:.95rem;padding-top:.95rem;border-top:1px solid rgba(239,230,212,.12)}
+  .cc-d-grp{margin-top:.95rem;padding-top:.95rem;border-top:1px solid rgb(var(--chrome-fg) / .12)}
   .cc-d-grp .cc-d-act{margin-top:0}
   .cc-d-grp .cc-osmcf{margin-top:0}
   .cc-d-grp .cc-cf{margin-top:0}
@@ -904,16 +967,16 @@
      sans bold, sentence case — one family for the community band. */
   .cc-d-vote{font-family:var(--sans);font-weight:700;font-size:.8rem;letter-spacing:0;text-transform:none;padding:.55rem 1rem}
   .cc-cf{margin-top:.7rem}
-  .cc-cf-h{font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;color:rgba(239,230,212,.8);margin-bottom:.45rem}
-  .cc-cf-yours{font-family:var(--mono);font-size:.66rem;letter-spacing:.04em;color:var(--glacier);margin-top:.45rem}
-  .cc-cf-total{color:var(--glacier);text-transform:none;letter-spacing:0}
-  .cc-cf-change{margin-top:.5rem;padding:0;border:0;background:none;font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;color:var(--glacier);cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+  .cc-cf-h{font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;color:rgb(var(--chrome-fg) / .8);margin-bottom:.45rem}
+  .cc-cf-yours{font-family:var(--mono);font-size:.66rem;letter-spacing:.04em;color:var(--chrome-head);margin-top:.45rem}
+  .cc-cf-total{color:var(--chrome-head);text-transform:none;letter-spacing:0}
+  .cc-cf-change{margin-top:.5rem;padding:0;border:0;background:none;font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;color:var(--chrome-head);cursor:pointer;text-decoration:underline;text-underline-offset:2px}
   .cc-cf-change:hover{color:var(--trail)}
   .cc-cf-row{display:flex;flex-wrap:wrap;gap:.5rem}
   .cc-cf-btn{flex:none;padding:.55rem 1rem;border-radius:5px;border:1px solid var(--trail);background:transparent;
     color:var(--trail);font-family:var(--sans);font-weight:700;font-size:.8rem;line-height:1;cursor:pointer;display:inline-flex;align-items:center;gap:.4rem}
   .cc-cf-btn:hover:not(:disabled){background:var(--trail);color:var(--ink)}
-  .cc-cf-btn:disabled{cursor:default;color:var(--glacier);border-color:rgba(143,182,168,.5)}
+  .cc-cf-btn:disabled{cursor:default;color:var(--chrome-head);border-color:rgba(143,182,168,.5)}
   .cc-cf-btn.is-mine{background:var(--trail);color:var(--ink)}
   /* The vouching is the button people should SEE (owner 2026-08-13): the
      positive stance fills orange; the negative keeps the outline. */
@@ -922,43 +985,43 @@
   .cc-cf-btn.cf-yes:disabled{background:rgba(143,182,168,.25);border-color:transparent}
   /* A negative answer points at the edit form — the one moderation pipeline —
      instead of offering a comment box (owner 2026-08-13). */
-  .cc-cf-use-edit{margin:.55rem 0 0;font-size:.8rem;color:rgba(239,230,212,.85);line-height:1.4;display:flex;flex-direction:column;gap:.1rem}
+  .cc-cf-use-edit{margin:.55rem 0 0;font-size:.8rem;color:rgb(var(--chrome-fg) / .85);line-height:1.4;display:flex;flex-direction:column;gap:.1rem}
   .cc-cf-n{font-family:var(--mono);font-size:.74rem;font-weight:600;opacity:.85}
-  .cc-cf-login{font-size:.82rem;color:rgba(239,230,212,.8);margin-top:.4rem}
+  .cc-cf-login{font-size:.82rem;color:rgb(var(--chrome-fg) / .8);margin-top:.4rem}
   .cc-cf-login a{color:var(--trail)}
   .cc-diff{margin-top:1rem;display:flex;align-items:center;gap:.6rem;font-family:var(--mono);font-size:.62rem;
-    letter-spacing:.1em;text-transform:uppercase;color:rgba(239,230,212,.6)}
+    letter-spacing:.1em;text-transform:uppercase;color:rgb(var(--chrome-fg) / .72)}
   .cc-diff-scale{display:flex;align-items:center;gap:.34rem}
   .cc-diff-dot{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-    font-size:.62rem;font-weight:600;border:1.5px solid rgba(178,91,232,.45);color:rgba(239,230,212,.5);cursor:default;transition:transform .12s}
-  .cc-diff-dot:hover{transform:scale(1.12);border-color:#B25BE8;color:var(--paper)}
+    font-size:.62rem;font-weight:600;border:1.5px solid rgba(178,91,232,.45);color:rgb(var(--chrome-fg) / .68);cursor:default;transition:transform .12s}
+  .cc-diff-dot:hover{transform:scale(1.12);border-color:#B25BE8;color:var(--chrome-fg-solid)}
   .cc-diff-dot.on{width:30px;height:30px;font-size:.82rem;font-weight:800;color:#fff;
     background:var(--p);border-color:var(--p);box-shadow:0 0 0 3px rgba(106,44,143,.28)}
-  .cc-diff-lbl{margin-left:auto;color:var(--paper);font-size:.74rem;letter-spacing:.04em;font-weight:700}
-  .cc-city{color:#7FC9E0;text-decoration:underline;cursor:pointer}
-  .cc-city:hover{color:var(--paper)}
-  .cc-city-info{font-size:.92rem;color:rgba(239,230,212,.85);line-height:1.55;margin-top:.7rem}
+  .cc-diff-lbl{margin-left:auto;color:var(--chrome-fg-solid);font-size:.74rem;letter-spacing:.04em;font-weight:700}
+  .cc-city{color:var(--chrome-link);text-decoration:underline;cursor:pointer}
+  .cc-city:hover{color:var(--chrome-fg-solid)}
+  .cc-city-info{font-size:.92rem;color:rgb(var(--chrome-fg) / .85);line-height:1.55;margin-top:.7rem}
   .cc-city-links{margin-top:.6rem;font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase}
-  .cc-city-links a{color:rgba(239,230,212,.85);text-decoration:underline}
-  .cc-city-ua{color:rgba(239,230,212,.42)}
+  .cc-city-links a{color:rgb(var(--chrome-fg) / .85);text-decoration:underline}
+  .cc-city-ua{color:rgb(var(--chrome-fg) / .65)}
   .cc-near-h{font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--clay);margin:1.3rem 0 .5rem}
   .cc-near-list{list-style:none;margin:0;padding:0}
-  .cc-near{display:flex;align-items:center;gap:.55rem;width:100%;background:none;border:none;border-bottom:1px solid rgba(239,230,212,.1);padding:.5rem 0;color:var(--paper);font-family:var(--sans);font-size:.9rem;text-align:left;cursor:pointer}
+  .cc-near{display:flex;align-items:center;gap:.55rem;width:100%;background:none;border:none;border-bottom:1px solid rgb(var(--chrome-fg) / .1);padding:.5rem 0;color:var(--chrome-fg-solid);font-family:var(--sans);font-size:.9rem;text-align:left;cursor:pointer}
   .cc-near:hover{color:var(--trail)}
   .cc-near-k{width:18px;height:18px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font-family:var(--emoji);font-size:.6rem;font-weight:700;flex:none}
   .cc-near-nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .cc-near em{font-style:normal;font-family:var(--mono);font-size:.62rem;color:rgba(239,230,212,.55);flex:none}
-  .cc-near-empty{color:rgba(239,230,212,.5);font-size:.88rem;padding:.4rem 0}
+  .cc-near em{font-style:normal;font-family:var(--mono);font-size:.62rem;color:rgb(var(--chrome-fg) / .68);flex:none}
+  .cc-near-empty{color:rgb(var(--chrome-fg) / .68);font-size:.88rem;padding:.4rem 0}
   /* provenance line under the ride-check coverage section: these rows are
      uncurated OSM, and must not read as verified Commons picks
  */
-  .cc-near-note{margin-top:.5rem;color:rgba(239,230,212,.45);font-family:var(--mono);font-size:.6rem;letter-spacing:.05em}
+  .cc-near-note{margin-top:.5rem;color:rgb(var(--chrome-fg) / .65);font-family:var(--mono);font-size:.6rem;letter-spacing:.05em}
   /* per-layer group header in the place card's nearby list (spec 2026-07-14 §3.3) */
-  .cc-near-grp{display:flex;align-items:center;gap:.55rem;margin-top:.7rem;padding:.25rem 0;font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(239,230,212,.6)}
-  .cc-comm-tag{margin-left:.45rem;font-family:var(--mono);font-size:.52rem;letter-spacing:.08em;text-transform:uppercase;color:rgba(239,230,212,.5);border:1px solid rgba(239,230,212,.22);border-radius:8px;padding:.08rem .35rem;vertical-align:middle}
+  .cc-near-grp{display:flex;align-items:center;gap:.55rem;margin-top:.7rem;padding:.25rem 0;font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:rgb(var(--chrome-fg) / .72)}
+  .cc-comm-tag{margin-left:.45rem;font-family:var(--mono);font-size:.52rem;letter-spacing:.08em;text-transform:uppercase;color:rgb(var(--chrome-fg) / .68);border:1px solid rgb(var(--chrome-fg) / .22);border-radius:8px;padding:.08rem .35rem;vertical-align:middle}
   .cc-near-more{background:none;border:none;padding:.45rem 0;color:var(--trail);font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
-  .cc-elev-cap{margin-top:.9rem;font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;color:rgba(239,230,212,.6)}
-  .cc-elev-cap em{color:rgba(239,230,212,.4);font-style:normal}
+  .cc-elev-cap{margin-top:.9rem;font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;color:rgb(var(--chrome-fg) / .72)}
+  .cc-elev-cap em{color:rgb(var(--chrome-fg) / .65);font-style:normal}
   .cc-elev{width:100%;height:64px;display:block;margin-top:.3rem}
   /* Gradient strip with a real zero line. Each column is the full height and
      splits at the baseline: climbing sits above it, descending hangs below.
@@ -966,7 +1029,7 @@
      climb is not decorated with a line that explains nothing. */
   .cc-grad{display:flex;align-items:stretch;gap:1px;margin-top:.45rem;height:52px;position:relative}
   .cc-grad.has-descent::before{content:"";position:absolute;left:0;right:0;top:var(--up);
-    border-top:1px dashed rgba(239,230,212,.35);pointer-events:none}
+    border-top:1px dashed rgb(var(--chrome-fg) / .35);pointer-events:none}
   .cc-grad-col{flex:1;display:flex;flex-direction:column;transition:opacity .15s}
   .cc-grad-col:hover{opacity:.7}
   /* A climbing bar must rest ON the baseline, not on the floor of the strip.
@@ -984,42 +1047,42 @@
      22-bar profile is a texture, and the steepest marker on the map has nothing
      to correspond to. */
   .cc-grad-axis{position:relative;height:1.15em;margin-top:.2rem;
-    font-size:.68rem;letter-spacing:.02em;color:rgba(239,230,212,.5)}
+    font-size:.68rem;letter-spacing:.02em;color:rgb(var(--chrome-fg) / .68)}
   .cc-grad-tick{position:absolute;transform:translateX(-50%);white-space:nowrap}
   .cc-grad-tick::before{content:"";position:absolute;left:50%;top:-.22rem;width:1px;height:.18rem;
-    background:rgba(239,230,212,.28)}
+    background:rgb(var(--chrome-fg) / .28)}
   /* The end labels sit flush rather than centred, so neither can overflow the
      strip on a narrow drawer. */
   .cc-grad-tick-0{left:0;transform:none}
   .cc-grad-tick-0::before{left:0}
   .cc-grad-tick-end{right:0;left:auto;transform:none}
   .cc-grad-tick-end::before{left:auto;right:0}
-  .cc-up{margin-top:1rem;font-family:var(--mono);font-size:.64rem;letter-spacing:.04em;color:rgba(239,230,212,.6)}
-  .cc-up b{color:var(--paper)}
-  .cc-up a{color:var(--glacier);text-decoration:underline}
-  .cc-d-desc{font-size:.92rem;line-height:1.55;color:rgba(239,230,212,.82);margin:.9rem 0 .2rem}
-  .cc-d-tr{font-family:var(--mono);font-size:.6rem;letter-spacing:.04em;color:rgba(239,230,212,.42);text-transform:uppercase}
+  .cc-up{margin-top:1rem;font-family:var(--mono);font-size:.64rem;letter-spacing:.04em;color:rgb(var(--chrome-fg) / .72)}
+  .cc-up b{color:var(--chrome-fg-solid)}
+  .cc-up a{color:var(--chrome-head);text-decoration:underline}
+  .cc-d-desc{font-size:.92rem;line-height:1.55;color:rgb(var(--chrome-fg) / .82);margin:.9rem 0 .2rem}
+  .cc-d-tr{font-family:var(--mono);font-size:.6rem;letter-spacing:.04em;color:rgb(var(--chrome-fg) / .65);text-transform:uppercase}
   .cc-d-photo{margin:1rem 0 0}
   /* aspect-ratio reserves the box BEFORE the Wikimedia thumb lands, so the
      records/actions below stop jumping when it does (CLS — frontend review
      2026-08-09 #7). 4/3 approximates the 520w thumbs; object-fit crops the
      odd portrait instead of stretching it. */
   .cc-d-photo>img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:8px;display:block;cursor:zoom-in}
-  .cc-d-photo figcaption{font-size:.6rem;color:rgba(239,230,212,.5);margin-top:.4rem;font-family:var(--mono);letter-spacing:.02em}
-  .cc-d-photo figcaption a{color:rgba(239,230,212,.72);text-decoration:underline}
+  .cc-d-photo figcaption{font-size:.6rem;color:rgb(var(--chrome-fg) / .68);margin-top:.4rem;font-family:var(--mono);letter-spacing:.02em}
+  .cc-d-photo figcaption a{color:rgb(var(--chrome-fg) / .72);text-decoration:underline}
   /* no-photo placeholder = a contributor CTA (links to the improve wizard's media step) */
-  .cc-d-addphoto{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.45rem;margin:1rem 0 0;padding:1.5rem 1rem;min-height:118px;border:1.5px dashed rgba(239,230,212,.26);border-radius:8px;background:rgba(239,230,212,.03);text-decoration:none;text-align:center;transition:border-color .15s,background .15s}
+  .cc-d-addphoto{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.45rem;margin:1rem 0 0;padding:1.5rem 1rem;min-height:118px;border:1.5px dashed rgb(var(--chrome-fg) / .26);border-radius:8px;background:rgb(var(--chrome-fg) / .03);text-decoration:none;text-align:center;transition:border-color .15s,background .15s}
   .cc-d-addphoto:hover{border-color:var(--trail);background:rgba(255,90,31,.06)}
-  .cc-ap-cam{color:rgba(239,230,212,.55);transition:color .15s}
+  .cc-ap-cam{color:rgb(var(--chrome-fg) / .68);transition:color .15s}
   .cc-d-addphoto:hover .cc-ap-cam{color:var(--trail)}
-  .cc-ap-t{font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(239,230,212,.5)}
+  .cc-ap-t{font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:rgb(var(--chrome-fg) / .68)}
   .cc-ap-b{font-weight:600;font-size:.92rem;color:var(--trail)}
   .cc-d-thumbs{display:flex;gap:.4rem;margin-top:.5rem;flex-wrap:wrap}
-  .cc-d-thumb{width:54px;height:40px;object-fit:cover;border-radius:4px;cursor:pointer;opacity:.5;border:1px solid rgba(239,230,212,.2);transition:opacity .15s,border-color .15s}
-  .cc-d-thumb.on,.cc-d-thumb:hover{opacity:1;border-color:var(--paper)}
+  .cc-d-thumb{width:54px;height:40px;object-fit:cover;border-radius:4px;cursor:pointer;opacity:.5;border:1px solid rgb(var(--chrome-fg) / .2);transition:opacity .15s,border-color .15s}
+  .cc-d-thumb.on,.cc-d-thumb:hover{opacity:1;border-color:var(--chrome-fg-solid)}
   .cc-d-link{display:inline-block;margin-left:.35rem;margin-top:.35rem;font-family:var(--mono);font-size:.62rem;letter-spacing:.05em;
-    text-transform:uppercase;color:var(--glacier);border:1px solid rgba(143,182,168,.5);border-radius:4px;padding:.15rem .45rem;text-decoration:none}
-  .cc-d-link:hover{background:var(--glacier);color:var(--ink)}
+    text-transform:uppercase;color:var(--chrome-head);border:1px solid rgba(143,182,168,.5);border-radius:4px;padding:.15rem .45rem;text-decoration:none}
+  .cc-d-link:hover{background:var(--chrome-head);color:var(--chrome-bg)}
   /* Suitable-bikes chips in the route drawer — one pill per declared type */
   .cc-chip{display:inline-block;margin:.1rem .3rem .1rem 0;font-family:var(--mono);font-size:.62rem;letter-spacing:.05em;
     text-transform:uppercase;color:var(--trail);border:1px solid rgba(255,90,31,.45);border-radius:999px;padding:.15rem .55rem}
@@ -1053,8 +1116,8 @@
   /* The chart takes the height the panel has left, so a tall window gets a
      taller silhouette instead of more empty paper. */
   .cc-cp-svg{width:100%;height:100%;max-height:82vh;display:block;min-width:560px}
-  .cc-cp-base{stroke:rgba(20,22,14,.45);stroke-width:1}
-  .cc-cp-tick{stroke:rgba(20,22,14,.35);stroke-width:1}
+  .cc-cp-base{stroke:rgba(16,30,22,.45);stroke-width:1}
+  .cc-cp-tick{stroke:rgba(16,30,22,.35);stroke-width:1}
   .cc-cp-axis{font-family:var(--mono);font-size:12px;fill:#595c4d}
   .cc-cp-ele{font-family:var(--mono);font-size:13px;fill:var(--ink);font-weight:600}
   .cc-cp-num{font-family:var(--mono);font-size:12px;font-weight:600;text-anchor:middle}
@@ -1064,12 +1127,12 @@
   .cc-lightbox.open{display:flex}
   .cc-lightbox img{max-width:100%;max-height:82vh;border-radius:8px;box-shadow:0 18px 50px -12px rgba(0,0,0,.7)}
   .cc-lb-stage{display:flex;flex-direction:column;align-items:center;gap:.7rem;max-width:88%}
-  .cc-lb-cap{font-family:var(--mono);font-size:.66rem;color:rgba(239,230,212,.7);text-align:center;line-height:1.6}
-  .cc-lb-cap a{color:rgba(239,230,212,.85);text-decoration:underline}
+  .cc-lb-cap{font-family:var(--mono);font-size:.66rem;color:rgb(243 235 216 / .7);text-align:center;line-height:1.6}
+  .cc-lb-cap a{color:rgb(243 235 216 / .85);text-decoration:underline}
   .cc-lb-x{position:absolute;top:1rem;right:1.2rem;background:none;border:none;color:var(--paper);font-size:1.4rem;cursor:pointer;z-index:2}
   .cc-lb-x:hover{color:var(--trail)}
   .cc-lb-nav{position:absolute;top:50%;transform:translateY(-50%);width:46px;height:46px;border-radius:50%;
-    background:rgba(16,30,22,.55);border:1px solid rgba(239,230,212,.3);color:var(--paper);font-size:2rem;line-height:1;
+    background:rgba(16,30,22,.55);border:1px solid rgb(243 235 216 / .3);color:var(--paper);font-size:2rem;line-height:1;
     cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;z-index:2}
   .cc-lb-nav:hover{background:var(--trail);color:var(--ink);border-color:var(--trail)}
   .cc-lb-prev{left:1.4rem}.cc-lb-next{right:1.4rem}
@@ -1115,15 +1178,15 @@
     /* re-skin the rail in place: head -> slim top bar, scroll+foot -> bottom sheet
        (no markup duplicated, so all filter JS keeps working) */
     .rail{position:fixed;inset:0;z-index:1500;max-height:none;border-right:none;background:transparent;pointer-events:none;display:block}
-    .rail-head{position:fixed;top:0;left:0;right:0;z-index:1500;pointer-events:auto;background:var(--ink);padding:.5rem .9rem;display:flex;align-items:center;gap:.7rem;border-bottom:1px solid rgba(239,230,212,.14)}
+    .rail-head{position:fixed;top:0;left:0;right:0;z-index:1500;pointer-events:auto;background:var(--chrome-bg);padding:.5rem .9rem;display:flex;align-items:center;gap:.7rem;border-bottom:1px solid rgb(var(--chrome-fg) / .14)}
     .rail-head .brand img{height:1.3rem}
     .rail-head .co{display:none}
     /* top-bar nav collapses to a hamburger; tap -> dropdown panel */
     .rail-burger{display:flex;margin-left:auto}
-    .rail-nav{position:fixed;top:2.7rem;right:.6rem;margin:0;padding:.4rem .2rem;flex-direction:column;align-items:stretch;gap:0;min-width:9.5rem;background:var(--ink);border:1px solid var(--spruce-lift);border-radius:10px;box-shadow:0 14px 34px -16px rgba(0,0,0,.7);opacity:0;transform:translateY(-6px);pointer-events:none;transition:opacity .18s ease,transform .18s ease;z-index:1502}
+    .rail-nav{position:fixed;top:2.7rem;right:.6rem;margin:0;padding:.4rem .2rem;flex-direction:column;align-items:stretch;gap:0;min-width:9.5rem;background:var(--chrome-bg);border:1px solid var(--chrome-lift);border-radius:10px;box-shadow:0 14px 34px -16px rgba(0,0,0,.7);opacity:0;transform:translateY(-6px);pointer-events:none;transition:opacity .18s ease,transform .18s ease;z-index:1502}
     .rail-head.nav-open .rail-nav{opacity:1;transform:none;pointer-events:auto}
-    .rail-nav a{font-size:.78rem;letter-spacing:.04em;text-transform:none;padding:.6rem .8rem;border-radius:6px;color:var(--paper);opacity:.9}
-    .rail-nav a.on,.rail-nav a:hover{background:var(--spruce-lift);opacity:1}
+    .rail-nav a{font-size:.78rem;letter-spacing:.04em;text-transform:none;padding:.6rem .8rem;border-radius:6px;color:var(--chrome-fg-solid);opacity:.9}
+    .rail-nav a.on,.rail-nav a:hover{background:var(--chrome-lift);opacity:1}
     /* Burger panel roominess: the ≤560px circle-collapse of the account chip is
        for the cramped inline topnav — inside this full panel the rider's name
        stays visible, and the panel widens to fit it. */
@@ -1140,12 +1203,12 @@
        open panel has transform:none. */
     .rail-nav .acct-dropdown{position:fixed;top:3.2rem;right:.6rem;left:auto;min-width:230px;max-height:calc(100svh - 4.2rem);overflow-y:auto}
     /* bottom sheet body (peeks closed via max-height:0, no transform -> no map reflow) */
-    .rail-scroll{position:fixed;left:0;right:0;bottom:0;z-index:1500;pointer-events:auto;background:var(--ink);max-height:0;padding-top:0;padding-bottom:0;overflow:hidden;transition:max-height .3s ease,padding .3s ease;border-radius:14px 14px 0 0;box-shadow:0 -14px 34px -16px rgba(0,0,0,.6)}
+    .rail-scroll{position:fixed;left:0;right:0;bottom:0;z-index:1500;pointer-events:auto;background:var(--chrome-bg);max-height:0;padding-top:0;padding-bottom:0;overflow:hidden;transition:max-height .3s ease,padding .3s ease;border-radius:14px 14px 0 0;box-shadow:0 -14px 34px -16px rgba(0,0,0,.6)}
     /* always-visible peek handle */
-    .rail-foot{position:fixed;left:0;right:0;bottom:0;z-index:1501;pointer-events:auto;background:var(--ink);border-top:1px solid rgba(239,230,212,.14);border-radius:14px 14px 0 0;box-shadow:0 -14px 34px -16px rgba(0,0,0,.6);user-select:none}
-    .rail-foot::before{content:"";position:absolute;top:.4rem;left:50%;transform:translateX(-50%);width:34px;height:4px;border-radius:2px;background:rgba(239,230,212,.3)}
+    .rail-foot{position:fixed;left:0;right:0;bottom:0;z-index:1501;pointer-events:auto;background:var(--chrome-bg);border-top:1px solid rgb(var(--chrome-fg) / .14);border-radius:14px 14px 0 0;box-shadow:0 -14px 34px -16px rgba(0,0,0,.6);user-select:none}
+    .rail-foot::before{content:"";position:absolute;top:.4rem;left:50%;transform:translateX(-50%);width:34px;height:4px;border-radius:2px;background:rgb(var(--chrome-fg) / .3)}
     .rail-foot .res{cursor:pointer}
-    .rail-foot .res::after{content:" · Filters ▾";color:var(--glacier);font-size:.62rem}
+    .rail-foot .res::after{content:" · Filters ▾";color:var(--chrome-head);font-size:.62rem}
     .app.sheet-open .rail-scroll{max-height:78svh;padding:1rem 1.3rem 6.5rem;overflow-y:auto}
     .app.sheet-open .rail-foot{box-shadow:none}
     .app.sheet-open .rail-foot .res::after{content:" · Close ▴"}
@@ -1165,7 +1228,7 @@
     /* content scrolls only at full; below full every drag moves the sheet */
     .cc-drawer.open:not(.s-full){overflow:hidden}
     .cc-d-grab{display:block;width:100%;background:none;border:none;padding:.15rem 0 .55rem;cursor:grab;touch-action:none}
-    .cc-d-grab span{display:block;width:2.6rem;height:.28rem;border-radius:2px;background:rgba(239,230,212,.35);margin:0 auto}
+    .cc-d-grab span{display:block;width:2.6rem;height:.28rem;border-radius:2px;background:rgb(var(--chrome-fg) / .35);margin:0 auto}
     .cc-d-grab:focus-visible span{outline:2px solid var(--trail);outline-offset:3px}
     /* pinned close target so it's always reachable on the bottom sheet; right edge lines up with the content/image.
        float:right lets the category/title wrap up beside it (no empty top-left gap); right:auto cancels the desktop
@@ -1186,15 +1249,15 @@
      "View mode" .grp on the dark rail — light cream fields, matching .cc-rc select. */
   .best-facets{display:flex;gap:.6rem;margin-top:.6rem}
   .best-facets[hidden]{display:none}
-  .best-facets label{flex:1;font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;color:rgba(239,230,212,.5);display:flex;flex-direction:column;gap:.25rem}
-  .best-facets select{font-family:var(--sans);font-size:.82rem;color:var(--ink);background:var(--paper);border:1px solid rgba(239,230,212,.25);border-radius:5px;padding:.35rem .45rem}
+  .best-facets label{flex:1;font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;color:rgb(var(--chrome-fg) / .68);display:flex;flex-direction:column;gap:.25rem}
+  .best-facets select{font-family:var(--sans);font-size:.82rem;color:var(--ink);background:var(--paper);border:1px solid rgb(var(--chrome-fg) / .25);border-radius:5px;padding:.35rem .45rem}
   .best-facets select:focus{outline:none;border-color:var(--trail)}
 
   /* Located-correction picking (spec §16). */
   .cc-drawer.cc-drawer-min{transform:translateX(calc(100% - 3.2rem));pointer-events:none}   /* slide mostly off so the map is clickable; can't be re-clicked during picking */
   .cc-rc-mark{margin:.4rem 0;padding:.4rem .7rem;border-radius:5px;border:1px solid var(--trail);background:transparent;color:var(--trail);font-family:var(--sans);font-weight:600;font-size:.8rem;cursor:pointer}
   .cc-rc-mark:hover{background:var(--trail);color:var(--ink)}
-  .cc-rc-marks{display:block;font-size:.78rem;color:rgba(239,230,212,.7);margin:.15rem 0 .3rem}
+  .cc-rc-marks{display:block;font-size:.78rem;color:rgb(var(--chrome-fg) / .7);margin:.15rem 0 .3rem}
   .cc-pick-pin{width:22px;height:22px;border-radius:50%;background:var(--trail);color:var(--ink);font-family:var(--sans);font-weight:700;font-size:.72rem;display:flex;align-items:center;justify-content:center;border:2px solid #FBF4E4;box-shadow:0 1px 4px rgba(0,0,0,.4)}
   .cc-pickbar{position:absolute;left:50%;bottom:1.4rem;transform:translateX(-50%);z-index:1300;background:var(--ink);color:var(--paper);display:flex;align-items:center;gap:.6rem;padding:.55rem .8rem;border-radius:8px;box-shadow:0 8px 28px rgba(0,0,0,.4);font-size:.82rem}
   .cc-pickbar[hidden]{display:none}
@@ -1204,28 +1267,28 @@
   /* Moderator pending-corrections overlay (spec §16 S3/S5): colour-per-correction
      stretches + numbered endpoint pins + bottom-left side list. */
   .cc-corr-pin{width:20px;height:20px;border-radius:50%;color:#fff;font-family:var(--sans);font-weight:700;font-size:.68rem;display:flex;align-items:center;justify-content:center;border:2px solid #FBF4E4;box-shadow:0 1px 4px rgba(0,0,0,.4)}
-  .cc-corrpanel{position:absolute;left:1rem;bottom:1rem;z-index:1250;width:min(300px,80vw);max-height:44vh;overflow-y:auto;background:var(--ink);color:var(--paper);border-radius:10px;box-shadow:0 10px 34px rgba(0,0,0,.45);padding:.7rem .8rem}
-  .cc-corrpanel h4{font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(239,230,212,.6);margin-bottom:.5rem}
-  .cc-corr-item{display:flex;gap:.55rem;width:100%;text-align:left;background:none;border:0;border-radius:6px;color:var(--paper);padding:.45rem .4rem;cursor:pointer;align-items:flex-start}
-  .cc-corr-item:hover{background:rgba(239,230,212,.08)}
+  .cc-corrpanel{position:absolute;left:1rem;bottom:1rem;z-index:1250;width:min(300px,80vw);max-height:44vh;overflow-y:auto;background:var(--chrome-bg);color:var(--chrome-fg-solid);border-radius:10px;box-shadow:0 10px 34px rgba(0,0,0,.45);padding:.7rem .8rem}
+  .cc-corrpanel h4{font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:rgb(var(--chrome-fg) / .72);margin-bottom:.5rem}
+  .cc-corr-item{display:flex;gap:.55rem;width:100%;text-align:left;background:none;border:0;border-radius:6px;color:var(--chrome-fg-solid);padding:.45rem .4rem;cursor:pointer;align-items:flex-start}
+  .cc-corr-item:hover{background:rgb(var(--chrome-fg) / .08)}
   .cc-corr-sw{flex:none;width:14px;height:14px;border-radius:3px;margin-top:.15rem}
   .cc-corr-body{font-size:.82rem;line-height:1.35}
   .cc-corr-body b{text-transform:capitalize}
-  .cc-corr-body em{display:block;font-style:normal;font-family:var(--mono);font-size:.6rem;letter-spacing:.04em;color:rgba(239,230,212,.55);margin-top:.15rem}
+  .cc-corr-body em{display:block;font-style:normal;font-family:var(--mono);font-size:.6rem;letter-spacing:.04em;color:rgb(var(--chrome-fg) / .68);margin-top:.15rem}
 
   /* ---- Ride-check (spec 2026-07-14 §4.3) ---- */
   /* rail control: upload + inline radius + the "never stored" notice. NB the
      cc-rc-* namespace belongs to the route-community drawer above — ride-check
      uses cc-ride-* (an earlier revision shadowed the community button/note). */
   .cc-ridecheck .cc-ride-row{display:flex;align-items:center;gap:.6rem;margin-top:.55rem;flex-wrap:wrap}
-  .cc-ride-btn{font-family:var(--mono);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;padding:.42rem .75rem;border:1px solid rgba(239,230,212,.35);border-radius:30px;background:none;color:var(--paper);cursor:pointer;transition:all .18s}
+  .cc-ride-btn{font-family:var(--mono);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;padding:.42rem .75rem;border:1px solid rgb(var(--chrome-fg) / .35);border-radius:30px;background:none;color:var(--chrome-fg-solid);cursor:pointer;transition:all .18s}
   .cc-ride-btn:hover{border-color:var(--trail);color:var(--trail)}
   .cc-ride-btn:disabled{opacity:.5;cursor:wait}
-  .cc-ride-radius{display:flex;align-items:center;gap:.4rem;font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;color:rgba(239,230,212,.6)}
-  .cc-ride-radius select{background:var(--ink);color:var(--paper);border:1px solid rgba(239,230,212,.25);border-radius:6px;font-size:.78rem;padding:.25rem .35rem}
+  .cc-ride-radius{display:flex;align-items:center;gap:.4rem;font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;color:rgb(var(--chrome-fg) / .72)}
+  .cc-ride-radius select{background:var(--chrome-field);color:var(--chrome-fg-solid);border:1px solid rgb(var(--chrome-fg) / .25);border-radius:6px;font-size:.78rem;padding:.25rem .35rem}
   .cc-ride-status{margin-top:.5rem;font-size:.8rem;color:var(--ochre)}
   .cc-ride-status .cc-ride-lnk{color:var(--trail);text-decoration:underline;cursor:pointer}
-  .cc-ride-note{margin:.55rem 0 0;font-size:.72rem;line-height:1.4;color:rgba(239,230,212,.5)}
+  .cc-ride-note{margin:.55rem 0 0;font-size:.72rem;line-height:1.4;color:rgb(var(--chrome-fg) / .68)}
   /* results live in the standard drawer (.cc-near list styles); just the Clear action */
   .cc-ride-actions{margin-top:.7rem}
 
@@ -1235,10 +1298,10 @@
      <a>, not a <button>, because it navigates. min-height keeps it over the
      24px WCAG 2.2 AA target floor at every text size. */
   .cc-addclimb-go{display:inline-flex;align-items:center;min-height:32px;font-family:var(--mono);font-size:.66rem;
-    letter-spacing:.08em;text-transform:uppercase;padding:.42rem .75rem;border:1px solid rgba(239,230,212,.35);
-    border-radius:30px;color:var(--paper);transition:all .18s}
+    letter-spacing:.08em;text-transform:uppercase;padding:.42rem .75rem;border:1px solid rgb(var(--chrome-fg) / .35);
+    border-radius:30px;color:var(--chrome-fg-solid);transition:all .18s}
   .cc-addclimb-go:hover{border-color:var(--trail);color:var(--trail)}
-  .cc-addclimb-note{margin:.55rem 0 0;font-size:.72rem;line-height:1.4;color:rgba(239,230,212,.5)}
+  .cc-addclimb-note{margin:.55rem 0 0;font-size:.72rem;line-height:1.4;color:rgb(var(--chrome-fg) / .68)}
 
 /* vestibular safety: the sibling contribute templates already carry this
    kill-switch; the map page was the one surface without it (review W10) */

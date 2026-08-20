@@ -12,6 +12,7 @@ use App\Account\ElevationUnit;
 use App\Account\RowsPerPage;
 use App\Account\TimeFormat;
 use App\Catalog\BikeType;
+use App\Catalog\MapTheme;
 use App\Catalog\MapViewMode;
 use App\Catalog\RidingStyle;
 use App\Form\CatalogFieldConstraints;
@@ -172,6 +173,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     // vocabulary change can never fatal the map render.
     #[ORM\Column(type: 'string', length: 16, options: ['default' => 'auto'])]
     private string $defaultMapMode = MapViewMode::Auto->value;
+
+    // The map chrome theme (rail/drawer/legend), dark by default. Stored as
+    // the enum's value string with the same tolerant accessor as the map
+    // mode — an unknown stored value falls back to Dark, never a fatal.
+    #[ORM\Column(name: 'map_theme', type: 'string', length: 16, options: ['default' => 'dark'])]
+    private string $mapTheme = MapTheme::Dark->value;
 
     // How dates are written for this rider. Deliberately independent of
     // `locale`: reading the site in English says nothing about expecting
@@ -650,6 +657,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     public function setDefaultMapMode(MapViewMode $mode): static
     {
         $this->defaultMapMode = $mode->value;
+
+        return $this;
+    }
+
+    public function getMapTheme(): MapTheme
+    {
+        return MapTheme::tryFrom($this->mapTheme) ?? MapTheme::Dark;
+    }
+
+    public function setMapTheme(MapTheme $theme): static
+    {
+        $this->mapTheme = $theme->value;
 
         return $this;
     }

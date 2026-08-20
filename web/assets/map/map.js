@@ -33,6 +33,7 @@ import { initSearchUi } from './search-ui.js';
 import { initScoutReview } from './scout-review.js';
 import { initLayerList, initMapCtrl, initRailChrome, initBestOf,
          initChips, initViewMode, initAddClimbHere } from './panels.js';
+import { initTheme } from './theme.js';
 
   // Scope model + rail + header (scope-ui.js).
   initScope();
@@ -45,6 +46,7 @@ import { initLayerList, initMapCtrl, initRailChrome, initBestOf,
   initViewMode();
 
   initMapControls();
+  initTheme();   // chrome light/dark toggle, stacked with the nav controls
 
 
 
