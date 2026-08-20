@@ -185,11 +185,16 @@ by default and a rider asks for one section at a time.
     the View mode band: they narrow harder than any chip under them, and up
     there nobody found them - the map subtitle said "Best of · Summer · Road"
     while the only bike control a rider could see was the profile chip
-    (2026-08-20). Their hint says where the season came from, because nothing
-    chose it: it is the season we are in today. They stay hidden outside Best
-    of, the only mode they change anything in. The heatmap's own season chips
-    stay LAST in the block, as far from them as it allows: two controls called
-    "season" must never sit side by side.
+    (2026-08-20). They stay hidden outside Best of, the only mode they change
+    anything in. The heatmap's own season chips stay LAST in the block, as far
+    from them as it allows: two controls called "season" must never sit side by
+    side. Both carry `autocomplete="off"`: the season opens on the one we are
+    in today and the bike on the rider's profile, and a browser restoring the
+    previous visit's value over those would silently contradict the subtitle.
+- **The panels label, they do not lecture** (owner 2026-08-20: "no need for
+  all those explanations. people know how filters work"). Sub-headers name the
+  facet and stop. The one place that still explains itself is view mode, whose
+  three words are product vocabulary rather than a filter mechanic.
   - **Ride tools** holds ride check, scout, contribute and the places count.
     The low-zoom/curator-scope hint stays ON the map instead, beside the zoom
     controls - it has to be readable while a rider is zooming, and the drawer

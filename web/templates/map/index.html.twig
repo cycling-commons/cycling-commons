@@ -204,7 +204,6 @@
         <h3>{{ 'map.map_overlays'|trans }}</h3>
         <button class="layer ov-row" id="ovSurface" type="button" hidden><span class="sw" style="--c:#C8923A;--ic:#101E16"><i class="sw-g">▰</i></span><span class="nm">{{ 'map.surfaces'|trans }}</span></button>
         <button class="layer ov-row" id="ovRoutes" type="button" hidden><span class="sw" style="--c:#7A4FCF;--ic:#EFE6D4"><i class="sw-g">⤳</i></span><span class="nm">{{ 'map.route_network'|trans }}</span></button>
-        <div class="hint">{{ 'map.map_overlays_hint'|trans }}</div>
       </div>
 
       {# Filters. Every group in here can make the map show LESS, which is why
@@ -228,7 +227,6 @@
          will be rebuilt on - when the DATA carries style tags, not before. #}
       <div class="grp" id="filters">
         <h3>{{ 'map.filters_head'|trans }}</h3>
-        <div class="hint" style="margin-top:0">{{ 'map.filters_hint'|trans }}</div>
 
         {# The Best-of facets. They were in the View mode band, which is where
            they belong logically and NOT where a rider looks: the map subtitle
@@ -241,17 +239,16 @@
            is the only mode they change anything in. The hint says where the
            season came from: nothing chose it, it is simply today's. #}
         <div class="best-facets" id="bestFacets" hidden>
-          <h4 class="fh">{{ 'map.best_facets_head'|trans }}</h4>
-          <p class="hint" style="margin:0 0 .55rem">{{ 'map.best_facets_hint'|trans }}</p>
+          <h4 class="fh">{{ 'map.curated'|trans }}</h4>
           <div class="bf-row">
           <label>{{ 'map.season'|trans }}
-            <select id="boSeason">
+            <select id="boSeason" autocomplete="off">
               <option value="spring">{{ 'map.season_spring'|trans }}</option><option value="summer">{{ 'map.season_summer'|trans }}</option>
               <option value="autumn">{{ 'map.season_autumn'|trans }}</option><option value="winter">{{ 'map.season_winter'|trans }}</option>
             </select>
           </label>
           <label>{{ 'map.bike'|trans }}
-            <select id="boBike">
+            <select id="boBike" autocomplete="off">
               <option value="all">{{ 'map.all_bikes'|trans }}</option>
               <option value="Road">{{ 'map.bike_road'|trans }}</option><option value="Gravel">{{ 'map.bike_gravel'|trans }}</option>
               <option value="MTB">{{ 'map.bike_mtb'|trans }}</option><option value="E-bike">{{ 'map.bike_ebike'|trans }}</option>

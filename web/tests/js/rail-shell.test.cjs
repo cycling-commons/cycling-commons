@@ -369,8 +369,6 @@ test('the best-of season and bike pickers live with the other filters', () => {
   const surface = s.indexOf('id="sqf"');
   assert.ok(facets > filters, 'the best-of facets are outside the filters block');
   assert.ok(facets < surface, 'the best-of facets are not first inside the filters block');
-  // The season is not a choice anybody made: it is today's. Say so.
-  assert.ok(s.includes('map.best_facets_hint'), 'nothing explains where the season came from');
   // Two "season" controls in one block, so they must sit as far apart as it
   // allows: the heatmap's own chips stay last.
   assert.ok(s.indexOf('id="season"') > s.indexOf('id="accessf"'),
