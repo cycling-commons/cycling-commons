@@ -463,6 +463,12 @@ final class MapController extends AbstractController
             'groupUtility' => $t->trans('map.dl_group_utility'),
             'groupVotable' => $t->trans('map.dl_group_votable'),
             'groupModeration' => $t->trans('map.dl_group_moderation'),
+            // Drawer headings for the three rail sections (shell.js). Same
+            // strings the rail's own tooltips carry, so the icon a rider
+            // pressed and the heading they land on read identically.
+            'railSearch' => $t->trans('map.rail_search'),
+            'railLayers' => $t->trans('map.rail_layers'),
+            'railTools' => $t->trans('map.rail_tools'),
             'curated' => $t->trans('map.curated'),
             'subEverything' => $t->trans('map.sub_everything'),
             'allBikes' => $t->trans('map.all_bikes'),

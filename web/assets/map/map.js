@@ -34,6 +34,7 @@ import { initScoutReview } from './scout-review.js';
 import { initLayerList, initMapCtrl, initRailChrome, initBestOf,
          initChips, initViewMode, initAddClimbHere } from './panels.js';
 import { initTheme } from './theme.js';
+import { initShell } from './shell.js';
 
   // Scope model + rail + header (scope-ui.js).
   initScope();
@@ -46,7 +47,8 @@ import { initTheme } from './theme.js';
   initViewMode();
 
   initMapControls();
-  initTheme();   // chrome light/dark toggle, stacked with the nav controls
+  initShell();   // icon rail + drawer: which section is open (shell.js)
+  initTheme();   // chrome light/dark toggle, in the rail's bottom cluster
 
 
 

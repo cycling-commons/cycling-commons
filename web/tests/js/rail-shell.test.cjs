@@ -28,6 +28,9 @@ const read = p => fs.readFileSync(path.join(ROOT, p), 'utf8');
 
 const twig = read('templates/map/index.html.twig');
 const css = read('assets/styles/map.css');
+const shellJs = read('assets/map/shell.js');
+const entry = read('assets/map/map.js');
+const controller = read('src/Controller/MapController.php');
 
 // The three panels are siblings in source order, so a panel's markup is
 // everything from its own id up to the next panel's (the last one runs to the
@@ -112,4 +115,28 @@ test('the shell styles read chrome tokens and band the groups', () => {
   assert.ok(shell.length > 0, 'no ICON RAIL section in map.css');
   assert.equal((shell.match(/#EFE6D4|#101E16/g) || []).length, 0,
     'the shell hardcodes a brand literal instead of a --chrome-* token');
+});
+
+test('shell.js owns the drawer and nothing else drives it', () => {
+  assert.ok(/export function initShell\(/.test(shellJs), 'shell.js does not export initShell()');
+  assert.ok(entry.includes("from './shell.js'"), 'map.js never imports the shell');
+  assert.ok(/initShell\(\)/.test(entry), 'map.js imports initShell but never calls it');
+  // The map canvas is a flex sibling of the drawer, so MapLibre has to be told
+  // its box changed - after the width transition, not during it.
+  assert.ok(shellJs.includes('map.resize'), 'shell.js never resizes the map after the drawer moves');
+  assert.ok(shellJs.includes("'Escape'"), 'Escape does not close the drawer');
+  assert.ok(shellJs.includes("setAttribute('aria-hidden'"), 'the drawer aria-hidden state is never updated');
+  // No module reaches in to open a panel: the rail is the only way in.
+  assert.ok(!/window\.CCShell/.test(shellJs), 'shell.js exposes a global; the rail is the only entry point');
+});
+
+test('the drawer opens closed and titles itself from the locale bundle', () => {
+  // The map is the hero. The prototype opened Layers to demo itself; the real
+  // page must not.
+  assert.ok(twig.includes('<aside class="dwr" id="dwr" aria-hidden="true">'),
+    'the drawer does not ship closed and aria-hidden');
+  for (const key of ['railSearch', 'railLayers', 'railTools']) {
+    assert.ok(shellJs.includes(key), `shell.js has no ${key} title`);
+    assert.ok(controller.includes(`'${key}' =>`), `MapController::mapI18n() does not emit ${key}`);
+  }
 });
