@@ -239,23 +239,17 @@
            is the only mode they change anything in. The hint says where the
            season came from: nothing chose it, it is simply today's. #}
         <div class="best-facets" id="bestFacets" hidden>
-          <h4 class="fh">{{ 'map.curated'|trans }}</h4>
-          <div class="bf-row">
-          <label>{{ 'map.season'|trans }}
-            <select id="boSeason" autocomplete="off">
-              <option value="spring">{{ 'map.season_spring'|trans }}</option><option value="summer">{{ 'map.season_summer'|trans }}</option>
-              <option value="autumn">{{ 'map.season_autumn'|trans }}</option><option value="winter">{{ 'map.season_winter'|trans }}</option>
-            </select>
-          </label>
-          <label>{{ 'map.bike'|trans }}
-            <select id="boBike" autocomplete="off">
-              <option value="all">{{ 'map.all_bikes'|trans }}</option>
-              <option value="Road">{{ 'map.bike_road'|trans }}</option><option value="Gravel">{{ 'map.bike_gravel'|trans }}</option>
-              <option value="MTB">{{ 'map.bike_mtb'|trans }}</option><option value="E-bike">{{ 'map.bike_ebike'|trans }}</option>
-              <option value="Handbike">{{ 'map.bike_handbike'|trans }}</option><option value="Recumbent">{{ 'map.bike_recumbent'|trans }}</option>
-              <option value="Trike">{{ 'map.bike_trike'|trans }}</option><option value="Tandem">{{ 'map.bike_tandem'|trans }}</option>
-            </select>
-          </label>
+          <h4 class="fh">{{ 'map.best_season'|trans }}</h4>
+          <div class="chips f-optin" id="boSeason">
+            <span class="chip" data-v="spring">{{ 'map.season_spring'|trans }}</span><span class="chip" data-v="summer">{{ 'map.season_summer'|trans }}</span>
+            <span class="chip" data-v="autumn">{{ 'map.season_autumn'|trans }}</span><span class="chip" data-v="winter">{{ 'map.season_winter'|trans }}</span>
+          </div>
+          <h4 class="fh">{{ 'map.best_bike'|trans }}</h4>
+          <div class="chips f-optin" id="boBike">
+            <span class="chip" data-v="Road">{{ 'map.bike_road'|trans }}</span><span class="chip" data-v="Gravel">{{ 'map.bike_gravel'|trans }}</span>
+            <span class="chip" data-v="MTB">{{ 'map.bike_mtb'|trans }}</span><span class="chip" data-v="E-bike">{{ 'map.bike_ebike'|trans }}</span>
+            <span class="chip" data-v="Handbike">{{ 'map.bike_handbike'|trans }}</span><span class="chip" data-v="Recumbent">{{ 'map.bike_recumbent'|trans }}</span>
+            <span class="chip" data-v="Trike">{{ 'map.bike_trike'|trans }}</span><span class="chip" data-v="Tandem">{{ 'map.bike_tandem'|trans }}</span>
           </div>
         </div>
 

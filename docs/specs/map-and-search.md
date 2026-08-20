@@ -181,16 +181,24 @@ by default and a rider asks for one section at a time.
   - **Layers & filters** is one panel because view mode is a filter too (owner:
     "people will not understand why they are missing data"). Order: view mode,
     the layer list, MAP OVERLAYS, then FILTERS under mono sub-headers. FILTERS
-    leads with the **Best-of season and bike** pickers, which used to sit in
+    leads with the **Best-of season and bike** facets, which used to sit in
     the View mode band: they narrow harder than any chip under them, and up
     there nobody found them - the map subtitle said "Best of · Summer · Road"
     while the only bike control a rider could see was the profile chip
     (2026-08-20). They stay hidden outside Best of, the only mode they change
     anything in. The heatmap's own season chips stay LAST in the block, as far
     from them as it allows: two controls called "season" must never sit side by
-    side. Both carry `autocomplete="off"`: the season opens on the one we are
-    in today and the bike on the rider's profile, and a browser restoring the
-    previous visit's value over those would silently contradict the subtitle.
+    side.
+
+    Both are **multi-select chip rows**, not single-value dropdowns (owner
+    2026-08-20: "no multiple select option as in my profile"). They open on
+    the season we are in today and on EVERY bike the rider's profile carries,
+    and both are `.f-optin`: a ticked chip narrows, so their widest state is
+    EMPTY and the server reads an empty list as the whole vocabulary
+    (route-domain.md §8.1). Marking them `.f-match` would make the pill's Show
+    all tick every season and every bike, the opposite of widest, which is why
+    the class is pinned by a test. Show all is also the one reset in this block
+    that must reach the SERVER, because the ranking is computed there.
 - **The panels label, they do not lecture** (owner 2026-08-20: "no need for
   all those explanations. people know how filters work"). Sub-headers name the
   facet and stop. The one place that still explains itself is view mode, whose

@@ -38,12 +38,22 @@ import { surfaceTilesConfigured, setSurfaceTiles, surfaceTilesVisible,
 import { routesTilesConfigured, setRoutesTiles, routesTilesVisible } from './routes-tiles.js';
 import { setFilterDot } from './shell.js';
 
-// Bindings a later init reads, so they cannot stay `const` inside the init that
-// looks them up: `app` is assigned by initRailChrome(), the two facet <select>s
-// by initBestOf(). boSeason/boBike are pure values and initialise here.
-let app, boSeasonEl, boBikeEl;
-let boSeason=currentSeason(), boBike='all';
+// `app` is assigned by initRailChrome(), so it cannot stay a const inside it.
+//
+// The two best-of facets are MULTI-select chip rows (owner 2026-08-20), read
+// straight from the DOM rather than mirrored in module state: one source of
+// truth, the same way render.js reads its own chip facets. An EMPTY row means
+// "narrowed by nothing" and the server aggregates across the whole vocabulary,
+// which is why unticking everything is a wide answer and never an empty one.
+let app;
 let _bestOfReq=0;
+const facet = id => {
+  const el=document.getElementById(id);
+  if(!el) return [];
+  return [...el.querySelectorAll('.chip.on')].map(c=>c.dataset.v);
+};
+const boSeasons = () => facet('boSeason');
+const boBikes = () => facet('boBike');
 
 export function initLayerList(){
   // The rail lists categories in READING order, grouped (catalog.js): the
@@ -272,6 +282,11 @@ export function initFilterPill(){
     }
     syncFacetChips();
     applyStaysAccessFilter();
+    // The best-of facets are f-optin too, so the reset just cleared them -
+    // their widest state, and the only one in this block the SERVER has to be
+    // told about.
+    updateSubtitle();
+    refreshBestOf();
     render();
     updateCounts();
   };
@@ -365,8 +380,14 @@ export function initRailChrome(){
 function updateSubtitle(){
   const sub=document.querySelector('.map-top .sub'); if(!sub) return;
   if(mode()==='all'){ sub.textContent=I18N.subEverything||'Everything · full catalog'; return; }
-  const bike=boBike==='all' ? (I18N.allBikes||'All bikes') : (CC_BIKE_LABEL[boBike]||boBike);
-  sub.textContent=`${I18N.curated||'Best of'} · ${CC_SEASON_LABEL[boSeason]} · ${bike}`;
+  // Both facets can hold several values now, and an empty one is the wide
+  // answer, so the subtitle names the whole vocabulary rather than nothing.
+  const seasons=boSeasons(), bikes=boBikes();
+  const sTxt = seasons.length ? seasons.map(v=>CC_SEASON_LABEL[v]||v).join(', ')
+    : (I18N.allSeasons||'All seasons');
+  const bTxt = bikes.length ? bikes.map(v=>CC_BIKE_LABEL[v]||v).join(', ')
+    : (I18N.allBikes||'All bikes');
+  sub.textContent=`${I18N.curated||'Best of'} · ${sTxt} · ${bTxt}`;
 }
 
 function applyBestOf(ids){
@@ -390,7 +411,8 @@ export function refreshBestOf(){
   // single named region keeps the identical single-id request as before.
   const regionIds = window.CCScope && window.CCScope.bestOfRegionIds();
   const regionQ = (regionIds && regionIds.length) ? `&region=${encodeURIComponent(regionIds.join(','))}` : '';
-  fetch(`/map/best-of?season=${encodeURIComponent(boSeason)}&bike=${encodeURIComponent(boBike)}${regionQ}`,
+  // Both facets go as a CSV of enum values; an empty one narrows by nothing.
+  fetch(`/map/best-of?season=${encodeURIComponent(boSeasons().join(','))}&bike=${encodeURIComponent(boBikes().join(','))}${regionQ}`,
     {credentials:'same-origin', headers:{'Accept':'application/json'}})
     .then(r=>{ if(!r.ok) throw new Error(String(r.status)); return r.json(); })
     .then(d=>{ if(req===_bestOfReq) applyBestOf(d.ids); })
@@ -443,10 +465,9 @@ export function initBestOf(){
   // switching Season/Bike quickly must never let a slower earlier response
   // overwrite the newer facet's membership under a subtitle that says otherwise.
 
-  // Facet pickers (Curated only).
-  boSeasonEl=document.getElementById('boSeason'); boBikeEl=document.getElementById('boBike');
-  if(boSeasonEl){ boSeasonEl.value=boSeason; boSeasonEl.onchange=()=>{ boSeason=boSeasonEl.value; updateSubtitle(); refreshBestOf(); }; }
-  if(boBikeEl){ boBikeEl.onchange=()=>{ boBike=boBikeEl.value; updateSubtitle(); refreshBestOf(); }; }
+  // The facet chips bind in initChips(), after the generic chip toggler that
+  // would otherwise clobber their handler - the same rule the climb filters
+  // follow (see the ordering note at the top of this file).
 
   // mode toggle
   document.querySelectorAll('#mode button').forEach(b=>b.onclick=()=>{
@@ -466,11 +487,25 @@ export function initBestOf(){
 }
 
 export function initChips(){
-  // Exactly one saved bike → preselect the Curated facet (single-valued
-  // select; multi-bike riders keep the neutral 'all').
-  if(PREFS.bikes.length===1 && boBikeEl && [...boBikeEl.options].some(o=>o.value===PREFS.bikes[0])){
-    boBikeEl.value=PREFS.bikes[0]; boBike=PREFS.bikes[0];
-  }
+  /* Opening state of the two best-of facets, painted here because it is read
+     from the rider's own data rather than rendered by the server.
+
+     Season: the one we are in today. Bike: EVERY bike on the rider's profile,
+     not just the single-bike case the old dropdown could express (owner
+     2026-08-20: "no multiple select option as in my profile"). A rider with
+     nothing saved opens on no bike chips, which the server reads as every
+     bike, so they still get a full ranking. */
+  (function openFacets(){
+    const season=document.getElementById('boSeason');
+    if(season){
+      const now=currentSeason();
+      season.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on', c.dataset.v===now));
+    }
+    const bike=document.getElementById('boBike');
+    if(bike && PREFS.bikes.length){
+      bike.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on', PREFS.bikes.includes(c.dataset.v)));
+    }
+  })();
 
   // Initial best-of for the default facet so Curated isn't empty on load.
   updateSubtitle();
@@ -546,6 +581,14 @@ export function initChips(){
   // climb surface + traffic chips actually filter the climbs layer; C2-T8 adds
   // climb effort + stay accessibility to the same wiring (this assignment runs
   // after the generic '.grp .chips .chip' toggle-only handler above, so it wins).
+  // Best-of facets: multi-select, and every change re-ranks. Assigned after
+  // the generic toggler above, so this handler wins.
+  document.querySelectorAll('#boSeason .chip, #boBike .chip').forEach(c=>c.onclick=()=>{
+    c.classList.toggle('on');
+    updateSubtitle();
+    refreshBestOf();
+  });
+
   document.querySelectorAll('#sqf .chip, #trf .chip, #effortf .chip, #accessf .chip').forEach(c=>c.onclick=()=>{
     c.classList.toggle('on');
     syncFacetChips();   // the four chip facets are render.js's state (setter, not assignment)

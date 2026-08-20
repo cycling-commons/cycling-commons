@@ -386,14 +386,24 @@ curator sees them on the map. Data contract (presentation details belong to
 
 ### 8.1 Endpoint
 
-`GET /map/best-of?season=<s>&bike=<b>[&region=<id>]`
+`GET /map/best-of?season=<s>[,<s>…]&bike=<b>[,<b>…][&region=<id>]`
 (`MapController::bestOf`) — public and cacheable like `catalog.json` (ETag +
-`public, max-age=300`). `season` defaults to the current Northern-hemisphere
-season; `bike` defaults to `all` (an unknown bike value also degrades to
-`all`). Response: `{season, bike, ids}` — ranked route ids, best first;
-**rank is encoded by array position only** (no explicit rank field yet). The
-map's Curated mode flags these ids `cur:true` and filters to them; a facet
-with no picks renders no route lines.
+`public, max-age=300`).
+
+**Both facets are multi-valued** (owner 2026-08-20): the rider profile already
+takes several bike types, and a season picker that takes one cannot say
+"spring or autumn". Each arrives as a CSV of enum values, and **an empty or
+absent list narrows by nothing** — no seasons aggregates across every season,
+no bikes across every bike type. Unknown parts are dropped rather than
+rejected, the same forgiving rule the `region` CSV follows, so a stale
+bookmark degrades to a wider answer instead of a 400; the literal `all` is
+still accepted for `bike` and means the same as omitting it.
+
+Response: `{season: [...], bike: [...], ids}` — the echoed facets are LISTS,
+and the ranked route ids come best first, with **rank encoded by array
+position only** (no explicit rank field yet). The map's Curated mode flags
+these ids `cur:true` and filters to them; a facet with no picks renders no
+route lines.
 
 ### 8.2 Ranking SQL contract
 
@@ -404,9 +414,13 @@ materialization (regions hold ≤ the active cap):
   joined to `route_vote` on the facet — so **only routes with ≥ 1 matching
   vote appear** (a zero-vote verified route shows only in "Everything",
   keeping best-of meaningful).
-- Facet match: a specific bike counts votes
-  `WHERE season = :s AND bike_type = :b`; `bike=all` counts all of the
-  season's votes regardless of bike type.
+- Facet match: seasons narrow with `rv.season IN (:seasons)`; bikes become
+  **one OR term per bike**, not a single `IN` list, because a specialty bike
+  carries a second condition of its own (§8.3). Written per bike so the two
+  halves can never be crossed: a vote for a handbike must not qualify on a
+  route that declares itself tandem-friendly. The enum is eight values long,
+  so the term count is bounded by the vocabulary. An empty list drops its
+  facet from the query entirely.
 - Order: `COUNT(*) DESC, MAX(route_vote.created_at) DESC, route_id ASC`
   (ties by most-recent matching vote, then id for determinism).
 

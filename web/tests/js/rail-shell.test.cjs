@@ -374,3 +374,19 @@ test('the best-of season and bike pickers live with the other filters', () => {
   assert.ok(s.indexOf('id="season"') > s.indexOf('id="accessf"'),
     'the heatmap season chips moved next to the best-of season picker');
 });
+
+test('the best-of facets narrow by selection, not by deselection', () => {
+  // Empty means every season and every bike, so their widest state is EMPTY.
+  // Marking them f-match would make the pill's "Show all" tick all four
+  // seasons and all eight bikes, which is the opposite of widest.
+  const s = panelSrc('p-layers');
+  assert.ok(/class="chips f-optin" id="boSeason"/.test(s), 'the season facet is not marked f-optin');
+  assert.ok(/class="chips f-optin" id="boBike"/.test(s), 'the bike facet is not marked f-optin');
+  // Both are multi-select chip rows now, not single-value dropdowns.
+  assert.ok(!/<select id="boSeason"/.test(s) && !/<select id="boBike"/.test(s),
+    'a best-of facet is still a single-value select');
+  // Clearing them is a server-side change, unlike every other chip here.
+  const panels = read('assets/map/panels.js');
+  const reset = panels.slice(panels.indexOf('reset.onclick'), panels.indexOf('reset.onclick') + 900);
+  assert.ok(reset.includes('refreshBestOf()'), 'the pill reset never re-ranks the best-of facets');
+});

@@ -478,6 +478,9 @@ final class MapController extends AbstractController
             'curated' => $t->trans('map.curated'),
             'subEverything' => $t->trans('map.sub_everything'),
             'allBikes' => $t->trans('map.all_bikes'),
+            // Both best-of facets are multi-select, so both need a name for
+            // "you narrowed by nothing" in the map subtitle.
+            'allSeasons' => $t->trans('map.all_seasons'),
             'pendingReview' => $t->trans('map.pending_review'),
             'login' => $t->trans('nav.login'),
             // Search scope widening (map-and-search.md §4.5 Phase 2):
@@ -670,9 +673,29 @@ final class MapController extends AbstractController
     #[Route('/map/best-of', name: 'map_best_of', methods: ['GET'])]
     public function bestOf(Request $request, RouteRankingService $ranking): Response
     {
-        $season = Season::tryFrom((string) $request->query->get('season')) ?? Season::current(new \DateTimeImmutable());
-        $bikeParam = (string) $request->query->get('bike', 'all');
-        $bike = 'all' === $bikeParam ? null : BikeType::tryFrom($bikeParam);
+        /* Both facets arrive as a CSV of enum values, because both are
+           multi-select on the map (map-and-search.md §4.0). Unknown parts are
+           dropped rather than rejected, the same forgiving rule the region CSV
+           below follows: a stale bookmark degrades to a wider answer instead
+           of a 400. An empty or all-garbage list narrows by nothing.
+           'all' stays accepted for the bike so an old client keeps working. */
+        $csvEnum = static function (string $raw, callable $tryFrom): array {
+            $out = [];
+            foreach (explode(',', $raw) as $part) {
+                $part = trim($part);
+                if ('' === $part || 'all' === $part) {
+                    continue;
+                }
+                $case = $tryFrom($part);
+                if (null !== $case) {
+                    $out[$part] = $case;
+                }
+            }
+
+            return array_values($out);
+        };
+        $seasons = $csvEnum((string) $request->query->get('season', ''), Season::tryFrom(...));
+        $bikes = $csvEnum((string) $request->query->get('bike', ''), BikeType::tryFrom(...));
         // CSV of region ids (map-and-search.md §4.5 Phase 4): a My-area
         // derived scope sends up to BaseAreaResolver::MAX_REGIONS ids, e.g.
         // `region=1,24,23`; a bare `region=3` stays valid (single-element
@@ -697,10 +720,10 @@ final class MapController extends AbstractController
         $regionIds = \array_slice(array_values($regionIds), 0, BaseAreaResolver::MAX_REGIONS);
         sort($regionIds);
 
-        $ids = $ranking->bestOf($season, $bike, $regionIds);
+        $ids = $ranking->bestOf($seasons, $bikes, $regionIds);
         $json = json_encode([
-            'season' => $season->value,
-            'bike' => null === $bike ? 'all' : $bike->value,
+            'season' => array_map(static fn (Season $s): string => $s->value, $seasons),
+            'bike' => array_map(static fn (BikeType $b): string => $b->value, $bikes),
             'ids' => $ids,
         ], \JSON_THROW_ON_ERROR);
 
