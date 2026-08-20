@@ -99,10 +99,11 @@ function writeScopeHeader(){
 // `sBox` const declared far below, next to the `sRes` search-results wiring
 // — renderScopeChips() first runs long before that line executes, so
 // capturing `sBox` here would hit the temporal-dead-zone. Reuses the same
-// mobile 'sheet-open' reveal + <=820 breakpoint the filter-sheet handle
-// already uses rather than inventing a second show/hide mechanism.
+// It no longer has to reveal anything first: "More regions" is a row in the
+// Search & region panel, so the panel holding the search box is by definition
+// already open when it is pressed (it used to live in a phone filter sheet
+// that had to be opened first).
 function focusSearchBox(){
-  if(window.innerWidth<=820){ const ap=document.querySelector('.app'); if(ap) ap.classList.add('sheet-open'); }
   const el=document.getElementById('search');
   if(el){ el.scrollIntoView({block:'nearest'}); el.focus(); }
 }

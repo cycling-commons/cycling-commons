@@ -22,8 +22,8 @@
       foot.appendChild(s);
       return;
     }
-    // 2) the map: tuck it into the sidebar foot next to the result count
-    var rail = document.querySelector('.rail-foot');
+    // 2) the map: tuck it into the drawer foot beside the data-version line
+    var rail = document.querySelector('.dwr-foot');
     if (rail) {
       var r = document.createElement('span');
       r.className = 'cc-ver';

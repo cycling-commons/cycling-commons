@@ -282,3 +282,35 @@ test('the zoom hint stays on the map, where a rider zooming can see it', () => {
   const stage = twig.slice(twig.indexOf('<main class="map-wrap">'), twig.indexOf('</main>'));
   assert.ok(stage.includes('id="zoomHint"'), 'the zoom hint is not on the map stage');
 });
+
+test('the account avatar is its own rail button, badge and all', () => {
+  // The unread bulb has to be visible ON the rail. Inside the ≡ flyout it
+  // would only appear once the rider already opened the menu, which is the
+  // one moment the badge has nothing left to tell them.
+  const rail = twig.slice(twig.indexOf('<nav class="irail"'), twig.indexOf('</nav>', twig.indexOf('id="railNav"')) + 6);
+  const acct = twig.indexOf("_account_chip.html.twig");
+  const nav = twig.indexOf('id="railNav"');
+  assert.ok(acct > 0, 'the account chip is not on the map page at all');
+  assert.ok(acct > twig.indexOf('</nav>', nav), 'the account chip is still inside the ≡ flyout');
+  assert.ok(rail.length > 0);
+  assert.ok(twig.includes('class="irail-acct"'), 'the avatar has no rail slot of its own');
+});
+
+test('the retired rail leaves no rules behind', () => {
+  for (const dead of ['.rail{', '.rail-head', '.rail-scroll', '.rail-foot', '.rail-burger', '.map-ctrl', '.theme-toggle', '.export{']) {
+    assert.ok(!css.includes(dead), `${dead} is still styled but nothing renders it`);
+  }
+  for (const dead of ['rail-scroll', 'rail-foot', 'rail-head', 'rail-burger', 'map-ctrl', 'rail-brandrow']) {
+    assert.ok(!twig.includes(dead), `${dead} is still in the map template`);
+  }
+});
+
+test('on a phone the rail stays and the drawer overlays the map', () => {
+  // Owner call 2026-08-20: one behaviour at every width. The old phone
+  // re-skin (top bar + bottom sheet) is gone rather than maintained beside it.
+  const mob = css.slice(css.indexOf('/* ---- PHONES'), css.indexOf('/* ---- PHONES') + 1400);
+  assert.ok(mob.length > 0, 'no phone section in map.css');
+  assert.ok(/\.dwr\{position:absolute/.test(mob), 'the drawer does not overlay the map on a phone');
+  assert.ok(mob.includes('min(320px,85vw)'), 'the phone drawer is not capped at 85vw');
+  assert.ok(!css.includes('sheet-open'), 'the old bottom-sheet class is still styled');
+});

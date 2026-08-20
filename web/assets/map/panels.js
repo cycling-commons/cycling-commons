@@ -316,35 +316,11 @@ export function initRailChrome(){
     document.querySelectorAll('#mode button').forEach(b=>b.addEventListener('click',()=>setTimeout(renderVersions,0)));
   }
 
-  // mobile: filters bottom-sheet — the rail-foot peek toggles it
+  /* The phone bottom-sheet retired with the old rail (owner 2026-08-20, one
+     behaviour at every width): the drawer now slides over the map on a phone
+     exactly as it slides beside it on a laptop, so there is no peek handle to
+     tap, no swipe to own, and no 'sheet-open' state for anything to clear. */
   app=document.querySelector('.app');
-
-  const sheetHandle=document.querySelector('.rail-foot .res');
-  const railFoot=document.querySelector('.rail-foot');
-  if(app && sheetHandle){
-    let _sheetSwiped=false;
-    sheetHandle.addEventListener('click',()=>{ if(_sheetSwiped) return; if(window.innerWidth<=820) app.classList.toggle('sheet-open'); });
-    const exp=document.querySelector('.rail-foot .export');
-    if(exp) exp.addEventListener('click',e=>e.stopPropagation());   // export ≠ sheet toggle
-    map.on('dragstart',()=>app.classList.remove('sheet-open'));      // collapse when panning
-    // mobile: swipe the filters handle down to close it (or up to open it) — the sheet has no ✕, only this bar
-    let fy=0, fActive=false, fMoved=0, fOpen=false;
-    railFoot.addEventListener('touchstart', e=>{
-      if(window.innerWidth>820 || e.touches.length!==1 || e.target.closest('.export')) return;
-      fActive=true; fy=e.touches[0].clientY; fMoved=0; fOpen=app.classList.contains('sheet-open');
-    }, {passive:true});
-    railFoot.addEventListener('touchmove', e=>{
-      if(!fActive) return; fMoved=e.touches[0].clientY-fy;
-      if((fOpen && fMoved>0) || (!fOpen && fMoved<0)) e.preventDefault();   // own a meaningful vertical swipe
-    }, {passive:false});
-    railFoot.addEventListener('touchend', ()=>{
-      if(!fActive) return; fActive=false;
-      if(fOpen && fMoved>45) app.classList.remove('sheet-open');            // drag down → close
-      else if(!fOpen && fMoved<-45) app.classList.add('sheet-open');        // drag up → open
-      else return;
-      _sheetSwiped=true; setTimeout(()=>{ _sheetSwiped=false; }, 450);      // suppress the swipe's synthesized click
-    });
-  }
 
   /* The legend collapses on EVERY screen (owner 2026-08-16), not only on
      phones: a rider who has learnt the colours wants the corner of the map

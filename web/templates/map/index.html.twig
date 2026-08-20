@@ -78,14 +78,21 @@
     {# The chrome theme toggle. theme.js paints the glyph and the label, both of
        which name the theme a press will GIVE you (map-and-search.md §4.6). #}
     <button class="ib" id="ib-theme" type="button"></button>
-    {# Site nav + language + account, one flyout behind a ≡ button. Same markup
-       and the same initRailChrome() handler as the old rail head used; only
-       the position changed. #}
+    {# Site nav + language, one flyout behind a ≡ button, opened by the same
+       initRailChrome() handler the old rail head used. #}
     <div class="irail-menu" id="railHead">
-      <button class="ib rail-burger" id="railBurger" type="button" aria-label="{{ 'map.menu_aria'|trans }}" aria-expanded="false" aria-controls="railNav">
+      <button class="ib" id="railBurger" type="button" aria-label="{{ 'map.menu_aria'|trans }}" data-tip="{{ 'map.menu_aria'|trans }}" aria-expanded="false" aria-controls="railNav">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
       </button>
-      <nav class="rail-nav" id="railNav"><a href="{{ path('map') }}" class="on">{{ 'nav.map'|trans }}</a><a href="{{ path('regions') }}">{{ 'nav.regions'|trans }}</a><a href="{{ path('vote') }}">{{ 'nav.vote'|trans }}</a><a href="{{ path('developers') }}">{{ 'nav.developers'|trans }}</a><a href="{{ path('about') }}">{{ 'nav.about'|trans }}</a>{% include 'partials/_lang_menu.html.twig' %}{% if app.user %}{% include 'partials/_account_chip.html.twig' %}{% else %}<a href="{{ path('login') }}">{{ 'nav.account'|trans }}</a>{% endif %}</nav>
+      <nav class="rail-nav" id="railNav"><a href="{{ path('map') }}" class="on">{{ 'nav.map'|trans }}</a><a href="{{ path('regions') }}">{{ 'nav.regions'|trans }}</a><a href="{{ path('vote') }}">{{ 'nav.vote'|trans }}</a><a href="{{ path('developers') }}">{{ 'nav.developers'|trans }}</a><a href="{{ path('about') }}">{{ 'nav.about'|trans }}</a>{% include 'partials/_lang_menu.html.twig' %}</nav>
+    </div>
+    {# The account avatar is its own rail slot, NOT a row inside the ≡ menu:
+       the unread bulb has to be visible on the rail, and inside the flyout it
+       would only appear once the rider had already opened the menu, which is
+       the one moment the badge has nothing left to tell them. The chip keeps
+       its shared markup; the rail only hides the name and the caret. #}
+    <div class="irail-acct">
+      {% if app.user %}{% include 'partials/_account_chip.html.twig' %}{% else %}<a class="ib" href="{{ path('login') }}" aria-label="{{ 'nav.account'|trans }}" data-tip="{{ 'nav.account'|trans }}"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg></a>{% endif %}
     </div>
   </nav>
 
@@ -369,7 +376,13 @@
       </section>
 
       </div>
-    <div class="data-versions" id="dataVersions" title="{{ 'map.data_versions_title'|trans }}"></div>
+    {# Drawer foot: which data build THIS page is drawing, plus the build stamp
+       version.js appends here. Outside the panels on purpose - it answers the
+       same question whichever section is open, and it is a diagnostic rather
+       than something a rider reads. #}
+    <div class="dwr-foot">
+      <div class="data-versions" id="dataVersions" title="{{ 'map.data_versions_title'|trans }}"></div>
+    </div>
     </div>
   </aside>
 

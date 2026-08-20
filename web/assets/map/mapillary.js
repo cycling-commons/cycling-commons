@@ -49,7 +49,7 @@ export function addMapillary(){
 function openMapillaryDock(){          // slide the dock up immediately + show the loading state
   const dock=document.getElementById('mlyDock');
   dock.classList.add('open','loading'); dock.setAttribute('aria-hidden','false');
-  { const ap=document.querySelector('.app'); ap.classList.add('dock-open'); ap.classList.remove('sheet-open'); }   // dock owns the bottom on mobile → hide the filters peek
+  { const ap=document.querySelector('.app'); if(ap) ap.classList.add('dock-open'); }   // the dock owns the bottom on a phone; CSS hides the drawer with it
   const ld=document.getElementById('mlyLoad'); if(ld) ld.innerHTML=`<span class="mly-spin"></span>${I18N.mlyLoading||'Loading street-level…'}`;
 }
 function mlyDockMessage(msg){           // swap the spinner for a short message (nothing found / error)
@@ -122,7 +122,7 @@ function loadMapillaryJs(){
 export async function openMapillaryImage(imageId){
   const dock=document.getElementById('mlyDock');
   dock.classList.add('open'); dock.setAttribute('aria-hidden','false');
-  { const ap=document.querySelector('.app'); ap.classList.add('dock-open'); ap.classList.remove('sheet-open'); }
+  { const ap=document.querySelector('.app'); if(ap) ap.classList.add('dock-open'); }
   try{ await loadMapillaryJs(); }
   catch(_){ mlyClose(); mlyPopup(map.getCenter(),'Viewer failed to load.'); return; }
   if(!mlyViewer){

@@ -75,7 +75,6 @@ export function initSearchUi(){
       // task-6 brief without duplicating a second click/keydown path.
       if(m.scope){ m.go(); closeS(); sBox.blur(); return; }
       sBox.value=m.name; closeS();
-      if(window.innerWidth<=820){ const ap=document.querySelector('.app'); if(ap) ap.classList.remove('sheet-open'); }  // clear the filter sheet on mobile
       m.go(); }
     // 07-15 decision A: community (unverified) rows carry a dimmed sub-tag so
     // verified vs community reads at a glance. Towns and pending rows never do.

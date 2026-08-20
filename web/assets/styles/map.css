@@ -108,7 +108,6 @@
      anchored to its bottom, because the button sits at the bottom of a 48px
      column. `.nav-open` is the same class initRailChrome() already toggles. */
   .irail-menu{position:relative;flex:none}
-  .irail .rail-burger{display:flex;width:40px;height:40px;border-radius:8px;color:rgb(var(--chrome-fg) / .68)}
   .irail-menu .rail-nav{position:absolute;left:calc(100% + .5rem);bottom:0;z-index:1502;margin:0;
     flex-direction:column;align-items:stretch;gap:0;min-width:13.5rem;max-width:86vw;padding:.4rem .2rem;
     background:var(--chrome-bg);border:1px solid var(--chrome-lift);border-radius:10px;
@@ -117,10 +116,23 @@
   .irail-menu.nav-open .rail-nav{opacity:1;transform:none;pointer-events:auto}
   .irail-menu .rail-nav a{font-size:.78rem;letter-spacing:.04em;text-transform:none;padding:.6rem .8rem;border-radius:6px;color:rgb(var(--chrome-fg) / .9)}
   .irail-menu .rail-nav a.on,.irail-menu .rail-nav a:hover{background:var(--chrome-lift);color:var(--chrome-fg-solid)}
-  .irail-menu .acct-menu,.irail-menu .lang-menu{margin:.25rem .5rem}
-  /* The dropdowns hang off chips inside a bottom-anchored panel, so they open
-     upward-right rather than down-left. */
+  .irail-menu .lang-menu{margin:.25rem .5rem}
+  /* The language panel hangs off a chip inside a bottom-anchored flyout, so it
+     opens upward rather than down. */
   .irail-menu .acct-dropdown{left:0;right:auto;bottom:calc(100% + .35rem);top:auto;max-height:70svh;overflow-y:auto}
+  /* The account avatar: its own rail slot, name and caret hidden, so the chip
+     collapses to the circle the bulb is anchored to. Its menu opens right of
+     the rail and bottom-anchored, like the ≡ flyout above it. */
+  .irail-acct{position:relative;flex:none;display:flex;align-items:center;justify-content:center;
+    width:40px;height:40px;margin-top:.1rem}
+  .irail-acct .acct-menu{position:static}
+  .irail-acct .acct-chip{padding:0;border:none;gap:0}
+  .irail-acct .acct-chip:hover .av,.irail-acct .acct-chip[aria-expanded=true] .av{box-shadow:0 0 0 2px var(--chrome-bg),0 0 0 4px var(--trail)}
+  .irail-acct .acct-chip .av{width:28px;height:28px;font-size:.76rem}
+  .irail-acct .acct-name,.irail-acct .acct-caret{display:none}
+  .irail-acct .acct-bulb{top:-2px;left:16px}
+  .irail-acct .acct-dropdown{left:calc(100% + .6rem);right:auto;top:auto;bottom:0;min-width:230px;
+    max-height:min(70svh,32rem);overflow-y:auto;z-index:1502}
   /* The scope kicker moved into the search panel with the heading it belongs to. */
   .dwr-body .co{font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;color:rgb(var(--chrome-fg) / .68);margin-top:.6rem;text-transform:uppercase}
 
@@ -141,8 +153,8 @@
   .dwr-body::-webkit-scrollbar-thumb{background:rgb(var(--chrome-fg) / .55);border-radius:5px;border:2px solid transparent;background-clip:padding-box}
   .panel{display:none}
   .panel.on{display:block}
-  .dwr-foot{flex:none;padding:.9rem 1.1rem;border-top:1px solid rgb(var(--chrome-fg) / .14);
-    display:flex;align-items:center;justify-content:space-between;gap:.6rem;flex-wrap:wrap}
+  .dwr-foot{flex:none;padding:.7rem 1.1rem;border-top:1px solid rgb(var(--chrome-fg) / .14);
+    display:flex;align-items:flex-start;justify-content:space-between;gap:.6rem}
   /* The places count reads as a headline number wherever it sits. */
   .panel .res{font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;color:rgb(var(--chrome-fg) / .7)}
   .panel .res b{color:var(--trail);font-size:1.15rem}
@@ -169,15 +181,13 @@
   .ov-row:not(.on) .sw,.ov-row:not(.on) .nm{opacity:.45}
   .ov-row:focus-visible{outline:2px solid var(--trail);outline-offset:2px;border-radius:5px}
 
-  /* ---------- RAIL ---------- */
-  .rail{background:var(--chrome-bg);color:var(--chrome-fg-solid);display:flex;flex-direction:column;border-right:1px solid var(--chrome-lift);z-index:1000}
-  .rail-head{padding:1.3rem 1.4rem;border-bottom:1px solid rgb(var(--chrome-fg) / .14)}
-  .rail-head .brand{font-family:var(--serif);font-weight:600;font-size:1.55rem}
-  .rail-head .brand b{color:var(--trail);font-style:italic}
-  .rail-head .co{font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;color:rgb(var(--chrome-fg) / .68);margin-top:.3rem;text-transform:uppercase}
-  .rail-nav{display:flex;flex-wrap:wrap;gap:.2rem .9rem;margin-top:.8rem}
-  .rail-nav a{font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:rgb(var(--chrome-fg) / .72);transition:color .2s}
-  .rail-nav a:hover,.rail-nav a.on{color:var(--trail)}
+  /* ---------- ACCOUNT + LANGUAGE CHIPS ----------
+     The 340px filter rail that used to hold these retired with the icon-rail
+     shell (map-and-search.md §4); the chips themselves moved to the rail's
+     bottom cluster and are styled here. Every rule that was only ever about
+     the old rail - its wrapper, head, scroll body, foot, burger, brand row,
+     phone re-skin and the top-right corner panel - is gone rather than left
+     dark in the file, and a test pins that it stays gone. */
   /* logged-in account chip + dropdown (partials/_account_chip.html.twig) — copied from
      atlas.css since this page is standalone and doesn't load it (Task 7: map page gains
      the account chip). Keep in sync with the atlas.css ".acct-*" block if that changes.
@@ -209,40 +219,17 @@
   .acct-dropdown form button{color:var(--clay)!important}
   /* Language switcher (shared partials/_lang_menu.html.twig) — same pill/dropdown
      pattern as the account chip; dropdown reuses .acct-dropdown above. Sits
-     right of the logo in .rail-brandrow (desktop rail AND the mobile top bar). */
-  .rail-brandrow{display:flex;align-items:center;justify-content:space-between;gap:.8rem}
+     at the foot of the icon rail. */
   .lang-menu{position:relative;flex:none}
   .lang-chip{display:inline-flex;align-items:center;gap:.32rem;background:none;border:1.5px solid rgb(var(--chrome-fg) / .4);border-radius:999px;padding:.3rem .55rem;color:var(--chrome-fg-solid);cursor:pointer;font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;line-height:1;transition:border-color .2s}
   .lang-chip:hover,.lang-chip[aria-expanded=true]{border-color:var(--trail)}
   .lang-chip svg{opacity:.7;flex:none}
   .lang-chip[aria-expanded=true] .lang-caret{transform:rotate(180deg)}
-  /* The rail-nav's mono/uppercase link styling must not leak into the dropdown
-     menus (it made the account menu read shouty and oversized). */
-  .rail .acct-dropdown a,.rail .acct-dropdown button{font-family:var(--sans);font-size:.85rem;text-transform:none;letter-spacing:normal}
-  /* Desktop rail tweaks (min-width:821px — above this the rail is the left column;
-     at/below it the rail-nav becomes a right-side panel and the shared defaults apply): */
-  @media(min-width:821px){
-    /* The rail sits on the LEFT, so the chip's menu must open rightward (left-anchored);
-       the shared right:0 anchoring is for right-side topnavs and runs off-screen here. */
-    .rail .acct-dropdown{left:0;right:auto}
-    /* …except the language menu: its pill sits at the rail's right edge (next
-       to the logo), so its panel must open leftward to stay inside the rail. */
-    .rail .lang-menu .acct-dropdown{left:auto;right:0}
-    /* Scale the chip down so it sits in proportion with the small mono rail-nav links
-       rather than towering over them. */
-    .rail .acct-chip{font-size:.8rem;padding:.18rem .5rem .18rem .2rem;gap:.4rem}
-    .rail .acct-chip .av{width:24px;height:24px;font-size:.7rem}
-    /* Breathing room between the nav-link row and the chip (they share the wrapping
-       rail-nav flex, whose .2rem row-gap alone reads as cramped). */
-    .rail .acct-menu{margin-top:.6rem}
-  }
-  @media(max-width:560px){.acct-chip .acct-name,.acct-chip .acct-caret{display:none}.acct-chip{padding:.26rem;border-radius:50%}}
-  .rail-burger{display:none;align-items:center;justify-content:center;width:2.4rem;height:2.4rem;padding:0;background:transparent;border:none;border-radius:6px;color:var(--chrome-fg-solid);cursor:pointer;-webkit-tap-highlight-color:transparent}
-  .rail-scroll{flex:1;min-height:0;overflow-y:auto;padding:1.2rem 1.4rem;scrollbar-width:thin;scrollbar-color:rgb(var(--chrome-fg) / .55) transparent}
-  .rail-scroll::-webkit-scrollbar{width:9px}
-  .rail-scroll::-webkit-scrollbar-track{background:rgba(0,0,0,.2)}
-  .rail-scroll::-webkit-scrollbar-thumb{background:rgb(var(--chrome-fg) / .55);border-radius:5px;border:2px solid transparent;background-clip:padding-box}
-  .rail-scroll::-webkit-scrollbar-thumb:hover{background:rgb(var(--chrome-fg) / .6);background-clip:padding-box}
+  /* The nav links' mono/uppercase styling must not leak into the dropdown
+     (a menu of plain links, not rail chrome). */
+  .irail-menu .acct-dropdown a,.irail-acct .acct-dropdown a,.irail-acct .acct-dropdown button{font-family:var(--sans);font-size:.85rem;text-transform:none;letter-spacing:normal}
+  .rail-nav{display:flex}
+  .rail-nav a{font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:rgb(var(--chrome-fg) / .72);transition:color .2s}
   .grp{margin-bottom:1.7rem}
   .grp h3{font-family:var(--mono);font-size:.66rem;letter-spacing:.18em;color:var(--chrome-head);margin-bottom:.8rem;text-transform:uppercase}
   /* Empty-scope invite (moderation-and-contribution.md
@@ -407,30 +394,23 @@
   /* The data-version readout under the places count: deliberately faint —
      it is a diagnostic, not content — but selectable for a bug report. */
   .data-versions{font-family:var(--mono);font-size:.58rem;letter-spacing:.04em;
-    color:rgb(var(--chrome-fg) / .65);padding:0 1.4rem 1rem;word-break:break-word;user-select:text}
+    color:rgb(var(--chrome-fg) / .65);word-break:break-word;user-select:text;flex:1;min-width:0}
   .data-versions .dv-bad{color:var(--trail)}
-  .rail-foot{padding:1.1rem 1.4rem;border-top:1px solid rgb(var(--chrome-fg) / .14);display:flex;align-items:center;justify-content:space-between;gap:.6rem;flex-wrap:wrap}
-  .rail-foot .res{font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;color:rgb(var(--chrome-fg) / .7)}
-  .rail-foot .res b{color:var(--trail);font-size:1.15rem}
-  /* Own line under the count: says why the coverage layers are drawing nothing
-     when the rider is zoomed out past the tileset's floor (render.js
-     updateZoomHint). Hidden by the [hidden] attribute at every other zoom, so
-     it costs no height once the rider is in range. */
   /* CURATOR MODE. The pending queue deliberately ignores the map's region scope
      (render.js featureVisible), so a curator scoped to one region legitimately
      sees pins in another - which reads as a scope leak until you know. The hint
-     line under the count explains it; this border says it at a glance.
+     hint on the map explains it; this border says it at a glance.
      inset, not a real border: a border would resize the canvas and force
      MapLibre to re-measure on every toggle. */
   #map.cc-curator-mode::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:400;
     box-shadow:inset 0 0 0 3px var(--trail);border-radius:inherit}
-  .rail-foot .zoom-hint{flex:0 0 100%;font-family:var(--mono);font-size:.62rem;line-height:1.35;letter-spacing:.04em;color:var(--chrome-head);opacity:.9}
-  .export{background:var(--trail);color:var(--ink);font-family:var(--sans);font-weight:700;font-size:.78rem;padding:.55rem .85rem;border-radius:5px;border:none;cursor:pointer;white-space:nowrap}
-  .export:hover{background:#ff703d}
 
   /* ---------- MAP ---------- */
   .map-wrap{position:relative;flex:1;min-height:0}
-  .mapcol{display:flex;flex-direction:column;min-height:0}
+  /* flex:1 is load-bearing: the rail and the drawer are flex:none, so the map
+     column is the only thing that may take the remaining width. Under the old
+     340px grid it inherited the 1fr track and needed nothing. */
+  .mapcol{flex:1;min-width:0;display:flex;flex-direction:column;min-height:0}
   #map{position:absolute;inset:0;background:var(--paper-deep)}
   .maplibregl-canvas{filter:none}
   .maplibregl-map{font-family:var(--sans)}
@@ -599,15 +579,8 @@
   /* Live zoom readout — a maplibregl bottom-left control (map.js), so it inherits
      the control margin/stacking; only appearance is styled here. */
   .zoom-badge{background:rgb(var(--chrome-glass) / .9);color:var(--chrome-fg-solid);font-family:var(--mono);font-size:.72rem;letter-spacing:.04em;line-height:1;padding:.28rem .5rem;border-radius:6px;pointer-events:none;box-shadow:0 2px 6px -2px rgba(0,0,0,.5)}
-  /* Chrome-theme toggle (assets/map/theme.js) — a maplibregl bottom-left
-     control like the zoom badge above, stacked with the nav buttons. The
-     glyph is ☀ in dark mode and ☾ in light mode: it shows the theme a press
-     will GIVE you, matching how the base/satellite switcher names targets. */
-  .theme-toggle{width:29px;height:29px;display:flex;align-items:center;justify-content:center;
-    background:rgb(var(--chrome-glass) / .9);color:var(--chrome-fg-solid);border:none;border-radius:6px;
-    font-family:var(--emoji);font-size:.85rem;line-height:1;cursor:pointer;box-shadow:0 2px 6px -2px rgba(0,0,0,.5)}
-  .theme-toggle:hover{color:var(--trail)}
-  .theme-toggle:focus-visible{outline:2px solid var(--trail);outline-offset:1px}
+  /* The chrome-theme toggle used to be a maplibregl control down here. It is
+     now a rail button (assets/map/theme.js), styled by .ib with the rest. */
   /* Narrower on purpose (owner 2026-08-16): the quality-ticks note is one long
      sentence and it was setting the panel's width, so a key of six short rows
      took a third of a laptop's map. Capped, and the note wraps to two lines -
@@ -1296,48 +1269,21 @@
   .cc-tooltip{position:absolute;z-index:1300;pointer-events:none;background:var(--ink);color:var(--paper);
     font-family:var(--mono);font-size:.66rem;letter-spacing:.03em;padding:.3rem .55rem;border-radius:4px;
     white-space:nowrap;transform:translate(-50%,-130%);box-shadow:0 4px 12px rgba(0,0,0,.4)}
-  /* ---- MOBILE: map is the hero; filters become a bottom sheet ---- */
+  /* ---- PHONES: one behaviour at every width (owner 2026-08-20) ----
+     The rail stays where it is, 48px on the left; the drawer stops taking
+     layout room and slides OVER the map instead, capped so the map is never
+     completely covered. The old phone re-skin - the rail folded into a top bar
+     and a bottom filter sheet - is deleted rather than maintained beside this:
+     two layouts meant two sets of rules to keep true, and the sheet was the
+     half nobody could find. */
   @media(max-width:820px){
-    .app{grid-template-columns:1fr;grid-template-rows:1fr}
-    /* re-skin the rail in place: head -> slim top bar, scroll+foot -> bottom sheet
-       (no markup duplicated, so all filter JS keeps working) */
-    .rail{position:fixed;inset:0;z-index:1500;max-height:none;border-right:none;background:transparent;pointer-events:none;display:block}
-    .rail-head{position:fixed;top:0;left:0;right:0;z-index:1500;pointer-events:auto;background:var(--chrome-bg);padding:.5rem .9rem;display:flex;align-items:center;gap:.7rem;border-bottom:1px solid rgb(var(--chrome-fg) / .14)}
-    .rail-head .brand img{height:1.3rem}
-    .rail-head .co{display:none}
-    /* top-bar nav collapses to a hamburger; tap -> dropdown panel */
-    .rail-burger{display:flex;margin-left:auto}
-    .rail-nav{position:fixed;top:2.7rem;right:.6rem;margin:0;padding:.4rem .2rem;flex-direction:column;align-items:stretch;gap:0;min-width:9.5rem;background:var(--chrome-bg);border:1px solid var(--chrome-lift);border-radius:10px;box-shadow:0 14px 34px -16px rgba(0,0,0,.7);opacity:0;transform:translateY(-6px);pointer-events:none;transition:opacity .18s ease,transform .18s ease;z-index:1502}
-    .rail-head.nav-open .rail-nav{opacity:1;transform:none;pointer-events:auto}
-    .rail-nav a{font-size:.78rem;letter-spacing:.04em;text-transform:none;padding:.6rem .8rem;border-radius:6px;color:var(--chrome-fg-solid);opacity:.9}
-    .rail-nav a.on,.rail-nav a:hover{background:var(--chrome-lift);opacity:1}
-    /* Burger panel roominess: the ≤560px circle-collapse of the account chip is
-       for the cramped inline topnav — inside this full panel the rider's name
-       stays visible, and the panel widens to fit it. */
-    .rail-nav{min-width:13.5rem;max-width:86vw}
-    .rail-nav .acct-menu{margin:.25rem .5rem}
-    .rail-nav .acct-chip .acct-name,.rail-nav .acct-chip .acct-caret{display:inline-block}
-    .rail-nav .acct-chip{padding:.26rem .7rem .26rem .28rem;border-radius:999px}
-    .rail-nav .acct-chip .acct-name{max-width:18ch}
-    /* The account/lang dropdowns re-anchor to the viewport (fixed under the
-       top bar) instead of hanging off a chip that already sits ~275px down
-       the panel — the admin menu is the longest and must get the full
-       remaining height on short (e.g. Firefox mobile) viewports, scrolling
-       internally only when it truly cannot fit. Fixed works here because the
-       open panel has transform:none. */
-    .rail-nav .acct-dropdown{position:fixed;top:3.2rem;right:.6rem;left:auto;min-width:230px;max-height:calc(100svh - 4.2rem);overflow-y:auto}
-    /* bottom sheet body (peeks closed via max-height:0, no transform -> no map reflow) */
-    .rail-scroll{position:fixed;left:0;right:0;bottom:0;z-index:1500;pointer-events:auto;background:var(--chrome-bg);max-height:0;padding-top:0;padding-bottom:0;overflow:hidden;transition:max-height .3s ease,padding .3s ease;border-radius:14px 14px 0 0;box-shadow:0 -14px 34px -16px rgba(0,0,0,.6)}
-    /* always-visible peek handle */
-    .rail-foot{position:fixed;left:0;right:0;bottom:0;z-index:1501;pointer-events:auto;background:var(--chrome-bg);border-top:1px solid rgb(var(--chrome-fg) / .14);border-radius:14px 14px 0 0;box-shadow:0 -14px 34px -16px rgba(0,0,0,.6);user-select:none}
-    .rail-foot::before{content:"";position:absolute;top:.4rem;left:50%;transform:translateX(-50%);width:34px;height:4px;border-radius:2px;background:rgb(var(--chrome-fg) / .3)}
-    .rail-foot .res{cursor:pointer}
-    .rail-foot .res::after{content:" · Filters ▾";color:var(--chrome-head);font-size:.62rem}
-    .app.sheet-open .rail-scroll{max-height:78svh;padding:1rem 1.3rem 6.5rem;overflow-y:auto}
-    .app.sheet-open .rail-foot{box-shadow:none}
-    .app.sheet-open .rail-foot .res::after{content:" · Close ▴"}
-    /* map fills the cell; clear the fixed top bar */
-    .mapcol{padding-top:3.7rem}   /* clear the ~55px fixed top bar (+ small gap) */
+    .app{position:relative}
+    .dwr{position:absolute;left:48px;top:0;bottom:0;z-index:1400;border-right:none;
+      box-shadow:0 0 40px -8px rgba(0,0,0,.55)}
+    .dwr.open{width:min(320px,85vw)}
+    .dwr-in{width:min(320px,85vw)}
+    /* Flyouts would otherwise hang off the right edge of a narrow screen. */
+    .irail-menu .rail-nav,.irail-acct .acct-dropdown{max-width:calc(100vw - 4rem)}
     .demo-banner{padding:.35rem .6rem;font-size:.7rem}
     /* feature detail -> bottom slide-up */
     .cc-drawer{top:auto;bottom:0;left:0;right:0;width:auto;height:auto;max-height:80vh;max-height:80svh;transform:translateY(102%);border-radius:14px 14px 0 0;box-shadow:0 -14px 34px -16px rgba(0,0,0,.6);z-index:1550;padding:1.2rem 1.3rem 2rem}
@@ -1362,11 +1308,13 @@
     .cc-d-scrim{display:block;position:fixed;inset:0;z-index:1540;background:rgba(16,30,22,.4);opacity:0;pointer-events:none;transition:opacity .25s ease}
     .cc-drawer.open.s-full ~ .cc-d-scrim{opacity:1;pointer-events:auto}
     .cc-lightbox{z-index:1600}
-    /* keep map zoom/attribution above the sheet peek */
-    .maplibregl-ctrl-bottom-left{bottom:3.4rem}
-    .maplibregl-ctrl-bottom-right{bottom:3.2rem}
-    /* street-level dock takes the bottom -> hide the sheet peek */
-    .app.dock-open .rail-foot,.app.dock-open .rail-scroll{display:none}
+    /* The bottom filter sheet is gone, so the zoom and attribution controls
+       take the bottom edge back. The zoom hint sits just above them. */
+    .zoom-hint{bottom:5rem;left:.7rem}
+    /* The street-level dock takes the bottom half of the screen. A drawer over
+       the other half would leave no map between them, which is the whole point
+       of opening street-level. */
+    .app.dock-open .dwr{display:none}
   }
 
   /* Route domain phase 4 (spec §8): Curated best-of season/bike pickers, in the
