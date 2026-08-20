@@ -26,6 +26,7 @@ import { updateConfMarkers, confShownCount, confTotalCount } from './osm-pools.j
 import { covShownCount, coverageTotal, syncCoverageLayers, covIconFilter,
          COVERAGE_CCS, COVERAGE_ON, COVERAGE_KEYS } from './coverage.js';
 import { openDrawer } from './drawer.js';
+import { attrMatch, narrowingCount, climbChipsMatch } from './filters.js';
 
 export const PREFS = window.CC_PREFS || {bikes: [], styles: []};
 
@@ -478,35 +479,11 @@ export const ALL_ACCESS=new Set(['Step-free access','Handbike-friendly','Wheelch
 // AND to the chips in map/index.html.twig.
 export const ALL_SURF=new Set(['Smooth','Good','Worn','Rough','Broken / loose']);
 export const ALL_TRAF=new Set(['Traffic-free','Quiet','Moderate','Busy']);
-// "Narrowing" semantics, deliberately different from the pre-existing sq/tr chips above
-// (which always require a matching value, hiding any climb missing sq/tr regardless of
-// chip state): most existing items predate effort/accessibility, so with every chip on
-// (the default) nothing is filtered — including items with no value for the attribute.
-// As soon as a rider deselects at least one option, items with no value are hidden too,
-// since they can't be confirmed to match the narrowed selection.
-/* Unknown is not a verdict.
-
-   An item with NO value for the attribute is not filtered out — we know
-   nothing about it, and hiding it would state something we have not been
-   told. Only an item that HAS a value can be judged, and it survives if any
-   of its values is still selected. This is the same rule prefMatch() already
-   applies to route bike types ("unknown ≠ unsuitable").
-
-   It replaces the earlier "narrowing" rule, where deselecting one chip also
-   hid every valueless item. On stays that was indefensible: 0 of 291 carry
-   `accessibility`, so unticking one box emptied the layer and told the rider
-   there are no accessible stays, when what we actually have is no data.
-   (2026-08-03, owner.) */
-export function attrMatch(value, activeSet, allSet){
-  if(!activeSet) return true;                    // group not on the page → no filter
-  if(activeSet.size===allSet.size) return true;  // nothing narrowed → nothing hidden
-  // A multiselect attribute (stays' accessibility) arrives as a list: the item
-  // matches if it carries ANY of the selected options. A rider filtering for
-  // "handbike-friendly" wants every stay that is handbike-friendly, not the
-  // ones that are ONLY that.
-  if(Array.isArray(value)) return value.length ? value.some(v=>activeSet.has(v)) : true;
-  return value ? activeSet.has(value) : true;
-}
+/* attrMatch and the narrowing rules moved to filters.js: they are pure, they
+   are the answer to "why is my data missing?", and a rule nobody can execute
+   in a test is a rule nobody can check. Re-exported here because this module
+   is where the rest of the map has always reached for it. */
+export { attrMatch };
 export let activeEffort=chipSet('effortf'), activeAccess=chipSet('accessf');
 
 // The chip facets and the preference toggle are OWNED here but DRIVEN from the
@@ -559,7 +536,39 @@ export function prefMatch(f){
   if(!f.bikeTypes || !f.bikeTypes.length) return true;          // undeclared → keep
   return f.bikeTypes.some(t=>PREFS.bikes.includes(t));
 }
-export function featureVisible(layer, f){
+/* The chip state, in the shape filters.js takes: what is selected now beside
+   the full vocabulary it was selected from. Built fresh on each read, because
+   syncFacetChips() replaces the Sets rather than mutating them. */
+export function chipState(){
+  return {
+    surface: {active: activeSurface, all: ALL_SURF},
+    traffic: {active: activeTraffic, all: ALL_TRAF},
+    effort: {active: activeEffort, all: ALL_EFFORT},
+    access: {active: activeAccess, all: ALL_ACCESS},
+    prefFilterOn: prefFilterOn && PREFS.bikes.length > 0,
+  };
+}
+
+/* How many catalog features the CHIP FILTERS alone are keeping off the map,
+   counted during the last render pass rather than estimated. Only the chips:
+   a layer the rider switched off, a region scope, and the view mode all hide
+   things too, and all three are already labelled loudly elsewhere. Counting
+   them here would turn the pill into noise the moment anybody scopes a map.
+
+   Coverage-tile stays narrowed by the accessibility chips are NOT in this
+   number - they are filtered inside the vector tiles, where there is nothing
+   to walk - so a pass that narrows only accessibility can legitimately report
+   zero. The pill says "narrowing this map" rather than a count in that case;
+   it never claims a zero it has not verified. */
+let _chipHidden = 0;
+export function hiddenByFilters(){
+  return {filters: narrowingCount(chipState()), hidden: _chipHidden};
+}
+
+/* `tally` is passed only by render()'s own walk, which visits each ACTIVE
+   layer's features exactly once. layerCounts() calls this too and passes
+   nothing, so the count cannot be doubled by the legend asking a question. */
+export function featureVisible(layer, f, tally){
   /* The PENDING layer is a work queue, not a view of a region. It is already
      scoped server-side to the curator's own moderation area, and putting it
      through the map's region gate as well meant a curator whose map happened to
@@ -584,15 +593,15 @@ export function featureVisible(layer, f){
     ? (!!f.v || !!f.cur)
     : (layer.key==='experience' ? (mode()==='all'||f.cur) : ((mode()==='all') || !layer.exp || f.cur));       // experiential layers filter to curated; K honours cur in Curated (best-of), all in Everything
   if(show) show = inScope(f.rid);   // region scope gate (map-and-search.md §4.5)
-  if(show && layer.key==='experience') show = prefMatch(f);
+  // From here down the filters are the RIDER'S chips, which is what the pill
+  // reports. Everything above (mode, scope) is labelled elsewhere.
+  if(show && layer.key==='experience' && !prefMatch(f)){ show=false; if(tally) tally.hidden++; }
   if(show && layer.key==='climbs'){
-    // All three now share attrMatch's narrowing semantics. sq/tr used to
-    // "always require" a matching value, which hid every climb that predates
-    // the attribute or carries a value the chips never listed — a filter that
+    // All three share attrMatch's narrowing rule. sq/tr used to "always
+    // require" a matching value, which hid every climb that predates the
+    // attribute or carries a value the chips never listed - a filter that
     // deletes data it cannot describe. With every chip on, nothing is hidden.
-    show = attrMatch(f.sq, activeSurface, ALL_SURF)
-      && attrMatch(f.tr, activeTraffic, ALL_TRAF)
-      && attrMatch(f.effort, activeEffort, ALL_EFFORT);
+    if(!climbChipsMatch(f, chipState())){ show=false; if(tally) tally.hidden++; }
   }
   return show;
 }
@@ -641,6 +650,8 @@ export function render(){
   // Community tier (07-15 decision B): utility coverage draws lightly in
   // Curated; experiential coverage only in Everything. See syncCoverageLayers.
   syncCoverageLayers();
+  // Fresh tally per pass: the pill must describe THIS frame, not the last one.
+  const tally={hidden:0};
   let n=0;
   CATALOG.forEach(layer=>{
     // The consolidated surface source is persistent (never torn down by
@@ -652,7 +663,7 @@ export function render(){
     if(!active.has(layer.key)) return;
     if(layer.kind==='point'){
       layer.features.forEach((f,i)=>{
-        if(!featureVisible(layer,f)) return;
+        if(!featureVisible(layer,f,tally)) return;
         if(f.route){                                    // climbs: draw the gradient-coloured road line + steepest marker
           /* lineGrad colours the LINE; grad draws the chart's bars. Two series
              on purpose: bars sit at fixed bin boundaries so columns stay
@@ -799,6 +810,11 @@ export function render(){
   // best-of), highlightRoute's moveLayer/setPaint calls simply no-op.
   if(selectedRouteLayerId && map.getLayer(selectedRouteLayerId)) highlightRoute(selectedRouteLayerId);
   document.getElementById('count').textContent=n;
+  _chipHidden=tally.hidden;
+  /* An event rather than a direct call, for the same reason cc:counts is one:
+     this module draws the map and must not import the chrome drawn around it.
+     panels.js paints the pill, shell.js wears the dot. */
+  document.dispatchEvent(new CustomEvent('cc:filters', {detail: hiddenByFilters()}));
   updateCounts();   // legend shows shown/total, refreshed on mode + layer changes
   updateZoomHint();
 }

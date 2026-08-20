@@ -469,6 +469,12 @@ final class MapController extends AbstractController
             'railSearch' => $t->trans('map.rail_search'),
             'railLayers' => $t->trans('map.rail_layers'),
             'railTools' => $t->trans('map.rail_tools'),
+            // The on-map filter pill (panels.js initFilterPill). Three strings
+            // rather than one with a plural rule: the count is rendered
+            // client-side by tpl(), which does substitution and not grammar.
+            'filtersHide' => $t->trans('map.filters_hide'),
+            'filtersHideOne' => $t->trans('map.filters_hide_one'),
+            'filtersNarrowing' => $t->trans('map.filters_narrowing'),
             'curated' => $t->trans('map.curated'),
             'subEverything' => $t->trans('map.sub_everything'),
             'allBikes' => $t->trans('map.all_bikes'),

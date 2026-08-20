@@ -20,7 +20,7 @@
 
    refreshBestOf() is the one export anything else needs: scope-ui.js's
    applyScope() calls it, because a scope change re-ranks best-of. */
-import { I18N, D, CC_SEASON_LABEL, CC_BIKE_LABEL } from './i18n.js';
+import { I18N, D, tpl, CC_SEASON_LABEL, CC_BIKE_LABEL } from './i18n.js';
 import { txtOn, currentSeason } from './util.js';
 import { map } from './map-init.js';
 import { CATALOG, catalogUtility, catalogVotable, catalogModeration,
@@ -36,6 +36,7 @@ import { surfaceTilesConfigured, setSurfaceTiles, surfaceTilesVisible,
          toggleSurfaceClass, setStudyMode, studyModeOn,
          setGapsGrid, gapsGridOn } from './surface-tiles.js';
 import { routesTilesConfigured, setRoutesTiles, routesTilesVisible } from './routes-tiles.js';
+import { setFilterDot } from './shell.js';
 
 // Bindings a later init reads, so they cannot stay `const` inside the init that
 // looks them up: `app` is assigned by initRailChrome(), the two facet <select>s
@@ -221,6 +222,55 @@ export function initMapCtrl(){
   fly.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>setOpen(false)));
   document.addEventListener('click', e=>{ if(!e.target.closest('.trw')) setOpen(false); });
   document.addEventListener('keydown', e=>{ if(e.key==='Escape') setOpen(false); });
+}
+
+/* The filter pill: the map's own answer to "why is my data missing?".
+
+   It is on the MAP, not in the panel, because the panel is exactly where a
+   rider is not looking when they notice something is gone. The rail's Layers
+   icon wears a dot at the same time, so the answer survives the drawer being
+   closed.
+
+   The number is a real tally from the last render pass (render.js
+   hiddenByFilters). When the narrowing happens entirely inside the coverage
+   tiles there is nothing to count, and the pill says the map is narrowed
+   without naming a figure rather than claiming a zero it has not verified. */
+export function initFilterPill(){
+  const pill=document.getElementById('fpill');
+  const msg=document.getElementById('fpillMsg');
+  const reset=document.getElementById('fpillReset');
+  if(!pill || !msg || !reset) return;
+
+  document.addEventListener('cc:filters', e=>{
+    const {filters, hidden}=e.detail || {filters:0, hidden:0};
+    setFilterDot(filters>0);
+    pill.hidden = filters<1;
+    if(filters<1) return;
+    msg.textContent = hidden===0 ? (I18N.filtersNarrowing || 'Filters are narrowing this map')
+      : hidden===1 ? (I18N.filtersHideOne || 'Filters are hiding 1 place')
+      : tpl(I18N.filtersHide || 'Filters are hiding {x} places', {x:hidden});
+  });
+
+  /* Show all: every narrowing group back to its widest. The markup declares
+     which way each group narrows (f-match narrows by deselection, f-optin by
+     selection), so a filter group added later is reset correctly without
+     anybody remembering to come back here. */
+  reset.onclick=()=>{
+    document.querySelectorAll('#filters .f-match .chip').forEach(c=>c.classList.add('on'));
+    document.querySelectorAll('#filters .f-optin .chip').forEach(c=>{
+      c.classList.remove('on'); c.setAttribute('aria-pressed','false');
+    });
+    // The preference chip's state is not the class: it lives in render.js and
+    // on the device, so it is switched off through its own setter.
+    if(prefFilterEnabled()){
+      setPrefFilter(false);
+      try{ localStorage.setItem(PREF_FILTER_KEY, 'off'); }catch(e){ /* private mode */ }
+    }
+    syncFacetChips();
+    applyStaysAccessFilter();
+    render();
+    updateCounts();
+  };
 }
 
 export function initRailChrome(){

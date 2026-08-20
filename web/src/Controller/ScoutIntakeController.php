@@ -99,7 +99,8 @@ final class ScoutIntakeController extends AbstractController
            observation. It auto-files as an F notice — "a rider noted
            something here", hazardType Other — and the curator's read of the
            description is the filing decision. One way to moderate holds: an
-           ordinary submission, no new desk mechanics. */
+           ordinary submission, no new desk mechanics. (A bare surface tap
+           never arrives at all: the review hides it, counted in the panel.) */
         $autoFiledOther = 'other' === $type && '' === $letter;
         if ($autoFiledOther) {
             $letter = 'F';

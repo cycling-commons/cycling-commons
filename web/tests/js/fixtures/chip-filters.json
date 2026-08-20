@@ -1,0 +1,10 @@
+{
+  "_note": "Climbs with the three chip-filtered attributes. 'sq' is surface, 'tr' is traffic, 'effort' is effort. A missing attribute is deliberate: unknown is not a verdict (render.js attrMatch), so those items must survive every narrowing.",
+  "climbs": [
+    {"name": "Cote de la Redoute", "sq": "Smooth",        "tr": "Quiet",        "effort": "Tough"},
+    {"name": "Mur de Huy",         "sq": "Good",          "tr": "Busy",         "effort": "Very steep"},
+    {"name": "Baraque Michel",     "sq": "Worn",          "tr": "Moderate",     "effort": "Steady"},
+    {"name": "Rosier",             "sq": "Broken / loose","tr": "Traffic-free", "effort": "Challenging"},
+    {"name": "Unmeasured hill"}
+  ]
+}

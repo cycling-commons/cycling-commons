@@ -659,6 +659,19 @@
     .legend.collapsed{top:.8rem;right:3.3rem;padding:.25rem}
   }
 
+  /* The filter pill: bottom-centre, over the map, with its own reset. Constant
+     colours on purpose - it sits on the basemap, not on the chrome, the same
+     rule the toast and the tooltip follow. */
+  .fpill{position:absolute;left:50%;bottom:1.4rem;transform:translateX(-50%);z-index:1200;
+    display:flex;align-items:center;gap:.6rem;background:var(--ink);color:var(--paper);
+    padding:.4rem .5rem .4rem .9rem;border-radius:30px;box-shadow:0 10px 28px -10px rgba(0,0,0,.55);
+    font-size:.78rem;max-width:min(92vw,26rem)}
+  .fpill[hidden]{display:none}
+  .fpill button{font-family:var(--mono);font-size:.58rem;letter-spacing:.06em;text-transform:uppercase;
+    background:var(--trail);color:var(--ink);border:none;border-radius:20px;padding:.35rem .7rem;cursor:pointer;white-space:nowrap}
+  .fpill button:hover{background:#ff703d}
+  .fpill button:focus-visible{outline:2px solid var(--paper);outline-offset:2px}
+
   .map-top{position:absolute;top:1.2rem;left:1.2rem;z-index:1000;background:rgb(var(--paper-glass) / .95);border-radius:8px;padding:.7rem 1rem}
   .map-top .rg{font-family:var(--serif);font-weight:600;font-size:1.05rem}
   .map-top .sub{font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;color:#5a5d4d;text-transform:uppercase;margin-top:.15rem}

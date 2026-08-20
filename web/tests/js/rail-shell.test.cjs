@@ -245,3 +245,21 @@ test('the flyout is opened by initMapCtrl, not by the old collapse toggle', () =
   assert.ok(!panels.includes("getElementById('mcToggle')"), 'panels.js still drives the retired .map-ctrl collapse');
   assert.ok(panels.includes("getElementById('fly-base')"), 'panels.js never binds the base flyout');
 });
+
+test('the pill and the rail dot both come from one real tally', () => {
+  const renderJs = read('assets/map/render.js');
+  const panels = read('assets/map/panels.js');
+  // The count is produced by the render pass, not estimated beside it.
+  assert.ok(/export function hiddenByFilters\(/.test(renderJs), 'render.js does not export hiddenByFilters()');
+  assert.ok(renderJs.includes("new CustomEvent('cc:filters'"), 'render.js never announces the tally');
+  assert.ok(!/tally\.hidden\+\+/.test(renderJs.slice(0, renderJs.indexOf('export function featureVisible'))),
+    'the tally is incremented outside featureVisible');
+  // The pill is DOM, so it lives with the other chrome, not in the renderer.
+  assert.ok(panels.includes("document.addEventListener('cc:filters'"), 'panels.js never listens for the tally');
+  assert.ok(twig.includes('id="fpill"'), 'no filter pill on the map');
+  assert.ok(twig.includes('id="fpillReset"'), 'the pill has no reset');
+  // Reset reads the markup's own declaration of how each group narrows.
+  assert.ok(panels.includes("'#filters .f-match .chip'"), 'the reset does not restore the f-match groups');
+  assert.ok(panels.includes("'#filters .f-optin .chip'"), 'the reset does not clear the f-optin groups');
+  assert.ok(panels.includes('setFilterDot'), 'the rail dot is never driven');
+});

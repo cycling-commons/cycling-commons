@@ -465,6 +465,16 @@
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="7" r="2.6"/><path d="M12 10v5m0 0-3 6m3-6 3 6M6 12l6-1.5L18 12"/></svg>
       </button>
     </div>
+    {# "Where did my data go?", answered ON the map (owner 2026-08-20). Any chip
+       filter that narrows the catalog raises this pill with a one-tap reset,
+       and the Layers icon in the rail wears a dot at the same time - so the
+       answer is visible whether or not the drawer is open. panels.js fills it
+       from render.js's cc:filters event; the count is a real tally from the
+       render pass, never an estimate. #}
+    <div class="fpill" id="fpill" role="status" hidden>
+      <span id="fpillMsg"></span>
+      <button type="button" id="fpillReset">{{ 'map.filters_show_all'|trans }}</button>
+    </div>
     <a class="contrib-fab" href="{{ path('contribute') }}" aria-label="{{ 'map.contribute_aria'|trans }}"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></a>
     <aside class="cc-drawer" id="drawer" tabindex="-1" aria-hidden="true" aria-label="{{ 'map.drawer_aria'|trans }}">
       <button class="cc-d-grab" id="drawerGrab" type="button" aria-label="{{ 'map.drawer_grab'|trans }}"><span></span></button>
@@ -749,6 +759,7 @@ window.CC_VENDOR = {{ {
 <link rel="modulepreload" href="{{ asset('map/corrections.js') }}">
 <link rel="modulepreload" href="{{ asset('map/coverage.js') }}">
 <link rel="modulepreload" href="{{ asset('map/drawer.js') }}">
+<link rel="modulepreload" href="{{ asset('map/filters.js') }}">
 <link rel="modulepreload" href="{{ asset('map/i18n.js') }}">
 <link rel="modulepreload" href="{{ asset('map/icons.js') }}">
 <link rel="modulepreload" href="{{ asset('map/item-index.js') }}">

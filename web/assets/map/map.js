@@ -31,7 +31,7 @@ import { resolveLocalFeature, resolveLocalFeatureById, openFeatureByName, openFe
 import { initCommunity, initCuratorKeys } from './community.js';
 import { initSearchUi } from './search-ui.js';
 import { initScoutReview } from './scout-review.js';
-import { initLayerList, initMapCtrl, initRailChrome, initBestOf,
+import { initLayerList, initMapCtrl, initRailChrome, initBestOf, initFilterPill,
          initChips, initViewMode, initAddClimbHere } from './panels.js';
 import { initTheme } from './theme.js';
 import { initShell } from './shell.js';
@@ -390,6 +390,8 @@ import { initShell } from './shell.js';
   initLayerList();      // layer toggles, select-all, base segmented control (panels.js)
   initStreetToggle();
   initMapCtrl();        // collapsible on-map base/overlay control (panels.js)
+
+  initFilterPill();     // on-map "N places hidden" pill + its reset (panels.js)
 
   initRailChrome();     // filters sheet, legend, burger nav, breakpoint resize (panels.js)
   initSearchUi();   // sidebar town + feature search (search-ui.js)
