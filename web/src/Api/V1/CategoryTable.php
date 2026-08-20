@@ -32,7 +32,7 @@ final class CategoryTable
      * internal i18n dict is session/locale-bound, which this anonymous
      * cacheable plane must never be.
      *
-     * @var list<array{letter: string, key: string, label: string, color: string, glyph: string, kind: string}>
+     * @var list<array{letter: string, key: string, label: string, color: string, glyph: string, kind: string, bestOf: bool}>
      */
     public const array CATEGORIES = [
         ['letter' => 'A', 'key' => 'surface', 'label' => 'Road surface', 'color' => '#4E8C84', 'glyph' => '▰', 'kind' => 'surface', 'bestOf' => true],

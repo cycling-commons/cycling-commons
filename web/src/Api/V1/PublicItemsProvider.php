@@ -24,6 +24,8 @@ use Doctrine\DBAL\ParameterType;
  * coverage-retired (untouched OSM) rows excluded for the coverage letters,
  * "Not there anymore" rows excluded. A place the site's own map would not
  * draw must not surface through the API either.
+ *
+ * @api Autowired by the DI container; consumed by PublicApiController::search().
  */
 final class PublicItemsProvider
 {

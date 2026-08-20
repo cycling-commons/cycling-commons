@@ -21,6 +21,8 @@ use Symfony\Component\HttpKernel\KernelEvents;
  * short-circuit below is defensive for hand-rolled clients that preflight
  * anyway. Swap for nelmio/cors-bundle when keys add an Authorization header
  * (that is the moment preflights become real).
+ *
+ * @api Auto-registered event subscriber.
  */
 final class PublicApiCorsSubscriber implements EventSubscriberInterface
 {
@@ -30,6 +32,7 @@ final class PublicApiCorsSubscriber implements EventSubscriberInterface
         'Access-Control-Max-Age' => '3600',
     ];
 
+    #[\Override]
     public static function getSubscribedEvents(): array
     {
         return [
