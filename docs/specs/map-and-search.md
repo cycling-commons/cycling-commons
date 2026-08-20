@@ -955,8 +955,20 @@ Mechanism, one attribute end to end:
   labour: the gaps grid answers the planning-zoom question, roads answer the
   riding-zoom one. Below the floor the on-map hint says "Zoom in to see road
   surfaces", because a control a rider just pressed must never leave the map
-  unchanged and silent. Shrinking the artifact itself (a tile-size limit, or
-  dropping z8/z9 from the build) is the pipeline-side follow-up.
+  unchanged and silent. That line is ranked ABOVE the pending-review one: both
+  are true at once for anyone with something waiting and a region scope, and
+  the pending line was winning every time, so the surface answer never
+  appeared. The pending line is a standing explanation and can wait; this one
+  clears itself on the next zoom.
+
+  **The build carries the same floor** (`surface.minZoom: 10` in
+  `pipeline/contract/coverage-contract.json`, raised from 8 on 2026-08-20), so
+  the z8/z9 tiles are not produced at all rather than produced and never
+  fetched. A cross-language test pins the contract floor to the client's
+  `CLASSIFIED_MIN_ZOOM`: a client floor above the build's would fetch nothing
+  in the gap, and a build floor above the client's would have the client asking
+  for tiles that do not exist, which fails silently. **The next republish
+  applies it** - the artifact on the bucket is still the z8-13 one.
 
   `SURFACE_STYLE` is reused verbatim, so a tile line and a
   curated item of the same class are the same colour — ours simply draws on

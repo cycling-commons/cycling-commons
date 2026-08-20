@@ -264,8 +264,8 @@
     "wikipedia"
   ],
   "surface": {
-    "_comment": "Road-surface LINE layer (Dated/2026-08-09-surface-line-tiles-design.md, owner-approved 2026-08-10). Zero DB rows: ways stream straight to GeoJSONL and tippecanoe. The seven class names are the client's SURFACE_STYLE keys and are pinned to it by a cross-language test.",
-    "minZoom": 8,
+    "_comment": "Road-surface LINE layer (Dated/2026-08-09-surface-line-tiles-design.md, owner-approved 2026-08-10). Zero DB rows: ways stream straight to GeoJSONL and tippecanoe. The seven class names are the client's SURFACE_STYLE keys and are pinned to it by a cross-language test. | minZoom was 8 until 2026-08-20. The build runs with --no-tile-size-limit, so a low-zoom tile carries every classified way under it instead of a sampled 500 KB: measured over Wallonia one tile was 1119 KB at z8 and 455 KB at z9 against 93 KB at z10, and a screen is roughly sixteen tiles at any zoom, which made a default region view about 16 MB. Nothing legible was lost at those zooms either - the client paints this layer 0.6 px wide at half opacity at z8. The client carries the same floor as CLASSIFIED_MIN_ZOOM and a cross-language test pins the two together; the planning-zoom question is answered by the gaps grid, which is built z4-11 for exactly that reason.",
+    "minZoom": 10,
     "maxZoom": 13,
     "highways": [
       "cycleway",

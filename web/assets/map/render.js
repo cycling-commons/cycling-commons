@@ -864,8 +864,14 @@ export function updateZoomHint(){
   const pendingMsg = isCurator
     ? (I18N.pendingFollowsAreas || 'Pins waiting for review ignore the region filter: they follow the areas you moderate')
     : (I18N.pendingYoursAnywhere || 'Your pins waiting for review show wherever you added them, even outside this region');
-  const msg = pendingOn ? pendingMsg
-    : surfaceBelowFloor ? (I18N.zoomForSurfaces || 'Zoom in to see road surfaces')
+  /* The surface line goes FIRST, ahead of the pending one (owner-reported
+     2026-08-20: "I do not see that"). Both are true at once for any curator or
+     rider who has something waiting and a region scope, which is most of them,
+     and the pending line was winning every time. It is a standing explanation
+     and can wait a beat; the surface line answers a control the rider pressed
+     one second ago, and it clears itself the moment they zoom in. */
+  const msg = surfaceBelowFloor ? (I18N.zoomForSurfaces || 'Zoom in to see road surfaces')
+    : pendingOn ? pendingMsg
     : !anyCoverage ? ''
     : z < 6 ? (I18N.zoomForCoverage || 'Zoom in to see the full-coverage layers')
     : z < 9 ? (I18N.zoomForPlaces || 'Shown as density here, zoom in for individual places')

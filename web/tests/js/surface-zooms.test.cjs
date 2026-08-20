@@ -75,6 +75,12 @@ test('the classified skin has a zoom floor, and the map says so below it', () =>
   assert.match(src, /const CLASSIFIED_MIN_ZOOM = 10;/, 'the classified skin has no zoom floor');
   assert.match(src, /minzoom: CLASSIFIED_MIN_ZOOM,/,
     'the floor is declared but never applied, so MapLibre still fetches the low-zoom tiles');
+  // Cross-language pin: the build stops where the client starts. A client
+  // floor above the build's would fetch nothing at the gap; a build floor
+  // above the client's would leave the client asking for tiles that do not
+  // exist, which is silent rather than loud.
+  assert.equal(contract.surface.minZoom, 10,
+    'the surface build no longer starts where the client does');
   // A control that changes nothing when pressed has to say why.
   const render = fs.readFileSync(path.join(__dirname, '..', '..', 'assets/map/render.js'), 'utf8');
   assert.match(render, /surfaceBelowFloor/, 'nothing explains an empty skin below the floor');
@@ -82,4 +88,11 @@ test('the classified skin has a zoom floor, and the map says so below it', () =>
   // Read from the button: surface-tiles.js imports render.js, so render.js
   // must not import it back (map-and-search.md §4.1).
   assert.doesNotMatch(render, /from '\.\/surface-tiles\.js'/, 'render.js imports surface-tiles and closes a cycle');
+  // AHEAD of the pending line. Both are true at once for anyone with something
+  // waiting and a region scope, which is most curators and many riders, and
+  // the pending line was winning every time (owner-reported 2026-08-20: "I do
+  // not see that"). The pending line is a standing explanation; this one
+  // answers a control pressed a second ago and clears itself on zoom.
+  assert.match(render, /const msg = surfaceBelowFloor \?/,
+    'the pending hint outranks the one the rider just asked for');
 });
