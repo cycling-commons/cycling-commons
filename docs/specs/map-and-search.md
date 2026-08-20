@@ -6,7 +6,8 @@
 
 This is the map/search presentation contract that
 [osm-data-architecture.md](osm-data-architecture.md) §8 delegates to: how the
-full Commons is surfaced on `/map` — the rail, the tooltip/drawer selection
+full Commons is surfaced on `/map` — the icon rail and its drawer, the
+tooltip/drawer selection
 model, layer rendering, search, deep links, ride-check, street-level imagery —
 and which of those contracts are approved but not yet built. It consumes the
 data model unchanged; it never defines data semantics.
@@ -32,10 +33,10 @@ Implementation surfaces: `web/assets/map/map.js` (all client behaviour),
 
 ## 1. Principles
 
-1. **The map is the showcase; the rail is the catalog index.** The rail's
+1. **The map is the showcase; the Layers panel is the catalog index.** Its
    controls expose the full lettered taxonomy as individually toggleable layers
    with live counts. Search, the view mode (Best of / Confirmed / Everything), and the filter chips
-   *compose* to define the visible feature set — the rail is a navigable index
+   *compose* to define the visible feature set — that panel is a navigable index
    of the Commons, not a settings panel.
 2. **Display toggle ≠ discoverability.** The view mode governs
    **ambient map density only**. Search and the town card are intent-driven
@@ -146,22 +147,102 @@ so a just-approved way's green line appears and its red dash disappears in
 the same moment — and `render()` runs. Other letters pick their new data up
 on the next reload.
 
-## 4. The rail
+## 4. The shell: icon rail and drawer
+
+Replaced the always-open 340px filter rail on 2026-08-20 (owner-approved from
+a clickable prototype). Everything the rail used to hold is still here and
+still driven by the same modules; what changed is that the map gets the room
+by default and a rider asks for one section at a time.
+
+### 4.0 Rail, drawer, corner
+
+- **The rail** is 48px on the left edge, at every screen width. Top: the brand
+  mark. Then one icon per rider section, in this order: **Search & region**
+  (magnifier), **Layers & filters** (layer stack), **Ride tools** (bicycle).
+  After a spring and a hairline: the **theme** sun/moon (§4.6), a **≡** button
+  whose flyout carries the site nav and the language menu, and the **account
+  avatar**, which keeps its unread bulb visible on the rail rather than hiding
+  it inside the flyout. The active icon is trail orange with a 3px orange notch
+  on the rail's edge; tooltips are mono uppercase, to the right of the button.
+- **The drawer** is 320px, between the rail and the map, and shows **one**
+  section at a time. The same icon again, the ✕ in its header, or Escape closes
+  it. It ships **closed**: the map is the hero. `shell.js` owns all of this and
+  exposes no global; no other module opens or closes a panel. Escape defers to
+  anything nearer that owns the key - the search dropdown inside the drawer,
+  and the feature drawer, lightbox and climb profile over the map. Because the
+  drawer is a flex sibling of the canvas, `map.resize()` runs after the 180ms
+  width transition (plus a timer, since `prefers-reduced-motion` fires no
+  `transitionend`).
+- **Three sections, and why they are three.**
+  - **Search & region** is one panel because a region is where you search
+    (owner: "search is in a region so those 2 must be combined"). The heading
+    names the active scope, the results follow, the widen ladder is the last
+    results row (§4.5), and the region grid and My area sit below them.
+  - **Layers & filters** is one panel because view mode is a filter too (owner:
+    "people will not understand why they are missing data"). Order: view mode,
+    the layer list, MAP OVERLAYS, then FILTERS under mono sub-headers.
+  - **Ride tools** holds ride check, scout, contribute and the places count.
+- **Filter transparency, always on the map.** When a chip filter narrows the
+  catalog, a pill at the bottom of the map says so and offers a one-tap **Show
+  all**, and the Layers icon wears an orange dot. Both are visible whether or
+  not the drawer is open, which is the point: a rider notices data is missing
+  while looking at the MAP. The count is a real tally from the render pass
+  (`render.js` `hiddenByFilters()`), incremented at the moment the chips - and
+  only the chips - exclude a feature. Mode, scope and switched-off layers hide
+  things too and are labelled loudly elsewhere; counting them here would make
+  the pill noise on any scoped map. Where the narrowing happens inside the
+  coverage tiles there is nothing to walk, so the pill says the map is narrowed
+  rather than claiming a zero it has not verified. **Show all** reads the
+  markup's own `.f-match` / `.f-optin` declaration, so a filter group added
+  later resets without anybody editing the reset.
+- **The top-right corner is two glass icon buttons:** base map (a flyout with
+  Map / Satellite; the flyout markup is a **sibling** of the button, never a
+  child, because a nested `<button>` is un-nested by the browser) and
+  street-level. With no Esri key the whole picker hides, not just the segment,
+  so its button can never open an empty menu. The Surfaces and Cycle-routes
+  toggles left this corner: they are layers, and they live with the layers.
+- **Zebra bands.** Every `.grp` in a panel is a full-bleed band, every second
+  one on `rgb(var(--chrome-fg) / .05)`, with a 1px `rgb(var(--chrome-fg) / .14)`
+  hairline between consecutive groups - so a long panel reads as stacked blocks
+  rather than one column.
+- **Phones (≤820px): the same behaviour, not a second layout** (owner
+  2026-08-20). The rail stays where it is; the drawer stops taking layout room
+  and slides OVER the map, capped at `min(320px, 85vw)` so the map is never
+  fully covered. The street-level dock hides the drawer while it is up. The
+  earlier phone re-skin - rail folded into a top bar, filters folded into a
+  swipe-up bottom sheet - is deleted: two layouts meant two sets of rules to
+  keep true, and the sheet was the half nobody could find. The FEATURE drawer's
+  own bottom sheet (§6.6) is untouched.
+- **Both themes by construction.** Every rule in the shell reads a `--chrome-*`
+  token (§4.6); a test pins that the section hardcodes no brand literal and
+  that chrome text never drops below alpha `.65`.
+- **Element ids are load-bearing.** `#mode`, `#layers`, `#bestFacets`,
+  `#scopeChips`, `#searchTitle`, `#search`, `#searchRes`, `#count`,
+  `#zoomHint`, `#baseSeg`, `#ovStreet`, `#ovSurface`, `#ovRoutes` and the chip
+  group ids are bound by `panels.js`, `scope-ui.js`, `scope-header.js`,
+  `search-ui.js`, `mapillary.js` and `render.js`. The shell refactor MOVED
+  them; renaming one breaks its module silently.
+  `tests/js/rail-shell.test.cjs` pins each panel's ownership and that no id is
+  rendered twice, which is the failure a markup move actually produces.
+- **Not built:** there is no GeoJSON export control. The design sketch asked
+  for one; nothing in the app exports GeoJSON, so it would have been a button
+  that does nothing. Owner call 2026-08-20: leave it out until the export
+  itself exists (the ODbL credit has to travel inside the file).
 
 ### 4.1 Layer toggles
 
-- The rail lists the catalog layers (localized label + icon + colour), each
+- The Layers panel lists the catalog layers (localized label + icon + colour), each
   individually toggleable, with a **`shown/total`** count that
   reflects the current mode and filters (`layerCounts()`). **Both parts are
   scope-aware:** `shown` applies mode/filters/scope, and `total` is scoped too —
   curated features gate on `inScope()` and coverage uses the server's per-scope
   count — so a region with no data for a letter reads `0/0`, never the global
-  total (a region's rail never shows another region's counts). A
+  total (a region's list never shows another region's counts). A
   select-all/deselect-all toggle sits above the list. **Default: all catalog
   layers on at load.** Layer labels come from the `item_type.*.label`
-  translation keys via `CC_I18N.layers`, so the rail can never drift from the
+  translation keys via `CC_I18N.layers`, so the list can never drift from the
   improve form / drawer wording.
-- **The rail is grouped, and the grouping is the split riders already know**
+- **The layer list is grouped, and the grouping is the split riders already know**
   (2026-08-02): *Practical · full coverage* (the utilities), then *Emotional ·
   voted by riders* (the votable layers), then, for curators only, *Moderation*
   (the pending-review overlay, which is not a category). The two headings use
@@ -176,10 +257,10 @@ on the next reload.
 - **No catalog letter appears anywhere a rider reads a category** (2026-08-02
   owner decision). Letters are storage identifiers — `?type=`, coverage tiles,
   `coverage_poi.letter`, the public API — and they stay there. They are gone
-  from the rail rows, the drawer type chip, search-result badges, the
+  from the layer rows, the drawer type chip, search-result badges, the
   ride-check group badges, the contribute hub cards and the improve/propose
   eyebrows; each of those shows the category's **icon** on its colour swatch
-  instead. The change was forced by the grouping: sorting the rail A–Z put
+  instead. The change was forced by the grouping: sorting the list A–Z put
   M · Public toilets last (far from Water & food, the row it belongs beside)
   and B · Climbs above every utility, and once the list is ordered for humans
   the letters read as a broken sequence (A, C, M, D…) — which is exactly what
@@ -206,9 +287,9 @@ on the next reload.
   at draw time**: this function runs at the end of every render *and* after
   every selection move, so a `moveLayer` in `drawClimbLine` is silently
   overridden a moment later (tried and reverted the same day).
-- **L · Ride heatmap is deliberately NOT a catalog entry:** the generated rail
-  lists A–K only; L appears as a separately labelled derived-overlay panel with
-  its own On/Off toggle and season chips (§11).
+- **L · Ride heatmap is deliberately NOT a catalog entry:** the generated layer
+  list holds A–K only; L is a sub-header inside the FILTERS block with its own
+  On/Off toggle and season chips (§11).
 - Curators additionally receive a **⚑ Pending review** layer
   (`CC_PENDING`-driven, red pins) — moderation behaviour is owned by
   [moderation-and-contribution.md](moderation-and-contribution.md).
@@ -278,7 +359,7 @@ across all five.
 
 - **Which mode the map OPENS in.** The global default is
   **Everything**, not Curated: Curated hides every non-curated experiential item,
-  so on an under-curated region it showed a near-empty map behind a rail counting
+  so on an under-curated region it showed a near-empty map behind a panel counting
   hundreds of places (the owner's "1488 where to sleep, 0/1488"). A region opens
   in Curated only once a moderator has flipped `region.curated_default`, and that
   toggle is **gated** on a readiness count — curated items on the experiential
@@ -502,7 +583,7 @@ four returned once the reason they looked broken was fixed:
 - **A missing chip group means NO filter, never an empty selection.**
   `chipSet(id)` returns `null` when the container is absent and every reader
   treats that as pass-through. Kept even though all four groups are back on
-  the rail: it is what makes removing a group from the template a safe,
+  the panel: it is what makes removing a group from the template a safe,
   one-file edit rather than a way to empty a layer.
 - The accessibility filter applies to the stays dot layer (`setFilter`), the
   clustered confirmed pins, and the legend counts alike.
@@ -558,7 +639,7 @@ hold and are the reason it reads honestly in the meantime:
 - **Predicate (`prefMatch()`, unknown ≠ unsuitable):** visible iff
   `!f.bikeTypes || f.bikeTypes.length === 0 || overlap(f.bikeTypes, CC_PREFS.bikes)`.
   Only a *declared* non-overlap hides a route.
-- **Never silent:** an active prefilter shows the dismissable rail chip
+- **Never silent:** an active prefilter shows the dismissable chip
   `#prefFilter` ("Routes for your bikes", `aria-pressed` reflects state). The
   off state persists in `localStorage` key **`cc-pref-filter`**
   (`on`/`off`, default `on` when preferences exist). Anonymous visitors
@@ -566,16 +647,17 @@ hold and are the reason it reads honestly in the meantime:
 
 ### 4.5 Region / My-area scope
 
-The rail's Region group (a per-registry list of named regions/countries plus
+The Search & region panel's Region group (a per-registry list of named
+regions/countries plus
 Everywhere) and its `scope.js` (`window.CCScope`) client model are the full
 region-scoping design owned by map-and-search.md §4.5 — this subsection
 covers only the `myArea` scope kind (map-and-search.md §4.5 Phase 4),
 the newest rung of that same ladder.
 
 - **`myArea` scope kind.** A rider with a base location gets a **My-area**
-  rail button, first entry in the Region group. Unlike `region`/`country`, its
+  button, first entry in the Region group. Unlike `region`/`country`, its
   region set is *derived* (`BaseAreaResolver`, capped at 8) rather than
-  curator-authored, so it can span more than one named region — the rail
+  curator-authored, so it can span more than one named region — the panel
   button itself carries no fixed boundary.
 - **`myarea` token.** Serializes to the bare, literal string `'myarea'` in the
   URL and the `cc-scope` localStorage key — never coordinates. Deserializing
@@ -650,7 +732,7 @@ the newest rung of that same ladder.
 
   *Why it exists:* coverage and catalog layers are scope-filtered, correctly and
   deliberately, so panning to South Africa under a Netherlands scope drew an
-  empty map with the rail reading `0 places shown` and nothing naming the cause.
+  empty map reading `0 places shown` and nothing naming the cause.
   It read as broken data and cost a real dig from the inside (2026-08-14).
 - **Out-of-scope town opens transiently widen:**
   town search is scope-exempt (a place is an explicit location choice), so
@@ -729,7 +811,7 @@ the newest rung of that same ladder.
 
 ### 4.6 Chrome theme: dark and light
 
-The map page's chrome (rail, drawer, legend, panels, popups) ships in two
+The map page's chrome (icon rail, drawer, legend, panels, popups) ships in two
 themes. Dark is the default and is the look the page has always had; light
 inverts the ground: paper (`--paper`) carries the chrome, ink (`--ink`)
 carries the text, trail orange stays the accent. The basemap tiles are the
@@ -757,8 +839,8 @@ Mechanism, one attribute end to end:
   only; borders and backgrounds are decorative, and off/disabled rows dim via
   `opacity`, which is a control state, not body copy. Scrollbar thumbs keep a
   `.55` floor (components need 3:1). Pinned by `tests/js/map-theme.test.cjs`.
-- **Toggle.** A sun/moon MapLibre control (bottom-left, `assets/map/theme.js`)
-  flips the attribute. Its glyph and label name the theme a press will GIVE
+- **Toggle.** The sun/moon button in the rail's bottom cluster
+  (`assets/map/theme.js`) flips the attribute. Its glyph and label name the theme a press will GIVE
   you (`map.theme_to_light` / `map.theme_to_dark`).
 - **Persistence.** Same profile-over-localStorage rule as the view mode
   (§4.2): a logged-in rider's choice POSTs to `/map/theme`
@@ -1005,12 +1087,12 @@ Two scopes for one question is one too many, and the server's is the one with
 authority. `featureVisible()` returns true for `pendingLayer` before any gate,
 and `layerCounts()` counts its whole set.
 
-**And the rail says so** (2026-08-14). The cost of that exemption is that
+**And the map says so** (2026-08-14). The cost of that exemption is that
 scoping the map to one region while a queue sits in another looks exactly like
 a scope leak: the owner read it as one, scoped to Free State with sixteen
 pending submissions in North Holland. Both readings cannot be right, and the
 2026-08-12 decision is the one to keep - re-scoping the queue is what produced
-"Pending review 0/0" in the first place. So the rail's hint line names it
+"Pending review 0/0" in the first place. So the on-map zoom hint names it
 instead: *"Pending review follows your moderation areas, not the map scope"*,
 shown while the layer is on, holds something, and the map is scoped narrower
 than Everywhere. Same slot as the coverage zoom hints
@@ -1047,12 +1129,12 @@ canvas and makes MapLibre re-measure on every toggle.
   z9 — no clustering, phantom-free at every zoom.** A coverage POI's icon is
   drawn by its tile `<key>-<cc>-cov` layer (`minzoom 9`); the tiles carry every
   point complete at z11–14, so the z9–10 icons are the **thinned** sample that
-  densifies to complete by z11 (the rail counts stay the exact total). At
+  densifies to complete by z11 (the layer counts stay the exact total). At
   overview zoom (z6–~9), a `<key>-<cc>-heat` heatmap layer on the **same**
   source-layer (`maxzoom 9`) draws the region's coverage as a smooth density
   surface, built from the tile's thinned z6–10 sample (`coverage-provider.md`
   §4) — this fills the empty overview that the no-cluster z11 floor had left,
-  with the rail's exact `/map/coverage/counts` still carrying the precise "how
+  with the exact `/map/coverage/counts` still carrying the precise "how
   much" alongside it. The two layers **cross-fade at z9** (heat `maxzoom 9`,
   icon `minzoom 9`) so the actual spots are visible at the region-fit landing
   zoom. The heat colour ramp runs to a deep green at max density (a pale top
@@ -1405,7 +1487,7 @@ opens the wizard with its ref and geometry seeded, while a climb had only the
 and then re-locate the climb from scratch in its own small map having just been
 looking straight at it.)*
 
-- **Where:** a `.grp.cc-addclimb` block in the rail, directly under ride-check,
+- **Where:** a `.grp.cc-addclimb` block in the Ride tools panel, under ride-check,
   inside the same `ROLE_USER` gate. `/add-climb` is `ROLE_USER`, and a link
   that lands on a login wall is worse than no link; anonymous riders reach it
   through `/contribute`, which lists it.
@@ -1440,7 +1522,7 @@ requirement).
   token id `ride-check` (`config/packages/csrf.yaml`), token injected by the
   template inside the `ROLE_USER` block; per-user sliding-window limiter
   `ride_check` (limits in the inventory:
-  [security-architecture.md](security-architecture.md)). The rail control
+  [security-architecture.md](security-architecture.md)). The panel control
   renders only for authenticated users (server-side Twig conditional).
 - **Validation** (`App\Catalog\RideCheckService`): radius ∈
   `ALLOWED_RADII = {100, 250, 500, 1000}` m, default `DEFAULT_RADIUS = 250`;
@@ -1491,7 +1573,7 @@ requirement).
   `fitBounds`; results render in the **standard right-hand drawer** (town-card
   styling: per-letter group headers, "name — km 23.4 · 80 m off" rows, followed
   routes with shared km, Clear button). **Closing the drawer keeps the track
-  overlay**; the rail status shows "X km · results · clear" to re-open or tear
+  overlay**; the panel status shows "X km · results · clear" to re-open or tear
   down. Radius change re-posts; a new file replaces the previous overlay.
   Ride-check owns the **`.cc-ride-*`** CSS namespace (it once collided with
   the route-community `.cc-rc-*`). Errors surface as translated inline
@@ -1541,7 +1623,7 @@ requirement).
 ## 11. L · Ride heatmap and the illustrative planner
 
 - L is a **derived overlay** (never a catalog entry, never editable — see the
-  A–L table in [edit-items/README.md](edit-items/README.md)): its own rail
+  A–L table in [edit-items/README.md](edit-items/README.md)): its own
   panel with On/Off + season chips (All/Spring/Summer/Autumn/Winter), default
   **Off**. Season chips set a layer `filter` on the per-point season tag; a
   chip selected before the layer exists is honoured on first build.
@@ -1552,7 +1634,7 @@ requirement).
   real anonymized-ingest heatmap (map-match-then-discard, k-anonymity) is
   unbuilt; its privacy contract lives in the public wiki data catalog and gets
   its own spec when built.
-- The **"Plan from Spa" planner is off the rail as of 2026-08-02** (owner
+- The **"Plan from Spa" planner is off the map chrome as of 2026-08-02** (owner
   decision; §4.3's chip groups came back the same day, the planner did not). It was openly faked: distance chips
   picked the nearest sample loop by km, drew it, and opened a drawer carrying
   the warning "⚠ Faked — the real planner stitches from the heatmap" — honest,
