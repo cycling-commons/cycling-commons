@@ -35,7 +35,11 @@ jobs:
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
-          extensions: ctype, iconv, pdo, pdo_pgsql
+          # imagick and redis are hard requires in composer.json (photo
+          # processing, and sessions/cache/messenger), and setup-php does not
+          # ship either by default — without them `composer install` fails the
+          # platform check before a single test runs.
+          extensions: ctype, iconv, imagick, pdo, pdo_pgsql, redis
           coverage: none
       - run: composer install --no-interaction --prefer-dist
       - run: ./tools/check-spdx.sh

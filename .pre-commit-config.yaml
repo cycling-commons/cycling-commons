@@ -26,6 +26,23 @@ repos:
 
   - repo: local
     hooks:
+      # FIRST among the pre-push hooks on purpose: it costs milliseconds, and a
+      # push aimed at the wrong remote should be refused before anyone waits on
+      # gitleaks or a full PHPStan run.
+      #
+      # This repo has two remotes that are not mirrors — the private Symfony
+      # line and the public site repo, diverged by well over a thousand
+      # commits. Publishing the private line cannot be undone, so the guard is
+      # on which refs may reach the public remote, not on the remote itself
+      # (which still needs ordinary pushes to deploy the live site and wiki).
+      - id: remote-guard-prepush
+        name: private branches must not reach the public remote
+        entry: tools/remote-guard-prepush.sh
+        language: script
+        stages: [pre-push]
+        pass_filenames: false
+        always_run: true
+
       - id: gitleaks-prepush
         name: gitleaks (scan commits being pushed)
         entry: tools/gitleaks-prepush.sh
