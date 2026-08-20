@@ -181,3 +181,39 @@ test('Escape reaches the drawer only when nothing nearer owns it', () => {
   assert.ok(shellJs.includes('.cc-drawer.open'), 'Escape ignores an open feature drawer');
   assert.ok(shellJs.includes('searchRes'), 'Escape ignores an open search dropdown');
 });
+
+test('the layers panel runs mode then layers then overlays then filters', () => {
+  // Contract point 4: everything that can make the map show less, in one
+  // panel, in the order a rider would ask the questions.
+  const s = panelSrc('p-layers');
+  const order = ['id="mode"', 'id="layers"', 'id="ovSurface"', 'id="filters"'];
+  let at = -1;
+  for (const marker of order) {
+    const i = s.indexOf(marker);
+    assert.ok(i > at, `${marker} is out of order inside the layers panel`);
+    at = i;
+  }
+  assert.ok(s.includes('id="ovRoutes"'), 'the cycle-route overlay never made it into the layers panel');
+  // Sub-headers, not a wall of chips.
+  assert.ok((s.match(/class="fh"/g) || []).length >= 5, 'the filters block has no .fh sub-headers');
+});
+
+test('every filter group declares how it narrows', () => {
+  // The pill and its reset need to know which way each group narrows. All four
+  // chip facets share attrMatch()'s rule (render.js): every chip on hides
+  // nothing, deselecting one narrows. The preference chip is the opposite -
+  // it narrows only while it is ON.
+  const s = panelSrc('p-layers');
+  for (const id of ['sqf', 'trf', 'effortf', 'accessf']) {
+    assert.ok(new RegExp(`class="chips f-match" id="${id}"`).test(s), `#${id} is not marked f-match`);
+  }
+  assert.ok(/class="chips f-optin"/.test(s), 'the opt-in preference filter is not marked f-optin');
+});
+
+test('the overlays left the top-right corner', () => {
+  // Surfaces and Cycle routes are layers, so they live with the layers
+  // (contract point 7). Their ids do not move, because panels.js binds them.
+  const corner = twig.slice(twig.indexOf('<div class="map-ctrl"'), twig.indexOf('contrib-fab'));
+  assert.ok(!corner.includes('ovSurface'), 'the Surfaces toggle is still in the top-right corner');
+  assert.ok(!corner.includes('ovRoutes'), 'the Routes toggle is still in the top-right corner');
+});

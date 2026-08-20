@@ -156,6 +156,19 @@
   .panel .grp:nth-of-type(even){background:rgb(var(--chrome-fg) / .05)}
   .panel .grp + .grp{border-top:1px solid rgb(var(--chrome-fg) / .14)}
 
+  /* Sub-header inside a group. Quieter than the group's own mono heading,
+     because it names one facet of the thing the heading already named. */
+  .fh{font-family:var(--mono);font-size:.58rem;letter-spacing:.12em;color:rgb(var(--chrome-fg) / .72);
+    text-transform:uppercase;font-weight:400;margin:.95rem 0 .45rem}
+  .fh:first-of-type{margin-top:.8rem}
+  .fh-note{color:var(--chrome-amber);letter-spacing:.08em}
+  /* Overlay rows read as layer rows, because that is what they are. The dim
+     state is the absence of .on (panels.js toggles only that), the mirror of
+     .layer.off above. */
+  .ov-row{width:100%;background:none;border:none;color:inherit;font:inherit;text-align:left}
+  .ov-row:not(.on) .sw,.ov-row:not(.on) .nm{opacity:.45}
+  .ov-row:focus-visible{outline:2px solid var(--trail);outline-offset:2px;border-radius:5px}
+
   /* ---------- RAIL ---------- */
   .rail{background:var(--chrome-bg);color:var(--chrome-fg-solid);display:flex;flex-direction:column;border-right:1px solid var(--chrome-lift);z-index:1000}
   .rail-head{padding:1.3rem 1.4rem;border-bottom:1px solid rgb(var(--chrome-fg) / .14)}

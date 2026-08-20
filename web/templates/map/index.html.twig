@@ -199,84 +199,91 @@
         <div class="hint">{{ 'map.curated_hint'|trans }}</div>
       </div>
 
-      {# Preference prefilter chip (spec 2026-07-14): shown by map.js only when
-         the logged-in rider has saved bike types. Never silent — the chip is
-         the visible "your prefs are filtering routes" affordance + opt-out. #}
-      <div class="grp" id="prefGrp" hidden>
-        <h3>{{ 'map.pref_filter_head'|trans }}</h3>
-        <div class="chips"><span class="chip" id="prefFilter" role="button" tabindex="0" aria-pressed="false">{{ 'map.pref_filter'|trans }}</span></div>
-      </div>
-
-      {# The Discipline chips (#disc) were RETIRED on 2026-08-03, the same call
-         that removed the loop planner and the Freshness chips the day before
-         (map-and-search.md §4.3): they toggled, they looked like a filter, and
-         they filtered nothing, because no server path tags an item with a
-         riding style. A control that does nothing is not a placeholder for the
-         real one, it is a lie about what the map can do.
-
-         Nothing is lost that was working. RidingStyle stays the vocabulary a
-         rider saves in their profile and stays the contract these chips will
-         be rebuilt on — when the DATA carries style tags, not before. #}
-
+      {# Data layers. The rows are rendered by panels.js initLayerList() in
+         catalog reading order, grouped into the utilities that aim for full
+         coverage and the layers riders vote into a best-of. #}
       <div class="grp">
         <h3 class="dl-head">{{ 'map.data_layers'|trans }} <button class="dl-all" id="layersAll" type="button">{{ 'map.deselect_all'|trans }}</button></h3>
         <div id="layers"></div>
       </div>
 
+      {# Map overlays. These two used to sit in the top-right corner as if they
+         were a different kind of thing; they are layers, and a rider looking
+         for "why can I not see surfaces" looks at the layers. Both rows stay
+         hidden until their tile artifact exists (panels.js): a control for
+         tiles nobody built reads as broken, not absent. #}
       <div class="grp">
-        <h3>{{ 'map.heatmap_title'|trans }} <span style="color:var(--ochre);letter-spacing:.08em">{{ 'map.heatmap_derived'|trans }}</span></h3>
+        <h3>{{ 'map.map_overlays'|trans }}</h3>
+        <button class="layer ov-row" id="ovSurface" type="button" hidden><span class="sw" style="--c:#C8923A;--ic:#101E16"><i class="sw-g">▰</i></span><span class="nm">{{ 'map.surfaces'|trans }}</span></button>
+        <button class="layer ov-row" id="ovRoutes" type="button" hidden><span class="sw" style="--c:#7A4FCF;--ic:#EFE6D4"><i class="sw-g">⤳</i></span><span class="nm">{{ 'map.route_network'|trans }}</span></button>
+        <div class="hint">{{ 'map.map_overlays_hint'|trans }}</div>
+      </div>
+
+      {# Filters. Every group in here can make the map show LESS, which is why
+         they are gathered under one heading with one explanation, and why the
+         on-map pill exists (Task 6): a rider must never have to guess that a
+         chip three scrolls up is the reason a place is missing.
+
+         f-match / f-optin say which way a group narrows, and the pill's reset
+         reads those classes. All four chip facets share attrMatch()'s rule
+         (render.js): every chip on hides nothing, and deselecting one hides
+         items that cannot be confirmed to match. The preference chip is the
+         other kind - it narrows only while it is ON.
+
+         The Discipline chips (#disc) were RETIRED on 2026-08-03, the same call
+         that removed the loop planner and the Freshness chips the day before
+         (map-and-search.md §4.3): they toggled, they looked like a filter, and
+         they filtered nothing, because no server path tags an item with a
+         riding style. A control that does nothing is not a placeholder for the
+         real one, it is a lie about what the map can do. RidingStyle stays the
+         vocabulary a rider saves in their profile and stays the contract they
+         will be rebuilt on - when the DATA carries style tags, not before. #}
+      <div class="grp" id="filters">
+        <h3>{{ 'map.filters_head'|trans }}</h3>
+        <div class="hint" style="margin-top:0">{{ 'map.filters_hint'|trans }}</div>
+
+        <h4 class="fh">{{ 'map.climb_surface'|trans }}</h4>
+        <div class="chips f-match" id="sqf">
+          <span class="chip on" data-v="Smooth">{{ 'map.surf_smooth'|trans }}</span><span class="chip on" data-v="Good">{{ 'map.surf_good'|trans }}</span>
+          <span class="chip on" data-v="Worn">{{ 'map.surf_worn'|trans }}</span><span class="chip on" data-v="Rough">{{ 'map.surf_rough'|trans }}</span>
+          {# The fifth value. Missing here, it was a climb-eating hole: see ALL_SURF in render.js. #}
+          <span class="chip on" data-v="Broken / loose">{{ 'map.surf_broken'|trans }}</span>
+        </div>
+
+        <h4 class="fh">{{ 'map.climb_traffic'|trans }}</h4>
+        <div class="chips f-match" id="trf">
+          <span class="chip on" data-v="Traffic-free">{{ 'map.traffic_free'|trans }}</span><span class="chip on" data-v="Quiet">{{ 'map.traffic_quiet'|trans }}</span>
+          <span class="chip on" data-v="Moderate">{{ 'map.traffic_moderate'|trans }}</span><span class="chip on" data-v="Busy">{{ 'map.traffic_busy'|trans }}</span>
+        </div>
+
+        <h4 class="fh">{{ 'map.climb_effort'|trans }}</h4>
+        <div class="chips f-match" id="effortf">
+          <span class="chip on" data-v="Steady">{{ 'map.effort_steady'|trans }}</span><span class="chip on" data-v="Challenging">{{ 'map.effort_challenging'|trans }}</span>
+          <span class="chip on" data-v="Tough">{{ 'map.effort_tough'|trans }}</span><span class="chip on" data-v="Very steep">{{ 'map.effort_very_steep'|trans }}</span>
+        </div>
+
+        <h4 class="fh">{{ 'map.stay_access'|trans }}</h4>
+        <div class="chips f-match" id="accessf">
+          <span class="chip on" data-v="Step-free access">{{ 'map.access_step_free'|trans }}</span><span class="chip on" data-v="Handbike-friendly">{{ 'map.access_handbike'|trans }}</span>
+          <span class="chip on" data-v="Wheelchair-accessible">{{ 'map.access_wheelchair'|trans }}</span>
+        </div>
+
+        {# Preference prefilter chip (spec 2026-07-14): revealed by panels.js
+           only when the logged-in rider has saved bike types. Never silent -
+           the chip is the visible "your prefs are filtering routes"
+           affordance and its own opt-out. #}
+        <div id="prefGrp" hidden>
+          <h4 class="fh">{{ 'map.pref_filter_head'|trans }}</h4>
+          <div class="chips f-optin"><span class="chip" id="prefFilter" role="button" tabindex="0" aria-pressed="false">{{ 'map.pref_filter'|trans }}</span></div>
+        </div>
+
+        <h4 class="fh">{{ 'map.heatmap_title'|trans }} <span class="fh-note">{{ 'map.heatmap_derived'|trans }}</span></h4>
         <div class="toggle" id="heattoggle">
           <button class="on" data-h="off">{{ 'map.heat_off'|trans }}</button>
           <button data-h="on">{{ 'map.heat_on'|trans }}</button>
         </div>
         <div class="chips" id="season" style="margin-top:.6rem">
           <span class="chip on" data-s="all">{{ 'map.season_all'|trans }}</span><span class="chip" data-s="spring">{{ 'map.season_spring'|trans }}</span><span class="chip" data-s="summer">{{ 'map.season_summer'|trans }}</span><span class="chip" data-s="autumn">{{ 'map.season_autumn'|trans }}</span><span class="chip" data-s="winter">{{ 'map.season_winter'|trans }}</span>
-        </div>
-      </div>
-
-      {# Gone for good (2026-08-02): "Plan a loop from Spa" (planner.js draws a
-         hardcoded sample loop and says "⚠ Faked" in its own drawer) and the
-         Freshness chips (never wired to anything — `f.freshness` is produced
-         by no server path either). Honest UI: a control a rider can press has
-         to do what it looks like it does.
-
-         The four below came back the same day, once the reason they looked
-         broken was fixed. All four now share attrMatch()'s narrowing rule —
-         every chip on hides nothing, deselecting one hides items that cannot
-         be confirmed to match — so an unfilled attribute never silently
-         deletes an item from the map (map-and-search.md §4.3). #}
-
-      <div class="grp">
-        <h3>{{ 'map.climb_surface'|trans }}</h3>
-        <div class="chips" id="sqf">
-          <span class="chip on" data-v="Smooth">{{ 'map.surf_smooth'|trans }}</span><span class="chip on" data-v="Good">{{ 'map.surf_good'|trans }}</span>
-          <span class="chip on" data-v="Worn">{{ 'map.surf_worn'|trans }}</span><span class="chip on" data-v="Rough">{{ 'map.surf_rough'|trans }}</span>
-          {# The fifth value. Missing here, it was a climb-eating hole: see ALL_SURF in render.js. #}
-          <span class="chip on" data-v="Broken / loose">{{ 'map.surf_broken'|trans }}</span>
-        </div>
-      </div>
-
-      <div class="grp">
-        <h3>{{ 'map.climb_traffic'|trans }}</h3>
-        <div class="chips" id="trf">
-          <span class="chip on" data-v="Traffic-free">{{ 'map.traffic_free'|trans }}</span><span class="chip on" data-v="Quiet">{{ 'map.traffic_quiet'|trans }}</span>
-          <span class="chip on" data-v="Moderate">{{ 'map.traffic_moderate'|trans }}</span><span class="chip on" data-v="Busy">{{ 'map.traffic_busy'|trans }}</span>
-        </div>
-      </div>
-
-      <div class="grp">
-        <h3>{{ 'map.climb_effort'|trans }}</h3>
-        <div class="chips" id="effortf">
-          <span class="chip on" data-v="Steady">{{ 'map.effort_steady'|trans }}</span><span class="chip on" data-v="Challenging">{{ 'map.effort_challenging'|trans }}</span>
-          <span class="chip on" data-v="Tough">{{ 'map.effort_tough'|trans }}</span><span class="chip on" data-v="Very steep">{{ 'map.effort_very_steep'|trans }}</span>
-        </div>
-      </div>
-
-      <div class="grp">
-        <h3>{{ 'map.stay_access'|trans }}</h3>
-        <div class="chips" id="accessf">
-          <span class="chip on" data-v="Step-free access">{{ 'map.access_step_free'|trans }}</span><span class="chip on" data-v="Handbike-friendly">{{ 'map.access_handbike'|trans }}</span>
-          <span class="chip on" data-v="Wheelchair-accessible">{{ 'map.access_wheelchair'|trans }}</span>
         </div>
       </div>
       </section>
@@ -444,13 +451,9 @@
         <button data-b="satellite">{{ 'map.base_satellite'|trans }}</button>
       </div>
       <button class="mc-ov" id="ovStreet"><span class="mc-ic">📷</span>{{ 'map.street_level'|trans }}</button>
-      {# Road-surface reference skin. Hidden by panels.js when no artifact is
-         built — the same rule the satellite segment follows, and for the same
-         reason: a control that does nothing reads as broken, not absent. #}
-      <button class="mc-ov" id="ovSurface" hidden><span class="mc-ic">▰</span>{{ 'map.surfaces'|trans }}</button>
-      {# Cycle-route network: signed corridors + knooppunt numbers
-         (routes-tiles.js). Same hidden-until-built rule. #}
-      <button class="mc-ov" id="ovRoutes" hidden><span class="mc-ic">⤳</span>{{ 'map.route_network'|trans }}</button>
+      {# Surfaces and Cycle routes used to sit here. They are layers, so they
+         moved into the Layers panel's MAP OVERLAYS group (Task 4 of the
+         icon-rail plan); their ids did not change. #}
     </div>
     <a class="contrib-fab" href="{{ path('contribute') }}" aria-label="{{ 'map.contribute_aria'|trans }}"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></a>
     <aside class="cc-drawer" id="drawer" tabindex="-1" aria-hidden="true" aria-label="{{ 'map.drawer_aria'|trans }}">
