@@ -140,3 +140,44 @@ test('the drawer opens closed and titles itself from the locale bundle', () => {
     assert.ok(controller.includes(`'${key}' =>`), `MapController::mapI18n() does not emit ${key}`);
   }
 });
+
+test('search and region read as one panel, in one order', () => {
+  // Contract point 3: the heading names the scope, the results follow, the
+  // widen ladder is the last results row, and the region grid plus My area sit
+  // below them. Asserted by source order inside the panel.
+  const s = panelSrc('p-search');
+  const order = ['id="searchTitle"', 'id="search"', 'id="searchRes"', 'id="scopeChips"', 'id="areaPromptRow"'];
+  let at = -1;
+  for (const marker of order) {
+    const i = s.indexOf(marker);
+    assert.ok(i > at, `${marker} is out of order inside the search panel`);
+    at = i;
+  }
+});
+
+test('the scope heading has exactly one writer', () => {
+  // scope-header.js paints it before first paint (the 2026-07-23 flash fix).
+  // A second writer would race it and the rider would see one of two answers.
+  const modules = fs.readdirSync(path.join(ROOT, 'assets/map'))
+    .filter(f => f.endsWith('.js'))
+    .filter(f => read('assets/map/' + f).includes('searchTitle'));
+  assert.deepEqual(modules, ['scope-header.js'], 'searchTitle is written from more than one module');
+});
+
+test('the widen ladder is offered only while the scope can widen', () => {
+  const searchUi = read('assets/map/search-ui.js');
+  // canWiden() is false at Everywhere, which is what hides the last rung.
+  assert.ok(/if\(window\.CCScope && window\.CCScope\.canWiden\(\)\)/.test(searchUi),
+    'the widen row is not gated on CCScope.canWiden()');
+  assert.ok(searchUi.includes('class="search-widen"'), 'no widen row in the results list');
+});
+
+test('Escape reaches the drawer only when nothing nearer owns it', () => {
+  // The search dropdown, the feature drawer, the lightbox and the climb
+  // profile all bind Escape. Closing a photo must not also close the section
+  // the rider was reading.
+  assert.ok(shellJs.includes('.cc-lightbox.open'), 'Escape ignores an open lightbox');
+  assert.ok(shellJs.includes('.cc-cp.open'), 'Escape ignores an open climb profile');
+  assert.ok(shellJs.includes('.cc-drawer.open'), 'Escape ignores an open feature drawer');
+  assert.ok(shellJs.includes('searchRes'), 'Escape ignores an open search dropdown');
+});

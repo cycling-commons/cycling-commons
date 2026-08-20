@@ -77,15 +77,16 @@ export function initShell(){
   });
   if(closeBtn) closeBtn.onclick = closePanel;
 
-  /* Escape closes the drawer only when the drawer is what is open. The feature
-     drawer, the lightbox and the climb profile bind Escape too, and they are
-     modal over the map while this panel is beside it - so a rider pressing
-     Escape to dismiss a photo must not also lose the section they were
-     reading. Those overlays are checked by their own open state. */
+  /* Escape closes the drawer only when nothing nearer owns the key. The search
+     dropdown lives INSIDE this drawer, and the feature drawer, the lightbox
+     and the climb profile sit modal over the map - all four bind Escape. A
+     rider dismissing a photo, or a suggestion list, must not also lose the
+     section they were reading, so each is checked by its own open state. */
+  const searchRes = document.getElementById('searchRes');
   document.addEventListener('keydown', e => {
     if(e.key !== 'Escape' || !active) return;
-    const modalOpen = document.querySelector('.cc-lightbox.open, .cc-cp.open, .cc-drawer.open');
-    if(modalOpen) return;
+    if(searchRes && !searchRes.hidden) return;
+    if(document.querySelector('.cc-lightbox.open, .cc-cp.open, .cc-drawer.open')) return;
     closePanel();
   });
 
