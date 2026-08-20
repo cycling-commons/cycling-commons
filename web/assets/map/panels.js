@@ -22,7 +22,7 @@
    applyScope() calls it, because a scope change re-ranks best-of. */
 import { I18N, D, tpl, CC_SEASON_LABEL, CC_BIKE_LABEL } from './i18n.js';
 import { txtOn, currentSeason } from './util.js';
-import { map } from './map-init.js';
+import { map, satelliteConfigured } from './map-init.js';
 import { CATALOG, catalogUtility, catalogVotable, catalogModeration,
          active, layerByKey, mode, setMode,
          resolveInitialMode, MODE_LS_KEY } from './catalog.js';
@@ -94,15 +94,19 @@ export function initLayerList(){
   };
   syncLayersAll();
 
-  // on-map base/overlay control (top-right) — Map ↔ Satellite + Street-level overlay
+  // on-map base picker (top-right) — Map ↔ Satellite
   //
-  // No satellite layer means no Esri key (map-init.js addSatellite()), and a
-  // two-button Map/Satellite control where Satellite does nothing is worse
-  // than no control: it reads as broken rather than absent. The whole segment
-  // goes, because "Map" alone is not a choice.
-  if(!map.getLayer('satellite')){
-    // The whole picker goes, not just the segment: with nothing to choose
-    // between, its button would open an empty menu.
+  // No Esri key means no satellite layer, and a two-button Map/Satellite
+  // control where Satellite does nothing is worse than no control: it reads as
+  // broken rather than absent. The whole picker goes, not just the segment,
+  // because with nothing to choose between, its button would open an empty
+  // menu.
+  //
+  // Gated on the KEY, not on map.getLayer('satellite'). This runs before
+  // map.on('load') adds the layer, so the layer question answered "no" on
+  // every load and the picker hid itself even where satellite works
+  // (owner-reported 2026-08-20).
+  if(!satelliteConfigured()){
     const seg=document.getElementById('baseSeg');
     const picker=seg && seg.closest('.trw');
     if(picker) picker.hidden=true; else if(seg) seg.hidden=true;

@@ -182,6 +182,10 @@ by default and a rider asks for one section at a time.
     "people will not understand why they are missing data"). Order: view mode,
     the layer list, MAP OVERLAYS, then FILTERS under mono sub-headers.
   - **Ride tools** holds ride check, scout, contribute and the places count.
+    The low-zoom/curator-scope hint stays ON the map instead, beside the zoom
+    controls - it has to be readable while a rider is zooming, and the drawer
+    is closed by default. Beside, not above: stacked, it covered the z-level
+    badge that shares MapLibre's bottom-left corner.
 - **Filter transparency, always on the map.** When a chip filter narrows the
   catalog, a pill at the bottom of the map says so and offers a one-tap **Show
   all**, and the Layers icon wears an orange dot. Both are visible whether or
@@ -199,7 +203,11 @@ by default and a rider asks for one section at a time.
   Map / Satellite; the flyout markup is a **sibling** of the button, never a
   child, because a nested `<button>` is un-nested by the browser) and
   street-level. With no Esri key the whole picker hides, not just the segment,
-  so its button can never open an empty menu. The Surfaces and Cycle-routes
+  so its button can never open an empty menu - and that decision reads the KEY
+  (`satelliteConfigured()`, map-init.js), never `map.getLayer('satellite')`:
+  the layer is added inside `map.on('load')` and the chrome is built before
+  that fires, so the layer question always answered "no" and the picker hid
+  itself even where satellite worked (2026-08-20). The Surfaces and Cycle-routes
   toggles left this corner: they are layers, and they live with the layers.
 - **Zebra bands.** Every `.grp` in a panel is a full-bleed band, every second
   one on `rgb(var(--chrome-fg) / .05)`, with a 1px `rgb(var(--chrome-fg) / .14)`

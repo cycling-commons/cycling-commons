@@ -122,6 +122,16 @@ export const esriTileUrl = key =>
   'https://ibasemaps-api.arcgis.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}?token='
   + encodeURIComponent(key);
 
+/* Is a satellite base available AT ALL? Ask this, never `map.getLayer(
+   'satellite')`, when deciding whether to offer the base picker: the layer is
+   added inside map.on('load'), and the chrome is built synchronously before
+   that fires, so the layer question always answered "no" and the picker hid
+   itself on every load - including for instances that have a perfectly good
+   Esri key (owner-reported 2026-08-20). The key is the real condition and it
+   is here from the first line. Same shape as surfaceTilesConfigured() /
+   routesTilesConfigured(). */
+export const satelliteConfigured = () => !!ESRI_KEY;
+
 export function addSatellite(){
   if(map.getSource('satellite') || !ESRI_KEY) return;
   map.addSource('satellite',{type:'raster',tileSize:256,

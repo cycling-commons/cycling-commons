@@ -645,9 +645,11 @@
   .fpill button:hover{background:#ff703d}
   .fpill button:focus-visible{outline:2px solid var(--paper);outline-offset:2px}
 
-  /* The zoom hint, on the map beside the zoom controls. Glass like the other
-     on-map badges, and left-anchored clear of MapLibre's bottom-left stack. */
-  .zoom-hint{position:absolute;left:1rem;bottom:5.6rem;z-index:1000;max-width:min(20rem,60vw);
+  /* The zoom hint, BESIDE the zoom controls rather than above them: stacked, it
+     landed on top of the z-level badge that shares MapLibre's bottom-left
+     corner (owner-reported 2026-08-20). left clears the ~29px control column
+     plus its 10px gutter; the bottom edge lines up with the +/- buttons. */
+  .zoom-hint{position:absolute;left:3.5rem;bottom:1.1rem;z-index:1000;max-width:min(22rem,52vw);
     background:rgb(var(--chrome-glass) / .92);color:var(--chrome-fg-solid);font-family:var(--mono);
     font-size:.62rem;line-height:1.4;letter-spacing:.04em;padding:.4rem .6rem;border-radius:6px;
     pointer-events:none;box-shadow:0 2px 6px -2px rgba(0,0,0,.5)}
@@ -1309,8 +1311,10 @@
     .cc-drawer.open.s-full ~ .cc-d-scrim{opacity:1;pointer-events:auto}
     .cc-lightbox{z-index:1600}
     /* The bottom filter sheet is gone, so the zoom and attribution controls
-       take the bottom edge back. The zoom hint sits just above them. */
-    .zoom-hint{bottom:5rem;left:.7rem}
+       take the bottom edge back. On a narrow screen there is no room BESIDE
+       the zoom column, so the hint goes back above it - clear of the z-level
+       badge, which is the collision the desktop rule avoids sideways. */
+    .zoom-hint{left:.7rem;bottom:7.4rem;max-width:calc(100vw - 5rem)}
     /* The street-level dock takes the bottom half of the screen. A drawer over
        the other half would leave no map between them, which is the whole point
        of opening street-level. */

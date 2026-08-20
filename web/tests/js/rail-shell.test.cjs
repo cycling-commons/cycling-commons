@@ -314,3 +314,28 @@ test('on a phone the rail stays and the drawer overlays the map', () => {
   assert.ok(mob.includes('min(320px,85vw)'), 'the phone drawer is not capped at 85vw');
   assert.ok(!css.includes('sheet-open'), 'the old bottom-sheet class is still styled');
 });
+
+test('the base picker is offered on the Esri key, not on a layer that does not exist yet', () => {
+  // map.on('load') adds the satellite layer; the chrome is built synchronously
+  // before that fires, so asking map.getLayer('satellite') always answered
+  // "no" and the picker hid itself on every load, even where satellite works
+  // (owner-reported 2026-08-20). The key is available from the first line.
+  const panels = read('assets/map/panels.js');
+  const init = read('assets/map/map-init.js');
+  assert.ok(/export const satelliteConfigured = \(\) => !!ESRI_KEY/.test(init),
+    'map-init.js does not expose satelliteConfigured()');
+  assert.ok(panels.includes('if(!satelliteConfigured())'), 'panels.js does not gate the picker on the key');
+  // Only the GATE moves. Flipping visibility still has to check the layer is
+  // there, because a rider can press the button before map.on('load') fires.
+  assert.ok(!panels.includes("if(!map.getLayer('satellite'))"),
+    'panels.js still decides the picker from a layer that is added later');
+});
+
+test('the zoom hint sits beside the zoom controls, not on top of them', () => {
+  // Stacked above, it landed on the z-level badge that shares MapLibre's
+  // bottom-left corner (owner-reported 2026-08-20).
+  const rule = css.match(/\.zoom-hint\{([^}]*)\}/);
+  assert.ok(rule, 'no .zoom-hint rule');
+  assert.ok(/left:3\.5rem/.test(rule[1]), 'the hint does not clear the zoom control column');
+  assert.ok(/bottom:1\.1rem/.test(rule[1]), 'the hint is not aligned with the bottom edge');
+});
