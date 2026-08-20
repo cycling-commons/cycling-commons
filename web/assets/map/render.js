@@ -833,17 +833,27 @@ export function updateZoomHint(){
   if(!el) return;
   const z = map.getZoom();
   const anyCoverage = COVERAGE_KEYS.some(([key]) => active.has(key));
-  /* The pending layer follows the CURATOR'S AREAS, not the map's region scope
-     (featureVisible), so scoping the map to one region and still seeing pins
-     somewhere else is correct and looks exactly like a bug - the owner read it
-     as one on 2026-08-14 while scoped to Free State with a queue in North
-     Holland. Say which it is; the alternative is re-scoping the queue, which is
-     the thing that made "Pending review 0/0" on 2026-08-12. */
-  const pendingLayer = CATALOG.find(l => l.pendingLayer);
+  /* The pending layer is exempt from the map's region scope (featureVisible),
+     so scoping the map to one region and still seeing waiting pins elsewhere
+     is correct and looks exactly like a bug - the owner read it as one on
+     2026-08-14 while scoped to Free State with a queue in North Holland. Say
+     which it is; the alternative is re-scoping the queue, which is the thing
+     that made "Pending review 0/0" on 2026-08-12.
+
+     TWO audiences see this layer and they see DIFFERENT things (MapController):
+     a curator gets their moderation area's whole queue, a rider gets their own
+     undecided submissions and nothing else. They need different sentences, and
+     only one of them is in a mode. `layerByKey` rather than a find() over
+     `pendingLayer`, which the curator-only `gone` ghost layer also carries. */
+  const isCurator = !!window.CC_IS_CURATOR;
+  const pendingLayer = layerByKey['pending'];
   const pendingOn = !!pendingLayer && active.has(pendingLayer.key)
     && (pendingLayer.features || []).length > 0
     && !!curScope() && curScope().kind !== 'everywhere';
-  const msg = pendingOn ? (I18N.pendingFollowsAreas || 'Pending review follows your moderation areas, not the map scope')
+  const pendingMsg = isCurator
+    ? (I18N.pendingFollowsAreas || 'Pins waiting for review ignore the region filter: they follow the areas you moderate')
+    : (I18N.pendingYoursAnywhere || 'Your pins waiting for review show wherever you added them, even outside this region');
+  const msg = pendingOn ? pendingMsg
     : !anyCoverage ? ''
     : z < 6 ? (I18N.zoomForCoverage || 'Zoom in to see the full-coverage layers')
     : z < 9 ? (I18N.zoomForPlaces || 'Shown as density here, zoom in for individual places')
@@ -851,10 +861,15 @@ export function updateZoomHint(){
   el.textContent = msg;
   el.hidden = !msg;
 
-  /* CURATOR MODE, said by the map itself (owner 2026-08-14). The hint line
-     explains the pins; the border says which mode you are in at a glance,
-     without reading anything. Driven by the same condition, so the two can
-     never disagree: the moderation layer is on and holding work. */
+  /* CURATOR MODE, said by the map itself (owner 2026-08-14). The hint explains
+     the pins; the border says which mode you are in at a glance, without
+     reading anything.
+
+     A RIDER IS NOT IN CURATOR MODE (owner-reported 2026-08-20: a plain account
+     had the orange border). Their own pending pins put the layer on screen and
+     used to satisfy this condition on their own. The border is moderation
+     chrome, so it answers to the same flag every other piece of moderation
+     chrome answers to. */
   const mapEl = document.getElementById('map');
-  if (mapEl) mapEl.classList.toggle('cc-curator-mode', pendingOn);
+  if (mapEl) mapEl.classList.toggle('cc-curator-mode', pendingOn && isCurator);
 }

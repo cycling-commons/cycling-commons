@@ -529,6 +529,10 @@ final class MapController extends AbstractController
             // The pending layer answers to the curator's areas, not the map
             // scope (render.js featureVisible), which reads as a leak.
             'pendingFollowsAreas' => $t->trans('map.pending_follows_areas'),
+            // The rider's twin of the line above. Same exemption, different
+            // audience: a rider sees only their OWN undecided submissions, so
+            // "the areas you moderate" would be a sentence about nothing.
+            'pendingYoursAnywhere' => $t->trans('map.pending_yours_anywhere'),
             'seasons' => [
                 'spring' => $t->trans('map.season_spring'),
                 'summer' => $t->trans('map.season_summer'),

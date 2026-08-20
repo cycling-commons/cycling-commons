@@ -339,3 +339,20 @@ test('the zoom hint sits beside the zoom controls, not on top of them', () => {
   assert.ok(/left:3\.5rem/.test(rule[1]), 'the hint does not clear the zoom control column');
   assert.ok(/bottom:1\.1rem/.test(rule[1]), 'the hint is not aligned with the bottom edge');
 });
+
+test('curator mode is a curator thing, and each audience gets its own sentence', () => {
+  // A rider gets their OWN undecided submissions on the same layer
+  // (MapController), so the layer being on screen never meant "moderating".
+  // A plain account was wearing the orange curator border (owner-reported
+  // 2026-08-20).
+  const renderJs = read('assets/map/render.js');
+  assert.ok(renderJs.includes("classList.toggle('cc-curator-mode', pendingOn && isCurator)"),
+    'the curator border does not check CC_IS_CURATOR');
+  assert.ok(renderJs.includes('const isCurator = !!window.CC_IS_CURATOR'),
+    'render.js never reads the curator flag');
+  assert.ok(renderJs.includes('pendingYoursAnywhere'), 'riders get the curator wording');
+  assert.ok(renderJs.includes("layerByKey['pending']"),
+    'the pending layer is looked up by a flag the gone ghost layer also carries');
+  assert.ok(controller.includes("'pendingYoursAnywhere' =>"),
+    'MapController::mapI18n() does not emit the rider string');
+});

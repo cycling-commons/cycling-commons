@@ -1095,7 +1095,15 @@ Two scopes for one question is one too many, and the server's is the one with
 authority. `featureVisible()` returns true for `pendingLayer` before any gate,
 and `layerCounts()` counts its whole set.
 
-**And the map says so** (2026-08-14). The cost of that exemption is that
+**And the map says so** (2026-08-14), in the words of whoever is looking.
+TWO audiences see this layer: a curator gets their moderation area's whole
+queue, a rider gets their own undecided submissions and nothing else
+(MapController). The on-map hint has a sentence for each, and the orange
+**curator-mode border answers to `CC_IS_CURATOR`, never to the layer being on
+screen** - a rider's own pending pins put it there too, and a plain account
+was wearing the border (owner-reported 2026-08-20).
+
+The cost of that exemption is that
 scoping the map to one region while a queue sits in another looks exactly like
 a scope leak: the owner read it as one, scoped to Free State with sixteen
 pending submissions in North Holland. Both readings cannot be right, and the
