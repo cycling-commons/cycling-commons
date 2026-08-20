@@ -79,6 +79,28 @@ const TODO_PREFIX = 'surftodo-';
    — a client that disagreed with the build would show a blank band of zoom
    where the artifact simply has no tiles. */
 const TODO_MIN_ZOOM = 11;
+
+/* The classified skin's floor, and it is a WEIGHT decision, not a taste one
+   (owner-reported 2026-08-20: "for default wallonia view it is about 16MB").
+
+   The artifact is built z8-13 with tippecanoe's --no-tile-size-limit, so a
+   low-zoom tile carries every classified way under it rather than a sampled
+   500 KB of them. Measured over Wallonia, one tile:
+
+       z8  1119 KB      z10   93 KB
+       z9   455 KB      z11   41 KB      z12  22 KB
+
+   A screen is roughly sixteen tiles at any zoom, so the same view costs about
+   17 MB at z8 and about 1.5 MB at z10. Nothing legible is lost: this layer's
+   own paint draws 0.6 px at 50% opacity at z8, which its own comment calls a
+   smear, and the design already answers the planning-zoom question with the
+   gaps grid (built z4-11) and the riding-zoom one with roads. This is the line
+   where the two meet.
+
+   NOT a scope clip. The skin deliberately keeps drawing across a border: a
+   rider planning a Wallonia ride into Germany wants the German roads without
+   having to re-scope the map (owner, same report). */
+const CLASSIFIED_MIN_ZOOM = 10;
 export const SURFACE_GAPS_SOURCE = 'surface-gaps';
 const GAPS_FILL = 'surfgaps-fill';
 const GAPS_LINE = 'surfgaps-line';
@@ -162,6 +184,10 @@ export function addSurfaceTiles() {
         type: 'line',
         source: SURFACE_TILE_SOURCE,
         'source-layer': srcLayer,
+        // Every layer on this source carries a floor, which is what stops
+        // MapLibre requesting the z8/z9 tiles at all: it derives a source's
+        // zoom range from the layers that need it.
+        minzoom: CLASSIFIED_MIN_ZOOM,
         filter: ['==', ['get', 'cls'], cls],
         layout: { 'line-cap': st.cap || 'round', 'line-join': 'round', visibility: 'none' },
         paint,

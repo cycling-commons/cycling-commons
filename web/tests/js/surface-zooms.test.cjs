@@ -64,3 +64,22 @@ test('the grid ships the properties its drawer reads', () => {
       `${prop} is promised but never read by the client`);
   }
 });
+
+test('the classified skin has a zoom floor, and the map says so below it', () => {
+  // Weight, not taste (owner-reported 2026-08-20: "for default wallonia view
+  // it is about 16MB"). The artifact is built z8-13 with
+  // --no-tile-size-limit, so one z8 tile over Wallonia measures 1119 KB
+  // against 93 KB at z10, and a screen is roughly sixteen tiles either way.
+  // The layer's own paint draws 0.6 px at half opacity at z8.
+  const src = fs.readFileSync(path.join(__dirname, '..', '..', 'assets/map/surface-tiles.js'), 'utf8');
+  assert.match(src, /const CLASSIFIED_MIN_ZOOM = 10;/, 'the classified skin has no zoom floor');
+  assert.match(src, /minzoom: CLASSIFIED_MIN_ZOOM,/,
+    'the floor is declared but never applied, so MapLibre still fetches the low-zoom tiles');
+  // A control that changes nothing when pressed has to say why.
+  const render = fs.readFileSync(path.join(__dirname, '..', '..', 'assets/map/render.js'), 'utf8');
+  assert.match(render, /surfaceBelowFloor/, 'nothing explains an empty skin below the floor');
+  assert.match(render, /zoomForSurfaces/, 'the below-floor hint has no string');
+  // Read from the button: surface-tiles.js imports render.js, so render.js
+  // must not import it back (map-and-search.md §4.1).
+  assert.doesNotMatch(render, /from '\.\/surface-tiles\.js'/, 'render.js imports surface-tiles and closes a cycle');
+});

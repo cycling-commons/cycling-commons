@@ -2220,6 +2220,7 @@ map:
   map_overlays: 'Capas superpuestas'
   overlay_on: 'Activada'
   overlay_off: 'Desactivada'
+  zoom_for_surfaces: 'Acerca el mapa para ver los firmes'
   filters_head: 'Filtros · mostrar menos'
   best_season: 'Lo mejor · temporada'
   best_bike: 'Lo mejor · bici'

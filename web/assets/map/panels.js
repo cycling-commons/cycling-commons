@@ -26,7 +26,7 @@ import { map, satelliteConfigured } from './map-init.js';
 import { CATALOG, catalogUtility, catalogVotable, catalogModeration,
          active, layerByKey, mode, setMode,
          resolveInitialMode, MODE_LS_KEY } from './catalog.js';
-import { PREFS, addHeatmap, updateHeatFilter, layerCounts, updateCounts, render,
+import { PREFS, addHeatmap, updateHeatFilter, layerCounts, updateCounts, render, updateZoomHint,
          applyStaysAccessFilter, syncFacetChips, prefFilterEnabled, setPrefFilter, PREF_FILTER_KEY } from './render.js';
 import { mapToast, clearRevealPin } from './drawer.js';
 import { scenicGlyph, toiletGlyph } from './icons.js';
@@ -168,7 +168,10 @@ export function initLayerList(){
 
   if(surfBtn && surfaceTilesConfigured()){
     surfBtn.hidden=false;
-    surfBtn.onclick=()=>{ paintOverlay(surfBtn, setSurfaceTiles(!surfaceTilesVisible())); syncStudyGate(); syncLegend(); };
+    // updateZoomHint: this toggle does not re-render, and below the skin's own
+    // zoom floor the hint is the only thing that answers "I pressed it and
+    // nothing happened".
+    surfBtn.onclick=()=>{ paintOverlay(surfBtn, setSurfaceTiles(!surfaceTilesVisible())); syncStudyGate(); syncLegend(); updateZoomHint(); };
   }
 
   // Cycle-route network (routes-tiles.js). Same rules as the surface skin: off

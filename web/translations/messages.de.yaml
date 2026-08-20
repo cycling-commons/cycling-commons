@@ -1878,6 +1878,7 @@ map:
   map_overlays: 'Kartenüberlagerungen'
   overlay_on: 'An'
   overlay_off: 'Aus'
+  zoom_for_surfaces: 'Zoom hinein, um Belaege zu sehen'
   filters_head: 'Filter · weniger anzeigen'
   best_season: 'Das Beste · Saison'
   best_bike: 'Das Beste · Rad'

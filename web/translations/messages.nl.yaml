@@ -1875,6 +1875,7 @@ map:
   map_overlays: 'Kaartoverlays'
   overlay_on: 'Aan'
   overlay_off: 'Uit'
+  zoom_for_surfaces: 'Zoom in om wegdek te zien'
   filters_head: 'Filters · toon minder'
   best_season: 'Beste van · seizoen'
   best_bike: 'Beste van · fiets'

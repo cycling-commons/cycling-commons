@@ -938,7 +938,27 @@ Mechanism, one attribute end to end:
   (`web/assets/map/surface-tiles.js`, off by default behind the ▰ Surfaces
   control). It is deliberately not in `coverage_poi`: that index is for points,
   and lines need neither SQL nor dedupe, which is what makes country-scale
-  surface data cheap. `SURFACE_STYLE` is reused verbatim, so a tile line and a
+  surface data cheap.
+
+  **It is deliberately NOT scope-clipped, and it has a zoom floor instead**
+  (owner 2026-08-20). Clipping it to the active region would be the wrong
+  trade: a rider planning a Wallonia ride into Germany wants the German roads
+  without re-scoping the map, and the skin is reference context, like the
+  basemap. The real cost was weight. The artifact is built z8-13 with
+  tippecanoe's `--no-tile-size-limit`, so a low-zoom tile carries every
+  classified way under it: measured over Wallonia one tile is 1119 KB at z8,
+  455 KB at z9, 93 KB at z10, 41 KB at z11. A screen is roughly sixteen tiles
+  at any zoom, which made the default region view about 16 MB. The class
+  layers therefore carry `CLASSIFIED_MIN_ZOOM = 10`, which stops MapLibre
+  requesting the z8/z9 tiles at all, costs nothing legible (the layer's own
+  paint is 0.6 px at half opacity at z8) and matches the existing division of
+  labour: the gaps grid answers the planning-zoom question, roads answer the
+  riding-zoom one. Below the floor the on-map hint says "Zoom in to see road
+  surfaces", because a control a rider just pressed must never leave the map
+  unchanged and silent. Shrinking the artifact itself (a tile-size limit, or
+  dropping z8/z9 from the build) is the pipeline-side follow-up.
+
+  `SURFACE_STYLE` is reused verbatim, so a tile line and a
   curated item of the same class are the same colour — ours simply draws on
   top. The class set is the pipeline's
   (`pipeline/contract/coverage-contract.json` `surface.classes`), one layer per

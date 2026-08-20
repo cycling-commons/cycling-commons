@@ -850,10 +850,22 @@ export function updateZoomHint(){
   const pendingOn = !!pendingLayer && active.has(pendingLayer.key)
     && (pendingLayer.features || []).length > 0
     && !!curScope() && curScope().kind !== 'everywhere';
+  /* The surface skin has a zoom floor of its own (surface-tiles.js
+     CLASSIFIED_MIN_ZOOM): its z8 tiles are 1.1 MB apiece over Wallonia, and at
+     that zoom the layer draws 0.6 px at half opacity. A rider who switches it
+     on at planning zoom must not be shown an unchanged map by a control they
+     just pressed, so the map says which it is.
+
+     Read from the BUTTON, not from surface-tiles.js: that module imports this
+     one, and the entry's module rules forbid the cycle (map-and-search.md
+     §4.1). The button is the state's own mirror. */
+  const surfBtn = document.getElementById('ovSurface');
+  const surfaceBelowFloor = !!surfBtn && surfBtn.classList.contains('on') && z < 10;
   const pendingMsg = isCurator
     ? (I18N.pendingFollowsAreas || 'Pins waiting for review ignore the region filter: they follow the areas you moderate')
     : (I18N.pendingYoursAnywhere || 'Your pins waiting for review show wherever you added them, even outside this region');
   const msg = pendingOn ? pendingMsg
+    : surfaceBelowFloor ? (I18N.zoomForSurfaces || 'Zoom in to see road surfaces')
     : !anyCoverage ? ''
     : z < 6 ? (I18N.zoomForCoverage || 'Zoom in to see the full-coverage layers')
     : z < 9 ? (I18N.zoomForPlaces || 'Shown as density here, zoom in for individual places')
