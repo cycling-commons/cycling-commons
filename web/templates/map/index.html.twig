@@ -440,20 +440,30 @@
       </div>
       </div>
     </div>
-    <div class="map-ctrl" aria-label="{{ 'map.base_aria'|trans }}">
-      <button class="mc-toggle" id="mcToggle" type="button" aria-label="{{ 'map.base_layers_aria'|trans }}" aria-expanded="false">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">
-          <path d="M12 2.5 22 8 12 13.5 2 8z"/><path d="M2.5 12 12 17 21.5 12"/><path d="M2.5 16 12 21 21.5 16"/>
-        </svg>
-      </button>
-      <div class="mc-seg" id="baseSeg">
-        <button class="on" data-b="map">{{ 'map.base_map'|trans }}</button>
-        <button data-b="satellite">{{ 'map.base_satellite'|trans }}</button>
+    {# Top-right: two glass icon buttons and nothing else. The base picker is
+       a flyout rather than an always-open segment, because a rider changes
+       base map rarely and looks at the map constantly. The flyout is a SIBLING
+       of its button, never a child: a <button> inside a <button> is un-nested
+       by the browser and the menu ends up outside the control. #}
+    <div class="tr" aria-label="{{ 'map.base_aria'|trans }}">
+      <div class="trw">
+        <button class="trb" id="tr-base" type="button" aria-label="{{ 'map.base_layers_aria'|trans }}" aria-haspopup="menu" aria-expanded="false" aria-controls="fly-base">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2Z"/><path d="M9 4v14M15 6v14"/></svg>
+        </button>
+        {# #baseSeg keeps its id and its data-b buttons: panels.js binds them
+           and hides the whole picker when there is no satellite layer. #}
+        <div class="fly" id="fly-base" role="menu">
+          <div id="baseSeg">
+            <button class="on" type="button" role="menuitem" data-b="map">{{ 'map.base_map'|trans }}</button>
+            <button type="button" role="menuitem" data-b="satellite">{{ 'map.base_satellite'|trans }}</button>
+          </div>
+        </div>
       </div>
-      <button class="mc-ov" id="ovStreet"><span class="mc-ic">📷</span>{{ 'map.street_level'|trans }}</button>
-      {# Surfaces and Cycle routes used to sit here. They are layers, so they
-         moved into the Layers panel's MAP OVERLAYS group (Task 4 of the
-         icon-rail plan); their ids did not change. #}
+      {# #ovStreet keeps its id: mapillary.js initStreetToggle() binds it, and
+         marks it .mc-off when there is no Mapillary token. #}
+      <button class="trb" id="ovStreet" type="button" aria-label="{{ 'map.street_level'|trans }}" data-tip="{{ 'map.street_level'|trans }}">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="7" r="2.6"/><path d="M12 10v5m0 0-3 6m3-6 3 6M6 12l6-1.5L18 12"/></svg>
+      </button>
     </div>
     <a class="contrib-fab" href="{{ path('contribute') }}" aria-label="{{ 'map.contribute_aria'|trans }}"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></a>
     <aside class="cc-drawer" id="drawer" tabindex="-1" aria-hidden="true" aria-label="{{ 'map.drawer_aria'|trans }}">

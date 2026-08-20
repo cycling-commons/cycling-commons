@@ -217,3 +217,31 @@ test('the overlays left the top-right corner', () => {
   assert.ok(!corner.includes('ovSurface'), 'the Surfaces toggle is still in the top-right corner');
   assert.ok(!corner.includes('ovRoutes'), 'the Routes toggle is still in the top-right corner');
 });
+
+test('the top-right corner is two glass icon buttons', () => {
+  assert.ok(!twig.includes('class="map-ctrl"'), 'the old .map-ctrl panel is still in the template');
+  assert.ok(/<div class="tr"/.test(twig), 'no .tr icon stack in the top-right corner');
+  assert.ok(twig.includes('id="tr-base"'), 'no base-map button');
+  assert.ok(twig.includes('id="fly-base"'), 'no base-map flyout');
+  // The ids the JS binds do NOT move: panels.js drives #baseSeg, mapillary.js
+  // drives #ovStreet.
+  assert.ok(twig.includes('id="baseSeg"'), '#baseSeg left the page; panels.js binds it');
+  assert.ok(twig.includes('id="ovStreet"'), '#ovStreet left the page; mapillary.js binds it');
+});
+
+test('the base flyout is a sibling of its button, never a child', () => {
+  // A <button> may not contain another <button>: the browser un-nests it and
+  // the flyout ends up outside the control, which is exactly the bug the
+  // prototype hit first.
+  const at = twig.indexOf('id="tr-base"');
+  const tail = twig.slice(at);
+  const closeBtn = tail.indexOf('</button>');
+  const flyAt = tail.indexOf('id="fly-base"');
+  assert.ok(flyAt > closeBtn, 'the base flyout is nested inside the base button');
+});
+
+test('the flyout is opened by initMapCtrl, not by the old collapse toggle', () => {
+  const panels = read('assets/map/panels.js');
+  assert.ok(!panels.includes("getElementById('mcToggle')"), 'panels.js still drives the retired .map-ctrl collapse');
+  assert.ok(panels.includes("getElementById('fly-base')"), 'panels.js never binds the base flyout');
+});

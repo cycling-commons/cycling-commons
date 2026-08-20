@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
 /* Every panel and control around the map: the layer list and its select-all, the
-   base Map/Satellite segmented control, the collapsible map-ctrl and legend, the
+   base Map/Satellite picker and its top-right flyout, the collapsible legend, the
    mobile filters sheet and burger nav, the breakpoint resize, the Curated
    best-of facets, and all the chip groups (discipline, preference prefilter,
    "set my area" prompt, climb/stay filters, heat toggle, season).
@@ -100,8 +100,11 @@ export function initLayerList(){
   // than no control: it reads as broken rather than absent. The whole segment
   // goes, because "Map" alone is not a choice.
   if(!map.getLayer('satellite')){
+    // The whole picker goes, not just the segment: with nothing to choose
+    // between, its button would open an empty menu.
     const seg=document.getElementById('baseSeg');
-    if(seg) seg.hidden=true;
+    const picker=seg && seg.closest('.trw');
+    if(picker) picker.hidden=true; else if(seg) seg.hidden=true;
   }
   // Road-surface reference skin (surface-tiles.js). Off by default and only
   // offered when an artifact exists; SURFACE_TILES_ON is false when
@@ -202,20 +205,22 @@ export function initLayerList(){
   });
 }
 
+/* The base-map picker: one icon button in the top-right corner and the small
+   flyout it opens. A flyout rather than an always-open segmented control
+   because a rider changes base map rarely and looks at the map constantly.
+
+   Closing rules are the ordinary ones a menu owes: a choice closes it, a click
+   anywhere else closes it, Escape closes it. The buttons inside are the SAME
+   #baseSeg buttons initLayerList() already binds - this only owns the opening
+   and closing. */
 export function initMapCtrl(){
-  // mobile: the control collapses to a small layers icon — tap to expand, and
-  // collapse again after a choice is made
-  const mcToggle=document.getElementById('mcToggle');
-  const mapCtrl=document.querySelector('.map-ctrl');
-  if(mcToggle && mapCtrl){
-    mcToggle.onclick=()=>{
-      const open=mapCtrl.classList.toggle('open');
-      mcToggle.setAttribute('aria-expanded', open?'true':'false');
-    };
-    mapCtrl.querySelectorAll('#baseSeg button, #ovStreet').forEach(b=>b.addEventListener('click',()=>{
-      if(window.innerWidth<=760){ mapCtrl.classList.remove('open'); mcToggle.setAttribute('aria-expanded','false'); }
-    }));
-  }
+  const btn=document.getElementById('tr-base'), fly=document.getElementById('fly-base');
+  if(!btn || !fly) return;
+  const setOpen=o=>{ fly.classList.toggle('open', o); btn.setAttribute('aria-expanded', o?'true':'false'); };
+  btn.onclick=e=>{ e.stopPropagation(); setOpen(!fly.classList.contains('open')); };
+  fly.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>setOpen(false)));
+  document.addEventListener('click', e=>{ if(!e.target.closest('.trw')) setOpen(false); });
+  document.addEventListener('keydown', e=>{ if(e.key==='Escape') setOpen(false); });
 }
 
 export function initRailChrome(){
