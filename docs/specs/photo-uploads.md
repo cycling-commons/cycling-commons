@@ -100,9 +100,10 @@ context). Media licensing context lives in the site licences
   that the signing region is "ignored by MinIO, accepted by Hetzner"). One
   code path runs in **dev, staging and prod**; only `when@test` differs, using
   the in-memory adapter. This is deliberate and load-bearing: this project has
-  a real staging environment but **no `when@staging` block anywhere in
-  `config/`**, so anything gated on `when@prod` silently falls back to the
-  base configuration on staging. Env-driven configuration has no such gap, and
+  a real staging environment, and every `when@prod` block has to be **mirrored
+  by hand into a `when@staging` block** (Symfony has no `when@prod|staging`),
+  so any prod-gated setting that nobody remembers to mirror silently falls back
+  to the base configuration on staging. Env-driven configuration has no such gap, and
   it means development exercises the same S3 path production does rather than
   a local-filesystem adapter that fails differently.
 - **Dev** points at the dev stack's MinIO (compose profile `storage`) by

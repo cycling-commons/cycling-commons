@@ -8,3 +8,10 @@ when@prod:
     framework:
         router:
             strict_requirements: null
+
+# Staging is a deployed environment and must behave like prod. Symfony has no
+# `when@prod|staging`, so every prod block below is mirrored deliberately.
+when@staging:
+    framework:
+        router:
+            strict_requirements: null

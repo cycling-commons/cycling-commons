@@ -9,3 +9,11 @@ when@prod:
     framework:
         asset_mapper:
             missing_import_mode: warn
+
+# Staging is a deployed environment and must behave like prod. Symfony has no
+# `when@prod|staging`, so the prod block above is mirrored deliberately —
+# otherwise `strict` makes a missing import fail the asset compile at deploy.
+when@staging:
+    framework:
+        asset_mapper:
+            missing_import_mode: warn
