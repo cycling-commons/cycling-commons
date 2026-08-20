@@ -8,8 +8,8 @@ namespace App\Tests\Media;
 
 use App\Media\ContinentResolver;
 use App\Media\MediaStorage;
-use App\Media\ShardUnavailable;
 use App\Media\ProcessedPhoto;
+use App\Media\ShardUnavailable;
 use League\Flysystem\FilesystemOperator;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
