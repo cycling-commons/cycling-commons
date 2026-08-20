@@ -263,3 +263,22 @@ test('the pill and the rail dot both come from one real tally', () => {
   assert.ok(panels.includes("'#filters .f-optin .chip'"), 'the reset does not clear the f-optin groups');
   assert.ok(panels.includes('setFilterDot'), 'the rail dot is never driven');
 });
+
+test('the ride tools panel holds the things a rider does with a ride', () => {
+  const s = panelSrc('p-tools');
+  assert.ok(s.includes('map.ride_check_intro'), 'the ride check has no one-line explainer');
+  assert.ok(s.includes("path('scout_review')"), 'no scout row in the tools panel');
+  assert.ok(s.includes('id="addClimbHere"'), 'the contribute row left the tools panel');
+  // render.js writes this element on every pass; the id must survive the move.
+  assert.ok(s.includes('id="count"'), 'the places count did not move into the tools panel');
+  assert.ok(!twig.includes('class="rail-foot"'), 'the old .rail-foot is still in the template');
+});
+
+test('the zoom hint stays on the map, where a rider zooming can see it', () => {
+  // It explains why the map is empty at low zoom, so it has to be readable
+  // WHILE zooming - which the drawer, closed by default, is not.
+  const tools = panelSrc('p-tools');
+  assert.ok(!tools.includes('id="zoomHint"'), 'the zoom hint is buried in the drawer');
+  const stage = twig.slice(twig.indexOf('<main class="map-wrap">'), twig.indexOf('</main>'));
+  assert.ok(stage.includes('id="zoomHint"'), 'the zoom hint is not on the map stage');
+});

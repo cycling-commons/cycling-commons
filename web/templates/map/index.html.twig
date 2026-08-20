@@ -295,6 +295,10 @@
          a user requirement and must stay visible. #}
       <div class="grp cc-ridecheck">
         <h3>{{ 'ride_check.title'|trans }}</h3>
+        {# What the tool IS, before what it costs. The notice below is a
+           requirement and stays; it answers a question a rider only asks once
+           they already know what they would be uploading. #}
+        <div class="hint" style="margin-top:0">{{ 'map.ride_check_intro'|trans }}</div>
         <div class="hint">{{ 'ride_check.hint'|trans }}</div>
         <input type="file" id="rcFile" accept=".gpx" hidden>
         <div class="cc-ride-row">
@@ -313,6 +317,17 @@
         </div>
         <div class="cc-ride-status" id="rcStatus" role="status" hidden></div>
         <p class="cc-ride-note">{{ 'ride_check.notice'|trans }}</p>
+      </div>
+
+      {# Scout: the same ride file, read the other way round. Ride check asks
+         what is already near a route; scout turns what a rider SAW on it into
+         submissions. Riders only, like the two groups around it, because
+         /scout/review is ROLE_USER and a link that lands on a login wall is
+         worse than no link. #}
+      <div class="grp">
+        <h3>{{ 'map.scout_heading'|trans }}</h3>
+        <a class="cc-addclimb-go" href="{{ path('scout_review') }}">{{ 'map.scout_review'|trans }}</a>
+        <p class="cc-addclimb-note">{{ 'map.scout_hint'|trans }}</p>
       </div>
 
       {# "Add a climb here" (owner asked 2026-08-14: "how do we add a new climb
@@ -335,26 +350,25 @@
         <p class="cc-addclimb-note">{{ 'map.add_climb_note'|trans }}</p>
       </div>
       {% endif %}
+
+      {# Anything that is not a climb goes through the wizard, which the map's
+         own orange Contribute button opens. Said here because this is the
+         panel a rider opens looking for "how do I add something". #}
+      <div class="grp">
+        <h3>{{ 'map.contribute'|trans }}</h3>
+        <a class="cc-addclimb-go" href="{{ path('contribute') }}">{{ 'map.contribute'|trans }}</a>
+        <p class="cc-addclimb-note">{{ 'map.contribute_hint'|trans }}</p>
+      </div>
+
+      {# What the map is drawing right now. render.js rewrites #count on every
+         pass, so the id travels with the element. #}
+      <div class="grp">
+        <h3>{{ 'map.on_the_map'|trans }}</h3>
+        <div class="res"><b id="count">0</b> {{ 'map.places_shown'|trans }}</div>
+      </div>
       </section>
 
       </div>
-    {# Drawer foot: what the map is currently drawing, and which build drew it.
-       Outside the panels on purpose - it answers the same question whichever
-       section is open. Task 7 of the icon-rail plan re-homes the count. #}
-    <div class="dwr-foot">
-      <div class="res"><b id="count">0</b> {{ 'map.places_shown'|trans }}</div>
-      {# Why the map can be empty at low zoom (owner-reported 2026-08-14, twice,
-         once for South Africa and once for Northern Cape). The coverage
-         TILESET starts at z6 and its individual icons at z9, so below those the
-         map draws nothing at all — correctly, and silently, which is
-         indistinguishable from missing data. Two reports and a long dig said
-         that silence is the bug. Filled by render.js on every zoom. #}
-      <div class="zoom-hint" id="zoomHint" hidden></div>
-    </div>
-    {# Which data builds THIS page is actually drawing (owner 2026-08-13):
-       catalog version tag + the artifact stamps parsed from the loaded URLs.
-       Splits every "I don't see X" report into stale-cache vs server in one
-       glance — a rider screenshots the line, we compare with the bucket. #}
     <div class="data-versions" id="dataVersions" title="{{ 'map.data_versions_title'|trans }}"></div>
     </div>
   </aside>
@@ -471,6 +485,15 @@
        answer is visible whether or not the drawer is open. panels.js fills it
        from render.js's cc:filters event; the count is a real tally from the
        render pass, never an estimate. #}
+    {# Why the map can be empty at low zoom (owner-reported 2026-08-14, twice,
+       once for South Africa and once for Northern Cape). The coverage TILESET
+       starts at z6 and its individual icons at z9, so below those the map
+       draws nothing at all - correctly, and silently, which is
+       indistinguishable from missing data. It sits ON the map, beside the zoom
+       controls, because it has to be readable WHILE a rider is zooming; the
+       drawer is closed by default and would never be. Filled by render.js on
+       every zoom. #}
+    <div class="zoom-hint" id="zoomHint" hidden></div>
     <div class="fpill" id="fpill" role="status" hidden>
       <span id="fpillMsg"></span>
       <button type="button" id="fpillReset">{{ 'map.filters_show_all'|trans }}</button>

@@ -143,9 +143,9 @@
   .panel.on{display:block}
   .dwr-foot{flex:none;padding:.9rem 1.1rem;border-top:1px solid rgb(var(--chrome-fg) / .14);
     display:flex;align-items:center;justify-content:space-between;gap:.6rem;flex-wrap:wrap}
-  .dwr-foot .res{font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;color:rgb(var(--chrome-fg) / .7)}
-  .dwr-foot .res b{color:var(--trail);font-size:1.15rem}
-  .dwr-foot .zoom-hint{flex:0 0 100%;font-family:var(--mono);font-size:.62rem;line-height:1.35;letter-spacing:.04em;color:var(--chrome-head)}
+  /* The places count reads as a headline number wherever it sits. */
+  .panel .res{font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;color:rgb(var(--chrome-fg) / .7)}
+  .panel .res b{color:var(--trail);font-size:1.15rem}
 
   /* Zebra bands (owner 2026-08-20): each group is a full-bleed band, every
      second one on a whisper of fg tint, with a hairline between consecutive
@@ -671,6 +671,14 @@
     background:var(--trail);color:var(--ink);border:none;border-radius:20px;padding:.35rem .7rem;cursor:pointer;white-space:nowrap}
   .fpill button:hover{background:#ff703d}
   .fpill button:focus-visible{outline:2px solid var(--paper);outline-offset:2px}
+
+  /* The zoom hint, on the map beside the zoom controls. Glass like the other
+     on-map badges, and left-anchored clear of MapLibre's bottom-left stack. */
+  .zoom-hint{position:absolute;left:1rem;bottom:5.6rem;z-index:1000;max-width:min(20rem,60vw);
+    background:rgb(var(--chrome-glass) / .92);color:var(--chrome-fg-solid);font-family:var(--mono);
+    font-size:.62rem;line-height:1.4;letter-spacing:.04em;padding:.4rem .6rem;border-radius:6px;
+    pointer-events:none;box-shadow:0 2px 6px -2px rgba(0,0,0,.5)}
+  .zoom-hint[hidden]{display:none}
 
   .map-top{position:absolute;top:1.2rem;left:1.2rem;z-index:1000;background:rgb(var(--paper-glass) / .95);border-radius:8px;padding:.7rem 1rem}
   .map-top .rg{font-family:var(--serif);font-weight:600;font-size:1.05rem}
