@@ -1323,8 +1323,10 @@
 
   /* Route domain phase 4 (spec §8): Curated best-of season/bike pickers, in the
      "View mode" .grp on the dark rail — light cream fields, matching .cc-rc select. */
-  .best-facets{display:flex;gap:.6rem;margin-top:.6rem}
+  .best-facets{margin-top:.2rem}
   .best-facets[hidden]{display:none}
+  .best-facets .fh{margin-top:.8rem}
+  .bf-row{display:flex;gap:.6rem}
   .best-facets label{flex:1;font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;color:rgb(var(--chrome-fg) / .68);display:flex;flex-direction:column;gap:.25rem}
   .best-facets select{font-family:var(--sans);font-size:.82rem;color:var(--ink);background:var(--paper);border:1px solid rgb(var(--chrome-fg) / .25);border-radius:5px;padding:.35rem .45rem}
   .best-facets select:focus{outline:none;border-color:var(--trail)}

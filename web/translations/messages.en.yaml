@@ -2214,6 +2214,8 @@ map:
   map_overlays_hint: 'Reference skins drawn under the places, from their own tile builds.'
   filters_head: 'Filters · narrow what shows'
   filters_hint: 'A filter that is off hides matching places from every layer above. The map always says when that happens.'
+  best_facets_head: 'Best of · season and bike'
+  best_facets_hint: 'Best of ranks riders'' picks for one season and one bike. The season starts on the one we are in today, and the bike on your profile default. Change either for this visit.'
   filters_hide: 'Filters are hiding {x} places'
   filters_hide_one: 'Filters are hiding 1 place'
   filters_narrowing: 'Filters are narrowing this map'

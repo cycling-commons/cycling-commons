@@ -180,7 +180,16 @@ by default and a rider asks for one section at a time.
     results row (§4.5), and the region grid and My area sit below them.
   - **Layers & filters** is one panel because view mode is a filter too (owner:
     "people will not understand why they are missing data"). Order: view mode,
-    the layer list, MAP OVERLAYS, then FILTERS under mono sub-headers.
+    the layer list, MAP OVERLAYS, then FILTERS under mono sub-headers. FILTERS
+    leads with the **Best-of season and bike** pickers, which used to sit in
+    the View mode band: they narrow harder than any chip under them, and up
+    there nobody found them - the map subtitle said "Best of · Summer · Road"
+    while the only bike control a rider could see was the profile chip
+    (2026-08-20). Their hint says where the season came from, because nothing
+    chose it: it is the season we are in today. They stay hidden outside Best
+    of, the only mode they change anything in. The heatmap's own season chips
+    stay LAST in the block, as far from them as it allows: two controls called
+    "season" must never sit side by side.
   - **Ride tools** holds ride check, scout, contribute and the places count.
     The low-zoom/curator-scope hint stays ON the map instead, beside the zoom
     controls - it has to be readable while a rider is zooming, and the drawer

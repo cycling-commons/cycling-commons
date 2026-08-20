@@ -356,3 +356,23 @@ test('curator mode is a curator thing, and each audience gets its own sentence',
   assert.ok(controller.includes("'pendingYoursAnywhere' =>"),
     'MapController::mapI18n() does not emit the rider string');
 });
+
+test('the best-of season and bike pickers live with the other filters', () => {
+  // They were in the View mode band: the subtitle read "Best of · Summer ·
+  // Road" and the only bike control a rider could find was the profile chip
+  // further down (owner-reported 2026-08-20). They narrow what shows, so they
+  // belong under FILTERS, and first, because they narrow harder than any chip
+  // under them.
+  const s = panelSrc('p-layers');
+  const filters = s.indexOf('id="filters"');
+  const facets = s.indexOf('id="bestFacets"');
+  const surface = s.indexOf('id="sqf"');
+  assert.ok(facets > filters, 'the best-of facets are outside the filters block');
+  assert.ok(facets < surface, 'the best-of facets are not first inside the filters block');
+  // The season is not a choice anybody made: it is today's. Say so.
+  assert.ok(s.includes('map.best_facets_hint'), 'nothing explains where the season came from');
+  // Two "season" controls in one block, so they must sit as far apart as it
+  // allows: the heatmap's own chips stay last.
+  assert.ok(s.indexOf('id="season"') > s.indexOf('id="accessf"'),
+    'the heatmap season chips moved next to the best-of season picker');
+});

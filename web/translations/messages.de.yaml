@@ -1881,6 +1881,8 @@ map:
   map_overlays_hint: 'Referenzflächen unter den Orten, aus ihren eigenen Kachel-Builds.'
   filters_head: 'Filter · weniger anzeigen'
   filters_hint: 'Ein ausgeschalteter Filter blendet passende Orte in allen Ebenen darüber aus. Die Karte sagt immer, wenn das passiert.'
+  best_facets_head: 'Das Beste · Saison und Rad'
+  best_facets_hint: 'Das Beste ordnet die Auswahl der Fahrenden nach einer Saison und einem Rad. Die Saison startet auf der von heute, das Rad auf deiner Profilvorgabe. Beides lässt sich für diesen Besuch ändern.'
   filters_hide: 'Filter verbergen {x} Orte'
   filters_hide_one: 'Filter verbergen 1 Ort'
   filters_narrowing: 'Filter schränken diese Karte ein'

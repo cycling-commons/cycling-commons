@@ -1878,6 +1878,8 @@ map:
   map_overlays_hint: 'Referentielagen onder de plaatsen, uit hun eigen tegelbuilds.'
   filters_head: 'Filters · toon minder'
   filters_hint: 'Een uitgezet filter verbergt bijpassende plaatsen in alle lagen hierboven. De kaart zegt het altijd wanneer dat gebeurt.'
+  best_facets_head: 'Beste van · seizoen en fiets'
+  best_facets_hint: 'Beste van rangschikt de keuzes van fietsers voor één seizoen en één fiets. Het seizoen begint op het seizoen van vandaag en de fiets op je profielkeuze. Verander gerust allebei voor dit bezoek.'
   filters_hide: 'Filters verbergen {x} plaatsen'
   filters_hide_one: 'Filters verbergen 1 plaats'
   filters_narrowing: 'Filters beperken deze kaart'
