@@ -81,18 +81,20 @@ test('the classified skin has a zoom floor, and the map says so below it', () =>
   // exist, which is silent rather than loud.
   assert.equal(contract.surface.minZoom, 10,
     'the surface build no longer starts where the client does');
-  // A control that changes nothing when pressed has to say why.
+  /* A control that changes nothing when pressed has to say why, AND has to
+     say it where the press happened. It used to say it in the corner of the
+     map, which nobody read (owner-reported 2026-08-20: "nobody is gone see
+     that"). Two channels now, both at the control: the row's own state column
+     carries the standing reason, and the press itself raises a toast. */
+  const panels = fs.readFileSync(path.join(__dirname, '..', '..', 'assets/map/panels.js'), 'utf8');
+  assert.match(panels, /const waiting = on && btn\.id==='ovSurface' && map\.getZoom\(\) < CLASSIFIED_MIN_ZOOM;/,
+    'the overlay row has no below-the-floor state');
+  assert.match(panels, /mapToast\(I18N\.zoomForSurfaces/, 'the press raises no toast');
+  // The floor is a zoom condition, so the row follows the zoom too, not only
+  // the press.
+  assert.match(panels, /map\.on\('zoomend', \(\)=>paintOverlay\(surfBtn/,
+    'the row does not follow the zoom');
   const render = fs.readFileSync(path.join(__dirname, '..', '..', 'assets/map/render.js'), 'utf8');
-  assert.match(render, /surfaceBelowFloor/, 'nothing explains an empty skin below the floor');
-  assert.match(render, /zoomForSurfaces/, 'the below-floor hint has no string');
-  // Read from the button: surface-tiles.js imports render.js, so render.js
-  // must not import it back (map-and-search.md §4.1).
-  assert.doesNotMatch(render, /from '\.\/surface-tiles\.js'/, 'render.js imports surface-tiles and closes a cycle');
-  // AHEAD of the pending line. Both are true at once for anyone with something
-  // waiting and a region scope, which is most curators and many riders, and
-  // the pending line was winning every time (owner-reported 2026-08-20: "I do
-  // not see that"). The pending line is a standing explanation; this one
-  // answers a control pressed a second ago and clears itself on zoom.
-  assert.match(render, /const msg = surfaceBelowFloor \?/,
-    'the pending hint outranks the one the rider just asked for');
+  assert.doesNotMatch(render, /surfaceBelowFloor/,
+    'the on-map hint still competes with the two channels at the control');
 });

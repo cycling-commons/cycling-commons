@@ -489,6 +489,9 @@ final class MapController extends AbstractController
             // The surface skin's own zoom floor, said on the map: its low-zoom
             // tiles are megabytes apiece and it draws sub-pixel there.
             'zoomForSurfaces' => $t->trans('map.zoom_for_surfaces'),
+            // The surface row's third state: on, but zoomed out past the
+            // skin's floor, so the map has not changed yet.
+            'overlayZoomIn' => $t->trans('map.overlay_zoom_in'),
             'pendingReview' => $t->trans('map.pending_review'),
             'login' => $t->trans('nav.login'),
             // Search scope widening (map-and-search.md §4.5 Phase 2):

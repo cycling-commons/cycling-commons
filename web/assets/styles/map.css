@@ -181,6 +181,9 @@
      .layer.off above. */
   .ov-row{width:100%;background:none;border:none;color:inherit;font:inherit;text-align:left}
   .ov-row:not(.on) .sw,.ov-row:not(.on) .nm{opacity:.45}
+  /* On, but nothing on screen yet: the state column says why, in the accent
+     so it reads as a prompt rather than as a count. */
+  .ov-row .ct.ct-wait{color:var(--trail)}
   .ov-row:focus-visible{outline:2px solid var(--trail);outline-offset:2px;border-radius:5px}
 
   /* ---------- ACCOUNT + LANGUAGE CHIPS ----------

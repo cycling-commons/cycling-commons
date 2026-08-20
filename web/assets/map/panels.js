@@ -26,7 +26,7 @@ import { map, satelliteConfigured } from './map-init.js';
 import { CATALOG, catalogUtility, catalogVotable, catalogModeration,
          active, layerByKey, mode, setMode,
          resolveInitialMode, MODE_LS_KEY } from './catalog.js';
-import { PREFS, addHeatmap, updateHeatFilter, layerCounts, updateCounts, render, updateZoomHint,
+import { PREFS, addHeatmap, updateHeatFilter, layerCounts, updateCounts, render,
          applyStaysAccessFilter, syncFacetChips, prefFilterEnabled, setPrefFilter, PREF_FILTER_KEY } from './render.js';
 import { mapToast, clearRevealPin } from './drawer.js';
 import { scenicGlyph, toiletGlyph } from './icons.js';
@@ -34,7 +34,7 @@ import { refilterClusters, updateConfMarkers } from './osm-pools.js';
 import { curScope, inScope } from './scope-ui.js';
 import { surfaceTilesConfigured, setSurfaceTiles, surfaceTilesVisible,
          toggleSurfaceClass, setStudyMode, studyModeOn,
-         setGapsGrid, gapsGridOn } from './surface-tiles.js';
+         setGapsGrid, gapsGridOn, CLASSIFIED_MIN_ZOOM } from './surface-tiles.js';
 import { routesTilesConfigured, setRoutesTiles, routesTilesVisible } from './routes-tiles.js';
 import { setFilterDot } from './shell.js';
 
@@ -137,7 +137,16 @@ export function initLayerList(){
     btn.classList.toggle('on', on);
     btn.setAttribute('aria-pressed', on?'true':'false');
     const ct=btn.querySelector('.ct');
-    if(ct) ct.textContent = on ? (I18N.overlayOn||'On') : (I18N.overlayOff||'Off');
+    if(!ct) return;
+    /* A THIRD state for the surface row: switched on, but zoomed out past the
+       skin's own floor, so the map has not changed and will not until the
+       rider zooms. The row is where they pressed, so the row is where it says
+       so - the same job the shown/total count does for a layer that is on and
+       drawing nothing. */
+    const waiting = on && btn.id==='ovSurface' && map.getZoom() < CLASSIFIED_MIN_ZOOM;
+    ct.classList.toggle('ct-wait', waiting);
+    ct.textContent = waiting ? (I18N.overlayZoomIn||'Zoom in')
+      : on ? (I18N.overlayOn||'On') : (I18N.overlayOff||'Off');
   };
 
   /* Study mode strips the basemap to leave the surface lines alone on a pale
@@ -168,10 +177,23 @@ export function initLayerList(){
 
   if(surfBtn && surfaceTilesConfigured()){
     surfBtn.hidden=false;
-    // updateZoomHint: this toggle does not re-render, and below the skin's own
-    // zoom floor the hint is the only thing that answers "I pressed it and
-    // nothing happened".
-    surfBtn.onclick=()=>{ paintOverlay(surfBtn, setSurfaceTiles(!surfaceTilesVisible())); syncStudyGate(); syncLegend(); updateZoomHint(); };
+    surfBtn.onclick=()=>{
+      const on=setSurfaceTiles(!surfaceTilesVisible());
+      paintOverlay(surfBtn, on);
+      /* Switched on from too far out, the map does not change at all, and a
+         control that answers a press with nothing is the one thing this map
+         refuses to do. The row now carries the reason, but the row is a small
+         word in a panel the rider is already looking past - so the press
+         itself also gets a toast, once, at the moment it happens. */
+      if(on && map.getZoom() < CLASSIFIED_MIN_ZOOM){
+        mapToast(I18N.zoomForSurfaces||'Zoom in to see road surfaces');
+      }
+      syncStudyGate(); syncLegend();
+    };
+    // The floor is a zoom condition, so the row has to follow the zoom, not
+    // just the press: a rider who zooms out with the skin on gets the same
+    // answer without touching anything.
+    map.on('zoomend', ()=>paintOverlay(surfBtn, surfaceTilesVisible()));
   }
 
   // Cycle-route network (routes-tiles.js). Same rules as the surface skin: off

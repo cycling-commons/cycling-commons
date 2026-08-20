@@ -100,7 +100,7 @@ const TODO_MIN_ZOOM = 11;
    NOT a scope clip. The skin deliberately keeps drawing across a border: a
    rider planning a Wallonia ride into Germany wants the German roads without
    having to re-scope the map (owner, same report). */
-const CLASSIFIED_MIN_ZOOM = 10;
+export const CLASSIFIED_MIN_ZOOM = 10;
 export const SURFACE_GAPS_SOURCE = 'surface-gaps';
 const GAPS_FILL = 'surfgaps-fill';
 const GAPS_LINE = 'surfgaps-line';

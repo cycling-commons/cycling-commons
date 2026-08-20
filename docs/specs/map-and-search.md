@@ -953,13 +953,19 @@ Mechanism, one attribute end to end:
   requesting the z8/z9 tiles at all, costs nothing legible (the layer's own
   paint is 0.6 px at half opacity at z8) and matches the existing division of
   labour: the gaps grid answers the planning-zoom question, roads answer the
-  riding-zoom one. Below the floor the on-map hint says "Zoom in to see road
-  surfaces", because a control a rider just pressed must never leave the map
-  unchanged and silent. That line is ranked ABOVE the pending-review one: both
-  are true at once for anyone with something waiting and a region scope, and
-  the pending line was winning every time, so the surface answer never
-  appeared. The pending line is a standing explanation and can wait; this one
-  clears itself on the next zoom.
+  riding-zoom one.
+
+  **Below the floor the CONTROL says so, not the map.** A control a rider just
+  pressed must never leave the map unchanged and silent, but the answer has to
+  appear where the press happened: it was tried in the map's own corner hint
+  first, and nobody read it (owner 2026-08-20: "nobody is gone see that"). Two
+  channels, both at the control. The Surfaces row's state column takes a third
+  value beside On and Off - "Zoom in", in the accent so it reads as a prompt
+  rather than a count - and it follows the ZOOM as well as the press, so a
+  rider who zooms out with the skin already on gets the same answer without
+  touching anything. The press itself also raises a toast, once. The map's
+  corner hint keeps out of it and goes back to the pending-review line, which
+  the surface message had been displacing.
 
   **The build carries the same floor** (`surface.minZoom: 10` in
   `pipeline/contract/coverage-contract.json`, raised from 8 on 2026-08-20), so

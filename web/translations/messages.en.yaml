@@ -2211,6 +2211,7 @@ map:
   map_overlays: 'Map overlays'
   overlay_on: 'On'
   overlay_off: 'Off'
+  overlay_zoom_in: 'Zoom in'
   zoom_for_surfaces: 'Zoom in to see road surfaces'
   filters_head: 'Filters · narrow what shows'
   best_season: 'Best of · season'

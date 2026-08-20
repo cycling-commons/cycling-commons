@@ -1875,6 +1875,7 @@ map:
   map_overlays: 'Calques de la carte'
   overlay_on: 'Activé'
   overlay_off: 'Désactivé'
+  overlay_zoom_in: 'Zoomez'
   zoom_for_surfaces: 'Zoomez pour voir les revêtements'
   filters_head: 'Filtres · réduire ce qui s''affiche'
   best_season: 'Meilleur de · saison'
