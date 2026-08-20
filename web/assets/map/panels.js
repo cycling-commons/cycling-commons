@@ -313,8 +313,8 @@ export function initRailChrome(){
     lgToggle.onclick=()=>{ legend.classList.toggle('collapsed'); sync(); };
   }
 
-  // mobile: top-bar nav hamburger -> dropdown
-  const railHead=document.querySelector('.rail-head'), railBurger=document.getElementById('railBurger');
+  // Site nav + language + account: the ≡ button opens the rail's bottom flyout.
+  const railHead=document.getElementById('railHead'), railBurger=document.getElementById('railBurger');
   if(railHead && railBurger){
     railBurger.onclick=e=>{ e.stopPropagation(); const o=railHead.classList.toggle('nav-open'); railBurger.setAttribute('aria-expanded',o?'true':'false'); };
     document.addEventListener('click',e=>{ if(railHead.classList.contains('nav-open') && !railHead.contains(e.target)){ railHead.classList.remove('nav-open'); railBurger.setAttribute('aria-expanded','false'); } });

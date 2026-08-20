@@ -51,72 +51,65 @@
 </head>
 <body>
 <div class="app">
-  <!-- ============ FILTER RAIL ============ -->
-  <aside class="rail">
-    <div class="rail-head">
-      <div class="rail-brandrow">
-        <a class="brand" href="{{ path('home') }}" style="flex:none"><img src="{{ asset('brand/logo-nav.svg') }}" alt="Cycling Commons" style="height:1.8rem;display:block"></a>
-        {% include 'partials/_lang_menu.html.twig' %}
-      </div>
-      <div class="co" id="regionCoords">{{ 'map.coords'|trans }}</div>
-      <nav class="rail-nav" id="railNav"><a href="{{ path('map') }}" class="on">{{ 'nav.map'|trans }}</a><a href="{{ path('regions') }}">{{ 'nav.regions'|trans }}</a><a href="{{ path('vote') }}">{{ 'nav.vote'|trans }}</a><a href="{{ path('developers') }}">{{ 'nav.developers'|trans }}</a><a href="{{ path('about') }}">{{ 'nav.about'|trans }}</a>{% if app.user %}{% include 'partials/_account_chip.html.twig' %}{% else %}<a href="{{ path('login') }}">{{ 'nav.account'|trans }}</a>{% endif %}</nav>
-      <button class="rail-burger" id="railBurger" type="button" aria-label="{{ 'map.menu_aria'|trans }}" aria-expanded="false" aria-controls="railNav">
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+  <!-- ============ ICON RAIL ============ -->
+  {# The rail is 48px of icons, one per rider section (map-and-search.md §4).
+     Each button opens the drawer beside it on the SAME section; a second press
+     on the same icon closes it. shell.js owns that behaviour, this markup only
+     declares which panel a button belongs to (data-panel). #}
+  <nav class="irail" aria-label="{{ 'map.rail_sections'|trans }}">
+    <a class="mark" href="{{ path('home') }}" aria-label="Cycling Commons">
+      <svg viewBox="0 0 100 130" width="22" height="29" aria-hidden="true"><path d="M50 8 C31 8 16 23 16 42 C16 68 50 124 50 124 C50 124 84 68 84 42 C84 23 69 8 50 8 Z" fill="var(--trail)"/><circle cx="50" cy="42" r="17" fill="var(--chrome-bg)"/></svg>
+    </a>
+    <button class="ib" id="ib-search" type="button" data-panel="search" data-tip="{{ 'map.rail_search'|trans }}" aria-label="{{ 'map.rail_search'|trans }}" aria-controls="dwr" aria-expanded="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg>
+    </button>
+    <button class="ib" id="ib-layers" type="button" data-panel="layers" data-tip="{{ 'map.rail_layers'|trans }}" aria-label="{{ 'map.rail_layers'|trans }}" aria-controls="dwr" aria-expanded="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 9 5-9 5-9-5 9-5Z"/><path d="m3 13 9 5 9-5"/><path d="m3 17.5 9 5 9-5" opacity=".45"/></svg>
+      {# Filter dot: shown by shell.js whenever a chip filter is narrowing the
+         map, so "where did my data go?" has an answer on the rail as well as
+         in the on-map pill (Task 6). #}
+      <span class="fdot" aria-hidden="true"></span>
+    </button>
+    <button class="ib" id="ib-tools" type="button" data-panel="tools" data-tip="{{ 'map.rail_tools'|trans }}" aria-label="{{ 'map.rail_tools'|trans }}" aria-controls="dwr" aria-expanded="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19c4 0 3-9 7-9m0 0c4 0 3 9 7 9M12 10V5"/><circle cx="12" cy="4" r="1.4"/><circle cx="5" cy="19" r="2.6"/><circle cx="19" cy="19" r="2.6"/></svg>
+    </button>
+    <span class="spring"></span>
+    <hr />
+    {# The chrome theme toggle. theme.js paints the glyph and the label, both of
+       which name the theme a press will GIVE you (map-and-search.md §4.6). #}
+    <button class="ib" id="ib-theme" type="button"></button>
+    {# Site nav + language + account, one flyout behind a ≡ button. Same markup
+       and the same initRailChrome() handler as the old rail head used; only
+       the position changed. #}
+    <div class="irail-menu" id="railHead">
+      <button class="ib rail-burger" id="railBurger" type="button" aria-label="{{ 'map.menu_aria'|trans }}" aria-expanded="false" aria-controls="railNav">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
       </button>
+      <nav class="rail-nav" id="railNav"><a href="{{ path('map') }}" class="on">{{ 'nav.map'|trans }}</a><a href="{{ path('regions') }}">{{ 'nav.regions'|trans }}</a><a href="{{ path('vote') }}">{{ 'nav.vote'|trans }}</a><a href="{{ path('developers') }}">{{ 'nav.developers'|trans }}</a><a href="{{ path('about') }}">{{ 'nav.about'|trans }}</a>{% include 'partials/_lang_menu.html.twig' %}{% if app.user %}{% include 'partials/_account_chip.html.twig' %}{% else %}<a href="{{ path('login') }}">{{ 'nav.account'|trans }}</a>{% endif %}</nav>
     </div>
-    <div class="rail-scroll">
+  </nav>
+
+  <!-- ============ DRAWER ============ -->
+  {# One section at a time, 320px wide, closed on load: the map is the hero.
+     shell.js flips .open and swaps which .panel carries .on. #}
+  <aside class="dwr" id="dwr" aria-hidden="true">
+    <div class="dwr-in">
+      <div class="dwr-head">
+        <h2 id="dwr-title"></h2>
+        <button class="dwr-x" id="dwr-x" type="button" aria-label="{{ 'map.panel_close'|trans }}">✕</button>
+      </div>
+      <div class="dwr-body">
+
+      <section class="panel" id="p-search">
+      {# Search and region are ONE panel (owner 2026-08-20: "search is in a
+         region so those 2 must be combined"). The heading names the scope,
+         written by scope-header.js paint(). #}
       <div class="grp">
         <h3 id="searchTitle">{{ 'map.search_title'|trans }}</h3>
         <input class="search" id="search" placeholder="{{ 'map.search_placeholder'|trans }}" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="searchRes" aria-label="{{ 'map.search_aria'|trans }}" />
         <ul class="search-res" id="searchRes" role="listbox" hidden></ul>
+        <div class="co" id="regionCoords">{{ 'map.coords'|trans }}</div>
       </div>
-
-      {% if is_granted('ROLE_USER') %}
-      {# Ride-check (spec 2026-07-14 §4.3): riders-only GPX upload — the file is
-         posted to /map/ride-check, answered, and discarded; the notice below is
-         a user requirement and must stay visible. #}
-      <div class="grp cc-ridecheck">
-        <h3>{{ 'ride_check.title'|trans }}</h3>
-        <div class="hint">{{ 'ride_check.hint'|trans }}</div>
-        <input type="file" id="rcFile" accept=".gpx" hidden>
-        <div class="cc-ride-row">
-          <button class="cc-ride-btn" id="rcPick" type="button">{{ 'ride_check.button'|trans }}</button>
-          <label class="cc-ride-radius">{{ 'ride_check.within'|trans }}
-            {# The values stay metres — the server only accepts its own fixed
-               set (RideCheckService::ALLOWED_RADII) — while the labels follow
-               the rider's unit. #}
-            <select id="rcRadius" aria-label="{{ 'ride_check.radius'|trans }}">
-              <option value="100">{{ 100|cc_m }}</option>
-              <option value="250" selected>{{ 250|cc_m }}</option>
-              <option value="500">{{ 500|cc_m }}</option>
-              <option value="1000">{{ 1000|cc_m }}</option>
-            </select>
-          </label>
-        </div>
-        <div class="cc-ride-status" id="rcStatus" role="status" hidden></div>
-        <p class="cc-ride-note">{{ 'ride_check.notice'|trans }}</p>
-      </div>
-
-      {# "Add a climb here" (owner asked 2026-08-14: "how do we add a new climb
-         via the map as a normal user"). Until now the answer was that you
-         cannot: the map's only contribution affordance is the /contribute link
-         in the map-top box, so a rider had to leave, find the climb wizard, and
-         then re-locate the climb from scratch in its own small map while having
-         been looking straight at it.
-
-         Riders only, like the ride-check block above it, because /add-climb is
-         ROLE_USER and offering a link that lands on a login wall is worse than
-         not offering it. Anonymous riders still reach it through /contribute,
-         which lists it.
-
-         The href is rewritten by panels.js initAddClimbHere() on every map
-         move, so what the wizard opens on is what the rider was looking at. #}
-      <div class="grp cc-addclimb">
-        <h3>{{ 'map.add_climb_heading'|trans }}</h3>
-        <a class="cc-addclimb-go" id="addClimbHere" href="{{ path('add_climb') }}">{{ 'map.add_climb_here'|trans }}</a>
-        <p class="cc-addclimb-note">{{ 'map.add_climb_note'|trans }}</p>
-      </div>
-      {% endif %}
 
       {# Region scope selector (map-and-search.md §4.5 Phase 2): the area
          the map + search filter to. Sits directly above View mode. Buttons carry a
@@ -158,7 +151,13 @@
       <div id="emptyScopeInvite" class="rail-invite" hidden>
         <a href="/join">{{ 'map.empty_scope_invite'|trans }}</a>
       </div>
+      </section>
 
+      <section class="panel" id="p-layers">
+      {# Layers and filters are ONE panel (owner 2026-08-20: "people will not
+         understand why they are missing data. Technically view mode is also a
+         filter"). Everything that can make the map show less lives here, in
+         one order: what to show, then which layers, then which values. #}
       {# View mode is the primary filter (curated best-of vs the full backlog), so it sits right
          under Region. Its active button is styled bright (#mode in the CSS) so the current mode
          is obvious at a glance. #}
@@ -280,8 +279,62 @@
           <span class="chip on" data-v="Wheelchair-accessible">{{ 'map.access_wheelchair'|trans }}</span>
         </div>
       </div>
-    </div>
-    <div class="rail-foot">
+      </section>
+
+      <section class="panel" id="p-tools">
+      {% if is_granted('ROLE_USER') %}
+      {# Ride-check (spec 2026-07-14 §4.3): riders-only GPX upload — the file is
+         posted to /map/ride-check, answered, and discarded; the notice below is
+         a user requirement and must stay visible. #}
+      <div class="grp cc-ridecheck">
+        <h3>{{ 'ride_check.title'|trans }}</h3>
+        <div class="hint">{{ 'ride_check.hint'|trans }}</div>
+        <input type="file" id="rcFile" accept=".gpx" hidden>
+        <div class="cc-ride-row">
+          <button class="cc-ride-btn" id="rcPick" type="button">{{ 'ride_check.button'|trans }}</button>
+          <label class="cc-ride-radius">{{ 'ride_check.within'|trans }}
+            {# The values stay metres — the server only accepts its own fixed
+               set (RideCheckService::ALLOWED_RADII) — while the labels follow
+               the rider's unit. #}
+            <select id="rcRadius" aria-label="{{ 'ride_check.radius'|trans }}">
+              <option value="100">{{ 100|cc_m }}</option>
+              <option value="250" selected>{{ 250|cc_m }}</option>
+              <option value="500">{{ 500|cc_m }}</option>
+              <option value="1000">{{ 1000|cc_m }}</option>
+            </select>
+          </label>
+        </div>
+        <div class="cc-ride-status" id="rcStatus" role="status" hidden></div>
+        <p class="cc-ride-note">{{ 'ride_check.notice'|trans }}</p>
+      </div>
+
+      {# "Add a climb here" (owner asked 2026-08-14: "how do we add a new climb
+         via the map as a normal user"). Until now the answer was that you
+         cannot: the map's only contribution affordance is the /contribute link
+         in the map-top box, so a rider had to leave, find the climb wizard, and
+         then re-locate the climb from scratch in its own small map while having
+         been looking straight at it.
+
+         Riders only, like the ride-check block above it, because /add-climb is
+         ROLE_USER and offering a link that lands on a login wall is worse than
+         not offering it. Anonymous riders still reach it through /contribute,
+         which lists it.
+
+         The href is rewritten by panels.js initAddClimbHere() on every map
+         move, so what the wizard opens on is what the rider was looking at. #}
+      <div class="grp cc-addclimb">
+        <h3>{{ 'map.add_climb_heading'|trans }}</h3>
+        <a class="cc-addclimb-go" id="addClimbHere" href="{{ path('add_climb') }}">{{ 'map.add_climb_here'|trans }}</a>
+        <p class="cc-addclimb-note">{{ 'map.add_climb_note'|trans }}</p>
+      </div>
+      {% endif %}
+      </section>
+
+      </div>
+    {# Drawer foot: what the map is currently drawing, and which build drew it.
+       Outside the panels on purpose - it answers the same question whichever
+       section is open. Task 7 of the icon-rail plan re-homes the count. #}
+    <div class="dwr-foot">
       <div class="res"><b id="count">0</b> {{ 'map.places_shown'|trans }}</div>
       {# Why the map can be empty at low zoom (owner-reported 2026-08-14, twice,
          once for South Africa and once for Northern Cape). The coverage
@@ -296,6 +349,7 @@
        Splits every "I don't see X" report into stale-cache vs server in one
        glance — a rider screenshots the line, we compare with the bucket. #}
     <div class="data-versions" id="dataVersions" title="{{ 'map.data_versions_title'|trans }}"></div>
+    </div>
   </aside>
 
   <!-- ============ MAP ============ -->
