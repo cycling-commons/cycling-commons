@@ -173,6 +173,8 @@
   .fh{font-family:var(--mono);font-size:.58rem;letter-spacing:.12em;color:rgb(var(--chrome-fg) / .72);
     text-transform:uppercase;font-weight:400;margin:.95rem 0 .45rem}
   .fh:first-of-type{margin-top:.8rem}
+  .fsub[hidden]{display:none}
+  .fsub:first-of-type .fh{margin-top:.8rem}
   .fh-note{color:var(--chrome-amber);letter-spacing:.08em}
   /* Overlay rows read as layer rows, because that is what they are. The dim
      state is the absence of .on (panels.js toggles only that), the mirror of

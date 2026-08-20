@@ -199,6 +199,16 @@ by default and a rider asks for one section at a time.
     all tick every season and every bike, the opposite of widest, which is why
     the class is pinned by a test. Show all is also the one reset in this block
     that must reach the SERVER, because the ranking is computed there.
+
+    **A filter only appears when its layer can be filtered** (owner 2026-08-20:
+    "still find the filter too crowded"). Climb surface, traffic and effort
+    describe climbs; stay accessibility describes stays. Each pair of header
+    and chips lives in a `.fsub[data-layer]` wrapper, and
+    `panels.js syncFilterGroups()` hides it whenever that layer is switched off
+    or holds nothing in the current scope - the rule the legend and the overlay
+    rows already follow. Gated on `total`, NEVER on `shown`: `shown` already
+    has the chips applied, so a rider who filtered a layer down to nothing
+    would watch the filter that did it disappear, with no way back.
 - **The panels label, they do not lecture** (owner 2026-08-20: "no need for
   all those explanations. people know how filters work"). Sub-headers name the
   facet and stop. The one place that still explains itself is view mode, whose
@@ -208,6 +218,11 @@ by default and a rider asks for one section at a time.
     controls - it has to be readable while a rider is zooming, and the drawer
     is closed by default. Beside, not above: stacked, it covered the z-level
     badge that shares MapLibre's bottom-left corner.
+- **An overlay row says whether it is on.** The two MAP OVERLAYS rows carry
+  the same right-hand state column every layer row uses for its `shown/total`.
+  Without it they were a dimmed swatch beside a dimmed name with nothing on the
+  right, which reads as disabled rather than off (owner-reported 2026-08-20):
+  in that list the number is what says a row is alive.
 - **Filter transparency, always on the map.** When a chip filter narrows the
   catalog, a pill at the bottom of the map says so and offers a one-tap **Show
   all**, and the Layers icon wears an orange dot. Both are visible whether or

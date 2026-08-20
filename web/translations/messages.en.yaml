@@ -2209,6 +2209,8 @@ map:
   rail_theme: 'Light or dark panels'
   panel_close: 'Close panel'
   map_overlays: 'Map overlays'
+  overlay_on: 'On'
+  overlay_off: 'Off'
   filters_head: 'Filters · narrow what shows'
   best_season: 'Best of · season'
   best_bike: 'Best of · bike'

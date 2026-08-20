@@ -1873,6 +1873,8 @@ map:
   rail_theme: 'Panneaux clairs ou sombres'
   panel_close: 'Fermer le panneau'
   map_overlays: 'Calques de la carte'
+  overlay_on: 'Activé'
+  overlay_off: 'Désactivé'
   filters_head: 'Filtres · réduire ce qui s''affiche'
   best_season: 'Meilleur de · saison'
   best_bike: 'Meilleur de · vélo'

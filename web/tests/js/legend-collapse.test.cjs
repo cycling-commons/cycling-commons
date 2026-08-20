@@ -102,7 +102,9 @@ test('the legend re-syncs from the one place the counts are recomputed', () => {
   const render = read('assets/map/render.js');
   assert.match(render, /document\.dispatchEvent\(new CustomEvent\('cc:counts'\)\)/,
     'updateCounts must announce; scope, mode, best-of and layer toggles all pass through it');
-  assert.match(panels, /document\.addEventListener\('cc:counts', syncLegend\)/);
+  // The same announcement now also re-decides which filter groups have
+  // anything to filter, so the listener is a body rather than a bare callback.
+  assert.match(panels, /document\.addEventListener\('cc:counts', \(\)=>\{ syncLegend\(\); syncFilterGroups\(\); \}\)/);
   // An event, not an import: render.js must not reach for the chrome it is
   // drawn under.
   assert.doesNotMatch(render, /from '\.\/panels\.js'/);

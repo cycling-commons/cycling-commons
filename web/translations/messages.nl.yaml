@@ -1873,6 +1873,8 @@ map:
   rail_theme: 'Lichte of donkere panelen'
   panel_close: 'Paneel sluiten'
   map_overlays: 'Kaartoverlays'
+  overlay_on: 'Aan'
+  overlay_off: 'Uit'
   filters_head: 'Filters · toon minder'
   best_season: 'Beste van · seizoen'
   best_bike: 'Beste van · fiets'

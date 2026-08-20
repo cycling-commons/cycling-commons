@@ -2218,6 +2218,8 @@ map:
   rail_theme: 'Paneles claros u oscuros'
   panel_close: 'Cerrar el panel'
   map_overlays: 'Capas superpuestas'
+  overlay_on: 'Activada'
+  overlay_off: 'Desactivada'
   filters_head: 'Filtros · mostrar menos'
   best_season: 'Lo mejor · temporada'
   best_bike: 'Lo mejor · bici'

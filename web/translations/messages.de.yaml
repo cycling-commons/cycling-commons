@@ -1876,6 +1876,8 @@ map:
   rail_theme: 'Helle oder dunkle Panels'
   panel_close: 'Panel schliessen'
   map_overlays: 'Kartenüberlagerungen'
+  overlay_on: 'An'
+  overlay_off: 'Aus'
   filters_head: 'Filter · weniger anzeigen'
   best_season: 'Das Beste · Saison'
   best_bike: 'Das Beste · Rad'

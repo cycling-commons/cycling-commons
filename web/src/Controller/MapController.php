@@ -481,6 +481,11 @@ final class MapController extends AbstractController
             // Both best-of facets are multi-select, so both need a name for
             // "you narrowed by nothing" in the map subtitle.
             'allSeasons' => $t->trans('map.all_seasons'),
+            // The overlay rows' state column, the counterpart of a layer row's
+            // shown/total: without something in that slot an off row reads as
+            // a disabled one.
+            'overlayOn' => $t->trans('map.overlay_on'),
+            'overlayOff' => $t->trans('map.overlay_off'),
             'pendingReview' => $t->trans('map.pending_review'),
             'login' => $t->trans('nav.login'),
             // Search scope widening (map-and-search.md §4.5 Phase 2):

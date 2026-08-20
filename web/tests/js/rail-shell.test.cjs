@@ -390,3 +390,43 @@ test('the best-of facets narrow by selection, not by deselection', () => {
   const reset = panels.slice(panels.indexOf('reset.onclick'), panels.indexOf('reset.onclick') + 900);
   assert.ok(reset.includes('refreshBestOf()'), 'the pill reset never re-ranks the best-of facets');
 });
+
+test('a filter only appears when its layer can be filtered', () => {
+  // Thirty chips in a wall is what a rider reads past to reach the ones that
+  // matter (owner 2026-08-20: "still find the filter too crowded"). Climb
+  // surface/traffic/effort describe climbs; stay accessibility describes
+  // stays. With that layer off, or nothing of it in scope, they can change
+  // nothing.
+  const s = panelSrc('p-layers');
+  const climbs = s.slice(s.indexOf('data-layer="climbs"'), s.indexOf('data-layer="stays"'));
+  for (const id of ['sqf', 'trf', 'effortf']) {
+    assert.ok(climbs.includes(`id="${id}"`), `#${id} is not inside the climbs filter group`);
+  }
+  const stays = s.slice(s.indexOf('data-layer="stays"'));
+  assert.ok(stays.includes('id="accessf"'), '#accessf is not inside the stays filter group');
+  // Header and chips have to hide together, so both live under the wrapper.
+  assert.ok(/<div class="fsub" data-layer="climbs" hidden>\s*<h4 class="fh">/.test(s),
+    'the climbs filter header is outside its wrapper');
+
+  const panels = read('assets/map/panels.js');
+  assert.ok(panels.includes('function syncFilterGroups()'), 'nothing hides the empty filter groups');
+  // TOTAL, never shown: `shown` already has the chips applied, so filtering a
+  // layer down to nothing would hide the filter that did it, with no way back.
+  assert.ok(/layerCounts\(lyr\)\.total > 0/.test(panels),
+    'the filter groups are gated on a count the filters themselves change');
+  assert.ok(!/layerCounts\(lyr\)\.shown/.test(panels), 'the gate reads `shown` and can trap a rider');
+});
+
+test('an overlay row says whether it is on, like every other row in the list', () => {
+  // Dimmed swatch, dimmed name, nothing on the right: that reads as disabled,
+  // not off (owner-reported 2026-08-20). Every layer row has a count in that
+  // slot and the count is what says "this one is alive".
+  const s = panelSrc('p-layers');
+  for (const id of ['ovSurface', 'ovRoutes']) {
+    const row = s.slice(s.indexOf(`id="${id}"`), s.indexOf('</button>', s.indexOf(`id="${id}"`)));
+    assert.ok(row.includes('class="ct"'), `#${id} has no state column`);
+    assert.ok(row.includes('aria-pressed="false"'), `#${id} does not announce its pressed state`);
+  }
+  const panels = read('assets/map/panels.js');
+  assert.ok(panels.includes('const paintOverlay='), 'the two overlay rows are painted separately and can drift');
+});

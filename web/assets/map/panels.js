@@ -127,6 +127,19 @@ export function initLayerList(){
   const surfBtn=document.getElementById('ovSurface');
   const studyBtn=document.getElementById('skeyStudy');
 
+  /* The overlay rows carry the same state column the layer rows do.
+     Without it they were a dimmed swatch and a dimmed name with nothing on
+     the right, which reads as disabled rather than off (owner-reported
+     2026-08-20): every OTHER row in the list has a count there, and that
+     number is what says "this one is alive". */
+  const paintOverlay=(btn, on)=>{
+    if(!btn) return;
+    btn.classList.toggle('on', on);
+    btn.setAttribute('aria-pressed', on?'true':'false');
+    const ct=btn.querySelector('.ct');
+    if(ct) ct.textContent = on ? (I18N.overlayOn||'On') : (I18N.overlayOff||'Off');
+  };
+
   /* Study mode strips the basemap to leave the surface lines alone on a pale
      ground. With the surface skin off that is not a study of anything — it is a
      blank page, and a rider who lands there has no way to tell whether the
@@ -155,7 +168,7 @@ export function initLayerList(){
 
   if(surfBtn && surfaceTilesConfigured()){
     surfBtn.hidden=false;
-    surfBtn.onclick=()=>{ surfBtn.classList.toggle('on', setSurfaceTiles(!surfaceTilesVisible())); syncStudyGate(); syncLegend(); };
+    surfBtn.onclick=()=>{ paintOverlay(surfBtn, setSurfaceTiles(!surfaceTilesVisible())); syncStudyGate(); syncLegend(); };
   }
 
   // Cycle-route network (routes-tiles.js). Same rules as the surface skin: off
@@ -166,7 +179,7 @@ export function initLayerList(){
   if(routesBtn && routesTilesConfigured()){
     routesBtn.hidden=false;
     routesBtn.onclick=()=>{
-      routesBtn.classList.toggle('on', setRoutesTiles(!routesTilesVisible()));
+      paintOverlay(routesBtn, setRoutesTiles(!routesTilesVisible()));
       syncLegend();
     };
   }
@@ -194,10 +207,26 @@ export function initLayerList(){
     const legendEl=document.querySelector('.legend');
     if(legendEl) legendEl.hidden=!!(surfaceKey?.hidden && routesKey?.hidden);
   }
+  /* THE FILTERS SHOW ONLY WHAT THERE IS TO FILTER (owner 2026-08-20: "still
+     find the filter too crowded"). Climb surface, traffic and effort describe
+     climbs; stay accessibility describes stays. With that layer switched off,
+     or with nothing of it in the current scope, those chips cannot change what
+     the map draws, and thirty of them in a wall is what a rider has to read
+     past to reach the ones that can.
+
+     Gated on TOTAL, never on shown: `shown` already has the chips applied, so
+     a rider who filtered a layer down to nothing would watch the filter that
+     did it disappear, with no way back. `total` is what exists here. */
+  function syncFilterGroups(){
+    document.querySelectorAll('#filters .fsub[data-layer]').forEach(g=>{
+      const lyr=layerByKey[g.dataset.layer];
+      g.hidden = !(lyr && active.has(lyr.key) && layerCounts(lyr).total > 0);
+    });
+  }
   // Counts change with scope, mode, best-of and every layer toggle; render.js
   // announces it from the one place they are all recomputed.
-  document.addEventListener('cc:counts', syncLegend);
-  syncLegend();
+  document.addEventListener('cc:counts', ()=>{ syncLegend(); syncFilterGroups(); });
+  syncLegend(); syncFilterGroups();
 
   // Legend-as-filter + study mode. Both live on the legend because that is
   // where the classes are named; the class filter works with the tile skin off

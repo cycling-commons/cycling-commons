@@ -202,8 +202,8 @@
          tiles nobody built reads as broken, not absent. #}
       <div class="grp">
         <h3>{{ 'map.map_overlays'|trans }}</h3>
-        <button class="layer ov-row" id="ovSurface" type="button" hidden><span class="sw" style="--c:#C8923A;--ic:#101E16"><i class="sw-g">▰</i></span><span class="nm">{{ 'map.surfaces'|trans }}</span></button>
-        <button class="layer ov-row" id="ovRoutes" type="button" hidden><span class="sw" style="--c:#7A4FCF;--ic:#EFE6D4"><i class="sw-g">⤳</i></span><span class="nm">{{ 'map.route_network'|trans }}</span></button>
+        <button class="layer ov-row" id="ovSurface" type="button" hidden aria-pressed="false"><span class="sw" style="--c:#C8923A;--ic:#101E16"><i class="sw-g">▰</i></span><span class="nm">{{ 'map.surfaces'|trans }}</span><span class="ct">{{ 'map.overlay_off'|trans }}</span></button>
+        <button class="layer ov-row" id="ovRoutes" type="button" hidden aria-pressed="false"><span class="sw" style="--c:#7A4FCF;--ic:#EFE6D4"><i class="sw-g">⤳</i></span><span class="nm">{{ 'map.route_network'|trans }}</span><span class="ct">{{ 'map.overlay_off'|trans }}</span></button>
       </div>
 
       {# Filters. Every group in here can make the map show LESS, which is why
@@ -253,6 +253,13 @@
           </div>
         </div>
 
+        {# A filter for a layer that is not on the map explains nothing and
+           makes the block longer for everyone (owner 2026-08-20: "still find
+           the filter too crowded"). data-layer names the layer this facet
+           describes; panels.js syncFilterGroups() hides the pair whenever that
+           layer is switched off or holds nothing in the current scope. The
+           same rule the legend and the overlay rows already follow. #}
+        <div class="fsub" data-layer="climbs" hidden>
         <h4 class="fh">{{ 'map.climb_surface'|trans }}</h4>
         <div class="chips f-match" id="sqf">
           <span class="chip on" data-v="Smooth">{{ 'map.surf_smooth'|trans }}</span><span class="chip on" data-v="Good">{{ 'map.surf_good'|trans }}</span>
@@ -272,11 +279,14 @@
           <span class="chip on" data-v="Steady">{{ 'map.effort_steady'|trans }}</span><span class="chip on" data-v="Challenging">{{ 'map.effort_challenging'|trans }}</span>
           <span class="chip on" data-v="Tough">{{ 'map.effort_tough'|trans }}</span><span class="chip on" data-v="Very steep">{{ 'map.effort_very_steep'|trans }}</span>
         </div>
+        </div>
 
+        <div class="fsub" data-layer="stays" hidden>
         <h4 class="fh">{{ 'map.stay_access'|trans }}</h4>
         <div class="chips f-match" id="accessf">
           <span class="chip on" data-v="Step-free access">{{ 'map.access_step_free'|trans }}</span><span class="chip on" data-v="Handbike-friendly">{{ 'map.access_handbike'|trans }}</span>
           <span class="chip on" data-v="Wheelchair-accessible">{{ 'map.access_wheelchair'|trans }}</span>
+        </div>
         </div>
 
         {# Preference prefilter chip (spec 2026-07-14): revealed by panels.js
