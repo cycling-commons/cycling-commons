@@ -1,0 +1,48 @@
+web/translations/messages.de.yaml
+  s_573608e5fb8d70::t_ba24524874e4d6 1879-1880
+web/translations/messages.fr.yaml
+  s_573608e5fb8d70::t_ba24524874e4d6 1876-1877
+web/translations/messages.en.yaml
+  s_573608e5fb8d70::t_ba24524874e4d6 2212-2213
+web/translations/messages.es.yaml
+  s_573608e5fb8d70::t_ba24524874e4d6 2221-2222
+web/src/Controller/MapController.php
+  s_573608e5fb8d70::t_ba24524874e4d6 484-488
+web/tests/js/rail-shell.test.cjs
+  s_573608e5fb8d70::t_4a4e5323ebd04e 393-432
+web/assets/map/panels.js
+  s_573608e5fb8d70::t_242ed6635f5584 210-225,228-229
+  s_573608e5fb8d70::t_ba24524874e4d6 130-142,171,182
+web/translations/messages.nl.yaml
+  s_573608e5fb8d70::t_ba24524874e4d6 1876-1877
+web/tests/js/legend-collapse.test.cjs
+  s_573608e5fb8d70::t_4a4e5323ebd04e 105-107
+web/assets/styles/map.css
+  s_573608e5fb8d70::t_242ed6635f5584 176-177
+web/templates/map/index.html.twig
+  s_573608e5fb8d70::t_242ed6635f5584 256-262,282,284,290
+  s_573608e5fb8d70::t_ba24524874e4d6 205-206
+docs/specs/map-and-search.md
+  s_573608e5fb8d70::t_5a2e1d296cd733 202-211,221-225
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "4a15abde11bc0444f190ac7ca82614b69ec66719",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_573608e5fb8d70": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "434ec033-3fb6-4aba-b649-e625d8799f68",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
