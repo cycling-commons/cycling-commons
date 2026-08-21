@@ -1,0 +1,118 @@
+web/src/Media/MediaClaimService.php
+  s_be5f7ba46f0f72::t_3bc265af77cabe 16,18,20,56
+web/src/Media/MediaDeletionHook.php
+  s_be5f7ba46f0f72::t_832f336e0aff63 13,15,17
+web/src/Media/MediaTakedownSource.php
+  s_be5f7ba46f0f72::t_df0b29522a7cd0 10,12,14
+web/src/Media/ConsentMissing.php
+  s_be5f7ba46f0f72::t_b5095ffdd8b2e3 10,12-14
+web/src/Media/Command/MediaGcCommand.php
+  s_be5f7ba46f0f72::t_41cb165d5df828 18,20,22
+web/src/Media/ProofOfWork.php
+  s_be5f7ba46f0f72::t_3e2a86c57ef497 56
+  s_be5f7ba46f0f72::t_485d0a62b5371f 13,15,17,21,45-46
+web/src/Media/UrgentWithholdBreaker.php
+  s_be5f7ba46f0f72::t_88e7934e1ce3dd 91
+  s_be5f7ba46f0f72::t_61109c65874927 19,21,23,27,43,46-47,68-69
+web/src/Media/ContinentResolver.php
+  s_be5f7ba46f0f72::t_5b0399084c4887 12,14,16
+web/src/Media/PhotoRejected.php
+  s_be5f7ba46f0f72::t_a1a55a822057b8 10,12-14
+web/src/Media/XmpRights.php
+  s_be5f7ba46f0f72::t_813fdb64cf760d 13,15,17
+web/src/Media/Command/MediaBackfillKeysCommand.php
+  s_be5f7ba46f0f72::t_9ee3d1bda9f88c 21,23,25
+  s_be5f7ba46f0f72::t_8d7742c476a602 49
+web/src/Media/Entity/MediaModerationEvent.php
+  s_be5f7ba46f0f72::t_d0e36aefdfeb62 14,16,18
+web/src/Media/Scan/ScanVerdict.php
+  s_be5f7ba46f0f72::t_38b82268fe7922 10,12-14
+web/src/Media/Message/ScanAndReleaseUpload.php
+  s_be5f7ba46f0f72::t_286b98fea60ffa 10,12,14
+web/src/Media/Scan/VirusScannerInterface.php
+  s_be5f7ba46f0f72::t_a948de0c4869f3 10,12,14,19,21
+web/src/Media/MediaDisposalService.php
+  s_be5f7ba46f0f72::t_8d8df5fcdb5933 18,20,22,26,40,42,55,71,122,133,139,157
+web/src/Media/GpsDistance.php
+  s_be5f7ba46f0f72::t_762f3404252495 10,12,14,20
+web/src/Media/PhotoProcessor.php
+  s_be5f7ba46f0f72::t_80d6d4e917b06d 10,12,14,18,26,30,32,49,61,91,155-157,171,174-175,193,221
+  s_be5f7ba46f0f72::t_38d9129ab107f3 209
+  s_be5f7ba46f0f72::t_31daf82983e2a6 95
+web/src/Media/Scan/ClamAvScanner.php
+  s_be5f7ba46f0f72::t_77fc6701d3e998 12,14,16,109
+web/src/Media/MediaConsent.php
+  s_be5f7ba46f0f72::t_5d6a09fc8a3e75 10,12,14
+  s_be5f7ba46f0f72::t_3cc813dda375ea 19
+web/src/Media/Scan/ScannerUnavailable.php
+  s_be5f7ba46f0f72::t_dd8170f4ad0505 10,12,14
+web/src/Media/MediaTakedownService.php
+  s_be5f7ba46f0f72::t_06acacd22f13b2 21,23,25,34,38,57-59,80,82,106,127,134,136,140,160-162,184,186,211,257-259,281,297,317,323,386,396,414,443,458,474
+  s_be5f7ba46f0f72::t_75a93c5f031a5a 435
+web/src/Media/MediaTakedownCategory.php
+  s_be5f7ba46f0f72::t_c9dd1d0bbd7b67 10,12,14,22,28
+web/src/Media/UrgentWithholdAlert.php
+  s_be5f7ba46f0f72::t_341c7ae69b34fe 18,20,22,77
+web/src/Media/MediaAction.php
+  s_be5f7ba46f0f72::t_2f04c10eda2886 10,12-14,19,21,23,30,32,36,38
+web/src/Media/PhotoAttribution.php
+  s_be5f7ba46f0f72::t_084172043a5d93 10,12,14
+web/src/Media/ShardUnavailable.php
+  s_be5f7ba46f0f72::t_f7654d90fb2887 10-12
+web/src/Media/Entity/MediaUpload.php
+  s_be5f7ba46f0f72::t_05360966c294aa 17,19,21,42,47,49,55,57,75,79,86,93,100,104,108,112,116,120,124,128,132,136,140,145,148-149,154,158,162,177,196,198,217,219,231,237,245,255-279,286,288,299,320,331,339,367,470,474,487,498,506,518,566,572,593,599
+web/src/Media/MediaStorage.php
+  s_be5f7ba46f0f72::t_6f16b81b6a2777 16,18,20,26,48,50-51,53,76,86,96,102,115,117,139-142,144-152
+  s_f68f52eab6f3c4::t_fb82831e7f0baf 153-161,167,172,176,194,198
+web/src/Media/ConsentService.php
+  s_be5f7ba46f0f72::t_db4c6974febc7b 16,18,20,63
+web/src/Media/MediaDecisionService.php
+  s_be5f7ba46f0f72::t_a453ff6a256cd4 16,18,20,34,36,54,97,101-103,116,125
+  s_be5f7ba46f0f72::t_b91f4db7981769 88
+web/src/Media/Entity/ConsentRecord.php
+  s_be5f7ba46f0f72::t_68f3abd546692b 14,16,18,32,36
+web/src/Media/AlertRecipients.php
+  s_be5f7ba46f0f72::t_ddfca0a4ffb96b 14,16,18
+  s_be5f7ba46f0f72::t_673e3954c9e23c 32
+web/src/Media/MediaStatus.php
+  s_be5f7ba46f0f72::t_50e190339cca52 10,12-14,18
+web/src/Media/ProcessedPhoto.php
+  s_be5f7ba46f0f72::t_bd7579a2638e4d 10,12-14
+web/src/Media/MediaEventLog.php
+  s_be5f7ba46f0f72::t_3fa86bc63481ec 14,16-18
+web/src/Media/MediaEscalationService.php
+  s_be5f7ba46f0f72::t_ea9704352ce88f 16,18,20,59,119
+web/src/Media/MessageHandler/ScanAndReleaseUploadHandler.php
+  s_be5f7ba46f0f72::t_b4312962525ae5 31,33,35,40,66,76,82,95,105,109,115,145,160
+web/src/Media/Command/MediaBackfillStorageBucketCommand.php
+  s_f68f52eab6f3c4::t_4699eea1f38411 1-162
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.23",
+  "base_commit_sha": "625b91db4ec8079e6c356313dea79fb3023c5eef",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_be5f7ba46f0f72": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "79e0e9d1-9bcd-420f-840b-436fbb9ade95",
+        "model": "cursor-grok-4.6-xhigh"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_f68f52eab6f3c4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c7a55b70-80fe-4d7b-a5a8-04f70def4f1e",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
