@@ -11,9 +11,15 @@ namespace App\Service;
  *
  * It was a hand-edited constant in version.js ('Demo v0.1.2 · 2026-06-26') —
  * which went stale the way every hand-edited date does, and said "demo" long
- * after the site stopped being one. Deploys here are server-side pulls of the
- * full repository (no CI step touches served files), so the repo itself is
- * present next to the app in production and can simply be asked:
+ * after the site stopped being one.
+ *
+ * Sources, in order:
+ *
+ *   REVISION — written by the deploy script from `git rev-parse HEAD` before it
+ *              strips .git. On a deployed host this is the only thing that names
+ *              the running commit, and reading it means never shelling out on a
+ *              tier where shell_exec is disabled.
+ *   git      — for a working copy that still has a repository:
  *
  *   number — `git describe --tags --match 'v*'`: exactly `v0.2.0` when HEAD is
  *            the release tag, `v0.2.0-14-gabc1234` between releases (honest
@@ -51,6 +57,16 @@ final class BuildVersion
         ?callable $run = null,
     ) {
         $this->run = $run ?? static function (string $cmd): ?string {
+            /* A function listed in disable_functions reports as UNDEFINED, so
+               calling it raises Error - which @ cannot suppress and nothing
+               here catches. The web tier disables shell_exec deliberately
+               (proc_open, popen and friends too), so ask before calling.
+               Without this guard the footer took every page down with a 500
+               on 2026-08-21, despite this class being written to fall back. */
+            if (!\function_exists('shell_exec')) {
+                return null;
+            }
+
             /* Psalm flags every shell_exec as unsafe. This one runs only the
                fixed `git log`/`git describe` strings composed in version()
                below - no user input reaches it, and the test seam ($run)
@@ -77,8 +93,33 @@ final class BuildVersion
     /** @return array{number: string, date: string} */
     private function derive(): array
     {
-        // web/ first, then the repo root above it — prod pulls the whole repo,
-        // so .git sits one level up from the kernel's project dir.
+        // A deployed release has no .git: the deploy script records the commit
+        // in REVISION and strips .git immediately after cloning. So on a server
+        // that file is the ONLY thing naming what is running, and it is checked
+        // first - which also means a hardened host never attempts to shell out.
+        //
+        // `date` here is the deploy date (the file's mtime), not the commit
+        // date the git path returns. Both answer "as of when", and a release
+        // that carries only a SHA cannot know the latter.
+        foreach ([$this->projectDir, \dirname($this->projectDir)] as $root) {
+            $revision = $root.'/REVISION';
+            if (!is_file($revision)) {
+                continue;
+            }
+            $sha = @file_get_contents($revision);
+            if (!\is_string($sha) || '' === trim($sha)) {
+                continue;
+            }
+            $mtime = @filemtime($revision);
+
+            return [
+                'number' => substr(trim($sha), 0, 12),
+                'date' => false !== $mtime ? date('Y-m-d', $mtime) : '',
+            ];
+        }
+
+        // web/ first, then the repo root above it — a plain `git pull` deploy
+        // keeps the repository next to the app, so .git may sit one level up.
         foreach ([$this->projectDir, \dirname($this->projectDir)] as $root) {
             $git = 'git -C '.escapeshellarg($root);
             $number = ($this->run)($git." describe --tags --match 'v*' --always");
