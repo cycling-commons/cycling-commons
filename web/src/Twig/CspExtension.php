@@ -11,13 +11,11 @@ use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
 
 /**
- * `csp_nonce()` - the per-request nonce every inline <script> must carry now
- * that responses ship a Content-Security-Policy without 'unsafe-inline'.
- * Usage: <script nonce="{{ csp_nonce() }}">.
+ * `csp_nonce()` for inline scripts.
  *
  * @see docs/specs/security-architecture.md §2.2
  *
- * @api Auto-registered Twig extension.
+ * @api
  */
 final class CspExtension extends AbstractExtension
 {

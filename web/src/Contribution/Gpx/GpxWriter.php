@@ -7,11 +7,9 @@ declare(strict_types=1);
 namespace App\Contribution\Gpx;
 
 /**
- * Emits GPX 1.1 for a served route (docs/specs/route-domain.md §6). Input coordinates
- * are GeoJSON-ordered [lng, lat] pairs, exactly as stored in
- * recommended_route.geom; output is standard GPX lat/lon.
+ * Emits GPX 1.1 for a served route (docs/specs/route-domain.md §6).
  *
- * @api Public entry point for GPX output (docs/specs/route-domain.md §6).
+ * @api
  */
 final class GpxWriter
 {

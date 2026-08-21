@@ -3,8 +3,7 @@
 // Geofabrik / Nominatim / polygons.openstreetmap.fr, with admin names enriched
 // from GeoNames (CC-BY 4.0), Statistics Canada (OGL 2.0) and US Census TIGER
 // (public domain). Derivative database — ODbL 1.0 share-alike; see attributions.
-/* Cycling Commons — indicative regions snapshot (names).
- * Continent -> country -> regions, admin divisions merged to ~Wallonia size. */
+/* Indicative regions snapshot: continent → country → regions. */
 window.CC_REGIONS = [
  {
   "continent": "Europe",

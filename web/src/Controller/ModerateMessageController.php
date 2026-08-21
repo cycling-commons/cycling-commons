@@ -23,18 +23,13 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Uid\Uuid;
 
 /**
- * One endpoint for a curator to send a rider a free-form personal message
- * from any desk row (moderation-feedback spec M6a) — the pending-submission
- * queue, a route-correction row, and a route's detail page all post here
- * with a `channel` discriminator. The `^/moderate` firewall rule enforces
- * ROLE_CURATOR (security.yaml); the recipient is always resolved
- * server-side from the referenced row, never trusted from the request.
+ * Curator → rider personal message from any desk row.
  *
- * Pseudonymity (spec constraint): nothing about the sending curator's
- * identity is exposed here beyond `sender='curator'` — MessageService never
- * receives a display name, only the curator's id for audit purposes.
+ * Recipient is resolved from the referenced row, never from the request (IDOR).
  *
- * @api Instantiated by Symfony's router.
+ * @see docs/specs/moderation-and-contribution.md §7.4
+ *
+ * @api
  */
 #[Route(LocalePrefix::PATHS)]
 #[IsGranted('ROLE_CURATOR')]
@@ -74,10 +69,7 @@ final class ModerateMessageController extends AbstractController
 
         [$recipientId, $refLabel, $regionId] = $recipient;
 
-        // Only a photo of THIS submission may be referenced. Anything else is
-        // dropped rather than refused: the curator's message is still worth
-        // delivering, and a dangling reference would be worse than none
-        // (docs/specs/photo-uploads.md §5b).
+        // docs/specs/photo-uploads.md §5b — only this submission's photo; drop others.
         $mediaId = null;
         $rawMediaId = (string) $request->request->get('mediaId', '');
         if ('submission' === $channel && '' !== $rawMediaId && Uuid::isValid($rawMediaId)) {
@@ -97,11 +89,7 @@ final class ModerateMessageController extends AbstractController
         try {
             $sent = $this->messages->sendCurator($recipientId, (int) $curator->getId(), $channel, $id, $refLabel, $body, $mediaId);
             if (null === $sent) {
-                // The referenced row's author/proposer id is a no-FK column
-                // (submission.user_id / route_suggestion.user_id /
-                // recommended_route.proposed_by) that can dangle after
-                // account deletion — same "nobody to message" outcome as an
-                // imported route's null proposer, above.
+                // Author/proposer is no-FK and may dangle after account deletion.
                 $this->addFlash('danger', 'moderate.error.no_recipient');
             } else {
                 $this->addFlash('success', 'moderate.msg.sent');
@@ -128,7 +116,7 @@ final class ModerateMessageController extends AbstractController
     private function resolveRoute(int $id): ?array
     {
         $route = $this->em->find(RecommendedRoute::class, $id);
-        // Imported routes carry no proposer: nobody to message.
+        // Imported routes carry no proposer.
         if (null === $route || null === $route->getProposedBy()) {
             return null;
         }
@@ -151,22 +139,16 @@ final class ModerateMessageController extends AbstractController
     }
 
     /**
-     * Redirect-after-POST (moderation-and-contribution.md §5.1 pattern): send
-     * the curator back to the desk row they messaged from, filters intact.
-     * Only the *path* component of the Referer is trusted (host/scheme are
-     * discarded), and only when it points back into `/moderate` — this rules
-     * out an open redirect via a forged Referer header. Falls back to the
-     * channel's own desk route.
+     * Redirect-after-POST: `/moderate` path only — forged Referer must not open-redirect.
+     *
+     * @see docs/specs/moderation-and-contribution.md §5.1
      */
     private function redirectBack(Request $request, string $channel): Response
     {
         $referer = $request->headers->get('referer');
         if (null !== $referer) {
             $path = parse_url($referer, PHP_URL_PATH);
-            // Wildcard locale group, not the literal list (owner, 2026-08-17,
-            // same convention as security.yaml): a new locale must not
-            // silently break back-to-the-desk-row. Still safe: the target
-            // must begin with a /moderate path, so it can never leave us.
+            // Wildcard locale prefix (same as security.yaml); target must still be /moderate.
             if (\is_string($path) && 1 === preg_match('#^(/[a-z]{2})?/moderate(/|$)#', $path)) {
                 $query = parse_url($referer, PHP_URL_QUERY);
 

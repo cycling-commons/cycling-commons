@@ -20,16 +20,12 @@ use App\Settings\SettingsRegistry;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
- * The ONLY write-path for route moderation - purpose-built, no reuse of
- * ModerationService. Every transition is transactional and appends
- * route_change_history. The region cap is enforced on approve. Decision
- * outcomes message the proposer, skipped for imported routes
- * (`proposedBy === null`).
+ * Write-path for route moderation. Region cap is enforced on approve.
  *
  * @see docs/specs/route-domain.md §5.1
  * @see docs/specs/moderation-and-contribution.md §7.2
  *
- * @api Called by RouteModerateController.
+ * @api
  */
 final class RouteModerationService
 {
@@ -57,10 +53,7 @@ final class RouteModerationService
             if (ItemState::Submitted !== $route->getState()) {
                 throw new \LogicException('Only a submitted route can be approved.');
             }
-            // Known TOCTOU: this COUNT(*) isn't locked, so two concurrent approve()
-            // calls at cap-1 could both pass and both commit, briefly exceeding the
-            // cap. Accepted tradeoff, not a bug: few curators, soft editorial cap,
-            // recoverable via retire(); not worth locking for this workflow.
+            // Known TOCTOU at cap-1: accepted for a soft editorial cap (docs/specs/route-domain.md §5.1).
             if ($this->activeCountForRegion($route->getRegionId()) >= $this->regionCap()) {
                 throw new RegionFullException(sprintf('Region %s is at the active-route cap.', $route->getRegionId() ?? 'none'));
             }
@@ -165,11 +158,7 @@ final class RouteModerationService
     }
 
     /**
-     * Trash (M9): a hard, permanent delete of a route correction (any
-     * status). Its `segments` are a JSON column on the row itself, so the
-     * delete leaves no orphan segment data. Audited content-free FIRST
-     * (AdminActionLogger::log() flushes its own row inside this transaction),
-     * never a UserMessage - trashing never feeds spam.
+     * Hard-delete a route correction in any status.
      *
      * @see docs/specs/moderation-and-contribution.md §6
      */
@@ -189,10 +178,7 @@ final class RouteModerationService
     }
 
     /**
-     * Trash (M9): a hard, permanent delete of a route proposal, ONLY while
-     * it is `submitted` or `rejected`. Never an active/served (unverified,
-     * verified) or retired route (TrashBlockedException guardrail). Audited
-     * content-free FIRST, never a UserMessage - trashing never feeds spam.
+     * Hard-delete a proposal only while submitted or rejected.
      *
      * @see docs/specs/moderation-and-contribution.md §6
      */
@@ -205,9 +191,7 @@ final class RouteModerationService
                 throw new TrashBlockedException(sprintf('Route %d is %s and cannot be trashed.', $routeId, $route->getState()->value));
             }
 
-            // Content-free audit (M9): NO rider-authored text. A submitted
-            // proposal's NAME is unvetted free text and must not land in the
-            // immutable log (same rule as the submission path's enum-only note).
+            // Content-free: a submitted name is unvetted free text (docs/specs/moderation-and-contribution.md §6).
             $this->adminLog->log($curator, TrashActions::TrashRouteProposal, null, sprintf('route %d state=%s', $routeId, $route->getState()->value));
             $this->em->remove($route);
         });
@@ -245,10 +229,7 @@ final class RouteModerationService
         }
     }
 
-    /**
-     * M2: rides the same transaction as the decision, atomic, and skipped
-     * entirely for imported routes (`proposedBy === null`, no rider to tell).
-     */
+    /** Outcome message rides the decision transaction; skipped for imported routes. */
     private function notifyProposer(RecommendedRoute $route, UserMessageKind $kind, ?string $note): void
     {
         if (null === $route->getProposedBy()) {

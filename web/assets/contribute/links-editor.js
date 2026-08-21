@@ -1,21 +1,6 @@
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
-/* The outbound-links editor (docs/specs/catalog-data-model.md §7 `links`).
-   Classic script mounted by improve.js through window.Cc, like every other
-   contribute widget — the wizard's templates load plain scripts, not modules.
-
-   `links` is two levels deep: a list of DESTINATIONS, each holding the same
-   page in several languages. Nobody should have to learn those words to use
-   the form, so the rider sees "places to link to", each with an address, and
-   "add another language" only where it is wanted.
-
-   The whole value travels as ONE hidden JSON field, exactly as the climb route
-   and the segment endpoints do. A links[0][urls][1][url] name grid would put
-   the nesting in the HTTP layer, where PHP's array parsing rather than
-   OutboundLinks would decide what a malformed post means.
-
-   EVERY LIMIT HERE IS A COURTESY. The caps are enforced again server-side by
-   OutboundLinks, which is the actual rule; these exist so a rider meets the
-   limit while they are typing rather than after they submit. */
+/* Outbound-links editor (docs/specs/catalog-data-model.md §7).
+   Caps here are courtesy; OutboundLinks enforces them server-side. */
 (function () {
   'use strict';
   window.Cc = window.Cc || {};
@@ -31,10 +16,7 @@
     var LOCALE_NAMES = cfg.localeNames || {};
     hidden.dataset.linksMounted = '1';
 
-    // Parse whatever the server put in the field. A value we cannot read is
-    // dropped rather than shown half-decoded: the rider then sees an empty
-    // editor and the old value is still in the DB until they save, which is
-    // the recoverable direction.
+    /* Unreadable JSON is dropped: empty editor, stored value unchanged until save. */
     var entries = [];
     try {
       var parsed = JSON.parse(hidden.value || '[]');
@@ -46,9 +28,7 @@
     hidden.parentNode.insertBefore(root, hidden.nextSibling);
 
     function sync() {
-      // Only entries that actually carry an address. A half-filled row is a
-      // rider mid-thought, not a link, and posting it would fail the server's
-      // shape check for something they never meant to send.
+      /* Half-filled rows are not links; posting them fails the server's shape check. */
       var out = entries.map(function (e) {
         var urls = (e.urls || []).filter(function (u) { return (u.url || '').trim() !== ''; })
           .map(function (u) {
@@ -81,10 +61,7 @@
       input.value = url.url || '';
       input.addEventListener('input', function () { url.url = input.value; sync(); });
 
-      // The language picker only appears on the SECOND and later addresses of
-      // an entry. The first one is "this page", and asking which language it is
-      // in before there is anything to distinguish it from is a question with
-      // no purpose.
+      /* Language picker only on the second+ address — the first is "this page". */
       var select = null;
       if (ui.index > 0) {
         select = field('select', 'lk-locale');
@@ -172,8 +149,6 @@
         });
         root.appendChild(add);
       } else {
-        // Say WHY there is no add button. A control that silently disappears at
-        // a threshold reads as a bug.
         var full = field('p', 'lk-full');
         full.textContent = (T.full || 'That is the most pages one place can link to.');
         root.appendChild(full);

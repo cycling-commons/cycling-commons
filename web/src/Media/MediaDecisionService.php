@@ -13,20 +13,11 @@ use App\Media\Entity\MediaUpload;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
- * What a moderation decision means for the submission's photos
- * (docs/specs/photo-uploads.md §5). Deliberately NOT a second moderation
- * mechanism: it is invoked from inside ModerationService::decide()'s existing
- * transaction, on the existing decision, and the item-side record of the
- * attachment is the existing change_history row — a curator who can moderate a
- * fact edit can moderate a photo without learning anything new
- * (docs/specs/photo-uploads.md §5c).
+ * Apply a submission decision to its photos — not a second moderation path.
  *
- * Per-photo decisions run one way only. Approving a submission approves its
- * photos except the ones the curator unticked; rejecting a submission rejects
- * all of them, with no per-photo escape; needs-info leaves them pending,
- * because the rider is still being asked.
+ * @see docs/specs/photo-uploads.md §5, §5c
  *
- * @api Called by ModerationService.
+ * @api
  */
 final class MediaDecisionService
 {
@@ -40,11 +31,9 @@ final class MediaDecisionService
     }
 
     /**
-     * @param list<string> $rejectMediaIds uuids the curator unticked
+     * @param list<string> $rejectMediaIds
      *
-     * @return array{old: mixed, new: list<array<string, mixed>>}|null the
-     *                                                                 photos-attribute change for the caller's history row,
-     *                                                                 or null when nothing about the item changed
+     * @return array{old: mixed, new: list<array<string, mixed>>}|null
      */
     public function apply(
         Submission $submission,
@@ -62,15 +51,7 @@ final class MediaDecisionService
             'submissionId' => (int) $submission->getId(),
             'status' => MediaStatus::Pending,
         ], ['createdAt' => 'ASC']);
-        // A photo under legal hold (docs/specs/photo-uploads.md §6d) leaves
-        // the curator's hands entirely: deciding the submission around it must
-        // neither approve it onto the map nor reject it into the retention
-        // sweep that would eventually delete it. It stays exactly where it is
-        // until an admin says otherwise.
-        // ...and a photo with nothing published cannot be approved onto an
-        // item: there is no URL to attach. Only a legacy row awaiting the
-        // one-off backfill reaches this, since a quarantined row is not
-        // Pending; it is left exactly where it is either way.
+        // Skip legal hold and unpublished rows. @see docs/specs/photo-uploads.md §6d
         $uploads = array_values(array_filter(
             $uploads,
             static fn (MediaUpload $u): bool => !$u->isEscalated() && $u->hasPublishedObjects(),
@@ -104,9 +85,7 @@ final class MediaDecisionService
         $old = $attributes['photos'] ?? ($attributes['photo'] ?? null);
 
         $gallery = self::existingGallery($attributes);
-        // The legacy singular is migrated INTO the gallery rather than left
-        // beside it: map.js reads f.photos || [f.photo], so leaving both would
-        // silently shadow one of them.
+        // Migrate the legacy singular into photos[]; map.js would shadow one if both remain.
         unset($attributes['photo']);
         $attributes['photos'] = [...$gallery, ...$attached];
         $item->setAttributes($attributes);
@@ -115,14 +94,13 @@ final class MediaDecisionService
     }
 
     /**
-     * The gallery entry an item carries for one photo. Public because a
-     * declined takedown has to put the photo back exactly as approval first
-     * put it there (docs/specs/photo-uploads.md §6b) — re-deriving that shape
-     * in a second place is how the two drift apart.
+     * Gallery entry written at approval (takedown reuses this shape).
      *
      * @return array<string, mixed>
      *
-     * @api Called by MediaTakedownService.
+     * @see docs/specs/photo-uploads.md §6b
+     *
+     * @api
      */
     public function describe(MediaUpload $upload): array
     {
@@ -130,13 +108,19 @@ final class MediaDecisionService
         $bucket = $upload->getStorageBucket();
 
         $photo = [
+            // The upload's own id, so a gallery entry can be matched back to its
+            // row without comparing URLs. The URLs move when the key layout or
+            // the bucket name does (both have), and every gallery mutation used
+            // to match on `sm` - a takedown against a moved photo then matched
+            // nothing and silently left the image on the item. The uuid is
+            // already visible inside the URL, so publishing it adds nothing.
+            'id' => $upload->getId()->toRfc4122(),
             'sm' => $this->storage->url($bucket, $prefix, 'sm'),
             'lg' => $this->storage->url($bucket, $prefix, 'lg'),
             'credit' => $this->credit($upload),
             'license' => self::LICENSE,
         ];
-        // Month granularity: public seasonal context, never a precise timestamp
-        // (docs/specs/photo-uploads.md §5). No capture date means no key at all.
+        // Month granularity only. @see docs/specs/photo-uploads.md §5
         $takenAt = $upload->getTakenAt();
         if (null !== $takenAt) {
             $photo['takenAt'] = $takenAt->format('Y-m');
@@ -145,7 +129,34 @@ final class MediaDecisionService
         return $photo;
     }
 
-    /** The existing uploader rule: a name only when the rider chose to be public. */
+    /**
+     * Is this gallery entry the one this upload wrote?
+     *
+     * The single place that answers it, so takedown, escalation and disposal
+     * can never drift apart. Prefers the recorded id; falls back to the `sm`
+     * URL for entries written before the id existed. That fallback goes once
+     * `app:media:repair-galleries` has run everywhere - it is a migration
+     * bridge, not a shape to tolerate.
+     *
+     * @see docs/specs/photo-uploads.md §6b
+     *
+     * @api
+     */
+    public function isEntryFor(mixed $photo, MediaUpload $upload): bool
+    {
+        if (!\is_array($photo)) {
+            return false;
+        }
+
+        $id = $photo['id'] ?? null;
+        if (\is_string($id) && '' !== $id) {
+            return $id === $upload->getId()->toRfc4122();
+        }
+
+        return ($photo['sm'] ?? null) === $this->describe($upload)['sm'];
+    }
+
+    /** Name only when the rider chose a public profile. */
     private function credit(MediaUpload $upload): string
     {
         $userId = $upload->getUserId();

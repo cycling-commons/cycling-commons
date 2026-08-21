@@ -7,24 +7,18 @@ declare(strict_types=1);
 namespace App\Media\Scan;
 
 /**
- * The release gate's scanner (media plan task 3).
+ * Release-gate scanner. Unavailability is not a clean verdict.
  *
- * Three outcomes, deliberately not two: clean and infected are VERDICTS,
- * while "the scanner is not answering" is neither and must never be folded
- * into clean - a fail-open scanner is indistinguishable from a working one
- * until the day it matters. Callers decide what unavailability means for
- * them; the release handler throws so Messenger retries and the object
- * stays quarantined.
+ * @see docs/specs/media-storage-architecture.md §3.1
  *
- * @api Implemented by ClamAvScanner; consumed by the release handler.
+ * @api
  */
 interface VirusScannerInterface
 {
     /**
-     * @param resource|string $bytes the raw object, as a stream or string
+     * @param resource|string $bytes
      *
-     * @throws ScannerUnavailable when no verdict could be obtained and the
-     *                            environment requires one (CLAMAV_REQUIRED)
+     * @throws ScannerUnavailable when no verdict could be obtained and CLAMAV_REQUIRED
      */
     public function scan(mixed $bytes): ScanVerdict;
 }

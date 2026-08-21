@@ -13,20 +13,9 @@ use Doctrine\Persistence\ObjectManager;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 /**
- * Seeds the dev database with four ready-to-use demo accounts, one per role,
- * plus a public and an anonymous rider. All share the password `password1234`.
+ * Dev demo accounts. All share `password1234`. Elevated roles get a preset TOTP secret.
  *
- *   admin@example.test      ROLE_ADMIN    (2FA preset)      Belgium
- *   moderator@example.test  ROLE_CURATOR  (2FA preset)      Netherlands
- *   user@example.test       ROLE_USER     public profile    France
- *   anon@example.test       ROLE_USER     private profile    (no country)
- *
- * The elevated roles get a preset TOTP secret so login reaches /admin and
- * /moderate without enrolling in 2FA first. Countries are linked when the World
- * reference data is already present (run `app:world:import` first, as `make
- * setup` does); otherwise they are left null.
- *
- * @api Entry point for Doctrine fixtures; loaded by doctrine:fixtures:load.
+ * @api
  */
 final class AppFixtures extends Fixture
 {
@@ -72,15 +61,6 @@ final class AppFixtures extends Fixture
         $user->setCountry($country);
         $user->setPassword($this->hasher->hashPassword($user, self::DEV_PASSWORD));
 
-        // Preset an ENROLLED 2FA state: set both the TOTP secret and the
-        // enabled flag. TwoFactorPolicy::requiresSetup() checks
-        // isTotpAuthenticationEnabled() (twoFaEnabled && secret), so setting
-        // only the secret would leave elevated accounts stuck at /2fa/setup,
-        // always redirected there by TwoFactorSetupEnforcer. Enrolling them
-        // fully matches the mandatory 2FA policy: login shows the TOTP
-        // prompt, and the well-known seed below lets any authenticator app
-        // (or `oathtool --totp -b JBSWY3DPEHPK3PXP`) generate valid codes
-        // for dev and demo use.
         if ($presetTotp) {
             $user->setTotpSecret('JBSWY3DPEHPK3PXP');
             $user->setTwoFaEnabled(true);

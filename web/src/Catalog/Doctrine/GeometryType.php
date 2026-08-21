@@ -10,13 +10,9 @@ use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Types\Type;
 
 /**
- * PostGIS geometry column ⇄ GeoJSON string.
+ * PostGIS geometry column ⇄ GeoJSON string. Spatial queries stay in raw SQL; this type only hydrates ORM.
  *
- * PHP side always sees a GeoJSON string; the SQL expressions do the conversion
- * (ST_GeomFromGeoJSON on write, ST_AsGeoJSON on read). Spatial queries stay in
- * raw SQL/DBAL where they belong - this type only makes ORM hydration work.
- *
- * @api Registered as DBAL type "geometry" in doctrine.yaml.
+ * @api
  */
 final class GeometryType extends Type
 {

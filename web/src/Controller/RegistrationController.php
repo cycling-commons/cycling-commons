@@ -23,8 +23,9 @@ use Symfony\Component\Routing\Attribute\Route;
 use SymfonyCasts\Bundle\VerifyEmail\Exception\VerifyEmailExceptionInterface;
 
 /**
- * @api Instantiated by Symfony's router; never referenced from code.
- *      `@api` tells Psalm this is a live entry point, not dead code.
+ * @see docs/specs/account-and-auth.md §2
+ *
+ * @api
  */
 final class RegistrationController extends AbstractController
 {
@@ -44,8 +45,6 @@ final class RegistrationController extends AbstractController
         UserPasswordHasherInterface $userPasswordHasher,
         EntityManagerInterface $entityManager,
     ): Response {
-        // Same as the login route: an unexplained bounce to the homepage looks
-        // like a broken link.
         if ($this->getUser()) {
             $this->addFlash('notice', 'flash.already_signed_in');
 
@@ -65,17 +64,13 @@ final class RegistrationController extends AbstractController
             );
             $user->setRoles(['ROLE_USER']);
             $user->setEmailVerified(false);
-            // Record that the declaration was made, for accountability
-            // (GDPR Art. 5(2)). The form already refused without it.
             $user->confirmAge(new \DateTimeImmutable());
 
             try {
                 $entityManager->persist($user);
                 $entityManager->flush();
             } catch (UniqueConstraintViolationException) {
-                // TOCTOU: the UniqueEntity check passed, but a concurrent request
-                // committed the same email before this flush. Surface it as the
-                // same duplicate-email form error instead of a 500.
+                // TOCTOU: same duplicate-email form error, never a 500.
                 $form->get('email')->addError(new FormError('This email address is already registered.'));
 
                 return $this->render('security/register.html.twig', [

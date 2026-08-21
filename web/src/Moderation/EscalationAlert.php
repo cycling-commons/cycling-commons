@@ -15,26 +15,11 @@ use Symfony\Component\Mime\Address;
 use Symfony\Component\Mime\Email;
 
 /**
- * The one mail that goes out when a curator escalates something as suspected
- * illegal content (docs/specs/photo-uploads.md §6d) — a photo or a
- * submission's words.
+ * Mail when a curator escalates suspected illegal content
+ * (docs/specs/photo-uploads.md §6d). Body carries no content. A send
+ * failure is CRITICAL, never fatal — the hold must not roll back.
  *
- * Shared by both paths on purpose: an escalation must reach a human the same
- * way whatever kind of content it was, and two copies of this would drift.
- *
- * Three rules the body obeys:
- *
- * - **Unthrottled.** Unlike the circuit-breaker alert, this is one deliberate
- *   act by a trusted person, not a flood. Every one gets a mail.
- * - **It carries no content.** Not the image, not the submission's text — only
- *   the curator's own description, a reference, and where to look. Suspected
- *   illegal material must not be copied into a mailbox on its way to being
- *   handled.
- * - **A failure is CRITICAL, never fatal.** An escalation nobody hears about is
- *   the one failure here that must be impossible to miss in the logs, but a
- *   dead transport must not roll back the hold that has already been applied.
- *
- * @api Called by MediaEscalationService and ModerationService.
+ * @api
  */
 final readonly class EscalationAlert
 {

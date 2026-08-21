@@ -3,28 +3,9 @@
   'use strict';
   window.Cc = window.Cc || {};
 
-  /* Asks the server for a climb's measured profile.
-
-     THE ARITHMETIC USED TO LIVE HERE — sampling, binning, the ascent-only
-     average and the steepest-window search were all done in the browser, and
-     the server stored whatever came back after checking only that it looked
-     like a gradient. That made the client the author of every published number,
-     and it made a catalogue-wide re-measure impossible, because the maths was
-     not where the data is.
-
-     It is one implementation in PHP now (App\Elevation\ClimbProfiler), so the
-     preview a rider sees and the value that gets stored are the same
-     computation by construction, and `app:climbs:recompute` can re-measure the
-     whole catalogue with it. See docs/specs/climb-elevation.md.
-
-     Resolves null for "no usable data" — including a 503, which is how the
-     server says it could not measure this line — and REJECTS on transport
-     failure, so the caller can tell the two apart and tell the rider which
-     happened. `signal` (optional AbortSignal) cancels a superseded request.
-
-     `steepAt` is an optional hand-placed marker in editor order [lng,lat]: the
-     server re-reads the gradient at that position rather than moving the
-     marker. */
+  /* Climb profile from the server (docs/specs/climb-elevation.md).
+     Arithmetic lives in PHP so preview and stored values match.
+     Resolves null for "no usable data" (incl. 503); rejects on transport failure. */
   window.Cc.profileFromRoute = function (coords, signal, steepAt) {
     if (!coords || coords.length < 2) return Promise.resolve(null);
     // Editor order is [lng,lat]; storage and the API are [lat,lng].
@@ -32,8 +13,7 @@
     if (steepAt) body.steepAt = [steepAt[1], steepAt[0]];
     return fetch('/contribute/elevation', {
       method: 'POST',
-      // X-CC-Token: the stateless 'elevation' CSRF token the wizard template
-      // mints (server refuses without it - ElevationController).
+      // Stateless 'elevation' CSRF token; server refuses without it.
       headers: { 'Content-Type': 'application/json', 'X-CC-Token': window.CC_ELEV_TOKEN || '' },
       body: JSON.stringify(body),
       signal: signal

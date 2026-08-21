@@ -15,19 +15,9 @@ use Symfony\Component\Clock\ClockInterface;
 /**
  * The only write path into `system_setting`.
  *
- * It is a separate class from SystemSettings on purpose: the reader is on the
- * hot path (three reads per curator-desk render) and must stay a Connection
- * plus a cache, while every write has to validate against the registry,
- * invalidate the cache and land in the admin audit log. Keeping the audit
- * logger out of the reader also keeps the entity manager off that path.
- *
- * Validation lives here rather than in the controller so no future caller —
- * a console command, a fixture, a second admin surface — can write a value the
- * admin page would refuse.
- *
  * @see docs/specs/system-configuration.md §4
  *
- * @api Called by the admin system-config page.
+ * @api
  */
 final class SystemSettingsWriter
 {
@@ -45,12 +35,11 @@ final class SystemSettingsWriter
     }
 
     /**
-     * Stores an override and records old -> new in the audit log.
+     * Store an override and audit old → new.
      *
-     * @return bool false when the value was already stored and unchanged, so
-     *              re-saving an untouched form does not fill the log with noise
+     * @return bool false when unchanged
      *
-     * @throws \InvalidArgumentException on an unknown key or an out-of-range value
+     * @throws \InvalidArgumentException
      */
     public function set(string $key, int|string $value, ?User $actor): bool
     {
@@ -71,26 +60,21 @@ final class SystemSettingsWriter
                     SET setting_value = EXCLUDED.setting_value,
                         updated_at    = EXCLUDED.updated_at,
                         updated_by_id = EXCLUDED.updated_by_id',
-            // Stored as text for every type; the definition reads it back
-            // (SettingDefinition::fromStorage).
             ['k' => $key, 'v' => (string) $value, 't' => $this->clock->now(), 'u' => $actor?->getId()],
             ['t' => Types::DATETIME_IMMUTABLE],
         );
         $this->settings->invalidate();
-        // The alert-recipient list is logged like any other change: who may be
-        // reached in an incident is exactly the kind of setting that should
-        // leave a trail.
         $this->adminLog->log($actor, self::ACTION_CHANGE, null, sprintf('%s: %s -> %s', $key, $old, $value));
 
         return true;
     }
 
     /**
-     * Drops the override so the key follows the YAML default again.
+     * Drop the override so the key follows the YAML default.
      *
-     * @return bool false when there was nothing stored to drop
+     * @return bool false when nothing was stored
      *
-     * @throws \InvalidArgumentException on an unknown key
+     * @throws \InvalidArgumentException
      */
     public function reset(string $key, ?User $actor): bool
     {

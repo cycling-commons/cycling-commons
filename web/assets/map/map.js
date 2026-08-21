@@ -1,10 +1,6 @@
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
-/* Map entry module. Being split into focused modules under web/assets/map/ —
-   see map-and-search.md §2 for the module layout
-   and the rules (§4.1 cycles, §4.2 side effects belong to the entry).
-
-   Loaded as an ES module: catalog-load.js injects it with type="module" once
-   the catalog fetch has populated the CC_* globals this file reads. */
+/* Map entry (docs/specs/map-and-search.md §4). ES module: catalog-load.js
+   injects it once the catalog fetch has populated the CC_* globals. */
 import { I18N, LAYER_L10N, D, tpl, VALUE_TR, trVal, sourceLabel, isRiderSource } from './i18n.js';
 import { wc, pinPoint } from './util.js';
 import { uKm } from './units.js';
@@ -36,73 +32,31 @@ import { initLayerList, initMapCtrl, initRailChrome, initBestOf, initFilterPill,
 import { initTheme } from './theme.js';
 import { initShell } from './shell.js';
 
-  // Scope model + rail + header (scope-ui.js).
   initScope();
 
-  // Which view mode the map OPENS in.
-  // Must sit exactly here: it reads the ACTIVE scope, which initScope()
-  // above has just resolved, and every later mode() reader — the map.on('load')
-  // applyScope/render and initChips()'s initial refreshBestOf() — must already
-  // see the answer.
+  // initViewMode must run after initScope — it reads the active scope.
   initViewMode();
 
   initMapControls();
-  initShell();   // icon rail + drawer: which section is open (shell.js)
-  initTheme();   // chrome light/dark toggle, in the rail's bottom cluster
+  initShell();
+  initTheme();
 
 
 
-  map.on('load',()=>{ markStyleReady(); localiseBasemapLabels(); addSatellite(); addMapillary(); addWaterOsm(); addCoverage(); addSurfaceTiles();   // heatmap is lazy (W43)
+  map.on('load',()=>{ markStyleReady(); localiseBasemapLabels(); addSatellite(); addMapillary(); addWaterOsm(); addCoverage(); addSurfaceTiles();
     OSM_BULK.forEach(([key, data, src])=>addOsmDots(key, data, src));
-    // renderScopeChips() must wait until here (not right after CCScope.init near
-    // the top of the file): it reads `curScope`, a const declared BELOW that call
-    // site in this same top-level script, so calling it any earlier hits the TDZ.
-    // (`scopeToken` is a hoisted function declaration and would have been fine —
-    // curScope alone forces the deferral.) The 'load' handler already runs the
-    // one-time initial applyScope, so it is also the natural first chip render.
-    // renderScopeChips()/applyScope() order (2026-07-23 flash fix): no longer
-    // coupled. scopeLabel() used to resolve by querying the rail button for the
-    // incoming scope's data-scope token, so applyScope() needed the chips already
-    // in the DOM or it would skip the header/kicker/search-title rewrites and
-    // leave the server-rendered fallback text on screen. scopeLabel() now calls
-    // CCScope.label() (registry-based, scope.js), so either function may run
-    // first — kept in this order anyway to avoid unrelated churn (the chip-anchor
-    // logic, CCScope.scopeCenter(), was deliberately made order-independent
-    // already; see its own doc comment in scope.js).
     renderScopeChips(); applyScope(curScope(), {fit:false}); setupConfClusters();
-    // Reconcile cluster/leaf markers only when the map SETTLES, never on every render frame:
-    // querySourceFeatures() + DOM marker diffing across all clustered layers, run per-frame during a
-    // flyTo, is what made zooming/flying stutter. MapLibre repositions the existing markers smoothly on
-    // its own mid-animation; we only need to add/remove on moveend (motion stops) and idle (tiles loaded).
+    // Cluster markers on settle (moveend/idle), never per render frame during a fly.
     let _confRAF=null;
     const scheduleConfMarkers=()=>{ if(_confRAF) return; _confRAF=requestAnimationFrame(()=>{ _confRAF=null; updateConfMarkers(); }); };
     map.on('moveend', scheduleConfMarkers); map.on('idle', scheduleConfMarkers);
-    // The coverage zoom hint follows the zoom, not the filters, so render()'s
-    // own call is not enough — a rider who only scrolls the wheel never
-    // re-renders. zoomend is the cheap moment: the hint reads map.getZoom()
-    // and toggles one line of text.
-    map.on('zoomend', updateZoomHint);
-    // Coverage counts fetched once at load (and again on each scope change via
-    // applyScope). No moveend/idle refresh: the coverage 'shown' is the
-    // scope-aware count (covShownCount), not a viewport-render count, so it
-    // never changes on pan/zoom.
-    // A CONST, not a function — every other caller reads it as a value, and
-    // calling it threw a TypeError that killed the rest of this handler, so the
-    // coverage counts never loaded (found 2026-08-12 while reading the console
-    // during a surface probe).
+    map.on('zoomend', updateZoomHint);   // hint follows zoom, not only render()
+    // Coverage counts once at load (and on each scope change via applyScope).
     if(COVERAGE_ON) fetchCoverageCounts();
     render();
-    // Deep links (?feature/?pending/?route) point at a specific object a narrow
-    // scope might filter out (map-and-search.md §4.5): widen to Everywhere
-    // so the target always renders. Transient — the saved scope returns on the
-    // next plain load; the handlers below flyTo the target. ONLY when the target
-    // actually resolves (07-20 review finding 9): a stale or mistyped id must
-    // not flip the whole map to Everywhere with nothing to show. This gate
-    // covers the SYNCHRONOUS resolvers (local feature / pending / route); a
-    // coverage-only ?feature resolves async and now (Phase 3, coverage tiles
-    // scope-filtered) widens inside openCoverageFeatureByName on its own hit —
-    // the resolvers here are exactly the ones the open calls use, so gate and
-    // open can never disagree.
+    // Deep links (docs/specs/map-and-search.md §4.5, §8): widen to Everywhere
+    // only when the target actually resolves. Coverage-only ?feature widens inside
+    // openCoverageFeatureByName on its own hit.
     const _dl = new URLSearchParams(location.search);
     const fp=_dl.get('feature'), pp=_dl.get('pending'), rp=_dl.get('route'), ip=_dl.get('item');
     const _dlHit =
@@ -111,36 +65,26 @@ import { initShell } from './shell.js';
       (pp && !!(layerByKey.pending && (layerByKey.pending.features||[]).some(x=>x.pending && String(x.pending.id)===String(pp)))) ||
       (rp && ((layerByKey['experience']||{}).features||[]).some(x=>String(x.id)===String(rp)));
     if(_dlHit) widenForDeepLink();
-    // deep-link: ?feature=<name> opens that item's drawer + zooms in (e.g. from
-    // a profile page); coverage POIs stay linkable via one search-endpoint
-    // lookup when the local index misses (coverage-provider.md §6)
-    // ?item=<id> — the moderation history's "what did I approve" link. By id,
-    // not by name: a settled submission carries the item id, and its own title
-    // need not still match the item's name.
+    // ?feature=<name> drawer + zoom; coverage POIs via search when local index misses.
+    // ?item=<id> — moderation "what did I approve", by id not name.
     if(ip) openFeatureById(ip);
     if(fp && !openFeatureByName(fp)) openCoverageFeatureByName(fp);
     if(pp) openPendingById(pp);
-    // ?route=<id> opens a specific route selected (e.g. from the curator Routes desk)
     if(rp) openRouteById(rp);
   });
 
   initCoordPopup();
 
-  initCuratorKeys();   // A/R arm a moderation decision (community.js)
+  initCuratorKeys();
 
 
-  // populate K · Recommended routes with every uploaded sample route + its cyclist-experience attributes
-  // C1-T4 (W6): CC_CLIMBS' 'source' field is the free-text citation ('OSM roads ·
-  // geometry handmade', etc.); srcType is the real ItemSource value. A rider-
-  // added/edited climb (user/manual/scout) must not keep an OSM-flavoured citation —
-  // swap the cc-d-src line to the plain rider-contributed label for those only.
+  // Rider-added climbs must not keep an OSM-flavoured citation.
   if(window.CC_CLIMBS){
     const climbSrc = CC_CLIMBS.map(c => isRiderSource(c.srcType)
       ? Object.assign({}, c, {source: sourceLabel(c.srcType)}) : c);
     layerByKey['climbs'].features = layerByKey['climbs'].features.concat(climbSrc);
   }
   if(window.CC_ROUTES){
-    // towns each ride starts at / passes — lets riders search routes by start location (demo lookup)
     const RIDE_CITIES={
       'Spa · Sankt Vith':['Spa','Stavelot','Vielsalm','Sankt Vith'],
       'Spa · Coo · Francorchamps':['Spa','Francorchamps','Coo','Stavelot'],
@@ -150,19 +94,12 @@ import { initShell } from './shell.js';
       'Afternoon Ride':['Spa','Sart','Tiège']
     };
     layerByKey['experience'].features = CC_ROUTES.routes.map((r,i)=>{
-      // Demo-era lookup keyed by ride name. NO fallback: fabricating
-      // 'Starts at: Spa' for unknown routes (e.g. rider proposals) is wrong
-      // data — reverse-geocoding real towns is a recorded route-domain
-      // non-goal, so unknown routes simply omit the town rows.
+      // Demo lookup keyed by ride name. No fallback — unknown routes omit town rows.
       const cities = RIDE_CITIES[r.name];
-      // Seeded from r.id (not the array index i): located corrections store
-      // fractions relative to this trimmed path, so the trim must stay
-      // deterministic per route even when the served route set changes
-      // (e.g. another route rejected shifts indices) — an index-seeded trim
-      // would re-trim the same route differently and drift stored fractions.
+      // Trim seeded from r.id, not index (docs/specs/route-domain.md §7): stored
+      // correction fractions stay valid when the served set changes.
       const seed = Number(r.id)||0;
-      const startM = 350 + (seed*137)%401, endM = 350 + (seed*211+90)%401;   // 350–750 m, varied but stable per ride
-      // difficulty is always {score,label} now (P2-D1); typeof fallback is defensive only.
+      const startM = 350 + (seed*137)%401, endM = 350 + (seed*211+90)%401;
       const diffLabel = r.difficulty?.label ?? (typeof r.difficulty === 'string' ? r.difficulty : undefined);
       return {
       id:r.id, rid:r.rid, name:r.name, state:r.state, headline:`${uKm(r.km)}${diffLabel ? ' · ' + trVal(diffLabel) : ''}`, cur:false, edit:'ride',
@@ -170,66 +107,36 @@ import { initShell } from './shell.js';
       cities: cities || [],                                // searchable start/through towns (empty when unknown)
       bikeTypes: Array.isArray(r.bikeTypes) ? r.bikeTypes : [],   // declared suitability (may be empty = undeclared)
       photo:r.photo||wc('Liège-Bastogne-Liège 2014 Echappée du jour Côte de Wanne.JPG','Les Meloures','Les Meloures','CC BY-SA 3.0'),
-      // C1-T4 (W6): 'Contributed GPX' is an accurate detail for the pipeline's
-      // usual auto-derived routes; a rider-added/edited one gets the plain label.
       source:isRiderSource(r.srcType) ? sourceLabel(r.srcType) : (D.contributedGpx||'Contributed GPX (GPS track only)'),
-      // C2-T7 (spec §W2): every row below is a real QualityRides registry
-      // attribute (CatalogFormRegistry::for(QualityRides), forwarded by
-      // CatalogProvider::routes()) — the previous Quietness/Scenic
-      // rating/Cycling-friendliness/Suitable bikes/Accessibility/Best direction
-      // rows were index-derived formulas or literals identical for every ride
-      // (the same class of bug C2-T6 fixed for climbs' "Bike type"/"Handbike"
-      // filler) — deleted; only present when a rider (or import) actually set
-      // the attribute.
+      // Registry rows only when a rider (or import) actually set the attribute.
       record:(()=>{
         const rec=[
           {label:D.distance||'Distance', value:uKm(r.km)}
         ];
-        // Phase-2 badge: a proposed route (unverified) rides "ride it to verify";
-        // a verified route renders normally. state is served by CatalogProvider.
         if(r.state === 'unverified') rec.unshift({label:D.status||'Status', value:D.proposedVerify||'Proposed · ride it to verify', warn:true});
         if(cities){
-          // html:true — builder-constructed markup from the constant
-          // RIDE_CITIES table (cityLink escapes the name); NEVER set this
-          // flag on payload-derived values.
+          // html:true — builder-constructed markup (cityLink escapes); never on payload-derived values
+          // (docs/specs/security-architecture.md §4.2).
           rec.push({label:D.startsAt||'Starts at', value:cityLink(cities[0]), html:true});
           rec.push({label:D.townsOnRoute||'Towns on route', value:cities.map(cityLink).join(' · '), html:true});
         }
-        // Derived, not declared: measured against the A-layer mapped-road
-        // segments at import/intake (SurfaceProfiler). The method note
-        // discloses estimate + coverage — never present this as ground truth.
-        // Kept hand-authored (it is not a registry field; K's declared field is
-        // 'dominantSurface', rendered by the schema below).
+        // Derived surface mix (SurfaceProfiler) — estimate + coverage, not ground truth.
         if(r.surfaces && Array.isArray(r.surfaces.parts) && r.surfaces.parts.length){
           rec.push({label:D.surfaces||'Surfaces', value:r.surfaces.parts.map(p=>`${trVal(p.surface)} ${p.pct}%`).join(' · '),
                     method:tpl(D.estimateMethod||'estimate · {pct}% of route mapped', {pct:Number(r.surfaces.covered)||0})});
         }
-        // Registry-driven (CC_FIELD_SCHEMA[K]): season / dominantSurface /
-        // quietness / scenic / friendliness / bikeTypes / gradientLimited /
-        // bestDirection / note — value or "add" prompt. 'difficulty' is skipped
-        // (rendered as the cc-diff badge); 'rideName' is display:false.
         rec.push(...schemaRows('K', r, r.id, {skip:['difficulty']}));
         return rec;
       })()
     };
     });
   }
-  // populate A · Road surface from the served segments. A FUNCTION, because it
-  // runs twice: at boot, and again when the catalog hot-refreshes on tab
-  // return (catalog-load.js) — a moderator who approves a surface submission
-  // in the desk tab and switches back to the map must see the new line without
-  // hunting for F5 (owner-reported 2026-08-13, twice).
+  // A · Road surface. A function because it also runs on catalog hot-refresh.
   function populateSurfaceA(){
     if(!window.CC_SURFACE) return;
     layerByKey['surface'].features = CC_SURFACE.segments.map(s=>{
-      // Registry-driven rows (CC_FIELD_SCHEMA[A]) — value or "add" prompt per field.
-      // Fields: surface / smoothness / width / traffic / note / lit /
-      // segregated / seasonalClosure. Per-row OSM provenance now lives only
-      // on the Source line.
       const rec = schemaRows('A', s, s.id);
-      // Length leads the record (owner 2026-08-13: the drawer showed no
-      // length at all): great-circle over the drawn path, in the rider's
-      // unit. Client-side, because the path is already here.
+      // Length leads: great-circle over the drawn path, in the rider's unit.
       const _km = (s.path||[]).reduce((acc,p,i,a)=>{
         if(!i) return 0;
         const [la1,lo1]=a[i-1],[la2,lo2]=p, r=Math.PI/180;
@@ -242,75 +149,35 @@ import { initShell } from './shell.js';
         id:s.id, rid:s.rid, name:s.name, headline:`${trVal(s.surface)} · ${trVal(s.smoothness)}`, cur:(s.cls!=='paved'), edit:'road-surface',
         geom:{path:s.path}, surfaceClass:s.cls, width:s.width, smoothness:s.smoothness,
         photo: s.photoFile ? wc(s.photoFile, s.photoCredit, s.photoUser, s.photoLicense) : undefined,
-        // C1-T4 (W6): a rider-added/edited surface segment isn't OSM.
         source:isRiderSource(s.srcType) ? sourceLabel(s.srcType) : 'OSM (surface=*)',
         record:rec
       };
     });
   }
   populateSurfaceA();
-  // F · Hazards & conditions — served items (map-and-search.md §4.5 Task A).
-  // Hazards have no coverage tile layer and no OSM bulk pool, so they render as
-  // CATALOG point features (like climbs), sourced from the served payload
-  // (CatalogProvider 'F' key -> window.CC_HAZARDS). Region stamping is automatic
-  // (item rows; recomputeMembership), so f.rid flows through featureVisible()'s
-  // scope gate with zero extra work. The drawer's registry rows / confirm panel
-  // / edit-bridge all key on f.id + schemaRows('F', …), same as every letter.
+  // F · Hazards — catalog point features from window.CC_HAZARDS (no coverage tile).
   if(window.CC_HAZARDS && Array.isArray(CC_HAZARDS.features)){
     layerByKey['hazards'].features = CC_HAZARDS.features.map(ft=>{
       const p=ft.properties||{}, c=(ft.geometry&&ft.geometry.coordinates)||[];
-      // headline: localized hazard type + severity when the item carries them
-      // (schema choices localize the stored English via trVal/VALUE_TR).
       const bits=[p.hazardType, p.severity].filter(Boolean).map(trVal);
       const named=!!p.n;
-      // photo may arrive as a JSON string (importable attribute) — parse it with
-      // the same guard osmDrawer uses, else a raw string flows unparsed into
-      // photoList()/the <img> sink (finding 14).
       let photo=p.photo; if(typeof photo==='string'){ try{ photo=JSON.parse(photo); }catch(e){ photo=null; } }
       return {
-        // Real name when the item carries one; otherwise the layer label for
-        // DISPLAY only, flagged `unnamed` so the index neither name-dedupes
-        // nameless hazards (two potholes 50 m apart → one dropped) nor routes
-        // them by the shared label (last-match-wins onto the wrong pin) — finding 9.
         id:p.id, rid:p.rid, name:p.n||(LAYER_L10N.hazards||'Hazard'), unnamed:!named,
-        // Only append the layer label as a headline when there's no type/severity
-        // AND no real name would already carry it, so a bare hazard never reads
-        // "Hazards & conditions · Hazards & conditions" (finding 9, cosmetic).
         headline:bits.join(' · ')||(named?(LAYER_L10N.hazards||'Hazards & conditions'):''),
-        // A rider-confirmed hazard (v) earns the same verified tier as a C/D/G/H
-        // confirmed twin, not a pixel-identical unconfirmed pin (finding 13).
         cur:!!p.v, geom:{ll:[c[1], c[0]]},
-        // Registry-driven record (CC_FIELD_SCHEMA[F]) — filled rows + "add" prompts.
         record:schemaRows('F', p, p.id),
         photo:photo,
-        // srcType drives the source line: an osm-sourced row keeps the OSM label
-        // (its ODbL linkifier + attribution), user/manual reads rider-contributed,
-        // and only a genuinely source-less row falls back to "Community report"
-        // (finding 12 — the old ternary made osm unreachable AND would have
-        // dropped OSM attribution by labelling it a community report).
         source:sourceLabel(p.srcType) || (D.communityReport||'Community report'),
         v:p.v
       };
     });
   }
-  // Curator-only pending submissions (injected by MapController for ROLE_CURATOR only).
-  // Off the public map by design — riders never receive window.CC_PENDING.
-  // CC_PENDING alone builds the layer: curators get the scope's whole queue,
-  // a rider gets their OWN rows (owner 2026-08-16 - a pending contribution
-  // was invisible to the person who made it). CC_IS_CURATOR only switches
-  // the moderation chrome (drawer.js), never the pins.
+  // Pending submissions: CC_PENDING builds the layer (curators: whole queue;
+  // riders: their own rows). CC_IS_CURATOR only switches moderation chrome.
   if(Array.isArray(window.CC_PENDING)){
-    /* The review pin has to land on the pin the curator is being sent to look
-       at. It used to sit at the submission's own point, which for an EDIT is
-       the item's stored anchor — and a climb's anchor is its SUMMIT while its
-       pin is drawn at the FOOT. On Côte de la Redoute that put the pending pin
-       9 m from the Monument de la Bataille de Sprimont, so "Review on the map"
-       highlighted the monument and the climb's real pin sat unmarked at the
-       other end of the line (owner-reported 2026-08-03).
-
-       pinPoint() is the renderer's own rule, now shared (util.js). A `new`
-       submission keeps its own point: there is no item yet, and its point is
-       the only thing that says where the place is. */
+    /* Review pin uses pinPoint() (renderer's rule). A `new` submission keeps
+       its own point — there is no item yet. */
     const pendingPin = s => {
       if('new' === s.type || s.itemId == null) return [s.lat, s.lng];
       const lyr = CATALOG.find(l => l.letter === s.letter);
@@ -321,12 +188,7 @@ import { initShell } from './shell.js';
       name:s.title, headline:`${(I18N.pendingTypes||{})[s.type]||s.type} · ${s.who} · ${s.when}`,
       geom:{ll:pendingPin(s)},
       record:[
-        /* WHICH LAYER this is. The card named the place, the person and the
-           region, and never the one thing a curator needs first — is this a
-           viewpoint, a water point, a hazard? (owner-reported 2026-08-12). The
-           label is the layer's own, so it reads exactly as the rail and the
-           improve form do. */
-        (()=>{ // the layer's own icon beside its own name, as the rail draws it
+        (()=>{
           const lyr = CATALOG.find(l=>l.letter===s.letter) || {};
           const name = LAYER_L10N[lyr.key] || lyr.label || s.letter;
           return {label:D.type||'Type', value:(lyr.icon ? lyr.icon+' ' : '')+name};
@@ -344,12 +206,7 @@ import { initShell } from './shell.js';
     active.add('pending');
   }
 
-  // Places approved as "Not there anymore" — the curator GHOST layer (owner
-  // 2026-08-13). A gone item is hidden from the public payload for good, and
-  // that answered removal but not RETURN: a rebuilt tap could never be found
-  // to reactivate. Curators see them as faint ⌀ pins; the drawer's ordinary
-  // "Edit this item" (typed per feature via f.letter) is the reactivation —
-  // set the condition back, submit, moderate. No new mechanic.
+  // Curator ghost layer: gone items, off by default.
   if(window.CC_IS_CURATOR && Array.isArray(window.CC_GONE) && window.CC_GONE.length){
     const gf = window.CC_GONE.map(g=>({
       id:g.id, letter:g.letter, name:g.name,
@@ -368,62 +225,49 @@ import { initShell } from './shell.js';
     const goneLayer = { key:'gone', letter:'⌀', label:LAYER_L10N.gone||'Removed places', color:'#8a8d7d', icon:'⌀', kind:'point', exp:false, pendingLayer:true, features:gf };
     CATALOG.push(goneLayer);
     layerByKey['gone'] = goneLayer;
-    // OFF by default: it is an archive to consult, not a queue to work.
   }
 
-  // Community loop + moderation submit (community.js): the delegated listeners.
   initCommunity();
 
-  initPicking();   // located-correction stretch picking (picking.js)
-  initClickToScope();   // empty-map click re-scopes the map (scope-ui.js)
+  initPicking();
+  initClickToScope();
 
-  initRideCheck();   // riders-only "what's along my GPX?" rail control (ride-check.js)
+  initRideCheck();
 
-  initDrawerChrome();   // drawer close affordances (drawer.js)
-  // Scout ride review — a no-op unless #scoutPanel is on the page, which it is
-  // only on /scout/review (scout-review.js).
+  initDrawerChrome();
   initScoutReview();
-  initSheet();       // mobile snap sheet (sheet.js)
-  initLightbox();    // lightbox chrome + Escape/arrows (lightbox.js)
+  initSheet();
+  initLightbox();
 
 
-  initLayerList();      // layer toggles, select-all, base segmented control (panels.js)
+  initLayerList();
   initStreetToggle();
-  initMapCtrl();        // collapsible on-map base/overlay control (panels.js)
+  initMapCtrl();
 
-  initFilterPill();     // on-map "N places hidden" pill + its reset (panels.js)
+  initFilterPill();
 
-  initRailChrome();     // filters sheet, legend, burger nav, breakpoint resize (panels.js)
-  initSearchUi();   // sidebar town + feature search (search-ui.js)
+  initRailChrome();
+  initSearchUi();
 
 
-  initBestOf();         // Curated best-of facets + the mode toggle (panels.js)
+  initBestOf();
 
-  initScopeRail();   // rail buttons + the cc:scopechange -> applyScope path (scope-ui.js)
+  initScopeRail();
 
-  initAreaNudge();   // pan-away widen prompt for a My-area scope (scope-ui.js)
+  initAreaNudge();
 
-  initAddClimbHere();   // rail "Add a climb here", seeded with the live view (panels.js)
+  initAddClimbHere();
 
-  initChips();          // every chip group; MUST follow initScopeRail/initAreaNudge (panels.js)
-
-  // street-level imagery (Mapillary) dock controls — the on/off toggle lives in the data-layers list
+  initChips();          // MUST follow initScopeRail/initAreaNudge
 
   initMapillaryDock();
 
-  initPlanner();   // illustrative Spa planner chips (planner.js)
+  initPlanner();
 
-  // The catalog hot-refresh hook (catalog-load.js calls it after re-assigning
-  // the CC_* globals on tab return with a changed payload). A window global on
-  // purpose — catalog-load is a classic pre-module script and cannot import;
-  // same pattern as window.__ccMap. Scope: the SURFACE features re-map and the
-  // tile dedupe filters re-apply (a just-approved way loses its red dash the
-  // same moment its green line appears); other letters pick their new data up
-  // on the next natural re-render or reload.
+  // Catalog hot-refresh hook (catalog-load.js); window global because that
+  // script cannot import.
   window.__ccApplyCatalog = () => {
     populateSurfaceA();
-    setSurfaceTiles(surfaceTilesVisible());   // re-applies surfDedupeFilter with the fresh refs
+    setSurfaceTiles(surfaceTilesVisible());
     render();
   };
-
-  // initial render runs from map.on('load') above (sources need the style loaded)

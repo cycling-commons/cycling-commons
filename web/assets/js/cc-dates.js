@@ -1,15 +1,5 @@
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
-//
-// The client half of the rider's date preference
-// (docs/specs/account-and-auth.md §9).
-//
-// Server-rendered dates go through the cc_date/cc_datetime/cc_month Twig
-// filters. Anything JavaScript prints has to reach the same answer, or a single
-// page shows the same date two ways and the preference reads as broken. So both
-// halves are driven by one value, handed over as window.CC_DATE by base.html.twig.
-//
-// Deliberately not a module and deliberately tiny: it is loaded on every page
-// and used by scripts that are themselves plain classic scripts.
+// Client half of the rider's date preference (docs/specs/account-and-auth.md §9).
 (function () {
   'use strict';
 
@@ -24,12 +14,7 @@
     try { return d.toLocaleDateString(LOC, opts); } catch (e) { return d.toDateString(); }
   }
 
-  /**
-   * A calendar date in the reader's chosen notation.
-   * Accepts a Date, an ISO string, or anything Date can parse; an unparseable
-   * value returns '' rather than "Invalid Date", because a page printing that
-   * at somebody is worse than a page printing nothing.
-   */
+  /* Unparseable values return '' rather than "Invalid Date". */
   function ccDate(value) {
     var d = value instanceof Date ? value : new Date(value);
     if (!value || isNaN(d.getTime())) return '';
@@ -44,11 +29,7 @@
     }
   }
 
-  /**
-   * Month and year only — the granularity photos are published at
-   * (docs/specs/photo-uploads.md §5). Always a month NAME: "08/2026" is not
-   * something anyone says out loud, and this string is read as prose.
-   */
+  /* Month name + year — photo publish granularity (docs/specs/photo-uploads.md §5). */
   function ccMonth(value) {
     var d = value instanceof Date ? value : new Date(value);
     if (!value || isNaN(d.getTime())) return '';
@@ -56,7 +37,6 @@
     return intl(d, { year: 'numeric', month: 'long' === FMT ? 'long' : 'short' });
   }
 
-  /** The time of day, 24-hour or 12-hour as the rider asked. */
   function ccTime(value) {
     var d = value instanceof Date ? value : new Date(value);
     if (!value || isNaN(d.getTime())) return '';

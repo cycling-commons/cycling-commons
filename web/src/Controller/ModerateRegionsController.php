@@ -22,29 +22,11 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
- * Curator Regions desk — the only place `region.default_map_mode` is set.
+ * Curator Regions desk — the only writer of `region.default_map_mode`. Gated: cannot enable a mode the region cannot show.
  *
- * The choice is GATED, which is the whole point (owner decision "B"): a region
- * cannot be made to open in a mode it has nothing to show in, so the setting
- * can never be raised prematurely and recreate the empty-map trap the global
- * default was flipped to avoid. Both counts are shown next to their thresholds
- * whether or not the gate is open, so a curator can see how far off a region is.
+ * @see docs/specs/map-and-search.md §4.2
  *
- * Three rungs since 2026-08-12, and each has its own bar:
- *  - **Everything** — always available; it is what every region starts in.
- *  - **Confirmed** — needs `map.confirmed_default_threshold` places somebody
- *    has vouched for. No breadth rule: it is not a selection, so a region whose
- *    confirmations are all water taps is still saying something true.
- *  - **Best of** — needs the breadth-and-depth readiness count, unchanged.
- *
- * A region can always be moved DOWN, whatever its counts: the gate exists to
- * stop premature promises, never to trap a region in a mode its content no
- * longer supports.
- *
- * Scoped like every other desk: a curator sees only their assigned regions;
- * a global curator or an admin sees all of them.
- *
- * @api Instantiated by Symfony's router.
+ * @api
  */
 #[Route(LocalePrefix::PATHS)]
 #[IsGranted('ROLE_CURATOR')]
@@ -53,11 +35,7 @@ final class ModerateRegionsController extends AbstractController
     private const string CSRF_TOKEN_ID = 'region-curated-default';
     private const string CSRF_ABOUT_ID = 'region-about-text';
 
-    /**
-     * A lead is a paragraph, not an essay. The Wikipedia extracts this sits
-     * beside run 150-400 characters; the cap is generous against those and
-     * still says "this is the lead, the map is the page".
-     */
+    /** Lead paragraph cap. */
     private const int ABOUT_MAX = 1200;
 
     public function __construct(
@@ -73,10 +51,6 @@ final class ModerateRegionsController extends AbstractController
         /** @var User $user */
         $user = $this->getUser();
         $rows = $this->visibleRegions($user);
-        // Every country this curator can see, taken from the rows themselves so
-        // the list can never offer a country with nothing behind it. Built
-        // BEFORE the filter narrows them, or picking a country would leave the
-        // select holding only that country (owner request, 2026-08-03).
         $countries = array_values(array_unique(array_map(
             static fn (array $r): string => (string) $r['countryCode'],
             $rows,
@@ -90,24 +64,7 @@ final class ModerateRegionsController extends AbstractController
             ));
         }
 
-        /* NOT PAGED (owner, 2026-08-14: "Pagination for Regions just remove it,
-           it makes no sense"). It was paged by region, which broke the moment
-           the desk grouped by country: 25 regions was four countries with
-           fifteen hidden, and Japan's 47 prefectures spanned two pages. Paging
-           by country fixed the splitting and was still the wrong shape — this
-           is a settings desk, not a queue. A curator comes here to find one
-           country and flip one region, and a pager turns "which regions open in
-           Best of" into a question you have to visit three URLs to answer.
-
-           It is bounded by construction, which is why dropping the pager does
-           not reopen the unbounded-list problem the pagination sweep closed:
-           the list is one collapsed row per ONBOARDED COUNTRY, a number that
-           grows by deliberate human act a few times a year and stands at 19.
-           The region cards inside are collapsed by default. Both readiness
-           queries are batched (one GROUP BY over every id), so the whole desk
-           costs two queries whatever its length. */
         $reports = $this->readiness->reportForRegions(array_map(static fn (array $r): int => $r['id'], $rows));
-        // The middle rung's count, batched the same way and for the same reason.
         $confirmedCounts = $this->readiness->confirmedCounts(array_map(static fn (array $r): int => $r['id'], $rows));
         $confirmedThreshold = $this->readiness->confirmedThreshold();
         $threshold = $this->readiness->threshold();
@@ -115,10 +72,6 @@ final class ModerateRegionsController extends AbstractController
 
         $regions = array_map(static function (array $r) use ($reports, $minPerBlock, $translator, $confirmedCounts, $confirmedThreshold): array {
             $rep = $reports[$r['id']];
-            // Per-BLOCK, so a moderator can see WHICH kind of content the region
-            // is short of, not just that a number is too low (owner request,
-            // 2026-07-27). `met` marks a block that already carries its share of
-            // the breadth requirement.
             $blocks = [];
             foreach (CuratedReadiness::BLOCKS as $letter => $labelKey) {
                 $n = $rep['blocks'][$letter];
@@ -134,8 +87,6 @@ final class ModerateRegionsController extends AbstractController
                 'id' => $r['id'],
                 'slug' => $r['slug'],
                 'countryCode' => $r['countryCode'],
-                // Carried through for the continent → country → region grouping
-                // the template renders; the rows arrive already in that order.
                 'continent' => $r['continent'],
                 'countryName' => $r['countryName'],
                 'flag' => $r['flag'],
@@ -151,25 +102,10 @@ final class ModerateRegionsController extends AbstractController
                 'shortTotal' => $rep['shortTotal'],
                 'shortBlocks' => $rep['shortBlocks'],
                 'ready' => $rep['ready'],
-                // A region already flipped can always be flipped back, even if
-                // its count later drops below the threshold — the gate exists to
-                // stop premature ENABLING, never to trap a region in a mode its
-                // content no longer supports.
                 'canCurated' => 'curated' === $r['defaultMode'] || $rep['ready'],
             ];
         }, $rows);
 
-        /* Continent → country → regions, as a real nested structure rather than
-           change-detection in the template: each country is a collapsible
-           <details>, and a <details> cannot be opened and closed across
-           iterations of a flat loop without emitting unbalanced tags.
-
-           Collapsed by default, because 19 countries of regions is several
-           screens of vertical scroll before a curator finds anything (owner,
-           2026-08-14). Two exceptions, both cases where a shut group would
-           leave the page looking empty: a country the filter has narrowed to,
-           and the only country on the page. The summary carries the counts, so
-           a closed group still answers "is there anything to do here". */
         $groups = [];
         foreach ($regions as $r) {
             $groups[$r['continent']][$r['countryCode']]['name'] = $r['countryName'];
@@ -224,9 +160,7 @@ final class ModerateRegionsController extends AbstractController
             return $this->redirectToRoute('moderate_regions');
         }
 
-        // Jurisdiction, then the gate. Both are re-checked here rather than
-        // trusted from the rendered form: the desk hides an unavailable choice,
-        // but a POST is a POST.
+        // Re-check scope and gate on POST — do not trust the rendered form.
         if (!$this->scopeProvider->allowsRegion($this->scopeProvider->scopeFor($user), $regionId)) {
             throw $this->createAccessDeniedException('Region outside your moderation area.');
         }
@@ -251,17 +185,6 @@ final class ModerateRegionsController extends AbstractController
         return $this->redirectToRoute('moderate_regions');
     }
 
-    /**
-     * The about-text editor for one region: five locale slots, each with the
-     * harvested Wikipedia lead shown beside the box a curator types into.
-     *
-     * Its own page rather than a control on the desk card. The desk is a list
-     * of nineteen countries of regions and each row already carries a meter,
-     * six block counts and three mode buttons; five textareas per row would
-     * bury the setting it exists for. A page also gives the harvested text
-     * somewhere to be READ, which is the thing a curator needs in front of
-     * them to decide whether they are adapting it or replacing it.
-     */
     #[Route('/moderate/regions/{slug}/about', name: 'moderate_regions_about', requirements: ['slug' => '[a-z0-9-]+'], methods: ['GET'])]
     public function about(string $slug, TranslatorInterface $translator): Response
     {
@@ -280,14 +203,9 @@ final class ModerateRegionsController extends AbstractController
                 'code' => $locale,
                 'text' => $own['text'] ?? '',
                 'derived' => $own['derived'] ?? false,
-                // What the harvest holds for this locale, so the curator can
-                // read the thing they are about to override or adapt.
                 'wiki' => \is_array($harvest) && \is_string($harvest['extract'] ?? null)
                     ? ['extract' => $harvest['extract'], 'url' => (string) ($harvest['url'] ?? ''), 'title' => (string) ($harvest['title'] ?? '')]
                     : null,
-                // "I adapted the article" can only be claimed where an article
-                // exists to adapt - this locale's, or English (translating the
-                // English lead is a derivative work too).
                 'canDerive' => RegionLead::hasSource($wiki, $locale),
             ];
         }
@@ -300,22 +218,13 @@ final class ModerateRegionsController extends AbstractController
                 'slug' => $slug,
                 'label' => $translator->trans('region.'.$slug.'.label'),
                 'countryCode' => $region['country_code'],
-                // Country ahead of the region name: "Eastern Province" alone is
-                // ambiguous across nineteen countries, and a curator who lands
-                // here from a filtered desk needs to see WHICH one at a glance.
                 'countryName' => $region['country_name'],
-                // Only when the World bundle actually matched — a code with no
-                // country row has no flag file, and a broken image on a
-                // moderation surface is worse than no flag (same rule as the
-                // desk's own rows).
                 'flag' => null !== $region['world_iso2']
                     ? 'flags/'.strtolower($region['world_iso2']).'.svg'
                     : null,
             ],
             'locales' => $locales,
             'max_len' => self::ABOUT_MAX,
-            // The shell chrome names the curator's areas, the same as on the
-            // desk this page is reached from.
             'mod_scope_names' => $this->scopeProvider->describe($user, $this->scopeProvider->scopeFor($user)),
         ]);
     }
@@ -328,8 +237,6 @@ final class ModerateRegionsController extends AbstractController
         if (!$this->isCsrfTokenValid(self::CSRF_ABOUT_ID, (string) $request->request->get('_token'))) {
             throw $this->createAccessDeniedException('Invalid CSRF token.');
         }
-        // Jurisdiction re-checked on the POST, not trusted from the form that
-        // rendered it — the same rule the mode buttons follow.
         $region = $this->regionForCurator($slug, $user);
         $wiki = self::decodeJson($region['context']);
 
@@ -338,9 +245,6 @@ final class ModerateRegionsController extends AbstractController
         foreach (RegionLead::LOCALES as $locale) {
             $text = trim((string) $request->request->get('text_'.$locale, ''));
             if ('' === $text) {
-                // An emptied box REMOVES the override rather than storing "",
-                // which is how a curator undoes one: the harvested lead comes
-                // back on the next render, and nothing has to be re-imported.
                 continue;
             }
             if (mb_strlen($text) > self::ABOUT_MAX) {
@@ -348,9 +252,7 @@ final class ModerateRegionsController extends AbstractController
 
                 return $this->redirectToRoute('moderate_regions_about', ['slug' => $slug]);
             }
-            // A claim of adaptation is only honoured where there is something
-            // to adapt; otherwise it silently becomes original work, which is
-            // the safe direction (no citation is better than a false one).
+            // Adaptation claim only if a source exists; otherwise original (fail-closed).
             $derived = $request->request->has('derived_'.$locale) && RegionLead::hasSource($wiki, $locale);
             $curated[$locale] = [
                 'text' => $text,
@@ -362,9 +264,6 @@ final class ModerateRegionsController extends AbstractController
 
         $this->db->executeStatement(
             'UPDATE region SET context_curated = :ctx, updated_at = NOW() WHERE id = :id',
-            // All five boxes emptied means "no override at all" — NULL, not an
-            // empty object, so the column reads the same as a region nobody has
-            // ever edited.
             ['ctx' => [] === $curated ? null : json_encode($curated, \JSON_THROW_ON_ERROR), 'id' => $region['id']],
         );
         $this->addFlash('success', 'moderate_regions.about.flash_saved');
@@ -373,17 +272,12 @@ final class ModerateRegionsController extends AbstractController
     }
 
     /**
-     * One region by slug, refused unless it is inside this curator's areas and
-     * is a region the desk operates on at all.
+     * One region by slug; 404/403 unless it is in this curator's areas.
      *
      * @return array{id: int, country_code: string, country_name: string, world_iso2: ?string, context: ?string, context_curated: ?string}
      */
     private function regionForCurator(string $slug, User $user): array
     {
-        /* Country name and flag come from the World reference bundle, LEFT
-           JOINed exactly as the desk list does it, so a region whose country is
-           somehow not in the bundle still opens (falling back to its code and
-           no flag) rather than 404ing on a moderation surface. */
         $row = $this->db->fetchAssociative(
             'SELECT r.id, r.country_code, r.context, r.context_curated,
                     COALESCE(wc.name, r.country_code) AS country_name, wc.iso2 AS world_iso2
@@ -426,19 +320,11 @@ final class ModerateRegionsController extends AbstractController
     }
 
     /**
-     * The regions this curator may act on, in the registry's own order.
-     *
      * @return list<array{id: int, slug: string, countryCode: string, defaultMode: string, continent: string, countryName: string, flag: ?string}>
      */
     private function visibleRegions(User $user): array
     {
         $scope = $this->scopeProvider->scopeFor($user);
-        /* Continent and country come from the World reference bundle, LEFT
-           JOINed so a region whose country is somehow not in it still lists
-           (under the "-" group) rather than vanishing from a moderation
-           surface. Sorted in SQL rather than in PHP because a PHP sort would
-           need the translator (region labels are translated) and would have to
-           run before the grouping anyway. */
         $sql = "SELECT r.id, r.slug, r.country_code AS cc, r.default_map_mode,
                        COALESCE(cont.name, '') AS continent,
                        COALESCE(wc.name, r.country_code) AS country_name,
@@ -462,21 +348,9 @@ final class ModerateRegionsController extends AbstractController
                 $params['ccs'] = $scope->countryCodes;
                 $types['ccs'] = ArrayParameterType::STRING;
             }
-            // A limited scope with neither list is a curator assigned nothing
-            // resolvable — show no regions rather than silently showing all.
+            // Empty assignment: show nothing, never silently all regions.
             $sql .= ' AND ('.([] === $clauses ? 'FALSE' : implode(' OR ', $clauses)).')';
         }
-        /* Continent, then country, then the biggest region first — the grouping
-           the page renders (owner request 2026-08-14: "group this per continent
-           and country and state"). A flat `area_km2 DESC` put Western Australia,
-           Queensland and Québec adjacent, which reads as an ordering accident
-           when the list spans six continents.
-
-           Area DESC is KEPT as the within-country order rather than swapped for
-           alphabetical: it is the existing convention, it needs no translation
-           to sort by, and it puts the region a curator is most likely to be
-           looking for at the top of its country. Empty continent sorts last so
-           an unmatched country lands at the end, not above Africa. */
         $sql .= " ORDER BY NULLIF(cont.name, '') NULLS LAST, country_name, r.area_km2 DESC, r.slug";
 
         /** @var list<array{id: int|string, slug: string, cc: string, default_map_mode: string, continent: string, country_name: string, world_iso2: ?string}> $rows */
@@ -489,9 +363,6 @@ final class ModerateRegionsController extends AbstractController
             'defaultMode' => (string) $r['default_map_mode'],
             'continent' => (string) $r['continent'],
             'countryName' => (string) $r['country_name'],
-            // Only when the World bundle actually matched: a code with no
-            // country row has no flag file either, and a broken image on a
-            // moderation surface is worse than no flag.
             'flag' => null !== $r['world_iso2']
                 ? 'flags/'.strtolower((string) $r['world_iso2']).'.svg'
                 : null,

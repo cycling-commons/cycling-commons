@@ -1,25 +1,9 @@
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
-/* Every panel and control around the map: the layer list and its select-all, the
-   base Map/Satellite picker and its top-right flyout, the collapsible legend, the
-   mobile filters sheet and burger nav, the breakpoint resize, the Curated
-   best-of facets, and all the chip groups (discipline, preference prefilter,
-   "set my area" prompt, climb/stay filters, heat toggle, season).
-   Extracted from map.js by the module split —
-   the last extraction, which leaves map.js as imports plus the boot sequence.
-
-   Six inits rather than one, because six calls the entry already made sit
-   interleaved through this chrome (initStreetToggle, initSearchUi, initScopeRail,
-   initAreaNudge, initMapillaryDock, initPlanner). Splitting on those seams is
-   what lets the entry's boot list stay in exact source order (§4.2) — the
-   ordering here is load-bearing twice over:
-     - initChips() MUST run after initScopeRail()/initAreaNudge(), because its
-       tail fires the initial refreshBestOf();
-     - inside initChips(), the pref chip and the area prompt MUST bind after the
-       generic '.grp .chips .chip' toggle binder, or that assignment clobbers
-       their onclick with a toggle-only handler.
-
-   refreshBestOf() is the one export anything else needs: scope-ui.js's
-   applyScope() calls it, because a scope change re-ranks best-of. */
+/* Map panels and chrome (docs/specs/map-and-search.md §4, §4.1, §4.2, §4.3):
+   layer list, base picker, legend, chips, Curated facets.
+   initChips() must run after initScopeRail()/initAreaNudge() (it fires the
+   initial refreshBestOf()). Pref chip and area prompt must bind after the
+   generic '.grp .chips .chip' toggler, or that assignment clobbers them. */
 import { I18N, D, tpl, CC_SEASON_LABEL, CC_BIKE_LABEL } from './i18n.js';
 import { txtOn, currentSeason } from './util.js';
 import { map, satelliteConfigured } from './map-init.js';
@@ -39,12 +23,7 @@ import { routesTilesConfigured, setRoutesTiles, routesTilesVisible } from './rou
 import { setFilterDot } from './shell.js';
 
 // `app` is assigned by initRailChrome(), so it cannot stay a const inside it.
-//
-// The two best-of facets are MULTI-select chip rows (owner 2026-08-20), read
-// straight from the DOM rather than mirrored in module state: one source of
-// truth, the same way render.js reads its own chip facets. An EMPTY row means
-// "narrowed by nothing" and the server aggregates across the whole vocabulary,
-// which is why unticking everything is a wide answer and never an empty one.
+// Best-of facets are multi-select chip rows read from the DOM. Empty = wide.
 let app;
 let _bestOfReq=0;
 const facet = id => {
@@ -56,16 +35,8 @@ const boSeasons = () => facet('boSeason');
 const boBikes = () => facet('boBike');
 
 export function initLayerList(){
-  // The rail lists categories in READING order, grouped (catalog.js): the
-  // utilities that aim for full coverage, then the layers riders vote into a
-  // best-of. Same split, same vocabulary as the contribute hub, so "what kind
-  // of thing is this" has one answer across the site.
-  //
-  // No letter in the row. The swatch already carries the category's icon and
-  // colour, so "B · Climbs" spent a prefix restating what the swatch says —
-  // and the letters, being storage identifiers, read as a broken sequence the
-  // moment the list is ordered for humans (A, C, M, D…). They stay in the
-  // URLs, tiles and API; they are gone from every surface a rider reads.
+  // Categories in reading order (catalog.js): utilities, then votable.
+  // No letter in the row — the swatch already carries icon and colour.
   const lc=document.getElementById('layers');
   const row=layer=>{
     const el=document.createElement('div');
@@ -74,9 +45,6 @@ export function initLayerList(){
     if(!active.has(layer.key)) el.classList.add('off');
     const _lc=layerCounts(layer);
     const ct=`${_lc.shown}/${_lc.total}`;
-    // Scenic wears the drawn camera here too: the row's silhouette filter
-    // flattens the 📷 emoji to a blank rounded box, exactly as it did on the
-    // map pins (owner 2026-08-14).
     const glyph = layer.key==='scenic' ? scenicGlyph(13)
       : layer.key==='toilets' ? toiletGlyph(13) : layer.icon;
     el.innerHTML=`<span class="sw"><i class="sw-g">${glyph}</i></span><span class="nm">${layer.label}</span><span class="ct">${ct}</span>`;
@@ -104,56 +72,32 @@ export function initLayerList(){
   };
   syncLayersAll();
 
-  // on-map base picker (top-right) — Map ↔ Satellite
-  //
-  // No Esri key means no satellite layer, and a two-button Map/Satellite
-  // control where Satellite does nothing is worse than no control: it reads as
-  // broken rather than absent. The whole picker goes, not just the segment,
-  // because with nothing to choose between, its button would open an empty
-  // menu.
-  //
-  // Gated on the KEY, not on map.getLayer('satellite'). This runs before
-  // map.on('load') adds the layer, so the layer question answered "no" on
-  // every load and the picker hid itself even where satellite works
-  // (owner-reported 2026-08-20).
+  // Base picker — hide entirely when there is no Esri key (gated on the key,
+  // not map.getLayer('satellite'); this runs before the layer is added).
   if(!satelliteConfigured()){
     const seg=document.getElementById('baseSeg');
     const picker=seg && seg.closest('.trw');
     if(picker) picker.hidden=true; else if(seg) seg.hidden=true;
   }
-  // Road-surface reference skin (surface-tiles.js). Off by default and only
-  // offered when an artifact exists; SURFACE_TILES_ON is false when
-  // CC_SURFACE_URL is absent, which is every region that has not been built.
+  // Road-surface skin: off by default; only offered when an artifact exists.
   const surfBtn=document.getElementById('ovSurface');
   const studyBtn=document.getElementById('skeyStudy');
 
-  /* The overlay rows carry the same state column the layer rows do.
-     Without it they were a dimmed swatch and a dimmed name with nothing on
-     the right, which reads as disabled rather than off (owner-reported
-     2026-08-20): every OTHER row in the list has a count there, and that
-     number is what says "this one is alive". */
+  /* Overlay rows share the layer rows' state column (On/Off). */
   const paintOverlay=(btn, on)=>{
     if(!btn) return;
     btn.classList.toggle('on', on);
     btn.setAttribute('aria-pressed', on?'true':'false');
     const ct=btn.querySelector('.ct');
     if(!ct) return;
-    /* A THIRD state for the surface row: switched on, but zoomed out past the
-       skin's own floor, so the map has not changed and will not until the
-       rider zooms. The row is where they pressed, so the row is where it says
-       so - the same job the shown/total count does for a layer that is on and
-       drawing nothing. */
+    /* Surface on but zoomed out past CLASSIFIED_MIN_ZOOM → "Zoom in". */
     const waiting = on && btn.id==='ovSurface' && map.getZoom() < CLASSIFIED_MIN_ZOOM;
     ct.classList.toggle('ct-wait', waiting);
     ct.textContent = waiting ? (I18N.overlayZoomIn||'Zoom in')
       : on ? (I18N.overlayOn||'On') : (I18N.overlayOff||'Off');
   };
 
-  /* Study mode strips the basemap to leave the surface lines alone on a pale
-     ground. With the surface skin off that is not a study of anything — it is a
-     blank page, and a rider who lands there has no way to tell whether the
-     feature is broken or the layer is missing. So the control follows the layer:
-     disabled while the skin is off, and switched off with it. */
+  /* Study mode follows the surface layer: disabled (and off) while the skin is off. */
   const gapsBtn=document.getElementById('skeyGaps');
   const syncStudyGate=()=>{
     if(studyBtn){
@@ -161,10 +105,7 @@ export function initLayerList(){
       studyBtn.disabled=!on;
       if(!on && studyModeOn()){ setStudyMode(false); studyBtn.setAttribute('aria-pressed','false'); }
     }
-    // The gaps toggle exists only while the skin is on (owner 2026-08-14):
-    // it is a question about this layer, and a control for an absent layer
-    // reads as broken. Hidden rather than disabled — with the skin off there
-    // is nothing to explain.
+    // Gaps toggle exists only while the skin is on.
     if(gapsBtn) gapsBtn.hidden=!surfaceTilesVisible();
   };
   if(gapsBtn){
@@ -180,26 +121,15 @@ export function initLayerList(){
     surfBtn.onclick=()=>{
       const on=setSurfaceTiles(!surfaceTilesVisible());
       paintOverlay(surfBtn, on);
-      /* Switched on from too far out, the map does not change at all, and a
-         control that answers a press with nothing is the one thing this map
-         refuses to do. The row now carries the reason, but the row is a small
-         word in a panel the rider is already looking past - so the press
-         itself also gets a toast, once, at the moment it happens. */
       if(on && map.getZoom() < CLASSIFIED_MIN_ZOOM){
         mapToast(I18N.zoomForSurfaces||'Zoom in to see road surfaces');
       }
       syncStudyGate(); syncLegend();
     };
-    // The floor is a zoom condition, so the row has to follow the zoom, not
-    // just the press: a rider who zooms out with the skin on gets the same
-    // answer without touching anything.
     map.on('zoomend', ()=>paintOverlay(surfBtn, surfaceTilesVisible()));
   }
 
-  // Cycle-route network (routes-tiles.js). Same rules as the surface skin: off
-  // by default (readable-by-default is the brief), offered only when an
-  // artifact exists — a control for tiles that were never built reads as
-  // broken, not absent.
+  // Cycle-route network: same rules as the surface skin.
   const routesBtn=document.getElementById('ovRoutes');
   if(routesBtn && routesTilesConfigured()){
     routesBtn.hidden=false;
@@ -209,17 +139,8 @@ export function initLayerList(){
     };
   }
 
-  /* THE LEGEND SHOWS ONLY WHAT IS ON THE MAP (owner 2026-08-16).
-     Each key follows the thing it explains, and the panel itself follows the
-     keys - six surface colours were being explained beside a map with no
-     surfaces on it, which teaches a rider to read the legend as decoration.
-
-     The surface key answers to TWO sources, because it is one key for two
-     layers: the tile skin, and the curated Road-surface layer. Either one on
-     screen earns it. `shown > 0` rather than merely "the layer is ticked",
-     because a region with no surfaces mapped is exactly the case in the
-     owner's screenshot: the row read 0/0 and the key still explained six
-     colours nobody could point at. */
+  /* Legend shows only what is on the map. Surface key: tile skin OR curated
+     A layer with shown > 0 (ticked-but-empty must not explain six colours). */
   const surfaceKey=document.getElementById('surfaceKey'), routesKey=document.getElementById('routesKey');
   const surfaceLayer=layerByKey['surface'];   // a lookup object, not a function
   const surfaceOnMap=()=>surfaceTilesVisible()
@@ -227,40 +148,25 @@ export function initLayerList(){
   function syncLegend(){
     if(surfaceKey) surfaceKey.hidden=!surfaceOnMap();
     if(routesKey) routesKey.hidden=!routesTilesVisible();
-    // Nothing left to explain: the panel goes rather than sitting there as an
-    // empty box with a collapse control on it.
     const legendEl=document.querySelector('.legend');
     if(legendEl) legendEl.hidden=!!(surfaceKey?.hidden && routesKey?.hidden);
   }
-  /* THE FILTERS SHOW ONLY WHAT THERE IS TO FILTER (owner 2026-08-20: "still
-     find the filter too crowded"). Climb surface, traffic and effort describe
-     climbs; stay accessibility describes stays. With that layer switched off,
-     or with nothing of it in the current scope, those chips cannot change what
-     the map draws, and thirty of them in a wall is what a rider has to read
-     past to reach the ones that can.
-
-     Gated on TOTAL, never on shown: `shown` already has the chips applied, so
-     a rider who filtered a layer down to nothing would watch the filter that
-     did it disappear, with no way back. `total` is what exists here. */
+  /* Filters show only what there is to filter. Gated on total, never shown
+     (shown already has the chips applied — filtering to nothing must not hide the chips). */
   function syncFilterGroups(){
     document.querySelectorAll('#filters .fsub[data-layer]').forEach(g=>{
       const lyr=layerByKey[g.dataset.layer];
       g.hidden = !(lyr && active.has(lyr.key) && layerCounts(lyr).total > 0);
     });
   }
-  // Counts change with scope, mode, best-of and every layer toggle; render.js
-  // announces it from the one place they are all recomputed.
   document.addEventListener('cc:counts', ()=>{ syncLegend(); syncFilterGroups(); });
   syncLegend(); syncFilterGroups();
 
-  // Legend-as-filter + study mode. Both live on the legend because that is
-  // where the classes are named; the class filter works with the tile skin off
-  // too, since it also governs our own curated A items.
+  // Legend-as-filter + study mode.
   document.querySelectorAll('.skey-row[data-surf-cls]').forEach(b=>{
     b.onclick=()=>{ b.setAttribute('aria-pressed', toggleSurfaceClass(b.dataset.surfCls) ? 'true' : 'false'); };
   });
-  // syncStudyGate() after the toggle, not before: Study mode hides the basemap,
-  // so its own key has to leave with it.
+  // syncStudyGate after the toggle: Study hides the basemap, so its key leaves with it.
   if(studyBtn) studyBtn.onclick=()=>{ studyBtn.setAttribute('aria-pressed', setStudyMode(!studyModeOn()) ? 'true' : 'false'); syncStudyGate(); };
   syncStudyGate();
 
@@ -274,14 +180,7 @@ export function initLayerList(){
   });
 }
 
-/* The base-map picker: one icon button in the top-right corner and the small
-   flyout it opens. A flyout rather than an always-open segmented control
-   because a rider changes base map rarely and looks at the map constantly.
-
-   Closing rules are the ordinary ones a menu owes: a choice closes it, a click
-   anywhere else closes it, Escape closes it. The buttons inside are the SAME
-   #baseSeg buttons initLayerList() already binds - this only owns the opening
-   and closing. */
+/* Base-map picker flyout. Same #baseSeg buttons initLayerList() already binds. */
 export function initMapCtrl(){
   const btn=document.getElementById('tr-base'), fly=document.getElementById('fly-base');
   if(!btn || !fly) return;
@@ -292,17 +191,8 @@ export function initMapCtrl(){
   document.addEventListener('keydown', e=>{ if(e.key==='Escape') setOpen(false); });
 }
 
-/* The filter pill: the map's own answer to "why is my data missing?".
-
-   It is on the MAP, not in the panel, because the panel is exactly where a
-   rider is not looking when they notice something is gone. The rail's Layers
-   icon wears a dot at the same time, so the answer survives the drawer being
-   closed.
-
-   The number is a real tally from the last render pass (render.js
-   hiddenByFilters). When the narrowing happens entirely inside the coverage
-   tiles there is nothing to count, and the pill says the map is narrowed
-   without naming a figure rather than claiming a zero it has not verified. */
+/* Filter pill on the map (docs/specs/map-and-search.md §4.3): tally from
+   render.js hiddenByFilters. Coverage-tile-only narrowing names no figure. */
 export function initFilterPill(){
   const pill=document.getElementById('fpill');
   const msg=document.getElementById('fpillMsg');
@@ -319,26 +209,20 @@ export function initFilterPill(){
       : tpl(I18N.filtersHide || 'Filters are hiding {x} places', {x:hidden});
   });
 
-  /* Show all: every narrowing group back to its widest. The markup declares
-     which way each group narrows (f-match narrows by deselection, f-optin by
-     selection), so a filter group added later is reset correctly without
-     anybody remembering to come back here. */
+  /* Show all: every narrowing group back to its widest (f-match vs f-optin). */
   reset.onclick=()=>{
     document.querySelectorAll('#filters .f-match .chip').forEach(c=>c.classList.add('on'));
     document.querySelectorAll('#filters .f-optin .chip').forEach(c=>{
       c.classList.remove('on'); c.setAttribute('aria-pressed','false');
     });
-    // The preference chip's state is not the class: it lives in render.js and
-    // on the device, so it is switched off through its own setter.
+    // Preference state lives in render.js, not the class.
     if(prefFilterEnabled()){
       setPrefFilter(false);
       try{ localStorage.setItem(PREF_FILTER_KEY, 'off'); }catch(e){ /* private mode */ }
     }
     syncFacetChips();
     applyStaysAccessFilter();
-    // The best-of facets are f-optin too, so the reset just cleared them -
-    // their widest state, and the only one in this block the SERVER has to be
-    // told about.
+    // Best-of facets are f-optin too — the only reset the server must hear.
     updateSubtitle();
     refreshBestOf();
     render();
@@ -347,22 +231,13 @@ export function initFilterPill(){
 }
 
 export function initRailChrome(){
-  // Data-version readout (owner 2026-08-13): which artifact builds THIS page
-  // is actually drawing — the catalog's ?v= tag plus the build stamp parsed
-  // from each loaded artifact URL. When a rider says "I don't see X", this
-  // line splits stale-cache from server in one glance; 'FAILED' on the
-  // catalog explains an empty map by itself.
+  // Data-version readout: catalog ?v= plus artifact build stamps.
   const dv=document.getElementById('dataVersions');
   if(dv){
     const stamp=(u,re)=>{ const m=String(u||'').match(re); return m?m[1]:'—'; };
     const state=window.CC_CATALOG_STATE||'…';
     const cat=state==='ok' ? stamp(window.CC_CATALOG_URL,/v=([0-9a-f]+)/) : state;
-    // Rendered as a FUNCTION and re-rendered on scope changes: the first
-    // real report this line answered (owner 2026-08-13) had two browsers on
-    // IDENTICAL builds — the difference was a stale region scope in one of
-    // them hiding every feature (a scoped rail legitimately reads 0/0). The
-    // client state is as load-bearing as the data versions, so it rides the
-    // same line.
+    // Re-rendered on scope/mode changes — client state is as load-bearing as versions.
     const renderVersions=()=>{
       dv.innerHTML='';
       const sc=curScope();
@@ -380,32 +255,15 @@ export function initRailChrome(){
       });
     };
     renderVersions();
-    // Once more after the boot sequence settles: initRailChrome runs before
-    // the view mode is resolved (initBestOf), and the line must show the mode
-    // the map actually opened in, not the pre-resolution default.
-    setTimeout(renderVersions,0);
+    setTimeout(renderVersions,0);   // after initViewMode resolves the opening mode
     document.addEventListener('cc:scopechange',renderVersions);
-    // Mode buttons re-render it too (setMode has no event of its own).
     document.querySelectorAll('#mode button').forEach(b=>b.addEventListener('click',()=>setTimeout(renderVersions,0)));
   }
 
-  /* The phone bottom-sheet retired with the old rail (owner 2026-08-20, one
-     behaviour at every width): the drawer now slides over the map on a phone
-     exactly as it slides beside it on a laptop, so there is no peek handle to
-     tap, no swipe to own, and no 'sheet-open' state for anything to clear. */
   app=document.querySelector('.app');
 
-  /* The legend collapses on EVERY screen (owner 2026-08-16), not only on
-     phones: a rider who has learnt the colours wants the corner of the map
-     back. One class, `collapsed`, hides #lgBody wherever it is applied - which
-     also means a key section added later cannot be forgotten out of a hide
-     list, the way the routes key just was.
-
-     The starting state differs by room, not by preference: a phone opens
-     collapsed because the panel would cover the map it explains, a laptop
-     opens expanded because there is space and the key is the point. Read once
-     at init; resizing does not re-decide, because after the first tap the
-     state belongs to the reader. */
+  /* Legend collapses on every screen. Phone opens collapsed; laptop expanded.
+     Read once at init — resize does not re-decide. */
   const lgToggle=document.getElementById('lgToggle'), legend=document.querySelector('.legend');
   if(lgToggle && legend){
     const sync=()=>{
@@ -434,8 +292,7 @@ export function initRailChrome(){
 function updateSubtitle(){
   const sub=document.querySelector('.map-top .sub'); if(!sub) return;
   if(mode()==='all'){ sub.textContent=I18N.subEverything||'Everything · full catalog'; return; }
-  // Both facets can hold several values now, and an empty one is the wide
-  // answer, so the subtitle names the whole vocabulary rather than nothing.
+  // Empty facet = whole vocabulary.
   const seasons=boSeasons(), bikes=boBikes();
   const sTxt = seasons.length ? seasons.map(v=>CC_SEASON_LABEL[v]||v).join(', ')
     : (I18N.allSeasons||'All seasons');
@@ -445,10 +302,7 @@ function updateSubtitle(){
 }
 
 function applyBestOf(ids){
-  // Membership only: the endpoint returns ids in rank order (vote count, then
-  // recency), but the map surfaces best-of routes as unordered lines — Curated
-  // shows the set, Everything shows all. The server ORDER BY is latent until a
-  // ranked-list UI consumes it; don't assume order is honoured client-side.
+  // Membership only — don't assume server ORDER BY is honoured client-side.
   const set=new Set((ids||[]).map(Number));
   const feats=(layerByKey['experience']||{}).features||[];
   feats.forEach(f=>{ f.cur = set.has(Number(f.id)); });
@@ -458,14 +312,10 @@ function applyBestOf(ids){
 export function refreshBestOf(){
   const req=++_bestOfReq;
   if(mode()!=='curated'){ render(); return; }
-  // A named-region scope sends &region=<id>; My area sends its derived rid SET
-  // as a CSV (&region=1,24) so best-of ranks across the whole home-base area
-  // (MapController parses the CSV; map-and-search.md §4.5 Phase 4).
-  // Country/Everywhere send no region — the guarded unbounded aggregate. A
-  // single named region keeps the identical single-id request as before.
+  // Named region: &region=<id>. My area: derived rid CSV (docs/specs/map-and-search.md §4.5).
+  // Country/Everywhere: no region. Empty facet CSV = narrow by nothing.
   const regionIds = window.CCScope && window.CCScope.bestOfRegionIds();
   const regionQ = (regionIds && regionIds.length) ? `&region=${encodeURIComponent(regionIds.join(','))}` : '';
-  // Both facets go as a CSV of enum values; an empty one narrows by nothing.
   fetch(`/map/best-of?season=${encodeURIComponent(boSeasons().join(','))}&bike=${encodeURIComponent(boBikes().join(','))}${regionQ}`,
     {credentials:'same-origin', headers:{'Accept':'application/json'}})
     .then(r=>{ if(!r.ok) throw new Error(String(r.status)); return r.json(); })
@@ -473,13 +323,8 @@ export function refreshBestOf(){
     .catch(()=>{ if(req===_bestOfReq) applyBestOf([]); });   // on failure, Curated shows no picks rather than a stale set
 }
 
-// Record a manual Curated/Everything choice.
-// A logged-in rider's choice
-// goes to their PROFILE — window.CC_MAP_MODE only exists in the riders-only
-// script block — so it follows them across devices and a shared computer never
-// hands it to the next person. Anonymous visitors have no profile to hang it
-// on, so theirs stays on the device. Fire-and-forget: a failed save must never
-// block the map, and the mode is already applied locally.
+// Persist Curated/Everything: profile for a rider (window.CC_MAP_MODE),
+// localStorage for anonymous. Fire-and-forget.
 function persistMode(m){
   const cfg = window.CC_MAP_MODE;
   if(cfg && cfg.url){
@@ -490,12 +335,8 @@ function persistMode(m){
   try { localStorage.setItem(MODE_LS_KEY, m); } catch(e){ /* private mode */ }
 }
 
-// Resolve which mode the map OPENS in and paint the toggle to match.
-// Runs after initScope(), so
-// CCScope.get() is the resolved active scope — the region's curated_default is
-// the third rung of the precedence and cannot be read before then. The template
-// marks Everything active, which is the global default and so the common case;
-// this only repaints when the precedence says otherwise.
+// Opening view mode (docs/specs/map-and-search.md §4.2). Must run after
+// initScope() — the region's curated_default is the third rung of precedence.
 export function initViewMode(){
   const m = resolveInitialMode(
     PREFS,
@@ -508,47 +349,25 @@ export function initViewMode(){
 }
 
 export function initBestOf(){
-  // Route domain phase 4 (spec §8): Curated mode = best-of for a (season, bike)
-  // facet, fetched from /map/best-of; the returned ids get cur:true and Curated
-  // filters K routes to them. A named-region scope now sends &region= too
-  // (map-and-search.md §4.5 Phase 2).
-
-
-
-  // Race-guard token, same pattern as the drawer's _historyReq (review W5):
-  // switching Season/Bike quickly must never let a slower earlier response
-  // overwrite the newer facet's membership under a subtitle that says otherwise.
-
-  // The facet chips bind in initChips(), after the generic chip toggler that
-  // would otherwise clobber their handler - the same rule the climb filters
-  // follow (see the ordering note at the top of this file).
-
-  // mode toggle
+  // Curated = best-of for (season, bike); named-region sends &region=
+  // (docs/specs/map-and-search.md §4.2, §4.5).
+  // Race-guard: a slower earlier response must not overwrite a newer facet.
   document.querySelectorAll('#mode button').forEach(b=>b.onclick=()=>{
     document.querySelectorAll('#mode button').forEach(x=>x.classList.remove('on'));
     b.classList.add('on'); setMode(b.dataset.m);
-    persistMode(b.dataset.m);   // profile for a rider, localStorage for a visitor
-    /* The curated POOL pins are a clustered source, filtered at setData time —
-       so a mode change has to rebuild them, exactly as a scope change does.
-       Without this, Confirmed kept drawing the unconfirmed pins it excludes
-       (and the rail, which now counts them, would have disagreed with itself). */
+    persistMode(b.dataset.m);
+    /* Curated pool pins are a clustered source, filtered at setData — rebuild on mode change. */
     refilterClusters(); updateConfMarkers();
-    clearRevealPin();   // decision C: mode change clears any reveal pin
+    clearRevealPin();
     const bf=document.getElementById('bestFacets'); if(bf) bf.hidden = (mode()!=='curated');
     updateSubtitle();
-    refreshBestOf();          // Curated → fetch + filter; Everything → plain render()
+    refreshBestOf();
   });
 }
 
 export function initChips(){
-  /* Opening state of the two best-of facets, painted here because it is read
-     from the rider's own data rather than rendered by the server.
-
-     Season: the one we are in today. Bike: EVERY bike on the rider's profile,
-     not just the single-bike case the old dropdown could express (owner
-     2026-08-20: "no multiple select option as in my profile"). A rider with
-     nothing saved opens on no bike chips, which the server reads as every
-     bike, so they still get a full ranking. */
+  /* Opening best-of facets: season = today; bike = every bike on the profile
+     (empty = server ranks all bikes). */
   (function openFacets(){
     const season=document.getElementById('boSeason');
     if(season){
@@ -565,13 +384,9 @@ export function initChips(){
   updateSubtitle();
   { const bf=document.getElementById('bestFacets'); if(bf) bf.hidden = (mode()!=='curated'); }
   refreshBestOf();
-  // Generic chip toggle. The climb-filter and preference chips below reassign
-  // onclick to do real work; this is the baseline every chip gets.
-  // (The #disc discipline chips it also used to drive were retired 2026-08-03 —
-  // map-and-search.md §4.3. PREFS.styles no longer preselects anything here.)
+  // Generic chip toggle; climb/pref/area handlers below reassign onclick.
   document.querySelectorAll('.grp .chips .chip').forEach(c=>c.onclick=()=>c.classList.toggle('on'));
-  // Preference prefilter chip: later onclick assignment overrides the generic
-  // toggle-only binder above (same pattern as the climb-filter chips below).
+  // Preference prefilter: later onclick overrides the generic binder above.
   (function initPrefChip(){
     const chip=document.getElementById('prefFilter'), grp=document.getElementById('prefGrp');
     if(!chip||!grp||!PREFS.bikes.length) return;      // anonymous / no prefs → group stays hidden
@@ -582,16 +397,8 @@ export function initChips(){
     chip.onkeydown=e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); flip(); } };
     sync();
   })();
-  // "Set my area" cold-start prompt (map-and-search.md §4.5 Phase 4):
-  // the pref-chip pattern — a hidden rail chip revealed only when the rider has
-  // NO My-area source yet (no base location, no anon circle) AND hasn't dismissed
-  // it. Tapping derives the base from the map centre (Komoot's suggest-home
-  // pattern): a logged-in POST to the base-location endpoint, or an anonymous
-  // localStorage-only circle. Coordinates are rounded to 2 decimals BEFORE they
-  // leave the page (request precision == stored precision — no raw point in the
-  // request or in localStorage; owner privacy invariant). MUST run after the
-  // generic '.grp .chips .chip' toggle binder above (same as initPrefChip), or
-  // that assignment clobbers this chip's onclick with a toggle-only handler.
+  // "Set my area" cold-start (docs/specs/map-and-search.md §4.5). Round to 2dp
+  // before the point leaves the page. Must bind after the generic chip toggler.
   (function initAreaPrompt(){
     const row=document.getElementById('areaPromptRow');
     const setChip=document.getElementById('areaPromptSet');
@@ -599,8 +406,6 @@ export function initChips(){
     if(!row||!setChip||!xBtn||!window.CCScope) return;
     const DISMISS_KEY='cc-area-prompt-dismissed';
     let dismissed=false; try{ dismissed=!!localStorage.getItem(DISMISS_KEY); }catch(e){}
-    // A My-area already exists (base location or a saved anon circle) → the prompt
-    // is moot; leave it hidden.
     if(window.CCScope.myAreaAvailable()||dismissed) return;
     row.hidden=false;
     const hide=()=>{ row.hidden=true; };
@@ -609,8 +414,7 @@ export function initChips(){
       const c=map.getCenter();
       const lat=Math.round(c.lat*100)/100, lng=Math.round(c.lng*100)/100;   // round client-side
       if(window.CC_MY_AREA && CC_MY_AREA.url){
-        // Logged-in: persist the coarse point server-side (the server rounds again
-        // as the invariant holder) and merge back the derived region/country set.
+        // Logged-in: persist the coarse point; server rounds again.
         fetch(CC_MY_AREA.url,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':CC_MY_AREA.token},body:JSON.stringify({lat,lng})})
           .then(r=>r.ok?r.json():null)
           .then(a=>{
@@ -621,8 +425,7 @@ export function initChips(){
           })
           .catch(()=>{ /* network/CSRF failure — leave the chip so the rider can retry */ });
       } else {
-        // Anonymous: a localStorage-only circle (setAnonCircle rounds to 2dp on
-        // write); NOTHING server-side, no device-location prompt (owner decision).
+        // Anonymous: localStorage-only circle; nothing server-side, no device-location prompt.
         window.CCScope.setAnonCircle(c.lat,c.lng,40);
         revealMyAreaBtn(); hide();
         mapToast(I18N.myAreaSetAnon||'My area set on this device');
@@ -632,11 +435,7 @@ export function initChips(){
     setChip.onkeydown=e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); setMyAreaFromCentre(); } };
     xBtn.onclick=()=>{ try{ localStorage.setItem(DISMISS_KEY,'1'); }catch(e){} hide(); };
   })();
-  // climb surface + traffic chips actually filter the climbs layer; C2-T8 adds
-  // climb effort + stay accessibility to the same wiring (this assignment runs
-  // after the generic '.grp .chips .chip' toggle-only handler above, so it wins).
-  // Best-of facets: multi-select, and every change re-ranks. Assigned after
-  // the generic toggler above, so this handler wins.
+  // Climb/stay chips + best-of facets: assigned after the generic toggler, so they win.
   document.querySelectorAll('#boSeason .chip, #boBike .chip').forEach(c=>c.onclick=()=>{
     c.classList.toggle('on');
     updateSubtitle();
@@ -650,17 +449,9 @@ export function initChips(){
     render();
   });
 
-  // ride-heatmap toggle + season filter (source built on first On — W43)
+  // Ride-heatmap: points are fetched on first On — await, then re-read the button.
   document.querySelectorAll('#heattoggle button').forEach(b=>b.onclick=async()=>{
     document.querySelectorAll('#heattoggle button').forEach(x=>x.classList.remove('on')); b.classList.add('on');
-    // addHeatmap ends with updateHeatFilter(), which honours a season chip
-    // selected before the layer existed AND the active region scope.
-    // Awaited since 2026-08-09: the points are fetched on first use rather
-    // than shipped in catalog.json, so the layer does not exist yet when this
-    // returns synchronously. The visibility flip has to wait for it, and the
-    // button re-read below is deliberate — an impatient rider can have
-    // toggled Off again while the fetch was in flight, and the layer must end
-    // up matching the button, not the click that started the fetch.
     if(b.dataset.h==='on' && !map.getLayer('rideheat')) await addHeatmap();
     const want=document.querySelector('#heattoggle button.on');
     if(map.getLayer('rideheat')) map.setLayoutProperty('rideheat','visibility', (want&&want.dataset.h==='on')?'visible':'none');
@@ -670,38 +461,16 @@ export function initChips(){
     updateHeatFilter();
   });
 
-  // "Nothing curated here yet" — the one line an empty map owes the visitor.
-  // A link,
-  // never a form: the page owns the form handling, validation and four-locale
-  // copy, and the map bundle stays small.
+  // Empty-scope invite: a link, never a form.
   (function initEmptyScopeInvite(){
     const row = document.getElementById('emptyScopeInvite');
     if (!row) return;
     const s = curScope() || {};
-    // Region/country scopes carry countryCode directly. A myArea scope always
-    // resolves countryCode to null (scope.js) and instead carries a derived
-    // countryCodes[] on s.myArea; window.CC_MY_AREA.countryCodes is the same
-    // data for a logged-in rider, kept as a fallback in case scope.myArea is
-    // ever absent. Mirror widen()'s "exactly one" rule rather than guess among
-    // several candidate countries.
+    // myArea countryCode is null; use the single derived country when there is exactly one.
     const myAreaCcs = (s.myArea && s.myArea.countryCodes)
       || (window.CC_MY_AREA && window.CC_MY_AREA.countryCodes) || [];
     const cc = s.countryCode || (myAreaCcs.length === 1 ? myAreaCcs[0] : '');
-    // "Curated content exists" must be counted independently of the rider's
-    // CURRENT view mode (default is Everything) and must never count
-    // coverage/OSM-reference POIs — otherwise a country with only a stray
-    // hazard report or an unverified route upload (real content, but not
-    // curated) would silently suppress the invite, and the row would flip on
-    // and off as the rider merely toggles Curated/Everything. Mirrors
-    // featureVisible()'s curated-mode branch (render.js) rather than
-    // inventing a new rule: non-experiential layers (C/D/F/G/H, exp:false)
-    // show unconditionally even in Curated mode — "full coverage" utility
-    // data, per map.curated_hint — so they can never signal curation and are
-    // excluded here; only f.cur on an experiential layer (A/B/E/I/J) or a K
-    // best-of route counts, same as the rail would count `shown` if mode()
-    // were 'curated' (K's f.cur starts false — map.js — and flips once
-    // panels.js's own refreshBestOf() resolves, same eventual consistency
-    // the rest of the rail already has).
+    // Curated count independent of view mode; utility/OSM layers never count.
     const curatedCount = CATALOG.reduce((n, l) => {
       if (l.key !== 'experience' && !l.exp) return n;   // utility layers never count as curated
       return n + l.features.filter(f => f.cur && inScope(f.rid)).length;
@@ -713,23 +482,8 @@ export function initChips(){
   })();
 }
 
-/* "Add a climb here": keep the rail's link pointed at what the map is showing.
-
-   The wizard's own map used to open on a hardcoded Wallonia centre wherever
-   the rider arrived from, so somebody who had just been looking at the climb
-   had to find it a second time (owner 2026-08-14). The link carries the
-   centre and zoom instead, and ContributeController::startView() validates
-   them before the wizard's map reads them.
-
-   Rewritten on 'move' rather than built once: the rider pans while deciding,
-   and a link captured at page load would send them wherever they happened to
-   land first. Coordinates are rounded to 5 decimals (about a metre), which is
-   far finer than a climb foot needs and keeps the URL readable.
-
-   Only the CAMERA travels. Seeding the foot pin from the centre was the
-   tempting version and it is wrong: one point cannot say which end of the
-   climb it is, and a pin the rider did not place is a claim they did not
-   make. */
+/* "Add a climb here" (docs/specs/map-and-search.md §8.1): live camera only,
+   rewritten on move. Do not seed the foot pin from the centre. */
 export function initAddClimbHere(){
   const a=document.getElementById('addClimbHere');
   if(!a) return;   // anonymous rider: the block is not rendered at all

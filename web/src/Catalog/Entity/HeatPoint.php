@@ -10,12 +10,11 @@ use App\Catalog\ItemSource;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * Aggregate ride-heat point (layer L). Never editable, never moderated;
- * delete and reload on import.
+ * Aggregate ride-heat point (layer L). Never editable; delete-and-reload on import.
  *
  * @see docs/specs/catalog-data-model.md §2.3
  *
- * @api Catalog domain entity.
+ * @api
  */
 #[ORM\Entity]
 #[ORM\Table(name: 'heat_point')]

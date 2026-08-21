@@ -14,37 +14,21 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
 
 /**
- * Read plane over the coverage_poi cache filled by the coverage pipeline:
- * drawer detail, name search, town-card nearby lists and rail counts for
- * the uncurated OSM tier. Uses raw DBAL, like App\Catalog\CatalogProvider,
- * because the map read path never hydrates entities.
- *
- * A coverage row is hidden whenever a payload-served `item` shares its
- * source_ref, so each place appears once, as curated, and the results
- * match what the map tiles show. "Payload-served" excludes any item row
- * that also matches the coverage-retirement predicate, so a legacy row
- * that is about to be retired still counts as community here too.
- *
- * The NOT EXISTS checks below test "not touched" without a letter filter,
- * unlike detail()/curatedRefs(). This only matters if a single OSM element
- * were somehow both an untouched surface item and a POI at the same time,
- * which should not happen in practice.
+ * Read plane over coverage_poi (docs/specs/coverage-provider.md §5).
+ * A coverage row is hidden when a payload-served item shares its source_ref.
  *
  * @see docs/specs/coverage-provider.md §5
  * @see docs/specs/osm-data-architecture.md §8
  *
- * @api Consumed by CoverageController.
+ * @api
  */
 final class CoverageRepository
 {
-    /** The serving-cache attribution line (osm-data-architecture.md §4). */
+    /** The serving-cache attribution line (docs/specs/osm-data-architecture.md §4). */
     public const string ATTRIBUTION = '© OpenStreetMap contributors (ODbL)';
 
     /**
-     * Tags shown to the public for a coverage POI. The cache stores every
-     * OSM tag, but only these are ever sent to the drawer.
-     *
-     * @see docs/specs/coverage-provider.md §5
+     * Tags sent to the drawer; the cache stores every OSM tag (docs/specs/coverage-provider.md §5).
      */
     public const array TAG_WHITELIST = [
         'opening_hours', 'website', 'contact:website', 'url', 'phone', 'contact:phone',
@@ -70,13 +54,7 @@ final class CoverageRepository
     }
 
     /**
-     * SQL filter arm for the active region scope (map-and-search.md §4.5),
-     * or '' for the Everywhere scope (no params). `rids` (region ids) compiles
-     * to `<alias>.region_id IN (:rids)`; `cc` to `<alias>.country_code = :cc`;
-     * a country scope sends both, ORed, so a stamped-region row OR an unsplit
-     * country row (region_id NULL, cc set) both pass. Placeholders are bound
-     * once per query via scopeBind(). Absent params = current behaviour,
-     * backward compatible.
+     * Region-scope SQL arm, or '' for Everywhere (docs/specs/map-and-search.md §4.5).
      *
      * @param list<int> $rids
      */
@@ -94,9 +72,7 @@ final class CoverageRepository
     }
 
     /**
-     * Bind the :rids/:cc placeholders scopeArm() references onto a query's
-     * param + type maps. A no-op arm adds nothing, so an Everywhere scope
-     * leaves the query untouched.
+     * Bind :rids/:cc from scopeArm(); no-op when Everywhere.
      *
      * @param array<string, mixed> $params
      * @param array<string, mixed> $types
@@ -114,13 +90,7 @@ final class CoverageRepository
     }
 
     /**
-     * Drawer payload for one coverage POI, with the curated overlay merged
-     * in when the place is also a payload-served item. Returns null when
-     * the ref is not in the coverage cache.
-     *
-     * The join that decides "curated" must match CatalogProvider::
-     * curatedRefs() exactly, so an untouched legacy row (rendered as
-     * community on the tiles) never shows a curated block in the drawer.
+     * Drawer payload for one coverage POI. Curated join matches CatalogProvider::curatedRefs().
      *
      * @return array<string, mixed>|null
      */
@@ -163,16 +133,8 @@ final class CoverageRepository
     }
 
     /**
-     * Ranked name search, curated first: payload-served items matched by
-     * name, then coverage rows not already covered by one of those items.
-     * Both lists are ranked by trigram similarity and deduped by ref.
-     *
-     * "Payload-served" excludes the coverage-retirement predicate, so an
-     * untouched legacy row lists as community, matching its tile.
-     *
-     * `rids`/`cc` scope the results to the active region scope
-     * (map-and-search.md §4.5), so the sidebar mirrors the scope-filtered
-     * tiles; absent = every row (backward compatible).
+     * Ranked name search, curated first (docs/specs/coverage-provider.md §5).
+     * ILIKE wildcards are escaped. Curated arm is rid-only (see below).
      *
      * @see docs/specs/coverage-provider.md §5
      * @see docs/specs/osm-data-architecture.md §8
@@ -183,17 +145,10 @@ final class CoverageRepository
      */
     public function search(string $q, array $rids = [], ?string $cc = null, int $limit = self::SEARCH_LIMIT): array
     {
-        $like = '%'.addcslashes($q, '\\%_').'%';
+        $like = '%'.addcslashes($q, '\\%_').'%'; // ILIKE wildcards escaped
         $curatedParams = ['like' => $like, 'q' => $q, 'limit' => $limit];
         $curatedTypes = ['limit' => ParameterType::INTEGER];
-        // Curated (served-item) arm is rid-ONLY, deliberately dropping cc: the
-        // map's served-data gate (map.js inScope) is rid-only and the catalog
-        // payload carries no cc, so an item admitted by a cc arm here but hidden
-        // by rid there would list a POI whose pin the map hides. A served item
-        // gets its region stamped on write (SpatialResolver) or by the importer's
-        // membership recompute, so rid-only is complete once membership runs.
-        // The community/coverage arm below keeps cc (the tile filter admits
-        // cc-scoped rows), so the two tiers scope by their own authoritative key.
+        // Curated arm is rid-only so a listed pin cannot be hidden by the map's rid gate (docs/specs/coverage-provider.md §5).
         $this->scopeBind($curatedParams, $curatedTypes, $rids, null);
         /** @var list<array{item_id: int|string, ref: string, letter: string, name: string, kind: string|null, lat: string|float, lng: string|float}> $curated */
         $curated = $this->db->fetchAllAssociative(
@@ -243,16 +198,7 @@ final class CoverageRepository
     }
 
     /**
-     * Letter-grouped POIs within $km of a point, for the town card:
-     * payload-served entries first, then the nearest NEARBY_COMMUNITY_CAP
-     * community rows. `total` counts everything in range, so the client can
-     * render a "show all" expander.
-     *
-     * "Payload-served" excludes the coverage-retirement predicate, so an
-     * untouched legacy row lists as community, matching its tile.
-     *
-     * `rids`/`cc` scope the groups to the active region scope
-     * (map-and-search.md §4.5); absent = every row.
+     * Letter-grouped POIs within $km (docs/specs/coverage-provider.md §5).
      *
      * @see docs/specs/coverage-provider.md §5
      *
@@ -262,8 +208,7 @@ final class CoverageRepository
      */
     public function nearby(float $lat, float $lng, float $km, array $rids = [], ?string $cc = null): array
     {
-        // Curated arm is rid-only (see search()): its own param set so :cc is
-        // never bound for a query that no longer references it.
+        // Curated arm is rid-only (see search()); :cc is not bound here.
         $curatedParams = ['lat' => $lat, 'lng' => $lng, 'm' => $km * 1000.0];
         $curatedTypes = [];
         $this->scopeBind($curatedParams, $curatedTypes, $rids, null);
@@ -333,17 +278,7 @@ final class CoverageRepository
     }
 
     /**
-     * Per-letter coverage totals for the rail. The letter filter is
-     * defensive, so the {C..J} response shape never depends on what the
-     * pipeline actually loaded.
-     *
-     * Rows already covered by a payload-served item are excluded (the same
-     * rule as search()/nearby()), so a confirmed item's coverage twin is
-     * never counted twice.
-     *
-     * `rids`/`cc` make the totals scope-aware (map-and-search.md §4.5):
-     * the rail badge's "total" side then matches the scope-filtered "shown"
-     * dots the client renders from the tile props; absent = global totals.
+     * Per-letter coverage totals for the rail (docs/specs/coverage-provider.md §5).
      *
      * @see docs/specs/coverage-provider.md §5
      *
@@ -400,9 +335,7 @@ final class CoverageRepository
     }
 
     /**
-     * The curated overlay block: canonical fields (attributes plus the name
-     * pseudo-field) and public confirmation tallies. Uses the same GROUP BY
-     * as ItemConfirmationService::snapshot().
+     * Curated overlay: attributes + name, plus confirmation tallies matching ItemConfirmationService::snapshot().
      *
      * @return array{itemId: int, state: string, fields: object, confirmations: object}
      */

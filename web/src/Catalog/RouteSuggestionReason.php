@@ -6,7 +6,11 @@ declare(strict_types=1);
 
 namespace App\Catalog;
 
-/** Preset correction reasons on a route drawer (docs/specs/route-domain.md §7). */
+/**
+ * Preset correction reasons on a route drawer.
+ *
+ * @see docs/specs/route-domain.md §7
+ */
 enum RouteSuggestionReason: string
 {
     case BrokenTrack = 'broken-track';
@@ -18,7 +22,7 @@ enum RouteSuggestionReason: string
     /**
      * @return list<string>
      *
-     * @api Consumed by the route-suggestion form choices and drawer.
+     * @api
      */
     public static function values(): array
     {

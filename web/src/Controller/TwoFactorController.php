@@ -21,15 +21,11 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
- * Self-service TOTP enrolment. Reachable by any fully authenticated user (and forced on
- * elevated roles by {@see \App\Security\LoginSuccessHandler}).
+ * Self-service TOTP enrolment. Secret stays in session until a valid code.
  *
- * Security note: the freshly generated secret is held in the session — NOT on the User entity —
- * until the user proves they scanned it correctly by entering a valid code. Only then is the
- * secret persisted, 2FA enabled, and one-time backup codes issued (shown exactly once).
+ * @see docs/specs/account-and-auth.md §4
  *
- * @api Instantiated by Symfony's router; never referenced from code.
- *      `@api` tells Psalm this is a live entry point, not dead code.
+ * @api
  */
 #[Route(LocalePrefix::PATHS)]
 final class TwoFactorController extends AbstractController
@@ -47,37 +43,27 @@ final class TwoFactorController extends AbstractController
         EntityManagerInterface $entityManager,
         ?TotpAuthenticatorInterface $totpAuthenticator = null,
     ): Response {
-        /* NULLABLE, because the provider can be off. `when@dev` disables TOTP
-           for local convenience (config/packages/scheb_2fa.yaml), and with it
-           this service - so requiring it here turned "2FA is off" into a 500 on
-           a page the enforcer sends people to. A newly approved curator was
-           then locked out of every page on the dev stack (owner-reported
-           2026-08-14). Say so instead; prod and staging never take this branch. */
+        // Nullable: `when@dev` disables TOTP; requiring it 500s the setup page.
         if (null === $totpAuthenticator) {
             return $this->render('security/2fa_unavailable.html.twig', [
                 'page_title' => 'meta.twofa_setup_title',
                 'page_description' => 'meta.twofa_setup_description',
             ]);
         }
-        // Defence-in-depth beyond the access_control regex: never dereference a
-        // null user. IsGranted above already guarantees authentication;
-        // this keeps the invariant explicit at the code boundary.
         $user = $this->getUser();
         if (!$user instanceof User) {
             throw $this->createAccessDeniedException('2FA setup requires an authenticated user.');
         }
         $session = $request->getSession();
 
-        // Reuse a pending secret across GET/POST so the QR the user scanned stays valid.
+        // Reuse across GET/POST so the scanned QR stays valid.
         $pendingSecret = $session->get(self::PENDING_SECRET_KEY);
         if (!\is_string($pendingSecret) || '' === $pendingSecret) {
             $pendingSecret = $totpAuthenticator->generateSecret();
             $session->set(self::PENDING_SECRET_KEY, $pendingSecret);
         }
 
-        // Attach the pending secret to the in-memory user ONLY to derive the QR content and to
-        // validate the entered code. We never flush() on this path, so it does not hit the DB
-        // until the code is confirmed below.
+        // In-memory only until a valid code — never flushed here.
         $user->setTotpSecret($pendingSecret);
 
         $form = $this->createForm(TwoFactorSetupType::class);
@@ -92,7 +78,7 @@ final class TwoFactorController extends AbstractController
 
                 $user->setTotpSecret($pendingSecret);
                 $user->setTwoFaEnabled(true);
-                // Store only keyed hashes; the plaintext codes are shown once below.
+                // docs/specs/account-and-auth.md §4 — keyed hashes; plaintext shown once.
                 $user->setBackupCodes(array_map(User::hashBackupCode(...), $backupCodes));
                 $entityManager->flush();
 
@@ -121,11 +107,7 @@ final class TwoFactorController extends AbstractController
         ]);
     }
 
-    /**
-     * Render the otpauth:// URI as an inline SVG data-URI for an <img> tag.
-     * SVG (not PNG) so we don't require the GD/Imagick PHP extension — the QR
-     * still scans identically and stays crisp at any size.
-     */
+    /** SVG data-URI so QR rendering does not need GD/Imagick. */
     private function buildQrCodeDataUri(string $otpauthUri): string
     {
         return (new Builder())->build(
@@ -139,19 +121,13 @@ final class TwoFactorController extends AbstractController
     }
 
     /**
-     * Generate cryptographically random single-use backup codes.
-     * Stored as plain strings to match the entity's BackupCodeInterface::isBackupCode()
-     * comparison (strict in_array against the stored list).
-     *
      * @return list<string>
      */
     private function generateBackupCodes(): array
     {
         $codes = [];
         for ($i = 0; $i < self::BACKUP_CODE_COUNT; ++$i) {
-            // 80 bits of entropy per code (10 random bytes → 20 hex chars),
-            // grouped in 4s for legibility. 32 bits was offline-enumerable
-            // against the stored hashes.
+            // docs/specs/account-and-auth.md §4 — 80 bits; 32 bits was enumerable.
             $codes[] = implode('-', str_split(bin2hex(random_bytes(10)), 4));
         }
 

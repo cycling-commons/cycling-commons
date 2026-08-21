@@ -18,27 +18,12 @@ use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
- * The measured profile of a drawn climb line.
+ * Server-side climb profile (not a public DEM).
  *
- * Exists so the climb editor asks *us* rather than a third party's public API
- * from the browser. That moves the dataset behind a setting instead of a CORS
- * allowlist, removes an external host from the page's CSP, and means the
- * gradient a rider sees comes from the source this project chose
- * (climb-elevation.md §2a).
+ * @see docs/specs/climb-elevation.md §2
+ * @see docs/specs/security-architecture.md §7
  *
- * It returns the COMPUTED profile — length, gain, average and maximum gradient,
- * the display bars and the steepest ramp — rather than raw elevations. The
- * arithmetic used to live in the browser, which made the client the author of
- * every published gradient and made a catalogue-wide re-measure impossible.
- * One implementation now serves both the editor and the sweep.
- *
- * Contributor-only: it is an editor tool, not public map data, and it costs an
- * upstream request per call — which is why login alone is not enough and the
- * `elevation` limiter (per user, per minute) sits in front of the profiler
- * (review 2026-08-16 finding 5).
- *
- * @api Instantiated by Symfony's router - `@api` tells Psalm this is a live
- *      entry point, not dead code.
+ * @api
  */
 final class ElevationController extends AbstractController
 {
@@ -48,11 +33,7 @@ final class ElevationController extends AbstractController
         ClimbProfiler $profiler,
         RateLimiterFactoryInterface $elevationLimiter,
     ): JsonResponse {
-        // THE stateless-CSRF JSON pattern (security-architecture.md §5.1),
-        // added by review 2026-08-16 finding 5: clean 401 (a JSON client must
-        // never be 302-redirected to a login page), then the stateless header
-        // token — login is a person, not a permission slip for cross-origin
-        // POSTs. The wizard templates mint CC_ELEV_TOKEN.
+        // docs/specs/security-architecture.md §5.1 — 401 not 302; stateless X-CC-Token.
         $user = $this->getUser();
         if (!$this->isGranted('ROLE_USER') || !$user instanceof User) {
             throw new HttpException(Response::HTTP_UNAUTHORIZED, 'authentication_required');
@@ -80,28 +61,20 @@ final class ElevationController extends AbstractController
             $coords[] = [$lat, $lng];
         }
 
-        // Optional: a marker the rider placed by hand, so its number can be
-        // re-read at that position without the marker being moved.
         $steepAt = null;
-        $rawSteep = $payload['steepAt'] ?? null;   // $payload is already known to be an array here
+        $rawSteep = $payload['steepAt'] ?? null;
         if (isset($rawSteep[0], $rawSteep[1]) && is_numeric($rawSteep[0]) && is_numeric($rawSteep[1])) {
             $steepAt = [(float) $rawSteep[0], (float) $rawSteep[1]];
         }
 
-        // Consumed after the cheap validation and before the expensive part:
-        // a malformed request costs no budget, a well-formed one costs exactly
-        // one upstream Valhalla call. Keyed per user, which is correct
-        // independently of proxy-IP resolution.
+        // docs/specs/security-architecture.md §7 — per-user; after cheap validation.
         if (!$elevationLimiter->create('user-'.(string) $user->getId())->consume()->isAccepted()) {
             return new JsonResponse(['error' => 'rate_limited'], 429);
         }
 
         $profile = $profiler->profile($coords, $steepAt);
         if (null === $profile) {
-            // 503, not 200-with-nulls: "we could not measure this" is a
-            // different outcome from "this is flat", and the editor has to be
-            // able to tell them apart to say so honestly (§2d). A line that
-            // runs downhill lands here too — it has no climb to describe.
+            // docs/specs/climb-elevation.md §2d — 503, not 200-with-nulls.
             return new JsonResponse(['error' => 'elevation_unavailable'], 503);
         }
 

@@ -7,18 +7,10 @@ declare(strict_types=1);
 namespace App\Contribution\Gpx;
 
 /**
- * Strict GPX intake parser (docs/specs/route-domain.md §4.1): reject, never coerce.
+ * Strict GPX intake parser (docs/specs/route-domain.md §4.1,
+ * docs/specs/edit-items/K-quality-rides.md): reject, never coerce.
  *
- * DOMDocument + getElementsByTagNameNS('*', …) so GPX 1.0/1.1 files parse
- * regardless of their default namespace. XXE-safe: PHP ≥8.0 never loads
- * external entities unless explicitly re-enabled; LIBXML_NONET additionally
- * forbids network fetches during parse.
- *
- * Every failure throws InvalidArgumentException whose message is a
- * translation key (propose_route.error.*) - the controller surfaces it as a
- * form error, mirroring the ClimbGeometry/ContributeController pattern.
- *
- * @api Public entry point for GPX intake (docs/specs/route-domain.md §4.1); covered by GpxParserTest.
+ * @api
  */
 final class GpxParser
 {
@@ -64,16 +56,14 @@ final class GpxParser
 
             $points[] = [$lat, $lng, $ele];
             if (\count($points) > self::MAX_POINTS) {
-                // Reject the moment we cross the cap. There is no point
-                // buffering the rest of a track we are going to refuse.
+                // Reject as soon as we cross the cap.
                 throw new \InvalidArgumentException('propose_route.error.gpx_points');
             }
         }
 
         $n = \count($points);
         if ($n < self::MIN_POINTS) {
-            // Zero trkpt elements means "not a GPX track" rather than a size
-            // problem, so report it as invalid, not out-of-range.
+            // Zero trkpt elements is invalid, not out-of-range.
             throw new \InvalidArgumentException(0 === $n ? 'propose_route.error.gpx_invalid' : 'propose_route.error.gpx_points');
         }
 

@@ -12,7 +12,7 @@ use Doctrine\Persistence\ManagerRegistry;
 /**
  * @extends ServiceEntityRepository<AdminActionLog>
  *
- * @api Wired by Doctrine's repository factory.
+ * @api
  */
 class AdminActionLogRepository extends ServiceEntityRepository
 {

@@ -10,23 +10,15 @@ use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 
 /**
- * Serves a region's spotlight polygon as a GeoJSON Feature, simplified with
- * ST_SimplifyPreserveTopology for a small cacheable payload — the client only
- * dims outside the shape and draws a dashed outline, so vertex-exact fidelity
- * is wasted bytes. Replaces the map's Nominatim boundary fetch, which was both
- * an external dependency and a Nominatim usage-policy problem in production
- * (map-and-search.md §4.5 spotlight, §7 Phase 1). Reads only; raw DBAL
- * like CatalogProvider / RouteRankingService.
+ * Region spotlight polygon as a simplified GeoJSON Feature. Vertex-exact fidelity is wasted bytes.
  *
- * @api Serving entry point for the map's region spotlight (MapController::regionBoundary).
+ * @see docs/specs/map-and-search.md §4.5
+ *
+ * @api
  */
 final class RegionBoundaryProvider
 {
-    /**
-     * Douglas–Peucker tolerance in SRID-4326 degrees (~0.001° ≈ 70–110 m at
-     * Belgian latitudes): invisible under the dim/dash spotlight, but shrinks
-     * the full-resolution admin polygon by roughly an order of magnitude.
-     */
+    /** Douglas–Peucker tolerance in SRID-4326 degrees (~70–110 m at Belgian latitudes). */
     private const float SIMPLIFY_TOLERANCE = 0.001;
 
     public function __construct(private readonly Connection $db)
@@ -56,10 +48,9 @@ final class RegionBoundaryProvider
     }
 
     /**
-     * GeoJSON Feature (JSON string) for the UNION of the regions in a scope —
-     * an explicit id list and/or every region of a country — for the map's
-     * country/multi-region dim mask (coverage-provider.md §4
-     * §B). Null when nothing matches (Everywhere / empty scope).
+     * UNION of regions in a scope for the country/multi-region dim mask. Null when nothing matches.
+     *
+     * @see docs/specs/coverage-provider.md §4
      *
      * @param list<int> $rids
      */
@@ -69,11 +60,7 @@ final class RegionBoundaryProvider
             return null;
         }
 
-        // Scope arms are built conditionally, mirroring CoverageRepository::
-        // scopeArm() (Coverage/CoverageRepository.php:83-94): a static
-        // `... OR country_code = :cc` bound to '' for a rids-only call would
-        // also union in every region still carrying the schema-default ''
-        // country_code, not just the requested ids.
+        // Build scope arms conditionally: a static `OR country_code = :cc` bound to '' would union leftover default-'' rows.
         $arms = [];
         $params = ['tol' => self::SIMPLIFY_TOLERANCE];
         $types = [];

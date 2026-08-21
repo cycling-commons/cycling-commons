@@ -7,30 +7,17 @@ declare(strict_types=1);
 namespace App\Media\Entity;
 
 use App\Media\MediaStatus;
-use App\Media\MediaTakedownCategory;
 use App\Media\MediaTakedownSource;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
 
 /**
- * One stored photo: three WebP objects under photos/<uuid>/ in the continent's
- * bucket, plus the facts harvested from the file before its metadata was
- * stripped (docs/specs/photo-uploads.md §3).
+ * One stored photo and the facts harvested before metadata strip.
  *
- * Path secrecy is honest secrecy, not access control: a UUIDv4 carries ~122
- * random bits so blind enumeration is impractical, but the path is still only
- * a secret in a URL, and the variant names are fixed, so anyone holding one
- * variant's URL can derive its siblings. Both are accepted for v1 —
- * docs/specs/photo-uploads.md §2 states the reasoning and the alternative that
- * was not chosen.
+ * @see docs/specs/photo-uploads.md §3
  *
- * user_id is nullable because account deletion anonymizes the credit on
- * approved photos rather than deleting contributions to the commons
- * (docs/specs/photo-uploads.md §6). It carries no foreign key, matching
- * submission.user_id.
- *
- * @api Media domain entity.
+ * @api
  */
 #[ORM\Entity]
 #[ORM\Table(name: 'media_upload')]
@@ -51,41 +38,22 @@ class MediaUpload
     #[ORM\Column(name: 'consent_record_id', type: 'uuid')]
     private Uuid $consentRecordId;
 
-    /** Where the photo WAS: the two-letter continent code intake resolved. */
+    /** Continent resolved at intake. */
     #[ORM\Column(type: Types::STRING, length: 2)]
     private string $continent;
 
     /**
-     * Where the bytes ACTUALLY WENT: the key into MediaStorage's map of public
-     * storages, decided once at intake and never re-derived
-     * (docs/specs/media-storage-architecture.md §2.1, §4).
+     * Full public-bucket name recorded at intake; never re-derived.
      *
-     * The same string as the continent today, and deliberately its own column.
-     * A continent with no bucket of its own refuses the upload outright
-     * (ShardUnavailable; owner 2026-08-18), so every stored row is fully
-     * self-contained: the shard it records is a bucket that existed when the
-     * bytes were written, and when §2.1's numbered buckets arrive, "existing
-     * objects never move" is only true because the address comes from what
-     * was recorded then, not from today's configuration.
-     */
-    /**
-     * The FULL name of the bucket the published objects live in (owner
-     * 2026-08-20: the row is one-to-one self-contained; nothing is assembled
-     * from parts). Recorded at intake from the continent's active env pair;
-     * a retired bucket therefore needs no config entry to stay addressable.
-     * Empty only on rows minted before the column existed.
+     * @see docs/specs/media-storage-architecture.md §2.1, §4
      */
     #[ORM\Column(name: 'storage_bucket', type: Types::STRING, length: 63, options: ['default' => ''])]
     private string $storageBucket = '';
 
     /**
-     * The processing run that produced the published objects - the `<rev>` in
-     * published/<uuid>/<rev>/… (docs/specs/media-storage-architecture.md §4).
-     * Minted per run, so reprocessing writes a NEW key and no reader ever sees
-     * an object change under a key it already holds.
+     * Immutable key token: published/<uuid>/<rev>/. Null = nothing published.
      *
-     * Null means nothing is published: the row is still quarantined and has no
-     * URL to build. Not a legacy shape - an absence.
+     * @see docs/specs/media-storage-architecture.md §4
      */
     #[ORM\Column(type: Types::STRING, length: 12, nullable: true)]
     private ?string $revision = null;
@@ -103,134 +71,94 @@ class MediaUpload
     #[ORM\Column(type: Types::INTEGER)]
     private int $bytes;
 
-    /** EXIF capture date. Published only at MONTH granularity (§5). */
+    /** EXIF capture date; published at month granularity. @see docs/specs/photo-uploads.md §5 */
     #[ORM\Column(name: 'taken_at', type: Types::DATETIME_IMMUTABLE, nullable: true)]
     private ?\DateTimeImmutable $takenAt;
 
-    /** PRIVATE and short-lived: nulled at intake by resolveGps(). Never served. */
+    /** GPS, stripped after distance. @see docs/specs/photo-uploads.md §3 */
     #[ORM\Column(name: 'gps_lat', type: Types::FLOAT, nullable: true)]
     private ?float $gpsLat;
 
     #[ORM\Column(name: 'gps_lng', type: Types::FLOAT, nullable: true)]
     private ?float $gpsLng;
 
-    /** All that survives of the coordinates: how far the shot was from the pin. */
+    /** Pin distance after GPS is stripped. @see docs/specs/photo-uploads.md §3 */
     #[ORM\Column(name: 'gps_distance_m', type: Types::INTEGER, nullable: true)]
     private ?int $gpsDistanceM = null;
 
     #[ORM\Column(name: 'submission_id', type: Types::BIGINT, nullable: true)]
     private ?int $submissionId = null;
 
-    /** Set at approval: the item this photo now belongs to (§6 credit anonymization). */
+    /** Item this photo belongs to after approval. @see docs/specs/photo-uploads.md §6 */
     #[ORM\Column(name: 'item_id', type: Types::BIGINT, nullable: true)]
     private ?int $itemId = null;
 
     #[ORM\Column(name: 'created_at', type: Types::DATETIME_IMMUTABLE)]
     private \DateTimeImmutable $createdAt;
 
-    /** When a curator decided. The retention window for rejects measures from here. */
+    /** When a curator decided; reject retention starts here. */
     #[ORM\Column(name: 'decided_at', type: Types::DATETIME_IMMUTABLE, nullable: true)]
     private ?\DateTimeImmutable $decidedAt = null;
 
-    /** Tombstone marker: the bucket objects are gone, the row is kept for audit. */
+    /** Tombstone: objects gone, row kept for audit. */
     #[ORM\Column(name: 'objects_deleted_at', type: Types::DATETIME_IMMUTABLE, nullable: true)]
     private ?\DateTimeImmutable $objectsDeletedAt = null;
 
-    /**
-     * Set only when the account is deleted (docs/specs/photo-uploads.md §6): the
-     * credit to render from then on, '' meaning anonymous. Null while the
-     * account still exists, because until then the credit is resolved live from
-     * the profile.
-     */
+    /** Frozen credit after account deletion; '' = anonymous. @see docs/specs/photo-uploads.md §6 */
     #[ORM\Column(name: 'credit_frozen', type: Types::STRING, length: 120, nullable: true)]
     private ?string $creditFrozen = null;
 
-    /**
-     * The uploader has asked for this photo to come down
-     * (docs/specs/photo-uploads.md §6b). Non-null withholds it from publication
-     * from that instant, before any curator looks: if the claim is "that photo
-     * is of me", leaving it up while somebody gets round to it is the wrong
-     * default, and GDPR Art. 18 is explicit that restriction is available while
-     * a request is being verified.
-     */
+    /** Uploader takedown withholds immediately. @see docs/specs/photo-uploads.md §6b */
     #[ORM\Column(name: 'takedown_requested_at', type: Types::DATETIME_IMMUTABLE, nullable: true)]
     private ?\DateTimeImmutable $takedownRequestedAt = null;
 
-    /** The rider's own words, which is what tells a rights claim from a change of mind. */
+    /** Rider's words: rights claim vs change of mind. */
     #[ORM\Column(name: 'takedown_reason', type: Types::TEXT, nullable: true)]
     private ?string $takedownReason = null;
 
-    /** MediaTakedownSource: uploader (withholds on the spot) or third_party (queues). Null = never asked. */
+    /** Uploader withholds; third_party queues. @see docs/specs/photo-uploads.md §6b, §6c */
     #[ORM\Column(name: 'takedown_source', type: Types::STRING, length: 16, nullable: true)]
     private ?string $takedownSource = null;
 
-    /** MediaTakedownCategory — third-party requests only; the uploader route has no category. */
+    /** Third-party category only. @see docs/specs/photo-uploads.md §6c */
     #[ORM\Column(name: 'takedown_category', type: Types::STRING, length: 32, nullable: true)]
     private ?string $takedownCategory = null;
 
-    /**
-     * The reporter's optional reply address — the only identity they are ever
-     * asked for, and only if they want an answer. Deleted 90 days after the
-     * decision (Art. 5(1)(e)); MediaGcCommand sweeps it.
-     */
+    /** Reporter reply address; 90-day retention. @see docs/specs/photo-uploads.md §6c */
     #[ORM\Column(name: 'takedown_contact', type: Types::STRING, length: 320, nullable: true)]
     private ?string $takedownContact = null;
 
-    /**
-     * Salted hash of the reporter's IP: answers "is one person reporting forty
-     * photos" without keeping a log of who read what. Never reversible, never
-     * shown.
-     */
+    /** Salted reporter-IP hash; never reversible. @see docs/specs/photo-uploads.md §6c */
     #[ORM\Column(name: 'takedown_reporter_hash', type: Types::STRING, length: 64, nullable: true)]
     private ?string $takedownReporterHash = null;
 
-    /** When a curator decided (grant or decline). The 90-day contact retention measures from here. */
+    /** Grant/decline time; contact retention starts here. */
     #[ORM\Column(name: 'takedown_resolved_at', type: Types::DATETIME_IMMUTABLE, nullable: true)]
     private ?\DateTimeImmutable $takedownResolvedAt = null;
 
-    /**
-     * Whether THIS request actually withheld the photo — stored, not derived
-     * from the category. Once the auto-withhold budget can run out
-     * (UrgentWithholdBreaker, docs/specs/photo-uploads.md §6c), an urgent
-     * report may legitimately leave the photo up, and a value computed from the
-     * category would tell the photo page to hide something we never detached.
-     */
+    /** Whether this request withheld the photo (not derived from category). @see docs/specs/photo-uploads.md §6c */
     #[ORM\Column(name: 'takedown_withheld', type: Types::BOOLEAN, options: ['default' => false])]
     private bool $takedownWithheld = false;
 
     /**
-     * Categories a curator has already decided for this photo. One decided
-     * report per photo per category is FINAL: a later identical report matches
-     * here and does not re-open the case, so a photo cannot be kept withheld —
-     * or a curator kept busy — by a stream of fresh copies of the same claim.
+     * Final decided third-party categories for this photo.
      *
      * @var list<string>
+     *
+     * @see docs/specs/photo-uploads.md §6c
      */
     #[ORM\Column(name: 'takedown_decided_categories', type: Types::JSON)]
     private array $takedownDecidedCategories = [];
 
-    /**
-     * A curator has escalated this as suspected illegal content
-     * (docs/specs/photo-uploads.md §6d). Non-null means a **legal hold**: the
-     * photo is out of reach of the public AND of the moderation desk, and
-     * nothing may destroy it — not Trash, not the retention sweep, not orphan
-     * collection, not a bulk restore. Only an admin can act on it.
-     *
-     * Preservation is the point. Where the material is the kind that must be
-     * reported (EU DSA Art. 18, threat to life or safety; terrorist content,
-     * whose regulation carries an explicit six-month preservation duty),
-     * destroying it before it has been reported destroys the evidence with it
-     * — and the first curator to see it must not be the one making that call
-     * alone.
-     */
+    /** Legal hold: no public, no curator, no delete except admin. @see docs/specs/photo-uploads.md §6d */
     #[ORM\Column(name: 'escalated_at', type: Types::DATETIME_IMMUTABLE, nullable: true)]
     private ?\DateTimeImmutable $escalatedAt = null;
 
-    /** Who escalated it, so an admin can ask what they saw without showing it to anyone again. */
+    /** Who escalated; admin can ask without re-showing the photo. */
     #[ORM\Column(name: 'escalated_by_id', type: Types::INTEGER, nullable: true)]
     private ?int $escalatedById = null;
 
-    /** The curator's own words — the only description an admin has before deciding whether to look. */
+    /** Curator's description before an admin looks. */
     #[ORM\Column(name: 'escalated_reason', type: Types::TEXT, nullable: true)]
     private ?string $escalatedReason = null;
 
@@ -245,11 +173,7 @@ class MediaUpload
         ?\DateTimeImmutable $takenAt = null,
         ?float $gpsLat = null,
         ?float $gpsLng = null,
-        // The shard the object physically lives in (a bucket-generation
-        // alias like EU-01, never a bare continent code in the numbered
-        // model). Null keeps the continent as shard for entity-level tests
-        // that never touch storage; every row that reaches a bucket comes
-        // from quarantined()/reshard(), which always pass the real shard.
+        // Empty bucket only for entity tests that never touch storage.
         string $bucket = '',
     ) {
         $this->id = $id;
@@ -268,14 +192,9 @@ class MediaUpload
     }
 
     /**
-     * Intake's constructor (docs/specs/media-storage-architecture.md §3): the
-     * web tier knows who, how many bytes and which shard, and nothing else. It
-     * has not decoded anything - it physically cannot - so the dimensions, the
-     * capture date and the revision are all the worker's to fill in.
+     * Intake constructor: identity, bytes, shard. Decode is the worker's.
      *
-     * $bytes is what ARRIVED, replaced at release by the size of the stored
-     * original. A quarantined row that never releases still says truthfully
-     * how much of the rider's data we are holding.
+     * @see docs/specs/media-storage-architecture.md §3
      */
     public static function quarantined(
         Uuid $id,
@@ -294,14 +213,9 @@ class MediaUpload
     }
 
     /**
-     * The worker's clean verdict, applied: the derivatives are already in the
-     * public bucket under this revision, so the row can now point at them.
+     * Point the row at already-written public objects (objects before row).
      *
-     * The revision is minted by the caller and passed in, because the objects
-     * have to be written BEFORE the row claims they exist - the release gate is
-     * physical (docs/specs/media-storage-architecture.md §3), and a row that
-     * pointed at a key nothing had written yet would be exactly the flag-shaped
-     * gate the architecture refuses.
+     * @see docs/specs/media-storage-architecture.md §3
      */
     public function release(string $revision, int $width, int $height, int $bytes, ?\DateTimeImmutable $takenAt): void
     {
@@ -313,22 +227,13 @@ class MediaUpload
         $this->status = MediaStatus::Pending;
     }
 
-    /**
-     * The revision alone, for the one-off backfill onto immutable keys
-     * (MediaBackfillKeysCommand). Deliberately NOT release(): those rows are
-     * already approved, rejected or awaiting a curator, and release() would
-     * put every one of them back in the queue.
-     */
+    /** Stamp revision without changing status (immutable-key backfill). @see docs/specs/media-storage-architecture.md §4.1 */
     public function stampRevision(string $revision): void
     {
         $this->revision = $revision;
     }
 
-    /**
-     * The scanner found something, or the bytes were not a photo at all. The
-     * objects are gone in the same pass, so the row is a tombstone from birth:
-     * it never had a revision and never will.
-     */
+    /** Infected/unreadable: tombstone with no revision. */
     public function rejectUnreleased(): void
     {
         $this->status = MediaStatus::Rejected;
@@ -336,15 +241,7 @@ class MediaUpload
         $this->objectsDeletedAt = new \DateTimeImmutable();
     }
 
-    /**
-     * The worker's decode found coordinates the web tier could not read, and
-     * they point at a different continent than the default it had to assume.
-     *
-     * Only legal while nothing is published - which is the only time it is
-     * ever called. Once objects exist under a shard, that shard IS the
-     * address, and §2.1's "existing objects never move" says plainly what
-     * moving it would break.
-     */
+    /** Re-pin shard before anything is published. @see docs/specs/media-storage-architecture.md §2.1 */
     public function reshard(string $continent, string $bucket): void
     {
         if (null !== $this->revision) {
@@ -354,19 +251,36 @@ class MediaUpload
         $this->storageBucket = $bucket;
     }
 
-    /** A fresh, short, opaque token - one per processing run (§4). */
+    /**
+     * Record where this upload's objects already live.
+     *
+     * Deliberately not reshard(): that refuses once objects are published,
+     * because moving a published photo changes its public URL. This fills a
+     * blank left by the migration that added the column, so it is allowed
+     * after publication - but only ever on a blank, never as a move.
+     *
+     * @throws \LogicException when an address is already recorded
+     *
+     * @see docs/specs/media-storage-architecture.md §2.1
+     */
+    public function adoptStorageBucket(string $bucket): void
+    {
+        if ('' !== $this->storageBucket) {
+            throw new \LogicException(\sprintf('Upload %s already records bucket "%s"; its bucket is its address and cannot be reassigned.', $this->id->toRfc4122(), $this->storageBucket));
+        }
+        $this->storageBucket = $bucket;
+    }
+
+    /** Opaque per-run token. @see docs/specs/media-storage-architecture.md §4 */
     public static function mintRevision(): string
     {
         return bin2hex(random_bytes(4));
     }
 
     /**
-     * Object key prefix inside the shard's bucket
-     * (docs/specs/media-storage-architecture.md §4).
+     * published/<uuid>/<rev> prefix; throws while quarantined.
      *
-     * Throws while the row is quarantined, and that is the point: there are no
-     * objects yet, so every honest answer is "there is no address". A caller
-     * that can see quarantined rows asks hasPublishedObjects() first.
+     * @see docs/specs/media-storage-architecture.md §4
      */
     public function getPathPrefix(): string
     {
@@ -377,11 +291,7 @@ class MediaUpload
         return self::prefixFor($this->id->toRfc4122(), $this->revision);
     }
 
-    /**
-     * The same key, assembled from raw column values - for the two readers that
-     * work in SQL rather than entities (SubmissionQueue, DataExportService) and
-     * must not load a thousand entities to build a thumbnail URL.
-     */
+    /** Same prefix from raw columns (SQL readers). */
     public static function prefixFor(string $uuid, string $revision): string
     {
         return 'published/'.$uuid.'/'.$revision;
@@ -402,7 +312,7 @@ class MediaUpload
         return $this->storageBucket;
     }
 
-    /** The private-storage key of the unscanned bytes, while they exist. */
+    /** Private-storage key of unscanned bytes. */
     public function getQuarantineKey(): string
     {
         return $this->id->toRfc4122();
@@ -413,12 +323,7 @@ class MediaUpload
         $this->submissionId = $submissionId;
     }
 
-    /**
-     * Intake's one and only use of the harvested coordinates: keep the distance
-     * to the submission pin, destroy the coordinates
-     * (docs/specs/photo-uploads.md §3). Called for every claimed row, with null
-     * when the photo carried no GPS — so the columns end up empty either way.
-     */
+    /** Keep pin distance; destroy coordinates. @see docs/specs/photo-uploads.md §3 */
     public function resolveGps(?int $distanceM): void
     {
         $this->gpsDistanceM = $distanceM;
@@ -426,16 +331,7 @@ class MediaUpload
         $this->gpsLng = null;
     }
 
-    /**
-     * The worker hands back what the EXIF held, for a row that has NOT been
-     * claimed yet - the claim is what destroys it.
-     *
-     * Only ever called on an unclaimed row. A row claimed while it was still
-     * quarantined has already had resolveGps() run against nulls, and writing
-     * coordinates onto it afterwards would resurrect exactly the data intake
-     * promised to destroy (docs/specs/photo-uploads.md §3); the handler
-     * computes the distance itself in that case and calls resolveGps().
-     */
+    /** Store GPS on an unclaimed row only. @see docs/specs/photo-uploads.md §3 */
     public function rememberGps(?float $lat, ?float $lng): void
     {
         if (null !== $this->submissionId) {
@@ -463,12 +359,7 @@ class MediaUpload
         $this->objectsDeletedAt = new \DateTimeImmutable();
     }
 
-    /**
-     * Account deletion: the photo stays in the commons, the account link goes.
-     * What the credit becomes is the departing rider's own choice
-     * (docs/specs/photo-uploads.md §6) — an empty frozen credit renders as
-     * anonymous everywhere, a name keeps naming them after the account is gone.
-     */
+    /** Drop account link; freeze credit. @see docs/specs/photo-uploads.md §6 */
     public function anonymize(string $frozenCredit = ''): void
     {
         $this->userId = null;
@@ -571,16 +462,11 @@ class MediaUpload
         $this->takedownReason = $reason;
         $this->takedownSource = MediaTakedownSource::Uploader;
         $this->takedownResolvedAt = null;
-        // The uploader owns the row: their request always withholds.
+        // Uploader owns the row: always withholds. @see docs/specs/photo-uploads.md §6b
         $this->takedownWithheld = true;
     }
 
-    /**
-     * A third party — somebody who may be IN the photo, with or without an
-     * account — reports it (docs/specs/photo-uploads.md §6c). Unlike the
-     * uploader route this records and changes nothing else: whether the photo
-     * is withheld is MediaTakedownService's call, not the row's.
-     */
+    /** Third-party report; withhold is the service's call. @see docs/specs/photo-uploads.md §6c */
     public function reportThirdParty(string $category, string $reason, ?string $contact, string $reporterHash, bool $withheld): void
     {
         $this->takedownRequestedAt = new \DateTimeImmutable();
@@ -593,13 +479,7 @@ class MediaUpload
         $this->takedownWithheld = $withheld;
     }
 
-    /**
-     * A curator has decided the request is not a rights claim
-     * (docs/specs/photo-uploads.md §6b). The marker goes so the photo is
-     * published again; the reason STAYS, because the next curator to look at
-     * this upload should be able to see it was asked about before. A declined
-     * third-party category joins the decided list and is final (§6c).
-     */
+    /** Decline: republish; keep reason; third-party category is final. @see docs/specs/photo-uploads.md §6b, §6c */
     public function declineTakedown(): void
     {
         if (null !== $this->takedownCategory && !\in_array($this->takedownCategory, $this->takedownDecidedCategories, true)) {
@@ -610,12 +490,7 @@ class MediaUpload
         $this->takedownWithheld = false;
     }
 
-    /**
-     * An abusive report is undone (docs/specs/photo-uploads.md §6c): the
-     * marker goes and the photo is published again, but the category is
-     * deliberately NOT added to the decided list — a fake claim must not spend
-     * the one slot a real one would need.
-     */
+    /** Abusive-report undo: republish without spending the category slot. @see docs/specs/photo-uploads.md §6c */
     public function dismissTakedownAsAbuse(): void
     {
         $this->takedownRequestedAt = null;
@@ -623,7 +498,7 @@ class MediaUpload
         $this->takedownWithheld = false;
     }
 
-    /** Grant-side bookkeeping: the disposal itself is MediaDisposalService's job. */
+    /** Grant-side bookkeeping; disposal is MediaDisposalService. */
     public function resolveTakedown(): void
     {
         $this->takedownResolvedAt = new \DateTimeImmutable();
@@ -635,7 +510,7 @@ class MediaUpload
         return \in_array($category, $this->takedownDecidedCategories, true);
     }
 
-    /** The 90-day retention sweep (docs/specs/photo-uploads.md §6c); MediaGcCommand calls it. */
+    /** 90-day contact sweep. @see docs/specs/photo-uploads.md §6c */
     public function clearTakedownContact(): void
     {
         $this->takedownContact = null;
@@ -683,17 +558,13 @@ class MediaUpload
         $this->escalatedReason = $reason;
     }
 
-    /** An admin has decided it was not what it looked like; normal moderation resumes. */
+    /** Admin: not illegal; resume normal moderation. */
     public function releaseEscalation(): void
     {
         $this->escalatedAt = null;
     }
 
-    /**
-     * Under legal hold: invisible to the public and to curators, and immune to
-     * every deletion path until an admin releases it
-     * (docs/specs/photo-uploads.md §6d).
-     */
+    /** Legal hold. @see docs/specs/photo-uploads.md §6d */
     public function isEscalated(): bool
     {
         return null !== $this->escalatedAt;
@@ -714,21 +585,13 @@ class MediaUpload
         return $this->escalatedReason;
     }
 
-    /** A curator has an undecided request — of either source — for this photo. */
+    /** Undecided takedown of either source. */
     public function isTakedownPending(): bool
     {
         return null !== $this->takedownRequestedAt && null === $this->objectsDeletedAt;
     }
 
-    /**
-     * Withheld from publication while the request waits. The uploader's own
-     * request always withholds (they own the row; the worst case is somebody
-     * hiding their own contribution). A third party's withholds only in the
-     * intimate-imagery/child category AND only while the site-wide auto-
-     * withhold budget holds out — anything else queuing invisible would be a
-     * heckler's veto (docs/specs/photo-uploads.md §6c). Both facts are decided
-     * when the request is recorded and stored on the row, never recomputed.
-     */
+    /** Withheld while pending; stored at request time, never recomputed. @see docs/specs/photo-uploads.md §6c */
     public function isTakedownWithheld(): bool
     {
         return $this->isTakedownPending() && $this->takedownWithheld;

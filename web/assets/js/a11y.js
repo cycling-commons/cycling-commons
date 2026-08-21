@@ -1,10 +1,6 @@
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
-// Accessibility helper — adds a "Skip to content" link as the first focusable
-// element on every page and points it at the main content landmark. Pages here
-// are hand-authored single files with no shared <head>, so this keeps the skip
-// link DRY: one
-//   <script src="a11y.js"></script>
-// before </body> wires it up everywhere. The link is offscreen until focused.
+// Skip-to-content link. Sibling walk skips announcement bars so a flash notice
+// is never stamped id="main" (improve/add-climb wizards have no <main>).
 (function a11y(){
   const T=window.ccT||function(k,fb){return fb;};
   const css=document.createElement('style');
@@ -19,18 +15,6 @@
   [data-skip-target]:focus{outline:none}`;
   document.head.appendChild(css);
 
-  // Locate the main content: an existing <main>/[role=main], else whatever
-  // element already carries id="main" (some pages put it on a plain wrapper),
-  // else the first sibling after the nav, else the first <section>, else
-  // <body>. Preferring an existing #main keeps us from stamping a duplicate id.
-  //
-  // The sibling walk SKIPS announcement bars, and that is a fix rather than a
-  // nicety: the flash notice is rendered between the nav and the page body, so
-  // on the two pages that have no #main of their own (the improve and
-  // add-climb wizards, whose root is #wiz) a page carrying a flash sent "Skip
-  // to content" to a one-line "your changes were saved" and stamped id="main"
-  // onto it. The skip link is the one control a keyboard user has for getting
-  // past the header, and it was landing on the header's own message.
   const SKIP_OVER='[role="status"],[role="alert"],.cc-notice,script,style,template';
   let target=document.querySelector('main, [role="main"]')||document.getElementById('main');
   if(!target){
@@ -50,9 +34,7 @@
   link.addEventListener('click',()=>{ const t=document.getElementById(target.id); if(t) t.focus(); });
   document.body.insertBefore(link,document.body.firstChild);
 
-  // Open off-site links — the wiki subdomain and any external site — in a new
-  // tab, with rel="noopener noreferrer" so the new page can't reach back via
-  // window.opener. Same-host links (relative or cyclingcommons.org) stay in place.
+  // Off-site links in a new tab with rel=noopener noreferrer.
   for(const a of document.querySelectorAll('a[href]')){
     if(/^https?:$/.test(a.protocol) && a.hostname && a.hostname!==location.hostname){
       a.target='_blank';

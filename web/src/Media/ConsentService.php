@@ -13,17 +13,11 @@ use Symfony\Component\Uid\Uuid;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
- * The consent ledger (docs/specs/photo-uploads.md §3, §4): append-only records
- * of riders granting the CC BY-SA 4.0 own-work licence, and the single place
- * any layer may ask whether consent exists.
+ * Consent ledger: append-only; every answer comes from a matching row.
  *
- * Fail-closed by construction. There is no boolean flag, no cache and no
- * session copy to go stale or be trusted: every answer comes from a row in
- * consent_record that belongs to the caller and matches the current kind AND
- * version. No method here can return a positive answer without such a row, and
- * every failure path returns the negative one.
+ * @see docs/specs/photo-uploads.md §3, §4
  *
- * @api Called by MediaController; enforced independently of any UI gate.
+ * @api
  */
 final class ConsentService
 {
@@ -66,10 +60,7 @@ final class ConsentService
         );
     }
 
-    /**
-     * The server-side guarantee behind every upload. The wizard's locked
-     * controls are sequencing; this is the rule.
-     */
+    /** Server-side upload gate: no valid row → ConsentMissing. */
     public function assertValid(User $user, ?string $consentId): ConsentRecord
     {
         if (null === $consentId || '' === $consentId || !Uuid::isValid($consentId)) {

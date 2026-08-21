@@ -7,20 +7,11 @@ declare(strict_types=1);
 namespace App\Catalog;
 
 /**
- * A rider's stored preference for the map CHROME theme: the rail, drawer,
- * legend and panels around the map canvas (map-and-search.md §4.6). The
- * basemap tiles are the same in both — liberty is a light style already;
- * only our dark chrome gains a light twin.
+ * Map chrome theme (rail, drawer, legend), not the basemap. Stored on the profile so a shared device does not leak the previous rider's choice; anonymous visitors use localStorage.
  *
- * Dark is the default: it is the look the map has always had, so an existing
- * rider sees no change until they ask for one.
+ * @see docs/specs/map-and-search.md §4.6
  *
- * Stored on the profile rather than in localStorage on purpose, same owner
- * decision as MapViewMode (2026-07-24): people share devices, and a
- * device-scoped default would leak one person's choice to the next. Anonymous
- * visitors have no profile, so their choice stays in localStorage.
- *
- * @api User-preference vocabulary; consumed by SettingsType, User and MapController.
+ * @api
  */
 enum MapTheme: string
 {

@@ -10,34 +10,11 @@ use Doctrine\DBAL\Connection;
 use Symfony\Component\Intl\Countries;
 
 /**
- * Read side of the DB-driven region pages:
- * operational regions grouped
- * by country/continent with the public status tier and modest live stats.
- * Per-request raw DBAL like RegionRegistryProvider — ~32 regions, indexed
- * COUNTs; deliberately no cache (owner decision §2.2).
+ * Region pages: operational regions grouped by country. Maturity and stewardship are independent facts, not one ladder.
  *
- * A region's public status is TWO independent facts, not one ladder:
+ * @see docs/specs/map-and-search.md §4.5
  *
- *  - **maturity** — how much rider knowledge the region holds:
- *    `onboarded` → `growing` (anything verified) → `established`
- *    (`default_map_mode`, which the curator desk will only let a moderator raise
- *    once the region passes a readiness count of curated places and
- *    rider-backed routes — so the top rung is earned by riders, not declared).
- *  - **stewardship** — who is looking after it: `curated` with its own curator,
- *    `countrywide` when only a country-scoped moderator covers it, else `none`.
- *
- * These were ONE field derived from the region's default mode, and the legend then
- * described it as "a curator maintains this region" — which that flag does not
- * mean. A busy region can have nobody looking after it and a curated one can be
- * empty; collapsing the two makes both unsayable.
- *
- * CuratedReadiness (25/3/5) stays a curator-desk signal and is not consulted here.
- *
- * Counts: items are VERIFIED-only (the editorial signal); routes are the
- * SERVED states (unverified+verified) — what a rider actually sees on the
- * map, where community-proposed routes serve before curator verification.
- *
- * @api Consumed by PageController::regions / PageController::regionDetail.
+ * @api
  */
 final class RegionDirectoryProvider
 {
@@ -85,15 +62,7 @@ final class RegionDirectoryProvider
             $countries[$cc]['regions'][] = $this->shape($row);
         }
 
-        // Stable order: continent name, then the LOCALIZED country name (the
-        // SQL ordered by the English name; FR/NL/DE readers sort their own).
-        // Collator applies the request locale's actual collation rules
-        // (accented names sort correctly); a plain <=> comparison of the PHP
-        // strings sorts by raw byte order, which misplaces accents. The
-        // constructor (not the ::create() factory) is used like
-        // SubmissionQueue's collator: it never fails even for a garbage
-        // locale string (ICU falls back to root collation), so there is no
-        // failure mode to guard against.
+        // Locale collation, not byte order — accents must sort correctly.
         $collator = new \Collator($locale);
         $list = array_values($countries);
         usort($list, static function (array $a, array $b) use ($collator): int {
@@ -108,46 +77,17 @@ final class RegionDirectoryProvider
         return $list;
     }
 
-    /**
-     * Does the pipeline-owned coverage table exist yet?
-     *
-     * Memoized per instance: the provider is a per-request service, so this is
-     * one information_schema lookup per page rather than one per region.
-     */
+    /** Does coverage_poi exist? Memoized per request. */
     private ?bool $coverageTable = null;
 
     private function hasCoverageTable(): bool
     {
-        // `to_regclass`, NOT the schema manager. config/packages/doctrine.yaml
-        // sets `schema_filter: '~^(?!topology\.|coverage_)~'` so that Doctrine's
-        // schema tooling never touches the pipeline's tables — and
-        // createSchemaManager()->tablesExist() honours that filter, so it
-        // answers FALSE for a coverage_poi that is sitting right there with two
-        // million rows in it. That silently zeroed every coverage count on the
-        // region pages, which looked like the feature had never been built.
-        // to_regclass asks Postgres directly, returns NULL rather than raising
-        // (so it cannot poison the transaction), and is unaffected by any
-        // Doctrine configuration.
+        // to_regclass, not Doctrine schema manager — schema_filter hides coverage_poi from tablesExist().
         return $this->coverageTable ??= null !== $this->db->fetchOne("SELECT to_regclass('public.coverage_poi')");
     }
 
     /**
-     * Who looks after this region, by name where they have said we may.
-     *
-     * NAMING A CURATOR IS AN OPT-IN, and this is a public page, so the rule is
-     * the strict one used on the moderation desks and the contributors wall:
-     * `public_profile` is an explicit choice that already puts a rider's name
-     * on `/riders/{uuid}`, and only that choice puts it here. A curator without
-     * it is counted but not named — the region still says somebody looks after
-     * it, which is the fact a visitor needs, without publishing who.
-     *
-     * The pseudonym (`rider#1a2b`) is deliberately NOT used as a fallback: it
-     * is a moderation-desk device for telling two submitters apart, and on a
-     * public page it would only look like a name that had been withheld.
-     *
-     * Local first, then country-wide: a region with its own curator is looked
-     * after more closely than one covered from the capital, and the order says
-     * so without needing a second label.
+     * Who looks after this region. Naming a curator is opt-in (`public_profile`); never fall back to rider#.
      *
      * @return list<array{name: string, uuid: ?string, scope: string}>
      */
@@ -196,51 +136,14 @@ final class RegionDirectoryProvider
             return null;
         }
 
-        /* TWO NUMBERS PER KIND, not one (owner, 2026-08-14: "What riders find
-           here looks a bit minimal now as it does not mention the base OSM
-           layer only the confirmed items").
-
-           Wallonia read "Water & food 2" while the map there draws 1,650 water
-           points, because this counted `item` rows in state `verified` and
-           nothing else. That is the CURATED plane; the reference plane is
-           `coverage_poi`, which is most of what a rider actually sees.
-           Reporting only the first told a rider the region was nearly empty
-           when the map is not.
-
-           They stay two numbers rather than a sum: they mean different things.
-           Verified is "somebody stood here and checked"; coverage is "OSM knows
-           about this". Adding them would erase exactly the distinction the
-           three view modes are built on. */
-        /* SERVED states, not verified-only (owner-reported 2026-08-14: "I added
-           one onto the map as a custom item with a photo, why do I not see that
-           reflected on the region page").
-
-           Their scenic item is `unverified`: approved, drawn on the map,
-           carrying a photo and a rider confirmation. Counting verified-only
-           reported North Holland as having ZERO scenic views while the rider
-           was looking at theirs on the map. A page headed "what riders find
-           here" has to mean what is FINDABLE, and served is exactly the set the
-           map draws — which is why the route count on this same page has always
-           used it (see the 2026-07-30 design note).
-
-           The hero's "verified items" stat and the maturity TIER keep the
-           stricter reading: those are editorial signals about how much has been
-           vouched for, and they say "verified" on the label. */
+        /* Two numbers per kind, never a sum: verified ≠ coverage_poi. */
+        /* SERVED states for "what riders find", not verified-only. Hero/maturity keep the stricter reading. */
         $verifiedRows = $this->db->fetchAllKeyValue(
             'SELECT letter, COUNT(*) FROM item WHERE region_id = :id AND state IN '
             .ItemState::servedSqlTuple().' GROUP BY letter ORDER BY letter',
             ['id' => (int) $row['id']],
         );
-        /* ASKED BEFORE QUERYING, not caught after. coverage_poi is
-           pipeline-owned DDL and does not exist on a fresh contributor stack or
-           in the test database, so this has to degrade to the verified counts
-           alone rather than 500.
-           A try/catch around the SELECT is the obvious shape and it does not
-           work: Postgres aborts the entire transaction on a failed statement,
-           so every later query in the same request fails too with "current
-           transaction is aborted" — which is what the test suite showed,
-           because DAMA wraps each test in one. Catching the exception left the
-           page just as broken and hid the cause. */
+        /* Probe existence first: a failed SELECT aborts the whole transaction. */
         $coverageRows = $this->hasCoverageTable()
             ? $this->db->fetchAllKeyValue(
                 'SELECT letter, COUNT(*) FROM coverage_poi WHERE region_id = :id GROUP BY letter ORDER BY letter',
@@ -252,8 +155,7 @@ final class RegionDirectoryProvider
         foreach (ItemType::cases() as $type) {
             $verifiedN = (int) ($verifiedRows[$type->letter()] ?? 0);
             $coverageN = (int) ($coverageRows[$type->letter()] ?? 0);
-            // A kind with neither is genuinely absent here and is left out; one
-            // with only coverage still belongs, because a rider can ride to it.
+            // A kind with neither is absent; coverage-only still belongs.
             if ($verifiedN > 0 || $coverageN > 0) {
                 $byKind[] = [
                     'labelKey' => $type->labelKey(),
@@ -265,18 +167,8 @@ final class RegionDirectoryProvider
 
         $cc = (string) $row['country_code'];
 
-        /* Build-time Wikipedia lead for the reader's locale, English when
-           their language has no article, nothing when the region has none -
-           the page then simply omits the section. Fetched here and not in
-           BASE_SELECT because the directory LIST never renders it, and text
-           blobs on every list row would be paid for nothing. The url/title
-           travel with the extract: the text is CC BY-SA 4.0 and the
-           attribution line must never drift from what it credits. */
-        /* Two stores, one lead: a curator override on the Regions desk beats
-           the harvest for the locale it was written in, and RegionLead decides
-           which of them the reader gets and what credit line it must carry
-           (adapted text keeps the Wikipedia citation and says so; original
-           text carries none). */
+        /* Wikipedia lead for this locale only — the list page never renders it. Attribution must travel with the extract. */
+        /* Curator override beats harvest for that locale; RegionLead owns credit. */
         $ctx = $this->db->fetchAssociative(
             'SELECT context, context_curated FROM region WHERE id = :id',
             ['id' => (int) $row['id']],
@@ -296,13 +188,7 @@ final class RegionDirectoryProvider
             'countryName' => Countries::exists($cc) ? Countries::getName($cc, $locale) : (string) $row['country_name_en'],
             'flag' => 'flags/'.strtolower($cc).'.svg',
             'byKind' => $byKind,
-            /* The hero's own reference-plane total, so the region page opens
-               with the same three figures as /coverage (owner 2026-08-14:
-               "show same block as coverage on the region page"). Summed from
-               the per-letter counts already fetched above rather than queried
-               again — same rows, same WHERE, one round trip. Zero when the
-               pipeline table is absent, which is the same degradation byKind
-               makes. */
+            /* Hero coverage total, same three figures as /coverage. Zero when the pipeline table is absent. */
             'coveragePois' => array_sum(array_map('intval', $coverageRows)),
         ];
     }
@@ -316,16 +202,13 @@ final class RegionDirectoryProvider
         return [
             'slug' => (string) $row['slug'],
             'areaKm2' => null === $row['area_km2'] ? null : (float) $row['area_km2'],
-            // The top rung supersedes: a region cannot be `established` without
-            // having been `growing` first, because the desk gates the flag on a
-            // readiness count (map-and-search.md §4.2).
+            // Established supersedes growing. docs/specs/map-and-search.md §4.2
             'tier' => match (true) {
                 'curated' === $row['default_map_mode'] => 'established',
                 $verified > 0 => 'growing',
                 default => 'onboarded',
             },
-            // Local cover wins over national: a region with its own curator is
-            // not merely "inside a country somebody watches".
+            // Local cover wins over national.
             'stewardship' => match (true) {
                 (bool) $row['curator_local'] => 'curated',
                 (bool) $row['curator_national'] => 'countrywide',
@@ -337,9 +220,7 @@ final class RegionDirectoryProvider
     }
 
     /**
-     * A JSONB column as an array, or null for anything that is not one.
-     * Malformed stored JSON degrades to "this region has no lead" rather than
-     * to a 500 on a public page.
+     * JSONB as an array, or null. Malformed JSON must not 500 a public page.
      *
      * @return array<string, mixed>|null
      */

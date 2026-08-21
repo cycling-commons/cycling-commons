@@ -10,38 +10,11 @@ use Psr\Log\LoggerInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 /**
- * Google Safe Browsing, the cheap reputation layer for rider-submitted links
- * (catalog-data-model.md §7 `links`).
+ * Safe Browsing for rider-submitted links. Submit fails open; render fails closed. Flag, never silently reject. Off without `SAFE_BROWSING_KEY`.
  *
- * A moderator clicking every submitted URL is one hostile link away from a bad
- * day, and the SEO-spam incentive for submitting links at all is exactly what
- * attracts the URLs worth checking. This is the free Lookup API - the same list
- * Chrome and Firefox use - asked at SUBMIT and again at RENDER.
+ * @see docs/specs/catalog-data-model.md §7
  *
- * **Both, and the pair is the point.** A URL that was clean when it was
- * submitted is precisely how a link farm gets past a one-time check; a check
- * only at render lets a hostile URL sit in the moderation queue where a curator
- * clicks it first.
- *
- * **The two calls fail in OPPOSITE directions, and this is the one thing to get
- * right.** They are different questions:
- *
- *  - **Submit fails OPEN.** A rider must not lose a contribution because a
- *    Google endpoint is down. An unreachable lookup stores the link and records
- *    the verdict as UNKNOWN for the curator to see.
- *  - **Render fails CLOSED.** On the public map that same unknown must never
- *    become a clean bill of health, so a link whose last verdict was UNSAFE
- *    stays withheld until a later check clears it.
- *
- * **Flag, never silently reject** (the owner's rule). A flagged submission
- * still reaches the queue carrying its verdict, because a false positive that
- * vanishes is indistinguishable from a bug.
- *
- * **Off by default.** With no `SAFE_BROWSING_KEY` the layer is disabled and
- * says so, rather than quietly passing everything: a security control that
- * cannot be told apart from an absent one is worse than admitting it is absent.
- *
- * @api Consumed by the links write path and by the moderation queue.
+ * @api
  */
 final class SafeBrowsing
 {
@@ -53,12 +26,7 @@ final class SafeBrowsing
 
     private const string ENDPOINT = 'https://safebrowsing.googleapis.com/v4/threatMatches:find';
 
-    /**
-     * Hosts whose reputation is not in question and whose links we produce in
-     * bulk ourselves. Re-checking them spends a quota on a known answer.
-     * Suffix-matched on the registrable host, so a look-alike domain
-     * (`wikipedia.org.example.com`) does NOT match.
-     */
+    /** Hosts we produce in bulk. Suffix-matched so a look-alike host does not match. */
     private const array ALLOWLIST = ['wikipedia.org', 'wikimedia.org', 'wikidata.org', 'openstreetmap.org'];
 
     public function __construct(
@@ -75,14 +43,7 @@ final class SafeBrowsing
     }
 
     /**
-     * Verdicts for a batch of urls, keyed by url.
-     *
-     * Batched because the Lookup API takes up to 500 entries per call and a
-     * submission carries at most a couple of dozen: one request per save rather
-     * than one per link, which is also what keeps the free quota viable.
-     *
-     * A url this cannot judge comes back UNKNOWN rather than missing, so a
-     * caller can never mistake "not in the result" for "safe".
+     * Verdicts keyed by url. Missing from the API response is SAFE; a url we cannot judge is UNKNOWN, never absent.
      *
      * @param list<string> $urls
      *
@@ -130,22 +91,13 @@ final class SafeBrowsing
             /** @var array{matches?: list<array{threat?: array{url?: string}}>} $data */
             $data = $response->toArray(false);
         } catch (\Throwable $e) {
-            /* Every failure is the same answer: everything asked stays UNKNOWN.
-               One catch rather than three, because naming the transport and
-               JSON exceptions separately only invites a third kind to escape as
-               a 500 on a rider's save.
-
-               Which DIRECTION unknown fails in is the CALLER's decision, never
-               this class's: submit treats it as allowed and render treats it as
-               not-yet-cleared, and deciding here would collapse two different
-               questions into one. */
+            /* Failures stay UNKNOWN. Fail-open vs fail-closed is the caller's decision. */
             $this->logger->warning('Safe Browsing lookup failed', ['error' => $e->getMessage()]);
 
             return $verdicts;
         }
 
-        // Everything we asked about and Google did NOT match is safe; only the
-        // matches are named in the response.
+        // Unmatched lookups are safe; only matches are named.
         foreach ($ask as $url) {
             $verdicts[$url] = self::SAFE;
         }
@@ -160,11 +112,7 @@ final class SafeBrowsing
     }
 
     /**
-     * The worst verdict in a set, which is what a submission card shows.
-     *
-     * UNSAFE beats UNKNOWN beats SAFE: one bad link in five makes the whole
-     * submission worth a second look, and a card that averaged them would hide
-     * the only one that mattered.
+     * UNSAFE > UNKNOWN > SAFE.
      *
      * @param array<string, string> $verdicts
      */
@@ -181,9 +129,9 @@ final class SafeBrowsing
     }
 
     /**
-     * Every url inside a `links` attribute, flattened.
+     * Every url inside a `links` attribute.
      *
-     * @param mixed $links the two-level structure from catalog-data-model.md §7
+     * @param mixed $links docs/specs/catalog-data-model.md §7
      *
      * @return list<string>
      */
@@ -209,10 +157,6 @@ final class SafeBrowsing
 
     /**
      * Suffix match on the registrable host, never `str_contains`.
-     *
-     * `str_contains($url, 'wikipedia.org')` would allowlist
-     * `https://wikipedia.org.example.com/` and `https://evil.com/?x=wikipedia.org`,
-     * which is the whole attack this list would otherwise open.
      */
     private static function isAllowlisted(string $url): bool
     {

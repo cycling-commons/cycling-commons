@@ -16,11 +16,7 @@ use Symfony\Component\Validator\Constraints\Length;
 use Symfony\Component\Validator\Constraints\NotBlank;
 
 /**
- * Form for a curator moderation decision (approve / reject / needs_info).
- *
- * The submission_id carries the queue item being decided on. The decision
- * and optional note are passed to the contribution stub. CSRF protection
- * is provided automatically by Symfony's form framework.
+ * Curator decision: approve / reject / needs_info.
  */
 final class ModerationDecisionType extends AbstractType
 {
@@ -46,11 +42,6 @@ final class ModerationDecisionType extends AbstractType
                     new NotBlank(message: 'moderate.error.decision_required'),
                 ],
             ])
-            // Approve & confirm in one stroke (owner 2026-08-13): '1' means
-            // the curator also stands behind the entry personally, and their
-            // confirmation is recorded after the approval (which verifies —
-            // ItemConfirmationService::verifyIfCurator). Hidden rather than a
-            // checkbox type: the drawer posts it programmatically.
             ->add('and_confirm', HiddenType::class, [
                 'label' => false,
                 'required' => false,
@@ -62,10 +53,7 @@ final class ModerationDecisionType extends AbstractType
                     new Length(max: 2000, maxMessage: 'moderate.error.note_too_long'),
                 ],
             ])
-            // Uuids of pending photos the curator unticked
-            // (docs/specs/photo-uploads.md §5). A JSON list, filled by
-            // assets/map/community.js from the drawer's per-photo checkboxes.
-            // Empty means "the submission's decision applies to every photo".
+            // Photo uuids the curator unticked (docs/specs/photo-uploads.md §5).
             ->add('media_reject', HiddenType::class, ['required' => false])
         ;
     }

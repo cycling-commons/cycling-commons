@@ -26,26 +26,19 @@ use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
- * The ONLY write-path for moderation decisions. Approve applies the change
- * to the catalog inside one transaction and appends change_history rows.
- * History records the item's ACTUAL value at apply time, never the
- * submitter's possibly-stale snapshot.
+ * Write-path for moderation decisions. History records the item's value at apply time.
  *
  * @see docs/specs/moderation-and-contribution.md §4
  *
- * @api Called by ModerateController::decide()/trash().
+ * @api
  */
 final class ModerationService
 {
-    /** Content-free audit actions for the escalation path (photo-uploads.md §6d). */
+    /** Content-free audit actions for the escalation path (docs/specs/photo-uploads.md §6d). */
     public const string ACTION_ESCALATE = 'submission_escalated';
     public const string ACTION_ESCALATE_RELEASE = 'submission_escalation_released';
 
-    /**
-     * Rows per page in the admin's held-submission list. Matches
-     * MediaEscalationService::PER_PAGE — the two lists share one page, and a
-     * reader should not meet two page sizes on it.
-     */
+    /** Rows per page in the admin held-submission list. */
     public const int HELD_PER_PAGE = 25;
 
     public function __construct(
@@ -70,20 +63,13 @@ final class ModerationService
         if (!\in_array($decision, ['approve', 'reject', 'needs_info'], true)) {
             throw new \InvalidArgumentException(sprintf('Unknown decision "%s"', $decision));
         }
-        // A needs-info decision IS the question. Without a note the rider gets
-        // "a curator needs more information" and nothing else — no way to know
-        // what to answer — while the submission leaves the map queue until
-        // they answer. So the note is not optional for this one decision,
-        // and the guard lives here because this is the only write path.
+        // Needs-info is the question; a blank note is refused (docs/specs/moderation-and-contribution.md §5.3).
         if ('needs_info' === $decision && '' === trim((string) $note)) {
             throw new MissingQuestionException('A needs-info decision must carry the question to ask the rider.');
         }
 
         return $this->em->wrapInTransaction(function () use ($submissionId, $decision, $curator, $note, $rejectMediaIds): Submission {
-            // Pessimistic row lock: two curators deciding the same submission
-            // concurrently would otherwise both read it as pending and both
-            // apply. The second now blocks until the first commits, then sees
-            // the decided status and is rejected below.
+            // Pessimistic lock: two concurrent decides must not both apply.
             $submission = $this->em->find(Submission::class, $submissionId, LockMode::PESSIMISTIC_WRITE);
             if (null === $submission) {
                 throw new \InvalidArgumentException(sprintf('Unknown submission %d', $submissionId));
@@ -99,10 +85,7 @@ final class ModerationService
 
             switch ($decision) {
                 case 'approve':
-                    // A submission bound to an item (itemId set) whose target row
-                    // has since vanished cannot be applied. Fail loudly (rolling
-                    // back the whole transaction) instead of silently marking it
-                    // approved with no effect.
+                    // Bound item missing: fail loudly rather than approve with no effect.
                     if (null !== $submission->getItemId() && null === $item) {
                         throw new \InvalidArgumentException(sprintf('Cannot approve submission %d: its target item %d no longer exists', $submissionId, $submission->getItemId()));
                     }
@@ -126,9 +109,7 @@ final class ModerationService
                     break;
             }
 
-            // Photos ride the same decision, in the same transaction, and the
-            // item-side record is the same change_history row every other
-            // applied change gets (docs/specs/photo-uploads.md §5, §5b).
+            // Photos ride the same decision transaction (docs/specs/photo-uploads.md §5, §5b).
             $photoChange = $this->mediaDecisions->apply($submission, $item, $decision, $curator, $note, $rejectMediaIds);
             if (null !== $photoChange && null !== $item) {
                 $this->history($item, $submission, $curator, 'photos', $photoChange['old'], $photoChange['new']);
@@ -143,9 +124,7 @@ final class ModerationService
                 'reject' => UserMessageKind::SubmissionRejected,
                 'needs_info' => UserMessageKind::SubmissionNeedsInfo,
             };
-            // M2: the outcome message rides the decision transaction. Atomic,
-            // duplicate-proof (the AlreadyDecidedException guard above means
-            // at most one message per outcome).
+            // Outcome message rides the decision transaction.
             $this->messages->sendSystem(
                 $submission->getUserId(), $kind,
                 'submission', $submissionId, 'SUB-'.$submissionId,
@@ -158,16 +137,7 @@ final class ModerationService
     }
 
     /**
-     * A rider takes back their own undecided submission (owner 2026-08-16).
-     *
-     * Withdrawal reuses the REJECT mechanics on purpose - a new-item's
-     * materialized row goes to state Rejected (so the map drops it, the OSM
-     * ref stays claimed for a possible revive, exactly like a rejection) and
-     * pending photos are rejected into the retention sweep - but it is not a
-     * decision: no curator, no scope check, no outcome message to the person
-     * who did it themselves, and it never counts in moderation activity
-     * (that view filters approved/rejected). `withdrawn` is terminal;
-     * decidedBy records the rider, decidedAt starts the retention clock.
+     * Rider takes back their own undecided submission (docs/specs/moderation-and-contribution.md §3.4).
      *
      * @throws AlreadyDecidedException  when the submission is already settled
      * @throws NotTheSubmitterException when it is somebody else's
@@ -202,10 +172,7 @@ final class ModerationService
     }
 
     /**
-     * Trash (M9): a hard, permanent delete of a submission row in ANY status.
-     * Spam and abuse need no state check, unlike a route proposal. Audited
-     * content-free FIRST (AdminActionLogger::log() flushes its own row inside
-     * this transaction), never a UserMessage - trashing never feeds spam.
+     * Hard-delete a submission in any status. Audited content-free first.
      *
      * @see docs/specs/moderation-and-contribution.md §6
      */
@@ -219,49 +186,20 @@ final class ModerationService
             if (!$this->scopeProvider->allowsRegion($this->scopeProvider->scopeFor($curator), $submission->getRegionId())) {
                 throw new OutOfScopeException('Submission outside the curator\'s assigned areas.');
             }
-            // A submission under legal hold is beyond every deletion path
-            // (docs/specs/photo-uploads.md §6d): Trash exists to destroy
-            // content, and this content has to survive until it has been
-            // reported.
+            // Legal hold is beyond every deletion path (docs/specs/photo-uploads.md §6d).
             if ($submission->isEscalated()) {
                 throw new \LogicException(sprintf('SUB-%d is under legal hold and cannot be trashed.', $id));
             }
 
             $this->adminLog->log($curator, TrashActions::TrashSubmission, null, sprintf('SUB-%d · type=%s', $id, $submission->getType()->value));
-            // Trash means no content survives — the photos go with the words,
-            // immediately and with no retention window
-            // (docs/specs/photo-uploads.md §6). The content-free audit row above
-            // is the only trace either leaves.
+            // Photos go immediately, no retention window (docs/specs/photo-uploads.md §6).
             $this->mediaDisposal->purgeForSubmission($id);
             $this->removeUnapprovedNewItem($submission);
             $this->em->remove($submission);
         });
     }
 
-    /**
-     * Trashing a NEW-place submission takes its unapproved item with it.
-     *
-     * Intake creates the `Item` immediately, in state `submitted` — that is how
-     * the pending pin reaches the curator's map before anyone has decided
-     * anything (CatalogContributionService). Trash used to remove only the
-     * submission row, which left that item behind for good: state `submitted`,
-     * `source_ref` = `sub:<id>` pointing at a submission that no longer exists,
-     * and nothing anywhere to sweep it — `RetentionService` does not touch
-     * items. Invisible rather than harmful (ItemState::SERVED is
-     * unverified+verified, so a `submitted` row is never served publicly), but
-     * it is exactly the content Trash promises to destroy, still in the
-     * database. Owner-reported 2026-08-03.
-     *
-     * The state check is the safety rail, not decoration: once a new item has
-     * been APPROVED it is `unverified`/`verified`, a real catalogue entry that
-     * riders may since have confirmed, photographed or edited. Trashing the
-     * originating submission must never take that with it — only an item still
-     * waiting on its first decision has nothing else depending on it.
-     *
-     * An `edit` submission is untouched by all of this: an edit applies on
-     * approve, so a pending edit has changed nothing yet and trashing it can
-     * only ever discard the proposal.
-     */
+    /** Trashing a NEW-place submission takes its still-submitted item with it. */
     private function removeUnapprovedNewItem(Submission $submission): void
     {
         if (SubmissionType::NewItem !== $submission->getType() || null === $submission->getItemId()) {
@@ -271,10 +209,7 @@ final class ModerationService
         if (null === $item || ItemState::Submitted !== $item->getState()) {
             return;
         }
-        // Nothing else can be pointing at it: change_history is written on
-        // approve, confirmations need a served item, and an item-attached photo
-        // only gets its item_id on approve — the submission's own photos are
-        // already gone via purgeForSubmission above.
+        // Only a still-submitted item: an approved place has other dependents.
         $this->em->remove($item);
     }
 
@@ -286,14 +221,8 @@ final class ModerationService
     }
 
     /**
-     * The submitter already answered the map's own question on the improve
-     * form ("Potable?"), so record it as their stance rather than asking them
-     * again the first time they open the place they just added.
-     *
-     * Recorded as `form`-sourced, which keeps it out of the public tally and
-     * out of the verified derivation: it is the claim, not a confirmation of
-     * it, and a rider must not be able to verify their own contribution
-     * (ConfirmationSource, moderation-and-contribution.md §6.3).
+     * Record the submitter's own form answer as form-sourced, not a confirmation
+     * (docs/specs/moderation-and-contribution.md §6.3).
      */
     private function carryOwnAnswer(Item $item, Submission $submission): void
     {
@@ -305,11 +234,7 @@ final class ModerationService
         $this->confirmations->recordFromSubmission($item, $submission->getUserId(), $stance);
     }
 
-    /**
-     * The improve form's potability answer as a stance, or null when it is not
-     * a claim either way — "Unsigned — use judgement" says the rider does not
-     * know, which is exactly the case the map should still ask about.
-     */
+    /** Potability answer as a stance, or null when it is not a claim either way. */
     private static function stanceFromAnswer(mixed $answer): ?ConfirmationStance
     {
         if (!\is_string($answer)) {
@@ -338,11 +263,7 @@ final class ModerationService
                 $actualOld = null;
             }
             if (Item::LOCATION_FIELD === $field) {
-                /* The pin the rider moved. Parsed back from the pair the diff
-                   showed the curator, so what is applied is exactly what they
-                   approved — no second source for the same number. Only a POINT
-                   item moves this way; a segment or a climb carries its shape in
-                   its own field. */
+                /* Apply the pin the curator approved; only POINT items move this way. */
                 $parts = array_map('trim', explode(',', (string) $now));
                 if (2 === \count($parts) && is_numeric($parts[0]) && is_numeric($parts[1])) {
                     $item->setGeom(json_encode([
@@ -357,17 +278,11 @@ final class ModerationService
             if (Item::NAME_FIELD === $field) {
                 $item->setName((string) $now);
             } elseif (null === $now) {
-                // A cleared field: remove the attribute rather than storing a
-                // null (the rider emptied a prefilled value on the improve form).
+                // Cleared field: remove the attribute rather than storing null.
                 unset($attributes[$field]);
             } else {
                 $attributes[$field] = $now;
-                // A redrawn stretch changes the item's GEOMETRY too: the map
-                // reads the line from geom, not from the attribute, so an
-                // approved segment edit that only updated attributes would
-                // keep drawing the old road. Same derivation as submitDraft:
-                // the routed/seeded line when there is one, the a→b chord
-                // otherwise.
+                // A redrawn stretch updates geom too; the map reads the line from geom.
                 if ('segment' === $field && \is_array($now) && isset($now['a'], $now['b'])) {
                     $path = \is_array($now['line'] ?? null) ? $now['line'] : [$now['a'], $now['b']];
                     $item->setGeom(json_encode(['type' => 'LineString', 'coordinates' => $path], \JSON_THROW_ON_ERROR));
@@ -389,24 +304,12 @@ final class ModerationService
             ->setField($field)
             ->setOldValue($old)
             ->setNewValue($new)
-            /* The CREATOR is credited, not the approver (owner 2026-08-13:
-               "we do not credit the creator of the surface item"). Every row
-               here applies a change the SUBMITTER authored - the curator only
-               let it through, and their act is already recorded where desk
-               acts belong (submission.decided_by, the desk history). The
-               public change log is provenance of the content. */
+            /* Credit the submitter, not the approver (docs/specs/moderation-and-contribution.md §4.1). */
             ->setChangedBy($submission->getUserId()));
     }
 
     /**
-     * Escalate a submission's contents as suspected illegal content
-     * (docs/specs/photo-uploads.md §6d) — the same third verb the photo side
-     * has, because words can be the material just as pixels can.
-     *
-     * It leaves the queue immediately (SubmissionQueue filters held rows out),
-     * nothing can delete it, and an admin is alerted at once. Any photos
-     * attached to it are escalated with it: they are the same act by the same
-     * person, and leaving them decidable would defeat the hold.
+     * Escalate as suspected illegal content (docs/specs/photo-uploads.md §6d).
      *
      * @throws \InvalidArgumentException on an unknown submission or an empty reason
      */
@@ -434,8 +337,7 @@ final class ModerationService
                 $upload->escalate((int) $curator->getId(), $reason);
             }
         }
-        // Content-free, like every Trash row: what is audited is that a
-        // curator escalated SUB-N, never what it said.
+        // Content-free: the audit records that SUB-N was escalated, never what it said.
         $this->adminLog->log($curator, self::ACTION_ESCALATE, null, sprintf('SUB-%d', $id));
         $this->em->flush();
 

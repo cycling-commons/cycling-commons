@@ -7,12 +7,11 @@ declare(strict_types=1);
 namespace App\Media;
 
 /**
- * No valid consent backs this request. Thrown wherever consent is asserted and
- * absent, expired by a version bump, or owned by somebody else — the one
- * outcome every ambiguity resolves to (docs/specs/photo-uploads.md §4
- * fail-closed).
+ * Missing, stale, or foreign consent. Every ambiguity is this.
  *
- * @api Thrown by ConsentService::assertValid().
+ * @see docs/specs/photo-uploads.md §4
+ *
+ * @api
  */
 final class ConsentMissing extends \RuntimeException
 {

@@ -7,8 +7,11 @@ declare(strict_types=1);
 namespace App\Catalog;
 
 /**
- * Lifecycle state of a catalog row (edit-items funnel). Imports always enter
- * as Unverified; upsert-updates never touch state. @api Catalog domain enum.
+ * Lifecycle state of a catalog row. Imports enter Unverified; upsert-updates never touch state.
+ *
+ * @see docs/specs/catalog-data-model.md §4
+ *
+ * @api
  */
 enum ItemState: string
 {

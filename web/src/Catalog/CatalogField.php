@@ -7,10 +7,11 @@ declare(strict_types=1);
 namespace App\Catalog;
 
 /**
- * One editable field in a type's form (a row in the "Fix details" or
- * "Add missing" pane).
+ * One editable field in a type's form.
  *
- * @api Read by the improve form and template.
+ * @see docs/specs/edit-items/README.md
+ *
+ * @api
  */
 final readonly class CatalogField
 {
@@ -25,24 +26,12 @@ final readonly class CatalogField
         public bool $required = false,
         public int $maxLength = 500,
         public bool $display = true,
-        /**
-         * Shown, never typed.
-         *
-         * A derived field is a fact the application works out for itself and
-         * displays — the climb's max gradient, read off wherever the rider put
-         * the steepest-ramp marker. It stays in the schema so the drawer keeps
-         * rendering it; it is dropped from the edit FORM, because offering a
-         * text box for a computed value invites somebody to disagree with the
-         * computation, and free text is how "~20% (mid-climb ramp)" ends up
-         * reading "answered-tag probe 16:10:23" (owner, 2026-08-03/04).
-         *
-         * `display: false` is the opposite flag: editable but not shown.
-         */
+        /** Shown, never typed — opposite of `display: false` (editable, hidden). */
         public bool $derived = false,
     ) {
     }
 
-    /** A value the app computes and displays, and nobody types. */
+    /** A value the app computes and displays; nobody types it. */
     public static function derivedText(string $name, string $label): self
     {
         return new self($name, $label, FieldKind::Text, derived: true);
@@ -59,10 +48,7 @@ final readonly class CatalogField
     }
 
     /**
-     * A text-like field whose value must be a real http(s) URL. Constrained by
-     * {@see \App\Form\CatalogFieldConstraints} to http/https so a non-http
-     * scheme (javascript:, data:, …) can never persist and reach the map's
-     * `<a href>`.
+     * http(s) only — non-http schemes must never persist into a map `<a href>`.
      */
     public static function url(string $name, string $label, string $placeholder = ''): self
     {
@@ -76,9 +62,7 @@ final readonly class CatalogField
     }
 
     /**
-     * A select field whose stored value is a list<string> over $choices,
-     * for example a route's suitable bike types, rather than a single
-     * scalar.
+     * Stored value is `list<string>` over `$choices`, not a scalar.
      *
      * @param list<string> $choices
      */
@@ -88,12 +72,9 @@ final readonly class CatalogField
     }
 
     /**
-     * The outbound-links editor: several destinations, each in several
-     * languages ({@see FieldKind::Links}).
+     * Outbound-links editor. No placeholder/default: an item with no links stores no `links` key.
      *
-     * No placeholder and no default. The control is not a text box, so a
-     * placeholder would have nowhere to sit, and an item with no links must
-     * store no `links` key at all rather than an empty list.
+     * @see docs/specs/catalog-data-model.md §7
      */
     public static function links(string $name, string $label): self
     {

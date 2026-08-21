@@ -9,8 +9,7 @@ namespace App\Catalog;
 /**
  * How a contributor sets a catalog item's location in add mode.
  *
- * Common to every edit type, see docs/specs/edit-items/README.md ("Setting the
- * location"). The improve wizard's step 1 renders differently per mode.
+ * @see docs/specs/edit-items/README.md (Common to every type)
  */
 enum LocationMode: string
 {

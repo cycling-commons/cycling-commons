@@ -12,26 +12,13 @@ use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 /**
- * Server-side reader of the CYCLE-ROUTE network tile manifest — the sibling of
- * {@see SurfaceManifest}, for the routes artifact (route=bicycle/mtb corridors
- * plus knooppunt numbers, one PMTiles archive).
- *
- * The routes build publishes `routes/<stamp>/routes.pmtiles` and repoints
- * `routes/manifest.json` at it. One artifact, so this class is the one-arm
- * version of its sibling: same tolerant contract (every failure path returns
- * null, logs, and the map renders without the layer), same env-pin override
- * (ROUTES_TILES_URL wins when set, and is honoured without touching the
- * bucket), same TTLs.
- *
- * Its OWN manifest, deliberately not a fourth arm of the surface one: the two
- * builds run as separate invocations, and a shared manifest would let
- * whichever ran last publish half-updated URLs for the other's arms. The
- * route-awareness coupling between the two lives in the surface BUILD's inputs
- * (the way-id files), never in serving.
+ * Cycle-route tile manifest (docs/specs/coverage-provider.md §4).
+ * Own manifest, not a surface arm — separate builds must not share URLs.
+ * Failure returns null and never throws.
  *
  * @see docs/specs/coverage-provider.md §4
  *
- * @api Injected into MapController::map().
+ * @api
  */
 final class RoutesManifest
 {
@@ -85,8 +72,7 @@ final class RoutesManifest
                     /** @var array<string, mixed> $manifest */
                     $manifest = $this->http
                         ->request('GET', $this->manifestUrl, [
-                            // 'timeout' caps idle time between chunks;
-                            // 'max_duration' caps the whole request.
+                            // 'timeout' caps idle time; 'max_duration' caps the whole request.
                             'timeout' => self::FETCH_TIMEOUT,
                             'max_duration' => self::FETCH_TIMEOUT,
                         ])
@@ -109,7 +95,7 @@ final class RoutesManifest
                 }
             });
         } catch (\Throwable $e) {
-            // The cache backend itself failed. Same silent degradation.
+            // Cache backend failed. Same silent degradation.
             $this->logger->warning('Routes manifest cache unavailable — map serves without the route layer.', [
                 'manifest_url' => $this->manifestUrl,
                 'exception' => $e,
@@ -119,12 +105,7 @@ final class RoutesManifest
         }
     }
 
-    /**
-     * Cache key derived from the manifest URL (hex digest, PSR-6-safe), so
-     * repointing ROUTES_MANIFEST_URL takes effect on the next request rather
-     * than after CACHE_TTL. The shape segment retires old-shaped entries if
-     * the cached value ever changes shape — bump it when that happens.
-     */
+    /** Cache key from the manifest URL. `.v1` retires old-shaped entries. */
     private function cacheKey(): string
     {
         return 'routes.manifest.v1.'.hash('xxh128', $this->manifestUrl);

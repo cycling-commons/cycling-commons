@@ -13,24 +13,16 @@ use Doctrine\DBAL\ParameterType;
 use Symfony\Component\Clock\ClockInterface;
 
 /**
- * Read model over the append-only change_history table
- * (moderation-and-contribution.md §4): what changed on a catalog item, who
- * changed it, and when, newest first, capped. Reuses the rider#-hash and
- * RelativeTime conventions SubmissionQueue established for the moderation
- * queue, so the map drawer's history reads the same way.
+ * Read model over append-only change_history.
  *
- * @api Read by MapController::history().
+ * @see docs/specs/moderation-and-contribution.md §4.1
+ *
+ * @api
  */
 final class ChangeHistoryView
 {
     /**
-     * The `who` value for an automatic change — a TOKEN, not prose.
-     *
-     * This endpoint is public and cacheable (max-age 60), so its body must not
-     * vary by locale: translating here would serve one language's word to
-     * every reader who hit the same cached URL. The client maps this token to
-     * a translated label (`d.historyAuto`), the way it already does for every
-     * other drawer string.
+     * Token, not prose — this endpoint is cacheable, so the body must not vary by locale.
      */
     public const string SYSTEM_LABEL = 'system';
 
@@ -68,17 +60,7 @@ final class ChangeHistoryView
                 'field' => $field,
                 'oldValue' => $this->decode($r['old_value'], $field),
                 'newValue' => $this->decode($r['new_value'], $field),
-                // An automatic expiry has no author. Handing 0 to
-                // RiderPseudonym would mint a plausible "rider#xxxx" for a
-                // person who does not exist and publish it on the item's
-                // change log — a fabricated contributor, on the one surface
-                // whose whole job is provenance.
-                /* A PUBLIC profile is credited by name (owner 2026-08-13):
-                   the rider chose to stand behind their contributions, and a
-                   pseudonym over a public byline hides what they asked to
-                   show. Private profiles keep the stable pseudonym; the
-                   system actor keeps its label; a deleted account (no user
-                   row) falls back to the pseudonym too. */
+                // SYSTEM_ACTOR must not mint a rider# handle. Public profiles are credited by name; others stay a pseudonym.
                 'who' => ChangeHistory::SYSTEM_ACTOR === (int) $r['changed_by']
                     ? self::SYSTEM_LABEL
                     : ($r['public_profile'] && \is_string($r['display_name']) && '' !== $r['display_name']
@@ -93,16 +75,12 @@ final class ChangeHistoryView
     private function decode(?string $json, string $field = ''): mixed
     {
         if (null === $json) {
-            // "no photos yet" is a count of zero, not an absent value.
+            // docs/specs/photo-uploads.md §5 — gallery absence is count 0, not null.
             return isset(self::PHOTO_FIELDS[$field]) ? 0 : null;
         }
         $v = json_decode($json, true);
 
-        // A gallery attribute's raw value is a list of objects full of URLs.
-        // Dumping that into the rider-visible item history is noise, not
-        // history (docs/specs/photo-uploads.md §5) — what changed is how many
-        // photos the item carries, so that is what the history reports. The
-        // client renders the count; the URLs never need to travel.
+        // docs/specs/photo-uploads.md §5 — history reports photo counts, never URLs.
         if (isset(self::PHOTO_FIELDS[$field])) {
             return \is_array($v) ? \count($v) : (null === $v ? 0 : 1);
         }

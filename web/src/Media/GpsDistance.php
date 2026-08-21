@@ -7,24 +7,17 @@ declare(strict_types=1);
 namespace App\Media;
 
 /**
- * How far a photo was taken from the pin, in whole metres - the only thing that
- * survives of a photo's coordinates (docs/specs/photo-uploads.md §3).
+ * Pin distance in metres — the only surviving GPS fact.
  *
- * Its own class because two callers now compute it and they must agree to the
- * metre: MediaClaimService, when the rider submits, and
- * ScanAndReleaseUploadHandler, for the photo that was claimed while it was
- * still quarantined and so had no coordinates to work from at claim time.
+ * @see docs/specs/photo-uploads.md §3
  *
- * @api Called by MediaClaimService and ScanAndReleaseUploadHandler.
+ * @api
  */
 final class GpsDistance
 {
     private const int EARTH_RADIUS_M = 6_371_000;
 
-    /**
-     * Null whenever either end is missing: an absent distance is honest, a zero
-     * would be a claim.
-     */
+    /** Null if either end is missing: zero would be a false claim. */
     public static function metres(?float $photoLat, ?float $photoLng, ?float $pinLat, ?float $pinLng): ?int
     {
         if (null === $photoLat || null === $photoLng || null === $pinLat || null === $pinLng) {

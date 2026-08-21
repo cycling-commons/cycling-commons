@@ -19,12 +19,9 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Intl\Countries;
 
 /**
- * Seed/refresh the World reference data: continents (static), countries
- * (symfony/intl + a derived continent map) and subdivisions
- * (sokil/php-isocodes, ISO 3166-2). Idempotent - upserts by code, so it is
- * safe to re-run to pick up dataset updates.
+ * Seed/refresh continents, countries, and ISO 3166-2 subdivisions. Idempotent.
  *
- * @api CLI entry point.
+ * @api
  */
 #[AsCommand(name: 'app:world:import', description: 'Seed/refresh continents, countries and ISO 3166-2 subdivisions')]
 final class ImportWorldDataCommand extends Command
@@ -44,7 +41,7 @@ final class ImportWorldDataCommand extends Command
     {
         $io = new SymfonyStyle($input, $output);
 
-        // 1) Continents ------------------------------------------------------
+        // Continents
         $continentRepo = $this->em->getRepository(Continent::class);
         $continents = [];
         foreach (self::CONTINENTS as $code => $name) {
@@ -55,7 +52,7 @@ final class ImportWorldDataCommand extends Command
         }
         $this->em->flush();
 
-        // 2) Countries (symfony/intl + continent map) ------------------------
+        // Countries (symfony/intl + continent map)
         /** @var array<string, string> $continentOf */
         $continentOf = require \dirname(__DIR__).'/Resources/country_continents.php';
         $countryRepo = $this->em->getRepository(Country::class);
@@ -75,10 +72,7 @@ final class ImportWorldDataCommand extends Command
         }
         $this->em->flush();
 
-        // 3) Subdivisions (sokil/php-isocodes, ISO 3166-2) -------------------
-        // Uses sokil's default gettext driver (ext-gettext is installed in
-        // the image). The php-isocodes-db-only package ships English msgids
-        // only, so names come out in canonical English.
+        // Iterate all subdivisions: getAllByCountryCode() drops parent.
         $subDb = (new IsoCodesFactory())->getSubdivisions();
         $subRepo = $this->em->getRepository(Subdivision::class);
         /** @var array<string, Subdivision> $byCode */
@@ -86,18 +80,11 @@ final class ImportWorldDataCommand extends Command
         /** @var array<string, string> $parentOf */
         $parentOf = [];
         $total = 0;
-        // Iterate the whole subdivision database rather than calling
-        // getAllByCountryCode() per country: sokil's index-based lookups
-        // (find()/getAllByCountryCode) return entries with a NULL parent,
-        // while plain iteration hydrates the full entry, including
-        // `parent`. Using the country lookup left every parent link, and
-        // therefore every level, unset. The country is the alpha-2 prefix
-        // of the ISO 3166-2 code ("BE-VAN" → "BE").
         foreach ($subDb as $s) {
             $code = strtoupper($s->getCode());
             $country = $countries[substr($code, 0, 2)] ?? null;
             if (null === $country) {
-                continue; // a subdivision for a country outside our set
+                continue;
             }
             $sd = $subRepo->findOneBy(['code' => $code]) ?? new Subdivision();
             $sd->setCode($code)->setName($s->getName())->setType($s->getType() ?: null)->setCountry($country);

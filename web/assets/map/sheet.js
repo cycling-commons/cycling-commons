@@ -1,17 +1,10 @@
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
-/* The mobile snap sheet (peek / half / full) and the map hover tip.
-   Extracted from map.js by the module split.
-
-   The sheet is built by an IIFE that binds drag handlers, so constructing it is
-   a side effect and belongs to the entry (§4.2): initSheet() runs it, and the
-   exported `sheet` is a stable facade over the result. That indirection is what
-   lets ride-check.js and the drawer hold a reference to `sheet` before
-   initSheet() has run — the pre-init facade is a no-op rather than a crash,
-   which is exactly the old `{reset(){}}` fallback for a page with no drawer. */
+/* Mobile snap sheet (peek / half / full) and hover tip.
+   @see docs/specs/map-and-search.md §6.6 */
 import { map } from './map-init.js';
 import { closeDrawer } from './drawer.js';
 
-// Pre-init and no-drawer pages both land on this no-op, same as before.
+// Callers hold `sheet` before initSheet(); no-op until then, and on pages with no drawer.
 let _sheet = {reset(){}, clear(){}};
 export const sheet = {
   reset(){ _sheet.reset(); },
@@ -22,10 +15,6 @@ export function initSheet(){
   _sheet = initSnapSheet();
 }
 
-// Mobile snap sheet (spec 2026-07-14): peek / half / full resting states.
-// Content scrolls only at full; below full any vertical drag moves the
-// sheet; at full, a downward drag while scrollTop===0 grabs the sheet back
-// (Google-Maps-style hand-off). Desktop (>820px) never enters this code.
 function initSnapSheet(){
   const d=document.getElementById('drawer'), grab=document.getElementById('drawerGrab');
   if(!d||!grab) return {reset(){}};
@@ -33,7 +22,6 @@ function initSnapSheet(){
   const rem=()=>parseFloat(getComputedStyle(document.documentElement).fontSize)||16;
   let snap='half', justDragged=false;
   const setSnap=s=>{ snap=s; d.classList.toggle('s-full', s==='full'); d.classList.toggle('s-peek', s==='peek'); d.style.transform=''; if(s==='full') {} else d.scrollTop=0; };
-  // translateY offsets (px from fully-open) for each resting state
   function offsets(){
     const h=d.getBoundingClientRect().height;
     return {full:0, half:Math.max(0, h-window.innerHeight*0.5), peek:Math.max(0, h-7.5*rem())};
@@ -44,41 +32,32 @@ function initSnapSheet(){
     viaGrab=grab.contains(e.target);
     if(!viaGrab && snap==='full' && d.scrollTop>0) return;   // mid-scroll at full → content's gesture
     active=true; dragging=false; startY=e.touches[0].clientY; startT=e.timeStamp; dy=0;
-    // baseOff from the sheet's ACTUAL rendered transform, not the offsets()
-    // table: the CSS half rule rests at 50svh while offsets() uses
-    // innerHeight — with a retracted URL bar those bases differ and a
-    // table-derived baseOff would jump the sheet on the first touchmove.
-    // offsets() is still fine for the release-snap targets below.
+    // Start from the rendered transform: 50svh vs innerHeight diverge when the URL bar retracts.
     const tr=getComputedStyle(d).transform;
     baseOff = (tr && tr!=='none') ? new DOMMatrixReadOnly(tr).m42 : 0;
-    // The clamp ceiling is invariant during a drag; measuring it here saves a
-    // getBoundingClientRect per touchmove frame (frontend review 2026-08-09).
     peekClamp = offsets().peek + 40;
   }, {passive:true});
   d.addEventListener('touchmove', e=>{
     if(!active) return;
     dy=e.touches[0].clientY-startY;
     if(!dragging){
-      // At full, content owns upward drags (scroll); the sheet owns downward
-      // ones from scrollTop 0. Below full the sheet owns both directions.
+      // At full, content owns upward drags; the sheet owns downward from scrollTop 0.
       if(!viaGrab && snap==='full' && dy<-4){ active=false; return; }
-      if(Math.abs(dy)<=4) return;                    // wait for a clear direction
+      if(Math.abs(dy)<=4) return;
       dragging=true;
     }
     e.preventDefault();                              // own the gesture (passive:false)
     d.classList.add('dragging');
-    d.style.transform=`translateY(${Math.min(Math.max(0, baseOff+dy), peekClamp)}px)`;   // clamp: never above full; slight give past peek
+    d.style.transform=`translateY(${Math.min(Math.max(0, baseOff+dy), peekClamp)}px)`;
   }, {passive:false});
   d.addEventListener('touchend', ()=>{
     if(!dragging){ active=false; return; }
     active=false; dragging=false; justDragged=true; setTimeout(()=>{ justDragged=false; }, 450);
     d.classList.remove('dragging');
-    const off=offsets(), pos=baseOff+dy, vel=dy/Math.max(1, performance.now()-startT);   // px/ms, + = down
-    // fast flick: skip straight to the neighbouring state in the flick's direction
+    const off=offsets(), pos=baseOff+dy, vel=dy/Math.max(1, performance.now()-startT);
     if(vel>0.5){ if(snap==='peek' || pos>off.peek+20){ dismiss(); return; } setSnap(snap==='full'?'half':'peek'); return; }
     if(vel<-0.5){ setSnap(snap==='peek'?'half':'full'); return; }
-    if(pos>off.peek+60){ dismiss(); return; }        // dragged well past peek → close
-    // otherwise: snap to nearest resting state
+    if(pos>off.peek+60){ dismiss(); return; }
     let best='full', bestD=Infinity;
     ['full','half','peek'].forEach(s=>{ const dd=Math.abs(pos-off[s]); if(dd<bestD){ bestD=dd; best=s; } });
     setSnap(best);
@@ -87,7 +66,7 @@ function initSnapSheet(){
     if(!active && !dragging) return;
     active=false; dragging=false;
     d.classList.remove('dragging');
-    setSnap(snap);                    // re-settle on the last resting state
+    setSnap(snap);
   });
   function dismiss(){
     d.style.transform='translateY(102%)';
@@ -97,9 +76,9 @@ function initSnapSheet(){
     d.addEventListener('transitionend', fin);
     setTimeout(fin, 320);                            // fallback if transitionend doesn't fire
   }
-  grab.addEventListener('click', ()=>{ if(!mobile()||justDragged) return; setSnap(snap==='full'?'half':'full'); });   // Enter/Space included (button)
+  grab.addEventListener('click', ()=>{ if(!mobile()||justDragged) return; setSnap(snap==='full'?'half':'full'); });
   return {
-    reset(){ setSnap('half'); },                     // openDrawer lands every sheet at half
+    reset(){ setSnap('half'); },
     clear(){ d.classList.remove('s-full','s-peek'); d.style.transform=''; snap='half'; },
   };
 }

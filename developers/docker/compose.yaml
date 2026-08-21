@@ -97,8 +97,8 @@ services:
       MEDIA_S3_PUBLIC_BUCKET_OC: "${MEDIA_S3_PUBLIC_BUCKET_OC:-cc-media-oc-01}"
       MEDIA_S3_PUBLIC_BUCKET_SA: "${MEDIA_S3_PUBLIC_BUCKET_SA:-cc-media-sa-01}"
       MEDIA_S3_PRIVATE_BUCKET: "${MEDIA_S3_PRIVATE_BUCKET:-cc-media-private}"
-      MEDIA_PUBLIC_BASE: "${MEDIA_PUBLIC_BASE:-http://localhost:9100}"
-      MEDIA_CSP_HOST: "${MEDIA_CSP_HOST:-http://localhost:9100}"
+      MEDIA_PUBLIC_BASE: "${MEDIA_PUBLIC_BASE:-http://localhost:9102/img}"
+      MEDIA_CSP_HOST: "${MEDIA_CSP_HOST:-http://localhost:9102}"
       MESSENGER_TRANSPORT_DSN: "${MESSENGER_TRANSPORT_DSN:-redis://redis:6379/cc_messages}"
     volumes:
       - ../../web:/app
@@ -147,8 +147,8 @@ services:
       MEDIA_S3_PUBLIC_BUCKET_OC: "${MEDIA_S3_PUBLIC_BUCKET_OC:-cc-media-oc-01}"
       MEDIA_S3_PUBLIC_BUCKET_SA: "${MEDIA_S3_PUBLIC_BUCKET_SA:-cc-media-sa-01}"
       MEDIA_S3_PRIVATE_BUCKET: "${MEDIA_S3_PRIVATE_BUCKET:-cc-media-private}"
-      MEDIA_PUBLIC_BASE: "${MEDIA_PUBLIC_BASE:-http://localhost:9100}"
-      MEDIA_CSP_HOST: "${MEDIA_CSP_HOST:-http://localhost:9100}"
+      MEDIA_PUBLIC_BASE: "${MEDIA_PUBLIC_BASE:-http://localhost:9102/img}"
+      MEDIA_CSP_HOST: "${MEDIA_CSP_HOST:-http://localhost:9102}"
     volumes:
       - ../../web:/app
       - cc_api_vendor:/app/vendor
@@ -346,6 +346,45 @@ services:
       mc anonymous set download cc/${MEDIA_S3_PUBLIC_BUCKET_SA:-cc-media-sa-01} &&
       mc mb --ignore-existing cc/${MEDIA_S3_PRIVATE_BUCKET:-cc-media-private}
       "
+
+  # Serves MediaStorage::url()'s <base>/<shard>/<key> shape, which MinIO cannot
+  # serve directly (it wants the full bucket name as the first path segment).
+  # Staging and production have the equivalent as a real vhost; without this,
+  # dev is the only environment that cannot display a photo.
+  media-proxy:
+    profiles: ["storage"]
+    image: nginx:alpine
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      # Only MEDIA_-prefixed names are substituted, so nginx's own $shard and
+      # $objkey survive envsubst untouched.
+      NGINX_ENVSUBST_FILTER: "MEDIA_"
+      MEDIA_BUCKET_PREFIX: "${MEDIA_BUCKET_PREFIX:-cc-media-}"
+    volumes:
+      - ./media-proxy.conf.template:/etc/nginx/templates/default.conf.template:ro
+    ports:
+      - "${MEDIA_PROXY_PORT:-9102}:80"
+
+  # The tile half of the same story as media-proxy: staging serves tiles from
+  # tiles-stg.cyclingcommons.org, rewriting the public /cc-maps/ prefix onto a
+  # bucket whose name is not public. Dev pointed the browser straight at MinIO,
+  # where /cc-maps/ resolves only because the dev bucket happens to carry that
+  # name - so the rewrite staging relies on was never exercised locally.
+  tiles-proxy:
+    profiles: ["storage"]
+    image: nginx:alpine
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      NGINX_ENVSUBST_FILTER: "CC_TILE_"
+      CC_TILE_BUCKET: "${CC_TILE_BUCKET:-cc-maps}"
+    volumes:
+      - ./tiles-proxy.conf.template:/etc/nginx/templates/default.conf.template:ro
+    ports:
+      - "${TILES_PROXY_PORT:-9103}:80"
 
 volumes:
   cc_pgdata:

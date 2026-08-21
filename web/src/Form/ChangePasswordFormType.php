@@ -31,11 +31,7 @@ final class ChangePasswordFormType extends AbstractType
                 'constraints' => [
                     new NotBlank(message: 'Please enter a new password.'),
                     new Length(min: 12, minMessage: 'Password must be at least {{ limit }} characters.'),
-                    // k-anonymity: only the first five SHA-1 hex chars leave
-                    // the server (haveibeenpwned range API), so this fits the
-                    // privacy stance. skipOnError: an API outage must never
-                    // block a signup or a password change. Disabled in test
-                    // (validator.yaml when@test).
+                    // docs/specs/account-and-auth.md §2 — HIBP k-anonymity; skipOnError so an outage cannot block a change.
                     new NotCompromisedPassword(skipOnError: true, message: 'This password appears in a known data breach. Please choose a different one.'),
                 ],
             ],

@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
-// Account dashboard tab switching (Contributions / Votes / Saved regions /
-// Settings). Client-side only — the panes are a preview; no server round-trip.
+// Account dashboard tab switching. Client-side only when the pane is on this page.
 (function () {
   'use strict';
 
@@ -24,21 +23,15 @@
 
     Array.prototype.forEach.call(tabs, function (a) {
       a.addEventListener('click', function (e) {
-        // Switch client-side only if this page has the pane; otherwise (the
-        // Settings tab, or any tab while on /settings) let the link navigate.
         if (document.getElementById('p-' + a.dataset.pane)) { e.preventDefault(); activate(a.dataset.pane); }
       });
     });
 
-    // Open a specific pane from ?tab= (the Votes/Saved links on /settings point
-    // back here as /profile?tab=votes).
     var initial = new URLSearchParams(window.location.search).get('tab');
     if (initial && document.getElementById('p-' + initial)) activate(initial);
   });
 
-  // One confirm() for every form that declares one (the withdraw button).
-  // Delegated + CSP-safe: the sentence lives on the form as data-confirm, so
-  // the template carries the words and no inline handler is needed.
+  // data-confirm on the form: CSP-safe, no inline handler.
   ready(function () {
     document.addEventListener('submit', function (e) {
       var f = e.target;

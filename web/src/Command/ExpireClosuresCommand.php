@@ -15,20 +15,9 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 /**
- * Retires road closures whose stated window has run out.
+ * Retires road closures whose stated window has run out. Dry-run by default.
  *
- * Dry-run by default and safe to re-run, like every other catalog maintenance
- * command here. Nothing is deleted: an expired closure moves to
- * `ItemState::Retired`, which is already outside the served states, so it stops
- * rendering while its row, history and confirmations stay.
- *
- * Install this on the worker host beside `app:moderation:gc` and
- * `app:media:gc` — the decay promise in wiki/data-priority.md is only kept by
- * something that actually runs. Until a timer exists, the map read path sweeps
- * opportunistically at most once an hour.
- *
- * @api Console entry point, wired by Symfony's DI - `@api` tells Psalm this is
- *      live, not dead code.
+ * @api
  */
 #[AsCommand(
     name: 'app:catalog:expire-closures',

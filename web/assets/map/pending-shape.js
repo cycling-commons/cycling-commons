@@ -1,26 +1,8 @@
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
-/* Before/after for a proposed climb shape, drawn on the map.
-
-   A redrawn climb cannot be reviewed as text. "summit 50.4860, 5.6927" tells a
-   curator nothing about whether the summit moved somewhere sensible, and the
-   raw route array told them even less (owner, 2026-08-03: "a human can't handle
-   this data — we need to see it on the map").
-
-   So the pending card carries a switch, and this module draws whichever side is
-   selected: BEFORE is the shape the item has today, AFTER is the shape being
-   proposed. Both come from the submission itself (`s.shape`, built by
-   SubmissionQueue::shapeSides) rather than from the loaded catalog, because a
-   brand-new climb has no current feature to compare against.
-
-   Why a switch rather than both lines at once: the two shapes usually share
-   most of their length — same foot, diverging near the summit — so drawn
-   together they overlap into one thick smear exactly where the difference is.
-   Flipping the same line in place makes the change read as movement, which is
-   the thing being judged. (Owner's call, twice stated.)
-
-   The overlay owns its own source/layer ids and always clears them before
-   drawing, so switching sides or closing the drawer can never leave a second
-   line behind. */
+/* Before/after for a proposed climb shape
+   (docs/specs/moderation-and-contribution.md §5.2b). One side at a time:
+   overlapping lines smear the difference. Overlay owns its own source/layer
+   ids and clears them before drawing. */
 import { map } from './map-init.js';
 import { D } from './i18n.js';
 
@@ -29,12 +11,8 @@ const CASE = 'cc-pending-shape-case';
 let _marker = null;
 let _side = 'after';
 
-/* Remove the overlay entirely. Safe to call when nothing is drawn.
-
-   Every LAYER goes before the source does. Both layers share one source, so
-   removing the source between them throws ("cannot be removed while layer … is
-   using it") — and a throw here leaves the casing behind, the re-add fails, and
-   the switch silently keeps showing the previous side. */
+/* Layers first: both share one source, and removing the source while a layer
+   still uses it throws — leaving the previous side on screen. */
 export function clearPendingShape() {
   [LINE, CASE].forEach(id => { if (map.getLayer(id)) map.removeLayer(id); });
   if (map.getSource(LINE)) map.removeSource(LINE);
@@ -44,24 +22,14 @@ export function clearPendingShape() {
 /** Which side is currently drawn ('before' | 'after'). */
 export const pendingShapeSide = () => _side;
 
-/**
- * Draw one side of a proposed shape.
- *
- * @param shape {{before: object|null, after: object|null}} from s.shape
- * @param side  'before' | 'after'
- * @returns true when something was drawn
- */
+/** Draw one side of a proposed shape (`s.shape`). Returns true when something was drawn. */
 export function showPendingShape(shape, side) {
   clearPendingShape();
   _side = side === 'before' ? 'before' : 'after';
   const s = shape && shape[_side];
   if (!s) return false;
 
-  /* A moved PIN: one position, not a line. Drawn as a ring rather than a
-     marker so the item's own pin stays visible underneath — the question a
-     curator is answering is "from where to where", and hiding one of the two
-     answers it badly. Before is muted and dashed, after is the violet the
-     change history uses for a new value, exactly as the line sides are. */
+  /* Moved pin: a ring so the item's own pin stays visible underneath. */
   if (Array.isArray(s.point) && s.point.length === 2) {
     const el = document.createElement('div');
     el.className = 'cc-pending-point cc-pending-point--' + _side;
@@ -79,14 +47,7 @@ export function showPendingShape(shape, side) {
   if (coords.length < 2) return false;
 
   map.addSource(LINE, { type: 'geojson', data: { type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: coords } } });
-  // A casing under the line so it stays legible over the climb it is being
-  // compared with, whatever the basemap is doing underneath.
-  /* The casing under the line. Dark ink for a climb, because it has to stay
-     legible over whatever the basemap is doing — but the UNRECORDED before is
-     the legend's red dotted line, and that one wears the surface skin's own
-     white casing. Dark ink between red dashes reads as a grey road surface,
-     which is precisely the thing the line is saying nobody has recorded
-     (owner-reported 2026-08-12, twice: the same mistake the legend made). */
+  /* Casing: cream for an unrecorded before (legend red dots); dark ink otherwise. */
   map.addLayer({
     id: CASE, type: 'line', source: LINE,
     layout: { 'line-cap': 'round', 'line-join': 'round' },
@@ -98,15 +59,7 @@ export function showPendingShape(shape, side) {
     id: LINE, type: 'line', source: LINE,
     layout: { 'line-cap': 'round', 'line-join': 'round' },
     paint: {
-      /* Before is the past: muted, dashed. After is the proposal: solid, and
-         in the same violet the change history uses for a new value.
-
-         An UNRECORDED before is a different past — the road was on the map,
-         with no surface anybody had recorded — and it is drawn in exactly the
-         style that state has everywhere else: the legend's red dotted "not
-         recorded" line (SURFACE_STYLE.unverified). Reusing the vocabulary
-         matters more than a consistent grey here: a curator has already
-         learned what red dots mean. */
+      /* Before: muted dashed (unrecorded = legend red dots). After: solid violet. */
       'line-color': 'before' !== _side ? '#B25BE8' : (s.unrecorded ? '#D92D20' : '#8a8d7d'),
       'line-width': 6,
       'line-opacity': 0.95,
@@ -128,8 +81,7 @@ export function showPendingShape(shape, side) {
 /** Fit the map to whichever side is drawn, so the difference is on screen. */
 export function fitPendingShape(shape, side) {
   const s = shape && shape[side === 'before' ? 'before' : 'after'];
-  // A moved pin: both positions matter, so frame the pair rather than one of
-  // them — a curator flipping between two off-screen points learns nothing.
+  // Moved pin: frame both positions.
   if (s && Array.isArray(s.point)) {
     const other = shape[side === 'before' ? 'after' : 'before'];
     const b = new maplibregl.LngLatBounds([+s.point[1], +s.point[0]], [+s.point[1], +s.point[0]]);

@@ -7,11 +7,9 @@ declare(strict_types=1);
 namespace App\Moderation;
 
 /**
- * Thrown by ModerationService::decide() when a submission is not in a
- * decidable state (Pending or NeedsInfo), e.g. a second decision on an
- * already-decided submission.
+ * Thrown when a submission is not in a decidable state.
  *
- * @api Consumed by ModerateController::decide().
+ * @api
  */
 final class AlreadyDecidedException extends \RuntimeException
 {

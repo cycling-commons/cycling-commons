@@ -29,12 +29,11 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
- * Curator "Routes" moderation desk (route-domain.md §5). index() lists pending route
- * proposals + suggestions; decide() applies approve/reject/retire via
- * RouteModerationService (the only write-path). detail()/edit() land in a
- * later task.
+ * Curator Routes desk.
  *
- * @api Instantiated by Symfony's router.
+ * @see docs/specs/route-domain.md §5
+ *
+ * @api
  */
 #[Route(LocalePrefix::PATHS)]
 #[IsGranted('ROLE_CURATOR')]
@@ -53,8 +52,6 @@ final class RouteModerateController extends AbstractController
     #[Route('/moderate/routes', name: 'moderate_routes')]
     public function index(Request $request): Response
     {
-        // Fire-and-forget housekeeping (throttled internally, never throws) —
-        // must never delay or break the desk render.
         $this->retention->sweepOpportunistically();
 
         /** @var User $user */
@@ -64,10 +61,6 @@ final class RouteModerateController extends AbstractController
         $region = $request->query->get('region');
         $regionId = null !== $region && ctype_digit((string) $region) ? (int) $region : null;
 
-        // Two work streams on one pane, so two pagers with two query keys —
-        // the same arrangement the account page uses. `page` moves proposals,
-        // `spage` moves corrections, and each carries the other's current page
-        // so moving through one never resets the other underneath the reader.
         $pager = Pager::of(
             $request->query->getInt('page', 1),
             $this->queue->pendingCount($scope, $regionId),
@@ -81,8 +74,6 @@ final class RouteModerateController extends AbstractController
 
         $rows = $this->queue->pending($scope, $regionId, $pager['page'], $pager['perPage']);
 
-        // No per-item decision forms here anymore: a proposal is decided ONLY
-        // on its detail page (the review surface). The list routes there.
         return $this->render('moderate_routes/index.html.twig', [
             'nav_active' => 'moderate_routes',
             'routes' => $rows,
@@ -192,9 +183,7 @@ final class RouteModerateController extends AbstractController
             ->add('note', \Symfony\Component\Form\Extension\Core\Type\TextareaType::class, ['required' => false, 'data' => $attrs['note'] ?? null])
             ->setMethod('POST')->getForm();
 
-        // Decisions now live ONLY on this detail page (and the map for
-        // submissions) — never the queue list. A SUBMITTED proposal awaiting
-        // first review gets the full three-way decision form here.
+        // docs/specs/moderation-and-contribution.md §5.1 — decisions live on the detail page.
         $decisionForm = 'submitted' === $row['state']
             ? $this->createForm(RouteDecisionType::class, null, [
                 'action' => $this->generateUrl('moderate_routes_decide'),
@@ -204,8 +193,6 @@ final class RouteModerateController extends AbstractController
 
         $suggested = SurfaceVocabulary::suggestFromProfile($attrs['surfaces'] ?? null);
 
-        // Retire only applies to an already-active (unverified/verified) route —
-        // a submitted proposal is retired via decide()'s three-way form instead.
         $retireForm = \in_array($row['state'], $servedValues, true)
             ? $this->container->get('form.factory')->createNamedBuilder('route_decision', \Symfony\Component\Form\Extension\Core\Type\FormType::class, null, [
                 'action' => $this->generateUrl('moderate_routes_decide'),
@@ -242,8 +229,6 @@ final class RouteModerateController extends AbstractController
     #[Route('/moderate/routes/edit', name: 'moderate_routes_edit', methods: ['POST'])]
     public function edit(Request $request): Response
     {
-        // The form's own CSRF token (form name → default token id), rendered by
-        // form_end() inside the route_edit[] namespace — not a top-level _token.
         $payload = (array) $request->request->all('route_edit');
         if (!$this->isCsrfTokenValid('route_edit', (string) ($payload['_token'] ?? ''))) {
             throw $this->createAccessDeniedException('Invalid CSRF token.');
@@ -266,23 +251,14 @@ final class RouteModerateController extends AbstractController
     }
 
     /**
-     * Trash (route-domain.md §3): an immediate, permanent hard
-     * delete of a route correction (any status) or a route proposal (ONLY
-     * while `submitted` or `rejected` — RouteModerationService enforces the
-     * guardrail). Audited content-free; never sends the rider a message.
-     * Always returns to the index — a trashed route has no detail page left
-     * to redirect back to.
+     * Permanent hard delete: correction (any status) or proposal (`submitted`/`rejected` only).
+     *
+     * @see docs/specs/route-domain.md §3
      */
     #[Route('/moderate/routes/trash', name: 'moderate_routes_trash', methods: ['POST'])]
     public function trash(Request $request): Response
     {
         $this->validateCsrf($request, 'route-trash');
-
-        // The typed-DELETE gate is gone (owner 2026-08-12): opening the
-        // panel and pressing Trash inside it are the two deliberate acts,
-        // and a word a curator types fifty times is a reflex, not a check.
-        // Everything else about Trash is unchanged — irreversible, logged,
-        // content-free record, no message sent.
 
         $kind = (string) $request->request->get('kind');
         $id = (int) $request->request->get('id');

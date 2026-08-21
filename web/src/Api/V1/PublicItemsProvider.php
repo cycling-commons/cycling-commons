@@ -13,19 +13,10 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
 
 /**
- * The /v1/search read path (public-api.md §2.2 PoC). Deliberately NOT
- * CatalogProvider::itemRows(): that query joins the contributor's
- * display_name/uuid for the site's own drawer, which the public boundary
- * forbids (public-api-personal-data-boundary.md). This one selects the four
- * public fields and nothing else, so a widened SELECT, not a serializer slip,
- * is what it would take to leak.
+ * /v1/search read path (docs/specs/public-api.md §2.2). Must not join
+ * contributor identity (docs/specs/public-api-personal-data-boundary.md).
  *
- * The serving predicates mirror itemRows() on purpose: served states only,
- * coverage-retired (untouched OSM) rows excluded for the coverage letters,
- * "Not there anymore" rows excluded. A place the site's own map would not
- * draw must not surface through the API either.
- *
- * @api Autowired by the DI container; consumed by PublicApiController::search().
+ * @api
  */
 final class PublicItemsProvider
 {
@@ -42,10 +33,7 @@ final class PublicItemsProvider
      */
     public function featuresInBbox(?string $letter, array $bbox, int $limit, ?string $tier = null): array
     {
-        // The verified derivation is itemRows()'s, minus the contributor join
-        // (map-and-search.md §12): verified state, PIVOT provenance, or a
-        // non-form confirmation. Named once so the SELECT column and the tier
-        // filter can never disagree.
+        // Named once so SELECT and the tier filter cannot disagree; no contributor join.
         $verified = '(i.state = \'verified\' OR i.source = \'pivot\' OR EXISTS (SELECT 1 FROM item_confirmation c WHERE c.item_id = i.id AND c.source <> \'form\'))';
 
         $sql = 'SELECT i.id, i.name, i.letter, ST_AsGeoJSON(i.geom) AS geom, '.$verified.' AS verified
@@ -67,8 +55,7 @@ final class PublicItemsProvider
                 $sql .= ' AND NOT ('.CoverageRetirement::untouchedOsmSql('i').')';
             }
         } else {
-            // All letters: the retirement exclusion stays scoped to the
-            // coverage letters, exactly as the per-letter branch composes it.
+            // Retirement exclusion stays scoped to coverage letters.
             $sql .= ' AND NOT (i.letter IN '.CoverageRetirement::lettersSqlTuple().' AND ('.CoverageRetirement::untouchedOsmSql('i').'))';
         }
         if ('curated' === $tier) {

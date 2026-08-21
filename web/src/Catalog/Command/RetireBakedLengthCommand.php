@@ -16,38 +16,11 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 /**
- * Turns a baked `record` "Length" row back into the discrete `length`
- * attribute, in metres.
+ * Move a baked `record` Length string into discrete `length` (metres). Measured length always wins; unparseable values are left alone. Dry-run by default.
  *
- * The seed harvests wrote some climbs' length as a finished display string —
- * `record: [{"label": "Length", "value": "2.2 km"}]` — which the drawer printed
- * verbatim. That was survivable while the app was metric everywhere. It is not
- * survivable now that a rider can ask for miles (account-and-auth.md §9): a
- * stored string cannot follow a preference, so those climbs went on saying
- * "2.2 km" at somebody reading everything else in miles. No formatter can fix
- * that, because by the time it runs the number is already text.
+ * @see docs/specs/account-and-auth.md §9
  *
- * So the number goes back to being a number. `length` is metres, the drawer
- * already prefers it over anything drawn or baked, and the unit is chosen at
- * render time like every other distance in the app.
- *
- * Rules, all of them deliberate:
- *  - a MEASURED `length` always wins and is never overwritten
- *    ({@see \App\Command\RecomputeClimbProfilesCommand} writes those from the
- *    drawn line);
- *  - a value that does not parse cleanly is REPORTED AND LEFT ALONE — this
- *    command never guesses what "about 2k" meant;
- *  - the consumed row leaves `record`, and `record` itself goes when that
- *    empties it, because a half-retired display string is the worst of both;
- *  - `headline` — the other baked display string, "2.2 km · 7.6% avg" — is
- *    dropped ONLY for a row whose length we just recovered. Some climbs carry
- *    an editorial headline with no distance in it ("Legendary Ardennes climb"),
- *    and that is somebody's writing, not a stale rendering.
- *
- * DRY RUN BY DEFAULT, like the recompute command it complements: this edits
- * numbers riders recognise.
- *
- * @api Console entry point (ops one-off, safe to re-run).
+ * @api
  */
 #[AsCommand(name: 'app:catalog:retire-baked-length', description: 'Move a baked `record` Length string into the discrete `length` attribute (metres)')]
 final class RetireBakedLengthCommand extends Command
@@ -73,9 +46,7 @@ final class RetireBakedLengthCommand extends Command
         try {
             /** @var list<array{id: int|string, name: string, attributes: string}> $rows */
             $rows = $this->db->fetchAllAssociative(
-                // jsonb_exists(), not the `?` operator: DBAL/PDO would otherwise
-                // read `?` as a positional bind placeholder (same reason as
-                // BackfillAttributesCommand).
+                // jsonb_exists(), not `?`: DBAL/PDO would treat `?` as a bind placeholder.
                 "SELECT id, name, attributes::text AS attributes FROM item WHERE jsonb_exists(attributes, 'record') ORDER BY id",
             );
 
@@ -110,8 +81,7 @@ final class RetireBakedLengthCommand extends Command
                     $this->db->executeStatement(
                         'UPDATE item SET attributes = :attrs, updated_at = NOW() WHERE id = :id',
                         [
-                            // PRESERVE_ZERO_FRACTION: the catalog fixtures compare
-                            // encoded bytes, and 1117.0 must not become 1117.
+                            // JSON_PRESERVE_ZERO_FRACTION: fixtures compare encoded bytes.
                             'attrs' => json_encode($updated, \JSON_THROW_ON_ERROR | \JSON_PRESERVE_ZERO_FRACTION),
                             'id' => $row['id'],
                         ],
@@ -142,15 +112,9 @@ final class RetireBakedLengthCommand extends Command
     }
 
     /**
-     * The whole decision for one item, kept pure so it can be tested without a
-     * database.
-     *
      * @param array<string, mixed> $attributes
      *
-     * @return array{0: ?array<string, mixed>, 1: ?int, 2: ?string}|null [updated attributes (null = no change),
-     *                                                                   metres written (null = kept the measured
-     *                                                                   value), note] — or null when the item has
-     *                                                                   no baked Length row at all
+     * @return array{0: ?array<string, mixed>, 1: ?int, 2: ?string}|null
      */
     public static function retire(array $attributes): ?array
     {
@@ -175,8 +139,6 @@ final class RetireBakedLengthCommand extends Command
 
         $metres = self::metresFrom($raw);
         if (null === $metres) {
-            // Left in place on purpose: a value we cannot read is a value we
-            // must not delete, and reporting it is how somebody fixes it.
             return [null, null, \sprintf('"%s" is not a length this command can read — left untouched', $raw)];
         }
 
@@ -187,7 +149,6 @@ final class RetireBakedLengthCommand extends Command
         if (!$keepMeasured) {
             $updated['length'] = $metres;
         }
-        // The baked headline is the same rendering in another shape.
         unset($updated['headline']);
 
         if ([] === $kept) {
@@ -199,13 +160,7 @@ final class RetireBakedLengthCommand extends Command
         return [$updated, $keepMeasured ? null : $metres, null];
     }
 
-    /**
-     * "2.2 km" -> 2200, "1,600 m" -> 1600, "4,4 km" -> 4400.
-     *
-     * Strict on purpose. A separator followed by exactly three digits is a
-     * thousands separator; anything else is a decimal point. A string that does
-     * not fit returns null rather than a number somebody has to go and check.
-     */
+    /** Strict: thousands sep is a separator plus exactly three digits; otherwise decimal. Unparseable → null. */
     public static function metresFrom(string $value): ?int
     {
         if (1 !== preg_match('/^\s*([\d.,]+)\s*(km|m)\s*$/i', $value, $m)) {

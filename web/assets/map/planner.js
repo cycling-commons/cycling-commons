@@ -1,18 +1,12 @@
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
-/* The illustrative "plan from Spa" chip: pick whichever sample loop is nearest
-   the chosen distance and draw it. Explicitly faked — the drawer says so — and
-   kept only as a placeholder for the real planner.
-   Extracted from map.js by the module split.
-
-   Its source/layer ids (`planroute`, `planroute-case`) are its own and are not
-   touched by render()'s clearDynamic, so a repaint leaves the drawn loop alone;
-   clearPlan() is the only teardown. */
+/* Illustrative "plan from Spa" chips (docs/specs/map-and-search.md §11): pick
+   the sample loop nearest the chosen distance. Explicitly faked — the drawer
+   says so. Source/layer ids are not touched by render()'s clearDynamic. */
 import { map } from './map-init.js';
 import { D, trVal, CC_SEASON_LABEL } from './i18n.js';
 import { uKm } from './units.js';
 import { openDrawer, closeDrawer } from './drawer.js';
 
-// "plan from Spa" — pick the sample loop nearest the chosen distance (faked for now)
 export let planMarker=null;
 export function clearPlan(){
   ['planroute','planroute-case'].forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
@@ -20,9 +14,7 @@ export function clearPlan(){
   if(planMarker){ planMarker.remove(); planMarker=null; }
 }
 export function planFromSpa(km){
-  // Empty-catalog + optional-attribute guards (review W6): reduce() with no
-  // initial value throws on [], and CatalogProvider only emits `start` when
-  // the attribute exists — fall back to the loop's first vertex.
+  // reduce() throws on []; CatalogProvider only emits `start` when it exists.
   if(!window.CC_ROUTES || !CC_ROUTES.routes.length) return;
   const r=CC_ROUTES.routes.reduce((b,x)=>Math.abs(x.km-km)<Math.abs(b.km-km)?x:b);
   const start=r.start||r.loop[0];
@@ -49,7 +41,7 @@ export function planFromSpa(km){
   });
 }
 
-// Distance chips (§4.2): a second click on the active chip clears the route.
+// Distance chips (docs/specs/map-and-search.md §11): second click on the active chip clears.
 export function initPlanner(){
   document.querySelectorAll('#planner .chip').forEach(c=>c.onclick=()=>{
     const wasOn=c.classList.contains('on');

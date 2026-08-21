@@ -10,17 +10,11 @@ use App\Entity\User;
 use App\Service\UserDeletionHookInterface;
 
 /**
- * Account deletion, media side (docs/specs/photo-uploads.md §6). Pending and
- * rejected uploads are deleted outright — unmoderated work leaves with the
- * account. Approved photos stay: they are CC BY-SA-licensed contributions to
- * the commons, and pulling them would punish everyone who relies on the map for
- * one person's departure. What does go is the credit, on the row and on the
- * item, which falls back to anonymous.
+ * Account deletion: drop unmoderated work; anonymize approved credit.
  *
- * Discovered through the app.user_deletion_hook tag (the _instanceof rule in
- * services.yaml tags it automatically); run by UserDeletionService::purge().
+ * @see docs/specs/photo-uploads.md §6
  *
- * @api Deletion hook.
+ * @api
  */
 final class MediaDeletionHook implements UserDeletionHookInterface
 {

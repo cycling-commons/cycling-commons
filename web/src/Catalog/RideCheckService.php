@@ -11,51 +11,27 @@ use App\Contribution\Gpx\TrackProcessor;
 use Doctrine\DBAL\Connection;
 
 /**
- * Ride-check (map-and-search.md §9): given an uploaded GPX, list the served
- * catalog items inside a rider-chosen corridor of the track, grouped by
- * letter and ordered by distance along the ride, plus the Commons routes the
- * ride genuinely follows. Read-only indication: the GPX is parsed in memory,
- * answered, and discarded; this service never writes anything.
+ * Given an uploaded GPX, list served items in a corridor of the track. The GPX is never persisted. No privacy trim — unlike route intake.
  *
- * Corridor query is the SurfaceProfiler idiom (ST_DWithin over ::geography,
- * GIST-indexed); the along-the-ride ordering key is ST_LineLocatePoint of the
- * item's closest point projected onto the track. Letter A (road-surface
- * segments) is excluded from the listing: every metre of a mapped ride
- * would "match", which is corridor noise, and the surface story already has
- * its own feature (SurfaceProfiler).
+ * @see docs/specs/map-and-search.md §9
  *
- * Deliberately NO privacy trim (unlike route intake, docs/specs/route-domain.md §4.3):
- * the track is shown only back to its uploader and never persisted, and
- * trimming would silently drop matches near the rider's actual start/end.
- *
- * @api Consumed by RideCheckController; covered by RideCheckServiceTest.
+ * @api
  */
 final class RideCheckService
 {
     public const array ALLOWED_RADII = [100, 250, 500, 1000];
     public const int DEFAULT_RADIUS = 250;
 
-    /**
-     * Utility coverage letters surfaced alongside curated items:
-     * water/bakery (C), bike
-     * services (D), transport — ferry/train (G), shelter (H). Experiential
-     * E-stays / I-scenic / J-history are left to the curated arm.
-     */
+    /** Utility coverage letters (C/D/G/H). Experiential E/I/J stay on the curated arm. */
     public const array COVERAGE_LETTERS = ['C', 'D', 'G', 'H'];
 
-    /* Public because the error message that quotes them is written in the
-       READER's units (account-and-auth.md §9), so the controller has to format
-       the bounds rather than the translation hard-coding "500 m and 400 km". */
-    public const int MIN_RAW_M = 500;       // shorter is a click, not a ride
-    public const int MAX_RAW_M = 400_000;   // route-domain cap (spec §5.3)
-    private const int MAX_PER_LETTER = 200; // payload sanity; flagged as truncated
+    /* Public so the controller can format bounds in the reader's units. docs/specs/account-and-auth.md §9 */
+    public const int MIN_RAW_M = 500;
+    public const int MAX_RAW_M = 400_000;   // docs/specs/map-and-search.md §9
+    private const int MAX_PER_LETTER = 200;
 
     /**
-     * A route only counts as "followed" when the shared stretch clearly
-     * exceeds what a mere crossing produces: a perpendicular route yields
-     * about 2x the radius of overlap inside the corridor buffer, so the
-     * floor scales with the radius. This keeps the check valid no matter
-     * which radius is chosen.
+     * Overlap floor so a mere crossing does not count as "followed". Scales with radius.
      */
     private const int ROUTE_MIN_OVERLAP_BASE_M = 300;
 
@@ -116,12 +92,7 @@ final class RideCheckService
      */
     private function corridorGroups(string $geoJson, int $radiusM, float $rawM): array
     {
-        // MATERIALIZED is load-bearing twice over: an inlined `track` CTE
-        // re-parses the whole GeoJSON per row per ST_* occurrence, and the
-        // one-off `corridor` buffer turns the containment test into a plain
-        // ST_Intersects the idx_item_geom GIST index can serve. The naive
-        // ST_DWithin(::geography) formulation seq-scanned with spheroid maths
-        // against the full track per item (62 s down to sub-second, dev catalog).
+        // MATERIALIZED is load-bearing: an inlined track CTE re-parses GeoJSON per ST_*; ST_Intersects can use the GIST index.
         /** @var list<array{id: int|string, letter: string, name: string, geom: string, dist_m: string|float, frac: string|float}> $rows */
         $rows = $this->db->fetchAllAssociative(
             'WITH track AS MATERIALIZED (SELECT ST_SetSRID(ST_GeomFromGeoJSON(:geom), 4326) AS g),
@@ -141,18 +112,7 @@ final class RideCheckService
     }
 
     /**
-     * Open `coverage_poi` utility points (C/D/G/H) in the same corridor,
-     * returned as a parallel
-     * arm so the frontend can render them with the smaller coverage icon while
-     * curated items keep their bigger spot icons. Deduped against SERVED curated
-     * items on (source_ref, letter): if a rider already curated this OSM entity,
-     * it is shown once, as the curated pick — never twice.
-     *
-     * Same MATERIALIZED corridor idiom as corridorGroups() (ST_Intersects rides
-     * coverage_poi_geom_idx); coverage_poi and item are co-located on CC's own
-     * cluster, so the dedup NOT EXISTS stays a local join. coverage_poi has no
-     * `state` column (a pipeline cache) — the served filter applies only to the
-     * curated item it is deduped against.
+     * Open coverage_poi utilities in the same corridor, deduped against served curated items on (source_ref, letter).
      *
      * @return list<array{letter: string, items: list<array{id: int, name: string, ll: array{0: float, 1: float}, distM: int, alongKm: float, ref: string}>, truncated: bool}>
      */
@@ -182,16 +142,7 @@ final class RideCheckService
     }
 
     /**
-     * Fold corridor rows (id, letter, name, geom, dist_m, frac — already ordered
-     * by along-the-ride fraction) into per-letter groups, capped at
-     * MAX_PER_LETTER with a `truncated` flag, each item anchored to a
-     * renderable [lat, lng]. Shared by the curated and coverage arms.
-     *
-     * A row's `ref` is carried through when present. Only the coverage arm
-     * selects one, and it is not decoration: `id` there is a coverage_poi row
-     * id, which no endpoint accepts, so the frontend needs the `ref` to open a
-     * coverage POI at all (/map/coverage/poi/{ref}, via openCoverageByRef).
-     * Curated rows have no `ref` and the key stays absent for them.
+     * Fold corridor rows into per-letter groups. Coverage rows carry `ref` because `id` is a coverage_poi row no endpoint accepts.
      *
      * @param list<array{id: int|string, letter: string, name: string|null, geom: string, dist_m: string|float, frac: string|float, ref?: string|null}> $rows
      *
@@ -236,9 +187,7 @@ final class RideCheckService
      */
     private function followedRoutes(string $geoJson, int $radiusM): array
     {
-        // Same MATERIALIZED corridor as corridorGroups() (see the note there);
-        // ST_Intersects rides idx_route_geom, and the intersection length is
-        // measured only for the handful of candidate routes.
+        // Same MATERIALIZED corridor as corridorGroups(); ST_Intersects uses idx_route_geom.
         /** @var list<array{id: int|string, name: string, overlap_m: string|float|null}> $rows */
         $rows = $this->db->fetchAllAssociative(
             'WITH track AS MATERIALIZED (SELECT ST_SetSRID(ST_GeomFromGeoJSON(:geom), 4326) AS g),
@@ -269,8 +218,7 @@ final class RideCheckService
     }
 
     /**
-     * A feature's map anchor as [lat, lng]: the point itself, or a line's
-     * first vertex (matches map.js featurePoint()).
+     * Map anchor as [lat, lng]: the point, or a line's first vertex.
      *
      * @param array{type: string, coordinates: mixed} $geo
      *

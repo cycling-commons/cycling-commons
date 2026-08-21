@@ -11,16 +11,11 @@ use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
 
 /**
- * `cc_rows_per_page_options()` — the page-length choices, for the select every
- * pager carries.
- *
- * A function rather than a variable each controller passes: the pager partial
- * is included from eleven templates across five controllers, and a list of
- * enum cases is not something any of them should have to remember to hand it.
+ * `cc_rows_per_page_options()` for every pager.
  *
  * @see docs/specs/account-and-auth.md §9
  *
- * @api Auto-registered Twig extension.
+ * @api
  */
 final class RowsPerPageExtension extends AbstractExtension
 {

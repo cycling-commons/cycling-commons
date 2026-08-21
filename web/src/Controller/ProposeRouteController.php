@@ -23,11 +23,11 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
- * Rider route-proposal intake (route-domain.md §4): the K contribute-hub
- * card lands here. Proposals become RecommendedRoute rows (state submitted),
- * reviewed later in the Routes moderation queue — never the item pipeline.
+ * Route-proposal intake — never the item pipeline.
  *
- * @api Instantiated by Symfony's router.
+ * @see docs/specs/route-domain.md §4
+ *
+ * @api
  */
 #[Route(LocalePrefix::PATHS)]
 final class ProposeRouteController extends AbstractController
@@ -66,11 +66,6 @@ final class ProposeRouteController extends AbstractController
             } catch (TooManyRequestsHttpException) {
                 $this->addFlash('error', 'contribute.error.rate_limited');
             } catch (\InvalidArgumentException $e) {
-                /* The length bounds are quoted in the rider's own units
-                   (account-and-auth.md §9). Passed on every message in this
-                   catch, not just the length one — an unused parameter costs
-                   nothing, and picking which key gets them would break the
-                   next message somebody adds. */
                 $form->addError(new FormError($this->translator->trans($e->getMessage(), [
                     '%min%' => $this->units->distance(RouteProposalService::MIN_RAW_M / 1000, 0),
                     '%max%' => $this->units->distance(RouteProposalService::MAX_RAW_M / 1000, 0),

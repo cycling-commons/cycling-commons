@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
-// Client-side guard for the registration form: validate BEFORE submit so a
-// trivially-wrong field (short password, mismatch, unchecked terms) doesn't
-// round-trip to the server and wipe the password boxes (Symfony never echoes
-// password values back). This mirrors the server constraints exactly but is
-// only a UX shortcut — RegistrationFormType re-validates everything on POST.
+// Registration form guard: validate before submit so a bad field does not wipe
+// the password boxes. UX only — RegistrationFormType re-validates on POST.
 (function () {
   'use strict';
 
@@ -16,7 +13,7 @@
 
   ready(function () {
     var email = document.getElementById('registration_form_email');
-    if (!email) return;                         // not the registration page
+    if (!email) return;
     var form = email.closest('form');
     if (!form) return;
 
@@ -31,8 +28,6 @@
       Array.prototype.forEach.call(form.querySelectorAll('.is-invalid'), function (el) { el.classList.remove('is-invalid'); });
     }
 
-    // Inject an error list styled identically to the server-rendered ones,
-    // placed right after the field's container (matching server placement).
     function addError(input, msg) {
       if (input) input.classList.add('is-invalid');
       var ul = document.createElement('ul');

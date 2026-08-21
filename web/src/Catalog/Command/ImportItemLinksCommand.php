@@ -16,24 +16,11 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 /**
- * Loads the item-links artifact (tools/wikimedia/item_links.py) into
- * wikidata-seeded items. ONE storage slot per fact (owner 2026-08-16): the
- * official website (P856) goes to the editable `web` attribute - the same
- * slot the OSM harvest and the wizard's Website field use, and only when it
- * is empty, because a harvested or rider-typed value wins over Wikidata's
- * claim - while `links` carries the OTHER destinations (the Wikipedia
- * article with its language variants).
+ * Import outbound links for wikidata-seeded items. Official site → `web` (only if empty); everything else → `links`. Curator edits win.
  *
- * BUILD-time import of a committed, human-reviewed file. Every links entry
- * passes {@see OutboundLinks::assertValid} (which also REFUSES an
- * Official-site label - that fact has its slot), and rows are matched by
- * their STORED source_ref (two shapes exist: bare `Q…` on climbs,
- * `wikidata:Q…` on places), never by parsing formats here.
+ * @see docs/specs/catalog-data-model.md §7
  *
- * Rows carrying a curator edit are left alone: an approved edit outranks a
- * harvest, same rule as ItemUpsert's shield.
- *
- * @api Console command.
+ * @api
  */
 #[AsCommand(name: 'app:items:import-links', description: 'Import outbound links for wikidata-seeded items')]
 final class ImportItemLinksCommand extends Command
@@ -82,8 +69,7 @@ final class ImportItemLinksCommand extends Command
 
                 return Command::FAILURE;
             }
-            // Assigned inside the isset branch so the string|null union is
-            // visible to psalm - the ?? form read as never-null downstream.
+            // Psalm: assign inside isset so the union is string|null.
             $web = null;
             if (isset($entry['web'])) {
                 if (!\is_string($entry['web']) || !str_starts_with($entry['web'], 'https://')) {
@@ -123,10 +109,7 @@ final class ImportItemLinksCommand extends Command
                     ['links' => json_encode($links, \JSON_THROW_ON_ERROR), 'id' => (int) $row['id']],
                 );
             }
-            // The official website goes to the ONE editable slot every other
-            // fill path uses (owner 2026-08-16: one field only) - and only
-            // when it is empty: an OSM-harvested or rider-typed value wins
-            // over Wikidata's claim.
+            // Official site → `web` only when empty; OSM/rider values win.
             if (null !== $web && !(bool) $row['has_web']) {
                 $this->db->executeStatement(
                     "UPDATE item SET attributes = jsonb_set(attributes, '{web}', :web::jsonb), updated_at = NOW() WHERE id = :id",

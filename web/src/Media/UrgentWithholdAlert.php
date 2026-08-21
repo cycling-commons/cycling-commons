@@ -15,26 +15,11 @@ use Symfony\Component\Mime\Email;
 use Symfony\Component\RateLimiter\RateLimiterFactory;
 
 /**
- * Tells a human that the auto-withhold circuit breaker has opened
- * (docs/specs/photo-uploads.md §6c).
+ * Ops alert when the auto-withhold breaker opens. Throttled; never fails the request.
  *
- * Two properties matter more than the wording:
+ * @see docs/specs/photo-uploads.md §6c
  *
- * 1. **It is throttled.** The breaker opens under a flood, and the flood keeps
- *    arriving afterwards — a mail per report would be thousands of messages,
- *    which is a second denial of service and aimed at the one person who has
- *    to read them. One message per hour, keyed globally, is enough to say
- *    "this is happening" and to keep saying it while it continues.
- * 2. **It never breaks the request.** A mail transport that is down, slow or
- *    misconfigured must not turn into a 500 on a rights-exercise route. A
- *    failure is logged and swallowed; the CRITICAL log line from the breaker
- *    is the durable record either way.
- *
- * Deliberately a plain text Email rather than a TemplatedEmail: this is an ops
- * alert to one operator address, not user-facing copy, so it has no business
- * in the translation catalogs.
- *
- * @api Called by UrgentWithholdBreaker when the budget runs out.
+ * @api
  */
 final class UrgentWithholdAlert
 {
@@ -89,9 +74,7 @@ final class UrgentWithholdAlert
         try {
             $this->mailer->send($email);
         } catch (TransportExceptionInterface $e) {
-            // Swallowed on purpose: see the class docblock. The alert is a
-            // courtesy on top of the CRITICAL log, never a precondition for
-            // handling the report.
+            // Mail must not 500 a rights-exercise route; the CRITICAL log is the record.
             $this->logger->error('Could not send the auto-withhold breaker alert.', ['exception' => $e]);
         }
     }

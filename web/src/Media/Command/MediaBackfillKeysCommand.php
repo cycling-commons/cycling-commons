@@ -18,31 +18,11 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 /**
- * The one-off move onto immutable keys
- * (docs/specs/media-storage-architecture.md §4.1; media plan task 5).
+ * One-off move onto immutable keys: copy, then row, then delete.
  *
- * Photos written before the release gate existed live at the MUTABLE
- * `photos/<uuid>/orig.webp|lg.webp|sm.webp` - a fixed set of names that
- * reprocessing would overwrite in place. This copies each set to
- * `published/<uuid>/<rev>/…`, stamps the revision on the row, and only then
- * removes the old prefix.
+ * @see docs/specs/media-storage-architecture.md §4.1
  *
- * **A copy, then the row, then the delete.** Any other order has a window in
- * which the row names objects that are not there, and a proxy that caches a
- * 404 for a year is a worse outcome than running the command twice: it is
- * idempotent, and a half-finished run simply finishes on the next one.
- *
- * The alternative - teaching the URL builder to recognise the old shape - was
- * considered and refused. A permanent legacy branch is exactly the
- * "tolerate the old shape" pattern the dead-code sweep spent a session
- * removing, and this is a handful of rows: no production photos exist yet,
- * which is why task 5 had to land before any real traffic.
- *
- * Rows whose objects are already gone (a tombstoned upload keeps its row past
- * its files, docs/specs/photo-uploads.md §6) are reported and skipped: there is
- * nothing to copy and stamping a revision would claim otherwise.
- *
- * @api Console entry point. Run once, immediately after Version20260816210000.
+ * @api
  */
 #[AsCommand(name: 'app:media:backfill-keys', description: 'Move pre-quarantine photos onto immutable published/<uuid>/<rev>/ keys')]
 final class MediaBackfillKeysCommand extends Command
@@ -66,9 +46,7 @@ final class MediaBackfillKeysCommand extends Command
         $io = new SymfonyStyle($input, $output);
         $dryRun = (bool) $input->getOption('dry-run');
 
-        /* Quarantined rows are deliberately out of scope: they have no
-           published objects to move, and their revision being NULL is the
-           current state of a live upload, not a leftover. */
+        // Quarantined rows are out of scope: NULL revision is a live upload, not a leftover.
         /** @var list<MediaUpload> $rows */
         $rows = $this->em->createQuery(
             'SELECT m FROM '.MediaUpload::class.' m

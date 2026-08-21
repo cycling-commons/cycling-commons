@@ -7,118 +7,45 @@ declare(strict_types=1);
 namespace App\Elevation;
 
 /**
- * Measures a climb from its drawn line: length, gain, average and maximum
- * gradient, the display profile, and where the steepest ramp is.
- *
- * This is the ONE implementation. It used to live in the browser
- * (`climb-elevation.js`), which meant the server stored whatever values a
- * client sent it — shape-checked but never recomputed — and a catalogue-wide
- * sweep was impossible because the maths was not where the data is. Moving it
- * here makes the preview a rider sees and the value that gets stored the same
- * computation by construction, and lets a command re-measure every climb.
+ * Measures a climb from its drawn line (docs/specs/climb-elevation.md §3, §4, §5).
  *
  * @see docs/specs/climb-elevation.md §3, §4, §5
  *
- * @api Used by ElevationController and App\Command\RecomputeClimbProfilesCommand.
+ * @api
  */
 final class ClimbProfiler
 {
-    /**
-     * Bin widths the display profile may use, narrowest first.
-     *
-     * The profile used to be **eleven equal slices of whatever the climb was**,
-     * which meant a bar was a different distance on every climb: ~220 m on a
-     * 2.4 km climb, 1.5 km on Hockai. Two climbs' charts could not be compared,
-     * and a short steep ramp was averaged flat on any long climb. Fixing the
-     * bin to a real distance fixes both — and it is what makes the caption's
-     * "per 100 m" mean something (owner, 2026-08-05).
-     */
+    /** Bin widths the display profile may use, narrowest first (docs/specs/climb-elevation.md §3b). */
     private const array BIN_LADDER = [100, 150, 200, 250, 500, 1000, 2000];
 
-    /**
-     * Most bars a chart may draw. Beyond this the profile stops being a shape
-     * and becomes texture — 17 km at 100 m would be 169 of them.
-     */
+    /** Most bars a chart may draw. */
     private const int MAX_BARS = 25;
 
-    /**
-     * The distance a published "steepest" figure is averaged over.
-     *
-     * **250 m, not the 100 m climb databases quote, because 100 m is finer than
-     * this DEM can answer.** §3a's own rule is that a window is never narrower
-     * than about four DEM cells; GLO-30's 30 m cells put that floor at 120 m, so
-     * the original 100 m was below the source's resolution from the start. It
-     * survived only because the Ardennes seed climbs are short and unroofed.
-     *
-     * The Alps disproved it. Measured 2026-08-06: Furka published 20% against a
-     * real ~10%, and Grimsel, Susten and Klausen all published exactly 35% —
-     * which was not a measurement but the clamp below, hiding raw windows as
-     * steep as 77%. Two independent ground truths then agreed on this window
-     * with {@see STEEPEST_PERCENTILE}: Wallonia's 50 cm LiDAR says Stockeu's
-     * steepest is 16.7% and we now read 16.7%; the owner reports Furka at ~10%
-     * and we now read 10.3%.
-     */
+    /** Window for a published steepest figure (docs/specs/climb-elevation.md §3a, §5). */
     private const int MAX_WINDOW_M = 250;
 
-    /**
-     * Which sliding window is published — the 95th percentile, not the steepest.
-     *
-     * A maximum is an extreme-value statistic, and on a Digital Surface Model
-     * the extreme is essentially always an artifact: an avalanche gallery, a
-     * cutting, a rock face beside the carriageway, a canopy edge. The proof is
-     * that the raw maximum got WORSE as sampling improved — densifying Furka
-     * from 50 m to 20 m moved Grimsel's raw window from 35% to 77%, because
-     * finer sampling finds more spikes rather than more road.
-     *
-     * A high percentile keeps the honest answer and drops the spikes: the
-     * published figure is the gradient that 5% of windows exceed, so a genuine
-     * sustained ramp still surfaces while a single bad cell cannot. This is the
-     * same reasoning that makes the AVERAGE trustworthy on a DSM — errors
-     * cancel over many samples — applied to the one figure that never had it.
-     */
+    /** Publish the 95th-percentile window, not the raw maximum (docs/specs/climb-elevation.md §5). */
     private const float STEEPEST_PERCENTILE = 0.95;
 
-    /**
-     * Bin width for the ascent-only average — see avgGradient() for why binning
-     * first matters. Deliberately fixed rather than following the display
-     * ladder: the published average must not change because a climb got long
-     * enough to redraw with wider bars.
-     */
+    /** Bin width for the ascent-only average; fixed, not the display ladder. */
     private const int AVG_BIN_M = 100;
 
-    /** Samples requested along the line. ~20 m spacing on a 4 km climb (§3c). */
+    /** Samples along the line. ~20 m spacing on a 4 km climb (docs/specs/climb-elevation.md §3c). */
     private const int SAMPLES = 200;
 
-    /**
-     * Metres a trailing stretch must LOSE before it counts as running past the
-     * summit.
-     *
-     * Not a distance test, which is what an earlier version got wrong. Many
-     * climbs finish on a plateau — Roche-aux-Faucons is flat for its last 73 m
-     * — and on flat ground the "highest point" is decided by DEM noise rather
-     * than by the road, so its position wanders and a distance test flags a
-     * route that is perfectly correct. That climb's tail is 130 m long and
-     * drops 1 m; La Redoute's is 361 m and drops 10 m. Only the second is a
-     * descent (owner-reported 2026-08-05).
-     */
+    /** Drop (m) a trailing stretch must lose before it counts as past the summit (docs/specs/climb-elevation.md §4a). */
     private const float OVERSHOOT_DROP_M = 8.0;
 
     public function __construct(
         private readonly ElevationClient $elevation,
-        /**
-         * Tunnels and galleries, excluded from the steepest-stretch search.
-         * Null keeps the pre-2026-08-07 behaviour, which is what the tests that
-         * do not care about cover construct.
-         */
+        /** Tunnels/galleries excluded from the steepest search; null skips cover. */
         private readonly ?CoveredSpans $covered = null,
     ) {
     }
 
     /**
      * @param list<array{0: float, 1: float}> $route   [lat, lng], foot to summit
-     * @param array{0: float, 1: float}|null  $steepAt a marker the rider placed
-     *                                                 by hand; its gradient is re-read at that
-     *                                                 position rather than the marker being moved (§5)
+     * @param array{0: float, 1: float}|null  $steepAt hand-placed marker; re-measured in place (docs/specs/climb-elevation.md §5)
      *
      * @return array{
      *     length: float, gain: float, footEle: float, summitEle: float,
@@ -135,8 +62,7 @@ final class ClimbProfiler
         if (\count($route) < 2) {
             return null;
         }
-        // Distances come from the FULL road, not from the 200 points we read
-        // elevation at — see sampleWithDistance().
+        // Distances come from the full road, not the 200 elevation samples.
         ['pts' => $pts, 'cum' => $cum] = self::sampleWithDistance($route, self::SAMPLES);
         $read = $this->elevation->heights($pts);
         if (null === $read) {
@@ -144,9 +70,7 @@ final class ClimbProfiler
         }
         $elev = $read['elevations'];
 
-        // The last index at the maximum, not the first: on a plateau the
-        // earliest and latest high points can be hundreds of metres apart, and
-        // the climb plainly does not end at the start of the flat.
+        // Last index at the maximum, not the first: a plateau must not end at the start of the flat.
         $si = 0;
         foreach ($elev as $i => $e) {
             if ($e >= $elev[$si]) {
@@ -160,15 +84,12 @@ final class ClimbProfiler
         $drop = $elev[$si] - $elev[\count($elev) - 1];
 
         if ($reversed || $total <= 0.0) {
-            // A descending line measures 0 m over 0 m at 0%, which is three
-            // values that look unremarkable in a database column. Refuse
-            // instead (§4a).
+            // Refuse a descending line (docs/specs/climb-elevation.md §4a).
             return null;
         }
 
         $gain = $elev[$si] - $elev[0];
-        // Fractions, converted to this line's own metres: the matched geometry
-        // is not the shape we sent, so only a proportion survives the round trip.
+        // Cover fractions → this line's metres; only a proportion survives map-match.
         $skip = array_map(
             static fn (array $s): array => [$s[0] * $total, $s[1] * $total],
             $this->covered?->forShape($pts) ?? [],
@@ -178,53 +99,25 @@ final class ClimbProfiler
         return [
             'length' => $total,
             'gain' => $gain,
-            /* The two ends, in metres above sea level. `gain` alone gives a
-               profile its height but not its position: a chart can say "+225 m"
-               without being able to say the climb runs 277 m -> 502 m, which is
-               what every published climb profile leads with, and what tells a
-               rider whether they are going to be cold at the top. Read from the
-               same elevation array everything else here is measured from, so
-               the labels cannot disagree with the shape. */
+            /* Foot and summit altitudes from the same elevation array. */
             'footEle' => round($elev[0]),
             'summitEle' => round($elev[$si]),
             'avgGradient' => self::fmt(self::avgGradient($pts, $elev, $cum, $total), 1),
-            /* The 35% clamp this used to carry was load-bearing and should not
-               have been: Grimsel, Susten and Klausen all published exactly 35%,
-               which looked like three steep passes and was really one ceiling
-               three artifacts had hit. With a percentile over a 250 m window the
-               figure is inside the plausible range on its own, so the clamp is
-               back to being a guard rather than a filter — 30% is above any real
-               road's sustained 250 m and only fires if the estimator itself is
-               wrong, which is when we want to see it, not hide it. */
+            /* Guard, not a filter: 30% is above any real sustained 250 m. */
             'maxGradient' => self::fmt(min(30.0, max(0.0, $steep['g'])), 0),
-            /* The width the figure is averaged over travels WITH it, so the
-               label cannot drift from the measurement (climb-elevation.md §5). */
+            /* Window width travels with the figure (docs/specs/climb-elevation.md §5). */
             'steepWindowM' => self::MAX_WINDOW_M,
             'grad' => self::bars($pts, $elev, $cum, $total, self::binWidthFor($total)),
-            /* Spans the CLIMB, and the map must draw only the climb to match.
-               These bands are mapped onto `line-progress`, which runs 0..1 over
-               whatever geometry is rendered, so the two extents have to be the
-               same or every band is stretched along the line — measuring to the
-               summit while drawing the whole route pushed the darkest band 145 m
-               past the marker (owner-reported 2026-08-05).
-
-               Drawing the climb rather than the whole line is also what makes
-               the map agree with everything else published: La Redoute's stored
-               contribution runs 361 m past its summit and gently descends, so
-               the map showed 2.44 km with a blue tail beside a chart and a
-               length that both said 2.1 km. The overshoot is kept in `route` —
-               it is a rider's contribution, and §4a warns rather than
-               discarding — but it is not part of the climb. */
+            /* Colour bands span the climb only (docs/specs/climb-elevation.md §4a). */
             'lineGrad' => self::lineGradients($pts, $elev, $cum, $total),
             'steep' => ['at' => $steep['at'], 'pct' => self::fmt(min(35.0, max(0.0, $steep['g'])), 0), 'manual' => false],
             'demSource' => $read['source'],
-            // The bin the BARS are drawn at, so the chart can label itself.
+            // Bin the bars are drawn at.
             'binM' => self::binWidthFor($total),
             'reversed' => false,
             'overshootM' => $drop >= self::OVERSHOOT_DROP_M ? $tail : 0.0,
             'overshootDropM' => $drop,
-            // A hand-placed marker keeps its position; only the number under it
-            // is re-measured, over the same window the maximum uses (§5).
+            // Hand-placed marker keeps its position; only the number is re-measured (docs/specs/climb-elevation.md §5).
             'sustainedAtSteep' => null === $steepAt
                 ? null
                 : self::fmt(min(35.0, max(0.0, self::sustainedAt($pts, $elev, $cum, $total, $steepAt))), 0),
@@ -232,16 +125,7 @@ final class ClimbProfiler
     }
 
     /**
-     * Average gradient counting ONLY the parts that go up.
-     *
-     * A climb with a dip has two defensible averages far apart: net gain over
-     * length lets the descent cancel the climbing either side of it, which is
-     * not what the rider did. Ascent-only is what climb sites publish.
-     *
-     * Measured over ~100 m bins rather than raw samples because ascent-only is
-     * noise-sensitive by construction — every upward wobble adds and nothing
-     * subtracts — so summing raw deltas inflates the figure on exactly the
-     * wooded climbs whose readings are least trustworthy.
+     * Ascent-only average over ~100 m bins (docs/specs/climb-elevation.md §4b).
      *
      * @param non-empty-list<array{0: float, 1: float}> $pts
      * @param non-empty-list<float>                     $elev
@@ -268,9 +152,7 @@ final class ClimbProfiler
      * @param non-empty-list<array{0: float, 1: float}> $pts
      * @param non-empty-list<float>                     $elev
      * @param non-empty-list<float>                     $cum
-     * @param list<array{0: float, 1: float}>           $skip covered [startM, endM] spans;
-     *                                                        a window overlapping one is not a candidate, because over a
-     *                                                        tunnel the DEM is reading the mountain and not the road
+     * @param list<array{0: float, 1: float}>           $skip covered [startM, endM]; overlapping windows are skipped
      *
      * @return array{g: float, at: array{0: float, 1: float}}
      */
@@ -279,15 +161,7 @@ final class ClimbProfiler
         $win = min((float) self::MAX_WINDOW_M, $total);
         $best = 0.0;
         $at = $pts[0];
-        /* Slide at a FIXED step, not from vertex to vertex.
-
-           Starting a window at each route vertex sounds equivalent and is not:
-           a routing engine places vertices where the road bends, so a straight
-           gives you almost none. On Côte d'Ereffe that left a gap with no vertex
-           near 660 m, the 17.7% window there was never evaluated, and the marker
-           landed on a 17% stretch 634 m away — visibly off the darkest part of
-           the line (owner-reported 2026-08-05). A fixed step also makes this
-           agree with lineGradients(), which has always stepped by distance. */
+        /* Slide at a fixed step, not vertex to vertex. */
         $step = max(5.0, $win / 10);
         /** @var list<array{g: float, at: array{0: float, 1: float}}> $seen */
         $seen = [];
@@ -302,22 +176,17 @@ final class ClimbProfiler
             $seen[] = ['g' => $g, 'at' => self::at($pts, $elev, $cum, ($start + $end) / 2)['coord']];
         }
         if ([] === $seen && [] !== $skip) {
-            // Every window straddled cover — a climb that is mostly tunnel. Fall
-            // back to measuring it all rather than publishing nothing: the
-            // figure is then no worse than it was before cover was considered.
+            // Mostly tunnel: measure it all rather than publish nothing.
             return self::steepestWindow($pts, $elev, $cum, $total);
         }
         if ([] !== $seen) {
-            // Publish the STEEPEST_PERCENTILE window rather than the steepest
-            // one. The marker moves with the figure — it must point at the
-            // stretch we publish, not at the artifact we just discarded, or the
-            // map disagrees with the number beside it.
+            // Marker points at the published percentile window, not the discarded spike.
             usort($seen, static fn (array $a, array $b): int => $a['g'] <=> $b['g']);
             $pick = $seen[min(\count($seen) - 1, (int) floor(\count($seen) * self::STEEPEST_PERCENTILE))];
             $best = $pick['g'];
             $at = $pick['at'];
         }
-        // A climb shorter than one window still has a steepest stretch: itself.
+        // Shorter than one window: the climb itself is the steepest stretch.
         if (0.0 === $best && $total > 0) {
             $best = ((self::at($pts, $elev, $cum, $total)['elev'] - $elev[0]) / $total) * 100;
             $at = self::at($pts, $elev, $cum, $total / 2)['coord'];
@@ -327,28 +196,7 @@ final class ClimbProfiler
     }
 
     /**
-     * Per-position gradients for COLOURING THE MAP LINE, as distinct from the
-     * chart's bars.
-     *
-     * The two must not share a series, and a marker that landed off the darkest
-     * stretch is how we found out (owner-reported 2026-08-05). The steepest-ramp
-     * marker slides its window to ANY offset, while the bars sit at fixed
-     * boundaries, so on La Redoute the marker reads 17% at 970 m while the
-     * steepest bar is 15% at 1100 m — a different stretch of road. Both figures
-     * are right; they simply answer "how steep is the worst 100 m" and "how
-     * steep is this particular 100 m".
-     *
-     * Colouring the line by the sustained gradient CENTRED at each point makes
-     * the darkest part of the line the steepest part of the road by
-     * construction, which is where the marker is. The bars keep their fixed
-     * bins, because a chart needs comparable columns.
-     *
-     * `$span` is the length of the DRAWN LINE, which is not always the length of
-     * the climb: a line running past its summit is longer. These bands are
-     * mapped onto `line-progress`, which runs 0..1 over the rendered geometry,
-     * so measuring over anything shorter stretches every band along the line.
-     * Covering the full line also means a trailing descent is coloured as one
-     * rather than inheriting the last climbing band.
+     * Per-position gradients for colouring the map line, distinct from chart bars.
      *
      * @param non-empty-list<array{0: float, 1: float}> $pts
      * @param non-empty-list<float>                     $elev
@@ -361,11 +209,7 @@ final class ClimbProfiler
         $step = max(25.0, $span / 120);     // ~120 bands is plenty for a smooth line
         $out = [];
         for ($d = 0.0; $d < $span; $d += $step) {
-            // Measured at the band's own centre DISTANCE. Going via a
-            // coordinate would snap to the nearest of the 200 samples first,
-            // and that quantisation is enough to under-read the peak: La
-            // Redoute's darkest band came out 15% beside a marker reading 17%,
-            // which is a whole colour step.
+            // Measure at the band's centre distance, not the nearest sample.
             $out[] = max(-35, min(35, (int) round(
                 self::sustainedAtDistance($pts, $elev, $cum, $span, $d + $step / 2),
             )));
@@ -374,13 +218,7 @@ final class ClimbProfiler
         return [] === $out ? [0] : $out;
     }
 
-    /**
-     * The narrowest bin on the ladder that keeps the chart under MAX_BARS.
-     *
-     * A 2.4 km climb draws 24 bars of 100 m; past 2.5 km it steps to 150 m, and
-     * so on. The last rung is a floor, not a guarantee — a very long route draws
-     * more bars rather than being silently truncated.
-     */
+    /** Narrowest bin on the ladder that keeps the chart under MAX_BARS. */
     public static function binWidthFor(float $total): int
     {
         foreach (self::BIN_LADDER as $w) {
@@ -419,24 +257,7 @@ final class ClimbProfiler
     }
 
     /**
-     * The points elevation is read at, WITH their true distance along the road.
-     *
-     * The two have to be separated, and conflating them was a real bug. Sampling
-     * keeps only every k-th vertex, and a routing engine puts vertices where the
-     * road bends — so the sampled polyline chords straight across every hairpin.
-     * Measuring distance along THAT loses real road: the Susten came out 26,956 m
-     * against a 28,215 m line, 4.5% short, and the Gotthard 6.5% short. It scales
-     * with how much was decimated away, which is why nobody noticed on the short
-     * Ardennes climbs where nothing is decimated at all.
-     *
-     * Everything downstream inherits it: the published length, the average
-     * (a short denominator reads steeper), the bar boundaries, and the drawn line,
-     * which the map trims to the published length — so the climb visibly stopped
-     * 1.3 km short of its own summit on the map while the editor drew it whole
-     * (owner-reported 2026-08-07).
-     *
-     * So: read elevation at 200 points, but take each one's distance from the
-     * full-resolution line it was sampled from.
+     * Elevation samples with true distance along the full-resolution road.
      *
      * @param non-empty-list<array{0: float, 1: float}> $coords
      *
@@ -528,10 +349,7 @@ final class ClimbProfiler
     }
 
     /**
-     * The sustained gradient AT a coordinate, over the same window the maximum
-     * uses. The display bars are the wrong instrument for this: they are equal
-     * slices of the WHOLE climb, so extending a climb widens every bin and
-     * averages a short ramp flat.
+     * Sustained gradient at a coordinate, over the same window as the maximum.
      *
      * @param non-empty-list<array{0: float, 1: float}> $pts
      * @param non-empty-list<float>                     $elev
@@ -554,12 +372,7 @@ final class ClimbProfiler
     }
 
     /**
-     * The sustained gradient over a window centred on a DISTANCE along the line.
-     *
-     * The distance-based form is the real one; sustainedAt(coord) resolves a
-     * coordinate to a distance and defers here. Taking a distance directly is
-     * what lets the line's colour bands be measured at their own centres rather
-     * than at whichever sample happens to be nearest.
+     * Sustained gradient over a window centred on a distance along the line.
      *
      * @param non-empty-list<array{0: float, 1: float}> $pts
      * @param non-empty-list<float>                     $elev

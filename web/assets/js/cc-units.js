@@ -1,20 +1,7 @@
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
-//
-// The client half of the rider's unit preference
-// (docs/specs/account-and-auth.md §9).
-//
-// Server-rendered distances go through the cc_km/cc_m/cc_elev Twig filters.
-// Anything JavaScript prints has to reach the same answer, or one page shows a
-// route as 84 km in the moderation table and 52 mi in the drawer beside it, and
-// the preference reads as broken. So both halves are driven by one value,
-// handed over as window.CC_UNITS by base.html.twig.
-//
-// Everything passed in is METRIC, because that is what the app stores and what
-// every API returns. Conversion happens here, at the last step before a number
-// becomes text — no stored value is ever written in miles or feet.
-//
-// Deliberately not a module and deliberately tiny: it is loaded on every page
-// and used by classic scripts as well as by the map's ES modules.
+// Client half of the rider's unit preference (docs/specs/account-and-auth.md §9).
+// Inputs are METRIC (what the app stores and every API returns). Conversion is
+// the last step before a number becomes text — nothing is stored in miles/feet.
 (function () {
   'use strict';
 
@@ -24,12 +11,10 @@
 
   var MI_PER_KM = 0.621371192237334;   // 1 mile = 1609.344 m exactly
   var FT_PER_M = 3.280839895013123;    // 1 foot = 0.3048 m exactly
-  // Where feet stop being readable and the long form takes over. A quarter mile
-  // is about the same size as the kilometre it replaces.
+  // Where feet stop being readable; a quarter mile ≈ the kilometre it replaces.
   var SHORT_LIMIT_M = 'mi' === DIST ? 402.336 : 1000;
   var SPEED = 'mi' === DIST ? 'mph' : 'km/h';
 
-  /** Thousands separated, trailing zeros dropped — "1,240 m", "12 mi". */
   function num(value, decimals) {
     if (!isFinite(value)) return '';
     var fixed = Math.abs(value).toFixed(Math.max(0, decimals || 0));
@@ -41,18 +26,13 @@
 
   function numeric(v) { return v != null && v !== '' && isFinite(Number(v)); }
 
-  /** A ride-scale distance given in kilometres: "42.2 km" or "26.2 mi". */
   function ccKm(km, decimals) {
     if (!numeric(km)) return '';
     var v = 'mi' === DIST ? Number(km) * MI_PER_KM : Number(km);
     return num(v, decimals == null ? 1 : decimals) + ' ' + DIST;
   }
 
-  /**
-   * A short distance given in metres: "250 m" or "820 ft".
-   * Past the point where feet stop being readable it promotes itself to the
-   * long form, so 1500 m never reads as "4921 ft".
-   */
+  /* Short distance in metres. Past SHORT_LIMIT_M it promotes to the long form. */
   function ccM(metres, decimals) {
     if (!numeric(metres)) return '';
     var m = Number(metres);
@@ -62,26 +42,19 @@
       : num(m, decimals == null ? 0 : decimals) + ' m';
   }
 
-  /** Height climbed or altitude, given in metres: "1,240 m" or "4,068 ft". */
   function ccElev(metres, decimals) {
     if (!numeric(metres)) return '';
     var v = 'ft' === ELEV ? Number(metres) * FT_PER_M : Number(metres);
     return num(v, decimals == null ? 0 : decimals) + ' ' + ELEV;
   }
 
-  /* A speed held in km/h.
-
-     There is no separate speed preference and there should not be: a rider who
-     reads miles reads mph, and a second control would only let the two
-     disagree. It follows the DISTANCE unit, which is the one they already set.
-     Whole numbers - a radar reading 31.6 km/h is not that precise. */
+  /* Speed in km/h. Follows the distance unit — no separate speed preference. */
   function ccSpeed(kmh, decimals) {
     if (!numeric(kmh)) return '';
     var v = 'mi' === DIST ? Number(kmh) * MI_PER_KM : Number(kmh);
     return num(v, decimals == null ? 0 : decimals) + ' ' + SPEED;
   }
 
-  /** The bare converted numbers, for axis ticks that write the unit once. */
   function ccKmValue(km, decimals) {
     if (!numeric(km)) return 0;
     var v = 'mi' === DIST ? Number(km) * MI_PER_KM : Number(km);
@@ -94,10 +67,7 @@
     return decimals == null ? v : Number(v.toFixed(decimals));
   }
 
-  /* The reverse, for the few controls a rider TYPES a distance into. The value
-     leaving the browser is metric again before anything stores or measures it:
-     the climb wizard's length field is the rider's unit on screen and
-     kilometres in the payload. */
+  /* Reverse of display: typed distances leave the browser metric again. */
   function ccKmFromValue(value) {
     if (!numeric(value)) return 0;
     return 'mi' === DIST ? Number(value) / MI_PER_KM : Number(value);

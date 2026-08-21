@@ -11,12 +11,11 @@ use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 
 /**
- * Resolves a curator's ModerationScope from moderator_area rows and answers
- * per-item scope checks. ROLE_ADMIN and row-less curators are global.
+ * Resolves a curator's ModerationScope. ROLE_ADMIN and row-less curators are global.
  *
  * @see docs/specs/moderation-and-contribution.md §9.2
  *
- * @api Consumed by the moderation queues, write guards, and the shell label.
+ * @api
  */
 final class ModerationScopeProvider
 {
@@ -51,7 +50,7 @@ final class ModerationScopeProvider
     }
 
     /**
-     * PHP twin of ModerationScope::sqlFragment() - the write-guard predicate.
+     * PHP twin of ModerationScope::sqlFragment() — the write-guard predicate.
      *
      * @see docs/specs/moderation-and-contribution.md §9.2
      */
@@ -72,11 +71,7 @@ final class ModerationScopeProvider
     }
 
     /**
-     * Display names of the user's assigned areas (region names, then country
-     * names), for the shell label / audit note / admin form. [] = global.
-     *
-     * Accepts an already-resolved $scope so callers that resolved it earlier
-     * in the same request don't pay for a second moderator_area lookup.
+     * Display names of assigned areas. [] = global.
      *
      * @return list<string>
      */
@@ -103,7 +98,7 @@ final class ModerationScopeProvider
                 ['ccs' => $scope->countryCodes],
                 ['ccs' => ArrayParameterType::STRING],
             );
-            // a code with no world_country row still shows as the raw code
+            // A code with no world_country row still shows as the raw code.
             $found = $this->db->fetchFirstColumn(
                 'SELECT iso2 FROM world_country WHERE iso2 IN (:ccs)',
                 ['ccs' => $scope->countryCodes],

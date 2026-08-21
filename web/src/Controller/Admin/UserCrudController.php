@@ -39,16 +39,11 @@ use Symfony\Contracts\Translation\TranslatableInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
- * CRUD + support-desk actions for the User entity.
+ * User CRUD + support-desk actions. Never exposes password, totpSecret, backupCodes.
  *
- * Exposed fields only: email, displayName, roles, emailVerified, twoFaEnabled
- * (read-only), lockedUntil, publicProfile, createdAt. NEVER exposes password,
- * totpSecret, backupCodes (see docs/specs/account-and-auth.md §6.5).
+ * @see docs/specs/account-and-auth.md §6.5
  *
- * Support actions delegate to UserAdminService; guardrail violations become a
- * flash + redirect, never a 500.
- *
- * @api Instantiated by EasyAdmin's router.
+ * @api
  *
  * @extends AbstractCrudController<User>
  */
@@ -104,11 +99,7 @@ final class UserCrudController extends AbstractCrudController
     {
         yield EmailField::new('email');
         yield TextField::new('displayName', 'Display Name');
-        // roles / emailVerified / lockedUntil are shown but not form-editable.
-        // Changes must go through the audited UserAdminService support actions
-        // (grant/revoke, verify, unlock), never the generic EA form. That is
-        // also why the built-in EDIT/DELETE are disabled below
-        // (docs/specs/account-and-auth.md §6.1).
+        // docs/specs/account-and-auth.md §6.1 — roles/verified/lockout only via audited actions.
         yield ChoiceField::new('roles')
             ->setChoices(['Curator' => 'ROLE_CURATOR', 'Admin' => 'ROLE_ADMIN'])
             ->allowMultipleChoices()
@@ -119,14 +110,6 @@ final class UserCrudController extends AbstractCrudController
         yield DateTimeField::new('lockedUntil', 'Locked Until')->setRequired(false)->hideOnForm();
         yield BooleanField::new('publicProfile', 'Public Profile');
         yield DateTimeField::new('createdAt', 'Registered')->hideOnForm();
-        // 'email' is only a property carrier here. The displayed value comes
-        // entirely from formatValue(), which reads the curator's live
-        // moderator_area rows via ModerationScopeProvider
-        // (docs/specs/moderation-and-contribution.md §9). 'id' was tried
-        // first, but EasyAdmin's TextConfigurator rejects non-string,
-        // non-Stringable raw values (int ids included) before formatValue
-        // ever runs. 'email' is already a string, so it clears that check
-        // untouched.
         yield TextField::new('email', $this->t('admin.field.mod_areas'))
             ->onlyOnDetail()
             ->formatValue(fn ($v, User $u): string => implode(' · ', $this->scopeProvider->describe($u)) ?: $this->translator->trans('account.mod_scope_all'));
@@ -135,21 +118,13 @@ final class UserCrudController extends AbstractCrudController
     #[\Override]
     public function configureActions(Actions $actions): Actions
     {
-        // Every support action renders through a custom template that POSTs a
-        // CSRF-tokened form (see admin/user_support_action.html.twig) instead of
-        // EasyAdmin's default GET <a href>. Paired with the POST-only route on
-        // each handler and the token check in run(), this closes the CSRF hole
-        // a GET link with no token would otherwise leave open
-        // (docs/specs/account-and-auth.md §6.1).
+        // docs/specs/account-and-auth.md §6.1 — POST + CSRF; never a GET link.
         $mk = fn (string $name, string $label, string $icon, bool $confirm, callable $when): Action => Action::new($name, $this->t($label), $icon)
             ->linkToCrudAction($name)
             ->displayIf($when)
             ->setTemplatePath('admin/user_support_action.html.twig')
             ->addCssClass($confirm ? 'action-confirm' : '');
 
-        // Kill the generic EA create/edit/delete: they would let an admin change
-        // roles / emailVerified / lockedUntil or delete an account WITHOUT the
-        // UserAdminService guardrails (last-admin protection, …) and audit log.
         $actions->disable(Action::NEW, Action::EDIT, Action::DELETE, Action::BATCH_DELETE);
 
         $actions
@@ -163,9 +138,6 @@ final class UserCrudController extends AbstractCrudController
             ->add(Crud::PAGE_DETAIL, $mk(UserAdminService::REVOKE_ADMIN, 'admin.action.revoke_admin', 'fa fa-user-minus', true, fn (User $u) => $this->svc->hasRole($u, 'ROLE_ADMIN')))
             ->add(Crud::PAGE_DETAIL, $mk(UserAdminService::REMOVE_ACCOUNT, 'admin.action.remove_account', 'fa fa-trash', true, static fn (User $u) => null !== $u->getDeletionRequestedAt()))
             ->add(Crud::PAGE_DETAIL, $mk(UserAdminService::CANCEL_REMOVAL, 'admin.action.cancel_removal', 'fa fa-rotate-left', false, static fn (User $u) => null !== $u->getDeletionRequestedAt()))
-            // Not one of the $mk one-click POST mutations: this opens a form
-            // page (GET) the curator fills in before submitting (POST), so it
-            // stays a plain link rather than the CSRF-form template above.
             ->add(Crud::PAGE_DETAIL, Action::new(UserAdminService::MODERATOR_AREAS, $this->t('admin.action.moderator_areas'), 'fa fa-map')
                 ->linkToCrudAction(UserAdminService::MODERATOR_AREAS)
                 ->displayIf(fn (User $u) => $this->svc->hasRole($u, 'ROLE_CURATOR')))
@@ -173,8 +145,6 @@ final class UserCrudController extends AbstractCrudController
 
         return $actions;
     }
-
-    // ── Action handlers (one per support operation) ────────────────────────────
 
     /** @param AdminContext<User> $context */
     #[AdminRoute(options: ['methods' => ['POST']])]
@@ -247,12 +217,9 @@ final class UserCrudController extends AbstractCrudController
     }
 
     /**
-     * Assign moderator areas: GET renders the pick-regions/countries form,
-     * POST validates and replaces the target's moderator_area rows
-     * (docs/specs/moderation-and-contribution.md §9). Unlike the one-click
-     * $mk actions above, this is a genuine intermediate page, hence GET+POST
-     * rather than POST-only; see the comment on
-     * testEverySupportActionRouteIsPostOnly().
+     * Assign moderator areas. GET+POST (form page), not POST-only.
+     *
+     * @see docs/specs/moderation-and-contribution.md §9
      *
      * @param AdminContext<User> $context
      */
@@ -284,25 +251,10 @@ final class UserCrudController extends AbstractCrudController
             );
         }
 
-        /* COLUMNS, not entities (fixed 2026-08-14 after this page started
-           500ing with "Allowed memory size of 134217728 bytes exhausted").
-
-           `findBy()` hydrates every Region, and a Region carries its `geom`
-           polygon: 271 rows hold 217 MB of geometry between them, so the page
-           blew the 128 MB limit building a <select> that needs three columns.
-           It was survivable at a dozen regions and became fatal with the
-           worldwide rollout - and this page is playbook step 7
-           (tools/divisions/README.md), so it sits on the path of onboarding
-           every new country.
-
-           Raising memory_limit would only move the wall further out; not
-           fetching the geometry removes it. Ordered by country then name so
-           the picker groups the way a reviewer reads it. */
+        // Columns only — hydrating Region.geom OOMs this page.
         $regionRows = $em->getConnection()->fetchAllAssociative(
             'SELECT id, name, country_code FROM region ORDER BY country_code ASC, name ASC'
         );
-        // Grouped here rather than in Twig: there is no core `group_by` filter,
-        // and the shape the picker wants is a controller concern anyway.
         $regions = [];
         foreach ($regionRows as $r) {
             $regions[(string) $r['country_code']][] = $r;
@@ -316,17 +268,13 @@ final class UserCrudController extends AbstractCrudController
         ]);
     }
 
-    // ── Shared handler plumbing ────────────────────────────────────────────────
-
     /**
      * @param AdminContext<User>         $context
      * @param callable(User, User): void $op
      */
     private function run(AdminContext $context, callable $op, string $successKey, bool $backToIndex = false): RedirectResponse
     {
-        // Defence-in-depth alongside the POST-only route: a forged/tokenless
-        // request (or any GET that slipped through) is refused before the
-        // account is touched. The token is minted by the action form template.
+        // CSRF before the account is touched.
         if (!$this->isCsrfTokenValid(self::CSRF_TOKEN_ID, (string) $context->getRequest()->request->get('token'))) {
             throw $this->createAccessDeniedException('Invalid CSRF token for a user support action.');
         }

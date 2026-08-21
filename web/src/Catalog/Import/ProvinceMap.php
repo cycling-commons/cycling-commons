@@ -7,10 +7,9 @@ declare(strict_types=1);
 namespace App\Catalog\Import;
 
 /**
- * Walloon province display names (as the harvest emits them in `prov`)
- * → ISO 3166-2 subdivision codes (world_subdivision.code).
+ * Walloon harvest `prov` display names → ISO 3166-2 (`world_subdivision.code`).
  *
- * @api Used by the catalog importer.
+ * @api
  */
 final class ProvinceMap
 {

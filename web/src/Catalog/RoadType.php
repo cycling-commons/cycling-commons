@@ -7,23 +7,11 @@ declare(strict_types=1);
 namespace App\Catalog;
 
 /**
- * What KIND of way a road-surface stretch is, in words a rider uses.
+ * Rider-facing kind of way for the A form. OSM `highway=` is many-to-one here; `unclassified` is not offered as a choice.
  *
- * OSM answers this with `highway=`, and the drawer has always shown that tag
- * verbatim for a tile line. Verbatim is right for a *reference* row — a rider
- * following the link back to OSM needs the word OSM uses — and wrong for a
- * *form*: `unclassified` is a British road-class term meaning "a public road
- * below tertiary", not "nobody classified it", and every rider outside mapping
- * reads it the second way. Offering it as a choice would collect confident
- * wrong answers.
+ * @see docs/specs/edit-items/A-road-surface.md
  *
- * So the form offers the six kinds a rider can tell apart from the saddle, and
- * this class owns the translation both directions. The mapping is many-to-one
- * on purpose: `primary` and `secondary` are one thing to a cyclist (a road with
- * fast traffic on it), and the distinction that matters — is it a lane, a
- * track, a path — is the one OSM splits most finely.
- *
- * @api Read by CatalogFormRegistry and the drawer's provenance rows.
+ * @api
  */
 final class RoadType
 {
@@ -52,12 +40,7 @@ final class RoadType
     ];
 
     /**
-     * The rider-facing kind for an OSM `highway` value, or null when we have no
-     * honest answer.
-     *
-     * Null rather than a fallback: an unmapped value means OSM said something
-     * this vocabulary does not cover, and inventing 'Local road' for it would
-     * be a confident guess presented in the same typeface as a fact.
+     * Null rather than a fallback: an unmapped OSM value must not be presented as a fact.
      */
     public static function fromHighway(string $highway): ?string
     {

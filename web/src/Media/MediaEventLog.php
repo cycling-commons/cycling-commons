@@ -11,11 +11,11 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Uid\Uuid;
 
 /**
- * The one writer of media_moderation_event (docs/specs/photo-uploads.md §5b).
- * Persists without flushing so an event always lands inside its caller's
- * transaction — the same discipline ModerationService uses for change_history.
+ * Sole writer of media_moderation_event. Persists without flushing.
  *
- * @api Called by every service that changes a MediaUpload's state.
+ * @see docs/specs/photo-uploads.md §5b
+ *
+ * @api
  */
 final class MediaEventLog
 {

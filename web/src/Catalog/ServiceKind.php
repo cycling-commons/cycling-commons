@@ -6,9 +6,9 @@ declare(strict_types=1);
 namespace App\Catalog;
 
 /**
- * The three kinds of "D · Bike services" (docs/specs/osm-data-architecture.md §5):
- * a staffed shop, an unmanned self-service station, or a public pump.
- * Only a shop has meaningful opening hours; the others are 24/7 by nature.
+ * D · Bike services: staffed shop, unmanned station, or public pump. Only a shop has meaningful opening hours.
+ *
+ * @see docs/specs/osm-data-architecture.md §5
  */
 enum ServiceKind: string
 {
@@ -17,11 +17,11 @@ enum ServiceKind: string
     case Pump = 'pump';
 
     /**
-     * @api Not called from PHP production code: the pipeline (Python) does
-     *      the real OSM→kind mapping for coverage_poi. This copy exists so
-     *      CoverageContractTest can pin PHP's mapping against
-     *      pipeline/contract/coverage-contract.json and catch drift
-     *      (coverage-provider.md §7).
+     * PHP copy of the pipeline mapping so CoverageContractTest can pin it.
+     *
+     * @see docs/specs/coverage-provider.md §7
+     *
+     * @api
      *
      * @param array<string,string> $tags raw OSM tags
      */

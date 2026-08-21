@@ -7,8 +7,7 @@ declare(strict_types=1);
 namespace App\Service;
 
 /**
- * Thrown when an admin action is blocked by a safety guardrail
- * (self-lockout or removing the last remaining administrator).
+ * Thrown when an admin action is blocked by a safety guardrail.
  *
  * @see docs/specs/account-and-auth.md §6.4
  */

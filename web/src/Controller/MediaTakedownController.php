@@ -19,15 +19,11 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Uid\Uuid;
 
 /**
- * The uploader asking for their own photo to come down
- * (docs/specs/photo-uploads.md §6b).
+ * Uploader takedown of their own photo.
  *
- * Prefix-free and unlocalized, matching PhotoPageController: this posts back to
- * the page whose URL is baked into the stored files, and the two must not
- * disagree about where they live.
+ * @see docs/specs/photo-uploads.md §6b
  *
- * @api Instantiated by Symfony's router — `@api` tells Psalm this is a live
- *      entry point, not dead code.
+ * @api
  */
 #[IsGranted('ROLE_USER')]
 final class MediaTakedownController extends AbstractController
@@ -50,10 +46,7 @@ final class MediaTakedownController extends AbstractController
         $user = $this->getUser();
         $upload = $this->em->find(MediaUpload::class, Uuid::fromString($uuid));
 
-        // One 404 for every way this can be the wrong photo — not theirs, not
-        // published, already asked about. Distinguishing them would let anyone
-        // holding a photo URL learn who uploaded it by watching which failure
-        // they get.
+        // One 404 for every miss — do not leak who uploaded it.
         if (null === $upload
             || $upload->getUserId() !== (int) $user->getId()
             || MediaStatus::Approved !== $upload->getStatus()

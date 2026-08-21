@@ -31,14 +31,11 @@ use Symfony\Component\Uid\Uuid;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * A registered account: one entity for every role (member, curator, admin),
- * with 2FA, lockout, and self-service deletion built in.
+ * Registered account: roles, 2FA, lockout, self-service deletion.
  *
  * @see docs/specs/account-and-auth.md §1
  *
- * @api Consumed by Symfony Security, Doctrine lifecycle events, and future
- *      auth controllers. All public methods are live entry points; Psalm
- *      must not flag them as unused.
+ * @api
  */
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: 'users')]
@@ -56,11 +53,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     #[ORM\Column(type: 'uuid', unique: false)]
     private ?Uuid $uuid = null;
 
-    // Validate on the entity so EVERY write path is covered (registration form,
-    // future JSON API, console commands), not just the one form. Length is
-    // capped at the column width so an over-long value fails validation instead
-    // of blowing up at flush; Email keeps a malformed address out before
-    // Address() would throw RfcComplianceException on send.
+    // Entity-level so every write path is covered; length matches the column.
     #[ORM\Column(type: 'string', length: 180, unique: true)]
     #[Assert\NotBlank(message: 'Please enter an email address.')]
     #[Assert\Email(message: 'Please enter a valid email address.')]
@@ -74,18 +67,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     #[ORM\Column(type: 'json')]
     private array $roles = [];
 
-    // Format rules live HERE, not only on RegistrationFormType/SettingsType, so
-    // every write path validates them — admin CRUD (UserCrudController exposes
-    // this field), console commands and fixtures included. A rule only a form
-    // enforces is a rule an administrator walks straight past.
-    //
-    // The split is deliberate. This entity says what a name must LOOK like once
-    // one exists; the forms say that a human filling them in must PROVIDE one
-    // (NotBlank + a 2-character floor). Unnamed rows are a supported state —
-    // tests and partial flows rely on it, and the canonical column is nullable
-    // precisely for them — so nothing here may fire on an empty string.
-    // Symfony's LengthValidator only skips null, not '', which is why the
-    // minimum lives with NotBlank on the forms and only the maximum is here.
+    // Format on the entity; NotBlank + min length live on forms (empty is supported).
+    // LengthValidator skips null only, not ''.
     #[Assert\Length(
         max: 100,
         maxMessage: 'Display name may not exceed {{ limit }} characters.',
@@ -97,23 +80,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
         mixedNumbersMessage: 'contribute.error.suspicious_characters',
         hiddenOverlayMessage: 'contribute.error.suspicious_characters',
     )]
-    // NoSuspiciousCharacters' CHECK_INVISIBLE only fires on *repeated identical*
-    // combining marks, not a lone Cf format character (U+200B and friends).
+    // CHECK_INVISIBLE misses a lone Cf (U+200B); this regex catches it.
     #[Assert\Regex(pattern: '/\p{Cf}/u', match: false, message: 'contribute.error.invisible_characters')]
-    // NOT unique, by decision (account-and-auth.md §9). Two riders may both be
-    // called John Doe; refusing the second would be telling someone their own
-    // name belongs to a stranger. $uuid is the identity, and it is what every
-    // public surface keys on — the rider profile route, and therefore the
-    // attribution link embedded in contributed photos.
+    // Not unique (docs/specs/account-and-auth.md §9); $uuid is public identity.
     #[PlainDisplayName]
     #[ORM\Column(type: 'string', length: 100)]
     private string $displayName = '';
 
-    // Rider preferences (docs/specs/account-and-auth.md §9): which bikes
-    // they ride and what kind of riding they do. Stored as enum value
-    // strings; read via the enum-typed accessors, which drop unknown values
-    // so a vocabulary change can never fatal a render. The map will later
-    // prefilter on these.
+    // Rider preferences (docs/specs/account-and-auth.md §9); accessors drop unknown enum values.
     /** @var list<string> */
     #[ORM\Column(type: 'json')]
     private array $bikeTypes = [];
@@ -122,7 +96,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     #[ORM\Column(type: 'json')]
     private array $ridingStyles = [];
 
-    // Optional home country (World bundle reference data).
     #[ORM\ManyToOne(targetEntity: Country::class)]
     #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
     private ?Country $country = null;
@@ -132,87 +105,47 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     public const int BASE_RADIUS_MAX = 150;
     public const int BASE_COORD_DECIMALS = 2;
 
-    /**
-     * Optional rider base location, COARSE ONLY: coordinates are rounded to
-     * 2 decimals (~1 km) at write time; the raw pick is never persisted
-     * (map-and-search.md §4.5 privacy invariants). GeoJSON Point.
-     */
+    /** Coarse GeoJSON Point; rounded to 2 dp at write (docs/specs/map-and-search.md §4.5). */
     #[ORM\Column(type: 'geometry', nullable: true)]
     private ?string $basePoint = null;
 
-    /** Town-level label for the scope line ("Near Namur · 40 km"); never public. */
+    /** Town-level label for the scope line; never public. */
     #[ORM\Column(type: 'string', length: 120, nullable: true)]
     private ?string $basePlace = null;
 
     #[ORM\Column(type: 'smallint')]
     private int $baseRadiusKm = self::BASE_RADIUS_DEFAULT;
 
-    // Doctrine's json type hydrates this property directly (bypassing
-    // setBaseRegionIds()), so a stale/malformed DB row can hand back anything
-    // JSON allows — hence `array`, not `list<int>`, and the is_numeric() guard
-    // in getBaseRegionIds() below actually does work.
-    /** @var array<mixed> derived region ids (ST_DWithin, cap 8) — recomputed on save + region import */
+    /** @var array<mixed> json hydrates bypassing the setter; getBaseRegionIds() guards */
     #[ORM\Column(type: 'json')]
     private array $baseRegionIds = [];
 
-    // Same hydration caveat as $baseRegionIds above.
-    /** @var array<mixed> derived ISO 3166-1 alpha-2 codes of those regions */
+    /** @var array<mixed> same hydration caveat as $baseRegionIds */
     #[ORM\Column(type: 'json')]
     private array $baseCountryCodes = [];
 
-    // Preferred UI language (short code: en|fr|nl|de|es). Null = follow the
-    // language switcher / browser / site default.
+    // Null = follow switcher / browser / site default.
     #[ORM\Column(type: 'string', length: 5, nullable: true)]
     private ?string $locale = null;
 
-    // Which view mode the map opens in.
-    // 'auto' = let the active
-    // region decide; the other values are the rider overriding that on every
-    // device. Stored as the enum's value string and read through the
-    // enum-typed accessor, which falls back to Auto on an unknown value so a
-    // vocabulary change can never fatal the map render.
     #[ORM\Column(type: 'string', length: 16, options: ['default' => 'auto'])]
     private string $defaultMapMode = MapViewMode::Auto->value;
 
-    // The map chrome theme (rail/drawer/legend), dark by default. Stored as
-    // the enum's value string with the same tolerant accessor as the map
-    // mode — an unknown stored value falls back to Dark, never a fatal.
     #[ORM\Column(name: 'map_theme', type: 'string', length: 16, options: ['default' => 'dark'])]
     private string $mapTheme = MapTheme::Dark->value;
 
-    // How dates are written for this rider. Deliberately independent of
-    // `locale`: reading the site in English says nothing about expecting
-    // 2026-08-01 rather than 01-08-2026. Same tolerant accessor as the map
-    // mode — an unknown stored value falls back to Auto rather than fatalling
-    // a page whose only job was to print a date.
     #[ORM\Column(name: 'date_format', type: 'string', length: 10, options: ['default' => 'auto'])]
     private string $dateFormat = DateFormat::Auto->value;
 
-    // And whether they read 14:30 or 2:30 PM. Its own column rather than
-    // something inferred from the date order: someone can want 01-08-2026 and
-    // 2:30 PM, and guessing a clock convention from a date format is a guess
-    // about their habits made from the wrong evidence.
     #[ORM\Column(name: 'time_format', type: 'string', length: 10, options: ['default' => 'auto'])]
     private string $timeFormat = TimeFormat::Auto->value;
 
-    // Kilometres or miles, and metres or feet, each on its own column. Nothing
-    // stored anywhere in the Commons changes: distances stay metric in the
-    // database and in the API, and these decide only what the last step before
-    // the text does with them. Two columns rather than one "imperial" flag
-    // because miles-and-metres is a real combination (most of Britain rides
-    // it), and the same tolerant accessor as the formats above — an unknown
-    // stored value falls back to metric rather than fatalling a page.
     #[ORM\Column(name: 'distance_unit', type: 'string', length: 8, options: ['default' => 'km'])]
     private string $distanceUnit = DistanceUnit::Km->value;
 
     #[ORM\Column(name: 'elevation_unit', type: 'string', length: 8, options: ['default' => 'm'])]
     private string $elevationUnit = ElevationUnit::M->value;
 
-    // How long a page of any list is. `auto` — the default — means every list
-    // keeps the size it was designed around, which is not one number: a
-    // message is a card, a queue item is a row of work, a wall row is one
-    // line. An explicit choice overrides all of them at once, because a rider
-    // who picks 100 is telling us about their screen, not about our layout.
     #[ORM\Column(name: 'rows_per_page', type: 'string', length: 8, options: ['default' => 'auto'])]
     private string $rowsPerPage = RowsPerPage::Auto->value;
 
@@ -225,8 +158,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     #[ORM\Column(type: 'boolean')]
     private bool $twoFaEnabled = false;
 
-    // Encrypted at rest (AES-256-GCM, key from APP_SECRET); a DB leak alone
-    // does not expose the authenticator seed.
+    // Encrypted at rest (AES-256-GCM, APP_SECRET); a DB leak does not expose the seed.
     #[ORM\Column(type: 'encrypted_string', nullable: true)]
     private ?string $totpSecret = null;
 
@@ -247,27 +179,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     private ?\DateTimeImmutable $deletionRequestedAt = null;
 
     /**
-     * When the rider declared they were 16 or older, at registration.
+     * When the rider declared they were 16+. Null if the gate did not apply.
      *
-     * The declaration is stored, not a date of birth: answering one yes/no
-     * question does not need a birthday on file (GDPR Art. 5(1)(c) data
-     * minimisation), and a self-declared gate is the proportionate reading of
-     * Art. 8(2)'s "reasonable efforts … taking into consideration available
-     * technology" for a service like this one. Null on accounts created before
-     * the gate existed, and on accounts made by admin or console paths.
-     *
-     * @see docs/specs/account-and-auth.md
+     * @see docs/specs/account-and-auth.md §2
      */
     #[ORM\Column(name: 'age_confirmed_at', type: 'datetime_immutable', nullable: true)]
     private ?\DateTimeImmutable $ageConfirmedAt = null;
 
-    /**
-     * What happens to the credit on this rider's approved photos when the
-     * account goes (docs/specs/photo-uploads.md §6). False — anonymize — is the
-     * default and is what happens if they say nothing. Meaningful only because
-     * stored files carry a link rather than a name: either way, the answer
-     * reaches every copy that ever left this site.
-     */
+    /** Credit on approved photos after deletion (docs/specs/photo-uploads.md §6). Default: anonymize. */
     #[ORM\Column(name: 'keep_media_credit', type: 'boolean', options: ['default' => false])]
     private bool $keepMediaCredit = false;
 
@@ -279,8 +198,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
 
     #[ORM\Column(type: 'datetime_immutable')]
     private ?\DateTimeImmutable $updatedAt = null;
-
-    // ── Lifecycle callbacks ──────────────────────────────────────────────────
 
     #[ORM\PrePersist]
     public function onCreate(): void
@@ -294,8 +211,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     {
         $this->updatedAt = new \DateTimeImmutable();
     }
-
-    // ── UserInterface ────────────────────────────────────────────────────────
 
     #[\Override]
     public function getUserIdentifier(): string
@@ -316,18 +231,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     #[\Override]
     public function eraseCredentials(): void
     {
-        // No plain-text credential to clear
     }
-
-    // ── PasswordAuthenticatedUserInterface ───────────────────────────────────
 
     #[\Override]
     public function getPassword(): string
     {
         return $this->password;
     }
-
-    // ── TwoFactorInterface (TOTP) ────────────────────────────────────────────
 
     #[\Override]
     public function isTotpAuthenticationEnabled(): bool
@@ -349,8 +259,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
             : null;
     }
 
-    // ── BackupCodeInterface ──────────────────────────────────────────────────
-
     #[\Override]
     public function isBackupCode(string $code): bool
     {
@@ -368,16 +276,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     }
 
     /**
-     * Keyed (peppered) hash for a single-use backup code.
+     * Peppered HMAC of a backup code (APP_SECRET). Rotating the secret invalidates stored codes.
      *
-     * The codes carry ≥80 bits of entropy (see TwoFactorController), so a fast
-     * digest is not itself the risk, but keying it with a secret derived from
-     * APP_SECRET (never stored in the DB) means a database-only leak cannot even
-     * compute candidate hashes, closing the offline-enumeration path that an
-     * unsalted SHA-256 left open. Rotating APP_SECRET invalidates
-     * stored codes (same trade-off as the encrypted TOTP secret).
-     *
-     * @api Also used by the enrolment controller when first storing codes.
+     * @api
      */
     public static function hashBackupCode(string $code): string
     {
@@ -389,14 +290,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
         return hash_hmac('sha256', $code, hash_hkdf('sha256', $secret, 32, 'cc-backup-code-v1'));
     }
 
-    // ── Lockout helper ───────────────────────────────────────────────────────
-
     public function isLocked(): bool
     {
         return null !== $this->lockedUntil && $this->lockedUntil > new \DateTimeImmutable();
     }
-
-    // ── Getters / setters ────────────────────────────────────────────────────
 
     public function getId(): ?int
     {
@@ -623,7 +520,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
         return $out;
     }
 
-    /** @param array<string> $ccs already-string per the declared param type (unlike setBaseRegionIds, no caller passes non-strings) */
+    /** @param array<string> $ccs */
     public function setBaseCountryCodes(array $ccs): static
     {
         $clean = [];

@@ -13,11 +13,7 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints\NotBlank;
 
 /**
- * Form for the seasonal vote ballot.
- *
- * The ballot field is a hidden input populated by client-side JS with the
- * comma-separated item ids the rider selected. CSRF protection is provided
- * automatically by Symfony's form framework.
+ * Seasonal vote ballot (hidden field filled by JS).
  */
 final class VoteType extends AbstractType
 {

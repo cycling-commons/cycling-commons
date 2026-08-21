@@ -13,54 +13,17 @@ use League\Flysystem\FilesystemException;
 use League\Flysystem\FilesystemOperator;
 
 /**
- * Writes, deletes and addresses photo objects across the per-shard public
- * storages, plus the one private storage that holds the quarantine
- * (docs/specs/media-storage-architecture.md §2, §4).
+ * Public per-shard objects and the private quarantine bucket.
  *
- * Two storages, two jobs:
+ * @see docs/specs/media-storage-architecture.md §2, §4
  *
- * - **public, per shard** - published derivatives only, at the immutable key
- *   published/<uuid>/<rev>/orig.webp | lg.webp | sm.webp. A key never changes
- *   meaning, which is what lets the proxy in front of it cache for a year (§4).
- * - **private, one** - quarantine/<uuid>, the raw unscanned bytes. Written by
- *   the web tier, read and deleted by the worker, reachable by nobody else:
- *   the bucket carries no anonymous-read policy at all (§2.2).
- *
- * The FULL bucket name is the one key (owner 2026-08-20): writing uses the
- * continent's MEDIA_S3_PUBLIC_BUCKET_<CC> value verbatim, the row stores
- * it, and reading addresses the recorded name, building a filesystem on
- * demand - a retired bucket needs no config entry to stay readable forever.
- * A continent whose bucket var is unset REFUSES the upload
- * (ShardUnavailable; owner 2026-08-18: "storage must fail"), never borrows
- * another bucket.
- *
- * The browser-facing URL is <MEDIA_PUBLIC_BASE>/<segment>/<key>, where the
- * segment is the bucket name's LAST FIVE characters - the naming convention
- * ...-<cc>-<nn> (cyclingcommons-media-public-staging-eu-01, never more than
- * 99 generations per continent) makes that a pure one-to-one read, no
- * assembly. The proxy maps each segment to its bucket, so no bucket name is
- * ever public (media-storage-architecture.md §2.0).
- *
- * These paths are guessing-infeasible, NOT unguessable, and they are not
- * access control. A UUIDv4 carries ~122 random bits so blind enumeration is
- * impractical, but the path is still only a secret in a URL, and the variant
- * names are fixed, so anyone holding one variant's URL can derive its siblings
- * including the full-resolution original. Both are accepted for v1: every
- * variant is the same CC BY-SA work at a different size, and "public" before
- * approval means UNLINKED — the moderation queue is the only place a pending
- * URL appears, buckets are never listable, and the proxy must not serve
- * directory indexes. Real access control for pending media would mean serving
- * those objects through an authorizing layer; that option was considered
- * during design and deliberately not chosen (docs/specs/photo-uploads.md §2).
- *
- * @api Called by MediaController, ScanAndReleaseUploadHandler,
- *      MediaDisposalService and MediaDecisionService.
+ * @api
  */
 final class MediaStorage
 {
     public const array VARIANTS = ['orig', 'lg', 'sm'];
 
-    /** Where an unscanned upload waits, in the private storage and nowhere else. */
+    /** Unscanned bytes live only in private storage. @see docs/specs/media-storage-architecture.md §2.2 */
     private const string QUARANTINE_PREFIX = 'quarantine/';
 
     /** @var array<string, FilesystemOperator> bucket name => filesystem, built on demand */
@@ -82,15 +45,12 @@ final class MediaStorage
     }
 
     /**
-     * The full bucket name a continent's NEW photos write to right now.
+     * Active bucket for a continent's new photos; stored on the row, never re-derived.
      *
-     * Called once, at intake, and the answer is STORED on the row. Never
-     * re-derived afterwards: "existing objects never move" is only true if a
-     * photo's address comes from what was recorded when it was written, not
-     * from today's configuration.
+     * @throws ShardUnavailable          when the continent's bucket var is unset
+     * @throws \InvalidArgumentException when the configured name does not end in -<cc>-<nn>
      *
-     * @throws ShardUnavailable when the continent's bucket var is unset -
-     *                          the upload is refused, never redirected
+     * @see docs/specs/media-storage-architecture.md §2.1
      */
     public function bucketFor(string $continent): string
     {
@@ -103,8 +63,6 @@ final class MediaStorage
         return $bucket;
     }
 
-    /* ---------- the quarantine (private storage) ---------- */
-
     /** @param resource|string $bytes */
     public function writeQuarantine(string $mediaId, mixed $bytes): void
     {
@@ -115,11 +73,7 @@ final class MediaStorage
         }
     }
 
-    /**
-     * Half of the release handler's no-op guard: a redelivered message after a
-     * successful release finds nothing here and stops
-     * (docs/specs/media-storage-architecture.md §3).
-     */
+    /** True while the quarantine object still exists (release no-op guard). @see docs/specs/media-storage-architecture.md §3 */
     public function quarantineExists(string $mediaId): bool
     {
         try {
@@ -129,15 +83,7 @@ final class MediaStorage
         }
     }
 
-    /**
-     * The quarantined bytes, or null when they are gone.
-     *
-     * A string rather than a stream, deliberately: the next thing that happens
-     * to these bytes is an Imagick decode of the whole blob, and the byte cap
-     * that bounds them (PhotoProcessor::MAX_BYTES, 15 MB) is enforced before
-     * they are ever written. Streaming into a buffer we immediately materialise
-     * would buy nothing.
-     */
+    /** Quarantined bytes, or null when gone. */
     public function readQuarantine(string $mediaId): ?string
     {
         try {
@@ -147,17 +93,15 @@ final class MediaStorage
         }
     }
 
-    /** Idempotent: the release path and the disposal path both call it. */
+    /** Idempotent: release and disposal both call it. */
     public function deleteQuarantine(string $mediaId): void
     {
         try {
             $this->filesystemFor($this->privateBucket)->delete(self::QUARANTINE_PREFIX.$mediaId);
         } catch (FilesystemException) {
-            // Already gone. Nothing to undo, nothing to report.
+            // Already gone.
         }
     }
-
-    /* ---------- published objects (public storage) ---------- */
 
     public function store(string $bucket, string $prefix, ProcessedPhoto $photo): void
     {
@@ -168,13 +112,9 @@ final class MediaStorage
     }
 
     /**
-     * Copies whichever variants exist from one prefix to another inside the
-     * same shard, and answers how many moved.
+     * Copy variants inside one shard. Copy-then-row-then-delete for the key backfill.
      *
-     * The one-off backfill onto immutable keys is the only caller
-     * (docs/specs/media-storage-architecture.md §4.1, MediaBackfillKeysCommand)
-     * - a copy, not a move, so a failure halfway leaves the source intact and
-     * the command can simply run again.
+     * @see docs/specs/media-storage-architecture.md §4.1
      */
     public function copyVariants(string $bucket, string $fromPrefix, string $toPrefix): int
     {
@@ -196,32 +136,44 @@ final class MediaStorage
     }
 
     /**
-     * Removes every object under the prefix. Idempotent by design: disposal
-     * runs from a garbage collector, a Trash action and an account deletion,
-     * and none of them may fail because the objects are already gone.
+     * How many of the three variants exist under the prefix. Zero means the
+     * bucket does not hold this upload.
+     *
+     * @see docs/specs/media-storage-architecture.md §4
      */
+    public function variantsExist(string $bucket, string $prefix): int
+    {
+        $filesystem = $this->filesystemFor($bucket);
+        $found = 0;
+        foreach (self::VARIANTS as $variant) {
+            try {
+                if ($filesystem->fileExists($prefix.'/'.$variant.'.webp')) {
+                    ++$found;
+                }
+            } catch (FilesystemException) {
+                // Unreachable shard counts as absent; the caller decides.
+            }
+        }
+
+        return $found;
+    }
+
+    /** Delete every object under the prefix. Idempotent. */
     public function deletePrefix(string $bucket, string $prefix): void
     {
         try {
             $this->filesystemFor($bucket)->deleteDirectory($prefix);
         } catch (FilesystemException) {
-            // Already absent, or the shard is unreachable. The row-side
-            // bookkeeping is the source of truth; a retry sweeps again.
+            // Already absent, or the shard is unreachable.
         }
     }
 
     /**
-     * Opens one stored variant for reading, or null when it is not there.
-     *
-     * A stream rather than a string: the caller is the data export, and a rider
-     * with a hundred photos must not cost a hundred full-resolution images'
-     * worth of memory. Absence is a normal answer — a tombstoned upload's row
-     * outlives its objects (docs/specs/photo-uploads.md §6) — so it is returned,
-     * not thrown.
+     * Open one stored variant, or null if missing.
      *
      * @return resource|null
      *
-     * @api Called by DataExportService.
+     * @api
      */
     public function readStream(string $bucket, string $prefix, string $variant)
     {
@@ -239,18 +191,11 @@ final class MediaStorage
         self::assertVariant($variant);
         self::assertSegmentable($bucket);
 
-        // The proxy-routed path segment is the bucket name's last five
-        // characters (<cc>-<nn>); the name itself never appears in a URL
-        // (§2.0).
+        // URL segment is the bucket name's last five characters; the name itself never appears. @see docs/specs/media-storage-architecture.md §2.0
         return rtrim($this->publicBase, '/').'/'.substr($bucket, -5).'/'.$prefix.'/'.$variant.'.webp';
     }
 
-    /**
-     * The naming convention the URL segment depends on: every public bucket
-     * name ends in -<cc>-<nn> (owner 2026-08-20, "never more than 99
-     * generations per continent"). A name outside it would emit a broken
-     * URL silently, so it refuses loudly instead.
-     */
+    /** Public bucket names must end in -<cc>-<nn>. @see docs/specs/media-storage-architecture.md §2.1 */
     private static function assertSegmentable(string $bucket): void
     {
         if (1 !== preg_match('/-[a-z]{2}-\d{2}$/D', $bucket)) {
@@ -268,15 +213,12 @@ final class MediaStorage
     private function filesystemFor(string $bucket): FilesystemOperator
     {
         if ('' === $bucket) {
-            // A row minted before the bucket column existed, or a caller bug.
-            // Failing loudly beats writing into a guessed bucket.
             throw new ShardUnavailable('(no bucket recorded)');
         }
         if (isset($this->filesystems[$bucket])) {
             return $this->filesystems[$bucket];
         }
         if (null === $this->client) {
-            // Test wiring: only preloaded in-memory buckets exist.
             throw new ShardUnavailable($bucket);
         }
 

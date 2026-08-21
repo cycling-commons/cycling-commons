@@ -10,34 +10,15 @@ use Doctrine\DBAL\Connection;
 use Psr\Clock\ClockInterface;
 
 /**
- * Where a Safe Browsing verdict lives (catalog-data-model.md §7 `links`).
+ * Safe Browsing verdict keyed by URL hash, not stored in `links` (that would surface as a rider edit).
  *
- * **Not inside the `links` attribute, and this is the whole design.** `links`
- * flows through the wizard's change diff, so a verdict written there would
- * surface on a moderation card as a rider-made edit and manufacture curator
- * work out of a background check. The verdict is a fact about a URL, not about
- * an item.
+ * @see docs/specs/catalog-data-model.md §7
  *
- * So it is keyed by URL, in its own table, and shared by every item pointing at
- * the same page. That is also what makes the scheduled re-check ONE sweep over
- * the distinct URLs rather than one per item.
- *
- * The primary key is a hash, not the URL: a btree index over an unbounded TEXT
- * column has a size limit somewhere around 2.7 KB, and a URL that exceeded it
- * would fail the INSERT rather than the validation - a rider's save lost to an
- * index detail.
- *
- * @api Written at submit and by the re-check sweep; read by the moderation
- *      queue and by the map payload.
+ * @api
  */
 final class LinkVerdictStore
 {
-    /**
-     * How long a verdict is trusted before the sweep asks again. A week: the
-     * threat lists move in hours, but so does the free quota, and a link farm
-     * that goes bad on day three is caught by the render-side check being
-     * fail-closed rather than by polling harder.
-     */
+    /** Verdicts older than this are re-asked. Render-side withhold is still fail-closed. */
     public const int STALE_DAYS = 7;
 
     /**
@@ -54,12 +35,7 @@ final class LinkVerdictStore
     }
 
     /**
-     * Records what the lookup said. Upsert by url, because the fact belongs to
-     * the url and the newest answer is the only one worth keeping.
-     *
-     * UNKNOWN is stored like any other verdict rather than skipped. "We asked
-     * and got nothing" is a different state from "we never asked", and only the
-     * stored one lets the sweep tell them apart.
+     * Upsert by url. Store UNKNOWN too — that is not the same as never asked.
      *
      * @param array<string, string> $verdicts url => SafeBrowsing::SAFE|UNSAFE|UNKNOWN
      */
@@ -84,10 +60,7 @@ final class LinkVerdictStore
     }
 
     /**
-     * The last verdict for each url asked about, defaulting to UNKNOWN.
-     *
-     * Never "missing": a caller that could not tell an unasked url from a safe
-     * one would be a caller that fails open by accident.
+     * Last verdict per url, default UNKNOWN. Never missing — missing would fail open.
      *
      * @param list<string> $urls
      *
@@ -117,17 +90,9 @@ final class LinkVerdictStore
     }
 
     /**
-     * Strips every url whose last verdict was UNSAFE out of a `links`
-     * structure, and drops an entry left with no urls at all.
+     * Drop UNSAFE urls from `links`. UNKNOWN still renders (fail-closed on UNSAFE only).
      *
-     * The RENDER-side half of the pair, and it fails CLOSED
-     * (App\Catalog\Links\SafeBrowsing): on the public map, "we do not know" and
-     * "it is fine" must not be the same answer for a url we have already been
-     * told is hostile. UNKNOWN still renders - withholding every unchecked link
-     * would empty the map the moment the key expired, which is the failure mode
-     * a security control is not allowed to have.
-     *
-     * @param mixed $links the two-level structure from catalog-data-model.md §7
+     * @param mixed $links docs/specs/catalog-data-model.md §7
      */
     public function withhold(mixed $links): mixed
     {
@@ -153,7 +118,7 @@ final class LinkVerdictStore
                 $urls[] = $url;
             }
             if ([] === $urls) {
-                continue;   // nothing left to point at
+                continue;
             }
             $entry['urls'] = $urls;
             $kept[] = $entry;
@@ -163,12 +128,6 @@ final class LinkVerdictStore
     }
 
     /**
-     * Every url currently judged unsafe, as a lookup set.
-     *
-     * The whole set in one query, memoized for the request, because the map
-     * payload asks per item and the answer is the same every time. It stays
-     * small by construction: it is the bad ones, not all of them.
-     *
      * @return array<string, true>
      */
     public function unsafeUrls(): array
@@ -189,7 +148,7 @@ final class LinkVerdictStore
     }
 
     /**
-     * Urls whose verdict has aged out, oldest first - the sweep's work list.
+     * Aged-out urls, oldest first.
      *
      * @return list<string>
      */
@@ -205,10 +164,7 @@ final class LinkVerdictStore
     }
 
     /**
-     * Urls that live in a served item's `links` and have never been checked at
-     * all. The other half of the sweep's work list: the layer can be switched
-     * on after links already exist, and a link nobody ever asked about is
-     * exactly the one a curator is about to click.
+     * Served `links` urls with no verdict row.
      *
      * @return list<string>
      */

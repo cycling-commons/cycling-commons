@@ -12,25 +12,11 @@ use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 
 /**
- * Reads the effective value of every runtime setting: the admin's override
- * from `system_setting` when there is a usable one, the YAML default otherwise.
- *
- * ## Caching
- *
- * CuratedReadiness reads three settings on every curator-desk render, so the
- * whole override map lives in ONE cache item rather than a row read per key,
- * plus an in-request memo so a single render never touches the pool twice.
- * SystemSettingsWriter calls invalidate() after every write; nothing else may
- * change the table, so there is no other staleness path.
- *
- * The table holds deviations only — a key with no row is at its default. Note
- * that a value an admin explicitly sets IS stored even when it equals the
- * current default: that pins the choice, so a later release that moves the YAML
- * default cannot silently move a number somebody deliberately chose.
+ * Effective setting value: stored override if still legal, else the YAML default.
  *
  * @see docs/specs/system-configuration.md §3
  *
- * @api Autowired as SettingsProviderInterface into every threshold consumer.
+ * @api
  */
 final class SystemSettings implements SettingsProviderInterface
 {
@@ -54,7 +40,6 @@ final class SystemSettings implements SettingsProviderInterface
         return \is_int($value) ? $value : throw new \InvalidArgumentException(sprintf('"%s" is a text setting; use getString().', $key));
     }
 
-    /** The text half of the two typed accessors (SettingDefinition docblock). */
     #[\Override]
     public function getString(string $key): string
     {
@@ -63,11 +48,6 @@ final class SystemSettings implements SettingsProviderInterface
         return \is_string($value) ? $value : throw new \InvalidArgumentException(sprintf('"%s" is a numeric setting; use get().', $key));
     }
 
-    /**
-     * The stored override when there is one and it is still legal for this
-     * key, the definition's default otherwise. Storage is textual for every
-     * type, so the definition does the reading back.
-     */
     private function effective(string $key): int|string
     {
         $def = $this->registry->get($key);
@@ -95,18 +75,13 @@ final class SystemSettings implements SettingsProviderInterface
         return $out;
     }
 
-    /** Whether an admin has explicitly set this key (i.e. a row exists to reset). */
     public function isOverridden(string $key): bool
     {
-        $this->registry->get($key); // reject unknown keys here too
+        $this->registry->get($key);
 
         return isset($this->overrides()[$key]);
     }
 
-    /**
-     * Drops the cached override map. Called by SystemSettingsWriter after every
-     * write; there is no other writer, so nothing else needs to call it.
-     */
     public function invalidate(): void
     {
         $this->memo = null;
@@ -123,10 +98,7 @@ final class SystemSettings implements SettingsProviderInterface
         $loaded = $this->cache->get(self::CACHE_KEY, function (ItemInterface $item): array {
             $rows = $this->load();
             if (null === $rows) {
-                // No table yet — a fresh checkout warming caches, or the
-                // migration run itself booting the kernel. Answer with the
-                // defaults, but do not pin that answer into the cache, or the
-                // first post-migration request would still see an empty map.
+                // Table missing (fresh checkout / migration): do not cache empty as the live map.
                 $item->expiresAfter(1);
 
                 return [];
@@ -150,8 +122,6 @@ final class SystemSettings implements SettingsProviderInterface
 
         $out = [];
         foreach ($rows as $key => $value) {
-            // A row for a key the registry no longer defines (a setting removed
-            // in a later release) is inert rather than fatal.
             if ($this->registry->has((string) $key)) {
                 $out[(string) $key] = (string) $value;
             }

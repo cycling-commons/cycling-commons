@@ -9,11 +9,9 @@ namespace App\Contribution;
 use Doctrine\DBAL\Connection;
 
 /**
- * Point → containing region + country, the intake-side twin of the importer's
- * membership recompute (same ST_Contains predicate; country comes from
- * region.country_code).
+ * Point → containing region + country.
  *
- * @api Used by CatalogContributionService at submit time.
+ * @api
  */
 final class SpatialResolver
 {
@@ -24,10 +22,7 @@ final class SpatialResolver
     /** @return array{regionId: ?int, countryCode: string} */
     public function resolve(float $lat, float $lng): array
     {
-        // Smallest-area-wins tie-break, mirroring RegionResolver verbatim:
-        // without it, a point
-        // inside both an operational L4 region and its containing
-        // infrastructure-only L2 country outline could anchor to the L2 row.
+        // Smallest-area-wins, mirroring RegionResolver: else an L2 country outline can win over an L4 region.
         /** @var array{id: int|string, country_code: string}|false $row */
         $row = $this->db->fetchAssociative(
             'SELECT id, country_code FROM region

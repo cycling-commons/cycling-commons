@@ -11,18 +11,11 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
 
 /**
- * One lifecycle transition of one photo. The media-scoped twin of the item-side
- * change_history: same append-only conventions, same (subject, time) index
- * (docs/specs/photo-uploads.md §5b). media_upload.status answers "what is it
- * now"; this log answers "how did it get here".
+ * One lifecycle transition. Cascades only on Trash and orphan collection.
  *
- * The foreign key cascades on delete because the two purges that remove a
- * media_upload row are exactly the two cases where nothing may survive: Trash
- * (content-free by principle) and orphan collection (nothing was ever
- * moderated). A rejected row past retention is tombstoned, not deleted, so its
- * log survives.
+ * @see docs/specs/photo-uploads.md §5b
  *
- * @api Media domain entity; written by MediaEventLog.
+ * @api
  */
 #[ORM\Entity]
 #[ORM\Table(name: 'media_moderation_event')]

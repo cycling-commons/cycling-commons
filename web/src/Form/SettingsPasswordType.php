@@ -14,12 +14,9 @@ use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\Validator\Constraints\NotCompromisedPassword;
 
 /**
- * Settings password-change form.
+ * Settings password change. Requires current password (unlike the reset-token form).
  *
- * Unlike ChangePasswordFormType (used in the reset-password flow, which is
- * token-authenticated), this form requires the user to supply their CURRENT
- * password first. The controller verifies it with UserPasswordHasherInterface
- * before applying the change.
+ * @see docs/specs/account-and-auth.md §8
  */
 final class SettingsPasswordType extends AbstractType
 {
@@ -51,11 +48,7 @@ final class SettingsPasswordType extends AbstractType
                     'constraints' => [
                         new NotBlank(message: 'Please enter a new password.'),
                         new Length(min: 12, minMessage: 'Password must be at least {{ limit }} characters.'),
-                        // k-anonymity: only the first five SHA-1 hex chars leave
-                        // the server (haveibeenpwned range API), so this fits the
-                        // privacy stance. skipOnError: an API outage must never
-                        // block a signup or a password change. Disabled in test
-                        // (validator.yaml when@test).
+                        // docs/specs/account-and-auth.md §2 — HIBP k-anonymity; skipOnError so an outage cannot block a change.
                         new NotCompromisedPassword(skipOnError: true, message: 'This password appears in a known data breach. Please choose a different one.'),
                     ],
                 ],

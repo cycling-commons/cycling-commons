@@ -19,16 +19,9 @@ use Symfony\Component\Intl\Countries;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
- * Server-renders the static content pages through the shared Twig layout.
- * page_title/page_description are translation keys (see the `meta` catalog
- * group); the layout translates them in the <head>.
+ * Static content pages through the shared Twig layout.
  *
- * The class-level localized prefix serves English clean (`/regions`) and the
- * other locales under a path prefix (`/fr/regions`); Symfony sets `_locale`
- * from the matched path.
- *
- * @api Instantiated by Symfony's router, never referenced from code — `@api`
- *      tells Psalm this (and its actions) is a live entry point, not dead code.
+ * @api
  */
 #[Route(LocalePrefix::PATHS)]
 final class PageController extends AbstractController
@@ -65,13 +58,7 @@ final class PageController extends AbstractController
                 'name' => Countries::exists((string) $code) ? Countries::getName((string) $code, $locale) : (string) $code,
             ];
         }
-        // Collator sorts by the request locale's actual collation rules (so
-        // accented names sort correctly for FR/NL/DE readers); strcoll sorts
-        // by raw byte order under the process locale, which misplaces
-        // accents. The constructor (not the ::create() factory) is used like
-        // SubmissionQueue's collator: it never fails even for a garbage
-        // locale string (ICU falls back to root collation), so there is no
-        // failure mode to guard against.
+        // Collator (locale rules), not strcoll (byte order).
         $collator = new \Collator($locale);
         usort($allCountries, static fn (array $a, array $b): int => $collator->compare($a['name'], $b['name']));
 
@@ -104,10 +91,6 @@ final class PageController extends AbstractController
             'page_description' => 'meta.region_description',
             'nav_active' => 'regions',
             'region' => $region,
-            // The country in outline with this region filled: inline SVG built
-            // from `region.outline`, so it costs no request and no JavaScript.
-            // Null when neither shape is usable, and the template omits the
-            // figure rather than drawing an empty box.
             'silhouette' => $silhouette->forRegion((int) $region['id'], (string) $region['countryCode']),
         ]);
     }
@@ -168,10 +151,6 @@ final class PageController extends AbstractController
     #[Route('/contributors', name: 'contributors')]
     public function contributors(Request $request, ContributorWallProvider $wallProvider, PageSize $pageSize): Response
     {
-        // Both filters are query parameters now, not JS over the rendered
-        // rows. The wall grows with the project, so it is paged — and a
-        // client-side filter over one page would answer "no match" for riders
-        // who are merely further down the list.
         $q = trim($request->query->getString('q'));
         $country = trim($request->query->getString('country'));
 
@@ -186,9 +165,6 @@ final class PageController extends AbstractController
             'page_description' => 'meta.contributors_description',
             'nav_active' => '',
             'wall' => $wallProvider->wall($q, $country, $pager['page'], $pager['perPage']),
-            // Country options come from the UNFILTERED wall, so the dropdown
-            // never advertises a country with zero visible contributors and
-            // never collapses to the one already chosen.
             'wall_countries' => $wallProvider->wallCountries(),
             'wall_q' => $q,
             'wall_country' => $country,
@@ -228,12 +204,6 @@ final class PageController extends AbstractController
         ]);
     }
 
-    /**
-     * Scout, the CC Tagger — the field recorder the Commons is fed from.
-     *
-     * Reached from the homepage CTA rather than the main nav: it is one
-     * companion app, not a top-level section of the atlas.
-     */
     #[Route('/scout', name: 'scout')]
     public function scout(): Response
     {

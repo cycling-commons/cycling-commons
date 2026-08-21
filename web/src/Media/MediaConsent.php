@@ -7,28 +7,16 @@ declare(strict_types=1);
 namespace App\Media;
 
 /**
- * The consent contract riders grant before a single byte may be uploaded:
- * own work, licensed CC BY-SA 4.0 (docs/specs/photo-uploads.md §1.5, §4).
+ * Own-work CC BY-SA 4.0 consent. VERSION is the only re-consent trigger.
  *
- * VERSION is the re-consent trigger and the ONLY one. A rider who has a record
- * at the current version is never asked again; bumping VERSION means a new
- * consent act for everyone, never a silent carry-over. TEXT_KEY is rendered
- * through the translator, so the hash stored on the record is the sha256 of
- * the exact words that rider saw, in that rider's language — the evidence of
- * what was agreed to, while VERSION is what decides whether to ask again.
+ * @see docs/specs/photo-uploads.md §1, §4
  *
- * @api Read by ConsentService and the wizard's consent endpoints.
+ * @api
  */
 final class MediaConsent
 {
     public const string KIND = 'media-cc-by-sa';
-    // v3 (2026-07-31): the contract became a first-person acknowledgement — "I
-    // agree to license my photo(s)…" rather than a statement of fact about the
-    // licence — and the licence deed is now linked beside it. Every wording
-    // change bumps this, without exception and however small it looks: the
-    // stored text_hash is evidence of the exact words a rider agreed to, and
-    // leaving it pointing at a version whose text has since moved would make
-    // that evidence a lie.
+    // Wording change must bump VERSION; text_hash is evidence of the exact words.
     public const string VERSION = 'v3';
     public const string TEXT_KEY = 'media.consent.contract';
 

@@ -7,10 +7,11 @@ declare(strict_types=1);
 namespace App\Catalog;
 
 /**
- * What a submission proposes. Intake produces NewItem/Edit today;
- * Hazard/Photo are queue-renderable, not yet collectable.
+ * What a submission proposes. Intake produces NewItem/Edit today; Hazard/Photo are queue-renderable, not yet collectable.
  *
- * @api Catalog domain enum.
+ * @see docs/specs/moderation-and-contribution.md §3.1
+ *
+ * @api
  */
 enum SubmissionType: string
 {

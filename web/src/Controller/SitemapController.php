@@ -15,29 +15,14 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\RouterInterface;
 
 /**
- * `robots.txt` and `sitemap.xml`.
+ * `robots.txt` and `sitemap.xml` from the live router and region registry.
  *
- * An open atlas that search engines cannot enumerate is an atlas nobody finds,
- * and the Commons has one page per region that is worth finding on its own.
- *
- * Both are served from the controller rather than dropped in `public/` so they
- * cannot drift: the sitemap is generated from the router and the live region
- * registry, and robots.txt points at whatever host is serving it. A static file
- * would have to be edited every time a country onboards, and would name a
- * hostname that is wrong in three of the four environments.
- *
- * What is deliberately NOT listed: anything behind a login (profile, settings,
- * messages, every moderation desk), the contribution wizards, and `/map`. The
- * map is one URL whose entire content is query state — listing it adds nothing,
- * and listing its states would be thousands of near-identical pages.
- *
- * @api Instantiated by Symfony's router.
+ * @api
  */
 final class SitemapController extends AbstractController
 {
     /**
-     * Public, indexable, locale-varying routes. Ordered roughly by importance,
-     * which is also the order a reader would meet them.
+     * Public, indexable, locale-varying routes.
      *
      * @var list<array{0: string, 1: string}> [route name, change frequency]
      */
@@ -68,12 +53,7 @@ final class SitemapController extends AbstractController
     {
         $sitemap = $this->generateUrl('sitemap', [], UrlGeneratorInterface::ABSOLUTE_URL);
 
-        /* Disallowed paths are the ones with nothing to index and a cost to
-           crawling: signed-in surfaces, the contribution wizards (which are
-           multi-step forms), and the JSON the map fetches. This is a crawl
-           budget hint, NOT an access control — everything genuinely private is
-           behind the firewall, and a robots.txt that were the only thing
-           standing between a crawler and a moderation desk would be a bug. */
+        // Crawl hint, not ACL — private surfaces sit behind the firewall.
         $disallow = [
             '/admin', '/moderate', '/profile', '/settings', '/messages',
             '/login', '/register', '/reset-password', '/2fa', '/i18n/',
@@ -105,11 +85,7 @@ final class SitemapController extends AbstractController
             $urls[] = $this->entry($name, [], $freq, 'home' === $name ? '1.0' : '0.7', $locales);
         }
 
-        /* One entry per region page. The registry already applies
-           OperationalRegions::predicate(), so the L2 country outlines are
-           filtered out at the query — they are infrastructure rows with no page
-           of their own (tools/divisions/README.md, "Operational vs
-           infrastructure rows"). */
+        // Operational regions only — L2 outlines have no page.
         foreach ($this->regions->all() as $region) {
             $urls[] = $this->entry('region_detail', ['slug' => $region['slug']], 'weekly', '0.6', $locales);
         }
@@ -125,12 +101,6 @@ final class SitemapController extends AbstractController
     }
 
     /**
-     * One `<url>`, with an `xhtml:link alternate` per locale.
-     *
-     * The alternates are the whole reason this is generated rather than
-     * written: five locales × every page is the kind of list that is correct
-     * on the day it is committed and wrong by the next one.
-     *
      * @param array<string, string> $params
      * @param list<string>          $locales
      */
@@ -147,7 +117,7 @@ final class SitemapController extends AbstractController
                 try {
                     $url = $this->router->generate($route, $params, UrlGeneratorInterface::ABSOLUTE_URL);
                 } catch (\Throwable) {
-                    continue;   // not generatable in this locale — omit it, do not fail the sitemap
+                    continue; // omit locales that cannot generate this route
                 }
                 $canonical ??= $url;
                 $alternates[] = sprintf(

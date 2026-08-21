@@ -7,14 +7,11 @@ declare(strict_types=1);
 namespace App\Media\Scan;
 
 /**
- * No verdict could be obtained and this environment requires one.
+ * No verdict and this environment requires one. Propagate so Messenger retries.
  *
- * A RuntimeException on purpose: the release handler lets it propagate so
- * Messenger retries with backoff and the object stays quarantined - a
- * scanner blip must delay a rider's photo, never reject it and never
- * release it unscanned.
+ * @see docs/specs/media-storage-architecture.md §3.1
  *
- * @api Thrown by scanner implementations.
+ * @api
  */
 final class ScannerUnavailable extends \RuntimeException
 {

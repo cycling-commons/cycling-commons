@@ -19,58 +19,24 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 /**
- * Seeds a small set of hand-authored "hero" pins (famous climbs, a showcase
- * gîte, …) as real `source = manual` item rows, so they get an id and can be
- * edited and moderated like any other row.
- *
- * Every row lands as `state = unverified` (never `verified`) - a seeded pin
- * is treated exactly like a fresh rider contribution; "verified" is only
- * ever earned through the real voting funnel.
- *
- * Idempotent: upserts by the same (source, source_ref, letter) key the
- * importer uses, with source_ref = `manual:<stable-slug>` - safe to re-run.
- * A row that carries an approved edit keeps its DB content ({@see ItemUpsert}),
- * unless its ref is named in `--overwrite-ref` - the owner-authorised escape
- * hatch for when a corrected seed should beat the edit pinning the row.
- *
- * Collision-safe: before inserting/upserting a pin, skips it if a non-manual
- * item already exists with the same (name, letter) - i.e. never seeds a
- * manual duplicate of a place the OSM/pivot/… harvest already imported.
- * Skipped pins are reported on stdout.
- *
- * Deliberately not persisted: derived/display-only values such as the
- * literal "Length" record row, the pre-baked `record`/`attribution` blobs
- * (already decomposed into discrete registry fields), free-text "links",
- * and the form-only "anything to correct?" intake field.
+ * Seed hand-authored hero pins as `source=manual`. Always unverified. Collision-safe against harvested (name, letter).
  *
  * @see docs/specs/catalog-data-model.md §5
  *
- * @api Console entry point (dev/ops seeding tool, run once per environment).
+ * @api
  */
 #[AsCommand(name: 'app:catalog:seed-manual', description: 'Seed the hand-authored demo pins (map.js CATALOG) as real manual item rows')]
 final class SeedManualCatalogCommand extends Command
 {
     /**
-     * Where a pin sits when it does not say. ISO 3166-2 for Liège: the original
-     * pins are all in the Amblève/Hautes-Fagnes/Spa-Stavelot area, so they were
-     * written before a pin could be anywhere else.
+     * ISO 3166-2 default for pins that omit `cc`/`sub`. A pin outside Belgium must set both.
      *
-     * A pin outside Belgium MUST carry its own `cc` and `sub` — an item stamped
-     * with the wrong country is a moderation-jurisdiction hole exactly like an
-     * unstamped region (map-and-search.md §4.5 risk 1). `region_id` is not
-     * affected either way: recomputeMembership() derives it from the geometry.
+     * @see docs/specs/map-and-search.md §4.5
      */
     private const string DEFAULT_COUNTRY = 'BE';
     private const string DEFAULT_SUBDIVISION_CODE = 'BE-WLG';
 
     /**
-     * The transcribed pins. Each entry: letter, name (-> item.name column),
-     * lat/lng (Point geometry), ref (-> source_ref suffix, stable across
-     * runs) and attributes (registry-validated per {@see AttributeVocabulary}).
-     *
-     * `cc` and `sub` are optional and default to DEFAULT_COUNTRY /
-     * DEFAULT_SUBDIVISION_CODE; a pin outside Belgium must set both.
-     *
      * @return list<array{letter: string, name: string, lat: float, lng: float, ref: string, cc?: string, sub?: string, attributes: array<string, mixed>}>
      */
     private static function pins(): array
@@ -154,59 +120,11 @@ final class SeedManualCatalogCommand extends Command
                     'effort' => 'Steady',
                     'famousFor' => "Wallonia's longest climb — RAVeL greenway drag",
                     'approach' => 'Coo / Trois-Ponts up the RAVeL greenway to the Hockai plateau',
-                    /* The line is OSM's own geometry, at full node resolution
-                       (549 points over 17.15 km): every rideable way within a
-                       300 m corridor of the old hand-trace, Dijkstra from foot
-                       to top with non-greenway surfaces penalised 3× so the
-                       path stays on the RAVeL wherever it exists. The old
-                       59-point trace (~290 m spacing) chorded across the bends
-                       — visibly wrong at Pont du Petit Spay (owner-reported
-                       2026-08-09) — the same failure the Swiss passes had
-                       before they were stored at full router resolution. A
-                       router could not redraw THIS one: the climb runs up a
-                       greenway a car profile refuses, which is why it was
-                       hand-traced in the first place. No typed numbers: grad,
-                       length, gain and the averages are measured off this line
-                       by `app:climbs:recompute --write` (climb-elevation.md §7). */
+                    /* OSM line at full node resolution. No typed numbers — docs/specs/climb-elevation.md §7. */
                     'route' => [[50.376015, 5.876322], [50.376142, 5.876384], [50.376171, 5.876282], [50.37623, 5.876164], [50.37616, 5.876046], [50.376115, 5.875941], [50.376106, 5.875758], [50.376077, 5.875636], [50.375989, 5.875426], [50.375942, 5.875328], [50.375843, 5.875176], [50.375729, 5.875019], [50.375663, 5.874928], [50.375599, 5.874836], [50.375538, 5.87475], [50.375529, 5.874702], [50.375556, 5.8747], [50.375584, 5.874724], [50.375606, 5.874745], [50.375659, 5.874802], [50.375726, 5.874873], [50.375813, 5.87496], [50.376066, 5.875269], [50.376188, 5.87544], [50.376258, 5.875558], [50.376381, 5.875811], [50.376415, 5.875874], [50.376427, 5.87589], [50.37645, 5.875912], [50.376474, 5.875929], [50.376488, 5.875989], [50.376517, 5.876117], [50.376616, 5.876622], [50.376719, 5.877201], [50.376775, 5.877618], [50.376835, 5.878037], [50.376953, 5.878942], [50.377017, 5.879361], [50.377157, 5.88032], [50.377249, 5.880772], [50.377463, 5.881525], [50.377716, 5.882217], [50.378526, 5.884116], [50.378697, 5.884655], [50.378866, 5.88527], [50.379016, 5.886071], [50.379115, 5.886894], [50.379144, 5.887817], [50.379095, 5.889001], [50.379025, 5.889922], [50.378955, 5.890781], [50.378925, 5.891492], [50.378935, 5.892123], [50.378995, 5.892982], [50.379132, 5.893732], [50.379325, 5.894563], [50.379565, 5.895382], [50.379857, 5.896005], [50.380153, 5.896584], [50.380417, 5.896964], [50.380682, 5.897321], [50.381267, 5.897882], [50.381537, 5.898111], [50.381773, 5.89828], [50.382073, 5.898472], [50.382573, 5.898756], [50.382983, 5.899018], [50.383182, 5.899158], [50.383375, 5.899309], [50.383583, 5.899491], [50.383772, 5.899676], [50.383945, 5.899871], [50.384113, 5.900079], [50.384287, 5.900322], [50.384441, 5.900556], [50.384608, 5.900843], [50.384768, 5.901126], [50.384897, 5.901399], [50.384964, 5.901545], [50.385019, 5.901677], [50.385117, 5.901923], [50.385205, 5.902162], [50.385299, 5.902438], [50.385417, 5.902856], [50.385517, 5.903263], [50.385602, 5.903698], [50.385666, 5.904103], [50.385719, 5.904587], [50.385749, 5.905032], [50.385758, 5.905413], [50.385756, 5.905858], [50.385745, 5.90634], [50.385675, 5.909264], [50.385638, 5.910796], [50.38559, 5.912742], [50.385576, 5.91342], [50.385563, 5.913965], [50.385548, 5.914519], [50.385545, 5.914771], [50.385548, 5.915034], [50.385563, 5.915448], [50.385587, 5.915742], [50.385621, 5.91604], [50.385667, 5.916414], [50.385723, 5.916775], [50.385769, 5.917022], [50.38582, 5.917268], [50.385935, 5.917726], [50.385997, 5.917949], [50.386063, 5.91816], [50.386172, 5.918476], [50.386287, 5.918786], [50.386392, 5.919041], [50.386501, 5.919293], [50.386642, 5.919568], [50.386786, 5.919837], [50.386926, 5.920078], [50.38707, 5.920308], [50.387209, 5.920499], [50.387349, 5.920685], [50.387421, 5.920775], [50.387581, 5.920971], [50.388004, 5.921415], [50.388222, 5.921615], [50.388478, 5.921788], [50.388733, 5.921951], [50.38897, 5.922084], [50.390344, 5.922842], [50.391044, 5.923237], [50.391537, 5.923512], [50.39207, 5.923814], [50.392247, 5.923918], [50.393438, 5.924586], [50.395007, 5.925464], [50.39541, 5.9257], [50.395622, 5.925843], [50.395893, 5.926064], [50.396161, 5.926314], [50.396461, 5.926634], [50.39679, 5.927039], [50.397025, 5.9274], [50.397167, 5.927627], [50.397301, 5.927858], [50.397427, 5.928094], [50.397545, 5.928334], [50.397625, 5.928515], [50.397699, 5.928705], [50.39779, 5.92894], [50.397876, 5.929186], [50.397948, 5.929386], [50.398009, 5.929494], [50.398077, 5.92962], [50.398125, 5.92973], [50.39825, 5.930037], [50.398385, 5.930374], [50.3989, 5.931609], [50.399235, 5.932384], [50.399294, 5.932484], [50.399322, 5.932555], [50.399347, 5.932626], [50.399388, 5.932743], [50.399444, 5.9329], [50.399475, 5.932984], [50.399485, 5.933015], [50.39951, 5.933054], [50.399539, 5.933093], [50.399557, 5.933125], [50.399571, 5.933156], [50.399593, 5.933237], [50.399618, 5.933326], [50.399659, 5.933452], [50.399743, 5.93367], [50.399843, 5.933903], [50.39994, 5.934128], [50.400036, 5.934324], [50.400138, 5.934517], [50.400263, 5.934729], [50.400398, 5.934946], [50.400544, 5.935152], [50.400616, 5.935249], [50.400693, 5.935345], [50.400855, 5.935541], [50.400964, 5.935664], [50.401073, 5.935778], [50.401286, 5.935978], [50.401399, 5.936081], [50.401519, 5.936179], [50.401761, 5.936374], [50.401994, 5.936577], [50.402192, 5.936733], [50.402327, 5.936838], [50.402478, 5.936954], [50.40258, 5.937032], [50.402788, 5.9372], [50.402997, 5.937365], [50.403205, 5.937539], [50.403421, 5.937726], [50.403619, 5.937916], [50.403802, 5.938119], [50.40397, 5.93832], [50.404124, 5.938511], [50.404285, 5.938741], [50.404444, 5.938985], [50.404594, 5.939234], [50.404742, 5.939501], [50.404894, 5.939807], [50.405031, 5.940144], [50.405251, 5.9407], [50.405476, 5.941256], [50.405608, 5.941585], [50.405723, 5.941871], [50.405848, 5.942193], [50.40598, 5.942515], [50.406147, 5.942922], [50.406316, 5.943321], [50.406336, 5.943366], [50.406352, 5.943404], [50.406364, 5.943435], [50.406387, 5.943498], [50.406472, 5.943712], [50.406585, 5.943946], [50.406737, 5.944252], [50.406926, 5.944574], [50.407079, 5.944819], [50.407251, 5.945044], [50.407431, 5.945271], [50.407621, 5.945486], [50.407782, 5.945637], [50.408025, 5.945845], [50.408162, 5.945957], [50.408508, 5.946202], [50.40875, 5.946329], [50.408973, 5.946428], [50.409194, 5.946515], [50.409451, 5.946591], [50.409714, 5.946638], [50.409871, 5.94666], [50.41003, 5.946671], [50.410299, 5.946673], [50.410606, 5.946652], [50.411816, 5.946562], [50.412392, 5.946523], [50.412965, 5.946485], [50.413806, 5.946412], [50.414117, 5.946383], [50.414246, 5.946365], [50.414554, 5.94634], [50.416225, 5.946214], [50.416371, 5.946203], [50.417053, 5.946158], [50.417733, 5.946118], [50.419097, 5.946009], [50.420085, 5.945941], [50.420828, 5.945859], [50.421249, 5.945839], [50.422741, 5.945727], [50.423079, 5.945696], [50.423266, 5.945681], [50.423479, 5.945671], [50.423935, 5.9457], [50.424033, 5.945708], [50.424267, 5.94575], [50.424465, 5.945811], [50.424634, 5.945872], [50.42477, 5.945925], [50.424952, 5.946016], [50.425108, 5.94611], [50.425429, 5.94631], [50.425469, 5.946343], [50.425718, 5.946545], [50.426044, 5.946833], [50.426102, 5.946896], [50.42617, 5.946976], [50.426346, 5.947211], [50.426501, 5.94742], [50.426662, 5.947641], [50.426871, 5.947986], [50.427072, 5.948335], [50.427479, 5.949048], [50.42772, 5.949456], [50.427966, 5.94989], [50.428206, 5.950313], [50.428476, 5.950767], [50.428822, 5.951381], [50.429656, 5.952831], [50.429805, 5.953074], [50.429895, 5.953229], [50.429997, 5.953404], [50.430262, 5.953831], [50.430529, 5.954235], [50.430704, 5.954486], [50.430799, 5.954621], [50.431691, 5.955807], [50.431999, 5.95623], [50.432133, 5.956405], [50.432183, 5.956476], [50.432473, 5.956849], [50.433184, 5.957799], [50.433346, 5.95802], [50.433511, 5.958255], [50.433653, 5.958481], [50.433787, 5.958703], [50.434039, 5.959145], [50.434229, 5.959501], [50.434677, 5.960359], [50.434872, 5.960748], [50.435321, 5.961608], [50.435657, 5.962286], [50.435798, 5.962551], [50.435847, 5.962645], [50.435872, 5.962694], [50.435908, 5.962765], [50.43597, 5.962905], [50.43604, 5.963037], [50.436205, 5.963307], [50.436399, 5.963595], [50.436574, 5.963824], [50.436828, 5.964133], [50.437095, 5.964411], [50.43736, 5.964642], [50.43758, 5.964813], [50.437718, 5.96491], [50.437865, 5.965], [50.43817, 5.965152], [50.438359, 5.965231], [50.438548, 5.965291], [50.438717, 5.965339], [50.438888, 5.965381], [50.439222, 5.965428], [50.439546, 5.965425], [50.439896, 5.965383], [50.44011, 5.965345], [50.440307, 5.965286], [50.440399, 5.96526], [50.440491, 5.965225], [50.440677, 5.965141], [50.440846, 5.965057], [50.441021, 5.964956], [50.441378, 5.96473], [50.442183, 5.964183], [50.442541, 5.96394], [50.443188, 5.963491], [50.443804, 5.963087], [50.444612, 5.962495], [50.444853, 5.962303], [50.445123, 5.962069], [50.445402, 5.961789], [50.445584, 5.961593], [50.445764, 5.961381], [50.446007, 5.961084], [50.44625, 5.960787], [50.44683, 5.960069], [50.447255, 5.959525], [50.447494, 5.959251], [50.447974, 5.958779], [50.448331, 5.958474], [50.448625, 5.958246], [50.448917, 5.95804], [50.449326, 5.957813], [50.449523, 5.957704], [50.449713, 5.95762], [50.450073, 5.957488], [50.450407, 5.95737], [50.451039, 5.957249], [50.451602, 5.95717], [50.452166, 5.957111], [50.452284, 5.957115], [50.45234, 5.957124], [50.452417, 5.957128], [50.452707, 5.957039], [50.452903, 5.956943], [50.452929, 5.956915], [50.453065, 5.956613], [50.453124, 5.956589], [50.453186, 5.956607], [50.453212, 5.956618], [50.453251, 5.956633], [50.453249, 5.956664], [50.453249, 5.956736], [50.453266, 5.956816], [50.453303, 5.956896], [50.453351, 5.956945], [50.453425, 5.956965], [50.453515, 5.956975], [50.453623, 5.95698], [50.453799, 5.956996], [50.453802, 5.956994], [50.453834, 5.956974], [50.453857, 5.956966], [50.453967, 5.956931], [50.454108, 5.956899], [50.454248, 5.956875], [50.454536, 5.956829], [50.454793, 5.956781], [50.455052, 5.956742], [50.45528, 5.956714], [50.455516, 5.9567], [50.455771, 5.95668], [50.456027, 5.956663], [50.456573, 5.956645], [50.456813, 5.956646], [50.45705, 5.956632], [50.457211, 5.956618], [50.457374, 5.956601], [50.457698, 5.956561], [50.457735, 5.95656], [50.457789, 5.956556], [50.458321, 5.95652], [50.458584, 5.956514], [50.458847, 5.956529], [50.459303, 5.956584], [50.459801, 5.956669], [50.460286, 5.956829], [50.460687, 5.956967], [50.46104, 5.957129], [50.461338, 5.957289], [50.461643, 5.957474], [50.461891, 5.957633], [50.462123, 5.957793], [50.462315, 5.957943], [50.462562, 5.958139], [50.462809, 5.958338], [50.46305, 5.958558], [50.46335, 5.958869], [50.463586, 5.959114], [50.463697, 5.959237], [50.463804, 5.959367], [50.46405, 5.959663], [50.464257, 5.959943], [50.464542, 5.960349], [50.464817, 5.960775], [50.464835, 5.960804], [50.464844, 5.960818], [50.464855, 5.960839], [50.464883, 5.960885], [50.465118, 5.961285], [50.465368, 5.961747], [50.465725, 5.962455], [50.466, 5.962987], [50.466271, 5.963519], [50.466516, 5.963958], [50.466729, 5.964328], [50.466903, 5.964686], [50.467005, 5.964926], [50.467116, 5.96523], [50.46719, 5.965367], [50.467269, 5.965515], [50.467481, 5.965937], [50.467692, 5.966367], [50.468204, 5.967376], [50.468459, 5.96786], [50.468555, 5.968036], [50.468621, 5.968174], [50.46865, 5.968233], [50.468692, 5.968273], [50.468724, 5.968325], [50.46874, 5.968352], [50.468761, 5.968386], [50.46879, 5.968434], [50.468802, 5.968496], [50.468843, 5.968557], [50.468905, 5.968661], [50.4692, 5.96915], [50.469674, 5.969817], [50.470181, 5.970413], [50.470717, 5.970954], [50.471167, 5.971359], [50.471637, 5.971748], [50.471756, 5.971838], [50.47188, 5.971923], [50.472132, 5.972086], [50.472387, 5.972238], [50.472641, 5.972385], [50.473105, 5.972645], [50.473391, 5.972806], [50.473632, 5.972938], [50.473873, 5.973074], [50.474112, 5.973204], [50.474188, 5.973227], [50.474225, 5.973232], [50.474246, 5.97323], [50.474268, 5.973218], [50.474294, 5.973193], [50.474317, 5.973163], [50.474339, 5.973147], [50.47436, 5.973138], [50.474382, 5.973142], [50.474402, 5.97316], [50.474418, 5.973192], [50.474435, 5.973248], [50.474448, 5.973269], [50.474222, 5.973986], [50.47394, 5.974748], [50.473957, 5.974783], [50.473985, 5.974805], [50.474077, 5.974845], [50.474156, 5.974871], [50.474503, 5.974995], [50.474579, 5.975027], [50.474696, 5.975087], [50.474723, 5.975097], [50.474759, 5.975083], [50.474833, 5.974889], [50.475061, 5.974289], [50.475172, 5.974228], [50.475217, 5.974189], [50.475263, 5.974135], [50.475291, 5.974091], [50.475311, 5.97405], [50.475336, 5.974005], [50.475373, 5.973963], [50.47542, 5.973942], [50.475483, 5.973949], [50.475963, 5.974252], [50.47622, 5.974409], [50.47648, 5.97459], [50.476852, 5.974883], [50.477183, 5.975169], [50.477317, 5.97529], [50.477412, 5.975385], [50.477452, 5.975425], [50.47747, 5.975442], [50.47749, 5.975463], [50.477542, 5.975514], [50.477649, 5.975619], [50.477818, 5.975789], [50.478043, 5.97603], [50.478224, 5.976258], [50.478572, 5.976703], [50.478834, 5.977067], [50.479106, 5.977486], [50.479699, 5.978522], [50.479917, 5.978976], [50.480106, 5.979394], [50.480332, 5.979935], [50.480609, 5.980634], [50.481072, 5.981866], [50.481218, 5.982245], [50.48137, 5.98262], [50.481577, 5.983194], [50.481715, 5.98355], [50.48184, 5.983843], [50.481981, 5.984209], [50.482119, 5.984585], [50.482375, 5.985245], [50.482551, 5.985733], [50.482677, 5.986067], [50.482832, 5.986468], [50.482986, 5.986875]],
                 ],
             ],
-            // B · Climbs — Switzerland. Six passes, added 2026-08-06 once the
-            // Swiss regions were onboarded and the Europe elevation tiles were
-            // confirmed to cover them.
-            //
-            // NOT ONE NUMBER HERE IS TYPED. Each `route` is a real line from the
-            // routing engine between the foot and the pass, trimmed to end at
-            // its highest point (climb-elevation.md §4a); length, gain, average
-            // and steepest stretch are then measured from it by
-            // `app:climbs:recompute --write`. That is the whole point of §7: the
-            // Wallonia pins above shipped with hand-authored gradients that
-            // turned out to be wrong, and these must not repeat it.
-            //
-            // FULL ROUTER RESOLUTION, deliberately. These first shipped thinned
-            // to ~25 m spacing to fit ClimbGeometry's old 2000-point cap, and
-            // even-distance thinning is precisely the wrong simplification for a
-            // pass road: it drops the vertices that MAKE a hairpin, so the line
-            // chorded straight across the bends (owner-reported 2026-08-08, with
-            // a satellite screenshot). The cap is 8000 now and these are stored
-            // as the router drew them.
-            //
-            // Susten is the OWNER'S redraw, kept verbatim. It was corrected
-            // through the contribute wizard once the cap stopped rejecting it;
-            // re-deriving it here would silently throw that away, and this
-            // command upserts by (source, source_ref).
-            //
-            // Deliberately absent: `sq`, `tr`, `effort`, `waterOnClimb` and a
-            // photo. Nobody has ridden these for us, so their surface quality,
-            // traffic and water are unverified — and an unverified attribute is
-            // omitted, not guessed. Riders fill them in.
-            //
-            // The Gotthard is seeded on the modern Strada Nuova, which is what
-            // the router returns from Airolo, and is NOT described as the
-            // cobbled Tremola: the Tremola runs parallel 500-800 m away, forcing
-            // the line onto it needs coordinates nobody here has verified, and
-            // claiming cobbles the stored line never touches is the same error
-            // class as a typed gradient.
+            // B · Climbs — Switzerland. No typed numbers (docs/specs/climb-elevation.md §7). Full router resolution. Susten is the owner's redraw — do not re-derive. Gotthard is Strada Nuova, not the Tremola.
             [
                 'letter' => 'B', 'name' => 'Furka Pass', 'lat' => 46.57234, 'lng' => 8.41466,
                 'ref' => 'manual:furka-pass', 'cc' => 'CH', 'sub' => 'CH-VS',
@@ -351,12 +269,7 @@ final class SeedManualCatalogCommand extends Command
                     'photo' => self::wc('Gîte rural de Puyolle.JPG', 'Darreenvt', 'Darreenvt', 'CC BY-SA 4.0'),
                 ],
             ],
-            // F · Hazards & conditions. Served end-to-end since
-            // map-and-search.md §4.5 Task A (CatalogProvider 'F' key ->
-            // window.CC_HAZARDS -> map.js CATALOG features). This row is the
-            // retired map.js demo hazard, re-homed as real region-stamped data:
-            // recomputeMembership stamps its region_id (Hautes Fagnes = Wallonia)
-            // so it flows through the scope gate like every other letter.
+            // F · Hazards & conditions
             [
                 'letter' => 'F', 'name' => 'Exposed crosswind · Hautes Fagnes', 'lat' => 50.5160, 'lng' => 6.0700,
                 'ref' => 'manual:crosswind-hautes-fagnes',
@@ -541,15 +454,10 @@ final class SeedManualCatalogCommand extends Command
         }
         $io->success(sprintf('Seeded %d manual demo pin(s) across %d letter(s).', array_sum($counts), \count($counts)));
 
-        /* Measured values survive a re-seed only while the seeded line is
-           unchanged (ItemUpsert::MEASURED_KEYS); a redrawn climb drops them,
-           correctly - they were measured off a line that no longer exists.
-           Saying so here is what keeps that drop from being silent: two
-           earlier re-seeds left the Swiss passes unmeasured for days because
-           nothing said the numbers were gone. */
+        /* docs/specs/climb-elevation.md §4 — measured keys survive a re-seed only while `route` is unchanged. */
         /** @var list<string> $unmeasured */
         $unmeasured = $this->db->fetchFirstColumn(
-            // jsonb_exists, not the ? operator: DBAL reads ? as a placeholder.
+            // jsonb_exists, not `?`: DBAL treats `?` as a placeholder.
             "SELECT name FROM item WHERE source = 'manual' AND letter = 'B' AND NOT jsonb_exists(attributes, 'lineGrad') ORDER BY name",
         );
         if ([] !== $unmeasured) {
@@ -563,14 +471,7 @@ final class SeedManualCatalogCommand extends Command
         return Command::SUCCESS;
     }
 
-    /**
-     * Guards against re-seeding a manual duplicate of a place the OSM/pivot/…
-     * harvest already imported under a different source. Matches on (name,
-     * letter): the same real-world place, re-seeded under `source = manual`,
-     * would otherwise double/triple-render on the map. Only non-manual rows
-     * count as a collision - re-running this command must still update the
-     * rows it seeded before, not duplicate them.
-     */
+    /** True when a harvested item already occupies this (name, letter). */
     private function duplicatesNonManualItem(string $name, string $letter): bool
     {
         $match = $this->db->fetchOne(
@@ -598,13 +499,7 @@ final class SeedManualCatalogCommand extends Command
     /** Only touches rows this command owns - never widens to the full item/recommended_route tables. */
     private function recomputeMembership(): void
     {
-        // Smallest-area-wins on overlap — the SAME deterministic rule the three
-        // other membership writers use (ImportCatalogCommand::recomputeMembership,
-        // RegionResolver, pipeline/coverage/load.py), so a manual pin can never
-        // land in a different region than an identically-located imported item
-        // (map-and-search.md §4.5, catalog-data-model.md §6). Scoped to
-        // source='manual', contained pins only — a pin outside every region
-        // keeps whatever it had, unchanged from before.
+        // docs/specs/catalog-data-model.md §6 — smallest-area-wins; scoped to source=manual.
         $this->db->executeStatement(
             "UPDATE item SET region_id = m.region_id FROM (
                 SELECT DISTINCT ON (i.id) i.id AS item_id, r.id AS region_id
@@ -616,10 +511,7 @@ final class SeedManualCatalogCommand extends Command
     }
 
     /**
-     * Wikimedia Commons photo helper - PHP port of map.js's `wc()`. Mirrors
-     * JS `encodeURIComponent`'s unreserved set (adds back ! ' ( ) * that
-     * `rawurlencode` would otherwise percent-escape) so the URL matches
-     * exactly what the client would have produced for the same filename.
+     * Wikimedia Commons photo URLs matching map.js `wc()`.
      *
      * @return array{sm: string, lg: string, credit: string, creditUrl: string, license: string, source: string}
      */

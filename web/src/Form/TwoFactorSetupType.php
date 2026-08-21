@@ -12,9 +12,9 @@ use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\Validator\Constraints\Regex;
 
 /**
- * One-time code entry used to confirm a freshly scanned TOTP secret during /2fa/setup.
- * The code itself is verified against the pending secret by the controller (scheb's
- * TotpAuthenticatorInterface::checkCode), not by this form. The constraints only guard shape.
+ * TOTP setup: 6-digit shape only; the controller checks the code against the pending secret.
+ *
+ * @see docs/specs/account-and-auth.md §4
  */
 final class TwoFactorSetupType extends AbstractType
 {

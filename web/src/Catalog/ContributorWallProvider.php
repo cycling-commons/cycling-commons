@@ -9,42 +9,18 @@ namespace App\Catalog;
 use Doctrine\DBAL\Connection;
 
 /**
- * Read side of the DB-driven /contributors wall. Replaces the demo's sample
- * handles with real riders under two hard rules:
+ * /contributors wall: opt-in (`public_profile`) only, alphabetical never ranked. Must not become a surveillance surface.
  *
- * 1. **Opt-in only.** A rider appears solely when their `public_profile`
- *    toggle is on — the same switch that gates /riders/{uuid}. Everyone
- *    else contributes uncredited by design; the wall must never become a
- *    surveillance surface.
- * 2. **Non-ranked.** Alphabetical by display name, exactly as the page
- *    copy promises. Counts are shown per row but never ordered by.
+ * @see docs/specs/account-and-auth.md §7
  *
- * Facts = approved submissions; routes = proposals in publicly-served
- * states. Both are already public per-rider on the profile page, so the
- * wall reveals nothing new — it only aggregates what opt-in riders show.
- *
- * Per-request raw DBAL, no cache — the RegionDirectoryProvider posture.
- *
- * @api Consumed by PageController::contributors.
+ * @api
  */
 final class ContributorWallProvider
 {
-    /**
-     * Riders per page. Larger than a moderation desk's 25 because a wall row
-     * is one line, and a reader scanning for a name would rather scroll than
-     * click.
-     */
+    /** Riders per page. */
     public const int PER_PAGE = 60;
 
-    /**
-     * The FROM/WHERE the wall and its count share, so a pager can never
-     * disagree with the page it is paging. Both filters are applied here and
-     * therefore span the whole wall, not the page in front of the reader —
-     * which is the reason the name search moved to the server when the wall
-     * became paged: a client-side filter over one page of a growing list
-     * silently answers "no such rider" about riders that are simply on
-     * page 4.
-     */
+    /** FROM/WHERE shared by the wall and its count so the pager cannot disagree. */
     private const string WALL_FROM = 'FROM users u
                LEFT JOIN world_country wc ON wc.id = u.country_id
                LEFT JOIN (SELECT user_id, COUNT(*) AS n FROM submission
@@ -70,9 +46,7 @@ final class ContributorWallProvider
         $params = [];
 
         if (null !== $q && '' !== $q) {
-            // ILIKE, not `=`: the box is a "find my name" search, and a rider
-            // types the part they remember. The wildcards are escaped so a
-            // name containing % or _ searches for itself.
+            // ILIKE, wildcards escaped so `%`/`_` in a name search for themselves.
             $sql .= ' AND u.display_name ILIKE :q';
             $params['q'] = '%'.addcslashes($q, '%_\\').'%';
         }
@@ -131,10 +105,7 @@ final class ContributorWallProvider
     }
 
     /**
-     * The countries with at least one visible rider behind them, for the
-     * filter's options. Built from the UNFILTERED wall — narrowing to one
-     * country must not leave the select holding only that country, the same
-     * rule the Regions desk follows.
+     * Filter options from the unfiltered wall — narrowing must not shrink the select to one country.
      *
      * @return list<string>
      */
@@ -152,8 +123,7 @@ final class ContributorWallProvider
     }
 
     /**
-     * Site-wide totals — these count ALL contributors, opt-in or not:
-     * an aggregate number credits the crowd without identifying anyone.
+     * Site-wide totals count everyone, opt-in or not — an aggregate that identifies nobody.
      *
      * @return array{facts:int, contributors:int, routes:int}
      */

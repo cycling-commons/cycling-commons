@@ -7,23 +7,11 @@ declare(strict_types=1);
 namespace App\Catalog;
 
 /**
- * The operational-region rule:
- * a region row is OPERATIONAL iff its admin_level equals the deepest onboarded
- * level for its country. The level-2 country outlines the 2+4 playbook emits
- * are infrastructure — submission anchoring and the country polygon — and must
- * never surface as scope-rail chips, moderation atoms or page entries. Derived,
- * never stored: a country that later onboards a deeper level demotes the old
- * one the day the rows land.
+ * A region is operational iff its admin_level equals the deepest onboarded level for its country. Level-2 country outlines must never surface as scope chips. Derived, never stored. Membership writers (RegionResolver, import recompute) stay unfiltered.
  *
- * IS NOT DISTINCT FROM keeps single-row countries with NULL admin_level
- * operational (legacy fixtures; MAX over only-NULL is NULL).
+ * @see docs/specs/catalog-data-model.md §2.4
  *
- * Exemptions (same spec, §4): RegionResolver and the importer's membership
- * recompute stay UNFILTERED — containment with the smallest-area tie-break is
- * how evidence anchors in not-yet-subdivided countries.
- *
- * @api Consumed by RegionRegistryProvider, RegionDirectoryProvider,
- *      JoinCountryController, ModerateRegionsController.
+ * @api
  */
 final class OperationalRegions
 {

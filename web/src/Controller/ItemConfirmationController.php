@@ -22,16 +22,11 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 
 /**
- * The rider confirmation loop on a non-votable item's map drawer: drinking-water
- * potability, or a plain existence confirmation for a utility (services,
- * hazards, shelter, getting-there). Unlocalized `/items/{id}/…` JSON API
- * (matches the route community + GPX endpoints).
+ * Item confirmation loop: public tallies; write is 401 not 302.
  *
- * Tallies are PUBLIC — the snapshot GET works for anonymous viewers (counts
- * only, no personal stance/token). Recording requires a logged-in ROLE_USER
- * (a clean 401, not a login redirect) + stateless CSRF.
+ * @see docs/specs/moderation-and-contribution.md §10.2
  *
- * @api Instantiated by Symfony's router; called by assets/map/map.js.
+ * @api
  */
 final class ItemConfirmationController extends AbstractController
 {
@@ -44,12 +39,9 @@ final class ItemConfirmationController extends AbstractController
     }
 
     /**
-     * NEVER make this response publicly cacheable. It sits in security.yaml's
-     * PUBLIC_ACCESS cluster beside endpoints that are there FOR cacheability,
-     * but unlike them it is user-varying: `mine` is the caller's own stance and
-     * the payload carries a CSRF token. Its (default) `private` Cache-Control
-     * is load-bearing — setPublic() here would hand one rider's stance and
-     * token to everyone behind a shared cache (frontend review 2026-08-09 #3).
+     * Never public-cache: payload is user-varying (`mine` + CSRF token).
+     *
+     * @see docs/specs/account-and-auth.md §5
      */
     #[Route('/items/{id}/confirmations', name: 'item_confirmations', requirements: ['id' => '\d+'], methods: ['GET'])]
     public function snapshot(int $id, CsrfTokenManagerInterface $csrf): JsonResponse
@@ -59,7 +51,6 @@ final class ItemConfirmationController extends AbstractController
         $user = $user instanceof User ? $user : null;
 
         $payload = $this->payload($item, $user);
-        // A token is only useful to someone who can actually POST.
         if (null !== $user) {
             $payload['token'] = $csrf->getToken(self::CSRF_TOKEN_ID)->getValue();
         }
@@ -85,15 +76,9 @@ final class ItemConfirmationController extends AbstractController
         try {
             $this->confirmations->record($item, $user, $stance);
         } catch (\InvalidArgumentException) {
-            // Stance not offered for this item's type.
             return $this->json(['error' => 'invalid_stance'], 422);
         }
 
-        /* Did this press verify the item? A curator's confirmation does
-           (ItemConfirmationService), and the map has to be told: the catalog
-           payload is fetched once at load, so the pin kept its "not confirmed
-           yet" mark until a reload and the curator saw their own decision fail
-           to happen (owner-reported 2026-08-12). */
         return $this->json([
             ...$this->payload($item, $user),
             'ok' => true,
@@ -102,20 +87,12 @@ final class ItemConfirmationController extends AbstractController
     }
 
     /**
-     * The public snapshot plus the stance kind ('potability' for water,
-     * 'existence' for other utilities) — the shape both endpoints return.
-     *
      * @return array{stances: array<string, int>, total: int, mine: ?string, mineSource: ?string, stanceKind: string}
      */
     private function payload(Item $item, ?User $user): array
     {
         return [
             ...$this->confirmations->snapshot($item, $user),
-            // 'accuracy' for a surface segment: the question is not "is it
-            // still here" (a road rarely leaves) but "is it as described",
-            // and the panel words itself accordingly (community.js). A "no"
-            // is a plain stance — what CHANGED belongs in the edit form, the
-            // one moderation pipeline (owner 2026-08-13: no comment channel).
             'stanceKind' => match (ItemType::fromParam($item->getLetter())) {
                 ItemType::WaterFood => 'potability',
                 ItemType::RoadSurface => 'accuracy',
@@ -124,7 +101,7 @@ final class ItemConfirmationController extends AbstractController
         ];
     }
 
-    /** A served, confirmable item (non-votable utility); 404 otherwise. */
+    /** Served confirmable item; 404 otherwise. */
     private function confirmableItem(int $id): Item
     {
         $item = $this->em->find(Item::class, $id);
@@ -138,7 +115,7 @@ final class ItemConfirmationController extends AbstractController
         return $item;
     }
 
-    /** A fully-authenticated ROLE_USER, or a clean 401 (never a login redirect). */
+    /** ROLE_USER, or a clean 401 (never a login redirect). */
     private function requireUser(): User
     {
         $user = $this->getUser();

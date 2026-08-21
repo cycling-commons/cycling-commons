@@ -12,30 +12,19 @@ use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 
 /**
- * Sets the Content-Security-Policy header on every main HTML response.
- * Script execution is locked to same-origin, nonced inline blocks, and
- * vendored same-origin scripts, so a stored-XSS payload that slips past output
- * escaping still does not execute. The directive table and the rationale for
- * each source list live in the linked spec, not here.
+ * Content-Security-Policy on main HTML responses.
  *
  * @see docs/specs/security-architecture.md §2
  *
- * @api Auto-registered event subscriber.
+ * @api
  */
 final class CspSubscriber implements EventSubscriberInterface
 {
     public function __construct(
         private readonly CspNonce $nonce,
-        // Browser-facing origin of the coverage PMTiles artifact (env
-        // COVERAGE_CSP_HOST). A separate param, not a parse of the manifest
-        // URL at response time: the manifest is fetched server-side and can
-        // live on a different host than the tile bytes the browser reads
-        // (dev: minio:9000 vs localhost:9100). Empty string means no coverage
-        // host is added to the policy.
+        // env COVERAGE_CSP_HOST; empty omits it (docs/specs/coverage-provider.md §4).
         private readonly string $coverageCspHost = '',
-        // Browser-facing origin of the rider-photo proxy (env MEDIA_CSP_HOST).
-        // Env-backed and never admin-editable: a writable CSP host would be an
-        // XSS-relaxation surface (docs/specs/photo-uploads.md §2).
+        // env MEDIA_CSP_HOST; never admin-editable (docs/specs/photo-uploads.md §2).
         private readonly string $mediaCspHost = '',
     ) {
     }
@@ -46,7 +35,7 @@ final class CspSubscriber implements EventSubscriberInterface
             return;
         }
         $response = $event->getResponse();
-        // Only documents need a policy. JSON/GPX/asset responses skip it.
+        // JSON/GPX/assets skip CSP; nosniff on those is SecurityHeadersSubscriber.
         $type = $response->headers->get('Content-Type', '');
         if ('' !== $type && !str_contains($type, 'text/html')) {
             return;
@@ -54,13 +43,7 @@ final class CspSubscriber implements EventSubscriberInterface
 
         $nonce = $this->nonce->value();
 
-        // The Mapillary street-level viewer (mapillary-js) compiles MapLibre-style
-        // filter expressions with new Function() (its FilterCreator) when opened,
-        // which requires 'unsafe-eval'. Scope that relaxation to the /map page
-        // only; every other response keeps the strict, eval-free policy.
-        // (MapLibre GL itself is CSP-safe; only mapillary-js needs this.)
-        // Full rationale and residual-risk assessment:
-        // docs/specs/security-architecture.md §2.4.
+        // mapillary-js needs 'unsafe-eval' only on /map (docs/specs/security-architecture.md §2.4).
         $request = $event->getRequest();
         $isMap = 'map' === $request->attributes->get('_route')
             || str_ends_with($request->getPathInfo(), '/map');
@@ -70,9 +53,7 @@ final class CspSubscriber implements EventSubscriberInterface
         $connectSrc = [
             "'self'",
             'https://tiles.openfreemap.org',
-            // Esri World Imagery, keyed since 2026-08-09. The old keyless
-            // server.arcgisonline.com host is gone with it — see
-            // docs/specs/Dated/2026-08-09-esri-imagery-terms.md.
+            // Esri World Imagery (docs/specs/map-and-search.md §2).
             'https://ibasemaps-api.arcgis.com',
             'https://*.mapillary.com',
             'https://*.fbcdn.net',
@@ -80,8 +61,7 @@ final class CspSubscriber implements EventSubscriberInterface
             'https://analytics.bikecoders.life',
         ];
         if ('' !== $this->coverageCspHost) {
-            // Coverage PMTiles byte-range reads straight off the bucket/CDN
-            // (docs/specs/coverage-provider.md §4).
+            // Coverage PMTiles (docs/specs/coverage-provider.md §4).
             $connectSrc[] = $this->coverageCspHost;
         }
 
@@ -95,8 +75,7 @@ final class CspSubscriber implements EventSubscriberInterface
             'https://*.fbcdn.net',
         ];
         if ('' !== $this->mediaCspHost) {
-            // Rider photos are fetched from the media proxy host
-            // (docs/specs/photo-uploads.md §2).
+            // Rider-photo proxy (docs/specs/photo-uploads.md §2).
             $imgSrc[] = $this->mediaCspHost;
         }
 

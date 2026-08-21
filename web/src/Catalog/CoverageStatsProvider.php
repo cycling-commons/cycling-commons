@@ -10,21 +10,11 @@ use Doctrine\DBAL\Connection;
 use Symfony\Component\Intl\Countries;
 
 /**
- * Read side of the DB-driven /coverage page: live KPIs, per-country volumes,
- * and the thinnest catalog categories. Replaces the demo's hardcoded numbers
- * — every figure here is a real COUNT, and countries appear only once they
- * are operational (same predicate discipline as RegionDirectoryProvider:
- * geom present, country code set, L2 infrastructure rows excluded).
+ * Live /coverage page KPIs. Reads of `coverage_poi` are guarded by to_regclass() and degrade to zero.
  *
- * coverage_poi is pipeline-owned DDL (coverage-provider.md §2) and absent on
- * a fresh contributor stack until the harvest has run, so every read of it is
- * guarded by to_regclass() and degrades to zero rather than 500ing the page.
+ * @see docs/specs/coverage-provider.md §9.1
  *
- * Per-request raw DBAL, deliberately no cache — the same posture as
- * RegionDirectoryProvider;
- * the biggest COUNT (coverage_poi, ~430k rows) is still milliseconds.
- *
- * @api Consumed by PageController::coverage.
+ * @api
  */
 final class CoverageStatsProvider
 {
@@ -56,23 +46,7 @@ final class CoverageStatsProvider
     }
 
     /**
-     * Operational countries with their real volumes, biggest reference base
-     * first. `share` pre-scales the table's bar as DENSITY (POIs per km² of
-     * onboarded area, percent of the densest country) — an absolute-volume
-     * bar would dwarf every small country under the biggest one forever
-     * (owner correction 2026-07-30: Luxembourg vs Germany), while density is
-     * size-fair. The printed number stays the absolute count.
-     *
-     * `poisPerKm2` is that same density as a NUMBER, because a bar without one
-     * is a shape: "Germany is longer than Luxembourg" was all this column could
-     * say, and the figure it was scaled by went unprinted.
-     *
-     * `sources` breaks the catalog count down by where each row came from,
-     * bucketed from ItemSource (osm · partner · riders · derived). This is the
-     * column with a real mix — the reference layer is OSM top to bottom, while
-     * the catalog already holds imported partner data (Wallonia PIVOT stays and
-     * drinking-water taps) beside rider contributions and pipeline-derived
-     * rows, and a bare total hides all of it.
+     * Operational countries. `share` is density (POIs/km² vs densest), not absolute volume.
      *
      * @return list<array{code:string, name:string, flag:string, regions:int,
      *                    areaKm2:float, coveragePois:int, poisPerKm2:float,
@@ -141,10 +115,9 @@ final class CoverageStatsProvider
     }
 
     /**
-     * The three catalog categories with the fewest publicly-served items —
-     * the honest version of the demo's invented "biggest gaps" cards.
-     * Routes (K) are excluded: their volume is governed by the per-region
-     * cap (route-domain.md §5), not by coverage.
+     * Thinnest catalog categories. K is excluded — volume is the per-region cap, not coverage.
+     *
+     * @see docs/specs/route-domain.md §5.1
      *
      * @return list<array{labelKey:string, count:int}>
      */
@@ -170,19 +143,7 @@ final class CoverageStatsProvider
     }
 
     /**
-     * Catalog items per country, bucketed by provenance.
-     *
-     * The six ItemSource values are collapsed to four the page can say out
-     * loud: `osm` mirrors OpenStreetMap, `partner` is data imported from an
-     * open dataset somebody else maintains (PIVOT, Wikidata), `riders` is
-     * contributed here (`user`, and `manual` — which the enum already defines
-     * as a hand-added row treated like a contribution), `derived` is computed
-     * by the pipeline. Anything unrecognised falls into `derived` rather than
-     * vanishing, so a new source shows up as an unexplained number instead of
-     * silently shrinking the total.
-     *
-     * Buckets are emitted in a fixed order and zeroes are dropped, so a country
-     * with only OSM rows shows one word rather than four with three noughts.
+     * Items per country by provenance. Unrecognised sources fall into `derived` rather than vanishing.
      *
      * @return array<string, list<array{key:string, count:int}>>
      */
@@ -223,24 +184,15 @@ final class CoverageStatsProvider
     }
 
     /**
-     * POI counts per country, `[]` when the pipeline table does not exist
-     * yet. Rows with a NULL country (pre-normalization harvests) are ignored
-     * for the per-country table but absent from the KPI sum too — the page
-     * shows what is attributable, not a number that cannot be broken down.
+     * POI counts per country; `[]` when coverage_poi does not exist yet. NULL-country rows are ignored.
      *
-     * Not broken down by provenance, because this layer has exactly one: every
-     * row is OSM-derived, which is why `coverage_poi` carries `ref`,
-     * `osm_version` and `osm_ts` and no source column at all
-     * (coverage-provider.md §2). Partner datasets do not land here — they are
-     * imported as catalog `item` rows with their own source, which is where
-     * `itemSourcesByCountry()` finds them.
+     * @see docs/specs/coverage-provider.md §2
      *
      * @return array<string, int>
      */
     private function poisByCountry(): array
     {
-        // to_regclass returns the relation name, or SQL NULL when it does
-        // not exist — a null/false fetchOne() means "pipeline never ran".
+        // to_regclass: null/false fetchOne() means the pipeline never ran.
         $exists = $this->db->fetchOne("SELECT to_regclass('public.coverage_poi')");
         if (null === $exists || false === $exists) {
             return [];

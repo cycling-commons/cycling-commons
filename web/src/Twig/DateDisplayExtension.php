@@ -16,24 +16,9 @@ use Twig\TwigFilter;
 use Twig\TwigFunction;
 
 /**
- * Every human-readable date on the site, written the way the reader asked for
- * (docs/specs/account-and-auth.md §9).
+ * Dates in the reader's format (docs/specs/account-and-auth.md §9). `|date('c')` stays ISO for `<time>`.
  *
- * The point of routing all of them through one filter is that a preference is
- * only worth having if it is honoured everywhere: a settings dropdown that
- * fixes eight dates and misses the ninth is worse than no dropdown, because the
- * rider now believes the site listens.
- *
- * `|date('c')` stays exactly where it is. The machine-readable `datetime`
- * attribute of a `<time>` element is defined by HTML to be ISO 8601 and has
- * nothing to do with what a person wants to read — these filters format the
- * ELEMENT'S TEXT, never its attribute.
- *
- * Formatting goes through ICU rather than PHP's `date()` because month names
- * have to come out in the reader's language, and because ICU is what the two
- * locale-following options (Auto and Long) are defined in terms of.
- *
- * @api Auto-registered Twig extension.
+ * @api
  */
 final class DateDisplayExtension extends AbstractExtension
 {
@@ -57,15 +42,11 @@ final class DateDisplayExtension extends AbstractExtension
     public function getFunctions(): array
     {
         return [
-            // For the base template, which hands the same preference to the
-            // client so JS-rendered dates cannot disagree with server-rendered
-            // ones on the same page.
             new TwigFunction('cc_user_date_format', fn (): string => $this->preference()->value),
             new TwigFunction('cc_user_time_format', fn (): string => $this->timePreference()->value),
         ];
     }
 
-    /** A calendar date: "1 Aug 2026", "2026-08-01", "01-08-2026", … */
     public function date(\DateTimeInterface|string|int|null $value): string
     {
         $when = self::coerce($value);
@@ -80,7 +61,6 @@ final class DateDisplayExtension extends AbstractExtension
             ->format($when) ?: '';
     }
 
-    /** A date with the time of day appended, each in the notation the rider chose. */
     public function dateTime(\DateTimeInterface|string|int|null $value): string
     {
         $when = self::coerce($value);
@@ -93,16 +73,10 @@ final class DateDisplayExtension extends AbstractExtension
         $datePattern = $date->pattern();
         $timePattern = $time->pattern();
 
-        // Both following the locale: one formatter, so the join is the locale's
-        // own ("1 Aug 2026 at 14:30" rather than anything hand-assembled).
         if (null === $datePattern && null === $timePattern) {
             return $this->formatter($date->localeDateStyle(), \IntlDateFormatter::SHORT, null)->format($when) ?: '';
         }
 
-        // Otherwise the halves are formatted independently and joined with a
-        // space. ICU cannot mix an explicit pattern with a style, and the two
-        // preferences are deliberately independent — either one may be explicit
-        // while the other follows the language.
         $datePart = null !== $datePattern
             ? $this->formatter(\IntlDateFormatter::NONE, \IntlDateFormatter::NONE, $datePattern)->format($when)
             : $this->formatter($date->localeDateStyle(), \IntlDateFormatter::NONE, null)->format($when);
@@ -114,11 +88,7 @@ final class DateDisplayExtension extends AbstractExtension
         return trim(($datePart ?: '').' '.($timePart ?: ''));
     }
 
-    /**
-     * Month and year, for "member since". Always written out, never numeric:
-     * "08/2026" is not something anybody says, and this string exists to be
-     * read as prose.
-     */
+    /** Month and year for "member since". */
     public function month(\DateTimeInterface|string|int|null $value): string
     {
         $when = self::coerce($value);
@@ -128,11 +98,6 @@ final class DateDisplayExtension extends AbstractExtension
             : ($this->formatter(\IntlDateFormatter::NONE, \IntlDateFormatter::NONE, 'LLLL yyyy')->format($when) ?: '');
     }
 
-    /**
-     * The reader's choice, or Auto for anyone not signed in. Anonymous visitors
-     * have no profile to hold a preference, so they get the locale's own form —
-     * which is what Auto means anyway.
-     */
     private function preference(): DateFormat
     {
         $user = $this->security->getUser();
@@ -157,11 +122,7 @@ final class DateDisplayExtension extends AbstractExtension
         return $formatter;
     }
 
-    /**
-     * The language the page is being rendered in — not the rider's stored
-     * locale. A signed-in Dutch rider who follows a German link is reading a
-     * German page, and a Dutch month name in the middle of it would be a bug.
-     */
+    /** Page language, not the rider's stored locale. */
     private function locale(): string
     {
         return $this->requestStack->getCurrentRequest()?->getLocale() ?? 'en';
@@ -181,8 +142,6 @@ final class DateDisplayExtension extends AbstractExtension
                 ? (new \DateTimeImmutable())->setTimestamp($value)
                 : new \DateTimeImmutable($value);
         } catch (\Exception) {
-            // An unparseable date is a data problem somewhere upstream; it is
-            // not a reason to 500 the page that was only trying to print it.
             return null;
         }
     }

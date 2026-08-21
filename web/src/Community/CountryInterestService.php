@@ -12,17 +12,11 @@ use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
- * moderation-and-contribution.md.
+ * Country-interest upsert. Counts stay owner-only for v1.
  *
- * Counts stay owner-only for v1 (§12.2): a public counter discourages when the
- * numbers are small — which they will be on an empty map — and becomes worth
- * gaming, while the signal's whole value is honest input to an onboarding
- * decision.
+ * @see docs/specs/moderation-and-contribution.md §11
  *
- * @api Autowired by the DI container; consumed by JoinCountryController.
- *      `counts()` is the read path for the admin/public view §12.2 leaves
- *      open — not wired to a page yet, kept ready for that one-line change;
- *      covered directly by CountryInterestTest.
+ * @api
  */
 final class CountryInterestService
 {
@@ -34,11 +28,10 @@ final class CountryInterestService
     }
 
     /**
-     * Upsert: re-submitting updates the flag and note rather than creating a
-     * second row, so the count stays a count of PEOPLE.
+     * Upsert so the count stays a count of people.
      *
      * @throws \InvalidArgumentException when the country code is not a real one
-     * @throws InvalidNoteException      when the note fails §7 hardening
+     * @throws InvalidNoteException      when the note fails hardening
      */
     public function record(User $user, string $countryCode, bool $willingToCurate, string $note): CountryInterest
     {
@@ -47,14 +40,11 @@ final class CountryInterestService
             throw new \InvalidArgumentException(sprintf('"%s" is not a known country code.', $countryCode));
         }
 
-        // Decide emptiness AFTER cleaning: PublicNoteFilter::clean() can reduce
-        // invisible-only strings (U+200B, etc.) to empty, which we must not treat
-        // as a legitimate note update. Only update note if cleaning produced non-empty.
+        // Decide emptiness after clean(): invisible-only strings become empty.
         $rawNote = trim($note);
         $clean = null;
         if ('' !== $rawNote) {
             $clean = $this->notes->clean($note, PublicNoteFilter::MAX_NOTE);
-            // If cleaning reduced to empty, treat as no-change (keep existing note)
             if ('' === $clean) {
                 $clean = null;
             }
@@ -64,8 +54,6 @@ final class CountryInterestService
             ->findOneBy(['userId' => (int) $user->getId(), 'countryCode' => $cc]);
 
         $interest = $existing ?? new CountryInterest((int) $user->getId(), $cc);
-        // Willingness only ever goes up on a repeat submit: someone who already
-        // volunteered has not withdrawn by filling the plain form again.
         $interest->setWillingToCurate($willingToCurate || $interest->isWillingToCurate());
         if (null !== $clean) {
             $interest->setNote($clean);

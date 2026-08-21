@@ -13,16 +13,9 @@ use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
 
 /**
- * Exposes the current page re-generated in every enabled locale. Used by the
- * nav language switcher (as the post-switch redirect target) and by the
- * `<link rel="alternate" hreflang>` tags in the document head.
+ * Current page regenerated in every enabled locale (language switcher + hreflang).
  *
- * The URL for each locale is produced by regenerating the *current* route with
- * the router context temporarily pointed at that locale, so localized routes
- * yield their prefixed path (`/fr/regions`) while non-localized routes (e.g.
- * the map) yield the same clean path for every locale.
- *
- * @api Auto-registered Twig extension.
+ * @api
  */
 final class LocaleExtension extends AbstractExtension
 {
@@ -43,10 +36,7 @@ final class LocaleExtension extends AbstractExtension
     }
 
     /**
-     * `urls` maps each enabled locale to the current page's path in that locale.
-     * `localized` is true only when those paths actually differ (i.e. the current
-     * route has per-locale variants), so callers can skip emitting hreflang for
-     * English-only pages such as the map.
+     * `urls` maps each enabled locale to this page. `localized` is true only when paths differ.
      *
      * @return array{localized: bool, urls: array<string, string>}
      */
@@ -66,21 +56,9 @@ final class LocaleExtension extends AbstractExtension
 
         /** @var array<string, mixed> $params */
         $params = $request->attributes->get('_route_params', []);
-        // The target locale is driven through the router context, not the
-        // parameters. Passing `_locale` as a param would append `?_locale=…`
-        // to non-localized routes.
         unset($params['_locale']);
 
-        // The QUERY STRING is not part of the route, so regenerating from
-        // _route/_route_params alone silently drops it — and on the map that is
-        // the whole state: switching language on
-        // `/map?scope=region:niedersachsen` landed the rider on a bare `/map`,
-        // i.e. back on the default scope, looking at a different region
-        // (reported 2026-07-27 as "the map does not change locale": the labels
-        // were translating correctly all along, the rider had just been moved
-        // somewhere else). `?feature=`, `?route=` and `?pending=` deep links
-        // were lost the same way. `_locale` is dropped because the target
-        // locale rides the router context, not the query.
+        // Keep the query string: `/map?scope=` (and feature/route/pending) is not in the route.
         $query = $request->query->all();
         unset($query['_locale']);
         $suffix = [] === $query ? '' : '?'.http_build_query($query);
@@ -95,8 +73,6 @@ final class LocaleExtension extends AbstractExtension
                 try {
                     $urls[$locale] = $this->router->generate($route, $params).$suffix;
                 } catch (\Throwable) {
-                    // Route not generatable in this locale (e.g. a required
-                    // parameter is absent). Omit it rather than fail the page.
                 }
             }
         } finally {
@@ -104,9 +80,6 @@ final class LocaleExtension extends AbstractExtension
         }
 
         return [
-            // Compare the PATHS, not the paths-plus-query: an identical query on
-            // every locale must not make an English-only page look localized and
-            // start emitting hreflang.
             'localized' => \count(array_unique(array_map(
                 static fn (string $u): string => strtok($u, '?') ?: $u,
                 $urls,

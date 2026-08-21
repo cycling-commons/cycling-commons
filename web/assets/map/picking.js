@@ -1,29 +1,15 @@
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
-/* Located-correction picking (route-domain spec §16 S1): the rider marks the
-   stretches of a route a correction applies to, by clicking the line twice per
-   stretch. Captured fractions are held per route id in _pickSegs until a
-   successful "suggest" POST consumes them (community.js).
-   Extracted from map.js by the module split.
-
-   The session itself (`_pick`) stays private: an importer would get a read-only
-   binding of a value that is reassigned on every start/finish, so it is read
-   through isPicking() — the owner-module rule (§9). _pickSegs is a mutable
-   container, not a rebindable variable, so it exports directly.
-
-   What reads isPicking(), and why each one has to: openDrawer bails so a picking
-   click cannot switch the drawer under the rider (§16 S1), closeDrawer tears the
-   session down so a mid-pick close leaves no orphaned map handler, coverage.js
-   skips both its paint and its detail fetch, and the entry's click-to-scope
-   handler yields the click entirely. */
+/* Located-correction picking (docs/specs/route-domain.md §7): the rider marks
+   stretches of a route a correction applies to, two clicks per stretch.
+   Captured fractions stay in _pickSegs until a successful suggest POST.
+   Session stays private behind isPicking() because the binding is reassigned. */
 import { map } from './map-init.js';
 import { D, tpl } from './i18n.js';
 import { routePathById } from './catalog.js';
 import { nearestOnPath, sliceByFrac } from './render.js';
 import { mapToast } from './drawer.js';
 
-// --- Located-correction picking mode (spec §16 S1). Segments captured per
-// route id, kept until a successful "suggest" POST consumes and clears them. ---
-export const _pickSegs={};   // route id → list<{start,end}> captured for the open suggest form
+export const _pickSegs={};   // route id → list<{start,end}>
 let _pick=null;       // active picking session or null
 export const isPicking = () => !!_pick;
 
@@ -108,8 +94,7 @@ export function cancelPicking(){
   const bar=document.getElementById('cc-pickbar'); if(bar) bar.hidden=true;
   document.querySelector('.cc-drawer')?.classList.remove('cc-drawer-min');
 }
-// The "Mark on map" button lives inside the route drawer, which is re-rendered
-// on every open, so the handler is delegated from the document (§4.2).
+// Drawer re-renders on every open, so the handler is delegated from document.
 export function initPicking(){
   document.addEventListener('click', e=>{
     const mb=e.target.closest('[data-rc-mark]'); if(!mb) return;

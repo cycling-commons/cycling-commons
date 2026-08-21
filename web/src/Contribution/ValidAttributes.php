@@ -9,11 +9,10 @@ namespace App\Contribution;
 use Symfony\Component\Validator\Constraint;
 
 /**
- * Class-level constraint: SubmissionDraft.attributes keys must belong to the
- * letter's vocabulary (AttributeVocabulary), the same rule the importer
- * enforces (catalog-data-model.md §7).
+ * SubmissionDraft.attributes keys must belong to the letter's vocabulary
+ * (docs/specs/catalog-data-model.md §7).
  *
- * @api Applied on SubmissionDraft.
+ * @api
  */
 #[\Attribute(\Attribute::TARGET_CLASS)]
 final class ValidAttributes extends Constraint

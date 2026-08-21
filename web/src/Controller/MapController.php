@@ -39,26 +39,18 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
- * Serves the full-screen interactive map shell.
+ * Full-screen map shell.
  *
- * @api Instantiated by Symfony's router, never referenced from code — `@api`
- *      tells Psalm this (and its actions) is a live entry point, not dead code.
+ * @see docs/specs/map-and-search.md §2
+ *
+ * @api
  */
 final class MapController extends AbstractController
 {
     /**
-     * The Scout ride-review screen: the SAME map, with a review panel.
+     * Scout review: the same `/map` plus a browser-only panel. Ride file never uploaded.
      *
-     * "Use our own full map with all the options" (owner, 2026-08-12) — so this
-     * is not a stripped editor map with two layers. It is `/map`, with every
-     * layer, the satellite and street-level bases, the surface skin and the
-     * search, plus a panel that reads a ride **in the browser** and puts its
-     * tags on it. A second template would have started as a copy and drifted
-     * within a month.
-     *
-     * The ride file is never posted here or anywhere else: this action renders
-     * a page, and the only thing that ever reaches the server is one approved
-     * tag at a time (ScoutIntakeController).
+     * @see docs/specs/moderation-and-contribution.md (Scout intake)
      */
     #[Route('/scout/review', name: 'scout_review')]
     #[IsGranted('ROLE_USER')]
@@ -81,23 +73,9 @@ final class MapController extends AbstractController
         $params = [
             'field_schema' => $schema->all(),
             'map_i18n' => $this->mapI18n($translator),
-            // Region registry for the scope selector (map-and-search.md §4.5
-            // §4 / §7 Phase 2): id/slug/cc/bbox per region, consumed by
-            // window.CCScope. Display labels come from region.<slug>.label.
-            // The country rungs that used to ride here as `scope_countries` are
-            // gone: map.js renderScopeChips() now derives them client-side from
-            // CC_REGIONS (map-and-search.md §4.5), so the
-            // template no longer reads a server-computed list.
             'regions' => $regionRows,
-            // Rider preferences ride the page render (map-and-search.md §4.4):
-            // value-lists only, [] for anonymous — map.js treats
-            // empty as "no prefilter" so anonymous behaviour is unchanged.
             'rider_prefs' => [
-                // The rider's public uuid, so client-side toggles can be
-                // stored per ACCOUNT: the prefilter's on/off used to live in
-                // one global localStorage key, and rider B on a shared browser
-                // inherited rider A's "off" (frontend review 2026-08-09 #4).
-                // The uuid is the identity every public surface already uses.
+                // Per-account uid so a shared browser does not inherit another rider's toggles.
                 'uid' => $user instanceof User ? $user->getUuid() : null,
                 'bikes' => $user instanceof User
                     ? array_map(static fn (BikeType $t): string => $t->value, $user->getBikeTypes())
@@ -105,35 +83,15 @@ final class MapController extends AbstractController
                 'styles' => $user instanceof User
                     ? array_map(static fn (RidingStyle $s): string => $s->value, $user->getRidingStyles())
                     : [],
-                // Which view mode the map opens in, step 1 of the load-time
-                // precedence.
-                // 'auto' — the default, and the only value an anonymous visitor
-                // ever sees — hands the decision down to the active region's
-                // the region's own defaultMode, then to the global Everything default.
                 'mapMode' => $user instanceof User
                     ? $user->getDefaultMapMode()->value
                     : MapViewMode::Auto->value,
-                // Whether a profile exists to hang a choice on. Only an
-                // ANONYMOUS visitor falls through to localStorage — a logged-in
-                // rider sitting on 'auto' has chosen to follow the region, and
-                // must not inherit whatever the previous person on a shared
-                // device picked.
+                // Logged-in 'auto' must not fall through to another rider's localStorage.
                 'authed' => $user instanceof User,
             ],
-            // Map chrome theme (map-and-search.md §4.6): rendered as the
-            // data-map-theme attribute on <html>, so the first paint is
-            // already themed and light mode never flashes dark. Anonymous
-            // visitors always render dark server-side; their light choice,
-            // if any, lives in localStorage and the inline head script
-            // applies it before first paint.
             'map_theme' => $user instanceof User
                 ? $user->getMapTheme()->value
                 : MapTheme::Dark->value,
-            // "My area" base location (map-and-search.md §4.5): the
-            // stored coarse point + derived region/country set, or null for
-            // anonymous. Anonymous-safe to compute (null, not omitted) — the
-            // template only ever emits window.CC_MY_AREA inside the
-            // ROLE_USER script block below.
             'my_area' => $user instanceof User ? [
                 'lat' => $user->getBaseLat(),
                 'lng' => $user->getBaseLng(),
@@ -142,83 +100,33 @@ final class MapController extends AbstractController
                 'regionIds' => $user->getBaseRegionIds(),
                 'countryCodes' => $user->getBaseCountryCodes(),
             ] : null,
-            // Coverage tiles (coverage-provider.md §4): the
-            // current versioned PMTiles URL from the bucket manifest (server-
-            // cached 3600 s), or null when the flag is off / the manifest is
-            // unreachable — the template only emits CC_COVERAGE_URL when set.
+            // docs/specs/coverage-provider.md §4 — null omits the layer.
             'coverage_url' => $coverage->currentTileUrl(),
-            // Country codes the tile artifact was built for
-            // (coverage-provider.md §4): the map turns
-            // each into a per-country coverage layer (source-layers <letter>_<cc>);
-            // [] falls the client back to a single unsplit layer per letter.
             'coverage_countries' => $coverage->countryCodes(),
-            // Road-surface line tiles. Resolved server-side from the build's
-            // manifest (or an operator's pin), so publishing a rebuild needs no
-            // config change and no cache clear — the same contract the coverage
-            // artifact has had since it shipped. Null means the layer is simply
-            // not offered: a control for tiles that do not exist is worse than
-            // no control.
+            // docs/specs/coverage-provider.md §4 — surface PMTiles; null omits the control.
             'surface_tiles_url' => $surface->classifiedUrl(),
             'surface_todo_url' => $surface->todoUrl(),
             'surface_gaps_url' => $surface->gapsUrl(),
-            // Cycle-route network tiles (corridors + knooppunten), same
-            // manifest-or-pin resolution as the surface arms. Null means the
-            // Routes toggle is simply not offered.
             'routes_tiles_url' => $routes->tilesUrl(),
-            // Seasonal voting go-live dial (owner 2026-08-13): until an
-            // admin flips community.voting_live, every vote call-to-action
-            // stays hidden — a button for a round that does not exist yet
-            // reads as broken, the same rule as unbuilt tile artifacts.
             'voting_live' => 1 === $settings->get(SettingsRegistry::COMMUNITY_VOTING_LIVE),
-            // Versions the catalog.json URL (?v=), so an approved submission
-            // shows on the next page load instead of hiding behind the
-            // browser's hour-long payload cache — see
-            // CatalogProvider::versionTag() for the full story.
             'catalog_version' => $catalogProvider->versionTag(),
         ];
 
-        // Curator-only: hand the pending submissions to the map so the moderation
-        // layer can render. Riders never receive this — the template only emits
-        // it when `pending` is set. Two gates:
-        //   1. ROLE_CURATOR (un-vetted data is a curator capability), AND
-        //   2. mandatory 2FA already completed. /map is on the 2FA-setup
-        //      enforcer's bypass list (public page, cacheable), so a
-        //      setup-pending curator can still reach this page — but they must
-        //      NOT receive any curator capability, including this payload,
-        //      before finishing 2FA. requiresSetup() is the same policy the
-        //      enforcer/login handler use.
+        // docs/specs/moderation-and-contribution.md §5.3 — ROLE_CURATOR and completed 2FA; /map is 2FA-bypass.
         if ($user instanceof User && $this->isGranted('ROLE_CURATOR') && !$twoFactorPolicy->requiresSetup($user)) {
-            // ?pending=<id> is the desk's "review on the map" link. It carries
-            // needs-info rows too, which the general layer leaves out — see
-            // SubmissionQueue::pendingForMap().
             $focus = $request->query->getInt('pending');
             $scope = $scopeProvider->scopeFor($user);
             $params['pending'] = $queue->pendingForMap($scope, $focus > 0 ? $focus : null);
-            // The template must NOT re-derive this with is_granted(): a
-            // setup-pending curator holds the role but not the capability,
-            // and only this branch has applied the 2FA policy.
+            // Do not re-derive with is_granted(): setup-pending curators hold the role without this payload.
             $params['pending_is_curator'] = true;
-            // Places approved as gone, CURATORS ONLY: hidden from the public
-            // payload for good, but a curator has to be able to SEE them or a
-            // rebuilt tap could never be reactivated (owner 2026-08-13).
-            // Ghost layer; reactivation is the ordinary edit form.
             $params['gone'] = $catalogProvider->goneForMap($scope);
         } elseif ($user instanceof User) {
-            // A rider's OWN undecided submissions (owner 2026-08-16): the
-            // pending pin was invisible to the person who made it. Same layer,
-            // their rows only; the template emits it WITHOUT CC_IS_CURATOR, so
-            // none of the moderation chrome renders and no decision endpoint
-            // would accept them anyway.
+            // Rider's own undecided submissions; no curator chrome.
             $params['pending'] = $queue->ownPendingForMap((int) $user->getId());
         }
 
         $params['scout_review'] = $scoutReview;
-        // The tag vocabulary and the letters each tag may resolve to, so the
-        // review panel offers exactly what the endpoint will accept — one list,
-        // not two that drift.
-        /* What the review panel offers per tag, best first: the sub-menu's own
-           answer, then every letter the tag can be re-filed onto. A mis-tap on
-           the bars is the normal case, so the list is never a lock. */
+        // docs/specs/moderation-and-contribution.md (Scout intake) — one vocabulary, shared with the endpoint.
         $offers = [];
         foreach (ScoutTag::TYPES as $tagType) {
             $offers[$tagType] = ['' => ScoutTag::offerFor($tagType)];
@@ -233,11 +141,9 @@ final class MapController extends AbstractController
     }
 
     /**
-     * The window.CC_I18N bundle: every string map.js renders itself, in the
-     * request locale. Layer labels reuse item_type.*.label so the rail can
-     * never drift from the improve form / drawer wording; drawer strings live
-     * under `d`. English fallbacks stay inline in map.js, so the map still
-     * works standalone (or with a stale bundle).
+     * window.CC_I18N in the request locale.
+     *
+     * @see docs/specs/map-and-search.md §2
      *
      * @return array<string, mixed>
      */
@@ -257,11 +163,9 @@ final class MapController extends AbstractController
             'history' => 'item_type.history-culture.label',
             'experience' => 'item_type.quality-rides.label',
             'pending' => 'map.pending_review',
-            // The curator ghost layer of gone places (goneForMap).
             'gone' => 'map.gone_places',
         ];
 
-        // Drawer namespace: JS-side name => map.d_* translation id.
         $drawer = [
             'type' => 'd_type', 'location' => 'd_location', 'town' => 'd_town', 'province' => 'd_province', 'listed' => 'd_listed',
             'status' => 'd_status', 'rating' => 'd_rating', 'website' => 'd_website', 'potable' => 'd_potable',
@@ -275,50 +179,31 @@ final class MapController extends AbstractController
             'proposedVerify' => 'd_proposed_verify', 'estimateMethod' => 'd_estimate_method',
             'contributedGpx' => 'd_contributed_gpx', 'srcAuto' => 'd_src_auto', 'srcRider' => 'd_src_rider', 'srcManual' => 'd_src_manual',
             'lnkWikipedia' => 'd_lnk_wikipedia',
-            // The reputation check on a submission's proposed links, on the
-            // moderation card only (catalog-data-model.md §7). A warning to
-            // the one person who is going to click the link, never a rejection.
             'linksUnsafe' => 'd_links_unsafe', 'linksUnknown' => 'd_links_unknown',
             'communityReport' => 'd_community_report', 'reportPhoto' => 'd_report_photo',
             'source' => 'd_source', 'editItem' => 'd_edit_item', 'fixLocation' => 'd_fix_location',
             'voteRound' => 'd_vote_round', 'downloadGpx' => 'd_download_gpx',
             'proposedChange' => 'd_proposed_change', 'history' => 'd_history', 'initialEntry' => 'd_initial_entry',
-            // Author of an automatic change (a closure that reached its stated
-            // window). The endpoint emits a token; the label is translated here.
             'historyAuto' => 'd_history_auto',
-            // Surface-tile drawer: the seven canonical class names (shared with
-            // the on-map legend, so a tile line and the key read the same word)
-            // plus its two row labels.
             'surfCycleway' => 'legend_cycleway', 'surfPaved' => 'legend_paved',
             'surfGravel' => 'legend_gravel', 'surfCobbles' => 'legend_cobbles',
             'surfDirt' => 'legend_dirt', 'surfRock' => 'legend_rock',
             'surfUnverified' => 'legend_unverified',
-            // Gap grid: the "surface not recorded" row at planning zoom, where
-            // it draws one square per ~6 km instead of every road.
             'gapsTitle' => 'd_gaps_title', 'gapsUnrecorded' => 'd_gaps_unrecorded',
             'gapsShare' => 'd_gaps_share', 'gapsRoads' => 'd_gaps_roads',
             'gapsHint' => 'd_gaps_hint',
             'surface' => 'd_surface', 'roadType' => 'd_road_type',
             'surfaceConfirm' => 'd_surface_confirm', 'srcScout' => 'd_src_scout',
-            // The quality channel: OSM smoothness as ticks on the skin, and
-            // its drawer rows (surface-tiles.js SM_LABEL collapses the OSM
-            // vocabulary to the form's five values for display).
             'smoothness' => 'd_smoothness', 'mtbScale' => 'd_mtb_scale',
             'length' => 'd_length',
-            // A-item confirmation panel (community.js stanceKind 'accuracy'):
-            // the question is "as described?", not "still here?" — with a
-            // negative stance that may carry a why for the curators, and the
-            // curator-only notes block that reads them back.
             'asDescribed' => 'd_as_described', 'surfaceCfQ' => 'd_surface_cf_q',
             'surfaceCfA' => 'd_surface_cf_a', 'notAsDescribed' => 'd_not_as_described',
             'cfUseEditQ' => 'd_cf_use_edit_q', 'cfUseEdit' => 'd_cf_use_edit', 'alsoConfirm' => 'd_also_confirm',
-            // Route-network drawer (routes-tiles.js): corridor + knooppunt.
             'routeNetwork' => 'd_route_network', 'routeRef' => 'd_route_ref',
             'routesHere' => 'd_routes_here', 'routeSurfaceHint' => 'd_route_surface_hint',
             'knoopTitle' => 'd_knoop_title', 'knoopHint' => 'd_knoop_hint',
             'netIcn' => 'd_net_icn', 'netNcn' => 'd_net_ncn', 'netRcn' => 'd_net_rcn',
             'netLcn' => 'd_net_lcn', 'netMtb' => 'd_net_mtb', 'netOther' => 'd_net_other',
-            // Scout review panel (scout-review.js).
             'scoutTag_resupply' => 'd_scout_tag_resupply', 'scoutTag_closure' => 'd_scout_tag_closure',
             'scoutTag_surface' => 'd_scout_tag_surface', 'scoutTag_notice' => 'd_scout_tag_notice',
             'scoutTag_scenery' => 'd_scout_tag_scenery', 'scoutTag_other' => 'd_scout_tag_other',
@@ -347,12 +232,8 @@ final class MapController extends AbstractController
             'trafficWhyResidential' => 'd_traffic_why_residential',
             'trafficWhyTrack' => 'd_traffic_why_track',
             'trafficWhyMain' => 'd_traffic_why_main',
-            // Before/after switch on a pending climb's proposed shape.
             'shapeOnMap' => 'd_shape_on_map', 'shapeBefore' => 'd_shape_before', 'shapeAfter' => 'd_shape_after',
             'itemProposed' => 'd_item_proposed',
-            // Names for the fields that carry no DISPLAY row of their own (the
-            // climb editor's geometry, and the correction note) — without
-            // these a curator's diff reads `grad`, `route`, `steep`.
             'fRoute' => 'd_f_route', 'fGrad' => 'd_f_grad', 'fSteep' => 'd_f_steep',
             'fCorrection' => 'd_f_correction',
             'recentChanges' => 'd_recent_changes', 'modNotePh' => 'd_mod_note_ph', 'approve' => 'd_approve',
@@ -360,24 +241,12 @@ final class MapController extends AbstractController
             'decisionErr' => 'd_decision_err', 'decisionRecorded' => 'd_decision_recorded',
             'decisionAsked' => 'd_decision_asked', 'needsInfoNote' => 'd_needs_info_note',
             'waitingOnRider' => 'd_waiting_on_rider', 'youAsked' => 'd_you_asked', 'riderReplied' => 'd_rider_replied',
-            // The verdict a curator may be about to overturn, on the card where
-            // the decision is actually made (SubmissionQueue::priorRejections).
             'priorRejected' => 'd_prior_rejected',
-            // Copy a deep link to the open place, so a rider can send somebody
-            // a water tap instead of describing where it is.
             'share' => 'd_share', 'shareHint' => 'd_share_hint', 'shareCopied' => 'd_share_copied',
-            // Pending rider photos in the moderation panel
-            // (docs/specs/photo-uploads.md §5). The distance string carries a
-            // literal {m} the drawer substitutes — the Twig desk list uses the
-            // %m%-parameterised moderate.media.distance instead.
             'photoAlt' => 'd_photo_alt', 'photoDistance' => 'd_photo_distance',
             'photoNoGps' => 'd_photo_no_gps', 'photoKeep' => 'd_photo_keep',
             'photoOpen' => 'd_photo_open',
-            // How a photo with no credit is captioned: an anonymous rider's
-            // upload has an empty credit by design (the uploader rule), and a
-            // bare "©" would read as a bug (docs/specs/photo-uploads.md §5).
             'anonCredit' => 'anon_credit',
-            // The item history reports a gallery as a count, never as its URLs.
             'photosNone' => 'd_photos_none', 'photosOne' => 'd_photos_one',
             'photosMany' => 'd_photos_many',
             'rodeThis' => 'd_rode_this', 'bikeTypePh' => 'd_bike_type_ph', 'recommend' => 'd_recommend',
@@ -391,7 +260,6 @@ final class MapController extends AbstractController
             'waterQ' => 'd_water_q', 'hereQ' => 'd_here_q', 'notPotable' => 'd_not_potable',
             'waterA' => 'd_water_a', 'hereA' => 'd_here_a',
             'confirmHere' => 'd_confirm_here', 'confirmedOne' => 'd_confirmed_one', 'confirmedMany' => 'd_confirmed_many',
-            // One-tap confirmation of an OSM place: a receipt, not a tally.
             'osmBroken' => 'd_osm_broken', 'osmClosed' => 'd_osm_closed', 'osmGone' => 'd_osm_gone',
             'osmSent' => 'd_osm_sent', 'osmAlready' => 'd_osm_already',
             'osmFailed' => 'd_osm_failed', 'osmLogin' => 'd_osm_login',
@@ -407,12 +275,8 @@ final class MapController extends AbstractController
             'difficulty' => 'd_difficulty', 'elevation' => 'd_elevation', 'mClimbing' => 'd_m_climbing',
             'climbLength' => 'd_climb_length',
             'fromGpx' => 'd_from_gpx', 'gradProfile' => 'd_grad_profile', 'illustrative' => 'd_illustrative',
-            // The steepest-ramp row writes the window it was measured over,
-            // per climb, because the field label no longer can (see
-            // CatalogFormRegistry's note on that label).
             'steepOver' => 'd_steep_over',
             'elevFrom' => 'd_elev_from',
-            // The full climb profile popup (assets/map/climb-profile.js).
             'openProfile' => 'open_profile', 'gradPerBin' => 'grad_per_bin',
             'elevAria' => 'd_elev_aria', 'sharedBy' => 'd_shared_by', 'viewProfile' => 'd_view_profile',
             'sharedAnon' => 'd_shared_anon', 'steepest' => 'd_steepest',
@@ -426,26 +290,16 @@ final class MapController extends AbstractController
             'alongRide' => 'd_along_ride', 'rideMeta' => 'd_ride_meta', 'clearRide' => 'd_clear_ride',
             'rideFollows' => 'd_ride_follows', 'kmShared' => 'd_km_shared', 'alongTrackH' => 'd_along_track_h',
             'capped' => 'd_capped', 'kmOff' => 'd_km_off', 'nothingWithin' => 'd_nothing_within',
-            // Ride-check coverage arm.
             'alongTrackCovH' => 'd_along_track_cov_h', 'covArmNote' => 'd_cov_arm_note',
             'noMatch' => 'd_no_match', 'places' => 'd_places',
             'scopes' => 'd_scopes', 'wholeCountry' => 'd_whole_country', 'region' => 'd_region',
-            // Contextual scope-chip overflow (map-and-search.md §4.5
-            // §B, owner fix 2): shown only when a country's region count exceeds
-            // the 8-closest cap; opens/focuses the sidebar search box.
             'scopesMore' => 'd_scopes_more',
-            // Compass grid (owner request, map-and-search.md §4.5
-            // §B "Compass grid layout"): a spelled-out direction word per neighbour
-            // chip, since the cell's position alone doesn't reach a screen reader.
-            // compassLabel is the aria-label template ('{dir}: {region}');
-            // compassGroup names the whole 3x3 grid for the role="group" wrapper.
             'compassN' => 'd_compass_n', 'compassNe' => 'd_compass_ne',
             'compassE' => 'd_compass_e', 'compassSe' => 'd_compass_se',
             'compassS' => 'd_compass_s', 'compassSw' => 'd_compass_sw',
             'compassW' => 'd_compass_w', 'compassNw' => 'd_compass_nw',
             'compassLabel' => 'd_compass_label', 'compassGroup' => 'd_compass_group',
             'community' => 'd_community', 'showAll' => 'd_show_all',
-            // The invitation on an approved-but-unconfirmed curated pin.
             'needsCheck' => 'd_needs_check', 'youConfirmed' => 'd_you_confirmed',
             'youAnsweredOnForm' => 'd_you_answered_on_form', 'changeAnswer' => 'd_change_answer',
             'stateField' => 'd_state_field', 'stateSubmitted' => 'd_state_submitted', 'stateUnverified' => 'd_state_unverified',
@@ -459,93 +313,42 @@ final class MapController extends AbstractController
             'layers' => array_map(static fn (string $id): string => $t->trans($id), $layers),
             'deselectAll' => $t->trans('map.deselect_all'),
             'selectAll' => $t->trans('map.select_all'),
-            // The layer rail's three group headings (catalog.js reading order).
             'groupUtility' => $t->trans('map.dl_group_utility'),
             'groupVotable' => $t->trans('map.dl_group_votable'),
             'groupModeration' => $t->trans('map.dl_group_moderation'),
-            // Drawer headings for the three rail sections (shell.js). Same
-            // strings the rail's own tooltips carry, so the icon a rider
-            // pressed and the heading they land on read identically.
             'railSearch' => $t->trans('map.rail_search'),
             'railLayers' => $t->trans('map.rail_layers'),
             'railTools' => $t->trans('map.rail_tools'),
-            // The on-map filter pill (panels.js initFilterPill). Three strings
-            // rather than one with a plural rule: the count is rendered
-            // client-side by tpl(), which does substitution and not grammar.
             'filtersHide' => $t->trans('map.filters_hide'),
             'filtersHideOne' => $t->trans('map.filters_hide_one'),
             'filtersNarrowing' => $t->trans('map.filters_narrowing'),
             'curated' => $t->trans('map.curated'),
             'subEverything' => $t->trans('map.sub_everything'),
             'allBikes' => $t->trans('map.all_bikes'),
-            // Both best-of facets are multi-select, so both need a name for
-            // "you narrowed by nothing" in the map subtitle.
             'allSeasons' => $t->trans('map.all_seasons'),
-            // The overlay rows' state column, the counterpart of a layer row's
-            // shown/total: without something in that slot an off row reads as
-            // a disabled one.
             'overlayOn' => $t->trans('map.overlay_on'),
             'overlayOff' => $t->trans('map.overlay_off'),
-            // The surface skin's own zoom floor, said on the map: its low-zoom
-            // tiles are megabytes apiece and it draws sub-pixel there.
             'zoomForSurfaces' => $t->trans('map.zoom_for_surfaces'),
-            // The surface row's third state: on, but zoomed out past the
-            // skin's floor, so the map has not changed yet.
             'overlayZoomIn' => $t->trans('map.overlay_zoom_in'),
             'pendingReview' => $t->trans('map.pending_review'),
             'login' => $t->trans('nav.login'),
-            // Search scope widening (map-and-search.md §4.5 Phase 2):
-            // dynamic search title + the one-tap widen chip. {area} is filled by
-            // map.js tpl().
             'searchIn' => $t->trans('map.search_in'),
             'searchEverywhere' => $t->trans('map.search_everywhere'),
             'searchWiden' => $t->trans('map.search_widen'),
-            // The "Everywhere" scope's own header/kicker label — same string as
-            // the static rail button (templates/map/index.html.twig), but map.js
-            // (and scope-header.js's early bootstrap) need their own copy:
-            // CCScope.label() (scope.js) deliberately returns null for the
-            // everywhere/myArea kinds (the caller owns those strings), and the
-            // header is now written straight after CCScope.init() resolves the
-            // scope, before first paint (2026-07-23 flash fix) — not by reading
-            // back the rendered rail button.
             'everywhereLabel' => $t->trans('region.everywhere.label'),
-            // My-area header/search line (map-and-search.md §4.5
-            // Phase 4). {place}/{km} filled by map.js tpl(); the _plain variant
-            // is used when the base location has no place name.
             'myAreaLine' => $t->trans('map.my_area_line'),
             'myAreaLinePlain' => $t->trans('map.my_area_line_plain'),
-            // Cold-start "Set my area" prompt + pan-away widen nudge
-            // (map-and-search.md §4.5 Phase 4): rendered by map.js.
-            // Note: the chip's own label ('map.set_my_area') is twig-rendered
-            // (templates/map/index.html.twig), not read from this payload —
-            // map.js never touches I18N.setMyArea.
-            // Chrome-theme toggle labels (theme.js): each names the theme a
-            // press will GIVE you, like the base switcher's buttons.
             'themeToLight' => $t->trans('map.theme_to_light'),
             'themeToDark' => $t->trans('map.theme_to_dark'),
             'myAreaSet' => $t->trans('map.my_area_set'),
             'myAreaSetAnon' => $t->trans('map.my_area_set_anon'),
             'outsideArea' => $t->trans('map.outside_area'),
-            // The same chip's other arm (scope-ui.js initAreaNudge): a named
-            // scope whose bbox the viewport no longer touches at all, which
-            // draws an empty map that reads as missing data rather than as the
-            // filter working. {area} is the scope label; the button's {area} is
-            // 'everywhereLabel' above, so the top rung is named once.
             'scopeMiss' => $t->trans('map.scope_miss'),
             'scopeMissGo' => $t->trans('map.scope_miss_go'),
             'areaDismiss' => $t->trans('map.area_dismiss'),
-            // Why the full-coverage layers can draw nothing (render.js
-            // updateZoomHint): the coverage tileset is built z6-14 and its
-            // per-place icons start at z9, so a rider looking at a whole
-            // country sees an empty map that is working exactly as designed.
             'zoomForCoverage' => $t->trans('map.zoom_for_coverage'),
             'zoomForPlaces' => $t->trans('map.zoom_for_places'),
-            // The pending layer answers to the curator's areas, not the map
-            // scope (render.js featureVisible), which reads as a leak.
             'pendingFollowsAreas' => $t->trans('map.pending_follows_areas'),
-            // The rider's twin of the line above. Same exemption, different
-            // audience: a rider sees only their OWN undecided submissions, so
-            // "the areas you moderate" would be a sentence about nothing.
             'pendingYoursAnywhere' => $t->trans('map.pending_yours_anywhere'),
             'seasons' => [
                 'spring' => $t->trans('map.season_spring'),
@@ -581,34 +384,20 @@ final class MapController extends AbstractController
     }
 
     /**
-     * The whole catalog as one cacheable JSON payload (catalog-data-model.md
-     * §9): a named interim until vector tiles. Letters key the layers; values
-     * are the fixture shapes map.js has always consumed. Public data only
-     * (unverified/verified rows).
+     * Cacheable catalog JSON.
+     *
+     * @see docs/specs/catalog-data-model.md §9
      */
     #[Route('/map/catalog.json', name: 'map_catalog', methods: ['GET'])]
     public function catalog(Request $request, CatalogProvider $catalog, ClosureExpiryService $closures): Response
     {
-        // A closure past the window its reporter stated must stop being served
-        // (ClosureLifetime). The scheduled command is the mechanism; this is
-        // the safety net, rate-limited to once an hour, because docs/TODO.md
-        // records that nothing on the worker host runs the timers yet — and a
-        // decay nobody runs is the same lie as no decay at all.
-        //
-        // Before the payload is built, so an expiry lands in the very response
-        // that would otherwise have carried the stale closure.
         $closures->sweepOpportunistically();
 
         $json = $catalog->json();
         $response = new JsonResponse($json, Response::HTTP_OK, [], true);
         $response->setEtag(md5($json));
         $response->setPublic();
-        // The body is session-independent (metric numbers, ISO dates, no user
-        // data), but LocaleSubscriber's session read makes AbstractSessionListener
-        // overwrite public caching with `private, must-revalidate` for anyone
-        // carrying a session cookie — i.e. every logged-in rider. This header
-        // tells it the caching decision here is deliberate (frontend review
-        // 2026-08-09 #1).
+        // docs/specs/account-and-auth.md §5 — public cache; do not let a session cookie downgrade it.
         $response->headers->set(AbstractSessionListener::NO_AUTO_CACHE_CONTROL_HEADER, 'true');
         $response->setMaxAge(3600);
         $response->isNotModified($request);
@@ -617,18 +406,9 @@ final class MapController extends AbstractController
     }
 
     /**
-     * The ride heatmap's points, on their own endpoint.
+     * Heatmap points, fetched on first On.
      *
-     * ~6,600 points, and the layer is Off by default. They used to ride inside
-     * catalog.json, so every visitor paid their bytes on the critical path to
-     * see a layer most of them never turn on — the source was already built
-     * lazily, but the DOWNLOAD was not (frontend review 2026-08-09, the second
-     * architectural item). The map fetches this on the first heatmap-On and
-     * never again.
-     *
-     * Same caching discipline as catalog.json, and for the same reason: the
-     * body is user-independent, so it is publicly cacheable and the
-     * session listener is told not to override that.
+     * @see docs/specs/catalog-data-model.md §9
      */
     #[Route('/map/heat.json', name: 'map_heat', methods: ['GET'])]
     public function heat(Request $request, CatalogProvider $catalog): Response
@@ -645,11 +425,9 @@ final class MapController extends AbstractController
     }
 
     /**
-     * Per-item change log (moderation-and-contribution.md §4.1): who changed
-     * what, when, newest first. Public, read-only; feeds the map drawer's
-     * "Recent changes" panel. Unknown/never-edited items simply have no rows:
-     * 200 with an empty list, not 404, so the drawer never has to
-     * special-case it.
+     * Public change log; empty list, not 404.
+     *
+     * @see docs/specs/moderation-and-contribution.md §4.1
      */
     #[Route('/map/item/{id}/history', name: 'map_item_history', requirements: ['id' => '\d+'], methods: ['GET'])]
     public function history(int $id, Request $request, ChangeHistoryView $history): Response
@@ -658,12 +436,7 @@ final class MapController extends AbstractController
         $response = new JsonResponse($json, Response::HTTP_OK, [], true);
         $response->setEtag(md5($json));
         $response->setPublic();
-        // The body is session-independent (metric numbers, ISO dates, no user
-        // data), but LocaleSubscriber's session read makes AbstractSessionListener
-        // overwrite public caching with `private, must-revalidate` for anyone
-        // carrying a session cookie — i.e. every logged-in rider. This header
-        // tells it the caching decision here is deliberate (frontend review
-        // 2026-08-09 #1).
+        // docs/specs/account-and-auth.md §5 — public cache; do not let a session cookie downgrade it.
         $response->headers->set(AbstractSessionListener::NO_AUTO_CACHE_CONTROL_HEADER, 'true');
         $response->setMaxAge(60);
         $response->isNotModified($request);
@@ -672,24 +445,13 @@ final class MapController extends AbstractController
     }
 
     /**
-     * Best-of ranking for the map's Curated mode (route-domain.md §8): ranked
-     * verified-route ids for a (season, bike, region-set?) facet. Public +
-     * cacheable like catalog.json; the map flags these ids `cur` and filters
-     * Curated to them. `region` accepts a CSV of ids (map-and-search.md §4.5
-     * §7 Phase 4) so a My-area derived scope can rank across several regions
-     * at once; a bare single id stays valid. The response body (and so the
-     * ETag, which hashes it) already varies with the resolved `ids`, which
-     * differ per region set, so no separate cache-key handling is needed.
+     * Public best-of ranking for Curated mode.
+     *
+     * @see docs/specs/route-domain.md §8
      */
     #[Route('/map/best-of', name: 'map_best_of', methods: ['GET'])]
     public function bestOf(Request $request, RouteRankingService $ranking): Response
     {
-        /* Both facets arrive as a CSV of enum values, because both are
-           multi-select on the map (map-and-search.md §4.0). Unknown parts are
-           dropped rather than rejected, the same forgiving rule the region CSV
-           below follows: a stale bookmark degrades to a wider answer instead
-           of a 400. An empty or all-garbage list narrows by nothing.
-           'all' stays accepted for the bike so an old client keeps working. */
         $csvEnum = static function (string $raw, callable $tryFrom): array {
             $out = [];
             foreach (explode(',', $raw) as $part) {
@@ -707,16 +469,7 @@ final class MapController extends AbstractController
         };
         $seasons = $csvEnum((string) $request->query->get('season', ''), Season::tryFrom(...));
         $bikes = $csvEnum((string) $request->query->get('bike', ''), BikeType::tryFrom(...));
-        // CSV of region ids (map-and-search.md §4.5 Phase 4): a My-area
-        // derived scope sends up to BaseAreaResolver::MAX_REGIONS ids, e.g.
-        // `region=1,24,23`; a bare `region=3` stays valid (single-element
-        // set). Mirrors CoverageController::scopeParams's rids idiom:
-        // canonical positive-integer parts only (ctype_digit + the
-        // zero-padding/overflow guard keeps an oversized numeral from
-        // silently saturating to a phantom id), deduped by numeric value,
-        // capped, sorted for a stable IN-list. Garbage parts are dropped, not
-        // rejected — an all-garbage CSV degrades to Everywhere, same as
-        // omitting the param entirely.
+        // docs/specs/map-and-search.md §4.5 — garbage CSV degrades to Everywhere, never a 400.
         $regionIds = [];
         foreach (explode(',', (string) $request->query->get('region', '')) as $part) {
             $part = trim($part);
@@ -741,12 +494,7 @@ final class MapController extends AbstractController
         $response = new JsonResponse($json, Response::HTTP_OK, [], true);
         $response->setEtag(md5($json));
         $response->setPublic();
-        // The body is session-independent (metric numbers, ISO dates, no user
-        // data), but LocaleSubscriber's session read makes AbstractSessionListener
-        // overwrite public caching with `private, must-revalidate` for anyone
-        // carrying a session cookie — i.e. every logged-in rider. This header
-        // tells it the caching decision here is deliberate (frontend review
-        // 2026-08-09 #1).
+        // docs/specs/account-and-auth.md §5 — public cache; do not let a session cookie downgrade it.
         $response->headers->set(AbstractSessionListener::NO_AUTO_CACHE_CONTROL_HEADER, 'true');
         $response->setMaxAge(300);
         $response->isNotModified($request);
@@ -755,12 +503,9 @@ final class MapController extends AbstractController
     }
 
     /**
-     * Region spotlight polygon (map-and-search.md §4.5): the simplified DB
-     * boundary the map dims around, served cacheably to retire the map's
-     * Nominatim fetch (an external dependency and a Nominatim usage-policy
-     * problem in production). Public + cacheable like catalog.json; unknown
-     * slugs 404 so the client's `.catch` degrades gracefully (the map works
-     * without a spotlight).
+     * Cacheable region spotlight; 404 unknown slugs.
+     *
+     * @see docs/specs/map-and-search.md §4.5
      */
     #[Route('/map/region/{slug}/boundary', name: 'map_region_boundary', requirements: ['slug' => '[a-z0-9-]+'], methods: ['GET'])]
     public function regionBoundary(string $slug, Request $request, RegionBoundaryProvider $boundaries): Response
@@ -773,15 +518,8 @@ final class MapController extends AbstractController
         $response = new JsonResponse($json, Response::HTTP_OK, [], true);
         $response->setEtag(md5($json));
         $response->setPublic();
-        // The body is session-independent (metric numbers, ISO dates, no user
-        // data), but LocaleSubscriber's session read makes AbstractSessionListener
-        // overwrite public caching with `private, must-revalidate` for anyone
-        // carrying a session cookie — i.e. every logged-in rider. This header
-        // tells it the caching decision here is deliberate (frontend review
-        // 2026-08-09 #1).
+        // docs/specs/account-and-auth.md §5 — public cache; do not let a session cookie downgrade it.
         $response->headers->set(AbstractSessionListener::NO_AUTO_CACHE_CONTROL_HEADER, 'true');
-        // Boundaries change only on a versioned re-import (rare); an hour matches
-        // catalog.json's discipline and keeps the shared cache warm.
         $response->setMaxAge(3600);
         $response->isNotModified($request);
 
@@ -789,21 +527,13 @@ final class MapController extends AbstractController
     }
 
     /**
-     * Scope-union boundary (coverage-provider.md §4):
-     * the ST_Union of a scope's regions — an explicit `rids` id list and/or
-     * every region of a `cc` country — so the map's dim mask can grey
-     * everything outside a whole-country scope, not just a single named
-     * region. `rids` parsing mirrors CoverageController::scopeParams's rids
-     * idiom (canonical positive-integer CSV parts only, garbage dropped).
-     * Public + cacheable like regionBoundary; an empty scope (no rids, no cc)
-     * is a 204 — there is nothing to dim around.
+     * Cacheable scope-union dim mask; empty scope is 204.
+     *
+     * @see docs/specs/map-and-search.md §4.5
      */
     #[Route('/map/scope/boundary', name: 'map_scope_boundary', methods: ['GET'])]
     public function scopeBoundary(Request $request, RegionBoundaryProvider $boundaries): Response
     {
-        // all() never throws on an array-valued param, unlike get(), so
-        // `rids[]=1` / `cc[]=BE` degrade to Everywhere instead of a 400
-        // (CoverageController::scopeParams's idiom).
         $query = $request->query->all();
         $ridsRaw = \is_string($query['rids'] ?? null) ? $query['rids'] : '';
         $rids = [];
@@ -825,12 +555,7 @@ final class MapController extends AbstractController
         $response = new JsonResponse($json, Response::HTTP_OK, [], true);
         $response->setEtag(md5($json));
         $response->setPublic();
-        // The body is session-independent (metric numbers, ISO dates, no user
-        // data), but LocaleSubscriber's session read makes AbstractSessionListener
-        // overwrite public caching with `private, must-revalidate` for anyone
-        // carrying a session cookie — i.e. every logged-in rider. This header
-        // tells it the caching decision here is deliberate (frontend review
-        // 2026-08-09 #1).
+        // docs/specs/account-and-auth.md §5 — public cache; do not let a session cookie downgrade it.
         $response->headers->set(AbstractSessionListener::NO_AUTO_CACHE_CONTROL_HEADER, 'true');
         $response->setMaxAge(3600);
         $response->isNotModified($request);

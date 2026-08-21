@@ -16,30 +16,11 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 /**
- * The fourth Safe Browsing call site (App\Catalog\Links\SafeBrowsing): what
- * makes "checked again at render" true over TIME rather than only in principle.
+ * Re-ask Safe Browsing about stale and never-checked URLs. No-op when the layer is off — rewriting UNKNOWN would hide that they were never checked.
  *
- * A url that was clean when it was submitted is exactly how a link farm gets
- * past a one-time check. The render side reads a stored verdict, so without
- * something re-asking, that verdict is frozen at whatever the day of the
- * submission happened to say.
+ * @see docs/specs/operations.md §1
  *
- * Two work lists, one sweep:
- *
- *  - **stale** - a verdict older than LinkVerdictStore::STALE_DAYS;
- *  - **unchecked** - a url living in a served item's `links` that nothing ever
- *    asked about. The layer can be switched on after links already exist, and
- *    an unasked link is precisely the one a curator is about to click.
- *
- * One sweep over DISTINCT urls, not per item, which is the point of keying the
- * verdict by url: a hundred items pointing at the same page cost one lookup.
- *
- * Idempotent, batched, and a no-op when the layer is off - with no
- * SAFE_BROWSING_KEY every answer would be UNKNOWN, and rewriting a thousand
- * rows to say "we still do not know" would only reset their timestamps and
- * hide from the next run that they were never really checked.
- *
- * @api Console entry point; runs beside the GC timers (operations.md §1).
+ * @api
  */
 #[AsCommand(name: 'app:links:recheck', description: 'Re-ask Safe Browsing about stale and never-checked outbound links')]
 final class LinkRecheckCommand extends Command
@@ -87,9 +68,6 @@ final class LinkRecheckCommand extends Command
 
         $unsafe = array_keys(array_filter($answers, static fn (string $v): bool => SafeBrowsing::UNSAFE === $v));
         foreach ($unsafe as $url) {
-            // Said out loud, not just stored: a link going bad after approval
-            // is a thing somebody should read about, and the map has already
-            // stopped serving it by the time this line is printed.
             $io->writeln('  <fg=red>unsafe</> '.$url);
         }
 

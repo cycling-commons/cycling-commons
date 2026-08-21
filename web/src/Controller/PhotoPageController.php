@@ -21,22 +21,11 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Uid\Uuid;
 
 /**
- * The page every stored photo points at (docs/specs/photo-uploads.md §5d). Its
- * URL is written into the file itself as xmpRights:WebStatement and
- * cc:attributionURL, so a reuser who has nothing but the image can still find
- * out what they may do with it and whom to credit.
+ * Stable photo page; attribution resolved live, never frozen in the file.
  *
- * Deliberately unlocalized and prefix-free: this URL is baked into files that
- * will outlive any routing decision made later, so it is the plainest stable
- * thing the app can commit to.
+ * @see docs/specs/photo-uploads.md §5d
  *
- * The attribution is RESOLVED HERE, on every request, never read from a copy
- * frozen at upload time. That single fact is what makes attribution revocable:
- * a rider who goes private, or leaves, changes what every copy of their photo
- * credits — including copies downloaded and mirrored years ago. It is also why
- * no name is embedded in the file to begin with (§1.3c).
- *
- * @api Instantiated by Symfony's router; linked from inside stored image files.
+ * @api
  */
 final class PhotoPageController extends AbstractController
 {
@@ -56,25 +45,12 @@ final class PhotoPageController extends AbstractController
     {
         $upload = $this->em->find(MediaUpload::class, Uuid::fromString($uuid));
 
-        // Nothing but an approved, still-stored photo is published here. A
-        // pending one is linked from the moderation queue and nowhere else;
-        // a rejected or tombstoned one has no public existence at all; and one
-        // whose uploader has asked for it to come down is withheld from the
-        // moment they ask (docs/specs/photo-uploads.md §6b). Withheld, not
-        // merely reported: a queued third-party report deliberately changes
-        // nothing here (§6c) — hiding the page on an anonymous report would
-        // hand strangers a lever the design exists to deny them.
+        // docs/specs/photo-uploads.md §6b / §6c / §6d — unpublished, withheld, and legal-hold look the same.
         if (null === $upload
             || MediaStatus::Approved !== $upload->getStatus()
-            // Nothing published: quarantined, or refused before it ever was
-            // (media-storage-architecture.md §3). Same page, same answer -
-            // there is no photo at this address.
             || !$upload->hasPublishedObjects()
             || null !== $upload->getObjectsDeletedAt()
             || $upload->isTakedownWithheld()
-            // Under legal hold (photo-uploads.md §6d): out of reach of the
-            // public exactly like a withheld one, and with no hint that the
-            // reason is different.
             || $upload->isEscalated()
         ) {
             return $this->render('media/photo.html.twig', [
@@ -82,10 +58,6 @@ final class PhotoPageController extends AbstractController
                 'page_description' => 'media.page.unpublished_title',
                 'nav_active' => '',
                 'photo' => null,
-                // The one thing the uploader may still learn from this page:
-                // that their own request is in hand. Anyone else sees the
-                // ordinary "not published" page and no hint that a request
-                // exists — who asked for a photo to come down is their business.
                 'takedown_pending' => null !== $upload
                     && $upload->isTakedownPending()
                     && $this->isUploader($upload),
@@ -122,21 +94,15 @@ final class PhotoPageController extends AbstractController
     }
 
     /**
-     * Who to credit, right now (docs/specs/photo-uploads.md §5d).
+     * Live attribution.
      *
-     * Two further cases land with the phase-2 write API
-     * (docs/specs/public-api.md §8): an external contribution renders
-     * "<shared name> · via app X", or "a rider, via app X" when the app shared
-     * no name. Both are additive — they set $viaApp and never a profile uuid,
-     * because an app-scoped author_ref has no Commons profile to link to.
+     * @see docs/specs/photo-uploads.md §5d
      */
     private function attribution(MediaUpload $upload): PhotoAttribution
     {
         $userId = $upload->getUserId();
         if (null === $userId) {
-            // The account is gone. What is left is whatever the rider chose on
-            // their way out (docs/specs/photo-uploads.md §6) — a frozen name,
-            // or ''.
+            // docs/specs/photo-uploads.md §6 — departing rider's credit choice.
             return new PhotoAttribution($upload->getCreditFrozen() ?? '');
         }
 
@@ -148,11 +114,9 @@ final class PhotoPageController extends AbstractController
         return new PhotoAttribution($user->getDisplayName(), $user->getUuid()?->toRfc4122());
     }
 
-    /**
-     * Is the person reading this the person who uploaded it? Only they are
-     * offered the takedown request (docs/specs/photo-uploads.md §6b) — a
-     * request from anyone else is a different claim with a different route,
-     * and the page must not invite it.
+    /** Uploader-only takedown affordance.
+     *
+     * @see docs/specs/photo-uploads.md §6b
      */
     private function isUploader(MediaUpload $upload): bool
     {

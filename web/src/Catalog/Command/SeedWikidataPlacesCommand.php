@@ -20,33 +20,11 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 /**
- * Seeds the scenic viewpoints and historical places harvested from Wikidata.
- *
- * Gives a freshly onboarded country something worth looking at on day one. A
- * region page whose only content is "0 verified items" tells a rider the
- * project is empty, not that their area is new — and the two layers a stranger
- * to a country most wants are exactly the two hardest for local riders to
- * bootstrap: what is worth stopping for, and what is worth riding past.
- *
- * **Reads a committed artifact, never the network.** `tools/wikimedia/
- * country_places.py` does the harvesting and the licence checking, and writes
- * `places-<cc>.json` for a human to read. This command imports that file. The
- * split matters: what ships is a list somebody reviewed, not whatever Wikidata
- * returned the minute the seed ran, and a re-run in six months produces the
- * same catalogue rather than silently drifting.
- *
- * Rows land as `source = wikidata`, `source_ref = wikidata:<Q-id>` — a stable
- * identity that upserts cleanly, and provenance a rider can see on the drawer's
- * Source line. They enter at `state = unverified` like every other seeded row:
- * being famous is not the same as having been checked by somebody who rode
- * there, and the verification funnel is what tells them apart.
- *
- * The curator-edit shield applies as everywhere else ({@see ItemUpsert}) — once
- * somebody has corrected one of these, a re-run leaves it alone.
+ * Seed scenic/historical places from a reviewed Wikidata artifact. Always unverified.
  *
  * @see docs/specs/catalog-data-model.md §3
  *
- * @api Console entry point (ops seeding tool).
+ * @api
  */
 #[AsCommand(
     name: 'app:catalog:seed-wikidata',
@@ -94,22 +72,10 @@ final class SeedWikidataPlacesCommand extends Command
         }
 
         $counts = [];
-        /* A Q-id is the identity here (`source_ref`), and Wikidata's `country`
-           is sovereignty rather than geography — so a border mountain belongs
-           to two countries and appears in two artifacts. Mont Blanc is in FR
-           and IT, the Matterhorn in CH and IT. Seeding both would upsert the
-           same row twice with conflicting country codes, and the last artifact
-           read would silently win. First one wins instead, and the rest are
-           reported rather than dropped in silence. */
+        /* First Q-id wins: a border place appears in two country artifacts. */
         $seenRefs = [];
         $duplicates = [];
-        /* Places that fall in no operational region. A country bbox is a
-           HARVEST box, not a statement of what has been onboarded — the US one
-           spans California to New Mexico while only California and Colorado
-           have regions — so Wikidata happily offers the Grand Canyon and the
-           Salt Lake Temple. A row with no region is invisible to every
-           region-scoped query, which is a pin nobody can find by looking where
-           it is. Skipped, and named, rather than imported into nowhere. */
+        /* Skip places in no operational region — a harvest bbox is not onboarded geography. */
         $regionless = [];
         try {
             $this->db->beginTransaction();
@@ -207,9 +173,6 @@ final class SeedWikidataPlacesCommand extends Command
             'type' => (string) $place['type'],
             'photo' => self::commonsPhoto($photo['file'], $photo['credit'], $photo['user'], $photo['license']),
         ];
-        // Wikidata's one-line description, when it has one. Short, factual and
-        // already the thing a reader wants first — but it is genuinely often
-        // absent, and an empty note renders as an empty row.
         if ('' !== (string) ($place['note'] ?? '')) {
             $attributes['note'] = (string) $place['note'];
         }
@@ -228,9 +191,7 @@ final class SeedWikidataPlacesCommand extends Command
                 \JSON_THROW_ON_ERROR,
             ),
             'cc' => $country,
-            // Left to the membership recompute, which derives region from the
-            // geometry — a country-level import has no business guessing which
-            // subdivision a point falls in.
+            // Membership recompute derives region from geometry.
             'sub' => null,
             'state' => 'unverified',
             'source' => 'wikidata',
@@ -239,13 +200,7 @@ final class SeedWikidataPlacesCommand extends Command
         ]);
     }
 
-    /**
-     * The operational region containing a point, or null.
-     *
-     * Same smallest-area-wins rule as the membership recompute, asked BEFORE
-     * the insert so a place with no region is never written at all — rather
-     * than written, left unstamped, and invisible.
-     */
+    /** Containing operational region, or null. Asked before insert so a regionless place is never written. */
     private function regionFor(float $lat, float $lng): ?int
     {
         $id = $this->db->fetchOne(
@@ -262,21 +217,7 @@ final class SeedWikidataPlacesCommand extends Command
         return false === $id ? null : (int) $id;
     }
 
-    /**
-     * Stamps each seeded place with the region that contains it.
-     *
-     * Smallest-area-wins on overlap — the SAME deterministic rule every other
-     * membership writer uses (ImportCatalogCommand, SeedManualCatalogCommand,
-     * RegionResolver, pipeline/coverage/load.py), so a Wikidata place cannot
-     * land in a different region than an identically-located imported item.
-     * Smallest-area is also what keeps these off the L2 country outlines, which
-     * contain every point in the country and would otherwise win nothing but
-     * would still be candidates.
-     *
-     * Without this the rows import with `region_id` NULL, which makes them
-     * invisible to every region-scoped query — a scenic pin nobody can find by
-     * looking at the region it is in.
-     */
+    /** docs/specs/catalog-data-model.md §6 — smallest-area-wins; scoped to source=wikidata. */
     private function recomputeMembership(): void
     {
         $this->db->executeStatement(
@@ -290,10 +231,6 @@ final class SeedWikidataPlacesCommand extends Command
     }
 
     /**
-     * Wikimedia Commons photo record — the same shape and the same URL
-     * construction {@see SeedManualCatalogCommand::wc()} produces, so the
-     * drawer cannot tell a seeded photo from a hand-authored one.
-     *
      * @return array{sm: string, lg: string, credit: string, creditUrl: string, license: string, source: string}
      */
     private static function commonsPhoto(string $file, string $credit, ?string $user, string $license): array

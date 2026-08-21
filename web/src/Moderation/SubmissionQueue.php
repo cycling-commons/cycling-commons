@@ -19,26 +19,21 @@ use Doctrine\DBAL\Connection;
 use Symfony\Component\Clock\ClockInterface;
 
 /**
- * The real moderation queue, DB-backed: pending + needs-info submissions,
- * filterable by country/region/type. The row shape is a shared contract used
- * by both map.js and moderate/index.html.twig.
+ * Moderation queue: pending + needs-info, shared row shape for desk and map.
  *
  * @see docs/specs/moderation-and-contribution.md §5.2
  *
- * @api Read by ModerateController and MapController.
+ * @api
  */
 final class SubmissionQueue
 {
     /** Rows per page on both desks. */
     public const int PER_PAGE = 25;
 
-    /**
-     * Change keys that are GEOMETRY: drawn on the map by the before/after
-     * switch, and never rendered into the textual diff.
-     */
+    /** Change keys drawn on the map, never in the textual diff. */
     private const array SHAPE_FIELDS = ['route', 'grad', 'steep', 'steepPoint', 'segment', 'location'];
 
-    private ?\Collator $collator = null; // created once and reused, not rebuilt per call
+    private ?\Collator $collator = null;
 
     public function __construct(
         private readonly Connection $db,
@@ -74,16 +69,13 @@ final class SubmissionQueue
     }
 
     /**
-     * The open-queue WHERE, shared by the page and its count so a pager can
-     * never disagree with the rows it is paging.
+     * Open-queue WHERE, shared by the page and its count.
      *
      * @return array{0: list<string>, 1: array<string, mixed>}
      */
     private function openFilters(?string $country, ?string $region, ?string $type, ?string $q, ?int $byUser = null): array
     {
-        // s.escalated_at IS NULL: a submission under legal hold leaves the
-        // desk entirely (docs/specs/photo-uploads.md §6d) — it is an admin's
-        // problem now, and no curator should meet it again.
+        // Legal hold leaves the desk (docs/specs/photo-uploads.md §6d).
         $where = ["s.status IN ('pending', 'needs_info')", 's.escalated_at IS NULL'];
         $params = [];
         if (null !== $country && '' !== $country) {
@@ -99,23 +91,12 @@ final class SubmissionQueue
             $params['type'] = $type;
         }
         if (null !== $q && '' !== trim($q)) {
-            // Case-insensitive contains on the submission's own title, which is
-            // the item name a curator is looking for. ILIKE with the wildcards
-            // in the BOUND VALUE, never concatenated into the SQL.
-            /* Title OR submitter. Searching a curator application's applicant by
-               name found nothing, because this only ever matched the item's
-               title - and "who sent this" is a question a desk gets asked
-               constantly (owner 2026-08-14). Matching the display name also
-               reaches riders with NO public profile: the name is stored either
-               way, and `public_profile` gates the public page, never the
-               moderator's view of their own queue. */
+            // ILIKE wildcards escaped in the bound value, never concatenated into SQL.
+            /* Title OR submitter display name. */
             $where[] = '(s.title ILIKE :q OR EXISTS (SELECT 1 FROM users qu WHERE qu.id = s.user_id AND qu.display_name ILIKE :q))';
             $params['q'] = '%'.str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], trim($q)).'%';
         }
-        /* One person's open work, the same filter the settled history takes.
-           A reviewer who has just read somebody's record usually wants the
-           other half of it: what of theirs is still waiting. By id, never by
-           display name. */
+        /* One person's open work, by user id never display name. */
         if (null !== $byUser) {
             $where[] = 's.user_id = :byUser';
             $params['byUser'] = $byUser;
@@ -130,17 +111,7 @@ final class SubmissionQueue
     }
 
     /**
-     * Map pending layer: strictly pending — needs-info pins stay off the map
-     * until the rider answers, because they are waiting on the rider, not on
-     * a curator, and a queue of questions nobody can act on is noise.
-     *
-     * `$focusId` is the one exception, and it exists because the desk lists
-     * needs-info rows with a "review on the map" link: an explicit
-     * `/map?pending=<id>` is a request for THAT submission, so it is served
-     * whatever its queue status. Without it the link landed on a map with no
-     * such pin, and clicking the place underneath showed the ordinary drawer
-     * — the submission looked lost. The scope guard still applies, so a
-     * curator cannot reach a submission outside their areas by guessing ids.
+     * Map pending layer: pending only, plus optional `$focusId` for a needs-info pin.
      *
      * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,whoUuid:string,when:string,body:string,was:string,now:string,status:string,asked:?string,riderReply:?string,priorRejection:?array{when:string,note:?string},photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,shape:?array{before: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}, after: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}},changes:list<array{key:string,was:?string,now:string}>,linkFlag:?string}>
      */
@@ -158,13 +129,7 @@ final class SubmissionQueue
     }
 
     /**
-     * A rider's OWN undecided submissions, for their map (owner 2026-08-16:
-     * a pending contribution was invisible to the person who made it - only
-     * curators got the pending layer). Same row shape as pendingForMap, so
-     * the client renders one layer either way; scoped by user, not by
-     * moderation areas (their own rows are theirs to see wherever they are),
-     * and needs-info rows ride along - those are exactly the ones waiting on
-     * the rider.
+     * Rider's own undecided submissions for their map.
      *
      * @return list<array<string, mixed>>
      */
@@ -178,12 +143,7 @@ final class SubmissionQueue
     }
 
     /**
-     * The human-readable before/after for a submission's `changes` blob.
-     *
-     * Shared by the queue rows and the history so a settled submission reads
-     * exactly the way it read while it was pending — the history used to name
-     * a title and a verdict and never say WHAT had been approved
-     * (owner-reported 2026-08-03).
+     * Human-readable before/after for a submission's `changes` blob.
      *
      * @return array{0: string, 1: string} was, now
      */
@@ -194,9 +154,7 @@ final class SubmissionQueue
         $was = [];
         $new = [];
         foreach ($changes as $field => $pair) {
-            // Geometry is summarised, not dumped: ChangeValue turns a route of
-            // 200 coordinate pairs into "4.3 km · foot … → summit … · 200
-            // points", which is what a curator can actually decide on.
+            // Geometry is summarised, not dumped (docs/specs/moderation-and-contribution.md §5.2a).
             if (null !== ($pair['was'] ?? null)) {
                 $was[] = $field.': '.ChangeValue::format($field, $pair['was']);
             }
@@ -207,14 +165,7 @@ final class SubmissionQueue
     }
 
     /**
-     * What has already been settled: approved and rejected submissions, newest
-     * decision first.
-     *
-     * Deliberately only those two. Trash hard-deletes the row
-     * (moderation-and-contribution.md §6) and escalation lifts it off every
-     * desk (photo-uploads.md §6d), so neither can appear here and neither
-     * needs a filter — the history is the complete set of decisions a curator
-     * can still be asked about.
+     * Settled history: approved and rejected only (docs/specs/moderation-and-contribution.md §6).
      *
      * @param ?int    $decidedBy scope to one moderator's own decisions
      * @param ?string $status    'approved' | 'rejected'; null = both
@@ -233,13 +184,7 @@ final class SubmissionQueue
                     su.public_profile, su.display_name, su.uuid AS user_uuid,
                     rr.body_text AS rider_reply
              FROM submission s LEFT JOIN users u ON u.id = s.decided_by
-                  -- The SUBMITTER, for the same public-profile rule the open
-                  -- queue follows (submitterLabel).
                   LEFT JOIN users su ON su.id = s.user_id
-                  -- The rider\'s answer follows the submission into the history.
-                  -- It is not personal mail (§5.4), so the desk is the ONLY place
-                  -- it exists — and once a submission is decided it drops out of
-                  -- the queue, which was the last surface still showing it.
                   LEFT JOIN LATERAL (
                       SELECT um.body_text
                       FROM user_message um
@@ -254,19 +199,14 @@ final class SubmissionQueue
             $types,
         );
         $now = $this->clock->now();
-        /* The photos too. A settled row is read the same way an open one is —
-           a curator checking what they approved last week wants the picture,
-           not the title (owner 2026-08-12). A rejected or trashed row may have
-           none left: disposal is real, and an empty list is the honest result
-           rather than a broken thumbnail. */
+        /* Settled photos: approved objects only; disposal may leave an empty list. */
         $photosBySubmission = $this->pendingPhotos(array_map(
             static fn (array $r): int => (int) $r['id'],
             $rows,
         ), settled: true);
 
         $out = array_map(function (array $r) use ($now, $photosBySubmission): array {
-            // Same before/after the queue card renders, so a settled row says
-            // WHAT was approved and not merely that something was.
+            // Same before/after the queue card renders.
             [$was, $new] = $this->diffStrings((string) $r['changes']);
 
             return [
@@ -274,13 +214,7 @@ final class SubmissionQueue
                 'itemId' => null !== $r['item_id'] ? (int) $r['item_id'] : null,
                 'title' => (string) $r['title'],
                 'type' => (string) $r['type'],
-                /* WHAT KIND of place this is, beside the title. A row reading
-                   "Schellinkhouterdijk" says nothing about what was proposed,
-                   while an unnamed one reads "Water & food" and is instantly
-                   clear - so the type showed up only on the rows that did not
-                   need it (owner 2026-08-14). Resolved from the letter here,
-                   where the enum lives, rather than mapped again in Twig.
-                   Null for a letter no type claims, and the template omits it. */
+                /* Type label from letter; template omits null. */
                 'typeLabel' => ItemType::fromLetter((string) $r['letter'])?->labelKey(),
                 'was' => $was,
                 'now' => $new,
@@ -290,9 +224,7 @@ final class SubmissionQueue
                     ? RelativeTime::ago(new \DateTimeImmutable((string) $r['decided_at']), $now)
                     : '',
                 'status' => (string) $r['status'],
-                // The moderator's own display name, not a pseudonym: curators are
-                // accountable to each other for decisions, and this page is
-                // curator-only.
+                // Curator display name, not a pseudonym.
                 'decidedBy' => null !== $r['decided_by_name'] ? (string) $r['decided_by_name'] : null,
                 'note' => null !== $r['decision_note'] && '' !== $r['decision_note'] ? (string) $r['decision_note'] : null,
                 'riderReply' => null !== $r['rider_reply'] && '' !== $r['rider_reply'] ? (string) $r['rider_reply'] : null,
@@ -300,35 +232,13 @@ final class SubmissionQueue
             ];
         }, $rows);
 
-        // Trashed submissions belong here too — a curator who trashed something
-        // and then cannot find it anywhere reasonably wonders whether it worked
-        // (owner-reported 2026-08-03). The row is gone, so this reads the
-        // content-free audit the Trash wrote instead, and that is ALL it can
-        // ever show: `trash_submission` deliberately records the reference and
-        // type and nothing else, because preserving a trashed title would
-        // preserve the spam Trash exists to destroy. Hence no title, no link,
-        // and no item — the reference is the whole record.
-        //
-        // Unscoped on purpose: the audit carries no region (the submission that
-        // had one is deleted), and with no content in the row there is nothing
-        // an out-of-area curator could learn from it.
+        // Trash audit is content-free and unscoped (docs/specs/moderation-and-contribution.md §6).
         $threads = $this->threadsFor(array_map(static fn (array $r): int => $r['id'], $out));
         foreach ($out as $i => $row) {
             $out[$i]['thread'] = $threads[$row['id']] ?? [];
         }
 
-        // Trash rows only on the FIRST page of an unfiltered history. They come
-        // from a different table with no shared cursor, so interleaving them
-        // across pages would drop or repeat rows as the pager moved; page one
-        // is where "did my trash work?" is actually asked.
-        // ...and never under a title search: a trash audit row is content-free
-        // by design (§6), so it has no title to match and would surface as an
-        // unexplained hit on every query.
-        // ...nor under a per-person filter, for the same reason one rung up: the
-        // audit records the reference and the type and NOT who sent it, so it
-        // cannot be attributed to anybody. Merged in anyway, it would put three
-        // strangers' trashed rows under "see their submissions" while a reviewer
-        // is deciding whether to trust that person (found 2026-08-14).
+        // Trash rows only on page 1 of an unfiltered history: no shared cursor, no title, no submitter.
         if (null === $status && (null === $q || '' === trim($q)) && null === $byUser && 1 === max(1, $page)) {
             $out = array_merge($out, $this->trashed($decidedBy, $perPage, $now));
             usort($out, static fn (array $a, array $b): int => $b['sortAt'] <=> $a['sortAt']);
@@ -360,9 +270,7 @@ final class SubmissionQueue
         $where = ["s.status IN ('approved', 'rejected')", 's.escalated_at IS NULL'];
         $params = [];
         $types = [];
-        // The same three the open queue filters on: a curator narrowing the
-        // desk to their country should be able to narrow the record the same
-        // way, with the same controls (owner, 2026-08-03).
+        // Same country/region/type filters as the open queue.
         if (null !== $country && '' !== $country) {
             $where[] = 's.country_code = :country';
             $params['country'] = $country;
@@ -379,22 +287,18 @@ final class SubmissionQueue
             $where[] = 's.decided_by = :me';
             $params['me'] = $decidedBy;
         }
-        /* One person's record. `decided_by` above is who ANSWERED; this is who
-           SENT, which is the question a reviewer reading a curator application
-           actually has: what has this rider contributed? An id, never a name -
-           display names stopped being unique on 2026-07-31. */
+        /* Filter by who sent, not who decided; by id never display name. */
         if (null !== $byUser) {
             $where[] = 's.user_id = :byUser';
             $params['byUser'] = $byUser;
         }
-        // Anything other than the two real states is ignored rather than
-        // trusted into the SQL — the value arrives from a query string.
+        // Ignore unknown status values from the query string.
         if (\in_array($status, ['approved', 'rejected'], true)) {
             $where[] = 's.status = :st';
             $params['st'] = $status;
         }
         if (null !== $q && '' !== trim($q)) {
-            // Same widening as the open queue: title OR submitter's name.
+            // Title OR submitter, same as the open queue.
             $where[] = '(s.title ILIKE :q OR EXISTS (SELECT 1 FROM users qu WHERE qu.id = s.user_id AND qu.display_name ILIKE :q))';
             $params['q'] = '%'.str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], trim($q)).'%';
         }
@@ -409,16 +313,7 @@ final class SubmissionQueue
     }
 
     /**
-     * The needs-info exchange for each submission: every question a curator
-     * asked and every answer the rider sent, oldest first.
-     *
-     * This is the one part of a submission that lives nowhere else. The queue
-     * card and the settled row show only the LATEST reply, `change_history`
-     * records what was applied rather than what was asked, and the curator's
-     * personal inbox no longer carries it (§5.4) — so a two-round exchange had
-     * no home at all (owner-reported 2026-08-03).
-     *
-     * One query for the whole page rather than one per row.
+     * Needs-info exchange per submission, oldest first. One query for the page.
      *
      * @param list<int> $submissionIds
      *
@@ -476,9 +371,7 @@ final class SubmissionQueue
         );
 
         return array_map(function (array $r) use ($now): array {
-            // The note is written as `SUB-12 · type=edit` and is the only thing
-            // there is to parse; anything unexpected degrades to the raw note
-            // rather than inventing a reference.
+            // Note is `SUB-12 · type=edit`; unexpected degrades to the raw note.
             $note = (string) $r['note'];
             preg_match('/^SUB-(\d+)(?:.*type=(\w+))?/', $note, $m);
             $at = new \DateTimeImmutable((string) $r['created_at']);
@@ -488,9 +381,7 @@ final class SubmissionQueue
                 'itemId' => null,
                 'title' => isset($m[1]) ? 'SUB-'.$m[1] : $note,
                 'type' => $m[2] ?? '',
-                // A trashed row is content-free by design: the content is gone,
-                // and so are its photos. The empty list keeps the shared row
-                // shape true rather than making every reader test for it.
+                // Content-free: empty photos keep the shared row shape.
                 'photos' => [],
                 'who' => '',
                 'when' => RelativeTime::ago($at, $now),
@@ -515,13 +406,7 @@ final class SubmissionQueue
         return (int) $this->db->fetchOne($sql, $frag['params'], $frag['types']);
     }
 
-    /**
-     * Which statuses an option list describes.
-     *
-     * The two desks list different sets: the queue offers the countries that
-     * still have open work, the record the countries that have settled work.
-     * A literal per branch, never an interpolated caller value.
-     */
+    /** Status tuple for option lists; a literal per branch, never interpolated. */
     private static function statusTuple(bool $settled): string
     {
         return $settled ? "('approved', 'rejected')" : "('pending', 'needs_info')";
@@ -557,12 +442,6 @@ final class SubmissionQueue
      * @param array<string, mixed> $params bound query parameters
      *
      * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,whoUuid:string,when:string,body:string,was:string,now:string,status:string,asked:?string,riderReply:?string,priorRejection:?array{when:string,note:?string},photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,shape:?array{before: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}, after: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}},changes:list<array{key:string,was:?string,now:string}>,linkFlag:?string}>
-     *
-     * The returned row is a deliberate shared view-model: the SAME shape is
-     * consumed by both moderate/index.html.twig AND map.js (as JSON). The
-     * server-side formatting below (anonymised who, relative when, ' · '-joined
-     * diffs) is the single source of truth for both consumers. Moving it into
-     * one template would fork the logic into client JS.
      */
     private function rows(ModerationScope $scope, string $where, array $params, ?int $limit = null, int $offset = 0): array
     {
@@ -623,64 +502,25 @@ final class SubmissionQueue
                 'body' => (string) $r['body'],
                 'was' => $was,
                 'now' => $new,
-                // A `needs_info` row only reaches the map on an explicit
-                // ?pending=<id>; the drawer says so rather than showing a card
-                // indistinguishable from one still awaiting a first look.
+                // needs_info reaches the map only via ?pending=<id>.
                 'status' => (string) $r['status'],
                 'asked' => null !== $r['decision_note'] && '' !== $r['decision_note'] ? (string) $r['decision_note'] : null,
                 'riderReply' => null !== $r['rider_reply'] ? (string) $r['rider_reply'] : null,
-                /* The decision this curator may be about to reverse. A rejected
-                   materialization is REVIVED rather than twinned, so the old
-                   report and its rejection hang off the same item id — which is
-                   what makes overturning possible, and is useless if the row
-                   only ever shows the new report (found 2026-08-12 while fixing
-                   the revive). Null for the common case: an item nobody has
-                   turned down before. */
+                /* Prior rejection on a revived item, if any. */
                 'priorRejection' => null !== $r['item_id'] ? ($rejectedByItem[(int) $r['item_id']] ?? null) : null,
                 'photos' => $photosBySubmission[(int) $r['id']] ?? [],
-                /* The proposed SHAPE, for the drawer's before/after switch.
-                   Coordinates in a text diff are not reviewable: a curator
-                   cannot tell from "50.4860, 5.6927" whether the summit moved
-                   somewhere sensible. The map can show it, so it does — the
-                   switch redraws the climb line between what is there now and
-                   what is being proposed (owner, 2026-08-03).
-                   Both sides travel, rather than leaning on the loaded
-                   catalog: a NEW climb has no current feature to fall back to,
-                   and a changed `route` with an unchanged `grad` would
-                   otherwise colour the proposed line from the wrong profile. */
+                /* Proposed shape for the drawer before/after switch (docs/specs/moderation-and-contribution.md §5.2b). */
                 'shape' => self::shapeSides((string) $r['changes']),
-                /* The same change set as `was`/`now`, but per field, so the
-                   drawer can group it and — more usefully — show the proposed
-                   value in place of the current one when the curator flips to
-                   After. One run-on string was readable; a field-by-field
-                   comparison against the item's own display is reviewable
-                   (owner, 2026-08-03). Labels stay client-side: the drawer
-                   already has localised ones in CC_FIELD_SCHEMA. */
+                /* Per-field changes for the drawer; labels stay client-side. */
                 'changes' => self::changeRows((string) $r['changes']),
-                /* The Safe Browsing verdict on the links THIS submission
-                   proposes (App\Catalog\Links\SafeBrowsing). Null when it
-                   proposes none, which is almost every card.
-
-                   Read here rather than written into the `links` attribute at
-                   submit, and that is the whole reason the verdict lives in its
-                   own table: `links` flows through the change diff above, so a
-                   verdict stored inside it would render as a rider-made edit
-                   and manufacture curator work out of a background check.
-
-                   FLAG, never silently reject (owner's rule). The submission
-                   is in the queue either way, carrying its verdict, because a
-                   false positive that vanishes is indistinguishable from a
-                   bug. */
+                /* Safe Browsing flag on proposed links; never silently reject. */
                 'linkFlag' => $linkFlags[(int) $r['id']] ?? null,
             ];
         }, $rows);
     }
 
     /**
-     * The worst link verdict per submission, in ONE query for the whole page.
-     *
-     * Keyed by url in the store, so a page of twenty cards pointing at the same
-     * handful of sites costs one lookup rather than twenty.
+     * Worst link verdict per submission, one query for the page.
      *
      * @param list<array<string, mixed>> $rows
      *
@@ -713,17 +553,7 @@ final class SubmissionQueue
     }
 
     /**
-     * How a submitter is named to a curator.
-     *
-     * Pseudonymous by default (`account-and-auth.md` §names): a decision should
-     * turn on the contribution, not on who sent it.
-     *
-     * **Except when the rider has said otherwise.** `public_profile` is an
-     * explicit opt-in that already puts their name on the contributors wall and
-     * on a public `/riders/{uuid}` page, so hiding it from the one person who
-     * has to read their work was inconsistent rather than protective — the
-     * owner hit exactly that (2026-08-12). A private account is unchanged, and
-     * that is where the protection actually matters.
+     * Pseudonymous unless `public_profile` (docs/specs/account-and-auth.md).
      *
      * @param array<string, mixed> $row
      */
@@ -738,18 +568,7 @@ final class SubmissionQueue
     }
 
     /**
-     * Pending photos per submission, with the facts harvested from each file:
-     * the capture month and how far the shot was taken from the pin. The
-     * curator judges the photo with the facts
-     * (docs/specs/photo-uploads.md §5).
-     *
-     * One query for the whole page rather than one per row.
-     *
-     * Both variants travel: `sm` is the 120px card thumbnail, `lg` is what the
-     * curator opens in the lightbox. A 120px crop is not enough to judge
-     * whether a photo shows what it claims — or whether somebody is
-     * identifiable in it — which is exactly the judgement this card asks for.
-     * `orig` is never offered here, as everywhere else
+     * Photos per submission: `sm` thumbnail + `lg` lightbox; never `orig`
      * (docs/specs/photo-uploads.md §5).
      *
      * @param list<int> $submissionIds
@@ -762,19 +581,7 @@ final class SubmissionQueue
             return [];
         }
 
-        /* Which photos exist depends on which desk is asking.
-
-           The open queue wants the ones still awaiting a verdict. The history
-           wants what was APPROVED — those objects are live and are what the
-           row is a record of. Rejected media is deleted on expiry
-           (photo-uploads.md §6), so listing it would put a broken thumbnail on
-           an audit trail, which reads as data loss rather than as disposal
-           working. */
-        /* `pending_scan` is deliberately in neither list. Those rows have no
-           objects at all yet (media-storage-architecture.md §3), so there is
-           nothing to link a thumbnail to - and the revision filter below says
-           the same thing a second time, in the one place a missing revision
-           would otherwise become a broken image on a curator's card. */
+        /* Open queue: pending; history: approved. pending_scan has no objects. */
         $statuses = $settled ? ['approved'] : ['pending'];
         $rows = $this->db->fetchAllAssociative(
             'SELECT id, submission_id, storage_bucket, revision, taken_at, gps_distance_m
@@ -805,19 +612,7 @@ final class SubmissionQueue
     }
 
     /**
-     * The most recent REJECTION already on record for each of these items.
-     *
-     * A rejection is a decision about one report, not a permanent silence on a
-     * place, so a rejected row is revived when somebody proposes it again
-     * (CatalogContributionService). That is the right behaviour and it creates
-     * this problem: the queue row carries the new report and says nothing about
-     * the verdict it is asking a curator to overturn, who then has to go
-     * looking for a decision they do not know exists.
-     *
-     * Newest rejection per item, and only rejections — an approval is the
-     * item's ordinary history and is already on the card as the change list.
-     * `decided_at` can be null on rows written before it was recorded, so the
-     * id breaks the tie rather than the row dropping out of the ordering.
+     * Most recent rejection per item, for revived materializations.
      *
      * @param list<int> $itemIds
      *
@@ -842,9 +637,7 @@ final class SubmissionQueue
         foreach ($rows as $row) {
             $note = trim((string) ($row['decision_note'] ?? ''));
             $byItem[(int) $row['item_id']] = [
-                // ISO, formatted by the reader's own date preference at render
-                // time (`cc_date` on the desk, CC_DATE_FORMAT in the drawer) —
-                // never pre-formatted here.
+                // ISO; formatted at render time, never here.
                 'when' => null !== $row['decided_at']
                     ? (new \DateTimeImmutable((string) $row['decided_at']))->format(\DateTimeInterface::ATOM)
                     : '',
@@ -856,10 +649,6 @@ final class SubmissionQueue
     }
 
     /**
-     * Locale-aware sort of a column of strings. Takes already-fetched values
-     * (not a SQL string) so no method here accepts raw SQL text as an
-     * argument.
-     *
      * @param list<mixed> $values
      *
      * @return list<string>
@@ -874,13 +663,7 @@ final class SubmissionQueue
     }
 
     /**
-     * The before/after climb geometry a submission proposes, or null when it
-     * proposes none.
-     *
-     * `changes` only carries the fields that actually changed, so each side is
-     * assembled from whichever of route/grad/steep is present. A side with no
-     * route is dropped: there is nothing to draw, and an empty overlay reads as
-     * "the climb has no line" rather than "this field was not touched".
+     * Before/after geometry a submission proposes, or null.
      *
      * @return array{before: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}, after: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}}|null
      */
@@ -889,11 +672,7 @@ final class SubmissionQueue
         /** @var array<string, array{was: mixed, now: mixed}> $changes */
         $changes = json_decode($changesJson, true) ?: [];
 
-        /* A MOVED PIN is a shape as well, and the least readable of all as text:
-           "52.62142, 5.13569 → 52.62117, 5.13448" tells a curator that something
-           moved and nothing about whether it moved to the right place (owner
-           2026-08-12). It goes to the same before/after switch, drawn as two
-           points on the map they are already looking at. */
+        /* A moved pin is a shape too. */
         if (isset($changes['location'])) {
             $point = static function (string $key) use ($changes): ?array {
                 $raw = $changes['location'][$key] ?? null;
@@ -905,8 +684,7 @@ final class SubmissionQueue
                     return null;
                 }
 
-                // `point`, not `route`: one position, not a line. The renderer
-                // draws a marker for it and a line for the others.
+                // `point`, not `route`: one position, not a line.
                 return ['point' => [(float) $parts[0], (float) $parts[1]], 'route' => [], 'grad' => [], 'steep' => null];
             };
             $before = $point('was');
@@ -915,19 +693,14 @@ final class SubmissionQueue
             return (null === $before && null === $after) ? null : ['before' => $before, 'after' => $after];
         }
 
-        /* A road-surface stretch is a shape too, and it was arriving at the
-           desk as a wall of raw JSON in the diff — a curator cannot review
-           `{"a":[5.265,50.276],"b":…,"line":[[…]]}` (owner-reported
-           2026-08-12). It draws on the map like a redrawn climb, using the same
-           before/after switch: geometry is reviewed by looking at it. */
+        /* A road-surface stretch is a shape too. */
         if (isset($changes['segment'])) {
             $seg = static function (string $key) use ($changes): ?array {
                 $side = $changes['segment'][$key] ?? null;
                 if (!\is_array($side)) {
                     return null;
                 }
-                // The road-following path when the router found one, else the
-                // two taps — the same fallback the item geometry uses.
+                // Routed path when present, else the two taps.
                 $line = \is_array($side['line'] ?? null) ? $side['line'] : null;
                 if (null === $line) {
                     $a = $side['a'] ?? null;
@@ -937,8 +710,7 @@ final class SubmissionQueue
                     }
                     $line = [$a, $b];
                 }
-                // Stored [lng,lat]; showPendingShape() reads climb order,
-                // [lat,lng]. Flipping here keeps ONE renderer for both.
+                // Stored [lng,lat]; renderer expects [lat,lng].
                 $route = [];
                 foreach ($line as $point) {
                     if (\is_array($point) && 2 === \count($point) && is_numeric($point[0]) && is_numeric($point[1])) {
@@ -950,15 +722,7 @@ final class SubmissionQueue
             };
             $before = $seg('was');
             $after = $seg('now');
-            /* A NEW stretch has no previous geometry, so Before used to be
-               unavailable — the switch rendered dead and a curator could not see
-               what the proposal replaces (owner-reported 2026-08-12).
-
-               It replaces something: the road as the map drew it, which for a
-               road nobody has recorded a surface for is the red dotted "needs
-               recording" line. Same geometry, marked `unrecorded`, so the
-               drawer can draw it in the vocabulary the legend already uses
-               rather than inventing a second way to say "no answer yet". */
+            /* New stretch: Before is the unrecorded road, not empty. */
             if (null === $before && null !== $after) {
                 $before = $after + ['unrecorded' => true];
             }
@@ -995,10 +759,7 @@ final class SubmissionQueue
     }
 
     /**
-     * The submission's changes, one entry per field.
-     *
-     * `was` is null when the field had no previous value — the "add a missing
-     * field" case, which must not render a struck-out blank.
+     * Per-field changes. `was` is null when the field had no previous value.
      *
      * @return list<array{key: string, was: ?string, now: string}>
      */
@@ -1008,15 +769,11 @@ final class SubmissionQueue
         $changes = json_decode($changesJson, true) ?: [];
         $out = [];
         foreach ($changes as $field => $pair) {
-            // Geometry is reviewed on the map (shapeSides), never as text. A
-            // stretch printed as raw coordinate JSON is not something a human
-            // can check, and it pushed the fields that ARE checkable off the
-            // card (owner-reported 2026-08-12).
+            // Geometry is reviewed on the map, never as text.
             if (\in_array($field, self::SHAPE_FIELDS, true)) {
                 continue;
             }
-            // A payload shape that is not {was, now} is not a diff and cannot
-            // be rendered as one. Skipping beats guessing.
+            // Skip a payload that is not {was, now}.
             if (!\is_array($pair)) {
                 continue;
             }

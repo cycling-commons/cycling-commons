@@ -17,8 +17,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 /**
- * @api Bootstrap CLI command, wired by Symfony's DI. Never referenced
- *      directly from application code.
+ * @api
  */
 #[AsCommand(
     name: 'app:user:create',
@@ -89,10 +88,6 @@ final class CreateUserCommand extends Command
             $this->em->persist($user);
             $this->em->flush();
         } catch (UniqueConstraintViolationException) {
-            // Email is the only unique column a caller of this command can
-            // trip. Display names stopped being unique deliberately
-            // (account-and-auth.md §9): two riders may share one, so the
-            // email local part being taken is no longer a reason to refuse.
             $io->error(sprintf('An account with email "%s" already exists.', $email));
 
             return Command::FAILURE;

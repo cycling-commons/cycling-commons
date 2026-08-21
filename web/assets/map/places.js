@@ -1,20 +1,6 @@
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
-/* Places and openers: the town/city info card with its "in the Commons nearby"
-   list, and every by-name / by-id way into a drawer — a deep link, a search hit,
-   a place-card row, the curator queue.
-   Extracted from map.js by the module split.
-
-   `_placeReq` is the town-card half of the shared drawer-generation convention
-   (its coverage half is coverage.js's invalidateCoverageDrawer). It stays
-   private — an importer would hold a read-only binding of a counter — and is
-   bumped through bumpPlaceReq(). Everything that opens or closes a drawer calls
-   BOTH: drawer.js's openDrawer/closeDrawer, renderPlaceCard here, and
-   ride-check's results drawer.
-
-   resolveLocalFeature() is deliberately side-effect-free and separate from
-   openFeatureByName(): the deep-link auto-widen gate has to ask "does this
-   resolve?" BEFORE any scope change, and the two lookups must never drift
-   (07-20 review finding 9). */
+/* Town card and deep-link / search openers.
+   @see docs/specs/map-and-search.md §6.5, §8 */
 import { D, tpl } from './i18n.js';
 import { escPend, safeHref, txtOn, haversine, featurePoint } from './util.js';
 import { uKm, uM } from './units.js';
@@ -29,57 +15,23 @@ import { COVERAGE_ON, widenForDeepLink, openCoverageByRef,
          invalidateCoverageDrawer } from './coverage.js';
 import { showRouteCorrections } from './corrections.js';
 
-// The town-card half of the drawer-generation convention — see the header.
 export function bumpPlaceReq(){ _placeReq++; }
 
-// Race guard: EVERY drawer-context render (openDrawer, openPlace/
-// renderPlaceCard, the ride-check results drawer, closeDrawer) bumps BOTH
-// the coverage generation (coverage.js's invalidateCoverageDrawer()) and
-// _placeReq together — one shared drawer-generation convention, two names so
-// each call site reads as "this fetch kind is now stale". A stale
-// GET /map/coverage/poi/{ref} detail response or a stale
-// GET /map/coverage/nearby town-card response (_placeReq) can therefore
-// never repaint a drawer that has since moved on — regardless of which
-// click path (coverage dot, curated pin, -osm dot, route, place card,
-// another town) opened the newer drawer. Before this pairing, _placeReq
-// was bumped only in openPlace, so switching from a town card to a plain
-// feature drawer (or to a different town) mid-fetch let the stale nearby
-// response resurrect the old town card over the new drawer content. The
-// enrich repaint itself is a content-only patch (renderDrawerBody), not a
-// re-open: no halo restart, no focus steal, no mobile-sheet snap to half.
+// Race-guard: every drawer-context render bumps this with invalidateCoverageDrawer()
+// so a stale /map/coverage/nearby response cannot resurrect a dismissed town card.
 let _placeReq=0;
 
-/* The neighbourhood the town card covers, in kilometres. Named because three
-   places have to agree on it: the local index lookup, the coverage request,
-   and the heading the rider reads — which now writes it in their own unit. */
 const NEARBY_KM = 5;
 
-// place info card: fly to the town/village, show its info (when known) +
-// everything in the Commons within 5 km, grouped by layer. Works for any
-// geocoded place (spec 2026-07-14 §3.3): CITIES entries keep their wiki/info
-// blurbs; Photon hits pass just {ll}.
 export function openPlace(name, meta){
-  // Town outside the current scope → transiently widen (persist:false, the
-  // deep-link mechanism), so the map matches the scope-exempt town drawer
-  // instead of zooming into an area the scope renders empty (owner decision
-  // 2026-07-21, map-and-search.md §4.5; opening a town is an explicit
-  // location choice — the map should follow it). Bbox containment is the
-  // deliberate approximation: a town inside the scope bbox already renders
-  // its surroundings, so no widen is needed there. The saved scope returns
-  // on the next plain load.
+  // docs/specs/map-and-search.md §4.5 — town outside the saved scope transiently widens (persist:false).
   const sbb = window.CCScope && window.CCScope.bbox ? window.CCScope.bbox() : null;
   if(sbb && (meta.ll[1]<sbb[0] || meta.ll[0]<sbb[1] || meta.ll[1]>sbb[2] || meta.ll[0]>sbb[3])){
     widenForDeepLink();
   }
-  // A · Road surface segments are corridor data, not places — near any mapped
-  // town they'd flood the card (Spa: 58 rows). Text search still finds them.
+  // A · segments are corridor data, not places — they would flood the card.
   const near = nearbyItems(meta.ll, NEARBY_KM).filter(n=>n.e.letter!=='A');
   renderPlaceCard(name, meta, near);
-  // Frame the whole ≤5 km neighbourhood instead of flyToPin's zoom-14 dive —
-  // hovering the list must pulse items that are actually on screen. The
-  // drawer covers the right edge on desktop (bottom sheet on mobile), hence
-  // the asymmetric padding. Framed ONCE, from the local rows: the coverage
-  // re-render below must not re-jump the camera.
   if(near.length){
     let minLat=meta.ll[0],maxLat=meta.ll[0],minLng=meta.ll[1],maxLng=meta.ll[1];
     near.forEach(n=>{ if(!n.e.ll) return; const [la,ln]=n.e.ll;
@@ -90,25 +42,15 @@ export function openPlace(name, meta){
   } else {
     map.flyTo({center:[meta.ll[1],meta.ll[0]], zoom:12.5, offset:[window.innerWidth<=820?0:-150,0], duration:900, essential:true});
   }
-  // Coverage tier (coverage-provider.md §5): uncurated OSM
-  // within the same 5 km from /map/coverage/nearby, merged behind the local
-  // rows per letter group. Photon-style silent degradation — the local card
-  // is already on screen; a slow/failed response changes nothing.
   if(!COVERAGE_ON) return;
   const myReq=++_placeReq;
   fetch(`/map/coverage/nearby?lat=${meta.ll[0]}&lng=${meta.ll[1]}&km=${NEARBY_KM}`, {headers:{'Accept':'application/json'}})
     .then(r=>{ if(!r.ok) throw new Error(String(r.status)); return r.json(); })
     .then(d=>{ if(myReq!==_placeReq) return;
-      if(!document.getElementById('drawer').classList.contains('open')) return;   // card closed while in flight
+      if(!document.getElementById('drawer').classList.contains('open')) return;
       renderPlaceCard(name, meta, near, d.groups||[]); })
     .catch(()=>{});
 }
-// town-card body renderer — split from openPlace so the coverage nearby
-// response re-renders the list without re-running the framing. Row order:
-// local (curated/served) rows nearest-first, then coverage rows appended
-// inside the same letter groups. Coverage items with a curated twin already
-// in the local index are dropped (IDX_IDS — dedupe by served item id).
-// (_placeReq is declared above; its coverage half lives in coverage.js.)
 function renderPlaceCard(name, meta, near, covGroups){
   const all=near.slice();
   (covGroups||[]).forEach(g=>{
@@ -118,21 +60,16 @@ function renderPlaceCard(name, meta, near, covGroups){
       if(it.itemId!=null && idxIds().has(g.letter+':'+it.itemId)) return;
       all.push({dist:haversine(meta.ll, it.ll), e:{name:it.n||layer.label, kind:layer.label,
         badge:layer.icon, color:layer.color, letter:g.letter, ll:it.ll, hlOff:[0,0], community:!it.curated,
-        // it.itemId (curated rows only) routes through the served item's own
-        // attributes instead of the OSM-tile fallback — see openCoverageByRef's header.
         go:()=>openCoverageByRef(it.ref, g.letter, it.ll, it.n, it.itemId)}});
     });
   });
-  // group rows by letter, keeping the global nearest-first order inside each group
   const byLetter={};
   all.forEach((n,i)=>{ n._i=i; (byLetter[n.e.letter]=byLetter[n.e.letter]||[]).push(n); });
   const letters=Object.keys(byLetter).sort();
   const isComm=n=>n.e.community || n.e.verified===false;
   const list = all.length
     ? letters.map(L=>{ const rows=byLetter[L], e0=rows[0].e;
-        // 07-15 decision A: verified/curated rows first, then the community
-        // subgroup capped at 3 behind a "show all N" expander. Same collapsed
-        // presentation on mobile (decision F) — one code path.
+        // docs/specs/map-and-search.md §12 — verified first; community subgroup capped at 3.
         const ver=rows.filter(n=>!isComm(n)), com=rows.filter(isComm);
         const row=(n,hidden)=>`<li${hidden?` hidden data-more="${L}"`:''}><button class="cc-near" data-i="${n._i}"><span class="cc-near-nm">${escPend(n.e.name)}${isComm(n)?`<span class="cc-comm-tag">${escPend(D.community||'community')}</span>`:''}</span><em>${n.dist<1?uM(Math.round(n.dist*1000)):uKm(n.dist)}</em></button></li>`;
         let html=`<li class="cc-near-grp"><span class="cc-near-k" style="background:${e0.color};color:${txtOn(e0.color)}">${escPend(e0.badge)}</span>${escPend(e0.kind)} · ${rows.length}</li>`;
@@ -143,7 +80,7 @@ function renderPlaceCard(name, meta, near, covGroups){
         return html;
       }).join('')
     : `<li class="cc-near-empty">${D.nothingHere||'Nothing mapped here yet — be the first to add something.'}</li>`;
-  invalidateCoverageDrawer();   // invalidate any in-flight coverage POI detail — this render supersedes it
+  invalidateCoverageDrawer();
   document.getElementById('drawerBody').innerHTML =
     `<span class="cc-d-type" style="--c:#3E7D8C;color:#fff">◎ ${meta.t==='City'?(D.city||'City'):(D.town||'Town')}</span>
      <div class="cc-d-name">${escPend(name)}</div>
@@ -156,44 +93,27 @@ function renderPlaceCard(name, meta, near, covGroups){
     b.onclick=()=>n.e.go();
     b.onmouseenter=()=>highlightAt(n.e.ll, n.e.hlOff); b.onmouseleave=clearHighlight;
   });
-  // expander: reveal the collapsed community rows of one group, then retire itself
   document.querySelectorAll('#drawerBody .cc-near-more').forEach(b=>{
     b.onclick=()=>{ document.querySelectorAll(`#drawerBody li[data-more="${b.dataset.grp}"]`).forEach(li=>li.hidden=false);
       b.closest('li').hidden=true; };
   });
   const d=document.getElementById('drawer'); d.classList.add('open'); d.setAttribute('aria-hidden','false');
-  d.focus({preventScroll:true});   // move focus into the panel (not the close X — avoids a focus ring on tap/click open)
-  if(window.innerWidth<=820) sheet.reset();          // land at half; desktop untouched
+  d.focus({preventScroll:true});
+  if(window.innerWidth<=820) sheet.reset();
 }
-// city info card — thin CITIES-lookup wrapper kept for existing callers (drawer .cc-city links, search)
 export function openCity(name){
   const c = CITIES[name]; if(!c) return;
   openPlace(name, c);
 }
-// Resolve a name to a CATALOG feature or PIVOT stay WITHOUT side effects —
-// shared by openFeatureByName and the deep-link auto-widen gate (07-20
-// review finding 9), so "does this deep link resolve?" can be asked before
-// any scope change or drawer open, and the two lookups can never drift.
 export function resolveLocalFeature(name){
   let found=null;
   CATALOG.forEach(layer=>layer.features.forEach(f=>{ if(f.name===name) found={layer,f}; }));
   if(found) return found;
-  // PIVOT stays live in CC_STAYS_PIVOT, not CATALOG — resolve them here so
-  // an official Tourisme Wallonie deep-link opens the full stay drawer
-  // (name, province, official-registry provenance) instead of falling
-  // through to the coverage path, whose /poi endpoint knows only node|way
-  // refs and 404s on fx:pivot:/manual: source_refs.
+  // PIVOT stays are not in CATALOG; resolving here avoids a coverage 404 on fx:pivot: refs.
   const pv=(window.CC_STAYS_PIVOT && CC_STAYS_PIVOT.features || [])
     .find(f=>f.properties && f.properties.n===name);
   if(pv) return {pivot:pv};
-  // Curated POOL features (the letters served as feature collections — water,
-  // services, stays, transit, shelter, scenic, history, toilets) live in
-  // osmLayers[key].data, never in CATALOG[].features. Without this branch a
-  // name deep-link for a fountain resolved nothing locally and fell through to
-  // the coverage path, which opens the OSM twin's record — so a rider
-  // following "view it on the map" from their own approved contribution
-  // landed on a plain OpenStreetMap point and concluded their submission had
-  // been lost.
+  // docs/specs/map-and-search.md §12 — pool features are not in CATALOG; skip this and a name deep-link opens the OSM twin.
   for(const key of Object.keys(osmLayers)){
     const info=osmLayers[key];
     const f=info && info.data && (info.data.features||[]).find(x=>x.properties && x.properties.n===name);
@@ -201,15 +121,7 @@ export function resolveLocalFeature(name){
   }
   return null;
 }
-// open a specific feature by name (deep-link from e.g. a profile page): activate its layer, draw, zoom in
-/* Resolve a served feature by its DB id.
-
-   The by-name resolver above cannot serve the moderation history: a settled
-   submission knows the item id, and its title is the submission's title, which
-   need not still match the item's name. Linking a settled row at
-   `?pending=<id>` was worse still — the submission is no longer pending, so
-   nothing resolved and the map simply opened at the default scope with nothing
-   selected (owner-reported 2026-08-03). */
+// Side-effect-free lookup; the deep-link widen gate asks this before any scope change.
 export function resolveLocalFeatureById(id){
   const want = String(id);
   let found = null;
@@ -217,9 +129,6 @@ export function resolveLocalFeatureById(id){
     if (f.id != null && String(f.id) === want) found = { layer, f };
   }));
   if (found) return found;
-  // Curated pool features (the letters served as feature collections) live in
-  // the OSM pools rather than CATALOG.features — same fallback order the
-  // by-name resolver uses.
   for (const key of Object.keys(osmLayers)) {
     const info = osmLayers[key];
     const f = info && info.data && (info.data.features || [])
@@ -249,13 +158,6 @@ export function openFeatureByName(name){
   if(found.poolKey) return openPoolFeature(found.poolKey, found.f);
   return openLocalFeature(found.layer, found.f);
 }
-/* Open a curated pool feature — the Commons item, not its OSM twin.
-
-   The same drawer the pin's own click builds (openCoverageByRef's pool branch
-   and confLeafPin both go through waterDrawer/osmDrawer with the served
-   properties), so a deep link, a search hit and a click on the pin all show
-   the same record: the rider's name, their photos, the attributes they filled
-   in — rather than the bare tile-derived OSM one. */
 export function openPoolFeature(key, f){
   const layer=layerByKey[key]; if(!layer) return false;
   const c=f.geometry && f.geometry.coordinates; if(!c || c.length<2) return false;
@@ -270,9 +172,6 @@ export function openPoolFeature(key, f){
   flyToPin([lo.lng, lo.lat]);
   return true;
 }
-// Open an ALREADY-resolved CATALOG feature (no name lookup) — the
-// side-effecting half of openFeatureByName, shared by the index/place-card
-// `go` so a nameless feature opens its exact pin rather than a name-slug guess.
 export function openLocalFeature(layer, f){
   if(!active.has(layer.key)){
     active.add(layer.key);
@@ -283,18 +182,10 @@ export function openLocalFeature(layer, f){
   const p=featurePoint(f); if(p) flyToPin([p[1],p[0]]);
   return true;
 }
-// open a specific route by id, SELECTED (deep-link from the curator Routes desk).
-// Curated mode only draws best-of routes; a non-best-of route now gets a
-// single reveal pin at its start (07-15 decision C) instead of the old
-// force-switch of the whole map into Everything.
 export function openRouteById(id){
   const layer=layerByKey['experience']; if(!layer) return false;
   const f=layer.features.find(x=>String(x.id)===String(id));
   if(!f) return false;
-  // Opening a route IS asking to see it: with the layer toggled off the
-  // drawer opened over a map with no line on it and the rail read 0/11
-  // (owner-reported 2026-08-09). Same reveal openPendingById below has
-  // always done for the moderation deep-link.
   if(!active.has('experience')){
     active.add('experience');
     const t=document.querySelector('#layers .layer[data-key="experience"]'); if(t) t.classList.remove('off');
@@ -302,12 +193,11 @@ export function openRouteById(id){
   }
   openDrawer(layer,f);
   const p=featurePoint(f); if(p) flyToPin([p[1],p[0]]);
-  if(!(mode()==='all'||f.cur) && p) revealPinAt(layer, p);
+  if(!(mode()==='all'||f.cur) && p) revealPinAt(layer, p);  // docs/specs/map-and-search.md §12 — no force-switch to Everything
   showRouteCorrections(id);
   return true;
 }
 
-// open a pending submission by id (deep-link from the /moderate queue's "View on map")
 export function openPendingById(id){
   const layer = layerByKey.pending; if(!layer) return false;
   const f = layer.features.find(x=>x.pending && String(x.pending.id)===String(id));
@@ -321,8 +211,6 @@ export function openPendingById(id){
   const p=featurePoint(f); if(p) flyToPin([p[1],p[0]]);
   return true;
 }
-// open a PIVOT accommodation point (Tourisme Wallonie, CC-BY) from search — these are bulk
-// stays merged into the map, not CATALOG features, so activate the E layer, draw + zoom in
 export function openStayPivot(f){
   const layer=layerByKey.stays; if(!layer) return false;
   if(!active.has('stays')){
@@ -330,7 +218,7 @@ export function openStayPivot(f){
     const t=document.querySelector('#layers .layer[data-key="stays"]'); if(t) t.classList.remove('off');
     render();
   }
-  const c=f.geometry.coordinates;                       // [lng,lat]
+  const c=f.geometry.coordinates;
   openDrawer(layer, osmDrawer(layer, f.properties, {lng:c[0], lat:c[1]}, (osmLayers.stays||{}).src||''));
   flyToPin(c);
   return true;

@@ -12,32 +12,18 @@ use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 /**
- * Server-side reader of the coverage tile manifest: the weekly pipeline
- * uploads a versioned PMTiles artifact plus a manifest at a stable key.
- * This resolves the current tile URL so MapController can inject it into
- * the page, with no client-side manifest fetch needed, and a new artifact
- * goes live within the cache TTL without a deploy.
+ * Coverage tile manifest reader (docs/specs/coverage-provider.md §4).
+ * Failure returns null and never throws.
  *
- * Tolerant by design: the map must render without coverage tiles whenever
- * the flag is off, the manifest URL is unset, or the bucket is unreachable.
- * Every failure path returns null and logs a warning; it never throws.
- * Failures are cached briefly, so a broken bucket costs one bounded fetch
- * per holdoff window, not one per /map render.
+ * @see docs/specs/coverage-provider.md §4
  *
- * @see coverage-provider.md §4
- *
- * @api Injected into MapController::map().
+ * @api
  */
 final class CoverageManifest
 {
     /** How long, in seconds, the manifest URL stays cached before being re-read. */
     private const int CACHE_TTL = 3600;
 
-    /**
-     * How long, in seconds, a failed fetch is remembered before retrying.
-     * This keeps a broken bucket from costing a slow fetch on every /map
-     * render, while still recovering within half a minute.
-     */
     private const int NEGATIVE_TTL = 30;
 
     /** Bucket fetch bound, in seconds, used as both idle timeout and total max duration. A slow bucket must not stall a /map render. */
@@ -56,20 +42,14 @@ final class CoverageManifest
     public function currentTileUrl(): ?string
     {
         $manifest = $this->manifest();
-        // The cached manifest is only ever non-null once its 'url' key has been
-        // validated as a non-empty string (see manifest()), so this is a plain read.
+        // Cached manifest is only non-null once 'url' has been validated.
         $url = $manifest['url'] ?? null;
 
         return \is_string($url) ? $url : null;
     }
 
     /**
-     * The country codes the current tile artifact was built for
-     * (coverage-provider.md §4), e.g. ['BE', 'NL'] —
-     * the map client turns each into a per-country coverage layer. Empty when
-     * coverage is off, the manifest is unreachable, or a pre-split manifest
-     * carries no `country_codes` key (the client then falls back to a single
-     * unsplit layer per letter). Only string members survive.
+     * Country codes the current tile artifact was built for (docs/specs/coverage-provider.md §4).
      *
      * @return list<string>
      */
@@ -85,11 +65,7 @@ final class CoverageManifest
     }
 
     /**
-     * The decoded manifest array, or null when coverage is off/unavailable.
-     * Cached (CACHE_TTL) as the whole decoded array — both currentTileUrl() and
-     * countryCodes() derive from this single cached read, so one bucket fetch
-     * per holdoff window serves both. A manifest with no valid 'url' is treated
-     * as unavailable (null), same as before the array widening.
+     * Decoded manifest, or null when coverage is off/unavailable.
      *
      * @return array<string, mixed>|null
      */
@@ -105,9 +81,7 @@ final class CoverageManifest
                     /** @var array<string, mixed> $manifest */
                     $manifest = $this->http
                         ->request('GET', $this->manifestUrl, [
-                            // 'timeout' caps idle time between chunks;
-                            // 'max_duration' caps the whole request. A
-                            // slow-drip host would defeat 'timeout' alone.
+                            // 'timeout' caps idle time; 'max_duration' caps the whole request.
                             'timeout' => self::FETCH_TIMEOUT,
                             'max_duration' => self::FETCH_TIMEOUT,
                         ])
@@ -131,7 +105,7 @@ final class CoverageManifest
                 }
             });
         } catch (\Throwable $e) {
-            // The cache backend itself failed. Same silent degradation as above.
+            // Cache backend failed. Same silent degradation.
             $this->logger->warning('Coverage manifest cache unavailable — map serves without coverage tiles.', [
                 'manifest_url' => $this->manifestUrl,
                 'exception' => $e,
@@ -141,20 +115,7 @@ final class CoverageManifest
         }
     }
 
-    /**
-     * Cache key derived from the manifest URL (hex digest, PSR-6-safe). If
-     * an operator repoints COVERAGE_MANIFEST_URL while using a persistent
-     * cache, the next request uses the new key, instead of serving the old
-     * URL for up to CACHE_TTL.
-     *
-     * The `.v2` shape segment guards the widening of the cached value from a
-     * bare URL string (pre-country-split) to the whole decoded manifest array:
-     * a warm persistent cache holding a v1 string entry must never be read back
-     * into manifest(): ?array (a TypeError the catch would swallow, silently
-     * disabling coverage until the entry expired). Bumping the key retires the
-     * old-shaped entries instead of misreading them. Bump again on any future
-     * change to the cached value's shape.
-     */
+    /** Cache key from the manifest URL. `.v2` retires old-shaped entries. */
     private function cacheKey(): string
     {
         return 'coverage.manifest.v2.'.hash('xxh128', $this->manifestUrl);

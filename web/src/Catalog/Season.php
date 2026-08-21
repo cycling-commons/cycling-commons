@@ -7,12 +7,11 @@ declare(strict_types=1);
 namespace App\Catalog;
 
 /**
- * The four seasons a rider tags a route vote with (docs/specs/route-domain.md §7, §4.2).
- * `current()` maps a date to a Northern-hemisphere season (route-domain spec
- * §8.1). The harvested data is Wallonia, so this is only used to pre-select
- * the voter's picker; it is not exact for other hemispheres.
+ * Season a rider tags a route vote with. `current()` is Northern-hemisphere; used only to pre-select the picker.
  *
- * @api Route-domain vocabulary (typed votes).
+ * @see docs/specs/route-domain.md §2.2
+ *
+ * @api
  */
 enum Season: string
 {

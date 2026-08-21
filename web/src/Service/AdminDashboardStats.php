@@ -11,9 +11,9 @@ use App\Repository\UserRepository;
 
 /**
  * Assembles the admin dashboard snapshot from live User-table counts.
- * All numbers are derived from `users`, so they are always accurate (no cache).
+ * All numbers from `users` (no cache).
  *
- * @api Autowired by the DI container; consumed by DashboardController.
+ * @api
  */
 final class AdminDashboardStats
 {

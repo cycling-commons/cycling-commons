@@ -7,22 +7,17 @@ declare(strict_types=1);
 namespace App\Contribution\Gpx;
 
 /**
- * Geometry post-processing for proposed routes (docs/specs/route-domain.md §4.2). All
- * light tabular math, deliberately kept in PHP rather than the Python
- * pipeline.
+ * Geometry post-processing for proposed routes (docs/specs/route-domain.md §4.2,
+ * docs/specs/edit-items/K-quality-rides.md).
  *
- * Every method takes/returns [lat, lng, ele|null] triples.
- *
- * @api Public geometry post-processing API (docs/specs/route-domain.md §4.2); covered by TrackProcessorTest.
+ * @api
  */
 final class TrackProcessor
 {
     private const float EARTH_RADIUS_M = 6_371_000.0;
     private const int TRIM_MIN_M = 350;   // privacy trim, docs/specs/route-domain.md §4.3
     private const int TRIM_SPAN_M = 401;  // 350 + [0..400] → 350..750
-    // Bound Douglas-Peucker inner-scan work: legitimate routes are O(n log n);
-    // an adversarial saw-tooth is O(n^2). 200n gives smooth tracks ample
-    // head-room while a zigzag trips a clean reject (docs/specs/route-domain.md §4.1).
+    // Bound Douglas-Peucker inner-scan work (docs/specs/route-domain.md §4.1).
     private const int MAX_DP_WORK_FACTOR = 200;
 
     /** @param list<array{0: float, 1: float, 2: float|null}> $points */
@@ -37,14 +32,13 @@ final class TrackProcessor
     }
 
     /**
-     * Positive elevation gain; null when any point lacks <ele> (spec §4.2 -
-     * a partial profile would silently under-report, so refuse instead).
+     * Positive elevation gain; null when any point lacks <ele> (docs/specs/route-domain.md §4.2).
      *
      * @param list<array{0: float, 1: float, 2: float|null}> $points
      */
     public function ascentM(array $points): ?int
     {
-        // No meaningful ascent on <2 points; unreachable behind upstream length guards.
+        // No meaningful ascent on <2 points.
         if (\count($points) < 2) {
             return null;
         }
@@ -63,10 +57,7 @@ final class TrackProcessor
     }
 
     /**
-     * Privacy trim (docs/specs/route-domain.md §4.3): cut ~350–750 m off each end,
-     * deterministic per content ($seedHex = sha256 of the raw upload). The
-     * cut interpolates new endpoints at the exact trim distance, so sparse
-     * tracks trim correctly.
+     * Privacy trim ~350–750 m per end, deterministic from $seedHex (docs/specs/route-domain.md §4.3).
      *
      * @param list<array{0: float, 1: float, 2: float|null}> $points
      *
@@ -83,8 +74,7 @@ final class TrackProcessor
     }
 
     /**
-     * Douglas-Peucker with a metric tolerance (equirectangular projection,
-     * fine at route scale). Elevation of kept points is preserved.
+     * Douglas-Peucker in metres; elevation of kept points is preserved.
      *
      * @param list<array{0: float, 1: float, 2: float|null}> $points
      *
@@ -96,10 +86,7 @@ final class TrackProcessor
             return $points;
         }
 
-        // Radial pre-decimation (spec §4.2): drop points within tolerance/2 of
-        // their kept predecessor. Dense loggers (1 Hz) produce huge clusters of
-        // near-identical points that make Douglas-Peucker pathologically slow;
-        // collapsing them first bounds the DP input. First/last always kept.
+        // Radial pre-decimation (docs/specs/route-domain.md §4.2); first/last always kept.
         $points = $this->radialDecimate($points, $toleranceM / 2.0);
         if (\count($points) < 3) {
             return $points;
@@ -113,9 +100,7 @@ final class TrackProcessor
     }
 
     /**
-     * Cheap O(n) radial-distance decimation: keep a point only when it is at
-     * least $minGapM from the last kept point. First and last are always kept
-     * so endpoints and overall shape survive.
+     * Keep a point only when it is ≥ $minGapM from the last kept point. First/last always kept.
      *
      * @param list<array{0: float, 1: float, 2: float|null}> $points
      *
@@ -181,9 +166,7 @@ final class TrackProcessor
             $walked += $seg;
         }
 
-        // The whole track is shorter than the cut. This is a degenerate case;
-        // keep the last two points so downstream code always has a line. The
-        // >=2 km raw length guard (service) makes this unreachable in practice.
+        // Track shorter than the cut: keep the last two points so downstream always has a line.
         return \array_slice($points, -2);
     }
 
@@ -191,14 +174,11 @@ final class TrackProcessor
      * @param list<array{0: float, 1: float, 2: float|null}> $points
      * @param array<int, bool>                               $keep
      *
-     * @throws \InvalidArgumentException when the inner-scan work exceeds $budget
-     *                                   (adversarial zigzag input, carry-in §12.1)
+     * @throws \InvalidArgumentException when inner-scan work exceeds $budget (docs/specs/route-domain.md §4.1)
      */
     private function dpMark(array $points, int $first, int $last, float $tolM, array &$keep, int $budget): void
     {
-        // Explicit worklist instead of recursion: a near-collinear megatrack
-        // would recurse ~O(n) deep and overflow PHP's call stack. Same
-        // keep-marking semantics as the classic recursive Douglas-Peucker.
+        // Worklist instead of recursion: a near-collinear megatrack would overflow PHP's stack.
         /** @var list<array{0: int, 1: int}> $stack */
         $stack = [[$first, $last]];
         $work = 0;
@@ -209,10 +189,7 @@ final class TrackProcessor
                 continue;
             }
 
-            // Each iteration scans ~($hi - $lo) points below; an adversarial
-            // saw-tooth keeps nearly every point, splitting into near-equal
-            // halves at every level and re-scanning most of the range each
-            // time, for O(n^2) total. Track that scan cost against the budget.
+            // Adversarial saw-tooth is O(n^2); track scan cost against the budget.
             $work += $hi - $lo;
             if ($work > $budget) {
                 throw new \InvalidArgumentException('contribute.error.route_too_complex');

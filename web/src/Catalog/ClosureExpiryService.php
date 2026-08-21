@@ -15,21 +15,11 @@ use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 
 /**
- * Retires closures whose stated window has run out (ClosureLifetime).
+ * Retires closures whose stated window has run out. Clock starts at last observation, not created_at. Retire, never delete. `form` confirmations do not count.
  *
- * The clock starts at the **last time somebody saw it**, not at the moment the
- * row was created: a rider confirming "still closed" pushes the expiry out by
- * the full window again, which is the "unless re-confirmed" half of the promise
- * in wiki/data-priority.md. Only confirmations that assert existence count, and
- * a `form`-sourced one never does — that is the submitter's own answer on their
- * own contribution, the same exclusion CatalogProvider's verified derivation
- * makes.
+ * @see docs/specs/edit-items/F-hazards.md (Closures expire themselves)
  *
- * Retire, never delete: `ItemState::Retired` is already outside
- * `servedSqlTuple()`, so the closure stops rendering with no change to any
- * serving path, and a curator can bring it back.
- *
- * @api Run by ExpireClosuresCommand and opportunistically by the map read path.
+ * @api
  */
 final class ClosureExpiryService
 {
@@ -55,10 +45,7 @@ final class ClosureExpiryService
 
         /** @var list<array{id: int, name: string, attributes: string, observed_at: string}> $rows */
         $rows = $this->db->fetchAllAssociative(
-            // The observation date is the newest of: an explicit observedOn
-            // attribute (what Scout writes, since the rider tagged it days
-            // before uploading), the row's own created_at, and the most recent
-            // existence confirmation.
+            // Newest of observedOn (Scout), created_at, and the latest existence confirmation.
             "SELECT i.id, i.name, i.attributes,
                     GREATEST(
                         i.created_at,
@@ -116,9 +103,7 @@ final class ClosureExpiryService
             }
             $old = $item->getState()->value;
             $item->setState(ItemState::Retired);
-            // Recorded in the same append-only log a curator's decision lands
-            // in, so an expiry is visible on the item's public history rather
-            // than being an unexplained disappearance.
+            // Same append-only log as a curator decision, so expiry is not an unexplained disappearance.
             $this->em->persist((new ChangeHistory())
                 ->setItemId($row['id'])
                 ->setField('state')
@@ -132,13 +117,7 @@ final class ClosureExpiryService
     }
 
     /**
-     * Sweep at most once an hour, off ordinary traffic.
-     *
-     * A safety net, not the mechanism: the promise is kept by the scheduled
-     * command. This exists because docs/TODO.md already records that nothing
-     * on the worker host runs the GC timers, and a decay nobody runs is the
-     * same lie as no decay at all — so the map read path keeps it honest in
-     * the meantime.
+     * Sweep at most once an hour off ordinary traffic. A failed sweep must never break the map.
      */
     public function sweepOpportunistically(): void
     {
@@ -150,8 +129,7 @@ final class ClosureExpiryService
                 return true;
             });
         } catch (\Throwable) {
-            // Opportunistic housekeeping only — mirrors RetentionService. A
-            // failed sweep must never turn into a broken map.
+            // Opportunistic only — a failed sweep must never turn into a broken map.
         }
     }
 }

@@ -1,48 +1,19 @@
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
-/* The full climb profile, shown in a popup when the drawer's gradient strip is
-   clicked.
-
-   The strip in the drawer is a *glance*: 25 bars in 52 px, sized to sit beside
-   the other rows without pushing them off screen. It answers "roughly what
-   shape is this". It cannot answer the questions a rider actually asks before
-   riding a col — where the hard part is, how high the top is, how much of the
-   climb is above 8% — because there is no room in it for a vertical axis, a
-   silhouette, or a number per bar.
-
-   So this draws the same measurement at a size where those fit: the road's
-   own silhouette, each bin filled in its gradient colour with the figure
-   written inside it, the two altitudes labelled, and a distance ruler. It is
-   the shape every published climb profile uses, and riders can read it without
-   being taught anything.
-
-   NOTHING IS RE-MEASURED HERE. Every number comes from `grad`, `binM`,
-   `footEle` and `summitEle`, which ClimbProfiler wrote (climb-elevation.md §4).
-   A chart that did its own arithmetic could disagree with the drawer's caption
-   about the same climb, and then neither could be trusted. The one thing this
-   derives is the cumulative height of each bin, which is the definition of the
-   gradients it was handed, not a second opinion about them. */
+/* Full climb profile popup (docs/specs/map-and-search.md §4.3a,
+   docs/specs/climb-elevation.md §6). Numbers come from `grad`/`binM`/`footEle`/
+   `summitEle` — nothing is re-measured here. */
 import { escPend, gradColor, txtOn } from './util.js';
 import { D } from './i18n.js';
 import { uKm, uM, uElev, uKmValue, uDistUnit } from './units.js';
 
-/* Bins narrower than this get no figure printed in them. Below roughly 30 px a
-   two-digit gradient plus its % sign either overflows its column or has to
-   shrink to a size nobody can read, and a chart of unreadable numbers is worse
-   than a chart of none — the colour still carries the gradient. */
+/* Below this, a two-digit % either overflows or shrinks unreadably. */
 const MIN_PX_FOR_LABEL = 30;
 
 export function canProfile(f){
   return !!(f && Array.isArray(f.grad) && f.grad.length);
 }
 
-/* The cumulative height at each bin edge, in metres above the foot.
-
-   Derived from the gradients rather than from a stored elevation array,
-   because the gradients ARE what the drawer strip draws: deriving the
-   silhouette from the same numbers guarantees the two charts describe one
-   climb. (A stored per-sample elevation array would be more faithful to the
-   road, and is the obvious upgrade if it is ever persisted — the shape below
-   would then read it instead.) */
+/* Cumulative height at each bin edge, derived from the same gradients the drawer strip draws. */
 function heights(grad, binM){
   const out=[0];
   let h=0;
@@ -56,27 +27,15 @@ export function profileSvg(f){
   const totalM = grad.length*binM;
   const h = heights(grad, binM);
 
-  // The vertical scale spans the climb's own range, floored so a gentle climb
-  // is not stretched into an alp: a 40 m riser drawn full-height would look
-  // exactly like Grimsel.
+  // Floor the vertical span so a 40 m riser is not drawn as an alp.
   const climbM = Math.max(...h) - Math.min(...h);
   const spanM = Math.max(climbM, 60);
 
-  /* The gradient figures live in their OWN band under the silhouette, not
-     inside it — which is what the published profiles do, and for a reason. A
-     number printed inside its column needs the column to be tall enough to hold
-     it, and the first bins of a long pass are 1-2% and a few pixels high, so
-     Grimsel's opening "1" and "5" floated outside their own bars. A fixed band
-     is always tall enough, always legible, and reads as a separate row of
-     values rather than as labels that sometimes fit. */
-  /* The viewBox aspect IS the panel's shape: the SVG keeps its ratio, so a
-     wide, shallow box letterboxes inside a tall window and leaves empty paper
-     above and below the chart. ~1.9:1 fills a normal laptop without stretching
-     a gentle climb into something it is not. */
+  /* Figures live in their own band: early bins are too short to hold a label.
+     ViewBox ~1.9:1 so the SVG fills a laptop without stretching a gentle climb. */
   const W=1180, H=620;
-  const BAND=30;                    // the gradient-figure strip
-  // Tight top (the panel header already names the climb) and side margins that
-  // hold the altitude labels outside the plot, so they never cover a column.
+  const BAND=30;                    // gradient-figure strip
+  // Side margins hold altitude labels outside the plot.
   const padL=84, padR=84, padT=16, padB=BAND+46;
   const plotW=W-padL-padR, plotH=H-padT-padB;
   const base=padT+plotH;
@@ -86,20 +45,14 @@ export function profileSvg(f){
   const colW = plotW/grad.length;
   const showNums = colW >= MIN_PX_FOR_LABEL;
 
-  /* Each bin is a quadrilateral under the road, not a rectangle: the top edge
-     follows the climb, so the bars together ARE the silhouette rather than a
-     histogram standing under a separate line. */
-  // A 100 m bin is 0.06 mi, so miles need the extra decimal or every bin in
-  // the first mile reads "0.1-0.1".
+  /* Each bin is a quadrilateral under the road: the top edge IS the silhouette. */
+  // Miles need the extra decimal: a 100 m bin is 0.06 mi.
   const binDec = 'mi' === uDistUnit() ? 2 : 1;
   const cols = grad.map((g,i)=>{
     const x0=x(i*binM), x1=x((i+1)*binM), y0=y(h[i]), y1=y(h[i+1]);
     const fill=gradColor(g);
     const band = `<rect x="${x0.toFixed(1)}" y="${base.toFixed(1)}" width="${(x1-x0).toFixed(1)}" height="${BAND}"
         fill="${fill}" stroke="#fff" stroke-width="0.75"/>`;
-    /* The unit travels with the figure. Without it the band is a row of bare
-       numbers that could be gradients, distances or bin indexes, and the only
-       thing saying otherwise is a caption at the bottom of the chart. */
     const label = showNums
       ? `<text x="${((x0+x1)/2).toFixed(1)}" y="${(base+BAND/2+4).toFixed(1)}" class="cc-cp-num" fill="${txtOn(fill)}">${g}%</text>`
       : '';
@@ -107,10 +60,7 @@ export function profileSvg(f){
         fill="${fill}" fill-opacity="0.9" stroke="#fff" stroke-width="0.75"><title>${uKmValue(i*binM/1000, binDec)}–${uKm((i+1)*binM/1000, binDec)} · ${g}%</title></polygon>${band}${label}`;
   }).join('');
 
-  // Distance ruler, under the band. Spaced in the unit it is LABELLED in: a
-  // mile-reading rider gets whole miles, not the kilometre grid relabelled into
-  // 0.6, 1.2, 1.9. Positions stay a fraction of the total, so the geometry is
-  // identical either way.
+  // Ruler spaced in the unit it is labelled in (positions stay a fraction of the total).
   const totalKm=totalM/1000;
   const totalDisp=uKmValue(totalKm);
   const stepKm = totalDisp<=3?0.5:(totalDisp<=12?1:Math.ceil(totalDisp/10));
@@ -121,16 +71,10 @@ export function profileSvg(f){
     ticks.push(`<line x1="${px.toFixed(1)}" y1="${axisY}" x2="${px.toFixed(1)}" y2="${axisY+6}" class="cc-cp-tick"/>
       <text x="${px.toFixed(1)}" y="${axisY+22}" class="cc-cp-axis" text-anchor="middle">${k%1?k.toFixed(1):k}</text>`);
   }
-  /* The unit once, at the end of the ruler, rather than repeated on every tick
-     — "3 km 6 km 9 km" is noise, and a bare row of numbers is ambiguous. Which
-     unit that is follows the rider's own setting (account-and-auth.md §9); the
-     numbers above were converted with it. */
+  /* Unit once at the end of the ruler (docs/specs/account-and-auth.md §9). */
   ticks.push(`<text x="${(padL+plotW+10).toFixed(1)}" y="${axisY+22}" class="cc-cp-axis" text-anchor="start">${uDistUnit()}</text>`);
 
-  /* The two altitudes, which is the pair `gain` alone cannot give you. Rows
-     measured before footEle/summitEle existed simply do not get them — an
-     invented sea level would be a number nobody measured, which is the exact
-     failure this codebase keeps correcting. */
+  /* Foot and summit altitudes — omitted when unmeasured, never invented. */
   const foot = f.footEle!=null ? Math.round(Number(f.footEle)) : null;
   const summit = f.summitEle!=null ? Math.round(Number(f.summitEle)) : null;
   const endLabels = (foot!=null && summit!=null)
@@ -150,9 +94,7 @@ export function profileSvg(f){
   </svg>`;
 }
 
-/* The popup. Its own overlay rather than the photo lightbox's: that one is a
-   slideshow with prev/next and a credit line, and threading a chart through it
-   would mean teaching it that some "photos" are not photos. */
+/* Own overlay: the photo lightbox is a slideshow, not a chart host. */
 export function openClimbProfile(f){
   if(!canProfile(f)) return;
   const el=document.getElementById('climbProfile');

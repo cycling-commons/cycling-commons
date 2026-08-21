@@ -12,20 +12,15 @@ use App\Settings\SettingsRegistry;
 use Doctrine\DBAL\Connection;
 
 /**
- * Raw-DBAL read model for the Routes desk. Proposals have no Submission row,
- * so this reads recommended_route WHERE state='submitted' directly, oldest
- * first, each row carrying its region's active count vs cap.
+ * Routes desk read model: submitted recommended_route rows, oldest first.
  *
  * @see docs/specs/route-domain.md §5
  *
- * @api Consumed by RouteModerateController.
+ * @api
  */
 final class RouteQueue
 {
-    /**
-     * Rows per desk page. Matches SubmissionQueue's, so a curator moving
-     * between the two desks meets the same page size on both.
-     */
+    /** Rows per desk page; matches SubmissionQueue. */
     public const int PER_PAGE = 25;
 
     public function __construct(
@@ -52,8 +47,7 @@ final class RouteQueue
         $params['lim'] = max(1, $perPage);
         $params['off'] = self::offset($page, $perPage);
 
-        // Hoisted out of the row mapper: every row on one desk render must show
-        // the same cap, and the setting is read once rather than per route.
+        // One cap per render, not per row.
         $cap = $this->regionCap();
 
         return array_map(fn (array $row): array => [
@@ -104,8 +98,7 @@ final class RouteQueue
     }
 
     /**
-     * The open-proposal WHERE, shared by {@see pending()} and its count, so a
-     * pager can never disagree with the page it is paging.
+     * Open-proposal WHERE, shared by pending() and its count.
      *
      * @return array{sql:string, params:array<string,mixed>, types:array<string,mixed>}
      */
@@ -129,7 +122,7 @@ final class RouteQueue
     }
 
     /**
-     * The open-correction WHERE, shared the same way.
+     * Open-correction WHERE, shared the same way.
      *
      * @return array{sql:string, params:array<string,mixed>, types:array<string,mixed>}
      */
@@ -142,8 +135,7 @@ final class RouteQueue
             $where .= ' AND r.region_id = :region';
             $params['region'] = $regionId;
         }
-        // The fragment reads region_id off the JOINed recommended_route r.
-        // route_suggestion itself has no region_id column.
+        // Scope reads region_id off the JOINed recommended_route.
         $frag = $scope->sqlFragment('r');
         if ('' !== $frag['sql']) {
             $where .= ' AND '.$frag['sql'];
@@ -159,14 +151,7 @@ final class RouteQueue
         return max(0, (max(1, $page) - 1) * max(1, $perPage));
     }
 
-    /**
-     * How many open proposals match the desk's CURRENT view, for the pager.
-     *
-     * Distinct from {@see total()}: that one is the tab badge and ignores the
-     * region filter on purpose (a curator who has narrowed to one region must
-     * still see how much work the whole scope holds). This one counts exactly
-     * what the pager is paging.
-     */
+    /** Open proposals matching the desk's current view (not the tab badge). */
     public function pendingCount(ModerationScope $scope, ?int $regionId): int
     {
         $w = $this->pendingWhere($scope, $regionId);
@@ -195,13 +180,7 @@ final class RouteQueue
         return (int) $this->db->fetchOne($sql, $frag['params'], $frag['types']);
     }
 
-    /**
-     * Open route corrections (route_suggestion, status=pending) in scope.
-     * This is the desk's second work stream, counted for the ROUTES tab
-     * badge so a waiting correction is never invisible. The scope fragment
-     * reads region_id off the JOINed recommended_route (suggestions carry
-     * none).
-     */
+    /** Open corrections in scope, for the ROUTES tab badge. */
     public function pendingSuggestionCount(ModerationScope $scope): int
     {
         $frag = $scope->sqlFragment('r');

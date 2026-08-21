@@ -9,13 +9,11 @@ namespace App\Catalog\Entity;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * A named operational region (day-one seed: Wallonia). Anchors moderator
- * areas and region-scoped voting/rankings, and drives item membership
- * (item.region_id), recomputed at every import.
+ * Named operational region. Never delete a region row.
  *
  * @see docs/specs/catalog-data-model.md §2.4
  *
- * @api Catalog domain entity.
+ * @api
  */
 #[ORM\Entity]
 #[ORM\Table(name: 'region')]
@@ -52,14 +50,14 @@ class Region
     #[ORM\Column(type: 'smallint', nullable: true)]
     private ?int $adminLevel = null;
 
-    /** Polygon provenance: 'osm' | 'overture' (map-and-search.md §4.5). */
+    /** Polygon provenance: `osm` | `overture`. docs/specs/map-and-search.md §4.5 */
     #[ORM\Column(type: 'string', length: 32, nullable: true)]
     private ?string $source = null;
 
     /**
-     * Per-region override of route.region_active_cap (route_domain.yaml); NULL
-     * falls back to the global default. Brussels and Flanders cannot share a
-     * cap (map-and-search.md §4.5). Set via admin, never by the importer.
+     * Per-region override of `route.region_active_cap`; NULL = global default. Set via admin, never by import.
+     *
+     * @see docs/specs/route-domain.md §5.1
      */
     #[ORM\Column(type: 'smallint', nullable: true)]
     private ?int $activeCap = null;

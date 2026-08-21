@@ -19,18 +19,9 @@ use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\String\Slugger\AsciiSlugger;
 
 /**
- * Country/state onboarding step 2 (tools/divisions/README.md): derive a
- * reviewable COUNTRY_CONFIG block (tools/divisions/config.py) and 4-locale
- * region-label translation stubs from the World bundle.
+ * Emit a reviewable divisions config block + region-label stubs. Does not apply them.
  *
- * EMITS, NEVER APPLIES (tools/divisions/README.md): slug is permanent
- * identity and exonyms need eyes — a human reviews and merges the artifacts.
- * `--only` seeds a subset of a country's subdivisions (state-level,
- * demand-driven onboarding). `--probe-areas` folds the bbox derived by
- * tools/divisions/probe_areas.py (probe.json in the same out dir) into the
- * config block.
- *
- * @api CLI entry point.
+ * @api
  */
 #[AsCommand(name: 'app:region:scaffold', description: 'Emit a reviewable divisions config block + region label stubs for a country (onboarding step 2)')]
 final class ScaffoldRegionsCommand extends Command
@@ -184,10 +175,7 @@ final class ScaffoldRegionsCommand extends Command
     }
 
     /**
-     * Slug/name collision review aids (tools/divisions/README.md): an
-     * existing region row with the same slug (slug is identity — MUST
-     * disambiguate) and same-name subdivisions in other countries (e.g.
-     * Limburg in both BE and NL) that suggest a -<cc> suffix.
+     * Slug/name collision review (tools/divisions/README.md).
      *
      * @param array<string, array{name: string, slug: string}> $entries
      *
@@ -217,10 +205,6 @@ final class ScaffoldRegionsCommand extends Command
             ['cc' => $cc, 'names' => array_values($lowerNames)],
             ['names' => ArrayParameterType::STRING],
         );
-        // Group twins by lowercased name, then walk every scaffolded entry
-        // (not just the first array_search hit) so two same-country
-        // subdivisions sharing a name (e.g. a duplicate/typo'd World row)
-        // both get flagged, not only whichever comes first.
         /** @var array<string, list<array{code: string, name: string, iso2: string}>> $twinsByName */
         $twinsByName = [];
         foreach ($twins as $t) {

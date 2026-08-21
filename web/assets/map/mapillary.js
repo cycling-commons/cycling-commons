@@ -1,17 +1,10 @@
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
-/* Mapillary street-level imagery: the sequence tile layer, the lazily injected
-   viewer, the bottom dock and its resize/fullscreen behaviour.
-   Extracted from map.js by the module split.
-
-   Self-contained by construction: nothing outside reads a Mapillary binding,
-   and the only outward dependency is the map itself. MLY_ENABLED gates the
-   whole feature on a real token, so the entry can call initMapillary*()
-   unconditionally and get a no-op on an unconfigured instance. */
+/* Mapillary street-level imagery (docs/specs/map-and-search.md §10): sequence
+   tiles, lazily injected viewer, bottom dock. MLY_ENABLED gates the feature
+   on a real token so init can be called unconditionally. */
 import { map } from './map-init.js';
 import { I18N } from './i18n.js';
 
-// ---------- Mapillary street-level imagery ----------
-// Public Mapillary client token (MLY|...). Replace the placeholder, preferably in config.js to enable the layer.
 const MAPILLARY_TOKEN = window.MAPILLARY_TOKEN || 'MLY|PASTE_TOKEN_HERE';
 export const MLY_ENABLED = /^MLY\|/.test(MAPILLARY_TOKEN) && !/PASTE_TOKEN_HERE/.test(MAPILLARY_TOKEN);
 const MLY_GREEN = '#05CB63';
@@ -22,10 +15,7 @@ export function addMapillary(){
   if(!MLY_ENABLED || map.getSource('mly')) return;
   map.addSource('mly',{type:'vector',
     tiles:[`https://tiles.mapillary.com/maps/vtp/mly1_public/2/{z}/{x}/{y}?access_token=${MAPILLARY_TOKEN}`],
-    // The dock viewer carries mapillary-js's own attribution, but these
-    // coverage TILES render in MapLibre, whose attribution control only knows
-    // what a source declares (go-live gate D, 2026-08-09).
-    attribution:'© <a href="https://www.mapillary.com/">Mapillary</a>',
+    attribution:'© <a href="https://www.mapillary.com/">Mapillary</a>',   // MapLibre only shows what a source declares
     minzoom:6, maxzoom:14});
   map.addLayer({id:'mly-cov',type:'line',source:'mly','source-layer':'sequence',
     layout:{visibility:'none','line-cap':'round','line-join':'round'},
@@ -37,7 +27,7 @@ export function addMapillary(){
     paint:{'circle-color':MLY_GREEN,'circle-opacity':0.9,
       'circle-stroke-color':'#0b3d22','circle-stroke-width':1,
       'circle-radius':['interpolate',['linear'],['zoom'],13,2,16,4,19,6]}});
-  // click a dot, or anywhere on a coverage line → open the nearest image straight from the tiles (no Graph API)
+  // Click a dot or coverage line → nearest image id from the tiles (no Graph API).
   map.on('click','mly-img',e=>openMapillaryAtPoint(e.point));
   map.on('click','mly-cov',e=>openMapillaryAtPoint(e.point));
   ['mly-img','mly-cov'].forEach(id=>{
@@ -89,7 +79,7 @@ async function openMapillaryAt(lngLat){
     openMapillaryImage(img.id);
   }catch(_){ mlyDockMessage(I18N.mlyNone||'No street-level imagery here.'); }
 }
-// one reusable popup — same accumulation concern as the contextmenu popup (W11)
+// one reusable popup
 let _mlyPopupInst=null;
 function mlyPopup(lngLat,msg){
   if(!_mlyPopupInst) _mlyPopupInst=new maplibregl.Popup({closeButton:false,className:'pop'});
@@ -101,12 +91,8 @@ function mlyPopup(lngLat,msg){
 function loadMapillaryJs(){
   if(window.mapillary) return Promise.resolve();
   if(mlyLoading) return mlyLoading;
-  // Vendored + same-origin since 2026-08-09 (the W2 SRI pinning protected the
-  // unpkg fetch; self-hosting removes the third party entirely — AssetMapper's
-  // digested filename is the integrity now). URLs cross from the template as
-  // window.CC_VENDOR because digestion only exists in Twig.
   mlyLoading=new Promise((res,rej)=>{
-    const V=window.CC_VENDOR||{};
+    const V=window.CC_VENDOR||{};   // digested URLs from Twig
     const css=document.createElement('link'); css.rel='stylesheet';
     css.href=V.mapillaryCss||'/assets/lib/mapillary-js-4.1.2.css';
     document.head.appendChild(css);
@@ -195,10 +181,7 @@ export function initMapillaryDock(){
   };
 }
 
-/* The #ovStreet overlay toggle. Lives here rather than with the other map-control
-   wiring so `mlyOn` stays module-private: it is a live binding the toggle writes
-   and the click handlers read, and an importer would only ever see its initial
-   value (§2's owner-module rule). */
+/* #ovStreet toggle lives here so `mlyOn` stays module-private. */
 export function initStreetToggle(){
   const ovStreet=document.getElementById('ovStreet');
   if(MLY_ENABLED){

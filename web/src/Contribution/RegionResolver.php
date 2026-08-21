@@ -9,17 +9,10 @@ namespace App\Contribution;
 use Doctrine\DBAL\Connection;
 
 /**
- * Assigns a proposed route to its operational region at intake (route-domain
- * spec §4.2) with the exact membership rule the importer applies wholesale
- * (ImportCatalogCommand::recomputeMembership): the region polygon that
- * contains the route's point-on-surface. When overlapping regions contain the
- * point, the smallest by area wins — a deterministic tie-break so membership
- * never depends on row order once regions multiply beyond the single Wallonia
- * seed (map-and-search.md §4.5). NULL when no region matches, so a
- * proposal outside every region is still reviewable.
+ * Assigns a proposed route to its operational region (docs/specs/route-domain.md §4.2).
+ * Smallest-area-wins on overlap. NULL when no region matches.
  *
- * @api Region assignment at route intake (docs/specs/route-domain.md §4.2); consumed by
- *      RouteProposalService, covered by RegionResolverTest.
+ * @api
  */
 final class RegionResolver
 {
@@ -28,9 +21,6 @@ final class RegionResolver
     }
 
     /**
-     * Callers pass parser-produced GeoJSON (valid by construction), so the
-     * PostGIS parse-failure path below is not expected in normal operation.
-     *
      * @throws \Doctrine\DBAL\Exception when the GeoJSON cannot be parsed by PostGIS
      */
     public function resolve(string $lineStringGeoJson): ?int

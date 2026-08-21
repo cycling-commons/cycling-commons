@@ -13,18 +13,11 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Uid\Uuid;
 
 /**
- * Binds a rider's uploads to the submission that carries them, and performs the
- * one and only use of the harvested coordinates
- * (docs/specs/photo-uploads.md §3): the distance from the photo to the
- * submission pin is computed, and the raw coordinates are destroyed in the same
- * transaction.
+ * Bind uploads to a submission; compute pin distance and destroy GPS.
  *
- * Every id is re-validated here regardless of what the browser believed: it
- * must exist, still be pending, still be unclaimed, and belong to the
- * submitting rider. The wizard's six-photo cap is likewise re-checked — a
- * client-side limit is a courtesy, never a control.
+ * @see docs/specs/photo-uploads.md §3
  *
- * @api Called by CatalogContributionService::submitDraft() inside its transaction.
+ * @api
  */
 final class MediaClaimService
 {
@@ -60,11 +53,7 @@ final class MediaClaimService
             if (null === $upload) {
                 throw new \InvalidArgumentException(\sprintf('Unknown upload %s.', $id->toRfc4122()));
             }
-            // PendingScan counts as claimable, and has to: the wizard stops
-            // WAITING for a slow scan after 30 seconds, it does not throw the
-            // photo away (docs/specs/photo-uploads.md §4). Refusing here would
-            // turn a scanner that took half a minute into a lost contribution
-            // and a failed submit.
+            // PendingScan is claimable: wizard patience must not drop the photo. @see docs/specs/photo-uploads.md §4
             if (!\in_array($upload->getStatus(), [MediaStatus::Pending, MediaStatus::PendingScan], true)) {
                 throw new \InvalidArgumentException(\sprintf('Upload %s is already decided.', $id->toRfc4122()));
             }

@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
-// Adds a show/hide (eye) toggle to every password <input>. Self-contained:
-// injects its own styles and wraps each field. Loaded site-wide; no-ops on
-// pages without a password field. Keyboard-accessible (button + aria-pressed).
+// Show/hide toggle on every password input. No-ops on pages without one.
 (function () {
   'use strict';
   if (window.__ccPwToggle) return;
@@ -20,11 +18,7 @@
     if (document.getElementById('cc-pw-style')) return;
     var css = [
       '.cc-pw-wrap{position:relative;display:block}',
-      // Keep the underline style when the field is revealed (type=text), so the
-      // input doesn't fall back to the browser's default box border.
-      // font-family/size too: when revealed the field becomes type=text, which the
-      // pages' input[type=password] rules don't match, so it would otherwise fall
-      // back to the browser's default input font.
+      // type=text must keep password-field font/underline, or reveal falls back to the browser default.
       '.cc-pw-wrap input{padding-right:2.4rem!important;border:none;border-bottom:1.5px solid rgba(20,22,14,.25);border-radius:0;background:transparent;font-family:var(--sans);font-size:1rem}',
       '.cc-pw-wrap input:focus{border-bottom-color:var(--trail,#FF5A1F);outline:none}',
       '.cc-pw-toggle{position:absolute;right:0;bottom:.15rem;display:flex;align-items:center;justify-content:center;',
@@ -45,7 +39,7 @@
     injectStyles();
 
     Array.prototype.forEach.call(inputs, function (input) {
-      if (input.dataset.ccPw) return;            // guard against double-wrap
+      if (input.dataset.ccPw) return;
       input.dataset.ccPw = '1';
 
       var wrap = document.createElement('span');
@@ -54,7 +48,7 @@
       wrap.appendChild(input);
 
       var btn = document.createElement('button');
-      btn.type = 'button';                        // never submit the form
+      btn.type = 'button';
       btn.className = 'cc-pw-toggle';
       btn.setAttribute('aria-label', T('pw_show', 'Show password'));
       btn.setAttribute('aria-pressed', 'false');

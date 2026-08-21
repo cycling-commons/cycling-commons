@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+/* Vote UI (docs/specs/edit-items/README.md — votability). Rank is the vote
+   (docs/specs/route-domain.md). Sample figures are metric-in, converted at
+   render (docs/specs/account-and-auth.md §9). */
 (function () {
   'use strict';
 
-  /* The rider's units (account-and-auth.md §9). Demo rows or not, a page that
-     prints kilometres at somebody who asked for miles is the failure the
-     preference exists to prevent — so the sample figures are held as metric
-     NUMBERS and written at render time, like everything else. */
   function uElev(m) { return window.ccElev ? window.ccElev(m) : Math.round(Number(m)) + ' m'; }
   function uKm(km) { return window.ccKm ? window.ccKm(km) : Number(km).toFixed(1) + ' km'; }
 
@@ -37,10 +36,6 @@
   var curCat = 'climbs';
   var ballot = { climbs: [], stays: [], views: [], heritage: [] };
 
-  // Server-translated strings (vote.* catalog keys, #vote-i18n JSON block) —
-  // the client renders candidate rows and the ballot panel, so hardcoded
-  // English here would leak into every locale. Fallbacks keep the demo alive
-  // if the block is ever missing.
   var i18nEl = document.getElementById('vote-i18n');
   var I18N = { pct: '%pct%% this round', add: '▲ add', onBallot: '✓ on ballot', remove: 'remove', empty: 'Add up to 10 picks, in the order you rate them.' };
   if (i18nEl) {
@@ -72,7 +67,6 @@
   function renderBallot() {
     var catLabel = document.getElementById('cat-l');
     if (catLabel) {
-      // The active tab already carries the translated category label.
       var onTab = document.querySelector('.vtabs button.on');
       catLabel.textContent = onTab ? onTab.textContent : curCat;
     }
@@ -112,8 +106,6 @@
       renderBallot();
     }
 
-    // Arrow buttons: the universal reorder path — keyboard, screen readers,
-    // and any pointer. One step per press.
     el.querySelectorAll('button.mv').forEach(function (btn) {
       btn.addEventListener('click', function () {
         var i = +btn.dataset.idx;
@@ -121,11 +113,7 @@
       });
     });
 
-    // Pointer-drag reordering on the ⠿ grip: rank IS the vote, so the order
-    // must be editable without remove-and-re-add round trips. Pointer Events
-    // (not HTML5 DnD, which mobile browsers never fire for touch) give mouse
-    // and touch one code path; touch-action:none on the grip alone means the
-    // rest of the row still scrolls the page normally.
+    // Pointer Events (not HTML5 DnD — mobile never fires those for touch).
     var rows = [].slice.call(el.querySelectorAll('.bitem'));
     rows.forEach(function (row) {
       var grip = row.querySelector('.grip');
@@ -134,7 +122,6 @@
         e.preventDefault();
         var from = +row.dataset.idx;
         var target = from;
-        // Row midpoints, frozen at drag start — nothing re-renders mid-drag.
         var mids = rows.map(function (r) {
           var rect = r.getBoundingClientRect();
           return (rect.top + rect.bottom) / 2;
@@ -211,9 +198,7 @@
       .replace(/"/g, '&quot;');
   }
 
-  // Full escape (not just quotes): attribute values round-trip through the HTML
-  // parser, so unescaped & would decode entity-like sequences on getAttribute
-  // and break toggle() matching.
+  // Attribute values round-trip through the HTML parser; unescaped & breaks matching.
   function escAttr(str) {
     return String(str)
       .replace(/&/g, '&amp;')
@@ -223,10 +208,7 @@
       .replace(/'/g, '&#39;');
   }
 
-  // The category tabs. Delegated from here rather than an `onclick=` in the
-  // template: the CSP is `script-src 'self' 'nonce-…'`, which does NOT cover
-  // inline event handlers — the browser refuses to run them and logs a
-  // violation, so the tabs looked wired and did nothing (2026-08-09).
+  // Delegated click: CSP does not cover inline onclick (docs/specs/security-architecture.md §2).
   document.addEventListener('click', function (e) {
     var b = e.target.closest('[data-votecat]');
     if (b) cat(b, b.dataset.votecat);

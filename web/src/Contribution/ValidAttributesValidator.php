@@ -12,7 +12,7 @@ use Symfony\Component\Validator\ConstraintValidator;
 use Symfony\Component\Validator\Exception\UnexpectedValueException;
 
 /**
- * @api Resolved by the validator for #[ValidAttributes].
+ * @api
  */
 final class ValidAttributesValidator extends ConstraintValidator
 {

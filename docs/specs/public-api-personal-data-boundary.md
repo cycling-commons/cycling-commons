@@ -78,7 +78,9 @@ Notes on the less obvious rows:
 
 - **The three media tables** ([photo-uploads.md](photo-uploads.md)) are here,
   even though the photos themselves are public. What the API serves is the
-  *gallery* — the `photos[]` entries on `item`, which are URLs plus a licence.
+  *gallery* — the `photos[]` entries on `item`, which are URLs, the upload's
+  own uuid and a licence. The uuid is already legible inside the URL, so
+  naming it as a field publishes nothing the gallery did not already carry.
   The rows behind them are not: `media_upload` holds the uploader link, the
   distance-from-pin, takedown reasons in the subject's own words, a salted
   reporter hash, an optional reporter email and the escalation columns

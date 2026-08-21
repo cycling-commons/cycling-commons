@@ -1,0 +1,39 @@
+# Dev media proxy — the local stand-in for staging's
+# staging-media.cyclingcommons.org vhost.
+#
+# MediaStorage::url() emits <MEDIA_PUBLIC_BASE>/<shard>/<key>, where <shard> is
+# the bucket name's LAST FIVE characters, never the name itself (that is the
+# point: bucket names stay unpublished). Pointing MEDIA_PUBLIC_BASE straight at
+# MinIO cannot work — MinIO wants the full bucket as the first path segment, so
+# every sharded URL 403s. Without this proxy dev cannot render any photo at all.
+#
+# Dev bucket names are all <prefix><shard> (cc-media- + af-01), so one rule
+# covers six buckets. Staging and production do NOT rely on that: they render
+# one explicit location per bucket from the vault, because there the names need
+# share no prefix.
+server {
+    listen 80;
+    server_name _;
+
+    # proxy_pass carries variables, so resolution happens per request through
+    # Docker's embedded DNS rather than being frozen at startup.
+    resolver 127.0.0.11 valid=30s ipv6=off;
+
+    # Quoted: nginx reads an unquoted { or } as a block delimiter, so a regex
+    # with a repetition count truncates at the brace and fails to compile.
+    location ~ "^/img/([a-z]{2}-[0-9]{2})/(.+)$" {
+        set $shard  $1;
+        set $objkey $2;
+        proxy_pass http://minio:9000/${MEDIA_BUCKET_PREFIX}$shard/$objkey;
+        proxy_set_header Host minio:9000;
+        # The browser loads these from a different origin than the app.
+        add_header Access-Control-Allow-Origin "*" always;
+        add_header X-Media-Shard $shard always;
+    }
+
+    location = /healthz { return 200 "ok\n"; }
+
+    # No directory indexes: unlinked-not-hidden depends on it.
+    # @see docs/specs/media-storage-architecture.md §5
+    location / { return 404; }
+}

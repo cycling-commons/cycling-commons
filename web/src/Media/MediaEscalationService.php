@@ -13,36 +13,11 @@ use App\Moderation\EscalationAlert;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
- * Escalation: the third verb, for suspected illegal content
- * (docs/specs/photo-uploads.md §6d).
+ * Suspected illegal content: hide, legal-hold, alert. Does not decide.
  *
- * Curators had two verbs and neither fits this case. **Reject** leaves the
- * material sitting in the queue where the next curator meets it too.
- * **Trash** deletes it immediately and completely — content, objects and
- * history — which is exactly backwards where the law expects the material to
- * survive until it has been reported: EU DSA Art. 18 requires promptly
- * informing law enforcement of a suspected offence involving a threat to life
- * or safety, and the terrorist-content regulation carries an explicit
- * six-month preservation duty. Destroying the evidence first is not a
- * conservative choice; it is destroying the evidence.
+ * @see docs/specs/photo-uploads.md §6d
  *
- * So escalation does four things and refuses to do a fifth:
- *
- * 1. **Hides it from everyone.** Off the map, off the photo page, and out of
- *    the moderation desk — the curator who escalated it does not have to see
- *    it again, and no other curator ever sees it. Only an admin can, in the
- *    admin area.
- * 2. **Puts a legal hold on the row.** Nothing may destroy it: not Trash, not
- *    the retention sweep, not orphan collection, not a bulk restore.
- * 3. **Tells a human immediately**, unthrottled, one mail per escalation.
- * 4. **Records who escalated it, when, and in whose words**, which is the
- *    account we would have to give of our handling.
- *
- * It does not decide anything. What the material is, whether it is reported,
- * to whom, and when it may finally be deleted are the owner's calls, made from
- * the admin area with the playbook in front of them.
- *
- * @api Called by ModerateController (escalate) and the admin area (release).
+ * @api
  */
 final class MediaEscalationService
 {
@@ -81,12 +56,7 @@ final class MediaEscalationService
         $this->alert->escalated('photo', $upload->getId()->toRfc4122(), $reason, '/admin/escalated');
     }
 
-    /**
-     * An admin has decided it was not what it looked like. The hold lifts and
-     * normal moderation resumes; the photo does NOT go back on the map by
-     * itself, because it was pending or approved before and that decision is
-     * the desk's to make again.
-     */
+    /** Lift the hold; do not put the photo back on the map. */
     public function release(MediaUpload $upload, User $admin, ?string $note = null): bool
     {
         if (!$upload->isEscalated()) {
@@ -146,7 +116,7 @@ final class MediaEscalationService
         )->getSingleScalarResult();
     }
 
-    /** Off the map at once — the same detach the takedown path uses, matched on the sm URL. */
+    /** Off the map at once — same sm-URL detach as takedown. */
     private function detachFromItem(MediaUpload $upload): void
     {
         $itemId = $upload->getItemId();
@@ -158,7 +128,6 @@ final class MediaEscalationService
             return;
         }
 
-        $target = $this->decisions->describe($upload)['sm'];
         $attributes = $item->getAttributes();
         $photos = $attributes['photos'] ?? null;
         if (!\is_array($photos)) {
@@ -166,7 +135,7 @@ final class MediaEscalationService
         }
         $kept = array_values(array_filter(
             $photos,
-            static fn (mixed $photo): bool => !\is_array($photo) || ($photo['sm'] ?? null) !== $target,
+            fn (mixed $photo): bool => !$this->decisions->isEntryFor($photo, $upload),
         ));
         if ([] === $kept) {
             unset($attributes['photos']);

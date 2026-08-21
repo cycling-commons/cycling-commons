@@ -7,12 +7,11 @@ declare(strict_types=1);
 namespace App\Media\Scan;
 
 /**
- * What the scanner said. `signature` names the detection on an infected
- * verdict (for the event log), and `skipped` marks a clean-BY-DEFAULT answer
- * from an environment with no scanner and CLAMAV_REQUIRED off - recorded so
- * a "clean" in dev logs never masquerades as a real verdict.
+ * Scanner result. `skipped` is clean-by-default with CLAMAV_REQUIRED off, not a real verdict.
  *
- * @api Returned by VirusScannerInterface::scan().
+ * @see docs/specs/media-storage-architecture.md §3.1
+ *
+ * @api
  */
 final readonly class ScanVerdict
 {

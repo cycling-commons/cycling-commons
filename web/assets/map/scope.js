@@ -1,18 +1,8 @@
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
 //
-// Map scope model (map-and-search.md §4.5
-// Phase 2): the single source of truth for "what area am I looking at" —
-// a named region, a whole country, or everywhere. Persisted in localStorage
-// + the URL (?scope=), and broadcast as a `cc:scopechange` window event that
-// map.js listens for to refilter, respotlight, and relabel.
-//
-// This is a focused module extracted from map.js (a 3000-line classic script);
-// map.js consumes window.CCScope. The scope uses `kind`, NOT `mode` — map.js
-// already owns `mode` for the Curated/Everything view toggle (verified name
-// collision, map-and-search.md §4.5). The `myArea` kind (Phase 4, §9.1)
-// derives from the logged-in home base (window.CC_MY_AREA, Task 6) or an
-// anonymous circle (localStorage 'cc-my-area'), never from the URL/'cc-scope'
-// token — those only ever carry the bare literal 'myarea', no coordinates.
+// Map scope (docs/specs/map-and-search.md §4.5): region, country, or everywhere.
+// Persisted in localStorage + ?scope=; broadcasts `cc:scopechange`.
+// `kind` not `mode` (map.js owns view mode). URL/storage store 'myarea', never coordinates.
 (() => {
   'use strict';
 
@@ -21,10 +11,9 @@
   const URL_PARAM = 'scope';
   const EVENT = 'cc:scopechange';
 
-  // Region registry injected by the map page from the DB (CCScope.init):
-  //   { id:int, slug:str, countryCode:str, bbox:[west, south, east, north],
-  //     adj:int[] }  — adj = border-neighbour ids (cross-border chip gate,
-  //   map-and-search.md §4.5)
+  // Region registry from the map page (CCScope.init):
+  //   { id, slug, countryCode, bbox:[w,s,e,n], adj:int[] }
+  // adj = border-neighbour ids (docs/specs/map-and-search.md §4.5)
   let regions = [];
   let byId = new Map();
   let bySlug = new Map();
@@ -34,10 +23,8 @@
   // list), so a second ambiguous click in the same overlap zone fetches nothing.
   const boundaryCache = new Map();
 
-  // IANA timezone -> ISO country, for the anonymous cold-start home hint
-  // (map-and-search.md §4.5). Starts with the onboarded
-  // countries' common zones; extend per onboarding. Compute-only — nothing is
-  // ever stored (map-and-search.md §4.5 rule 1).
+  // IANA timezone → ISO country, anonymous cold-start hint
+  // (docs/specs/map-and-search.md §4.5). Compute-only — nothing is stored.
   const TZ_COUNTRY = {
     'Europe/Brussels': 'BE',
     'Europe/Amsterdam': 'NL',
@@ -47,10 +34,7 @@
     'Europe/Zurich': 'CH',
     'Europe/London': 'GB', 'Europe/Belfast': 'GB',
     'Europe/Rome': 'IT',
-    // Spain runs two zones: the mainland and the Balearics on Europe/Madrid,
-    // the Canaries an hour behind on Atlantic/Canary. Ceuta and Melilla report
-    // Africa/Ceuta. All three are Spain, and a rider in Las Palmas would
-    // otherwise get no home-country guess at all.
+      // Spain: mainland + Balearics (Europe/Madrid), Canaries, Ceuta/Melilla.
     'Europe/Madrid': 'ES', 'Atlantic/Canary': 'ES', 'Africa/Ceuta': 'ES',
     'Asia/Tokyo': 'JP',
     'Australia/Sydney': 'AU', 'Australia/Melbourne': 'AU',
@@ -59,24 +43,17 @@
     'Australia/Darwin': 'AU', 'Australia/Canberra': 'AU',
     'Australia/Broken_Hill': 'AU', 'Australia/Lindeman': 'AU',
     'Australia/Lord_Howe': 'AU', 'Australia/Eucla': 'AU',
-    // Only the two onboarded states' zones. A visitor in America/New_York is
-    // in a country we have nothing for yet, so falling through to the default
-    // is more honest than guessing a home country whose whole map is dimmed.
+    // Only onboarded US states; America/New_York is a country we have nothing for.
     'America/Los_Angeles': 'US', 'America/Denver': 'US',
-    // ——— 2026-08-14 rollout ———
     'Europe/Ljubljana': 'SI',
     'Africa/Kigali': 'RW',
     'Africa/Johannesburg': 'ZA',
     'America/Bogota': 'CO',
-    // Chile's mainland is America/Santiago; Easter Island, part of the
-    // Valparaíso region, runs two hours behind on Pacific/Easter.
+    // Chile: mainland America/Santiago; Easter Island Pacific/Easter.
     'America/Santiago': 'CL', 'Pacific/Easter': 'CL',
-    // Same shape for New Zealand: the Chatham Islands are their own region AND
-    // their own zone, 45 minutes ahead of the mainland.
+    // NZ: Chatham Islands are their own region and zone.
     'Pacific/Auckland': 'NZ', 'Pacific/Chatham': 'NZ',
-    // Only the two onboarded provinces' zones, as for the US. British Columbia
-    // is America/Vancouver; Québec reports America/Toronto (America/Montreal
-    // is a link to it that some browsers still resolve to, so both are listed).
+    // Only onboarded CA provinces; America/Montreal is a link some browsers still resolve.
     'America/Vancouver': 'CA', 'America/Toronto': 'CA', 'America/Montreal': 'CA',
   };
   const currentTimezone = () => {
@@ -90,13 +67,10 @@
   let scope = null;
   let fallback = { kind: 'everywhere', regionIds: [], countryCode: null };
 
-  // True only when the ACTIVE scope was never explicitly chosen: init() fell
-  // through to the default (neither a URL ?scope= nor a stored 'cc-scope' —
-  // see init() below), and no set()/setRegion()/setCountry()/setEverywhere()/
-  // setMyArea() has run since. renderScopeChips() (map.js) uses this to know
-  // whether it may still substitute the inferred home country for the
-  // hardcoded default's country when choosing which chips to render (owner
-  // fix 1, 2026-07-23) — the ACTIVE scope itself is never touched by this flag.
+  // True only when init() fell through to the default (no URL ?scope=, no
+  // stored 'cc-scope') and no setter has run. renderScopeChips() uses this
+  // to substitute the inferred home country for chip choice; the active
+  // scope itself is never touched.
   let isDefaultScope = false;
 
   const reindex = (list) => {
@@ -129,10 +103,8 @@
   };
 
   const regionScope = (r) => ({ kind: 'region', regionIds: [r.id], countryCode: r.countryCode || null });
-  // Does stepping up to the country rung actually ADD area? False when the
-  // region scope already holds every region its country has — the
-  // single-region-country case (Luxembourg), where the country rung is the
-  // same polygon wearing a different label.
+  // False when the region scope already holds every region its country has
+  // (single-region country: Luxembourg) — the country rung adds no area.
   const countryRungWidens = (s) => {
     if (!s || !s.countryCode || !byCountry.has(s.countryCode)) return false;
     const held = s.regionIds || [];
@@ -141,11 +113,9 @@
   const countryScope = (cc) => ({ kind: 'country', regionIds: (byCountry.get(cc) || []).map((r) => r.id), countryCode: cc });
   const everywhereScope = () => ({ kind: 'everywhere', regionIds: [], countryCode: null });
 
-  // --- myArea (Phase 4, map-and-search.md §4.5): "what's near my home
-  // base" for logged-in users (window.CC_MY_AREA, Task 6) or an anonymous
-  // circle (localStorage). The circle itself never leaves this module — the
-  // URL/'cc-scope' token is the bare literal 'myarea', and the derived scope
-  // (rid set only) is what every other API surface sees. ----------------------
+  // myArea (docs/specs/map-and-search.md §4.5): logged-in home base or an
+  // anonymous circle. The circle never leaves this module — URL/'cc-scope'
+  // is the bare literal 'myarea'.
 
   // [west, south, east, north] bbox around a lat/lng circle of radius rkm.
   const circleBbox = (center, rkm) => {
@@ -249,11 +219,8 @@
     const rest = str.slice(i + 1);
     if (kind === 'country') return byCountry.has(rest) ? countryScope(rest) : null;
     if (kind === 'region') {
-      // A multi-region token collapses to its FIRST resolvable region (07-20
-      // review finding 10): every label/spotlight/best-of surface renders a
-      // single named region today, so honouring the extra ids would filter on
-      // regions the UI cannot show. Phase 4's derived sets (myArea) build
-      // multi-region scopes internally, not from URL tokens — revisit then.
+      // A multi-region token collapses to its first resolvable region — UI
+      // surfaces a single named region. myArea builds multi-region internally.
       for (const tok of rest.split(',')) {
         const r = bySlug.get(tok) || byId.get(Number(tok));
         if (r) return regionScope(r);
@@ -290,26 +257,8 @@
     try { window.dispatchEvent(new CustomEvent(EVENT, { detail: clone(scope) })); } catch (e) { /* no window */ }
   };
 
-  // ---- ground distance: anchor → the nearest point ON a region ---------------
-  //
-  // map-and-search.md §4.5. This used to measure to
-  // each region's BBOX CENTRE, which misjudges any region that is large or
-  // oddly shaped: from Groningen, Lower Saxony's centre is out near Hannover,
-  // so compact Bremen scored nearer than the region Groningen actually borders.
-  // The metric is now the distance to the nearest point on the region's own
-  // simplified outline (`r.outline`, shipped in CC_REGIONS), and 0 when the
-  // anchor is inside it.
-  //
-  // Note this is NOT the edge-DISTANCE ELIGIBILITY that was tried and rejected
-  // in map-and-search.md §4.5: which
-  // foreign regions may be offered is still decided by adjacency, and still
-  // keeps Utrecht all-Dutch. Edge distance only ORDERS a pool adjacency has
-  // already chosen. The bbox-EXTENT shortcut (distance to the rectangle) was
-  // prototyped and declined by the owner; this is real polygon geometry.
-  //
-  // Units are corrected degrees squared — the same scale the centre metric
-  // used — so the no-outline fallback below stays directly comparable and a
-  // registry that mixes the two still sorts sanely.
+  // Ground distance: nearest point ON the region's outline (docs/specs/map-and-search.md §4.5).
+  // Adjacency still gates eligibility; edge distance only orders that pool.
 
   // Squared distance from the origin to segment (ax,ay)→(bx,by), all already
   // translated so the anchor is at 0,0 and longitudes scaled by cos(lat).
@@ -322,10 +271,7 @@
     return px * px + py * py;
   };
 
-  // Ray-casting containment over a FLAT [lng,lat,lng,lat,…] ring. Outlines ship
-  // exterior rings only, so a hole is not modelled: for a ranking metric,
-  // scoring an enclave's anchor as "inside its surrounder" is the right answer
-  // anyway (you are standing in it).
+  // Ray-casting on a flat [lng,lat,…] ring. Exterior only; enclave-as-inside is fine for ranking.
   const pointInFlatRing = (x, y, f) => {
     let inside = false;
     const n = f.length / 2;
@@ -365,10 +311,7 @@
     return best;
   }
 
-  // Nearest-first by ground distance from `near` to each region, capped at `cap`.
-  // The cos(lat) correction (a longitude degree is ~0.65 of a latitude degree at
-  // 49°N) is shared by contextualRegions and regionsNear, so a bare degree-delta
-  // never over-weights east-west separation. Pure; no mutation.
+  // Nearest-first by ground distance, capped. cos(lat) correction shared with regionsNear.
   function rankByGroundDistance(list, near, cap) {
     const lng = near[0]; const lat = near[1];
     const kx = Math.cos(lat * Math.PI / 180);
@@ -414,22 +357,14 @@
       try { fromUrl = deserialize(new URLSearchParams(location.search).get(URL_PARAM)); } catch (e) { /* noop */ }
       let fromLs = null;
       try { fromLs = deserialize(localStorage.getItem(LS_KEY)); } catch (e) { /* noop */ }
-      // Phase 4 (map-and-search.md §4.5, owner decision): My area wins
-      // whenever a base location is set — EXCEPT an explicit URL scope, which
-      // always wins (a shared deep link must reproduce what was shared, not
-      // silently swap in "my area").
+      // My area wins whenever a base location is set, except an explicit URL
+      // scope (docs/specs/map-and-search.md §4.5).
       if (!fromUrl && fallback.kind === 'myArea') {
         scope = clone(fallback);
-        isDefaultScope = true; // fromUrl is falsy in this branch; fromLs (if any) was overridden, not used
+        isDefaultScope = true;
       } else {
-        // Cold start with nothing explicit: open on the rider's inferred home
-        // country rather than the caller's hardcoded default
-        // (map-and-search.md §4.5). Before this, an
-        // incognito visitor in the Netherlands got Dutch CHIPS on a
-        // Wallonia-SCOPED map — the inference reached the chip block but never
-        // the active scope. Sits BELOW url/localStorage so no returning rider's
-        // own choice is overridden, and writes nothing: init never persists, so
-        // opening on NL is still not a stored preference (§F rule 1).
+        // Cold start: inferred home country, not the hardcoded default
+        // (docs/specs/map-and-search.md §4.5). Below url/localStorage; writes nothing.
         let home = null;
         if (!fromUrl && !fromLs) {
           const cc = this.inferHomeCountry();
@@ -444,19 +379,12 @@
     /** The active scope (a copy — mutating it never changes internal state). */
     get() { return clone(scope || fallback); },
 
-    /** Whether the active scope was never explicitly chosen — init() fell
-     *  through to the default (no URL ?scope=, no stored 'cc-scope') and no
-     *  setter has run since (owner fix 1, 2026-07-23). Lets renderScopeChips()
-     *  (map.js) tell "hardcoded default, never confirmed" apart from "the
-     *  rider is really scoped to their own country" without changing what the
-     *  active scope IS. */
+    /** Whether the active scope was never explicitly chosen (no URL, no stored
+     *  'cc-scope', no setter since init). */
     isDefault() { return isDefaultScope; },
 
-    /** Replace the scope; persists + emits unless {persist:false}. Every
-     *  setter (setRegion/setCountry/setEverywhere/setMyArea/setAnonCircle)
-     *  funnels through here, so this is the one choke point that retires
-     *  isDefault() the moment the rider (or any caller) actually picks a
-     *  scope — a no-op call (sanitize fails) leaves it untouched. */
+    /** Replace the scope; persists + emits unless {persist:false}. Every setter
+     *  funnels through here, so isDefault() retires the moment a scope is picked. */
     set(next, opts) {
       const clean = sanitize(next);
       if (!clean) return this.get();
@@ -474,12 +402,9 @@
     setCountry(cc) { return byCountry.has(cc) ? this.set(countryScope(cc)) : this.get(); },
     setEverywhere() { return this.set(everywhereScope()); },
 
-    /** One rung wider: region -> its country -> everywhere; myArea -> its single
-     *  registry-known country (if exactly one) -> everywhere.
-     *  A region scope that ALREADY covers every region its country has skips
-     *  the country rung: Luxembourg has one region (the country itself), and
-     *  "Search in All Luxembourg instead" from it widened nothing
-     *  (owner-reported 2026-08-16). */
+    /** One rung wider: region → country → everywhere; myArea → its single
+     *  registry-known country (if exactly one) → everywhere. A region that
+     *  already covers every region its country has skips the country rung. */
     widen() {
       if (!scope || scope.kind === 'everywhere') return this.get();
       if (scope.kind === 'country') return this.setEverywhere();
@@ -505,19 +430,8 @@
     /** Region registry objects currently in scope (for spotlight + labels). */
     regions() { return (scope ? scope.regionIds : []).map((id) => byId.get(id)).filter(Boolean); },
 
-    /** Display label for ANY scope object, resolved from the REGISTRY — never
-     *  the DOM (2026-07-23 flash fix). map.js's scopeLabel() used to find this
-     *  by querying the rendered rail button for the scope's data-scope token,
-     *  which only exists once renderScopeChips() has run — long after first
-     *  paint (map.on('load')), and only for the currently-shown chips at all
-     *  (a second bug: a stale header when chips re-rendered after applyScope).
-     *  Neither problem exists once the label comes straight from the registry.
-     *  `region` -> its label (fall back to its slug); `country` -> its
-     *  countryLabel (fall back to the country code); `everywhere`/`myArea` ->
-     *  null, since those strings ("Everywhere", the "Near {place} · {km} km"
-     *  My-area line) are owned by the caller, not the registry. Unknown/
-     *  unresolvable (bad id, empty registry) is also null, so a guarded caller
-     *  can tell "nothing to show" from "show this" (map.js ~L290's guard). */
+    /** Display label from the registry, never the DOM. `region`/`country` from
+     *  the row; `everywhere`/`myArea` → null (caller owns those strings). */
     label(s) {
       if (!s || !s.kind) return null;
       if (s.kind === 'region') {
@@ -548,20 +462,8 @@
       return Number.isFinite(w) ? [w, s, e, n] : null;
     },
 
-    /** Where to POINT THE CAMERA for this scope, which is not always bbox().
-     *
-     *  bbox() is the true extent and has to stay that way: membership tests and
-     *  the nearest-region ranking read it. But a region that owns a distant
-     *  island has a true extent mostly made of sea, and framing on it shows the
-     *  sea. Western Cape reaches 46.98°S for the Prince Edward Islands, so
-     *  scoping to it centred the map 800 km off Cape Town on blank water
-     *  reading "0 places shown"; Valparaíso reaches 109.45°W for Easter Island
-     *  and lands mid-Pacific. Both arrived with the 2026-08-14 rollout.
-     *
-     *  `r.view` is the largest outline ring's box (RegionRegistryProvider),
-     *  i.e. the mainland, and falls back to `r.bbox` when a region has no
-     *  usable outline — so this is never worse than what it replaced.
-     */
+    /** Camera frame for this scope — not always bbox(). Distant islands make
+     *  the true extent mostly sea; `r.view` is the mainland outline box. */
     viewBbox() {
       if (scope && scope.kind === 'myArea' && scope.myArea) return this.bbox();
       const rs = this.regions();
@@ -577,15 +479,8 @@
     },
 
     /** [lng, lat] centre of the active scope, or null for Everywhere.
-     *
-     *  This is the anchor the contextual chip block ranks "closest regions"
-     *  against (map-and-search.md §4.5). It deliberately
-     *  does NOT come from the map: chips are rendered BEFORE applyScope fits the
-     *  viewport (the header label resolves by querying the rendered chip button),
-     *  so `map.getCenter()` there is still the OUTGOING scope's centre. Scoping
-     *  to Utrecht ranked against Germany's centroid and offered Drenthe/Groningen
-     *  while hiding adjacent Noord-Holland/Zuid-Holland. The scope's own bbox is
-     *  known synchronously and has no timing coupling at all. */
+     *  Chip ranking anchor (docs/specs/map-and-search.md §4.5) — from the
+     *  scope bbox, not the map (chips render before applyScope fits the view). */
     scopeCenter() {
       const b = this.bbox();
       return b ? [(b[0] + b[2]) / 2, (b[1] + b[3]) / 2] : null;
@@ -593,7 +488,7 @@
 
     /** Single region id for best-of &region= (only a single named region qualifies).
      *  Kept for compatibility — bestOfRegionIds() supersedes it for callers that
-     *  can send a set (Phase 4). */
+     *  can send a set. */
     bestOfRegionParam() {
       return (scope && scope.kind === 'region' && scope.regionIds.length === 1) ? scope.regionIds[0] : null;
     },
@@ -610,11 +505,8 @@
     /** Whether a myArea source (CC_MY_AREA payload or anon circle) is available. */
     myAreaAvailable() { return myAreaScope() !== null; },
 
-    /** The onboarded home country code, from (in order) the My-area payload,
-     *  the anon circle, then the client timezone; null when none is onboarded.
-     *  Compute-only — writes nothing (map-and-search.md §4.5
-     *  §D / §F rule 1: no localStorage, no cookie, no network call, no mutation
-     *  of module state). */
+    /** Onboarded home country: My-area payload, anon circle, then timezone.
+     *  Compute-only (docs/specs/map-and-search.md §4.5). */
     inferHomeCountry() {
       const onboarded = (cc) => (cc && byCountry.has(cc) ? cc : null);
       const src = myAreaSource();
@@ -640,11 +532,7 @@
       return s ? this.set(s) : this.get();
     },
 
-    /** Store an anonymous circle (rounded to 2 decimals — same coarseness as
-     *  the server) for logged-out users, then apply it as the myArea scope.
-     *  radiusKm is clamped to [10,150] and rounded — the server (User::
-     *  BASE_RADIUS_MIN/MAX, default 40) applies the same clamp, so this is
-     *  the client-side mirror the docblock already claimed. */
+    /** Store an anonymous circle (rounded to 2 decimals, radius clamped [10,150]). */
     setAnonCircle(lat, lng, radiusKm) {
       try {
         const rkm = Math.round(Math.max(10, Math.min(150, radiusKm)));
@@ -662,23 +550,15 @@
       try { localStorage.removeItem(LS_AREA_KEY); } catch (e) { /* private mode */ }
     },
 
-    /** Photon geocode hints derived from scope (Task 8): scoped bbox + country gate. */
+    /** Photon geocode hints: scoped bbox + country gate. */
     photonParams() {
       if (!scope || scope.kind === 'everywhere') return { bbox: null, countrycode: null };
       return { bbox: this.bbox(), countrycode: scope.countryCode ? scope.countryCode.toLowerCase() : null };
     },
 
-    /** Coverage endpoint params {rids, cc} for the active scope (Phase 3,
-     *  map-and-search.md §4.5). A region sends its ids only; a country
-     *  sends its ids AND cc (the server ORs them, so an unsplit country row
-     *  region_id NULL still matches on cc); Everywhere sends neither. rids are
-     *  sorted so the shared HTTP-cache key is order-independent (§8 risk 10).
-     *  A myArea scope whose derived region set is empty is NOT "no scope" —
-     *  it returns rids: [] (an empty array, distinct from Everywhere's null)
-     *  as an explicit "in scope: nothing" sentinel, so callers never fall
-     *  through to an unscoped/GLOBAL request for a rider whose area matched
-     *  no region (map-and-search.md §4.5's leak-safe-hide rule, extended to
-     *  this client-side seam). */
+    /** Coverage params {rids, cc} (docs/specs/map-and-search.md §4.5). Region:
+     *  ids only; country: ids AND cc; Everywhere: neither. Empty myArea returns
+     *  rids: [] (not null) — "in scope: nothing", never an unscoped request. */
     coverageParams() {
       if (!scope || scope.kind === 'everywhere') return { rids: null, cc: null };
       const rids = scope.regionIds.slice().sort((a, b) => a - b);
@@ -686,18 +566,15 @@
       return { rids: rids.length ? rids : null, cc: scope.kind === 'country' ? scope.countryCode : null };
     },
 
-    /** Scope search results for the unified search box
-     *  (map-and-search.md §4.5): matching country rungs +
-     *  regions, prefix-before-substring, country rungs first on a country hit.
-     *  Pure/compute-only — reads the registry only, never touches storage,
-     *  module state, or the scopechange event. */
+    /** Scope search for the unified search box (docs/specs/map-and-search.md §4.5).
+     *  Pure — registry only, never storage or scopechange. */
     searchScopes(query, limit) {
       const q = (query || '').trim().toLowerCase();
       if (q.length < 1) return [];
-      const cap = limit ?? 8;   // ?? not ||: an explicit limit of 0 must mean 0, not "unset"
+      const cap = limit ?? 8;   // ?? not ||: explicit 0 must mean 0
       const rank = (hay) => { const h = (hay || '').toLowerCase(); const i = h.indexOf(q); return i < 0 ? Infinity : (i === 0 ? 0 : 1); };
       const out = [];
-      // country rungs (one per onboarded country)
+      // country rungs
       for (const [cc, rs] of byCountry) {
         const cl = rs[0] && rs[0].countryLabel ? rs[0].countryLabel : cc;
         const score = Math.min(rank(cl), rank(cc));
@@ -708,28 +585,21 @@
         const score = Math.min(rank(r.label), rank(r.slug));
         if (score < Infinity) out.push({ kind: 'region', slug: r.slug, cc: r.countryCode || '', label: r.label || r.slug, _s: score });
       }
-      // Pin the collator locale: bare localeCompare() uses the runtime default,
-      // so diacritic labels (Baden-Württemberg) could tie-break differently on CI
-      // than on a dev box. Score order is numeric and unaffected either way.
+      // Pin collator locale so diacritic labels sort the same on CI and a dev box.
       out.sort((a, b) => (a._s - b._s) || a.label.localeCompare(b.label, 'en'));
       return out.slice(0, cap).map(({ _s, ...rest }) => rest);
     },
 
-    /** The region whose bbox contains [lng,lat]; nearest-centre on overlap;
-     *  null outside every region (a no-op click). Always a region, never a
-     *  country (map-and-search.md §4.5). */
+    /** Region whose bbox contains [lng,lat]; nearest-centre on overlap; null
+     *  outside every region. Always a region, never a country
+     *  (docs/specs/map-and-search.md §4.5). */
     regionOfPoint(lng, lat) {
       let best = null; let bestD = Infinity;
       for (const r of regions) {
         const b = r.bbox;
         if (!b || lng < b[0] || lng > b[2] || lat < b[1] || lat > b[3]) continue;
         const cx = (b[0] + b[2]) / 2; const cy = (b[1] + b[3]) / 2;
-        // Scale the longitude delta by cos(lat) before comparing. Raw squared
-        // degrees are NOT "nearest centre": a longitude degree is ~0.65 of a
-        // latitude degree at 49°N, so an unscaled metric over-weights east-west
-        // separation by 1/cos²(lat) ≈ 2.3× there — enough to pick the visually
-        // farther region when an east-west-elongated bbox overlaps a
-        // north-south-elongated one (task-4 review).
+        // Scale longitude by cos(lat); raw degrees over-weight east-west.
         const kx = Math.cos(lat * Math.PI / 180);
         const d = ((cx - lng) * kx) ** 2 + (cy - lat) ** 2;
         if (d < bestD) { bestD = d; best = r; }
@@ -753,12 +623,8 @@
       return Math.sqrt(d2) * 111.32;   // mean degree of latitude, km
     },
 
-    /** Async click refinement:
-     * the synchronous bbox pass as the candidate filter, then a real
-     *  point-in-polygon test ONLY when 2+ bboxes overlap the click. 1 candidate
-     *  (or 0) never fetches. Inside no candidate polygon → nearest-centre among
-     *  the candidates (identical to regionOfPoint's tiebreak, never a regression).
-     *  Returns Promise<region|null>. regionOfPoint stays synchronous for chips. */
+    /** Async click refinement: bbox candidates, then point-in-polygon only when
+     *  2+ overlap. regionOfPoint stays sync for chips. */
     async regionOfPointPrecise(lng, lat) {
       const cands = [];
       for (const r of regions) {
@@ -804,17 +670,8 @@
       return nearestByCentre();
     },
 
-    /** Onboarded regions of a country, capped at 8 by default, for the
-     *  contextual chips (map-and-search.md §4.5,
-     *  Tasks 5-6; cap + overflow: owner fix 2, 2026-07-23 — a country can
-     *  onboard far more than 8 regions, e.g. a future 51-state US). `opts`:
-     *  - `near: [lng, lat]` — sort by ground distance from that point to each
-     *    region's bbox centre, nearest first, then cap. Omitted -> today's
-     *    label-sort (pinned 'en' collator, consistent with searchScopes,
-     *    ddb9b4a — diacritic labels like Baden-Württemberg must not sort
-     *    differently on CI than a dev box).
-     *  - `limit` — defaults to 8; `contextualRegions(cc)` with no opts at all
-     *    stays valid (every existing caller). */
+    /** Onboarded regions of a country, capped at 8 (docs/specs/map-and-search.md §4.5).
+     *  `near: [lng,lat]` sorts by ground distance; else label-sort (pinned 'en'). */
     contextualRegions(cc, opts) {
       const o = opts || {};
       const cap = o.limit != null ? o.limit : 8;
@@ -826,39 +683,16 @@
       return list.slice(0, cap);
     },
 
-    /** All onboarded regions, nearest-first by ground distance from `near`
-     *  ([lng, lat]), capped (default 8). Country-agnostic — this is what makes the
-     *  scope chips cross-border: a
-     *  rider near a border is offered the genuinely nearest regions whatever country
-     *  they are in. contextualRegions(cc) stays country-scoped for the
-     *  "All <country>" rung. Pure. */
+    /** All onboarded regions, nearest-first from `near`, capped (default 8).
+     *  Country-agnostic — the cross-border chip offer. */
     regionsNear(near, opts) {
       const cap = (opts && opts.limit != null) ? opts.limit : 8;
       return rankByGroundDistance(regions.slice(), near, cap);
     },
 
-    /** Assign up to 8 regions to compass slots around `origin` ([lng, lat]) by
-     *  true bearing from `origin` to each region's own bbox centre (owner
-     *  request, map-and-search.md §4.5 "Compass grid
-     *  layout"): the active region sits in the caller's centre cell, and each
-     *  neighbour lands in the cell matching the direction it actually lies —
-     *  north above, east right, and so on.
-     *
-     *  Ground-corrected for latitude, same `cos(lat)` scaling `regionOfPoint`/
-     *  `contextualRegions` already use: a bare degree-delta bearing is skewed
-     *  east-west away from the equator (a longitude degree is ~0.65 of a
-     *  latitude degree at 49N), so an uncorrected bearing can land a region a
-     *  full octant away from where it visually sits.
-     *
-     *  Deterministic collision resolution: regions are processed NEAREST-first
-     *  (ground distance from `origin`); when a region's ideal slot is already
-     *  taken, it takes the nearest FREE slot by angular distance to its own
-     *  bearing. Nothing is ever dropped silently — once all 8 slots fill,
-     *  every further region lands in `overflow` for the caller to fold in
-     *  (e.g. into the existing "More regions…" chip) rather than losing it.
-     *
-     *  Pure: no DOM, no storage, no mutation of the registry rows passed in.
-     *  Returns {n,ne,e,se,s,sw,w,nw: region|null, overflow: region[]}. */
+    /** Assign up to 8 regions to compass slots around `origin` by true bearing
+     *  (docs/specs/map-and-search.md §4.5). Ground-corrected for latitude.
+     *  Nearest-first; displaced at most one slot or overflow. Pure. */
     compassLayout(origin, regionsList) {
       const SLOTS = ['n', 'ne', 'e', 'se', 's', 'sw', 'w', 'nw'];
       const ANGLE = { n: 0, ne: 45, e: 90, se: 135, s: 180, sw: 225, w: 270, nw: 315 };
@@ -891,14 +725,7 @@
             const wrapped = Math.min(diff, 360 - diff);
             if (wrapped < bestDiff) { bestDiff = wrapped; best = s; }
           });
-          // Displace by at most ONE slot. The ideal cell is always within 22.5°
-          // of the true bearing, so one slot over is ≤ 67.5° — still a fair hint.
-          // Two slots over is ≤ 112.5°, which puts a WESTERN neighbour in the
-          // south cell: the grid would then assert a direction that is simply
-          // wrong, which is worse than not placing it. Bavaria is the real case —
-          // as Germany's south-east corner its neighbours all cluster N/NW/W, so
-          // the far slots can only be filled by lying. Those regions fall to
-          // `overflow` and the caller lists them below the grid instead.
+          // Displace by at most one slot (≤ 67.5°). Further would lie about direction.
           if (bestDiff > MAX_SLOT_DISPLACEMENT_DEG) { result.overflow.push(r); return; }
           slot = best;
         }
@@ -908,18 +735,9 @@
       return result;
     },
 
-    /** MapLibre filter expression for the coverage TILE layers (Phase 3,
-     *  map-and-search.md §4.5), or null for Everywhere (no filter). The
-     *  scope keys are pipe-delimited membership TOKENS: ridtok = "|<region_id>|"
-     *  (empty when unstamped), cctok = "|<cc>|", UNIONed across a cluster's
-     *  members by tippecanoe (--accumulate-attribute=concat). Testing
-     *  `'|id|' in ridtok` answers "does ANY member fall in this region?" for a
-     *  bubble and works identically on an individual icon, so ONE filter serves
-     *  both sublayers. Prop-less (both tokens empty) RENDERS — the artifact lags
-     *  the DB by up to a weekly rebuild, so hiding-all would blank the map (§8
-     *  risk 2); a cc-bearing rid-less row (cctok non-empty) is NOT prop-less, so
-     *  it hides under a region scope (matching /counts) and shows under its
-     *  country scope. coalesce keeps the test safe against a stale pre-token tile. */
+    /** MapLibre filter for coverage TILE layers (docs/specs/map-and-search.md §4.5),
+     *  or null for Everywhere. Prop-less (empty tokens) still renders — the
+     *  artifact lags the DB. */
     coverageTileFilter() {
       if (!scope || scope.kind === 'everywhere') return null;
       const ridtok = ['coalesce', ['get', 'ridtok'], ''];

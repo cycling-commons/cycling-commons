@@ -11,14 +11,11 @@ use App\Catalog\ItemState;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * An atomic editable catalog feature (letters A–J): points for most letters,
- * LineStrings for A (road surface). Common/filterable fields are real
- * columns; type-specific detail lives in registry-validated jsonb
- * attributes.
+ * An atomic editable catalog feature. Filterable fields are columns; type-specific detail is jsonb `attributes`.
  *
  * @see docs/specs/catalog-data-model.md §2.1
  *
- * @api Catalog domain entity.
+ * @api
  */
 #[ORM\Entity]
 #[ORM\Table(name: 'item')]
@@ -28,24 +25,10 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\UniqueConstraint(name: 'uniq_item_source_ref_letter', columns: ['source', 'source_ref', 'letter'])]
 class Item
 {
-    /**
-     * The one pseudo-field name that lives on Item::name, never in the jsonb
-     * `attributes` map. Change-detection (CatalogContributionService) and
-     * apply-on-approve (ModerationService) both special-case it; referencing
-     * this constant keeps that rule in one place.
-     */
+    /** Lives on Item::name, never in jsonb `attributes`. */
     public const string NAME_FIELD = 'name';
 
-    /**
-     * The pseudo-field a MOVED PIN travels as.
-     *
-     * Like NAME_FIELD it is not an attribute — the position lives in `geom` —
-     * but an edit has to be able to carry it, or moving a pin is a change the
-     * rider makes, the wizard accepts, and nothing records (owner-reported
-     * 2026-08-12: "I moved the spot … but this change is not recorded in the
-     * submission"). No letter's vocabulary uses `location`, so there is nothing
-     * to collide with.
-     */
+    /** Moved pin travels as this pseudo-field; the position lives in `geom`, not attributes. */
     public const string LOCATION_FIELD = 'location';
 
     #[ORM\Id]
@@ -53,7 +36,7 @@ class Item
     #[ORM\Column(type: 'bigint')]
     private ?int $id = null;
 
-    /** Catalog letter A–J (K = recommended_route table, L = heat_point table). */
+    /** Catalog letter (K and L live on other tables). */
     #[ORM\Column(type: 'string', length: 1)]
     private string $letter = '';
 
@@ -99,7 +82,7 @@ class Item
     #[ORM\Column(type: 'datetime_immutable')]
     private \DateTimeImmutable $updatedAt;
 
-    /** Last harvest touch: a staleness signal (no auto-retire). */
+    /** Last harvest touch: staleness signal, no auto-retire. docs/specs/catalog-data-model.md §4 */
     #[ORM\Column(type: 'datetime_immutable', nullable: true)]
     private ?\DateTimeImmutable $importedAt = null;
 
@@ -263,11 +246,6 @@ class Item
         return $this->updatedAt;
     }
 
-    /**
-     * Mark the row as freshly changed. Called by every content setter
-     * (name/geom/state/attributes) so updatedAt tracks any edit, not only an
-     * attribute change.
-     */
     private function touch(): void
     {
         $this->updatedAt = new \DateTimeImmutable();

@@ -10,17 +10,11 @@ use Symfony\Contracts\HttpClient\Exception\ExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 /**
- * Optional evidence: a public, checkable track record of exactly the kind of
- * work being volunteered for.
+ * Best-effort OSM handle lookup. Unreachable OSM still lets the application submit.
  *
- * Best-effort by design. If OSM is slow, rate-limits us or is down, the
- * application still submits and the reviewer sees "unverified" — the same
- * silent-degradation rule the coverage manifest and the Photon geocoder follow
- * (coverage-provider.md §6). A high changeset count is not a qualification and
- * zero is not a disqualification; it is one line of evidence among three.
+ * @see docs/specs/moderation-and-contribution.md §11
  *
- * @api Autowired by the DI container; consumed by CuratorApplicationService;
- *      covered directly by OsmUserVerifierTest.
+ * @api
  */
 final class OsmUserVerifier
 {
@@ -31,11 +25,7 @@ final class OsmUserVerifier
     {
     }
 
-    /**
-     * Charset-checked BEFORE the value is ever put in a URL. OSM display names
-     * allow letters, digits, spaces and a small punctuation set; anything else
-     * is a malformed input, not a lookup.
-     */
+    /** Charset-checked before the value is put in a URL. */
     public function isWellFormed(string $username): bool
     {
         $u = trim($username);
@@ -73,7 +63,6 @@ final class OsmUserVerifier
 
         $changesetCount = substr_count($body, '<changeset');
 
-        // If we're at the pagination cap (100), attempt to get the true count
         if ($changesetCount >= 100) {
             $changesetCount = $this->resolvePaginationCap($body, $changesetCount);
         }
@@ -82,15 +71,12 @@ final class OsmUserVerifier
     }
 
     /**
-     * Best-effort resolution of the 100-changeset pagination cap.
-     * Extracts the uid from the first changeset and fetches the user's
-     * true changeset count from /user/{uid}.
+     * When the list is capped at 100, fetch the user's true changeset count.
      *
      * @return int the resolved count, or the page count if resolution fails
      */
     private function resolvePaginationCap(string $changesetsXml, int $pageCount): int
     {
-        // Extract uid from the first changeset's uid attribute
         if (!preg_match('/<changeset[^>]+uid="(\d+)"/', $changesetsXml, $matches)) {
             return $pageCount;
         }
@@ -109,12 +95,10 @@ final class OsmUserVerifier
 
             $body = $response->getContent();
 
-            // Extract count attribute from <changesets count="N"/>
             if (preg_match('/<changesets\s+count="(\d+)"/', $body, $matches)) {
                 return (int) $matches[1];
             }
         } catch (ExceptionInterface) {
-            // Fall back to page count silently; do not degrade reachable/exists
         }
 
         return $pageCount;

@@ -1,21 +1,13 @@
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
-/* The map shell: the icon rail and the drawer it opens (map-and-search.md §4).
-
-   One section at a time. Pressing a rail icon opens that section; pressing the
-   same icon again, the ✕, or Escape closes the drawer. Nothing else on the
-   page drives it - no window global, no cross-module calls - because "which
-   panel is open" is chrome state and every module that wanted to reach for it
-   would be reaching past the rider's own choice.
-
-   The drawer is a flex sibling of the map canvas, so opening it genuinely
-   narrows #map. MapLibre does not observe that on its own, hence the resize
-   after the width transition settles. */
+/* Map shell: icon rail and drawer (docs/specs/map-and-search.md §4).
+   One section at a time; the same icon, ✕, or Escape closes it. Ships closed.
+   Nothing else opens it. The drawer is a flex sibling of #map, so MapLibre
+   must be told to resize after the width transition. */
 
 import { map } from './map-init.js';
 import { I18N } from './i18n.js';
 
-// Panel key -> the drawer heading. Same three sections the rail declares in
-// data-panel, and the same strings its tooltips carry.
+// Panel key → drawer heading; same three sections as the rail.
 const TITLES = () => ({
   search: I18N.railSearch || 'Search & region',
   layers: I18N.railLayers || 'Layers & filters',
@@ -24,11 +16,8 @@ const TITLES = () => ({
 
 let active = null;
 
-/* MapLibre re-measures its canvas only when told to. The drawer animates its
-   width over 180ms, so a resize fired now would measure the old box; one fired
-   on transitionend measures the new one. The timer is not belt-and-braces: a
-   rider on prefers-reduced-motion has no transition at all, so transitionend
-   never fires for them. Resizing twice is cheap and idempotent. */
+/* MapLibre only re-measures when told. Resize on transitionend (new box) and
+   after 220ms (prefers-reduced-motion fires no transitionend). */
 function resizeWhenSettled(dwr){
   const once = () => map.resize();
   dwr.addEventListener('transitionend', function h(e){
@@ -77,11 +66,8 @@ export function initShell(){
   });
   if(closeBtn) closeBtn.onclick = closePanel;
 
-  /* Escape closes the drawer only when nothing nearer owns the key. The search
-     dropdown lives INSIDE this drawer, and the feature drawer, the lightbox
-     and the climb profile sit modal over the map - all four bind Escape. A
-     rider dismissing a photo, or a suggestion list, must not also lose the
-     section they were reading, so each is checked by its own open state. */
+  /* Escape closes the drawer only when nothing nearer owns the key: search
+     dropdown, feature drawer, lightbox, climb profile. */
   const searchRes = document.getElementById('searchRes');
   document.addEventListener('keydown', e => {
     if(e.key !== 'Escape' || !active) return;
@@ -90,14 +76,11 @@ export function initShell(){
     closePanel();
   });
 
-  // Drawer closed on load: the map is the hero. (The prototype opened Layers
-  // to demo itself; the real page has a map to show.)
-  closePanel();
+  closePanel();   // closed on load: the map is the hero
 }
 
-/* The rail's half of "why is data missing?": a dot on the Layers icon whenever
-   a chip filter is narrowing what the map draws. render.js owns the count and
-   calls this; the on-map pill is the other half (Task 6 of the shell plan). */
+/* Dot on the Layers icon when a chip filter is narrowing the map.
+   render.js owns the count; the on-map pill is the other half. */
 export function setFilterDot(on){
   const b = document.getElementById('ib-layers');
   if(b) b.classList.toggle('filtered', !!on);

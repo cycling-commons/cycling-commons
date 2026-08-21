@@ -1,36 +1,11 @@
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
-/* The catalogue: the A-K layer table every other module reads, the derived
-   lookups, the towns index, and the two pieces of view state that key off it
-   (which layers are active, and which view mode is showing).
-   Extracted from map.js by the module split.
-
-   CATALOG is built at module scope — the second exception §4.2 allows, for the
-   same reason as `map`: every module needs it before any init() runs, and the
-   catalog-fetch gate guarantees the labels it reads are present. Its `features`
-   arrays are filled later, by the entry, from the CC_* payloads.
-
-   `mode` is deliberately NOT exported as a binding. An importer would get a
-   read-only copy of a value that changes when the rider flips the view mode, so
-   it is read through mode() and written through setMode() — the owner-module
-   rule from §2. `active` and `layerByKey` are mutable containers rather than
-   rebindable variables, so they export directly. */
+/* A–K layer table, towns index, active layers, view mode.
+   @see docs/specs/map-and-search.md §4 */
 import { LAYER_L10N } from './i18n.js';
 import { escPend } from './util.js';
 
-// One real, verified Ardennes example per catalog type (A–K). geom.ll = [lat,lng].
-// record[] rows render in the detail drawer; omit any attribute we cannot verify.
-//
-// This array's order is the DRAW order (render.js walks it to build markers and
-// sources, so later entries stack above earlier ones) — deliberately left as it
-// was. The order a rider READS categories in is CATALOG_DISPLAY below; the two
-// are different jobs and were only ever the same by accident.
-//
-// `votable` mirrors ItemType::isVotable() on the server and splits the rail
-// into its two groups. It is NOT `exp`: `exp` decides what Curated mode hides,
-// and the two genuinely disagree — road surface is a measured utility (never
-// voted) that still filters to curated, and K · Recommended routes is the
-// votable best-of layer that carries `exp:false` because render.js special-
-// cases it by key. Group by `votable`; filter by `exp`.
+// Draw order (render.js walks this). Reading order is catalogUtility/catalogVotable.
+// `votable` mirrors ItemType::isVotable(); `exp` is the Curated-mode hide flag — they disagree (A vs K).
 export const CATALOG = [
   { key:'surface', letter:'A', label:LAYER_L10N.surface||'Road surface', color:'#4E8C84', icon:'▰', kind:'surface', exp:true, votable:false, features:[] }
   ,{ key:'climbs', letter:'B', label:LAYER_L10N.climbs||'Climbs', color:'#6A2C8F', icon:'⛰', kind:'point', exp:true, votable:true, features:[] }
@@ -38,12 +13,6 @@ export const CATALOG = [
   ,{ key:'toilets', letter:'M', label:LAYER_L10N.toilets||'Public toilets', color:'#4E6E8C', icon:'🚻', kind:'point', exp:false, votable:false, features:[] }
   ,{ key:'services', letter:'D', label:LAYER_L10N.services||'Bike services', color:'#6b6f5e', icon:'⚙', kind:'point', exp:false, votable:false, features:[] }
   ,{ key:'stays', letter:'E', label:LAYER_L10N.stays||'Where to sleep', color:'#B5532E', icon:'⛺', kind:'point', exp:true, votable:true, features:[] }
-  // F · Hazards — features filled below from window.CC_HAZARDS (the served
-  // payload), region-stamped like every letter (map-and-search.md §4.5
-  // Task A). The hardcoded demo fixture ("Exposed crosswind · Hautes Fagnes")
-  // was retired in the 07-20 review round (rid-less client fixtures have no
-  // honest place in a scope-filtered map); it now returns as a real seeded,
-  // region-stamped SeedManualCatalogCommand row served through this path.
   ,{ key:'hazards', letter:'F', label:LAYER_L10N.hazards||'Hazards & conditions', color:'#C8923A', icon:'⚠', kind:'point', exp:false, votable:false, features:[]}
   ,{ key:'transit', letter:'G', label:LAYER_L10N.transit||'Getting there', color:'#3E7D8C', icon:'🚆', kind:'point', exp:false, votable:false, features:[] }
   ,{ key:'shelter', letter:'H', label:LAYER_L10N.shelter||'Shelter', color:'#9A8FB6', icon:'⛑', kind:'point', exp:false, votable:false, features:[] }
@@ -52,20 +21,15 @@ export const CATALOG = [
   ,{ key:'experience', letter:'K', label:LAYER_L10N.experience||'Recommended routes', color:'#FF5A1F', icon:'★', kind:'line', exp:false, votable:true, features:[] }
 ];
 
-export const active = new Set(CATALOG.map(l => l.key));   // all layers (incl. K · Recommended routes) on by default
+export const active = new Set(CATALOG.map(l => l.key));
 export const layerByKey = Object.fromEntries(CATALOG.map(l => [l.key, l]));
 
-// A route's drawn path by item id. Lives here rather than with either caller
-// because both picking.js and corrections.js need it and neither owns the
-// catalogue it reads (§9 — a deviation from §4's table, which did not place it).
 export function routePathById(id){
   const layer=layerByKey['experience']; if(!layer) return null;
   const f=layer.features.find(x=>String(x.id)===String(id));
   return f && f.geom && f.geom.path ? f.geom.path : null;
 }
 
-// Towns referenced by routes — each links to a place on the map + a city info card.
-// ll=[lat,lng]; info is a short blurb (in production auto-found from Wikidata/Wikipedia or user-added).
 export const CITIES = {
   'Spa':{ll:[50.4920,5.8636], wiki:'https://en.wikipedia.org/wiki/Spa,_Belgium', info:'The thermal town that gave the word "spa" its name; start of these loops and gateway to Spa-Francorchamps.'},
   'Stavelot':{ll:[50.3957,5.9300], wiki:'https://en.wikipedia.org/wiki/Stavelot', info:'Abbey town grown around its Benedictine abbey (651), at the foot of the Côte de Stockeu.'},
@@ -80,7 +44,6 @@ export const CITIES = {
   'La Gleize':{ll:[50.4150,5.8500], wiki:'https://en.wikipedia.org/wiki/La_Gleize', info:'Amblève-valley village of Stoumont, known for its WWII history (a preserved King Tiger tank).'},
   'Trois-Ponts':{ll:[50.3700,5.8730], wiki:'https://en.wikipedia.org/wiki/Trois-Ponts', info:'"Three bridges" — confluence of the Amblève and Salm, on the LBL roads.'},
   'Tiège':{ll:[50.5300,5.8900], wiki:'https://en.wikipedia.org/wiki/Jalhay', info:'Hamlet of Sart/Jalhay on the plateau above Spa.'},
-  // major Wallonia cities (t:'City') — searchable anchors to fly to; far-west ones have no Commons data nearby yet
   'Namur':{t:'City', ll:[50.4674,4.8720], wiki:'https://en.wikipedia.org/wiki/Namur', info:'Capital of Wallonia, where the Sambre meets the Meuse beneath its citadel.'},
   'Liège':{t:'City', ll:[50.6451,5.5736], wiki:'https://en.wikipedia.org/wiki/Li%C3%A8ge', info:'Largest city of eastern Wallonia, on the Meuse — start of Liège–Bastogne–Liège.'},
   'Charleroi':{t:'City', ll:[50.4109,4.4447], wiki:'https://en.wikipedia.org/wiki/Charleroi', info:'Former industrial hub on the Sambre, heart of the Pays Noir.'},
@@ -97,72 +60,32 @@ export const CITIES = {
   'Nivelles':{t:'City', ll:[50.5977,4.3270], wiki:'https://en.wikipedia.org/wiki/Nivelles', info:'Brabant town around its Romanesque collegiate church.'},
   'Malmedy':{t:'City', ll:[50.4259,6.0283], wiki:'https://en.wikipedia.org/wiki/Malmedy', info:'East-cantons town below the Hautes Fagnes, near the Stavelot roads.'}
 };
-// Defense in depth: the name is escaped even though today's callers only
-// pass RIDE_CITIES constants — if a payload value ever reaches this, it
-// must not break out of the attribute or element context.
+// docs/specs/security-architecture.md §4.2 — fail-closed if a payload name ever reaches this.
 export const cityLink = name => `<a class="cc-city" data-city="${escPend(name)}">${escPend(name)}</a>`;
 
-/* Reading order for the layer rail: the two groups a rider actually thinks in
-   — what is here (utilities, aiming for full coverage) and what is worth
-   riding to (votable, curated by riders) — mirroring the contribute hub's
-   PRACTICAL/EMOTIONAL split so one vocabulary describes the catalogue
-   everywhere. Within a group, CATALOG's order carries through.
-
-   This replaces an A–Z sort by letter, which put M · Public toilets last
-   (nowhere near Water & food, the row it belongs beside) and B · Climbs
-   second, above every utility, purely because climbs were catalogued early.
-   Letters are storage identifiers; they were never a running order.
-
-   Functions, not constants: the curator-only "Pending review" layer is pushed
-   into CATALOG at runtime (map.js), before initLayerList runs but after this
-   module evaluates — a precomputed array would silently drop it. It carries
-   `pendingLayer:true` and belongs to neither group; it is a moderation
-   overlay, not a category, so it gets its own trailing section. */
+// Functions, not constants: the curator-only pending layer is pushed into CATALOG at runtime.
 export const catalogUtility = () => CATALOG.filter(l => !l.votable && !l.pendingLayer);
 export const catalogVotable = () => CATALOG.filter(l => l.votable && !l.pendingLayer);
 export const catalogModeration = () => CATALOG.filter(l => l.pendingLayer);
 
-// Letter <-> layer-key, both directions: coverage tiles are addressed by
-// letter, the served layers by key.
 export const LETTER_KEY={C:'water',D:'services',E:'stays',G:'transit',H:'shelter',I:'scenic',J:'history',M:'toilets'};
 export const KEY_LETTER={water:'C',services:'D',stays:'E',transit:'G',shelter:'H',scenic:'I',history:'J',toilets:'M'};
 
-// Which layers are drawn, and which of the two view modes is showing.
-//
-// The global default is 'all' (Everything), NOT 'curated'.
-// Curated hides every
-// non-curated item on the experiential layers, so on an under-curated region it
-// shows a near-empty map while the rail counts hundreds of stays — a real
-// new-user trap the owner hit ("Gelderland says 1488 where to sleep but I see
-// 0/1488"). The honest default for a region that has not earned a best-of is to
-// show the data. resolveInitialMode() below can still open Curated, but only
-// when someone has actually said so.
+// docs/specs/map-and-search.md §4.2 — default Everything; Curated on an under-curated region is a near-empty map.
 let _mode = 'all';
 export const mode = () => _mode;
 export function setMode(m){ _mode = m; }
 
-// localStorage key for an ANONYMOUS visitor's manual choice. A logged-in
-// rider's choice goes to their profile instead (owner decision: shared devices
-// must not leak one person's default to the next), so this key is only ever
-// read when CC_PREFS says the viewer has no stored preference of their own.
+// Anonymous visitor only; a logged-in rider's choice lives on the profile (shared-device).
 export const MODE_LS_KEY = 'cc-map-mode';
 
-/** Load-time precedence:
- *   1. the logged-in rider's saved profile mode, if not 'auto';
- *   2. an anonymous visitor's own earlier choice in localStorage;
- *   3. the ACTIVE region's curated_default, set by a moderator once the region
- *      passed the readiness threshold;
- *   4. Everything.
- * `scope` is the resolved active scope (CCScope.get()) and `registry` the
- * CC_REGIONS rows. Pure apart from the localStorage read; returns a toggle
- * token ('curated' | 'all'), never an enum value. */
+/** docs/specs/map-and-search.md §4.2 — profile, then anonymous localStorage, then region defaultMode, then Everything. */
 export function resolveInitialMode(prefs, scope, registry){
   const p = prefs || {};
   if(p.mapMode === 'curated') return 'curated';
   if(p.mapMode === 'confirmed') return 'confirmed';
   if(p.mapMode === 'everything') return 'all';
-  // Only anonymous visitors fall through to the device: a logged-in rider on
-  // 'auto' has deliberately chosen to follow the region.
+  // Logged-in 'auto' follows the region; only anonymous visitors read the device.
   if(!p.mapMode || p.mapMode === 'auto'){
     if(!p.authed){
       let stored = null;
@@ -170,15 +93,8 @@ export function resolveInitialMode(prefs, scope, registry){
       if(stored === 'curated' || stored === 'confirmed' || stored === 'all') return stored;
     }
   }
-  // A single named region can carry the setting; a country/Everywhere/My-area
-  // scope spans many regions with no one answer, so it stays on Everything.
   if(scope && scope.kind === 'region' && scope.regionIds && scope.regionIds.length === 1){
     const r = (registry || []).find(x => x.id === scope.regionIds[0]);
-    /* Three rungs since 2026-08-12: the registry hands over the region's own
-       toggle token ('curated' | 'confirmed' | 'all'), gated on the Regions
-       desk, rather than a boolean that could only say best-of-or-nothing. An
-       unknown value falls through to Everything, which is the honest default
-       for a region nobody has vouched for. */
     const m = r && r.defaultMode;
     if(m === 'curated' || m === 'confirmed') return m;
   }

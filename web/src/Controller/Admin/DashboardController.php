@@ -40,12 +40,11 @@ use Symfony\Component\Uid\Uuid;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
- * EasyAdmin dashboard for site administrators.
+ * EasyAdmin dashboard.
  *
- * Access is gated at both the security layer (access_control: ^/admin → ROLE_ADMIN
- * in security.yaml) and the controller level (#[IsGranted]).
+ * @see docs/specs/account-and-auth.md §6
  *
- * @api Instantiated by EasyAdmin's router; never referenced from application code.
+ * @api
  */
 #[AdminDashboard(routePath: '/admin', routeName: 'admin')]
 #[IsGranted('ROLE_ADMIN')]
@@ -81,8 +80,6 @@ final class DashboardController extends AbstractDashboardController
     #[\Override]
     public function configureAssets(): Assets
     {
-        // form_autosubmit: the pager's page-length select posts on change, and
-        // an inline onchange= would be blocked by the CSP without a word.
         return Assets::new()
             ->addAssetMapperEntry('admin_confirm')
             ->addAssetMapperEntry('form_autosubmit');
@@ -95,8 +92,6 @@ final class DashboardController extends AbstractDashboardController
         yield MenuItem::linkTo(UserCrudController::class, new TranslatableMessage('admin.menu.users'), 'fa fa-users')->setAction('index');
         yield MenuItem::linkTo(AdminActionLogCrudController::class, new TranslatableMessage('admin.menu.activity'), 'fa fa-clock-rotate-left')->setAction('index');
         yield MenuItem::linkTo(ResetPasswordRequestCrudController::class, new TranslatableMessage('admin.menu.reset_requests'), 'fa fa-key')->setAction('index');
-        // Operator playbooks: verification scripts for manual support requests.
-        // A dedicated section so future playbooks slot in beside this one.
         yield MenuItem::section(new TranslatableMessage('admin.menu.playbooks'));
         yield MenuItem::linkToRoute(new TranslatableMessage('admin.menu.playbook_email'), 'fa fa-envelope-circle-check', 'admin_playbook_email_change');
         yield MenuItem::linkToRoute(new TranslatableMessage('admin.menu.playbook_photo_flood'), 'fa fa-triangle-exclamation', 'admin_playbook_photo_flood');
@@ -110,11 +105,9 @@ final class DashboardController extends AbstractDashboardController
     }
 
     /**
-     * Operator playbook for manual email-change requests. Email is read-only
-     * in settings (account-and-auth.md §8), so every change request lands in
-     * the support mailbox; this page keeps the verification script in front
-     * of the admin executing it. Canonical text: account-and-auth.md §8
-     * "Support playbook" — keep the two in sync.
+     * Email-change playbook. Email is read-only in settings.
+     *
+     * @see docs/specs/account-and-auth.md §8
      */
     #[AdminRoute('/playbook/email-change', 'playbook_email_change')]
     public function emailChangePlaybook(): Response
@@ -123,15 +116,9 @@ final class DashboardController extends AbstractDashboardController
     }
 
     /**
-     * Incident response for a flood of anonymous photo reports
-     * (docs/specs/photo-uploads.md §6c).
+     * Incident response for a flood of anonymous photo reports.
      *
-     * Admin-only on purpose, and NOT in the public wiki: the moderator
-     * rulebook is world-readable, so anything it says about how removal
-     * decisions are actually made is also a script for talking a curator into
-     * removing something. What belongs in public is the promise we make to
-     * somebody exercising a right; what belongs here is how we respond when
-     * that route is used as a weapon.
+     * @see docs/specs/photo-uploads.md §6c
      */
     #[AdminRoute('/playbook/photo-flood', 'playbook_photo_flood')]
     public function photoFloodPlaybook(UrgentWithholdBreaker $breaker, SystemSettings $settings): Response
@@ -144,15 +131,9 @@ final class DashboardController extends AbstractDashboardController
     }
 
     /**
-     * The editorial thresholds, editable at runtime (system-configuration.md §4).
+     * Runtime editorial thresholds.
      *
-     * Not an EasyAdmin CRUD over a settings entity on purpose: these are six
-     * typed, grouped, range-checked fields with help text explaining what each
-     * one does to the site — not rows somebody browses, sorts and deletes. The
-     * page is a plain form, like the email-change playbook above.
-     *
-     * GET renders, POST either saves the whole form or resets one key. Both
-     * branches redirect (POST/redirect/GET) so a refresh never re-submits.
+     * @see docs/specs/system-configuration.md §4
      */
     #[AdminRoute('/system-config', 'system_config', options: ['methods' => ['GET', 'POST']])]
     public function systemConfig(
@@ -164,7 +145,6 @@ final class DashboardController extends AbstractDashboardController
     ): Response {
         /** @var User $actor */
         $actor = $this->getUser();
-        // Effective values, or the raw input when it failed validation.
         $values = $settings->all();
         /** @var array<string, string> $errors key => message, rendered under the field */
         $errors = [];
@@ -174,8 +154,6 @@ final class DashboardController extends AbstractDashboardController
                 throw $this->createAccessDeniedException('Invalid CSRF token for a system-config change.');
             }
 
-            // "Reset to default" — one key, its own submit button, so it does
-            // not have to care whether the other fields are currently valid.
             $reset = (string) $request->request->get('reset', '');
             if ('' !== $reset) {
                 if (!$registry->has($reset)) {
@@ -191,10 +169,6 @@ final class DashboardController extends AbstractDashboardController
             $posted = $request->request->all('settings');
             foreach ($registry->all() as $key => $def) {
                 $raw = trim((string) ($posted[$key] ?? ''));
-                // No setting may be saved empty, whatever its type. Said in its
-                // own message rather than folded into the range/format one: an
-                // empty box answered with "enter a number between 1 and 1000"
-                // reads as a complaint about a number nobody typed.
                 if ('' === $raw) {
                     $errors[$key] = $translator->trans('admin.settings.error_required');
                     $values[$key] = $raw;
@@ -209,14 +183,13 @@ final class DashboardController extends AbstractDashboardController
                     $values[$key] = $raw;
                     continue;
                 }
-                // Reject the string before casting: (int) '' is 0 and (int) 'abc'
-                // is 0, and 0 is a legal-looking number for none of these keys.
+                // Reject before cast: (int) '' and (int) 'abc' are 0.
                 if (1 !== preg_match('/^-?\d+$/', $raw) || !$def->accepts((int) $raw)) {
                     $errors[$key] = $translator->trans('admin.settings.error_range', [
                         '%min%' => $def->min,
                         '%max%' => $def->max,
                     ]);
-                    $values[$key] = $raw; // keep what they typed rather than silently reverting it
+                    $values[$key] = $raw;
                     continue;
                 }
                 $values[$key] = (int) $raw;
@@ -225,11 +198,6 @@ final class DashboardController extends AbstractDashboardController
             if ([] === $errors) {
                 $changed = 0;
                 foreach ($values as $key => $value) {
-                    // Only genuine changes are written, so re-saving an
-                    // untouched form neither pins defaults into the table nor
-                    // fills the audit log with "25 -> 25". Compared in the
-                    // key's own type: casting a text setting to int would make
-                    // every address list look like 0 and "unchanged".
                     $current = $registry->get($key)->isString() ? $settings->getString($key) : $settings->get($key);
                     if ($value === $current) {
                         continue;
@@ -264,9 +232,7 @@ final class DashboardController extends AbstractDashboardController
     /**
      * Curator applications.
      *
-     * A purpose-built page rather than an EasyAdmin CRUD: the reviewer needs a
-     * person, their track record, their OSM standing and their words side by
-     * side to make one judgement — not rows to sort and delete.
+     * @see docs/specs/moderation-and-contribution.md §11.4
      */
     #[AdminRoute('/curator-applications', 'curator_applications', options: ['methods' => ['GET', 'POST']])]
     public function curatorApplications(
@@ -293,12 +259,6 @@ final class DashboardController extends AbstractDashboardController
             }
             $note = trim((string) $request->request->get('note', '')) ?: null;
 
-            // Guard against re-deciding here too, not just inside the
-            // service: a stale page (two admin tabs, a double-submit) must
-            // flash and no-op rather than reprocess an already-Approved or
-            // -Declined application. The service throws the same guard
-            // regardless of caller, so this is a friendlier front door on it,
-            // not the only line of defence.
             if (CuratorApplicationStatus::Pending !== $app->getStatus()) {
                 $this->addFlash('danger', $translator->trans('admin.curator.already_decided'));
 
@@ -312,11 +272,6 @@ final class DashboardController extends AbstractDashboardController
                     $applications->decline($app, $actor, $note);
                 }
             } catch (CuratorApplicationException $e) {
-                // Known reasons get a translated, four-locale flash; anything
-                // else falls back to the exception's own English text rather
-                // than a 500 — a stale-page re-decide is already handled by
-                // the Pending check above, so in practice this is the region-
-                // gone and already-global-curator guards from approve().
                 $key = match ($e->reason) {
                     'region_gone' => 'admin.curator.approve_blocked_region_gone',
                     'already_global_curator' => 'admin.curator.approve_blocked_already_global',
@@ -333,20 +288,13 @@ final class DashboardController extends AbstractDashboardController
 
         $pager = Pager::of(
             $request->query->getInt('page', 1),
-            // Every application, not just the waiting ones: a decided one used
-            // to disappear from this desk, so there was nowhere to see what had
-            // been answered or how (owner 2026-08-14).
             $applications->totalCount(),
             $pageSize->resolve(CuratorApplicationService::PER_PAGE),
         );
 
         $rows = [];
         foreach ($applications->recent($pager['page'], $pager['perPage']) as $app) {
-            // requested_region_id carries no FK, so a region deleted after
-            // submission does not null the column out — it dangles. That
-            // must render as its own state, not fall through to "whole
-            // country" (which approve() would then also have to guard, see
-            // CuratorApplicationService::approve()).
+            // requested_region_id is no-FK; a deleted region must not look like "whole country".
             $regionName = null;
             $regionGone = false;
             if (null !== $app->getRequestedRegionId()) {
@@ -360,14 +308,6 @@ final class DashboardController extends AbstractDashboardController
 
             $user = $em->getRepository(User::class)->find($app->getUserId());
 
-            // Existing standing (§9 follow-up): approving someone who already
-            // holds ROLE_CURATOR/ROLE_MODERATOR, or is already scoped
-            // somewhere, is worth a glance before deciding — approve() itself
-            // only hard-blocks the narrowing case (global curator, zero
-            // moderator_area rows), everything else is just shown.
-            // Slugs, not raw ROLE_* constants, so the template can trans()
-            // each one directly (admin.curator.role_curator / _moderator)
-            // instead of string-surgering a role constant at render time.
             $standingRoles = [];
             $standingAreas = [];
             if (null !== $user) {
@@ -405,20 +345,9 @@ final class DashboardController extends AbstractDashboardController
     }
 
     /**
-     * Put back photos that abusive reports took down
-     * (docs/specs/photo-uploads.md §6c).
+     * Restore photos withheld by abusive reports. Dismiss, do not decline — decline immunises the photo.
      *
-     * The recovery half of the circuit breaker. The breaker bounds how many
-     * photos a flood can withhold; it cannot un-withhold them, and clearing an
-     * incident one card at a time on the moderation desk is exactly the cost
-     * an attacker is buying — while the noise buries the genuine report the
-     * whole route exists for.
-     *
-     * Admin rather than the curator desk on purpose: this is an operational
-     * response to an attack on the site, not a judgement on any one claim.
-     * That is also why it dismisses rather than declines — a decline closes
-     * that category for that photo forever, so mass-declining a flood would
-     * quietly immunise every attacked photo against the next genuine report.
+     * @see docs/specs/photo-uploads.md §6c
      */
     #[AdminRoute('/withheld-photos', 'withheld_photos', options: ['methods' => ['GET', 'POST']])]
     public function withheldPhotos(
@@ -446,9 +375,6 @@ final class DashboardController extends AbstractDashboardController
                     continue;
                 }
                 $upload = $em->find(MediaUpload::class, Uuid::fromString($uuid));
-                // Anything already decided by a curator in the meantime is
-                // skipped, not overridden: the desk and this page can be open
-                // at once, and a real decision outranks a bulk sweep.
                 if (null !== $upload && $takedowns->dismissAsAbuse($upload, $actor, $note)) {
                     ++$restored;
                 }
@@ -459,8 +385,6 @@ final class DashboardController extends AbstractDashboardController
             return $this->redirectToRoute('admin_withheld_photos');
         }
 
-        // Paging matters more here than anywhere: this page exists to undo a
-        // flood, and a flood is exactly what fills it.
         $pager = Pager::of(
             $request->query->getInt('page', 1),
             $takedowns->withheldThirdPartyCount(),
@@ -476,32 +400,13 @@ final class DashboardController extends AbstractDashboardController
     }
 
     /**
-     * Photos under legal hold (docs/specs/photo-uploads.md §6d).
+     * Who covers what. Read-only names — never hydrate Region.geom.
      *
-     * The only surface in the application where escalated material can be
-     * reached: it is gone from the map, the photo page and the moderation desk
-     * by the time it appears here. Releasing lifts the hold and hands the row
-     * back to normal moderation — it deletes nothing, because when the
-     * material is the kind that had to be reported, the authority it was
-     * reported to decides when it may go.
-     */
-    /**
-     * Who covers what — the overview playbook step 7 never had.
-     *
-     * Assigning areas has always been a per-user action buried on a user's own
-     * page, so there was no way to answer "which regions have a curator?"
-     * except by opening people one at a time, and nothing in the menu pointed
-     * at it at all (owner-reported 2026-08-14). This lists every elevated
-     * account with its areas and links each to the existing assignment form.
-     *
-     * Read-only: it changes nothing itself, so it needs no CSRF and no POST.
+     * @see docs/specs/moderation-and-contribution.md §9
      */
     #[AdminRoute('/moderator-areas', 'moderator_areas_overview', options: ['methods' => ['GET']])]
     public function moderatorAreasOverview(EntityManagerInterface $em): Response
     {
-        // Names only, never the geometry: a Region carries its polygon and
-        // hydrating them all is what made the assignment page run out of
-        // memory (see UserCrudController::moderator_areas).
         $regionNames = $em->getConnection()->fetchAllKeyValue('SELECT id, name FROM region');
 
         $rows = [];
@@ -525,13 +430,9 @@ final class DashboardController extends AbstractDashboardController
     }
 
     /**
-     * Moderation workload, per month × per REGION - deliberately never per
-     * moderator (owner 2026-08-13): the view exists to see how much work is
-     * being done and where, not to watch individuals; in a region with few
-     * moderators a per-moderator graph would be the same thing with extra
-     * steps. Moderators are told this view exists (the rulebook names it) -
-     * an openly-stated workload view is management, a quiet one is
-     * surveillance. Read-only.
+     * Workload per month × region — never per moderator.
+     *
+     * @see docs/specs/account-and-auth.md §7
      */
     #[AdminRoute('/moderation-activity', 'moderation_activity', options: ['methods' => ['GET']])]
     public function moderationActivity(EntityManagerInterface $em): Response
@@ -552,6 +453,11 @@ final class DashboardController extends AbstractDashboardController
         return $this->render('admin/moderation_activity.html.twig', ['rows' => $rows]);
     }
 
+    /**
+     * Photos and submissions under legal hold. Release lifts the hold; it deletes nothing.
+     *
+     * @see docs/specs/photo-uploads.md §6d
+     */
     #[AdminRoute('/escalated', 'escalated', options: ['methods' => ['GET', 'POST']])]
     public function escalated(Request $request, MediaEscalationService $escalations, ModerationService $moderation, EntityManagerInterface $em, TranslatorInterface $translator, PageSize $pageSize): Response
     {
@@ -563,8 +469,6 @@ final class DashboardController extends AbstractDashboardController
                 throw $this->createAccessDeniedException('Invalid CSRF token for an escalation release.');
             }
             $note = trim((string) $request->request->get('note', '')) ?: null;
-            // One form, two kinds of held thing: a photo carries a uuid, a
-            // submission its id. Both release the same way.
             $submissionId = (int) $request->request->get('submission', 0);
             if ($submissionId > 0) {
                 $moderation->releaseSubmission($submissionId, $actor, $note);
@@ -581,9 +485,6 @@ final class DashboardController extends AbstractDashboardController
             return $this->redirectToRoute('admin_escalated');
         }
 
-        // Two held lists on one page, so two pagers with two keys — `page` for
-        // the photos, `spage` for the submissions — and each carries the
-        // other's current page so neither resets the other.
         $pager = Pager::of($request->query->getInt('page', 1), $escalations->heldCount(), $pageSize->resolve(MediaEscalationService::PER_PAGE));
         $submissionPager = Pager::of($request->query->getInt('spage', 1), $moderation->heldSubmissionCount(), $pageSize->resolve(ModerationService::HELD_PER_PAGE));
 

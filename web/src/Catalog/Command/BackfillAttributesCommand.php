@@ -20,45 +20,11 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 /**
- * Backfills discrete registry attributes from an item's baked `record` array.
- * The Wallonia harvest bakes some display values as pre-formatted strings in
- * a `record` array instead of also writing the discrete `item.attributes` key
- * the edit form reads ({@see CatalogFormRegistry}), so those items show fine
- * in the drawer but leave the edit form blank for the same field.
+ * Backfill discrete registry attributes from a baked `record` array. Existing discrete values always win. Idempotent.
  *
- * For each served item/route carrying a baked `record`, a row whose `label`
- * matches one of the type's registry field labels
- * ({@see CatalogFormRegistry::for()}) is parsed into that field's discrete
- * attribute key, but only when the discrete key is not already set - an
- * existing discrete value always wins and is never overwritten. Labels with
- * no matching registry field (e.g. "Length", which is derived and
- * display-only) are left in `record` untouched.
+ * @see docs/specs/catalog-data-model.md §7
  *
- * Idempotent: a key already present is left untouched, so re-running changes
- * nothing. `record` itself is never removed, since it still carries fields
- * such as Length that have no discrete home.
- *
- * Written generically over every {@see ItemType} (and, for K, over
- * `recommended_route` directly, since that letter lives in its own table),
- * so a harvest that bakes the same shortcut for another type is covered
- * without a code change.
- *
- * Known parsing rules (extend {@see self::extractValue()} if the harvest
- * ever bakes another field this way):
- *  - `avgGradient` / `maxGradient`: the leading number, e.g. "5.7%" -> "5.7",
- *    "~13% (steepest ramp)" -> "13" (ignores the `~` prefix and any trailing
- *    parenthetical).
- *  - Select fields (e.g. `surface`): the record value must case-insensitively
- *    match one of the registry's exact choices (e.g. "Asphalt" -> "Asphalt");
- *    no match -> left unset and reported, never guessed.
- *  - Every other text field (e.g. `famousFor`): copied verbatim (trimmed).
- *
- * The Wallonia import pipeline still emits data in this shape, so a future
- * harvest re-import can reintroduce the same gap for newly imported items.
- * The durable fix belongs upstream, in the export or import step; this
- * command only backfills the current database.
- *
- * @api Console entry point (dev/ops one-off backfill, safe to re-run).
+ * @api
  */
 #[AsCommand(name: 'app:catalog:backfill-attributes', description: 'Backfill discrete registry attributes from an imported baked `record` array')]
 final class BackfillAttributesCommand extends Command
@@ -67,21 +33,9 @@ final class BackfillAttributesCommand extends Command
     private const array NUMERIC_FIELDS = ['avgGradient', 'maxGradient'];
 
     /**
-     * Baked labels a registry field no longer answers to, normalized
-     * ({@see self::normalizeLabel()}) — so a re-import of an older harvest
-     * still lands in the right attribute.
+     * Older harvests named the steepest-ramp window in the label. Do not map a baked "Max gradient" — that is a point maximum, a different measurement.
      *
-     * The steepest-ramp field spelled its measurement window into its own label
-     * until 2026-08-09, and did so at two different widths as the window moved
-     * (100 m, then 250 m). The width now travels with the value instead
-     * (account-and-auth.md §9), which is what let the label stop being a
-     * moving target — but a dump taken before that still says the old thing.
-     *
-     * Only labels naming OUR OWN sustained measurement belong here. A baked
-     * "Max gradient" stays unmatched on purpose: it is a POINT maximum from
-     * whoever compiled it, a different measurement over a different distance,
-     * and copying it in would put a foreign definition into the one field whose
-     * whole value is that it means the same thing on every climb (2026-08-05).
+     * @see docs/specs/climb-elevation.md §5
      */
     private const array LEGACY_LABELS = [
         'steepest 250m' => 'maxGradient',
@@ -107,9 +61,6 @@ final class BackfillAttributesCommand extends Command
             $routeCounts = $this->backfillTable('recommended_route', $io);
             $this->db->commit();
         } catch (\JsonException|DBALException|\InvalidArgumentException $e) {
-            // Includes \InvalidArgumentException: AttributeVocabulary::assertValid()
-            // throws it on a vocabulary violation, and that must roll back the
-            // transaction like every other exception caught here.
             if ($this->db->isTransactionActive()) {
                 $this->db->rollBack();
             }
@@ -138,15 +89,7 @@ final class BackfillAttributesCommand extends Command
     }
 
     /**
-     * The item and recommended_route (letter K) tables carry the same baked
-     * `record` shape and are backfilled identically - one loop, parameterised
-     * by table. K lives in its own table with no `letter` column, so its type
-     * is fixed to QualityRides; item rows resolve their type per `letter`.
-     *
      * @return array{0: array<string, int>, 1: int, items: int, attrs: int}
-     *                                                                      [letter => items-backfilled, total
-     *                                                                      attrs written] plus items/attrs
-     *                                                                      aliases for the route caller
      */
     private function backfillTable(string $table, SymfonyStyle $io): array
     {
@@ -156,8 +99,7 @@ final class BackfillAttributesCommand extends Command
 
         /** @var list<array{id: int|string, letter?: string, attributes: string}> $rows */
         $rows = $this->db->fetchAllAssociative(
-            // jsonb_exists(), not the `?` operator: DBAL/PDO would otherwise try to
-            // parse `?` as a positional bind placeholder in this parameterless query.
+            // jsonb_exists(), not `?`: DBAL/PDO would treat `?` as a bind placeholder.
             sprintf("SELECT id, %sattributes::text AS attributes FROM %s WHERE jsonb_exists(attributes, 'record') ORDER BY id", $letterColumn, $table),
         );
 
@@ -224,9 +166,6 @@ final class BackfillAttributesCommand extends Command
                 }
             }
             if (null === $field) {
-                // No registry field for this label. "Length" used to land here
-                // too; it now has a discrete home and its own retirement
-                // command ({@see RetireBakedLengthCommand}).
                 continue;
             }
             if (\array_key_exists($field->name, $attributes)) {
@@ -246,13 +185,7 @@ final class BackfillAttributesCommand extends Command
         return [$written > 0 ? $attributes : null, $written, $skipped];
     }
 
-    /**
-     * A registry field label may carry a unit/hint suffix the baked `record`
-     * label never had (e.g. "Average gradient (%)" vs. record's plain
-     * "Average gradient", "Max gradient (%)" vs. "Max gradient") - strip a
-     * trailing "(...)" and casefold so both sides compare on the same
-     * "what the field actually is" text, not incidental UI decoration.
-     */
+    /** Strip a trailing "(...)" so registry labels compare to baked-record labels. */
     private static function normalizeLabel(string $label): string
     {
         return mb_strtolower(trim(preg_replace('/\s*\([^)]*\)\s*$/', '', $label) ?? $label));
@@ -267,7 +200,7 @@ final class BackfillAttributesCommand extends Command
         }
 
         if (\in_array($field->name, self::NUMERIC_FIELDS, true)) {
-            // "5.7%" -> "5.7"; "~13% (steepest ramp)" -> "13" - first leading number, ignoring a "~" prefix or trailing text.
+            // First leading number: "5.7%" → "5.7"; "~13% (steepest ramp)" → "13".
             return preg_match('/(\d+(?:\.\d+)?)/', $value, $m) ? $m[1] : null;
         }
 

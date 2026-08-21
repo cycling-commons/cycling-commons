@@ -23,34 +23,14 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
- * The two doors an empty map needs.
+ * Country interest vs curator application, chosen by onboarded state.
  *
- * One route, two states, chosen by whether the country has regions: a country
- * with none can only be REQUESTED, because there is nowhere to anchor a
- * submission and nothing to scope a curator to (§4).
+ * @see docs/specs/moderation-and-contribution.md §11
  *
- * @api Instantiated by Symfony's router; linked from the map rail's
- *      empty-scope invite (assets/map/panels.js).
+ * @api
  */
 final class JoinCountryController extends AbstractController
 {
-    /* ROLE_USER, not IS_AUTHENTICATED_FULLY (owner 2026-08-14: "why am I going
-       to login when I want to apply for curation of a region when I am already
-       logged in - this does not make sense to a normal user").
-
-       It did not, and the demand was arbitrary: this was the ONLY FULLY in the
-       codebase. A rider returning on a remember-me cookie can already change
-       their settings, set their base location, propose places and upload
-       photos - all ROLE_USER, all satisfied by a remembered token. Asking them
-       to type their password again to volunteer, and only to volunteer, drew a
-       line where there is no matching risk: an application is a form a curator
-       reads later, not a credential change or anything irreversible.
-
-       FULLY exists for re-authentication before something dangerous. If such a
-       page is ever added here, this is the attribute to reach for - and
-       SecurityController::login now sends a merely-remembered visitor to the
-       form rather than bouncing them home, so that page will have a way
-       through instead of the dead end this one had. */
     #[Route('/join/{cc}', name: 'join_country', requirements: ['cc' => '[A-Za-z]{2}'], methods: ['GET', 'POST'])]
     #[IsGranted('ROLE_USER')]
     public function index(
@@ -87,10 +67,7 @@ final class JoinCountryController extends AbstractController
         $error = null;
 
         if ($request->isMethod('POST')) {
-            // Server-known state alone decides the branch — never the client-
-            // supplied payload. The page only ever renders one form for a given
-            // $onboarded, and a crafted POST must not be able to pick the other
-            // one (wrong CSRF token id, wrong rate limiter, wrong service).
+            // Server-known onboarded state picks the branch — never the client payload.
             $isApplication = $onboarded;
             $tokenId = $isApplication ? 'curator-application' : 'country-interest';
 
@@ -98,22 +75,7 @@ final class JoinCountryController extends AbstractController
                 throw $this->createAccessDeniedException('Invalid CSRF token.');
             }
 
-            /* CONFIRM THE PASSWORD AT THE MOMENT OF COMMITMENT, and only when
-               the session is merely remembered (owner 2026-08-14: "let them
-               revalidate their password before the final submit if it is a
-               remember-me situation").
-
-               Not at the door: this page is a form somebody thinks about and
-               fills in, and demanding a password to look at it is what made no
-               sense. Here, the rider has decided, and putting their name
-               forward as a curator is a thing that should not be possible from
-               an unattended browser. Their typing is preserved on a wrong
-               answer, so a typo costs nothing but the retry.
-
-               Checked BEFORE the application limiter is consumed, and guarded
-               by a limiter of its own: the application allows three a DAY, so
-               charging failed passwords against it would have cost a rider
-               their ability to apply at all. */
+            // Remember-me: re-auth at submit, before the application limiter.
             $needsReauth = $isApplication && !$this->isGranted('IS_AUTHENTICATED_FULLY');
             if ($needsReauth) {
                 $reauth = $curatorReauthLimiter->create('user-'.(string) $user->getId());
@@ -137,15 +99,9 @@ final class JoinCountryController extends AbstractController
             }
 
             try {
-                // `null === $error` is the password guard: a failed re-check
-                // has already decided this request, so nothing is written and
-                // the form re-renders below with the rider's typing intact.
                 if ($isApplication && null === $error) {
                     $about = $request->request->getString('about');
                     if ('' === trim($about)) {
-                        // An application with no "who are you" text is not
-                        // meaningful evidence for a reviewer — reject it as a
-                        // page-level error rather than persisting an empty one.
                         $error = $translator->trans('join.error.about_required');
                     } else {
                         $regionRaw = $request->request->getString('region');
@@ -162,9 +118,6 @@ final class JoinCountryController extends AbstractController
                         return $this->redirectToRoute('join_country', ['cc' => $code]);
                     }
                 } elseif (!$isApplication) {
-                    // NOT a bare `else`: with the password guard above, that
-                    // would have recorded a country INTEREST for an application
-                    // whose re-check failed.
                     $interests->record(
                         $user,
                         $code,
@@ -178,10 +131,6 @@ final class JoinCountryController extends AbstractController
             } catch (InvalidNoteException $e) {
                 $error = $translator->trans('join.error.note_'.$e->reason);
             } catch (CuratorApplicationException $e) {
-                // Known reasons render a translated, four-locale message;
-                // anything else (e.g. a re-decide guard that can never fire
-                // from this controller) falls back to the exception's own
-                // English text rather than a blank or crashed page.
                 $key = match ($e->reason) {
                     'already_pending' => 'join.error.already_pending',
                     'not_onboarded' => 'join.error.not_onboarded',
@@ -197,19 +146,6 @@ final class JoinCountryController extends AbstractController
             }
         }
 
-        /* WHICH REGION THEY CAME FROM (owner 2026-08-14: "I am on the North
-           Holland page, so presumably the user wants to join this region").
-
-           The picker has always been here; nothing ever pointed at a row in
-           it, so a rider who clicked "do you want to join?" underneath one
-           region's name arrived at a country-level page and had to find their
-           region again in a list of twelve. `?region=<slug>` preselects it and
-           lets the page say the region's name back to them.
-
-           Validated against the regions ALREADY fetched for this country, not
-           trusted: an id from another country (or a slug that is not
-           operational here) simply falls back to the whole-country default,
-           which is also what the form does when the parameter is absent. */
         $wantedSlug = trim($request->query->getString('region'));
         $wanted = null;
         if ('' !== $wantedSlug) {
@@ -229,19 +165,8 @@ final class JoinCountryController extends AbstractController
             'regions' => $regions,
             'wanted' => $wanted,
             'error' => $error,
-            // Only a remembered session is asked to confirm; a fully
-            // authenticated one never sees the field.
             'needs_reauth' => $onboarded && !$this->isGranted('IS_AUTHENTICATED_FULLY'),
-            /* An application already with the curators replaces the form
-               (owner 2026-08-14: "hide the application form once successfully
-               submitted"). Read fresh on every render rather than keyed off
-               the success flash, so it also answers the rider who comes back
-               tomorrow: the service refuses a second pending application
-               anyway, and handing somebody an empty form that cannot be sent
-               is a worse answer than telling them theirs is already in. */
             'pending_app' => $onboarded ? $applications->pendingApplication((int) $user->getId(), $code) : null,
-            // What they typed, so a rejected submit costs the retry and
-            // nothing else. Never the password.
             'sent' => $request->isMethod('POST') ? [
                 'region' => $request->request->getString('region'),
                 'osm' => $request->request->getString('osm'),

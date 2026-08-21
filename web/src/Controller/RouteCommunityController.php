@@ -25,13 +25,11 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 
 /**
- * The rider community loop on the route drawer (route-domain.md §6): a
- * per-route snapshot fetched on drawer-open and the ride/vote/suggest
- * writes. Unlocalized `/routes/{id}/…` JSON API (matches RouteGpxController),
- * user-only + stateless CSRF. Auth is enforced in-controller (401,
- * not a login redirect) because these are API endpoints, not pages.
+ * Route community JSON: 401 not 302.
  *
- * @api Instantiated by Symfony's router; called by assets/map/map.js.
+ * @see docs/specs/route-domain.md §6
+ *
+ * @api
  */
 final class RouteCommunityController extends AbstractController
 {
@@ -55,11 +53,7 @@ final class RouteCommunityController extends AbstractController
         ]);
     }
 
-    /**
-     * The API auth gate: a fully-authenticated ROLE_USER, or a clean 401 — a
-     * JSON client must not be 302-redirected to the login page. Also
-     * catches 2FA-in-progress tokens (they lack ROLE_USER).
-     */
+    /** ROLE_USER, or a clean 401 (never a login redirect). */
     private function requireUser(): User
     {
         $user = $this->getUser();
@@ -86,7 +80,7 @@ final class RouteCommunityController extends AbstractController
     {
         $user = $this->requireUser();
         $this->validateCsrf($request);
-        $route = $this->activeRoute($id);   // Unverified + Verified both allowed
+        $route = $this->activeRoute($id);
 
         $bike = BikeType::tryFrom((string) $request->request->get('bike_type'));
         if (null === $bike) {
@@ -141,7 +135,6 @@ final class RouteCommunityController extends AbstractController
         } catch (TooManyRequestsHttpException) {
             return $this->json(['error' => 'rate_limited'], 429);
         } catch (\InvalidArgumentException) {
-            // recordSuggestion's only throw path today is the note-length cap.
             return $this->json(['error' => 'note_too_long'], 422);
         }
 
@@ -149,9 +142,6 @@ final class RouteCommunityController extends AbstractController
     }
 
     /**
-     * Parse the optional `segments` field (JSON list of {start,end} fractions).
-     * Returns null (none), a validated list, or false (malformed → 422).
-     *
      * @return list<array{start: float, end: float}>|false|null
      */
     private function parseSegments(mixed $raw): array|false|null
@@ -183,8 +173,7 @@ final class RouteCommunityController extends AbstractController
     }
 
     /**
-     * Curator-only: a route's PENDING corrections + their located segments, for the
-     * moderator map (route-domain.md §7). Colours are assigned client-side.
+     * @see docs/specs/route-domain.md §7
      */
     #[Route('/routes/{id}/corrections', name: 'route_corrections', requirements: ['id' => '\d+'], methods: ['GET'])]
     public function corrections(int $id, Connection $db): JsonResponse
@@ -193,7 +182,7 @@ final class RouteCommunityController extends AbstractController
         if (!$this->isGranted('ROLE_CURATOR')) {
             throw new HttpException(Response::HTTP_FORBIDDEN, 'curator_only');
         }
-        $this->activeRoute($id);   // 404 if not served
+        $this->activeRoute($id);
 
         /** @var list<array{id:int|string, reason:string, note:?string, segments:?string}> $rows */
         $rows = $db->fetchAllAssociative(
@@ -221,7 +210,7 @@ final class RouteCommunityController extends AbstractController
 
     private function freshSnapshot(RecommendedRoute $route, User $user): JsonResponse
     {
-        $this->em->refresh($route);   // pick up a just-flipped state
+        $this->em->refresh($route);
         $season = Season::current(new \DateTimeImmutable());
 
         return $this->json(['ok' => true, ...$this->community->snapshot($route, $user, $season)]);

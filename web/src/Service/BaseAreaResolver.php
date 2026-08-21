@@ -10,17 +10,11 @@ use App\Catalog\OperationalRegions;
 use Doctrine\DBAL\Connection;
 
 /**
- * Derives the rider's My-area region set from a coarse base point + radius:
- * ST_DWithin over region polygons, containing region always first, capped at
- * MAX_REGIONS (map-and-search.md §4.5 "User base location").
- * Raw DBAL like SpatialResolver/RegionResolver. Operational-only:
- * a lister of regions, so the
- * infrastructure-only L2 country outline (which always contains its
- * operational L4 subdivisions) must never occupy one of the 8 slots.
+ * My-area regions from a coarse base point + radius. Cap 8; operational regions only.
  *
- * @api Autowired by the DI container; consumed by BaseLocationService's
- *      apply()/rederiveAll() (settings save, the map "Set my area" endpoint,
- *      and import re-derivation).
+ * @see docs/specs/map-and-search.md §4.5
+ *
+ * @api
  */
 final class BaseAreaResolver
 {

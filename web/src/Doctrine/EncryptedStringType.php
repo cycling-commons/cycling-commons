@@ -10,13 +10,9 @@ use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Types\Type;
 
 /**
- * Transparently encrypts a string column at rest with AES-256-GCM.
+ * Encrypts a string column at rest (AES-256-GCM, APP_SECRET). Used for TOTP secrets.
  *
- * The key is derived from APP_SECRET via HKDF-SHA256, so there is no extra secret
- * to manage; rotating APP_SECRET invalidates stored ciphertext (affected users
- * simply re-enrol). Used for the TOTP 2FA secret so a database leak alone does
- * not expose the authenticator seed. Stored as base64(iv || tag || ciphertext);
- * the column stays a plain VARCHAR(255) (an encrypted seed is ~80 chars).
+ * @see docs/specs/account-and-auth.md §4
  *
  * @api
  */
@@ -29,8 +25,6 @@ final class EncryptedStringType extends Type
     #[\Override]
     public function getSQLDeclaration(array $column, AbstractPlatform $platform): string
     {
-        // Match a plain string(255) column so swapping a `string` field to this
-        // type produces no schema diff (the ORM defaults `string` to 255).
         $column['length'] ??= 255;
 
         return $platform->getStringTypeDeclarationSQL($column);
@@ -60,16 +54,7 @@ final class EncryptedStringType extends Type
             return null;
         }
 
-        // Any unreadable stored value (structurally invalid, or the key was
-        // rotated, or the data is corrupted so the GCM auth check fails)
-        // hydrates as NULL instead of throwing. This type is mapped on
-        // User::$totpSecret, so throwing here would break every hydration of
-        // the affected row: the user could never log in, and an admin could
-        // never open the account to turn off 2FA. Returning null makes the
-        // seed read as absent, so the documented "affected users simply
-        // re-enrol" path, and the mandatory 2FA enforcer, actually work. An
-        // affected account is observable: it just shows 2FA disabled and
-        // prompts the user to re-enrol.
+        // Unreadable ciphertext hydrates as null so a rotated key cannot 500 login.
         $raw = base64_decode((string) $value, true);
         if (false === $raw || \strlen($raw) <= self::IV_LEN + self::TAG_LEN) {
             return null;

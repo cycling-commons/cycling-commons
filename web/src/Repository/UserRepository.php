@@ -14,7 +14,7 @@ use Symfony\Component\Security\Core\User\PasswordUpgraderInterface;
 /**
  * @extends ServiceEntityRepository<User>
  *
- * @api Wired by Doctrine's repository factory; never referenced from code directly.
+ * @api
  */
 class UserRepository extends ServiceEntityRepository implements PasswordUpgraderInterface
 {
@@ -23,9 +23,6 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         parent::__construct($registry, User::class);
     }
 
-    /**
-     * Used to upgrade (re-hash) the user's password automatically over time.
-     */
     public function upgradePassword(PasswordAuthenticatedUserInterface $user, string $newHashedPassword): void
     {
         if (!$user instanceof User) {
@@ -43,8 +40,7 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
     }
 
     /**
-     * Count users whose stored roles JSON contains the given role.
-     * Postgres jsonb containment; roles is stored as JSON text like ["ROLE_ADMIN"].
+     * Count users whose roles JSON contains `$role` (Postgres jsonb containment).
      */
     public function countWithRole(string $role): int
     {

@@ -24,7 +24,9 @@ use SymfonyCasts\Bundle\ResetPassword\Exception\ResetPasswordExceptionInterface;
 use SymfonyCasts\Bundle\ResetPassword\ResetPasswordHelperInterface;
 
 /**
- * @api Instantiated by Symfony's router; never referenced from code.
+ * @see docs/specs/account-and-auth.md §2
+ *
+ * @api
  */
 #[Route(LocalePrefix::PATHS)]
 final class ResetPasswordController extends AbstractController
@@ -60,8 +62,7 @@ final class ResetPasswordController extends AbstractController
     #[Route('/reset-password/check-email', name: 'check_email', methods: ['GET'])]
     public function checkEmail(): Response
     {
-        // If the user arrives here without a token object in the session, they came directly.
-        // Generate a fake token so timing cannot reveal if an account exists.
+        // Fake token so timing cannot reveal whether an account exists.
         if (null === ($resetToken = $this->getTokenObjectFromSession())) {
             $resetToken = $this->resetPasswordHelper->generateFakeResetToken();
         }
@@ -80,7 +81,7 @@ final class ResetPasswordController extends AbstractController
         ?string $token = null,
     ): Response {
         if ($token) {
-            // Store token in session and redirect to remove it from the URL (prevent leakage via Referer header).
+            // Drop token from the URL so it cannot leak via Referer.
             $this->storeTokenInSession($token);
 
             return $this->redirectToRoute('reset_password');
@@ -109,16 +110,13 @@ final class ResetPasswordController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            // Token must be removed before persisting the new password.
             $this->resetPasswordHelper->removeResetRequest($token);
 
             /** @var string $plainPassword */
             $plainPassword = $form->get('plainPassword')->getData();
 
             $user->setPassword($userPasswordHasher->hashPassword($user, $plainPassword));
-            // Completing a reset is the account owner's recovery path — clear any
-            // brute-force lockout so a locked-out (or DoS-targeted) owner can log
-            // in again immediately with the new password.
+            // docs/specs/account-and-auth.md §3 — reset clears lockout so the owner can sign in.
             $user->setLockedUntil(null);
             $user->setFailedLoginAttempts(0);
             $this->entityManager->flush();
@@ -144,7 +142,6 @@ final class ResetPasswordController extends AbstractController
     ): RedirectResponse {
         $user = $userRepository->findByEmail($emailFormData);
 
-        // Do not reveal whether a user account was found or not.
         if (!$user) {
             return $this->redirectToRoute('check_email');
         }
@@ -152,7 +149,6 @@ final class ResetPasswordController extends AbstractController
         try {
             $resetToken = $this->resetPasswordHelper->generateResetToken($user);
         } catch (ResetPasswordExceptionInterface $e) {
-            // If a reset token was recently generated, we redirect without sending a new email.
             return $this->redirectToRoute('check_email');
         }
 
@@ -165,10 +161,7 @@ final class ResetPasswordController extends AbstractController
 
         $mailer->send($email);
 
-        // Store the plain token string for later validation in the reset step.
         $this->storeTokenInSession($resetToken->getToken());
-        // Store the token object (expiry metadata) so the check-email page can show the expiry time.
-        // Note: setTokenObjectInSession() calls clearToken() on the object, so call it after storeTokenInSession().
         $this->setTokenObjectInSession($resetToken);
 
         return $this->redirectToRoute('check_email');

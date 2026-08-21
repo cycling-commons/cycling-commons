@@ -7,23 +7,11 @@ declare(strict_types=1);
 namespace App\Pagination;
 
 /**
- * The one page-arithmetic helper, and the shape `partials/_pager.html.twig`
- * renders.
- *
- * It started on the moderation desks and moved here the moment a second
- * surface needed it (the account's contributions list and the messages
- * dashboard, 2026-08-08). Every list that grows without bound pages through
- * this, so "page 3 of 12 · 240 in total" means the same arithmetic everywhere
- * and an out-of-range `?page=` lands on the last page rather than on nothing.
- *
- * @see docs/specs/moderation-and-contribution.md §7
+ * Page arithmetic for `partials/_pager.html.twig`. Out-of-range `?page=` clamps to the last page.
  */
 final class Pager
 {
     /**
-     * Clamps `$page` into range, so a bookmarked `?page=99` on a list that has
-     * shrunk shows the last page instead of an empty one.
-     *
      * @return array{page:int, pages:int, total:int, perPage:int, offset:int, prev:?int, next:?int}
      */
     public static function of(int $page, int $total, int $perPage): array

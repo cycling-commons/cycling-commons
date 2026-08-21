@@ -15,21 +15,9 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 /**
- * Loads the region-context artifact (Wikipedia leads per locale) written by
- * tools/wikimedia/region_context.py into `region.context`.
+ * Import Wikipedia leads into `region.context`. An extract without its citation is refused.
  *
- * BUILD-time import of a committed, human-reviewed file - the region page
- * never talks to Wikipedia at runtime. Every entry must carry title, extract
- * AND url per locale, because the text is CC BY-SA 4.0 and the attribution
- * line is rendered from the same entry as the text: an extract that arrives
- * without its citation is refused rather than shown uncredited.
- *
- * Regions are matched by slug; a slug the DB does not know is reported, not
- * skipped silently. Regions absent from the artifact keep whatever context
- * they had (partial harvests stay usable); `--prune` clears context from
- * every region NOT in the artifact instead.
- *
- * @api Console command.
+ * @api
  */
 #[AsCommand(name: 'app:regions:import-context', description: 'Import build-time Wikipedia context for region pages')]
 final class ImportRegionContextCommand extends Command
@@ -104,8 +92,7 @@ final class ImportRegionContextCommand extends Command
                     || !\is_string($ctx['url'] ?? null)
                     || '' === trim((string) $ctx['extract'])
                     || !str_starts_with((string) $ctx['url'], 'https://')) {
-                    // No citation, no text: the extract is CC BY-SA and the
-                    // attribution renders from this same entry.
+                    // Extract is CC BY-SA; attribution renders from this same entry.
                     $io->error(sprintf('%s/%s: every entry needs title, non-empty extract and an https url.', $slug, $locale));
 
                     return Command::FAILURE;
@@ -121,8 +108,7 @@ final class ImportRegionContextCommand extends Command
         $pruned = 0;
         if ((bool) $input->getOption('prune')) {
             $keep = array_values(array_intersect(array_keys($bySlug), array_map(strval(...), array_keys($artifact))));
-            // IN (:keep), not = ANY(): DBAL only expands array parameters for
-            // the IN form. An empty keep list means "clear everything".
+            // IN (:keep), not = ANY(): DBAL expands array params only for IN. Empty keep = clear all.
             $pruned = [] === $keep
                 ? (int) $this->db->executeStatement('UPDATE region SET context = NULL, updated_at = NOW() WHERE context IS NOT NULL')
                 : (int) $this->db->executeStatement(

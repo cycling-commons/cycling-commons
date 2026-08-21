@@ -26,28 +26,11 @@ use Symfony\Component\Validator\Constraints\Length;
 use Symfony\Component\Validator\Constraints\NotBlank;
 
 /**
- * The type-aware improve / add-location wizard.
- *
- * Given a `catalog_type` ({@see ItemType}), the Details step is built from the
- * catalog registry: the "Fix details" pane ({@see \App\Catalog\ItemFieldSet::$fields})
- * becomes the `details` sub-form and the "Add missing" pane the `extras` sub-form,
- * so a gîte shows gîte fields and a road segment shows surface fields.
- *
- * Location (lat/lng/place) and media queue are filled by client-side JS and
- * carried as hidden fields. The controller hands the submitted array to
- * {@see \App\Service\ContributionStubInterface} (implemented by
- * {@see \App\Contribution\CatalogContributionService}), which persists the
- * 'improve' kind as an Edit submission (was/now snapshot against the bound
- * item's current attributes).
- *
- * The `current` option (`array<string, scalar|list<string>|null>`, keyed by
- * registry field name) prefills Text/Textarea/Select fields with the bound
- * item's current name and attribute values, so `/improve?item=<id>` opens
- * pre-filled, never blank or default.
+ * Type-aware improve / add-location wizard. Details come from the catalog registry.
  *
  * @see docs/specs/moderation-and-contribution.md §1.4
  *
- * @api Instantiated by Symfony's form factory.
+ * @api
  */
 final class ImproveType extends AbstractType
 {
@@ -69,29 +52,11 @@ final class ImproveType extends AbstractType
         $current = $options['current'];
         $addMode = (bool) $options['add_mode'];
 
-        // ── Type-specific Details step: two panes as nested sub-forms ────────
         $details = $builder->create('details', FormType::class, ['label' => false, 'required' => false]);
-        // Add mode ("Add a new place", moderation-and-contribution.md §1.1):
-        // a new place must arrive NAMED — the moderation queue and the map
-        // both key on it — but several field sets (water & food among them)
-        // carry no name field because editing an existing item never needs
-        // one. Inject a required name first, and skip any registry-optional
-        // duplicate so the requirement cannot be bypassed.
-        // EDIT mode gets the same field, prefilled and optional. A name is a
-        // fact about a place like any other, and it is the one a rider most
-        // often has to fix (an OSM tap named "Fontein" that everyone locally
-        // calls something else, a typo, a shop that changed hands) — but
-        // several registry field sets, water & food among them, carry no name
-        // field at all, so editing simply offered no way to change it.
-        // Optional here rather than required: an unnamed OSM point must stay
-        // editable for its other fields without forcing a name on it, and an
-        // emptied box means "leave the name alone", never "clear the name"
-        // (ImproveSubmissionBuilder).
+        // Add: required name (docs/specs/moderation-and-contribution.md §1.1). Edit: optional; empty means leave unchanged.
         $details->add(Item::NAME_FIELD, TextType::class, [
             'label' => 'Name',
             'required' => $addMode,
-            // Materialize-on-edit prefills the OSM name via `current`;
-            // the bare add flow starts blank.
             'data' => $current[Item::NAME_FIELD] ?? null,
             'constraints' => $addMode
                 ? [
@@ -102,10 +67,10 @@ final class ImproveType extends AbstractType
         ]);
         foreach ($fieldSet->fields as $field) {
             if (Item::NAME_FIELD === $field->name) {
-                continue;   // the explicit field above is the only name input
+                continue;
             }
             if ($field->derived) {
-                continue;   // computed and displayed, never typed (CatalogField::$derived)
+                continue;
             }
             $this->addCatalogField($details, $field, $current);
         }
@@ -120,17 +85,9 @@ final class ImproveType extends AbstractType
         }
         $builder->add($extras);
 
-        // ── Shared fields (all types) ────────────────────────────────────────
         $builder
-            // Opaque feature reference (which specific item is being edited),
-            // filled by JS from ?item=. This is distinct from the catalog type.
             ->add('subject', HiddenType::class, ['required' => false])
-            // The uuids of this submission's real uploads
-            // (docs/specs/photo-uploads.md §4), filled by
-            // assets/contribute/media-upload.js as a JSON list. Nothing here is
-            // trusted: intake re-validates that each id exists, is still
-            // pending, is unclaimed, and belongs to the submitter
-            // (MediaClaimService).
+            // Upload uuids (docs/specs/photo-uploads.md §4); intake re-validates ownership.
             ->add('mediaIds', HiddenType::class, ['required' => false])
             ->add('lat', HiddenType::class, ['required' => false])
             ->add('lng', HiddenType::class, ['required' => false])
@@ -138,33 +95,16 @@ final class ImproveType extends AbstractType
             ->add('mode', HiddenType::class, ['required' => false])
         ;
 
-        // Climb shape drawn by the three-point editor (client JS), carried as
-        // JSON. These fields stay top-level (not nested under details/extras)
-        // so they land at $payload['route'|'grad'|'steep'], where
-        // App\Contribution\ClimbGeometry decodes them, exactly like
-        // AddClimbType. Only climbs get these fields; other catalog types
-        // have no geometry to edit.
         if (ItemType::Climbs === $type) {
             $builder
                 ->add('route', HiddenType::class, ['label' => false, 'required' => false])
                 ->add('grad', HiddenType::class, ['label' => false, 'required' => false])
                 ->add('steep', HiddenType::class, ['label' => false, 'required' => false])
-                // Ascent-only average, computed by the editor from the drawn line.
-                // Derived, never typed: climb-elevation.md 4.
                 ->add('avg', HiddenType::class, ['label' => false, 'required' => false])
-                // The RIDER's steepest point, distinct from our derived `steep`:
-                // climb-elevation.md 5a.
                 ->add('steepPoint', HiddenType::class, ['label' => false, 'required' => false])
             ;
         }
 
-        // Segment-located types (road surface): the wizard's two drawn
-        // endpoints, carried as JSON {"a":[lng,lat],"b":[lng,lat]}. Without
-        // this field the drawn segment only lives in client memory and is
-        // silently dropped on submit. It is recorded in the submission
-        // payload for parity with the point branch's lat/lng. Applying
-        // geometry edits on approve is a separate moderation feature for
-        // points and segments alike.
         if (LocationMode::Segment === $type->locationMode()) {
             $builder->add('segment', HiddenType::class, ['label' => false, 'required' => false]);
         }
@@ -188,8 +128,6 @@ final class ImproveType extends AbstractType
                 'choices' => array_combine($field->choices, $field->choices),
                 'data' => $data,
             ]),
-            // Same choice universe as Select, but multiple/expanded so the
-            // submitted value is a list<string> (BikeTypeVocabulary consumes it).
             FieldKind::MultiSelect => $builder->add($field->name, ChoiceType::class, [
                 'label' => $field->label,
                 'required' => false,
@@ -198,15 +136,6 @@ final class ImproveType extends AbstractType
                 'choices' => array_combine($field->choices, $field->choices),
                 'data' => \is_array($current[$field->name] ?? null) ? $current[$field->name] : [],
             ]),
-            /* The two-level links editor. One HIDDEN field carrying JSON, and
-               the widget a rider actually uses is built beside it by
-               links-editor.js - the same shape the climb `route` and the
-               segment endpoints already travel in. A `links[0][urls][1][url]`
-               name grid would put the nesting in the HTTP layer, where PHP's
-               array parsing rather than OutboundLinks would decide what a
-               malformed post means. The current value is re-encoded rather
-               than passed through, so the editor always parses one known
-               shape. */
             FieldKind::Links => $builder->add($field->name, HiddenType::class, [
                 'label' => $field->label,
                 'required' => false,
@@ -229,9 +158,6 @@ final class ImproveType extends AbstractType
                 'attr' => $attr,
                 'constraints' => CatalogFieldConstraints::for($field),
             ]),
-            // A real http(s) URL field: rendered as <input type="url"> (no
-            // protocol auto-prefixing) and validated by the Url constraint the
-            // registry emits. See CatalogFieldConstraints.
             FieldKind::Url => $builder->add($field->name, UrlType::class, [
                 'label' => $field->label,
                 'required' => false,
@@ -250,11 +176,7 @@ final class ImproveType extends AbstractType
             'data_class' => null,
             'catalog_type' => ItemType::default(),
             'current' => [],
-            // The bound item's D (BikeServices) kind. Null for other types or
-            // when the kind is unknown; CatalogFormRegistry::for() then falls
-            // back to the default field set, which includes openingHours.
             'service_kind' => null,
-            // "Add a new place": no bound item, required name (see buildForm).
             'add_mode' => false,
         ]);
         $resolver->setAllowedTypes('catalog_type', ItemType::class);

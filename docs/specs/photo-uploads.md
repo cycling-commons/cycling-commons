@@ -396,8 +396,15 @@ Nothing public until approved — the rule everywhere else, applied here:
   inside one, every click to enlarge would also untick Keep.
 - **Approve** → uploads flip to `approved`, and the item's `photos[]`
   attribute gains
-  `{sm, lg, credit, license: 'CC BY-SA 4.0', takenAt?: 'YYYY-MM'}` per
-  photo (`takenAt` month-granular — public seasonal context, never a
+  `{id, sm, lg, credit, license: 'CC BY-SA 4.0', takenAt?: 'YYYY-MM'}` per
+  photo. `id` is the upload's own uuid, and it is what takedown, escalation
+  and disposal match on. They used to compare the stored `sm` string against a
+  freshly built one, which silently stopped matching each time the address
+  moved — `photos/<uuid>/` to `published/<uuid>/<rev>/`, then the `-<cc>-<nn>`
+  bucket suffix — leaving a granted takedown's image on the item while the
+  code reported success. `MediaDecisionService::isEntryFor()` is the one place
+  that answers "is this entry that upload's?", and
+  `app:media:repair-galleries` re-points entries written before `id` existed (`takenAt` month-granular — public seasonal context, never a
   precise timestamp) —
   the exact shape the drawer/lightbox already render (photoList/photoCap).
   **Responsive serving:** every photo `<img>` on rider-facing surfaces (map

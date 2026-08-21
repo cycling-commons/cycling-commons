@@ -12,35 +12,13 @@ use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 /**
- * Server-side reader of the ROAD-SURFACE tile manifest — the sibling of
- * {@see CoverageManifest}, for the three line artifacts rather than the point
- * one.
- *
- * The surface build publishes `surface/<stamp>/{classified,todo,gaps}.pmtiles`
- * and repoints `surface/manifest.json` at them. Reading that here means a
- * rebuild goes live within the cache TTL: no env edit, no cache clear, no
- * deploy. Before this existed, every rebuild needed all three by hand, and the
- * failure mode was silent — a pinned URL left pointing at a pruned artifact is
- * a map with no surfaces and nothing in any log.
- *
- * **All three URLs come from one manifest, and that is the point.** The arms
- * are three readings of a single walk over the same ways. Serving one build's
- * classified skin beside another's to-do arm would tell riders that roads they
- * have just recorded still need recording — so the arms move together or not
- * at all.
- *
- * **The env vars still win when set.** ROAD_SURFACE_TILES_URL / ROAD_SURFACE_TODO_URL /
- * ROAD_SURFACE_GAPS_URL pin a specific build, which is what you want when bisecting
- * a rendering problem or serving an artifact that was never published. Empty
- * (the default) means "follow the manifest".
- *
- * Tolerant by design, exactly as CoverageManifest is: every failure path
- * returns null, logs, and leaves the map rendering without the layer. A missing
- * surface layer is a smaller harm than a 500.
+ * Road-surface tile manifest (docs/specs/coverage-provider.md §4).
+ * All three arms come from one manifest so they move together.
+ * Env pins win when set. Failure returns null and never throws.
  *
  * @see docs/specs/coverage-provider.md §4
  *
- * @api Injected into MapController::map().
+ * @api
  */
 final class SurfaceManifest
 {
@@ -85,13 +63,7 @@ final class SurfaceManifest
         return $this->url('gaps', $this->pinnedGapsUrl);
     }
 
-    /**
-     * One arm's URL: the operator's pin if there is one, else the manifest's.
-     *
-     * A pin is honoured WITHOUT fetching the manifest at all, so an instance
-     * that pins all three never touches the bucket — which is what makes this
-     * safe to add to an installation that has no manifest yet.
-     */
+    /** One arm's URL: operator pin if set, else the manifest. A pin skips the bucket. */
     private function url(string $arm, string $pinned): ?string
     {
         if ('' !== $pinned) {
@@ -107,10 +79,7 @@ final class SurfaceManifest
     }
 
     /**
-     * The decoded manifest, or null when it is unset/unreachable/malformed.
-     *
-     * Cached whole, so one bucket fetch per holdoff window serves all three
-     * arms rather than three fetches for one build.
+     * Decoded manifest, or null when unset/unreachable/malformed.
      *
      * @return array<string, mixed>|null
      */
@@ -126,8 +95,7 @@ final class SurfaceManifest
                     /** @var array<string, mixed> $manifest */
                     $manifest = $this->http
                         ->request('GET', $this->manifestUrl, [
-                            // 'timeout' caps idle time between chunks;
-                            // 'max_duration' caps the whole request.
+                            // 'timeout' caps idle time; 'max_duration' caps the whole request.
                             'timeout' => self::FETCH_TIMEOUT,
                             'max_duration' => self::FETCH_TIMEOUT,
                         ])
@@ -153,7 +121,7 @@ final class SurfaceManifest
                 }
             });
         } catch (\Throwable $e) {
-            // The cache backend itself failed. Same silent degradation.
+            // Cache backend failed. Same silent degradation.
             $this->logger->warning('Surface manifest cache unavailable — map serves without the surface layers.', [
                 'manifest_url' => $this->manifestUrl,
                 'exception' => $e,
@@ -163,12 +131,7 @@ final class SurfaceManifest
         }
     }
 
-    /**
-     * Cache key derived from the manifest URL (hex digest, PSR-6-safe), so
-     * repointing ROAD_SURFACE_MANIFEST_URL takes effect on the next request rather
-     * than after CACHE_TTL. The shape segment retires old-shaped entries if the
-     * cached value ever changes shape — bump it when that happens.
-     */
+    /** Cache key from the manifest URL. `.v1` retires old-shaped entries. */
     private function cacheKey(): string
     {
         return 'surface.manifest.v1.'.hash('xxh128', $this->manifestUrl);

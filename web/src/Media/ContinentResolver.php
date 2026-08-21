@@ -9,20 +9,11 @@ namespace App\Media;
 use Doctrine\DBAL\Connection;
 
 /**
- * Which bucket a photo belongs in (docs/specs/photo-uploads.md §1.2): a point
- * resolves to its containing region, the region names its country, and the
- * world reference data maps that country to a continent.
+ * Pin → region → country → continent. Unresolvable means refuse, never guess.
  *
- * Smallest-area-wins mirrors {@see \App\Contribution\SpatialResolver}, so a
- * point inside both an operational region and its containing infrastructure-only
- * country outline anchors to the smaller one. A point in the sea, in a country
- * that has not been onboarded, or with no coordinates at all resolves to NULL
- * (owner 2026-08-18: "not part of a continent, we can not accept it") - never
- * a default and never a nearest-country guess: the continent is recorded on
- * the row, and a guess would be a lie stored forever. The caller refuses the
- * upload instead.
+ * @see docs/specs/photo-uploads.md §1
  *
- * @api Called by MediaController when persisting an upload.
+ * @api
  */
 final class ContinentResolver
 {

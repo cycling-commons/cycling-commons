@@ -1,17 +1,7 @@
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
 //
-// The map's handle on the rider's unit preference
-// (docs/specs/account-and-auth.md §9).
-//
-// The conversion itself lives in ONE place — js/cc-units.js, loaded by
-// base.html.twig — so the drawer, the Twig templates and the moderation tables
-// can never disagree about what 84 km is. This module only makes those globals
-// safe to call from a module that might be running without them: the node test
-// harness has no `window`, and a page is still a page if a script failed to
-// load. The fallback is metric, which is what the app stores and what it showed
-// before the preference existed.
-//
-// Everything passed in is metric. Nothing here converts on the way IN.
+// Rider units (docs/specs/account-and-auth.md §9). Conversion is js/cc-units.js;
+// this wraps the globals for node tests / failed load. Fallback is metric.
 
 const G = typeof window !== 'undefined' ? window : {};
 

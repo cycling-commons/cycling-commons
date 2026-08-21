@@ -11,12 +11,11 @@ use App\Catalog\ItemState;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * A curated ride recommendation (letter K): a composition, not an atomic
- * map feature.
+ * A curated ride recommendation (letter K).
  *
  * @see docs/specs/catalog-data-model.md §2.2
  *
- * @api Catalog domain entity.
+ * @api
  */
 #[ORM\Entity]
 #[ORM\Table(name: 'recommended_route')]
@@ -65,9 +64,9 @@ class RecommendedRoute
     private array $attributes = [];
 
     /**
-     * users.id of the proposing rider (route-domain.md §2.1); NULL for
-     * imported routes. Plain column, no relation: provenance only, confers
-     * no edit rights.
+     * Proposing rider; NULL for imported routes. Provenance only, no edit rights.
+     *
+     * @see docs/specs/route-domain.md §2.1
      */
     #[ORM\Column(name: 'proposed_by', type: 'integer', nullable: true)]
     private ?int $proposedBy = null;

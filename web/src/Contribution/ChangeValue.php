@@ -7,23 +7,10 @@ declare(strict_types=1);
 namespace App\Contribution;
 
 /**
- * One changed value, rendered for a human to read.
+ * One changed value, rendered for a human. Geometry is summarised, not dumped
+ * (docs/specs/moderation-and-contribution.md §5.2a).
  *
- * Most fields are a word or a number and need nothing. The climb editor's three
- * are the exception: `route` is a list of every node on the road, `grad` a
- * sampled profile, `steep` a marker. Printed as JSON they filled the curator's
- * card with two hundred coordinate pairs and told them nothing — a moderator
- * cannot see from `[[50.483212,5.703912],[50.483217,...` that the climb got a
- * kilometre longer, which is the only thing they actually need to decide
- * (owner-reported 2026-08-03: "this is pretty useless").
- *
- * So geometry is summarised into the facts a decision turns on: how long the
- * line is now, how far it moved, where the steepest ramp sits and at what
- * percentage. The full values are still stored and still applied on approve —
- * this is only how they are SHOWN.
- *
- * @api Used by SubmissionQueue (the curator's desk, the map drawer's pending
- *      card) and SubmissionChangeSummary (the rider's own contributions).
+ * @api
  */
 final class ChangeValue
 {
@@ -48,9 +35,7 @@ final class ChangeValue
     }
 
     /**
-     * A drawn line, as its length and its endpoints — the two things that tell
-     * a curator whether this is the same climb drawn better or a different
-     * climb altogether.
+     * A drawn line as length and endpoints.
      */
     private static function route(mixed $v): string
     {
@@ -77,10 +62,7 @@ final class ChangeValue
         return implode(' · ', $parts);
     }
 
-    /**
-     * The sampled gradient profile. Its individual numbers are drawing data;
-     * what a curator can judge is the range it spans.
-     */
+    /** Sampled gradient profile as range, not individual numbers. */
     private static function grad(mixed $v): string
     {
         if (!\is_array($v) || [] === $v) {
@@ -111,8 +93,7 @@ final class ChangeValue
             $out .= ' at '.self::point($at);
         }
         if (!empty($v['manual'])) {
-            // Worth saying: a hand-placed marker is a rider's judgement about
-            // the road, not something the profile derived.
+            // A hand-placed marker is the rider's judgement, not the profile.
             $out .= ' (placed by hand)';
         }
 

@@ -9,10 +9,9 @@ namespace App\World\Entity;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * A continent (the top of the geographic hierarchy). Seeded from a static list
- * of the seven continent codes.
+ * Continent. Seeded from a static list of seven codes.
  *
- * @api Reference data for the World bundle.
+ * @api
  */
 #[ORM\Entity]
 #[ORM\Table(name: 'world_continent')]

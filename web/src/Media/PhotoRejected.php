@@ -7,11 +7,11 @@ declare(strict_types=1);
 namespace App\Media;
 
 /**
- * A photo the processor refuses, carrying the machine-readable reason the
- * endpoint returns and the wizard translates (docs/specs/photo-uploads.md §3).
- * Honest degradation: every refusal names itself, none is a silent drop.
+ * Processor refusal with the machine-readable reason the endpoint returns.
  *
- * @api Thrown by PhotoProcessor, caught by MediaController.
+ * @see docs/specs/photo-uploads.md §3
+ *
+ * @api
  */
 final class PhotoRejected extends \RuntimeException
 {

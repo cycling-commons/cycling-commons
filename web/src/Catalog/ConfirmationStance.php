@@ -7,22 +7,17 @@ declare(strict_types=1);
 namespace App\Catalog;
 
 /**
- * A rider's community stance on a non-votable catalog item (spec: utilities are
- * confirmed, not voted). Drinking water carries a potability judgement
- * (potable / not potable); other point utilities carry a plain existence
- * confirmation. Votable types (climbs, stays, viewpoints, history, routes) use
- * the vote/best-of funnel instead and have no confirmation stance.
+ * Community stance on a confirmable item. Votable types use the vote/best-of funnel instead.
  *
- * @api Persisted on ItemConfirmation; tallied in the map drawer.
+ * @see docs/specs/moderation-and-contribution.md §10.1
+ *
+ * @api
  */
 enum ConfirmationStance: string
 {
     case Potable = 'potable';
     case NotPotable = 'not_potable';
     case Exists = 'exists';
-    /* A road-surface segment's "no": the stretch is there, but not as the
-       entry describes it (owner 2026-08-13). Like NotPotable it is a warning,
-       not a vouching — it counts in the public tally but never verifies — and
-       it may carry a note telling the curators what differs. */
+    /** Warning, not a vouching — counts in the tally, never verifies. docs/specs/edit-items/A-road-surface.md (Confirmation: "as described") */
     case NotAsDescribed = 'not_as_described';
 }

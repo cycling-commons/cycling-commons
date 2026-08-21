@@ -1,17 +1,7 @@
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
-/* Ride-check: "what is along my GPX?"
-   (map-and-search.md §9; coverage arm: map-and-search.md §9).
-
-   Extracted from map.js by the module split. Its own
-   sources/layers are namespaced `ridecheck*` and are never touched by render()'s
-   clearDynamic, so the track survives a repaint.
-
-   Every dep this module once took injected is a plain import now that drawer.js
-   and places.js have landed (§5 step 6), so initRideCheck() takes none. The
-   drawer-generation pairing it needs — invalidate the coverage detail AND the
-   town-card nearby fetch together — is now called directly, the same two lines
-   drawer.js's openDrawer/closeDrawer run.
- */
+/* Ride-check: "what is along my GPX?" (docs/specs/map-and-search.md §9).
+   Own `ridecheck*` sources/layers — render()'s clearDynamic never touches them.
+   The server parses the GPX in memory and stores nothing. */
 import { map, flyToPin } from './map-init.js';
 import { I18N, D, tpl } from './i18n.js';
 import { escPend, txtOn } from './util.js';
@@ -24,16 +14,8 @@ import { sheet } from './sheet.js';
 import { closeDrawer, highlightAt, clearHighlight } from './drawer.js';
 import { openRouteById, bumpPlaceReq } from './places.js';
 
-// ---- Ride-check (spec 2026-07-14 §4.3): riders-only "what's along my GPX?" ----
-// Track overlay uses its own source/layer ids (render()'s clearDynamic never
-// touches them); results render in the standard right-hand drawer, exactly
-// like the town card (same .cc-near list styling). Closing the drawer keeps
-// the track on the map — the rail status offers "results" (re-open) and
-// "clear"; Clear tears everything down. Read-only indication — the server
-// parses the GPX in memory and stores nothing (notice in the rail control).
-// Coverage letters ride-check surfaces, mapped to the layer key whose icon they
-// draw with. Utility only (C/D/G/H) — the design leaves E/I/J to the curated
-// arm, where they overlap most and add corridor noise.
+// Coverage letters ride-check surfaces (utility C/D/G/H). Experiential E/I/J
+// stay on the curated arm.
 const COV_KEY={C:'water', D:'services', G:'transit', H:'shelter'};
 
 export function initRideCheck(){
@@ -57,15 +39,10 @@ export function initRideCheck(){
       ['ridecheck','ridecheck-cov'].forEach(id=>{ if(map.getSource(id)) map.removeSource(id); });
       clearHighlight();
     }
-    /* Corridor coverage POIs as their OWN small-icon overlay
-       (map-and-search.md §9, refined by the split
-       design §7). Not a panel-only list, and deliberately not the coverage tile
-       layers: an uploaded ride routinely leaves the rider's region scope, the
-       coverage layer may be toggled off, and Curated mode hides the
-       experiential letters — so relying on the tiles would list refill points
-       the rider cannot see. Drawn unconditionally instead, with the same icons
-       and the same `_s8`/`_s13`/`_s18` size ramp as the cov-sel overlay, which
-       is what keeps them visibly SMALLER than a curated spot pin. */
+    /* Corridor coverage as its own overlay (docs/specs/map-and-search.md §9),
+       not the coverage tiles: a ride may leave the rider's region, the layer
+       may be off, and Curated hides experiential letters. Same icons and
+       `_s8`/`_s13`/`_s18` ramp as cov-sel, so they stay smaller than curated pins. */
     function drawCoverageOverlay(d){
       const groups=d.coverage||[];
       const features=[];
@@ -73,9 +50,7 @@ export function initRideCheck(){
         const key=COV_KEY[g.letter]; if(!key) return;
         const water=key==='water';
         g.items.forEach(it=>{
-          // The tile-icon minter needs the same shape a tile feature's props
-          // have; a ride-check row carries no potability/kind, so both fall back
-          // to the "unknown" variants — the honest reading of what we know here.
+          // Same shape as a tile feature's props; potability/kind unknown here.
           features.push({type:'Feature',
             geometry:{type:'Point',coordinates:[it.ll[1],it.ll[0]]},
             properties:{_icon:coverageIconId(key,{}),
@@ -86,8 +61,7 @@ export function initRideCheck(){
       map.addSource('ridecheck-cov',{type:'geojson',data:{type:'FeatureCollection',features}});
       map.addLayer({id:'ridecheck-cov',type:'symbol',source:'ridecheck-cov',
         layout:{'icon-image':['get','_icon'],'icon-allow-overlap':true,
-          // ONE zoom interpolate (MapLibre forbids two) with per-feature stop
-          // outputs, exactly as cov-sel-icon does it.
+          // One zoom interpolate (MapLibre forbids two), same as cov-sel-icon.
           'icon-size':['interpolate',['linear'],['zoom'],
             8,['get','_s8'],13,['get','_s13'],18,['get','_s18']]}});
     }
@@ -120,8 +94,7 @@ export function initRideCheck(){
         paint:{'line-color':'#3A3A33','line-width':4,'line-opacity':1,'line-dasharray':[2,1.6]}});
       let minLat=90,maxLat=-90,minLng=180,maxLng=-180;
       d.track.forEach(p=>{ if(p[0]<minLat)minLat=p[0]; if(p[0]>maxLat)maxLat=p[0]; if(p[1]<minLng)minLng=p[1]; if(p[1]>maxLng)maxLng=p[1]; });
-      // drawer-aware framing, same as openPlace: the results drawer covers the
-      // right edge on desktop, the bottom on mobile
+      // Drawer-aware framing, same as openPlace.
       const mobile=window.innerWidth<=820;
       map.fitBounds([[minLng,minLat],[maxLng,maxLat]],
         {padding:{top:70, bottom:mobile?300:70, left:70, right:mobile?70:400}, duration:900, essential:true});
@@ -130,8 +103,7 @@ export function initRideCheck(){
     }
     function renderRideDrawer(d){
       const asc=d.ascentM!=null?` · ↑ ${uElev(d.ascentM)}`:'';
-      // The radius is one of a fixed set of metre values; uM writes it short
-      // (250 m / 820 ft) and promotes the 1000 m option to 1 km / 0.6 mi.
+      // Radius is a fixed metre set; uM writes it short and promotes 1000 m.
       const radius=uM(d.radiusM);
       const kColor=(layerByKey.experience||{}).color||'#FF5A1F';
       let html=`<span class="cc-d-type" style="--c:#3A3A33;color:#fff">➜ ${D.rideCheck||'Ride check'}</span>
@@ -155,12 +127,8 @@ export function initRideCheck(){
       } else {
         html+=`<div class="cc-near-empty">${tpl(D.nothingWithin||'Nothing in the Commons within {r} of this ride yet.', {r:radius})}</div>`;
       }
-      /* Open coverage, as its own section under its own heading
-. Deliberately distinct
-         from "In the Commons along the track": these are uncurated OSM points,
-         C/D/G/H only, already deduped server-side against the served items
-         above, so nothing is listed twice. Rows carry `ref` rather than the
-         curated arm's item id — see the service's groupByLetter docblock. */
+      /* Open coverage, own heading. Uncurated OSM C/D/G/H, already deduped
+         server-side against served items. Rows carry `ref`, not item id. */
       const cov=(d.coverage||[]).filter(g=>g.items.length);
       if(cov.length){
         html+=`<h4 class="cc-near-h">${D.alongTrackCovH||'Open coverage along the track'}</h4><ul class="cc-near-list">`;
@@ -172,13 +140,11 @@ export function initRideCheck(){
         html+=`</ul><div class="cc-near-note">${D.covArmNote||'From open data — not yet checked by a rider.'}</div>`;
       }
       const body=document.getElementById('drawerBody');
-      invalidateCoverageDrawer(); bumpPlaceReq();   // invalidate any in-flight coverage POI detail + town-card nearby fetch — this render supersedes them
+      invalidateCoverageDrawer(); bumpPlaceReq();   // supersede in-flight coverage detail + town nearby
       body.innerHTML=html;
       document.getElementById('rcClearBtn').onclick=clearRideCheck;
       const groupsByLetter=Object.fromEntries(d.groups.map(g=>[g.letter,g]));
-      // One pass over the index, not one .find() per row: with a few thousand
-      // index entries and ~100 corridor rows the per-row scan was O(rows ×
-      // index) every render (frontend review 2026-08-09 #5).
+      // One index pass, not one .find() per row.
       const idxByKey=new Map(itemIndex().map(x=>[x.letter+':'+x.id, x]));
       body.querySelectorAll('[data-rc-route]').forEach(b=>{ b.onclick=()=>openRouteById(b.dataset.rcRoute); });
       body.querySelectorAll('[data-rc-g]').forEach(b=>{
@@ -191,10 +157,7 @@ export function initRideCheck(){
       const covByLetter=Object.fromEntries(cov.map(g=>[g.letter,g]));
       body.querySelectorAll('[data-rc-c]').forEach(b=>{
         const it=(covByLetter[b.dataset.rcC]||{items:[]}).items[+b.dataset.rcI]; if(!it) return;
-        // openCoverageByRef flies, fetches /map/coverage/poi/{ref} and still
-        // opens a minimal drawer when that 404s, so a row can never no-op. A
-        // row without a ref (an older payload) falls back to fly + highlight
-        // rather than doing nothing.
+        // openCoverageByRef still opens a minimal drawer on 404; no-ref falls back to fly.
         b.onclick=()=>{ if(it.ref) openCoverageByRef(it.ref, b.dataset.rcC, it.ll, it.name); else { flyToPin([it.ll[1],it.ll[0]]); highlightAt(it.ll); } };
         b.onmouseenter=()=>highlightAt(it.ll);
         b.onmouseleave=clearHighlight;

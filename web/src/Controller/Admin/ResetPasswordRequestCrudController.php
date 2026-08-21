@@ -18,14 +18,11 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
- * Read-only password-reset diagnostics: which accounts have an outstanding
- * request, when it expires, and whether it is still active. Secrets
- * (selector/hashedToken) are never exposed. Only Delete is allowed, to purge
- * a stuck row.
+ * Read-only reset diagnostics. Secrets (selector/hashedToken) are never exposed.
  *
  * @see docs/specs/account-and-auth.md §6.5
  *
- * @api Instantiated by EasyAdmin's router.
+ * @api
  *
  * @extends AbstractCrudController<ResetPasswordRequest>
  */
@@ -50,8 +47,7 @@ final class ResetPasswordRequestCrudController extends AbstractCrudController
     #[\Override]
     public function configureActions(Actions $actions): Actions
     {
-        // Only Delete is enabled, to purge a stuck row. Detail is disabled
-        // because the secret fields (selector/hashedToken) must never render.
+        // docs/specs/account-and-auth.md §6.5 — Detail would render secret fields.
         return $actions
             ->disable(Action::NEW, Action::EDIT, Action::DETAIL, Action::BATCH_DELETE);
     }

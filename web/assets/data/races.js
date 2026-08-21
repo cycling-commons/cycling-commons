@@ -1,16 +1,7 @@
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
-// Cycling-event calendar — the single source of truth for the "active event"
-// coordinate shown under the logo across the site, and the index hero's
-// ride-line colour/finish. One-day classics are listed before stage races so a
-// classic inside a Grand Tour window still wins. Each event defines a theme
-// (outer/inner colour, time windows) + a finish location.
-//
-// Usage: include <script src="races.js"></script>. Any element with
-// class="cc-coord" is auto-filled with the active event's finish coordinate.
-// Other scripts can read window.CC = {RACES, RAINBOW, pickRace, fmtCoord}.
-//
-// NOTE: Worlds/Unbound dates & host cities are plausible placeholders for 2026 —
-// confirm against the real calendars before launch.
+// Active-event calendar for .cc-coord / hero theme. Classics before stage races
+// so a classic inside a Grand Tour window still wins. Worlds/Unbound 2026 dates
+// are placeholders.
 (function () {
   const RACES = [
     {key:'cx-worlds', name:'UCI Cyclocross Worlds', rainbow:true, icon:'🌈', finish:{label:'FINISH · HULST', lat:51.28, lng:4.05}, windows:[['2026-01-31','2026-02-01']]},
@@ -29,10 +20,8 @@
     {key:'gravel-worlds',name:'UCI Gravel Worlds', rainbow:true, icon:'🌈', finish:{label:'FINISH · NICE', lat:43.70, lng:7.27}, windows:[['2026-10-17','2026-10-18']]},
     {key:'track-worlds',name:'UCI Track Worlds', rainbow:true, icon:'🌈', finish:{label:'FINISH · SANTIAGO', lat:-33.45, lng:-70.67}, windows:[['2026-10-20','2026-10-25']]}
   ];
-  // UCI rainbow jersey stripes, in order: blue, red, black, yellow, green.
   const RAINBOW = ['#0B4EA2', '#E2001A', '#141414', '#FFE500', '#009A44'];
 
-  // The race that's on now; else the next one up; else wrap to the season's first.
   function pickRace() {
     const now = new Date(); now.setHours(0, 0, 0, 0);
     for (const r of RACES) for (const [s, e] of r.windows) {
@@ -54,7 +43,6 @@
 
   window.CC = Object.assign(window.CC || {}, {RACES, RAINBOW, pickRace, fmtCoord});
 
-  // auto: fill every .cc-coord element with the active event's finish coordinate
   function paintCoord() {
     const els = document.querySelectorAll('.cc-coord');
     if (!els.length) return;

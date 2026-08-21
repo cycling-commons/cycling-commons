@@ -20,42 +20,11 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 /**
- * Seeds well-known mountain passes from the REVIEWED climb-sides artifact.
- *
- * Same split as {@see SeedWikidataPlacesCommand}: the harvesting, the judging
- * and the naming happen in `tools/wikimedia/` and land in a file a human reads;
- * this imports that file. What ships is a list somebody reviewed, and a re-run
- * in six months produces the same catalogue rather than whatever the router
- * said that morning.
- *
- * **One item per SIDE, not per pass**, which is the whole point of the harvest.
- * Stelvio from Prato and Stelvio from Bormio are different climbs that happen
- * to end in the same place, and a catalogue that holds one of them is missing a
- * climb rather than being tidy. Sides are therefore named by where they start -
- * how riders name them - and identified by `wikidata:<qid>:<side>`, so a re-run
- * upserts each side onto itself.
- *
- * **Only what the review passed.** The default is `KEEP` alone; `--verdict` can
- * widen it, and CHECK rows are exactly the ones a person should have looked at
- * first (a side cut short at a terrace, a road that never reaches a col because
- * the col is a walking pass). DROP is refused outright rather than offered,
- * because those rows are hiking trails and a via ferrata: nothing about a later
- * decision should be able to let them in through this door.
- *
- * Rows enter at `state = unverified` like every other seeded row - being famous
- * is not the same as having been ridden by somebody who then said so - and the
- * curator-edit shield in {@see ItemUpsert} means a re-run leaves a corrected
- * row alone.
- *
- * **This writes no gradients.** `length`, `gain`, `avgGradient`, `maxGradient`
- * and the profile are measured from the drawn line by `app:climbs:recompute`,
- * which stays the only thing in the project that writes them
- * (climb-elevation.md §7). Run it after this, or the rows carry a line and no
- * numbers.
+ * Seed reviewed climb-sides. One item per side, not per pass. Writes no gradients — those are measured.
  *
  * @see docs/specs/climb-elevation.md §7a
  *
- * @api Console entry point (ops seeding tool).
+ * @api
  */
 #[AsCommand(
     name: 'app:catalog:seed-climbs',
@@ -63,13 +32,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 )]
 final class SeedClimbsCommand extends Command
 {
-    /**
-     * The surface every seeded side claims. Not a guess and not a default:
-     * `climb_audit.py` traced each line against the road graph and every KEEP
-     * came back 0% unpaved, so this is the measurement being written down. A
-     * row whose trace disagreed is refused below rather than seeded with a
-     * surface it does not have.
-     */
+    /** KEEP rows are 0% unpaved; refuse a row whose trace disagrees rather than stamp Asphalt. */
     private const string SURFACE = 'Asphalt';
 
     public function __construct(
@@ -131,11 +94,7 @@ final class SeedClimbsCommand extends Command
         $skipped = ['regionless' => [], 'unpaved' => [], 'duplicate-ref' => []];
         $seenRefs = [];
 
-        /* TWO PASSES, because a name cannot be judged alone. Two sides of one
-           col whose feet geocoded to nothing usable are both called "Wurzen
-           Pass", and the second would upsert over a row it is not - a silent
-           loss. So every accepted row is collected first, then the batch is
-           made unique, then it is written. */
+        /* Collect then write: two sides of one col can share a name and would otherwise collide. */
         $accepted = [];
         foreach ($rows as $row) {
             if (!\in_array((string) ($row['verdict'] ?? ''), $verdicts, true)) {
@@ -151,10 +110,7 @@ final class SeedClimbsCommand extends Command
                 continue;
             }
 
-            /* The trace is the surface claim. A row whose line is not
-               effectively fully paved is refused rather than written with
-               `surface: Asphalt`, because a wrong attribute on a rider-facing
-               card is worse than a missing climb. */
+            /* Refuse a line that is not effectively fully paved rather than write `surface: Asphalt`. */
             $unpaved = (float) ($row['trace']['unpaved_pct'] ?? 100.0);
             if ($unpaved > 5.0) {
                 $skipped['unpaved'][] = sprintf('%s (%s, %.1f%% unpaved)', $row['name'], $cc, $unpaved);
@@ -167,10 +123,7 @@ final class SeedClimbsCommand extends Command
                 continue;
             }
 
-            /* The line is stored summit-first by the harvester (it walked
-               DOWN from the col). A climb is ridden the other way, and
-               ClimbProfiler measures from the first point, so it is
-               reversed here rather than in six places downstream. */
+            /* Harvester stores summit-first; reverse so ClimbProfiler measures from the foot. */
             $route = array_reverse($line);
             [$sLat, $sLng] = $line[0];
 
@@ -187,9 +140,7 @@ final class SeedClimbsCommand extends Command
                 ),
                 'surface' => self::SURFACE,
             ];
-            // The TIDIED place, so the Approach row and the name agree.
-            // A card reading "Pitkin County" under a name that does not
-            // mention it is two answers to one question.
+            // Tidied place so Approach and the name agree.
             $place = self::tidyPlace((string) ($row['foot_place'] ?? ''));
             if ('' !== $place) {
                 $attributes['approach'] = 'From '.$place;
@@ -223,11 +174,7 @@ final class SeedClimbsCommand extends Command
                     $this->db->executeStatement(ItemUpsert::SQL, [
                         'letter' => 'B',
                         'name' => $name,
-                        // The SUMMIT, matching every measured climb already in
-                        // the catalogue. The line's own end rather than
-                        // Wikidata's coordinate: the profile is measured to
-                        // where the road stops, so the pin and the numbers
-                        // describe the same point.
+                        // Summit = the line's own end, not Wikidata's coordinate.
                         'geom' => json_encode(
                             ['type' => 'Point', 'coordinates' => [(float) $sLng, (float) $sLat]],
                             \JSON_THROW_ON_ERROR,
@@ -277,12 +224,7 @@ final class SeedClimbsCommand extends Command
     }
 
     /**
-     * The stable identity of one SIDE.
-     *
-     * The Q-id alone is the pass, and a pass has more than one climb in it, so
-     * the side index rides along. A col Wikidata does not know falls back to a
-     * slug of its name plus the index - still stable across runs, because both
-     * come from the artifact rather than from row order.
+     * One SIDE: `wikidata:<qid>:<side>` (or a name slug when Wikidata has no Q-id).
      *
      * @param array<string, mixed> $row
      */
@@ -299,22 +241,7 @@ final class SeedClimbsCommand extends Command
     }
 
     /**
-     * What a rider calls this climb.
-     *
-     * "Stelvio Pass" names a col; "Stelvio Pass from Prato" names a climb, and
-     * the second is what somebody planning a ride is looking for. The suffix is
-     * added whenever the foot is known, INCLUDING for a pass with only one
-     * harvested side: a second side found next year must not force the first
-     * one to be renamed, and a name that changes under a rider is worse than a
-     * name that is slightly long.
-     *
-     * The raw geocode is kept in the artifact and tidied here, because the two
-     * jobs are different: the artifact should record what OSM actually said,
-     * and a rider should not read it verbatim. Three things needed fixing on
-     * the first run - a multilingual blob ("Cave del Predil / Raibl / Rabelj /
-     * Rabil"), an administrative area standing in for a town ("from Pitkin
-     * County"), and a foot named after the pass itself ("Sir Lowry's Pass from
-     * Sir Lowry's Pass").
+     * "Pass from Place" when the foot is known, including a one-side harvest so a later second side does not rename it.
      *
      * @param array<string, mixed> $row
      */
@@ -323,8 +250,7 @@ final class SeedClimbsCommand extends Command
         $name = trim((string) $row['name']);
         $place = self::tidyPlace((string) ($row['foot_place'] ?? ''));
 
-        // A foot whose name is already inside the pass name adds nothing: the
-        // reader learns the same word twice and the row gets longer.
+        // A foot already inside the pass name adds nothing.
         if ('' === $place || str_contains(mb_strtolower($name), mb_strtolower($place))) {
             return $name;
         }
@@ -332,18 +258,10 @@ final class SeedClimbsCommand extends Command
         return sprintf('%s from %s', $name, $place);
     }
 
-    /**
-     * A settlement name a rider would use, or '' when there is none.
-     *
-     * Administrative areas are dropped rather than shortened. "from Pitkin
-     * County" is not how anyone describes where a climb starts, and a wrong
-     * name is worse than no name - the collision pass below can still tell two
-     * sides apart by their road.
-     */
+    /** Settlement a rider would use, or '' — drop administrative areas rather than shorten them. */
     private static function tidyPlace(string $raw): string
     {
-        // OSM stores a bilingual border settlement as one slash-joined string.
-        // The first is the one on the side the road comes from.
+        // OSM bilingual settlement is slash-joined; first is the side the road comes from.
         $place = trim(explode('/', $raw)[0]);
         $admin = ['/\s+District Municipality$/i', '/\s+Municipality$/i', '/\s+District$/i',
             '/\s+County$/i', '/\s+Region$/i', '/^Distrito\s+/i'];
@@ -357,17 +275,7 @@ final class SeedClimbsCommand extends Command
     }
 
     /**
-     * Makes every name in the batch unique, preferring a fact over a number.
-     *
-     * Two sides of one col whose feet geocoded to nothing usable would both be
-     * called "Independence Pass", and the second would upsert over a row it is
-     * not - a climb quietly lost. Something has to tell them apart, and what
-     * that something IS matters: a rider reading "(CO 82)" or "(14.0 km)"
-     * learns which climb this is, where "(2)" only tells them somebody gave up.
-     *
-     * So: the road when the colliding rows run on DIFFERENT roads, and the
-     * length when they share one - which is the Independence Pass case, both
-     * sides of it being CO 82.
+     * Disambiguate colliding names with road (if they differ) else length — never "(2)".
      *
      * @param list<array{name: string, road: string, km: float}> $names
      *
@@ -397,13 +305,7 @@ final class SeedClimbsCommand extends Command
         return $out;
     }
 
-    /**
-     * The operational region containing a point, or null.
-     *
-     * Asked BEFORE the insert, exactly as the Wikidata seeder does it, so a
-     * climb outside every onboarded region is never written at all rather than
-     * written and then invisible to every region-scoped query.
-     */
+    /** Containing operational region, or null. Asked before insert so a regionless climb is never written. */
     private function regionFor(float $lat, float $lng): ?int
     {
         $id = $this->db->fetchOne(

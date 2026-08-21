@@ -7,30 +7,16 @@ declare(strict_types=1);
 namespace App\Api\V1;
 
 /**
- * The rendering metadata the public API hands external consumers
- * (public-api.md §2.2 PoC; wiki/developers/api/serving-map-data.md):
- * the category table and the route-network style groups.
- *
- * Hand-mirrored from the map client's own constants (CATALOG in
- * assets/map/catalog.js, GROUPS/BADGE_MIN_ZOOM in assets/map/routes-tiles.js)
- * because those are browser ES modules the server cannot read at runtime.
- * tests/Api/CategoryTableSyncTest.php regex-parses both JS files and fails on
- * any divergence, so editing either side without the other breaks CI, not prod.
+ * Public API rendering metadata (docs/specs/public-api.md §2.2).
+ * Mirrored from the map client; CategoryTableSyncTest pins both sides.
  */
 final class CategoryTable
 {
-    /**
-     * The required consumer attribution (public-api.md §5): Commons data is
-     * ODbL, coverage-derived rows carry OSM provenance, so both credits ride
-     * every public response and the map-config bootstrap.
-     */
+    /** Required consumer attribution (docs/specs/public-api.md §5). */
     public const string ATTRIBUTION = '© Cycling Commons contributors (ODbL) · © OpenStreetMap contributors';
 
     /**
-     * One row per catalogue letter, in catalog.js draw order. `label` is the
-     * English fallback only: localised labels are a v1 concern, and the
-     * internal i18n dict is session/locale-bound, which this anonymous
-     * cacheable plane must never be.
+     * English fallback only — this cacheable plane must never be locale-bound.
      *
      * @var list<array{letter: string, key: string, label: string, color: string, glyph: string, kind: string, bestOf: bool}>
      */
@@ -50,11 +36,6 @@ final class CategoryTable
     ];
 
     /**
-     * Route-network style groups (routes-tiles.js GROUPS): how the Commons
-     * paints the corridor tiles, offered so a consumer can match the look
-     * without copying constants by hand. Data-only tiles carry no styling, so
-     * this table is the only place the pairing exists server-side.
-     *
      * @var list<array{key: string, nets: list<string>, color: string}>
      */
     public const array ROUTE_STYLE_GROUPS = [
@@ -66,19 +47,10 @@ final class CategoryTable
     /** Zoom from which the tiles carry knooppunt badge points (routes-tiles.js BADGE_MIN_ZOOM). */
     public const int ROUTE_BADGE_MIN_ZOOM = 10;
 
-    /**
-     * The catalogue letters the coverage artifact carries, lowercase because
-     * they name its source-layers ('<letter>_<cc>'). Mirrored from
-     * assets/map/coverage.js COVERAGE_KEYS and pinned by the sync test.
-     *
-     * @var list<string>
-     */
+    /** @var list<string> */
     public const array COVERAGE_LETTERS = ['c', 'd', 'e', 'g', 'h', 'i', 'j', 'm'];
 
-    /**
-     * The 'zz' source-layer bucket holds rows not stamped with a country;
-     * consumers append it to the country list so those rows still render.
-     */
+    /** Unstamped coverage source-layer; consumers append it to the country list. */
     public const string COVERAGE_UNSTAMPED_BUCKET = 'zz';
 
     /** Zoom from which the coverage artifact carries individual points (coverage.js icon minzoom). */

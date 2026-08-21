@@ -10,32 +10,11 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Uid\Uuid;
 
 /**
- * The one metadata block Cycling Commons writes into a stored photo
- * (docs/specs/photo-uploads.md §1.3c). Everything the camera put there has
- * already been destroyed by the time this is applied; these are the only fields
- * any stored file carries, and they were all chosen here.
+ * Authored XMP packet: licence + photo-page URL, never a display name.
  *
- * Its job is to make the licence travel with the work. A share-alike licence
- * that vanishes the moment a file is downloaded is not doing its job, so the
- * packet states the terms literally — readable by any tool, forever, whether
- * or not this site still exists.
+ * @see docs/specs/photo-uploads.md §1
  *
- * WHAT IS DELIBERATELY ABSENT: dc:creator and cc:attributionName. No display
- * name is ever embedded. Three independent reasons, any one of which decides
- * it. A name in a downloaded file cannot be withdrawn, so embedding one would
- * quietly break the promise that deleting an account anonymizes the credit
- * (§6). Display names are unique only at a given moment — they can be changed
- * and re-claimed, so a baked-in name eventually credits a stranger, which is
- * worse than crediting nobody. And a display name is self-chosen and
- * unverified, so it identifies no one to begin with.
- *
- * Attribution is therefore a UUID link to the photo's page (§5d), whose text
- * we resolve at render time. That is what makes it revocable: changing that
- * page reaches every copy of the file that was ever downloaded or mirrored.
- * The limit is honest and worth stating — an owner is recollectable from a
- * photo for exactly as long as this site is online.
- *
- * @api Called by MediaController before processing an upload.
+ * @api
  */
 final class XmpRights
 {

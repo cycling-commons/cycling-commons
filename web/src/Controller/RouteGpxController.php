@@ -15,11 +15,11 @@ use Symfony\Component\HttpKernel\EventListener\AbstractSessionListener;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
- * Public GPX download for ACTIVE recommended routes: the track riders ride
- * (and later ride-verify). Serves the stored, privacy-trimmed geometry
- * (route-domain.md §4.3); the untrimmed upload never persisted.
+ * Public GPX of served routes — privacy-trimmed geometry only.
  *
- * @api Instantiated by Symfony's router.
+ * @see docs/specs/route-domain.md §4.3
+ *
+ * @api
  */
 final class RouteGpxController extends AbstractController
 {
@@ -37,8 +37,6 @@ final class RouteGpxController extends AbstractController
         }
 
         $geo = json_decode($row['geom'], true, 512, \JSON_THROW_ON_ERROR);
-        // Defensive 404: ingest guarantees a LineString, but a malformed or
-        // non-LineString geom must not become a destructuring TypeError.
         if (!\is_array($geo) || 'LineString' !== ($geo['type'] ?? null) || !\is_array($geo['coordinates'] ?? null)) {
             throw $this->createNotFoundException('Route geometry is not a usable track.');
         }
@@ -51,9 +49,7 @@ final class RouteGpxController extends AbstractController
             'Content-Type' => 'application/gpx+xml',
             'Content-Disposition' => sprintf('attachment; filename="%s.gpx"', $slug),
             'Cache-Control' => 'public, max-age=3600',
-            // Trackpoints only — session-independent; without this the session
-            // listener downgrades the caching for any cookie-carrying visitor
-            // (frontend review 2026-08-09 #1, same as the /map endpoints).
+            // docs/specs/account-and-auth.md §5 — public cache; do not let a session cookie downgrade it.
             AbstractSessionListener::NO_AUTO_CACHE_CONTROL_HEADER => 'true',
         ]);
     }

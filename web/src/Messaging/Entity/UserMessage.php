@@ -12,15 +12,11 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
 
 /**
- * A dashboard message delivered to a rider or curator: a decision outcome
- * (submission, route, or correction), a free-form curator note, or a
- * rider's needs-info reply. The `user_id` column has a DB-level
- * `ON DELETE CASCADE` foreign key to `users(id)`, but the entity keeps it
- * as a plain int column, matching every other entity's FK convention.
+ * Dashboard message. `user_id` is ON DELETE CASCADE to users.
  *
  * @see docs/specs/moderation-and-contribution.md §7
  *
- * @api Read by the messages dashboard; written by moderation decision handlers.
+ * @api
  */
 #[ORM\Entity]
 #[ORM\Table(name: 'user_message')]
@@ -70,10 +66,7 @@ class UserMessage
     private ?\DateTimeImmutable $readAt = null;
 
     /**
-     * Optional reference to one of the submission's photos
-     * (docs/specs/photo-uploads.md §5b). A detail of an ordinary message, not a
-     * second messaging system — and SET NULL on delete, because disposing of a
-     * photo must never delete the conversation about it.
+     * Optional photo on this message (docs/specs/photo-uploads.md §5b). SET NULL on media delete.
      */
     #[ORM\Column(name: 'media_id', type: 'uuid', nullable: true)]
     private ?Uuid $mediaId;

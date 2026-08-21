@@ -11,20 +11,11 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * "I'd like to curate here".
+ * "I'd like to curate here". Evidence is looked up live at review, not snapshotted.
  *
- * Evidence is deliberately NOT copied into this row: the applicant's
- * submissions are looked up by user + country at review time, so the reviewer
- * always sees their current state rather than a snapshot taken at submit (§8).
+ * @see docs/specs/moderation-and-contribution.md §11
  *
- * @api Written by CuratorApplicationService; the OSM/about/scope accessors
- *      are read by admin/curator_applications.html.twig (§9) and covered
- *      directly by CuratorApplicationTest. `decidedBy`/`decidedAt` are set by
- *      decide() but have no reader yet — `AdminActionLogger`'s row already
- *      carries actor + timestamp for the audit trail (§4.1/§6.2 of
- *      account-and-auth.md), so nothing has needed to read them back off this
- *      row; `getCreatedAt()` mirrors `Submission`'s decision-column shape and
- *      is not yet surfaced on the review page.
+ * @api
  */
 #[ORM\Entity]
 #[ORM\Table(name: 'curator_application')]
@@ -42,7 +33,7 @@ class CuratorApplication
     #[ORM\Column(name: 'country_code', type: Types::STRING, length: 2)]
     private string $countryCode;
 
-    /** null = the whole country; set = one division (§4 step 4). */
+    /** null = whole country; set = one division. */
     #[ORM\Column(name: 'requested_region_id', type: Types::BIGINT, nullable: true)]
     private ?int $requestedRegionId = null;
 
@@ -62,11 +53,7 @@ class CuratorApplication
     #[ORM\Column(type: Types::TEXT)]
     private string $about = '';
 
-    /**
-     * Optional "where can we find you online" link — a normalized http(s)
-     * URL, validated by CuratorApplicationService. Reviewer-only, like the
-     * OSM handle; never rendered publicly.
-     */
+    /** Reviewer-only http(s) URL; never public. */
     #[ORM\Column(name: 'social_url', type: Types::STRING, length: 255, nullable: true)]
     private ?string $socialUrl = null;
 
@@ -74,15 +61,13 @@ class CuratorApplication
     private CuratorApplicationStatus $status = CuratorApplicationStatus::Pending;
 
     /**
-     * @psalm-suppress UnusedProperty Set by decide(); no reader yet (see the
-     *                                class docblock).
+     * @psalm-suppress UnusedProperty
      */
     #[ORM\Column(name: 'decided_by', type: Types::BIGINT, nullable: true)]
     private ?int $decidedBy = null;
 
     /**
-     * @psalm-suppress UnusedProperty Set by decide(); no reader yet (see the
-     *                                class docblock).
+     * @psalm-suppress UnusedProperty
      */
     #[ORM\Column(name: 'decided_at', type: Types::DATETIME_IMMUTABLE, nullable: true)]
     private ?\DateTimeImmutable $decidedAt = null;
@@ -202,11 +187,6 @@ class CuratorApplication
     {
         return $this->decisionNote;
     }
-
-    /* The other two halves of the decision. `decide()` has always written all
-       three, but only the note could be read back, so the admin desk could show
-       WHAT was answered and not when or by whom. Added when the desk started
-       listing decided applications rather than only the queue (2026-08-14). */
 
     public function getDecidedAt(): ?\DateTimeImmutable
     {

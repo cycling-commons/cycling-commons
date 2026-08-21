@@ -7,13 +7,11 @@ declare(strict_types=1);
 namespace App\Media;
 
 /**
- * The result of processing one upload: three metadata-free WebP encodings plus
- * the two facts harvested from the original before its metadata was destroyed
- * (docs/specs/photo-uploads.md §1.3b). The coordinates here are the last raw
- * ones that will ever exist for this photo — intake turns them into a distance
- * and nulls them.
+ * Three metadata-free WebPs plus harvested takenAt/GPS (GPS is then destroyed).
  *
- * @api Returned by PhotoProcessor.
+ * @see docs/specs/photo-uploads.md §1
+ *
+ * @api
  */
 final readonly class ProcessedPhoto
 {

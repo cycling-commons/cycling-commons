@@ -7,11 +7,9 @@ declare(strict_types=1);
 namespace App\Moderation;
 
 /**
- * Thrown by ModerationService::withdraw() when the caller is not the rider
- * who filed the submission - withdrawing is the submitter's own exit and
- * nobody else's (a curator who wants it gone has reject and Trash).
+ * Withdraw is the submitter's own exit, nobody else's.
  *
- * @api Consumed by ProfileController::withdraw().
+ * @api
  */
 final class NotTheSubmitterException extends \RuntimeException
 {

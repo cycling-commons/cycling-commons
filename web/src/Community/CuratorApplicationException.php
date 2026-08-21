@@ -7,11 +7,7 @@ declare(strict_types=1);
 namespace App\Community;
 
 /**
- * Machine-readable domain failures out of CuratorApplicationService, on the
- * same footing as InvalidNoteException: a controller maps `reason` to a
- * translated key instead of parsing (or verbatim rendering) English prose,
- * so the join page and the admin review page stay correct across all four
- * locales.
+ * Domain failure from CuratorApplicationService; `reason` maps to a translation key.
  */
 final class CuratorApplicationException extends \DomainException
 {

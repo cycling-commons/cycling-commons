@@ -10,16 +10,11 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * "I want Cycling Commons here" — a tick against a country code, existing to be
- * counted so the next country to onboard is chosen from evidence.
+ * Country demand signal. Not tied to a region — most countries have none yet.
  *
- * Deliberately NOT tied to a region: 245 countries have none, and requiring one
- * would make the signal impossible exactly where it matters most (§4).
+ * @see docs/specs/moderation-and-contribution.md §11
  *
- * @api Written by CountryInterestService::record(); read today only through
- *      its own `counts()` aggregate query (§12.2's owner-only-for-v1 counter
- *      is not wired to a page yet). Per-row accessors are Doctrine hydration
- *      + entity-completeness, exercised directly by CountryInterestTest.
+ * @api
  */
 #[ORM\Entity]
 #[ORM\Table(name: 'country_interest')]
@@ -44,15 +39,13 @@ class CountryInterest
     private ?string $note = null;
 
     /**
-     * @psalm-suppress UnusedProperty Doctrine-mapped column; no reader yet
-     *                                (see the class docblock).
+     * @psalm-suppress UnusedProperty
      */
     #[ORM\Column(name: 'created_at', type: Types::DATETIME_IMMUTABLE)]
     private \DateTimeImmutable $createdAt;
 
     /**
-     * @psalm-suppress UnusedProperty Doctrine-mapped column; no reader yet
-     *                                (see the class docblock).
+     * @psalm-suppress UnusedProperty
      */
     #[ORM\Column(name: 'updated_at', type: Types::DATETIME_IMMUTABLE)]
     private \DateTimeImmutable $updatedAt;

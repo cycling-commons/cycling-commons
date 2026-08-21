@@ -16,13 +16,11 @@ use App\World\Entity\Country;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
- * Administrative support operations on a User account. All mutations flush
- * and write an audit row (AdminActionLogger). Guardrails prevent an admin
- * from locking themselves out or removing the last administrator.
+ * Admin mutations on a User. Every change flushes and is audited.
  *
  * @see docs/specs/account-and-auth.md §6
  *
- * @api Autowired by the DI container; consumed by UserCrudController.
+ * @api
  */
 final class UserAdminService
 {
@@ -113,17 +111,9 @@ final class UserAdminService
         $this->assertNotLastAdmin($target);
 
         $email = $target->getEmail();
-        // Audit + deletion are one transaction: a failure in either (e.g. a
-        // deletion hook) rolls BOTH back, so the audit trail can never claim a
-        // removal that did not happen.
         $this->em->wrapInTransaction(function () use ($actor, $target, $email): void {
-            // Log first (target still exists); the target FK becomes NULL when the
-            // row is deleted (ON DELETE SET NULL), so snapshot the email into the note.
-            // Commons rule: personal data goes; contributed data is anonymised,
-            // never cascade-deleted; see docs/specs/account-and-auth.md §6.3.
+            // Personal data goes; contributions are anonymised (docs/specs/account-and-auth.md §6.3).
             $this->logger->log($actor, self::REMOVE_ACCOUNT, $target, 'Removed account: '.$email);
-            // Route through the shared deletion seam so admin removal runs the
-            // same UserDeletionHookInterface anonymisation as self-service.
             $this->deletion->purge($target);
             $this->em->flush();
         });
@@ -137,10 +127,7 @@ final class UserAdminService
     }
 
     /**
-     * Replace the target's moderation-area rows and audit the resulting set.
-     * Codes and ids are validated against world_country/region; an unknown
-     * value throws \InvalidArgumentException, shown as the desk's danger
-     * flash.
+     * Replace moderation-area rows and audit the set.
      *
      * @see docs/specs/moderation-and-contribution.md §9.4
      *
@@ -167,16 +154,8 @@ final class UserAdminService
             [] !== $countryCodes ? implode(', ', $countryCodes) : 'none',
         );
 
-        /* WHAT THEY COVERED BEFORE, read while the old rows still exist. The
-           comparison decides whether this is worth telling them about: saving
-           the form unchanged (or re-saving after a typo) must not post a
-           "your areas changed" message that describes no change. */
         $before = $this->areaKeys((int) $target->getId());
 
-        // Rows and audit are one transaction: commit() below opens its own
-        // wrapInTransaction, but Doctrine's connection nests transactions
-        // by ref-count rather than starting a second one, so this stays atomic
-        // with the DELETE/persist calls that precede it.
         $this->em->wrapInTransaction(function () use ($target, $actor, $countryCodes, $regionIds, $note): void {
             $this->em->createQuery('DELETE FROM App\Moderation\Entity\ModeratorArea m WHERE m.userId = :uid')
                 ->setParameter('uid', (int) $target->getId())
@@ -190,18 +169,6 @@ final class UserAdminService
             $this->commit($actor, self::MODERATOR_AREAS, $target, $note);
         });
 
-        /* TELL THE PERSON (owner 2026-08-14: "if we update a moderator to have
-           less or more regions send them a message"). Their scope decides what
-           they can see and act on, so a silent change means finding out by
-           noticing a desk has gone quiet, or that somewhere new has appeared in
-           it with no explanation.
-
-           After the transaction, not inside it: the message is a notification,
-           not part of the assignment, and a mail-layer problem must never roll
-           back a scope change an admin has already made. Names, not ids, and
-           resolved here because the message is rendered long after this runs.
-           The dashboard row is what MessageMailer then delivers by email, so
-           one call covers both surfaces the owner asked for. */
         $after = $this->areaKeys((int) $target->getId());
         if ($before !== $after) {
             $this->messages->sendSystem(
@@ -218,11 +185,7 @@ final class UserAdminService
     }
 
     /**
-     * A stable, comparable fingerprint of what somebody moderates.
-     *
-     * Sorted so that saving the same set in a different order is not mistaken
-     * for a change, and prefixed so region 7 can never collide with a country
-     * code that happens to stringify the same way.
+     * Sorted fingerprint of coverage. Empty means global.
      *
      * @return list<string>
      */
@@ -238,12 +201,7 @@ final class UserAdminService
     }
 
     /**
-     * The areas in words, for the message.
-     *
-     * Empty means GLOBAL, not "none" — that is what an empty assignment does
-     * (see the picker's own note), and telling somebody they now cover nothing
-     * when they in fact cover everything would be the worst possible way to be
-     * wrong about it.
+     * Area names for the notification. Empty assignment is global.
      *
      * @param list<int>    $regionIds
      * @param list<string> $countryCodes
@@ -251,12 +209,7 @@ final class UserAdminService
     private function areaNames(array $regionIds, array $countryCodes): string
     {
         if ([] === $regionIds && [] === $countryCodes) {
-            /* English, not translated (owner 2026-08-14: internal communication
-               with moderators is English only). Using the translator here was
-               worse than inconsistent, it was wrong: it would have resolved in
-               the ADMIN's locale at the moment of saving, so a Dutch admin
-               would have written a Dutch word into a message an English or
-               Spanish moderator then reads. */
+            // English only: translator would lock in the admin's locale (docs/specs/moderation-and-contribution.md §7).
             return 'everywhere';
         }
 
@@ -272,7 +225,6 @@ final class UserAdminService
         return implode(', ', $names);
     }
 
-    // ── Guardrails ────────────────────────────────────────────────────────────
 
     private function assertNotSelf(User $target, User $actor): void
     {
@@ -288,7 +240,6 @@ final class UserAdminService
         }
     }
 
-    // ── Internals ───────────────────────────────────────────────────────────────
 
     /** Add or remove an elevated role, never storing the implicit ROLE_USER. */
     private function setRole(User $user, string $role, bool $enabled): void

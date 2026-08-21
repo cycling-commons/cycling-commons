@@ -18,24 +18,11 @@ use Symfony\Component\Security\Http\HttpUtils;
 use Symfony\Component\Security\Http\Util\TargetPathTrait;
 
 /**
- * Firewall success handler invoked once a user is *fully* authenticated.
- *
- * Integration with scheb/2fa (v8): for users who have 2FA enabled, scheb's own
- * {@see \Scheb\TwoFactorBundle\Security\Http\Authenticator\TwoFactorAuthenticator}
- * intercepts the primary login, shows the interstitial, and only calls this
- * handler after the second factor is verified. So when this handler runs, the
- * user is always fully authenticated; it never double-handles the 2FA
- * challenge.
- *
- * Enforcement policy: 2FA is optional for ROLE_USER but mandatory for
- * ROLE_CURATOR / ROLE_ADMIN. An elevated-role user who has not yet provisioned
- * a TOTP secret is redirected to /2fa/setup; everyone else lands on the
- * default target.
+ * After full authentication: seed locale, then 2FA setup if still required.
  *
  * @see docs/specs/account-and-auth.md §4
  *
- * @api Registered as the `main` firewall `success_handler`; instantiated by the container,
- *      never referenced from application code.
+ * @api
  */
 final class LoginSuccessHandler implements AuthenticationSuccessHandlerInterface
 {
@@ -55,19 +42,12 @@ final class LoginSuccessHandler implements AuthenticationSuccessHandlerInterface
     #[\Override]
     public function onAuthenticationSuccess(Request $request, TokenInterface $token): Response
     {
-        // For users with 2FA enabled, scheb has already swapped the token for a TwoFactorToken
-        // during AuthenticationTokenCreatedEvent. Send them straight to the interstitial instead
-        // of bouncing through the default target while still only half-authenticated. scheb's
-        // TwoFactorAccessListener would enforce this on the next protected request anyway; this
-        // just makes the redirect immediate. We do not verify the code here; that is scheb's job
-        // at /2fa_check, which calls this handler again once the user is fully authenticated.
         if ($token instanceof TwoFactorTokenInterface) {
             return new RedirectResponse($this->urlGenerator->generate(self::TWO_FACTOR_LOGIN_ROUTE));
         }
 
         $user = $token->getUser();
 
-        // The user's saved language preference for the rest of the session.
         $locale = $user instanceof User ? $user->getLocale() : null;
         if (null !== $locale) {
             $request->getSession()->set('_locale', $locale);
@@ -84,10 +64,7 @@ final class LoginSuccessHandler implements AuthenticationSuccessHandlerInterface
             return $this->httpUtils->createRedirectResponse($request, $targetPath);
         }
 
-        // Generate the default target in the user's own locale, otherwise the
-        // path-prefix router serves the un-prefixed (English) URL and the
-        // LocaleListener re-reads English from the path, clobbering the
-        // session locale we just set.
+        // Default target in the user's locale so LocaleListener does not clobber session locale.
         return new RedirectResponse($this->localizedUrl(self::DEFAULT_TARGET_ROUTE, $locale));
     }
 

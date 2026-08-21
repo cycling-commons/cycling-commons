@@ -13,16 +13,11 @@ use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 
 /**
- * CORS for the public API (public-api.md §2.2 PoC): every /v1 response
- * (200, 304, 400, and 429 alike, or a browser consumer could not even read
- * the error) carries a wildcard allow-origin. GET-only with no custom
- * request headers means browsers send these as CORS "simple requests" and
- * never preflight, so no nelmio dependency is warranted yet; the OPTIONS
- * short-circuit below is defensive for hand-rolled clients that preflight
- * anyway. Swap for nelmio/cors-bundle when keys add an Authorization header
- * (that is the moment preflights become real).
+ * CORS for `/v1` responses, including errors. GET-only; no preflight in browsers.
  *
- * @api Auto-registered event subscriber.
+ * @see docs/specs/public-api.md §2.2
+ *
+ * @api
  */
 final class PublicApiCorsSubscriber implements EventSubscriberInterface
 {
@@ -36,8 +31,7 @@ final class PublicApiCorsSubscriber implements EventSubscriberInterface
     public static function getSubscribedEvents(): array
     {
         return [
-            // Priority 33: one above the router (32), so an OPTIONS probe is
-            // answered before routing 405s it (the routes declare GET only).
+            // Priority 33: one above the router (32), so OPTIONS is not 405'd (GET-only routes).
             KernelEvents::REQUEST => ['onKernelRequest', 33],
             KernelEvents::RESPONSE => 'onKernelResponse',
         ];

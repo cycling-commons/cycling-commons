@@ -9,23 +9,11 @@ namespace App\Catalog;
 use Doctrine\DBAL\Connection;
 
 /**
- * Derives the road surfaces a route actually crosses from the served A-layer
- * (Road surface) segments, as an honest estimate with disclosed coverage.
+ * Surfaces a route crosses from served A-layer segments. `parts` and `covered` are measured on different sides so neither can exceed 100%.
  *
- * Two figures, deliberately measured on different sides so neither lies:
- *  - `parts`: per-surface metres of mapped segment within a {@see self::BUFFER_M}
- *    buffer of the route, normalized over TOTAL mapped metres. Parallel/duplicate
- *    mapping inflates numerator and denominator equally, so shares stay ≤ 100 %.
- *  - `covered`: how much of the ROUTE falls within the buffer of the UNION of
- *    those segments, measured route-side and union-flattened, so double
- *    mapping cannot push it past 100 %. This is the "how much of the route
- *    is even mapped" honesty figure surfaced next to the estimate.
+ * @see docs/specs/route-domain.md §9
  *
- * `Surface unverified` segments say nothing and are excluded from both. Raw DBAL:
- * this is a read/derive path, never an entity hydrate.
- *
- * @api Consumed by RouteProposalService (intake), ImportCatalogCommand and
- *      RouteSurfacesCommand (backfill); covered by SurfaceProfilerTest.
+ * @api
  */
 final class SurfaceProfiler
 {
@@ -75,14 +63,7 @@ final class SurfaceProfiler
             return null;
         }
 
-        // Top 4 by length, apportioned by largest remainder over their share of
-        // the mapped total. Independent round-half-up could push near-equal parts
-        // past 100 % (37.5 + 37.5 + 12.5 + 12.5 → 38 + 38 + 13 + 13 = 102): floor
-        // each exact share, then hand the leftover integer points to the largest
-        // fractional remainders (ties: longer segment first, then the stable
-        // length-descending order). Kept parts sum to round(100 · kept_metres /
-        // total) ≤ 100: dropped small parts honestly leave the rest below 100,
-        // but the row can never exceed it.
+        // Largest-remainder over top-4 so kept parts cannot round past 100.
         usort($byMetres, static fn (array $a, array $b): int => $b['metres'] <=> $a['metres']);
         $kept = \array_slice($byMetres, 0, 4);
 
@@ -99,8 +80,7 @@ final class SurfaceProfiler
             $floorSum += $floor;
         }
 
-        // Rank kept indices by descending remainder; ties go to the longer
-        // segment, then keep the length-descending order (stable, deterministic).
+        // Ties: longer segment, then length-descending order.
         $order = array_keys($kept);
         usort($order, static function (int $a, int $b) use ($remainders, $kept): int {
             if ($remainders[$a] !== $remainders[$b]) {
@@ -161,10 +141,7 @@ final class SurfaceProfiler
     }
 
     /**
-     * Recompute `attributes.surfaces` for every recommended_route row (all
-     * states, proposals included). A route that gains coverage gets the key;
-     * one that lost it loses the stale key; every other attribute key is left
-     * untouched. Returns the number of rows whose profile actually changed.
+     * Recompute `attributes.surfaces` for every recommended_route. Missing coverage drops the key; other keys are untouched.
      */
     public function recomputeAll(): int
     {
@@ -191,9 +168,7 @@ final class SurfaceProfiler
                 $attributes['surfaces'] = $profile;
             }
 
-            // Rewrite the whole jsonb (BackfillAttributesCommand convention): every
-            // other key round-trips untouched, and an empty `[]` becomes an object
-            // once the derived key lands. jsonb_set cannot target a JSON array.
+            // Whole jsonb rewrite: jsonb_set cannot target a JSON array.
             $this->db->executeStatement(
                 'UPDATE recommended_route SET attributes = :attrs, updated_at = NOW() WHERE id = :id',
                 ['attrs' => json_encode($attributes, \JSON_THROW_ON_ERROR | \JSON_PRESERVE_ZERO_FRACTION), 'id' => $row['id']],
@@ -205,8 +180,7 @@ final class SurfaceProfiler
     }
 
     /**
-     * Field-wise compare (jsonb does not preserve key order, so `===` on the
-     * decoded arrays is unreliable) so a re-run that changes nothing is a no-op.
+     * Field-wise compare: jsonb does not preserve key order, so `===` is unreliable.
      *
      * @param array{covered: int, parts: list<array{surface: string, pct: int}>} $new
      */

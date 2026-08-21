@@ -15,7 +15,7 @@ use Doctrine\ORM\EntityManagerInterface;
  *
  * @see docs/specs/account-and-auth.md §6.2
  *
- * @api Autowired by the DI container; consumed by UserAdminService.
+ * @api
  */
 final class AdminActionLogger
 {

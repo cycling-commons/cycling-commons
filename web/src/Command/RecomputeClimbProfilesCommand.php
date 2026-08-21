@@ -17,23 +17,11 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 /**
- * Re-measures every climb that has a drawn line, replacing hand-authored
- * gradients with figures derived from the elevation source.
- *
- * The catalogue's published numbers were typed. Checked against the route
- * stored in the same seed entry, four climbs read 8.4%, 9.3%, "9%+" and 9% for
- * roads that actually range from 3.2% to 14% — a clustering that is the
- * signature of plausible-looking values rather than measurements that drifted.
- * Even the lengths were typed: one climb published 1.5 km beside a 1.75 km
- * route.
- *
- * DRY RUN BY DEFAULT. This changes numbers riders recognise, so seeing the diff
- * before writing it is the normal way to run it (climb-elevation.md §7).
+ * Re-measure climbs from the elevation source. Dry-run by default.
  *
  * @see docs/specs/climb-elevation.md §7
  *
- * @api Console entry point, wired by Symfony's DI - `@api` tells Psalm this is
- *      live, not dead code.
+ * @api
  */
 #[AsCommand(name: 'app:climbs:recompute', description: 'Re-measure climb gradients from the elevation source')]
 final class RecomputeClimbProfilesCommand extends Command
@@ -78,7 +66,7 @@ final class RecomputeClimbProfilesCommand extends Command
             $attrs = $item->getAttributes();
             $route = $attrs['route'] ?? null;
             if (!\is_array($route) || \count($route) < 2) {
-                continue;   // point-only climb: nothing to measure from
+                continue;
             }
             /** @var list<array{0: float, 1: float}> $coords */
             $coords = array_values(array_map(
@@ -108,42 +96,22 @@ final class RecomputeClimbProfilesCommand extends Command
             }
 
             if ($write) {
-                // Length and gain are derived too (§4), and storing them is what
-                // stops the drawer measuring the whole drawn line while the bars
-                // cover only the climb — La Redoute read "2.4 km" over 21 bars
-                // of 100 m, which is 2.1.
                 $attrs['length'] = round($p['length']);
                 $attrs['gain'] = round($p['gain']);
-                // The two ends above sea level, so a profile can be labelled
-                // "277 m -> 502 m" and not merely "+225 m".
                 $attrs['footEle'] = $p['footEle'];
                 $attrs['summitEle'] = $p['summitEle'];
                 $attrs['avgGradient'] = $p['avgGradient'];
                 $attrs['maxGradient'] = $p['maxGradient'];
                 $attrs['grad'] = $p['grad'];
-                // Colours the map line, at finer resolution than the bars, so
-                // the darkest stretch is the steepest one and the marker sits
-                // on it.
                 $attrs['lineGrad'] = $p['lineGrad'];
                 $attrs['demSource'] = $p['demSource'];
                 $attrs['binM'] = $p['binM'];
-                // The width maxGradient was averaged over, stored beside it so
-                // the drawer's caption is built from the measurement. Without
-                // this the copy keeps whatever number was typed into the four
-                // catalogues, which is how it came to say "steepest 100m" over
-                // a 250 m window.
                 $attrs['steepWindowM'] = $p['steepWindowM'];
-                // A hand-placed steepest marker is the rider's, and re-deriving
-                // it would silently discard a correction someone made standing
-                // on the road (§5).
+                // Do not overwrite a hand-placed steepest marker (docs/specs/climb-elevation.md §5).
                 $existing = $attrs['steep'] ?? null;
                 if (!\is_array($existing) || true !== ($existing['manual'] ?? false)) {
                     $attrs['steep'] = $p['steep'];
                 }
-                // `headline` is a stored display string nothing recomputes, so
-                // it drifts the moment a climb is redrawn — one climb still
-                // read "1.5 km · 9% avg" on a 4.4 km line. The drawer composes
-                // that line at render time now (§4).
                 unset($attrs['headline']);
                 $item->setAttributes($attrs);
             }

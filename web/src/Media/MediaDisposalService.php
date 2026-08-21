@@ -15,36 +15,21 @@ use Psr\Clock\ClockInterface;
 use Psr\Log\LoggerInterface;
 
 /**
- * What happens to a photo's bytes at the end of each path
- * (docs/specs/photo-uploads.md §6). The disposal CLASSES belong to
- * docs/specs/moderation-and-contribution.md — one source of truth; this service
- * only carries out what they mean for objects and rows, plus the one
- * media-only class:
+ * End-of-life for photo bytes: orphans, rejects, trash, anonymize.
  *
- *  - Orphans: pending, never claimed, older than seven days. Nothing was ever
- *    moderated, so objects, row and log all go — a log with no row would be
- *    litter, not history.
- *  - Rejected: once the standard retention window lapses, the objects go and
- *    the row stays as an audit tombstone, its log intact.
- *  - Trashed: objects, row and log go IMMEDIATELY, synchronously with the
- *    Trash action. No window means no sweep, and Trash's content-free
- *    principle means no exceptions — this is the deliberate exception to
- *    "events survive forever".
+ * @see docs/specs/photo-uploads.md §6
  *
- * Every method is idempotent: the sweeps run from a cron, the Trash arm from a
- * curator, and the anonymizer from an account deletion, and none of them may
- * fail because somebody else already did the work.
- *
- * @api Called by MediaGcCommand, ModerationService::trashSubmission() and MediaDeletionHook.
+ * @api
  */
 final class MediaDisposalService
 {
-    /** docs/specs/photo-uploads.md §6: nothing to moderate ever arrived. */
+    /** Unclaimed pending uploads older than this are orphans. @see docs/specs/photo-uploads.md §6 */
     public const int ORPHAN_DAYS = 7;
 
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly MediaStorage $storage,
+        private readonly MediaDecisionService $decisions,
         private readonly MediaEventLog $events,
         private readonly RetentionService $retention,
         private readonly ClockInterface $clock,
@@ -53,15 +38,9 @@ final class MediaDisposalService
     }
 
     /**
-     * Objects, row and log. Used by orphan collection, Trash and account
-     * deletion.
+     * Objects, row and log. Silent no-op under legal hold.
      *
-     * **Refuses anything under legal hold** (docs/specs/photo-uploads.md §6d).
-     * This is the single chokepoint every destructive path runs through, which
-     * is why the guard lives here rather than being repeated at each caller:
-     * a hold that any one forgotten path could bypass is not a hold. Silent
-     * rather than throwing — Trash sweeps a whole submission, and one held
-     * photo must not abort the rest or leak its existence through an error.
+     * @see docs/specs/photo-uploads.md §6d
      */
     public function purge(MediaUpload $upload): void
     {
@@ -74,7 +53,7 @@ final class MediaDisposalService
         $this->em->remove($upload);   // media_moderation_event cascades
     }
 
-    /** Objects only: the row survives as a tombstone, and so does its history. */
+    /** Objects only: the row survives as a tombstone. */
     public function deleteObjects(MediaUpload $upload): void
     {
         if (null !== $upload->getObjectsDeletedAt()) {
@@ -90,21 +69,7 @@ final class MediaDisposalService
         $this->events->append($upload->getId(), null, MediaAction::ObjectsDeleted);
     }
 
-    /**
-     * Every object this upload owns, in BOTH buckets
-     * (docs/specs/media-storage-architecture.md §2).
-     *
-     * The quarantine delete is unconditional and the published delete is not,
-     * and that asymmetry is the point: a row that never released has no
-     * published prefix to ask for - getPathPrefix() would throw - while a row
-     * that did release may still be holding quarantined bytes if the worker
-     * died between the write and the cleanup. Deleting from a bucket with
-     * nothing in it costs one no-op; forgetting a bucket leaves a rider's
-     * unscanned file behind after they asked us to destroy it.
-     *
-     * Hetzner Object Storage has no versioning (§2.3), so these deletes are
-     * real and immediate. Every caller above already treats them that way.
-     */
+    /** Quarantine always; published prefix only if a revision exists. @see docs/specs/media-storage-architecture.md §2 */
     private function destroyObjects(MediaUpload $upload): void
     {
         $this->storage->deleteQuarantine($upload->getQuarantineKey());
@@ -155,11 +120,7 @@ final class MediaDisposalService
         return \count($expired);
     }
 
-    /**
-     * Trash (docs/specs/photo-uploads.md §6): everything, now, with no trace.
-     * Runs inside the caller's transaction so it commits with the Trash audit
-     * row or not at all.
-     */
+    /** Trash: everything now, in the caller's transaction. @see docs/specs/photo-uploads.md §6 */
     public function purgeForSubmission(int $submissionId): int
     {
         $uploads = $this->em->getRepository(MediaUpload::class)->findBy(['submissionId' => $submissionId]);
@@ -170,28 +131,13 @@ final class MediaDisposalService
         return \count($uploads);
     }
 
-    /**
-     * Account deletion (docs/specs/photo-uploads.md §6): unmoderated and
-     * rejected work leaves with the account; an approved photo is a CC
-     * BY-SA-licensed contribution to the commons and stays, with its credit
-     * falling back to anonymous — the same reasoning as anonymized ballots.
-     */
+    /** Account deletion: drop unmoderated work; anonymize approved credit. @see docs/specs/photo-uploads.md §6 */
     public function anonymizeFor(User $user): void
     {
         $userId = (int) $user->getId();
         $uploads = $this->em->getRepository(MediaUpload::class)->findBy(['userId' => $userId]);
 
-        // The departing rider's own choice, made on the delete-account
-        // confirmation (docs/specs/photo-uploads.md §6). It is meaningful
-        // precisely because stored files carry a link and not a name: whichever
-        // way this goes, it reaches every copy that ever left this site.
-        //
-        // Gated on the profile being public, and NOT only in the template that
-        // offers the checkbox. A rider with a private profile has never been
-        // named on their photos; honouring a stale ticked box would publish a
-        // name at the exact moment they are leaving, which is the opposite of
-        // what either setting means. Deletion may only preserve a credit that
-        // was already visible — it may never create one.
+        // Preserve credit only if it was already public. @see docs/specs/photo-uploads.md §6
         $keepCredit = $user->isKeepMediaCredit() && $user->isPublicProfile();
         $frozen = $keepCredit ? $user->getDisplayName() : '';
 
@@ -209,11 +155,7 @@ final class MediaDisposalService
         }
     }
 
-    /**
-     * Rewrites the visible credit on the item this photo is attached to. The
-     * photo is matched by the URL the attachment was built from, which carries
-     * the upload's uuid — an exact, deterministic match, not a guess.
-     */
+    /** Clear gallery credit matched on the sm URL. */
     private function clearCredit(MediaUpload $upload): void
     {
         $itemId = $upload->getItemId();
@@ -231,10 +173,9 @@ final class MediaDisposalService
             return;
         }
 
-        $target = $this->storage->url($upload->getStorageBucket(), $upload->getPathPrefix(), 'sm');
         $changed = false;
         foreach ($photos as $index => $photo) {
-            if (\is_array($photo) && ($photo['sm'] ?? null) === $target && '' !== ($photo['credit'] ?? '')) {
+            if ($this->decisions->isEntryFor($photo, $upload) && '' !== ($photo['credit'] ?? '')) {
                 $photos[$index]['credit'] = '';
                 $changed = true;
             }

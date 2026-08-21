@@ -1,10 +1,6 @@
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
-// Native confirmation for destructive admin actions. Support-desk actions now
-// render as CSRF-protected POST forms (security review #2), so the guard hooks
-// the form's submit event — that covers the button click AND an Enter-key
-// submit, which never fires a click. Legacy confirm-links keep the click hook.
-// The prompt text comes from the element's data-confirm attribute (translated
-// in the Twig template), with an English fallback.
+// Confirm destructive admin actions. Forms hook submit (covers Enter); legacy
+// confirm-links hook click. Prompt text is data-confirm from the template.
 (function () {
     const FALLBACK = 'This action is irreversible. Continue?';
     const confirmed = (el) => window.confirm(el.dataset.confirm || FALLBACK);

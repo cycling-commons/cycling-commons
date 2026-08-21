@@ -9,11 +9,9 @@ namespace App\World\Entity;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * A country (ISO 3166-1). Names + ISO codes are seeded from symfony/intl; the
- * continent link from a static code→continent map. The flag is an SVG served
- * from assets/flags/<iso2 lowercased>.svg (see flagAsset()).
+ * ISO 3166-1 country. Names from symfony/intl; continent from a static map.
  *
- * @api Reference data for the World bundle.
+ * @api
  */
 #[ORM\Entity]
 #[ORM\Table(name: 'world_country')]

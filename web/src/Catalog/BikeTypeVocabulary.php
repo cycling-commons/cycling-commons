@@ -7,13 +7,11 @@ declare(strict_types=1);
 namespace App\Catalog;
 
 /**
- * Canonical bikeTypes shape: a deduplicated list of valid `BikeType` values.
- * Handbike is one of those values, so it is stored in the list like any
- * other; there is no separate handbike field.
+ * Deduplicated list of valid `BikeType` values; Handbike is one of them, not a separate field.
  *
  * @see docs/specs/route-domain.md §9
  *
- * @api Used by the proposal/curator forms, RouteProposalService, CatalogProvider.
+ * @api
  */
 final class BikeTypeVocabulary
 {

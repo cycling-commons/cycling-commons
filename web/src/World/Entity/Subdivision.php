@@ -9,11 +9,9 @@ namespace App\World\Entity;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * An administrative subdivision (ISO 3166-2): state, province, region, admin
- * division, county, … Seeded from sokil/php-isocodes. Self-referencing `parent`
- * models the depth (State → Admin division → County) that varies by country.
+ * ISO 3166-2 subdivision. Self-referencing `parent` models country-specific depth.
  *
- * @api Reference data for the World bundle.
+ * @api
  */
 #[ORM\Entity]
 #[ORM\Table(name: 'world_subdivision')]

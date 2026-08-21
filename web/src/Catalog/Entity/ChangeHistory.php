@@ -9,14 +9,11 @@ namespace App\Catalog\Entity;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * One applied field change on a catalog item. Append-only: no code path
- * may ever update or delete rows. old_value records the item's actual
- * value at apply time, never the submitter's possibly-stale snapshot.
- * Time-partitionable from day one: nothing references its id.
+ * One applied field change. Append-only; old_value is the item at apply time, not the submitter's snapshot.
  *
  * @see docs/specs/moderation-and-contribution.md §4.1
  *
- * @api Catalog domain entity.
+ * @api
  */
 #[ORM\Entity]
 #[ORM\Table(name: 'change_history')]
@@ -24,13 +21,7 @@ use Doctrine\ORM\Mapping as ORM;
 class ChangeHistory
 {
     /**
-     * `changed_by` for a change nobody made: the automatic expiry of a stale
-     * closure (ClosureExpiryService), and anything like it later.
-     *
-     * Zero is safe as a sentinel because user ids are generated and start at 1.
-     * It must never be handed to RiderPseudonym, which would mint a plausible
-     * "rider#xxxx" for a person who does not exist and put it on a public
-     * change log — ChangeHistoryView special-cases it instead.
+     * `changed_by` for a change nobody made. Do not pass to RiderPseudonym — that would mint a fake rider#.
      */
     public const int SYSTEM_ACTOR = 0;
 

@@ -11,11 +11,9 @@ use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
 
 /**
- * `cc_build()` — the release-tag build stamp for the footer, one shape for
- * every template that emits window.CC_VERSION ({@see BuildVersion} for how it
- * is derived and why).
+ * `cc_build()` — footer stamp ({@see BuildVersion}).
  *
- * @api Auto-registered Twig extension.
+ * @api
  */
 final class VersionExtension extends AbstractExtension
 {

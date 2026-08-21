@@ -8,15 +8,11 @@ use App\Entity\User;
 use App\Repository\ResetPasswordRequestRepository;
 
 /**
- * Purges a user's pending password-reset requests before account removal.
- * reset_password_request.user_id is a restrictive FK (no ON DELETE action),
- * so without this hook BOTH deletion paths (self-service confirm and admin
- * removal) throw a foreign-key violation whenever a live reset request
- * exists.
+ * Drop pending reset-password rows before account removal (restrictive FK).
  *
  * @see docs/specs/account-and-auth.md §6.3
  *
- * @api Discovered via the app.user_deletion_hook tag; run by UserDeletionService::purge().
+ * @api
  */
 final class ResetPasswordCleanupHook implements UserDeletionHookInterface
 {

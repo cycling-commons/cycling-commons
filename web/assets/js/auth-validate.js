@@ -1,21 +1,10 @@
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
-// Generic client-side guard for auth forms (login / reset password / settings).
-// Validates BEFORE submit so a trivially-wrong field doesn't round-trip to the
-// server and wipe password boxes (Symfony never echoes passwords back). Works
-// by convention on any <form class="cc-validate">:
-//   - required empty            → "Please enter your <label>."
-//   - type=email, bad format    → "Please enter a valid email address."
-//   - password id ending _first → required + minimum length (PW_MIN)
-//   - password id ending _second→ must match its _first sibling
-//   - single password           → required only (e.g. current password, login)
-// The server (Symfony form types) re-validates everything — this is only UX.
-// (The registration page has its own register-validate.js for its IsTrue terms
-// checkbox; this file deliberately leaves that form alone.)
+// Client-side guard for auth forms. UX only — the server re-validates on POST.
 (function () {
   'use strict';
 
   var T = window.ccT || function (k, fb, vars) { var s = fb; if (vars) { for (var p in vars) { s = s.replace('%' + p + '%', vars[p]); } } return s; };
-  var PW_MIN = 12;                              // matches server Length(min: 12) on new passwords
+  var PW_MIN = 12;
   var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   function ready(fn) {
@@ -65,7 +54,6 @@
 
           var id = el.id || '';
 
-          // Confirm-password field: must match its _first sibling.
           if (/_second$/.test(id)) {
             var firstEl = document.getElementById(id.replace(/_second$/, '_first'));
             if (firstEl && firstEl.value && el.value !== firstEl.value) fail(el, T('err_mismatch', 'The password fields must match.'));

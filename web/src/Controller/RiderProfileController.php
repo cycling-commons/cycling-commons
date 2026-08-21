@@ -15,12 +15,11 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Uid\Uuid;
 
 /**
- * Public rider profile (account-and-auth.md §7): exists only while the rider's
- * publicProfile toggle is ON — the "view as others see it" link renders this
- * exact page with zero owner special-casing. Public-appropriate data only.
+ * Public rider profile: exists only while `publicProfile` is ON.
  *
- * @api Instantiated by Symfony's router — `@api` tells Psalm this is a live
- *      entry point, not dead code.
+ * @see docs/specs/account-and-auth.md §7
+ *
+ * @api
  */
 #[Route(LocalePrefix::PATHS)]
 final class RiderProfileController extends AbstractController
@@ -33,13 +32,7 @@ final class RiderProfileController extends AbstractController
             throw $this->createNotFoundException('No public profile.');
         }
 
-        /* The counter boundaries are editorial and deliberate (docs/TODO.md,
-           owner 2026-08-13): count APPROVED work only - a counter of pending
-           submissions is a spam incentive with a scoreboard; votes stay
-           private (an opinion is not a contribution); moderation counts stay
-           admin-only. "Checks" merges every verify-reality act (confirmations
-           of any stance) into ONE counter, because three separate ones invite
-           gaming the easiest. */
+        // docs/specs/account-and-auth.md §7 — approved work only; votes stay private.
         $db = $em->getConnection();
         /** @var array<string, int> $byType */
         $byType = [];
@@ -52,9 +45,7 @@ final class RiderProfileController extends AbstractController
         $counters = [
             'places' => $byType['new'] ?? 0,
             'edits' => $byType['edit'] ?? 0,
-            // Photos still standing: a granted takedown deletes the objects
-            // (objects_deleted_at), and a deleted photo is not a contribution
-            // a profile should keep scoring.
+            // docs/specs/account-and-auth.md §7 — granted takedown stops scoring.
             'photos' => (int) $db->fetchOne(
                 "SELECT COUNT(*) FROM media_upload WHERE user_id = :uid AND status = 'approved' AND objects_deleted_at IS NULL",
                 ['uid' => (int) $rider->getId()],
@@ -66,11 +57,7 @@ final class RiderProfileController extends AbstractController
         ];
         $contribCount = $counters['places'] + $counters['edits'];
 
-        // Verified routes are shown by name; anything not yet fully verified
-        // only as a count (spec: never leak un-vetted route names on a public
-        // surface). "Not yet fully verified" spans BOTH pre-Verified lifecycle
-        // states: Submitted (awaiting curator decision) AND Unverified
-        // (curator-approved, publicly served, awaiting ride-verification).
+        // docs/specs/account-and-auth.md §7 — names only for Verified; never leak un-vetted routes.
         $routes = $em->getRepository(RecommendedRoute::class)->findBy(
             ['proposedBy' => (int) $rider->getId(), 'state' => ItemState::Verified],
             ['createdAt' => 'DESC', 'id' => 'DESC'],

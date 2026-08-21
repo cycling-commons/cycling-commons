@@ -9,25 +9,11 @@ namespace App\Media\Scan;
 use Psr\Log\LoggerInterface;
 
 /**
- * ClamAV, two ways in (media plan task 3): INSTREAM to `clamd` over TCP when
- * CLAMAV_TCP_ADDR is set (the dev sidecar and the worker host), else the
- * `clamscan` binary for contributors who have ClamAV but no daemon.
+ * ClamAV via clamd INSTREAM, else clamscan. CLAMAV_REQUIRED: miss throws, never clean.
  *
- * The REQUIRED flag decides what "no scanner" means. True (every real
- * environment): unavailability THROWS - the caller must not mistake silence
- * for a clean verdict. False (a contributor stack with no ClamAV at all):
- * scan() answers ScanVerdict::skipped() with a warning, so uploads still
- * work locally and the log says plainly that nothing was scanned.
- * CLAMAV_REQUIRED therefore sits on the deploy checklist beside APP_SECRET:
- * unset on a real environment silently disables the entire architecture.
+ * @see docs/specs/media-storage-architecture.md §3.1
  *
- * INSTREAM protocol: `zINSTREAM\0`, then <4-byte big-endian length><chunk>
- * frames, a zero-length frame to finish, one `stream: <verdict>` line back.
- * clamd enforces its own StreamMaxLength (default 25M, above our 15M photo
- * cap); exceeding it answers "INSTREAM size limit exceeded", which lands in
- * the unavailable path, not in a verdict.
- *
- * @api The VirusScannerInterface implementation every environment wires.
+ * @api
  */
 final class ClamAvScanner implements VirusScannerInterface
 {
@@ -96,10 +82,6 @@ final class ClamAvScanner implements VirusScannerInterface
     /** @param resource|string $bytes */
     private function scanBinary(mixed $bytes): ScanVerdict
     {
-        /* A PATH walk in PHP, not `command -v` through a shell: discovering a
-           binary needs no subprocess at all, and psalm rightly dislikes
-           shell_exec. The scan itself still exec()s the found binary below,
-           argument-escaped. */
         $binary = null;
         $path = getenv('PATH') ?: '';
         foreach (['clamscan', 'clamdscan'] as $candidate) {
@@ -124,7 +106,7 @@ final class ClamAvScanner implements VirusScannerInterface
             $code = 1;
             exec(\sprintf('%s --no-summary %s 2>&1', $binary, escapeshellarg($tmp)), $out, $code);
 
-            // clamscan exit codes: 0 clean, 1 infected, anything else = error.
+            // clamscan: 0 clean, 1 infected, anything else = error.
             return match ($code) {
                 0 => ScanVerdict::clean(),
                 1 => ScanVerdict::infected($this->signatureFrom(implode("\n", $out))),
@@ -144,8 +126,6 @@ final class ClamAvScanner implements VirusScannerInterface
             return ScanVerdict::infected($this->signatureFrom($reply));
         }
 
-        // "INSTREAM size limit exceeded", "COMMAND READ TIMED OUT", an empty
-        // reply from a dying daemon: all non-verdicts.
         throw new ScannerUnavailable(\sprintf('%s answered without a verdict: "%s"', $via, $reply));
     }
 

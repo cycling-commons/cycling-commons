@@ -32,11 +32,6 @@ final class RegistrationFormType extends AbstractType
             ->add('displayName', TextType::class, [
                 'label' => 'form.label_display_name',
                 'attr' => ['autocomplete' => 'nickname', 'placeholder' => 'form.ph_display_name_register'],
-                // Only the "a human must supply one" half lives here. What a
-                // name may LOOK like (length ceiling, no confusables, no
-                // invisibles, plain spacing) is on the User entity, so admin
-                // CRUD and console paths are held to it too — see
-                // account-and-auth.md §9.
                 'constraints' => [
                     new NotBlank(message: 'Please enter a display name.'),
                     new Length(min: 2, minMessage: 'Display name must be at least {{ limit }} characters.'),
@@ -51,11 +46,7 @@ final class RegistrationFormType extends AbstractType
                     'constraints' => [
                         new NotBlank(message: 'Please enter a password.'),
                         new Length(min: 12, minMessage: 'Password must be at least {{ limit }} characters.'),
-                        // k-anonymity: only the first five SHA-1 hex chars leave
-                        // the server (haveibeenpwned range API), so this fits the
-                        // privacy stance. skipOnError: an API outage must never
-                        // block a signup or a password change. Disabled in test
-                        // (validator.yaml when@test).
+                        // docs/specs/account-and-auth.md §2 — HIBP k-anonymity; skipOnError so an outage cannot block signup.
                         new NotCompromisedPassword(skipOnError: true, message: 'This password appears in a known data breach. Please choose a different one.'),
                     ],
                 ],
@@ -65,12 +56,7 @@ final class RegistrationFormType extends AbstractType
                 ],
                 'invalid_message' => 'The password fields must match.',
             ])
-            // The age gate (GDPR Art. 8). Self-declared, and deliberately not a
-            // date of birth: one yes/no question does not need a birthday on
-            // file, and Art. 8(2) asks for reasonable efforts given available
-            // technology — for a service like this one, that is a declaration.
-            // Flat 16 for everyone: it is the Art. 8 ceiling, so it never sits
-            // below any member state's own floor (owner decision 2026-08-01).
+            // Age gate (docs/specs/account-and-auth.md §2): self-declared 16+, not a date of birth.
             ->add('confirmAge', CheckboxType::class, [
                 'mapped' => false,
                 'required' => false,

@@ -9,15 +9,11 @@ namespace App\Moderation;
 use Doctrine\DBAL\ArrayParameterType;
 
 /**
- * The acting curator's moderation scope: global (admin, or a curator with no
- * area rows) or a union of region ids + country codes. One SQL fragment
- * scopes the queues; the provider's allowsRegion() is the matching PHP
- * predicate for write guards. NULL-region items are ALWAYS in scope - intake
- * keeps outside-all-regions proposals reviewable by everyone.
+ * Curator's moderation scope. NULL-region items are always in scope.
  *
  * @see docs/specs/moderation-and-contribution.md §9.2
  *
- * @api Moderation vocabulary.
+ * @api
  */
 final class ModerationScope
 {
@@ -51,13 +47,7 @@ final class ModerationScope
     }
 
     /**
-     * Scoping WHERE fragment for a table aliased $alias that carries a
-     * region_id column. Empty when global. Empty lists bind impossible
-     * sentinels so the IN () clauses stay valid SQL.
-     *
-     * $alias is interpolated into raw SQL: it MUST be a hardcoded literal
-     * identifier at the call site, never user/request-derived. A cheap
-     * allowlist guard enforces the identifier shape.
+     * Scoping WHERE for `$alias.region_id`. `$alias` must be a hardcoded identifier.
      *
      * @return array{sql: string, params: array<string, mixed>, types: array<string, mixed>}
      */

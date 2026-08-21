@@ -7,12 +7,9 @@ declare(strict_types=1);
 namespace App\Media;
 
 /**
- * A continent resolved cleanly but has no provisioned bucket (owner
- * 2026-08-18: "storage must fail"). Deliberately NOT absorbed by writing
- * into another continent's bucket: that borrow would scatter one region's
- * photos across shards and make the eventual bucket's arrival a migration
- * instead of a provisioning action. The upload endpoint turns this into a
- * storage_unavailable refusal the rider can see.
+ * Resolved continent with no provisioned bucket — refuse, never borrow.
+ *
+ * @see docs/specs/media-storage-architecture.md §2.1
  */
 final class ShardUnavailable extends \RuntimeException
 {

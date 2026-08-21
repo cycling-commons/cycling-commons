@@ -1,30 +1,18 @@
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
-/* The curator-only pending-corrections overlay (route-domain spec §16 S3/S5):
-   one colour per correction, numbered stretch endpoints, and the bottom-left
-   side list that zooms to a stretch.
-   Extracted from map.js by the module split.
-
-   /routes/{id}/corrections 403s for non-curators, and that is treated as "no
-   corrections" — renderCorrections never runs, so nothing leaks. The 403 shows
-   up as one console line on any rider's route open; it predates the split.
-
-   `_corrLayers` is REASSIGNED by clearCorrections(), so importers read it
-   through corrLayerIds() rather than the binding (§9). Its one reader is
-   scope-ui.js's click-to-scope guard, which must not treat a correction preview
-   as empty map. */
+/* Curator-only pending-corrections overlay (docs/specs/route-domain.md §7):
+   one colour per correction, numbered stretch endpoints, side list.
+   GET /routes/{id}/corrections 403s for non-curators — treated as no
+   corrections, so nothing leaks.
+   `_corrLayers` is reassigned by clearCorrections(); importers read it through
+   corrLayerIds() so click-to-scope does not treat a preview as empty map. */
 import { D } from './i18n.js';
 import { escPend } from './util.js';
 import { map } from './map-init.js';
 import { routePathById } from './catalog.js';
 import { fracToLatLng, sliceByFrac } from './render.js';
 
-// The correction-preview layer ids, for scope-ui.js's click-to-scope guard.
 export const corrLayerIds = () => _corrLayers;
 
-// §16 S3/S5: curator-only pending-corrections overlay — one colour per
-// correction, numbered stretch endpoints, bottom-left side list. The
-// /corrections endpoint 403s for non-curators; that's treated as "no
-// corrections" (renderCorrections never runs, nothing leaks).
 const CC_CORR_COLORS=['#FF5A1F','#3E9C8A','#C8923A','#6E7B96','#B5532E','#8FB6A8','#5F5A54','#6E5849'];
 let _corrLayers=[], _corrMarkers=[];
 export function clearCorrections(){
@@ -34,9 +22,7 @@ export function clearCorrections(){
 }
 export function showRouteCorrections(routeId){
   const path=routePathById(routeId); if(!path) return;
-  // Curator-only endpoint; a non-curator's request can only 403 and the
-  // browser logs every failed request. CC_IS_CURATOR is emitted exactly for
-  // the sessions the endpoint accepts (review 2026-08-09).
+  // Skip the fetch (and its 403 console line) when the session is not curator.
   if(!window.CC_IS_CURATOR){ clearCorrections(); return; }
   fetch(`/routes/${routeId}/corrections`, {credentials:'same-origin', headers:{'Accept':'application/json'}})
     .then(r=>{ if(!r.ok) throw new Error(String(r.status)); return r.json(); })

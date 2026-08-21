@@ -30,7 +30,9 @@ use Symfony\Component\Validator\Constraints\Length;
 use Symfony\Component\Validator\Constraints\NotBlank;
 
 /**
- * Settings form for display name and public-profile toggle.
+ * Settings: display name, units, map prefs, public profile.
+ *
+ * @see docs/specs/account-and-auth.md §9
  */
 final class SettingsType extends AbstractType
 {
@@ -45,11 +47,6 @@ final class SettingsType extends AbstractType
                     'autocomplete' => 'name',
                     'placeholder' => 'form.ph_display_name_settings',
                 ],
-                // Only the "a human must supply one" half lives here. What a
-                // name may LOOK like (length ceiling, no confusables, no
-                // invisibles, plain spacing) is on the User entity, so admin
-                // CRUD and console paths are held to it too — see
-                // account-and-auth.md §9.
                 'constraints' => [
                     new NotBlank(message: 'Please enter a display name.'),
                     new Length(min: 2, minMessage: 'Display name must be at least {{ limit }} characters.'),
@@ -61,18 +58,13 @@ final class SettingsType extends AbstractType
                 'label' => 'form.label_country',
                 'placeholder' => 'form.ph_country',
                 'choice_label' => 'name',
-                // Group the options under their continent.
                 'group_by' => static fn (Country $c): ?string => $c->getContinent()?->getName(),
                 'query_builder' => static fn (EntityRepository $r) => $r->createQueryBuilder('c')
                     ->leftJoin('c.continent', 'cont')->addSelect('cont')
                     ->orderBy('c.name', 'ASC'),
                 'attr' => ['autocomplete' => 'country-name'],
             ])
-            // Base location (map-and-search.md §4.5): town pick + radius,
-            // unmapped — the controller reads these raw and calls
-            // BaseLocationService::apply()/clear() before flush. baseLat/baseLng/
-            // basePlace are filled by base-location.js from a Photon pick; the
-            // pin-drop path lives on the map page, not here.
+            // Base location (docs/specs/map-and-search.md §4.5); controller calls BaseLocationService.
             ->add('baseQuery', TextType::class, [
                 'mapped' => false,
                 'required' => false,
@@ -107,7 +99,6 @@ final class SettingsType extends AbstractType
                 'label' => 'form.label_language',
                 'required' => false,
                 'placeholder' => 'form.ph_language',
-                // Endonyms: the same in every locale, so keep them out of the translator.
                 'choices' => [
                     'English' => 'en',
                     'Français' => 'fr',
@@ -117,9 +108,6 @@ final class SettingsType extends AbstractType
                 ],
                 'choice_translation_domain' => false,
             ])
-            // Its own field rather than a consequence of `locale`: reading the
-            // site in English says nothing about wanting 2026-08-01 over
-            // 01-08-2026 (account-and-auth.md §9).
             ->add('dateFormat', EnumType::class, [
                 'class' => DateFormat::class,
                 'label' => 'form.label_date_format',
@@ -134,10 +122,6 @@ final class SettingsType extends AbstractType
                 'required' => true,
                 'choice_label' => static fn (TimeFormat $f): string => $f->labelKey(),
             ])
-            // Two dropdowns rather than one metric/imperial switch: miles with
-            // metres of climbing is a real combination, and asking those riders
-            // to accept feet to get miles is the kind of tidy reasoning that is
-            // wrong about actual people (same argument as date vs time above).
             ->add('distanceUnit', EnumType::class, [
                 'class' => DistanceUnit::class,
                 'label' => 'form.label_distance_unit',
@@ -152,9 +136,6 @@ final class SettingsType extends AbstractType
                 'required' => true,
                 'choice_label' => static fn (ElevationUnit $u): string => $u->labelKey(),
             ])
-            // One preference for every paged list in the application. `Auto`
-            // is not a single number: each list keeps the size it was designed
-            // around, because a message is a card and a wall row is one line.
             ->add('rowsPerPage', EnumType::class, [
                 'class' => RowsPerPage::class,
                 'label' => 'form.label_rows_per_page',
@@ -162,9 +143,6 @@ final class SettingsType extends AbstractType
                 'required' => true,
                 'choice_label' => static fn (RowsPerPage $r): string => $r->labelKey(),
             ])
-            // Rider preferences (account-and-auth.md §9). EnumType hands the
-            // entity setters real enum instances. Bike-type labels reuse the
-            // map's existing vocabulary keys (already translated in all 4 locales).
             ->add('bikeTypes', EnumType::class, [
                 'class' => BikeType::class,
                 'label' => 'form.label_bike_types',

@@ -12,13 +12,11 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * A rider-reported correction on a route. Preset reason plus an optional
- * note; a curator resolves it in the Routes desk. `note` is HTML-escaped
- * when rendered, to prevent XSS.
+ * A rider-reported correction on a route.
  *
- * @see docs/specs/route-domain.md §2.2
+ * @see docs/specs/route-domain.md §2.2, §7
  *
- * @api Created from the map drawer; listed and resolved by the Routes desk.
+ * @api
  */
 #[ORM\Entity]
 #[ORM\Table(name: 'route_suggestion')]
@@ -42,7 +40,7 @@ class RouteSuggestion
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $note;
 
-    /** @var list<array{start: float, end: float}>|null Located stretches (spec §16 S4). */
+    /** @var list<array{start: float, end: float}>|null Located stretches. docs/specs/route-domain.md §7 */
     #[ORM\Column(type: Types::JSON, nullable: true)]
     private ?array $segments;
 

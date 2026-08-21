@@ -15,18 +15,11 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
- * Persists a logged-in rider's manual Curated/Everything choice to their
- * profile. The owner chose the
- * profile over localStorage deliberately: people share computers, and a
- * device-scoped default leaks one person's choice to the next.
+ * Persist view mode on the profile (shared-device leak otherwise).
  *
- * Anonymous visitors never reach this — the map writes their choice to
- * localStorage instead, which is session-scoped by nature.
+ * @see docs/specs/map-and-search.md §4.2
  *
- * Unlocalized `/map/…` JSON endpoint, matching the other small map POSTs
- * (my-area, ride-check, item confirmations), with the same stateless CSRF.
- *
- * @api Instantiated by Symfony's router; called by assets/map/panels.js.
+ * @api
  */
 final class MapViewModeController extends AbstractController
 {
@@ -41,16 +34,13 @@ final class MapViewModeController extends AbstractController
     {
         $user = $this->getUser();
         if (!$user instanceof User) {
-            // A clean 401 rather than a login redirect: the caller is fetch(),
-            // and the map must not swallow an HTML login page as JSON.
+            // 401 not 302: fetch() must not swallow a login HTML page as JSON.
             return $this->json(['error' => 'unauthenticated'], 401);
         }
         if (!$this->isCsrfTokenValid(self::CSRF_TOKEN_ID, (string) $request->request->get('_token'))) {
             throw $this->createAccessDeniedException('Invalid CSRF token.');
         }
 
-        // The wire value is the map toggle's own token ('curated' | 'all'), not
-        // the enum value — see MapViewMode::clientToken() for why those differ.
         $mode = match ((string) $request->request->get('mode')) {
             'curated' => MapViewMode::Curated,
             'confirmed' => MapViewMode::Confirmed,

@@ -7,14 +7,11 @@ declare(strict_types=1);
 namespace App\Moderation;
 
 /**
- * Audit-log action constants for Trash (M9): an immediate, permanent hard
- * delete of spam and abusive contributions. Every trash action is audited
- * content-free: the AdminActionLogger note carries a channel, a ref, and a
- * couple of content-free facts, never the rider's body or curator note text.
+ * Content-free audit actions for Trash.
  *
  * @see docs/specs/moderation-and-contribution.md §6
  *
- * @api Read by ModerationService/RouteModerationService when logging trash actions.
+ * @api
  */
 final class TrashActions
 {

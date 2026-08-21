@@ -22,10 +22,11 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
- * Read-only audit trail. Every administrative mutation writes one row here.
- * The index may be scoped to a single account via ?targetUser=<id>.
+ * Read-only audit trail; `?targetUser=` scopes the index.
  *
- * @api Instantiated by EasyAdmin's router.
+ * @see docs/specs/account-and-auth.md §6.2
+ *
+ * @api
  *
  * @extends AbstractCrudController<AdminActionLog>
  */
@@ -68,10 +69,7 @@ final class AdminActionLogCrudController extends AbstractCrudController
         yield TextField::new('note', 'Note')->hideOnIndex();
     }
 
-    /**
-     * Scope the index to one account when ?targetUser=<id> is present
-     * (used by the "Activity" link on the user detail page).
-     */
+    /** Scope the index to one account when `?targetUser=` is present. */
     #[\Override]
     public function createIndexQueryBuilder(SearchDto $searchDto, EntityDto $entityDto, FieldCollection $fields, FilterCollection $filters): QueryBuilder
     {

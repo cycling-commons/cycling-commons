@@ -10,14 +10,11 @@ use App\Entity\User;
 use Doctrine\DBAL\Connection;
 
 /**
- * Owns every base-location write so the derived set can never drift from the
- * point (map-and-search.md §4.5): settings save + the map "Set my area"
- * endpoint call apply()/clear(); ImportCatalogCommand calls rederiveAll()
- * inside its import transaction after recomputeMembership() - there is no
- * queue in this app, so re-derivation is transactional-inline by design.
+ * Base-location writes; derived regions stay in sync with the point.
  *
- * @api Autowired by the DI container; consumed by SettingsController,
- *      MyAreaController, and ImportCatalogCommand.
+ * @see docs/specs/map-and-search.md §4.5
+ *
+ * @api
  */
 final class BaseLocationService
 {
@@ -49,12 +46,7 @@ final class BaseLocationService
     }
 
     /**
-     * Mass re-derivation after region geometry changes (map-and-search.md §4.5
-     * §3): every rider with a base point gets a fresh region/country set from
-     * BaseAreaResolver, in the same id ASC order the resolver's own query uses
-     * for its tie-breaks. Runs inside the caller's transaction (ImportCatalogCommand,
-     * directly after recomputeMembership()) so newly-imported region geometry is
-     * already visible to the resolver's reads.
+     * Re-derive every rider's base regions after geometry changes (docs/specs/map-and-search.md §4.5).
      *
      * @return int users updated
      */

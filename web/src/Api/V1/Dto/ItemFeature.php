@@ -7,11 +7,8 @@ declare(strict_types=1);
 namespace App\Api\V1\Dto;
 
 /**
- * The public shape of one catalogue item
- * (public-api-personal-data-boundary.md): a dedicated DTO, never an entity or
- * a raw provider row, so the serialization boundary is this constructor's
- * parameter list. Contributor identity, raw attributes, and moderation state
- * have no field here and therefore no path into a /v1 response.
+ * Public catalogue item (docs/specs/public-api-personal-data-boundary.md).
+ * No contributor, raw attributes, or moderation state.
  */
 final readonly class ItemFeature
 {

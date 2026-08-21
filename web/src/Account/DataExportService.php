@@ -14,31 +14,15 @@ use Psr\Clock\ClockInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
- * Everything the Commons holds about one rider, in one ZIP
- * (docs/specs/account-and-auth.md §11).
+ * One ZIP of everything held about a rider. DBAL reads with named columns (no SELECT *).
  *
- * One export, not two. GDPR Art. 20 portability covers only what the rider
- * themselves provided, while Art. 15 access is broader; asking a rider to
- * choose between two downloads would be a worse answer to both, so this is the
- * superset and the README says which is which.
+ * @see docs/specs/account-and-auth.md §11
  *
- * Read through DBAL rather than the ORM: the export is a read-only snapshot
- * across fourteen tables, and hydrating entity graphs to immediately flatten
- * them back to arrays would buy nothing. Every query names its columns
- * explicitly and none of them is `SELECT *` — that is the mechanism that keeps
- * a future column from silently ending up in riders' downloads, and it is why
- * credentials are absent by construction rather than by a filter someone has to
- * remember to update.
- *
- * @api Called by DataExportController.
+ * @api
  */
 final class DataExportService
 {
-    /**
-     * The reuse asset (docs/specs/photo-uploads.md §1.3): the largest thing we
-     * hold. Shipping lg and sm as well would triple the download to deliver two
-     * downscales of a file the rider already has.
-     */
+    /** Original photo only (docs/specs/photo-uploads.md §1.3). */
     public const string PHOTO_VARIANT = 'orig';
 
     public function __construct(
@@ -50,9 +34,7 @@ final class DataExportService
     }
 
     /**
-     * Builds the archive and returns its path on the local filesystem. The
-     * caller owns the file from here and must delete it — BinaryFileResponse's
-     * deleteFileAfterSend() is what the controller uses.
+     * Writes the archive and returns its path. Caller must delete it.
      *
      * @throws \RuntimeException when the archive cannot be created
      */
@@ -78,10 +60,7 @@ final class DataExportService
         $zip->addFromString('messages.json', $this->json($this->messages($userId)));
         $zip->addFromString('consent.json', $this->json($this->consent($userId)));
 
-        // Photo binaries go through the local filesystem rather than
-        // addFromString: ZipArchive reads files added by path lazily at close()
-        // time, so the archive never holds more than one image in memory, and a
-        // rider with a hundred photos costs disk instead of RAM.
+        // addFile() reads at close(); addFromString() would hold every photo in RAM.
         $staged = $this->stagePhotos($userId, $zip);
 
         if (true !== $zip->close()) {
@@ -95,11 +74,7 @@ final class DataExportService
     }
 
     /**
-     * The account itself. Three things are deliberately absent and the README
-     * says so: the password hash, the TOTP secret and the backup-code hashes.
-     * They are the credentials that protect the account, an export is a file
-     * riders forward and back up, and Art. 15(4) does not require handing over
-     * the keys to the thing being exported.
+     * Omits password hash, TOTP secret, and backup-code hashes.
      *
      * @return array<string, mixed>
      */
@@ -129,12 +104,7 @@ final class DataExportService
     }
 
     /**
-     * What the rider gave the map: their submissions, and the field-level
-     * changes those submissions produced once a curator accepted them.
-     *
-     * decided_by is not exported anywhere in this file. Which curator handled a
-     * submission is another person's data, and the decision itself — note
-     * included — is already delivered to the rider as a message.
+     * Submissions and accepted field changes. `decided_by` is never exported.
      *
      * @return array<string, mixed>
      */
@@ -158,10 +128,7 @@ final class DataExportService
     }
 
     /**
-     * The lighter-weight things a rider does: confirming a place is still
-     * there, voting on routes, marking one ridden, suggesting a correction,
-     * asking for a country, applying to curate. Plus moderator areas, which
-     * only exist for curators and are part of what we hold about them.
+     * Confirmations, votes, rides, suggestions, country interest, applications, moderator areas.
      *
      * @return array<string, mixed>
      */
@@ -209,9 +176,7 @@ final class DataExportService
     }
 
     /**
-     * The rider's dashboard messages. sender_id is omitted on purpose while
-     * `sender` is kept: "a curator wrote this" is the rider's data, "curator
-     * #7 wrote this" is the curator's.
+     * Dashboard messages. `sender_id` omitted; `sender` kept.
      *
      * @return list<array<string, mixed>>
      */
@@ -226,9 +191,7 @@ final class DataExportService
     }
 
     /**
-     * The consent ledger (docs/specs/photo-uploads.md §4) — the one store that
-     * outlives the account, so a rider who is about to leave can take their own
-     * copy of what they agreed to and when.
+     * Consent ledger (docs/specs/photo-uploads.md §4).
      *
      * @return list<array<string, mixed>>
      */
@@ -242,17 +205,7 @@ final class DataExportService
     }
 
     /**
-     * Writes every still-stored photo into the archive and its metadata into
-     * photos/index.json.
-     *
-     * Uploads whose objects are already gone (rejected past retention, or
-     * tombstoned) still appear in the index with `file: null`: the row is a
-     * fact about the rider that the export would otherwise hide, and a rider
-     * comparing the index against the files is entitled to see why one is
-     * missing.
-     *
-     * Curator notes on those uploads come along — a note about your photo is
-     * about you — but never who wrote them.
+     * Photos in the archive; missing objects stay in the index with `file: null`.
      *
      * @return list<string> staged temp paths, to delete after close()
      */
@@ -279,10 +232,6 @@ final class DataExportService
             );
             $upload['file'] = null;
 
-            /* No revision means nothing was ever published for this upload -
-               it is still quarantined, or the worker refused it. The index row
-               still ships (the rider is entitled to know we hold it and what
-               became of it); there is simply no file to attach. */
             $source = (null !== $upload['objects_deleted_at'] || null === $upload['revision'])
                 ? null
                 : $this->storage->readStream(
@@ -343,10 +292,7 @@ final class DataExportService
     }
 
     /**
-     * DBAL hands back jsonb columns as strings. Re-decoding them means the
-     * export contains real JSON structures rather than JSON quoted inside JSON,
-     * which is the difference between machine-readable (Art. 20) and merely
-     * machine-parseable-if-you-try-twice.
+     * jsonb columns arrive as strings; decode so the ZIP holds real JSON.
      *
      * @param array<string, mixed> $row
      * @param list<string>         $columns

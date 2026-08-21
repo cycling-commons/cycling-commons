@@ -11,13 +11,11 @@ use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Address;
 
 /**
- * Deletes a user account. Self-service confirmation and admin-triggered
- * removal both go through this service, so contributed data is anonymised
- * the same way on either path, never cascade-deleted.
+ * Account deletion. Self-service and admin share this seam; contributions are anonymised, never cascaded.
  *
  * @see docs/specs/account-and-auth.md §6.3, §10
  *
- * @api Instantiated by Symfony's DI container; constructor wired via tagged_iterator.
+ * @api
  */
 final class UserDeletionService
 {
@@ -70,12 +68,9 @@ final class UserDeletionService
     }
 
     /**
-     * Run every UserDeletionHookInterface pre-delete hook, then remove the user.
-     * The caller controls the surrounding flush/transaction. This is the shared
-     * seam both self-service confirmation and admin removal must go through, so
-     * contributed data is anonymised (never cascade-deleted) on either path.
+     * Hooks then remove. Caller owns flush/transaction.
      *
-     * @api Called by self-service confirmDeletion and admin UserAdminService.
+     * @api
      */
     public function purge(User $user): void
     {

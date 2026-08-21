@@ -7,11 +7,11 @@ declare(strict_types=1);
 namespace App\Catalog;
 
 /**
- * One canonical difficulty shape for every route (docs/specs/route-domain.md §12):
- * {score:1..5, label} on the 5-level scale the drawer already renders. Maps a
- * canonical label string and import {score,label} onto it.
+ * Canonical difficulty `{score:1..5, label}` for every route.
  *
- * @api Used by the proposal/curator forms, RouteProposalService, CatalogProvider.
+ * @see docs/specs/route-domain.md §9
+ *
+ * @api
  */
 final class DifficultyVocabulary
 {

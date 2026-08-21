@@ -13,7 +13,7 @@ use SymfonyCasts\Bundle\VerifyEmail\Exception\VerifyEmailExceptionInterface;
 use SymfonyCasts\Bundle\VerifyEmail\VerifyEmailHelperInterface;
 
 /**
- * @api Consumed by RegistrationController; not referenced statically but wired via DI.
+ * @api
  */
 final class EmailVerifier
 {

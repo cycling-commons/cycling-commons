@@ -10,19 +10,11 @@ use App\Entity\User;
 use Symfony\Bundle\SecurityBundle\Security;
 
 /**
- * Turns a list's own page size into the reader's, when the reader has asked
- * for one.
- *
- * Every paged surface passes the size it was designed around and gets back
- * either that number (the `auto` default, and the only answer available to a
- * signed-out reader) or the rider's explicit choice. Keeping the surface
- * default in the CALL rather than in here is the point: the resolver has no
- * opinion about how long a message list should be, and adding a paged list
- * never means editing this class.
+ * Resolve a list's page size against the reader's preference.
  *
  * @see docs/specs/account-and-auth.md §9
  *
- * @api Injected by every controller that renders a paged list.
+ * @api
  */
 final class PageSize
 {

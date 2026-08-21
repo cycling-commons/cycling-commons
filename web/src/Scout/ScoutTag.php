@@ -9,23 +9,10 @@ namespace App\Scout;
 use App\Catalog\ItemType;
 
 /**
- * The Scout tag vocabulary, and the only thing the server accepts from a ride.
+ * Scout tag vocabulary. Letter is chosen in review, never inferred
+ * (docs/specs/moderation-and-contribution.md (Scout intake)).
  *
- * Scout writes six tag types (plus an automatic overtake count) into the
- * activity file a bike computer was already recording. The **file never reaches
- * us**: it is decoded in the rider's own browser, and what is posted is a list
- * of these — a position, a type, a moment. That is the trust boundary
- * (`Dated/2026-08-09-scout-cc-tagger-plan.md` §1), and it is enforced in
- * ScoutIntakeController rather than merely described here.
- *
- * The mapping to catalog letters is deliberately not one-to-one. `resupply`
- * covers water, food and a repair stop, which are three letters here; `other`
- * covers nothing at all until the rider says what it was. So a tag arrives as a
- * *proposal* the rider resolves in the review screen, and the letter is what
- * they choose there — never inferred silently, because a mis-filed tag is worse
- * than an unfiled one: nobody looks for it again.
- *
- * @api Read by ScoutIntakeController and the review screen's wire contract.
+ * @api
  */
 final class ScoutTag
 {
@@ -48,19 +35,7 @@ final class ScoutTag
     ];
 
     /**
-     * @var array<string, array<int, list<string>>> tag type → the device's
-     *                                              sub-menu value → the letters that sub-menu value may become, best
-     *                                              first.
-     *
-     * The sub-menu is the half of a Scout tag that says what the rider actually
-     * meant, and it does not always land where the tag type alone would put it:
-     * SCENERY · HISTORY and SCENERY · ARCHITECTURE are J (history & culture),
-     * not I (scenic views), and offering only I made the rider re-file their own
-     * answer (owner-reported 2026-08-12).
-     *
-     * Values are Scout's own `poi_detail` numbers (fit-viewer.html's POI_*
-     * tables). An unlisted value falls back to LETTERS, which is the coarse
-     * answer rather than a wrong one.
+     * @var array<string, array<int, list<string>>> tag type → poi_detail → letters, best first
      */
     public const array DETAIL_LETTERS = [
         // NOTICE?  POTHOLES · CROSSING · CORNER · OTHER · UNKNOWN
@@ -79,13 +54,7 @@ final class ScoutTag
     ];
 
     /**
-     * @var array<string, array<int, array<string, string>>> tag type →
-     *                                                       sub-menu value → attribute values that sub-menu value states
-     *
-     * What the rider chose on the device, in the vocabulary the form uses. This
-     * is not an assumption: they picked it, on the road, at the place. Filling
-     * it in is the difference between a Scout tag and a pin somebody has to
-     * describe from memory a week later.
+     * @var array<string, array<int, array<string, string>>> tag type → poi_detail → form attributes
      */
     public const array DETAIL_FIELDS = [
         'notice' => [
@@ -94,8 +63,7 @@ final class ScoutTag
             3 => ['hazardType' => 'Bad corner'],
             4 => ['hazardType' => 'Other'],
         ],
-        // A closure is a road-closed hazard that knows its own duration, which
-        // is what lets the map retire it by itself (ClosureLifetime).
+        // Road-closed + duration so ClosureLifetime can retire it.
         'closure' => [
             1 => ['hazardType' => 'Road closed', 'closedFor' => 'Today'],
             2 => ['hazardType' => 'Road closed', 'closedFor' => 'Days'],
@@ -105,12 +73,7 @@ final class ScoutTag
         ],
     ];
 
-    /**
-     * The letters a tag may legitimately become — narrowed by the device's
-     * sub-menu value when there is one.
-     *
-     * @return list<string>
-     */
+    /** @return list<string> */
     public static function lettersFor(string $type, ?int $detail = null): array
     {
         $byDetail = self::DETAIL_LETTERS[$type][$detail] ?? null;
@@ -118,51 +81,23 @@ final class ScoutTag
         return $byDetail ?? (self::LETTERS[$type] ?? []);
     }
 
-    /**
-     * Attribute values the device's sub-menu already answered.
-     *
-     * @return array<string, string>
-     */
+    /** @return array<string, string> */
     public static function fieldsFor(string $type, ?int $detail): array
     {
         return self::DETAIL_FIELDS[$type][$detail] ?? [];
     }
 
-    /**
-     * @var list<string> Every letter a Scout tag may be re-filed onto.
-     *
-     * A mis-tap at 30 km/h is the normal case, not the exception: the menu is
-     * six tiles on a bike computer and the rider is riding. Whatever they meant,
-     * they know it now — so review must let them move a tag ANYWHERE the tag
-     * could have gone, not only within the type they hit by accident (owner:
-     * "I now can't change from scenic view to another category", 2026-08-12).
-     *
-     * `A` is not in the list. Road surface is the one segment-located letter: it
-     * needs a start and an end, and a single tapped point cannot become one. A
-     * surface tag reaches A through its own pairing path.
-     */
+    /** @var list<string> Point-tag refile letters; A is stretch-only (docs/specs/moderation-and-contribution.md (Scout intake)). */
     public const array REFILE_LETTERS = ['C', 'D', 'F', 'H', 'I', 'J'];
 
     /**
-     * Is this letter a legitimate resolution of this tag type?
-     *
-     * Narrowing (DETAIL_LETTERS) decides what is offered FIRST; it never decides
-     * what is allowed. The rider is correcting their own tag, and a form that
-     * refuses the correction is worse than one that guessed wrong to begin with.
-     *
-     * $type and $detail are deliberately part of the signature and deliberately
-     * unread: this is the intake contract ("may THIS tag refile to THAT
-     * letter?"), and today's rule happens not to vary by them. Callers must not
-     * have to know that.
+     * Narrowing decides offer order, not what is allowed.
      *
      * @psalm-suppress UnusedParam
      */
     public static function allows(string $type, string $letter, ?int $detail = null): bool
     {
-        // A is reachable ONLY as a surface stretch (plan task 6): the intake
-        // demands the segment excerpt alongside it, so a point tag still
-        // cannot become road surface. Point tags re-file within REFILE_LETTERS,
-        // where A deliberately does not appear — see offerFor().
+        // A is stretch-only (docs/specs/moderation-and-contribution.md (Scout intake)).
         if ('A' === $letter) {
             return 'surface' === $type;
         }
@@ -170,20 +105,10 @@ final class ScoutTag
         return \in_array($letter, self::REFILE_LETTERS, true);
     }
 
-    /**
-     * The letters to OFFER, best first: what the sub-menu implies, then
-     * everything else a tag can be re-filed onto.
-     *
-     * @return list<string>
-     */
+    /** @return list<string> */
     public static function offerFor(string $type, ?int $detail = null): array
     {
-        /* A is deliberately absent from every offer: an offer feeds the POINT
-           tag dropdown, and a single tapped point cannot become a stretch of
-           road. Surface STRETCHES (a start/END pair) reach A through their own
-           cards, which carry the segment excerpt the intake demands — that
-           path is fixed to A and never consults this offer (plan task 6,
-           built 2026-08-18). */
+        // Point-tag dropdown never offers A; stretches take a separate path.
         $best = array_values(array_filter(
             self::lettersFor($type, $detail),
             static fn (string $l): bool => 'A' !== $l,

@@ -35,24 +35,18 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Validator\Exception\ValidationFailedException;
 
 /**
- * Handles authenticated contribution actions: adding a climb, voting, and
- * improving an existing item.
+ * Contribution wizards.
  *
- * @api Instantiated by Symfony's router — `@api` tells Psalm this is a live
- *      entry point, not dead code.
+ * @see docs/specs/moderation-and-contribution.md §1
+ *
+ * @api
  */
 #[Route(LocalePrefix::PATHS)]
 final class ContributeController extends AbstractController
 {
     public function __construct(
         private readonly ContributionStubInterface $contributionStub,
-        /* The concrete service, for the one read the submit interface does not
-           cover: finding the rider's own undecided submission so the wizard can
-           open on their proposal rather than on the item. Defining "undecided"
-           in a second place is how two definitions drift apart. */
         private readonly CatalogContributionService $contributions,
-        /* Read-only: validating a pre-chosen surface class from the query
-           string against the choices the registry actually offers. */
         private readonly CatalogFormRegistry $registry,
     ) {
     }
@@ -102,24 +96,9 @@ final class ContributeController extends AbstractController
     }
 
     /**
-     * Where the wizard's own map should open, when the rider arrived from /map.
+     * Camera hint from `/map`; validated, never trusted.
      *
-     * The wizard used to open on a hardcoded Wallonia centre wherever the rider
-     * came from, so somebody who had just been looking at the climb on /map had
-     * to find it a second time in a small map with no scope and no layers
-     * (owner 2026-08-14: "how do we add a new climb via the map as a normal
-     * user"). The map's "Add a climb here" link now hands over the position it
-     * was showing.
-     *
-     * VIEW ONLY. It moves the camera and nothing else: the foot and summit stay
-     * the three-point editor's to place, because a single centre cannot say
-     * which end of the climb it is (the same rule the wizard's own
-     * paste-a-coordinate path already follows).
-     *
-     * Validated, never trusted: this arrives from the URL bar as readily as
-     * from our own link. Out-of-range or non-numeric values give null, which
-     * the template reads as "use the default", so a junk link degrades to the
-     * old behaviour rather than to a broken map.
+     * @see docs/specs/map-and-search.md §8.1
      *
      * @return array{lat: float, lng: float, zoom: float}|null
      */
@@ -136,9 +115,6 @@ final class ContributeController extends AbstractController
             return null;
         }
         $z = $request->query->get('z');
-        // Clamped, not rejected: a zoom outside the slider's range is a bad
-        // number in an otherwise good link, and the coordinates are the part
-        // that matters. 13 matches what the link hands over for a wide view.
         $zoom = is_numeric($z) ? max(3.0, min(18.0, (float) $z)) : 13.0;
 
         return ['lat' => $lat, 'lng' => $lng, 'zoom' => $zoom];
@@ -206,11 +182,9 @@ final class ContributeController extends AbstractController
     }
 
     /**
-     * The ?ref= arm of /improve: mint a catalog item from a cached coverage
-     * POI. An already-SERVED materialization redirects to the plain edit of
-     * that item (never a duplicate); an unknown/mismatched ref degrades to
-     * the explainer; anything else is the add wizard with the POI's name
-     * prefilled and the ref threaded to the 'add' intake on POST.
+     * Materialize-on-edit from a coverage POI.
+     *
+     * @see docs/specs/osm-data-architecture.md §6
      */
     private function materialize(Request $request, ItemType $type, string $ref, CoverageRepository $coverage, EntityManagerInterface $em): Response
     {
@@ -222,31 +196,13 @@ final class ContributeController extends AbstractController
             return $this->redirectToRoute('improve', ['item' => $existing->getId(), 'type' => $type->value]);
         }
 
-        // Segment-located types (A · road surface) do NOT resolve through the
-        // coverage POI index, and must not be required to.
-        //
-        // coverage_poi is the POINT index. Road-surface lines are served from
-        // their own tile artifact and never enter PostGIS at all — that is what
-        // makes country-scale line data cheap
-        // (Dated/2026-08-09-surface-line-tiles-design.md §4). So a rider
-        // clicking a surface line and asking to correct it arrives with a
-        // perfectly good `way/NNN` that this lookup could never find, and the
-        // wizard used to fall through to "pick a place", which reads as broken
-        // rather than unsupported.
-        //
-        // It does not need the lookup either. For a point, the coverage row
-        // supplies the name and the location the rider is about to confirm; for
-        // a segment the rider DRAWS the geometry (two pins, LocationMode::Segment)
-        // and the OSM ref is provenance plus the one-item-per-ref key, both of
-        // which are already enforced downstream in CatalogContributionService.
+        // docs/specs/coverage-provider.md §4 — A is not in coverage_poi; skip the point lookup.
         $poi = null;
         if (LocationMode::Segment !== $type->locationMode()) {
             [$osmType, $osmId] = explode('/', $ref);
             try {
                 $poi = $coverage->detail($osmType, (int) $osmId);
             } catch (TableNotFoundException) {
-                // Fresh contributor stack: coverage_poi is pipeline-owned DDL and
-                // may not exist yet — degrade like an unknown ref, never a 500.
                 $poi = null;
             }
             if (null === $poi || $poi['letter'] !== $type->letter()) {
@@ -254,19 +210,6 @@ final class ContributeController extends AbstractController
             }
         }
 
-        // "This surface is correct" arrives with the class already chosen
-        // (?surface=<tile class>), so agreeing with OSM is the SAME submission
-        // as correcting it, one decision shorter — not a separate agree-store.
-        // The query carries the tile class, never a label: the map only knows
-        // its own seven classes, and SurfaceVocabulary owns the single
-        // translation into the declarable vocabulary. A class that maps to
-        // nothing, or a value the registry does not offer, is dropped rather
-        // than trusted into the form.
-        // A point brings its name from the coverage row; a segment has no
-        // coverage row at all, so a named way hands its `name` tag over in the
-        // query instead. Trimmed and length-capped because it arrives from the
-        // URL bar as much as from our own link, and the form's own validation
-        // is the next gate either way.
         $osmName = trim((string) $request->query->get('name', ''));
         $current = [Item::NAME_FIELD => '' !== $osmName
             ? mb_substr($osmName, 0, 120)
@@ -296,13 +239,6 @@ final class ContributeController extends AbstractController
             $user = $this->getUser();
 
             try {
-                // The ref comes from the (re-validated) query string, never a
-                // form field — the POST posts back to the same URL.
-                // The way refs the prefilled run spans (?srefs=, from the
-                // to-do click's run-chaining). Query string like the ref
-                // itself — the POST posts back to the same URL. Trust with
-                // bounds: they only retire red dashes, so malformed entries
-                // are dropped rather than rejected, and the list is capped.
                 $srefs = array_values(array_unique(array_filter(
                     explode(',', (string) $request->query->get('srefs', '')),
                     static fn (string $r): bool => 1 === preg_match('~^way/\d{1,16}$~', $r),
@@ -326,7 +262,7 @@ final class ContributeController extends AbstractController
         return $this->renderAddPlace($type, form: $form);
     }
 
-    /** The mode=add arm of /improve: submit → 'add' intake, or re-render. */
+    /** mode=add arm of /improve. */
     private function addPlace(Request $request, ItemType $type): Response
     {
         $form = $this->createForm(ImproveType::class, null, [
@@ -377,51 +313,15 @@ final class ContributeController extends AbstractController
     #[IsGranted('ROLE_USER')]
     public function improve(Request $request, EntityManagerInterface $em, CoverageRepository $coverage): Response
     {
-        // The edit flow is bound to a real item: the map edit-bridge always
-        // sends `?item=<dbId>` (docs/specs/moderation-and-contribution.md
-        // §1.4). No valid item id means no fake default editor, just an
-        // explainer pointing to the map.
-        //
-        // Deliberately not `$request->query->getInt('item')`: InputBag::filter()
-        // throws BadRequestHttpException on a non-numeric value (e.g. a stale
-        // slug-based link) instead of coercing it. A non-numeric `item` is
-        // exactly the "no valid item" case, not a 400.
+        // docs/specs/moderation-and-contribution.md §1.4 — non-numeric item is unbound, never a 400.
         $item = null;
         $itemParam = (string) $request->query->get('item', '');
-        // The edit-bridge also tells us which catalog type it opened. `type` is
-        // the letter A–K (or the canonical slug) the map layer carried; an empty
-        // param means a legacy/bare link with no declared type.
         $typeParam = (string) $request->query->get('type', '');
         $requestedType = '' === $typeParam ? null : ItemType::fromParam($typeParam);
 
-        // K (Recommended routes) live in `recommended_route`, a separate table
-        // and id sequence from `item`. The map renders the K "Edit this ride"
-        // link as `/improve?item=<recommended_route.id>&type=K`, so resolving
-        // that id against the item table would bind the edit to an unrelated
-        // item that merely shares the numeric id (cross-sequence collision).
-        // Route editing has no item binding yet, so K always falls through to
-        // the unbound explainer.
-        //
-        // ctype_digit('') is false, so this also rejects a missing/blank param.
+        // K lives in recommended_route — do not bind its id against item (IDOR).
         if (ItemType::QualityRides !== $requestedType && ctype_digit($itemParam)) {
-            /* Only bind items in a publicly-served state: /map serves only
-               unverified/verified (docs/specs/catalog-data-model.md §4).
-               A 'submitted' item is another rider's un-moderated contribution;
-               'rejected'/'retired' are withdrawn. Binding any of them would
-               prefill the form with data that no public read path exposes.
-
-               **Except for a curator**, who is already reading that very
-               submission on the moderation desk. The pending drawer offers
-               "Edit this item" on exactly these rows, and the link landed on
-               "pick a place to improve" — a control that cannot work
-               (owner-reported 2026-08-12). Nothing is exposed that the curator
-               cannot already see, and the alternative is bouncing a typo back
-               to the rider as a needs-info.
-
-               **And except for the SUBMITTER** (owner 2026-08-16: "while an
-               item is waiting for review I should be able to edit it"). The
-               data is their own; the edit lands as one more submission on the
-               same queue, so moderation still sees everything. */
+            // docs/specs/catalog-data-model.md §4 — served states only; curator/submitter may open submitted.
             $states = [ItemState::Unverified, ItemState::Verified];
             $user = $this->getUser();
             if ($this->isGranted('ROLE_CURATOR')
@@ -435,29 +335,19 @@ final class ContributeController extends AbstractController
                 'id' => (int) $itemParam,
                 'state' => $states,
             ]);
-            // Guard the shared client-side id contract for A–J: the resolved row
-            // must be the type the client opened. A mismatch means the id
-            // collided across sequences (or the link was hand-crafted). Treat
-            // it as unbound rather than editing the wrong item.
             if (null !== $item && null !== $requestedType && $item->getLetter() !== $requestedType->letter()) {
                 $item = null;
             }
         }
 
-        // "Add a new place" (moderation-and-contribution.md §1.1: mode=add) —
-        // the same wizard, deliberately unbound: empty form, required name,
-        // NewItem submission. Climbs keep the dedicated /add-climb flow and
-        // K routes keep /propose-route, so both fall through to the explainer.
+        // docs/specs/moderation-and-contribution.md §1.1 — mode=add.
         if (null === $item && 'add' === (string) $request->query->get('mode', '')
             && null !== $requestedType
             && !\in_array($requestedType, [ItemType::Climbs, ItemType::QualityRides], true)) {
             return $this->addPlace($request, $requestedType);
         }
 
-        // Materialize-on-edit (osm-data-architecture.md §6, owner decision
-        // 2026-07-30): a coverage POI is improved like any other place — the
-        // same wizard, location and name already given — except submit
-        // CREATES the item, carrying the OSM ref for provenance + map dedup.
+        // docs/specs/osm-data-architecture.md §6
         $ref = (string) $request->query->get('ref', '');
         if (null === $item && null !== $requestedType
             && !\in_array($requestedType, [ItemType::Climbs, ItemType::QualityRides], true)
@@ -472,16 +362,7 @@ final class ContributeController extends AbstractController
         $type = ItemType::fromParam($item->getLetter());
         $current = ['name' => $item->getName()] + $item->getAttributes();
 
-        /* A rider with an undecided submission on this item is REVISING it, so
-           the wizard opens on what they proposed — not on the item as it stands
-           (owner decision, 2026-08-04). Answering "is that ending really
-           right?" was otherwise impossible: the form showed the current climb,
-           so the rider could not see, let alone adjust, the change they were
-           being asked about, and re-submitting would have re-proposed the
-           item's own values.
-
-           Only the `now` side is overlaid: `was` is the item, which $current
-           already carries. */
+        // docs/specs/moderation-and-contribution.md §7.3b — revise the open submission, do not file a second.
         if (null !== $item->getId() && $this->getUser() instanceof User) {
             /** @var User $rider */
             $rider = $this->getUser();
@@ -494,10 +375,6 @@ final class ContributeController extends AbstractController
                 }
             }
         }
-        // D (BikeServices) kind-aware form: opening hours only makes sense
-        // for a staffed shop, so the registry needs the concrete item's kind
-        // to drop the field for a station/pump. Other types stay null.
-        // See docs/specs/edit-items/D-bike-services.md.
         $serviceKind = ItemType::BikeServices === $type
             ? ServiceKind::tryFrom((string) ($item->getAttributes()['serviceKind'] ?? ''))
             : null;
@@ -541,15 +418,6 @@ final class ContributeController extends AbstractController
             }
         }
 
-        /* Where the item is, for the wizard's Locate step.
-           It used to come only from `?lat=&lng=` on the link, so a bare
-           `/improve?item=…` — the desk's own edit link, and anything typed or
-           bookmarked — opened with no map and no way to move the pin at all
-           (owner-reported 2026-08-12). The item knows its own position; the URL
-           was never the right place to learn it.
-
-           A segment or a polygon reports its first vertex, the same
-           representative point the edit path already uses elsewhere. */
         $geom = json_decode((string) $item->getGeom(), true);
         $point = \is_array($geom) ? ($geom['coordinates'] ?? null) : null;
         while (\is_array($point) && \is_array($point[0] ?? null)) {
@@ -569,9 +437,6 @@ final class ContributeController extends AbstractController
             'item_lng' => $itemLng,
             'receipt' => null,
             'form' => $form,
-            // Lets step 3 ("Photos & video") show the item's existing photo(s)
-            // above the add-media controls, so a rider editing an item sees
-            // what's already there instead of an empty upload prompt.
             'current' => $current,
         ]);
     }

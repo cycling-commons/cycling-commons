@@ -1,53 +1,24 @@
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
-/* Base-layer + street-level controls for the two CONTRIBUTE maps (add-climb's
-   climb editor and improve's locate map).
-
-   /map has had satellite and Mapillary for a long time; the editors — the one
-   place a rider is actually tracing a road — had neither, so you drew a climb
-   over a flat vector basemap with no way to see the hairpins or check what the
-   road actually looks like (owner-reported 2026-08-07).
-
-   Deliberately NOT a reuse of map/mapillary.js: that module binds the /map
-   singleton (`import { map } from './map-init.js'`) and carries the viewer
-   dock, its resize/fullscreen behaviour and the i18n plumbing that goes with
-   it. An editor wants the coverage lines as a TRACING REFERENCE, so this is
-   the layers plus a click-through — clicking a dot opens the image on
-   mapillary.com rather than embedding a second viewer inside a wizard step.
-
-   Loaded as a plain <script> like the other contribute editors, so it hangs off
-   the same window.Cc namespace rather than being an ES module. */
+/* Satellite + Mapillary coverage for contribute editor maps. Not a reuse of
+   map/mapillary.js (that module binds the /map singleton). Click opens
+   mapillary.com in a new tab so unsaved geometry is not lost. */
 (function () {
   'use strict';
   window.Cc = window.Cc || {};
 
   var MLY_GREEN = '#05CB63';
 
-  /** True when a real Mapillary token is configured, as opposed to the placeholder. */
   function mapillaryEnabled(token) {
     return /^MLY\|/.test(token || '') && !/PASTE_TOKEN_HERE/.test(token || '');
   }
 
-  /**
-   * Adds a satellite base and (when configured) a Mapillary coverage overlay to
-   * an editor map, plus the on-map control that switches them.
-   *
-   * Call AFTER the style has loaded — sources cannot be added before that.
-   *
-   * @param {object} map           a MapLibre map
-   * @param {object} [opts]
-   * @param {string} [opts.token]  Mapillary client token
-   * @param {object} [opts.labels] {map, satellite, street} display strings
-   */
   function mountBaseControl(map, opts) {
     var o = opts || {};
     var labels = o.labels || {};
     var token = o.token || '';
     var streetOn = false;
 
-    // Esri World Imagery, keyed since 2026-08-09 — see map-init.js's
-    // addSatellite() for why the keyless path had to go. No key, no source:
-    // the Satellite toggle then has nothing to show, which is the same
-    // behaviour a lapsed key produces.
+    // No Esri key, no source: the Satellite toggle then has nothing to show.
     var esriKey = window.CC_ESRI_KEY || '';
     if (!map.getSource('ed-satellite') && esriKey) {
       map.addSource('ed-satellite', {
@@ -56,11 +27,7 @@
           + encodeURIComponent(esriKey)],
         attribution: 'Imagery © Esri, Maxar, Earthstar Geographics',
       });
-      // NO beforeId, matching /map's addSatellite(). Inserting it before the
-      // style's first layer buries it under the basemap's own opaque land and
-      // background fills, so the imagery loads, bills tiles and renders
-      // nothing. It goes on top of the basemap instead; everything the editor
-      // draws is added after this and therefore stays above it.
+      // No beforeId: inserting before the style's first layer buries imagery under the basemap.
       map.addLayer({
         id: 'ed-satellite', type: 'raster', source: 'ed-satellite',
         layout: { visibility: 'none' },
@@ -91,9 +58,6 @@
         },
       });
 
-      // Open the photo on mapillary.com, in a NEW TAB on purpose: the rider is
-      // mid-wizard with unsaved geometry, and navigating away from a half-drawn
-      // climb to look at a photo would lose the drawing.
       map.on('click', 'ed-mly-img', function (e) {
         var f = e.features && e.features[0];
         var id = f && f.properties && f.properties.id;
@@ -123,10 +87,7 @@
     var bSat = mk(labels.satellite || 'Satellite');
     bMap.classList.add('on');
 
-    // Without a key there is no ed-satellite layer, and setLayoutProperty on a
-    // layer MapLibre does not have throws — so this used to be one missing env
-    // var away from breaking the editor's base toggle outright, not merely
-    // leaving it inert. The button is removed rather than guarded silently.
+    // setLayoutProperty on a missing layer throws — hide the button instead.
     if (!map.getLayer('ed-satellite')) bSat.hidden = true;
 
     function setBase(sat) {

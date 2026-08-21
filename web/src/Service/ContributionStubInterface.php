@@ -9,7 +9,7 @@ namespace App\Service;
 use App\Entity\User;
 
 /**
- * @api Seam for all contribution/moderation writes.
+ * @api
  */
 interface ContributionStubInterface
 {

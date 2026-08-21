@@ -31,30 +31,21 @@ use Symfony\Component\Validator\Exception\ValidationFailedException;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 /**
- * Turns contribute-form payloads into catalog submissions for moderator
- * review. New climbs create an item plus a submission. Improvements
- * snapshot only the fields that changed.
+ * Contribute-form payloads → catalog submissions.
  *
  * @see docs/specs/moderation-and-contribution.md
  *
- * @api Autowired via ContributionStubInterface.
+ * @api
  */
 final class CatalogContributionService implements ContributionStubInterface
 {
     /**
-     * Maps AddClimbType field names to registry attribute keys (letter B
-     * vocabulary). Length, elevation gain and "already in OSM?" have no
-     * matching attribute: they are derived from geometry or are
-     * submission-only metadata. Both stay out of `attributes` but are kept
-     * verbatim in the submission's raw `payload` for moderator review.
+     * AddClimbType field names → registry attribute keys.
      *
      * @see docs/specs/edit-items/B-climbs.md
      */
     private const array CLIMB_FIELDS = [
-        // No fAvg and no fMax: both gradients are measured from the drawn line,
-        // never typed. The average is the editor's ascent-only figure
-        // (applyDerivedAverage) and the maximum is read off the steepest-ramp
-        // marker (deriveMaxGradient). See CatalogField::$derived.
+        // Gradients are measured from the line, never typed (docs/specs/climb-elevation.md §4).
         'fSurface' => 'surface',
         'fSurfaceQ' => 'sq',
         'fTraffic' => 'tr',
@@ -73,21 +64,7 @@ final class CatalogContributionService implements ContributionStubInterface
     ) {
     }
 
-    /**
-     * Payload keys this service REFUSES, whatever sends them.
-     *
-     * `photoUrl` is the one entry and it is a deliberate belt to the braces:
-     * the field is gone from ImproveType, so `$form->getData()` cannot produce
-     * it and a hand-posted `improve[photoUrl]` fails the form's extra-fields
-     * check. This is the third door, for the day somebody puts the input back
-     * on the page without reading why it left (owner 2026-08-16). A
-     * rider-pasted image URL is not a contribution this codebase can accept:
-     * nothing validates the host, nothing reads the licence, the CSP cannot
-     * display most of them, and none of our media safeguards - the scan, the
-     * re-encode, the EXIF strip - touch bytes we never receive. The honest
-     * version fetches the file instead; see docs/TODO.md "Photo by Commons
-     * link".
-     */
+    /** Payload keys this service refuses. `photoUrl` is never accepted. */
     private const array REFUSED_KEYS = ['photoUrl'];
 
     #[\Override]
@@ -97,9 +74,7 @@ final class CatalogContributionService implements ContributionStubInterface
             throw new \LogicException('Contributions require an authenticated user.');
         }
 
-        // Dropped silently rather than rejected: a submission is a rider's
-        // work, and refusing the whole thing over a field they cannot see
-        // would punish them for our leftover markup.
+        // Drop refused keys silently; leftover markup must not fail the submission.
         foreach (self::REFUSED_KEYS as $key) {
             unset($payload[$key]);
         }
@@ -108,7 +83,6 @@ final class CatalogContributionService implements ContributionStubInterface
             'climb' => $this->submitClimb($payload, $by),
             'add' => $this->submitAdd($payload, $by),
             'improve' => $this->submitImprove($payload, $by),
-            // 'vote' (and any other kind) is intentionally not persisted here.
             // Voting is verification-gate machinery, not catalog intake.
             default => new ContributionReceipt(
                 'CC-'.strtoupper(bin2hex(random_bytes(6))), $kind, false, new \DateTimeImmutable(),
@@ -119,9 +93,7 @@ final class CatalogContributionService implements ContributionStubInterface
     /** @param array<string, mixed> $payload */
     private function submitClimb(array $payload, User $by): ContributionReceipt
     {
-        // Reject rather than coerce: an absent, blank, or non-numeric
-        // coordinate must not silently become 0.0. The geocoder always fills
-        // these fields; a violation here surfaces as a normal form error.
+        // Reject rather than coerce: a missing coordinate must not become 0.0.
         if (!is_numeric($payload['lat'] ?? null) || !is_numeric($payload['lng'] ?? null)) {
             $this->reject('contribute.error.invalid_location', 'lat');
         }
@@ -134,8 +106,7 @@ final class CatalogContributionService implements ContributionStubInterface
             }
         }
 
-        // Surface malformed editor output as a form error instead of silently
-        // discarding the drawn shape (every other field error surfaces too).
+        // Surface malformed editor output as a form error, not a silent drop.
         try {
             $attributes += ClimbGeometry::fromPayload($payload);
         } catch (\InvalidArgumentException) {
@@ -146,7 +117,6 @@ final class CatalogContributionService implements ContributionStubInterface
         $draft = new SubmissionDraft(
             type: ItemType::Climbs,
             title: (string) ($payload['fName'] ?? ''),
-            // Guaranteed numeric by the guard above.
             lat: (float) $payload['lat'],
             lng: (float) $payload['lng'],
             attributes: $attributes,
@@ -160,11 +130,7 @@ final class CatalogContributionService implements ContributionStubInterface
     }
 
     /**
-     * "Add a new place" — the generic NewItem intake for every non-climb,
-     * non-route type (moderation-and-contribution.md §1.1 mode=add, §3.3).
-     * Mirrors submitClimb's contract: reject-don't-coerce coordinates, the
-     * form's constraints already validated field values, and submitDraft
-     * owns the rate limiter, spatial resolution, and the Submitted item row.
+     * Generic NewItem intake (docs/specs/moderation-and-contribution.md §1.1, §3.3).
      *
      * @param array<string, mixed> $payload
      */
@@ -174,19 +140,7 @@ final class CatalogContributionService implements ContributionStubInterface
         if (null === $type || \in_array($type, [ItemType::Climbs, ItemType::QualityRides], true)) {
             throw new \InvalidArgumentException('add requires a non-climb, non-route catalog type');
         }
-        // A drawn segment IS a location, so a segment-located type does not
-        // need a separate pin. The rider places a start and an end (A · road
-        // surface is the only such type today) and the wizard fills `segment`;
-        // requiring lat/lng as well made a complete submission fail with
-        // "set the location on the map", pointing at a pin the form never
-        // asked for.
-        //
-        // Derived here rather than in the client because lat/lng are not
-        // decoration: RegionResolver turns them into the region whose
-        // moderators see this submission. The stretch's START is the
-        // representative point — the same choice submitImprove already makes
-        // for an existing segment item (representativePoint takes the first
-        // vertex).
+        // Segment-located types use the stretch start as the pin (docs/specs/moderation-and-contribution.md §1.3).
         if (LocationMode::Segment === $type->locationMode()
             && !is_numeric($payload['lat'] ?? null)
             && \is_string($payload['segment'] ?? null) && '' !== $payload['segment']
@@ -205,13 +159,11 @@ final class CatalogContributionService implements ContributionStubInterface
         $extras = (array) ($payload['extras'] ?? []);
         $proposed = $details + $extras;
 
-        // The name pseudo-field becomes the submission title / Item::name —
-        // never an attribute (Item::NAME_FIELD, same rule as submitImprove).
+        // Name becomes the title, never an attribute (Item::NAME_FIELD).
         $name = trim((string) ($proposed[Item::NAME_FIELD] ?? ''));
         unset($proposed[Item::NAME_FIELD]);
         if ('' === $name) {
-            // The form's NotBlank already guards this; a hand-crafted POST
-            // must not mint an unnamed item.
+            // A hand-crafted POST must not mint an unnamed item.
             $this->reject('contribute.error.name_required', 'details');
         }
 
@@ -225,19 +177,13 @@ final class CatalogContributionService implements ContributionStubInterface
             }
         }
 
-        // Segment-located types: the two drawn endpoints become a real
-        // attribute (unlike edits, where geometry changes are payload-only —
-        // a NEW segment item has no other geometry to fall back on).
+        // New segment items store geometry as an attribute; edits keep it payload-only.
         if (LocationMode::Segment === $type->locationMode()) {
             $rawSegment = $payload['segment'] ?? null;
             if (\is_string($rawSegment) && '' !== $rawSegment) {
                 $attributes['segment'] = $this->decodeSegment($rawSegment);
             }
-            // The way refs the prefilled run spans (owner 2026-08-13): stored
-            // so curatedRefs() can retire the red dash of EVERY covered way,
-            // not just the clicked one — a 16 km item that silenced one 30 m
-            // way kept contradicting itself along the rest. Re-validated here
-            // (the controller already filtered): pattern, dedupe, cap.
+            // Way refs the prefilled run spans, so curatedRefs() retires every covered way.
             $rawSpanned = $payload['_ways_spanned'] ?? null;
             if (\is_string($rawSpanned) && '' !== $rawSpanned) {
                 $spanned = array_values(array_unique(array_filter(
@@ -250,10 +196,7 @@ final class CatalogContributionService implements ContributionStubInterface
             }
         }
 
-        // Materialize-on-edit (osm-data-architecture.md §6): the controller
-        // re-validated the ref against the coverage cache; here the only
-        // extra invariant is one item per OSM ref — a second materialization
-        // (double submit, or a race with another rider) must not mint a twin.
+        // One item per OSM ref (docs/specs/osm-data-architecture.md §6).
         $osmRef = null;
         $rawRef = $payload['_osm_ref'] ?? null;
         if (\is_string($rawRef) && '' !== $rawRef) {
@@ -267,21 +210,11 @@ final class CatalogContributionService implements ContributionStubInterface
             if (null !== $taken) {
                 $this->reject('contribute.error.already_materialized', 'details');
             }
-            /* A REJECTED row is a different case, and used to be a 500. The
-               unique key is (source, source_ref, letter) and it counts rejected
-               rows too, so a place a curator once said no to could never be
-               proposed again: the guard above let the second rider through and
-               the insert hit the constraint (owner-reported 2026-08-12).
-
-               A rejection is a decision about one report, not a permanent
-               silence on a place - the tap may genuinely be there this year. So
-               the existing row is REVIVED by submitDraft() rather than twinned,
-               carrying the new proposal and going back through the queue. */
+            /* A rejected row is revived, not twinned (docs/specs/moderation-and-contribution.md §3.3). */
             $osmRef = $rawRef;
         }
 
-        // `via` is the intake channel, and only a value we know is honoured —
-        // a client cannot label its submission anything it likes.
+        // `via` is the intake channel; only known values are honoured.
         $source = 'scout' === ($payload['via'] ?? null) ? ItemSource::Scout : null;
 
         $draft = new SubmissionDraft(
@@ -301,36 +234,14 @@ final class CatalogContributionService implements ContributionStubInterface
         );
     }
 
-    /**
-     * Longest road-following path a surface stretch may carry.
-     *
-     * A stretch is a stretch, not an Alpine climb: the router returns a vertex
-     * every few metres, so 3,000 covers many kilometres of bends. The cap is
-     * not about the honest case, it is about what a hand-crafted POST could put
-     * into every visitor's catalog.json — the same exposure ClimbGeometry's
-     * MAX_POINTS bounds, and the lesson from that constant is to set it above
-     * the real road rather than at the shape somebody imagined.
-     */
+    /** Longest road-following path a surface stretch may carry. */
     private const int MAX_SEGMENT_POINTS = 3000;
 
-    /**
-     * How far the snapped path may start or end from the pin it snapped from.
-     *
-     * The router moves a pin to the nearest road, which is metres in a town and
-     * can be a few hundred on a moor. Beyond a kilometre it is not the same
-     * stretch any more, so the path is refused rather than quietly recorded as
-     * somewhere the rider never pointed at.
-     */
+    /** Max snap drift from the rider's pin; beyond this the path is refused. */
     private const float MAX_SNAP_DRIFT_M = 1000.0;
 
     /**
-     * Decode + bounds-check the wizard's segment JSON:
-     * {"a":[lng,lat],"b":[lng,lat],"line":[[lng,lat],…]}.
-     *
-     * `a`/`b` are where the rider pointed; `line` is the road between them as
-     * the router drew it, and is optional — no route, no router, or an older
-     * client all mean the straight chord, which is a worse shape but never a
-     * wrong one.
+     * Decode + bounds-check the wizard's segment JSON.
      *
      * @return array{a: array{float, float}, b: array{float, float}, line?: list<array{float, float}>}
      */
@@ -355,8 +266,6 @@ final class CatalogContributionService implements ContributionStubInterface
         }
 
         $segment = ['a' => $a, 'b' => $b];
-        // $decoded is an array by here: a non-array could not have produced a
-        // valid $a above, and reject() does not return.
         $rawLine = $decoded['line'] ?? null;
         if (null === $rawLine) {
             return $segment;
@@ -374,9 +283,7 @@ final class CatalogContributionService implements ContributionStubInterface
             }
             $line[] = $valid;
         }
-        // Both ends must belong to the stretch the rider pointed at. Without
-        // this the `line` key is an open channel for any shape at all, drawn on
-        // the map under a name and a surface somebody else chose.
+        // Both ends must belong to the rider's stretch; otherwise `line` is an open channel.
         if (self::metres($line[0], $a) > self::MAX_SNAP_DRIFT_M
             || self::metres($line[\count($line) - 1], $b) > self::MAX_SNAP_DRIFT_M) {
             $this->reject('contribute.error.invalid_geometry', 'segment');
@@ -413,15 +320,10 @@ final class CatalogContributionService implements ContributionStubInterface
         $details = (array) ($payload['details'] ?? []);
         /** @var array<string, mixed> $extras */
         $extras = (array) ($payload['extras'] ?? []);
-        // Keep empty values here (do not array_filter): an emptied prefilled
-        // field must survive as a removal. The change loop below normalises
-        // '', null and [] to null and records the change as was -> null.
+        // Keep empty values: an emptied prefilled field must survive as a removal.
         $proposed = $details + $extras;
 
-        // Climb shape (route/grad/steep) is a top-level hidden field on
-        // ImproveType, not nested under details/extras (see ClimbGeometry).
-        // Merge it into $proposed so a shape edit is recorded in $changes and
-        // applied to $attributes on approve, the same as submitClimb.
+        // Climb shape is a top-level hidden field; merge so a shape edit is recorded.
         try {
             foreach (ClimbGeometry::fromPayload($payload) as $k => $v) {
                 $proposed[$k] = $v;
@@ -430,54 +332,23 @@ final class CatalogContributionService implements ContributionStubInterface
             $this->reject('contribute.error.invalid_geometry', 'route');
         }
 
-        // A road surface's drawn stretch is a top-level hidden field too
-        // (`segment`, {a,b,line?}), like the climb shape above: merged so a
-        // redrawn line is recorded in $changes and applied on approve
-        // (ModerationService rebuilds the item's LineString from it). Without
-        // this the wizard said the new stretch would be recorded while the
-        // server silently dropped the field — the C6 class of bug. Gated on
-        // the letter: only segment-located items carry one. An UNCHANGED
-        // prefill records nothing: the wizard reposts the stored attribute's
-        // own values, and the change loop compares them equal.
+        // Segment is top-level too; only letter A. Unchanged prefill records nothing.
         $rawSegment = $payload['segment'] ?? null;
         if ('A' === $item->getLetter() && \is_string($rawSegment) && '' !== $rawSegment) {
             $proposed['segment'] = $this->decodeSegment($rawSegment);
         }
-        /* Max gradient follows the steepest-ramp marker — but only when the
-           marker actually MOVED.
-
-           Deriving it unconditionally re-introduces the phantom change this
-           class just learned to avoid: a seeded climb stores the editorial
-           "~20% (mid-climb ramp)" while the marker reads "~20%", so every edit
-           would record a maxGradient change nobody made, and would quietly
-           overwrite the editorial text on the way past. A rider who drags the
-           marker IS restating the max gradient; a rider who leaves it alone is
-           not. */
+        /* Max gradient follows the marker only when the marker moved (docs/specs/climb-elevation.md §5). */
         $proposed = $this->deriveClimbProfile($proposed, $item->getAttributes());
-        /* BEFORE the diff, not after. `links` is stored as an array and posted
-           as a JSON string; comparing the two would report a change on every
-           save even when the rider touched nothing, and every one of those
-           would reach a curator as work. */
+        /* Decode links before the diff: stored array vs posted JSON would look like a change. */
         $proposed = $this->decodeLinks($proposed);
 
         $currentAttrs = $item->getAttributes();
         $changes = [];
         $attributes = [];
         foreach ($proposed as $field => $rawNow) {
-            // Normalise empty values ('', null, []) to null so clearing a
-            // prefilled field is recorded as a removal, while a field that
-            // was already empty records no phantom change.
+            // Normalise '', null, [] to null so clearing a field is a removal.
             $now = self::normalizeEmpty($rawNow);
-            // The name pseudo-field lives on Item::name, never in attributes
-            // (see Item::NAME_FIELD) — letting it through would submit `name`
-            // as an attribute key no letter's vocabulary allows, and the whole
-            // edit would be rejected as unknown. It travels as a CHANGE only,
-            // which is what ModerationService::applyEdit reads to setName().
-            //
-            // An emptied box means "leave the name alone", never "clear the
-            // name": editing offers the name prefilled (ImproveType) so a rider
-            // can correct it, and a place with no name at all is a different
-            // proposition from a place whose name somebody deleted.
+            // Name lives on Item::name, never in attributes. Empty means leave it alone.
             if (Item::NAME_FIELD === $field) {
                 if (null !== $now && $item->getName() !== $now) {
                     $changes[$field] = ['was' => $item->getName(), 'now' => $now];
@@ -493,32 +364,16 @@ final class CatalogContributionService implements ContributionStubInterface
             }
         }
 
-        // Items may be Points, LineStrings (road surfaces) or Polygons. Never
-        // assume a flat [lng,lat] pair. Derive a representative point (the
-        // first vertex) so a segment edit is not stranded at Point(1 1).
+        // Representative point is the first vertex; never assume a Point.
         [$lng, $lat] = self::representativePoint((string) $item->getGeom());
 
-        // An edit that changes nothing is not a contribution: it costs a
-        // curator a queue row to read, tells the rider's own dashboard a
-        // suggestion is pending, and applies nothing on approve. The wizard
-        // walks straight from a prefilled form to Submit, so this is easy to
-        // do by accident — say so plainly instead of recording it.
-        //
-        // "Changed" is broader than the field diff: a photo, a photo link and
-        // a moved pin are all real contributions on their own.
+        // No field/photo/pin change is not a contribution.
         $moved = self::pinMoved($payload, (float) $lat, (float) $lng);
         if ([] === $changes && !self::hasMedia($payload) && !$moved) {
             $this->reject('contribute.error.nothing_changed', 'details');
         }
 
-        /* A moved pin is a CHANGE, not merely permission to submit.
-           It used to count only towards "did anything change" and was then
-           thrown away: the submission was filed at the item's OLD point, the
-           diff never mentioned the move, and approving it moved nothing. The
-           rider had done the work and the system agreed to it and dropped it.
-
-           Recorded as a was/now pair like every other field, so the desk shows
-           it, the history records it, and ModerationService applies it. */
+        /* A moved pin is a CHANGE, not merely permission to submit. */
         $newLat = (float) $lat;
         $newLng = (float) $lng;
         if ($moved) {
@@ -532,48 +387,26 @@ final class CatalogContributionService implements ContributionStubInterface
 
         $draft = new SubmissionDraft(
             type: ItemType::fromParam($item->getLetter()),
-            /* A submission needs a heading, and plenty of places have no name:
-               a drinking-water node in OSM usually carries nothing but its
-               tags. Callers that know a better word for it (the one-tap
-               condition report passes the layer's own label) hand it over as
-               `_title_fallback`; the ITEM is not renamed by it, because the
-               title is what the queue displays and nothing else. */
+            /* Nameless places use `_title_fallback`; the item is not renamed by it. */
             title: '' !== $item->getName()
                 ? $item->getName()
                 : trim((string) ($payload['_title_fallback'] ?? '')),
-            // The submission sits where the RIDER put it, not where the item
-            // still is: the desk pins submissions on a map, and a curator
-            // judging a move has to see the proposed spot.
+            // Submission sits where the rider put it, not where the item still is.
             lat: $newLat,
             lng: $newLng,
             attributes: $attributes,
             itemId: $item->getId(),
         );
 
-        /* An undecided submission on this item by this rider is AMENDED, never
-           duplicated (owner decision, 2026-08-04). A rider asked a question
-           about their proposal goes back, revises it, and sends the same
-           submission again — "updates their update". Filing a second one would
-           leave the desk holding two competing proposals for one item with
-           nothing to say which supersedes which, and would leave the curator's
-           question attached to the abandoned one.
-
-           The reference is deliberately unchanged, so the messages thread the
-           rider and curator have already exchanged still names the thing they
-           are talking about. It returns to `pending`: the ball is back with the
-           curator, which is the same transition a needs-info reply makes. */
+        /* Open submission on this item is amended, never duplicated (docs/specs/moderation-and-contribution.md §7.3b). */
         $open = $this->openSubmissionFor((int) $item->getId(), $by);
         if (null !== $open) {
-            // `changes` and `payload` are the whole of an edit submission — an
-            // Edit carries no attributes column of its own; ModerationService
-            // applies the was/now map on approve.
+            // Edit carries no attributes column; apply the was/now map on approve.
             $this->em->wrapInTransaction(function () use ($open, $changes, $payload): void {
                 $open->setChanges($changes)
                     ->setPayload($payload)
                     ->setStatus(SubmissionStatus::Pending)
-                    // The previous round's verdict belongs to the previous
-                    // round: a stale "we need more information" note sitting on
-                    // a freshly revised submission reads as a new complaint.
+                    // Clear the previous round's verdict from a freshly revised submission.
                     ->setDecisionNote(null)
                     ->setDecidedAt(null)
                     ->setDecidedBy(null);
@@ -584,8 +417,6 @@ final class CatalogContributionService implements ContributionStubInterface
             );
         }
 
-        // Pass the computed was/now map into submitDraft so it is set inside
-        // the same transaction, with no second flush outside wrapInTransaction.
         $submission = $this->submitDraft($draft, SubmissionType::Edit, $by, $payload, $changes);
 
         return new ContributionReceipt(
@@ -594,33 +425,13 @@ final class CatalogContributionService implements ContributionStubInterface
     }
 
     /**
-     * The rider's own submission on this item that has not been decided yet.
+     * The rider's own undecided submission on this item, if any.
      *
-     * A rider who has already proposed a change and is asked a question about
-     * it must be able to go back and REVISE it — "update their update". Without
-     * this they can only file a second submission, and the desk then holds two
-     * competing proposals for one item with nothing to say which supersedes
-     * which (owner decision, 2026-08-04).
-     *
-     * `pending` and `needs_info` are exactly the undecided states. An approved
-     * or rejected submission is history and is never amended: a further change
-     * to that item is a new contribution, which is what it is.
-     *
-     * @api Read by ContributeController to prefill the wizard, and by
-     *      improve() to amend rather than duplicate.
+     * @api
      */
     public function openSubmissionFor(int $itemId, User $by): ?Submission
     {
-        /* A QueryBuilder rather than findOneBy([... 'status' => [A, B]]): the
-           column maps through `enumType`, and an ARRAY of backed enums in
-           findOneBy criteria leans on Doctrine converting each element. It
-           does, but this is the query that decides whether a rider's revision
-           lands on their existing submission or forks a second one, so it says
-           what it means with scalar values and an explicit ordering.
-
-           Newest first: if a rider somehow holds two open submissions on one
-           item (possible before this method existed), the one they are looking
-           at is the most recent. */
+        /* QueryBuilder with scalar enum values; newest first if two open rows exist. */
         return $this->em->createQueryBuilder()
             ->select('s')
             ->from(Submission::class, 's')
@@ -638,14 +449,7 @@ final class CatalogContributionService implements ContributionStubInterface
 
     /**
      * @param array<string, mixed>                         $rawPayload
-     * @param array<string, array{was: mixed, now: mixed}> $changes    ready was/now
-     *                                                                 map for Edit
-     *                                                                 submissions
-     *                                                                 (ignored for
-     *                                                                 NewItem, which
-     *                                                                 derives it from
-     *                                                                 the draft
-     *                                                                 attributes)
+     * @param array<string, array{was: mixed, now: mixed}> $changes    Edit was/now map (ignored for NewItem)
      */
     public function submitDraft(SubmissionDraft $draft, SubmissionType $type, User $by, array $rawPayload = [], array $changes = []): Submission
     {
@@ -661,23 +465,7 @@ final class CatalogContributionService implements ContributionStubInterface
 
         $geo = $this->resolver->resolve($draft->lat, $draft->lng);
         $point = json_encode(['type' => 'Point', 'coordinates' => [$draft->lng, $draft->lat]], \JSON_THROW_ON_ERROR);
-        // A segment-located item is a LINE, and storing it as a point would be
-        // a quiet corruption rather than an approximation: CatalogProvider's
-        // surfaceSegments() reads geom as a list of vertex pairs to build the
-        // A layer's `path`, so a Point there yields nonsense for that row.
-        //
-        // The submission itself keeps the point geometry — the moderation desk
-        // pins submissions on a map, and the start of the stretch is the right
-        // pin — while the ITEM gets the line the rider drew.
-        //
-        // The line FOLLOWS THE ROAD when the router could find one. A road
-        // bends, and a straight chord between two taps crosses fields, houses
-        // and the wrong side of a river — it reads as a mistake, because on a
-        // map it is one. So the wizard snaps the two pins with the same bicycle
-        // router the climb editor uses (RouteSnapper) and sends the resulting
-        // path as `segment.line`; a→b survives only as the fallback for when no
-        // route exists, which is the honest answer in that case rather than a
-        // shape nobody rode.
+        // Segment items store a LineString; the submission keeps the start point.
         $segment = $draft->attributes['segment'] ?? null;
         $itemGeom = $point;
         if (\is_array($segment) && isset($segment['a'], $segment['b'])) {
@@ -705,16 +493,7 @@ final class CatalogContributionService implements ContributionStubInterface
             $this->em->flush();
 
             if (SubmissionType::NewItem === $type) {
-                /* One row per OSM ref, including the ones a curator turned
-                   down. The unique key spans (source, source_ref, letter) and
-                   does not care about state, so a rejected row still holds the
-                   ref: minting a second item for it raised a constraint error
-                   in the rider's face (owner-reported 2026-08-12).
-
-                   It is revived instead. The row keeps its id and its history -
-                   the earlier report, its rejection, and now this one all hang
-                   off the same place - and goes back to Submitted carrying
-                   what this rider said. */
+                /* Revive a rejected/retired OSM row rather than minting a twin. */
                 $item = null !== $draft->osmRef
                     ? $this->em->getRepository(Item::class)->findOneBy([
                         'sourceRef' => $draft->osmRef,
@@ -722,10 +501,7 @@ final class CatalogContributionService implements ContributionStubInterface
                         'state' => [ItemState::Rejected, ItemState::Retired],
                     ])
                     : null;
-                // A materialized OSM object keeps its ref as source_ref
-                // (source `osm`) — honest provenance, and the coverage layer
-                // dedupes on exactly this key so the grey twin disappears
-                // the moment this item serves.
+                // Materialized OSM objects keep source_ref so coverage can dedupe.
                 $item ??= new Item();
                 $item
                     ->setLetter($draft->type->letter())
@@ -743,10 +519,7 @@ final class CatalogContributionService implements ContributionStubInterface
                 $this->em->flush();
             }
 
-            // Photos ride the same intake transaction as the facts
-            // (docs/specs/photo-uploads.md §4): a rejected photo list rolls the
-            // whole submission back rather than leaving a half-attached
-            // contribution.
+            // Photos ride the same intake transaction (docs/specs/photo-uploads.md §4).
             try {
                 $this->mediaClaims->claim($rawPayload['mediaIds'] ?? null, $by, $submission);
             } catch (\InvalidArgumentException) {
@@ -759,22 +532,7 @@ final class CatalogContributionService implements ContributionStubInterface
     }
 
     /**
-     * Throw a form-surfaceable validation error. The controller renders each
-     * violation message as a FormError, so intake rejections read like every
-     * other field error rather than a 500.
-     */
-    /**
-     * Turns the links editor's one hidden JSON field into the array the rest of
-     * the pipeline stores (catalog-data-model.md §7 `links`).
-     *
-     * The client cap is a suggestion and this is the rule: `OutboundLinks`
-     * already gates every other write path, and the wizard must not become the
-     * one door that skips it. Both the shape and the caps are re-checked here
-     * on a value the browser wrote.
-     *
-     * An emptied editor posts '' and becomes null, which `normalizeEmpty`
-     * records as a removal - so clearing every link is a real edit rather than
-     * a silent no-op.
+     * Decode the links editor JSON (docs/specs/catalog-data-model.md §7).
      *
      * @param array<string, mixed> $proposed
      *
@@ -783,8 +541,7 @@ final class CatalogContributionService implements ContributionStubInterface
     private function decodeLinks(array $proposed): array
     {
         $raw = $proposed['links'] ?? null;
-        // Absent, or already an array (an internal caller rather than the
-        // wizard). Nothing to decode either way.
+        // Absent, or already an array from an internal caller.
         if (!\is_string($raw)) {
             return $proposed;
         }
@@ -798,12 +555,7 @@ final class CatalogContributionService implements ContributionStubInterface
             $decoded = json_decode($raw, true, 512, \JSON_THROW_ON_ERROR);
             OutboundLinks::assertValid($decoded);
         } catch (\JsonException|\InvalidArgumentException) {
-            /* The rule is NOT named back to the rider, deliberately. Every one
-               of OutboundLinks' messages describes a cap the editor already
-               enforces in the browser, so a rider can only reach this by
-               posting by hand - and a hand-crafted post is the case where
-               echoing the validator's internals is a favour to the wrong
-               person. */
+            /* Do not echo validator internals to a hand-crafted POST. */
             $this->reject('contribute.error.invalid_links', 'links');
         }
 
@@ -814,22 +566,8 @@ final class CatalogContributionService implements ContributionStubInterface
     }
 
     /**
-     * The SUBMIT-side Safe Browsing call (App\Catalog\Links\SafeBrowsing).
-     *
-     * **It fails OPEN, and never blocks.** A rider must not lose a
-     * contribution because a Google endpoint is down, or slow, or out of
-     * quota. Whatever comes back is recorded against the url; whether it
-     * changes anything is the curator's call on the queue card, and the map's
-     * own fail-CLOSED check at render is the backstop.
-     *
-     * Flag, never silently reject: a submission with an unsafe link still
-     * reaches the queue carrying its verdict, because a false positive that
-     * vanishes is indistinguishable from a bug.
-     *
-     * The verdict is stored in `link_verdict`, NOT in the `links` attribute.
-     * `links` flows through the change diff, so a verdict written there would
-     * show up on a moderation card as a rider-made edit and manufacture
-     * curator work out of a background check.
+     * Submit-side Safe Browsing: fails open, never blocks. Verdicts live in
+     * `link_verdict`, not in the `links` attribute.
      */
     private function checkLinks(mixed $links): void
     {
@@ -841,8 +579,7 @@ final class CatalogContributionService implements ContributionStubInterface
         try {
             $this->linkVerdicts->record($this->safeBrowsing->check($urls));
         } catch (\Throwable) {
-            // Deliberately swallowed. This is a background check riding along
-            // with a rider's save; nothing about it may cost them the save.
+            // Fail-open: a background check must not cost the rider the save.
         }
     }
 
@@ -851,31 +588,14 @@ final class CatalogContributionService implements ContributionStubInterface
         throw new ValidationFailedException($message, new ConstraintViolationList([new ConstraintViolation($message, $message, [], $message, $field, null)]));
     }
 
-    /**
-     * Does this edit carry a photo?
-     *
-     * Uploads only. `photoUrl` used to count here and nowhere else in the
-     * codebase - it let a rider past the "did you change anything" gate and
-     * was then discarded: no column, no diff, no moderation card, nothing on
-     * approve. The field is gone from the form (owner 2026-08-16); the
-     * replacement is specced in docs/TODO.md as "Photo by Commons link", and
-     * it will arrive as a real upload through the quarantine, not as a string
-     * in this payload.
-     *
-     * @param array<string, mixed> $payload
-     */
+    /** @param array<string, mixed> $payload */
     private static function hasMedia(array $payload): bool
     {
         return '' !== trim((string) ($payload['mediaIds'] ?? ''));
     }
 
     /**
-     * Has the pin actually been moved, or is it sitting where it was?
-     *
-     * The wizard pre-places the pin at the item's own coordinates and posts
-     * them back untouched, so an exact comparison would call every edit a
-     * move. The tolerance is ~1 m: below that nobody moved anything, they
-     * just opened the map.
+     * True when the pin moved more than ~1 m (wizard reposts the item's coords).
      *
      * @param array<string, mixed> $payload
      */
@@ -889,14 +609,7 @@ final class CatalogContributionService implements ContributionStubInterface
             || abs((float) $payload['lng'] - $lng) > 1e-5;
     }
 
-    /**
-     * A coordinate pair as the desk and the history show it.
-     *
-     * Text rather than an array: `changes` is read by three renderers that all
-     * print was/now, and a bare pair would arrive as "Array". Five decimals is
-     * about a metre — enough to see that a pin moved, and no more precision
-     * than a rider's tap carries.
-     */
+    /** Text point for was/now; five decimals is about a metre. */
     private static function formatPoint(float $lat, float $lng): string
     {
         return \sprintf('%.5f, %.5f', $lat, $lng);
@@ -909,22 +622,7 @@ final class CatalogContributionService implements ContributionStubInterface
     }
 
     /**
-     * Is the proposed value the same fact as the stored one?
-     *
-     * `!==` is too literal for the values the climb editor round-trips. The
-     * steepest marker is stored as `{at, pct}` and comes back as
-     * `{at, pct, manual: false}` — the same marker in the same place at the
-     * same percentage, described with one extra default. Compared strictly it
-     * counted as a change, so EVERY climb edit recorded a phantom
-     * `steep: ~20% at 50.4908, 5.7058 → ~20% at 50.4908, 5.7058`, and a curator
-     * was asked to approve a difference that did not exist (owner-reported
-     * 2026-08-04). Key order does the same thing: PHP compares string-keyed
-     * arrays order-sensitively under `===`.
-     *
-     * So arrays are compared canonically — recursively key-sorted, with the
-     * marker's optional `manual` flag defaulted. Scalars keep strict
-     * comparison, where `'0'` and `0` and `false` are genuinely different
-     * answers.
+     * Canonical array compare: key-sorted, with `manual` defaulted, so a round-trip marker is not a phantom change.
      */
     private static function sameValue(mixed $was, mixed $now): bool
     {
@@ -939,8 +637,7 @@ final class CatalogContributionService implements ContributionStubInterface
     private static function canonical(mixed $v): string
     {
         if (\is_array($v)) {
-            // The one documented default: an absent `manual` means "not placed
-            // by hand", which is exactly what `manual: false` says.
+            // Absent `manual` means not placed by hand.
             if (\array_key_exists('at', $v) && \array_key_exists('pct', $v)) {
                 $v['manual'] = (bool) ($v['manual'] ?? false);
             }
@@ -956,8 +653,7 @@ final class CatalogContributionService implements ContributionStubInterface
     }
 
     /**
-     * First coordinate of any GeoJSON geometry, as [lng, lat]. Points,
-     * LineStrings and Polygons alike descend to the first numeric pair.
+     * First coordinate of any GeoJSON geometry, as [lng, lat].
      *
      * @return array{0: float, 1: float}
      */
@@ -984,35 +680,7 @@ final class CatalogContributionService implements ContributionStubInterface
     }
 
     /**
-     * Moves the editor's ascent-only average onto `avgGradient`, and drops the
-     * transport key so `avg` never becomes an attribute in its own right.
-     *
-     * Unconditional, unlike deriveMaxGradient's caller-side gate. The average is
-     * a function of the whole line, so when the line changes it MUST change --
-     * that is the bug this closes: redrawing Roche-aux-Faucons from 1.75 km to
-     * 4.35 km left `avgGradient` reading the 9% somebody typed in June
-     * (owner-reported 2026-08-04). When the line is untouched the editor
-     * recomputes the same value from the same samples, so no phantom change is
-     * recorded.
-     *
-     * @param array<string, mixed> $attrs
-     *
-     * @return array<string, mixed>
-     */
-    /**
-     * Measures the climb from its drawn line and writes every derived value.
-     *
-     * This used to set only the average and the maximum, and the rest —
-     * `length`, `gain`, `binM`, `lineGrad`, `demSource` — arrived solely from
-     * the catalogue sweep. So an approved redraw updated the gradients and the
-     * profile but left the length behind: Côte de Stockeu displayed "1.0 km"
-     * beside a chart whose own axis read 2.4 km (owner-reported 2026-08-05).
-     * Anything derived from the line has to be derived *when the line changes*,
-     * or the item is internally inconsistent until someone remembers to run a
-     * command.
-     *
-     * No route, no change: a submission that does not touch the geometry leaves
-     * every measurement exactly as it was.
+     * Measure the climb from its drawn line (docs/specs/climb-elevation.md §4).
      *
      * @param array<string, mixed>      $attrs
      * @param array<string, mixed>|null $current the item's present attributes, when editing
@@ -1021,10 +689,7 @@ final class CatalogContributionService implements ContributionStubInterface
      */
     private function deriveClimbProfile(array $attrs, ?array $current = null): array
     {
-        /* `avg` is a TRANSPORT key, never an attribute: the editor posts it and
-           the profile below replaces it. Dropped first and unconditionally,
-           because a submission whose elevation lookup fails must not leave it
-           behind to be stored as though it were a field. */
+        /* `avg` is a transport key, never an attribute. */
         unset($attrs['avg']);
 
         $route = $attrs['route'] ?? ($current['route'] ?? null);
@@ -1037,8 +702,7 @@ final class CatalogContributionService implements ContributionStubInterface
             array_filter($route, static fn ($p): bool => \is_array($p) && isset($p[0], $p[1])),
         ));
 
-        /* A hand-placed steepest marker is the rider's: its position is kept and
-           only the number under it is re-read (climb-elevation.md §5). */
+        /* A hand-placed marker keeps its position; only the number is re-read (docs/specs/climb-elevation.md §5). */
         $steep = $attrs['steep'] ?? ($current['steep'] ?? null);
         $manualAt = (\is_array($steep) && true === ($steep['manual'] ?? false) && isset($steep['at'][0], $steep['at'][1]))
             ? [(float) $steep['at'][0], (float) $steep['at'][1]]
@@ -1046,8 +710,7 @@ final class CatalogContributionService implements ContributionStubInterface
 
         $p = $this->profiler->profile($coords, $manualAt);
         if (null === $p) {
-            // No elevation, no numbers — never a guess (§2d). The geometry still
-            // submits: the line is the contribution, the profile derives from it.
+            // No elevation, no numbers — never a guess (docs/specs/climb-elevation.md §2d).
             return $attrs;
         }
 
@@ -1064,8 +727,7 @@ final class CatalogContributionService implements ContributionStubInterface
         } else {
             $attrs['steep'] = $p['steep'];
         }
-        // A stored display string nothing recomputes drifts the moment a climb
-        // is redrawn; the drawer composes that line at render time (§4).
+        // Stored headline drifts on redraw; the drawer composes it (docs/specs/climb-elevation.md §4).
         unset($attrs['headline']);
 
         return $attrs;

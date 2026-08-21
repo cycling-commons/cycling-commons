@@ -12,55 +12,16 @@ use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 
 /**
- * How much curated best-of content a region actually has, **per block**, and
- * therefore whether a moderator may flip it to open in Curated mode
- * (map-and-search.md §4.2; owner decision "B", the GATED
- * option: the flag cannot be set prematurely).
+ * Per-block curated content a region has, and whether Curated-by-default may unlock. Utility layers do not count — they render in both modes.
  *
- * The count deliberately mirrors what Curated mode would SHOW, because that is
- * the thing a rider judges the region by:
+ * @see docs/specs/map-and-search.md §4.2
  *
- *  - items on the experiential layers (`render.js` featureVisible: A surface,
- *    B climbs, E stays, I scenic, J history) that carry the curated flag —
- *    in Curated mode a non-curated item on those layers is hidden outright;
- *  - plus the region's best-of routes (K), i.e. verified `recommended_route`
- *    rows with at least one vote (the same set `RouteRankingService::bestOf`
- *    ranks).
- *
- * Utility layers (C water, D services, F hazards, G transit, H shelter) are
- * excluded on purpose: they render in BOTH modes, so they cannot be evidence
- * that Curated has anything to show. That is precisely the trap the owner hit —
- * a full utility map behind a rail reading "0 places shown".
- *
- * ## Why a total alone is not enough (owner question, 2026-07-27)
- *
- * A flat "25 curated items" can be met by **25 scenic views and nothing else**,
- * and a rider who opens that region in Curated then finds nowhere to sleep, no
- * climbs and no routes — the same empty-feeling map the default was flipped to
- * avoid, just with a different hole in it. So readiness is **breadth AND
- * depth**: a total, plus a minimum number of BLOCKS that each carry a minimum
- * of their own. No single layer can carry a region.
- *
- * Breadth is expressed as "N blocks of M" rather than "every block", because
- * regions legitimately differ: a Dutch province has no climbs and never will,
- * and must still be able to qualify on stays + scenic + history + routes.
- *
- * All three numbers are config (README threshold principle) and are editable at
- * runtime from the admin system-config page (system-configuration.md §2), so
- * they are read through SettingsProviderInterface rather than bound as
- * constructor scalars — tuning the gate must not need a deploy. Setting
- * `minBlocks` to 1 reverts the gate to a pure total.
- *
- * @api Consumed by the curator Regions desk and its gated toggle.
+ * @api
  */
 final class CuratedReadiness
 {
     /**
-     * The blocks a region's readiness is measured across, in map order.
-     * Letters A/B/E/I/J are the layers Curated HIDES when an item is not curated
-     * (`exp: true` in `web/assets/map/catalog.js`); 'K' is the best-of route set,
-     * which is counted from `recommended_route`, not `item`. Keep in step with
-     * that list.
+     * Experiential layers Curated hides when an item is not curated, plus K from `recommended_route`.
      *
      * @var array<string, string> letter => the item_type translation key
      */
@@ -112,12 +73,7 @@ final class CuratedReadiness
     }
 
     /**
-     * How many places in each region somebody has vouched for.
-     *
-     * The same test the map's Confirmed mode draws and the drawer's badge reads
-     * (`CatalogProvider`: verified state, PIVOT provenance, or any confirmation
-     * that is not the submitter's own form answer) — one definition, so the desk
-     * cannot promise a mode that then shows something else.
+     * Confirmed-mode count: same derivation as CatalogProvider (excludes `form` confirmations).
      *
      * @param list<int> $regionIds
      *
@@ -162,9 +118,7 @@ final class CuratedReadiness
     }
 
     /**
-     * Batch form, so the desk lists N regions in two queries rather than 2N.
-     * Every requested region is present in the result, with a zero for every
-     * block — the desk renders "0" per block, never a blank.
+     * Batch form. Every requested region is present, zeros included.
      *
      * @param list<int> $regionIds
      *
@@ -181,10 +135,7 @@ final class CuratedReadiness
 
         /** @var list<array{region_id: int|string, letter: string, n: int|string}> $items */
         $items = $this->db->fetchAllAssociative(
-            // jsonb_exists(), NOT the `?` operator: DBAL parses `?` as a
-            // positional parameter placeholder, so `attributes ? 'cur'` fails
-            // the whole statement with "Positional parameter at index 0 does
-            // not have a bound value". Same predicate, no ambiguity.
+            // jsonb_exists(), not `?` — DBAL treats `?` as a placeholder.
             "SELECT region_id, letter, COUNT(*) AS n
                FROM item
               WHERE region_id IN (:rids)
@@ -199,9 +150,7 @@ final class CuratedReadiness
             $counts[(int) $r['region_id']][(string) $r['letter']] = (int) $r['n'];
         }
 
-        // Best-of routes: verified AND voted, the same gate RouteRankingService
-        // applies. A verified route nobody has voted for is not best-of yet, so
-        // it must not count towards readiness.
+        // Verified AND voted — same gate as RouteRankingService.
         /** @var list<array{region_id: int|string, n: int|string}> $routes */
         $routes = $this->db->fetchAllAssociative(
             "SELECT rr.region_id, COUNT(DISTINCT rr.id) AS n
@@ -217,8 +166,7 @@ final class CuratedReadiness
             $counts[(int) $r['region_id']]['K'] = (int) $r['n'];
         }
 
-        // Read once per batch, not once per region: the values are settings now,
-        // and every region in one report must be judged by the same numbers.
+        // Read once per batch so every region is judged by the same settings.
         $threshold = $this->threshold();
         $minBlocks = $this->minBlocks();
         $minPerBlock = $this->minPerBlock();

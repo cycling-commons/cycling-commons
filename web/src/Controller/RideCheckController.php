@@ -20,14 +20,12 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
- * Ride-check intake (map-and-search.md §9): a logged-in rider uploads a GPX
- * and gets back the catalog items along it. Stateless JSON API in the
- * RouteCommunityController mould — in-controller auth (clean 401, never a
- * login redirect), stateless CSRF (`ride-check` token id), per-user daily
- * rate limit. The GPX is read from the request, answered, and discarded:
- * nothing is persisted anywhere on this path.
+ * Ride-check: 401 not 302; GPX is discarded; nothing persisted.
  *
- * @api Instantiated by Symfony's router; called by assets/map/map.js.
+ * @see docs/specs/map-and-search.md §9
+ * @see docs/specs/security-architecture.md §7
+ *
+ * @api
  */
 final class RideCheckController extends AbstractController
 {
@@ -51,11 +49,7 @@ final class RideCheckController extends AbstractController
         if (!$file instanceof UploadedFile) {
             return $this->json(['error' => $translator->trans('ride_check.error.file_required')], 422);
         }
-        // A file PHP itself refused is NOT "no file chosen" — the rider picked
-        // one, and telling them to pick one is a dead end that hides a size
-        // problem they could act on. UPLOAD_ERR_INI_SIZE/FORM_SIZE means the GPX
-        // exceeded upload_max_filesize (16M, web/Dockerfile); anything else here
-        // is a partial or interrupted transfer, which retrying can fix.
+        // PHP size/partial errors are not "no file chosen".
         if (!$file->isValid()) {
             $key = \in_array($file->getError(), [\UPLOAD_ERR_INI_SIZE, \UPLOAD_ERR_FORM_SIZE], true)
                 ? 'ride_check.error.file_too_large'
@@ -75,10 +69,7 @@ final class RideCheckController extends AbstractController
         try {
             return $this->json($service->check($file->getContent(), $radius));
         } catch (\InvalidArgumentException $e) {
-            // message = translation key (GpxParser / RideCheckService convention).
-            // The length bounds inside that message are written in the rider's
-            // own units (account-and-auth.md §9); an unused parameter on the
-            // other keys costs nothing.
+            // Exception message is a translation key; lengths in rider units.
             return $this->json(['error' => $translator->trans($e->getMessage(), [
                 '%min%' => $units->shortDistance(RideCheckService::MIN_RAW_M),
                 '%max%' => $units->distance(RideCheckService::MAX_RAW_M / 1000, 0),

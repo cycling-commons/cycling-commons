@@ -10,12 +10,11 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
- * The load-balancer probe. Deliberately the ONLY endpoint here: its sibling
- * `/api/db-check` was deleted (review 2026-08-16 finding 1) because it was an
- * unauthenticated version-and-exception leak with no consumer anywhere.
+ * Load-balancer probe only — `/api/db-check` was an unauthenticated leak.
  *
- * @api Instantiated by Symfony's router, never referenced from code — `@api`
- *      tells Psalm this (and its actions) is a live entry point, not dead code.
+ * @see docs/specs/public-api-personal-data-boundary.md §3.3
+ *
+ * @api
  */
 class ApiController
 {

@@ -29,14 +29,11 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
- * Renders the authenticated user's messages dashboard: decision outcomes,
- * curator notes, and rider replies, newest first. Also owns the needs-info
- * reply loop (docs/specs/moderation-and-contribution.md §7.3): a rider
- * answering a curator's needs-info request re-queues their submission to
- * `pending`.
+ * Rider messages dashboard and the needs-info reply loop.
  *
- * @api Instantiated by Symfony's router — `@api` tells Psalm this is a live
- *      entry point, not dead code.
+ * @see docs/specs/moderation-and-contribution.md §7.3
+ *
+ * @api
  */
 #[Route(LocalePrefix::PATHS)]
 #[IsGranted('ROLE_USER')]
@@ -56,10 +53,7 @@ final class MessagesController extends AbstractController
         $user = $this->getUser();
         $userId = (int) $user->getId();
 
-        // Three shelves and an unread switch (moderation-and-contribution.md
-        // §7.9). An unknown ?cat= is treated as no filter rather than as an
-        // error: it is a bookmark to a shelf that has been renamed, not an
-        // attack, and showing everything is the honest fallback.
+        // docs/specs/moderation-and-contribution.md §7.9 — unknown ?cat= shows all.
         $category = MessageCategory::tryFrom($request->query->getString('cat'));
         $unreadOnly = $request->query->getBoolean('unread');
 
@@ -69,13 +63,10 @@ final class MessagesController extends AbstractController
             $this->pageSize->resolve(MessageService::PER_PAGE),
         );
 
-        // Fetch BEFORE marking read, so the template can still flag which
-        // rows were new to this visit via isRead().
+        // Fetch before markRead so this visit can still flag unread rows.
         $heads = $messages->listFor($userId, $pager['offset'], $pager['perPage'], $category, $unreadOnly);
 
-        // The reader's own replies, re-attached to the questions on THIS page.
-        // listFor() returns heads only so a question and its answer can never
-        // be split across a page boundary.
+        // Heads only so a question and its answer never split across a page.
         $list = [...$heads, ...$messages->repliesBySender(
             $userId,
             array_values(array_unique(array_map(
@@ -84,9 +75,7 @@ final class MessagesController extends AbstractController
             ))),
         )];
 
-        // The reply form only renders for needs-info messages whose
-        // submission is STILL `needs_info` — a curator may have decided it
-        // again (or the rider already replied) since the message was sent.
+        // Reply form only while the submission is still needs_info.
         $needsInfoRefIds = array_values(array_unique(array_map(
             static fn (UserMessage $m): int => $m->getRefId(),
             array_filter($list, static fn (UserMessage $m): bool => UserMessageKind::SubmissionNeedsInfo === $m->getKind()),
@@ -99,9 +88,7 @@ final class MessagesController extends AbstractController
             ))
             : [];
 
-        // Only what this page actually showed. Marking everything read on a
-        // visit would consume the unread state of messages the reader has not
-        // reached yet, and the chip would drop to zero over unopened mail.
+        // docs/specs/moderation-and-contribution.md §7.5a — mark only this page read.
         $messages->markRead($userId, array_map(
             static fn (UserMessage $m): int => (int) $m->getId(),
             $heads,
@@ -114,8 +101,6 @@ final class MessagesController extends AbstractController
             'page_description' => 'meta.messages_description',
             'nav_active' => '',
             'cc_user' => $user,
-            // A question and its answer are one exchange, so they render as one
-            // card: the replies attached below are dropped from the top level.
             'messages' => array_values(array_filter(
                 $list,
                 static fn (UserMessage $m): bool => !isset($answers['attached'][(int) $m->getId()]),
@@ -123,14 +108,8 @@ final class MessagesController extends AbstractController
             'answers' => $answers['byQuestion'],
             'replyable_submission_ids' => $replyableSubmissionIds,
             'message_photos' => $this->messagePhotos($list),
-            // WHAT the contribution this message is about actually changed.
-            // "Your contribution X was approved" names a place and stops; the
-            // rider still cannot see which of their own edits it was
-            // (owner-reported 2026-08-03).
             'submission_changes' => $this->submissionChanges($list, $userId, $changes),
             'pager' => $pager,
-            // The pager must keep the filter it is paging, or page two of
-            // "Notices" quietly becomes page two of everything.
             'pager_params' => array_filter([
                 'cat' => $category?->value,
                 'unread' => $unreadOnly ? '1' : null,
@@ -143,14 +122,7 @@ final class MessagesController extends AbstractController
     }
 
     /**
-     * The change rows for every submission these messages refer to, keyed by
-     * submission id.
-     *
-     * **Scoped to the reader's own submissions.** A message is addressed to
-     * its recipient, so `refId` should already be theirs — but this reads
-     * contribution content out of the database on the strength of an id
-     * carried by a row, and "should already be" is not an access rule. The
-     * `userId` filter is the access rule.
+     * Change rows keyed by submission id. `userId` is the access rule — refId is not.
      *
      * @param list<UserMessage> $list
      *
@@ -189,13 +161,7 @@ final class MessagesController extends AbstractController
     }
 
     /**
-     * Pair each of the reader's own replies with the question it answers.
-     *
-     * A needs-info question and the answer to it are one exchange; listed as
-     * two rows they read as unrelated events, and the answer (newest first)
-     * appeared ABOVE the question it belongs to. Pairing is by submission and
-     * order: a reply answers the most recent question on the same submission
-     * that precedes it, which keeps a second round of ask-and-answer straight.
+     * Pair the reader's own replies with the question they answer.
      *
      * @param list<UserMessage> $list
      *
@@ -203,17 +169,14 @@ final class MessagesController extends AbstractController
      */
     private static function answersToQuestions(array $list, int $userId): array
     {
-        // Pairing needs oldest-first, and `$list` is no longer uniformly
-        // ordered: it is the page's heads (newest-first) with the reader's own
-        // replies appended. Sort rather than reverse — reversing a
-        // two-orderings list silently mispairs a second round of ask-and-answer.
+        // Oldest-first; `$list` mixes newest-first heads with appended replies.
         $chronological = $list;
         usort(
             $chronological,
             static fn (UserMessage $a, UserMessage $b): int => [$a->getCreatedAt(), (int) $a->getId()]
                 <=> [$b->getCreatedAt(), (int) $b->getId()],
         );
-        $openQuestion = [];   // submission id => the question still unanswered
+            $openQuestion = []; // submission id => unanswered question
         $byQuestion = [];
         $attached = [];
 
@@ -225,9 +188,7 @@ final class MessagesController extends AbstractController
                 $openQuestion[$m->getRefId()] = (int) $m->getId();
                 continue;
             }
-            // Only the reader's OWN replies fold in. A curator reading this
-            // page sees the rider's reply as its own row, because to them it
-            // is an incoming message, not their half of the exchange.
+            // Only the reader's own replies fold in.
             if (UserMessageKind::RiderReply === $m->getKind() && $userId === $m->getSenderId()
                 && isset($openQuestion[$m->getRefId()])) {
                 $byQuestion[$openQuestion[$m->getRefId()]][] = $m;
@@ -239,10 +200,9 @@ final class MessagesController extends AbstractController
     }
 
     /**
-     * A rider answers a needs-info request from their own messages page.
-     * The reply is delivered to the curator who made the decision, and the
-     * submission goes back to `pending` — the queue already lists pending
-     * rows, so this alone re-queues it.
+     * Rider answers needs-info; submission returns to `pending`.
+     *
+     * @see docs/specs/moderation-and-contribution.md §7.3
      */
     #[Route('/messages/{id}/reply', name: 'messages_reply', requirements: ['id' => '\d+'], methods: ['POST'])]
     public function reply(int $id, Request $request, EntityManagerInterface $em, MessageService $messages, Connection $db): Response
@@ -264,21 +224,7 @@ final class MessagesController extends AbstractController
         $submission = $em->find(Submission::class, $submissionId);
         $decidingCuratorId = $submission?->getDecidedBy();
 
-        // The submission may have moved on (decided again, or already
-        // answered) since the needs-info message was sent — and, in the
-        // unlikely case a NeedsInfo submission somehow carries no decider,
-        // there is no curator to deliver the reply to either way. Both are
-        // the same "too late" outcome for the rider.
-        //
-        // `submission.decided_by` is also a no-FK column (same family as
-        // submission.user_id / route_suggestion.user_id /
-        // recommended_route.proposed_by — see MessageService::sendSystem):
-        // the curator who asked for more info may have deleted their own
-        // account since. There is no other curator to reroute the reply to
-        // automatically, and surfacing it nowhere would silently discard the
-        // rider's answer, so this is treated as the same "too late" outcome
-        // rather than re-queuing with an undeliverable message. Another
-        // curator can re-request info if the submission still needs it.
+        // Too late: decided again, already answered, or the decider's account is gone.
         if (null === $submission || SubmissionStatus::NeedsInfo !== $submission->getStatus() || null === $decidingCuratorId
             || false === $db->fetchOne('SELECT 1 FROM users WHERE id = :id', ['id' => $decidingCuratorId])) {
             $this->addFlash('danger', 'messages.reply_too_late');
@@ -288,14 +234,10 @@ final class MessagesController extends AbstractController
 
         try {
             $em->wrapInTransaction(function () use ($messages, $decidingCuratorId, $userId, $submissionId, $submission, $request): void {
-                // sendRiderReply flushes internally — fine inside
-                // wrapInTransaction, it joins the outer transaction rather
-                // than committing early.
                 $messages->sendRiderReply($decidingCuratorId, $userId, 'submission', $submissionId, 'SUB-'.$submissionId, (string) $request->request->get('body', ''));
                 $submission->setStatus(SubmissionStatus::Pending);
             });
         } catch (\InvalidArgumentException $e) {
-            // The message carries a translation key (moderate.error.note_*).
             $this->addFlash('danger', $e->getMessage());
 
             return $this->redirectToRoute('messages');
@@ -307,11 +249,9 @@ final class MessagesController extends AbstractController
     }
 
     /**
-     * Thumbnail URL per referenced photo, keyed by uuid string
-     * (docs/specs/photo-uploads.md §5b). Built here rather than in the template
-     * so the storage router stays the only thing that knows how a photo is
-     * addressed. Rows whose photo has since been disposed of simply do not
-     * appear, and the message renders without a thumb.
+     * Thumbnail URL per referenced photo.
+     *
+     * @see docs/specs/photo-uploads.md §5b
      *
      * @param list<UserMessage> $messages
      *
@@ -333,8 +273,6 @@ final class MessagesController extends AbstractController
         $urls = [];
         foreach ($this->em->getRepository(MediaUpload::class)->findBy(['id' => $ids]) as $upload) {
             if (!$upload->hasPublishedObjects()) {
-                // Still quarantined: there is no thumbnail yet, and a broken
-                // image beside a message reads as data loss.
                 continue;
             }
             $urls[$upload->getId()->toRfc4122()] = $this->mediaStorage->url(

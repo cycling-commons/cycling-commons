@@ -12,16 +12,11 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
- * Language switcher endpoint: records the chosen locale in the session (so it
- * applies for the whole visit), then returns to the page they came from.
+ * Session locale switcher (GET). Does not write User.locale — that is a CSRF-protected settings POST.
  *
- * This is a GET link in the nav, so it deliberately performs NO persistent
- * account mutation — a state-changing GET has no CSRF protection and could be
- * triggered cross-site (e.g. an <img> tag) to silently flip a logged-in user's
- * stored language. The account's saved locale is owned by the
- * CSRF-protected settings form; the session locale here covers the visit.
+ * @see docs/specs/dev-environment.md §7
  *
- * @api Instantiated by Symfony's router.
+ * @api
  */
 final class LocaleController extends AbstractController
 {
@@ -30,15 +25,13 @@ final class LocaleController extends AbstractController
     {
         $request->getSession()->set('_locale', $_locale);
 
-        // Preferred: the caller (nav switcher) passes `to` — the current page
-        // already re-generated in the target locale, so localized routes land
-        // on their prefixed path. Only accept our own relative paths.
+        // Relative `to` only; same allowlist as the pager (docs/specs/account-and-auth.md §9.4).
         $to = $request->query->get('to');
         if (\is_string($to) && $this->isSafeInternalPath($to)) {
             return $this->redirect($to);
         }
 
-        // Fallback: return to the originating page, but only if it is our host.
+        // Same-host Referer only — never an open redirect.
         $referer = $request->headers->get('referer');
         if (\is_string($referer) && str_starts_with($referer, $request->getSchemeAndHttpHost())) {
             return $this->redirect($referer);
@@ -48,16 +41,9 @@ final class LocaleController extends AbstractController
     }
 
     /**
-     * A path we may redirect to must be root-relative and not protocol-relative
-     * (`//host`) or a backslash trick — otherwise it is an open-redirect vector.
+     * Root-relative path allowlist: no `//`, `\`, or C0 — otherwise open-redirect.
      *
-     * One strict regex, not prefix checks (review 2026-08-16 finding 8):
-     * browsers strip tab/CR/LF *inside* URLs before resolving them, so
-     * "/\t//evil.example" passes a `//` prefix check yet leaves the browser as
-     * protocol-relative "//evil.example". Hence no C0 control or DEL anywhere
-     * in the string, no second character `/`, and no backslash at any position
-     * (browsers normalise `\` to `/` in URLs, so "/\evil.example"-style
-     * payloads are the same trick in another coat).
+     * @see docs/specs/account-and-auth.md §9.4
      */
     private function isSafeInternalPath(string $path): bool
     {

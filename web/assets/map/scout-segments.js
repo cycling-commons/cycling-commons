@@ -1,23 +1,11 @@
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
-/* Surface stretches from a Scout ride (scout plan task 6): the pure half.
+/* Surface stretches from a Scout ride
+   (docs/specs/moderation-and-contribution.md (Scout intake)):
+   a start/END tap pair plus the track → the line intake accepts and the map draws.
+   Coordinates only — timestamps stay in the browser. Pure; node-testable. */
 
-   A surface tag pair (a start tap and an END tap - "2 records") describes a
-   stretch of ridden road. These helpers turn that pair plus the ride's track
-   into exactly what the intake accepts and the map draws:
-
-   - the ridden LINE between the two taps, coordinates only. Deliberately no
-     timestamps: the excerpt the rider approves is "this road is gravel", not
-     "I was here at 14:02" - the segment is road data, the timings stay
-     movement data and never leave the browser.
-   - the CC surface CLASS for the stretch's colour, so the review draws the
-     same palette the map legend uses (render.js SURFACE_STYLE).
-
-   Pure functions on purpose: node-testable without a map or a DOM
-   (tests/js/scout-segments.test.mjs). */
-
-/* Device surface type (FIT poi_detail 1-8) → the map's tile class. The chain
-   it shortcuts is OSM_SURFACE (scout-fit.js) ∘ SurfaceVocabulary::FROM_OSM ∘
-   SurfaceVocabulary::TO_TILE_CLASS (PHP) - keep the three in step. */
+/* Device surface type (FIT poi_detail 1-8) → the map's tile class. Keep in step
+   with OSM_SURFACE (scout-fit.js) ∘ SurfaceVocabulary::FROM_OSM ∘ TO_TILE_CLASS. */
 export const DEVICE_CLASS = {
   1: 'paved',   // asphalt
   2: 'paved',   // concrete
@@ -29,34 +17,22 @@ export const DEVICE_CLASS = {
   8: 'dirt',    // sand
 };
 
-/* Device surface type → the declarable label the A form stores, mirroring
-   SurfaceVocabulary::FROM_OSM so the dropdown preselects what the rider
-   already chose on the device. The server re-derives this from `osmSurface`
-   when the rider leaves the dropdown alone, so a drifted entry here corrects
-   itself at intake rather than storing a wrong value. */
+/* Device surface type → the A-form declarable label (SurfaceVocabulary::FROM_OSM).
+   The server re-derives from `osmSurface` if the dropdown is left alone. */
 export const DEVICE_DECLARABLE = {
   1: 'Asphalt', 2: 'Concrete', 3: 'Paving stones',
   4: 'Sett — pavé', 5: 'Sett — pavé',
   6: 'Gravel', 7: 'Dirt', 8: 'Dirt',
 };
 
-/* Mirror of CatalogContributionService::MAX_SEGMENT_POINTS - the intake
-   refuses longer lines, so the cut downsamples to fit rather than failing. */
+/* Mirror of CatalogContributionService::MAX_SEGMENT_POINTS — downsample to fit. */
 export const MAX_SEGMENT_POINTS = 3000;
 
-/* The ridden line between a stretch's two taps.
-
-   `track` is readFit()'s [{lat, lng, at: Date}] in ride order; `seg` is one of
-   buildSurfaceSegments()'s {startTime, endTime, startLat, startLon, endLat,
-   endLon}. Returns {a, b, line} in the intake's shape ([lng, lat] pairs,
-   line[0] == a, line[last] == b) or null when the ride holds no usable line
-   for the window (a tunnel with no fix, a recording gap).
-
-   The exact tap points bound the line: the taps are where the rider SAID the
-   surface changes, the track points are merely where the device happened to
-   sample - so the taps win the endpoints and the samples fill the middle. An
-   unterminated stretch (no END tap) has no end tap to trust, so the last
-   sample inside the window becomes `b`. */
+/* Ridden line between a stretch's two taps.
+   `track` is [{lat, lng, at: Date}] in ride order; `seg` is a
+   buildSurfaceSegments() window. Returns {a, b, line} ([lng, lat], line[0]==a)
+   or null. Taps win the endpoints; samples fill the middle. An unterminated
+   stretch has no end tap, so the last sample in the window becomes `b`. */
 export function cutTrack(track, seg) {
   const start = seg.startTime instanceof Date ? seg.startTime.getTime() : null;
   if (start == null) return null;
@@ -81,9 +57,7 @@ export function cutTrack(track, seg) {
   return { a: sampled[0], b: sampled[sampled.length - 1], line: sampled };
 }
 
-/* Even index-space thinning that always keeps both endpoints - the endpoints
-   are the rider's taps and the intake checks the line starts and ends on
-   them (MAX_SNAP_DRIFT_M). */
+/* Even index-space thinning that always keeps both endpoints (intake snap check). */
 export function downsample(line, max) {
   if (line.length <= max) return line;
   const out = [];
@@ -95,10 +69,7 @@ export function downsample(line, max) {
   return out;
 }
 
-/* Nearest track index to a dragged point - the snap that keeps a stretch
-   endpoint ON the ride. Plain equirectangular distance is plenty at drag
-   scale; the win of an index over a coordinate is that ordering ("start
-   before end") becomes a number comparison. */
+/* Nearest track index to a dragged point — keeps a stretch endpoint on the ride. */
 export function nearestTrackIndex(track, lngLat) {
   let best = -1;
   let bestD = Infinity;
@@ -112,9 +83,7 @@ export function nearestTrackIndex(track, lngLat) {
   return best;
 }
 
-/* The stretch between two track INDICES - the dragged-endpoint counterpart of
-   cutTrack's time window. The endpoints are track points themselves, so the
-   intake's endpoint-drift check holds by construction. */
+/* Stretch between two track indices — dragged-endpoint counterpart of cutTrack. */
 export function sliceTrack(track, i0, i1) {
   if (i0 < 0 || i1 >= track.length || i1 - i0 < 1) return null;
   const line = [];

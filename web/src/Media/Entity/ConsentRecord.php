@@ -11,18 +11,11 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
 
 /**
- * One consent act: a rider ticked the licence contract at a point in time.
- * Append-only and immutable — no setters exist, and no code path may update or
- * delete a row. The licence grant outlives the account that made it, which is
- * why user_id is a plain column and not a cascading foreign key
- * (docs/specs/photo-uploads.md §3 consent ledger).
+ * One consent act. Append-only; user_id is not a cascading FK.
  *
- * When the phase-2 write API lands (docs/specs/public-api.md §8), external
- * consent rows key on api_app_id + external_author_ref instead of user_id,
- * which becomes nullable behind an exactly-one-origin CHECK. Nothing here may
- * assume user_id is permanently NOT NULL.
+ * @see docs/specs/photo-uploads.md §3
  *
- * @api Media domain entity; referenced by every media_upload row.
+ * @api
  */
 #[ORM\Entity]
 #[ORM\Table(name: 'consent_record')]
@@ -36,11 +29,11 @@ class ConsentRecord
     #[ORM\Column(name: 'user_id', type: Types::BIGINT)]
     private int $userId;
 
-    /** {@see \App\Media\MediaConsent::KIND} — which contract was granted. */
+    /** {@see \App\Media\MediaConsent::KIND} */
     #[ORM\Column(type: Types::STRING, length: 32)]
     private string $kind;
 
-    /** Wording version; a change here is what brings the modal back. */
+    /** Wording version; a change here brings the modal back. */
     #[ORM\Column(type: Types::STRING, length: 16)]
     private string $version;
 

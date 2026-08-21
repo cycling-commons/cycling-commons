@@ -7,41 +7,19 @@ declare(strict_types=1);
 namespace App\Community;
 
 /**
- * Hardening for the two stranger-writable free-text fields.
+ * Hardening for stranger-writable notes. Reviewer-only; never public.
  *
- * Both fields are reviewer-only and never rendered on a public page, which
- * bounds the blast radius to the reviewer's own screen. This filter is the
- * layer above that: it rejects the payloads outright rather than relying on
- * escaping alone.
- *
- * The claims about what is wrong on the map do NOT come through here — those
- * go through the contribute wizard as normal submissions (§8), which is what
- * keeps these fields short enough to be safe.
+ * @see docs/specs/moderation-and-contribution.md §11
  */
 final class PublicNoteFilter
 {
     public const int MAX_NOTE = 280;
     public const int MAX_ABOUT = 1200;
 
-    /**
-     * Zero-width and bidirectional-override characters. Invisible on screen,
-     * so a reviewer cannot see what they are approving. Includes deprecated
-     * embedding/override controls (\x{202A}-\x{202E}) and modern isolate
-     * controls (\x{2066}-\x{2069}) to defeat Trojan-Source spoofing.
-     */
+    /** Zero-width / bidi controls; invisible on screen. */
     private const string INVISIBLE = '/[\x{200B}-\x{200F}\x{202A}-\x{202E}\x{2060}-\x{2064}\x{2066}-\x{2069}\x{FEFF}]/u';
 
-    /**
-     * A link is the entire payload of most spam and nobody needs one to explain
-     * why they know an area. Matches a scheme, a bare www., and a bare
-     * domain.tld — the three forms that survive a reviewer's eye.
-     *
-     * The scheme form requires either '://' (http://, https://, ftp://…) or,
-     * for non-'//' schemes, a payload pattern that confirms it is actually a link:
-     * - mailto: only when followed by an @ (e.g. mailto:user@example.com)
-     * - tel: only when followed by + or digits (e.g. tel:+1234567890)
-     * This avoids false-positives on prose like "News:local closed" or "Tel:office".
-     */
+    /** Scheme, www., or domain.tld — mailto/tel only with a real payload. */
     private const string LINKISH = '~(\b[a-z][a-z0-9+.-]*://\S|\bmailto:[^\s@]+@|\btel:[+0-9]|\bwww\.|\b[a-z0-9-]+\.[a-z]{2,}(/|\b))~i';
 
     public function clean(string $raw, int $maxLength): string
@@ -49,8 +27,6 @@ final class PublicNoteFilter
         $text = $raw;
 
         if (class_exists(\Normalizer::class)) {
-            // Composed vs decomposed forms must not store as two different
-            // values, or the uniqueness rules can be evaded visually.
             $text = (string) \Normalizer::normalize($text, \Normalizer::FORM_C);
         }
 
@@ -58,7 +34,6 @@ final class PublicNoteFilter
         $text = (string) preg_replace('/\s+/u', ' ', $text);
         $text = trim($text);
 
-        // Control characters other than the whitespace already collapsed above.
         if (1 === preg_match('/[\x{0000}-\x{0008}\x{000B}\x{000C}\x{000E}-\x{001F}\x{007F}]/u', $text)) {
             throw new InvalidNoteException('control', 'The text contains control characters.');
         }

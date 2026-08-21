@@ -14,7 +14,7 @@ use SymfonyCasts\Bundle\ResetPassword\Persistence\ResetPasswordRequestRepository
 /**
  * @extends ServiceEntityRepository<ResetPasswordRequest>
  *
- * @api Wired by Doctrine's repository factory and the reset-password bundle.
+ * @api
  */
 class ResetPasswordRequestRepository extends ServiceEntityRepository implements ResetPasswordRequestRepositoryInterface
 {

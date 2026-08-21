@@ -18,11 +18,11 @@ use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
- * Community confirmations for non-votable items (drinking-water potability, or a
- * plain existence confirmation for a utility). One stance per rider per item,
- * changeable. Tallies are public; recording requires an account.
+ * Confirmations for non-votable items. One stance per rider per item.
  *
- * @api Consumed by ItemConfirmationController.
+ * @see docs/specs/moderation-and-contribution.md §10
+ *
+ * @api
  */
 final class ItemConfirmationService
 {
@@ -33,9 +33,7 @@ final class ItemConfirmationService
     }
 
     /**
-     * Record (or switch) a rider's stance on an item. Rejects a stance the
-     * item's type does not offer (e.g. Potable on a bike-service point, or any
-     * stance on a votable type).
+     * Record or switch a stance. Rejects a stance the item's type does not offer.
      */
     public function record(Item $item, User $user, ConfirmationStance $stance, ConfirmationSource $source = ConfirmationSource::Drawer): void
     {
@@ -50,9 +48,6 @@ final class ItemConfirmationService
 
             if (null !== $existing) {
                 $existing->setStance($stance);
-                // A drawer answer promotes a form-sourced row (the submitter has
-                // now confirmed as a rider); a form answer never demotes a real
-                // confirmation back out of the tally.
                 if (ConfirmationSource::Drawer === $source) {
                     $existing->setSource($source);
                 }
@@ -65,32 +60,14 @@ final class ItemConfirmationService
     }
 
     /**
-     * A curator's own confirmation verifies the item outright.
+     * A curator's drawer confirmation verifies the item. Form-sourced answers never do.
      *
-     * The question a confirmation answers is "is this real, and is it right" —
-     * and the honest answer for most things is *we cannot know until several
-     * unrelated people say so*. A photo can be generated; a place can be
-     * invented. Repetition by strangers is the only check this project has, and
-     * that is why it exists.
-     *
-     * But it is the wrong instrument for a castle (owner 2026-08-12). Some
-     * things a curator can settle by looking — a listed monument, a station, a
-     * public fountain in a town square — and making them wait for three riders
-     * to pass by is ceremony, not verification. So a curator standing behind an
-     * entry IS the verification, once, and it is recorded as an act of theirs in
-     * the item's history rather than happening quietly.
-     *
-     * Deliberately NOT a new moderation mechanic: it is the same confirm control
-     * every rider uses, weighted by who pressed it. Nothing queues, nothing is
-     * approved, and a curator who is wrong is corrected the way anything else is.
-     * A `form`-sourced answer never verifies — the submitter is not a witness to
-     * their own submission.
+     * @see docs/specs/moderation-and-contribution.md §10
      */
     private function verifyIfCurator(Item $item, User $user, ConfirmationStance $stance, ConfirmationSource $source): void
     {
         if (ConfirmationSource::Drawer !== $source
             || ItemState::Unverified !== $item->getState()
-            // a warning is not a vouching — neither negative stance verifies
             || ConfirmationStance::NotPotable === $stance
             || ConfirmationStance::NotAsDescribed === $stance) {
             return;
@@ -110,28 +87,20 @@ final class ItemConfirmationService
     }
 
     /**
-     * The submitter's own answer to the same question, taken from an approved
-     * submission's payload — recorded so the map never asks them again, and
-     * never counted (ConfirmationSource::Form).
-     *
-     * Silent no-op when the submission asserted nothing: the potability field
-     * offers "Unsigned — use judgement", which is not a claim either way, and
-     * a submitter who left it alone has answered nothing.
+     * Submitter's form answer: stored so the map does not re-ask, never tallied.
      */
     public function recordFromSubmission(Item $item, int $userId, ConfirmationStance $stance): void
     {
         $user = $this->em->find(User::class, $userId);
         if (null === $user) {
-            return;   // account gone between submitting and approval
+            return;
         }
 
         $this->record($item, $user, $stance, ConfirmationSource::Form);
     }
 
     /**
-     * Public tally of stances for an item, plus this user's own stance (null for
-     * an anonymous viewer). `stances` is keyed only by the stances the item's
-     * type actually offers, each defaulting to 0.
+     * Public tally plus this user's stance. Form-sourced rows are excluded from counts.
      *
      * @return array{stances: array<string, int>, total: int, mine: ?string, mineSource: ?string}
      */
@@ -143,11 +112,6 @@ final class ItemConfirmationService
             $stances[$s->value] = 0;
         }
 
-        // Form-sourced rows are the submitter's own answer on the improve form.
-        // They are kept (so the map never re-asks the person who added the
-        // place) but never tallied: "2 riders confirmed" must mean two riders
-        // confirmed it, not one rider and the person making the claim
-        // (ConfirmationSource).
         /** @var list<array{stance: string, n: int|string}> $rows */
         $rows = $this->db->fetchAllAssociative(
             "SELECT stance, COUNT(*) AS n FROM item_confirmation WHERE item_id = :id AND source <> 'form' GROUP BY stance",
@@ -162,11 +126,6 @@ final class ItemConfirmationService
             }
         }
 
-        // `mine` ignores the source: the reader answered, whichever way they
-        // answered, and the drawer must not put the question to them again.
-        // `mineSource` lets it say WHERE they answered, so a submitter reading
-        // their own form answer back is not left wondering when they confirmed
-        // a place they only just added.
         $mine = null;
         $mineSource = null;
         if (null !== $user) {

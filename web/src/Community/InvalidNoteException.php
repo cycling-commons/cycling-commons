@@ -7,9 +7,7 @@ declare(strict_types=1);
 namespace App\Community;
 
 /**
- * Why a rejected note carries a machine-readable reason: the form shows the
- * rider a specific message, and "no links here" is the one rejection a
- * legitimate person actually hits.
+ * Rejected note with a machine-readable `reason`.
  */
 final class InvalidNoteException extends \RuntimeException
 {

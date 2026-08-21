@@ -7,10 +7,9 @@ declare(strict_types=1);
 namespace App\Catalog;
 
 /**
- * A type's two field panes: "Fix details" ({@see self::$fields}) and
- * "Add missing" ({@see self::$addFields}). Both become Symfony form children.
+ * A type's "Fix details" ({@see self::$fields}) and "Add missing" ({@see self::$addFields}) panes.
  *
- * @api Read by the improve form and template.
+ * @api
  */
 final readonly class ItemFieldSet
 {

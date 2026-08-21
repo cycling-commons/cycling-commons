@@ -9,13 +9,9 @@ namespace App\Catalog;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
- * Serialises a type's *display* fields for the map drawer, straight from the
- * same {@see CatalogFormRegistry} that builds the improve form: one source of
- * truth, so the drawer can never drift from the form. Labels are localised
- * (the `messages` domain, source-string keys, exactly as ImproveType renders
- * them) so no English label is baked into map.js.
+ * Display fields for the map drawer, from the same {@see CatalogFormRegistry} as the improve form.
  *
- * @api Injected into MapController; emitted as window.CC_FIELD_SCHEMA.
+ * @api
  */
 final class CatalogSchemaProvider
 {
@@ -38,10 +34,7 @@ final class CatalogSchemaProvider
                 'label' => $this->translator->trans($field->label),
                 'kind' => $this->renderKind($field),
             ];
-            // Canonical stored value => localized display label, so the drawer
-            // can render select values in the rider's language while the data
-            // (and the improve form's submitted values) stay canonical English.
-            // Rating scales (1-5) render as stars, so there are no labels to translate.
+            // Stored value stays canonical English; labels localize. Ratings have no labels.
             if ([] !== $field->choices && 'rating' !== $entry['kind']) {
                 $choices = [];
                 foreach ($field->choices as $choice) {
@@ -66,11 +59,7 @@ final class CatalogSchemaProvider
         return $out;
     }
 
-    /**
-     * A drawer render-hint, not just the raw form input kind: a select whose
-     * choices are exactly the 1-5 rating scale renders as star glyphs, not a
-     * dropdown.
-     */
+    /** Drawer hint: a 1–5 select renders as stars, not a dropdown. */
     private function renderKind(CatalogField $field): string
     {
         if (FieldKind::Select === $field->kind && $field->choices === ['1', '2', '3', '4', '5']) {

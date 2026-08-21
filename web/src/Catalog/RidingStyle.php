@@ -7,13 +7,11 @@ declare(strict_types=1);
 namespace App\Catalog;
 
 /**
- * Rider riding-style vocabulary: what KIND of riding a
- * rider does, deliberately excluding hardware. Bikes (E-bike, Handbike,
- * Recumbent, Trike, Tandem, …) are declared separately via BikeType. The
- * map's Discipline chips (today a visual stub) get re-based onto this enum
- * when preference prefiltering is built; this enum is that contract.
+ * Kind of riding, excluding hardware (that is {@see BikeType}).
  *
- * @api User-preference vocabulary; consumed by SettingsType and User.
+ * @see docs/specs/map-and-search.md §4.4
+ *
+ * @api
  */
 enum RidingStyle: string
 {

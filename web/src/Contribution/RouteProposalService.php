@@ -20,22 +20,15 @@ use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 
 /**
- * Route proposal intake (docs/specs/route-domain.md §4). Deliberately not part of the
- * item Submission pipeline: a proposal is a RecommendedRoute row in state
- * `submitted`, reviewed later in the Routes moderation queue.
+ * Route proposal intake (docs/specs/route-domain.md §4,
+ * docs/specs/edit-items/K-quality-rides.md). A proposal is a RecommendedRoute
+ * in state `submitted`, not an item Submission.
  *
- * Processing order (spec §4.2): parse → raw-length guard → privacy trim
- * (content-hash seeded, only the trimmed track is ever persisted) →
- * distance/ascent on the trimmed track → simplify for serving → region.
- *
- * @api Route-proposal intake entry point (docs/specs/route-domain.md §4); consumed by
- *      ProposeRouteController, covered by RouteProposalServiceTest.
+ * @api
  */
 final class RouteProposalService
 {
-    /* Public because the error message that quotes them is written in the
-       READER's units (account-and-auth.md §9), so the controller formats the
-       bounds instead of the translation hard-coding "2 and 400 km". */
+    /* Public so the error message can quote them in the reader's units. */
     public const int MIN_RAW_M = 2_000;     // spec §4.1
     public const int MAX_RAW_M = 400_000;   // spec §4.1
 
@@ -98,16 +91,14 @@ final class RouteProposalService
                 $attributes[$key] = $value;
             }
         }
-        // Canonicalize difficulty to {score,label} (docs/specs/route-domain.md §9) so
-        // the form's rider-facing string is never persisted verbatim.
+        // Canonicalize difficulty to {score,label} (docs/specs/route-domain.md §9).
         $canonicalDifficulty = DifficultyVocabulary::canonical($meta['difficulty'] ?? null);
         if (null !== $canonicalDifficulty) {
             $attributes['difficulty'] = $canonicalDifficulty;
         } else {
             unset($attributes['difficulty']);
         }
-        // Store bikeTypes as a deduplicated list of valid BikeType values
-        // (docs/specs/route-domain.md §9).
+        // Deduplicated valid BikeType values (docs/specs/route-domain.md §9).
         $bikeTypes = BikeTypeVocabulary::normalize($meta['bikeTypes'] ?? null);
         if ([] !== $bikeTypes) {
             $attributes['bikeTypes'] = $bikeTypes;
@@ -115,9 +106,7 @@ final class RouteProposalService
             unset($attributes['bikeTypes']);
         }
 
-        // Derived, never user-supplied: the surfaces the trimmed track actually
-        // crosses, measured against the served A-layer segments (honest estimate
-        // with disclosed coverage). Absent when nothing mapped is near the route.
+        // Derived surfaces from the trimmed track; never user-supplied.
         $surfaces = $this->profiler->profile($geoJson);
         if (null !== $surfaces) {
             $attributes['surfaces'] = $surfaces;
@@ -131,8 +120,7 @@ final class RouteProposalService
             ->setRegionId($this->regions->resolve($geoJson))
             ->setState(ItemState::Submitted)
             ->setSource(ItemSource::User)
-            // Unique per proposal so harvest upserts keyed on (source,
-            // source_ref) can never clobber rider proposals (spec §2.1).
+            // Unique per proposal so harvest upserts cannot clobber rider rows (docs/specs/route-domain.md §2.1).
             ->setSourceRef('user:'.bin2hex(random_bytes(12)))
             ->setAttributes($attributes)
             ->setProposedBy($user->getId())

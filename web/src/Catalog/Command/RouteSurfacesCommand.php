@@ -14,12 +14,11 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 /**
- * Recomputes every recommended_route's derived surface profile
- * ({@see SurfaceProfiler}) from the served A-layer segments. The importer runs
- * this automatically after a harvest; this command is the standalone ops/dev
- * backfill for when the A-layer changed without a route re-import.
+ * Standalone backfill of derived route surface profiles ({@see SurfaceProfiler}).
  *
- * @api Console entry point (dev/ops backfill, safe to re-run).
+ * @see docs/specs/route-domain.md §9
+ *
+ * @api
  */
 #[AsCommand(name: 'app:catalog:route-surfaces', description: 'Recompute derived route surface profiles from the A-layer segments')]
 final class RouteSurfacesCommand extends Command

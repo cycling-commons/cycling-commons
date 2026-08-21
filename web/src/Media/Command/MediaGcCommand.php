@@ -15,16 +15,11 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 /**
- * Sweeps the three disposal classes that have a window
- * (docs/specs/photo-uploads.md §6): orphaned uploads nobody ever submitted,
- * rejected media whose retention has lapsed, and reporter reply addresses 90
- * days past their takedown's resolution (§6c). Trash has no window and
- * therefore no sweep — it deletes synchronously with the Trash action itself.
+ * Sweep orphans, expired rejects, and 90-day reporter contacts.
  *
- * Cron-able and idempotent: a second run always reports zero once the backlog
- * is clear.
+ * @see docs/specs/photo-uploads.md §6
  *
- * @api Console entry point.
+ * @api
  */
 #[AsCommand(name: 'app:media:gc', description: 'Collect orphaned uploads, expired rejected media and expired reporter contacts')]
 final class MediaGcCommand extends Command

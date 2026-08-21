@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
-// Toggles the self-managed nav dropdown menus (the logged-in account chip and
-// the language switcher). Each menu is a [data-nav-menu] wrapper containing a
-// [data-nav-toggle] button and a [data-nav-dd] dropdown. Closes on outside
-// click, Escape, menu-item choice, or when another menu opens. No-ops when no
-// such menu is on the page. Keyboard-accessible (button + aria-expanded).
+// Account-chip and language-switcher dropdowns. Closes on outside click, Escape,
+// menu-item choice, or when another menu opens.
 (function () {
   'use strict';
   if (window.__ccNavMenus) return;
@@ -30,7 +27,6 @@
     }
 
     document.addEventListener('click', function (e) {
-      // A click outside every menu closes them all.
       if (!menus.some(function (m) { return m.menu.contains(e.target); })) closeAll();
     }, true);
 
@@ -44,13 +40,13 @@
 
     menus.forEach(function (m) {
       m.btn.addEventListener('click', function (e) {
-        e.stopPropagation();                 // don't let the outside-click handler see this
+        e.stopPropagation();
         var willOpen = m.dd.hidden;
         closeAll(m);
         setOpen(m, willOpen);
       });
       m.dd.addEventListener('click', function (e) {
-        if (e.target.closest('a')) setOpen(m, false);  // navigating away — collapse
+        if (e.target.closest('a')) setOpen(m, false);
       });
     });
   });

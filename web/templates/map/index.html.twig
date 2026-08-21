@@ -689,7 +689,7 @@ window.CC_VENDOR = {{ {
   window.CC_COVERAGE_COUNTRIES = {{ coverage_countries|default([])|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
   {% endif %}
   {# Road-surface LINE tiles: a SEPARATE artifact from the coverage points
-     (Dated/2026-08-09-surface-line-tiles-design.md), so it has its own URL and
+     (docs/specs/coverage-provider.md §4), so it has its own URL and
      its own gate. Absent/empty means the Surfaces toggle never renders — a
      control for a layer whose tiles do not exist is worse than no control,
      which is the toilets lesson (a rail row for a layer that was never built).

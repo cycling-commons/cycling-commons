@@ -21,19 +21,11 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
- * "Download my data" (docs/specs/account-and-auth.md §11) — GDPR Art. 15 and
- * Art. 20 in one ZIP.
+ * "Download my data" — POST + current password; limiter before the password check.
  *
- * POST, not GET, and behind the current password. This is the single request
- * that assembles everything the app knows about a rider into one file, which
- * makes it the most valuable thing an attacker on a borrowed session could ask
- * for — more valuable than any individual page it draws from, because it
- * removes the work of collecting them. Re-authentication turns "left a laptop
- * unlocked" back into "knows the password", and the POST keeps the whole
- * archive out of a URL that could be prefetched, linked or logged.
+ * @see docs/specs/account-and-auth.md §11
  *
- * @api Instantiated by Symfony's router — `@api` tells Psalm this is a live
- *      entry point, not dead code.
+ * @api
  */
 #[Route(LocalePrefix::PATHS)]
 #[IsGranted('ROLE_USER')]
@@ -58,10 +50,7 @@ final class DataExportController extends AbstractController
             return $this->redirectToRoute('settings', ['tab' => 'security']);
         }
 
-        // Checked BEFORE the password, and it is the password attempt that is
-        // being throttled as much as the export: this endpoint would otherwise
-        // be an unmetered oracle for guessing the password of an account whose
-        // session you already hold.
+        // docs/specs/account-and-auth.md §11 — limiter before password (no unmetered oracle).
         if (!$dataExportLimiter->create('user-'.(string) $user->getId())->consume()->isAccepted()) {
             $this->addFlash('export_error', 'flash.export_rate_limited');
 
@@ -84,8 +73,6 @@ final class DataExportController extends AbstractController
             \sprintf('cycling-commons-export-%s.zip', $this->clock->now()->format('Y-m-d')),
         );
         $response->headers->set('Content-Type', 'application/zip');
-        // Belt and braces on top of the POST: an archive of somebody's whole
-        // account must not sit in a shared cache or a proxy's disk.
         $response->headers->set('Cache-Control', 'no-store, private');
 
         return $response;

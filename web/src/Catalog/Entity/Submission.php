@@ -11,15 +11,11 @@ use App\Catalog\SubmissionType;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * A user contribution awaiting (or past) moderation. The row doubles as the
- * decision audit record (decided_by/decided_at/decision_note). For NewItem
- * submissions the created item row (state=submitted) is referenced by
- * item_id; for Edit submissions item_id is the edit target and `changes`
- * holds the per-field was/now snapshot taken at submit time.
+ * A contribution awaiting (or past) moderation. The row also holds the decision audit.
  *
  * @see docs/specs/moderation-and-contribution.md §3.1
  *
- * @api Catalog domain entity.
+ * @api
  */
 #[ORM\Entity]
 #[ORM\Table(name: 'submission')]
@@ -93,14 +89,9 @@ class Submission
     private \DateTimeImmutable $createdAt;
 
     /**
-     * A curator has escalated this submission's contents as suspected illegal
-     * content (docs/specs/photo-uploads.md §6d). Non-null is a **legal hold**:
-     * out of the queue, out of every curator's sight, and immune to Trash and
-     * to the retention sweep. Only an admin can act on it.
+     * Legal hold: out of the queue, immune to Trash and retention. Only an admin can act.
      *
-     * The same reasoning as the photo side — where the material is the kind
-     * that must be reported, deleting it first destroys the evidence too —
-     * and words can be that material just as pixels can.
+     * @see docs/specs/photo-uploads.md §6d
      */
     #[ORM\Column(name: 'escalated_at', type: 'datetime_immutable', nullable: true)]
     private ?\DateTimeImmutable $escalatedAt = null;

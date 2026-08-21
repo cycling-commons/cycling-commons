@@ -10,57 +10,26 @@ use App\Catalog\CatalogFormRegistry;
 use App\Catalog\ItemType;
 
 /**
- * The only attribute keys an imported item may carry: the catalog registry's
- * editable field names for the letter, plus shared display keys, plus a few
- * per-letter fixture extras. Unknown keys are an import ERROR - the "no key
- * exists unless declared" rule starts at the front door.
+ * Import attribute keys: unknown keys are an error.
  *
  * @see docs/specs/catalog-data-model.md §7
  *
- * @api Used by the catalog importer.
+ * @api
  */
 final class AttributeVocabulary
 {
-    // 'photos' (plural) sits alongside singular 'photo': a gallery of 2+ images
-    // for a pin - map.js's photoList(f) already prefers f.photos over f.photo.
-    // 'links': outbound links to the pages that describe the place (an
-    // official site, a Wikipedia article) - two-level shape, validated by
-    // {@see OutboundLinks} on every write path; the drawer renders each entry
-    // resolved to the reader's locale (web/assets/map/links.js).
+    // photos (gallery) beside photo. links: docs/specs/catalog-data-model.md §7
     private const array COMMON = ['t', 'town', 'web', 'c', 'sim', 'r', 'desc', 'descTr', 'photo', 'photos', 'links'];
 
     private const array EXTRAS = [
-        // 'segment': the add-wizard's two drawn endpoints
-        // ({a:[lng,lat], b:[lng,lat]}, CatalogContributionService::submitAdd) —
-        // a NEW road-surface stretch has no other geometry to fall back on.
-        // 'waysSpanned': the OSM way refs a run-prefilled stretch covers
-        // (run-chaining, owner 2026-08-13) — nobody types it, but it must
-        // survive so curatedRefs() can retire every covered red dash.
+        // segment: add-wizard endpoints. waysSpanned: OSM ways a run-prefilled stretch covers.
         'A' => ['cls', 'photoFile', 'photoCredit', 'photoUser', 'photoLicense', 'segment', 'waysSpanned'],
-        // 'attribution' (not 'source'): the climbs export preserves the citation
-        // as `attribution` since `source` is reserved for provenance
-        // (App\Catalog\ItemSource).
-        // Derived-and-stored measurements (climb-elevation.md §4) sit here rather
-        // than in the registry: nobody types them, so they are not form fields,
-        // but they must survive an import round-trip. `steepPoint` is the one
-        // exception in spirit — a rider places it — but it is geometry, not a
-        // text field, so it travels with `route`/`steep` (§5a).
+        // attribution not source (provenance owns source). Measured keys: docs/specs/climb-elevation.md §4
         'B' => ['headline', 'cur', 'sq', 'tr', 'record', 'attribution', 'route', 'grad',
             'steep', 'steepPoint', 'lineGrad', 'binM', 'length', 'gain', 'demSource',
-            // The width `maxGradient` was averaged over. Stored beside the figure
-            // so the caption is built from the measurement rather than from a
-            // number typed into four translation catalogues — which is exactly
-            // how they came to read "steepest 100m" over a 250 m window.
             'steepWindowM',
-            // The two ends above sea level (climb-elevation.md §4b). Same
-            // family as length/gain — measured by ClimbProfiler, typed by
-            // nobody, and they must survive an export/import round trip or a
-            // re-imported climb loses the labels on its profile chart.
             'footEle', 'summitEle'],
-        // serviceKind (App\Catalog\ServiceKind: shop/station/pump) - D/bike-services only.
-        // Not a registry field: it's harvester/import-stamped (tools/wallonia's
-        // service_kind_by_label + ImportCatalogCommand's legacy-label fallback),
-        // never a curator-editable form field.
+        // serviceKind is harvest-stamped, not a form field.
         'D' => ['serviceKind'],
     ];
 

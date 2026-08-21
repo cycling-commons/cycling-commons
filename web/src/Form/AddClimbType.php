@@ -24,15 +24,11 @@ use Symfony\Component\Validator\Constraints\PositiveOrZero;
 use Symfony\Component\Validator\Constraints\Regex;
 
 /**
- * Server-side form for the add-climb wizard.
- *
- * Maps the eleven input ids from atlas/demo/add-climb.html onto Symfony form
- * types. The geocoded location (lat/lng/place) is filled by client-side JS and
- * carried as hidden/text fields. CSRF protection is provided automatically.
+ * Add-climb wizard form.
  *
  * @see docs/specs/edit-items/B-climbs.md
  *
- * @api Instantiated by Symfony's form factory.
+ * @api
  */
 final class AddClimbType extends AbstractType
 {
@@ -92,11 +88,7 @@ final class AddClimbType extends AbstractType
             ->add('fAvg', TextType::class, [
                 'label' => false,
                 'required' => false,
-                // Average gradient: a bare number, optionally with a decimal
-                // and/or trailing '%' (e.g. "6.4" or "8%"). Kept as text (not
-                // NumberType) so the editor's "%" affordance round-trips. The
-                // Length and Regex constraints below keep the stored value
-                // bounded before it reaches the published attributes.
+                // Text so the editor's "%" round-trips (docs/specs/edit-items/B-climbs.md).
                 'constraints' => [
                     new Length(max: 8, maxMessage: 'add_climb.error.avg_gradient_invalid'),
                     new Regex(
@@ -105,13 +97,6 @@ final class AddClimbType extends AbstractType
                     ),
                 ],
             ])
-            // No max-gradient input: it is read off the steepest-ramp marker the
-            // rider places in step 1 (CatalogField::derived). A text box beside
-            // that marker is a second source for one fact, and accepts anything.
-            // Climb surface/quality/traffic vocabularies come from the ONE
-            // registry (Climbs surface/sq/tr fields), so add-climb and the
-            // improve form can never store divergent values for the same
-            // attribute.
             ->add('fSurface', ChoiceType::class, [
                 'label' => false,
                 'choices' => $climbChoices['surface'],
@@ -145,30 +130,14 @@ final class AddClimbType extends AbstractType
                 'label' => false,
                 'required' => false,
             ])
-            // Climb shape drawn by the three-point editor (client JS), carried
-            // as JSON. Validated + decoded server-side by ClimbGeometry.
             ->add('route', HiddenType::class, ['label' => false, 'required' => false])
             ->add('grad', HiddenType::class, ['label' => false, 'required' => false])
             ->add('steep', HiddenType::class, ['label' => false, 'required' => false])
-            // Ascent-only average, computed by the editor from the drawn line.
-            // Derived, never typed: climb-elevation.md 4.
             ->add('avg', HiddenType::class, ['label' => false, 'required' => false])
-            // The RIDER's steepest point, distinct from our derived `steep`:
-            // climb-elevation.md 5a.
             ->add('steepPoint', HiddenType::class, ['label' => false, 'required' => false])
         ;
 
-        /* Length and gain are the only two numbers on this wizard a rider TYPES
-           in a unit of their own choosing (account-and-auth.md §9). The field
-           shows — and the editor autofills — miles or feet when that is what
-           they asked for; these transformers put the value back into kilometres
-           and metres before anything downstream sees it.
-
-           It has to happen here rather than in the browser: the payload a
-           moderator reads, the constraints below and every later measurement
-           are metric, and a submission that arrived in miles because JavaScript
-           was meant to convert it and did not is a wrong number nobody can spot
-           afterwards. A rider on a metric setting gets identity functions. */
+        // Typed length/gain: convert display units back to km/m (docs/specs/account-and-auth.md §9).
         $builder->get('fLen')->addModelTransformer(new CallbackTransformer(
             fn (mixed $km): ?float => is_numeric($km) ? $this->units->distanceValue((float) $km, 1) : null,
             fn (mixed $shown): ?float => is_numeric($shown)

@@ -40,16 +40,11 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Uid\Uuid;
 
 /**
- * Curator moderation queue — review pending submissions and record decisions.
+ * Curator moderation queue.
  *
- * Decisions are applied by ModerationService, the only write-path for
- * moderation (approve applies the change to the catalog + appends
- * change_history; reject/needs_info never mutate the item). The queue is
- * populated from SubmissionQueue, which reads real pending/needs-info rows
- * from the submission table.
+ * @see docs/specs/moderation-and-contribution.md §5
  *
- * @api Instantiated by Symfony's router — `@api` tells Psalm this is a live
- *      entry point, not dead code.
+ * @api
  */
 #[Route(LocalePrefix::PATHS)]
 #[IsGranted('ROLE_CURATOR')]
@@ -75,8 +70,6 @@ final class ModerateController extends AbstractController
     #[Route('/moderate', name: 'moderate')]
     public function index(Request $request): Response
     {
-        // Fire-and-forget housekeeping (throttled internally, never throws) —
-        // must never delay or break the desk render.
         $this->retention->sweepOpportunistically();
 
         return $this->renderQueue(
@@ -90,11 +83,9 @@ final class ModerateController extends AbstractController
     }
 
     /**
-     * Settled submissions — their own page since 2026-08-03 (owner).
+     * Settled submissions — searchable history, not the open queue.
      *
-     * It grew from a footnote under the queue into a searchable, paged record
-     * with a foldable conversation per row; a desk that is about what is still
-     * to do should not carry an unbounded list of what is already done.
+     * @see docs/specs/moderation-and-contribution.md §5.2
      */
     #[Route('/moderate/history', name: 'moderate_history')]
     public function history(Request $request): Response
@@ -109,8 +100,6 @@ final class ModerateController extends AbstractController
         $region = $request->query->getString('region');
         $type = $request->query->getString('type');
         $page = max(1, $request->query->getInt('page', 1));
-        // ?by=<user id> — "show me what this person has submitted", the question
-        // the curator-application desk links here to ask. 0 means absent.
         $byUser = $request->query->getInt('by') ?: null;
         $me = $mine ? $user->getId() : null;
         $perPage = $this->pageSize->resolve(SubmissionQueue::PER_PAGE);
@@ -122,8 +111,6 @@ final class ModerateController extends AbstractController
             'nav_active' => 'moderate_history',
             'history' => $this->queue->history($scope, $me, $status ?: null, $q ?: null, $page, $perPage, $country ?: null, $region ?: null, $type ?: null, $byUser),
             'history_filters' => ['mine' => $mine, 'status' => $status, 'q' => $q, 'country' => $country, 'region' => $region, 'type' => $type, 'by' => $byUser],
-            // Option lists describe the SETTLED set here, not the open queue —
-            // a country with no open work can still have a record worth reading.
             'countries' => $this->queue->countries($scope, settled: true),
             'regions' => $this->queue->regions($scope, settled: true),
             'types' => SubmissionType::values(),
@@ -133,13 +120,9 @@ final class ModerateController extends AbstractController
     }
 
     /**
-     * Photo takedown requests — their own desk since 2026-08-03 (owner).
+     * Photo takedown desk — unscoped: every curator sees every request.
      *
-     * They rode along under the submissions queue, which put a legal clock and
-     * an editorial backlog on one page and made the takedowns look like the
-     * bottom of somebody's to-do list. They are neither scoped nor filtered
-     * (docs/specs/photo-uploads.md §6b): a rights request is not editorial work
-     * to be shared out by jurisdiction, so every curator sees every one.
+     * @see docs/specs/photo-uploads.md §6b
      */
     #[Route('/moderate/takedowns', name: 'moderate_takedowns')]
     public function takedowns(Request $request): Response
@@ -154,16 +137,6 @@ final class ModerateController extends AbstractController
             $this->pageSize->resolve(MediaTakedownService::PER_PAGE),
         );
 
-        /* The ANSWERED requests, below the open ones (owner-reported
-           2026-08-14: "we had one request that was rejected and now we do not
-           know of it"). This desk empties itself by design, so without a
-           history a decided request left no trace on the only page anyone
-           looks at — while every other desk has one. The decisions were being
-           written to the event log the whole time; nothing was lost, there was
-           just nowhere to see it.
-
-           Its own page parameter, so paging the history cannot scroll the open
-           requests out from under a curator halfway through answering one. */
         $historyPager = Pager::of(
             $request->query->getInt('hpage', 1),
             $this->takedowns->decidedCount(),
@@ -184,13 +157,7 @@ final class ModerateController extends AbstractController
     }
 
     /**
-     * The moderator rulebook — moderators only, deliberately NOT the public
-     * wiki (2026-08-03, owner).
-     *
-     * A world-readable page describing how moderators decide what to destroy
-     * is a social-engineering aid: it tells anyone which words get a
-     * submission trashed and which get it escalated. The wiki copy is going;
-     * this is where the rules live.
+     * Moderator rulebook — curators only, not the public wiki.
      */
     #[Route('/moderate/rulebook', name: 'moderate_rulebook')]
     public function rulebook(): Response
@@ -203,21 +170,12 @@ final class ModerateController extends AbstractController
             'page_title' => 'meta.moderate_rulebook_title',
             'page_description' => 'meta.moderate_rulebook_description',
             'nav_active' => 'moderate_rulebook',
-            /* The owner-managed PDF of these same rules, kept on the server
-               rather than in this repository: the template below is readable by
-               anyone once the repo is public, and a rulebook is a script for
-               talking a curator into a removal (owner 2026-08-14). Empty =>
-               no link, so an unconfigured environment shows nothing rather than
-               a dead download. Nothing here writes or validates the file. */
             'rulebook_pdf' => $this->rulebookPdfUrl,
             ...$this->deskBadges($user, $scope),
         ]);
     }
 
     /**
-     * The counts every moderation page's tab strip needs. Extracted so a new
-     * desk cannot ship with a dead badge simply by forgetting to pass them.
-     *
      * @return array{mod_scope_names: list<string>, mod_submission_count: int, mod_route_count: int, mod_takedown_count: int}
      */
     private function deskBadges(User $user, ModerationScope $scope): array
@@ -230,12 +188,6 @@ final class ModerateController extends AbstractController
         ];
     }
 
-    /**
-     * Render the moderation desk for the given filters. Shared by index() and
-     * the invalid-decision branch of decide() so the queue-rendering block is
-     * not duplicated and the curator's active filters are preserved on an
-     * invalid submit rather than reset to unfiltered.
-     */
     private function renderQueue(
         string $country,
         string $region,
@@ -253,9 +205,7 @@ final class ModerateController extends AbstractController
         $matching = $this->queue->countFiltered($scope, $country ?: null, $region ?: null, $type ?: null, $q ?: null, $byUser);
         $items = $this->queue->filtered($scope, $country ?: null, $region ?: null, $type ?: null, $q ?: null, $page, $perPage, $byUser);
 
-        // No per-item decision forms here anymore: submissions are approved
-        // ONLY from the map drawer (so a curator always sees the item in place
-        // first). The list routes to /map?pending=<id> to review + decide.
+        // docs/specs/moderation-and-contribution.md §5.4 — decide from the map drawer, not this list.
         return $this->render('moderate/index.html.twig', [
             'page_title' => 'meta.moderate_title',
             'page_description' => 'meta.moderate_description',
@@ -299,10 +249,6 @@ final class ModerateController extends AbstractController
             } catch (OutOfScopeException) {
                 throw $this->createAccessDeniedException('Out of moderation scope.');
             } catch (MissingQuestionException) {
-                // The curator's own slip, not a state conflict: the submission
-                // is still decidable and still in the queue. Say which of the
-                // two it was, so the drawer can put the cursor in the note
-                // rather than showing a generic failure.
                 if ($wantsJson) {
                     return $this->json(['error' => 'needs_info_note_required'], Response::HTTP_UNPROCESSABLE_ENTITY);
                 }
@@ -318,15 +264,7 @@ final class ModerateController extends AbstractController
                 return $this->redirectToRoute('moderate');
             }
 
-            /* Approve & confirm in one stroke (owner 2026-08-13: "I know these
-               roads by hand"). The curator's own confirmation is recorded
-               AFTER the approval materialized the item, and it verifies
-               through the existing weighted-by-who-pressed-it rule
-               (ItemConfirmationService::verifyIfCurator) — no new mechanic,
-               the same record every rider makes, reached from the decision.
-               Best-effort on purpose: a letter whose stances do not include
-               `exists` (water) simply skips, and a failure here must never
-               undo a decision that already stands. */
+            // docs/specs/moderation-and-contribution.md (A curator's confirmation verifies the item) — best-effort after approve.
             if ('approve' === $data['decision'] && '1' === ($data['and_confirm'] ?? null) && null !== $submission->getItemId()) {
                 $item = $this->em->find(Item::class, $submission->getItemId());
                 if (null !== $item && \in_array(ConfirmationStance::Exists, ItemType::fromParam($item->getLetter())->confirmationStances(), true)) {
@@ -342,23 +280,13 @@ final class ModerateController extends AbstractController
                     'persisted' => true,
                     'decision' => $data['decision'],
                     'submission_id' => $submission->getId(),
-                    // On approval, the item as the map's own pools carry it, so
-                    // the drawer can put the contribution on the map in place
-                    // of the pending pin it just removed. Null for the letters
-                    // whose payload is not a feature collection (A/B/K) and for
-                    // every non-approve decision — the client simply skips it.
-                    // Sent for every approve, not just new items: approving an
-                    // EDIT has to refresh the item the curator is looking at,
-                    // or the drawer keeps showing the value they just changed.
                     'item' => 'approve' === $data['decision'] && null !== $submission->getItemId()
                         ? $catalog->featureForItem($submission->getItemId())
                         : null,
                 ]);
             }
 
-            // Redirect-after-POST (moderation-and-contribution.md §5.1):
-            // preserve the curator's active filters instead of resetting to
-            // an unfiltered queue.
+            // docs/specs/moderation-and-contribution.md §5.1 — keep active filters.
             return $this->redirectToRoute('moderate', array_filter([
                 'country' => $request->query->getString('country'),
                 'region' => $request->query->getString('region'),
@@ -370,8 +298,6 @@ final class ModerateController extends AbstractController
             return $this->json(['error' => 'invalid_decision'], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        // Invalid form — re-render the queue preserving the curator's active
-        // filters (from the action query string), not reset to unfiltered.
         return $this->renderQueue(
             $request->query->getString('country'),
             $request->query->getString('region'),
@@ -381,10 +307,9 @@ final class ModerateController extends AbstractController
     }
 
     /**
-     * Trash (moderation-and-contribution.md §6): an immediate, permanent hard
-     * delete of a spam/abusive submission — any status is legal (unlike a
-     * route proposal, there's no state guardrail here). Audited content-free
-     * by ModerationService; never sends the rider a message.
+     * Permanent hard delete of a spam/abusive submission. Audited content-free; no rider message.
+     *
+     * @see docs/specs/moderation-and-contribution.md §5
      */
     #[Route('/moderate/trash', name: 'moderate_trash', methods: ['POST'])]
     public function trash(Request $request): Response
@@ -392,12 +317,6 @@ final class ModerateController extends AbstractController
         if (!$this->isCsrfTokenValid('moderate-trash', (string) $request->request->get('_token'))) {
             throw $this->createAccessDeniedException('Invalid CSRF token.');
         }
-
-        // The typed-DELETE gate is gone (owner 2026-08-12): opening the
-        // panel and pressing Trash inside it are the two deliberate acts,
-        // and a word a curator types fifty times is a reflex, not a check.
-        // Everything else about Trash is unchanged — irreversible, logged,
-        // content-free record, no message sent.
 
         $kind = (string) $request->request->get('kind');
         $id = (int) $request->request->get('id');
@@ -416,8 +335,6 @@ final class ModerateController extends AbstractController
             $this->addFlash('danger', 'moderate.trash.error');
         }
 
-        // §13 redirect-after-POST: preserve the curator's active filters
-        // instead of resetting to an unfiltered queue.
         return $this->redirectToRoute('moderate', array_filter([
             'country' => $request->query->getString('country'),
             'region' => $request->query->getString('region'),
@@ -426,20 +343,9 @@ final class ModerateController extends AbstractController
     }
 
     /**
-     * A photo takedown request, granted or declined
-     * (docs/specs/photo-uploads.md §6b).
+     * Escalate a submission as suspected illegal content.
      *
-     * The two verbs the rest of this desk already uses, and the curator is
-     * answering one question with them: is this a rights claim ("that photo is
-     * of me") or a change of mind about contributing? The first must be
-     * honoured; the second must not be, or every approved photo in the commons
-     * is only on loan. Nothing but the rider's own words tells them apart,
-     * which is the entire reason a human is in this loop.
-     */
-    /**
-     * Escalate a submission's contents as suspected illegal content
-     * (docs/specs/photo-uploads.md §6d) — the same verb as the photo one
-     * below, for the case where the words are the material.
+     * @see docs/specs/photo-uploads.md §6d
      */
     #[Route('/moderate/escalate-submission', name: 'moderate_escalate_submission', methods: ['POST'])]
     public function escalateSubmission(Request $request): Response
@@ -467,15 +373,9 @@ final class ModerateController extends AbstractController
     }
 
     /**
-     * Escalate a photo as suspected illegal content
-     * (docs/specs/photo-uploads.md §6d).
+     * Escalate a photo as suspected illegal content.
      *
-     * The third verb, and the only one a curator should reach for here.
-     * Reject leaves the material in the queue for the next curator to meet;
-     * Trash destroys it along with the evidence that it existed, which is
-     * exactly what must survive until it has been reported. This hides it from
-     * everyone including the desk, freezes it against every deletion path, and
-     * puts it in front of an admin at once.
+     * @see docs/specs/photo-uploads.md §6d
      */
     #[Route('/moderate/escalate', name: 'moderate_escalate', methods: ['POST'])]
     public function escalate(Request $request): Response
@@ -516,9 +416,6 @@ final class ModerateController extends AbstractController
         $upload = Uuid::isValid($raw) ? $this->em->find(MediaUpload::class, Uuid::fromString($raw)) : null;
         $note = trim((string) $request->request->get('note', '')) ?: null;
 
-        // Idempotent by omission: a request somebody else has already decided
-        // is simply no longer here, and a curator who double-submits gets the
-        // refreshed desk rather than an error about a race they did not cause.
         if (null !== $upload && $upload->isTakedownPending()) {
             if ('grant' === $request->request->get('decision')) {
                 $this->takedowns->grant($upload, $curator, $note);
@@ -533,10 +430,9 @@ final class ModerateController extends AbstractController
     }
 
     /**
-     * The unticked-photo list, defensively parsed: anything that is not a list
-     * of uuid strings is treated as an empty list, which means the submission's
-     * own decision applies to every photo — the safe reading either way
-     * (docs/specs/photo-uploads.md §5).
+     * Unticked photos: garbage JSON means empty — the submission decision applies to every photo.
+     *
+     * @see docs/specs/photo-uploads.md §5
      *
      * @return list<string>
      */

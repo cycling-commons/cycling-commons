@@ -1,0 +1,35 @@
+# Dev tile proxy — the local stand-in for staging's
+# tiles-stg.cyclingcommons.org vhost.
+#
+# `/cc-maps/` is a PUBLIC PATH, not a bucket name. It happens to equal the dev
+# bucket's name, which is why pointing the browser straight at MinIO has worked
+# so far — and why the prefix-to-bucket rewrite that staging depends on has
+# never been exercised locally. Here it is, so a mistake in it fails in dev
+# rather than on staging.
+#
+# Tiles are read with HTTP range requests, so Accept-Ranges and 206 responses
+# must survive the hop; nginx proxies them untouched.
+server {
+    listen 80;
+    server_name _;
+
+    resolver 127.0.0.11 valid=30s ipv6=off;
+
+    location /cc-maps/ {
+        # NOTE: `set` must precede `rewrite ... break` — break halts the rewrite
+        # module, so a later `set` never runs and proxy_pass gets an empty value.
+        set $tile_bucket "${CC_TILE_BUCKET}";
+        rewrite ^/cc-maps/(.*)$ /$1 break;
+        proxy_pass http://minio:9000/$tile_bucket$uri;
+        proxy_set_header Host minio:9000;
+        proxy_set_header Range $http_range;
+        proxy_set_header If-Range $http_if_range;
+        # pmtiles.js reads Content-Range/Content-Length to size the archive;
+        # without these it sees an opaque response and cannot page the index.
+        add_header Access-Control-Allow-Origin "*" always;
+        add_header Access-Control-Expose-Headers "Content-Range, Content-Length, Accept-Ranges, ETag" always;
+    }
+
+    location = /healthz { return 200 "ok\n"; }
+    location / { return 404; }
+}

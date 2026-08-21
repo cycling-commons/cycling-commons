@@ -7,7 +7,7 @@ declare(strict_types=1);
 namespace App\Service;
 
 /**
- * @api Value object returned by ContributionStubInterface::submit().
+ * @api
  */
 final readonly class ContributionReceipt
 {

@@ -12,15 +12,11 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * One rider's community stance on a non-votable item (drinking-water
- * potability or a plain existence confirmation for a utility). One row per
- * user per item (UNIQUE), and changeable: a rider may switch between
- * potable and not potable. The map drawer tallies these; the counts are
- * public, recording requires an account.
+ * One rider's stance on a confirmable item. UNIQUE (item, user); switchable.
  *
  * @see docs/specs/moderation-and-contribution.md §10.1
  *
- * @api Created and updated by ItemConfirmationService.
+ * @api
  */
 #[ORM\Entity]
 #[ORM\Table(name: 'item_confirmation')]
@@ -43,10 +39,9 @@ class ItemConfirmation
     private ConfirmationStance $stance;
 
     /**
-     * Where the answer came from. A form-sourced row is the submitter's own
-     * answer on the improve form: kept so they are never asked it again, but
-     * left out of the tally and the verified derivation, because it is the
-     * claim rather than a confirmation of it (ConfirmationSource).
+     * Form-sourced = submitter's own answer: kept, never tallied or used to verify.
+     *
+     * @see docs/specs/moderation-and-contribution.md §6.3
      */
     #[ORM\Column(type: Types::STRING, length: 8, enumType: ConfirmationSource::class, options: ['default' => 'drawer'])]
     private ConfirmationSource $source;
@@ -101,9 +96,9 @@ class ItemConfirmation
     }
 
     /**
-     * Answering in the drawer promotes a form-sourced row: the rider has now
-     * confirmed the place as a rider, so it starts counting. It never goes the
-     * other way — a real confirmation is not demoted by a later form edit.
+     * Drawer answer promotes a form-sourced row; a real confirmation is never demoted.
+     *
+     * @see docs/specs/moderation-and-contribution.md §6.3
      */
     public function setSource(ConfirmationSource $source): static
     {

@@ -17,21 +17,11 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
- * "Set my area" write path (map-and-search.md §4.5): a rider picks a
- * town or drops a pin and this is where the base point lands. Stateless JSON
- * API in the ride-check/best-of mould — no locale prefix, `my-area` CSRF
- * token id carried in the X-CSRF-Token header. BaseLocationService owns the
- * coarsen+clamp+derive; the response echoes back only the STORED coarse
- * values it re-reads from the user afterwards, never the raw request body —
- * §4's privacy invariant is "requests transmit only the already-coarse
- * stored value (request precision == stored precision)".
+ * Set-my-area write: 401 not 302; echo stored coarse values, never the raw body.
  *
- * In-controller auth (clean 401, never a login redirect) instead of
- * `#[IsGranted]` — same RideCheckController/RouteCommunityController
- * convention: a JSON `fetch()` caller can't branch on a 302-to-/login the
- * way an `#[IsGranted]` attribute would produce for an anonymous request.
+ * @see docs/specs/map-and-search.md §4.5
  *
- * @api Instantiated by Symfony's router; called by assets/map/scope.js.
+ * @api
  */
 final class MyAreaController extends AbstractController
 {
@@ -57,8 +47,7 @@ final class MyAreaController extends AbstractController
 
         $lat = $body['lat'] ?? null;
         $lng = $body['lng'] ?? null;
-        // Reject before touching the entity (map-and-search.md §4.5):
-        // malformed input must never reach BaseLocationService::apply().
+        // docs/specs/map-and-search.md §4.5 — reject before touching the entity.
         if (!\is_numeric($lat) || !\is_numeric($lng) || abs((float) $lat) > 90.0 || abs((float) $lng) > 180.0) {
             return new JsonResponse(['error' => 'bad_coords'], 400);
         }

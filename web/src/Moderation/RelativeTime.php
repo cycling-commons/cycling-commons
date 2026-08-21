@@ -7,9 +7,9 @@ declare(strict_types=1);
 namespace App\Moderation;
 
 /**
- * Human age of a submission ("2h ago") for the queue and the map drawer.
+ * Human age of a submission ("2h ago").
  *
- * @api Used by SubmissionQueue.
+ * @api
  */
 final class RelativeTime
 {

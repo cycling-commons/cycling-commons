@@ -13,22 +13,14 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Uid\Uuid;
 
 /**
- * The single owner of message writes and reads: system decision outcomes,
- * free-form curator notes, and rider needs-info replies all go through
- * here, along with the dashboard's list, unread-count, and mark-read reads.
+ * System outcomes, curator notes, and rider replies — plus dashboard reads.
  *
  * @see docs/specs/moderation-and-contribution.md §7
  *
- * @api Called by moderation decision handlers, the curator message action,
- *      the rider reply action, and the messages dashboard.
+ * @api
  */
 final class MessageService
 {
-    /**
-     * Messages per page on the dashboard. The list used to stop at a hard 100
-     * with nothing saying so; anyone past that simply never saw their older
-     * decisions again (2026-08-08).
-     */
     public const int PER_PAGE = 20;
 
     private const int BODY_TEXT_MAX_LENGTH = 2000;
@@ -38,42 +30,20 @@ final class MessageService
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly Connection $db,
-        /**
-         * Where a message goes to be emailed (M7). Queued rather than sent: the
-         * system path below runs INSIDE the moderation transaction, and mail
-         * announcing a decision that can still roll back is worse than no mail
-         * at all. {@see MessageOutbox}.
-         */
+        // Queued, not sent: sendSystem() runs inside the moderation transaction.
         private readonly MessageOutbox $outbox,
     ) {
     }
 
     /**
-     * Records a system decision outcome. Persists WITHOUT flushing: callers
-     * call this from inside a decision transaction (for example,
-     * ModerationService::decide's `wrapInTransaction` closure), whose own
-     * flush-on-commit writes this row alongside the decision. An extra
-     * flush here would be redundant, and could flush a still-inconsistent
-     * unit of work.
-     *
-     * `$curatorNote`, when non-empty after trimming, is stored in
-     * `body_text` next to the translated `body_key` headline, so the rider
-     * sees the curator's note under it.
-     *
-     * `user_message.user_id` carries a real FK (`ON DELETE CASCADE`) to
-     * `users`, but every referenced entity's author/proposer column
-     * (`submission.user_id`, `route_suggestion.user_id`,
-     * `recommended_route.proposed_by`) is a plain no-FK int that survives
-     * account deletion. If the recipient's account is already gone, this
-     * method returns null instead of letting the INSERT violate the FK: no
-     * recipient, no message. The durable audit still lives on the row or
-     * its change history, so the decision itself is never lost.
+     * Persist without flushing — callers are already inside a decision transaction.
+     * Returns null if the recipient account is gone (FK vs no-FK authors).
      *
      * @see docs/specs/moderation-and-contribution.md §7.6
      *
      * @param array<string, mixed> $bodyParams
      *
-     * @throws \InvalidArgumentException if the trimmed note exceeds 2000 characters (moderate.error.note_too_long)
+     * @throws \InvalidArgumentException if the trimmed note exceeds 2000 characters
      */
     public function sendSystem(
         int $userId,
@@ -110,14 +80,7 @@ final class MessageService
     }
 
     /**
-     * Records a free-form curator note to a rider. Standalone action, not
-     * inside a decision transaction: persists and flushes immediately.
-     *
-     * `$userId` is resolved by the caller from the same no-FK author/
-     * proposer columns `sendSystem()` guards against (submission.user_id,
-     * route_suggestion.user_id, recommended_route.proposed_by). A deleted
-     * account is the same already-dangling-id case there, so this method
-     * needs the identical existence guard, not just for consistency.
+     * Free-form curator note; flushes immediately. Null if the recipient is gone.
      *
      * @throws \InvalidArgumentException if the trimmed body is empty or exceeds 2000 characters
      */
@@ -138,18 +101,7 @@ final class MessageService
     }
 
     /**
-     * Records a rider's needs-info reply, delivered TO the curator (the
-     * message recipient is the curator, not the rider). Standalone action:
-     * persists and flushes immediately.
-     *
-     * `submission.decided_by` (the source of `$recipientCuratorId`) is
-     * another no-FK column, so the deciding curator's account can be gone
-     * by the time the rider replies. `MessagesController::reply` already
-     * checks this before opening the transaction, and flashes the same
-     * `messages.reply_too_late` outcome as an already-resolved submission.
-     * This guard is a backstop for that same race, for any future direct
-     * caller. The window is small, so it is only documented here rather
-     * than specially handled by the caller's transaction.
+     * Rider needs-info reply, delivered to the curator. Null if that account is gone.
      *
      * @throws \InvalidArgumentException if the trimmed body is empty or exceeds 2000 characters
      */
@@ -170,27 +122,7 @@ final class MessageService
     }
 
     /**
-     * The reader's own thread: what was sent TO them, and what they sent
-     * themselves.
-     *
-     * A rider's needs-info reply is addressed to the deciding curator
-     * (sendRiderReply), so a recipient-only list showed the rider the
-     * curator's question and then nothing — their own answer vanished, and
-     * the page read as though they had never replied. `sender_id` carries the
-     * author of every non-system message, which is what makes the sent half
-     * recoverable without a second table.
-     *
-     * Unread counting and mark-read stay recipient-only on purpose: a message
-     * you wrote is not news to you.
-     *
-     * Returns THREAD HEADS only - everything except the reader's own replies,
-     * which {@see \App\Controller\MessagesController} attaches under the
-     * question they answer. Paging over heads is what keeps a question and its
-     * answer on the same page: paging the flat list would eventually put a
-     * reply at the foot of one page and the question it belongs to at the top
-     * of the next, where each reads as an orphan. (A reply whose question row
-     * is gone - retention sweep, deleted account - has nothing to attach to and
-     * does not render; the reply itself is not the record, the decision is.)
+     * Thread heads for the reader (sent + received). Rider replies are attached by the controller.
      *
      * @return list<UserMessage>
      */
@@ -207,31 +139,14 @@ final class MessageService
             $qb->andWhere('m.kind IN (:kinds)')->setParameter('kinds', $category->kinds());
         }
         if ($unreadOnly) {
-            // Recipient-only, matching unreadCount(): a message the reader
-            // WROTE was never unread to them, so "unread" must not surface
-            // their own sent half (which the senderId arm below includes).
+            // Recipient-only, matching unreadCount().
             $qb->andWhere('m.readAt IS NULL')->andWhere('m.userId = :id');
         }
 
         /** @var list<UserMessage> $messages */
         $messages = $qb
             ->andWhere($qb->expr()->orX('m.userId = :id', 'm.senderId = :id'))
-            // A rider's answer to a needs-info question is MODERATION work, not
-            // personal correspondence, so it does not belong in the inbox a
-            // rider uses for their own contributions (owner, 2026-08-03). It is
-            // addressed to the deciding curator only so the desk can find it:
-            // SubmissionQueue's LATERAL join reads this row to render "Rider
-            // replied" on the queue card and in the map drawer, and the reply
-            // puts the submission back in the pending queue. Excluded HERE
-            // rather than not written, because deleting the row would take the
-            // desk's copy of the answer with it.
-            //
-            // Combined with the `senderId = :id` half of the clause above, the
-            // only rider replies that ever reached this list were the reader's
-            // OWN - and those are precisely what the controller re-attaches to
-            // the question they answer. So heads exclude the kind outright and
-            // repliesBySender() brings the reader's back, for the questions on
-            // this page only.
+            // Rider replies stay on the desk; the controller re-attaches the reader's own.
             ->andWhere('m.kind != :moderationReply')
             ->setParameter('moderationReply', UserMessageKind::RiderReply)
             ->setParameter('id', $userId)
@@ -245,10 +160,7 @@ final class MessageService
         return $messages;
     }
 
-    /**
-     * How many thread heads {@see self::listFor()} would return in total.
-     * Same filters, or paging walks into pages the list refuses to render.
-     */
+    /** Thread-head count matching {@see self::listFor()} filters. */
     public function countFor(int $userId, ?MessageCategory $category = null, bool $unreadOnly = false): int
     {
         $sql = 'SELECT COUNT(*) FROM user_message
@@ -269,14 +181,7 @@ final class MessageService
     }
 
     /**
-     * How many messages sit on each shelf, and how many are unread, in one
-     * round trip — so the filter can say "Notices 3" rather than making the
-     * reader click each one to find out whether it holds anything.
-     *
-     * Unread is recipient-only, like {@see unreadCount()}. The per-category
-     * totals are not: they count the same set the unfiltered list shows, sent
-     * half included, or the numbers on the chips would not add up to the
-     * number on "All".
+     * Per-shelf totals plus unread. Unread is recipient-only; totals match the unfiltered list.
      *
      * @return array{total:int, unread:int, byCategory:array<string,int>}
      */
@@ -309,8 +214,6 @@ final class MessageService
         foreach ($rows as $row) {
             $total += (int) $row['n'];
             $unread += (int) $row['unread'];
-            // A kind nobody filed lands on no shelf rather than on the wrong
-            // one; MessageCategoryTest fails before that can ship.
             if (isset($shelfOf[$row['kind']])) {
                 $byCategory[$shelfOf[$row['kind']]] += (int) $row['n'];
             }
@@ -320,12 +223,7 @@ final class MessageService
     }
 
     /**
-     * The reader's own needs-info replies for the given submissions, oldest
-     * first, so the controller can pair each with the question it answers.
-     *
-     * Scoped to `sender_id = :u`: a reply addressed to a curator is the
-     * curator's incoming message, not something this reader may pull up by
-     * quoting a submission id.
+     * The reader's own needs-info replies for these submissions, oldest first.
      *
      * @param list<int> $refIds
      *
@@ -359,8 +257,6 @@ final class MessageService
 
     public function unreadCount(int $userId): int
     {
-        // Matches listFor()'s exclusion, or the chip would count a message the
-        // page then refuses to show — a badge pointing at nothing.
         return (int) $this->db->fetchOne(
             'SELECT COUNT(*) FROM user_message
              WHERE user_id = :u AND read_at IS NULL AND kind <> :moderationReply',
@@ -370,9 +266,6 @@ final class MessageService
 
     public function markAllRead(int $userId): void
     {
-        // Everything the page can show. Moderation replies are excluded from
-        // the list, so marking them read here would quietly consume a state
-        // the reader was never shown.
         $this->db->executeStatement(
             'UPDATE user_message SET read_at = now()
              WHERE user_id = :u AND read_at IS NULL AND kind <> :moderationReply',
@@ -381,13 +274,7 @@ final class MessageService
     }
 
     /**
-     * Marks read only the messages actually rendered.
-     *
-     * Since the dashboard pages (2026-08-08), marking everything read on a
-     * visit would consume the unread state of messages sitting on page 3 that
-     * the reader has not seen - the unread marker would then be a lie, and the
-     * chip would drop to zero over messages nobody opened. Only rows addressed
-     * TO the reader are touched: a message you sent was never unread to you.
+     * Mark read only the rendered rows, and only those addressed to the reader.
      *
      * @param list<int> $ids
      */
@@ -405,20 +292,13 @@ final class MessageService
         );
     }
 
-    /**
-     * True when `$userId` still has a row in `users`. This is the
-     * deleted-recipient guard shared by every send* method (see their
-     * docblocks).
-     */
+    /** Deleted-recipient guard for every send* path. */
     private function recipientExists(int $userId): bool
     {
         return false !== $this->db->fetchOne('SELECT 1 FROM users WHERE id = :id', ['id' => $userId]);
     }
 
     /**
-     * Trims, nulls-out-if-empty (only when `$allowEmpty`), and enforces the
-     * 2000-character cap shared by curator notes/messages/replies.
-     *
      * @throws \InvalidArgumentException if empty when required, or over the cap
      */
     private function normalizeBody(?string $text, bool $allowEmpty): ?string

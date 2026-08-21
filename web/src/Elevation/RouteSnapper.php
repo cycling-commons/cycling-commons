@@ -10,24 +10,10 @@ use Psr\Log\LoggerInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 /**
- * Snaps the climb editor's two points to a road line, using OUR Valhalla.
+ * Snaps two points to a road line via our Valhalla (`bicycle` costing)
+ * (docs/specs/climb-elevation.md §3e). Null when unset or unreachable — never a guess.
  *
- * The editor used to ask the public OSRM demo server from the browser — a
- * service whose own policy forbids production reliance, and the one external
- * this project called in a rider's hot path with no agreement behind it
- * (external-systems audit, 2026-08-09). The same Valhalla that already answers
- * every /height request routes too, so the editor now asks us, exactly as it
- * does for elevation: one less CSP host, one less third party, and the road
- * network the line snaps to is the one this project operates.
- *
- * `bicycle` costing, deliberately — the old call used `driving`, which refuses
- * the cycleways and greenways some climbs actually ride (Hockai's whole line
- * is a RAVeL a car profile will not enter).
- *
- * Lives in the Elevation namespace because it shares Valhalla's configuration:
- * the master switch (ELEVATION_URL) and the per-continent endpoint selection.
- *
- * @api Consumed by RouteController (the /contribute/route proxy).
+ * @api
  */
 final class RouteSnapper
 {
@@ -44,9 +30,7 @@ final class RouteSnapper
      * @param array{0: float, 1: float} $b [lat, lng]
      *
      * @return array{coordinates: list<array{0: float, 1: float}>, distanceM: float}|null
-     *                                                                                    coordinates as [lng, lat] pairs (GeoJSON order, what the editor
-     *                                                                                    draws); null when no route exists or the router is unreachable —
-     *                                                                                    the editor keeps its straight line and says so, never a guess
+     *                                                                                    [lng, lat] GeoJSON; null when unset or unreachable
      */
     public function snap(array $a, array $b): ?array
     {
@@ -64,7 +48,7 @@ final class RouteSnapper
                         ['lat' => $b[0], 'lon' => $b[1]],
                     ],
                     'costing' => 'bicycle',
-                    // The editor wants the LINE; turn-by-turn prose is dead weight.
+                    // The editor wants the line; turn-by-turn prose is dead weight.
                     'directions_type' => 'none',
                 ],
                 'timeout' => 8,
@@ -92,7 +76,7 @@ final class RouteSnapper
             if (\count($pts) < 2) {
                 return null;
             }
-            // consecutive legs repeat the join point
+            // Consecutive legs repeat the join point.
             if ([] !== $coordinates) {
                 array_shift($pts);
             }
