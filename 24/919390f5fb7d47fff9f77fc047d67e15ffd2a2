@@ -1,0 +1,19 @@
+web/src/Controller/MessagesController.php
+  s_f68f52eab6f3c4::t_4258d01fab7b0b 179
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.23",
+  "base_commit_sha": "24919390f5fb7d47fff9f77fc047d67e15ffd2a2",
+  "prompts": {},
+  "sessions": {
+    "s_f68f52eab6f3c4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c7a55b70-80fe-4d7b-a5a8-04f70def4f1e",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
