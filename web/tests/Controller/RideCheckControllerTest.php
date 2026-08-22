@@ -9,6 +9,7 @@ namespace App\Tests\Controller;
 use App\Catalog\Entity\Item;
 use App\Catalog\ItemSource;
 use App\Catalog\ItemState;
+use App\Controller\RideCheckController;
 use App\Entity\User;
 use App\Tests\Coverage\CoverageSchema;
 use Doctrine\ORM\EntityManagerInterface;
@@ -90,12 +91,49 @@ final class RideCheckControllerTest extends WebTestCase
         return [$params, ['gpx' => self::gpxFixture()], ['HTTP_SEC_FETCH_SITE' => 'same-origin']];
     }
 
-    public function testAnonymousGetsClean401(): void
+    public function testAnonymousCanCheckARide(): void
     {
         $client = static::createClient();
+        // coverage_poi is pipeline-owned DDL outside Doctrine's migrations, and
+        // check() reads it unconditionally — without the table this is a 500.
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        self::ensureCoverageSchema($em->getConnection());
+
         [$params, $files, $server] = self::post();
         $client->request('POST', '/map/ride-check', $params, $files, $server);
-        self::assertResponseStatusCodeSame(401);
+        self::assertResponseIsSuccessful();
+    }
+
+    public function testAnonymousOverFiveIsRefusedAndTownAnAccount(): void
+    {
+        $client = static::createClient();
+        $secret = (string) static::getContainer()->getParameter('kernel.secret');
+
+        // Same draining trick as the signed-in case below: the array pool
+        // resets between HTTP requests, so consume the allowance directly and
+        // let the one real request be the sixth.
+        $factory = static::getContainer()->get('limiter.ride_check_anon');
+        $limiter = $factory->create(RideCheckController::anonKey('127.0.0.1', $secret));
+        for ($i = 0; $i < 5; ++$i) {
+            self::assertTrue($limiter->consume()->isAccepted());
+        }
+
+        [$params, $files, $server] = self::post();
+        $client->request('POST', '/map/ride-check', $params, $files, $server);
+        self::assertResponseStatusCodeSame(429);
+
+        // The refusal has to say why and what to do about it.
+        $body = (string) $client->getResponse()->getContent();
+        self::assertStringContainsString('free account', $body);
+        self::assertStringContainsString('5 ride checks', $body);
+    }
+
+    public function testTheAnonymousKeyNeverContainsTheAddress(): void
+    {
+        $key = RideCheckController::anonKey('203.0.113.7', 'test-secret');
+        self::assertStringNotContainsString('203.0.113.7', $key);
+        self::assertNotSame($key, RideCheckController::anonKey('203.0.113.8', 'test-secret'));
+        self::assertNotSame($key, RideCheckController::anonKey('203.0.113.7', 'other-secret'));
     }
 
     public function testBadCsrfIs403(): void

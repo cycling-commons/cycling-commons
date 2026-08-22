@@ -1602,19 +1602,23 @@ looking straight at it.)*
 
 ## 9. Ride-check ("what's along my GPX?")
 
-Logged-in riders upload a GPX and see the catalog items inside a chosen
-corridor of the track. **Read-only indication — the GPX is parsed in memory,
+Anyone uploads a GPX and sees the catalog items inside a chosen corridor of
+the track — no account needed. It is the one tool that answers a question
+before a rider has any reason to trust us, so it is the wrong place to ask
+for a sign-up first. **Read-only indication — the GPX is parsed in memory,
 answered, and discarded; nothing is ever persisted**, and the UI carries a
 persistent notice saying so (`ride_check.notice`, an explicit user
 requirement).
 
 - **Endpoint:** `POST /map/ride-check` (`RideCheckController::check()`).
-  In-controller auth (clean 401 JSON, never a login redirect); stateless CSRF
-  token id `ride-check` (`config/packages/csrf.yaml`), token injected by the
-  template inside the `ROLE_USER` block; per-user sliding-window limiter
-  `ride_check` (limits in the inventory:
-  [security-architecture.md](security-architecture.md)). The panel control
-  renders only for authenticated users (server-side Twig conditional).
+  Open to anonymous callers; stateless CSRF token id `ride-check`
+  (`config/packages/csrf.yaml`). Two sliding-window limiters, never sharing a
+  budget: `ride_check` at 20/day keyed `user-<id>` when signed in, and
+  `ride_check_anon` at 5/day keyed on a salted hash of the caller's address
+  (`RideCheckController::anonKey()`) when not. The anonymous refusal names the
+  limit, why it exists and that an account raises it — a bare 429 teaches the
+  visitor nothing. Limits in the inventory:
+  [security-architecture.md](security-architecture.md).
 - **Validation** (`App\Catalog\RideCheckService`): radius ∈
   `ALLOWED_RADII = {100, 250, 500, 1000}` m, default `DEFAULT_RADIUS = 250`;
   raw track length within `MIN_RAW_M = 500` m … `MAX_RAW_M = 400 km` (the

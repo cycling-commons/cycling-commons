@@ -58,6 +58,9 @@
     <h3>{% trans %}privacy.h3_auto{% endtrans %}</h3>
     <ul>
       <li>{{ 'privacy.collect_auto_technical'|trans|rich }}</li>
+      {# Hashing the address is pseudonymisation, not anonymisation: the counter
+         is still personal data, so it is disclosed like everything else. #}
+      <li>{{ 'privacy.collect_auto_ratelimit'|trans|rich }}</li>
     </ul>
     <div class="banner"><b>{% trans %}privacy.banner_bold{% endtrans %}</b> {{ 'privacy.banner_body'|trans|rich }}</div>
 
@@ -86,6 +89,7 @@
     <ul>
       <li>{{ 'privacy.retention_account'|trans|rich }}</li>
       <li>{{ 'privacy.retention_logs'|trans|rich }}</li>
+      <li>{{ 'privacy.retention_ratelimit'|trans|rich }}</li>
       <li>{{ 'privacy.retention_contributions'|trans|rich }}</li>
       {# GDPR Art. 13(2)(a) requires the retention period to be STATED, and the
          consent ledger is the one store the app keeps indefinitely on purpose

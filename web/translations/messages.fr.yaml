@@ -104,6 +104,7 @@ privacy:
   collect_contribute_profile_post: ' et désactivés par défaut.'
   h3_auto: 'Automatiquement, quand vous utilisez le site'
   collect_auto_technical: '<b>Données techniques</b> — adresse IP, type de navigateur et horodatages dans nos journaux serveur, conservés pour exploiter et sécuriser le service.'
+  collect_auto_ratelimit: "<b>Compteurs de limite</b> — lorsque vous utilisez un outil sans compte, comme la vérification de parcours, nous comptons vos usages sur une empreinte à sens unique et salée de votre adresse IP plutôt que sur l'adresse elle-même. Cela permet d'appliquer une limite quotidienne équitable sans conserver la liste des visiteurs. Le hachage n'est pas une anonymisation : le compteur reste une donnée personnelle et tout ce qui figure sur cette page s'y applique."
   banner_bold: 'Pas de suivi de parcours.'
   banner_body: 'Le Commons est une carte de lieux, pas de personnes. Nous ne collectons <b>pas</b> de traces GPS, vos itinéraires, votre position en direct, ni aucun relevé de vos déplacements à vélo.'
   h_why: 'Pourquoi nous l''utilisons (bases légales)'
@@ -126,6 +127,7 @@ privacy:
   h_retention: 'Combien de temps nous les conservons'
   retention_account: '<b>Données de compte</b> — pendant que votre compte est ouvert, plus une courte période de grâce après sa fermeture.'
   retention_logs: '<b>Journaux serveur</b> — conservés <b>30 jours</b>, puis supprimés automatiquement. Ils contiennent des adresses IP : un serveur web inscrit l''adresse du visiteur dans ses entrées d''erreur et n''offre aucun réglage pour l''en retirer ; c''est donc cette durée qui limite la conservation, et non une promesse sur le contenu.'
+  retention_ratelimit: "<b>Compteurs de limite</b> — un jour."
   retention_contributions: '<b>Contributions</b> — les faits que vous reversez à la carte ouverte persistent dans le Commons (avec provenance), même après votre départ ; ils ne constituent pas des données personnelles vous concernant.'
   retention_consent: '<b>Consentements de licence</b> — lorsque vous placez une photo sous licence pour le Commons, nous enregistrons votre accord, le texte exact auquel vous avez consenti et la date. Nous conservons cet enregistrement indéfiniment, et il survit à la fermeture de votre compte : c''est notre preuve que la licence a bien été accordée, dont nous pourrions avoir besoin pour constater ou défendre un droit en justice (Art. 17(3)(e)). Il ne contient qu''une référence de compte et rien d''autre à votre sujet, et une fois le compte supprimé, cette référence n''identifie plus personne ici.'
   h_rights: 'Vos droits'
@@ -1733,6 +1735,7 @@ ride_check:
   within: 'à moins de'
   button: 'Choisir un GPX'
   error:
+    anon_limit: "Vous avez utilisé vos 5 vérifications de parcours pour aujourd'hui. Cette limite existe parce que chaque vérification lit tout votre fichier et parcourt le catalogue alentour. Un compte gratuit la porte à 20 par jour."
     file_required: 'Choisissez d''abord un fichier GPX.'
     file_too_large: 'Ce fichier GPX est trop volumineux — la limite est de 16 Mo.'
     upload_failed: 'Le fichier n''a pas été téléversé entièrement. Veuillez réessayer.'

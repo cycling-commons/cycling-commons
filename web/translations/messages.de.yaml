@@ -104,6 +104,7 @@ privacy:
   collect_contribute_profile_post: ' und standardmäßig deaktiviert.'
   h3_auto: 'Automatisch, wenn du die Seite nutzt'
   collect_auto_technical: '<b>Technische Daten</b> — IP-Adresse, Browsertyp und Zeitstempel in unseren Serverprotokollen, aufbewahrt zum Betrieb und zur Absicherung des Dienstes.'
+  collect_auto_ratelimit: "<b>Limitzähler</b> — wenn Sie ein Werkzeug ohne Konto nutzen, etwa die Tourenprüfung, zählen wir Ihre Nutzung über einen gesalzenen Einweg-Hash Ihrer IP-Adresse statt über die Adresse selbst. So gilt ein faires Tageslimit, ohne dass wir festhalten, wer zu Besuch war. Hashen ist keine Anonymisierung: der Zähler bleibt personenbezogenes Datum, und alles auf dieser Seite gilt dafür."
   banner_bold: 'Kein Tourentracking.'
   banner_body: 'The Commons ist eine Karte von Orten, nicht von Menschen. Wir erheben <b>keine</b> GPS-Spuren, deine Routen, deinen aktuellen Standort oder irgendwelche Aufzeichnungen darüber, wo du fährst.'
   h_why: 'Warum wir es verwenden (Rechtsgrundlagen)'
@@ -126,6 +127,7 @@ privacy:
   h_retention: 'Wie lange wir es aufbewahren'
   retention_account: '<b>Kontodaten</b> — solange dein Konto offen ist, plus eine kurze Übergangszeit nach der Schließung.'
   retention_logs: '<b>Serverprotokolle</b> — <b>30 Tage</b> aufbewahrt und danach automatisch gelöscht. Sie enthalten IP-Adressen: Ein Webserver schreibt die Adresse der Besucherin oder des Besuchers in seine Fehlereinträge und bietet keine Einstellung, die das verhindert. Die Frist ist also die eigentliche Grenze, nicht ein Versprechen über den Inhalt.'
+  retention_ratelimit: "<b>Limitzähler</b> — ein Tag."
   retention_contributions: '<b>Beiträge</b> — Fakten, die du zur offenen Karte beisteuert, bleiben als Teil von The Commons erhalten (mit Provenienz), auch nachdem du gehst; sie sind keine personenbezogenen Daten über dich.'
   retention_consent: '<b>Lizenz-Einwilligungen</b> — wenn du ein Foto an The Commons lizenzierst, halten wir fest, dass du zugestimmt hast, welchem Wortlaut genau, und wann. Wir bewahren diesen Nachweis unbefristet auf, und er überdauert die Schließung deines Kontos: Er ist unser Beleg dafür, dass die Lizenz erteilt wurde, den wir zur Geltendmachung oder Verteidigung von Rechtsansprüchen benötigen könnten (Art. 17(3)(e)). Er enthält einen Kontoverweis und sonst nichts über dich, und sobald das Konto weg ist, identifiziert dieser Verweis hier niemanden mehr.'
   h_rights: 'Deine Rechte'
@@ -1736,6 +1738,7 @@ ride_check:
   within: 'im Umkreis von'
   button: 'GPX wählen'
   error:
+    anon_limit: "Sie haben Ihre 5 Tourenprüfungen für heute verbraucht. Das Limit besteht, weil jede Prüfung Ihre gesamte Datei liest und den Katalog ringsum durchsucht. Ein kostenloses Konto erhöht es auf 20 pro Tag."
     file_required: 'Wähle zuerst eine GPX-Datei.'
     file_too_large: 'Diese GPX-Datei ist zu groß — das Limit liegt bei 16 MB.'
     upload_failed: 'Die Datei wurde nicht vollständig hochgeladen. Bitte versuche es erneut.'

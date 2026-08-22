@@ -104,6 +104,7 @@ privacy:
   collect_contribute_profile_post: ' and off by default.'
   h3_auto: 'Automatically, when you use the site'
   collect_auto_technical: '<b>Technical data</b> — IP address, browser type, and timestamps in our server logs, kept to operate and secure the service.'
+  collect_auto_ratelimit: "<b>Rate-limit counters</b> — when you use a tool without an account, such as the ride check, we count your uses against a salted one-way hash of your IP address rather than the address itself. That lets us apply a fair daily limit without keeping a list of who visited. Hashing is not anonymisation: the counter is still personal data and everything on this page applies to it."
   banner_bold: 'No ride tracking.'
   banner_body: 'The Commons is a map of places, not of people. We do <b>not</b> collect GPS traces, your routes, your live location, or any record of where you ride.'
   h_why: 'Why we use it (legal bases)'
@@ -126,6 +127,7 @@ privacy:
   h_retention: 'How long we keep it'
   retention_account: '<b>Account data</b> — while your account is open, plus a short grace period after you close it.'
   retention_logs: '<b>Server logs</b> — kept for <b>30 days</b>, then deleted automatically. They contain IP addresses: a web server writes the visitor''s address into its error entries and offers no setting that removes it, so the time limit is what bounds this rather than any promise about the contents.'
+  retention_ratelimit: "<b>Rate-limit counters</b> — one day."
   retention_contributions: '<b>Contributions</b> — facts you give back to the open map persist as part of the Commons (with provenance), even after you leave; they are not personal data about you.'
   retention_consent: '<b>Licence consents</b> — when you licence a photo to the Commons we record that you agreed, the exact wording you agreed to, and when. We keep that record indefinitely, and it survives closing your account: it is our evidence that the licence was granted, which we may need to establish or defend a legal claim (Art. 17(3)(e)). It holds an account reference and nothing else about you, and once the account is gone that reference no longer identifies anyone here.'
   h_rights: 'Your rights'
@@ -2066,6 +2068,7 @@ ride_check:
   within: 'within'
   button: 'Choose GPX'
   error:
+    anon_limit: "You have used your 5 ride checks for today. The limit is there because every check reads your whole file and searches the catalogue around it. A free account raises it to 20 a day."
     file_required: 'Choose a GPX file first.'
     file_too_large: 'That GPX is too large — the limit is 16 MB.'
     upload_failed: 'That file did not upload completely. Please try again.'

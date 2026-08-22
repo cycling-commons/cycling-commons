@@ -313,9 +313,10 @@
       {# Every tool below is shown to everyone. Riders-only ones render locked
          when logged out — same heading, same description, with the control
          replaced by a link to log in. #}
-      {# Ride-check (spec 2026-07-14 §4.3): riders-only GPX upload — the file is
-         posted to /map/ride-check, answered, and discarded; the notice below is
-         a user requirement and must stay visible. #}
+      {# Ride-check: open to anyone. The file is posted to /map/ride-check,
+         answered, and discarded; the notice below is a user requirement and
+         must stay visible. Anonymous callers get 5 a day, keyed on a salted
+         hash of their address. #}
       <div class="grp cc-ridecheck">
         <h3>{{ 'ride_check.title'|trans }}</h3>
         {# What the tool IS, before what it costs. The notice below is a
@@ -323,7 +324,6 @@
            they already know what they would be uploading. #}
         <div class="hint" style="margin-top:0">{{ 'map.ride_check_intro'|trans }}</div>
         <div class="hint">{{ 'ride_check.hint'|trans }}</div>
-        {% if is_granted('ROLE_USER') %}
         <input type="file" id="rcFile" accept=".gpx" hidden>
         <div class="cc-ride-row">
           <button class="cc-ride-btn" id="rcPick" type="button">{{ 'ride_check.button'|trans }}</button>
@@ -340,9 +340,6 @@
           </label>
         </div>
         <div class="cc-ride-status" id="rcStatus" role="status" hidden></div>
-        {% else %}
-        {% include 'map/_locked_tool.html.twig' with {label: 'ride_check.button'|trans} only %}
-        {% endif %}
         {# The notice stays in both states: it answers what would happen to a
            file, which is worth knowing before deciding to sign up. #}
         <p class="cc-ride-note">{{ 'ride_check.notice'|trans }}</p>
@@ -619,10 +616,19 @@ window.CC_VENDOR = {{ {
   window.CC_MOD_TOKEN = {{ csrf_token('submit')|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
 </script>
 {% endif %}
+{# Ride-check is open to everyone, so its URL and token sit outside the riders
+   block below. A token shipped only to signed-in visitors would leave the
+   control on the page unable to post. #}
+  window.CC_RIDECHECK = {
+    url: {{ path('map_ride_check')|json_encode(constant('JSON_UNESCAPED_SLASHES'))|raw }},
+    token: {{ csrf_token('ride-check')|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }}
+  };
+
 {% if is_granted('ROLE_USER') %}
 <script nonce="{{ csp_nonce() }}">
   {# Ride-check (spec 2026-07-14 §4.3): endpoint + stateless CSRF token for the
      logged-in GPX upload. Riders-only block — anonymous visitors get no control. #}
+
   {# Confirming an OSM place has no item to fetch a token from — the point is
      that it is not one of ours yet — so the page carries it, the way the
      ride-check token below is carried. Same id as the item panel's
@@ -632,10 +638,6 @@ window.CC_VENDOR = {{ {
      may answer, and its ABSENCE is the auth signal the drawer reads to show
      "log in to confirm" instead of a button that cannot work. #}
   window.CC_CONFIRM_TOKEN = {{ csrf_token('item-confirm')|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
-  window.CC_RIDECHECK = {
-    url: {{ path('map_ride_check')|json_encode(constant('JSON_UNESCAPED_SLASHES'))|raw }},
-    token: {{ csrf_token('ride-check')|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }}
-  };
   {# "My area" base location (map-and-search.md §4.5): the stored
      coarse point + derived region/country set from MapController::map's
      `my_area` param, merged with the set-my-area endpoint + stateless CSRF

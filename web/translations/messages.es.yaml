@@ -104,6 +104,7 @@ privacy:
   collect_contribute_profile_post: ' y están desactivados por defecto.'
   h3_auto: 'De forma automática, al usar el sitio'
   collect_auto_technical: '<b>Datos técnicos</b> — dirección IP, tipo de navegador y marcas de tiempo en los registros del servidor, conservados para operar y proteger el servicio.'
+  collect_auto_ratelimit: "<b>Contadores de límite</b> — cuando usas una herramienta sin cuenta, como la comprobación de ruta, contamos tus usos sobre un hash unidireccional con sal de tu dirección IP en lugar de la dirección misma. Así aplicamos un límite diario justo sin guardar una lista de quién nos visitó. El hash no es anonimización: el contador sigue siendo un dato personal y todo lo de esta página se le aplica."
   banner_bold: 'Sin seguimiento de rutas.'
   banner_body: 'El Commons es un mapa de lugares, no de personas. <b>No</b> recogemos trazas GPS, tus rutas, tu ubicación en tiempo real ni ningún registro de por dónde ruedas.'
   h_why: 'Por qué lo usamos (bases jurídicas)'
@@ -126,6 +127,7 @@ privacy:
   h_retention: 'Cuánto tiempo lo conservamos'
   retention_account: '<b>Datos de la cuenta</b> — mientras la cuenta esté abierta, más un breve periodo de gracia tras cerrarla.'
   retention_logs: '<b>Registros del servidor</b> — se conservan <b>30 días</b> y después se eliminan automáticamente. Contienen direcciones IP: un servidor web anota la dirección de quien visita en sus entradas de error y no ofrece ninguna opción para omitirla, así que ese plazo es el límite real, no una promesa sobre el contenido.'
+  retention_ratelimit: "<b>Contadores de límite</b> — un día."
   retention_contributions: '<b>Aportaciones</b> — los hechos que devuelves al mapa abierto permanecen como parte del Commons (con su procedencia), incluso después de que te vayas; no son datos personales sobre ti.'
   retention_consent: '<b>Consentimientos de licencia</b> — cuando licencias una foto al Commons registramos que aceptaste, el texto exacto que aceptaste y cuándo. Ese registro lo conservamos indefinidamente y sobrevive al cierre de tu cuenta: es nuestra prueba de que la licencia se concedió, y podemos necesitarla para formular o defender reclamaciones (art. 17.3.e). Contiene una referencia a la cuenta y nada más sobre ti, y una vez desaparecida la cuenta esa referencia ya no identifica a nadie aquí.'
   h_rights: 'Tus derechos'
@@ -2074,6 +2076,7 @@ ride_check:
   within: 'dentro de'
   button: 'Elegir GPX'
   error:
+    anon_limit: "Has usado tus 5 comprobaciones de ruta de hoy. El límite existe porque cada comprobación lee todo tu archivo y busca en el catálogo a su alrededor. Una cuenta gratuita lo sube a 20 al día."
     file_required: 'Elige primero un archivo GPX.'
     file_too_large: 'Ese GPX es demasiado grande — el límite son 16 MB.'
     upload_failed: 'Ese archivo no se ha subido del todo. Inténtalo otra vez.'

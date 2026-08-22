@@ -13,6 +13,8 @@ framework:
                 adapter: cache.app
             cache.ride_check_limiter:
                 adapter: cache.app
+            cache.ride_check_anon_limiter:
+                adapter: cache.app
             cache.elevation_limiter:
                 adapter: cache.app
             cache.coverage_read_limiter:
@@ -66,6 +68,14 @@ framework:
             limit: 20
             interval: '1 day'
             cache_pool: cache.ride_check_limiter
+        # Ride-check without an account. Its own limiter, not a smaller share of
+        # the one above: the two must not drain each other, and the key is a
+        # salted IP hash rather than an address.
+        ride_check_anon:
+            policy: sliding_window
+            limit: 5
+            interval: '1 day'
+            cache_pool: cache.ride_check_anon_limiter
         # Climb-editor elevation profiling (review 2026-08-16 finding 5): every
         # call is an upstream Valhalla request, and Valhalla is shared
         # infrastructure. Per MINUTE, not per day: redrawing a climb
