@@ -106,14 +106,8 @@ the difference is invisible. On a real table it is not.
 Chapter 5 walks through exactly this happening in this codebase: `Catalog/RideCheckService.php`,
 `RideCheckService::corridorGroups()` once compared a rider's uploaded track against every catalog
 item using `ST_DWithin` with `::geography` on both sides, and PostgreSQL had no faster way to answer
-it than checking the ellipsoid maths against every single row in the table. The method's own comment
-records the result plainly:
-
-<!-- CODE-FROM web/src/Catalog/RideCheckService.php -->
-```php
-// ST_DWithin(::geography) formulation seq-scanned with spheroid maths
-// against the full track per item (62 s down to sub-second, dev catalog).
-```
+it than checking the ellipsoid maths against every single row in the table. Against the dev catalog
+that query took 62 seconds; the rewritten version answers in under one.
 
 The fix is chapter 5's subject, not this chapter's —
 what belongs here is smaller: **cast to `geography` when the question is genuinely "how far apart, in

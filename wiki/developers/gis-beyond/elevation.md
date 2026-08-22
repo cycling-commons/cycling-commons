@@ -62,13 +62,17 @@ height to be at that instant is the only elevation number a proposed route's asc
 from.
 
 `TrackProcessor::ascentM()` then sums that raw device elevation, point to point, with a rule about
-missing data that is worth reading in full because it is a deliberate refusal, not an oversight:
+missing data that is a deliberate refusal rather than an oversight:
 
 <!-- CODE-FROM web/src/Contribution/Gpx/TrackProcessor.php -->
 ```php
-* Positive elevation gain; null when any point lacks <ele> (spec §4.2 -
-* a partial profile would silently under-report, so refuse instead).
+* Positive elevation gain; null when any point lacks <ele> (docs/specs/route-domain.md §4.2).
 ```
+
+The refusal is the interesting part. A partial elevation profile does not fail loudly — it produces a
+number, and that number is always too small, because the missing points contribute no climb. A ride
+with a third of its `<ele>` values dropped would report an ascent that looks entirely plausible and is
+simply wrong. Returning `null` makes the gap visible instead of averaging it away.
 
 If even one trackpoint in the whole track is missing an `<ele>` value, `ascentM()` returns `null` for
 the entire ride rather than quietly summing whatever elevation data it does have. Course 1's

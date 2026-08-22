@@ -119,17 +119,14 @@ hardcoded, name-keyed table that only recognises the small handful of routes it 
 
 <!-- CODE-FROM web/assets/map/map.js -->
 ```js
-// Demo-era lookup keyed by ride name. NO fallback: fabricating
-// 'Starts at: Spa' for unknown routes (e.g. rider proposals) is wrong
-// data — reverse-geocoding real towns is a recorded route-domain
-// non-goal, so unknown routes simply omit the town rows.
+// Demo lookup keyed by ride name. No fallback — unknown routes omit town rows.
 ```
 
-That comment is the honest version of this chapter's whole argument in miniature. A rider-proposed
+"No fallback" is the honest version of this chapter's whole argument in miniature. A rider-proposed
 route has no hand-picked town name attached to it, and reverse-geocoding one from the raw track was
-considered and explicitly rejected as a way to invent one — "fabricating a start town … would be
-wrong data." Rather than guess, the feature simply does not show a town for a route it was never
-told one for. `docs/specs/route-domain.md` lists real reverse-geocoding from the track as recorded,
+considered and explicitly rejected as a way to invent one: showing "Starts at: Spa" for a route
+nobody ever told us starts at Spa is wrong data, not a rough guess. Rather than guess, the feature
+simply does not show a town for a route it was never told one for. `docs/specs/route-domain.md` lists real reverse-geocoding from the track as recorded,
 un-scheduled future work, precisely because doing it properly means confronting every question this
 chapter just raised — which containing place, at which precision, with what fallback when the answer
 is genuinely ambiguous — rather than papering over it with a lookup table that only covers the routes
