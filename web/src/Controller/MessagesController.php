@@ -176,7 +176,7 @@ final class MessagesController extends AbstractController
             static fn (UserMessage $a, UserMessage $b): int => [$a->getCreatedAt(), (int) $a->getId()]
                 <=> [$b->getCreatedAt(), (int) $b->getId()],
         );
-            $openQuestion = []; // submission id => unanswered question
+        $openQuestion = []; // submission id => unanswered question
         $byQuestion = [];
         $attached = [];
 

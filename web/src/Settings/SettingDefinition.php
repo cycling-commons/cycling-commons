@@ -19,15 +19,7 @@ final readonly class SettingDefinition
     public const string TYPE_STRING = 'string';
 
     /**
-     * @param string                  $key
-     * @param int|string              $default
-     * @param ?int                    $min
-     * @param ?int                    $max
-     * @param ?int                    $maxLength
      * @param ?\Closure(string): bool $validator
-     * @param string                  $group
-     * @param string                  $labelKey
-     * @param string                  $helpKey
      */
     public function __construct(
         public string $key,

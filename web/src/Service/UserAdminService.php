@@ -225,7 +225,6 @@ final class UserAdminService
         return implode(', ', $names);
     }
 
-
     private function assertNotSelf(User $target, User $actor): void
     {
         if ($target->getId() === $actor->getId()) {
@@ -239,7 +238,6 @@ final class UserAdminService
             throw new GuardrailViolationException('Cannot remove the last remaining administrator.');
         }
     }
-
 
     /** Add or remove an elevated role, never storing the implicit ROLE_USER. */
     private function setRole(User $user, string $role, bool $enabled): void

@@ -117,7 +117,6 @@ final class LoginThrottleListener
         $this->em->flush();
     }
 
-
     private function resolveUserFromFailureEvent(LoginFailureEvent $event): ?User
     {
         $passport = $event->getPassport();
