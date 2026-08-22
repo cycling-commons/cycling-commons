@@ -1896,6 +1896,7 @@ map:
   rc_results: 'resultaten'
   rc_clear: 'wissen'
   rc_error: 'Kon deze rit niet controleren — probeer het opnieuw.'
+  rc_scope_from_ride: 'van je rit'
   d_pick_bike_rode: 'Kies eerst het fietstype waarmee je hem reed.'
   d_pick_bike_vote: 'Kies eerst een fietstype om aan te bevelen.'
   d_ride_check: 'Ritcheck'

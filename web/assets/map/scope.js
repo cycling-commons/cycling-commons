@@ -435,9 +435,14 @@
     label(s) {
       if (!s || !s.kind) return null;
       if (s.kind === 'region') {
-        const id = s.regionIds && s.regionIds[0];
-        const r = id != null ? byId.get(id) : null;
-        return r ? (r.label || r.slug) : null;
+        const ids = s.regionIds || [];
+        const r = ids.length ? byId.get(ids[0]) : null;
+        if (!r) return null;
+        const first = r.label || r.slug;
+        // A scope can hold several regions (a ride crossing provinces sets one
+        // per region it passes through). Naming only the first would claim the
+        // map is showing less than it is, so the rest are counted.
+        return ids.length > 1 ? `${first} +${ids.length - 1}` : first;
       }
       if (s.kind === 'country') {
         if (!s.countryCode) return null;

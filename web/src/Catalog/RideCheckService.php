@@ -50,7 +50,8 @@ final class RideCheckService
      *     radiusM: int,
      *     groups: list<array{letter: string, items: list<array{id: int, name: string, ll: array{0: float, 1: float}, distM: int, alongKm: float}>, truncated: bool}>,
      *     coverage: list<array{letter: string, items: list<array{id: int, name: string, ll: array{0: float, 1: float}, distM: int, alongKm: float, ref: string}>, truncated: bool}>,
-     *     routes: list<array{id: int, name: string, sharedKm: float}>
+     *     routes: list<array{id: int, name: string, sharedKm: float}>,
+     *     regions: list<array{id: int, slug: string, name: string, countryCode: string|null}>
      * }
      *
      * @throws \InvalidArgumentException validation failure (message = translation key)
@@ -84,6 +85,7 @@ final class RideCheckService
             'groups' => $this->corridorGroups($geoJson, $radiusM, $rawM),
             'coverage' => $this->corridorCoverage($geoJson, $radiusM, $rawM),
             'routes' => $this->followedRoutes($geoJson, $radiusM),
+            'regions' => $this->crossedRegions($geoJson),
         ];
     }
 
@@ -239,5 +241,42 @@ final class RideCheckService
         }
 
         return null;
+    }
+
+    /**
+     * Every operational region the track passes through, in ride order.
+     *
+     * The map scope is a set of region ids (map-and-search.md §4.5), so a ride
+     * that crosses three provinces answers with three: the client widens to all
+     * of them rather than picking a winner and leaving the rest of the ride
+     * unscoped. Ordered by where the track first enters each one, so the chip
+     * reads the way the ride was ridden. Level-2 country outlines are excluded
+     * exactly as everywhere else — they are not scope chips
+     * (catalog-data-model.md §2.4).
+     *
+     * @return list<array{id: int, slug: string, name: string, countryCode: string|null}>
+     */
+    private function crossedRegions(string $geoJson): array
+    {
+        /** @var list<array{id: int|string, slug: string, name: string, country_code: string|null}> $rows */
+        $rows = $this->db->fetchAllAssociative(
+            'WITH track AS MATERIALIZED (SELECT ST_SetSRID(ST_GeomFromGeoJSON(:geom), 4326) AS g)
+             SELECT r.id, r.slug, r.name, r.country_code
+             FROM region r
+             WHERE ST_Intersects(r.geom, (SELECT g FROM track))
+               AND '.OperationalRegions::predicate('r').'
+             ORDER BY ST_LineLocatePoint(
+                 (SELECT g FROM track),
+                 ST_ClosestPoint(ST_Intersection(r.geom, (SELECT g FROM track)), ST_StartPoint((SELECT g FROM track)))
+             ), r.id',
+            ['geom' => $geoJson],
+        );
+
+        return array_map(static fn (array $r): array => [
+            'id' => (int) $r['id'],
+            'slug' => $r['slug'],
+            'name' => $r['name'],
+            'countryCode' => $r['country_code'],
+        ], $rows);
     }
 }

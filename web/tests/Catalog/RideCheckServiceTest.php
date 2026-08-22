@@ -337,4 +337,55 @@ final class RideCheckServiceTest extends KernelTestCase
         }
         self::assertContains('Curated fountain', $curatedNames);
     }
+
+    /**
+     * A region the track passes through, as a box around the test ride's
+     * latitude. `admin_level` decides operationality: the deepest level a
+     * country has is the one that scopes (catalog-data-model.md §2.4).
+     */
+    private function seedRegion(string $slug, string $name, string $cc, float $lngW, float $lngE, int $adminLevel = 4): int
+    {
+        $db = $this->db();
+        $db->executeStatement(
+            "INSERT INTO region (slug, name, geom, area_km2, country_code, iso_code, admin_level, source, created_at, updated_at)
+             VALUES (?, ?, ST_GeomFromText(?, 4326), 1000, ?, ?, ?, 'test', NOW(), NOW())",
+            [$slug, $name, sprintf('POLYGON((%1$F 50.3,%1$F 50.5,%2$F 50.5,%2$F 50.3,%1$F 50.3))', $lngW, $lngE),
+                $cc, strtoupper(substr($slug, 0, 5)), $adminLevel],
+        );
+
+        return (int) $db->lastInsertId('region_id_seq');
+    }
+
+    public function testTheRideNamesEveryRegionItCrosses(): void
+    {
+        // The ride runs west→east from 5.8000 to 5.8300; these two boxes split it.
+        $west = $this->seedRegion('rc-west', 'West province', 'BE', 5.75, 5.815);
+        $east = $this->seedRegion('rc-east', 'East province', 'BE', 5.815, 5.90);
+        $this->seedRegion('rc-away', 'Somewhere else', 'BE', 6.50, 6.60);
+
+        $regions = $this->service()->check(self::ride(), 250)['regions'];
+
+        self::assertSame([$west, $east], array_column($regions, 'id'), 'both crossed regions, in ride order');
+        self::assertSame(['West province', 'East province'], array_column($regions, 'name'));
+        self::assertSame(['BE', 'BE'], array_column($regions, 'countryCode'));
+    }
+
+    public function testACountryOutlineIsNeverOfferedAsAScope(): void
+    {
+        // Same country, two levels: only the deepest one scopes. A level-2
+        // outline covering the ride must not join the answer.
+        $province = $this->seedRegion('rc-prov', 'Province', 'BE', 5.75, 5.90, 4);
+        $this->seedRegion('rc-country', 'Whole country', 'BE', 5.00, 6.50, 2);
+
+        $regions = $this->service()->check(self::ride(), 250)['regions'];
+
+        self::assertSame([$province], array_column($regions, 'id'), 'the level-2 outline is not a scope chip');
+    }
+
+    public function testARideOutsideEveryRegionAnswersWithNone(): void
+    {
+        $this->seedRegion('rc-elsewhere', 'Elsewhere', 'BE', 6.50, 6.60);
+
+        self::assertSame([], $this->service()->check(self::ride(), 250)['regions']);
+    }
 }

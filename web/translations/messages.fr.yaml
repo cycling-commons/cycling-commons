@@ -1896,6 +1896,7 @@ map:
   rc_results: 'résultats'
   rc_clear: 'effacer'
   rc_error: 'Impossible de vérifier ce parcours — veuillez réessayer.'
+  rc_scope_from_ride: 'depuis votre sortie'
   d_pick_bike_rode: 'Choisissez d''abord le type de vélo avec lequel vous l''avez roulé.'
   d_pick_bike_vote: 'Choisissez d''abord un type de vélo pour la recommandation.'
   d_ride_check: 'Vérif parcours'

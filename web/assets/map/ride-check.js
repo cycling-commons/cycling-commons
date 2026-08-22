@@ -13,6 +13,7 @@ import { CATALOG, layerByKey } from './catalog.js';
 import { sheet } from './sheet.js';
 import { closeDrawer, highlightAt, clearHighlight } from './drawer.js';
 import { openRouteById, bumpPlaceReq } from './places.js';
+import { rideScopeFor, scopeKey } from './ride-scope.js';
 
 // Coverage letters ride-check surfaces (utility C/D/G/H). Experiential E/I/J
 // stay on the curated arm.
@@ -23,7 +24,7 @@ export function initRideCheck(){
     const pick=document.getElementById('rcPick'), fileIn=document.getElementById('rcFile'),
           radiusSel=document.getElementById('rcRadius'), status=document.getElementById('rcStatus');
     if(!pick || !fileIn || !radiusSel || !status) return;
-    let _file=null, _busy=false, _last=null;
+    let _file=null, _busy=false, _last=null, _prevScope=null;
     const say=msg=>{ status.hidden=!msg; status.textContent=msg||''; };
     function loadedStatus(d){
       status.hidden=false;
@@ -39,6 +40,40 @@ export function initRideCheck(){
       ['ridecheck','ridecheck-cov'].forEach(id=>{ if(map.getSource(id)) map.removeSource(id); });
       clearHighlight();
     }
+    /* The ride decides the scope while it is loaded (docs/specs/map-and-search.md
+       §4.5). A rider who drops a GPX of the Ardennes while scoped to Flanders
+       means to look at the Ardennes; leaving the old scope up shows an empty
+       map over a drawn track. A scope holds a SET of region ids, so a ride
+       crossing three provinces takes all three rather than picking a winner and
+       leaving the last 30 km unscoped. Two countries have no common region
+       scope, so that widens to Everywhere instead. Never persisted: the rider's
+       own scope goes back the moment the ride is cleared. */
+    function applyRideScope(regions){
+      const S=window.CCScope;
+      const next=rideScopeFor(regions);
+      if(!S || !next) return;                                    // ride outside every onboarded region: leave the scope alone
+      const cur=S.get();
+      if(_prevScope==null) _prevScope=cur;
+      if(scopeKey(cur)===scopeKey(next)){ noteRideScope(); return; }   // already looking there
+      S.set(next,{persist:false});
+      noteRideScope();
+    }
+    function restoreScope(){
+      const prev=_prevScope; _prevScope=null;
+      if(prev && window.CCScope) window.CCScope.set(prev,{persist:false});
+      else repaintScopeHeader();
+    }
+    function repaintScopeHeader(){
+      if(window.CCScopeHeader) window.CCScopeHeader.paint(window.CC_I18N||{});
+    }
+    /* Say it in the chip: a scope that moves without a word is the same
+       confusion from the other side. */
+    function noteRideScope(){
+      repaintScopeHeader();
+      const el=document.getElementById('regionLine');
+      if(el) el.textContent=el.textContent+' · '+(I18N.rcScopeFromRide||'from your ride');
+    }
+
     /* Corridor coverage as its own overlay (docs/specs/map-and-search.md §9),
        not the coverage tiles: a ride may leave the rider's region, the layer
        may be off, and Curated hides experiential letters. Same icons and
@@ -68,6 +103,7 @@ export function initRideCheck(){
     function clearRideCheck(){
       clearOverlay();
       _last=null; _file=null; say('');
+      restoreScope();
       if(rideDrawerShowing()) closeDrawer();
     }
     function post(){
@@ -84,6 +120,9 @@ export function initRideCheck(){
     function renderRideCheck(d){
       clearOverlay();
       _last=d;
+      // Before the fitBounds below: cc:scopechange re-fits to the scope bbox,
+      // and the ride's own framing must have the last word.
+      applyRideScope(d.regions);
       const coords=d.track.map(p=>[p[1],p[0]]);            // [lat,lng] → [lng,lat]
       map.addSource('ridecheck',{type:'geojson',data:{type:'Feature',properties:{},geometry:{type:'LineString',coordinates:coords}}});
       map.addLayer({id:'ridecheck-case',type:'line',source:'ridecheck',

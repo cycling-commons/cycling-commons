@@ -2232,6 +2232,7 @@ map:
   rc_results: 'results'
   rc_clear: 'clear'
   rc_error: 'Could not check this ride — please try again.'
+  rc_scope_from_ride: 'from your ride'
   d_pick_bike_rode: 'Pick the bike type you rode it on first.'
   d_pick_bike_vote: 'Pick a bike type to recommend it for first.'
   d_ride_check: 'Ride check'

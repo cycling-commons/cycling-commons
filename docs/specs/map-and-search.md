@@ -1656,6 +1656,30 @@ requirement).
   torn down by Clear together with the track. In the drawer, coverage is a
   separate section under its own heading with a provenance note, so uncurated
   OSM never reads as a verified Commons pick; rows call `openCoverageByRef()`.
+- **The ride sets the scope while it is loaded** (owner 2026-08-23) —
+  `check()` also answers **`regions`**: every *operational* region the track
+  intersects (`RideCheckService::crossedRegions()`, `OperationalRegions`
+  predicate so level-2 country outlines never appear), ordered by where the
+  track first enters each. `assets/map/ride-scope.js::rideScopeFor()` turns
+  that list into a scope, and `ride-check.js` applies it **before** its own
+  `fitBounds`, so the ride's framing still wins:
+  - one or more regions in **one country** → a `region` scope holding **all**
+    of them. §4.5's scope is a set of region ids, so a ride across three
+    provinces keeps every kilometre inside the scope rather than picking a
+    winner and leaving the last stretch unscoped.
+  - regions in **two countries** → `everywhere`. There is no region scope that
+    spans them, and half a scoped ride is worse than a wide one.
+  - **no regions** (a ride outside every onboarded country) → the rider's scope
+    is left exactly as it was; there is nothing better to move it to.
+
+  **Never persisted** (`set(..., {persist:false})`): Clear puts the rider's own
+  scope back, and a new session starts from theirs, not from a ride they once
+  looked at. The move is **said out loud** — the scope header gains
+  `· from your ride` (`map.rc_scope_from_ride`), and a multi-region scope reads
+  `Vaucluse +2` rather than naming the first region as if it were the whole
+  scope (`CCScope.label()`). One caveat carried knowingly: restoring through
+  `set()` retires `isDefault()`, so a rider who had never chosen a scope is
+  treated as having one after their first ride-check.
 - **Route-overlap "follows" floor:**
   `max(ROUTE_MIN_OVERLAP_BASE_M = 300, 2·radius + 100)` m of shared length —
   a fixed 300 m fails at larger radii, where a mere perpendicular crossing

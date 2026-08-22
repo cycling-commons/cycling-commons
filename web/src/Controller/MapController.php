@@ -377,6 +377,7 @@ final class MapController extends AbstractController
             'rcResults' => $t->trans('map.rc_results'),
             'rcClear' => $t->trans('map.rc_clear'),
             'rcError' => $t->trans('map.rc_error'),
+            'rcScopeFromRide' => $t->trans('map.rc_scope_from_ride'),
             'mlyLoading' => $t->trans('map.mly_loading'),
             'mlyNone' => $t->trans('map.mly_none'),
             'mlyZoom' => $t->trans('map.mly_zoom'),

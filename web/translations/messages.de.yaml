@@ -1899,6 +1899,7 @@ map:
   rc_results: 'Ergebnisse'
   rc_clear: 'löschen'
   rc_error: 'Diese Tour konnte nicht geprüft werden — bitte erneut versuchen.'
+  rc_scope_from_ride: 'von deiner Tour'
   d_pick_bike_rode: 'Wähle zuerst den Radtyp, mit dem du gefahren bist.'
   d_pick_bike_vote: 'Wähle zuerst einen Radtyp für die Empfehlung.'
   d_ride_check: 'Tour-Check'

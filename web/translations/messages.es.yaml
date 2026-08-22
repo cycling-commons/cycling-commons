@@ -2241,6 +2241,7 @@ map:
   rc_results: 'resultados'
   rc_clear: 'limpiar'
   rc_error: 'No se ha podido revisar esta salida — inténtalo otra vez.'
+  rc_scope_from_ride: 'de tu ruta'
   d_pick_bike_rode: 'Elige primero el tipo de bici con el que la rodaste.'
   d_pick_bike_vote: 'Elige primero el tipo de bici para el que la recomiendas.'
   d_ride_check: 'Revisión de la salida'
