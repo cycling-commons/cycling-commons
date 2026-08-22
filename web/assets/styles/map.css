@@ -1383,6 +1383,15 @@
   .cc-addclimb-go:hover{border-color:var(--trail);color:var(--trail)}
   .cc-addclimb-note{margin:.55rem 0 0;font-size:.72rem;line-height:1.4;color:rgb(var(--chrome-fg) / .68)}
 
+  /* A tool that needs an account: muted, but a real link and a real target —
+     dimmed enough to read as not-yet-yours, never below the contrast floor. */
+  .cc-locked{display:inline-flex;align-items:center;min-height:32px;font-family:var(--mono);font-size:.66rem;
+    letter-spacing:.08em;text-transform:uppercase;padding:.42rem .75rem;
+    border:1px dashed rgb(var(--chrome-fg) / .3);border-radius:30px;
+    color:rgb(var(--chrome-fg) / .72);transition:all .18s}
+  .cc-locked:hover,.cc-locked:focus-visible{border-style:solid;border-color:var(--trail);color:var(--trail)}
+  .cc-locked-hint{margin:.4rem 0 0;font-size:.72rem;line-height:1.4;color:rgb(var(--chrome-fg) / .68)}
+
 /* vestibular safety: the sibling contribute templates already carry this
    kill-switch; the map page was the one surface without it (review W10) */
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}

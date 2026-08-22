@@ -310,7 +310,9 @@
       </section>
 
       <section class="panel" id="p-tools">
-      {% if is_granted('ROLE_USER') %}
+      {# Every tool below is shown to everyone. Riders-only ones render locked
+         when logged out — same heading, same description, with the control
+         replaced by a link to log in. #}
       {# Ride-check (spec 2026-07-14 §4.3): riders-only GPX upload — the file is
          posted to /map/ride-check, answered, and discarded; the notice below is
          a user requirement and must stay visible. #}
@@ -321,6 +323,7 @@
            they already know what they would be uploading. #}
         <div class="hint" style="margin-top:0">{{ 'map.ride_check_intro'|trans }}</div>
         <div class="hint">{{ 'ride_check.hint'|trans }}</div>
+        {% if is_granted('ROLE_USER') %}
         <input type="file" id="rcFile" accept=".gpx" hidden>
         <div class="cc-ride-row">
           <button class="cc-ride-btn" id="rcPick" type="button">{{ 'ride_check.button'|trans }}</button>
@@ -337,17 +340,25 @@
           </label>
         </div>
         <div class="cc-ride-status" id="rcStatus" role="status" hidden></div>
+        {% else %}
+        {% include 'map/_locked_tool.html.twig' with {label: 'ride_check.button'|trans} only %}
+        {% endif %}
+        {# The notice stays in both states: it answers what would happen to a
+           file, which is worth knowing before deciding to sign up. #}
         <p class="cc-ride-note">{{ 'ride_check.notice'|trans }}</p>
       </div>
 
       {# Scout: the same ride file, read the other way round. Ride check asks
          what is already near a route; scout turns what a rider SAW on it into
-         submissions. Riders only, like the two groups around it, because
-         /scout/review is ROLE_USER and a link that lands on a login wall is
-         worse than no link. #}
+         submissions. /scout/review is ROLE_USER, so logged out this renders
+         locked rather than as a link that would land on a login wall. #}
       <div class="grp">
         <h3>{{ 'map.scout_heading'|trans }}</h3>
+        {% if is_granted('ROLE_USER') %}
         <a class="cc-addclimb-go" href="{{ path('scout_review') }}">{{ 'map.scout_review'|trans }}</a>
+        {% else %}
+        {% include 'map/_locked_tool.html.twig' with {label: 'map.scout_review'|trans} only %}
+        {% endif %}
         <p class="cc-addclimb-note">{{ 'map.scout_hint'|trans }}</p>
       </div>
 
@@ -358,19 +369,20 @@
          then re-locate the climb from scratch in its own small map while having
          been looking straight at it.
 
-         Riders only, like the ride-check block above it, because /add-climb is
-         ROLE_USER and offering a link that lands on a login wall is worse than
-         not offering it. Anonymous riders still reach it through /contribute,
-         which lists it.
+         /add-climb is ROLE_USER, so logged out this renders locked. Anonymous
+         riders also reach it through /contribute, which lists it.
 
          The href is rewritten by panels.js initAddClimbHere() on every map
          move, so what the wizard opens on is what the rider was looking at. #}
       <div class="grp cc-addclimb">
         <h3>{{ 'map.add_climb_heading'|trans }}</h3>
+        {% if is_granted('ROLE_USER') %}
         <a class="cc-addclimb-go" id="addClimbHere" href="{{ path('add_climb') }}">{{ 'map.add_climb_here'|trans }}</a>
+        {% else %}
+        {% include 'map/_locked_tool.html.twig' with {label: 'map.add_climb_here'|trans} only %}
+        {% endif %}
         <p class="cc-addclimb-note">{{ 'map.add_climb_note'|trans }}</p>
       </div>
-      {% endif %}
 
       {# Anything that is not a climb goes through the wizard, which the map's
          own orange Contribute button opens. Said here because this is the
