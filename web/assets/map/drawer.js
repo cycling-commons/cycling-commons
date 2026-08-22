@@ -14,6 +14,7 @@ import { openLightbox } from './lightbox.js';
 import { highlightRoute, clearRouteHighlight, showSurfaceSelection, clearSurfaceSelection } from './render.js';
 import { clearRouteSelection } from './routes-tiles.js';
 import { clearSelectedCoverageIcon, invalidateCoverageDrawer } from './coverage.js';
+import { osmMetres } from './osm-tags.js';
 import { setSurfaceTiles, surfaceTilesVisible, surfaceTilesConfigured } from './surface-tiles.js';
 import { isPicking, cancelPicking } from './picking.js';
 import { openCity, bumpPlaceReq } from './places.js';
@@ -107,6 +108,12 @@ export function fieldLabelFor(letter, name){
   return off ? off() : name;
 }
 
+/* A metres-valued OSM tag in the rider's unit; anything else stays verbatim. */
+function elevValue(raw){
+  const m = osmMetres(raw);
+  return m == null ? String(raw) : uElev(m);
+}
+
 /* Provenance line: geometry sources plus per-climb demSource. */
 function srcLine(f, osmHref){
   const link='style="color:var(--glacier);text-decoration:underline;text-underline-offset:2px"';
@@ -175,6 +182,12 @@ export function osmDrawer(layer, p, ll, src){
   let rec=[{label:D.type||'Type', value:typeLbl, method: pivot?'Tourisme Wallonie':'OSM'}];
   if(p.town && layer.letter!=='E') rec.push({label:D.town||'Town', value:p.town});  // docs/specs/coverage-provider.md §2 — no province row when region_id is null (no Wallonia fallback).
   if(p.prov) rec.push({label:D.province||'Province', value:p.prov});
+  // Scenic-view facts OSM already holds (docs/specs/coverage-provider.md §5):
+  // altitude, which way a viewpoint faces, how far a waterfall drops. Written
+  // in the rider's own unit, so an imperial reader gets feet.
+  if(p.ele!=null) rec.push({label:D.elevation||'Elevation', value:elevValue(p.ele)});
+  if(p.viewDir) rec.push({label:D.viewDirection||'View direction', value:p.viewDir});
+  if(p.drop!=null) rec.push({label:D.drop||'Drop', value:elevValue(p.drop)});
   if(pivot) rec.push({label:D.listed||'Listed', value:D.officialRegistry||'Official Tourisme Wallonie registry', method:'official'});
   // docs/specs/map-and-search.md §12 — simulated flags die. Skip structural `web` when the letter schema already declares it.
   const schemaHasWeb = (((window.CC_FIELD_SCHEMA||{})[(layer||{}).letter])||[]).some(f=>f.key==='web');

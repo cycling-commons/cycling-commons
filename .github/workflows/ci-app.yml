@@ -62,3 +62,7 @@ jobs:
       # Map scope-model smoke tests (07-20 review finding 8) — plain node:test,
       # no npm install; the runner image ships Node.
       - run: node --test tests/js/*.test.cjs
+      # .mjs separately, exactly as `make scope-test` does: the ES-module tests
+      # (vendored Scout FIT reader, outbound links, OSM tag values) are invisible
+      # to the .cjs glob above and were running nowhere in CI.
+      - run: node --test tests/js/*.test.mjs

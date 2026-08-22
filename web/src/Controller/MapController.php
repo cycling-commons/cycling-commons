@@ -168,6 +168,7 @@ final class MapController extends AbstractController
 
         $drawer = [
             'type' => 'd_type', 'location' => 'd_location', 'town' => 'd_town', 'province' => 'd_province', 'listed' => 'd_listed',
+            'viewDirection' => 'd_view_direction', 'drop' => 'd_drop',
             'status' => 'd_status', 'rating' => 'd_rating', 'website' => 'd_website', 'potable' => 'd_potable',
             'verify' => 'd_verify', 'distance' => 'd_distance', 'startsAt' => 'd_starts_at',
             'townsOnRoute' => 'd_towns_on_route', 'surfaces' => 'd_surfaces', 'submittedBy' => 'd_submitted_by', 'itemToday' => 'd_item_today',

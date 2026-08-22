@@ -184,10 +184,21 @@ The serve-set is three groups:
 | Group | Count | Keys | Read by |
 |---|---|---|---|
 | **Selectors** | 11 | `amenity`, `drinking_water`, `historic`, `man_made`, `natural`, `railway`, `route`, `shelter_type`, `shop`, `tourism`, `waterway` | Classification (letter + `serviceKind`); `tiles.py::_label_case` re-reads them at tile-build time |
-| **Display** | 14 | `opening_hours`, `website`, `contact:website`, `url`, `phone`, `contact:phone`, `addr:city`, `addr:street`, `addr:housenumber`, `operator`, `description`, `wheelchair`, `fee`, `capacity` | `CoverageRepository::TAG_WHITELIST` — exactly what the drawer renders (§5). `wheelchair`/`drinking_water` also feed tile props (§4) |
+| **Display** | 17 | `opening_hours`, `website`, `contact:website`, `url`, `phone`, `contact:phone`, `addr:city`, `addr:street`, `addr:housenumber`, `operator`, `description`, `wheelchair`, `fee`, `capacity`, `ele`, `direction`, `height` | `CoverageRepository::TAG_WHITELIST` — exactly what the drawer renders (§5). `wheelchair`/`drinking_water` also feed tile props (§4) |
 
-`TAG_WHITELIST` has **15** entries; `drinking_water` is counted in the selector
-row above, so the three groups sum to 11 + 14 + 4 = **29** distinct keys.
+`TAG_WHITELIST` has **18** entries; `drinking_water` is counted in the selector
+row above, so the three groups sum to 11 + 17 + 4 = **32** distinct keys.
+
+`ele`, `direction` and `height` were added on 2026-08-21 for the scenic-view
+letter (I), where OSM's own record is often richer than what the drawer showed:
+a peak carries its altitude, a viewpoint the compass bearing it faces, a
+waterfall the metres it drops. The drawer reads all three for letter I only
+(`covProps` in `assets/map/coverage.js`), but the whitelist is per-tag rather
+than per-letter, so the same facts appear wherever else they are tagged. Values
+are free text in OSM, so `assets/map/osm-tags.js` refuses anything that is not
+plainly metres instead of guessing — "1200 ft" renders verbatim, never as 1200
+metres. **Existing rows do not gain the tags until the country is re-harvested**
+(§3); this is the first contract change to prove that path.
 | **Media/reference** | 4 | `wikidata`, `wikipedia`, `image`, `wikimedia_commons` | **Nothing yet — provisional.** Kept only because re-adding them later costs a full re-harvest; pending a decision on whether we build the drawer photo / deep-link features. Cost: 19 B/row, ≈ 89 MB planet-wide |
 
 Measured impact of the trim across BE + NL + DE (then 375,078 rows; 377,558 after

@@ -11,6 +11,7 @@ import { updateCounts, applyStaysAccessFilter } from './render.js';
 import { openDrawer, renderDrawerBody, osmDrawer, waterDrawer, revealPinAt } from './drawer.js';
 import { isPicking } from './picking.js';
 import { osmLayers } from './osm-pools.js';
+import { viewDirection } from './osm-tags.js';
 
 // Coverage tiles (docs/specs/coverage-provider.md §6). [rail key, lowercase letter]
 // must stay in step with catalog.js LETTER_KEY (covKeysTest.cjs).
@@ -180,6 +181,11 @@ export function covProps(key, tp, d){
     const tags=d.tags||{};
     const web=tags.website||tags['contact:website'];
     if(web) p.web=web;
+    if(key==='scenic'){
+      if(tags.ele!=null) p.ele=tags.ele;
+      if(tags.height!=null) p.drop=tags.height;
+      if(tags.direction!=null) p.viewDir=viewDirection(tags.direction);
+    }
     if(key==='water' && tags.drinking_water==='no') p.osmPotable=false;   // hydrated tag wins over tile boolean
     if(d.curated){
       if(d.curated.itemId!=null) p.id=d.curated.itemId;

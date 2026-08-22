@@ -34,6 +34,12 @@ final class CoverageRepository
         'opening_hours', 'website', 'contact:website', 'url', 'phone', 'contact:phone',
         'addr:city', 'addr:street', 'addr:housenumber', 'operator', 'description',
         'wheelchair', 'drinking_water', 'fee', 'capacity',
+        // Scenic-view detail (letter I): a peak's altitude, which way a
+        // viewpoint faces, and how far a waterfall drops. All three are plain
+        // OSM tags the harvest now stores; the drawer reads them for I only,
+        // but the whitelist is per-tag, not per-letter, so a peak reached
+        // through any other letter shows the same fact rather than hiding it.
+        'ele', 'direction', 'height',
     ];
 
     /**
