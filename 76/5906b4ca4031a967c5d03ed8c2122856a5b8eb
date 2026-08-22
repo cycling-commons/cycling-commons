@@ -1,0 +1,38 @@
+web/assets/map/drawer.js
+  s_9a6b8d8611c934::t_3558d5fc71e7fc 111-116,185-190
+  s_9a6b8d8611c934::t_8106c30dcc2323 17
+pipeline/contract/coverage-contract.json
+  s_9a6b8d8611c934::t_970bbd1532fa55 244,246,248
+web/assets/map/coverage.js
+  s_9a6b8d8611c934::t_55cabc5b3e8bcf 184-188
+  s_9a6b8d8611c934::t_8106c30dcc2323 14
+web/src/Controller/MapController.php
+  s_9a6b8d8611c934::t_7c132486fa6959 171
+web/tests/js/osm-tags.test.mjs
+  s_9a6b8d8611c934::t_b529676e466964 1-10,12-38
+  s_9a6b8d8611c934::t_ce1ff1ae14e4b6 11
+docs/specs/coverage-provider.md
+  s_9a6b8d8611c934::t_d270f64424f4b0 187-201
+web/assets/map/osm-tags.js
+  s_9a6b8d8611c934::t_8106c30dcc2323 1-23
+web/src/Coverage/CoverageRepository.php
+  s_9a6b8d8611c934::t_cb084614077a60 37-42
+.github/workflows/ci-app.yml
+  s_9a6b8d8611c934::t_d48a1961823c80 65-68
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.23",
+  "base_commit_sha": "765906b4ca4031a967c5d03ed8c2122856a5b8eb",
+  "prompts": {},
+  "sessions": {
+    "s_9a6b8d8611c934": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5ab7bb79-587a-4b27-803b-dbb4f99c167a",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
