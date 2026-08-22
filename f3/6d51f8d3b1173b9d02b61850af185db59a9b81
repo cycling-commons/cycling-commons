@@ -1,0 +1,48 @@
+web/translations/messages.es.yaml
+  s_9a6b8d8611c934::t_94b071334d6119 2276-2277
+  s_f68f52eab6f3c4::t_230eb72d9bf85b 2234
+web/translations/messages.en.yaml
+  s_9a6b8d8611c934::t_94b071334d6119 2267-2268
+  s_f68f52eab6f3c4::t_f2260097a3896c 2225
+web/translations/messages.de.yaml
+  s_9a6b8d8611c934::t_94b071334d6119 1934-1935
+  s_f68f52eab6f3c4::t_f3b86f427f4dd6 1892
+web/translations/messages.fr.yaml
+  s_9a6b8d8611c934::t_94b071334d6119 1931-1932
+  s_f68f52eab6f3c4::t_3f5f1c4a49d56d 1889
+web/translations/messages.nl.yaml
+  s_9a6b8d8611c934::t_94b071334d6119 1931-1932
+  s_f68f52eab6f3c4::t_6bee6a7750c09f 1889
+web/assets/styles/map.css
+  s_f68f52eab6f3c4::t_1049de80e5546e 1386-1394
+web/templates/map/_locked_tool.html.twig
+  s_f68f52eab6f3c4::t_73a4c9d1a69bd4 1-4
+web/templates/map/index.html.twig
+  s_f68f52eab6f3c4::t_18a685b88d2431 313-315,326,343-347,353-354,357,359-361,372-373,379,381-383
+web/tests/Smoke/MapToolsLockedTest.php
+  s_f68f52eab6f3c4::t_c63895cb1ed8a0 1-81
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.23",
+  "base_commit_sha": "f36d51f8d3b1173b9d02b61850af185db59a9b81",
+  "prompts": {},
+  "sessions": {
+    "s_9a6b8d8611c934": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5ab7bb79-587a-4b27-803b-dbb4f99c167a",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_f68f52eab6f3c4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c7a55b70-80fe-4d7b-a5a8-04f70def4f1e",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
