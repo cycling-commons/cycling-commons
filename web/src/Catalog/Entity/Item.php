@@ -69,6 +69,24 @@ class Item
     private string $sourceRef = '';
 
     /**
+     * The OSM object this row is a record OF, whatever our own source is.
+     *
+     * OSM is the identity spine ([osm-data-architecture.md §1] — "the join key
+     * between our data and OSM is always `osm_ref`"). `sourceRef` cannot serve
+     * that role for every source: it is the harvest's own upsert key, so a
+     * PIVOT row carries `fx:pivot:hotel-koru|ramillies` and could never match
+     * `node/6123208864`. That mismatch is why one hotel was served twice, once
+     * from the catalog and once from the coverage cache.
+     *
+     * NULL means "no OSM counterpart found", which is the honest majority: most
+     * curated rows have none. It never means "not checked".
+     *
+     * @see docs/specs/catalog-data-model.md §5b
+     */
+    #[ORM\Column(type: 'string', length: 160, nullable: true)]
+    private ?string $osmRef = null;
+
+    /**
      * Registry-validated type-specific + display fields.
      *
      * @var array<string, mixed>
@@ -205,6 +223,18 @@ class Item
     public function setSourceRef(string $sourceRef): static
     {
         $this->sourceRef = $sourceRef;
+
+        return $this;
+    }
+
+    public function getOsmRef(): ?string
+    {
+        return $this->osmRef;
+    }
+
+    public function setOsmRef(?string $osmRef): static
+    {
+        $this->osmRef = ('' === $osmRef) ? null : $osmRef;
 
         return $this;
     }
