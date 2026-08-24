@@ -11,7 +11,7 @@ import { updateCounts, applyStaysAccessFilter } from './render.js';
 import { openDrawer, renderDrawerBody, osmDrawer, waterDrawer, revealPinAt } from './drawer.js';
 import { isPicking } from './picking.js';
 import { osmLayers } from './osm-pools.js';
-import { viewDirection } from './osm-tags.js';
+import { viewDirection, OSM_REF } from './osm-tags.js';
 
 // Coverage tiles (docs/specs/coverage-provider.md §6). [rail key, lowercase letter]
 // must stay in step with catalog.js LETTER_KEY (covKeysTest.cjs).
@@ -231,23 +231,46 @@ export function openCoverageByRef(ref, letter, ll, name, itemId){
     }
   }
   const myReq=++_covReq;
-  const paint=(d)=>{ if(myReq!==_covReq) return;
-      const layer=layerByKey[key], lo={lng:ll[1], lat:ll[0]};
-      const p=covProps(key, {ref, n:(d&&d.name)||name, kind:d&&d.kind}, d);
-      openDrawer(layer, key==='water' ? waterDrawer(p, lo) : osmDrawer(layer, p, lo, COV_SRC[key]));
-      // Layer off or Curated-hidden: one temporary pin rather than flipping map mode.
-      const drawn = COVERAGE_CCS.some(cc=>{
-        const id = cc ? key+'-'+cc+'-cov' : key+'-cov';
-        return map.getLayer(id) && map.getLayoutProperty(id,'visibility')==='visible';
-      });
-      if(!drawn) revealPinAt(layer, ll);
-      else showSelectedCoverageIcon(key, {kind:d&&d.kind}, lo);
-    };
-  if(!/^(node|way)\/\d+$/.test(ref)){ paint(null); return; }   // non-OSM refs have no /map/coverage/poi
+  const paint=(d)=>{ if(myReq!==_covReq) return; paintCoverageDetail(key, ref, ll, name, d); };
+  if(!OSM_REF.test(ref)){ paint(null); return; }   // non-OSM refs have no /map/coverage/poi
   fetch('/map/coverage/poi/'+ref, {headers:{'Accept':'application/json'}})
     .then(r=>r.ok?r.json():null)
     .catch(()=>null)
     .then(paint);
+}
+/* Drawer + pin for one coverage POI, from its detail response (`d`, null when
+   the fetch failed or the ref is not an OSM one). Shared by the search path and
+   the ?ref= deep link, which differ only in how they learn the letter and ll. */
+function paintCoverageDetail(key, ref, ll, name, d){
+  const layer=layerByKey[key], lo={lng:ll[1], lat:ll[0]};
+  const p=covProps(key, {ref, n:(d&&d.name)||name, kind:d&&d.kind}, d);
+  openDrawer(layer, key==='water' ? waterDrawer(p, lo) : osmDrawer(layer, p, lo, COV_SRC[key]));
+  // Layer off or Curated-hidden: one temporary pin rather than flipping map mode.
+  const drawn = COVERAGE_CCS.some(cc=>{
+    const id = cc ? key+'-'+cc+'-cov' : key+'-cov';
+    return map.getLayer(id) && map.getLayoutProperty(id,'visibility')==='visible';
+  });
+  if(!drawn) revealPinAt(layer, ll);
+  else showSelectedCoverageIcon(key, {kind:d&&d.kind}, lo);
+}
+/* ?ref=node/462149319 deep link (docs/specs/map-and-search.md §8). Unlike
+   ?feature=<name> this names one POI: thousands of scenic views are called
+   "Viewpoint" and none of them could be shared. The detail endpoint is the only
+   thing that knows the letter and the coordinates, so one fetch resolves the
+   whole link, and the scope widens only once it has actually resolved. */
+export function openCoverageByOsmRef(ref){
+  if(!COVERAGE_ON || !OSM_REF.test(String(ref ?? ''))) return;
+  const myReq=++_covReq;
+  fetch('/map/coverage/poi/'+ref, {headers:{'Accept':'application/json'}})
+    .then(r=>r.ok?r.json():null)
+    .catch(()=>null)
+    .then(d=>{
+      if(myReq!==_covReq || !d || !Array.isArray(d.ll) || d.ll.length!==2) return;
+      const key=LETTER_KEY[d.letter]; if(!key) return;
+      widenForDeepLink();
+      flyToPin([d.ll[1], d.ll[0]]);
+      paintCoverageDetail(key, ref, d.ll, d.name, d);
+    });
 }
 // Widen to Everywhere for a resolved deep-link (docs/specs/map-and-search.md §4.5). persist:false.
 export function widenForDeepLink(){

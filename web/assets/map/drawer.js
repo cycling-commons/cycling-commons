@@ -14,7 +14,8 @@ import { openLightbox } from './lightbox.js';
 import { highlightRoute, clearRouteHighlight, showSurfaceSelection, clearSurfaceSelection } from './render.js';
 import { clearRouteSelection } from './routes-tiles.js';
 import { clearSelectedCoverageIcon, invalidateCoverageDrawer } from './coverage.js';
-import { osmMetres } from './osm-tags.js';
+import { osmMetres, osmRefUrl } from './osm-tags.js';
+import { shareQuery } from './share-links.js';
 import { setSurfaceTiles, surfaceTilesVisible, surfaceTilesConfigured } from './surface-tiles.js';
 import { isPicking, cancelPicking } from './picking.js';
 import { openCity, bumpPlaceReq } from './places.js';
@@ -206,6 +207,7 @@ export function osmDrawer(layer, p, ll, src){
   if(p.by!=null){ d.by=p.by; if(p.byName) d.byName=p.byName; if(p.byUuid) d.byUuid=p.byUuid; }
   if(p.id!=null) d.id=p.id;          // real DB item id — the edit-bridge's `?item=` target
   else if(p.ref) d.osmRef=p.ref;     // uncurated coverage POI — materialize-on-edit (docs/specs/osm-data-architecture.md §6)
+  if(p.n) d.shareName=p.n;           // the mapper's own name; `name` above may be the category word
   if(p.desc) d.desc=p.desc;
   if(p.descTr) d.descTr=1;
   attachPhotos(d, p);
@@ -237,6 +239,7 @@ export function waterDrawer(p, ll){
   if(p.by!=null){ d.by=p.by; if(p.byName) d.byName=p.byName; if(p.byUuid) d.byUuid=p.byUuid; }
   if(p.id!=null) d.id=p.id;          // real DB item id — the edit-bridge's `?item=` target
   else if(p.ref) d.osmRef=p.ref;     // uncurated coverage POI — materialize-on-edit (docs/specs/osm-data-architecture.md §6)
+  if(p.n) d.shareName=p.n;           // the mapper's own name; `name` above may be the category word
   attachPhotos(d, p);
   return d;
 }
@@ -508,14 +511,21 @@ function buildRecord(layer, f){
   const desc = f.desc ? `<p class="cc-d-desc">${escPend(f.desc)}${f.descTr?` <span class="cc-d-tr">· auto-translated</span>`:''}</p>` : '';
   // History slot: real DB ids only; filled async by loadItemHistory (race-guarded).
   const histSlot = f.id!=null ? `<div class="cc-d-hist" id="cc-d-hist-slot" data-item="${f.id}"></div>` : '';
-  // OSM source link: feature query, or f.osmUrl when the way id is known.
+  // OSM source link: the exact node/way whenever we hold its id, and only then
+  // a coordinate query. A coverage POI carries `osmRef` (drawer.js sets it from
+  // the tile `ref`), so sending a rider to "what is here?" threw away an id we
+  // already had and made them pick their viewpoint out of a list.
   const osmHref = f.osmUrl
+    || osmRefUrl(f.osmRef)
     || ((f.geom && f.geom.ll)
       ? `https://www.openstreetmap.org/query?lat=${f.geom.ll[0]}&lon=${f.geom.ll[1]}#map=18/${f.geom.ll[0]}/${f.geom.ll[1]}`
       : 'https://www.openstreetmap.org');
-  /* docs/specs/map-and-search.md §8 — share ?item=id (or ?feature=name). */
-  const shareQ = f.id != null ? `item=${encodeURIComponent(f.id)}`
-    : (f.name ? `feature=${encodeURIComponent(f.name)}` : '');
+  /* docs/specs/map-and-search.md §8: id first, then the name as a slug so the
+     link is readable before it is clicked. The name alone was the weakest key:
+     every unnamed viewpoint is called "Viewpoint", so ?feature=Viewpoint was
+     one link for thousands of places and opened whichever the search hit
+     first. */
+  const shareQ = shareQuery(f);
   /* Icon-only share: aria-label + title; svg aria-hidden so it announces once. */
   const shareLbl = escPend(D.share||'Share');
   /* Only published items; pending/gone links would open nothing. */

@@ -1398,9 +1398,33 @@ chip competing with the type chip. Icon-only moves the label to `aria-label`
 they recognise the place, and the source line is below the photo, the
 description and every record row — a scroll away from the name being shared on
 any drawer with content. It stays out of the footer action row, which is for
-verbs that change data. It copies `?item=<id>` (or `?feature=<name>` for a
-coverage POI with no catalog id), both read on load by map.js, which widens the
-scope first so the link opens for a recipient whose saved scope is elsewhere.
+verbs that change data. It copies `?item=<id>`, then `?ref=<osm ref>` for a
+coverage POI with no catalog id, and `?feature=<name>` only when neither id
+exists. All three are read on load by map.js, which widens the scope first so
+the link opens for a recipient whose saved scope is elsewhere.
+
+`?ref=` exists because the name is not an identifier. Most OSM scenic views
+carry no `name` at all, so the drawer titles them by type and every one of them
+is called "Viewpoint": `?feature=Viewpoint` was a single link shared for
+thousands of separate places, and it opened whichever the search returned
+first. The ref is unique, it is already on the tile, and the guard that accepts
+it (`osmRefUrl` / `OSM_REF` in `osm-tags.js`) is deliberately the same
+`node|way` shape the detail route requires, so a link that can be shared is
+always a link that opens again. Reported by the owner, 2026-08-24.
+
+The **slug** exists because an id is unique and unreadable, and a shared link
+is read before it is clicked. It is decoration only: `shareQuery` appends it,
+the parsers throw it away, and nothing downstream ever sees it. So it cannot
+drift out of date, and it cannot change which place opens.
+
+Which name gets slugged is the one judgement call. `f.name` is not it: an OSM
+point with no `name` tag is *titled* by its category, so slugging `f.name`
+would mint `?ref=node/2348266912/viewpoint` and present our own word as the
+mapper's. The drawers therefore set `shareName` only when `p.n` is present, and
+`shareQuery` falls back to `f.name` only for a feature with a DB id, whose name
+is its own. A name in a script the slug cannot carry (`東京`, `Δελφοί`) folds to
+empty and the link is simply the bare id, never a row of hyphens. Owner ask,
+2026-08-24.
 
 Footer actions are per-type:
 
@@ -1576,7 +1600,10 @@ is the pending permalink contract):
 
 | Param | Behaviour |
 |---|---|
-| `?feature=<name>` | exact-name match over `CATALOG` features: activates the layer if hidden, opens the drawer, flies to the pin. The profile-card → map contract. (Coverage POIs become linkable via the coverage plan's index-then-endpoint fallback.) |
+| `?feature=<name>` | exact-name match over `CATALOG` features: activates the layer if hidden, opens the drawer, flies to the pin. The profile-card → map contract. Falls back to one unscoped coverage search when the local index misses. |
+| `?ref=<osm ref>` | one coverage POI by its OSM id (`node/462149319`, `way/…`). Resolved by a single `/map/coverage/poi/{osmType}/{osmId}` call, which is the only thing that knows the letter and the coordinates; widens the scope on its own hit, like `?feature=`. |
+
+**Both id params may carry a readable tail:** `?item=482/cote-de-wanne`, `?ref=node/462149319/roche-aux-faucons`. The id is everything before the first `/` after it (`idFromShare` / `refFromShare` in `share-links.js`); the slug is discarded on read. A renamed place, a hand-trimmed link and every bare-id link already sent out all open the same point. Slashes stay unencoded in the query value, because a `%2F` in the middle defeats the reason the slug is there.
 | `?pending=<id>` | curator deep link from the /moderate queue: activates the ⚑ layer, opens the submission drawer |
 | `?route=<id>` | opens that K route **selected** (curator Routes desk link): currently force-switches to Everything so an un-voted route can render, then highlights + shows the curator corrections overlay. The force-switch is slated to become a reveal pin (§12). |
 
@@ -1915,9 +1942,9 @@ The coverage tiles themselves are specified in
   `CC_I18N` but only reachable via the legacy Graph-API fallback, which no
   click path calls — dead-string cleanup vs re-wiring is undecided.
 - **`?feature=` matches by exact name**, not id — two same-named features
-  resolve to the last one scanned. Acceptable today (names are effectively
-  unique in the served set); the coverage plan's ref-based deep links will
-  supersede it.
+  resolve to the last one scanned. Superseded for coverage POIs by `?ref=`
+  (§8, 2026-08-24), which the share button now prefers; `?feature=` stays for
+  catalog features and for links already in the wild.
 - **Region boundary + default bounds are Wallonia-hardcoded** (`map.js`
   `addRegionBoundary('Wallonia')`, the boot `bounds`, and the Photon bbox) —
   worldwide readiness for the map shell has no owner yet beyond the coverage

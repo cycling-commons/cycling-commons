@@ -648,8 +648,9 @@ itemId?}`.
   key is the raw client query string, which `covScopeQuery` already canonicalises
   (sorted, deduped) — the server sort/dedupe only keeps the SQL binding stable.
   Absent = current behaviour (backward compatible). The deep-link resolver
-  (`openCoverageFeatureByName`) deliberately sends **no** scope params, so a
-  deep link finds its target regardless of the saved scope, then widens.
+  (`openCoverageFeatureByName`, and `openCoverageByOsmRef` for `?ref=`)
+  deliberately sends **no** scope params, so a deep link finds its target
+  regardless of the saved scope, then widens.
 
 Rules:
 
@@ -727,6 +728,19 @@ the data-plane facts it consumes:
 - `?feature=` deep links resolve against the local (curated) index first, then
   fall back to one `/map/coverage/search` lookup, so coverage POIs stay
   linkable.
+- `?ref=<osm ref>` deep links ([map-and-search.md §8](map-and-search.md)) skip
+  the index entirely: one `/map/coverage/poi/{osmType}/{osmId}` call returns the
+  letter, the coordinates and the tags, which is everything the drawer needs.
+  This is what the share button emits for an uncurated coverage POI, because
+  most of them have no `name`, and every unnamed scenic view is drawn as
+  "Viewpoint", so `?feature=` could not tell 1,743 Belgian viewpoints apart.
+  The accepted shape (`OSM_REF` in `osm-tags.js`) is pinned to the `node|way`
+  the route requires and to the two prefixes `coverage_poi.ref` actually holds,
+  so a share link is never mintable for something the endpoint would refuse.
+  A POI whose OSM `name` tag is set also carries a readable slug after the ref
+  (`?ref=node/462149319/roche-aux-faucons`); the slug is discarded on read, and
+  a POI with no `name` gets none rather than being slugged with our own
+  category word.
 - **Degradation:** `catalog-load.js` keeps defining all `CC_*` globals (empty
   pools degrade gracefully); tile-source failure degrades to basemap +
   curated data — the same silent-degradation convention as the Photon

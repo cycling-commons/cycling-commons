@@ -18,9 +18,10 @@ import { initLightbox } from './lightbox.js';
 import { initPlanner } from './planner.js';
 import { render, updateZoomHint } from './render.js';
 import { COVERAGE_ON, addCoverage, widenForDeepLink, openCoverageFeatureByName,
-         fetchCoverageCounts, covShownCount } from './coverage.js';
+         openCoverageByOsmRef, fetchCoverageCounts, covShownCount } from './coverage.js';
 import { addSurfaceTiles, setSurfaceTiles, surfaceTilesVisible } from './surface-tiles.js';
 import { schemaRows, initDrawerChrome } from './drawer.js';
+import { refFromShare, idFromShare } from './share-links.js';
 import { initPicking } from './picking.js';
 import { resolveLocalFeature, resolveLocalFeatureById, openFeatureByName, openFeatureById,
          openRouteById, openPendingById } from './places.js';
@@ -58,7 +59,11 @@ import { initShell } from './shell.js';
     // only when the target actually resolves. Coverage-only ?feature widens inside
     // openCoverageFeatureByName on its own hit.
     const _dl = new URLSearchParams(location.search);
-    const fp=_dl.get('feature'), pp=_dl.get('pending'), rp=_dl.get('route'), ip=_dl.get('item');
+    const fp=_dl.get('feature'), pp=_dl.get('pending'), rp=_dl.get('route'), rawIp=_dl.get('item');
+    // §8: both id params may carry a readable `/<slug>` tail. The id decides;
+    // the slug is thrown away, so a renamed place still opens its own link.
+    const ip=rawIp ? idFromShare(rawIp) : null;
+    const xp=refFromShare(_dl.get('ref'));   // ?ref=<osm ref>: the only per-POI key a coverage point has
     const _dlHit =
       (ip && !!resolveLocalFeatureById(ip)) ||
       (fp && !!resolveLocalFeature(fp)) ||
@@ -69,6 +74,8 @@ import { initShell } from './shell.js';
     // ?item=<id> — moderation "what did I approve", by id not name.
     if(ip) openFeatureById(ip);
     if(fp && !openFeatureByName(fp)) openCoverageFeatureByName(fp);
+    // ?ref= widens on its own hit, like ?feature=: it cannot be resolved locally.
+    if(xp) openCoverageByOsmRef(xp);
     if(pp) openPendingById(pp);
     if(rp) openRouteById(rp);
   });

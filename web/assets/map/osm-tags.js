@@ -21,3 +21,13 @@ export function viewDirection(raw){
   }
   return /^[NSEW]{1,3}$/i.test(v) ? v.toUpperCase() : v;
 }
+
+/* A coverage POI's OSM ref (`node/462149319`). Only the two shapes the harvest
+   stores and `/map/coverage/poi/{osmType}/{osmId}` accepts, so a ref that makes
+   a share link always makes one that opens again. */
+export const OSM_REF = /^(?:node|way)\/\d+$/;
+
+/** That ref as an openstreetmap.org URL; null when it is not a ref we serve. */
+export function osmRefUrl(ref){
+  return OSM_REF.test(String(ref ?? '')) ? 'https://www.openstreetmap.org/' + ref : null;
+}
