@@ -1,0 +1,128 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{% extends 'base.html.twig' %}
+{% block head_styles %}
+{% include 'account/_shell_styles.html.twig' %}
+<style>
+  .mh{padding:2rem 0 1.4rem}
+  .mh .kicker{font-family:var(--mono);font-size:.64rem;letter-spacing:.16em;text-transform:uppercase;color:var(--clay);margin-bottom:.6rem}
+  .mh h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4vw,2.4rem);line-height:1.08;margin-bottom:.4rem;color:var(--ink)}
+  .mh .lead{color:#4a4d40;max-width:56ch;line-height:1.6}
+  .mh .role-badge{display:inline-flex;align-items:center;gap:.4rem;font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;background:var(--spruce-lift);color:var(--paper);padding:.22rem .55rem;border-radius:30px;margin-top:.7rem}
+
+  .mod-bar{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin:0 0 1.4rem}
+  .mod-bar a{font-family:var(--mono);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;
+    padding:.4rem .7rem;border:1px solid rgba(20,22,14,.2);border-radius:30px;color:#4a4d40;text-decoration:none}
+  .mod-bar a.on{background:var(--spruce-lift);color:var(--paper);border-color:transparent}
+
+  .fd-list{margin:1.4rem 0 3rem;display:flex;flex-direction:column;gap:.7rem}
+  .fd{border:1px solid rgba(20,22,14,.12);border-radius:8px;background:var(--paper);padding:1rem 1.2rem}
+  .fd-kind{font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:#8a8d7d}
+  .fd-q{font-family:var(--serif);font-weight:600;font-size:1.05rem;margin:.25rem 0 .7rem;color:var(--ink)}
+
+  /* The two rows being compared sit side by side and are read against each
+     other, so they share one grid: a curator is answering "are these the same
+     thing", and that question is easier when the differences line up. */
+  .fd-pair{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-bottom:.8rem}
+  @media (max-width:640px){.fd-pair{grid-template-columns:1fr}}
+  .fd-side{border:1px solid rgba(20,22,14,.1);border-radius:6px;padding:.6rem .75rem;background:rgba(20,22,14,.02)}
+  .fd-side h4{font-family:var(--mono);font-size:.56rem;letter-spacing:.1em;text-transform:uppercase;color:#8a8d7d;margin:0 0 .25rem}
+  .fd-side .nm{font-weight:600;color:var(--ink);word-break:break-word}
+  .fd-side .meta{font-family:var(--mono);font-size:.66rem;color:#5c5f50;margin-top:.2rem}
+  /* The row that would go away is the consequence of Accept, so it is the one
+     that has to be unmissable before the click, not after. */
+  .fd-side.loses{border-color:rgba(150,60,40,.35);background:rgba(150,60,40,.05)}
+
+  .fd-facts{font-family:var(--mono);font-size:.7rem;color:#5c5f50;margin-bottom:.8rem}
+  .fd-actions{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center}
+  .fd-actions input[type=text]{flex:1 1 220px;min-width:0;font-family:var(--sans);font-size:.85rem;
+    padding:.45rem .6rem;border:1px solid rgba(20,22,14,.25);border-radius:6px;background:var(--paper)}
+  .fd-actions button{font-family:var(--mono);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;
+    padding:.5rem .9rem;border-radius:6px;border:1px solid rgba(20,22,14,.25);background:var(--paper);
+    color:var(--ink);cursor:pointer;min-height:38px}
+  .fd-actions button.go{background:var(--spruce-lift);color:var(--paper);border-color:transparent}
+  .fd-empty{border:1px dashed rgba(20,22,14,.2);border-radius:8px;padding:2rem;text-align:center;color:#5c5f50}
+</style>
+{% endblock %}
+
+{% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate_data', mod_scope_names: mod_scope_names is defined ? mod_scope_names : null} %}{% endblock %}
+
+{% block body %}
+<div class="mh">
+  <div class="wrap">
+    <div class="kicker">{{ 'moderate_data.kicker'|trans }}</div>
+    <h1>{{ 'moderate_data.title'|trans }}</h1>
+    <p class="lead">{{ 'moderate_data.lead'|trans }}</p>
+    <div><span class="role-badge">&#9876; {{ 'moderate.role_label'|trans }}</span></div>
+  </div>
+</div>
+
+<div class="wrap" id="main">
+  {% for msg in app.flashes('success') %}<div class="flash-success" role="alert">{{ msg|trans }}</div>{% endfor %}
+  {% for msg in app.flashes('warning') %}<div class="flash-error" role="alert">{{ msg|trans }}</div>{% endfor %}
+
+  <div class="mod-bar">
+    <a href="{{ path('moderate_data') }}" class="{{ kind is null ? 'on' : '' }}">{{ 'moderate_data.all'|trans }}</a>
+    {% for k in kinds %}
+      <a href="{{ path('moderate_data', {kind: k.value}) }}" class="{{ kind is not null and kind.value == k.value ? 'on' : '' }}">{{ k.labelKey|trans }}</a>
+    {% endfor %}
+  </div>
+
+  {% if findings is empty %}
+    <div class="fd-empty">{{ 'moderate_data.empty'|trans }}</div>
+  {% else %}
+  <div class="fd-list">
+    {% for f in findings %}
+      {% set d = f.detail %}
+      <div class="fd">
+        <div class="fd-kind">{{ ('finding.kind.' ~ f.kind)|trans }} &middot; {{ f.letter }} &middot; {{ f.country_code }}</div>
+
+        {% if f.kind == 'duplicate' %}
+          <div class="fd-q">{{ 'moderate_data.q_duplicate'|trans }}</div>
+          <div class="fd-pair">
+            <div class="fd-side">
+              <h4>{{ 'moderate_data.keeps'|trans }}</h4>
+              <div class="nm">{{ f.rel_name }}</div>
+              <div class="meta">#{{ f.rel_id }} &middot; {{ f.rel_source }}</div>
+            </div>
+            <div class="fd-side loses">
+              <h4>{{ 'moderate_data.retires'|trans }}</h4>
+              <div class="nm">{{ f.item_name }}</div>
+              <div class="meta">#{{ f.item_id }} &middot; {{ f.item_source }}</div>
+            </div>
+          </div>
+          {% if d.blocked is defined and d.blocked %}
+            <div class="fd-facts">{{ 'moderate_data.has_edits'|trans }}</div>
+          {% endif %}
+        {% else %}
+          <div class="fd-q">{{ 'moderate_data.q_osm_link'|trans }}</div>
+          <div class="fd-pair">
+            <div class="fd-side">
+              <h4>{{ 'moderate_data.our_row'|trans }}</h4>
+              <div class="nm">{{ f.item_name }}</div>
+              <div class="meta">#{{ f.item_id }} &middot; {{ f.item_source }}</div>
+            </div>
+            <div class="fd-side">
+              <h4>{{ 'moderate_data.osm_object'|trans }}</h4>
+              <div class="nm">{{ d.osmName|default(f.osm_ref) }}</div>
+              <div class="meta">{{ f.osm_ref }}</div>
+            </div>
+          </div>
+          {# The distance is the whole reason this is a question and not an
+             automatic link, so it is stated, not implied. #}
+          <div class="fd-facts">{{ 'moderate_data.apart'|trans({'%m%': d.distanceM|default('?')}) }}</div>
+        {% endif %}
+
+        <form method="post" action="{{ path('moderate_data_decide') }}" class="fd-actions">
+          <input type="hidden" name="_token" value="{{ csrf_token('catalog-finding-decide') }}">
+          <input type="hidden" name="finding" value="{{ f.id }}">
+          <input type="hidden" name="kind" value="{{ kind is not null ? kind.value : '' }}">
+          <input type="text" name="note" maxlength="500" placeholder="{{ 'moderate_data.note_placeholder'|trans }}" aria-label="{{ 'moderate_data.note_placeholder'|trans }}">
+          <button type="submit" name="verdict" value="accept" class="go">{{ 'moderate_data.accept'|trans }}</button>
+          <button type="submit" name="verdict" value="dismiss">{{ 'moderate_data.dismiss'|trans }}</button>
+        </form>
+      </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

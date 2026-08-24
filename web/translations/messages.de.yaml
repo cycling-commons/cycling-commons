@@ -4,6 +4,7 @@ nav:
   map: 'Karte'
   account: 'Konto'
   regions: 'Regionen'
+  data: 'Daten'
   coverage: 'Abdeckung'
   vote: 'Abstimmen'
   developers: 'Entwickler'
@@ -3610,3 +3611,27 @@ pager:
 
 receipt:
   thanks: 'Danke'
+finding:
+  kind:
+    duplicate: 'Dubletten'
+    osm_link: 'OSM-Verknüpfungen'
+moderate_data:
+  kicker: 'Kuratorentisch'
+  title: 'Datenbefunde'
+  lead: 'Was die automatischen Prüfungen an Katalogzeilen in deinem Gebiet bemerkt haben. Niemand hat sie eingereicht, also wartet niemand auf eine Antwort — aber eine Maschine kann zwei Bunker nicht von einem doppelt erfassten Bunker unterscheiden. Du schon.'
+  all: 'Alles'
+  empty: 'Nichts zu prüfen. Die Prüfungen fanden keine offenen Fragen in deinem Gebiet.'
+  q_duplicate: 'Ist das derselbe Ort?'
+  q_osm_link: 'Beschreibt unsere Zeile dieses OSM-Objekt?'
+  keeps: 'Bleibt'
+  retires: 'Würde stillgelegt'
+  our_row: 'Unsere Zeile'
+  osm_object: 'OSM-Objekt'
+  apart: '%m% m auseinander'
+  has_edits: 'Eine Zeile dieser Gruppe wurde von einer Kuratorin bearbeitet. Annehmen legt sie trotzdem still — lies sie zuerst.'
+  accept: 'Annehmen'
+  dismiss: 'Nein, beide behalten'
+  note_placeholder: 'Warum (optional, wird gespeichert)'
+  flash_applied: 'Angewendet.'
+  flash_dismissed: 'Verworfen. Das wird nicht erneut gemeldet.'
+  flash_already_decided: 'Das hat jemand schon entschieden.'

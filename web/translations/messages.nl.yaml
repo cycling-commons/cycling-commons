@@ -4,6 +4,7 @@ nav:
   map: 'Kaart'
   account: 'Account'
   regions: 'Regio''s'
+  data: 'Data'
   coverage: 'Dekking'
   vote: 'Stem'
   developers: 'Ontwikkelaars'
@@ -3607,3 +3608,27 @@ pager:
 
 receipt:
   thanks: 'Bedankt'
+finding:
+  kind:
+    duplicate: 'Dubbels'
+    osm_link: 'OSM-koppelingen'
+moderate_data:
+  kicker: 'Curatorbalie'
+  title: 'Databevindingen'
+  lead: 'Wat de automatische controles opmerkten aan catalogusrijen in jouw gebied. Niemand heeft deze ingediend, dus niemand wacht op antwoord — maar een machine ziet het verschil niet tussen twee bunkers en één bunker die twee keer is ingetekend. Jij wel.'
+  all: 'Alles'
+  empty: 'Niets te bekijken. De controles vonden geen open vragen in jouw gebied.'
+  q_duplicate: 'Is dit dezelfde plek?'
+  q_osm_link: 'Beschrijft onze rij dit OSM-object?'
+  keeps: 'Blijft'
+  retires: 'Wordt teruggetrokken'
+  our_row: 'Onze rij'
+  osm_object: 'OSM-object'
+  apart: '%m% m uit elkaar'
+  has_edits: 'Een rij in deze groep is door een curator bewerkt. Accepteren trekt hem alsnog terug, dus lees hem eerst.'
+  accept: 'Accepteren'
+  dismiss: 'Nee, beide houden'
+  note_placeholder: 'Waarom (optioneel, wordt bewaard)'
+  flash_applied: 'Toegepast.'
+  flash_dismissed: 'Afgewezen. Dit komt niet terug.'
+  flash_already_decided: 'Iemand heeft die al beslist.'

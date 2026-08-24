@@ -4,6 +4,7 @@ nav:
   map: 'Carte'
   account: 'Compte'
   regions: 'Régions'
+  data: 'Données'
   coverage: 'Couverture'
   vote: 'Voter'
   developers: 'Développeurs'
@@ -3607,3 +3608,27 @@ pager:
 
 receipt:
   thanks: 'Merci'
+finding:
+  kind:
+    duplicate: 'Doublons'
+    osm_link: 'Liens OSM'
+moderate_data:
+  kicker: 'Bureau du curateur'
+  title: 'Constats sur les données'
+  lead: "Ce que les contrôles automatiques ont remarqué sur les fiches de votre zone. Personne ne les a proposés, donc personne n'attend de réponse — mais une machine ne sait pas distinguer deux bunkers d'un seul bunker cartographié deux fois. Vous, si."
+  all: 'Tout'
+  empty: 'Rien à examiner. Les contrôles n''ont trouvé aucune question ouverte dans votre zone.'
+  q_duplicate: 'Est-ce le même lieu ?'
+  q_osm_link: 'Notre fiche décrit-elle cet objet OSM ?'
+  keeps: 'Conservé'
+  retires: 'Serait retiré'
+  our_row: 'Notre fiche'
+  osm_object: 'Objet OSM'
+  apart: '%m% m d''écart'
+  has_edits: 'Une fiche de ce groupe a été modifiée par un curateur. Accepter la retirera quand même : lisez-la d''abord.'
+  accept: 'Accepter'
+  dismiss: 'Non, garder les deux'
+  note_placeholder: 'Pourquoi (facultatif, conservé)'
+  flash_applied: 'Appliqué.'
+  flash_dismissed: 'Écarté. Ce constat ne reviendra plus.'
+  flash_already_decided: 'Quelqu''un a déjà tranché celui-là.'

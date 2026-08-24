@@ -4,6 +4,7 @@ nav:
   map: 'Map'
   account: 'Account'
   regions: 'Regions'
+  data: 'Data'
   coverage: 'Coverage'
   vote: 'Vote'
   developers: 'Developers'
@@ -3637,3 +3638,27 @@ pager:
 
 receipt:
   thanks: 'Thank you'
+finding:
+  kind:
+    duplicate: 'Duplicates'
+    osm_link: 'OSM links'
+moderate_data:
+  kicker: 'Curator desk'
+  title: 'Data findings'
+  lead: 'Things the automatic checks noticed about catalog rows in your area. Nobody proposed these, so there is nobody waiting on a reply — but a machine cannot tell two bunkers apart from one bunker mapped twice, and you can.'
+  all: 'Everything'
+  empty: 'Nothing to look at. The checks found no open questions in your area.'
+  q_duplicate: 'Are these the same place?'
+  q_osm_link: 'Is our row a record of this OSM object?'
+  keeps: 'Stays'
+  retires: 'Would be retired'
+  our_row: 'Our row'
+  osm_object: 'OSM object'
+  apart: '%m% m apart'
+  has_edits: 'A row in this group has been edited by a curator. Accepting still retires it, so read it first.'
+  accept: 'Accept'
+  dismiss: 'No, leave both'
+  note_placeholder: 'Why (optional, kept)'
+  flash_applied: 'Applied.'
+  flash_dismissed: 'Dismissed. This will not be raised again.'
+  flash_already_decided: 'Somebody already decided that one.'

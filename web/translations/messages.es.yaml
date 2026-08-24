@@ -4,6 +4,7 @@ nav:
   map: 'Mapa'
   account: 'Cuenta'
   regions: 'Regiones'
+  data: 'Datos'
   coverage: 'Cobertura'
   vote: 'Votar'
   developers: 'Desarrolladores'
@@ -3649,3 +3650,27 @@ pager:
 
 receipt:
   thanks: 'Gracias'
+finding:
+  kind:
+    duplicate: 'Duplicados'
+    osm_link: 'Enlaces OSM'
+moderate_data:
+  kicker: 'Mesa de curación'
+  title: 'Hallazgos de datos'
+  lead: 'Lo que las comprobaciones automáticas notaron en las fichas de tu zona. Nadie las propuso, así que nadie espera respuesta — pero una máquina no distingue dos búnkeres de un búnker cartografiado dos veces. Tú sí.'
+  all: 'Todo'
+  empty: 'Nada que revisar. Las comprobaciones no encontraron preguntas abiertas en tu zona.'
+  q_duplicate: '¿Es el mismo lugar?'
+  q_osm_link: '¿Nuestra ficha describe este objeto de OSM?'
+  keeps: 'Se queda'
+  retires: 'Se retiraría'
+  our_row: 'Nuestra ficha'
+  osm_object: 'Objeto OSM'
+  apart: '%m% m de distancia'
+  has_edits: 'Una ficha de este grupo fue editada por una persona curadora. Aceptar la retirará igualmente: léela primero.'
+  accept: 'Aceptar'
+  dismiss: 'No, dejar ambas'
+  note_placeholder: 'Por qué (opcional, se guarda)'
+  flash_applied: 'Aplicado.'
+  flash_dismissed: 'Descartado. No volverá a aparecer.'
+  flash_already_decided: 'Alguien ya decidió eso.'

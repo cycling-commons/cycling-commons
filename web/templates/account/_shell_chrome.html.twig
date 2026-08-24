@@ -11,7 +11,7 @@
    reach it via the account-chip dropdown) — user pages show user tabs only,
    and on moderator pages the labelled group makes the section unmistakable. #}
 {% set active = active|default('contrib') %}
-{% set in_moderation = active in ['moderate', 'moderate_routes', 'moderate_regions', 'moderate_takedowns', 'moderate_rulebook', 'moderate_history'] %}
+{% set in_moderation = active in ['moderate', 'moderate_routes', 'moderate_regions', 'moderate_data', 'moderate_takedowns', 'moderate_rulebook', 'moderate_history'] %}
 <header class="dtop">
   <div class="brandblock">
     <a class="brand" href="{{ path('home') }}"><img src="{{ asset('brand/logo-nav.svg') }}" alt="Cycling Commons"></a>
@@ -38,6 +38,10 @@
   {# Regions desk: the gated
      curated-by-default flag. No badge — nothing queues here. #}
   <a href="{{ path('moderate_regions') }}" class="dtab-mod {{ active == 'moderate_regions' ? 'on' : '' }}">{{ 'nav.regions'|trans }}</a>
+  {# Data desk: machine-raised findings about catalog rows. Badged, because
+     unlike Regions this one does queue — and it was invisible console output
+     before it had a tab. #}
+  <a href="{{ path('moderate_data') }}" class="dtab-mod {{ active == 'moderate_data' ? 'on' : '' }}">{{ 'nav.data'|trans }}{% if mod_data_count is defined and mod_data_count %}<span class="dtab-count" title="{{ 'account.mod_open_in_area'|trans }}">{{ mod_data_count }}</span>{% endif %}</a>
   {# The rulebook, moderators-only (it used to be a public wiki page). #}
   <a href="{{ path('moderate_rulebook') }}" class="dtab-mod {{ active == 'moderate_rulebook' ? 'on' : '' }}">{{ 'nav.rulebook'|trans }}</a>
 </nav>
