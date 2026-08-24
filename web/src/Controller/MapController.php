@@ -272,7 +272,7 @@ final class MapController extends AbstractController
             'pickBikeRode' => 'd_pick_bike_rode', 'pickBikeVote' => 'd_pick_bike_vote',
             'undo' => 'd_undo', 'clear' => 'd_clear', 'done' => 'd_done', 'pointSet' => 'd_point_set',
             'barOne' => 'd_bar_one', 'barMany' => 'd_bar_many', 'marksOne' => 'd_marks_one', 'marksMany' => 'd_marks_many',
-            'noPhoto' => 'd_no_photo', 'addPhoto' => 'd_add_photo', 'add' => 'd_add', 'visitSite' => 'd_visit_site',
+            'noPhoto' => 'd_no_photo', 'addPhoto' => 'd_add_photo', 'photoLoading' => 'd_photo_loading', 'add' => 'd_add', 'visitSite' => 'd_visit_site',
             'difficulty' => 'd_difficulty', 'elevation' => 'd_elevation', 'mClimbing' => 'd_m_climbing',
             'climbLength' => 'd_climb_length',
             'fromGpx' => 'd_from_gpx', 'gradProfile' => 'd_grad_profile', 'illustrative' => 'd_illustrative',
@@ -381,7 +381,15 @@ final class MapController extends AbstractController
             'mlyLoading' => $t->trans('map.mly_loading'),
             'mlyNone' => $t->trans('map.mly_none'),
             'mlyZoom' => $t->trans('map.mly_zoom'),
-            'd' => array_map(static fn (string $id): string => $t->trans('map.'.$id), $drawer),
+            'd' => array_map(static fn (string $id): string => $t->trans('map.'.$id), $drawer) + [
+                // Curator duplicate-resolve panel (?finding=<id>). Translated
+                // for everyone rather than gated on the role: the bag is one
+                // cacheable payload, and three strings are cheaper than a
+                // second variant of it.
+                'dupeSamePlace' => $t->trans('moderate_data.q_duplicate'),
+                'dupeKeepThis' => $t->trans('moderate_data.keep_this'),
+                'dupeKeepBoth' => $t->trans('moderate_data.keep_both'),
+            ],
         ];
     }
 

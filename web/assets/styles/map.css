@@ -1174,6 +1174,17 @@
   .cc-d-photo>img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:8px;display:block;cursor:zoom-in}
   .cc-d-photo figcaption{font-size:.6rem;color:rgb(var(--chrome-fg) / .68);margin-top:.4rem;font-family:var(--mono);letter-spacing:.02em}
   .cc-d-photo figcaption a{color:rgb(var(--chrome-fg) / .72);text-decoration:underline}
+  /* The wait for a cached Wikimedia Commons photo (coverage-provider.md §7).
+     Same box as the photo it becomes, so the drawer does not jump when it
+     lands, and it reuses the Mapillary spinner's animation rather than adding
+     a second one that turns at a different speed. */
+  .cc-d-photo-wait{margin:1rem 0 0;aspect-ratio:4/3;border-radius:8px;display:flex;
+    align-items:center;justify-content:center;gap:.6rem;
+    background:rgb(var(--chrome-fg) / .06);color:rgb(var(--chrome-fg) / .68);
+    font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase}
+  .cc-d-spin{width:18px;height:18px;border:2px solid rgb(var(--chrome-fg) / .2);
+    border-top-color:var(--chrome-head);border-radius:50%;animation:mly-spin .8s linear infinite}
+  @media (prefers-reduced-motion: reduce){.cc-d-spin{animation-duration:2.4s}}
   /* no-photo placeholder = a contributor CTA (links to the improve wizard's media step) */
   .cc-d-addphoto{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.45rem;margin:1rem 0 0;padding:1.5rem 1rem;min-height:118px;border:1.5px dashed rgb(var(--chrome-fg) / .26);border-radius:8px;background:rgb(var(--chrome-fg) / .03);text-decoration:none;text-align:center;transition:border-color .15s,background .15s}
   .cc-d-addphoto:hover{border-color:var(--trail);background:rgba(255,90,31,.06)}
@@ -1273,6 +1284,28 @@
   .cc-highlight::after{content:"";position:absolute;inset:0;border-radius:50%;border:2px solid rgba(255,90,31,.6);
     animation:cc-pulse 1.25s infinite;z-index:-1}
   @keyframes cc-pulse{0%{transform:scale(1);opacity:.9}70%{transform:scale(2.6);opacity:0}100%{transform:scale(1);opacity:0}}
+  /* ---- Curator duplicate resolve (?finding=<id>) --------------------------
+     Two pins for what may be one place. Numbered rather than coloured: the
+     pair can sit 3 m apart, where a colour difference is one blob on a phone
+     but "1" and "2" still read, and the panel below names them by number. */
+  .cc-dupe-pin{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    font-family:var(--mono);font-size:.78rem;font-weight:700;color:#fff;background:rgba(255,90,31,.95);
+    box-shadow:0 0 0 2px #fff,0 2px 8px rgba(0,0,0,.35);cursor:default}
+  .cc-dupe h2{font-family:var(--serif);font-size:1.15rem;font-weight:600;margin:0 0 .9rem}
+  .cc-dupe-list{list-style:none;margin:0 0 1rem;padding:0;display:flex;flex-direction:column;gap:.6rem}
+  .cc-dupe-row{display:flex;align-items:center;gap:.7rem;border:1px solid rgb(var(--chrome-fg) / .16);
+    border-radius:8px;padding:.7rem .8rem}
+  .cc-dupe-n{flex:0 0 auto;width:24px;height:24px;border-radius:50%;background:rgba(255,90,31,.95);color:#fff;
+    font-family:var(--mono);font-size:.72rem;font-weight:700;display:flex;align-items:center;justify-content:center}
+  .cc-dupe-nm{flex:1 1 auto;min-width:0;font-weight:600;word-break:break-word}
+  .cc-dupe-nm small{display:block;font-family:var(--mono);font-size:.66rem;font-weight:400;color:#5c5f50}
+  .cc-dupe-row button,.cc-dupe-both button{font-family:var(--mono);font-size:.66rem;letter-spacing:.06em;
+    text-transform:uppercase;padding:.5rem .8rem;min-height:38px;border-radius:6px;cursor:pointer;
+    border:1px solid rgb(var(--chrome-fg) / .25);background:transparent;color:inherit}
+  /* "Keep both" is the answer that changes nothing, so it does not compete
+     with the two that do. */
+  .cc-dupe-both{margin-top:.2rem}
+  .cc-dupe-both button{width:100%;background:transparent}
   .cc-tooltip{position:absolute;z-index:1300;pointer-events:none;background:var(--ink);color:var(--paper);
     font-family:var(--mono);font-size:.66rem;letter-spacing:.03em;padding:.3rem .55rem;border-radius:4px;
     white-space:nowrap;transform:translate(-50%,-130%);box-shadow:0 4px 12px rgba(0,0,0,.4)}

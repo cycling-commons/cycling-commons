@@ -665,6 +665,14 @@ window.CC_VENDOR = {{ {
     url: {{ path('map_theme')|json_encode(constant('JSON_UNESCAPED_SLASHES'))|raw }},
     token: {{ csrf_token('map-theme')|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }}
   };
+  {# Curator duplicate-resolve (?finding=<id>, catalog-data-model.md §5c).
+     ROLE_CURATOR only: a rider has no /moderate/data/decide to post to, so
+     minting them a token would be a token for a door they cannot open. The
+     endpoint enforces this on its own — this block only avoids handing out
+     something useless. #}
+  {% if is_granted('ROLE_CURATOR') %}
+  window.CC_FINDING_TOKEN = {{ csrf_token('catalog-finding-decide')|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
+  {% endif %}
 </script>
 {% endif %}
 <script nonce="{{ csp_nonce() }}">

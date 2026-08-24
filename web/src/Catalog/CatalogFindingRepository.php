@@ -37,14 +37,14 @@ final readonly class CatalogFindingRepository
     {
         $params = ['status' => FindingStatus::Open->value];
         $types = [];
-        $sql = "SELECT f.id, f.kind, f.osm_ref, f.detail, f.created_at,
+        $sql = 'SELECT f.id, f.kind, f.osm_ref, f.detail, f.created_at,
                        i.id   AS item_id,   i.name   AS item_name,   i.letter,
                        i.source AS item_source, i.country_code, i.region_id,
                        r.id   AS rel_id,    r.name   AS rel_name,    r.source AS rel_source
                   FROM catalog_finding f
                   JOIN item i ON i.id = f.item_id
              LEFT JOIN item r ON r.id = f.related_item_id
-                 WHERE f.status = :status";
+                 WHERE f.status = :status';
 
         if (null !== $kind) {
             $sql .= ' AND f.kind = :kind';
@@ -68,6 +68,46 @@ final readonly class CatalogFindingRepository
         }
 
         return $rows;
+    }
+
+    /**
+     * One finding with both rows' coordinates, for the map resolve view.
+     *
+     * Coordinates come from the item geometry rather than the finding, because
+     * a curator moving a pin must change what the map shows next time.
+     *
+     * @return array{id: int, kind: string, items: list<array<string, mixed>>}|null
+     */
+    public function detail(int $id, ModerationScope $scope): ?array
+    {
+        if (!$this->isInScope($id, $scope)) {
+            return null;
+        }
+
+        /** @var array{id: int, kind: string, item_id: int, related_item_id: int|null}|false $row */
+        $row = $this->db->fetchAssociative(
+            'SELECT id, kind, item_id, related_item_id FROM catalog_finding WHERE id = :id AND status = :status',
+            ['id' => $id, 'status' => FindingStatus::Open->value],
+        );
+        if (false === $row) {
+            return null;
+        }
+
+        $ids = array_values(array_filter([(int) $row['item_id'], $row['related_item_id']]));
+
+        $items = $this->db->fetchAllAssociative(
+            'SELECT i.id, i.name, i.letter, i.source, i.state,
+                    ST_Y(ST_Centroid(i.geom)) AS lat, ST_X(ST_Centroid(i.geom)) AS lng
+               FROM item i WHERE i.id IN (:ids)',
+            ['ids' => array_map(intval(...), $ids)],
+            ['ids' => ArrayParameterType::INTEGER],
+        );
+
+        // The row the scan proposed retiring is first, so the map can label
+        // them in the same order the desk did.
+        usort($items, static fn (array $a, array $b): int => array_search((int) $a['id'], $ids, true) <=> array_search((int) $b['id'], $ids, true));
+
+        return ['id' => (int) $row['id'], 'kind' => (string) $row['kind'], 'items' => $items];
     }
 
     /** How many open findings this curator is being asked about (the tab badge). */

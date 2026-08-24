@@ -28,6 +28,7 @@ import { resolveLocalFeature, resolveLocalFeatureById, openFeatureByName, openFe
 import { initCommunity, initCuratorKeys } from './community.js';
 import { initSearchUi } from './search-ui.js';
 import { initScoutReview } from './scout-review.js';
+import { initDuplicateResolve } from './duplicate-resolve.js';
 import { initLayerList, initMapCtrl, initRailChrome, initBestOf, initFilterPill,
          initChips, initViewMode, initAddClimbHere } from './panels.js';
 import { initTheme } from './theme.js';
@@ -79,6 +80,9 @@ import { initShell } from './shell.js';
     if(xp) openCoverageByOsmRef(xp);
     if(pp) openPendingById(pp);
     if(rp) openRouteById(rp);
+    // ?finding=<id> — curator duplicate resolve. Last, so it owns the drawer
+    // if a link ever carries both params.
+    initDuplicateResolve();
   });
 
   initCoordPopup();

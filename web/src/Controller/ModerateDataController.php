@@ -16,6 +16,7 @@ use App\Moderation\ModerationScopeProvider;
 use App\Routing\LocalePrefix;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -33,10 +34,18 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
  * output in the same list as a person's work, and the two need different
  * attention.
  *
- * Two verbs only, and they are the same two every desk here has: apply it, or
- * say no. Saying no is recorded and permanent — `app:catalog:findings` never
- * re-raises a dismissed finding, because a desk that keeps asking the same
- * question is a desk people stop reading.
+ * The buttons answer the question printed above them — "are these the same
+ * place?" takes **yes** or **no**, not "accept", which describes what the
+ * software does next and leaves the curator translating.
+ *
+ * Saying no is recorded and permanent: `app:catalog:findings` never re-raises
+ * a dismissed finding, because a desk that keeps asking the same question is a
+ * desk people stop reading.
+ *
+ * Yes on the desk keeps the row the source ranking picked. That is the right
+ * default and the wrong forced choice, so a duplicate finding also links to the
+ * map, where both pins can be seen in place and the curator answers with
+ * `keep=<id>` — possibly the other one — or keeps both, which is a no.
  *
  * @see docs/specs/catalog-data-model.md §5c
  *
@@ -74,6 +83,30 @@ final class ModerateDataController extends AbstractController
         ]);
     }
 
+    /**
+     * One finding as JSON, for the map's resolve view.
+     *
+     * The map is where a curator can see both pins standing in the landscape
+     * and answer the question the desk can only ask flat: which of these two
+     * survives, or do both.
+     */
+    #[Route('/moderate/data/finding/{id}', name: 'moderate_data_finding', requirements: ['id' => '\d+'], methods: ['GET'])]
+    public function finding(int $id): JsonResponse
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+        $detail = $this->findings->detail($id, $this->scopeProvider->scopeFor($user));
+
+        if (null === $detail) {
+            // Out of area, already decided, or never existed. One answer for
+            // all three: a curator has no business learning that a finding
+            // exists in a country they do not moderate.
+            return new JsonResponse(['error' => 'not_found'], Response::HTTP_NOT_FOUND);
+        }
+
+        return new JsonResponse($detail);
+    }
+
     #[Route('/moderate/data/decide', name: 'moderate_data_decide', methods: ['POST'])]
     public function decide(Request $request): Response
     {
@@ -100,21 +133,29 @@ final class ModerateDataController extends AbstractController
             return $this->redirectToRoute('moderate_data');
         }
 
-        $accept = 'accept' === $request->request->getString('verdict');
+        // `yes`/`no` answer the question the desk asks. `keep` is the map
+        // flow's finer answer: still "yes, same place", but the curator has
+        // looked at both pins and named the survivor, which need not be the
+        // one the source ranking picked.
+        $verdict = $request->request->getString('verdict');
+        $keep = $request->request->getInt('keep');
+        $yes = 'yes' === $verdict || $keep > 0;
         $note = trim($request->request->getString('note'));
 
-        if ($accept) {
-            $this->apply($finding);
+        if ($yes && !$this->apply($finding, $keep > 0 ? $keep : null)) {
+            $this->addFlash('warning', 'moderate_data.flash_not_in_finding');
+
+            return $this->redirectToRoute('moderate_data');
         }
 
         $finding->decide(
-            $accept ? FindingStatus::Accepted : FindingStatus::Dismissed,
+            $yes ? FindingStatus::Accepted : FindingStatus::Dismissed,
             (int) $user->getId(),
             '' === $note ? null : mb_substr($note, 0, 500),
         );
         $this->em->flush();
 
-        $this->addFlash('success', $accept ? 'moderate_data.flash_applied' : 'moderate_data.flash_dismissed');
+        $this->addFlash('success', $yes ? 'moderate_data.flash_applied' : 'moderate_data.flash_dismissed');
 
         return $this->redirectToRoute('moderate_data', ['kind' => $request->request->getString('kind')]);
     }
@@ -126,18 +167,34 @@ final class ModerateDataController extends AbstractController
      * kind. Adding a kind means adding its branch, and a kind whose Accept does
      * nothing should not have been a finding.
      */
-    private function apply(CatalogFinding $finding): void
+    private function apply(CatalogFinding $finding, ?int $keepItemId): bool
     {
         switch ($finding->getKind()) {
             case FindingKind::Duplicate:
+                $item = $finding->getItem();
+                $related = $finding->getRelatedItem();
+
+                // A `keep` that names neither row is a stale tab or a hand-made
+                // POST. Retiring the default row instead would silently do
+                // something the curator did not ask for.
+                $ids = array_filter([$item->getId(), $related?->getId()]);
+                if (null !== $keepItemId && !\in_array($keepItemId, array_map(intval(...), $ids), true)) {
+                    return false;
+                }
+
                 // Retire, never delete: the id may be referenced by
                 // confirmations, history and moderation rows.
-                $finding->getItem()->setState(ItemState::Retired);
+                $loser = (null !== $keepItemId && (int) $item->getId() === $keepItemId && null !== $related)
+                    ? $related
+                    : $item;
+                $loser->setState(ItemState::Retired);
                 break;
 
             case FindingKind::OsmLink:
                 $finding->getItem()->setOsmRef($finding->getOsmRef());
                 break;
         }
+
+        return true;
     }
 }

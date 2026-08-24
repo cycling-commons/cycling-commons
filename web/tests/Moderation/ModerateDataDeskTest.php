@@ -75,7 +75,7 @@ final class ModerateDataDeskTest extends WebTestCase
         $finding = $this->finding(FindingKind::Duplicate, $loser, $keeper);
 
         $client->loginUser($this->curator('data-accept@test.test'));
-        $this->post($client, $finding, 'accept');
+        $this->post($client, $finding, 'yes');
 
         self::assertResponseRedirects();
         $this->em()->clear();
@@ -90,7 +90,7 @@ final class ModerateDataDeskTest extends WebTestCase
         $finding = $this->finding(FindingKind::OsmLink, $item, null, 'node/1350577339');
 
         $client->loginUser($this->curator('data-link@test.test'));
-        $this->post($client, $finding, 'accept');
+        $this->post($client, $finding, 'yes');
 
         $this->em()->clear();
         self::assertSame('node/1350577339', $this->reload($item)->getOsmRef());
@@ -103,7 +103,7 @@ final class ModerateDataDeskTest extends WebTestCase
         $finding = $this->finding(FindingKind::Duplicate, $loser, $keeper);
 
         $client->loginUser($this->curator('data-dismiss@test.test'));
-        $this->post($client, $finding, 'dismiss', 'two different bunkers on one line');
+        $this->post($client, $finding, 'no', 'two different bunkers on one line');
 
         $this->em()->clear();
         // Nothing retired: "no" means no.
@@ -128,10 +128,10 @@ final class ModerateDataDeskTest extends WebTestCase
         // The token has to be taken BEFORE the first decision: afterwards the
         // desk is empty and carries no form, which is the correct behaviour and
         // also what a second curator's stale open tab looks like.
-        $token = $this->post($client, $finding, 'dismiss');
+        $token = $this->post($client, $finding, 'no');
         // Two curators reaching the same row is normal, not an error — and the
         // second click must not overturn the first.
-        $this->post($client, $finding, 'accept', token: $token);
+        $this->post($client, $finding, 'yes', token: $token);
 
         $this->em()->clear();
         self::assertSame(ItemState::Unverified, $this->reload($loser)->getState());
@@ -139,6 +139,100 @@ final class ModerateDataDeskTest extends WebTestCase
             FindingStatus::Dismissed,
             $this->em()->getRepository(CatalogFinding::class)->find($finding->getId())?->getStatus(),
         );
+    }
+
+    public function testTheMapCanKeepTheRowTheRankingWouldHaveRetired(): void
+    {
+        // The desk's Yes keeps whichever row the source ranking preferred. The
+        // map exists so a curator who has looked at both pins can say the other
+        // one is the real record, and that answer must win.
+        $client = static::createClient();
+        [$keeper, $loser] = $this->pair('keepother');
+        $finding = $this->finding(FindingKind::Duplicate, $loser, $keeper);
+
+        $client->loginUser($this->curator('data-keepother@test.test'));
+        $token = $this->deskToken($client);
+        $client->request('POST', '/moderate/data/decide', [
+            '_token' => $token, 'finding' => (string) $finding->getId(),
+            'keep' => (string) $loser->getId(),
+        ]);
+
+        $this->em()->clear();
+        self::assertSame(ItemState::Unverified, $this->reload($loser)->getState());
+        self::assertSame(ItemState::Retired, $this->reload($keeper)->getState());
+    }
+
+    public function testAKeepThatNamesNeitherRowChangesNothing(): void
+    {
+        // A stale tab or a hand-made POST. Falling back to the default row
+        // would retire something the curator never chose.
+        $client = static::createClient();
+        [$keeper, $loser] = $this->pair('stray');
+        $stranger = $this->item('stray-other', 'Somewhere Else', ItemSource::Osm, 'E');
+        $finding = $this->finding(FindingKind::Duplicate, $loser, $keeper);
+
+        $client->loginUser($this->curator('data-stray@test.test'));
+        $token = $this->deskToken($client);
+        $client->request('POST', '/moderate/data/decide', [
+            '_token' => $token, 'finding' => (string) $finding->getId(),
+            'keep' => (string) $stranger->getId(),
+        ]);
+
+        $this->em()->clear();
+        self::assertSame(ItemState::Unverified, $this->reload($loser)->getState());
+        self::assertSame(ItemState::Unverified, $this->reload($keeper)->getState());
+        self::assertSame(
+            FindingStatus::Open,
+            $this->em()->getRepository(CatalogFinding::class)->find($finding->getId())?->getStatus(),
+        );
+    }
+
+    public function testTheMapEndpointServesBothRowsWithCoordinates(): void
+    {
+        $client = static::createClient();
+        [$keeper, $loser] = $this->pair('json');
+        $finding = $this->finding(FindingKind::Duplicate, $loser, $keeper);
+
+        $client->loginUser($this->curator('data-json@test.test'));
+        $client->request('GET', '/moderate/data/finding/'.$finding->getId());
+
+        self::assertResponseIsSuccessful();
+        /** @var array{items: list<array<string, mixed>>} $body */
+        $body = json_decode((string) $client->getResponse()->getContent(), true);
+        self::assertCount(2, $body['items']);
+        foreach ($body['items'] as $row) {
+            // Without coordinates the map cannot place the pins, which is the
+            // entire reason for the link.
+            self::assertIsNumeric($row['lat']);
+            self::assertIsNumeric($row['lng']);
+        }
+    }
+
+    public function testTheMapEndpointIsClosedToRiders(): void
+    {
+        $client = static::createClient();
+        [$keeper, $loser] = $this->pair('jsonrider');
+        $finding = $this->finding(FindingKind::Duplicate, $loser, $keeper);
+
+        $client->loginUser($this->user('data-jsonrider@test.test', ['ROLE_USER']));
+        $client->request('GET', '/moderate/data/finding/'.$finding->getId());
+
+        self::assertResponseStatusCodeSame(403);
+    }
+
+    public function testTheMapEndpointIsQuietAboutADecidedFinding(): void
+    {
+        $client = static::createClient();
+        [$keeper, $loser] = $this->pair('jsondone');
+        $finding = $this->finding(FindingKind::Duplicate, $loser, $keeper);
+
+        $client->loginUser($this->curator('data-jsondone@test.test'));
+        $this->post($client, $finding, 'no');
+        $client->request('GET', '/moderate/data/finding/'.$finding->getId());
+
+        // A follower of a stale link gets nothing to resolve, not a panel that
+        // would post into a closed finding.
+        self::assertResponseStatusCodeSame(404);
     }
 
     public function testABadCsrfTokenIsForbidden(): void
@@ -275,5 +369,4 @@ final class ModerateDataDeskTest extends WebTestCase
 
         return $user;
     }
-
 }
