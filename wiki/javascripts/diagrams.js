@@ -55,9 +55,29 @@
     };
   }
 
+  /* One pass at a time, and a fresh id namespace per pass.
+
+     Both matter, and the second is what broke every diagram on 2026-08-24.
+     mermaid.render(id, src) parks a scratch element under that id and removes
+     it BY ID when it finishes. With a fixed 'ccdiag-<i>' two overlapping passes
+     shared every id, so the later pass's cleanup deleted the SVG the earlier
+     one had already put on the page: the diagram drew, stood for about a
+     second, and the box collapsed to its own padding with nothing in the
+     console. */
+  var pass = 0;
+  var running = false;
+  var again = false;
+
   function render() {
+    if (running) { again = true; return; }
     var blocks = sources();
     if (!blocks.length) return;
+    running = true;
+    var mine = ++pass;
+    var settled = function () {
+      running = false;
+      if (again) { again = false; render(); }
+    };
     load(MERMAID).then(function () {
       var mermaid = window.mermaid;
       if (!mermaid) return;
@@ -71,10 +91,12 @@
         // mermaid strips the tags and every label runs together on one line.
         themeVariables: palette(),
       });
-      blocks.forEach(function (pre, i) {
+      return Promise.all(blocks.map(function (pre, i) {
         var code = pre.querySelector('code');
         var src = (code || pre).textContent;
-        mermaid.render('ccdiag-' + i, src).then(function (res) {
+        return mermaid.render('ccdiag-' + mine + '-' + i, src).then(function (res) {
+          // A pass that started before a re-render may land on a detached node.
+          if (!pre.isConnected) return;
           var fig = document.createElement('div');
           fig.className = 'cc-diagram-out';
           fig.setAttribute('data-src', src);
@@ -84,18 +106,22 @@
           // Leave the source visible and say why, rather than an empty box.
           pre.setAttribute('data-diagram-error', (e && e.message) || String(e));
         });
-      });
-    }).catch(function () { /* offline: the source stays readable */ });
+      }));
+    }).catch(function () { /* offline: the source stays readable */ })
+      .then(settled, settled);
   }
 
-  if (document.readyState === 'loading') {
+  /* Material's document$ is a ReplaySubject: subscribing fires immediately with
+     the current document, and again on every instant navigation. So when it
+     exists it is the ONLY trigger. Calling render() here as well started a
+     second pass in the same tick as the first, which is how the id collision
+     above got the chance to happen at all. */
+  if (window.document$ && typeof window.document$.subscribe === 'function') {
+    window.document$.subscribe(render);
+  } else if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', render);
   } else {
     render();
-  }
-  // Material's instant navigation swaps the <main> without a page load.
-  if (window.document$ && typeof window.document$.subscribe === 'function') {
-    window.document$.subscribe(render);
   }
   // Re-render on a scheme flip: Material stamps data-md-color-scheme on <body>,
   // and an SVG already drawn keeps the palette it was drawn with.

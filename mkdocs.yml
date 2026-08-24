@@ -66,7 +66,7 @@ extra:
 
 extra_javascript:
   # Bump ?v= when diagrams.js changes — MkDocs does not fingerprint extra_*.
-  - javascripts/diagrams.js?v=3
+  - javascripts/diagrams.js?v=4
 
 extra_css:
   # ?v= is a cache-buster. MkDocs fingerprints the theme's own assets but NOT
