@@ -1,16 +1,57 @@
+# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
 name: Deploy — production
 
 on:
   push:
     branches: [production]  # auto-deploy on every push/merge to production
   workflow_dispatch:        # also runnable manually from the Actions tab
+    inputs:
+      skip_ci_gate:
+        description: 'Deploy without waiting for CI (incident use only)'
+        type: boolean
+        default: false
 
 concurrency:
   group: deploy-production
   cancel-in-progress: false
 
+# Every gating workflow below is path-filtered, so "did not run" and "failed"
+# are different answers and only the second one blocks the deploy. See
+# .github/actions/require-green-ci for why this is a polling job rather than
+# `needs:` or `workflow_run`.
+env:
+  GATING_WORKFLOWS: >-
+    .github/workflows/ci-app.yml
+    .github/workflows/ci-tools.yml
+    .github/workflows/ci-wiki.yml
+    .github/workflows/reuse.yml
+    .github/workflows/secret-scan.yml
+
 jobs:
+  gate:
+    name: CI must be green
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/require-green-ci
+        # The escape hatch is deliberate and deliberately loud: an incident
+        # rollback must not be held hostage by a flaking test, and a gate with
+        # no override is a gate somebody deletes outright. It is reachable only
+        # from a manual run, never from a push.
+        if: >-
+          github.event_name != 'workflow_dispatch'
+          || inputs.skip_ci_gate != true
+        with:
+          workflows: ${{ env.GATING_WORKFLOWS }}
+          sha: ${{ github.sha }}
+          repository: ${{ github.repository }}
+          token: ${{ github.token }}
+
   deploy:
+    needs: gate
     runs-on: ubuntu-latest
     steps:
       - name: Trigger deploy over SSH

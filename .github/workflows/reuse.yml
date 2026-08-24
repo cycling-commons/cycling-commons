@@ -7,7 +7,9 @@
 name: REUSE compliance
 on:
   push:
-    branches: [main, symfony-base]
+    # staging and production are deploy sources; a licence regression must
+    # fail before a release, not after it.
+    branches: [main, staging, symfony-base, production]
   pull_request:
 
 jobs:

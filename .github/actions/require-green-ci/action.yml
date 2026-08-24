@@ -1,0 +1,125 @@
+# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+#
+# Deploy gate: refuse to ship a commit whose CI is not green.
+#
+# Why this exists as a polling step and not `workflow_run` or `needs:`:
+#
+#   - `needs:` only orders jobs INSIDE one workflow file. The CI jobs live in
+#     ci-app.yml / ci-tools.yml / ci-wiki.yml, which are separate files with
+#     their own path filters. A deploy workflow cannot `needs:` them.
+#   - `workflow_run` fires only after a named workflow actually RAN. Every CI
+#     workflow here is path-filtered, so a wiki-only commit never starts
+#     ci-app.yml, and a `workflow_run: [App CI]` deploy would then never fire
+#     at all. That trades "deploys untested code" for "stops deploying", which
+#     is not an improvement.
+#
+# So the gate reads the workflow runs recorded against the deployed commit and
+# waits them out. A workflow that did not run for this commit is not a failure:
+# its path filter said the change cannot affect it. A workflow that ran and did
+# not succeed IS a failure, and the deploy stops before touching a host.
+name: Require green CI
+description: Wait for this commit's CI workflow runs and fail unless every one that ran succeeded.
+
+inputs:
+  workflows:
+    description: Space-separated workflow file paths that gate the deploy.
+    required: true
+  sha:
+    description: Commit SHA to check.
+    required: true
+  repository:
+    description: owner/name of the repository.
+    required: true
+  token:
+    description: Token with actions:read on this repository.
+    required: true
+  timeout-seconds:
+    description: How long to wait for still-running CI before giving up.
+    required: false
+    default: '2400'
+  settle-seconds:
+    description: >-
+      How long to keep looking before accepting "no CI run exists for this
+      commit". A push registers the deploy run and the CI runs at nearly the
+      same moment, so a gate that judged on its first API call would race the
+      very checks it is waiting for and pass every time.
+    required: false
+    default: '90'
+
+runs:
+  using: composite
+  steps:
+    - name: Wait for CI on ${{ inputs.sha }}
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+        REPO: ${{ inputs.repository }}
+        SHA: ${{ inputs.sha }}
+        WATCH: ${{ inputs.workflows }}
+        TIMEOUT: ${{ inputs.timeout-seconds }}
+        SETTLE: ${{ inputs.settle-seconds }}
+      run: |
+        set -euo pipefail
+
+        started=$(date +%s)
+        echo "gating commit $SHA on: $WATCH"
+
+        while :; do
+          now=$(date +%s)
+          elapsed=$(( now - started ))
+
+          # Newest run first, so the first row seen for a workflow path is the
+          # current one. A re-run of a red job must be able to unblock a deploy;
+          # judging on the oldest row would keep the original failure forever.
+          rows=$(gh api --paginate \
+            "repos/${REPO}/actions/runs?head_sha=${SHA}&per_page=100" \
+            --jq '.workflow_runs[] | [.path, .status, (.conclusion // "pending"), .html_url] | @tsv')
+
+          declare -A seen=()
+          pending=""
+          failed=""
+          passed=""
+
+          while IFS=$'\t' read -r path status conclusion url; do
+            [ -n "${path:-}" ] || continue
+            case " ${WATCH} " in *" ${path} "*) ;; *) continue ;; esac
+            [ -z "${seen[$path]+x}" ] || continue
+            seen[$path]=1
+            if [ "$status" != "completed" ]; then
+              pending="${pending} ${path}"
+              continue
+            fi
+            case "$conclusion" in
+              # `skipped` is a real pass: it is what a job-level `if:` produces.
+              success|skipped) passed="${passed} ${path}" ;;
+              *)                failed="${failed} ${path}=${conclusion} (${url})" ;;
+            esac
+          done <<< "$rows"
+
+          if [ -n "$failed" ]; then
+            echo "::error::CI is not green for ${SHA}:${failed}"
+            echo "Fix CI, or re-run the failed workflow, then deploy again."
+            exit 1
+          fi
+
+          if [ -z "$pending" ]; then
+            if [ -n "$passed" ]; then
+              echo "green:${passed}"
+              exit 0
+            fi
+            if [ "$elapsed" -ge "$SETTLE" ]; then
+              # Every gating workflow is path-filtered. None running means the
+              # commit touched nothing any of them guard.
+              echo "no gating workflow ran for ${SHA} (path filters); nothing to wait for"
+              exit 0
+            fi
+          fi
+
+          if [ "$elapsed" -ge "$TIMEOUT" ]; then
+            echo "::error::timed out after ${elapsed}s waiting for:${pending:- (no run registered)}"
+            exit 1
+          fi
+
+          echo "waiting (${elapsed}s):${pending:- no run registered yet}"
+          sleep 15
+        done

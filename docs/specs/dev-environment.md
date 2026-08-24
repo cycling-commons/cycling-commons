@@ -378,6 +378,42 @@ SSH forced-command pattern. All deploy scripts live server-side; the repo
 carries none. Branch flow: `main` → `staging` → `production`, each deploy
 branch auto-deploying on push (plus manual `workflow_dispatch`).
 
+### Deploy waits for CI (2026-08-24)
+
+**A deploy job may not touch a host until this commit's CI is green.** Both
+deploy workflows open with a `gate` job that every deploy job `needs:`.
+
+Two facts made this necessary, and both were live:
+
+1. `ci-app.yml`, `ci-tools.yml` and `ci-wiki.yml` listed
+   `branches: [main, staging, symfony-base]`. `production` was absent, so a
+   push to the production branch ran **no CI at all** and deployed anyway.
+   All four gating workflows now list `production` as well.
+2. Nothing connected the deploy workflows to the CI workflows. On `staging`
+   both started from the same push and raced; the deploy usually won, because
+   an SSH call finishes long before PHPUnit does.
+
+The gate is `.github/actions/require-green-ci`, a local composite action (no
+third-party action runs in a workflow holding the deploy key). It polls
+`GET /repos/{repo}/actions/runs?head_sha=…` and applies three rules:
+
+- a gating workflow that **did not run** for this commit is not a failure. All
+  of them are path-filtered, so absence means the change cannot affect them;
+- the **newest** run for a workflow decides, so re-running a red job unblocks
+  the deploy;
+- `success` and `skipped` pass; anything else stops the deploy before the
+  first `ssh`.
+
+Gating workflows: `ci-app.yml`, `ci-tools.yml`, `ci-wiki.yml`, `reuse.yml`,
+`secret-scan.yml`, named in the `GATING_WORKFLOWS` env of each deploy
+workflow. `reuse.yml` gained `staging` and `production` for the same reason as
+the CI workflows: a licence regression must fail before a release, not after.
+
+A `workflow_dispatch` run accepts `skip_ci_gate: true`. It exists so an
+incident rollback is never held hostage by a flaking test, and it is
+unreachable from a push. This is not a substitute for GitHub branch protection
+on the deploy branches, which remains worth configuring.
+
 ## Open questions
 
 - **CONTRIBUTING.md Mailpit paragraph is stale**: it states "the stack does
