@@ -235,8 +235,8 @@ region-probe: ## Onboarding step 1: probe Overture subdivision areas (make regio
 region-scaffold: ## Onboarding step 2: emit region config + label stubs for review (make region-scaffold c="NL" [flags="--probe-areas"])
 	@$(DOCKER_COMP) exec -T app php bin/console app:region:scaffold $(or $(c),NL) $(flags)
 
-tools-test: ## Run the tools Python test suites (wallonia + divisions)
-	cd tools && python3 -m pytest wallonia/tests divisions/tests -q
+tools-test: ## Run the tools Python test suites (wallonia + divisions + wikimedia)
+	cd tools && python3 -m pytest wallonia/tests divisions/tests wikimedia/tests -q
 
 pipeline-test: ## Run the pipeline Python test suite in the pipeline container (contract + batch job units)
 	@$(DOCKER_COMP) exec -T pipeline python -m pytest tests -q

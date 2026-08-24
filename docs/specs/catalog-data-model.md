@@ -223,7 +223,7 @@ has this option, and there is no all-refs form.
 | `unverified` | Public but unconfirmed (pre-verification-gate) | Every imported/seeded row enters here |
 | `verified` | Passed the community verification gate | Verification mechanics (edit-items/README.md funnel) |
 | `rejected` | Moderation outcome | Moderation |
-| `retired` | Removed from serving | **Curator decision only — never automatic** |
+| `retired` | Removed from serving | **Curator decision only — never automatic** (a curator running `app:catalog:dedupe --write` after reading its dry run is that decision; see §5a) |
 
 `ItemState::SERVED = [Unverified, Verified]` is the single constant defining
 what the public ever sees; every serving query filters through
@@ -285,11 +285,82 @@ touched by the harvest importer, served source-agnostically, editable and
 moderatable), permanently distinguishable from harvested sources. Every seeded
 row enters `state='unverified'` — never `verified`; verification is only ever
 earned through the funnel. Seeding is idempotent (`source_ref =
-manual:<stable-slug>`, same upsert as the importer) and collision-safe: a pin
-is skipped when a non-manual row with the same `(name, letter)` already
-exists. Corollary: **everything on the map is a real DB row** — no decorative
+manual:<stable-slug>`, same upsert as the importer) and collision-safe through
+the shared duplicate guard below. Corollary: **everything on the map is a real DB row** — no decorative
 constants in templates or `map.js` (the single letter-F hazard pin is the
 documented standing exception, since F has no serving path yet).
+
+### 5a. One place, one row (2026-08-24)
+
+**Why a guard is needed at all.** Read-time dedupe matches **by ref**
+([coverage-provider.md §5](coverage-provider.md)). A PIVOT hotel row and an OSM
+hotel row for one building have different refs by construction, so a ref-based
+dedupe is *structurally* blind to them. Five such pairs were served as two pins
+on one building, plus two `wikidata`/`osm` pairs and six same-source OSM twins.
+The older guard could not have caught any of them: it lived in
+`SeedManualCatalogCommand` alone, compared names as exact strings, and ignored
+distance, so a namesake 8,000 km away blocked a legitimate pin while
+"Saint-Roch" and "Saint Roch" passed each other unnoticed.
+
+**The rule.** Two rows are the same place when all three hold:
+
+1. same `letter`;
+2. same **name key** — `App\Catalog\Import\NameKey::of()`;
+3. within **250 m**, measured geometry to geometry (`DuplicateGuard::RADIUS_M`),
+   so a climb's LINE is compared as a line rather than as its midpoint.
+
+All three are load-bearing. Name alone merges three real "St Mary's Cathedral"
+buildings on three continents; distance alone merges a cafe and the bike shop
+next door; letter alone merges a climb with the viewpoint on its summit.
+
+**The name key** reduces a name to what makes two rows the same dedication:
+accents fold to ASCII, a trailing place qualifier is dropped at the first comma,
+**separators** (hyphens, slashes, every width of dash) become a space and
+**joiners** (apostrophes, abbreviation points) come off with nothing. So
+`Saint-Roch` and `Saint Roch` agree while `Mary's` becomes `marys` and not
+`mary s`. It is a comparison key and nothing else: never stored, never
+displayed, never written back. `Ferme de l'Espinette` stays spelled exactly
+that way.
+
+It exists twice, in two languages — `NameKey::of()` and `normalise_name()` in
+`tools/wikimedia/prescreen_seeded.py` — and both are pinned to
+`tools/wikimedia/name_key_cases.json`, asserted from each side
+(`NameKeyContractTest`, `test_name_key_contract.py`). Same arrangement, and the
+same reason, as `coverage-contract.json`: two implementations of one rule drift,
+and drift here means the import guard and the pre-screen report disagree about
+what a duplicate is.
+
+**Which row wins.** `ItemSource::dedupeRank()`:
+`manual` > `user` > `scout` > `pivot` > `wikidata` > `osm` > `auto`. It is not a
+quality score and says nothing about lifecycle state; it answers one question,
+"which of these two records of one place is ours to keep". Without it the winner
+is whichever harvest happened to import first, which is how a canonical PIVOT
+row loses to an OSM row.
+
+**Two halves, and the split is deliberate.**
+
+- `App\Catalog\Import\DuplicateGuard` runs inside every import path
+  (`app:catalog:import`, `seed-manual`, `seed-climbs`, `seed-wikidata`) and
+  **never writes**. It declines to ADD a second row, and names every skip with
+  the id in the way, the distance, and — when the row being held out comes from
+  a better source — the command that resolves it. A count alone would let a
+  canonical row stay locked out for weeks while the import reported success.
+- `app:catalog:dedupe` retires the losers among rows already in the database.
+  Dry run by default; `--write` acts. **A row carrying curator edits is never
+  retired**: that human work cannot be weighed against a source ranking, so the
+  whole group is reported and left alone (the same shield `ItemUpsert` already
+  applies against re-import overwrites, §3).
+
+Only **served** rows count as a collision, which is what lets the two halves
+compose: once a curator retires a weaker row it stops blocking, and the next
+import admits the better one.
+
+**On the no-auto-retire rule (§4).** Retirement stays a curator decision. A
+curator reading a dry run and then passing `--write` *is* that decision; an
+import running unattended at 04:00 is not, which is exactly why the guard can
+only refuse to add and never remove. The §4 rule guards against inferring
+deletion from *absence* in a capped harvest; a positively identified duplicate
+is a different question, and it is still a human who answers it.
 
 ## 6. Region membership mechanics
 
@@ -872,6 +943,10 @@ The two documents coexist deliberately; here is the exact split.
 - **F (hazards) serving path.** Letter F has intake designed but no serving
   path in `CatalogProvider`; the one demo hazard pin remains hardcoded in
   `map.js` (deferred, tracked in `docs/TODO.md`).
-- **Known data issue**: a pre-existing OSM-vs-OSM duplicate ("Signal de
+- ~~**Known data issue**: a pre-existing OSM-vs-OSM duplicate ("Signal de
   Botrange", two `osm`-sourced rows) — a harvest-side dedupe gap within a
-  single source, outside the manual-seeding collision guard.
+  single source, outside the manual-seeding collision guard.~~ **Answered
+  2026-08-24 (§5a).** A full scan found it was not one case but 14 groups, and
+  not only same-source: seven were cross-source, which the old guard could not
+  have seen at all. `DuplicateGuard` stops new ones and `app:catalog:dedupe`
+  clears the existing ones.

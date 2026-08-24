@@ -7,7 +7,9 @@ declare(strict_types=1);
 namespace App\Catalog\Command;
 
 use App\Catalog\Import\AttributeVocabulary;
+use App\Catalog\Import\DuplicateGuard;
 use App\Catalog\Import\ItemUpsert;
+use App\Catalog\ItemSource;
 use App\Catalog\ItemType;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Exception as DBALException;
@@ -41,6 +43,7 @@ final class SeedWikidataPlacesCommand extends Command
     public function __construct(
         private readonly Connection $db,
         private readonly AttributeVocabulary $vocabulary,
+        private readonly DuplicateGuard $duplicates,
     ) {
         parent::__construct();
     }
@@ -77,6 +80,8 @@ final class SeedWikidataPlacesCommand extends Command
         $duplicates = [];
         /* Skip places in no operational region — a harvest bbox is not onboarded geography. */
         $regionless = [];
+        /* Skip places another source already holds — one place, one row. */
+        $duplicatePlaces = [];
         try {
             $this->db->beginTransaction();
             foreach ($files as $file) {
@@ -101,6 +106,17 @@ final class SeedWikidataPlacesCommand extends Command
                             $regionless[] = sprintf('%s (%s)', $place['name'], $country);
                             continue;
                         }
+                        /* One place, one row: an OSM harvest may already hold it
+                           under a different ref, which read-time dedupe (by ref)
+                           cannot see. catalog-data-model.md §5. */
+                        $held = $this->duplicates->existing(
+                            $type->letter(), (string) $place['name'],
+                            (float) $place['lat'], (float) $place['lng'], $ref,
+                        );
+                        if (null !== $held) {
+                            $duplicatePlaces[] = DuplicateGuard::explain((string) $place['name'], ItemSource::Wikidata, $held);
+                            continue;
+                        }
                         $seenRefs[$ref] = $country;
                         $this->seed($place, $type, $country, $dryRun);
                         $counts[$country][$type->letter()] = ($counts[$country][$type->letter()] ?? 0) + 1;
@@ -122,12 +138,6 @@ final class SeedWikidataPlacesCommand extends Command
             return Command::FAILURE;
         }
 
-        if ([] === $counts) {
-            $io->warning('Nothing matched — check --country.');
-
-            return Command::SUCCESS;
-        }
-
         ksort($counts);
         foreach ($counts as $country => $byLetter) {
             ksort($byLetter);
@@ -137,6 +147,11 @@ final class SeedWikidataPlacesCommand extends Command
             }
             $io->writeln(sprintf('  %s — %s', $country, implode(', ', $parts)));
         }
+        // Reported BEFORE the empty-counts return (test-suite review
+        // 2026-08-24): an artifact whose places all fall outside the onboarded
+        // regions used to answer "Nothing matched — check --country", which
+        // names the wrong cause and sends the operator to fix an option that
+        // was never the problem.
         if ([] !== $regionless) {
             $io->note(sprintf(
                 "Skipped %d place(s) that fall in no onboarded region:\n  %s",
@@ -151,6 +166,22 @@ final class SeedWikidataPlacesCommand extends Command
                 implode("\n  ", $duplicates),
             ));
         }
+        if ([] !== $duplicatePlaces) {
+            $io->note(sprintf(
+                "Skipped %d place(s) another source already holds:\n  %s",
+                \count($duplicatePlaces),
+                implode("\n  ", $duplicatePlaces),
+            ));
+        }
+
+        if ([] === $counts) {
+            $io->warning([] === $regionless && [] === $duplicates && [] === $duplicatePlaces
+                ? 'Nothing matched — check --country.'
+                : 'Nothing was seeded: every place in this artifact was skipped for a reason listed above.');
+
+            return Command::SUCCESS;
+        }
+
         $io->success(sprintf(
             '%s %d place(s) across %d country/ies.',
             $dryRun ? 'Would seed' : 'Seeded',

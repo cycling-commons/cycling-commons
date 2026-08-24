@@ -7,7 +7,9 @@ declare(strict_types=1);
 namespace App\Catalog\Command;
 
 use App\Catalog\Import\AttributeVocabulary;
+use App\Catalog\Import\DuplicateGuard;
 use App\Catalog\Import\ItemUpsert;
+use App\Catalog\ItemSource;
 use App\Catalog\ItemType;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Exception as DBALException;
@@ -362,6 +364,7 @@ final class SeedManualCatalogCommand extends Command
     public function __construct(
         private readonly Connection $db,
         private readonly AttributeVocabulary $vocabulary,
+        private readonly DuplicateGuard $duplicates,
     ) {
         parent::__construct();
     }
@@ -409,8 +412,11 @@ final class SeedManualCatalogCommand extends Command
                 $type = ItemType::fromParam($pin['letter']);
                 $this->vocabulary->assertValid($type, $pin['attributes']);
 
-                if ($this->duplicatesNonManualItem($pin['name'], $pin['letter'])) {
-                    $skipped[] = $pin['name'];
+                $held = $this->duplicates->existing(
+                    $pin['letter'], $pin['name'], $pin['lat'], $pin['lng'], 'manual:'.$pin['ref'],
+                );
+                if (null !== $held) {
+                    $skipped[] = DuplicateGuard::explain($pin['name'], ItemSource::Manual, $held);
                     continue;
                 }
 
@@ -447,9 +453,9 @@ final class SeedManualCatalogCommand extends Command
         }
         if ([] !== $skipped) {
             $io->note(sprintf(
-                'Skipped %d pin(s) that duplicate an existing non-manual item (same name + letter): %s',
+                "Skipped %d pin(s) that duplicate a row already in the catalog:\n  %s",
                 \count($skipped),
-                implode(', ', $skipped),
+                implode("\n  ", $skipped),
             ));
         }
         $io->success(sprintf('Seeded %d manual demo pin(s) across %d letter(s).', array_sum($counts), \count($counts)));
@@ -469,17 +475,6 @@ final class SeedManualCatalogCommand extends Command
         }
 
         return Command::SUCCESS;
-    }
-
-    /** True when a harvested item already occupies this (name, letter). */
-    private function duplicatesNonManualItem(string $name, string $letter): bool
-    {
-        $match = $this->db->fetchOne(
-            "SELECT 1 FROM item WHERE name = :name AND letter = :letter AND source != 'manual' LIMIT 1",
-            ['name' => $name, 'letter' => $letter],
-        );
-
-        return false !== $match;
     }
 
     /** @var array<string, int|null> resolved once per ISO 3166-2 code, not once per pin */

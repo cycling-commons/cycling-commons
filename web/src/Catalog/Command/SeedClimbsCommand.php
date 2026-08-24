@@ -7,7 +7,9 @@ declare(strict_types=1);
 namespace App\Catalog\Command;
 
 use App\Catalog\Import\AttributeVocabulary;
+use App\Catalog\Import\DuplicateGuard;
 use App\Catalog\Import\ItemUpsert;
+use App\Catalog\ItemSource;
 use App\Catalog\ItemType;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Exception as DBALException;
@@ -38,6 +40,7 @@ final class SeedClimbsCommand extends Command
     public function __construct(
         private readonly Connection $db,
         private readonly AttributeVocabulary $vocabulary,
+        private readonly DuplicateGuard $duplicates,
     ) {
         parent::__construct();
     }
@@ -91,7 +94,7 @@ final class SeedClimbsCommand extends Command
         }
 
         $seeded = [];
-        $skipped = ['regionless' => [], 'unpaved' => [], 'duplicate-ref' => []];
+        $skipped = ['regionless' => [], 'unpaved' => [], 'duplicate-ref' => [], 'duplicate-place' => []];
         $seenRefs = [];
 
         /* Collect then write: two sides of one col can share a name and would otherwise collide. */
@@ -170,13 +173,25 @@ final class SeedClimbsCommand extends Command
                 $sLat = $entry['lat'];
                 $sLng = $entry['lng'];
                 $ref = $entry['ref'];
+
+                /* One place, one row (catalog-data-model.md §5). A climb the
+                   Wallonia harvest already seeded under an OSM ref is the same
+                   hill, and read-time dedupe matches by ref, so it cannot see
+                   that. Checked in a dry run too, or the dry run would report a
+                   number the real run will not produce. */
+                $held = $this->duplicates->existing('B', $name, $sLat, $sLng, 'wikidata:'.$ref);
+                if (null !== $held) {
+                    $skipped['duplicate-place'][] = DuplicateGuard::explain($name, ItemSource::Wikidata, $held);
+                    continue;
+                }
+
                 if (!$dryRun) {
                     $this->db->executeStatement(ItemUpsert::SQL, [
                         'letter' => 'B',
                         'name' => $name,
                         // Summit = the line's own end, not Wikidata's coordinate.
                         'geom' => json_encode(
-                            ['type' => 'Point', 'coordinates' => [(float) $sLng, (float) $sLat]],
+                            ['type' => 'Point', 'coordinates' => [$sLng, $sLat]],
                             \JSON_THROW_ON_ERROR,
                         ),
                         'cc' => $cc,

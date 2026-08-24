@@ -1,0 +1,37 @@
+{
+  "$comment": [
+    "Cross-language contract for the duplicate-name key.",
+    "",
+    "Two implementations must agree exactly, in two languages, or the import",
+    "guard and the pre-screen report disagree about what a duplicate is:",
+    "  python  tools/wikimedia/prescreen_seeded.py  normalise_name()",
+    "  php     web/src/Catalog/Import/NameKey.php   NameKey::of()",
+    "",
+    "Same idea as pipeline/contract/coverage-contract.json: one file, asserted",
+    "from both sides, so neither can drift alone. Each case names the rule it",
+    "exists to hold. Add a case when you add a rule.",
+    "",
+    "Pinned by web/tests/Catalog/NameKeyContractTest.php (PHP) and",
+    "tools/wikimedia/tests/test_name_key_contract.py (Python)."
+  ],
+  "cases": [
+    { "why": "plain name, lowercased", "name": "Signal de Botrange", "key": "signal de botrange" },
+    { "why": "a hyphen SEPARATES: it becomes a space", "name": "Saint-Roch", "key": "saint roch" },
+    { "why": "and the spaced spelling reduces to the same thing", "name": "Saint Roch", "key": "saint roch" },
+    { "why": "an apostrophe JOINS inside a word: it comes off with no space", "name": "St Mary's", "key": "st marys" },
+    { "why": "the abbreviation point comes off too", "name": "St. Mary's", "key": "st marys" },
+    { "why": "a trailing place qualifier is dropped at the first comma", "name": "St Mary's Cathedral, Perth", "key": "st marys cathedral" },
+    { "why": "accents fold to ascii", "name": "Côte de la Redoute", "key": "cote de la redoute" },
+    { "why": "an en dash reads as a separator, not as nothing", "name": "Liège–Bastogne–Liège", "key": "liege bastogne liege" },
+    { "why": "so does an em dash", "name": "Liège—Bastogne—Liège", "key": "liege bastogne liege" },
+    { "why": "so does a slash", "name": "Liege / Bastogne / Liege", "key": "liege bastogne liege" },
+    { "why": "so does a soft hyphen, which is invisible in an editor", "name": "Liege­Bastogne", "key": "liege bastogne" },
+    { "why": "so does a unicode minus sign", "name": "Liege−Bastogne", "key": "liege bastogne" },
+    { "why": "runs of whitespace collapse", "name": "Ferme   de    l'Espinette", "key": "ferme de lespinette" },
+    { "why": "leading and trailing whitespace is trimmed", "name": "  Hôtel Koru  ", "key": "hotel koru" },
+    { "why": "an ampersand is punctuation, not a separator", "name": "Water & food", "key": "water food" },
+    { "why": "digits survive: they are part of the name", "name": "7 Rue des Marchés", "key": "7 rue des marches" },
+    { "why": "two genuinely different dedications stay different", "name": "St Johns Cathedral", "key": "st johns cathedral" },
+    { "why": "a name that is only punctuation reduces to nothing, and callers must treat an empty key as no key", "name": "---", "key": "" }
+  ]
+}

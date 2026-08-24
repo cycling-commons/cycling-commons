@@ -77,6 +77,29 @@ AREA_CLASSES = {
 COORD_TOLERANCE_M = 1000
 
 
+# Characters that SEPARATE two words and must become a space, not vanish.
+# Deleting them was a real gap (found 2026-08-24): "Cote de Saint-Roch" reduced
+# to "cotedesaintroch" while "Cote de Saint Roch" reduced to
+# "cote de saint roch", so the one pair of spellings this function exists to
+# catch was the one pair it could never catch.
+#
+# Written as explicit escapes, and the unicode dashes are listed on purpose:
+# they must be replaced BEFORE the ascii fold below, which deletes them outright
+# and would close the gap up again. `App\Catalog\Import\NameKey` is the PHP
+# twin of this function and the two are pinned together by
+# tools/wikimedia/name_key_cases.json — keep the character set identical.
+_SEPARATORS = re.compile(
+    "["
+    "\\-"          # hyphen-minus
+    "/"            # slash
+    "_"            # underscore
+    "­"       # soft hyphen
+    "‐-―"  # hyphen .. horizontal bar (en dash, em dash, figure dash)
+    "−"       # minus sign
+    "]+"
+)
+
+
 def normalise_name(name: str) -> str:
     """A name reduced to what makes two rows the SAME dedication.
 
@@ -84,11 +107,17 @@ def normalise_name(name: str) -> str:
     Perth" are three strings and one wrong-match risk, so the abbreviation
     point, the possessive apostrophe and any trailing place qualifier all come
     off before comparing. Exact matching found none of them.
+
+    Separators (hyphens, slashes, dashes of every width) become a SPACE;
+    joiners inside a word (apostrophes, abbreviation points) come off with no
+    replacement. That is the difference between "Saint-Roch" meaning
+    "Saint Roch" and "Mary's" meaning "Marys".
     """
-    n = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode()
+    n = _SEPARATORS.sub(" ", name)
+    n = unicodedata.normalize("NFKD", n).encode("ascii", "ignore").decode()
     n = n.split(",")[0]                       # drop ", Perth" / ", Brisbane"
     n = re.sub(r"\bSt\.", "St", n)
-    n = re.sub(r"[^\w\s]", "", n)              # apostrophes, hyphens, periods
+    n = re.sub(r"[^\w\s]", "", n)              # apostrophes, periods, the rest
     return re.sub(r"\s+", " ", n).strip().casefold()
 
 

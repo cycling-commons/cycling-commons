@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace App\Catalog\Command;
 
 use App\Catalog\Import\AttributeVocabulary;
+use App\Catalog\Import\DuplicateGuard;
 use App\Catalog\Import\ItemUpsert;
 use App\Catalog\Import\ProvinceMap;
 use App\Catalog\ItemSource;
@@ -47,11 +48,23 @@ final class ImportCatalogCommand extends Command
     /** Same-level overlap above this fraction of the smaller area is a bad import; at or below it is a digitization sliver. */
     private const float REGION_OVERLAP_TOLERANCE = 0.001;
 
+    /**
+     * Rows the duplicate guard held out, reported after the transaction.
+     *
+     * Named one by one, never counted: "skipped 4 duplicates" tells an operator
+     * nothing they can check, and a wrong skip would look exactly like a right
+     * one.
+     *
+     * @var list<string>
+     */
+    private array $duplicateSkips = [];
+
     public function __construct(
         private readonly Connection $db,
         private readonly AttributeVocabulary $vocabulary,
         private readonly SurfaceProfiler $surfaces,
         private readonly BaseLocationService $baseLocations,
+        private readonly DuplicateGuard $duplicates,
     ) {
         parent::__construct();
     }
@@ -95,6 +108,14 @@ final class ImportCatalogCommand extends Command
             $io->error($e->getMessage());
 
             return Command::FAILURE;
+        }
+
+        if ([] !== $this->duplicateSkips) {
+            $io->note(sprintf(
+                "Skipped %d feature(s) that duplicate a row already in the catalog:\n  %s",
+                \count($this->duplicateSkips),
+                implode("\n  ", $this->duplicateSkips),
+            ));
         }
 
         $io->success(sprintf('Catalog import: %d region(s), %d item(s) upserted, %d route(s), %d heat point(s), %d region-assigned, %d route surface profile(s).', $regions, $items, $routes, $heat, $assigned, $surfaced));
@@ -220,13 +241,29 @@ final class ImportCatalogCommand extends Command
 
                 [$source, $ref] = $this->resolveSourceRef($props, $file);
 
+                // OSM pools emit `n`; climbs/surface exporters emit `name`.
+                $name = (string) ($props['n'] ?? $props['name'] ?? '');
+                $geomJson = json_encode($geometry, \JSON_THROW_ON_ERROR);
+
+                /* One place, one row (catalog-data-model.md §5). A harvest run
+                   under one source must not add a second pin to a place another
+                   source already holds: read-time dedupe matches by ref, so it
+                   is blind to a PIVOT hotel and an OSM hotel being one hotel. */
+                $held = $this->duplicates->existingAtGeometry($letter, $name, $geomJson, $source.':'.$ref);
+                if (null !== $held) {
+                    $incoming = ItemSource::tryFrom($source);
+                    $this->duplicateSkips[] = null === $incoming
+                        ? sprintf('%s — already held by #%d', $name, $held['id'])
+                        : DuplicateGuard::explain($name, $incoming, $held);
+                    continue;
+                }
+
                 $prov = (string) ($props['prov'] ?? '');
                 $this->db->executeStatement(
                     ItemUpsert::SQL,
                     [
                         'letter' => $letter,
-                        // OSM pools emit `n`; climbs/surface exporters emit `name`.
-                        'name' => (string) ($props['n'] ?? $props['name'] ?? ''),
+                        'name' => $name,
                         'geom' => json_encode($geometry, \JSON_THROW_ON_ERROR),
                         'cc' => 'BE',
                         'sub' => $subdivisions[ProvinceMap::CODES[$prov] ?? ''] ?? null,
