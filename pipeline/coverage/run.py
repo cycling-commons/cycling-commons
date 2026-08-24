@@ -477,6 +477,20 @@ def _run_routes(regions, workdir, contract, *, extract_only: bool = False,
     return 1 if failed else 0
 
 
+def _dur(seconds: float) -> str:
+    """A duration read at a glance: "41.2s", "2m17s", "1h04m".
+
+    A refresh is minutes per country and hours for the full list, so the log
+    has to answer "which region is eating the run?" without arithmetic.
+    """
+    if seconds < 60:
+        return f"{seconds:.1f}s"
+    total = int(round(seconds))
+    if total < 3600:
+        return f"{total // 60}m{total % 60:02d}s"
+    return f"{total // 3600}h{(total % 3600) // 60:02d}m"
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Weekly coverage batch (PostGIS index + PMTiles)")
     ap.add_argument("--surface", action="store_true",
@@ -539,7 +553,10 @@ def main(argv=None) -> int:
                   "exiting", file=sys.stderr)
             return 2
         ensure_schema(conn)
+        run_started = time.monotonic()
+        timings: list[tuple[str, float, bool]] = []
         for region in regions:
+            region_started = time.monotonic()
             try:
                 # Resolved ONCE per region and reused for both calls below (I1): an
                 # unresolvable country is now a hard failure (raises), caught by the
@@ -551,15 +568,27 @@ def main(argv=None) -> int:
                 run_extract(pbf, filtered, contract)
                 rows = parse_pois(filtered, contract, region, country_code)
                 result = load_region(conn, rows, region, country_code)
+                elapsed = time.monotonic() - region_started
+                timings.append((region, elapsed, True))
                 print(f"[coverage] {region}: loaded/updated {result.inserted} rows "
-                      f"(previous {result.previous})")
+                      f"(previous {result.previous}) in {_dur(elapsed)}")
             except Exception as exc:  # noqa: BLE001 — one region must not stop the rest (coverage-provider.md §3 failure mode)
+                elapsed = time.monotonic() - region_started
+                timings.append((region, elapsed, False))
                 failed.append(region)
-                print(f"[coverage] {region}: FAILED — {exc}", file=sys.stderr)
+                # The time a failure took is worth as much as a success's: a
+                # region that dies after 40 minutes failed differently from one
+                # that dies in two seconds.
+                print(f"[coverage] {region}: FAILED after {_dur(elapsed)} — {exc}", file=sys.stderr)
 
+        tiles_started = time.monotonic()
         layer_files = export_geojsonl(conn, workdir)
         if not layer_files:
             print("[coverage] index empty — nothing to publish", file=sys.stderr)
+            # Still report what the attempt cost: a run that harvested for an
+            # hour and then found nothing to publish is a different problem
+            # from one that fell over immediately.
+            _print_timings(timings, time.monotonic() - run_started)
             return 1
         artifact = workdir / "coverage.pmtiles"
         build_pmtiles(layer_files, artifact)
@@ -579,8 +608,24 @@ def main(argv=None) -> int:
         url = upload(artifact, {"counts": counts, "regions": regions,
                                 "country_codes": country_codes})
         stale = prune(keep=4)
-        print(f"[coverage] published {url} (pruned {len(stale)})")
+        print(f"[coverage] published {url} (pruned {len(stale)}) — "
+              f"tiles {_dur(time.monotonic() - tiles_started)}")
+        _print_timings(timings, time.monotonic() - run_started)
     return 1 if failed else 0
+
+
+def _print_timings(timings, total: float) -> None:
+    """Per-region times, slowest first, then the wall clock for the whole run."""
+    if not timings:
+        return
+    ok = sum(1 for (_r, _e, good) in timings if good)
+    width = max(len(region) for (region, _e, _g) in timings)
+    print(f"[coverage] --- timings ({len(timings)} regions, {ok} ok, "
+          f"{len(timings) - ok} failed) ---")
+    for region, elapsed, good in sorted(timings, key=lambda t: -t[1]):
+        print(f"[coverage]   {region.ljust(width)}  {_dur(elapsed):>7}"
+              f"{'' if good else '  FAILED'}")
+    print(f"[coverage] total {_dur(total)}")
 
 
 if __name__ == "__main__":

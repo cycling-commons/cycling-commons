@@ -10,7 +10,7 @@ import pytest
 
 from coverage import run
 from coverage.load import DriftAbort, LoadResult
-from coverage.run import COVERAGE_ADVISORY_LOCK_KEY, _acquire_run_lock
+from coverage.run import COVERAGE_ADVISORY_LOCK_KEY, _acquire_run_lock, _dur, _print_timings
 
 
 class _Resp(io.BytesIO):
@@ -243,3 +243,40 @@ def test_run_lock_is_exclusive_across_sessions(db):
         assert _acquire_run_lock(other) is False
     finally:
         other.close()  # db releases its lock at fixture teardown (conn.close)
+
+
+# ---- run timings -----------------------------------------------------------
+# A full refresh is 22 country extracts and hours of wall clock, so the log has
+# to answer "which region is eating the run?" without the reader doing sums.
+
+
+@pytest.mark.parametrize("seconds,expected", [
+    (0.42, "0.4s"),
+    (41.23, "41.2s"),
+    (59.94, "59.9s"),        # still seconds; the minute boundary is exact
+    (60, "1m00s"),
+    (137, "2m17s"),
+    (3599, "59m59s"),
+    (3600, "1h00m"),
+    (45296, "12h34m"),       # a planet-scale run must not read as "755m"
+])
+def test_dur_reads_at_a_glance(seconds, expected):
+    assert _dur(seconds) == expected
+
+
+def test_timings_are_listed_slowest_first_and_mark_failures(capsys):
+    _print_timings(
+        [("europe/belgium", 41.2, True), ("asia/japan", 3.1, False), ("europe/france", 258.0, True)],
+        302.3,
+    )
+    lines = [ln for ln in capsys.readouterr().out.splitlines() if ln]
+
+    assert "3 regions, 2 ok, 1 failed" in lines[0]
+    assert [ln.split()[1] for ln in lines[1:4]] == ["europe/france", "europe/belgium", "asia/japan"]
+    assert lines[3].endswith("FAILED")
+    assert lines[-1] == "[coverage] total 5m02s"
+
+
+def test_timings_stay_quiet_when_no_region_ran(capsys):
+    _print_timings([], 0.0)
+    assert capsys.readouterr().out == ""
