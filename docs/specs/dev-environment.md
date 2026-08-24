@@ -334,15 +334,49 @@ REDIS_URL=redis://host.docker.internal:6379
 
 - `make app-test` is the full local gate: `phpunit` + `phpstan` + `psalm` +
   `php-cs-fixer --dry-run` + the SPDX, licence, and translation checks.
-  CI (`.github/workflows/ci-app.yml`) runs the same tool chain minus the
-  translation-parity gate (see Open questions) against a
+  CI (`.github/workflows/ci-app.yml`) runs the same tool chain against a
   `postgis/postgis:18-3.6` service container, plus an advisory Rector pass.
+- **Every local gate now has a workflow (2026-08-24).** Four ran only on
+  developer machines, so a green pull request could still ship a broken
+  coverage contract, an untranslated key, or a map module that throws
+  `ReferenceError` on boot:
+  - `make pipeline-test` → `.github/workflows/ci-pipeline.yml`
+    (coverage-provider.md §7).
+  - `web/tools/check-translations.sh` → a step in `ci-app.yml`. It was in
+    `make app-test` from the start, and
+    `tools/check-translations-precommit.sh` told contributors without php on
+    PATH that "CI will enforce parity" while nothing did.
+  - `make map-refs` → a step in `ci-app.yml`, run from the repo root. Because
+    it invokes a root Makefile target, `Makefile` joined `ci-app.yml`'s
+    trigger paths.
+  - `web/tests/browser/map-smoke.js` stays a manual console protocol on
+    purpose; see the note in that file's header.
 - **The test suite refuses non-`_test` databases.** `web/tests/bootstrap.php`
   hard-stops unless the `DATABASE_URL` database name ends in `_test` — because
   a real environment variable (like the compose-provided dev-DB DSN in the
   `app` container) beats every `.env*` file including `.env.test`. To run
   phpunit inside the container, pass `-e DATABASE_URL=…/cyclingcommons_test`
   explicitly.
+- **`APP_ENV=test` needs passing too, for the same reason** (measured
+  2026-08-24). The compose `app` container exports `APP_ENV=dev`, and a real
+  environment variable also beats `phpunit.dist.xml`'s
+  `<server name="APP_ENV" force="true">`. Without it the kernel boots in `dev`,
+  `framework.test` is false, and **every** `WebTestCase` errors with *"You
+  cannot create the client used in functional tests if the framework.test
+  config is not set to true"* — which reads like a broken config file rather
+  than a missing flag. The working invocation is:
+
+  ```
+  docker exec -e APP_ENV=test \
+    -e DATABASE_URL="postgresql://cc:cc@db:5432/cyclingcommons_test?serverVersion=18&charset=utf8" \
+    cycling-commons-dev-app-1 php -d memory_limit=1G bin/phpunit
+  ```
+
+  `-d memory_limit=1G` is the second half: the container's php.ini caps CLI
+  memory at 128 MB and `GpxParserTest::testRejectsMoreThanFiftyThousandPoints`
+  builds a 50,000-point track, so the run dies with a fatal error two thirds of
+  the way through. CI does not hit either problem: `setup-php` sets no
+  `APP_ENV` and raises the CLI memory limit.
 - **`make test-db-reset`** drops and rebuilds `cyclingcommons_test`. It exists
   because the DAMA transaction wrapper only guards phpunit-managed runs — the
   test DB accumulates stray committed rows from out-of-band runs (symptom:
@@ -411,8 +445,25 @@ the CI workflows: a licence regression must fail before a release, not after.
 
 A `workflow_dispatch` run accepts `skip_ci_gate: true`. It exists so an
 incident rollback is never held hostage by a flaking test, and it is
-unreachable from a push. This is not a substitute for GitHub branch protection
-on the deploy branches, which remains worth configuring.
+unreachable from a push.
+
+**Branch protection covers the other half** (enabled 2026-08-24 on `staging`
+and `production`): restrict deletions, block force pushes, require linear
+history, and require exactly one status check, `secret-scan`.
+
+Only that one, and the reason is the same path filtering the gate exists to
+handle. `secret-scan.yml` is the single workflow with no `paths:` filter, so it
+is the only check that reports on every commit. Requiring a path-filtered check
+instead would **permanently block** any merge that does not touch its paths: a
+docs-only commit never starts `ci-app.yml`, so the `app` check never reports,
+and GitHub reads a check that never reported as *"Expected — waiting for
+status"* rather than as "not applicable". That is why the per-commit test
+enforcement lives in the deploy gate, which can tell "did not run" from
+"failed", and branch protection is left to enforce the push rules.
+
+Leave "require branches to be up to date before merging" OFF for the same
+reason it is off in the gate: it forces a re-run of every check on every merge
+without telling anyone anything new.
 
 ## Open questions
 
@@ -422,9 +473,6 @@ on the deploy branches, which remains worth configuring.
   default `MAILER_DSN` is `smtp://mailpit:1025`). The compose file is the
   contract; CONTRIBUTING.md needs updating to describe the bundled service.
   The `MAILER_DSN` comment in `web/.env` carries the same stale claim.
-- **CI does not run the translation-parity gate**: `ci-app.yml` invokes the
-  individual tools but omits `tools/check-translations.sh` (CONTRIBUTING.md
-  implies CI enforces it). Either add it to CI or correct the claim.
 - **`atlas` service retirement**: the static prototype container remains in
   the compose file; its removal is decided when the HTML demo (`atlas/demo/`,
   old `main`) is finally swept post-go-live.

@@ -1,0 +1,55 @@
+# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+name: Pipeline CI
+#
+# The coverage batch suite (`make pipeline-test`) ran on developer machines and
+# nowhere else: 181 tests that pin the extract/parse/load/publish contract,
+# invisible to every pull request. coverage-provider.md §7 carried it as an
+# open question.
+#
+# This runs the same suite natively rather than by building pipeline/Dockerfile,
+# because that image compiles tippecanoe from source and NO test needs it: the
+# tile and publish steps are monkeypatched or botocore-stubbed. The two real
+# external dependencies are `osmium-tool` (extract shells out to
+# `osmium tags-filter`, exercised by test_extract) and a PostGIS database with
+# pg_trgm (the `db` fixture in tests/conftest.py builds an isolated
+# coverage_pytest schema).
+on:
+  pull_request:
+    paths: ['pipeline/**', '.github/workflows/ci-pipeline.yml']
+  push:
+    # Same deploy-source reasoning as ci-app.yml: a push to a branch that
+    # deploys must run its tests.
+    branches: [main, staging, symfony-base, production]
+    paths: ['pipeline/**', '.github/workflows/ci-pipeline.yml']
+
+jobs:
+  pipeline:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: pipeline
+    services:
+      # Same image as ci-app.yml. Its entrypoint installs postgis into the
+      # default database, which the `db` fixture's geometry column needs.
+      postgres:
+        image: postgis/postgis:18-3.6
+        env:
+          POSTGRES_USER: cc
+          POSTGRES_PASSWORD: cc
+          POSTGRES_DB: cyclingcommons
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U cc" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      # conftest reads DATABASE_DSN, exactly as the pipeline container does.
+      DATABASE_DSN: "postgresql://cc:cc@127.0.0.1:5432/cyclingcommons"
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'   # matches pipeline/Dockerfile's base image
+      - name: osmium-tool (extract shells out to `osmium tags-filter`)
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends osmium-tool
+      # The pinned set, so CI and the container agree on every version.
+      - run: pip install --no-cache-dir -r requirements.txt
+      - run: python -m pytest tests -q

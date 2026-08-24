@@ -6,7 +6,7 @@ name: App CI
 # exists to catch — editing the contract alone triggered no workflow at all.
 on:
   pull_request:
-    paths: ['web/**', 'pipeline/contract/**', '.github/workflows/ci-app.yml']
+    paths: ['web/**', 'pipeline/contract/**', 'tools/wikimedia/name_key_cases.json', 'Makefile', '.github/workflows/ci-app.yml']
   push:
     # staging and symfony-base are deploy sources (deploy-staging.yaml) —
     # without them here, a push could deploy code that never passed CI.
@@ -14,7 +14,7 @@ on:
     # missing here, so a push straight to production ran no CI at all and the
     # deploy fired anyway.
     branches: [main, staging, symfony-base, production]
-    paths: ['web/**', 'pipeline/contract/**', '.github/workflows/ci-app.yml']
+    paths: ['web/**', 'pipeline/contract/**', 'tools/wikimedia/name_key_cases.json', 'Makefile', '.github/workflows/ci-app.yml']
 jobs:
   app:
     runs-on: ubuntu-latest
@@ -47,6 +47,11 @@ jobs:
       - run: composer install --no-interaction --prefer-dist
       - run: ./tools/check-spdx.sh
       - run: ./tools/check-licenses.sh
+      # Translation parity (en/fr/nl/de/es). `make app-test` has always run it
+      # and CI never did, while tools/check-translations-precommit.sh tells a
+      # contributor without php on PATH that "CI will enforce parity". It does
+      # now: that message was false for as long as it existed.
+      - run: ./tools/check-translations.sh
       - run: vendor/bin/php-cs-fixer fix --dry-run --diff
       - run: vendor/bin/phpstan analyse --no-progress
       - run: vendor/bin/psalm --no-cache
@@ -69,3 +74,12 @@ jobs:
       # (vendored Scout FIT reader, outbound links, OSM tag values) are invisible
       # to the .cjs glob above and were running nowhere in CI.
       - run: node --test tests/js/*.test.mjs
+      # The map-split gate: every web/assets/map module must parse as an ES
+      # MODULE (a CommonJS parse once accepted a duplicated top-level `let` the
+      # browser refuses), and none may still reference a binding map.js owns.
+      # It was written because a green browser sweep missed a live
+      # ReferenceError, and then ran only on developer machines. Runs from the
+      # repo root: the Makefile target spans web/ and tools/.
+      - name: make map-refs (map module split gate)
+        working-directory: .
+        run: make map-refs

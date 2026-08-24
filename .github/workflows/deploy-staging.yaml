@@ -48,6 +48,7 @@ concurrency:
 env:
   GATING_WORKFLOWS: >-
     .github/workflows/ci-app.yml
+    .github/workflows/ci-pipeline.yml
     .github/workflows/ci-tools.yml
     .github/workflows/ci-wiki.yml
     .github/workflows/reuse.yml

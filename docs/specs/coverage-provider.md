@@ -785,10 +785,14 @@ source of truth for the mapping both languages need:
   never in the dev container, which mounts `web/` alone. `ci-app.yml` now lists
   `pipeline/contract/**` in its trigger paths so a
   contract-only edit re-runs the PHP pin; before that it fired on nothing.
-  **Still open:** the pipeline's own pytest suite runs in no workflow at all
-  (`ci-tools.yml` covers `tools/**` only), so `load_contract()`'s validation and
-  the `test_tiles.py` drift pin are dev-machine-only. Tracked in the storage
-  backlog.
+  **Closed 2026-08-24:** the pipeline's own pytest suite used to run in no
+  workflow at all (`ci-tools.yml` covers `tools/**` only), so
+  `load_contract()`'s validation and the `test_tiles.py` drift pin were
+  dev-machine-only. `.github/workflows/ci-pipeline.yml` now runs the whole
+  suite on `pipeline/**`. It runs natively rather than building
+  `pipeline/Dockerfile`, because no test needs tippecanoe or go-pmtiles (the
+  tile and publish steps are monkeypatched or botocore-stubbed); the two real
+  dependencies are `osmium-tool` and a PostGIS service for the `db` fixture.
 - Result: the Python extractor and the Symfony serving plane cannot drift —
   one mapping, asserted from both sides.
 

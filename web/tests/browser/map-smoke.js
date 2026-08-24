@@ -21,7 +21,20 @@
    riders-only control). Anonymously they report `skipped`, not `failed`. On the
    dev stack, log in as the `make setup` demo rider — user@example.test /
    password1234, ROLE_USER with no 2FA — then upload a GPX before running the
-   sweep, since the coverage checkpoint reads an already-loaded result. */
+   sweep, since the coverage checkpoint reads an already-loaded result.
+
+   DECIDED 2026-08-24 — this stays manual, and is not going into CI.
+   A headless arm would need a browser download, a booted app with Postgres,
+   seeded fixtures and reachable tiles, plus the first package.json in the repo,
+   in a job whose most likely output is a flake. What it would buy is already
+   bought more cheaply from two directions: `make map-refs` runs in ci-app.yml
+   and catches the module-boot class of bug that the split actually produces
+   (it exists because a green sweep here once missed a live ReferenceError),
+   and web/tests/js/ pins the shell ids, zoom handovers and theme tokens this
+   sweep asserts. What stays uncovered either way is real MapLibre interaction
+   (planner, picking, lightbox, climb profile); that is a browser-testing
+   decision to take on its own merits, not a side effect of wiring this file to
+   a runner. Run it by hand after any map change. */
 
 globalThis.runMapSmoke = async function runMapSmoke(opts) {
   const only = (opts && opts.only) || null;
