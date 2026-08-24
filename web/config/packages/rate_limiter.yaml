@@ -21,6 +21,12 @@ framework:
                 adapter: cache.app
             cache.coverage_read_limiter:
                 adapter: cache.app
+            cache.coverage_photo_limiter:
+                adapter: cache.app
+            cache.coverage_photo_fetch_limiter:
+                adapter: cache.app
+            cache.coverage_photo_global_limiter:
+                adapter: cache.app
             cache.country_interest_limiter:
                 adapter: cache.app
             cache.curator_application_limiter:
@@ -107,6 +113,40 @@ framework:
             limit: 120
             interval: '1 minute'
             cache_pool: cache.coverage_read_limiter
+        # A drawer polls this while a Commons photo is being fetched, so the
+        # budget is spent per poll rather than per POI. commons-photo.js backs
+        # off and gives up inside 45 seconds, which is what keeps 120 generous
+        # rather than tight (coverage-provider.md §7).
+        coverage_photo:
+            policy: sliding_window
+            limit: 120
+            interval: '1 minute'
+            cache_pool: cache.coverage_photo_limiter
+        # Admitting a NEW Commons file is the expensive act: it makes an
+        # outbound Wikimedia request from OUR address and puts ~300 KB of
+        # somebody else's bytes in our bucket. 233,795 POIs carry a tag that
+        # could trigger one, so at the poll budget above a single scripted
+        # client could walk the whole corpus in about 32 hours and leave us
+        # holding ~70 GB, with Wikimedia seeing every request as ours.
+        #
+        # So admission is budgeted separately from polling, twice. The per
+        # address budget stops one script; the global one is the real defence,
+        # because a distributed script defeats any per-address limit and this
+        # bounds what Wikimedia ever sees from us no matter how many clients
+        # ask. Owner-reported hole, 2026-08-25.
+        coverage_photo_fetch:
+            policy: sliding_window
+            limit: 60
+            interval: '1 hour'
+            cache_pool: cache.coverage_photo_fetch_limiter
+        # 600/hour is one request every six seconds, which is a polite rate for
+        # an anonymous API client, and it caps storage growth at roughly 180 MB
+        # an hour in the worst case.
+        coverage_photo_global:
+            policy: sliding_window
+            limit: 600
+            interval: '1 hour'
+            cache_pool: cache.coverage_photo_global_limiter
         # Country requests and curator signup.
         # A rider
         # may reasonably ask for a handful of countries; nobody needs 200.
@@ -209,6 +249,12 @@ when@test:
                 cache.route_snap_limiter:
                     adapter: cache.adapter.array
                 cache.coverage_read_limiter:
+                    adapter: cache.adapter.array
+                cache.coverage_photo_limiter:
+                    adapter: cache.adapter.array
+                cache.coverage_photo_fetch_limiter:
+                    adapter: cache.adapter.array
+                cache.coverage_photo_global_limiter:
                     adapter: cache.adapter.array
                 cache.country_interest_limiter:
                     adapter: cache.adapter.array

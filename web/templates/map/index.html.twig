@@ -537,6 +537,17 @@
     <a class="contrib-fab" href="{{ path('contribute') }}" aria-label="{{ 'map.contribute_aria'|trans }}"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></a>
     <aside class="cc-drawer" id="drawer" tabindex="-1" aria-hidden="true" aria-label="{{ 'map.drawer_aria'|trans }}">
       <button class="cc-d-grab" id="drawerGrab" type="button" aria-label="{{ 'map.drawer_grab'|trans }}"><span></span></button>
+      {# Collapse, not close: the map's own top-right controls sit under this
+         panel, so reaching them used to mean closing the drawer and losing the
+         place you were reading. Collapsed keeps the record and leaves a handle. #}
+      <button class="cc-drawer-fold" id="drawerFold" type="button"
+              aria-expanded="true" aria-controls="drawerBody"
+              aria-label="{{ 'map.drawer_fold'|trans }}" title="{{ 'map.drawer_fold'|trans }}">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M9 6l6 6-6 6"/>
+        </svg>
+      </button>
       <button class="cc-drawer-x" id="drawerClose" aria-label="{{ 'map.drawer_close'|trans }}">✕</button>
       <div class="cc-drawer-body" id="drawerBody"></div>
     </aside>

@@ -9,13 +9,28 @@ namespace App\Coverage;
 use App\Catalog\CoverageRetirement;
 use App\Catalog\Entity\Item;
 use App\Catalog\ItemState;
+use App\Media\Commons\CommonsFile;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
 
 /**
  * Read plane over coverage_poi (docs/specs/coverage-provider.md §5).
- * A coverage row is hidden when a payload-served item shares its source_ref.
+ * A coverage row is hidden when a payload-served item IS that object, which is
+ * `source_ref` for a harvested row and `osm_ref` for everything else.
+ *
+ * source_ref alone was not enough. It is the harvest's own upsert key, so a
+ * PIVOT row carries `fx:pivot:hotel-koru|ramillies` and a Wikidata row
+ * `wikidata:Q322824`; neither can ever equal `node/6123208864`. OSM is the
+ * identity spine and `osm_ref` is the join key (catalog-data-model.md §5b,
+ * osm-data-architecture.md §1), which is why the Item entity carries it at all.
+ *
+ * The visible symptom was that resolving a duplicate did not deduplicate.
+ * Retiring the OSM twin of a Wikidata row unserved it, this join stopped
+ * suppressing its coverage POI, and the raw OSM pin came back beside the row
+ * the curator had just kept (owner, 2026-08-25). The moderation desk now hands
+ * the survivor the retired row's osm_ref, and this is the half that makes that
+ * mean something.
  *
  * @see docs/specs/coverage-provider.md §5
  * @see docs/specs/osm-data-architecture.md §8
@@ -40,6 +55,10 @@ final class CoverageRepository
         // but the whitelist is per-tag, not per-letter, so a peak reached
         // through any other letter shows the same fact rather than hiding it.
         'ele', 'direction', 'height',
+        // What a photo of this place might be found under
+        // (coverage-provider.md §7). Served as well as read here, because they
+        // are the citation for a picture a rider is looking at.
+        'image', 'wikimedia_commons', 'wikidata',
     ];
 
     /**
@@ -109,7 +128,7 @@ final class CoverageRepository
                     ST_Y(cp.geom) AS lat, ST_X(cp.geom) AS lng, cp.tags,
                     i.id AS item_id, i.state AS item_state, i.name AS item_name, i.attributes AS item_attributes
              FROM coverage_poi cp
-             LEFT JOIN item i ON i.source_ref = cp.ref AND i.state IN '.ItemState::servedSqlTuple().'
+             LEFT JOIN item i ON cp.ref IN (i.source_ref, i.osm_ref) AND i.state IN '.ItemState::servedSqlTuple().'
                  AND NOT (i.letter IN '.CoverageRetirement::lettersSqlTuple().' AND '.CoverageRetirement::untouchedOsmSql('i').')
              WHERE cp.ref = :ref
              ORDER BY cp.letter, i.id
@@ -131,11 +150,40 @@ final class CoverageRepository
             'll' => [(float) $row['lat'], (float) $row['lng']],
             // (object) so an empty whitelist intersection still encodes {}.
             'tags' => (object) array_intersect_key($tags, array_flip(self::TAG_WHITELIST)),
+            // coverage-provider.md §7 - only WHETHER a Commons file is
+            // resolvable, never its state. This response is cached for 300s, so
+            // a state would freeze at `pending` and the spinner would never
+            // clear; the live state lives behind /map/coverage/photo, which is
+            // no-store. The boolean also saves a second request for the 99.7%
+            // of POIs that have no Commons file at all.
+            'photo' => self::photoPossible($tags),
             'curated' => null === $row['item_id']
                 ? null
                 : $this->curatedOverlay((int) $row['item_id'], (string) $row['item_state'], (string) $row['item_name'], (string) $row['item_attributes']),
             'attribution' => self::ATTRIBUTION,
         ];
+    }
+
+    /**
+     * Whether a photo could exist for this POI, which is not the same as
+     * whether one is ready.
+     *
+     * True for a resolvable Commons filename, and also for a bare Wikidata id,
+     * because a third of those have a P18 (measured 2026-08-24) and that second
+     * hop is where nearly all the photos come from. False here means the drawer
+     * never even asks, so being conservative would silently hide 58,497 of the
+     * rows most likely to have a picture.
+     *
+     * @param array<string, mixed> $tags
+     */
+    private static function photoPossible(array $tags): bool
+    {
+        if (null !== CommonsFile::fromTags($tags)) {
+            return true;
+        }
+        $qid = $tags['wikidata'] ?? null;
+
+        return \is_string($qid) && 1 === preg_match('~^Q\d+$~', $qid);
     }
 
     /**
@@ -188,7 +236,7 @@ final class CoverageRepository
                 'SELECT cp.ref, cp.letter, cp.name, cp.kind, ST_Y(cp.geom) AS lat, ST_X(cp.geom) AS lng
                  FROM coverage_poi cp
                  WHERE cp.name ILIKE :like
-                   AND NOT EXISTS (SELECT 1 FROM item i WHERE i.source_ref = cp.ref AND i.state IN '.ItemState::servedSqlTuple().' AND NOT ('.CoverageRetirement::untouchedOsmSql('i').'))'
+                   AND NOT EXISTS (SELECT 1 FROM item i WHERE cp.ref IN (i.source_ref, i.osm_ref) AND i.state IN '.ItemState::servedSqlTuple().' AND NOT ('.CoverageRetirement::untouchedOsmSql('i').'))'
                    .$this->scopeArm('cp', $rids, $cc).'
                  ORDER BY similarity(cp.name, :q) DESC, cp.id
                  LIMIT :limit',
@@ -248,7 +296,7 @@ final class CoverageRepository
                         COUNT(*) OVER (PARTITION BY cp.letter) AS letter_total
                  FROM coverage_poi cp
                  WHERE ST_DWithin(cp.geom::geography, $point, :m)
-                   AND NOT EXISTS (SELECT 1 FROM item i WHERE i.source_ref = cp.ref AND i.state IN ".ItemState::servedSqlTuple().' AND NOT ('.CoverageRetirement::untouchedOsmSql('i').'))'
+                   AND NOT EXISTS (SELECT 1 FROM item i WHERE cp.ref IN (i.source_ref, i.osm_ref) AND i.state IN ".ItemState::servedSqlTuple().' AND NOT ('.CoverageRetirement::untouchedOsmSql('i').'))'
                    .$this->scopeArm('cp', $rids, $cc).'
              ) ranked
              WHERE rn <= '.self::NEARBY_COMMUNITY_CAP.'
@@ -301,7 +349,7 @@ final class CoverageRepository
         $rows = $this->db->fetchAllAssociative(
             'SELECT cp.letter, COUNT(*) AS n FROM coverage_poi cp
              WHERE cp.letter IN '.self::POI_LETTERS_SQL.'
-               AND NOT EXISTS (SELECT 1 FROM item i WHERE i.source_ref = cp.ref AND i.state IN '.ItemState::servedSqlTuple().' AND NOT ('.CoverageRetirement::untouchedOsmSql('i').'))'
+               AND NOT EXISTS (SELECT 1 FROM item i WHERE cp.ref IN (i.source_ref, i.osm_ref) AND i.state IN '.ItemState::servedSqlTuple().' AND NOT ('.CoverageRetirement::untouchedOsmSql('i').'))'
                .$this->scopeArm('cp', $rids, $cc).'
              GROUP BY cp.letter ORDER BY cp.letter',
             $params,

@@ -2193,6 +2193,7 @@ map:
   mly_resize_hint: 'Drag to resize · ↑/↓ keys · double-click to reset'
   drawer_aria: 'Feature detail'
   drawer_close: 'Close detail'
+  drawer_fold: 'Fold this panel out of the way'
   drawer_grab: 'Drag to resize the panel'
   lb_close: 'Close image'
   lb_prev: 'Previous image'

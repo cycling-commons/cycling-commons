@@ -16,6 +16,7 @@ import { clearRouteSelection } from './routes-tiles.js';
 import { clearSelectedCoverageIcon, invalidateCoverageDrawer } from './coverage.js';
 import { osmMetres, osmRefUrl } from './osm-tags.js';
 import { shareQuery } from './share-links.js';
+import { watchCommonsPhoto } from './commons-photo.js';
 import { setSurfaceTiles, surfaceTilesVisible, surfaceTilesConfigured } from './surface-tiles.js';
 import { isPicking, cancelPicking } from './picking.js';
 import { openCity, bumpPlaceReq } from './places.js';
@@ -38,6 +39,13 @@ export function schemaRows(letter, src, id, opts){
   const rows = [];
   schema.forEach(f=>{
     if(skip.indexOf(f.key) >= 0) return;
+    /* A `links` field is rendered below, one row per destination, and it has no
+       branch in this loop. Left here it fell through to the generic value row
+       and the drawer printed the raw structure at the rider: "[object Object]"
+       when it arrived parsed, and the whole JSON array when it arrived as a
+       string. Either way the properly formatted links appeared underneath it,
+       so the place always showed both (reported 2026-08-25). */
+    if(f.kind === 'links') return;
     if(proposed && Object.prototype.hasOwnProperty.call(proposed, f.key)){
       rows.push({label:f.label, value:proposed[f.key], changed:true});
       return;
@@ -208,6 +216,7 @@ export function osmDrawer(layer, p, ll, src){
   if(p.id!=null) d.id=p.id;          // real DB item id — the edit-bridge's `?item=` target
   else if(p.ref) d.osmRef=p.ref;     // uncurated coverage POI — materialize-on-edit (docs/specs/osm-data-architecture.md §6)
   if(p.n) d.shareName=p.n;           // the mapper's own name; `name` above may be the category word
+  if(p.hasPhoto && p.ref) d.photoPending=p.ref;   // coverage-provider.md §7 - spinner until our own copy exists
   if(p.desc) d.desc=p.desc;
   if(p.descTr) d.descTr=1;
   attachPhotos(d, p);
@@ -240,6 +249,7 @@ export function waterDrawer(p, ll){
   if(p.id!=null) d.id=p.id;          // real DB item id — the edit-bridge's `?item=` target
   else if(p.ref) d.osmRef=p.ref;     // uncurated coverage POI — materialize-on-edit (docs/specs/osm-data-architecture.md §6)
   if(p.n) d.shareName=p.n;           // the mapper's own name; `name` above may be the category word
+  if(p.hasPhoto && p.ref) d.photoPending=p.ref;   // coverage-provider.md §7 - spinner until our own copy exists
   attachPhotos(d, p);
   return d;
 }
@@ -274,6 +284,24 @@ export function photoCap(p){
   const taken = p.takenAt ? ` · ${escPend(monthLabel(p.takenAt))}` : '';
   return `© ${credit}${license}${source}${taken}`;
 }
+/* coverage-provider.md §7 - the wait, made visible. Never a Commons URL: the
+   pixels only ever come from our own storage, so on a first view there is
+   genuinely nothing to show yet. */
+function waitingPhoto(ref){
+  return `<div class="cc-d-photo-wait" data-photo-ref="${escPend(ref)}">
+    <span class="cc-d-spin" aria-hidden="true"></span>
+    <span role="status">${escPend(D.photoLoading||'Loading image…')}</span>
+  </div>`;
+}
+/* The same <figure> the rider photos use, so a cached Commons photo and a
+   rider's upload look like one thing. photoCap already renders credit, licence
+   and the Commons link. */
+export function commonsPhotoHtml(p, name){
+  return `<figure class="cc-d-photo">
+    <img src="${safeHref(p.sm)}" ${srcsetAttrs(p, '(max-width: 560px) 100vw, 480px')} alt="${escPend(name||'')}" data-i="0" />
+    <figcaption id="cc-d-cap">${photoCap(p)}</figcaption>
+  </figure>`;
+}
 function buildRecord(layer, f){
   const cur = f.cur ? `<div class="cc-d-cur">▲ ${I18N.curated||'Best of'}</div>` : '';
   const pl = photoList(f);
@@ -290,7 +318,7 @@ function buildRecord(layer, f){
     <figcaption id="cc-d-cap">${photoCap(pl[0])}</figcaption>
     ${/* Thumbs are ~64px: sm only; a srcset here would fetch lg for nothing. */''}
     ${pl.length>1 ? `<div class="cc-d-thumbs">${pl.map((p,i)=>`<img class="cc-d-thumb${i===0?' on':''}" src="${safeHref(p.sm)}" data-i="${i}" alt="${escPend(f.name)} — photo ${i+1}" />`).join('')}</div>` : ''}
-  </figure>` : addPhoto;
+  </figure>` : (f.photoPending ? waitingPhoto(f.photoPending) : addPhoto);
   let recs = f.record || [];
   if(layer.key==='climbs'){
     // docs/specs/map-and-search.md §6.2 — climb attributes from CC_FIELD_SCHEMA[B]; filled rows replace stale pre-baked ones.
@@ -745,8 +773,32 @@ function elevSvg(elev){
     <polyline points="${line}" fill="none" stroke="#FF5A1F" stroke-width="1.6"/></svg>`;
 }
 // Content-only body: no open-state, halo, focus, or sheet snap (coverage enrich-later).
+/* Poll for the Commons photo this drawer is waiting on, and swap it in when it
+   lands. The slot itself is what says whether to keep going: once the rider
+   opens something else it is gone from the DOM, and the poll stops by itself. */
+function startPhotoWatch(name){
+  const slot = document.querySelector('#drawerBody [data-photo-ref]');
+  if(!slot) return;
+  const ref = slot.getAttribute('data-photo-ref');
+  const find = () => document.querySelector(`#drawerBody [data-photo-ref="${CSS.escape(ref)}"]`);
+  watchCommonsPhoto(ref,
+    p => {
+      const el = find();
+      if(!el) return;
+      el.outerHTML = commonsPhotoHtml(p, name);
+      /* The gallery's click handler is bound once, when the body is rendered,
+         from photoList(f). This photo arrives after that and is not in the
+         list, so without re-binding here the image simply does not open
+         (reported 2026-08-25). One photo, so index 0 and no thumbnails. */
+      const img = document.querySelector('#drawerBody .cc-d-photo > img');
+      if(img) img.addEventListener('click', () => openLightbox([p], 0, name || ''));
+    },
+    () => { const el = find(); if(el) el.remove(); },
+    { cancelled: () => !find() });
+}
 export function renderDrawerBody(layer, f){
   document.getElementById('drawerBody').innerHTML = buildRecord(layer, f);
+  startPhotoWatch(f.name);
   if(layer.key==='experience' && f.id!=null) hydrateRouteCommunity(f.id);
   if(CC_CONFIRMABLE.has(layer.key) && f.id!=null) hydrateItemConfirm(f.id);
   /* Pending shape: show After first; fit so a moved summit is on screen. */
@@ -820,7 +872,8 @@ export function openDrawer(layer, f){
     highlightAt(hlAt, isPin ? [0,-16] : [0,0]);
   }
   renderDrawerBody(layer, f);
-  const d=document.getElementById('drawer'); d.classList.add('open'); d.setAttribute('aria-hidden','false');
+  const d=document.getElementById('drawer'); d.classList.add('open'); d.classList.remove('folded'); d.setAttribute('aria-hidden','false');
+  syncMapWrap();   // a new record always arrives unfolded, and the toolbar steps aside
   d.focus({preventScroll:true});   // move focus into the panel (not the close X — avoids a focus ring on tap/click open)
   if(window.innerWidth<=820) sheet.reset();          // land at half; desktop untouched
 }
@@ -842,12 +895,40 @@ export function revealPinAt(layer, ll){
   el.classList.add('community','reveal');
   _revealMarker=new maplibregl.Marker({element:el, anchor:'bottom'}).setLngLat([ll[1],ll[0]]).addTo(map);
 }
+/* The map wrapper mirrors the drawer's state, because the top-right toolbar
+   lives in the map and has to know to step aside. A class rather than :has(),
+   so the rule is one selector a person can find and a test can assert. */
+function syncMapWrap(){
+  const wrap = document.querySelector('.map-wrap');
+  if(!wrap) return;
+  const d = document.getElementById('drawer');
+  const open = !!d && d.classList.contains('open');
+  const folded = open && d.classList.contains('folded');
+  wrap.classList.toggle('drawer-open', open && !folded);
+  wrap.classList.toggle('drawer-folded', folded);
+}
+
+/* Fold the drawer to a handle, or bring it back.
+   Deliberately not closeDrawer(): that drops the selection, the highlight and
+   any pending overlay, so glancing at the map underneath used to cost the
+   rider the record they were reading (reported 2026-08-25). */
+export function foldDrawer(folded){
+  const d = document.getElementById('drawer');
+  if(!d || !d.classList.contains('open')) return;
+  d.classList.toggle('folded', folded);
+  const btn = document.getElementById('drawerFold');
+  if(btn) btn.setAttribute('aria-expanded', folded ? 'false' : 'true');
+  syncMapWrap();
+}
+
 export function closeDrawer(){
   // Closing mid-pick tears the picking session down (no orphaned map handler).
   if(isPicking()) cancelPicking();
   // Race-guard: close invalidates in-flight coverage POI detail and town-card nearby.
   invalidateCoverageDrawer(); bumpPlaceReq();
-  const d=document.getElementById('drawer'); d.classList.remove('open'); d.setAttribute('aria-hidden','true');
+  const d=document.getElementById('drawer'); d.classList.remove('open','folded'); d.setAttribute('aria-hidden','true');
+  const foldBtn=document.getElementById('drawerFold'); if(foldBtn) foldBtn.setAttribute('aria-expanded','true');
+  syncMapWrap();
   clearHighlight();
   clearSelectedCoverageIcon();                        // remove the selected coverage POI's persistent icon overlay
   clearRevealPin();
@@ -863,6 +944,8 @@ export function closeDrawer(){
 // Close: X and scrim (tap the dimmed area above the mobile sheet).
 export function initDrawerChrome(){
   document.getElementById('drawerClose').onclick=closeDrawer;
+  const fold = document.getElementById('drawerFold');
+  if(fold) fold.onclick = () => foldDrawer(!document.getElementById('drawer').classList.contains('folded'));
   document.getElementById('drawerScrim').onclick=closeDrawer;   
 
   /* Delegated: rows rebuild every open. Click and keyboard (touch has no hover). */

@@ -97,10 +97,16 @@ final class CoveragePoiDetailTest extends WebTestCase
         self::assertSame([50.4005, 5.8102], $data['ll']);
         // Store rich, serve trimmed (coverage-provider.md §5): only TAG_WHITELIST keys leave
         // the server. assertEquals — jsonb does not preserve key order.
+        // `wikidata` joined the whitelist with the Commons photo cache
+        // (coverage-provider.md §7): it is the citation for a picture a rider
+        // may be looking at. `source` is still trimmed, which is the assertion
+        // that matters here.
         self::assertEquals(
-            ['drinking_water' => 'yes', 'opening_hours' => '24/7', 'operator' => 'Ville de Test'],
+            ['drinking_water' => 'yes', 'opening_hours' => '24/7', 'operator' => 'Ville de Test',
+                'wikidata' => 'Q1234567'],
             $data['tags'],
         );
+        self::assertArrayNotHasKey('source', (array) $data['tags'], 'the whitelist still trims');
         self::assertNull($data['curated']);
         self::assertSame('© OpenStreetMap contributors (ODbL)', $data['attribution']);
     }

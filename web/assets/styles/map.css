@@ -608,7 +608,15 @@
   /* Top-right: two glass icon buttons. The base picker opens a small flyout to
      its left; street-level is a plain toggle. Everything else that used to
      live in this corner is now a layer, in the Layers panel. */
-  .tr{position:absolute;top:1.2rem;right:1.2rem;z-index:1000;display:flex;flex-direction:column;gap:.35rem}
+  .tr{position:absolute;top:1.2rem;right:1.2rem;z-index:1000;display:flex;flex-direction:column;gap:.35rem;
+    transition:transform .22s ease}
+  /* The drawer is z-1200 and covers the right 380px, so with an item open this
+     toolbar was underneath it: clicking the base picker hit the drawer header
+     instead, and switching to satellite meant closing the drawer first
+     (reported 2026-08-25). Step aside instead of being buried. Folded, the
+     30px handle is all that is left, so a small nudge is enough. */
+  .map-wrap.drawer-open .tr{transform:translateX(calc(-1 * min(380px, 90vw) + 1.2rem))}
+  .map-wrap.drawer-folded .tr{transform:translateX(calc(-1 * var(--fold-nudge, 30px)))}
   .trw{position:relative}
   .trb{width:34px;height:34px;display:flex;align-items:center;justify-content:center;border:none;border-radius:7px;cursor:pointer;
     background:rgb(var(--chrome-glass) / .92);color:var(--chrome-fg-solid);box-shadow:0 2px 6px -2px rgba(0,0,0,.5)}
@@ -887,9 +895,46 @@
   .cc-drawer::-webkit-scrollbar{width:6px}
   .cc-drawer::-webkit-scrollbar-thumb{background:var(--chrome-lift);border-radius:3px}
   .cc-drawer.open{transform:none}
+  /* Folded: the panel slides off, leaving a strip you can grab to bring it
+     back. Deliberately NOT closed - closeDrawer() drops the selection, the
+     highlight and any pending overlay, so "let me see the map for a second"
+     used to cost the rider the thing they were reading. */
+  .cc-drawer.open.folded{transform:translateX(calc(100% - var(--fold-w)))}
+  .cc-drawer{--fold-w:34px}   /* same 34px as the .trb map buttons, so it reads as chrome */
+  .cc-drawer.open.folded .cc-drawer-body,
+  .cc-drawer.open.folded .cc-drawer-x{opacity:0;pointer-events:none}
+  .cc-drawer-fold{position:absolute;top:1.4rem;right:calc(1.4rem + 40px);width:32px;height:32px;
+    display:flex;align-items:center;justify-content:center;background:none;border:none;
+    color:rgb(var(--chrome-fg) / .7);cursor:pointer;padding:0;line-height:0;border-radius:6px;z-index:3}
+  .cc-drawer-fold:hover{color:var(--trail)}
+  .cc-drawer-fold:focus-visible{outline:2px solid var(--trail);outline-offset:1px}
+  /* Folded, the button becomes the whole handle: full height, so the strip is
+     a target rather than a 15px chevron somebody has to hunt for. */
+  /* left:0, not right:0. The panel is translated right by (100% - fold width),
+     so the sliver still on screen is its LEFT edge; a handle pinned to the
+     right edge sits off screen and the strip looks like a dead margin. */
+  .cc-drawer.open.folded .cc-drawer-fold{top:0;left:0;right:auto;width:var(--fold-w);height:100%;
+    display:flex;align-items:center;justify-content:center;border-radius:0;opacity:1;pointer-events:auto;
+    color:var(--chrome-fg-solid);background:rgb(var(--chrome-fg) / .06);
+    border-right:1px solid rgb(var(--chrome-fg) / .12)}
+  .cc-drawer.open.folded .cc-drawer-fold svg{width:19px;height:19px}
+  /* A grip, so a 34px strip reads as something to pull rather than a margin. */
+  .cc-drawer.open.folded .cc-drawer-fold::before{content:'';position:absolute;left:50%;top:50%;
+    transform:translate(-50%,-50%);width:2px;height:34px;margin-left:13px;border-radius:2px;
+    background:rgb(var(--chrome-fg) / .3)}
+  .cc-drawer.open.folded .cc-drawer-fold svg{transform:rotate(180deg)}
+  .cc-drawer.open.folded .cc-drawer-fold:hover{background:rgb(var(--chrome-fg) / .08)}
   .cc-drawer:focus{outline:none}           /* panel receives focus on open for a11y; no visible ring on the container */
   .cc-drawer.dragging{transition:none}     /* track the finger 1:1 while drag-dismissing (mobile) */
-  .cc-drawer-x{position:absolute;top:.9rem;right:1.4rem;background:none;border:none;color:rgb(var(--chrome-fg) / .7);
+  /* One row across the top: the type chip, share, fold, close. The chip and
+     share sit in the head flow and centre at the same y; these two are
+     absolute, and at top:.9rem in auto-height boxes they centred 13px and 16px
+     higher, so four controls sat on three different lines (reported
+     2026-08-25). Same 32px square as .cc-d-share, and top matches the drawer's
+     own 1.4rem padding, which is where the head row starts. */
+  .cc-drawer-x{position:absolute;top:1.4rem;right:1.4rem;width:32px;height:32px;
+    display:flex;align-items:center;justify-content:center;
+    background:none;border:none;color:rgb(var(--chrome-fg) / .7);
     font-size:1rem;cursor:pointer;line-height:1}
   .cc-drawer-x:hover{color:var(--trail)}
   .cc-drawer-x:focus{outline:none}                                           /* no square when focused on open */
@@ -940,13 +985,22 @@
      verbs that alter data live. Quiet until hovered, and a real 32px target. */
   /* Type chip + share, one row. The right padding keeps the row clear of the
      absolutely-positioned close X (and of its sticky float on mobile). */
-  .cc-d-head{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;padding-right:2.2rem}
+  /* min-height, not the tallest child: the fold and close are positioned
+     absolutely and cannot participate in this flex row, so they are centred
+     against a 32px row in CSS. Letting the row shrink to its content moved
+     that centre and put the four controls back on different lines. */
+  .cc-d-head{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;padding-right:5rem;min-height:32px}
   /* Icon-only: a square target rather than a text chip, so it reads as an
      action beside the type chip instead of competing with it. Kept at 32px,
      which is the tap target, not the glyph. */
+  /* Sized off the same padding as .cc-d-type rather than a fixed 32px square,
+     so the share box is exactly as tall as the type chip beside it and stays
+     that way if the chip's padding ever changes. It was 32px against the
+     chip's 19px, which read as two different rows (owner, 2026-08-25). */
   .cc-d-share{display:inline-flex;align-items:center;justify-content:center;
-    width:32px;height:32px;padding:0;border:1px solid rgb(var(--chrome-fg) / .28);border-radius:5px;
+    width:auto;height:auto;padding:3px;border:1px solid rgb(var(--chrome-fg) / .28);border-radius:4px;
     background:transparent;color:rgb(var(--chrome-fg) / .75);cursor:pointer}
+  .cc-d-share svg{width:11px;height:11px}
   .cc-d-share:hover{background:rgb(var(--chrome-fg) / .1);color:var(--chrome-fg-solid)}
   .cc-d-share:focus-visible{outline:2px solid var(--trail);outline-offset:2px}
   /* C1-T3 (spec W5): per-item "Recent changes" — filled async by map.js's
@@ -1298,7 +1352,14 @@
   .cc-dupe-n{flex:0 0 auto;width:24px;height:24px;border-radius:50%;background:rgba(255,90,31,.95);color:#fff;
     font-family:var(--mono);font-size:.72rem;font-weight:700;display:flex;align-items:center;justify-content:center}
   .cc-dupe-nm{flex:1 1 auto;min-width:0;font-weight:600;word-break:break-word}
-  .cc-dupe-nm small{display:block;font-family:var(--mono);font-size:.66rem;font-weight:400;color:#5c5f50}
+  /* The id and source line, which a curator reads to tell two identical names
+     apart, so it has to be legible rather than decorative. It was a hardcoded
+     #5c5f50 on the panel's near-black green: about 2:1, unreadable, and fixed
+     to one theme (reported 2026-08-25). The token tracks the map's own light
+     and dark themes, and .68 is what the drawer already uses for secondary
+     text like the photo caption. */
+  .cc-dupe-nm small{display:block;font-family:var(--mono);font-size:.66rem;font-weight:400;
+    color:rgb(var(--chrome-fg) / .68)}
   .cc-dupe-row button,.cc-dupe-both button{font-family:var(--mono);font-size:.66rem;letter-spacing:.06em;
     text-transform:uppercase;padding:.5rem .8rem;min-height:38px;border-radius:6px;cursor:pointer;
     border:1px solid rgb(var(--chrome-fg) / .25);background:transparent;color:inherit}
@@ -1331,6 +1392,11 @@
        full height and slides via translateY — .open alone now means "at half"
        (landing state); s-full/s-peek move it up/down. Inline transforms set by
        JS during a drag override these resting values. */
+    /* The phone sheet already has peek/half/full snaps (sheet.js), which is the
+       same idea done better for a thumb, so folding is a desktop affordance. */
+    .cc-drawer-fold{display:none}
+    .cc-drawer.open.folded{transform:translateY(max(0px, calc(100% - 50svh)))}
+    .map-wrap.drawer-open .tr,.map-wrap.drawer-folded .tr{transform:none}
     .cc-drawer{--peek:7.5rem}
     .cc-drawer.open{transform:translateY(max(0px, calc(100% - 50svh)))}                 /* half (default) — max() keeps a SHORT sheet anchored at the bottom instead of lifting it above its natural position */
     .cc-drawer.open.s-full{transform:none}                                     /* full */

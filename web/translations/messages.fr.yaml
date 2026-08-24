@@ -1857,6 +1857,7 @@ map:
   mly_resize_hint: 'Glisser pour redimensionner · touches ↑/↓ · double-clic pour réinitialiser'
   drawer_aria: 'Détail de l''élément'
   drawer_close: 'Fermer le détail'
+  drawer_fold: 'Replier ce panneau'
   drawer_grab: 'Faites glisser pour redimensionner le panneau'
   lb_close: 'Fermer l''image'
   lb_prev: 'Image précédente'

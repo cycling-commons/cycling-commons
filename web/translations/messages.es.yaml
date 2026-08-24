@@ -2202,6 +2202,7 @@ map:
   mly_resize_hint: 'Arrastra para redimensionar · teclas ↑/↓ · doble clic para reiniciar'
   drawer_aria: 'Detalle del elemento'
   drawer_close: 'Cerrar el detalle'
+  drawer_fold: 'Plegar este panel'
   drawer_grab: 'Arrastra para redimensionar el panel'
   lb_close: 'Cerrar la imagen'
   lb_prev: 'Imagen anterior'

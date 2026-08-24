@@ -181,6 +181,10 @@ export function covProps(key, tp, d){
     const tags=d.tags||{};
     const web=tags.website||tags['contact:website'];
     if(web) p.web=web;
+    // coverage-provider.md §7 - the detail endpoint says only WHETHER a
+    // Commons file is resolvable. The live state comes from the no-store
+    // photo endpoint, which the drawer polls.
+    if(d.photo) p.hasPhoto = 1;
     if(key==='scenic'){
       if(tags.ele!=null) p.ele=tags.ele;
       if(tags.height!=null) p.drop=tags.height;

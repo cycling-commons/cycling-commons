@@ -26,6 +26,8 @@ framework:
 
         routing:
             App\Media\Message\ScanAndReleaseUpload: async
+            App\Media\Message\FetchCommonsPhoto: async
+            App\Media\Message\ResolveWikidataImage: async
 
 # The suite holds messages instead of running them, and that is the point: the
 # flow under test is ASYNCHRONOUS, so a sync transport would make the one state

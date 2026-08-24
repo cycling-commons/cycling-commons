@@ -1857,6 +1857,7 @@ map:
   mly_resize_hint: 'Sleep om te schalen · ↑/↓-toetsen · dubbelklik om te herstellen'
   drawer_aria: 'Detail van element'
   drawer_close: 'Detail sluiten'
+  drawer_fold: 'Dit paneel inklappen'
   drawer_grab: 'Sleep om het paneel te vergroten of verkleinen'
   lb_close: 'Afbeelding sluiten'
   lb_prev: 'Vorige afbeelding'

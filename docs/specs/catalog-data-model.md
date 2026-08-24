@@ -362,6 +362,139 @@ only refuse to add and never remove. The §4 rule guards against inferring
 deletion from *absence* in a capped harvest; a positively identified duplicate
 is a different question, and it is still a human who answers it.
 
+### 5b. OSM is the identity spine (2026-08-25)
+
+Three columns in this codebase look like they answer "which real object is
+this". Only one of them does, and confusing them has now produced the same
+class of bug three times: a hotel served twice, a viewpoint served twice, and a
+resolved duplicate that came straight back as a raw pin.
+
+| Column | Owner | What it is | What it is NOT |
+|---|---|---|---|
+| `coverage_poi.ref` | the harvest | The OSM object itself, mirrored into our cache. `node/930340800` | ours to edit; the pipeline rewrites this table |
+| `item.source_ref` | whichever pipeline wrote the row | That pipeline's **upsert key**, so a re-run updates instead of duplicating | an identity. A PIVOT row carries `fx:pivot:hotel-koru|ramillies` and a Wikidata row `wikidata:Q322824` |
+| `item.osm_ref` | us | **The join key back to OSM**, whatever our own source is | a guess. NULL means "no OSM counterpart", never "not checked" |
+
+**A coverage POI is the reference every higher layer points at.** It is not a
+lesser copy of an item; it is the object. An item that records that same place
+points at it, and that pointer is `osm_ref`.
+
+**An item upgraded from a coverage POI always carries the ref it came from.**
+Materialize-on-edit ([osm-data-architecture.md §6](osm-data-architecture.md))
+copies the OSM object into the canonical store, so the resulting row records a
+known OSM object by construction and there is nothing to infer. An `osm`-sourced
+item whose `source_ref` is a `node/…` or `way/…` and whose `osm_ref` is NULL is
+an unfinished row, not a row with no counterpart.
+
+**Every other source has to be linked, and most of them cannot be inferred.**
+`source_ref` cannot stand in: it is the writing pipeline's key and shares no
+alphabet with an OSM ref. So the link is made three ways, in this order:
+
+1. **Imports link as they write**, when they know the object.
+2. **`app:catalog:link-osm`** backfills existing rows from `coverage_poi`, the
+   mirror we already hold. Nothing is fetched from OSM. Three outcomes, and only
+   the first writes:
+   - **within `OsmLinker::TIGHT_M` (50 m) with an identical name key**: linked
+     automatically. Close enough and named the same is not a judgement call.
+   - **50 m to `OsmLinker::LOOSE_M` (250 m)**: never written here. It becomes
+     an `OsmLink` finding on the curator data desk.
+   - **the OSM object is already claimed by another served row**: that is a
+     duplicate wearing a link, so it goes to the desk as a duplicate rather than
+     being welded together by a command.
+3. **A curator decides the rest.** This is the one that needs saying out loud:
+   **when a rider adds a place and does not link it to OSM, checking for a
+   nearby OSM object and making the link is curator work, not an accident of
+   geometry.** The desk exists so that question is asked about every unlinked
+   row rather than only the convenient ones. Accepting an `OsmLink` finding
+   writes `osm_ref` and nothing else (`ModerateDataController::apply()`).
+
+**Read-time dedupe joins on identity, not on the upsert key.** A coverage row is
+suppressed when a *served* item IS that object:
+
+```sql
+cp.ref IN (i.source_ref, i.osm_ref) AND i.state IN ('unverified','verified')
+```
+
+`source_ref` alone was the original rule and could never have worked for a
+non-OSM source, since neither `fx:pivot:…` nor `wikidata:Q…` can equal
+`node/…`. That mismatch is why one hotel appeared twice, once from the catalog
+and once from the coverage cache.
+
+**Resolving a duplicate transfers the identity.** The keeper is the highest
+`ItemSource::dedupeRank()`, so the row retired is the lowest order, the one
+closest to the primary source. The survivor **inherits the retired row's
+`osm_ref`** (falling back to its `source_ref` when the retired row is
+OSM-sourced), unless it already has one of its own.
+
+Without that inheritance the operation is not deduplication. Retiring the OSM
+twin makes it unserved, the join above stops suppressing its coverage POI, and
+the raw OSM pin reappears beside the row the curator just kept: one duplicate
+traded for another, and the place quietly loses its link to OpenStreetMap.
+Owner, 2026-08-25: *"else it is not deduplication what we are doing"*.
+
+#### The question has three answers, not two
+
+`osm_ref IS NULL` cannot mean both "this place has no OSM counterpart" and
+"nobody has looked yet", and today it means the second for every row. So the
+answer is recorded separately:
+
+| `osm_checked_at` | `osm_ref` | Meaning |
+|---|---|---|
+| NULL | NULL | **Nobody has asked.** The row is unfinished |
+| set | `node/…` | Linked, by construction, by the linker, or by a curator |
+| set | NULL | **Asked and answered: this place is not in OSM.** A real, deliberate answer |
+
+It is written whenever the question is genuinely answered, and never as a side
+effect of anything else:
+
+- **materialize-on-edit**, answered by construction: the row exists *because* a
+  rider edited a known OSM object, so both columns are set at creation;
+- **`app:catalog:link-osm`** inside the tight band, answered by the machine;
+- **a curator settling an `OsmLink` finding**: accepted sets the ref, dismissed
+  records "no counterpart". Both are answers;
+- **a curator approving a new rider place**: see the gate below.
+
+#### Approving a new place requires answering it (owner decision, 2026-08-25)
+
+**A `NewItem` submission cannot be approved while `osm_checked_at` is NULL.**
+The curator either links the OSM object or states there is none. Both are one
+click; neither is a default.
+
+This is a gate rather than a nudge because the alternative is what we have now.
+The linker and the desk exist, they work, and **0 of 1,525 rows are linked**,
+because every path to them is an operator command somebody has to remember to
+run. A scan that fills a queue nobody is required to empty produces exactly this
+outcome. Putting the question in the one flow a curator cannot skip is the only
+placement that makes the answer certain rather than likely.
+
+It is also the cheapest moment to ask. The curator is already looking at the
+place, on the map, with its coordinates in front of them, and
+`OsmLinker::candidateFor()` can offer the nearby objects without a single
+outbound request, because `coverage_poi` is already the mirror. Asked later it
+is archaeology; asked here it is a glance.
+
+A rider is never asked. They are describing a place they stood next to, not
+reconciling two databases.
+
+**Scheduled, not remembered.** `app:catalog:link-osm` and
+`app:catalog:findings` run on a schedule and their output is what the curator
+data desk shows. The desk is the queue for everything the gate does not catch:
+rows that existed before the gate, rows whose OSM counterpart appeared later,
+and links that need a human because they fall in the 50 m to 250 m band.
+
+**Current state, and it is a gap.** The column shipped on 2026-08-24 and
+**0 of 1,525 items carry a value**, including 775 `osm`-sourced rows whose
+`source_ref` already is an OSM object, where the ref is known by construction
+and simply never written (`CatalogContributionService` sets `sourceRef` and not
+`osmRef`). `app:catalog:link-osm` has not been run, nothing schedules it, and
+the approval gate above is specified and not built. Until then the dedupe join
+is doing its work on `source_ref` alone for every row, which is the behaviour
+§5b exists to replace. Delete this paragraph when all four are true.
+
+**`osm_ref` is deliberately not UNIQUE.** The duplicates have to be cleared
+first, or the constraint is a migration that cannot run. Two served rows sharing
+one `osm_ref` is a duplicate by definition and is the desk's business.
+
 ## 6. Region membership mechanics
 
 Assigned by a deterministic containment rule, recomputed **from scratch on

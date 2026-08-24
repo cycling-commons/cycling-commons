@@ -178,6 +178,15 @@ when@test:
             public: true
             autowire: true
 
+        # Fetched directly by the Commons photo-cache tests
+        # (coverage-provider.md §7).
+        App\Media\Commons\CommonsPhotoRepository:
+            public: true
+            autowire: true
+        App\Media\Commons\WikidataImageRepository:
+            public: true
+            autowire: true
+
         App\Community\CountryInterestService:
             public: true
             autowire: true

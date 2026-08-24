@@ -10,6 +10,7 @@ use App\Catalog\CatalogFindingRepository;
 use App\Catalog\Entity\CatalogFinding;
 use App\Catalog\FindingKind;
 use App\Catalog\FindingStatus;
+use App\Catalog\ItemSource;
 use App\Catalog\ItemState;
 use App\Entity\User;
 use App\Moderation\ModerationScopeProvider;
@@ -187,7 +188,30 @@ final class ModerateDataController extends AbstractController
                 $loser = (null !== $keepItemId && (int) $item->getId() === $keepItemId && null !== $related)
                     ? $related
                     : $item;
+                $winner = $loser === $item ? $related : $item;
                 $loser->setState(ItemState::Retired);
+
+                // The survivor inherits the retired row's OSM identity.
+                //
+                // Without this, resolving a duplicate did not deduplicate: it
+                // moved the duplicate. Retiring the OSM row makes it unserved,
+                // read-time dedupe stops suppressing its coverage POI, and the
+                // raw OSM pin reappears beside the row the curator kept. The
+                // place also silently loses its link to OpenStreetMap, and
+                // osm_ref is the join key between our data and OSM
+                // (catalog-data-model.md §5b). Owner, 2026-08-25: "else it is
+                // not deduplication what we are doing".
+                //
+                // Only when the survivor has none of its own. A curator who
+                // kept the OSM-sourced row already has the identity, and
+                // overwriting it would swap one true ref for another.
+                if (null !== $winner && null === $winner->getOsmRef()) {
+                    $inherited = $loser->getOsmRef()
+                        ?? (ItemSource::Osm === $loser->getSource() ? $loser->getSourceRef() : null);
+                    if (null !== $inherited) {
+                        $winner->setOsmRef($inherited);
+                    }
+                }
                 break;
 
             case FindingKind::OsmLink:
