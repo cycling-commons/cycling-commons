@@ -854,6 +854,18 @@ the newest rung of that same ladder.
   a same-wound hole as a solid dark wedge (an intermittent, zoom-out-only
   artifact otherwise). Country / My-area / Everywhere spotlights are unchanged.
 
+  **`region.adj` must hold operational regions only** (catalog-data-model.md
+  §2.4). The clear hole is punched through `active + adj`, so one non-scope id
+  in that list is not a cosmetic error: the first recompute paired every region
+  with every polygon it intersects, which includes its own level-2 country
+  outline, and selecting North Holland cleared the whole Netherlands while the
+  neighbour tier it was meant to show stayed invisible (owner 2026-08-24).
+  `ImportCatalogCommand::adjacencySql()` now applies the operational predicate
+  to **both** sides (a country outline gets an empty list, which is the truth
+  about a row that is not a scope), `Version20260824120000` backfills deployed
+  databases with that same SQL, and `RegionRegistryProvider` drops any adj id it
+  is not itself shipping — so a stale row cannot reach the client either.
+
 ### 4.6 Chrome theme: dark and light
 
 The map page's chrome (icon rail, drawer, legend, panels, popups) ships in two

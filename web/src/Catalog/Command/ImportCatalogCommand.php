@@ -11,6 +11,7 @@ use App\Catalog\Import\ItemUpsert;
 use App\Catalog\Import\ProvinceMap;
 use App\Catalog\ItemSource;
 use App\Catalog\ItemType;
+use App\Catalog\OperationalRegions;
 use App\Catalog\ServiceKind;
 use App\Catalog\SurfaceProfiler;
 use App\Service\BaseLocationService;
@@ -416,14 +417,36 @@ final class ImportCatalogCommand extends Command
     /** Derived adj: never authored. Empty array, never NULL, when a region touches nothing. */
     private function recomputeAdjacency(): void
     {
-        $this->db->executeStatement(
-            'UPDATE region a SET adj = COALESCE((
+        $this->db->executeStatement(self::adjacencySql());
+    }
+
+    /**
+     * Neighbours are OPERATIONAL regions only, on both sides (catalog-data-model.md §2.4).
+     *
+     * Every region intersects its own country outline, so the unfiltered
+     * version made the level-2 row a neighbour of all twelve Dutch provinces -
+     * and the spotlight, which punches its clear hole through the union of
+     * region + neighbours, then lit the whole Netherlands instead of North
+     * Holland and its four real neighbours (owner 2026-08-24).
+     *
+     * The `a` predicate sits INSIDE the subquery deliberately: for a
+     * non-operational row it matches nothing, so COALESCE writes the empty
+     * array. A country outline ends up with no neighbours, which is the truth
+     * about a row that is not a scope.
+     *
+     * Shared with Version20260824120000, so a fix here cannot drift from what
+     * deployed databases were backfilled with.
+     */
+    public static function adjacencySql(): string
+    {
+        return 'UPDATE region a SET adj = COALESCE((
                 SELECT array_agg(b.id ORDER BY b.id)
                 FROM region b
                 WHERE b.id <> a.id AND ST_Intersects(a.geom, b.geom)
+                  AND '.OperationalRegions::predicate('b').'
+                  AND '.OperationalRegions::predicate('a').'
              ), ARRAY[]::int[])
-             WHERE a.geom IS NOT NULL'
-        );
+             WHERE a.geom IS NOT NULL';
     }
 
     /** Derived ranking outline, never authored. Empty array, never NULL. */

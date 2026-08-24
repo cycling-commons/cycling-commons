@@ -40,7 +40,12 @@ final class RegionRegistryProvider
              ORDER BY area_km2 DESC, slug',
         );
 
-        return array_map(static function (array $r): array {
+        $known = [];
+        foreach ($rows as $r) {
+            $known[(int) $r['id']] = true;
+        }
+
+        return array_map(static function (array $r) use ($known): array {
             // Do not 500 the map page on a hand-edited outline; ranking falls back to bbox centres.
             $outline = null === $r['outline'] ? null : json_decode((string) $r['outline'], true);
 
@@ -52,7 +57,15 @@ final class RegionRegistryProvider
                 /* Camera box is the largest outline ring, not true bbox — distant islands would frame empty ocean. */
                 'view' => self::mainPartBox(\is_array($outline) ? $outline : [])
                     ?? [(float) $r['w'], (float) $r['s'], (float) $r['e'], (float) $r['n']],
-                'adj' => array_map('intval', json_decode((string) $r['adj'], true, 512, \JSON_THROW_ON_ERROR)),
+                // Filtered against the ids this registry actually carries: a
+                // stale adj row can still name a region it does not (a level-2
+                // country outline, a region since removed), and the client
+                // unions every neighbour id into the spotlight's clear hole.
+                // One dangling id there lights up a whole country.
+                'adj' => array_values(array_filter(
+                    array_map('intval', json_decode((string) $r['adj'], true, 512, \JSON_THROW_ON_ERROR)),
+                    static fn (int $id): bool => isset($known[$id]),
+                )),
                 'outline' => \is_array($outline) ? $outline : [],
                 // Toggle token (`all` not `everything`). See MapViewMode::clientToken.
                 'defaultMode' => 'everything' === $r['default_map_mode'] ? 'all' : (string) $r['default_map_mode'],
