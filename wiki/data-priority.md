@@ -61,6 +61,41 @@ flowchart TD
 is wrong in OSM, the honest fix is an OSM edit — not a Commons override that
 quietly diverges forever.
 
+### The seven sources, by name
+
+Three boxes is the shape. In the database each row carries one of seven
+values, and they are what a drawer's citation line is built from:
+
+| Value | What it is | Cited as |
+|---|---|---|
+| `manual` | Hand-authored by us. A seeded hero pin, a demo route. The harvest never touches it | rider |
+| `user` | A rider added or edited it through the app | rider |
+| `scout` | A rider's ride trace suggested it. How it arrived, not proof: the server never saw the ride file | rider |
+| `pivot` | An open-data provider. Today that is Géoportail Wallonie PIVOT, official accommodation, CC-BY | Tourisme Wallonie |
+| `wikidata` | Anchored to a Wikidata entry | Wikidata |
+| `osm` | Straight from the harvest. Most of the map | OpenStreetMap |
+| `auto` | Our own pipeline computed it, for example a surface stretch. Deleted and rebuilt wholesale, never edited in place | derived |
+
+The first three are the ones the map calls **rider** sources. The rest keep
+their upstream citation, which is why approving a rider's edit to an OSM place
+does not remove the OpenStreetMap credit: it adds ours beside it.
+
+!!! note "Which row wins is a separate question again"
+    When two rows turn out to describe one real place, the duplicate guard keeps
+    one, in the order above, top to bottom. That is a *bookkeeping* rule, not a
+    quality judgement: a brand-new `manual` pin outranks a long-verified `osm`
+    row, because the question being asked is "which of these two records is ours
+    to keep", never "which is better". Specified in
+    `docs/specs/catalog-data-model.md` §5 and §5a.
+
+!!! warning "A photograph is not a source"
+    These seven say where a *place record* came from. A photo of that place is
+    not a place. A Wikimedia Commons image reached through OpenStreetMap or
+    Wikidata is cached media, carrying its own credit and its own licence per
+    file, shown beside the record it illustrates. It is never a rider
+    contribution and never enters a moderation queue, because there is no
+    contributor and nothing was submitted.
+
 ---
 
 ## 2 · Trust — the funnel every record climbs

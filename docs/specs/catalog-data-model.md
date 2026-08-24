@@ -251,8 +251,32 @@ diagrammed in [osm-data-architecture.md §2](osm-data-architecture.md).
 | `pivot` | Géoportail Wallonie PIVOT (official Tourisme Wallonie accommodation) |
 | `wikidata` | Wikidata-anchored rows (`source_ref` = `Q…`) |
 | `user` | Rider contribution through the app |
+| `scout` | Rider ride-trace intake ([moderation-and-contribution.md](moderation-and-contribution.md), Scout intake). How it arrived, not verification: the server never saw the ride file |
 | `manual` | Hand-authored/seeded row — see below |
 | `auto` | Pipeline-derived (synthetic refs, e.g. `fx:surface:…`) |
+
+`manual`, `user` and `scout` are the three the map treats as **rider** sources
+(`RIDER_SOURCES` in `web/assets/map/i18n.js`); the rest keep their upstream
+citation in the drawer.
+
+**Keeper order**, used by the duplicate guard alone
+(catalog-data-model.md §5a) and by nothing else:
+`manual` > `user` > `scout` > `pivot` > `wikidata` > `osm` > `auto`. The
+authority is `App\Catalog\ItemSource::dedupeRank()`, which carries the reason
+for each position; do not restate the numbers here, they would drift. It is not
+a quality score and says nothing about a row's lifecycle state.
+
+**Provenance is not media.** These values answer where a *place record* came
+from. A photograph of that place is not a place, and third-party media (a
+Wikimedia Commons file reached through an OSM `image` / `wikimedia_commons` tag
+or a Wikidata `P18`) therefore takes none of these values. It is cached
+media carrying its own per-file credit and licence, hung off the row it
+illustrates. Filing it as a source value would mean materialising every
+illustrated coverage POI into an `item` purely to hold a picture, against
+[osm-data-architecture.md §6](osm-data-architecture.md); filing it as a rider
+upload would restate its licence as CC BY-SA and push it through a moderation
+queue with no submitter ([photo-uploads.md §6](photo-uploads.md)). Owner
+question, 2026-08-24.
 
 **The `manual` seeding rule** (`SeedManualCatalogCommand`,
 `app:catalog:seed-manual`): hand-authored demo/hero content is seeded as real

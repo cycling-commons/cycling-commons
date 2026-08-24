@@ -1943,8 +1943,8 @@ The coverage tiles themselves are specified in
   click path calls — dead-string cleanup vs re-wiring is undecided.
 - **`?feature=` matches by exact name**, not id — two same-named features
   resolve to the last one scanned. Superseded for coverage POIs by `?ref=`
-  (§8, 2026-08-24), which the share button now prefers; `?feature=` stays for
-  catalog features and for links already in the wild.
+  (map-and-search.md §8, 2026-08-24), which the share button now prefers;
+  `?feature=` stays for catalog features and for links already in the wild.
 - **Region boundary + default bounds are Wallonia-hardcoded** (`map.js`
   `addRegionBoundary('Wallonia')`, the boot `bounds`, and the Photon bbox) —
   worldwide readiness for the map shell has no owner yet beyond the coverage

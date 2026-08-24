@@ -60,8 +60,9 @@ import { initShell } from './shell.js';
     // openCoverageFeatureByName on its own hit.
     const _dl = new URLSearchParams(location.search);
     const fp=_dl.get('feature'), pp=_dl.get('pending'), rp=_dl.get('route'), rawIp=_dl.get('item');
-    // §8: both id params may carry a readable `/<slug>` tail. The id decides;
-    // the slug is thrown away, so a renamed place still opens its own link.
+    // map-and-search.md §8: both id params may carry a readable `/<slug>` tail.
+    // The id decides; the slug is thrown away, so a renamed place still opens
+    // its own link.
     const ip=rawIp ? idFromShare(rawIp) : null;
     const xp=refFromShare(_dl.get('ref'));   // ?ref=<osm ref>: the only per-POI key a coverage point has
     const _dlHit =
