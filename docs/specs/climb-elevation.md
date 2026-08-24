@@ -753,6 +753,27 @@ Neither `router.project-osrm.org` nor `api.open-meteo.com` is called by
 anything, and neither host is in the CSP. The editor's own parsing was left
 alone: the snap proxy deliberately returns OSRM's response shape.
 
+**Hardened 2026-08-24 (test-suite review).** `POST /contribute/route` now
+follows THE stateless-JSON pattern
+([security-architecture.md](security-architecture.md) §5.1) exactly as its
+sibling `/contribute/elevation` does, because they are the same shape of thing:
+JSON posted by the same two editor pages to the same upstream Valhalla. Until
+then it carried `#[IsGranted('ROLE_USER')]` and nothing else, which meant three
+divergences from the sibling, none of them visible from reading either file
+alone:
+
+- an anonymous caller got a **302 to the login page**, which a `fetch()` reads
+  as a successful response with an HTML body, instead of a clean `401`;
+- **no CSRF token**, where elevation requires `X-CC-Token`. It now takes the
+  `route-snap` stateless token (`window.CC_ROUTE_TOKEN`), a separate id from
+  the existing and unrelated `route-community`;
+- **no rate limiter**, so one account could spend the whole routing box's
+  capacity at 8 s per upstream call. It now has `route_snap`, 90/minute per
+  user, consumed after validation so a malformed body costs no budget.
+
+`RouteControllerTest` mirrors `ElevationControllerTest` case for case, on
+purpose: the two endpoints must not drift again.
+
 Three consequences — of the arrangement as it WAS, which is why it changed.
 
 **`router.project-osrm.org` was the OSRM project's public demo server** — no

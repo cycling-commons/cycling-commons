@@ -17,6 +17,8 @@ framework:
                 adapter: cache.app
             cache.elevation_limiter:
                 adapter: cache.app
+            cache.route_snap_limiter:
+                adapter: cache.app
             cache.coverage_read_limiter:
                 adapter: cache.app
             cache.country_interest_limiter:
@@ -86,6 +88,17 @@ framework:
             limit: 30
             interval: '1 minute'
             cache_pool: cache.elevation_limiter
+        # Climb-editor and route-editor road snap: the SAME upstream Valhalla,
+        # reached through /contribute/route. It shipped with login as its only
+        # guard, which is not a quota (test-suite review 2026-08-24). The budget
+        # is larger than elevation's because one edit snaps per leg: dragging a
+        # route with a dozen control points is a dozen calls, and improve.js
+        # re-snaps the touched legs on every drag.
+        route_snap:
+            policy: sliding_window
+            limit: 90
+            interval: '1 minute'
+            cache_pool: cache.route_snap_limiter
         # Coverage query plane (coverage-provider.md §5): the
         # app's first anonymous-read limiter — per-IP sliding window, generous
         # for normal map use, bounded against scraping (access-terms rule).
@@ -192,6 +205,8 @@ when@test:
                 cache.ride_check_limiter:
                     adapter: cache.adapter.array
                 cache.elevation_limiter:
+                    adapter: cache.adapter.array
+                cache.route_snap_limiter:
                     adapter: cache.adapter.array
                 cache.coverage_read_limiter:
                     adapter: cache.adapter.array

@@ -7,25 +7,50 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Elevation\RouteSnapper;
+use App\Entity\User;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
  * Climb-editor road snap via our Valhalla; OSRM response shape kept on purpose.
  *
+ * Hardened 2026-08-24 (test-suite review) to match its sibling
+ * /contribute/elevation exactly. Both POST JSON from the same two editor pages
+ * to the same upstream Valhalla, and this one had login as its only guard:
+ * `#[IsGranted]` alone, no stateless token, no quota. Login is not a quota, and
+ * an `#[IsGranted]` denial for an anonymous caller is a 302 to the login page,
+ * which a fetch() client reads as a broken response body.
+ *
  * @see docs/specs/climb-elevation.md §3e
+ * @see docs/specs/security-architecture.md §5.1 (THE stateless-JSON pattern)
+ * @see docs/specs/security-architecture.md §7 (upstream quotas)
  *
  * @api
  */
 final class RouteController extends AbstractController
 {
     #[Route('/contribute/route', name: 'contribute_route', methods: ['POST'])]
-    #[IsGranted('ROLE_USER')]
-    public function route(Request $request, RouteSnapper $snapper): JsonResponse
-    {
+    public function route(
+        Request $request,
+        RouteSnapper $snapper,
+        RateLimiterFactoryInterface $routeSnapLimiter,
+    ): JsonResponse {
+        // docs/specs/security-architecture.md §5.1 — 401 not 302; stateless X-CC-Token.
+        $user = $this->getUser();
+        if (!$this->isGranted('ROLE_USER') || !$user instanceof User) {
+            throw new HttpException(Response::HTTP_UNAUTHORIZED, 'authentication_required');
+        }
+        // 'route-snap', not 'route': 'route-community' already exists and means
+        // something else entirely (route-domain community actions).
+        if (!$this->isCsrfTokenValid('route-snap', (string) $request->headers->get('X-CC-Token'))) {
+            throw $this->createAccessDeniedException('Invalid CSRF token.');
+        }
+
         $payload = json_decode($request->getContent(), true);
         $points = [];
         foreach (['a', 'b'] as $key) {
@@ -39,6 +64,12 @@ final class RouteController extends AbstractController
                 return new JsonResponse(['error' => 'bad_request'], 400);
             }
             $points[$key] = [$lat, $lng];
+        }
+
+        // docs/specs/security-architecture.md §7 — per-user, and after the cheap
+        // validation above, so a malformed body costs the caller no budget.
+        if (!$routeSnapLimiter->create('user-'.(string) $user->getId())->consume()->isAccepted()) {
+            return new JsonResponse(['error' => 'rate_limited'], 429);
         }
 
         $snapped = $snapper->snap($points['a'], $points['b']);

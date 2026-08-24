@@ -440,7 +440,8 @@
         var timer = setTimeout(function () { ctl.abort(); }, SNAP_TIMEOUT_MS);
         fetch('/contribute/route', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          // Stateless 'route-snap' CSRF token; server refuses without it.
+          headers: { 'Content-Type': 'application/json', 'X-CC-Token': window.CC_ROUTE_TOKEN || '' },
           body: JSON.stringify({ a: a, b: b }),
           signal: ctl.signal
         }).then(function (r) {

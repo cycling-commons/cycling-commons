@@ -450,6 +450,9 @@
   {# The stateless 'elevation' CSRF token climb-elevation.js sends as
      X-CC-Token (config/packages/csrf.yaml stateless_token_ids). #}
   <script nonce="{{ csp_nonce() }}">window.CC_ELEV_TOKEN = {{ csrf_token('elevation')|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
+  {# Same contract for the road snap improve.js and climb-editor.js post to
+     /contribute/route. #}
+  <script nonce="{{ csp_nonce() }}">window.CC_ROUTE_TOKEN = {{ csrf_token('route-snap')|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
 
   {# Why the submission was refused.
      Without this the wizard was SILENT on failure: the controller adds the

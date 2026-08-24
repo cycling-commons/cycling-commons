@@ -12,6 +12,8 @@ framework:
             - route-community
             - ride-check
             - elevation
+            # /contribute/route road snap, the stateless sibling of 'elevation'.
+            - route-snap
             - scout-tags
             - my-area
             - country-interest

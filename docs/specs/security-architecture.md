@@ -296,7 +296,7 @@ Configuration: `web/config/packages/csrf.yaml`.
   **statelessly** (Symfony's same-origin/double-submit check — no session
   write, which keeps responses cacheable and JSON endpoints session-free):
   `submit`, `authenticate`, `logout`, `route-community`, `ride-check`,
-  `elevation`, `scout-tags`.
+  `elevation`, `route-snap`, `scout-tags`.
 - Token ids **not** in that list fall back to Symfony's default
   session-backed storage.
 
@@ -316,7 +316,8 @@ docblock). Elements:
    page instead, via `csrf_token('ride-check')` into `window.CC_RIDECHECK`
    inside a nonced inline script — `web/templates/map/index.html.twig`.
    `elevation` does the same: `window.CC_ELEV_TOKEN` in both climb-editor
-   templates, sent as the `X-CC-Token` header.)
+   templates, sent as the `X-CC-Token` header. `route-snap` sits beside it in
+   the same two templates as `window.CC_ROUTE_TOKEN`.)
 4. **In-controller auth gate, clean 401**: a `requireUser()` helper checks
    `isGranted('ROLE_USER')` *and* the user instance, and throws
    `HttpException(401, 'authentication_required')` otherwise — a JSON client
@@ -334,6 +335,7 @@ Instances:
 | `route-community` | `App\Controller\RouteCommunityController` | `GET /routes/{id}/community`, `GET …/corrections`, `POST …/rode-it`, `…/vote`, `…/suggest` | [route-domain.md](route-domain.md) |
 | `ride-check` | `App\Controller\RideCheckController` | `POST /map/ride-check` | [map-and-search.md](map-and-search.md) |
 | `elevation` | `App\Controller\ElevationController` | `POST /contribute/elevation` | [climb-elevation.md](climb-elevation.md) |
+| `route-snap` | `App\Controller\RouteController` | `POST /contribute/route` | [climb-elevation.md](climb-elevation.md) §3e |
 | `item-confirm` | `App\Controller\ItemConfirmationController` | `GET /items/{id}/confirmations`, `POST /items/{id}/confirm` | [moderation-and-contribution.md](moderation-and-contribution.md) |
 | `scout-tags` | `App\Controller\ScoutIntakeController` | `POST /scout/tags` | [map-and-search.md](map-and-search.md) |
 
@@ -406,6 +408,7 @@ budgeted there is a site-wide capability, not one caller's share of it.
 | `ride_check` | sliding_window | 20 / 1 day | `user-<id>` | GPX ride-check compute — `App\Controller\RideCheckController::check()`; read-only (parse + two PostGIS corridor queries, nothing persisted), hence more generous than intake | `429` JSON with translated `contribute.error.rate_limited` |
 | `ride_check_anon` | sliding_window | 5 / 1 day | `anon-<sha256(secret\|ride-check\|ip)>` | The same endpoint without an account. Its own limiter so the two cannot drain each other. The key is a salted one-way hash, never the address — pseudonymisation, not anonymisation: it stays personal data and is disclosed in the privacy notice | `429` JSON with translated `ride_check.error.anon_limit`, which names the limit and that an account raises it |
 | `elevation` | sliding_window | 30 / 1 minute | `user-<id>` | Climb-editor elevation profiling — `App\Controller\ElevationController::elevation()`; every call is an upstream Valhalla request (shared infrastructure), so the budget is per minute: generous for a rider redrawing a climb, a wall for a loop (review 2026-08-16 finding 5) | `429 {"error":"rate_limited"}` |
+| `route_snap` | sliding_window | 90 / 1 minute | `user-<id>` | Climb-editor and route-editor road snap — `App\Controller\RouteController::route()`; the SAME upstream Valhalla as `elevation`, reached through `POST /contribute/route`. It shipped with `#[IsGranted]` and nothing else, so login was its only guard and login is not a quota (test-suite review 2026-08-24). Larger budget than `elevation` because one edit snaps per leg: dragging a route with a dozen control points is a dozen calls | `429 {"error":"rate_limited"}` |
 | `coverage_read` | sliding_window | 120 / 1 min | per **IP** (anonymous) | Coverage read endpoints — the app's first anonymous-read limiter, consistent with the no-scraping access terms ([osm-data-architecture.md](osm-data-architecture.md) §7) | `429 JSON {"error":"rate_limited"}` (`CoverageController::rateLimited()`) |
 | `country_interest` | sliding_window | 10 / 1 day | `user-<id>` | Country-interest submissions — `App\Controller\JoinCountryController::index()`, country not yet onboarded ([moderation-and-contribution.md](moderation-and-contribution.md) §11) | Flash `join.error.too_many`, redirect back to the form (`JoinCountryController`) |
 | `curator_application` | sliding_window | 3 / 1 day | `user-<id>` | Curator-application submissions — same controller, country onboarded; the tighter of the two, since an application is a task for a human reviewer, not just a counter ([moderation-and-contribution.md](moderation-and-contribution.md) §11) | Flash `join.error.too_many`, redirect back to the form |
@@ -430,7 +433,7 @@ simply hides nothing.
 
 
 Storage note: `route_propose`, `route_suggest`, `ride_check`, `elevation`,
-`country_interest` and `curator_application` each use their own dedicated
+`route_snap`, `country_interest` and `curator_application` each use their own dedicated
 cache pool (`cache.<name>_limiter`, inheriting `cache.app` — Redis in
 dev/prod, and the array adapter in test via that inheritance) that `when@test`
 additionally overrides to the array adapter — a persistent pool would carry

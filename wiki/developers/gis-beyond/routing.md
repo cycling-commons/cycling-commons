@@ -154,7 +154,8 @@ when the call moved in-house — the demo server's own policy forbids production
 ```js
       fetch('/contribute/route', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        // Stateless 'route-snap' CSRF token; server refuses without it.
+        headers: { 'Content-Type': 'application/json', 'X-CC-Token': window.CC_ROUTE_TOKEN || '' },
         body: JSON.stringify({ a: a, b: b }),
         signal: ctl.signal
       })
@@ -170,6 +171,10 @@ What this is and is not:
   catalog entry** — it is a drawing aid for data entry, not a feature riders can reach.
 - It degrades honestly when it fails: a straight line between the two points stays on screen, and the
   curator is told the snap did not work, rather than the tool silently pretending it succeeded.
+- It is **guarded like any other JSON endpoint here**, since 2026-08-24: a signed-out caller gets a
+  clean `401` rather than a redirect to a login page it cannot render, the `X-CC-Token` header above
+  is a stateless CSRF token the server requires, and a per-user limiter caps how much of the shared
+  routing engine one account can spend. Being a drawing aid is not a reason to be an open proxy.
 
 This is a real, working call to a real routing engine, and it would be dishonest to describe this
 chapter's "we do not do it yet" as covering the whole codebase without naming it. But it is also
