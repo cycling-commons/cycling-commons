@@ -50,6 +50,11 @@ doctrine:
                 dir: '%kernel.project_dir%/src/Media/Entity'
                 prefix: 'App\Media\Entity'
                 alias: Media
+            Translation:
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Translation/Entity'
+                prefix: 'App\Translation\Entity'
+                alias: Translation
 
 when@prod:
     doctrine:

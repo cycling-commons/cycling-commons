@@ -1,0 +1,31 @@
+<?php
+
+// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+
+declare(strict_types=1);
+
+namespace App\Translation;
+
+/**
+ * Hard limits for in-site translation proposals.
+ *
+ * Measured max English/locale value length across messages.*.yaml: 2821
+ * (key export.readme). Cap = max(2821 + 2048, 4096) = 4869.
+ * Longest message_key length: 60 (fits VARCHAR(255)).
+ *
+ * @see docs/specs/translations.md
+ *
+ * @api
+ */
+final class TranslationLimits
+{
+    public const int PROPOSED_VALUE_MAX = 4869;
+
+    /** @var list<string> */
+    public const array LOCALES = ['fr', 'nl', 'de', 'es'];
+
+    public static function isTranslatableLocale(string $locale): bool
+    {
+        return \in_array($locale, self::LOCALES, true);
+    }
+}

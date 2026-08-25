@@ -10,6 +10,7 @@ services:
             - '../src/World/Entity/'
             - '../src/World/Resources/'
             - '../src/Catalog/Entity/'
+            - '../src/Translation/Entity/'
 
     _instanceof:
         App\Service\UserDeletionHookInterface:
