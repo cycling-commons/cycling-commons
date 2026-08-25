@@ -115,6 +115,7 @@ security:
         # in-controller 401 an access_control rule would replace with a 302 to
         # the login page; their auth is pinned by their own controller tests.
         - { path: '^(/[a-z]{2})?/messages', roles: ROLE_USER }
+        - { path: '^(/[a-z]{2})?/translate', roles: ROLE_USER }
         - { path: ^/scout/tags, roles: ROLE_USER }
         - { path: '^(/[a-z]{2})?/moderate', roles: ROLE_CURATOR }
         - { path: ^/admin, roles: ROLE_ADMIN }

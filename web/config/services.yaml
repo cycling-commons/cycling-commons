@@ -77,6 +77,11 @@ services:
         arguments:
             $inner: '@.inner'
 
+    # /translate live display: YAML via decorator inner (no double overlay).
+    App\Translation\CatalogueBrowser:
+        arguments:
+            $yamlTranslator: '@App\Translation\OverlayTranslator.inner'
+
     # Google Safe Browsing for rider-submitted links. Empty key = the layer is
     # OFF and every verdict is "unknown", which the two callers then treat in
     # OPPOSITE directions (fail open at submit, fail closed at render). See
