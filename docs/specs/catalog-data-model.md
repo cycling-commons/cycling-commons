@@ -454,6 +454,31 @@ effect of anything else:
   records "no counterpart". Both are answers;
 - **a curator approving a new rider place**: see the gate below.
 
+#### The candidate list is stored, not asked (owner decision, 2026-08-25)
+
+The chip on a queue card offers `OsmLinker::nearby()`: the coverage objects of
+that letter within 250 m. Until 2026-08-25 the desk ran that query for every
+open card on every list view, against two million coverage rows: the same
+question with the same answer, 2.8 s per card before the geography index and
+one spatial query per card after it ("that doesn't sound well engineered").
+The answer changes only when the place moves or the country's coverage is
+re-harvested, so it is computed once and stored on the row:
+
+| Column | Meaning |
+|---|---|
+| `item.osm_candidates` (jsonb) | the list `{ref, name, distanceM}[]` the chip shows |
+| `item.osm_candidates_at` | when it was computed; NULL with a NULL list = compute on next read |
+
+`App\Catalog\Import\OsmCandidates` owns it: intake computes it when the row
+is created (`refresh()`), an approved pin move recomputes it at the new point
+(`refreshAt()`, ModerationService), and the desk reads it (`forItems()`),
+computing only where the column is NULL. The pipeline's per-region swap
+(`load.py`, in the swap transaction, right after the delete-disappeared arm)
+sets both columns back to NULL for every **open** row whose `country_code` is
+among the slice's countries; answered rows keep whatever they hold, and no
+harvest depends on the app's schema (`to_regclass('item')` guard). Net: zero
+spatial queries per list view; one per row per harvest, on first read.
+
 #### Approving a new place requires answering it (owner decision, 2026-08-25)
 
 **A `NewItem` submission cannot be approved while `osm_checked_at` is NULL.**
@@ -482,14 +507,17 @@ data desk shows. The desk is the queue for everything the gate does not catch:
 rows that existed before the gate, rows whose OSM counterpart appeared later,
 and links that need a human because they fall in the 50 m to 250 m band.
 
-**Current state, and it is a gap.** The column shipped on 2026-08-24 and
-**0 of 1,525 items carry a value**, including 775 `osm`-sourced rows whose
-`source_ref` already is an OSM object, where the ref is known by construction
-and simply never written (`CatalogContributionService` sets `sourceRef` and not
-`osmRef`). `app:catalog:link-osm` has not been run, nothing schedules it, and
-the approval gate above is specified and not built. Until then the dedupe join
-is doing its work on `source_ref` alone for every row, which is the behaviour
-§5b exists to replace. Delete this paragraph when all four are true.
+**Built 2026-08-25** (plan `docs/plans/2026-08-25-osm-identity-spine.md`):
+materialisation answers by construction, `Version20260825110000` added
+`osm_checked_at` and backfilled the 775 by-construction rows, the approval gate
+refuses an unanswered new place (`OsmUnansweredException`; the queue row carries
+an OSM chip: `OSM?` pops the `OsmLinker::nearby()` candidates and "Not in OSM",
+and once answered the chip reads the linked ref or "not in OSM", so an answered
+row no longer looks like an unasked one, 2026-08-25), and every writer
+(`app:catalog:link-osm`, the data desk's accept AND dismiss, duplicate
+inheritance) records the answer. Still an operator's job: installing the two
+timers `operations.md` §1 now specifies, and running the first
+`app:catalog:link-osm --write` over the pre-gate backlog.
 
 **`osm_ref` is deliberately not UNIQUE.** The duplicates have to be cleared
 first, or the constraint is a migration that cannot run. Two served rows sharing

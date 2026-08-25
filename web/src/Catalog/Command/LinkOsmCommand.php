@@ -103,8 +103,11 @@ final class LinkOsmCommand extends Command
 
             $linked[] = $line;
             if ($write) {
+                // The link is an ANSWER, not just a ref: without the stamp
+                // the approval gate and the desk would keep asking about a row
+                // the machine already settled (catalog-data-model.md §5b).
                 $this->db->executeStatement(
-                    'UPDATE item SET osm_ref = :ref, updated_at = NOW() WHERE id = :id',
+                    'UPDATE item SET osm_ref = :ref, osm_checked_at = NOW(), updated_at = NOW() WHERE id = :id',
                     ['ref' => $found['ref'], 'id' => $row['id']],
                 );
             }
@@ -161,7 +164,10 @@ final class LinkOsmCommand extends Command
                    AND i.geom IS NOT NULL";
         $params = [];
         if (!$relink) {
-            $sql .= ' AND i.osm_ref IS NULL';
+            // osm_checked_at, not osm_ref: a curator's "not in OSM" leaves the
+            // ref NULL on purpose, and reconsidering it here would re-ask a
+            // question a human already answered (catalog-data-model.md §5b).
+            $sql .= ' AND i.osm_checked_at IS NULL';
         }
         if (null !== $letter) {
             $sql .= ' AND i.letter = :letter';

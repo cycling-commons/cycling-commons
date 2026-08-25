@@ -8,6 +8,7 @@ namespace App\Contribution;
 
 use App\Catalog\Entity\Item;
 use App\Catalog\Entity\Submission;
+use App\Catalog\Import\OsmCandidates;
 use App\Catalog\Import\OutboundLinks;
 use App\Catalog\ItemSource;
 use App\Catalog\ItemState;
@@ -61,6 +62,7 @@ final class CatalogContributionService implements ContributionStubInterface
         private readonly ClimbProfiler $profiler,
         private readonly SafeBrowsing $safeBrowsing,
         private readonly LinkVerdictStore $linkVerdicts,
+        private readonly OsmCandidates $osmCandidates,
     ) {
     }
 
@@ -513,10 +515,23 @@ final class CatalogContributionService implements ContributionStubInterface
                     ->setSource($draft->source ?? (null !== $draft->osmRef ? ItemSource::Osm : ItemSource::User))
                     ->setSourceRef($draft->osmRef ?? 'sub:'.(string) $submission->getId())
                     ->setAttributes($draft->attributes);
+
+                // catalog-data-model.md §5b: a row materialised from a coverage
+                // POI records a known OSM object, so the identity question is
+                // answered by construction. Writing only sourceRef left 775
+                // rows carrying the ref in a column nothing joins on.
+                if (null !== $draft->osmRef) {
+                    $item->answerOsm($draft->osmRef);
+                }
                 $this->em->persist($item);
                 $this->em->flush();
                 $submission->setItemId($item->getId());
                 $this->em->flush();
+                // The desk's OSM chip reads a stored list, never the coverage
+                // table (catalog-data-model.md §5b): compute it here, once.
+                if (!$item->osmAnswered()) {
+                    $this->osmCandidates->refresh((int) $item->getId());
+                }
             }
 
             // Photos ride the same intake transaction (docs/specs/photo-uploads.md §4).

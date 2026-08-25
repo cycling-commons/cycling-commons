@@ -226,7 +226,7 @@ final class ModerateDecideAjaxTest extends WebTestCase
 
         /** @var EntityManagerInterface $em */
         $em = static::getContainer()->get(EntityManagerInterface::class);
-        $item = (new Item())->setLetter('C')->setName('Fontaine du Décide')
+        $item = (new Item()->answerOsm(null)   /* pre-gate fixture: the curator answered "not in OSM" (catalog-data-model.md §5b) */)->setLetter('C')->setName('Fontaine du Décide')
             ->setGeom('{"type":"Point","coordinates":[5.86,50.47]}')->setCountryCode('BE')
             ->setState(ItemState::Submitted)->setSource(ItemSource::User)->setSourceRef('sub:ajax-feature')
             ->setAttributes(['potable' => 'yes']);

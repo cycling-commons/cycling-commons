@@ -144,6 +144,11 @@ final class MaterializeFlowTest extends WebTestCase
         /** @var Item $item */
         $item = $em->getRepository(Item::class)->findOneBy(['sourceRef' => self::REF]);
         self::assertNotNull($item, 'the item now exists, keyed by the OSM ref (map dedup)');
+        // catalog-data-model.md §5b: born linked, and answered by construction.
+        // This row exists BECAUSE a rider edited a known OSM object, so there
+        // is nothing left to ask a curator about its identity.
+        self::assertSame(self::REF, $item->getOsmRef(), 'the identity, not just the upsert key');
+        self::assertTrue($item->osmAnswered());
         self::assertSame(ItemSource::Osm, $item->getSource());
         self::assertSame(ItemState::Submitted, $item->getState());
         self::assertSame('Waterpunt Geestmerambacht', $item->getName());

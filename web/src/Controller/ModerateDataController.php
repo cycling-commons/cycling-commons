@@ -149,6 +149,14 @@ final class ModerateDataController extends AbstractController
             return $this->redirectToRoute('moderate_data');
         }
 
+        // Dismissing an OsmLink finding is itself an answer: a curator looked
+        // at the proposed object and said "that is not this place". Recording
+        // it stops the scan re-raising the same pair for ever
+        // (catalog-data-model.md §5b).
+        if (!$yes && FindingKind::OsmLink === $finding->getKind() && !$finding->getItem()->osmAnswered()) {
+            $finding->getItem()->answerOsm(null);
+        }
+
         $finding->decide(
             $yes ? FindingStatus::Accepted : FindingStatus::Dismissed,
             (int) $user->getId(),
@@ -209,13 +217,15 @@ final class ModerateDataController extends AbstractController
                     $inherited = $loser->getOsmRef()
                         ?? (ItemSource::Osm === $loser->getSource() ? $loser->getSourceRef() : null);
                     if (null !== $inherited) {
-                        $winner->setOsmRef($inherited);
+                        $winner->answerOsm($inherited);
                     }
                 }
                 break;
 
             case FindingKind::OsmLink:
-                $finding->getItem()->setOsmRef($finding->getOsmRef());
+                // Accepting names the object. An answer, not just a ref, so
+                // the gate and the linker stop asking (catalog-data-model.md §5b).
+                $finding->getItem()->answerOsm($finding->getOsmRef());
                 break;
         }
 

@@ -87,6 +87,35 @@ class Item
     private ?string $osmRef = null;
 
     /**
+     * When the OSM question was last answered, whatever the answer was.
+     *
+     * NULL means nobody has looked. Set with `osmRef` NULL means somebody
+     * looked and there is no OSM counterpart, which is a real answer and must
+     * never be retried as though it were a gap.
+     *
+     * @see docs/specs/catalog-data-model.md §5b
+     */
+    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
+    private ?\DateTimeImmutable $osmCheckedAt = null;
+
+    /**
+     * The OSM-candidate list for an open question, computed once and stored
+     * (App\Catalog\Import\OsmCandidates). NULL = compute on the next read;
+     * the coverage harvest sets it back to NULL for every open row of the
+     * harvested country. Written by SQL from the service, mapped here so the
+     * schema tooling knows the columns.
+     *
+     * @var list<array{ref: string, name: ?string, distanceM: float}>|null
+     *
+     * @see docs/specs/catalog-data-model.md §5b
+     */
+    #[ORM\Column(type: 'json', nullable: true)]
+    private ?array $osmCandidates = null;
+
+    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
+    private ?\DateTimeImmutable $osmCandidatesAt = null;
+
+    /**
      * Registry-validated type-specific + display fields.
      *
      * @var array<string, mixed>
@@ -235,6 +264,44 @@ class Item
     public function setOsmRef(?string $osmRef): static
     {
         $this->osmRef = ('' === $osmRef) ? null : $osmRef;
+
+        return $this;
+    }
+
+    public function getOsmCheckedAt(): ?\DateTimeImmutable
+    {
+        return $this->osmCheckedAt;
+    }
+
+    /** @return list<array{ref: string, name: ?string, distanceM: float}>|null */
+    public function getOsmCandidates(): ?array
+    {
+        return $this->osmCandidates;
+    }
+
+    public function getOsmCandidatesAt(): ?\DateTimeImmutable
+    {
+        return $this->osmCandidatesAt;
+    }
+
+    /** Has anyone said which OSM object this is, or that there is none? */
+    public function osmAnswered(): bool
+    {
+        return null !== $this->osmCheckedAt;
+    }
+
+    /**
+     * Answer the OSM question. A null (or empty) ref is the answer "this place
+     * is not in OSM", not a clear.
+     *
+     * The only way both columns move together, so a row can never end up
+     * carrying a ref nobody vouched for, or an answer with no timestamp
+     * behind it (catalog-data-model.md §5b).
+     */
+    public function answerOsm(?string $ref): static
+    {
+        $this->setOsmRef($ref);
+        $this->osmCheckedAt = new \DateTimeImmutable();
 
         return $this;
     }
