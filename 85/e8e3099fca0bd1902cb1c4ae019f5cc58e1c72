@@ -1,0 +1,85 @@
+web/src/Translation/Exception/UnknownProposalException.php
+  s_c05586667a10a2::t_5683d970397002 1-18
+web/translations/messages.en.yaml
+  s_c05586667a10a2::t_561695d711f820 2086-2087
+  s_c05586667a10a2::t_56c4d725fb2c25 2681-2684
+web/src/Controller/TranslateController.php
+  s_c05586667a10a2::t_b490d003f9f70a 18,20-21
+  s_c05586667a10a2::t_37605b91a1a48c 124-129,136
+web/tests/Translation/ModerateTranslationsTest.php
+  s_c05586667a10a2::t_4c9be645ff0676 180-181,191,193
+  s_c05586667a10a2::t_383116394125f6 154-179,182-190,192,194-208
+web/translations/messages.fr.yaml
+  s_c05586667a10a2::t_b3b2116d92a0cc 2653-2656
+  s_c05586667a10a2::t_d19790b308e068 2540-2541
+web/src/Translation/Exception/InvalidLocaleException.php
+  s_c05586667a10a2::t_86bc06335e23c9 1-18
+web/tests/Smoke/ContentPagesTest.php
+  s_c05586667a10a2::t_a555e9b59acb71 37-40
+web/src/Controller/ModerateTranslationsController.php
+  s_c05586667a10a2::t_e3084c63ec8a4f 17
+  s_c05586667a10a2::t_41700cc6bee367 65-66,86
+web/src/Translation/Exception/TranslationConflictException.php
+  s_c05586667a10a2::t_776877edf49b7d 1-18
+web/translations/messages.es.yaml
+  s_c05586667a10a2::t_6c6763d29b4a9a 2689-2692
+  s_c05586667a10a2::t_230933cf7e10f6 2093-2094
+web/tests/Translation/ProposalServiceTest.php
+  s_c05586667a10a2::t_875beb33ecc5d2 213
+  s_c05586667a10a2::t_6d9691ccd0f85c 259-260,268-288
+  s_c05586667a10a2::t_bf8e2f0d854ee6 16,18
+  s_c05586667a10a2::t_c83a411745f289 178-192
+  s_c05586667a10a2::t_b2cf6cbb66c9b2 160-168
+  s_c05586667a10a2::t_55215770060bda 25-26
+  s_c05586667a10a2::t_1ec2a3468b9654 255,258
+web/templates/moderate/translations.html.twig
+  s_c05586667a10a2::t_48b5948cff58c3 12
+  s_c05586667a10a2::t_6da23e6e7228f0 53
+web/translations/messages.nl.yaml
+  s_c05586667a10a2::t_ad493618998d49 2653-2656
+  s_c05586667a10a2::t_9685478138dbe9 2540-2541
+web/tests/Translation/DeleteTranslationOverlayCommandTest.php
+  s_c05586667a10a2::t_dbe529bfbc4efa 48-49,51-54
+web/src/Translation/ProposalService.php
+  s_c05586667a10a2::t_ceb1f41ab7a0eb 88
+  s_c05586667a10a2::t_2bbe41eb986e7d 16,18-21,47,50-51,68,80-87,89-97,100-102,107-109,123,127-131
+web/config/services.yaml
+  s_c05586667a10a2::t_0dca3fbafcc1b6 218
+web/src/Form/TranslationProposalType.php
+  s_c05586667a10a2::t_199ca36bb1b537 40
+web/src/Translation/DecisionService.php
+  s_c05586667a10a2::t_73659103d55859 38
+  s_c05586667a10a2::t_4735077dca1be4 17
+  s_c05586667a10a2::t_faf49bc864542d 55
+  s_c05586667a10a2::t_c9e117c45163fc 39-41
+docs/specs/security-architecture.md
+  s_c05586667a10a2::t_df1a49537c7094 409
+web/src/Translation/Exception/TranslationTooLongException.php
+  s_c05586667a10a2::t_064920ad840da4 1-18
+web/tests/Translation/TranslatePageTest.php
+  s_c05586667a10a2::t_8dcb2cfbef2a17 214-243,245-260,265
+  s_c05586667a10a2::t_8f19e402436ec1 261
+  s_c05586667a10a2::t_4daaa788bcf7d7 262-264
+  s_c05586667a10a2::t_50ee610ffd1801 244
+web/tests/Translation/OverlayTranslatorTest.php
+  s_c05586667a10a2::t_f70b08825b0a0d 195-202
+web/translations/messages.de.yaml
+  s_c05586667a10a2::t_11ba248fe77f81 2543-2544
+  s_c05586667a10a2::t_15b130ed08c668 2656-2659
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "85e8e3099fca0bd1902cb1c4ae019f5cc58e1c72",
+  "prompts": {},
+  "sessions": {
+    "s_c05586667a10a2": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "7b9fd57a-1b4e-4f86-a9c1-9724be316cdf",
+        "model": "grok-4.6"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
