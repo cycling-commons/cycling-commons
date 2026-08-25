@@ -1,0 +1,73 @@
+web/translations/messages.de.yaml
+  s_946b9cd11c7809::t_7409b3c285c618 194-195
+  s_946b9cd11c7809::t_6f6b189a855b5b 29
+  s_946b9cd11c7809::t_18db54e3249f48 260-269
+  s_946b9cd11c7809::t_af17ea59a9b7a1 288,297
+  s_946b9cd11c7809::t_e6e95cc5e0d18b 2400
+  s_946b9cd11c7809::t_1fd07a55874b94 2980
+  s_946b9cd11c7809::t_adf9cf26a18311 235
+web/templates/pages/terms.html.twig
+  s_946b9cd11c7809::t_8090ba04a95be5 64
+licenses/COMMONS-TERMS-CLAUSE.md
+  s_946b9cd11c7809::t_f55699d6bb3cf0 4-5,26-28,32-37,40-42
+web/translations/messages.es.yaml
+  s_946b9cd11c7809::t_15b6e25df273ea 194-195
+  s_946b9cd11c7809::t_8267bfa25f023e 3014
+  s_946b9cd11c7809::t_7cc57b7308af35 260-269
+  s_946b9cd11c7809::t_6605e83733a8f5 29
+  s_946b9cd11c7809::t_577d74cc956377 235
+  s_946b9cd11c7809::t_83fdd43b2e83f0 288,297
+  s_946b9cd11c7809::t_4ef24219d0f9a2 1945
+web/translations/messages.en.yaml
+  s_946b9cd11c7809::t_15023ee7ad78bb 29
+  s_946b9cd11c7809::t_b8c176e7850f0e 235,260-269,288,297
+  s_946b9cd11c7809::t_f03131cf48a693 1933
+  s_946b9cd11c7809::t_95552f57ca7b8b 3005
+  s_946b9cd11c7809::t_2f231cb3e68d4b 194-195
+web/templates/pages/licenses.html.twig
+  s_946b9cd11c7809::t_92c8967fe6fe3b 73-88
+  s_946b9cd11c7809::t_c22b3373f021a6 108,116
+  s_946b9cd11c7809::t_7c84f063199bd3 72
+licenses/COMMONS-TRANSLATIONS-LICENSE.md
+  s_946b9cd11c7809::t_2ec0cc4672cb04 1-46
+web/translations/messages.nl.yaml
+  s_946b9cd11c7809::t_39c4c899f3fb27 2397
+  s_946b9cd11c7809::t_649c907d792d56 29
+  s_946b9cd11c7809::t_06736f645f2a3e 194-195
+  s_946b9cd11c7809::t_610047694694cc 288,297
+  s_946b9cd11c7809::t_763e77f6d1de7d 260-269
+  s_946b9cd11c7809::t_0500f6e9a02ad1 235
+  s_946b9cd11c7809::t_58357adf538a5d 2977
+web/translations/messages.fr.yaml
+  s_946b9cd11c7809::t_78cb5f4540b9c2 260-269
+  s_946b9cd11c7809::t_713eded838e9ea 2977
+  s_946b9cd11c7809::t_fa6d7aaba769ca 2397
+  s_946b9cd11c7809::t_2174f1ad5e30ba 288,297
+  s_946b9cd11c7809::t_b80cbd51d0aaa2 29
+  s_946b9cd11c7809::t_3b9d62f708d1aa 194-195
+  s_946b9cd11c7809::t_b4e83a5ce823a0 235
+docs/specs/security-architecture.md
+  s_946b9cd11c7809::t_6cff11a6008d92 442-443
+  s_946b9cd11c7809::t_c5e00902fcabab 409
+web/tests/Smoke/ContentPagesTest.php
+  s_946b9cd11c7809::t_044d60d031624a 46-47,52-58
+  s_946b9cd11c7809::t_601dbc69b0a992 48-51
+docs/specs/account-and-auth.md
+  s_946b9cd11c7809::t_5558677d2a6f68 376
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "3f33d8c9e24e706e4397b4042310516759b771f4",
+  "prompts": {},
+  "sessions": {
+    "s_946b9cd11c7809": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "5c6227a9-ba64-48d2-abb8-8424d3f01e78",
+        "model": "cursor-grok-4.5-high"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
