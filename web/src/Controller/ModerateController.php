@@ -9,6 +9,7 @@ namespace App\Controller;
 use App\Catalog\CatalogProvider;
 use App\Catalog\ConfirmationStance;
 use App\Catalog\Entity\Item;
+use App\Catalog\Entity\Submission;
 use App\Catalog\ItemType;
 use App\Catalog\SubmissionType;
 use App\Community\ItemConfirmationService;
@@ -365,6 +366,8 @@ final class ModerateController extends AbstractController
                 (string) $request->request->get('reason', ''),
             );
             $this->addFlash('success', 'moderate.escalate.done');
+        } catch (OutOfScopeException) {
+            throw $this->createAccessDeniedException('Out of moderation scope.');
         } catch (\InvalidArgumentException $e) {
             $this->addFlash('error', $e->getMessage());
         }
@@ -392,6 +395,17 @@ final class ModerateController extends AbstractController
         if (null === $upload) {
             throw $this->createNotFoundException();
         }
+        // Same write-guard as escalateSubmission above (security scan
+        // 2026-08-25). The region comes from the photo's OWNING submission,
+        // because that is where a photo gets its place: an unclaimed upload
+        // has no region yet, and a null region is in-scope for everyone, which
+        // is the same rule allowsRegion() applies everywhere else.
+        if (!$this->scopeProvider->allowsRegion(
+            $this->scopeProvider->scopeFor($curator),
+            $this->regionOfUpload($upload),
+        )) {
+            throw $this->createAccessDeniedException('Out of moderation scope.');
+        }
 
         try {
             $this->escalations->escalate($upload, $curator, (string) $request->request->get('reason', ''));
@@ -401,6 +415,22 @@ final class ModerateController extends AbstractController
         }
 
         return $this->redirectToRoute('moderate');
+    }
+
+    /**
+     * Region a photo belongs to, via its owning submission. null when the
+     * upload is not claimed by one yet.
+     *
+     * @see docs/specs/moderation-and-contribution.md §9.2
+     */
+    private function regionOfUpload(MediaUpload $upload): ?int
+    {
+        $submissionId = $upload->getSubmissionId();
+        if (null === $submissionId) {
+            return null;
+        }
+
+        return $this->em->find(Submission::class, $submissionId)?->getRegionId();
     }
 
     #[Route('/moderate/takedown', name: 'moderate_takedown', methods: ['POST'])]

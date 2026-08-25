@@ -45,6 +45,14 @@ import urllib.request
 # ELEVATION_URLS lists them), passed with --valhalla.
 VALHALLA = os.environ.get("VALHALLA_URL", "http://localhost:8002")
 PSQL = ["docker", "exec", "cycling-commons-dev-db-1", "psql", "-U", "cc", "-d", "cyclingcommons", "-tAc"]
+# The same psql, reading its statement on STDIN so that `-v name=value`
+# bindings can be interpolated as `:'name'` (psql quotes and escapes those
+# itself, so no caller builds a literal by hand). It has to be `-f -` and not
+# `-c`: psql hands a `-c` string straight to the server without running its own
+# parser over it, so `:'name'` would arrive verbatim and the server would
+# answer `syntax error at or near ":"`. Note `docker exec -i`, without which
+# the container gets no stdin and psql reads an empty script.
+PSQL_STDIN = ["docker", "exec", "-i", "cycling-commons-dev-db-1", "psql", "-U", "cc", "-d", "cyclingcommons", "-tA"]
 
 
 def _hav(a: tuple[float, float], b: tuple[float, float]) -> float:
@@ -298,11 +306,18 @@ def main() -> int:
               f"{args.id} --write)")
         return 0
 
-    payload = json.dumps(line).replace("'", "''")
-    subprocess.run(PSQL + [
-        f"UPDATE item SET attributes = jsonb_set(attributes, '{{route}}', '{payload}'::jsonb), "
-        f"updated_at = NOW() WHERE id = {args.id}"
-    ], capture_output=True, text=True, check=True)
+    # Bound, not interpolated. The old version doubled quotes into an f-string
+    # by hand; it happened to be safe because the only input is a router
+    # response, but hand-rolled escaping in a write path is one refactor away
+    # from an injection and it was flagged as such (security scan 2026-08-25).
+    # `:'route'` makes psql produce the literal, and the id is an int by
+    # argparse so it needs no quoting.
+    subprocess.run(
+        PSQL_STDIN + ["-v", "route=" + json.dumps(line), "-f", "-"],
+        input="UPDATE item SET attributes = jsonb_set(attributes, '{route}', :'route'::jsonb), "
+              f"updated_at = NOW() WHERE id = {int(args.id)};\n",
+        capture_output=True, text=True, check=True,
+    )
     print(f"  written. Now: app:climbs:recompute --id {args.id} --write")
     return 0
 

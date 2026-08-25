@@ -32,12 +32,42 @@ final class LocaleController extends AbstractController
         }
 
         // Same-host Referer only — never an open redirect.
+        //
+        // Compare the parsed HOST, never a string prefix: prefix matching on
+        // "https://cyclingcommons.org" also accepts
+        // "https://cyclingcommons.org.evil.example/", which is a different site
+        // (security scan 2026-08-25). Scheme is checked too, so an http Referer
+        // cannot bounce an https visitor down to plaintext.
         $referer = $request->headers->get('referer');
-        if (\is_string($referer) && str_starts_with($referer, $request->getSchemeAndHttpHost())) {
+        if (\is_string($referer) && $this->isSameOrigin($referer, $request)) {
             return $this->redirect($referer);
         }
 
         return $this->redirectToRoute('home');
+    }
+
+    /**
+     * True only when $url's scheme, host and port all equal the current request's.
+     *
+     * @see docs/specs/account-and-auth.md §9.4
+     */
+    private function isSameOrigin(string $url, Request $request): bool
+    {
+        $parts = parse_url($url);
+        if (!\is_array($parts) || !isset($parts['host'])) {
+            return false;
+        }
+
+        $scheme = strtolower($parts['scheme'] ?? '');
+        if ($scheme !== strtolower($request->getScheme())) {
+            return false;
+        }
+
+        // Default port when absent, so "https://host" and "https://host:443" agree.
+        $port = $parts['port'] ?? ('https' === $scheme ? 443 : 80);
+
+        return 0 === strcasecmp($parts['host'], $request->getHost())
+            && $port === $request->getPort();
     }
 
     /**

@@ -629,11 +629,19 @@ window.CC_VENDOR = {{ {
 {% endif %}
 {# Ride-check is open to everyone, so its URL and token sit outside the riders
    block below. A token shipped only to signed-in visitors would leave the
-   control on the page unable to post. #}
+   control on the page unable to post.
+
+   This block carries its OWN <script> tag on purpose: it sits between the
+   curator `{% if pending %}` block and the riders `{% if is_granted %}` block,
+   so it belongs to neither and cannot borrow either one's tag. It lost that
+   tag once (security scan 2026-08-25) and the whole ride-check feature went
+   dark for everyone while the CSRF token rendered as visible page text. #}
+<script nonce="{{ csp_nonce() }}">
   window.CC_RIDECHECK = {
     url: {{ path('map_ride_check')|json_encode(constant('JSON_UNESCAPED_SLASHES'))|raw }},
     token: {{ csrf_token('ride-check')|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }}
   };
+</script>
 
 {% if is_granted('ROLE_USER') %}
 <script nonce="{{ csp_nonce() }}">

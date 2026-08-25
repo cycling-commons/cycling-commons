@@ -113,4 +113,40 @@ final class MapPageTest extends WebTestCase
         self::assertNotFalse($chipsPos, 'scope-chips.js must be in the map shell');
         self::assertLessThan($loaderPos, $chipsPos, 'scope-chips.js must load before catalog-load.js injects map.js');
     }
+
+    /**
+     * Every `window.CC_*` global the map shell emits must sit INSIDE a
+     * <script> element.
+     *
+     * Not a re-test of one typo: on 2026-08-25 a security scan found
+     * window.CC_RIDECHECK stranded between two conditional script blocks after
+     * an edit moved the closing tag. The ride-check feature was dead for
+     * everyone, and its CSRF token rendered as visible page text. The template
+     * has ~15 of these blocks and they are edited constantly, so the guard is
+     * on the SHAPE (a global outside a script tag), not on one variable name.
+     *
+     * Anonymous client on purpose: the always-emitted globals are the ones a
+     * logged-out visitor sees, and CC_RIDECHECK is deliberately one of them.
+     */
+    public function testEveryInjectedGlobalIsInsideAScriptTag(): void
+    {
+        $client = static::createClient();
+        $client->request('GET', '/map');
+        self::assertResponseIsSuccessful();
+        $html = (string) $client->getResponse()->getContent();
+
+        // Strip every <script>...</script> body. Anything named window.CC_*
+        // that survives was never inside a script element.
+        $stripped = preg_replace('#<script\b[^>]*>.*?</script>#si', '', $html);
+        self::assertIsString($stripped);
+
+        self::assertSame(
+            0,
+            preg_match_all('/window\.CC_[A-Z0-9_]+/', $stripped, $loose),
+            sprintf('These globals render as page text, not script: %s', implode(', ', $loose[0] ?? [])),
+        );
+
+        // And the specific one that broke, so the regression has a named guard.
+        self::assertStringContainsString('window.CC_RIDECHECK', $html);
+    }
 }

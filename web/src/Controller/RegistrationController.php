@@ -18,7 +18,9 @@ use Symfony\Component\Form\FormError;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Mime\Address;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use SymfonyCasts\Bundle\VerifyEmail\Exception\VerifyEmailExceptionInterface;
 
@@ -44,6 +46,9 @@ final class RegistrationController extends AbstractController
         Request $request,
         UserPasswordHasherInterface $userPasswordHasher,
         EntityManagerInterface $entityManager,
+        RateLimiterFactoryInterface $registrationLimiter,
+        #[Autowire('%kernel.secret%')]
+        string $secret,
     ): Response {
         if ($this->getUser()) {
             $this->addFlash('notice', 'flash.already_signed_in');
@@ -56,6 +61,23 @@ final class RegistrationController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            // Quota BEFORE anything is written or sent. One unauthenticated
+            // POST creates a row and mails a confirmation link to whatever
+            // address was typed, so without this a loop both fills the user
+            // table and points our mail server at someone else's inbox
+            // (security scan 2026-08-25). A visible error, not a silent
+            // redirect: unlike the reset form this page already tells you when
+            // an address is taken, so there is no existence secret to keep.
+            if (!$registrationLimiter->create(self::anonKey($request->getClientIp() ?? 'unknown', $secret))->consume()->isAccepted()) {
+                $form->addError(new FormError('Too many sign-up attempts from this connection. Try again later.'));
+
+                return $this->render('security/register.html.twig', [
+                    'registrationForm' => $form,
+                    'page_title' => 'meta.register_title',
+                    'page_description' => 'meta.register_description',
+                ], new Response('', Response::HTTP_TOO_MANY_REQUESTS));
+            }
+
             /** @var string $plainPassword */
             $plainPassword = $form->get('plainPassword')->getData();
 
@@ -102,6 +124,19 @@ final class RegistrationController extends AbstractController
             'page_title' => 'meta.register_title',
             'page_description' => 'meta.register_description',
         ]);
+    }
+
+    /**
+     * Limiter key for an anonymous caller: a salted hash, never the address.
+     *
+     * An IP address is personal data under the GDPR, so the rate-limit store
+     * holds a hash of it. Same construction as RideCheckController::anonKey.
+     *
+     * @see docs/specs/security-architecture.md §7
+     */
+    public static function anonKey(string $ip, string $secret): string
+    {
+        return 'anon-'.hash('sha256', $secret.'|registration|'.$ip);
     }
 
     #[Route('/verify/email', name: 'verify_email')]

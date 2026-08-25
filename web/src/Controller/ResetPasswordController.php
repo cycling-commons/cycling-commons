@@ -17,7 +17,9 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Address;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use SymfonyCasts\Bundle\ResetPassword\Controller\ResetPasswordControllerTrait;
 use SymfonyCasts\Bundle\ResetPassword\Exception\ResetPasswordExceptionInterface;
@@ -40,14 +42,30 @@ final class ResetPasswordController extends AbstractController
     }
 
     #[Route('/reset-password', name: 'reset_password_request', methods: ['GET', 'POST'])]
-    public function request(Request $request, MailerInterface $mailer, UserRepository $userRepository): Response
-    {
+    public function request(
+        Request $request,
+        MailerInterface $mailer,
+        UserRepository $userRepository,
+        RateLimiterFactoryInterface $passwordResetLimiter,
+        #[Autowire('%kernel.secret%')]
+        string $secret,
+    ): Response {
         $form = $this->createForm(ResetPasswordRequestFormType::class);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
             /** @var string $email */
             $email = $form->get('email')->getData();
+
+            // Quota BEFORE the lookup, and the over-quota answer is the same
+            // check-your-inbox page a real request gets. Both matter: an
+            // anonymous caller must not learn from a 429 that the address
+            // exists, and this page already refuses to reveal that anywhere
+            // else (see processSendingPasswordResetEmail, which redirects to
+            // the same place for an unknown address).
+            if (!$passwordResetLimiter->create(self::anonKey($request->getClientIp() ?? 'unknown', $secret))->consume()->isAccepted()) {
+                return $this->redirectToRoute('check_email');
+            }
 
             return $this->processSendingPasswordResetEmail($email, $mailer, $userRepository);
         }
@@ -57,6 +75,19 @@ final class ResetPasswordController extends AbstractController
             'page_title' => 'meta.reset_request_title',
             'page_description' => 'meta.reset_request_description',
         ]);
+    }
+
+    /**
+     * Limiter key for an anonymous caller: a salted hash, never the address.
+     *
+     * An IP address is personal data under the GDPR, so the rate-limit store
+     * holds a hash of it. Same construction as RideCheckController::anonKey.
+     *
+     * @see docs/specs/security-architecture.md §7
+     */
+    public static function anonKey(string $ip, string $secret): string
+    {
+        return 'anon-'.hash('sha256', $secret.'|password-reset|'.$ip);
     }
 
     #[Route('/reset-password/check-email', name: 'check_email', methods: ['GET'])]

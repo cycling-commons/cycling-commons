@@ -68,6 +68,21 @@ From `developers/docker/compose.yaml`. Host ports resolve as
 overrides some defaults to avoid collisions with commonly-running local
 services — both values are listed where they differ.
 
+**Every published port binds `${BIND_ADDR}`, which defaults to `127.0.0.1`.**
+The stack used to bind `0.0.0.0`, so joining any café or office network
+published a PostGIS with a two-letter fallback password, a MinIO with its
+console, and an unauthenticated pipeline API to everyone on it (security scan
+2026-08-25). Loopback is the right default because everything here is either
+reached from this machine or reached container-to-container over the compose
+network, which port publishing has nothing to do with. Set `BIND_ADDR=0.0.0.0`
+in `developers/docker/.env` when you deliberately want a phone or a colleague
+to reach the stack, and change the passwords first.
+
+`POSTGRES_PASSWORD` and `MINIO_ROOT_PASSWORD` use `${VAR:?message}` rather than
+a fallback value, so a missing `.env` stops the stack with a readable error
+instead of quietly booting a database whose password is `cc`. Both are set in
+`.env.example`, so `cp .env.example .env` is still the whole setup step.
+
 | Service | Image / build | Ports (host → container) | Profile | Volumes / notes |
 |---|---|---|---|---|
 | `db` | `postgis/postgis:18-3.6` | `POSTGRES_PORT`: compose default **5432**, `.env.example` sets **5433** → 5432 | always | named volume `cc_pgdata:/var/lib/postgresql` (dev-environment.md §4); `./db/init` → `/docker-entrypoint-initdb.d` (first-init only); healthcheck `pg_isready` |

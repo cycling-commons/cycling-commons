@@ -1380,11 +1380,22 @@ Hidden queue rows are not a security boundary. Scoping applies to:
 - **Reads**: `SubmissionQueue` (rows, `pendingForMap` / `CC_PENDING`, totals,
   badge counts, filter dropdowns) and `RouteQueue` likewise.
 - **Writes (403 out of scope, `OutOfScopeException`)**: `/moderate/decide`,
-  `/moderate/trash`, every route moderation write
-  (approve/reject/retire/save, trash, correction done/dismiss), and
-  `/moderate/message` (the referenced row's region). The route detail page
-  itself 403s out of scope. The 403-reveals-existence trade-off is accepted as
-  consistent, documented semantics.
+  `/moderate/trash`, `/moderate/escalate-submission`, `/moderate/escalate`
+  (the photo's region comes from its owning submission; an unclaimed upload has
+  no region yet, and a null region is in scope for everyone as above), every
+  route moderation write (approve/reject/retire/save, trash, correction
+  done/dismiss), and `/moderate/message` (the referenced row's region). The
+  route detail page itself 403s out of scope. The 403-reveals-existence
+  trade-off is accepted as consistent, documented semantics.
+
+  **The two escalation paths were the gap** (security scan 2026-08-25). They
+  were the only writes on the desk with no scope guard, and they are the
+  heaviest verb it has: escalation puts a row into legal hold, hides its
+  photos and mails a human. A region-limited curator could pull any submission
+  on the platform out of its queue. Both endpoints take a bare id, so "the
+  queue only shows you your own regions" was never a guard, which is the whole
+  reason §9.3 opens by saying hidden rows are not a security boundary. Pinned
+  by `App\Tests\Moderation\SubmissionEscalationTest`.
 - **Visible scope**: the moderation shell label always shows the actor's scope
   — assigned area names via `ModerationScopeProvider::describe()`, or "All
   areas" (`account.mod_scope_all`).

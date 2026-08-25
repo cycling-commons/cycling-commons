@@ -33,6 +33,10 @@ framework:
                 adapter: cache.app
             cache.curator_reauth_limiter:
                 adapter: cache.app
+            cache.password_reset_limiter:
+                adapter: cache.app
+            cache.registration_limiter:
+                adapter: cache.app
             cache.media_upload_limiter:
                 adapter: cache.app
             cache.data_export_limiter:
@@ -172,6 +176,23 @@ framework:
             limit: 5
             interval: '15 minutes'
             cache_pool: cache.curator_reauth_limiter
+        # Anonymous account-mail endpoints (account-and-auth.md §2). Both had
+        # no quota at all (security scan 2026-08-25): one unauthenticated POST
+        # persists a row and sends a message to an address the sender chose, so
+        # a loop turns this site into a mail cannon aimed at somebody else's
+        # inbox and floods our own tables on the way. Per address, sized so a
+        # shared office address that genuinely forgets a password twice in an
+        # afternoon is never the one that hits it.
+        password_reset:
+            policy: sliding_window
+            limit: 5
+            interval: '1 hour'
+            cache_pool: cache.password_reset_limiter
+        registration:
+            policy: sliding_window
+            limit: 5
+            interval: '1 hour'
+            cache_pool: cache.registration_limiter
         # Photo uploads (photo-uploads.md §7): generous for a real day of
         # contributing, bounded against bulk abuse. Each accepted upload costs
         # an Imagick decode plus three encodes, so this is a compute gate as
@@ -261,6 +282,10 @@ when@test:
                 cache.curator_application_limiter:
                     adapter: cache.adapter.array
                 cache.curator_reauth_limiter:
+                    adapter: cache.adapter.array
+                cache.password_reset_limiter:
+                    adapter: cache.adapter.array
+                cache.registration_limiter:
                     adapter: cache.adapter.array
                 cache.media_upload_limiter:
                     adapter: cache.adapter.array

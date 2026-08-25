@@ -150,6 +150,27 @@ bundle with its own `ResetPasswordRequest` entity):
 - Repository throttling in the bundle prevents reset-request floods; stuck
   rows are visible/purgeable via the admin diagnostics CRUD (§6.5).
 
+**Both of these endpoints are budgeted per address** (`password_reset` and
+`registration`, 5 per hour each,
+[security-architecture.md](security-architecture.md) §7). Neither had a quota
+until the 2026-08-25 security scan. One unauthenticated POST to either persists
+a row and sends a message to an address the sender chose, so a loop is two
+attacks at once: an inbox flood aimed at somebody else and a table flood aimed
+at us. The bundle's own repository throttle does not cover it, because that one
+is per user and the flood picks a new target address every time.
+
+The two differ in what over-budget looks like, and the difference is the point:
+
+- **Password reset** redirects to `/reset-password/check-email`, exactly the
+  answer a real request gets. A `429` here would be the account-enumeration
+  oracle this page is otherwise careful to avoid.
+- **Registration** answers `429` with a visible form error. This page already
+  tells you when an address is taken, so there is no existence secret left to
+  protect, and a silent no-op would just look broken to an honest visitor.
+
+The limiter is consumed **before** anything is written or sent, and the keys are
+salted hashes of the address rather than the address itself.
+
 **Mail:** `symfony/mailer`; Mailpit in the dev docker stack, prod SMTP via the
 `MAILER_DSN` env var. Sender identity is `noreply@cyclingcommons.org`.
 All transactional emails (verification, password reset, account-deletion
@@ -182,6 +203,25 @@ Lock semantics (all in `LoginThrottleListener`):
   reset first).
 - Successful login resets both fields (flush skipped when already clean).
 - No user-enumeration leak: unresolvable identifiers are silently ignored.
+
+### The 2FA interstitial rides the same budget
+
+`LoginThrottleListener` listens on `CheckPassportEvent` and
+`LoginFailureEvent`, and Symfony's authenticator manager dispatches both for
+**every** authenticator on the firewall, scheb's `TwoFactorAuthenticator`
+included. So a wrong TOTP code at `/2fa_login_check` counts against the same
+per-account budget as a wrong password, the fifth one locks the account, and
+from then on even a **correct** code is refused at `CheckPassportEvent`.
+
+`/2fa_login_check` therefore has **no rate limiter of its own, deliberately**.
+A 2026-08-25 security scan read that missing limiter as a missing gate and
+filed it as unlimited six-digit guessing on exactly the elevated accounts 2FA
+is mandatory for. Reproducing it end to end showed the opposite. The report was
+wrong, but only because of the wiring above, which at the time nothing stated
+and nothing tested: narrowing `LoginThrottleListener` to the password step
+would have made it true. `App\Tests\Auth\TwoFactorBruteForceTest` pins the
+behaviour, including that the lock is per account so one attacked rider cannot
+lock out another.
 
 Accepted residual: an attacker who knows a victim's email can trip a 15-minute
 lock with 5 bad passwords. This is inherent to account-scoped locking; it is
@@ -961,6 +1001,19 @@ relative paths are honoured (the strict allowlist regex shared with
 `LocaleController::isSafeInternalPath` — no `//`, no backslash, no control
 characters anywhere, `\A…\z` anchored; review 2026-08-16 finding 8), or a
 logged-in POST becomes an open redirect.
+
+**Referer, where it is used at all, is same-ORIGIN and never same-prefix.**
+`LocaleController::switch` falls back to `Referer` when no `to` is given, and
+that check was `str_starts_with($referer, $request->getSchemeAndHttpHost())`
+until the 2026-08-25 security scan. A prefix match on
+`https://cyclingcommons.org` also accepts
+`https://cyclingcommons.org.evil.example/`, which is a different site, so the
+switcher was an open redirect reachable by an ordinary GET link.
+`LocaleController::isSameOrigin` now compares the parsed host, scheme and port,
+which additionally refuses `https://user@evil.example/` (userinfo dressed up to
+look like the real host) and any downgrade from https to http. Nothing else in
+the app trusts `Referer` for a destination; the pagers use a submitted `back`
+field precisely so they do not have to.
 The pager shows one count line: page-of-pages on multi-page lists, the row
 range on single-page ones.
 

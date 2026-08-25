@@ -3,6 +3,16 @@ name: cycling-commons-dev
 # Full-stack dev environment for the Cycling Commons.
 #   cp .env.example .env  &&  docker compose up
 # See developers/docker/README.md for the URL table and the opt-in profiles.
+#
+# Every published port binds ${BIND_ADDR}, which defaults to 127.0.0.1: this
+# stack is for THIS machine. It used to bind 0.0.0.0 and so offered the whole
+# network a PostgreSQL, a MinIO console and an unauthenticated pipeline API
+# (security scan 2026-08-25). Set BIND_ADDR=0.0.0.0 in .env if you actually
+# want a phone or a colleague to reach it.
+#
+# The two passwords below use `:?` rather than a fallback value on purpose. A
+# missing .env should stop the stack with a readable message, not quietly boot
+# a database whose password is "cc".
 
 services:
   # ---- the spine: PostgreSQL + PostGIS -------------------------------------
@@ -11,9 +21,9 @@ services:
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-cyclingcommons}
       POSTGRES_USER: ${POSTGRES_USER:-cc}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cc}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in developers/docker/.env (cp .env.example .env)}
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - "${BIND_ADDR:-127.0.0.1}:${POSTGRES_PORT:-5432}:5432"
     volumes:
       # PG18 images store data in a major-version subdir; mount the parent so PGDATA
       # (/var/lib/postgresql/18/docker) is persisted and pg_upgrade --link stays possible.
@@ -176,7 +186,7 @@ services:
   web:
     image: nginx:alpine
     ports:
-      - "${API_PORT:-8001}:80"
+      - "${BIND_ADDR:-127.0.0.1}:${API_PORT:-8001}:80"
     volumes:
       - ../../web:/app:ro
       - ./nginx/app.conf:/etc/nginx/conf.d/default.conf:ro
@@ -226,7 +236,7 @@ services:
       # a clone that did not copy .env.example bound the pipeline to 8002 and
       # elevation could not start. .env.example already used 8012; this makes
       # the fallback agree with it.
-      - "${PIPELINE_PORT:-8012}:8000"
+      - "${BIND_ADDR:-127.0.0.1}:${PIPELINE_PORT:-8012}:8000"
     volumes:
       - ../../pipeline:/app
       - ${DEM_DIR:-./data/dem}:/data/dem:ro   # downloaded DEM (see README)
@@ -244,7 +254,7 @@ services:
   atlas:
     image: nginx:alpine
     ports:
-      - "${ATLAS_PORT:-8099}:80"
+      - "${BIND_ADDR:-127.0.0.1}:${ATLAS_PORT:-8099}:80"
     volumes:
       - ../../atlas/demo:/usr/share/nginx/html:ro
       - ./nginx/atlas.conf:/etc/nginx/conf.d/default.conf:ro   # dev: no-store cache so edits always show
@@ -255,7 +265,7 @@ services:
       context: ../../
       dockerfile: developers/docker/wiki/Dockerfile
     ports:
-      - "${WIKI_PORT:-8000}:8000"
+      - "${BIND_ADDR:-127.0.0.1}:${WIKI_PORT:-8000}:8000"
     volumes:
       - ../../mkdocs.yml:/docs/mkdocs.yml:ro
       - ../../wiki:/docs/wiki:ro
@@ -273,7 +283,7 @@ services:
       build_admins: "False"
       build_time_zones: "False"
     ports:
-      - "${VALHALLA_PORT:-8003}:8002"
+      - "${BIND_ADDR:-127.0.0.1}:${VALHALLA_PORT:-8003}:8002"
     volumes:
       - ${VALHALLA_TILES:-./data/valhalla}:/custom_files   # drop the downloaded tiles here
 
@@ -288,7 +298,7 @@ services:
       MP_SMTP_AUTH_ACCEPT_ANY: "1"
       MP_SMTP_AUTH_ALLOW_INSECURE: "1"
     ports:
-      - "${MAILPIT_UI_PORT:-8025}:8025"
+      - "${BIND_ADDR:-127.0.0.1}:${MAILPIT_UI_PORT:-8025}:8025"
 
   # ---- opt-in: S3-compatible object storage for PMTiles + rider media ------
   minio:
@@ -297,10 +307,10 @@ services:
     command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-ccadmin}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-ccadminsecret}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?set MINIO_ROOT_PASSWORD in developers/docker/.env (cp .env.example .env)}
     ports:
-      - "${MINIO_PORT:-9100}:9000"
-      - "${MINIO_CONSOLE_PORT:-9101}:9001"
+      - "${BIND_ADDR:-127.0.0.1}:${MINIO_PORT:-9100}:9000"
+      - "${BIND_ADDR:-127.0.0.1}:${MINIO_CONSOLE_PORT:-9101}:9001"
     volumes:
       - cc_minio:/data
     healthcheck:
@@ -365,7 +375,7 @@ services:
     volumes:
       - ./media-proxy.conf.template:/etc/nginx/templates/default.conf.template:ro
     ports:
-      - "${MEDIA_PROXY_PORT:-9102}:80"
+      - "${BIND_ADDR:-127.0.0.1}:${MEDIA_PROXY_PORT:-9102}:80"
 
   # The tile half of the same story as media-proxy: staging serves tiles from
   # tiles-stg.cyclingcommons.org, rewriting the public /cc-maps/ prefix onto a
@@ -384,7 +394,7 @@ services:
     volumes:
       - ./tiles-proxy.conf.template:/etc/nginx/templates/default.conf.template:ro
     ports:
-      - "${TILES_PROXY_PORT:-9103}:80"
+      - "${BIND_ADDR:-127.0.0.1}:${TILES_PROXY_PORT:-9103}:80"
 
 volumes:
   cc_pgdata:

@@ -8,11 +8,14 @@ namespace App\Tests\Moderation;
 
 use App\Catalog\Entity\Submission;
 use App\Catalog\SubmissionType;
+use App\Catalog\Entity\Region;
 use App\Entity\User;
 use App\Media\Entity\ConsentRecord;
 use App\Media\Entity\MediaUpload;
 use App\Media\MediaConsent;
+use App\Moderation\Entity\ModeratorArea;
 use App\Moderation\ModerationScope;
+use App\Moderation\OutOfScopeException;
 use App\Moderation\ModerationService;
 use App\Moderation\SubmissionQueue;
 use Doctrine\ORM\EntityManagerInterface;
@@ -51,6 +54,15 @@ final class SubmissionEscalationTest extends KernelTestCase
         $this->em->flush();
 
         return $user;
+    }
+
+    private function region(string $slug, string $cc): Region
+    {
+        $r = (new Region())->setSlug($slug.'-'.uniqid())->setName(ucfirst($slug))->setCountryCode($cc);
+        $this->em->persist($r);
+        $this->em->flush();
+
+        return $r;
     }
 
     private function submission(User $author): Submission
@@ -193,5 +205,60 @@ final class SubmissionEscalationTest extends KernelTestCase
 
         self::assertSame(2, $this->moderation->heldSubmissionCount());
         self::assertCount(2, $this->moderation->heldSubmissions(1, 25));
+    }
+
+    /**
+     * A region-limited curator cannot escalate a submission from somebody
+     * else's area.
+     *
+     * Escalation is the heaviest verb on the desk: it puts a row into legal
+     * hold, hides its photos and mails a human. Every other write already
+     * checked the curator's areas, and this one did not (security scan
+     * 2026-08-25), so a curator scoped to one province could have pulled any
+     * submission on the platform out of its queue. The endpoint takes a bare
+     * submission id, so "the queue only shows you your own regions" was never
+     * the guard.
+     */
+    public function testARegionLimitedCuratorCannotEscalateOutsideTheirAreas(): void
+    {
+        $curator = $this->user('esc-sub-scope');
+        $wallonia = $this->region('scope-wallonia', 'BE');
+        $flanders = $this->region('scope-flanders', 'BE');
+
+        $this->em->persist(new ModeratorArea((int) $curator->getId(), (int) $wallonia->getId(), null));
+        $this->em->flush();
+
+        $foreign = $this->submission($this->user('esc-sub-scope-author'));
+        $foreign->setRegionId((int) $flanders->getId());
+        $this->em->flush();
+
+        try {
+            $this->moderation->escalateSubmission((int) $foreign->getId(), $curator, 'Not mine to hold.');
+            self::fail('Escalation must refuse a submission outside the curator\'s areas');
+        } catch (OutOfScopeException) {
+            // expected
+        }
+
+        self::assertFalse($foreign->isEscalated(), 'the row is untouched');
+        self::assertSame([], $this->sent(), 'and no human was paged');
+    }
+
+    /** The same curator escalates normally inside their own area. */
+    public function testTheSameCuratorEscalatesInsideTheirOwnArea(): void
+    {
+        $curator = $this->user('esc-sub-scope-ok');
+        $wallonia = $this->region('scope-ok-wallonia', 'BE');
+
+        $this->em->persist(new ModeratorArea((int) $curator->getId(), (int) $wallonia->getId(), null));
+        $this->em->flush();
+
+        $mine = $this->submission($this->user('esc-sub-scope-ok-author'));
+        $mine->setRegionId((int) $wallonia->getId());
+        $this->em->flush();
+
+        $this->moderation->escalateSubmission((int) $mine->getId(), $curator, 'This one is mine.');
+
+        self::assertTrue($mine->isEscalated());
+        self::assertCount(1, $this->sent());
     }
 }

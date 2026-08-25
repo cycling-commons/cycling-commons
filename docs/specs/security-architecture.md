@@ -395,10 +395,13 @@ literal numbers. Most limiters are keyed **per user**
 (`'user-'.$user->getId()`) and consumed with `consume()->isAccepted()`. Three
 exceptions, each for a reason worth knowing: `coverage_read` and the two
 `media_report*` limiters are keyed **per IP**
-(`'ip-'.$request->getClientIp()`) because their callers are anonymous; and the
-two `media_urgent_breaker_*` limiters are keyed on **one global key**, because
-a per-IP budget cannot bound a distributed attacker and the thing being
-budgeted there is a site-wide capability, not one caller's share of it.
+(`'ip-'.$request->getClientIp()`) because their callers are anonymous;
+`ride_check_anon`, `password_reset` and `registration` are also per address but
+key on a **salted hash** of it rather than the address itself, so the limiter
+store never holds one in the clear; and the two `media_urgent_breaker_*`
+limiters are keyed on **one global key**, because a per-IP budget cannot bound
+a distributed attacker and the thing being budgeted there is a site-wide
+capability, not one caller's share of it.
 
 | Limiter | Policy | Limit (current config) | Key | Guards | Over-limit behaviour |
 |---|---|---|---|---|---|
@@ -414,6 +417,8 @@ budgeted there is a site-wide capability, not one caller's share of it.
 | `curator_application` | sliding_window | 3 / 1 day | `user-<id>` | Curator-application submissions — same controller, country onboarded; the tighter of the two, since an application is a task for a human reviewer, not just a counter ([moderation-and-contribution.md](moderation-and-contribution.md) §11) | Flash `join.error.too_many`, redirect back to the form |
 | `media_report` | sliding_window | 5 / 1 day | per **IP** (anonymous) | Third-party photo reports — `App\Controller\MediaReportController::submit()` ([photo-uploads.md](photo-uploads.md) §6c); anonymous by design (Art. 17 needs no account) and deliberately CAPTCHA-free, so this limiter and the queue-not-withhold design are the abuse story | `429`, form re-rendered with `media.report.error.rate_limited` |
 | `media_report_urgent` | sliding_window | 1 / 1 day | per **IP** (anonymous) | The intimate-imagery/child report category — the one lever an anonymous visitor has that changes anything (auto-withhold), so its budget is one pull per IP per day; consumed **in addition to** `media_report` | `429`, same re-render |
+| `password_reset` | sliding_window | 5 / 1 hour | `anon-<sha256(secret\|password-reset\|ip)>` | Password-reset requests, in `App\Controller\ResetPasswordController::request()`. One unauthenticated POST persists a token row and mails a link to an address the sender chose, so an unbudgeted loop is both an inbox flood aimed at a third party and a table flood aimed at us (security scan 2026-08-25). Salted-hash key, same construction and the same pseudonymisation caveat as `ride_check_anon` | Redirect to `/reset-password/check-email`, the **same** answer a real request gets. Never a `429`: this page refuses to reveal whether an address has an account, and a distinguishable over-limit response would be exactly that oracle |
+| `registration` | sliding_window | 5 / 1 hour | `anon-<sha256(secret\|registration\|ip)>` | Sign-ups, in `App\Controller\RegistrationController::register()`; same shape and same reasoning as `password_reset`, consumed **before** the user row is written or any mail is sent | `429`, form re-rendered with a visible error. A `429` is fine here, unlike above: this page already tells you when an address is taken, so there is no existence secret left to keep |
 | `media_urgent_alert` | sliding_window | 1 / 1 hour | **one global key** | How often the circuit breaker may mail a human ([photo-uploads.md](photo-uploads.md) §6c). The flood that opens the breaker keeps arriving, so a mail per report would be thousands of messages aimed at the one person who has to read them | Silently skips the mail; the CRITICAL log line is written either way |
 
 **Not in this file, and deliberately:** the auto-withhold **circuit breaker**
@@ -433,7 +438,8 @@ simply hides nothing.
 
 
 Storage note: `route_propose`, `route_suggest`, `ride_check`, `elevation`,
-`route_snap`, `country_interest` and `curator_application` each use their own dedicated
+`route_snap`, `country_interest`, `curator_application`, `password_reset` and
+`registration` each use their own dedicated
 cache pool (`cache.<name>_limiter`, inheriting `cache.app` — Redis in
 dev/prod, and the array adapter in test via that inheritance) that `when@test`
 additionally overrides to the array adapter — a persistent pool would carry
@@ -442,7 +448,10 @@ tests. A new per-user limiter should copy this pool-plus-test-override shape.
 (`contribution_submit` predates the convention and uses the default pool.)
 
 Login throttling is Symfony's built-in limiter and is inventoried in
-[account-and-auth.md](account-and-auth.md) §3, not here.
+[account-and-auth.md](account-and-auth.md) §3, not here. **The 2FA
+interstitial has no limiter of its own and needs none**: the per-account
+lockout described there already covers it, for reasons that are easy to miss.
+Read that section before adding one.
 
 ## 8. Open questions
 

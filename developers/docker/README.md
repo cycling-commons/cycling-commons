@@ -11,9 +11,14 @@ stack — database, API, pipeline, frontend, and wiki — wired together exactly
 
 ```sh
 cd developers/docker
-cp .env.example .env          # adjust ports/creds if you like
+cp .env.example .env          # required: the DB and MinIO passwords have no fallback
 docker compose up --build     # first run builds the images
 ```
+
+Everything is published on **`127.0.0.1` only**, so the stack is reachable from
+this machine and nowhere else. If you want a phone or a colleague on the same
+network to reach it, set `BIND_ADDR=0.0.0.0` in `.env` and change the passwords
+in there first.
 
 Then open:
 

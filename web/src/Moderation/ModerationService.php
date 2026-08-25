@@ -327,6 +327,15 @@ final class ModerationService
         if (null === $submission) {
             throw new \InvalidArgumentException(sprintf('Unknown submission %d', $id));
         }
+        // Same write-guard as decide()/trash() above. Escalation is the
+        // HEAVIEST action a curator has: it puts a row in legal hold, hides
+        // its photos and mails a human, so it is the last one that should
+        // have been reachable outside a curator's areas (security scan
+        // 2026-08-25). The endpoint takes a bare submission id, so the queue
+        // being scoped is not a guard.
+        if (!$this->scopeProvider->allowsRegion($this->scopeProvider->scopeFor($curator), $submission->getRegionId())) {
+            throw new OutOfScopeException('Submission outside the curator\'s assigned areas.');
+        }
         if ($submission->isEscalated()) {
             return;   // idempotent: a double-submit must not re-alert
         }

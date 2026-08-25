@@ -17,9 +17,25 @@ use Symfony\Component\Security\Http\Event\LoginFailureEvent;
 use Symfony\Component\Security\Http\Event\LoginSuccessEvent;
 
 /**
- * Per-account brute-force lockout: 5 failures → 15 minutes. Complements per-IP throttling.
+ * Per-account brute-force lockout: 5 failures, then 15 minutes. Complements
+ * per-IP throttling.
+ *
+ * This also guards the 2FA interstitial, and that is not a side effect to
+ * refactor away. Symfony's authenticator manager dispatches CheckPassportEvent
+ * and LoginFailureEvent for EVERY authenticator on the firewall, so scheb's
+ * TwoFactorAuthenticator runs through both listeners below: a wrong TOTP code
+ * counts against the same budget, and the fifth one locks the account so that
+ * even a correct code is refused. /2fa_login_check has no limiter of its own
+ * and needs none.
+ *
+ * A 2026-08-25 security scan read the missing limiter as a missing gate and
+ * filed it as unlimited code guessing on elevated accounts. It was wrong, but
+ * only because of the wiring above, which nothing stated and nothing tested.
+ * Narrowing this listener to the password step would make the report true.
+ * TwoFactorBruteForceTest pins the behaviour; keep it passing.
  *
  * @see docs/specs/account-and-auth.md §3
+ * @see \App\Tests\Auth\TwoFactorBruteForceTest
  *
  * @api
  */
