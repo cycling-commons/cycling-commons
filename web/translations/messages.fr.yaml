@@ -197,7 +197,7 @@ terms:
   contributions_p1_post: '.'
   contributions_p2: 'Vous confirmez avoir le droit de contribuer ce que vous soumettez, que cela ne viole pas les droits de tiers, et qu''il ne s''agit pas de données personnelles sur d''autres personnes.'
   h6_opendata: 'Données ouvertes & API'
-  opendata_pre: 'Les données et médias du Commons sont librement utilisables par tous — y compris commercialement — sous leurs'
+  opendata_pre: 'Les données, médias et traductions d''interface du Commons sont librement utilisables par tous — y compris commercialement — sous leurs'
   opendata_link: 'licences'
   opendata_mid: ', avec attribution. Consultez la'
   opendata_dev_link: 'documentation développeur'
@@ -226,7 +226,7 @@ terms:
   contact_post: '.'
   footer_disc_pre: 'Voir aussi notre'
   footer_disc_privacy: 'Politique de confidentialité'
-  footer_disc_mid: 'et les licences des données, médias et code'
+  footer_disc_mid: 'et les licences des données, médias, traductions d''interface et code'
   footer_disc_licences: 'licences'
   footer_disc_post: '.'
 licenses:

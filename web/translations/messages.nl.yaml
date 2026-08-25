@@ -197,7 +197,7 @@ terms:
   contributions_p1_post: '.'
   contributions_p2: 'Je bevestigt dat je het recht hebt om in te dienen wat je indient, dat het de rechten van anderen niet schendt, en dat het geen persoonsgegevens over andere mensen bevat.'
   h6_opendata: 'Open data & de API'
-  opendata_pre: 'De Commons-data en -media zijn voor iedereen vrij te gebruiken — ook commercieel — onder hun'
+  opendata_pre: 'De Commons-data, -media en UI-vertalingen zijn voor iedereen vrij te gebruiken — ook commercieel — onder hun'
   opendata_link: 'licenties'
   opendata_mid: ', met naamsvermelding. Zie de'
   opendata_dev_link: 'ontwikkelaarsdocumentatie'
@@ -226,7 +226,7 @@ terms:
   contact_post: '.'
   footer_disc_pre: 'Zie ook onze'
   footer_disc_privacy: 'Privacyverklaring'
-  footer_disc_mid: 'en de data-, media- en code-'
+  footer_disc_mid: 'en de data-, media-, UI-vertalingen- en code-'
   footer_disc_licences: 'licenties'
   footer_disc_post: '.'
 licenses:

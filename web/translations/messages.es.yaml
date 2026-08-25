@@ -197,7 +197,7 @@ terms:
   contributions_p1_post: '.'
   contributions_p2: 'Confirmas que tienes derecho a aportar lo que envías, que no vulnera derechos de terceros y que no son datos personales de otras personas.'
   h6_opendata: 'Datos abiertos y API'
-  opendata_pre: 'Los datos y los medios del Commons son de uso libre para cualquiera — también con fines comerciales — bajo sus'
+  opendata_pre: 'Los datos, los medios y las traducciones de la interfaz del Commons son de uso libre para cualquiera — también con fines comerciales — bajo sus'
   opendata_link: 'licencias'
   opendata_mid: ', citando la fuente. Consulta la'
   opendata_dev_link: 'documentación para desarrolladores'
@@ -228,7 +228,7 @@ terms:
   footer_disc_privacy: 'aviso de privacidad'
   footer_disc_mid: 'y las'
   footer_disc_licences: 'licencias'
-  footer_disc_post: ' de los datos, los medios y el código.'
+  footer_disc_post: ' de los datos, los medios, las traducciones de la interfaz y el código.'
 licenses:
   kicker: 'Licencias'
   title: 'La versión corta.'
