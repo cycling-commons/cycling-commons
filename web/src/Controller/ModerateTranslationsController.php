@@ -14,6 +14,7 @@ use App\Routing\LocalePrefix;
 use App\Translation\CatalogueBrowser;
 use App\Translation\DecisionService;
 use App\Translation\Exception\SelfReviewException;
+use App\Translation\Exception\UnknownProposalException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -61,8 +62,8 @@ final class ModerateTranslationsController extends AbstractController
                 $this->addFlash('danger', 'moderate.translation.error.self_review');
             } catch (AlreadyDecidedException) {
                 $this->addFlash('danger', 'moderate.translation.error.already_decided');
-            } catch (\InvalidArgumentException $e) {
-                $this->addFlash('danger', $e->getMessage());
+            } catch (UnknownProposalException) {
+                $this->addFlash('danger', 'moderate.translation.error.unknown');
             }
 
             return $this->redirectToRoute('moderate_translations');
@@ -82,13 +83,13 @@ final class ModerateTranslationsController extends AbstractController
                 'live' => $live['live'],
                 'proposed' => $proposal->getProposedValue(),
                 'locale' => $proposal->getLocale(),
+                'status' => $proposal->getStatus()->value,
             ];
         }
 
         return $this->render('moderate/translations.html.twig', [
             'page_title' => 'meta.moderate_translations_title',
             'page_description' => 'meta.moderate_translations_description',
-            'nav_active' => 'moderate_translations',
             'cards' => $cards,
         ]);
     }

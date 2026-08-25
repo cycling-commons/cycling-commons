@@ -45,8 +45,13 @@ final class DeleteTranslationOverlayCommandTest extends KernelTestCase
         self::assertStringContainsString('--write', $dry->getDisplay());
 
         $em->clear();
+        $entryAgain = $em->getRepository(TranslationEntry::class)->findOneBy(['messageKey' => 'nav.map']);
+        self::assertNotNull($entryAgain);
         self::assertNotNull(
-            $em->getRepository(TranslationOverlay::class)->findOneBy(['locale' => 'fr']),
+            $em->getRepository(TranslationOverlay::class)->findOneBy([
+                'entry' => $entryAgain,
+                'locale' => 'fr',
+            ]),
         );
         self::assertSame('Carte (overlay)', $t->trans('nav.map', [], 'messages', 'fr'));
 

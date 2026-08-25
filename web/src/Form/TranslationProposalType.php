@@ -37,6 +37,7 @@ final class TranslationProposalType extends AbstractType
                     new Length(
                         max: TranslationLimits::PROPOSED_VALUE_MAX,
                         maxMessage: 'translate.error.too_long',
+                        countUnit: Length::COUNT_BYTES,
                     ),
                 ],
             ])

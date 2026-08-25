@@ -151,4 +151,59 @@ final class ModerateTranslationsTest extends WebTestCase
         self::assertNotNull($overlay);
         self::assertSame('Carte csrf', $overlay->getValue());
     }
+
+    public function testNeedsInfoCardShowsStatus(): void
+    {
+        $client = static::createClient();
+        $rider = $this->createUser('mod-tr-badge-rider@example.com', 'hunter2secure!');
+        $proposal = $this->seedPendingProposal($rider, 'nav.map', 'Map', 'fr', 'Carte badge');
+        $proposal->setStatus(TranslationProposalStatus::NeedsInfo);
+        static::getContainer()->get(EntityManagerInterface::class)->flush();
+
+        $curator = $this->createUser(
+            'mod-tr-badge-curator@example.com',
+            'hunter2secure!',
+            roles: ['ROLE_CURATOR'],
+            totpSecret: 'JBSWY3DPEHPK3PXP',
+            twoFaEnabled: true,
+        );
+        $client->loginUser($curator);
+
+        $client->request('GET', '/moderate/translations');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('.tr-status', 'Needs info');
+    }
+
+    public function testUnknownProposalFlashesTranslatedError(): void
+    {
+        $client = static::createClient();
+        $rider = $this->createUser('mod-tr-unknown-rider@example.com', 'hunter2secure!');
+        $this->seedPendingProposal($rider, 'nav.map', 'Map', 'fr', 'Carte unknown');
+        $curator = $this->createUser(
+            'mod-tr-unknown-curator@example.com',
+            'hunter2secure!',
+            roles: ['ROLE_CURATOR'],
+            totpSecret: 'JBSWY3DPEHPK3PXP',
+            twoFaEnabled: true,
+        );
+        $client->loginUser($curator);
+
+        $crawler = $client->request('GET', '/moderate/translations');
+        self::assertResponseIsSuccessful();
+        $token = (string) $crawler->filter('form input[name="translation_decision[_token]"]')->attr('value');
+
+        $client->request('POST', '/moderate/translations', [
+            'translation_decision' => [
+                '_token' => $token,
+                'proposal_id' => '999999999',
+                'decision' => 'approve',
+                'note' => '',
+            ],
+        ]);
+
+        self::assertResponseRedirects();
+        $client->followRedirect();
+        self::assertSelectorExists('[role="alert"]');
+        self::assertSelectorTextContains('[role="alert"]', 'That proposal was not found');
+    }
 }

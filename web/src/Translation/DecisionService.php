@@ -14,6 +14,7 @@ use App\Moderation\MissingQuestionException;
 use App\Translation\Entity\TranslationOverlay;
 use App\Translation\Entity\TranslationProposal;
 use App\Translation\Exception\SelfReviewException;
+use App\Translation\Exception\UnknownProposalException;
 use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -34,10 +35,10 @@ final class DecisionService
     }
 
     /**
-     * @throws \InvalidArgumentException unknown decision or proposal id
-     * @throws MissingQuestionException  needs_info without a note
-     * @throws AlreadyDecidedException   proposal already settled
-     * @throws SelfReviewException       curator is the submitter
+     * @throws UnknownProposalException proposal id does not exist
+     * @throws MissingQuestionException needs_info without a note
+     * @throws AlreadyDecidedException  proposal already settled
+     * @throws SelfReviewException      curator is the submitter
      */
     public function decide(int $proposalId, string $decision, User $curator, ?string $note): TranslationProposal
     {
@@ -51,7 +52,7 @@ final class DecisionService
         $proposal = $this->em->wrapInTransaction(function () use ($proposalId, $decision, $curator, $note): TranslationProposal {
             $proposal = $this->em->find(TranslationProposal::class, $proposalId, LockMode::PESSIMISTIC_WRITE);
             if (null === $proposal) {
-                throw new \InvalidArgumentException(sprintf('Unknown proposal %d', $proposalId));
+                throw new UnknownProposalException(sprintf('Unknown proposal %d', $proposalId));
             }
             if (!\in_array($proposal->getStatus(), [
                 TranslationProposalStatus::Pending,

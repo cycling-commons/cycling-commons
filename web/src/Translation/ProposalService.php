@@ -13,7 +13,12 @@ use App\Translation\Entity\TranslationProposal;
 use App\Translation\Exception\ConsentRequiredException;
 use App\Translation\Exception\EmptyTranslationException;
 use App\Translation\Exception\EnglishNotTranslatableException;
+use App\Translation\Exception\InvalidLocaleException;
 use App\Translation\Exception\KeyNotFoundException;
+use App\Translation\Exception\TranslationConflictException;
+use App\Translation\Exception\TranslationTooLongException;
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
+use Doctrine\DBAL\ParameterType;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
@@ -39,9 +44,11 @@ final class ProposalService
      * @throws TooManyRequestsHttpException    over the hourly proposal limit
      * @throws ConsentRequiredException        when the consent tick is false
      * @throws EnglishNotTranslatableException when locale is en
+     * @throws InvalidLocaleException          locale is not a translatable one
      * @throws KeyNotFoundException            when the entry is marked absent
      * @throws EmptyTranslationException       when the value is empty after trim
-     * @throws \InvalidArgumentException       invalid locale or value too long
+     * @throws TranslationTooLongException     value longer than the byte cap
+     * @throws TranslationConflictException    concurrent open-proposal insert
      */
     public function submit(
         User $user,
@@ -50,21 +57,15 @@ final class ProposalService
         string $value,
         bool $consentTick,
     ): TranslationProposal {
-        if (!$this->translationProposeLimiter->create('user-'.(string) $user->getId())->consume()->isAccepted()) {
-            throw new TooManyRequestsHttpException(null, 'Too many translation proposals.');
-        }
-
         if (!$consentTick) {
             throw new ConsentRequiredException('Consent tick required.');
         }
-
-        $consentRecord = $this->consent->record($user);
 
         if ('en' === $locale) {
             throw new EnglishNotTranslatableException('English is not proposed from the website.');
         }
         if (!TranslationLimits::isTranslatableLocale($locale)) {
-            throw new \InvalidArgumentException(sprintf('Locale "%s" is not translatable.', $locale));
+            throw new InvalidLocaleException(sprintf('Locale "%s" is not translatable.', $locale));
         }
 
         if (null !== $entry->getAbsentAt()) {
@@ -76,14 +77,36 @@ final class ProposalService
             throw new EmptyTranslationException('Proposed translation must not be empty.');
         }
         if (\strlen($value) > TranslationLimits::PROPOSED_VALUE_MAX) {
-            throw new \InvalidArgumentException(sprintf('Proposed translation exceeds %d bytes.', TranslationLimits::PROPOSED_VALUE_MAX));
+            throw new TranslationTooLongException(sprintf('Proposed translation exceeds %d bytes.', TranslationLimits::PROPOSED_VALUE_MAX));
         }
 
-        $open = $this->findOpenProposal((int) $user->getId(), $locale, $entry);
+        $userId = (int) $user->getId();
+        $this->em->getConnection()->executeStatement(
+            'SELECT pg_advisory_xact_lock(:uid, :key)',
+            [
+                'uid' => $userId,
+                'key' => crc32($locale."\0".$entry->getMessageKey()) & 0x7FFFFFFF,
+            ],
+            [
+                'uid' => ParameterType::INTEGER,
+                'key' => ParameterType::INTEGER,
+            ],
+        );
+
+        if (!$this->translationProposeLimiter->create('user-'.(string) $userId)->consume()->isAccepted()) {
+            throw new TooManyRequestsHttpException(null, 'Too many translation proposals.');
+        }
+
+        $consentRecord = $this->consent->record($user);
+
+        $open = $this->findOpenProposal($userId, $locale, $entry);
         if (null !== $open) {
             $open->setProposedValue($value);
             $open->setEnglishAtSubmit($entry->getEnglish());
             $open->setStatus(TranslationProposalStatus::Pending);
+            $open->setReviewerId(null);
+            $open->setReviewerNote(null);
+            $open->setDecidedAt(null);
             if (!$this->consentStillCurrent($open->getConsentRecordId())) {
                 $open->setConsentRecordId($consentRecord->getId());
             }
@@ -97,11 +120,15 @@ final class ProposalService
             $locale,
             $value,
             $entry->getEnglish(),
-            (int) $user->getId(),
+            $userId,
             $consentRecord->getId(),
         );
         $this->em->persist($proposal);
-        $this->em->flush();
+        try {
+            $this->em->flush();
+        } catch (UniqueConstraintViolationException) {
+            throw new TranslationConflictException('An open proposal for this key already exists.');
+        }
 
         return $proposal;
     }

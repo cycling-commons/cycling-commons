@@ -2083,6 +2083,8 @@ translate:
     english: 'English cannot be proposed from the website.'
     key_absent: 'That catalogue key is no longer available.'
     rate_limited: 'Too many proposals this hour. Try again later.'
+    bad_locale: 'That language cannot be translated from the website.'
+    conflict: 'Someone else just submitted this key. Please try again.'
   locale:
     fr: 'French'
     nl: 'Dutch'
@@ -2676,6 +2678,10 @@ moderate:
     error:
       self_review: 'You cannot review your own translation proposal.'
       already_decided: 'That proposal was already decided.'
+      unknown: 'That proposal was not found.'
+    status:
+      pending: 'Pending'
+      needs_info: 'Needs info'
   type:
     new: 'New place'
     edit: 'Edit'

@@ -2540,6 +2540,8 @@ translate:
     english: 'Englisch kann nicht von der Website vorgeschlagen werden.'
     key_absent: 'Dieser Katalogschlüssel ist nicht mehr verfügbar.'
     rate_limited: 'Zu viele Vorschläge in dieser Stunde. Versuche es später erneut.'
+    bad_locale: 'Diese Sprache kann auf der Website nicht übersetzt werden.'
+    conflict: 'Jemand hat diesen Schlüssel gerade vorgeschlagen. Bitte versuche es erneut.'
   locale:
     fr: 'Französisch'
     nl: 'Niederländisch'
@@ -2651,6 +2653,10 @@ moderate:
     error:
       self_review: 'Du kannst deinen eigenen Übersetzungsvorschlag nicht prüfen.'
       already_decided: 'Dieser Vorschlag wurde bereits entschieden.'
+      unknown: 'Dieser Vorschlag wurde nicht gefunden.'
+    status:
+      pending: 'Offen'
+      needs_info: 'Rückfrage'
   type:
     new: 'Neuer Ort'
     edit: 'Bearbeitung'

@@ -211,4 +211,56 @@ final class TranslatePageTest extends WebTestCase
         $html = (string) $client->getResponse()->getContent();
         self::assertStringContainsString('home.cta_map', $html);
     }
+
+    public function testPostWithoutCsrfCreatesNoProposal(): void
+    {
+        $client = static::createClient();
+        $user = $this->createUser('translate-csrf@example.com', 'hunter2secure!');
+        $entry = $this->seedEntry('home.cta_map', 'Explore the map');
+        $client->loginUser($user);
+
+        $before = $this->proposalCount();
+        $client->request('POST', '/fr/translate/'.$entry->getId(), [
+            'translation_proposal' => [
+                '_token' => 'not-a-token',
+                'value' => 'Explorer la carte',
+                'consent' => '1',
+            ],
+        ]);
+
+        self::assertResponseStatusCodeSame(422);
+        self::assertSame($before, $this->proposalCount());
+    }
+
+    public function testMarkupNoteForStrongTag(): void
+    {
+        $client = static::createClient();
+        $user = $this->createUser('translate-markup@example.com', 'hunter2secure!');
+        $entry = $this->seedEntry('test.markup.strong', 'Keep the <strong>tags</strong>.');
+        $client->loginUser($user);
+
+        $client->request('GET', '/fr/translate/'.$entry->getId());
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('.note');
+    }
+
+    public function testRichPreviewStripsScript(): void
+    {
+        $client = static::createClient();
+        $user = $this->createUser('translate-script@example.com', 'hunter2secure!');
+        $entry = $this->seedEntry('home.cta_map', 'Explore the map');
+        $client->loginUser($user);
+
+        $crawler = $client->request('GET', '/fr/translate/'.$entry->getId());
+        $form = $crawler->filter('form[name="translation_proposal"]')->form([
+            'translation_proposal[value]' => '<script>alert(1)</script><b>ok</b>',
+            'translation_proposal[consent]' => false,
+        ]);
+        $client->submit($form);
+
+        self::assertResponseStatusCodeSame(422);
+        $preview = $client->getCrawler()->filter('.preview')->html();
+        self::assertStringNotContainsString('<script>', $preview);
+        self::assertStringContainsString('<b>ok</b>', $preview);
+    }
 }

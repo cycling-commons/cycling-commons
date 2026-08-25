@@ -34,6 +34,10 @@ final class ContentPagesTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertSelectorExists('footer.foot');
         self::assertSelectorTextContains('h1', 'The deal, in plain language');
+        self::assertStringContainsString(
+            'UI translations',
+            (string) $client->getResponse()->getContent(),
+        );
     }
 
     public function testLicensesRenders(): void

@@ -15,7 +15,10 @@ use App\Translation\Entity\TranslationEntry;
 use App\Translation\Exception\ConsentRequiredException;
 use App\Translation\Exception\EmptyTranslationException;
 use App\Translation\Exception\EnglishNotTranslatableException;
+use App\Translation\Exception\InvalidLocaleException;
 use App\Translation\Exception\KeyNotFoundException;
+use App\Translation\Exception\TranslationConflictException;
+use App\Translation\Exception\TranslationTooLongException;
 use App\Translation\ProposalService;
 use App\Translation\TranslationLimits;
 use Doctrine\ORM\EntityManagerInterface;
@@ -118,17 +121,19 @@ final class TranslateController extends AbstractController
                 $this->addFlash('danger', 'translate.error.english');
             } catch (KeyNotFoundException) {
                 $this->addFlash('danger', 'translate.error.key_absent');
+            } catch (InvalidLocaleException) {
+                $this->addFlash('danger', 'translate.error.bad_locale');
+            } catch (TranslationTooLongException) {
+                $this->addFlash('danger', 'translate.error.too_long');
+            } catch (TranslationConflictException) {
+                $this->addFlash('danger', 'translate.error.conflict');
             } catch (TooManyRequestsHttpException) {
                 $this->addFlash('danger', 'translate.error.rate_limited');
-            } catch (\InvalidArgumentException $e) {
-                $this->addFlash('danger', $e->getMessage());
             }
         }
 
         $english = $entry->getEnglish();
-        $hasMarkup = str_contains($english, '<b>')
-            || str_contains($english, '<a ')
-            || str_contains($english, '<a>');
+        $hasMarkup = 1 === preg_match('/<[a-zA-Z\/]/', $english);
 
         return $this->render('translate/edit.html.twig', [
             'page_title' => 'meta.translate_title',

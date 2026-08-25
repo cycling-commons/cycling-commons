@@ -2537,6 +2537,8 @@ translate:
     english: 'Engels kan niet vanaf de website worden voorgesteld.'
     key_absent: 'Die catalogsleutel is niet meer beschikbaar.'
     rate_limited: 'Te veel voorstellen dit uur. Probeer later opnieuw.'
+    bad_locale: 'Die taal kan vanaf de site niet vertaald worden.'
+    conflict: 'Iemand heeft deze sleutel net ingediend. Probeer het opnieuw.'
   locale:
     fr: 'Frans'
     nl: 'Nederlands'
@@ -2648,6 +2650,10 @@ moderate:
     error:
       self_review: 'Je kunt je eigen vertaalvoorstel niet beoordelen.'
       already_decided: 'Dat voorstel is al beslist.'
+      unknown: 'Dat voorstel is niet gevonden.'
+    status:
+      pending: 'In behandeling'
+      needs_info: 'Meer info'
   type:
     new: 'Nieuwe plek'
     edit: 'Bewerking'

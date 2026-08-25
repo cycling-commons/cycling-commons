@@ -9,6 +9,7 @@
   .mh .role-badge{display:inline-flex;align-items:center;gap:.4rem;font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;background:var(--spruce-lift);color:var(--paper);padding:.22rem .55rem;border-radius:30px;margin-top:.5rem}
   {% include 'moderate/_card_styles.html.twig' %}
   .tr-key{font-family:var(--mono);font-size:.72rem;letter-spacing:.04em;color:var(--clay);margin:0 0 .35rem}
+  .tr-status{display:inline-block;margin-left:.45rem;font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;color:var(--paper);background:var(--clay);padding:.12rem .4rem;border-radius:30px}
   .tr-meta{font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;color:#595c4d;margin:.15rem 0}
   .tr-warn{font-size:.84rem;line-height:1.45;color:#7d2018;background:rgba(163,52,43,.09);border-left:2px solid #a3342b;padding:.45rem .8rem;border-radius:0 5px 5px 0;margin:.5rem 0 .7rem}
   .tr-pair{display:grid;gap:.35rem;margin:.45rem 0 .7rem}
@@ -49,7 +50,7 @@
       <p class="tr-meta">{{ 'moderate.translation.lead'|trans }}</p>
       {% for card in cards %}
         <article class="q-item">
-          <p class="tr-key">{{ card.message_key }}</p>
+          <p class="tr-key">{{ card.message_key }} <span class="tr-status">{{ ('moderate.translation.status.' ~ card.status)|trans }}</span></p>
           <p class="tr-meta">{{ 'moderate.translation.locale'|trans({'%locale%': card.locale}) }}
             · {{ ('translate.locale.' ~ card.locale)|trans }}</p>
           {% if card.english_changed %}

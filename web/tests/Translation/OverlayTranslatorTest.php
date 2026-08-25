@@ -192,4 +192,12 @@ final class OverlayTranslatorTest extends KernelTestCase
 
         self::assertSame([], $translator->warmUp('/tmp/cache'));
     }
+
+    public function testRichSanitizerStripsScriptKeepsBold(): void
+    {
+        $sanitizer = static::getContainer()->get('html_sanitizer.sanitizer.app.rich_translations');
+        $clean = $sanitizer->sanitize('<script>alert(1)</script>Hi <b>there</b>');
+        self::assertStringNotContainsString('<script>', $clean);
+        self::assertStringContainsString('<b>there</b>', $clean);
+    }
 }

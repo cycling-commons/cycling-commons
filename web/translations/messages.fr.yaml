@@ -2537,6 +2537,8 @@ translate:
     english: 'L''anglais ne peut pas être proposé depuis le site.'
     key_absent: 'Cette clé du catalogue n''est plus disponible.'
     rate_limited: 'Trop de propositions cette heure. Réessayez plus tard.'
+    bad_locale: 'Cette langue ne peut pas être traduite depuis le site.'
+    conflict: 'Quelqu''un vient de proposer cette clé. Réessayez.'
   locale:
     fr: 'Français'
     nl: 'Néerlandais'
@@ -2648,6 +2650,10 @@ moderate:
     error:
       self_review: 'Vous ne pouvez pas examiner votre propre proposition de traduction.'
       already_decided: 'Cette proposition a déjà été tranchée.'
+      unknown: 'Cette proposition est introuvable.'
+    status:
+      pending: 'En attente'
+      needs_info: 'Besoin d''infos'
   type:
     new: 'Nouveau lieu'
     edit: 'Modification'

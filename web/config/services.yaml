@@ -215,7 +215,7 @@ when@test:
             public: true
             autowire: true
 
-        # Fetched directly by ProposalServiceTest until Task 5 wires a controller.
+        # Fetched directly by ProposalServiceTest (and used by TranslateController).
         App\Translation\ProposalService:
             public: true
             autowire: true

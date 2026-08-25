@@ -13,13 +13,17 @@ use App\Translation\Entity\TranslationProposal;
 use App\Translation\Exception\ConsentRequiredException;
 use App\Translation\Exception\EmptyTranslationException;
 use App\Translation\Exception\EnglishNotTranslatableException;
+use App\Translation\Exception\InvalidLocaleException;
 use App\Translation\Exception\KeyNotFoundException;
+use App\Translation\Exception\TranslationTooLongException;
 use App\Translation\ProposalService;
 use App\Translation\TranslationConsent;
 use App\Translation\TranslationLimits;
 use App\Translation\TranslationProposalStatus;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
+use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 
 final class ProposalServiceTest extends KernelTestCase
 {
@@ -153,8 +157,15 @@ final class ProposalServiceTest extends KernelTestCase
         $user = $this->user($em, 'prop-empty@test.test');
         $entry = $this->entry($em, 'nav.home', 'Home');
 
-        $this->expectException(EmptyTranslationException::class);
-        $this->svc()->submit($user, $entry, 'de', "  \t  ", true);
+        $beforeConsent = $this->consentCount($em, (int) $user->getId());
+
+        try {
+            $this->svc()->submit($user, $entry, 'de', "  \t  ", true);
+            self::fail('Expected EmptyTranslationException');
+        } catch (EmptyTranslationException) {
+        }
+
+        self::assertSame($beforeConsent, $this->consentCount($em, (int) $user->getId()));
     }
 
     public function testTooLongValueThrows(): void
@@ -164,14 +175,21 @@ final class ProposalServiceTest extends KernelTestCase
         $user = $this->user($em, 'prop-long@test.test');
         $entry = $this->entry($em, 'nav.about', 'About');
 
-        $this->expectException(\InvalidArgumentException::class);
-        $this->svc()->submit(
-            $user,
-            $entry,
-            'es',
-            str_repeat('a', TranslationLimits::PROPOSED_VALUE_MAX + 1),
-            true,
-        );
+        $beforeConsent = $this->consentCount($em, (int) $user->getId());
+
+        try {
+            $this->svc()->submit(
+                $user,
+                $entry,
+                'es',
+                str_repeat('a', TranslationLimits::PROPOSED_VALUE_MAX + 1),
+                true,
+            );
+            self::fail('Expected TranslationTooLongException');
+        } catch (TranslationTooLongException) {
+        }
+
+        self::assertSame($beforeConsent, $this->consentCount($em, (int) $user->getId()));
     }
 
     public function testEnglishLocaleThrows(): void
@@ -192,7 +210,7 @@ final class ProposalServiceTest extends KernelTestCase
         $user = $this->user($em, 'prop-xx@test.test');
         $entry = $this->entry($em, 'nav.search', 'Search');
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidLocaleException::class);
         $this->svc()->submit($user, $entry, 'xx', 'Buscar', true);
     }
 
@@ -234,8 +252,12 @@ final class ProposalServiceTest extends KernelTestCase
         $user = $this->user($em, 'prop-needs-info@test.test');
         $entry = $this->entry($em, 'flash.saved', 'Saved');
 
+        $reviewer = $this->user($em, 'prop-needs-info-reviewer@test.test');
         $first = $this->svc()->submit($user, $entry, 'de', 'Gespeichert', true);
         $first->setStatus(TranslationProposalStatus::NeedsInfo);
+        $first->setReviewerId((int) $reviewer->getId());
+        $first->setReviewerNote('Please shorten.');
+        $first->setDecidedAt(new \DateTimeImmutable('2026-08-01T12:00:00+00:00'));
         $em->flush();
         $id = $first->getId();
 
@@ -243,5 +265,26 @@ final class ProposalServiceTest extends KernelTestCase
         self::assertSame($id, $again->getId());
         self::assertSame('Gesichert', $again->getProposedValue());
         self::assertSame(TranslationProposalStatus::Pending, $again->getStatus());
+        self::assertNull($again->getReviewerId());
+        self::assertNull($again->getReviewerNote());
+        self::assertNull($again->getDecidedAt());
+    }
+
+    public function testRateLimitRejectsTheSixtyFirstSubmit(): void
+    {
+        self::bootKernel();
+        $em = $this->em();
+        $user = $this->user($em, 'prop-limit@test.test');
+        $entry = $this->entry($em, 'nav.map', 'Map');
+
+        /** @var RateLimiterFactoryInterface $factory */
+        $factory = static::getContainer()->get('limiter.translation_propose');
+        $limiter = $factory->create('user-'.(int) $user->getId());
+        for ($i = 0; $i < 60; ++$i) {
+            self::assertTrue($limiter->consume()->isAccepted());
+        }
+
+        $this->expectException(TooManyRequestsHttpException::class);
+        $this->svc()->submit($user, $entry, 'fr', 'Carte', true);
     }
 }
