@@ -121,15 +121,31 @@ def normalise_name(name: str) -> str:
     return re.sub(r"\s+", " ", n).strip().casefold()
 
 
-def db(sql: str) -> list[list[str]]:
-    """One psql round trip against the dev database, tab-separated."""
+def db(sql: str, **bindings: str) -> list[list[str]]:
+    """One psql round trip against the dev database, tab-separated.
+
+    Values go in as `-v name=value` and are read in SQL as `:'name'`, which
+    psql quotes and escapes itself. Nothing here builds a literal by hand: one
+    of the queries below keys on `country_code` values read back OUT of the
+    database, which is second-order injection waiting for the first row whose
+    text carries a quote (security scan 2026-08-25).
+
+    The statement arrives on STDIN rather than through `-c`, because psql hands
+    a `-c` string straight to the server without running its own parser over
+    it, so `:'name'` would reach PostgreSQL verbatim and come back as a syntax
+    error.
+    """
+    argv = [
+        "docker", "compose", "-f", "developers/docker/compose.yaml",
+        "exec", "-T", "db", "psql", "-U", "cc", "-d", "cyclingcommons",
+        "-At", "-F", "\t",
+    ]
+    for name, value in bindings.items():
+        argv += ["-v", f"{name}={value}"]
+    argv += ["-f", "-"]
+
     out = subprocess.run(
-        [
-            "docker", "compose", "-f", "developers/docker/compose.yaml",
-            "exec", "-T", "db", "psql", "-U", "cc", "-d", "cyclingcommons",
-            "-At", "-F", "\t", "-c", sql,
-        ],
-        capture_output=True, text=True, check=True,
+        argv, input=sql, capture_output=True, text=True, check=True,
     ).stdout
     return [line.split("\t") for line in out.splitlines() if line]
 
@@ -189,18 +205,18 @@ def main() -> int:
     args = ap.parse_args()
 
     letters = [args.letter] if args.letter else ["B", "I", "J"]
-    letter_list = ",".join(f"'{ltr}'" for ltr in letters)
 
-    rows = db(f"""
+    rows = db("""
         SELECT i.letter, i.country_code, i.name, i.source_ref,
                ST_Y(ST_Centroid(i.geom))::text, ST_X(ST_Centroid(i.geom))::text,
                ST_GeometryType(i.geom),
                ((i.attributes -> 'photo') IS NOT NULL)::text,
                COALESCE(NULLIF(i.attributes ->> 'description', ''), '')
           FROM item i
-         WHERE i.letter IN ({letter_list}) AND i.source IN ('manual','wikidata')
+         WHERE i.letter = ANY (string_to_array(:'letters', ','))
+           AND i.source IN ('manual','wikidata')
          ORDER BY i.letter, i.country_code, i.name
-    """)
+    """, letters=",".join(letters))
 
     items = [{
         "letter": r[0], "cc": r[1], "name": r[2], "ref": r[3],
@@ -212,12 +228,22 @@ def main() -> int:
     # ── Check 2: inside a region of its own country? ────────────────────────
     # One query for all of them, using our own polygons. `nearest_km` says
     # whether an outside point is a metre over a border or a country away.
-    values = ",".join(
-        f"({n},{it['lon']},{it['lat']},'{it['cc']}')" for n, it in enumerate(items)
-    )
+    # One bound JSON document, expanded server-side. These rows come back OUT
+    # of the database, so pasting `cc` into a SQL literal made the query only as
+    # safe as the tidiest row in `item` (security scan 2026-08-25).
+    points = json.dumps([
+        {"n": n, "lon": it["lon"], "lat": it["lat"], "cc": it["cc"]}
+        for n, it in enumerate(items)
+    ])
     placement = {int(r[0]): (r[1] == "true", float(r[2]) if r[2] else None, r[3] or "")
-                 for r in db(f"""
-        WITH pt(n, lon, lat, cc) AS (VALUES {values}),
+                 for r in db("""
+        WITH pt AS (
+            SELECT (e ->> 'n')::int      AS n,
+                   (e ->> 'lon')::float8 AS lon,
+                   (e ->> 'lat')::float8 AS lat,
+                   e ->> 'cc'            AS cc
+              FROM jsonb_array_elements(:'points'::jsonb) AS e
+        ),
              p AS (SELECT n, cc, ST_SetSRID(ST_MakePoint(lon, lat), 4326) AS g FROM pt)
         SELECT p.n,
                EXISTS (SELECT 1 FROM region r
@@ -230,7 +256,7 @@ def main() -> int:
                           WHERE r.geom IS NOT NULL AND ST_Contains(r.geom, p.g)
                           LIMIT 1), '')
           FROM p
-    """)}
+    """, points=points)}
 
     # ── Checks 1 and 3: Wikidata's own coordinate and classes ───────────────
     qids = [it["ref"].split(":", 1)[1] for it in items

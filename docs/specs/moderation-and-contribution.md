@@ -1361,7 +1361,14 @@ path of every new country.
 
 - **Unassigned = global**: a curator with zero rows moderates everything
   (rollout-safe, right for small teams). `ROLE_ADMIN` is always global
-  regardless of rows.
+  regardless of rows. A 2026-08-25 security scan filed this as a fail-open
+  default; it is a deliberate one, and it stays. Curators are appointed by hand
+  through an audited admin action (§9.4), the appointment is the trust decision,
+  and areas are a division of labour laid over it rather than the grant itself.
+  Defaulting a new curator to moderating nothing would make every appointment a
+  two-step act whose second step is easy to forget, and the failure mode of
+  forgetting it is a silent one: a queue that looks empty. Revisit if curators
+  ever stop being hand-appointed.
 - **NULL-region items are in scope for every curator** — deliberate, so
   outside-all-regions submissions never fall through the cracks.
 - The in-scope rule exists exactly twice, as verified twins:

@@ -94,6 +94,7 @@ jobs:
       - name: Set up SSH
         env:
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
           PORT: ${{ secrets.DEPLOY_PORT }}
           WEB1: ${{ secrets.DEPLOY_HOST_WEB1 }}
           WEB2: ${{ secrets.DEPLOY_HOST_WEB2 }}
@@ -102,8 +103,28 @@ jobs:
           mkdir -p ~/.ssh && chmod 700 ~/.ssh
           printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
+          # Pinned host keys, never a keyscan. Same reasoning as the production
+          # workflow: a keyscan is trust-on-first-use on every run, so it would
+          # hand the deploy key to anyone who can answer for the host on the
+          # runner's network path (security scan 2026-08-25). ONE secret holds
+          # every host this repo deploys to, staging and production alike, so
+          # there is a single place to look when a host key rotates.
+          if [ -z "${DEPLOY_KNOWN_HOSTS:-}" ]; then
+            echo "::error::DEPLOY_KNOWN_HOSTS secret is not set. Generate it ONCE from a machine you trust:"
+            echo "::error::  ssh-keyscan -p <DEPLOY_PORT> <WEB1> <WEB2> <DEPLOY_HOST>"
+            echo "::error::Verify the fingerprints against the hosts themselves, then paste the output into the secret."
+            exit 1
+          fi
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+          # A host missing from the pin would otherwise fail mid-deploy, with
+          # web-1 already updated and web-2 not. That is the exact half-deployed
+          # state the sequential loop below exists to prevent, so check now.
           for h in "$WEB1" "$WEB2"; do
-            ssh-keyscan -p "$PORT" "$h" >> ~/.ssh/known_hosts 2>/dev/null
+            ssh-keygen -F "[$h]:$PORT" -f ~/.ssh/known_hosts >/dev/null || {
+              echo "::error::$h is not in DEPLOY_KNOWN_HOSTS. Re-run the keyscan above with every host."
+              exit 1
+            }
           done
 
       # Sequential, and `set -e` means a failure on web-1 stops before web-2.
@@ -123,6 +144,7 @@ jobs:
           for host in "$WEB1" "$WEB2"; do
             echo "::group::${{ matrix.domain }} → $host"
             ssh -i ~/.ssh/deploy_key -p "$PORT" -o IdentitiesOnly=yes \
+              -o StrictHostKeyChecking=yes -o UserKnownHostsFile=~/.ssh/known_hosts \
               "$USER@$host" \
               "deploy-symfony.sh '${{ matrix.domain }}' '$REPO_URL' '$BRANCH'"
             echo "::endgroup::"

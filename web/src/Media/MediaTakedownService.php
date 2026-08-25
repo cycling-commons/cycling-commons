@@ -11,6 +11,7 @@ use App\Entity\User;
 use App\Media\Entity\MediaUpload;
 use App\Messaging\MessageService;
 use App\Messaging\UserMessageKind;
+use App\Security\PseudonymousKey;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
@@ -124,10 +125,10 @@ final class MediaTakedownService
         $this->em->flush();
     }
 
-    /** Salted reporter-IP hash: volume, not identity. @see docs/specs/photo-uploads.md §6c */
+    /** Keyed reporter-IP hash: volume, not identity. @see \App\Security\PseudonymousKey */
     private function hashReporter(string $ip): string
     {
-        return hash('sha256', $this->secret.'|'.$ip);
+        return PseudonymousKey::of('media-report', $ip, $this->secret);
     }
 
     /**

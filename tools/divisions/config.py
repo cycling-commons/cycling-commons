@@ -7,6 +7,8 @@ BE-WAL / BE-VLG / BE-BRU. Worldwide rollout adds a config block per country as
 its first curator appears (map-and-search.md §4.5a demand-driven seeding).
 """
 
+import re
+
 # Overture Maps release to pin. Regeneration hits the public Overture S3 bucket
 # for this release; bump deliberately (a newer release may shift boundaries —
 # that is a versioned re-import event, slugs/ISO codes stay identity).
@@ -17,6 +19,28 @@ OVERTURE_DIVISION_AREA = (
     "s3://overturemaps-us-west-2/release/{release}"
     "/theme=divisions/type=division_area/*"
 )
+
+# An Overture release id: four-digit year, month, day, then a dot and a build
+# number. Nothing else.
+RELEASE_RE = re.compile(r"\A\d{4}-\d{2}-\d{2}\.\d+\Z")
+
+
+def division_area_path(release):
+    """The read_parquet glob for a release, refusing anything oddly shaped.
+
+    Both callers paste this into a DuckDB string literal inside an f-string,
+    where the value arrives from `--release` on the command line. Nobody is
+    attacking their own laptop with it, but a validated accessor costs one
+    regex and removes the whole question (security scan 2026-08-25). It also
+    catches the likelier mistake by far: a typo'd release, which would
+    otherwise surface as an opaque S3 404 several seconds later.
+    """
+    if not RELEASE_RE.match(str(release)):
+        raise ValueError(
+            f"Not an Overture release id: {release!r}. Expected YYYY-MM-DD.N, "
+            f"e.g. {OVERTURE_RELEASE}."
+        )
+    return OVERTURE_DIVISION_AREA.format(release=release)
 
 # admin_level per Overture subtype, matching the OSM admin_level convention the
 # importer + moderation model already use (Wallonia was admin_level=4).

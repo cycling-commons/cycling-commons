@@ -6,17 +6,17 @@ declare(strict_types=1);
 
 namespace App\Tests\Moderation;
 
+use App\Catalog\Entity\Region;
 use App\Catalog\Entity\Submission;
 use App\Catalog\SubmissionType;
-use App\Catalog\Entity\Region;
 use App\Entity\User;
 use App\Media\Entity\ConsentRecord;
 use App\Media\Entity\MediaUpload;
 use App\Media\MediaConsent;
 use App\Moderation\Entity\ModeratorArea;
 use App\Moderation\ModerationScope;
-use App\Moderation\OutOfScopeException;
 use App\Moderation\ModerationService;
+use App\Moderation\OutOfScopeException;
 use App\Moderation\SubmissionQueue;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;

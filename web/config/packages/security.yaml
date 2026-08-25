@@ -7,7 +7,13 @@ security:
         app_users: { entity: { class: App\Entity\User, property: email } }
 
     firewalls:
-        dev: { pattern: ^/(_(profiler|wdt)|css|images|js)/, security: false }
+        # Symfony's skeleton pattern also carried `css|images|js`, which this
+        # app has never served from: AssetMapper puts everything under
+        # /assets/, and `debug:router` confirms no route lives at any of those
+        # three prefixes. An unauthenticated firewall over paths nobody uses is
+        # a trap for whoever adds the first one (security scan 2026-08-25), so
+        # only the profiler stays.
+        dev: { pattern: ^/(_(profiler|wdt))/, security: false }
         main:
             lazy: true
             provider: app_users

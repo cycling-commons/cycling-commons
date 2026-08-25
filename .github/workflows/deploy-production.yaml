@@ -58,6 +58,7 @@ jobs:
       - name: Trigger deploy over SSH
         env:
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
           DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
@@ -66,6 +67,20 @@ jobs:
           mkdir -p ~/.ssh && chmod 700 ~/.ssh
           printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -p "$DEPLOY_PORT" "$DEPLOY_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          # Pinned host keys, never a keyscan. A keyscan is trust-on-first-use
+          # on EVERY run: it accepts whatever answers on that port at that
+          # moment, so anyone able to answer for the host on the runner's
+          # network path is handed the deploy key and a shell on production
+          # (security scan 2026-08-25). Knowing the key BEFORE connecting is
+          # the entire purpose of the file it was writing into.
+          if [ -z "${DEPLOY_KNOWN_HOSTS:-}" ]; then
+            echo "::error::DEPLOY_KNOWN_HOSTS secret is not set. Generate it ONCE from a machine you trust:"
+            echo "::error::  ssh-keyscan -p <DEPLOY_PORT> <DEPLOY_HOST>"
+            echo "::error::Verify the fingerprints against the host itself, then paste the output into the secret."
+            exit 1
+          fi
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
           ssh -i ~/.ssh/id_ed25519 -p "$DEPLOY_PORT" -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes -o UserKnownHostsFile=~/.ssh/known_hosts \
             "$DEPLOY_USER@$DEPLOY_HOST" production

@@ -284,19 +284,60 @@ Invariant for fixtures and seeded elevated accounts: set **both**
 
 - `totpSecret` uses the custom Doctrine type `encrypted_string`
   (`App\Doctrine\EncryptedStringType`, registered in
-  `web/config/packages/doctrine.yaml`): AES-256-GCM, key derived from
-  `APP_SECRET` via HKDF-SHA256, stored as `base64(iv || tag || ciphertext)`.
-  A database-only leak does not expose authenticator seeds.
+  `web/config/packages/doctrine.yaml`): AES-256-GCM, key derived by HKDF-SHA256
+  from **`ENCRYPTION_SECRET`, falling back to `APP_SECRET`**, stored as
+  `base64(iv || tag || ciphertext)`. A database-only leak does not expose
+  authenticator seeds.
 - Backup codes are stored as `HMAC-SHA256(code, HKDF(APP_SECRET))`
   (`User::hashBackupCode()`) — a DB-only leak cannot even compute candidate
   hashes.
-- Shared trade-off: rotating `APP_SECRET` invalidates stored TOTP secrets and
-  backup codes (affected users re-enrol).
+- Shared trade-off: rotating the key invalidates stored TOTP secrets and backup
+  codes (affected users re-enrol).
+
+**Why `ENCRYPTION_SECRET` exists** (security scan 2026-08-25). Before it, the
+two variables were one, and there was no way to separate them. `APP_SECRET` is
+a signing key that an incident runbook may quite reasonably tell you to
+rotate; this is a data-encryption key that can only be rotated by re-encrypting
+every row. Rotating the shared value produced a **completely silent** 2FA
+outage: `convertToPHPValue()` hydrates unreadable ciphertext as null on purpose
+so that a mis-set variable cannot 500 every login, so the symptom was elevated
+users being told their code was wrong, one at a time, with nothing in the logs.
+
+Unset, the fallback keeps every existing deployment working with no change.
+To separate them: set `ENCRYPTION_SECRET` to the **current** value of
+`APP_SECRET`, deploy, confirm, and only then is `APP_SECRET` free to rotate.
+
+`bin/console app:security:encryption-audit` (`App\Command\EncryptionAuditCommand`)
+reports how many stored secrets the running key can actually read and lists the
+accounts it cannot, exiting non-zero so a deploy script can gate on it. Run it
+before and after touching either variable. Backup codes are a keyed hash rather
+than ciphertext, so they cannot be audited this way: nothing can tell a wrong
+key from a wrong code. That asymmetry is why the audit names TOTP only.
 - TOTP parameters: SHA1, 30 s period, 6 digits
   (`User::getTotpAuthenticationConfiguration()`); issuer `Cycling Commons`
   (`web/config/packages/scheb_2fa.yaml`).
 - The 2FA setup page carries a "Settings · Security" breadcrumb back-link and
   its post-enrolment Done button targets `/settings?tab=security` (§8).
+
+### The interstitial is a hard stop, not just a page
+
+Between the password and the second factor the session holds a
+`TwoFactorToken` whose `getUser()` returns the real `User`. Controllers that
+gate on `getUser() instanceof User` therefore look, from the inside, exactly as
+they do after a completed login, and a 2026-08-25 security scan read that as
+state-changing POSTs being reachable mid-interstitial.
+
+They are not. scheb's `TwoFactorAccessListener` refuses every path that is not
+the interstitial itself or explicitly `PUBLIC_ACCESS`, and redirects it to
+`/2fa` before any controller runs. Verified end to end against `/map/theme` and
+`/map/view-mode`: both bounce, and the profile column is unchanged.
+
+Worth knowing because of what it implies for `access_control`. That list gains
+`PUBLIC_ACCESS` entries regularly, several of them purely for cacheability
+(§5). Every one of them also opens that path to half-authenticated sessions.
+That is harmless for the cacheable GET endpoints there today, and would not be
+for a state-changing route. `App\Tests\Auth\TwoFactorInterstitialLockdownTest`
+pins the behaviour.
 
 Admin recovery: the support desk's **Disarm 2FA** action (§6) clears secret +
 codes and disables the flag — audited, confirm-gated.

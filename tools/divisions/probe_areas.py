@@ -83,7 +83,7 @@ def probe_country(cc, out_base, subtypes=("region",), release=None, con=None):
     con = con or _connect()
     out_dir = pathlib.Path(out_base) / cc.lower()
     out_dir.mkdir(parents=True, exist_ok=True)
-    path = config.OVERTURE_DIVISION_AREA.format(release=release)
+    path = config.division_area_path(release)
     per_subtype = {}
     probe = {"country": cc, "release": release, "subtypes": {}}
     for subtype in subtypes:

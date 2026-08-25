@@ -180,11 +180,24 @@ def existing_climbs():
     """Climbs already in the catalogue, as (name, lat, lng) - never re-seed one."""
     sql = ("SELECT json_agg(json_build_object('name', name, 'lat', ST_Y(geom), 'lng', ST_X(geom)))::text "
            "FROM item WHERE letter = 'B'")
+    # Narrow, and loud. A blanket `except Exception: return []` here read as
+    # "no climbs in the catalogue", which is the same answer as "the database
+    # is down" and as "the query is broken" (security scan 2026-08-25). This
+    # function's whole job is to stop the caller re-seeding a climb that
+    # already exists, so silently answering "none exist" is the one wrong
+    # answer it must never give.
     try:
         out = subprocess.run(PSQL + [sql], capture_output=True, text=True, check=True).stdout.strip()
-        return json.loads(out) or []
-    except Exception:
+    except (subprocess.CalledProcessError, OSError) as exc:
+        detail = exc.stderr.strip() if isinstance(exc, subprocess.CalledProcessError) and exc.stderr else exc
+        sys.exit(f"Cannot read the existing climbs, so re-seeding would be unsafe: {detail}")
+
+    if not out:
         return []
+    try:
+        return json.loads(out) or []
+    except json.JSONDecodeError as exc:
+        sys.exit(f"The existing-climbs query returned something that is not JSON: {exc}")
 
 
 def main() -> int:

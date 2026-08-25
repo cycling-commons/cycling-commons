@@ -6,12 +6,14 @@ routing, tile/PMTiles generation, ODbL exports). For now it only proves the
 wiring: it can reach PostGIS and see the mounted DEM. Real jobs build on top.
 """
 
+import logging
 import os
 
 import psycopg
 from fastapi import FastAPI
 
 app = FastAPI(title="Cycling Commons pipeline", version="0.0.1-dev")
+log = logging.getLogger("cc.pipeline")
 
 DATABASE_DSN = os.environ.get(
     "DATABASE_DSN", "postgresql://cc:cc@db:5432/cyclingcommons"
@@ -31,8 +33,22 @@ def db() -> dict:
         with psycopg.connect(DATABASE_DSN, connect_timeout=5) as conn:
             postgres = conn.execute("SELECT version()").fetchone()[0]
             postgis = conn.execute("SELECT postgis_full_version()").fetchone()[0]
-    except Exception as exc:  # noqa: BLE001 - surface the reason in dev
-        return {"status": "error", "message": str(exc)}
+    except Exception as exc:  # noqa: BLE001 - any failure is the same answer here
+        # The exception text is LOGGED, never returned. The old `str(exc)` in
+        # the response body handed a caller whatever psycopg had to say, and a
+        # failed connection says plenty: an auth failure reports as
+        # `connection to server at "172.26.0.8", port 5432 failed: FATAL:
+        # password authentication failed for user "cc"`, which is the internal
+        # address, the port and the database user (verified against psycopg 3,
+        # 2026-08-25; the password itself does NOT appear, which is the one
+        # part of the original report that did not hold up). Nothing about this
+        # being a dev scaffold makes it fine: the service published its port to
+        # the whole network until the same scan, and scaffolds get copied.
+        log.exception("PostGIS connectivity check failed")
+        return {
+            "status": "error",
+            "message": "Cannot reach PostGIS. See the pipeline container logs for the reason.",
+        }
     return {"status": "ok", "postgres": postgres, "postgis": postgis}
 
 

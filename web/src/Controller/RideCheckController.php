@@ -9,6 +9,7 @@ namespace App\Controller;
 use App\Account\UnitFormatter;
 use App\Catalog\RideCheckService;
 use App\Entity\User;
+use App\Security\PseudonymousKey;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -40,7 +41,7 @@ final class RideCheckController extends AbstractController
      */
     public static function anonKey(string $ip, string $secret): string
     {
-        return 'anon-'.hash('sha256', $secret.'|ride-check|'.$ip);
+        return PseudonymousKey::limiter('ride-check', $ip, $secret);
     }
 
     #[Route('/map/ride-check', name: 'map_ride_check', methods: ['POST'])]

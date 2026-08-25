@@ -92,7 +92,7 @@ instead of quietly booting a database whose password is `cc`. Both are set in
 | `atlas` | `nginx:alpine` | `ATLAS_PORT` **8099** → 80 | always | bind `atlas/demo/ → html:ro`; `./nginx/atlas.conf` serves with `Cache-Control: no-store` so edits always show |
 | `wiki` | build `developers/docker/wiki/Dockerfile` (python + pinned mkdocs) | `WIKI_PORT`: compose default **8000**, `.env.example` sets **8013** → 8000 | always | binds `mkdocs.yml`, `wiki/`, `overrides/` read-only; live reload |
 | `mailpit` | `axllent/mailpit` | `MAILPIT_UI_PORT` **8025** → 8025 (UI only; SMTP is internal-network `mailpit:1025`, no host SMTP port) | always | bundled so the stack is self-contained; collision with a shared host Mailpit → change `MAILPIT_UI_PORT` or set `MAILER_DSN=smtp://host.docker.internal:1025` |
-| `worker` | same build + env as `app` | none | always | the async tier (media-storage-architecture.md §3): `messenger:consume async` over the Redis-stream transport (`MESSENGER_TRANSPORT_DSN`, default `redis://redis:6379/cc_messages`); `stop_grace_period: 90s` sits above the slowest handler so a deploy never orphans a message mid-flight; THIS container gets the scanner env (`CLAMAV_TCP_ADDR=clamav:3310`, `CLAMAV_REQUIRED=1`), the web container keeps neither; waits for `clamav` healthy. **Rider photos do not appear without it**: the upload endpoint only quarantines and dispatches, so a stack started without `worker` leaves every photo stuck at "still checking" (`docker compose logs -f worker` is the first place to look) |
+| `worker` | same build + env as `app`, **as `www-data`** (`user:` in compose) | none | always | the async tier (media-storage-architecture.md §3): `messenger:consume async` over the Redis-stream transport (`MESSENGER_TRANSPORT_DSN`, default `redis://redis:6379/cc_messages`); `stop_grace_period: 90s` sits above the slowest handler so a deploy never orphans a message mid-flight; THIS container gets the scanner env (`CLAMAV_TCP_ADDR=clamav:3310`, `CLAMAV_REQUIRED=1`), the web container keeps neither; waits for `clamav` healthy. **Rider photos do not appear without it**: the upload endpoint only quarantines and dispatches, so a stack started without `worker` leaves every photo stuck at "still checking" (`docker compose logs -f worker` is the first place to look). **Runs as `www-data`**: the image carries no `USER` because the php-fpm master must start as root to drop its own pool workers, and this service replaces that CMD with a plain console command, so it inherited the root fpm needed and never dropped it. It is also the container that unpacks stranger-supplied image bytes through Imagick (security scan 2026-08-25). Nothing it does needs root: cache and logs go to `/tmp` via `APP_CACHE_DIR`/`APP_LOG_DIR`, and `/app/vendor` is only read |
 | `clamav` | `clamav/clamav:stable` | none (internal `clamav:3310`) | always | the release gate's scanner sidecar; `start_period: 180s` on the healthcheck is signature loading, not slowness — the worker waits for healthy so a scan never races the signature load |
 | `valhalla` | `ghcr.io/valhalla/valhalla:latest` | `VALHALLA_PORT` **8003** → 8002 | `routing` (opt-in) | `VALHALLA_TILES` (default `./data/valhalla`) → `/custom_files` — a **downloaded prebuilt** tile set, never built in-container (`use_tiles_ignore_pbf=True`, `force_rebuild=False`) |
 | `minio` | `minio/minio:latest` | `MINIO_PORT` **9100** → 9000, `MINIO_CONSOLE_PORT` **9101** → 9001 (off MinIO defaults to avoid clashes) | `storage` (opt-in) | named volume `cc_minio:/data`; S3-compatible store for PMTiles — dev mirror of the prod object-storage bucket ([coverage-provider.md](coverage-provider.md)) |
@@ -426,6 +426,36 @@ the target environment name (`staging` / `production`) as the command — the
 SSH forced-command pattern. All deploy scripts live server-side; the repo
 carries none. Branch flow: `main` → `staging` → `production`, each deploy
 branch auto-deploying on push (plus manual `workflow_dispatch`).
+
+### Host keys are pinned, not discovered (2026-08-25)
+
+**`DEPLOY_KNOWN_HOSTS` is a required repository secret.** Both workflows write
+it to `~/.ssh/known_hosts` and connect with `StrictHostKeyChecking=yes`. Without
+it they stop before the first `ssh`, with an error telling you how to build it.
+
+They previously ran a keyscan into that file on every run, which is
+trust-on-first-use with no first: it accepts whatever answers on that port at
+that moment, so anyone able to answer for the host on the runner's network path
+would be handed the deploy key and, through the forced command, a release on
+production. Knowing the key before connecting is the entire purpose of the file
+the keyscan was writing into (security scan 2026-08-25).
+
+Build the secret **once, from a machine you trust**, covering every host this
+repo deploys to (both staging frontends and production), and check the
+fingerprints against the hosts themselves before pasting:
+
+```sh
+ssh-keyscan -p <DEPLOY_PORT> <DEPLOY_HOST_WEB1> <DEPLOY_HOST_WEB2> <DEPLOY_HOST>
+```
+
+One secret rather than one per host, so a rotated key has a single place to be
+fixed. The staging workflow additionally checks each of its two hosts is
+present **before** it starts, because a host missing from the pin would
+otherwise fail between web-1 and web-2 and leave exactly the half-deployed
+state the sequential loop exists to prevent.
+
+Rotating a host key (a rebuild, a reinstall) means updating this secret, and
+until you do, deploys fail closed. That is the intended behaviour.
 
 ### Deploy waits for CI (2026-08-24)
 

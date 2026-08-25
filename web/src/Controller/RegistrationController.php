@@ -10,15 +10,16 @@ use App\Entity\User;
 use App\Form\RegistrationFormType;
 use App\Repository\UserRepository;
 use App\Security\EmailVerifier;
+use App\Security\PseudonymousKey;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Form\FormError;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Mime\Address;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Routing\Attribute\Route;
@@ -127,16 +128,13 @@ final class RegistrationController extends AbstractController
     }
 
     /**
-     * Limiter key for an anonymous caller: a salted hash, never the address.
+     * Limiter key for an anonymous caller: a keyed hash, never the address.
      *
-     * An IP address is personal data under the GDPR, so the rate-limit store
-     * holds a hash of it. Same construction as RideCheckController::anonKey.
-     *
-     * @see docs/specs/security-architecture.md §7
+     * @see PseudonymousKey
      */
     public static function anonKey(string $ip, string $secret): string
     {
-        return 'anon-'.hash('sha256', $secret.'|registration|'.$ip);
+        return PseudonymousKey::limiter('registration', $ip, $secret);
     }
 
     #[Route('/verify/email', name: 'verify_email')]

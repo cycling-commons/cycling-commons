@@ -100,7 +100,7 @@ reading):
 |---|---|---|
 | `default-src` | `'self'` | Deny-by-default baseline |
 | `script-src` | `'self' 'nonce-<per-request>'` (+ `'unsafe-eval'` on `/map` only — security-architecture.md §2.4) | No `'unsafe-inline'` and **no third-party script host at all** since 2026-08-09: the libraries are vendored same-origin (security-architecture.md §2.5) |
-| `style-src` | `'self' 'unsafe-inline'` | Map/site JS sets many `style` attributes and MapLibre/mapillary inject inline styles; a style nonce cannot cover attribute styles. Script execution is the boundary, not styling |
+| `style-src` | `'self' 'unsafe-inline'` | **Known gap, tracked in docs/TODO.md under "Opened 2026-08-25".** 209 `style="..."` attributes in `web/templates/` need it; each has to become a class before it can go. Runtime styling is NOT the reason and never was: CSP only restricts styles arriving as markup, so MapLibre's and the site JS's `.style` assignments are unaffected either way (the earlier note here said otherwise). What `'unsafe-inline'` leaves open is CSS-based exfiltration and UI redressing, not script execution, which `script-src` handles with a nonce |
 | `img-src` | `'self' data: blob: https://commons.wikimedia.org https://upload.wikimedia.org https://*.mapillary.com https://*.fbcdn.net` (+ `MEDIA_CSP_HOST` when set — rider photos, photo-uploads.md §2) | Wikimedia `Special:FilePath` 302s to `upload.wikimedia.org` and CSP checks every hop, so both hosts are listed; `data:`/`blob:` for MapLibre sprites and generated icons |
 | `font-src` | `'self'` | |
 | `connect-src` | see host table below | |
@@ -397,7 +397,7 @@ exceptions, each for a reason worth knowing: `coverage_read` and the two
 `media_report*` limiters are keyed **per IP**
 (`'ip-'.$request->getClientIp()`) because their callers are anonymous;
 `ride_check_anon`, `password_reset` and `registration` are also per address but
-key on a **salted hash** of it rather than the address itself, so the limiter
+key on a **keyed hash** of it rather than the address itself, so the limiter
 store never holds one in the clear; and the two `media_urgent_breaker_*`
 limiters are keyed on **one global key**, because a per-IP budget cannot bound
 a distributed attacker and the thing being budgeted there is a site-wide
@@ -446,6 +446,30 @@ additionally overrides to the array adapter — a persistent pool would carry
 limiter counters across phpunit runs while DAMA reuses user ids, which flakes
 tests. A new per-user limiter should copy this pool-plus-test-override shape.
 (`contribution_submit` predates the convention and uses the default pool.)
+
+### One construction for every pseudonymous key
+
+`App\Security\PseudonymousKey` is the only place an address becomes a key:
+`hash_hmac('sha256', $purpose.'|'.$value, $secret)`, with `$purpose` keeping
+the namespaces apart so one budget can never drain another. Four call sites use
+it: the three limiters named above, plus
+`media_upload.takedown_reporter_hash`, which is the only **persisted** one.
+
+It is HMAC because that is the primitive for a keyed hash. The four sites
+previously each hand-rolled `hash($secret.'|'.$value)`, which is
+length-extension shaped: knowing one output lets an attacker derive further
+valid outputs without the secret. Never exploitable here, since the digests are
+published nowhere, but there was no reason to keep the wrong primitive in four
+copies (security scan 2026-08-25).
+
+This is pseudonymisation, **not** anonymisation. The output still relates to a
+person and is still personal data; the privacy notice says so.
+
+Changing the construction changes every stored pseudonym. The 2026-08-25 switch
+needed no migration because nothing compares stored values, to each other or to
+a fresh one: the reporter hash is written and read back, and the index on it
+exists for a query that does not exist yet. A future change that has to preserve
+continuity will need one.
 
 Login throttling is Symfony's built-in limiter and is inventoried in
 [account-and-auth.md](account-and-auth.md) §3, not here. **The 2FA

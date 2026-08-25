@@ -120,7 +120,7 @@ def query_country(con, cc, cfg, release):
 
     Geometry only — area is computed geodesically in Python (see geodesic_area_km2).
     """
-    path = config.OVERTURE_DIVISION_AREA.format(release=release)
+    path = config.division_area_path(release)
     where, params = build_where(cc, cfg)
     # COALESCE(region, country): a subtype='region' land row carries its ISO 3166-2
     # code in `region`; a subtype='country' row (a whole-country operating level,

@@ -37,7 +37,7 @@ final class CreateUserCommand extends Command
     {
         $this
             ->addArgument('email', InputArgument::REQUIRED, 'The user\'s email address')
-            ->addArgument('password', InputArgument::OPTIONAL, 'The plain-text password — omit to be prompted securely (hashed on creation)')
+            ->addArgument('password', InputArgument::OPTIONAL, 'The plain-text password. OMIT IT: you are then prompted with the input hidden, and it never reaches your shell history or the process list')
             ->addOption('role', null, InputOption::VALUE_REQUIRED, 'Extra role: ROLE_ADMIN or ROLE_CURATOR (ROLE_USER is always granted)', 'ROLE_USER')
             ->addOption('display-name', null, InputOption::VALUE_REQUIRED, 'Display name (defaults to the email local part)', null)
         ;
@@ -59,6 +59,18 @@ final class CreateUserCommand extends Command
 
                 return Command::FAILURE;
             }
+        } else {
+            // Kept, not removed: seeding a fixture from a script is a real use
+            // and a prompt cannot be answered by one. But a password given here
+            // is now in the shell history and was visible in `ps` output to
+            // every other user on the box while this ran, and whoever typed it
+            // is unlikely to have thought about that (security scan
+            // 2026-08-25). Say so, once, where it cannot be missed.
+            $io->warning(
+                'The password was passed as an argument, so it is in your shell history '
+                .'and was visible in the process list while this command ran. '
+                .'Omit it to be prompted instead, and treat this one as compromised if the machine is shared.',
+            );
         }
         /** @var string $role */
         $role = $input->getOption('role');

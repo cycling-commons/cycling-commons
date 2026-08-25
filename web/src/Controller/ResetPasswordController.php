@@ -9,15 +9,16 @@ use App\Form\ChangePasswordFormType;
 use App\Form\ResetPasswordRequestFormType;
 use App\Repository\UserRepository;
 use App\Routing\LocalePrefix;
+use App\Security\PseudonymousKey;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Address;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Routing\Attribute\Route;
@@ -78,16 +79,13 @@ final class ResetPasswordController extends AbstractController
     }
 
     /**
-     * Limiter key for an anonymous caller: a salted hash, never the address.
+     * Limiter key for an anonymous caller: a keyed hash, never the address.
      *
-     * An IP address is personal data under the GDPR, so the rate-limit store
-     * holds a hash of it. Same construction as RideCheckController::anonKey.
-     *
-     * @see docs/specs/security-architecture.md §7
+     * @see PseudonymousKey
      */
     public static function anonKey(string $ip, string $secret): string
     {
-        return 'anon-'.hash('sha256', $secret.'|password-reset|'.$ip);
+        return PseudonymousKey::limiter('password-reset', $ip, $secret);
     }
 
     #[Route('/reset-password/check-email', name: 'check_email', methods: ['GET'])]

@@ -56,6 +56,7 @@ services:
       APP_ENV: dev
       APP_DEBUG: "1"
       APP_SECRET: ${APP_SECRET:-dev-not-secret-change-me}
+      ENCRYPTION_SECRET: ${ENCRYPTION_SECRET:-}
       # cache/logs to a container-writable path so the bind-mounted source has no perms issues
       APP_CACHE_DIR: /tmp/cc-cache
       APP_LOG_DIR: /tmp/cc-log
@@ -133,11 +134,20 @@ services:
   worker:
     build: ../../web
     command: ["php", "bin/console", "messenger:consume", "async", "--time-limit=3600", "--memory-limit=256M", "-vv"]
+    # The image has no USER on purpose: the php-fpm master must start as root
+    # so it can drop each pool worker to www-data itself (see web/Dockerfile).
+    # This service replaces that CMD with a plain console command, so it
+    # inherited the root the fpm master needed and never dropped it, and it is
+    # the container that unpacks stranger-supplied image bytes through Imagick
+    # (security scan 2026-08-25). Nothing here needs root: the cache and log
+    # dirs are redirected under /tmp and /app/vendor is only ever read.
+    user: www-data
     stop_grace_period: 90s
     environment:
       APP_ENV: dev
       APP_DEBUG: "1"
       APP_SECRET: ${APP_SECRET:-dev-not-secret-change-me}
+      ENCRYPTION_SECRET: ${ENCRYPTION_SECRET:-}
       APP_CACHE_DIR: /tmp/cc-cache
       APP_LOG_DIR: /tmp/cc-log
       DATABASE_URL: "postgresql://${POSTGRES_USER:-cc}:${POSTGRES_PASSWORD:-cc}@db:5432/${POSTGRES_DB:-cyclingcommons}?serverVersion=18&charset=utf8"
