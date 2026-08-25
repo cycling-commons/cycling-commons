@@ -25,6 +25,9 @@ final class Version20260825220000 extends AbstractMigration
     #[\Override]
     public function up(Schema $schema): void
     {
+        // Trusted extension (PG >= 13); required for gin_trgm_ops indexes below.
+        $this->addSql('CREATE EXTENSION IF NOT EXISTS pg_trgm');
+
         $this->addSql(<<<'SQL'
             CREATE TABLE translation_entry (
                 id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,

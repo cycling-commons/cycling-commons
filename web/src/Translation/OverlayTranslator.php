@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Translation;
 
+use Symfony\Component\HttpKernel\CacheWarmer\WarmableInterface;
 use Symfony\Component\Translation\MessageCatalogueInterface;
 use Symfony\Component\Translation\TranslatorBagInterface;
 use Symfony\Contracts\Translation\LocaleAwareInterface;
@@ -18,12 +19,24 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  *
  * @api
  */
-final class OverlayTranslator implements TranslatorInterface, TranslatorBagInterface, LocaleAwareInterface
+final class OverlayTranslator implements TranslatorInterface, TranslatorBagInterface, LocaleAwareInterface, WarmableInterface
 {
     public function __construct(
         private readonly TranslatorInterface&TranslatorBagInterface&LocaleAwareInterface $inner,
         private readonly OverlayCatalogue $overlays,
     ) {
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function warmUp(string $cacheDir, ?string $buildDir = null): array
+    {
+        if ($this->inner instanceof WarmableInterface) {
+            return $this->inner->warmUp($cacheDir, $buildDir);
+        }
+
+        return [];
     }
 
     /**

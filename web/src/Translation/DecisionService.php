@@ -48,7 +48,7 @@ final class DecisionService
             throw new MissingQuestionException('A needs-info decision must carry the question to ask the rider.');
         }
 
-        return $this->em->wrapInTransaction(function () use ($proposalId, $decision, $curator, $note): TranslationProposal {
+        $proposal = $this->em->wrapInTransaction(function () use ($proposalId, $decision, $curator, $note): TranslationProposal {
             $proposal = $this->em->find(TranslationProposal::class, $proposalId, LockMode::PESSIMISTIC_WRITE);
             if (null === $proposal) {
                 throw new \InvalidArgumentException(sprintf('Unknown proposal %d', $proposalId));
@@ -79,7 +79,6 @@ final class DecisionService
                 case 'approve':
                     $this->upsertOverlay($proposal, (int) $curator->getId());
                     $proposal->setStatus(TranslationProposalStatus::Approved);
-                    $this->overlays->invalidate($locale);
                     break;
                 case 'reject':
                     $proposal->setStatus(TranslationProposalStatus::Rejected);
@@ -115,6 +114,13 @@ final class DecisionService
 
             return $proposal;
         });
+
+        // After commit — same order as DeleteTranslationOverlayCommand (flush, then invalidate).
+        if ('approve' === $decision) {
+            $this->overlays->invalidate($proposal->getLocale());
+        }
+
+        return $proposal;
     }
 
     /** Open proposals awaiting a curator (pending + needs_info). */

@@ -70,7 +70,8 @@ services:
             $englishYamlPath: '%kernel.project_dir%/translations/messages.en.yaml'
 
     # Overlay merge: YAML default, then per-locale DB overlays (translations.md §3).
-    # Priority -10 keeps DataCollectorTranslator outside in dev.
+    # Priority -10 puts OverlayTranslator outside DataCollectorTranslator in dev
+    # (higher decoration_priority = innermost). WarmableInterface delegates warm-up inward.
     App\Translation\OverlayTranslator:
         decorates: translator
         decoration_priority: -10

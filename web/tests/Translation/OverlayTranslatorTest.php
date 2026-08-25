@@ -13,6 +13,8 @@ use App\Translation\OverlayTranslator;
 use Doctrine\DBAL\Exception\DriverException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
+use Symfony\Component\HttpKernel\CacheWarmer\WarmableInterface;
+use Symfony\Component\Translation\MessageCatalogueInterface;
 use Symfony\Component\Translation\TranslatorBagInterface;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Translation\LocaleAwareInterface;
@@ -113,5 +115,84 @@ final class OverlayTranslatorTest extends KernelTestCase
         /** @var TranslatorBagInterface $inner */
         $inner = static::getContainer()->get('App\Translation\OverlayTranslator.inner');
         self::assertSame('Carte', $inner->getCatalogue('fr')->get('nav.map', 'messages'));
+    }
+
+    public function testWarmUpDelegatesToWarmableInner(): void
+    {
+        $inner = new class implements TranslatorInterface, TranslatorBagInterface, LocaleAwareInterface, WarmableInterface {
+            public bool $warmed = false;
+
+            public function trans(string $id, array $parameters = [], ?string $domain = null, ?string $locale = null): string
+            {
+                return $id;
+            }
+
+            public function getCatalogue(?string $locale = null): MessageCatalogueInterface
+            {
+                throw new \LogicException('unused');
+            }
+
+            public function getCatalogues(): array
+            {
+                return [];
+            }
+
+            public function setLocale(string $locale): void
+            {
+            }
+
+            public function getLocale(): string
+            {
+                return 'en';
+            }
+
+            public function warmUp(string $cacheDir, ?string $buildDir = null): array
+            {
+                $this->warmed = true;
+
+                return ['PreloadFromInner'];
+            }
+        };
+
+        $overlays = $this->createStub(OverlayCatalogue::class);
+        $translator = new OverlayTranslator($inner, $overlays);
+
+        self::assertInstanceOf(WarmableInterface::class, $translator);
+        self::assertSame(['PreloadFromInner'], $translator->warmUp('/tmp/cache', '/tmp/build'));
+        self::assertTrue($inner->warmed);
+    }
+
+    public function testWarmUpReturnsEmptyWhenInnerNotWarmable(): void
+    {
+        $inner = new class implements TranslatorInterface, TranslatorBagInterface, LocaleAwareInterface {
+            public function trans(string $id, array $parameters = [], ?string $domain = null, ?string $locale = null): string
+            {
+                return $id;
+            }
+
+            public function getCatalogue(?string $locale = null): MessageCatalogueInterface
+            {
+                throw new \LogicException('unused');
+            }
+
+            public function getCatalogues(): array
+            {
+                return [];
+            }
+
+            public function setLocale(string $locale): void
+            {
+            }
+
+            public function getLocale(): string
+            {
+                return 'en';
+            }
+        };
+
+        $overlays = $this->createStub(OverlayCatalogue::class);
+        $translator = new OverlayTranslator($inner, $overlays);
+
+        self::assertSame([], $translator->warmUp('/tmp/cache'));
     }
 }
