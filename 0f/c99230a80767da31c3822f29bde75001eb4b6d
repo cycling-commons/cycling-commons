@@ -1,0 +1,41 @@
+web/src/Translation/OverlayTranslator.php
+  s_c05586667a10a2::t_2663848a4e9f55 77
+  s_c05586667a10a2::t_8d017ceb4dd753 101
+  s_c05586667a10a2::t_e15747fc1554ea 33
+  s_c05586667a10a2::t_61e022204fa0bc 62
+  s_c05586667a10a2::t_7119475c6e2701 95
+  s_c05586667a10a2::t_77839a68d83ba7 44,46
+web/src/Translation/OverlayCatalogue.php
+  s_c05586667a10a2::t_62f159ed9e1de8 38
+  s_c05586667a10a2::t_0bbd55722389f9 36
+web/src/Translation/OverlayCatalogueLoader.php
+  s_c05586667a10a2::t_67ded1c647b8c4 14
+web/src/Translation/CatalogueSync.php
+  s_c05586667a10a2::t_0f98abcc78387d 25-26,51
+web/src/Translation/Command/SyncTranslationsCommand.php
+  s_c05586667a10a2::t_2c61b0512762ea 53
+web/src/Translation/DecisionService.php
+  s_c05586667a10a2::t_6efc4046f71e1e 38-40,60,63
+web/src/Translation/ProposalService.php
+  s_c05586667a10a2::t_65b13556ca2839 39-40,42-44,79
+web/tests/Translation/DecisionServiceInvalidateOrderTest.php
+  s_c05586667a10a2::t_5a23020d37a034 88
+web/tests/Translation/OverlayTranslatorTest.php
+  s_c05586667a10a2::t_313b914439681b 83
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "0fc99230a80767da31c3822f29bde75001eb4b6d",
+  "prompts": {},
+  "sessions": {
+    "s_c05586667a10a2": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "7b9fd57a-1b4e-4f86-a9c1-9724be316cdf",
+        "model": "grok-4.6"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
