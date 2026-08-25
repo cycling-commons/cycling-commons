@@ -40,24 +40,24 @@ class TranslationEntry
     #[ORM\Column(name: 'absent_at', type: Types::DATETIME_IMMUTABLE, nullable: true)]
     private ?\DateTimeImmutable $absentAt = null;
 
-    public function __construct(string $messageKey, string $english)
+    public function __construct(string $messageKey, string $english, \DateTimeImmutable $now = new \DateTimeImmutable())
     {
         $this->messageKey = $messageKey;
         $this->english = $english;
-        $this->syncedAt = new \DateTimeImmutable();
+        $this->syncedAt = $now;
     }
 
-    public function markAbsent(): void
+    public function markAbsent(\DateTimeImmutable $now = new \DateTimeImmutable()): void
     {
-        $this->absentAt = new \DateTimeImmutable();
-        $this->syncedAt = new \DateTimeImmutable();
+        $this->absentAt = $now;
+        $this->syncedAt = $now;
     }
 
-    public function restoreFromYaml(string $english): void
+    public function restoreFromYaml(string $english, \DateTimeImmutable $now = new \DateTimeImmutable()): void
     {
         $this->english = $english;
         $this->absentAt = null;
-        $this->syncedAt = new \DateTimeImmutable();
+        $this->syncedAt = $now;
     }
 
     public function getId(): ?int

@@ -86,4 +86,32 @@ final class CatalogueSyncTest extends KernelTestCase
 
         self::assertSame($firstAbsent, $entry->getAbsentAt());
     }
+
+    public function testSyncStampsSuppliedNowOnAllTouchedRows(): void
+    {
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $em->persist(new TranslationEntry('obsolete.key', 'Gone', new \DateTimeImmutable('2020-01-01T00:00:00+00:00')));
+        $em->persist(new TranslationEntry('alpha', 'Old Alpha', new \DateTimeImmutable('2020-01-01T00:00:00+00:00')));
+        $em->flush();
+
+        $now = new \DateTimeImmutable('2026-08-25T12:00:00+00:00');
+        (new CatalogueSync($em, self::FIXTURE))->sync($now);
+
+        $repo = $em->getRepository(TranslationEntry::class);
+        $alpha = $repo->findOneBy(['messageKey' => 'alpha']);
+        $beta = $repo->findOneBy(['messageKey' => 'beta']);
+        $obsolete = $repo->findOneBy(['messageKey' => 'obsolete.key']);
+
+        self::assertNotNull($alpha);
+        self::assertEquals($now, $alpha->getSyncedAt());
+        self::assertNull($alpha->getAbsentAt());
+
+        self::assertNotNull($beta);
+        self::assertEquals($now, $beta->getSyncedAt());
+        self::assertNull($beta->getAbsentAt());
+
+        self::assertNotNull($obsolete);
+        self::assertEquals($now, $obsolete->getSyncedAt());
+        self::assertEquals($now, $obsolete->getAbsentAt());
+    }
 }

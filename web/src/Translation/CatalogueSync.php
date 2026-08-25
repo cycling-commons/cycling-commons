@@ -39,16 +39,16 @@ final class CatalogueSync
 
         foreach ($messages as $key => $english) {
             if (isset($byKey[$key])) {
-                $byKey[$key]->restoreFromYaml($english);
+                $byKey[$key]->restoreFromYaml($english, $now);
                 unset($byKey[$key]);
             } else {
-                $this->em->persist(new TranslationEntry($key, $english));
+                $this->em->persist(new TranslationEntry($key, $english, $now));
             }
         }
 
         foreach ($byKey as $entry) {
             if ($entry->getAbsentAt() === null) {
-                $entry->markAbsent();
+                $entry->markAbsent($now);
             }
         }
 
