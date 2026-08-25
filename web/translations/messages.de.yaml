@@ -1506,6 +1506,9 @@ export:
       messages.json       Deine Dashboard-Nachrichten, in beide Richtungen.
       consent.json        Jede erteilte Fotolizenz: welcher Wortlaut, welche
                           Version, und wann.
+      translations.json   Deine vorgeschlagenen UI-Übersetzungen. Das sind
+                          CC-BY-SA-Beiträge, keine personenbezogenen Daten über
+                          den Fahrer.
       photos/index.json   Ein Eintrag pro hochgeladenem Foto, mit Status und
                           der zugehörigen Datei.
       photos/*.webp       Die Fotos selbst.

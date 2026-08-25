@@ -1507,6 +1507,8 @@ export:
       messages.json       Your dashboard messages, in both directions.
       consent.json        Every photo licence you granted: which wording, which
                           version of it, and when.
+      translations.json   Your proposed UI translations. These are CC BY-SA
+                          contributions, not personal data about the rider.
       photos/index.json   One entry per photo you uploaded, with its status and
                           the file it corresponds to.
       photos/*.webp       The photos themselves.

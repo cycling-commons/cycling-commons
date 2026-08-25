@@ -1096,8 +1096,9 @@ and the README inside says which part is which.
 **What it holds.** `account.json`, `contributions.json` (submissions plus the
 `change_history` rows they produced), `community.json` (confirmations, route
 votes, rides, correction suggestions, country requests, curator applications,
-moderator areas), `messages.json`, `consent.json`, and `photos/` — the stored
-originals as files, plus an `index.json` describing each one.
+moderator areas), `messages.json`, `consent.json`, `translations.json`, and
+`photos/` — the stored originals as files, plus an `index.json` describing each
+one.
 
 **What it does not, by construction.** Every query names its columns; none is
 `SELECT *`. That is the mechanism, not a filter someone has to remember to

@@ -1506,6 +1506,9 @@ export:
       messages.json       Je dashboardberichten, in beide richtingen.
       consent.json        Elke fotolicentie die je verleende: welke tekst,
                           welke versie, en wanneer.
+      translations.json   Jouw voorgestelde UI-vertalingen. Dit zijn
+                          CC BY-SA-bijdragen, geen persoonsgegevens over de
+                          fietser.
       photos/index.json   Eén regel per geüploade foto, met status en het
                           bijbehorende bestand.
       photos/*.webp       De foto's zelf.

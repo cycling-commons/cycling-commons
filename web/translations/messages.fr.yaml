@@ -1506,6 +1506,9 @@ export:
       messages.json       Vos messages de tableau de bord, dans les deux sens.
       consent.json        Chaque licence photo accordée : quel texte, quelle
                           version, et quand.
+      translations.json   Vos propositions de traduction de l'interface. Ce
+                          sont des contributions CC BY-SA, pas des données
+                          personnelles sur le cycliste.
       photos/index.json   Une entrée par photo envoyée, avec son statut et le
                           fichier correspondant.
       photos/*.webp       Les photos elles-mêmes.

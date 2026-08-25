@@ -1512,6 +1512,9 @@ export:
       messages.json       Tus mensajes del panel, en ambos sentidos.
       consent.json        Cada licencia de foto que concediste: con qué texto,
                           con qué versión y cuándo.
+      translations.json   Tus propuestas de traducción de la interfaz. Son
+                          contribuciones CC BY-SA, no datos personales sobre el
+                          ciclista.
       photos/index.json   Una entrada por cada foto que subiste, con su estado
                           y el archivo al que corresponde.
       photos/*.webp       Las fotos en sí.

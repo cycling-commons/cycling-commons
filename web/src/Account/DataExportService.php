@@ -59,6 +59,7 @@ final class DataExportService
         $zip->addFromString('community.json', $this->json($this->community($userId)));
         $zip->addFromString('messages.json', $this->json($this->messages($userId)));
         $zip->addFromString('consent.json', $this->json($this->consent($userId)));
+        $zip->addFromString('translations.json', $this->json($this->translations($userId)));
 
         // addFile() reads at close(); addFromString() would hold every photo in RAM.
         $staged = $this->stagePhotos($userId, $zip);
@@ -200,6 +201,20 @@ final class DataExportService
         return $this->db->fetchAllAssociative(
             'SELECT id, kind, version, text_hash, consented_at
              FROM consent_record WHERE user_id = ? ORDER BY consented_at',
+            [$userId],
+        );
+    }
+
+    /**
+     * Translation proposals submitted by this rider (docs/specs/translations.md §3.2).
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function translations(int $userId): array
+    {
+        return $this->db->fetchAllAssociative(
+            'SELECT id, entry_id, locale, proposed_value, english_at_submit, status, created_at, decided_at
+             FROM translation_proposal WHERE submitter_id = ? ORDER BY created_at',
             [$userId],
         );
     }

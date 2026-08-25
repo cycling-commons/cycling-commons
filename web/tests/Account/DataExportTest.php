@@ -248,6 +248,9 @@ final class DataExportTest extends WebTestCase
 
         self::assertIsArray($this->entry($zip, 'community.json'));
 
+        $translations = $this->entry($zip, 'translations.json');
+        self::assertIsArray($translations);
+
         $readme = $zip->getFromName('README.txt');
         self::assertIsString($readme);
         self::assertStringContainsString('Export Rider', $readme);
