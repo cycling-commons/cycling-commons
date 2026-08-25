@@ -43,6 +43,19 @@ final class ContentPagesTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertSelectorExists('footer.foot');
         self::assertSelectorTextContains('h1', 'The short version');
+        // Fourth licence line: website-submitted UI translations (CC BY-SA),
+        // separate from ODbL data and PolyForm code (translations.md §6).
+        self::assertStringContainsString(
+            'The UI translations',
+            (string) $client->getResponse()->getContent(),
+        );
+    }
+
+    public function testLicensesRendersInFrench(): void
+    {
+        $client = static::createClient();
+        $client->request('GET', '/fr/licenses');
+        self::assertResponseIsSuccessful();
     }
 
     public function testCreditsRenders(): void

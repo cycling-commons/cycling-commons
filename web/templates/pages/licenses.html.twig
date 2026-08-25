@@ -70,6 +70,23 @@
     </div>
 
     <div class="card">
+      <h3>{% trans %}licenses.ui_h{% endtrans %}</h3>
+      <div class="sub">{% trans %}licenses.ui_sub{% endtrans %}</div>
+      <div class="tldr">{% trans %}licenses.ui_tldr{% endtrans %}</div>
+      <h5>{% trans %}licenses.can_h{% endtrans %}</h5>
+      <ul class="can">
+        <li><span class="m">✓</span> {% trans %}licenses.ui_can1{% endtrans %}</li>
+        <li><span class="m">✓</span> {% trans %}licenses.ui_can2{% endtrans %}</li>
+        <li><span class="m">✓</span> {% trans %}licenses.ui_can3{% endtrans %}</li>
+      </ul>
+      <h5>{% trans %}licenses.must_h{% endtrans %}</h5>
+      <ul class="must">
+        <li><span class="m">⚑</span> <b>{% trans %}licenses.ui_must1_b{% endtrans %}</b> {% trans %}licenses.ui_must1_body{% endtrans %}</li>
+        <li><span class="m">⚑</span> <b>{% trans %}licenses.ui_must2_b{% endtrans %}</b> {% trans %}licenses.ui_must2_body{% endtrans %}</li>
+      </ul>
+    </div>
+
+    <div class="card">
       <h3>{% trans %}licenses.code_h{% endtrans %}</h3>
       <div class="sub">{% trans %}licenses.code_sub{% endtrans %}</div>
       <div class="tldr">{% trans %}licenses.code_tldr{% endtrans %}</div>
@@ -88,7 +105,7 @@
   </div>
 
   <h5 style="font-family:var(--mono);font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--clay);margin-top:2.2rem">{% trans %}licenses.attribution_h{% endtrans %}</h5>
-  <div class="snippet">{% trans %}licenses.attribution_line1{% endtrans %} <span class="s">{% trans %}licenses.attribution_cc{% endtrans %}</span> {% trans %}licenses.attribution_line2{% endtrans %}<br/>{% trans %}licenses.attribution_line3{% endtrans %} <span class="s">{% trans %}licenses.attribution_osm{% endtrans %}</span> {% trans %}licenses.attribution_line4{% endtrans %}<br/>{% trans %}licenses.attribution_line5{% endtrans %}</div>
+  <div class="snippet">{% trans %}licenses.attribution_line1{% endtrans %} <span class="s">{% trans %}licenses.attribution_cc{% endtrans %}</span> {% trans %}licenses.attribution_line2{% endtrans %}<br/>{% trans %}licenses.attribution_line3{% endtrans %} <span class="s">{% trans %}licenses.attribution_osm{% endtrans %}</span> {% trans %}licenses.attribution_line4{% endtrans %}<br/>{% trans %}licenses.attribution_line5{% endtrans %}<br/>{% trans %}licenses.attribution_line6{% endtrans %}</div>
 
   <div class="disc"><b>{% trans %}licenses.disc_bold{% endtrans %}</b> {% trans %}licenses.disc_body_pre{% endtrans %}
     <a href="https://opendatacommons.org/licenses/odbl/1-0/">{% trans %}licenses.disc_odbl{% endtrans %}</a> /
@@ -96,6 +113,7 @@
     <a href="https://polyformproject.org/licenses/shield/1.0.0">{% trans %}licenses.disc_polyform{% endtrans %}</a> {% trans %}licenses.disc_body_mid{% endtrans %}
     <a href="https://github.com/cycling-commons/cycling-commons/blob/main/licenses/COMMONS-DATA-LICENSE.md">{% trans %}licenses.disc_data{% endtrans %}</a> ·
     <a href="https://github.com/cycling-commons/cycling-commons/blob/main/licenses/COMMONS-MEDIA-LICENSE.md">{% trans %}licenses.disc_media{% endtrans %}</a> ·
+    <a href="https://github.com/cycling-commons/cycling-commons/blob/main/licenses/COMMONS-TRANSLATIONS-LICENSE.md">{% trans %}licenses.disc_translations{% endtrans %}</a> ·
     <a href="https://github.com/cycling-commons/cycling-commons/blob/main/LICENSE">{% trans %}licenses.disc_code{% endtrans %}</a> ·
     <a href="https://github.com/cycling-commons/cycling-commons/blob/main/licenses/COMMONS-TERMS-CLAUSE.md">{% trans %}licenses.disc_terms{% endtrans %}</a>{% trans %}licenses.disc_post{% endtrans %}</div>
 </div></section>

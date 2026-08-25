@@ -373,7 +373,7 @@ stay unprefixed):
 | `(/[a-z]{2})?/2fa/setup` | `ROLE_USER` — must precede the interstitial rule: setup is reached *fully* authenticated |
 | `^/2fa` | `IS_AUTHENTICATED_2FA_IN_PROGRESS` (scheb interstitial) |
 | `(/[a-z]{2})?/(profile\|settings)` | `ROLE_USER` |
-| `(/[a-z]{2})?/messages`, `^/scout/tags` | `ROLE_USER` — backstops mirroring the controllers' `IsGranted` attributes (review 2026-08-16 finding 7). `/media/*` and `/contribute/elevation` are deliberately absent: THE stateless-JSON pattern ([security-architecture.md](security-architecture.md) §5.1) owns their clean 401s, and an `access_control` rule would turn those into login redirects |
+| `(/[a-z]{2})?/messages`, `(/[a-z]{2})?/translate`, `^/scout/tags` | `ROLE_USER` — backstops mirroring the controllers' `IsGranted` attributes (review 2026-08-16 finding 7). `/media/*` and `/contribute/elevation` are deliberately absent: THE stateless-JSON pattern ([security-architecture.md](security-architecture.md) §5.1) owns their clean 401s, and an `access_control` rule would turn those into login redirects |
 | `(/[a-z]{2})?/moderate` | `ROLE_CURATOR` |
 | `^/admin` | `ROLE_ADMIN` |
 
