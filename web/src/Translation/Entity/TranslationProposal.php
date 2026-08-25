@@ -100,6 +100,21 @@ class TranslationProposal
         $this->consentRecordId = $consentRecordId;
     }
 
+    public function setReviewerId(?int $reviewerId): void
+    {
+        $this->reviewerId = $reviewerId;
+    }
+
+    public function setReviewerNote(?string $reviewerNote): void
+    {
+        $this->reviewerNote = $reviewerNote;
+    }
+
+    public function setDecidedAt(?\DateTimeImmutable $decidedAt): void
+    {
+        $this->decidedAt = $decidedAt;
+    }
+
     public function getId(): ?int
     {
         return $this->id;

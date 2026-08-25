@@ -40,6 +40,9 @@ enum MessageCategory: string
                 UserMessageKind::MediaTakedownDeclined,
                 UserMessageKind::MediaReady,
                 UserMessageKind::MediaScanRejected,
+                UserMessageKind::TranslationApproved,
+                UserMessageKind::TranslationRejected,
+                UserMessageKind::TranslationNeedsInfo,
             ],
             self::Notices => [
                 UserMessageKind::MediaRemovedOnReport,

@@ -1,0 +1,89 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{% extends 'base.html.twig' %}
+{% block head_styles %}
+{% include 'account/_shell_styles.html.twig' %}
+<style>
+  .mh{padding:2rem 0 1.4rem}
+  .mh .kicker{font-family:var(--mono);font-size:.64rem;letter-spacing:.16em;text-transform:uppercase;color:var(--clay);margin-bottom:.6rem}
+  .mh h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4vw,2.4rem);line-height:1.08;margin-bottom:.4rem;color:var(--ink)}
+  .mh .role-badge{display:inline-flex;align-items:center;gap:.4rem;font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;background:var(--spruce-lift);color:var(--paper);padding:.22rem .55rem;border-radius:30px;margin-top:.5rem}
+  {% include 'moderate/_card_styles.html.twig' %}
+  .tr-key{font-family:var(--mono);font-size:.72rem;letter-spacing:.04em;color:var(--clay);margin:0 0 .35rem}
+  .tr-meta{font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;color:#595c4d;margin:.15rem 0}
+  .tr-warn{font-size:.84rem;line-height:1.45;color:#7d2018;background:rgba(163,52,43,.09);border-left:2px solid #a3342b;padding:.45rem .8rem;border-radius:0 5px 5px 0;margin:.5rem 0 .7rem}
+  .tr-pair{display:grid;gap:.35rem;margin:.45rem 0 .7rem}
+  .tr-pair dt{font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;color:#8a8d7d}
+  .tr-pair dd{margin:0;font-size:.92rem;line-height:1.45;color:var(--ink);white-space:pre-wrap}
+  .empty-queue{text-align:center;padding:3rem 1rem;color:#595c4d}
+  .empty-queue .ic{font-size:1.6rem;color:var(--trail)}
+  .empty-queue h3{font-family:var(--serif);font-size:1.3rem;margin:.5rem 0 .3rem;color:var(--ink)}
+  .flash-success{background:rgba(46,125,50,.12);border:1px solid rgba(46,125,50,.4);color:#2c5440;border-radius:6px;padding:.8rem 1rem;margin-bottom:1.4rem;font-size:.9rem}
+  .flash-error{background:rgba(179,38,30,.1);border:1px solid rgba(179,38,30,.45);color:var(--danger-ink);border-radius:6px;padding:.8rem 1rem;margin-bottom:1.4rem;font-size:.9rem}
+  .td-actions{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin-top:.6rem}
+  .td-actions textarea{flex:1 1 16rem;font-family:var(--sans);font-size:.9rem;padding:.45rem .55rem;border:1px solid rgba(20,22,14,.25);border-radius:6px;background:var(--paper);min-height:2.4rem;resize:vertical}
+</style>
+{% endblock %}
+{% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate_translations'} %}{% endblock %}
+
+{% block body %}
+<div class="mh">
+  <div class="wrap">
+    <div class="kicker">{{ 'moderate.translation.kicker'|trans }}</div>
+    <h1>{{ 'moderate.translation.heading'|trans }}</h1>
+    <div><span class="role-badge">&#9876; {{ 'moderate.role_label'|trans }}</span></div>
+  </div>
+</div>
+
+<div class="wrap" id="main">
+  {% for msg in app.flashes('success') %}<div class="flash-success" role="alert">{{ msg|trans }}</div>{% endfor %}
+  {% for msg in app.flashes('danger') %}<div class="flash-error" role="alert">{{ msg|trans }}</div>{% endfor %}
+
+  {% if cards is empty %}
+    <div class="empty-queue">
+      <div class="ic">&#9650;</div>
+      <h3>{{ 'moderate.translation.empty_heading'|trans }}</h3>
+      <p>{{ 'moderate.translation.empty_body'|trans }}</p>
+    </div>
+  {% else %}
+    <section class="q-list">
+      <p class="tr-meta">{{ 'moderate.translation.lead'|trans }}</p>
+      {% for card in cards %}
+        <article class="q-item">
+          <p class="tr-key">{{ card.message_key }}</p>
+          <p class="tr-meta">{{ 'moderate.translation.locale'|trans({'%locale%': card.locale}) }}
+            · {{ ('translate.locale.' ~ card.locale)|trans }}</p>
+          {% if card.english_changed %}
+            <p class="tr-warn" role="status">{{ 'moderate.translation.english_changed'|trans }}</p>
+          {% endif %}
+          <dl class="tr-pair">
+            <div>
+              <dt>{{ 'moderate.translation.english_at_submit'|trans }}</dt>
+              <dd>{{ card.english_at_submit }}</dd>
+            </div>
+            <div>
+              <dt>{{ 'moderate.translation.english_now'|trans }}</dt>
+              <dd>{{ card.english_now }}</dd>
+            </div>
+            <div>
+              <dt>{{ 'moderate.translation.live'|trans }}</dt>
+              <dd>{{ card.live }}</dd>
+            </div>
+            <div>
+              <dt>{{ 'moderate.translation.proposed'|trans }}</dt>
+              <dd>{{ card.proposed }}</dd>
+            </div>
+          </dl>
+          <form method="post" action="{{ path('moderate_translations') }}" class="td-actions">
+            <input type="hidden" name="translation_decision[_token]" value="{{ csrf_token('moderate_translation') }}">
+            <input type="hidden" name="translation_decision[proposal_id]" value="{{ card.proposal.id }}">
+            <textarea name="translation_decision[note]" maxlength="2000" placeholder="{{ 'moderate.translation.note_placeholder'|trans }}"></textarea>
+            <button type="submit" name="translation_decision[decision]" value="approve" class="btn-act btn-approve">{{ 'moderate.action.approve'|trans }}</button>
+            <button type="submit" name="translation_decision[decision]" value="reject" class="btn-act btn-reject">{{ 'moderate.action.reject'|trans }}</button>
+            <button type="submit" name="translation_decision[decision]" value="needs_info" class="btn-act">{{ 'moderate.action.needs_info'|trans }}</button>
+          </form>
+        </article>
+      {% endfor %}
+    </section>
+  {% endif %}
+</div>
+{% endblock %}

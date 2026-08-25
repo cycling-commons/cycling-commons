@@ -38,6 +38,10 @@ enum UserMessageKind: string
     /** Release slower than the wizard window (docs/specs/media-storage-architecture.md §3.3). */
     case MediaReady = 'media_ready';
     case MediaScanRejected = 'media_scan_rejected';
+    /** In-site translation proposal (docs/specs/translations.md §5). */
+    case TranslationApproved = 'translation_approved';
+    case TranslationRejected = 'translation_rejected';
+    case TranslationNeedsInfo = 'translation_needs_info';
 
     /** @return list<string>
      *

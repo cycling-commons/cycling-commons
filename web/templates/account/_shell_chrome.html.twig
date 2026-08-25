@@ -11,7 +11,8 @@
    reach it via the account-chip dropdown) — user pages show user tabs only,
    and on moderator pages the labelled group makes the section unmistakable. #}
 {% set active = active|default('contrib') %}
-{% set in_moderation = active in ['moderate', 'moderate_routes', 'moderate_regions', 'moderate_data', 'moderate_takedowns', 'moderate_rulebook', 'moderate_history'] %}
+{% set in_moderation = active in ['moderate', 'moderate_routes', 'moderate_regions', 'moderate_data', 'moderate_takedowns', 'moderate_translations', 'moderate_rulebook', 'moderate_history'] %}
+{% set mod_translation_count = pending_translation_count() %}
 <header class="dtop">
   <div class="brandblock">
     <a class="brand" href="{{ path('home') }}"><img src="{{ asset('brand/logo-nav.svg') }}" alt="Cycling Commons"></a>
@@ -33,6 +34,8 @@
      clock does not belong at the bottom of an editorial backlog. Badge counts
      every open request, unscoped — these are not shared out by jurisdiction. #}
   <a href="{{ path('moderate_takedowns') }}" class="dtab-mod {{ active == 'moderate_takedowns' ? 'on' : '' }}">{{ 'nav.takedowns'|trans }}{% if mod_takedown_count is defined and mod_takedown_count %}<span class="dtab-count" title="{{ 'account.mod_takedowns_open'|trans }}">{{ mod_takedown_count }}</span>{% endif %}</a>
+  {# Translations: site-wide overlays, unscoped like takedowns (translations.md §5). #}
+  <a href="{{ path('moderate_translations') }}" class="dtab-mod {{ active == 'moderate_translations' ? 'on' : '' }}">{{ 'nav.translations'|trans }}{% if mod_translation_count %}<span class="dtab-count" title="{{ 'account.mod_translations_open'|trans }}">{{ mod_translation_count }}</span>{% endif %}</a>
   {# What is already settled — its own page, so the queue stays about work. #}
   <a href="{{ path('moderate_history') }}" class="dtab-mod {{ active == 'moderate_history' ? 'on' : '' }}">{{ 'nav.history'|trans }}</a>
   {# Regions desk: the gated

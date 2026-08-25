@@ -64,6 +64,18 @@ class TranslationOverlay
         $this->approvedAt = new \DateTimeImmutable();
     }
 
+    public function applyApproval(
+        string $value,
+        ?TranslationProposal $sourceProposal,
+        ?int $approvedById,
+        \DateTimeImmutable $approvedAt = new \DateTimeImmutable(),
+    ): void {
+        $this->value = $value;
+        $this->sourceProposal = $sourceProposal;
+        $this->approvedById = $approvedById;
+        $this->approvedAt = $approvedAt;
+    }
+
     public function getId(): ?int
     {
         return $this->id;
