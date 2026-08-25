@@ -64,6 +64,11 @@ services:
             $projectDir: '%kernel.project_dir%'
             $envFallback: '%env(default::APP_BUILD_VERSION)%'
 
+    # English catalogue projection for /translate search (translations.md §3.1).
+    App\Translation\CatalogueSync:
+        arguments:
+            $englishYamlPath: '%kernel.project_dir%/translations/messages.en.yaml'
+
     # Google Safe Browsing for rider-submitted links. Empty key = the layer is
     # OFF and every verdict is "unknown", which the two callers then treat in
     # OPPOSITE directions (fail open at submit, fail closed at render). See
