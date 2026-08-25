@@ -1,0 +1,31 @@
+web/src/Translation/OverlayCatalogueLoader.php
+  s_993d1e83b70cce::t_f0c5ea4776af2d 1-45
+web/tests/Translation/OverlayCatalogueTest.php
+  s_993d1e83b70cce::t_8cce91606a0709 1-88
+web/tests/Translation/OverlayTranslatorTest.php
+  s_993d1e83b70cce::t_b4de2d27d28d8c 1-13,15-70,72-77,82,85-125
+  s_993d1e83b70cce::t_d16f4e4efd05f2 71,78-81,83-84
+  s_993d1e83b70cce::t_7bc274eefe6b9d 14
+web/src/Translation/OverlayCatalogue.php
+  s_993d1e83b70cce::t_ef7bae47aa6cbe 1-51
+web/src/Translation/OverlayTranslator.php
+  s_993d1e83b70cce::t_7632f0f9b22d40 1-104
+web/config/services.yaml
+  s_993d1e83b70cce::t_3228b7174d15c6 72-79
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "2b0c117bdcde6635dcb357815723750a76980e95",
+  "prompts": {},
+  "sessions": {
+    "s_993d1e83b70cce": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "23ec2706-9d89-4ee6-bb5e-de47f7de66c1",
+        "model": "cursor-grok-4.5-high"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
