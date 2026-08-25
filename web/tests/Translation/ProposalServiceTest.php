@@ -1,0 +1,249 @@
+<?php
+
+// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+
+declare(strict_types=1);
+
+namespace App\Tests\Translation;
+
+use App\Entity\User;
+use App\Media\Entity\ConsentRecord;
+use App\Translation\Entity\TranslationEntry;
+use App\Translation\Entity\TranslationProposal;
+use App\Translation\Exception\ConsentRequiredException;
+use App\Translation\Exception\EmptyTranslationException;
+use App\Translation\Exception\EnglishNotTranslatableException;
+use App\Translation\Exception\KeyNotFoundException;
+use App\Translation\ProposalService;
+use App\Translation\TranslationConsent;
+use App\Translation\TranslationLimits;
+use App\Translation\TranslationProposalStatus;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
+
+final class ProposalServiceTest extends KernelTestCase
+{
+    private function em(): EntityManagerInterface
+    {
+        return static::getContainer()->get(EntityManagerInterface::class);
+    }
+
+    private function svc(): ProposalService
+    {
+        return static::getContainer()->get(ProposalService::class);
+    }
+
+    private function user(EntityManagerInterface $em, string $email): User
+    {
+        $u = (new User())->setEmail($email)->setDisplayName(strstr($email, '@', true) ?: $email);
+        $u->setPassword('x');
+        $em->persist($u);
+        $em->flush();
+
+        return $u;
+    }
+
+    private function entry(EntityManagerInterface $em, string $key, string $english): TranslationEntry
+    {
+        $entry = new TranslationEntry($key, $english);
+        $em->persist($entry);
+        $em->flush();
+
+        return $entry;
+    }
+
+    private function consentCount(EntityManagerInterface $em, int $userId): int
+    {
+        return (int) $em->createQueryBuilder()
+            ->select('COUNT(c.id)')
+            ->from(ConsentRecord::class, 'c')
+            ->where('c.userId = :uid')
+            ->andWhere('c.kind = :kind')
+            ->setParameter('uid', $userId)
+            ->setParameter('kind', TranslationConsent::KIND)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    private function proposalCount(EntityManagerInterface $em): int
+    {
+        return (int) $em->createQueryBuilder()
+            ->select('COUNT(p.id)')
+            ->from(TranslationProposal::class, 'p')
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    public function testNoTickCreatesNeitherProposalNorConsent(): void
+    {
+        self::bootKernel();
+        $em = $this->em();
+        $user = $this->user($em, 'prop-notick@test.test');
+        $entry = $this->entry($em, 'home.cta_map', 'Explore the map');
+        $beforeConsent = $this->consentCount($em, (int) $user->getId());
+        $beforeProposal = $this->proposalCount($em);
+
+        try {
+            $this->svc()->submit($user, $entry, 'fr', 'Explorer la carte', false);
+            self::fail('Expected ConsentRequiredException');
+        } catch (ConsentRequiredException) {
+        }
+
+        self::assertSame($beforeConsent, $this->consentCount($em, (int) $user->getId()));
+        self::assertSame($beforeProposal, $this->proposalCount($em));
+    }
+
+    public function testTickRecordsConsentThenProposal(): void
+    {
+        self::bootKernel();
+        $em = $this->em();
+        $user = $this->user($em, 'prop-tick@test.test');
+        $entry = $this->entry($em, 'nav.map', 'Map');
+
+        $proposal = $this->svc()->submit($user, $entry, 'fr', 'Carte', true);
+        $em->clear();
+
+        $found = $em->find(TranslationProposal::class, $proposal->getId());
+        self::assertNotNull($found);
+        self::assertSame('Carte', $found->getProposedValue());
+        self::assertSame('Map', $found->getEnglishAtSubmit());
+        self::assertSame('fr', $found->getLocale());
+        self::assertSame(TranslationProposalStatus::Pending, $found->getStatus());
+        self::assertSame((int) $user->getId(), $found->getSubmitterId());
+
+        $consent = $em->find(ConsentRecord::class, $found->getConsentRecordId());
+        self::assertNotNull($consent);
+        self::assertSame(TranslationConsent::KIND, $consent->getKind());
+        self::assertSame(TranslationConsent::VERSION, $consent->getVersion());
+        self::assertSame((int) $user->getId(), $consent->getUserId());
+    }
+
+    public function testSecondSubmitUpdatesSamePendingId(): void
+    {
+        self::bootKernel();
+        $em = $this->em();
+        $user = $this->user($em, 'prop-update@test.test');
+        $entry = $this->entry($em, 'home.title', 'Home');
+
+        $first = $this->svc()->submit($user, $entry, 'nl', 'Thuis', true);
+        $firstId = $first->getId();
+        self::assertNotNull($firstId);
+
+        $second = $this->svc()->submit($user, $entry, 'nl', 'Startpagina', true);
+        self::assertSame($firstId, $second->getId());
+        self::assertSame('Startpagina', $second->getProposedValue());
+        self::assertSame(TranslationProposalStatus::Pending, $second->getStatus());
+
+        $em->clear();
+        self::assertSame(1, (int) $em->createQueryBuilder()
+            ->select('COUNT(p.id)')
+            ->from(TranslationProposal::class, 'p')
+            ->where('p.submitterId = :uid')
+            ->andWhere('p.locale = :locale')
+            ->andWhere('p.entry = :entry')
+            ->setParameter('uid', (int) $user->getId())
+            ->setParameter('locale', 'nl')
+            ->setParameter('entry', $entry)
+            ->getQuery()
+            ->getSingleScalarResult());
+    }
+
+    public function testEmptyValueThrows(): void
+    {
+        self::bootKernel();
+        $em = $this->em();
+        $user = $this->user($em, 'prop-empty@test.test');
+        $entry = $this->entry($em, 'nav.home', 'Home');
+
+        $this->expectException(EmptyTranslationException::class);
+        $this->svc()->submit($user, $entry, 'de', "  \t  ", true);
+    }
+
+    public function testTooLongValueThrows(): void
+    {
+        self::bootKernel();
+        $em = $this->em();
+        $user = $this->user($em, 'prop-long@test.test');
+        $entry = $this->entry($em, 'nav.about', 'About');
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->svc()->submit(
+            $user,
+            $entry,
+            'es',
+            str_repeat('a', TranslationLimits::PROPOSED_VALUE_MAX + 1),
+            true,
+        );
+    }
+
+    public function testEnglishLocaleThrows(): void
+    {
+        self::bootKernel();
+        $em = $this->em();
+        $user = $this->user($em, 'prop-en@test.test');
+        $entry = $this->entry($em, 'nav.help', 'Help');
+
+        $this->expectException(EnglishNotTranslatableException::class);
+        $this->svc()->submit($user, $entry, 'en', 'Help', true);
+    }
+
+    public function testUnknownLocaleThrows(): void
+    {
+        self::bootKernel();
+        $em = $this->em();
+        $user = $this->user($em, 'prop-xx@test.test');
+        $entry = $this->entry($em, 'nav.search', 'Search');
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->svc()->submit($user, $entry, 'xx', 'Buscar', true);
+    }
+
+    public function testAbsentEntryThrows(): void
+    {
+        self::bootKernel();
+        $em = $this->em();
+        $user = $this->user($em, 'prop-absent@test.test');
+        $entry = $this->entry($em, 'gone.key', 'Gone');
+        $entry->markAbsent();
+        $em->flush();
+
+        $this->expectException(KeyNotFoundException::class);
+        $this->svc()->submit($user, $entry, 'fr', 'Parti', true);
+    }
+
+    public function testSameEnglishDifferentKeysAreSeparateRows(): void
+    {
+        self::bootKernel();
+        $em = $this->em();
+        $user = $this->user($em, 'prop-same-en@test.test');
+        $a = $this->entry($em, 'ballot.submit', 'Submit');
+        $b = $this->entry($em, 'route.submit', 'Submit');
+
+        $pa = $this->svc()->submit($user, $a, 'fr', 'Envoyer', true);
+        $pb = $this->svc()->submit($user, $b, 'fr', 'Soumettre', true);
+
+        self::assertNotSame($pa->getId(), $pb->getId());
+        self::assertSame($a->getId(), $pa->getEntry()->getId());
+        self::assertSame($b->getId(), $pb->getEntry()->getId());
+        self::assertSame('Envoyer', $pa->getProposedValue());
+        self::assertSame('Soumettre', $pb->getProposedValue());
+    }
+
+    public function testNeedsInfoResubmitUpdatesInPlaceAndResetsPending(): void
+    {
+        self::bootKernel();
+        $em = $this->em();
+        $user = $this->user($em, 'prop-needs-info@test.test');
+        $entry = $this->entry($em, 'flash.saved', 'Saved');
+
+        $first = $this->svc()->submit($user, $entry, 'de', 'Gespeichert', true);
+        $first->setStatus(TranslationProposalStatus::NeedsInfo);
+        $em->flush();
+        $id = $first->getId();
+
+        $again = $this->svc()->submit($user, $entry, 'de', 'Gesichert', true);
+        self::assertSame($id, $again->getId());
+        self::assertSame('Gesichert', $again->getProposedValue());
+        self::assertSame(TranslationProposalStatus::Pending, $again->getStatus());
+    }
+}

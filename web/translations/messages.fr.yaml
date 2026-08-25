@@ -2484,6 +2484,9 @@ media:
       contact: 'Cette adresse de réponse ne ressemble pas à une adresse e-mail.'
       rate_limited: 'Trop de signalements depuis votre connexion aujourd''hui. Si c''est urgent, écrivez à info@cyclingcommons.org.'
       challenge: 'Veuillez attendre la fin de la vérification de sécurité, puis renvoyez le signalement.'
+translate:
+  consent:
+    contract: 'J''accepte de placer cette traduction sous licence CC BY-SA 4.0 et je confirme qu''elle est mon propre travail.'
 propose_route:
   eyebrow: 'Itinéraires recommandés'
   title: 'Proposer un itinéraire'

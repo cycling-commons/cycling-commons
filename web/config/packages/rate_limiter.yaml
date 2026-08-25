@@ -39,6 +39,8 @@ framework:
                 adapter: cache.app
             cache.media_upload_limiter:
                 adapter: cache.app
+            cache.translation_propose_limiter:
+                adapter: cache.app
             cache.data_export_limiter:
                 adapter: cache.app
             cache.media_report_limiter:
@@ -202,6 +204,13 @@ framework:
             limit: 30
             interval: '1 day'
             cache_pool: cache.media_upload_limiter
+        # In-site translation proposals (translations.md §4): a human can
+        # translate a page; a loop cannot fill the curator desk.
+        translation_propose:
+            policy: sliding_window
+            limit: 60
+            interval: '1 hour'
+            cache_pool: cache.translation_propose_limiter
         # Data export (account-and-auth.md §11): the heaviest read the app
         # offers — fourteen queries plus every stored photo streamed through
         # a temp file. Nobody legitimately needs a second copy of an unchanged
@@ -288,6 +297,8 @@ when@test:
                 cache.registration_limiter:
                     adapter: cache.adapter.array
                 cache.media_upload_limiter:
+                    adapter: cache.adapter.array
+                cache.translation_propose_limiter:
                     adapter: cache.adapter.array
                 cache.data_export_limiter:
                     adapter: cache.adapter.array

@@ -208,3 +208,8 @@ when@test:
         App\Community\CuratorApplicationService:
             public: true
             autowire: true
+
+        # Fetched directly by ProposalServiceTest until Task 5 wires a controller.
+        App\Translation\ProposalService:
+            public: true
+            autowire: true

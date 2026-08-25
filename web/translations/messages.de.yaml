@@ -2487,6 +2487,9 @@ media:
       contact: 'Diese Antwortadresse sieht nicht wie eine E-Mail-Adresse aus.'
       rate_limited: 'Zu viele Meldungen von deiner Verbindung heute. Wenn es dringend ist, schreib an info@cyclingcommons.org.'
       challenge: 'Bitte warte, bis die Sicherheitsprüfung fertig ist, und sende die Meldung erneut.'
+translate:
+  consent:
+    contract: 'Ich stimme zu, diese Übersetzung unter CC BY-SA 4.0 zu lizenzieren, und bestätige, dass sie meine eigene Arbeit ist.'
 propose_route:
   eyebrow: 'Empfohlene Routen'
   title: 'Route vorschlagen'

@@ -2029,6 +2029,11 @@ media:
       contact: 'That reply address does not look like an email address.'
       rate_limited: 'Too many reports from your connection today. If it is urgent, email info@cyclingcommons.org.'
       challenge: 'Please wait for the security check to finish, then send the report again.'
+translate:
+  consent:
+    # The binding sentence. Its exact wording is hashed onto the consent record,
+    # so changing it means bumping TranslationConsent::VERSION (docs/specs/translations.md §6).
+    contract: 'I agree to license this translation under CC BY-SA 4.0, and I confirm it is my own work.'
 propose_route:
   eyebrow: 'Recommended routes'
   title: 'Propose a route'

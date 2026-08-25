@@ -2484,6 +2484,9 @@ media:
       contact: 'Dat antwoordadres ziet er niet uit als een e-mailadres.'
       rate_limited: 'Te veel meldingen vanaf jouw verbinding vandaag. Is het dringend, mail dan info@cyclingcommons.org.'
       challenge: 'Wacht tot de veiligheidscontrole klaar is en verstuur de melding opnieuw.'
+translate:
+  consent:
+    contract: 'Ik ga ermee akkoord deze vertaling onder CC BY-SA 4.0 te licentiëren en bevestig dat het mijn eigen werk is.'
 propose_route:
   eyebrow: 'Aanbevolen routes'
   title: 'Stel een route voor'

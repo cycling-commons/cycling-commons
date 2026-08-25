@@ -2037,6 +2037,9 @@ media:
       contact: 'Esa dirección de respuesta no parece un correo electrónico.'
       rate_limited: 'Demasiados informes desde tu conexión hoy. Si es urgente, escribe a info@cyclingcommons.org.'
       challenge: 'Espera a que termine la comprobación de seguridad y vuelve a enviar el informe.'
+translate:
+  consent:
+    contract: 'Acepto licenciar esta traducción bajo CC BY-SA 4.0 y confirmo que es obra mía.'
 propose_route:
   eyebrow: 'Rutas recomendadas'
   title: 'Proponer una ruta'

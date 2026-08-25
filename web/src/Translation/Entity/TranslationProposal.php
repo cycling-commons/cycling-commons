@@ -85,6 +85,21 @@ class TranslationProposal
         $this->status = $status;
     }
 
+    public function setProposedValue(string $proposedValue): void
+    {
+        $this->proposedValue = $proposedValue;
+    }
+
+    public function setEnglishAtSubmit(string $englishAtSubmit): void
+    {
+        $this->englishAtSubmit = $englishAtSubmit;
+    }
+
+    public function setConsentRecordId(Uuid $consentRecordId): void
+    {
+        $this->consentRecordId = $consentRecordId;
+    }
+
     public function getId(): ?int
     {
         return $this->id;
