@@ -24,10 +24,15 @@
   .actions button{font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;padding:.75rem 1.1rem;border:1px solid var(--ink);background:var(--ink);color:var(--paper);border-radius:6px;cursor:pointer}
   .actions a{font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;padding:.75rem 1.1rem;border:1px solid rgba(20,22,14,.25);border-radius:6px;color:var(--ink);text-decoration:none}
   .err{color:#8b2e2e;font-size:.84rem;margin-top:.35rem}
+  .flash-success{background:rgba(44,84,64,.12);border-left:3px solid var(--spruce-lift);color:var(--spruce-lift);padding:.7rem 1rem;border-radius:0 5px 5px 0;font-size:.9rem;margin-bottom:1.4rem}
+  .flash-error{background:rgba(179,38,30,.1);border-left:3px solid var(--danger);color:var(--danger-ink);padding:.7rem 1rem;border-radius:0 5px 5px 0;font-size:.9rem;margin-bottom:1.4rem}
 </style>
 {% endblock %}
 {% block body %}
 <div class="wrap" id="main">
+  {% for msg in app.flashes('success') %}<div class="flash-success" role="alert">{{ msg|trans }}</div>{% endfor %}
+  {% for msg in app.flashes('danger') %}<div class="flash-error" role="alert">{{ msg|trans }}</div>{% endfor %}
+
   <a class="back" href="{{ path('translate') }}">← {{ 'translate.back'|trans }}</a>
   <div class="ey">{{ 'translate.kicker'|trans }}</div>
   <h1>{{ entry.messageKey }}</h1>

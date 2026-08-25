@@ -23,10 +23,15 @@
   .row-meta{font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;color:#7a7d6d;margin-top:.45rem}
   .row-meta.is-pending{color:var(--ochre)}
   .empty{color:#4a4d40;margin-top:1.2rem}
+  .flash-success{background:rgba(44,84,64,.12);border-left:3px solid var(--spruce-lift);color:var(--spruce-lift);padding:.7rem 1rem;border-radius:0 5px 5px 0;font-size:.9rem;margin-bottom:1.4rem}
+  .flash-error{background:rgba(179,38,30,.1);border-left:3px solid var(--danger);color:var(--danger-ink);padding:.7rem 1rem;border-radius:0 5px 5px 0;font-size:.9rem;margin-bottom:1.4rem}
 </style>
 {% endblock %}
 {% block body %}
 <div class="wrap" id="main">
+  {% for msg in app.flashes('success') %}<div class="flash-success" role="alert">{{ msg|trans }}</div>{% endfor %}
+  {% for msg in app.flashes('danger') %}<div class="flash-error" role="alert">{{ msg|trans }}</div>{% endfor %}
+
   <div class="ey">{{ 'translate.kicker'|trans }}</div>
   <h1>{{ 'translate.title'|trans }}</h1>
 

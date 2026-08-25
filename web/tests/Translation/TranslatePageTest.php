@@ -170,6 +170,10 @@ final class TranslatePageTest extends WebTestCase
         self::assertResponseRedirects();
         self::assertSame($before + 1, $this->proposalCount());
 
+        $client->followRedirect();
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('[role="alert"]', 'Proposition reçue — un curateur la relira.');
+
         /** @var EntityManagerInterface $em */
         $em = static::getContainer()->get(EntityManagerInterface::class);
         /** @var TranslationProposal|null $proposal */
