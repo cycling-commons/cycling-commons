@@ -6,7 +6,6 @@ declare(strict_types=1);
 
 namespace App\Tests\Translation;
 
-use App\Translation\Entity\TranslationEntry;
 use App\Translation\Entity\TranslationOverlay;
 use App\Translation\OverlayCatalogue;
 use App\Translation\OverlayCatalogueLoader;
@@ -18,6 +17,8 @@ use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
  */
 final class OverlayCatalogueTest extends KernelTestCase
 {
+    use FindsOrCreatesTranslationEntry;
+
     public function testEmptyWhenNoRows(): void
     {
         $catalogue = static::getContainer()->get(OverlayCatalogue::class);
@@ -29,9 +30,7 @@ final class OverlayCatalogueTest extends KernelTestCase
     public function testMapContainsOverlayAndSkipsAbsent(): void
     {
         $em = static::getContainer()->get(EntityManagerInterface::class);
-        $entry = new TranslationEntry('home.cta_map', 'Explore the map');
-        $em->persist($entry);
-        $em->flush();
+        $entry = $this->findOrCreateEntry($em, 'home.cta_map', 'Explore the map');
         $em->persist(new TranslationOverlay($entry, 'fr', 'Explorer la carte (overlay)', null, null));
         $em->flush();
 
@@ -53,9 +52,7 @@ final class OverlayCatalogueTest extends KernelTestCase
     public function testSecondMapDoesNotReloadAndInvalidateForcesReload(): void
     {
         $em = static::getContainer()->get(EntityManagerInterface::class);
-        $entry = new TranslationEntry('home.cta_map', 'Explore the map');
-        $em->persist($entry);
-        $em->flush();
+        $entry = $this->findOrCreateEntry($em, 'home.cta_map', 'Explore the map');
         $em->persist(new TranslationOverlay($entry, 'fr', 'Overlay FR', null, null));
         $em->flush();
 

@@ -6,7 +6,6 @@ declare(strict_types=1);
 
 namespace App\Tests\Translation;
 
-use App\Translation\Entity\TranslationEntry;
 use App\Translation\Entity\TranslationOverlay;
 use App\Translation\OverlayCatalogue;
 use App\Translation\OverlayCatalogueLoader;
@@ -24,6 +23,8 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  */
 final class OverlayTranslatorTest extends KernelTestCase
 {
+    use FindsOrCreatesTranslationEntry;
+
     public function testYamlWinsWhenNoOverlay(): void
     {
         static::getContainer()->get(OverlayCatalogue::class)->invalidate('fr');
@@ -36,9 +37,7 @@ final class OverlayTranslatorTest extends KernelTestCase
     public function testOverlayBeatsYaml(): void
     {
         $em = static::getContainer()->get(EntityManagerInterface::class);
-        $entry = new TranslationEntry('nav.map', 'Map');
-        $em->persist($entry);
-        $em->flush();
+        $entry = $this->findOrCreateEntry($em, 'nav.map', 'Map');
         $em->persist(new TranslationOverlay($entry, 'fr', 'Carte (overlay)', null, null));
         $em->flush();
 
@@ -52,9 +51,7 @@ final class OverlayTranslatorTest extends KernelTestCase
     public function testPercentNameInterpolation(): void
     {
         $em = static::getContainer()->get(EntityManagerInterface::class);
-        $entry = new TranslationEntry('place.see_place', 'See %name% on the map');
-        $em->persist($entry);
-        $em->flush();
+        $entry = $this->findOrCreateEntry($em, 'place.see_place', 'See %name% on the map');
         $em->persist(new TranslationOverlay($entry, 'fr', 'Voir %name% ici', null, null));
         $em->flush();
 
@@ -70,9 +67,7 @@ final class OverlayTranslatorTest extends KernelTestCase
     public function testOverlayLocaleEnIsRejectedByCheck(): void
     {
         $em = static::getContainer()->get(EntityManagerInterface::class);
-        $entry = new TranslationEntry('nav.map', 'Map');
-        $em->persist($entry);
-        $em->flush();
+        $entry = $this->findOrCreateEntry($em, 'nav.map', 'Map');
 
         $this->expectException(DriverException::class);
         $em->persist(new TranslationOverlay($entry, 'en', 'ROGUE', null, null));
@@ -104,9 +99,7 @@ final class OverlayTranslatorTest extends KernelTestCase
     public function testGetCatalogueAppliesOverlaysWithoutMutatingInner(): void
     {
         $em = static::getContainer()->get(EntityManagerInterface::class);
-        $entry = new TranslationEntry('nav.map', 'Map');
-        $em->persist($entry);
-        $em->flush();
+        $entry = $this->findOrCreateEntry($em, 'nav.map', 'Map');
         $em->persist(new TranslationOverlay($entry, 'fr', 'Carte catalogue', null, null));
         $em->flush();
 

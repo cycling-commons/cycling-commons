@@ -24,6 +24,8 @@ use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
  */
 final class DecisionServiceTest extends KernelTestCase
 {
+    use FindsOrCreatesTranslationEntry;
+
     private function em(): EntityManagerInterface
     {
         return static::getContainer()->get(EntityManagerInterface::class);
@@ -52,11 +54,7 @@ final class DecisionServiceTest extends KernelTestCase
 
     private function entry(EntityManagerInterface $em, string $key, string $english): TranslationEntry
     {
-        $entry = new TranslationEntry($key, $english);
-        $em->persist($entry);
-        $em->flush();
-
-        return $entry;
+        return $this->findOrCreateEntry($em, $key, $english);
     }
 
     public function testApproveWritesOverlayAndTranslatorReturnsIt(): void

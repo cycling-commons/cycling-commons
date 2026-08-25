@@ -22,6 +22,8 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
  */
 final class TranslatePageTest extends WebTestCase
 {
+    use FindsOrCreatesTranslationEntry;
+
     /**
      * @param list<string> $roles
      */
@@ -55,11 +57,8 @@ final class TranslatePageTest extends WebTestCase
     {
         /** @var EntityManagerInterface $em */
         $em = static::getContainer()->get(EntityManagerInterface::class);
-        $entry = new TranslationEntry($key, $english);
-        $em->persist($entry);
-        $em->flush();
 
-        return $entry;
+        return $this->findOrCreateEntry($em, $key, $english);
     }
 
     private function proposalCount(): int
@@ -106,7 +105,8 @@ final class TranslatePageTest extends WebTestCase
         $this->seedEntry('home.cta_map', 'Explore the map');
         $client->loginUser($user);
 
-        $client->request('GET', '/fr/translate');
+        // After CI sync the catalogue is fully populated; search so the key is on the page.
+        $client->request('GET', '/fr/translate?q=home.cta_map');
         self::assertResponseIsSuccessful();
 
         $html = (string) $client->getResponse()->getContent();
@@ -127,7 +127,14 @@ final class TranslatePageTest extends WebTestCase
 
         $html = (string) $client->getResponse()->getContent();
         self::assertStringContainsString('home.cta_map', $html);
-        self::assertStringNotContainsString('nav.map', $html);
+        // After CI sync the table holds every YAML key; assert the filtered
+        // result rows specifically (not the whole HTML document).
+        self::assertDoesNotMatchRegularExpression('/class="row-key">\s*nav\.map\s*</', $html);
+        preg_match_all('/class="row-key">\s*([^<]+?)\s*</', $html, $keys);
+        self::assertNotEmpty($keys[1]);
+        foreach ($keys[1] as $key) {
+            self::assertStringContainsString('cta_map', $key);
+        }
     }
 
     public function testPostWithoutConsentCreatesNoProposal(): void
@@ -199,7 +206,7 @@ final class TranslatePageTest extends WebTestCase
         $this->seedEntry('home.cta_map', 'Explore the map');
         $client->loginUser($user);
 
-        $client->request('GET', '/de/translate');
+        $client->request('GET', '/de/translate?q=home.cta_map');
         self::assertResponseIsSuccessful();
 
         $html = (string) $client->getResponse()->getContent();

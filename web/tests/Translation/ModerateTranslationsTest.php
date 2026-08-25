@@ -7,7 +7,6 @@ declare(strict_types=1);
 namespace App\Tests\Translation;
 
 use App\Entity\User;
-use App\Translation\Entity\TranslationEntry;
 use App\Translation\Entity\TranslationOverlay;
 use App\Translation\Entity\TranslationProposal;
 use App\Translation\ProposalService;
@@ -23,6 +22,8 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
  */
 final class ModerateTranslationsTest extends WebTestCase
 {
+    use FindsOrCreatesTranslationEntry;
+
     /**
      * @param list<string> $roles
      */
@@ -63,9 +64,7 @@ final class ModerateTranslationsTest extends WebTestCase
     {
         /** @var EntityManagerInterface $em */
         $em = static::getContainer()->get(EntityManagerInterface::class);
-        $entry = new TranslationEntry($key, $english);
-        $em->persist($entry);
-        $em->flush();
+        $entry = $this->findOrCreateEntry($em, $key, $english);
 
         /** @var ProposalService $proposals */
         $proposals = static::getContainer()->get(ProposalService::class);

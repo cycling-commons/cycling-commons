@@ -20,6 +20,8 @@ use Symfony\Component\Console\Tester\CommandTester;
  */
 final class DeleteTranslationOverlayCommandTest extends KernelTestCase
 {
+    use FindsOrCreatesTranslationEntry;
+
     #[\Override]
     protected function setUp(): void
     {
@@ -29,9 +31,7 @@ final class DeleteTranslationOverlayCommandTest extends KernelTestCase
     public function testDryRunKeepsOverlayAndWriteDeletesReturningYaml(): void
     {
         $em = static::getContainer()->get(EntityManagerInterface::class);
-        $entry = new TranslationEntry('nav.map', 'Map');
-        $em->persist($entry);
-        $em->flush();
+        $entry = $this->findOrCreateEntry($em, 'nav.map', 'Map');
         $em->persist(new TranslationOverlay($entry, 'fr', 'Carte (overlay)', null, null));
         $em->flush();
 
@@ -81,8 +81,7 @@ final class DeleteTranslationOverlayCommandTest extends KernelTestCase
     public function testNoOverlayWarnsAndSucceeds(): void
     {
         $em = static::getContainer()->get(EntityManagerInterface::class);
-        $em->persist(new TranslationEntry('nav.about', 'About'));
-        $em->flush();
+        $this->findOrCreateEntry($em, 'nav.about', 'About');
 
         $tester = $this->runCommand(['locale' => 'fr', 'key' => 'nav.about', '--write' => true]);
         $tester->assertCommandIsSuccessful();

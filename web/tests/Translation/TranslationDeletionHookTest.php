@@ -10,7 +10,6 @@ use App\Account\DataExportService;
 use App\Entity\User;
 use App\Media\Entity\ConsentRecord;
 use App\Service\UserDeletionService;
-use App\Translation\Entity\TranslationEntry;
 use App\Translation\Entity\TranslationOverlay;
 use App\Translation\Entity\TranslationProposal;
 use App\Translation\TranslationConsent;
@@ -27,6 +26,8 @@ use Symfony\Component\Uid\Uuid;
  */
 final class TranslationDeletionHookTest extends KernelTestCase
 {
+    use FindsOrCreatesTranslationEntry;
+
     private function em(): EntityManagerInterface
     {
         return static::getContainer()->get(EntityManagerInterface::class);
@@ -50,8 +51,7 @@ final class TranslationDeletionHookTest extends KernelTestCase
         $rider = $this->user($em, 'trans-purge-rider@test.test');
         $riderId = (int) $rider->getId();
 
-        $entry = new TranslationEntry('nav.map', 'Map');
-        $em->persist($entry);
+        $entry = $this->findOrCreateEntry($em, 'nav.map', 'Map');
 
         $consent = new ConsentRecord(
             Uuid::v4(),
