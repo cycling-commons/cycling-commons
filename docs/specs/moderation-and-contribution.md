@@ -661,6 +661,79 @@ at a time, so the row is sized for that:
   from the moderation menu**; until that page exists these panels carry no link
   rather than a public one. The `moderate.trash.rulebook_link` string is kept
   for it.
+- **The rulebook PDF is streamed to curators, never served from public/**
+  (2026-08-25 link; 2026-08-26 owner: "the file should be streamed to the
+  client, not via a hidden public link accessible to everybody who knows it").
+  `CC_RULEBOOK_PDF_PATH` names the file on the server: a path, not a URL,
+  relative paths taken from the project root, committed default
+  `var/private/moderator-rulebook.pdf` (`var/` is git-ignored, so a fresh
+  checkout has no file and no link). `ModerateController::rulebookPdf()`
+  (`GET /moderate/rulebook.pdf`, `moderate_rulebook_pdf`) sits behind the
+  class-level `ROLE_CURATOR` gate and the `^/moderate` access rule, answers
+  with a `BinaryFileResponse` (inline, `Content-Type: application/pdf`,
+  `Cache-Control: private, no-store`, `X-Robots-Tag: noindex, nofollow`) and
+  404s when nothing is configured or the file is missing; the rulebook page
+  renders the "Download the rulebook (PDF)" link only when the file really
+  exists (`rulebook_pdf` is a boolean, not a URL). The file is owner-managed:
+  nothing in the app writes, uploads or validates it. Two homes were tried
+  and rejected the same day: `assets/` (AssetMapper would compile it into
+  the public build under a hashed name AND git would track it) and
+  `public/moderation/` (nginx serves it to anyone holding the URL, so the
+  page's gate would protect nothing). `RulebookPdfTest` pins anonymous →
+  login, `ROLE_USER` → 403, curator → PDF with those headers, link present
+  only with the file, 404 without it. **Deploy prerequisite:** copy the PDF
+  to the configured path on each frontend and set `CC_RULEBOOK_PDF_PATH`
+  (`.env.staging` carries `replace-me`).
+- **The rulebook prints as a document, and that is how the PDF is made**
+  (2026-08-25, owner). The template carries a `@media print` sheet so the file
+  is the page itself: the shell (brand bar, tabs, chip, footer, skip link) and
+  the download link are hidden, a print-only masthead shows
+  `brand/logo-nav-light.svg` (the dark-bar `logo-nav.svg` paints most of the
+  wordmark in paper colour, invisible on paper), the moderators-only badge
+  text and the print date. Colours are forced (`print-color-adjust: exact`)
+  so paper, clay and ink survive. The body's paper-grain overlay
+  (`body::after` in `atlas.css`) is hidden in print because a fixed noise
+  texture rasterises every page into a full-bleed bitmap (13 MB for four
+  pages; 230 KB without it). Three more print facts, each learned from a
+  wrong PDF (owner 2026-08-26):
+  - **Paper to the edge of every sheet.** Chrome paints `@page` margins white
+    whatever the canvas colour, so the page margin is 0 and the body is wrapped
+    in `table.rb-sheet`, whose empty `thead`/`tfoot` rows repeat on every
+    printed page and supply the 16 mm top and bottom gaps; the side gaps are
+    cell padding. On screen the wrapper is plain blocks and the gap rows are
+    hidden.
+  - **The file carries no links.** Chrome turns every printed `<a href>` into a
+    PDF link annotation, and a relative one makes Acrobat ask to "connect to"
+    whichever host the file was opened from (`wsl.localhost` for a WSL path).
+    The only in-body anchor (the curator room) is screen-only, with a plain
+    `span.rb-print` twin for print. The logo is embedded as an image; nothing
+    in the PDF references the site. Verified by decompressing the file: zero
+    `/Link`, `/URI`, `/Annots`, `http`.
+  - **Acrobat's "connect to wsl.localhost" on a clean file** is the file's
+    location, not its content: a UNC path counts as a network site. Copy the
+    PDF to a local Windows folder before judging it.
+  To produce the file: log in as a curator, open `/moderate/rulebook`, print to
+  PDF (A4, backgrounds on), copy it to the configured path. Nothing in the app
+  writes or validates the PDF.
+- **The rulebook covers every desk, and quotes no number** (2026-08-25,
+  owner). The 2026-08-03 text described only the submissions queue and the
+  takedowns desk, and four of its claims had gone stale: the typed `DELETE`
+  (removed 2026-08-12), "currently 3 months" (a runtime system setting), "the
+  photo comes off the map the moment they ask" (true for an uploader's own
+  request and the intimate-or-child category only; a third-party report stays
+  published until decided) and "never per moderator" (true of the admin
+  activity table, not of the History desk's *Handled by me* filter). The page
+  now has a section per desk (the OSM question and approve-and-confirm before
+  approval; Routes with edit-before-publish, the region cap, retire and located
+  corrections; Data with its two questions and dismiss-is-final; Regions with
+  the map default and the about-text attribution tick; takedowns with the
+  categories, the one-month reply clock, decline-is-final-per-category and the
+  flood banner) plus account rules (mandatory 2FA, hard scope refusals, the
+  unsafe-link marks). Every "ask" points at the **curator room**, an in-desk
+  board at `/moderate/room` (feat/curator-room, not yet merged); the template
+  links it by literal path until the route exists, so the page renders today.
+  Rule kept from the original: the rulebook names mechanisms, never settings'
+  values, so it cannot rot when an administrator changes a threshold.
 - **The four triggers never leave their line.** The server renders three
   `<details>`; a nonce script upgrades each into a real disclosure — a
   `<button aria-expanded aria-controls>` that stays in the row, with its panel

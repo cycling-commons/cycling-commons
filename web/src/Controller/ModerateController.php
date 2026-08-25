@@ -34,8 +34,10 @@ use App\Routing\LocalePrefix;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Uid\Uuid;
@@ -63,8 +65,10 @@ final class ModerateController extends AbstractController
         private readonly EntityManagerInterface $em,
         private readonly ItemConfirmationService $confirmations,
         private readonly PageSize $pageSize,
-        #[Autowire('%env(default::CC_RULEBOOK_PDF_URL)%')]
-        private readonly ?string $rulebookPdfUrl = null,
+        #[Autowire('%kernel.project_dir%')]
+        private readonly string $projectDir = '',
+        #[Autowire('%env(default::CC_RULEBOOK_PDF_PATH)%')]
+        private readonly ?string $rulebookPdfPath = null,
     ) {
     }
 
@@ -171,9 +175,56 @@ final class ModerateController extends AbstractController
             'page_title' => 'meta.moderate_rulebook_title',
             'page_description' => 'meta.moderate_rulebook_description',
             'nav_active' => 'moderate_rulebook',
-            'rulebook_pdf' => $this->rulebookPdfUrl,
+            'rulebook_pdf' => null !== $this->rulebookPdfFile(),
             ...$this->deskBadges($user, $scope),
         ]);
+    }
+
+    /**
+     * The rulebook as a PDF, streamed to curators only (owner 2026-08-26).
+     *
+     * The file lives on the server at CC_RULEBOOK_PDF_PATH, outside public/ and
+     * outside the repository: a file under public/ is readable by anyone who
+     * has the URL, and the rulebook is a script for talking a curator into a
+     * removal. This action is behind the class-level ROLE_CURATOR gate, marks
+     * the response private and uncacheable, and tells crawlers to stay away.
+     * 404 when nothing is configured or the file is missing; the page above
+     * shows no link in that case, so nobody is sent here to find out.
+     */
+    #[Route('/moderate/rulebook.pdf', name: 'moderate_rulebook_pdf', methods: ['GET'])]
+    public function rulebookPdf(): BinaryFileResponse
+    {
+        $file = $this->rulebookPdfFile();
+        if (null === $file) {
+            throw $this->createNotFoundException('No rulebook PDF is configured.');
+        }
+
+        $response = new BinaryFileResponse($file);
+        $response->headers->set('Content-Type', 'application/pdf');
+        $response->setContentDisposition(ResponseHeaderBag::DISPOSITION_INLINE, 'moderator-rulebook.pdf');
+        $response->headers->set('Cache-Control', 'private, no-store');
+        $response->headers->set('X-Robots-Tag', 'noindex, nofollow');
+
+        return $response;
+    }
+
+    /**
+     * Absolute path of the configured rulebook PDF, or null when unset or
+     * absent. A relative CC_RULEBOOK_PDF_PATH is taken from the project root,
+     * so the committed default (`var/private/...`) works on every checkout
+     * without naming a machine.
+     */
+    private function rulebookPdfFile(): ?string
+    {
+        $path = trim((string) $this->rulebookPdfPath);
+        if ('' === $path) {
+            return null;
+        }
+        if (!str_starts_with($path, '/')) {
+            $path = rtrim($this->projectDir, '/').'/'.$path;
+        }
+
+        return is_file($path) && is_readable($path) ? $path : null;
     }
 
     /**

@@ -1,11 +1,11 @@
 {# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
 {#
-  The moderator rulebook — moderators only (2026-08-03, owner).
+  The moderator rulebook: moderators only (2026-08-03, owner).
 
   This page WAS the public wiki's `moderator-rulebook`. All of it moved here and
   the public page is gone: a published account of how removal decisions are
   really made is also a script for talking a curator into removing something,
-  and the takedown section was the clearest example — a two-row table mapping
+  and the takedown section was the clearest example, a two-row table mapping
   "their words say" to "decide". The old page even said as much about its own
   missing half. Now the whole thing is behind ROLE_CURATOR.
 
@@ -15,7 +15,7 @@
   curator does to somebody's photo. The page's chrome (title, kicker, the
   moderators-only badge) stays translated because it is chrome. If the rulebook
   is ever translated, it should be translated by a person who moderates, not
-  key-by-key — see the handoff note.
+  key-by-key; see the handoff note.
 #}
 {% extends 'base.html.twig' %}
 {% block head_styles %}
@@ -45,13 +45,61 @@
   .rb-table td{border-bottom:1px solid rgba(20,22,14,.08);padding:.55rem .6rem .55rem 0;vertical-align:top;line-height:1.5;color:#3a3d33}
   .rb-note{border-left:2px solid var(--clay);padding:.1rem 0 .1rem .8rem;margin:1rem 0;font-size:.92rem;line-height:1.6;color:#4a4d40}
   .rb-scroll{overflow-x:auto}
+
+  /* Print / PDF: the same page as a document. The shell (tabs, chip, language
+     menu, footer) is navigation and goes; the brand bar becomes a paper-toned
+     masthead with the logo and the date, so the file says where it came from.
+     Colours are forced to print so the paper, clay and ink survive "save as
+     PDF"; the PDF the owner deploys (CC_RULEBOOK_PDF_PATH) is made this way. */
+  .rb-print-head{display:none}
+  .rb-print{display:none}
+  /* On screen the sheet wrapper is inert: plain blocks, no gap rows. */
+  .rb-sheet,.rb-sheet>tbody,.rb-sheet>tbody>tr,.rb-sheet>tbody>tr>td{display:block}
+  .rb-sheet>thead,.rb-sheet>tfoot{display:none}
+  @media print{
+    /* Chrome paints @page margins white whatever the canvas colour, so the
+       page margin is zero and the sheet wrapper (a table whose header and
+       footer rows repeat on every printed page) supplies the gaps instead.
+       That is what lets the paper reach the edge of every sheet. */
+    @page{size:A4;margin:0}
+    html,body{background:var(--paper) !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .rb-sheet{display:table;width:100%;border-collapse:collapse}
+    .rb-sheet>thead{display:table-header-group}
+    .rb-sheet>tfoot{display:table-footer-group}
+    .rb-sheet>tbody{display:table-row-group}
+    .rb-sheet tr{display:table-row}
+    .rb-sheet>thead>tr>td,.rb-sheet>tfoot>tr>td{display:table-cell;height:16mm;padding:0}
+    .rb-sheet>tbody>tr>td{display:table-cell;padding:0 14mm;vertical-align:top}
+    .dtop,.dtabs,.foot,.cc-notice,.rb-pdf,.private,.skip-link{display:none !important}
+    /* The paper-grain overlay (body::after) is a fixed noise texture; on print it
+       rasterises every page into a full-bleed bitmap (13 MB for four pages). */
+    body::after{display:none !important}
+    .rb-print-head{display:flex;align-items:flex-end;justify-content:space-between;gap:1rem;border-bottom:2px solid var(--ink);padding:0 0 .7rem;margin:0 0 .4rem}
+    .rb-print-head img{height:2rem;display:block}
+    .rb-print-head .rb-print-meta{font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--clay);text-align:right;line-height:1.7}
+    .mh{padding:.6rem 0 .4rem}
+    .mh h1{font-size:1.9rem}
+    .wrap{max-width:none;padding:0}
+    .rb{max-width:none;margin-bottom:0}
+    .rb section{break-inside:auto;margin-bottom:1.6rem}
+    .rb h2,.rb h3{break-after:avoid}
+    .rb-table tr,.rb li,.rb-note{break-inside:avoid}
+    .rb-scroll{overflow:visible}
+    .rb-screen{display:none !important}
+    .rb-print{display:inline;font-weight:700;color:var(--ink)}
+  }
 </style>
 {% endblock %}
 {% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate_rulebook', mod_scope_names: mod_scope_names is defined ? mod_scope_names : null, mod_submission_count: mod_submission_count is defined ? mod_submission_count : null, mod_route_count: mod_route_count is defined ? mod_route_count : null, mod_takedown_count: mod_takedown_count is defined ? mod_takedown_count : null} %}{% endblock %}
 
 {% block body %}
+<table class="rb-sheet"><thead><tr><td></td></tr></thead><tfoot><tr><td></td></tr></tfoot><tbody><tr><td>
 <div class="mh">
   <div class="wrap">
+    <div class="rb-print-head" aria-hidden="true">
+      <img src="{{ asset('brand/logo-nav-light.svg') }}" alt="">
+      <div class="rb-print-meta">{{ 'moderate.rulebook.private'|trans }}<br>{{ 'now'|date('Y-m-d') }}</div>
+    </div>
     <div class="kicker">{{ 'moderate.rulebook.kicker'|trans }}</div>
     <h1>{{ 'moderate.rulebook.title'|trans }}</h1>
     <div><span class="role-badge">&#9876; {{ 'moderate.role_label'|trans }}</span></div>
@@ -67,16 +115,22 @@
        readable by anyone once the repo is public and a rulebook is a script for
        talking a curator into a removal (owner 2026-08-14).
 
-       Rendered only when CC_RULEBOOK_PDF_URL is set, so an unconfigured
-       environment shows nothing rather than a dead link. Owner-managed: nothing
-       here writes, uploads or validates it. #}
+       Streamed by ModerateController::rulebookPdf() behind the curator gate,
+       never served from public/ (owner 2026-08-26). Rendered only when the
+       file at CC_RULEBOOK_PDF_PATH really exists, so an unconfigured
+       environment shows nothing rather than a dead link. Owner-managed:
+       nothing here writes, uploads or validates it. #}
     {% if rulebook_pdf %}
-      <p class="rb-pdf"><a href="{{ rulebook_pdf }}" rel="noopener">{{ 'moderate.rulebook.download'|trans }}</a></p>
+      <p class="rb-pdf"><a href="{{ path('moderate_rulebook_pdf') }}">{{ 'moderate.rulebook.download'|trans }}</a></p>
     {% endif %}
-    <p class="lead">The short, always-current rules for everyone holding a curator or moderator role. If a situation is not covered here, ask in the curator channel before acting — this page is the do's and don'ts, not a replacement for judgement.</p>
+    <p class="lead">The short, always-current rules for everyone holding a curator or moderator role. If a situation is not covered here, ask in the {# The curator room (/moderate/room) is being built on feat/curator-room;
+      switch this to path('moderate_room') when it lands. The anchor is
+      screen-only: Chrome turns every printed <a href> into a PDF link
+      annotation, and a relative one makes Acrobat "connect to" wherever
+      the file is opened from. The PDF must carry no links at all. #}<a class="rb-screen" href="/moderate/room">curator room</a><span class="rb-print">curator room</span> before acting. The room is part of this desk, so what you discuss there stays inside it. This page is the do's and don'ts, not a replacement for judgement.</p>
 
     <section id="verbs">
-      <h2>The four verbs — and what each one keeps</h2>
+      <h2>The four verbs, and what each one keeps</h2>
       <div class="rb-scroll">
         <table class="rb-table">
           <thead><tr><th>Verb</th><th>When</th><th>What happens</th><th>What is kept</th></tr></thead>
@@ -91,13 +145,13 @@
               <td><strong>Reject</strong></td>
               <td>Honest contribution, but wrong / not verifiable / duplicate</td>
               <td>Nothing goes live; the rider gets your note</td>
-              <td>The submission and any photos, for the standard retention window (currently 3 months), then collected</td>
+              <td>The submission and any photos, for the retention window (a system setting the administrators control, not a fixed number), then collected</td>
             </tr>
             <tr>
               <td><strong>Trash</strong></td>
-              <td>Spam and abuse — <strong>not</strong> illegal content, see below</td>
-              <td>Immediate permanent deletion — content, photos and their history are gone at once, no retention window, and <strong>no message is sent</strong> to the submitter</td>
-              <td>Only a <strong>content-free record of the action</strong>: that <em>you</em> trashed submission N of type X at time T. The content itself is unrecoverable — deliberately</td>
+              <td>Spam and abuse. <strong>Not</strong> illegal content, see below</td>
+              <td>Immediate permanent deletion: content, photos and their history are gone at once, no retention window, and <strong>no message is sent</strong> to the submitter</td>
+              <td>Only a <strong>content-free record of the action</strong>: that <em>you</em> trashed submission N of type X at time T. The content itself is unrecoverable, deliberately</td>
             </tr>
             <tr>
               <td><strong>Escalate</strong></td>
@@ -109,17 +163,62 @@
         </table>
       </div>
 
-      <p><strong>Keep the record, never the content</strong> is the Trash principle: the Commons can always prove the moderation action happened, and can never reproduce the material — which is the point when the material is spam or abuse.</p>
+      <p><strong>Keep the record, never the content</strong> is the Trash principle: the Commons can always prove the moderation action happened, and can never reproduce the material, which is the point when the material is spam or abuse.</p>
 
-      <p><strong>Illegal material is the exception, and it goes to Escalate, not Trash.</strong> Trashing it destroys the evidence along with the content, and for some material the law expects that evidence to survive until it has been reported. Escalating takes it out of everyone's reach — yours included — freezes it against every deletion path, and puts it in front of an administrator the same minute. You are never expected to decide what it is, only to say what you saw. Nobody is asked to view escalated material twice, and if something you saw here is sitting with you afterwards, say so in the curator channel; that is a normal thing to need and not a failure.</p>
+      <p><strong>Illegal material is the exception, and it goes to Escalate, not Trash.</strong> Trashing it destroys the evidence along with the content, and for some material the law expects that evidence to survive until it has been reported. Escalating takes it out of everyone's reach, yours included, freezes it against every deletion path, and puts it in front of an administrator the same minute. You are never expected to decide what it is, only to say what you saw: Escalate asks for a short reason and a tick that you mean it. Nobody is asked to view escalated material twice, and if something you saw here is sitting with you afterwards, say so in the curator room; that is a normal thing to need and not a failure.</p>
 
-      <p>Because Trash is irreversible, the desk asks you to <strong>type <code>DELETE</code></strong> to confirm. Cancelling leaves no trace at all — no record is written for a Trash you did not complete.</p>
+      <p><strong>Trash asks nothing twice.</strong> There is no confirmation box, so the moment to think is before the click. Cancelling a message or an escalation leaves no trace at all; no record is written for an action you did not complete.</p>
+    </section>
+
+    <section id="before-approve">
+      <h2>Before you approve a place</h2>
+      <ul>
+        <li><strong>Answer the OSM question first.</strong> A new place cannot be approved until you have linked it to its OpenStreetMap object or recorded <em>Not in OSM</em>. The desk refuses the approval until one of the two is on record. A wrong "not in OSM" is cheap to fix later; a place approved with no answer is a duplicate waiting to happen.</li>
+        <li><strong>"Approve and confirm" makes you a witness.</strong> The extra button also records that <em>you</em> know the place exists. Use it only when you do; approving on plausibility alone is the plain Approve.</li>
+        <li><strong>Read the "Previously rejected" flag.</strong> It means another curator already turned a version of this down. You may still approve, but read their note first, and say in yours why this time is different.</li>
+        <li><strong>Decide photos individually</strong> when a submission's facts are right but one photo is not. Approving the submission does not force approving every photo.</li>
+        <li><strong>Check a photo's context line</strong> (capture date, distance from the pin) before judging it; those facts are extracted for exactly this. <strong>Click the thumbnail</strong> to see the photo full size before you decide: the thumbnail is too small to tell whether somebody in it is identifiable, and that is the judgement a takedown request will later ask you about.</li>
+      </ul>
+    </section>
+
+    <section id="routes">
+      <h2>The Routes desk</h2>
+      <p>A proposed route gets the same first three verbs: <strong>Approve</strong> publishes it, <strong>Reject</strong> sends it back with your note, and <strong>Trash</strong> is the same irreversible bin as for places, for spam only. Two things are different here.</p>
+      <ul>
+        <li><strong>You may edit before you publish.</strong> The title, the attributes and the surface are yours to correct on the way through; the track itself is not. This is the one place where "editing on a rider's behalf" is the desk's own offer, and the rider is told the route went live as you shaped it.</li>
+        <li><strong>Every region has a cap</strong> on live routes (an administrator setting). Approving past it is refused and the desk asks you to <strong>Retire</strong> something first. Retiring takes a route off the map without deleting it; the author is told. Retire the weakest, not the oldest.</li>
+        <li><strong>Located corrections</strong> are riders' notes pinned to a stretch of a live route: a broken track, a piece to trim for privacy, a duplicate, a part that is not rideable. You close each one as <strong>done</strong> (you changed the route) or <strong>dismissed</strong> (you did not, and your note says why). The rider who filed it is told either way.</li>
+      </ul>
+    </section>
+
+    <section id="data">
+      <h2>The Data desk</h2>
+      <p>Findings here were raised by the automatic checks, not by a rider, so nobody is waiting on a reply, but a machine can only ask; the answer is yours. There are two questions.</p>
+      <ul>
+        <li><strong>Are these the same place?</strong> Two rows close together that look alike. See both on the map, then <strong>keep one</strong> (the other is retired, and its history points at the survivor) or <strong>keep both</strong>. If a row in the group has been edited by a curator, read it before you retire it; the edit is what would be lost.</li>
+        <li><strong>Is our row a record of this OSM object?</strong> Yes links them, and the map will follow OSM for that place from then on. No records that they are different, and the checks stop asking.</li>
+      </ul>
+      <p><strong>Dismiss is an answer, not a postponement.</strong> A dismissed finding is never raised again. If you are not sure, leave it open and ask in the room.</p>
+    </section>
+
+    <section id="regions">
+      <h2>The Regions desk</h2>
+      <p>Nothing queues here, but two editorial powers live on this page.</p>
+      <ul>
+        <li><strong>What the map opens in.</strong> Every region opens in <em>Everything</em> until you change it. <em>Confirmed</em> needs enough confirmed places; <em>Best of</em> needs enough curated picks spread over several map blocks, so no single layer can carry a region. The desk shows the readiness counts and refuses the switch below the threshold. Switching a region to Best of hides the unconfirmed map from every visitor by default; do it when the curated layer stands on its own, not to make the region look tidy.</li>
+        <li><strong>The region's about text.</strong> You can write the lead a reader meets on the region page, per language. Leave a language empty and the page keeps the Wikipedia text we harvested. If you edited the Wikipedia text instead of writing your own, <strong>tick the box that says so</strong>; the page then keeps the Wikipedia credit and says the text was changed. Unticked, you are claiming the words as your own.</li>
+      </ul>
     </section>
 
     {# Linked from the takedowns desk as #takedowns. #}
     <section id="takedowns">
       <h2>Photo takedown requests</h2>
-      <p>A rider can ask for a photo they uploaded to be removed. The photo comes off the map <strong>the moment they ask</strong>, before you see it — you are not deciding whether it stays up meanwhile, only what happens next.</p>
+      <p>Somebody has asked for a photo to come down. <strong>Who asked decides what is already off the map:</strong></p>
+      <ul>
+        <li><strong>The uploader's own request</strong> takes the photo off the map the moment they ask, before you see it. You are only deciding what happens next.</li>
+        <li><strong>A third-party report stays up until you decide</strong>, with one exception: a report in the category <em>intimate imagery, or a child</em> hides the photo at once, before review. Hiding is not removal; only you can remove.</li>
+      </ul>
+      <p>The card says which of these you are looking at, and which category the reporter picked: <em>I am identifiable</em>, <em>someone else is identifiable and has not agreed</em>, <em>intimate imagery or a child</em>, <em>private property or something that should not be public</em>, or <em>something else</em>.</p>
 
       <p>You are answering one question: <strong>which kind of request is this?</strong></p>
 
@@ -133,71 +232,90 @@
             </tr>
             <tr>
               <td>They have changed their mind about contributing</td>
-              <td><strong>Decline and republish.</strong> The licence cannot be taken back — if it could, the Commons would only ever be on loan</td>
+              <td><strong>Decline and republish.</strong> The licence cannot be taken back; if it could, the Commons would only ever be on loan</td>
             </tr>
           </tbody>
         </table>
       </div>
 
       <h3>The test for a third-party claim</h3>
-      <p>Does the photo, on its face, show an identifiable person, and is the claim plausible? If yes, remove — <strong>when unsure, remove</strong>. Decline only what is clearly not a rights claim: an uploader's change of mind about contributing, nobody visible at all, or a complaint about the place rather than a person.</p>
+      <p>Does the photo, on its face, show an identifiable person, and is the claim plausible? If yes, remove; <strong>when unsure, remove</strong>. Decline only what is clearly not a rights claim: an uploader's change of mind about contributing, nobody visible at all, or a complaint about the place rather than a person.</p>
 
       <ul>
         <li><strong>Do lean towards removing</strong> when you are unsure. Losing one photo of a fountain costs the Commons almost nothing; refusing a genuine claim about somebody's own image is a rights violation.</li>
-        <li><strong>Do write a note either way</strong> — on a decline especially. Say they can reply if you have misread them, because sometimes you will have.</li>
+        <li><strong>Do write a note either way</strong>, on a decline especially. Say they can reply if you have misread them, because sometimes you will have.</li>
+        <li><strong>Do answer within a month.</strong> A reporter who left an address is answered from the project mailbox, and the desk shows the address next to the request. A month is the outer limit, not the target.</li>
         <li><strong>Don't ask them to prove it.</strong> Demanding identity documents to settle "that's me in the reflection" collects more personal data than the complaint is about. If the photo plausibly shows them, that is enough.</li>
         <li><strong>Don't treat a removal as a black mark.</strong> It is not a rejection and it is not misconduct; it is somebody exercising a right.</li>
+        <li><strong>Don't decline to clear a backlog.</strong> A decline is a judgement, and it <strong>closes that category for that photo for good</strong>: a later report of the same kind about the same photo is not heard. What is obviously abuse is for an administrator to dismiss as abuse, which leaves the door open; ask in the room rather than declining it yourself.</li>
       </ul>
 
-      <p>Removing deletes the image files. The record that a photo existed, that its subject asked, and that we did as asked is kept on purpose — it is how the Commons can show it honoured the request.</p>
+      <p>Removing deletes the image files. The record that a photo existed, that its subject asked, and that we did as asked is kept on purpose; it is how the Commons can show it honoured the request.</p>
 
-      <p><strong>Someone who is in a photo they did not upload</strong> has their own route: the "this photo shows me" link on every photo page, open to people without accounts. Their report lands on this same desk, marked as coming from a third party, and a curator decides it — nothing is removed automatically on somebody's say-so.</p>
+      <p><strong>Someone who is in a photo they did not upload</strong> has their own route: the "this photo shows me" link on every photo page, open to people without accounts. Their report lands on this same desk, marked as coming from a third party, and a curator decides it; nothing is removed automatically on somebody's say-so.</p>
 
-      <p class="rb-note">Two rules hold in both directions: <strong>nobody learns who anybody is</strong> (the reporter is never told who uploaded, the uploader is never told who reported, and neither sees the other's contact details), and <strong>we do not ask you to prove your identity</strong> to have a photo of you looked at. These two are promises rather than procedure, and they are the part of this page that is stated publicly — on the privacy notice, not here.</p>
+      <h3>When the desk shows a red banner</h3>
+      <p>Anonymous reports may hide only so many photos on their own per hour and per day. Past that budget the desk shows a banner: urgent reports still arrive and still queue, but they hide nothing until you decide them. That pattern is either an attack on the report route or something happening at scale. <strong>Decide each one yourself, tell the site owner, and do not bulk-decline the noise</strong>; declining is final per category, and the owner has a restore page for obvious abuse that keeps a later genuine claim hearable.</p>
+
+      <p class="rb-note">Two rules hold in both directions: <strong>nobody learns who anybody is</strong> (the reporter is never told who uploaded, the uploader is never told who reported, and neither sees the other's contact details), and <strong>we do not ask you to prove your identity</strong> to have a photo of you looked at. These two are promises rather than procedure, and they are the part of this page that is stated publicly, on the privacy notice, not here.</p>
     </section>
 
     <section id="do">
       <h2>Do</h2>
       <ul>
-        <li><strong>Do use Reject for disagreement, Trash only for bad faith.</strong> A wrong location or an unverifiable claim is a rejection with a friendly note — never a trash.</li>
-        <li><strong>Do ask before deciding</strong> when a submission is unclear: send the rider a message (the needs-info flow). Most "wrong" submissions are just missing context. <strong>Write the actual question in the note</strong> — the desk requires it, because a needs-info with no question tells the rider nothing while taking their submission off the map until they answer. They see the question on their contributions list and answer it from their messages page; their reply puts the item straight back in the queue.</li>
-        <li><strong>Do write a decision note</strong> on rejections — the rider reads it, and it is the difference between a contributor who improves and one who leaves.</li>
-        <li><strong>Do check a photo's context line</strong> (capture date, distance from the pin) before judging it — those facts are extracted for exactly this. <strong>Click the thumbnail</strong> to see the photo full size before you decide: the thumbnail is too small to tell whether somebody in it is identifiable, and that is the judgement a takedown request will later ask you about.</li>
-        <li><strong>Do decide photos individually</strong> when a submission's facts are right but one photo is not — approving the submission does not force approving every photo.</li>
-        <li><strong>Do report illegal content patterns</strong> to the site owner after escalating — repeated sources may need an account-level response, which is the admin desk's job, not yours.</li>
+        <li><strong>Do use Reject for disagreement, Trash only for bad faith.</strong> A wrong location or an unverifiable claim is a rejection with a friendly note, never a trash.</li>
+        <li><strong>Do ask before deciding</strong> when a submission is unclear: send the rider a message (the needs-info flow). Most "wrong" submissions are just missing context. <strong>Write the actual question in the note</strong>; the desk requires it, because a needs-info with no question tells the rider nothing while taking their submission off the map until they answer. They see the question on their contributions list and answer it from their messages page; their reply puts the item straight back in the queue.</li>
+        <li><strong>Do write a decision note</strong> on rejections. The rider reads it, and it is the difference between a contributor who improves and one who leaves.</li>
+        <li><strong>Do ask the room</strong> when you are unsure, and answer when somebody else asks. A question with a submission number on it is enough; the room links to the card, so nobody has to paste content anywhere.</li>
+        <li><strong>Do report illegal content patterns</strong> to the site owner after escalating. Repeated sources may need an account-level response, which is the admin desk's job, not yours.</li>
       </ul>
     </section>
 
     <section id="dont">
       <h2>Don't</h2>
       <ul>
-        <li><strong>Don't share, download, or link pending content</strong> anywhere outside the moderation desk. Unapproved material is unpublished by design; its URLs exist only in your queue.</li>
-        <li><strong>Don't trash what you merely disagree with.</strong> Trash destroys the evidence of its own correctness — use it only where keeping the content would itself be the harm (spam, abuse), and never for illegal material, which goes to Escalate.</li>
-        <li><strong>Don't decide your own submissions</strong> or those of people close to you — hand them to another curator.</li>
-        <li><strong>Don't promise outcomes</strong> in rider messages ("this will be approved once you…") — you are describing the process, not pre-deciding it.</li>
-        <li><strong>Don't work around the tools</strong> (no manual database edits, no editing content on a rider's behalf beyond what the desk offers). If the tool cannot express the right decision, that is a bug to report, not a rule to bend.</li>
+        <li><strong>Don't share, download, or link pending content</strong> anywhere outside the moderation desk. Unapproved material is unpublished by design; its URLs exist only in your queue. The curator room is inside the desk; a chat app is not.</li>
+        <li><strong>Don't click a link the desk has marked unsafe.</strong> Links in a submission are checked against a known-unsafe list; a marked one stays marked for a reason. Links the check could not reach say so; open those with care, and never on a work account you use for anything else.</li>
+        <li><strong>Don't trash what you merely disagree with.</strong> Trash destroys the evidence of its own correctness; use it only where keeping the content would itself be the harm (spam, abuse), and never for illegal material, which goes to Escalate.</li>
+        <li><strong>Don't decide your own submissions</strong> or those of people close to you; hand them to another curator.</li>
+        <li><strong>Don't promise outcomes</strong> in rider messages ("this will be approved once you…"). You are describing the process, not pre-deciding it.</li>
+        <li><strong>Don't work around the tools</strong> (no manual database edits, no editing content on a rider's behalf beyond what the desk offers; the Routes desk's edit-before-publish is such an offer). If the tool cannot express the right decision, that is a bug to report, not a rule to bend.</li>
+        <li><strong>Don't reach outside your area.</strong> Your moderation area decides what you see and can act on. An item outside it is refused, not hidden, and you are not told what exists elsewhere. If an item you need is out of reach, ask the room; do not ask for the URL.</li>
       </ul>
     </section>
 
     <section id="privacy">
       <h2>Privacy specifics</h2>
       <ul>
-        <li>A photo's <strong>GPS coordinates are never stored</strong> — you see only the computed distance to the pin, and only until you decide.</li>
-        <li>Rider identity stays out of public surfaces unless the rider opted into a public profile; the desk may show you more than the public ever sees — treat everything on the desk as confidential.</li>
-        <li>Consent records (the CC BY-SA donation a rider granted) are permanent and none of your concern to manage — the system enforces them. They are disclosed on the privacy notice, so a rider asking "what do you keep after I leave?" can be pointed at that page rather than answered from memory.</li>
-        <li><strong>A takedown reason is confidential.</strong> It often says something personal about the rider — that is the whole point of it. It stays on the desk.</li>
+        <li>A photo's <strong>GPS coordinates are never stored</strong>; you see only the computed distance to the pin, and only until you decide.</li>
+        <li>Rider identity stays out of public surfaces unless the rider opted into a public profile; the desk may show you more than the public ever sees. Treat everything on the desk as confidential.</li>
+        <li>Consent records (the CC BY-SA donation a rider granted) are permanent and none of your concern to manage; the system enforces them. They are disclosed on the privacy notice, so a rider asking "what do you keep after I leave?" can be pointed at that page rather than answered from memory.</li>
+        <li><strong>A takedown reason is confidential.</strong> It often says something personal about the rider; that is the whole point of it. It stays on the desk. A reporter's reply address is kept only to answer them and is deleted 90 days after the decision.</li>
+      </ul>
+    </section>
+
+    <section id="account">
+      <h2>Your account</h2>
+      <ul>
+        <li><strong>Two-factor login is mandatory</strong> for every curator and moderator account. The desk will not open without it. Keep the recovery codes somewhere that is not this browser.</li>
+        <li><strong>Riders can only ask you so often.</strong> A rider may file a few route corrections a day and a curator application a few times a day; the limits exist because every row is a curator's task. If a desk fills faster than that, something is wrong; say so in the room.</li>
       </ul>
     </section>
 
     <section id="workload-view">
-      <h2>The workload view exists, and you should know it does</h2>
-      <p>Admins can see a <strong>moderation activity</strong> table: decided submissions per month, per <em>region</em>, deliberately never per moderator. It answers "how much work is being done, and where", so quiet regions get help and busy ones get more hands. It is named here because an openly-stated workload view is management; a quiet one would be surveillance.</p>
+      <h2>Who can see your work, and you should know it</h2>
+      <p>Two views exist and are named here on purpose, because an openly-stated view is management and a quiet one would be surveillance.</p>
+      <ul>
+        <li>Admins can see a <strong>moderation activity</strong> table: decided submissions per month, per <em>region</em>, never per moderator. It answers "how much work is being done, and where", so quiet regions get help and busy ones get more hands.</li>
+        <li>Every curator can see the <strong>History</strong> desk: what is already settled, with its message threads, and a <em>Handled by me</em> filter. Your name is on your decisions there, to the other curators in your area, and that is what lets a second curator pick up a thread you started.</li>
+      </ul>
     </section>
 
     <section id="deep-rules">
       <h2>Where the deep rules live</h2>
-      <p>This page is the operating summary. The binding contracts are the moderation and contribution specification (retention, Trash, messages, scoping) and the photo-uploads specification (media lifecycle) in the project repository — when this page and a spec disagree, the spec wins and this page has a bug.</p>
+      <p>This page is the operating summary. The binding contracts are the moderation and contribution specification (retention, Trash, messages, scoping), the route domain specification (Routes desk, caps, corrections), the catalog data model (the Data desk and the OSM question), the map and search specification (what a region opens in) and the photo-uploads specification (media lifecycle) in the project repository. When this page and a spec disagree, the spec wins and this page has a bug.</p>
     </section>
   </div>
 </div>
+</td></tr></tbody></table>
 {% endblock %}
