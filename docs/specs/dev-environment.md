@@ -307,6 +307,12 @@ Day-one internationalisation across **EN / FR / NL / DE / ES**:
   yet. The catalogue is complete and in parity, and it is enabled, but treat
   its copy as unreviewed until a Spanish-speaking rider has read it. Tracked
   in `docs/TODO.md`.
+- **In-site overlays** ([translations.md](translations.md)): YAML remains the
+  shipped default and the parity gate still compares locale YAML to English.
+  Approved overlays may lead for individual non-English keys at runtime.
+  Run `php bin/console app:translations:sync` on deploy so `translation_entry`
+  stays aligned with `messages.en.yaml`. Do not merge overlays back into
+  locale YAML.
 
 ## 7a. Shared state — Redis (2026-08-08)
 

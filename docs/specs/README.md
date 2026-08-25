@@ -51,6 +51,8 @@ committed — working docs stay local.
   two value types, the `system_setting` table, and the admin page that writes
   it. Editorial thresholds plus the operational dials an owner may need to
   turn mid-incident (the auto-withhold budgets, the alert recipients).
+- `translations.md` — **implemented** — catalogue overlays, in-site proposals,
+  curator desk, and the ops `app:translations:overlay-delete` revert command.
 
 ## Rules
 

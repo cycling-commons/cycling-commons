@@ -26,6 +26,9 @@ final class OverlayTranslator implements TranslatorInterface, TranslatorBagInter
     ) {
     }
 
+    /**
+     * @param array<string, mixed> $parameters
+     */
     public function trans(string $id, array $parameters = [], ?string $domain = null, ?string $locale = null): string
     {
         $locale ??= $this->inner->getLocale();
@@ -97,6 +100,9 @@ final class OverlayTranslator implements TranslatorInterface, TranslatorBagInter
         return [];
     }
 
+    /**
+     * @param list<mixed> $args
+     */
     public function __call(string $method, array $args): mixed
     {
         return $this->inner->{$method}(...$args);

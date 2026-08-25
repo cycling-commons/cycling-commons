@@ -27,6 +27,8 @@ documents own the surrounding contracts:
   for elevated roles, admin desk patterns.
 - [security-architecture.md](security-architecture.md) — stateless CSRF,
   escaping rules, sanitizer.
+- [translations.md](translations.md) — in-site non-English proposals; the
+  curator desk is unscoped.
 
 ---
 

@@ -59,6 +59,9 @@ jobs:
         run: vendor/bin/rector process --dry-run
         continue-on-error: true
       - run: php bin/console doctrine:migrations:migrate -n --env=test
+      # Keep app:translations:sync from rotting; tests still seed their own
+      # translation_entry / overlay rows when they need them.
+      - run: php bin/console app:translations:sync --env=test
       # World reference data (continents, countries, ISO 3166-2 subdivisions)
       # is seeded out-of-band, never by a migration — `make test-db-reset` does
       # exactly this step for the local test DB. The region, country-interest
