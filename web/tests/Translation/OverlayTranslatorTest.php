@@ -26,12 +26,11 @@ final class OverlayTranslatorTest extends KernelTestCase
 {
     public function testYamlWinsWhenNoOverlay(): void
     {
+        static::getContainer()->get(OverlayCatalogue::class)->invalidate('fr');
+
         $t = static::getContainer()->get('translator');
         $t->setLocale('fr');
-        self::assertSame(
-            $t->trans('nav.map', [], 'messages', 'fr'),
-            static::getContainer()->get('translator')->trans('nav.map', [], 'messages', 'fr'),
-        );
+        self::assertSame('Carte', $t->trans('nav.map', [], 'messages', 'fr'));
     }
 
     public function testOverlayBeatsYaml(): void
