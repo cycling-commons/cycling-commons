@@ -1,0 +1,20 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+<!-- ===================== CURATION ===================== -->
+<section class="pad" id="curation" style="background:var(--paper-deep)">
+  <div class="wrap split">
+    <div>
+      <div class="kicker rv">{{ 'home.cur_kicker'|trans }}</div>
+      <h2 class="rv" data-d="1">{{ 'home.cur_h2'|trans }}</h2>
+      <p class="lead rv" data-d="2">{{ (home_compact|default(false) ? 'home.cur_lead_short' : 'home.cur_lead')|trans }}</p>
+    </div>
+    <div class="panel rv" data-d="2">
+      <h3>{{ 'home.cur_panel_h'|trans }}</h3>
+      <span class="pin">{{ 'home.cur_panel_pin'|trans }}</span>
+      <div class="rank"><span class="n">01</span><span class="nm">La Redoute</span><span class="co">△ 161 m · 9.7%</span></div>
+      <div class="rank"><span class="n">02</span><span class="nm">Tier Antoine</span><span class="co">△ 232 m · 8.7%</span></div>
+      <div class="rank"><span class="n">03</span><span class="nm">Mur de Huy</span><span class="co">△ 128 m · 9.3%</span></div>
+      <div class="rank" style="border:none"><span class="n">04</span><span class="nm">Côte de Stockeu</span><span class="co">△ 100 m · 9.0%</span></div>
+      <div class="vs">{{ 'home.cur_voted'|trans }}</div>
+    </div>
+  </div>
+</section>

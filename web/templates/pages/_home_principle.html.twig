@@ -1,0 +1,16 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+<!-- ===================== WHAT IT IS ===================== -->
+<section class="pad" id="what">
+  <div class="wrap split">
+    <div>
+      <div class="kicker rv">{{ 'home.what_kicker'|trans }}</div>
+      <h2 class="rv" data-d="1">{{ 'home.what_h2'|trans }}</h2>
+      <p class="lead rv" data-d="2">{{ (home_compact|default(false) ? 'home.what_lead_short' : 'home.what_lead')|trans }}</p>
+    </div>
+    <div class="open-list rv" data-d="2">
+      <div class="open-item"><span class="t open">IN</span><div><h4>{{ 'home.what_in_h'|trans }}</h4><p>{{ 'home.what_in_p'|trans }}</p></div></div>
+      <div class="open-item"><span class="t priv">OUT</span><div><h4>{{ 'home.what_out_h'|trans }}</h4><p>{{ 'home.what_out_p'|trans }}</p></div></div>
+      <div class="open-item" style="border:none"><span class="t open">FREE</span><div><h4>{{ 'home.what_free_h'|trans }}</h4><p>{{ 'home.what_free_p'|trans }}</p></div></div>
+    </div>
+  </div>
+</section>
