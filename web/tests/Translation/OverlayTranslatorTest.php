@@ -80,10 +80,7 @@ final class OverlayTranslatorTest extends KernelTestCase
     {
         $yamlEn = static::getContainer()->get('translator')->trans('nav.map', [], 'messages', 'en');
 
-        $stub = new class(
-            static::getContainer()->get(OverlayCatalogueLoader::class),
-            static::getContainer()->get(CacheInterface::class),
-        ) extends OverlayCatalogue {
+        $stub = new class(static::getContainer()->get(OverlayCatalogueLoader::class), static::getContainer()->get(CacheInterface::class)) extends OverlayCatalogue {
             public function map(string $locale): array
             {
                 return ['nav.map' => 'ROGUE FROM STUB'];

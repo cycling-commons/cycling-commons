@@ -36,12 +36,12 @@ final class ProposalService
     }
 
     /**
-     * @throws TooManyRequestsHttpException over the hourly proposal limit
-     * @throws ConsentRequiredException when the consent tick is false
+     * @throws TooManyRequestsHttpException    over the hourly proposal limit
+     * @throws ConsentRequiredException        when the consent tick is false
      * @throws EnglishNotTranslatableException when locale is en
-     * @throws KeyNotFoundException when the entry is marked absent
-     * @throws EmptyTranslationException when the value is empty after trim
-     * @throws \InvalidArgumentException invalid locale or value too long
+     * @throws KeyNotFoundException            when the entry is marked absent
+     * @throws EmptyTranslationException       when the value is empty after trim
+     * @throws \InvalidArgumentException       invalid locale or value too long
      */
     public function submit(
         User $user,
@@ -76,10 +76,7 @@ final class ProposalService
             throw new EmptyTranslationException('Proposed translation must not be empty.');
         }
         if (\strlen($value) > TranslationLimits::PROPOSED_VALUE_MAX) {
-            throw new \InvalidArgumentException(sprintf(
-                'Proposed translation exceeds %d bytes.',
-                TranslationLimits::PROPOSED_VALUE_MAX,
-            ));
+            throw new \InvalidArgumentException(sprintf('Proposed translation exceeds %d bytes.', TranslationLimits::PROPOSED_VALUE_MAX));
         }
 
         $open = $this->findOpenProposal((int) $user->getId(), $locale, $entry);

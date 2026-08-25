@@ -85,11 +85,7 @@ final class DecisionServiceInvalidateOrderTest extends KernelTestCase
     {
         $conn = static::getContainer()->get(EntityManagerInterface::class)->getConnection();
 
-        return new class(
-            static::getContainer()->get(OverlayCatalogueLoader::class),
-            static::getContainer()->get(CacheInterface::class),
-            $conn,
-        ) extends OverlayCatalogue {
+        return new class(static::getContainer()->get(OverlayCatalogueLoader::class), static::getContainer()->get(CacheInterface::class), $conn) extends OverlayCatalogue {
             /** @var list<string> */
             public array $phases = [];
 

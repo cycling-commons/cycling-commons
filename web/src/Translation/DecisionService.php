@@ -35,9 +35,9 @@ final class DecisionService
 
     /**
      * @throws \InvalidArgumentException unknown decision or proposal id
-     * @throws MissingQuestionException needs_info without a note
-     * @throws AlreadyDecidedException proposal already settled
-     * @throws SelfReviewException curator is the submitter
+     * @throws MissingQuestionException  needs_info without a note
+     * @throws AlreadyDecidedException   proposal already settled
+     * @throws SelfReviewException       curator is the submitter
      */
     public function decide(int $proposalId, string $decision, User $curator, ?string $note): TranslationProposal
     {
@@ -57,18 +57,10 @@ final class DecisionService
                 TranslationProposalStatus::Pending,
                 TranslationProposalStatus::NeedsInfo,
             ], true)) {
-                throw new AlreadyDecidedException(sprintf(
-                    'Proposal %d is already %s',
-                    $proposalId,
-                    $proposal->getStatus()->value,
-                ));
+                throw new AlreadyDecidedException(sprintf('Proposal %d is already %s', $proposalId, $proposal->getStatus()->value));
             }
             if ((int) $curator->getId() === $proposal->getSubmitterId()) {
-                throw new SelfReviewException(sprintf(
-                    'Curator %d cannot review their own proposal %d',
-                    (int) $curator->getId(),
-                    $proposalId,
-                ));
+                throw new SelfReviewException(sprintf('Curator %d cannot review their own proposal %d', (int) $curator->getId(), $proposalId));
             }
 
             $entry = $proposal->getEntry();

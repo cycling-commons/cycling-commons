@@ -11,7 +11,7 @@ use Doctrine\DBAL\Connection;
 /**
  * Cold-loads overlay rows for one locale. Public $loads is for tests only.
  *
- * @internal used by OverlayCatalogue
+ * @api
  */
 final class OverlayCatalogueLoader
 {

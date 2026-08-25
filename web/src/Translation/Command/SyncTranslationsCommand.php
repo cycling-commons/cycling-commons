@@ -50,7 +50,7 @@ final class SyncTranslationsCommand extends Command
         $io = new SymfonyStyle($input, $output);
 
         $file = $input->getOption('file');
-        $sync = \is_string($file) && $file !== ''
+        $sync = \is_string($file) && '' !== $file
             ? new CatalogueSync($this->em, $file)
             : $this->catalogueSync;
 

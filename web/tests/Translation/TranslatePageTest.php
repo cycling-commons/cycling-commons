@@ -11,7 +11,6 @@ use App\Translation\Entity\TranslationEntry;
 use App\Translation\Entity\TranslationProposal;
 use App\Translation\TranslationProposalStatus;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 

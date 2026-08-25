@@ -30,6 +30,7 @@ final class OverlayTranslator implements TranslatorInterface, TranslatorBagInter
     /**
      * @return list<string>
      */
+    #[\Override]
     public function warmUp(string $cacheDir, ?string $buildDir = null): array
     {
         if ($this->inner instanceof WarmableInterface) {
@@ -40,8 +41,9 @@ final class OverlayTranslator implements TranslatorInterface, TranslatorBagInter
     }
 
     /**
-     * @param array<string, mixed> $parameters
+     * @param array<array-key, mixed> $parameters
      */
+    #[\Override]
     public function trans(string $id, array $parameters = [], ?string $domain = null, ?string $locale = null): string
     {
         $locale ??= $this->inner->getLocale();
@@ -57,6 +59,7 @@ final class OverlayTranslator implements TranslatorInterface, TranslatorBagInter
         return $this->inner->trans($id, $parameters, $domain, $locale);
     }
 
+    #[\Override]
     public function getCatalogue(?string $locale = null): MessageCatalogueInterface
     {
         $catalogue = clone $this->inner->getCatalogue($locale);
@@ -71,6 +74,7 @@ final class OverlayTranslator implements TranslatorInterface, TranslatorBagInter
         return $catalogue;
     }
 
+    #[\Override]
     public function getCatalogues(): array
     {
         $out = [];
@@ -88,11 +92,13 @@ final class OverlayTranslator implements TranslatorInterface, TranslatorBagInter
         return $out;
     }
 
+    #[\Override]
     public function setLocale(string $locale): void
     {
         $this->inner->setLocale($locale);
     }
 
+    #[\Override]
     public function getLocale(): string
     {
         return $this->inner->getLocale();

@@ -22,7 +22,8 @@ final class CatalogueSync
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly string $englishYamlPath,
-    ) {}
+    ) {
+    }
 
     /** @return int number of English keys in YAML after sync */
     public function sync(\DateTimeImmutable $now = new \DateTimeImmutable()): int
@@ -47,7 +48,7 @@ final class CatalogueSync
         }
 
         foreach ($byKey as $entry) {
-            if ($entry->getAbsentAt() === null) {
+            if (null === $entry->getAbsentAt()) {
                 $entry->markAbsent($now);
             }
         }

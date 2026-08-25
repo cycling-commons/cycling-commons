@@ -33,15 +33,12 @@ class OverlayCatalogue
             return [];
         }
 
-        /** @var array<string, string> $map */
-        $map = $this->cache->get(
+        return $this->cache->get(
             'translation_overlay.'.$locale,
-            function (ItemInterface $item) use ($locale): array {
+            function (ItemInterface $_item) use ($locale): array {
                 return $this->loader->load($locale);
             },
         );
-
-        return $map;
     }
 
     public function invalidate(string $locale): void
