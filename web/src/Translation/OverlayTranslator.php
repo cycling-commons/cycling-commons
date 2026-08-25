@@ -1,0 +1,104 @@
+<?php
+
+// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+
+declare(strict_types=1);
+
+namespace App\Translation;
+
+use Symfony\Component\Translation\MessageCatalogueInterface;
+use Symfony\Component\Translation\TranslatorBagInterface;
+use Symfony\Contracts\Translation\LocaleAwareInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
+
+/**
+ * Decorates the Symfony translator: YAML default, then overlay for messages.
+ *
+ * @see docs/specs/translations.md §3
+ *
+ * @api
+ */
+final class OverlayTranslator implements TranslatorInterface, TranslatorBagInterface, LocaleAwareInterface
+{
+    public function __construct(
+        private readonly TranslatorInterface&TranslatorBagInterface&LocaleAwareInterface $inner,
+        private readonly OverlayCatalogue $overlays,
+    ) {
+    }
+
+    public function trans(string $id, array $parameters = [], ?string $domain = null, ?string $locale = null): string
+    {
+        $locale ??= $this->inner->getLocale();
+        $effectiveDomain = $domain ?? 'messages';
+
+        if ('messages' === $effectiveDomain && TranslationLimits::isTranslatableLocale($locale)) {
+            $map = $this->overlays->map($locale);
+            if (isset($map[$id])) {
+                return strtr($map[$id], $parameters);
+            }
+        }
+
+        return $this->inner->trans($id, $parameters, $domain, $locale);
+    }
+
+    public function getCatalogue(?string $locale = null): MessageCatalogueInterface
+    {
+        $catalogue = clone $this->inner->getCatalogue($locale);
+        $resolved = $locale ?? $this->inner->getLocale();
+
+        if (TranslationLimits::isTranslatableLocale($resolved)) {
+            foreach ($this->overlays->map($resolved) as $key => $value) {
+                $catalogue->set($key, $value, 'messages');
+            }
+        }
+
+        return $catalogue;
+    }
+
+    public function getCatalogues(): array
+    {
+        $out = [];
+        foreach ($this->inner->getCatalogues() as $catalogue) {
+            $cloned = clone $catalogue;
+            $loc = $cloned->getLocale();
+            if (TranslationLimits::isTranslatableLocale($loc)) {
+                foreach ($this->overlays->map($loc) as $key => $value) {
+                    $cloned->set($key, $value, 'messages');
+                }
+            }
+            $out[] = $cloned;
+        }
+
+        return $out;
+    }
+
+    public function setLocale(string $locale): void
+    {
+        $this->inner->setLocale($locale);
+    }
+
+    public function getLocale(): string
+    {
+        return $this->inner->getLocale();
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function getFallbackLocales(): array
+    {
+        if (method_exists($this->inner, 'getFallbackLocales')) {
+            /** @var list<string> $locales */
+            $locales = $this->inner->getFallbackLocales();
+
+            return $locales;
+        }
+
+        return [];
+    }
+
+    public function __call(string $method, array $args): mixed
+    {
+        return $this->inner->{$method}(...$args);
+    }
+}
