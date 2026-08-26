@@ -44,7 +44,7 @@ def test_ensure_schema_is_idempotent(db):
     idx = {r[0] for r in db.execute(
         "SELECT indexname FROM pg_indexes WHERE schemaname = 'coverage_pytest'"
     ).fetchall()}
-    assert {"coverage_poi_geom_idx", "coverage_poi_letter_idx",
+    assert {"coverage_poi_geom_idx", "coverage_poi_geog_idx", "coverage_poi_letter_idx",
             "coverage_poi_region_id_idx", "coverage_poi_country_code_idx",
             "coverage_poi_name_trgm_idx", "coverage_poi_src_region_id_idx"} <= idx
 
@@ -314,16 +314,16 @@ def test_ensure_schema_gated_extension_still_builds_schema(db, monkeypatch):
     ensure_schema(db)
     idx = {r[0] for r in db.execute(
         "SELECT indexname FROM pg_indexes WHERE schemaname = 'coverage_pytest'").fetchall()}
-    assert {"coverage_poi_geom_idx", "coverage_poi_name_trgm_idx",
+    assert {"coverage_poi_geom_idx", "coverage_poi_geog_idx", "coverage_poi_name_trgm_idx",
             "coverage_poi_src_region_id_idx"} <= idx
 
 
 def test_load_region_exact_drift_boundary_does_not_abort(db):
     """A drop of exactly DRIFT_ABORT_RATIO is allowed: the guard is strict <."""
     ensure_schema(db)
-    load_region(db, [_row(f"node/{i}", "C") for i in range(10)], "europe/belgium")
+    load_region(db, [_row(f"node/{i}", "B") for i in range(10)], "europe/belgium")
     res = load_region(
-        db, [_row(f"node/{i}", "C") for i in range(6)], "europe/belgium"
+        db, [_row(f"node/{i}", "B") for i in range(6)], "europe/belgium"
     )                                                  # 6 == 10 * (1 - 0.4) -> no abort
     assert res == LoadResult(inserted=6, previous=10)
     n = db.execute("SELECT count(*) FROM coverage_poi").fetchone()[0]

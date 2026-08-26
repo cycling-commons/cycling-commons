@@ -133,6 +133,15 @@ CREATE TABLE IF NOT EXISTS coverage_poi (
 - **Measured sizing.** At 377,558 rows (BE + NL + DE + LU; 0 unstamped
   after the ownership fix), compacted steady-state:
   **341 B/row heap + 176 B/row indexes = 517 B/row** — the compacted per-row cost.
+  Since 2026-08-25 there is one more index, `coverage_poi_geog_idx`, a
+  functional GiST on `(geom::geography)` (about +60 B/row). Every radius
+  query the app runs casts to geography (`ST_DWithin(cp.geom::geography, …)`
+  in `OsmLinker` and `/map/coverage/nearby`), and the geometry GiST cannot
+  serve that predicate: without it the planner walked the letter index and
+  measured 375k rows per lookup, 2.8 s per queue card on `/moderate`
+  (owner-reported). With it: 2 ms. Pipeline-owned like the rest
+  (`load.py` `_INDEX_DDL`, created CONCURRENTLY by `ensure_schema`); prod
+  gets it on the next harvest or by hand before go-live.
   **Superseded:** the earlier `DELETE-all-then-INSERT-all` per-region swap doubled the row
   count mid-swap and left a large reusable-free-space high-water mark (measured then:
   258 MB heap, 67 % reusable free space), which needed a `VACUUM FULL`/`pg_repack` to

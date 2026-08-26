@@ -198,6 +198,13 @@ _INDEX_DDL = (
     # the shared prod cluster (design §3.6); requires autocommit (ensure_schema
     # toggles it). IF NOT EXISTS keeps the bootstrap idempotent.
     "CREATE INDEX CONCURRENTLY IF NOT EXISTS coverage_poi_geom_idx ON coverage_poi USING gist (geom)",
+    # Every radius query the app runs casts to geography
+    # (ST_DWithin(cp.geom::geography, ...): OsmLinker candidates, /map/coverage/nearby),
+    # and a geometry GiST index cannot serve a geography predicate, so the
+    # planner fell back to the letter index and measured 375k water POIs per
+    # queue card (2.8 s each on /moderate, owner-reported 2026-08-25). A
+    # functional index on the cast is what those predicates match: 716 ms -> 2 ms.
+    "CREATE INDEX CONCURRENTLY IF NOT EXISTS coverage_poi_geog_idx ON coverage_poi USING gist ((geom::geography))",
     "CREATE INDEX CONCURRENTLY IF NOT EXISTS coverage_poi_letter_idx ON coverage_poi (letter)",
     "CREATE INDEX CONCURRENTLY IF NOT EXISTS coverage_poi_region_id_idx ON coverage_poi (region_id)",
     # country_code arm of /map/coverage/search|nearby|counts (map-and-search.md §4.5):
