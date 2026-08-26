@@ -2666,8 +2666,6 @@ moderate:
     search_ph: 'Titel of bijdrager…'
     by_user: 'Alleen de inzendingen van één bijdrager.'
     by_user_clear: 'Toon iedereen'
-  overview:
-    showing: '%shown% van %total% in behandeling'
   msg:
     about_photo: 'Over een foto'
     no_photo: '— de bijdrage zelf'

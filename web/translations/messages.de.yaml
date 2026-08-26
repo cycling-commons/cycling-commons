@@ -2669,8 +2669,6 @@ moderate:
     search_ph: 'Titel oder Beitragende…'
     by_user: 'Nur die Einreichungen einer Person.'
     by_user_clear: 'Alle anzeigen'
-  overview:
-    showing: '%shown% von %total% ausstehend'
   msg:
     about_photo: 'Zu einem Foto'
     no_photo: '— der Beitrag selbst'

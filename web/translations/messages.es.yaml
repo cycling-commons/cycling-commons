@@ -2691,8 +2691,6 @@ moderate:
     search_ph: 'Título o colaborador…'
     by_user: 'Solo las propuestas de una persona.'
     by_user_clear: 'Mostrar a todos'
-  overview:
-    showing: 'mostrando %shown% de %total% pendientes'
   msg:
     about_photo: 'Sobre una foto'
     no_photo: '— el envío en sí'

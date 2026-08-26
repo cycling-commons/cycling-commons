@@ -52,10 +52,18 @@
       <div class="who"><a href="https://www.geofabrik.de/">Geofabrik</a><span class="lic">{% trans %}credits.lic_osm_extracts{% endtrans %}</span></div>
       <p>{% trans %}credits.geofabrik_p{% endtrans %}</p>
     </div>
+    {# Drinkwaterkaart.nl is hidden until its developer has been asked (owner,
+       2026-08-26). We link riders to it and credit it here, but nobody has
+       spoken to them yet, and the owner wants that conversation to happen
+       before the site keeps sending them traffic. Its map link in
+       assets/map/drawer.js is commented out with it, and credits.lic_linked
+       and credits.drinkwater_p stay in the catalogs so both come back
+       together. See "Drinkwaterkaart.nl" in docs/TODO.md.
     <div class="crow">
       <div class="who"><a href="https://www.drinkwaterkaart.nl/">Drinkwaterkaart.nl</a><span class="lic">{% trans %}credits.lic_linked{% endtrans %}</span></div>
       <p>{% trans %}credits.drinkwater_p{% endtrans %}</p>
     </div>
+    #}
     <div class="crow">
       <div class="who"><a href="https://commons.wikimedia.org/">Wikimedia Commons</a><span class="req">{% trans %}credits.req_badge{% endtrans %}</span><span class="lic">{% trans %}credits.lic_per_photo{% endtrans %}</span></div>
       <p>{% trans %}credits.wikimedia_p{% endtrans %}</p>

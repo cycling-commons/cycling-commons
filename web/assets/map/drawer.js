@@ -223,9 +223,14 @@ export function osmDrawer(layer, p, ll, src){
   return d;
 }
 // Per-country tap-water links; countries without a vetted reference get none.
+// NL is hidden until Drinkwaterkaart.nl's developer has been asked (owner,
+// 2026-08-26): the drawer sends riders there and the credits page names them,
+// and neither should keep happening before that conversation. A country with no
+// entry falls through to [] below, so the Verify row simply carries no links.
+// Its credits row is commented out with it. See docs/TODO.md.
 const WATER_CHECK_LINKS={
   BE:[{label:'SWDE · Wallonia',href:'https://www.swde.be'},{label:'eaupotable.info',href:'https://eaupotable.info/nl/be-belgie'}],
-  NL:[{label:'Drinkwaterkaart · NL',href:'https://www.drinkwaterkaart.nl'}],
+  // NL:[{label:'Drinkwaterkaart · NL',href:'https://www.drinkwaterkaart.nl'}],
 };
 export function waterDrawer(p, ll){
   // Rider-set potable/type win over OSM; v:1 is verification, not potability (docs/specs/map-and-search.md §12).

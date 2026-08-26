@@ -2685,8 +2685,6 @@ moderate:
     search_ph: 'Item title or contributor…'
     by_user: 'Showing one contributor''s submissions only.'
     by_user_clear: 'Show everyone'
-  overview:
-    showing: 'showing %shown% of %total% pending'
   msg:
     about_photo: 'About a photo'
     no_photo: '— the submission itself'

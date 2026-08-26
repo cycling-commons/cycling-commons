@@ -2666,8 +2666,6 @@ moderate:
     search_ph: 'Titre ou contributeur…'
     by_user: 'Contributions d''une seule personne.'
     by_user_clear: 'Afficher tout le monde'
-  overview:
-    showing: '%shown% sur %total% en attente'
   msg:
     about_photo: 'À propos d''une photo'
     no_photo: '— la contribution elle-même'
