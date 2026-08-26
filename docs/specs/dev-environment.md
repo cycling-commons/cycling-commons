@@ -307,6 +307,10 @@ Day-one internationalisation across **EN / FR / NL / DE / ES**:
   yet. The catalogue is complete and in parity, and it is enabled, but treat
   its copy as unreviewed until a Spanish-speaking rider has read it. Tracked
   in `docs/TODO.md`.
+- **In-site proposals (pending).** English stays git-only. Logged-in riders
+  may propose non-English values for existing keys; a curator publishes an
+  overlay. Contract: [translations.md](translations.md). Until that ships,
+  the only write path is the YAML files in git.
 
 ## 7a. Shared state — Redis (2026-08-08)
 
@@ -402,114 +406,6 @@ REDIS_URL=redis://host.docker.internal:6379
   (3) `app:world:import` (world reference data is seeded out-of-band, and
   moderator-area tests validate country codes against it).
 
-## 9. Production topology and deploy
-
-**Specified, pending implementation** (go-live has not happened; the dated
-gate lives in `docs/TODO.md`).
-
-Production rides a **shared Hetzner cluster** (not a single VPS):
-
-- **Load balancer → 2 nginx/PHP frontend servers.** Cycling Commons is one
-  more vhost + certificate on the shared nginx targets; TLS is either
-  TCP-passthrough to nginx or LB-terminated with SNI certs (open choice).
-- **1 database server, shared** with the other tenant — CC's PostGIS lives
-  alongside it. This is a standing design constraint: user-facing map display
-  must not generate per-pan DB queries (one reason static coverage tiles won —
-  [coverage-provider.md](coverage-provider.md)).
-- **1 worker server** running Valhalla and the Symfony Messenger workers — the
-  natural home for scheduled batch jobs (e.g. the weekly coverage build).
-
-**Deploy is a server-side concern.** The GitHub workflows
-(`.github/workflows/deploy-staging.yaml`, `deploy-production.yaml`) contain no
-build or deploy logic: each one's entire job is a single SSH invocation passing
-the target environment name (`staging` / `production`) as the command — the
-SSH forced-command pattern. All deploy scripts live server-side; the repo
-carries none. Branch flow: `main` → `staging` → `production`, each deploy
-branch auto-deploying on push (plus manual `workflow_dispatch`).
-
-### Host keys are pinned, not discovered (2026-08-25)
-
-**`DEPLOY_KNOWN_HOSTS` is a required repository secret.** Both workflows write
-it to `~/.ssh/known_hosts` and connect with `StrictHostKeyChecking=yes`. Without
-it they stop before the first `ssh`, with an error telling you how to build it.
-
-They previously ran a keyscan into that file on every run, which is
-trust-on-first-use with no first: it accepts whatever answers on that port at
-that moment, so anyone able to answer for the host on the runner's network path
-would be handed the deploy key and, through the forced command, a release on
-production. Knowing the key before connecting is the entire purpose of the file
-the keyscan was writing into (security scan 2026-08-25).
-
-Build the secret **once, from a machine you trust**, covering every host this
-repo deploys to (both staging frontends and production), and check the
-fingerprints against the hosts themselves before pasting:
-
-```sh
-ssh-keyscan -p <DEPLOY_PORT> <DEPLOY_HOST_WEB1> <DEPLOY_HOST_WEB2> <DEPLOY_HOST>
-```
-
-One secret rather than one per host, so a rotated key has a single place to be
-fixed. The staging workflow additionally checks each of its two hosts is
-present **before** it starts, because a host missing from the pin would
-otherwise fail between web-1 and web-2 and leave exactly the half-deployed
-state the sequential loop exists to prevent.
-
-Rotating a host key (a rebuild, a reinstall) means updating this secret, and
-until you do, deploys fail closed. That is the intended behaviour.
-
-### Deploy waits for CI (2026-08-24)
-
-**A deploy job may not touch a host until this commit's CI is green.** Both
-deploy workflows open with a `gate` job that every deploy job `needs:`.
-
-Two facts made this necessary, and both were live:
-
-1. `ci-app.yml`, `ci-tools.yml` and `ci-wiki.yml` listed
-   `branches: [main, staging, symfony-base]`. `production` was absent, so a
-   push to the production branch ran **no CI at all** and deployed anyway.
-   All four gating workflows now list `production` as well.
-2. Nothing connected the deploy workflows to the CI workflows. On `staging`
-   both started from the same push and raced; the deploy usually won, because
-   an SSH call finishes long before PHPUnit does.
-
-The gate is `.github/actions/require-green-ci`, a local composite action (no
-third-party action runs in a workflow holding the deploy key). It polls
-`GET /repos/{repo}/actions/runs?head_sha=…` and applies three rules:
-
-- a gating workflow that **did not run** for this commit is not a failure. All
-  of them are path-filtered, so absence means the change cannot affect them;
-- the **newest** run for a workflow decides, so re-running a red job unblocks
-  the deploy;
-- `success` and `skipped` pass; anything else stops the deploy before the
-  first `ssh`.
-
-Gating workflows: `ci-app.yml`, `ci-tools.yml`, `ci-wiki.yml`, `reuse.yml`,
-`secret-scan.yml`, named in the `GATING_WORKFLOWS` env of each deploy
-workflow. `reuse.yml` gained `staging` and `production` for the same reason as
-the CI workflows: a licence regression must fail before a release, not after.
-
-A `workflow_dispatch` run accepts `skip_ci_gate: true`. It exists so an
-incident rollback is never held hostage by a flaking test, and it is
-unreachable from a push.
-
-**Branch protection covers the other half** (enabled 2026-08-24 on `staging`
-and `production`): restrict deletions, block force pushes, require linear
-history, and require exactly one status check, `secret-scan`.
-
-Only that one, and the reason is the same path filtering the gate exists to
-handle. `secret-scan.yml` is the single workflow with no `paths:` filter, so it
-is the only check that reports on every commit. Requiring a path-filtered check
-instead would **permanently block** any merge that does not touch its paths: a
-docs-only commit never starts `ci-app.yml`, so the `app` check never reports,
-and GitHub reads a check that never reported as *"Expected — waiting for
-status"* rather than as "not applicable". That is why the per-commit test
-enforcement lives in the deploy gate, which can tell "did not run" from
-"failed", and branch protection is left to enforce the push rules.
-
-Leave "require branches to be up to date before merging" OFF for the same
-reason it is off in the gate: it forces a re-run of every check on every merge
-without telling anyone anything new.
-
 ## Open questions
 
 - **CONTRIBUTING.md Mailpit paragraph is stale**: it states "the stack does
@@ -525,4 +421,4 @@ without telling anyone anything new.
   majors before); pinning a specific variant for reproducibility is an open
   consideration, not a decision.
 - **TLS termination point** (LB with SNI certs vs TCP-passthrough to nginx) is
-  undecided — recorded as open in the prod-topology note above.
+  undecided — recorded as open in [operations.md](operations.md) §6.
