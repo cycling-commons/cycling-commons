@@ -1,7 +1,7 @@
 {# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
-{# One translation proposal. Approve / reject / needs-info live here,
-   not on the queue (translations.md §5). The page is a story: English,
-   the YAML original, then each change oldest-first, newest at the bottom. #}
+{# This rider's versions of one key+locale as the same story the curator
+   sees: English, the YAML original, then each change oldest-first
+   (translations.md §4). #}
 {% extends 'base.html.twig' %}
 {% block head_styles %}
 {% include 'account/_shell_styles.html.twig' %}
@@ -9,8 +9,6 @@
   .tr-status{display:inline-block;margin-left:.45rem;font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;color:var(--paper);background:var(--clay);padding:.12rem .4rem;border-radius:30px;font-weight:400}
   .tr-back{display:inline-block;font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--clay);text-decoration:none;margin-bottom:.9rem}
   .tr-back:hover{text-decoration:underline}
-  .td-actions{display:flex;gap:.5rem;flex-wrap:wrap;align-items:flex-start;margin:1.2rem 0 1.6rem}
-  .td-actions textarea[name="translation_decision[note]"]{flex:1 1 16rem;font-family:var(--sans);font-size:.9rem;padding:.45rem .55rem;border:1px solid rgba(20,22,14,.25);border-radius:6px;background:var(--paper);min-height:4.5rem;resize:vertical}
   .tr-story{margin:0 0 2.4rem}
   .tr-block{margin:0 0 1.1rem}
   .tr-block p{font-size:.95rem;line-height:1.45;white-space:pre-wrap;overflow-wrap:anywhere;margin:.15rem 0 0}
@@ -21,14 +19,11 @@
   .tr-hist-meta a{color:var(--clay)}
   .tr-hist-edit{margin:.45rem 0 0;font-size:.84rem}
   .tr-hist-edit .tr-hist-k{display:block;font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;color:#8a8d7d;margin-bottom:.25rem}
-  .tr-publish{margin:.7rem 0 0}
-  .tr-publish label{display:block;font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;color:#8a8d7d;margin-bottom:.4rem}
-  .tr-publish textarea{width:100%;min-height:6rem;font-family:var(--sans);font-size:.92rem;line-height:1.45;padding:.55rem .7rem;border:1px solid rgba(20,22,14,.25);border-radius:6px;background:var(--paper);resize:vertical}
-  .tr-publish .fhelp{font-size:.82rem;color:#595c4d;margin:.35rem 0 0}
   .tr-settled{font-size:.95rem;line-height:1.45;white-space:pre-wrap;overflow-wrap:anywhere;margin:.15rem 0 0}
+  .tr-pending .tr-continue{margin-top:.7rem}
 </style>
 {% endblock %}
-{% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate_translations', mod_scope_names: mod_scope_names is defined ? mod_scope_names : null, mod_submission_count: mod_submission_count is defined ? mod_submission_count : null, mod_route_count: mod_route_count is defined ? mod_route_count : null, mod_takedown_count: mod_takedown_count is defined ? mod_takedown_count : null} %}{% endblock %}
+{% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'translate'} %}{% endblock %}
 
 {% macro who(w) %}{%- if w.anonymous -%}
     {{ 'moderate.translation.anonymous'|trans }}
@@ -68,15 +63,12 @@
 {% block body %}
 <div class="dbody" id="main">
   <div class="mh">
-    <div class="kicker">{{ 'moderate.translation.kicker'|trans }}</div>
-    <a class="tr-back" href="{{ card.open ? path('moderate_translations') : path('moderate_translations_history') }}">{{ (card.open ? 'moderate.translation.back' : 'moderate.translation.back_history')|trans }}</a>
+    <div class="kicker">{{ 'account.menu_personal'|trans }} · {{ 'translate.mine.history_kicker'|trans }}</div>
+    <a class="tr-back" href="{{ path('translate_mine') }}">{{ 'translate.mine.back'|trans }}</a>
     <h1>{{ card.message_key }} <span class="tr-status">{{ ('moderate.translation.status.' ~ card.status)|trans }}</span></h1>
     <p class="lead">{{ 'moderate.translation.locale'|trans({'%locale%': card.locale}) }}
       · {{ ('translate.locale.' ~ card.locale)|trans }}</p>
   </div>
-
-  {% for msg in app.flashes('success') %}<div class="flash-success" role="alert">{{ msg|trans }}</div>{% endfor %}
-  {% for msg in app.flashes('danger') %}<div class="flash-error" role="alert">{{ msg|trans }}</div>{% endfor %}
 
   <div class="tr-story tr-history">
     <div class="tr-block tr-english">
@@ -102,30 +94,12 @@
     {% endfor %}
 
     {% if card.pending %}
-      {% if card.open %}
-      <form method="post" action="{{ path('moderate_translations_detail', {id: card.proposal.id}) }}">
-        <input type="hidden" name="translation_decision[_token]" value="{{ csrf_token('moderate_translation') }}">
-        <input type="hidden" name="translation_decision[proposal_id]" value="{{ card.proposal.id }}">
-      {% endif %}
-        <article class="tr-pending{% if not card.open %} tr-hist-item{% endif %}">
-          {{ _self.change(card.pending) }}
-          {% if card.open %}
-          <div class="tr-publish">
-            <label for="tr-published">{{ 'moderate.translation.proposed'|trans }}</label>
-            <textarea id="tr-published" name="translation_decision[published]" maxlength="{{ proposed_max }}">{{ card.proposed }}</textarea>
-            <p class="fhelp">{{ 'moderate.translation.proposed_help'|trans }}</p>
-          </div>
-          {% endif %}
-        </article>
-      {% if card.open %}
-        <div class="td-actions">
-          <textarea name="translation_decision[note]" maxlength="2000" placeholder="{{ 'moderate.translation.note_placeholder'|trans }}"></textarea>
-          <button type="submit" name="translation_decision[decision]" value="approve" class="btn-act btn-approve">{{ 'moderate.action.approve'|trans }}</button>
-          <button type="submit" name="translation_decision[decision]" value="reject" class="btn-act btn-reject">{{ 'moderate.action.reject'|trans }}</button>
-          <button type="submit" name="translation_decision[decision]" value="needs_info" class="btn-act">{{ 'moderate.action.needs_info'|trans }}</button>
-        </div>
-      </form>
-      {% endif %}
+      <article class="tr-pending">
+        {{ _self.change(card.pending) }}
+        {% if card.open %}
+          <a class="btn-act btn-secondary tr-continue" href="{{ path('translate_edit', {id: card.entry_id, _locale: card.locale}) }}">{{ 'translate.mine.continue'|trans }}</a>
+        {% endif %}
+      </article>
     {% endif %}
   </div>
 </div>

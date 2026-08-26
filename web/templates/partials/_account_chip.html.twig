@@ -7,14 +7,18 @@
 {# A disclosure of plain links (button + aria-expanded), NOT an ARIA menu:
    role=menu/menuitem would promise arrow-key navigation we don't implement. #}
 <div class="acct-menu" data-nav-menu>
-  {# One read, used by the chip's bulb AND the Messages row below — the bulb
-     says "something is waiting", the row says WHERE. Without the second, the
-     count on the avatar points at nothing you can act on (owner asked twice
-     what it referred to, 2026-08-03). #}
+  {# One set of reads: the chip bulb is the total of open work (unread
+     messages + open submissions + open translations). Each contributing
+     row below repeats its own count so the number on the avatar still
+     says WHERE (owner 2026-08-03, 2026-08-26). Counts are the real
+     numbers, not a 9+ cap. #}
   {% set _unread = unread_message_count() %}
+  {% set _sub_open = pending_submission_count() %}
+  {% set _tr_open = pending_translation_count() %}
+  {% set _open = _unread + _sub_open + _tr_open %}
   <button type="button" class="acct-chip" data-nav-toggle aria-expanded="false" aria-controls="cc-acct-dd">
     <span class="av" aria-hidden="true">{{ _initials }}</span>
-    {% if _unread > 0 %}<span class="acct-bulb" title="{{ 'account.unread_messages'|trans({'%count%': _unread}) }}" aria-label="{{ 'account.unread_messages'|trans({'%count%': _unread}) }}">{{ _unread > 9 ? '9+' : _unread }}</span>{% endif %}
+    {% if _open > 0 %}<span class="acct-bulb" title="{{ 'account.open_items'|trans({'%count%': _open}) }}" aria-label="{{ 'account.open_items'|trans({'%count%': _open}) }}">{{ _open }}</span>{% endif %}
     <span class="acct-name">{{ app.user.displayName }}</span>
     <svg class="acct-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
   </button>
@@ -28,25 +32,24 @@
         <a href="{{ path('profile') }}">{{ 'account.tab_contributions'|trans }}</a>
         <a href="{{ path('scout_review') }}">{{ 'account.tab_scout'|trans }}</a>
         <a href="{{ path('translate') }}">{{ 'account.tab_translate'|trans }}</a>
-        <a href="{{ path('messages') }}">{{ 'nav.messages'|trans }}{% if _unread > 0 %}<span class="acct-count">{{ _unread > 9 ? '9+' : _unread }}</span>{% endif %}</a>
+        <a href="{{ path('messages') }}">{{ 'nav.messages'|trans }}{% if _unread > 0 %}<span class="acct-count">{{ _unread }}</span>{% endif %}</a>
         <a href="{{ path('settings') }}">{{ 'nav.settings'|trans }}</a>
       </div>
     {% else %}
       <a href="{{ path('profile') }}">{{ 'account.tab_contributions'|trans }}</a>
       <a href="{{ path('scout_review') }}">{{ 'account.tab_scout'|trans }}</a>
       <a href="{{ path('translate') }}">{{ 'account.tab_translate'|trans }}</a>
-      <a href="{{ path('messages') }}">{{ 'nav.messages'|trans }}{% if _unread > 0 %}<span class="acct-count">{{ _unread > 9 ? '9+' : _unread }}</span>{% endif %}</a>
+      <a href="{{ path('messages') }}">{{ 'nav.messages'|trans }}{% if _unread > 0 %}<span class="acct-count">{{ _unread }}</span>{% endif %}</a>
       <a href="{{ path('settings') }}">{{ 'nav.settings'|trans }}</a>
     {% endif %}
     {% if is_granted('ROLE_CURATOR') %}
       {# Two moderation queues: submissions (everything except routes) + routes. #}
       <div class="acct-group acct-group-mod">
         <div class="acct-sec acct-sec-mod">{{ 'account.menu_moderation'|trans }}</div>
-        <a href="{{ path('moderate') }}">{{ 'nav.moderate'|trans }}</a>
+        <a href="{{ path('moderate') }}">{{ 'nav.moderate'|trans }}{% if _sub_open > 0 %}<span class="acct-count" title="{{ 'account.mod_open_in_area'|trans }}">{{ _sub_open }}</span>{% endif %}</a>
         <a href="{{ path('moderate_routes') }}">{{ 'nav.routes'|trans }}</a>
-        <a href="{{ path('moderate_history') }}">{{ 'nav.history'|trans }}</a>
         <a href="{{ path('moderate_takedowns') }}">{{ 'nav.takedowns'|trans }}</a>
-        <a href="{{ path('moderate_translations') }}">{{ 'nav.translations'|trans }}</a>
+        <a href="{{ path('moderate_translations') }}">{{ 'nav.translations'|trans }}{% if _tr_open > 0 %}<span class="acct-count" title="{{ 'account.mod_translations_open'|trans }}">{{ _tr_open }}</span>{% endif %}</a>
         <a href="{{ path('moderate_rulebook') }}">{{ 'nav.rulebook'|trans }}</a>
       </div>
     {% endif %}

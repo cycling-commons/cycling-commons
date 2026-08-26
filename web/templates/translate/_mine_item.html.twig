@@ -1,0 +1,39 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{% set pill = pill|default({pending: 'pend', needs_info: 'pend', approved: 'ok', rejected: 'rej'}) %}
+<article class="q-item">
+  <div class="q-top">
+    <div class="q-headwrap">
+      <div class="q-head">
+        <h3 class="q-title">
+          {%- if history_href is defined and history_href -%}
+            <a class="q-title-link tr-key-hist" href="{{ history_href }}">{{ card.message_key }}</a>
+          {%- else -%}
+            {{ card.message_key }}
+          {%- endif -%}
+        </h3>
+        <span class="q-pill q-pill--{{ pill[card.status] ?? 'ret' }}">{{ ('translate.mine.status.' ~ card.status)|trans }}</span>
+      </div>
+      <div class="q-submitter">{{ 'moderate.translation.locale'|trans({'%locale%': card.locale}) }}
+        · {{ ('translate.locale.' ~ card.locale)|trans }}</div>
+    </div>
+    <div class="q-acts">
+      <time class="q-when" datetime="{{ card.when|date('c') }}">{{ card.when|cc_datetime }}</time>
+      {% if card.open %}
+        <a class="btn-act btn-secondary tr-continue" href="{{ path('translate_edit', {id: card.entry_id, _locale: card.locale}) }}">{{ 'translate.mine.continue'|trans }}</a>
+      {% endif %}
+    </div>
+  </div>
+  {% if card.edited %}
+    <div class="q-diff">
+      <dl>
+        <dt>{{ 'translate.mine.your_text'|trans }}</dt>
+        <dd><span class="q-was">{{ card.proposed }}</span></dd>
+        <dt>{{ 'translate.mine.published'|trans }}</dt>
+        <dd><span class="q-now">{{ card.published }}</span></dd>
+      </dl>
+    </div>
+  {% else %}
+    <p class="q-note">{{ card.proposed }}</p>
+  {% endif %}
+  {% if card.note %}<p class="q-note">{{ card.note }}</p>{% endif %}
+</article>

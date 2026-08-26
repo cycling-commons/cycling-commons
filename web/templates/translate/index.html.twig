@@ -1,42 +1,44 @@
 {# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
 {% extends 'base.html.twig' %}
 {% block head_styles %}
+{% include 'account/_shell_styles.html.twig' %}
 <style>
-  .wrap{max-width:820px;margin:0 auto;padding:2.2rem clamp(1.25rem,4vw,2rem)}
-  .ey{font-family:var(--mono);font-size:.64rem;letter-spacing:.16em;text-transform:uppercase;color:var(--clay);margin-bottom:.6rem}
-  h1{font-family:var(--serif);font-weight:600;font-size:2rem;line-height:1.05}
-  .sub{color:#4a4d40;margin-top:.6rem;max-width:74ch;line-height:1.65}
   .chooser{list-style:none;padding:0;margin:1.8rem 0 0;display:grid;gap:.8rem}
   .chooser a{display:block;padding:1.1rem 1.2rem;background:var(--paper-deep);border:1px solid rgba(20,22,14,.14);border-radius:8px;text-decoration:none;color:var(--ink);transition:all .2s}
   .chooser a:hover{border-color:var(--trail);transform:translateY(-2px);box-shadow:0 10px 24px -16px rgba(20,22,14,.45)}
   .chooser .loc{font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--clay)}
   .chooser .nm{font-family:var(--serif);font-weight:600;font-size:1.15rem;margin-top:.2rem}
-  .search{display:flex;gap:.6rem;margin:1.6rem 0 1.2rem;flex-wrap:wrap}
-  .search input[type=search]{flex:1;min-width:12rem;padding:.65rem .85rem;border:1px solid rgba(20,22,14,.22);border-radius:6px;background:var(--paper);font:inherit}
-  .search button{font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;padding:.7rem 1rem;border:1px solid var(--ink);background:var(--ink);color:var(--paper);border-radius:6px;cursor:pointer}
-  .rows{list-style:none;padding:0;margin:0}
-  .row{display:block;padding:1rem 1.1rem;margin-bottom:.75rem;border:1px solid rgba(20,22,14,.14);border-radius:8px;background:var(--paper-deep);text-decoration:none;color:inherit;transition:border-color .2s}
-  .row:hover{border-color:var(--trail)}
+  .tr-search{display:flex;gap:.6rem;margin:0 0 1.2rem;flex-wrap:wrap}
+  .tr-search input[type=search]{flex:1;min-width:12rem;padding:.65rem .85rem;border:1px solid rgba(20,22,14,.22);border-radius:6px;background:var(--paper);font:inherit}
+  .tr-search button{font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;padding:.7rem 1rem;border:1px solid var(--ink);background:var(--ink);color:var(--paper);border-radius:6px;cursor:pointer}
+  .tr-rows{list-style:none;padding:0;margin:0}
+  .tr-row{display:block;padding:1rem 1.1rem;margin-bottom:.75rem;border:1px solid rgba(20,22,14,.14);border-radius:8px;background:var(--paper-deep);text-decoration:none;color:inherit;transition:border-color .2s}
+  .tr-row:hover{border-color:var(--trail)}
   .row-key{font-family:var(--mono);font-size:.68rem;letter-spacing:.04em;color:var(--clay)}
   .row-en{font-size:.95rem;margin-top:.25rem;line-height:1.45}
   .row-live{font-size:.84rem;color:#4a4d40;margin-top:.35rem;line-height:1.45}
   .row-meta{font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;color:#7a7d6d;margin-top:.45rem}
   .row-meta.is-pending{color:var(--ochre)}
-  .empty{color:#4a4d40;margin-top:1.2rem}
-  .flash-success{background:rgba(44,84,64,.12);border-left:3px solid var(--spruce-lift);color:var(--spruce-lift);padding:.7rem 1rem;border-radius:0 5px 5px 0;font-size:.9rem;margin-bottom:1.4rem}
-  .flash-error{background:rgba(179,38,30,.1);border-left:3px solid var(--danger);color:var(--danger-ink);padding:.7rem 1rem;border-radius:0 5px 5px 0;font-size:.9rem;margin-bottom:1.4rem}
 </style>
 {% endblock %}
+{% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'translate'} %}{% endblock %}
 {% block body %}
-<div class="wrap" id="main">
+<div class="dbody" id="main">
+  <div class="mh">
+    <div class="kicker">{{ 'account.menu_personal'|trans }} · {{ 'translate.kicker'|trans }}</div>
+    <h1>{{ 'translate.title'|trans }}</h1>
+    <p class="lead">{% if chooser %}{{ 'translate.chooser_lead'|trans }}{% else %}{{ 'translate.list_lead'|trans }}{% endif %}</p>
+  </div>
+
   {% for msg in app.flashes('success') %}<div class="flash-success" role="alert">{{ msg|trans }}</div>{% endfor %}
   {% for msg in app.flashes('danger') %}<div class="flash-error" role="alert">{{ msg|trans }}</div>{% endfor %}
 
-  <div class="ey">{{ 'translate.kicker'|trans }}</div>
-  <h1>{{ 'translate.title'|trans }}</h1>
+  <nav class="lfilter" aria-label="{{ 'translate.section_aria'|trans }}">
+    <a class="lchip on" href="{{ path('translate') }}">{{ 'translate.catalogue'|trans }}</a>
+    <a class="lchip tr-yours" href="{{ path('translate_mine') }}">{{ 'translate.mine.yours'|trans }}</a>
+  </nav>
 
   {% if chooser %}
-    <p class="sub">{{ 'translate.chooser_lead'|trans }}</p>
     <ul class="chooser">
       {% for loc in locales %}
         <li>
@@ -48,19 +50,20 @@
       {% endfor %}
     </ul>
   {% else %}
-    <p class="sub">{{ 'translate.list_lead'|trans }}</p>
-    <form class="search" method="get" action="{{ path('translate') }}">
+    <form class="tr-search" method="get" action="{{ path('translate') }}">
       <input type="search" name="q" value="{{ q }}" placeholder="{{ 'translate.search_ph'|trans }}" aria-label="{{ 'translate.search_ph'|trans }}">
       <button type="submit">{{ 'translate.search'|trans }}</button>
     </form>
 
     {% if rows is empty %}
-      <p class="empty">{{ 'translate.empty'|trans }}</p>
+      <div class="empty-state">
+        <p>{{ 'translate.empty'|trans }}</p>
+      </div>
     {% else %}
-      <ul class="rows">
+      <ul class="tr-rows">
         {% for row in rows %}
           <li>
-            <a class="row" href="{{ path('translate_edit', {id: row.id}) }}">
+            <a class="tr-row row" href="{{ path('translate_edit', {id: row.id}) }}">
               <div class="row-key">{{ row.message_key }}</div>
               <div class="row-en">{{ row.english }}</div>
               <div class="row-live">{{ row.live }}</div>

@@ -1,21 +1,25 @@
 {# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
 {# Unscoped translation curator desk (translations.md §5). The queue is a
-   scan: key, locale, status, Review. Decisions live on the detail page. #}
+   scan: key, locale, status. The key opens the detail page. #}
 {% extends 'base.html.twig' %}
 {% block head_styles %}
 {% include 'account/_shell_styles.html.twig' %}
-<style>
-  .tr-status{display:inline-block;margin-left:.45rem;font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;color:var(--paper);background:var(--clay);padding:.12rem .4rem;border-radius:30px;font-weight:400}
-</style>
 {% endblock %}
 {% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate_translations', mod_scope_names: mod_scope_names is defined ? mod_scope_names : null, mod_submission_count: mod_submission_count is defined ? mod_submission_count : null, mod_route_count: mod_route_count is defined ? mod_route_count : null, mod_takedown_count: mod_takedown_count is defined ? mod_takedown_count : null} %}{% endblock %}
 
 {% block body %}
+{% set pill = {pending: 'pend', needs_info: 'pend', approved: 'ok', rejected: 'rej'} %}
 <div class="dbody" id="main">
   <div class="mh">
     <div class="kicker">{{ 'moderate.translation.kicker'|trans }}</div>
     <h1>{{ 'moderate.translation.heading'|trans }}</h1>
+    <p class="lead">{{ 'moderate.translation.lead'|trans }}</p>
   </div>
+
+  <nav class="lfilter" aria-label="{{ 'moderate.translation.section_aria'|trans }}">
+    <a class="lchip on" href="{{ path('moderate_translations') }}">{{ 'moderate.translation.desk_queue'|trans }}</a>
+    <a class="lchip tr-desk-hist" href="{{ path('moderate_translations_history') }}">{{ 'moderate.translation.desk_history'|trans }}</a>
+  </nav>
 
   {% for msg in app.flashes('success') %}<div class="flash-success" role="alert">{{ msg|trans }}</div>{% endfor %}
   {% for msg in app.flashes('danger') %}<div class="flash-error" role="alert">{{ msg|trans }}</div>{% endfor %}
@@ -32,20 +36,17 @@
     </div>
   {% else %}
     <h2 class="sec-band">{{ 'moderate.translation.heading'|trans }} <span class="sec-count">{{ cards|length }}</span></h2>
-    <p class="sec-lead">{{ 'moderate.translation.lead'|trans }}</p>
     <div class="q-list">
       {% for card in cards %}
         <article class="q-item">
           <div class="q-top">
             <div class="q-headwrap">
               <div class="q-head">
-                <h3 class="q-title">{{ card.message_key }} <span class="tr-status">{{ ('moderate.translation.status.' ~ card.status)|trans }}</span></h3>
-                <span class="q-when">{{ 'moderate.translation.locale'|trans({'%locale%': card.locale}) }}
-                  · {{ ('translate.locale.' ~ card.locale)|trans }}</span>
+                <h3 class="q-title"><a class="q-title-link" href="{{ path('moderate_translations_detail', {id: card.proposal.id}) }}">{{ card.message_key }}</a></h3>
+                <span class="q-pill q-pill--{{ pill[card.status] ?? 'ret' }}">{{ ('moderate.translation.status.' ~ card.status)|trans }}</span>
               </div>
-            </div>
-            <div class="q-acts">
-              <a class="btn-act btn-secondary q-review" href="{{ path('moderate_translations_detail', {id: card.proposal.id}) }}">{{ 'moderate.translation.review'|trans }} &#8594;</a>
+              <div class="q-submitter">{{ 'moderate.translation.locale'|trans({'%locale%': card.locale}) }}
+                · {{ ('translate.locale.' ~ card.locale)|trans }}</div>
             </div>
           </div>
         </article>

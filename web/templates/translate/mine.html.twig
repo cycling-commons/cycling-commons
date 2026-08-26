@@ -1,0 +1,69 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{# Rider ledger of their own translation proposals (translations.md §4). #}
+{% extends 'base.html.twig' %}
+{% block head_styles %}
+{% include 'account/_shell_styles.html.twig' %}
+{% endblock %}
+{% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'translate'} %}{% endblock %}
+
+{% block body %}
+{% set pill = {pending: 'pend', needs_info: 'pend', approved: 'ok', rejected: 'rej'} %}
+<div class="dbody" id="main">
+  <div class="mh">
+    <div class="kicker">{{ 'account.menu_personal'|trans }} · {{ 'translate.mine.kicker'|trans }}</div>
+    <h1>{{ 'translate.mine.title'|trans }}</h1>
+    <p class="lead">{{ 'translate.mine.lead'|trans }}</p>
+  </div>
+
+  <nav class="lfilter" aria-label="{{ 'translate.section_aria'|trans }}">
+    <a class="lchip" href="{{ path('translate') }}">{{ 'translate.catalogue'|trans }}</a>
+    <a class="lchip on tr-yours" href="{{ path('translate_mine') }}">{{ 'translate.mine.yours'|trans }}</a>
+  </nav>
+
+  {% set loc_q = locale_filter is null ? {locale: 'all'} : {locale: locale_filter} %}
+  {% set status_q = status_filter ? {status: status_filter} : {} %}
+
+  <div class="mod-bar">
+    <nav class="lfilter" aria-label="{{ 'translate.mine.filter_locale_aria'|trans }}">
+      <a class="lchip tr-loc-all {{ locale_filter is null ? 'on' }}" href="{{ path('translate_mine', {locale: 'all'}|merge(status_q)) }}">{{ 'translate.mine.filter_all'|trans }}</a>
+      {% for loc in locales %}
+        <a class="lchip tr-loc-{{ loc }} {{ locale_filter == loc ? 'on' }}" href="{{ path('translate_mine', {locale: loc}|merge(status_q)) }}">{{ ('translate.locale.' ~ loc)|trans }}</a>
+      {% endfor %}
+    </nav>
+    {% if status_chips|length > 1 or status_filter %}
+      <nav class="lfilter" aria-label="{{ 'translate.mine.filter_aria'|trans }}">
+        <a class="lchip {{ status_filter is empty ? 'on' }}" href="{{ path('translate_mine', loc_q) }}">{{ 'translate.mine.filter_all'|trans }}</a>
+        {% for s in status_chips %}
+          <a class="lchip {{ status_filter == s ? 'on' }}" href="{{ path('translate_mine', loc_q|merge({status: s})) }}">{{ ('translate.mine.status.' ~ s)|trans }}</a>
+        {% endfor %}
+      </nav>
+    {% endif %}
+    {% if cards is not empty %}
+      {% include 'account/_density.html.twig' %}
+    {% endif %}
+  </div>
+
+  {% if cards is empty %}
+    <div class="empty-state">
+      {% if had_any and locale_filter %}
+        <h3>{{ 'translate.mine.empty_locale_heading'|trans }}</h3>
+        <p>{{ 'translate.mine.empty_locale_body'|trans }}</p>
+      {% else %}
+        <h3>{{ 'translate.mine.empty_heading'|trans }}</h3>
+        <p>{{ 'translate.mine.empty_body'|trans }}</p>
+      {% endif %}
+    </div>
+  {% else %}
+    <div class="q-list">
+      {% for card in cards %}
+        {% include 'translate/_mine_item.html.twig' with {
+          card: card,
+          history_href: path('translate_mine_key', {id: card.entry_id, locale: card.locale}),
+        } %}
+      {% endfor %}
+    </div>
+    {% include 'partials/_pager.html.twig' with {pager: pager, route: 'translate_mine', params: pager_params} %}
+  {% endif %}
+</div>
+{% include 'moderate/_card_script.html.twig' %}
+{% endblock %}

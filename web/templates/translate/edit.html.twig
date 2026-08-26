@@ -1,60 +1,97 @@
 {# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
 {% extends 'base.html.twig' %}
 {% block head_styles %}
+{% include 'account/_shell_styles.html.twig' %}
 <style>
-  .wrap{max-width:720px;margin:0 auto;padding:2.2rem clamp(1.25rem,4vw,2rem)}
-  .ey{font-family:var(--mono);font-size:.64rem;letter-spacing:.16em;text-transform:uppercase;color:var(--clay);margin-bottom:.6rem}
-  h1{font-family:var(--serif);font-weight:600;font-size:1.75rem;line-height:1.1;word-break:break-word}
-  .back{display:inline-block;margin-bottom:1.2rem;font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--clay);text-decoration:none}
-  .back:hover{color:var(--trail)}
-  .panel{margin-top:1.4rem;padding:1.1rem 1.2rem;background:var(--paper-deep);border:1px solid rgba(20,22,14,.14);border-radius:8px}
-  .panel + .panel{margin-top:.9rem}
-  .lab{font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:#595c4d;margin-bottom:.35rem}
-  .val{font-size:.95rem;line-height:1.55;color:var(--ink);white-space:pre-wrap;overflow-wrap:anywhere}
-  .note{margin-top:1rem;padding:.75rem .9rem;background:var(--paper);border-left:2px solid var(--glacier);border-radius:0 6px 6px 0;font-size:.84rem;line-height:1.55;color:#4a4d40}
+  .tr-panel{margin-top:1.4rem;padding:1.1rem 1.2rem;background:var(--paper-deep);border:1px solid rgba(20,22,14,.14);border-radius:8px}
+  .tr-panel + .tr-panel{margin-top:.9rem}
+  .tr-lab{font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:#595c4d;margin-bottom:.35rem}
+  .tr-val{font-size:.95rem;line-height:1.55;color:var(--ink);white-space:pre-wrap;overflow-wrap:anywhere}
+  .tr-note{margin-top:1rem;padding:.75rem .9rem;background:var(--paper);border-left:2px solid var(--glacier);border-radius:0 6px 6px 0;font-size:.84rem;line-height:1.55;color:#4a4d40}
   .preview{margin-top:.8rem;padding:.7rem .85rem;background:var(--paper);border-radius:6px;font-size:.9rem;line-height:1.5}
-  form{margin-top:1.4rem}
-  .field{margin-bottom:1.1rem}
-  .field label{display:block;font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;color:#595c4d;margin-bottom:.4rem}
-  .field textarea{width:100%;min-height:8rem;padding:.7rem .85rem;border:1px solid rgba(20,22,14,.22);border-radius:6px;background:var(--paper);font:inherit;line-height:1.5}
+  .tr-status{display:inline-block;margin-left:.45rem;font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;color:var(--paper);background:var(--clay);padding:.12rem .4rem;border-radius:30px;font-weight:400}
+  .tr-warn{font-size:.84rem;line-height:1.45;color:#7d2018;background:rgba(163,52,43,.09);border-left:2px solid #a3342b;padding:.45rem .8rem;border-radius:0 5px 5px 0;margin:.5rem 0 .7rem}
+  .tr-diff{padding:.9rem 1.05rem;margin-top:1.4rem}
+  .tr-diff dl{row-gap:1.15rem}
+  .tr-change{margin:.9rem 0 0}
+  .tr-change-k{display:block;font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;color:#8a8d7d;margin-bottom:.35rem}
+  .tr-form{margin-top:1.4rem}
+  .tr-diff .tr-form{margin-top:1rem}
+  .tr-form .field{margin-bottom:1.1rem}
+  .tr-form .field label{display:block;font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;color:#595c4d;margin-bottom:.4rem}
+  .tr-form .field textarea{width:100%;min-height:8rem;padding:.7rem .85rem;border:1px solid rgba(20,22,14,.22);border-radius:6px;background:var(--paper);font:inherit;line-height:1.5}
   .consent{display:flex;gap:.7rem;align-items:flex-start;margin:1.2rem 0}
   .consent input{margin-top:.25rem}
   .consent label{font-size:.9rem;line-height:1.5}
-  .actions{display:flex;gap:.8rem;flex-wrap:wrap;margin-top:1.2rem}
-  .actions button{font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;padding:.75rem 1.1rem;border:1px solid var(--ink);background:var(--ink);color:var(--paper);border-radius:6px;cursor:pointer}
-  .actions a{font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;padding:.75rem 1.1rem;border:1px solid rgba(20,22,14,.25);border-radius:6px;color:var(--ink);text-decoration:none}
+  .tr-actions{display:flex;gap:.8rem;flex-wrap:wrap;margin-top:1.2rem}
+  .tr-actions button{font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;padding:.75rem 1.1rem;border:1px solid var(--ink);background:var(--ink);color:var(--paper);border-radius:6px;cursor:pointer}
+  .tr-actions a{font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;padding:.75rem 1.1rem;border:1px solid rgba(20,22,14,.25);border-radius:6px;color:var(--ink);text-decoration:none}
   .err{color:#8b2e2e;font-size:.84rem;margin-top:.35rem}
-  .flash-success{background:rgba(44,84,64,.12);border-left:3px solid var(--spruce-lift);color:var(--spruce-lift);padding:.7rem 1rem;border-radius:0 5px 5px 0;font-size:.9rem;margin-bottom:1.4rem}
-  .flash-error{background:rgba(179,38,30,.1);border-left:3px solid var(--danger);color:var(--danger-ink);padding:.7rem 1rem;border-radius:0 5px 5px 0;font-size:.9rem;margin-bottom:1.4rem}
 </style>
 {% endblock %}
+{% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'translate'} %}{% endblock %}
+
+{% macro worddiff(segments) %}{%- for s in segments -%}
+  {%- if s.type == 'del' -%}<span class="q-was">{{ s.text }}</span>
+  {%- elseif s.type == 'ins' -%}<span class="q-now">{{ s.text }}</span>
+  {%- else -%}{{ s.text }}{%- endif -%}
+  {%- if not loop.last %} {% endif -%}
+{%- endfor -%}{% endmacro %}
+
 {% block body %}
-<div class="wrap" id="main">
+<div class="dbody" id="main">
+  <div class="mh">
+    <div class="kicker">{{ 'account.menu_personal'|trans }} · {{ 'translate.kicker'|trans }}</div>
+    <h1>{{ entry.messageKey }}{% if open %} <span class="tr-status">{{ ('translate.mine.status.' ~ open.status.value)|trans }}</span>{% endif %}</h1>
+    <p class="lead">{{ 'moderate.translation.locale'|trans({'%locale%': locale}) }}
+      · {{ ('translate.locale.' ~ locale)|trans }}</p>
+  </div>
+
   {% for msg in app.flashes('success') %}<div class="flash-success" role="alert">{{ msg|trans }}</div>{% endfor %}
   {% for msg in app.flashes('danger') %}<div class="flash-error" role="alert">{{ msg|trans }}</div>{% endfor %}
 
-  <a class="back" href="{{ path('translate') }}">← {{ 'translate.back'|trans }}</a>
-  <div class="ey">{{ 'translate.kicker'|trans }}</div>
-  <h1>{{ entry.messageKey }}</h1>
+  <nav class="lfilter" aria-label="{{ 'translate.section_aria'|trans }}">
+    <a class="lchip {{ open ? '' : 'on' }}" href="{{ path('translate') }}">{{ 'translate.catalogue'|trans }}</a>
+    <a class="lchip tr-yours {{ open ? 'on' }}" href="{{ path('translate_mine') }}">{{ 'translate.mine.yours'|trans }}</a>
+  </nav>
 
-  <div class="panel">
-    <div class="lab">{{ 'translate.field.english'|trans }}</div>
-    <div class="val">{{ entry.english }}</div>
+  {% if open %}
+    {% if open.englishAtSubmit != entry.english %}
+      <p class="tr-warn" role="status">{{ 'moderate.translation.english_changed'|trans }}</p>
+    {% endif %}
+    <div class="q-diff tr-diff">
+      <dl>
+        <dt>{{ 'moderate.translation.english_at_submit'|trans }}</dt>
+        <dd>{{ open.englishAtSubmit }}</dd>
+        <dt>{{ 'moderate.translation.english_now'|trans }}</dt>
+        <dd>{{ entry.english }}</dd>
+        <dt>{{ 'moderate.translation.live'|trans }}</dt>
+        <dd>{{ live }}</dd>
+      </dl>
+      <div class="tr-change">
+        <span class="tr-change-k">{{ 'moderate.translation.change'|trans }}</span>
+        <div class="q-diff">{{ _self.worddiff(change) }}</div>
+      </div>
+    {% else %}
+  <div class="tr-panel">
+    <div class="tr-lab">{{ 'translate.field.english'|trans }}</div>
+    <div class="tr-val">{{ entry.english }}</div>
   </div>
-  <div class="panel">
-    <div class="lab">{{ 'translate.field.yaml'|trans }}</div>
-    <div class="val">{{ yaml_default }}</div>
+  <div class="tr-panel">
+    <div class="tr-lab">{{ 'translate.field.yaml'|trans }}</div>
+    <div class="tr-val">{{ yaml_default }}</div>
   </div>
-  <div class="panel">
-    <div class="lab">{{ 'translate.field.live'|trans }}</div>
-    <div class="val">{{ live }}</div>
+  <div class="tr-panel">
+    <div class="tr-lab">{{ 'translate.field.live'|trans }}</div>
+    <div class="tr-val">{{ live }}</div>
   </div>
+    {% endif %}
 
   {% if has_markup %}
-    <p class="note">{{ 'translate.markup_note'|trans }}</p>
+    <p class="tr-note note">{{ 'translate.markup_note'|trans }}</p>
   {% endif %}
 
-  {{ form_start(form) }}
+  {{ form_start(form, {attr: {class: 'tr-form'}}) }}
     <div class="field">
       {{ form_label(form.value) }}
       {{ form_widget(form.value) }}
@@ -62,8 +99,8 @@
     </div>
 
     {% if proposed_preview is not empty %}
-      <div class="panel">
-        <div class="lab">{{ 'translate.field.preview'|trans }}</div>
+      <div class="tr-panel">
+        <div class="tr-lab">{{ 'translate.field.preview'|trans }}</div>
         <div class="preview">{{ proposed_preview|rich }}</div>
       </div>
     {% endif %}
@@ -75,10 +112,13 @@
     {{ form_errors(form.consent) }}
     {{ form_errors(form) }}
 
-    <div class="actions">
+    <div class="tr-actions">
       <button type="submit">{{ 'translate.submit'|trans }}</button>
       <a href="{{ path('translate') }}">{{ 'translate.cancel'|trans }}</a>
     </div>
   {{ form_end(form) }}
+  {% if open %}
+    </div>
+  {% endif %}
 </div>
 {% endblock %}

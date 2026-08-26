@@ -213,7 +213,7 @@ final class DataExportService
     private function translations(int $userId): array
     {
         return $this->db->fetchAllAssociative(
-            'SELECT id, entry_id, locale, proposed_value, english_at_submit, status, created_at, decided_at
+            'SELECT id, entry_id, locale, proposed_value, published_value, english_at_submit, status, created_at, decided_at
              FROM translation_proposal WHERE submitter_id = ? ORDER BY created_at',
             [$userId],
         );

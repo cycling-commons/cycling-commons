@@ -149,12 +149,42 @@ final class ModerateTest extends WebTestCase
         // The queue heading must be visible.
         self::assertSelectorTextContains('h1', 'Review pending submissions');
 
+        // The range lives on the pager, not under the title (owner 2026-08-26).
+        self::assertSelectorNotExists('.mh .pend-count');
+        self::assertSelectorExists('.pager .pager-range');
+
         // The seeded item's title must appear.
         self::assertSelectorTextContains('.q-title', $sub->getTitle());
 
         // Decisions moved to the map drawer — the queue item now links there
         // to review & decide, instead of carrying an inline decision form.
         self::assertSelectorExists('.q-item a.q-review');
+    }
+
+    public function testQueueAndHistoryAreDeskChipsNotATopTab(): void
+    {
+        $client = static::createClient();
+        $curator = $this->createUser(
+            'moderate-desk-chips@example.com',
+            'hunter2secure!',
+            roles: ['ROLE_CURATOR'],
+            totpSecret: 'JBSWY3DPEHPK3PXP',
+            twoFaEnabled: true,
+        );
+        $client->loginUser($curator);
+
+        $crawler = $client->request('GET', '/moderate');
+        self::assertResponseIsSuccessful();
+        self::assertSame(1, $crawler->filter('a.lchip.on[href$="/moderate"]')->count());
+        self::assertSame(1, $crawler->filter('a.mod-desk-hist[href$="/moderate/history"]')->count());
+        self::assertSame(0, $crawler->filter('nav.dtabs a[href$="/moderate/history"]')->count());
+        self::assertSame(0, $crawler->filter('.acct-dropdown a[href$="/moderate/history"]')->count());
+
+        $crawler = $client->request('GET', '/moderate/history');
+        self::assertResponseIsSuccessful();
+        self::assertSame(1, $crawler->filter('a.mod-desk-hist.on[href$="/moderate/history"]')->count());
+        self::assertSame(1, $crawler->filter('nav.dtabs a.dtab-mod.on[href$="/moderate"]')->count());
+        self::assertSame(0, $crawler->filter('nav.dtabs a[href$="/moderate/history"]')->count());
     }
 
     /**

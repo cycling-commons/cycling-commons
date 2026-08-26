@@ -4,8 +4,8 @@
 
   It began as a section under the queue and grew a diff, a rider reply, a
   foldable conversation and a pager. A desk about what is still to do should
-  not carry an unbounded list of what is already done, so the two are separate
-  pages that share only their tab strip.
+  not carry an unbounded list of what is already done, so the two are
+  separate pages switched by Queue / History chips, like translations.
 
   Since 2026-08-25 a settled row is the shared record card, like every other
   list in the shell: the verdict is its pill, the diff its diff, the
@@ -15,7 +15,7 @@
 {% block head_styles %}
 {% include 'account/_shell_styles.html.twig' %}
 {% endblock %}
-{% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate_history', mod_scope_names: mod_scope_names is defined ? mod_scope_names : null, mod_submission_count: mod_submission_count is defined ? mod_submission_count : null, mod_route_count: mod_route_count is defined ? mod_route_count : null, mod_takedown_count: mod_takedown_count is defined ? mod_takedown_count : null} %}{% endblock %}
+{% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate', mod_scope_names: mod_scope_names is defined ? mod_scope_names : null, mod_submission_count: mod_submission_count is defined ? mod_submission_count : null, mod_route_count: mod_route_count is defined ? mod_route_count : null, mod_takedown_count: mod_takedown_count is defined ? mod_takedown_count : null} %}{% endblock %}
 
 {% block body %}
 {# The filters this page pages through, so every link keeps them. #}
@@ -27,6 +27,11 @@
     <div class="kicker">{{ 'moderate.history.kicker'|trans }}</div>
     <h1>{{ 'moderate.history.heading'|trans }}</h1>
   </div>
+
+  <nav class="lfilter" aria-label="{{ 'moderate.desk_aria'|trans }}">
+    <a class="lchip" href="{{ path('moderate') }}">{{ 'moderate.desk_queue'|trans }}</a>
+    <a class="lchip on mod-desk-hist" href="{{ path('moderate_history') }}">{{ 'moderate.desk_history'|trans }}</a>
+  </nav>
 
   {# The same three selects the queue carries, plus the search — a curator who
      narrows the desk to their country narrows the record the same way, with the

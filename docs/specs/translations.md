@@ -111,9 +111,10 @@ That is the index. Do not full-text-index proposal snapshots for the browser.
 | id | PK |
 | entry_id | FK `translation_entry`, **the link** |
 | locale | `fr` / `nl` / `de` / `es` only |
-| proposed_value | the rider's text |
+| proposed_value | the rider's text — never overwritten by a curator copy-edit |
+| published_value | wording written to the overlay on approve. Null until approved. May differ from `proposed_value` when a curator fixed typos. Reject / needs-info leave this null (a curator edit in the form is discarded). |
 | english_at_submit | copy of `entry.english` at submit time — **audit/drift only**, not the join, not the search index. The curator card compares this to `entry.english` and warns if git has moved. |
-| submitter_id | FK `users` |
+| submitter_id | FK `users`. Credit is resolved live (`rider#` plus display name only if the profile is public). Do **not** denormalize a display name onto this row (GDPR; account deletion unlinks the person). |
 | status | `pending` / `needs_info` / `approved` / `rejected` |
 | reviewer_id | FK, null until decided |
 | reviewer_note | required on needs-info, optional on reject |
@@ -172,6 +173,11 @@ row.
 `/translate` (locale-prefixed like every other page). `ROLE_USER`, 2FA not
 required.
 
+Catalogue (`/translate`), edit (`/translate/{id}`), and the rider ledger
+(`/translate/mine`) sit in the personal shell: the same account chrome
+as contributions, with the Translate tab on. Catalogue and ledger share
+a Catalogue | Yours chip pair.
+
 The list is `translation_entry` (the English catalogue in the database).
 Each row shows: key, English, current live string for the **viewing locale**
 (YAML or overlay), and whether a pending proposal already exists for that
@@ -181,11 +187,42 @@ table — not on `english_at_submit`.
 Actions:
 
 - Open a key → English (read-only), current live, textarea for a proposal.
+  Reopening an open proposal prefills that textarea and shows the live →
+  proposed word diff.
 - Submit creates a `pending` proposal. One pending proposal per
   `(submitter, locale, entry_id)`; a second submit updates the pending row
   rather than stacking.
 - Needs-info: the rider is messaged (moderation-and-contribution.md user-
   messages) and can resubmit on the same row.
+
+`/translate/mine` is the rider's ledger of proposals they submitted
+(pending, needs-info, approved, rejected). Rows are grouped by
+**(locale, key)**; each card is the **latest** version of that pair.
+Clicking the key opens `/translate/mine/{locale}/{id}` — that rider's
+full history for the pair, as the same story the curator sees: English,
+the YAML original, then each change oldest-first (first diffs against
+the YAML default; later diffs against the previous live). An open
+proposal is the last Change, with a continue link back to the edit
+form. The page is framed as history (kicker History, lead under the
+title). One version only still shows the original and a Change against
+it. Another account's rows never appear (a stranger hitting someone
+else's key history gets 404). The
+list **defaults to the current site locale** when that locale can be
+proposed (`fr`/`nl`/`de`/`es`); on English it defaults to all locales,
+because English cannot be proposed. Chips All · French · Dutch · German
+· Spanish override that (`?locale=all` or `?locale=nl`). Status chips
+compose with the locale query, filter on the **latest** row of each
+group, and still appear only when more than one status exists **in the
+filtered set**. An empty locale view (proposals exist, none in this
+language) is not the never-proposed empty state. Pending and needs-info
+link back to the edit form in that proposal's locale, with the pending
+wording in the textarea and a word-level live → proposed diff above it
+(same change block as the curator card). Approved / rejected are
+read-only: the rider's text, the curator note when there is one, and —
+if a curator copy-edited on approve — both original and published.
+Account deletion still nulls `submitter_id`, so this list exists only
+while the account does. Messages remain the ping; this page is the
+history.
 
 A later nicety, not v1: “Improve this wording” on a public page, passing the
 key. v1 is the `/translate` browser with search over key and English text.
@@ -210,13 +247,49 @@ Content review stays in the branded `/moderate` shell, not EasyAdmin
 Translations are **site-wide**. They are not region-scoped. Any
 `ROLE_CURATOR` with completed 2FA may decide, same unscoped pattern as photo
 takedowns. A curator must not approve or reject **their own** proposal.
+The open count (pending + needs-info) badges the Translations tab and
+the same row in the account-chip dropdown, as a real count (not `9+`),
+and is added into the chip bulb together with unread messages
+and open submissions. The bulb is that sum, also as a real number.
 
-The queue is a scan: key, locale, status, and Review. The detail
-page (`/moderate/translations/{id}`) shows English snapshot vs current
-English (warn if they differ), current live, and the proposed string.
+The queue is a scan: key, locale, status. Queue and History chips switch
+between the open list and `/moderate/translations/history`, including
+when the queue is empty. Clicking the key opens
+`/moderate/translations/{id}` — there is no separate Review / View
+button. That history page lists **approved and rejected** groups, one
+card per `(locale, key)`, the **latest** settled version of each, newest
+`createdAt` first, with who submitted. It is not the submissions History
+tab. The key links to `/moderate/translations/{id}` for that latest
+settled proposal. The detail page is read-only when the proposal is
+already decided (no approve / reject); the back link returns to this
+history list. Per-key word diffs live on that detail page.
+
+The detail page (`/moderate/translations/{id}`) is a story of the
+key+locale, oldest first, newest at the bottom. It opens with the
+English source as it was on the first proposal, then the YAML original
+for that locale. Each **approved** version follows as a Change
+word-diff against the previous live (first-ever diffs against the YAML
+default). If English changed between two versions, that new English is
+inserted between them. An open proposal is the last Change, with the
+editable proposed field and the three verbs under it. Settled GET is
+the same story without the form. Who submitted (`rider#`, plus the
+public display name linking to `/riders/{uuid}` when they opted in;
+otherwise the handle only; missing submitter → “Anonymous translator”)
+sits on each change. Approve publishes **whatever is in
+that field** into the overlay and stores it as `published_value`. The
+rider’s `proposed_value` is not rewritten. Reject / needs-info ignore
+the edited field.
+
 Decisions are `approve` / `reject` / `needs_info` with the same note
 rules as item submissions (needs-info requires a question), and happen
 only on that detail page.
+
+Rejected drafts stay out of the approved chain. Opening a rejected
+proposal appends that attempt after the published story. If the
+curator copy-edited on approve, a second small diff shows rider text →
+published, labelled as edited on publish by the reviewer’s `rider#`.
+Older proposal rows remaining after overlay last-wins **are** that
+history; there is no extra table.
 
 `ROLE_ADMIN` implies `ROLE_CURATOR` and may use this desk. There is no
 separate translation-moderator role.

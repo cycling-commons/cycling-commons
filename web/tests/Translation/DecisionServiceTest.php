@@ -84,6 +84,34 @@ final class DecisionServiceTest extends KernelTestCase
 
         $t = static::getContainer()->get('translator');
         self::assertSame('Carte (approve)', $t->trans('nav.map', [], 'messages', 'fr'));
+        self::assertSame('Carte (approve)', $decided->getPublishedValue());
+    }
+
+    public function testApproveCanPublishACuratorEditWithoutChangingTheRiderText(): void
+    {
+        self::bootKernel();
+        $em = $this->em();
+        $rider = $this->user($em, 'dec-edit-rider@test.test');
+        $curator = $this->user($em, 'dec-edit-curator@test.test', ['ROLE_CURATOR']);
+        $entry = $this->entry($em, 'nav.map', 'Map');
+
+        $proposal = $this->proposals()->submit($rider, $entry, 'fr', 'Carte orignal', true);
+        $proposalId = (int) $proposal->getId();
+
+        $this->decisions()->decide($proposalId, 'approve', $curator, null, 'Carte original');
+        $em->clear();
+
+        $decided = $em->find(TranslationProposal::class, $proposalId);
+        self::assertNotNull($decided);
+        self::assertSame('Carte orignal', $decided->getProposedValue());
+        self::assertSame('Carte original', $decided->getPublishedValue());
+
+        $overlay = $em->getRepository(TranslationOverlay::class)->findOneBy([
+            'entry' => $em->find(TranslationEntry::class, $entry->getId()),
+            'locale' => 'fr',
+        ]);
+        self::assertNotNull($overlay);
+        self::assertSame('Carte original', $overlay->getValue());
     }
 
     public function testSecondApproveReplacesOverlayValue(): void

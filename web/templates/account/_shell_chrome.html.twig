@@ -3,7 +3,7 @@
    Included by the dashboard (/profile), settings (/settings), 2FA setup, and the
    moderation queue (/moderate) so the logged-in area is one continuous
    environment with the same account chip used in the public nav.
-   Param: `active` = contrib | votes | saved | scout | translate | messages | settings | moderate | moderate_routes | moderate_data | moderate_takedowns | moderate_translations | moderate_history | moderate_regions | moderate_rulebook.
+   Param: `active` = contrib | votes | saved | scout | translate | messages | settings | moderate | moderate_routes | moderate_data | moderate_takedowns | moderate_translations | moderate_regions | moderate_rulebook. Submission history lives under the Submissions tab as Queue/History chips, so it keeps `active: moderate`.
    Param: `mod_scope_names` (moderator-areas spec 2026-07-14) = the curator's
    assigned area names (ModerationScopeProvider::describe()) — [] for global,
    omitted/null for pages that don't pass it. Only rendered in moderator mode.
@@ -40,8 +40,6 @@
   <a href="{{ path('moderate_takedowns') }}" class="dtab-mod {{ active == 'moderate_takedowns' ? 'on' : '' }}">{{ 'nav.takedowns'|trans }}{% if mod_takedown_count is defined and mod_takedown_count %}<span class="dtab-count" title="{{ 'account.mod_takedowns_open'|trans }}">{{ mod_takedown_count }}</span>{% endif %}</a>
   {# Translations: site-wide overlays, unscoped like takedowns (translations.md §5). #}
   <a href="{{ path('moderate_translations') }}" class="dtab-mod {{ active == 'moderate_translations' ? 'on' : '' }}">{{ 'nav.translations'|trans }}{% if mod_translation_count %}<span class="dtab-count" title="{{ 'account.mod_translations_open'|trans }}">{{ mod_translation_count }}</span>{% endif %}</a>
-  {# What is already settled — its own page, so the queue stays about work. #}
-  <a href="{{ path('moderate_history') }}" class="dtab-mod {{ active == 'moderate_history' ? 'on' : '' }}">{{ 'nav.history'|trans }}</a>
   {# Regions desk: the gated
      curated-by-default flag. No badge — nothing queues here. #}
   <a href="{{ path('moderate_regions') }}" class="dtab-mod {{ active == 'moderate_regions' ? 'on' : '' }}">{{ 'nav.regions'|trans }}</a>

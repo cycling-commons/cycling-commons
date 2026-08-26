@@ -1,0 +1,77 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{# Settled translation groups, newest submission first (translations.md §5).
+   One card per key+locale; the key opens the per-key story. #}
+{% extends 'base.html.twig' %}
+{% block head_styles %}
+{% include 'account/_shell_styles.html.twig' %}
+{% endblock %}
+{% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate_translations', mod_scope_names: mod_scope_names is defined ? mod_scope_names : null, mod_submission_count: mod_submission_count is defined ? mod_submission_count : null, mod_route_count: mod_route_count is defined ? mod_route_count : null, mod_takedown_count: mod_takedown_count is defined ? mod_takedown_count : null} %}{% endblock %}
+
+{% macro who(w) %}{%- if w.anonymous -%}
+    {{ 'moderate.translation.anonymous'|trans }}
+  {%- else -%}
+    {{ w.handle }}{% if w.name %} · {% if w.profile_url %}<a href="{{ w.profile_url }}">{{ w.name }}</a>{% else %}{{ w.name }}{% endif %}{% endif %}
+  {%- endif -%}{% endmacro %}
+
+{% block body %}
+{% set pill = {approved: 'ok', rejected: 'rej'} %}
+<div class="dbody" id="main">
+  <div class="mh">
+    <div class="kicker">{{ 'moderate.translation.kicker'|trans }}</div>
+    <h1>{{ 'moderate.translation.desk_history_heading'|trans }}</h1>
+    <p class="lead">{{ 'moderate.translation.desk_history_lead'|trans }}</p>
+  </div>
+
+  <nav class="lfilter" aria-label="{{ 'moderate.translation.section_aria'|trans }}">
+    <a class="lchip" href="{{ path('moderate_translations') }}">{{ 'moderate.translation.desk_queue'|trans }}</a>
+    <a class="lchip on" href="{{ path('moderate_translations_history') }}">{{ 'moderate.translation.desk_history'|trans }}</a>
+  </nav>
+
+  {% if cards is not empty %}
+    <div class="mod-bar">{% include 'account/_density.html.twig' %}</div>
+  {% endif %}
+
+  {% if cards is empty %}
+    <div class="empty-state">
+      <h3>{{ 'moderate.translation.desk_history_empty'|trans }}</h3>
+    </div>
+  {% else %}
+    <h2 class="sec-band">{{ 'moderate.translation.desk_history_heading'|trans }} <span class="sec-count">{{ pager.total }}</span></h2>
+    <div class="q-list">
+      {% for card in cards %}
+        <article class="q-item">
+          <div class="q-top">
+            <div class="q-headwrap">
+              <div class="q-head">
+                <h3 class="q-title"><a class="q-title-link" href="{{ path('moderate_translations_detail', {id: card.id}) }}">{{ card.message_key }}</a></h3>
+                <span class="q-pill q-pill--{{ pill[card.status] ?? 'ret' }}">{{ ('moderate.translation.status.' ~ card.status)|trans }}</span>
+              </div>
+              <div class="q-submitter">{{ _self.who(card.who) }}
+                · {{ 'moderate.translation.locale'|trans({'%locale%': card.locale}) }}
+                · {{ ('translate.locale.' ~ card.locale)|trans }}</div>
+            </div>
+            <div class="q-acts">
+              {% if card.when %}<time class="q-when" datetime="{{ card.when|date('c') }}">{{ card.when|cc_datetime }}</time>{% endif %}
+            </div>
+          </div>
+          {% if card.edited %}
+            <div class="q-diff">
+              <dl>
+                <dt>{{ 'translate.mine.your_text'|trans }}</dt>
+                <dd><span class="q-was">{{ card.proposed }}</span></dd>
+                <dt>{{ 'translate.mine.published'|trans }}</dt>
+                <dd><span class="q-now">{{ card.published }}</span></dd>
+              </dl>
+            </div>
+          {% else %}
+            <p class="q-note">{{ card.proposed }}</p>
+          {% endif %}
+          {% if card.note %}<p class="q-note">{{ card.note }}</p>{% endif %}
+        </article>
+      {% endfor %}
+    </div>
+    {% include 'partials/_pager.html.twig' with {pager: pager, route: 'moderate_translations_history', params: {}} %}
+  {% endif %}
+</div>
+{% include 'moderate/_card_script.html.twig' %}
+{% endblock %}

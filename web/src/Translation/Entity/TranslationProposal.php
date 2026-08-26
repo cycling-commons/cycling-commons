@@ -38,6 +38,9 @@ class TranslationProposal
     #[ORM\Column(name: 'proposed_value', type: Types::TEXT)]
     private string $proposedValue;
 
+    #[ORM\Column(name: 'published_value', type: Types::TEXT, nullable: true)]
+    private ?string $publishedValue = null;
+
     #[ORM\Column(name: 'english_at_submit', type: Types::TEXT)]
     private string $englishAtSubmit;
 
@@ -90,6 +93,11 @@ class TranslationProposal
         $this->proposedValue = $proposedValue;
     }
 
+    public function setPublishedValue(?string $publishedValue): void
+    {
+        $this->publishedValue = $publishedValue;
+    }
+
     public function setEnglishAtSubmit(string $englishAtSubmit): void
     {
         $this->englishAtSubmit = $englishAtSubmit;
@@ -133,6 +141,12 @@ class TranslationProposal
     public function getProposedValue(): string
     {
         return $this->proposedValue;
+    }
+
+    /** Wording that went live; falls back to the rider's proposal if never copy-edited. */
+    public function getPublishedValue(): string
+    {
+        return $this->publishedValue ?? $this->proposedValue;
     }
 
     public function getEnglishAtSubmit(): string

@@ -204,9 +204,12 @@ submission is not in the pending payload, so the link opened the map at the
 default scope with nothing selected. Only **approved** rows link — a rejected
 item is not on the map, and a link that lands nowhere is worse than no link.
 
-**The record is its own page, and both desks page and search** (2026-08-03,
-owner). `/moderate/history` carries the settled submissions; `/moderate` stays
-about what is still to do. Both take **25 rows a page** (`SubmissionQueue::PER_PAGE`)
+**The record is its own page under the submissions desk, and both desks page
+and search** (2026-08-03, owner; chips 2026-08-26). `/moderate/history`
+carries the settled submissions; `/moderate` stays about what is still to
+do. Queue and History chips on both pages switch between them, the same
+pattern as the translations desk — History is not a top-level moderation
+tab. Both take **25 rows a page** (`SubmissionQueue::PER_PAGE`)
 and a **title search**.
 
 - The page query and its count share one WHERE builder per desk
@@ -250,12 +253,13 @@ built because it largely exists: `change_history` is already served per item at
 `/map/item/{id}/history` and rendered as "Recent changes" in the map drawer,
 which the history row's `?item=` link now opens in one click.
 
-**The account chip's unread count says where it points** (2026-08-03,
-owner asked twice what the number referred to). The bulb on the avatar reports
-`unread_message_count()` — it always did, and it was always right — but a
-number on an avatar names no destination. The same count now also renders on
-the **Messages** row inside the menu, from a single `{% set %}` so the two can
-never disagree: the bulb says something is waiting, the row says where.
+**The account chip's open count says where it points** (2026-08-03,
+owner asked twice what the number referred to; 2026-08-26 the total grew).
+The bulb on the avatar is the sum of unread messages, open submissions
+in the curator's area, and open translation proposals — `0` for any
+queue the visitor cannot see. Each contributing row inside the menu
+repeats its own count, from the same `{% set %}`s, so the two can never
+disagree: the bulb says something is waiting, the row says where.
 
 **The moderation tab strip no longer grows a phantom vertical scrollbar.**
 `.dtabs` sets `overflow-x:auto` for the horizontal tab list, which makes the

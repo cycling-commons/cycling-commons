@@ -16,7 +16,7 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 /**
  * Unread bulb on the account chip (moderation-feedback spec M4, Task 6):
- * count rendering, the "9+" cap, the mark-all-read side effect clearing it,
+ * count rendering, the mark-all-read side effect clearing it,
  * and the anonymous no-DB-touch path.
  *
  * Test isolation: DAMA\DoctrineTestBundle wraps each test in a rolled-back transaction.
@@ -106,7 +106,7 @@ final class BulbTest extends WebTestCase
         self::assertSame('1', trim($crawler->filter('.acct-bulb')->text()));
     }
 
-    public function testTwelveUnreadCapsAtNinePlus(): void
+    public function testTwelveUnreadShowsTwelve(): void
     {
         $client = static::createClient();
 
@@ -133,7 +133,7 @@ final class BulbTest extends WebTestCase
         $crawler = $client->request('GET', '/profile');
         self::assertResponseIsSuccessful();
         self::assertSelectorExists('.acct-bulb');
-        self::assertSame('9+', trim($crawler->filter('.acct-bulb')->text()));
+        self::assertSame('12', trim($crawler->filter('.acct-bulb')->text()));
     }
 
     public function testVisitingMessagesClearsTheBulb(): void

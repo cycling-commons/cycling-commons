@@ -118,7 +118,7 @@ final class ModerateController extends AbstractController
         return $this->render('moderate/history.html.twig', [
             'page_title' => 'meta.moderate_history_title',
             'page_description' => 'meta.moderate_history_description',
-            'nav_active' => 'moderate_history',
+            'nav_active' => 'moderate',
             'history' => $this->queue->history($scope, $me, $status ?: null, $q ?: null, $page, $perPage, $country ?: null, $region ?: null, $type ?: null, $byUser),
             'history_filters' => ['mine' => $mine, 'status' => $status, 'q' => $q, 'country' => $country, 'region' => $region, 'type' => $type, 'by' => $byUser],
             'countries' => $this->queue->countries($scope, settled: true),

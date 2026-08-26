@@ -31,6 +31,8 @@ const LIST_PAGES = [
   'templates/moderate_routes/index.html.twig',
   'templates/moderate/takedowns.html.twig',
   'templates/moderate/translations.html.twig',
+  'templates/moderate/translations_history.html.twig',
+  'templates/translate/mine.html.twig',
   'templates/moderate_data/index.html.twig',
   'templates/moderate_regions/index.html.twig',
 ];
@@ -38,6 +40,9 @@ const LIST_PAGES = [
 const SHELL_PAGES = LIST_PAGES.concat([
   'templates/settings/index.html.twig',
   'templates/moderate/translation_detail.html.twig',
+  'templates/translate/mine_key.html.twig',
+  'templates/translate/index.html.twig',
+  'templates/translate/edit.html.twig',
 ]);
 
 // Rules that belong to the shell and nowhere else. A page defining one of
@@ -88,8 +93,8 @@ test('every shell page opens with the same head inside the same container', () =
 test('every list page renders the record card and offers the density switch', () => {
   for (const page of LIST_PAGES) {
     const src = read(page);
-    // The queue and routes desks render their card through an included partial.
-    assert.ok(src.includes('q-item') || /_queue_item\.html\.twig/.test(src), `${page} must render rows as .q-item cards`);
+    // The queue, routes, and translation-mine desks render their card through an included partial.
+    assert.ok(src.includes('q-item') || /_queue_item\.html\.twig/.test(src) || /_mine_item\.html\.twig/.test(src), `${page} must render rows as .q-item cards`);
     if (page.endsWith('moderate_regions/index.html.twig')) continue;   // a settings desk: no density, no pager (owner 2026-08-14)
     assert.ok(src.includes('class="q-list'), `${page} must group its cards in a .q-list`);
     assert.ok(src.includes("{% include 'account/_density.html.twig' %}"), `${page} must offer the cards/list switch`);

@@ -14,10 +14,12 @@
   <div class="mh">
     <div class="kicker">{{ 'moderate.kicker'|trans }}</div>
     <h1>{{ 'moderate.title'|trans }}</h1>
-    <div>
-      <span class="pend-count">{{ 'moderate.overview.showing'|trans({'%shown%': items|length, '%total%': matching}) }}</span>
-    </div>
   </div>
+
+  <nav class="lfilter" aria-label="{{ 'moderate.desk_aria'|trans }}">
+    <a class="lchip on" href="{{ path('moderate') }}">{{ 'moderate.desk_queue'|trans }}</a>
+    <a class="lchip mod-desk-hist" href="{{ path('moderate_history') }}">{{ 'moderate.desk_history'|trans }}</a>
+  </nav>
 
   {% for msg in app.flashes('success') %}<div class="flash-success" role="alert">{{ msg|trans }}</div>{% endfor %}
   {% for msg in app.flashes('danger') %}<div class="flash-error" role="alert">{{ msg|trans }}</div>{% endfor %}

@@ -11,11 +11,15 @@ use App\Messaging\MessageService;
 use App\Messaging\UserMessageKind;
 use App\Moderation\AlreadyDecidedException;
 use App\Moderation\MissingQuestionException;
+use App\Translation\Entity\TranslationEntry;
 use App\Translation\Entity\TranslationOverlay;
 use App\Translation\Entity\TranslationProposal;
+use App\Translation\Exception\EmptyTranslationException;
 use App\Translation\Exception\SelfReviewException;
+use App\Translation\Exception\TranslationTooLongException;
 use App\Translation\Exception\UnknownProposalException;
 use Doctrine\DBAL\LockMode;
+use Doctrine\DBAL\ParameterType;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
@@ -35,12 +39,14 @@ final class DecisionService
     }
 
     /**
-     * @throws UnknownProposalException proposal id does not exist
-     * @throws MissingQuestionException needs_info without a note
-     * @throws AlreadyDecidedException  proposal already settled
-     * @throws SelfReviewException      curator is the submitter
+     * @throws UnknownProposalException    proposal id does not exist
+     * @throws MissingQuestionException    needs_info without a note
+     * @throws AlreadyDecidedException     proposal already settled
+     * @throws SelfReviewException         curator is the submitter
+     * @throws EmptyTranslationException   approve with an empty published string
+     * @throws TranslationTooLongException approve over the byte cap
      */
-    public function decide(int $proposalId, string $decision, User $curator, ?string $note): TranslationProposal
+    public function decide(int $proposalId, string $decision, User $curator, ?string $note, ?string $published = null): TranslationProposal
     {
         if (!\in_array($decision, ['approve', 'reject', 'needs_info'], true)) {
             throw new \InvalidArgumentException(sprintf('Unknown decision "%s"', $decision));
@@ -49,7 +55,7 @@ final class DecisionService
             throw new MissingQuestionException('A needs-info decision must carry the question to ask the rider.');
         }
 
-        $proposal = $this->em->wrapInTransaction(function () use ($proposalId, $decision, $curator, $note): TranslationProposal {
+        $proposal = $this->em->wrapInTransaction(function () use ($proposalId, $decision, $curator, $note, $published): TranslationProposal {
             $proposal = $this->em->find(TranslationProposal::class, $proposalId, LockMode::PESSIMISTIC_WRITE);
             if (null === $proposal) {
                 throw new UnknownProposalException(sprintf('Unknown proposal %d', $proposalId));
@@ -70,6 +76,14 @@ final class DecisionService
 
             switch ($decision) {
                 case 'approve':
+                    $text = null !== $published ? trim($published) : $proposal->getProposedValue();
+                    if ('' === $text) {
+                        throw new EmptyTranslationException('Published translation must not be empty.');
+                    }
+                    if (\strlen($text) > TranslationLimits::PROPOSED_VALUE_MAX) {
+                        throw new TranslationTooLongException(sprintf('Published translation exceeds %d bytes.', TranslationLimits::PROPOSED_VALUE_MAX));
+                    }
+                    $proposal->setPublishedValue($text);
                     $this->upsertOverlay($proposal, (int) $curator->getId());
                     $proposal->setStatus(TranslationProposalStatus::Approved);
                     break;
@@ -132,17 +146,14 @@ final class DecisionService
     }
 
     /**
-     * Open proposal for the detail page, or unknown if missing / already settled.
+     * One proposal for the detail page, open or settled.
      *
      * @throws UnknownProposalException
      */
-    public function getOpen(int $id): TranslationProposal
+    public function get(int $id): TranslationProposal
     {
         $proposal = $this->em->find(TranslationProposal::class, $id);
-        if (null === $proposal || !\in_array($proposal->getStatus(), [
-            TranslationProposalStatus::Pending,
-            TranslationProposalStatus::NeedsInfo,
-        ], true)) {
+        if (null === $proposal) {
             throw new UnknownProposalException(sprintf('Unknown proposal %d', $id));
         }
 
@@ -173,6 +184,134 @@ final class DecisionService
         return $rows;
     }
 
+    /**
+     * Previous approvals for this key+locale, oldest first.
+     *
+     * @return list<TranslationProposal>
+     */
+    public function approvedHistory(TranslationEntry $entry, string $locale): array
+    {
+        /** @var list<TranslationProposal> $rows */
+        $rows = $this->em->createQueryBuilder()
+            ->select('p')
+            ->from(TranslationProposal::class, 'p')
+            ->where('p.entry = :entry')
+            ->andWhere('p.locale = :locale')
+            ->andWhere('p.status = :status')
+            ->setParameter('entry', $entry)
+            ->setParameter('locale', $locale)
+            ->setParameter('status', TranslationProposalStatus::Approved)
+            ->orderBy('p.decidedAt', 'ASC')
+            ->addOrderBy('p.id', 'ASC')
+            ->getQuery()
+            ->getResult();
+
+        return $rows;
+    }
+
+    /**
+     * How many (locale, key) groups have a settled proposal.
+     */
+    public function settledCount(): int
+    {
+        [$sql, $params, $types] = $this->latestSettledFrom();
+
+        return (int) $this->em->getConnection()->fetchOne('SELECT COUNT(*) '.$sql, $params, $types);
+    }
+
+    /**
+     * Latest settled proposal per (locale, key), newest submission first.
+     *
+     * @return list<TranslationProposal>
+     */
+    public function settled(int $offset, int $limit): array
+    {
+        return $this->proposalsByIds(
+            $this->latestSettledIds($offset, $limit),
+        );
+    }
+
+    /**
+     * Latest settled id per (locale, key), newest groups first.
+     *
+     * @return list<int>
+     */
+    private function latestSettledIds(int $offset, int $limit): array
+    {
+        [$from, $params, $types] = $this->latestSettledFrom();
+        $params['limit'] = $limit;
+        $params['offset'] = $offset;
+        $types['limit'] = ParameterType::INTEGER;
+        $types['offset'] = ParameterType::INTEGER;
+
+        /** @var list<int|string> $raw */
+        $raw = $this->em->getConnection()->fetchFirstColumn(
+            'SELECT latest.id '.$from.'
+             ORDER BY latest.created_at DESC, latest.id DESC
+             LIMIT :limit OFFSET :offset',
+            $params,
+            $types,
+        );
+
+        $ids = [];
+        foreach ($raw as $id) {
+            $ids[] = (int) $id;
+        }
+
+        return $ids;
+    }
+
+    /**
+     * @return array{0: string, 1: array<string, mixed>, 2: array<string, ParameterType>}
+     */
+    private function latestSettledFrom(): array
+    {
+        $from = "FROM (
+            SELECT DISTINCT ON (p.locale, p.entry_id) p.id, p.created_at
+            FROM translation_proposal p
+            WHERE p.status IN ('approved', 'rejected')
+            ORDER BY p.locale, p.entry_id, p.created_at DESC, p.id DESC
+        ) latest";
+
+        return [$from, [], []];
+    }
+
+    /**
+     * @param list<int> $ids
+     *
+     * @return list<TranslationProposal>
+     */
+    private function proposalsByIds(array $ids): array
+    {
+        if ([] === $ids) {
+            return [];
+        }
+
+        /** @var list<TranslationProposal> $rows */
+        $rows = $this->em->createQueryBuilder()
+            ->select('p', 'e')
+            ->from(TranslationProposal::class, 'p')
+            ->join('p.entry', 'e')
+            ->where('p.id IN (:ids)')
+            ->setParameter('ids', $ids)
+            ->getQuery()
+            ->getResult();
+
+        $byId = [];
+        foreach ($rows as $proposal) {
+            $byId[(int) $proposal->getId()] = $proposal;
+        }
+
+        $ordered = [];
+        foreach ($ids as $id) {
+            if (isset($byId[$id])) {
+                $ordered[] = $byId[$id];
+            }
+        }
+
+        return $ordered;
+    }
+
     private function upsertOverlay(TranslationProposal $proposal, int $approvedById): void
     {
         $entry = $proposal->getEntry();
@@ -194,7 +333,7 @@ final class DecisionService
             $this->em->persist(new TranslationOverlay(
                 $entry,
                 $locale,
-                $proposal->getProposedValue(),
+                $proposal->getPublishedValue(),
                 $proposal,
                 $approvedById,
             ));
@@ -203,7 +342,7 @@ final class DecisionService
         }
 
         $existing->applyApproval(
-            $proposal->getProposedValue(),
+            $proposal->getPublishedValue(),
             $proposal,
             $approvedById,
         );

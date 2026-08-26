@@ -1,0 +1,7 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{%- for s in segments -%}
+  {%- if s.type == 'del' -%}<span class="q-was">{{ s.text }}</span>
+  {%- elseif s.type == 'ins' -%}<span class="q-now">{{ s.text }}</span>
+  {%- else -%}{{ s.text }}{%- endif -%}
+  {%- if not loop.last %} {% endif -%}
+{%- endfor -%}

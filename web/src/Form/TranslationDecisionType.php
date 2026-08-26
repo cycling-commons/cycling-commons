@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Form;
 
+use App\Translation\TranslationLimits;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
@@ -42,6 +43,13 @@ final class TranslationDecisionType extends AbstractType
                 ],
                 'constraints' => [
                     new NotBlank(message: 'moderate.error.decision_required'),
+                ],
+            ])
+            ->add('published', TextareaType::class, [
+                'label' => false,
+                'required' => false,
+                'constraints' => [
+                    new Length(max: TranslationLimits::PROPOSED_VALUE_MAX, maxMessage: 'translate.error.too_long'),
                 ],
             ])
             ->add('note', TextareaType::class, [

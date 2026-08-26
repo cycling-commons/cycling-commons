@@ -9,6 +9,7 @@ namespace App\Tests\Translation;
 use App\Entity\User;
 use App\Translation\Entity\TranslationEntry;
 use App\Translation\Entity\TranslationProposal;
+use App\Translation\ProposalService;
 use App\Translation\TranslationProposalStatus;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -262,5 +263,81 @@ final class TranslatePageTest extends WebTestCase
         $preview = $client->getCrawler()->filter('.preview')->html();
         self::assertStringNotContainsString('<script>', $preview);
         self::assertStringContainsString('<b>ok</b>', $preview);
+    }
+
+    public function testCatalogueShowsPersonalMenu(): void
+    {
+        $client = static::createClient();
+        $user = $this->createUser('translate-chrome@example.com', 'hunter2secure!');
+        $client->loginUser($user);
+
+        $crawler = $client->request('GET', '/fr/translate');
+        self::assertResponseIsSuccessful();
+        self::assertSame(1, $crawler->filter('nav.dtabs')->count());
+        self::assertSame(1, $crawler->filter('nav.dtabs a[href$="/fr/translate"].on, nav.dtabs a[href$="/translate"].on')->count());
+        self::assertSame(1, $crawler->filter('.mh .lead')->count());
+        $html = (string) $crawler->filter('#main')->html();
+        $h1 = strpos($html, '<h1');
+        $lead = strpos($html, 'class="lead"');
+        $chips = strpos($html, 'class="lfilter"');
+        self::assertNotFalse($h1);
+        self::assertNotFalse($lead);
+        self::assertNotFalse($chips);
+        self::assertLessThan($lead, $h1, 'the lead belongs under the title, not under the chips');
+        self::assertLessThan($chips, $lead);
+    }
+
+    public function testEditShowsPersonalMenu(): void
+    {
+        $client = static::createClient();
+        $user = $this->createUser('translate-edit-chrome@example.com', 'hunter2secure!');
+        $entry = $this->seedEntry('home.cta_map', 'Explore the map');
+        $client->loginUser($user);
+
+        $crawler = $client->request('GET', '/fr/translate/'.$entry->getId());
+        self::assertResponseIsSuccessful();
+        self::assertSame(1, $crawler->filter('nav.dtabs')->count());
+    }
+
+    public function testContinueEditPrefillsPendingAndShowsLiveToProposedDiff(): void
+    {
+        $client = static::createClient();
+        $user = $this->createUser('translate-continue@example.com', 'hunter2secure!');
+        $entry = $this->seedEntry('test.tr.continue.diff', 'Water and views');
+        $client->loginUser($user);
+
+        static::getContainer()->get(ProposalService::class)
+            ->submit($user, $entry, 'nl', 'waterpunten en uitzichten', true);
+
+        $crawler = $client->request('GET', '/nl/translate/'.$entry->getId());
+
+        self::assertResponseIsSuccessful();
+        $textarea = $crawler->filter('textarea[name="translation_proposal[value]"]');
+        self::assertSame(1, $textarea->count());
+        self::assertStringContainsString('waterpunten en uitzichten', (string) $textarea->text());
+        self::assertSame(1, $crawler->filter('.tr-change')->count());
+        self::assertSelectorTextContains('.tr-change .q-now', 'waterpunten');
+        $html = (string) $crawler->filter('.dbody')->html();
+        $changePos = strpos($html, 'tr-change');
+        $textareaPos = strpos($html, 'translation_proposal[value]');
+        self::assertNotFalse($changePos);
+        self::assertNotFalse($textareaPos);
+        self::assertLessThan($textareaPos, $changePos, 'word diff must sit above the proposed textarea');
+    }
+
+    public function testFirstEditHasEmptyTextareaAndNoChangeDiff(): void
+    {
+        $client = static::createClient();
+        $user = $this->createUser('translate-first-edit@example.com', 'hunter2secure!');
+        $entry = $this->seedEntry('test.tr.first.edit', 'First visit empty');
+        $client->loginUser($user);
+
+        $crawler = $client->request('GET', '/nl/translate/'.$entry->getId());
+
+        self::assertResponseIsSuccessful();
+        self::assertSame(0, $crawler->filter('.tr-change')->count());
+        $textarea = $crawler->filter('textarea[name="translation_proposal[value]"]');
+        self::assertSame(1, $textarea->count());
+        self::assertSame('', trim((string) $textarea->text()));
     }
 }
