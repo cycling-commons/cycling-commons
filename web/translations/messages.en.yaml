@@ -1954,6 +1954,9 @@ translate:
     # The binding sentence. Its exact wording is hashed onto the consent record,
     # so changing it means bumping TranslationConsent::VERSION (docs/specs/translations.md §6).
     contract: 'I agree to license this translation under CC BY-SA 4.0, and I confirm it is my own work.'
+    standing: 'You agreed to the translation licence on %date%. Your translations join the Commons under CC BY-SA 4.0.'
+    read_contract: 'See exactly what you agreed to'
+    site_terms: 'Site terms'
   kicker: 'Translations'
   title: 'Translate the site'
   catalogue: 'Catalogue'
@@ -2746,7 +2749,6 @@ moderate_routes:
   region_cap: '%active% / %cap% active'
   stat_ascent: '%v% ascent'
   overview:
-    showing: 'showing %shown% of %total% pending'
     empty: 'No route proposals waiting right now.'
   filter:
     region: 'Region'

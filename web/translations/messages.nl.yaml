@@ -2418,6 +2418,9 @@ media:
 translate:
   consent:
     contract: 'Ik ga ermee akkoord deze vertaling onder CC BY-SA 4.0 te licentiëren en bevestig dat het mijn eigen werk is.'
+    standing: 'Je ging op %date% akkoord met de vertaallicentie. Je vertalingen komen onder CC BY-SA 4.0 in de Commons.'
+    read_contract: 'Bekijk precies waarmee je akkoord ging'
+    site_terms: 'Sitevoorwaarden'
   kicker: 'Vertalingen'
   title: 'Vertaal de site'
   catalogue: 'Catalogus'
@@ -2727,7 +2730,6 @@ moderate_routes:
   region_cap: '%active% / %cap% actief'
   stat_ascent: '%v% stijging'
   overview:
-    showing: '%shown% van %total% in behandeling'
     empty: 'Op dit moment geen routevoorstellen in behandeling.'
   filter:
     region: 'Regio'

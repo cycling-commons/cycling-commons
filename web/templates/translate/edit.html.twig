@@ -23,6 +23,11 @@
   .consent{display:flex;gap:.7rem;align-items:flex-start;margin:1.2rem 0}
   .consent input{margin-top:.25rem}
   .consent label{font-size:.9rem;line-height:1.5}
+  .consent-ok{font-size:.86rem;line-height:1.5;color:#3f6b3f;margin:1.2rem 0}
+  .consent-when{font-family:var(--mono);font-size:.68rem;color:#595c4d}
+  .consent-more{display:block;margin:.4rem 0 0}
+  .consent-more summary{cursor:pointer;font-size:.78rem;color:var(--clay)}
+  .consent-ok > a{display:block;margin-top:.25rem;color:var(--clay);text-decoration:underline}
   .tr-actions{display:flex;gap:.8rem;flex-wrap:wrap;margin-top:1.2rem}
   .tr-actions button{font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;padding:.75rem 1.1rem;border:1px solid var(--ink);background:var(--ink);color:var(--paper);border-radius:6px;cursor:pointer}
   .tr-actions a{font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;padding:.75rem 1.1rem;border:1px solid rgba(20,22,14,.25);border-radius:6px;color:var(--ink);text-decoration:none}
@@ -105,11 +110,22 @@
       </div>
     {% endif %}
 
+    {% if standing %}
+      {% set when %}<time class="consent-when" datetime="{{ standing.consentedAt|date('c') }}">{{ standing.consentedAt|cc_date }}</time>{% endset %}
+      <div class="consent-ok">✓ {{ 'translate.consent.standing'|trans({'%date%': when})|raw }}
+        <details class="consent-more">
+          <summary>{{ 'translate.consent.read_contract'|trans }}</summary>
+          <p>{{ 'translate.consent.contract'|trans }}</p>
+        </details>
+        <a href="{{ path('terms') }}">{{ 'translate.consent.site_terms'|trans }}</a>
+      </div>
+    {% else %}
     <div class="consent">
       {{ form_widget(form.consent) }}
       {{ form_label(form.consent) }}
     </div>
     {{ form_errors(form.consent) }}
+    {% endif %}
     {{ form_errors(form) }}
 
     <div class="tr-actions">

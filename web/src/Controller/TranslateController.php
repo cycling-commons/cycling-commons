@@ -22,6 +22,7 @@ use App\Translation\Exception\KeyNotFoundException;
 use App\Translation\Exception\TranslationConflictException;
 use App\Translation\Exception\TranslationTooLongException;
 use App\Translation\ProposalService;
+use App\Translation\TranslationConsentService;
 use App\Translation\TranslationDiff;
 use App\Translation\TranslationLimits;
 use App\Translation\TranslationProposalStatus;
@@ -45,6 +46,7 @@ final class TranslateController extends AbstractController
     public function __construct(
         private readonly CatalogueBrowser $browser,
         private readonly ProposalService $proposals,
+        private readonly TranslationConsentService $consent,
         private readonly PageSize $pageSize,
         private readonly EntityManagerInterface $em,
     ) {
@@ -237,7 +239,9 @@ final class TranslateController extends AbstractController
             $approved = TranslationProposalStatus::Approved === $proposal->getStatus();
             $published = $approved ? $proposal->getPublishedValue() : null;
             $to = $published ?? $proposal->getProposedValue();
-            $edit = $approved && null !== $published && $published !== $proposal->getProposedValue()
+            // No null check: inside $approved, $published is getPublishedValue(),
+            // which falls back to the proposal rather than returning null.
+            $edit = $approved && $published !== $proposal->getProposedValue()
                 ? [
                     'diff' => TranslationDiff::words($proposal->getProposedValue(), $published),
                     'who' => $this->who($proposal->getReviewerId()),
@@ -348,18 +352,21 @@ final class TranslateController extends AbstractController
         $open = $this->proposals->openFor($user, $locale, $entry);
         $live = $this->browser->liveFor($entry, $locale);
         $proposed = $open?->getProposedValue() ?? '';
+        $standing = $this->consent->current($user);
         $form = $this->createForm(TranslationProposalType::class, [
             'value' => $proposed,
+        ], [
+            'standing' => null !== $standing,
         ]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
             /** @var array{value: string} $data */
             $data = $form->getData();
-            $consent = (bool) $form->get('consent')->getData();
+            $consentTick = $form->has('consent') && (bool) $form->get('consent')->getData();
 
             try {
-                $this->proposals->submit($user, $entry, $locale, (string) $data['value'], $consent);
+                $this->proposals->submit($user, $entry, $locale, (string) $data['value'], $consentTick);
                 $this->addFlash('success', 'translate.flash.submitted');
 
                 return $this->redirectToRoute('translate');
@@ -396,6 +403,7 @@ final class TranslateController extends AbstractController
             'form' => $form,
             'locale' => $locale,
             'open' => $open,
+            'standing' => $standing,
             'change' => null !== $open ? TranslationDiff::words($live['live'], $proposed) : [],
             'proposed_preview' => $form->isSubmitted()
                 ? (string) ($form->get('value')->getData() ?? '')

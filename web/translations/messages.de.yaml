@@ -2421,6 +2421,9 @@ media:
 translate:
   consent:
     contract: 'Ich stimme zu, diese Übersetzung unter CC BY-SA 4.0 zu lizenzieren, und bestätige, dass sie meine eigene Arbeit ist.'
+    standing: 'Du hast der Übersetzungslizenz am %date% zugestimmt. Deine Übersetzungen kommen unter CC BY-SA 4.0 in The Commons.'
+    read_contract: 'Genau ansehen, wozu du zugestimmt hast'
+    site_terms: 'Nutzungsbedingungen'
   kicker: 'Übersetzungen'
   title: 'Die Site übersetzen'
   catalogue: 'Katalog'
@@ -2730,7 +2733,6 @@ moderate_routes:
   region_cap: '%active% / %cap% aktiv'
   stat_ascent: '%v% Anstieg'
   overview:
-    showing: '%shown% von %total% ausstehend'
     empty: 'Momentan keine ausstehenden Routenvorschläge.'
   filter:
     region: 'Region'

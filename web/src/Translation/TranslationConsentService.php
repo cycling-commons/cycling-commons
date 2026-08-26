@@ -48,4 +48,17 @@ final class TranslationConsentService
 
         return $record;
     }
+
+    /** Latest row for this rider and the current wording version, or null. */
+    public function current(User $user): ?ConsentRecord
+    {
+        return $this->em->getRepository(ConsentRecord::class)->findOneBy(
+            [
+                'userId' => (int) $user->getId(),
+                'kind' => TranslationConsent::KIND,
+                'version' => TranslationConsent::VERSION,
+            ],
+            ['consentedAt' => 'DESC'],
+        );
+    }
 }

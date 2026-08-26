@@ -232,10 +232,16 @@ string plus headroom — state the number in the implementation as a named
 constant, not a magic literal). Reject empty strings; a translator who wants
 the YAML default back does not blank the key, they leave it alone.
 
-Submit is refused without an explicit consent tick: the rider licenses
-**this translation** under CC BY-SA 4.0 (§6). Same shape as photo consent
-(photo-uploads.md §5): store a `consent_record` (wording version + hash)
-before the proposal row is written. No default-true checkbox.
+Submit is refused without an explicit consent tick on the first proposal:
+the rider licenses **this translation** under CC BY-SA 4.0 (§6). Same
+shape as photo consent (photo-uploads.md §4–§5): store a `consent_record`
+(wording version + hash) before the proposal row is written. No
+default-true checkbox. **From then on, the given consent is always
+shown.** Once a record exists for the current wording version, later
+keys render a standing notice instead of asking again — "✓ You agreed
+to the translation licence on <date>" — with the contract and the site
+terms one tap away. A new `TranslationConsent::VERSION` brings the tick
+back; never a silent carry-over of stale wording.
 
 ---
 

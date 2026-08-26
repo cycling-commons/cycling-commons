@@ -24,9 +24,6 @@
   <div class="mh">
     <div class="kicker">{{ 'moderate_routes.kicker'|trans }}</div>
     <h1>{{ 'moderate_routes.title'|trans }}</h1>
-    <div>
-      <span class="pend-count">{{ 'moderate_routes.overview.showing'|trans({'%shown%': routes|length, '%total%': total}) }}</span>
-    </div>
   </div>
 
   {% for msg in app.flashes('success') %}<div class="flash-success" role="alert">{{ msg|trans }}</div>{% endfor %}

@@ -28,20 +28,21 @@ final class TranslationProposalType extends AbstractType
     #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
-        $builder
-            ->add('value', TextareaType::class, [
-                'label' => 'translate.form.value',
-                'required' => true,
-                'constraints' => [
-                    new NotBlank(message: 'translate.error.empty'),
-                    new Length(
-                        max: TranslationLimits::PROPOSED_VALUE_MAX,
-                        maxMessage: 'translate.error.too_long',
-                        countUnit: Length::COUNT_BYTES,
-                    ),
-                ],
-            ])
-            ->add('consent', CheckboxType::class, [
+        $builder->add('value', TextareaType::class, [
+            'label' => 'translate.form.value',
+            'required' => true,
+            'constraints' => [
+                new NotBlank(message: 'translate.error.empty'),
+                new Length(
+                    max: TranslationLimits::PROPOSED_VALUE_MAX,
+                    maxMessage: 'translate.error.too_long',
+                    countUnit: Length::COUNT_BYTES,
+                ),
+            ],
+        ]);
+
+        if (true !== $options['standing']) {
+            $builder->add('consent', CheckboxType::class, [
                 'label' => TranslationConsent::TEXT_KEY,
                 'mapped' => false,
                 'required' => false,
@@ -50,6 +51,7 @@ final class TranslationProposalType extends AbstractType
                     new IsTrue(message: 'translate.error.consent_required'),
                 ],
             ]);
+        }
     }
 
     #[\Override]
@@ -57,6 +59,8 @@ final class TranslationProposalType extends AbstractType
     {
         $resolver->setDefaults([
             'csrf_protection' => true,
+            'standing' => false,
         ]);
+        $resolver->setAllowedTypes('standing', 'bool');
     }
 }

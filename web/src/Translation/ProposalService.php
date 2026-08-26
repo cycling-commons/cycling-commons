@@ -45,7 +45,7 @@ final class ProposalService
 
     /**
      * @throws TooManyRequestsHttpException    over the hourly proposal limit
-     * @throws ConsentRequiredException        when the consent tick is false
+     * @throws ConsentRequiredException        when there is no current consent and no tick
      * @throws EnglishNotTranslatableException when locale is en
      * @throws InvalidLocaleException          locale is not a translatable one
      * @throws KeyNotFoundException            when the entry is marked absent
@@ -60,7 +60,8 @@ final class ProposalService
         string $value,
         bool $consentTick,
     ): TranslationProposal {
-        if (!$consentTick) {
+        $currentConsent = $this->consent->current($user);
+        if (!$consentTick && null === $currentConsent) {
             throw new ConsentRequiredException('Consent tick required.');
         }
 
@@ -100,7 +101,7 @@ final class ProposalService
             throw new TooManyRequestsHttpException(null, 'Too many translation proposals.');
         }
 
-        $consentRecord = $this->consent->record($user);
+        $consentRecord = $currentConsent ?? $this->consent->record($user);
 
         $open = $this->findOpenProposal($userId, $locale, $entry);
         if (null !== $open) {

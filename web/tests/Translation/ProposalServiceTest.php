@@ -245,6 +245,24 @@ final class ProposalServiceTest extends KernelTestCase
         self::assertSame('Soumettre', $pb->getProposedValue());
     }
 
+    public function testStandingConsentAllowsALaterKeyWithoutATick(): void
+    {
+        self::bootKernel();
+        $em = $this->em();
+        $user = $this->user($em, 'prop-standing@test.test');
+        $first = $this->entry($em, 'nav.map', 'Map');
+        $later = $this->entry($em, 'nav.home', 'Home');
+
+        $a = $this->svc()->submit($user, $first, 'nl', 'Kaart', true);
+        $beforeConsent = $this->consentCount($em, (int) $user->getId());
+        self::assertGreaterThan(0, $beforeConsent);
+
+        $b = $this->svc()->submit($user, $later, 'nl', 'Start', false);
+        self::assertSame($a->getConsentRecordId()->toRfc4122(), $b->getConsentRecordId()->toRfc4122());
+        self::assertSame($beforeConsent, $this->consentCount($em, (int) $user->getId()));
+        self::assertSame('Start', $b->getProposedValue());
+    }
+
     public function testNeedsInfoResubmitUpdatesInPlaceAndResetsPending(): void
     {
         self::bootKernel();

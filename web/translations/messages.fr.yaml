@@ -2418,6 +2418,9 @@ media:
 translate:
   consent:
     contract: 'J''accepte de placer cette traduction sous licence CC BY-SA 4.0 et je confirme qu''elle est mon propre travail.'
+    standing: 'Vous avez accepté la licence de traduction le %date%. Vos traductions rejoignent le Commons sous CC BY-SA 4.0.'
+    read_contract: 'Voir exactement ce que vous avez accepté'
+    site_terms: 'Conditions du site'
   kicker: 'Traductions'
   title: 'Traduire le site'
   catalogue: 'Catalogue'
@@ -2727,7 +2730,6 @@ moderate_routes:
   region_cap: '%active% / %cap% actifs'
   stat_ascent: '%v% de dénivelé'
   overview:
-    showing: '%shown% sur %total% en attente'
     empty: 'Aucune proposition d''itinéraire en attente pour le moment.'
   filter:
     region: 'Région'

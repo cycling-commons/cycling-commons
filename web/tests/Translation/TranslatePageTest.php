@@ -199,6 +199,40 @@ final class TranslatePageTest extends WebTestCase
         self::assertSame((int) $user->getId(), $proposal->getSubmitterId());
     }
 
+    public function testStandingConsentReplacesTheTickAfterFirstAgreement(): void
+    {
+        $client = static::createClient();
+        $user = $this->createUser('translate-standing@example.com', 'hunter2secure!');
+        $first = $this->seedEntry('home.cta_map', 'Explore the map');
+        $later = $this->seedEntry('nav.home', 'Home');
+        $client->loginUser($user);
+
+        $crawler = $client->request('GET', '/fr/translate/'.$first->getId());
+        self::assertSame(1, $crawler->filter('input[name="translation_proposal[consent]"]')->count());
+        self::assertSame(0, $crawler->filter('.consent-ok')->count());
+
+        $form = $crawler->filter('form[name="translation_proposal"]')->form([
+            'translation_proposal[value]' => 'Explorer la carte',
+            'translation_proposal[consent]' => true,
+        ]);
+        $client->submit($form);
+        self::assertResponseRedirects();
+
+        $crawler = $client->request('GET', '/fr/translate/'.$later->getId());
+        self::assertResponseIsSuccessful();
+        self::assertSame(0, $crawler->filter('input[name="translation_proposal[consent]"]')->count());
+        self::assertSame(1, $crawler->filter('.consent-ok')->count());
+        self::assertSelectorExists('.consent-ok time');
+
+        $before = $this->proposalCount();
+        $form = $crawler->filter('form[name="translation_proposal"]')->form([
+            'translation_proposal[value]' => 'Accueil',
+        ]);
+        $client->submit($form);
+        self::assertResponseRedirects();
+        self::assertSame($before + 1, $this->proposalCount());
+    }
+
     public function testGermanPrefixWorks(): void
     {
         $client = static::createClient();
