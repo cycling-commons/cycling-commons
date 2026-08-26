@@ -81,8 +81,12 @@ final class PublicApiController extends AbstractController
         $query = $request->query->all();
 
         $letter = $query['letter'] ?? null;
-        if (null !== $letter && (!\is_string($letter) || 1 !== preg_match('/^[A-M]$/D', $letter))) {
-            return $this->badRequest('invalid_letter', 'letter must be one catalogue letter A-M (see /v1/map-config categories), or absent for all');
+        // Only letters the catalogue actually defines: a free letter in a half
+        // (practical A-M, experiential N-Z) is not a category yet, so it is a
+        // 400 like any other unknown value, not an empty 200.
+        $known = array_column(CategoryTable::CATEGORIES, 'letter');
+        if (null !== $letter && (!\is_string($letter) || !\in_array($letter, $known, true))) {
+            return $this->badRequest('invalid_letter', 'letter must be one catalogue letter (see /v1/map-config categories: practical A-M, experiential N-Z), or absent for all');
         }
 
         $tier = $query['tier'] ?? null;

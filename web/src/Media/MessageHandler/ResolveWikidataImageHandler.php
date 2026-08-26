@@ -23,7 +23,7 @@ use Symfony\Component\Messenger\MessageBusInterface;
  * It is a separate hop because Wikidata has to be asked before Commons can be,
  * and because a QID with no P18 is an answer worth caching. Measured on
  * 2026-08-24, a 600-item sample of our own scenic rows: 196 have a P18, so
- * 32.7 percent give or take 3.8 points. Against 58,497 letter-I rows carrying a
+ * 32.7 percent give or take 3.8 points. Against 58,497 letter-P rows carrying a
  * `wikidata` tag that is roughly 19,100 photos, against 1,384 from tags alone.
  *
  * @see docs/specs/coverage-provider.md §7

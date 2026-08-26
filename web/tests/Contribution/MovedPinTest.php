@@ -51,7 +51,7 @@ final class MovedPinTest extends WebTestCase
     private function seedItem(): Item
     {
         $em = static::getContainer()->get(EntityManagerInterface::class);
-        $item = (new Item())->setLetter('I')->setName('Viewpoint')
+        $item = (new Item())->setLetter('P')->setName('Viewpoint')
             ->setGeom(\sprintf('{"type":"Point","coordinates":[%s,%s]}', self::OLD_LNG, self::OLD_LAT))
             ->setCountryCode('BE')->setState(ItemState::Unverified)->setSource(ItemSource::Osm)
             ->setSourceRef('node/moved-pin-'.bin2hex(random_bytes(4)))

@@ -70,7 +70,7 @@ final class CatalogContributionServiceTest extends KernelTestCase
         self::assertNotNull($sub);
         self::assertSame(SubmissionType::NewItem, $sub->getType());
         self::assertSame(SubmissionStatus::Pending, $sub->getStatus());
-        self::assertSame('B', $sub->getLetter());
+        self::assertSame('N', $sub->getLetter());
         self::assertSame('BE', $sub->getCountryCode());
         self::assertSame($region->getId(), $sub->getRegionId());
         self::assertNotNull($sub->getItemId());

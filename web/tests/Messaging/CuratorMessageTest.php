@@ -64,7 +64,7 @@ final class CuratorMessageTest extends WebTestCase
     private function seedSubmission(int $userId): Submission
     {
         $em = $this->em();
-        $sub = (new Submission())->setType(SubmissionType::NewItem)->setLetter('B')->setUserId($userId)
+        $sub = (new Submission())->setType(SubmissionType::NewItem)->setLetter('N')->setUserId($userId)
             ->setTitle('Curator-message submission')
             ->setGeom('{"type":"Point","coordinates":[5.86,50.47]}')->setCountryCode('BE')
             ->setChanges([])->setPayload([]);

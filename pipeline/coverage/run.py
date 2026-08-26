@@ -520,6 +520,13 @@ def main(argv=None) -> int:
                          "stop, without building any PMTiles. For continental runs done "
                          "one region at a time (so a failure costs one country, not "
                          "the queue); the tiling pass follows once, over all of them.")
+    ap.add_argument("--tiles-only", action="store_true",
+                    help="skip the harvest and rebuild + publish the coverage artifact "
+                         "from the coverage_poi rows already in the database. For a "
+                         "change that rewrote the index without new OSM data (the "
+                         "2026-08-25 letter renumbering: the tile layers are named "
+                         "<letter>_<cc>, so the artifact had to follow the rows). The "
+                         "manifest's `regions` is the region list given, as for a full run.")
     ap.add_argument("--regions",
                     help="csv of Geofabrik regions (default: $COVERAGE_REGIONS or europe/belgium,europe/netherlands,europe/germany,europe/luxembourg,europe/france,europe/switzerland,europe/great-britain,europe/ireland-and-northern-ireland,europe/italy,australia-oceania/australia,asia/japan,north-america/us/california,north-america/us/colorado,europe/spain)")
     args = ap.parse_args(argv)

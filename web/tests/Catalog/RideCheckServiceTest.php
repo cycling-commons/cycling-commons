@@ -113,14 +113,14 @@ final class RideCheckServiceTest extends KernelTestCase
     public function testFindsItemsInsideCorridorGroupedAndOrdered(): void
     {
         // Two water points ~50 m north of the track, early and late along it.
-        $early = $this->seedItem('C', 'Fontaine early', self::point(50.40045, 5.8050), 'rc-early');
-        $late = $this->seedItem('C', 'Fontaine late', self::point(50.40045, 5.8250), 'rc-late');
+        $early = $this->seedItem('B', 'Fontaine early', self::point(50.40045, 5.8050), 'rc-early');
+        $late = $this->seedItem('B', 'Fontaine late', self::point(50.40045, 5.8250), 'rc-late');
 
         $result = $this->service()->check(self::ride(), 250);
 
         $letters = array_column($result['groups'], 'letter');
-        self::assertContains('C', $letters);
-        $group = $result['groups'][array_search('C', $letters, true)];
+        self::assertContains('B', $letters);
+        $group = $result['groups'][array_search('B', $letters, true)];
         $ids = array_column($group['items'], 'id');
         self::assertSame([$early, $late], $ids, 'items must be ordered by distance along the ride');
         self::assertFalse($group['truncated']);
@@ -241,9 +241,9 @@ final class RideCheckServiceTest extends KernelTestCase
         self::ensureCoverageSchema($this->db());
         // Two water points ~50 m north of the track, early and late along it,
         // plus one ~5 km north (outside every corridor).
-        self::insertCoveragePoi($this->db(), ['letter' => 'C', 'name' => 'OSM fountain early', 'lat' => 50.40045, 'lng' => 5.8050, 'ref' => 'node/cov-early']);
+        self::insertCoveragePoi($this->db(), ['letter' => 'B', 'name' => 'OSM fountain early', 'lat' => 50.40045, 'lng' => 5.8050, 'ref' => 'node/cov-early']);
         self::insertCoveragePoi($this->db(), ['letter' => 'D', 'name' => 'OSM bike pump late', 'lat' => 50.40045, 'lng' => 5.8250, 'ref' => 'node/cov-late']);
-        self::insertCoveragePoi($this->db(), ['letter' => 'C', 'name' => 'OSM far fountain', 'lat' => 50.4450, 'lng' => 5.8150, 'ref' => 'node/cov-far']);
+        self::insertCoveragePoi($this->db(), ['letter' => 'B', 'name' => 'OSM far fountain', 'lat' => 50.4450, 'lng' => 5.8150, 'ref' => 'node/cov-far']);
 
         $result = $this->service()->check(self::ride(), 250);
 
@@ -254,7 +254,7 @@ final class RideCheckServiceTest extends KernelTestCase
         self::assertNotContains('OSM far fountain', $names, 'a point outside the corridor is not listed');
 
         $letters = array_column($result['coverage'], 'letter');
-        $cGroup = $result['coverage'][array_search('C', $letters, true)];
+        $cGroup = $result['coverage'][array_search('B', $letters, true)];
         $first = $cGroup['items'][0];
         self::assertSame('OSM fountain early', $first['name']);
         self::assertEqualsWithDelta(50.40045, $first['ll'][0], 0.0001);
@@ -265,7 +265,7 @@ final class RideCheckServiceTest extends KernelTestCase
     public function testCoverageItemsCarryTheirRef(): void
     {
         self::ensureCoverageSchema($this->db());
-        self::insertCoveragePoi($this->db(), ['letter' => 'C', 'name' => 'OSM ref fountain', 'lat' => 50.40045, 'lng' => 5.8050, 'ref' => 'node/cov-ref']);
+        self::insertCoveragePoi($this->db(), ['letter' => 'B', 'name' => 'OSM ref fountain', 'lat' => 50.40045, 'lng' => 5.8050, 'ref' => 'node/cov-ref']);
 
         $result = $this->service()->check(self::ride(), 250);
 
@@ -301,10 +301,10 @@ final class RideCheckServiceTest extends KernelTestCase
     public function testCoverageExcludesNonUtilityLetters(): void
     {
         self::ensureCoverageSchema($this->db());
-        // E-stay, I-scenic, J-history coverage points right on the track: utility-only.
-        self::insertCoveragePoi($this->db(), ['letter' => 'E', 'name' => 'OSM campsite', 'lat' => 50.4000, 'lng' => 5.8100, 'ref' => 'node/cov-e']);
-        self::insertCoveragePoi($this->db(), ['letter' => 'I', 'name' => 'OSM viewpoint', 'lat' => 50.4000, 'lng' => 5.8150, 'ref' => 'node/cov-i']);
-        self::insertCoveragePoi($this->db(), ['letter' => 'J', 'name' => 'OSM castle', 'lat' => 50.4000, 'lng' => 5.8200, 'ref' => 'node/cov-j']);
+        // O-stay, P-scenic, Q-history coverage points right on the track: utility-only.
+        self::insertCoveragePoi($this->db(), ['letter' => 'O', 'name' => 'OSM campsite', 'lat' => 50.4000, 'lng' => 5.8100, 'ref' => 'node/cov-e']);
+        self::insertCoveragePoi($this->db(), ['letter' => 'P', 'name' => 'OSM viewpoint', 'lat' => 50.4000, 'lng' => 5.8150, 'ref' => 'node/cov-i']);
+        self::insertCoveragePoi($this->db(), ['letter' => 'Q', 'name' => 'OSM castle', 'lat' => 50.4000, 'lng' => 5.8200, 'ref' => 'node/cov-j']);
 
         $names = self::coverageNames($this->service()->check(self::ride(), 250));
         self::assertNotContains('OSM campsite', $names);
@@ -318,10 +318,10 @@ final class RideCheckServiceTest extends KernelTestCase
         // 'node/dup': a served curated item exists for the same ref+letter → the
         // coverage POI is hidden (curated wins). 'node/keep': the only item for
         // that ref is retired (not served) → the coverage POI still shows.
-        $this->seedItem('C', 'Curated fountain', self::point(50.40045, 5.8050), 'dup', ItemState::Unverified);
-        $this->seedItem('C', 'Retired fountain', self::point(50.40045, 5.8250), 'keep', ItemState::Retired);
-        self::insertCoveragePoi($this->db(), ['letter' => 'C', 'name' => 'OSM dup fountain', 'lat' => 50.40045, 'lng' => 5.8050, 'ref' => 'node/dup']);
-        self::insertCoveragePoi($this->db(), ['letter' => 'C', 'name' => 'OSM keep fountain', 'lat' => 50.40045, 'lng' => 5.8250, 'ref' => 'node/keep']);
+        $this->seedItem('B', 'Curated fountain', self::point(50.40045, 5.8050), 'dup', ItemState::Unverified);
+        $this->seedItem('B', 'Retired fountain', self::point(50.40045, 5.8250), 'keep', ItemState::Retired);
+        self::insertCoveragePoi($this->db(), ['letter' => 'B', 'name' => 'OSM dup fountain', 'lat' => 50.40045, 'lng' => 5.8050, 'ref' => 'node/dup']);
+        self::insertCoveragePoi($this->db(), ['letter' => 'B', 'name' => 'OSM keep fountain', 'lat' => 50.40045, 'lng' => 5.8250, 'ref' => 'node/keep']);
 
         $result = $this->service()->check(self::ride(), 250);
         $coverageNames = self::coverageNames($result);

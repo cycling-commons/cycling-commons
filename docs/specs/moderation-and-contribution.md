@@ -53,11 +53,16 @@ interprets them — a real cross-file contract:
 
 **mode=add server side.** `ContributeController::addPlace()` renders the wizard
 (`ImproveType` `add_mode: true` — which injects a **required name** into the
-details pane, since several field sets carry none) for every type except B
-(dedicated /add-climb) and K (/propose-route);
+details pane, since several field sets carry none) for every type except R
+(/propose-route); N (climbs) has been included since 2026-08-25, when the
+dedicated /add-climb wizard was retired (`/add-climb` is a 301 to
+`/improve?type=climbs&mode=add`; [edit-items/N-climbs.md](edit-items/N-climbs.md)).
 `CatalogContributionService::submitAdd()` persists it as a NewItem submission
 (§3.3), with the two drawn endpoints of a segment-located type stored as the
-`segment` attribute (added to `AttributeVocabulary` `EXTRAS['A']`). A stale
+`segment` attribute (added to `AttributeVocabulary` `EXTRAS['A']`), and for a
+climb with the drawn `route`/`grad`/`steep` merged through
+`ClimbGeometry::fromPayload()` and the profile measured by `deriveClimbProfile()`
+(the foot of the route is the pin when the form sent none). A stale
 deep link carrying junk `item` + `mode=add` degrades to the add wizard, not
 the explainer (ImproveTest::testDeepLinkWithItemAndModeReturns200).
 Covered end-to-end by `AddPlaceFlowTest`.
@@ -271,7 +276,7 @@ element bit; they are replaced by a single `#wiz [hidden]{display:none}`.
 
 - The drawer's **Fix location** action is what unlocks a *point* item's pin: a
   point opens its edit form on a compact, view-only confirm map, and
-  `fix=location` is the thing that expands it. **Letter B has no such gate** —
+  `fix=location` is the thing that expands it. **Letter N has no such gate** —
   the three-point editor is live the moment the form opens, foot, summit and
   steepest all draggable. Both links therefore landed on an identical page, and
   a second door into one room reads as a second room. Gated to `'B' !==
@@ -287,7 +292,7 @@ element bit; they are replaced by a single `#wiz [hidden]{display:none}`.
 (2026-08-03, owner request). A climb is not a dropped pin: three points in
 order, with the road between the first two snapped for you, and nothing on
 screen would ever suggest that a *third* tap marks the steepest ramp. Step 1
-therefore carries a four-line how-to for letter B — tap foot then summit, tap
+therefore carries a four-line how-to for letter N — tap foot then summit, tap
 again for the steepest ramp (optional), drag any marker to correct it, and Undo
 takes back the last thing you did.
 
@@ -446,7 +451,7 @@ then `/vote` should stop calling this service at all.
 |---|---|---|
 | `id` | bigint identity | receipt ref is `SUB-<id>` |
 | `type` | varchar(8), enum `SubmissionType` | `new` \| `edit` \| `hazard` \| `photo`; queue renders all four, intake produces `new`/`edit` only (§8) |
-| `letter` | varchar(1) | effective range A–J (K bypasses this table) |
+| `letter` | varchar(1) | effective range A–G, N–Q (R bypasses this table) |
 | `item_id` | bigint NULL | set for `edit` at submit; set for `new` when the item row is created in the same transaction |
 | `user_id` | bigint | submitter — deliberately **no FK** (survives account deletion as anonymous data; see §5.6) |
 | `status` | varchar(12), enum `SubmissionStatus` | `pending` \| `approved` \| `rejected` \| `needs_info` \| `withdrawn` (§3.4) |

@@ -71,7 +71,7 @@ final class CuratedDefaultGateTest extends WebTestCase
     {
         /** @var Connection $db */
         $db = static::getContainer()->get(Connection::class);
-        $letters = ['B', 'E', 'I'];
+        $letters = ['N', 'O', 'P'];
         for ($i = 0; $i < $n; ++$i) {
             $db->executeStatement(
                 "INSERT INTO item (letter, name, source, source_ref, state, country_code, attributes, region_id, geom, created_at, updated_at)

@@ -47,8 +47,8 @@
   };
 
   /* Locate: point / segment / none. Climbs always get a map — the line IS the item
-     (docs/specs/edit-items/B-climbs.md). */
-  var IS_CLIMB = !!(window.CC_ITEM && 'B' === window.CC_ITEM.letter);
+     (docs/specs/edit-items/N-climbs.md). */
+  var IS_CLIMB = !!(window.CC_ITEM && 'N' === window.CC_ITEM.letter);
   var LOCATE = (ADD || hasCoords || RELOCATE || (IS_CLIMB && !!(window.CC_ITEM || {}).route)) ? _locMode : 'off';
 
   // Photos: media-upload.js onChange. Links stay here — onChange replaces its list.
@@ -203,7 +203,7 @@
 
     /* Known-places overlay (ADD): nearby coverage so the pin is not a duplicate. */
     var covLetter = window.CC_ITEM && window.CC_ITEM.letter;
-    if (ADD && covLetter && 'B' !== covLetter) {
+    if (ADD && covLetter && 'N' !== covLetter) {
       var covMarkers = [];
       var covLast = null;
       var covNote = document.getElementById('wz-known');
@@ -247,8 +247,8 @@
       wmap.on('moveend', refreshCov);
     }
 
-    // Climbs: shared three-point editor (docs/specs/edit-items/B-climbs.md).
-    var isClimb = !!(window.CC_ITEM && 'B' === window.CC_ITEM.letter);
+    // Climbs: shared three-point editor (docs/specs/edit-items/N-climbs.md).
+    var isClimb = !!(window.CC_ITEM && 'N' === window.CC_ITEM.letter);
     var climbEditor = null;
     var wzReset = document.getElementById('wzReset');
     var placeAt = null;

@@ -351,13 +351,13 @@ def test_load_region_zero_rows_over_populated_region_aborts(db):
 def test_same_ref_may_carry_two_letters(db):
     ensure_schema(db)
     load_region(db, [
-        _row("node/109", "E", tags={"tourism": "hotel", "historic": "castle"}),
-        _row("node/109", "J", tags={"tourism": "hotel", "historic": "castle"}),
+        _row("node/109", "O", tags={"tourism": "hotel", "historic": "castle"}),
+        _row("node/109", "Q", tags={"tourism": "hotel", "historic": "castle"}),
     ], "europe/belgium")
     letters = {r[0] for r in db.execute(
         "SELECT letter FROM coverage_poi WHERE ref = 'node/109'"
     ).fetchall()}
-    assert letters == {"E", "J"}
+    assert letters == {"O", "Q"}
 
 
 def test_ownership_is_independent_of_load_order(db):

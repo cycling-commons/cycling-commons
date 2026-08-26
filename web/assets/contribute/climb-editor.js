@@ -6,7 +6,7 @@
   var SOURCE_ID = 'cc-climb-editor-route';
   var LAYER_ID = 'cc-climb-editor-route';
 
-  /* Three-point climb editor (docs/specs/edit-items/B-climbs.md,
+  /* Three-point climb editor (docs/specs/edit-items/N-climbs.md,
      docs/specs/climb-elevation.md). Internal coords are [lng,lat]; storage
      is [lat,lng] only at writeHidden() / hydrate(). */
   window.Cc.mountClimbEditor = function (opts) {

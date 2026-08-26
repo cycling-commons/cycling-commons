@@ -59,7 +59,7 @@ final class MaterializeFlowTest extends WebTestCase
         self::ensureCoverageSchema($db);
         self::insertCoveragePoi($db, [
             'ref' => self::REF,
-            'letter' => 'C',
+            'letter' => 'B',
             'name' => 'Waterpunt Geestmerambacht',
             'lat' => 52.66,
             'lng' => 4.77,
@@ -106,7 +106,7 @@ final class MaterializeFlowTest extends WebTestCase
         $this->loginFreshUser($client, 'bound');
         $this->seedWaterPoi();
         $em = static::getContainer()->get(EntityManagerInterface::class);
-        $item = (new Item())->setLetter('C')->setName('Bestaand waterpunt')
+        $item = (new Item())->setLetter('B')->setName('Bestaand waterpunt')
             ->setGeom('{"type":"Point","coordinates":[4.77,52.66]}')->setCountryCode('NL')
             ->setState(ItemState::Unverified)->setSource(ItemSource::Osm)
             ->setSourceRef(self::REF)->setAttributes([]);
@@ -165,7 +165,7 @@ final class MaterializeFlowTest extends WebTestCase
         $em = static::getContainer()->get(EntityManagerInterface::class);
         // A Submitted (not yet served) twin: the GET can't bind it, so the
         // wizard renders — the SUBMIT is where the duplicate must be stopped.
-        $twin = (new Item())->setLetter('C')->setName('Race twin')
+        $twin = (new Item())->setLetter('B')->setName('Race twin')
             ->setGeom('{"type":"Point","coordinates":[4.77,52.66]}')->setCountryCode('NL')
             ->setState(ItemState::Submitted)->setSource(ItemSource::Osm)
             ->setSourceRef(self::REF)->setAttributes([]);

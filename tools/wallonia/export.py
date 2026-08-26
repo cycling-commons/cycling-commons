@@ -30,8 +30,8 @@ OUT = pathlib.Path(__file__).resolve().parent / "out"
 # map-and-search.md §4.5 Phase 2. This module still emits the POI /
 # fixture catalog layers below.
 
-LETTERS = {"services": "D", "scenic": "I", "history": "J",
-           "stays": "E", "shelter": "H", "transit": "G"}
+LETTERS = {"services": "D", "scenic": "P", "history": "Q",
+           "stays": "O", "shelter": "G", "transit": "F"}
 
 
 def slug(text):
@@ -257,9 +257,9 @@ def write(name, payload):
 
 
 def run_fixtures():
-    write("water.json", {"layer": "water", "letter": "C", "features": water_features()})
-    write("stays-pivot.json", {"layer": "stays-pivot", "letter": "E", "features": pivot_features()})
-    write("climbs.json", {"layer": "climbs", "letter": "B", "features": climb_features()})
+    write("water.json", {"layer": "water", "letter": "B", "features": water_features()})
+    write("stays-pivot.json", {"layer": "stays-pivot", "letter": "O", "features": pivot_features()})
+    write("climbs.json", {"layer": "climbs", "letter": "N", "features": climb_features()})
     write("surface.json", {"layer": "surface", "letter": "A", "features": surface_features()})
     write("routes.json", routes_payload())
     write("heat.json", heat_payload())

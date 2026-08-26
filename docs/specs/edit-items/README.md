@@ -9,11 +9,11 @@ service station): each editable type gets its own spec here, documenting what a 
 change, the field-level provenance, and how it's built in the demo vs. production. Having one per
 type is the guarantee that we've thought through the design and implementation options for each.
 
-**K is the deliberate exception** (since 2026-07-08): recommended routes are *curated
+**R is the deliberate exception** (since 2026-07-08): recommended routes are *curated
 compositions* — riders propose (GPX + metadata), vote, confirm rides, and suggest corrections,
 but never edit route data; curators own all edits. See
 [`../route-domain.md`](../route-domain.md) and the rewritten
-[K-quality-rides.md](K-quality-rides.md).
+[R-quality-rides.md](R-quality-rides.md).
 
 These specs are the **design source of truth** for [`atlas/demo/edit-items.js`](../../../atlas/demo/edit-items.js)
 (the registry rendered by [`atlas/demo/improve.html`](../../../atlas/demo/improve.html)) and for the catalog
@@ -23,12 +23,12 @@ These specs are the **design source of truth** for [`atlas/demo/edit-items.js`](
 
 The real, server-rendered port of this registry lives in the Symfony app:
 
-- **Catalog source of truth** — [`web/src/Catalog/`](../../../web/src/Catalog/): `ItemType` (the A–M enum, L skipped
-  carrying letter/label/icon/eyebrow, `locationMode` point/segment/none, and `isVotable()` per the funnel
+- **Catalog source of truth** — [`web/src/Catalog/`](../../../web/src/Catalog/): `ItemType` (the enum of letters A–G and N–R: practical types A–M, experiential N–Z;
+  each carries letter/label/icon/eyebrow, `locationMode` point/segment/none, and `isVotable()` per the funnel
   table below) and `CatalogFormRegistry` (each type's *Fix-details* + *Add-missing* fields, lifted from
   `edit-items.js` to per-type schemas). `LocationMode`, `FieldKind`, `CatalogField`, `ItemFieldSet` support them.
-  For **K** the registry field set backs the *propose-route* and *curator* forms, not a rider improve form —
-  `/improve` refuses `type=K` ([route-domain.md](../route-domain.md) §1).
+  For **R** the registry field set backs the *propose-route* and *curator* forms, not a rider improve form —
+  `/improve` refuses `type=R` ([route-domain.md](../route-domain.md) §1).
 - **Type-aware form** — [`web/src/Form/ImproveType.php`](../../../web/src/Form/ImproveType.php) builds the
   Details step from the registry; [`web/templates/contribute/improve.html.twig`](../../../web/templates/contribute/improve.html.twig)
   renders it and surfaces this **votability/lifecycle context** in the review step —
@@ -40,7 +40,7 @@ The real, server-rendered port of this registry lives in the Symfony app:
   it appears as a small dot others can confirm, a few confirmations make it a full pin.
   **When a term is added here, it does not follow that it appears on a rider's screen.**
 - **Reachability** — the contribute hub deep-links each card with `?type=<slug>`; the map drawer's Edit/Add-photo
-  links use `?type=<letter>` (`ItemType::fromParam()` resolves either) — **except K**: the route drawer offers
+  links use `?type=<letter>` (`ItemType::fromParam()` resolves either) — **except R**: the route drawer offers
   vote / "I rode this" / GPX download / suggest-a-correction instead of an edit link.
 
 **Persistence** — item submissions persist for real since data-API phase B
@@ -67,16 +67,16 @@ every type here:
   moderatable). Hand-authored demo content is seed data with `source='manual'`
   (`App\Catalog\ItemSource::Manual`) — real items in the normal lifecycle, permanently
   distinguishable from `osm`/`pivot`/`wikidata`/`user`/`auto` — never code. Standing documented
-  exception: the single hazard fixture pin (F), inlined in `map.js` with no serving path.
+  exception: the single hazard fixture pin (E), inlined in `map.js` with no serving path.
 - **W5 — change history is user-visible** — see
   [Change history & field-level diffs](#change-history--field-level-diffs) below.
 - **W6 — provenance renders uniformly** across ALL layers and item types; user/manual
   contributions and approved edits are legibly attributed wherever they surface.
 
 **Character vocabulary (D2).** The filterable "what the place is like" attributes are
-live registry fields (never "who it's good for" framing): **effort** (`B`, with a map
-filter), road quality **`sq`** + traffic **`tr`** (`B`, with map filters), **famousFor**
-and **approach** (`B` add-missing free text), **accessibility** (`E`, with a map
+live registry fields (never "who it's good for" framing): **effort** (`N`, with a map
+filter), road quality **`sq`** + traffic **`tr`** (`N`, with map filters), **famousFor**
+and **approach** (`N` add-missing free text), **accessibility** (`O`, with a map
 filter). The map filter chips' vocab lists mirror the registry's (`map.js`,
 `ALL_EFFORT`/`ALL_ACCESS`), with narrowing semantics: with every chip on, items
 with no value still show; deselect one and unvalued items hide too.
@@ -85,7 +85,7 @@ with no value still show; deselect one and unvalued items hide too.
 These panes behave the same across all edit items, so the per-type specs don't repeat them:
 
 **Moderation feedback, messages, retention & trash** *(built)* — every
-contribution channel (item submissions A–J, route proposals, route corrections)
+contribution channel (item submissions A–G and N–Q, route proposals, route corrections)
 inherits the shared feedback system owned by
 [../moderation-and-contribution.md](../moderation-and-contribution.md) (the
 user-messages contract M1–M12, retention/GC, and Trash): every decision writes
@@ -113,9 +113,11 @@ it varies by type:
 - **none** (quality rides) — no pin; the **GPX** track sets the whole route. Upload happens in the
   dedicated rate-limited **propose-route flow** (not `/improve` add-mode), with server-side validation,
   privacy trim, and distance/ascent computation (route-domain.md §4).
-- **climbs** use the dedicated `/add-climb` wizard: draw the **foot**, then the **summit** — the
-  road between them is auto-routed and a lockable **steepest** marker is placed
-  (three-point definition — [B-climbs.md](B-climbs.md)).
+- **climbs** use the same add arm, `/improve?type=climbs&mode=add`, with the shared three-point
+  editor in place of the pin: draw the **foot**, then the **summit**; the road between them is
+  auto-routed, a lockable **steepest** marker is placed, and length, gain and gradients are
+  measured from the DEM, never typed (three-point definition: [N-climbs.md](N-climbs.md)). The
+  dedicated `/add-climb` wizard was retired on 2026-08-25 and is now a 301 to this arm.
 
 **Report a problem** always includes an **Other** option (free-text) alongside the type-specific reasons.
 
@@ -166,7 +168,7 @@ Every catalog item keeps a **per-field change history** — the durable record b
 - **when** — a timestamp.
 
 The history is **append-only** and per item: a submission is one entry, a later correction (by a
-rider or a curator) is another. **For K (routes)** riders never author changes — curator edits and
+rider or a curator) is another. **For R (routes)** riders never author changes — curator edits and
 state transitions write to a route-scoped `route_change_history` table instead (route-domain.md
 §2.2); rider input arrives as moderated `route_suggestion` records. The history is the source of
 truth for:
@@ -230,8 +232,8 @@ The map's three view modes read this ladder from the top down: **Best of**
   Not there anymore*) travels as an ordinary edit, not a stance, and a place
   reported gone leaves the map without handing itself back to OSM
   ([catalog-data-model.md](../catalog-data-model.md) §7). *Out of order* is
-  offered only by the types that have working parts to break — C, D and M
-  (`ItemType::canBreak()`); G, H, I and J get the same vocabulary one answer
+  offered only by the types that have working parts to break — B, C and D
+  (`ItemType::canBreak()`); F, G, P and Q get the same vocabulary one answer
   shorter.
 
 **View modes** (Best of · Confirmed · Everything) are owned by
@@ -244,7 +246,7 @@ Per-pin state carries the trust/vote signal (unverified dot → verified pin →
 the toggle no longer stands in for "trusted". Each per-type spec below tags its **Lifecycle** row
 accordingly.
 
-**Route carve-out (K).** Recommended routes follow the same *shape* but a route-specific machine
+**Route carve-out (R).** Recommended routes follow the same *shape* but a route-specific machine
 ([route-domain.md](../route-domain.md) §3): `submitted` proposals are
 reviewed in a dedicated **Routes queue** (an editorial desk with a per-region active cap and
 retire-to-admit, not the item spam/abuse gate); curator-approved routes render a **"proposed"
@@ -252,7 +254,7 @@ badge** (not the help-confirm dot); the confirmation is **"I rode this"** (`rout
 independent riders) rather than a generic tap; votes are **typed** (season + bike type) and open
 only at `verified`; and the state set adds `retired`. For routes, supply *is* editorially
 hand-picked — the community ranks within the curated set; the "votes, not hand-picking" principle
-above governs the item types A–J.
+above governs the item types A–G and N–Q.
 
 ### Verification threshold (X)
 
@@ -265,7 +267,7 @@ low-traffic regions.
 |---|---|---|---|
 | **Objective utility** | water *existence*, bike services, getting there | ~2 | existence is binary → cheap to confirm |
 | **Experiential / votable** | climbs, where to sleep, scenic views, history | ~2–3 | verification only confirms it *exists*; the **voting** layer does the quality filtering, so no punishing bar |
-| **Routes (K)** | quality rides | X = ~3 "I rode this" | route-specific: confirmation asserts *I rode it*, not *it exists* — `route_ride` rows from independent riders (route-domain.md §6.2 / §5.1, config key `route.ride_verify_threshold`); config, not constant |
+| **Routes (R)** | quality rides | X = ~3 "I rode this" | route-specific: confirmation asserts *I rode it*, not *it exists* — `route_ride` rows from independent riders (route-domain.md §6.2 / §5.1, config key `route.ride_verify_threshold`); config, not constant |
 | **Safety / time-sensitive** | hazards, shelter & emergency, the water *potable* flag | ~1 to publish | publish fast, then rely on **freshness decay** (the `freshness` field) — auto-stale after N days unless re-confirmed |
 
 **Modifiers** adjust the base (floor 1): `[OSM]` provenance −1 (imports arrive source-vetted, and may
@@ -280,7 +282,7 @@ or low-density region −1 (seed coverage early, tighten as the community grows)
   provenance, not tap-confirmations.
 - **Config, not constants** — base X and modifiers are tunable per region / launch phase without a deploy.
 - **Risk can live at the field, not the item** — "this fountain exists" (low X) ≠ "this water is potable"
-  (never fully verifiable → *labelled* "Unsigned — use judgement", not gated). See [C-water-food](C-water-food.md).
+  (never fully verifiable → *labelled* "Unsigned — use judgement", not gated). See [B-water-food](B-water-food.md).
 - The numbers above are **starting points (TBD)** — the *structure* (tiers + modifiers + decay) is what's fixed.
 
 **As built today (2026-08-02): X = 1 for every item type.** `CatalogProvider`'s
@@ -306,18 +308,23 @@ approved.
 | Letter | Type | Spec | Map | Votable? | Editable |
 |---|---|---|---|---|---|
 | **A** | Road surface | [A-road-surface.md](A-road-surface.md) | line (by surface) | utility | yes |
-| **B** | Climbs | [B-climbs.md](B-climbs.md) | line + foot pin | **votable** | yes |
-| **C** | Water & food | [C-water-food.md](C-water-food.md) | pin | utility | yes (2 fountains → 1 edit item) |
+| **B** | Water & food | [B-water-food.md](B-water-food.md) | pin | utility | yes (2 fountains → 1 edit item) |
+| **C** | Public toilets | [C-public-toilets.md](C-public-toilets.md) | pin | utility | yes |
 | **D** | Bike services | [D-bike-services.md](D-bike-services.md) | pin | utility | yes (default edit item) |
-| **E** | Where to sleep | [E-where-to-sleep.md](E-where-to-sleep.md) | pin | **votable** | yes |
-| **F** | Hazards & conditions | [F-hazards.md](F-hazards.md) | pin | utility | yes |
-| **G** | Getting there | [G-getting-there.md](G-getting-there.md) | pin | utility | yes |
-| **H** | Shelter | [H-shelter.md](H-shelter.md) | pin | utility | yes |
-| **I** | Scenic views | [I-scenic-views.md](I-scenic-views.md) | pin | **votable** | yes |
-| **J** | History & culture | [J-history-culture.md](J-history-culture.md) | pin | **votable** | yes |
-| **K** | Quality rides | [K-quality-rides.md](K-quality-rides.md) | line + GPX | **votable** (typed: season + bike type) | **no — curator-only**; riders propose / vote / rode-it / suggest |
-| **L** | Ride heatmap | — | derived overlay | — | **no** (auto/aggregate, never per-rider) |
-| **M** | Public toilets | [M-public-toilets.md](M-public-toilets.md) | pin | utility | yes (**displayed** after C — letters are identifiers, not order) |
+| **E** | Hazards & conditions | [E-hazards.md](E-hazards.md) | pin | utility | yes |
+| **F** | Getting there | [F-getting-there.md](F-getting-there.md) | pin | utility | yes |
+| **G** | Shelter | [G-shelter.md](G-shelter.md) | pin | utility | yes |
+| **N** | Climbs | [N-climbs.md](N-climbs.md) | line + foot pin | **votable** | yes |
+| **O** | Where to sleep | [O-where-to-sleep.md](O-where-to-sleep.md) | pin | **votable** | yes |
+| **P** | Scenic views | [P-scenic-views.md](P-scenic-views.md) | pin | **votable** | yes |
+| **Q** | History & culture | [Q-history-culture.md](Q-history-culture.md) | pin | **votable** | yes |
+| **R** | Quality rides | [R-quality-rides.md](R-quality-rides.md) | line + GPX | **votable** (typed: season + bike type) | **no — curator-only**; riders propose / vote / rode-it / suggest |
+| (none) | Ride heatmap | — | derived overlay | — | **no** (auto/aggregate, never per-rider) |
 
-L is intentionally not editable: it is a derived, anonymized aggregate,
-which is why M · Public toilets skips over it.
+**Letters renumbered 2026-08-25.** Practical types take A–M, experiential
+(votable) types take N–Z, so each half can grow without colliding. Old -> new:
+B->N, C->B, E->O, F->E, G->F, H->G, I->P, J->Q, K->R, M->C; A and D unchanged.
+Letters are identifiers, not display order.
+
+The ride heatmap has no letter: it is a derived, anonymized aggregate, not a
+catalogue type, and is never editable.

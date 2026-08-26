@@ -60,7 +60,7 @@ function renderPlaceCard(name, meta, near, covGroups){
       if(!it || !Array.isArray(it.ll)) return;
       if(it.itemId!=null && idxIds().has(g.letter+':'+it.itemId)) return;
       all.push({dist:haversine(meta.ll, it.ll), e:{name:it.n||layer.label, kind:layer.label,
-        badge:layer.icon, color:layer.color, letter:g.letter, ll:it.ll, hlOff:[0,0], community:!it.curated,
+        badge:layerGlyph(layer), color:layer.color, letter:g.letter, ll:it.ll, hlOff:[0,0], community:!it.curated,
         go:()=>openCoverageByRef(it.ref, g.letter, it.ll, it.n, it.itemId)}});
     });
   });

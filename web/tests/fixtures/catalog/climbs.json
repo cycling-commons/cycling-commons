@@ -1,2 +1,2 @@
-{"layer":"climbs","letter":"B","features":[
+{"layer":"climbs","letter":"N","features":[
  {"type":"Feature","properties":{"headline":"1.0 km · 5% avg","cur":true,"sq":"Good","tr":"Quiet","record":[{"label":"Length","value":"1.0 km"}],"attribution":"Wikidata (P625) · OpenStreetMap","desc":"A test climb.","descTr":1,"route":[[50.61,4.41],[50.62,4.42]],"grad":[5,6],"steep":{"at":[50.615,4.415],"pct":"~8%"},"n":"Côte de Test","source":"wikidata","ref":"Q999001"},"geometry":{"type":"Point","coordinates":[4.41,50.61]}}]}

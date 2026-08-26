@@ -34,7 +34,7 @@
      three separate one-off patches that each fixed one element after it bit. */
   #wiz [hidden]{display:none}
   .field{margin-bottom:1.3rem}
-  .field label{display:block;font-family:var(--mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:#5a5d4d;margin-bottom:.4rem}
+  .field label{display:block;font-family:var(--mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:#A0472A;margin-bottom:.4rem}  /* clay, darkened to 4.94:1; same as /add-climb (owner 2026-08-25) */
   /* Details step: two columns on wide screens — the stacked full-width fields
      wasted half the pane. Textareas and checkbox groups span both columns. */
   .fgrid{display:grid;grid-template-columns:1fr 1fr;gap:0 2.4rem}
@@ -52,7 +52,7 @@
   .field[data-f="width"] input{max-width:22rem}
   .field textarea{border:1.5px solid rgba(20,22,14,.25);border-radius:6px;padding:.7rem;min-height:80px;resize:vertical}
   .field input:focus,.field textarea:focus{border-color:var(--trail)}
-  .field .fhelp{font-family:var(--mono);font-size:.62rem;color:#9a9d8c;margin-top:.35rem;text-transform:none;letter-spacing:0}
+  .field .fhelp{font-family:var(--mono);font-size:.78rem;line-height:1.5;color:#5a5d4d;margin-top:.4rem;text-transform:none;letter-spacing:0}  /* same readable size and AA colour as add-climb (owner 2026-08-25) */
 
   /* Multi-select fields (stays' accessibility) render as the site's orange
      chips, the same look as the route form's bike types and the map rail's
@@ -108,6 +108,13 @@
   .readout #wzReset,.readout #wzUndo{color:var(--clay);cursor:pointer;text-transform:uppercase;letter-spacing:.1em;font-size:.64rem}
   .readout #wzUndo{margin-left:auto}
   /* How to place a climb — read before the map, not after a mistake. */
+  .wmap-stage{position:relative}
+  .map-hint{position:absolute;top:.8rem;left:50%;transform:translateX(-50%);z-index:5;pointer-events:none;max-width:calc(100% - 2rem);text-align:center;font-family:var(--mono);font-size:.76rem;letter-spacing:.04em;color:var(--ink);background:rgba(239,230,212,.96);border:1px solid rgba(20,22,14,.18);border-radius:999px;padding:.45rem .9rem;box-shadow:0 8px 20px -12px rgba(20,22,14,.6)}
+  .map-hint[hidden]{display:none}
+  .wz-measured{display:flex;flex-wrap:wrap;gap:.6rem 2rem;margin:.8rem 0 0}
+  .wz-measured div{display:flex;flex-direction:column;gap:.15rem}
+  .wz-measured dt{font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:#595c4d}
+  .wz-measured dd{margin:0;font-size:1.05rem;color:var(--ink)}
   .climb-howto{margin:0 0 .9rem;padding:.75rem 1rem .75rem 2.1rem;background:var(--paper-deep);
     border-left:2px solid var(--trail);border-radius:0 6px 6px 0;font-size:.86rem;line-height:1.55;color:#4a4d40}
   .climb-howto li{margin:.18rem 0}
@@ -333,7 +340,7 @@
   <p class="sub">{{ (add_mode|default(false) ? 'contribute.add.lead' : 'improve.lead')|trans }}</p>
 
   {# The bound item's letter + current climb shape (route/grad/steep), for
-     improve.js step 1: a climb (letter B) mounts the shared three-point
+     improve.js step 1: a climb (letter N) mounts the shared three-point
      editor instead of the single-pin Locate (Task 5). Only emitted here —
      the unbound branch above never reaches this template region. #}
   <script nonce="{{ csp_nonce() }}">window.CC_ITEM = {{ {letter: item_type.letter, lat: item_lat|default(null), lng: item_lng|default(null), route: current.route|default(null), grad: current.grad|default(null), steep: current.steep|default(null), steepPoint: current.steepPoint|default(null), segment: current.segment|default(null)}|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
@@ -521,7 +528,7 @@
        step you are on, but a rider needs to know the whole shape BEFORE they
        start — especially that a third tap marks the steepest ramp, which
        nothing else on screen would ever suggest (owner request 2026-08-03). #}
-    {% if item_type.letter == 'B' %}
+    {% if item_type.letter == 'N' %}
       <ol class="climb-howto">
         <li>{{ 'js.climb_how_1'|trans }}</li>
         <li>{{ 'js.climb_how_2'|trans }}</li>
@@ -529,7 +536,13 @@
         <li>{{ 'js.climb_how_4'|trans }}</li>
       </ol>
     {% endif %}
-    <div id="wmap" role="application" aria-label="{{ 'improve.step1.map_aria'|trans }}"></div>
+    <div class="wmap-stage">
+      <div id="wmap" role="application" aria-label="{{ 'improve.step1.map_aria'|trans }}"></div>
+      {% if item_type.letter == 'N' %}
+        {# The next tap, on the map itself; improve.js keeps it in step with the readout. #}
+        <div id="wz-mapHint" class="map-hint" aria-hidden="true" hidden>{{ 'improve.step1.readout_climb_foot'|trans }}</div>
+      {% endif %}
+    </div>
     <button type="button" id="wzChange" class="btn btn-g" hidden>◎ {{ 'improve.locate.change'|trans }}</button>
     <div class="readout">
       <span id="wz-readout">{{ 'improve.step1.readout_initial'|trans }}</span>
@@ -539,6 +552,16 @@
       <span id="wzUndo" role="button" tabindex="0" hidden>{{ 'js.climb_undo'|trans }}</span>
       <span id="wzReset" role="button" tabindex="0">{{ 'improve.step1.reset'|trans }}</span>
     </div>
+    {% if item_type.letter == 'N' %}
+      {# What the elevation model measured along the line: shown, never typed
+         (docs/specs/climb-elevation.md §4). Filled by improve.js. #}
+      <dl class="wz-measured" id="wz-measured" hidden>
+        <div><dt>{{ 'improve.step1.measured_length'|trans }}</dt><dd id="wzm-len">—</dd></div>
+        <div><dt>{{ 'improve.step1.measured_gain'|trans }}</dt><dd id="wzm-gain">—</dd></div>
+        <div><dt>{{ 'improve.step1.measured_avg'|trans }}</dt><dd id="wzm-avg">—</dd></div>
+        <div><dt>{{ 'improve.step1.measured_max'|trans }}</dt><dd id="wzm-max">—</dd></div>
+      </dl>
+    {% endif %}
     {% if item_type.locationMode.value == 'segment' %}
       {# The one gesture nobody discovers on their own (owner 2026-08-14):
          control points exist, and the same gesture removes them. Static text,

@@ -63,7 +63,7 @@ final class CatalogProviderTest extends KernelTestCase
         // These fixtures assert payload SHAPE, so promote them to verified
         // (still a served state) instead of re-plumbing every assertion.
         $this->em->getConnection()->executeStatement(
-            "UPDATE item SET state = 'verified' WHERE letter IN ('C','D','E','G','H','I','J')",
+            "UPDATE item SET state = 'verified' WHERE letter IN ('B','D','F','G','O','P','Q')",
         );
     }
 
@@ -230,27 +230,51 @@ final class CatalogProviderTest extends KernelTestCase
     }
 
     /**
-     * featureForItem() serves B · climbs too.
+     * featureForItem() serves N · climbs too.
      *
      * Approving an EDIT has to refresh the item the curator is looking at, and
      * the drawer can only do that from the item's served shape. Climbs used to
-     * be excluded with A and K, so approving a climb edit left the map and the
+     * be excluded with A and R, so approving a climb edit left the map and the
      * drawer showing the pre-edit values until a full page reload
      * (owner-reported 2026-08-03). Rebuilt through the SAME mapper the bulk
      * payload uses, so the live-updated climb cannot drift from the served one.
      */
     public function testFeatureForItemRebuildsAClimbInItsOwnShape(): void
     {
-        $bulk = $this->payload()['B'][0];
+        $bulk = $this->payload()['N'][0];
 
         $one = static::getContainer()->get(CatalogProvider::class)->featureForItem($bulk['id']);
 
         self::assertNotNull($one);
-        self::assertSame('B', $one['letter']);
+        self::assertSame('N', $one['letter']);
         self::assertArrayHasKey('climb', $one, 'a climb comes back as a climb, not a GeoJSON feature');
         self::assertArrayNotHasKey('feature', $one);
         // Byte-identical to the bulk payload's entry: one mapper, two callers.
         self::assertSame($bulk, $one['climb']);
+    }
+
+    /**
+     * A submitted (not yet served) item must stay out of every payload, but a
+     * curator reviewing it on the map needs its final form: `anyState` opens
+     * the one-item mapper for that preview only (owner 2026-08-25).
+     */
+    public function testFeatureForItemPreviewsASubmittedItemOnlyWhenAsked(): void
+    {
+        $bulk = $this->payload()['N'][0];
+        $db = static::getContainer()->get(\Doctrine\DBAL\Connection::class);
+        $provider = static::getContainer()->get(CatalogProvider::class);
+
+        $db->executeStatement("UPDATE item SET state = 'submitted' WHERE id = :id", ['id' => $bulk['id']]);
+        try {
+            self::assertNull($provider->featureForItem($bulk['id']), 'served payloads keep the state gate');
+            $one = $provider->featureForItem($bulk['id'], anyState: true);
+            self::assertNotNull($one);
+            self::assertSame('N', $one['letter']);
+            self::assertSame($bulk['name'], $one['climb']['name']);
+            self::assertArrayHasKey('route', $one['climb']);
+        } finally {
+            $db->executeStatement("UPDATE item SET state = 'verified' WHERE id = :id", ['id' => $bulk['id']]);
+        }
     }
 
     public function testSurfaceSegmentDecodesWayIdAndFlipsPath(): void
@@ -290,8 +314,8 @@ final class CatalogProviderTest extends KernelTestCase
             "SELECT id FROM region WHERE slug = 'test-square'",
         );
         self::assertGreaterThan(0, $regionId);
-        // heat() is its own endpoint now, not a catalog letter (2026-08-09).
-        self::assertArrayNotHasKey('L', $p);
+        // heat() is its own endpoint now, a derived layer with no catalog letter (2026-08-09).
+        self::assertArrayNotHasKey('heat', $p);
         self::assertSame(
             [[50.5, 4.5, 'summer', $regionId], [50.6, 4.6, 'winter', $regionId]],
             static::getContainer()->get(CatalogProvider::class)->heat(),
@@ -415,16 +439,16 @@ final class CatalogProviderTest extends KernelTestCase
 
     public function testClimbAndSurfaceCarryRealVerifiedFlag(): void
     {
-        // Climbs (B) and surface segments (A) serve through their own shapes,
+        // Climbs (N) and surface segments (A) serve through their own shapes,
         // not featureCollection() — they must still carry the SAME real
         // verified signal (map-and-search.md §12: v:1 = verified state OR ≥1
         // confirmation), or the map's index mislabels every DB-verified climb
         // as community. Imported seeds are unverified: no 'v' key (byte-stable).
-        self::assertArrayNotHasKey('v', $this->payload()['B'][0]);
+        self::assertArrayNotHasKey('v', $this->payload()['N'][0]);
         self::assertArrayNotHasKey('v', $this->payload()['A'][0]);
 
         $conn = $this->em->getConnection();
-        $conn->executeStatement("UPDATE item SET state = 'verified' WHERE letter = 'B'");
+        $conn->executeStatement("UPDATE item SET state = 'verified' WHERE letter = 'N'");
         // A takes the confirmation branch so both derivation legs are pinned.
         $segId = $this->payload()['A'][0]['id'];
         $conn->executeStatement(
@@ -530,11 +554,11 @@ final class CatalogProviderTest extends KernelTestCase
         $gone = $provider->goneForMap(ModerationScope::global());
         $mine = array_values(array_filter($gone, static fn (array $g): bool => 'GoneTap' === $g['name']));
         self::assertCount(1, $mine);
-        self::assertSame('C', $mine[0]['letter']);
+        self::assertSame('B', $mine[0]['letter']);
         self::assertEqualsWithDelta(50.65, $mine[0]['lat'], 0.001);
 
         // Still invisible to riders: the served payload keeps excluding it.
-        $served = array_column($this->payload()['C']['features'], 'properties');
+        $served = array_column($this->payload()['B']['features'], 'properties');
         self::assertNotContains('GoneTap', array_column($served, 'n'));
     }
 

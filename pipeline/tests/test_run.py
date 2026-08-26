@@ -280,3 +280,56 @@ def test_timings_are_listed_slowest_first_and_mark_failures(capsys):
 def test_timings_stay_quiet_when_no_region_ran(capsys):
     _print_timings([], 0.0)
     assert capsys.readouterr().out == ""
+
+
+def test_main_tiles_only_skips_the_harvest_and_still_publishes(monkeypatch, tmp_path):
+    """--tiles-only: no fetch/extract/load for any region, but the artifact is
+    still exported, built, verified, uploaded and pruned in that order, with
+    the manifest carrying the region list given. Added for the 2026-08-25
+    letter renumbering: the rows changed, the OSM data did not."""
+    calls = []
+    manifests = []
+
+    class FakeResult:
+        def fetchall(self):
+            return [("B", 3)]
+
+        def fetchone(self):
+            return (True,)
+
+    class FakeConn:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+        def execute(self, sql, params=None):
+            return FakeResult()
+
+        def commit(self):
+            pass
+
+    monkeypatch.setenv("COVERAGE_WORKDIR", str(tmp_path))
+    monkeypatch.setattr(run.psycopg, "connect", lambda dsn: FakeConn())
+    monkeypatch.setattr(run, "ensure_schema", lambda conn: calls.append("schema"))
+    monkeypatch.setattr(run, "resolve_country", lambda region: calls.append("resolve"))
+    monkeypatch.setattr(run, "fetch_pbf", lambda region, workdir: calls.append("fetch"))
+    monkeypatch.setattr(run, "run_extract", lambda pbf, out, contract: calls.append("extract"))
+    monkeypatch.setattr(run, "parse_pois", lambda pbf, contract, region, cc: calls.append("parse"))
+    monkeypatch.setattr(run, "load_region", lambda conn, rows, region, cc: calls.append("load"))
+    monkeypatch.setattr(
+        run, "export_geojsonl",
+        lambda conn, wd: calls.append("export") or {("B", "BE"): tmp_path / "b.geojsonl"})
+    monkeypatch.setattr(run, "build_pmtiles", lambda lf, out: calls.append("build"))
+    monkeypatch.setattr(run, "verify_pmtiles", lambda path, expected_layers=None: calls.append("verify"))
+    monkeypatch.setattr(run, "ensure_bucket", lambda: calls.append("bucket"))
+    monkeypatch.setattr(run, "upload", lambda artifact, manifest: manifests.append(manifest) or calls.append("upload") or "u")
+    monkeypatch.setattr(run, "prune", lambda keep=4: calls.append("prune") or [])
+
+    rc = run.main(["--tiles-only", "--regions", "europe/belgium"])
+
+    assert rc == 0
+    assert not {"resolve", "fetch", "extract", "parse", "load"} & set(calls)
+    assert calls == ["schema", "export", "build", "verify", "bucket", "upload", "prune"]
+    assert manifests == [{"counts": {"B": 3}, "regions": ["europe/belgium"], "country_codes": ["BE"]}]

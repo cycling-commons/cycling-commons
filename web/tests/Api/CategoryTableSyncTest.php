@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace App\Tests\Api;
 
 use App\Api\V1\CategoryTable;
+use App\Catalog\ItemType;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -24,7 +25,7 @@ final class CategoryTableSyncTest extends TestCase
         $js = (string) file_get_contents(__DIR__.'/../../assets/map/catalog.js');
 
         preg_match_all(
-            "/key:'(?<key>\\w+)',\\s*letter:'(?<letter>[A-M])',\\s*label:LAYER_L10N\\.\\w+\\|\\|'(?<label>[^']+)',\\s*color:'(?<color>#[0-9A-Fa-f]{6})',\\s*icon:'(?<icon>[^']+)',\\s*kind:'(?<kind>\\w+)',\\s*exp:(?<exp>true|false)/u",
+            "/key:'(?<key>\\w+)',\\s*letter:'(?<letter>[A-Z])',\\s*label:LAYER_L10N\\.\\w+\\|\\|'(?<label>[^']+)',\\s*color:'(?<color>#[0-9A-Fa-f]{6})',\\s*icon:TYPE_ICON\\('(?<icon>[A-Z])'\\),\\s*kind:'(?<kind>\\w+)',\\s*exp:(?<exp>true|false)/u",
             $js,
             $matches,
             \PREG_SET_ORDER,
@@ -35,7 +36,8 @@ final class CategoryTableSyncTest extends TestCase
             'key' => $m['key'],
             'label' => $m['label'],
             'color' => $m['color'],
-            'glyph' => $m['icon'],
+            // catalog.js asks the shared set by letter; the API resolves the same set.
+            'glyph' => ItemType::iconSet()[$m['icon']]['glyph'],
             'kind' => $m['kind'],
             // catalog.js `exp` is what the map's Best of mode SHOWS; the API
             // publishes it under the consumer-facing name.
@@ -43,7 +45,7 @@ final class CategoryTableSyncTest extends TestCase
         ], $matches);
 
         self::assertNotEmpty($fromJs, 'the CATALOG regex no longer matches catalog.js: update the parser AND check CategoryTable');
-        self::assertSame($fromJs, CategoryTable::CATEGORIES, 'CategoryTable::CATEGORIES drifted from assets/map/catalog.js CATALOG');
+        self::assertSame($fromJs, CategoryTable::categories(), 'CategoryTable::categories() drifted from assets/map/catalog.js CATALOG');
     }
 
     public function testRouteStyleGroupsMirrorRoutesTilesJs(): void
@@ -75,7 +77,7 @@ final class CategoryTableSyncTest extends TestCase
         $js = (string) file_get_contents(__DIR__.'/../../assets/map/coverage.js');
 
         self::assertSame(1, preg_match('/export const COVERAGE_KEYS=\[(.+?)\];/', $js, $keys));
-        preg_match_all("/\\['\\w+','([a-m])'\\]/", $keys[1], $letters);
+        preg_match_all("/\\['\\w+','([a-z])'\\]/", $keys[1], $letters);
 
         self::assertSame($letters[1], CategoryTable::COVERAGE_LETTERS, 'COVERAGE_LETTERS drifted from assets/map/coverage.js COVERAGE_KEYS');
     }

@@ -12,7 +12,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * The resolver's real job is refusing things.
  *
- * Measured over 487,704 letter-I rows on 2026-08-24: 1,274 carry `image`, and
+ * Measured over 487,704 letter-P rows on 2026-08-24: 1,274 carry `image`, and
  * only 639 of those point at Commons. 1,850 carry `wikimedia_commons`, and
  * 1,107 of those name a Category rather than a file. Every refusal below is a
  * shape that exists in the harvest today, not a hypothetical.

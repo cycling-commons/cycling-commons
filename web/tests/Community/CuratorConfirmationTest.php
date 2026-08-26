@@ -46,7 +46,7 @@ final class CuratorConfirmationTest extends KernelTestCase
         return $u;
     }
 
-    private function item(string $letter = 'J', ItemState $state = ItemState::Unverified): Item
+    private function item(string $letter = 'Q', ItemState $state = ItemState::Unverified): Item
     {
         $item = (new Item())->setLetter($letter)->setName('Muiderslot')
             ->setGeom('{"type":"Point","coordinates":[5.07,52.33]}')->setCountryCode('NL')

@@ -17,7 +17,7 @@ use Symfony\Contracts\Cache\ItemInterface;
 /**
  * Retires closures whose stated window has run out. Clock starts at last observation, not created_at. Retire, never delete. `form` confirmations do not count.
  *
- * @see docs/specs/edit-items/F-hazards.md (Closures expire themselves)
+ * @see docs/specs/edit-items/E-hazards.md (Closures expire themselves)
  *
  * @api
  */
@@ -56,7 +56,7 @@ final class ClosureExpiryService
                                      AND c.source <> 'form'), i.created_at)
                     ) AS observed_at
              FROM item i
-             WHERE i.letter = 'F'
+             WHERE i.letter = 'E'
                AND i.state IN ".ItemState::servedSqlTuple()."
                AND i.attributes->>'hazardType' = :closed
              ORDER BY observed_at DESC",

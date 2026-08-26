@@ -42,7 +42,7 @@ final class OutboundLinksEditorTest extends WebTestCase
     {
         /** @var EntityManagerInterface $em */
         $em = static::getContainer()->get(EntityManagerInterface::class);
-        $item = (new Item())->setLetter('J')->setName('Muiderslot '.$ref)
+        $item = (new Item())->setLetter('Q')->setName('Muiderslot '.$ref)
             ->setGeom('{"type":"Point","coordinates":[5.0718,52.3341]}')->setCountryCode('BE')
             ->setState(ItemState::Unverified)->setSource(ItemSource::Manual)->setSourceRef('manual:'.$ref)
             ->setAttributes($attributes);

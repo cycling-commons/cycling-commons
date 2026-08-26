@@ -22,8 +22,8 @@ final class RideCheckService
     public const array ALLOWED_RADII = [100, 250, 500, 1000];
     public const int DEFAULT_RADIUS = 250;
 
-    /** Utility coverage letters (C/D/G/H). Experiential E/I/J stay on the curated arm. */
-    public const array COVERAGE_LETTERS = ['C', 'D', 'G', 'H'];
+    /** Utility coverage letters (B/D/F/G). Experiential O/P/Q stay on the curated arm. */
+    public const array COVERAGE_LETTERS = ['B', 'D', 'F', 'G'];
 
     /* Public so the controller can format bounds in the reader's units. docs/specs/account-and-auth.md §9 */
     public const int MIN_RAW_M = 500;

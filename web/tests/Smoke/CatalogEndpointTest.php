@@ -32,7 +32,7 @@ final class CatalogEndpointTest extends WebTestCase
         // test asserts payload SHAPE, so promote the fixtures to verified
         // (still a served state) exactly like CatalogProviderTest::import().
         static::getContainer()->get(\Doctrine\ORM\EntityManagerInterface::class)->getConnection()->executeStatement(
-            "UPDATE item SET state = 'verified' WHERE letter IN ('C','D','E','G','H','I','J')",
+            "UPDATE item SET state = 'verified' WHERE letter IN ('B','D','F','G','O','P','Q')",
         );
 
         $client->request('GET', '/map/catalog.json');
@@ -45,16 +45,17 @@ final class CatalogEndpointTest extends WebTestCase
 
         /** @var array<string, mixed> $data */
         $data = json_decode((string) $response->getContent(), true, 512, \JSON_THROW_ON_ERROR);
-        // No 'L': the heat points moved to /map/heat.json on 2026-08-09 so
+        // No heat key: the heat points are a derived layer without a
+        // catalogue letter, served from /map/heat.json since 2026-08-09 so
         // they stop riding the critical payload for an Off-by-default layer.
-        foreach (['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K'] as $letter) {
+        foreach (['A', 'B', 'C', 'D', 'E', 'F', 'G', 'N', 'O', 'P', 'Q', 'R'] as $letter) {
             self::assertArrayHasKey($letter, $data);
         }
         self::assertArrayHasKey('refs', $data);            // Plan 2 Task 13: curated-OSM refs for tile dedupe
         self::assertContains('node/1001', $data['refs']);
         self::assertCount(3, $data['D']['features']);
-        self::assertCount(1, $data['K']);
-        self::assertArrayNotHasKey('L', $data, 'the heat points are not on the critical payload');
+        self::assertCount(1, $data['R']);
+        self::assertArrayNotHasKey('heat', $data, 'the heat points are not on the critical payload');
 
         // Conditional revalidation: replaying the ETag yields 304 with no body.
         $client->request('GET', '/map/catalog.json', [], [], ['HTTP_IF_NONE_MATCH' => $response->getEtag()]);

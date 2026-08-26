@@ -407,7 +407,7 @@ features living inside a tile, nothing to do with anything drawn on screen. Chap
 (`on-screen.md`) gives this exact idea its MapLibre name, `source-layer`; for now, just picture a
 layer as a named group of features packed inside a tile. The obvious design is one layer per
 catalogue letter (chapter 6,
-`osm-to-database.md`, covers what the letters mean): `c` for water, `d` for services, and so on. That
+`osm-to-database.md`, covers what the letters mean): `b` for water, `d` for services, and so on. That
 is what this project shipped first, and it worked, right up until a second bordering country
 (the Netherlands) was onboarded next to the first (Belgium).
 
@@ -420,7 +420,7 @@ two, and whose unioned `ridtok`/`cctok` scope tokens could make that mixed bubbl
 it should not have. The measured before-picture, recorded in `coverage-provider.md §4`: under a
 Netherlands-only scope, 42 clusters rendered pure-NL, 31 mixed, and 0 pure-BE. The fix in
 `build_pmtiles()` and `export_geojsonl()` (both in `pipeline/coverage/tiles.py`) was to give tippecanoe
-one layer per **`(letter, country_code)`** pair instead of one per letter — `c_be`, `c_nl`, and so on,
+one layer per **`(letter, country_code)`** pair instead of one per letter — `b_be`, `b_nl`, and so on,
 lowercase, with unstamped rows bucketed under `<letter>_zz` so a POI that could not be matched to a
 country is never silently dropped.
 
@@ -523,17 +523,17 @@ from.
     ```text
      letter | country_code | count
     --------+--------------+-------
-     C      | ZZ           |     1
+     B      | ZZ           |     1
      D      | ZZ           |     2
-     E      | ZZ           |     2
+     F      | ZZ           |     1
      G      | ZZ           |     1
-     H      | ZZ           |     1
-     I      | ZZ           |     1
-     J      | ZZ           |     2
+     O      | ZZ           |     2
+     P      | ZZ           |     1
+     Q      | ZZ           |     2
     (7 rows)
     ```
 
-    Seven letters, seven groups, seven layers — `c_zz`, `d_zz`, `e_zz` and so on. `ZZ` is not a
+    Seven letters, seven groups, seven layers — `b_zz`, `d_zz`, `f_zz` and so on. `ZZ` is not a
     country: it is what `coalesce` substitutes when `country_code` is `NULL`, and the offline fixture
     leaves it `NULL` on purpose. `country_code` is stamped from the region a row falls inside, and
     `make course-data` loads no region boundaries (those come from a separate, network-bound

@@ -169,7 +169,7 @@ final class RiderProfileTest extends WebTestCase
         $em = static::getContainer()->get(EntityManagerInterface::class);
 
         $mk = static function (SubmissionType $type, SubmissionStatus $status, int $uid): Submission {
-            return (new Submission())->setType($type)->setLetter('C')->setUserId($uid)
+            return (new Submission())->setType($type)->setLetter('B')->setUserId($uid)
                 ->setStatus($status)->setTitle('row')
                 ->setGeom('{"type":"Point","coordinates":[6.0,50.4]}')->setCountryCode('BE')
                 ->setChanges([])->setPayload([]);

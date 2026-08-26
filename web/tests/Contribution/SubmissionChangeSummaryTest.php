@@ -90,17 +90,17 @@ final class SubmissionChangeSummaryTest extends TestCase
      */
     public function testAnUnknownFieldKeepsItsKey(): void
     {
-        $rows = $this->summary()->rows($this->submission('B', [
+        $rows = $this->summary()->rows($this->submission('N', [
             'hairpinsOld' => ['was' => null, 'now' => '3'],
         ]));
 
         self::assertSame('hairpinsOld', $rows[0]['label']);
     }
 
-    /** Letter K (routes) has no registry field set; every row falls back. */
+    /** Letter R (routes) has no registry field set; every row falls back. */
     public function testALetterWithNoRegistryEntryFallsBackToKeys(): void
     {
-        $rows = $this->summary()->rows($this->submission('K', [
+        $rows = $this->summary()->rows($this->submission('R', [
             'name' => ['was' => 'Old', 'now' => 'New'],
         ]));
 

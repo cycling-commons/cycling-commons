@@ -61,8 +61,8 @@ def test_export_geojsonl_shapes(db, tmp_path):
     # appear. FIXTURE_ROWS stamp no country_code, so every row buckets to the
     # unstamped 'ZZ' pseudo-country (coverage-provider.md §4 — per-country
     # tile split).
-    assert set(out) == {("C", "ZZ"), ("D", "ZZ"), ("E", "ZZ")}
-    assert not any(letter == "G" for letter, _ in out)
+    assert set(out) == {("B", "ZZ"), ("D", "ZZ"), ("O", "ZZ")}
+    assert not any(letter == "F" for letter, _ in out)
 
     shop = _features(out[("D", "ZZ")])["node/900000001"]
     assert shop["id"] == 900000001
@@ -93,8 +93,8 @@ def test_export_geojsonl_shapes(db, tmp_path):
     # exported feature's key set is exactly the contract's universal props plus
     # this letter's declared extras — an undeclared column can't ship silently.
     contract = load_contract()
-    for letter, feats in (("D", _features(out[("D", "ZZ")])), ("C", _features(out[("C", "ZZ")])),
-                          ("E", _features(out[("E", "ZZ")]))):
+    for letter, feats in (("D", _features(out[("D", "ZZ")])), ("B", _features(out[("B", "ZZ")])),
+                          ("O", _features(out[("O", "ZZ")]))):
         allowed = set(contract.universal_tile_props) | set(contract.letters[letter].tile_props)
         for ref, feat in feats.items():
             extra = set(feat["properties"]) - allowed

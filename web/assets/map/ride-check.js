@@ -15,9 +15,9 @@ import { closeDrawer, highlightAt, clearHighlight } from './drawer.js';
 import { openRouteById, bumpPlaceReq } from './places.js';
 import { rideScopeFor, scopeKey } from './ride-scope.js';
 
-// Coverage letters ride-check surfaces (utility C/D/G/H). Experiential E/I/J
+// Coverage letters ride-check surfaces (utility B/D/F/G). Experiential O/P/Q
 // stay on the curated arm.
-const COV_KEY={C:'water', D:'services', G:'transit', H:'shelter'};
+const COV_KEY={B:'water', D:'services', F:'transit', G:'shelter'};
 
 export function initRideCheck(){
     if(!window.CC_RIDECHECK) return;                       // anonymous: no control rendered

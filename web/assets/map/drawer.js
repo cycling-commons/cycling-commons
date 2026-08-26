@@ -91,7 +91,7 @@ function linkValue(href, text){
 }
 /* docs/specs/climb-elevation.md §5 — steepest figure carries the window it was measured over. */
 function steepValue(letter, name, value, src){
-  if(letter !== 'B') return value;
+  if(letter !== 'N') return value;
   // Ascent is stored in metres; write it in the reader's unit.
   if(name === 'gain') return uElev(value);
   if(name !== 'maxGradient') return value;
@@ -189,7 +189,7 @@ export function osmDrawer(layer, p, ll, src){
   const kindLbl = p.serviceKind && ({shop:D.kindShop, station:D.kindStation, pump:D.kindPump}[p.serviceKind] || lbl);
   const typeLbl = kindLbl || p.t || lbl;
   let rec=[{label:D.type||'Type', value:typeLbl, method: pivot?'Tourisme Wallonie':'OSM'}];
-  if(p.town && layer.letter!=='E') rec.push({label:D.town||'Town', value:p.town});  // docs/specs/coverage-provider.md §2 — no province row when region_id is null (no Wallonia fallback).
+  if(p.town && layer.letter!=='O') rec.push({label:D.town||'Town', value:p.town});  // docs/specs/coverage-provider.md §2 — no province row when region_id is null (no Wallonia fallback).
   if(p.prov) rec.push({label:D.province||'Province', value:p.prov});
   // Scenic-view facts OSM already holds (docs/specs/coverage-provider.md §5):
   // altitude, which way a viewpoint faces, how far a waterfall drops. Written
@@ -367,7 +367,7 @@ function buildRecord(layer, f){
         + (ell ? `&lat=${ell[0]}&lng=${ell[1]}` : '');
       edit = `<a class="cc-d-act edit" href="/improve?${editQ}">✎ ${D.editItem||'Edit this item'}</a>`;
       /* Fix location only for point items with coords, never climbs (editor is live on open). */
-      if(ell && 'B' !== layer.letter){
+      if(ell && 'N' !== layer.letter){
         edit += `<a class="cc-d-act fixloc" href="/improve?${editQ}&fix=location">◎ ${D.fixLocation||'Fix location'}</a>`;
       }
     }
@@ -458,6 +458,15 @@ function buildRecord(layer, f){
       : '';
     /* Edit submissions carry the target item's own rows (same renderer/escaping). */
     let context = '';
+    if(previewed){
+      const target = s.preview.climb || s.preview.feature;
+      const src = target.properties ? Object.assign({}, target.properties, {geom:{ll:target.geometry && target.geometry.coordinates ? [target.geometry.coordinates[1], target.geometry.coordinates[0]] : null}}) : target;
+      const rows = recRowsHtml(schemaRows(s.letter, src, null));
+      const grad = src.grad ? gradStrip(src.grad, src) : '';
+      const km = (src.length ? Number(src.length)/1000 : 0) || routeLengthKm(src.route);
+      const len = km ? `<div class="cc-elev-cap">${D.climbLength||'Length'} · ${uKm(km)}</div>` : '';
+      context = `<div class="cc-mod-ctx"><div class="cc-mod-ctx-h">${D.itemProposed||'This item, as proposed'}</div>${grad}${len}${rows?`<ul class="cc-d-rec">${rows}</ul>`:''}</div>`;
+    }
     if('new' !== s.type && s.itemId != null){
       const lyr = CATALOG.find(l => l.letter === s.letter);
       const target = lyr && (lyr.features||[]).find(x => x.id != null && String(x.id) === String(s.itemId));
@@ -474,7 +483,7 @@ function buildRecord(layer, f){
     /* Also-confirm on approve (not water, not K, not absence). Unticked by default. */
     const NEGATIVE_NOW = ['Out of order', 'Closed', 'Not there anymore', 'Gone — clear now', 'Reduced'];
     const assertsAbsence = chList.some(c => NEGATIVE_NOW.includes(c.now));
-    const alsoConfirm = ('C' !== s.letter && 'K' !== s.letter && !assertsAbsence)
+    const alsoConfirm = ('B' !== s.letter && 'R' !== s.letter && !assertsAbsence)
       ? `<label class="cc-mod-also"><input type="checkbox" class="cc-mod-confirm-cb"> ${D.alsoConfirm||'Also confirm — I know this place (counts as verified)'}</label>`
       : '';
     /* Curator-only decide chrome; a rider sees a preview of their own pending pin. */

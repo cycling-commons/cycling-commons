@@ -32,7 +32,7 @@ final class CoverageQueryTest extends WebTestCase
     }
 
     /** A served canonical point item (the curated tier). */
-    private function item(string $sourceRef, string $name, float $lat = 50.4, float $lng = 5.8, string $letter = 'C'): Item
+    private function item(string $sourceRef, string $name, float $lat = 50.4, float $lng = 5.8, string $letter = 'B'): Item
     {
         $em = static::getContainer()->get(EntityManagerInterface::class);
         $item = (new Item())->setLetter($letter)->setName($name)
@@ -52,7 +52,7 @@ final class CoverageQueryTest extends WebTestCase
      * app:coverage:retire-legacy would delete, so the query plane must key
      * it as community, not curated, to mirror the payload/tile pair.
      */
-    private function untouchedOsmItem(string $sourceRef, string $name, float $lat = 50.4, float $lng = 5.8, string $letter = 'C'): Item
+    private function untouchedOsmItem(string $sourceRef, string $name, float $lat = 50.4, float $lng = 5.8, string $letter = 'B'): Item
     {
         $em = static::getContainer()->get(EntityManagerInterface::class);
         $item = (new Item())->setLetter($letter)->setName($name)
@@ -212,7 +212,7 @@ final class CoverageQueryTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertCount(1, $data['groups']);
         $group = $data['groups'][0];
-        self::assertSame('C', $group['letter']);
+        self::assertSame('B', $group['letter']);
         self::assertSame(6, $group['total']);                 // 1 curated + 5 community in range
         self::assertCount(4, $group['items']);                // curated + community cap of 3
         self::assertTrue($group['items'][0]['curated']);
@@ -285,16 +285,16 @@ final class CoverageQueryTest extends WebTestCase
         $client = static::createClient();
         $db = $this->db();
         self::ensureCoverageSchema($db);
-        self::insertCoveragePoi($db, ['ref' => 'node/9701', 'letter' => 'C']);
-        self::insertCoveragePoi($db, ['ref' => 'node/9702', 'letter' => 'C']);
-        self::insertCoveragePoi($db, ['ref' => 'way/9703', 'letter' => 'H', 'name' => 'Abri', 'tags' => ['amenity' => 'shelter']]);
+        self::insertCoveragePoi($db, ['ref' => 'node/9701', 'letter' => 'B']);
+        self::insertCoveragePoi($db, ['ref' => 'node/9702', 'letter' => 'B']);
+        self::insertCoveragePoi($db, ['ref' => 'way/9703', 'letter' => 'G', 'name' => 'Abri', 'tags' => ['amenity' => 'shelter']]);
         // A stray non-catalogue letter must never leak into the rail shape:
-        // {C..J} is code-guaranteed (POI_LETTERS_SQL), not data-dependent.
+        // the coverage letter set is code-guaranteed (POI_LETTERS_SQL), not data-dependent.
         self::insertCoveragePoi($db, ['ref' => 'node/9704', 'letter' => 'X', 'name' => 'Stray']);
 
         $data = $this->getJson($client, '/map/coverage/counts');
         self::assertResponseIsSuccessful();
-        self::assertSame(['C' => 2, 'H' => 1], $data['counts']);
+        self::assertSame(['B' => 2, 'G' => 1], $data['counts']);
         self::assertSame('© OpenStreetMap contributors (ODbL)', $data['attribution']);
         self::assertSame('max-age=3600, public', $client->getResponse()->headers->get('Cache-Control'));
     }
@@ -306,15 +306,15 @@ final class CoverageQueryTest extends WebTestCase
         self::ensureCoverageSchema($db);
         // A confirmed (payload-served) item's coverage twin must not count
         // (minor finding 7: rail coherence with the payload-on-top map).
-        self::insertCoveragePoi($db, ['ref' => 'node/9705', 'letter' => 'C', 'name' => 'Fontaine confirmée']);
+        self::insertCoveragePoi($db, ['ref' => 'node/9705', 'letter' => 'B', 'name' => 'Fontaine confirmée']);
         $this->item('node/9705', 'Fontaine confirmée');
         // An untouched legacy row is not payload-served — it must still count.
-        self::insertCoveragePoi($db, ['ref' => 'node/9706', 'letter' => 'C', 'name' => 'Fontaine oubliée']);
+        self::insertCoveragePoi($db, ['ref' => 'node/9706', 'letter' => 'B', 'name' => 'Fontaine oubliée']);
         $this->untouchedOsmItem('node/9706', 'Fontaine oubliée');
 
         $data = $this->getJson($client, '/map/coverage/counts');
         self::assertResponseIsSuccessful();
-        self::assertSame(['C' => 1], $data['counts']);
+        self::assertSame(['B' => 1], $data['counts']);
     }
 
     public function testSearchScopesToRidsAndCc(): void
@@ -411,12 +411,12 @@ final class CoverageQueryTest extends WebTestCase
         $client = static::createClient();
         $db = $this->db();
         self::ensureCoverageSchema($db);
-        self::insertCoveragePoi($db, ['ref' => 'node/9971', 'letter' => 'C', 'region_id' => 1, 'country_code' => 'BE']);
+        self::insertCoveragePoi($db, ['ref' => 'node/9971', 'letter' => 'B', 'region_id' => 1, 'country_code' => 'BE']);
 
         $everywhere = $this->getJson($client, '/map/coverage/counts')['counts'];
         $newline = $this->getJson($client, '/map/coverage/counts?cc=BE%0A')['counts'];
         self::assertSame($everywhere, $newline, "'BE\\n' must be garbage → Everywhere, not an empty country_code='BE\\n' scope");
-        self::assertSame(['C' => 1], $newline);
+        self::assertSame(['B' => 1], $newline);
     }
 
     public function testRidsParserEdges(): void
@@ -428,19 +428,19 @@ final class CoverageQueryTest extends WebTestCase
         $client = static::createClient();
         $db = $this->db();
         self::ensureCoverageSchema($db);
-        self::insertCoveragePoi($db, ['ref' => 'node/9981', 'letter' => 'C', 'region_id' => 1]);
-        self::insertCoveragePoi($db, ['ref' => 'node/9982', 'letter' => 'C', 'region_id' => 2]);
+        self::insertCoveragePoi($db, ['ref' => 'node/9981', 'letter' => 'B', 'region_id' => 1]);
+        self::insertCoveragePoi($db, ['ref' => 'node/9982', 'letter' => 'B', 'region_id' => 2]);
 
         // '01' is region 1 (zero-padded), deduped with '1' — scopes to region 1.
-        self::assertSame(['C' => 1], $this->getJson($client, '/map/coverage/counts?rids=01,1')['counts']);
+        self::assertSame(['B' => 1], $this->getJson($client, '/map/coverage/counts?rids=01,1')['counts']);
 
         // A 20-digit overflow saturates (int); rejected → Everywhere (both rows).
-        self::assertSame(['C' => 2], $this->getJson($client, '/map/coverage/counts?rids=99999999999999999999')['counts']);
+        self::assertSame(['B' => 2], $this->getJson($client, '/map/coverage/counts?rids=99999999999999999999')['counts']);
 
         // Array-valued param must not 500/400 — degrades to Everywhere.
         $client->request('GET', '/map/coverage/counts?rids[]=1');
         self::assertResponseIsSuccessful();
-        self::assertSame(['C' => 2], json_decode((string) $client->getResponse()->getContent(), true)['counts']);
+        self::assertSame(['B' => 2], json_decode((string) $client->getResponse()->getContent(), true)['counts']);
     }
 
     public function testCountsScopeToRids(): void
@@ -450,12 +450,12 @@ final class CoverageQueryTest extends WebTestCase
         $client = static::createClient();
         $db = $this->db();
         self::ensureCoverageSchema($db);
-        self::insertCoveragePoi($db, ['ref' => 'node/9931', 'letter' => 'C', 'region_id' => 1]);
-        self::insertCoveragePoi($db, ['ref' => 'node/9932', 'letter' => 'C', 'region_id' => 2]);
-        self::insertCoveragePoi($db, ['ref' => 'way/9933', 'letter' => 'H', 'name' => 'Abri', 'tags' => ['amenity' => 'shelter'], 'region_id' => 1]);
+        self::insertCoveragePoi($db, ['ref' => 'node/9931', 'letter' => 'B', 'region_id' => 1]);
+        self::insertCoveragePoi($db, ['ref' => 'node/9932', 'letter' => 'B', 'region_id' => 2]);
+        self::insertCoveragePoi($db, ['ref' => 'way/9933', 'letter' => 'G', 'name' => 'Abri', 'tags' => ['amenity' => 'shelter'], 'region_id' => 1]);
 
-        self::assertSame(['C' => 1, 'H' => 1], $this->getJson($client, '/map/coverage/counts?rids=1')['counts']);
-        self::assertSame(['C' => 2, 'H' => 1], $this->getJson($client, '/map/coverage/counts')['counts']);
+        self::assertSame(['B' => 1, 'G' => 1], $this->getJson($client, '/map/coverage/counts?rids=1')['counts']);
+        self::assertSame(['B' => 2, 'G' => 1], $this->getJson($client, '/map/coverage/counts')['counts']);
     }
 
     public function testNearbyScopesToRids(): void
@@ -503,11 +503,11 @@ final class CoverageQueryTest extends WebTestCase
         $db = $this->db();
         self::ensureCoverageSchema($db);
         // region_id 100 is beyond the 24-id cap when rids=1..30 (sorted, sliced).
-        self::insertCoveragePoi($db, ['ref' => 'node/9991', 'letter' => 'C', 'region_id' => 100, 'country_code' => 'BE']);
+        self::insertCoveragePoi($db, ['ref' => 'node/9991', 'letter' => 'B', 'region_id' => 100, 'country_code' => 'BE']);
 
         $ids = implode(',', range(1, 30));
         // With cc: the cc arm rescues the capped-out region-100 row.
-        self::assertSame(['C' => 1], $this->getJson($client, '/map/coverage/counts?rids='.$ids.'&cc=BE')['counts']);
+        self::assertSame(['B' => 1], $this->getJson($client, '/map/coverage/counts?rids='.$ids.'&cc=BE')['counts']);
         // Without cc: region 100 is past the cap and there is no fallback → empty.
         self::assertSame([], $this->getJson($client, '/map/coverage/counts?rids='.$ids)['counts']);
     }

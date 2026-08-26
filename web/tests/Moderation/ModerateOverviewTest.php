@@ -47,7 +47,7 @@ final class ModerateOverviewTest extends WebTestCase
         $em = static::getContainer()->get(EntityManagerInterface::class);
 
         $sub = (new Submission())
-            ->setType(SubmissionType::NewItem)->setLetter('B')->setUserId(3)
+            ->setType(SubmissionType::NewItem)->setLetter('N')->setUserId(3)
             ->setTitle($title)
             ->setGeom('{"type":"Point","coordinates":[5.86,50.47]}')
             ->setCountryCode($country)

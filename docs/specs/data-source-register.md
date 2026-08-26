@@ -169,31 +169,17 @@ per-city adapter, rather than a decision per city.
 | iOverlander | Overnight spots for self-supported travel | ToS: personal, non-commercial use only; redistribution expressly prohibited | **No** | verified |
 | Booking.com, Airbnb, Park4Night | Scale | Proprietary, ToS forbids bulk reuse | **No** | stated |
 
-**Assessment.** E was the letter with the least non-OSM supply, and it is now
+**Assessment.** O was the letter with the least non-OSM supply, and it is now
 the letter with the most: DATAtourisme plus the Accueil Vélo label sets make
 France's stays layer a data-loading job rather than a research job. Bett+Bike is
 the one worth a conversation — an ADFC certification scheme and an open cycling
 atlas want the same thing, and a licence grant costs them nothing.
 
-### F · Hazards & conditions
+### P · Scenic views · Q · History & culture
 
 | Source | What it gives | Licence | Verdict | Confidence |
 |---|---|---|---|---|
-| Rider reports (ours, via Scout and the improve form) | The only source that will ever be current | Ours | **Ingest** — by design the primary source | n/a |
-| National/municipal roadworks and closure feeds | Authoritative closures | National licences, §2, where published as open data | **Ingest** where open | unverified |
-| BikeMaps.org | Crowd collision/near-miss/hazard reports, academic | **No licence published**; research project | **Ask** — likely receptive, it is an academic open-data project | verified (no licence found) |
-| Waze **C**onnected **C**itizens **P**rogram | Live closures | Partner agreement, not open data | **No** | stated |
-| One.Network / roadworks.org | Official UK closure feed | Closed layer over public data | **No** — but the underlying council data may be open, §2 | stated |
-
-**Assessment.** F is structurally rider-sourced: hazards decay in days, and no
-licensing arrangement fixes a feed that is car-framed. The correct investment is
-Scout, not a provider.
-
-### I · Scenic views · J · History & culture
-
-| Source | What it gives | Licence | Verdict | Confidence |
-|---|---|---|---|---|
-| Wikidata | Named places with coordinates and typed classes, worldwide | CC0 | **Ingest** — in use, 194 I / 240 J rows seeded | verified (in use) |
+| Wikidata | Named places with coordinates and typed classes, worldwide | CC0 | **Ingest** — in use, 194 P / 240 Q rows seeded | verified (in use) |
 | Wikimedia Commons | Photographs with machine-verifiable licences | Per file, mostly CC BY-SA / public domain | **Ingest as media** — in use, licence checked at harvest | verified (in use) |
 | OSM `tourism=viewpoint`, `historic=*` | Baseline, worldwide, 850k+ on our coverage plane | ODbL | **Ingest** (baseline) | verified |
 | Europeana | European cultural heritage aggregation | Metadata CC0; objects per item | **Ingest** metadata | stated |
@@ -201,12 +187,12 @@ Scout, not a provider.
 | DATAtourisme (again) | French heritage and viewpoint POIs | Licence Ouverte 2.0 | **Ingest** | verified |
 | Atlas Obscura, Komoot Highlights | The curation riders actually use | Proprietary | **No** | stated |
 
-**Assessment.** I and J are the best-supplied letters in the register and the
+**Assessment.** P and Q are the best-supplied letters in the register and the
 weakest in *editorial* terms — the open-review backlog is full of "would a rider
 go there" questions about rows we already have. More supply is not the
 constraint; a selection rule is.
 
-### K · Quality rides / routes
+### R · Quality rides / routes
 
 | Source | What it gives | Licence | Verdict | Confidence |
 |---|---|---|---|---|

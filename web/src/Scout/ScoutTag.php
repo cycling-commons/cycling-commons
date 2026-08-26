@@ -88,7 +88,7 @@ final class ScoutTag
     }
 
     /** @var list<string> Point-tag refile letters; A is stretch-only (docs/specs/moderation-and-contribution.md (Scout intake)). */
-    public const array REFILE_LETTERS = ['C', 'D', 'F', 'H', 'I', 'J'];
+    public const array REFILE_LETTERS = ['B', 'D', 'E', 'G', 'P', 'Q'];
 
     /**
      * Narrowing decides offer order, not what is allowed.

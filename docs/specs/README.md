@@ -27,11 +27,11 @@ committed — working docs stay local.
   data served, vector-tile + REST transports, auth/metering, versioning, a
   worked consumer example (the endpoint contract osm-data-architecture.md §7 and
   api-strategy.md defer to).
-- `edit-items/` — per-type contribution/edit contracts (A–L) and the shared
+- `edit-items/` — per-type contribution/edit contracts (letters A–M practical, N–Z experiential) and the shared
   contribution contract (`edit-items/README.md`).
 - `catalog-data-model.md` — the running catalog schema and data contracts.
 - `moderation-and-contribution.md` — the contribution-to-decision lifecycle.
-- `route-domain.md` — the K route domain in depth.
+- `route-domain.md` — the R route domain in depth.
 - `climb-elevation.md` — how a climb's length, gain, gradients and profile are
   MEASURED (elevation source chain, binning, the steepest-ramp window) and how
   the profile chart is drawn. Nobody types a gradient.

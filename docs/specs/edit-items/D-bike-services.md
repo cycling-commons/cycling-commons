@@ -73,8 +73,8 @@ confirmed/curated DOM pins.
 > weekly hours change without notice and we can't verify them, so the Commons only
 > records what stays true — `24/7`, or `See website` (point riders at the source) —
 > and defaults to `Unknown`. Migration `Version20260715120000` reset every
-> previously-stored free-text value (letters D and J) to `Unknown`. Same treatment
-> on [J-history-culture](J-history-culture.md).
+> previously-stored free-text value (letters D and Q) to `Unknown`. Same treatment
+> on [Q-history-culture](Q-history-culture.md).
 
 ### Add missing  (type-specific)
 | Field | Control | Provenance |

@@ -9,95 +9,42 @@
    rider's reply is addressed to the deciding curator, so a received-only
    list showed them the question and never their own answer — which read as
    though the reply had gone nowhere. Sent rows are marked, carry no reply
-   form, and are never "new". #}
+   form, and are never "new".
+
+   Every message is the shared record card (account/_shell_styles.html.twig):
+   the `msg-*` classes on top of it name message states (new, mine) and hooks
+   the tests read; the look comes from the card. #}
 {% extends 'base.html.twig' %}
 
 {% block head_styles %}
 {% include 'account/_shell_styles.html.twig' %}
 <style>
-  .wrap{max-width:820px;margin:0 auto;padding:2.2rem clamp(1.25rem,4vw,2rem)}
-
-  /* Shelf chips: the same pill vocabulary as the map rail's filters, so a
-     rider who has used one recognises the other. The count is part of the
-     chip, not a tooltip — "Notices 0" is the answer, and a click to find it
-     out is a click wasted. */
-  .msg-filters{display:flex;flex-wrap:wrap;gap:.5rem;margin:0 0 1.6rem}
-  .msg-chip{display:inline-flex;align-items:center;gap:.4rem;min-height:32px;padding:.4rem .85rem;
-            border:1px solid rgba(20,22,14,.2);border-radius:30px;background:var(--paper);
-            font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;
-            color:#595c4d;text-decoration:none}
-  .msg-chip b{font-family:var(--sans);font-size:.78rem;font-weight:700;color:var(--ink);letter-spacing:0}
-  .msg-chip:hover{border-color:var(--clay);color:var(--ink)}
-  .msg-chip.is-on{background:var(--spruce);border-color:var(--spruce);color:var(--paper)}
-  .msg-chip.is-on b{color:var(--paper)}
-  .msg-chip--unread{margin-left:auto}
-  .msg-chip--unread.is-on{background:var(--clay);border-color:var(--clay)}
-  @media(max-width:520px){.msg-chip--unread{margin-left:0}}
-  .msg-list{list-style:none;padding:0;margin:0}
-  .msg-row{padding:1.1rem 1.2rem;margin-bottom:.9rem;border:1px solid rgba(20,22,14,.14);border-radius:8px;background:var(--paper-deep)}
-  .msg-row.msg-new{border-color:var(--trail);box-shadow:0 0 0 1px var(--trail);border-left-width:4px;background:var(--paper)}
-  .msg-row.msg-new .msg-kind{font-weight:800}
   .msg-state{display:inline-flex;align-items:center;margin-right:.4rem;vertical-align:-2px}
   .msg-state.is-unread{color:var(--trail)}
   .msg-state.is-read{color:#8c8f7d}
   .msg-state svg{display:block}
   {# The state name, for a screen reader; sighted readers get the icon and the row styling. #}
   .msg-state .vh{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-  /* Sent by this account: the other half of the conversation, set back so the
-     thread reads as an exchange rather than a second inbox. */
-  .msg-row.msg-mine{background:var(--paper);border-style:dashed}
-  .msg-from-you{color:#595c4d}
-  /* Arriving from a submission row's "see the conversation" link. */
-  .msg-row:target{border-color:var(--ochre);box-shadow:0 0 0 2px var(--ochre);scroll-margin-top:1.5rem}
-  .msg-head{display:flex;align-items:baseline;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:.4rem}
-  .msg-kind{font-family:var(--sans);font-weight:700;font-size:.98rem}
-  .msg-meta{font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;color:#595c4d;white-space:nowrap}
-  .msg-ref{font-family:var(--mono);font-size:.68rem;color:#595c4d;margin-bottom:.5rem}
-  .msg-body{font-size:.9rem;line-height:1.55;color:var(--ink)}
-  .msg-photo{margin:.4rem 0}
-  .msg-photo img{width:120px;height:90px;object-fit:cover;border-radius:5px;display:block}
-  .msg-map-link{display:inline-block;margin-top:.45rem;font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--clay)}
-  .msg-map-link:hover{color:var(--trail)}
-  /* pre-line, so the line breaks a curator typed survive into the message.
-     Not pre-wrap: runs of spaces should still collapse, only the newlines are
-     meaningful. */
-  .msg-note{font-size:.88rem;line-height:1.55;color:#4a4d40;background:var(--paper);border-left:2px solid var(--glacier);padding:.6rem .85rem;border-radius:0 5px 5px 0;margin-top:.55rem;white-space:pre-line}
   .msg-subject{color:var(--clay);text-decoration:underline;text-underline-offset:2px}
   .msg-subject:hover{color:var(--trail)}
-  /* The reader's own answer, inside the card holding the question. */
-  .msg-answer{border-left-color:var(--ochre)}
-  .msg-answer-h{font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;color:#595c4d;display:block}
-  .msg-answer .msg-meta{display:block;margin-top:.3rem}
   .msg-from-curator{font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;color:var(--clay);margin-top:.5rem}
-  /* What the contribution changed — the same was/now shape the curator's desk
-     and the contributions list use, so all three read as one thing. */
-  .msg-diff{margin-top:.6rem;padding:.5rem .7rem;background:rgba(20,22,14,.05);border-radius:5px;font-size:.84rem;line-height:1.5}
-  .msg-diff-h{font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;color:#595c4d;display:block;margin-bottom:.25rem}
-  .msg-diff dl{display:grid;grid-template-columns:auto 1fr;gap:.15rem .7rem;margin:0}
-  .msg-diff dt{font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;color:#595c4d;align-self:baseline;padding-top:.15rem}
-  .msg-diff dd{margin:0;min-width:0;overflow-wrap:anywhere}
-  .msg-diff .was{color:#8a8d7d;text-decoration:line-through;margin-right:.4rem}
-  .msg-diff .now{color:var(--trail)}
-  @media(max-width:520px){.msg-diff dl{grid-template-columns:1fr;gap:0}.msg-diff dt{padding-top:.35rem}}
-
-  .msg-reply{margin-top:.8rem;padding-top:.7rem;border-top:1px solid rgba(20,22,14,.1);display:flex;flex-direction:column;gap:.45rem}
-  .msg-reply label{font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;color:#595c4d}
-  .msg-reply textarea{width:100%;min-height:80px;font-family:var(--sans);font-size:.85rem;padding:.5rem;border:1px solid rgba(20,22,14,.25);border-radius:6px;resize:vertical}
-  .msg-reply button{align-self:flex-start}
-
-  .acct-id{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  .msg-from-you{color:#595c4d}
 </style>
 {% endblock %}
 
 {% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'messages'} %}{% endblock %}
 
 {% block body %}
-<h1 class="acct-id">{{ 'messages.title'|trans }} — {{ cc_user.displayName }}</h1>
-<div class="wrap dmin">
+<div class="dbody dmin" id="main">
+  <div class="mh">
+    <div class="kicker">{{ 'account.menu_personal'|trans }} · {{ cc_user.displayName }}</div>
+    <h1>{{ 'messages.title'|trans }}</h1>
+  </div>
 
   {% for msg in app.flashes('success') %}<div class="flash-success" role="alert">{{ msg|trans }}</div>{% endfor %}
   {% for msg in app.flashes('danger') %}<div class="flash-error" role="alert">{{ msg|trans }}</div>{% endfor %}
 
+  <div class="mod-bar">
   {# ── Shelves (moderation-and-contribution.md §7.9) ──
      Plain links, not a form: each shelf is a place the reader can bookmark and
      come back to, and the browser's back button then means what they expect.

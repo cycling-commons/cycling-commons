@@ -18,13 +18,8 @@
   .dtop [aria-expanded="true"] .lang-caret{transform:rotate(180deg)}
   .dtop .lang-dropdown{right:0;left:auto}
   /* Shared account-page presence: content areas keep vertical height even when
-     empty, and empty panes render a centred block with a real door — never a
-     lone floating line. */
+     empty, so sparse pages keep their shape. */
   .dbody,.dmin{min-height:46vh}
-  .empty-state{text-align:center;padding:4rem 1.5rem 4.5rem;color:#595c4d}
-  .empty-state p{max-width:46ch;margin:0 auto 1.3rem;font-size:.95rem;line-height:1.6}
-  .empty-state .door{display:inline-block;font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;border:1.5px solid var(--ink);border-radius:5px;padding:.6rem 1rem;color:var(--ink);text-decoration:none;transition:background .2s}
-  .empty-state .door:hover{background:var(--trail)}
   /* overflow-y MUST be pinned. Setting only overflow-x:auto makes the other axis
      compute to `auto` too (CSS overflow §), and `.dtabs a` carries
      margin-bottom:-1px to pull the active tab's border over the bar's — one
@@ -76,14 +71,6 @@
   .pager-at{margin:0 auto 0 0;display:flex;flex-direction:column;gap:.15rem;line-height:1.35}
   .pager-range{color:var(--ink);font-size:.72rem}
   .pager-of{color:#595c4d;font-size:.6rem;letter-spacing:.06em;text-transform:uppercase}
-  /* Category filter chips on the contributions list: same quiet chip family
-     as Withdraw; the active one wears the ink. */
-  .lfilter{display:flex;flex-wrap:wrap;gap:.4rem;margin:0 0 1rem}
-  .lchip{border:1px solid rgba(20,22,14,.3);border-radius:30px;padding:.25rem .65rem;
-    font-family:var(--mono);font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;
-    color:#595c4d;text-decoration:none}
-  .lchip:hover{border-color:var(--clay);color:var(--clay)}
-  .lchip.on{background:var(--ink);border-color:var(--ink);color:var(--paper)}
   /* Withdraw: the rider's own exit on an undecided contribution row. Styled
      as a quiet bordered chip beside the status pill, never a primary action. */
   .withdraw-form{display:inline;margin-left:.4rem}

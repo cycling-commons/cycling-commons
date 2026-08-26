@@ -41,12 +41,12 @@ final class CoverageContractTest extends TestCase
         $contract = $this->loadContract();
 
         self::assertSame(1, $contract['version']);
-        // osm-data-architecture.md §5 point catalogue: C D E G H I J M
-        // (M · Public toilets added 2026-07-30; letter L stays reserved for
-        // the derived ride heatmap). A (road surface) is corridor data and
+        // osm-data-architecture.md §5 point catalogue: B C D F G O P Q
+        // (C · Public toilets added 2026-07-30; the derived ride heatmap has
+        // no letter). A (road surface) is corridor data and
         // stays out of the coverage artifact (coverage-provider.md §4);
-        // B/F/K are category-3 (our own data, never part of the OSM extract).
-        self::assertSame(['C', 'D', 'E', 'G', 'H', 'I', 'J', 'M'], array_keys($contract['letters']));
+        // E/N/R are category-3 (our own data, never part of the OSM extract).
+        self::assertSame(['B', 'C', 'D', 'F', 'G', 'O', 'P', 'Q'], array_keys($contract['letters']));
 
         foreach ($contract['letters'] as $letter => $spec) {
             self::assertNotSame([], $spec['selectors'], sprintf('letter %s has no selectors', $letter));
@@ -93,10 +93,10 @@ final class CoverageContractTest extends TestCase
 
         // coverage-provider.md §4: ref/n/t are implicit
         // on every layer; tileProps lists only the per-letter extras.
-        self::assertSame(['potable'], $letters['C']['tileProps']);
+        self::assertSame(['potable'], $letters['B']['tileProps']);
         self::assertSame(['kind'], $letters['D']['tileProps']);
-        self::assertSame(['acc'], $letters['E']['tileProps']);
-        foreach (['G', 'H', 'I', 'J'] as $letter) {
+        self::assertSame(['acc'], $letters['O']['tileProps']);
+        foreach (['F', 'G', 'P', 'Q'] as $letter) {
             self::assertSame([], $letters[$letter]['tileProps']);
         }
     }

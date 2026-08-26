@@ -26,7 +26,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 #[AsCommand(name: 'app:coverage:retire-legacy', description: 'Retire imported-OSM item rows the coverage cache now serves (dry-run by default; delete with --force)')]
 final class RetireLegacyOsmCommand extends Command
 {
-    /** Letter guard is here so A/B cannot be deleted even if CoverageRetirement changes. */
+    /** Letter guard is here so A/N cannot be deleted even if CoverageRetirement changes. */
     private static function predicate(): string
     {
         return 'letter IN '.CoverageRetirement::lettersSqlTuple()

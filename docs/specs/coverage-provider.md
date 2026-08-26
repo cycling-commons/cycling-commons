@@ -106,7 +106,7 @@ CREATE TABLE IF NOT EXISTS coverage_source (
 CREATE TABLE IF NOT EXISTS coverage_poi (
     id            bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     ref           varchar(160) NOT NULL,  -- 'node/61146471' | 'way/…' = item.source_ref format
-    letter        char(1)      NOT NULL,  -- C D E G H I J (osm-data-architecture.md §5 catalogue)
+    letter        char(1)      NOT NULL,  -- B C D F G O P Q (osm-data-architecture.md §5 catalogue)
     kind          varchar(16),            -- serviceKind for D (shop|station|pump), NULL otherwise
     name          varchar(255),           -- OSM name tag, NULL when unnamed
     geom          geometry(Point, 4326) NOT NULL, -- nodes as-is; ways centroid at load
@@ -199,9 +199,9 @@ The serve-set is three groups:
 row above, so the three groups sum to 11 + 17 + 4 = **32** distinct keys.
 
 `ele`, `direction` and `height` were added on 2026-08-21 for the scenic-view
-letter (I), where OSM's own record is often richer than what the drawer showed:
+letter (P), where OSM's own record is often richer than what the drawer showed:
 a peak carries its altitude, a viewpoint the compass bearing it faces, a
-waterfall the metres it drops. The drawer reads all three for letter I only
+waterfall the metres it drops. The drawer reads all three for letter P only
 (`covProps` in `assets/map/coverage.js`), but the whitelist is per-tag rather
 than per-letter, so the same facts appear wherever else they are tagged. Values
 are free text in OSM, so `assets/map/osm-tags.js` refuses anything that is not
@@ -406,6 +406,18 @@ volume), `COVERAGE_PBF_PATH` (optional local override), `COVERAGE_S3_ENDPOINT`,
 `COVERAGE_S3_REGION` (signing only, default `us-east-1`),
 `COVERAGE_PUBLIC_BASE_URL`.
 
+**Republish without a harvest: `python -m coverage.run --tiles-only`**
+(dev: `make coverage-tiles`). The flag skips the per-region Geofabrik harvest
+and runs only the tail of the chain - export, build, verify and publish the
+coverage PMTiles from the `coverage_poi` rows already in PostGIS; the
+manifest's `regions` is the region list given (`COVERAGE_REGIONS` /
+`regions=`). This is the way to republish after a change that rewrote the
+index without new OSM data - the 2026-08-25 letter renumbering is the
+exemplar: migration `Version20260825120000` rewrote `coverage_poi.letter`, and
+since source-layers are named `<letter>_<cc>` (§4) the tile artifact had to be
+rebuilt from the rewritten rows. `make coverage-tiles` brings up MinIO and
+publishes there, no Geofabrik involved.
+
 ## 4. Tile artifact contract
 
 Thin tiles: enough to draw markers and run map-side filters; everything else
@@ -414,7 +426,7 @@ Feature id = numeric OSM id.
 
 **Source-layers are per-country: `<letter>_<cc>`** (lowercase; `cc` is the
 country code lowercased), one tippecanoe layer per `(letter, country_code)`
-pair — e.g. `c_be`, `c_nl` — rather than one layer per letter. Onboarding a
+pair — e.g. `b_be`, `b_nl` — rather than one layer per letter. Onboarding a
 second bordering country (the Netherlands, 2026-07-22) surfaced a
 client-rendering-only defect Belgium-alone couldn't show: tippecanoe clusters
 *within a layer*, so a single per-letter layer let a low-zoom bubble merge POIs
@@ -677,16 +689,16 @@ Rules:
 
   | Endpoint | Test on the joined `item` |
   |---|---|
-  | `poi/{osmType}/{osmId}` (`detail()`) | `NOT (i.letter IN (C,D,E,G,H,I,J) AND untouched)` — letter-guarded |
+  | `poi/{osmType}/{osmId}` (`detail()`) | `NOT (i.letter IN (B,C,D,F,G,O,P,Q) AND untouched)` — letter-guarded |
   | `search`, `nearby`, `counts` | `NOT (untouched)` — **no letter guard** |
 
   The two diverge only for an untouched OSM `item` whose letter is outside
-  `CoverageRetirement::LETTERS` (so A, B, F or K) that nonetheless shares a
+  `CoverageRetirement::LETTERS` (so A, N, E or R) that nonetheless shares a
   `source_ref` with a cached POI: `poi` would report it `curated`, while
   `search`/`counts` would still show the place as community. This is accepted,
   not overlooked. It cannot arise from the current pipeline, which writes only
-  those same seven letters into `coverage_poi`, and A never enters the artifact
-  while B is wikidata-sourced (coverage-provider.md §4). **Before letting any
+  those same eight letters into `coverage_poi`, and A never enters the artifact
+  while N is wikidata-sourced (coverage-provider.md §4). **Before letting any
   other letter share a `source_ref` with a coverage row, add the letter guard
   to the three `NOT EXISTS` clauses too.**
 - Every response carries `"attribution": "© OpenStreetMap contributors (ODbL)"`
@@ -764,7 +776,7 @@ source of truth for the mapping both languages need:
 
 ```
 {"version": 1,
- "letters": {"C": {"selectors": [{"tag": "amenity=drinking_water", "label": "Drinking water"}, …],
+ "letters": {"B": {"selectors": [{"tag": "amenity=drinking_water", "label": "Drinking water"}, …],
              "tileProps": […]}, …},
  "serviceKind": {"shop=bicycle": "shop", "amenity=bicycle_repair_station": "station",
                  "amenity=compressed_air": "pump"},
@@ -772,7 +784,7 @@ source of truth for the mapping both languages need:
  "storedTagKeys": ["addr:city", "amenity", …]}
 ```
 
-- `letters` keys are exactly `C D E G H I J` — the
+- `letters` keys are exactly `B C D F G O P Q` — the
   [osm-data-architecture.md §5](osm-data-architecture.md) point catalogue.
 - `storedTagKeys` is the **serve-set**: the only tag keys `parse.py` writes into
   `coverage_poi.tags` (§2 storage policy). Sorted + unique, and validated on
@@ -833,8 +845,8 @@ interim clause retires):
   `source='osm' AND state='unverified'` AND zero `change_history` AND zero
   `item_confirmation` AND zero `submission` rows for the item — exactly what
   the cache now serves. **Anything a human ever touched stays canonical.**
-  The command additionally letter-guards `IN ('C','D','E','G','H','I','J')`:
-  A (not in the coverage artifact) and B (own data) must never be deleted.
+  The command additionally letter-guards `IN ('B','C','D','F','G','O','P','Q')`:
+  A (not in the coverage artifact) and N (own data) must never be deleted.
 - Console command `app:coverage:retire-legacy`
   (`web/src/Command/Coverage/RetireLegacyOsmCommand.php`): the **bare
   invocation IS the dry-run** — per-letter counts, zero writes; there is no

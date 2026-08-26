@@ -122,7 +122,7 @@ final class AddPlaceFlowTest extends WebTestCase
         $submission = $em->getRepository(Submission::class)->findOneBy(['title' => 'Fontaine du marché']);
         self::assertNotNull($submission);
         self::assertSame(SubmissionType::NewItem, $submission->getType());
-        self::assertSame('C', $submission->getLetter());
+        self::assertSame('B', $submission->getLetter());
 
         /** @var Item $item */
         $item = $em->getRepository(Item::class)->find($submission->getItemId());

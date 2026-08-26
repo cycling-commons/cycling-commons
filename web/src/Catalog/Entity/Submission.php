@@ -34,7 +34,7 @@ class Submission
     #[ORM\Column(type: 'string', length: 8, enumType: SubmissionType::class)]
     private SubmissionType $type = SubmissionType::NewItem;
 
-    /** Catalog letter A–K. */
+    /** Catalog letter: practical A-G or experiential N-R. */
     #[ORM\Column(type: 'string', length: 1)]
     private string $letter = '';
 

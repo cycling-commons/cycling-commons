@@ -1,20 +1,10 @@
 {# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{# The Routes desk: proposals and corrections, on the shared page head,
+   filter bar, record card and density switch (account/_shell_styles). #}
 {% extends 'base.html.twig' %}
 {% block head_styles %}
 {% include 'account/_shell_styles.html.twig' %}
 <style>
-  .mh{padding:2rem 0 1.4rem}
-  .mh .kicker{font-family:var(--mono);font-size:.64rem;letter-spacing:.16em;text-transform:uppercase;color:var(--clay);margin-bottom:.6rem}
-  .mh h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4vw,2.4rem);line-height:1.08;margin-bottom:.4rem;color:var(--ink)}
-  .mh .role-badge{display:inline-flex;align-items:center;gap:.4rem;font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;background:var(--spruce-lift);color:var(--paper);padding:.22rem .55rem;border-radius:30px;margin-top:.5rem}
-  .mh .pend-count{font-family:var(--mono);font-size:.68rem;color:var(--clay);margin-left:.8rem}
-
-  .mod-filters{display:flex;gap:1rem;flex-wrap:wrap;align-items:end;margin:0 0 1.4rem}
-  .mod-filters label{font-family:var(--mono);font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;color:#595c4d;display:flex;flex-direction:column;gap:.3rem}
-  .mod-filters select{font-family:var(--sans);font-size:.9rem;padding:.5rem;min-height:34px;border:1px solid rgba(20,22,14,.25);border-radius:6px;background:var(--paper);min-width:150px}
-
-{% include 'moderate/_card_styles.html.twig' %}
-
   /* Route cards carry no lat/lng line, so the correction card's heading block
      can sit on the action row's baseline instead of above it. */
   .q-item--corr .q-head{align-items:center}
@@ -24,39 +14,25 @@
   /* Done/Dismiss are POSTs, so each is its own <form> inside the action row —
      without this they would each claim a block-level line of their own. */
   .q-acts > form{display:contents}
-
-  /* section headers: delicate — a coloured label + a thin accent rule marks
-     the two work streams (proposals / corrections) without a heavy fill. */
-  .sec-band{display:flex;align-items:center;gap:.6rem;font-family:var(--mono);font-size:.66rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;padding:0 0 .5rem;margin:2.6rem 0 1.1rem;border-bottom:1.5px solid}
-  .sec-band--new{color:var(--clay);border-color:rgba(184,89,58,.4)}
-  .sec-band--corr{color:var(--spruce);border-color:rgba(28,58,42,.35)}
-  .sec-band .sec-count{display:inline-flex;align-items:center;justify-content:center;min-width:1.2rem;height:1.2rem;padding:0 .35rem;border-radius:999px;background:rgba(20,22,14,.08);color:#595c4d;font-size:.62rem}
-  .sec-empty{color:#595c4d;font-size:.9rem;padding:.4rem 0 1.5rem}
-
-  .empty-queue{text-align:center;padding:4rem 1rem;color:#595c4d}
-  .empty-queue .ic{font-size:2.4rem;margin-bottom:.5rem}
-  .empty-queue h3{font-family:var(--serif);font-size:1.4rem}
 </style>
 {% endblock %}
 
 {% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate_routes', mod_scope_names: mod_scope_names is defined ? mod_scope_names : null, mod_submission_count: mod_submission_count is defined ? mod_submission_count : null, mod_route_count: mod_route_count is defined ? mod_route_count : null} %}{% endblock %}
 
 {% block body %}
-<div class="mh">
-  <div class="wrap">
+<div class="dbody" id="main">
+  <div class="mh">
     <div class="kicker">{{ 'moderate_routes.kicker'|trans }}</div>
     <h1>{{ 'moderate_routes.title'|trans }}</h1>
     <div>
-      <span class="role-badge">&#9876; {{ 'moderate_routes.role_label'|trans }}</span>
       <span class="pend-count">{{ 'moderate_routes.overview.showing'|trans({'%shown%': routes|length, '%total%': total}) }}</span>
     </div>
   </div>
-</div>
 
-<div class="wrap" id="main">
   {% for msg in app.flashes('success') %}<div class="flash-success" role="alert">{{ msg|trans }}</div>{% endfor %}
   {% for msg in app.flashes('danger') %}<div class="flash-error" role="alert">{{ msg|trans }}</div>{% endfor %}
 
+  <div class="mod-bar">
   <form class="mod-filters" method="get" action="{{ path('moderate_routes') }}">
     {# Explicit Apply button, no onchange auto-submit (WCAG 3.2.2: changing a
        setting must not automatically change context). #}

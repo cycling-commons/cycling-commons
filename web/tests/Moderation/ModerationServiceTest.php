@@ -70,7 +70,7 @@ final class ModerationServiceTest extends KernelTestCase
     }
 
     /**
-     * A new water point (letter C) with the submitter's own form answers in
+     * A new water point (letter B) with the submitter's own form answers in
      * `changes`, the shape ImproveType produces.
      *
      * @param array<string, array{was: mixed, now: mixed}> $changes

@@ -36,7 +36,7 @@ class Item
     #[ORM\Column(type: 'bigint')]
     private ?int $id = null;
 
-    /** Catalog letter (K and L live on other tables). */
+    /** Catalog letter (R lives on `recommended_route`; the derived heat layer has no letter and lives on `heat_point`). */
     #[ORM\Column(type: 'string', length: 1)]
     private string $letter = '';
 

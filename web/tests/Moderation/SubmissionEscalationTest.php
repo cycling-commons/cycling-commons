@@ -67,7 +67,7 @@ final class SubmissionEscalationTest extends KernelTestCase
 
     private function submission(User $author): Submission
     {
-        $sub = (new Submission())->setType(SubmissionType::NewItem)->setLetter('B')
+        $sub = (new Submission())->setType(SubmissionType::NewItem)->setLetter('N')
             ->setUserId((int) $author->getId())
             ->setTitle('Côte de Escalade')
             ->setGeom('{"type":"Point","coordinates":[5.86,50.47]}')->setCountryCode('BE')

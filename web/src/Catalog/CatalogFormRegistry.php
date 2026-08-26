@@ -143,7 +143,7 @@ final class CatalogFormRegistry
 
             ItemType::Hazards => new ItemFieldSet(
                 fields: [
-                    // docs/specs/edit-items/F-hazards.md (Closures expire themselves) — Scout NOTICE types too.
+                    // docs/specs/edit-items/E-hazards.md (Closures expire themselves) — Scout NOTICE types too.
                     CatalogField::select('hazardType', 'Hazard type', ['Crosswind / fog', 'Ice / frost', 'Loose surface / gravel', 'Potholes', 'Junction / crossing', 'Bad corner', 'Flooding', 'Roadworks', 'Road closed', 'Other']),
                     // Only when hazardType is 'Road closed'.
                     CatalogField::select('closedFor', 'If closed, for how long?', ClosureLifetime::CHOICES, default: 'Unknown'),

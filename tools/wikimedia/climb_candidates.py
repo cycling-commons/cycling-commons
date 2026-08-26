@@ -152,7 +152,7 @@ def published_elevation(name: str) -> float | None:
 def ours() -> list[tuple[str, float]]:
     """Every climb we have measured, straight out of the dev database."""
     sql = ("SELECT name || '|' || (attributes->>'summitEle') FROM item "
-           "WHERE letter='B' AND attributes ? 'summitEle' ORDER BY 1")
+           "WHERE letter='N' AND attributes ? 'summitEle' ORDER BY 1")
     out = subprocess.run(
         ["docker", "compose", "-f", "developers/docker/compose.yaml", "exec", "-T", "db",
          "psql", "-U", "cc", "-d", "cyclingcommons", "-tAc", sql],

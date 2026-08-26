@@ -64,7 +64,7 @@ final class ModerateDecideAjaxTest extends WebTestCase
         $em->flush();
 
         $sub = (new Submission())
-            ->setType(SubmissionType::NewItem)->setLetter('B')->setUserId((int) $submitter->getId())
+            ->setType(SubmissionType::NewItem)->setLetter('N')->setUserId((int) $submitter->getId())
             ->setTitle('Ajax queue item')
             ->setGeom('{"type":"Point","coordinates":[5.86,50.47]}')
             ->setCountryCode('BE')
@@ -234,7 +234,7 @@ final class ModerateDecideAjaxTest extends WebTestCase
         $em->flush();
 
         $sub = $this->seedSubmission();
-        $sub->setLetter('C')->setItemId($item->getId());
+        $sub->setLetter('B')->setItemId($item->getId());
         $em->flush();
 
         $client->request('GET', '/map');
@@ -252,8 +252,8 @@ final class ModerateDecideAjaxTest extends WebTestCase
         /** @var array{item: ?array{letter: string, feature: array{type: string, properties: array<string, mixed>, geometry: array<string, mixed>}}} $data */
         $data = json_decode((string) $client->getResponse()->getContent(), true, 512, \JSON_THROW_ON_ERROR);
 
-        self::assertNotNull($data['item'], 'an approved C item must come back for the map');
-        self::assertSame('C', $data['item']['letter']);
+        self::assertNotNull($data['item'], 'an approved B item must come back for the map');
+        self::assertSame('B', $data['item']['letter']);
         self::assertSame('Feature', $data['item']['feature']['type']);
         self::assertSame($item->getId(), $data['item']['feature']['properties']['id']);
         self::assertSame('Fontaine du Décide', $data['item']['feature']['properties']['n']);

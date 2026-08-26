@@ -78,7 +78,7 @@ Here is one such entry, exactly as a person typed it:
 
 <!-- CODE-FROM web/src/Catalog/Command/SeedManualCatalogCommand.php -->
 ```php
-'letter' => 'B', 'name' => 'Côte de la Redoute', 'lat' => 50.49222, 'lng' => 5.69924,
+'letter' => 'N', 'name' => 'Côte de la Redoute', 'lat' => 50.49222, 'lng' => 5.69924,
 ```
 
 and here is that same pin, a few dozen lines later in the same file, on its way into a geometry:

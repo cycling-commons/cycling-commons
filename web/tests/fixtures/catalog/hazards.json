@@ -1,2 +1,2 @@
-{"layer":"hazards","letter":"F","features":[
+{"layer":"hazards","letter":"E","features":[
  {"type":"Feature","properties":{"n":"Test crosswind","hazardType":"Crosswind / fog","severity":"Moderate","worstWhen":"Autumn / winter","source":"manual","ref":"manual:crosswind-test"},"geometry":{"type":"Point","coordinates":[4.5,50.5]}}]}

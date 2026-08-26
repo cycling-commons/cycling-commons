@@ -7,7 +7,7 @@ declare(strict_types=1);
 namespace App\Catalog;
 
 /**
- * Editable catalog types. L is the heatmap (not editable), so M skips over it. Letters are storage ids, not display order.
+ * Editable catalog types. Practical types take letters A-M, experiential types N-Z, so each half can grow without colliding. The heat layer is derived and carries no letter. Letters are storage ids, not display order.
  *
  * @see docs/specs/edit-items/README.md
  *
@@ -28,7 +28,7 @@ enum ItemType: string
     case QualityRides = 'quality-rides';
     case PublicToilets = 'public-toilets';
 
-    /** Slug (`?type=water-food`) or letter (A–M); unknown falls back to {@see default()}. */
+    /** Slug (`?type=water-food`) or letter (A-G, N-R); unknown falls back to {@see default()}. */
     public static function fromParam(?string $value): self
     {
         if (null === $value || '' === $value) {
@@ -67,22 +67,22 @@ enum ItemType: string
         return null;
     }
 
-    /** Catalog letter (A–K, then M; L is reserved for the heatmap). */
+    /** Catalog letter: practical A-G, experiential N-R (A-M and N-Z are the two halves). */
     public function letter(): string
     {
         return match ($this) {
             self::RoadSurface => 'A',
-            self::Climbs => 'B',
-            self::WaterFood => 'C',
+            self::Climbs => 'N',
+            self::WaterFood => 'B',
             self::BikeServices => 'D',
-            self::WhereToSleep => 'E',
-            self::Hazards => 'F',
-            self::GettingThere => 'G',
-            self::Shelter => 'H',
-            self::ScenicViews => 'I',
-            self::HistoryCulture => 'J',
-            self::QualityRides => 'K',
-            self::PublicToilets => 'M',
+            self::WhereToSleep => 'O',
+            self::Hazards => 'E',
+            self::GettingThere => 'F',
+            self::Shelter => 'G',
+            self::ScenicViews => 'P',
+            self::HistoryCulture => 'Q',
+            self::QualityRides => 'R',
+            self::PublicToilets => 'C',
         };
     }
 
@@ -120,7 +120,13 @@ enum ItemType: string
         return 'item_type.'.$this->value.'.eyebrow';
     }
 
-    /** The locator pin glyph shown in the wizard (from edit-items.js). */
+    /**
+     * THE category glyph, one per type, for every surface (owner 2026-08-25:
+     * "use the same as in the map, and make sure these are the only ones in
+     * the system"). The map reads this set as `window.CC_TYPE_ICONS`
+     * (MapController), server pages through `cc_type_icons()`
+     * (partials/_type_icon.html.twig). Nothing else may define a category icon.
+     */
     public function icon(): string
     {
         return match ($this) {
@@ -132,11 +138,42 @@ enum ItemType: string
             self::Hazards => '⚠',
             self::GettingThere => '🚆',
             self::Shelter => '⛑',
-            self::ScenicViews => '◬',
+            self::ScenicViews => '📷',
             self::HistoryCulture => '🏛',
             self::QualityRides => '★',
             self::PublicToilets => '🚻',
         };
+    }
+
+    /**
+     * A drawn 24-box path for the types whose glyph is not good enough as a
+     * pin or a row icon; the map's own paths (they used to live in icons.js).
+     * Null = the glyph is the icon.
+     */
+    public function svgPath(): ?string
+    {
+        return match ($this) {
+            self::Climbs => 'M2 20 L9.5 6 L13 12 L16 8 L22 20 Z',
+            self::ScenicViews => 'M9 4h6l1.5 2.5H20a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8.5a2 2 0 0 1 2-2h3.5L9 4Zm3 4.6a4.7 4.7 0 1 0 0 9.4 4.7 4.7 0 0 0 0-9.4Zm0 2a2.7 2.7 0 1 1 0 5.4 2.7 2.7 0 0 1 0-5.4Z',
+            self::PublicToilets => 'M5 3h5.6v8H5zM4 12h16a1 1 0 0 1 1 1.1c-.3 3.4-2.3 6-4.9 7.1v1.3a.9.9 0 0 1-.9.9H8.8a.9.9 0 0 1-.9-.9v-1.3C5.3 19.1 3.3 16.5 3 13.1A1 1 0 0 1 4 12z',
+            default => null,
+        };
+    }
+
+    /**
+     * Letter → {glyph, svg} for every type: the payload both the map and the
+     * Twig partial consume.
+     *
+     * @return array<string, array{glyph: string, svg: ?string}>
+     */
+    public static function iconSet(): array
+    {
+        $set = [];
+        foreach (self::cases() as $t) {
+            $set[$t->letter()] = ['glyph' => $t->icon(), 'svg' => $t->svgPath()];
+        }
+
+        return $set;
     }
 
     /** The wizard eyebrow line ("Improve this …"). */

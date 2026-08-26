@@ -1,10 +1,10 @@
 <!-- SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 -->
 
-# Edit spec — F · Hazards & conditions
+# Edit spec — E · Hazards & conditions
 
 **Status:** canonical reference · **Audience:** contributors to Cycling Commons
 
-- **Catalog layer:** F · Hazards & conditions
+- **Catalog layer:** E · Hazards & conditions
 - **Map depiction:** ⚠ pin, colour #C8923A
 - **Edit-item id:** `exposed-crosswind-hautes-fagnes` in `atlas/demo/edit-items.js`, dynamic — needs freshness
 - **Editable:** yes · Frontend demo · 2026-06-18

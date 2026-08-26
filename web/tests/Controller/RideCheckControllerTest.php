@@ -198,9 +198,9 @@ final class RideCheckControllerTest extends WebTestCase
         // test that does not build it gets a 500, not a payload.
         self::ensureCoverageSchema($em->getConnection());
         self::insertCoveragePoi($em->getConnection(), [
-            'letter' => 'C', 'name' => 'OSM fontaine', 'lat' => 50.40045, 'lng' => 5.8050, 'ref' => 'node/rc-web-cov',
+            'letter' => 'B', 'name' => 'OSM fontaine', 'lat' => 50.40045, 'lng' => 5.8050, 'ref' => 'node/rc-web-cov',
         ]);
-        $item = (new Item())->setLetter('C')->setName('Fontaine du test')
+        $item = (new Item())->setLetter('B')->setName('Fontaine du test')
             ->setGeom(json_encode(['type' => 'Point', 'coordinates' => [5.815, 50.40045]], \JSON_THROW_ON_ERROR))
             ->setCountryCode('BE')->setState(ItemState::Verified)->setSource(ItemSource::Osm)
             ->setSourceRef('node/rc-web')->setAttributes([]);
@@ -218,14 +218,14 @@ final class RideCheckControllerTest extends WebTestCase
         self::assertGreaterThan(1.5, $body['distanceKm']);
         self::assertNotEmpty($body['track']);
         $letters = array_column($body['groups'], 'letter');
-        self::assertContains('C', $letters);
-        self::assertSame('Fontaine du test', $body['groups'][array_search('C', $letters, true)]['items'][0]['name']);
+        self::assertContains('B', $letters);
+        self::assertSame('Fontaine du test', $body['groups'][array_search('B', $letters, true)]['items'][0]['name']);
         // The coverage arm is serialized alongside the curated one, each item
         // carrying the `ref` the frontend needs to open it (§3.1/§3.3).
         self::assertArrayHasKey('coverage', $body);
         $covLetters = array_column($body['coverage'], 'letter');
-        self::assertContains('C', $covLetters);
-        $covItem = $body['coverage'][array_search('C', $covLetters, true)]['items'][0];
+        self::assertContains('B', $covLetters);
+        $covItem = $body['coverage'][array_search('B', $covLetters, true)]['items'][0];
         self::assertSame('OSM fontaine', $covItem['name']);
         self::assertSame('node/rc-web-cov', $covItem['ref']);
         // Read-only: the upload must not create any DB row.

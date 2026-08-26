@@ -179,7 +179,7 @@ _TABLE_DDL = """
 CREATE TABLE IF NOT EXISTS coverage_poi (
     id            bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     ref           varchar(160) NOT NULL,  -- 'node/61146471' | 'way/…' = item.source_ref format
-    letter        char(1)      NOT NULL,  -- C D E G H I J (osm-data-architecture.md §5)
+    letter        char(1)      NOT NULL,  -- B C D F G O P Q (osm-data-architecture.md §5)
     kind          varchar(16),            -- serviceKind for D (shop|station|pump), NULL otherwise
     name          varchar(255),           -- OSM name tag, NULL when unnamed
     geom          geometry(Point, 4326) NOT NULL, -- nodes as-is; ways centroid at load

@@ -65,7 +65,7 @@ final class ModerationActivityPageTest extends WebTestCase
         /** @var EntityManagerInterface $em */
         $em = static::getContainer()->get(EntityManagerInterface::class);
 
-        $s = (new Submission())->setType(SubmissionType::NewItem)->setLetter('C')
+        $s = (new Submission())->setType(SubmissionType::NewItem)->setLetter('B')
             ->setUserId((int) $rider->getId())
             ->setStatus(SubmissionStatus::Approved)->setTitle('activity row')
             ->setGeom('{"type":"Point","coordinates":[6.0,50.4]}')->setCountryCode('BE')

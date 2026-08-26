@@ -16,7 +16,7 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 /**
- * Improve page: auth-gate, type-aware rendering (A–K), and the real edit
+ * Improve page: auth-gate, type-aware rendering (every catalogue letter), and the real edit
  * submission (Task 4 — see ImproveBindingTest for the prefill/was-now-snapshot
  * scenarios this file doesn't duplicate).
  *
@@ -432,8 +432,8 @@ final class ImproveTest extends WebTestCase
         $client = static::createClient();
         $this->loginFreshUser($client, 'letter');
 
-        // Map deep-links carry the catalog letter (layer.letter) — E is sleep.
-        $item = $this->createItem('E');
+        // Map deep-links carry the catalog letter (layer.letter) — O is sleep.
+        $item = $this->createItem('O');
         $client->request('GET', '/improve?item='.$item->getId());
 
         self::assertResponseIsSuccessful();

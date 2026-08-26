@@ -144,7 +144,7 @@ final class CuratedReadinessTest extends KernelTestCase
 
     public function testATotalSpreadOverEnoughBlocksIsReady(): void
     {
-        foreach (['B' => 9, 'E' => 8, 'I' => 8] as $letter => $n) {
+        foreach (['N' => 9, 'O' => 8, 'P' => 8] as $letter => $n) {
             for ($i = 0; $i < $n; ++$i) {
                 $this->addItem($letter, 'true');
             }
@@ -162,7 +162,7 @@ final class CuratedReadinessTest extends KernelTestCase
      */
     public function testBreadthMetButTotalShortReportsOnlyTheTotalGap(): void
     {
-        foreach (['B', 'E', 'I'] as $letter) {
+        foreach (['N', 'O', 'P'] as $letter) {
             for ($i = 0; $i < 5; ++$i) {
                 $this->addItem($letter, 'true');
             }

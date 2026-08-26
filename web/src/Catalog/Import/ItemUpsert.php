@@ -35,7 +35,7 @@ final class ItemUpsert
           subdivision_id = CASE WHEN EXISTS (SELECT 1 FROM change_history ch WHERE ch.item_id = item.id) THEN item.subdivision_id ELSE EXCLUDED.subdivision_id END,
           attributes = CASE WHEN EXISTS (SELECT 1 FROM change_history ch WHERE ch.item_id = item.id) THEN item.attributes
                             ELSE EXCLUDED.attributes || CASE
-                              WHEN item.letter = 'B' AND item.attributes -> 'route' = EXCLUDED.attributes -> 'route'
+                              WHEN item.letter = 'N' AND item.attributes -> 'route' = EXCLUDED.attributes -> 'route'
                               THEN (SELECT COALESCE(jsonb_object_agg(mk, item.attributes -> mk), '{}'::jsonb)
                                     FROM unnest(ARRAY['length','gain','footEle','summitEle','avgGradient','maxGradient','grad','lineGrad','demSource','binM','steepWindowM','steep']) AS mk
                                     WHERE jsonb_exists(item.attributes, mk))
@@ -65,7 +65,7 @@ final class ItemUpsert
           country_code = EXCLUDED.country_code,
           subdivision_id = EXCLUDED.subdivision_id,
           attributes = EXCLUDED.attributes || CASE
-            WHEN item.letter = 'B' AND item.attributes -> 'route' = EXCLUDED.attributes -> 'route'
+            WHEN item.letter = 'N' AND item.attributes -> 'route' = EXCLUDED.attributes -> 'route'
             THEN (SELECT COALESCE(jsonb_object_agg(mk, item.attributes -> mk), '{}'::jsonb)
                   FROM unnest(ARRAY['length','gain','footEle','summitEle','avgGradient','maxGradient','grad','lineGrad','demSource','binM','steepWindowM','steep']) AS mk
                   WHERE jsonb_exists(item.attributes, mk))

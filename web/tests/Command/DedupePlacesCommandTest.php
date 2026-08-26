@@ -138,18 +138,18 @@ final class DedupePlacesCommandTest extends KernelTestCase
 
     public function testTheLetterFilterBoundsTheSweep(): void
     {
-        $osm = $this->seed('E', 'Hôtel Koru', 50.66887, 4.90664, ItemSource::Osm, 'a');
-        $this->seed('E', 'Hôtel Koru', 50.66884, 4.90664, ItemSource::Pivot, 'b');
+        $osm = $this->seed('O', 'Hôtel Koru', 50.66887, 4.90664, ItemSource::Osm, 'a');
+        $this->seed('O', 'Hôtel Koru', 50.66884, 4.90664, ItemSource::Pivot, 'b');
 
-        $this->run_(['--write' => true, '--letter' => 'I']);
+        $this->run_(['--write' => true, '--letter' => 'P']);
 
         self::assertSame(ItemState::Unverified->value, $this->stateOf($osm));
     }
 
     public function testASecondRunIsAQuietNoOp(): void
     {
-        $this->seed('E', 'Hôtel Koru', 50.66887, 4.90664, ItemSource::Osm, 'a');
-        $this->seed('E', 'Hôtel Koru', 50.66884, 4.90664, ItemSource::Pivot, 'b');
+        $this->seed('O', 'Hôtel Koru', 50.66887, 4.90664, ItemSource::Osm, 'a');
+        $this->seed('O', 'Hôtel Koru', 50.66884, 4.90664, ItemSource::Pivot, 'b');
 
         $this->run_(['--write' => true]);
         $second = $this->run_(['--write' => true]);

@@ -49,9 +49,9 @@ final class CoverageRepository
         'opening_hours', 'website', 'contact:website', 'url', 'phone', 'contact:phone',
         'addr:city', 'addr:street', 'addr:housenumber', 'operator', 'description',
         'wheelchair', 'drinking_water', 'fee', 'capacity',
-        // Scenic-view detail (letter I): a peak's altitude, which way a
+        // Scenic-view detail (letter P): a peak's altitude, which way a
         // viewpoint faces, and how far a waterfall drops. All three are plain
-        // OSM tags the harvest now stores; the drawer reads them for I only,
+        // OSM tags the harvest now stores; the drawer reads them for P only,
         // but the whitelist is per-tag, not per-letter, so a peak reached
         // through any other letter shows the same fact rather than hiding it.
         'ele', 'direction', 'height',
@@ -62,11 +62,11 @@ final class CoverageRepository
     ];
 
     /**
-     * Coverage POI letters. A, B and K stay curated-only.
+     * Coverage POI letters. A, N and R stay curated-only.
      *
      * @see docs/specs/osm-data-architecture.md §5
      */
-    private const string POI_LETTERS_SQL = "('C', 'D', 'E', 'G', 'H', 'I', 'J', 'M')";
+    private const string POI_LETTERS_SQL = "('B', 'C', 'D', 'F', 'G', 'O', 'P', 'Q')";
 
     /** Community items listed per nearby letter group before the "show all" expander. */
     private const int NEARBY_COMMUNITY_CAP = 3;
@@ -317,7 +317,7 @@ final class CoverageRepository
         }
 
         $out = [];
-        foreach (str_split('CDEGHIJM') as $letter) {
+        foreach (str_split('BCDFGOPQ') as $letter) {
             if (!isset($groups[$letter])) {
                 continue;
             }

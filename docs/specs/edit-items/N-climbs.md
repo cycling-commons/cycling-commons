@@ -1,11 +1,11 @@
 <!-- SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 -->
 
-# Edit spec — B · Climbs
+# Edit spec — N · Climbs
 
 **Status:** canonical reference · **Audience:** contributors to Cycling Commons
 
-- **Catalog layer:** B · Climbs
-- **Map depiction:** gradient-coloured line + foot pin, icon ⛰, colour #6A2C8F
+- **Catalog layer:** N · Climbs
+- **Map depiction:** gradient-coloured line + foot pin, icon: a drawn twin-peak mountain (`MOUNTAIN_PATH` in icons.js, like the camera and toilet glyphs; the ⛰ emoji flattened to one plain triangle), colour #6A2C8F
 - **Edit-item id:** `cote-de-la-redoute`, `mur-de-huy`, `cote-de-stockeu`, `cote-de-la-roche-aux-faucons` in `atlas/demo/edit-items.js` (one edit item per climb)
 - **Editable:** yes · Frontend demo · 2026-06-18
 - **Lifecycle:** *votable* — verified (≥ X community confirmations) → votable → **best-of** (top-voted); appears in **Best-of** mode once it earns votes. See [README — lifecycle & votability](README.md#item-lifecycle-and-votability).
@@ -33,14 +33,17 @@ range (lat −90..90, lng −180..180); `steep.pct` must match a gradient shape
 (`12`, `12.5%` — up to two digits, optional decimal, optional `%`). Malformed geometry
 surfaces as a form error on the `route` field, never a silent discard.
 
-**One shared editor, both flows.** `web/assets/contribute/climb-editor.js`
-(`window.Cc.mountClimbEditor`) is mounted by both the add flow (`add-climb.js`) and the
-edit flow (`improve.js`, which swaps it in for the generic single-pin Locate step when
-the item is letter B). Markers are labelled to make direction unambiguous — foot = green
+**One shared editor, both arms of one page.** `web/assets/contribute/climb-editor.js`
+(`window.Cc.mountClimbEditor`) is mounted by `improve.js` for both the add arm
+(`/improve?type=climbs&mode=add`) and the edit arm (`/improve?item=<id>&type=N`); it swaps
+the editor in for the generic single-pin Locate step whenever the type is letter N. (Until
+2026-08-25 a separate `add-climb.js` mounted the same editor for the retired `/add-climb`
+wizard; see the dated note below.) Markers are labelled to make direction unambiguous — foot = green
 "START · foot", summit = orange "END · summit", steepest = red warning ▲ "STEEPEST · \<pct\>"
 (labels come from the `js.climb_marker_*` translation keys via `window.CC_EDITOR_LABELS`).
-The editor writes the three attributes into hidden form fields (`route`/`grad`/`steep` on
-both `App\Form\AddClimbType` and `App\Form\ImproveType`).
+The editor writes the attributes into hidden form fields on `App\Form\ImproveType`
+(`route`/`grad`/`steep`, plus `avg` and `steepPoint`; the add arm also fills `lat`/`lng`
+from the foot, because a climb's pin is its foot).
 
 **Auto-routing.** Placing or moving foot + summit auto-routes the road between them via
 client-side OSRM (`router.project-osrm.org`), producing `route` and the snapped length;
@@ -106,33 +109,90 @@ through. And the edit flow offered both as ordinary registry fields, so a redraw
 untouched: rebuilding Roche-aux-Faucons from 1.75 km to 4.35 km kept the 9% somebody typed
 in June (owner-reported 2026-08-04). One definition, measured, recomputed on every redraw.
 
-## Adding a climb (`/add-climb`)
+## Adding a climb (`/improve?type=climbs&mode=add`)
 
-Climbs do not use the generic `/improve?mode=add` pin flow — they have a dedicated
-5-step gated wizard (`ContributeController::addClimb()`,
-`web/templates/contribute/add_climb.html.twig`, `web/assets/contribute/add-climb.js`).
-Next is disabled until each step's minimum is met:
+Since 2026-08-25 a climb is added on the same registry-driven page that edits one. There
+is **one contribution form per item type** ([README.md](README.md)): `/improve?type=climbs&mode=add`
+is the `mode=add` arm of `ContributeController::improve()` (`addPlace()`, `ImproveType` with
+`add_mode: true`, `web/templates/contribute/improve.html.twig`,
+`web/assets/contribute/improve.js`), and `/improve?item=<id>&type=N` is the edit arm of the
+same page. Next is disabled until each step's minimum is met:
 
 | # | Step | Contents | Gate to advance |
 |---|---|---|---|
-| 1 | **Where** | map hosting the shared three-point editor (foot → summit → auto-routed track + steepest); the four-line how-to; keyless Photon place search with map-tap fallback; Undo + Reset | foot + summit placed, no routing/elevation request in flight |
-| 2 | **Profile** | name, length (auto-filled from the routed track, editable — a user-typed value always wins over re-autofill), elevation gain, avg gradient (read-only, measured ascent-only from the drawn line), max gradient (read-only, off the steepest marker), surface, road quality (`sq`), traffic (`tr`) | name + elevation gain > 0 |
-| 3 | **Details** | gradient guidance (a static line naming the ceilings per discipline, handbikes included), rider note, "Already in OSM?" toggle | none (all optional) |
-| 4 | **Review** | echoes exactly the entered values ([README.md](README.md) P3) with the provenance line (curator queue; ODbL data / CC BY-SA media) | submit blocked while routing/profiling is pending |
-| 5 | **Submitted** | real POST → submission receipt; "you are here" highlight on the journey diagram | — |
+| 1 | **Where** | map hosting the shared three-point editor (foot → summit → auto-routed track + steepest); an on-map **hint pill** at the top of the map (`#wz-mapHint`) that says the next tap (foot, then summit) and hides once both are set; the four-line how-to; keyless Photon place search with map-tap fallback; Undo + Reset; a read-only **measured** block under the map (`#wz-measured`: length, height gain, average gradient, steepest) filled live from the elevation profile as the line is drawn | foot + summit placed, and no routing or elevation-profile request in flight (`WZ.locPending`) |
+| 2 | **Details** | the registry fields for `ItemType::Climbs` (`CatalogFormRegistry`): **name** (required, injected by add mode), surface, road quality (`sq`), traffic (`tr`), effort, "anything to correct" (`correction`); and the add-missing extras water on climb, hairpins, shade / exposure, famous for, approach. Ascent, average gradient and steepest sustained are `CatalogField::derivedText`: displayed, never typed | name filled |
+| 3 | **Photos + links** | up to 6 photos through the shared uploader (consent modal on the first drop, quarantine scan, ids in the hidden `mediaIds` field, claimed by the submission at intake; [../photo-uploads.md](../photo-uploads.md) §4); links through the shared links editor | none (all optional); Next is held while a photo is uploading or checking (`cc:media-busy`) |
+| 4 | **Review** | echoes exactly the entered values ([README.md](README.md) P3); the foot/summit line is followed by the **measured** numbers (length, gain, average, steepest) so the review repeats what step 1 showed; the provenance line (curator queue; ODbL data / CC BY-SA media) | submit blocked while routing/profiling is pending |
+| 5 | **Submitted** | real POST → submission receipt; the page's own lifecycle/funnel line says what happens next | none |
 
-The **"journey of a climb" governance diagram** (you draw it → curator review → approved
-→ Everything backlog → eligible next round → voted up → best-of, with needs-info and
-rejected branches) stays always visible below the wizard (the template's `.journey` block).
+**Intake.** The form posts as `CatalogContributionService::submit('add', …)` →
+`submitAdd()`, the same path as every other type: `type: climbs`, `details` (name, surface,
+`sq`, `tr`, effort, correction), `extras`, `lat`/`lng`, the hidden `route`/`grad`/`steep`/
+`avg`/`steepPoint`, and `mediaIds`. For climbs `submitAdd()` merges
+`ClimbGeometry::fromPayload()` into the attributes and runs `deriveClimbProfile()`, so
+length, gain, average and maximum gradient and the profile bars are measured from the
+DEM ([../climb-elevation.md §4](../climb-elevation.md)). If the wizard sent no `lat`/`lng`,
+the foot of the drawn route becomes the pin. The result is a NewItem submission in the
+curator queue ([../moderation-and-contribution.md §3.3](../moderation-and-contribution.md)),
+and photos ride along via `mediaIds` exactly as for an improve.
 
-**Honesty rule** (carried from the original add-climb design and still binding): never
-fabricate a derived value and present it as measured. Length comes from the real routed
-geometry, the average gradient is measured ascent-only from that geometry (never from a
-typed gain), and the gradient profile exists only when real elevation resolved (see the
-no-fake-profile rule above).
+**Gate rules, in one place:** foot and summit placed before Next on step 1, and nothing
+in flight (a mid-flight two-point placeholder is never submitted); name required on step 2;
+a photo still uploading or checking holds Next on step 3; submit waits for routing and the
+profile.
+
+**Honesty rule** (carried from the original climb wizard design and still binding): never
+fabricate a derived value and present it as measured, and **never let a rider type one**.
+Length comes from the real routed geometry, the height gain and the average gradient are
+measured from the DEM profile of that geometry (ascent-only average), the maximum is read
+off the steepest-ramp marker, and the gradient profile exists only when real elevation
+resolved (see the no-fake-profile rule above). The numbers are shown in the rider's unit
+(`ccKm`/`ccElev`, [../account-and-auth.md](../account-and-auth.md)) but stored metric; there
+is no typed field to convert back.
+
+**Arriving from the map (camera hint).** The map's "Add a climb here" rail block links to
+`/improve?type=climbs&mode=add&lat=&lng=&z=`; `panels.js` `initAddClimbHere()` rewrites the
+href on every map move, keeping the page's own query and adding the camera. Old
+`/add-climb?lat=&lng=&z=` links still work: `ContributeController::addClimb()` answers with a
+**301** to the same target, validating the hint on the way (`lat`/`lng` must be numeric and
+in range or both are dropped; `z` is clamped to 3..18). `improve.js` reads `?lat=&lng=&z=`
+(clamping `z` to 3..18 again) and opens the map at that view, otherwise at its own default
+centre. Only the camera travels; the foot pin is never seeded from it
+([../map-and-search.md §8.1](../map-and-search.md)).
 
 Submissions consume the shared per-user `contribution_submit` rate limiter
 (`web/config/packages/rate_limiter.yaml`, currently 20/hour sliding window).
+
+### `/add-climb` retired (2026-08-25)
+
+The dedicated 5-step wizard (`add_climb.html.twig`, `add-climb.js`, `App\Form\AddClimbType`,
+`AddClimbTest`, `CatalogContributionService::submit('climb', …)` / `submitClimb()`) was
+deleted on 2026-08-25 (owner decision). Why: two forms existed for one thing; the
+registry-driven form already had more fields (effort, correction, famous for, approach,
+links) than the wizard; and every fix was landing in the wrong one, so the two drifted
+apart with each round. `/add-climb` remains only as the 301 described above.
+
+Carried over into `/improve` for climbs, add and edit alike: the on-map hint pill and the
+read-only measured block (above), the review step's echo of the measured numbers, and the
+gating on in-flight routing/profile and on photo uploads.
+
+Dropped on purpose: the wizard's "journey of a climb" governance diagram (the `/improve`
+page already carries its lifecycle/funnel line); the static "gradient guidance"
+pseudo-field (it looked like a field and nobody could fill it in); the "Already in OSM?"
+toggle (OSM linking is the linker's job, [../catalog-data-model.md §5b](../catalog-data-model.md));
+and the typed length and elevation-gain fields, which the DEM overwrote on submit anyway.
+
+Translations: the whole `add_climb.*` block and the `meta.add_climb_*` keys were removed
+from all five locales; new keys are `improve.step1.measured_length`,
+`improve.step1.measured_gain`, `improve.step1.measured_avg`, `improve.step1.measured_max`,
+`improve.review.measured_avg` and `improve.review.measured_max`. `map.add_climb_*` stays
+(the map rail still says "Add a climb here") and so does `js.climb_*` (shared editor copy).
+`/add-climb` was removed from `SitemapController`.
+
+The three dated subsections below describe the shared editor and the retired wizard as
+they were in August 2026. They are kept as history; wherever they say "add-climb" or "the
+wizard", the behaviour now lives in `/improve`.
 
 ### The "it sends me back to the first page" bug (2026-08-03)
 
@@ -181,7 +241,7 @@ ends is to drag the summit. A rider answering a curator's question about their
 proposed ending arrived at a form that could not show the thing being asked
 about (owner-reported 2026-08-03).
 
-Letter B now always gets the Locate step when the item has a stored route.
+Letter N now always gets the Locate step when the item has a stored route.
 `CC_ITEM` already carries `route`/`grad`/`steep` regardless of the step, so the
 editor mounts on the real geometry with nothing extra sent.
 
@@ -202,10 +262,13 @@ follows when that spec is built.
 refused as `invalid_geometry` — now at least visibly. Not yet measured against a
 real long climb.
 
-### The wizard caught up with `/improve` (2026-08-03)
+### The wizard caught up with `/improve` (2026-08-03, history)
 
-Both flows mount the same three-point editor, but only `/improve` had been given
-that editor's supporting treatment. `/add-climb` now has all of it:
+*(Describes the retired `/add-climb` wizard; since 2026-08-25 only `/improve` exists and
+everything below is simply its own behaviour.)*
+
+Both flows mounted the same three-point editor, but only `/improve` had been given
+that editor's supporting treatment. `/add-climb` was given all of it:
 
 - **Its JS is translated.** 23 hardcoded English strings — the readouts, the
   search notes, the review-card labels, the nav — moved into a
@@ -226,15 +289,16 @@ that editor's supporting treatment. `/add-climb` now has all of it:
   drag to correct, Undo takes back the last thing) now appears above the map,
   not only on `/improve`. The third tap is undiscoverable without it.
 - **Undo is wired.** `mountClimbEditor` always exposed `undo()`/`canUndo()` and
-  an `onHistory` callback; add-climb simply never used them. The control is
+  an `onHistory` callback; the add-climb wizard simply never used them. The control is
   revealed only once there is history to take back.
 
 **Where that copy lives.** The how-to lines and the Undo label describe the
 *shared editor*, not either wizard, so they moved from `improve.step1.*` into
 `js.*` beside the editor's marker labels (`js.climb_how_1..4`, `js.climb_undo`).
 Two wizards mounting one control must not be able to explain it two different
-ways. Wizard-specific copy (readouts, search notes, review labels) stays under
-each wizard's own keys.
+ways. That split outlived the second wizard: `js.climb_*` is still the editor's
+copy, and the page copy (readouts, search notes, review labels) is `improve.*`;
+the `add_climb.*` keys are gone.
 
 ## Read view (drawer "current details")
 - Length
@@ -249,8 +313,8 @@ each wizard's own keys.
 |---|---|---|
 | Name | input | `[edit]` |
 | Surface | select(Smooth asphalt / Asphalt / Worn asphalt / Cobbles / Gravel) | `[OSM]` |
-| Average gradient (%) | input (from DEM) | `[auto]` |
-| Max gradient (%) | input | `[auto]` |
+| Average gradient (%) | read-only (measured from the DEM) | `[auto]` |
+| Max gradient (%) | read-only (off the steepest marker) | `[auto]` |
 | Anything to correct? | textarea | `[edit]` |
 
 ### Add missing  (type-specific)
@@ -258,7 +322,7 @@ each wizard's own keys.
 |---|---|---|
 | Water on climb? | select(Unknown / Yes / No) | `[tap]` |
 | Hairpins (count) | input | `[edit]` |
-| Shade / exposure | select(Unknown / Wooded / Exposed) | `[edit]` |
+| Shade / exposure | select(Unknown / Wooded / Partly shaded / Exposed) | `[edit]` |
 
 ### Report a problem
 - Foot/top wrong · Gradient wrong · Surface changed · Duplicate
@@ -268,5 +332,13 @@ Available on this type (CC BY-SA 4.0).
 Location metadata (EXIF GPS) is stripped from uploaded photos before storage — the Commons maps places, not riders.
 
 ## Implementation
-- **Demo:** registry entry per climb in `atlas/demo/edit-items.js` (typed values).
-- **Production:** geometry handmade from OSM road geometry (provenance label "OSM roads · geometry handmade"); gradient auto via DEM (SRTM / Copernicus GLO-30); optional snapping via Valhalla.
+- **Demo (`main` branch):** registry entry per climb in `atlas/demo/edit-items.js` (typed values).
+- **Production:** add on `/improve?type=climbs&mode=add`, edit on `/improve?item=<id>&type=N`,
+  both `ImproveType` + `improve.js` mounting `climb-editor.js`; intake
+  `CatalogContributionService::submitAdd()` (add) and the edit path, both validating the
+  geometry through `ClimbGeometry::fromPayload()` and measuring length, gain, gradients and
+  profile bars with `deriveClimbProfile()` from the DEM (Copernicus GLO-30 via Valhalla
+  `/height`, [../climb-elevation.md](../climb-elevation.md)); road snapping via our own
+  Valhalla behind `POST /contribute/route`. Seeded climbs carry the provenance label
+  "OSM roads · geometry handmade". The dedicated `/add-climb` wizard, `add-climb.js` and
+  `AddClimbType` were deleted on 2026-08-25; the route is a 301.

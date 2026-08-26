@@ -8,7 +8,7 @@ namespace App\Contribution\Gpx;
 
 /**
  * Geometry post-processing for proposed routes (docs/specs/route-domain.md §4.2,
- * docs/specs/edit-items/K-quality-rides.md).
+ * docs/specs/edit-items/R-quality-rides.md).
  *
  * @api
  */

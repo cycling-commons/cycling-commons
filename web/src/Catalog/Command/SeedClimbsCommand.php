@@ -187,7 +187,7 @@ final class SeedClimbsCommand extends Command
 
                 if (!$dryRun) {
                     $this->db->executeStatement(ItemUpsert::SQL, [
-                        'letter' => 'B',
+                        'letter' => 'N',
                         'name' => $name,
                         // Summit = the line's own end, not Wikidata's coordinate.
                         'geom' => json_encode(
@@ -353,7 +353,7 @@ final class SeedClimbsCommand extends Command
                     LIMIT 1
                  ) AS rid
                  FROM item it
-                WHERE it.letter = 'B' AND it.source = 'wikidata'
+                WHERE it.letter = 'N' AND it.source = 'wikidata'
                ) sub
               WHERE i.id = sub.iid AND i.region_id IS DISTINCT FROM sub.rid",
         );

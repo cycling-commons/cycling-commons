@@ -59,7 +59,7 @@ final class OsmConfirmTest extends WebTestCase
         self::ensureCoverageSchema($db);
         self::insertCoveragePoi($db, [
             'ref' => self::REF,
-            'letter' => 'C',
+            'letter' => 'B',
             'name' => 'Fontein Grote Markt',
             'lat' => 51.05,
             'lng' => 3.72,
@@ -67,7 +67,7 @@ final class OsmConfirmTest extends WebTestCase
         ]);
         self::insertCoveragePoi($db, [
             'ref' => self::NAMELESS,
-            'letter' => 'C',
+            'letter' => 'B',
             'name' => null,
             'lat' => 51.06,
             'lng' => 3.73,
@@ -195,7 +195,7 @@ final class OsmConfirmTest extends WebTestCase
         $db = static::getContainer()->get(Connection::class);
         foreach (['node/531001', 'node/531002'] as $extra) {
             self::insertCoveragePoi($db, [
-                'ref' => $extra, 'letter' => 'C', 'name' => 'Tap '.$extra,
+                'ref' => $extra, 'letter' => 'B', 'name' => 'Tap '.$extra,
                 'lat' => 51.07, 'lng' => 3.74, 'country_code' => 'BE',
             ]);
         }
@@ -327,7 +327,7 @@ final class OsmConfirmTest extends WebTestCase
         $client = static::createClient();
         $this->login($client, 'ours');
         $em = static::getContainer()->get(EntityManagerInterface::class);
-        $item = (new Item())->setLetter('C')->setName('Fontein Vrijdagmarkt')
+        $item = (new Item())->setLetter('B')->setName('Fontein Vrijdagmarkt')
             ->setGeom('{"type":"Point","coordinates":[3.72,51.05]}')->setCountryCode('BE')
             ->setState(ItemState::Unverified)->setSource(ItemSource::Osm)
             ->setSourceRef('node/909090')->setAttributes(['potable' => 'Yes (public supply)']);
@@ -363,7 +363,7 @@ final class OsmConfirmTest extends WebTestCase
         $client = static::createClient();
         $this->login($client, 'viewpoint');
         $em = static::getContainer()->get(EntityManagerInterface::class);
-        $item = (new Item())->setLetter('I')->setName('Zuiderdijk')
+        $item = (new Item())->setLetter('P')->setName('Zuiderdijk')
             ->setGeom('{"type":"Point","coordinates":[5.13,52.62]}')->setCountryCode('NL')
             ->setState(ItemState::Unverified)->setSource(ItemSource::Scout)->setAttributes([]);
         $em->persist($item);
@@ -385,7 +385,7 @@ final class OsmConfirmTest extends WebTestCase
         $client = static::createClient();
         $this->login($client, 'twice');
         $em = static::getContainer()->get(EntityManagerInterface::class);
-        $item = (new Item())->setLetter('H')->setName('Schuilhut')
+        $item = (new Item())->setLetter('G')->setName('Schuilhut')
             ->setGeom('{"type":"Point","coordinates":[3.73,51.06]}')->setCountryCode('BE')
             ->setState(ItemState::Unverified)->setSource(ItemSource::Manual)->setAttributes([]);
         $em->persist($item);
@@ -411,7 +411,7 @@ final class OsmConfirmTest extends WebTestCase
         self::assertResponseStatusCodeSame(404);
 
         $em = static::getContainer()->get(EntityManagerInterface::class);
-        $item = (new Item())->setLetter('C')->setName('Tap')
+        $item = (new Item())->setLetter('B')->setName('Tap')
             ->setGeom('{"type":"Point","coordinates":[3.74,51.07]}')->setCountryCode('BE')
             ->setState(ItemState::Unverified)->setSource(ItemSource::Manual)->setAttributes([]);
         $em->persist($item);

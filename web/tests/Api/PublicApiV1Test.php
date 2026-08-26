@@ -41,7 +41,7 @@ final class PublicApiV1Test extends WebTestCase
         self::assertArrayHasKey('tilesUrl', $config['routes']);   // null here: no manifest in test env
         self::assertCount(3, $config['routes']['style']['groups']);
         self::assertSame('{letter}_{cc}', $config['coverage']['sourceLayers']['points']);
-        self::assertSame(['c', 'd', 'e', 'g', 'h', 'i', 'j', 'm'], $config['coverage']['letters']);
+        self::assertSame(['b', 'c', 'd', 'f', 'g', 'o', 'p', 'q'], $config['coverage']['letters']);
         self::assertContains('zz', $config['coverage']['countries']);
         self::assertSame(9, $config['coverage']['minZoom']);
         self::assertStringContainsString('Cycling Commons', (string) $config['attribution']);
@@ -99,7 +99,7 @@ final class PublicApiV1Test extends WebTestCase
         self::assertCount(1, $capped['features']);
 
         // A valid letter with no rows in the box is an empty collection, not an error.
-        $client->request('GET', '/v1/search?bbox=4.0,50.0,5.0,51.0&letter=M');
+        $client->request('GET', '/v1/search?bbox=4.0,50.0,5.0,51.0&letter=C');
         self::assertResponseIsSuccessful();
         /** @var array<string, mixed> $empty */
         $empty = json_decode((string) $client->getResponse()->getContent(), true, 512, \JSON_THROW_ON_ERROR);
@@ -131,13 +131,13 @@ final class PublicApiV1Test extends WebTestCase
 
         $cases = [
             ['/v1/search', 'invalid_bbox'],                                     // nothing at all (letter is optional now)
-            ['/v1/search?letter=Z&bbox=4.0,50.0,5.0,51.0', 'invalid_letter'],   // letter outside A-M
-            ['/v1/search?letter=C', 'invalid_bbox'],                            // bbox missing
-            ['/v1/search?letter=C&bbox=1,2,3', 'invalid_bbox'],                 // three numbers
-            ['/v1/search?letter=C&bbox=4.0,50.0,x,51.0', 'invalid_bbox'],       // not numeric
-            ['/v1/search?letter=C&bbox=5.0,50.0,4.0,51.0', 'invalid_bbox'],     // min >= max
-            ['/v1/search?letter=C&bbox=190,50.0,195,51.0', 'invalid_bbox'],     // off the planet
-            ['/v1/search?letter=C&bbox=0,0,60,60', 'bbox_too_large'],           // continent-sized
+            ['/v1/search?letter=Z&bbox=4.0,50.0,5.0,51.0', 'invalid_letter'],   // not a catalogue letter
+            ['/v1/search?letter=B', 'invalid_bbox'],                            // bbox missing
+            ['/v1/search?letter=B&bbox=1,2,3', 'invalid_bbox'],                 // three numbers
+            ['/v1/search?letter=B&bbox=4.0,50.0,x,51.0', 'invalid_bbox'],       // not numeric
+            ['/v1/search?letter=B&bbox=5.0,50.0,4.0,51.0', 'invalid_bbox'],     // min >= max
+            ['/v1/search?letter=B&bbox=190,50.0,195,51.0', 'invalid_bbox'],     // off the planet
+            ['/v1/search?letter=B&bbox=0,0,60,60', 'bbox_too_large'],           // continent-sized
             ['/v1/search?bbox=4.0,50.0,5.0,51.0&tier=gold', 'invalid_tier'],    // unknown tier
         ];
 
@@ -169,7 +169,7 @@ final class PublicApiV1Test extends WebTestCase
         // (coverage-provider.md §9), for /v1/search exactly as for
         // catalog.json, so promote the fixtures like CatalogEndpointTest does.
         static::getContainer()->get(\Doctrine\ORM\EntityManagerInterface::class)->getConnection()->executeStatement(
-            "UPDATE item SET state = 'verified' WHERE letter IN ('C','D','E','G','H','I','J')",
+            "UPDATE item SET state = 'verified' WHERE letter IN ('B','D','F','G','O','P','Q')",
         );
     }
 }

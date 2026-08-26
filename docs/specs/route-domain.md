@@ -1,15 +1,15 @@
 <!-- SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 -->
 
-# Route Domain — Recommended Routes (K)
+# Route Domain — Recommended Routes (R)
 
 **Status:** canonical reference · **Audience:** contributors to Cycling Commons
 
-This document is the deep contract for item type **K · Quality rides**: how a
+This document is the deep contract for item type **R · Quality rides**: how a
 route enters the system (GPX intake), who owns it (curators), how the
 community's voice works (typed votes, ride confirmations, located
 corrections — never edits), how volume stays bounded (the per-region cap),
 and how best-of rankings are computed. The rider-facing digest lives in
-[edit-items/K-quality-rides.md](edit-items/K-quality-rides.md); the K
+[edit-items/R-quality-rides.md](edit-items/R-quality-rides.md); the R
 carve-out from the generic item funnel is described in
 [edit-items/README.md](edit-items/README.md). Routes are category-3 data
 (our own, never OSM-derived — [osm-data-architecture.md](osm-data-architecture.md) §2).

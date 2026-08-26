@@ -2398,12 +2398,12 @@ map:
   d_scout_send_all: 'Send the rest'
   d_scout_close_unsent: 'Close the review? {n} tag(s) have not been sent — they stay in your ride file, so you can open it here again later.'
   d_scout_letter_A: 'Road surface'
-  d_scout_letter_C: 'Water & food'
+  d_scout_letter_B: 'Water & food'
   d_scout_letter_D: 'Bike services'
-  d_scout_letter_F: 'Hazards'
-  d_scout_letter_H: 'Shelter'
-  d_scout_letter_I: 'Scenic views'
-  d_scout_letter_J: 'History & culture'
+  d_scout_letter_E: 'Hazards'
+  d_scout_letter_G: 'Shelter'
+  d_scout_letter_P: 'Scenic views'
+  d_scout_letter_Q: 'History & culture'
   d_initial_entry: 'Initial entry — new item'
   d_recent_changes: 'Recent changes'
   d_mod_note_ph: 'Optional note — a reason, or context…'
@@ -3110,7 +3110,7 @@ js:
   climb_marker_summit: 'END · summit'
   climb_marker_steepest: 'STEEPEST'
   # The shared three-point climb editor's own copy: mounted identically by
-  # /improve (letter B) and /add-climb, so one catalogue entry each. Undo is
+  # /improve (letter N) and /add-climb, so one catalogue entry each. Undo is
   # revealed only once there is history to take back.
   climb_undo: 'Undo'
   climb_how_1: 'Tap the foot of the climb, then tap the summit — the road between them is followed automatically.'

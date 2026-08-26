@@ -31,7 +31,7 @@ prints a short list; silence about a row means the mechanical checks passed,
 not that the row is good.
 
     python3 tools/wikimedia/prescreen_seeded.py            # all letters
-    python3 tools/wikimedia/prescreen_seeded.py --letter I
+    python3 tools/wikimedia/prescreen_seeded.py --letter P
     python3 tools/wikimedia/prescreen_seeded.py --json out.json
 """
 
@@ -200,11 +200,11 @@ def wikidata_entities(qids: list[str]) -> dict[str, dict]:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--letter", choices=["B", "I", "J"], help="only this letter")
+    ap.add_argument("--letter", choices=["N", "P", "Q"], help="only this letter")
     ap.add_argument("--json", metavar="PATH", help="also write the findings as JSON")
     args = ap.parse_args()
 
-    letters = [args.letter] if args.letter else ["B", "I", "J"]
+    letters = [args.letter] if args.letter else ["N", "P", "Q"]
 
     rows = db("""
         SELECT i.letter, i.country_code, i.name, i.source_ref,
@@ -322,7 +322,7 @@ def main() -> int:
     # when its line was last moved, and `app:climbs:recompute --write` is the
     # fix. (Verifying the summit against the real world is a separate job that
     # DOES need elevation: `climb_candidates.py --verify`.)
-    if "B" in letters:
+    if "N" in letters:
         for r in db("""
             SELECT i.name, i.country_code,
                    (i.attributes ? 'route')::text,
@@ -337,13 +337,13 @@ def main() -> int:
                    COALESCE(((i.attributes->>'summitEle')::float - (i.attributes->>'footEle')::float)::text, ''),
                    COALESCE((SELECT MIN(v::int)::text FROM jsonb_array_elements_text(i.attributes->'lineGrad') v), '')
               FROM item i
-             WHERE i.letter = 'B' AND i.source IN ('manual','wikidata')
+             WHERE i.letter = 'N' AND i.source IN ('manual','wikidata')
              ORDER BY i.country_code, i.name
         """):
             name, cc, has_line, has_grad, stored, measured, gain, delta, min_grad = r
 
             def cflag(kind: str, detail: str) -> None:
-                findings.append({"kind": kind, "letter": "B", "cc": cc, "name": name,
+                findings.append({"kind": kind, "letter": "N", "cc": cc, "name": name,
                                  "ref": "", "lat": 0.0, "lon": 0.0, "detail": detail})
 
             if has_line != "true":

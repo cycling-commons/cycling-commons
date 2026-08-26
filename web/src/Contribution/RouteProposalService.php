@@ -21,7 +21,7 @@ use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 
 /**
  * Route proposal intake (docs/specs/route-domain.md §4,
- * docs/specs/edit-items/K-quality-rides.md). A proposal is a RecommendedRoute
+ * docs/specs/edit-items/R-quality-rides.md). A proposal is a RecommendedRoute
  * in state `submitted`, not an item Submission.
  *
  * @api

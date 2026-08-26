@@ -5,7 +5,7 @@
 The running example: you build a route-planner application. It already has a
 [MapLibre GL JS](https://maplibre.org/maplibre-gl-js/docs/) map with its own basemap, and users
 draw a planned ride on it. You want two Commons overlays behind their planning: the cycle-route
-network (so the plan can follow signed routes) and water points along the way (letter `C`). This
+network (so the plan can follow signed routes) and water points along the way (letter `B`). This
 page wires both, start to finish. Every value is real; swap the coordinates for your viewport.
 
 The example assumes the `maplibre-gl` and `pmtiles` packages, but nothing here depends on a
@@ -99,12 +99,12 @@ function bboxParam(map) {
 
 async function refreshCcWater(map, cc) {
   if (map.getZoom() < 8) return;                          // viewport far too large below this
-  const url = `${CC_API}/v1/search?bbox=${bboxParam(map)}&letter=C&limit=200`;
+  const url = `${CC_API}/v1/search?bbox=${bboxParam(map)}&letter=B&limit=200`;
   const res = await fetch(url);
   if (!res.ok) return;                                    // a 400/429 should never break the map
   const collection = await res.json();
 
-  const water = cc.categories.find((c) => c.letter === 'C');
+  const water = cc.categories.find((c) => c.letter === 'B');
   if (!map.getSource('cc-water')) {
     map.addSource('cc-water', { type: 'geojson', data: collection });
     map.addLayer({

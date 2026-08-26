@@ -6,19 +6,23 @@ import { escPend } from './util.js';
 
 // Draw order (render.js walks this). Reading order is catalogUtility/catalogVotable.
 // `votable` mirrors ItemType::isVotable(); `exp` is the Curated-mode hide flag — they disagree (A vs K).
+/* The category glyph per letter comes from ItemType::iconSet() (window.CC_TYPE_ICONS,
+   injected by the map page): one set for the map, the desks and the account pages. */
+export const TYPE_ICON = l => (((window.CC_TYPE_ICONS || {})[l] || {}).glyph) || '\u2022';
+export const TYPE_SVG = l => (((window.CC_TYPE_ICONS || {})[l] || {}).svg) || '';
 export const CATALOG = [
-  { key:'surface', letter:'A', label:LAYER_L10N.surface||'Road surface', color:'#4E8C84', icon:'▰', kind:'surface', exp:true, votable:false, features:[] }
-  ,{ key:'climbs', letter:'B', label:LAYER_L10N.climbs||'Climbs', color:'#6A2C8F', icon:'⛰', kind:'point', exp:true, votable:true, features:[] }
-  ,{ key:'water', letter:'C', label:LAYER_L10N.water||'Water & food', color:'#8FB6A8', icon:'💧', kind:'point', exp:false, votable:false, features:[] }
-  ,{ key:'toilets', letter:'M', label:LAYER_L10N.toilets||'Public toilets', color:'#4E6E8C', icon:'🚻', kind:'point', exp:false, votable:false, features:[] }
-  ,{ key:'services', letter:'D', label:LAYER_L10N.services||'Bike services', color:'#6b6f5e', icon:'⚙', kind:'point', exp:false, votable:false, features:[] }
-  ,{ key:'stays', letter:'E', label:LAYER_L10N.stays||'Where to sleep', color:'#B5532E', icon:'⛺', kind:'point', exp:true, votable:true, features:[] }
-  ,{ key:'hazards', letter:'F', label:LAYER_L10N.hazards||'Hazards & conditions', color:'#C8923A', icon:'⚠', kind:'point', exp:false, votable:false, features:[]}
-  ,{ key:'transit', letter:'G', label:LAYER_L10N.transit||'Getting there', color:'#3E7D8C', icon:'🚆', kind:'point', exp:false, votable:false, features:[] }
-  ,{ key:'shelter', letter:'H', label:LAYER_L10N.shelter||'Shelter', color:'#9A8FB6', icon:'⛑', kind:'point', exp:false, votable:false, features:[] }
-  ,{ key:'scenic', letter:'I', label:LAYER_L10N.scenic||'Scenic views', color:'#2C5440', icon:'📷', kind:'point', exp:true, votable:true, features:[] }
-  ,{ key:'history', letter:'J', label:LAYER_L10N.history||'History & culture', color:'#6E5849', icon:'🏛', kind:'point', exp:true, votable:true, features:[] }
-  ,{ key:'experience', letter:'K', label:LAYER_L10N.experience||'Recommended routes', color:'#FF5A1F', icon:'★', kind:'line', exp:false, votable:true, features:[] }
+  { key:'surface', letter:'A', label:LAYER_L10N.surface||'Road surface', color:'#4E8C84', icon:TYPE_ICON('A'), kind:'surface', exp:true, votable:false, features:[] }
+  ,{ key:'climbs', letter:'N', label:LAYER_L10N.climbs||'Climbs', color:'#6A2C8F', icon:TYPE_ICON('N'), kind:'point', exp:true, votable:true, features:[] }
+  ,{ key:'water', letter:'B', label:LAYER_L10N.water||'Water & food', color:'#8FB6A8', icon:TYPE_ICON('B'), kind:'point', exp:false, votable:false, features:[] }
+  ,{ key:'toilets', letter:'C', label:LAYER_L10N.toilets||'Public toilets', color:'#4E6E8C', icon:TYPE_ICON('C'), kind:'point', exp:false, votable:false, features:[] }
+  ,{ key:'services', letter:'D', label:LAYER_L10N.services||'Bike services', color:'#6b6f5e', icon:TYPE_ICON('D'), kind:'point', exp:false, votable:false, features:[] }
+  ,{ key:'stays', letter:'O', label:LAYER_L10N.stays||'Where to sleep', color:'#B5532E', icon:TYPE_ICON('O'), kind:'point', exp:true, votable:true, features:[] }
+  ,{ key:'hazards', letter:'E', label:LAYER_L10N.hazards||'Hazards & conditions', color:'#C8923A', icon:TYPE_ICON('E'), kind:'point', exp:false, votable:false, features:[]}
+  ,{ key:'transit', letter:'F', label:LAYER_L10N.transit||'Getting there', color:'#3E7D8C', icon:TYPE_ICON('F'), kind:'point', exp:false, votable:false, features:[] }
+  ,{ key:'shelter', letter:'G', label:LAYER_L10N.shelter||'Shelter', color:'#9A8FB6', icon:TYPE_ICON('G'), kind:'point', exp:false, votable:false, features:[] }
+  ,{ key:'scenic', letter:'P', label:LAYER_L10N.scenic||'Scenic views', color:'#2C5440', icon:TYPE_ICON('P'), kind:'point', exp:true, votable:true, features:[] }
+  ,{ key:'history', letter:'Q', label:LAYER_L10N.history||'History & culture', color:'#6E5849', icon:TYPE_ICON('Q'), kind:'point', exp:true, votable:true, features:[] }
+  ,{ key:'experience', letter:'R', label:LAYER_L10N.experience||'Recommended routes', color:'#FF5A1F', icon:TYPE_ICON('R'), kind:'line', exp:false, votable:true, features:[] }
 ];
 
 export const active = new Set(CATALOG.map(l => l.key));
@@ -68,8 +72,8 @@ export const catalogUtility = () => CATALOG.filter(l => !l.votable && !l.pending
 export const catalogVotable = () => CATALOG.filter(l => l.votable && !l.pendingLayer);
 export const catalogModeration = () => CATALOG.filter(l => l.pendingLayer);
 
-export const LETTER_KEY={C:'water',D:'services',E:'stays',G:'transit',H:'shelter',I:'scenic',J:'history',M:'toilets'};
-export const KEY_LETTER={water:'C',services:'D',stays:'E',transit:'G',shelter:'H',scenic:'I',history:'J',toilets:'M'};
+export const LETTER_KEY={B:'water',C:'toilets',D:'services',F:'transit',G:'shelter',O:'stays',P:'scenic',Q:'history'};
+export const KEY_LETTER={water:'B',toilets:'C',services:'D',transit:'F',shelter:'G',stays:'O',scenic:'P',history:'Q'};
 
 // docs/specs/map-and-search.md §4.2 — default Everything; Curated on an under-curated region is a near-empty map.
 let _mode = 'all';

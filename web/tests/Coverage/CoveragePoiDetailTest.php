@@ -35,7 +35,7 @@ final class CoveragePoiDetailTest extends WebTestCase
     private function item(string $sourceRef, ItemState $state = ItemState::Verified): Item
     {
         $em = static::getContainer()->get(EntityManagerInterface::class);
-        $item = (new Item())->setLetter('C')->setName('Fontaine curated')
+        $item = (new Item())->setLetter('B')->setName('Fontaine curated')
             ->setGeom('{"type":"Point","coordinates":[5.8,50.4]}')->setCountryCode('BE')
             ->setState($state)->setSource(ItemSource::Osm)->setSourceRef($sourceRef)
             ->setAttributes(['potable' => 'yes']);
@@ -79,7 +79,7 @@ final class CoveragePoiDetailTest extends WebTestCase
         $db = $this->db();
         self::ensureCoverageSchema($db);
         self::insertCoveragePoi($db, [
-            'ref' => 'node/61146471', 'letter' => 'C', 'name' => 'Fontaine Sainte-Anne',
+            'ref' => 'node/61146471', 'letter' => 'B', 'name' => 'Fontaine Sainte-Anne',
             'lat' => 50.4005, 'lng' => 5.8102,
             'tags' => [
                 'amenity' => 'drinking_water', 'drinking_water' => 'yes',
@@ -91,7 +91,7 @@ final class CoveragePoiDetailTest extends WebTestCase
         $data = $this->getJson($client, '/map/coverage/poi/node/61146471');
         self::assertResponseIsSuccessful();
         self::assertSame('node/61146471', $data['ref']);
-        self::assertSame('C', $data['letter']);
+        self::assertSame('B', $data['letter']);
         self::assertSame('Fontaine Sainte-Anne', $data['name']);
         self::assertNull($data['kind']);
         self::assertSame([50.4005, 5.8102], $data['ll']);
@@ -117,14 +117,14 @@ final class CoveragePoiDetailTest extends WebTestCase
         $db = $this->db();
         self::ensureCoverageSchema($db);
         self::insertCoveragePoi($db, [
-            'ref' => 'way/123456', 'letter' => 'H', 'name' => 'Abri du bois',
+            'ref' => 'way/123456', 'letter' => 'G', 'name' => 'Abri du bois',
             'tags' => ['amenity' => 'shelter'],
         ]);
 
         $data = $this->getJson($client, '/map/coverage/poi/way/123456');
         self::assertResponseIsSuccessful();
         self::assertSame('way/123456', $data['ref']);
-        self::assertSame('H', $data['letter']);
+        self::assertSame('G', $data['letter']);
     }
 
     public function testServiceKindSurfaces(): void
@@ -147,7 +147,7 @@ final class CoveragePoiDetailTest extends WebTestCase
         $client = static::createClient();
         $db = $this->db();
         self::ensureCoverageSchema($db);
-        self::insertCoveragePoi($db, ['ref' => 'node/777001', 'letter' => 'C', 'name' => 'Fontaine OSM']);
+        self::insertCoveragePoi($db, ['ref' => 'node/777001', 'letter' => 'B', 'name' => 'Fontaine OSM']);
         $item = $this->item('node/777001');
 
         // Two riders confirmed potable, one disagreed (plain int user ids —
@@ -173,7 +173,7 @@ final class CoveragePoiDetailTest extends WebTestCase
         $client = static::createClient();
         $db = $this->db();
         self::ensureCoverageSchema($db);
-        self::insertCoveragePoi($db, ['ref' => 'node/777002', 'letter' => 'C', 'name' => 'Fontaine rejetée']);
+        self::insertCoveragePoi($db, ['ref' => 'node/777002', 'letter' => 'B', 'name' => 'Fontaine rejetée']);
         $this->item('node/777002', ItemState::Rejected);
 
         $data = $this->getJson($client, '/map/coverage/poi/node/777002');
@@ -191,7 +191,7 @@ final class CoveragePoiDetailTest extends WebTestCase
         // community, so the drawer must not present a curated{...} overlay
         // (the app:coverage:retire-legacy --force run must not change what
         // the drawer shows: coverage-provider.md §9 "zero display change").
-        self::insertCoveragePoi($db, ['ref' => 'node/777004', 'letter' => 'C', 'name' => 'Fontaine oubliée']);
+        self::insertCoveragePoi($db, ['ref' => 'node/777004', 'letter' => 'B', 'name' => 'Fontaine oubliée']);
         $this->item('node/777004', ItemState::Unverified);
 
         $data = $this->getJson($client, '/map/coverage/poi/node/777004');
@@ -207,7 +207,7 @@ final class CoveragePoiDetailTest extends WebTestCase
         // Unverified but a rider confirmed it — "anything a human ever
         // touched stays canonical" (coverage-provider.md §9): it stays
         // payload-served, so the overlay must survive, state included.
-        self::insertCoveragePoi($db, ['ref' => 'node/777005', 'letter' => 'C', 'name' => 'Fontaine confirmée']);
+        self::insertCoveragePoi($db, ['ref' => 'node/777005', 'letter' => 'B', 'name' => 'Fontaine confirmée']);
         $item = $this->item('node/777005', ItemState::Unverified);
         $em = static::getContainer()->get(EntityManagerInterface::class);
         $em->persist(new ItemConfirmation((int) $item->getId(), 9201, ConfirmationStance::Potable));

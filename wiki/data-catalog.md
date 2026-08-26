@@ -22,6 +22,11 @@ viewpoints, and more. All of it is **community-contributed**, useful to **anyone
 
 ---
 
+Letters are stable identifiers, not an order: practical categories take A-M,
+experiential (votable) categories take N-Z, and the ride heatmap is a derived
+layer with no letter. Renumbered 2026-08-25; the letters are what `?type=`,
+the coverage tiles and the public API use.
+
 ## A. Road surface & base map  *(the base)* — mostly [OSM]
 - Area / region / municipality boundaries [OSM]
 - Road & path geometry and names [auto][OSM]
@@ -60,10 +65,24 @@ viewpoints, and more. All of it is **community-contributed**, useful to **anyone
     | **Unverified** | small **dot** | raw OSM `drinking_water=*`, shown but labelled *"verify locally"* |
 
     A point starts as a dot (imported from OSM) and is **promoted to an icon** once a verification step (utility cross-check or steward confirmation) passes. Demotion/expiry follows the freshness rules. The demo fakes the verification, but the dot-vs-icon distinction is the real intended UX.
-- Public toilets — their **own** category, **M** (below); listed here too because a rider looking for water and a rider looking for a toilet are usually the same rider, and the map shows M right after this group [tap][OSM]
+- Public toilets — their **own** category, **C** (next); listed here too because a rider looking for water and a rider looking for a toilet are usually the same rider, and the map shows C right after this group [tap][OSM]
 - Cyclist-friendly cafés / coffee stops [tap][edit]
 - Resupply — shops, supermarkets, bakeries (+ opening hours) [tap][OSM]
 - Notable on-route food stops [edit]
+
+## C. Public toilets  *(the stop nobody maps well)*
+- Public toilets — municipal blocks, station and park facilities, serviced stops [tap][OSM]
+- Free or paid · accessible · opening hours, where they are known [tap][OSM]
+
+Its own letter rather than a line inside **B** because it answers a different
+question at a different moment, and folding it into "Water & food" made it
+unfindable - a rider looking for a toilet does not think of it as food. It sits
+at C, straight after Water & food, which is also where the map displays it
+(it was M until the 2026-08-25 renumbering, when L was still kept free for the
+derived heatmap; the heatmap has no letter now).
+
+Sourced from OSM only. The obvious specialist directory for the Netherlands
+(HogeNood) is closed and partner-only, so nothing of theirs is copied.
 
 ## D. Bike services
 - Bike shops (+ hours, brands serviced) [edit][OSM]
@@ -71,13 +90,7 @@ viewpoints, and more. All of it is **community-contributed**, useful to **anyone
 - E-bike charging points [tap][OSM]
 - Emergency / mobile mechanics [edit]
 
-## E. Where to sleep
-- Bike-friendly accommodation riders have actually used — B&B, hotel, hostel, campsite [tap][edit][OSM]
-- Secure bike storage at a stay [edit]
-- Bivouac / shelter / wild-camp spots (where legal) [tap]
-- *Signpost layer (links out, not Commons): cyclist-accommodation & hospitality schemes*
-
-## F. Hazards & conditions  *(dynamic — needs freshness)*
+## E. Hazards & conditions  *(dynamic — needs freshness)*
 - Road-surface problems — potholes, broken surface, loose gravel [tap][safety]
 - Dangerous junctions, blind corners, bad sightlines [tap][safety]
 - Tram tracks, level crossings, cattle grids, slippery surfaces [tap][safety][OSM]
@@ -141,21 +154,8 @@ anonymization happens at ingest, not in storage**:
   start from those before any first-party uploads exist.
 
 Result: a purely aggregate layer, publishable openly (ODbL), holding **the map, not the rider**
-(Manifesto §IV). This is the *measured* side of routes; the rider-verified side is **K** — rode-it
+(Manifesto §IV). This is the *measured* side of routes; the rider-verified side is **R** — rode-it
 counts plus seasonal recommend-votes cast on the map drawer.
-
-## M. Public toilets  *(the stop nobody maps well)*
-- Public toilets — municipal blocks, station and park facilities, serviced stops [tap][OSM]
-- Free or paid · accessible · opening hours, where they are known [tap][OSM]
-
-Its own letter rather than a line inside **C** because it answers a different
-question at a different moment, and folding it into "Water & food" made it
-unfindable — a rider looking for a toilet does not think of it as food. **L is
-reserved** for the derived heatmap, so this took M; on the map it is displayed
-straight after Water & food, where riders look for it.
-
-Sourced from OSM only. The obvious specialist directory for the Netherlands
-(HogeNood) is closed and partner-only, so nothing of theirs is copied.
 
 ---
 

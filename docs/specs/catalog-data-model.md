@@ -30,10 +30,16 @@ other three by `Version20260703153611`):
 
 | Table | Holds | Letters |
 |---|---|---|
-| `item` | Every atomic editable catalog feature | A–J |
-| `recommended_route` | Curated route compositions | K |
-| `heat_point` | The computed ride-heat aggregate | L |
+| `item` | Every atomic editable catalog feature | A–G, N–Q |
+| `recommended_route` | Curated route compositions | R |
+| `heat_point` | The computed ride-heat aggregate | none (derived layer) |
 | `region` | Operational spatial buckets (moderation, voting, caps) | — |
+
+**Letters renumbered 2026-08-25:** practical A–M, experiential N–Z. Old -> new:
+B->N, C->B, E->O, F->E, G->F, H->G, I->P, J->Q, K->R, M->C; A and D unchanged.
+Migration `Version20260825120000` rewrites `item`, `coverage_poi` and
+`submission`; the coverage tile artifact must be republished after it (layer
+names are `<letter>_<cc>`). The ride heatmap no longer has a letter (it was L).
 
 **One generic `item` entity — not per-type entities, not Doctrine
 inheritance.** Common/filterable fields are real columns; type-specific detail
@@ -51,11 +57,11 @@ kind:
   segments are letter-A items with LineString geometry).
 - **Curated composition → `recommended_route`** — riders propose, curators own
   edits; see route-domain.md.
-- **Computed aggregate → `heat_point`** — L is *never* an item: no name, no
+- **Computed aggregate → `heat_point`** — the heat aggregate is *never* an item: no name, no
   lifecycle, no attributes, no region, never editable, never moderated.
 
 The letter → geometry-kind mapping is enforced at import
-(`ImportCatalogCommand::GEOMETRY_KIND`): `A` = LineString, `B`–`J` = Point.
+(`ImportCatalogCommand::GEOMETRY_KIND`): `A` = LineString, every other letter = Point.
 Wrong geometry kind for a letter is an import error.
 
 ## 2. Schemas
@@ -72,7 +78,7 @@ raw SQL/DBAL. Timestamps are `TIMESTAMP(0) WITHOUT TIME ZONE`
 | Column | Type | Notes |
 |---|---|---|
 | `id` | bigint generated identity | partition-friendly; no random UUIDs |
-| `letter` | varchar(1) | catalog type A–J (uppercased by the setter) |
+| `letter` | varchar(1) | catalog type A–G, N–Q (uppercased by the setter) |
 | `name` | varchar(200) | the one pseudo-field outside `attributes` — `Item::NAME_FIELD` keeps that rule in one place |
 | `geom` | geometry, GiST `idx_item_geom` | Point, or LineString for A |
 | `country_code` | varchar(2), btree `idx_item_country` | denormalized filter column |
@@ -204,7 +210,7 @@ has this option, and there is no all-refs form.
    recompute-owned keys (`ItemUpsert::MEASURED_KEYS`: length, gain, footEle,
    summitEle, avgGradient, maxGradient, grad, lineGrad, demSource, binM,
    steepWindowM, steep) over from the existing row, but ONLY when the row is
-   letter B and its stored `route` is byte-identical to the seeded one: a
+   letter N and its stored `route` is byte-identical to the seeded one: a
    measurement is a claim about one specific line, and keeping it across a
    redraw is the Roche-aux-Faucons failure (stored numbers from a line that
    moved). A changed line drops the measurements, and `seed-manual` ends by
@@ -287,8 +293,8 @@ row enters `state='unverified'` — never `verified`; verification is only ever
 earned through the funnel. Seeding is idempotent (`source_ref =
 manual:<stable-slug>`, same upsert as the importer) and collision-safe through
 the shared duplicate guard below. Corollary: **everything on the map is a real DB row** — no decorative
-constants in templates or `map.js` (the single letter-F hazard pin is the
-documented standing exception, since F has no serving path yet).
+constants in templates or `map.js` (the single letter-E hazard pin is the
+documented standing exception, since E has no serving path yet).
 
 ### 5a. One place, one row (2026-08-24)
 
@@ -940,18 +946,18 @@ Harvest-side rules that shape what arrives (toolchain:
 | Key | Shape | Notes |
 |---|---|---|
 | `A` | surface-segment list | `path` = [[lat,lng]…]; `wayId` only for `way/…` refs |
-| `B` | climbs list | `geom.ll` = [lat,lng]; stored `attribution` served as `source` (citation) |
-| `C`,`D`,`F`,`G`,`H`,`I`,`J`,`M` | GeoJSON FeatureCollection | properties = attributes + `n` (name) + `prov` (subdivision name) + `id` |
-| `E` | `{osm, pivot}` | the only source-split letter: `pivot` rows are their own bucket; every other source lands in `osm` |
-| `K` | routes list | includes raw `state` (map badges "proposed"), canonicalized `difficulty` and `bikeTypes` |
+| `N` | climbs list | `geom.ll` = [lat,lng]; stored `attribution` served as `source` (citation) |
+| `B`,`C`,`D`,`E`,`F`,`G`,`P`,`Q` | GeoJSON FeatureCollection | properties = attributes + `n` (name) + `prov` (subdivision name) + `id` |
+| `O` | `{osm, pivot}` | the only source-split letter: `pivot` rows are their own bucket; every other source lands in `osm` |
+| `R` | routes list | includes raw `state` (map badges "proposed"), canonicalized `difficulty` and `bikeTypes` |
 | `refs` | `["node/123", …]` | source_ref of every served `source='osm'` item, so the client can drop the coverage-tile twin (osm-data-architecture.md §8) |
-| `L` | **absent** | the ride heatmap moved to its own endpoint on 2026-08-09 (below) |
+| heat | **absent** | the ride heatmap (no letter) moved to its own endpoint on 2026-08-09 (below) |
 
-`F` (hazards) joined the payload on 2026-07-21 and `M` (public toilets) on
+`E` (hazards) joined the payload on 2026-07-21 and `C` (public toilets) on
 2026-07-30; both are ordinary served-item collections, region-stamped like every
 other letter.
 
-**`L` is not in this payload.** The ~6,600 heat points serve from
+**The heatmap is not in this payload.** The ~6,600 heat points serve from
 `GET /map/heat.json` (`MapController::heat()`), on the same public/ETag/max-age
 discipline, fetched only when a rider first switches the heatmap on. The layer
 is off by default, so on the catalog path every visitor was paying its bytes for
@@ -1101,7 +1107,7 @@ The two documents coexist deliberately; here is the exact split.
   is enforced structurally (free-licence gate + always-stamped
   `credit`/`license`/`source` in `enrich.py`) with no independent lint pass
   that would catch a future regression in that structure.
-- **F (hazards) serving path.** Letter F has intake designed but no serving
+- **E (hazards) serving path.** Letter E has intake designed but no serving
   path in `CatalogProvider`; the one demo hazard pin remains hardcoded in
   `map.js` (deferred, tracked in `docs/TODO.md`).
 - ~~**Known data issue**: a pre-existing OSM-vs-OSM duplicate ("Signal de

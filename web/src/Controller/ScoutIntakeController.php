@@ -68,7 +68,7 @@ final class ScoutIntakeController extends AbstractController
         $letter = (string) ($payload['letter'] ?? '');
         $autoFiledOther = 'other' === $type && '' === $letter;
         if ($autoFiledOther) {
-            $letter = 'F';
+            $letter = 'E';
         }
         $detail = isset($payload['detail']) && is_numeric($payload['detail'])
             ? (int) $payload['detail']
@@ -112,7 +112,7 @@ final class ScoutIntakeController extends AbstractController
         }
 
         foreach (ScoutTag::fieldsFor($type, $detail) as $field => $value) {
-            if ('F' === $letter) {
+            if ('E' === $letter) {
                 $details[$field] = $value;
             }
         }

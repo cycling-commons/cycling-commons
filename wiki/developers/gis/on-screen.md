@@ -137,15 +137,15 @@ const srcLayer = cc ? letter+'_'+cc : letter;
 map.addLayer({id, type:'symbol', source:'coverage', 'source-layer':srcLayer,
 ```
 
-`letter` is the lowercase catalogue letter (`c` for water, `d` for bike services, and so on) and `cc`
-is a lowercase country code, so our fountain's icon layer reads the `c_be` source-layer inside the
+`letter` is the lowercase catalogue letter (`b` for water, `d` for bike services, and so on) and `cc`
+is a lowercase country code, so our fountain's icon layer reads the `b_be` source-layer inside the
 `coverage` source. Rows with no country recorded live in a `zz` bucket, and `cc === null` is a
-fallback for a tile archive built before this split existed, reading the plain `c` source-layer
+fallback for a tile archive built before this split existed, reading the plain `b` source-layer
 instead. A `(letter, country)` pair with nothing in it simply renders nothing — there is no special
 case for an empty source-layer, it is just an empty layer.
 
 This is also where the "one source, many layers" idea from the previous section gets a second
-dimension. The very same `source` and the very same `source-layer` — `coverage` and `c_be` — feed
+dimension. The very same `source` and the very same `source-layer` — `coverage` and `b_be` — feed
 *two* layers in `addCoverage()`: a `symbol` icon layer for individual points and a `heatmap` layer
 for the overview density surface. What tells them apart is not the source, and not even the
 source-layer — it is each layer's `type`, its zoom range (`minzoom: 9` on the icons, `maxzoom: 9` on

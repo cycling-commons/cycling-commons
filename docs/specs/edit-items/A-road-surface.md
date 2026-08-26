@@ -461,7 +461,7 @@ entry point to the curators. The moderation drawer gained **Approve &
 confirm** — a tick on the decision that also records the curator's own
 confirmation, which verifies outright through the existing
 weighted-by-who-pressed-it rule ("I know these roads by hand"); offered for
-every letter whose stances include `exists` (not water, not K).
+every letter whose stances include `exists` (not water, not R).
 
 The public change history shows every actor as a stable pseudonym
 (`RiderPseudonym`, e.g. `rider#175a`) by design — including the moderator who

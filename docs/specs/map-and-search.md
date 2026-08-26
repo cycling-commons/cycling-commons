@@ -306,9 +306,9 @@ by default and a rider asks for one section at a time.
   ride-check group badges, the contribute hub cards and the improve/propose
   eyebrows; each of those shows the category's **icon** on its colour swatch
   instead. The change was forced by the grouping: sorting the list A–Z put
-  M · Public toilets last (far from Water & food, the row it belongs beside)
-  and B · Climbs above every utility, and once the list is ordered for humans
-  the letters read as a broken sequence (A, C, M, D…) — which is exactly what
+  Public toilets (then letter M) last (far from Water & food, the row it belongs beside)
+  and Climbs (then letter B) above every utility, and once the list is ordered for humans
+  the letters read as a broken sequence (at the time A, C, M, D…) — which is exactly what
   an identifier looks like when it is used as an ordinal.
 - **A pin's position is `pinPoint()` (util.js), not `featurePoint()`.** They
   answer different questions and disagree on climbs: the stored anchor is the
@@ -332,8 +332,8 @@ by default and a rider asks for one section at a time.
   at draw time**: this function runs at the end of every render *and* after
   every selection move, so a `moveLayer` in `drawClimbLine` is silently
   overridden a moment later (tried and reverted the same day).
-- **L · Ride heatmap is deliberately NOT a catalog entry:** the generated layer
-  list holds A–K only; L is a sub-header inside the FILTERS block with its own
+- **The ride heatmap (no letter) is deliberately NOT a catalog entry:** the generated layer
+  list holds the lettered types only; the heatmap is a sub-header inside the FILTERS block with its own
   On/Off toggle and season chips (§11).
 - Curators additionally receive a **⚑ Pending review** layer
   (`CC_PENDING`-driven, red pins) — moderation behaviour is owned by
@@ -1583,7 +1583,7 @@ the index and the dropdown.
 ### 7.3 Dropdown presentation
 
 Grouped and scrollable: **Places first** (local towns, then geocoded ones),
-then items grouped by catalog letter A–K with colour chips, **total cap 30**
+then items grouped by catalog letter (A–G, N–R) with colour chips, **total cap 30**
 (`CAP` in map.js `runS()`). Prefix matches rank above substring matches. The
 flat `sMatches` list preserves display order so keyboard navigation
 (↓/↑/Enter/Escape, `role="combobox"`/`listbox`) is untouched by grouping.
@@ -1619,26 +1619,34 @@ and then re-locate the climb from scratch in its own small map having just been
 looking straight at it.)*
 
 - **Where:** a `.grp.cc-addclimb` block in the Ride tools panel, under ride-check,
-  inside the same `ROLE_USER` gate. `/add-climb` is `ROLE_USER`, and a link
-  that lands on a login wall is worse than no link; anonymous riders reach it
-  through `/contribute`, which lists it.
+  inside the same `ROLE_USER` gate. The target, `/improve`, is `ROLE_USER`, and
+  a link that lands on a login wall is worse than no link; anonymous riders
+  reach it through `/contribute`, which lists it.
+- **Target (since 2026-08-25):** `/improve?type=climbs&mode=add&lat=&lng=&z=`,
+  the climb add arm of the one contribution form
+  ([edit-items/N-climbs.md](edit-items/N-climbs.md)). The dedicated `/add-climb`
+  wizard was retired that day; `/add-climb?lat=&lng=&z=` still answers, as a
+  **301** to the same target, so old links and bookmarks keep working.
 - **What travels:** the **camera only**. `panels.js` `initAddClimbHere()`
-  rewrites the href on every `move` to
-  `/add-climb?lat=&lng=&z=`, coordinates rounded to 5 decimals (about a metre).
-  Rewritten on move rather than captured at load, because the rider pans while
-  deciding.
+  rewrites the href on every `move`, keeping the link's own query
+  (`type`, `mode`) and setting `lat`/`lng`/`z`, coordinates rounded to
+  5 decimals (about a metre). Rewritten on move rather than captured at load,
+  because the rider pans while deciding.
 - **What does NOT travel:** the foot pin. Seeding it from the map centre was
   the tempting version and it is wrong twice: one point cannot say which end of
   the climb it is, and a pin the rider did not place is a claim they did not
   make. This is the same rule the wizard's own paste-a-coordinate path already
   follows.
-- **Server side:** `ContributeController::startView()` validates and returns
-  `{lat, lng, zoom}` or `null`; the template emits `window.CC_CLIMB_VIEW` only
-  when non-null and `add-climb.js` falls back to its own default centre
-  otherwise. Latitude/longitude out of range or non-numeric gives `null`
-  (a junk link degrades to the old behaviour, never to a broken map); zoom is
-  **clamped** to 3–18 rather than rejected, because a bad zoom in an otherwise
-  good link should not throw the coordinates away.
+- **Server side:** validation lives in the redirect.
+  `ContributeController::addClimb()` (the `/add-climb` route) forwards `lat`,
+  `lng` and `z` only when latitude/longitude are numeric and in range; junk
+  drops both (a junk link degrades to the wizard's own default centre, never to
+  a broken map), and zoom is **clamped** to 3..18 rather than rejected, because
+  a bad zoom in an otherwise good link should not throw the coordinates away.
+  `improve.js` honours `?lat=&lng=&z=` on its side (the same range check, `z`
+  clamped to 3..18 again) and opens the map at that view. Until 2026-08-25 this
+  was `ContributeController::startView()` returning `{lat, lng, zoom}` or `null`
+  into `window.CC_CLIMB_VIEW` for `add-climb.js`; both are gone.
 
 ## 9. Ride-check ("what's along my GPX?")
 
@@ -1671,7 +1679,7 @@ requirement).
   `WITH track AS MATERIALIZED (…GeomFromGeoJSON…), corridor AS MATERIALIZED (ST_Buffer(track::geography, :radius)::geometry)`
   probed with **`ST_Intersects(i.geom, corridor)`** — `ST_DWithin(::geography)`
   cannot use the GIST index, and an inlined track CTE re-parses the GeoJSON per
-  row per `ST_*` call. Letters **B–J only** (the SQL excludes A; K is absent
+  row per `ST_*` call. Letters **B–G and N–Q only** (the SQL excludes A; R is absent
   because routes live in `recommended_route` and get their own overlap query).
   States gated by `ItemState::servedSqlTuple()`. Per match:
   `ST_Distance` (metres off-track) and
@@ -1680,7 +1688,7 @@ requirement).
 - **Coverage arm (open POIs along the ride)** — a parallel `coverage` result
   (`RideCheckService::corridorCoverage()`) runs the *same* MATERIALIZED
   corridor over `coverage_poi`, limited to utility letters
-  `COVERAGE_LETTERS = {C, D, G, H}` (water, bike services, transport, shelter).
+  `COVERAGE_LETTERS = {B, D, F, G}` (water, bike services, transport, shelter).
   **Deduped against served curated items** on `(source_ref, letter)` — if a
   rider already curated an OSM entity it shows once, as the curated pick, never
   in both arms. `coverage_poi` and `item` are co-located on CC's own cluster, so
@@ -1779,17 +1787,18 @@ requirement).
   mapillary-js (§2); the unpkg dependency is the accepted external exception,
   SRI-pinned like maplibre-gl.
 
-## 11. L · Ride heatmap and the illustrative planner
+## 11. Ride heatmap (no letter) and the illustrative planner
 
-- L is a **derived overlay** (never a catalog entry, never editable — see the
-  A–L table in [edit-items/README.md](edit-items/README.md)): its own
+- The ride heatmap is a **derived overlay** (never a catalog entry, never editable,
+  and it carries no catalogue letter — see the items table in
+  [edit-items/README.md](edit-items/README.md)): its own
   panel with On/Off + season chips (All/Spring/Summer/Autumn/Winter), default
   **Off**. Season chips set a layer `filter` on the per-point season tag; a
   chip selected before the layer exists is honoured on first build.
 - The heatmap source/layer is built **lazily on the first On** — thousands of
   points allocated at load for a default-off layer was pure startup cost.
 - Heat data is derived at build time from sample GPX (downsampled ~1 point /
-  110 m, served as catalog.json's L layer); raw `.gpx` files never ship. The
+  110 m, served as the map's heat layer); raw `.gpx` files never ship. The
   real anonymized-ingest heatmap (map-match-then-discard, k-anonymity) is
   unbuilt; its privacy contract lives in the public wiki data catalog and gets
   its own spec when built.
@@ -1925,9 +1934,10 @@ Production stack choices recorded during the prototype and still steering the
 app: MapLibre GL render; PMTiles-on-CDN basemap direction with OpenFreeMap as
 the current keyless source; Copernicus GLO-30 / SRTM for elevation
 (climb-provenance side owned by
-[edit-items/B-climbs.md](edit-items/B-climbs.md)); **Photon** for type-ahead
+[edit-items/N-climbs.md](edit-items/N-climbs.md)); **Photon** for type-ahead
 place search, and **no Nominatim at all** (§7.2); **our own Valhalla**, via
-`POST /contribute/route` → `RouteSnapper`, for the add-climb draw preview —
+`POST /contribute/route` → `RouteSnapper`, for the climb editor's draw preview
+(on `/improve`; the `/add-climb` wizard that first used it was retired 2026-08-25) —
 the public OSRM demo server it used to call is gone from the CSP, and the
 proxy keeps OSRM's response shape so the editor's parsing was untouched.
 The coverage tiles themselves are specified in

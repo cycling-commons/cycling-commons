@@ -40,19 +40,6 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
  */
 final class CatalogContributionService implements ContributionStubInterface
 {
-    /**
-     * AddClimbType field names → registry attribute keys.
-     *
-     * @see docs/specs/edit-items/B-climbs.md
-     */
-    private const array CLIMB_FIELDS = [
-        // Gradients are measured from the line, never typed (docs/specs/climb-elevation.md §4).
-        'fSurface' => 'surface',
-        'fSurfaceQ' => 'sq',
-        'fTraffic' => 'tr',
-        'fNote' => 'correction',
-    ];
-
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly ValidatorInterface $validator,
