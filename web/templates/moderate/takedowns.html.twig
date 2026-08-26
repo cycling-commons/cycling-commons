@@ -1,139 +1,117 @@
 {# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{# The takedowns desk (docs/specs/photo-uploads.md §6b/§6c): open rights
+   requests as record cards, then the answered ones as a log of the same cards
+   in list density. Head, cards, pills and buttons come from
+   account/_shell_styles.html.twig like every other shell page. #}
 {% extends 'base.html.twig' %}
 {% block head_styles %}
 {% include 'account/_shell_styles.html.twig' %}
 <style>
-  .mh{padding:2rem 0 1.4rem}
-  .mh .kicker{font-family:var(--mono);font-size:.64rem;letter-spacing:.16em;text-transform:uppercase;color:var(--clay);margin-bottom:.6rem}
-  .mh h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4vw,2.4rem);line-height:1.08;margin-bottom:.4rem;color:var(--ink)}
-  .mh .role-badge{display:inline-flex;align-items:center;gap:.4rem;font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;background:var(--spruce-lift);color:var(--paper);padding:.22rem .55rem;border-radius:30px;margin-top:.5rem}
-
-  /* photo takedown requests (docs/specs/photo-uploads.md §6b) */
-  .q-takedowns{margin:0 0 2rem;padding:1.2rem;border:1px solid var(--clay);border-radius:8px;background:rgba(181,83,46,.05)}
-  .q-takedowns h2{font-family:var(--serif);font-size:1.15rem;margin:0}
-  .td-lead{font-size:.86rem;color:#4a4d40;margin:.3rem 0 1rem;line-height:1.5}
-  .td-lead a{color:var(--clay);text-decoration:underline;text-underline-offset:2px}
-  .td-card{border-top:1px solid rgba(20,22,14,.12);padding:.9rem 0}
-  /* Answered requests: a log, not cards. There is nothing to decide here and
-     usually nothing left to look at, so it is sized to be read down quickly
-     and to sit clearly below the work. */
-  .td-history{margin-top:2.4rem;border-top:1px solid rgba(20,22,14,.14);padding-top:1.2rem}
-  .td-history-h{font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:#8a8d7d;margin:0}
-  .td-history-lead{font-size:.82rem;color:#595c4d;margin:.35rem 0 .9rem;line-height:1.5}
-  .td-log{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.5rem}
-  .td-log-row{display:flex;flex-wrap:wrap;align-items:baseline;gap:.5rem;font-size:.84rem;
-    padding:.5rem .7rem;border-radius:6px;background:rgba(20,22,14,.04)}
-  .td-log-verb{font-family:var(--mono);font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;
-    padding:.15rem .45rem;border-radius:3px;background:rgba(20,22,14,.1);color:#4a4d40}
-  /* Granted is the one that destroyed something; it reads differently. */
-  .td-log-row--takedown_granted .td-log-verb{background:rgba(184,89,58,.16);color:var(--clay)}
-  .td-log-when{font-family:var(--mono);font-size:.62rem;color:#8a8d7d}
-  .td-log-item{font-weight:600;color:var(--ink)}
-  .td-log-gone{font-family:var(--mono);font-size:.6rem;color:#8a8d7d}
-  /* The handling record: quiet, monospaced, and always last on the line, so a
-     curator scanning verdicts is not reading timestamps unless they want to. */
-  .td-log-track{margin-left:auto;font-family:var(--mono);font-size:.62rem;color:#8a8d7d;white-space:nowrap}
-  @media(max-width:700px){.td-log-track{margin-left:0;flex:1 0 100%;white-space:normal}}
-  .td-log-note{flex:1 0 100%;margin:.3rem 0 0;font-size:.84rem;line-height:1.5;color:#4a4d40}
-  .td-body{display:flex;gap:.9rem;align-items:flex-start}
-  .td-body img{width:110px;height:82px;object-fit:cover;border-radius:5px;flex:0 0 auto}
-  .td-reason{font-size:.9rem;line-height:1.5;margin:.3rem 0;white-space:pre-wrap}
-  .td-meta{font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;color:#595c4d;margin:0}
-  .td-actions{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin-top:.6rem}
+  /* The picture is the evidence: "is anyone recognisable" needs more than a
+     44px crop, so this card's thumbnail is the wizard's own 110×82. */
+  .td-img{width:110px;height:82px;object-fit:cover;border-radius:5px;flex:0 0 auto;border:1px solid rgba(20,22,14,.18)}
+  .td-reason{white-space:pre-wrap}
+  /* The decision row: a note field beside the two verbs. */
+  .td-actions{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin-top:.7rem}
   .td-actions input[type=text]{flex:1 1 16rem;font-family:var(--sans);font-size:.9rem;padding:.45rem .55rem;border:1px solid rgba(20,22,14,.25);border-radius:6px;background:var(--paper)}
-  .empty-queue{text-align:center;padding:3rem 1rem;color:#595c4d}
-  .empty-queue .ic{font-size:1.6rem;color:var(--trail)}
-  .empty-queue h3{font-family:var(--serif);font-size:1.3rem;margin:.5rem 0 .3rem;color:var(--ink)}
-  .flash-success{background:rgba(46,125,50,.12);border:1px solid rgba(46,125,50,.4);color:#2c5440;border-radius:6px;padding:.8rem 1rem;margin-bottom:1.4rem;font-size:.9rem}
-  .flash-error{background:rgba(179,38,30,.1);border:1px solid rgba(179,38,30,.45);color:var(--danger-ink);border-radius:6px;padding:.8rem 1rem;margin-bottom:1.4rem;font-size:.9rem}
+  /* The handling record on an answered request: when it came in, when it was
+     answered, how long that took, by whom. A rights request runs against a
+     legal clock, so the wait is the number this desk is judged on. */
+  .td-track{white-space:nowrap}
+  @media(max-width:700px){.td-track{white-space:normal}}
+  .td-gone{font-family:var(--mono);font-size:.6rem;color:#8a8d7d;margin-left:.4rem;font-weight:400}
 </style>
 {% endblock %}
 {% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate_takedowns', mod_scope_names: mod_scope_names is defined ? mod_scope_names : null, mod_submission_count: mod_submission_count is defined ? mod_submission_count : null, mod_route_count: mod_route_count is defined ? mod_route_count : null, mod_takedown_count: mod_takedown_count is defined ? mod_takedown_count : null} %}{% endblock %}
 
 {% block body %}
-<div class="mh">
-  <div class="wrap">
+<div class="dbody" id="main">
+  <div class="mh">
     <div class="kicker">{{ 'moderate.takedown.kicker'|trans }}</div>
     <h1>{{ 'moderate.takedown.heading'|trans }}</h1>
-    <div><span class="role-badge">&#9876; {{ 'moderate.role_label'|trans }}</span></div>
   </div>
-</div>
 
-<div class="wrap" id="main">
   {% for msg in app.flashes('success') %}<div class="flash-success" role="alert">{{ msg|trans }}</div>{% endfor %}
   {% for msg in app.flashes('danger') %}<div class="flash-error" role="alert">{{ msg|trans }}</div>{% endfor %}
 
+  {# No filters here: a rights request is never narrowed by area. The density
+     switch still folds the answered log to one line per request. #}
+  {% if takedowns is not empty or decided is not empty %}
+    <div class="mod-bar">{% include 'account/_density.html.twig' %}</div>
+  {% endif %}
+
   {% if takedowns is empty and not urgent_breaker_open|default(false) %}
-    <div class="empty-queue">
-      <div class="ic">&#9650;</div>
+    <div class="empty-state">
       <h3>{{ 'moderate.takedown.empty_heading'|trans }}</h3>
       <p>{{ 'moderate.takedown.empty_body'|trans }}</p>
     </div>
   {% else %}
   {# ── Photo takedown requests (docs/specs/photo-uploads.md §6b/§6c) ──
-     Its own desk since 2026-08-03 (owner). It used to ride above the
-     submissions queue, which put a legal clock and an editorial backlog on one
-     page and made the requests read as the bottom of somebody's to-do list.
-     Unfiltered and unscoped, shown to every curator: a rights request is not
-     work to be shared out by jurisdiction. Two sources share the cards: the
-     uploader (withheld the moment they asked) and a third party who says they
-     are in the picture (photo still up unless the urgent category fired).
+     Its own desk since 2026-08-03 (owner). Unfiltered and unscoped, shown to
+     every curator: a rights request is not work to be shared out by
+     jurisdiction. Two sources share the cards: the uploader (withheld the
+     moment they asked) and a third party who says they are in the picture
+     (photo still up unless the urgent category fired).
 
      The test for whether to remove is NOT restated here — it is one of the
      rules, so it lives in the rulebook and this page links to it. Copy that
      explains a judgement call has exactly one home, or the two drift. #}
-  <section class="q-takedowns">
-    <h2>{{ 'moderate.takedown.heading'|trans }}</h2>
-    {% if urgent_breaker_open|default(false) %}
-      {# The site-wide auto-withhold budget is spent: urgent reports are
-         arriving far faster than any genuine rate, so they are queuing here
-         instead of taking photos down by themselves (§6c). #}
-      <p class="td-lead" role="alert"><b>{{ 'moderate.takedown.breaker_open_b'|trans }}</b> {{ 'moderate.takedown.breaker_open'|trans }}</p>
-    {% endif %}
-    {# The test for what to remove and what to decline used to be spelled out
-       here in full. It is a rule, not a page label, so it lives in the
-       rulebook and this is the link to it — one home per judgement call. #}
-    <p class="td-lead">{{ 'moderate.takedown.lead_short'|trans }}
-      <a href="{{ path('moderate_rulebook') }}#takedowns">{{ 'moderate.takedown.rulebook_link'|trans }}</a></p>
+  <h2 class="sec-band">{{ 'moderate.takedown.heading'|trans }} <span class="sec-count">{{ pager.total }}</span></h2>
+  {% if urgent_breaker_open|default(false) %}
+    {# The site-wide auto-withhold budget is spent: urgent reports are
+       arriving far faster than any genuine rate, so they are queuing here
+       instead of taking photos down by themselves (§6c). #}
+    <p class="sec-lead" role="alert"><b>{{ 'moderate.takedown.breaker_open_b'|trans }}</b> {{ 'moderate.takedown.breaker_open'|trans }}</p>
+  {% endif %}
+  <p class="sec-lead">{{ 'moderate.takedown.lead_short'|trans }}
+    <a href="{{ path('moderate_rulebook') }}#takedowns">{{ 'moderate.takedown.rulebook_link'|trans }}</a></p>
+  <div class="q-list">
     {% for t in takedowns %}
-      <article class="td-card">
-        <div class="td-body">
-          <img src="{{ t.sm }}" width="110" height="82" alt="{{ 'moderate.takedown.alt'|trans }}">
-          <div>
-            <b>{{ t.itemName ?: ('moderate.takedown.no_item'|trans) }}</b>
-            <p class="td-meta">
+      <article class="q-item">
+        <div class="q-top">
+          <img class="td-img" src="{{ t.sm }}" width="110" height="82" alt="{{ 'moderate.takedown.alt'|trans }}">
+          <div class="q-headwrap">
+            <div class="q-head">
+              <span class="q-tag q-tag--photo">{{ (t.source == 'third_party' ? 'moderate.takedown.source_third_party' : 'moderate.takedown.source_uploader')|trans }}</span>
+              <h3 class="q-title">{{ t.itemName ?: ('moderate.takedown.no_item'|trans) }}</h3>
+              <span class="q-when">{{ 'moderate.takedown.asked'|trans({'%when%': t.requestedAt|cc_datetime}) }}</span>
+            </div>
+            <div class="q-submitter">
               {% if t.source == 'third_party' %}
-                {{ 'moderate.takedown.source_third_party'|trans }}
-                · {{ ('media.report.category.' ~ t.category)|trans }}
+                {{ ('media.report.category.' ~ t.category)|trans }}
                 · {{ (t.withheld ? 'moderate.takedown.state_withheld' : 'moderate.takedown.state_published')|trans }}
-              {% else %}
-                {{ 'moderate.takedown.source_uploader'|trans }}
               {% endif %}
-            </p>
-            <p class="td-reason">{{ t.reason }}</p>
-            <p class="td-meta">{{ 'moderate.takedown.asked'|trans({'%when%': t.requestedAt|cc_datetime}) }}</p>
-            {% if t.contact %}
-              {# Curator-only: the address to answer within the month
-                 (Art. 12(3)), through the project mailbox — never shown to,
-                 or shared with, the uploader. #}
-              <p class="td-meta">{{ 'moderate.takedown.reply_to'|trans({'%email%': t.contact}) }}</p>
-            {% endif %}
+              {% if t.contact %}
+                {# Curator-only: the address to answer within the month
+                   (Art. 12(3)), through the project mailbox — never shown to,
+                   or shared with, the uploader. #}
+                {% if t.source == 'third_party' %} · {% endif %}{{ 'moderate.takedown.reply_to'|trans({'%email%': t.contact}) }}
+              {% endif %}
+            </div>
+          </div>
+          {# The third verb (docs/specs/photo-uploads.md §6d). Its own panel so
+             it can never be a mis-click on the decision buttons, and folded
+             away because it is the rare case, not the common one. #}
+          <div class="q-acts">
+            <details class="q-act q-act--escalate">
+              <summary class="btn-act btn-secondary btn-alarm">{{ 'moderate.escalate.summary'|trans }}</summary>
+              <div class="q-act-panel">
+                <form method="post" action="{{ path('moderate_escalate') }}">
+                  <input type="hidden" name="_token" value="{{ csrf_token('moderate_escalate') }}">
+                  <input type="hidden" name="media" value="{{ t.uuid }}">
+                  <p>{{ 'moderate.escalate.help'|trans }}</p>
+                  <input type="text" name="reason" maxlength="2000" required
+                         placeholder="{{ 'moderate.escalate.reason_placeholder'|trans }}">
+                  <div class="q-act-buttons">
+                    <button type="submit" class="btn-act btn-secondary">{{ 'moderate.escalate.submit'|trans }}</button>
+                    <button type="button" class="btn-act btn-quiet q-act-cancel">{{ 'moderate.action.cancel'|trans }}</button>
+                  </div>
+                </form>
+              </div>
+            </details>
           </div>
         </div>
-        {# The third verb (docs/specs/photo-uploads.md §6d). Separate form so it
-           can never be a mis-click on the decision buttons, and folded away
-           because it is the rare case, not the common one. #}
-        <details class="td-escalate">
-          <summary>{{ 'moderate.escalate.summary'|trans }}</summary>
-          <p>{{ 'moderate.escalate.help'|trans }}</p>
-          <form method="post" action="{{ path('moderate_escalate') }}" class="td-actions">
-            <input type="hidden" name="_token" value="{{ csrf_token('moderate_escalate') }}">
-            <input type="hidden" name="media" value="{{ t.uuid }}">
-            <input type="text" name="reason" maxlength="2000" required
-                   placeholder="{{ 'moderate.escalate.reason_placeholder'|trans }}">
-            <button type="submit" class="btn-act btn-reject">{{ 'moderate.escalate.submit'|trans }}</button>
-          </form>
-        </details>
+        <p class="q-body td-reason">{{ t.reason }}</p>
         <form method="post" action="{{ path('moderate_takedown') }}" class="td-actions">
           <input type="hidden" name="_token" value="{{ csrf_token('moderate_takedown') }}">
           <input type="hidden" name="media" value="{{ t.uuid }}">

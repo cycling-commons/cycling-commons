@@ -2915,6 +2915,8 @@ messages:
     media_scan_rejected: 'We could not accept that photo. Our checks either found something in the file or could not read it as an image at all. Nobody looked at the picture: this is an automatic check on the file itself. Please try a different photo, or the same one saved again as JPEG.'
   reply_label: 'Your reply'
   what_you_changed: 'What you changed'
+  show_details: 'Show details'
+  hide_details: 'Hide details'
   reply_send: 'Send reply'
   reply_sent: 'Reply sent — your contribution is back in the review queue.'
   reply_too_late: 'This contribution is no longer waiting for your reply.'

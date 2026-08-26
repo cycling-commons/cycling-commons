@@ -42,24 +42,21 @@
         {% for r in regions %}<option value="{{ r.id }}"{{ filter_region == r.id ? ' selected' }}>{{ r.name }}</option>{% endfor %}
       </select>
     </label>
-    <button type="submit" class="btn-act btn-decide">{{ 'moderate.filter.apply'|trans }}</button>
-    {# Density switch: cards ↔ list, exactly as on the submissions desk, and it
-       folds BOTH sections — a curator switching density means the desk.
-       Unhidden by moderate/_card_script.html.twig, so without JS the desk
-       stays in cards, the view that carries the full context. #}
-    <div class="q-density" id="qDensity" role="group" aria-label="{{ 'moderate.view.label'|trans }}" hidden>
-      <button type="button" class="dens" data-dens="cards" aria-pressed="true">{{ 'moderate.view.cards'|trans }}</button>
-      <button type="button" class="dens" data-dens="list" aria-pressed="false">{{ 'moderate.view.list'|trans }}</button>
-    </div>
+    <button type="submit" class="btn-act btn-secondary mod-go">{{ 'moderate.filter.apply'|trans }}</button>
   </form>
+  {# Density switch: cards ↔ list, exactly as on the submissions desk, and it
+     folds BOTH sections — a curator switching density means the desk. #}
+  {% if routes is not empty or suggestions is not empty %}
+    {% include 'account/_density.html.twig' %}
+  {% endif %}
+  </div>
 
   {# ── New route proposals — riders' newly-uploaded routes awaiting first review ── #}
   {# The section counts are the pager's totals, not the page's length: a "12"
      over a section holding 25 of 40 would be a lie about how much work waits. #}
-  <h2 class="sec-band sec-band--new">{{ 'moderate_routes.section_proposals'|trans }} <span class="sec-count">{{ pager.total }}</span></h2>
+  <h2 class="sec-band">{{ 'moderate_routes.section_proposals'|trans }} <span class="sec-count">{{ pager.total }}</span></h2>
   {% if routes is empty %}
-  <div class="empty-queue">
-    <div class="ic">&#9650;</div>
+  <div class="empty-state">
     <h3>{{ 'moderate.empty.heading'|trans }}</h3>
     <p>{{ 'moderate_routes.overview.empty'|trans }}</p>
   </div>

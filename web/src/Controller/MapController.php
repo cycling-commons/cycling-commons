@@ -72,6 +72,8 @@ final class MapController extends AbstractController
         );
         $params = [
             'field_schema' => $schema->all(),
+            // The one category icon set (ItemType::iconSet()); catalog.js and icons.js read it.
+            'type_icons' => ItemType::iconSet(),
             'map_i18n' => $this->mapI18n($translator),
             'regions' => $regionRows,
             'rider_prefs' => [

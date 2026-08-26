@@ -635,6 +635,43 @@ made (§5.1): `.q-prior-reject` on the card and `.cc-mod-prior` directly under
 the pending badge. It stays visible in list density, unlike body/diff/photos
 — it changes what the decision *is*, not the context it is made in.
 
+**One list system for every shell page (owner 2026-08-25).** The record card
+below, the page head (eyebrow · title · count or lead), the container
+(`.dbody`, 1120px, `id="main"`), the filter bar (`.mod-bar` holding
+`.mod-filters` selects + Apply and/or a `.lfilter` row of `.lchip` chips), the
+status pill (`.q-pill--ok|pend|conf|rej|ret|danger`), the quoted note
+(`.q-note`, `--answer`, `--prior`), the was → now diff (`.q-diff`, as two lines
+on the desk or as a `<dl>` on the rider pages, foldable as `details.q-diff`),
+the density switch (`account/_density.html.twig`) and the pager are defined
+**once**, in `account/_shell_styles.html.twig`, which includes
+`moderate/_card_styles.html.twig`. Every list page draws from there: the
+submissions desk, History, Routes, Takedowns, Data, Regions, and on the rider
+side `/profile` (contributions, route proposals, curator applications, votes)
+and `/messages`. A page's own `<style>` block keeps only what is truly its own
+(the data desk's side-by-side pair, the takedown photo size). A rider reading
+their own contribution and a curator deciding it are looking at one card; the
+desks that had grown their own row shapes (History's one-liners, Takedowns'
+tinted log, the data desk's green Yes) are on the card and the orange button
+system like everything else. The empty state is left-aligned prose on every
+page (`.empty-state`; the centred block and the ▲ ornament are gone).
+`tests/js/shell-list-system.test.cjs` pins it: no shell page may define a
+shared rule locally, use the public `.wrap`, or render a row that is not a
+`.q-item`.
+
+**Category icons have one home (owner 2026-08-25: "use the same as in the
+map, and make sure these are the only ones in the system").**
+`ItemType::icon()` is the glyph per type and `ItemType::svgPath()` the drawn
+path for climbs, scenic views and toilets; `ItemType::iconSet()` packs both
+by letter. The map page injects that set as `window.CC_TYPE_ICONS`
+(`MapController`), and `catalog.js` (`TYPE_ICON`, `TYPE_SVG`) and `icons.js`
+read it; server pages render it through `cc_type_icons()` in
+`partials/_type_icon.html.twig`, which every record row (contributions,
+votes, History) opens with. Never an emoji literal in a template or a module,
+and never a second set. A row shows: icon · type tag (new / edit) · title ·
+kind, then date · Map · status on the right; History is that same row with
+its everyone/mine and approved/rejected chips on top (trashed rows join the
+unfiltered first page, as before).
+
 **Queue item layout (2026-08-02, owner).** The desk is a queue worked dozens
 at a time, so the row is sized for that:
 

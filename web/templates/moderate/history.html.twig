@@ -61,6 +61,9 @@
     </label>
     <button type="submit" class="btn-act btn-secondary mod-go">{{ 'moderate.filter.apply'|trans }}</button>
   </form>
+  {% if history is not empty %}
+    {% include 'account/_density.html.twig' %}
+  {% endif %}
   </div>
 
   {# ── History ── what this desk has already settled.
@@ -68,89 +71,102 @@
      escalation lifts it off every desk, so there is nothing else to filter for
      (moderation-and-contribution.md §5.2). Plain links, not JS: a filter that
      survives a reload and can be linked to a colleague is worth a page load. #}
-  <section class="q-history">
-    <div class="hist-filters">
-      <a class="hchip {{ history_filters.mine ? '' : 'on' }}" href="{{ path('moderate_history', hparams|merge({hstatus: history_filters.status})) }}">{{ 'moderate.history.everyone'|trans }}</a>
-      <a class="hchip {{ history_filters.mine ? 'on' : '' }}" href="{{ path('moderate_history', hparams|merge({handled: 'mine', hstatus: history_filters.status})) }}">{{ 'moderate.history.mine'|trans }}</a>
-      <span class="hsep"></span>
-      <a class="hchip {{ history_filters.status ? '' : 'on' }}" href="{{ path('moderate_history', hparams|merge({handled: history_filters.mine ? 'mine' : null})) }}">{{ 'moderate.filter.all'|trans }}</a>
-      <a class="hchip {{ history_filters.status == 'approved' ? 'on' : '' }}" href="{{ path('moderate_history', hparams|merge({handled: history_filters.mine ? 'mine' : null, hstatus: 'approved'})) }}">{{ 'moderate.action.approve'|trans }}</a>
-      <a class="hchip {{ history_filters.status == 'rejected' ? 'on' : '' }}" href="{{ path('moderate_history', hparams|merge({handled: history_filters.mine ? 'mine' : null, hstatus: 'rejected'})) }}">{{ 'moderate.action.reject'|trans }}</a>
-    </div>
-    {% if history is empty %}
-      <p class="hist-empty">{{ 'moderate.history.empty'|trans }}</p>
-    {% else %}
-      <ul class="hist-list">
-        {% for h in history %}
-          <li class="hist-row">
-            <span class="hist-state hist-state--{{ h.status }}">{{ ('moderate.status.' ~ h.status)|trans }}</span>
+  <nav class="lfilter" aria-label="{{ 'moderate.history.heading'|trans }}">
+    <a class="lchip {{ history_filters.mine ? '' : 'on' }}" href="{{ path('moderate_history', hparams|merge({hstatus: history_filters.status})) }}">{{ 'moderate.history.everyone'|trans }}</a>
+    <a class="lchip {{ history_filters.mine ? 'on' : '' }}" href="{{ path('moderate_history', hparams|merge({handled: 'mine', hstatus: history_filters.status})) }}">{{ 'moderate.history.mine'|trans }}</a>
+    <span class="lsep"></span>
+    <a class="lchip {{ history_filters.status ? '' : 'on' }}" href="{{ path('moderate_history', hparams|merge({handled: history_filters.mine ? 'mine' : null})) }}">{{ 'moderate.filter.all'|trans }}</a>
+    <a class="lchip {{ history_filters.status == 'approved' ? 'on' : '' }}" href="{{ path('moderate_history', hparams|merge({handled: history_filters.mine ? 'mine' : null, hstatus: 'approved'})) }}">{{ 'moderate.action.approve'|trans }}</a>
+    <a class="lchip {{ history_filters.status == 'rejected' ? 'on' : '' }}" href="{{ path('moderate_history', hparams|merge({handled: history_filters.mine ? 'mine' : null, hstatus: 'rejected'})) }}">{{ 'moderate.action.reject'|trans }}</a>
+  </nav>
+  {% if history is empty %}
+    <div class="empty-state"><p>{{ 'moderate.history.empty'|trans }}</p></div>
+  {% else %}
+    <div class="q-list" id="qList">
+      {% for h in history %}
+        <div class="q-item">
+          <div class="q-top">
             {# The picture, as in the open queue. A trashed row has none by
                design — the audit is content-free — and a rejected one may have
                lost its photos to disposal, so this is `if`, not `else`. #}
             {% if h.photos is defined and h.photos|length > 0 %}
-              <a class="hist-thumb" href="{{ h.photos[0].lg }}" target="_blank" rel="noopener"
+              <a class="q-thumb" href="{{ h.photos[0].lg }}" target="_blank" rel="noopener"
                  title="{{ 'improve.step3.open_full'|trans }}">
-                <img src="{{ h.photos[0].sm }}" alt="" loading="lazy" width="28" height="28">
+                <img src="{{ h.photos[0].sm }}" alt="" loading="lazy" width="44" height="44">
               </a>
             {% endif %}
-            {# ?item=<id>, not ?pending=<id>: the submission is settled, so it is
-               no longer in the pending payload and that link resolved nothing —
-               the map just opened at the default scope with nothing selected.
-               Only APPROVED rows link: a rejected item is not on the map, and a
-               link that lands nowhere is worse than no link. #}
-            <span class="hist-title">{% if h.itemId and h.status == 'approved' %}<a href="{{ path('map') }}?item={{ h.itemId }}" target="_blank" rel="noopener">{{ h.title }}</a>{% else %}{{ h.title }}{% endif %}{% if h.status == 'trashed' and h.type %} <span class="hist-kind">{{ ('moderate.type.' ~ h.type)|trans }}</span>{% endif %}
-              {# The item's own kind. A custom title hides what a row is about;
-                 an unnamed one already reads as its type, so repeating it there
-                 would print "Water & food WATER & FOOD". #}
-              {% if h.typeLabel is defined and h.typeLabel and (h.typeLabel|trans) != h.title %}<span class="hist-kind">{{ h.typeLabel|trans }}</span>{% endif %}</span>
-            {# A trashed row carries no title and no rider: the audit is
-               content-free by design, so all there is to show is who did it. #}
-            <span class="hist-meta">{{ h.who }}{% if h.decidedBy %}{% if h.who %} · {% endif %}{{ 'moderate.history.by'|trans({'%who%': h.decidedBy}) }}{% endif %}</span>
-            <span class="hist-when">{{ h.when }}</span>
-          </li>
-          {# The curator's own note, then the rider's answer. Since a needs-info
-             reply is desk work rather than personal mail (§5.4), this history is
-             the only place it survives once the submission is decided. #}
+            {# The same row a rider sees on /profile (owner 2026-08-25): icon,
+               type tag, title + kind; date · Map · verdict on the right. #}
+            <div class="q-headwrap">
+              <div class="q-head">
+                {% if h.letter is defined and h.letter %}{% include 'partials/_type_icon.html.twig' with {letter: h.letter} %}{% endif %}
+                {% if h.type %}<span class="q-tag q-tag--{{ h.type }}">{{ ('moderate.type.' ~ h.type)|trans }}</span>{% endif %}
+                <h3 class="q-title">{{ h.title }}
+                  {# The item's own kind. A custom title hides what a row is about;
+                     an unnamed one already reads as its type, so repeating it there
+                     would print "Water & food WATER & FOOD". #}
+                  {% if h.typeLabel is defined and h.typeLabel and (h.typeLabel|trans) != h.title %}<span class="q-kind">{{ h.typeLabel|trans }}</span>{% endif %}</h3>
+              </div>
+              {# A trashed row carries no title and no rider: the audit is
+                 content-free by design, so all there is to show is who did it. #}
+              <div class="q-submitter"><span class="q-who">{{ h.who }}{% if h.decidedBy %}{% if h.who %} · {% endif %}{{ 'moderate.history.by'|trans({'%who%': h.decidedBy}) }}{% endif %}</span></div>
+            </div>
+            <div class="q-acts">
+              <span class="q-when">{{ h.when }}</span>
+              {# ?item=<id>, not ?pending=<id>: the submission is settled, so it is
+                 no longer in the pending payload and that link resolved nothing.
+                 Only APPROVED rows link: a rejected item is not on the map, and a
+                 link that lands nowhere is worse than no link. #}
+              {% if h.itemId and h.status == 'approved' %}
+                <span class="q-links"><a class="q-link" href="{{ path('map') }}?item={{ h.itemId }}" target="_blank" rel="noopener">{{ 'account.link_map'|trans }} &#8599;</a></span>
+              {% endif %}
+              <span class="q-pill q-pill--{{ verdict_pill[h.status] ?? 'ret' }}">{{ ('moderate.status.' ~ h.status)|trans }}</span>
+            </div>
+          </div>
           {# WHAT was decided. A verdict with no subject ("Approved · Côte de la
              Redoute") tells a curator nothing they can check (owner-reported
              2026-08-03). Same before/after the queue card shows. #}
           {% if h.now %}
             {# Long values (a drawn segment's geometry) clamp to one line,
                click to expand — partials/_vclip.html.twig. #}
-            {% set hlong = (h.now ~ (h.was ?? ''))|length > 110 %}
-            <li class="hist-diff{% if hlong %} vclip" tabindex="0" role="button" aria-expanded="false{% endif %}">{% if h.was %}<span class="hist-was">{{ h.was }}</span> {% endif %}<span class="hist-now">{{ h.now }}</span></li>
+            <div class="q-diff">
+              {% if h.was %}<div class="q-was{% if h.was|length > 110 %} vclip" tabindex="0" role="button" aria-expanded="false{% endif %}">{{ h.was }}</div>{% endif %}
+              <div class="q-now{% if h.now|length > 110 %} vclip" tabindex="0" role="button" aria-expanded="false{% endif %}">{{ h.now }}</div>
+            </div>
           {% endif %}
-          {% if h.note %}<li class="hist-note">{{ h.note }}</li>{% endif %}
-          {# The full exchange, folded away. The row stays one line because most
+          {# The curator's own note, then the rider's answer. Since a needs-info
+             reply is desk work rather than personal mail (§5.4), this history is
+             the only place it survives once the submission is decided. #}
+          {% if h.note %}<p class="q-note">{{ h.note }}</p>{% endif %}
+          {# The full exchange, folded away. The row stays short because most
              submissions never had a conversation; the ones that did are the
              only place it survives — change_history records what was APPLIED,
              not what was asked, and the reply is no longer personal mail
              (§5.4). Shown instead of the single latest reply, which is a
              subset of this. #}
           {% if h.thread is not empty %}
-            <li class="hist-thread-row">
-              <details class="hist-thread">
-                <summary>{{ 'moderate.history.thread'|trans({'%count%': h.thread|length}) }}</summary>
-                <ol class="hist-msgs">
-                  {% for m in h.thread %}
-                    <li class="hist-msg hist-msg--{{ m.who }}">
-                      <span class="hist-msg-who">{{ ('moderate.history.said_' ~ m.who)|trans }}</span>
-                      <span class="hist-msg-body">{{ m.body ?: 'moderate.history.no_text'|trans }}</span>
-                      <span class="hist-msg-when">{{ m.when }}</span>
-                    </li>
-                  {% endfor %}
-                </ol>
-              </details>
-            </li>
+            <details class="q-thread">
+              <summary>{{ 'moderate.history.thread'|trans({'%count%': h.thread|length}) }}</summary>
+              <ol class="q-msgs">
+                {% for m in h.thread %}
+                  <li class="q-msg q-msg--{{ m.who }}">
+                    <span class="q-msg-who">{{ ('moderate.history.said_' ~ m.who)|trans }}</span>
+                    <span class="q-msg-body">{{ m.body ?: 'moderate.history.no_text'|trans }}</span>
+                    <span class="q-msg-when">{{ m.when }}</span>
+                  </li>
+                {% endfor %}
+              </ol>
+            </details>
           {% elseif h.riderReply %}
-            <li class="hist-note hist-reply"><strong>{{ 'moderate.rider_reply'|trans }}:</strong> {{ h.riderReply }}</li>
+            <p class="q-note q-note--answer"><strong>{{ 'moderate.rider_reply'|trans }}:</strong> {{ h.riderReply }}</p>
           {% endif %}
-        {% endfor %}
-      </ul>
-    {% endif %}
-  </section>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
 
   {% include 'partials/_pager.html.twig' with {pager: pager, route: 'moderate_history', params: hparams} %}
 </div>
 {% include 'partials/_vclip.html.twig' %}
+{% include 'moderate/_card_script.html.twig' %}
 {% endblock %}

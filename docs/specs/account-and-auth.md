@@ -655,8 +655,13 @@ lives in the shell header.
 - Dashboard **Contributions pane** renders the user's real submissions
   (retention-filtered — a rejected submission past the retention cutoff never
   renders, see [moderation-and-contribution.md](moderation-and-contribution.md))
-  and route proposals, 50 each (`ProfileController`), in the shared `.item`
-  row style (type/route tag, date, status pill, decision-note sub-line); empty
+  and route proposals, 50 each (`ProfileController`), as the shared record
+  card (`.q-item`: type/route tag, title, region · country, date, Map/Edit
+  links, status pill, then the diff, the decision note and the conversation
+  under it), the same card the curator's desk renders, from the same
+  stylesheet (moderation-and-contribution.md §5.2, owner 2026-08-25). Every
+  pane opens with the shell's page head (eyebrow "Personal · <name>", a real
+  title) and offers the cards/list density switch; empty
   state is the `account.contributions_empty` key. The pane closes with a
   **Curator applications** section: the user's own
   `curator_application` rows with status pills (pending/approved/declined/

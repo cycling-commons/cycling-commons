@@ -20,6 +20,7 @@
   <div class="q-top">
     <div class="q-headwrap">
       <div class="q-head">
+        {% include 'partials/_type_icon.html.twig' with {letter: 'R'} %}
         <span class="q-tag q-tag--edit">{{ ('moderate_routes.suggestions.reason_' ~ (s.reason|replace({'-': '_'})))|trans }}</span>
         {% if show_route|default(false) %}
           <h3 class="q-title"><a class="sugg-route" href="{{ path('map') }}?route={{ s.routeId }}" target="_blank" rel="noopener" title="{{ 'moderate_routes.suggestions.open_on_map'|trans }}">{{ s.routeName }}</a></h3>

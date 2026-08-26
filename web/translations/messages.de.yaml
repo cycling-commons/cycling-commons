@@ -2891,6 +2891,8 @@ messages:
     media_scan_rejected: 'Wir konnten dieses Foto nicht annehmen. Unsere Prüfungen haben entweder etwas in der Datei gefunden oder konnten sie gar nicht als Bild lesen. Niemand hat sich das Bild angesehen: das ist eine automatische Prüfung der Datei selbst. Versuche es mit einem anderen Foto oder mit demselben, erneut als JPEG gespeichert.'
   reply_label: 'Deine Antwort'
   what_you_changed: 'Was du geändert hast'
+  show_details: 'Details anzeigen'
+  hide_details: 'Details ausblenden'
   reply_send: 'Antwort senden'
   reply_sent: 'Antwort gesendet — dein Beitrag ist wieder in der Prüfwarteschlange.'
   reply_too_late: 'Dieser Beitrag wartet nicht mehr auf deine Antwort.'

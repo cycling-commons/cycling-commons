@@ -2888,6 +2888,8 @@ messages:
     media_scan_rejected: 'We konden die foto niet accepteren. Onze controles vonden iets in het bestand, of konden het helemaal niet als afbeelding lezen. Niemand heeft naar de foto gekeken: dit is een automatische controle van het bestand zelf. Probeer een andere foto, of dezelfde opnieuw opgeslagen als JPEG.'
   reply_label: 'Jouw antwoord'
   what_you_changed: 'Wat je hebt gewijzigd'
+  show_details: 'Toon details'
+  hide_details: 'Verberg details'
   reply_send: 'Antwoord versturen'
   reply_sent: 'Antwoord verstuurd — jouw bijdrage staat weer in de beoordelingswachtrij.'
   reply_too_late: 'Deze bijdrage wacht niet meer op je antwoord.'

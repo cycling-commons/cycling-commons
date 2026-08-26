@@ -34,13 +34,20 @@
     {% endif %}
     <div class="q-headwrap">
       <div class="q-head">
+        {# The type's icon first, as on every other row (owner 2026-08-25). A
+           submitted photo, when there is one, sits before the whole block as
+           the 44px thumbnail above. #}
+        {% include 'partials/_type_icon.html.twig' with {letter: item.letter} %}
         <span class="q-tag q-tag--{{ item.type }}">{{ ('moderate.type.' ~ item.type)|trans }}</span>
         {# The rider answered a needs-info question. It used to arrive as a
            message in the curator's PERSONAL inbox; moderation work belongs on
            the desk, so the signal has to be here where it can be scanned
            (owner, 2026-08-03). The answer itself is further down the card. #}
         {% if item.riderReply %}<span class="q-tag q-tag--answered">{{ 'moderate.answered'|trans }}</span>{% endif %}
-        <h3 class="q-title">{{ item.title }}</h3>
+        {# The name opens the edit form, same target as ✎ (owner 2026-08-25): the
+           biggest thing on the row should be the thing you click. #}
+        <h3 class="q-title">{% if item.itemId %}<a class="q-title-link" href="{{ path('improve') }}?item={{ item.itemId }}&type={{ item.letter }}"
+             target="_blank" rel="noopener" title="{{ 'moderate.action.edit_form'|trans }}">{{ item.title }}</a>{% else %}{{ item.title }}{% endif %}</h3>
         <span class="q-when">{{ item.when }}</span>
       </div>
       {# WHERE, in words. Three decimal places of latitude tell a curator

@@ -2888,6 +2888,8 @@ messages:
     media_scan_rejected: 'Nous n''avons pas pu accepter cette photo. Nos vérifications ont trouvé quelque chose dans le fichier, ou n''ont pas pu le lire comme une image. Personne n''a regardé l''image : c''est un contrôle automatique du fichier lui-même. Essayez une autre photo, ou la même enregistrée à nouveau en JPEG.'
   reply_label: 'Votre réponse'
   what_you_changed: 'Ce que vous avez modifié'
+  show_details: 'Afficher les détails'
+  hide_details: 'Masquer les détails'
   reply_send: 'Envoyer la réponse'
   reply_sent: 'Réponse envoyée — votre contribution est de retour dans la file de relecture.'
   reply_too_late: 'Cette contribution n''attend plus votre réponse.'

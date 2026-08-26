@@ -52,26 +52,30 @@
      one is furniture, and the counts are what make the chips worth reading
      ("Notices 0" saves a click that "Notices" does not). #}
   {% if counts.total > 1 %}
-    <nav class="msg-filters" aria-label="{{ 'messages.filter.label'|trans }}">
-      <a class="msg-chip {{ filter_category is null ? 'is-on' }}"
+    <nav class="lfilter msg-filters" aria-label="{{ 'messages.filter.label'|trans }}">
+      <a class="lchip {{ filter_category is null ? 'on' }}"
          href="{{ path('messages', filter_unread ? {unread: 1} : {}) }}">
         {{ 'messages.filter.all'|trans }} <b>{{ counts.total }}</b>
       </a>
       {% for c in categories %}
-        <a class="msg-chip {{ filter_category == c.value ? 'is-on' }}"
+        <a class="lchip {{ filter_category == c.value ? 'on' }}"
            href="{{ path('messages', {cat: c.value}|merge(filter_unread ? {unread: 1} : {})) }}">
           {{ c.labelKey|trans }} <b>{{ counts.byCategory[c.value] }}</b>
         </a>
       {% endfor %}
       {# Unread is a switch across whichever shelf is open, not a fourth shelf:
          "unread notices" is a real thing to want. #}
-      <a class="msg-chip msg-chip--unread {{ filter_unread ? 'is-on' }}"
+      <a class="lchip lchip--push {{ filter_unread ? 'on' }}"
          href="{{ path('messages', (filter_category ? {cat: filter_category} : {})|merge(filter_unread ? {} : {unread: 1})) }}"
          aria-pressed="{{ filter_unread ? 'true' : 'false' }}">
         {{ 'messages.filter.unread'|trans }} <b>{{ counts.unread }}</b>
       </a>
     </nav>
   {% endif %}
+  {% if messages is not empty %}
+    {% include 'account/_density.html.twig' %}
+  {% endif %}
+  </div>
 
   {% if messages is empty %}
     <div class="empty-state">
@@ -148,8 +152,13 @@
                the diff would push it below the fold. #}
             {% set diff = (m.channel == 'submission' and not is_question) ? (submission_changes[m.refId] ?? []) : [] %}
             {% if diff is not empty %}
-              <div class="msg-diff">
-                <span class="msg-diff-h">{{ 'messages.what_you_changed'|trans }}</span>
+              {# Folded by default: the card says what happened, the diff is
+                 there for the rider who wants to check (owner 2026-08-25).
+                 Native <details>, so it needs no script and survives CSP. #}
+              <details class="q-diff msg-diff">
+                <summary><span class="q-diff-show">{{ 'messages.show_details'|trans }}</span><span class="q-diff-hide">{{ 'messages.hide_details'|trans }}</span></summary>
+                <div class="q-diff-body">
+                <span class="q-diff-h">{{ 'messages.what_you_changed'|trans }}</span>
                 <dl>
                   {% for row in diff %}
                     <dt>{{ row.label }}</dt>

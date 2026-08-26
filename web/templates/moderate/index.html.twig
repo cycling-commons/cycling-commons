@@ -52,6 +52,15 @@
     <button type="submit" class="btn-act btn-secondary mod-go">{{ 'moderate.filter.apply'|trans }}</button>
   </form>
 
+  {# Density switch: cards (full review context) ↔ list (one line per
+     submission, for a triage pass). Rendered only when there is a queue to
+     switch, and only with JS — it is a view preference, not a filter, so it
+     never touches the URL or the server. #}
+  {% if items is not empty %}
+    {% include 'account/_density.html.twig' %}
+  {% endif %}
+  </div>
+
   {# A queue showing one person's work has to SAY so. Without this the desk
      looks like the whole queue and a curator would reasonably conclude there
      were four things left to do (owner-linked from the applications desk). #}
@@ -64,22 +73,8 @@
     </p>
   {% endif %}
 
-  {# Density switch: cards (full review context) ↔ list (one line per
-     submission, for a triage pass). Rendered only when there is a queue to
-     switch, and only with JS — it is a view preference, not a filter, so it
-     never touches the URL or the server. The choice is remembered per browser
-     because a curator picks a way of working, not a way of working *once*. #}
-  {% if items is not empty %}
-    <div class="q-density" id="qDensity" role="group" aria-label="{{ 'moderate.view.label'|trans }}" hidden>
-      <button type="button" class="dens" data-dens="cards" aria-pressed="true">{{ 'moderate.view.cards'|trans }}</button>
-      <button type="button" class="dens" data-dens="list" aria-pressed="false">{{ 'moderate.view.list'|trans }}</button>
-    </div>
-  {% endif %}
-  </div>
-
   {% if items is empty %}
-  <div class="empty-queue">
-    <div class="ic">&#9650;</div>
+  <div class="empty-state">
     <h3>{{ 'moderate.empty.heading'|trans }}</h3>
     <p>{{ 'moderate.empty.body'|trans }}</p>
   </div>

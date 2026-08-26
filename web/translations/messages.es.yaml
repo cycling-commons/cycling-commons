@@ -2925,6 +2925,8 @@ messages:
     media_scan_rejected: 'No hemos podido aceptar esa foto. Nuestras comprobaciones encontraron algo en el archivo o no pudieron leerlo como imagen. Nadie ha mirado la imagen: es una comprobación automática del archivo en sí. Prueba con otra foto, o con la misma guardada de nuevo como JPEG.'
   reply_label: 'Tu respuesta'
   what_you_changed: 'Lo que cambiaste'
+  show_details: 'Mostrar detalles'
+  hide_details: 'Ocultar detalles'
   reply_send: 'Enviar la respuesta'
   reply_sent: 'Respuesta enviada — tu aportación vuelve a la cola de revisión.'
   reply_too_late: 'Esta aportación ya no está esperando tu respuesta.'
