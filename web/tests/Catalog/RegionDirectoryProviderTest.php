@@ -49,9 +49,9 @@ final class RegionDirectoryProviderTest extends KernelTestCase
         $vlg = $this->seedRegion('flanders-t', 'BE', 4);
         $this->seedRegion('empty-t', 'BE', 4);
         $this->seedRegion('belgium-t', 'BE', 2);
-        $this->seedItem($wal, 'B', 'verified');
-        $this->seedItem($wal, 'B', 'unverified'); // must NOT count
-        $this->seedItem($vlg, 'C', 'verified');
+        $this->seedItem($wal, 'N', 'verified');
+        $this->seedItem($wal, 'N', 'unverified'); // must NOT count
+        $this->seedItem($vlg, 'B', 'verified');
 
         $provider = static::getContainer()->get(RegionDirectoryProvider::class);
         $countries = $provider->directory('en');
@@ -122,9 +122,9 @@ final class RegionDirectoryProviderTest extends KernelTestCase
         self::bootKernel();
         $wal = $this->seedRegion('wallonia-t', 'BE', 4);
         $this->seedRegion('belgium-t', 'BE', 2);
+        $this->seedItem($wal, 'N', 'verified');
         $this->seedItem($wal, 'B', 'verified');
-        $this->seedItem($wal, 'C', 'verified');
-        $this->seedItem($wal, 'C', 'verified');
+        $this->seedItem($wal, 'B', 'verified');
 
         $provider = static::getContainer()->get(RegionDirectoryProvider::class);
         $detail = $provider->region('wallonia-t', 'fr');

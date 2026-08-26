@@ -90,7 +90,7 @@ final class CuratedDefaultGateTest extends WebTestCase
         for ($i = 0; $i < $n; ++$i) {
             $db->executeStatement(
                 "INSERT INTO item (letter, name, source, source_ref, state, country_code, attributes, region_id, geom, created_at, updated_at)
-                 VALUES ('I', 'view', 'manual', :ref, 'verified', 'BE', '{\"cur\": true}'::jsonb, :r,
+                 VALUES ('P', 'view', 'manual', :ref, 'verified', 'BE', '{\"cur\": true}'::jsonb, :r,
                          ST_SetSRID(ST_MakePoint(5.0, 50.0), 4326), NOW(), NOW())",
                 ['ref' => 'lop:'.$regionId.':'.$i, 'r' => $regionId],
             );
@@ -187,7 +187,7 @@ final class CuratedDefaultGateTest extends WebTestCase
         for ($i = 0; $i < $n; ++$i) {
             $db->executeStatement(
                 "INSERT INTO item (letter, name, source, source_ref, state, country_code, attributes, region_id, geom, created_at, updated_at)
-                 VALUES ('C', 'tap', 'manual', :ref, 'verified', 'BE', '{}'::jsonb, :r,
+                 VALUES ('B', 'tap', 'manual', :ref, 'verified', 'BE', '{}'::jsonb, :r,
                          ST_SetSRID(ST_MakePoint(5.0, 50.0), 4326), NOW(), NOW())",
                 ['ref' => 'conf:'.$regionId.':'.$i, 'r' => $regionId],
             );

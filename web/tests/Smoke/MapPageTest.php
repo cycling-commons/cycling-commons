@@ -75,7 +75,7 @@ final class MapPageTest extends WebTestCase
         // the improve form keeps submitting canonical English.
         self::assertSame(1, preg_match('/window\.CC_FIELD_SCHEMA = (\{.*?\});/s', $html, $ms), 'CC_FIELD_SCHEMA must be injected');
         $schema = json_decode($ms[1], true, 512, JSON_THROW_ON_ERROR);
-        $difficulty = array_values(array_filter($schema['K'], static fn (array $f): bool => 'difficulty' === $f['key']))[0];
+        $difficulty = array_values(array_filter($schema['R'], static fn (array $f): bool => 'difficulty' === $f['key']))[0];
         self::assertSame('Très difficile', $difficulty['choices']['Very hard']);
         $surface = array_values(array_filter($schema['A'], static fn (array $f): bool => 'surface' === $f['key']))[0];
         self::assertSame('Asphalte', $surface['choices']['Asphalt'] ?? null);

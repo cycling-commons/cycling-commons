@@ -44,7 +44,7 @@ function lettersFor(tag, detail) {
   const byDetail = (window.CC_SCOUT_DETAILS || {})[tag] || {};
   const offered = detail != null ? byDetail[String(detail)] : byDetail[''];
   if (offered && offered.length) return offered;
-  return (window.CC_SCOUT_TAGS || {})[tag] || ['C'];
+  return (window.CC_SCOUT_TAGS || {})[tag] || ['B'];
 }
 
 function fitTagName(tag, detail) {

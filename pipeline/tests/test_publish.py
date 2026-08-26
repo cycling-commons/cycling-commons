@@ -54,7 +54,7 @@ def test_upload_versioned_artifact_and_manifest(env, tmp_path):
         "ContentType": "application/json",
         "CacheControl": "public, max-age=300"})
     with stub:
-        url = publish.upload(art, {"counts": {"C": 2, "D": 1}, "regions": ["europe/belgium"]},
+        url = publish.upload(art, {"counts": {"B": 2, "D": 1}, "regions": ["europe/belgium"]},
                              client=client, now=now)
     assert url == "http://localhost:9100/cc-maps/coverage/20260716-0430.pmtiles"
     stub.assert_no_pending_responses()
@@ -75,7 +75,7 @@ def test_manifest_carries_country_codes(env, tmp_path):
         "ContentType": "application/json",
         "CacheControl": "public, max-age=300"})
     with stub:
-        publish.upload(art, {"counts": {"C": 1}, "regions": ["europe/belgium"],
+        publish.upload(art, {"counts": {"B": 1}, "regions": ["europe/belgium"],
                             "country_codes": ["BE", "NL"]},
                        client=client, now=now)
     stub.assert_no_pending_responses()

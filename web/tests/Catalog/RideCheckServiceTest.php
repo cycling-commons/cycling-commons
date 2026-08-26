@@ -139,9 +139,9 @@ final class RideCheckServiceTest extends KernelTestCase
         // A-segment lying exactly on the track: corridor noise, never listed.
         $this->seedItem('A', 'Asphalt on track', self::line([[5.8000, 50.4000], [5.8300, 50.4000]]), 'rc-a');
         // Retired stay directly on the track: not served, never listed.
-        $this->seedItem('E', 'Closed hostel', self::point(50.4000, 5.8150), 'rc-retired', ItemState::Retired);
+        $this->seedItem('O', 'Closed hostel', self::point(50.4000, 5.8150), 'rc-retired', ItemState::Retired);
         // Water point ~5 km north: outside every allowed corridor.
-        $this->seedItem('C', 'Far fountain', self::point(50.4450, 5.8150), 'rc-far');
+        $this->seedItem('B', 'Far fountain', self::point(50.4450, 5.8150), 'rc-far');
 
         $result = $this->service()->check(self::ride(), 1000);
 
@@ -159,7 +159,7 @@ final class RideCheckServiceTest extends KernelTestCase
     public function testRadiusChangesMembership(): void
     {
         // Stay ~400 m north of the track: inside at 500 m, outside at 250 m.
-        $this->seedItem('E', 'Ferme du plateau', self::point(50.4036, 5.8150), 'rc-400m');
+        $this->seedItem('O', 'Ferme du plateau', self::point(50.4036, 5.8150), 'rc-400m');
 
         $at500 = $this->service()->check(self::ride(), 500);
         $at250 = $this->service()->check(self::ride(), 250);
@@ -284,7 +284,7 @@ final class RideCheckServiceTest extends KernelTestCase
     public function testCuratedItemsCarryNoRef(): void
     {
         self::ensureCoverageSchema($this->db());
-        $this->seedItem('C', 'Fontaine curated', self::point(50.40045, 5.8050), 'rc-no-ref');
+        $this->seedItem('B', 'Fontaine curated', self::point(50.40045, 5.8050), 'rc-no-ref');
 
         $result = $this->service()->check(self::ride(), 250);
 

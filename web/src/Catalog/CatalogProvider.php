@@ -311,7 +311,7 @@ final class CatalogProvider
     private function climbs(): array
     {
         $climbs = [];
-        foreach ($this->itemRows('B') as $row) {
+        foreach ($this->itemRows('N') as $row) {
             $climbs[] = $this->climbFromRow($row);
         }
 

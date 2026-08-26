@@ -25,7 +25,7 @@ final class AttributeVocabulary
         // segment: add-wizard endpoints. waysSpanned: OSM ways a run-prefilled stretch covers.
         'A' => ['cls', 'photoFile', 'photoCredit', 'photoUser', 'photoLicense', 'segment', 'waysSpanned'],
         // attribution not source (provenance owns source). Measured keys: docs/specs/climb-elevation.md §4
-        'B' => ['headline', 'cur', 'sq', 'tr', 'record', 'attribution', 'route', 'grad',
+        'N' => ['headline', 'cur', 'sq', 'tr', 'record', 'attribution', 'route', 'grad',
             'steep', 'steepPoint', 'lineGrad', 'binM', 'length', 'gain', 'demSource',
             'steepWindowM',
             'footEle', 'summitEle'],

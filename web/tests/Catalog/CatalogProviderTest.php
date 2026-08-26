@@ -121,9 +121,9 @@ final class CatalogProviderTest extends KernelTestCase
      */
     public function testHazardsServeAsFeatureCollection(): void
     {
-        $f = $this->payload()['F'];
+        $f = $this->payload()['E'];
         self::assertSame('FeatureCollection', $f['type']);
-        // Locate the seeded hazard by name rather than assuming it is the ONLY F
+        // Locate the seeded hazard by name rather than assuming it is the ONLY E
         // feature — the DB is shared across tests, so a global count(1) is fragile
         // (finding 21 / CodeRabbit).
         $matches = array_values(array_filter(
@@ -147,7 +147,7 @@ final class CatalogProviderTest extends KernelTestCase
 
     public function testStaysSplitBySource(): void
     {
-        $e = $this->payload()['E'];
+        $e = $this->payload()['O'];
         self::assertCount(1, $e['osm']['features']);
         self::assertCount(1, $e['pivot']['features']);
         self::assertSame('Camping Test', $e['osm']['features'][0]['properties']['n']);
@@ -175,7 +175,7 @@ final class CatalogProviderTest extends KernelTestCase
             'DELETE FROM item_confirmation WHERE item_id IN (SELECT id FROM item WHERE source = \'pivot\')',
         );
 
-        foreach ($this->payload()['E']['pivot']['features'] as $f) {
+        foreach ($this->payload()['O']['pivot']['features'] as $f) {
             self::assertSame(1, $f['properties']['v'], 'registry provenance alone must verify a pivot row');
         }
     }
@@ -216,7 +216,7 @@ final class CatalogProviderTest extends KernelTestCase
 
     public function testClimbShapeRestoresCitationAndLatLng(): void
     {
-        $climb = $this->payload()['B'][0];
+        $climb = $this->payload()['N'][0];
         self::assertSame('Côte de Test', $climb['name']);
         self::assertSame([50.61, 4.41], $climb['geom']['ll']);                // [lat, lng]
         self::assertSame('Wikidata (P625) · OpenStreetMap', $climb['source']); // attribution -> source
@@ -294,7 +294,7 @@ final class CatalogProviderTest extends KernelTestCase
     public function testRouteShapeAndHeat(): void
     {
         $p = $this->payload();
-        $route = $p['K'][0];
+        $route = $p['R'][0];
         self::assertSame('Test loop', $route['name']);
         self::assertSame(12.3, $route['km']);                                 // 12300 / 1000
         self::assertSame(210, $route['gain']);
@@ -364,7 +364,7 @@ final class CatalogProviderTest extends KernelTestCase
         }
         $em->flush();
 
-        $routes = static::getContainer()->get(CatalogProvider::class)->payload()['K'];
+        $routes = static::getContainer()->get(CatalogProvider::class)->payload()['R'];
         $byName = [];
         foreach ($routes as $r) {
             $byName[$r['name']] = $r;
@@ -399,7 +399,7 @@ final class CatalogProviderTest extends KernelTestCase
         $route->setState(\App\Catalog\ItemState::Unverified);
         $this->em->flush();
 
-        $routes = static::getContainer()->get(CatalogProvider::class)->payload()['K'];
+        $routes = static::getContainer()->get(CatalogProvider::class)->payload()['R'];
         $byName = [];
         foreach ($routes as $r) {
             $byName[$r['name']] = $r;
@@ -456,7 +456,7 @@ final class CatalogProviderTest extends KernelTestCase
             ['item' => $segId, 'stance' => 'exists'],
         );
 
-        self::assertSame(1, $this->payload()['B'][0]['v']);
+        self::assertSame(1, $this->payload()['N'][0]['v']);
         self::assertSame(1, $this->payload()['A'][0]['v']);
     }
 
@@ -495,12 +495,12 @@ final class CatalogProviderTest extends KernelTestCase
         // Pump [6.5,49.0] is outside every region → no rid key.
         self::assertArrayNotHasKey('rid', $byType['Pump']);
 
-        // Climbs (B) and surface (A) serve through their own shapes — they carry rid too.
-        self::assertIsInt($this->payload()['B'][0]['rid']);   // Côte de Test [50.61,4.41] inside
+        // Climbs (N) and surface (A) serve through their own shapes — they carry rid too.
+        self::assertIsInt($this->payload()['N'][0]['rid']);   // Côte de Test [50.61,4.41] inside
         self::assertIsInt($this->payload()['A'][0]['rid']);   // Test seg inside
 
-        // Routes (K) carry rid via recommended_route.region_id (Test loop inside).
-        $route = $this->payload()['K'][0];
+        // Routes (R) carry rid via recommended_route.region_id (Test loop inside).
+        $route = $this->payload()['R'][0];
         self::assertIsInt($route['rid']);
         self::assertGreaterThan(0, $route['rid']);
     }
@@ -545,7 +545,7 @@ final class CatalogProviderTest extends KernelTestCase
         $db = $this->em->getConnection();
         $db->executeStatement(
             "INSERT INTO item (letter, name, geom, country_code, state, source, source_ref, attributes, created_at, updated_at)
-             VALUES ('C', 'GoneTap', ST_GeomFromText('POINT(4.45 50.65)', 4326), 'BE',
+             VALUES ('B', 'GoneTap', ST_GeomFromText('POINT(4.45 50.65)', 4326), 'BE',
                      'unverified', 'osm', 'node/999002',
                      '{\"t\": \"Drinking water\", \"condition\": \"Not there anymore\"}', now(), now())",
         );
@@ -585,20 +585,20 @@ final class CatalogProviderTest extends KernelTestCase
 
             $db->executeStatement(
                 "INSERT INTO item (letter, name, geom, country_code, state, source, source_ref, attributes, created_at, updated_at)
-                 VALUES ('I', :name, ST_GeomFromText('POINT(4.46 50.66)', 4326), 'BE',
+                 VALUES ('P', :name, ST_GeomFromText('POINT(4.46 50.66)', 4326), 'BE',
                          'unverified', 'scout', :ref, '{}', now(), now())",
                 ['name' => $who.' Added', 'ref' => 'sub:contrib-'.strtolower($who)],
             );
             $itemId = (int) $db->fetchOne('SELECT id FROM item WHERE name = :n', ['n' => $who.' Added']);
             $db->executeStatement(
                 "INSERT INTO submission (type, letter, item_id, user_id, status, title, geom, country_code, changes, payload, created_at)
-                 VALUES ('new', 'I', :item, :uid, 'approved', :title, ST_GeomFromText('POINT(4.46 50.66)', 4326), 'BE', '{}', '{}', now())",
+                 VALUES ('new', 'P', :item, :uid, 'approved', :title, ST_GeomFromText('POINT(4.46 50.66)', 4326), 'BE', '{}', '{}', now())",
                 ['item' => $itemId, 'uid' => $user->getId(), 'title' => $who.' Added'],
             );
         }
 
         $props = [];
-        foreach ($this->payload()['I']['features'] as $f) {
+        foreach ($this->payload()['P']['features'] as $f) {
             $props[$f['properties']['n'] ?? ''] = $f['properties'];
         }
 

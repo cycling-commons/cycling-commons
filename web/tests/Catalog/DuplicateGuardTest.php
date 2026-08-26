@@ -42,14 +42,14 @@ final class DuplicateGuardTest extends KernelTestCase
 
     public function testAnEmptyCatalogHoldsNothing(): void
     {
-        self::assertNull($this->guard->existing('E', 'Hôtel Koru', 50.66887, 4.90664));
+        self::assertNull($this->guard->existing('O', 'Hôtel Koru', 50.66887, 4.90664));
     }
 
     public function testTheSameNameAtTheSamePlaceIsHeld(): void
     {
-        $id = $this->seed('E', 'Hôtel Koru', 50.66887, 4.90664, ItemSource::Osm, 'a');
+        $id = $this->seed('O', 'Hôtel Koru', 50.66887, 4.90664, ItemSource::Osm, 'a');
 
-        $held = $this->guard->existing('E', 'Hôtel Koru', 50.66884, 4.90664);
+        $held = $this->guard->existing('O', 'Hôtel Koru', 50.66884, 4.90664);
 
         self::assertNotNull($held);
         self::assertSame($id, $held['id']);
@@ -60,18 +60,18 @@ final class DuplicateGuardTest extends KernelTestCase
     {
         // The whole point of NameKey: two harvests spell one place differently
         // and a string comparison sees two places.
-        $this->seed('I', 'Côte de Saint-Roch', 50.10000, 5.10000, ItemSource::Osm, 'b');
+        $this->seed('P', 'Côte de Saint-Roch', 50.10000, 5.10000, ItemSource::Osm, 'b');
 
-        self::assertNotNull($this->guard->existing('I', 'Cote de Saint Roch', 50.10000, 5.10000));
+        self::assertNotNull($this->guard->existing('P', 'Cote de Saint Roch', 50.10000, 5.10000));
     }
 
     public function testTheSameNameFarAwayIsANamesakeNotADuplicate(): void
     {
         // St Mary's Cathedral is in Sydney, in Perth and in Tokyo. Three real
         // buildings; merging them would delete two of them.
-        $this->seed('J', "St Mary's Cathedral", -33.87111, 151.21333, ItemSource::Wikidata, 'c');
+        $this->seed('Q', "St Mary's Cathedral", -33.87111, 151.21333, ItemSource::Wikidata, 'c');
 
-        self::assertNull($this->guard->existing('J', 'St. Mary\'s Cathedral', 35.71417, 139.72667));
+        self::assertNull($this->guard->existing('Q', 'St. Mary\'s Cathedral', 35.71417, 139.72667));
     }
 
     public function testADifferentNameAtTheSamePlaceIsNotADuplicate(): void
@@ -86,17 +86,17 @@ final class DuplicateGuardTest extends KernelTestCase
     {
         // A climb and a viewpoint on one summit are two catalog entries about
         // two different things.
-        $this->seed('I', 'Signal de Botrange', 50.50167, 6.09306, ItemSource::Osm, 'e');
+        $this->seed('P', 'Signal de Botrange', 50.50167, 6.09306, ItemSource::Osm, 'e');
 
-        self::assertNull($this->guard->existing('B', 'Signal de Botrange', 50.50167, 6.09306));
+        self::assertNull($this->guard->existing('N', 'Signal de Botrange', 50.50167, 6.09306));
     }
 
     public function testJustOutsideTheRadiusIsNotADuplicate(): void
     {
         // ~0.01 degrees of latitude is about 1.1 km, comfortably past 250 m.
-        $this->seed('I', 'Point de Vue', 50.30000, 5.30000, ItemSource::Osm, 'f');
+        $this->seed('P', 'Point de Vue', 50.30000, 5.30000, ItemSource::Osm, 'f');
 
-        self::assertNull($this->guard->existing('I', 'Point de Vue', 50.31000, 5.30000));
+        self::assertNull($this->guard->existing('P', 'Point de Vue', 50.31000, 5.30000));
     }
 
     public function testARetiredRowIsNotInTheWay(): void
@@ -105,33 +105,33 @@ final class DuplicateGuardTest extends KernelTestCase
         // retires a weaker row, the next import may admit the better one. If
         // retired rows still blocked, a duplicate would lock its own place out
         // of the catalog forever.
-        $this->seed('E', 'Hôtel Koru', 50.66887, 4.90664, ItemSource::Osm, 'g', ItemState::Retired);
+        $this->seed('O', 'Hôtel Koru', 50.66887, 4.90664, ItemSource::Osm, 'g', ItemState::Retired);
 
-        self::assertNull($this->guard->existing('E', 'Hôtel Koru', 50.66887, 4.90664));
+        self::assertNull($this->guard->existing('O', 'Hôtel Koru', 50.66887, 4.90664));
     }
 
     public function testARowDoesNotCollideWithItself(): void
     {
         // Re-importing is normal; every import would otherwise skip everything
         // it imported last time.
-        $this->seed('E', 'Hôtel Koru', 50.66887, 4.90664, ItemSource::Pivot, 'h');
+        $this->seed('O', 'Hôtel Koru', 50.66887, 4.90664, ItemSource::Pivot, 'h');
 
-        self::assertNull($this->guard->existing('E', 'Hôtel Koru', 50.66887, 4.90664, 'pivot:test:dup:h'));
+        self::assertNull($this->guard->existing('O', 'Hôtel Koru', 50.66887, 4.90664, 'pivot:test:dup:h'));
     }
 
     public function testAPunctuationOnlyNameNeverMatches(): void
     {
         // Its key is '', and an empty key would collide with every other
         // punctuation-only row in the catalog.
-        $this->seed('I', '---', 50.40000, 5.40000, ItemSource::Osm, 'i');
+        $this->seed('P', '---', 50.40000, 5.40000, ItemSource::Osm, 'i');
 
-        self::assertNull($this->guard->existing('I', '***', 50.40000, 5.40000));
+        self::assertNull($this->guard->existing('P', '***', 50.40000, 5.40000));
     }
 
     public function testTheExplanationNamesTheRowInTheWayAndHowFar(): void
     {
-        $this->seed('E', 'Hôtel Koru', 50.66887, 4.90664, ItemSource::Osm, 'j');
-        $held = $this->guard->existing('E', 'Hôtel Koru', 50.66884, 4.90664);
+        $this->seed('O', 'Hôtel Koru', 50.66887, 4.90664, ItemSource::Osm, 'j');
+        $held = $this->guard->existing('O', 'Hôtel Koru', 50.66884, 4.90664);
         self::assertNotNull($held);
 
         $line = DuplicateGuard::explain('Hôtel Koru', ItemSource::Pivot, $held);
@@ -148,8 +148,8 @@ final class DuplicateGuardTest extends KernelTestCase
 
     public function testTheExplanationIsQuietWhenTheHeldRowRanksHigher(): void
     {
-        $this->seed('E', 'Hôtel Koru', 50.66887, 4.90664, ItemSource::Manual, 'k');
-        $held = $this->guard->existing('E', 'Hôtel Koru', 50.66884, 4.90664);
+        $this->seed('O', 'Hôtel Koru', 50.66887, 4.90664, ItemSource::Manual, 'k');
+        $held = $this->guard->existing('O', 'Hôtel Koru', 50.66884, 4.90664);
         self::assertNotNull($held);
 
         $line = DuplicateGuard::explain('Hôtel Koru', ItemSource::Osm, $held);

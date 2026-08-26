@@ -238,7 +238,7 @@ export function waterDrawer(p, ll){
   const rec=[{label:D.type||'Type', value:(p.type||p.t) ? trVal(p.type||p.t) : (D.drinkingWater||'Drinking water'), method: p.type?undefined:'OSM'}, potable,
     {label:D.verify||'Verify', value:D.verifyWater||'Cross-check tap-water quality with the regional utility / fountain directory', links:WATER_CHECK_LINKS[p.cc]||[]}];
   // Remaining WaterFood fields; type and potable are structural above.
-  rec.push(...schemaRows('C', p, p.id, {skip:['type','potable']}));
+  rec.push(...schemaRows('B', p, p.id, {skip:['type','potable']}));
   const d={name:p.n||p.t||D.drinkingWater||'Drinking water', headline:(D.headlineDrinking||'drinking water')+' · '+(community?sourceLabel(p.srcType):'OSM'), cur:!!p.v, geom:{ll:[ll.lat,ll.lng]},
     record:rec,
     source: community?sourceLabel(p.srcType):'OpenStreetMap (amenity=drinking_water / drinking_water=yes)'};
@@ -321,8 +321,8 @@ function buildRecord(layer, f){
   </figure>` : (f.photoPending ? waitingPhoto(f.photoPending) : addPhoto);
   let recs = f.record || [];
   if(layer.key==='climbs'){
-    // docs/specs/map-and-search.md §6.2 — climb attributes from CC_FIELD_SCHEMA[B]; filled rows replace stale pre-baked ones.
-    const attrRows = schemaRows('B', f, f.id);
+    // docs/specs/map-and-search.md §6.2 — climb attributes from CC_FIELD_SCHEMA[N]; filled rows replace stale pre-baked ones.
+    const attrRows = schemaRows('N', f, f.id);
     const attrLabels = new Set(attrRows.filter(r=>!r.empty).map(r=>r.label));
     recs = recs.filter(r=>!attrLabels.has(r.label)).concat(attrRows);
   }

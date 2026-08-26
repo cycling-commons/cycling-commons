@@ -38,7 +38,7 @@ final class CoveragePageTest extends WebTestCase
 
         $db->executeStatement(
             "INSERT INTO item (letter, name, geom, country_code, region_id, state, source, source_ref, attributes, created_at, updated_at)
-             VALUES ('B', 'Cov Climb', ST_SetSRID(ST_GeomFromText('POINT(4.5 50.5)'), 4326), 'BE', :r, 'verified', 'seed', :ref, '{}', NOW(), NOW())",
+             VALUES ('N', 'Cov Climb', ST_SetSRID(ST_GeomFromText('POINT(4.5 50.5)'), 4326), 'BE', :r, 'verified', 'seed', :ref, '{}', NOW(), NOW())",
             ['r' => $rid, 'ref' => 'cov-'.uniqid()],
         );
         self::ensureCoverageSchema($db);

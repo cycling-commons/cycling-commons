@@ -26,12 +26,12 @@ final class ScoutTag
      *                                  always pick another letter in review.
      */
     public const array LETTERS = [
-        'resupply' => ['C', 'D'],       // water & food, or a bike service
-        'closure' => ['F'],             // hazards & conditions
+        'resupply' => ['B', 'D'],       // water & food, or a bike service
+        'closure' => ['E'],             // hazards & conditions
         'surface' => ['A'],             // the one segment-located letter
-        'notice' => ['F'],
-        'scenery' => ['I'],
-        'other' => ['C', 'D', 'F', 'H', 'I', 'J'],
+        'notice' => ['E'],
+        'scenery' => ['P'],
+        'other' => ['B', 'D', 'E', 'G', 'P', 'Q'],
     ];
 
     /**
@@ -39,16 +39,16 @@ final class ScoutTag
      */
     public const array DETAIL_LETTERS = [
         // NOTICE?  POTHOLES · CROSSING · CORNER · OTHER · UNKNOWN
-        'notice' => [1 => ['F'], 2 => ['F'], 3 => ['F'], 4 => ['F'], 5 => ['F']],
+        'notice' => [1 => ['E'], 2 => ['E'], 3 => ['E'], 4 => ['E'], 5 => ['E']],
         // CLOSED FOR?  TODAY · DAYS · WEEKS · MONTHS · UNKNOWN
-        'closure' => [1 => ['F'], 2 => ['F'], 3 => ['F'], 4 => ['F'], 5 => ['F']],
+        'closure' => [1 => ['E'], 2 => ['E'], 3 => ['E'], 4 => ['E'], 5 => ['E']],
         // SCENERY?  NATURE · HISTORY · CULTURE · VIEW · ARCHITECTURE · UNKNOWN
         'scenery' => [
-            1 => ['I'], 2 => ['J', 'I'], 3 => ['J', 'I'],
-            4 => ['I'], 5 => ['J', 'I'], 6 => ['I', 'J'],
+            1 => ['P'], 2 => ['Q', 'P'], 3 => ['Q', 'P'],
+            4 => ['P'], 5 => ['Q', 'P'], 6 => ['P', 'Q'],
         ],
         // WHAT KIND?  WATER · FOOD · REPAIR
-        'resupply' => [1 => ['C'], 2 => ['C'], 3 => ['D']],
+        'resupply' => [1 => ['B'], 2 => ['B'], 3 => ['D']],
         // The surface submenu is the surface itself; it is always A.
         'surface' => [],
     ];

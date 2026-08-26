@@ -71,7 +71,7 @@ final class BackfillAttributesCommand extends Command
 
         $counts = $itemCounts;
         if ($routeCounts['items'] > 0) {
-            $counts['K'] = $routeCounts['items'];
+            $counts['R'] = $routeCounts['items'];
         }
         ksort($counts);
         foreach ($counts as $letter => $count) {

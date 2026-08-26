@@ -162,7 +162,7 @@ final class CatalogContributionServiceTest extends KernelTestCase
         $this->wallonia();
         // A road-surface style LineString item inside Wallonia. Pre-fix this
         // destructured coordinates as a flat pair → lat/lng = 1.0/1.0.
-        $item = $this->item('B', '{"type":"LineString","coordinates":[[5.86,50.47],[5.87,50.48]]}');
+        $item = $this->item('N', '{"type":"LineString","coordinates":[[5.86,50.47],[5.87,50.48]]}');
 
         $receipt = $this->service->submit('improve', [
             '_item_id' => $item->getId(),
@@ -189,7 +189,7 @@ final class CatalogContributionServiceTest extends KernelTestCase
      */
     public function testImproveResendingIdenticalGeometryChangesNothingAndIsRefused(): void
     {
-        $item = $this->item('B', '{"type":"Point","coordinates":[5.24,50.51]}', [
+        $item = $this->item('N', '{"type":"Point","coordinates":[5.24,50.51]}', [
             'route' => [[50.51, 5.24], [50.52, 5.25]],
             'grad' => [6, 9, 13],
             'steep' => ['at' => [50.517, 5.247], 'pct' => '26%', 'manual' => false],
@@ -219,7 +219,7 @@ final class CatalogContributionServiceTest extends KernelTestCase
      */
     public function testImproveRecordsOnlyTheRealChangeBesideIdenticalGeometry(): void
     {
-        $item = $this->item('B', '{"type":"Point","coordinates":[5.24,50.51]}', [
+        $item = $this->item('N', '{"type":"Point","coordinates":[5.24,50.51]}', [
             'route' => [[50.51, 5.24], [50.52, 5.25]],
             'grad' => [6, 9, 13],
             'steep' => ['at' => [50.517, 5.247], 'pct' => '26%', 'manual' => false],
@@ -243,7 +243,7 @@ final class CatalogContributionServiceTest extends KernelTestCase
 
     public function testImproveWithNoChangeAtAllIsRefused(): void
     {
-        $item = $this->item('B', '{"type":"Point","coordinates":[5.24,50.51]}', ['surface' => 'Asphalt']);
+        $item = $this->item('N', '{"type":"Point","coordinates":[5.24,50.51]}', ['surface' => 'Asphalt']);
 
         try {
             $this->service->submit('improve', [
@@ -272,7 +272,7 @@ final class CatalogContributionServiceTest extends KernelTestCase
      */
     public function testAPastedPhotoUrlIsNotAChangeAndIsDroppedFromThePayload(): void
     {
-        $item = $this->item('B', '{"type":"Point","coordinates":[5.24,50.51]}', ['surface' => 'Asphalt']);
+        $item = $this->item('N', '{"type":"Point","coordinates":[5.24,50.51]}', ['surface' => 'Asphalt']);
 
         try {
             $this->service->submit('improve', [
@@ -292,7 +292,7 @@ final class CatalogContributionServiceTest extends KernelTestCase
 
     public function testImproveClearingPrefilledAttributeRecordsRemoval(): void
     {
-        $item = $this->item('B', '{"type":"Point","coordinates":[5.24,50.51]}', ['surface' => 'Asphalt']);
+        $item = $this->item('N', '{"type":"Point","coordinates":[5.24,50.51]}', ['surface' => 'Asphalt']);
 
         $receipt = $this->service->submit('improve', [
             '_item_id' => $item->getId(),

@@ -586,7 +586,7 @@ non-empty) is NOT prop-less — it hides under a region scope (matching
   change).
 - **Manifest** (stable key `coverage/manifest.json`):
   `{"version":1, "url":"<COVERAGE_PUBLIC_BASE_URL>/coverage/<YYYYMMDD-HHMM>.pmtiles",
-  "built_at":"<ISO>", "counts":{"C":n,…}, "regions":[…], "country_codes":[…]}`.
+  "built_at":"<ISO>", "counts":{"B":n,…}, "regions":[…], "country_codes":[…]}`.
   `country_codes` is the sorted list of real onboarded countries resolved via
   `COUNTRY_BY_REGION` (`["BE","NL"]`; the `zz` bucket is excluded — it is a
   fixed client-side fallback, not a real country) — it tells the client which
@@ -636,7 +636,7 @@ itemId?}`.
 |---|---|---|
 | `GET /map/coverage/search?q=` | in-memory `ITEM_INDEX` sidebar search (coverage part) | `{"results": entry[], "attribution"}` — ranked curated first, then community; trgm-backed; default limit `CoverageRepository::SEARCH_LIMIT` (value `12`); ETag + `max-age=300` |
 | `GET /map/coverage/nearby?lat=&lng=&km=` | town-card 5 km client-side haversine scan | `{"groups": [{letter, total, items: entry[]}], "attribution"}` — `ST_DWithin`, grouped by letter, community capped per group (`CoverageRepository::NEARBY_COMMUNITY_CAP`, value `3`) behind a "show all" expander; 422 on bad coords; `max-age=300` |
-| `GET /map/coverage/counts` | rail totals | `{"counts": {"C": n, …}, "attribution"}`; **scope-aware** (Phase 3); `max-age=3600` |
+| `GET /map/coverage/counts` | rail totals | `{"counts": {"B": n, …}, "attribution"}`; **scope-aware** (Phase 3); `max-age=3600` |
 | `GET /map/coverage/poi/{osmType}/{osmId}` | new: drawer detail for tile POIs | `{ref, letter, name, kind, ll, tags, curated, attribution}` — `tags` filtered to `CoverageRepository::TAG_WHITELIST` (store rich, serve trimmed); `curated` = `{itemId, state, fields, confirmations}` or `null`; `osmType ∈ {node, way}`; 404 when the ref is not cached; ETag + `max-age=300` |
 
 - **Region scope params (Phase 3, map-and-search.md §4.5).** `search`,

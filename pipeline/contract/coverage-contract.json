@@ -1,7 +1,7 @@
 {
   "version": 1,
   "letters": {
-    "C": {
+    "B": {
       "selectors": [
         {
           "tag": "amenity=drinking_water",
@@ -28,6 +28,15 @@
         "potable"
       ]
     },
+    "C": {
+      "selectors": [
+        {
+          "tag": "amenity=toilets",
+          "label": "Public toilets"
+        }
+      ],
+      "tileProps": []
+    },
     "D": {
       "selectors": [
         {
@@ -47,46 +56,7 @@
         "kind"
       ]
     },
-    "E": {
-      "selectors": [
-        {
-          "tag": "tourism=camp_site",
-          "label": "Campsite"
-        },
-        {
-          "tag": "tourism=hostel",
-          "label": "Hostel"
-        },
-        {
-          "tag": "tourism=guest_house",
-          "label": "Guest house"
-        },
-        {
-          "tag": "tourism=chalet",
-          "label": "Chalet"
-        },
-        {
-          "tag": "tourism=wilderness_hut",
-          "label": "Wilderness hut"
-        },
-        {
-          "tag": "tourism=alpine_hut",
-          "label": "Mountain hut"
-        },
-        {
-          "tag": "tourism=motel",
-          "label": "Motel"
-        },
-        {
-          "tag": "tourism=hotel",
-          "label": "Hotel"
-        }
-      ],
-      "tileProps": [
-        "acc"
-      ]
-    },
-    "G": {
+    "F": {
       "selectors": [
         {
           "tag": "railway=station",
@@ -107,7 +77,7 @@
       ],
       "tileProps": []
     },
-    "H": {
+    "G": {
       "selectors": [
         {
           "tag": "shelter_type=basic_hut",
@@ -156,7 +126,46 @@
       ],
       "tileProps": []
     },
-    "I": {
+    "O": {
+      "selectors": [
+        {
+          "tag": "tourism=camp_site",
+          "label": "Campsite"
+        },
+        {
+          "tag": "tourism=hostel",
+          "label": "Hostel"
+        },
+        {
+          "tag": "tourism=guest_house",
+          "label": "Guest house"
+        },
+        {
+          "tag": "tourism=chalet",
+          "label": "Chalet"
+        },
+        {
+          "tag": "tourism=wilderness_hut",
+          "label": "Wilderness hut"
+        },
+        {
+          "tag": "tourism=alpine_hut",
+          "label": "Mountain hut"
+        },
+        {
+          "tag": "tourism=motel",
+          "label": "Motel"
+        },
+        {
+          "tag": "tourism=hotel",
+          "label": "Hotel"
+        }
+      ],
+      "tileProps": [
+        "acc"
+      ]
+    },
+    "P": {
       "selectors": [
         {
           "tag": "tourism=viewpoint",
@@ -173,7 +182,7 @@
       ],
       "tileProps": []
     },
-    "J": {
+    "Q": {
       "selectors": [
         {
           "tag": "historic=castle",
@@ -206,15 +215,6 @@
         {
           "tag": "historic=monastery",
           "label": "Monastery"
-        }
-      ],
-      "tileProps": []
-    },
-    "M": {
-      "selectors": [
-        {
-          "tag": "amenity=toilets",
-          "label": "Public toilets"
         }
       ],
       "tileProps": []

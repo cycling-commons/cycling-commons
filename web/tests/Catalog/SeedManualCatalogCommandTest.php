@@ -260,7 +260,7 @@ final class SeedManualCatalogCommandTest extends KernelTestCase
         $connection = static::getContainer()->get(EntityManagerInterface::class)->getConnection();
         $connection->executeStatement(
             "INSERT INTO item (letter, name, geom, country_code, state, source, source_ref, attributes, created_at, updated_at, imported_at)
-             VALUES ('H', 'Abri Jean Poumay', ST_SetSRID(ST_MakePoint(5.8521, 50.5074), 4326), 'BE', 'verified', 'osm', 'osm:node:1', '{}', NOW(), NOW(), NOW())",
+             VALUES ('G', 'Abri Jean Poumay', ST_SetSRID(ST_MakePoint(5.8521, 50.5074), 4326), 'BE', 'verified', 'osm', 'osm:node:1', '{}', NOW(), NOW(), NOW())",
         );
 
         $tester = $this->runSeed();

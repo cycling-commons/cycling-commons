@@ -179,7 +179,7 @@ final class SeedClimbsCommand extends Command
                    hill, and read-time dedupe matches by ref, so it cannot see
                    that. Checked in a dry run too, or the dry run would report a
                    number the real run will not produce. */
-                $held = $this->duplicates->existing('B', $name, $sLat, $sLng, 'wikidata:'.$ref);
+                $held = $this->duplicates->existing('N', $name, $sLat, $sLng, 'wikidata:'.$ref);
                 if (null !== $held) {
                     $skipped['duplicate-place'][] = DuplicateGuard::explain($name, ItemSource::Wikidata, $held);
                     continue;

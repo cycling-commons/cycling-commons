@@ -163,7 +163,7 @@ final class CuratedReadiness
             ['rids' => ArrayParameterType::INTEGER],
         );
         foreach ($routes as $r) {
-            $counts[(int) $r['region_id']]['K'] = (int) $r['n'];
+            $counts[(int) $r['region_id']]['R'] = (int) $r['n'];
         }
 
         // Read once per batch so every region is judged by the same settings.

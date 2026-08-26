@@ -196,7 +196,7 @@ final class ImproveTest extends WebTestCase
     {
         $client = static::createClient();
         $this->loginFreshUser($client, 'water');
-        $item = $this->createItem('C');
+        $item = $this->createItem('B');
 
         $client->request('GET', '/improve?item='.$item->getId());
 
@@ -322,7 +322,7 @@ final class ImproveTest extends WebTestCase
     {
         $client = static::createClient();
         $this->loginFreshUser($client, 'rename');
-        $item = $this->createItem('C', ['potable' => 'Yes (public supply)'], name: 'Waterpunt');
+        $item = $this->createItem('B', ['potable' => 'Yes (public supply)'], name: 'Waterpunt');
 
         $crawler = $client->request('GET', '/improve?item='.$item->getId());
         self::assertResponseIsSuccessful();
@@ -351,7 +351,7 @@ final class ImproveTest extends WebTestCase
     {
         $client = static::createClient();
         $this->loginFreshUser($client, 'rename-empty');
-        $item = $this->createItem('C', ['potable' => 'Yes (public supply)'], name: 'Waterpunt');
+        $item = $this->createItem('B', ['potable' => 'Yes (public supply)'], name: 'Waterpunt');
 
         $crawler = $client->request('GET', '/improve?item='.$item->getId());
         $form = $crawler->selectButton('Next →')->form();
@@ -381,7 +381,7 @@ final class ImproveTest extends WebTestCase
     {
         $client = static::createClient();
         $this->loginFreshUser($client, 'ride');
-        $item = $this->createItem('K');
+        $item = $this->createItem('R');
 
         $client->request('GET', '/improve?item='.$item->getId());
 
@@ -397,12 +397,12 @@ final class ImproveTest extends WebTestCase
     {
         $client = static::createClient();
         $this->loginFreshUser($client, 'votable');
-        $item = $this->createItem('B');
+        $item = $this->createItem('N');
 
         $client->request('GET', '/improve?item='.$item->getId());
 
         self::assertResponseIsSuccessful();
-        // Climbs (B) can be voted on, and the wizard says so. Asserted on what
+        // Climbs (N) can be voted on, and the wizard says so. Asserted on what
         // a rider is actually told — "vote" — rather than on the word "votable",
         // which is the schema's vocabulary and was never meant to reach the page.
         // One paragraph now carries both halves (the funnel and what this type
@@ -415,12 +415,12 @@ final class ImproveTest extends WebTestCase
     {
         $client = static::createClient();
         $this->loginFreshUser($client, 'utility');
-        $item = $this->createItem('C');
+        $item = $this->createItem('B');
 
         $client->request('GET', '/improve?item='.$item->getId());
 
         self::assertResponseIsSuccessful();
-        // Water & food (C) is a utility type. The rider is told what that MEANS
+        // Water & food (B) is a utility type. The rider is told what that MEANS
         // for them — nobody votes on it, one rider's confirmation promotes it —
         // and never the word "utility" or "coverage", which are ours, not theirs.
         self::assertSelectorTextContains('.lc-funnel', 'they never vote on them');
@@ -502,7 +502,7 @@ final class ImproveTest extends WebTestCase
     {
         $client = static::createClient();
         $this->loginFreshUser($client, 'xss');
-        $item = $this->createItem('E', ['web' => 'https://old.example.test'], name: 'Gîte XSS');
+        $item = $this->createItem('O', ['web' => 'https://old.example.test'], name: 'Gîte XSS');
 
         $crawler = $client->request('GET', '/improve?item='.$item->getId());
         self::assertResponseIsSuccessful();
@@ -532,7 +532,7 @@ final class ImproveTest extends WebTestCase
     {
         $client = static::createClient();
         $this->loginFreshUser($client, 'xss-ok');
-        $item = $this->createItem('E', ['web' => 'https://old.example.test'], name: 'Gîte OK');
+        $item = $this->createItem('O', ['web' => 'https://old.example.test'], name: 'Gîte OK');
 
         $crawler = $client->request('GET', '/improve?item='.$item->getId());
         self::assertResponseIsSuccessful();

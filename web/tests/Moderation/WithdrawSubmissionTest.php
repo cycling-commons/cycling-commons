@@ -58,7 +58,7 @@ final class WithdrawSubmissionTest extends WebTestCase
     {
         return (int) static::getContainer()->get(Connection::class)->fetchOne(
             "INSERT INTO item (letter, name, geom, country_code, state, source, source_ref, attributes, created_at, updated_at)
-             VALUES ('J', 'Withdraw Castle', ST_SetSRID(ST_MakePoint(6.0, 49.9), 4326), 'LU', 'unverified', 'user', 'user:withdraw-1', '{}', NOW(), NOW())
+             VALUES ('Q', 'Withdraw Castle', ST_SetSRID(ST_MakePoint(6.0, 49.9), 4326), 'LU', 'unverified', 'user', 'user:withdraw-1', '{}', NOW(), NOW())
              RETURNING id",
         );
     }

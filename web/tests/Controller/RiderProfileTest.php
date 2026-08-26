@@ -200,7 +200,7 @@ final class RiderProfileTest extends WebTestCase
         // must land in the SAME counter.
         $mkItem = static fn (string $ref): int => (int) $em->getConnection()->fetchOne(
             "INSERT INTO item (letter, name, geom, country_code, state, source, source_ref, attributes, created_at, updated_at, imported_at)
-             VALUES ('C', 'Counter Tap', ST_SetSRID(ST_MakePoint(6.0, 50.4), 4326), 'BE', 'unverified', 'osm', :ref, '{}', NOW(), NOW(), NOW())
+             VALUES ('B', 'Counter Tap', ST_SetSRID(ST_MakePoint(6.0, 50.4), 4326), 'BE', 'unverified', 'osm', :ref, '{}', NOW(), NOW(), NOW())
              RETURNING id",
             ['ref' => $ref],
         );

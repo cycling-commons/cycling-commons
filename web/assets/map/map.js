@@ -147,7 +147,7 @@ import { layerGlyph } from './icons.js';
           rec.push({label:D.surfaces||'Surfaces', value:r.surfaces.parts.map(p=>`${trVal(p.surface)} ${p.pct}%`).join(' · '),
                     method:tpl(D.estimateMethod||'estimate · {pct}% of route mapped', {pct:Number(r.surfaces.covered)||0})});
         }
-        rec.push(...schemaRows('K', r, r.id, {skip:['difficulty']}));
+        rec.push(...schemaRows('R', r, r.id, {skip:['difficulty']}));
         return rec;
       })()
     };
@@ -188,7 +188,7 @@ import { layerGlyph } from './icons.js';
         id:p.id, rid:p.rid, name:p.n||(LAYER_L10N.hazards||'Hazard'), unnamed:!named,
         headline:bits.join(' · ')||(named?(LAYER_L10N.hazards||'Hazards & conditions'):''),
         cur:!!p.v, geom:{ll:[c[1], c[0]]},
-        record:schemaRows('F', p, p.id),
+        record:schemaRows('E', p, p.id),
         photo:photo,
         source:sourceLabel(p.srcType) || (D.communityReport||'Community report'),
         v:p.v

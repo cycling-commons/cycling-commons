@@ -66,13 +66,13 @@ final class ClosureLifetimeTest extends TestCase
     {
         $closed = ['hazardType' => ClosureLifetime::CLOSED_TYPE];
 
-        self::assertTrue(ClosureLifetime::applies('F', $closed));
+        self::assertTrue(ClosureLifetime::applies('E', $closed));
         // Same attributes, wrong letter — nothing outside hazards decays.
-        self::assertFalse(ClosureLifetime::applies('C', $closed));
+        self::assertFalse(ClosureLifetime::applies('B', $closed));
         // A hazard that is not a closure keeps its place: ice and crosswind
         // have no stated end date, so there is nothing to expire against.
-        self::assertFalse(ClosureLifetime::applies('F', ['hazardType' => 'Ice / frost']));
-        self::assertFalse(ClosureLifetime::applies('F', []));
+        self::assertFalse(ClosureLifetime::applies('E', ['hazardType' => 'Ice / frost']));
+        self::assertFalse(ClosureLifetime::applies('E', []));
     }
 
     /** The form vocabulary and the duration table must not drift apart. */

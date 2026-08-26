@@ -296,8 +296,8 @@ final class ScoutIntakeTest extends WebTestCase
         // Best first, everything after: the narrowing is guidance, and the
         // guidance must not become a cage.
         $offer = ScoutTag::offerFor('scenery', 2);
-        self::assertSame('J', $offer[0], 'SCENERY · HISTORY leads with history & culture');
-        self::assertContains('C', $offer, 'and a mis-tap can still become water & food');
+        self::assertSame('Q', $offer[0], 'SCENERY · HISTORY leads with history & culture');
+        self::assertContains('B', $offer, 'and a mis-tap can still become water & food');
         self::assertNotContains('A', $offer, 'road surface is not reachable from a single point');
     }
 

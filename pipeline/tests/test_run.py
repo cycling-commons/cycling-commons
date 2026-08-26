@@ -149,7 +149,7 @@ def test_main_stage_order_and_region_failure_isolation(monkeypatch, tmp_path, ca
 
     class FakeResult:
         def fetchall(self):
-            return [("C", 3), ("D", 2)]
+            return [("B", 3), ("D", 2)]
 
         def fetchone(self):
             return (True,)   # pg_try_advisory_lock → acquired (design §3.2)
@@ -200,7 +200,7 @@ def test_main_stage_order_and_region_failure_isolation(monkeypatch, tmp_path, ca
     monkeypatch.setattr(run, "load_region", fake_load_region)
     monkeypatch.setattr(
         run, "export_geojsonl",
-        lambda conn, wd: calls.append("export") or {("C", "BE"): tmp_path / "c.geojsonl"})
+        lambda conn, wd: calls.append("export") or {("B", "BE"): tmp_path / "b.geojsonl"})
     monkeypatch.setattr(run, "build_pmtiles", lambda lf, out: calls.append("build"))
     monkeypatch.setattr(
         run, "verify_pmtiles",
@@ -218,7 +218,7 @@ def test_main_stage_order_and_region_failure_isolation(monkeypatch, tmp_path, ca
     assert calls.index("verify") < calls.index("upload") < calls.index("prune")
     assert calls.index("build") < calls.index("verify")
     # Manifest: table-wide counts, this run's regions (shape locked).
-    assert manifests == [{"counts": {"C": 3, "D": 2}, "regions": ["dev/bad", "dev/ok"],
+    assert manifests == [{"counts": {"B": 3, "D": 2}, "regions": ["dev/bad", "dev/ok"],
                          "country_codes": ["BE"]}]
     err = capsys.readouterr().err
     assert "dev/bad: FAILED" in err and "simulated drift" in err

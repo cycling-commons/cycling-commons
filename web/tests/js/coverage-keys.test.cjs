@@ -38,7 +38,7 @@ function letterKey() {
   return out;
 }
 
-/** `export const COVERAGE_KEYS=[['water','c'],…]` -> [['water','c'], …] */
+/** `export const COVERAGE_KEYS=[['water','b'],…]` -> [['water','b'], …] */
 function coverageKeys() {
   const m = read('coverage.js').match(/export const COVERAGE_KEYS\s*=\s*\[(.*?)\];/s);
   assert.ok(m, 'COVERAGE_KEYS not found in coverage.js — did it move or change shape?');

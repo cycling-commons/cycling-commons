@@ -53,13 +53,13 @@ final class ModerationServiceTest extends KernelTestCase
     /** @return array{Item, Submission} */
     private function seedNew(): array
     {
-        $item = (new Item()->answerOsm(null)   /* pre-gate fixture: the curator answered "not in OSM" (catalog-data-model.md §5b) */)->setLetter('B')->setName('Côte du Test')
+        $item = (new Item()->answerOsm(null)   /* pre-gate fixture: the curator answered "not in OSM" (catalog-data-model.md §5b) */)->setLetter('N')->setName('Côte du Test')
             ->setGeom('{"type":"Point","coordinates":[5.86,50.47]}')->setCountryCode('BE')
             ->setState(ItemState::Submitted)->setSource(ItemSource::User)->setSourceRef('sub:pending')
             ->setAttributes(['len' => 3.1]);
         $this->em->persist($item);
         $this->em->flush();
-        $sub = (new Submission())->setType(SubmissionType::NewItem)->setLetter('B')->setUserId($this->submitterId)
+        $sub = (new Submission())->setType(SubmissionType::NewItem)->setLetter('N')->setUserId($this->submitterId)
             ->setItemId($item->getId())->setTitle('Côte du Test')
             ->setGeom('{"type":"Point","coordinates":[5.86,50.47]}')->setCountryCode('BE')
             ->setChanges(['len' => ['was' => null, 'now' => 3.1]])->setPayload([]);
@@ -79,13 +79,13 @@ final class ModerationServiceTest extends KernelTestCase
      */
     private function seedWater(array $changes): array
     {
-        $item = (new Item()->answerOsm(null)   /* pre-gate fixture: the curator answered "not in OSM" (catalog-data-model.md §5b) */)->setLetter('C')->setName('Fontaine du Test')
+        $item = (new Item()->answerOsm(null)   /* pre-gate fixture: the curator answered "not in OSM" (catalog-data-model.md §5b) */)->setLetter('B')->setName('Fontaine du Test')
             ->setGeom('{"type":"Point","coordinates":[5.86,50.47]}')->setCountryCode('BE')
             ->setState(ItemState::Submitted)->setSource(ItemSource::User)->setSourceRef('sub:water')
             ->setAttributes([]);
         $this->em->persist($item);
         $this->em->flush();
-        $sub = (new Submission())->setType(SubmissionType::NewItem)->setLetter('C')->setUserId($this->submitterId)
+        $sub = (new Submission())->setType(SubmissionType::NewItem)->setLetter('B')->setUserId($this->submitterId)
             ->setItemId($item->getId())->setTitle('Fontaine du Test')
             ->setGeom('{"type":"Point","coordinates":[5.86,50.47]}')->setCountryCode('BE')
             ->setChanges($changes)->setPayload([]);
@@ -178,13 +178,13 @@ final class ModerationServiceTest extends KernelTestCase
      */
     public function testApproveEditUpdatesClimbEffortWithHistory(): void
     {
-        $item = (new Item()->answerOsm(null)   /* pre-gate fixture: the curator answered "not in OSM" (catalog-data-model.md §5b) */)->setLetter('B')->setName('Côte du Test Effort')
+        $item = (new Item()->answerOsm(null)   /* pre-gate fixture: the curator answered "not in OSM" (catalog-data-model.md §5b) */)->setLetter('N')->setName('Côte du Test Effort')
             ->setGeom('{"type":"Point","coordinates":[5.86,50.47]}')->setCountryCode('BE')
             ->setState(ItemState::Unverified)->setSource(ItemSource::User)->setSourceRef('sub:effort')
             ->setAttributes(['effort' => 'Steady', 'famousFor' => 'Nothing yet']);
         $this->em->persist($item);
         $this->em->flush();
-        $sub = (new Submission())->setType(SubmissionType::Edit)->setLetter('B')->setUserId($this->submitterId)
+        $sub = (new Submission())->setType(SubmissionType::Edit)->setLetter('N')->setUserId($this->submitterId)
             ->setItemId($item->getId())->setTitle('Côte du Test Effort')
             ->setGeom('{"type":"Point","coordinates":[5.86,50.47]}')->setCountryCode('BE')
             ->setChanges(['effort' => ['was' => 'Steady', 'now' => 'Very steep']])->setPayload([]);

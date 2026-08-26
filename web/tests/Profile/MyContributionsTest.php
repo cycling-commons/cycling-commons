@@ -106,9 +106,9 @@ final class MyContributionsTest extends WebTestCase
                 ->setGeom('{"type":"Point","coordinates":[6.0,50.4]}')->setCountryCode('BE')
                 ->setChanges([])->setPayload([]));
         };
-        $mk('J', 'Castle pending', SubmissionStatus::Pending);
-        $mk('J', 'Castle withdrawn', SubmissionStatus::Withdrawn);
-        $mk('C', 'Fountain withdrawn', SubmissionStatus::Withdrawn);
+        $mk('Q', 'Castle pending', SubmissionStatus::Pending);
+        $mk('Q', 'Castle withdrawn', SubmissionStatus::Withdrawn);
+        $mk('B', 'Fountain withdrawn', SubmissionStatus::Withdrawn);
         $em->flush();
         $client->loginUser($me);
 
