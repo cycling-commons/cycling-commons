@@ -67,7 +67,7 @@ final class CatalogFormRegistry
                 addFields: [
                     CatalogField::select('waterOnClimb', 'Water on climb?', self::UNKNOWN_YES_NO),
                     CatalogField::text('hairpins', 'Hairpins (count)', placeholder: 'e.g. 3'),
-                    CatalogField::select('shade', 'Shade / exposure', ['Unknown', 'Wooded', 'Exposed']),
+                    CatalogField::select('shade', 'Shade / exposure', ['Unknown', 'Wooded', 'Partly shaded', 'Exposed']),
                     CatalogField::text('famousFor', 'Famous for', placeholder: 'e.g. La Flèche Wallonne summit finish'),
                     CatalogField::text('approach', 'Approach', placeholder: 'e.g. From Sougné-Remouchamps (Aywaille)'),
                 ],

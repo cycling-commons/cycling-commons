@@ -57,7 +57,7 @@ window.CC_EDIT = {
     addFields:[
       {label:'Water on climb?', type:'select', opts:['Unknown','Yes','No']},
       {label:'Hairpins (count)', placeholder:'e.g. 3'},
-      {label:'Shade / exposure', type:'select', opts:['Unknown','Wooded','Exposed']}
+      {label:'Shade / exposure', type:'select', opts:['Unknown','Wooded','Partly shaded','Exposed']}
     ]
   },
   'mur-de-huy': {
@@ -76,7 +76,7 @@ window.CC_EDIT = {
     addFields:[
       {label:'Water on climb?', type:'select', opts:['Unknown','Yes','No']},
       {label:'Hairpins (count)', placeholder:'e.g. 3'},
-      {label:'Shade / exposure', type:'select', opts:['Unknown','Wooded','Exposed']}
+      {label:'Shade / exposure', type:'select', opts:['Unknown','Wooded','Partly shaded','Exposed']}
     ]
   },
   'cote-de-stockeu': {
@@ -95,7 +95,7 @@ window.CC_EDIT = {
     addFields:[
       {label:'Water on climb?', type:'select', opts:['Unknown','Yes','No']},
       {label:'Hairpins (count)', placeholder:'e.g. 3'},
-      {label:'Shade / exposure', type:'select', opts:['Unknown','Wooded','Exposed']}
+      {label:'Shade / exposure', type:'select', opts:['Unknown','Wooded','Partly shaded','Exposed']}
     ]
   },
   'cote-de-la-roche-aux-faucons': {
@@ -114,7 +114,7 @@ window.CC_EDIT = {
     addFields:[
       {label:'Water on climb?', type:'select', opts:['Unknown','Yes','No']},
       {label:'Hairpins (count)', placeholder:'e.g. 3'},
-      {label:'Shade / exposure', type:'select', opts:['Unknown','Wooded','Exposed']}
+      {label:'Shade / exposure', type:'select', opts:['Unknown','Wooded','Partly shaded','Exposed']}
     ]
   },
 
