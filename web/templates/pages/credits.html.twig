@@ -12,13 +12,26 @@
   .crow .who a{font-weight:600;text-decoration:none;border-bottom:1px solid var(--trail)}
   .crow .who .lic{display:block;font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:#595c4d;margin-top:.3rem}
   .crow p{font-size:.92rem;color:#3a3d30;margin:0}
-  /* Rows whose text is a LEGALLY REQUIRED notice, not a thank-you. The badge
+  /* Rows whose text is a LEGALLY REQUIRED notice, not a thank-you. The mark
      exists for the next editor: twice in one week a mandated text was nearly
      revised as if it were courtesy copy (the Copernicus notice both times).
-     Everything else on this page can be reworded; these rows cannot. */
-  .crow .req{display:inline-block;font-family:var(--mono);font-size:.52rem;letter-spacing:.1em;text-transform:uppercase;color:var(--paper);background:var(--clay);border-radius:3px;padding:.15rem .4rem;margin-left:.5rem;vertical-align:middle}
-  .legend{font-size:.82rem;color:#595c4d;margin:1.2rem 0 0}
-  .legend .req{margin-left:0;margin-right:.4rem}
+     Everything else on this page can be reworded; these rows cannot.
+     It is a quiet asterisk, not a badge: the owner's call (2026-08-27) is that
+     a loud pill on half the rows shouts a reminder nobody outside the project
+     needs. The asterisk links down to .legend at the foot of the page, and the
+     .vh span carries the wording for screen readers, which get nothing from a
+     bare "*". */
+  .crow .who a.req{font-weight:400;font-size:.95rem;line-height:1;color:var(--clay);vertical-align:super;margin-left:.15rem;border-bottom:0;text-decoration:none}
+  .crow .who a.req:hover{color:var(--ochre)}
+  .vh{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  /* The full dependency list. It is one long comma-separated run on purpose:
+     forty more .crow rows would out-shout the named credits above it, and the
+     point here is completeness, not prominence. */
+  .pkglist{margin-top:.7rem;font-size:.86rem;line-height:1.85;color:#4a4d40}
+  .pkglist a{color:inherit;text-decoration:none;border-bottom:1px solid rgba(20,22,14,.22)}
+  .pkglist a:hover{border-bottom-color:var(--trail)}
+  .legend{font-size:.82rem;color:#595c4d;margin:2.4rem 0 0;padding-top:1.2rem;border-top:1px solid rgba(20,22,14,.1)}
+  .legend .reqkey{color:var(--clay);margin-right:.35rem}
   @media(max-width:640px){.crow{grid-template-columns:1fr;gap:.3rem}}
   .cnote{background:var(--paper-deep);border-left:2px solid var(--ochre);padding:1rem 1.2rem;border-radius:0 8px 8px 0;font-size:.86rem;color:#4a4d40;margin-top:2.4rem}
 </style>
@@ -28,7 +41,6 @@
   <div class="kicker" style="color:var(--trail)">{% trans %}credits.kicker{% endtrans %}</div>
   <h1 class="disp">{% trans %}credits.title{% endtrans %}</h1>
   <p class="lead" style="color:rgba(239,230,212,.85);margin-top:.8rem">{% trans %}credits.lead{% endtrans %}</p>
-  <p class="legend" style="color:rgba(239,230,212,.7)"><span class="req">{% trans %}credits.req_badge{% endtrans %}</span>{% trans %}credits.req_legend{% endtrans %}</p>
 </div></div>
 
 <section class="pad"><div class="wrap">
@@ -37,11 +49,20 @@
     <h3>{% trans %}credits.data_h{% endtrans %}</h3>
     <div class="gsub">{% trans %}credits.data_sub{% endtrans %}</div>
     <div class="crow">
-      <div class="who"><a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a><span class="req">{% trans %}credits.req_badge{% endtrans %}</span><span class="lic">ODbL 1.0 · © OpenStreetMap contributors</span></div>
+      <div class="who"><a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a><a class="req" href="#credits-req"><span class="vh">{% trans %}credits.req_badge{% endtrans %}</span><span aria-hidden="true">*</span></a><span class="lic">ODbL 1.0 · © OpenStreetMap contributors</span></div>
       <p>{% trans %}credits.osm_p{% endtrans %}</p>
     </div>
+    {# Every region boundary on the site is an Overture `divisions` polygon:
+       271 of 271 region rows carry source='overture'. The theme is ODbL
+       (it conflates OSM with geoBoundaries), so this credit is required, not
+       courtesy. Release pinned in tools/divisions/config.py:OVERTURE_RELEASE;
+       bumping it is a versioned re-import, and the year below moves with it. #}
     <div class="crow">
-      <div class="who"><a href="https://geoportail.wallonie.be/">Géoportail de la Wallonie · PIVOT</a><span class="req">{% trans %}credits.req_badge{% endtrans %}</span><span class="lic">{% trans %}credits.lic_open_data{% endtrans %}</span></div>
+      <div class="who"><a href="https://overturemaps.org/">Overture Maps Foundation</a><a class="req" href="#credits-req"><span class="vh">{% trans %}credits.req_badge{% endtrans %}</span><span aria-hidden="true">*</span></a><span class="lic">ODbL 1.0 · © Overture Maps Foundation · © OpenStreetMap contributors</span></div>
+      <p>{% trans %}credits.overture_p{% endtrans %}</p>
+    </div>
+    <div class="crow">
+      <div class="who"><a href="https://geoportail.wallonie.be/">Géoportail de la Wallonie · PIVOT</a><a class="req" href="#credits-req"><span class="vh">{% trans %}credits.req_badge{% endtrans %}</span><span aria-hidden="true">*</span></a><span class="lic">{% trans %}credits.lic_open_data{% endtrans %}</span></div>
       <p>{% trans %}credits.wallonia_p{% endtrans %}</p>
     </div>
     <div class="crow">
@@ -65,20 +86,20 @@
     </div>
     #}
     <div class="crow">
-      <div class="who"><a href="https://commons.wikimedia.org/">Wikimedia Commons</a><span class="req">{% trans %}credits.req_badge{% endtrans %}</span><span class="lic">{% trans %}credits.lic_per_photo{% endtrans %}</span></div>
+      <div class="who"><a href="https://commons.wikimedia.org/">Wikimedia Commons</a><a class="req" href="#credits-req"><span class="vh">{% trans %}credits.req_badge{% endtrans %}</span><span aria-hidden="true">*</span></a><span class="lic">{% trans %}credits.lic_per_photo{% endtrans %}</span></div>
       <p>{% trans %}credits.wikimedia_p{% endtrans %}</p>
     </div>
     {# CC BY-SA requires attribution wherever the text is reused; each region
        page carries its own per-article line, and this row is the site-wide
        half of that credit. #}
     <div class="crow">
-      <div class="who"><a href="https://www.wikipedia.org/">Wikipedia</a><span class="req">{% trans %}credits.req_badge{% endtrans %}</span><span class="lic">CC BY-SA 4.0</span></div>
+      <div class="who"><a href="https://www.wikipedia.org/">Wikipedia</a><a class="req" href="#credits-req"><span class="vh">{% trans %}credits.req_badge{% endtrans %}</span><span aria-hidden="true">*</span></a><span class="lic">CC BY-SA 4.0</span></div>
       <p>{% trans %}credits.wikipedia_p{% endtrans %}</p>
     </div>
     {# The Copernicus programme's licence conditions require this credit on
        derived products — the climb gradients are exactly that. #}
     <div class="crow">
-      <div class="who"><a href="https://dataspace.copernicus.eu/explore-data/data-collections/copernicus-contributing-missions/collections-description/COP-DEM">Copernicus DEM GLO-30</a><span class="req">{% trans %}credits.req_badge{% endtrans %}</span><span class="lic">© DLR e.V. 2010-2014 · © Airbus Defence and Space GmbH</span></div>
+      <div class="who"><a href="https://dataspace.copernicus.eu/explore-data/data-collections/copernicus-contributing-missions/collections-description/COP-DEM">Copernicus DEM GLO-30</a><a class="req" href="#credits-req"><span class="vh">{% trans %}credits.req_badge{% endtrans %}</span><span aria-hidden="true">*</span></a><span class="lic">© DLR e.V. 2010-2014 · © Airbus Defence and Space GmbH</span></div>
       <p>{% trans %}credits.copernicus_p{% endtrans %}</p>
     </div>
   </div>
@@ -107,11 +128,11 @@
       <p>{% trans %}credits.redoc_p{% endtrans %}</p>
     </div>
     <div class="crow">
-      <div class="who"><a href="https://www.mapillary.com/">Mapillary</a><span class="req">{% trans %}credits.req_badge{% endtrans %}</span><span class="lic">CC BY-SA 4.0 · © Mapillary contributors</span></div>
+      <div class="who"><a href="https://www.mapillary.com/">Mapillary</a><a class="req" href="#credits-req"><span class="vh">{% trans %}credits.req_badge{% endtrans %}</span><span aria-hidden="true">*</span></a><span class="lic">CC BY-SA 4.0 · © Mapillary contributors</span></div>
       <p>{% trans %}credits.mapillary_p{% endtrans %}</p>
     </div>
     <div class="crow">
-      <div class="who"><a href="https://www.esri.com/">Esri World Imagery</a><span class="req">{% trans %}credits.req_badge{% endtrans %}</span><span class="lic">© Esri, Maxar, Earthstar Geographics</span></div>
+      <div class="who"><a href="https://www.esri.com/">Esri World Imagery</a><a class="req" href="#credits-req"><span class="vh">{% trans %}credits.req_badge{% endtrans %}</span><span aria-hidden="true">*</span></a><span class="lic">© Esri, Maxar, Earthstar Geographics</span></div>
       <p>{% trans %}credits.esri_p{% endtrans %}</p>
     </div>
     <div class="crow">
@@ -135,9 +156,66 @@
       <div class="who"><a href="https://github.com/sokil/php-isocodes">sokil/php-isocodes</a><span class="lic">MIT</span></div>
       <p>{% trans %}credits.isocodes_p{% endtrans %}</p>
     </div>
+    {# The full run of direct dependencies. Named rows above get a sentence
+       each; everything else gets a link here. Keep the list alphabetical
+       (case-insensitive) and keep it matching composer.json's require and
+       require-dev, pipeline/requirements.txt, tools/divisions/requirements.txt,
+       developers/docker/wiki/requirements.txt, the base images and services in
+       the compose stack, and the two language runtimes themselves (PHP and
+       Python) plus Node, which runs the JS test suite. Ubuntu is here because
+       the production hosts run it; Alpine and Debian because the container
+       images do. WSL is deliberately NOT here, and it is the only OS in that
+       position: it is a developer's local shim, nothing the Commons runs on.
+       Packages that already have
+       their own row above (Symfony, PostgreSQL + PostGIS, sokil/php-isocodes)
+       are deliberately not repeated here. #}
     <div class="crow">
       <div class="who"><a href="https://github.com/cycling-commons/cycling-commons">{% trans %}credits.oss_more_who{% endtrans %}</a><span class="lic">{% trans %}credits.lic_various{% endtrans %}</span></div>
-      <p>{% trans %}credits.oss_more_p{% endtrans %}</p>
+      <div>
+        <p>{% trans %}credits.oss_more_p{% endtrans %}</p>
+        <p class="pkglist"><a href="https://alpinelinux.org/">Alpine Linux</a>,
+        <a href="https://async-aws.com/">async-aws</a>,
+        <a href="https://github.com/boto/boto3">boto3</a>,
+        <a href="https://www.clamav.net/">ClamAV</a>,
+        <a href="https://www.debian.org/">Debian</a>,
+        <a href="https://www.docker.com/">Docker</a>,
+        <a href="https://www.doctrine-project.org/projects/dbal.html">Doctrine DBAL</a>,
+        <a href="https://github.com/doctrine/DoctrineFixturesBundle">Doctrine Fixtures</a>,
+        <a href="https://www.doctrine-project.org/projects/migrations.html">Doctrine Migrations</a>,
+        <a href="https://www.doctrine-project.org/projects/orm.html">Doctrine ORM</a>,
+        <a href="https://github.com/dmaicher/doctrine-test-bundle">doctrine-test-bundle</a>,
+        <a href="https://duckdb.org/">DuckDB</a>,
+        <a href="https://github.com/EasyCorp/EasyAdminBundle">EasyAdmin</a>,
+        <a href="https://github.com/endroid/qr-code">endroid/qr-code</a>,
+        <a href="https://fastapi.tiangolo.com/">FastAPI</a>,
+        <a href="https://flysystem.thephpleague.com/">Flysystem</a>,
+        <a href="https://imagemagick.org/">ImageMagick</a>,
+        <a href="https://mailpit.axllent.org/">Mailpit</a>,
+        <a href="https://squidfunk.github.io/mkdocs-material/">Material for MkDocs</a>,
+        <a href="https://min.io/">MinIO</a>,
+        <a href="https://www.mkdocs.org/">MkDocs</a>,
+        <a href="https://nginx.org/">nginx</a>,
+        <a href="https://nodejs.org/">Node.js</a>,
+        <a href="https://www.php.net/">PHP</a>,
+        <a href="https://cs.symfony.com/">PHP CS Fixer</a>,
+        <a href="https://phpstan.org/">PHPStan</a>,
+        <a href="https://phpunit.de/">PHPUnit</a>,
+        <a href="https://psalm.dev/">Psalm</a>,
+        <a href="https://www.psycopg.org/">psycopg</a>,
+        <a href="https://osmcode.org/pyosmium/">pyosmium</a>,
+        <a href="https://pyproj4.github.io/pyproj/">pyproj</a>,
+        <a href="https://docs.pytest.org/">pytest</a>,
+        <a href="https://www.python.org/">Python</a>,
+        <a href="https://getrector.com/">Rector</a>,
+        <a href="https://redis.io/">Redis</a>,
+        <a href="https://github.com/scheb/2fa">scheb/2fa</a>,
+        <a href="https://www.starlette.io/">Starlette</a>,
+        <a href="https://github.com/SymfonyCasts/reset-password-bundle">SymfonyCasts Reset Password</a>,
+        <a href="https://github.com/SymfonyCasts/verify-email-bundle">SymfonyCasts Verify Email</a>,
+        <a href="https://twig.symfony.com/">Twig</a>,
+        <a href="https://ubuntu.com/">Ubuntu</a>,
+        <a href="https://www.uvicorn.org/">Uvicorn</a>.</p>
+      </div>
     </div>
   </div>
 
@@ -174,6 +252,11 @@
       <p>{% trans %}credits.people_steward_p{% endtrans %}</p>
     </div>
   </div>
+
+  {# The target of every asterisk above. It sits at the foot rather than in the
+     hero so the page opens on the credits themselves, not on a housekeeping
+     note. Moving it means moving #credits-req with it. #}
+  <p class="legend" id="credits-req"><span class="reqkey" aria-hidden="true">*</span>{% trans %}credits.req_legend{% endtrans %}</p>
 
   <div class="cnote"><b>{% trans %}credits.note_b{% endtrans %}</b> {% trans %}credits.note_pre{% endtrans %} <a href="https://github.com/cycling-commons/cycling-commons/issues">{% trans %}credits.note_link{% endtrans %}</a>{% trans %}credits.note_post{% endtrans %}</div>
 

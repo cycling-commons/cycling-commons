@@ -223,6 +223,18 @@ set — precisely K's shape — and it needs no negotiation, no attribution
 gymnastics and no architectural exception. If one thing here becomes work, it
 is this.
 
+### Region boundaries (not a letter, but sourced the same way)
+
+| Source | What it gives | Licence | Verdict | Confidence |
+|---|---|---|---|---|
+| Overture Maps `divisions` theme (`division_area`) | Every `region` polygon on the atlas, plus the ISO 3166-1/-2 codes the world directory is keyed on | ODbL (conflates OSM + geoBoundaries), attribution required (notice on `/credits`) | **Ingest** - in use (`tools/divisions/export_divisions.py` -> `app:catalog:import`) | verified (in use) |
+
+Provenance is recorded per row: `region.source` is `osm` or `overture`
+(`catalog-data-model.md` §4). Today every seeded row is `overture`. The release
+is pinned in `tools/divisions/config.py:OVERTURE_RELEASE`; bumping it is a
+versioned re-import, not a refresh, so the `/credits` notice moves with it.
+The onboarding playbook is `tools/divisions/README.md`.
+
 ### Imagery and elevation (not a letter, but sourced the same way)
 
 | Source | What it gives | Licence | Verdict | Confidence |
