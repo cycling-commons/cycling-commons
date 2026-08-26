@@ -121,11 +121,9 @@
     {% if rulebook_pdf %}
       <p class="rb-pdf"><a href="{{ path('moderate_rulebook_pdf') }}">{{ 'moderate.rulebook.download'|trans }}</a></p>
     {% endif %}
-    <p class="lead">The short, always-current rules for everyone holding a curator or moderator role. If a situation is not covered here, ask in the {# The curator room (/moderate/room) is being built on feat/curator-room;
-      switch this to path('moderate_room') when it lands. The anchor is
-      screen-only: Chrome turns every printed <a href> into a PDF link
-      annotation, and a relative one makes Acrobat "connect to" wherever
-      the file is opened from. The PDF must carry no links at all. #}<a class="rb-screen" href="/moderate/room">curator room</a><span class="rb-print">curator room</span> before acting. The room is part of this desk, so what you discuss there stays inside it. This page is the do's and don'ts, not a replacement for judgement.</p>
+    <p class="lead">The short, always-current rules for everyone holding a curator or moderator role. If a situation is not covered here, ask in the {# The anchor is screen-only: Chrome turns every printed <a href>
+      into a PDF link annotation, and a relative one makes Acrobat "connect to"
+      wherever the file is opened from. The PDF must carry no links at all. #}<a class="rb-screen" href="{{ path('moderate_room') }}">curator room</a><span class="rb-print">curator room</span> before acting. The room is part of this desk, so what you discuss there stays inside it. This page is the do's and don'ts, not a replacement for judgement.</p>
 
     <section id="verbs">
       <h2>The four verbs, and what each one keeps</h2>

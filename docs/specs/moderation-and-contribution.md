@@ -790,9 +790,9 @@ at a time, so the row is sized for that:
   the map default and the about-text attribution tick; takedowns with the
   categories, the one-month reply clock, decline-is-final-per-category and the
   flood banner) plus account rules (mandatory 2FA, hard scope refusals, the
-  unsafe-link marks). Every "ask" points at the **curator room**, an in-desk
-  board at `/moderate/room` (feat/curator-room, not yet merged); the template
-  links it by literal path until the route exists, so the page renders today.
+  unsafe-link marks). Every "ask" points at the **curator room**, the in-desk
+  board at `/moderate/room` (§13), linked by `path('moderate_room')` since the
+  route landed on 2026-08-26.
   Rule kept from the original: the rulebook names mechanisms, never settings'
   values, so it cannot rot when an administrator changes a threshold.
 - **The four triggers never leave their line.** The server renders three
@@ -1455,7 +1455,7 @@ corrections** (`resolved_at < cutoff`). Three runners, no scheduler yet:
    cache-throttled, never throws (a failed sweep must not break the desk).
 3. **`app:moderation:gc`** — idempotent standalone console/cron entry point.
 
-Deliberately **not** swept (open decisions, §13): rejected
+Deliberately **not** swept (open decisions, §14): rejected
 `recommended_route` rows, never-answered `needs_info` submissions, and
 approved rows.
 
@@ -2369,7 +2369,161 @@ is the right default for a stranger and the wrong one for a rider with two
 hundred approved submissions behind them; contributor standing is in
 `docs/TODO.md`.
 
-## 13. Open questions
+## 13. The curator room, the in-desk board
+
+**Status: specified 2026-08-26 (owner), building on `feat/curator-room`.**
+
+### 13.1 Why it exists
+
+The rulebook (§5) tells curators to ask before acting, and forbids taking
+pending content anywhere outside the moderation desk. Both sentences need a
+place to point at. An external chat link (an environment variable naming a
+Signal/Matrix/Discord room) was considered and **rejected by the owner** on
+2026-08-26, for exactly the reason the rulebook gives: a chat app is outside
+the desk, and unapproved material would be pasted into it as screenshots.
+Do not re-propose it.
+
+The room is that place: an in-desk board at `/moderate/room`, readable and
+writable by curators only, sharing the desk's session, its 2FA gate and its
+CSP. Nothing leaves the application.
+
+### 13.2 What it is not
+
+Named here so the next reader does not build them by accident: no push, no
+email, no threads, no replies-to-a-reply, no reactions, no attachments, no
+presence, no typing indicators, no JavaScript. The desk already has a
+notification channel for riders (§7), and the room deliberately does not reuse
+it for curators. A room that emails is a room people answer from their phone,
+and the rulebook's whole point is that this conversation stays at the desk.
+
+### 13.3 Model: a board, not an inbox
+
+The room does **not** reuse `user_message` (§7). That table is a per-recipient
+inbox row, `user_id` plus `read_at`, one row per person. A post addressed to
+every curator would be one row per curator, a pinned post would have to be
+edited in each copy, and the room's counts would collide with the inbox's
+unread bulb. The room stores one row per post instead.
+
+`curator_post`:
+
+| column | type | meaning |
+| --- | --- | --- |
+| `id` | bigint | |
+| `author_id` | bigint, null | who wrote it. `ON DELETE SET NULL`, so the room's record of a decision survives the author's account and renders as a former curator. |
+| `category` | varchar(32), null | a `CuratorRoomCategory` value, or `null` for the root. |
+| `recipient_id` | bigint, null | `null` means addressed to every curator. Non-null makes it a direct message. `ON DELETE CASCADE`: a direct message to a deleted account has no second reader. |
+| `pin` | varchar(8) | `none`, `category` or `room`. See §13.5. |
+| `body` | text | trimmed, 1 to 2000 characters, the same bound `MessageService` applies to a curator note. |
+| `about_submission_id` | bigint, null | optional link to the queue card the post is about. `ON DELETE SET NULL`. |
+| `created_at` | timestamptz | |
+| `edited_at` | timestamptz, null | set when the author rewrites the body. |
+
+Indexes: `(pin, created_at DESC)` for the board read, `(recipient_id,
+created_at DESC)` for the Direct view and the badge.
+
+`curator_room_visit`: `user_id` (primary key, `ON DELETE CASCADE`) and
+`last_seen_at`. One row per curator, written when the room is opened.
+
+### 13.4 Categories, a fixed list in code
+
+`App\Messaging\CuratorRoomCategory`, a backed enum with translated labels, in
+the shape of `MessageCategory` (§7.9). Curators do not create categories: a
+group this size does not need an admin screen, a merge story or an
+empty-category rule.
+
+| value | label key | for |
+| --- | --- | --- |
+| `general` | `room.cat.general` | anything that does not fit below |
+| `ask` | `room.cat.ask` | asking before acting, the rulebook's own case |
+| `escalations` | `room.cat.escalations` | hard cases and their aftermath, including the rulebook's line about what sits with you afterwards |
+| `rules` | `room.cat.rules` | how the rules are read, and where they are unclear |
+| `tools` | `room.cat.tools` | the desk misbehaving, which is a bug to report and not a rule to bend |
+
+Two views are **not** categories and have no stored value: **All** (every post
+the reader may see) and **Direct** (posts where the reader is sender or
+recipient). A post whose `category` is `null` belongs to the root: it appears
+in All, and when pinned to the room it appears at the top of every category.
+
+### 13.5 Pinning
+
+`pin` has three values:
+
+- `none`: an ordinary post, ordered by `created_at DESC`.
+- `category`: pinned to the top of its own category view only.
+- `room`: pinned to the top of every view, category views included.
+
+Any curator may pin, unpin, or move a pin. There is no separate pinning right,
+because curator and moderator are the same role today (§9.4), and a group
+trusted to destroy a contribution is trusted to pin a note about it. A direct
+message cannot be pinned: the form refuses it, and the server refuses it again.
+
+### 13.6 Visibility
+
+Three rules, enforced in the query and again before any write:
+
+1. Every curator sees every post whose `recipient_id` is null.
+2. A post with a `recipient_id` is visible to its author and its recipient, and
+   to nobody else, administrators included. It is a private note between two
+   curators, and the room does not pretend otherwise.
+3. `ROLE_USER` gets 403, anonymous gets the login redirect. The controller
+   carries `#[IsGranted('ROLE_CURATOR')]` like the rest of `ModerateController`.
+
+**The room is not region-scoped, and that is a decision, not an oversight.**
+Every other moderation query filters by `ModerationScope` (§9), and the
+region-scoping rule is that each new region query filters or says why it does
+not. The room does not filter, because the rulebook's "if an item is out of
+reach, ask the room" only works if the room reaches past the asker's area. A
+room per area would silence exactly the question it exists to answer.
+`curator_post` therefore holds no region column at all, so there is nothing a
+later query could accidentally filter on.
+
+### 13.7 The badge
+
+The Room tab on the moderation bar carries the count of posts the reader has
+not seen: `created_at > curator_room_visit.last_seen_at`, excluding the
+reader's own posts, and excluding directed posts not addressed to them. A
+curator with no visit row counts nothing on their first load, because the
+room's whole history is not unread, it is history. `last_seen_at` is stamped on
+every room load, whatever category is showing: the room is one room, so seeing
+it is seeing it.
+
+### 13.8 Routes
+
+All on `ModerateRoomController`, locale-prefixed and `ROLE_CURATOR` like the
+other desks.
+
+| method | path | name | does |
+| --- | --- | --- | --- |
+| GET | `/moderate/room` | `moderate_room` | the board. `?c=<category>` filters, `?c=direct` shows the reader's direct messages. An unknown `c` falls back to All rather than 404ing. |
+| POST | `/moderate/room/post` | `moderate_room_post` | write a post: body, category, optional recipient, optional submission id. CSRF-protected. |
+| POST | `/moderate/room/pin` | `moderate_room_pin` | set a post's `pin`. CSRF-protected. |
+| POST | `/moderate/room/delete` | `moderate_room_delete` | delete **your own** post. A hard delete with no tombstone: this is a staffroom note, not a moderation record, and §8's record-keeping principle covers decisions, not conversation. |
+
+Every POST redirects back to the room with the active category preserved,
+matching `ModerateController`'s existing redirect discipline.
+
+### 13.9 Surface
+
+`templates/moderate/room.html.twig`, inside the account shell with
+`active = 'moderate_room'`. `_shell_chrome.html.twig` gains `moderate_room` in
+its `in_moderation` list, and a Room tab carrying the §13.7 badge.
+
+Category chips across the top, pinned posts in their own block, then the list
+newest first, then the composer. **No JavaScript at all**: plain forms, so the
+strict CSP has nothing to allow, and a curator whose script tag never loaded
+can still ask their question. `about_submission_id` renders as a link to the
+queue card. The reader's own scope still decides whether that card opens, so a
+link to an item outside their area refuses at the target, as §9.3 requires.
+
+### 13.10 The rulebook's link
+
+`templates/moderate/rulebook.html.twig` links the room by literal path, with a
+comment saying to switch once the route lands. When it lands, the screen-only
+anchor becomes `path('moderate_room')` and the comment goes. The
+`span.rb-print` twin stays: §5's PDF must carry no link annotations, and the
+route existing does not change that.
+
+## 14. Open questions
 
 - **Confirmations vs the verification threshold (X):** whether
   `item_confirmation` tallies are the counter feeding the

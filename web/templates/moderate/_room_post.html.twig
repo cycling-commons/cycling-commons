@@ -1,0 +1,51 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{# One curator-room post (moderation-and-contribution.md §13).
+   `post` is a RoomCard from CuratorRoom::board(). A post whose author account
+   is gone keeps its text and loses its name: the room's record of a decision
+   outlives the account (§13.3). #}
+<article class="rm-post {{ pinned_block ? 'rm-pinned' : '' }} {{ post.direct ? 'rm-direct' : '' }}">
+  <div class="rm-meta">
+    <span class="rm-who">{{ post.author_name ?? 'room.former_curator'|trans }}</span>
+    <span>{{ post.created_at|cc_datetime }}</span>
+    {% if post.edited_at %}<span>{{ 'room.edited'|trans }}</span>{% endif %}
+    {% if post.category %}<span class="rm-tag">{{ ('room.cat.' ~ post.category)|trans }}</span>{% endif %}
+    {% if post.direct %}
+      <span class="rm-tag rm-tag-direct">{{ post.mine
+        ? 'room.to_person'|trans({'%name%': post.recipient_name ?? 'room.former_curator'|trans})
+        : 'room.to_you'|trans }}</span>
+    {% endif %}
+    {% if post.pin != 'none' %}<span class="rm-tag">{{ ('room.pin.' ~ post.pin)|trans }}</span>{% endif %}
+  </div>
+
+  <p class="rm-body">{{ post.body }}</p>
+
+  {% if post.about_submission_id %}
+    {# The queue card. The reader's own area still decides whether it opens, so
+       a link out of scope refuses at the target rather than here (§9.3). #}
+    <p class="rm-about"><a href="{{ path('moderate', {q: 'SUB-' ~ post.about_submission_id}) }}">{{ 'room.about_submission'|trans({'%id%': post.about_submission_id}) }}</a></p>
+  {% endif %}
+
+  <div class="rm-acts">
+    {% if not post.direct %}
+      <form method="post" action="{{ path('moderate_room_pin') }}">
+        <input type="hidden" name="_token" value="{{ csrf_token('moderate-room-pin') }}">
+        <input type="hidden" name="id" value="{{ post.id }}">
+        <input type="hidden" name="c" value="{{ view }}">
+        <select id="rm-pin-{{ post.id }}" name="pin" aria-label="{{ 'room.pin_label'|trans }}">
+          <option value="none" {{ post.pin == 'none' ? 'selected' : '' }}>{{ 'room.pin.none'|trans }}</option>
+          {% if post.category %}<option value="category" {{ post.pin == 'category' ? 'selected' : '' }}>{{ 'room.pin.category'|trans }}</option>{% endif %}
+          <option value="room" {{ post.pin == 'room' ? 'selected' : '' }}>{{ 'room.pin.room'|trans }}</option>
+        </select>
+        <button class="rm-mini" type="submit">{{ 'room.pin_apply'|trans }}</button>
+      </form>
+    {% endif %}
+    {% if post.mine %}
+      <form method="post" action="{{ path('moderate_room_delete') }}">
+        <input type="hidden" name="_token" value="{{ csrf_token('moderate-room-delete') }}">
+        <input type="hidden" name="id" value="{{ post.id }}">
+        <input type="hidden" name="c" value="{{ view }}">
+        <button class="rm-mini" type="submit">{{ 'room.delete'|trans }}</button>
+      </form>
+    {% endif %}
+  </div>
+</article>

@@ -3,7 +3,7 @@
    Included by the dashboard (/profile), settings (/settings), 2FA setup, and the
    moderation queue (/moderate) so the logged-in area is one continuous
    environment with the same account chip used in the public nav.
-   Param: `active` = contrib | votes | saved | scout | translate | messages | settings | moderate | moderate_routes | moderate_data | moderate_takedowns | moderate_translations | moderate_regions | moderate_rulebook. Submission history lives under the Submissions tab as Queue/History chips, so it keeps `active: moderate`.
+   Param: `active` = contrib | votes | saved | scout | translate | messages | settings | moderate | moderate_routes | moderate_data | moderate_takedowns | moderate_translations | moderate_regions | moderate_room | moderate_rulebook. Submission history lives under the Submissions tab as Queue/History chips, so it keeps `active: moderate`.
    Param: `mod_scope_names` (moderator-areas spec 2026-07-14) = the curator's
    assigned area names (ModerationScopeProvider::describe()) — [] for global,
    omitted/null for pages that don't pass it. Only rendered in moderator mode.
@@ -11,7 +11,7 @@
    reach it via the account-chip dropdown) — user pages show user tabs only,
    and on moderator pages the labelled group makes the section unmistakable. #}
 {% set active = active|default('contrib') %}
-{% set in_moderation = active in ['moderate', 'moderate_routes', 'moderate_regions', 'moderate_data', 'moderate_takedowns', 'moderate_translations', 'moderate_rulebook', 'moderate_history'] %}
+{% set in_moderation = active in ['moderate', 'moderate_routes', 'moderate_regions', 'moderate_data', 'moderate_takedowns', 'moderate_translations', 'moderate_room', 'moderate_rulebook', 'moderate_history'] %}
 <header class="dtop">
   <div class="brandblock">
     <a class="brand" href="{{ path('home') }}"><img src="{{ asset('brand/logo-nav.svg') }}" alt="Cycling Commons"></a>
@@ -26,6 +26,7 @@
 {# Moderator mode: the bar carries ONLY the moderation tabs, on its own darker
    colour — no user items. Back to the personal area via the account chip. #}
 {% set mod_translation_count = pending_translation_count() %}
+{% set mod_room_count = curator_room_unread() %}
 <nav class="dtabs dtabs-modmode" aria-label="{{ 'account.menu_moderation'|trans }}">
   <span class="dtabs-modlabel" aria-hidden="true">{{ 'account.menu_moderation'|trans }}{% if mod_scope_names is defined and mod_scope_names is not null %} · {{ mod_scope_names is empty ? 'account.mod_scope_all'|trans : mod_scope_names|join(' · ') }}{% endif %}</span>
   <a href="{{ path('moderate') }}" class="dtab-mod {{ active == 'moderate' ? 'on' : '' }}">{{ 'nav.moderate'|trans }}{% if mod_submission_count is defined and mod_submission_count %}<span class="dtab-count" title="{{ 'account.mod_open_in_area'|trans }}">{{ mod_submission_count }}</span>{% endif %}</a>
@@ -43,6 +44,10 @@
   {# Regions desk: the gated
      curated-by-default flag. No badge — nothing queues here. #}
   <a href="{{ path('moderate_regions') }}" class="dtab-mod {{ active == 'moderate_regions' ? 'on' : '' }}">{{ 'nav.regions'|trans }}</a>
+  {# The curator room: the in-desk board the rulebook's "ask before acting"
+     points at (moderation-and-contribution.md §13). Badge counts posts since
+     this curator last had the room open, so it reads zero while you are in it. #}
+  <a href="{{ path('moderate_room') }}" class="dtab-mod {{ active == 'moderate_room' ? 'on' : '' }}">{{ 'nav.room'|trans }}{% if mod_room_count %}<span class="dtab-count" title="{{ 'account.mod_room_new'|trans }}">{{ mod_room_count }}</span>{% endif %}</a>
   {# The rulebook, moderators-only (it used to be a public wiki page). #}
   <a href="{{ path('moderate_rulebook') }}" class="dtab-mod {{ active == 'moderate_rulebook' ? 'on' : '' }}">{{ 'nav.rulebook'|trans }}</a>
 </nav>
