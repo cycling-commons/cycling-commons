@@ -1,0 +1,55 @@
+docs/specs/translations.md
+  s_c05586667a10a2::t_c013cff48fdaa8 214-219
+web/templates/moderate/translation_detail.html.twig
+  s_c05586667a10a2::t_672883a7c17ffa 40
+  s_c05586667a10a2::t_dc2bc886a9cf2a 1-13,18-39,41-62
+  s_c05586667a10a2::t_a3ed94b2700bd3 14-17
+web/translations/messages.en.yaml
+  s_c05586667a10a2::t_5bf1a020cd3d0d 2562-2564
+  s_c05586667a10a2::t_6f5f4a889229fa 2773
+web/src/Controller/ModerateTranslationsController.php
+  s_c05586667a10a2::t_3b0c72c65da1e2 17,29-30,44-45,47-80,91,97-98,105-106,108,111,117,120-121,124-167
+web/templates/account/_shell_chrome.html.twig
+  s_c05586667a10a2::t_182bd612040731 61
+  s_c05586667a10a2::t_e1c219de612e97 6
+  s_c05586667a10a2::t_37601849606fb2 28
+web/translations/messages.de.yaml
+  s_c05586667a10a2::t_d847ba697a8040 2546-2548
+  s_c05586667a10a2::t_6ffc026e31b353 2757
+web/src/Translation/DecisionService.php
+  s_c05586667a10a2::t_07ce64fd6b11ac 135-151
+  s_c05586667a10a2::t_39b52d108cae3d 134
+web/templates/partials/_account_chip.html.twig
+  s_c05586667a10a2::t_98a64e4f6a6a5d 30,37
+web/tests/js/shell-list-system.test.cjs
+  s_c05586667a10a2::t_d10a9e0a40a889 38-41
+web/tests/Translation/ModerateTranslationsTest.php
+  s_c05586667a10a2::t_0b3e55b93197c9 21-22,65-79,103,106-107,109,111-122,127-132,135-153,159,161,167,176,186-189,201,208,211,213-221,225,231
+web/translations/messages.nl.yaml
+  s_c05586667a10a2::t_24c94cfbf90c58 2754
+  s_c05586667a10a2::t_74daf4a0d62a6f 2543-2545
+web/translations/messages.es.yaml
+  s_c05586667a10a2::t_186f7b49197edc 2780
+  s_c05586667a10a2::t_92e018cc2696e5 2568-2570
+web/templates/moderate/translations.html.twig
+  s_c05586667a10a2::t_cf7dc1a0408005 2-3,23,47-49
+web/translations/messages.fr.yaml
+  s_c05586667a10a2::t_9738175cdb3480 2754
+  s_c05586667a10a2::t_6e24defabc8d80 2543-2545
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "83a4908f92f2af467399e442f98e52c3b8e914be",
+  "prompts": {},
+  "sessions": {
+    "s_c05586667a10a2": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "7b9fd57a-1b4e-4f86-a9c1-9724be316cdf",
+        "model": "grok-4.6"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
