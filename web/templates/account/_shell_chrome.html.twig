@@ -3,7 +3,7 @@
    Included by the dashboard (/profile), settings (/settings), 2FA setup, and the
    moderation queue (/moderate) so the logged-in area is one continuous
    environment with the same account chip used in the public nav.
-   Param: `active` = contrib | votes | saved | messages | settings | moderate | moderate_routes | moderate_data | moderate_takedowns | moderate_translations | moderate_history | moderate_regions | moderate_rulebook.
+   Param: `active` = contrib | votes | saved | scout | translate | messages | settings | moderate | moderate_routes | moderate_data | moderate_takedowns | moderate_translations | moderate_history | moderate_regions | moderate_rulebook.
    Param: `mod_scope_names` (moderator-areas spec 2026-07-14) = the curator's
    assigned area names (ModerationScopeProvider::describe()) — [] for global,
    omitted/null for pages that don't pass it. Only rendered in moderator mode.
@@ -12,7 +12,6 @@
    and on moderator pages the labelled group makes the section unmistakable. #}
 {% set active = active|default('contrib') %}
 {% set in_moderation = active in ['moderate', 'moderate_routes', 'moderate_regions', 'moderate_data', 'moderate_takedowns', 'moderate_translations', 'moderate_rulebook', 'moderate_history'] %}
-{% set mod_translation_count = pending_translation_count() %}
 <header class="dtop">
   <div class="brandblock">
     <a class="brand" href="{{ path('home') }}"><img src="{{ asset('brand/logo-nav.svg') }}" alt="Cycling Commons"></a>
@@ -26,6 +25,7 @@
 {% if in_moderation and is_granted('ROLE_CURATOR') %}
 {# Moderator mode: the bar carries ONLY the moderation tabs, on its own darker
    colour — no user items. Back to the personal area via the account chip. #}
+{% set mod_translation_count = pending_translation_count() %}
 <nav class="dtabs dtabs-modmode" aria-label="{{ 'account.menu_moderation'|trans }}">
   <span class="dtabs-modlabel" aria-hidden="true">{{ 'account.menu_moderation'|trans }}{% if mod_scope_names is defined and mod_scope_names is not null %} · {{ mod_scope_names is empty ? 'account.mod_scope_all'|trans : mod_scope_names|join(' · ') }}{% endif %}</span>
   <a href="{{ path('moderate') }}" class="dtab-mod {{ active == 'moderate' ? 'on' : '' }}">{{ 'nav.moderate'|trans }}{% if mod_submission_count is defined and mod_submission_count %}<span class="dtab-count" title="{{ 'account.mod_open_in_area'|trans }}">{{ mod_submission_count }}</span>{% endif %}</a>
@@ -58,6 +58,7 @@
      act: the file is read in this browser and nothing about it exists anywhere
      else until the rider approves a tag. #}
   <a href="{{ path('scout_review') }}" class="{{ active == 'scout' ? 'on' : '' }}">{{ 'account.tab_scout'|trans }}</a>
+  <a href="{{ path('translate') }}" class="{{ active == 'translate' ? 'on' : '' }}">{{ 'account.tab_translate'|trans }}</a>
   <a href="{{ path('messages') }}" class="{{ active == 'messages' ? 'on' : '' }}">{{ 'account.tab_messages'|trans }}</a>
   <a href="{{ path('settings') }}" class="{{ active == 'settings' ? 'on' : '' }}">{{ 'nav.settings'|trans }}</a>
 </nav>

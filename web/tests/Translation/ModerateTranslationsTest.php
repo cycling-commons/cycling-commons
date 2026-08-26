@@ -18,6 +18,8 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 /**
  * Curator /moderate/translations desk (translations.md §5).
  *
+ * The queue is a scan; decisions live on /moderate/translations/{id}.
+ *
  * ROLE_CURATOR users need totpSecret so TwoFactorSetupEnforcer does not redirect.
  */
 final class ModerateTranslationsTest extends WebTestCase
@@ -60,6 +62,21 @@ final class ModerateTranslationsTest extends WebTestCase
         return $user;
     }
 
+    private function loginCurator(string $email): User
+    {
+        $client = static::getClient();
+        $curator = $this->createUser(
+            $email,
+            'hunter2secure!',
+            roles: ['ROLE_CURATOR'],
+            totpSecret: 'JBSWY3DPEHPK3PXP',
+            twoFaEnabled: true,
+        );
+        $client->loginUser($curator);
+
+        return $curator;
+    }
+
     private function seedPendingProposal(User $rider, string $key, string $english, string $locale, string $value): TranslationProposal
     {
         /** @var EntityManagerInterface $em */
@@ -83,52 +100,71 @@ final class ModerateTranslationsTest extends WebTestCase
         self::assertResponseStatusCodeSame(403);
     }
 
-    public function testCuratorWithTotpCanOpenDesk(): void
+    public function testRiderForbiddenOnDetail(): void
+    {
+        $client = static::createClient();
+        $rider = $this->createUser('mod-tr-detail-rider@example.com', 'hunter2secure!');
+        $client->loginUser($rider);
+
+        $client->request('GET', '/moderate/translations/1');
+
+        self::assertResponseStatusCodeSame(403);
+    }
+
+    public function testQueueIsAScanWithReviewLink(): void
     {
         $client = static::createClient();
         $rider = $this->createUser('mod-tr-queue-rider@example.com', 'hunter2secure!');
-        $this->seedPendingProposal($rider, 'nav.map', 'Map', 'fr', 'Carte desk');
+        $proposal = $this->seedPendingProposal($rider, 'nav.map', 'Map', 'fr', 'Carte desk');
+        $id = (int) $proposal->getId();
+        $this->loginCurator('mod-tr-curator@example.com');
 
-        $curator = $this->createUser(
-            'mod-tr-curator@example.com',
-            'hunter2secure!',
-            roles: ['ROLE_CURATOR'],
-            totpSecret: 'JBSWY3DPEHPK3PXP',
-            twoFaEnabled: true,
-        );
-        $client->loginUser($curator);
-
-        $client->request('GET', '/moderate/translations');
+        $crawler = $client->request('GET', '/moderate/translations');
 
         self::assertResponseIsSuccessful();
         $html = (string) $client->getResponse()->getContent();
         self::assertStringContainsString('nav.map', $html);
-        self::assertStringContainsString('Carte desk', $html);
+        self::assertStringNotContainsString('Carte desk', $html);
+        self::assertSame(0, $crawler->filter('input[name="translation_decision[_token]"]')->count());
+        self::assertSame(
+            1,
+            $crawler->filter(sprintf('a.q-review[href$="/moderate/translations/%d"]', $id))->count(),
+        );
     }
 
-    public function testCuratorCanApproveWithCsrf(): void
+    public function testDetailShowsEnglishAndProposed(): void
+    {
+        $client = static::createClient();
+        $rider = $this->createUser('mod-tr-show-rider@example.com', 'hunter2secure!');
+        $proposal = $this->seedPendingProposal($rider, 'nav.map', 'Map', 'fr', 'Carte detail visible');
+        $id = (int) $proposal->getId();
+        $this->loginCurator('mod-tr-show-curator@example.com');
+
+        $client->request('GET', '/moderate/translations/'.$id);
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('h1', 'nav.map');
+        self::assertSelectorTextContains('.q-diff', 'Map');
+        self::assertSelectorTextContains('.q-diff', 'Carte detail visible');
+        self::assertSelectorExists('input[name="translation_decision[_token]"]');
+        self::assertSelectorExists('button[value="approve"]');
+    }
+
+    public function testCuratorCanApproveFromDetail(): void
     {
         $client = static::createClient();
         $rider = $this->createUser('mod-tr-approve-rider@example.com', 'hunter2secure!');
         $proposal = $this->seedPendingProposal($rider, 'nav.map', 'Map', 'fr', 'Carte csrf');
         $proposalId = (int) $proposal->getId();
+        $this->loginCurator('mod-tr-approve-curator@example.com');
 
-        $curator = $this->createUser(
-            'mod-tr-approve-curator@example.com',
-            'hunter2secure!',
-            roles: ['ROLE_CURATOR'],
-            totpSecret: 'JBSWY3DPEHPK3PXP',
-            twoFaEnabled: true,
-        );
-        $client->loginUser($curator);
-
-        $crawler = $client->request('GET', '/moderate/translations');
+        $crawler = $client->request('GET', '/moderate/translations/'.$proposalId);
         self::assertResponseIsSuccessful();
 
         $token = (string) $crawler->filter('form input[name="translation_decision[_token]"]')->attr('value');
         self::assertNotSame('', $token);
 
-        $client->request('POST', '/moderate/translations', [
+        $client->request('POST', '/moderate/translations/'.$proposalId, [
             'translation_decision' => [
                 '_token' => $token,
                 'proposal_id' => (string) $proposalId,
@@ -137,7 +173,7 @@ final class ModerateTranslationsTest extends WebTestCase
             ],
         ]);
 
-        self::assertResponseRedirects();
+        self::assertResponseRedirects('/moderate/translations');
 
         /** @var EntityManagerInterface $em */
         $em = static::getContainer()->get(EntityManagerInterface::class);
@@ -147,7 +183,10 @@ final class ModerateTranslationsTest extends WebTestCase
         self::assertNotNull($decided);
         self::assertSame(TranslationProposalStatus::Approved, $decided->getStatus());
 
-        $overlay = $em->getRepository(TranslationOverlay::class)->findOneBy(['locale' => 'fr']);
+        $overlay = $em->getRepository(TranslationOverlay::class)->findOneBy([
+            'locale' => 'fr',
+            'sourceProposal' => $decided,
+        ]);
         self::assertNotNull($overlay);
         self::assertSame('Carte csrf', $overlay->getValue());
     }
@@ -159,51 +198,36 @@ final class ModerateTranslationsTest extends WebTestCase
         $proposal = $this->seedPendingProposal($rider, 'nav.map', 'Map', 'fr', 'Carte badge');
         $proposal->setStatus(TranslationProposalStatus::NeedsInfo);
         static::getContainer()->get(EntityManagerInterface::class)->flush();
-
-        $curator = $this->createUser(
-            'mod-tr-badge-curator@example.com',
-            'hunter2secure!',
-            roles: ['ROLE_CURATOR'],
-            totpSecret: 'JBSWY3DPEHPK3PXP',
-            twoFaEnabled: true,
-        );
-        $client->loginUser($curator);
+        $this->loginCurator('mod-tr-badge-curator@example.com');
 
         $client->request('GET', '/moderate/translations');
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('.tr-status', 'Needs info');
     }
 
-    public function testUnknownProposalFlashesTranslatedError(): void
+    public function testUnknownProposalIsNotFound(): void
     {
         $client = static::createClient();
-        $rider = $this->createUser('mod-tr-unknown-rider@example.com', 'hunter2secure!');
-        $this->seedPendingProposal($rider, 'nav.map', 'Map', 'fr', 'Carte unknown');
-        $curator = $this->createUser(
-            'mod-tr-unknown-curator@example.com',
-            'hunter2secure!',
-            roles: ['ROLE_CURATOR'],
-            totpSecret: 'JBSWY3DPEHPK3PXP',
-            twoFaEnabled: true,
-        );
-        $client->loginUser($curator);
+        $this->loginCurator('mod-tr-unknown-curator@example.com');
 
-        $crawler = $client->request('GET', '/moderate/translations');
-        self::assertResponseIsSuccessful();
-        $token = (string) $crawler->filter('form input[name="translation_decision[_token]"]')->attr('value');
+        $client->request('GET', '/moderate/translations/999999999');
+
+        self::assertResponseStatusCodeSame(404);
+    }
+
+    public function testQueueDoesNotAcceptDecisions(): void
+    {
+        $client = static::createClient();
+        $this->loginCurator('mod-tr-list-post-curator@example.com');
 
         $client->request('POST', '/moderate/translations', [
             'translation_decision' => [
-                '_token' => $token,
-                'proposal_id' => '999999999',
+                'proposal_id' => '1',
                 'decision' => 'approve',
                 'note' => '',
             ],
         ]);
 
-        self::assertResponseRedirects();
-        $client->followRedirect();
-        self::assertSelectorExists('[role="alert"]');
-        self::assertSelectorTextContains('[role="alert"]', 'That proposal was not found');
+        self::assertResponseStatusCodeSame(405);
     }
 }

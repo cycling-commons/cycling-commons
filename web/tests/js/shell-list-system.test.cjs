@@ -35,7 +35,10 @@ const LIST_PAGES = [
   'templates/moderate_regions/index.html.twig',
 ];
 // Shell pages that are not lists but share the head and the container.
-const SHELL_PAGES = LIST_PAGES.concat(['templates/settings/index.html.twig']);
+const SHELL_PAGES = LIST_PAGES.concat([
+  'templates/settings/index.html.twig',
+  'templates/moderate/translation_detail.html.twig',
+]);
 
 // Rules that belong to the shell and nowhere else. A page defining one of
 // these has forked the system.

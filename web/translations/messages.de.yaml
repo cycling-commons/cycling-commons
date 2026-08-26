@@ -2543,7 +2543,9 @@ moderate:
   translation:
     kicker: 'Moderation · Übersetzungen'
     heading: 'Übersetzungsvorschläge prüfen'
-    lead: 'Freigeben veröffentlicht den Text siteweit ohne Release. Ablehnen und Rückfrage lassen das Live-Overlay unverändert.'
+    lead: 'Öffne einen Vorschlag, um das Englische mit dem vorgeschlagenen Text zu vergleichen, und genehmige, lehne ab oder frage nach.'
+    review: 'Prüfen'
+    back: 'Zurück zur Warteschlange'
     empty_heading: 'Nichts zu prüfen'
     empty_body: 'Keine offenen Übersetzungsvorschläge.'
     locale: 'Locale %locale%'
@@ -2752,6 +2754,7 @@ account:
   tab_saved: 'Gespeicherte Regionen'
   tab_messages: 'Nachrichten'
   tab_scout: 'Scout'
+  tab_translate: 'Übersetzen'
   tab_settings: 'Einstellungen'
   stat_facts: 'Beigetragene Fakten'
   stat_confirmed: 'Von anderen bestätigt'

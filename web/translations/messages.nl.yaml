@@ -2540,7 +2540,9 @@ moderate:
   translation:
     kicker: 'Moderatie · vertalingen'
     heading: 'Vertaalvoorstellen beoordelen'
-    lead: 'Goedkeuren publiceert de tekst sitebreed zonder release. Afwijzen en meer info laten de live overlay ongemoeid.'
+    lead: 'Open een voorstel om het Engels met de voorgestelde tekst te vergelijken, en keur goed, wijs af of vraag meer informatie.'
+    review: 'Beoordelen'
+    back: 'Terug naar de wachtrij'
     empty_heading: 'Niets te beoordelen'
     empty_body: 'Geen openstaande vertaalvoorstellen.'
     locale: 'Locale %locale%'
@@ -2749,6 +2751,7 @@ account:
   tab_saved: 'Opgeslagen regio''s'
   tab_messages: 'Berichten'
   tab_scout: 'Scout'
+  tab_translate: 'Vertalen'
   tab_settings: 'Instellingen'
   stat_facts: 'Bijgedragen feiten'
   stat_confirmed: 'Bevestigd door anderen'

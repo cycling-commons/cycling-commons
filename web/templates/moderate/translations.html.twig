@@ -1,17 +1,11 @@
 {# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
-{# Unscoped translation curator desk (translations.md §5). Head, cards and
-   density switch come from the shared list system like every other desk. #}
+{# Unscoped translation curator desk (translations.md §5). The queue is a
+   scan: key, locale, status, Review. Decisions live on the detail page. #}
 {% extends 'base.html.twig' %}
 {% block head_styles %}
 {% include 'account/_shell_styles.html.twig' %}
 <style>
   .tr-status{display:inline-block;margin-left:.45rem;font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;color:var(--paper);background:var(--clay);padding:.12rem .4rem;border-radius:30px;font-weight:400}
-  .tr-warn{font-size:.84rem;line-height:1.45;color:#7d2018;background:rgba(163,52,43,.09);border-left:2px solid #a3342b;padding:.45rem .8rem;border-radius:0 5px 5px 0;margin:.5rem 0 .7rem}
-  .tr-pair{display:grid;gap:.35rem;margin:.45rem 0 .7rem}
-  .tr-pair dt{font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;color:#8a8d7d}
-  .tr-pair dd{margin:0;font-size:.92rem;line-height:1.45;color:var(--ink);white-space:pre-wrap}
-  .td-actions{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin-top:.6rem}
-  .td-actions textarea{flex:1 1 16rem;font-family:var(--sans);font-size:.9rem;padding:.45rem .55rem;border:1px solid rgba(20,22,14,.25);border-radius:6px;background:var(--paper);min-height:2.4rem;resize:vertical}
 </style>
 {% endblock %}
 {% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate_translations', mod_scope_names: mod_scope_names is defined ? mod_scope_names : null, mod_submission_count: mod_submission_count is defined ? mod_submission_count : null, mod_route_count: mod_route_count is defined ? mod_route_count : null, mod_takedown_count: mod_takedown_count is defined ? mod_takedown_count : null} %}{% endblock %}
@@ -26,8 +20,7 @@
   {% for msg in app.flashes('success') %}<div class="flash-success" role="alert">{{ msg|trans }}</div>{% endfor %}
   {% for msg in app.flashes('danger') %}<div class="flash-error" role="alert">{{ msg|trans }}</div>{% endfor %}
 
-  {# Site-wide overlays: never narrowed by area (translations.md §5). Density
-     still folds a long queue to one line per key. #}
+  {# Site-wide overlays: never narrowed by area (translations.md §5). #}
   {% if cards is not empty %}
     <div class="mod-bar">{% include 'account/_density.html.twig' %}</div>
   {% endif %}
@@ -51,38 +44,10 @@
                   · {{ ('translate.locale.' ~ card.locale)|trans }}</span>
               </div>
             </div>
+            <div class="q-acts">
+              <a class="btn-act btn-secondary q-review" href="{{ path('moderate_translations_detail', {id: card.proposal.id}) }}">{{ 'moderate.translation.review'|trans }} &#8594;</a>
+            </div>
           </div>
-          <div class="q-body">
-            {% if card.english_changed %}
-              <p class="tr-warn" role="status">{{ 'moderate.translation.english_changed'|trans }}</p>
-            {% endif %}
-            <dl class="tr-pair">
-              <div>
-                <dt>{{ 'moderate.translation.english_at_submit'|trans }}</dt>
-                <dd>{{ card.english_at_submit }}</dd>
-              </div>
-              <div>
-                <dt>{{ 'moderate.translation.english_now'|trans }}</dt>
-                <dd>{{ card.english_now }}</dd>
-              </div>
-              <div>
-                <dt>{{ 'moderate.translation.live'|trans }}</dt>
-                <dd>{{ card.live }}</dd>
-              </div>
-              <div>
-                <dt>{{ 'moderate.translation.proposed'|trans }}</dt>
-                <dd>{{ card.proposed }}</dd>
-              </div>
-            </dl>
-          </div>
-          <form method="post" action="{{ path('moderate_translations') }}" class="td-actions">
-            <input type="hidden" name="translation_decision[_token]" value="{{ csrf_token('moderate_translation') }}">
-            <input type="hidden" name="translation_decision[proposal_id]" value="{{ card.proposal.id }}">
-            <textarea name="translation_decision[note]" maxlength="2000" placeholder="{{ 'moderate.translation.note_placeholder'|trans }}"></textarea>
-            <button type="submit" name="translation_decision[decision]" value="approve" class="btn-act btn-approve">{{ 'moderate.action.approve'|trans }}</button>
-            <button type="submit" name="translation_decision[decision]" value="reject" class="btn-act btn-reject">{{ 'moderate.action.reject'|trans }}</button>
-            <button type="submit" name="translation_decision[decision]" value="needs_info" class="btn-act">{{ 'moderate.action.needs_info'|trans }}</button>
-          </form>
         </article>
       {% endfor %}
     </div>

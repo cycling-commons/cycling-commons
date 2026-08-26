@@ -2565,7 +2565,9 @@ moderate:
   translation:
     kicker: 'Moderación · traducciones'
     heading: 'Revisar propuestas de traducción'
-    lead: 'Aprobar publica la cadena en todo el sitio sin una nueva versión. Rechazar y pedir información dejan la superposición en vivo sin cambios.'
+    lead: 'Abre una propuesta para comparar el inglés con el texto propuesto y luego aprueba, rechaza o pide más información.'
+    review: 'Revisar'
+    back: 'Volver a la cola'
     empty_heading: 'Nada que revisar'
     empty_body: 'No hay propuestas de traducción abiertas.'
     locale: 'Configuración regional %locale%'
@@ -2775,6 +2777,7 @@ account:
   tab_saved: 'Regiones guardadas'
   tab_messages: 'Mensajes'
   tab_scout: 'Scout'
+  tab_translate: 'Traducir'
   tab_settings: 'Ajustes'
   stat_facts: 'Hechos aportados'
   stat_confirmed: 'Confirmados por otros'

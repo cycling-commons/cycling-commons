@@ -14,6 +14,7 @@ use App\Moderation\ModerationScopeProvider;
 use App\Routing\LocalePrefix;
 use App\Translation\CatalogueBrowser;
 use App\Translation\DecisionService;
+use App\Translation\Entity\TranslationProposal;
 use App\Translation\Exception\SelfReviewException;
 use App\Translation\Exception\UnknownProposalException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -24,6 +25,8 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
  * Unscoped translation curator desk (translations.md §5).
+ *
+ * The queue is a scan. Decisions live on the detail page.
  *
  * @api
  */
@@ -38,10 +41,43 @@ final class ModerateTranslationsController extends AbstractController
     ) {
     }
 
-    #[Route('/moderate/translations', name: 'moderate_translations', methods: ['GET', 'POST'])]
-    public function __invoke(Request $request): Response
+    #[Route('/moderate/translations', name: 'moderate_translations', methods: ['GET'])]
+    public function index(): Response
     {
-        $form = $this->createForm(TranslationDecisionType::class);
+        $cards = [];
+        foreach ($this->decisions->openQueue() as $proposal) {
+            $entry = $proposal->getEntry();
+            $cards[] = [
+                'proposal' => $proposal,
+                'message_key' => $entry->getMessageKey(),
+                'locale' => $proposal->getLocale(),
+                'status' => $proposal->getStatus()->value,
+            ];
+        }
+
+        /** @var User $curator */
+        $curator = $this->getUser();
+
+        return $this->render('moderate/translations.html.twig', [
+            'page_title' => 'meta.moderate_translations_title',
+            'page_description' => 'meta.moderate_translations_description',
+            'cards' => $cards,
+            ...$this->chrome($curator),
+        ]);
+    }
+
+    #[Route('/moderate/translations/{id}', name: 'moderate_translations_detail', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
+    public function detail(int $id, Request $request): Response
+    {
+        try {
+            $proposal = $this->decisions->getOpen($id);
+        } catch (UnknownProposalException) {
+            throw $this->createNotFoundException();
+        }
+
+        $form = $this->createForm(TranslationDecisionType::class, [
+            'proposal_id' => (string) $id,
+        ]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
@@ -52,52 +88,81 @@ final class ModerateTranslationsController extends AbstractController
 
             try {
                 $this->decisions->decide(
-                    (int) $data['proposal_id'],
+                    $id,
                     (string) $data['decision'],
                     $curator,
                     $data['note'] ?? null,
                 );
                 $this->addFlash('success', 'moderate.translation.flash.'.$data['decision']);
+
+                return $this->redirectToRoute('moderate_translations');
             } catch (MissingQuestionException) {
                 $this->addFlash('danger', 'moderate.error.needs_info_note_required');
             } catch (SelfReviewException) {
                 $this->addFlash('danger', 'moderate.translation.error.self_review');
             } catch (AlreadyDecidedException) {
                 $this->addFlash('danger', 'moderate.translation.error.already_decided');
+
+                return $this->redirectToRoute('moderate_translations');
             } catch (UnknownProposalException) {
-                $this->addFlash('danger', 'moderate.translation.error.unknown');
+                throw $this->createNotFoundException();
             }
 
-            return $this->redirectToRoute('moderate_translations');
-        }
-
-        $cards = [];
-        foreach ($this->decisions->openQueue() as $proposal) {
-            $entry = $proposal->getEntry();
-            $live = $this->browser->liveFor($entry, $proposal->getLocale());
-            $englishNow = $entry->getEnglish();
-            $cards[] = [
-                'proposal' => $proposal,
-                'message_key' => $entry->getMessageKey(),
-                'english_at_submit' => $proposal->getEnglishAtSubmit(),
-                'english_now' => $englishNow,
-                'english_changed' => $proposal->getEnglishAtSubmit() !== $englishNow,
-                'live' => $live['live'],
-                'proposed' => $proposal->getProposedValue(),
-                'locale' => $proposal->getLocale(),
-                'status' => $proposal->getStatus()->value,
-            ];
+            return $this->redirectToRoute('moderate_translations_detail', ['id' => $id]);
         }
 
         /** @var User $curator */
         $curator = $this->getUser();
-        $scope = $this->scopeProvider->scopeFor($curator);
 
-        return $this->render('moderate/translations.html.twig', [
+        return $this->render('moderate/translation_detail.html.twig', [
             'page_title' => 'meta.moderate_translations_title',
             'page_description' => 'meta.moderate_translations_description',
-            'cards' => $cards,
-            'mod_scope_names' => $this->scopeProvider->describe($curator, $scope),
+            'card' => $this->detailCard($proposal),
+            ...$this->chrome($curator),
         ]);
+    }
+
+    /**
+     * @return array{mod_scope_names: list<string>}
+     */
+    private function chrome(User $curator): array
+    {
+        $scope = $this->scopeProvider->scopeFor($curator);
+
+        return [
+            'mod_scope_names' => $this->scopeProvider->describe($curator, $scope),
+        ];
+    }
+
+    /**
+     * @return array{
+     *     proposal: TranslationProposal,
+     *     message_key: string,
+     *     english_at_submit: string,
+     *     english_now: string,
+     *     english_changed: bool,
+     *     live: string,
+     *     proposed: string,
+     *     locale: string,
+     *     status: string
+     * }
+     */
+    private function detailCard(TranslationProposal $proposal): array
+    {
+        $entry = $proposal->getEntry();
+        $live = $this->browser->liveFor($entry, $proposal->getLocale());
+        $englishNow = $entry->getEnglish();
+
+        return [
+            'proposal' => $proposal,
+            'message_key' => $entry->getMessageKey(),
+            'english_at_submit' => $proposal->getEnglishAtSubmit(),
+            'english_now' => $englishNow,
+            'english_changed' => $proposal->getEnglishAtSubmit() !== $englishNow,
+            'live' => $live['live'],
+            'proposed' => $proposal->getProposedValue(),
+            'locale' => $proposal->getLocale(),
+            'status' => $proposal->getStatus()->value,
+        ];
     }
 }

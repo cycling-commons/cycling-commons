@@ -132,6 +132,24 @@ final class DecisionService
     }
 
     /**
+     * Open proposal for the detail page, or unknown if missing / already settled.
+     *
+     * @throws UnknownProposalException
+     */
+    public function getOpen(int $id): TranslationProposal
+    {
+        $proposal = $this->em->find(TranslationProposal::class, $id);
+        if (null === $proposal || !\in_array($proposal->getStatus(), [
+            TranslationProposalStatus::Pending,
+            TranslationProposalStatus::NeedsInfo,
+        ], true)) {
+            throw new UnknownProposalException(sprintf('Unknown proposal %d', $id));
+        }
+
+        return $proposal;
+    }
+
+    /**
      * Open queue, oldest first.
      *
      * @return list<TranslationProposal>

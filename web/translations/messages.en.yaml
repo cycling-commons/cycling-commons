@@ -2559,7 +2559,9 @@ moderate:
   translation:
     kicker: 'Moderation · translations'
     heading: 'Review translation proposals'
-    lead: 'Approve publishes the string site-wide without a release. Reject and needs-info leave the live overlay unchanged.'
+    lead: 'Open a proposal to compare the English source with the proposed string, then approve, reject, or ask for more information.'
+    review: 'Review'
+    back: 'Back to queue'
     empty_heading: 'Nothing to review'
     empty_body: 'No open translation proposals.'
     locale: 'Locale %locale%'
@@ -2768,6 +2770,7 @@ account:
   tab_saved: 'Saved regions'
   tab_messages: 'Messages'
   tab_scout: 'Scout'
+  tab_translate: 'Translate'
   tab_settings: 'Settings'
   stat_facts: 'Facts contributed'
   stat_confirmed: 'Confirmed by others'

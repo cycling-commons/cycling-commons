@@ -211,10 +211,12 @@ Translations are **site-wide**. They are not region-scoped. Any
 `ROLE_CURATOR` with completed 2FA may decide, same unscoped pattern as photo
 takedowns. A curator must not approve or reject **their own** proposal.
 
-The card shows: key, English snapshot vs current English (warn if they
-differ), current live, proposed. Decisions are `approve` / `reject` /
-`needs_info` with the same note rules as item submissions (needs-info
-requires a question).
+The queue is a scan: key, locale, status, and Review. The detail
+page (`/moderate/translations/{id}`) shows English snapshot vs current
+English (warn if they differ), current live, and the proposed string.
+Decisions are `approve` / `reject` / `needs_info` with the same note
+rules as item submissions (needs-info requires a question), and happen
+only on that detail page.
 
 `ROLE_ADMIN` implies `ROLE_CURATOR` and may use this desk. There is no
 separate translation-moderator role.

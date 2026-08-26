@@ -27,12 +27,14 @@
         <div class="acct-sec acct-sec-personal">{{ 'account.menu_personal'|trans }}</div>
         <a href="{{ path('profile') }}">{{ 'account.tab_contributions'|trans }}</a>
         <a href="{{ path('scout_review') }}">{{ 'account.tab_scout'|trans }}</a>
+        <a href="{{ path('translate') }}">{{ 'account.tab_translate'|trans }}</a>
         <a href="{{ path('messages') }}">{{ 'nav.messages'|trans }}{% if _unread > 0 %}<span class="acct-count">{{ _unread > 9 ? '9+' : _unread }}</span>{% endif %}</a>
         <a href="{{ path('settings') }}">{{ 'nav.settings'|trans }}</a>
       </div>
     {% else %}
       <a href="{{ path('profile') }}">{{ 'account.tab_contributions'|trans }}</a>
       <a href="{{ path('scout_review') }}">{{ 'account.tab_scout'|trans }}</a>
+      <a href="{{ path('translate') }}">{{ 'account.tab_translate'|trans }}</a>
       <a href="{{ path('messages') }}">{{ 'nav.messages'|trans }}{% if _unread > 0 %}<span class="acct-count">{{ _unread > 9 ? '9+' : _unread }}</span>{% endif %}</a>
       <a href="{{ path('settings') }}">{{ 'nav.settings'|trans }}</a>
     {% endif %}

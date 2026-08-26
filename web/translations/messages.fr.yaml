@@ -2540,7 +2540,9 @@ moderate:
   translation:
     kicker: 'Modération · traductions'
     heading: 'Examiner les propositions de traduction'
-    lead: 'Approuver publie la chaîne sur tout le site sans nouvelle version. Refuser et demander des précisions laissent l''overlay en ligne inchangé.'
+    lead: 'Ouvrez une proposition pour comparer l''anglais à la chaîne proposée, puis approuvez, refusez ou demandez des précisions.'
+    review: 'Examiner'
+    back: 'Retour à la file'
     empty_heading: 'Rien à examiner'
     empty_body: 'Aucune proposition de traduction ouverte.'
     locale: 'Locale %locale%'
@@ -2749,6 +2751,7 @@ account:
   tab_saved: 'Régions sauvegardées'
   tab_messages: 'Messages'
   tab_scout: 'Scout'
+  tab_translate: 'Traduire'
   tab_settings: 'Paramètres'
   stat_facts: 'Faits contribués'
   stat_confirmed: 'Confirmés par d''autres'
