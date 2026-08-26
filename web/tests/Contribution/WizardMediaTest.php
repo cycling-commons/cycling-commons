@@ -70,25 +70,25 @@ final class WizardMediaTest extends WebTestCase
         self::assertSelectorNotExists('#lnk-video');
         self::assertSelectorNotExists('#btn-link-video');
 
-        $client->request('GET', '/add-climb');
+        $client->request('GET', '/improve?type=climbs&mode=add');
         self::assertResponseIsSuccessful();
         self::assertSelectorNotExists('#drop-video');
     }
 
-    public function testTheDeadAddClimbDropZoneIsGoneAndPointsSomewhereReal(): void
+    public function testAddingAClimbCarriesTheSameRealUploader(): void
     {
         $client = static::createClient();
         $this->login($client, 'climb');
 
-        $crawler = $client->request('GET', '/add-climb');
+        // The old /add-climb wizard (a decorative drop zone, then a pointer to
+        // /improve) was retired on 2026-08-25; climbs are added on /improve like
+        // every other type, so the uploader is the one real one.
+        $client->request('GET', '/improve?type=climbs&mode=add');
         self::assertResponseIsSuccessful();
-
         self::assertSelectorNotExists('.drop[onclick]', 'a zone that refuses its own click is decoration, not a control');
-        self::assertStringContainsString(
-            'Add a photo',
-            $crawler->filter('.pane[data-s="3"]')->text(),
-            'the climb wizard says where photos really go instead of pretending to take them',
-        );
+        self::assertSelectorExists('input[name="improve[mediaIds]"]');
+        self::assertSelectorExists('#drop-photo');
+        self::assertSelectorExists('#media-consent');
     }
 
     public function testTheFileInputAcceptsExactlyTheSupportedFormats(): void

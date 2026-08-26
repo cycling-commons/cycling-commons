@@ -88,11 +88,18 @@ final class AddPlaceFlowTest extends WebTestCase
 
         $client->request('GET', '/improve?type=quality-rides&mode=add');
         self::assertResponseIsSuccessful();
-        self::assertSelectorExists('[data-improve-unbound]', 'K routes go through /propose-route');
+        self::assertSelectorExists('[data-improve-unbound]', 'R routes go through /propose-route');
 
+        // Climbs are a real add form here since 2026-08-25: the /add-climb wizard was retired (owner).
         $client->request('GET', '/improve?type=climbs&mode=add');
         self::assertResponseIsSuccessful();
-        self::assertSelectorExists('[data-improve-unbound]', 'climbs keep the dedicated /add-climb flow');
+        self::assertSelectorNotExists('[data-improve-unbound]');
+        self::assertSelectorExists('#wmap');
+        self::assertSelectorExists('input[name="improve[route]"]');
+        self::assertSelectorExists('input[name="improve[details][name]"]');
+        self::assertSelectorExists('#wz-mapHint');
+        self::assertSelectorExists('#wz-measured');
+        self::assertSelectorExists('input#file-photo[type="file"][multiple]');
     }
 
     public function testValidPostPersistsNewItemSubmission(): void

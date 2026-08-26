@@ -1627,124 +1627,6 @@ vote:
     reference: 'Referencia:'
     stub_note: 'Nota: la papeleta estacional llega después del lanzamiento. Hasta entonces esta página enseña cómo funcionará, y enviarla no cambia nada.'
     cta: 'Ver la región →'
-add_climb:
-  eyebrow: 'Añadir al atlas'
-  title: 'Añade un puerto.'
-  lead: '¿Has encontrado un puerto que le falta al atlas? Dibújalo, descríbelo y envíaselo a los curadores.'
-  step1:
-    label: 'Dónde'
-    heading: '¿Por dónde sube?'
-    help: 'Busca la zona y luego pulsa el <b>pie</b> del puerto y su <b>cima</b>. Nosotros dibujamos la línea y medimos su longitud.'
-    search_label: 'Busca un lugar o una calle'
-    search_placeholder: 'p. ej. La Redoute, Remouchamps — o un pueblo, un col, una calle…'
-    map_aria: 'Mapa — pulsa el pie y después la cima del puerto'
-    readout_initial: 'Pulsa en el mapa para fijar el pie del puerto.'
-    reset: 'Reiniciar'
-    # Todo lo que dibuja add-climb.js por su cuenta le llega a través de
-    # window.CC_ADD_CLIMB_I18N como TEXTO y se asigna con textContent, nunca
-    # como marcado — la misma regla que sigue improve.js
-    # (docs/plans/2026-08-01-improve-js-i18n.md).
-    readout_climb_summit: 'Pie fijado — ahora pulsa la cima.'
-    readout_climb_set: 'Puerto fijado'
-    climb_length: '%km%'
-    climb_measuring: 'midiendo…'
-    climb_route_error: 'no se ha podido ajustar a la red de carreteras, se muestra una línea recta'
-    climb_profile_error: 'perfil de pendiente no disponible'
-    search_no_matches: 'Sin resultados'
-    search_unavailable: 'Búsqueda no disponible — pulsa en el mapa'
-    search_result: 'Resultado'
-    search_coords_go: 'Coordenadas — pulsa para saltar aquí'
-  step2:
-    label: 'Perfil'
-    heading: 'El perfil'
-    help: 'La longitud se mide de tu línea. Añade el resto.'
-    name_placeholder: 'Puerto sin nombre'
-    name_label: 'Nombre del puerto'
-    name_input_placeholder: 'p. ej. Côte de La Redoute'
-    len_label: 'Longitud (%u%)'
-    gain_label: 'Desnivel positivo (%u%)'
-    gain_help: 'De tu ciclocomputador o GPS — en producción se muestrea de un modelo digital de elevaciones (MDE) abierto.'
-    avg_label: 'Pendiente media'
-    max_label: 'Pendiente máxima (%) — opcional'
-    max_help: 'Del marcador de rampa más dura que colocaste en el mapa.'
-    surface_label: 'Firme'
-    surface_q_label: 'Calidad del firme'
-    traffic_label: 'Tráfico'
-    traffic_help: 'Cuánto tráfico motorizado comparte el puerto.'
-  step3:
-    label: 'Detalles'
-    heading: 'Detalles'
-    help: '¿Para quién es este puerto y hay algo que los ciclistas deban saber? Todo es opcional.'
-    gradient_help_label: 'Orientación sobre pendientes'
-    note_label: 'Nota para los ciclistas'
-    note_placeholder: 'Cambios de firme, una rampa final brutal, la vista desde arriba…'
-    photo_label: 'Añadir una foto — opcional'
-    photo_after: 'Añade fotos cuando el puerto esté en el atlas — ábrelo en el mapa y usa «Añadir una foto».'
-    osm_label: '¿Ya está en OpenStreetMap?'
-    # Orientación sobre pendientes, renderizada por la plantilla. Antes la
-    # recalculaba add-climb.js según cambiaban los chips de público (ya
-    # retirados); ahora dice lo mismo a todo el mundo, incluido el techo de la
-    # handbike.
-    hint_ceilings: 'Techos de pendiente aproximados — carretera y BTT: 15% o más · gravel ~12% (tracción) · cicloturismo con carga ~10% · handbike ~6%.'
-  step4:
-    label: 'Revisar'
-    heading: 'Revisa tu puerto'
-    help: 'Comprueba los datos antes de enviárselo a los curadores.'
-    # Etiquetas de la tarjeta de revisión. add-climb.js construye la tarjeta con
-    # createElement + textContent (assets/contribute/review-card.js), así que
-    # ninguna de estas puede llevar marcado.
-    loc: 'Pie %foot% → Cima %summit%'
-    label_length: 'Longitud'
-    label_gain: 'Desnivel positivo'
-    label_avg: 'Pendiente media'
-    label_max: 'Pendiente máxima'
-    label_surface: 'Firme'
-    label_traffic: 'Tráfico'
-    label_osm: '¿Ya está en OSM?'
-  step5:
-    label: 'Enviado'
-    heading: 'Está en la cola.'
-    body_pre: 'Un curador revisará'
-    your_climb: 'tu puerto'
-    body_post: '. Si todo cuadra, se incorpora a la reserva del Commons — y queda a la espera de las rondas de votación estacionales, que abren después del lanzamiento. Sigue su recorrido abajo.'
-    cta: '← Volver al mapa'
-  nav:
-    back: 'Atrás'
-    next: 'Siguiente'
-    submit: 'Enviar a revisión'
-  receipt:
-    heading: 'Puerto enviado.'
-    body: 'Tu puerto está en la cola de los curadores. No aparece nada en el mapa hasta que un curador lo haya mirado — y recibirás la decisión, con su motivo, en tus mensajes.'
-    reference: 'Referencia:'
-    stub_note: 'Nota: se incorpora al atlas en cuanto un curador lo aprueba. Las rondas de votación estacionales que ordenan el best-of todavía no están en marcha — abren después del lanzamiento.'
-    cta: '← Volver al mapa'
-  journey:
-    eyebrow: 'Cómo las aportaciones se convierten en el atlas'
-    title: 'El recorrido de un puerto'
-    lead: 'Nada de lo que añadas se publica sin revisar. Cada puerto se revisa y luego se gana su sitio — y los mejores suben con el voto de la comunidad, reordenados cada ronda, nunca reiniciados.'
-    node_you_t: 'Tú'
-    node_you_l: 'Tú dibujas y envías el puerto'
-    node_curators_t: 'Curadores'
-    node_curators_l: 'Cola de revisión — comprobada por curadores de confianza'
-    node_approved_t: 'Aprobado'
-    node_approved_l: 'Se incorpora a la reserva «Todo» del Commons'
-    node_eligible_t: 'Elegible'
-    node_eligible_l: 'A la espera de la ronda estacional (abre tras el lanzamiento)'
-    node_curated_t: 'Lo mejor'
-    node_curated_l: 'Votado hasta lo mejor de la región'
-    branch_lead: '…o, desde la revisión'
-    branch_needs_info_b: '⟲ Faltan datos'
-    branch_needs_info: 'Un curador te lo devuelve con una pregunta — lo afinas y lo vuelves a enviar.'
-    branch_rejected_b: '✕ Rechazado'
-    branch_rejected: 'Duplicado o no es un puerto — se rechaza con un motivo, no se pierde nada.'
-  error:
-    name_required: 'Escribe un nombre para el puerto.'
-    name_too_long: 'El nombre del puerto no puede pasar de 200 caracteres.'
-    length_negative: 'La longitud debe ser cero o positiva.'
-    gain_negative: 'El desnivel positivo debe ser cero o positivo.'
-    max_gradient_range: 'La pendiente máxima debe estar entre 0 y 100.'
-    avg_gradient_invalid: 'La pendiente media debe ser un número como 6,4 o 8%.'
-    note_too_long: 'La nota no puede pasar de 2000 caracteres.'
 improve:
   eyebrow: 'Aportar · entrada nueva'
   title: 'Mejora o añade un lugar.'
@@ -2994,8 +2876,6 @@ meta:
   moderate_description: 'La pantalla de los curadores del Commons — revisa envíos, resuelve avisos y mantén fiable el atlas ciclista abierto.'
   contribute_title: 'Cycling Commons — Aportar'
   contribute_description: 'Elige qué aportar a Cycling Commons — puertos, agua, firme, peligros, alojamientos, vistas y más. Un solo atlas abierto, construido por ciclistas.'
-  add_climb_title: 'Cycling Commons — Añadir un puerto'
-  add_climb_description: 'Añade un puerto al Commons — busca el lugar, traza el recorrido y recoge el firme, el tráfico y la pendiente para cualquier tipo de ciclista.'
   vote_title: 'Cycling Commons — Votar'
   vote_description: 'Ordena lo mejor que se puede rodar en esta región. La comunidad decide lo mejor de cada temporada, mantenido al día por los ciclistas que lo ruedan.'
   improve_title: 'Cycling Commons — Mejorar o añadir un lugar'
@@ -3122,7 +3002,7 @@ js:
   climb_marker_summit: 'FIN · cima'
   climb_marker_steepest: 'MÁS DURA'
   # El texto propio del editor de puertos de tres puntos compartido: /improve
-  # (letra B) y /add-climb lo montan igual, así que hay una sola entrada de
+  # (letra N) y /add-climb lo montan igual, así que hay una sola entrada de
   # catálogo para cada cadena. Deshacer solo se muestra cuando ya hay historial
   # que recuperar.
   climb_undo: 'Deshacer'

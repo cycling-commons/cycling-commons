@@ -42,7 +42,7 @@ final class AddClimbFromMapTest extends WebTestCase
         self::assertResponseIsSuccessful();
         // panels.js rewrites this href on every move; the served value is the
         // bare route, so a rider with JS off still lands on the wizard.
-        self::assertSelectorExists('a#addClimbHere[href="/add-climb"]');
+        self::assertSelectorExists('a#addClimbHere[href="/improve?type=climbs&mode=add"]');
     }
 
     public function testTheRailOffersNothingToAnAnonymousVisitor(): void
@@ -61,14 +61,15 @@ final class AddClimbFromMapTest extends WebTestCase
         $em = static::getContainer()->get(EntityManagerInterface::class);
         $client->loginUser($this->rider($em, 'climb-view@test.test'));
 
+        // /add-climb is a redirect since 2026-08-25 (the wizard folded into
+        // /improve); the camera hint rides along, then improve.js reads ?lat/lng/z.
         $client->request('GET', '/add-climb?lat=50.49&lng=5.74&z=14.5');
-        self::assertResponseIsSuccessful();
-        $html = (string) $client->getResponse()->getContent();
+        self::assertResponseRedirects('/improve?type=climbs&mode=add&lat=50.49&lng=5.74&z=14.5', 301);
 
-        self::assertStringContainsString('CC_CLIMB_VIEW', $html);
-        self::assertStringContainsString('"lat":50.49', $html);
-        self::assertStringContainsString('"lng":5.74', $html);
-        self::assertStringContainsString('"zoom":14.5', $html);
+        $client->followRedirect();
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('#wmap');
+        self::assertSelectorExists('input[name="improve[route]"]');
     }
 
     /**
@@ -88,12 +89,11 @@ final class AddClimbFromMapTest extends WebTestCase
     {
         $client = static::createClient();
         $em = static::getContainer()->get(EntityManagerInterface::class);
-        $client->loginUser($this->rider($em, 'climb-junk'.md5($query).'@test.test'));
+        $client->loginUser($this->rider($em, 'climb-junk@test.test'));
 
+        // The redirect forwards no camera at all, so improve.js opens on its own default.
         $client->request('GET', '/add-climb'.$query);
-        self::assertResponseIsSuccessful();
-        // No global emitted at all, so add-climb.js keeps its own default.
-        self::assertStringNotContainsString('CC_CLIMB_VIEW', (string) $client->getResponse()->getContent());
+        self::assertResponseRedirects('/improve?type=climbs&mode=add', 301);
     }
 
     public function testZoomIsClampedRatherThanThrowingTheCoordinatesAway(): void
@@ -103,12 +103,6 @@ final class AddClimbFromMapTest extends WebTestCase
         $client->loginUser($this->rider($em, 'climb-zoom@test.test'));
 
         $client->request('GET', '/add-climb?lat=50.49&lng=5.74&z=99');
-        self::assertResponseIsSuccessful();
-        $html = (string) $client->getResponse()->getContent();
-
-        // A bad zoom is a bad number in an otherwise good link; the position is
-        // the part that matters, so it survives.
-        self::assertStringContainsString('"lat":50.49', $html);
-        self::assertStringContainsString('"zoom":18', $html);
+        self::assertResponseRedirects('/improve?type=climbs&mode=add&lat=50.49&lng=5.74&z=18', 301);
     }
 }

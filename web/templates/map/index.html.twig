@@ -366,7 +366,7 @@
          then re-locate the climb from scratch in its own small map while having
          been looking straight at it.
 
-         /add-climb is ROLE_USER, so logged out this renders locked. Anonymous
+         /improve is ROLE_USER, so logged out this renders locked. Anonymous
          riders also reach it through /contribute, which lists it.
 
          The href is rewritten by panels.js initAddClimbHere() on every map
@@ -374,7 +374,7 @@
       <div class="grp cc-addclimb">
         <h3>{{ 'map.add_climb_heading'|trans }}</h3>
         {% if is_granted('ROLE_USER') %}
-        <a class="cc-addclimb-go" id="addClimbHere" href="{{ path('add_climb') }}">{{ 'map.add_climb_here'|trans }}</a>
+        <a class="cc-addclimb-go" id="addClimbHere" href="{{ path('improve', {type: 'climbs', mode: 'add'}) }}">{{ 'map.add_climb_here'|trans }}</a>
         {% else %}
         {% include 'map/_locked_tool.html.twig' with {label: 'map.add_climb_here'|trans} only %}
         {% endif %}

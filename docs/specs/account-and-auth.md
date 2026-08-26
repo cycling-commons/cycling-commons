@@ -928,14 +928,16 @@ moderation tables read miles. Map ES modules reach it through
 `assets/map/units.js` (`uKm`/`uM`/`uElev`), which falls back to metric so
 `node --test` can still import the leaf modules.
 
-**The three places a rider types or drags a distance** convert on the way in as
+**The places a rider types or drags a distance** convert on the way in as
 well as out:
 
-- the climb wizard's length and gain fields — shown and autofilled in the
-  rider's unit, converted back by model transformers on `AddClimbType` so the
-  submitted payload is metric. Server-side rather than in the browser: a
-  submission that arrived in miles because JavaScript was supposed to convert it
-  and did not is a wrong number nobody can spot afterwards;
+- a climb's length, gain and gradients are **never typed**: they are measured
+  server-side from the drawn line and the DEM (climb-elevation.md §4) and only
+  DISPLAYED in the rider's unit, through `ccKm`/`ccElev` in `improve.js`
+  (the measured block under the map and the review line), so no transformer
+  is needed. Until 2026-08-25 the retired `/add-climb` wizard had typed length
+  and gain fields with model transformers on `AddClimbType`; both the fields
+  and the transformers are gone;
 - the base-location radius slider — the **input stays kilometres** (that is what
   is stored and what the controller reads) and only the read-out follows the
   preference;

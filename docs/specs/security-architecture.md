@@ -281,9 +281,11 @@ each produce zero elements. Its document shim parses assigned `innerHTML` into
 real children, so the assertions fail rather than pass vacuously if the
 builders are ever rewritten on `innerHTML`.
 
-`add_climb.js` and the map modules still follow §4.2 and want the same sweep;
-that is a separate change, because mixing it with this one makes the
-security-relevant diff unreviewable.
+The map modules still follow §4.2 and want the same sweep; that is a separate
+change, because mixing it with this one makes the security-relevant diff
+unreviewable. (`add_climb.js` was on this list until it was deleted with the
+`/add-climb` wizard on 2026-08-25; climbs now go through `improve.js`, which
+is covered above.)
 
 ## 5. CSRF model
 
@@ -405,7 +407,7 @@ capability, not one caller's share of it.
 
 | Limiter | Policy | Limit (current config) | Key | Guards | Over-limit behaviour |
 |---|---|---|---|---|---|
-| `contribution_submit` | sliding_window | 20 / 1 hour | `user-<id>` | All item-submission intake — `App\Contribution\CatalogContributionService::submitDraft()` (improve + add-climb flows) | `TooManyRequestsHttpException` → flash `contribute.error.rate_limited`, form re-rendered (`ContributeController`) |
+| `contribution_submit` | sliding_window | 20 / 1 hour | `user-<id>` | All item-submission intake — `App\Contribution\CatalogContributionService::submitDraft()` (every `/improve` arm: edit, `mode=add` for all catalog types including climbs since 2026-08-25) | `TooManyRequestsHttpException` → flash `contribute.error.rate_limited`, form re-rendered (`ContributeController`) |
 | `route_propose` | sliding_window | 3 / 1 day | `user-<id>` | Route proposal intake (GPX upload) — `App\Contribution\RouteProposalService::propose()`; proposals are heavier than pin edits, the supply gate starts at intake | `TooManyRequestsHttpException` → flash (`ProposeRouteController`) |
 | `route_suggest` | sliding_window | 5 / 1 day | `user-<id>` | Route correction channel — `App\Community\RouteCommunityService::recordSuggestion()`; the suggest channel is the flood vector (each pending row is a curator task); vote/rode-it are self-bounded by UNIQUE constraints instead | `429 {"error":"rate_limited"}` (`RouteCommunityController::suggest`) |
 | `ride_check` | sliding_window | 20 / 1 day | `user-<id>` | GPX ride-check compute — `App\Controller\RideCheckController::check()`; read-only (parse + two PostGIS corridor queries, nothing persisted), hence more generous than intake | `429` JSON with translated `contribute.error.rate_limited` |

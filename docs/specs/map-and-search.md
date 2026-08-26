@@ -398,9 +398,9 @@ that look like the same rename and are not:
 
 A half-finished rename was found on 2026-08-14: the map said Best of while the
 Regions desk, the region-status legend, the admin settings labels and the
-add-climb journey diagram still said Curated / Sélection / Selectie / Auswahl /
-Curado, so one product had two names for one thing in five languages. Fixed
-across all five.
+add-climb journey diagram (gone with the wizard on 2026-08-25) still said
+Curated / Sélection / Selectie / Auswahl / Curado, so one product had two names
+for one thing in five languages. Fixed across all five.
 
 - **Which mode the map OPENS in.** The global default is
   **Everything**, not Curated: Curated hides every non-curated experiential item,
@@ -647,14 +647,17 @@ four returned once the reason they looked broken was fixed:
   `map.disc_*` catalogue keys went with it.
 
 - **The same call, the same day, on `/add-climb`'s "Targeted audience" chips.**
+  *(History: the wizard itself was retired on 2026-08-25; climbs are added on
+  `/improve`, whose `ImproveType` has no audience field either.)*
   They were worse than the map's: not only did they filter nothing, *nothing
-  submitted them* — `AddClimbType` has no audience field and
-  `CatalogContributionService::CLIMB_FIELDS` maps no such key — while the
+  submitted them* — `AddClimbType` had no audience field and
+  `CatalogContributionService::CLIMB_FIELDS` mapped no such key — while the
   wizard's review step listed the ticked ones back as though a curator would
   receive them. Their labels were also the last untranslated strings on that
   page. The gradient guidance they used to drive stays, as one static line: it
   is advice for whoever is describing a climb, and it already names the handbike
-  ceiling the conditional version spelled out.
+  ceiling the conditional version spelled out. (That static line went with
+  the wizard on 2026-08-25.)
 
   Bringing either set back means giving items a real audience attribute in
   `CatalogFormRegistry`, which is a vocabulary decision — the add-climb chips
