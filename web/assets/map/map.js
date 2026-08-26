@@ -30,9 +30,10 @@ import { initSearchUi } from './search-ui.js';
 import { initScoutReview } from './scout-review.js';
 import { initDuplicateResolve } from './duplicate-resolve.js';
 import { initLayerList, initMapCtrl, initRailChrome, initBestOf, initFilterPill,
-         initChips, initViewMode, initAddClimbHere } from './panels.js';
+         initChips, initViewMode, initAddClimbHere, liftModeFor } from './panels.js';
 import { initTheme } from './theme.js';
 import { initShell } from './shell.js';
+import { layerGlyph } from './icons.js';
 
   initScope();
 
@@ -72,6 +73,15 @@ import { initShell } from './shell.js';
       (pp && !!(layerByKey.pending && (layerByKey.pending.features||[]).some(x=>x.pending && String(x.pending.id)===String(pp)))) ||
       (rp && ((layerByKey['experience']||{}).features||[]).some(x=>String(x.id)===String(rp)));
     if(_dlHit) widenForDeepLink();
+    // docs/specs/map-and-search.md §8: the rider's own mode may not draw the
+    // target (Best of hides a Verified climb): lift it before the drawer opens,
+    // or the halo lands on an empty map. Pool hits and pivots keep their own path.
+    if(_dlHit){
+      const hit = (ip && resolveLocalFeatureById(ip))
+        || (fp && resolveLocalFeature(fp))
+        || (rp && (()=>{ const l=layerByKey['experience']; const f=l && (l.features||[]).find(x=>String(x.id)===String(rp)); return f ? {layer:l, f} : null; })());
+      if(hit && hit.layer && hit.f) liftModeFor(hit.layer, hit.f);
+    }
     // ?feature=<name> drawer + zoom; coverage POIs via search when local index misses.
     // ?item=<id> — moderation "what did I approve", by id not name.
     if(ip) openFeatureById(ip);

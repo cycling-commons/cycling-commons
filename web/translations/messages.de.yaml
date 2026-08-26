@@ -2139,6 +2139,7 @@ map:
   d_toast_login_rate: 'Bitte anmelden, um Routen zu bewerten.'
   d_toast_curator: 'Danke — ein Kurator prüft es.'
   d_toast_verified: 'Verifiziert — danke fürs Bestätigen dieser Route!'
+  d_toast_mode_lift: 'Angezeigt in {to} · {from} blendet diesen Ort aus'
   d_toast_recorded: 'Erfasst — danke!'
   d_toast_limit: 'Tageslimit erreicht — morgen erneut versuchen.'
   d_toast_open_route: 'Zuerst die Route öffnen.'

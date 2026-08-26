@@ -13,9 +13,10 @@ import { CATALOG, catalogUtility, catalogVotable, catalogModeration,
 import { PREFS, addHeatmap, updateHeatFilter, layerCounts, updateCounts, render,
          applyStaysAccessFilter, syncFacetChips, prefFilterEnabled, setPrefFilter, PREF_FILTER_KEY } from './render.js';
 import { mapToast, clearRevealPin } from './drawer.js';
-import { scenicGlyph, toiletGlyph } from './icons.js';
+import { climbGlyph, scenicGlyph, toiletGlyph } from './icons.js';
 import { refilterClusters, updateConfMarkers } from './osm-pools.js';
 import { curScope, inScope } from './scope-ui.js';
+import { modeToShow } from './filters.js';
 import { surfaceTilesConfigured, setSurfaceTiles, surfaceTilesVisible,
          toggleSurfaceClass, setStudyMode, studyModeOn,
          setGapsGrid, gapsGridOn, CLASSIFIED_MIN_ZOOM } from './surface-tiles.js';
@@ -352,17 +353,38 @@ export function initBestOf(){
   // Curated = best-of for (season, bike); named-region sends &region=
   // (docs/specs/map-and-search.md §4.2, §4.5).
   // Race-guard: a slower earlier response must not overwrite a newer facet.
-  document.querySelectorAll('#mode button').forEach(b=>b.onclick=()=>{
-    document.querySelectorAll('#mode button').forEach(x=>x.classList.remove('on'));
-    b.classList.add('on'); setMode(b.dataset.m);
-    persistMode(b.dataset.m);
-    /* Curated pool pins are a clustered source, filtered at setData — rebuild on mode change. */
-    refilterClusters(); updateConfMarkers();
-    clearRevealPin();
-    const bf=document.getElementById('bestFacets'); if(bf) bf.hidden = (mode()!=='curated');
-    updateSubtitle();
-    refreshBestOf();
-  });
+  document.querySelectorAll('#mode button').forEach(b=>b.onclick=()=>applyMode(b.dataset.m, {persist:true}));
+}
+
+/* Switch the view mode: buttons, subtitle, facets, clusters, best-of fetch.
+   A click persists (profile or localStorage); a deep-link lift does not, so
+   the rider's own choice is what the next visit opens with. */
+export function applyMode(m, {persist}={persist:true}){
+  document.querySelectorAll('#mode button').forEach(x=>x.classList.toggle('on', x.dataset.m===m));
+  setMode(m);
+  if(persist) persistMode(m);
+  /* Curated pool pins are a clustered source, filtered at setData — rebuild on mode change. */
+  refilterClusters(); updateConfMarkers();
+  clearRevealPin();
+  const bf=document.getElementById('bestFacets'); if(bf) bf.hidden = (mode()!=='curated');
+  updateSubtitle();
+  refreshBestOf();
+}
+
+/* docs/specs/map-and-search.md §8: a deep link lands in the rider's own mode,
+   and Best of hides a Verified climb: the drawer opened over a halo with no pin
+   and no line under it, and the fresh approval looked "gone" (owner-reported
+   2026-08-25). Lift to the lowest rung that draws the target, this visit only,
+   and say so. Returns true when the mode changed. */
+export function liftModeFor(layer, f){
+  if(!layer || !f || layer.pendingLayer) return false;
+  const to = modeToShow(mode(), layer, f);
+  if(!to) return false;
+  const label = m => { const b=document.querySelector(`#mode button[data-m="${m}"]`); return b ? b.textContent.trim() : m; };
+  const from = label(mode());
+  applyMode(to, {persist:false});
+  mapToast(tpl(D.toastModeLift||'Shown in {to} · {from} hides this place', {to: label(to), from}), {center:true});
+  return true;
 }
 
 export function initChips(){

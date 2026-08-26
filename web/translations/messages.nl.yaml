@@ -2136,6 +2136,7 @@ map:
   d_toast_login_rate: 'Log in om routes te beoordelen.'
   d_toast_curator: 'Bedankt — een curator bekijkt het.'
   d_toast_verified: 'Geverifieerd — bedankt voor het bevestigen van deze route!'
+  d_toast_mode_lift: 'Getoond in {to} · {from} verbergt deze plek'
   d_toast_recorded: 'Vastgelegd — bedankt!'
   d_toast_limit: 'Dagelijkse limiet bereikt — probeer morgen opnieuw.'
   d_toast_open_route: 'Open eerst de route.'

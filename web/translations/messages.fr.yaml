@@ -2136,6 +2136,7 @@ map:
   d_toast_login_rate: 'Veuillez vous connecter pour évaluer les itinéraires.'
   d_toast_curator: 'Merci — un curateur va l''examiner.'
   d_toast_verified: 'Vérifié — merci d''avoir confirmé cet itinéraire !'
+  d_toast_mode_lift: 'Affiché dans {to} · {from} masque ce lieu'
   d_toast_recorded: 'Enregistré — merci !'
   d_toast_limit: 'Limite quotidienne atteinte — réessayez demain.'
   d_toast_open_route: 'Ouvrez d''abord l''itinéraire.'

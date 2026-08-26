@@ -1602,10 +1602,11 @@ is the pending permalink contract):
 |---|---|
 | `?feature=<name>` | exact-name match over `CATALOG` features: activates the layer if hidden, opens the drawer, flies to the pin. The profile-card → map contract. Falls back to one unscoped coverage search when the local index misses. |
 | `?ref=<osm ref>` | one coverage POI by its OSM id (`node/462149319`, `way/…`). Resolved by a single `/map/coverage/poi/{osmType}/{osmId}` call, which is the only thing that knows the letter and the coordinates; widens the scope on its own hit, like `?feature=`. |
+| `?item=<id>` | one catalog item by DB id: the desk's "what did I approve" link and the drawer's share link. Opens the drawer, flies to the pin. **Lifts the view mode** when the rider's own mode would not draw the target: to the lowest rung that does (Confirmed before Everything), for this visit only, never persisted, with a toast naming both modes (`liftModeFor`, panels.js; the rung rule is `modeShows` in filters.js, the same predicate `featureVisible` reads). `?feature=` and `?route=` lift the same way. Owner decision 2026-08-25: a curator approved a climb, opened the link in their own Best of mode, and found the halo over an empty map, because the climb was Verified but not a pick. |
 
 **Both id params may carry a readable tail:** `?item=482/cote-de-wanne`, `?ref=node/462149319/roche-aux-faucons`. The id is everything before the first `/` after it (`idFromShare` / `refFromShare` in `share-links.js`); the slug is discarded on read. A renamed place, a hand-trimmed link and every bare-id link already sent out all open the same point. Slashes stay unencoded in the query value, because a `%2F` in the middle defeats the reason the slug is there.
 | `?pending=<id>` | curator deep link from the /moderate queue: activates the ⚑ layer, opens the submission drawer |
-| `?route=<id>` | opens that K route **selected** (curator Routes desk link): currently force-switches to Everything so an un-voted route can render, then highlights + shows the curator corrections overlay. The force-switch is slated to become a reveal pin (§12). |
+| `?route=<id>` | opens that R route **selected** (curator Routes desk link): lifts the view mode like `?item=` (above), then highlights + shows the curator corrections overlay. The reveal pin (§12) stays as the fallback when the target is still not drawn. |
 
 ### 8.1 "Add a climb here": the map is a starting point, not only a reader
 

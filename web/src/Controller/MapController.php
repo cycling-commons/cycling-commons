@@ -268,6 +268,7 @@ final class MapController extends AbstractController
             'toastLoginConfirm' => 'd_toast_login_confirm', 'toastThanks' => 'd_toast_thanks',
             'toastErr' => 'd_toast_err', 'toastLoginRate' => 'd_toast_login_rate', 'toastCurator' => 'd_toast_curator',
             'toastVerified' => 'd_toast_verified', 'toastRecorded' => 'd_toast_recorded',
+            'toastModeLift' => 'd_toast_mode_lift',
             'toastLimit' => 'd_toast_limit', 'toastOpenRoute' => 'd_toast_open_route',
             'pickBikeRode' => 'd_pick_bike_rode', 'pickBikeVote' => 'd_pick_bike_vote',
             'undo' => 'd_undo', 'clear' => 'd_clear', 'done' => 'd_done', 'pointSet' => 'd_point_set',

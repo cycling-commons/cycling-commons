@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
 /* Town card and deep-link / search openers.
    @see docs/specs/map-and-search.md §6.5, §8 */
+import { modeShows } from './filters.js';
 import { D, tpl } from './i18n.js';
 import { escPend, safeHref, txtOn, haversine, featurePoint } from './util.js';
 import { uKm, uM } from './units.js';
@@ -193,7 +194,7 @@ export function openRouteById(id){
   }
   openDrawer(layer,f);
   const p=featurePoint(f); if(p) flyToPin([p[1],p[0]]);
-  if(!(mode()==='all'||f.cur) && p) revealPinAt(layer, p);  // docs/specs/map-and-search.md §12 — no force-switch to Everything
+  if(!modeShows(mode(), layer, f) && p) revealPinAt(layer, p);  // docs/specs/map-and-search.md §12: reveal, never force-switch
   showRouteCorrections(id);
   return true;
 }

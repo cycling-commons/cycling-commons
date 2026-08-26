@@ -2481,6 +2481,7 @@ map:
   d_toast_login_rate: 'Inicia sesión para valorar rutas.'
   d_toast_curator: 'Gracias — un curador lo revisará.'
   d_toast_verified: 'Verificada — ¡gracias por confirmar esta ruta!'
+  d_toast_mode_lift: 'Mostrado en {to} · {from} oculta este lugar'
   d_toast_recorded: 'Registrado — ¡gracias!'
   d_toast_limit: 'Has llegado al límite diario — inténtalo mañana.'
   d_toast_open_route: 'Abre primero la ruta.'

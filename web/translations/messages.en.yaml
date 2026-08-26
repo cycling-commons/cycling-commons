@@ -2472,6 +2472,7 @@ map:
   d_toast_login_rate: 'Please log in to rate routes.'
   d_toast_curator: 'Thanks — a curator will review it.'
   d_toast_verified: 'Verified — thanks for confirming this route!'
+  d_toast_mode_lift: 'Shown in {to} · {from} hides this place'
   d_toast_recorded: 'Recorded — thanks!'
   d_toast_limit: 'Daily limit reached — try again tomorrow.'
   d_toast_open_route: 'Open the route first.'
