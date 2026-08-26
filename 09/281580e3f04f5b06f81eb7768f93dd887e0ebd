@@ -1,0 +1,284 @@
+web/templates/moderate/_card_styles.html.twig
+  s_71e62148fd80e8::t_8b58fd8b633535 13-15,34-37
+  s_71e62148fd80e8::t_837084dfaf3dc7 19-20,42,121
+  s_d6eab02dcad899::t_c05540ecabf969 144-147
+  s_d6eab02dcad899::t_6d79dbf71f8262 18
+  s_d6eab02dcad899::t_f332724ae858d6 40-41
+web/templates/contribute/improve.html.twig
+  s_d6eab02dcad899::t_d53ba679343855 436-437
+  s_d6eab02dcad899::t_6d649b40f75f07 247-248,703-708
+web/tests/Contribution/OutboundLinksEditorTest.php
+  s_d6eab02dcad899::t_f14acf983908f3 191
+docs/specs/moderation-and-contribution.md
+  s_d8f44836ef68cd::t_c36a15ef027f2a 28-30
+  s_71e62148fd80e8::t_917b4f63ca97d8 1125-1129
+  s_d6eab02dcad899::t_edd35d7b2385da 20,22,378,380,690-701,941,944-945,1013,1565-1566,1614,1689,1747,2140,2189-2190
+web/templates/contribute/index.html.twig
+  s_d6eab02dcad899::t_0c2a87e862528a 96
+  s_d6eab02dcad899::t_d53ba679343855 95
+web/assets/map/drawer.js
+  s_d6eab02dcad899::t_3eabb1bc2ecd0a 10,583
+  s_d6eab02dcad899::t_8c4f4e858affcf 400-403,412
+web/assets/map/icons.js
+  s_d6eab02dcad899::t_e3d9b2d767a09b 62,102
+wiki/developers/gis/tiles.md
+  s_d6eab02dcad899::t_156ee6fc46337b 555-557,561-575,583-584
+tools/wikimedia/country_places.py
+  s_d6eab02dcad899::t_8108cb6085590e 16,18
+docs/specs/coverage-provider.md
+  s_d6eab02dcad899::t_8100cbdbb08334 491-492,522,833
+web/src/Controller/SitemapController.php
+  s_d6eab02dcad899::t_d53ba679343855 60
+pipeline/tests/test_tiles.py
+  s_d6eab02dcad899::t_8108cb6085590e 188,194,210,223,233
+web/tests/Contribution/ContributeHubTest.php
+  s_d6eab02dcad899::t_a5bdaab74f21fd 68
+  s_d6eab02dcad899::t_d53ba679343855 40-41
+wiki/developers/gis/osm-to-database.md
+  s_d6eab02dcad899::t_156ee6fc46337b 370
+web/assets/contribute/improve.js
+  s_d6eab02dcad899::t_d53ba679343855 1017-1020
+  s_d6eab02dcad899::t_6d649b40f75f07 1050-1051
+web/templates/moderate/_card_script.html.twig
+  s_71e62148fd80e8::t_d527f46b8c2d31 41-42,138,180
+  s_71e62148fd80e8::t_92b02cd93f3f26 157-160,178,184
+docs/specs/catalog-data-model.md
+  s_d6eab02dcad899::t_06bc3f7f6a1740 20,243,590,906,915,1031,1095-1096,1098
+web/assets/map/catalog-load.js
+  s_d6eab02dcad899::t_a51bdfd3110138 35-36,38-44,46-47
+web/translations/messages.nl.yaml
+  s_d6eab02dcad899::t_a51bdfd3110138 394,1691
+  s_d6eab02dcad899::t_d53ba679343855 2143-2146,2200-2201
+  s_d8f44836ef68cd::t_3f86e3d1af5d82 453,455,473,483,523-524,530,534,538
+  s_d6eab02dcad899::t_6d649b40f75f07 2198-2199
+  s_d6eab02dcad899::t_7e13e2c9affb3a 461,465,507,578,582,586,1428,2188,2241,2260,2270
+  s_16e7d98f40a315::t_beb7d848c13360 3541
+web/assets/map/item-index.js
+  s_d6eab02dcad899::t_3eabb1bc2ecd0a 8,45,57,70
+docs/specs/map-and-search.md
+  s_d6eab02dcad899::t_55f9068fb21276 19,53,298,374,684,1158,1163,1277
+  s_d6eab02dcad899::t_42611347c81f84 1565-1566
+  s_71e62148fd80e8::t_cb5857e41a83fc 1887-1891
+pipeline/coverage/tiles.py
+  s_d6eab02dcad899::t_8108cb6085590e 40,45
+web/assets/map/search-ui.js
+  s_d6eab02dcad899::t_3eabb1bc2ecd0a 11,44,98
+web/templates/moderate/takedowns.html.twig
+  s_71e62148fd80e8::t_5855f55fbe0582 124-125,134-168,171
+web/src/Catalog/CoverageStatsProvider.php
+  s_d6eab02dcad899::t_de10c590e44d6a 118
+web/tests/Auth/ProfileSettingsTest.php
+  s_71e62148fd80e8::t_eef4e694ddd398 122-123
+web/templates/profile/show.html.twig
+  s_71e62148fd80e8::t_92b02cd93f3f26 269
+  s_71e62148fd80e8::t_a61d6c3f041be0 234-235,256,258,260-268,270-273,276,284,286-287,381,383-384,393
+  s_71e62148fd80e8::t_eef4e694ddd398 285,382
+web/tests/Smoke/ContentPagesTest.php
+  s_d8f44836ef68cd::t_33b6b5b7efb829 164-169
+  s_16e7d98f40a315::t_15abdf09d3d56d 199-200
+  s_d8f44836ef68cd::t_55341260fb00d1 124-138,145-151,153-163
+  s_d8f44836ef68cd::t_c2ccf5baa8489a 139-144
+  s_d8f44836ef68cd::t_58fcc97584db03 152
+  s_d6eab02dcad899::t_d53ba679343855 99
+  s_d8f44836ef68cd::t_533cdb40520e9c 170-198
+docs/specs/security-architecture.md
+  s_d8f44836ef68cd::t_31834d8b818aa5 35-36
+wiki/developers/gis/on-screen.md
+  s_d6eab02dcad899::t_156ee6fc46337b 104,363,397-398,401-402
+  s_d6eab02dcad899::t_76c8590bfa025e 382,384,386-388
+web/assets/map/places.js
+  s_d6eab02dcad899::t_3eabb1bc2ecd0a 18,77
+Makefile
+  s_d6eab02dcad899::t_5e11c1d9f6d789 266-275
+web/templates/account/_shell_chrome.html.twig
+  s_d6eab02dcad899::t_6cf8b0d28404cd 32-35
+web/templates/moderate/_queue_item.html.twig
+  s_d6eab02dcad899::t_f78ac4499c1a6d 70
+  s_d6eab02dcad899::t_6c5adf747b672d 108-111,113-115,123,126-127,131-132
+  s_d6eab02dcad899::t_c05540ecabf969 59
+  s_d6eab02dcad899::t_945a2da69c7bab 60-69,71-97
+wiki/developers/gis-beyond/routing.md
+  s_d6eab02dcad899::t_42611347c81f84 147-148
+web/templates/moderate_regions/about.html.twig
+  s_d6eab02dcad899::t_6d79dbf71f8262 21
+  s_d6eab02dcad899::t_eb5c67a3552052 27
+docs/specs/README.md
+  s_d8f44836ef68cd::t_b908ccac33f322 49-52
+  s_d8f44836ef68cd::t_cc20137ba819bb 53-54
+web/translations/messages.en.yaml
+  s_d6eab02dcad899::t_28093570eb80e2 3562
+  s_d6eab02dcad899::t_a51bdfd3110138 394,2026
+  s_d8f44836ef68cd::t_3f86e3d1af5d82 453,455,473,483,523-524,530,534,538
+  s_d6eab02dcad899::t_d53ba679343855 1666-1669,1727-1728
+  s_d6eab02dcad899::t_6d649b40f75f07 1725-1726
+  s_d6eab02dcad899::t_7e13e2c9affb3a 461,465,507,578,582,586
+web/templates/messages/index.html.twig
+  s_71e62148fd80e8::t_96c87f50832ae3 92,95-133,135,138,149,184-185,187,193,195,205,220
+  s_71e62148fd80e8::t_a7c8d6c34f299a 178-179
+docs/specs/translations.md
+  s_d8f44836ef68cd::t_e80c37c237de9c 312-313
+  s_d8f44836ef68cd::t_efc92a5cb48b00 137-162
+  s_d8f44836ef68cd::t_fb32176004abba 251
+  s_d8f44836ef68cd::t_6b73519ad40c78 178-182
+  s_d8f44836ef68cd::t_d4bc516ff560f5 323-337
+  s_d8f44836ef68cd::t_2091410b83294b 59-61
+  s_d8f44836ef68cd::t_5aa3514ef77774 89-91,93-109,115,118,125,129,136
+  s_d8f44836ef68cd::t_4299aa57cbf274 1-58,62-88,92,110-114,116-117,119-124,126-128,130-135,163-177,183-187,190-200,206,260-311,314-322
+  s_d8f44836ef68cd::t_75f12cf9680508 201-205,207,227-250,252-259
+  s_d8f44836ef68cd::t_18c8663388be3c 188-189
+  s_d8f44836ef68cd::t_c1d1653ed62cd5 208-226
+web/templates/moderate_data/index.html.twig
+  s_71e62148fd80e8::t_c9db2c55a51886 109-111,117-118,124,132
+web/assets/map/pending-shape.js
+  s_d6eab02dcad899::t_8c4f4e858affcf 8,50-55,67-74
+docs/specs/osm-data-architecture.md
+  s_d8f44836ef68cd::t_7a27aa68196b1e 82-85
+web/tests/Controller/SitemapControllerTest.php
+  s_d6eab02dcad899::t_d53ba679343855 53
+wiki/data-catalog.md
+  s_d6eab02dcad899::t_a12b00e3267cf9 48,95,102,107-122,127,133,141,175,177,212,216-220,227,232,237,242-255,258,262,267,315
+docs/specs/data-source-register.md
+  s_d6eab02dcad899::t_24da58402b43e4 114,142-170,176,245-246,249,252,254-255
+web/tests/Catalog/CatalogProviderTest.php
+  s_d6eab02dcad899::t_60876fa28db454 654
+  s_d6eab02dcad899::t_09f0a7bf66a667 470
+  s_d6eab02dcad899::t_6e03553936b5ae 116
+web/templates/pages/join.html.twig
+  s_d6eab02dcad899::t_d53ba679343855 38
+web/templates/settings/index.html.twig
+  s_71e62148fd80e8::t_eef4e694ddd398 148
+  s_71e62148fd80e8::t_1b6c2371353ef5 146-147,149-150
+  s_71e62148fd80e8::t_66b60a0474029a 173,177,181,185,189
+tools/wikimedia/item_links.py
+  s_d6eab02dcad899::t_8108cb6085590e 53
+web/tests/Contribution/MovedPinTest.php
+  s_d6eab02dcad899::t_f14acf983908f3 71,109
+web/src/Controller/Api/V1/PublicApiController.php
+  s_71e62148fd80e8::t_8ffd70d0321ebd 65
+pipeline/coverage/run.py
+  s_d6eab02dcad899::t_187745edea2b8b 565
+web/translations/messages.de.yaml
+  s_d6eab02dcad899::t_a51bdfd3110138 394,1694
+  s_d6eab02dcad899::t_7e13e2c9affb3a 461,465,507,578,582,586,1428,2191,2244,2263,2273
+  s_d8f44836ef68cd::t_3f86e3d1af5d82 453,455,473,483,523-524,530,534,538
+  s_d6eab02dcad899::t_6d649b40f75f07 2201-2202
+  s_d6eab02dcad899::t_28093570eb80e2 3544
+  s_d6eab02dcad899::t_d53ba679343855 2146-2149,2203-2204
+web/tests/Moderation/CuratedDefaultGateTest.php
+  s_71e62148fd80e8::t_8c0543435e7662 338,348
+web/src/Form/ProposeRouteType.php
+  s_d6eab02dcad899::t_de10c590e44d6a 25
+web/assets/contribute/climb-editor.js
+  s_d6eab02dcad899::t_31d4518a2d8d4e 20,118,146,266,271-272,291,416,431
+  s_d6eab02dcad899::t_35ab0ba3c0314e 273
+web/src/Controller/MapController.php
+  s_d6eab02dcad899::t_8c4f4e858affcf 123-131
+web/tests/Contribution/ProposeRouteFlowTest.php
+  s_d6eab02dcad899::t_5f4bce2910ceeb 17
+  s_71e62148fd80e8::t_8c0543435e7662 260,262
+web/templates/pages/pages.html.twig
+  s_d6eab02dcad899::t_d53ba679343855 28
+web/tests/Messaging/MessagesPageTest.php
+  s_71e62148fd80e8::t_8c0543435e7662 177
+docs/specs/route-domain.md
+  s_d6eab02dcad899::t_5cce194e4a4709 26,446
+web/tests/Contribution/CatalogContributionServiceTest.php
+  s_d6eab02dcad899::t_7a655bbfabee07 60-62,87-88,119-120,149-150,157,313-314,438-439
+web/templates/moderate_regions/index.html.twig
+  s_71e62148fd80e8::t_1b6c2371353ef5 83-84,110,135
+web/assets/styles/map.css
+  s_d6eab02dcad899::t_3eabb1bc2ecd0a 432
+web/tests/Messaging/NeedsInfoReplyTest.php
+  s_71e62148fd80e8::t_26b0d3b9b086a8 496,522,524
+web/tests/Contribution/ImproveBindingTest.php
+  s_d6eab02dcad899::t_f14acf983908f3 602,627,659
+  s_d6eab02dcad899::t_6e03553936b5ae 417
+  s_d6eab02dcad899::t_60876fa28db454 658
+  s_d6eab02dcad899::t_5f4bce2910ceeb 599,630-631
+web/assets/map/map.js
+  s_d6eab02dcad899::t_3eabb1bc2ecd0a 5,216,240
+  s_d6eab02dcad899::t_a51bdfd3110138 180
+docs/specs/account-and-auth.md
+  s_d8f44836ef68cd::t_c64e0ab13af22b 436-438
+  s_71e62148fd80e8::t_576f26fd406f82 684-688
+  s_d6eab02dcad899::t_24da58402b43e4 14
+web/translations/messages.fr.yaml
+  s_d6eab02dcad899::t_28093570eb80e2 3541
+  s_d6eab02dcad899::t_d53ba679343855 2143-2146,2200-2201
+  s_d6eab02dcad899::t_6d649b40f75f07 2198-2199
+  s_d8f44836ef68cd::t_3f86e3d1af5d82 453,455,473,483,523-524,530,534,538
+  s_d6eab02dcad899::t_7e13e2c9affb3a 461,465,507,578,582,586
+  s_d6eab02dcad899::t_a51bdfd3110138 394,1691
+web/tests/js/skip-link-target.test.cjs
+  s_d6eab02dcad899::t_d53ba679343855 66
+.gitignore
+  s_c05586667a10a2::t_660a2ef25ee45b 86
+web/tests/Catalog/ItemSourceRankTest.php
+  s_d6eab02dcad899::t_5f4bce2910ceeb 27
+web/assets/map/ride-check.js
+  s_d6eab02dcad899::t_3eabb1bc2ecd0a 9,162,176
+web/templates/moderate/history.html.twig
+  s_71e62148fd80e8::t_c6304d378afe61 24-26
+web/translations/messages.es.yaml
+  s_d6eab02dcad899::t_a51bdfd3110138 395,2033
+  s_d6eab02dcad899::t_d53ba679343855 1674-1677,1736-1737
+  s_d6eab02dcad899::t_6d649b40f75f07 1734-1735
+  s_d6eab02dcad899::t_28093570eb80e2 3572
+  s_d8f44836ef68cd::t_3f86e3d1af5d82 454,456,474,484,524-525,531,535,539
+web/assets/map/panels.js
+  s_d6eab02dcad899::t_e3d9b2d767a09b 50-51
+  s_d6eab02dcad899::t_d53ba679343855 513-514,517-518
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "09281580e3f04f5b06f81eb7768f93dd887e0ebd",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_16e7d98f40a315": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a9fcd11a-43a8-477a-bd05-612aaa422d99",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_71e62148fd80e8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e135c2f1-9eca-49d8-bc4f-2ead6e883463",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_c05586667a10a2": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "7b9fd57a-1b4e-4f86-a9c1-9724be316cdf",
+        "model": "grok-4.6"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_d6eab02dcad899": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b5577347-6bee-425e-a6b0-d01f31e69be7",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_d8f44836ef68cd": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "6a138544-543c-46a3-b50a-765172aed096",
+        "model": "grok-4.6"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
