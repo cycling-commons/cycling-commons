@@ -56,7 +56,12 @@
   <span class="dtabs-modlabel dtabs-personallabel" aria-hidden="true">{{ 'account.menu_personal'|trans }}</span>
   <a href="{{ path('profile') }}" data-pane="contrib" class="{{ active == 'contrib' ? 'on' : '' }}">{{ 'account.tab_contributions'|trans }}</a>
   <a href="{{ path('profile') }}?tab=votes" data-pane="votes" class="{{ active == 'votes' ? 'on' : '' }}">{{ 'account.tab_votes'|trans }}</a>
+  {# Saved regions is hidden until it has a backend (owner, 2026-08-26). The
+     pane in profile/show.html.twig is commented out with it, and account.js
+     already guards every tab on its pane existing, so ?tab=saved is inert
+     rather than broken. See "Saved regions" in docs/TODO.md.
   <a href="{{ path('profile') }}?tab=saved" data-pane="saved" class="{{ active == 'saved' ? 'on' : '' }}">{{ 'account.tab_saved'|trans }}</a>
+  #}
   {# Scout lives in the personal area because reviewing a ride is a private
      act: the file is read in this browser and nothing about it exists anywhere
      else until the rider approves a tag. #}

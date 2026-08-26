@@ -375,8 +375,11 @@
     <div class="note">{{ 'account.votes_note'|trans|rich }}</div>
   </section>
 
-  {# ── Saved regions — no persistence behind it yet; say so honestly and open
-     the real door instead of rendering sample cards. #}
+  {# ── Saved regions: hidden until there is persistence behind it (owner,
+     2026-08-26). A tab that only ever says "nothing here yet" teaches riders
+     the section is broken. Its tab in account/_shell_chrome.html.twig is
+     commented out with it, and its account.saved_* keys stay in the catalogs
+     so the pane can come back unchanged. See "Saved regions" in docs/TODO.md.
   <section class="dpane" id="p-saved">
     <div class="mh">
       <div class="kicker">{{ 'account.menu_personal'|trans }} · {{ cc_user.displayName }}</div>
@@ -387,6 +390,7 @@
       <a class="door" href="{{ path('regions') }}">{{ 'account.saved_browse'|trans }}</a>
     </div>
   </section>
+  #}
 
 </div>
 {% include 'partials/_vclip.html.twig' %}
