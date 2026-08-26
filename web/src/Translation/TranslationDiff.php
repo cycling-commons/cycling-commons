@@ -38,25 +38,35 @@ final class TranslationDiff
             }
         }
 
+        // Walk the table back to the origin, then drain whichever side still has
+        // words left. Splitting the tails out of the main loop keeps every index
+        // inside a bound the static analysers can prove, which a single
+        // "while one of them is left" loop does not.
         $rev = [];
         $i = $n;
         $j = $m;
-        while ($i > 0 || $j > 0) {
-            if ($i > 0 && $j > 0 && $a[$i - 1] === $b[$j - 1]) {
+        while ($i > 0 && $j > 0) {
+            if ($a[$i - 1] === $b[$j - 1]) {
                 $rev[] = ['type' => 'eq', 'text' => $a[$i - 1]];
                 --$i;
                 --$j;
                 continue;
             }
-            if ($j > 0 && (0 === $i || $dp[$i][$j - 1] >= $dp[$i - 1][$j])) {
+            if ($dp[$i][$j - 1] >= $dp[$i - 1][$j]) {
                 $rev[] = ['type' => 'ins', 'text' => $b[$j - 1]];
                 --$j;
                 continue;
             }
-            if ($i > 0) {
-                $rev[] = ['type' => 'del', 'text' => $a[$i - 1]];
-                --$i;
-            }
+            $rev[] = ['type' => 'del', 'text' => $a[$i - 1]];
+            --$i;
+        }
+        while ($j > 0) {
+            $rev[] = ['type' => 'ins', 'text' => $b[$j - 1]];
+            --$j;
+        }
+        while ($i > 0) {
+            $rev[] = ['type' => 'del', 'text' => $a[$i - 1]];
+            --$i;
         }
 
         return array_reverse($rev);
@@ -69,6 +79,6 @@ final class TranslationDiff
     {
         $parts = preg_split('/\s+/u', trim($s), -1, PREG_SPLIT_NO_EMPTY);
 
-        return false === $parts ? [] : array_values($parts);
+        return false === $parts ? [] : $parts;
     }
 }

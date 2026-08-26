@@ -290,7 +290,9 @@ final class ModerateTranslationsController extends AbstractController
                 ];
             }
             $prevEnglish = $en;
-            $published = $pastProposal->getPublishedValue() ?? $pastProposal->getProposedValue();
+            // getPublishedValue() already falls back to the proposal, so there
+            // is nothing here to coalesce against.
+            $published = $pastProposal->getPublishedValue();
             $proposed = $pastProposal->getProposedValue();
             $past[] = $this->changeRow(
                 $pastProposal,
