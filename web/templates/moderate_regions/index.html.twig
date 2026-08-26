@@ -5,7 +5,10 @@
 <style>
   /* Head, filter bar and container are the shell's (account/_shell_styles);
      the region card is the shared record card with its own insides. */
-  .rg-list{margin:.9rem 0 3rem;display:flex;flex-direction:column;gap:.7rem}
+  /* .25rem between country rows: each summary already carries 44px of height
+     and its own padding, so the gap only has to keep two hover targets apart,
+     not draw a break (owner, 2026-08-26). The continent rule does the sections. */
+  .rg-list{margin:.9rem 0 3rem;display:flex;flex-direction:column;gap:.25rem}
   .rg-item{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;margin-bottom:0}
   .rg-body{flex:1 1 240px;min-width:0}
   .rg-name{font-family:var(--serif);font-weight:600;font-size:1.05rem;display:flex;align-items:center;gap:.5rem}
@@ -14,8 +17,13 @@
      apart at a glance while a curator scans, without either competing with the
      region names that are the actual content: the continent is a quiet
      small-caps rule, the country is the one that reads as a label. */
+  /* 1rem above it, not 1.9rem: .rg-list is a flex column with its own gap, and
+     a flex gap does not collapse into a margin the way block margins do, so the
+     two stacked into a band of empty page between one continent's last country
+     and the next continent's rule (owner, 2026-08-26). The break is still four
+     times the row-to-row gap, which is what keeps the hierarchy readable. */
   .rg-continent{font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;
-    color:#8a8d7d;margin:1.9rem 0 .1rem;padding-bottom:.35rem;border-bottom:1px solid rgba(20,22,14,.14)}
+    color:#8a8d7d;margin:1rem 0 .1rem;padding-bottom:.35rem;border-bottom:1px solid rgba(20,22,14,.14)}
   .rg-list > .rg-continent:first-child{margin-top:0}
   /* The country is the click target, so it has to look like one: a full-width
      row with a hover state and a marker that turns. Sized to be comfortably
@@ -36,6 +44,9 @@
   /* Pushed right: it is the answer to "anything to do here", not a title. */
   .rg-tally{margin-left:auto;font-family:var(--mono);font-size:.62rem;letter-spacing:.04em;color:#595c4d}
   .rg-country[open] > summary{margin-bottom:.5rem}
+  /* An open country ends in bordered cards, which need more air under them than
+     the tight row-to-row gap gives. */
+  .rg-country[open]{margin-bottom:.6rem}
   /* The cards indent under their country so the grouping survives scrolling
      past the heading. */
   .rg-country > .rg-item{margin-left:1.15rem}
@@ -55,10 +66,6 @@
   .rg-block.is-met{background:rgba(28,58,42,.1);border-color:rgba(28,58,42,.35);color:var(--spruce)}
   .rg-block b{font-size:.72rem;font-weight:700}
   .rg-need{font-family:var(--mono);font-size:.6rem;color:var(--clay);margin-top:.45rem;line-height:1.6}
-  .rg-state{font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;
-    padding:.22rem .55rem;border-radius:30px}
-  .rg-state--on{background:var(--trail);color:var(--ink)}
-  .rg-state--off{background:rgba(20,22,14,.08);color:#595c4d}
   .rg-act{display:flex;align-items:center;gap:.6rem}
   .rg-locked{font-family:var(--mono);font-size:.6rem;color:#8a8d7d;max-width:22ch;line-height:1.5}
   /* Three rungs, one row. The mode a region is IN reads as a filled chip, the
@@ -165,9 +172,6 @@
             </div>
           {% endif %}
         </div>
-        <span class="rg-state {{ r.defaultMode == 'everything' ? 'rg-state--off' : 'rg-state--on' }}">
-          {{ ('moderate_regions.opens_' ~ r.defaultMode)|trans }}
-        </span>
         {# Three rungs, three buttons, and each says what it costs. A locked one
            stays visible with its own reason under it: a curator working a young
            region should be able to see what it is short of, not just that they

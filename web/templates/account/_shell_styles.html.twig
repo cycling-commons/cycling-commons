@@ -59,10 +59,12 @@
      the things that made the two areas read as two products. */
   .dbody{max-width:1120px;width:100%;margin:0 auto;padding:1.2rem clamp(1.25rem,4vw,2.5rem) 2.6rem}
   .mh{padding:.4rem 0 1rem}
+  /* A head with no intro paragraph does not need the intro's breathing room
+     underneath it (takedowns, routes, translations). */
+  .mh:not(:has(.lead)){padding-bottom:.5rem}
   .mh .kicker{font-family:var(--mono);font-size:.64rem;letter-spacing:.16em;text-transform:uppercase;color:var(--clay);margin-bottom:.6rem}
   .mh h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4vw,2.4rem);line-height:1.08;margin:0 0 .4rem;color:var(--ink)}
-  .mh .pend-count{font-family:var(--mono);font-size:.68rem;color:var(--clay);margin-top:.5rem;display:inline-block}
-  .mh .lead{color:#4a4d40;max-width:56ch;font-size:.94rem;line-height:1.55;margin:0}
+  .mh .lead{color:#4a4d40;max-width:88ch;font-size:.94rem;line-height:1.55;margin:0}
   .mh .lead a{color:var(--clay);text-decoration:underline;text-underline-offset:2px}
   /* A section inside a page: a coloured label on a thin rule, with an optional
      count. The same band whether it says "Route proposals" to a rider or
@@ -73,13 +75,20 @@
   .sec-band--quiet{color:#8a8d7d;border-color:rgba(20,22,14,.14);font-weight:600}
   .sec-band .sec-count{display:inline-flex;align-items:center;justify-content:center;min-width:1.2rem;height:1.2rem;padding:0 .35rem;border-radius:999px;background:rgba(20,22,14,.08);color:#595c4d;font-size:.62rem}
   .sec-empty{color:#595c4d;font-size:.9rem;padding:.4rem 0 1.5rem}
-  .sec-lead{font-size:.86rem;color:#4a4d40;margin:0 0 1rem;line-height:1.5;max-width:70ch}
+  .sec-lead{font-size:.86rem;color:#4a4d40;margin:0 0 1rem;line-height:1.5;max-width:88ch}
   .sec-lead a{color:var(--clay);text-decoration:underline;text-underline-offset:2px}
 
   /* ── The filter bar ──────────────────────────────────────────────────────
      Selects + search with an Apply, and/or a row of chips. Every list page
      draws its filters from these two shapes and nothing else. */
   .mod-bar{display:flex;gap:1rem;flex-wrap:wrap;align-items:flex-end;margin:0 0 1.2rem}
+  /* A bar carrying nothing but the density switch has no filters to sit
+     opposite it, so the switch stays on the left and the bar takes only the
+     room it needs. Right-aligned and full height, it read as an empty strip
+     under the title on the desks that filter nothing (takedowns,
+     translations). */
+  .mod-bar:has(> .q-density:only-child){margin:-.6rem 0 .5rem}
+  .mod-bar > .q-density:only-child{margin-left:0}
   .mod-filters{display:flex;gap:1rem;flex-wrap:wrap;align-items:end;margin:0}
   .mod-filters label{font-family:var(--mono);font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;color:#595c4d;display:flex;flex-direction:column;gap:.3rem}
   .mod-filters select{font-family:var(--sans);font-size:.9rem;padding:.5rem;min-height:34px;border:1px solid rgba(20,22,14,.25);border-radius:6px;background:var(--paper);min-width:150px}
@@ -203,7 +212,7 @@
   /* Nothing here: left-aligned, in the same voice as a page lead, with a door
      when there is one to open (owner 2026-08-25: the centred block and the ▲
      ornament are gone). */
-  .empty-state{text-align:left;padding:.6rem 0 1.5rem;color:#4a4d40;max-width:60ch}
+  .empty-state{text-align:left;padding:.6rem 0 1.5rem;color:#4a4d40;max-width:75ch}
   .empty-state h3{font-family:var(--serif);font-weight:600;font-size:1.15rem;margin:0 0 .3rem;color:var(--ink)}
   .empty-state p{font-size:.94rem;line-height:1.55;margin:0 0 .9rem}
   .empty-state p:last-child{margin-bottom:0}
