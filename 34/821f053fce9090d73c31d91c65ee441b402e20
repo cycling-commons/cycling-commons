@@ -1,0 +1,20 @@
+.github/workflows/ci-pipeline.yml
+  s_16e7d98f40a315::t_ec4ccc0906430e 9-26
+  s_16e7d98f40a315::t_5d6feacfda0745 64-130
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "34821f053fce9090d73c31d91c65ee441b402e20",
+  "prompts": {},
+  "sessions": {
+    "s_16e7d98f40a315": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a9fcd11a-43a8-477a-bd05-612aaa422d99",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
