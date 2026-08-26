@@ -367,7 +367,7 @@ part of a small file a map can actually fetch.
     ```text
      letter |       name       |                        stored_keys
     --------+------------------+------------------------------------------------------------
-     J      | Château de Vêves | ["historic", "image", "website", "wheelchair", "wikidata"]
+     Q      | Château de Vêves | ["historic", "image", "website", "wheelchair", "wikidata"]
     (1 row)
     ```
 

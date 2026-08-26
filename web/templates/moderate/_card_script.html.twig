@@ -38,6 +38,8 @@ document.addEventListener('click', function (e) {
   }
   if (!panel) return;
   panel.hidden = true;
+  var h = panel.closest('.q-panels');
+  if (h && !h.querySelector('.q-act-panel:not([hidden])')) h.hidden = true;
   var opener = panel.id ? document.querySelector('[aria-controls="' + panel.id + '"]') : null;
   if (opener) {
     opener.setAttribute('aria-expanded', 'false');
@@ -133,6 +135,7 @@ document.addEventListener('click', function (e) {
 
     var host = document.createElement('div');
     host.className = 'q-panels';
+    host.hidden = true;   // shown only while a panel is open, so it costs the row nothing
     acts.parentNode.insertBefore(host, acts.nextSibling);
 
     var pairs = [];
@@ -151,6 +154,10 @@ document.addEventListener('click', function (e) {
       if (summary.title) btn.title = summary.title;
       var label = summary.getAttribute('aria-label');
       if (label) btn.setAttribute('aria-label', label);
+      /* "Show details" reads "Hide details" while its panel is open: the
+         trigger carries the open wording in data-label-open (owner 2026-08-25). */
+      btn.dataset.labelClosed = summary.textContent;
+      if (summary.dataset.labelOpen) btn.dataset.labelOpen = summary.dataset.labelOpen;
       btn.setAttribute('aria-expanded', 'false');
       var id = 'qp-' + key + '-' + i;
       panel.id = id;
@@ -168,10 +175,13 @@ document.addEventListener('click', function (e) {
         pairs.forEach(function (o) {
           o.panel.hidden = true;
           o.btn.setAttribute('aria-expanded', 'false');
+          if (o.btn.dataset.labelOpen) o.btn.textContent = o.btn.dataset.labelClosed;
         });
+        host.hidden = !opening;
         if (opening) {
           p.panel.hidden = false;
           p.btn.setAttribute('aria-expanded', 'true');
+          if (p.btn.dataset.labelOpen) p.btn.textContent = p.btn.dataset.labelOpen;
           var first = p.panel.querySelector('textarea, input:not([type=hidden]), select');
           if (first) first.focus();
         }

@@ -87,7 +87,6 @@
             <div class="fd-facts">{{ 'moderate_data.has_edits'|trans }}</div>
           {% endif %}
         {% else %}
-          <div class="fd-q">{{ 'moderate_data.q_osm_link'|trans }}</div>
           <div class="fd-pair">
             <div class="fd-side">
               <h4>{{ 'moderate_data.our_row'|trans }}</h4>
@@ -107,20 +106,22 @@
 
         {# The buttons answer the question in the heading. "Accept" described
            what the software would do next, which is not an answer to "are
-           these the same place?" and left the curator translating. #}
+           these the same place?" and left the curator translating. Same
+           orange system as every other desk: Yes is the primary, No the
+           outline (owner 2026-08-25, was a green of its own). #}
         <form method="post" action="{{ path('moderate_data_decide') }}" class="fd-actions">
           <input type="hidden" name="_token" value="{{ csrf_token('catalog-finding-decide') }}">
           <input type="hidden" name="finding" value="{{ f.id }}">
           <input type="hidden" name="kind" value="{{ kind is not null ? kind.value : '' }}">
           <input type="text" name="note" maxlength="500" placeholder="{{ 'moderate_data.note_placeholder'|trans }}" aria-label="{{ 'moderate_data.note_placeholder'|trans }}">
-          <button type="submit" name="verdict" value="yes" class="go">{{ 'moderate_data.yes'|trans }}</button>
-          <button type="submit" name="verdict" value="no">{{ 'moderate_data.no'|trans }}</button>
+          <button type="submit" name="verdict" value="yes" class="btn-act">{{ 'moderate_data.yes'|trans }}</button>
+          <button type="submit" name="verdict" value="no" class="btn-act btn-secondary">{{ 'moderate_data.no'|trans }}</button>
         </form>
         {% if f.kind == 'duplicate' %}
           {# Yes/No above answers with the ranked keeper. The map is where the
              curator can see both pins in place and choose a different one, or
              keep both. #}
-          <p class="fd-map"><a href="{{ path('map') }}?finding={{ f.id }}">{{ 'moderate_data.on_map'|trans }}</a>
+          <p class="q-map"><a href="{{ path('map') }}?finding={{ f.id }}">{{ 'moderate_data.on_map'|trans }}</a>
             <span>{{ 'moderate_data.resolve_hint'|trans }}</span></p>
         {% endif %}
       </div>
@@ -128,4 +129,5 @@
   </div>
   {% endif %}
 </div>
+{% include 'moderate/_card_script.html.twig' %}
 {% endblock %}

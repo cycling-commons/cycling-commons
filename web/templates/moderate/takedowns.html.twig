@@ -121,8 +121,8 @@
         </form>
       </article>
     {% endfor %}
-    {% include 'partials/_pager.html.twig' with {pager: pager, route: 'moderate_takedowns', params: {}} %}
-  </section>
+  </div>
+  {% include 'partials/_pager.html.twig' with {pager: pager, route: 'moderate_takedowns', params: {}} %}
   {% endif %}
 
   {# ── Answered requests ──────────────────────────────────────────────────
@@ -131,39 +131,42 @@
      is on. Without it a decided request left no trace anywhere a curator
      looks (owner-reported 2026-08-14). #}
   {% if decided is not empty %}
-    <section class="td-history">
-      <h2 class="td-history-h">{{ 'moderate.takedown.history_heading'|trans }}</h2>
-      <p class="td-history-lead">{{ 'moderate.takedown.history_lead'|trans }}</p>
-      <ul class="td-log">
-        {% for d in decided %}
-          <li class="td-log-row td-log-row--{{ d.action }}">
-            <span class="td-log-verb">{{ ('moderate.takedown.action_' ~ d.action)|trans }}</span>
-            {% if d.itemName %}<span class="td-log-item">{{ d.itemName }}</span>{% endif %}
-            {# A granted request destroys the photo, so there is nothing to
-               link to. Saying so beats a dead thumbnail. #}
-            {% if d.gone %}<span class="td-log-gone">{{ 'moderate.takedown.photo_gone'|trans }}</span>{% endif %}
-            {# The whole handling record on one line, in the order it happened
-               (owner 2026-08-14): when it arrived, when it was answered, how
-               long that took, and by whom. A rights request runs against a
-               legal clock, so the gap between the first two is the number this
-               desk is actually judged on, and nobody should have to subtract
-               two timestamps to find it. #}
-            <span class="td-log-track">
-              {%- if d.requestedAt %}{{ 'moderate.takedown.log_in'|trans({'%when%': d.requestedAt|cc_datetime}) }} · {% endif -%}
-              {{ 'moderate.takedown.log_out'|trans({'%when%': d.decidedAt|cc_datetime}) }}
-              {%- if d.waitedHours is not null %} · {{ (d.waitedHours < 48
-                  ? 'moderate.takedown.log_waited_h'|trans({'%n%': d.waitedHours})
-                  : 'moderate.takedown.log_waited_d'|trans({'%n%': (d.waitedHours / 24)|round})) }}{% endif -%}
-              {%- if d.actor %} · {{ 'moderate.takedown.log_by'|trans({'%who%': d.actor}) }}{% endif -%}
-            </span>
-            {% if d.note %}<p class="td-log-note">{{ d.note }}</p>{% endif %}
-          </li>
-        {% endfor %}
-      </ul>
-      {# `key: 'hpage'` — its own query parameter, so paging the history cannot
-         scroll the open requests out from under a curator mid-decision. #}
-      {% include 'partials/_pager.html.twig' with {pager: history_pager, route: 'moderate_takedowns', params: {}, key: 'hpage', show_size: false} %}
-    </section>
+    <h2 class="sec-band sec-band--quiet">{{ 'moderate.takedown.history_heading'|trans }} <span class="sec-count">{{ history_pager.total }}</span></h2>
+    <p class="sec-lead">{{ 'moderate.takedown.history_lead'|trans }}</p>
+    <div class="q-list">
+      {% for d in decided %}
+        <div class="q-item">
+          <div class="q-top">
+            <div class="q-headwrap">
+              <div class="q-head">
+                {# Granted is the one that destroyed something; it reads differently. #}
+                <span class="q-pill {{ d.action == 'takedown_granted' ? 'q-pill--rej' : 'q-pill--ret' }}">{{ ('moderate.takedown.action_' ~ d.action)|trans }}</span>
+                <h3 class="q-title">{{ d.itemName ?: ('moderate.takedown.no_item'|trans) }}
+                  {# A granted request destroys the photo, so there is nothing to
+                     link to. Saying so beats a dead thumbnail. #}
+                  {% if d.gone %}<span class="td-gone">{{ 'moderate.takedown.photo_gone'|trans }}</span>{% endif %}</h3>
+                {# The whole handling record on one line, in the order it happened
+                   (owner 2026-08-14): when it arrived, when it was answered, how
+                   long that took, and by whom. #}
+                <span class="q-when td-track">
+                  {%- if d.requestedAt %}{{ 'moderate.takedown.log_in'|trans({'%when%': d.requestedAt|cc_datetime}) }} · {% endif -%}
+                  {{ 'moderate.takedown.log_out'|trans({'%when%': d.decidedAt|cc_datetime}) }}
+                  {%- if d.waitedHours is not null %} · {{ (d.waitedHours < 48
+                      ? 'moderate.takedown.log_waited_h'|trans({'%n%': d.waitedHours})
+                      : 'moderate.takedown.log_waited_d'|trans({'%n%': (d.waitedHours / 24)|round})) }}{% endif -%}
+                  {%- if d.actor %} · {{ 'moderate.takedown.log_by'|trans({'%who%': d.actor}) }}{% endif -%}
+                </span>
+              </div>
+            </div>
+          </div>
+          {% if d.note %}<p class="q-note">{{ d.note }}</p>{% endif %}
+        </div>
+      {% endfor %}
+    </div>
+    {# `key: 'hpage'` — its own query parameter, so paging the history cannot
+       scroll the open requests out from under a curator mid-decision. #}
+    {% include 'partials/_pager.html.twig' with {pager: history_pager, route: 'moderate_takedowns', params: {}, key: 'hpage', show_size: false} %}
   {% endif %}
 </div>
+{% include 'moderate/_card_script.html.twig' %}
 {% endblock %}

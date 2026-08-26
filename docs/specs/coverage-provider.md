@@ -488,8 +488,8 @@ manifest's `country_codes`-based client wiring (below).
 | `ridtok` | all (always; `""` when unstamped) | region scope filter — `"|<region_id>|"` (map-and-search.md §4.5, Phase 3) |
 | `cctok` | all (always; `""` when unstamped) | country scope filter — `"|<cc>|"` (map-and-search.md §4.5, Phase 3) |
 | `kind` | D | shop/station/pump icon match |
-| `potable` | C | water marker variant, derived from OSM `drinking_water` tags |
-| `acc` | E | stays accessibility filter |
+| `potable` | B | water marker variant, derived from OSM `drinking_water` tags |
+| `acc` | O | stays accessibility filter |
 
 `ref`/`n`/`t`/`ridtok`/`cctok` are the **universal** props (every layer, declared
 as `universalTileProps` in `coverage-contract.json`, consumed by
@@ -519,7 +519,7 @@ non-empty) is NOT prop-less — it hides under a region scope (matching
 
 - **A · road surface stays out** of the coverage artifact: corridor line data,
   orders of magnitude larger, its own future decision. The existing curated
-  segments keep serving via `catalog.json`. B/F/K are category-3 (our own
+  segments keep serving via `catalog.json`. N/E/R are category-3 (our own
   data) and are never in the extract
   ([osm-data-architecture.md §5](osm-data-architecture.md)).
   **It has its own artifacts and its own manifest since 2026-08-12** — three of
@@ -830,7 +830,7 @@ source of truth for the mapping both languages need:
   long-lived dual path. The retirement exclusion in `CatalogProvider`
   (coverage-provider.md §9) is now **unconditional** (not flag-gated), the
   `refs` list mirrors it (coverage-provider.md §6), and the `verified`
-  property stays. A and B never pass through the exclusion.
+  property stays. A and N never pass through the exclusion.
 - Enabling the flag in prod is gated on the checklist in
   `developers/coverage-batch.md` (bucket + manifest published, and client-IP
   propagation verified for the per-IP `coverage_read` limiter).

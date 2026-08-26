@@ -17,7 +17,7 @@ and which parts are permanent.
 Sibling ownership: the OSM relationship, licensing posture, and coverage/API
 policy live in [osm-data-architecture.md](osm-data-architecture.md); per-type
 edit contracts in [edit-items/](edit-items/README.md); the submission →
-moderation machinery in moderation-and-contribution.md; the K (routes) domain
+moderation machinery in moderation-and-contribution.md; the R (routes) domain
 in route-domain.md; the map/search UX in map-and-search.md.
 
 ---
@@ -240,7 +240,7 @@ served.
 absence from a re-run can mean "fell below cap", not "deleted upstream".
 `imported_at` records staleness; retirement is a curator decision. (The one
 deliberate exception: `heat_point` rows with `source='auto'` are
-delete-and-replaced wholesale each import — L has no lifecycle to protect.)
+delete-and-replaced wholesale each import — the heat aggregate has no lifecycle to protect.)
 
 The same state enum is shared by `recommended_route`, but K's transitions run
 a route-specific machine (Routes queue, ride-verification, retire-to-admit
@@ -587,7 +587,7 @@ error at the front door, never a passthrough.** The allowlist per letter is
 - shared display keys (`AttributeVocabulary::COMMON`: `t`, `town`, `web`, `c`,
   `sim`, `r`, `desc`, `descTr`, `photo`, `photos`, `links`);
 - a few per-letter fixture extras (`AttributeVocabulary::EXTRAS`), notably
-  `B`'s `attribution` (the fixture's free-text citation — renamed because
+  `N`'s `attribution` (the fixture's free-text citation — renamed because
   `source` is reserved for provenance; `CatalogProvider::climbs()` renames it
   back on serving) and `D`'s `serviceKind` (`shop`/`station`/`pump`,
   harvester/import-stamped, never a form field — see
@@ -903,7 +903,7 @@ Harvest-side rules that shape what arrives (toolchain:
 - **Harvested outputs are regenerated, never hand-edited.** Curated editorial
   choices (climb list, route seeds) are version-controlled *seed inputs*;
   geometry is always fetched by script.
-- **E/H de-overlap**: the stays (E) and shelter (H) layers use disjoint OSM
+- **O/G de-overlap**: the stays (O) and shelter (G) layers use disjoint OSM
   selectors (`build_all.py` `LAYERS`; the tag families are catalogued in
   osm-data-architecture.md §5). Features are
   deduped by OSM id within a layer and across provinces
@@ -912,7 +912,7 @@ Harvest-side rules that shape what arrives (toolchain:
 - **Per-province caps** (`cap_per_province` per layer in `build_all.py
   LAYERS`) rank-and-cap each layer — the reason absence from a re-harvest is
   not a deletion signal (catalog-data-model.md §4).
-- **L is synthetic and illustrative**: heat points are sampled from the
+- **The heat layer is synthetic and illustrative**: heat points are sampled from the
   curated routes' own geometry (`routes.py`), never real ride data, never
   third-party ride platforms — and every UI surface labels it so
   (`d_faked_src` / `heatmap_hint` keys in `web/translations/messages.en.yaml`).
@@ -1028,7 +1028,7 @@ the catalog pipeline enforces:
 | Wikidata | CC0 | used for notability ranking/identifiers; no attribution required (credited anyway) |
 | Wikipedia | CC BY-SA 4.0 | short descriptions → `desc` (truncated at 260 chars, `enrich.py`); machine-translated ones flagged `descTr` |
 | Wikimedia Commons | per-file | **every photo attribute structurally carries `credit` + `license` + `source`** (`enrich._photo()` always stamps all three); only free licences are ever attached (the `FREE` allowlist in `tools/wallonia/enrich.py`); the drawer renders credit (linked to the author's profile) + licence deed link + Commons file-page link |
-| Géoportail Wallonie PIVOT | open data (CC-BY-compatible) | own `pivot` source + own `E` bucket, driving the Tourisme-Wallonie attribution branch in the stays merge |
+| Géoportail Wallonie PIVOT | open data (CC-BY-compatible) | own `pivot` source + own `O` bucket, driving the Tourisme-Wallonie attribution branch in the stays merge |
 
 Photos are the one real licence trap: a photo that cannot be licensed cleanly
 is dropped, never guessed.
@@ -1092,10 +1092,10 @@ The two documents coexist deliberately; here is the exact split.
 
 ## Open questions
 
-- **E/H `basic_hut` carve.** The original design routed
-  `amenity=shelter` + `shelter_type=basic_hut` to E (sleepable); the current
+- **O/G `basic_hut` carve.** The original design routed
+  `amenity=shelter` + `shelter_type=basic_hut` to O (sleepable); the current
   harvest selectors (`tools/wallonia/build_all.py`) implement de-overlap
-  purely by disjoint selectors, with *all* `amenity=shelter` going to H. Is
+  purely by disjoint selectors, with *all* `amenity=shelter` going to G. Is
   the basic-hut carve still intended for the coverage-provider tag subset?
 - **Per-feature description source link.** The Wallonia design specified a
   per-feature `descSource` + link for Wikipedia (CC BY-SA) summaries; the

@@ -17,7 +17,7 @@
       foot: 'START · foot', summit: 'END · summit', steepest: 'STEEPEST'
     };
 
-    var state = { start: null, summit: null, steep: null, steepPoint: null, route: [], grad: [], avg: '', lengthKm: 0 };
+    var state = { start: null, summit: null, steep: null, steepPoint: null, route: [], grad: [], avg: '', gain: '', lengthKm: 0 };
     var footM = null, summitM = null, steepM = null, riderM = null;
     /* Armed: next tap places the rider's steepest point (docs/specs/climb-elevation.md). */
     var placingRider = false;
@@ -115,6 +115,7 @@
         route: state.route.map(function (c) { return c.slice(); }),
         grad: state.grad.slice(),
         avg: state.avg,
+        gain: state.gain,
         steepPoint: state.steepPoint ? { at: state.steepPoint.at.slice(), pct: state.steepPoint.pct, note: state.steepPoint.note } : null,
         lengthKm: state.lengthKm
       });
@@ -142,7 +143,7 @@
       var prev = history.pop();
       state.start = prev.start; state.summit = prev.summit; state.steep = prev.steep;
       state.route = prev.route; state.grad = prev.grad; state.lengthKm = prev.lengthKm;
-      state.avg = prev.avg;
+      state.avg = prev.avg; state.gain = prev.gain;
       state.steepPoint = prev.steepPoint;
       placeRiderMarker();
       remarkers();
@@ -262,11 +263,14 @@
         if (seq !== profileSeq) return; // a newer route/profile superseded this one
         profiling = false;
         if (!res) {
-          state.grad = [];
+          state.grad = []; state.gain = '';
           // Marker stays: a missing profile is not a reason to delete the position.
         } else {
           state.grad = res.grad;
           state.avg = res.avg;
+          // Height gain measured from the DEM along the line (docs/specs/climb-elevation.md);
+          // the wizard prefills its gain field from this (owner 2026-08-25).
+          state.gain = res.gainM;
           sustainedAtSteep = res.sustainedAtSteep || null;
           /* Hand-placed marker stays; automatic one is re-derived when the line
              changes (docs/specs/climb-elevation.md). Re-derive a hand-placed
@@ -284,7 +288,7 @@
         if (seq !== profileSeq) return;
         profiling = false;
         profileError = true;
-        state.grad = [];
+        state.grad = []; state.gain = '';
         // Timed-out elevation must not erase the steepest ramp on screen.
         placeSteepMarker();
         writeHidden();
@@ -409,7 +413,7 @@
 
     function publicState() {
       return {
-        start: state.start, summit: state.summit, steep: state.steep, lengthKm: state.lengthKm, avg: state.avg,
+        start: state.start, summit: state.summit, steep: state.steep, lengthKm: state.lengthKm, avg: state.avg, gain: state.gain,
         steepPoint: state.steepPoint, placingRider: placingRider,
         routing: routing, profiling: profiling,
         routeError: routeError, profileError: profileError
@@ -424,7 +428,7 @@
       abortProfile();
       routeError = false; profileError = false;
       state.start = null; state.summit = null; state.steep = null;
-      state.route = []; state.grad = []; state.lengthKm = 0;
+      state.route = []; state.grad = []; state.gain = ''; state.lengthKm = 0;
       if (footM) { footM.remove(); footM = null; }
       if (summitM) { summitM.remove(); summitM = null; }
       if (steepM) { steepM.remove(); steepM = null; }

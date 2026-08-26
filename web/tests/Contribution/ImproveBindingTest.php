@@ -414,7 +414,7 @@ final class ImproveBindingTest extends WebTestCase
     }
 
     /**
-     * C2-T7 (spec §W2): E · Where to sleep — the registry's Website field is
+     * C2-T7 (spec §W2): O · Where to sleep — the registry's Website field is
      * now keyed 'web' (not 'website'), matching the key osmDrawer already
      * reads/renders and every OSM-harvested stay already carries. Confirms
      * both the prefill (regression for the rename) and the round-trip for
@@ -596,10 +596,10 @@ final class ImproveBindingTest extends WebTestCase
     }
 
     /**
-     * Security review 2026-07-07 (critical): the K (Recommended routes) layer
+     * Security review 2026-07-07 (critical): the R (Recommended routes) layer
      * lives in `recommended_route` — a separate table and id sequence from
      * `item`. The map edit-bridge renders its "Edit this ride" link as
-     * `/improve?item=<recommended_route.id>&type=K` (map.js), so resolving that
+     * `/improve?item=<recommended_route.id>&type=R` (map.js), so resolving that
      * id against the item table binds the edit to an UNRELATED item that merely
      * shares the numeric id (cross-sequence collision). A K request must never
      * bind an Item — it falls through to the unbound explainer (route editing
@@ -624,11 +624,11 @@ final class ImproveBindingTest extends WebTestCase
         $em->flush();
 
         $client->loginUser($user);
-        $crawler = $client->request('GET', '/improve?item='.$item->getId().'&type=K&name=Some+Ride');
+        $crawler = $client->request('GET', '/improve?item='.$item->getId().'&type=R&name=Some+Ride');
 
         self::assertResponseIsSuccessful();
-        self::assertSame(0, $crawler->filter('form[name="improve"]')->count(), 'a K route id must not bind the colliding item to an edit form');
-        self::assertGreaterThan(0, $crawler->filter('[data-improve-unbound]')->count(), 'a K route id renders the unbound explainer');
+        self::assertSame(0, $crawler->filter('form[name="improve"]')->count(), 'an R route id must not bind the colliding item to an edit form');
+        self::assertGreaterThan(0, $crawler->filter('[data-improve-unbound]')->count(), 'an R route id renders the unbound explainer');
         self::assertStringNotContainsString('Repair station · Collision', (string) $client->getResponse()->getContent(), 'the colliding item is not leaked into the page');
     }
 
@@ -655,8 +655,8 @@ final class ImproveBindingTest extends WebTestCase
         $em->flush();
 
         $client->loginUser($user);
-        // Claims to be a climb (B) but the id resolves to a bike-service (D).
-        $crawler = $client->request('GET', '/improve?item='.$item->getId().'&type=B');
+        // Claims to be a climb (N) but the id resolves to a bike-service (D).
+        $crawler = $client->request('GET', '/improve?item='.$item->getId().'&type=N');
 
         self::assertResponseIsSuccessful();
         self::assertSame(0, $crawler->filter('form[name="improve"]')->count(), 'a type/letter mismatch must not bind the edit form');

@@ -11,7 +11,7 @@ shape, the admin support desk (audit, guardrails, removal semantics), the public
 rider profile, the account shell and settings surfaces, display-name identity,
 rider preferences, and GDPR deletion. Where a fact belongs to a sibling domain it
 is linked, not restated: moderation/submission machinery lives in
-[moderation-and-contribution.md](moderation-and-contribution.md), the route (K)
+[moderation-and-contribution.md](moderation-and-contribution.md), the route (R)
 domain in [route-domain.md](route-domain.md), CSP/CSRF/sanitizer details in
 [security-architecture.md](security-architecture.md), and map/search UX in
 [map-and-search.md](map-and-search.md).
@@ -433,6 +433,9 @@ administration only. Curator content review is the branded in-product
 `/moderate` shell (`ROLE_CURATOR`) — review happens within the product, never
 in a back-office tool. See
 [moderation-and-contribution.md](moderation-and-contribution.md).
+Machine-translation assist (DeepL), when built, is an `/admin` operator
+tool that only creates *drafts*; publishing still goes through `/moderate`
+([translations.md](translations.md) §7).
 
 ## 6. Admin support desk (`/admin`)
 
@@ -678,8 +681,11 @@ lives in the shell header.
   and links the regions directory. The former preview sample data is gone
   Every dashboard pane renders real rows only. Empty panes use
   the shared `.empty-state` block (`account/_shell_styles.html.twig`):
-  centred message plus a bordered door link, with `.dbody`/`.dmin` holding a
-  46vh minimum so sparse account pages keep their vertical shape.
+  left-aligned message plus a bordered door link (the same block every desk
+  uses), with `.dbody`/`.dmin` holding a 46vh minimum so sparse account pages
+  keep their vertical shape. `/messages` and `/settings` open with the same
+  head and container; `/messages` rows are the same card with `msg-*` state
+  hooks (new, mine) layered on.
 
 ### Settings (`App\Controller\SettingsController`, `/settings`)
 

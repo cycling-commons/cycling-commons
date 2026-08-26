@@ -37,8 +37,8 @@ final class ContributeHubTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertGreaterThan(
             0,
-            $crawler->filter('a[href="/add-climb"]')->count(),
-            'Expected a link to /add-climb on the contribute hub.',
+            $crawler->filter('a[href="/improve?type=climbs&mode=add"]')->count(),
+            'Expected a link to the climb add form on the contribute hub.',
         );
     }
 
@@ -65,7 +65,7 @@ final class ContributeHubTest extends WebTestCase
 
         // Each category card carries its canonical ?type= slug so the wizard
         // opens the right per-type form (not the default bike-services one).
-        // `quality-rides` (K) is intentionally excluded: it now has its own
+        // `quality-rides` (R) is intentionally excluded: it now has its own
         // rider intake at /propose-route (route-domain spec §5), asserted by
         // ProposeRouteFlowTest::testContributeHubCardPointsToProposeRoute.
         foreach (['water-food', 'where-to-sleep', 'road-surface'] as $slug) {

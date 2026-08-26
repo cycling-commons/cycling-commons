@@ -231,8 +231,8 @@
        vocabulary. What is worth their while is whether their OWN area has
        anyone looking after it, and an invitation either way. #}
     {% if curator_applications is empty %}
-      <h2 class="sec-h">{{ 'account.curating_invite_title'|trans }}</h2>
-      <p class="empty curating">
+      <h2 class="sec-band">{{ 'account.curating_invite_title'|trans }}</h2>
+      <p class="curating">
         {% set region = curating.slug ? ('region.' ~ curating.slug ~ '.label')|trans : '' %}
         {% if curating.state == 'region_local' %}
           {{ 'account.curating_region_local'|trans({'%region%': region}) }}
@@ -253,17 +253,27 @@
         <a class="cta" href="{{ path('regions') }}">{{ 'account.curating_apply'|trans }}</a>
       </p>
     {% else %}
-      <h2 class="sec-h">{{ 'account.curating_title'|trans }}</h2>
+      <h2 class="sec-band">{{ 'account.curating_title'|trans }} <span class="sec-count">{{ curator_applications|length }}</span></h2>
       {% set app_pill = {'pending': 'pend', 'approved': 'ok', 'declined': 'rej', 'withdrawn': 'ret'} %}
+      <div class="q-list">
       {% for app in curator_applications %}
-        <div class="item">
-          <span class="tag">{{ app.country_code }}</span>
-          <h4>{% if app.region_slug %}{{ ('region.' ~ app.region_slug ~ '.label')|trans }}{% else %}{{ 'account.curating_whole_country'|trans }}{% endif %}</h4>
-          <time class="co" datetime="{{ app.created_at|date('c') }}">{{ app.created_at|cc_date }}</time>
-          <span class="pill {{ app_pill[app.status] ?? 'pend' }}">{{ ('account.app_status_' ~ app.status)|trans }}</span>
-          {% if app.decision_note %}<p class="item-note">{{ app.decision_note }}</p>{% endif %}
+        <div class="q-item">
+          <div class="q-top">
+            <div class="q-headwrap">
+              <div class="q-head">
+                <span class="q-tag q-tag--kind">{{ app.country_code }}</span>
+                <h3 class="q-title">{% if app.region_slug %}{{ ('region.' ~ app.region_slug ~ '.label')|trans }}{% else %}{{ 'account.curating_whole_country'|trans }}{% endif %}</h3>
+              </div>
+            </div>
+            <div class="q-acts">
+                <time class="q-when" datetime="{{ app.created_at|date('c') }}">{{ app.created_at|cc_date }}</time>
+              <span class="q-pill q-pill--{{ app_pill[app.status] ?? 'pend' }}">{{ ('account.app_status_' ~ app.status)|trans }}</span>
+            </div>
+          </div>
+          {% if app.decision_note %}<p class="q-note">{{ app.decision_note }}</p>{% endif %}
         </div>
       {% endfor %}
+      </div>
     {% endif %}
   </section>
 
@@ -271,6 +281,10 @@
      the only surface that shows WHAT was voted for, voter-only) and place
      confirmations (moderation-and-contribution.md §1.6). #}
   <section class="dpane" id="p-votes">
+    <div class="mh">
+      <div class="kicker">{{ 'account.menu_personal'|trans }} · {{ cc_user.displayName }}</div>
+      <h1>{{ 'account.tab_votes'|trans }}</h1>
+    </div>
     {% if votes is empty and confirmations is empty %}
       <div class="empty-state">
         <p>{{ 'account.votes_empty'|trans }}</p>
@@ -364,6 +378,10 @@
   {# ── Saved regions — no persistence behind it yet; say so honestly and open
      the real door instead of rendering sample cards. #}
   <section class="dpane" id="p-saved">
+    <div class="mh">
+      <div class="kicker">{{ 'account.menu_personal'|trans }} · {{ cc_user.displayName }}</div>
+      <h1>{{ 'account.tab_saved'|trans }}</h1>
+    </div>
     <div class="empty-state">
       <p>{{ 'account.saved_empty'|trans }}</p>
       <a class="door" href="{{ path('regions') }}">{{ 'account.saved_browse'|trans }}</a>
@@ -372,6 +390,7 @@
 
 </div>
 {% include 'partials/_vclip.html.twig' %}
+{% include 'moderate/_card_script.html.twig' %}
 {% endblock %}
 
 {% block body_scripts %}

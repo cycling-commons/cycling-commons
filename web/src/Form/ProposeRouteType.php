@@ -22,7 +22,7 @@ use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\Validator\Constraints\Regex;
 
 /**
- * Route-proposal form: GPX plus K metadata. File content is validated later.
+ * Route-proposal form: GPX plus R metadata. File content is validated later.
  *
  * @see docs/specs/route-domain.md §4.1
  */

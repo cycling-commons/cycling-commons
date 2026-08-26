@@ -335,7 +335,7 @@ final class CuratedDefaultGateTest extends WebTestCase
         );
         self::assertGreaterThanOrEqual(
             \count($countries) * 2,
-            substr_count($body, 'class="rg-item"'),
+            substr_count($body, 'class="q-item rg-item"'),
             'and so is every one of their regions',
         );
         self::assertStringNotContainsString('page=2', $body, 'nothing offers a second page');
@@ -345,6 +345,6 @@ final class CuratedDefaultGateTest extends WebTestCase
         self::assertResponseIsSuccessful();
         $filtered = (string) $client->getResponse()->getContent();
         self::assertSame(1, substr_count($filtered, '<details class="rg-country"'), 'the filter narrows to one country');
-        self::assertSame(2, substr_count($filtered, 'class="rg-item"'), 'showing only its regions');
+        self::assertSame(2, substr_count($filtered, 'class="q-item rg-item"'), 'showing only its regions');
     }
 }

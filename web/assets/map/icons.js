@@ -59,7 +59,7 @@ export function miniIcon(key, glyph, suffix){
   x.beginPath(); x.arc(R,R,R-2.5*S,0,Math.PI*2);
   x.fillStyle=color; x.fill();
   x.lineWidth=1.6*S; x.strokeStyle='rgba(20,22,14,.85)'; x.stroke();
-  const drawn = !glyph && (key==='scenic' ? CAMERA_PATH : key==='toilets' ? TOILET_PATH : null);
+  const drawn = !glyph && (key==='scenic' ? CAMERA_PATH : key==='toilets' ? TOILET_PATH : key==='climbs' ? MOUNTAIN_PATH : null);
   if(drawn){
     const side=13*S, sc=side/24;
     x.save();
@@ -99,6 +99,7 @@ export function pinEl(layer,cur,props){
   const white = txtOn(layer.color)==='#fff';
   if(layer.key==='scenic'){ d.innerHTML=`<span>${cameraSvg(white?'#fff':'#20241c')}</span>`; return d; }
   if(layer.key==='toilets'){ d.innerHTML=`<span>${toiletSvg(white?'#fff':'#20241c')}</span>`; return d; }
+  if(layer.key==='climbs'){ d.innerHTML=`<span>${mountainSvg(white?'#fff':'#20241c')}</span>`; return d; }
   d.innerHTML=`<span${white?' style="filter:brightness(0) invert(1)"':''}>${pinGlyph(layer, props)}</span>`; return d;
 }
 

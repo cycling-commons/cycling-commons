@@ -2,7 +2,7 @@
 /* Map entry (docs/specs/map-and-search.md §4). ES module: catalog-load.js
    injects it once the catalog fetch has populated the CC_* globals. */
 import { I18N, LAYER_L10N, D, tpl, VALUE_TR, trVal, sourceLabel, isRiderSource } from './i18n.js';
-import { wc, pinPoint } from './util.js';
+import { escPend, pinPoint, wc } from './util.js';
 import { uKm } from './units.js';
 import { map, initMapControls, addSatellite, markStyleReady, initCoordPopup,
          localiseBasemapLabels } from './map-init.js';
@@ -177,7 +177,7 @@ import { layerGlyph } from './icons.js';
     });
   }
   populateSurfaceA();
-  // F · Hazards — catalog point features from window.CC_HAZARDS (no coverage tile).
+  // E · Hazards — catalog point features from window.CC_HAZARDS (no coverage tile).
   if(window.CC_HAZARDS && Array.isArray(CC_HAZARDS.features)){
     layerByKey['hazards'].features = CC_HAZARDS.features.map(ft=>{
       const p=ft.properties||{}, c=(ft.geometry&&ft.geometry.coordinates)||[];
@@ -213,7 +213,7 @@ import { layerGlyph } from './icons.js';
         (()=>{
           const lyr = CATALOG.find(l=>l.letter===s.letter) || {};
           const name = LAYER_L10N[lyr.key] || lyr.label || s.letter;
-          return {label:D.type||'Type', value:(lyr.icon ? lyr.icon+' ' : '')+name};
+          return {label:D.type||'Type', html:true, value:layerGlyph(lyr, 13)+' '+escPend(name)};
         })(),
         {label:D.submittedBy||'Submitted by', value:s.who},
         {label:D.age||'Age', value:s.when},
@@ -237,7 +237,7 @@ import { layerGlyph } from './icons.js';
       record:[
         (()=>{ const lyr=CATALOG.find(l=>l.letter===g.letter)||{};
           const nm=LAYER_L10N[lyr.key]||lyr.label||g.letter;
-          return {label:D.type||'Type', value:(lyr.icon?lyr.icon+' ':'')+nm}; })(),
+          return {label:D.type||'Type', html:true, value:layerGlyph(lyr, 13)+' '+escPend(nm)}; })(),
         {label:D.status||'Status', value:trVal('Not there anymore')},
         {label:D.age||'Age', value:g.since},
         {label:D.where||'Where', value:g.cc}

@@ -562,7 +562,7 @@ def main(argv=None) -> int:
         ensure_schema(conn)
         run_started = time.monotonic()
         timings: list[tuple[str, float, bool]] = []
-        for region in regions:
+        for region in ([] if args.tiles_only else regions):
             region_started = time.monotonic()
             try:
                 # Resolved ONCE per region and reused for both calls below (I1): an

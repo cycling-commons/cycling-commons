@@ -7,7 +7,7 @@ import { openClimbProfile } from './climb-profile.js';
 import { uKm, uM, uElev, uKmValue, uElevValue, uDistUnit } from './units.js';
 import { map } from './map-init.js';
 import { CATALOG, CITIES } from './catalog.js';
-import { pinEl } from './icons.js';
+import { layerGlyph, pinEl } from './icons.js';
 import { itemLinks } from './links.js';
 import { sheet } from './sheet.js';
 import { openLightbox } from './lightbox.js';
@@ -397,6 +397,10 @@ function buildRecord(layer, f){
   if(layer.pendingLayer && f.pending){
     // docs/specs/security-architecture.md §4.2 — escape every interpolated submission field before innerHTML.
     const s=f.pending;
+    /* A brand-new item comes with its would-be feature (`s.preview`, server-side,
+       curators only): it is rendered below like a live item, so the raw field dump
+       that used to stand in for it is not shown twice. */
+    const previewed = 'new' === s.type && !!(s.preview && (s.preview.climb || s.preview.feature));
     // Edit-bridge binds to s.itemId (target catalog item), never the submission id.
     edit = (s.itemId != null)
       ? `<a class="cc-d-act edit" href="/improve?type=${encodeURIComponent(s.letter)}&item=${encodeURIComponent(s.itemId)}&name=${encodeURIComponent(s.title)}&lat=${encodeURIComponent(s.lat)}&lng=${encodeURIComponent(s.lng)}">✎ ${D.editItem||'Edit this item'}</a>`
@@ -405,7 +409,7 @@ function buildRecord(layer, f){
     // Proposed change: this submission, not item history. Gate on `now`, not `was && now`.
     /* One row per changed field; labels from the same schema as the item rows. */
     const chList = Array.isArray(s.changes) ? s.changes : [];
-    const diff = chList.length
+    const diff = (chList.length && !previewed)
       ? `<div class="cc-mod-diff"><div class="cc-mod-diff-h">${D.proposedChange||'Proposed change'}</div>
           <dl class="cc-mod-chg">${chList.map(c=>`
             <dt>${escPend(fieldLabelFor(s.letter, c.key))}</dt>
@@ -576,7 +580,7 @@ function buildRecord(layer, f){
          </svg></button>`
     : '';
 
-  return `<div class="cc-d-head"><span class="cc-d-type" style="--c:${layer.color};color:${txtOn(layer.color)}"><i class="cc-g">${layer.icon}</i> ${layer.label}</span>${share}</div>
+  return `<div class="cc-d-head"><span class="cc-d-type" style="--c:${layer.color};color:${txtOn(layer.color)}"><i class="cc-g">${layerGlyph(layer)}</i> ${layer.label}</span>${share}</div>
     <div class="cc-d-name">${escPend(f.name)}</div>${cur}${photo}${desc}${diff}${elev}${len}${grad}
     <ul class="cc-d-rec">${rows}</ul>${fresh}${up}
     <div class="cc-d-src">${D.source||'Source'} · ${who || srcLine(f, osmHref)}${

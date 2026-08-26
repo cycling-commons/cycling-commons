@@ -188,7 +188,7 @@ final class OutboundLinksEditorTest extends WebTestCase
         $item = $this->item('links-render', ['links' => self::TWO_LEVEL]);
         $client->loginUser($this->user('links-render@test.test'));
 
-        $client->request('GET', '/improve?item='.$item->getId().'&type=J');
+        $client->request('GET', '/improve?item='.$item->getId().'&type=Q');
         self::assertResponseIsSuccessful();
         $html = (string) $client->getResponse()->getContent();
 

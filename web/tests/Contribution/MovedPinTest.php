@@ -68,7 +68,7 @@ final class MovedPinTest extends WebTestCase
         $this->login($client);
         $item = $this->seedItem();
 
-        $crawler = $client->request('GET', '/improve?item='.$item->getId().'&type=I');
+        $crawler = $client->request('GET', '/improve?item='.$item->getId().'&type=P');
         self::assertResponseIsSuccessful();
         $form = $crawler->selectButton('Next →')->form([
             'improve[lat]' => (string) self::NEW_LAT,
@@ -106,7 +106,7 @@ final class MovedPinTest extends WebTestCase
         $this->login($client);
         $item = $this->seedItem();
 
-        $crawler = $client->request('GET', '/improve?item='.$item->getId().'&type=I');
+        $crawler = $client->request('GET', '/improve?item='.$item->getId().'&type=P');
         $form = $crawler->selectButton('Next →')->form([
             'improve[lat]' => (string) self::OLD_LAT,
             'improve[lng]' => (string) self::OLD_LNG,

@@ -185,13 +185,13 @@ def test_build_and_verify_pmtiles(built):
     # Belgium box; passing expected_bbox also exercises the bounds check and
     # the sample-tile decode (coverage-provider.md §3 step 7: bounds, tile
     # count, decode).
-    tiles.verify_pmtiles(built, expected_layers={"c_be", "d_be"},
+    tiles.verify_pmtiles(built, expected_layers={"b_be", "d_be"},
                          expected_bbox=(4.0, 50.0, 6.0, 51.5))  # must not raise
 
 
 def test_verify_pmtiles_missing_layer_raises(built):
     with pytest.raises(RuntimeError, match="missing layer"):
-        tiles.verify_pmtiles(built, expected_layers={"c_be", "d_be", "e_be"})
+        tiles.verify_pmtiles(built, expected_layers={"b_be", "d_be", "o_be"})
 
 
 def test_verify_pmtiles_default_layers_expect_all_contract_letters(built):
@@ -207,7 +207,7 @@ def test_verify_pmtiles_default_layers_expect_all_contract_letters(built):
 
 def test_verify_pmtiles_disjoint_bounds_raise(built):
     with pytest.raises(RuntimeError, match="bounds"):
-        tiles.verify_pmtiles(built, expected_layers={"c_be", "d_be"},
+        tiles.verify_pmtiles(built, expected_layers={"b_be", "d_be"},
                              expected_bbox=(120.0, 10.0, 121.0, 11.0))
 
 
@@ -220,7 +220,7 @@ def test_verify_pmtiles_zero_addressed_tiles_raise(built, monkeypatch):
                       tiles._show(built))
     monkeypatch.setattr(tiles, "_show", lambda path, *flags: doctored)
     with pytest.raises(RuntimeError, match="no addressed tiles"):
-        tiles.verify_pmtiles(built, expected_layers={"c_be", "d_be"})
+        tiles.verify_pmtiles(built, expected_layers={"b_be", "d_be"})
 
 
 def test_verify_pmtiles_all_sample_tiles_empty_raises(built, monkeypatch):
@@ -230,7 +230,7 @@ def test_verify_pmtiles_all_sample_tiles_empty_raises(built, monkeypatch):
     # test the decode-gate raise semantics.
     monkeypatch.setattr(tiles, "_tile_bytes", lambda *a: b"")
     with pytest.raises(RuntimeError, match="no decodable non-empty tile"):
-        tiles.verify_pmtiles(built, expected_layers={"c_be", "d_be"})
+        tiles.verify_pmtiles(built, expected_layers={"b_be", "d_be"})
 
 
 def test_verify_pmtiles_subprocess_failure_surfaces_diagnostics(tmp_path):

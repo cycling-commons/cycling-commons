@@ -5,6 +5,7 @@
 import { CATALOG, layerByKey } from './catalog.js';
 import { slug, haversine, featurePoint } from './util.js';
 import { openLocalFeature, openStayPivot, openPoolFeature } from './places.js';
+import { layerGlyph } from './icons.js';
 
 // Bulk-pool globals, read at BUILD time (catalog-load fills them asynchronously).
 const POOL_GLOBALS = [
@@ -41,7 +42,7 @@ export function buildItemIndex(){
     out.push(e);
   }
   CATALOG.forEach(layer=>(layer.features||[]).forEach(f=>{ if(!f.name) return;
-    push({name:f.name, unnamed:f.unnamed, key:slug(f.name+' '+(layer.label||'')), kind:layer.label||'', badge:layer.icon||'•',
+    push({name:f.name, unnamed:f.unnamed, key:slug(f.name+' '+(layer.label||'')), kind:layer.label||'', badge:layerGlyph(layer)||'•',
       color:layer.color||'#6b6f5e', letter:layer.letter||'•', ll:featurePoint(f), id:f.id,
       rid:f.rid,
       // Real signal only (docs/specs/map-and-search.md §12) — never the demo 'c'.
@@ -53,7 +54,7 @@ export function buildItemIndex(){
   (window.CC_STAYS_PIVOT && CC_STAYS_PIVOT.features || []).forEach(f=>{ const p=f.properties;
     if(!p || !p.n) return; const layer=layerByKey.stays; if(!layer) return;
     const c=f.geometry && f.geometry.coordinates; if(!c || c.length<2) return;
-    push({name:p.n, key:slug(p.n+' '+(p.town||'')+' '+layer.label), kind:layer.label, badge:layer.icon,
+    push({name:p.n, key:slug(p.n+' '+(p.town||'')+' '+layer.label), kind:layer.label, badge:layerGlyph(layer),
       color:layer.color, letter:layer.letter, ll:[+c[1],+c[0]], id:p.id,
       rid:p.rid,
       verified:!!p.v,
@@ -66,7 +67,7 @@ export function buildItemIndex(){
     (((window[g]||{}).features)||[]).forEach(f=>{ const p=f.properties;
       if(!p || !p.n || p.id==null) return;
       const c=f.geometry && f.geometry.coordinates; if(!c || c.length<2) return;
-      push({name:p.n, key:slug(p.n+' '+(p.town||'')+' '+layer.label), kind:layer.label, badge:layer.icon,
+      push({name:p.n, key:slug(p.n+' '+(p.town||'')+' '+layer.label), kind:layer.label, badge:layerGlyph(layer),
         color:layer.color, letter:layer.letter, ll:[+c[1],+c[0]], id:p.id, rid:p.rid,
         verified:!!p.v, hlOff: p.v ? [0,-16] : [0,0],
         go:()=>openPoolFeature(key, f)});

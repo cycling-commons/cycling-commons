@@ -21,15 +21,13 @@
 {# The filters this page pages through, so every link keeps them. #}
 {% set hparams = {handled: history_filters.mine ? 'mine' : null, hstatus: history_filters.status, q: history_filters.q,
                   country: history_filters.country, region: history_filters.region, type: history_filters.type} %}
-<div class="mh">
-  <div class="wrap">
+{% set verdict_pill = {'approved': 'ok', 'rejected': 'rej', 'trashed': 'danger'} %}
+<div class="dbody" id="main">
+  <div class="mh">
     <div class="kicker">{{ 'moderate.history.kicker'|trans }}</div>
     <h1>{{ 'moderate.history.heading'|trans }}</h1>
-    <div><span class="role-badge">&#9876; {{ 'moderate.role_label'|trans }}</span></div>
   </div>
-</div>
 
-<div class="wrap" id="main">
   {# The same three selects the queue carries, plus the search — a curator who
      narrows the desk to their country narrows the record the same way, with the
      same controls (owner, 2026-08-03). The everyone/mine and status chips below

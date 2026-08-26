@@ -62,7 +62,7 @@ final class PublicApiController extends AbstractController
                 'letters' => CategoryTable::COVERAGE_LETTERS,
                 'minZoom' => CategoryTable::COVERAGE_MIN_ZOOM,
             ],
-            'categories' => CategoryTable::CATEGORIES,
+            'categories' => CategoryTable::categories(),
         ];
 
         return $this->cacheable($request, $payload, 3600);

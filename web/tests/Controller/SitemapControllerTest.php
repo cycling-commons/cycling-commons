@@ -50,7 +50,7 @@ final class SitemapControllerTest extends WebTestCase
         foreach ([
             '/admin', '/moderate', '/profile', '/settings', '/messages',
             '/login', '/register', '/reset-password', '/2fa', '/i18n/',
-            '/contribute', '/add-climb', '/improve', '/propose-route',
+            '/contribute', '/improve', '/propose-route',
             '/map/', '/api/', '/photo/',
         ] as $path) {
             self::assertStringContainsString("Disallow: {$path}\n", $body, "robots.txt no longer disallows {$path}");

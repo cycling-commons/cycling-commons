@@ -144,8 +144,8 @@ has not yet ridden. Riders bring the line; this project only ever measures it.
 ## The one existing exception, and exactly what it is not
 
 There is a narrow, already-existing routing call in this codebase, and honesty about scope means
-naming it precisely rather than either hiding it or overselling it. When a curator draws a new climb
-on the add-climb map — clicking a start point and a summit point to define a new catalog entry — the
+naming it precisely rather than either hiding it or overselling it. When a rider draws a new climb
+on the `/improve` climb map — clicking a start point and a summit point to define a new catalog entry — the
 two clicked points are snapped onto the actual road network by the project's **own Valhalla**
 instance, through a small server-side proxy (it asked a public OSRM demo server until 2026-08-09,
 when the call moved in-house — the demo server's own policy forbids production reliance):

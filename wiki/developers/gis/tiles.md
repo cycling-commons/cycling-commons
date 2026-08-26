@@ -552,27 +552,27 @@ from.
         ```text
          letter | country_code | count
         --------+--------------+--------
-         C      | BE           |   1369
-         C      | DE           |  15894
-         C      | NL           |   3699
+         B      | BE           |   1369
+         B      | DE           |  15894
+         B      | NL           |   3699
          D      | BE           |   2013
          D      | DE           |  13224
          D      | NL           |   3039
-         E      | BE           |   6454
-         E      | DE           |  59090
-         E      | NL           |  14916
-         G      | BE           |    720
-         G      | DE           |   8709
-         G      | NL           |    624
-         H      | BE           |   1023
-         H      | DE           |  23341
-         H      | NL           |    595
-         I      | BE           |   2501
-         I      | DE           |  75359
-         I      | NL           |   2582
-         J      | BE           |   8815
-         J      | DE           | 122076
-         J      | NL           |   9035
+         F      | BE           |    720
+         F      | DE           |   8709
+         F      | NL           |    624
+         G      | BE           |   1023
+         G      | DE           |  23341
+         G      | NL           |    595
+         O      | BE           |   6454
+         O      | DE           |  59090
+         O      | NL           |  14916
+         P      | BE           |   2501
+         P      | DE           |  75359
+         P      | NL           |   2582
+         Q      | BE           |   8815
+         Q      | DE           | 122076
+         Q      | NL           |   9035
         (21 rows)
         ```
 
@@ -580,8 +580,8 @@ from.
         under one letter, because `country_code` is a column on the table, not something tippecanoe
         infers. Add the counts and they land on 375,078, the same total this chapter opened with.
 
-    Either way, this table *is* the reason the tile layers are named `c_be`, `c_de`, `c_nl`, `d_be`
-    and so on rather than just `c`, `d`, `e`: each row above becomes exactly one
+    Either way, this table *is* the reason the tile layers are named `b_be`, `b_de`, `b_nl`, `d_be`
+    and so on rather than just `b`, `d`, `f`: each row above becomes exactly one
     `(letter, country)` GeoJSONL file, and a tile layer built from one file can never mix two
     countries, because the other country's points were never in that file to begin with. If your dev
     stack has published a `.pmtiles` archive, `pmtiles show <path-or-url>` lists those same names back

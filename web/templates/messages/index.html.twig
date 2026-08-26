@@ -89,49 +89,53 @@
       {% endif %}
     </div>
   {% else %}
-    <ul class="msg-list">
+    <ul class="q-list msg-list" id="qList">
       {% for m in messages %}
         {% set mine = m.senderId is not null and m.senderId == cc_user.id %}
-        <li class="msg-row {{ mine ? 'msg-mine' : (m.isRead ? '' : 'msg-new') }}" id="msg-{{ m.id }}">
-          <div class="msg-head">
-            <span class="msg-kind">
-              {#- A message you sent was never unread to you, so it carries no
-                 state marker at all — only received rows do. Unread is a filled
-                 dot with a single tick; read is the double tick. The state is
-                 also in the row's own styling, so the icon is a confirmation
-                 rather than the only signal, and the label is what a screen
-                 reader gets. -#}
-              {%- if not mine %}
-                {% set unread = not m.isRead %}
-                <span class="msg-state {{ unread ? 'is-unread' : 'is-read' }}" title="{{ (unread ? 'messages.state_unread' : 'messages.state_read')|trans }}">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <polyline points="3 12.5 8 17.5 16 6.5"/>
-                    {% if not unread %}<polyline points="12 17 13 18 21 7"/>{% endif %}
-                  </svg>
-                  <span class="vh">{{ (unread ? 'messages.state_unread' : 'messages.state_read')|trans }}</span>
-                </span>
-              {% endif -%}
-              {{ mine ? 'messages.kind_you'|trans : ('messages.kind_' ~ m.kind.value)|trans }}
-            </span>
-            <time class="msg-meta" datetime="{{ m.createdAt|date('c') }}">{{ m.createdAt|cc_datetime }}</time>
+        <li class="q-item msg-row {{ mine ? 'q-item--mine msg-mine' : (m.isRead ? '' : 'q-item--new msg-new') }}" id="msg-{{ m.id }}">
+          <div class="q-top">
+            <div class="q-headwrap">
+              <div class="q-head">
+                <h3 class="q-title msg-kind">
+                  {#- A message you sent was never unread to you, so it carries no
+                     state marker at all — only received rows do. Unread is a filled
+                     dot with a single tick; read is the double tick. The state is
+                     also in the row's own styling, so the icon is a confirmation
+                     rather than the only signal, and the label is what a screen
+                     reader gets. -#}
+                  {%- if not mine %}
+                    {% set unread = not m.isRead %}
+                    <span class="msg-state {{ unread ? 'is-unread' : 'is-read' }}" title="{{ (unread ? 'messages.state_unread' : 'messages.state_read')|trans }}">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <polyline points="3 12.5 8 17.5 16 6.5"/>
+                        {% if not unread %}<polyline points="12 17 13 18 21 7"/>{% endif %}
+                      </svg>
+                      <span class="vh">{{ (unread ? 'messages.state_unread' : 'messages.state_read')|trans }}</span>
+                    </span>
+                  {% endif -%}
+                  {{ mine ? 'messages.kind_you'|trans : ('messages.kind_' ~ m.kind.value)|trans }}
+                </h3>
+                <time class="q-when" datetime="{{ m.createdAt|date('c') }}">{{ m.createdAt|cc_datetime }}</time>
+              </div>
+              {% set is_question = m.kind.value == 'submission_needs_info' %}
+              {# NOT `answers` — assigning to the loop variable would clobber the
+                 whole map on the first row, and every later card would find its
+                 answer missing. #}
+              {% set my_answers = answers[m.id] ?? [] %}
+              {# The subject, as a link back to the contribution it is about. A
+                 reference like SUB-8 says nothing about which place this was. #}
+              <div class="q-submitter msg-ref">
+                {{ m.refLabel }}
+                {% if m.channel == 'submission' and m.bodyParams['%title%'] is defined %}
+                  · <a class="msg-subject" href="{{ path('profile') }}#sub-{{ m.refId }}">{{ m.bodyParams['%title%'] }}</a>
+                {% endif %}
+              </div>
+            </div>
           </div>
-          {% set is_question = m.kind.value == 'submission_needs_info' %}
-          {# NOT `answers` — assigning to the loop variable would clobber the
-             whole map on the first row, and every later card would find its
-             answer missing. #}
-          {% set my_answers = answers[m.id] ?? [] %}
-          {# The subject, as a link back to the contribution it is about. A
-             reference like SUB-8 says nothing about which place this was. #}
-          <div class="msg-ref">
-            {{ m.refLabel }}
-            {% if m.channel == 'submission' and m.bodyParams['%title%'] is defined %}
-              · <a class="msg-subject" href="{{ path('profile') }}#sub-{{ m.refId }}">{{ m.bodyParams['%title%'] }}</a>
-            {% endif %}
-          </div>
-          <div class="msg-body">
+          <div class="q-body msg-body">
             {% if m.mediaId and message_photos[m.mediaId|trim] is defined %}
               {# The photo this message is about (docs/specs/photo-uploads.md §5b). #}
-              <figure class="msg-photo">
+              <figure class="q-photo-lg msg-photo">
                 <img src="{{ message_photos[m.mediaId|trim] }}" alt="{{ 'messages.photo_alt'|trans }}" loading="lazy" width="120" height="90">
               </figure>
             {% endif %}
@@ -142,7 +146,7 @@
                question that is missing (rows from before the note was
                required). #}
             {% if m.bodyKey and not (is_question and m.bodyText) %}{{ m.bodyKey|trans(m.bodyParams ?? {}) }}{% endif %}
-            {% if m.bodyText %}<p class="msg-note">{{ m.bodyText }}</p>{% endif %}
+            {% if m.bodyText %}<p class="q-note msg-note">{{ m.bodyText }}</p>{% endif %}
             {# WHAT the contribution was. "Your contribution X was approved"
                names a place and stops, and a rider with two edits to the same
                climb cannot tell which one this is about (owner-reported
@@ -171,23 +175,24 @@
                     </dd>
                   {% endfor %}
                 </dl>
-              </div>
+                </div>
+              </details>
             {% endif %}
             {# The answer belongs under the question it answers, in the same
                card — not as a separate row above it. #}
             {% for a in my_answers %}
-              <p class="msg-note msg-answer">
-                <span class="msg-answer-h">{{ 'account.you_replied'|trans }}</span>
+              <p class="q-note q-note--answer msg-answer">
+                <span class="q-note-h">{{ 'account.you_replied'|trans }}</span>
                 {{ a.bodyText }}
-                <time class="msg-meta" datetime="{{ a.createdAt|date('c') }}">{{ a.createdAt|cc_datetime }}</time>
+                <time class="q-when" datetime="{{ a.createdAt|date('c') }}">{{ a.createdAt|cc_datetime }}</time>
               </p>
             {% endfor %}
             {# link to the item — only for kinds whose subject is publicly on the
                map (approved submission by name; live route by id) #}
             {% if m.kind.value == 'submission_approved' %}
-              <a class="msg-map-link" href="{{ path('map') }}?feature={{ m.refLabel|url_encode }}">{{ 'messages.view_on_map'|trans }} ↗</a>
+              <p class="q-map"><a class="q-link msg-map-link" href="{{ path('map') }}?feature={{ m.refLabel|url_encode }}">{{ 'messages.view_on_map'|trans }} ↗</a></p>
             {% elseif m.kind.value in ['route_approved', 'correction_done'] %}
-              <a class="msg-map-link" href="{{ path('map') }}?route={{ m.refId }}">{{ 'messages.view_on_map'|trans }} ↗</a>
+              <p class="q-map"><a class="q-link msg-map-link" href="{{ path('map') }}?route={{ m.refId }}">{{ 'messages.view_on_map'|trans }} ↗</a></p>
             {% endif %}
           </div>
           {% if m.sender == 'curator' and not mine %}
@@ -197,7 +202,7 @@
             <div class="msg-from-curator msg-from-you">{{ 'messages.you_sent'|trans }}</div>
           {% endif %}
           {% if not mine and is_question and my_answers is empty and m.refId in replyable_submission_ids %}
-            <form class="msg-reply" method="post" action="{{ path('messages_reply', {id: m.id}) }}">
+            <form class="q-reply msg-reply" method="post" action="{{ path('messages_reply', {id: m.id}) }}">
               <input type="hidden" name="_token" value="{{ csrf_token('message-reply') }}">
               <label for="msg-reply-{{ m.id }}">{{ 'messages.reply_label'|trans }}</label>
               <textarea id="msg-reply-{{ m.id }}" name="body" maxlength="2000" required></textarea>
@@ -212,4 +217,5 @@
 
 </div>
 {% include 'partials/_vclip.html.twig' %}
+{% include 'moderate/_card_script.html.twig' %}
 {% endblock %}

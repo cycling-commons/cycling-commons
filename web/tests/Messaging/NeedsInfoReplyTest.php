@@ -493,7 +493,7 @@ final class NeedsInfoReplyTest extends WebTestCase
         $crawler = $client->request('GET', '/profile');
         self::assertResponseIsSuccessful();
 
-        $answer = $crawler->filter('a.item-answer');
+        $answer = $crawler->filter('a.q-link--act');
         self::assertSame(1, $answer->count(), 'A needs-info row must offer a way to answer.');
         self::assertStringEndsWith('/messages#msg-'.$msgId, (string) $answer->attr('href'));
     }
@@ -519,9 +519,9 @@ final class NeedsInfoReplyTest extends WebTestCase
 
         $crawler = $client->request('GET', '/profile');
         self::assertResponseIsSuccessful();
-        self::assertStringContainsString('Gravel, and the gate is open.', $crawler->filter('.item-reply')->text());
+        self::assertStringContainsString('Gravel, and the gate is open.', $crawler->filter('.q-note--answer')->text());
         // Back in the queue, so there is no question left to answer.
-        self::assertSame(0, $crawler->filter('a.item-answer')->count());
+        self::assertSame(0, $crawler->filter('a.q-link--act')->count());
     }
 
     /**

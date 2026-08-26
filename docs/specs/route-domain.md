@@ -23,7 +23,7 @@ carve-out from the generic item funnel is described in
    curators *own* it: they approve, edit metadata, and retire. Riders never
    edit route data — rider signal arrives as votes, ride confirmations, and
    moderated correction suggestions. This also permanently retires the
-   route-id/item-id collision bug class (`/improve` refuses `type=K`).
+   route-id/item-id collision bug class (`/improve` refuses `type=R`).
 2. **Purpose-built pipeline.** The route domain reuses nothing from the item
    `Submission`/`ModerationService` pipeline. Proposals are `RecommendedRoute`
    rows in state `submitted` (no separate proposal entity); moderation,
@@ -443,7 +443,7 @@ split.
 
 ## 9. Attribute vocabulary (`recommended_route.attributes`)
 
-The K registry field set (`CatalogFormRegistry::for(ItemType::QualityRides)`)
+The R registry field set (`CatalogFormRegistry::for(ItemType::QualityRides)`)
 backs both the proposal form and the curator edit form — not a rider improve
 form. Canonical shapes (enforced at intake by `RouteProposalService` and
 re-canonicalized at serve time by `CatalogProvider`, so legacy stored shapes

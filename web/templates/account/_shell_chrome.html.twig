@@ -29,6 +29,10 @@
   <span class="dtabs-modlabel" aria-hidden="true">{{ 'account.menu_moderation'|trans }}{% if mod_scope_names is defined and mod_scope_names is not null %} · {{ mod_scope_names is empty ? 'account.mod_scope_all'|trans : mod_scope_names|join(' · ') }}{% endif %}</span>
   <a href="{{ path('moderate') }}" class="dtab-mod {{ active == 'moderate' ? 'on' : '' }}">{{ 'nav.moderate'|trans }}{% if mod_submission_count is defined and mod_submission_count %}<span class="dtab-count" title="{{ 'account.mod_open_in_area'|trans }}">{{ mod_submission_count }}</span>{% endif %}</a>
   <a href="{{ path('moderate_routes') }}" class="dtab-mod {{ active == 'moderate_routes' ? 'on' : '' }}">{{ 'nav.routes'|trans }}{% if mod_route_count is defined and mod_route_count %}<span class="dtab-count" title="{{ 'account.mod_open_in_area'|trans }}">{{ mod_route_count }}</span>{% endif %}</a>
+  {# Data desk, right after Routes (owner 2026-08-25): machine-raised findings about catalog rows. Badged, because
+     unlike Regions this one does queue — and it was invisible console output
+     before it had a tab. #}
+  <a href="{{ path('moderate_data') }}" class="dtab-mod {{ active == 'moderate_data' ? 'on' : '' }}">{{ 'nav.data'|trans }}{% if mod_data_count is defined and mod_data_count %}<span class="dtab-count" title="{{ 'account.mod_open_in_area'|trans }}">{{ mod_data_count }}</span>{% endif %}</a>
   {# Takedowns: their own desk since 2026-08-03. A rights request on a legal
      clock does not belong at the bottom of an editorial backlog. Badge counts
      every open request, unscoped — these are not shared out by jurisdiction. #}
@@ -38,10 +42,6 @@
   {# Regions desk: the gated
      curated-by-default flag. No badge — nothing queues here. #}
   <a href="{{ path('moderate_regions') }}" class="dtab-mod {{ active == 'moderate_regions' ? 'on' : '' }}">{{ 'nav.regions'|trans }}</a>
-  {# Data desk: machine-raised findings about catalog rows. Badged, because
-     unlike Regions this one does queue — and it was invisible console output
-     before it had a tab. #}
-  <a href="{{ path('moderate_data') }}" class="dtab-mod {{ active == 'moderate_data' ? 'on' : '' }}">{{ 'nav.data'|trans }}{% if mod_data_count is defined and mod_data_count %}<span class="dtab-count" title="{{ 'account.mod_open_in_area'|trans }}">{{ mod_data_count }}</span>{% endif %}</a>
   {# The rulebook, moderators-only (it used to be a public wiki page). #}
   <a href="{{ path('moderate_rulebook') }}" class="dtab-mod {{ active == 'moderate_rulebook' ? 'on' : '' }}">{{ 'nav.rulebook'|trans }}</a>
 </nav>

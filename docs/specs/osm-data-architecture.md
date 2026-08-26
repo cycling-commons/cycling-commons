@@ -79,6 +79,10 @@ Cycling Commons publishes under:
 - **Media (photos):** CC BY-SA 4.0.
 - **Wiki prose** (`wiki/`, wiki.cyclingcommons.org): CC BY-SA 4.0 — per-page
   SPDX headers, pre-commit enforced.
+- **UI translations from the website** (when [translations.md](translations.md)
+  ships): CC BY-SA 4.0, stored as database overlays — not merged into git YAML
+  (that YAML is code, PolyForm). Developer-shipped `messages.*.yaml` stays
+  PolyForm.
 - **Code:** PolyForm Shield 1.0.0 (source-available, non-compete).
 
 Consequences for OSM handling:

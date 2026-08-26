@@ -15,6 +15,7 @@ import { openDrawer, osmDrawer, waterDrawer, highlightAt, clearHighlight, reveal
 import { COVERAGE_ON, widenForDeepLink, openCoverageByRef,
          invalidateCoverageDrawer } from './coverage.js';
 import { showRouteCorrections } from './corrections.js';
+import { layerGlyph } from './icons.js';
 
 export function bumpPlaceReq(){ _placeReq++; }
 
@@ -73,7 +74,7 @@ function renderPlaceCard(name, meta, near, covGroups){
         // docs/specs/map-and-search.md §12 — verified first; community subgroup capped at 3.
         const ver=rows.filter(n=>!isComm(n)), com=rows.filter(isComm);
         const row=(n,hidden)=>`<li${hidden?` hidden data-more="${L}"`:''}><button class="cc-near" data-i="${n._i}"><span class="cc-near-nm">${escPend(n.e.name)}${isComm(n)?`<span class="cc-comm-tag">${escPend(D.community||'community')}</span>`:''}</span><em>${n.dist<1?uM(Math.round(n.dist*1000)):uKm(n.dist)}</em></button></li>`;
-        let html=`<li class="cc-near-grp"><span class="cc-near-k" style="background:${e0.color};color:${txtOn(e0.color)}">${escPend(e0.badge)}</span>${escPend(e0.kind)} · ${rows.length}</li>`;
+        let html=`<li class="cc-near-grp"><span class="cc-near-k" style="background:${e0.color};color:${txtOn(e0.color)}">${e0.badge}</span>${escPend(e0.kind)} · ${rows.length}</li>`;
         html+=ver.map(n=>row(n,false)).join('');
         html+=com.slice(0,3).map(n=>row(n,false)).join('');
         html+=com.slice(3).map(n=>row(n,true)).join('');

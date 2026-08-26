@@ -32,19 +32,19 @@
   // Shared by the boot fetch and the tab-return refresh.
   function applyCatalog(d) {
     window.CC_SURFACE = { segments: d.A };
-    window.CC_CLIMBS = d.B;
-    window.CC_WATER_OSM = d.C;
+    window.CC_CLIMBS = d.N;
+    window.CC_WATER_OSM = d.B;
     window.CC_SERVICES_OSM = d.D;
-    window.CC_STAYS_OSM = d.E.osm;
-    window.CC_STAYS_PIVOT = d.E.pivot;
-    window.CC_HAZARDS = d.F;
-    window.CC_TRANSIT_OSM = d.G;
-    window.CC_SHELTER_OSM = d.H;
-    window.CC_SCENIC_OSM = d.I;
-    window.CC_HISTORY_OSM = d.J;
+    window.CC_STAYS_OSM = d.O.osm;
+    window.CC_STAYS_PIVOT = d.O.pivot;
+    window.CC_HAZARDS = d.E;
+    window.CC_TRANSIT_OSM = d.F;
+    window.CC_SHELTER_OSM = d.G;
+    window.CC_SCENIC_OSM = d.P;
+    window.CC_HISTORY_OSM = d.Q;
     // Heat points live on /map/heat.json — off by default, not on the critical payload.
-    window.CC_ROUTES = { routes: d.K };
-    window.CC_TOILETS_OSM = d.M;
+    window.CC_ROUTES = { routes: d.R };
+    window.CC_TOILETS_OSM = d.C;
     // Coverage dedupe (docs/specs/coverage-provider.md §6): source_refs already served as items.
     window.CC_CURATED_REFS = d.refs || [];
     // Stays merge: tag PIVOT features and append them once (Tourisme-Wallonie attribution).

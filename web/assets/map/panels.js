@@ -47,7 +47,8 @@ export function initLayerList(){
     const _lc=layerCounts(layer);
     const ct=`${_lc.shown}/${_lc.total}`;
     const glyph = layer.key==='scenic' ? scenicGlyph(13)
-      : layer.key==='toilets' ? toiletGlyph(13) : layer.icon;
+      : layer.key==='toilets' ? toiletGlyph(13)
+      : layer.key==='climbs' ? climbGlyph(13) : layer.icon;
     el.innerHTML=`<span class="sw"><i class="sw-g">${glyph}</i></span><span class="nm">${layer.label}</span><span class="ct">${ct}</span>`;
     el.onclick=()=>{ if(active.has(layer.key)){active.delete(layer.key);el.classList.add('off')} else {active.add(layer.key);el.classList.remove('off')} syncLayersAll(); render(); };
     lc.appendChild(el);
@@ -509,10 +510,12 @@ export function initChips(){
 export function initAddClimbHere(){
   const a=document.getElementById('addClimbHere');
   if(!a) return;   // anonymous rider: the block is not rendered at all
-  const base=a.getAttribute('href').split('?')[0];
+  // The target is /improve?type=climbs&mode=add since 2026-08-25: keep its own query, add the camera.
+  const u=new URL(a.getAttribute('href'), location.origin);
   const sync=()=>{
     const c=map.getCenter();
-    a.href=`${base}?lat=${c.lat.toFixed(5)}&lng=${c.lng.toFixed(5)}&z=${map.getZoom().toFixed(1)}`;
+    u.searchParams.set('lat', c.lat.toFixed(5)); u.searchParams.set('lng', c.lng.toFixed(5)); u.searchParams.set('z', map.getZoom().toFixed(1));
+    a.href=u.pathname+u.search;
   };
   map.on('move', sync);
   sync();

@@ -45,16 +45,7 @@ the coverage tiles and the public API use.
   are our own recorded answers, not a re-rendering of somebody else's style
   [tap][OSM]
 
-## B. Climbs, descents & terrain  *(the layer closed databases lock down)*
-- Climbs / cols / bergs: start & top points, length, elevation gain [auto][edit]
-- Average gradient, max gradient, full gradient profile [auto]
-- Climb surface & whether it's paved/gravel [edit]
-- Difficulty category (HC/1–4) [auto]
-- Named climbs & famous segments [edit]
-- Descents: technicality, hairpin count, surface, danger notes [edit][safety]
-- Per-area relief / total climbing [auto]
-
-## C. Water & food  *(ride-critical)*
+## B. Water & food  *(ride-critical)*
 - Drinking water / refill points — fountains, taps, cemeteries, churches [tap][OSM]
   - **Potability is verified, not assumed.** OSM `amenity=drinking_water` is frequently *not* confirmed potable, so a point is only shown as drinking water once cross-checked against the regional utility: **SWDE** ([swde.be](https://www.swde.be), distribution-zone open data on the [Géoportail de la Wallonie](https://geoportail.wallonie.be)) in Wallonia, **De Watergroep** ([drinkwatertappunten](https://www.dewatergroep.be/nl-be/drinkwater/extra-services/drinkwatertappunten)) in Flanders. Natural mineral springs (e.g. the Spa *pouhons*) are labelled as such — potable, but not utility tap water. eaupotable.info ([be-belgie](https://eaupotable.info/nl/be-belgie)) is an OSM-based public-fountain directory usable as a cross-reference.
   - **Verification state drives the map symbol** (planned implementation; the demo only previews it with sample data):
@@ -101,30 +92,45 @@ Sourced from OSM only. The obvious specialist directory for the Netherlands
 - Aggressive-dog warnings [tap][safety]
 - Notorious crosswind / exposed sections [tap]
 
-## G. Getting there & multimodal
+## F. Getting there & multimodal
 - Train stations with bike access; bikes-on-train rules [edit][OSM]
 - Ferries cyclists can use (+ bikes-allowed, rough schedule) [edit][OSM]
 - Tunnels & bridges a cyclist may use — or must avoid [edit][OSM]
 - Bike-share / rental stations [OSM]
 - Park-and-ride / trailheads / good ride-start parking [tap][OSM]
 
-## H. Shelter & emergency
+## G. Shelter & emergency
 - Rain shelters / covered spots / bus stops to wait out weather [tap][OSM]
 - Hospitals, pharmacies, first aid [OSM]
 - Mountain refuges / huts / emergency phones [OSM]
 
-## I. Scenic views  *(the photo-stop layer)*
+## N. Climbs, descents & terrain  *(the layer closed databases lock down)*
+- Climbs / cols / bergs: start & top points, length, elevation gain [auto][edit]
+- Average gradient, max gradient, full gradient profile [auto]
+- Climb surface & whether it's paved/gravel [edit]
+- Difficulty category (HC/1–4) [auto]
+- Named climbs & famous segments [edit]
+- Descents: technicality, hairpin count, surface, danger notes [edit][safety]
+- Per-area relief / total climbing [auto]
+
+## O. Where to sleep
+- Bike-friendly accommodation riders have actually used — B&B, hotel, hostel, campsite [tap][edit][OSM]
+- Secure bike storage at a stay [edit]
+- Bivouac / shelter / wild-camp spots (where legal) [tap]
+- *Signpost layer (links out, not Commons): cyclist-accommodation & hospitality schemes*
+
+## P. Scenic views  *(the photo-stop layer)*
 - Viewpoints / panoramas [tap][OSM][media]
 - Photo spots — where the shot is [tap][media]
 - Best light / time of day [edit]
 
-## J. History & culture  *(the story layer — stories about the region or its cities)*
+## Q. History & culture  *(the story layer — stories about the region or its cities)*
 - Landmarks & points of interest to ride past [edit][OSM]
 - Local stories & history (community text) [edit]
 - Municipality facts / public-domain coats of arms [edit]
 - Cycling-heritage sites — famous finish lines, velodromes, monuments [edit]
 
-## K. Quality rides — cyclist-experience attributes  *(ratings / suitability)*
+## R. Quality rides — cyclist-experience attributes  *(ratings / suitability)*
 - Quietness / traffic level of a road [auto][tap]
 - Scenic rating [tap]
 - Overall cycling-friendliness [tap]
@@ -132,7 +138,7 @@ Sourced from OSM only. The obvious specialist directory for the Netherlands
 - Accessibility — adapted-bike / handbike friendly, gradient-limited (Manifesto §X) [edit]
 - Best direction to ride a loop or climb [edit]
 
-## L. Ride heatmap — derived & aggregate  *(auto, anonymized — never per-rider)*
+## Ride heatmap — derived & aggregate  *(auto, anonymized — never per-rider)*
 - Road popularity / "is this actually used" heatmap (aggregate) [auto]
 - Rideability inference — e.g. is this gravel OK on a road bike (from aggregate use) [auto]
 - Under-explored areas (shows where the map is thin) [auto]
@@ -166,9 +172,9 @@ counts plus seasonal recommend-votes cast on the map drawer.
 These are never collected (Manifesto §IV) or are external. The Commons holds the *world*, not the people in it.
 
 ## Notes for product / schema
-- Most of A–H and parts of I have **OSM tags already** — design the Commons to *interoperate with* OSM (import + contribute back under ODbL), so you inherit a huge head start and avoid duplicating the base map.
+- Most of A–G, N and O, and parts of P, have **OSM tags already** — design the Commons to *interoperate with* OSM (import + contribute back under ODbL), so you inherit a huge head start and avoid duplicating the base map.
 - **[safety]** items need a freshness model: timestamp, confirmations, and decay/expiry, or the map rots.
-- The Commons's defensible curation: **climbs (B), bike-friendly stays riders vouch for (E), quality rides / cyclist-experience attributes (K), and live conditions reported by riders (F)** — the layers OSM is thin on and that closed, single-app data leaves out.
+- The Commons's defensible curation: **climbs (N), bike-friendly stays riders vouch for (O), quality rides / cyclist-experience attributes (R), and live conditions reported by riders (E)** — the layers OSM is thin on and that closed, single-app data leaves out.
 
 ## Freshness model (for the [safety] / dynamic layers)
 A "road closed" or "pothole" report that never expires becomes a lie. Perishable items need a lifecycle, or the map rots:
@@ -203,7 +209,37 @@ Road type (road / cycleway / gravel path / singletrack) [OSM] · surface materia
 [OSM] · width [OSM] · segregated vs shared · lit / unlit [OSM] · typical traffic level · barriers
 (gate · bollard · steps · ford · stile) [OSM] · one-way / contraflow allowed [OSM] · seasonal access.
 
-## B. Climbs — the worked example
+## B. Water & food — per point
+**Water:** source type (fountain · public tap · cemetery tap · church · spring) · potable? · seasonal (frost
+shut-off) · reliability. **Café:** cyclist-friendly? · open days & hours [OSM] · weekly closing day · indoor bike
+parking · outdoor seating · card/cash · coffee-stop reputation. **Shop/bakery:** type · hours · open Sunday? · what
+they stock. (Toilets moved to their own category, **C** - see next.)
+
+## C. Public toilets — per point
+Public · free or paid · accessible · opening hours [OSM]. (These four used to be the "Toilet:" clause of **B**'s
+field list; they became their own category so the map could show them as their own thing.)
+
+## D. Bike services — per point
+**Shop:** brands serviced · repairs? · rental? · e-bike service? · hours [OSM]. **Repair station:** pump + valve
+type (presta/schrader) · tools available · chain tool · work stand · 24/7? [OSM]. **Charging:** connector ·
+free/paid · location. **Vending:** tubes / CO2 / spares.
+
+## E. Hazards & conditions — per report  *(all [safety])*
+Type (pothole · loose gravel · dangerous junction · blind corner · tram tracks · level/cattle crossing · road
+closure · construction · flooding · ice · aggressive dog · notorious crosswind) · severity · **date observed /
+last confirmed** · temporary vs permanent · seasonal window · direction affected · suggested detour · confirm/decay state.
+
+## F. Getting there — per node
+**Station:** bikes allowed (always / off-peak / reservation) · bike spaces · lifts/ramps · bike ticket needed? [OSM].
+**Ferry:** bikes allowed · schedule · seasonal · cost · crossing time [OSM]. **Tunnel/bridge:** cyclists allowed? ·
+shuttle? · alternative. **Parking:** free/paid · size · surface · security [OSM]. **Bike-share:** docks · type [OSM].
+
+## G. Shelter & emergency — per point
+**Shelter:** covered? · type (bus stop · hut · church porch · barn) · seating. **Refuge/hut:** staffed? · water ·
+food · sleeping · open season [OSM]. **Medical:** hospital · pharmacy · first aid · hours [OSM]. **Emergency:** SOS
+phone / rescue point · what3words-style locator.
+
+## N. Climbs — the worked example
 Name (+ local & alternate names) · start point and top (coords, town) · which side / approach · length ·
 elevation gain · **average gradient** · **max gradient (and where)** · gradient profile / the steep ramps ·
 number of hairpins · surface (paved · gravel · cobbles) · difficulty category (HC/1–4) ·
@@ -211,57 +247,27 @@ exposed vs sheltered (wind/sun) · shade / tree cover · traffic on the climb ·
 where it tops out (viewpoint, café, pass sign) · famous-for / history (Tour, Classics) · segment/KOM reference ·
 best season & when it's *open* (snow gates) · descent notes (technicality, surface, danger) [safety] · photo spot.
 
-## C. Water & food — per point
-**Water:** source type (fountain · public tap · cemetery tap · church · spring) · potable? · seasonal (frost
-shut-off) · reliability. **Café:** cyclist-friendly? · open days & hours [OSM] · weekly closing day · indoor bike
-parking · outdoor seating · card/cash · coffee-stop reputation. **Shop/bakery:** type · hours · open Sunday? · what
-they stock. (Toilets moved to their own category, **M** — see below.)
-
-## D. Bike services — per point
-**Shop:** brands serviced · repairs? · rental? · e-bike service? · hours [OSM]. **Repair station:** pump + valve
-type (presta/schrader) · tools available · chain tool · work stand · 24/7? [OSM]. **Charging:** connector ·
-free/paid · location. **Vending:** tubes / CO2 / spares.
-
-## E. Stays — per place
+## O. Stays — per place
 Type (B&B · hotel · hostel · campsite · refuge) [OSM] · **secure bike storage** · bike wash · tools/workshop ·
 drying room · early/packed breakfast · price band · scheme (cyclist-accommodation network · independent) ·
 booking link / contact · open season · minimum nights · cyclist-rated.
 
-## F. Hazards & conditions — per report  *(all [safety])*
-Type (pothole · loose gravel · dangerous junction · blind corner · tram tracks · level/cattle crossing · road
-closure · construction · flooding · ice · aggressive dog · notorious crosswind) · severity · **date observed /
-last confirmed** · temporary vs permanent · seasonal window · direction affected · suggested detour · confirm/decay state.
-
-## G. Getting there — per node
-**Station:** bikes allowed (always / off-peak / reservation) · bike spaces · lifts/ramps · bike ticket needed? [OSM].
-**Ferry:** bikes allowed · schedule · seasonal · cost · crossing time [OSM]. **Tunnel/bridge:** cyclists allowed? ·
-shuttle? · alternative. **Parking:** free/paid · size · surface · security [OSM]. **Bike-share:** docks · type [OSM].
-
-## H. Shelter & emergency — per point
-**Shelter:** covered? · type (bus stop · hut · church porch · barn) · seating. **Refuge/hut:** staffed? · water ·
-food · sleeping · open season [OSM]. **Medical:** hospital · pharmacy · first aid · hours [OSM]. **Emergency:** SOS
-phone / rescue point · what3words-style locator.
-
-## I. Scenic views — per POI
+## P. Scenic views — per POI
 **Viewpoint:** what you see · best light / time of day · access [OSM][media]. **Photo spot:** best angle, time.
 
-## J. History & culture — per POI
+## Q. History & culture — per POI
 **Landmark:** type · era · one-line story. **Local story:** short text + source. **Municipality:** public-domain
 coat of arms · a fact or two. **Cycling heritage:** Tour/Classics history · velodrome · memorial · famous finish line.
 
-## K. Quality rides — cyclist-experience attributes — per road/route  *(ratings, 1–5 unless noted)*
+## R. Quality rides — cyclist-experience attributes — per road/route  *(ratings, 1–5 unless noted)*
 Quietness · scenery · surface quality · **bike-type suitability** (road · gravel · MTB · e-bike) · **accessibility**
 (adapted-bike / handbike friendly, gradient cap) · best direction to ride · effort/difficulty · family/kid-safe ·
 seasonal best.
 
-## L. Derived & aggregate — computed, not entered  *(all [auto])*
+## Derived & aggregate — computed, not entered  *(all [auto])*
 Road popularity score · rideability inference (is this gravel OK on a road bike?) · under-explored areas · per-area
 coverage % and data freshness · confidence/age of each [safety] item. These are *outputs* of the Commons, not things
 a person fills in — but they're published openly too.
-
-## M. Public toilets — per point
-Public · free or paid · accessible · opening hours [OSM]. (These four used to be the "Toilet:" clause of **C**'s
-field list; they became their own category so the map could show them as their own thing.)
 
 ---
 
@@ -306,7 +312,7 @@ lightest to heaviest:
 
 **Flows back → OSM:** durable infrastructure facts (the **[OSM]**-tagged items — water, repair stations, bike
 shops, surface, cycleways, barriers).
-**Stays in the Commons (not pushed to OSM):** the experience layers apps build on top, subjective ratings (J), ephemeral **[safety]** hazards
+**Stays in the Commons (not pushed to OSM):** the experience layers apps build on top, subjective ratings (R), ephemeral **[safety]** hazards
 (OSM doesn't want "pothole reported yesterday"), and anything personal. OSM wants lasting facts, not the game or the weather.
 
 **Etiquette:** follow OSM's Import & Automated-Edit guidelines — human-reviewed, attributed, never a firehose —

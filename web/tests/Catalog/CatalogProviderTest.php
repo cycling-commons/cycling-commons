@@ -113,7 +113,7 @@ final class CatalogProviderTest extends KernelTestCase
     }
 
     /**
-     * F · Hazards & conditions (map-and-search.md §4.5 Task A): served as a
+     * E · Hazards & conditions (map-and-search.md §4.5 Task A): served as a
      * plain FeatureCollection like the other point letters, so map.js can render
      * it as CATALOG features. The manual hazard is not an untouched-osm row, so
      * the coverage-retirement predicate never drops it; its attributes reach the
@@ -467,7 +467,7 @@ final class CatalogProviderTest extends KernelTestCase
     {
         $refs = $this->payload()['refs'];
         self::assertContains('node/1001', $refs);                              // D shop
-        self::assertContains('node/5001', $refs);                              // E stay (osm bucket)
+        self::assertContains('node/5001', $refs);                              // O stay (osm bucket)
         self::assertContains('way/2001', $refs);                               // A surface — osm-sourced, listed too (harmless to tiles)
         self::assertNotContains('fx:pivot:gite-test|testbourg', $refs);        // pivot is not an OSM ref
 
@@ -651,7 +651,7 @@ final class CatalogProviderTest extends KernelTestCase
         $v3 = $provider->versionTag();
         self::assertNotSame($v2, $v3, 'a confirmation must mint a new version');
 
-        // K rides the same payload: a route change must mint one too.
+        // R rides the same payload: a route change must mint one too.
         $db->executeStatement("UPDATE recommended_route SET updated_at = updated_at + interval '1 second' WHERE id = (SELECT min(id) FROM recommended_route)");
         self::assertNotSame($v3, $provider->versionTag(), 'a route update must mint a new version');
     }

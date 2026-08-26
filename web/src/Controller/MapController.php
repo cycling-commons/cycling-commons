@@ -120,6 +120,15 @@ final class MapController extends AbstractController
             $focus = $request->query->getInt('pending');
             $scope = $scopeProvider->scopeFor($user);
             $params['pending'] = $queue->pendingForMap($scope, $focus > 0 ? $focus : null);
+            // A brand-new item is not served yet, so the drawer had nothing to render
+            // it with and dumped the raw proposed fields. Hand the curator its would-be
+            // feature instead: final form, DEM numbers, same mapper as a live item
+            // (owner 2026-08-25).
+            foreach ($params['pending'] as $i => $p) {
+                if ('new' === $p['type'] && null !== $p['itemId']) {
+                    $params['pending'][$i]['preview'] = $catalogProvider->featureForItem($p['itemId'], anyState: true);
+                }
+            }
             // Do not re-derive with is_granted(): setup-pending curators hold the role without this payload.
             $params['pending_is_curator'] = true;
             $params['gone'] = $catalogProvider->goneForMap($scope);

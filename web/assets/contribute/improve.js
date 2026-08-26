@@ -1014,6 +1014,10 @@
       if (WZ.loc.lengthKm) {
         locTxt += ' · ' + t('climb_length', { '%km%': uKm(WZ.loc.lengthKm) });
       }
+      // The measured numbers, so the review echoes what step 1 showed.
+      if (WZ.loc.gain) locTxt += ' · △ ' + (window.ccElev ? window.ccElev(WZ.loc.gain) : Math.round(Number(WZ.loc.gain)) + ' m');
+      if (WZ.loc.avg) locTxt += ' · ' + t('measured_avg', { '%pct%': WZ.loc.avg });
+      if (WZ.loc.max) locTxt += ' · ' + t('measured_max', { '%pct%': String(WZ.loc.max).replace(/\s*%$/, '') });
     }
 
     var fieldRows = [];
@@ -1043,7 +1047,8 @@
     var note = document.getElementById('wz-nochange');
     if (note) {
       note.textContent = t('nothing_changed');
-      note.hidden = !nothingChanged();
+      // A curator sees the map pointer instead; the two notices never stack.
+      note.hidden = !nothingChanged() || !!document.getElementById('wz-curator-decide');
     }
 
     var block = document.getElementById('reviewMedia');

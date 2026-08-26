@@ -37,12 +37,12 @@ def _label_case(selectors) -> str:
 # attributes cost nothing in the tile.
 _EXTRA_SQL = {
     "kind": "'kind', kind",
-    # C: potable unless OSM says otherwise — drinking_water=yes explicit, or
+    # B: potable unless OSM says otherwise — drinking_water=yes explicit, or
     # amenity=drinking_water with no contradicting drinking_water tag
     # (osm-data-architecture.md §5 water selectors).
     "potable": ("'potable', (tags->>'drinking_water' = 'yes' OR "
                 "(tags->>'amenity' = 'drinking_water' AND NOT (tags ? 'drinking_water')))"),
-    # E: the stays accessibility filter narrows on the CatalogFormRegistry
+    # O: the stays accessibility filter narrows on the CatalogFormRegistry
     # vocabulary (map.js applyStaysAccessFilter); the only OSM-derivable member
     # is wheelchair=yes → 'Wheelchair-accessible'. Everything else stays NULL.
     "acc": "'acc', CASE WHEN tags->>'wheelchair' = 'yes' THEN 'Wheelchair-accessible' END",

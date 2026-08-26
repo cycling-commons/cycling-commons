@@ -119,8 +119,8 @@ final class ProfileSettingsTest extends WebTestCase
         $client->request('GET', '/profile');
 
         self::assertResponseIsSuccessful();
-        // Account dashboard shows the display name in the (a11y) heading + top bar.
-        self::assertSelectorTextContains('h1', 'Hanne V');
+        // Account dashboard shows the display name in the page head + top bar.
+        self::assertSelectorTextContains('.mh', 'Hanne V');
         self::assertSelectorTextContains('.dtop', 'Hanne V');
     }
 

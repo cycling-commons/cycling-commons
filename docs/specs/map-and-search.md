@@ -16,7 +16,7 @@ data model unchanged; it never defines data semantics.
 [catalog-data-model.md](catalog-data-model.md). Per-type edit contracts and the
 lifecycle/votability funnel: [edit-items/README.md](edit-items/README.md).
 Submission/moderation/confirmation machinery:
-[moderation-and-contribution.md](moderation-and-contribution.md). The K route
+[moderation-and-contribution.md](moderation-and-contribution.md). The R route
 domain (states, votes, rides, corrections, GPX endpoint):
 [route-domain.md](route-domain.md). CSP/CSRF/sanitizer/limiters:
 [security-architecture.md](security-architecture.md). The coverage pipeline that
@@ -50,7 +50,7 @@ Implementation surfaces: `web/assets/map/map.js` (all client behaviour),
    exception: they render *as invitations to contribute*, visually distinct
    from data rows, never as values.
 4. **Honesty labels.** Anything derived, simulated, or illustrative says so on
-   the surface where it appears: the L heatmap and planner are labelled
+   the surface where it appears: the ride heatmap and planner are labelled
    illustrative/faked (§11), route surface breakdowns carry an
    "estimate · N% of route mapped" method note, best-of is derived (never
    hand-set — funnel in
@@ -295,7 +295,7 @@ by default and a rider asks for one section at a time.
   one split describes the catalogue everywhere. Membership comes from
   `layer.votable`, which mirrors `ItemType::isVotable()`. It is **not** `exp`:
   `exp` decides what Curated mode hides, and the two disagree on both road
-  surface (utility, but filters to curated) and K (votable, but special-cased
+  surface (utility, but filters to curated) and R (votable, but special-cased
   by key). Within a group, `CATALOG`'s own order carries through; that array's
   order stays the **draw** order (`render.js` walks it, so later entries stack
   above earlier ones) and must not be reshuffled for display reasons.
@@ -371,7 +371,7 @@ by default and a rider asks for one section at a time.
 - **Experiential layers** (`layer.exp`: climbs, stays, scenic, history) filter
   to `f.cur` in Curated; utility layers always draw their confirmed pins, and
   their unverified OSM dots draw only in Everything (this gate changes under
-  §12). **K routes** honour a server-computed best-of: Curated mode fetches
+  §12). **R routes** honour a server-computed best-of: Curated mode fetches
   `GET /map/best-of` for the active *(season, bike)* facet (`#boSeason` /
   `#boBike` selects, shown only in Curated), flags the returned ids `cur`, and
   filters to them. Membership only — the server's rank order is latent until a
@@ -681,7 +681,7 @@ hold and are the reason it reads honestly in the meantime:
 
 ### 4.4 Preference prefilter
 
-- Saved **bike types really filter the routes (K) layer** — routes are the only
+- Saved **bike types really filter the routes (R) layer** — routes are the only
   bike-tagged layer; nothing else is preference-filtered. Applies in **both**
   modes, composing with (never replacing) the mode/best-of filters.
 - **Predicate (`prefMatch()`, unknown ≠ unsuitable):** visible iff
@@ -1155,12 +1155,12 @@ Mechanism, one attribute end to end:
   bridge** — a square is 6 km of countryside, not a road, and the honest next
   step is to go and ride it rather than to invent an answer for a road you have
   not seen.
-- **B · Climbs** with traced geometry draw a gradient-coloured line
+- **N · Climbs** with traced geometry draw a gradient-coloured line
   (`line-gradient` over `line-progress`, purple ramp `gradColor()`) plus a
   "steepest pitch" marker; the pin sits at the climb **foot** (first route
   vertex). The same purple ramp renders the 1–5 difficulty scale in the drawer
   (deliberately "climb-coloured").
-- **K · Routes** draw in a **pre-blended lighter orange at full opacity**
+- **R · Routes** draw in a **pre-blended lighter orange at full opacity**
   (`ROUTE_BASE_COLOR`) instead of a translucent line — translucent lines
   stacked where routes share a road read as random darker segments. The
   **selected** route gets full brand orange, a wider halo, and dims every
@@ -1274,7 +1274,7 @@ permanently retired.
 - **Delivery:** `App\Catalog\CatalogSchemaProvider::all()` walks the registry,
   keeps `CatalogField::$display === true` fields in `fields`-then-`addFields`
   order, resolves labels through the translator once at serialize time, and is
-  injected as `window.CC_FIELD_SCHEMA = {A: […], …, K: […]}` — **localized per
+  injected as `window.CC_FIELD_SCHEMA = {A: […], …, R: […]}` — **localized per
   request, deliberately kept OUT of `catalog.json`** (that endpoint is
   locale-agnostic and HTTP-cached; never inflate the cached bulk payload with
   locale-varying data).
@@ -1562,7 +1562,8 @@ the index and the dropdown.
   as of 2026-08-09 the codebase makes zero Nominatim requests. The region
   boundary moved to our own endpoint, and the add-climb wizard's last call
   (which geocoded the hardcoded string "Wallonia" on every page load, wrong on
-  a worldwide wizard) was deleted rather than proxied. Distributed browser
+  a worldwide wizard) was deleted rather than proxied (the wizard itself
+  followed on 2026-08-25; `improve.js` never made that call). Distributed browser
   calls could never have honoured a per-application rate cap; the only way to
   respect the policy at scale was to need it zero times. Photon's host is in
   the CSP `connect-src`; Nominatim's is not, because there is nothing to
@@ -1883,8 +1884,11 @@ counting it would let a rider verify their own contribution
 - **3.** Picking a non-drawn **experiential** item from search in Curated mode
   drops a single temporary **reveal pin** (community style + selection halo)
   and opens its drawer — never force-switches the map to Everything. Cleared on
-  the next pick, drawer close, or mode change. The existing `openRouteById`
-  force-switch (§8) must adopt the same pattern.
+  the next pick, drawer close, or mode change. **Deep links are the exception**
+  (owner decision 2026-08-25): a shared or desk link is an explicit ask to see
+  one place, so `?item=` / `?feature=` / `?route=` lift the mode to the lowest
+  rung that draws it, transiently and with a toast (§8). A search pick inside a
+  session keeps the reveal pin, because the rider chose the mode a moment ago.
 - **4.** Photon `countrycode === 'BE'` filter (§7.2).
 
 ## 13. Pending map enhancements — **Specified, pending implementation**

@@ -57,7 +57,7 @@ final class SitemapController extends AbstractController
         $disallow = [
             '/admin', '/moderate', '/profile', '/settings', '/messages',
             '/login', '/register', '/reset-password', '/2fa', '/i18n/',
-            '/contribute', '/add-climb', '/improve', '/propose-route',
+            '/contribute', '/improve', '/propose-route',
             '/map/', '/api/', '/photo/',
         ];
 

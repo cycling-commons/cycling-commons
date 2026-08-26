@@ -32,7 +32,8 @@ Two content sources are explicitly **untrusted** even though they render on
 our pages: **item attributes** (they survive OSM/Wikidata import, so they are
 attacker-editable upstream) and **translation catalogs** (the repo is public
 and contributor-oriented — a careless or malicious translation PR is an input
-channel). Defence is layered: output escaping everywhere
+channel; in-site overlays in [translations.md](translations.md) are the same
+class once that path exists). Defence is layered: output escaping everywhere
 (security-architecture.md §4), a sanitizer for the one place markup is
 deliberately rendered from catalogs (security-architecture.md §3), and an
 enforced CSP so a payload that slips past both still does not execute

@@ -92,8 +92,8 @@
 
   <h3 class="cat-h"><b>{{ 'contribute_hub.cat_emotional_h'|trans }}</b> <span>{{ 'contribute_hub.cat_emotional_sub'|trans }}</span></h3>
   <div class="grid">
-    <a class="card" href="{{ path('add_climb') }}">
-      <span class="ic">⛰</span>
+    <a class="card" href="{{ path('improve', {type: 'climbs', mode: 'add'}) }}">
+      <span class="ic"><svg class="ic-mtn" viewBox="0 0 24 18" width="26" height="20" aria-hidden="true" focusable="false"><path d="M0 18 L7.5 4 L11 10 L14.5 5.5 L24 18 Z" fill="currentColor"/></svg></span>
       <h4>{{ 'contribute_hub.card_climbs_h'|trans }}</h4>
       <p>{{ 'contribute_hub.card_climbs_p'|trans }}</p>
       <span class="go">{{ 'contribute_hub.card_climbs_go'|trans }}</span>

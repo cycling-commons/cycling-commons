@@ -244,6 +244,8 @@
     .kv:last-child{border-bottom:1px solid rgba(20,22,14,.08)}
   }
   .nochange{font-size:.85rem;color:var(--clay);background:var(--paper-deep);border-left:2px solid var(--clay);padding:.6rem .85rem;border-radius:0 6px 6px 0;margin-top:.9rem}
+  .curator-decide{color:var(--ink);border-left-color:var(--spruce)}
+  .curator-decide a{color:var(--clay);font-weight:600;text-decoration:underline;margin-left:.3rem}
   .rm-item.is-existing img{opacity:.85}
   .prov{font-size:.8rem;color:#595c4d;margin-top:1rem;line-height:1.5}
 
@@ -431,6 +433,8 @@
     search_coords_go: 'improve.step1.search_coords_go'|trans,
     label_location: 'improve.review.label_location'|trans,
     loc_climb: 'improve.review.loc_climb'|trans,
+    measured_avg: 'improve.review.measured_avg'|trans,
+    measured_max: 'improve.review.measured_max'|trans,
     nothing_changed: 'contribute.error.nothing_changed'|trans
   }|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
   {# The outbound-links editor's own bag: its caps come from OutboundLinks so
@@ -696,6 +700,12 @@
     {# Filled + revealed by improve.js when an edit carries no change at all
        (the Submit button is disabled in the same breath). #}
     <p class="nochange" id="wz-nochange" hidden></p>
+    {% if pending_submission_id is defined and pending_submission_id %}
+      {# A curator lands here from the queue's ✎ to correct a detail; the
+         decision itself is made on the map, in place, with the change set. #}
+      <p class="nochange curator-decide" id="wz-curator-decide">{{ 'improve.review.curator_decide'|trans }}
+        <a href="{{ path('map') }}?pending={{ pending_submission_id }}" target="_blank" rel="noopener">{{ 'improve.review.curator_decide_link'|trans }} &#8599;</a></p>
+    {% endif %}
 
     {# The photos themselves, not their filenames. The heading is rendered here
        rather than in improve.js so it stays translated — that file has no

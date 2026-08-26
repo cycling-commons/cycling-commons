@@ -13,9 +13,9 @@ ran.
 
 Two layers, matching the catalogue's own letters:
 
-- **I · scenic-views** — mountains, lakes, waterfalls, national parks and
+- **P · scenic-views** — mountains, lakes, waterfalls, national parks and
   viewpoints. Things you stop the bike for.
-- **J · history-culture** — UNESCO World Heritage sites, castles, monasteries,
+- **Q · history-culture** — UNESCO World Heritage sites, castles, monasteries,
   monuments. Things worth riding past slowly.
 
 Selection is by Wikidata sitelink count, which is the only machine-readable

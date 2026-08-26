@@ -83,6 +83,7 @@ docs/specs/Dated/
 # Agent scratch (worktrees, SDD ledger) — local only, never committed.
 .claude/
 .superpowers/
+.worktrees/
 
 # Understand-Anything knowledge graph — generated analysis artifacts, regenerated
 # on demand (auto-update on commit); never committed.

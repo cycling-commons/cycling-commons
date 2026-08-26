@@ -101,7 +101,7 @@ data.</p>
 <p><strong>Drawing brief:</strong> keep the four-tier vertical flow of the original figure — one
 tile archive (`coverage.pmtiles`) at the top, an arrow down into one source box (`source:
 "coverage"`), fanning out across a horizontal bar into three layer boxes standing side by side (for
-example `water icons` and `water heat`, both on source-layer `c_be`, plus `services icons` on
+example `water icons` and `water heat`, both on source-layer `b_be`, plus `services icons` on
 `d_be`), each sending its own arrow down into one shared rendered-map panel. In that panel, replace
 the old cluster-bubble circle with a soft blurred patch (the heatmap) sitting under a scatter of
 small individual dot icons (the symbol layer) — no bubble, no count label anywhere in the panel.
@@ -360,7 +360,7 @@ way to answer "what's here?" except by asking somewhere else.
 ## Try it
 
 !!! tip "Hands-on — connect a `source-layer` name to real rows"
-    `addCoverage()` reads one `coverage` source and slices it by `source-layer` — `c_be` for Belgian
+    `addCoverage()` reads one `coverage` source and slices it by `source-layer` — `b_be` for Belgian
     water points, and so on. Fetch the running map page to see the URL that source actually points
     at, then ask the database to build those layer names for you, straight from the two columns they
     are made of.
@@ -379,13 +379,13 @@ way to answer "what's here?" except by asking somewhere else.
     CC_COVERAGE_URL = "http:\/\/localhost:9100\/cc-maps\/coverage\/20260723-1429.pmtiles";
      source_layer | count
     --------------+-------
-     c_zz         |     1
+     b_zz         |     1
      d_zz         |     2
-     e_zz         |     2
+     f_zz         |     1
      g_zz         |     1
-     h_zz         |     1
-     i_zz         |     1
-     j_zz         |     2
+     o_zz         |     2
+     p_zz         |     1
+     q_zz         |     2
     (7 rows)
     ```
 
@@ -394,12 +394,12 @@ way to answer "what's here?" except by asking somewhere else.
     pipeline republishes, which is expected (`tiles.md` covers why). The second is chapter 7's
     `(letter, country_code)` table with the two columns pasted together in exactly the order
     `export_geojsonl()` pastes them, which is what makes it a `source-layer` name: the string
-    `c_zz` in that output is the same string a MapLibre
-    `addLayer({source:'coverage', 'source-layer':'c_zz', ...})` call would read, and the count beside
+    `b_zz` in that output is the same string a MapLibre
+    `addLayer({source:'coverage', 'source-layer':'b_zz', ...})` call would read, and the count beside
     it is how many rows that layer holds.
 
-    On a machine that has run the full `make coverage-refresh` the same query names `c_be`, `c_de`,
-    `c_nl` and eighteen more, because `country_code` is stamped for real there; on the offline seed
+    On a machine that has run the full `make coverage-refresh` the same query names `b_be`, `b_de`,
+    `b_nl` and eighteen more, because `country_code` is stamped for real there; on the offline seed
     every layer ends `_zz`, for the reason chapter 7 spells out. Either way the derivation is the
     same, and that is the point — the layer name is not a label someone typed, it is two columns
     joined by an underscore. If `CC_COVERAGE_URL` prints empty on your machine, no coverage archive

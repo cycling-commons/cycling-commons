@@ -17,14 +17,17 @@ documents own the surrounding contracts:
 - [osm-data-architecture.md](osm-data-architecture.md) — materialize-on-edit
   (osm-data-architecture.md §6) and how the pipeline here becomes the boundary
   crossing for OSM-backed items.
-- [route-domain.md](route-domain.md) — the K carve-out: route proposals,
+- [route-domain.md](route-domain.md) — the R carve-out: route proposals,
   corrections and votes never enter the item pipeline; `/improve` refuses
-  `type=K`. Route moderation reuses only the shared systems defined here
+  `type=R`. Route moderation reuses only the shared systems defined here
   (messages, Trash, retention, moderator areas).
 - [catalog-data-model.md](catalog-data-model.md) — the `item` table, states,
   identity and serving.
 - [account-and-auth.md](account-and-auth.md) — `ROLE_CURATOR`, mandatory 2FA
   for elevated roles, admin desk patterns.
+- [translations.md](translations.md) — in-site non-English proposals; the
+  curator desk is unscoped (pending implementation). The YAML catalogues and
+  locale routing stay in [dev-environment.md](dev-environment.md) §7.
 - [security-architecture.md](security-architecture.md) — stateless CSRF,
   escaping rules, sanitizer.
 
@@ -372,9 +375,9 @@ data-loss bug class this contract closes.
   fake default editor.
 - A `type`/letter mismatch between the param and the resolved item also falls
   through to the explainer (editing the wrong item is worse than editing none).
-- **`type=K` is always refused** (route/item id-collision guard): route ids
+- **`type=R` is always refused** (route/item id-collision guard): route ids
   live in `recommended_route`, a separate sequence from `item`, so resolving a
-  K id against the item table would bind an unrelated item. Riders interact
+  R id against the item table would bind an unrelated item. Riders interact
   with routes via the community loop ([route-domain.md](route-domain.md)).
 - The form is prefilled with the item's current `name` + attribute values;
   was → now is computed server-side at submit (§3.2), never trusted from the
@@ -684,7 +687,18 @@ at a time, so the row is sized for that:
   **Review ↗**, then Message the rider / Escalate / Trash. The last three were
   link-ish `<summary>` text stacked in a two-column block below the primary
   action, which cost two horizontal rules and two extra rows for three
-  controls. They keep their order — **Escalate before Trash** (§6d of
+  controls. Since 2026-08-25 all five are icon-only (◎ review on the map,
+  ✎ edit the form, ✉ message, ⚑ escalate, the bin), the word kept as the
+  tooltip and the accessible name: five worded buttons repeated per row read
+  as a wall on the list view (owner). A new place also carries the OSM
+  identity chip in its meta line (open / linked / not in OSM,
+  [catalog-data-model.md](catalog-data-model.md) §5b). On the map, a
+  brand-new submission opens in its final form: `MapController` attaches the
+  item's would-be feature (`CatalogProvider::featureForItem(id, anyState: true)`,
+  the one place the served-state gate is bypassed, curators only) as
+  `preview`, and the drawer renders it with the live-item renderers (rows,
+  gradient strip, length) under "This item, as proposed" instead of the raw
+  field dump; a climb's after-line is coloured by its bars (2026-08-25). They keep their order — **Escalate before Trash** (§6d of
   [photo-uploads.md](photo-uploads.md)), so a curator reaching for "destroy
   this" because it is illegal meets the right verb first.
 - **Both destructive verbs open with WHEN to use them and close with a ticked
@@ -924,11 +938,11 @@ in place *and* reopen the drawer on the applied result:
 - **Pool letters** come back as a GeoJSON `feature`. `addCuratedFeature()` now
   **replaces** a feature whose id is already present instead of returning early
   — the early return was why an approved edit never refreshed.
-- **B · climbs** come back as the `climb` object map.js consumes, rebuilt
+- **N · climbs** come back as the `climb` object map.js consumes, rebuilt
   through the same mapper the bulk payload uses (`climbFromRow`), so the
   live-updated climb cannot drift from the served one. Climbs were previously
-  excluded from `featureForItem()` along with A and K.
-- **A · segments and K · routes** still send nothing and keep the old
+  excluded from `featureForItem()` along with A and R.
+- **A · segments and R · routes** still send nothing and keep the old
   close-and-toast: a segment's geometry and the route domain are not worth
   half-supporting on this path.
 
@@ -996,7 +1010,7 @@ idempotent by item id). Before this the pending pin simply vanished on approve
 and the place appeared nowhere until the curator reloaded — the map's pools are
 built once, at boot. It joins as a **community** pin (dashed, `v` absent):
 approved is not confirmed, and only a rider's confirmation flips that. Letters
-whose payload is not a feature collection (A segments, K routes) send
+whose payload is not a feature collection (A segments, R routes) send
 no item and keep the reload behaviour.
 
 **The decision buttons are delegated, not bound per element (2026-08-03).**
@@ -1108,7 +1122,11 @@ Both now render the change, as the same was → now shape the desk's `.q-diff`
 uses:
 
 - **`/profile` contributions list** — under every row that changed something.
-- **`/messages`** — inside the decision card, headed "What you changed".
+- **`/messages`** — inside the decision card, headed "What you changed", **folded
+  by default** behind a small "Show details" link (a native `<details>`, no
+  script). The card says what happened; the diff is there for the rider who
+  wants to check it, not pushed at everyone (owner 2026-08-25). The unread
+  card is outlined, with no thicker left edge (same decision).
   **Not** on a needs-info card: there the curator's question is the point, and
   a diff above the reply box pushes it down the page.
 
@@ -1544,8 +1562,8 @@ source of truth:
 
 | Type | Stances (`ConfirmationStance`) | `stanceKind` |
 |---|---|---|
-| C · Water & food | `potable` / `not_potable` | `potability` |
-| B · Climbs, D · Services, F · Hazards, G · Getting there, H · Shelter, I · Scenic views, J · History & culture, M · Public toilets, W · Where to sleep | `exists` | `existence` |
+| B · Water & food | `potable` / `not_potable` | `potability` |
+| C · Public toilets, D · Services, E · Hazards, F · Getting there, G · Shelter, N · Climbs, O · Where to sleep, P · Scenic views, Q · History & culture | `exists` | `existence` |
 | A · Road surface, all remaining votable types | none — they vote, or are measured | — |
 
 **Why the second row grew** (owner decision 2026-08-12). The old test was
@@ -1593,7 +1611,7 @@ three live in `ConfirmationFreshness`:
    predicate than §10.1's stance list: `ItemType::confirmationAges()`. Every
    place a rider can stand next to is *confirmable* - that is §10.1's point -
    but **a tap breaks, a shop shuts, a hazard clears; a viewpoint does not
-   stop being a view.** So C, D, F, G, H, M, W and A age; B, I and J never do.
+   stop being a view.** So B, C, D, E, F, G, O and A age; N, P and Q never do.
    Reusing `confirmationStances()` here would have aged the whole map, because
    the 2026-08-12 decision deliberately widened it to nearly every letter.
 3. **`source <> 'form'`**, as everywhere else: a submitter answering their own
@@ -1668,7 +1686,7 @@ decision 2026-08-12).
 
 | Button | Writes | Offered on |
 |---|---|---|
-| ⚠ Out of order | `condition = 'Out of order'` | C · water, D · services, M · toilets (`CC_BREAKABLE`) |
+| ⚠ Out of order | `condition = 'Out of order'` | B · water, C · toilets, D · services (`CC_BREAKABLE`) |
 | ⌀ Closed | `condition = 'Closed'` | every confirmable type |
 | ✕ Not there anymore | `condition = 'Not there anymore'` | every confirmable type |
 
@@ -1726,7 +1744,7 @@ The map rail's one-line invite (`#emptyScopeInvite`,
 the active scope's curated count is zero. That count is a faithful reduction
 of `featureVisible()`'s curated branch (render.js): only features on
 experiential layers (`l.key === 'experience'` or `l.exp`) with `f.cur` set
-count; utility layers (C/D/F/G/H) never carry a `cur` flag and can neither
+count; utility layers (B/C/D/E/F/G) never carry a `cur` flag and can neither
 suppress nor trigger the invite, so a stray hazard report or an unverified
 route upload never silently hides it. This holds independent of the rider's
 own view-mode toggle, and is computed once per map load.
@@ -2119,7 +2137,7 @@ offers exactly that list, and the endpoint validates against the same constant �
 so the panel can never present a choice the server refuses. `resupply` may be
 water or a bike service. `other` is the exception since 2026-08-18 (owner):
 it carries no category on the device and asks for none in review — its card is
-a free-text description only, and the intake auto-files it as an **F notice**
+a free-text description only, and the intake auto-files it as an **E notice**
 with `hazardType: Other`, the curator's read of the text being the filing
 decision. An empty description refuses to send: "Other" as a name tells the
 curator nothing. A **bare surface tap** (the device's type picker timed out:
@@ -2168,8 +2186,8 @@ outstanding, in order.
 - **The sub-menu decides the letter and fills the fields.** Scout's second tap
   is the half that says what the rider meant, and it does not always land where
   the tag type alone would put it: SCENERY · HISTORY and SCENERY · ARCHITECTURE
-  are J, not I. NOTICE · POTHOLES arrives as F with `hazardType` already
-  answered; CLOSURE · WEEKS as F with `closedFor`, which is what lets the map
+  are Q, not P. NOTICE · POTHOLES arrives as E with `hazardType` already
+  answered; CLOSURE · WEEKS as E with `closedFor`, which is what lets the map
   retire it by itself. `ScoutTag::DETAIL_LETTERS` and `DETAIL_FIELDS` own both
   tables and the panel reads them from the server, so it cannot offer a letter
   the endpoint refuses. A sub-menu answer never follows a tag the rider re-filed

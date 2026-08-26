@@ -46,7 +46,12 @@ committed — working docs stay local.
 - `data-source-register.md` — every candidate upstream source per catalog
   letter, with its licence, an Ingest/Reference/Ask/No verdict and the evidence
   behind it. The supply side; `wiki/landscape.md` is the product side.
-- `dev-environment.md` — dev stack, platform decisions, conventions.
+- `dev-environment.md` — dev stack, platform decisions, conventions
+  (locale routing and YAML parity; in-site translation proposals live in
+  [translations.md](translations.md)).
+- `translations.md` — English-leading catalogues, in-site proposals,
+  curator publish via overlays, rider strings CC BY-SA 4.0 (not git), DeepL
+  as a later admin assist. Specified, pending implementation.
 - `system-configuration.md` — the runtime-editable settings: the registry, the
   two value types, the `system_setting` table, and the admin page that writes
   it. Editorial thresholds plus the operational dials an owner may need to

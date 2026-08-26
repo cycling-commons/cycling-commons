@@ -63,7 +63,7 @@ test('the two wizards are the pages that depend on the fallback', () => {
   // If either ever grows an id="main", this test is what says the fallback is
   // no longer load-bearing for it - and the pin above can be re-read in that
   // light rather than looking like belt and braces for nothing.
-  for (const tpl of ['templates/contribute/improve.html.twig', 'templates/contribute/add_climb.html.twig']) {
+  for (const tpl of ['templates/contribute/improve.html.twig']) {
     const html = read(tpl);
     assert.ok(html.includes('id="wiz"'), `${tpl} no longer roots on #wiz`);
     assert.ok(!/<main[\s>]/.test(html), `${tpl} grew a <main> - re-read this test`);
