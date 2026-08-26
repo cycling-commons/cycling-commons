@@ -11,6 +11,7 @@ use App\Catalog\CatalogProvider;
 use App\Catalog\CatalogSchemaProvider;
 use App\Catalog\ChangeHistoryView;
 use App\Catalog\ClosureExpiryService;
+use App\Catalog\ItemType;
 use App\Catalog\MapTheme;
 use App\Catalog\MapViewMode;
 use App\Catalog\RegionBoundaryProvider;
