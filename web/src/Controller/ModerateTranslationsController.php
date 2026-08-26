@@ -10,6 +10,7 @@ use App\Entity\User;
 use App\Form\TranslationDecisionType;
 use App\Moderation\AlreadyDecidedException;
 use App\Moderation\MissingQuestionException;
+use App\Moderation\ModerationScopeProvider;
 use App\Routing\LocalePrefix;
 use App\Translation\CatalogueBrowser;
 use App\Translation\DecisionService;
@@ -33,6 +34,7 @@ final class ModerateTranslationsController extends AbstractController
     public function __construct(
         private readonly DecisionService $decisions,
         private readonly CatalogueBrowser $browser,
+        private readonly ModerationScopeProvider $scopeProvider,
     ) {
     }
 
@@ -87,10 +89,15 @@ final class ModerateTranslationsController extends AbstractController
             ];
         }
 
+        /** @var User $curator */
+        $curator = $this->getUser();
+        $scope = $this->scopeProvider->scopeFor($curator);
+
         return $this->render('moderate/translations.html.twig', [
             'page_title' => 'meta.moderate_translations_title',
             'page_description' => 'meta.moderate_translations_description',
             'cards' => $cards,
+            'mod_scope_names' => $this->scopeProvider->describe($curator, $scope),
         ]);
     }
 }

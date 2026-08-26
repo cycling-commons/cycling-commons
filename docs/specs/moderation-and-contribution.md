@@ -649,7 +649,7 @@ on the desk or as a `<dl>` on the rider pages, foldable as `details.q-diff`),
 the density switch (`account/_density.html.twig`) and the pager are defined
 **once**, in `account/_shell_styles.html.twig`, which includes
 `moderate/_card_styles.html.twig`. Every list page draws from there: the
-submissions desk, History, Routes, Takedowns, Data, Regions, and on the rider
+submissions desk, History, Routes, Takedowns, Translations, Data, Regions, and on the rider
 side `/profile` (contributions, route proposals, curator applications, votes)
 and `/messages`. A page's own `<style>` block keeps only what is truly its own
 (the data desk's side-by-side pair, the takedown photo size). A rider reading

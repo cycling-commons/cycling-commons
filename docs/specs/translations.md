@@ -251,9 +251,8 @@ not labelled as a named contributor's CC BY-SA work unless a human then
 adopts and consents to them as such. Do not send DeepL output through the
 photo-style consent flow as if a rider wrote it.
 
-When this ships, `/licenses` and the contributor terms gain a fourth line
-next to data / media / code: UI translations from the website, CC BY-SA
-4.0. Until then the three-way split on that page is unchanged.
+`/licenses` and the contributor terms carry a fourth line next to data /
+media / code: UI translations from the website, CC BY-SA 4.0.
 
 ---
 
