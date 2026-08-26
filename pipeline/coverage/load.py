@@ -538,6 +538,22 @@ def load_region(
                 "WHERE s.ref = c.ref AND s.letter = c.letter)",
                 (src_id,),
             )
+            # The app stores each open row's OSM-candidate list on the row
+            # (item.osm_candidates, catalog-data-model.md §5b) instead of asking
+            # this table on every list view. This slice just changed, so every
+            # open row of the same country gets its list cleared; the app
+            # recomputes on the next read. Answered rows (osm_checked_at set)
+            # are left alone. to_regclass: the pipeline's own test schema has no
+            # item table, and a harvest must not depend on the app's schema.
+            cur.execute(
+                "DO $$ BEGIN "
+                "IF to_regclass('item') IS NOT NULL THEN "
+                "  UPDATE item SET osm_candidates = NULL, osm_candidates_at = NULL "
+                "   WHERE osm_checked_at IS NULL AND osm_candidates_at IS NOT NULL "
+                "     AND country_code IN (SELECT DISTINCT country_code FROM coverage_poi_staging "
+                "                          WHERE country_code IS NOT NULL); "
+                "END IF; END $$"
+            )
             # Delta-scoped membership (design §3.4): restrict the 3 recompute
             # UPDATEs to rows the upsert touched, so unchanged rows keep last
             # week's region_id/cc (correct while the `region` table is unchanged)

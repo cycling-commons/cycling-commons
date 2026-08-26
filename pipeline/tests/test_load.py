@@ -766,9 +766,29 @@ def test_a_stamp_that_stopped_being_operational_is_re_derived(db):
     import os
     os.environ["COVERAGE_FULL_MEMBERSHIP"] = "1"
     try:
-        load_region(db, [_row("node/1", "C", lon=5.0, lat=50.5)], "europe/belgium")
+        load_region(db, [_row("node/1", "B", lon=5.0, lat=50.5)], "europe/belgium")
     finally:
         del os.environ["COVERAGE_FULL_MEMBERSHIP"]
     assert db.execute(
         "SELECT region_id FROM coverage_poi WHERE ref = 'node/1'"
     ).fetchone()[0] == 21, "the stale infrastructure stamp must be re-derived"
+
+
+def test_load_region_clears_stored_osm_candidates_of_its_country_only(db):
+    """The app stores each open row's OSM-candidate list on item (catalog-data-model.md §5b);
+    a swapped slice invalidates that country's open lists, answered rows and other countries keep theirs."""
+    ensure_schema(db)
+    db.execute(
+        "CREATE TABLE item (id bigint PRIMARY KEY, country_code char(2), osm_checked_at timestamp, "
+        "osm_candidates jsonb, osm_candidates_at timestamp)"
+    )
+    db.execute(
+        "INSERT INTO item VALUES "
+        "(1, 'BE', NULL, '[]', now()), "          # open, BE: cleared
+        "(2, 'BE', now(), '[]', now()), "         # answered, BE: kept
+        "(3, 'NL', NULL, '[]', now()), "          # open, NL: kept
+        "(4, 'BE', NULL, NULL, NULL)"             # open, BE, never computed: stays NULL
+    )
+    load_region(db, [_row("node/10", "B")], "europe/belgium")
+    rows = dict(db.execute("SELECT id, osm_candidates_at IS NOT NULL FROM item ORDER BY id").fetchall())
+    assert rows == {1: False, 2: True, 3: True, 4: False}
