@@ -46,7 +46,7 @@ final class CuratorConfirmationTest extends KernelTestCase
         return $u;
     }
 
-    private function item(string $letter = 'J', ItemState $state = ItemState::Unverified): Item
+    private function item(string $letter = 'Q', ItemState $state = ItemState::Unverified): Item
     {
         $item = (new Item())->setLetter($letter)->setName('Muiderslot')
             ->setGeom('{"type":"Point","coordinates":[5.07,52.33]}')->setCountryCode('NL')
@@ -121,7 +121,7 @@ final class CuratorConfirmationTest extends KernelTestCase
         // Verifying an item on the strength of a warning would read as approval
         // of the thing being warned about.
         self::bootKernel();
-        $water = $this->item('C');
+        $water = $this->item('B');
         $curator = $this->user('warn-confirm@test.test', ['ROLE_CURATOR']);
 
         $this->service()->record($water, $curator, ConfirmationStance::NotPotable);
@@ -132,7 +132,7 @@ final class CuratorConfirmationTest extends KernelTestCase
     public function testAnAlreadyVerifiedItemIsNotTouchedAgain(): void
     {
         self::bootKernel();
-        $item = $this->item('J', ItemState::Verified);
+        $item = $this->item('Q', ItemState::Verified);
         $curator = $this->user('again-confirm@test.test', ['ROLE_CURATOR']);
 
         $this->service()->record($item, $curator, ConfirmationStance::Exists);

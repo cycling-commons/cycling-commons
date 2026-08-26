@@ -32,7 +32,7 @@ final class ImportItemLinksCommandTest extends KernelTestCase
     {
         return (int) $this->db->fetchOne(
             "INSERT INTO item (letter, name, geom, country_code, state, source, source_ref, attributes, created_at, updated_at, imported_at)
-             VALUES ('J', 'Links Castle', ST_SetSRID(ST_MakePoint(5.07, 52.33), 4326), 'NL', 'unverified', 'wikidata', :ref, '{\"t\": \"Castle\"}', NOW(), NOW(), NOW())
+             VALUES ('Q', 'Links Castle', ST_SetSRID(ST_MakePoint(5.07, 52.33), 4326), 'NL', 'unverified', 'wikidata', :ref, '{\"t\": \"Castle\"}', NOW(), NOW(), NOW())
              RETURNING id",
             ['ref' => $ref],
         );

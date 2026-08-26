@@ -36,7 +36,7 @@ final class SubmissionChangeSummaryTest extends TestCase
 
     public function testAFieldIsNamedTheWayTheFormAskedForIt(): void
     {
-        $rows = $this->summary()->rows($this->submission('B', [
+        $rows = $this->summary()->rows($this->submission('N', [
             'sq' => ['was' => 'Smooth', 'now' => 'Rough'],
         ]));
 
@@ -47,7 +47,7 @@ final class SubmissionChangeSummaryTest extends TestCase
 
     public function testAddingAMissingFieldHasNothingToStrikeOut(): void
     {
-        $rows = $this->summary()->rows($this->submission('B', [
+        $rows = $this->summary()->rows($this->submission('N', [
             'maxGradient' => ['was' => null, 'now' => '17'],
         ]));
 
@@ -67,7 +67,7 @@ final class SubmissionChangeSummaryTest extends TestCase
      */
     public function testAnEmptyPreviousValueCountsAsNoPreviousValue(): void
     {
-        $rows = $this->summary()->rows($this->submission('C', [
+        $rows = $this->summary()->rows($this->submission('B', [
             'note' => ['was' => '', 'now' => 'Frost-shut in winter'],
         ]));
 
@@ -76,7 +76,7 @@ final class SubmissionChangeSummaryTest extends TestCase
 
     public function testAMultiSelectReadsAsAListAndNotAsJson(): void
     {
-        $rows = $this->summary()->rows($this->submission('E', [
+        $rows = $this->summary()->rows($this->submission('O', [
             'accessibility' => ['was' => null, 'now' => ['Step-free', 'Handbike-friendly']],
         ]));
 
@@ -90,17 +90,17 @@ final class SubmissionChangeSummaryTest extends TestCase
      */
     public function testAnUnknownFieldKeepsItsKey(): void
     {
-        $rows = $this->summary()->rows($this->submission('B', [
+        $rows = $this->summary()->rows($this->submission('N', [
             'hairpinsOld' => ['was' => null, 'now' => '3'],
         ]));
 
         self::assertSame('hairpinsOld', $rows[0]['label']);
     }
 
-    /** Letter K (routes) has no registry field set; every row falls back. */
+    /** Letter R (routes) has no registry field set; every row falls back. */
     public function testALetterWithNoRegistryEntryFallsBackToKeys(): void
     {
-        $rows = $this->summary()->rows($this->submission('K', [
+        $rows = $this->summary()->rows($this->submission('R', [
             'name' => ['was' => 'Old', 'now' => 'New'],
         ]));
 
@@ -109,7 +109,7 @@ final class SubmissionChangeSummaryTest extends TestCase
 
     public function testAPayloadThatIsNotADiffIsSkippedRatherThanGuessedAt(): void
     {
-        $rows = $this->summary()->rows($this->submission('B', [
+        $rows = $this->summary()->rows($this->submission('N', [
             'sq' => 'Rough',                                  // not a {was, now} pair
             'tr' => ['was' => 'Quiet', 'now' => 'Busy'],
         ]));
@@ -120,6 +120,6 @@ final class SubmissionChangeSummaryTest extends TestCase
 
     public function testNoChangesYieldsNoRows(): void
     {
-        self::assertSame([], $this->summary()->rows($this->submission('B', [])));
+        self::assertSame([], $this->summary()->rows($this->submission('N', [])));
     }
 }

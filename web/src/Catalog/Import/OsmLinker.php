@@ -103,6 +103,37 @@ final readonly class OsmLinker
     }
 
     /**
+     * The nearest OSM objects of this letter, for a curator to choose from.
+     *
+     * Unlike {@see candidateFor} this does not filter by name key: the rider's
+     * "Uitkijkpunt bos" and OSM's unnamed viewpoint 40 m away are exactly the
+     * pair a human is better at than a string rule, which is why the approval
+     * gate shows this list instead of deciding (catalog-data-model.md §5b).
+     *
+     * @return list<array{ref: string, name: ?string, distanceM: float}>
+     */
+    public function nearby(string $letter, float $lat, float $lng, int $limit = 5): array
+    {
+        /** @var list<array{ref: string, name: ?string, distance_m: string}> $rows */
+        $rows = $this->db->fetchAllAssociative(
+            'SELECT cp.ref, cp.name,
+                    ST_Distance(cp.geom::geography, ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography) AS distance_m
+               FROM coverage_poi cp
+              WHERE cp.letter = :letter
+                AND ST_DWithin(cp.geom::geography, ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography, :radius)
+              ORDER BY distance_m
+              LIMIT :lim',
+            ['letter' => $letter, 'lat' => $lat, 'lng' => $lng, 'radius' => self::LOOSE_M, 'lim' => $limit],
+        );
+
+        return array_map(static fn (array $r): array => [
+            'ref' => $r['ref'],
+            'name' => null !== $r['name'] && '' !== $r['name'] ? $r['name'] : null,
+            'distanceM' => round((float) $r['distance_m'], 1),
+        ], $rows);
+    }
+
+    /**
      * True when another served row of this letter already claims that OSM object.
      *
      * Identity is exclusive: two served rows pointing at one OSM object are a

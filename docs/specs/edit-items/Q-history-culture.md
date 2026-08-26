@@ -1,10 +1,10 @@
 <!-- SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 -->
 
-# Edit spec — J · History & culture
+# Edit spec — Q · History & culture
 
 **Status:** canonical reference · **Audience:** contributors to Cycling Commons
 
-- **Catalog layer:** J · History & culture
+- **Catalog layer:** Q · History & culture
 - **Map depiction:** 🏛 pin, colour #6E5849
 - **Edit-item id:** `stavelot-abbey` in `atlas/demo/edit-items.js`
 - **Editable:** yes · Frontend demo · 2026-06-18

@@ -8,6 +8,7 @@ import { inScope, scopeLabel } from './scope-ui.js';
 import { itemIndex, idxIds, rebuildItemIndex, dropPendingFromIndex } from './item-index.js';
 import { openPlace, openCity } from './places.js';
 import { COVERAGE_ON, covScopeIsZero, covScopeQuery, openCoverageByRef } from './coverage.js';
+import { layerGlyph } from './icons.js';
 
 let _searchDropPending=null;
 
@@ -40,7 +41,7 @@ export function initSearchUi(){
       m.go(); }
     // docs/specs/map-and-search.md §12 — community sub-tag; towns and pending never.
     const commRow=m=>!m.town && !m.pend && (m.community || m.verified===false);
-    const sRow=(m,i)=>`<li role="option"><button data-i="${i}"><span class="sw" style="background:${m.color};color:${txtOn(m.color)}">${escH(m.badge)}</span><span class="snm">${escH(m.name)}${commRow(m)?`<span class="scomm">${escH(D.community||'community')}</span>`:''}</span><span class="sub">${escH(m.kind)}</span></button></li>`;
+    const sRow=(m,i)=>`<li role="option"><button data-i="${i}"><span class="sw" style="background:${m.color};color:${txtOn(m.color)}">${m.badge}</span><span class="snm">${escH(m.name)}${commRow(m)?`<span class="scomm">${escH(D.community||'community')}</span>`:''}</span><span class="sub">${escH(m.kind)}</span></button></li>`;
     const SCOPE_COLOR='#B5532E';
     const scopeRow=(m,i)=>`<li role="option"><button data-i="${i}" class="s-scope"><span class="sw" style="background:${SCOPE_COLOR};color:${txtOn(SCOPE_COLOR)}">${m.kind==='country'?'◆':'◇'}</span><span class="snm">${escPend(m.name)}</span><span class="sub">${escPend(m.kind==='country'?(D.wholeCountry||'Whole country'):(D.region||'Region'))}</span></button></li>`;
     // docs/specs/map-and-search.md §7.2 — Photon, never Nominatim; silent degrade.
@@ -94,7 +95,7 @@ export function initSearchUi(){
             .filter(h=>h && h.n && LETTER_KEY[h.letter] && Array.isArray(h.ll))
             .filter(h=>!(h.itemId!=null && idxIds().has(h.letter+':'+h.itemId)))
             .map(h=>{ const layer=layerByKey[LETTER_KEY[h.letter]];
-              return {name:h.n, key:slug(h.n), kind:layer.label, badge:layer.icon, color:layer.color,
+              return {name:h.n, key:slug(h.n), kind:layer.label, badge:layerGlyph(layer), color:layer.color,
                 letter:h.letter, ll:h.ll, cov:1, community:!h.curated,
                 go:()=>openCoverageByRef(h.ref, h.letter, h.ll, h.n, h.itemId)}; });
           _covSQ=slug(q);

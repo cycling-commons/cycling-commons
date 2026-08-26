@@ -15,7 +15,7 @@ import { viewDirection, OSM_REF } from './osm-tags.js';
 
 // Coverage tiles (docs/specs/coverage-provider.md §6). [rail key, lowercase letter]
 // must stay in step with catalog.js LETTER_KEY (covKeysTest.cjs).
-export const COVERAGE_KEYS=[['water','c'],['services','d'],['stays','e'],['transit','g'],['shelter','h'],['scenic','i'],['history','j'],['toilets','m']];
+export const COVERAGE_KEYS=[['water','b'],['toilets','c'],['services','d'],['transit','f'],['shelter','g'],['stays','o'],['scenic','p'],['history','q']];
 // Per-country source-layers (docs/specs/coverage-provider.md §4): `<letter>_<cc>`, unstamped in `zz`.
 export const COVERAGE_CCS = (Array.isArray(window.CC_COVERAGE_COUNTRIES) && window.CC_COVERAGE_COUNTRIES.length)
   ? window.CC_COVERAGE_COUNTRIES.map(c=>c.toLowerCase()).concat(['zz'])
@@ -80,7 +80,7 @@ export function covScopeQuery(){
 }
 // Community tier (docs/specs/map-and-search.md §12): C/D/G/H/M in both modes
 // (dimmed in Curated); E/I/J stay Everything-only.
-export const COV_UTILITY=new Set(['C','D','G','H','M']);
+export const COV_UTILITY=new Set(['B','C','D','F','G']);
 export function syncCoverageLayers(){
   if(!COVERAGE_ON) return;
   COVERAGE_KEYS.forEach(([key])=>{

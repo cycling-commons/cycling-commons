@@ -1,10 +1,10 @@
 <!-- SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 -->
 
-# Edit spec — E · Where to sleep
+# Edit spec — O · Where to sleep
 
 **Status:** canonical reference · **Audience:** contributors to Cycling Commons
 
-- **Catalog layer:** E · Where to sleep
+- **Catalog layer:** O · Where to sleep
 - **Map depiction:** ⛺ pin, colour #B5532E
 - **Edit-item id:** `cyclist-friendly-gite-ambleve-valley` in `atlas/demo/edit-items.js`
 - **Editable:** yes · Frontend demo · 2026-06-18

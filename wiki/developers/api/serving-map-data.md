@@ -59,13 +59,13 @@ GET https://cyclingcommons.org/v1/map-config
     "tilesUrl": "https://tiles.cyclingcommons.org/coverage/20260814/coverage.pmtiles",
     "countries": ["be", "nl", "de", "zz"],
     "sourceLayers": { "points": "{letter}_{cc}" },
-    "letters": ["c", "d", "e", "g", "h", "i", "j", "m"],
+    "letters": ["b", "c", "d", "f", "g", "o", "p", "q"],
     "minZoom": 9
   },
   "categories": [
-    { "letter": "C", "key": "water",    "label": "Water & food",   "color": "#8FB6A8", "glyph": "💧", "kind": "point", "bestOf": false },
-    { "letter": "E", "key": "stays",    "label": "Where to sleep", "color": "#B5532E", "glyph": "⛺", "kind": "point", "bestOf": true },
-    { "letter": "M", "key": "toilets",  "label": "Public toilets", "color": "#4E6E8C", "glyph": "🚻", "kind": "point", "bestOf": false }
+    { "letter": "B", "key": "water",    "label": "Water & food",   "color": "#8FB6A8", "glyph": "💧", "kind": "point", "bestOf": false },
+    { "letter": "C", "key": "toilets",  "label": "Public toilets", "color": "#4E6E8C", "glyph": "🚻", "kind": "point", "bestOf": false },
+    { "letter": "O", "key": "stays",    "label": "Where to sleep", "color": "#B5532E", "glyph": "⛺", "kind": "point", "bestOf": true }
   ]
 }
 ```
@@ -89,11 +89,11 @@ Field by field:
   how you paint them. `badgeMinZoom` is the zoom from which the tiles carry junction-node points
   (the numbered "knooppunt" badges); below it they simply are not in the tiles.
 - **`coverage`**: the dense "everything" layer, raw OpenStreetMap coverage as a second PMTiles
-  archive. Source-layers are named per letter and country (`c_be`, `d_nl`, ...); the `zz` bucket
+  archive. Source-layers are named per letter and country (`b_be`, `d_nl`, ...); the `zz` bucket
   holds rows not stamped with a country, so append it as the country list already does. Individual
   points exist in the tiles from `minZoom` (9). Colour them by letter from the category table.
   Like the routes URL, `tilesUrl` can be null; skip the layer then.
-- **`categories`**: the full category table, letters A through M: machine key, English label,
+- **`categories`**: the full category table (letters A-M are the practical categories, N-Z the experiential ones): machine key, English label,
   colour, glyph, kind (`point`, `line`, or `surface`), and `bestOf` (whether the Commons map's
   Best of view shows this category). Use it to colour markers, build a legend, and reproduce the
   view modes below. Labels are English in the proof of concept; localised labels are a v1 concern.
@@ -104,13 +104,13 @@ Ask for one bounding box, and optionally a category letter and a tier; receive G
 
 <!-- CODE-ILLUSTRATIVE example request; bbox is Brussels and surroundings -->
 ```text
-GET https://cyclingcommons.org/v1/search?bbox=4.30,50.70,4.50,50.90&letter=C&limit=100
+GET https://cyclingcommons.org/v1/search?bbox=4.30,50.70,4.50,50.90&letter=B&limit=100
 ```
 
 | Parameter | Required | Meaning |
 |-----------|----------|---------|
 | `bbox` | yes | `minLon,minLat,maxLon,maxLat`, WGS84 (EPSG:4326). Maximum span 10 by 10 degrees. |
-| `letter` | no | One catalogue letter, `A` through `M` (see `categories` in the map config). Absent = all letters in one response. |
+| `letter` | no | One catalogue letter (A-M practical, N-Z experiential; see `categories` in the map config). Absent = all letters in one response. |
 | `tier` | no | `community` or `curated`. Absent = both. `curated` means a human vouched for the item: a curator verified it or a rider confirmed it on the spot. |
 | `limit` | no | Maximum features returned. Default 100, maximum 500. |
 
@@ -122,7 +122,7 @@ GET https://cyclingcommons.org/v1/search?bbox=4.30,50.70,4.50,50.90&letter=C&lim
     {
       "type": "Feature",
       "geometry": { "type": "Point", "coordinates": [4.3517, 50.8466] },
-      "properties": { "id": 1042, "letter": "C", "name": "Fontaine du Parc", "tier": "curated" }
+      "properties": { "id": 1042, "letter": "B", "name": "Fontaine du Parc", "tier": "curated" }
     }
   ],
   "licence": "ODbL-1.0",
@@ -149,7 +149,7 @@ zoom (debounced), from a sensible minimum zoom (the Commons uses 8 for its own i
 |--------|---------|------|
 | 400 | `invalid_bbox` | Missing, malformed, or out-of-range `bbox`. |
 | 400 | `bbox_too_large` | Span over 10 by 10 degrees. |
-| 400 | `invalid_letter` | `letter` given but not `A` through `M`. |
+| 400 | `invalid_letter` | `letter` given but not one of the catalogue letters in `categories`. |
 | 400 | `invalid_tier` | `tier` given but not `community` or `curated`. |
 | 429 | `rate_limited` | Over 120 requests per minute from one address. Back off and retry. |
 

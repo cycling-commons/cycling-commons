@@ -33,7 +33,7 @@ final class MyContributionsTest extends WebTestCase
             ->setGeom('{"type":"Point","coordinates":[6.0,50.4]}')->setCountryCode('BE')
             ->setDecisionNote('photo please')
             ->setChanges([])->setPayload([]);
-        $theirs = (new Submission())->setType(SubmissionType::NewItem)->setLetter('B')->setUserId((int) $other->getId())
+        $theirs = (new Submission())->setType(SubmissionType::NewItem)->setLetter('N')->setUserId((int) $other->getId())
             ->setStatus(SubmissionStatus::Pending)->setTitle('Their climb')
             ->setGeom('{"type":"Point","coordinates":[5.0,50.0]}')->setCountryCode('BE')
             ->setChanges([])->setPayload([]);
@@ -52,7 +52,7 @@ final class MyContributionsTest extends WebTestCase
     }
 
     /**
-     * The category filter (owner 2026-08-16): ?letter=J shows only that
+     * The category filter (owner 2026-08-16): ?letter=Q shows only that
      * kind, the chips render only for letters this rider has, and a garbage
      * letter falls back to the unfiltered list rather than an empty one.
      */
@@ -71,15 +71,15 @@ final class MyContributionsTest extends WebTestCase
                 ->setGeom('{"type":"Point","coordinates":[6.0,50.4]}')->setCountryCode('BE')
                 ->setChanges([])->setPayload([]));
         };
-        $mk('J', 'My castle edit');
-        $mk('C', 'My fountain edit');
+        $mk('Q', 'My castle edit');
+        $mk('B', 'My fountain edit');
         $em->flush();
 
         $client->loginUser($me);
-        $html = (string) $client->request('GET', '/profile?letter=J')->html();
+        $html = (string) $client->request('GET', '/profile?letter=Q')->html();
         self::assertStringContainsString('My castle edit', $html);
         self::assertStringNotContainsString('My fountain edit', $html);
-        self::assertStringContainsString('?letter=C', $html, 'the other category stays one click away');
+        self::assertStringContainsString('?letter=B', $html, 'the other category stays one click away');
 
         $html = (string) $client->request('GET', '/profile?letter=%27%22zz')->html();
         self::assertStringContainsString('My castle edit', $html, 'garbage filter = unfiltered, never empty');
@@ -106,9 +106,9 @@ final class MyContributionsTest extends WebTestCase
                 ->setGeom('{"type":"Point","coordinates":[6.0,50.4]}')->setCountryCode('BE')
                 ->setChanges([])->setPayload([]));
         };
-        $mk('J', 'Castle pending', SubmissionStatus::Pending);
-        $mk('J', 'Castle withdrawn', SubmissionStatus::Withdrawn);
-        $mk('C', 'Fountain withdrawn', SubmissionStatus::Withdrawn);
+        $mk('Q', 'Castle pending', SubmissionStatus::Pending);
+        $mk('Q', 'Castle withdrawn', SubmissionStatus::Withdrawn);
+        $mk('B', 'Fountain withdrawn', SubmissionStatus::Withdrawn);
         $em->flush();
         $client->loginUser($me);
 
@@ -117,9 +117,9 @@ final class MyContributionsTest extends WebTestCase
         self::assertStringContainsString('Fountain withdrawn', $html);
         self::assertStringNotContainsString('Castle pending', $html);
 
-        $html = (string) $client->request('GET', '/profile?status=withdrawn&letter=J')->html();
+        $html = (string) $client->request('GET', '/profile?status=withdrawn&letter=Q')->html();
         self::assertStringContainsString('Castle withdrawn', $html, 'both filters AND together');
         self::assertStringNotContainsString('Fountain withdrawn', $html);
-        self::assertStringContainsString('letter=C&amp;status=withdrawn', $html, 'category chips keep the status filter');
+        self::assertStringContainsString('letter=B&amp;status=withdrawn', $html, 'category chips keep the status filter');
     }
 }

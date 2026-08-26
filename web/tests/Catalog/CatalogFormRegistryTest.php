@@ -120,6 +120,9 @@ final class CatalogFormRegistryTest extends TestCase
         self::assertSame(FieldKind::Select, $byName['effort']->kind);
         self::assertSame(['Steady', 'Challenging', 'Tough', 'Very steep'], $byName['effort']->choices);
 
+        self::assertArrayHasKey('shade', $byName);
+        self::assertSame(['Unknown', 'Wooded', 'Partly shaded', 'Exposed'], $byName['shade']->choices, 'Partly shaded sits between Wooded and Exposed (owner request 2026-08-25)');
+
         self::assertArrayHasKey('famousFor', $byName);
         self::assertSame(FieldKind::Text, $byName['famousFor']->kind);
 

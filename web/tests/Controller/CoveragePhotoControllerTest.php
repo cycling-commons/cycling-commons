@@ -123,7 +123,7 @@ final class CoveragePhotoControllerTest extends WebTestCase
         );
         $db->executeStatement(
             "INSERT INTO coverage_poi (ref, letter, name, geom, tags, country_code)
-             VALUES (:r, 'I', NULL, ST_SetSRID(ST_MakePoint(5.55, 50.55), 4326), CAST(:t AS jsonb), 'BE')",
+             VALUES (:r, 'P', NULL, ST_SetSRID(ST_MakePoint(5.55, 50.55), 4326), CAST(:t AS jsonb), 'BE')",
             ['r' => $ref, 't' => json_encode($tags, \JSON_THROW_ON_ERROR)],
         );
 

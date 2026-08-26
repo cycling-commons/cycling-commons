@@ -163,6 +163,12 @@ final class ProfileController extends AbstractController
                     : null,
                 ItemType::cases(),
             ))),
+            // Letter → label key for every type, so a card can name what kind
+            // of place it is about, not only "New item" (owner 2026-08-25).
+            'letter_labels' => array_combine(
+                array_map(static fn (ItemType $t): string => $t->letter(), ItemType::cases()),
+                array_map(static fn (ItemType $t): string => $t->labelKey(), ItemType::cases()),
+            ),
             'letter_filter' => $letterFilter,
             'status_filter' => $statusFilter,
             'region_names' => $regionNames,

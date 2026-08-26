@@ -92,7 +92,7 @@ final class DeletedRecipientTest extends WebTestCase
         $curator = $this->user('sub-curator');
 
         $em = $this->em();
-        $sub = (new Submission())->setType(SubmissionType::NewItem)->setLetter('B')->setUserId($authorId)
+        $sub = (new Submission())->setType(SubmissionType::NewItem)->setLetter('N')->setUserId($authorId)
             ->setTitle('Côte du Deleted Recipient')
             ->setGeom('{"type":"Point","coordinates":[5.86,50.47]}')->setCountryCode('BE')
             ->setChanges([])->setPayload([]);
@@ -178,7 +178,7 @@ final class DeletedRecipientTest extends WebTestCase
         $rider = $this->user('reply-rider');
 
         $em = $this->em();
-        $sub = (new Submission())->setType(SubmissionType::NewItem)->setLetter('B')->setUserId((int) $rider->getId())
+        $sub = (new Submission())->setType(SubmissionType::NewItem)->setLetter('N')->setUserId((int) $rider->getId())
             ->setTitle('Côte du Deleted Recipient · Reply')
             ->setGeom('{"type":"Point","coordinates":[5.86,50.47]}')->setCountryCode('BE')
             ->setChanges([])->setPayload([]);

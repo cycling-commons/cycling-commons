@@ -44,7 +44,7 @@ def test_ensure_schema_is_idempotent(db):
     idx = {r[0] for r in db.execute(
         "SELECT indexname FROM pg_indexes WHERE schemaname = 'coverage_pytest'"
     ).fetchall()}
-    assert {"coverage_poi_geom_idx", "coverage_poi_letter_idx",
+    assert {"coverage_poi_geom_idx", "coverage_poi_geog_idx", "coverage_poi_letter_idx",
             "coverage_poi_region_id_idx", "coverage_poi_country_code_idx",
             "coverage_poi_name_trgm_idx", "coverage_poi_src_region_id_idx"} <= idx
 
@@ -57,7 +57,7 @@ def test_load_region_inserts_and_backfills_region_id(db):
     )
     db.commit()
     res = load_region(db, [
-        _row("node/1", "C"),                        # inside the region polygon
+        _row("node/1", "B"),                        # inside the region polygon
         _row("node/2", "D", lon=10.0, lat=45.0, kind="shop",
              tags={"shop": "bicycle"}),             # outside every polygon
     ], "europe/belgium")
@@ -83,8 +83,8 @@ def test_load_region_snaps_boundary_miss_to_nearest_region(db):
     )
     db.commit()
     load_region(db, [
-        _row("node/near", "C", lon=3.995, lat=50.5),   # ~0.005° west of the 4.0 edge → snaps
-        _row("node/far", "C", lon=10.0, lat=45.0),      # far outside → stays NULL
+        _row("node/near", "B", lon=3.995, lat=50.5),   # ~0.005° west of the 4.0 edge → snaps
+        _row("node/far", "B", lon=10.0, lat=45.0),      # far outside → stays NULL
     ], "europe/belgium")
     got = dict(db.execute("SELECT ref, region_id FROM coverage_poi").fetchall())
     assert got["node/near"] == 7, "a boundary-miss row must snap to the nearest region"
@@ -100,7 +100,7 @@ def test_load_region_never_snaps_across_country(db):
         "ST_GeomFromText('MULTIPOLYGON(((4 50, 6 50, 6 51, 4 51, 4 50)))', 4326))"
     )
     db.commit()
-    load_region(db, [_row("node/be", "C", lon=3.995, lat=50.5, country_code="BE")],
+    load_region(db, [_row("node/be", "B", lon=3.995, lat=50.5, country_code="BE")],
                 "europe/belgium")
     region_id = db.execute(
         "SELECT region_id FROM coverage_poi WHERE ref = 'node/be'"
@@ -118,7 +118,7 @@ def test_load_region_backfills_cc_from_region_when_extract_left_it_null(db):
         "ST_GeomFromText('MULTIPOLYGON(((4 50, 6 50, 6 51, 4 51, 4 50)))', 4326))"
     )
     db.commit()
-    load_region(db, [_row("node/1", "C", country_code=None)], "europe/belgium")
+    load_region(db, [_row("node/1", "B", country_code=None)], "europe/belgium")
     rid, cc = db.execute(
         "SELECT region_id, country_code FROM coverage_poi WHERE ref = 'node/1'"
     ).fetchone()
@@ -144,14 +144,14 @@ def test_load_region_upserts_shared_border_entity_across_regions(db):
     # BE extract loads two border entities that ALSO fall in NL's extract buffer:
     #   node/100 sits in NL territory (lon 6), node/200 in BE territory (lon 4).
     load_region(db, [
-        _row("node/100", "C", lon=6.0, lat=50.5, src_region="europe/belgium", country_code="BE"),
-        _row("node/200", "C", lon=4.0, lat=50.5, src_region="europe/belgium", country_code="BE"),
+        _row("node/100", "B", lon=6.0, lat=50.5, src_region="europe/belgium", country_code="BE"),
+        _row("node/200", "B", lon=4.0, lat=50.5, src_region="europe/belgium", country_code="BE"),
     ], "europe/belgium")
     # NL extract re-loads the SAME shared entities — must not raise a UNIQUE
     # violation (the pre-fix bug that rolled the whole NL slice back).
     res = load_region(db, [
-        _row("node/100", "C", lon=6.0, lat=50.5, src_region="europe/netherlands", country_code="NL"),
-        _row("node/200", "C", lon=4.0, lat=50.5, src_region="europe/netherlands", country_code="NL"),
+        _row("node/100", "B", lon=6.0, lat=50.5, src_region="europe/netherlands", country_code="NL"),
+        _row("node/200", "B", lon=4.0, lat=50.5, src_region="europe/netherlands", country_code="NL"),
     ], "europe/netherlands")
     assert res.inserted == 2
     rows = {ref: (rid, cc) for ref, rid, cc in db.execute(
@@ -186,14 +186,14 @@ def test_load_region_reclaimed_boundary_miss_reevaluates_region(db):
     db.commit()
     # Shared boundary-miss POI at x=1.008: outside both polygons, but within the
     # 0.01° snap of BOTH edges (0.008° to BE, 0.004° to NL).
-    load_region(db, [_row("node/b", "C", lon=1.008, lat=50.5,
+    load_region(db, [_row("node/b", "B", lon=1.008, lat=50.5,
                           src_region="europe/belgium", country_code="BE")], "europe/belgium")
     assert db.execute(
         "SELECT region_id, country_code FROM coverage_poi WHERE ref = 'node/b'"
     ).fetchone() == (1, "BE"), "BE first snaps the boundary-miss to its own region"
     # NL reclaims the same entity (border overlap): it must snap to the NL region,
     # not stay stuck on BE.
-    load_region(db, [_row("node/b", "C", lon=1.008, lat=50.5,
+    load_region(db, [_row("node/b", "B", lon=1.008, lat=50.5,
                           src_region="europe/netherlands", country_code="NL")], "europe/netherlands")
     assert db.execute(
         "SELECT region_id, country_code FROM coverage_poi WHERE ref = 'node/b'"
@@ -216,7 +216,7 @@ def test_load_region_smallest_area_wins_on_overlap(db):
         "'MULTIPOLYGON(((4 50, 6 50, 6 52, 4 52, 4 50)))', 4326))"
     )
     db.commit()
-    load_region(db, [_row("node/1", "C", lon=5.0, lat=51.0)], "europe/belgium")
+    load_region(db, [_row("node/1", "B", lon=5.0, lat=51.0)], "europe/belgium")
     region_id = db.execute(
         "SELECT region_id FROM coverage_poi WHERE ref = 'node/1'"
     ).fetchone()[0]
@@ -225,10 +225,10 @@ def test_load_region_smallest_area_wins_on_overlap(db):
 
 def test_load_region_swaps_only_its_region_slice(db):
     ensure_schema(db)
-    load_region(db, [_row("node/10", "C")], "europe/belgium")
-    load_region(db, [_row("node/20", "C", src_region="europe/netherlands",
+    load_region(db, [_row("node/10", "B")], "europe/belgium")
+    load_region(db, [_row("node/20", "B", src_region="europe/netherlands",
                           country_code="NL")], "europe/netherlands")
-    res = load_region(db, [_row("node/11", "C")], "europe/belgium")
+    res = load_region(db, [_row("node/11", "B")], "europe/belgium")
     assert res == LoadResult(inserted=1, previous=1)
     refs = {r[0] for r in db.execute("SELECT ref FROM coverage_poi").fetchall()}
     assert refs == {"node/11", "node/20"}           # node/10 swapped out, NL untouched
@@ -236,10 +236,10 @@ def test_load_region_swaps_only_its_region_slice(db):
 
 def test_load_region_drift_abort_keeps_last_slice(db):
     ensure_schema(db)
-    load_region(db, [_row(f"node/{i}", "C") for i in range(10)], "europe/belgium")
+    load_region(db, [_row(f"node/{i}", "B") for i in range(10)], "europe/belgium")
     with pytest.raises(DriftAbort):
         # 5 < 10 * (1 - DRIFT_ABORT_RATIO) = 6 -> abort
-        load_region(db, [_row(f"node/{i}", "C") for i in range(5)], "europe/belgium")
+        load_region(db, [_row(f"node/{i}", "B") for i in range(5)], "europe/belgium")
     n = db.execute("SELECT count(*) FROM coverage_poi").fetchone()[0]
     assert n == 10                                   # last good slice kept
 
@@ -257,11 +257,11 @@ def test_load_region_generic_error_rolls_back_whole_swap(db):
     dups; this is a synthetic generic-error trigger.)
     """
     ensure_schema(db)
-    load_region(db, [_row(f"node/{i}", "C") for i in range(10)], "europe/belgium")
+    load_region(db, [_row(f"node/{i}", "B") for i in range(10)], "europe/belgium")
     with pytest.raises(psycopg.errors.CardinalityViolation):
         load_region(db, [
-            _row(f"node/{i}", "C") for i in range(9)
-        ] + [_row("node/dup", "C"), _row("node/dup", "C")], "europe/belgium")  # new ref, twice
+            _row(f"node/{i}", "B") for i in range(9)
+        ] + [_row("node/dup", "B"), _row("node/dup", "B")], "europe/belgium")  # new ref, twice
     n = db.execute("SELECT count(*) FROM coverage_poi").fetchone()[0]
     assert n == 10                                     # last good slice intact
     assert db.execute(
@@ -278,7 +278,7 @@ def test_delta_membership_noop_reload_rewrites_nothing(db):
         "INSERT INTO region (id, area_km2, country_code, geom) VALUES (7, 100, 'BE', "
         "ST_GeomFromText('MULTIPOLYGON(((4 50, 6 50, 6 51, 4 51, 4 50)))', 4326))")
     db.commit()
-    rows = [_row("node/1", "C")]                          # inside region 7, BE
+    rows = [_row("node/1", "B")]                          # inside region 7, BE
     load_region(db, rows, "europe/belgium", "BE")
     before = db.execute("SELECT ctid::text FROM coverage_poi WHERE ref='node/1'").fetchone()[0]
     load_region(db, rows, "europe/belgium", "BE")         # identical
@@ -290,7 +290,7 @@ def test_full_membership_recomputes_whole_slice(db, monkeypatch):
     """The invariant + escape hatch: after a region change, a delta reload does
     NOT restamp an unchanged row, but COVERAGE_FULL_MEMBERSHIP=1 does (design §3.4)."""
     ensure_schema(db)
-    rows = [_row("node/1", "C", lon=5.0, lat=50.5, src_region="dev/fixture", country_code=None)]
+    rows = [_row("node/1", "B", lon=5.0, lat=50.5, src_region="dev/fixture", country_code=None)]
     load_region(db, rows, "dev/fixture", None)            # no region yet → region_id NULL
     assert db.execute("SELECT region_id FROM coverage_poi WHERE ref='node/1'").fetchone()[0] is None
     db.execute(                                            # a region is onboarded that now contains node/1
@@ -314,16 +314,16 @@ def test_ensure_schema_gated_extension_still_builds_schema(db, monkeypatch):
     ensure_schema(db)
     idx = {r[0] for r in db.execute(
         "SELECT indexname FROM pg_indexes WHERE schemaname = 'coverage_pytest'").fetchall()}
-    assert {"coverage_poi_geom_idx", "coverage_poi_name_trgm_idx",
+    assert {"coverage_poi_geom_idx", "coverage_poi_geog_idx", "coverage_poi_name_trgm_idx",
             "coverage_poi_src_region_id_idx"} <= idx
 
 
 def test_load_region_exact_drift_boundary_does_not_abort(db):
     """A drop of exactly DRIFT_ABORT_RATIO is allowed: the guard is strict <."""
     ensure_schema(db)
-    load_region(db, [_row(f"node/{i}", "C") for i in range(10)], "europe/belgium")
+    load_region(db, [_row(f"node/{i}", "B") for i in range(10)], "europe/belgium")
     res = load_region(
-        db, [_row(f"node/{i}", "C") for i in range(6)], "europe/belgium"
+        db, [_row(f"node/{i}", "B") for i in range(6)], "europe/belgium"
     )                                                  # 6 == 10 * (1 - 0.4) -> no abort
     assert res == LoadResult(inserted=6, previous=10)
     n = db.execute("SELECT count(*) FROM coverage_poi").fetchone()[0]
@@ -341,7 +341,7 @@ def test_load_region_zero_rows_fresh_region_succeeds(db):
 
 def test_load_region_zero_rows_over_populated_region_aborts(db):
     ensure_schema(db)
-    load_region(db, [_row(f"node/{i}", "C") for i in range(10)], "europe/belgium")
+    load_region(db, [_row(f"node/{i}", "B") for i in range(10)], "europe/belgium")
     with pytest.raises(DriftAbort):
         load_region(db, [], "europe/belgium")
     n = db.execute("SELECT count(*) FROM coverage_poi").fetchone()[0]
@@ -351,13 +351,13 @@ def test_load_region_zero_rows_over_populated_region_aborts(db):
 def test_same_ref_may_carry_two_letters(db):
     ensure_schema(db)
     load_region(db, [
-        _row("node/109", "E", tags={"tourism": "hotel", "historic": "castle"}),
-        _row("node/109", "J", tags={"tourism": "hotel", "historic": "castle"}),
+        _row("node/109", "O", tags={"tourism": "hotel", "historic": "castle"}),
+        _row("node/109", "Q", tags={"tourism": "hotel", "historic": "castle"}),
     ], "europe/belgium")
     letters = {r[0] for r in db.execute(
         "SELECT letter FROM coverage_poi WHERE ref = 'node/109'"
     ).fetchall()}
-    assert letters == {"E", "J"}
+    assert letters == {"O", "Q"}
 
 
 def test_ownership_is_independent_of_load_order(db):
@@ -372,7 +372,7 @@ def test_ownership_is_independent_of_load_order(db):
         "INSERT INTO region (id, area_km2, country_code, geom) VALUES (2, 100, 'NL', "
         "ST_GeomFromText('POLYGON((4 50, 5 50, 5 51, 4 51, 4 50))', 4326))")
     db.commit()
-    shared = _row("node/shared", "C", lon=3.5, lat=50.5)   # geometrically inside BE
+    shared = _row("node/shared", "B", lon=3.5, lat=50.5)   # geometrically inside BE
 
     # BE first, then NL
     load_region(db, [shared], "europe/belgium", "BE")
@@ -412,7 +412,7 @@ def test_ownership_is_independent_of_load_order_in_the_border_band(db):
         "INSERT INTO region (id, area_km2, country_code, geom) VALUES (2, 100, 'NL', "
         "ST_GeomFromText('POLYGON((4 50, 5 50, 5 51, 4 51, 4 50))', 4326))")
     db.commit()
-    shared = _row("node/shared", "C", lon=3.995, lat=50.5)   # geometrically inside BE
+    shared = _row("node/shared", "B", lon=3.995, lat=50.5)   # geometrically inside BE
 
     # BE first, then NL
     load_region(db, [shared], "europe/belgium", "BE")
@@ -450,7 +450,7 @@ def test_ownership_tie_break_is_stable_regardless_of_load_order(db):
         "INSERT INTO region (id, area_km2, country_code, geom) VALUES (2, 100, 'NL', "
         "ST_GeomFromText('POLYGON((4 50, 5 50, 5 51, 4 51, 4 50))', 4326))")
     db.commit()
-    tied = _row("node/tie", "C", lon=4.0, lat=50.5)   # exactly on the shared edge
+    tied = _row("node/tie", "B", lon=4.0, lat=50.5)   # exactly on the shared edge
 
     load_region(db, [tied], "europe/belgium", "BE")
     load_region(db, [tied], "europe/netherlands", "NL")
@@ -483,7 +483,7 @@ def test_load_region_country_code_none_skips_filter_and_warns(db, capsys):
     db.commit()
     # Far outside every region and every country — the filter would drop this
     # if it ran; country_code=None must skip it entirely and keep it.
-    load_region(db, [_row("node/anywhere", "C", lon=20.0, lat=60.0, country_code=None)],
+    load_region(db, [_row("node/anywhere", "B", lon=20.0, lat=60.0, country_code=None)],
                 "dev/fixture", None)
     assert db.execute("SELECT count(*) FROM coverage_poi").fetchone()[0] == 1
     err = capsys.readouterr().err
@@ -497,7 +497,7 @@ def test_load_region_raises_when_country_has_no_regions(db):
     case) nothing else catches it, so this must raise rather than exit 0."""
     ensure_schema(db)
     with pytest.raises(RuntimeError, match="onboarding step 5"):
-        load_region(db, [_row("node/1", "C")], "europe/belgium", "BE")
+        load_region(db, [_row("node/1", "B")], "europe/belgium", "BE")
     assert db.execute("SELECT count(*) FROM coverage_poi").fetchone()[0] == 0
 
 
@@ -512,7 +512,7 @@ def test_a_non_owning_extract_does_not_create_the_row(db):
         "ST_GeomFromText('POLYGON((4 50, 5 50, 5 51, 4 51, 4 50))', 4326))")
     db.commit()
 
-    load_region(db, [_row("node/be", "C", lon=3.5, lat=50.5)], "europe/netherlands", "NL")
+    load_region(db, [_row("node/be", "B", lon=3.5, lat=50.5)], "europe/netherlands", "NL")
 
     assert db.execute("SELECT count(*) FROM coverage_poi").fetchone()[0] == 0
 
@@ -531,14 +531,14 @@ def test_owner_dropping_the_entity_removes_it(db):
         "INSERT INTO region (id, area_km2, country_code, geom) VALUES (2, 100, 'NL', "
         "ST_GeomFromText('POLYGON((4 50, 5 50, 5 51, 4 51, 4 50))', 4326))")
     db.commit()
-    row = _row("node/gone", "C", lon=3.5, lat=50.5)   # geometrically inside BE, not NL
+    row = _row("node/gone", "B", lon=3.5, lat=50.5)   # geometrically inside BE, not NL
 
     # Two stable placeholders (also inside BE) keep the BE load within
     # DRIFT_ABORT_RATIO once node/gone is trimmed below — dropping 1 of 3 rows
     # stays under the 40% guard, unrelated to ownership, so the assertions below
     # isolate the ownership behaviour under test.
-    placeholder1 = _row("node/stays1", "C", lon=3.5, lat=50.5)
-    placeholder2 = _row("node/stays2", "C", lon=3.5, lat=50.5)
+    placeholder1 = _row("node/stays1", "B", lon=3.5, lat=50.5)
+    placeholder2 = _row("node/stays2", "B", lon=3.5, lat=50.5)
 
     load_region(db, [row, placeholder1, placeholder2], "europe/belgium", "BE")
     assert db.execute(
@@ -583,8 +583,8 @@ def test_rows_in_no_onboarded_region_are_dropped(db):
     db.commit()
 
     load_region(db, [
-        _row("node/inside", "C", lon=3.5, lat=50.5),
-        _row("node/far", "C", lon=20.0, lat=60.0),      # far outside every region
+        _row("node/inside", "B", lon=3.5, lat=50.5),
+        _row("node/far", "B", lon=20.0, lat=60.0),      # far outside every region
     ], "europe/belgium", "BE")
 
     refs = {r[0] for r in db.execute("SELECT ref FROM coverage_poi").fetchall()}
@@ -601,7 +601,7 @@ def test_boundary_snap_rows_keep_their_owner(db):
         "ST_GeomFromText('POLYGON((3 50, 4 50, 4 51, 3 51, 3 50))', 4326))")
     db.commit()
 
-    load_region(db, [_row("node/near", "C", lon=4.005, lat=50.5)], "europe/belgium", "BE")
+    load_region(db, [_row("node/near", "B", lon=4.005, lat=50.5)], "europe/belgium", "BE")
 
     got = db.execute("SELECT ref, region_id FROM coverage_poi").fetchall()
     assert got == [("node/near", 1)], (
@@ -614,10 +614,10 @@ def test_src_region_normalized_and_self_filled(db):
     id rather than duplicating it — so the lookup scales worldwide with no
     pre-seeding or enum DDL."""
     ensure_schema(db)
-    load_region(db, [_row("node/1", "C"), _row("node/2", "C")], "europe/belgium")
+    load_region(db, [_row("node/1", "B"), _row("node/2", "B")], "europe/belgium")
     load_region(
         db,
-        [_row("node/3", "C", src_region="europe/netherlands", country_code="NL")],
+        [_row("node/3", "B", src_region="europe/netherlands", country_code="NL")],
         "europe/netherlands",
     )
     slugs = {r[0]: r[1] for r in db.execute("SELECT slug, id FROM coverage_source").fetchall()}
@@ -633,7 +633,7 @@ def test_src_region_normalized_and_self_filled(db):
     ]
     # reloading the same slug reuses the same id, never a second source row
     be_id = slugs["europe/belgium"]
-    load_region(db, [_row("node/1", "C"), _row("node/2", "C")], "europe/belgium")
+    load_region(db, [_row("node/1", "B"), _row("node/2", "B")], "europe/belgium")
     assert db.execute("SELECT count(*) FROM coverage_source").fetchone()[0] == 2
     assert db.execute(
         "SELECT id FROM coverage_source WHERE slug = 'europe/belgium'"
@@ -665,7 +665,7 @@ def test_diff_merge_skips_unchanged_row(db):
     """An identical reload rewrites nothing: a region-less row's ctid is stable,
     proving the upsert's IS DISTINCT FROM guard skipped it (no heap write, no WAL)."""
     ensure_schema(db)
-    rows = [_row("node/1", "C", lon=20.0, lat=60.0,
+    rows = [_row("node/1", "B", lon=20.0, lat=60.0,
                  src_region="dev/fixture", country_code=None)]
     load_region(db, rows, "dev/fixture", None)
     before = db.execute("SELECT ctid::text FROM coverage_poi WHERE ref='node/1'").fetchone()[0]
@@ -676,11 +676,11 @@ def test_diff_merge_skips_unchanged_row(db):
 
 def test_diff_merge_rewrites_only_the_changed_row(db):
     ensure_schema(db)
-    r1 = _row("node/1", "C", lon=20.0, lat=60.0, src_region="dev/fixture", country_code=None)
-    r2 = _row("node/2", "C", lon=21.0, lat=61.0, src_region="dev/fixture", country_code=None)
+    r1 = _row("node/1", "B", lon=20.0, lat=60.0, src_region="dev/fixture", country_code=None)
+    r2 = _row("node/2", "B", lon=21.0, lat=61.0, src_region="dev/fixture", country_code=None)
     load_region(db, [r1, r2], "dev/fixture", None)
     ctid0 = dict(db.execute("SELECT ref, ctid::text FROM coverage_poi").fetchall())
-    r1b = _row("node/1", "C", lon=20.0, lat=60.0, name="RENAMED",
+    r1b = _row("node/1", "B", lon=20.0, lat=60.0, name="RENAMED",
                src_region="dev/fixture", country_code=None)
     load_region(db, [r1b, r2], "dev/fixture", None)
     ctid1 = dict(db.execute("SELECT ref, ctid::text FROM coverage_poi").fetchall())
@@ -693,9 +693,9 @@ def test_diff_merge_deletes_disappeared_row(db):
     ensure_schema(db)
     # Three rows so dropping one (node/3) stays under the 40% drift guard —
     # isolating the delete-disappeared behaviour from the drift abort.
-    a = _row("node/1", "C", lon=20.0, lat=60.0, src_region="dev/fixture", country_code=None)
-    b = _row("node/2", "C", lon=21.0, lat=61.0, src_region="dev/fixture", country_code=None)
-    c = _row("node/3", "C", lon=22.0, lat=62.0, src_region="dev/fixture", country_code=None)
+    a = _row("node/1", "B", lon=20.0, lat=60.0, src_region="dev/fixture", country_code=None)
+    b = _row("node/2", "B", lon=21.0, lat=61.0, src_region="dev/fixture", country_code=None)
+    c = _row("node/3", "B", lon=22.0, lat=62.0, src_region="dev/fixture", country_code=None)
     load_region(db, [a, b, c], "dev/fixture", None)
     load_region(db, [a, b], "dev/fixture", None)        # node/3 disappears upstream
     refs = {r[0] for r in db.execute("SELECT ref FROM coverage_poi").fetchall()}
@@ -724,11 +724,11 @@ def test_infrastructure_region_never_stamps_a_poi(db):
     )
     db.commit()
     load_region(db, [
-        _row("node/inside", "C", lon=5.0, lat=50.5),    # inside the subdivision
+        _row("node/inside", "B", lon=5.0, lat=50.5),    # inside the subdivision
         # Inside the OUTLINE but outside the subdivision and beyond the snap:
         # the outline is the only region that contains it, and it must still
         # not be stamped.
-        _row("node/gap", "C", lon=6.5, lat=51.5),
+        _row("node/gap", "B", lon=6.5, lat=51.5),
     ], "europe/belgium")
     got = dict(db.execute("SELECT ref, region_id FROM coverage_poi").fetchall())
     assert got["node/inside"] == 21, "the operational subdivision stamps the POI"
@@ -756,7 +756,7 @@ def test_a_stamp_that_stopped_being_operational_is_re_derived(db):
         "'MULTIPOLYGON(((4 50, 6 50, 6 51, 4 51, 4 50)))', 4326))"
     )
     db.commit()
-    load_region(db, [_row("node/1", "C", lon=5.0, lat=50.5)], "europe/belgium")
+    load_region(db, [_row("node/1", "B", lon=5.0, lat=50.5)], "europe/belgium")
     # Simulate the stamp a pre-fix harvest left behind.
     db.execute("UPDATE coverage_poi SET region_id = 20 WHERE ref = 'node/1'")
     db.commit()
@@ -766,9 +766,29 @@ def test_a_stamp_that_stopped_being_operational_is_re_derived(db):
     import os
     os.environ["COVERAGE_FULL_MEMBERSHIP"] = "1"
     try:
-        load_region(db, [_row("node/1", "C", lon=5.0, lat=50.5)], "europe/belgium")
+        load_region(db, [_row("node/1", "B", lon=5.0, lat=50.5)], "europe/belgium")
     finally:
         del os.environ["COVERAGE_FULL_MEMBERSHIP"]
     assert db.execute(
         "SELECT region_id FROM coverage_poi WHERE ref = 'node/1'"
     ).fetchone()[0] == 21, "the stale infrastructure stamp must be re-derived"
+
+
+def test_load_region_clears_stored_osm_candidates_of_its_country_only(db):
+    """The app stores each open row's OSM-candidate list on item (catalog-data-model.md §5b);
+    a swapped slice invalidates that country's open lists, answered rows and other countries keep theirs."""
+    ensure_schema(db)
+    db.execute(
+        "CREATE TABLE item (id bigint PRIMARY KEY, country_code char(2), osm_checked_at timestamp, "
+        "osm_candidates jsonb, osm_candidates_at timestamp)"
+    )
+    db.execute(
+        "INSERT INTO item VALUES "
+        "(1, 'BE', NULL, '[]', now()), "          # open, BE: cleared
+        "(2, 'BE', now(), '[]', now()), "         # answered, BE: kept
+        "(3, 'NL', NULL, '[]', now()), "          # open, NL: kept
+        "(4, 'BE', NULL, NULL, NULL)"             # open, BE, never computed: stays NULL
+    )
+    load_region(db, [_row("node/10", "B")], "europe/belgium")
+    rows = dict(db.execute("SELECT id, osm_candidates_at IS NOT NULL FROM item ORDER BY id").fetchall())
+    assert rows == {1: False, 2: True, 3: True, 4: False}

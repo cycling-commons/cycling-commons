@@ -32,7 +32,8 @@ Two content sources are explicitly **untrusted** even though they render on
 our pages: **item attributes** (they survive OSM/Wikidata import, so they are
 attacker-editable upstream) and **translation catalogs** (the repo is public
 and contributor-oriented — a careless or malicious translation PR is an input
-channel). Defence is layered: output escaping everywhere
+channel; in-site overlays in [translations.md](translations.md) are the same
+class). Defence is layered: output escaping everywhere
 (security-architecture.md §4), a sanitizer for the one place markup is
 deliberately rendered from catalogs (security-architecture.md §3), and an
 enforced CSP so a payload that slips past both still does not execute
@@ -281,9 +282,11 @@ each produce zero elements. Its document shim parses assigned `innerHTML` into
 real children, so the assertions fail rather than pass vacuously if the
 builders are ever rewritten on `innerHTML`.
 
-`add_climb.js` and the map modules still follow §4.2 and want the same sweep;
-that is a separate change, because mixing it with this one makes the
-security-relevant diff unreviewable.
+The map modules still follow §4.2 and want the same sweep; that is a separate
+change, because mixing it with this one makes the security-relevant diff
+unreviewable. (`add_climb.js` was on this list until it was deleted with the
+`/add-climb` wizard on 2026-08-25; climbs now go through `improve.js`, which
+is covered above.)
 
 ## 5. CSRF model
 
@@ -405,7 +408,7 @@ capability, not one caller's share of it.
 
 | Limiter | Policy | Limit (current config) | Key | Guards | Over-limit behaviour |
 |---|---|---|---|---|---|
-| `contribution_submit` | sliding_window | 20 / 1 hour | `user-<id>` | All item-submission intake — `App\Contribution\CatalogContributionService::submitDraft()` (improve + add-climb flows) | `TooManyRequestsHttpException` → flash `contribute.error.rate_limited`, form re-rendered (`ContributeController`) |
+| `contribution_submit` | sliding_window | 20 / 1 hour | `user-<id>` | All item-submission intake — `App\Contribution\CatalogContributionService::submitDraft()` (every `/improve` arm: edit, `mode=add` for all catalog types including climbs since 2026-08-25) | `TooManyRequestsHttpException` → flash `contribute.error.rate_limited`, form re-rendered (`ContributeController`) |
 | `translation_propose` | sliding_window | 60 / 1 hour | `user-<id>` | In-site UI translation proposals — `App\Translation\ProposalService::submit()` ([translations.md](translations.md) §4); a human can translate a page, a loop cannot fill the curator desk | `TooManyRequestsHttpException` → flash `translate.error.rate_limited`, form re-rendered (`TranslateController`) |
 | `route_propose` | sliding_window | 3 / 1 day | `user-<id>` | Route proposal intake (GPX upload) — `App\Contribution\RouteProposalService::propose()`; proposals are heavier than pin edits, the supply gate starts at intake | `TooManyRequestsHttpException` → flash (`ProposeRouteController`) |
 | `route_suggest` | sliding_window | 5 / 1 day | `user-<id>` | Route correction channel — `App\Community\RouteCommunityService::recordSuggestion()`; the suggest channel is the flood vector (each pending row is a curator task); vote/rode-it are self-bounded by UNIQUE constraints instead | `429 {"error":"rate_limited"}` (`RouteCommunityController::suggest`) |

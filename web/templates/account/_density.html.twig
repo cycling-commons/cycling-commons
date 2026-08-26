@@ -1,0 +1,11 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{# Density switch: cards (full context) ↔ list (one line per row, for a scan).
+   The same control on every list page, rider or curator, remembered per
+   browser under one key (moderate/_card_script.html.twig) because a person
+   picks a way of working, not a way of working per page. Rendered hidden; the
+   script unhides it, so without JS the page stays in cards, the view that
+   carries the full context. Include only where a `.q-list` is rendered. #}
+<div class="q-density" id="qDensity" role="group" aria-label="{{ 'moderate.view.label'|trans }}" hidden>
+  <button type="button" class="dens" data-dens="cards" aria-pressed="true">{{ 'moderate.view.cards'|trans }}</button>
+  <button type="button" class="dens" data-dens="list" aria-pressed="false">{{ 'moderate.view.list'|trans }}</button>
+</div>

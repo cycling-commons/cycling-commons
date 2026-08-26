@@ -14,7 +14,7 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 /**
- * Route-domain spec §5: /propose-route is the rider intake for K.
+ * Route-domain spec §5: /propose-route is the rider intake for R.
  * The old improve?type=quality-rides&mode=add entry is repointed here.
  */
 final class ProposeRouteFlowTest extends WebTestCase
@@ -257,8 +257,8 @@ final class ProposeRouteFlowTest extends WebTestCase
         $crawler = $client->request('GET', '/profile');
         self::assertResponseIsSuccessful();
         self::assertStringContainsString('Condroz · profile test', (string) $client->getResponse()->getContent());
-        // Route proposals render as .item rows carrying a .tag-route badge
+        // Route proposals render as shared record cards carrying the route tag
         // (profile rework 2026-07-14 replaced the old .acct-route-list markup).
-        self::assertGreaterThan(0, $crawler->filter('.item .tag-route')->count());
+        self::assertGreaterThan(0, $crawler->filter('.q-item .q-tag--route')->count());
     }
 }

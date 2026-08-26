@@ -32,7 +32,7 @@ allow-list for external geocoders is now exactly one entry long, and it is a nam
 'https://photon.komoot.io',
 ```
 
-It used to be two. `web/assets/contribute/add-climb.js` once drew a dimmed backdrop around the
+It used to be two. `web/assets/contribute/add-climb.js` (retired 2026-08-25) once drew a dimmed backdrop around the
 region on the add-climb map by asking **Nominatim** for the name 'Wallonia' and taking the polygon
 from the answer — a call retired on 2026-08-09, and its reasons are a compact lesson in external
 geocoders: the name was hardcoded (wrong backdrop once the wizard went worldwide), the polygon was

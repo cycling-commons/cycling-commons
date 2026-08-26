@@ -34,13 +34,20 @@
     {% endif %}
     <div class="q-headwrap">
       <div class="q-head">
+        {# The type's icon first, as on every other row (owner 2026-08-25). A
+           submitted photo, when there is one, sits before the whole block as
+           the 44px thumbnail above. #}
+        {% include 'partials/_type_icon.html.twig' with {letter: item.letter} %}
         <span class="q-tag q-tag--{{ item.type }}">{{ ('moderate.type.' ~ item.type)|trans }}</span>
         {# The rider answered a needs-info question. It used to arrive as a
            message in the curator's PERSONAL inbox; moderation work belongs on
            the desk, so the signal has to be here where it can be scanned
            (owner, 2026-08-03). The answer itself is further down the card. #}
         {% if item.riderReply %}<span class="q-tag q-tag--answered">{{ 'moderate.answered'|trans }}</span>{% endif %}
-        <h3 class="q-title">{{ item.title }}</h3>
+        {# The name opens the edit form, same target as ✎ (owner 2026-08-25): the
+           biggest thing on the row should be the thing you click. #}
+        <h3 class="q-title">{% if item.itemId %}<a class="q-title-link" href="{{ path('improve') }}?item={{ item.itemId }}&type={{ item.letter }}"
+             target="_blank" rel="noopener" title="{{ 'moderate.action.edit_form'|trans }}">{{ item.title }}</a>{% else %}{{ item.title }}{% endif %}</h3>
         <span class="q-when">{{ item.when }}</span>
       </div>
       {# WHERE, in words. Three decimal places of latitude tell a curator
@@ -49,9 +56,45 @@
          for the one case where the exact spot is the question - and the map
          itself is one click away in the row below. #}
       <div class="q-submitter" title="{{ item.lat|number_format(4) }}&deg;N {{ item.lng|number_format(4) }}&deg;E">
-        {{ item.who }}
-        {% if item.region %} &middot; {{ item.region }}{% endif %}
-        {% if item.country %} &middot; {{ item.country }}{% endif %}
+        <span class="q-who">{{ item.who }}{% if item.region %} &middot; {{ item.region }}{% endif %}{% if item.country %} &middot; {{ item.country }}{% endif %}</span>
+        {# The OSM identity of a new place (catalog-data-model.md §5b) as one
+           chip, so a curator sees at a glance whether the question is still
+           open, and what the answer was. Open: the chip pops the candidates and
+           "Not in OSM"; approve refuses until one is clicked. #}
+        {% if item.osm is defined %}
+          {% if item.osm.state == 'open' %}
+          <details class="q-act q-osm-chip">
+            <summary class="osm-chip osm-chip--open" title="{{ 'moderate.osm.tip_open'|trans }}"
+                     aria-label="{{ 'moderate.osm.tip_open'|trans }}">⌖ {{ 'moderate.osm.chip_open'|trans }}</summary>
+            <div class="q-act-panel">
+              <button type="button" class="q-act-cancel q-osm-close" aria-label="{{ 'moderate.action.cancel'|trans }}" title="{{ 'moderate.action.cancel'|trans }}">×</button>
+              <p class="q-act-head">{{ 'moderate.osm.question'|trans }}</p>
+              <div class="q-osm">
+                {% for c in item.osm.candidates %}
+                <form method="post" action="{{ path('moderate_osm_answer') }}" class="q-osm-link">
+                  <input type="hidden" name="_token" value="{{ csrf_token('moderate-osm-answer') }}">
+                  <input type="hidden" name="submission_id" value="{{ item.id }}">
+                  <input type="hidden" name="ref" value="{{ c.ref }}">
+                  <button type="submit" class="btn-act btn-secondary"
+                          title="{{ c.ref }}">{{ c.name ?? ('moderate.osm.unnamed'|trans) }} &middot; {{ c.distanceM|round }}&nbsp;m</button>
+                </form>
+                {% endfor %}
+                <form method="post" action="{{ path('moderate_osm_answer') }}" class="q-osm-none">
+                  <input type="hidden" name="_token" value="{{ csrf_token('moderate-osm-answer') }}">
+                  <input type="hidden" name="submission_id" value="{{ item.id }}">
+                  <input type="hidden" name="ref" value="">
+                  <button type="submit" class="btn-act btn-secondary">{{ 'moderate.osm.none'|trans }}</button>
+                </form>
+              </div>
+            </div>
+          </details>
+          {% elseif item.osm.state == 'linked' %}
+          <a class="osm-chip osm-chip--linked" href="https://www.openstreetmap.org/{{ item.osm.ref }}"
+             target="_blank" rel="noopener" title="{{ 'moderate.osm.tip_linked'|trans }}">⌖ {{ item.osm.ref }}</a>
+          {% else %}
+          <span class="osm-chip osm-chip--none" title="{{ 'moderate.osm.tip_none'|trans }}">⌖ {{ 'moderate.osm.chip_none'|trans }}</span>
+          {% endif %}
+        {% endif %}
       </div>
     </div>
 
@@ -62,9 +105,14 @@
        reaching for "destroy this" because it is illegal meets the right verb
        first. #}
     <div class="q-acts">
-      <a class="btn-act btn-secondary q-review"
+      {# Icons only, on every action (owner 2026-08-25): five worded buttons
+         per row read as a wall when the row repeats eleven times. The word
+         stays as the tooltip and the accessible name, like ⚑ and the bin. #}
+      <a class="btn-act btn-secondary btn-icon q-review"
          href="{{ path('map') }}?pending={{ item.id }}"
-         target="_blank" rel="noopener">{{ 'moderate.action.review_on_map'|trans }} &#8599;</a>
+         target="_blank" rel="noopener"
+         title="{{ 'moderate.action.review_on_map'|trans }}"
+         aria-label="{{ 'moderate.action.review_on_map'|trans }}">◎</a>
       {# Straight to the form. Review-on-the-map answers "is this right"; this
          answers "fix this typo", and routing a one-word correction through a
          map, a pin and a drawer is three steps too many (owner 2026-08-12).
@@ -72,14 +120,16 @@
          open, and a button that leads to "pick a place to improve" is a button
          that lies. #}
       {% if item.itemId %}
-      <a class="btn-act btn-secondary q-edit"
+      <a class="btn-act btn-secondary btn-icon q-edit"
          href="{{ path('improve') }}?item={{ item.itemId }}&type={{ item.letter }}"
          target="_blank" rel="noopener"
-         title="{{ 'moderate.action.edit_form'|trans }}">✎ {{ 'moderate.action.edit_form'|trans }}</a>
+         title="{{ 'moderate.action.edit_form'|trans }}"
+         aria-label="{{ 'moderate.action.edit_form'|trans }}">✎</a>
       {% endif %}
 
       <details class="q-act q-act--message">
-        <summary class="btn-act btn-secondary">{{ 'moderate.msg.summary'|trans }}</summary>
+        <summary class="btn-act btn-secondary btn-icon" title="{{ 'moderate.msg.summary'|trans }}"
+                 aria-label="{{ 'moderate.msg.summary'|trans }}">✉</summary>
         <div class="q-act-panel">
           <form method="post" action="{{ path('moderate_message') }}">
             <input type="hidden" name="_token" value="{{ csrf_token('moderate-message') }}">

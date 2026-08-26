@@ -97,7 +97,7 @@ paths:
       operationId: getCatalog
       summary: Item-type catalogue
       description: >
-        The letters A–L, their slugs and labels, `serviceKind` vocabularies,
+        The catalogue letters (practical A-M, experiential N-Z), their slugs and labels, `serviceKind` vocabularies,
         and the tier names — the rendering and labelling metadata a consumer
         needs to present Commons data.
       responses:
@@ -122,7 +122,7 @@ paths:
         when no tileset is published, then skip the routes overlay), the
         per-country source-layer naming contract, the route style groups,
         the coverage (raw-OSM) PMTiles URL with its per-letter source-layer
-        contract, the category table (letters A-M with colours, glyphs and
+        contract, the category table (practical letters A-M and experiential N-Z, with colours, glyphs and
         the Best of flag), and the attribution string the consumer must
         display. Cacheable for an hour; the tile URLs change when a new
         build is published, which is why consumers read them here instead of
@@ -232,7 +232,7 @@ paths:
                   counts:
                     type: object
                     additionalProperties: { type: integer }
-                    description: 'Catalogue letter → feature count, e.g. `{"C": 41, "D": 12}`.'
+                    description: 'Catalogue letter → feature count, e.g. `{"B": 41, "D": 12}`.'
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '429': { $ref: '#/components/responses/RateLimited' }
@@ -421,11 +421,11 @@ components:
     letter:
       name: letter
       in: query
-      description: Catalogue letter (see `/v1/catalog`).
+      description: Catalogue letter (see `/v1/catalog`). Practical categories use A-M, experiential categories N-Z.
       schema:
         type: string
-        pattern: '^[A-M]$'
-      example: C
+        pattern: '^[A-Z]$'
+      example: B
     tier:
       name: tier
       in: query
@@ -585,14 +585,14 @@ components:
               type: array
               items: { type: string }
               description: Lowercase catalogue letters the artifact carries.
-              example: [c, d, e, g, h, i, j, m]
+              example: [b, c, d, f, g, o, p, q]
             minZoom: { type: integer, example: 9 }
         categories:
           type: array
           items:
             type: object
             properties:
-              letter: { type: string, example: C }
+              letter: { type: string, example: B }
               key: { type: string, example: water }
               label: { type: string, example: Water & food }
               color: { type: string, example: '#8FB6A8' }
@@ -610,7 +610,7 @@ components:
           items:
             type: object
             properties:
-              letter: { type: string, example: C }
+              letter: { type: string, example: B }
               slug: { type: string, example: water-food }
               name: { type: string, example: Water & food }
               serviceKinds:
@@ -644,7 +644,7 @@ components:
           type: string
           description: 'OSM element reference (`node/…`, `way/…`), absent for Commons-native items.'
           example: node/4207030426
-        letter: { type: string, example: C }
+        letter: { type: string, example: B }
         serviceKind: { type: string, example: fountain }
         tier: { $ref: '#/components/schemas/Tier' }
         name: { type: string, example: 'Fountain · Spa' }
@@ -766,7 +766,7 @@ components:
       description: '**Draft** — phase-2 shape, subject to change.'
       required: [letter]
       properties:
-        letter: { type: string, example: C }
+        letter: { type: string, example: B }
         item_id:
           type: string
           description: Set when editing an existing Commons item.

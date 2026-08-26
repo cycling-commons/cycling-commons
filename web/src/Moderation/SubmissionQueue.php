@@ -214,6 +214,7 @@ final class SubmissionQueue
                 'itemId' => null !== $r['item_id'] ? (int) $r['item_id'] : null,
                 'title' => (string) $r['title'],
                 'type' => (string) $r['type'],
+                'letter' => (string) $r['letter'],
                 /* Type label from letter; template omits null. */
                 'typeLabel' => ItemType::fromLetter((string) $r['letter'])?->labelKey(),
                 'was' => $was,

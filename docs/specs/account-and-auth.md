@@ -11,7 +11,7 @@ shape, the admin support desk (audit, guardrails, removal semantics), the public
 rider profile, the account shell and settings surfaces, display-name identity,
 rider preferences, and GDPR deletion. Where a fact belongs to a sibling domain it
 is linked, not restated: moderation/submission machinery lives in
-[moderation-and-contribution.md](moderation-and-contribution.md), the route (K)
+[moderation-and-contribution.md](moderation-and-contribution.md), the route (R)
 domain in [route-domain.md](route-domain.md), CSP/CSRF/sanitizer details in
 [security-architecture.md](security-architecture.md), and map/search UX in
 [map-and-search.md](map-and-search.md).
@@ -433,6 +433,9 @@ administration only. Curator content review is the branded in-product
 `/moderate` shell (`ROLE_CURATOR`) — review happens within the product, never
 in a back-office tool. See
 [moderation-and-contribution.md](moderation-and-contribution.md).
+Machine-translation assist (DeepL), when built, is an `/admin` operator
+tool that only creates *drafts*; publishing still goes through `/moderate`
+([translations.md](translations.md) §7).
 
 ## 6. Admin support desk (`/admin`)
 
@@ -655,8 +658,13 @@ lives in the shell header.
 - Dashboard **Contributions pane** renders the user's real submissions
   (retention-filtered — a rejected submission past the retention cutoff never
   renders, see [moderation-and-contribution.md](moderation-and-contribution.md))
-  and route proposals, 50 each (`ProfileController`), in the shared `.item`
-  row style (type/route tag, date, status pill, decision-note sub-line); empty
+  and route proposals, 50 each (`ProfileController`), as the shared record
+  card (`.q-item`: type/route tag, title, region · country, date, Map/Edit
+  links, status pill, then the diff, the decision note and the conversation
+  under it), the same card the curator's desk renders, from the same
+  stylesheet (moderation-and-contribution.md §5.2, owner 2026-08-25). Every
+  pane opens with the shell's page head (eyebrow "Personal · <name>", a real
+  title) and offers the cards/list density switch; empty
   state is the `account.contributions_empty` key. The pane closes with a
   **Curator applications** section: the user's own
   `curator_application` rows with status pills (pending/approved/declined/
@@ -673,8 +681,11 @@ lives in the shell header.
   and links the regions directory. The former preview sample data is gone
   Every dashboard pane renders real rows only. Empty panes use
   the shared `.empty-state` block (`account/_shell_styles.html.twig`):
-  centred message plus a bordered door link, with `.dbody`/`.dmin` holding a
-  46vh minimum so sparse account pages keep their vertical shape.
+  left-aligned message plus a bordered door link (the same block every desk
+  uses), with `.dbody`/`.dmin` holding a 46vh minimum so sparse account pages
+  keep their vertical shape. `/messages` and `/settings` open with the same
+  head and container; `/messages` rows are the same card with `msg-*` state
+  hooks (new, mine) layered on.
 
 ### Settings (`App\Controller\SettingsController`, `/settings`)
 
@@ -923,14 +934,16 @@ moderation tables read miles. Map ES modules reach it through
 `assets/map/units.js` (`uKm`/`uM`/`uElev`), which falls back to metric so
 `node --test` can still import the leaf modules.
 
-**The three places a rider types or drags a distance** convert on the way in as
+**The places a rider types or drags a distance** convert on the way in as
 well as out:
 
-- the climb wizard's length and gain fields — shown and autofilled in the
-  rider's unit, converted back by model transformers on `AddClimbType` so the
-  submitted payload is metric. Server-side rather than in the browser: a
-  submission that arrived in miles because JavaScript was supposed to convert it
-  and did not is a wrong number nobody can spot afterwards;
+- a climb's length, gain and gradients are **never typed**: they are measured
+  server-side from the drawn line and the DEM (climb-elevation.md §4) and only
+  DISPLAYED in the rider's unit, through `ccKm`/`ccElev` in `improve.js`
+  (the measured block under the map and the review line), so no transformer
+  is needed. Until 2026-08-25 the retired `/add-climb` wizard had typed length
+  and gain fields with model transformers on `AddClimbType`; both the fields
+  and the transformers are gone;
 - the base-location radius slider — the **input stays kilometres** (that is what
   is stored and what the controller reads) and only the read-out follows the
   preference;

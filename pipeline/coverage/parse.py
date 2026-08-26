@@ -22,7 +22,7 @@ from coverage.contract import Contract
 @dataclass(frozen=True)
 class PoiRow:
     ref: str            # 'node/<id>' | 'way/<id>' — item.source_ref format
-    letter: str         # C D E G H I J (osm-data-architecture.md §5)
+    letter: str         # B C D F G O P Q (osm-data-architecture.md §5)
     kind: str | None    # serviceKind for D (shop|station|pump), None otherwise
     name: str | None
     lon: float

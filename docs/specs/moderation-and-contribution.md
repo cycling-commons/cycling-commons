@@ -17,9 +17,9 @@ documents own the surrounding contracts:
 - [osm-data-architecture.md](osm-data-architecture.md) — materialize-on-edit
   (osm-data-architecture.md §6) and how the pipeline here becomes the boundary
   crossing for OSM-backed items.
-- [route-domain.md](route-domain.md) — the K carve-out: route proposals,
+- [route-domain.md](route-domain.md) — the R carve-out: route proposals,
   corrections and votes never enter the item pipeline; `/improve` refuses
-  `type=K`. Route moderation reuses only the shared systems defined here
+  `type=R`. Route moderation reuses only the shared systems defined here
   (messages, Trash, retention, moderator areas).
 - [catalog-data-model.md](catalog-data-model.md) — the `item` table, states,
   identity and serving.
@@ -28,7 +28,8 @@ documents own the surrounding contracts:
 - [security-architecture.md](security-architecture.md) — stateless CSRF,
   escaping rules, sanitizer.
 - [translations.md](translations.md) — in-site non-English proposals; the
-  curator desk is unscoped.
+  curator desk is unscoped. The YAML catalogues and locale routing stay in
+  [dev-environment.md](dev-environment.md) §7.
 
 ---
 
@@ -55,11 +56,16 @@ interprets them — a real cross-file contract:
 
 **mode=add server side.** `ContributeController::addPlace()` renders the wizard
 (`ImproveType` `add_mode: true` — which injects a **required name** into the
-details pane, since several field sets carry none) for every type except B
-(dedicated /add-climb) and K (/propose-route);
+details pane, since several field sets carry none) for every type except R
+(/propose-route); N (climbs) has been included since 2026-08-25, when the
+dedicated /add-climb wizard was retired (`/add-climb` is a 301 to
+`/improve?type=climbs&mode=add`; [edit-items/N-climbs.md](edit-items/N-climbs.md)).
 `CatalogContributionService::submitAdd()` persists it as a NewItem submission
 (§3.3), with the two drawn endpoints of a segment-located type stored as the
-`segment` attribute (added to `AttributeVocabulary` `EXTRAS['A']`). A stale
+`segment` attribute (added to `AttributeVocabulary` `EXTRAS['A']`), and for a
+climb with the drawn `route`/`grad`/`steep` merged through
+`ClimbGeometry::fromPayload()` and the profile measured by `deriveClimbProfile()`
+(the foot of the route is the pin when the form sent none). A stale
 deep link carrying junk `item` + `mode=add` degrades to the add wizard, not
 the explainer (ImproveTest::testDeepLinkWithItemAndModeReturns200).
 Covered end-to-end by `AddPlaceFlowTest`.
@@ -105,8 +111,9 @@ The mode gate in `improve.js`:
   instead" and map-tap keeps working — the geocoder is never load-bearing.
 - **A pasted coordinate pair short-circuits the geocoder.** The map's
   right-click popup copies a spot as `lat, lng`, so the search box has to read
-  that back: `web/assets/contribute/coords.js` (`window.Cc.parseLatLng`, shared
-  with `add-climb.js`) parses `lat, lng`, `50.4920°N 5.8600°E`, `N50.49 E5.86`
+  that back: `web/assets/contribute/coords.js` (`window.Cc.parseLatLng`; it was
+  shared with `add-climb.js` until that wizard was retired on 2026-08-25) parses
+  `lat, lng`, `50.4920°N 5.8600°E`, `N50.49 E5.86`
   and `geo:`/`@` prefixes, and the query never reaches Photon. The pair is
   shown as a result row before anything moves, so the rider sees what was read
   out of the paste. Selecting it flies there **and drops the pin** — the
@@ -273,7 +280,7 @@ element bit; they are replaced by a single `#wiz [hidden]{display:none}`.
 
 - The drawer's **Fix location** action is what unlocks a *point* item's pin: a
   point opens its edit form on a compact, view-only confirm map, and
-  `fix=location` is the thing that expands it. **Letter B has no such gate** —
+  `fix=location` is the thing that expands it. **Letter N has no such gate** —
   the three-point editor is live the moment the form opens, foot, summit and
   steepest all draggable. Both links therefore landed on an identical page, and
   a second door into one room reads as a second room. Gated to `'B' !==
@@ -289,7 +296,7 @@ element bit; they are replaced by a single `#wiz [hidden]{display:none}`.
 (2026-08-03, owner request). A climb is not a dropped pin: three points in
 order, with the road between the first two snapped for you, and nothing on
 screen would ever suggest that a *third* tap marks the steepest ramp. Step 1
-therefore carries a four-line how-to for letter B — tap foot then summit, tap
+therefore carries a four-line how-to for letter N — tap foot then summit, tap
 again for the steepest ramp (optional), drag any marker to correct it, and Undo
 takes back the last thing you did.
 
@@ -368,9 +375,9 @@ data-loss bug class this contract closes.
   fake default editor.
 - A `type`/letter mismatch between the param and the resolved item also falls
   through to the explainer (editing the wrong item is worse than editing none).
-- **`type=K` is always refused** (route/item id-collision guard): route ids
+- **`type=R` is always refused** (route/item id-collision guard): route ids
   live in `recommended_route`, a separate sequence from `item`, so resolving a
-  K id against the item table would bind an unrelated item. Riders interact
+  R id against the item table would bind an unrelated item. Riders interact
   with routes via the community loop ([route-domain.md](route-domain.md)).
 - The form is prefilled with the item's current `name` + attribute values;
   was → now is computed server-side at submit (§3.2), never trusted from the
@@ -448,7 +455,7 @@ then `/vote` should stop calling this service at all.
 |---|---|---|
 | `id` | bigint identity | receipt ref is `SUB-<id>` |
 | `type` | varchar(8), enum `SubmissionType` | `new` \| `edit` \| `hazard` \| `photo`; queue renders all four, intake produces `new`/`edit` only (§8) |
-| `letter` | varchar(1) | effective range A–J (K bypasses this table) |
+| `letter` | varchar(1) | effective range A–G, N–Q (R bypasses this table) |
 | `item_id` | bigint NULL | set for `edit` at submit; set for `new` when the item row is created in the same transaction |
 | `user_id` | bigint | submitter — deliberately **no FK** (survives account deletion as anonymous data; see §5.6) |
 | `status` | varchar(12), enum `SubmissionStatus` | `pending` \| `approved` \| `rejected` \| `needs_info` \| `withdrawn` (§3.4) |
@@ -632,6 +639,43 @@ made (§5.1): `.q-prior-reject` on the card and `.cc-mod-prior` directly under
 the pending badge. It stays visible in list density, unlike body/diff/photos
 — it changes what the decision *is*, not the context it is made in.
 
+**One list system for every shell page (owner 2026-08-25).** The record card
+below, the page head (eyebrow · title · count or lead), the container
+(`.dbody`, 1120px, `id="main"`), the filter bar (`.mod-bar` holding
+`.mod-filters` selects + Apply and/or a `.lfilter` row of `.lchip` chips), the
+status pill (`.q-pill--ok|pend|conf|rej|ret|danger`), the quoted note
+(`.q-note`, `--answer`, `--prior`), the was → now diff (`.q-diff`, as two lines
+on the desk or as a `<dl>` on the rider pages, foldable as `details.q-diff`),
+the density switch (`account/_density.html.twig`) and the pager are defined
+**once**, in `account/_shell_styles.html.twig`, which includes
+`moderate/_card_styles.html.twig`. Every list page draws from there: the
+submissions desk, History, Routes, Takedowns, Data, Regions, and on the rider
+side `/profile` (contributions, route proposals, curator applications, votes)
+and `/messages`. A page's own `<style>` block keeps only what is truly its own
+(the data desk's side-by-side pair, the takedown photo size). A rider reading
+their own contribution and a curator deciding it are looking at one card; the
+desks that had grown their own row shapes (History's one-liners, Takedowns'
+tinted log, the data desk's green Yes) are on the card and the orange button
+system like everything else. The empty state is left-aligned prose on every
+page (`.empty-state`; the centred block and the ▲ ornament are gone).
+`tests/js/shell-list-system.test.cjs` pins it: no shell page may define a
+shared rule locally, use the public `.wrap`, or render a row that is not a
+`.q-item`.
+
+**Category icons have one home (owner 2026-08-25: "use the same as in the
+map, and make sure these are the only ones in the system").**
+`ItemType::icon()` is the glyph per type and `ItemType::svgPath()` the drawn
+path for climbs, scenic views and toilets; `ItemType::iconSet()` packs both
+by letter. The map page injects that set as `window.CC_TYPE_ICONS`
+(`MapController`), and `catalog.js` (`TYPE_ICON`, `TYPE_SVG`) and `icons.js`
+read it; server pages render it through `cc_type_icons()` in
+`partials/_type_icon.html.twig`, which every record row (contributions,
+votes, History) opens with. Never an emoji literal in a template or a module,
+and never a second set. A row shows: icon · type tag (new / edit) · title ·
+kind, then date · Map · status on the right; History is that same row with
+its everyone/mine and approved/rejected chips on top (trashed rows join the
+unfiltered first page, as before).
+
 **Queue item layout (2026-08-02, owner).** The desk is a queue worked dozens
 at a time, so the row is sized for that:
 
@@ -643,7 +687,18 @@ at a time, so the row is sized for that:
   **Review ↗**, then Message the rider / Escalate / Trash. The last three were
   link-ish `<summary>` text stacked in a two-column block below the primary
   action, which cost two horizontal rules and two extra rows for three
-  controls. They keep their order — **Escalate before Trash** (§6d of
+  controls. Since 2026-08-25 all five are icon-only (◎ review on the map,
+  ✎ edit the form, ✉ message, ⚑ escalate, the bin), the word kept as the
+  tooltip and the accessible name: five worded buttons repeated per row read
+  as a wall on the list view (owner). A new place also carries the OSM
+  identity chip in its meta line (open / linked / not in OSM,
+  [catalog-data-model.md](catalog-data-model.md) §5b). On the map, a
+  brand-new submission opens in its final form: `MapController` attaches the
+  item's would-be feature (`CatalogProvider::featureForItem(id, anyState: true)`,
+  the one place the served-state gate is bypassed, curators only) as
+  `preview`, and the drawer renders it with the live-item renderers (rows,
+  gradient strip, length) under "This item, as proposed" instead of the raw
+  field dump; a climb's after-line is coloured by its bars (2026-08-25). They keep their order — **Escalate before Trash** (§6d of
   [photo-uploads.md](photo-uploads.md)), so a curator reaching for "destroy
   this" because it is illegal meets the right verb first.
 - **Both destructive verbs open with WHEN to use them and close with a ticked
@@ -663,6 +718,79 @@ at a time, so the row is sized for that:
   from the moderation menu**; until that page exists these panels carry no link
   rather than a public one. The `moderate.trash.rulebook_link` string is kept
   for it.
+- **The rulebook PDF is streamed to curators, never served from public/**
+  (2026-08-25 link; 2026-08-26 owner: "the file should be streamed to the
+  client, not via a hidden public link accessible to everybody who knows it").
+  `CC_RULEBOOK_PDF_PATH` names the file on the server: a path, not a URL,
+  relative paths taken from the project root, committed default
+  `var/private/moderator-rulebook.pdf` (`var/` is git-ignored, so a fresh
+  checkout has no file and no link). `ModerateController::rulebookPdf()`
+  (`GET /moderate/rulebook.pdf`, `moderate_rulebook_pdf`) sits behind the
+  class-level `ROLE_CURATOR` gate and the `^/moderate` access rule, answers
+  with a `BinaryFileResponse` (inline, `Content-Type: application/pdf`,
+  `Cache-Control: private, no-store`, `X-Robots-Tag: noindex, nofollow`) and
+  404s when nothing is configured or the file is missing; the rulebook page
+  renders the "Download the rulebook (PDF)" link only when the file really
+  exists (`rulebook_pdf` is a boolean, not a URL). The file is owner-managed:
+  nothing in the app writes, uploads or validates it. Two homes were tried
+  and rejected the same day: `assets/` (AssetMapper would compile it into
+  the public build under a hashed name AND git would track it) and
+  `public/moderation/` (nginx serves it to anyone holding the URL, so the
+  page's gate would protect nothing). `RulebookPdfTest` pins anonymous →
+  login, `ROLE_USER` → 403, curator → PDF with those headers, link present
+  only with the file, 404 without it. **Deploy prerequisite:** copy the PDF
+  to the configured path on each frontend and set `CC_RULEBOOK_PDF_PATH`
+  (`.env.staging` carries `replace-me`).
+- **The rulebook prints as a document, and that is how the PDF is made**
+  (2026-08-25, owner). The template carries a `@media print` sheet so the file
+  is the page itself: the shell (brand bar, tabs, chip, footer, skip link) and
+  the download link are hidden, a print-only masthead shows
+  `brand/logo-nav-light.svg` (the dark-bar `logo-nav.svg` paints most of the
+  wordmark in paper colour, invisible on paper), the moderators-only badge
+  text and the print date. Colours are forced (`print-color-adjust: exact`)
+  so paper, clay and ink survive. The body's paper-grain overlay
+  (`body::after` in `atlas.css`) is hidden in print because a fixed noise
+  texture rasterises every page into a full-bleed bitmap (13 MB for four
+  pages; 230 KB without it). Three more print facts, each learned from a
+  wrong PDF (owner 2026-08-26):
+  - **Paper to the edge of every sheet.** Chrome paints `@page` margins white
+    whatever the canvas colour, so the page margin is 0 and the body is wrapped
+    in `table.rb-sheet`, whose empty `thead`/`tfoot` rows repeat on every
+    printed page and supply the 16 mm top and bottom gaps; the side gaps are
+    cell padding. On screen the wrapper is plain blocks and the gap rows are
+    hidden.
+  - **The file carries no links.** Chrome turns every printed `<a href>` into a
+    PDF link annotation, and a relative one makes Acrobat ask to "connect to"
+    whichever host the file was opened from (`wsl.localhost` for a WSL path).
+    The only in-body anchor (the curator room) is screen-only, with a plain
+    `span.rb-print` twin for print. The logo is embedded as an image; nothing
+    in the PDF references the site. Verified by decompressing the file: zero
+    `/Link`, `/URI`, `/Annots`, `http`.
+  - **Acrobat's "connect to wsl.localhost" on a clean file** is the file's
+    location, not its content: a UNC path counts as a network site. Copy the
+    PDF to a local Windows folder before judging it.
+  To produce the file: log in as a curator, open `/moderate/rulebook`, print to
+  PDF (A4, backgrounds on), copy it to the configured path. Nothing in the app
+  writes or validates the PDF.
+- **The rulebook covers every desk, and quotes no number** (2026-08-25,
+  owner). The 2026-08-03 text described only the submissions queue and the
+  takedowns desk, and four of its claims had gone stale: the typed `DELETE`
+  (removed 2026-08-12), "currently 3 months" (a runtime system setting), "the
+  photo comes off the map the moment they ask" (true for an uploader's own
+  request and the intimate-or-child category only; a third-party report stays
+  published until decided) and "never per moderator" (true of the admin
+  activity table, not of the History desk's *Handled by me* filter). The page
+  now has a section per desk (the OSM question and approve-and-confirm before
+  approval; Routes with edit-before-publish, the region cap, retire and located
+  corrections; Data with its two questions and dismiss-is-final; Regions with
+  the map default and the about-text attribution tick; takedowns with the
+  categories, the one-month reply clock, decline-is-final-per-category and the
+  flood banner) plus account rules (mandatory 2FA, hard scope refusals, the
+  unsafe-link marks). Every "ask" points at the **curator room**, an in-desk
+  board at `/moderate/room` (feat/curator-room, not yet merged); the template
+  links it by literal path until the route exists, so the page renders today.
+  Rule kept from the original: the rulebook names mechanisms, never settings'
+  values, so it cannot rot when an administrator changes a threshold.
 - **The four triggers never leave their line.** The server renders three
   `<details>`; a nonce script upgrades each into a real disclosure — a
   `<button aria-expanded aria-controls>` that stays in the row, with its panel
@@ -810,11 +938,11 @@ in place *and* reopen the drawer on the applied result:
 - **Pool letters** come back as a GeoJSON `feature`. `addCuratedFeature()` now
   **replaces** a feature whose id is already present instead of returning early
   — the early return was why an approved edit never refreshed.
-- **B · climbs** come back as the `climb` object map.js consumes, rebuilt
+- **N · climbs** come back as the `climb` object map.js consumes, rebuilt
   through the same mapper the bulk payload uses (`climbFromRow`), so the
   live-updated climb cannot drift from the served one. Climbs were previously
-  excluded from `featureForItem()` along with A and K.
-- **A · segments and K · routes** still send nothing and keep the old
+  excluded from `featureForItem()` along with A and R.
+- **A · segments and R · routes** still send nothing and keep the old
   close-and-toast: a segment's geometry and the route domain are not worth
   half-supporting on this path.
 
@@ -882,7 +1010,7 @@ idempotent by item id). Before this the pending pin simply vanished on approve
 and the place appeared nowhere until the curator reloaded — the map's pools are
 built once, at boot. It joins as a **community** pin (dashed, `v` absent):
 approved is not confirmed, and only a rider's confirmation flips that. Letters
-whose payload is not a feature collection (A segments, K routes) send
+whose payload is not a feature collection (A segments, R routes) send
 no item and keep the reload behaviour.
 
 **The decision buttons are delegated, not bound per element (2026-08-03).**
@@ -994,7 +1122,11 @@ Both now render the change, as the same was → now shape the desk's `.q-diff`
 uses:
 
 - **`/profile` contributions list** — under every row that changed something.
-- **`/messages`** — inside the decision card, headed "What you changed".
+- **`/messages`** — inside the decision card, headed "What you changed", **folded
+  by default** behind a small "Show details" link (a native `<details>`, no
+  script). The card says what happened; the diff is there for the rider who
+  wants to check it, not pushed at everyone (owner 2026-08-25). The unread
+  card is outlined, with no thicker left edge (same decision).
   **Not** on a needs-info card: there the curator's question is the point, and
   a diff above the reply box pushes it down the page.
 
@@ -1430,8 +1562,8 @@ source of truth:
 
 | Type | Stances (`ConfirmationStance`) | `stanceKind` |
 |---|---|---|
-| C · Water & food | `potable` / `not_potable` | `potability` |
-| B · Climbs, D · Services, F · Hazards, G · Getting there, H · Shelter, I · Scenic views, J · History & culture, M · Public toilets, W · Where to sleep | `exists` | `existence` |
+| B · Water & food | `potable` / `not_potable` | `potability` |
+| C · Public toilets, D · Services, E · Hazards, F · Getting there, G · Shelter, N · Climbs, O · Where to sleep, P · Scenic views, Q · History & culture | `exists` | `existence` |
 | A · Road surface, all remaining votable types | none — they vote, or are measured | — |
 
 **Why the second row grew** (owner decision 2026-08-12). The old test was
@@ -1479,7 +1611,7 @@ three live in `ConfirmationFreshness`:
    predicate than §10.1's stance list: `ItemType::confirmationAges()`. Every
    place a rider can stand next to is *confirmable* - that is §10.1's point -
    but **a tap breaks, a shop shuts, a hazard clears; a viewpoint does not
-   stop being a view.** So C, D, F, G, H, M, W and A age; B, I and J never do.
+   stop being a view.** So B, C, D, E, F, G, O and A age; N, P and Q never do.
    Reusing `confirmationStances()` here would have aged the whole map, because
    the 2026-08-12 decision deliberately widened it to nearly every letter.
 3. **`source <> 'form'`**, as everywhere else: a submitter answering their own
@@ -1554,7 +1686,7 @@ decision 2026-08-12).
 
 | Button | Writes | Offered on |
 |---|---|---|
-| ⚠ Out of order | `condition = 'Out of order'` | C · water, D · services, M · toilets (`CC_BREAKABLE`) |
+| ⚠ Out of order | `condition = 'Out of order'` | B · water, C · toilets, D · services (`CC_BREAKABLE`) |
 | ⌀ Closed | `condition = 'Closed'` | every confirmable type |
 | ✕ Not there anymore | `condition = 'Not there anymore'` | every confirmable type |
 
@@ -1612,7 +1744,7 @@ The map rail's one-line invite (`#emptyScopeInvite`,
 the active scope's curated count is zero. That count is a faithful reduction
 of `featureVisible()`'s curated branch (render.js): only features on
 experiential layers (`l.key === 'experience'` or `l.exp`) with `f.cur` set
-count; utility layers (C/D/F/G/H) never carry a `cur` flag and can neither
+count; utility layers (B/C/D/E/F/G) never carry a `cur` flag and can neither
 suppress nor trigger the invite, so a stray hazard report or an unverified
 route upload never silently hides it. This holds independent of the rider's
 own view-mode toggle, and is computed once per map load.
@@ -2005,7 +2137,7 @@ offers exactly that list, and the endpoint validates against the same constant �
 so the panel can never present a choice the server refuses. `resupply` may be
 water or a bike service. `other` is the exception since 2026-08-18 (owner):
 it carries no category on the device and asks for none in review — its card is
-a free-text description only, and the intake auto-files it as an **F notice**
+a free-text description only, and the intake auto-files it as an **E notice**
 with `hazardType: Other`, the curator's read of the text being the filing
 decision. An empty description refuses to send: "Other" as a name tells the
 curator nothing. A **bare surface tap** (the device's type picker timed out:
@@ -2054,8 +2186,8 @@ outstanding, in order.
 - **The sub-menu decides the letter and fills the fields.** Scout's second tap
   is the half that says what the rider meant, and it does not always land where
   the tag type alone would put it: SCENERY · HISTORY and SCENERY · ARCHITECTURE
-  are J, not I. NOTICE · POTHOLES arrives as F with `hazardType` already
-  answered; CLOSURE · WEEKS as F with `closedFor`, which is what lets the map
+  are Q, not P. NOTICE · POTHOLES arrives as E with `hazardType` already
+  answered; CLOSURE · WEEKS as E with `closedFor`, which is what lets the map
   retire it by itself. `ScoutTag::DETAIL_LETTERS` and `DETAIL_FIELDS` own both
   tables and the panel reads them from the server, so it cannot offer a letter
   the endpoint refuses. A sub-menu answer never follows a tag the rider re-filed

@@ -33,7 +33,7 @@ final class ContributorsPageTest extends WebTestCase
     private function approvedSubmission(int $userId): void
     {
         $em = static::getContainer()->get(EntityManagerInterface::class);
-        $sub = (new Submission())->setType(SubmissionType::NewItem)->setLetter('B')->setUserId($userId)
+        $sub = (new Submission())->setType(SubmissionType::NewItem)->setLetter('N')->setUserId($userId)
             ->setTitle('Wall submission')
             ->setGeom('{"type":"Point","coordinates":[5.86,50.47]}')->setCountryCode('BE')
             ->setChanges([])->setPayload([]);

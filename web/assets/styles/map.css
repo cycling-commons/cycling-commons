@@ -429,6 +429,7 @@
      draw tofu boxes on any machine whose browser has no colour-emoji font —
      which is silent: the pin still renders, it just says nothing. */
   .cc-g{font-family:var(--emoji);font-style:normal}
+  .cc-g svg,.cc-near-k svg,.search-res .sw svg,.cc-d-rec .v svg{vertical-align:-2px}
   /* "Somebody checked this, but a while ago." The ring replaces the paper
      border rather than adding a second one: an outline outside the drop shadow
      read as a selection state, which is what .cur already means. Trail orange,

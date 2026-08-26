@@ -366,7 +366,7 @@
          then re-locate the climb from scratch in its own small map while having
          been looking straight at it.
 
-         /add-climb is ROLE_USER, so logged out this renders locked. Anonymous
+         /improve is ROLE_USER, so logged out this renders locked. Anonymous
          riders also reach it through /contribute, which lists it.
 
          The href is rewritten by panels.js initAddClimbHere() on every map
@@ -374,7 +374,7 @@
       <div class="grp cc-addclimb">
         <h3>{{ 'map.add_climb_heading'|trans }}</h3>
         {% if is_granted('ROLE_USER') %}
-        <a class="cc-addclimb-go" id="addClimbHere" href="{{ path('add_climb') }}">{{ 'map.add_climb_here'|trans }}</a>
+        <a class="cc-addclimb-go" id="addClimbHere" href="{{ path('improve', {type: 'climbs', mode: 'add'}) }}">{{ 'map.add_climb_here'|trans }}</a>
         {% else %}
         {% include 'map/_locked_tool.html.twig' with {label: 'map.add_climb_here'|trans} only %}
         {% endif %}
@@ -711,6 +711,8 @@ window.CC_VENDOR = {{ {
   window.CC_VOTING_LIVE = {{ voting_live|default(false) ? 'true' : 'false' }};
   window.CC_MAP_SRC = {{ asset('map/map.js')|json_encode(constant('JSON_UNESCAPED_SLASHES'))|raw }};
   window.CC_FIELD_SCHEMA = {{ field_schema|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
+  {# The category icon set, letter → {glyph, svg}: ItemType::iconSet(), the only definition. #}
+  window.CC_TYPE_ICONS = {{ type_icons|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
   {# Locale bundle for the strings map.js renders itself (layer list, subtitle,
      drawer, toasts) — built by MapController::mapI18n, one source of truth. #}
   window.CC_I18N = {{ map_i18n|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};

@@ -2,7 +2,7 @@
 /* Map entry (docs/specs/map-and-search.md §4). ES module: catalog-load.js
    injects it once the catalog fetch has populated the CC_* globals. */
 import { I18N, LAYER_L10N, D, tpl, VALUE_TR, trVal, sourceLabel, isRiderSource } from './i18n.js';
-import { wc, pinPoint } from './util.js';
+import { escPend, pinPoint, wc } from './util.js';
 import { uKm } from './units.js';
 import { map, initMapControls, addSatellite, markStyleReady, initCoordPopup,
          localiseBasemapLabels } from './map-init.js';
@@ -30,9 +30,10 @@ import { initSearchUi } from './search-ui.js';
 import { initScoutReview } from './scout-review.js';
 import { initDuplicateResolve } from './duplicate-resolve.js';
 import { initLayerList, initMapCtrl, initRailChrome, initBestOf, initFilterPill,
-         initChips, initViewMode, initAddClimbHere } from './panels.js';
+         initChips, initViewMode, initAddClimbHere, liftModeFor } from './panels.js';
 import { initTheme } from './theme.js';
 import { initShell } from './shell.js';
+import { layerGlyph } from './icons.js';
 
   initScope();
 
@@ -72,6 +73,15 @@ import { initShell } from './shell.js';
       (pp && !!(layerByKey.pending && (layerByKey.pending.features||[]).some(x=>x.pending && String(x.pending.id)===String(pp)))) ||
       (rp && ((layerByKey['experience']||{}).features||[]).some(x=>String(x.id)===String(rp)));
     if(_dlHit) widenForDeepLink();
+    // docs/specs/map-and-search.md §8: the rider's own mode may not draw the
+    // target (Best of hides a Verified climb): lift it before the drawer opens,
+    // or the halo lands on an empty map. Pool hits and pivots keep their own path.
+    if(_dlHit){
+      const hit = (ip && resolveLocalFeatureById(ip))
+        || (fp && resolveLocalFeature(fp))
+        || (rp && (()=>{ const l=layerByKey['experience']; const f=l && (l.features||[]).find(x=>String(x.id)===String(rp)); return f ? {layer:l, f} : null; })());
+      if(hit && hit.layer && hit.f) liftModeFor(hit.layer, hit.f);
+    }
     // ?feature=<name> drawer + zoom; coverage POIs via search when local index misses.
     // ?item=<id> — moderation "what did I approve", by id not name.
     if(ip) openFeatureById(ip);
@@ -137,7 +147,7 @@ import { initShell } from './shell.js';
           rec.push({label:D.surfaces||'Surfaces', value:r.surfaces.parts.map(p=>`${trVal(p.surface)} ${p.pct}%`).join(' · '),
                     method:tpl(D.estimateMethod||'estimate · {pct}% of route mapped', {pct:Number(r.surfaces.covered)||0})});
         }
-        rec.push(...schemaRows('K', r, r.id, {skip:['difficulty']}));
+        rec.push(...schemaRows('R', r, r.id, {skip:['difficulty']}));
         return rec;
       })()
     };
@@ -167,7 +177,7 @@ import { initShell } from './shell.js';
     });
   }
   populateSurfaceA();
-  // F · Hazards — catalog point features from window.CC_HAZARDS (no coverage tile).
+  // E · Hazards — catalog point features from window.CC_HAZARDS (no coverage tile).
   if(window.CC_HAZARDS && Array.isArray(CC_HAZARDS.features)){
     layerByKey['hazards'].features = CC_HAZARDS.features.map(ft=>{
       const p=ft.properties||{}, c=(ft.geometry&&ft.geometry.coordinates)||[];
@@ -178,7 +188,7 @@ import { initShell } from './shell.js';
         id:p.id, rid:p.rid, name:p.n||(LAYER_L10N.hazards||'Hazard'), unnamed:!named,
         headline:bits.join(' · ')||(named?(LAYER_L10N.hazards||'Hazards & conditions'):''),
         cur:!!p.v, geom:{ll:[c[1], c[0]]},
-        record:schemaRows('F', p, p.id),
+        record:schemaRows('E', p, p.id),
         photo:photo,
         source:sourceLabel(p.srcType) || (D.communityReport||'Community report'),
         v:p.v
@@ -203,7 +213,7 @@ import { initShell } from './shell.js';
         (()=>{
           const lyr = CATALOG.find(l=>l.letter===s.letter) || {};
           const name = LAYER_L10N[lyr.key] || lyr.label || s.letter;
-          return {label:D.type||'Type', value:(lyr.icon ? lyr.icon+' ' : '')+name};
+          return {label:D.type||'Type', html:true, value:layerGlyph(lyr, 13)+' '+escPend(name)};
         })(),
         {label:D.submittedBy||'Submitted by', value:s.who},
         {label:D.age||'Age', value:s.when},
@@ -227,7 +237,7 @@ import { initShell } from './shell.js';
       record:[
         (()=>{ const lyr=CATALOG.find(l=>l.letter===g.letter)||{};
           const nm=LAYER_L10N[lyr.key]||lyr.label||g.letter;
-          return {label:D.type||'Type', value:(lyr.icon?lyr.icon+' ':'')+nm}; })(),
+          return {label:D.type||'Type', html:true, value:layerGlyph(lyr, 13)+' '+escPend(nm)}; })(),
         {label:D.status||'Status', value:trVal('Not there anymore')},
         {label:D.age||'Age', value:g.since},
         {label:D.where||'Where', value:g.cc}

@@ -52,7 +52,7 @@ def main() -> int:
     args = ap.parse_args()
 
     sql = (f"SELECT json_build_object('name', name, 'route', attributes->'route')::text "
-           f"FROM item WHERE id = {args.id} AND letter = 'B'")
+           f"FROM item WHERE id = {args.id} AND letter = 'N'")
     out = subprocess.run(PSQL + [sql], capture_output=True, text=True, check=True).stdout.strip()
     item = json.loads(out)
     line = item["route"] or []

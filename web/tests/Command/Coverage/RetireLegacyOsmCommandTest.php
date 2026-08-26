@@ -76,17 +76,17 @@ final class RetireLegacyOsmCommandTest extends KernelTestCase
     {
         $display = $this->runCommand()->getDisplay();
 
-        // Fixture pool: 3 D + 1 E imported-OSM rows, untouched by any human.
+        // Fixture pool: 3 D + 1 O imported-OSM rows, untouched by any human.
         // A (way/2001, osm) is letter-exempt — road surface never entered the
-        // coverage artifact (coverage-provider.md §7); B is
+        // coverage artifact (coverage-provider.md §7); N is
         // wikidata-sourced, off-predicate anyway.
         self::assertStringContainsString('D: 3 row(s)', $display);
-        self::assertStringContainsString('E: 1 row(s)', $display);
+        self::assertStringContainsString('O: 1 row(s)', $display);
         self::assertStringNotContainsString('A: ', $display);
         self::assertStringContainsString('Dry-run: 4 row(s) would be deleted', $display);
 
         $conn = $this->em->getConnection();
-        self::assertSame(4, (int) $conn->fetchOne("SELECT COUNT(*) FROM item WHERE letter IN ('D', 'E') AND source = 'osm'"));
+        self::assertSame(4, (int) $conn->fetchOne("SELECT COUNT(*) FROM item WHERE letter IN ('D', 'O') AND source = 'osm'"));
     }
 
     public function testForceDeletesPredicateRowsOnly(): void
@@ -107,9 +107,9 @@ final class RetireLegacyOsmCommandTest extends KernelTestCase
         self::assertStringContainsString('Deleted 3 legacy OSM row(s)', $display);
 
         self::assertSame($shopId, (int) $conn->fetchOne("SELECT id FROM item WHERE letter = 'D'"));   // confirmed shop survives, alone
-        self::assertSame('pivot', $conn->fetchOne("SELECT source FROM item WHERE letter = 'E'"));     // pivot stay survives
+        self::assertSame('pivot', $conn->fetchOne("SELECT source FROM item WHERE letter = 'O'"));     // pivot stay survives
         self::assertSame(1, (int) $conn->fetchOne("SELECT COUNT(*) FROM item WHERE letter = 'A'"));   // surface letter-exempt
-        self::assertSame(1, (int) $conn->fetchOne("SELECT COUNT(*) FROM item WHERE letter = 'B'"));   // wikidata off-predicate
+        self::assertSame(1, (int) $conn->fetchOne("SELECT COUNT(*) FROM item WHERE letter = 'N'"));   // wikidata off-predicate
     }
 
     public function testSecondForceRunReportsNothingLeft(): void

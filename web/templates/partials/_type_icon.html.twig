@@ -1,0 +1,16 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{# The category icon for one catalog letter, from THE icon set
+   (ItemType::iconSet() via cc_type_icons()): the same glyph the map's layer
+   list and pins use (owner 2026-08-25: "use the same as in the map, and make
+   sure these are the only ones in the system"). A type with a drawn path
+   renders it as inline SVG in the text colour; the others render the glyph in
+   the emoji stack, flattened to a dark mark so it reads as an icon, not a
+   sticker. No icon may be defined anywhere else.
+   Param: `letter` (ItemType::letter()). Unknown letters render nothing.
+   Decorative: aria-hidden, the tag beside it carries the word. #}
+{% set ic = cc_type_icons()[letter] ?? null %}
+{% if ic and ic.svg -%}
+<span class="q-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" fill-rule="evenodd" d="{{ ic.svg }}"/></svg></span>
+{%- elseif ic -%}
+<span class="q-icon q-icon--glyph" aria-hidden="true">{{ ic.glyph }}</span>
+{%- endif %}

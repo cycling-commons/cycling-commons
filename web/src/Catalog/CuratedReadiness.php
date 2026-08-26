@@ -21,21 +21,21 @@ use Doctrine\DBAL\Connection;
 final class CuratedReadiness
 {
     /**
-     * Experiential layers Curated hides when an item is not curated, plus K from `recommended_route`.
+     * Experiential layers Curated hides when an item is not curated, plus R from `recommended_route`.
      *
      * @var array<string, string> letter => the item_type translation key
      */
     public const array BLOCKS = [
         'A' => 'item_type.road-surface.label',
-        'B' => 'item_type.climbs.label',
-        'E' => 'item_type.where-to-sleep.label',
-        'I' => 'item_type.scenic-views.label',
-        'J' => 'item_type.history-culture.label',
-        'K' => 'item_type.quality-rides.label',
+        'N' => 'item_type.climbs.label',
+        'O' => 'item_type.where-to-sleep.label',
+        'P' => 'item_type.scenic-views.label',
+        'Q' => 'item_type.history-culture.label',
+        'R' => 'item_type.quality-rides.label',
     ];
 
-    /** The letters counted from the `item` table (everything but the K routes). */
-    public const array ITEM_LETTERS = ['A', 'B', 'E', 'I', 'J'];
+    /** The letters counted from the `item` table (everything but the R routes). */
+    public const array ITEM_LETTERS = ['A', 'N', 'O', 'P', 'Q'];
 
     public function __construct(
         private readonly Connection $db,
@@ -163,7 +163,7 @@ final class CuratedReadiness
             ['rids' => ArrayParameterType::INTEGER],
         );
         foreach ($routes as $r) {
-            $counts[(int) $r['region_id']]['K'] = (int) $r['n'];
+            $counts[(int) $r['region_id']]['R'] = (int) $r['n'];
         }
 
         // Read once per batch so every region is judged by the same settings.

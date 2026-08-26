@@ -16,7 +16,7 @@ data model unchanged; it never defines data semantics.
 [catalog-data-model.md](catalog-data-model.md). Per-type edit contracts and the
 lifecycle/votability funnel: [edit-items/README.md](edit-items/README.md).
 Submission/moderation/confirmation machinery:
-[moderation-and-contribution.md](moderation-and-contribution.md). The K route
+[moderation-and-contribution.md](moderation-and-contribution.md). The R route
 domain (states, votes, rides, corrections, GPX endpoint):
 [route-domain.md](route-domain.md). CSP/CSRF/sanitizer/limiters:
 [security-architecture.md](security-architecture.md). The coverage pipeline that
@@ -50,7 +50,7 @@ Implementation surfaces: `web/assets/map/map.js` (all client behaviour),
    exception: they render *as invitations to contribute*, visually distinct
    from data rows, never as values.
 4. **Honesty labels.** Anything derived, simulated, or illustrative says so on
-   the surface where it appears: the L heatmap and planner are labelled
+   the surface where it appears: the ride heatmap and planner are labelled
    illustrative/faked (§11), route surface breakdowns carry an
    "estimate · N% of route mapped" method note, best-of is derived (never
    hand-set — funnel in
@@ -295,7 +295,7 @@ by default and a rider asks for one section at a time.
   one split describes the catalogue everywhere. Membership comes from
   `layer.votable`, which mirrors `ItemType::isVotable()`. It is **not** `exp`:
   `exp` decides what Curated mode hides, and the two disagree on both road
-  surface (utility, but filters to curated) and K (votable, but special-cased
+  surface (utility, but filters to curated) and R (votable, but special-cased
   by key). Within a group, `CATALOG`'s own order carries through; that array's
   order stays the **draw** order (`render.js` walks it, so later entries stack
   above earlier ones) and must not be reshuffled for display reasons.
@@ -306,9 +306,9 @@ by default and a rider asks for one section at a time.
   ride-check group badges, the contribute hub cards and the improve/propose
   eyebrows; each of those shows the category's **icon** on its colour swatch
   instead. The change was forced by the grouping: sorting the list A–Z put
-  M · Public toilets last (far from Water & food, the row it belongs beside)
-  and B · Climbs above every utility, and once the list is ordered for humans
-  the letters read as a broken sequence (A, C, M, D…) — which is exactly what
+  Public toilets (then letter M) last (far from Water & food, the row it belongs beside)
+  and Climbs (then letter B) above every utility, and once the list is ordered for humans
+  the letters read as a broken sequence (at the time A, C, M, D…) — which is exactly what
   an identifier looks like when it is used as an ordinal.
 - **A pin's position is `pinPoint()` (util.js), not `featurePoint()`.** They
   answer different questions and disagree on climbs: the stored anchor is the
@@ -332,8 +332,8 @@ by default and a rider asks for one section at a time.
   at draw time**: this function runs at the end of every render *and* after
   every selection move, so a `moveLayer` in `drawClimbLine` is silently
   overridden a moment later (tried and reverted the same day).
-- **L · Ride heatmap is deliberately NOT a catalog entry:** the generated layer
-  list holds A–K only; L is a sub-header inside the FILTERS block with its own
+- **The ride heatmap (no letter) is deliberately NOT a catalog entry:** the generated layer
+  list holds the lettered types only; the heatmap is a sub-header inside the FILTERS block with its own
   On/Off toggle and season chips (§11).
 - Curators additionally receive a **⚑ Pending review** layer
   (`CC_PENDING`-driven, red pins) — moderation behaviour is owned by
@@ -371,7 +371,7 @@ by default and a rider asks for one section at a time.
 - **Experiential layers** (`layer.exp`: climbs, stays, scenic, history) filter
   to `f.cur` in Curated; utility layers always draw their confirmed pins, and
   their unverified OSM dots draw only in Everything (this gate changes under
-  §12). **K routes** honour a server-computed best-of: Curated mode fetches
+  §12). **R routes** honour a server-computed best-of: Curated mode fetches
   `GET /map/best-of` for the active *(season, bike)* facet (`#boSeason` /
   `#boBike` selects, shown only in Curated), flags the returned ids `cur`, and
   filters to them. Membership only — the server's rank order is latent until a
@@ -398,9 +398,9 @@ that look like the same rename and are not:
 
 A half-finished rename was found on 2026-08-14: the map said Best of while the
 Regions desk, the region-status legend, the admin settings labels and the
-add-climb journey diagram still said Curated / Sélection / Selectie / Auswahl /
-Curado, so one product had two names for one thing in five languages. Fixed
-across all five.
+add-climb journey diagram (gone with the wizard on 2026-08-25) still said
+Curated / Sélection / Selectie / Auswahl / Curado, so one product had two names
+for one thing in five languages. Fixed across all five.
 
 - **Which mode the map OPENS in.** The global default is
   **Everything**, not Curated: Curated hides every non-curated experiential item,
@@ -647,14 +647,17 @@ four returned once the reason they looked broken was fixed:
   `map.disc_*` catalogue keys went with it.
 
 - **The same call, the same day, on `/add-climb`'s "Targeted audience" chips.**
+  *(History: the wizard itself was retired on 2026-08-25; climbs are added on
+  `/improve`, whose `ImproveType` has no audience field either.)*
   They were worse than the map's: not only did they filter nothing, *nothing
-  submitted them* — `AddClimbType` has no audience field and
-  `CatalogContributionService::CLIMB_FIELDS` maps no such key — while the
+  submitted them* — `AddClimbType` had no audience field and
+  `CatalogContributionService::CLIMB_FIELDS` mapped no such key — while the
   wizard's review step listed the ticked ones back as though a curator would
   receive them. Their labels were also the last untranslated strings on that
   page. The gradient guidance they used to drive stays, as one static line: it
   is advice for whoever is describing a climb, and it already names the handbike
-  ceiling the conditional version spelled out.
+  ceiling the conditional version spelled out. (That static line went with
+  the wizard on 2026-08-25.)
 
   Bringing either set back means giving items a real audience attribute in
   `CatalogFormRegistry`, which is a vocabulary decision — the add-climb chips
@@ -678,7 +681,7 @@ hold and are the reason it reads honestly in the meantime:
 
 ### 4.4 Preference prefilter
 
-- Saved **bike types really filter the routes (K) layer** — routes are the only
+- Saved **bike types really filter the routes (R) layer** — routes are the only
   bike-tagged layer; nothing else is preference-filtered. Applies in **both**
   modes, composing with (never replacing) the mode/best-of filters.
 - **Predicate (`prefMatch()`, unknown ≠ unsuitable):** visible iff
@@ -1152,12 +1155,12 @@ Mechanism, one attribute end to end:
   bridge** — a square is 6 km of countryside, not a road, and the honest next
   step is to go and ride it rather than to invent an answer for a road you have
   not seen.
-- **B · Climbs** with traced geometry draw a gradient-coloured line
+- **N · Climbs** with traced geometry draw a gradient-coloured line
   (`line-gradient` over `line-progress`, purple ramp `gradColor()`) plus a
   "steepest pitch" marker; the pin sits at the climb **foot** (first route
   vertex). The same purple ramp renders the 1–5 difficulty scale in the drawer
   (deliberately "climb-coloured").
-- **K · Routes** draw in a **pre-blended lighter orange at full opacity**
+- **R · Routes** draw in a **pre-blended lighter orange at full opacity**
   (`ROUTE_BASE_COLOR`) instead of a translucent line — translucent lines
   stacked where routes share a road read as random darker segments. The
   **selected** route gets full brand orange, a wider halo, and dims every
@@ -1271,7 +1274,7 @@ permanently retired.
 - **Delivery:** `App\Catalog\CatalogSchemaProvider::all()` walks the registry,
   keeps `CatalogField::$display === true` fields in `fields`-then-`addFields`
   order, resolves labels through the translator once at serialize time, and is
-  injected as `window.CC_FIELD_SCHEMA = {A: […], …, K: […]}` — **localized per
+  injected as `window.CC_FIELD_SCHEMA = {A: […], …, R: […]}` — **localized per
   request, deliberately kept OUT of `catalog.json`** (that endpoint is
   locale-agnostic and HTTP-cached; never inflate the cached bulk payload with
   locale-varying data).
@@ -1559,7 +1562,8 @@ the index and the dropdown.
   as of 2026-08-09 the codebase makes zero Nominatim requests. The region
   boundary moved to our own endpoint, and the add-climb wizard's last call
   (which geocoded the hardcoded string "Wallonia" on every page load, wrong on
-  a worldwide wizard) was deleted rather than proxied. Distributed browser
+  a worldwide wizard) was deleted rather than proxied (the wizard itself
+  followed on 2026-08-25; `improve.js` never made that call). Distributed browser
   calls could never have honoured a per-application rate cap; the only way to
   respect the policy at scale was to need it zero times. Photon's host is in
   the CSP `connect-src`; Nominatim's is not, because there is nothing to
@@ -1583,7 +1587,7 @@ the index and the dropdown.
 ### 7.3 Dropdown presentation
 
 Grouped and scrollable: **Places first** (local towns, then geocoded ones),
-then items grouped by catalog letter A–K with colour chips, **total cap 30**
+then items grouped by catalog letter (A–G, N–R) with colour chips, **total cap 30**
 (`CAP` in map.js `runS()`). Prefix matches rank above substring matches. The
 flat `sMatches` list preserves display order so keyboard navigation
 (↓/↑/Enter/Escape, `role="combobox"`/`listbox`) is untouched by grouping.
@@ -1602,10 +1606,11 @@ is the pending permalink contract):
 |---|---|
 | `?feature=<name>` | exact-name match over `CATALOG` features: activates the layer if hidden, opens the drawer, flies to the pin. The profile-card → map contract. Falls back to one unscoped coverage search when the local index misses. |
 | `?ref=<osm ref>` | one coverage POI by its OSM id (`node/462149319`, `way/…`). Resolved by a single `/map/coverage/poi/{osmType}/{osmId}` call, which is the only thing that knows the letter and the coordinates; widens the scope on its own hit, like `?feature=`. |
+| `?item=<id>` | one catalog item by DB id: the desk's "what did I approve" link and the drawer's share link. Opens the drawer, flies to the pin. **Lifts the view mode** when the rider's own mode would not draw the target: to the lowest rung that does (Confirmed before Everything), for this visit only, never persisted, with a toast naming both modes (`liftModeFor`, panels.js; the rung rule is `modeShows` in filters.js, the same predicate `featureVisible` reads). `?feature=` and `?route=` lift the same way. Owner decision 2026-08-25: a curator approved a climb, opened the link in their own Best of mode, and found the halo over an empty map, because the climb was Verified but not a pick. |
 
 **Both id params may carry a readable tail:** `?item=482/cote-de-wanne`, `?ref=node/462149319/roche-aux-faucons`. The id is everything before the first `/` after it (`idFromShare` / `refFromShare` in `share-links.js`); the slug is discarded on read. A renamed place, a hand-trimmed link and every bare-id link already sent out all open the same point. Slashes stay unencoded in the query value, because a `%2F` in the middle defeats the reason the slug is there.
 | `?pending=<id>` | curator deep link from the /moderate queue: activates the ⚑ layer, opens the submission drawer |
-| `?route=<id>` | opens that K route **selected** (curator Routes desk link): currently force-switches to Everything so an un-voted route can render, then highlights + shows the curator corrections overlay. The force-switch is slated to become a reveal pin (§12). |
+| `?route=<id>` | opens that R route **selected** (curator Routes desk link): lifts the view mode like `?item=` (above), then highlights + shows the curator corrections overlay. The reveal pin (§12) stays as the fallback when the target is still not drawn. |
 
 ### 8.1 "Add a climb here": the map is a starting point, not only a reader
 
@@ -1618,26 +1623,34 @@ and then re-locate the climb from scratch in its own small map having just been
 looking straight at it.)*
 
 - **Where:** a `.grp.cc-addclimb` block in the Ride tools panel, under ride-check,
-  inside the same `ROLE_USER` gate. `/add-climb` is `ROLE_USER`, and a link
-  that lands on a login wall is worse than no link; anonymous riders reach it
-  through `/contribute`, which lists it.
+  inside the same `ROLE_USER` gate. The target, `/improve`, is `ROLE_USER`, and
+  a link that lands on a login wall is worse than no link; anonymous riders
+  reach it through `/contribute`, which lists it.
+- **Target (since 2026-08-25):** `/improve?type=climbs&mode=add&lat=&lng=&z=`,
+  the climb add arm of the one contribution form
+  ([edit-items/N-climbs.md](edit-items/N-climbs.md)). The dedicated `/add-climb`
+  wizard was retired that day; `/add-climb?lat=&lng=&z=` still answers, as a
+  **301** to the same target, so old links and bookmarks keep working.
 - **What travels:** the **camera only**. `panels.js` `initAddClimbHere()`
-  rewrites the href on every `move` to
-  `/add-climb?lat=&lng=&z=`, coordinates rounded to 5 decimals (about a metre).
-  Rewritten on move rather than captured at load, because the rider pans while
-  deciding.
+  rewrites the href on every `move`, keeping the link's own query
+  (`type`, `mode`) and setting `lat`/`lng`/`z`, coordinates rounded to
+  5 decimals (about a metre). Rewritten on move rather than captured at load,
+  because the rider pans while deciding.
 - **What does NOT travel:** the foot pin. Seeding it from the map centre was
   the tempting version and it is wrong twice: one point cannot say which end of
   the climb it is, and a pin the rider did not place is a claim they did not
   make. This is the same rule the wizard's own paste-a-coordinate path already
   follows.
-- **Server side:** `ContributeController::startView()` validates and returns
-  `{lat, lng, zoom}` or `null`; the template emits `window.CC_CLIMB_VIEW` only
-  when non-null and `add-climb.js` falls back to its own default centre
-  otherwise. Latitude/longitude out of range or non-numeric gives `null`
-  (a junk link degrades to the old behaviour, never to a broken map); zoom is
-  **clamped** to 3–18 rather than rejected, because a bad zoom in an otherwise
-  good link should not throw the coordinates away.
+- **Server side:** validation lives in the redirect.
+  `ContributeController::addClimb()` (the `/add-climb` route) forwards `lat`,
+  `lng` and `z` only when latitude/longitude are numeric and in range; junk
+  drops both (a junk link degrades to the wizard's own default centre, never to
+  a broken map), and zoom is **clamped** to 3..18 rather than rejected, because
+  a bad zoom in an otherwise good link should not throw the coordinates away.
+  `improve.js` honours `?lat=&lng=&z=` on its side (the same range check, `z`
+  clamped to 3..18 again) and opens the map at that view. Until 2026-08-25 this
+  was `ContributeController::startView()` returning `{lat, lng, zoom}` or `null`
+  into `window.CC_CLIMB_VIEW` for `add-climb.js`; both are gone.
 
 ## 9. Ride-check ("what's along my GPX?")
 
@@ -1670,7 +1683,7 @@ requirement).
   `WITH track AS MATERIALIZED (…GeomFromGeoJSON…), corridor AS MATERIALIZED (ST_Buffer(track::geography, :radius)::geometry)`
   probed with **`ST_Intersects(i.geom, corridor)`** — `ST_DWithin(::geography)`
   cannot use the GIST index, and an inlined track CTE re-parses the GeoJSON per
-  row per `ST_*` call. Letters **B–J only** (the SQL excludes A; K is absent
+  row per `ST_*` call. Letters **B–G and N–Q only** (the SQL excludes A; R is absent
   because routes live in `recommended_route` and get their own overlap query).
   States gated by `ItemState::servedSqlTuple()`. Per match:
   `ST_Distance` (metres off-track) and
@@ -1679,7 +1692,7 @@ requirement).
 - **Coverage arm (open POIs along the ride)** — a parallel `coverage` result
   (`RideCheckService::corridorCoverage()`) runs the *same* MATERIALIZED
   corridor over `coverage_poi`, limited to utility letters
-  `COVERAGE_LETTERS = {C, D, G, H}` (water, bike services, transport, shelter).
+  `COVERAGE_LETTERS = {B, D, F, G}` (water, bike services, transport, shelter).
   **Deduped against served curated items** on `(source_ref, letter)` — if a
   rider already curated an OSM entity it shows once, as the curated pick, never
   in both arms. `coverage_poi` and `item` are co-located on CC's own cluster, so
@@ -1778,17 +1791,18 @@ requirement).
   mapillary-js (§2); the unpkg dependency is the accepted external exception,
   SRI-pinned like maplibre-gl.
 
-## 11. L · Ride heatmap and the illustrative planner
+## 11. Ride heatmap (no letter) and the illustrative planner
 
-- L is a **derived overlay** (never a catalog entry, never editable — see the
-  A–L table in [edit-items/README.md](edit-items/README.md)): its own
+- The ride heatmap is a **derived overlay** (never a catalog entry, never editable,
+  and it carries no catalogue letter — see the items table in
+  [edit-items/README.md](edit-items/README.md)): its own
   panel with On/Off + season chips (All/Spring/Summer/Autumn/Winter), default
   **Off**. Season chips set a layer `filter` on the per-point season tag; a
   chip selected before the layer exists is honoured on first build.
 - The heatmap source/layer is built **lazily on the first On** — thousands of
   points allocated at load for a default-off layer was pure startup cost.
 - Heat data is derived at build time from sample GPX (downsampled ~1 point /
-  110 m, served as catalog.json's L layer); raw `.gpx` files never ship. The
+  110 m, served as the map's heat layer); raw `.gpx` files never ship. The
   real anonymized-ingest heatmap (map-match-then-discard, k-anonymity) is
   unbuilt; its privacy contract lives in the public wiki data catalog and gets
   its own spec when built.
@@ -1870,8 +1884,11 @@ counting it would let a rider verify their own contribution
 - **3.** Picking a non-drawn **experiential** item from search in Curated mode
   drops a single temporary **reveal pin** (community style + selection halo)
   and opens its drawer — never force-switches the map to Everything. Cleared on
-  the next pick, drawer close, or mode change. The existing `openRouteById`
-  force-switch (§8) must adopt the same pattern.
+  the next pick, drawer close, or mode change. **Deep links are the exception**
+  (owner decision 2026-08-25): a shared or desk link is an explicit ask to see
+  one place, so `?item=` / `?feature=` / `?route=` lift the mode to the lowest
+  rung that draws it, transiently and with a toast (§8). A search pick inside a
+  session keeps the reveal pin, because the rider chose the mode a moment ago.
 - **4.** Photon `countrycode === 'BE'` filter (§7.2).
 
 ## 13. Pending map enhancements — **Specified, pending implementation**
@@ -1924,9 +1941,10 @@ Production stack choices recorded during the prototype and still steering the
 app: MapLibre GL render; PMTiles-on-CDN basemap direction with OpenFreeMap as
 the current keyless source; Copernicus GLO-30 / SRTM for elevation
 (climb-provenance side owned by
-[edit-items/B-climbs.md](edit-items/B-climbs.md)); **Photon** for type-ahead
+[edit-items/N-climbs.md](edit-items/N-climbs.md)); **Photon** for type-ahead
 place search, and **no Nominatim at all** (§7.2); **our own Valhalla**, via
-`POST /contribute/route` → `RouteSnapper`, for the add-climb draw preview —
+`POST /contribute/route` → `RouteSnapper`, for the climb editor's draw preview
+(on `/improve`; the `/add-climb` wizard that first used it was retired 2026-08-25) —
 the public OSRM demo server it used to call is gone from the CSP, and the
 proxy keeps OSRM's response shape so the editor's parsing was untouched.
 The coverage tiles themselves are specified in

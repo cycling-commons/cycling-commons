@@ -1,15 +1,15 @@
 <!-- SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 -->
 
-# Route Domain — Recommended Routes (K)
+# Route Domain — Recommended Routes (R)
 
 **Status:** canonical reference · **Audience:** contributors to Cycling Commons
 
-This document is the deep contract for item type **K · Quality rides**: how a
+This document is the deep contract for item type **R · Quality rides**: how a
 route enters the system (GPX intake), who owns it (curators), how the
 community's voice works (typed votes, ride confirmations, located
 corrections — never edits), how volume stays bounded (the per-region cap),
 and how best-of rankings are computed. The rider-facing digest lives in
-[edit-items/K-quality-rides.md](edit-items/K-quality-rides.md); the K
+[edit-items/R-quality-rides.md](edit-items/R-quality-rides.md); the R
 carve-out from the generic item funnel is described in
 [edit-items/README.md](edit-items/README.md). Routes are category-3 data
 (our own, never OSM-derived — [osm-data-architecture.md](osm-data-architecture.md) §2).
@@ -23,7 +23,7 @@ carve-out from the generic item funnel is described in
    curators *own* it: they approve, edit metadata, and retire. Riders never
    edit route data — rider signal arrives as votes, ride confirmations, and
    moderated correction suggestions. This also permanently retires the
-   route-id/item-id collision bug class (`/improve` refuses `type=K`).
+   route-id/item-id collision bug class (`/improve` refuses `type=R`).
 2. **Purpose-built pipeline.** The route domain reuses nothing from the item
    `Submission`/`ModerationService` pipeline. Proposals are `RecommendedRoute`
    rows in state `submitted` (no separate proposal entity); moderation,
@@ -443,7 +443,7 @@ split.
 
 ## 9. Attribute vocabulary (`recommended_route.attributes`)
 
-The K registry field set (`CatalogFormRegistry::for(ItemType::QualityRides)`)
+The R registry field set (`CatalogFormRegistry::for(ItemType::QualityRides)`)
 backs both the proposal form and the curator edit form — not a rider improve
 form. Canonical shapes (enforced at intake by `RouteProposalService` and
 re-canonicalized at serve time by `CatalogProvider`, so legacy stored shapes

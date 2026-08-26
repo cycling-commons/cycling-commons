@@ -9,7 +9,7 @@ namespace App\Catalog;
 /**
  * How long a reported closure stays true. Expiry retires the item; it does not delete. 'Unknown' must not mean forever.
  *
- * @see docs/specs/edit-items/F-hazards.md (Closures expire themselves)
+ * @see docs/specs/edit-items/E-hazards.md (Closures expire themselves)
  *
  * @api
  */
@@ -40,7 +40,7 @@ final class ClosureLifetime
      */
     public static function applies(string $letter, array $attributes): bool
     {
-        return 'F' === $letter
+        return 'E' === $letter
             && self::CLOSED_TYPE === ($attributes['hazardType'] ?? null);
     }
 

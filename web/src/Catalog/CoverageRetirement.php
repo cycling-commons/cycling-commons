@@ -14,11 +14,11 @@ namespace App\Catalog;
 final class CoverageRetirement
 {
     /**
-     * Point-POI letters the coverage artifact serves. A (not in the artifact) and B (wikidata) must never match.
+     * Point-POI letters the coverage artifact serves. A (not in the artifact) and N (wikidata) must never match.
      *
      * @see docs/specs/coverage-provider.md §7
      */
-    public const array LETTERS = ['C', 'D', 'E', 'G', 'H', 'I', 'J'];
+    public const array LETTERS = ['B', 'D', 'F', 'G', 'O', 'P', 'Q'];
 
     /** SQL tuple of LETTERS for `letter IN (...)` guards. */
     public static function lettersSqlTuple(): string

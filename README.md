@@ -129,11 +129,11 @@ The command prompts securely for the password (input hidden, never visible on sc
 | Page | Route | What it does |
 |------|-------|--------------|
 | `/contribute` | `contribute` | Public hub — links to all contribution flows |
-| `/add-climb` | `add_climb` | Wizard to describe and trace a climb |
-| `/improve` | `improve` | Step-by-step form to fix or update a place |
+| `/improve` | `improve` | Step-by-step form to add, fix or update a place (`?type=climbs&mode=add` traces a new climb) |
+| `/add-climb` | `add_climb` | 301 to `/improve?type=climbs&mode=add` (the dedicated wizard was retired 2026-08-25) |
 | `/vote` | `vote` | Cast a seasonal vote for the best riding in a region |
 
-All three action pages (`/add-climb`, `/improve`, `/vote`) require a verified account (`ROLE_USER`). The `/contribute` hub is public.
+Both action pages (`/improve`, `/vote`) require a verified account (`ROLE_USER`). The `/contribute` hub is public.
 
 ### Curator moderation queue (requires ROLE_CURATOR + 2FA)
 

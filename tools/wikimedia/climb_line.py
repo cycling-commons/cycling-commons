@@ -182,7 +182,7 @@ def stored(item_id: int) -> dict:
     sql = ("SELECT json_build_object('name', name, 'cc', country_code, "
            "'route', attributes->'route', 'length', attributes->>'length', "
            "'gain', attributes->>'gain', 'avg', attributes->>'avgGradient')::text "
-           f"FROM item WHERE id = {item_id} AND letter = 'B'")
+           f"FROM item WHERE id = {item_id} AND letter = 'N'")
     out = subprocess.run(PSQL + [sql], capture_output=True, text=True, check=True).stdout.strip()
     if not out:
         sys.exit(f"No climb with id {item_id}.")

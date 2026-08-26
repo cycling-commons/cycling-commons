@@ -1,10 +1,38 @@
 # SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
 name: Deploy — production
 
+# Same shape as deploy-staging.yaml: two web hosts behind one load balancer,
+# each domain deployed explicitly with deploy-symfony.sh. This replaces the
+# single-box `ssh deploy@host production` forced command that targeted the
+# business server; production is leaving that box for the shared cluster.
+#
+# Required secrets (shared with staging, one place to look):
+#   DEPLOY_SSH_KEY     private key authorized for the deploy user on BOTH hosts
+#   DEPLOY_KNOWN_HOSTS pinned host keys for web-1 and web-2. How to build,
+#                      verify and rotate it: the private infrastructure repo,
+#                      docs/37-cyclingcommons-deploy-host-key-pinning.md,
+#                      section "Build or rotate DEPLOY_KNOWN_HOSTS"
+#   DEPLOY_HOST_WEB1   web-1 address
+#   DEPLOY_HOST_WEB2   web-2 address
+#   DEPLOY_PORT        SSH port
+#   DEPLOY_USER        deploy
+#
+# Optional repository VARIABLE (not a secret, it is a public address):
+#   DEPLOY_LB_ADDRESS  the load balancer's IP. Until the cyclingcommons.org
+#                      DNS cutover the public name still resolves to the old
+#                      business server, so a plain health check would pass
+#                      against the wrong machine. When set, the check pins the
+#                      name to the LB with `curl --resolve`; when empty, it
+#                      trusts DNS. Unset it after the cutover. Same doc as
+#                      above, section "Production health check before the
+#                      DNS cutover".
+#
+# Deliberately NOT required: a GitHub token. See deploy-staging.yaml for why.
+
 on:
   push:
-    branches: [production]  # auto-deploy on every push/merge to production
-  workflow_dispatch:        # also runnable manually from the Actions tab
+    branches: [production]
+  workflow_dispatch:
     inputs:
       skip_ci_gate:
         description: 'Deploy without waiting for CI (incident use only)'
@@ -54,33 +82,125 @@ jobs:
   deploy:
     needs: gate
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: wiki
+            domain: wiki.cyclingcommons.org
+          - name: app
+            domain: cyclingcommons.org
+    name: ${{ matrix.name }} → ${{ matrix.domain }}
+
     steps:
-      - name: Trigger deploy over SSH
+      - name: Set up SSH
         env:
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
           DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
-          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
-          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
-          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          PORT: ${{ secrets.DEPLOY_PORT }}
+          WEB1: ${{ secrets.DEPLOY_HOST_WEB1 }}
+          WEB2: ${{ secrets.DEPLOY_HOST_WEB2 }}
         run: |
           set -euo pipefail
           mkdir -p ~/.ssh && chmod 700 ~/.ssh
-          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
           # Pinned host keys, never a keyscan. A keyscan is trust-on-first-use
           # on EVERY run: it accepts whatever answers on that port at that
           # moment, so anyone able to answer for the host on the runner's
           # network path is handed the deploy key and a shell on production
-          # (security scan 2026-08-25). Knowing the key BEFORE connecting is
-          # the entire purpose of the file it was writing into.
+          # (security scan 2026-08-25). ONE secret holds every host this repo
+          # deploys to, staging and production alike.
           if [ -z "${DEPLOY_KNOWN_HOSTS:-}" ]; then
             echo "::error::DEPLOY_KNOWN_HOSTS secret is not set. Generate it ONCE from a machine you trust:"
-            echo "::error::  ssh-keyscan -p <DEPLOY_PORT> <DEPLOY_HOST>"
-            echo "::error::Verify the fingerprints against the host itself, then paste the output into the secret."
+            echo "::error::  ssh-keyscan -t ed25519 -p <DEPLOY_PORT> <WEB1> <WEB2>"
+            echo "::error::Verify the fingerprints against the hosts themselves, then paste the output into the secret."
             exit 1
           fi
           printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
           chmod 600 ~/.ssh/known_hosts
-          ssh -i ~/.ssh/id_ed25519 -p "$DEPLOY_PORT" -o IdentitiesOnly=yes \
-            -o StrictHostKeyChecking=yes -o UserKnownHostsFile=~/.ssh/known_hosts \
-            "$DEPLOY_USER@$DEPLOY_HOST" production
+          # A host missing from the pin would otherwise fail mid-deploy, with
+          # web-1 already updated and web-2 not. That is the exact half-deployed
+          # state the sequential loop below exists to prevent, so check now.
+          for h in "$WEB1" "$WEB2"; do
+            ssh-keygen -F "[$h]:$PORT" -f ~/.ssh/known_hosts >/dev/null || {
+              echo "::error::$h is not in DEPLOY_KNOWN_HOSTS. Re-run the keyscan above with every host."
+              exit 1
+            }
+          done
+
+      # Sequential, and `set -e` means a failure on web-1 stops before web-2.
+      # A half-completed two-host deploy must fail the workflow, not pass
+      # quietly (see deploy-staging.yaml for the incident behind this).
+      - name: Deploy to both web hosts
+        env:
+          PORT: ${{ secrets.DEPLOY_PORT }}
+          USER: ${{ secrets.DEPLOY_USER }}
+          WEB1: ${{ secrets.DEPLOY_HOST_WEB1 }}
+          WEB2: ${{ secrets.DEPLOY_HOST_WEB2 }}
+        run: |
+          set -euo pipefail
+          REPO_URL="${{ github.server_url }}/${{ github.repository }}.git"
+          BRANCH="${{ github.ref_name }}"
+          for host in "$WEB1" "$WEB2"; do
+            echo "::group::${{ matrix.domain }} → $host"
+            ssh -i ~/.ssh/deploy_key -p "$PORT" -o IdentitiesOnly=yes \
+              -o StrictHostKeyChecking=yes -o UserKnownHostsFile=~/.ssh/known_hosts \
+              "$USER@$host" \
+              "deploy-symfony.sh '${{ matrix.domain }}' '$REPO_URL' '$BRANCH'"
+            echo "::endgroup::"
+          done
+
+      # deploy-symfony.sh already health-checks each host locally and rolls back
+      # on failure. This checks the public path through the load balancer, which
+      # the per-host check cannot see. With DEPLOY_LB_ADDRESS set the name is
+      # pinned to the LB, so the check cannot be satisfied by the old business
+      # server while DNS still points there (see the note at the top).
+      - name: Health check through the load balancer
+        env:
+          LB: ${{ vars.DEPLOY_LB_ADDRESS }}
+        run: |
+          set -euo pipefail
+          RESOLVE=()
+          if [ -n "${LB:-}" ]; then
+            RESOLVE=(--resolve "${{ matrix.domain }}:443:$LB")
+            echo "pinning ${{ matrix.domain }} to $LB"
+          fi
+          for i in $(seq 1 15); do
+            if curl -sf -o /dev/null ${RESOLVE[@]+"${RESOLVE[@]}"} "https://${{ matrix.domain }}/health"; then
+              echo "healthy"
+              exit 0
+            fi
+            echo "waiting… ($i/15)"
+            sleep 2
+          done
+          echo "health check FAILED for ${{ matrix.domain }}"
+          exit 1
+
+      # Both hosts sit behind one load balancer, so they must serve the same
+      # code. Release directory names differ by the seconds between the two
+      # sequential deploys, so compare the deployed commit instead.
+      - name: Verify both hosts run the same commit
+        env:
+          PORT: ${{ secrets.DEPLOY_PORT }}
+          USER: ${{ secrets.DEPLOY_USER }}
+          WEB1: ${{ secrets.DEPLOY_HOST_WEB1 }}
+          WEB2: ${{ secrets.DEPLOY_HOST_WEB2 }}
+        run: |
+          set -euo pipefail
+          # A release is a git clone today; if the deploy script ever strips
+          # .git and leaves a REVISION file, the check keeps working.
+          read_commit() {
+            ssh -i ~/.ssh/deploy_key -p "$PORT" -o IdentitiesOnly=yes \
+              -o StrictHostKeyChecking=yes -o UserKnownHostsFile=~/.ssh/known_hosts \
+              "$USER@$1" \
+              "cd /var/www/${{ matrix.domain }}/current && { cat REVISION 2>/dev/null || git rev-parse HEAD; }"
+          }
+          C1="$(read_commit "$WEB1")"
+          C2="$(read_commit "$WEB2")"
+          echo "web-1: $C1"
+          echo "web-2: $C2"
+          if [ "$C1" != "$C2" ]; then
+            echo "HOSTS DIVERGED - the load balancer would serve two different commits"
+            exit 1
+          fi

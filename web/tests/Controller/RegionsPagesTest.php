@@ -58,7 +58,7 @@ final class RegionsPagesTest extends WebTestCase
         $id = $this->seedRegion('wallonia-t', 'BE', 4);
         static::getContainer()->get(Connection::class)->executeStatement(
             "INSERT INTO item (letter, name, geom, country_code, region_id, state, source, source_ref, attributes, created_at, updated_at)
-             VALUES ('B', 'T', ST_SetSRID(ST_GeomFromText('POINT(4.5 50.5)'), 4326), 'BE', ?, 'verified', 'seed', 't1', '{}', NOW(), NOW())",
+             VALUES ('N', 'T', ST_SetSRID(ST_GeomFromText('POINT(4.5 50.5)'), 4326), 'BE', ?, 'verified', 'seed', 't1', '{}', NOW(), NOW())",
             [$id],
         );
 

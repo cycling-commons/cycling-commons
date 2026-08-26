@@ -50,7 +50,7 @@ def _get(url: str, attempts: int = 4) -> dict:
 
 def refs_from_db(dsn: str) -> dict[str, str]:
     """{source_ref: qid}. Two ref shapes exist in the wild - the climb seeds
-    store the bare Q-id, the I/J place seeds store `wikidata:Q...` - and the
+    store the bare Q-id, the P/Q place seeds store `wikidata:Q...` - and the
     artifact must key by the STORED ref so the importer matches rows without
     guessing formats."""
     res = subprocess.run(

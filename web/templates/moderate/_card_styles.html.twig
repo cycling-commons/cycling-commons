@@ -10,12 +10,14 @@
   /moderate/takedowns in one sitting and the card must not change shape
   under them.
 
-  Include it inside a page's <style> block, and include
-  `moderate/_card_script.html.twig` at the end of `body` for the
+  Included ONCE, by account/_shell_styles.html.twig, so every shell page
+  (a rider's contributions and messages included, 2026-08-25) draws the same
+  card. Include `moderate/_card_script.html.twig` at the end of `body` for the
   disclosure + density enhancements. Spec: moderation-and-contribution.md §5.2.
 #}
-  .q-list{margin:1.8rem 0}
-  .q-item{border:1px solid rgba(20,22,14,.12);border-radius:8px;padding:.8rem .9rem;margin-bottom:.6rem;background:var(--paper)}
+  .q-list{margin:.9rem 0 1.8rem}
+  /* Tight (owner 2026-08-25): a list is read down, so the card is the row, not a box around it. */
+  .q-item{border:1px solid rgba(20,22,14,.12);border-radius:8px;padding:.5rem .8rem;margin-bottom:.4rem;background:var(--paper)}
   /* Heading block and action row share the card's top line, so an ordinary
      submission is two lines tall and only real review context (photo, diff,
      rider's words) makes the card grow. */
@@ -29,9 +31,15 @@
   .q-tag--new{background:#FF5A1F}.q-tag--edit{background:#8FB6A8}.q-tag--hazard{background:#C8923A}.q-tag--photo{background:#B5532E;color:var(--paper)}
   /* Answered: the rider came back and this card is waiting on the curator. */
   .q-tag--answered{background:var(--spruce-lift);color:var(--paper)}
+  /* Rider-side kinds, same chip: a route proposal, a catalog category, a country. */
+  .q-tag--route{background:var(--trail)}
+  .q-tag--kind{background:var(--spruce);color:var(--paper)}
+  .q-tag--quiet{background:rgba(20,22,14,.1);color:#4a4d40}
   .q-when{font-family:var(--mono);font-size:.6rem;color:#8a8d7d;margin-left:auto;flex:0 0 auto}
   .q-title{font-family:var(--serif);font-weight:600;font-size:1rem;margin:0;min-width:0}
-  .q-submitter{font-family:var(--mono);font-size:.62rem;color:#595c4d;margin:.15rem 0 .45rem}
+  .q-title-link{color:inherit;text-decoration:none}
+  .q-title-link:hover,.q-title-link:focus-visible{text-decoration:underline;text-decoration-color:var(--trail)}
+  .q-submitter{font-family:var(--mono);font-size:.62rem;color:#595c4d;margin:.1rem 0 .15rem}
   .q-view{color:var(--clay);text-decoration:none;border-bottom:1px solid rgba(184,89,58,.35);white-space:nowrap}
   .q-view:hover{color:var(--ink);border-bottom-color:var(--ink)}
   .q-view:focus-visible{outline:2px solid var(--trail);outline-offset:2px;border-radius:2px}
@@ -110,7 +118,7 @@
     padding:.35rem .6rem;border:1px solid rgba(20,22,14,.25);border-radius:30px;background:transparent;
     color:#595c4d;cursor:pointer;min-height:34px}
   .q-density .dens.on{background:var(--ink);border-color:var(--ink);color:var(--paper)}
-  .q-list.is-list .q-item{padding:.45rem .7rem;margin-bottom:.3rem}
+  .q-list.is-list .q-item{padding:.3rem .7rem;margin-bottom:.25rem}
   .q-list.is-list .q-body,
   .q-list.is-list .q-diff,
   .q-list.is-list .q-photos,
@@ -133,7 +141,10 @@
        spare. 44ch fits the longest region names we carry (North
        Rhine-Westphalia) with the country after them; the title is still the
        elastic part that takes the ellipsis first. */
-    .q-list.is-list .q-submitter{flex:0 1 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:44ch}
+    /* The who/where text truncates; the OSM chip beside it never does (owner 2026-08-25). */
+    .q-list.is-list .q-submitter{flex:0 1 auto;display:inline-flex;align-items:center;min-width:0;max-width:60ch}
+    .q-list.is-list .q-submitter .q-who{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;max-width:44ch}
+    .q-list.is-list .q-submitter .osm-chip,.q-list.is-list .q-submitter .q-osm-chip{flex:none}
   }
   .trash-warn{color:#8b1a1a}
   .trash-type-label{display:block;font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;color:#8b1a1a;margin:.5rem 0}
@@ -160,3 +171,28 @@
   .q-thumb:hover{border-color:var(--trail)}
   .q-thumb-n{position:absolute;right:0;bottom:0;background:rgba(20,22,14,.78);color:var(--paper);
     font-family:var(--mono);font-size:.56rem;padding:0 .2rem;border-radius:3px 0 0 0;line-height:1.3}
+  /* The OSM identity chip (catalog-data-model.md §5b): one small pill in the
+     meta line, three states. Open pops the candidates + "Not in OSM". */
+  .osm-chip{display:inline-flex;align-items:center;gap:.3rem;margin-left:.45rem;vertical-align:middle;
+    font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;line-height:1.4;padding:.1rem .5rem;
+    border-radius:999px;border:1px solid;list-style:none;text-decoration:none;white-space:nowrap}
+  .osm-chip::-webkit-details-marker{display:none}
+  .osm-chip--open{color:#A0472A;border-color:#A0472A;cursor:pointer}
+  .osm-chip--open:hover{background:rgba(160,71,42,.08)}
+  .osm-chip--linked{color:#2f6b3f;border-color:#2f6b3f}
+  .osm-chip--linked:hover{background:rgba(47,107,63,.08)}
+  .osm-chip--none{color:#595c4d;border-color:rgba(20,22,14,.3)}
+  /* The candidates open as a popover under the chip, not inside the meta line. */
+  .q-osm-chip{display:inline-block;position:relative}
+  .q-osm-chip > .q-act-panel{position:absolute;left:0;top:calc(100% + .3rem);z-index:20;width:max-content;min-width:12rem;max-width:min(28rem,90vw);padding-right:1.9rem;background:var(--paper);box-shadow:0 14px 30px -16px rgba(20,22,14,.5)}
+  /* Compact: this popover hangs off a .62rem meta line, so its heading and
+     buttons follow that scale, not the card-panel scale (owner 2026-08-25). */
+  .q-osm-chip > .q-act-panel{padding:.5rem 1.9rem .5rem .6rem}
+  .q-osm-close{position:absolute;top:.2rem;right:.3rem;border:0;background:none;font-size:1rem;line-height:1;color:#595c4d;cursor:pointer;padding:.15rem .35rem;border-radius:4px}
+  .q-osm-close:hover{background:rgba(20,22,14,.08);color:var(--ink)}
+  .q-osm-chip .q-act-panel p.q-act-head{font-size:.6rem;margin:0 0 .4rem;line-height:1.4}
+  .q-osm-chip .q-osm .btn-act{font-family:var(--mono);font-size:.68rem;letter-spacing:.04em;padding:.22rem .55rem;
+    background:transparent;color:#A0472A;border:1px solid rgba(160,71,42,.55);border-radius:999px}
+  .q-osm-chip .q-osm .btn-act:hover{background:rgba(160,71,42,.08);border-color:#A0472A}
+  .q-osm{display:flex;flex-wrap:wrap;align-items:center;gap:.4rem}
+  .q-osm form{display:inline}

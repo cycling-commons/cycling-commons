@@ -21,7 +21,7 @@ Nobody types a gradient.
 This document owns how that measurement is done and how the result is
 displayed. The climb's *editing* flow (the three-point editor, the wizard steps,
 the moderation path) is owned by
-[edit-items/B-climbs.md](edit-items/B-climbs.md); the *catalog* rules for what an
+[edit-items/N-climbs.md](edit-items/N-climbs.md); the *catalog* rules for what an
 item may store are owned by [catalog-data-model.md](catalog-data-model.md).
 
 ---
@@ -819,7 +819,7 @@ rider saw and accepted.
 ## 4. What is measured, and what is stored
 
 Everything below is **derived**. None of it is a form field, and
-`CatalogField::$derived` ([edit-items/B-climbs.md](edit-items/B-climbs.md))
+`CatalogField::$derived` ([edit-items/N-climbs.md](edit-items/N-climbs.md))
 is how the edit form is kept from offering a box for any of it.
 
 | attribute | definition |
@@ -835,7 +835,7 @@ is how the edit form is kept from offering a box for any of it.
 
 `elev` and `binM` do not exist today; `demSource` is the provenance flag whose
 absence made [§1c](#1c-the-bars-mean-different-things-on-different-climbs)
-undetectable. All three need adding to the letter-B vocabulary in
+undetectable. All three need adding to the letter-N vocabulary in
 `AttributeVocabulary`.
 
 **`headline` is retired.** It is a stored display string (`"2.0 km · 8.4% avg"`)
@@ -1223,7 +1223,7 @@ unlabelled bars with no axis and no silhouette.
 
 1. Stand up the elevation service ([§2](#2-the-elevation-service)); confirm
    licensing first.
-2. Recompute every letter-B item that has a `route`, writing the derived set
+2. Recompute every letter-N item that has a `route`, writing the derived set
    from [§4](#4-what-is-measured-and-what-is-stored).
 3. **Delete the hand-authored values** — `grad`, `avgGradient`, `maxGradient`
    and `headline` — from `SeedManualCatalogCommand` and from any row a recompute
@@ -1363,7 +1363,7 @@ told apart by their road, or by their length when they share one. Pinned by
   and it is what the seeded 8.4% failed.
 - **Browser** — the climb editor must be exercised in a real browser. A headless
   probe reported green against a broken geometry path for hours
-  ([edit-items/B-climbs.md](edit-items/B-climbs.md) records why).
+  ([edit-items/N-climbs.md](edit-items/N-climbs.md) records why).
 
 ---
 

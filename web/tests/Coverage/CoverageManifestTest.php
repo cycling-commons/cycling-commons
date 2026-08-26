@@ -53,7 +53,7 @@ final class CoverageManifestTest extends TestCase
             'version' => 1,
             'url' => 'https://maps.test/coverage/20260716-0400.pmtiles',
             'built_at' => '2026-07-16T04:00:00+00:00',
-            'counts' => ['C' => 3184],
+            'counts' => ['B' => 3184],
             'regions' => ['europe/belgium'],
         ]));
         $manifest = $this->manifest($http);

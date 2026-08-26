@@ -39,10 +39,10 @@ final class CatalogSchemaProviderTest extends TestCase
     {
         $all = $this->provider->all();
         self::assertArrayHasKey('D', $all);
-        self::assertArrayHasKey('B', $all);
+        self::assertArrayHasKey('N', $all);
 
         // The fields the old map.js whitelist dropped must now be present.
-        $climbKeys = array_column($all['B'], 'key');
+        $climbKeys = array_column($all['N'], 'key');
         self::assertContains('waterOnClimb', $climbKeys);
         self::assertContains('hairpins', $climbKeys);
         self::assertContains('shade', $climbKeys);

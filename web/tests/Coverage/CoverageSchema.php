@@ -60,7 +60,7 @@ trait CoverageSchema
     {
         $row = $overrides + [
             'ref' => 'node/'.random_int(100000, 999999),
-            'letter' => 'C',
+            'letter' => 'B',
             'kind' => null,
             'name' => 'Fontaine test',
             'lat' => 50.4,

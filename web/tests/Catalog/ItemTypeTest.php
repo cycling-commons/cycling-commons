@@ -11,24 +11,25 @@ use App\Catalog\LocationMode;
 use PHPUnit\Framework\TestCase;
 
 /**
- * The A–K catalog is the single source of truth for the per-type item forms.
+ * The lettered catalog (practical A-M, experiential N-Z) is the single source of truth for the per-type item forms.
  * Design source: docs/specs/edit-items/<LETTER>-*.md + README.md.
  */
 final class ItemTypeTest extends TestCase
 {
     public function testCatalogHasTwelveEditableTypes(): void
     {
-        // A–K plus M · Public toilets (2026-07-30) are the editable catalog
-        // types. L · Ride heatmap is a derived overlay, intentionally not
-        // editable (README.md), which is why M skips over it.
+        // Practical A-G plus experiential N-R are the editable catalog
+        // types (2026-08-25 renumbering). The ride heatmap is a derived
+        // overlay without a letter, intentionally not editable (README.md).
         self::assertCount(12, ItemType::cases());
     }
 
-    public function testLettersAreUniqueAndCoverAtoKPlusM(): void
+    public function testLettersAreUniqueAndCoverAtoGPlusNtoR(): void
     {
         $letters = array_map(static fn (ItemType $t): string => $t->letter(), ItemType::cases());
 
-        self::assertSame([...range('A', 'K'), 'M'], $letters);
+        sort($letters);
+        self::assertSame([...range('A', 'G'), ...range('N', 'R')], $letters);
         self::assertCount(12, array_unique($letters));
     }
 
@@ -47,11 +48,11 @@ final class ItemTypeTest extends TestCase
 
     public function testFromParamResolvesCatalogLetter(): void
     {
-        // The A–K letter is the identifier the map layers carry (layer.letter),
+        // The catalogue letter is the identifier the map layers carry (layer.letter),
         // so links can deep-link by letter too — case-insensitively.
-        self::assertSame(ItemType::WhereToSleep, ItemType::fromParam('E'));
-        self::assertSame(ItemType::WhereToSleep, ItemType::fromParam('e'));
-        self::assertSame(ItemType::QualityRides, ItemType::fromParam('K'));
+        self::assertSame(ItemType::WhereToSleep, ItemType::fromParam('O'));
+        self::assertSame(ItemType::WhereToSleep, ItemType::fromParam('o'));
+        self::assertSame(ItemType::QualityRides, ItemType::fromParam('R'));
     }
 
     public function testFromParamFallsBackToDefaultForUnknown(): void
@@ -76,7 +77,7 @@ final class ItemTypeTest extends TestCase
 
     public function testVotableTypesMatchTheFunnelTable(): void
     {
-        // README funnel table: votable = B, E, I, J, K; utility = A, C, D, F, G, H.
+        // README funnel table: votable = N, O, P, Q, R; utility = A, B, C, D, E, F, G.
         $votable = array_values(array_filter(
             ItemType::cases(),
             static fn (ItemType $t): bool => $t->isVotable(),
@@ -131,5 +132,21 @@ final class ItemTypeTest extends TestCase
         self::assertTrue(ItemType::Climbs->isConfirmable());
         self::assertFalse(ItemType::WaterFood->isVotable(), 'completeness, not quality');
         self::assertTrue(ItemType::WaterFood->isConfirmable());
+    }
+
+    /** Owner 2026-08-25: one icon set for the whole system, letter-keyed, with the three drawn paths. */
+    public function testIconSetCoversEveryTypeOnce(): void
+    {
+        $set = ItemType::iconSet();
+        self::assertCount(\count(ItemType::cases()), $set);
+        foreach (ItemType::cases() as $t) {
+            self::assertArrayHasKey($t->letter(), $set);
+            self::assertNotSame('', $set[$t->letter()]['glyph']);
+        }
+        self::assertNotNull($set['N']['svg'], 'climbs draw a mountain');
+        self::assertNotNull($set['P']['svg'], 'scenic views draw a camera');
+        self::assertNotNull($set['C']['svg'], 'toilets draw their sign');
+        self::assertNull($set['B']['svg'], 'water is its glyph');
+        self::assertSame('📷', ItemType::ScenicViews->icon(), 'the map and the server agree on the camera');
     }
 }

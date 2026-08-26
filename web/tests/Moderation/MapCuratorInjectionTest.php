@@ -48,7 +48,7 @@ final class MapCuratorInjectionTest extends WebTestCase
         $em = static::getContainer()->get(EntityManagerInterface::class);
 
         $sub = (new Submission())
-            ->setType(SubmissionType::NewItem)->setLetter('B')->setUserId(3)
+            ->setType(SubmissionType::NewItem)->setLetter('N')->setUserId(3)
             ->setStatus($status)
             ->setTitle($title)
             ->setGeom('{"type":"Point","coordinates":[6.0208,50.7549]}')
@@ -128,7 +128,7 @@ final class MapCuratorInjectionTest extends WebTestCase
         $em = static::getContainer()->get(EntityManagerInterface::class);
         $me = $em->getRepository(User::class)->findOneBy(['email' => 'map-rider@example.com']);
         $own = (new Submission())
-            ->setType(SubmissionType::NewItem)->setLetter('I')->setUserId((int) $me->getId())
+            ->setType(SubmissionType::NewItem)->setLetter('P')->setUserId((int) $me->getId())
             ->setStatus(SubmissionStatus::Pending)->setTitle('My Own Viewpoint')
             ->setGeom('{"type":"Point","coordinates":[6.0208,50.7549]}')
             ->setCountryCode('NL')->setChanges([])->setPayload([]);

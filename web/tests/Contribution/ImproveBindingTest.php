@@ -74,7 +74,7 @@ final class ImproveBindingTest extends WebTestCase
         $client = static::createClient();
         $em = static::getContainer()->get(EntityManagerInterface::class);
 
-        $item = (new Item())->setLetter('B')->setName('Côte de Test Reconciliation')
+        $item = (new Item())->setLetter('N')->setName('Côte de Test Reconciliation')
             ->setGeom('{"type":"Point","coordinates":[5.699,50.492]}')->setCountryCode('BE')
             ->setState(ItemState::Unverified)->setSource(ItemSource::Osm)->setSourceRef('node/999003')
             ->setAttributes([
@@ -121,7 +121,7 @@ final class ImproveBindingTest extends WebTestCase
         $client = static::createClient();
         $em = static::getContainer()->get(EntityManagerInterface::class);
 
-        $item = (new Item())->setLetter('B')->setName('Côte de Bohissau')
+        $item = (new Item())->setLetter('N')->setName('Côte de Bohissau')
             ->setGeom('{"type":"Point","coordinates":[5.11182,50.49479]}')->setCountryCode('BE')
             ->setState(ItemState::Unverified)->setSource(ItemSource::Wikidata)->setSourceRef('wikidata:Q3430429-test')
             ->setAttributes([
@@ -326,7 +326,7 @@ final class ImproveBindingTest extends WebTestCase
         $service = static::getContainer()->get(\App\Service\ContributionStubInterface::class);
 
         $stored = ['at' => [50.49077, 5.70583], 'pct' => '~20%'];
-        $item = (new Item())->setLetter('B')->setName('Côte de Phantom')
+        $item = (new Item())->setLetter('N')->setName('Côte de Phantom')
             ->setGeom('{"type":"Point","coordinates":[5.70391,50.48321]}')->setCountryCode('BE')
             ->setState(ItemState::Unverified)->setSource(ItemSource::User)->setSourceRef('node/999007')
             ->setAttributes(['steep' => $stored, 'hairpins' => '3']);
@@ -358,7 +358,7 @@ final class ImproveBindingTest extends WebTestCase
         $em = static::getContainer()->get(EntityManagerInterface::class);
         $service = static::getContainer()->get(\App\Service\ContributionStubInterface::class);
 
-        $item = (new Item())->setLetter('B')->setName('Côte de Moved')
+        $item = (new Item())->setLetter('N')->setName('Côte de Moved')
             ->setGeom('{"type":"Point","coordinates":[5.70391,50.48321]}')->setCountryCode('BE')
             ->setState(ItemState::Unverified)->setSource(ItemSource::User)->setSourceRef('node/999008')
             ->setAttributes(['steep' => ['at' => [50.49077, 5.70583], 'pct' => '~20%']]);
@@ -414,7 +414,7 @@ final class ImproveBindingTest extends WebTestCase
     }
 
     /**
-     * C2-T7 (spec §W2): E · Where to sleep — the registry's Website field is
+     * C2-T7 (spec §W2): O · Where to sleep — the registry's Website field is
      * now keyed 'web' (not 'website'), matching the key osmDrawer already
      * reads/renders and every OSM-harvested stay already carries. Confirms
      * both the prefill (regression for the rename) and the round-trip for
@@ -427,7 +427,7 @@ final class ImproveBindingTest extends WebTestCase
         $service = static::getContainer()->get(\App\Service\ContributionStubInterface::class);
         $moderation = static::getContainer()->get(ModerationService::class);
 
-        $item = (new Item())->setLetter('E')->setName('Cyclist-friendly gîte · Test')
+        $item = (new Item())->setLetter('O')->setName('Cyclist-friendly gîte · Test')
             ->setGeom('{"type":"Point","coordinates":[5.62,50.45]}')->setCountryCode('BE')
             ->setState(ItemState::Unverified)->setSource(ItemSource::Osm)->setSourceRef('node/999005')
             ->setAttributes(['web' => 'https://old.example.test', 'bikeStorage' => 'On request']);
@@ -467,7 +467,7 @@ final class ImproveBindingTest extends WebTestCase
     /**
      * Task 5: the edit flow wires the shared three-point climb editor
      * (window.Cc.mountClimbEditor) into `/improve?item=<id>` for a climb
-     * (letter B). ImproveType adds hidden `route`/`grad`/`steep` fields
+     * (letter N). ImproveType adds hidden `route`/`grad`/`steep` fields
      * top-level (not nested under details/extras) so the form renders them
      * and the template emits `window.CC_ITEM` (letter + the item's current
      * shape) for improve.js to hydrate the editor from.
@@ -477,7 +477,7 @@ final class ImproveBindingTest extends WebTestCase
         $client = static::createClient();
         $em = static::getContainer()->get(EntityManagerInterface::class);
 
-        $item = (new Item())->setLetter('B')->setName('Mur de Test Editor')
+        $item = (new Item())->setLetter('N')->setName('Mur de Test Editor')
             ->setGeom('{"type":"Point","coordinates":[5.24874,50.51426]}')->setCountryCode('BE')
             ->setState(ItemState::Unverified)->setSource(ItemSource::Manual)->setSourceRef('manual:mur-de-test-editor')
             ->setAttributes([
@@ -501,13 +501,13 @@ final class ImproveBindingTest extends WebTestCase
         self::assertSame(1, $crawler->filter('input[name="improve[grad]"]')->count(), 'hidden grad field renders');
         self::assertSame(1, $crawler->filter('input[name="improve[steep]"]')->count(), 'hidden steep field renders');
         self::assertStringContainsString('window.CC_ITEM', $html);
-        self::assertStringContainsString('"letter":"B"', $html);
+        self::assertStringContainsString('"letter":"N"', $html);
         self::assertStringContainsString('50.51426', $html, 'the climb\'s current route is emitted for the editor to hydrate from');
     }
 
     /**
      * Non-climb items must keep the current single-pin Locate untouched —
-     * ImproveType only adds route/grad/steep for letter B, so no hidden
+     * ImproveType only adds route/grad/steep for letter N, so no hidden
      * shape fields should render for them.
      */
     public function testImproveFormForNonClimbHasNoClimbEditorFields(): void
@@ -551,7 +551,7 @@ final class ImproveBindingTest extends WebTestCase
         $oldRoute = [[50.51426, 5.24874], [50.516, 5.250]];
         $newRoute = [[50.51426, 5.24874], [50.52, 5.26]];
 
-        $item = (new Item())->setLetter('B')->setName('Mur de Test Route Change')
+        $item = (new Item())->setLetter('N')->setName('Mur de Test Route Change')
             ->setGeom('{"type":"Point","coordinates":[5.24874,50.51426]}')->setCountryCode('BE')
             ->setState(ItemState::Unverified)->setSource(ItemSource::Manual)->setSourceRef('manual:mur-de-test-route-change')
             ->setAttributes(['route' => $oldRoute, 'grad' => [4, 8]]);
@@ -596,10 +596,10 @@ final class ImproveBindingTest extends WebTestCase
     }
 
     /**
-     * Security review 2026-07-07 (critical): the K (Recommended routes) layer
+     * Security review 2026-07-07 (critical): the R (Recommended routes) layer
      * lives in `recommended_route` — a separate table and id sequence from
      * `item`. The map edit-bridge renders its "Edit this ride" link as
-     * `/improve?item=<recommended_route.id>&type=K` (map.js), so resolving that
+     * `/improve?item=<recommended_route.id>&type=R` (map.js), so resolving that
      * id against the item table binds the edit to an UNRELATED item that merely
      * shares the numeric id (cross-sequence collision). A K request must never
      * bind an Item — it falls through to the unbound explainer (route editing
@@ -624,11 +624,11 @@ final class ImproveBindingTest extends WebTestCase
         $em->flush();
 
         $client->loginUser($user);
-        $crawler = $client->request('GET', '/improve?item='.$item->getId().'&type=K&name=Some+Ride');
+        $crawler = $client->request('GET', '/improve?item='.$item->getId().'&type=R&name=Some+Ride');
 
         self::assertResponseIsSuccessful();
-        self::assertSame(0, $crawler->filter('form[name="improve"]')->count(), 'a K route id must not bind the colliding item to an edit form');
-        self::assertGreaterThan(0, $crawler->filter('[data-improve-unbound]')->count(), 'a K route id renders the unbound explainer');
+        self::assertSame(0, $crawler->filter('form[name="improve"]')->count(), 'an R route id must not bind the colliding item to an edit form');
+        self::assertGreaterThan(0, $crawler->filter('[data-improve-unbound]')->count(), 'an R route id renders the unbound explainer');
         self::assertStringNotContainsString('Repair station · Collision', (string) $client->getResponse()->getContent(), 'the colliding item is not leaked into the page');
     }
 
@@ -655,8 +655,8 @@ final class ImproveBindingTest extends WebTestCase
         $em->flush();
 
         $client->loginUser($user);
-        // Claims to be a climb (B) but the id resolves to a bike-service (D).
-        $crawler = $client->request('GET', '/improve?item='.$item->getId().'&type=B');
+        // Claims to be a climb (N) but the id resolves to a bike-service (D).
+        $crawler = $client->request('GET', '/improve?item='.$item->getId().'&type=N');
 
         self::assertResponseIsSuccessful();
         self::assertSame(0, $crawler->filter('form[name="improve"]')->count(), 'a type/letter mismatch must not bind the edit form');
@@ -665,7 +665,7 @@ final class ImproveBindingTest extends WebTestCase
 
     /**
      * The guard must not over-reach: when the declared `type` agrees with the
-     * resolved item's real letter (the normal edit-bridge case for A–J), the
+     * resolved item's real letter (the normal edit-bridge case for every item-table letter), the
      * item still binds and prefills as before.
      */
     public function testImproveStillBindsWhenDeclaredTypeMatchesItemLetter(): void
@@ -785,7 +785,7 @@ final class ImproveBindingTest extends WebTestCase
         $client = static::createClient();
         $em = static::getContainer()->get(EntityManagerInterface::class);
 
-        $item = (new Item())->setLetter('B')->setName('Mur de Test')
+        $item = (new Item())->setLetter('N')->setName('Mur de Test')
             ->setGeom('{"type":"Point","coordinates":[5.24874,50.51426]}')->setCountryCode('BE')
             ->setState(ItemState::Unverified)->setSource(ItemSource::Manual)->setSourceRef('manual:mur-de-test')
             ->setAttributes([

@@ -21,9 +21,9 @@ use Doctrine\DBAL\Connection;
 final class CatalogProvider
 {
     /**
-     * Letters served as GeoJSON feature collections. A, B, and K have their own shapes.
+     * Letters served as GeoJSON feature collections. A, N, and R have their own shapes.
      */
-    public const array POOL_LETTERS = ['C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'M'];
+    public const array POOL_LETTERS = ['B', 'C', 'D', 'E', 'F', 'G', 'O', 'P', 'Q'];
 
     public function __construct(
         private readonly Connection $db,
@@ -34,7 +34,7 @@ final class CatalogProvider
     }
 
     /**
-     * The full catalog payload, letters A–L.
+     * The full catalog payload: practical letters A-G, experiential letters N-R.
      *
      * @return array<string, mixed>
      */
@@ -42,22 +42,22 @@ final class CatalogProvider
     {
         return [
             'A' => $this->surfaceSegments(),
-            'B' => $this->climbs(),
+            'B' => $this->featureCollection('B'),
             'C' => $this->featureCollection('C'),
             'D' => $this->featureCollection('D'),
-            // E splits by source: PIVOT is its own bucket; every other source lands in 'osm'.
-            'E' => [
-                'osm' => $this->featureCollection('E', excludeSource: 'pivot'),
-                'pivot' => $this->featureCollection('E', 'pivot'),
-            ],
+            'E' => $this->featureCollection('E'),
             'F' => $this->featureCollection('F'),
             'G' => $this->featureCollection('G'),
-            'H' => $this->featureCollection('H'),
-            'I' => $this->featureCollection('I'),
-            'J' => $this->featureCollection('J'),
-            'K' => $this->routes(),
-            // L is /map/heat.json, not this payload.
-            'M' => $this->featureCollection('M'),
+            'N' => $this->climbs(),
+            // O splits by source: PIVOT is its own bucket; every other source lands in 'osm'.
+            'O' => [
+                'osm' => $this->featureCollection('O', excludeSource: 'pivot'),
+                'pivot' => $this->featureCollection('O', 'pivot'),
+            ],
+            'P' => $this->featureCollection('P'),
+            'Q' => $this->featureCollection('Q'),
+            'R' => $this->routes(),
+            // The heat layer is derived and carries no letter; it is /map/heat.json, not this payload.
             // docs/specs/osm-data-architecture.md §8 — client-side tile dedupe.
             'refs' => $this->curatedRefs(),
         ];
@@ -137,7 +137,7 @@ final class CatalogProvider
      *
      * @return list<array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null, region_id: int|null, verified: bool, by_name: string|null, by_public: bool|null, by_uuid: string|null, letter: string, last_confirmed: string|null}>
      */
-    private function itemRows(string $letter, ?string $source = null, ?string $excludeSource = null, ?int $onlyId = null): array
+    private function itemRows(string $letter, ?string $source = null, ?string $excludeSource = null, ?int $onlyId = null, bool $anyState = false): array
     {
         // Creator is the earliest type=new submission; harvested rows stay anonymous.
         $sql = 'SELECT i.id, i.name, i.letter, ST_AsGeoJSON(i.geom) AS geom, i.attributes, i.source_ref, i.source, s.name AS prov, i.region_id,
@@ -156,7 +156,10 @@ final class CatalogProvider
                   ORDER BY sub.id
                      LIMIT 1
                 ) contributor ON true
-                WHERE i.letter = :letter AND i.state IN '.ItemState::servedSqlTuple();
+                WHERE i.letter = :letter'
+                // anyState: a curator previewing a submitted item in its final form (map drawer);
+                // every served payload keeps the state gate.
+                .($anyState ? '' : ' AND i.state IN '.ItemState::servedSqlTuple());
         $params = ['letter' => $letter];
         if (null !== $source) {
             $sql .= ' AND i.source = :source';
@@ -226,22 +229,22 @@ final class CatalogProvider
      *
      * @return array{letter: string, feature?: array{type: string, properties: array<string, mixed>, geometry: mixed}, climb?: array<string, mixed>}|null
      */
-    public function featureForItem(int $itemId): ?array
+    public function featureForItem(int $itemId, bool $anyState = false): ?array
     {
         $letter = $this->db->fetchOne('SELECT letter FROM item WHERE id = :id', ['id' => $itemId]);
         if (!\is_string($letter)) {
             return null;
         }
-        if ('B' === $letter) {
-            $rows = $this->itemRows('B', onlyId: $itemId);
+        if ('N' === $letter) {
+            $rows = $this->itemRows('N', onlyId: $itemId, anyState: $anyState);
 
-            return [] === $rows ? null : ['letter' => 'B', 'climb' => $this->climbFromRow($rows[0])];
+            return [] === $rows ? null : ['letter' => 'N', 'climb' => $this->climbFromRow($rows[0])];
         }
         if (!\in_array($letter, self::POOL_LETTERS, true)) {
             return null;
         }
 
-        $rows = $this->itemRows($letter, onlyId: $itemId);
+        $rows = $this->itemRows($letter, onlyId: $itemId, anyState: $anyState);
 
         return [] === $rows ? null : ['letter' => $letter, 'feature' => $this->feature($rows[0])];
     }
@@ -308,7 +311,7 @@ final class CatalogProvider
     private function climbs(): array
     {
         $climbs = [];
-        foreach ($this->itemRows('B') as $row) {
+        foreach ($this->itemRows('N') as $row) {
             $climbs[] = $this->climbFromRow($row);
         }
 

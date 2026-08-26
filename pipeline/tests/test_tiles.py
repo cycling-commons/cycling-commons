@@ -28,11 +28,11 @@ FIXTURE_ROWS = [
     # (ref, letter, kind, name, lon, lat, tags)
     ("node/900000001", "D", "shop", "Vélodroom", 4.35, 50.85,
      {"shop": "bicycle", "name": "Vélodroom"}),
-    ("node/900000002", "C", None, None, 4.40, 50.84,
+    ("node/900000002", "B", None, None, 4.40, 50.84,
      {"amenity": "drinking_water"}),
-    ("node/900000003", "C", None, "Oude pomp", 4.41, 50.83,
+    ("node/900000003", "B", None, "Oude pomp", 4.41, 50.83,
      {"amenity": "drinking_water", "drinking_water": "no"}),
-    ("node/900000004", "E", None, "Camping Dijle", 4.70, 50.88,
+    ("node/900000004", "O", None, "Camping Dijle", 4.70, 50.88,
      {"tourism": "camp_site", "wheelchair": "yes", "name": "Camping Dijle"}),
 ]
 
@@ -61,8 +61,8 @@ def test_export_geojsonl_shapes(db, tmp_path):
     # appear. FIXTURE_ROWS stamp no country_code, so every row buckets to the
     # unstamped 'ZZ' pseudo-country (coverage-provider.md §4 — per-country
     # tile split).
-    assert set(out) == {("C", "ZZ"), ("D", "ZZ"), ("E", "ZZ")}
-    assert not any(letter == "G" for letter, _ in out)
+    assert set(out) == {("B", "ZZ"), ("D", "ZZ"), ("O", "ZZ")}
+    assert not any(letter == "F" for letter, _ in out)
 
     shop = _features(out[("D", "ZZ")])["node/900000001"]
     assert shop["id"] == 900000001
@@ -71,13 +71,13 @@ def test_export_geojsonl_shapes(db, tmp_path):
     assert shop["properties"]["kind"] == "shop"
     assert shop["properties"]["n"] == "Vélodroom"
 
-    water = _features(out[("C", "ZZ")])
+    water = _features(out[("B", "ZZ")])
     assert water["node/900000002"]["properties"]["potable"] is True
     assert "n" not in water["node/900000002"]["properties"]  # jsonb_strip_nulls
     assert water["node/900000003"]["properties"]["potable"] is False
 
-    stay = _features(out[("E", "ZZ")])["node/900000004"]
-    assert stay["properties"]["t"] == _label("E", "tourism=camp_site")
+    stay = _features(out[("O", "ZZ")])["node/900000004"]
+    assert stay["properties"]["t"] == _label("O", "tourism=camp_site")
     assert stay["properties"]["acc"] == "Wheelchair-accessible"
 
     # ridtok/cctok are the region-scoping keys (map-and-search.md §4.5) as
@@ -93,8 +93,8 @@ def test_export_geojsonl_shapes(db, tmp_path):
     # exported feature's key set is exactly the contract's universal props plus
     # this letter's declared extras — an undeclared column can't ship silently.
     contract = load_contract()
-    for letter, feats in (("D", _features(out[("D", "ZZ")])), ("C", _features(out[("C", "ZZ")])),
-                          ("E", _features(out[("E", "ZZ")]))):
+    for letter, feats in (("D", _features(out[("D", "ZZ")])), ("B", _features(out[("B", "ZZ")])),
+                          ("O", _features(out[("O", "ZZ")]))):
         allowed = set(contract.universal_tile_props) | set(contract.letters[letter].tile_props)
         for ref, feat in feats.items():
             extra = set(feat["properties"]) - allowed
@@ -131,10 +131,10 @@ def test_export_geojsonl_splits_by_country(db, tmp_path):
     ensure_schema(db)
     sid = _src_id(db)
     rows = [
-        ("node/1", "C", 4.35, 50.85, "BE"),
-        ("node/2", "C", 4.40, 50.84, "BE"),
-        ("node/3", "C", 5.10, 52.09, "NL"),
-        ("node/4", "C", 6.00, 53.00, None),   # unstamped -> zz bucket
+        ("node/1", "B", 4.35, 50.85, "BE"),
+        ("node/2", "B", 4.40, 50.84, "BE"),
+        ("node/3", "B", 5.10, 52.09, "NL"),
+        ("node/4", "B", 6.00, 53.00, None),   # unstamped -> zz bucket
     ]
     for ref, letter, lon, lat, cc in rows:
         db.execute(
@@ -143,15 +143,15 @@ def test_export_geojsonl_splits_by_country(db, tmp_path):
             (ref, letter, lon, lat, Json({"amenity": "drinking_water"}), sid, cc))
     files = tiles.export_geojsonl(db, tmp_path)
     keys = set(files)
-    assert ("C", "BE") in keys and ("C", "NL") in keys and ("C", "ZZ") in keys
+    assert ("B", "BE") in keys and ("B", "NL") in keys and ("B", "ZZ") in keys
     # each file holds only its country's rows
-    assert set(_features(files[("C", "BE")])) == {"node/1", "node/2"}
-    assert set(_features(files[("C", "NL")])) == {"node/3"}
-    assert set(_features(files[("C", "ZZ")])) == {"node/4"}
+    assert set(_features(files[("B", "BE")])) == {"node/1", "node/2"}
+    assert set(_features(files[("B", "NL")])) == {"node/3"}
+    assert set(_features(files[("B", "ZZ")])) == {"node/4"}
     # cctok is single-country per file (BE file never carries |NL|)
-    be = _features(files[("C", "BE")])["node/1"]["properties"]
+    be = _features(files[("B", "BE")])["node/1"]["properties"]
     assert be["cctok"] == "|BE|"
-    zz = _features(files[("C", "ZZ")])["node/4"]["properties"]
+    zz = _features(files[("B", "ZZ")])["node/4"]["properties"]
     assert zz["cctok"] == ""   # unstamped stays prop-less
 
 
@@ -167,7 +167,7 @@ def _geojsonl(path, rows):
 @pytest.fixture()
 def built(tmp_path):
     files = {
-        ("C", "BE"): _geojsonl(tmp_path / "c_be.geojsonl", [
+        ("B", "BE"): _geojsonl(tmp_path / "b_be.geojsonl", [
             (4.35, 50.85, {"ref": "node/1", "t": "Drinking water", "potable": True}),
             (5.57, 50.63, {"ref": "node/2", "t": "Drinking water", "potable": False}),
         ]),
@@ -185,13 +185,13 @@ def test_build_and_verify_pmtiles(built):
     # Belgium box; passing expected_bbox also exercises the bounds check and
     # the sample-tile decode (coverage-provider.md §3 step 7: bounds, tile
     # count, decode).
-    tiles.verify_pmtiles(built, expected_layers={"c_be", "d_be"},
+    tiles.verify_pmtiles(built, expected_layers={"b_be", "d_be"},
                          expected_bbox=(4.0, 50.0, 6.0, 51.5))  # must not raise
 
 
 def test_verify_pmtiles_missing_layer_raises(built):
     with pytest.raises(RuntimeError, match="missing layer"):
-        tiles.verify_pmtiles(built, expected_layers={"c_be", "d_be", "e_be"})
+        tiles.verify_pmtiles(built, expected_layers={"b_be", "d_be", "o_be"})
 
 
 def test_verify_pmtiles_default_layers_expect_all_contract_letters(built):
@@ -207,7 +207,7 @@ def test_verify_pmtiles_default_layers_expect_all_contract_letters(built):
 
 def test_verify_pmtiles_disjoint_bounds_raise(built):
     with pytest.raises(RuntimeError, match="bounds"):
-        tiles.verify_pmtiles(built, expected_layers={"c_be", "d_be"},
+        tiles.verify_pmtiles(built, expected_layers={"b_be", "d_be"},
                              expected_bbox=(120.0, 10.0, 121.0, 11.0))
 
 
@@ -220,7 +220,7 @@ def test_verify_pmtiles_zero_addressed_tiles_raise(built, monkeypatch):
                       tiles._show(built))
     monkeypatch.setattr(tiles, "_show", lambda path, *flags: doctored)
     with pytest.raises(RuntimeError, match="no addressed tiles"):
-        tiles.verify_pmtiles(built, expected_layers={"c_be", "d_be"})
+        tiles.verify_pmtiles(built, expected_layers={"b_be", "d_be"})
 
 
 def test_verify_pmtiles_all_sample_tiles_empty_raises(built, monkeypatch):
@@ -230,7 +230,7 @@ def test_verify_pmtiles_all_sample_tiles_empty_raises(built, monkeypatch):
     # test the decode-gate raise semantics.
     monkeypatch.setattr(tiles, "_tile_bytes", lambda *a: b"")
     with pytest.raises(RuntimeError, match="no decodable non-empty tile"):
-        tiles.verify_pmtiles(built, expected_layers={"c_be", "d_be"})
+        tiles.verify_pmtiles(built, expected_layers={"b_be", "d_be"})
 
 
 def test_verify_pmtiles_subprocess_failure_surfaces_diagnostics(tmp_path):

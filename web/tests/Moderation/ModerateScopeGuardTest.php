@@ -81,7 +81,7 @@ final class ModerateScopeGuardTest extends WebTestCase
         $em->flush();
 
         $sub = (new Submission())
-            ->setType(SubmissionType::NewItem)->setLetter('B')->setUserId((int) $submitter->getId())
+            ->setType(SubmissionType::NewItem)->setLetter('N')->setUserId((int) $submitter->getId())
             ->setTitle($title)
             ->setGeom('{"type":"Point","coordinates":[5.86,50.47]}')
             ->setCountryCode($country)->setRegionId($regionId)

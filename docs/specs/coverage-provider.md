@@ -106,7 +106,7 @@ CREATE TABLE IF NOT EXISTS coverage_source (
 CREATE TABLE IF NOT EXISTS coverage_poi (
     id            bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     ref           varchar(160) NOT NULL,  -- 'node/61146471' | 'way/…' = item.source_ref format
-    letter        char(1)      NOT NULL,  -- C D E G H I J (osm-data-architecture.md §5 catalogue)
+    letter        char(1)      NOT NULL,  -- B C D F G O P Q (osm-data-architecture.md §5 catalogue)
     kind          varchar(16),            -- serviceKind for D (shop|station|pump), NULL otherwise
     name          varchar(255),           -- OSM name tag, NULL when unnamed
     geom          geometry(Point, 4326) NOT NULL, -- nodes as-is; ways centroid at load
@@ -133,6 +133,15 @@ CREATE TABLE IF NOT EXISTS coverage_poi (
 - **Measured sizing.** At 377,558 rows (BE + NL + DE + LU; 0 unstamped
   after the ownership fix), compacted steady-state:
   **341 B/row heap + 176 B/row indexes = 517 B/row** — the compacted per-row cost.
+  Since 2026-08-25 there is one more index, `coverage_poi_geog_idx`, a
+  functional GiST on `(geom::geography)` (about +60 B/row). Every radius
+  query the app runs casts to geography (`ST_DWithin(cp.geom::geography, …)`
+  in `OsmLinker` and `/map/coverage/nearby`), and the geometry GiST cannot
+  serve that predicate: without it the planner walked the letter index and
+  measured 375k rows per lookup, 2.8 s per queue card on `/moderate`
+  (owner-reported). With it: 2 ms. Pipeline-owned like the rest
+  (`load.py` `_INDEX_DDL`, created CONCURRENTLY by `ensure_schema`); prod
+  gets it on the next harvest or by hand before go-live.
   **Superseded:** the earlier `DELETE-all-then-INSERT-all` per-region swap doubled the row
   count mid-swap and left a large reusable-free-space high-water mark (measured then:
   258 MB heap, 67 % reusable free space), which needed a `VACUUM FULL`/`pg_repack` to
@@ -190,9 +199,9 @@ The serve-set is three groups:
 row above, so the three groups sum to 11 + 17 + 4 = **32** distinct keys.
 
 `ele`, `direction` and `height` were added on 2026-08-21 for the scenic-view
-letter (I), where OSM's own record is often richer than what the drawer showed:
+letter (P), where OSM's own record is often richer than what the drawer showed:
 a peak carries its altitude, a viewpoint the compass bearing it faces, a
-waterfall the metres it drops. The drawer reads all three for letter I only
+waterfall the metres it drops. The drawer reads all three for letter P only
 (`covProps` in `assets/map/coverage.js`), but the whitelist is per-tag rather
 than per-letter, so the same facts appear wherever else they are tagged. Values
 are free text in OSM, so `assets/map/osm-tags.js` refuses anything that is not
@@ -397,6 +406,18 @@ volume), `COVERAGE_PBF_PATH` (optional local override), `COVERAGE_S3_ENDPOINT`,
 `COVERAGE_S3_REGION` (signing only, default `us-east-1`),
 `COVERAGE_PUBLIC_BASE_URL`.
 
+**Republish without a harvest: `python -m coverage.run --tiles-only`**
+(dev: `make coverage-tiles`). The flag skips the per-region Geofabrik harvest
+and runs only the tail of the chain - export, build, verify and publish the
+coverage PMTiles from the `coverage_poi` rows already in PostGIS; the
+manifest's `regions` is the region list given (`COVERAGE_REGIONS` /
+`regions=`). This is the way to republish after a change that rewrote the
+index without new OSM data - the 2026-08-25 letter renumbering is the
+exemplar: migration `Version20260825120000` rewrote `coverage_poi.letter`, and
+since source-layers are named `<letter>_<cc>` (§4) the tile artifact had to be
+rebuilt from the rewritten rows. `make coverage-tiles` brings up MinIO and
+publishes there, no Geofabrik involved.
+
 ## 4. Tile artifact contract
 
 Thin tiles: enough to draw markers and run map-side filters; everything else
@@ -405,7 +426,7 @@ Feature id = numeric OSM id.
 
 **Source-layers are per-country: `<letter>_<cc>`** (lowercase; `cc` is the
 country code lowercased), one tippecanoe layer per `(letter, country_code)`
-pair — e.g. `c_be`, `c_nl` — rather than one layer per letter. Onboarding a
+pair — e.g. `b_be`, `b_nl` — rather than one layer per letter. Onboarding a
 second bordering country (the Netherlands, 2026-07-22) surfaced a
 client-rendering-only defect Belgium-alone couldn't show: tippecanoe clusters
 *within a layer*, so a single per-letter layer let a low-zoom bubble merge POIs
@@ -467,8 +488,8 @@ manifest's `country_codes`-based client wiring (below).
 | `ridtok` | all (always; `""` when unstamped) | region scope filter — `"|<region_id>|"` (map-and-search.md §4.5, Phase 3) |
 | `cctok` | all (always; `""` when unstamped) | country scope filter — `"|<cc>|"` (map-and-search.md §4.5, Phase 3) |
 | `kind` | D | shop/station/pump icon match |
-| `potable` | C | water marker variant, derived from OSM `drinking_water` tags |
-| `acc` | E | stays accessibility filter |
+| `potable` | B | water marker variant, derived from OSM `drinking_water` tags |
+| `acc` | O | stays accessibility filter |
 
 `ref`/`n`/`t`/`ridtok`/`cctok` are the **universal** props (every layer, declared
 as `universalTileProps` in `coverage-contract.json`, consumed by
@@ -498,7 +519,7 @@ non-empty) is NOT prop-less — it hides under a region scope (matching
 
 - **A · road surface stays out** of the coverage artifact: corridor line data,
   orders of magnitude larger, its own future decision. The existing curated
-  segments keep serving via `catalog.json`. B/F/K are category-3 (our own
+  segments keep serving via `catalog.json`. N/E/R are category-3 (our own
   data) and are never in the extract
   ([osm-data-architecture.md §5](osm-data-architecture.md)).
   **It has its own artifacts and its own manifest since 2026-08-12** — three of
@@ -565,7 +586,7 @@ non-empty) is NOT prop-less — it hides under a region scope (matching
   change).
 - **Manifest** (stable key `coverage/manifest.json`):
   `{"version":1, "url":"<COVERAGE_PUBLIC_BASE_URL>/coverage/<YYYYMMDD-HHMM>.pmtiles",
-  "built_at":"<ISO>", "counts":{"C":n,…}, "regions":[…], "country_codes":[…]}`.
+  "built_at":"<ISO>", "counts":{"B":n,…}, "regions":[…], "country_codes":[…]}`.
   `country_codes` is the sorted list of real onboarded countries resolved via
   `COUNTRY_BY_REGION` (`["BE","NL"]`; the `zz` bucket is excluded — it is a
   fixed client-side fallback, not a real country) — it tells the client which
@@ -615,7 +636,7 @@ itemId?}`.
 |---|---|---|
 | `GET /map/coverage/search?q=` | in-memory `ITEM_INDEX` sidebar search (coverage part) | `{"results": entry[], "attribution"}` — ranked curated first, then community; trgm-backed; default limit `CoverageRepository::SEARCH_LIMIT` (value `12`); ETag + `max-age=300` |
 | `GET /map/coverage/nearby?lat=&lng=&km=` | town-card 5 km client-side haversine scan | `{"groups": [{letter, total, items: entry[]}], "attribution"}` — `ST_DWithin`, grouped by letter, community capped per group (`CoverageRepository::NEARBY_COMMUNITY_CAP`, value `3`) behind a "show all" expander; 422 on bad coords; `max-age=300` |
-| `GET /map/coverage/counts` | rail totals | `{"counts": {"C": n, …}, "attribution"}`; **scope-aware** (Phase 3); `max-age=3600` |
+| `GET /map/coverage/counts` | rail totals | `{"counts": {"B": n, …}, "attribution"}`; **scope-aware** (Phase 3); `max-age=3600` |
 | `GET /map/coverage/poi/{osmType}/{osmId}` | new: drawer detail for tile POIs | `{ref, letter, name, kind, ll, tags, curated, attribution}` — `tags` filtered to `CoverageRepository::TAG_WHITELIST` (store rich, serve trimmed); `curated` = `{itemId, state, fields, confirmations}` or `null`; `osmType ∈ {node, way}`; 404 when the ref is not cached; ETag + `max-age=300` |
 
 - **Region scope params (Phase 3, map-and-search.md §4.5).** `search`,
@@ -668,16 +689,16 @@ Rules:
 
   | Endpoint | Test on the joined `item` |
   |---|---|
-  | `poi/{osmType}/{osmId}` (`detail()`) | `NOT (i.letter IN (C,D,E,G,H,I,J) AND untouched)` — letter-guarded |
+  | `poi/{osmType}/{osmId}` (`detail()`) | `NOT (i.letter IN (B,C,D,F,G,O,P,Q) AND untouched)` — letter-guarded |
   | `search`, `nearby`, `counts` | `NOT (untouched)` — **no letter guard** |
 
   The two diverge only for an untouched OSM `item` whose letter is outside
-  `CoverageRetirement::LETTERS` (so A, B, F or K) that nonetheless shares a
+  `CoverageRetirement::LETTERS` (so A, N, E or R) that nonetheless shares a
   `source_ref` with a cached POI: `poi` would report it `curated`, while
   `search`/`counts` would still show the place as community. This is accepted,
   not overlooked. It cannot arise from the current pipeline, which writes only
-  those same seven letters into `coverage_poi`, and A never enters the artifact
-  while B is wikidata-sourced (coverage-provider.md §4). **Before letting any
+  those same eight letters into `coverage_poi`, and A never enters the artifact
+  while N is wikidata-sourced (coverage-provider.md §4). **Before letting any
   other letter share a `source_ref` with a coverage row, add the letter guard
   to the three `NOT EXISTS` clauses too.**
 - Every response carries `"attribution": "© OpenStreetMap contributors (ODbL)"`
@@ -755,7 +776,7 @@ source of truth for the mapping both languages need:
 
 ```
 {"version": 1,
- "letters": {"C": {"selectors": [{"tag": "amenity=drinking_water", "label": "Drinking water"}, …],
+ "letters": {"B": {"selectors": [{"tag": "amenity=drinking_water", "label": "Drinking water"}, …],
              "tileProps": […]}, …},
  "serviceKind": {"shop=bicycle": "shop", "amenity=bicycle_repair_station": "station",
                  "amenity=compressed_air": "pump"},
@@ -763,7 +784,7 @@ source of truth for the mapping both languages need:
  "storedTagKeys": ["addr:city", "amenity", …]}
 ```
 
-- `letters` keys are exactly `C D E G H I J` — the
+- `letters` keys are exactly `B C D F G O P Q` — the
   [osm-data-architecture.md §5](osm-data-architecture.md) point catalogue.
 - `storedTagKeys` is the **serve-set**: the only tag keys `parse.py` writes into
   `coverage_poi.tags` (§2 storage policy). Sorted + unique, and validated on
@@ -809,7 +830,7 @@ source of truth for the mapping both languages need:
   long-lived dual path. The retirement exclusion in `CatalogProvider`
   (coverage-provider.md §9) is now **unconditional** (not flag-gated), the
   `refs` list mirrors it (coverage-provider.md §6), and the `verified`
-  property stays. A and B never pass through the exclusion.
+  property stays. A and N never pass through the exclusion.
 - Enabling the flag in prod is gated on the checklist in
   `developers/coverage-batch.md` (bucket + manifest published, and client-IP
   propagation verified for the per-IP `coverage_read` limiter).
@@ -824,8 +845,8 @@ interim clause retires):
   `source='osm' AND state='unverified'` AND zero `change_history` AND zero
   `item_confirmation` AND zero `submission` rows for the item — exactly what
   the cache now serves. **Anything a human ever touched stays canonical.**
-  The command additionally letter-guards `IN ('C','D','E','G','H','I','J')`:
-  A (not in the coverage artifact) and B (own data) must never be deleted.
+  The command additionally letter-guards `IN ('B','C','D','F','G','O','P','Q')`:
+  A (not in the coverage artifact) and N (own data) must never be deleted.
 - Console command `app:coverage:retire-legacy`
   (`web/src/Command/Coverage/RetireLegacyOsmCommand.php`): the **bare
   invocation IS the dry-run** — per-letter counts, zero writes; there is no

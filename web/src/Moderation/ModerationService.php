@@ -10,6 +10,7 @@ use App\Catalog\ConfirmationStance;
 use App\Catalog\Entity\ChangeHistory;
 use App\Catalog\Entity\Item;
 use App\Catalog\Entity\Submission;
+use App\Catalog\Import\OsmCandidates;
 use App\Catalog\ItemState;
 use App\Catalog\ItemType;
 use App\Catalog\SubmissionStatus;
@@ -50,6 +51,7 @@ final class ModerationService
         private readonly MediaDisposalService $mediaDisposal,
         private readonly ItemConfirmationService $confirmations,
         private readonly EscalationAlert $escalationAlert,
+        private readonly OsmCandidates $osmCandidates,
     ) {
     }
 
@@ -88,6 +90,13 @@ final class ModerationService
                     // Bound item missing: fail loudly rather than approve with no effect.
                     if (null !== $submission->getItemId() && null === $item) {
                         throw new \InvalidArgumentException(sprintf('Cannot approve submission %d: its target item %d no longer exists', $submissionId, $submission->getItemId()));
+                    }
+                    // catalog-data-model.md §5b: a new place is not admitted
+                    // until somebody has said which OSM object it is, or that
+                    // there is none. Checked before the status changes so a
+                    // refusal leaves the submission exactly as it was.
+                    if (SubmissionType::NewItem === $submission->getType() && null !== $item && !$item->osmAnswered()) {
+                        throw new OsmUnansweredException('Link this place to OSM, or record that it has no OSM counterpart, before approving it.');
                     }
                     $submission->setStatus(SubmissionStatus::Approved);
                     if (null !== $item) {
@@ -270,6 +279,11 @@ final class ModerationService
                         'type' => 'Point',
                         'coordinates' => [(float) $parts[1], (float) $parts[0]],
                     ], \JSON_THROW_ON_ERROR));
+                    // The place moved: its stored OSM-candidate list is stale
+                    // (catalog-data-model.md §5b). Recompute at the new point.
+                    if (!$item->osmAnswered()) {
+                        $this->osmCandidates->refreshAt((int) $item->getId(), $item->getLetter(), (float) $parts[0], (float) $parts[1]);
+                    }
                     $changed = true;
                     $this->history($item, $submission, $curator, $field, $pair['was'] ?? null, $now);
                 }

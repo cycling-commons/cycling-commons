@@ -13,7 +13,7 @@ import { updateConfMarkers, confShownCount, confTotalCount } from './osm-pools.j
 import { covShownCount, coverageTotal, syncCoverageLayers, covIconFilter,
          COVERAGE_CCS, COVERAGE_ON, COVERAGE_KEYS } from './coverage.js';
 import { openDrawer } from './drawer.js';
-import { attrMatch, narrowingCount, climbChipsMatch } from './filters.js';
+import { attrMatch, narrowingCount, climbChipsMatch, modeShows } from './filters.js';
 
 export const PREFS = window.CC_PREFS || {bikes: [], styles: []};
 
@@ -269,7 +269,7 @@ const CURATED_SM_TONE={excellent:'#1E8E4F',good:'#5FA845',intermediate:'#D9A62E'
 export function renderSurfaceLayer(layer, visible){
   const feats=[];
   if(visible) layer.features.forEach((f,i)=>{
-    if(!(mode()==='confirmed' ? (f.v||f.cur) : ((mode()==='all')||!layer.exp||f.cur))) return;   // same visibility rule as featureVisible()
+    if(!modeShows(mode(), layer, f)) return;         // the rung rule, shared with featureVisible() via filters.js
     if(!inScope(f.rid)) return;                        // docs/specs/map-and-search.md §4.5 — region scope gate.
     const sm=(f.smoothness||'').toLowerCase().replace(/\s+/g,'_');
     feats.push({type:'Feature',
@@ -386,9 +386,7 @@ export function featureVisible(layer, f, tally){
   /* docs/specs/map-and-search.md (The pending layer is exempt from the region scope) — server-scoped work queue. */
   if(layer.pendingLayer) return true;
   /* docs/specs/map-and-search.md §4.2 — three rungs: all / confirmed / curated. */
-  let show = mode()==='confirmed'
-    ? (!!f.v || !!f.cur)
-    : (layer.key==='experience' ? (mode()==='all'||f.cur) : ((mode()==='all') || !layer.exp || f.cur));       // experiential layers filter to curated; K honours cur in Curated (best-of), all in Everything
+  let show = modeShows(mode(), layer, f);   // filters.js owns the rung rule; one reader for render, legend and deep links
   if(show) show = inScope(f.rid);   // docs/specs/map-and-search.md §4.5 — region scope gate; chips below are the rider's.
   if(show && layer.key==='experience' && !prefMatch(f)){ show=false; if(tally) tally.hidden++; }
   if(show && layer.key==='climbs'){

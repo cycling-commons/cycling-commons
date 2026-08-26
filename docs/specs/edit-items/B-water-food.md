@@ -1,10 +1,10 @@
 <!-- SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 -->
 
-# Edit spec — C · Water & food
+# Edit spec — B · Water & food
 
 **Status:** canonical reference · **Audience:** contributors to Cycling Commons
 
-- **Catalog layer:** C · Water & food
+- **Catalog layer:** B · Water & food
 - **Map depiction:** pin, icon 💧, colour #8FB6A8
 - **Edit-item id:** `water-fountain` in `atlas/demo/edit-items.js`, shared by both fountains (Stavelot + Coo) — editing either opens the same edit item
 - **Editable:** yes · Frontend demo · 2026-06-18

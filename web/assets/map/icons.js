@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
 /* Pins, cluster bubbles, minted tile icons. Idempotent hasImage guards. */
 import { map } from './map-init.js';
-import { layerByKey } from './catalog.js';
-import { txtOn } from './util.js';
+import { layerByKey, TYPE_SVG } from './catalog.js';
+import { escPend, txtOn } from './util.js';
 
 // docs/specs/coverage-provider.md §4 — blue drinkable, grey untagged.
 export function mintWaterDrops(){
@@ -26,14 +26,27 @@ export function mintWaterDrops(){
 // BMP symbols, not colour-emoji: the silhouette filter otherwise renders tofu.
 export const SERVICE_GLYPH={shop:'⚙', station:'⚒', pump:'⊕'};
 // Emoji camera flattens to a rounded box under the white-icon filter; draw the shape.
-export const CAMERA_PATH='M9 4h6l1.5 2.5H20a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8.5a2 2 0 0 1 2-2h3.5L9 4Zm3 4.6a4.7 4.7 0 1 0 0 9.4 4.7 4.7 0 0 0 0-9.4Zm0 2a2.7 2.7 0 1 1 0 5.4 2.7 2.7 0 0 1 0-5.4Z';
+export const CAMERA_PATH=TYPE_SVG('P');   // ItemType::svgPath(), via window.CC_TYPE_ICONS
 const cameraSvg=(fill,size)=>`<svg viewBox="0 0 24 24" width="${size||15}" height="${size||15}" aria-hidden="true"><path fill-rule="evenodd" fill="${fill}" d="${CAMERA_PATH}"/></svg>`;
 export const scenicGlyph=size=>cameraSvg('currentColor', size);
 
 // Same flatten-to-box problem as the camera; side profile, not the pictogram pair.
-export const TOILET_PATH='M5 3h5.6v8H5zM4 12h16a1 1 0 0 1 1 1.1c-.3 3.4-2.3 6-4.9 7.1v1.3a.9.9 0 0 1-.9.9H8.8a.9.9 0 0 1-.9-.9v-1.3C5.3 19.1 3.3 16.5 3 13.1A1 1 0 0 1 4 12z';
+export const TOILET_PATH=TYPE_SVG('C');   // ItemType::svgPath(), via window.CC_TYPE_ICONS
 const toiletSvg=(fill,size)=>`<svg viewBox="0 0 24 24" width="${size||15}" height="${size||15}" aria-hidden="true"><path fill-rule="evenodd" fill="${fill}" d="${TOILET_PATH}"/></svg>`;
 export const toiletGlyph=size=>toiletSvg('currentColor', size);
+// The mountain emoji flattens to one plain triangle; draw twin peaks instead (owner 2026-08-25).
+export const MOUNTAIN_PATH=TYPE_SVG('N');   // ItemType::svgPath(), via window.CC_TYPE_ICONS
+const mountainSvg=(fill,size)=>`<svg viewBox="0 0 24 24" width="${size||15}" height="${size||15}" aria-hidden="true"><path fill="${fill}" d="${MOUNTAIN_PATH}"/></svg>`;
+export const climbGlyph=size=>mountainSvg('currentColor', size);
+// One glyph for every HTML surface (drawer head, rail, badges, nearby groups):
+// the drawn shapes where we have them, the escaped text glyph otherwise.
+export function layerGlyph(layer, size){
+  const k=(layer||{}).key;
+  if(k==='scenic') return cameraSvg('currentColor', size);
+  if(k==='toilets') return toiletSvg('currentColor', size);
+  if(k==='climbs') return mountainSvg('currentColor', size);
+  return escPend((layer||{}).icon||'');
+}
 // Unverified disc; `suffix` keeps per-kind cache ids distinct.
 export function miniIcon(key, glyph, suffix){
   const id='mini-'+key+(suffix?('-'+suffix):'');
@@ -46,7 +59,7 @@ export function miniIcon(key, glyph, suffix){
   x.beginPath(); x.arc(R,R,R-2.5*S,0,Math.PI*2);
   x.fillStyle=color; x.fill();
   x.lineWidth=1.6*S; x.strokeStyle='rgba(20,22,14,.85)'; x.stroke();
-  const drawn = !glyph && (key==='scenic' ? CAMERA_PATH : key==='toilets' ? TOILET_PATH : null);
+  const drawn = !glyph && (key==='scenic' ? CAMERA_PATH : key==='toilets' ? TOILET_PATH : key==='climbs' ? MOUNTAIN_PATH : null);
   if(drawn){
     const side=13*S, sc=side/24;
     x.save();
@@ -86,6 +99,7 @@ export function pinEl(layer,cur,props){
   const white = txtOn(layer.color)==='#fff';
   if(layer.key==='scenic'){ d.innerHTML=`<span>${cameraSvg(white?'#fff':'#20241c')}</span>`; return d; }
   if(layer.key==='toilets'){ d.innerHTML=`<span>${toiletSvg(white?'#fff':'#20241c')}</span>`; return d; }
+  if(layer.key==='climbs'){ d.innerHTML=`<span>${mountainSvg(white?'#fff':'#20241c')}</span>`; return d; }
   d.innerHTML=`<span${white?' style="filter:brightness(0) invert(1)"':''}>${pinGlyph(layer, props)}</span>`; return d;
 }
 

@@ -989,11 +989,17 @@ deliberate:
   (`'50/1,29/1,3000/100'`) and is converted here; a partial or malformed block
   yields nulls rather than an exception, because a broken EXIF header must
   never cost a rider their upload.
-- **The add-climb wizard's photo drop zone was removed, not wired.** It was
-  decoration (`onclick="return false"`) over a wizard with no media queue at
-  all. Honest UI (§1.1) means removing the pretence; climb photos have a real
-  path through `/improve?item=…&add=photo` once the climb exists, and the
-  wizard now says so.
+- **New climbs get the uploader because they go through /improve (2026-08-25).**
+  The dedicated add-climb wizard never had a working uploader: its decorative
+  drop zone (`onclick="return false"`) had been removed on the honest-UI rule
+  (§1.1) and the step pointed riders to `/improve?item=…&add=photo` once the
+  climb existed. It was given `media-upload.js` on the morning of 2026-08-25 and
+  retired the same day: climbs are now added on `/improve?type=climbs&mode=add`
+  ([edit-items/N-climbs.md](edit-items/N-climbs.md)), so they use the one
+  uploader there is: same consent gate, same `CC_MEDIA` endpoints, the `mediaIds`
+  hidden field on `ImproveType`, and `CatalogContributionService::submitAdd`
+  claims the ids for the climb submission exactly as for any other new item.
+  Next is held while a photo is uploading or checking (the `cc:media-busy` event).
 
 One thing worth knowing for deployment: files written from the upload endpoint
 onward embed a `/photo/<uuid>` URL, so this feature must not ship without §5d's

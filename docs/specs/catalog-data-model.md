@@ -17,7 +17,7 @@ and which parts are permanent.
 Sibling ownership: the OSM relationship, licensing posture, and coverage/API
 policy live in [osm-data-architecture.md](osm-data-architecture.md); per-type
 edit contracts in [edit-items/](edit-items/README.md); the submission →
-moderation machinery in moderation-and-contribution.md; the K (routes) domain
+moderation machinery in moderation-and-contribution.md; the R (routes) domain
 in route-domain.md; the map/search UX in map-and-search.md.
 
 ---
@@ -30,10 +30,16 @@ other three by `Version20260703153611`):
 
 | Table | Holds | Letters |
 |---|---|---|
-| `item` | Every atomic editable catalog feature | A–J |
-| `recommended_route` | Curated route compositions | K |
-| `heat_point` | The computed ride-heat aggregate | L |
+| `item` | Every atomic editable catalog feature | A–G, N–Q |
+| `recommended_route` | Curated route compositions | R |
+| `heat_point` | The computed ride-heat aggregate | none (derived layer) |
 | `region` | Operational spatial buckets (moderation, voting, caps) | — |
+
+**Letters renumbered 2026-08-25:** practical A–M, experiential N–Z. Old -> new:
+B->N, C->B, E->O, F->E, G->F, H->G, I->P, J->Q, K->R, M->C; A and D unchanged.
+Migration `Version20260825120000` rewrites `item`, `coverage_poi` and
+`submission`; the coverage tile artifact must be republished after it (layer
+names are `<letter>_<cc>`). The ride heatmap no longer has a letter (it was L).
 
 **One generic `item` entity — not per-type entities, not Doctrine
 inheritance.** Common/filterable fields are real columns; type-specific detail
@@ -51,11 +57,11 @@ kind:
   segments are letter-A items with LineString geometry).
 - **Curated composition → `recommended_route`** — riders propose, curators own
   edits; see route-domain.md.
-- **Computed aggregate → `heat_point`** — L is *never* an item: no name, no
+- **Computed aggregate → `heat_point`** — the heat aggregate is *never* an item: no name, no
   lifecycle, no attributes, no region, never editable, never moderated.
 
 The letter → geometry-kind mapping is enforced at import
-(`ImportCatalogCommand::GEOMETRY_KIND`): `A` = LineString, `B`–`J` = Point.
+(`ImportCatalogCommand::GEOMETRY_KIND`): `A` = LineString, every other letter = Point.
 Wrong geometry kind for a letter is an import error.
 
 ## 2. Schemas
@@ -72,7 +78,7 @@ raw SQL/DBAL. Timestamps are `TIMESTAMP(0) WITHOUT TIME ZONE`
 | Column | Type | Notes |
 |---|---|---|
 | `id` | bigint generated identity | partition-friendly; no random UUIDs |
-| `letter` | varchar(1) | catalog type A–J (uppercased by the setter) |
+| `letter` | varchar(1) | catalog type A–G, N–Q (uppercased by the setter) |
 | `name` | varchar(200) | the one pseudo-field outside `attributes` — `Item::NAME_FIELD` keeps that rule in one place |
 | `geom` | geometry, GiST `idx_item_geom` | Point, or LineString for A |
 | `country_code` | varchar(2), btree `idx_item_country` | denormalized filter column |
@@ -204,7 +210,7 @@ has this option, and there is no all-refs form.
    recompute-owned keys (`ItemUpsert::MEASURED_KEYS`: length, gain, footEle,
    summitEle, avgGradient, maxGradient, grad, lineGrad, demSource, binM,
    steepWindowM, steep) over from the existing row, but ONLY when the row is
-   letter B and its stored `route` is byte-identical to the seeded one: a
+   letter N and its stored `route` is byte-identical to the seeded one: a
    measurement is a claim about one specific line, and keeping it across a
    redraw is the Roche-aux-Faucons failure (stored numbers from a line that
    moved). A changed line drops the measurements, and `seed-manual` ends by
@@ -234,7 +240,7 @@ served.
 absence from a re-run can mean "fell below cap", not "deleted upstream".
 `imported_at` records staleness; retirement is a curator decision. (The one
 deliberate exception: `heat_point` rows with `source='auto'` are
-delete-and-replaced wholesale each import — L has no lifecycle to protect.)
+delete-and-replaced wholesale each import — the heat aggregate has no lifecycle to protect.)
 
 The same state enum is shared by `recommended_route`, but K's transitions run
 a route-specific machine (Routes queue, ride-verification, retire-to-admit
@@ -287,8 +293,8 @@ row enters `state='unverified'` — never `verified`; verification is only ever
 earned through the funnel. Seeding is idempotent (`source_ref =
 manual:<stable-slug>`, same upsert as the importer) and collision-safe through
 the shared duplicate guard below. Corollary: **everything on the map is a real DB row** — no decorative
-constants in templates or `map.js` (the single letter-F hazard pin is the
-documented standing exception, since F has no serving path yet).
+constants in templates or `map.js` (the single letter-E hazard pin is the
+documented standing exception, since E has no serving path yet).
 
 ### 5a. One place, one row (2026-08-24)
 
@@ -454,6 +460,31 @@ effect of anything else:
   records "no counterpart". Both are answers;
 - **a curator approving a new rider place**: see the gate below.
 
+#### The candidate list is stored, not asked (owner decision, 2026-08-25)
+
+The chip on a queue card offers `OsmLinker::nearby()`: the coverage objects of
+that letter within 250 m. Until 2026-08-25 the desk ran that query for every
+open card on every list view, against two million coverage rows: the same
+question with the same answer, 2.8 s per card before the geography index and
+one spatial query per card after it ("that doesn't sound well engineered").
+The answer changes only when the place moves or the country's coverage is
+re-harvested, so it is computed once and stored on the row:
+
+| Column | Meaning |
+|---|---|
+| `item.osm_candidates` (jsonb) | the list `{ref, name, distanceM}[]` the chip shows |
+| `item.osm_candidates_at` | when it was computed; NULL with a NULL list = compute on next read |
+
+`App\Catalog\Import\OsmCandidates` owns it: intake computes it when the row
+is created (`refresh()`), an approved pin move recomputes it at the new point
+(`refreshAt()`, ModerationService), and the desk reads it (`forItems()`),
+computing only where the column is NULL. The pipeline's per-region swap
+(`load.py`, in the swap transaction, right after the delete-disappeared arm)
+sets both columns back to NULL for every **open** row whose `country_code` is
+among the slice's countries; answered rows keep whatever they hold, and no
+harvest depends on the app's schema (`to_regclass('item')` guard). Net: zero
+spatial queries per list view; one per row per harvest, on first read.
+
 #### Approving a new place requires answering it (owner decision, 2026-08-25)
 
 **A `NewItem` submission cannot be approved while `osm_checked_at` is NULL.**
@@ -482,14 +513,17 @@ data desk shows. The desk is the queue for everything the gate does not catch:
 rows that existed before the gate, rows whose OSM counterpart appeared later,
 and links that need a human because they fall in the 50 m to 250 m band.
 
-**Current state, and it is a gap.** The column shipped on 2026-08-24 and
-**0 of 1,525 items carry a value**, including 775 `osm`-sourced rows whose
-`source_ref` already is an OSM object, where the ref is known by construction
-and simply never written (`CatalogContributionService` sets `sourceRef` and not
-`osmRef`). `app:catalog:link-osm` has not been run, nothing schedules it, and
-the approval gate above is specified and not built. Until then the dedupe join
-is doing its work on `source_ref` alone for every row, which is the behaviour
-§5b exists to replace. Delete this paragraph when all four are true.
+**Built 2026-08-25** (plan `docs/plans/2026-08-25-osm-identity-spine.md`):
+materialisation answers by construction, `Version20260825110000` added
+`osm_checked_at` and backfilled the 775 by-construction rows, the approval gate
+refuses an unanswered new place (`OsmUnansweredException`; the queue row carries
+an OSM chip: `OSM?` pops the `OsmLinker::nearby()` candidates and "Not in OSM",
+and once answered the chip reads the linked ref or "not in OSM", so an answered
+row no longer looks like an unasked one, 2026-08-25), and every writer
+(`app:catalog:link-osm`, the data desk's accept AND dismiss, duplicate
+inheritance) records the answer. Still an operator's job: installing the two
+timers `operations.md` §1 now specifies, and running the first
+`app:catalog:link-osm --write` over the pre-gate backlog.
 
 **`osm_ref` is deliberately not UNIQUE.** The duplicates have to be cleared
 first, or the constraint is a migration that cannot run. Two served rows sharing
@@ -553,7 +587,7 @@ error at the front door, never a passthrough.** The allowlist per letter is
 - shared display keys (`AttributeVocabulary::COMMON`: `t`, `town`, `web`, `c`,
   `sim`, `r`, `desc`, `descTr`, `photo`, `photos`, `links`);
 - a few per-letter fixture extras (`AttributeVocabulary::EXTRAS`), notably
-  `B`'s `attribution` (the fixture's free-text citation — renamed because
+  `N`'s `attribution` (the fixture's free-text citation — renamed because
   `source` is reserved for provenance; `CatalogProvider::climbs()` renames it
   back on serving) and `D`'s `serviceKind` (`shop`/`station`/`pump`,
   harvester/import-stamped, never a form field — see
@@ -869,7 +903,7 @@ Harvest-side rules that shape what arrives (toolchain:
 - **Harvested outputs are regenerated, never hand-edited.** Curated editorial
   choices (climb list, route seeds) are version-controlled *seed inputs*;
   geometry is always fetched by script.
-- **E/H de-overlap**: the stays (E) and shelter (H) layers use disjoint OSM
+- **O/G de-overlap**: the stays (O) and shelter (G) layers use disjoint OSM
   selectors (`build_all.py` `LAYERS`; the tag families are catalogued in
   osm-data-architecture.md §5). Features are
   deduped by OSM id within a layer and across provinces
@@ -878,7 +912,7 @@ Harvest-side rules that shape what arrives (toolchain:
 - **Per-province caps** (`cap_per_province` per layer in `build_all.py
   LAYERS`) rank-and-cap each layer — the reason absence from a re-harvest is
   not a deletion signal (catalog-data-model.md §4).
-- **L is synthetic and illustrative**: heat points are sampled from the
+- **The heat layer is synthetic and illustrative**: heat points are sampled from the
   curated routes' own geometry (`routes.py`), never real ride data, never
   third-party ride platforms — and every UI surface labels it so
   (`d_faked_src` / `heatmap_hint` keys in `web/translations/messages.en.yaml`).
@@ -912,18 +946,18 @@ Harvest-side rules that shape what arrives (toolchain:
 | Key | Shape | Notes |
 |---|---|---|
 | `A` | surface-segment list | `path` = [[lat,lng]…]; `wayId` only for `way/…` refs |
-| `B` | climbs list | `geom.ll` = [lat,lng]; stored `attribution` served as `source` (citation) |
-| `C`,`D`,`F`,`G`,`H`,`I`,`J`,`M` | GeoJSON FeatureCollection | properties = attributes + `n` (name) + `prov` (subdivision name) + `id` |
-| `E` | `{osm, pivot}` | the only source-split letter: `pivot` rows are their own bucket; every other source lands in `osm` |
-| `K` | routes list | includes raw `state` (map badges "proposed"), canonicalized `difficulty` and `bikeTypes` |
+| `N` | climbs list | `geom.ll` = [lat,lng]; stored `attribution` served as `source` (citation) |
+| `B`,`C`,`D`,`E`,`F`,`G`,`P`,`Q` | GeoJSON FeatureCollection | properties = attributes + `n` (name) + `prov` (subdivision name) + `id` |
+| `O` | `{osm, pivot}` | the only source-split letter: `pivot` rows are their own bucket; every other source lands in `osm` |
+| `R` | routes list | includes raw `state` (map badges "proposed"), canonicalized `difficulty` and `bikeTypes` |
 | `refs` | `["node/123", …]` | source_ref of every served `source='osm'` item, so the client can drop the coverage-tile twin (osm-data-architecture.md §8) |
-| `L` | **absent** | the ride heatmap moved to its own endpoint on 2026-08-09 (below) |
+| heat | **absent** | the ride heatmap (no letter) moved to its own endpoint on 2026-08-09 (below) |
 
-`F` (hazards) joined the payload on 2026-07-21 and `M` (public toilets) on
+`E` (hazards) joined the payload on 2026-07-21 and `C` (public toilets) on
 2026-07-30; both are ordinary served-item collections, region-stamped like every
 other letter.
 
-**`L` is not in this payload.** The ~6,600 heat points serve from
+**The heatmap is not in this payload.** The ~6,600 heat points serve from
 `GET /map/heat.json` (`MapController::heat()`), on the same public/ETag/max-age
 discipline, fetched only when a rider first switches the heatmap on. The layer
 is off by default, so on the catalog path every visitor was paying its bytes for
@@ -994,7 +1028,7 @@ the catalog pipeline enforces:
 | Wikidata | CC0 | used for notability ranking/identifiers; no attribution required (credited anyway) |
 | Wikipedia | CC BY-SA 4.0 | short descriptions → `desc` (truncated at 260 chars, `enrich.py`); machine-translated ones flagged `descTr` |
 | Wikimedia Commons | per-file | **every photo attribute structurally carries `credit` + `license` + `source`** (`enrich._photo()` always stamps all three); only free licences are ever attached (the `FREE` allowlist in `tools/wallonia/enrich.py`); the drawer renders credit (linked to the author's profile) + licence deed link + Commons file-page link |
-| Géoportail Wallonie PIVOT | open data (CC-BY-compatible) | own `pivot` source + own `E` bucket, driving the Tourisme-Wallonie attribution branch in the stays merge |
+| Géoportail Wallonie PIVOT | open data (CC-BY-compatible) | own `pivot` source + own `O` bucket, driving the Tourisme-Wallonie attribution branch in the stays merge |
 
 Photos are the one real licence trap: a photo that cannot be licensed cleanly
 is dropped, never guessed.
@@ -1058,10 +1092,10 @@ The two documents coexist deliberately; here is the exact split.
 
 ## Open questions
 
-- **E/H `basic_hut` carve.** The original design routed
-  `amenity=shelter` + `shelter_type=basic_hut` to E (sleepable); the current
+- **O/G `basic_hut` carve.** The original design routed
+  `amenity=shelter` + `shelter_type=basic_hut` to O (sleepable); the current
   harvest selectors (`tools/wallonia/build_all.py`) implement de-overlap
-  purely by disjoint selectors, with *all* `amenity=shelter` going to H. Is
+  purely by disjoint selectors, with *all* `amenity=shelter` going to G. Is
   the basic-hut carve still intended for the coverage-provider tag subset?
 - **Per-feature description source link.** The Wallonia design specified a
   per-feature `descSource` + link for Wikipedia (CC BY-SA) summaries; the
@@ -1073,7 +1107,7 @@ The two documents coexist deliberately; here is the exact split.
   is enforced structurally (free-licence gate + always-stamped
   `credit`/`license`/`source` in `enrich.py`) with no independent lint pass
   that would catch a future regression in that structure.
-- **F (hazards) serving path.** Letter F has intake designed but no serving
+- **E (hazards) serving path.** Letter E has intake designed but no serving
   path in `CatalogProvider`; the one demo hazard pin remains hardcoded in
   `map.js` (deferred, tracked in `docs/TODO.md`).
 - ~~**Known data issue**: a pre-existing OSM-vs-OSM duplicate ("Signal de

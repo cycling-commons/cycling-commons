@@ -16,7 +16,6 @@ use App\Catalog\SurfaceVocabulary;
 use App\Contribution\CatalogContributionService;
 use App\Coverage\CoverageRepository;
 use App\Entity\User;
-use App\Form\AddClimbType;
 use App\Form\ImproveType;
 use App\Form\VoteType;
 use App\Routing\LocalePrefix;
@@ -61,78 +60,31 @@ final class ContributeController extends AbstractController
         ]);
     }
 
+    /**
+     * The dedicated climb wizard was folded into /improve on 2026-08-25 (owner):
+     * one form per item type, the registry-driven one. Old links and the map's
+     * "Add a climb here" still arrive here and are sent on with their camera hint
+     * (docs/specs/map-and-search.md §8.1 validates it on the other side).
+     */
     #[Route('/add-climb', name: 'add_climb')]
-    #[IsGranted('ROLE_USER')]
     public function addClimb(Request $request): Response
     {
-        $view = self::startView($request);
-        $form = $this->createForm(AddClimbType::class);
-        $form->handleRequest($request);
-
-        if ($form->isSubmitted() && $form->isValid()) {
-            /** @var array<string, mixed> $data */
-            $data = $form->getData();
-            /** @var User $user */
-            $user = $this->getUser();
-
-            try {
-                $receipt = $this->contributionStub->submit('climb', $data, $user);
-            } catch (TooManyRequestsHttpException) {
-                $this->addFlash('error', 'contribute.error.rate_limited');
-
-                return $this->renderAddClimb(form: $form, view: $view);
-            } catch (ValidationFailedException $e) {
-                foreach ($e->getViolations() as $violation) {
-                    $form->addError(new FormError((string) $violation->getMessage()));
-                }
-
-                return $this->renderAddClimb(form: $form, view: $view);
-            }
-
-            return $this->renderAddClimb(receipt: $receipt);
-        }
-
-        return $this->renderAddClimb(form: $form, view: $view);
-    }
-
-    /**
-     * Camera hint from `/map`; validated, never trusted.
-     *
-     * @see docs/specs/map-and-search.md §8.1
-     *
-     * @return array{lat: float, lng: float, zoom: float}|null
-     */
-    private static function startView(Request $request): ?array
-    {
+        // Validated, never trusted (§8.1): junk falls back to the wizard's own centre,
+        // a wild zoom is clamped rather than throwing the coordinates away.
+        $params = ['type' => ItemType::Climbs->value, 'mode' => 'add'];
         $lat = $request->query->get('lat');
         $lng = $request->query->get('lng');
-        if (!is_numeric($lat) || !is_numeric($lng)) {
-            return null;
+        if (is_numeric($lat) && is_numeric($lng)
+            && (float) $lat >= -90.0 && (float) $lat <= 90.0 && (float) $lng >= -180.0 && (float) $lng <= 180.0) {
+            $params['lat'] = $lat;
+            $params['lng'] = $lng;
+            $z = $request->query->get('z');
+            if (is_numeric($z)) {
+                $params['z'] = (string) max(3.0, min(18.0, (float) $z));
+            }
         }
-        $lat = (float) $lat;
-        $lng = (float) $lng;
-        if ($lat < -90.0 || $lat > 90.0 || $lng < -180.0 || $lng > 180.0) {
-            return null;
-        }
-        $z = $request->query->get('z');
-        $zoom = is_numeric($z) ? max(3.0, min(18.0, (float) $z)) : 13.0;
 
-        return ['lat' => $lat, 'lng' => $lng, 'zoom' => $zoom];
-    }
-
-    /**
-     * @param array{lat: float, lng: float, zoom: float}|null $view
-     */
-    private function renderAddClimb(?ContributionReceipt $receipt = null, ?FormInterface $form = null, ?array $view = null): Response
-    {
-        return $this->render('contribute/add_climb.html.twig', [
-            'page_title' => 'meta.add_climb_title',
-            'page_description' => 'meta.add_climb_description',
-            'nav_active' => 'add_climb',
-            'receipt' => $receipt,
-            'form' => $form,
-            'start_view' => $view,
-        ]);
+        return $this->redirectToRoute('improve', $params, Response::HTTP_MOVED_PERMANENTLY);
     }
 
     #[Route('/vote', name: 'vote')]
@@ -319,7 +271,7 @@ final class ContributeController extends AbstractController
         $typeParam = (string) $request->query->get('type', '');
         $requestedType = '' === $typeParam ? null : ItemType::fromParam($typeParam);
 
-        // K lives in recommended_route — do not bind its id against item (IDOR).
+        // R lives in recommended_route — do not bind its id against item (IDOR).
         if (ItemType::QualityRides !== $requestedType && ctype_digit($itemParam)) {
             // docs/specs/catalog-data-model.md §4 — served states only; curator/submitter may open submitted.
             $states = [ItemState::Unverified, ItemState::Verified];
@@ -341,9 +293,10 @@ final class ContributeController extends AbstractController
         }
 
         // docs/specs/moderation-and-contribution.md §1.1 — mode=add.
+        // Climbs included since 2026-08-25: the old /add-climb wizard redirects here (owner).
         if (null === $item && 'add' === (string) $request->query->get('mode', '')
             && null !== $requestedType
-            && !\in_array($requestedType, [ItemType::Climbs, ItemType::QualityRides], true)) {
+            && ItemType::QualityRides !== $requestedType) {
             return $this->addPlace($request, $requestedType);
         }
 
@@ -426,6 +379,18 @@ final class ContributeController extends AbstractController
         $itemLat = \is_array($point) && is_numeric($point[1] ?? null) ? (float) $point[1] : null;
         $itemLng = \is_array($point) && is_numeric($point[0] ?? null) ? (float) $point[0] : null;
 
+        // A curator who came here from the queue's ✎ is correcting a detail; the
+        // decision itself lives on the map, so the review step points there
+        // instead of leaving a greyed-out Submit (owner 2026-08-25).
+        $pendingSubmissionId = null;
+        if ($this->isGranted('ROLE_CURATOR')) {
+            $found = $em->getConnection()->fetchOne(
+                "SELECT id FROM submission WHERE item_id = :id AND status IN ('pending', 'needs_info') ORDER BY id DESC LIMIT 1",
+                ['id' => (int) $item->getId()],
+            );
+            $pendingSubmissionId = false === $found ? null : (int) $found;
+        }
+
         return $this->render('contribute/improve.html.twig', [
             'page_title' => 'meta.improve_title',
             'page_description' => 'meta.improve_description',
@@ -438,6 +403,7 @@ final class ContributeController extends AbstractController
             'receipt' => null,
             'form' => $form,
             'current' => $current,
+            'pending_submission_id' => $pendingSubmissionId,
         ]);
     }
 }

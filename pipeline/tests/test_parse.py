@@ -24,18 +24,18 @@ def test_letter_per_selector_and_no_selector_drops(rows):
     letters = {ref: {r.letter for r in rs} for ref, rs in _by_ref(rows).items()}
     assert letters["node/101"] == {"D"}
     assert letters["node/102"] == {"D"}
-    assert letters["node/103"] == {"C"}
-    assert letters["node/104"] == {"G"}
-    assert letters["node/105"] == {"J"}
-    assert letters["node/106"] == {"H"}
-    assert letters["node/107"] == {"I"}
+    assert letters["node/103"] == {"B"}
+    assert letters["node/104"] == {"F"}
+    assert letters["node/105"] == {"Q"}
+    assert letters["node/106"] == {"G"}
+    assert letters["node/107"] == {"P"}
     assert "node/108" not in letters          # amenity=bench matches no selector
     assert "node/110" not in letters          # untagged way corners never emit
 
 
 def test_multi_letter_object_yields_one_row_per_letter(rows):
     hotel_castle = _by_ref(rows)["node/109"]
-    assert {r.letter for r in hotel_castle} == {"E", "J"}
+    assert {r.letter for r in hotel_castle} == {"O", "Q"}
     # `name` is promoted to the dedicated column and STRIPPED from the stored
     # tags subset (coverage-provider.md §2): tags->>'name' duplicated the
     # authoritative `name` column on every named row and nothing reads it back
@@ -76,7 +76,7 @@ def test_tags_trimmed_to_the_contract_stored_set(rows, contract):
 
 def test_way_reduces_to_centroid(rows):
     (way,) = _by_ref(rows)["way/201"]
-    assert way.letter == "E"
+    assert way.letter == "O"
     assert way.lon == pytest.approx(5.01, abs=1e-6)
     assert way.lat == pytest.approx(50.01, abs=1e-6)
     assert way.name == "Hôtel du Centre"
@@ -123,7 +123,7 @@ def test_missing_osm_metadata_falls_back_to_none(tmp_path, contract):
 """)
     (row,) = rows
     assert row.ref == "node/1"
-    assert row.letter == "C"
+    assert row.letter == "B"
     assert row.osm_version is None
     assert row.osm_ts is None
 
@@ -146,6 +146,6 @@ def test_open_way_centroid_is_plain_mean(tmp_path, contract):
 """)
     (way,) = rows
     assert way.ref == "way/9"
-    assert way.letter == "E"
+    assert way.letter == "O"
     assert way.lon == pytest.approx((4.0000 + 4.0300 + 4.0300) / 3, abs=1e-6)
     assert way.lat == pytest.approx((50.0000 + 50.0000 + 50.0300) / 3, abs=1e-6)

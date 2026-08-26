@@ -41,7 +41,7 @@ final class WithdrawSubmissionTest extends WebTestCase
     private function submission(User $by, SubmissionStatus $status, ?int $itemId = null, SubmissionType $type = SubmissionType::Edit): Submission
     {
         $em = static::getContainer()->get(EntityManagerInterface::class);
-        $s = (new Submission())->setType($type)->setLetter('J')->setUserId((int) $by->getId())
+        $s = (new Submission())->setType($type)->setLetter('Q')->setUserId((int) $by->getId())
             ->setStatus($status)->setTitle('Withdraw-me')
             ->setGeom('{"type":"Point","coordinates":[6.0,49.9]}')->setCountryCode('LU')
             ->setChanges([])->setPayload([]);
@@ -58,7 +58,7 @@ final class WithdrawSubmissionTest extends WebTestCase
     {
         return (int) static::getContainer()->get(Connection::class)->fetchOne(
             "INSERT INTO item (letter, name, geom, country_code, state, source, source_ref, attributes, created_at, updated_at)
-             VALUES ('J', 'Withdraw Castle', ST_SetSRID(ST_MakePoint(6.0, 49.9), 4326), 'LU', 'unverified', 'user', 'user:withdraw-1', '{}', NOW(), NOW())
+             VALUES ('Q', 'Withdraw Castle', ST_SetSRID(ST_MakePoint(6.0, 49.9), 4326), 'LU', 'unverified', 'user', 'user:withdraw-1', '{}', NOW(), NOW())
              RETURNING id",
         );
     }
@@ -113,11 +113,11 @@ final class WithdrawSubmissionTest extends WebTestCase
         // Withdraw FROM a category-filtered view: the redirect must land back
         // on the same filter (owner 2026-08-16: "the system loses the
         // selected category").
-        $crawler = $client->request('GET', '/profile?letter=J');
+        $crawler = $client->request('GET', '/profile?letter=Q');
         $form = $crawler->filter('form[action$="/profile/withdraw/'.$pending->getId().'"]')->form();
         $client->submit($form);
         self::assertResponseRedirects();
-        self::assertStringContainsString('letter=J', (string) $client->getResponse()->headers->get('Location'));
+        self::assertStringContainsString('letter=Q', (string) $client->getResponse()->headers->get('Location'));
         $em->clear();
         self::assertSame(SubmissionStatus::Withdrawn, $em->find(Submission::class, (int) $pending->getId())->getStatus());
         self::assertSame(SubmissionStatus::Approved, $em->find(Submission::class, (int) $sub->getId())->getStatus());

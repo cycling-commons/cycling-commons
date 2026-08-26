@@ -27,11 +27,11 @@ committed — working docs stay local.
   data served, vector-tile + REST transports, auth/metering, versioning, a
   worked consumer example (the endpoint contract osm-data-architecture.md §7 and
   api-strategy.md defer to).
-- `edit-items/` — per-type contribution/edit contracts (A–L) and the shared
+- `edit-items/` — per-type contribution/edit contracts (letters A–M practical, N–Z experiential) and the shared
   contribution contract (`edit-items/README.md`).
 - `catalog-data-model.md` — the running catalog schema and data contracts.
 - `moderation-and-contribution.md` — the contribution-to-decision lifecycle.
-- `route-domain.md` — the K route domain in depth.
+- `route-domain.md` — the R route domain in depth.
 - `climb-elevation.md` — how a climb's length, gain, gradients and profile are
   MEASURED (elevation source chain, binning, the steepest-ramp window) and how
   the profile chart is drawn. Nobody types a gradient.
@@ -46,7 +46,9 @@ committed — working docs stay local.
 - `data-source-register.md` — every candidate upstream source per catalog
   letter, with its licence, an Ingest/Reference/Ask/No verdict and the evidence
   behind it. The supply side; `wiki/landscape.md` is the product side.
-- `dev-environment.md` — dev stack, platform decisions, conventions.
+- `dev-environment.md` — dev stack, platform decisions, conventions
+  (locale routing and YAML parity; in-site translation proposals live in
+  [translations.md](translations.md)).
 - `system-configuration.md` — the runtime-editable settings: the registry, the
   two value types, the `system_setting` table, and the admin page that writes
   it. Editorial thresholds plus the operational dials an owner may need to

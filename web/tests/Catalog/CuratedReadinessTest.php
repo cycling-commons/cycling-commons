@@ -72,15 +72,15 @@ final class CuratedReadinessTest extends KernelTestCase
 
     public function testCountsOnlyCuratedItemsOnExperientialLetters(): void
     {
-        $this->addItem('B', 'true');    // curated climb — counts
-        $this->addItem('E', '1');       // curated stay — counts
-        $this->addItem('I', 'false');   // present but false — must NOT count
-        $this->addItem('J', null);      // no cur key at all — must NOT count
+        $this->addItem('N', 'true');    // curated climb — counts
+        $this->addItem('O', '1');       // curated stay — counts
+        $this->addItem('P', 'false');   // present but false — must NOT count
+        $this->addItem('Q', null);      // no cur key at all — must NOT count
         // Utility letters render in BOTH modes, so they are not evidence that
         // Curated has anything to show — the exact trap this gate exists for.
-        $this->addItem('C', 'true');
+        $this->addItem('B', 'true');
         $this->addItem('D', 'true');
-        $this->addItem('G', 'true');
+        $this->addItem('F', 'true');
 
         self::assertSame(2, $this->readiness(25)->reportFor($this->regionId)['total']);
     }
@@ -92,8 +92,8 @@ final class CuratedReadinessTest extends KernelTestCase
 
     public function testIsReadyComparesAgainstTheConfiguredThreshold(): void
     {
-        $this->addItem('B', 'true');
-        $this->addItem('B', 'true');
+        $this->addItem('N', 'true');
+        $this->addItem('N', 'true');
 
         // minBlocks 1 here so this stays a test of the TOTAL alone; breadth has
         // its own tests below.
@@ -104,7 +104,7 @@ final class CuratedReadinessTest extends KernelTestCase
 
     public function testBatchFormReportsZeroForRegionsWithNothingCurated(): void
     {
-        $this->addItem('B', 'true');
+        $this->addItem('N', 'true');
         $other = (int) $this->db->fetchOne(
             "INSERT INTO region (slug, name, country_code, area_km2, created_at, updated_at)
              VALUES ('readiness-test-2', 'Readiness Test 2', 'BE', 50, NOW(), NOW())
@@ -129,7 +129,7 @@ final class CuratedReadinessTest extends KernelTestCase
     public function testATotalCarriedByOneBlockIsNotReady(): void
     {
         for ($i = 0; $i < 25; ++$i) {
-            $this->addItem('I', 'true');   // all scenic views
+            $this->addItem('P', 'true');   // all scenic views
         }
         $r = $this->readiness(25, minBlocks: 3, minPerBlock: 5);
         $rep = $r->reportFor($this->regionId);
@@ -144,7 +144,7 @@ final class CuratedReadinessTest extends KernelTestCase
 
     public function testATotalSpreadOverEnoughBlocksIsReady(): void
     {
-        foreach (['B' => 9, 'E' => 8, 'I' => 8] as $letter => $n) {
+        foreach (['N' => 9, 'O' => 8, 'P' => 8] as $letter => $n) {
             for ($i = 0; $i < $n; ++$i) {
                 $this->addItem($letter, 'true');
             }
@@ -162,7 +162,7 @@ final class CuratedReadinessTest extends KernelTestCase
      */
     public function testBreadthMetButTotalShortReportsOnlyTheTotalGap(): void
     {
-        foreach (['B', 'E', 'I'] as $letter) {
+        foreach (['N', 'O', 'P'] as $letter) {
             for ($i = 0; $i < 5; ++$i) {
                 $this->addItem($letter, 'true');
             }
@@ -180,7 +180,7 @@ final class CuratedReadinessTest extends KernelTestCase
     public function testMinBlocksOfOneRevertsToAPureTotal(): void
     {
         for ($i = 0; $i < 25; ++$i) {
-            $this->addItem('I', 'true');
+            $this->addItem('P', 'true');
         }
         self::assertTrue($this->readiness(25, minBlocks: 1, minPerBlock: 1)->isReady($this->regionId));
     }

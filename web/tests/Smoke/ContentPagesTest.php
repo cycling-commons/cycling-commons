@@ -113,7 +113,7 @@ final class ContentPagesTest extends WebTestCase
         // The surfaces that were missing entirely until the same audit. Named
         // one by one, because "some links exist" is what the bug looked like.
         foreach (['/join', '/scout', '/propose-route', '/messages', '/settings', '/privacy', '/terms',
-            '/contribute', '/add-climb', '/improve', '/moderate'] as $path) {
+            '/contribute', '/improve', '/moderate'] as $path) {
             self::assertContains($path, $hrefs, $path.' is a live surface and belongs in the directory');
         }
     }
@@ -136,6 +136,83 @@ final class ContentPagesTest extends WebTestCase
         // of the hero that has held across rewrites, where the lines above it
         // are the pitch and get re-cut (2026-08-08).
         self::assertSelectorTextContains('h1', 'open atlas');
+    }
+
+    public function testHomeKeepsPrincipleBetweenFragmentationAndVoting(): void
+    {
+        $client = static::createClient();
+        $client->request('GET', '/');
+        self::assertResponseIsSuccessful();
+
+        $html = (string) $client->getResponse()->getContent();
+        $frag = strpos($html, 'Cycling knowledge is scattered');
+        $what = strpos($html, 'Open data about the world');
+        $cur = strpos($html, 'The best of a region');
+        self::assertNotFalse($frag);
+        self::assertNotFalse($what);
+        self::assertNotFalse($cur);
+        self::assertLessThan($what, $frag);
+        self::assertLessThan($cur, $what);
+
+        $scout = strpos($html, 'Scout — tag it while you ride');
+        $how = strpos($html, 'One tap at a time');
+        self::assertNotFalse($scout);
+        self::assertNotFalse($how);
+        self::assertLessThan($how, $scout);
+    }
+
+    public function testHomePairPutsVotingBesideFragmentation(): void
+    {
+        $client = static::createClient();
+        $client->request('GET', '/home-pair');
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('noindex', (string) $client->getResponse()->headers->get('X-Robots-Tag'));
+        self::assertSelectorExists('meta[name="robots"][content="noindex, nofollow"]');
+
+        $html = (string) $client->getResponse()->getContent();
+        $frag = strpos($html, 'Cycling knowledge is scattered');
+        $cur = strpos($html, 'The best of a region');
+        $what = strpos($html, 'Open data about the world');
+        self::assertNotFalse($frag);
+        self::assertNotFalse($cur);
+        self::assertNotFalse($what);
+        self::assertLessThan($cur, $frag);
+        self::assertLessThan($what, $cur);
+
+        $how = strpos($html, 'One tap at a time');
+        $scout = strpos($html, 'Scout — tag it while you ride');
+        self::assertNotFalse($how);
+        self::assertNotFalse($scout);
+        self::assertLessThan($scout, $how);
+        self::assertStringContainsString('community-built map of the world', $html);
+        self::assertStringContainsString('Today every layer lives in its own silo', $html);
+    }
+
+    public function testHomePair2UsesCompactCopyAndKeepsTheHero(): void
+    {
+        $client = static::createClient();
+        $client->request('GET', '/home-pair2');
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('noindex', (string) $client->getResponse()->headers->get('X-Robots-Tag'));
+
+        $html = (string) $client->getResponse()->getContent();
+        self::assertStringContainsString('community-built map of the world', $html);
+        self::assertStringContainsString('Each layer lives in its own app', $html);
+        self::assertStringNotContainsString('Today every layer lives in its own silo', $html);
+
+        $frag = strpos($html, 'Cycling knowledge is scattered');
+        $cur = strpos($html, 'The best of a region');
+        $what = strpos($html, 'Open data about the world');
+        $how = strpos($html, 'One tap at a time');
+        $scout = strpos($html, 'Scout — tag it while you ride');
+        self::assertNotFalse($frag);
+        self::assertNotFalse($cur);
+        self::assertNotFalse($what);
+        self::assertNotFalse($how);
+        self::assertNotFalse($scout);
+        self::assertLessThan($cur, $frag);
+        self::assertLessThan($what, $cur);
+        self::assertLessThan($scout, $how);
     }
 
     public function testJoinRenders(): void

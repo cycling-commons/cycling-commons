@@ -51,7 +51,7 @@ final class MovedPinTest extends WebTestCase
     private function seedItem(): Item
     {
         $em = static::getContainer()->get(EntityManagerInterface::class);
-        $item = (new Item())->setLetter('I')->setName('Viewpoint')
+        $item = (new Item())->setLetter('P')->setName('Viewpoint')
             ->setGeom(\sprintf('{"type":"Point","coordinates":[%s,%s]}', self::OLD_LNG, self::OLD_LAT))
             ->setCountryCode('BE')->setState(ItemState::Unverified)->setSource(ItemSource::Osm)
             ->setSourceRef('node/moved-pin-'.bin2hex(random_bytes(4)))
@@ -68,7 +68,7 @@ final class MovedPinTest extends WebTestCase
         $this->login($client);
         $item = $this->seedItem();
 
-        $crawler = $client->request('GET', '/improve?item='.$item->getId().'&type=I');
+        $crawler = $client->request('GET', '/improve?item='.$item->getId().'&type=P');
         self::assertResponseIsSuccessful();
         $form = $crawler->selectButton('Next →')->form([
             'improve[lat]' => (string) self::NEW_LAT,
@@ -106,7 +106,7 @@ final class MovedPinTest extends WebTestCase
         $this->login($client);
         $item = $this->seedItem();
 
-        $crawler = $client->request('GET', '/improve?item='.$item->getId().'&type=I');
+        $crawler = $client->request('GET', '/improve?item='.$item->getId().'&type=P');
         $form = $crawler->selectButton('Next →')->form([
             'improve[lat]' => (string) self::OLD_LAT,
             'improve[lng]' => (string) self::OLD_LNG,

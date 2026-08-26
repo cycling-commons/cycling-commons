@@ -8,7 +8,7 @@ namespace App\Contribution\Gpx;
 
 /**
  * Strict GPX intake parser (docs/specs/route-domain.md §4.1,
- * docs/specs/edit-items/K-quality-rides.md): reject, never coerce.
+ * docs/specs/edit-items/R-quality-rides.md): reject, never coerce.
  *
  * @api
  */

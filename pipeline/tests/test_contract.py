@@ -13,8 +13,9 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 
 from coverage.contract import load_contract  # noqa: E402
 
-# M · Public toilets (added 2026-07-30) skips over L, which stays reserved.
-LETTERS = ["C", "D", "E", "G", "H", "I", "J", "M"]
+# Public toilets (added 2026-07-30 as M) became C in the 2026-08-25 renumbering:
+# practical categories A-M, experiential N-Z.
+LETTERS = ["B", "C", "D", "F", "G", "O", "P", "Q"]
 RAW_PATH = pathlib.Path(__file__).resolve().parents[1] / "contract" / "coverage-contract.json"
 
 
@@ -45,10 +46,10 @@ def test_selectors_carry_tag_key_value_label():
 
 def test_letter_specific_tile_props():
     contract = load_contract()
-    assert contract.letters["C"].tile_props == ["potable"]
+    assert contract.letters["B"].tile_props == ["potable"]
     assert contract.letters["D"].tile_props == ["kind"]
-    assert contract.letters["E"].tile_props == ["acc"]
-    for letter in ("G", "H", "I", "J"):
+    assert contract.letters["O"].tile_props == ["acc"]
+    for letter in ("F", "G", "P", "Q"):
         assert contract.letters[letter].tile_props == []
 
 
@@ -83,8 +84,8 @@ def test_service_kind_mapping_matches_php_service_kind_cases():
 def test_letters_for_matches_selectors():
     contract = load_contract()
     assert contract.letters_for({"shop": "bicycle"}) == ["D"]
-    assert contract.letters_for({"amenity": "drinking_water"}) == ["C"]
-    assert contract.letters_for({"tourism": "hotel", "historic": "castle"}) == ["E", "J"]
+    assert contract.letters_for({"amenity": "drinking_water"}) == ["B"]
+    assert contract.letters_for({"tourism": "hotel", "historic": "castle"}) == ["O", "Q"]
     assert contract.letters_for({"amenity": "bench"}) == []
 
 
@@ -164,14 +165,14 @@ def test_rejects_stored_tag_keys_carrying_name(tmp_path):
 
 def test_rejects_contract_missing_a_catalogue_letter(tmp_path):
     raw = _raw()
-    del raw["letters"]["J"]
+    del raw["letters"]["Q"]
     with pytest.raises(ValueError, match="letters"):
         load_contract(_reload(tmp_path, raw))
 
 
 def test_rejects_malformed_selector_entry(tmp_path):
     raw = _raw()
-    raw["letters"]["C"]["selectors"][0] = {"tag": "no-equals-sign", "label": "Broken"}
+    raw["letters"]["B"]["selectors"][0] = {"tag": "no-equals-sign", "label": "Broken"}
     with pytest.raises(ValueError, match="selector"):
         load_contract(_reload(tmp_path, raw))
 

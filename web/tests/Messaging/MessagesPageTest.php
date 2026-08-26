@@ -174,6 +174,6 @@ final class MessagesPageTest extends WebTestCase
         $crawler = $client->request('GET', '/messages');
         self::assertResponseIsSuccessful();
         self::assertCount(0, $crawler->filter('.msg-row'));
-        self::assertSelectorTextNotContains('.wrap', 'This belongs to owner only.');
+        self::assertSelectorTextNotContains('.dbody', 'This belongs to owner only.');
     }
 }

@@ -1,44 +1,44 @@
 <!-- SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 -->
 
-# Edit spec — G · Getting there
+# Edit spec — G · Shelter
 
 **Status:** canonical reference · **Audience:** contributors to Cycling Commons
 
-- **Catalog layer:** G · Getting there
-- **Map depiction:** 🚆 pin, colour #3E7D8C
-- **Edit-item id:** `aywaille-station` in `atlas/demo/edit-items.js`
+- **Catalog layer:** G · Shelter
+- **Map depiction:** ⛑ pin, colour #9A8FB6
+- **Edit-item id:** `shelter-baraque-michel` in `atlas/demo/edit-items.js`
 - **Editable:** yes · Frontend demo · 2026-06-18
 - **Lifecycle:** *utility / coverage* — verified (≥ X community confirmations) then shown; **never votable, never best-of** (value is completeness). Lives in **Everything** mode. See [README — lifecycle & votability](README.md#item-lifecycle-and-votability).
 
 ## What it is
-Multimodal access points — stations with bikes-on-train, the gateway to the climbs.
+Refuges, cabanes and emergency shelter on exposed terrain.
 
 ## Read view (drawer "current details")
-- Type · Line · Bikes on train
+- Type · Use · Where
 
-## Edit form  (`improve.html?item=aywaille-station`)
+## Edit form  (`improve.html?item=shelter-baraque-michel`)
 ### Fix details
 | Field | Control | Provenance |
 |---|---|---|
-| Bikes on board | select(Allowed with supplement / Allowed, free / Restricted at peak / Not allowed) | `[OSM]` |
-| Step-free access | select(Unknown / Yes / No) (wheelchair=) | `[OSM]` |
-| Bike parking at station | select(Unknown / Covered racks / Open racks / None) | `[OSM]` |
+| Shelter type | select(Refuge / chapel / Bus shelter / Café (seasonal) / Picnic hut) (amenity=shelter) | `[OSM]` |
+| Always accessible? | select(Yes — open structure / Daytime only / Seasonal / Unknown) | `[tap]` |
+| Water nearby? | select(Unknown / Yes / No) | `[tap]` |
 | Still as mapped? | select(As mapped / Closed / Not there anymore) | `[tap]` |
 | Note | textarea | `[edit]` |
 
 ### Add missing  (type-specific)
 | Field | Control | Provenance |
 |---|---|---|
-| Lift / ramp? | select(Unknown / Yes / No) | `[OSM]` |
-| Bike ticket needed? | select(Unknown / Yes / No) | `[edit]` |
+| Bench / seating? | select(Unknown / Yes / No) | `[edit]` |
+| Phone signal? | select(Unknown / Yes / No) | `[edit]` |
 
 ### Report a problem
-- Wrong details · Closed · Duplicate
+- Gone · Wrong location · Duplicate
 
 ### Add a photo
 Available on this type (CC BY-SA 4.0).
 Location metadata (EXIF GPS) is stripped from uploaded photos before storage — the Commons maps places, not riders.
 
 ## Implementation
-- **Demo:** registry entry `aywaille-station` in `atlas/demo/edit-items.js` (hand-picked fixture data).
-- **Production:** OSM railway=station + operator (SNCB) info + community edits.
+- **Demo:** registry entry `shelter-baraque-michel` in `atlas/demo/edit-items.js` (hand-picked fixture data).
+- **Production:** OSM amenity=shelter mirrored + `[tap]` access confirmations.

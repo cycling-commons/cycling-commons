@@ -53,7 +53,7 @@
   <node id="108" version="1" timestamp="2026-06-10T12:00:00Z" lat="50.4650" lon="4.8650">
     <tag k="amenity" v="bench"/>
   </node>
-  <!-- two letters on one object: hotel (E) in a castle (J) -->
+  <!-- two letters on one object: hotel (O) in a castle (Q) -->
   <node id="109" version="7" timestamp="2026-06-20T18:00:00Z" lat="50.3000" lon="4.9500">
     <tag k="tourism" v="hotel"/>
     <tag k="historic" v="castle"/>

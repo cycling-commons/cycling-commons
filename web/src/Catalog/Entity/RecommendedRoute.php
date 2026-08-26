@@ -11,7 +11,7 @@ use App\Catalog\ItemState;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * A curated ride recommendation (letter K).
+ * A curated ride recommendation (letter R).
  *
  * @see docs/specs/catalog-data-model.md §2.2
  *

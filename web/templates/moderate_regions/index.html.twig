@@ -3,19 +3,10 @@
 {% block head_styles %}
 {% include 'account/_shell_styles.html.twig' %}
 <style>
-  .mod-bar{display:flex;gap:1rem;flex-wrap:wrap;align-items:flex-end;margin:0 0 1.4rem}
-  .mod-filters{display:flex;gap:1rem;flex-wrap:wrap;align-items:end;margin:0}
-  .mod-filters label{font-family:var(--mono);font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;color:#595c4d;display:flex;flex-direction:column;gap:.3rem}
-  .mod-filters select{font-family:var(--sans);font-size:.9rem;padding:.5rem;min-height:34px;border:1px solid rgba(20,22,14,.25);border-radius:6px;background:var(--paper);min-width:150px}
-  .mh{padding:2rem 0 1.4rem}
-  .mh .kicker{font-family:var(--mono);font-size:.64rem;letter-spacing:.16em;text-transform:uppercase;color:var(--clay);margin-bottom:.6rem}
-  .mh h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4vw,2.4rem);line-height:1.08;margin-bottom:.4rem;color:var(--ink)}
-  .mh .lead{color:#4a4d40;max-width:56ch;line-height:1.6}
-  .mh .role-badge{display:inline-flex;align-items:center;gap:.4rem;font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;background:var(--spruce-lift);color:var(--paper);padding:.22rem .55rem;border-radius:30px;margin-top:.7rem}
-
-  .rg-list{margin:1.8rem 0 3rem;display:flex;flex-direction:column;gap:.7rem}
-  .rg-item{border:1px solid rgba(20,22,14,.12);border-radius:8px;background:var(--paper);
-    padding:1rem 1.2rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
+  /* Head, filter bar and container are the shell's (account/_shell_styles);
+     the region card is the shared record card with its own insides. */
+  .rg-list{margin:.9rem 0 3rem;display:flex;flex-direction:column;gap:.7rem}
+  .rg-item{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;margin-bottom:0}
   .rg-body{flex:1 1 240px;min-width:0}
   .rg-name{font-family:var(--serif);font-weight:600;font-size:1.05rem;display:flex;align-items:center;gap:.5rem}
   .rg-cc{font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;color:#8a8d7d;border:1px solid rgba(20,22,14,.2);border-radius:3px;padding:.05rem .3rem}
@@ -82,9 +73,6 @@
   button.rg-mode{border:1px solid rgba(20,22,14,.3);background:transparent;color:var(--ink);cursor:pointer}
   button.rg-mode:hover{border-color:var(--trail);color:var(--trail)}
   .rg-mode--locked{border:1px dashed rgba(20,22,14,.22);color:#8a8d7d;cursor:help}
-  .empty-queue{text-align:center;padding:4rem 1rem;color:#595c4d}
-  .empty-queue .ic{font-size:2.4rem;margin-bottom:.5rem}
-  .empty-queue h3{font-family:var(--serif);font-size:1.4rem}
   @media(max-width:700px){.rg-item{align-items:flex-start}.rg-bar{flex-basis:100px}}
 </style>
 {% endblock %}
@@ -92,16 +80,12 @@
 {% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate_regions', mod_scope_names: mod_scope_names is defined ? mod_scope_names : null} %}{% endblock %}
 
 {% block body %}
-<div class="mh">
-  <div class="wrap">
+<div class="dbody" id="main">
+  <div class="mh">
     <div class="kicker">{{ 'moderate_regions.kicker'|trans }}</div>
     <h1>{{ 'moderate_regions.title'|trans }}</h1>
     <p class="lead">{{ 'moderate_regions.lead'|trans({'%threshold%': threshold, '%blocks%': min_blocks, '%per_block%': min_per_block}) }}</p>
-    <div><span class="role-badge">&#9876; {{ 'moderate.role_label'|trans }}</span></div>
   </div>
-</div>
-
-<div class="wrap" id="main">
   {% for msg in app.flashes('success') %}<div class="flash-success" role="alert">{{ msg|trans }}</div>{% endfor %}
   {% for msg in app.flashes('danger') %}<div class="flash-error" role="alert">{{ msg|trans }}</div>{% endfor %}
 
@@ -123,8 +107,7 @@
   {% endif %}
 
   {% if regions is empty %}
-    <div class="empty-queue">
-      <div class="ic">&#9650;</div>
+    <div class="empty-state">
       <h3>{{ 'moderate_regions.empty_heading'|trans }}</h3>
       <p>{{ 'moderate_regions.empty_body'|trans }}</p>
     </div>
@@ -149,7 +132,7 @@
             <span class="rg-tally">{{ 'moderate_regions.country_tally'|trans({'%ready%': c.ready, '%total%': c.total}) }}</span>
           </summary>
           {% for r in c.regions %}
-      <div class="rg-item">
+      <div class="q-item rg-item">
         <div class="rg-body">
           {# No country badge here any more: the country heading directly above
              carries it, and repeating it on every card was the same two letters

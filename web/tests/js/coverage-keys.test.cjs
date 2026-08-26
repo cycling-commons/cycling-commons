@@ -8,9 +8,9 @@
 // reads its count out of the database and draws nothing — "0 / 583" forever,
 // at every zoom, in every country.
 //
-// That is not hypothetical. Public toilets (M) shipped as a category in the
+// That is not hypothetical. Public toilets (C, then lettered M) shipped as a category in the
 // catalog, the rail, the contribute hub and the harvest — the tiles have
-// carried m_<cc> for weeks — and COVERAGE_KEYS was never extended, so the
+// carried its source-layer (c_<cc> today) for weeks — and COVERAGE_KEYS was never extended, so the
 // layer did not exist. Nothing errored. The count was right. It was reported
 // by somebody looking at Wallonia and wondering where the toilets were
 // (2026-08-09).
@@ -29,7 +29,7 @@ const path = require('node:path');
 const ASSETS = path.join(__dirname, '..', '..', 'assets', 'map');
 const read = f => fs.readFileSync(path.join(ASSETS, f), 'utf8');
 
-/** `export const LETTER_KEY={C:'water',…}` -> { C: 'water', … } */
+/** `export const LETTER_KEY={B:'water',…}` -> { B: 'water', … } */
 function letterKey() {
   const m = read('catalog.js').match(/export const LETTER_KEY\s*=\s*\{([^}]*)\}/);
   assert.ok(m, 'LETTER_KEY not found in catalog.js — did it move or change shape?');
@@ -38,7 +38,7 @@ function letterKey() {
   return out;
 }
 
-/** `export const COVERAGE_KEYS=[['water','c'],…]` -> [['water','c'], …] */
+/** `export const COVERAGE_KEYS=[['water','b'],…]` -> [['water','b'], …] */
 function coverageKeys() {
   const m = read('coverage.js').match(/export const COVERAGE_KEYS\s*=\s*\[(.*?)\];/s);
   assert.ok(m, 'COVERAGE_KEYS not found in coverage.js — did it move or change shape?');
@@ -62,7 +62,7 @@ test('each coverage key carries the lowercase form of its own letter', () => {
   const inverse = Object.fromEntries(Object.entries(byKey).map(([l, k]) => [k, l]));
 
   for (const [key, letter] of coverageKeys()) {
-    // The letter IS the tile source-layer prefix ('m' -> 'm_be'), so a typo
+    // The letter IS the tile source-layer prefix ('c' -> 'c_be'), so a typo
     // here points every layer of that pool at source-layers that do not
     // exist — which renders empty rather than throwing.
     assert.equal(letter, inverse[key].toLowerCase(),

@@ -24,7 +24,7 @@ final class ItemSourceRankTest extends TestCase
     public function testPivotOutranksOsm(): void
     {
         // The live bug this ordering fixes: five PIVOT accommodation rows and
-        // five OSM rows for the same five buildings. PIVOT is canonical for E
+        // five OSM rows for the same five buildings. PIVOT is canonical for O
         // and carries its own CC-BY attribution, so losing it to an OSM row
         // that imported first would drop the attribution with it.
         self::assertGreaterThan(ItemSource::Osm->dedupeRank(), ItemSource::Pivot->dedupeRank());

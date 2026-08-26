@@ -42,7 +42,7 @@ final class OutboundLinksEditorTest extends WebTestCase
     {
         /** @var EntityManagerInterface $em */
         $em = static::getContainer()->get(EntityManagerInterface::class);
-        $item = (new Item())->setLetter('J')->setName('Muiderslot '.$ref)
+        $item = (new Item())->setLetter('Q')->setName('Muiderslot '.$ref)
             ->setGeom('{"type":"Point","coordinates":[5.0718,52.3341]}')->setCountryCode('BE')
             ->setState(ItemState::Unverified)->setSource(ItemSource::Manual)->setSourceRef('manual:'.$ref)
             ->setAttributes($attributes);
@@ -188,7 +188,7 @@ final class OutboundLinksEditorTest extends WebTestCase
         $item = $this->item('links-render', ['links' => self::TWO_LEVEL]);
         $client->loginUser($this->user('links-render@test.test'));
 
-        $client->request('GET', '/improve?item='.$item->getId().'&type=J');
+        $client->request('GET', '/improve?item='.$item->getId().'&type=Q');
         self::assertResponseIsSuccessful();
         $html = (string) $client->getResponse()->getContent();
 

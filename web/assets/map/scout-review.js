@@ -44,7 +44,7 @@ function lettersFor(tag, detail) {
   const byDetail = (window.CC_SCOUT_DETAILS || {})[tag] || {};
   const offered = detail != null ? byDetail[String(detail)] : byDetail[''];
   if (offered && offered.length) return offered;
-  return (window.CC_SCOUT_TAGS || {})[tag] || ['C'];
+  return (window.CC_SCOUT_TAGS || {})[tag] || ['B'];
 }
 
 function fitTagName(tag, detail) {
@@ -91,7 +91,7 @@ function readFit(buffer) {
       const tag = POI_TO_TAG[t.type] || 'other';
       const offered = lettersFor(tag, detail);
       /* 'other' starts unchosen — don't invent Water & food. */
-      const letter = 'other' === tag ? '' : (offered[0] || 'C');
+      const letter = 'other' === tag ? '' : (offered[0] || 'B');
       return {
         tag,
         letter,
@@ -631,7 +631,7 @@ function show(parsed) {
   tags = parsed.tags.map(w => ({
     ...w,
     letter: 'other' === w.tag ? (w.letter || '')
-      : (w.letter || ((window.CC_SCOUT_TAGS || {})[w.tag] || ['C'])[0]),
+      : (w.letter || ((window.CC_SCOUT_TAGS || {})[w.tag] || ['B'])[0]),
     approved: false,
   }));
   /* Each stretch: geometry cut from the ride between the two taps — coordinates

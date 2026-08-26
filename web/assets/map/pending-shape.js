@@ -5,6 +5,7 @@
    ids and clears them before drawing. */
 import { map } from './map-init.js';
 import { D } from './i18n.js';
+import { gradColor } from './util.js';
 
 const LINE = 'cc-pending-shape';
 const CASE = 'cc-pending-shape-case';
@@ -46,7 +47,12 @@ export function showPendingShape(shape, side) {
     .map(p => [+p[1], +p[0]]);
   if (coords.length < 2) return false;
 
-  map.addSource(LINE, { type: 'geojson', data: { type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: coords } } });
+  /* A climb's after-side carries its measured bars: colour the line by them, the
+     way the live climb layer does (render.js drawClimbLine), so the curator sees
+     the climb as it will look, not a flat violet stroke (owner 2026-08-25). */
+  const bars = ('after' === _side && Array.isArray(s.grad)) ? s.grad.filter(g => isFinite(+g)) : [];
+  const graded = bars.length > 0;
+  map.addSource(LINE, { type: 'geojson', lineMetrics: graded, data: { type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: coords } } });
   /* Casing: cream for an unrecorded before (legend red dots); dark ink otherwise. */
   map.addLayer({
     id: CASE, type: 'line', source: LINE,
@@ -58,7 +64,14 @@ export function showPendingShape(shape, side) {
   map.addLayer({
     id: LINE, type: 'line', source: LINE,
     layout: { 'line-cap': 'round', 'line-join': 'round' },
-    paint: {
+    paint: graded
+      ? (() => {
+          const n = bars.length;
+          const expr = ['step', ['line-progress'], gradColor(+bars[0])];
+          for (let i = 1; i < n; i++) { expr.push(i / n); expr.push(gradColor(+bars[i])); }
+          return { 'line-width': 6, 'line-opacity': 0.95, 'line-gradient': expr };
+        })()
+      : {
       /* Before: muted dashed (unrecorded = legend red dots). After: solid violet. */
       'line-color': 'before' !== _side ? '#B25BE8' : (s.unrecorded ? '#D92D20' : '#8a8d7d'),
       'line-width': 6,

@@ -10,6 +10,8 @@ use App\Catalog\CatalogProvider;
 use App\Catalog\ConfirmationStance;
 use App\Catalog\Entity\Item;
 use App\Catalog\Entity\Submission;
+use App\Catalog\Import\OsmCandidates;
+use App\Catalog\Import\OsmLinker;
 use App\Catalog\ItemType;
 use App\Catalog\SubmissionType;
 use App\Community\ItemConfirmationService;
@@ -24,6 +26,7 @@ use App\Moderation\MissingQuestionException;
 use App\Moderation\ModerationScope;
 use App\Moderation\ModerationScopeProvider;
 use App\Moderation\ModerationService;
+use App\Moderation\OsmUnansweredException;
 use App\Moderation\OutOfScopeException;
 use App\Moderation\RetentionService;
 use App\Moderation\RouteQueue;
@@ -34,8 +37,10 @@ use App\Routing\LocalePrefix;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Uid\Uuid;
@@ -62,9 +67,13 @@ final class ModerateController extends AbstractController
         private readonly UrgentWithholdBreaker $breaker,
         private readonly EntityManagerInterface $em,
         private readonly ItemConfirmationService $confirmations,
+        private readonly OsmLinker $linker,
+        private readonly OsmCandidates $osmCandidates,
         private readonly PageSize $pageSize,
-        #[Autowire('%env(default::CC_RULEBOOK_PDF_URL)%')]
-        private readonly ?string $rulebookPdfUrl = null,
+        #[Autowire('%kernel.project_dir%')]
+        private readonly string $projectDir = '',
+        #[Autowire('%env(default::CC_RULEBOOK_PDF_PATH)%')]
+        private readonly ?string $rulebookPdfPath = null,
     ) {
     }
 
@@ -171,9 +180,56 @@ final class ModerateController extends AbstractController
             'page_title' => 'meta.moderate_rulebook_title',
             'page_description' => 'meta.moderate_rulebook_description',
             'nav_active' => 'moderate_rulebook',
-            'rulebook_pdf' => $this->rulebookPdfUrl,
+            'rulebook_pdf' => null !== $this->rulebookPdfFile(),
             ...$this->deskBadges($user, $scope),
         ]);
+    }
+
+    /**
+     * The rulebook as a PDF, streamed to curators only (owner 2026-08-26).
+     *
+     * The file lives on the server at CC_RULEBOOK_PDF_PATH, outside public/ and
+     * outside the repository: a file under public/ is readable by anyone who
+     * has the URL, and the rulebook is a script for talking a curator into a
+     * removal. This action is behind the class-level ROLE_CURATOR gate, marks
+     * the response private and uncacheable, and tells crawlers to stay away.
+     * 404 when nothing is configured or the file is missing; the page above
+     * shows no link in that case, so nobody is sent here to find out.
+     */
+    #[Route('/moderate/rulebook.pdf', name: 'moderate_rulebook_pdf', methods: ['GET'])]
+    public function rulebookPdf(): BinaryFileResponse
+    {
+        $file = $this->rulebookPdfFile();
+        if (null === $file) {
+            throw $this->createNotFoundException('No rulebook PDF is configured.');
+        }
+
+        $response = new BinaryFileResponse($file);
+        $response->headers->set('Content-Type', 'application/pdf');
+        $response->setContentDisposition(ResponseHeaderBag::DISPOSITION_INLINE, 'moderator-rulebook.pdf');
+        $response->headers->set('Cache-Control', 'private, no-store');
+        $response->headers->set('X-Robots-Tag', 'noindex, nofollow');
+
+        return $response;
+    }
+
+    /**
+     * Absolute path of the configured rulebook PDF, or null when unset or
+     * absent. A relative CC_RULEBOOK_PDF_PATH is taken from the project root,
+     * so the committed default (`var/private/...`) works on every checkout
+     * without naming a machine.
+     */
+    private function rulebookPdfFile(): ?string
+    {
+        $path = trim((string) $this->rulebookPdfPath);
+        if ('' === $path) {
+            return null;
+        }
+        if (!str_starts_with($path, '/')) {
+            $path = rtrim($this->projectDir, '/').'/'.$path;
+        }
+
+        return is_file($path) && is_readable($path) ? $path : null;
     }
 
     /**
@@ -206,6 +262,8 @@ final class ModerateController extends AbstractController
         $matching = $this->queue->countFiltered($scope, $country ?: null, $region ?: null, $type ?: null, $q ?: null, $byUser);
         $items = $this->queue->filtered($scope, $country ?: null, $region ?: null, $type ?: null, $q ?: null, $page, $perPage, $byUser);
 
+        $items = $this->withOsmQuestion($items);
+
         // docs/specs/moderation-and-contribution.md §5.4 — decide from the map drawer, not this list.
         return $this->render('moderate/index.html.twig', [
             'page_title' => 'meta.moderate_title',
@@ -222,6 +280,122 @@ final class ModerateController extends AbstractController
             'receipt' => null,
             ...$this->deskBadges($user, $scope),
         ], Response::HTTP_OK === $status ? null : new Response('', $status));
+    }
+
+    /**
+     * Attach the OSM question to every pending new-place card that still needs
+     * an answer (catalog-data-model.md §5b). One query for the items, one
+     * spatial lookup per unanswered card; the queue page is small.
+     *
+     * @param list<array<string, mixed>> $items
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function withOsmQuestion(array $items): array
+    {
+        $ids = [];
+        foreach ($items as $card) {
+            if (SubmissionType::NewItem->value === ($card['type'] ?? null)
+                && \in_array($card['status'] ?? '', ['pending', 'needs_info'], true)
+                && null !== ($card['itemId'] ?? null)) {
+                $ids[] = (int) $card['itemId'];
+            }
+        }
+        if ([] === $ids) {
+            return $items;
+        }
+
+        // Every new place gets an OSM chip, in one of three states: open (no
+        // answer yet: the row offers the candidates and "Not in OSM"), linked,
+        // or none. Until 2026-08-25 only the open state was shown, so a row
+        // that had been answered looked exactly like one nobody had asked about.
+        /** @var list<array{id: string|int, osm_ref: string|null, osm_checked_at: string|null}> $rows */
+        $rows = $this->em->getConnection()->fetchAllAssociative(
+            'SELECT id, osm_ref, osm_checked_at FROM item WHERE id IN (:ids)',
+            ['ids' => $ids],
+            ['ids' => \Doctrine\DBAL\ArrayParameterType::INTEGER],
+        );
+        // Stored once per row, never asked of the coverage table per list view
+        // (catalog-data-model.md §5b, owner 2026-08-25).
+        $candidates = $this->osmCandidates->forItems($ids);
+        $osm = [];
+        foreach ($rows as $row) {
+            $id = (int) $row['id'];
+            if (null === $row['osm_checked_at']) {
+                $osm[$id] = ['state' => 'open', 'ref' => null, 'candidates' => $candidates[$id] ?? []];
+            } elseif (\is_string($row['osm_ref']) && '' !== $row['osm_ref']) {
+                $osm[$id] = ['state' => 'linked', 'ref' => $row['osm_ref'], 'candidates' => []];
+            } else {
+                $osm[$id] = ['state' => 'none', 'ref' => null, 'candidates' => []];
+            }
+        }
+
+        foreach ($items as &$card) {
+            $itemId = $card['itemId'] ?? null;
+            if (null !== $itemId && \array_key_exists((int) $itemId, $osm)) {
+                $card['osm'] = $osm[(int) $itemId];
+            }
+        }
+
+        return $items;
+    }
+
+    /**
+     * The curator answers the OSM question: a ref links it, an empty ref is
+     * "this place is not in OSM". Both are one click, neither is a default
+     * (catalog-data-model.md §5b).
+     */
+    #[Route('/moderate/osm-answer', name: 'moderate_osm_answer', methods: ['POST'])]
+    public function osmAnswer(Request $request): Response
+    {
+        if (!$this->isCsrfTokenValid('moderate-osm-answer', (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Invalid CSRF token.');
+        }
+
+        /** @var User $curator */
+        $curator = $this->getUser();
+        $submissionId = $request->request->getInt('submission_id');
+        $ref = trim((string) $request->request->get('ref'));
+
+        // A hand-made ref must still be an OSM object the poi endpoint would
+        // serve; anything else could not be the identity of anything.
+        if ('' !== $ref && 1 !== preg_match('~^(node|way)/\d+$~', $ref)) {
+            $this->addFlash('danger', 'moderate.osm.bad_ref');
+
+            return $this->redirectToRoute('moderate');
+        }
+
+        $submission = $this->em->find(Submission::class, $submissionId);
+        if (null === $submission || null === $submission->getItemId()) {
+            $this->addFlash('danger', 'moderate.osm.bad_ref');
+
+            return $this->redirectToRoute('moderate');
+        }
+        // Same boundary decide() enforces, before anything is written.
+        if (!$this->scopeProvider->allowsRegion($this->scopeProvider->scopeFor($curator), $submission->getRegionId())) {
+            throw $this->createAccessDeniedException('Out of moderation scope.');
+        }
+
+        $item = $this->em->find(Item::class, $submission->getItemId());
+        if (null === $item) {
+            $this->addFlash('danger', 'moderate.osm.bad_ref');
+
+            return $this->redirectToRoute('moderate');
+        }
+
+        // Identity is exclusive: linking to an object another served row
+        // already claims would mint the duplicate the desk exists to remove.
+        if ('' !== $ref && $this->linker->refIsTaken($ref, $item->getLetter(), (int) $item->getId())) {
+            $this->addFlash('danger', 'moderate.osm.ref_taken');
+
+            return $this->redirectToRoute('moderate');
+        }
+
+        $item->answerOsm('' === $ref ? null : $ref);
+        $this->em->flush();
+        $this->addFlash('success', '' === $ref ? 'moderate.osm.answered_none' : 'moderate.osm.answered_linked');
+
+        return $this->redirectToRoute('moderate');
     }
 
     #[Route('/moderate/decide', name: 'moderate_decide', methods: ['POST'])]
@@ -255,6 +429,16 @@ final class ModerateController extends AbstractController
                 }
 
                 $this->addFlash('error', 'moderate.error.needs_info_note_required');
+
+                return $this->redirectToRoute('moderate');
+            } catch (OsmUnansweredException) {
+                // catalog-data-model.md §5b - the card shows the question; this
+                // is the curator clicking approve before answering it.
+                if ($wantsJson) {
+                    return $this->json(['error' => 'osm_unanswered'], Response::HTTP_UNPROCESSABLE_ENTITY);
+                }
+
+                $this->addFlash('error', 'moderate.error.osm_unanswered');
 
                 return $this->redirectToRoute('moderate');
             } catch (AlreadyDecidedException|\InvalidArgumentException|\LogicException) {

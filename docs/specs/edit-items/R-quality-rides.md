@@ -1,12 +1,12 @@
 <!-- SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 -->
 
-# Edit spec — K · Quality rides (recommended routes)
+# Edit spec — R · Quality rides (recommended routes)
 
 **Status:** canonical reference · **Audience:** contributors to Cycling Commons
 
-- **Catalog layer:** K · Quality rides
+- **Catalog layer:** R · Quality rides
 - **Map depiction:** line, icon ★, colour #FF5A1F (brand orange); `unverified` routes carry a **"proposed"** badge
-- **Editable:** **no — curator-only.** K is the deliberate exception to the every-type-has-an-edit-flow rule: a route is a *curated composition*, not an atomic map feature. Riders **propose**, **vote**, **confirm rides**, **download GPX**, and **suggest corrections** — they never edit route data. Design source of truth: [`../route-domain.md`](../route-domain.md).
+- **Editable:** **no — curator-only.** R is the deliberate exception to the every-type-has-an-edit-flow rule: a route is a *curated composition*, not an atomic map feature. Riders **propose**, **vote**, **confirm rides**, **download GPX**, and **suggest corrections** — they never edit route data. Design source of truth: [`../route-domain.md`](../route-domain.md).
 - **Lifecycle:** route-specific state machine (NOT the shared item funnel): `submitted` (rider proposal) → curator desk approval → `unverified` ("proposed" on the map) → X independent **"I rode this"** confirmations → `verified` (votable) · plus `rejected` and `retired`. A configurable **per-region cap (~30 active routes)** bounds supply; a full region admits a new route only by retiring a weaker one.
 
 ## What it is
@@ -20,7 +20,7 @@ bike type) and the **ride-confirmation**, not the upload.
 The historical model — "contributed GPX loops" editable via
 `improve.html?item=ride` — is retired. It was mechanically broken (the
 route-id/item-id collision, 2026-07-07 security review critical #1; `/improve`
-now refuses `type=K`) and conceptually wrong (rider-editable route data is how
+now refuses `type=R`) and conceptually wrong (rider-editable route data is how
 a region drowns in 1000+ unvetted routes).
 
 ## How a route is born

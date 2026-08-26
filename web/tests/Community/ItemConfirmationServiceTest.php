@@ -51,7 +51,7 @@ final class ItemConfirmationServiceTest extends KernelTestCase
 
     public function testRecordCreatesAConfirmationAndTally(): void
     {
-        $water = $this->item('C');
+        $water = $this->item('B');
         $this->service->record($water, $this->user('a@t.test'), ConfirmationStance::Potable);
 
         $snap = $this->service->snapshot($water, null);
@@ -62,7 +62,7 @@ final class ItemConfirmationServiceTest extends KernelTestCase
 
     public function testStanceIsOnePerUserAndSwitchable(): void
     {
-        $water = $this->item('C');
+        $water = $this->item('B');
         $u = $this->user('b@t.test');
         $this->service->record($water, $u, ConfirmationStance::Potable);
         $this->service->record($water, $u, ConfirmationStance::NotPotable);
@@ -76,7 +76,7 @@ final class ItemConfirmationServiceTest extends KernelTestCase
 
     public function testTallyCountsAcrossUsers(): void
     {
-        $water = $this->item('C');
+        $water = $this->item('B');
         $this->service->record($water, $this->user('c1@t.test'), ConfirmationStance::Potable);
         $this->service->record($water, $this->user('c2@t.test'), ConfirmationStance::Potable);
         $this->service->record($water, $this->user('c3@t.test'), ConfirmationStance::NotPotable);
@@ -110,7 +110,7 @@ final class ItemConfirmationServiceTest extends KernelTestCase
      */
     public function testAFormAnswerIsRememberedButNotCounted(): void
     {
-        $water = $this->item('C');
+        $water = $this->item('B');
         $submitter = $this->user('form-answer@t.test');
 
         $this->service->recordFromSubmission($water, (int) $submitter->getId(), ConfirmationStance::Potable);
@@ -127,7 +127,7 @@ final class ItemConfirmationServiceTest extends KernelTestCase
 
     public function testARiderConfirmationPromotesTheSubmittersOwnRow(): void
     {
-        $water = $this->item('C');
+        $water = $this->item('B');
         $submitter = $this->user('promote@t.test');
         $this->service->recordFromSubmission($water, (int) $submitter->getId(), ConfirmationStance::Potable);
 
@@ -144,7 +144,7 @@ final class ItemConfirmationServiceTest extends KernelTestCase
 
     public function testAFormAnswerForAVanishedAccountIsANoOp(): void
     {
-        $water = $this->item('C');
+        $water = $this->item('B');
         $this->service->recordFromSubmission($water, 987654321, ConfirmationStance::Potable);
 
         self::assertSame(0, $this->service->snapshot($water, null)['total']);
@@ -152,7 +152,7 @@ final class ItemConfirmationServiceTest extends KernelTestCase
 
     public function testRejectsStanceNotAllowedForType(): void
     {
-        $water = $this->item('C');
+        $water = $this->item('B');
         $this->expectException(\InvalidArgumentException::class);
         $this->service->record($water, $this->user('e@t.test'), ConfirmationStance::Exists);
     }

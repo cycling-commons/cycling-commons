@@ -7,7 +7,7 @@ import { openClimbProfile } from './climb-profile.js';
 import { uKm, uM, uElev, uKmValue, uElevValue, uDistUnit } from './units.js';
 import { map } from './map-init.js';
 import { CATALOG, CITIES } from './catalog.js';
-import { pinEl } from './icons.js';
+import { layerGlyph, pinEl } from './icons.js';
 import { itemLinks } from './links.js';
 import { sheet } from './sheet.js';
 import { openLightbox } from './lightbox.js';
@@ -91,7 +91,7 @@ function linkValue(href, text){
 }
 /* docs/specs/climb-elevation.md §5 — steepest figure carries the window it was measured over. */
 function steepValue(letter, name, value, src){
-  if(letter !== 'B') return value;
+  if(letter !== 'N') return value;
   // Ascent is stored in metres; write it in the reader's unit.
   if(name === 'gain') return uElev(value);
   if(name !== 'maxGradient') return value;
@@ -189,7 +189,7 @@ export function osmDrawer(layer, p, ll, src){
   const kindLbl = p.serviceKind && ({shop:D.kindShop, station:D.kindStation, pump:D.kindPump}[p.serviceKind] || lbl);
   const typeLbl = kindLbl || p.t || lbl;
   let rec=[{label:D.type||'Type', value:typeLbl, method: pivot?'Tourisme Wallonie':'OSM'}];
-  if(p.town && layer.letter!=='E') rec.push({label:D.town||'Town', value:p.town});  // docs/specs/coverage-provider.md §2 — no province row when region_id is null (no Wallonia fallback).
+  if(p.town && layer.letter!=='O') rec.push({label:D.town||'Town', value:p.town});  // docs/specs/coverage-provider.md §2 — no province row when region_id is null (no Wallonia fallback).
   if(p.prov) rec.push({label:D.province||'Province', value:p.prov});
   // Scenic-view facts OSM already holds (docs/specs/coverage-provider.md §5):
   // altitude, which way a viewpoint faces, how far a waterfall drops. Written
@@ -238,7 +238,7 @@ export function waterDrawer(p, ll){
   const rec=[{label:D.type||'Type', value:(p.type||p.t) ? trVal(p.type||p.t) : (D.drinkingWater||'Drinking water'), method: p.type?undefined:'OSM'}, potable,
     {label:D.verify||'Verify', value:D.verifyWater||'Cross-check tap-water quality with the regional utility / fountain directory', links:WATER_CHECK_LINKS[p.cc]||[]}];
   // Remaining WaterFood fields; type and potable are structural above.
-  rec.push(...schemaRows('C', p, p.id, {skip:['type','potable']}));
+  rec.push(...schemaRows('B', p, p.id, {skip:['type','potable']}));
   const d={name:p.n||p.t||D.drinkingWater||'Drinking water', headline:(D.headlineDrinking||'drinking water')+' · '+(community?sourceLabel(p.srcType):'OSM'), cur:!!p.v, geom:{ll:[ll.lat,ll.lng]},
     record:rec,
     source: community?sourceLabel(p.srcType):'OpenStreetMap (amenity=drinking_water / drinking_water=yes)'};
@@ -321,8 +321,8 @@ function buildRecord(layer, f){
   </figure>` : (f.photoPending ? waitingPhoto(f.photoPending) : addPhoto);
   let recs = f.record || [];
   if(layer.key==='climbs'){
-    // docs/specs/map-and-search.md §6.2 — climb attributes from CC_FIELD_SCHEMA[B]; filled rows replace stale pre-baked ones.
-    const attrRows = schemaRows('B', f, f.id);
+    // docs/specs/map-and-search.md §6.2 — climb attributes from CC_FIELD_SCHEMA[N]; filled rows replace stale pre-baked ones.
+    const attrRows = schemaRows('N', f, f.id);
     const attrLabels = new Set(attrRows.filter(r=>!r.empty).map(r=>r.label));
     recs = recs.filter(r=>!attrLabels.has(r.label)).concat(attrRows);
   }
@@ -367,7 +367,7 @@ function buildRecord(layer, f){
         + (ell ? `&lat=${ell[0]}&lng=${ell[1]}` : '');
       edit = `<a class="cc-d-act edit" href="/improve?${editQ}">✎ ${D.editItem||'Edit this item'}</a>`;
       /* Fix location only for point items with coords, never climbs (editor is live on open). */
-      if(ell && 'B' !== layer.letter){
+      if(ell && 'N' !== layer.letter){
         edit += `<a class="cc-d-act fixloc" href="/improve?${editQ}&fix=location">◎ ${D.fixLocation||'Fix location'}</a>`;
       }
     }
@@ -397,6 +397,10 @@ function buildRecord(layer, f){
   if(layer.pendingLayer && f.pending){
     // docs/specs/security-architecture.md §4.2 — escape every interpolated submission field before innerHTML.
     const s=f.pending;
+    /* A brand-new item comes with its would-be feature (`s.preview`, server-side,
+       curators only): it is rendered below like a live item, so the raw field dump
+       that used to stand in for it is not shown twice. */
+    const previewed = 'new' === s.type && !!(s.preview && (s.preview.climb || s.preview.feature));
     // Edit-bridge binds to s.itemId (target catalog item), never the submission id.
     edit = (s.itemId != null)
       ? `<a class="cc-d-act edit" href="/improve?type=${encodeURIComponent(s.letter)}&item=${encodeURIComponent(s.itemId)}&name=${encodeURIComponent(s.title)}&lat=${encodeURIComponent(s.lat)}&lng=${encodeURIComponent(s.lng)}">✎ ${D.editItem||'Edit this item'}</a>`
@@ -405,7 +409,7 @@ function buildRecord(layer, f){
     // Proposed change: this submission, not item history. Gate on `now`, not `was && now`.
     /* One row per changed field; labels from the same schema as the item rows. */
     const chList = Array.isArray(s.changes) ? s.changes : [];
-    const diff = chList.length
+    const diff = (chList.length && !previewed)
       ? `<div class="cc-mod-diff"><div class="cc-mod-diff-h">${D.proposedChange||'Proposed change'}</div>
           <dl class="cc-mod-chg">${chList.map(c=>`
             <dt>${escPend(fieldLabelFor(s.letter, c.key))}</dt>
@@ -458,6 +462,15 @@ function buildRecord(layer, f){
       : '';
     /* Edit submissions carry the target item's own rows (same renderer/escaping). */
     let context = '';
+    if(previewed){
+      const target = s.preview.climb || s.preview.feature;
+      const src = target.properties ? Object.assign({}, target.properties, {geom:{ll:target.geometry && target.geometry.coordinates ? [target.geometry.coordinates[1], target.geometry.coordinates[0]] : null}}) : target;
+      const rows = recRowsHtml(schemaRows(s.letter, src, null));
+      const grad = src.grad ? gradStrip(src.grad, src) : '';
+      const km = (src.length ? Number(src.length)/1000 : 0) || routeLengthKm(src.route);
+      const len = km ? `<div class="cc-elev-cap">${D.climbLength||'Length'} · ${uKm(km)}</div>` : '';
+      context = `<div class="cc-mod-ctx"><div class="cc-mod-ctx-h">${D.itemProposed||'This item, as proposed'}</div>${grad}${len}${rows?`<ul class="cc-d-rec">${rows}</ul>`:''}</div>`;
+    }
     if('new' !== s.type && s.itemId != null){
       const lyr = CATALOG.find(l => l.letter === s.letter);
       const target = lyr && (lyr.features||[]).find(x => x.id != null && String(x.id) === String(s.itemId));
@@ -474,7 +487,7 @@ function buildRecord(layer, f){
     /* Also-confirm on approve (not water, not K, not absence). Unticked by default. */
     const NEGATIVE_NOW = ['Out of order', 'Closed', 'Not there anymore', 'Gone — clear now', 'Reduced'];
     const assertsAbsence = chList.some(c => NEGATIVE_NOW.includes(c.now));
-    const alsoConfirm = ('C' !== s.letter && 'K' !== s.letter && !assertsAbsence)
+    const alsoConfirm = ('B' !== s.letter && 'R' !== s.letter && !assertsAbsence)
       ? `<label class="cc-mod-also"><input type="checkbox" class="cc-mod-confirm-cb"> ${D.alsoConfirm||'Also confirm — I know this place (counts as verified)'}</label>`
       : '';
     /* Curator-only decide chrome; a rider sees a preview of their own pending pin. */
@@ -567,7 +580,7 @@ function buildRecord(layer, f){
          </svg></button>`
     : '';
 
-  return `<div class="cc-d-head"><span class="cc-d-type" style="--c:${layer.color};color:${txtOn(layer.color)}"><i class="cc-g">${layer.icon}</i> ${layer.label}</span>${share}</div>
+  return `<div class="cc-d-head"><span class="cc-d-type" style="--c:${layer.color};color:${txtOn(layer.color)}"><i class="cc-g">${layerGlyph(layer)}</i> ${layer.label}</span>${share}</div>
     <div class="cc-d-name">${escPend(f.name)}</div>${cur}${photo}${desc}${diff}${elev}${len}${grad}
     <ul class="cc-d-rec">${rows}</ul>${fresh}${up}
     <div class="cc-d-src">${D.source||'Source'} · ${who || srcLine(f, osmHref)}${

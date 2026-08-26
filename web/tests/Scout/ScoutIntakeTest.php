@@ -62,7 +62,7 @@ final class ScoutIntakeTest extends WebTestCase
             'CONTENT_TYPE' => 'application/json',
             'HTTP_X_CC_TOKEN' => 'nope',
             'HTTP_SEC_FETCH_SITE' => 'cross-site',
-        ], json_encode(['tag' => 'notice', 'letter' => 'F', 'lat' => 50.5, 'lng' => 6.05, 'details' => ['name' => 'X']], \JSON_THROW_ON_ERROR));
+        ], json_encode(['tag' => 'notice', 'letter' => 'E', 'lat' => 50.5, 'lng' => 6.05, 'details' => ['name' => 'X']], \JSON_THROW_ON_ERROR));
         self::assertResponseStatusCodeSame(403);
     }
 
@@ -73,7 +73,7 @@ final class ScoutIntakeTest extends WebTestCase
 
         $this->post($client, [
             'tag' => 'resupply',
-            'letter' => 'C',
+            'letter' => 'B',
             'lat' => 50.49,
             'lng' => 6.04,
             'observedAt' => '2026-08-10T09:15:00Z',
@@ -84,7 +84,7 @@ final class ScoutIntakeTest extends WebTestCase
         $em = static::getContainer()->get(EntityManagerInterface::class);
         $submission = $em->getRepository(Submission::class)->findOneBy(['title' => 'Fontaine de Sinsin']);
         self::assertNotNull($submission, 'a Scout tag lands in the ordinary queue');
-        self::assertSame('C', $submission->getLetter());
+        self::assertSame('B', $submission->getLetter());
 
         /** @var Item $item */
         $item = $em->getRepository(Item::class)->find($submission->getItemId());
@@ -102,7 +102,7 @@ final class ScoutIntakeTest extends WebTestCase
         $this->login($client, 'date');
 
         $this->post($client, [
-            'tag' => 'scenery', 'letter' => 'I', 'lat' => 50.51, 'lng' => 6.06,
+            'tag' => 'scenery', 'letter' => 'P', 'lat' => 50.51, 'lng' => 6.06,
             'observedAt' => '2026-01-12T14:03:00Z',
             'details' => ['name' => 'Vue sur la vallée'],
         ]);
@@ -199,7 +199,7 @@ final class ScoutIntakeTest extends WebTestCase
     public function testAnOtherTagAutoFilesAsANotice(): void
     {
         /* 'Other' asks for words, not a category (owner, 2026-08-18): no
-           letter arrives, the server files it as an F notice with hazardType
+           letter arrives, the server files it as an E notice with hazardType
            Other, and the curator's read of the description decides. */
         $client = static::createClient();
         $this->login($client, 'other-note');
@@ -213,7 +213,7 @@ final class ScoutIntakeTest extends WebTestCase
         $em = static::getContainer()->get(EntityManagerInterface::class);
         $submission = $em->getRepository(Submission::class)->findOneBy(['title' => 'Loose planks on the small bridge']);
         self::assertNotNull($submission);
-        self::assertSame('F', $submission->getLetter());
+        self::assertSame('E', $submission->getLetter());
         /** @var Item $item */
         $item = $em->getRepository(Item::class)->find($submission->getItemId());
         self::assertSame('Other', $item->getAttributes()['hazardType'] ?? null);
@@ -227,7 +227,7 @@ final class ScoutIntakeTest extends WebTestCase
         $this->login($client, 'point-line');
 
         $this->post($client, [
-            'tag' => 'resupply', 'letter' => 'C', 'lat' => 50.49, 'lng' => 6.04,
+            'tag' => 'resupply', 'letter' => 'B', 'lat' => 50.49, 'lng' => 6.04,
             'details' => ['name' => 'Fontaine'],
             'segment' => json_encode(self::stretchGeometry(), \JSON_THROW_ON_ERROR),
         ]);
@@ -257,7 +257,7 @@ final class ScoutIntakeTest extends WebTestCase
         $this->login($client, 'guard'.$key);
 
         $this->post($client, [
-            'tag' => 'notice', 'letter' => 'F', 'lat' => 50.5, 'lng' => 6.05,
+            'tag' => 'notice', 'letter' => 'E', 'lat' => 50.5, 'lng' => 6.05,
             'details' => ['name' => 'Bad corner'],
             $key => [[6.0, 50.4], [6.1, 50.5]],
         ]);
@@ -282,12 +282,12 @@ final class ScoutIntakeTest extends WebTestCase
         $this->login($client, 'letter');
 
         $this->post($client, [
-            'tag' => 'scenery', 'letter' => 'C', 'lat' => 50.5, 'lng' => 6.05,
+            'tag' => 'scenery', 'letter' => 'B', 'lat' => 50.5, 'lng' => 6.05,
             'details' => ['name' => 'Actually a fountain'],
         ]);
 
         self::assertResponseIsSuccessful();
-        self::assertSame('C', static::getContainer()->get(EntityManagerInterface::class)
+        self::assertSame('B', static::getContainer()->get(EntityManagerInterface::class)
             ->getRepository(Submission::class)->findOneBy(['title' => 'Actually a fountain'])->getLetter());
     }
 
@@ -296,8 +296,8 @@ final class ScoutIntakeTest extends WebTestCase
         // Best first, everything after: the narrowing is guidance, and the
         // guidance must not become a cage.
         $offer = ScoutTag::offerFor('scenery', 2);
-        self::assertSame('J', $offer[0], 'SCENERY · HISTORY leads with history & culture');
-        self::assertContains('C', $offer, 'and a mis-tap can still become water & food');
+        self::assertSame('Q', $offer[0], 'SCENERY · HISTORY leads with history & culture');
+        self::assertContains('B', $offer, 'and a mis-tap can still become water & food');
         self::assertNotContains('A', $offer, 'road surface is not reachable from a single point');
     }
 
@@ -307,7 +307,7 @@ final class ScoutIntakeTest extends WebTestCase
         $this->login($client, 'noname');
 
         $this->post($client, [
-            'tag' => 'notice', 'letter' => 'F', 'lat' => 50.5, 'lng' => 6.05,
+            'tag' => 'notice', 'letter' => 'E', 'lat' => 50.5, 'lng' => 6.05,
             'details' => ['name' => '   '],
         ]);
 
@@ -318,7 +318,7 @@ final class ScoutIntakeTest extends WebTestCase
     {
         $client = static::createClient();
         $this->post($client, [
-            'tag' => 'notice', 'letter' => 'F', 'lat' => 50.5, 'lng' => 6.05,
+            'tag' => 'notice', 'letter' => 'E', 'lat' => 50.5, 'lng' => 6.05,
             'details' => ['name' => 'Anonymous'],
         ]);
 
@@ -345,7 +345,7 @@ final class ScoutIntakeTest extends WebTestCase
         $this->login($client, 'photo');
 
         $this->post($client, [
-            'tag' => 'scenery', 'letter' => 'I', 'lat' => 52.0, 'lng' => 4.0,
+            'tag' => 'scenery', 'letter' => 'P', 'lat' => 52.0, 'lng' => 4.0,
             'details' => ['name' => 'Waterkering'],
             'mediaIds' => '00000000-0000-4000-8000-000000000000',
         ]);
@@ -393,12 +393,12 @@ final class ScoutIntakeTest extends WebTestCase
     public function testASceneryTagAboutHistoryBecomesHistoryAndCulture(): void
     {
         // The device's submenu says which kind of view it was, and HISTORY is
-        // letter J — not the scenic-views letter the tag type alone implies.
-        // Offering only I made the rider re-file their own answer.
-        self::assertSame(['J', 'I'], ScoutTag::lettersFor('scenery', 2));
-        self::assertSame(['I'], ScoutTag::lettersFor('scenery', 4), 'a VIEW is a scenic view');
+        // letter Q — not the scenic-views letter the tag type alone implies.
+        // Offering only P made the rider re-file their own answer.
+        self::assertSame(['Q', 'P'], ScoutTag::lettersFor('scenery', 2));
+        self::assertSame(['P'], ScoutTag::lettersFor('scenery', 4), 'a VIEW is a scenic view');
         self::assertSame(['D'], ScoutTag::lettersFor('resupply', 3), 'REPAIR is a bike service');
-        self::assertSame(['C'], ScoutTag::lettersFor('resupply', 1), 'WATER is water & food');
+        self::assertSame(['B'], ScoutTag::lettersFor('resupply', 1), 'WATER is water & food');
     }
 
     public function testAClosureArrivesKnowingItsOwnDuration(): void
@@ -410,7 +410,7 @@ final class ScoutIntakeTest extends WebTestCase
         $this->login($client, 'closure');
 
         $this->post($client, [
-            'tag' => 'closure', 'letter' => 'F', 'detail' => 3,
+            'tag' => 'closure', 'letter' => 'E', 'detail' => 3,
             'lat' => 52.0, 'lng' => 4.0,
             'details' => ['name' => 'Dijk dicht'],
         ]);
@@ -430,7 +430,7 @@ final class ScoutIntakeTest extends WebTestCase
         $this->login($client, 'potholes');
 
         $this->post($client, [
-            'tag' => 'notice', 'letter' => 'F', 'detail' => 1,
+            'tag' => 'notice', 'letter' => 'E', 'detail' => 1,
             'lat' => 52.0, 'lng' => 4.0,
             'details' => ['name' => 'Gatenweg'],
         ]);
@@ -446,13 +446,13 @@ final class ScoutIntakeTest extends WebTestCase
     public function testASubmenuAnswerNeverFollowsATagToAnotherLetter(): void
     {
         // Re-filing is allowed; carrying the old answer along is not.
-        // `hazardType` does not exist on I, and the submission would be refused
+        // `hazardType` does not exist on P, and the submission would be refused
         // for something the rider never said.
         $client = static::createClient();
         $this->login($client, 'refiled');
 
         $this->post($client, [
-            'tag' => 'notice', 'letter' => 'I', 'detail' => 1,
+            'tag' => 'notice', 'letter' => 'P', 'detail' => 1,
             'lat' => 52.0, 'lng' => 4.0,
             'details' => ['name' => 'Refiled as a view'],
         ]);
@@ -460,7 +460,7 @@ final class ScoutIntakeTest extends WebTestCase
         self::assertResponseIsSuccessful();
         $em = static::getContainer()->get(EntityManagerInterface::class);
         $submission = $em->getRepository(Submission::class)->findOneBy(['title' => 'Refiled as a view']);
-        self::assertSame('I', $submission->getLetter());
+        self::assertSame('P', $submission->getLetter());
         /** @var Item $item */
         $item = $em->getRepository(Item::class)->find($submission->getItemId());
         self::assertArrayNotHasKey('hazardType', $item->getAttributes());

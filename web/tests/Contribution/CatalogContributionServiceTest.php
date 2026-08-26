@@ -57,9 +57,9 @@ final class CatalogContributionServiceTest extends KernelTestCase
     public function testClimbSubmissionCreatesItemAndSubmissionAtomically(): void
     {
         $region = $this->wallonia();
-        $receipt = $this->service->submit('climb', [
-            'fName' => 'Côte du Test', 'fLen' => 3.1, 'fGain' => 200, 'fAvg' => '6.4',
-            'fMax' => 12, 'fSurface' => 'Asphalt', 'fNote' => 'Steady, honest climb.',
+        $receipt = $this->service->submit('add', [
+            'type' => 'climbs',
+            'details' => ['name' => 'Côte du Test', 'surface' => 'Asphalt', 'correction' => 'Steady, honest climb.'],
             'lat' => '50.47', 'lng' => '5.86', 'place' => 'Testville',
         ], $this->user());
 
@@ -70,7 +70,7 @@ final class CatalogContributionServiceTest extends KernelTestCase
         self::assertNotNull($sub);
         self::assertSame(SubmissionType::NewItem, $sub->getType());
         self::assertSame(SubmissionStatus::Pending, $sub->getStatus());
-        self::assertSame('B', $sub->getLetter());
+        self::assertSame('N', $sub->getLetter());
         self::assertSame('BE', $sub->getCountryCode());
         self::assertSame($region->getId(), $sub->getRegionId());
         self::assertNotNull($sub->getItemId());
@@ -84,8 +84,8 @@ final class CatalogContributionServiceTest extends KernelTestCase
 
     public function testClimbSubmissionStoresRouteGradSteep(): void
     {
-        $receipt = $this->service->submit('climb', [
-            'fName' => 'Test Col', 'lat' => 50.51, 'lng' => 5.24,
+        $receipt = $this->service->submit('add', [
+            'type' => 'climbs', 'details' => ['name' => 'Test Col'], 'lat' => 50.51, 'lng' => 5.24,
             'route' => '[[50.51,5.24],[50.52,5.25]]', // [lat,lng]
             'grad' => '[6,9,13]',
             'steep' => '{"at":[50.517,5.247],"pct":"26%","manual":false}',
@@ -116,8 +116,8 @@ final class CatalogContributionServiceTest extends KernelTestCase
 
     public function testPointOutsideAnyRegionGetsEmptyCountry(): void
     {
-        $receipt = $this->service->submit('climb', [
-            'fName' => 'Nowhere climb', 'lat' => '10.0', 'lng' => '10.0',
+        $receipt = $this->service->submit('add', [
+            'type' => 'climbs', 'details' => ['name' => 'Nowhere climb'], 'lat' => '10.0', 'lng' => '10.0',
         ], $this->user());
         $sub = $this->em->find(Submission::class, $receipt->submissionId);
         self::assertSame('', $sub->getCountryCode());
@@ -146,15 +146,15 @@ final class CatalogContributionServiceTest extends KernelTestCase
     public function testClimbRejectsNonNumericLatLng(): void
     {
         $this->expectException(ValidationFailedException::class);
-        $this->service->submit('climb', [
-            'fName' => 'Garbage coords', 'lat' => 'abc', 'lng' => '5.86',
+        $this->service->submit('add', [
+            'type' => 'climbs', 'details' => ['name' => 'Garbage coords'], 'lat' => 'abc', 'lng' => '5.86',
         ], $this->user());
     }
 
     public function testClimbRejectsMissingLatLng(): void
     {
         $this->expectException(ValidationFailedException::class);
-        $this->service->submit('climb', ['fName' => 'No coords'], $this->user());
+        $this->service->submit('add', ['type' => 'climbs', 'details' => ['name' => 'No coords']], $this->user());
     }
 
     public function testImproveOnLineStringItemLocatesAtFirstVertex(): void
@@ -162,7 +162,7 @@ final class CatalogContributionServiceTest extends KernelTestCase
         $this->wallonia();
         // A road-surface style LineString item inside Wallonia. Pre-fix this
         // destructured coordinates as a flat pair → lat/lng = 1.0/1.0.
-        $item = $this->item('B', '{"type":"LineString","coordinates":[[5.86,50.47],[5.87,50.48]]}');
+        $item = $this->item('N', '{"type":"LineString","coordinates":[[5.86,50.47],[5.87,50.48]]}');
 
         $receipt = $this->service->submit('improve', [
             '_item_id' => $item->getId(),
@@ -189,7 +189,7 @@ final class CatalogContributionServiceTest extends KernelTestCase
      */
     public function testImproveResendingIdenticalGeometryChangesNothingAndIsRefused(): void
     {
-        $item = $this->item('B', '{"type":"Point","coordinates":[5.24,50.51]}', [
+        $item = $this->item('N', '{"type":"Point","coordinates":[5.24,50.51]}', [
             'route' => [[50.51, 5.24], [50.52, 5.25]],
             'grad' => [6, 9, 13],
             'steep' => ['at' => [50.517, 5.247], 'pct' => '26%', 'manual' => false],
@@ -219,7 +219,7 @@ final class CatalogContributionServiceTest extends KernelTestCase
      */
     public function testImproveRecordsOnlyTheRealChangeBesideIdenticalGeometry(): void
     {
-        $item = $this->item('B', '{"type":"Point","coordinates":[5.24,50.51]}', [
+        $item = $this->item('N', '{"type":"Point","coordinates":[5.24,50.51]}', [
             'route' => [[50.51, 5.24], [50.52, 5.25]],
             'grad' => [6, 9, 13],
             'steep' => ['at' => [50.517, 5.247], 'pct' => '26%', 'manual' => false],
@@ -243,7 +243,7 @@ final class CatalogContributionServiceTest extends KernelTestCase
 
     public function testImproveWithNoChangeAtAllIsRefused(): void
     {
-        $item = $this->item('B', '{"type":"Point","coordinates":[5.24,50.51]}', ['surface' => 'Asphalt']);
+        $item = $this->item('N', '{"type":"Point","coordinates":[5.24,50.51]}', ['surface' => 'Asphalt']);
 
         try {
             $this->service->submit('improve', [
@@ -272,7 +272,7 @@ final class CatalogContributionServiceTest extends KernelTestCase
      */
     public function testAPastedPhotoUrlIsNotAChangeAndIsDroppedFromThePayload(): void
     {
-        $item = $this->item('B', '{"type":"Point","coordinates":[5.24,50.51]}', ['surface' => 'Asphalt']);
+        $item = $this->item('N', '{"type":"Point","coordinates":[5.24,50.51]}', ['surface' => 'Asphalt']);
 
         try {
             $this->service->submit('improve', [
@@ -292,7 +292,7 @@ final class CatalogContributionServiceTest extends KernelTestCase
 
     public function testImproveClearingPrefilledAttributeRecordsRemoval(): void
     {
-        $item = $this->item('B', '{"type":"Point","coordinates":[5.24,50.51]}', ['surface' => 'Asphalt']);
+        $item = $this->item('N', '{"type":"Point","coordinates":[5.24,50.51]}', ['surface' => 'Asphalt']);
 
         $receipt = $this->service->submit('improve', [
             '_item_id' => $item->getId(),
@@ -310,8 +310,8 @@ final class CatalogContributionServiceTest extends KernelTestCase
     public function testMalformedClimbGeometrySurfacesAsValidationError(): void
     {
         $this->expectException(ValidationFailedException::class);
-        $this->service->submit('climb', [
-            'fName' => 'Bad shape', 'lat' => '50.47', 'lng' => '5.86',
+        $this->service->submit('add', [
+            'type' => 'climbs', 'details' => ['name' => 'Bad shape'], 'lat' => '50.47', 'lng' => '5.86',
             'route' => '{"not":"a list of pairs"}',
         ], $this->user());
     }
@@ -435,8 +435,8 @@ final class CatalogContributionServiceTest extends KernelTestCase
     {
         // Spec §8: state=submitted never reaches /map/catalog.json.
         $this->wallonia();
-        $this->service->submit('climb', [
-            'fName' => 'Côte invisible', 'lat' => '50.47', 'lng' => '5.86',
+        $this->service->submit('add', [
+            'type' => 'climbs', 'details' => ['name' => 'Côte invisible'], 'lat' => '50.47', 'lng' => '5.86',
         ], $this->user());
 
         $provider = static::getContainer()->get(\App\Catalog\CatalogProvider::class);

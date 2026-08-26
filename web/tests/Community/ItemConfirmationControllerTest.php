@@ -51,7 +51,7 @@ final class ItemConfirmationControllerTest extends WebTestCase
     {
         $client = static::createClient();
         $em = static::getContainer()->get(EntityManagerInterface::class);
-        $water = $this->item($em, 'C');
+        $water = $this->item($em, 'B');
 
         $snap = $this->snapshot($client, $water->getId());
         self::assertResponseIsSuccessful();
@@ -65,7 +65,7 @@ final class ItemConfirmationControllerTest extends WebTestCase
     {
         $client = static::createClient();
         $em = static::getContainer()->get(EntityManagerInterface::class);
-        $water = $this->item($em, 'C');
+        $water = $this->item($em, 'B');
         $u = $this->rider($em, 'potable@test.test');
         $client->loginUser($u);
 
@@ -83,7 +83,7 @@ final class ItemConfirmationControllerTest extends WebTestCase
     {
         $client = static::createClient();
         $em = static::getContainer()->get(EntityManagerInterface::class);
-        $water = $this->item($em, 'C');
+        $water = $this->item($em, 'B');
         $u = $this->rider($em, 'switch@test.test');
         $client->loginUser($u);
         $id = $water->getId();
@@ -100,7 +100,7 @@ final class ItemConfirmationControllerTest extends WebTestCase
     {
         $client = static::createClient();
         $em = static::getContainer()->get(EntityManagerInterface::class);
-        $water = $this->item($em, 'C');
+        $water = $this->item($em, 'B');
 
         $client->request('POST', '/items/'.$water->getId().'/confirm', ['stance' => 'potable', '_token' => 'x']);
         self::assertResponseStatusCodeSame(401);
@@ -110,7 +110,7 @@ final class ItemConfirmationControllerTest extends WebTestCase
     {
         $client = static::createClient();
         $em = static::getContainer()->get(EntityManagerInterface::class);
-        $water = $this->item($em, 'C');
+        $water = $this->item($em, 'B');
         $client->loginUser($this->rider($em, 'csrf@test.test'));
 
         $client->request('POST', '/items/'.$water->getId().'/confirm', ['stance' => 'potable', '_token' => 'wrong']);
@@ -154,7 +154,7 @@ final class ItemConfirmationControllerTest extends WebTestCase
            They are different questions and one never excluded the other. */
         $client = static::createClient();
         $em = static::getContainer()->get(EntityManagerInterface::class);
-        $climb = $this->item($em, 'B');
+        $climb = $this->item($em, 'N');
 
         $client->request('GET', '/items/'.$climb->getId().'/confirmations');
         self::assertResponseIsSuccessful();
@@ -183,7 +183,7 @@ final class ItemConfirmationControllerTest extends WebTestCase
     {
         $client = static::createClient();
         $em = static::getContainer()->get(EntityManagerInterface::class);
-        $submitted = $this->item($em, 'C', ItemState::Submitted);
+        $submitted = $this->item($em, 'B', ItemState::Submitted);
 
         $client->request('GET', '/items/'.$submitted->getId().'/confirmations');
         self::assertResponseStatusCodeSame(404);

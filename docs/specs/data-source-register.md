@@ -111,21 +111,7 @@ the finding behind the surface-line-tiles work: A's coverage problem is not
 solved by finding a provider, it is solved by rendering OSM itself as a
 reference plane. Do not spend more research here.
 
-### B · Climbs
-
-| Source | What it gives | Licence | Verdict | Confidence |
-|---|---|---|---|---|
-| Wikidata | Named cols with `P625` summit coordinates, per country | CC0 | **Ingest** — in use (`tools/wikimedia/climb_candidates.py`) | verified (in use) |
-| OSM `mountain_pass=yes`, `natural=saddle` | Passes and saddles, worldwide | ODbL | **Ingest** | verified |
-| Copernicus GLO-30 **D**igital **E**levation **M**odel (DEM) | The elevation behind every measured gradient | Free, attribution required | **Ingest** — in use, notice on `/credits` | verified (in use) |
-| climbfinder, quaeldich, salite.ch, cols-cyclisme, PJAMM | The richest European climb catalogues | All proprietary, no reuse licence | **No** | stated |
-| Strava segments | The de-facto leaderboard | Proprietary, **API terms forbid** storing/redisplaying | **No** | stated |
-
-**Assessment.** Climbs are an editorial layer and will stay one. The seeding
-tooling exists and the backlog item is to run it per country, not to find a new
-source.
-
-### C · Water & food · M · Public toilets
+### B · Water & food · C · Public toilets
 
 | Source | What it gives | Licence | Verdict | Confidence |
 |---|---|---|---|---|
@@ -153,29 +139,7 @@ per-city adapter, rather than a decision per city.
 | Flanders / Wallonia cycling-service datasets | Dense Belgian coverage | §2 | **Ingest** | verified |
 | Manufacturer dealer locators (Bosch eBike, brand networks) | E-bike charging, brand service points | Proprietary, no reuse grant | **No** | stated |
 
-### E · Bike-friendly stays
-
-| Source | What it gives | Licence | Verdict | Confidence |
-|---|---|---|---|---|
-| Tourisme Wallonie PIVOT | Official Walloon accommodation | CC BY | **Ingest** — in use, its own provenance bucket | verified (in use) |
-| **DATAtourisme** (ADN Tourisme, France) | **400,000+ French tourism points of interest**, daily-updated, national ontology, application programming interface plus bulk download | Licence Ouverte 2.0 | **Ingest** — the single largest actionable find in this register | verified |
-| Accueil Vélo datasets on data.gouv.fr | France's cyclist-welcome label, as data — the exact semantic E wants | Licence Ouverte 2.0 | **Ingest** | verified |
-| OSM `tourism=hotel/guest_house/camp_site` + `bicycle=*` amenities | Baseline, worldwide | ODbL | **Ingest** (baseline) | verified |
-| Bett+Bike (ADFC, Germany) | Thousands of certified German properties | Closed scheme, no reuse licence found | **Ask** — a natural partner, same ethos | unverified |
-| Vrienden op de Fiets (NL) | The Dutch equivalent | Closed | **No** (prior decision) | stated |
-| Warmshowers | Hospitality network | Closed; member data is personal data regardless | **No** (prior decision) | stated |
-| Welcome To My Garden | Belgian/European cyclist-camping network | Non-profit, ethos-aligned, **no public data licence** | **Ask, do not scrape** (standing decision) | stated |
-| Trustroots, Couchers.org | Open-source hospitality platforms | Code is open; **member data is personal data** | **No** — a personal-data boundary question, not a licence one | stated |
-| iOverlander | Overnight spots for self-supported travel | ToS: personal, non-commercial use only; redistribution expressly prohibited | **No** | verified |
-| Booking.com, Airbnb, Park4Night | Scale | Proprietary, ToS forbids bulk reuse | **No** | stated |
-
-**Assessment.** E was the letter with the least non-OSM supply, and it is now
-the letter with the most: DATAtourisme plus the Accueil Vélo label sets make
-France's stays layer a data-loading job rather than a research job. Bett+Bike is
-the one worth a conversation — an ADFC certification scheme and an open cycling
-atlas want the same thing, and a licence grant costs them nothing.
-
-### F · Hazards & conditions
+### E · Hazards & conditions
 
 | Source | What it gives | Licence | Verdict | Confidence |
 |---|---|---|---|---|
@@ -185,15 +149,51 @@ atlas want the same thing, and a licence grant costs them nothing.
 | Waze **C**onnected **C**itizens **P**rogram | Live closures | Partner agreement, not open data | **No** | stated |
 | One.Network / roadworks.org | Official UK closure feed | Closed layer over public data | **No** — but the underlying council data may be open, §2 | stated |
 
-**Assessment.** F is structurally rider-sourced: hazards decay in days, and no
+**Assessment.** E is structurally rider-sourced: hazards decay in days, and no
 licensing arrangement fixes a feed that is car-framed. The correct investment is
 Scout, not a provider.
 
-### I · Scenic views · J · History & culture
+### N · Climbs
 
 | Source | What it gives | Licence | Verdict | Confidence |
 |---|---|---|---|---|
-| Wikidata | Named places with coordinates and typed classes, worldwide | CC0 | **Ingest** — in use, 194 I / 240 J rows seeded | verified (in use) |
+| Wikidata | Named cols with `P625` summit coordinates, per country | CC0 | **Ingest** — in use (`tools/wikimedia/climb_candidates.py`) | verified (in use) |
+| OSM `mountain_pass=yes`, `natural=saddle` | Passes and saddles, worldwide | ODbL | **Ingest** | verified |
+| Copernicus GLO-30 **D**igital **E**levation **M**odel (DEM) | The elevation behind every measured gradient | Free, attribution required | **Ingest** — in use, notice on `/credits` | verified (in use) |
+| climbfinder, quaeldich, salite.ch, cols-cyclisme, PJAMM | The richest European climb catalogues | All proprietary, no reuse licence | **No** | stated |
+| Strava segments | The de-facto leaderboard | Proprietary, **API terms forbid** storing/redisplaying | **No** | stated |
+
+**Assessment.** Climbs are an editorial layer and will stay one. The seeding
+tooling exists and the backlog item is to run it per country, not to find a new
+source.
+
+### O · Bike-friendly stays
+
+| Source | What it gives | Licence | Verdict | Confidence |
+|---|---|---|---|---|
+| Tourisme Wallonie PIVOT | Official Walloon accommodation | CC BY | **Ingest** — in use, its own provenance bucket | verified (in use) |
+| **DATAtourisme** (ADN Tourisme, France) | **400,000+ French tourism points of interest**, daily-updated, national ontology, application programming interface plus bulk download | Licence Ouverte 2.0 | **Ingest** — the single largest actionable find in this register | verified |
+| Accueil Vélo datasets on data.gouv.fr | France's cyclist-welcome label, as data — the exact semantic O wants | Licence Ouverte 2.0 | **Ingest** | verified |
+| OSM `tourism=hotel/guest_house/camp_site` + `bicycle=*` amenities | Baseline, worldwide | ODbL | **Ingest** (baseline) | verified |
+| Bett+Bike (ADFC, Germany) | Thousands of certified German properties | Closed scheme, no reuse licence found | **Ask** — a natural partner, same ethos | unverified |
+| Vrienden op de Fiets (NL) | The Dutch equivalent | Closed | **No** (prior decision) | stated |
+| Warmshowers | Hospitality network | Closed; member data is personal data regardless | **No** (prior decision) | stated |
+| Welcome To My Garden | Belgian/European cyclist-camping network | Non-profit, ethos-aligned, **no public data licence** | **Ask, do not scrape** (standing decision) | stated |
+| Trustroots, Couchers.org | Open-source hospitality platforms | Code is open; **member data is personal data** | **No** — a personal-data boundary question, not a licence one | stated |
+| iOverlander | Overnight spots for self-supported travel | ToS: personal, non-commercial use only; redistribution expressly prohibited | **No** | verified |
+| Booking.com, Airbnb, Park4Night | Scale | Proprietary, ToS forbids bulk reuse | **No** | stated |
+
+**Assessment.** O was the letter with the least non-OSM supply, and it is now
+the letter with the most: DATAtourisme plus the Accueil Vélo label sets make
+France's stays layer a data-loading job rather than a research job. Bett+Bike is
+the one worth a conversation — an ADFC certification scheme and an open cycling
+atlas want the same thing, and a licence grant costs them nothing.
+
+### P · Scenic views · Q · History & culture
+
+| Source | What it gives | Licence | Verdict | Confidence |
+|---|---|---|---|---|
+| Wikidata | Named places with coordinates and typed classes, worldwide | CC0 | **Ingest** — in use, 194 P / 240 Q rows seeded | verified (in use) |
 | Wikimedia Commons | Photographs with machine-verifiable licences | Per file, mostly CC BY-SA / public domain | **Ingest as media** — in use, licence checked at harvest | verified (in use) |
 | OSM `tourism=viewpoint`, `historic=*` | Baseline, worldwide, 850k+ on our coverage plane | ODbL | **Ingest** (baseline) | verified |
 | Europeana | European cultural heritage aggregation | Metadata CC0; objects per item | **Ingest** metadata | stated |
@@ -201,12 +201,12 @@ Scout, not a provider.
 | DATAtourisme (again) | French heritage and viewpoint POIs | Licence Ouverte 2.0 | **Ingest** | verified |
 | Atlas Obscura, Komoot Highlights | The curation riders actually use | Proprietary | **No** | stated |
 
-**Assessment.** I and J are the best-supplied letters in the register and the
+**Assessment.** P and Q are the best-supplied letters in the register and the
 weakest in *editorial* terms — the open-review backlog is full of "would a rider
 go there" questions about rows we already have. More supply is not the
 constraint; a selection rule is.
 
-### K · Quality rides / routes
+### R · Quality rides / routes
 
 | Source | What it gives | Licence | Verdict | Confidence |
 |---|---|---|---|---|
@@ -242,17 +242,17 @@ In order of value per unit of work:
 
 1. **EuroVelo, ODbL.** Licence-identical, pan-European, curated, yearly-updated
    route geometry. Nothing to negotiate. Decide how it relates to rider-proposed
-   K routes (it is reference-grade, not community-proposed — likely its own
-   provenance source, the way PIVOT is for E).
+   R routes (it is reference-grade, not community-proposed — likely its own
+   provenance source, the way PIVOT is for O).
 2. **DATAtourisme plus the Accueil Vélo sets, Licence Ouverte 2.0.** Turns
    France's stays layer from empty into populated, with a cyclist-welcome
-   semantic already attached — which is exactly what E means and what OSM cannot
+   semantic already attached — which is exactly what O means and what OSM cannot
    express.
 3. **Municipal fountain and toilet datasets.** Dozens of permissive
-   authoritative sources for C and M. Build one per-city adapter pipeline rather
+   authoritative sources for B and C. Build one per-city adapter pipeline rather
    than deciding city by city.
-4. **National heritage registers** for J, once the editorial selection rule
-   exists. Supply is not currently J's problem.
+4. **National heritage registers** for Q, once the editorial selection rule
+   exists. Supply is not currently Q's problem.
 5. **Two conversations worth having**, both with organisations whose mission
    matches ours and neither of which can be scraped in the meantime:
    **Bett+Bike** (ADFC) for German stays, and **BikeMaps.org** for hazards.

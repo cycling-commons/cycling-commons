@@ -46,12 +46,12 @@ owns the full enforcement stack).
 
 | Product | Content | Category | Default response |
 |---------|---------|----------|------------------|
-| **Coverage POIs** | catalogue items C, D, E, G, H, I, J ([osm-data-architecture.md §5](osm-data-architecture.md)) | 1 (community) + 2 (curated) | reference-only: `osm_ref` + our added fields |
+| **Coverage POIs** | catalogue items B, C, D, F, G, O, P, Q ([osm-data-architecture.md §5](osm-data-architecture.md)) | 1 (community) + 2 (curated) | reference-only: `osm_ref` + our added fields |
 | **Curated / own items** | our enrichment, verification state, provenance | 2 | full (it is ours) |
-| **Routes** | the K route domain — geometry, surfaces, ratings ([route-domain.md](route-domain.md)) | 3 | full + GPX |
-| **Climbs (B), Hazards (F)** | our own generated data | 3 | full |
+| **Routes** | the R route domain — geometry, surfaces, ratings ([route-domain.md](route-domain.md)) | 3 | full + GPX |
+| **Climbs (N), Hazards (E)** | our own generated data | 3 | full |
 | **Coverage polygons / regions** | administrative regions + coverage/adoption stats | ours | full |
-| **Catalogue metadata** | letters A–L, `serviceKind`, vocabularies, tiers | ours | full |
+| **Catalogue metadata** | letters A–M (practical) and N–Z (experiential), `serviceKind`, vocabularies, tiers | ours | full |
 
 **Reference-only is the default** ([osm-data-architecture.md
 §7](osm-data-architecture.md)): coverage responses return the `osm_ref`s we hold
@@ -123,8 +123,8 @@ contract.
 
 | Method | Endpoint | Purpose |
 |--------|----------|---------|
-| GET | `/v1/map-config` | **implemented (PoC)**, the consumer bootstrap: routes-tiles URL + source-layer contract, route style groups, category table (A–M), attribution string |
-| GET | `/v1/catalog` | item-type catalogue (letters A–L, `serviceKind`, vocabularies, tiers) — the labels and rendering metadata a consumer needs |
+| GET | `/v1/map-config` | **implemented (PoC)**, the consumer bootstrap: routes-tiles URL + source-layer contract, route style groups, category table (letters A–M practical, N–Z experiential), attribution string |
+| GET | `/v1/catalog` | item-type catalogue (letters A–M practical, N–Z experiential; `serviceKind`, vocabularies, tiers) — the labels and rendering metadata a consumer needs |
 | GET | `/v1/search?bbox=&q=&letter=&tier=&limit=&cursor=` | search / browse coverage → GeoJSON `FeatureCollection` (reference-only) |
 | GET | `/v1/items/{id}` (`?hydrate=osm`) | single-item detail: our enrichment, provenance, verification state |
 | GET | `/v1/coverage/counts?bbox=` | per-letter counts for chips and summaries |
@@ -137,7 +137,7 @@ contract.
 app: `/v1/map-config` (routes tiles, coverage tiles, category table with the
 Best of flag, attribution) and the `/v1/search` subset `bbox` + optional
 `letter` + optional `tier` + `limit` (`q`/`hydrate`/`cursor` stay draft; `bbox`
-spans at most 10x10 degrees; `letter` widened to A-M for M · public toilets;
+spans at most 10x10 degrees; `letter` accepts any catalogue letter (A–M practical, N–Z experiential; e.g. `letter=B` for water);
 absent letter = all letters in one response). The config carries enough for a
 consumer to reproduce the map's three view modes (Best of / Confirmed /
 Everything, §2.1 tiles + the tier filter + the `bestOf` category flag). Both are open read-only (no

@@ -2,199 +2,192 @@
 {# Account dashboard — the logged-in "user environment" (post-login landing).
    Uses the shared account shell (account/_shell_*). Every pane renders REAL
    rows only: submissions + route proposals, the user's own route ballots, and
-   their curator applications. Saved regions has no backend yet and says so. #}
+   their curator applications. Saved regions has no backend yet and says so.
+
+   Every row is the shared record card (moderation-and-contribution.md §5.2,
+   account/_shell_styles.html.twig): the same card a curator meets on the desk,
+   so a rider reading their own contribution and a curator deciding it are
+   looking at one thing (owner 2026-08-25). #}
 {% extends 'base.html.twig' %}
 
 {% block head_styles %}
 {% include 'account/_shell_styles.html.twig' %}
 <style>
-  .dbody{padding:2.2rem clamp(1.25rem,4vw,2rem);max-width:880px;width:100%;margin:0 auto}
   .dpane{display:none} .dpane.on{display:block}
-
-  .sec-h{font-family:var(--mono);font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--clay);margin:2rem 0 .4rem}
-  .sec-h:first-child{margin-top:0}
-  .empty{font-size:.9rem;color:#595c4d;padding:.6rem 0}
   /* The curating invitation is prose, not a one-line empty state: it sits
-     close under its heading (the section's own .4rem is enough separation),
-     wraps at a readable measure, and puts its call to action on its own line
-     rather than trailing the last sentence. */
-  .empty.curating{padding-top:0;line-height:1.6;max-width:62ch}
-  .empty.curating .cta{display:block;margin-top:.55rem}
-
-  .item{display:flex;align-items:center;gap:1rem;padding:.9rem 0;border-bottom:1px solid rgba(20,22,14,.1);flex-wrap:wrap}
-  .item .tag{font-family:var(--mono);font-size:.58rem;padding:.25rem .45rem;border-radius:3px;white-space:nowrap;text-transform:uppercase;letter-spacing:.06em;background:var(--spruce);color:var(--paper)}
-  .item .tag-route{background:var(--trail);color:var(--ink)}
-  .item h4{flex:1;font-size:1rem;font-weight:500;min-width:8rem}
-  .item-where{display:block;font-family:var(--mono);font-size:.62rem;letter-spacing:.04em;color:#595c4d;margin-top:.15rem}
-  .item .co{font-family:var(--mono);font-size:.62rem;color:#595c4d}
-  .item-links{display:inline-flex;gap:.9rem}
-  .item-links a{font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;color:var(--clay);white-space:nowrap}
-  .item-links a:hover{color:var(--trail)}
-  .item-note{flex-basis:100%;margin:.1rem 0 0;font-size:.85rem;color:#4a4d40;border-left:2px solid var(--glacier);padding-left:.7rem}
-  .item-reply{border-left-color:var(--ochre)}
-  /* What was actually contributed. Same was/now shape the curator's desk uses
-     (.q-diff), so a rider and a curator are looking at one thing. */
-  .item-diff{flex-basis:100%;margin:.35rem 0 0;padding:.5rem .7rem;background:rgba(20,22,14,.05);border-radius:5px;font-size:.84rem;line-height:1.5}
-  .item-diff dl{display:grid;grid-template-columns:auto 1fr;gap:.15rem .7rem;margin:0}
-  .item-diff dt{font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;color:#595c4d;align-self:baseline;padding-top:.15rem}
-  .item-diff dd{margin:0;min-width:0;overflow-wrap:anywhere}
-  .item-diff .was{color:#8a8d7d;text-decoration:line-through;margin-right:.4rem}
-  .item-diff .now{color:var(--trail)}
-  @media(max-width:520px){.item-diff dl{grid-template-columns:1fr;gap:0 0}.item-diff dt{padding-top:.35rem}}
-  .item:target{background:var(--paper-deep);box-shadow:0 0 0 2px var(--ochre);border-radius:6px;scroll-margin-top:1.5rem}
-  /* A waiting question is the one thing on this row the rider has to act on. */
-  .item-answer{color:var(--trail)!important;font-weight:700}
-  .pill{font-family:var(--mono);font-size:.58rem;text-transform:uppercase;letter-spacing:.08em;padding:.25rem .5rem;border-radius:30px;white-space:nowrap}
-  .pill.ok{background:#3e7d4f;color:#fff} .pill.pend{background:var(--ochre);color:var(--ink)} .pill.conf{background:var(--spruce);color:var(--paper)}
-  .pill.rej{background:var(--clay);color:#fff} .pill.ret{background:rgba(20,22,14,.12);color:#595c4d}
-
-  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem}
-  .rc{background:var(--paper-deep);border:1px solid rgba(20,22,14,.14);border-radius:6px;padding:1.1rem;display:block}
-  .rc h4{font-family:var(--serif);font-weight:600;font-size:1.15rem} .rc .co{font-family:var(--mono);font-size:.62rem;color:#595c4d;margin-top:.3rem}
-
+     close under its heading, wraps at a readable measure, and puts its call to
+     action on its own line rather than trailing the last sentence. */
+  .curating{font-size:.9rem;color:#4a4d40;padding:0;line-height:1.6;max-width:62ch}
+  .curating .cta{display:block;margin-top:.55rem;color:var(--clay)}
   .note{background:var(--paper-deep);border-left:2px solid var(--glacier);padding:.9rem 1.1rem;font-size:.88rem;color:#4a4d40;margin:1.4rem 0;border-radius:0 6px 6px 0}
-  .rounding{font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--clay);margin-bottom:1rem}
-
-  .acct-id{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 </style>
 {% endblock %}
 
 {% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'contrib'} %}{% endblock %}
 
 {% block body %}
-<h1 class="acct-id">{{ 'account.heading'|trans }} — {{ cc_user.displayName }}</h1>
+<div class="dbody" id="main">
 
-<div class="dbody">
-
-  {# ── Contributions — real data only (submissions + route proposals). The old
-     preview stat tiles + sample rows were identical for every user; removed. #}
+  {# ── Contributions — real data only (submissions + route proposals). #}
   <section class="dpane on" id="p-contrib">
     {% set sub_pill = {'approved': 'ok', 'pending': 'pend', 'needs_info': 'pend', 'rejected': 'rej', 'withdrawn': 'rej'} %}
-    <h2 class="sec-h">{{ 'account.contributions_title'|trans }}</h2>
+    <div class="mh">
+      <div class="kicker">{{ 'account.menu_personal'|trans }} · {{ cc_user.displayName }}</div>
+      <h1>{{ 'account.contributions_title'|trans }}</h1>
+    </div>
     {% for msg in app.flashes('success') %}<div class="flash-success" role="alert">{{ msg|trans }}</div>{% endfor %}
     {% for msg in app.flashes('notice') %}<div class="flash-success" role="alert">{{ msg|trans }}</div>{% endfor %}
-    {# Category filter (owner 2026-08-16): plain GET links so a filtered list
-       can be bookmarked; chips render only for letters this rider has, and
-       only when there is more than one - a filter with one option is noise. #}
-    {% if letter_chips|length > 1 or status_filter %}
-      {# Category chips and the withdrawn toggle COMBINE: every chip's href
-         carries the other filter along, so switching one never resets the
-         other (owner 2026-08-16). #}
-      {% set st = status_filter ? {status: status_filter} : {} %}
-      <nav class="lfilter" aria-label="{{ 'account.filter_kind_aria'|trans }}">
-        <a class="lchip {{ letter_filter == '' ? 'on' }}" href="{{ path('profile', st) }}">{{ 'account.filter_all'|trans }}</a>
-        {% for c in letter_chips %}
-          <a class="lchip {{ letter_filter == c.letter ? 'on' }}" href="{{ path('profile', {letter: c.letter}|merge(st)) }}">{{ c.labelKey|trans }}</a>
-        {% endfor %}
-        {% set lt = letter_filter ? {letter: letter_filter} : {} %}
-        <a class="lchip lchip-status {{ status_filter ? 'on' }}"
-           href="{{ path('profile', status_filter ? lt : {status: 'withdrawn'}|merge(lt)) }}">{{ 'account.sub_status_withdrawn'|trans }}</a>
-      </nav>
-    {% endif %}
+    <div class="mod-bar">
+      {# Category filter (owner 2026-08-16): plain GET links so a filtered list
+         can be bookmarked; chips render only for letters this rider has, and
+         only when there is more than one - a filter with one option is noise. #}
+      {% if letter_chips|length > 1 or status_filter %}
+        {# Category chips and the withdrawn toggle COMBINE: every chip's href
+           carries the other filter along, so switching one never resets the
+           other (owner 2026-08-16). #}
+        {% set st = status_filter ? {status: status_filter} : {} %}
+        <nav class="lfilter" aria-label="{{ 'account.filter_kind_aria'|trans }}">
+          <a class="lchip {{ letter_filter == '' ? 'on' }}" href="{{ path('profile', st) }}">{{ 'account.filter_all'|trans }}</a>
+          {% for c in letter_chips %}
+            <a class="lchip {{ letter_filter == c.letter ? 'on' }}" href="{{ path('profile', {letter: c.letter}|merge(st)) }}">{{ c.labelKey|trans }}</a>
+          {% endfor %}
+          {% set lt = letter_filter ? {letter: letter_filter} : {} %}
+          <a class="lchip lchip-status {{ status_filter ? 'on' }}"
+             href="{{ path('profile', status_filter ? lt : {status: 'withdrawn'}|merge(lt)) }}">{{ 'account.sub_status_withdrawn'|trans }}</a>
+        </nav>
+      {% endif %}
+      {% if contributions is not empty or route_proposals is not empty %}
+        {% include 'account/_density.html.twig' %}
+      {% endif %}
+    </div>
     {% if contributions is empty %}
       <div class="empty-state">
         <p>{{ 'account.contributions_empty'|trans }}</p>
         <a class="door" href="{{ path('map') }}">{{ 'account.votes_cta'|trans }}</a>
       </div>
     {% else %}
+      <div class="q-list" id="qList">
       {% for sub in contributions %}
         {# Map + Edit render for every item-bound row, PENDING included (owner
            2026-08-16: "while an item is waiting for review I should be able
            to edit it"). A pending new item is not served by name, so its map
            link is the pending deep-link the desk uses; the edit wizard binds
-           the submitter's own Submitted item. Routes (letter K) have no
+           the submitter's own Submitted item. Routes (letter R) have no
            item-edit binding — handled in the route-proposals list. #}
-        {% set sub_live = sub.itemId is not null and sub.letter != 'K' %}
+        {% set sub_live = sub.itemId is not null and sub.letter != 'R' %}
         {% set sub_pending_new = sub.type.value == 'new' and sub.status.value in ['pending', 'needs_info'] %}
         {# Anchor for the messages page, whose cards link back to the
-           contribution they are about. #}
-        <div class="item" id="sub-{{ sub.id }}">
-          <span class="tag">{{ ('account.sub_type_' ~ sub.type.value)|trans }}</span>
-          <h4>{{ sub.title }}
-            {# WHERE it is, as words: Scout rows all read "Scenery" and
-               nothing else (owner 2026-08-16). Region + country come from
-               the row's own stamps; town-level needs the gazetteer
-               (docs/TODO.md "Nearby town on a queue row"). #}
-            {% set rname = sub.regionId ? region_names[sub.regionId] ?? null : null %}
-            {% if rname or sub.countryCode %}
-              <span class="item-where">{{ [rname, sub.countryCode]|filter(v => v)|join(' · ') }}</span>
-            {% endif %}
-          </h4>
-          {% if sub_live %}
-            <span class="item-links">
-              {# The map opens in its own tab: this list is a work queue, and a
-                 rider checking one row should come back to it, not to a fresh
-                 /profile. Same convention as the desk (moderate/_queue_item). #}
-              {% if sub_pending_new %}
-                <a href="{{ path('map') }}?pending={{ sub.id }}"
-                   target="_blank" rel="noopener">{{ 'account.link_map'|trans }} &#8599;</a>
-              {% else %}
-                <a href="{{ path('map') }}?feature={{ sub.title|url_encode }}"
-                   target="_blank" rel="noopener">{{ 'account.link_map'|trans }} &#8599;</a>
+           contribution they are about. No data-item-id: that attribute is the
+           desk's live-removal hook for a decided submission, and this row is
+           the rider's own record of it. #}
+        <div class="q-item" id="sub-{{ sub.id }}">
+          <div class="q-top">
+            <div class="q-headwrap">
+              <div class="q-head">
+                {# The type's own icon first (owner 2026-08-25), drawn, never an
+                   emoji: partials/_type_icon.html.twig. #}
+                {% include 'partials/_type_icon.html.twig' with {letter: sub.letter} %}
+                <span class="q-tag q-tag--{{ sub.type.value }}">{{ ('account.sub_type_' ~ sub.type.value)|trans }}</span>
+                <h3 class="q-title">{{ sub.title }}
+                  {# WHAT KIND of place: "New item · Thier Antoine" said nothing
+                     about climbs (owner 2026-08-25). Same small kind label the
+                     History desk prints after a title. #}
+                  {% if letter_labels[sub.letter] is defined %}<span class="q-kind">{{ letter_labels[sub.letter]|trans }}</span>{% endif %}</h3>
+              </div>
+              {# WHERE it is, as words: Scout rows all read "Scenery" and
+                 nothing else (owner 2026-08-16). Region + country come from
+                 the row's own stamps; town-level needs the gazetteer
+                 (docs/TODO.md "Nearby town on a queue row"). #}
+              {% set rname = sub.regionId ? region_names[sub.regionId] ?? null : null %}
+              {% if rname or sub.countryCode %}
+                <div class="q-submitter">{{ [rname, sub.countryCode]|filter(v => v)|join(' · ') }}</div>
               {% endif %}
-              <a href="{{ path('improve') }}?item={{ sub.itemId }}&amp;type={{ sub.letter }}">{{ 'account.link_edit'|trans }}</a>
-            </span>
-          {% endif %}
-          <time class="co" datetime="{{ sub.createdAt|date('c') }}">{{ sub.createdAt|cc_date }}</time>
-          <span class="pill {{ sub_pill[sub.status.value] ?? 'pend' }}">{{ ('account.sub_status_' ~ sub.status.value)|trans }}</span>
-          {# The rider's own exit, only while nobody has decided (owner
-             2026-08-16). The service re-checks state under a row lock, so a
-             race with a curator ends in a flash, never a half-withdrawal. #}
-          {% if sub.status.value in ['pending', 'needs_info'] %}
-            <form class="withdraw-form" method="post" action="{{ path('profile_withdraw', {id: sub.id}) }}"
-                  data-confirm="{{ 'account.withdraw_confirm'|trans }}">
-              <input type="hidden" name="_token" value="{{ csrf_token('withdraw' ~ sub.id) }}">
-              {# The active filters travel with the POST, so the redirect
-                 lands back on the same filtered view. #}
-              {% if letter_filter %}<input type="hidden" name="letter" value="{{ letter_filter }}">{% endif %}
-              {% if status_filter %}<input type="hidden" name="status" value="{{ status_filter }}">{% endif %}
-              <button type="submit" class="withdraw-btn">{{ 'account.withdraw'|trans }}</button>
-            </form>
-          {% endif %}
-          {# WHAT was contributed, not just which place it was about. Without
-             this, two edits to the same climb are the same row twice, and the
-             rider has no way to tell which of their own changes a curator
-             approved (owner-reported 2026-08-03). Field names come from the
-             registry, so they read as the form asked them — "Road quality",
-             not `sq`. The struck-out line appears only when there was a
-             previous value: adding a missing field is the commonest
-             contribution there is, and it has nothing to strike out. #}
-          {% set diff = submission_changes[sub.id] ?? [] %}
-          {% if diff is not empty %}
-            <div class="item-diff">
-              <dl>
-                {% for row in diff %}
-                  <dt>{{ row.label }}</dt>
-                  {# Long values (a drawn segment's geometry) clamp to one line,
-                     click to expand — partials/_vclip.html.twig. #}
-                  {% set long = (row.now ~ (row.was ?? ''))|length > 110 %}
-                  <dd{% if long %} class="vclip" tabindex="0" role="button" aria-expanded="false"{% endif %}>
-                    {%- if row.was is not null %}<span class="was">{{ row.was }}</span>{% endif -%}
-                    <span class="now">{{ row.now }}</span>
-                  </dd>
-                {% endfor %}
-              </dl>
             </div>
-          {% endif %}
-          {% if sub.decisionNote %}<p class="item-note">{{ sub.decisionNote }}</p>{% endif %}
+            {# One line: date · Map · Edit · status · Withdraw · Show details
+               (owner 2026-08-25). #}
+            <div class="q-acts">
+              <time class="q-when" datetime="{{ sub.createdAt|date('c') }}">{{ sub.createdAt|cc_date }}</time>
+              {% if sub_live %}
+                <span class="q-links">
+                  {# The map opens in its own tab: this list is a work queue, and a
+                     rider checking one row should come back to it, not to a fresh
+                     /profile. Same convention as the desk (moderate/_queue_item). #}
+                  {% if sub_pending_new %}
+                    <a class="q-link" href="{{ path('map') }}?pending={{ sub.id }}"
+                       target="_blank" rel="noopener">{{ 'account.link_map'|trans }} &#8599;</a>
+                  {% else %}
+                    <a class="q-link" href="{{ path('map') }}?feature={{ sub.title|url_encode }}"
+                       target="_blank" rel="noopener">{{ 'account.link_map'|trans }} &#8599;</a>
+                  {% endif %}
+                  <a class="q-link" href="{{ path('improve') }}?item={{ sub.itemId }}&amp;type={{ sub.letter }}">{{ 'account.link_edit'|trans }}</a>
+                </span>
+              {% endif %}
+              <span class="q-pill q-pill--{{ sub_pill[sub.status.value] ?? 'pend' }}">{{ ('account.sub_status_' ~ sub.status.value)|trans }}</span>
+              {# The rider's own exit, only while nobody has decided (owner
+                 2026-08-16). The service re-checks state under a row lock, so a
+                 race with a curator ends in a flash, never a half-withdrawal. #}
+              {% if sub.status.value in ['pending', 'needs_info'] %}
+                <form class="withdraw-form" method="post" action="{{ path('profile_withdraw', {id: sub.id}) }}"
+                      data-confirm="{{ 'account.withdraw_confirm'|trans }}">
+                  <input type="hidden" name="_token" value="{{ csrf_token('withdraw' ~ sub.id) }}">
+                  {# The active filters travel with the POST, so the redirect
+                     lands back on the same filtered view. #}
+                  {% if letter_filter %}<input type="hidden" name="letter" value="{{ letter_filter }}">{% endif %}
+                  {% if status_filter %}<input type="hidden" name="status" value="{{ status_filter }}">{% endif %}
+                  <button type="submit" class="withdraw-btn">{{ 'account.withdraw'|trans }}</button>
+                </form>
+              {% endif %}
+              {# WHAT was contributed: the was → now list, folded behind a link
+                 that sits UNDER Map · Edit · status in this same column (owner
+                 2026-08-25: no extra line, no extra space). The break forces
+                 the wrap; with JS the script turns the <details> into a button
+                 whose panel drops under the whole card. Field names come from
+                 the registry, so they read as the form asked them: "Road
+                 quality", not `sq` (owner-reported 2026-08-03). #}
+              {% set diff = submission_changes[sub.id] ?? [] %}
+              {% if diff is not empty %}
+                <span class="q-acts-break"></span>
+                <details class="q-act q-act--diff">
+                  <summary class="q-link" data-label-open="{{ 'messages.hide_details'|trans }}">{{ 'messages.show_details'|trans }}</summary>
+                  <div class="q-act-panel q-diff">
+                    <span class="q-diff-h">{{ 'messages.what_you_changed'|trans }}</span>
+                    <dl>
+                      {% for row in diff %}
+                        <dt>{{ row.label }}</dt>
+                        {# Long values (a drawn segment's geometry) clamp to one line,
+                           click to expand: partials/_vclip.html.twig. #}
+                        {% set long = (row.now ~ (row.was ?? ''))|length > 110 %}
+                        <dd{% if long %} class="vclip" tabindex="0" role="button" aria-expanded="false"{% endif %}>
+                          {%- if row.was is not null %}<span class="was">{{ row.was }}</span>{% endif -%}
+                          <span class="now">{{ row.now }}</span>
+                        </dd>
+                      {% endfor %}
+                    </dl>
+                  </div>
+                </details>
+              {% endif %}
+            </div>
+          </div>
+          {% if sub.decisionNote %}<p class="q-note">{{ sub.decisionNote }}</p>{% endif %}
           {# The conversation, the way the curator's desk shows it. A status
              chip on its own left a rider who had been asked something with no
              sign of the question, and no sign that their answer had landed. #}
           {% set thread = submission_threads[sub.id] ?? null %}
           {% if thread and thread.reply %}
-            <p class="item-note item-reply"><b>{{ 'account.you_replied'|trans }}</b> {{ thread.reply }}</p>
+            <p class="q-note q-note--answer"><b>{{ 'account.you_replied'|trans }}</b> {{ thread.reply }}</p>
           {% endif %}
           {% if sub.status.value == 'needs_info' %}
-            <span class="item-links">
-              <a class="item-answer" href="{{ path('messages') }}{% if thread and thread.askedId %}#msg-{{ thread.askedId }}{% endif %}">{{ 'account.answer_curator'|trans }} →</a>
-            </span>
+            <p class="q-links q-map">
+              <a class="q-link q-link--act" href="{{ path('messages') }}{% if thread and thread.askedId %}#msg-{{ thread.askedId }}{% endif %}">{{ 'account.answer_curator'|trans }} →</a>
+            </p>
           {% elseif thread and (thread.reply or thread.askedId) %}
-            <span class="item-links">
-              <a href="{{ path('messages') }}{% if thread.askedId %}#msg-{{ thread.askedId }}{% endif %}">{{ 'account.see_conversation'|trans }}</a>
-            </span>
+            <p class="q-links q-map">
+              <a class="q-link" href="{{ path('messages') }}{% if thread.askedId %}#msg-{{ thread.askedId }}{% endif %}">{{ 'account.see_conversation'|trans }}</a>
+            </p>
           {% endif %}
         </div>
       {% endfor %}
+      </div>
       {# Paging the contributions pane keeps `rpage` so moving through one list
          never resets the other — they share a URL. #}
       {% include 'partials/_pager.html.twig' with {pager: pager, route: 'profile', params: {rpage: route_pager.page}|merge(letter_filter ? {letter: letter_filter} : {})|merge(status_filter ? {status: status_filter} : {})} %}
@@ -202,21 +195,32 @@
 
     {% if route_proposals is not empty %}
     {% set route_pill = {'verified': 'ok', 'unverified': 'conf', 'submitted': 'pend', 'rejected': 'rej', 'retired': 'ret'} %}
-    <h2 class="sec-h">{{ 'account.route_proposals_title'|trans }}</h2>
+    <h2 class="sec-band">{{ 'account.route_proposals_title'|trans }} <span class="sec-count">{{ route_pager.total }}</span></h2>
+    <div class="q-list">
     {% for p in route_proposals %}
-      <div class="item">
-        <span class="tag tag-route">{{ 'nav.routes'|trans }}</span>
-        <h4>{{ p.name }}</h4>
-        {% if p.state.value in ['verified', 'unverified'] %}
-          <span class="item-links">
-            <a href="{{ path('map') }}?route={{ p.id }}"
-               target="_blank" rel="noopener">{{ 'account.link_map'|trans }} &#8599;</a>
-          </span>
-        {% endif %}
-        <time class="co" datetime="{{ p.createdAt|date('c') }}">{{ p.createdAt|cc_date }}</time>
-        <span class="pill {{ route_pill[p.state.value] ?? 'pend' }}">{{ ('account.route_state_' ~ p.state.value)|trans }}</span>
+      <div class="q-item">
+        <div class="q-top">
+          <div class="q-headwrap">
+            <div class="q-head">
+              {% include 'partials/_type_icon.html.twig' with {letter: 'R'} %}
+              <span class="q-tag q-tag--route">{{ 'nav.routes'|trans }}</span>
+              <h3 class="q-title">{{ p.name }}</h3>
+            </div>
+          </div>
+          <div class="q-acts">
+                <time class="q-when" datetime="{{ p.createdAt|date('c') }}">{{ p.createdAt|cc_date }}</time>
+            {% if p.state.value in ['verified', 'unverified'] %}
+              <span class="q-links">
+                <a class="q-link" href="{{ path('map') }}?route={{ p.id }}"
+                   target="_blank" rel="noopener">{{ 'account.link_map'|trans }} &#8599;</a>
+              </span>
+            {% endif %}
+            <span class="q-pill q-pill--{{ route_pill[p.state.value] ?? 'pend' }}">{{ ('account.route_state_' ~ p.state.value)|trans }}</span>
+          </div>
+        </div>
       </div>
     {% endfor %}
+    </div>
     {% include 'partials/_pager.html.twig' with {pager: route_pager, route: 'profile', params: {page: pager.page}|merge(letter_filter ? {letter: letter_filter} : {})|merge(status_filter ? {status: status_filter} : {}), key: 'rpage'} %}
     {% endif %}
 
@@ -227,8 +231,8 @@
        vocabulary. What is worth their while is whether their OWN area has
        anyone looking after it, and an invitation either way. #}
     {% if curator_applications is empty %}
-      <h2 class="sec-h">{{ 'account.curating_invite_title'|trans }}</h2>
-      <p class="empty curating">
+      <h2 class="sec-band">{{ 'account.curating_invite_title'|trans }}</h2>
+      <p class="curating">
         {% set region = curating.slug ? ('region.' ~ curating.slug ~ '.label')|trans : '' %}
         {% if curating.state == 'region_local' %}
           {{ 'account.curating_region_local'|trans({'%region%': region}) }}
@@ -249,17 +253,27 @@
         <a class="cta" href="{{ path('regions') }}">{{ 'account.curating_apply'|trans }}</a>
       </p>
     {% else %}
-      <h2 class="sec-h">{{ 'account.curating_title'|trans }}</h2>
+      <h2 class="sec-band">{{ 'account.curating_title'|trans }} <span class="sec-count">{{ curator_applications|length }}</span></h2>
       {% set app_pill = {'pending': 'pend', 'approved': 'ok', 'declined': 'rej', 'withdrawn': 'ret'} %}
+      <div class="q-list">
       {% for app in curator_applications %}
-        <div class="item">
-          <span class="tag">{{ app.country_code }}</span>
-          <h4>{% if app.region_slug %}{{ ('region.' ~ app.region_slug ~ '.label')|trans }}{% else %}{{ 'account.curating_whole_country'|trans }}{% endif %}</h4>
-          <time class="co" datetime="{{ app.created_at|date('c') }}">{{ app.created_at|cc_date }}</time>
-          <span class="pill {{ app_pill[app.status] ?? 'pend' }}">{{ ('account.app_status_' ~ app.status)|trans }}</span>
-          {% if app.decision_note %}<p class="item-note">{{ app.decision_note }}</p>{% endif %}
+        <div class="q-item">
+          <div class="q-top">
+            <div class="q-headwrap">
+              <div class="q-head">
+                <span class="q-tag q-tag--kind">{{ app.country_code }}</span>
+                <h3 class="q-title">{% if app.region_slug %}{{ ('region.' ~ app.region_slug ~ '.label')|trans }}{% else %}{{ 'account.curating_whole_country'|trans }}{% endif %}</h3>
+              </div>
+            </div>
+            <div class="q-acts">
+                <time class="q-when" datetime="{{ app.created_at|date('c') }}">{{ app.created_at|cc_date }}</time>
+              <span class="q-pill q-pill--{{ app_pill[app.status] ?? 'pend' }}">{{ ('account.app_status_' ~ app.status)|trans }}</span>
+            </div>
+          </div>
+          {% if app.decision_note %}<p class="q-note">{{ app.decision_note }}</p>{% endif %}
         </div>
       {% endfor %}
+      </div>
     {% endif %}
   </section>
 
@@ -267,6 +281,10 @@
      the only surface that shows WHAT was voted for, voter-only) and place
      confirmations (moderation-and-contribution.md §1.6). #}
   <section class="dpane" id="p-votes">
+    <div class="mh">
+      <div class="kicker">{{ 'account.menu_personal'|trans }} · {{ cc_user.displayName }}</div>
+      <h1>{{ 'account.tab_votes'|trans }}</h1>
+    </div>
     {% if votes is empty and confirmations is empty %}
       <div class="empty-state">
         <p>{{ 'account.votes_empty'|trans }}</p>
@@ -274,17 +292,28 @@
       </div>
     {% else %}
       {% if votes is not empty %}
-        <h2 class="sec-h">{{ 'account.votes_routes_h'|trans }}</h2>
+        <h2 class="sec-band">{{ 'account.votes_routes_h'|trans }} <span class="sec-count">{{ votes|length }}</span></h2>
+        <div class="q-list">
         {% for v in votes %}
-          <div class="item">
-            <span class="tag tag-route">{{ 'nav.routes'|trans }}</span>
-            <h4>{{ v.name }}</h4>
-            <span class="item-links"><a href="{{ path('map') }}?route={{ v.route_id }}"
-              target="_blank" rel="noopener">{{ 'account.link_map'|trans }} &#8599;</a></span>
-            <span class="co">{{ v.season }} · {{ v.bike_type }}</span>
-            <time class="co" datetime="{{ v.created_at|date('c') }}">{{ v.created_at|cc_date }}</time>
+          <div class="q-item">
+            <div class="q-top">
+              <div class="q-headwrap">
+                <div class="q-head">
+                  {% include 'partials/_type_icon.html.twig' with {letter: 'R'} %}
+                  <span class="q-tag q-tag--route">{{ 'nav.routes'|trans }}</span>
+                  <h3 class="q-title">{{ v.name }}</h3>
+                </div>
+                <div class="q-submitter">{{ v.season }} · {{ v.bike_type }}</div>
+              </div>
+              <div class="q-acts">
+                <time class="q-when" datetime="{{ v.created_at|date('c') }}">{{ v.created_at|cc_date }}</time>
+                <span class="q-links"><a class="q-link" href="{{ path('map') }}?route={{ v.route_id }}"
+                  target="_blank" rel="noopener">{{ 'account.link_map'|trans }} &#8599;</a></span>
+              </div>
+            </div>
           </div>
         {% endfor %}
+        </div>
       {% endif %}
       {# PLACES NEAR YOU WORTH A LOOK (owner 2026-08-12). The map's orange ring
          is a passive colour; this is the half a rider can act on deliberately.
@@ -294,31 +323,53 @@
          answer, and a national list of old taps is a chore, which is what this
          nudge must never become. #}
       {% if stale_nearby is not empty %}
-        <h2 class="sec-h">{{ 'account.stale_nearby_h'|trans }}</h2>
+        <h2 class="sec-band">{{ 'account.stale_nearby_h'|trans }} <span class="sec-count">{{ stale_nearby|length }}</span></h2>
         <p class="note">{{ 'account.stale_nearby_body'|trans }}</p>
+        <div class="q-list">
         {% for s in stale_nearby %}
-          <div class="item">
-            <span class="tag">{{ s.typeLabelKey|trans }}</span>
-            <h4>{{ s.name }}</h4>
-            <span class="item-where">{{ 'account.stale_nearby_km'|trans({'%km%': s.km}) }}</span>
-            <span class="item-links"><a href="{{ path('map') }}?feature={{ s.name|url_encode }}"
-              target="_blank" rel="noopener">{{ 'account.link_map'|trans }} &#8599;</a></span>
-            <time class="co" datetime="{{ s.last_confirmed|date('c') }}">{{ 'account.stale_nearby_last'|trans }} {{ s.last_confirmed|cc_date }}</time>
+          <div class="q-item">
+            <div class="q-top">
+              <div class="q-headwrap">
+                <div class="q-head">
+                  {% if s.letter is defined %}{% include 'partials/_type_icon.html.twig' with {letter: s.letter} %}{% endif %}
+                  <span class="q-tag q-tag--kind">{{ s.typeLabelKey|trans }}</span>
+                  <h3 class="q-title">{{ s.name }}</h3>
+                </div>
+                <div class="q-submitter">{{ 'account.stale_nearby_km'|trans({'%km%': s.km}) }}</div>
+              </div>
+              <div class="q-acts">
+                <time class="q-when" datetime="{{ s.last_confirmed|date('c') }}">{{ 'account.stale_nearby_last'|trans }} {{ s.last_confirmed|cc_date }}</time>
+                <span class="q-links"><a class="q-link" href="{{ path('map') }}?feature={{ s.name|url_encode }}"
+                  target="_blank" rel="noopener">{{ 'account.link_map'|trans }} &#8599;</a></span>
+              </div>
+            </div>
           </div>
         {% endfor %}
+        </div>
       {% endif %}
       {% if confirmations is not empty %}
-        <h2 class="sec-h">{{ 'account.votes_places_h'|trans }}</h2>
+        <h2 class="sec-band">{{ 'account.votes_places_h'|trans }} <span class="sec-count">{{ confirmations|length }}</span></h2>
+        <div class="q-list">
         {% for c in confirmations %}
-          <div class="item">
-            <span class="tag">{{ c.typeLabelKey|trans }}</span>
-            <h4>{{ c.name }}</h4>
-            <span class="item-links"><a href="{{ path('map') }}?feature={{ c.name|url_encode }}"
-              target="_blank" rel="noopener">{{ 'account.link_map'|trans }} &#8599;</a></span>
-            <time class="co" datetime="{{ c.created_at|date('c') }}">{{ c.created_at|cc_date }}</time>
-            <span class="pill {{ c.stance == 'not_potable' ? 'rej' : 'ok' }}">{{ ('account.stance_' ~ c.stance)|trans }}</span>
+          <div class="q-item">
+            <div class="q-top">
+              <div class="q-headwrap">
+                <div class="q-head">
+                  {% if c.letter is defined %}{% include 'partials/_type_icon.html.twig' with {letter: c.letter} %}{% endif %}
+                  <span class="q-tag q-tag--kind">{{ c.typeLabelKey|trans }}</span>
+                  <h3 class="q-title">{{ c.name }}</h3>
+                </div>
+              </div>
+              <div class="q-acts">
+                <time class="q-when" datetime="{{ c.created_at|date('c') }}">{{ c.created_at|cc_date }}</time>
+                <span class="q-links"><a class="q-link" href="{{ path('map') }}?feature={{ c.name|url_encode }}"
+                  target="_blank" rel="noopener">{{ 'account.link_map'|trans }} &#8599;</a></span>
+                <span class="q-pill q-pill--{{ c.stance == 'not_potable' ? 'rej' : 'ok' }}">{{ ('account.stance_' ~ c.stance)|trans }}</span>
+              </div>
+            </div>
           </div>
         {% endfor %}
+        </div>
       {% endif %}
     {% endif %}
     <div class="note">{{ 'account.votes_note'|trans|rich }}</div>
@@ -327,6 +378,10 @@
   {# ── Saved regions — no persistence behind it yet; say so honestly and open
      the real door instead of rendering sample cards. #}
   <section class="dpane" id="p-saved">
+    <div class="mh">
+      <div class="kicker">{{ 'account.menu_personal'|trans }} · {{ cc_user.displayName }}</div>
+      <h1>{{ 'account.tab_saved'|trans }}</h1>
+    </div>
     <div class="empty-state">
       <p>{{ 'account.saved_empty'|trans }}</p>
       <a class="door" href="{{ path('regions') }}">{{ 'account.saved_browse'|trans }}</a>
@@ -335,6 +390,7 @@
 
 </div>
 {% include 'partials/_vclip.html.twig' %}
+{% include 'moderate/_card_script.html.twig' %}
 {% endblock %}
 
 {% block body_scripts %}

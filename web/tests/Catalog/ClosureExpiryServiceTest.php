@@ -47,7 +47,7 @@ final class ClosureExpiryServiceTest extends KernelTestCase
     private function hazard(string $ref, array $attributes, string $createdAt): Item
     {
         $item = (new Item())
-            ->setLetter('F')
+            ->setLetter('E')
             ->setName('Test '.$ref)
             ->setGeom('{"type":"Point","coordinates":[4.87,50.47]}')
             ->setCountryCode('BE')

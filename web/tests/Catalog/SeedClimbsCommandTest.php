@@ -91,7 +91,7 @@ final class SeedClimbsCommandTest extends KernelTestCase
         /** @var Connection $db */
         $db = static::getContainer()->get(Connection::class);
         $row = $db->fetchAssociative(
-            "SELECT name, source_ref, attributes FROM item WHERE letter = 'B' AND name = :n",
+            "SELECT name, source_ref, attributes FROM item WHERE letter = 'N' AND name = :n",
             ['n' => $name],
         );
 

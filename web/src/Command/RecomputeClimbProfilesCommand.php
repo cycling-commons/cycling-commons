@@ -49,7 +49,7 @@ final class RecomputeClimbProfilesCommand extends Command
 
         $qb = $this->em->createQueryBuilder()
             ->select('i')->from(Item::class, 'i')
-            ->where("i.letter = 'B'")
+            ->where("i.letter = 'N'")
             ->orderBy('i.id', 'ASC');
         if (null !== ($id = $input->getOption('id'))) {
             $qb->andWhere('i.id = :id')->setParameter('id', (int) $id);

@@ -115,7 +115,7 @@ final class CoverageStatsProvider
     }
 
     /**
-     * Thinnest catalog categories. K is excluded — volume is the per-region cap, not coverage.
+     * Thinnest catalog categories. R is excluded — volume is the per-region cap, not coverage.
      *
      * @see docs/specs/route-domain.md §5.1
      *

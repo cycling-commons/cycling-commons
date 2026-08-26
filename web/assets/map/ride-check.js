@@ -6,7 +6,7 @@ import { map, flyToPin } from './map-init.js';
 import { I18N, D, tpl } from './i18n.js';
 import { escPend, txtOn } from './util.js';
 import { uKm, uM, uElev } from './units.js';
-import { coverageIconId } from './icons.js';
+import { coverageIconId, layerGlyph } from './icons.js';
 import { openCoverageByRef, invalidateCoverageDrawer } from './coverage.js';
 import { itemIndex } from './item-index.js';
 import { CATALOG, layerByKey } from './catalog.js';
@@ -15,9 +15,9 @@ import { closeDrawer, highlightAt, clearHighlight } from './drawer.js';
 import { openRouteById, bumpPlaceReq } from './places.js';
 import { rideScopeFor, scopeKey } from './ride-scope.js';
 
-// Coverage letters ride-check surfaces (utility C/D/G/H). Experiential E/I/J
+// Coverage letters ride-check surfaces (utility B/D/F/G). Experiential O/P/Q
 // stay on the curated arm.
-const COV_KEY={C:'water', D:'services', G:'transit', H:'shelter'};
+const COV_KEY={B:'water', D:'services', F:'transit', G:'shelter'};
 
 export function initRideCheck(){
     if(!window.CC_RIDECHECK) return;                       // anonymous: no control rendered
@@ -159,7 +159,7 @@ export function initRideCheck(){
         html+=`<ul class="cc-near-list">`;
         d.groups.forEach(g=>{
           const meta=CATALOG.find(l=>l.letter===g.letter)||{color:'#6b6f5e',label:g.letter};
-          html+=`<li class="cc-near-grp"><span class="cc-near-k" style="background:${meta.color};color:${txtOn(meta.color)}">${meta.icon||'•'}</span>${escPend(meta.label)} · ${g.items.length}${g.truncated?` ${D.capped||'(capped)'}`:''}</li>`;
+          html+=`<li class="cc-near-grp"><span class="cc-near-k" style="background:${meta.color};color:${txtOn(meta.color)}">${layerGlyph(meta)||'•'}</span>${escPend(meta.label)} · ${g.items.length}${g.truncated?` ${D.capped||'(capped)'}`:''}</li>`;
           html+=g.items.map((it,i)=>`<li><button class="cc-near" data-rc-g="${g.letter}" data-rc-i="${i}"><span class="cc-near-nm">${escPend(it.name||meta.label)}</span><em>${tpl(D.kmOff||'{a} along · {b} off', {a:uKm(it.alongKm), b:uM(it.distM)})}</em></button></li>`).join('');
         });
         html+=`</ul>`;
@@ -173,7 +173,7 @@ export function initRideCheck(){
         html+=`<h4 class="cc-near-h">${D.alongTrackCovH||'Open coverage along the track'}</h4><ul class="cc-near-list">`;
         cov.forEach(g=>{
           const meta=CATALOG.find(l=>l.letter===g.letter)||{color:'#6b6f5e',label:g.letter};
-          html+=`<li class="cc-near-grp"><span class="cc-near-k" style="background:${meta.color};color:${txtOn(meta.color)}">${meta.icon||'•'}</span>${escPend(meta.label)} · ${g.items.length}${g.truncated?` ${D.capped||'(capped)'}`:''}</li>`;
+          html+=`<li class="cc-near-grp"><span class="cc-near-k" style="background:${meta.color};color:${txtOn(meta.color)}">${layerGlyph(meta)||'•'}</span>${escPend(meta.label)} · ${g.items.length}${g.truncated?` ${D.capped||'(capped)'}`:''}</li>`;
           html+=g.items.map((it,i)=>`<li><button class="cc-near" data-rc-c="${g.letter}" data-rc-i="${i}"><span class="cc-near-nm">${escPend(it.name||meta.label)}</span><em>${tpl(D.kmOff||'{a} along · {b} off', {a:uKm(it.alongKm), b:uM(it.distM)})}</em></button></li>`).join('');
         });
         html+=`</ul><div class="cc-near-note">${D.covArmNote||'From open data — not yet checked by a rider.'}</div>`;

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
 /* Town card and deep-link / search openers.
    @see docs/specs/map-and-search.md §6.5, §8 */
+import { modeShows } from './filters.js';
 import { D, tpl } from './i18n.js';
 import { escPend, safeHref, txtOn, haversine, featurePoint } from './util.js';
 import { uKm, uM } from './units.js';
@@ -14,6 +15,7 @@ import { openDrawer, osmDrawer, waterDrawer, highlightAt, clearHighlight, reveal
 import { COVERAGE_ON, widenForDeepLink, openCoverageByRef,
          invalidateCoverageDrawer } from './coverage.js';
 import { showRouteCorrections } from './corrections.js';
+import { layerGlyph } from './icons.js';
 
 export function bumpPlaceReq(){ _placeReq++; }
 
@@ -59,7 +61,7 @@ function renderPlaceCard(name, meta, near, covGroups){
       if(!it || !Array.isArray(it.ll)) return;
       if(it.itemId!=null && idxIds().has(g.letter+':'+it.itemId)) return;
       all.push({dist:haversine(meta.ll, it.ll), e:{name:it.n||layer.label, kind:layer.label,
-        badge:layer.icon, color:layer.color, letter:g.letter, ll:it.ll, hlOff:[0,0], community:!it.curated,
+        badge:layerGlyph(layer), color:layer.color, letter:g.letter, ll:it.ll, hlOff:[0,0], community:!it.curated,
         go:()=>openCoverageByRef(it.ref, g.letter, it.ll, it.n, it.itemId)}});
     });
   });
@@ -72,7 +74,7 @@ function renderPlaceCard(name, meta, near, covGroups){
         // docs/specs/map-and-search.md §12 — verified first; community subgroup capped at 3.
         const ver=rows.filter(n=>!isComm(n)), com=rows.filter(isComm);
         const row=(n,hidden)=>`<li${hidden?` hidden data-more="${L}"`:''}><button class="cc-near" data-i="${n._i}"><span class="cc-near-nm">${escPend(n.e.name)}${isComm(n)?`<span class="cc-comm-tag">${escPend(D.community||'community')}</span>`:''}</span><em>${n.dist<1?uM(Math.round(n.dist*1000)):uKm(n.dist)}</em></button></li>`;
-        let html=`<li class="cc-near-grp"><span class="cc-near-k" style="background:${e0.color};color:${txtOn(e0.color)}">${escPend(e0.badge)}</span>${escPend(e0.kind)} · ${rows.length}</li>`;
+        let html=`<li class="cc-near-grp"><span class="cc-near-k" style="background:${e0.color};color:${txtOn(e0.color)}">${e0.badge}</span>${escPend(e0.kind)} · ${rows.length}</li>`;
         html+=ver.map(n=>row(n,false)).join('');
         html+=com.slice(0,3).map(n=>row(n,false)).join('');
         html+=com.slice(3).map(n=>row(n,true)).join('');
@@ -193,7 +195,7 @@ export function openRouteById(id){
   }
   openDrawer(layer,f);
   const p=featurePoint(f); if(p) flyToPin([p[1],p[0]]);
-  if(!(mode()==='all'||f.cur) && p) revealPinAt(layer, p);  // docs/specs/map-and-search.md §12 — no force-switch to Everything
+  if(!modeShows(mode(), layer, f) && p) revealPinAt(layer, p);  // docs/specs/map-and-search.md §12: reveal, never force-switch
   showRouteCorrections(id);
   return true;
 }

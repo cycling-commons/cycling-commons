@@ -9,7 +9,7 @@ namespace App\Media\Commons;
 /**
  * The Wikimedia Commons filename a coverage POI's tags point at, or null.
  *
- * Refusing is the common case. Measured over 487,704 letter-I rows on
+ * Refusing is the common case. Measured over 487,704 letter-P rows on
  * 2026-08-24: half the `image` tags name a stranger's web server, and most
  * `wikimedia_commons` tags name a category rather than a file. So every branch
  * here is a shape the harvest actually holds, not a hypothetical, and anything

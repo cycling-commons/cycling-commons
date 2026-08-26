@@ -48,7 +48,7 @@ final class BackfillAttributesCommandTest extends KernelTestCase
     /** @param array<string, mixed> $attributes */
     private function createClimb(array $attributes, string $name = 'Côte de Bohissau (test)'): Item
     {
-        $item = (new Item())->setLetter('B')->setName($name)
+        $item = (new Item())->setLetter('N')->setName($name)
             ->setGeom('{"type":"Point","coordinates":[5.11182,50.49479]}')->setCountryCode('BE')
             ->setState(ItemState::Unverified)->setSource(ItemSource::Wikidata)
             ->setSourceRef('wikidata:Q'.random_int(1, \PHP_INT_MAX))

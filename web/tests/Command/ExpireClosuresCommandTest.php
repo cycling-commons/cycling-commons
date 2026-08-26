@@ -26,7 +26,7 @@ use Symfony\Component\Console\Tester\CommandTester;
  * one that reports for months and never writes. Neither shows up in a service
  * test.
  *
- * @see docs/specs/edit-items/F-hazards.md
+ * @see docs/specs/edit-items/E-hazards.md
  */
 final class ExpireClosuresCommandTest extends KernelTestCase
 {
@@ -129,7 +129,7 @@ final class ExpireClosuresCommandTest extends KernelTestCase
     private function hazard(string $ref, array $attributes, string $observedAgo): Item
     {
         $item = (new Item())
-            ->setLetter('F')
+            ->setLetter('E')
             ->setName('Test expire-cmd:'.$ref)
             ->setGeom('{"type":"Point","coordinates":[4.87,50.47]}')
             ->setCountryCode('BE')

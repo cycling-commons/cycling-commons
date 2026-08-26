@@ -6,13 +6,24 @@ name: Pipeline CI
 # invisible to every pull request. coverage-provider.md §7 carried it as an
 # open question.
 #
-# This runs the same suite natively rather than by building pipeline/Dockerfile,
-# because that image compiles tippecanoe from source and NO test needs it: the
-# tile and publish steps are monkeypatched or botocore-stubbed. The two real
-# external dependencies are `osmium-tool` (extract shells out to
-# `osmium tags-filter`, exercised by test_extract) and a PostGIS database with
-# pg_trgm (the `db` fixture in tests/conftest.py builds an isolated
-# coverage_pytest schema).
+# This runs the suite natively rather than by building pipeline/Dockerfile, so
+# it needs the same external tools the image bakes in. There are four:
+#
+#   osmium-tool   extract shells out to `osmium tags-filter` (test_extract)
+#   tippecanoe    tiles.py shells out to it (test_tiles)
+#   go-pmtiles    verify shells out to `pmtiles` (test_tiles)
+#   PostGIS       the `db` fixture builds an isolated coverage_pytest schema
+#
+# The first version of this workflow claimed no test needed tippecanoe. It was
+# wrong, and it looked right locally because `make pipeline-test` runs INSIDE
+# the pipeline container, which has both binaries on PATH. The tests passed
+# there and eight of them failed here with FileNotFoundError. A dependency that
+# only the container provides is invisible to any check run inside it.
+#
+# Versions and checksums are READ FROM pipeline/Dockerfile rather than repeated
+# here. Two copies of a pinned version drift, and the failure mode is CI
+# testing against a different tippecanoe than the one that builds the real
+# tiles - which would show up as a tile-format bug nobody could reproduce.
 on:
   pull_request:
     paths: ['pipeline/**', '.github/workflows/ci-pipeline.yml']
@@ -50,6 +61,73 @@ jobs:
           python-version: '3.12'   # matches pipeline/Dockerfile's base image
       - name: osmium-tool (extract shells out to `osmium tags-filter`)
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends osmium-tool
+
+      # One source of truth for both: the Dockerfile's ARG pins. Read, never
+      # copied, so bumping the image bumps CI in the same commit.
+      - name: Read the tile-tool pins from pipeline/Dockerfile
+        id: pins
+        run: |
+          set -euo pipefail
+          for k in TIPPECANOE_VERSION TIPPECANOE_SHA256 GO_PMTILES_VERSION GO_PMTILES_SHA256; do
+            v=$(sed -n "s/^ARG ${k}=//p" Dockerfile)
+            [ -n "$v" ] || { echo "::error::${k} not found in pipeline/Dockerfile"; exit 1; }
+            echo "${k}=${v}" >> "$GITHUB_OUTPUT"
+          done
+
+      # tippecanoe has no apt package and takes minutes to compile, so the built
+      # binaries are cached on the pinned versions. A version bump misses the
+      # cache and rebuilds, which is exactly when it should.
+      - name: Cache tippecanoe + go-pmtiles
+        id: tiletools
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/tiletools
+          key: tiletools-${{ steps.pins.outputs.TIPPECANOE_VERSION }}-${{ steps.pins.outputs.GO_PMTILES_VERSION }}
+
+      - name: Build tippecanoe, fetch go-pmtiles
+        if: steps.tiletools.outputs.cache-hit != 'true'
+        env:
+          TIPPECANOE_VERSION: ${{ steps.pins.outputs.TIPPECANOE_VERSION }}
+          TIPPECANOE_SHA256: ${{ steps.pins.outputs.TIPPECANOE_SHA256 }}
+          GO_PMTILES_VERSION: ${{ steps.pins.outputs.GO_PMTILES_VERSION }}
+          GO_PMTILES_SHA256: ${{ steps.pins.outputs.GO_PMTILES_SHA256 }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.local/tiletools
+          sudo apt-get install -y --no-install-recommends build-essential libsqlite3-dev zlib1g-dev
+
+          # Checksums pin the exact release asset, same as the Dockerfile: a
+          # moved tag or a tampered download fails here instead of quietly
+          # testing against something else.
+          curl -fsSL -o /tmp/tippecanoe.tar.gz \
+            "https://github.com/felt/tippecanoe/archive/refs/tags/${TIPPECANOE_VERSION}.tar.gz"
+          echo "${TIPPECANOE_SHA256}  /tmp/tippecanoe.tar.gz" | sha256sum -c -
+          tar -xzf /tmp/tippecanoe.tar.gz -C /tmp
+          make -C "/tmp/tippecanoe-${TIPPECANOE_VERSION}" -j "$(nproc)"
+          cp "/tmp/tippecanoe-${TIPPECANOE_VERSION}"/tippecanoe \
+             "/tmp/tippecanoe-${TIPPECANOE_VERSION}"/tippecanoe-decode \
+             "/tmp/tippecanoe-${TIPPECANOE_VERSION}"/tile-join ~/.local/tiletools/
+
+          curl -fsSL -o /tmp/go-pmtiles.tar.gz \
+            "https://github.com/protomaps/go-pmtiles/releases/download/v${GO_PMTILES_VERSION}/go-pmtiles_${GO_PMTILES_VERSION}_Linux_x86_64.tar.gz"
+          echo "${GO_PMTILES_SHA256}  /tmp/go-pmtiles.tar.gz" | sha256sum -c -
+          tar -xzf /tmp/go-pmtiles.tar.gz -C ~/.local/tiletools pmtiles
+          chmod +x ~/.local/tiletools/*
+
+      - name: Put the tile tools on PATH
+        run: echo "$HOME/.local/tiletools" >> "$GITHUB_PATH"
+
+      - name: Every tool the suite shells out to is present
+        # Fail here with a readable message rather than eight tests deep in a
+        # FileNotFoundError traceback, which is how this was first reported.
+        run: |
+          set -euo pipefail
+          for t in osmium tippecanoe pmtiles; do
+            command -v "$t" >/dev/null || { echo "::error::$t missing from PATH"; exit 1; }
+          done
+          tippecanoe --version 2>&1 | head -1
+          pmtiles version 2>&1 | head -1
+
       # The pinned set, so CI and the container agree on every version.
       - run: pip install --no-cache-dir -r requirements.txt
       - run: python -m pytest tests -q

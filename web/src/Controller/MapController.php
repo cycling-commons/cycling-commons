@@ -11,6 +11,7 @@ use App\Catalog\CatalogProvider;
 use App\Catalog\CatalogSchemaProvider;
 use App\Catalog\ChangeHistoryView;
 use App\Catalog\ClosureExpiryService;
+use App\Catalog\ItemType;
 use App\Catalog\MapTheme;
 use App\Catalog\MapViewMode;
 use App\Catalog\RegionBoundaryProvider;
@@ -72,6 +73,8 @@ final class MapController extends AbstractController
         );
         $params = [
             'field_schema' => $schema->all(),
+            // The one category icon set (ItemType::iconSet()); catalog.js and icons.js read it.
+            'type_icons' => ItemType::iconSet(),
             'map_i18n' => $this->mapI18n($translator),
             'regions' => $regionRows,
             'rider_prefs' => [
@@ -117,6 +120,15 @@ final class MapController extends AbstractController
             $focus = $request->query->getInt('pending');
             $scope = $scopeProvider->scopeFor($user);
             $params['pending'] = $queue->pendingForMap($scope, $focus > 0 ? $focus : null);
+            // A brand-new item is not served yet, so the drawer had nothing to render
+            // it with and dumped the raw proposed fields. Hand the curator its would-be
+            // feature instead: final form, DEM numbers, same mapper as a live item
+            // (owner 2026-08-25).
+            foreach ($params['pending'] as $i => $p) {
+                if ('new' === $p['type'] && null !== $p['itemId']) {
+                    $params['pending'][$i]['preview'] = $catalogProvider->featureForItem($p['itemId'], anyState: true);
+                }
+            }
             // Do not re-derive with is_granted(): setup-pending curators hold the role without this payload.
             $params['pending_is_curator'] = true;
             $params['gone'] = $catalogProvider->goneForMap($scope);
@@ -208,10 +220,10 @@ final class MapController extends AbstractController
             'scoutTag_resupply' => 'd_scout_tag_resupply', 'scoutTag_closure' => 'd_scout_tag_closure',
             'scoutTag_surface' => 'd_scout_tag_surface', 'scoutTag_notice' => 'd_scout_tag_notice',
             'scoutTag_scenery' => 'd_scout_tag_scenery', 'scoutTag_other' => 'd_scout_tag_other',
-            'scoutLetter_A' => 'd_scout_letter_A', 'scoutLetter_C' => 'd_scout_letter_C',
-            'scoutLetter_D' => 'd_scout_letter_D', 'scoutLetter_F' => 'd_scout_letter_F',
-            'scoutLetter_H' => 'd_scout_letter_H', 'scoutLetter_I' => 'd_scout_letter_I',
-            'scoutLetter_J' => 'd_scout_letter_J',
+            'scoutLetter_A' => 'd_scout_letter_A', 'scoutLetter_B' => 'd_scout_letter_B',
+            'scoutLetter_D' => 'd_scout_letter_D', 'scoutLetter_E' => 'd_scout_letter_E',
+            'scoutLetter_G' => 'd_scout_letter_G', 'scoutLetter_P' => 'd_scout_letter_P',
+            'scoutLetter_Q' => 'd_scout_letter_Q',
             'scoutApprove' => 'd_scout_approve', 'scoutSent' => 'd_scout_sent',
             'scoutSending' => 'd_scout_sending', 'scoutNamePh' => 'd_scout_name_ph',
             'scoutNeedName' => 'd_scout_need_name', 'scoutSendFailed' => 'd_scout_send_failed',
@@ -268,6 +280,7 @@ final class MapController extends AbstractController
             'toastLoginConfirm' => 'd_toast_login_confirm', 'toastThanks' => 'd_toast_thanks',
             'toastErr' => 'd_toast_err', 'toastLoginRate' => 'd_toast_login_rate', 'toastCurator' => 'd_toast_curator',
             'toastVerified' => 'd_toast_verified', 'toastRecorded' => 'd_toast_recorded',
+            'toastModeLift' => 'd_toast_mode_lift',
             'toastLimit' => 'd_toast_limit', 'toastOpenRoute' => 'd_toast_open_route',
             'pickBikeRode' => 'd_pick_bike_rode', 'pickBikeVote' => 'd_pick_bike_vote',
             'undo' => 'd_undo', 'clear' => 'd_clear', 'done' => 'd_done', 'pointSet' => 'd_point_set',

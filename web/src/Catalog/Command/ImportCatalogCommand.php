@@ -38,8 +38,8 @@ final class ImportCatalogCommand extends Command
     /** Geometry kind each letter must carry (registry LocationMode made concrete). */
     private const array GEOMETRY_KIND = [
         'A' => 'LineString',
-        'B' => 'Point', 'C' => 'Point', 'D' => 'Point', 'E' => 'Point', 'F' => 'Point',
-        'G' => 'Point', 'H' => 'Point', 'I' => 'Point', 'J' => 'Point',
+        'B' => 'Point', 'D' => 'Point', 'E' => 'Point', 'F' => 'Point', 'G' => 'Point',
+        'N' => 'Point', 'O' => 'Point', 'P' => 'Point', 'Q' => 'Point',
     ];
 
     /** Property keys consumed into columns - never stored as attributes. */

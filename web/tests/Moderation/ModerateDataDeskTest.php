@@ -86,7 +86,7 @@ final class ModerateDataDeskTest extends WebTestCase
     public function testAcceptingAnOsmLinkWritesTheRef(): void
     {
         $client = static::createClient();
-        $item = $this->item('link', 'Dom', ItemSource::Wikidata, 'I');
+        $item = $this->item('link', 'Dom', ItemSource::Wikidata, 'P');
         $finding = $this->finding(FindingKind::OsmLink, $item, null, 'node/1350577339');
 
         $client->loginUser($this->curator('data-link@test.test'));
@@ -168,7 +168,7 @@ final class ModerateDataDeskTest extends WebTestCase
         // would retire something the curator never chose.
         $client = static::createClient();
         [$keeper, $loser] = $this->pair('stray');
-        $stranger = $this->item('stray-other', 'Somewhere Else', ItemSource::Osm, 'E');
+        $stranger = $this->item('stray-other', 'Somewhere Else', ItemSource::Osm, 'O');
         $finding = $this->finding(FindingKind::Duplicate, $loser, $keeper);
 
         $client->loginUser($this->curator('data-stray@test.test'));
@@ -303,8 +303,8 @@ final class ModerateDataDeskTest extends WebTestCase
     private function pair(string $slug): array
     {
         return [
-            $this->item($slug.'-keep', 'Hôtel Koru', ItemSource::Pivot, 'E'),
-            $this->item($slug.'-lose', 'Hôtel Koru', ItemSource::Osm, 'E'),
+            $this->item($slug.'-keep', 'Hôtel Koru', ItemSource::Pivot, 'O'),
+            $this->item($slug.'-lose', 'Hôtel Koru', ItemSource::Osm, 'O'),
         ];
     }
 

@@ -60,7 +60,7 @@ final class DecisionMessagesTest extends WebTestCase
     private function seedSubmission(int $userId, string $title): Submission
     {
         $em = $this->em();
-        $sub = (new Submission())->setType(SubmissionType::NewItem)->setLetter('B')->setUserId($userId)
+        $sub = (new Submission())->setType(SubmissionType::NewItem)->setLetter('N')->setUserId($userId)
             ->setTitle($title)
             ->setGeom('{"type":"Point","coordinates":[5.86,50.47]}')->setCountryCode('BE')
             ->setChanges([])->setPayload([]);

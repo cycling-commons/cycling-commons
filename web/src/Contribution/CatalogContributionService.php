@@ -8,6 +8,7 @@ namespace App\Contribution;
 
 use App\Catalog\Entity\Item;
 use App\Catalog\Entity\Submission;
+use App\Catalog\Import\OsmCandidates;
 use App\Catalog\Import\OutboundLinks;
 use App\Catalog\ItemSource;
 use App\Catalog\ItemState;
@@ -39,19 +40,6 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
  */
 final class CatalogContributionService implements ContributionStubInterface
 {
-    /**
-     * AddClimbType field names → registry attribute keys.
-     *
-     * @see docs/specs/edit-items/B-climbs.md
-     */
-    private const array CLIMB_FIELDS = [
-        // Gradients are measured from the line, never typed (docs/specs/climb-elevation.md §4).
-        'fSurface' => 'surface',
-        'fSurfaceQ' => 'sq',
-        'fTraffic' => 'tr',
-        'fNote' => 'correction',
-    ];
-
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly ValidatorInterface $validator,
@@ -61,6 +49,7 @@ final class CatalogContributionService implements ContributionStubInterface
         private readonly ClimbProfiler $profiler,
         private readonly SafeBrowsing $safeBrowsing,
         private readonly LinkVerdictStore $linkVerdicts,
+        private readonly OsmCandidates $osmCandidates,
     ) {
     }
 
@@ -80,7 +69,6 @@ final class CatalogContributionService implements ContributionStubInterface
         }
 
         return match ($kind) {
-            'climb' => $this->submitClimb($payload, $by),
             'add' => $this->submitAdd($payload, $by),
             'improve' => $this->submitImprove($payload, $by),
             // Voting is verification-gate machinery, not catalog intake.
@@ -88,45 +76,6 @@ final class CatalogContributionService implements ContributionStubInterface
                 'CC-'.strtoupper(bin2hex(random_bytes(6))), $kind, false, new \DateTimeImmutable(),
             ),
         };
-    }
-
-    /** @param array<string, mixed> $payload */
-    private function submitClimb(array $payload, User $by): ContributionReceipt
-    {
-        // Reject rather than coerce: a missing coordinate must not become 0.0.
-        if (!is_numeric($payload['lat'] ?? null) || !is_numeric($payload['lng'] ?? null)) {
-            $this->reject('contribute.error.invalid_location', 'lat');
-        }
-
-        $attributes = [];
-        foreach (self::CLIMB_FIELDS as $formKey => $attrKey) {
-            $v = $payload[$formKey] ?? null;
-            if (null !== $v && '' !== $v) {
-                $attributes[$attrKey] = \is_float($v) || \is_int($v) ? $v : (string) $v;
-            }
-        }
-
-        // Surface malformed editor output as a form error, not a silent drop.
-        try {
-            $attributes += ClimbGeometry::fromPayload($payload);
-        } catch (\InvalidArgumentException) {
-            $this->reject('contribute.error.invalid_geometry', 'route');
-        }
-        $attributes = $this->deriveClimbProfile($attributes);
-
-        $draft = new SubmissionDraft(
-            type: ItemType::Climbs,
-            title: (string) ($payload['fName'] ?? ''),
-            lat: (float) $payload['lat'],
-            lng: (float) $payload['lng'],
-            attributes: $attributes,
-        );
-
-        $submission = $this->submitDraft($draft, SubmissionType::NewItem, $by, $payload);
-
-        return new ContributionReceipt(
-            'SUB-'.(string) $submission->getId(), 'climb', true, $submission->getCreatedAt(), $submission->getId(),
-        );
     }
 
     /**
@@ -137,8 +86,17 @@ final class CatalogContributionService implements ContributionStubInterface
     private function submitAdd(array $payload, User $by): ContributionReceipt
     {
         $type = ItemType::tryFrom((string) ($payload['type'] ?? ''));
-        if (null === $type || \in_array($type, [ItemType::Climbs, ItemType::QualityRides], true)) {
-            throw new \InvalidArgumentException('add requires a non-climb, non-route catalog type');
+        if (null === $type || ItemType::QualityRides === $type) {
+            throw new \InvalidArgumentException('add requires a catalog item type; routes go through /propose-route');
+        }
+        // A climb's pin is its foot: fall back to the drawn line when the wizard sent no pin.
+        if (ItemType::Climbs === $type && !is_numeric($payload['lat'] ?? null)) {
+            $rawRoute = $payload['route'] ?? null;
+            $route = \is_string($rawRoute) ? json_decode($rawRoute, true) : null;
+            if (\is_array($route) && isset($route[0][0], $route[0][1]) && is_numeric($route[0][0]) && is_numeric($route[0][1])) {
+                $payload['lat'] = $route[0][0];
+                $payload['lng'] = $route[0][1];
+            }
         }
         // Segment-located types use the stretch start as the pin (docs/specs/moderation-and-contribution.md §1.3).
         if (LocationMode::Segment === $type->locationMode()
@@ -175,6 +133,18 @@ final class CatalogContributionService implements ContributionStubInterface
             if (null !== $now) {
                 $attributes[$field] = $now;
             }
+        }
+
+        // A climb's shape rides in top-level hidden fields; its numbers are measured from
+        // the DEM, never typed (docs/specs/climb-elevation.md §4). Same path the old
+        // /add-climb intake took, folded in here on 2026-08-25.
+        if (ItemType::Climbs === $type) {
+            try {
+                $attributes += ClimbGeometry::fromPayload($payload);
+            } catch (\InvalidArgumentException) {
+                $this->reject('contribute.error.invalid_geometry', 'route');
+            }
+            $attributes = $this->deriveClimbProfile($attributes);
         }
 
         // New segment items store geometry as an attribute; edits keep it payload-only.
@@ -513,10 +483,23 @@ final class CatalogContributionService implements ContributionStubInterface
                     ->setSource($draft->source ?? (null !== $draft->osmRef ? ItemSource::Osm : ItemSource::User))
                     ->setSourceRef($draft->osmRef ?? 'sub:'.(string) $submission->getId())
                     ->setAttributes($draft->attributes);
+
+                // catalog-data-model.md §5b: a row materialised from a coverage
+                // POI records a known OSM object, so the identity question is
+                // answered by construction. Writing only sourceRef left 775
+                // rows carrying the ref in a column nothing joins on.
+                if (null !== $draft->osmRef) {
+                    $item->answerOsm($draft->osmRef);
+                }
                 $this->em->persist($item);
                 $this->em->flush();
                 $submission->setItemId($item->getId());
                 $this->em->flush();
+                // The desk's OSM chip reads a stored list, never the coverage
+                // table (catalog-data-model.md §5b): compute it here, once.
+                if (!$item->osmAnswered()) {
+                    $this->osmCandidates->refresh((int) $item->getId());
+                }
             }
 
             // Photos ride the same intake transaction (docs/specs/photo-uploads.md §4).

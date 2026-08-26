@@ -50,11 +50,11 @@ final class SeedManualCatalogCommandTest extends KernelTestCase
         $tester->assertCommandIsSuccessful();
 
         $items = $this->em->getRepository(Item::class)->findBy(['source' => ItemSource::Manual]);
-        // Hazards (F) now have a real serving path (map-and-search.md §4.5
+        // Hazards (E) now have a real serving path (map-and-search.md §4.5
         // Task A), so the retired Hautes Fagnes crosswind demo returns as one
-        // seeded manual F row: 23 -> 24. The 2026-08-06 Swiss rollout then
-        // added six alpine passes, all letter B: 24 -> 30.
-        self::assertCount(30, $items, 'expected exactly the hand-authored demo pins (incl. the F hazard)');
+        // seeded manual E row: 23 -> 24. The 2026-08-06 Swiss rollout then
+        // added six alpine passes, all letter N: 24 -> 30.
+        self::assertCount(30, $items, 'expected exactly the hand-authored demo pins (incl. the E hazard)');
 
         $byLetter = [];
         foreach ($items as $item) {
@@ -64,19 +64,19 @@ final class SeedManualCatalogCommandTest extends KernelTestCase
         }
         ksort($byLetter);
         self::assertSame(
-            ['B' => 11, 'C' => 5, 'D' => 4, 'E' => 1, 'F' => 1, 'G' => 1, 'H' => 4, 'I' => 2, 'J' => 1],
+            ['B' => 5, 'D' => 4, 'E' => 1, 'F' => 1, 'G' => 4, 'N' => 11, 'O' => 1, 'P' => 2, 'Q' => 1],
             $byLetter,
         );
 
         $crosswind = $this->em->getRepository(Item::class)->findOneBy(['sourceRef' => 'manual:crosswind-hautes-fagnes']);
         self::assertNotNull($crosswind);
-        self::assertSame('F', $crosswind->getLetter());
+        self::assertSame('E', $crosswind->getLetter());
         self::assertSame('Crosswind / fog', $crosswind->getAttributes()['hazardType']);
 
         $redoute = $this->em->getRepository(Item::class)->findOneBy(['sourceRef' => 'manual:cote-de-la-redoute']);
         self::assertNotNull($redoute);
         self::assertSame('Côte de la Redoute', $redoute->getName());
-        self::assertSame('B', $redoute->getLetter());
+        self::assertSame('N', $redoute->getLetter());
         self::assertSame('Tough', $redoute->getAttributes()['effort']);
     }
 
@@ -260,7 +260,7 @@ final class SeedManualCatalogCommandTest extends KernelTestCase
         $connection = static::getContainer()->get(EntityManagerInterface::class)->getConnection();
         $connection->executeStatement(
             "INSERT INTO item (letter, name, geom, country_code, state, source, source_ref, attributes, created_at, updated_at, imported_at)
-             VALUES ('H', 'Abri Jean Poumay', ST_SetSRID(ST_MakePoint(5.8521, 50.5074), 4326), 'BE', 'verified', 'osm', 'osm:node:1', '{}', NOW(), NOW(), NOW())",
+             VALUES ('G', 'Abri Jean Poumay', ST_SetSRID(ST_MakePoint(5.8521, 50.5074), 4326), 'BE', 'verified', 'osm', 'osm:node:1', '{}', NOW(), NOW(), NOW())",
         );
 
         $tester = $this->runSeed();
@@ -283,16 +283,16 @@ final class SeedManualCatalogCommandTest extends KernelTestCase
         $payload = static::getContainer()->get(CatalogProvider::class)->payload();
         $names = array_map(
             static fn (array $f): ?string => $f['properties']['n'] ?? null,
-            $payload['E']['osm']['features'],
+            $payload['O']['osm']['features'],
         );
         self::assertContains(
             'Cyclist-friendly gîte · Amblève valley',
             $names,
-            'a manual (source=manual) letter-E stay must be served in the osm bucket, not dropped by the pivot split',
+            'a manual (source=manual) letter-O stay must be served in the osm bucket, not dropped by the pivot split',
         );
 
         $gite = array_values(array_filter(
-            $payload['E']['osm']['features'],
+            $payload['O']['osm']['features'],
             static fn (array $f): bool => 'Cyclist-friendly gîte · Amblève valley' === ($f['properties']['n'] ?? null),
         ))[0];
         self::assertSame('manual', $gite['properties']['srcType']);

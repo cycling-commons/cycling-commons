@@ -263,6 +263,16 @@ coverage-refresh: ## Refresh the coverage index + PMTiles (dev: Geofabrik → Po
 		$(if $(timeout),-e COVERAGE_STATEMENT_TIMEOUT=$(timeout)) \
 		pipeline python -m coverage.run
 
+coverage-tiles: ## Rebuild + publish the coverage PMTiles from the rows already in PostGIS (no harvest)
+	@$(DOCKER_COMP) --profile storage up --detach --wait minio
+	@$(DOCKER_COMP) run --rm \
+		-e COVERAGE_S3_ENDPOINT=http://minio:9000 \
+		-e COVERAGE_S3_KEY=$${MINIO_ROOT_USER:-ccadmin} \
+		-e COVERAGE_S3_SECRET=$${MINIO_ROOT_PASSWORD:-ccadminsecret} \
+		-e COVERAGE_PUBLIC_BASE_URL=http://localhost:9100/cc-maps \
+		$(if $(regions),-e COVERAGE_REGIONS=$(regions)) \
+		pipeline python -m coverage.run --tiles-only
+
 # The road-surface LINE layer — three artifacts from one pass over each region's
 # PBF, and NO database at all (Dated/2026-08-09-surface-line-tiles-design.md):
 #   surface.pmtiles        the classified skin (what is under your tyres), z8-13

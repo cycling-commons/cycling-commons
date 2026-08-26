@@ -67,7 +67,7 @@ final class CatalogFormRegistry
                 addFields: [
                     CatalogField::select('waterOnClimb', 'Water on climb?', self::UNKNOWN_YES_NO),
                     CatalogField::text('hairpins', 'Hairpins (count)', placeholder: 'e.g. 3'),
-                    CatalogField::select('shade', 'Shade / exposure', ['Unknown', 'Wooded', 'Exposed']),
+                    CatalogField::select('shade', 'Shade / exposure', ['Unknown', 'Wooded', 'Partly shaded', 'Exposed']),
                     CatalogField::text('famousFor', 'Famous for', placeholder: 'e.g. La Flèche Wallonne summit finish'),
                     CatalogField::text('approach', 'Approach', placeholder: 'e.g. From Sougné-Remouchamps (Aywaille)'),
                 ],
@@ -143,7 +143,7 @@ final class CatalogFormRegistry
 
             ItemType::Hazards => new ItemFieldSet(
                 fields: [
-                    // docs/specs/edit-items/F-hazards.md (Closures expire themselves) — Scout NOTICE types too.
+                    // docs/specs/edit-items/E-hazards.md (Closures expire themselves) — Scout NOTICE types too.
                     CatalogField::select('hazardType', 'Hazard type', ['Crosswind / fog', 'Ice / frost', 'Loose surface / gravel', 'Potholes', 'Junction / crossing', 'Bad corner', 'Flooding', 'Roadworks', 'Road closed', 'Other']),
                     // Only when hazardType is 'Road closed'.
                     CatalogField::select('closedFor', 'If closed, for how long?', ClosureLifetime::CHOICES, default: 'Unknown'),

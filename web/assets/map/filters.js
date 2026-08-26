@@ -38,3 +38,24 @@ export function climbChipsMatch(f, state){
     && attrMatch(f.tr, state.traffic.active, state.traffic.all)
     && attrMatch(f.effort, state.effort.active, state.effort.all);
 }
+
+/* docs/specs/map-and-search.md §4.2: the three rungs, lowest first. */
+export const MODE_RUNGS = ['curated', 'confirmed', 'all'];
+
+/** Does view mode `m` draw feature `f` on `layer`? The mode half of
+ *  render.js featureVisible(); scope and chips are judged there. */
+export function modeShows(m, layer, f){
+  if(m === 'all') return true;
+  if(m === 'confirmed') return !!f.v || !!f.cur;
+  // curated: experiential layers filter to the picks; utility layers draw as before.
+  return layer.key === 'experience' ? !!f.cur : (!layer.exp || !!f.cur);
+}
+
+/** docs/specs/map-and-search.md §8: a deep link must show what it points at.
+ *  Returns the lowest rung at or above `from` that draws `f`, or null when
+ *  `from` already does (nothing to lift). */
+export function modeToShow(from, layer, f){
+  if(modeShows(from, layer, f)) return null;
+  const i = MODE_RUNGS.indexOf(from);
+  return MODE_RUNGS.slice(i < 0 ? 0 : i + 1).find(m => modeShows(m, layer, f)) || null;
+}

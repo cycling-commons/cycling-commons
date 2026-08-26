@@ -70,6 +70,7 @@ versioned prefix plus `surface/manifest.json`.
 | `--surface` | build the line artifacts instead of the point index |
 | `--extract-only` | stop after the per-region GeoJSONL. For continental runs done one region at a time, so a failure costs one country instead of the queue. |
 | `--no-publish` | build without uploading or moving the manifest (size experiments) |
+| `--tiles-only` | skip the harvest; export, build, verify and publish the coverage PMTiles from the `coverage_poi` rows already in PostGIS. For a change that rewrote the index without new OSM data (the 2026-08-25 letter renumbering, when the `<letter>_<cc>` layer names had to follow the rows). Dev shortcut: `make coverage-tiles`. |
 
 The app reads the manifest through `App\Coverage\SurfaceManifest`, so a rebuild
 needs no config change. `ROAD_SURFACE_MANIFEST_URL` points at it server-side;

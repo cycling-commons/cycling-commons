@@ -217,7 +217,7 @@ diverge even before any smoothing choice enters the picture: one source is measu
 fixed grid resolution, the other is measuring wherever the rider's own sensor happened to be, as
 often as it happened to sample.
 
-`docs/specs/edit-items/B-climbs.md` records exactly this pairing as the intended production path for
+`docs/specs/edit-items/N-climbs.md` records exactly this pairing as the intended production path for
 climb gradients — "gradient auto via DEM (SRTM / Copernicus GLO-30)" — and `docs/specs/map-and-search.md`
 §14 names the same pairing again for elevation generally. Neither is built yet. The pipeline service
 that would eventually sample a downloaded DEM currently does no more than check that one is mounted at

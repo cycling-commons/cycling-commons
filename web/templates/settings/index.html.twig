@@ -6,7 +6,6 @@
 {% block head_styles %}
 {% include 'account/_shell_styles.html.twig' %}
 <style>
-  .wrap{max-width:980px;margin:0 auto;padding:2.2rem clamp(1.25rem,4vw,2rem)}
 
   h2.sec{font-family:var(--mono);font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;color:var(--clay);
     margin:2.2rem 0 1.1rem;padding-bottom:.5rem;border-bottom:1px solid rgba(20,22,14,.14)}
@@ -17,8 +16,6 @@
 
   .status-row{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.7rem 0;border-bottom:1px solid rgba(20,22,14,.1);font-size:.9rem}
   .status-row .label{color:#595c4d;font-size:.85rem}
-  .pill{font-family:var(--mono);font-size:.58rem;text-transform:uppercase;letter-spacing:.08em;padding:.25rem .5rem;border-radius:30px}
-  .pill.yes{color:var(--paper);background:var(--spruce-lift)} .pill.no{color:#5a4410;background:rgba(200,146,58,.22)} .pill.role{color:var(--paper);background:var(--ink);margin-left:.2rem}
 
   /* Every explanatory line on this page reads in ONE secondary style. The
      class was referenced but never defined, so half the help text rendered at
@@ -128,8 +125,6 @@
   .btn-danger:hover{background:rgba(181,83,46,.18)}
 
   .notice{background:var(--paper-deep);border-left:2px solid var(--glacier);padding:.9rem 1.1rem;font-size:.84rem;color:#4a4d40;border-radius:0 6px 6px 0;margin-top:1.6rem;line-height:1.55}
-  .flash-success{background:rgba(44,84,64,.12);border-left:3px solid var(--spruce-lift);color:var(--spruce-lift);padding:.7rem 1rem;border-radius:0 5px 5px 0;font-size:.9rem;margin-bottom:1.4rem}
-  .flash-error{background:rgba(179,38,30,.1);border-left:3px solid var(--danger);color:var(--danger-ink);padding:.7rem 1rem;border-radius:0 5px 5px 0;font-size:.9rem;margin-bottom:1.4rem}
 
   .danger-zone{border:1px solid rgba(181,83,46,.35);border-radius:8px;padding:1.2rem 1.4rem;margin-top:2.4rem}
   .danger-zone h2.sec{color:var(--clay);margin-top:0}
@@ -148,8 +143,11 @@
 {% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'settings'} %}{% endblock %}
 
 {% block body %}
-<h1 class="acct-id">{{ 'settings.heading'|trans }} — {{ cc_user.displayName }}</h1>
-<div class="wrap">
+<div class="dbody" id="main">
+  <div class="mh">
+    <div class="kicker">{{ 'account.menu_personal'|trans }} · {{ cc_user.displayName }}</div>
+    <h1>{{ 'settings.heading'|trans }}</h1>
+  </div>
 
   <div class="tabs" role="tablist" aria-label="{{ 'settings.heading'|trans }}">
     <button type="button" role="tab" id="tabbtn-profile" aria-controls="tab-profile"
@@ -172,23 +170,23 @@
   <div class="grid-2">
     <div class="status-row">
       <span class="label">{{ 'profile.status_email_verified'|trans }}</span>
-      {% if cc_user.emailVerified %}<span class="pill yes">{{ 'profile.pill_verified'|trans }}</span>{% else %}<span class="pill no">{{ 'profile.pill_pending'|trans }}</span>{% endif %}
+      {% if cc_user.emailVerified %}<span class="q-pill q-pill--ok">{{ 'profile.pill_verified'|trans }}</span>{% else %}<span class="q-pill q-pill--ret">{{ 'profile.pill_pending'|trans }}</span>{% endif %}
     </div>
     <div class="status-row">
       <span class="label">{{ 'profile.status_2fa'|trans }}</span>
-      {% if cc_user.twoFaEnabled and cc_user.totpSecret %}<span class="pill yes">{{ 'profile.pill_2fa_enabled'|trans }}</span>{% else %}<span class="pill no">{{ 'profile.pill_2fa_not_enabled'|trans }}</span>{% endif %}
+      {% if cc_user.twoFaEnabled and cc_user.totpSecret %}<span class="q-pill q-pill--ok">{{ 'profile.pill_2fa_enabled'|trans }}</span>{% else %}<span class="q-pill q-pill--ret">{{ 'profile.pill_2fa_not_enabled'|trans }}</span>{% endif %}
     </div>
     <div class="status-row">
       <span class="label">{{ 'profile.status_public_profile'|trans }}</span>
-      {% if cc_user.publicProfile %}<span class="pill yes">{{ 'profile.pill_public_yes'|trans }}</span>{% else %}<span class="pill no">{{ 'profile.pill_public_no'|trans }}</span>{% endif %}
+      {% if cc_user.publicProfile %}<span class="q-pill q-pill--ok">{{ 'profile.pill_public_yes'|trans }}</span>{% else %}<span class="q-pill q-pill--ret">{{ 'profile.pill_public_no'|trans }}</span>{% endif %}
     </div>
     <div class="status-row">
       <span class="label">{{ 'profile.status_roles'|trans }}</span>
-      <span>{% for role in cc_user.roles %}<span class="pill role">{{ role }}</span>{% endfor %}</span>
+      <span>{% for role in cc_user.roles %}<span class="q-pill q-pill--conf">{{ role }}</span>{% endfor %}</span>
     </div>
     <div class="status-row">
       <span class="label">{{ 'profile.status_country'|trans }}</span>
-      <span>{% if cc_user.country %}<img src="{{ asset(cc_user.country.flagAsset) }}" alt="" width="20" height="15" style="vertical-align:-2px;border-radius:2px;box-shadow:0 0 0 1px rgba(0,0,0,.08)"> {{ cc_user.country.name }}{% else %}<span class="pill no">{{ 'profile.pill_not_set'|trans }}</span>{% endif %}</span>
+      <span>{% if cc_user.country %}<img src="{{ asset(cc_user.country.flagAsset) }}" alt="" width="20" height="15" style="vertical-align:-2px;border-radius:2px;box-shadow:0 0 0 1px rgba(0,0,0,.08)"> {{ cc_user.country.name }}{% else %}<span class="q-pill q-pill--ret">{{ 'profile.pill_not_set'|trans }}</span>{% endif %}</span>
     </div>
   </div>
 

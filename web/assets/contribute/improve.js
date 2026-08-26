@@ -22,7 +22,10 @@
   var initLng = parseFloat(_q.get('lng'));
   if (isNaN(initLat) && typeof _itemPos.lat === 'number') initLat = _itemPos.lat;
   if (isNaN(initLng) && typeof _itemPos.lng === 'number') initLng = _itemPos.lng;
-  var hasCoords = !isNaN(initLat) && !isNaN(initLng);
+  var hasCoords = !isNaN(initLat) && !isNaN(initLng) && Math.abs(initLat) <= 90 && Math.abs(initLng) <= 180;
+  // ?z= from the map's "Add a climb here" (map-and-search.md §8.1); clamped like the server did.
+  var initZoom = parseFloat(_q.get('z'));
+  if (!isNaN(initZoom)) initZoom = Math.max(3, Math.min(18, initZoom));
 
   var _pair = function (raw) {
     var p = String(raw || '').split(',');
@@ -47,8 +50,8 @@
   };
 
   /* Locate: point / segment / none. Climbs always get a map — the line IS the item
-     (docs/specs/edit-items/B-climbs.md). */
-  var IS_CLIMB = !!(window.CC_ITEM && 'B' === window.CC_ITEM.letter);
+     (docs/specs/edit-items/N-climbs.md). */
+  var IS_CLIMB = !!(window.CC_ITEM && 'N' === window.CC_ITEM.letter);
   var LOCATE = (ADD || hasCoords || RELOCATE || (IS_CLIMB && !!(window.CC_ITEM || {}).route)) ? _locMode : 'off';
 
   // Photos: media-upload.js onChange. Links stay here — onChange replaces its list.
@@ -159,10 +162,11 @@
       nextBtn.disabled = true;
       return;
     }
+    // A climb mid-route or mid-profile is not placed yet: never send a placeholder.
     if (WZ.cur === 1 && LOCATE !== 'off') {
-      nextBtn.disabled = !WZ.loc;
+      nextBtn.disabled = !WZ.loc || !!WZ.locPending;
     } else if (WZ.cur === WZ.last) {
-      nextBtn.disabled = nothingChanged();
+      nextBtn.disabled = nothingChanged() || !!WZ.locPending;
     } else {
       nextBtn.disabled = false;
     }
@@ -189,7 +193,7 @@
       container: 'wmap',
       style: 'https://tiles.openfreemap.org/styles/liberty',
       center: DEFAULTS.center,
-      zoom: hasCoords ? 14 : 12,
+      zoom: hasCoords ? (isNaN(initZoom) ? 14 : initZoom) : 12,
       attributionControl: false
     });
     window.__ccWizMap = wmap;  // smoke tests: project()/unproject()
@@ -203,7 +207,7 @@
 
     /* Known-places overlay (ADD): nearby coverage so the pin is not a duplicate. */
     var covLetter = window.CC_ITEM && window.CC_ITEM.letter;
-    if (ADD && covLetter && 'B' !== covLetter) {
+    if (ADD && covLetter && 'N' !== covLetter) {
       var covMarkers = [];
       var covLast = null;
       var covNote = document.getElementById('wz-known');
@@ -247,8 +251,8 @@
       wmap.on('moveend', refreshCov);
     }
 
-    // Climbs: shared three-point editor (docs/specs/edit-items/B-climbs.md).
-    var isClimb = !!(window.CC_ITEM && 'B' === window.CC_ITEM.letter);
+    // Climbs: shared three-point editor (docs/specs/edit-items/N-climbs.md).
+    var isClimb = !!(window.CC_ITEM && 'N' === window.CC_ITEM.letter);
     var climbEditor = null;
     var wzReset = document.getElementById('wzReset');
     var placeAt = null;
@@ -261,6 +265,28 @@
         : undefined;
 
       var undoBtn = document.getElementById('wzUndo');
+      /* The next tap, said ON the map, where the eye is (carried over from the
+         retired /add-climb wizard, owner 2026-08-25). Mirrors the readout and
+         hides once foot and summit are set. */
+      var setMapHint = function (text) {
+        var h = document.getElementById('wz-mapHint');
+        if (!h) return;
+        if (text) { h.textContent = text; h.hidden = false; } else { h.hidden = true; }
+      };
+      var uElevM = function (m) { return window.ccElev ? window.ccElev(m) : Math.round(Number(m)) + ' m'; };
+      /* Length, gain, average and steepest as the model measured them: read-only,
+         under the map, so a rider sees the numbers before the review step. */
+      var renderMeasured = function (st) {
+        var box = document.getElementById('wz-measured');
+        if (!box) return;
+        var set = function (id, v) { var el = document.getElementById(id); if (el) el.textContent = v || '—'; };
+        var any = !!(st.lengthKm || st.gain || st.avg || (st.steep && st.steep.pct));
+        box.hidden = !any;
+        set('wzm-len', st.lengthKm ? uKm(st.lengthKm) : '');
+        set('wzm-gain', st.gain ? '△ ' + uElevM(st.gain) : '');
+        set('wzm-avg', st.avg ? st.avg + ' %' : '');
+        set('wzm-max', (st.steep && st.steep.pct) ? String(st.steep.pct).replace(/\s*%$/, '') + ' %' : '');
+      };
       climbEditor = window.Cc.mountClimbEditor({
         map: wmap,
         hidden: { route: fld('route'), grad: fld('grad'), steep: fld('steep'), avg: fld('avg'), steepPoint: fld('steepPoint') },
@@ -268,8 +294,14 @@
         onHistory: function (depth) { if (undoBtn) undoBtn.hidden = 0 === depth; },
         onChange: function (st) {
           var ro = document.getElementById('wz-readout');
+          // A climb's pin is its foot: the add intake needs lat/lng like any new item.
+          var fLatC = fld('lat'), fLngC = fld('lng');
+          if (fLatC) fLatC.value = st.start ? st.start[1] : '';
+          if (fLngC) fLngC.value = st.start ? st.start[0] : '';
+          WZ.locPending = !!(st.routing || st.profiling);
           if (st.start && st.summit) {
-            WZ.loc = { type: 'climb', start: st.start, summit: st.summit, lengthKm: st.lengthKm };
+            WZ.loc = { type: 'climb', start: st.start, summit: st.summit, lengthKm: st.lengthKm,
+                       gain: st.gain || '', avg: st.avg || '', max: (st.steep && st.steep.pct) || '' };
             if (ro) {
               var txt = t('readout_climb_set');
               if (st.lengthKm) txt += ' · ' + t('climb_length', { '%km%': uKm(st.lengthKm) });
@@ -279,13 +311,18 @@
               else txt += ' — ' + t('climb_drag_hint');
               ro.textContent = txt;
             }
+            setMapHint('');
           } else {
             WZ.loc = null;
-            if (ro) ro.textContent = st.start ? t('readout_climb_summit') : t('readout_climb_foot');
+            var next = st.start ? t('readout_climb_summit') : t('readout_climb_foot');
+            if (ro) ro.textContent = next;
+            setMapHint(next);
           }
+          renderMeasured(st);
           refreshGate();
         }
       });
+      setMapHint(initial ? '' : t('readout_climb_foot'));
 
       if (wzReset) {
         wzReset.addEventListener('click', function () { if (climbEditor) climbEditor.reset(); });
@@ -977,6 +1014,10 @@
       if (WZ.loc.lengthKm) {
         locTxt += ' · ' + t('climb_length', { '%km%': uKm(WZ.loc.lengthKm) });
       }
+      // The measured numbers, so the review echoes what step 1 showed.
+      if (WZ.loc.gain) locTxt += ' · △ ' + (window.ccElev ? window.ccElev(WZ.loc.gain) : Math.round(Number(WZ.loc.gain)) + ' m');
+      if (WZ.loc.avg) locTxt += ' · ' + t('measured_avg', { '%pct%': WZ.loc.avg });
+      if (WZ.loc.max) locTxt += ' · ' + t('measured_max', { '%pct%': String(WZ.loc.max).replace(/\s*%$/, '') });
     }
 
     var fieldRows = [];
@@ -1006,7 +1047,8 @@
     var note = document.getElementById('wz-nochange');
     if (note) {
       note.textContent = t('nothing_changed');
-      note.hidden = !nothingChanged();
+      // A curator sees the map pointer instead; the two notices never stack.
+      note.hidden = !nothingChanged() || !!document.getElementById('wz-curator-decide');
     }
 
     var block = document.getElementById('reviewMedia');

@@ -71,7 +71,7 @@ final class CuratedDefaultGateTest extends WebTestCase
     {
         /** @var Connection $db */
         $db = static::getContainer()->get(Connection::class);
-        $letters = ['B', 'E', 'I'];
+        $letters = ['N', 'O', 'P'];
         for ($i = 0; $i < $n; ++$i) {
             $db->executeStatement(
                 "INSERT INTO item (letter, name, source, source_ref, state, country_code, attributes, region_id, geom, created_at, updated_at)
@@ -90,7 +90,7 @@ final class CuratedDefaultGateTest extends WebTestCase
         for ($i = 0; $i < $n; ++$i) {
             $db->executeStatement(
                 "INSERT INTO item (letter, name, source, source_ref, state, country_code, attributes, region_id, geom, created_at, updated_at)
-                 VALUES ('I', 'view', 'manual', :ref, 'verified', 'BE', '{\"cur\": true}'::jsonb, :r,
+                 VALUES ('P', 'view', 'manual', :ref, 'verified', 'BE', '{\"cur\": true}'::jsonb, :r,
                          ST_SetSRID(ST_MakePoint(5.0, 50.0), 4326), NOW(), NOW())",
                 ['ref' => 'lop:'.$regionId.':'.$i, 'r' => $regionId],
             );
@@ -187,7 +187,7 @@ final class CuratedDefaultGateTest extends WebTestCase
         for ($i = 0; $i < $n; ++$i) {
             $db->executeStatement(
                 "INSERT INTO item (letter, name, source, source_ref, state, country_code, attributes, region_id, geom, created_at, updated_at)
-                 VALUES ('C', 'tap', 'manual', :ref, 'verified', 'BE', '{}'::jsonb, :r,
+                 VALUES ('B', 'tap', 'manual', :ref, 'verified', 'BE', '{}'::jsonb, :r,
                          ST_SetSRID(ST_MakePoint(5.0, 50.0), 4326), NOW(), NOW())",
                 ['ref' => 'conf:'.$regionId.':'.$i, 'r' => $regionId],
             );
@@ -335,7 +335,7 @@ final class CuratedDefaultGateTest extends WebTestCase
         );
         self::assertGreaterThanOrEqual(
             \count($countries) * 2,
-            substr_count($body, 'class="rg-item"'),
+            substr_count($body, 'class="q-item rg-item"'),
             'and so is every one of their regions',
         );
         self::assertStringNotContainsString('page=2', $body, 'nothing offers a second page');
@@ -345,6 +345,6 @@ final class CuratedDefaultGateTest extends WebTestCase
         self::assertResponseIsSuccessful();
         $filtered = (string) $client->getResponse()->getContent();
         self::assertSame(1, substr_count($filtered, '<details class="rg-country"'), 'the filter narrows to one country');
-        self::assertSame(2, substr_count($filtered, 'class="rg-item"'), 'showing only its regions');
+        self::assertSame(2, substr_count($filtered, 'class="q-item rg-item"'), 'showing only its regions');
     }
 }

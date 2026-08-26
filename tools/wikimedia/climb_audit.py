@@ -179,7 +179,7 @@ def foot_place(lat, lng):
 def existing_climbs():
     """Climbs already in the catalogue, as (name, lat, lng) - never re-seed one."""
     sql = ("SELECT json_agg(json_build_object('name', name, 'lat', ST_Y(geom), 'lng', ST_X(geom)))::text "
-           "FROM item WHERE letter = 'B'")
+           "FROM item WHERE letter = 'N'")
     # Narrow, and loud. A blanket `except Exception: return []` here read as
     # "no climbs in the catalogue", which is the same answer as "the database
     # is down" and as "the query is broken" (security scan 2026-08-25). This

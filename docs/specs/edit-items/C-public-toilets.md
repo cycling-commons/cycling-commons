@@ -1,22 +1,24 @@
 <!-- SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 -->
 
-# Edit spec — M · Public toilets
+# Edit spec — C · Public toilets
 
 **Status:** canonical reference · **Audience:** contributors to Cycling Commons
 
-- **Catalog layer:** M · Public toilets
+- **Catalog layer:** C · Public toilets
 - **Map depiction:** 🚻 pin, colour #4E6E8C
 - **Editable:** yes · full wizard (add / improve / materialize-on-edit)
 - **Lifecycle:** *utility* — never votable; riders confirm with a plain
-  "still here?" stance (`ConfirmationStance::Exists`), same as D/F/G/H. See
+  "still here?" stance (`ConfirmationStance::Exists`), same as D/E/F/G. See
   [README — lifecycle & votability](README.md#item-lifecycle-and-votability).
 
-## The letter — M, deliberately not L
+## The letter — C
 
-Letter **L is reserved** for the derived, anonymized ride heatmap (see
-`ItemType`'s class doc), so this type takes **M**. Letters are stable storage
-identifiers, never display order: every surface that lists categories orders
-this one editorially **right after C · Water & food** — the contribute hub
+This type takes **C** since the 2026-08-25 renumbering (practical types A–M,
+experiential N–Z; it was M before, when L was kept free for the ride heatmap.
+The heatmap has no letter any more: it is a derived layer, not a catalogue
+type). Letters are stable storage identifiers, never display order: every
+surface that lists categories orders this one editorially **right after
+B · Water & food** — the contribute hub
 card, the map layer rail (`CATALOG` array order in
 `web/assets/map/catalog.js`), and any future legend.
 
@@ -24,7 +26,7 @@ card, the map layer rail (`CATALOG` array order in
 
 Public toilets and sanitary stops — the second-most-asked utility after
 water on a long ride. OSM's `amenity=toilets` is the reference base
-(coverage contract letter `M`); riders add what OSM misses and confirm what
+(coverage contract letter `C`); riders add what OSM misses and confirm what
 exists.
 
 ## Data sources (Netherlands note)
@@ -53,15 +55,15 @@ sourcing rule (Warmshowers/WTMG precedent).
 
 ## Wiring
 
-- `ItemType::PublicToilets` (`public-toilets`, letter M, 🚻, existence
+- `ItemType::PublicToilets` (`public-toilets`, letter C, 🚻, existence
   confirmations) + `CatalogFormRegistry` field set above.
-- Coverage contract letter `M` (`amenity=toilets`) in
+- Coverage contract letter `C` (`amenity=toilets`) in
   `pipeline/contract/coverage-contract.json`; pipeline `LETTERS` and the
-  serving-plane rosters (`CoverageRepository`, `LETTER_KEY`) carry M. Tiles
+  serving-plane rosters (`CoverageRepository`, `LETTER_KEY`) carry C. Tiles
   and `coverage_poi` rows appear after the next harvest run; every reader
   tolerates their absence until then.
-- Map: `toilets` layer (key ↔ letter M), catalog payload key `M`, OSM bulk
+- Map: `toilets` layer (key ↔ letter C), catalog payload key `C`, OSM bulk
   pool `CC_TOILETS_OSM`.
 - Contribute hub card (after Water & food), add wizard, materialize-on-edit
   and confirmations all work through the generic per-letter machinery — no
-  M-specific code paths.
+  C-specific code paths.

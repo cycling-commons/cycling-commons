@@ -169,7 +169,7 @@ final class RiderProfileTest extends WebTestCase
         $em = static::getContainer()->get(EntityManagerInterface::class);
 
         $mk = static function (SubmissionType $type, SubmissionStatus $status, int $uid): Submission {
-            return (new Submission())->setType($type)->setLetter('C')->setUserId($uid)
+            return (new Submission())->setType($type)->setLetter('B')->setUserId($uid)
                 ->setStatus($status)->setTitle('row')
                 ->setGeom('{"type":"Point","coordinates":[6.0,50.4]}')->setCountryCode('BE')
                 ->setChanges([])->setPayload([]);
@@ -200,7 +200,7 @@ final class RiderProfileTest extends WebTestCase
         // must land in the SAME counter.
         $mkItem = static fn (string $ref): int => (int) $em->getConnection()->fetchOne(
             "INSERT INTO item (letter, name, geom, country_code, state, source, source_ref, attributes, created_at, updated_at, imported_at)
-             VALUES ('C', 'Counter Tap', ST_SetSRID(ST_MakePoint(6.0, 50.4), 4326), 'BE', 'unverified', 'osm', :ref, '{}', NOW(), NOW(), NOW())
+             VALUES ('B', 'Counter Tap', ST_SetSRID(ST_MakePoint(6.0, 50.4), 4326), 'BE', 'unverified', 'osm', :ref, '{}', NOW(), NOW(), NOW())
              RETURNING id",
             ['ref' => $ref],
         );

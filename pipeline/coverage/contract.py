@@ -16,8 +16,8 @@ from dataclasses import dataclass
 CONTRACT_PATH = pathlib.Path(__file__).resolve().parents[1] / "contract" / "coverage-contract.json"
 
 # osm-data-architecture.md §5 point catalogue. A (road surface) is corridor
-# data and stays out of the coverage artifact; B/F/K are category-3.
-LETTERS = frozenset("CDEGHIJM")
+# data and stays out of the coverage artifact; E/N/R are category-3.
+LETTERS = frozenset("BCDFGOPQ")
 
 # Tag keys tiles.py::_EXTRA_SQL reads back out of `tags` when it builds the
 # per-letter tile properties. They must survive the storedTagKeys trim or the

@@ -6,65 +6,14 @@
   foldable conversation and a pager. A desk about what is still to do should
   not carry an unbounded list of what is already done, so the two are separate
   pages that share only their tab strip.
+
+  Since 2026-08-25 a settled row is the shared record card, like every other
+  list in the shell: the verdict is its pill, the diff its diff, the
+  conversation a folded thread under it. List density is what makes it scan.
 #}
 {% extends 'base.html.twig' %}
 {% block head_styles %}
 {% include 'account/_shell_styles.html.twig' %}
-<style>
-  .mh{padding:2rem 0 1.4rem}
-  .mh .kicker{font-family:var(--mono);font-size:.64rem;letter-spacing:.16em;text-transform:uppercase;color:var(--clay);margin-bottom:.6rem}
-  .mh h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4vw,2.4rem);line-height:1.08;margin-bottom:.4rem;color:var(--ink)}
-  .mh .role-badge{display:inline-flex;align-items:center;gap:.4rem;font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;background:var(--spruce-lift);color:var(--paper);padding:.22rem .55rem;border-radius:30px;margin-top:.5rem}
-  .mod-bar{display:flex;gap:1rem;flex-wrap:wrap;align-items:flex-end;margin:0 0 1.4rem}
-  .mod-filters{display:flex;gap:1rem;flex-wrap:wrap;align-items:end;margin:0}
-  .mod-filters label{font-family:var(--mono);font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;color:#595c4d;display:flex;flex-direction:column;gap:.3rem}
-  .mod-filters select{font-family:var(--sans);font-size:.9rem;padding:.5rem;min-height:34px;border:1px solid rgba(20,22,14,.25);border-radius:6px;background:var(--paper);min-width:150px}
-  /* ── History: settled submissions, one line each. Deliberately plainer than
-     the queue — this is a record to scan, not work to do. */
-  .q-history{margin:2.5rem 0 3rem;border-top:1px solid rgba(20,22,14,.12);padding-top:1.4rem}
-  .q-history h2{font-family:var(--serif);font-weight:600;font-size:1.15rem;margin:0 0 .8rem}
-  .hist-filters{display:flex;flex-wrap:wrap;gap:.35rem;align-items:center;margin-bottom:1rem}
-  .hist-filters .hsep{width:1px;height:20px;background:rgba(20,22,14,.18);margin:0 .4rem}
-  .hchip{font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;
-    padding:.35rem .65rem;border:1px solid rgba(20,22,14,.25);border-radius:30px;color:#595c4d;
-    text-decoration:none;transition:all .15s}
-  .hchip:hover{border-color:var(--ink);color:var(--ink)}
-  .hchip.on{background:var(--ink);border-color:var(--ink);color:var(--paper)}
-  .hist-empty{font-size:.88rem;color:#595c4d}
-  .hist-list{list-style:none;margin:0;padding:0}
-  .hist-row{display:flex;align-items:baseline;gap:.6rem;padding:.4rem 0;border-bottom:1px solid rgba(20,22,14,.07);font-size:.88rem}
-  .hist-state{font-family:var(--mono);font-size:.55rem;letter-spacing:.08em;text-transform:uppercase;
-    padding:.16rem .4rem;border-radius:3px;flex:0 0 auto}
-  /* Smaller than the queue's: this list is a scan of what happened, not a
-     surface for judging, so the picture jogs the memory rather than carrying
-     the decision. */
-  .hist-thumb{flex:0 0 28px;display:block;line-height:0;border-radius:4px;overflow:hidden;
-    border:1px solid rgba(20,22,14,.18);align-self:center}
-  .hist-thumb img{width:28px;height:28px;object-fit:cover;display:block}
-  .hist-thumb:hover{border-color:var(--trail)}
-  .hist-state--approved{background:rgba(46,125,50,.16);color:#2c5440}
-  .hist-state--rejected{background:rgba(181,83,46,.16);color:#6b3016}
-  .hist-state--trashed{background:rgba(139,26,26,.14);color:#8b1a1a}
-  .hist-kind{font-family:var(--mono);font-size:.58rem;letter-spacing:.06em;text-transform:uppercase;color:#8a8d7d;margin-left:.4rem}
-  .hist-title{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .hist-title a{color:var(--ink);text-decoration:none;border-bottom:1px solid rgba(20,22,14,.2)}
-  .hist-meta{font-family:var(--mono);font-size:.6rem;color:#595c4d;flex:0 0 auto}
-  .hist-when{font-family:var(--mono);font-size:.6rem;color:#8a8d7d;flex:0 0 auto}
-  .hist-note{font-size:.82rem;color:#4a4d40;padding:.15rem 0 .5rem 3.2rem;border-bottom:1px solid rgba(20,22,14,.07)}
-  .hist-reply strong{color:var(--ink)}
-  .hist-diff{font-size:.82rem;padding:.15rem 0 .4rem 3.2rem;border-bottom:1px solid rgba(20,22,14,.07)}
-  .hist-thread-row{padding:0 0 .4rem 3.2rem;border-bottom:1px solid rgba(20,22,14,.07)}
-  .hist-thread summary{cursor:pointer;font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;color:var(--clay);padding:.2rem 0}
-  .hist-thread summary:hover{color:var(--ink)}
-  .hist-msgs{list-style:none;margin:.35rem 0 .2rem;padding:0;border-left:2px solid rgba(20,22,14,.14)}
-  .hist-msg{display:flex;gap:.6rem;align-items:baseline;padding:.25rem 0 .25rem .7rem;font-size:.84rem;color:#3a3d33}
-  .hist-msg-who{font-family:var(--mono);font-size:.55rem;letter-spacing:.08em;text-transform:uppercase;flex:0 0 4.2rem;color:#595c4d}
-  .hist-msg--rider .hist-msg-who{color:var(--clay)}
-  .hist-msg-body{flex:1 1 auto;min-width:0}
-  .hist-msg-when{font-family:var(--mono);font-size:.6rem;color:#8a8d7d;flex:0 0 auto}
-  .hist-was{color:#8a8d7d;text-decoration:line-through;margin-right:.4rem}
-  .hist-now{color:var(--trail)}
-</style>
 {% endblock %}
 {% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate_history', mod_scope_names: mod_scope_names is defined ? mod_scope_names : null, mod_submission_count: mod_submission_count is defined ? mod_submission_count : null, mod_route_count: mod_route_count is defined ? mod_route_count : null, mod_takedown_count: mod_takedown_count is defined ? mod_takedown_count : null} %}{% endblock %}
 
@@ -72,15 +21,13 @@
 {# The filters this page pages through, so every link keeps them. #}
 {% set hparams = {handled: history_filters.mine ? 'mine' : null, hstatus: history_filters.status, q: history_filters.q,
                   country: history_filters.country, region: history_filters.region, type: history_filters.type} %}
-<div class="mh">
-  <div class="wrap">
+{% set verdict_pill = {'approved': 'ok', 'rejected': 'rej', 'trashed': 'danger'} %}
+<div class="dbody" id="main">
+  <div class="mh">
     <div class="kicker">{{ 'moderate.history.kicker'|trans }}</div>
     <h1>{{ 'moderate.history.heading'|trans }}</h1>
-    <div><span class="role-badge">&#9876; {{ 'moderate.role_label'|trans }}</span></div>
   </div>
-</div>
 
-<div class="wrap" id="main">
   {# The same three selects the queue carries, plus the search — a curator who
      narrows the desk to their country narrows the record the same way, with the
      same controls (owner, 2026-08-03). The everyone/mine and status chips below
@@ -112,6 +59,9 @@
     </label>
     <button type="submit" class="btn-act btn-secondary mod-go">{{ 'moderate.filter.apply'|trans }}</button>
   </form>
+  {% if history is not empty %}
+    {% include 'account/_density.html.twig' %}
+  {% endif %}
   </div>
 
   {# ── History ── what this desk has already settled.
@@ -119,89 +69,102 @@
      escalation lifts it off every desk, so there is nothing else to filter for
      (moderation-and-contribution.md §5.2). Plain links, not JS: a filter that
      survives a reload and can be linked to a colleague is worth a page load. #}
-  <section class="q-history">
-    <div class="hist-filters">
-      <a class="hchip {{ history_filters.mine ? '' : 'on' }}" href="{{ path('moderate_history', hparams|merge({hstatus: history_filters.status})) }}">{{ 'moderate.history.everyone'|trans }}</a>
-      <a class="hchip {{ history_filters.mine ? 'on' : '' }}" href="{{ path('moderate_history', hparams|merge({handled: 'mine', hstatus: history_filters.status})) }}">{{ 'moderate.history.mine'|trans }}</a>
-      <span class="hsep"></span>
-      <a class="hchip {{ history_filters.status ? '' : 'on' }}" href="{{ path('moderate_history', hparams|merge({handled: history_filters.mine ? 'mine' : null})) }}">{{ 'moderate.filter.all'|trans }}</a>
-      <a class="hchip {{ history_filters.status == 'approved' ? 'on' : '' }}" href="{{ path('moderate_history', hparams|merge({handled: history_filters.mine ? 'mine' : null, hstatus: 'approved'})) }}">{{ 'moderate.action.approve'|trans }}</a>
-      <a class="hchip {{ history_filters.status == 'rejected' ? 'on' : '' }}" href="{{ path('moderate_history', hparams|merge({handled: history_filters.mine ? 'mine' : null, hstatus: 'rejected'})) }}">{{ 'moderate.action.reject'|trans }}</a>
-    </div>
-    {% if history is empty %}
-      <p class="hist-empty">{{ 'moderate.history.empty'|trans }}</p>
-    {% else %}
-      <ul class="hist-list">
-        {% for h in history %}
-          <li class="hist-row">
-            <span class="hist-state hist-state--{{ h.status }}">{{ ('moderate.status.' ~ h.status)|trans }}</span>
+  <nav class="lfilter" aria-label="{{ 'moderate.history.heading'|trans }}">
+    <a class="lchip {{ history_filters.mine ? '' : 'on' }}" href="{{ path('moderate_history', hparams|merge({hstatus: history_filters.status})) }}">{{ 'moderate.history.everyone'|trans }}</a>
+    <a class="lchip {{ history_filters.mine ? 'on' : '' }}" href="{{ path('moderate_history', hparams|merge({handled: 'mine', hstatus: history_filters.status})) }}">{{ 'moderate.history.mine'|trans }}</a>
+    <span class="lsep"></span>
+    <a class="lchip {{ history_filters.status ? '' : 'on' }}" href="{{ path('moderate_history', hparams|merge({handled: history_filters.mine ? 'mine' : null})) }}">{{ 'moderate.filter.all'|trans }}</a>
+    <a class="lchip {{ history_filters.status == 'approved' ? 'on' : '' }}" href="{{ path('moderate_history', hparams|merge({handled: history_filters.mine ? 'mine' : null, hstatus: 'approved'})) }}">{{ 'moderate.action.approve'|trans }}</a>
+    <a class="lchip {{ history_filters.status == 'rejected' ? 'on' : '' }}" href="{{ path('moderate_history', hparams|merge({handled: history_filters.mine ? 'mine' : null, hstatus: 'rejected'})) }}">{{ 'moderate.action.reject'|trans }}</a>
+  </nav>
+  {% if history is empty %}
+    <div class="empty-state"><p>{{ 'moderate.history.empty'|trans }}</p></div>
+  {% else %}
+    <div class="q-list" id="qList">
+      {% for h in history %}
+        <div class="q-item">
+          <div class="q-top">
             {# The picture, as in the open queue. A trashed row has none by
                design — the audit is content-free — and a rejected one may have
                lost its photos to disposal, so this is `if`, not `else`. #}
             {% if h.photos is defined and h.photos|length > 0 %}
-              <a class="hist-thumb" href="{{ h.photos[0].lg }}" target="_blank" rel="noopener"
+              <a class="q-thumb" href="{{ h.photos[0].lg }}" target="_blank" rel="noopener"
                  title="{{ 'improve.step3.open_full'|trans }}">
-                <img src="{{ h.photos[0].sm }}" alt="" loading="lazy" width="28" height="28">
+                <img src="{{ h.photos[0].sm }}" alt="" loading="lazy" width="44" height="44">
               </a>
             {% endif %}
-            {# ?item=<id>, not ?pending=<id>: the submission is settled, so it is
-               no longer in the pending payload and that link resolved nothing —
-               the map just opened at the default scope with nothing selected.
-               Only APPROVED rows link: a rejected item is not on the map, and a
-               link that lands nowhere is worse than no link. #}
-            <span class="hist-title">{% if h.itemId and h.status == 'approved' %}<a href="{{ path('map') }}?item={{ h.itemId }}" target="_blank" rel="noopener">{{ h.title }}</a>{% else %}{{ h.title }}{% endif %}{% if h.status == 'trashed' and h.type %} <span class="hist-kind">{{ ('moderate.type.' ~ h.type)|trans }}</span>{% endif %}
-              {# The item's own kind. A custom title hides what a row is about;
-                 an unnamed one already reads as its type, so repeating it there
-                 would print "Water & food WATER & FOOD". #}
-              {% if h.typeLabel is defined and h.typeLabel and (h.typeLabel|trans) != h.title %}<span class="hist-kind">{{ h.typeLabel|trans }}</span>{% endif %}</span>
-            {# A trashed row carries no title and no rider: the audit is
-               content-free by design, so all there is to show is who did it. #}
-            <span class="hist-meta">{{ h.who }}{% if h.decidedBy %}{% if h.who %} · {% endif %}{{ 'moderate.history.by'|trans({'%who%': h.decidedBy}) }}{% endif %}</span>
-            <span class="hist-when">{{ h.when }}</span>
-          </li>
-          {# The curator's own note, then the rider's answer. Since a needs-info
-             reply is desk work rather than personal mail (§5.4), this history is
-             the only place it survives once the submission is decided. #}
+            {# The same row a rider sees on /profile (owner 2026-08-25): icon,
+               type tag, title + kind; date · Map · verdict on the right. #}
+            <div class="q-headwrap">
+              <div class="q-head">
+                {% if h.letter is defined and h.letter %}{% include 'partials/_type_icon.html.twig' with {letter: h.letter} %}{% endif %}
+                {% if h.type %}<span class="q-tag q-tag--{{ h.type }}">{{ ('moderate.type.' ~ h.type)|trans }}</span>{% endif %}
+                <h3 class="q-title">{{ h.title }}
+                  {# The item's own kind. A custom title hides what a row is about;
+                     an unnamed one already reads as its type, so repeating it there
+                     would print "Water & food WATER & FOOD". #}
+                  {% if h.typeLabel is defined and h.typeLabel and (h.typeLabel|trans) != h.title %}<span class="q-kind">{{ h.typeLabel|trans }}</span>{% endif %}</h3>
+              </div>
+              {# A trashed row carries no title and no rider: the audit is
+                 content-free by design, so all there is to show is who did it. #}
+              <div class="q-submitter"><span class="q-who">{{ h.who }}{% if h.decidedBy %}{% if h.who %} · {% endif %}{{ 'moderate.history.by'|trans({'%who%': h.decidedBy}) }}{% endif %}</span></div>
+            </div>
+            <div class="q-acts">
+              <span class="q-when">{{ h.when }}</span>
+              {# ?item=<id>, not ?pending=<id>: the submission is settled, so it is
+                 no longer in the pending payload and that link resolved nothing.
+                 Only APPROVED rows link: a rejected item is not on the map, and a
+                 link that lands nowhere is worse than no link. #}
+              {% if h.itemId and h.status == 'approved' %}
+                <span class="q-links"><a class="q-link" href="{{ path('map') }}?item={{ h.itemId }}" target="_blank" rel="noopener">{{ 'account.link_map'|trans }} &#8599;</a></span>
+              {% endif %}
+              <span class="q-pill q-pill--{{ verdict_pill[h.status] ?? 'ret' }}">{{ ('moderate.status.' ~ h.status)|trans }}</span>
+            </div>
+          </div>
           {# WHAT was decided. A verdict with no subject ("Approved · Côte de la
              Redoute") tells a curator nothing they can check (owner-reported
              2026-08-03). Same before/after the queue card shows. #}
           {% if h.now %}
             {# Long values (a drawn segment's geometry) clamp to one line,
                click to expand — partials/_vclip.html.twig. #}
-            {% set hlong = (h.now ~ (h.was ?? ''))|length > 110 %}
-            <li class="hist-diff{% if hlong %} vclip" tabindex="0" role="button" aria-expanded="false{% endif %}">{% if h.was %}<span class="hist-was">{{ h.was }}</span> {% endif %}<span class="hist-now">{{ h.now }}</span></li>
+            <div class="q-diff">
+              {% if h.was %}<div class="q-was{% if h.was|length > 110 %} vclip" tabindex="0" role="button" aria-expanded="false{% endif %}">{{ h.was }}</div>{% endif %}
+              <div class="q-now{% if h.now|length > 110 %} vclip" tabindex="0" role="button" aria-expanded="false{% endif %}">{{ h.now }}</div>
+            </div>
           {% endif %}
-          {% if h.note %}<li class="hist-note">{{ h.note }}</li>{% endif %}
-          {# The full exchange, folded away. The row stays one line because most
+          {# The curator's own note, then the rider's answer. Since a needs-info
+             reply is desk work rather than personal mail (§5.4), this history is
+             the only place it survives once the submission is decided. #}
+          {% if h.note %}<p class="q-note">{{ h.note }}</p>{% endif %}
+          {# The full exchange, folded away. The row stays short because most
              submissions never had a conversation; the ones that did are the
              only place it survives — change_history records what was APPLIED,
              not what was asked, and the reply is no longer personal mail
              (§5.4). Shown instead of the single latest reply, which is a
              subset of this. #}
           {% if h.thread is not empty %}
-            <li class="hist-thread-row">
-              <details class="hist-thread">
-                <summary>{{ 'moderate.history.thread'|trans({'%count%': h.thread|length}) }}</summary>
-                <ol class="hist-msgs">
-                  {% for m in h.thread %}
-                    <li class="hist-msg hist-msg--{{ m.who }}">
-                      <span class="hist-msg-who">{{ ('moderate.history.said_' ~ m.who)|trans }}</span>
-                      <span class="hist-msg-body">{{ m.body ?: 'moderate.history.no_text'|trans }}</span>
-                      <span class="hist-msg-when">{{ m.when }}</span>
-                    </li>
-                  {% endfor %}
-                </ol>
-              </details>
-            </li>
+            <details class="q-thread">
+              <summary>{{ 'moderate.history.thread'|trans({'%count%': h.thread|length}) }}</summary>
+              <ol class="q-msgs">
+                {% for m in h.thread %}
+                  <li class="q-msg q-msg--{{ m.who }}">
+                    <span class="q-msg-who">{{ ('moderate.history.said_' ~ m.who)|trans }}</span>
+                    <span class="q-msg-body">{{ m.body ?: 'moderate.history.no_text'|trans }}</span>
+                    <span class="q-msg-when">{{ m.when }}</span>
+                  </li>
+                {% endfor %}
+              </ol>
+            </details>
           {% elseif h.riderReply %}
-            <li class="hist-note hist-reply"><strong>{{ 'moderate.rider_reply'|trans }}:</strong> {{ h.riderReply }}</li>
+            <p class="q-note q-note--answer"><strong>{{ 'moderate.rider_reply'|trans }}:</strong> {{ h.riderReply }}</p>
           {% endif %}
-        {% endfor %}
-      </ul>
-    {% endif %}
-  </section>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
 
   {% include 'partials/_pager.html.twig' with {pager: pager, route: 'moderate_history', params: hparams} %}
 </div>
 {% include 'partials/_vclip.html.twig' %}
+{% include 'moderate/_card_script.html.twig' %}
 {% endblock %}

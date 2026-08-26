@@ -78,9 +78,9 @@ final class ProfileDashboardTest extends WebTestCase
         );
         $db->executeStatement(
             "INSERT INTO item (letter, name, geom, country_code, state, source, source_ref, attributes, created_at, updated_at)
-             VALUES ('C', 'Dash Fountain', ST_SetSRID(ST_GeomFromText('POINT(4.5 50.5)'), 4326), 'BE', 'verified', 'seed', 'dash-fountain-t', '{}', NOW(), NOW())",
+             VALUES ('B', 'Dash Fountain', ST_SetSRID(ST_GeomFromText('POINT(4.5 50.5)'), 4326), 'BE', 'verified', 'seed', 'dash-fountain-t', '{}', NOW(), NOW())",
         );
-        $itemId = (int) $db->fetchOne("SELECT id FROM item WHERE source_ref = 'dash-fountain-t' AND letter = 'C'");
+        $itemId = (int) $db->fetchOne("SELECT id FROM item WHERE source_ref = 'dash-fountain-t' AND letter = 'B'");
         $db->executeStatement(
             "INSERT INTO item_confirmation (item_id, user_id, stance, created_at, updated_at) VALUES (?, ?, 'potable', NOW(), NOW())",
             [$itemId, (int) $user->getId()],

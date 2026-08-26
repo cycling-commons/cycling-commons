@@ -179,7 +179,7 @@ _TABLE_DDL = """
 CREATE TABLE IF NOT EXISTS coverage_poi (
     id            bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     ref           varchar(160) NOT NULL,  -- 'node/61146471' | 'way/…' = item.source_ref format
-    letter        char(1)      NOT NULL,  -- C D E G H I J (osm-data-architecture.md §5)
+    letter        char(1)      NOT NULL,  -- B C D F G O P Q (osm-data-architecture.md §5)
     kind          varchar(16),            -- serviceKind for D (shop|station|pump), NULL otherwise
     name          varchar(255),           -- OSM name tag, NULL when unnamed
     geom          geometry(Point, 4326) NOT NULL, -- nodes as-is; ways centroid at load
@@ -198,6 +198,13 @@ _INDEX_DDL = (
     # the shared prod cluster (design §3.6); requires autocommit (ensure_schema
     # toggles it). IF NOT EXISTS keeps the bootstrap idempotent.
     "CREATE INDEX CONCURRENTLY IF NOT EXISTS coverage_poi_geom_idx ON coverage_poi USING gist (geom)",
+    # Every radius query the app runs casts to geography
+    # (ST_DWithin(cp.geom::geography, ...): OsmLinker candidates, /map/coverage/nearby),
+    # and a geometry GiST index cannot serve a geography predicate, so the
+    # planner fell back to the letter index and measured 375k water POIs per
+    # queue card (2.8 s each on /moderate, owner-reported 2026-08-25). A
+    # functional index on the cast is what those predicates match: 716 ms -> 2 ms.
+    "CREATE INDEX CONCURRENTLY IF NOT EXISTS coverage_poi_geog_idx ON coverage_poi USING gist ((geom::geography))",
     "CREATE INDEX CONCURRENTLY IF NOT EXISTS coverage_poi_letter_idx ON coverage_poi (letter)",
     "CREATE INDEX CONCURRENTLY IF NOT EXISTS coverage_poi_region_id_idx ON coverage_poi (region_id)",
     # country_code arm of /map/coverage/search|nearby|counts (map-and-search.md §4.5):
@@ -530,6 +537,22 @@ def load_region(
                 "AND NOT EXISTS (SELECT 1 FROM coverage_poi_staging s "
                 "WHERE s.ref = c.ref AND s.letter = c.letter)",
                 (src_id,),
+            )
+            # The app stores each open row's OSM-candidate list on the row
+            # (item.osm_candidates, catalog-data-model.md §5b) instead of asking
+            # this table on every list view. This slice just changed, so every
+            # open row of the same country gets its list cleared; the app
+            # recomputes on the next read. Answered rows (osm_checked_at set)
+            # are left alone. to_regclass: the pipeline's own test schema has no
+            # item table, and a harvest must not depend on the app's schema.
+            cur.execute(
+                "DO $$ BEGIN "
+                "IF to_regclass('item') IS NOT NULL THEN "
+                "  UPDATE item SET osm_candidates = NULL, osm_candidates_at = NULL "
+                "   WHERE osm_checked_at IS NULL AND osm_candidates_at IS NOT NULL "
+                "     AND country_code IN (SELECT DISTINCT country_code FROM coverage_poi_staging "
+                "                          WHERE country_code IS NOT NULL); "
+                "END IF; END $$"
             )
             # Delta-scoped membership (design §3.4): restrict the 3 recompute
             # UPDATEs to rows the upsert touched, so unchanged rows keep last
