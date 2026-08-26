@@ -1,0 +1,128 @@
+web/assets/map/drawer.js
+  s_d6eab02dcad899::t_a51bdfd3110138 324
+  s_d6eab02dcad899::t_bf502b97d3d75b 325
+  s_16e7d98f40a315::t_c33f52be8417c8 241
+web/tests/Scout/ScoutIntakeTest.php
+  s_d6eab02dcad899::t_ed6431d7adbdfb 299-300
+pipeline/tests/test_run.py
+  s_d6eab02dcad899::t_8108cb6085590e 152,203,221
+web/tests/js/coverage-keys.test.cjs
+  s_d6eab02dcad899::t_2f6993635ac3bd 41
+web/tests/Controller/CoveragePhotoControllerTest.php
+  s_d6eab02dcad899::t_f14acf983908f3 126
+web/tests/Catalog/RegionDirectoryProviderTest.php
+  s_d6eab02dcad899::t_f14acf983908f3 52-54,125-126
+web/tests/Moderation/CuratedDefaultGateTest.php
+  s_d6eab02dcad899::t_f14acf983908f3 93,190
+web/tests/Contribution/ImproveTest.php
+  s_d6eab02dcad899::t_8a5c3e4135ca55 199,325,354,384,400,418,505,535
+  s_d6eab02dcad899::t_a5bdaab74f21fd 405,423
+web/tests/Community/ItemConfirmationServiceTest.php
+  s_d6eab02dcad899::t_f14acf983908f3 54,65,79,113,130,147,155
+web/tests/Controller/RiderProfileTest.php
+  s_d6eab02dcad899::t_f14acf983908f3 203
+web/assets/map/coverage.js
+  s_d6eab02dcad899::t_a51bdfd3110138 18,83
+web/tests/Moderation/WithdrawSubmissionTest.php
+  s_d6eab02dcad899::t_f14acf983908f3 61
+web/tests/Catalog/DuplicateGuardTest.php
+  s_d6eab02dcad899::t_f14acf983908f3 45,50,52,63,65,72,74,89,91,97,99,108,110,117,119,126,128,133-134,151-152
+web/tests/Catalog/CatalogSchemaProviderTest.php
+  s_d6eab02dcad899::t_f14acf983908f3 42,45
+web/tests/Catalog/ImportItemLinksCommandTest.php
+  s_d6eab02dcad899::t_f14acf983908f3 35
+pipeline/tests/test_load.py
+  s_d6eab02dcad899::t_8108cb6085590e 60,86-87,103,121,147-148,153-154,189,196,219,228-229,231,239,242,260,263-264,281,293,344,375,415,453,486,500,515,534,540-541,586-587,604,617,620,636,668,679-680,683,696-698,727,731,759
+web/tests/Community/CuratorConfirmationTest.php
+  s_d6eab02dcad899::t_f14acf983908f3 124,135
+web/tests/Catalog/CuratedReadinessTest.php
+  s_d6eab02dcad899::t_f14acf983908f3 75-78,81,83,95-96,107,132,183
+web/tests/Controller/RegionsPagesTest.php
+  s_d6eab02dcad899::t_f14acf983908f3 61
+web/tests/Moderation/ModerateDecideAjaxTest.php
+  s_16e7d98f40a315::t_b2e08904cfb3da 229
+pipeline/tests/test_publish.py
+  s_d6eab02dcad899::t_8108cb6085590e 57,78
+web/tests/Contribution/SubmissionChangeSummaryTest.php
+  s_d6eab02dcad899::t_f14acf983908f3 39,50,70,79,112,123
+pipeline/tests/test_tiles.py
+  s_d6eab02dcad899::t_8108cb6085590e 31,33,35,74,79-80,134-137,146,148-150,152,154,170
+web/src/Catalog/Import/AttributeVocabulary.php
+  s_d6eab02dcad899::t_b3a368a10d75db 28
+web/tests/Coverage/CoverageManifestTest.php
+  s_d6eab02dcad899::t_f14acf983908f3 56
+web/src/Catalog/Command/SeedClimbsCommand.php
+  s_d6eab02dcad899::t_536957c0fb7036 182
+web/assets/map/scout-review.js
+  s_d6eab02dcad899::t_a51bdfd3110138 47
+web/tests/Catalog/RideCheckServiceTest.php
+  s_d6eab02dcad899::t_f14acf983908f3 142,144,162,287
+web/tests/Command/DedupePlacesCommandTest.php
+  s_d6eab02dcad899::t_f14acf983908f3 43-44,59-60,72-73,88-89,101-102,116-118,129-130
+web/tests/Controller/CoveragePageTest.php
+  s_d6eab02dcad899::t_f14acf983908f3 41
+web/tests/Smoke/MapPageTest.php
+  s_d6eab02dcad899::t_f14acf983908f3 78
+web/src/Catalog/Command/ImportCatalogCommand.php
+  s_d6eab02dcad899::t_b3a368a10d75db 41-42
+web/tests/Profile/MyContributionsTest.php
+  s_d6eab02dcad899::t_f14acf983908f3 109-111
+web/src/Catalog/CatalogProvider.php
+  s_d6eab02dcad899::t_cd9cf8195727e7 314
+web/tests/Moderation/ModerationServiceTest.php
+  s_d6eab02dcad899::t_f14acf983908f3 62,82,88,181,187
+  s_16e7d98f40a315::t_a36f89d87c049f 56
+web/tests/Catalog/SeedManualCatalogCommandTest.php
+  s_d6eab02dcad899::t_f14acf983908f3 263
+web/src/Scout/ScoutTag.php
+  s_d6eab02dcad899::t_b3a368a10d75db 29-30,32-34,42,44,47-48,51
+web/src/Catalog/Command/BackfillAttributesCommand.php
+  s_d6eab02dcad899::t_b3a368a10d75db 74
+web/tests/Catalog/ClosureLifetimeTest.php
+  s_d6eab02dcad899::t_8a5c3e4135ca55 69,71,74-75
+web/src/Catalog/CuratedReadiness.php
+  s_d6eab02dcad899::t_cd9cf8195727e7 166
+web/tests/Community/ItemConfirmationControllerTest.php
+  s_d6eab02dcad899::t_f14acf983908f3 54,68,86,103,113,157,186
+pipeline/contract/coverage-contract.json
+  s_d6eab02dcad899::t_8108cb6085590e 4,31-39,59,80,129-168,185
+web/tests/Moderation/ModerateDataDeskTest.php
+  s_d6eab02dcad899::t_f14acf983908f3 89,171,306-307
+docs/specs/coverage-provider.md
+  s_16e7d98f40a315::t_e9406f7a11bf60 589,639
+web/assets/map/map.js
+  s_16e7d98f40a315::t_7ece20c3630e78 150,191
+web/tests/Catalog/CatalogProviderTest.php
+  s_16e7d98f40a315::t_3f552909fb9333 124,126,150,178,219,297,367,402,459,498-499,502-503,548,588,595,601
+web/tests/Contribution/CatalogContributionServiceTest.php
+  s_16e7d98f40a315::t_e4016b469ea693 165,192,222,246,275,295
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "14284828a44cd0521f8fd2e5be0b6be8e4797819",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_16e7d98f40a315": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a9fcd11a-43a8-477a-bd05-612aaa422d99",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_d6eab02dcad899": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b5577347-6bee-425e-a6b0-d01f31e69be7",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
