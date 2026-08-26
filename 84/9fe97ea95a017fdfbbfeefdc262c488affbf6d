@@ -35,8 +35,11 @@ web/src/Messaging/CuratorRoomPin.php
 web/src/Twig/ModerationChromeExtension.php
   s_504d29ab0e31e9::t_e18288e353795d 10,20,24-26,37,47,60,71-81
   s_504d29ab0e31e9::t_069780034acee7 82
+  s_504d29ab0e31e9::t_a591ff20a83bba 27
+  s_504d29ab0e31e9::t_df595ba0b670dc 21-23,70
 web/templates/account/_shell_chrome.html.twig
   s_504d29ab0e31e9::t_2cd35330285a23 14,29,47-50
+  s_504d29ab0e31e9::t_03e01c729b8774 6
 web/translations/messages.de.yaml
   s_504d29ab0e31e9::t_9c06b1a3f362a9 26,2805,3016-3017,3720-3776
 web/translations/messages.en.yaml
