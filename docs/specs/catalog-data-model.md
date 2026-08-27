@@ -265,6 +265,13 @@ diagrammed in [osm-data-architecture.md §2](osm-data-architecture.md).
 (`RIDER_SOURCES` in `web/assets/map/i18n.js`); the rest keep their upstream
 citation in the drawer.
 
+!!! note "Planned: `pivot` becomes `authority`, ranked from a registry"
+    [data-provider-hierarchy.md](data-provider-hierarchy.md) replaces the
+    `pivot` value and the fixed ladder below with an `authority` value whose
+    rank comes from a curator-maintained `data_provider` table. Specified
+    2026-08-27, not built. The rider sources and `auto` keep their positions;
+    only the middle of the ladder moves.
+
 **Keeper order**, used by the duplicate guard alone
 (catalog-data-model.md §5a) and by nothing else:
 `manual` > `user` > `scout` > `pivot` > `wikidata` > `osm` > `auto`. The
