@@ -624,6 +624,79 @@ is still valid: the line is the contribution, the profile is derived from it.
 
 ---
 
+### 2e. This pipeline serves the platform, not only Cycling Commons
+
+**Decision (2026-08-27): Cycling Commons owns the elevation pipeline for every
+application that reads the shared Valhalla. What gets installed is the union of
+every consumer's requirement, and each consumer must be able to print its own.**
+
+#### What went wrong
+
+The Valhalla host is shared. Cycling Commons asks it for climb profiles; a second
+application asks it for route planning, for the climb metres on every recorded
+ride, and for per-region energy priors. One `elevation_data` directory per
+continent, several readers.
+
+The installed coverage was measured against the presets in
+`tools/elevation/fetch-glo30.sh` and matched **exactly**, on all six continents:
+
+| continent | installed box | presets that explain it |
+|---|---|---|
+| europe | 35-72 / -11-32 | `EUROPE` |
+| asia | 24-46 / 122-146 | `JAPAN` |
+| africa | -35-0 / 16-33 | `SOUTHAFRICA` ∪ `RWANDA` |
+| south-america | -56-13 / -82--66 | `COLOMBIA` ∪ `CHILE` |
+| oceania | -48--9 / 112-179 | `AUSTRALIA` ∪ `NEWZEALAND` |
+| north-america | 32-63 / -140--56 | `USWEST` ∪ `USROCKY` ∪ `CANADAWEST` ∪ `CANADAEAST` |
+
+Not "roughly ours" but precisely the union of our seventeen presets, to the
+degree. The other consumer covers 175 countries, whose areas touch 16,619
+one-degree cells; 3,439 of them were covered. **143 of its 175 countries had no
+elevation**, and because Valhalla answers `0` rather than failing (§2d applies
+to our client, not to the engine), nothing surfaced it. Rides in those countries
+recorded zero climb.
+
+The failure is invisible from inside Cycling Commons *because* our own
+requirement was fully met the whole time. That is the property that makes it
+worth a spec entry rather than a bug fix.
+
+#### The split
+
+1. **Action lives here.** Fetch, convert, validate, install: one pipeline, one
+   validator (`compare-sources.js`), one write-up
+   (`wiki/developers/data-ops/elevation-tiles.md`). No other repository carries
+   a copy of these scripts. A second copy drifts, and the copy that travels
+   without the validator is the one that gets trusted by accident.
+2. **Requirement lives with each consumer**, and must be machine-readable.
+   Cycling Commons declares through the presets in `fetch-glo30.sh`. The other
+   consumer declares through a console command that derives its cell list from
+   its own coverage tables rather than from anyone's memory:
+
+   ```
+   app:elevation:coverage --installed=<file>                # gap report
+   app:elevation:coverage --installed=<file> --missing-only # bare cell names
+   app:elevation:coverage --country=XX --plan               # bbox for one country
+   ```
+
+3. **The input to a fetch is the union**, never one consumer's list. Today the
+   presets are the whole input; that is the defect this section closes.
+
+#### Consequences accepted
+
+- **Onboarding a region is two-sided.** New elevation does not backfill anything
+  computed before it. Each consumer re-runs its own recompute — ours is
+  `app:climbs:recompute`; every other consumer is responsible for its own.
+- **Consumers guard themselves against the silent zero.** The other consumer's
+  batch refuses to report success when more than 95% of a country's results
+  come back with zero climb. This pipeline cannot check what it does not own,
+  and a consumer that trusts a shared resource blindly will publish sea level.
+- **Direction of travel.** As Cycling Commons becomes the data initiator for the
+  catalogue, consumers move from reading the shared Valhalla directly to reading
+  a Cycling Commons API. The requirement/action split above holds either way,
+  and is the smaller change to make first.
+
+---
+
 ## 3. Sampling and binning
 
 ### 3a. Bin width follows the source
