@@ -392,11 +392,238 @@ A rebuild buys something genuinely different: `build_elevation` bakes grade into
 the *routing* tiles so cycling costs can prefer flatter roads. That is a separate
 feature, and it is not required for climb profiles.
 
+### Store them gzipped
+
+Valhalla reads `.hgt.gz` directly — `valhalla_build_elevation` has a
+`--decompress` flag precisely so you can decline it. Verified on the production
+host on 2026-08-28: the same tile served as `.hgt` and as `.hgt.gz` returned
+identical heights, `[316, 313, 289]`, after a container restart.
+
+The restart is what makes that a real test. Rename a `.hgt` and query again
+without restarting and you get the right answer from a file that is no longer
+there — the old inode is still mapped.
+
+The ratio is excellent, because a `.hgt` is 26 MB of 16-bit integers with a lot
+of local similarity. Measured at `gzip -6`:
+
+| tile | terrain | raw | gzip |
+|---|---|---|---|
+| N52E004 | Dutch polder | 24.7 MB | 1.8 MB (7%) |
+| N70E024 | Arctic Norway | 24.7 MB | 5.8 MB (24%) |
+| N49E006 | Luxembourg | 24.7 MB | 9.0 MB (36%) |
+| N46E007 | Swiss Alps | 24.7 MB | 15.2 MB (61%) |
+| **mixed sample** | | **123.7 MB** | **37.4 MB (30%)** |
+
+At 30%, the entire planet's land — 19,406 tiles once Antarctica is dropped —
+is **140 GB instead of 468 GB**.
+
+What it costs, measured on the same host: **120 ms to inflate one tile**, versus
+effectively zero to read a raw one. That is a first-touch cost per tile, not per
+lookup, and it exists because a `.hgt` supports seeking straight to a byte offset
+while a gzip stream must be inflated from its start.
+
+!!! note "The cost nobody has measured yet"
+
+    Raw tiles are `mmap`ed: the kernel pages them in lazily and evicts them under
+    pressure, so they barely count against resident memory. An inflated tile is
+    real allocated memory that cannot be reclaimed the same way. On a box that
+    also runs workers and other services, that is the number to watch after a
+    rollout — not the 120 ms.
+
+    `.lz4` is the middle setting if it becomes a problem: a worse ratio, several
+    times faster to inflate.
+
 One trap, and it is a nasty one: **a Valhalla with no elevation tiles loaded does
 not fail.** It returns `0` for every point — a perfectly valid-looking sea-level
 profile. Any client must require some minimum share of non-zero samples before
 believing a result. A silent zero is worse than an error, because nothing
 downstream can detect it.
+
+## The pipeline is not only ours
+
+Everything above is written as though Cycling Commons were the only reader of
+that `elevation_data` directory. It is not, and on 2026-08-27 that assumption
+was measured and found to be costing another application most of its data.
+
+The Valhalla host serves several applications. Cycling Commons asks it for climb
+profiles. **A second application** asks it for route planning, for the climb
+metres on every recorded ride, and for a per-region energy figure. They share one DEM directory
+per continent, and only one of them has ever put anything in it.
+
+### How to tell whose requirement was used
+
+Compare the installed coverage against the presets in `fetch-glo30.sh`:
+
+| continent | installed box | presets that explain it |
+|---|---|---|
+| europe | 35-72 / -11-32 | `EUROPE` |
+| asia | 24-46 / 122-146 | `JAPAN` |
+| africa | -35-0 / 16-33 | `SOUTHAFRICA` ∪ `RWANDA` |
+| south-america | -56-13 / -82--66 | `COLOMBIA` ∪ `CHILE` |
+| oceania | -48--9 / 112-179 | `AUSTRALIA` ∪ `NEWZEALAND` |
+| north-america | 32-63 / -140--56 | `USWEST` ∪ `USROCKY` ∪ `CANADAWEST` ∪ `CANADAEAST` |
+
+Six continents, six exact matches. Not "roughly ours" — **precisely** the union
+of our seventeen presets, to the degree. That is the fingerprint of a pipeline
+that has only ever had one requester.
+
+That application meanwhile covers 175 countries, whose areas touch
+**16,619** one-degree cells. Installed: 3,897, of which 3,439 are in cells it
+cares about. So 32 of its 175 countries have elevation and 143 do not. In those
+143, `/height` answers `0`, and — per the trap two sections above — nothing
+errors. Rides there have been recording zero climb.
+
+!!! warning "The lesson, which is not about elevation"
+
+    A shared resource provisioned from one consumer's list looks completely
+    healthy from that consumer's side. Cycling Commons' climbs were correct the
+    whole time. The gap was invisible from here precisely *because* our own
+    requirement was fully met.
+
+    If you own a pipeline that more than one thing reads, the input is the
+    **union of every consumer's requirement** — and each consumer has to be able
+    to state its own, mechanically, rather than by someone remembering.
+
+### Consumers declare, this pipeline acts
+
+The split that fixes it:
+
+- **This repository owns the action.** Fetch, convert, validate, install. One
+  pipeline, one validator, one write-up. Nobody else should carry a copy of
+  `fetch-glo30.sh` — a second copy drifts, and the copy without
+  `compare-sources.js` is the one that will be trusted by accident.
+- **Every consumer owns its requirement**, and must be able to print it. Cycling
+  Commons declares through the presets in `fetch-glo30.sh`. The other consumer
+  declares through a console command that reads its own coverage tables:
+
+    <!-- CODE-ILLUSTRATIVE how a consumer prints its own requirement -->
+    ```bash
+    # what that application needs, against what is installed
+    bin/console <its-coverage-command> --installed=/tmp/dem_cells.txt
+
+    # just the missing cell names, ready to feed a fetch
+    bin/console <its-coverage-command> --installed=/tmp/dem_cells.txt --missing-only
+    ```
+
+- **What gets installed is the union.** Today the presets are the whole input.
+  That is the bug, and it is a modelling bug rather than a coding one.
+
+## Onboarding a region, end to end
+
+Here is the whole thing, with the reasoning attached to each step rather than
+collected at the bottom.
+
+### 1. Decide the box, and be mean about it
+
+<!-- CODE-ILLUSTRATIVE step 1, choosing the box -->
+```bash
+./fetch-glo30.sh SLOVENIA ./data/dem/glo30
+```
+
+A one-degree cell costs **24.7 MB** as `.hgt` whether it holds the Alps or open
+Atlantic, because the format is a fixed 3601 × 3601 grid of 16-bit integers with
+no compression and no concept of "empty". That is why the presets are the
+onboarded ground rather than the continent: `AUSTRALIA` stops at 44°S, `EUROPE`
+stops at 32°E short of the Urals. Widen a box when a country is onboarded, not
+in anticipation.
+
+Cells over open sea simply 404 and are skipped, so a slightly generous bbox
+costs nothing but a few wasted requests.
+
+### 2. Convert, in a container
+
+<!-- CODE-ILLUSTRATIVE step 2, converting to the format Valhalla reads -->
+```bash
+./to-hgt.sh ./data/dem/glo30 ./data/dem/hgt
+```
+
+GLO-30 ships as Cloud-Optimised GeoTIFF; Valhalla reads SRTMHGT. The conversion
+runs inside `ghcr.io/osgeo/gdal` on purpose — the routing host deliberately has
+no GDAL, because it is a routing box and not a GIS box, and a tool installed for
+one job in 2026 is a dependency nobody can safely remove in 2028.
+
+### 3. Prove it before anyone believes it
+
+<!-- CODE-ILLUSTRATIVE step 3, proving the source -->
+```bash
+node compare-sources.js <reference_hgt_dir> ./data/dem/hgt
+```
+
+This is the step that separates this pipeline from a shell one-liner, and the
+reason the whole thing lives here rather than being copied around. Skipping it
+is how "2.0 km · 8.4%" got published in the first place.
+
+### 4. Install and restart
+
+<!-- CODE-ILLUSTRATIVE step 4, install and restart -->
+```bash
+./dem-install.sh europe SLOVENIA        # fetch + convert + install, resumable
+docker restart valhalla-europe
+```
+
+The restart is unavoidable and it is a real outage for that continent — seconds
+to a couple of minutes, but real. That is why this is an operator action and not
+a hook on someone's import script.
+
+### 5. Prove it again, from outside
+
+<!-- CODE-ILLUSTRATIVE step 5, proving it from outside -->
+```bash
+curl -s http://localhost:8002/height -H 'Content-Type: application/json' \
+  -d '{"shape":[{"lat":46.05,"lon":14.51},{"lat":46.20,"lon":14.66}]}'
+```
+
+**Use more than one point, and require a non-zero.** A single sample that
+returns `0` is indistinguishable from a correct sea-level reading, and a
+Valhalla with no tiles returns `0` forever without complaint. Sample a spread
+and demand that some of it is above sea level.
+
+### 6. Tell the other consumers
+
+New elevation does not backfill itself. Anything already computed against the
+old (or absent) DEM keeps its old numbers until it is recomputed:
+
+<!-- CODE-ILLUSTRATIVE step 6, telling the other consumers -->
+```bash
+# here
+bin/console app:climbs:recompute --country=SI
+
+# in every other consumer — anything of theirs that reads /height
+bin/console <their-recompute-command> --country=SI
+```
+
+A well-behaved consumer refuses to report success when more than 95% of a
+country's results come back with zero climb — the same silent-zero trap, caught
+one layer further out.
+
+### 7. Note what a DEM install does *not* fix
+
+This is the distinction from *Installing, and a distinction worth money*, and it
+is worth restating with the consequence attached:
+
+| | reads | fixed by installing a DEM? |
+|---|---|---|
+| climb profiles, ride climb metres, energy priors | `/height`, at request time | **yes**, immediately after restart |
+| `use_hills` preferring flatter roads | `weighted_grade`, baked into the tiles | **no** — only a tile rebuild |
+
+So a newly onboarded region measures correctly the moment the DEM lands. What it
+does not get is a router that knows to avoid its hills, and that waits for the
+next rebuild of that continent.
+
+!!! danger "A rebuild is not free, and right now it is a downgrade"
+
+    The routing tiles currently carry grades **everywhere**, because the
+    2026-03-29 build ran with `build_elevation=True` and Valhalla downloaded its
+    own SRTM-derived set for the whole graph.
+
+    A rebuild bakes only what is in `elevation_data` at that moment. Any cell
+    without a GLO-30 tile comes back **flat** — a downgrade from the SRTM grades
+    it has today, and an invisible one.
+
+    So a continent must reach full coverage of everything anyone routes on
+    *before* it is rebuilt, not after. For the whole platform that is 16,619
+    cells: 401 GB raw, or about **120 GB stored gzipped**, which Valhalla reads
+    natively.
 
 ## Faults no elevation source can fix
 
