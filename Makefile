@@ -25,6 +25,8 @@ setup: ## First-time dev setup: start the stack, install deps, migrate, seed wor
 	@$(DOCKER_COMP) exec -T app php bin/console doctrine:migrations:migrate --no-interaction
 	@echo "→ Importing world reference data (continents, countries, subdivisions)…"
 	@$(DOCKER_COMP) exec -T app php bin/console app:world:import
+	@echo "→ Projecting the English catalogue into translation_entry…"
+	@$(DOCKER_COMP) exec -T app php bin/console app:translations:sync
 	@echo "→ Loading demo accounts (keeps the world tables)…"
 	@$(DOCKER_COMP) exec -T app php bin/console doctrine:fixtures:load --no-interaction \
 		--purge-exclusions=world_continent --purge-exclusions=world_country --purge-exclusions=world_subdivision
@@ -209,6 +211,13 @@ test-db-reset: ## Drop + rebuild the test DB (PostGIS ext, migrations, world dat
 	@echo "→ Importing world reference data…"
 	@$(DOCKER_COMP) exec -T -e DATABASE_URL='$(TEST_DB_URL)' app php bin/console app:world:import
 	@echo "✔ Test DB rebuilt — run the suite with: make app-test (or docker exec -e APP_ENV=test … php bin/phpunit)"
+
+app-translations-sync: ## Project new English keys into translation_entry so /translate can see them
+	@$(DOCKER_COMP) exec -T app php bin/console app:translations:sync
+	@echo "  Run this after adding English strings. The pre-commit gate only checks that"
+	@echo "  the five YAML files agree with each other; it cannot write to a database, so"
+	@echo "  new keys are invisible on /translate until this runs. Deploy does it too"
+	@echo "  (docs/specs/operations.md §3)."
 
 app-create-admin: ## Bootstrap an admin user: make app-create-admin email=you@example.com  (prompts for password)
 	cd web && php bin/console app:user:create --role=ROLE_ADMIN $(email)
