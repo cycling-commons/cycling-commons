@@ -386,15 +386,34 @@ A credit naming only the publisher credits the pipe rather than the person.
 That is exactly the mistake the current hand-written Nationaal Georegister row
 makes, and why that row is hidden right now rather than merely stale.
 
-**Open, and it is this page's call, not the registry's:** which slot renders
-`creator`. The `.lic` chip is mono, uppercase and small, and already carries
-the licence plus any mandated attribution. Pushing creator into it produces
+**Decided (owner, 2026-08-27): creator gets its own small line, in normal
+case.** Not the `.lic` chip. That chip is mono and uppercased, and pushing
+people into it produces
 `PUBLIC DOMAIN MARK 1.0 · CREATED BY DRINKWATERKAART.NL · PUBLISHED BY RIVM`,
-where the uppercasing mangles a domain name and the chip stops being scannable.
-The recommendation is a separate small line under the name, in normal case,
-because creator and publisher are facts about people rather than a licence
-string. Decide before the first promoted row ships, since the promoted rows are
-precisely the ones that exist to carry it.
+where the uppercasing mangles a domain name and the chip stops being scannable
+as a licence. Creator and publisher are facts about people, not a licence
+string, and they read as one.
+
+The shape, so it does not have to be re-decided at build time:
+
+| Question | Answer |
+|----------|--------|
+| Where | inside `.who`, directly under the name, **above** the `.lic` chip |
+| Why there | reading order is who made it, then under what terms. The chip stays the cell's machine-ish footer. |
+| Case | normal, like `.crow p`. Not `text-transform: uppercase`. |
+| When it renders | only when `creator` is set **and** differs from `full_name`. A dataset whose publisher made it needs no line: the name already said so. |
+| Wording | a translation key with placeholders, e.g. `credits.provider_by: 'Created by %creator%, published by %publisher%'`. The two names are untranslated facts (§8.6); the words joining them are copy about us, so they translate like any other prose. |
+
+Worked example, the row this whole field exists for:
+
+```
+Nationaal Georegister                          <- name
+Created by drinkwaterkaart.nl, published by RIVM
+PUBLIC DOMAIN MARK 1.0                         <- .lic chip
+```
+
+That is the credit the current hand-written row fails to give, which is why it
+is hidden rather than merely stale.
 
 ### 8.5 Curator-entered text is the provider module's problem, not this page's
 
