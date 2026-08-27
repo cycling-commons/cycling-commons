@@ -244,7 +244,12 @@ import { layerGlyph } from './icons.js';
       ],
       source:'Removed from the map · curator view'
     }));
-    const goneLayer = { key:'gone', letter:'⌀', label:LAYER_L10N.gone||'Removed places', color:'#8a8d7d', icon:'⌀', kind:'point', exp:false, pendingLayer:true, features:gf };
+    // ✖, not ⌀ (owner 2026-08-27): the empty-set sign is a hairline maths glyph
+    // that vanished at swatch size. Grey, not red: red already means "pending
+    // review, act on this" on the layer above and on .cc-pin.pending, and a
+    // colour cannot mean both "do something" and "nothing here any more"
+    // (data-provider-hierarchy.md §6.3).
+    const goneLayer = { key:'gone', letter:'✖', label:LAYER_L10N.gone||'Removed places', color:'#8a8d7d', icon:'✖', kind:'point', exp:false, pendingLayer:true, features:gf };
     CATALOG.push(goneLayer);
     layerByKey['gone'] = goneLayer;
   }
