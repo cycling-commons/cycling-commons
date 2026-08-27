@@ -235,8 +235,14 @@ region-probe: ## Onboarding step 1: probe Overture subdivision areas (make regio
 region-scaffold: ## Onboarding step 2: emit region config + label stubs for review (make region-scaffold c="NL" [flags="--probe-areas"])
 	@$(DOCKER_COMP) exec -T app php bin/console app:region:scaffold $(or $(c),NL) $(flags)
 
-tools-test: ## Run the tools Python test suites (wallonia + divisions + wikimedia)
-	cd tools && python3 -m pytest wallonia/tests divisions/tests wikimedia/tests -q
+tools-test: ## Run the tools Python test suites (wallonia + divisions + wikimedia + credits)
+	cd tools && python3 -m pytest wallonia/tests divisions/tests wikimedia/tests credits/tests -q
+
+credits-check: ## Verify /credits still names every dependency, and that its links resolve
+	@python3 tools/credits/check_credits.py
+	@# The link pass is separated because it needs the network: `make
+	@# credits-check` stays usable on a train, and CI runs `--links` itself.
+	@echo "credits: run 'python3 tools/credits/check_credits.py --links' for the network pass"
 
 pipeline-test: ## Run the pipeline Python test suite in the pipeline container (contract + batch job units)
 	@$(DOCKER_COMP) exec -T pipeline python -m pytest tests -q

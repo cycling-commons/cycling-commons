@@ -346,7 +346,7 @@ credits:
   osm_p: 'Das Fundament des Atlas. Radinfrastruktur, Ortsnamen und die von Radfahrenden bestätigten Punkte beginnen alle mit OpenStreetMap-Daten, © OpenStreetMap-Mitwirkende.'
   overture_p: 'Jede Regionsgrenze im Atlas stammt aus dem divisions-Thema von Overture Maps, das OpenStreetMap mit geoBoundaries zusammenführt und die ISO-3166-Codes trägt, auf denen das Weltverzeichnis aufbaut.'
   wallonia_p: 'Unterkünfte und Orte von Interesse für Wallonien, aus der PIVOT-Datenbank des wallonischen Geoportals.'
-  georegister_p: 'Das niederländische nationale Open-Data-Register — die Quelle für Trinkwasserstellen in den Niederlanden.'
+  georegister_p: 'Das niederländische nationale Georegister, betrieben vom Kadaster. Es führt das Register öffentlicher Trinkwasserstellen, erstellt von drinkwaterkaart.nl und veröffentlicht vom RIVM.'
   geofabrik_p: 'Regionale OpenStreetMap-Auszüge, die die Abdeckungs-Pipeline speisen.'
   drinkwater_p: 'Niederländische Wasserstellen verlinken auf drinkwaterkaart.nl, damit man einen Hahn prüfen kann, bevor man sich darauf verlässt.'
   map_h: 'Die Karte'

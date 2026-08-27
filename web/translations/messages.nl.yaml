@@ -346,7 +346,7 @@ credits:
   osm_p: 'Het fundament van de atlas. Fietsinfrastructuur, plaatsnamen en de punten die fietsers bevestigen beginnen allemaal bij OpenStreetMap-data, © OpenStreetMap-bijdragers.'
   overture_p: 'Elke regiogrens in de atlas komt uit het divisions-thema van Overture Maps, dat OpenStreetMap samenvoegt met geoBoundaries en de ISO 3166-codes draagt waarop de wereldgids is gebouwd.'
   wallonia_p: 'Accommodaties en nuttige punten voor Wallonië, uit de PIVOT-databank van het Waalse geoportaal.'
-  georegister_p: 'Het Nederlandse nationale opendataregister — de bron voor drinkwaterpunten in Nederland.'
+  georegister_p: 'Het Nationaal Georegister, beheerd door het Kadaster. Het bevat het register van openbare drinkwaterkranen, gemaakt door drinkwaterkaart.nl en gepubliceerd door het RIVM.'
   geofabrik_p: 'Regionale OpenStreetMap-extracten die de dekkingspipeline voeden.'
   drinkwater_p: 'Nederlandse waterpunten linken naar drinkwaterkaart.nl zodat je een kraan kunt checken voor je erop rekent.'
   map_h: 'De kaart'

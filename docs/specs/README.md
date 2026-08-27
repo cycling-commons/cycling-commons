@@ -46,6 +46,9 @@ committed — working docs stay local.
 - `data-source-register.md` — every candidate upstream source per catalog
   letter, with its licence, an Ingest/Reference/Ask/No verdict and the evidence
   behind it. The supply side; `wiki/landscape.md` is the product side.
+- `credits-page.md` (**implemented**): what `/credits` promises, its three
+  tiers of credit, the `data-pkg` marker contract, and the gate that stops the
+  page drifting away from the dependencies it names.
 - `dev-environment.md` — dev stack, platform decisions, conventions
   (locale routing and YAML parity; in-site translation proposals live in
   [translations.md](translations.md)).

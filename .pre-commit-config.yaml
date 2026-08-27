@@ -108,6 +108,39 @@ repos:
         language: python
         always_run: true
         pass_filenames: false
+
+      # /credits claims that everything the Commons is built on is named there.
+      # That claim breaks silently: a dependency lands in composer.json, nobody
+      # remembers the page, and the page goes on reading perfectly while being
+      # wrong. Each credit declares what it covers with data-pkg, and the gate
+      # diffs those markers against composer.json, the requirements.txt files,
+      # the compose images and web/assets/lib. Contract:
+      # docs/specs/credits-page.md.
+      #
+      # Split by who is committing, for the same reason as the wiki gate above:
+      #   editing CREDITS  -> hard fail. You are touching the credits, so the
+      #                       credits must be right.
+      #   editing DEPS     -> warn, never block. Holding a composer bump hostage
+      #                       to a copy page is backwards, and the predictable
+      #                       result is --no-verify. `make credits-check` and CI
+      #                       still fail, so the page cannot SHIP stale.
+      #
+      # Neither hook touches the network. Link rot is caught by `--links`, which
+      # CI runs; keeping it out of here is what lets you commit offline.
+      - id: check-credits
+        name: /credits names every dependency
+        entry: tools/credits/check_credits.py
+        language: python
+        files: ^web/templates/pages/credits\.html\.twig$
+        pass_filenames: false
+
+      - id: warn-credits-drift
+        name: does this dependency change make /credits stale? (warning only)
+        entry: tools/credits/check_credits.py --warn-only
+        language: python
+        files: ^(web/composer\.json|web/assets/lib/.*|.*/requirements\.txt|developers/docker/.*)$
+        pass_filenames: false
+
       # five (en/fr/nl/de/es). Runs only when translation files are staged;
       # skips gracefully without php/vendor (CI still enforces it).
       - id: check-translations

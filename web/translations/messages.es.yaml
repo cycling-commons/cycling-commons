@@ -347,7 +347,7 @@ credits:
   osm_p: 'El cimiento del atlas. La infraestructura ciclista, los topónimos y los puntos que confirman los ciclistas parten todos de datos de OpenStreetMap, © colaboradores de OpenStreetMap.'
   overture_p: 'Cada límite de región del atlas procede del tema divisions de Overture Maps, que fusiona OpenStreetMap con geoBoundaries y lleva los códigos ISO 3166 sobre los que se apoya el directorio mundial.'
   wallonia_p: 'Alojamientos y puntos de interés de Valonia, de la base de datos PIVOT del geoportal valón.'
-  georegister_p: 'El registro nacional neerlandés de datos abiertos — la fuente de los puntos de agua potable en los Países Bajos.'
+  georegister_p: 'El Georregistro nacional neerlandés, gestionado por het Kadaster. Contiene el registro de fuentes públicas de agua potable, creado por drinkwaterkaart.nl y publicado por el RIVM.'
   geofabrik_p: 'Extractos regionales de OpenStreetMap que alimentan la canalización de cobertura.'
   drinkwater_p: 'Los puntos de agua neerlandeses enlazan con drinkwaterkaart.nl para que los ciclistas puedan comprobar una fuente antes de contar con ella.'
   map_h: 'El mapa'

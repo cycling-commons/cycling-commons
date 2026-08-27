@@ -1,0 +1,53 @@
+# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+name: ci-credits
+# NO `paths:` FILTER, DELIBERATELY.
+#
+# The gate's inputs are spread across web/composer.json, three requirements.txt
+# files, developers/docker/** and web/assets/lib/**. Writing that set out here
+# would be a second copy of a list that already lives in
+# tools/credits/check_credits.py, and it would drift the same way: add a fourth
+# requirements.txt and the filter silently stops covering it, while the job
+# keeps going green. That is worse than having no job, because the silence
+# reads as an all-clear. This is the same reasoning that made
+# `warn-wiki-code-drift` always_run in .pre-commit-config.yaml.
+#
+# The offline pass takes well under a second, so there is nothing to optimise.
+on:
+  pull_request:
+  push:
+    # staging and symfony-base are deploy sources (deploy-staging.yaml), and
+    # production ships from deploy-production.yaml. A stale credits page must
+    # not reach any of them.
+    branches: [main, staging, symfony-base, production]
+  # Link rot is the one failure here that no commit causes. uvicorn.org was
+  # credited on 2026-08-27 and did not resolve; nothing in the repository had
+  # changed, so no change-triggered job could ever have caught it. A weekly
+  # sweep is the only thing that can.
+  schedule:
+    - cron: '17 6 * * 1'
+
+jobs:
+  credits:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      # The gate itself needs nothing but the standard library, on purpose: it
+      # has to be runnable from a bare checkout, a pre-commit hook and a
+      # Makefile target without an install step in front of it.
+      - name: /credits names every dependency
+        run: python3 tools/credits/check_credits.py
+
+      - run: pip install pytest
+      - name: credits gate unit tests
+        run: python3 -m pytest tools/credits/tests -q
+
+      # Advisory: an upstream project's site being down for an hour is not a
+      # reason to fail somebody's pull request. It is a reason to see it in the
+      # log, and on the Monday run it is the whole point of the job.
+      - name: /credits links still resolve (advisory)
+        run: python3 tools/credits/check_credits.py --links
+        continue-on-error: true

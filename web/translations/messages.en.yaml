@@ -346,7 +346,7 @@ credits:
   osm_p: 'The foundation of the atlas. Cycling infrastructure, place names and the points riders confirm all start from OpenStreetMap data, © OpenStreetMap contributors.'
   overture_p: 'Every region boundary on the atlas comes from the Overture Maps divisions theme, which conflates OpenStreetMap with geoBoundaries and carries the ISO 3166 codes the world directory is keyed on.'
   wallonia_p: 'Accommodation and points of interest for Wallonia, from the Walloon geoportal''s PIVOT database.'
-  georegister_p: 'The Dutch national open-data registry — the source for drinking-water tap points in the Netherlands.'
+  georegister_p: 'The Dutch national Georegistry, run by het Kadaster. It carries the public drinking-water tap register, created by drinkwaterkaart.nl and published by RIVM.'
   geofabrik_p: 'Regional OpenStreetMap extracts that feed the coverage pipeline.'
   drinkwater_p: 'Dutch water points link to drinkwaterkaart.nl so riders can double-check a tap before counting on it.'
   map_h: 'The map'

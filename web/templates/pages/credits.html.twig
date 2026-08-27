@@ -49,7 +49,7 @@
     <h3>{% trans %}credits.data_h{% endtrans %}</h3>
     <div class="gsub">{% trans %}credits.data_sub{% endtrans %}</div>
     <div class="crow">
-      <div class="who"><a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a><a class="req" href="#credits-req"><span class="vh">{% trans %}credits.req_badge{% endtrans %}</span><span aria-hidden="true">*</span></a><span class="lic">ODbL 1.0 · © OpenStreetMap contributors</span></div>
+      <div class="who"><a href="https://www.openstreetmap.org/copyright" data-pkg="manual:openstreetmap-data">OpenStreetMap</a><a class="req" href="#credits-req"><span class="vh">{% trans %}credits.req_badge{% endtrans %}</span><span aria-hidden="true">*</span></a><span class="lic">ODbL 1.0 · © OpenStreetMap contributors</span></div>
       <p>{% trans %}credits.osm_p{% endtrans %}</p>
     </div>
     {# Every region boundary on the site is an Overture `divisions` polygon:
@@ -58,19 +58,26 @@
        courtesy. Release pinned in tools/divisions/config.py:OVERTURE_RELEASE;
        bumping it is a versioned re-import, and the year below moves with it. #}
     <div class="crow">
-      <div class="who"><a href="https://overturemaps.org/">Overture Maps Foundation</a><a class="req" href="#credits-req"><span class="vh">{% trans %}credits.req_badge{% endtrans %}</span><span aria-hidden="true">*</span></a><span class="lic">ODbL 1.0 · © Overture Maps Foundation · © OpenStreetMap contributors</span></div>
+      <div class="who"><a href="https://overturemaps.org/" data-pkg="manual:overture-divisions">Overture Maps Foundation</a><a class="req" href="#credits-req"><span class="vh">{% trans %}credits.req_badge{% endtrans %}</span><span aria-hidden="true">*</span></a><span class="lic">ODbL 1.0 · © Overture Maps Foundation · © OpenStreetMap contributors</span></div>
       <p>{% trans %}credits.overture_p{% endtrans %}</p>
     </div>
     <div class="crow">
-      <div class="who"><a href="https://geoportail.wallonie.be/">Géoportail de la Wallonie · PIVOT</a><a class="req" href="#credits-req"><span class="vh">{% trans %}credits.req_badge{% endtrans %}</span><span aria-hidden="true">*</span></a><span class="lic">{% trans %}credits.lic_open_data{% endtrans %}</span></div>
+      <div class="who"><a href="https://geoportail.wallonie.be/" data-pkg="manual:wallonia-pivot">Géoportail de la Wallonie · PIVOT</a><a class="req" href="#credits-req"><span class="vh">{% trans %}credits.req_badge{% endtrans %}</span><span aria-hidden="true">*</span></a><span class="lic">{% trans %}credits.lic_open_data{% endtrans %}</span></div>
       <p>{% trans %}credits.wallonia_p{% endtrans %}</p>
     </div>
+    {# Hidden with the Drinkwaterkaart row above (owner, 2026-08-27): nothing in
+       the code reads the Georegister yet, so crediting it as a source was a
+       claim about the future on a page whose job is to be true. The text is
+       already corrected in the catalogs and names the creator, so this comes
+       back with the tap ingest (data-provider-hierarchy.md, phase 5) rather
+       than being re-decided. See "Drinkwaterkaart.nl" in docs/TODO.md.
     <div class="crow">
-      <div class="who"><a href="https://www.nationaalgeoregister.nl/">Nationaal Georegister (NL)</a><span class="lic">{% trans %}credits.lic_open_data{% endtrans %}</span></div>
+      <div class="who"><a href="https://www.nationaalgeoregister.nl/" data-pkg="manual:nl-georegister">Nationaal Georegister (NL)</a><span class="lic">Public Domain Mark 1.0</span></div>
       <p>{% trans %}credits.georegister_p{% endtrans %}</p>
     </div>
+    #}
     <div class="crow">
-      <div class="who"><a href="https://www.geofabrik.de/">Geofabrik</a><span class="lic">{% trans %}credits.lic_osm_extracts{% endtrans %}</span></div>
+      <div class="who"><a href="https://www.geofabrik.de/" data-pkg="manual:geofabrik-extracts">Geofabrik</a><span class="lic">{% trans %}credits.lic_osm_extracts{% endtrans %}</span></div>
       <p>{% trans %}credits.geofabrik_p{% endtrans %}</p>
     </div>
     {# Drinkwaterkaart.nl is hidden until its developer has been asked (owner,
@@ -81,25 +88,25 @@
        and credits.drinkwater_p stay in the catalogs so both come back
        together. See "Drinkwaterkaart.nl" in docs/TODO.md.
     <div class="crow">
-      <div class="who"><a href="https://www.drinkwaterkaart.nl/">Drinkwaterkaart.nl</a><span class="lic">{% trans %}credits.lic_linked{% endtrans %}</span></div>
+      <div class="who"><a href="https://www.drinkwaterkaart.nl/" data-pkg="manual:drinkwaterkaart-link">Drinkwaterkaart.nl</a><span class="lic">{% trans %}credits.lic_linked{% endtrans %}</span></div>
       <p>{% trans %}credits.drinkwater_p{% endtrans %}</p>
     </div>
     #}
     <div class="crow">
-      <div class="who"><a href="https://commons.wikimedia.org/">Wikimedia Commons</a><a class="req" href="#credits-req"><span class="vh">{% trans %}credits.req_badge{% endtrans %}</span><span aria-hidden="true">*</span></a><span class="lic">{% trans %}credits.lic_per_photo{% endtrans %}</span></div>
+      <div class="who"><a href="https://commons.wikimedia.org/" data-pkg="manual:wikimedia-commons">Wikimedia Commons</a><a class="req" href="#credits-req"><span class="vh">{% trans %}credits.req_badge{% endtrans %}</span><span aria-hidden="true">*</span></a><span class="lic">{% trans %}credits.lic_per_photo{% endtrans %}</span></div>
       <p>{% trans %}credits.wikimedia_p{% endtrans %}</p>
     </div>
     {# CC BY-SA requires attribution wherever the text is reused; each region
        page carries its own per-article line, and this row is the site-wide
        half of that credit. #}
     <div class="crow">
-      <div class="who"><a href="https://www.wikipedia.org/">Wikipedia</a><a class="req" href="#credits-req"><span class="vh">{% trans %}credits.req_badge{% endtrans %}</span><span aria-hidden="true">*</span></a><span class="lic">CC BY-SA 4.0</span></div>
+      <div class="who"><a href="https://www.wikipedia.org/" data-pkg="manual:wikipedia">Wikipedia</a><a class="req" href="#credits-req"><span class="vh">{% trans %}credits.req_badge{% endtrans %}</span><span aria-hidden="true">*</span></a><span class="lic">CC BY-SA 4.0</span></div>
       <p>{% trans %}credits.wikipedia_p{% endtrans %}</p>
     </div>
     {# The Copernicus programme's licence conditions require this credit on
        derived products — the climb gradients are exactly that. #}
     <div class="crow">
-      <div class="who"><a href="https://dataspace.copernicus.eu/explore-data/data-collections/copernicus-contributing-missions/collections-description/COP-DEM">Copernicus DEM GLO-30</a><a class="req" href="#credits-req"><span class="vh">{% trans %}credits.req_badge{% endtrans %}</span><span aria-hidden="true">*</span></a><span class="lic">© DLR e.V. 2010-2014 · © Airbus Defence and Space GmbH</span></div>
+      <div class="who"><a href="https://dataspace.copernicus.eu/explore-data/data-collections/copernicus-contributing-missions/collections-description/COP-DEM" data-pkg="manual:copernicus-dem">Copernicus DEM GLO-30</a><a class="req" href="#credits-req"><span class="vh">{% trans %}credits.req_badge{% endtrans %}</span><span aria-hidden="true">*</span></a><span class="lic">© DLR e.V. 2010-2014 · © Airbus Defence and Space GmbH</span></div>
       <p>{% trans %}credits.copernicus_p{% endtrans %}</p>
     </div>
   </div>
@@ -108,35 +115,35 @@
     <h3>{% trans %}credits.map_h{% endtrans %}</h3>
     <div class="gsub">{% trans %}credits.map_sub{% endtrans %}</div>
     <div class="crow">
-      <div class="who"><a href="https://maplibre.org/">MapLibre GL JS</a><span class="lic">BSD-3-Clause</span></div>
+      <div class="who"><a href="https://maplibre.org/" data-pkg="maplibre-gl">MapLibre GL JS</a><span class="lic">BSD-3-Clause</span></div>
       <p>{% trans %}credits.maplibre_p{% endtrans %}</p>
     </div>
     <div class="crow">
-      <div class="who"><a href="https://openfreemap.org/">OpenFreeMap</a><span class="lic">{% trans %}credits.lic_free_tiles{% endtrans %}</span></div>
+      <div class="who"><a href="https://openfreemap.org/" data-pkg="manual:openfreemap-tiles">OpenFreeMap</a><span class="lic">{% trans %}credits.lic_free_tiles{% endtrans %}</span></div>
       <p>{% trans %}credits.openfreemap_p{% endtrans %}</p>
     </div>
     <div class="crow">
-      <div class="who"><a href="https://protomaps.com/">Protomaps · PMTiles</a><span class="lic">BSD-3-Clause</span></div>
+      <div class="who"><a href="https://protomaps.com/" data-pkg="pmtiles">Protomaps · PMTiles</a><span class="lic">BSD-3-Clause</span></div>
       <p>{% trans %}credits.protomaps_p{% endtrans %}</p>
     </div>
     <div class="crow">
-      <div class="who"><a href="https://valhalla.github.io/valhalla/">Valhalla</a><span class="lic">MIT</span></div>
+      <div class="who"><a href="https://valhalla.github.io/valhalla/" data-pkg="valhalla">Valhalla</a><span class="lic">MIT</span></div>
       <p>{% trans %}credits.valhalla_p{% endtrans %}</p>
     </div>
     <div class="crow">
-      <div class="who"><a href="https://github.com/Redocly/redoc">Redoc</a><span class="lic">MIT</span></div>
+      <div class="who"><a href="https://github.com/Redocly/redoc" data-pkg="redoc-standalone">Redoc</a><span class="lic">MIT</span></div>
       <p>{% trans %}credits.redoc_p{% endtrans %}</p>
     </div>
     <div class="crow">
-      <div class="who"><a href="https://www.mapillary.com/">Mapillary</a><a class="req" href="#credits-req"><span class="vh">{% trans %}credits.req_badge{% endtrans %}</span><span aria-hidden="true">*</span></a><span class="lic">CC BY-SA 4.0 · © Mapillary contributors</span></div>
+      <div class="who"><a href="https://www.mapillary.com/" data-pkg="mapillary-js manual:mapillary-service">Mapillary</a><a class="req" href="#credits-req"><span class="vh">{% trans %}credits.req_badge{% endtrans %}</span><span aria-hidden="true">*</span></a><span class="lic">CC BY-SA 4.0 · © Mapillary contributors</span></div>
       <p>{% trans %}credits.mapillary_p{% endtrans %}</p>
     </div>
     <div class="crow">
-      <div class="who"><a href="https://www.esri.com/">Esri World Imagery</a><a class="req" href="#credits-req"><span class="vh">{% trans %}credits.req_badge{% endtrans %}</span><span aria-hidden="true">*</span></a><span class="lic">© Esri, Maxar, Earthstar Geographics</span></div>
+      <div class="who"><a href="https://www.esri.com/" data-pkg="manual:esri-imagery">Esri World Imagery</a><a class="req" href="#credits-req"><span class="vh">{% trans %}credits.req_badge{% endtrans %}</span><span aria-hidden="true">*</span></a><span class="lic">© Esri, Maxar, Earthstar Geographics</span></div>
       <p>{% trans %}credits.esri_p{% endtrans %}</p>
     </div>
     <div class="crow">
-      <div class="who"><a href="https://github.com/komoot/photon">Photon</a><span class="lic">Apache-2.0</span></div>
+      <div class="who"><a href="https://github.com/komoot/photon" data-pkg="manual:photon-geocoder">Photon</a><span class="lic">Apache-2.0</span></div>
       <p>{% trans %}credits.photon_p{% endtrans %}</p>
     </div>
   </div>
@@ -145,15 +152,15 @@
     <h3>{% trans %}credits.software_h{% endtrans %}</h3>
     <div class="gsub">{% trans %}credits.software_sub{% endtrans %}</div>
     <div class="crow">
-      <div class="who"><a href="https://symfony.com/">Symfony</a><span class="lic">MIT</span></div>
+      <div class="who"><a href="https://symfony.com/" data-pkg="symfony/*">Symfony</a><span class="lic">MIT</span></div>
       <p>{% trans %}credits.symfony_p{% endtrans %}</p>
     </div>
     <div class="crow">
-      <div class="who"><a href="https://postgis.net/">PostgreSQL + PostGIS</a><span class="lic">PostgreSQL License · GPL-2.0</span></div>
+      <div class="who"><a href="https://postgis.net/" data-pkg="postgis">PostgreSQL + PostGIS</a><span class="lic">PostgreSQL License · GPL-2.0</span></div>
       <p>{% trans %}credits.postgis_p{% endtrans %}</p>
     </div>
     <div class="crow">
-      <div class="who"><a href="https://github.com/sokil/php-isocodes">sokil/php-isocodes</a><span class="lic">MIT</span></div>
+      <div class="who"><a href="https://github.com/sokil/php-isocodes" data-pkg="sokil/*">sokil/php-isocodes</a><span class="lic">MIT</span></div>
       <p>{% trans %}credits.isocodes_p{% endtrans %}</p>
     </div>
     {# The full run of direct dependencies. Named rows above get a sentence
@@ -173,48 +180,47 @@
       <div class="who"><a href="https://github.com/cycling-commons/cycling-commons">{% trans %}credits.oss_more_who{% endtrans %}</a><span class="lic">{% trans %}credits.lic_various{% endtrans %}</span></div>
       <div>
         <p>{% trans %}credits.oss_more_p{% endtrans %}</p>
-        <p class="pkglist"><a href="https://alpinelinux.org/">Alpine Linux</a>,
-        <a href="https://async-aws.com/">async-aws</a>,
-        <a href="https://github.com/boto/boto3">boto3</a>,
-        <a href="https://www.clamav.net/">ClamAV</a>,
-        <a href="https://www.debian.org/">Debian</a>,
-        <a href="https://www.docker.com/">Docker</a>,
-        <a href="https://www.doctrine-project.org/projects/dbal.html">Doctrine DBAL</a>,
-        <a href="https://github.com/doctrine/DoctrineFixturesBundle">Doctrine Fixtures</a>,
-        <a href="https://www.doctrine-project.org/projects/migrations.html">Doctrine Migrations</a>,
-        <a href="https://www.doctrine-project.org/projects/orm.html">Doctrine ORM</a>,
-        <a href="https://github.com/dmaicher/doctrine-test-bundle">doctrine-test-bundle</a>,
-        <a href="https://duckdb.org/">DuckDB</a>,
-        <a href="https://github.com/EasyCorp/EasyAdminBundle">EasyAdmin</a>,
-        <a href="https://github.com/endroid/qr-code">endroid/qr-code</a>,
-        <a href="https://fastapi.tiangolo.com/">FastAPI</a>,
-        <a href="https://flysystem.thephpleague.com/">Flysystem</a>,
-        <a href="https://imagemagick.org/">ImageMagick</a>,
-        <a href="https://mailpit.axllent.org/">Mailpit</a>,
-        <a href="https://squidfunk.github.io/mkdocs-material/">Material for MkDocs</a>,
-        <a href="https://min.io/">MinIO</a>,
-        <a href="https://www.mkdocs.org/">MkDocs</a>,
-        <a href="https://nginx.org/">nginx</a>,
-        <a href="https://nodejs.org/">Node.js</a>,
-        <a href="https://www.php.net/">PHP</a>,
-        <a href="https://cs.symfony.com/">PHP CS Fixer</a>,
-        <a href="https://phpstan.org/">PHPStan</a>,
-        <a href="https://phpunit.de/">PHPUnit</a>,
-        <a href="https://psalm.dev/">Psalm</a>,
-        <a href="https://www.psycopg.org/">psycopg</a>,
-        <a href="https://osmcode.org/pyosmium/">pyosmium</a>,
-        <a href="https://pyproj4.github.io/pyproj/">pyproj</a>,
-        <a href="https://docs.pytest.org/">pytest</a>,
-        <a href="https://www.python.org/">Python</a>,
-        <a href="https://getrector.com/">Rector</a>,
-        <a href="https://redis.io/">Redis</a>,
-        <a href="https://github.com/scheb/2fa">scheb/2fa</a>,
-        <a href="https://www.starlette.io/">Starlette</a>,
-        <a href="https://github.com/SymfonyCasts/reset-password-bundle">SymfonyCasts Reset Password</a>,
-        <a href="https://github.com/SymfonyCasts/verify-email-bundle">SymfonyCasts Verify Email</a>,
-        <a href="https://twig.symfony.com/">Twig</a>,
-        <a href="https://ubuntu.com/">Ubuntu</a>,
-        <a href="https://uvicorn.dev/">Uvicorn</a>.</p>
+        <p class="pkglist"><a href="https://alpinelinux.org/" data-pkg="manual:container-base-alpine">Alpine Linux</a>,
+        <a href="https://github.com/boto/boto3" data-pkg="boto3">boto3</a>,
+        <a href="https://www.clamav.net/" data-pkg="clamav">ClamAV</a>,
+        <a href="https://www.debian.org/" data-pkg="manual:container-base-debian">Debian</a>,
+        <a href="https://www.docker.com/" data-pkg="manual:container-runtime">Docker</a>,
+        <a href="https://www.doctrine-project.org/projects/dbal.html" data-pkg="doctrine/dbal">Doctrine DBAL</a>,
+        <a href="https://github.com/doctrine/DoctrineFixturesBundle" data-pkg="doctrine/doctrine-fixtures-bundle">Doctrine Fixtures</a>,
+        <a href="https://www.doctrine-project.org/projects/migrations.html" data-pkg="doctrine/doctrine-migrations-bundle">Doctrine Migrations</a>,
+        <a href="https://www.doctrine-project.org/projects/orm.html" data-pkg="doctrine/orm doctrine/doctrine-bundle">Doctrine ORM</a>,
+        <a href="https://github.com/dmaicher/doctrine-test-bundle" data-pkg="dama/doctrine-test-bundle">doctrine-test-bundle</a>,
+        <a href="https://duckdb.org/" data-pkg="duckdb">DuckDB</a>,
+        <a href="https://github.com/EasyCorp/EasyAdminBundle" data-pkg="easycorp/easyadmin-bundle">EasyAdmin</a>,
+        <a href="https://github.com/endroid/qr-code" data-pkg="endroid/qr-code">endroid/qr-code</a>,
+        <a href="https://fastapi.tiangolo.com/" data-pkg="fastapi">FastAPI</a>,
+        <a href="https://flysystem.thephpleague.com/" data-pkg="league/flysystem-*">Flysystem</a>,
+        <a href="https://imagemagick.org/" data-pkg="ext-imagick">ImageMagick</a>,
+        <a href="https://mailpit.axllent.org/" data-pkg="mailpit">Mailpit</a>,
+        <a href="https://squidfunk.github.io/mkdocs-material/" data-pkg="mkdocs-material">Material for MkDocs</a>,
+        <a href="https://min.io/" data-pkg="minio mc">MinIO</a>,
+        <a href="https://www.mkdocs.org/" data-pkg="mkdocs">MkDocs</a>,
+        <a href="https://nginx.org/" data-pkg="nginx">nginx</a>,
+        <a href="https://nodejs.org/" data-pkg="manual:js-test-runtime">Node.js</a>,
+        <a href="https://www.php.net/" data-pkg="php ext-*">PHP</a>,
+        <a href="https://cs.symfony.com/" data-pkg="friendsofphp/php-cs-fixer">PHP CS Fixer</a>,
+        <a href="https://phpstan.org/" data-pkg="phpstan/*">PHPStan</a>,
+        <a href="https://phpunit.de/" data-pkg="phpunit/phpunit">PHPUnit</a>,
+        <a href="https://psalm.dev/" data-pkg="vimeo/psalm">Psalm</a>,
+        <a href="https://www.psycopg.org/" data-pkg="psycopg">psycopg</a>,
+        <a href="https://osmcode.org/pyosmium/" data-pkg="osmium">pyosmium</a>,
+        <a href="https://pyproj4.github.io/pyproj/" data-pkg="pyproj">pyproj</a>,
+        <a href="https://docs.pytest.org/" data-pkg="pytest">pytest</a>,
+        <a href="https://www.python.org/" data-pkg="python">Python</a>,
+        <a href="https://getrector.com/" data-pkg="rector/rector">Rector</a>,
+        <a href="https://redis.io/" data-pkg="redis ext-redis">Redis</a>,
+        <a href="https://github.com/scheb/2fa" data-pkg="scheb/*">scheb/2fa</a>,
+        <a href="https://www.starlette.io/" data-pkg="starlette">Starlette</a>,
+        <a href="https://github.com/SymfonyCasts/reset-password-bundle" data-pkg="symfonycasts/reset-password-bundle">SymfonyCasts Reset Password</a>,
+        <a href="https://github.com/SymfonyCasts/verify-email-bundle" data-pkg="symfonycasts/verify-email-bundle">SymfonyCasts Verify Email</a>,
+        <a href="https://twig.symfony.com/" data-pkg="twig/*">Twig</a>,
+        <a href="https://ubuntu.com/" data-pkg="manual:production-host-os">Ubuntu</a>,
+        <a href="https://uvicorn.dev/" data-pkg="uvicorn">Uvicorn</a>.</p>
       </div>
     </div>
   </div>
@@ -223,15 +229,15 @@
     <h3>{% trans %}credits.design_h{% endtrans %}</h3>
     <div class="gsub">{% trans %}credits.design_sub{% endtrans %}</div>
     <div class="crow">
-      <div class="who"><a href="https://fonts.google.com/specimen/Bricolage+Grotesque">Bricolage Grotesque</a><span class="lic">SIL OFL 1.1</span></div>
+      <div class="who"><a href="https://fonts.google.com/specimen/Bricolage+Grotesque" data-pkg="manual:font-bricolage">Bricolage Grotesque</a><span class="lic">SIL OFL 1.1</span></div>
       <p>{% trans %}credits.bricolage_p{% endtrans %}</p>
     </div>
     <div class="crow">
-      <div class="who"><a href="https://fonts.google.com/specimen/Spline+Sans">Spline Sans &amp; Spline Sans Mono</a><span class="lic">SIL OFL 1.1</span></div>
+      <div class="who"><a href="https://fonts.google.com/specimen/Spline+Sans" data-pkg="manual:font-spline-sans">Spline Sans &amp; Spline Sans Mono</a><span class="lic">SIL OFL 1.1</span></div>
       <p>{% trans %}credits.splinesans_p{% endtrans %}</p>
     </div>
     <div class="crow">
-      <div class="who"><a href="https://github.com/lipis/flag-icons">flag-icons</a><span class="lic">MIT · {% trans %}credits.lic_flags_pd{% endtrans %}</span></div>
+      <div class="who"><a href="https://github.com/lipis/flag-icons" data-pkg="manual:flag-icons">flag-icons</a><span class="lic">MIT · {% trans %}credits.lic_flags_pd{% endtrans %}</span></div>
       <p>{% trans %}credits.flags_p{% endtrans %}</p>
     </div>
   </div>
