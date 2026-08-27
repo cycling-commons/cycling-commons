@@ -1,0 +1,44 @@
+web/config/packages/rate_limiter.yaml
+  s_17396619d306c4::t_20f302d52b7de6 275-294
+  s_17396619d306c4::t_41b87ef268d6de 54-62,353-357
+  s_17396619d306c4::t_8492288917c7d8 63,295-305,358-359
+web/src/Controller/MediaReportController.php
+  s_17396619d306c4::t_f41fdaf3d000d8 13
+web/tests/Support/FormGuardTest.php
+  s_17396619d306c4::t_e3e04e1945b224 1-18,20-179
+  s_17396619d306c4::t_80ae0d4aceccd7 19
+web/tests/Support/ProofOfWorkSpentTest.php
+  s_17396619d306c4::t_cf47f91d8912db 1-39,41-92
+  s_17396619d306c4::t_f41fdaf3d000d8 40
+web/tests/Media/ProofOfWorkTest.php
+  s_17396619d306c4::t_fa7dd6276b8f7b 9
+web/src/Security/ProofOfWork.php
+  s_17396619d306c4::t_0b702415144e73 1-12,14-44,46-116
+  s_17396619d306c4::t_a2dbe4042b5b55 13,45
+web/src/Security/FormGuard.php
+  s_17396619d306c4::t_99c1a50a9cd0af 1-22,24-71,73-154
+  s_17396619d306c4::t_6c3bc45914e06d 23,72
+docs/specs/dev-environment.md
+  s_17396619d306c4::t_37f6ac3f9b4d3d 328
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "d73957ee147d758d2af8774eedd77798353033b2",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_17396619d306c4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "de24113b-ff92-4db1-b177-1da3cfa74b70",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
