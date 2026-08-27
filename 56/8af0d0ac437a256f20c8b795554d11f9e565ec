@@ -1,0 +1,291 @@
+web/src/Form/TwoFactorSetupType.php
+  s_7ca916eeb157fa::t_cf24ce097a1c3b 36-37
+web/templates/security/register.html.twig
+  s_7ca916eeb157fa::t_7ad5c53044bbce 28
+docs/specs/README.md
+  s_7ca916eeb157fa::t_a621bbd829f92d 52-54
+  s_7ca916eeb157fa::t_f85f5dbce454c6 55-56
+  s_7ca916eeb157fa::t_568c4437d69fcc 57-59
+  s_7ca916eeb157fa::t_bfc425ee937deb 60-63
+web/templates/moderate_routes/detail.html.twig
+  s_7ca916eeb157fa::t_7ad5c53044bbce 92,107,119
+web/templates/pages/changelog.html.twig
+  s_7ca916eeb157fa::t_30a7e9cddd46cc 1-12,14-53,55-59
+  s_7ca916eeb157fa::t_7f1b05d022062d 13,54
+web/templates/pages/roadmap.html.twig
+  s_7ca916eeb157fa::t_c0f257288aa381 1-66
+web/templates/security/_auth_shell_styles.html.twig
+  s_7ca916eeb157fa::t_57c500f79ff233 53-55
+web/assets/map/map-init.js
+  s_7ca916eeb157fa::t_0c9b1f12282e06 42-52
+web/src/Controller/SitemapController.php
+  s_7ca916eeb157fa::t_5db29e1c5e61e1 56-59
+web/config/packages/security.yaml
+  s_7ca916eeb157fa::t_751a63192905e5 59-62
+  s_7ca916eeb157fa::t_6488356e8f55bb 45,48
+  s_7ca916eeb157fa::t_e5032f6fc6b2c6 56-57
+  s_7ca916eeb157fa::t_ff208ff008118a 53-55,58
+web/src/Media/RiderCreditSync.php
+  s_7ca916eeb157fa::t_eb32bc9845a5fc 1-116
+web/templates/contribute/vote.html.twig
+  s_7ca916eeb157fa::t_7ad5c53044bbce 72
+docs/specs/account-and-auth.md
+  s_7ca916eeb157fa::t_388ee760928a88 128-138,374,380
+web/tests/Smoke/FormErrorsVisibleTest.php
+  s_7ca916eeb157fa::t_462c7fd911fd1e 100-121,124-125,127-150
+  s_7ca916eeb157fa::t_67d9420f073239 122-123,126
+  s_7ca916eeb157fa::t_97a5911c96fac3 1-99,151-173
+web/src/Form/RegistrationFormType.php
+  s_7ca916eeb157fa::t_cf24ce097a1c3b 36-37,47-48,50,57,65,73
+web/translations/messages.fr.yaml
+  s_7ca916eeb157fa::t_1289207828ebab 3415-3431
+  s_7ca916eeb157fa::t_c0496f75df8d96 1561,3307-3308,3411-3412,4207-4215
+  s_7ca916eeb157fa::t_026099b9f8d3d6 223-224
+  s_7ca916eeb157fa::t_5db29e1c5e61e1 31-32,486
+  s_7ca916eeb157fa::t_07640b218093d6 89,100-101,132-135,137-139,143,149,151-154,156-157,164-173,175-179,184-187,190,200,202-203,225
+  s_7ca916eeb157fa::t_2c22cafcbcd1aa 3414
+  s_7ca916eeb157fa::t_76f3e8c97d66af 3432
+  s_7ca916eeb157fa::t_251f297525a00e 107,112,123,126,140-141,155,158-163,174,191-199,212,214
+  s_7ca916eeb157fa::t_b170f82b07f5cd 2503,2511
+  s_7ca916eeb157fa::t_a129ba49feb470 3413
+  s_7ca916eeb157fa::t_2eae0cf1753a7f 4166-4206
+  s_7ca916eeb157fa::t_7ce9510bf95037 150
+  s_7ca916eeb157fa::t_f444b1a4d25bb8 111,125
+  s_7ca916eeb157fa::t_78a46c5d6048bb 148,183,188
+  s_7ca916eeb157fa::t_ee5f350f4666c0 127,189
+  s_7ca916eeb157fa::t_ce8633de2fdfc2 131
+  s_7ca916eeb157fa::t_d165b7de7d4c8c 1576
+  s_7ca916eeb157fa::t_d0fdd9e449a7ab 136
+  s_7ca916eeb157fa::t_48e572c1d78ef3 3309-3312
+  s_7ca916eeb157fa::t_561555bcad5aad 1445
+  s_7ca916eeb157fa::t_733c62e3972d37 201
+web/src/Content/ReleaseNotes.php
+  s_7ca916eeb157fa::t_85aea264917b1d 1-94,106,108-109
+  s_7ca916eeb157fa::t_c7fcf78feba08f 95-105,107
+web/src/Form/SettingsPasswordType.php
+  s_7ca916eeb157fa::t_cf24ce097a1c3b 36,49-50,52,62
+web/templates/map/index.html.twig
+  s_7ca916eeb157fa::t_0c9b1f12282e06 415-420
+web/src/Form/ImproveType.php
+  s_7ca916eeb157fa::t_a129ba49feb470 58
+web/src/Controller/PageController.php
+  s_7ca916eeb157fa::t_82e7a1b9c83214 78-137,140
+  s_7ca916eeb157fa::t_ca4889fe1f1c81 11
+  s_7ca916eeb157fa::t_efa903109b415f 138-139,141
+web/templates/security/reset_password_request.html.twig
+  s_7ca916eeb157fa::t_7ad5c53044bbce 24
+web/config/packages/csrf.yaml
+  s_7ca916eeb157fa::t_e8dc62d98b74c2 21-28
+web/tests/Account/UpdatesSubscriptionTest.php
+  s_7ca916eeb157fa::t_c1788f469e546a 1-141
+web/templates/base.html.twig
+  s_7ca916eeb157fa::t_3b83467f6f3394 7-9
+web/tests/Smoke/RoadmapChangelogTest.php
+  s_7ca916eeb157fa::t_e2e430cd1b26be 1-125
+web/templates/partials/_footer.html.twig
+  s_7ca916eeb157fa::t_5db29e1c5e61e1 4
+web/src/Routing/LocalizedPath.php
+  s_7ca916eeb157fa::t_82e7a1b9c83214 71-88
+web/templates/pages/privacy.html.twig
+  s_7ca916eeb157fa::t_17d01c5963729a 114-118,198-207,281,285-290
+  s_7ca916eeb157fa::t_251f764e546276 271-280,282-283,291-294,319-325
+  s_7ca916eeb157fa::t_fc30535eabc832 128-155,170-177,179-197,208-247
+  s_7ca916eeb157fa::t_038b55ca4c3317 248,269-270
+  s_7ca916eeb157fa::t_ee5f350f4666c0 119-121,268
+  s_7ca916eeb157fa::t_9292721b68b874 3-17,99,113,158-163,263-267
+  s_7ca916eeb157fa::t_2a74a4dc41b68a 46-53,61-62,80-83
+  s_7ca916eeb157fa::t_c8fe2ffe4c11b7 54-60,178
+web/templates/security/2fa_setup.html.twig
+  s_7ca916eeb157fa::t_57c500f79ff233 22-24
+  s_7ca916eeb157fa::t_7ad5c53044bbce 80
+web/src/Account/UpdatesSubscription.php
+  s_7ca916eeb157fa::t_c7fcf78feba08f 73-77
+  s_7ca916eeb157fa::t_5f8381ab1e2214 1-72,78-115
+docs/specs/security-architecture.md
+  s_7ca916eeb157fa::t_381617456cbb04 484-515
+web/src/Form/ChangePasswordFormType.php
+  s_7ca916eeb157fa::t_cf24ce097a1c3b 32-33,35,45
+web/src/EventSubscriber/LocaleSubscriber.php
+  s_7ca916eeb157fa::t_e8dc62d98b74c2 34-46
+web/tests/Smoke/ValidationMessagesTranslatedTest.php
+  s_7ca916eeb157fa::t_dc8e2f6c67190b 1-38,40-59,63-86,88-114,116-122,124-132
+  s_7ca916eeb157fa::t_79125c77d15e4a 39,60-62,87,115,123
+web/src/Account/UpdatesConsent.php
+  s_7ca916eeb157fa::t_5bdb9d7c3177f7 1-55
+web/src/Controller/RegistrationController.php
+  s_7ca916eeb157fa::t_ae5eae3cdebab5 73-77
+  s_7ca916eeb157fa::t_cf24ce097a1c3b 101
+  s_7ca916eeb157fa::t_6488356e8f55bb 144-162
+web/tests/Smoke/LocalizedRoutingTest.php
+  s_7ca916eeb157fa::t_126bddabca3308 59,62-82
+web/translations/messages.nl.yaml
+  s_7ca916eeb157fa::t_48e572c1d78ef3 3309-3312
+  s_7ca916eeb157fa::t_e221bab06ab7f2 89,100-101,132-135,137-139,143,149,151-154,156-157,164-173,175-179,184-187,190,200-203,223-225
+  s_7ca916eeb157fa::t_7ce9510bf95037 150
+  s_7ca916eeb157fa::t_c0496f75df8d96 1561,3307-3308,3411-3412,4207-4215
+  s_7ca916eeb157fa::t_2c22cafcbcd1aa 3414
+  s_7ca916eeb157fa::t_2eae0cf1753a7f 4166-4206
+  s_7ca916eeb157fa::t_08c34be6f8ab2a 107,112,123,126,140-141,155,158-163,174,191-199,212,214
+  s_7ca916eeb157fa::t_a272cc285aee3e 2503,2511
+  s_7ca916eeb157fa::t_5db29e1c5e61e1 31-32,486
+  s_7ca916eeb157fa::t_d0fdd9e449a7ab 136
+  s_7ca916eeb157fa::t_a129ba49feb470 3413
+  s_7ca916eeb157fa::t_f444b1a4d25bb8 111,125
+  s_7ca916eeb157fa::t_1289207828ebab 3415-3431
+  s_7ca916eeb157fa::t_ee5f350f4666c0 127,189
+  s_7ca916eeb157fa::t_ce8633de2fdfc2 131
+  s_7ca916eeb157fa::t_561555bcad5aad 1445
+  s_7ca916eeb157fa::t_d165b7de7d4c8c 1576
+  s_7ca916eeb157fa::t_78a46c5d6048bb 148,183,188
+  s_7ca916eeb157fa::t_76f3e8c97d66af 3432
+web/src/Controller/SettingsController.php
+  s_7ca916eeb157fa::t_10e2f584b4b251 8,44,59,93-96
+  s_7ca916eeb157fa::t_53f63cdd297a99 12
+  s_7ca916eeb157fa::t_01d11e352a3c70 43,54-58,60,87-91,97
+  s_7ca916eeb157fa::t_f1e8f7e6bd9602 92
+docs/specs/roadmap-and-changelog.md
+  s_7ca916eeb157fa::t_942eda18d667f0 1-129
+web/src/Controller/TwoFactorController.php
+  s_7ca916eeb157fa::t_2c22cafcbcd1aa 95
+web/translations/messages.de.yaml
+  s_7ca916eeb157fa::t_9eebf7e68bd572 89,100-101,132-135,137-139,143,149,151-154,156-157,164-173,175-179,184-187,190,200-203,223-225
+  s_7ca916eeb157fa::t_ee5f350f4666c0 127,189
+  s_7ca916eeb157fa::t_d0fdd9e449a7ab 136
+  s_7ca916eeb157fa::t_76f3e8c97d66af 3435
+  s_7ca916eeb157fa::t_f77fe872075fae 107,112,123,126,140-141,155,158-163,174,191-199,212,214
+  s_7ca916eeb157fa::t_c0496f75df8d96 1561,3310-3311,3414-3415,4210-4218
+  s_7ca916eeb157fa::t_2c22cafcbcd1aa 3417
+  s_7ca916eeb157fa::t_78a46c5d6048bb 148,183,188
+  s_7ca916eeb157fa::t_2eae0cf1753a7f 4169-4209
+  s_7ca916eeb157fa::t_a272cc285aee3e 2506,2514
+  s_7ca916eeb157fa::t_7ce9510bf95037 150
+  s_7ca916eeb157fa::t_561555bcad5aad 1445
+  s_7ca916eeb157fa::t_5db29e1c5e61e1 31-32,486
+  s_7ca916eeb157fa::t_ce8633de2fdfc2 131
+  s_7ca916eeb157fa::t_f444b1a4d25bb8 111,125
+  s_7ca916eeb157fa::t_1289207828ebab 3418-3434
+  s_7ca916eeb157fa::t_a129ba49feb470 3416
+  s_7ca916eeb157fa::t_d165b7de7d4c8c 1576
+  s_7ca916eeb157fa::t_48e572c1d78ef3 3312-3315
+web/templates/pages/unsubscribed.html.twig
+  s_7ca916eeb157fa::t_751a63192905e5 1-34
+web/src/Form/Extension/CsrfMessageExtension.php
+  s_7ca916eeb157fa::t_c7399cd43ff4fd 52
+  s_7ca916eeb157fa::t_76f3e8c97d66af 1-8,10-31,38-39,41-51,53-54
+  s_7ca916eeb157fa::t_8ae459dd0cc3ef 9,32-37,40
+web/templates/partials/_form_errors.html.twig
+  s_7ca916eeb157fa::t_9e8825b210bc53 1-21,26-28,30-31
+  s_7ca916eeb157fa::t_3a5a2f35c6a481 22-25,29
+docs/specs/privacy-notice.md
+  s_7ca916eeb157fa::t_1bdd7ae70ba8b2 262
+  s_7ca916eeb157fa::t_ee3043b071b581 1-26,33-50,72-105,117-128,147-166,184-196,249,251-261,263-266
+  s_7ca916eeb157fa::t_53f63cdd297a99 226-244
+  s_7ca916eeb157fa::t_0edd1acf0618b4 167-183,197-213,245-248,250
+  s_7ca916eeb157fa::t_af2fcd0031ea9a 106-116,129-146
+  s_7ca916eeb157fa::t_717a39366d0a32 30-32,214-225
+  s_7ca916eeb157fa::t_7260c1da5a7264 27-29,51-71
+  s_7ca916eeb157fa::t_85dc071508ee72 267-270
+web/src/Controller/UnsubscribeController.php
+  s_7ca916eeb157fa::t_4a54f2ae6709be 1-53
+web/templates/pages/changelog.atom.twig
+  s_7ca916eeb157fa::t_3b83467f6f3394 1-5,10-18,20,22-31,33,35-39
+  s_7ca916eeb157fa::t_7f1b05d022062d 6-9,19,21
+  s_7ca916eeb157fa::t_39fff0af0ab832 32,34
+web/src/Media/Command/MediaResyncCreditsCommand.php
+  s_7ca916eeb157fa::t_6d0b4c4999f127 1-90
+web/src/Entity/User.php
+  s_7ca916eeb157fa::t_cf24ce097a1c3b 45,58-60,74
+  s_7ca916eeb157fa::t_32232707a88e9b 196-204,733-743
+  s_7ca916eeb157fa::t_3dd5a97c3a4362 744
+web/templates/pages/credits.html.twig
+  s_7ca916eeb157fa::t_df0fe864be45ba 126-130,132
+web/templates/settings/index.html.twig
+  s_7ca916eeb157fa::t_57c500f79ff233 98
+  s_7ca916eeb157fa::t_7ad5c53044bbce 194,438
+  s_7ca916eeb157fa::t_d165b7de7d4c8c 392-398
+  s_7ca916eeb157fa::t_10e2f584b4b251 401-413
+  s_7ca916eeb157fa::t_7dc9cfdec5b936 399-400
+web/src/Form/ResetPasswordRequestFormType.php
+  s_7ca916eeb157fa::t_cf24ce097a1c3b 27-28
+web/migrations/Version20260828010000.php
+  s_7ca916eeb157fa::t_b58924942faad0 1-44
+web/templates/security/reset_password.html.twig
+  s_7ca916eeb157fa::t_7ad5c53044bbce 24
+web/src/Form/SettingsType.php
+  s_7ca916eeb157fa::t_f84f473d75d42a 207-214
+  s_7ca916eeb157fa::t_cf24ce097a1c3b 51-52
+docs/specs/form-errors.md
+  s_7ca916eeb157fa::t_f89d821eb9dfb3 1-57,64-65,90-112
+  s_7ca916eeb157fa::t_f58f2b185c14eb 58-63,66-89,113-144
+web/assets/styles/atlas.css
+  s_7ca916eeb157fa::t_e486533d847c1c 186-191
+  s_7ca916eeb157fa::t_9e8825b210bc53 179-185,192,199
+  s_7ca916eeb157fa::t_3a5a2f35c6a481 193-198
+  s_7ca916eeb157fa::t_57c500f79ff233 200-215
+web/tests/Media/RiderCreditSyncTest.php
+  s_7ca916eeb157fa::t_a96c7c25903039 1-8,10,12-14,16-127,130-132,139-151
+  s_7ca916eeb157fa::t_1a13d93004d379 137-138
+  s_7ca916eeb157fa::t_8db4e531f15658 128-129
+  s_7ca916eeb157fa::t_9bd04eed3b0cd6 9,11,15,133-136
+web/templates/pages/pages.html.twig
+  s_7ca916eeb157fa::t_5db29e1c5e61e1 52-53
+web/translations/messages.es.yaml
+  s_7ca916eeb157fa::t_d0fdd9e449a7ab 136
+  s_7ca916eeb157fa::t_3e87fde9579d0e 89,100-101,132-135,137-139,143,149,151-154,156-157,164-173,175-179,184-187,190,200-203,223-225
+  s_7ca916eeb157fa::t_d4076c592b8703 107,112,123,126,140-141,155,158-163,174,191-199,212,214
+  s_7ca916eeb157fa::t_a129ba49feb470 3439
+  s_7ca916eeb157fa::t_76f3e8c97d66af 3458
+  s_7ca916eeb157fa::t_ee5f350f4666c0 127,189
+  s_7ca916eeb157fa::t_ce8633de2fdfc2 131
+  s_7ca916eeb157fa::t_78a46c5d6048bb 148,183,188
+  s_7ca916eeb157fa::t_7ce9510bf95037 150
+  s_7ca916eeb157fa::t_561555bcad5aad 1451
+  s_7ca916eeb157fa::t_c0496f75df8d96 1567,3333-3334,3437-3438,4238-4246
+  s_7ca916eeb157fa::t_2eae0cf1753a7f 4197-4237
+  s_7ca916eeb157fa::t_a272cc285aee3e 2044,2052
+  s_7ca916eeb157fa::t_1289207828ebab 3441-3457
+  s_7ca916eeb157fa::t_48e572c1d78ef3 3335-3338
+  s_7ca916eeb157fa::t_f444b1a4d25bb8 111,125
+  s_7ca916eeb157fa::t_2c22cafcbcd1aa 3440
+  s_7ca916eeb157fa::t_5db29e1c5e61e1 31-32,487
+  s_7ca916eeb157fa::t_d165b7de7d4c8c 1582
+web/translations/messages.en.yaml
+  s_7ca916eeb157fa::t_bf9e40d1c5c03a 131,136,1449,3451
+  s_7ca916eeb157fa::t_1289207828ebab 3434-3450
+  s_7ca916eeb157fa::t_ee5f350f4666c0 127,189
+  s_7ca916eeb157fa::t_78a46c5d6048bb 148,183,188
+  s_7ca916eeb157fa::t_a272cc285aee3e 2037,2045
+  s_7ca916eeb157fa::t_2eae0cf1753a7f 4188-4228
+  s_7ca916eeb157fa::t_a129ba49feb470 3432
+  s_7ca916eeb157fa::t_8b473b94688eb1 89,100-101,132-135,137-139,143,149,151-154,156-157,164-173,175-179,184-187,190,200-203,223-225
+  s_7ca916eeb157fa::t_2c22cafcbcd1aa 3433
+  s_7ca916eeb157fa::t_a9a2048ff58b15 3328-3331
+  s_7ca916eeb157fa::t_8daa489e876dfc 107,112,123,126,140-141,155,158-163,174,191-199,214
+  s_7ca916eeb157fa::t_d165b7de7d4c8c 1580
+  s_7ca916eeb157fa::t_c0496f75df8d96 1565,3326-3327,3430-3431,4229-4237
+  s_7ca916eeb157fa::t_5db29e1c5e61e1 31-32,486
+  s_7ca916eeb157fa::t_7ce9510bf95037 150
+  s_7ca916eeb157fa::t_f444b1a4d25bb8 111,125
+  s_7ca916eeb157fa::t_8afe29ce68437a 212
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "568af0d0ac437a256f20c8b795554d11f9e565ec",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_7ca916eeb157fa": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e8be2531-9ac2-4db0-b37d-277f0b28cb93",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
