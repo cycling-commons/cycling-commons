@@ -2,7 +2,14 @@
 /* Cycling Commons — shared "Riders' Atlas" stylesheet */
 :root{
   --ink:#101E16;--paper:#EFE6D4;--paper-deep:#E2D5BC;--spruce:#1C3A2A;--spruce-lift:#2C5440;
-  --trail:#FF5A1F;--clay:#B5532E;--glacier:#8FB6A8;--ochre:#C8923A;
+  /* --clay was #B5532E, which is 3.99:1 on --paper and 3.41:1 on --paper-deep:
+     a near miss that survived because it looks fine. It is the link and
+     small-heading colour on every content page, so every one of those links
+     failed WCAG AA for body text. #964526 clears both (5.33 and 4.56) and is
+     the same hue, 17% darker.
+     NOT changed in map.css: the map chrome uses --clay on a DARK ground, where
+     darkening makes it worse. See docs/TODO.md. */
+  --trail:#FF5A1F;--clay:#964526;--glacier:#8FB6A8;--ochre:#C8923A;
   /* Errors were borrowing --clay, a burnt ORANGE that sits a shade off the
      paper and reads as a note rather than a problem (owner 2026-08-14).
      A real red, warm enough to belong to this palette: --danger carries
@@ -183,7 +190,9 @@ section.pad{padding:clamp(3rem,7vw,6rem) 0}
 section.pad:has(+ section.pad){padding-bottom:clamp(2rem,4vw,3rem)}
 section.pad+section.pad{padding-top:clamp(2rem,4vw,3rem)}
 .foot{background:var(--ink);color:rgba(239,230,212,.8);border-top:1px solid rgba(239,230,212,.14);padding:2rem 0 4rem}
-.foot .wrap{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+/* Row gap kept small: `gap:1rem` set the space BETWEEN the two wrapped lines as
+   well as between the columns, which read as a hole in the footer. */
+.foot .wrap{display:flex;justify-content:space-between;gap:.4rem 1rem;flex-wrap:wrap}
 .foot .mono{font-size:.64rem;color:rgba(239,230,212,.72)}  /* lightened: ≈7.7:1 on --ink (WCAG AAA); was .5 ≈4.4:1 */
 .foot a:hover{color:var(--trail)}
 
