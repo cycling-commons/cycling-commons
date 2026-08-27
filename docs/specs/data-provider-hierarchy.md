@@ -66,7 +66,9 @@ A new table, `data_provider`, one row per dataset. Curator-maintained (§8).
 | `name` | what a rider sees: "RIVM", "Tourisme Wallonie". |
 | `full_name` | the long form for the credits page. |
 | `homepage` | where the citation links. |
-| `licence` | free text plus a code, e.g. `public-domain`, `cc-by-4.0`, `odbl`. |
+| `licence` | free text plus a code, e.g. `public-domain`, `cc-by-4.0`, `odbl`. The code also decides the credit's weight (§9.3). |
+| `creator` | who made the dataset, when that is not the publisher. drinkwaterkaart.nl for the Dutch taps. Null when publisher and creator are the same. |
+| `promoted` | false by default. Lifts a courtesy credit into a full row (§9.3). |
 | `attribution` | the exact line we are obliged to show, when the licence names one. |
 | `country_code` | null for worldwide. |
 | `letters` | which catalogue letters this dataset fills. |
@@ -424,6 +426,47 @@ as the queue clears, with no deploy either time.
 **What `credited_providers()` returns per row is therefore:** the facts as
 values, plus a resolved sentence, already translated by the time the template
 sees it. The template renders and does not choose.
+
+### 9.3 One row per provider does not survive a registry of hundreds
+
+Raised by the credits work, 2026-08-27, and accepted: §9's "one `.crow` per
+entry" and "lots and lots of these worldwide" cannot both hold.
+
+The page already solves this for software, in two weights. Notable dependencies
+get a row and a sentence; the long tail is a comma-separated run of linked
+names, and 42 packages fit in five lines.
+
+**The split is decided by the licence, not by taste.** That is the part worth
+keeping:
+
+| The licence says | Weight | Why |
+| --- | --- | --- |
+| an attribution notice is **required** (ODbL, CC BY, CC BY-SA) | its own `.crow` with the required marker | a mandated text has to be *displayed*. A bare name in a comma run does not display it. |
+| nothing is owed (Public Domain Mark, CC0) | one linked name in the comma run | naming them is decency, not obligation, and a link names them |
+
+The required set stays small by its nature, so the page survives a registry of
+hundreds without anyone deciding what is important.
+
+`data_provider` therefore stores no "prominence" column. The weight is derived
+from `licence`, the same code §8 already uses to refuse enabling a provider that
+owes an attribution and has none. A curator cannot promote a row by preferring
+it.
+
+**One deliberate exception, and it is bounded.** The licence sets the floor, not
+the ceiling. A `promoted` flag, default false, lifts a courtesy provider into a
+full row. It exists because the owner asked for exactly this case: the Dutch tap
+register is public domain and therefore owes nothing, yet its **creator**
+deserves naming, and a comma run cannot carry that sentence. Promotion is an
+explicit act on the desk, recorded in moderation history like every other
+provider change, and the desk shows how many promoted rows exist so the count
+cannot creep unnoticed.
+
+**Publisher and creator are different fields.** `full_name` is who publishes.
+`creator` (nullable) is who made the dataset, when that is somebody else. For
+the Dutch taps: publisher RIVM, creator drinkwaterkaart.nl, registry the
+Kadaster's Nationaal Georegister. A credit that names only the publisher credits
+the pipe rather than the person, which is the mistake the current hand-written
+row makes.
 
 ## 10. Migration of the existing 150 rows
 
