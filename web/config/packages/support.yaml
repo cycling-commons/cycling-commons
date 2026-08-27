@@ -21,12 +21,21 @@
 #                        it at runtime, because who reads the inbox changes far
 #                        more often than who the operator is.
 #
-# EVERY cc.organisation.* value below is deliberately EMPTY in the committed
-# defaults. The legal identity block renders only the lines that are filled, and
-# says plainly when it is incomplete, so an unconfigured deployment shows a
-# visible gap rather than a plausible-looking lie. The real values are
-# deployment configuration: set them in .env.local (dev) and the deployed
-# environment (staging, prod). See docs/specs/contact-and-support.md §2.
+# The cc.organisation.* values are EMPTY in the committed defaults, with one
+# exception: the operator's NAME, which is already public in a dozen tracked
+# files (the footer, the terms, the credits page) and so leaks nothing by being
+# here. Everything that identifies a place or a register stays empty.
+#
+# The legal identity block renders only the lines that are filled and says
+# plainly when it is incomplete, so an unconfigured deployment shows a visible
+# gap rather than a plausible-looking lie. A placeholder KvK number would be a
+# false statement about a real register, which is why none of those has a
+# default.
+#
+# The real values are deployment configuration. In dev this project already
+# keeps its local overrides in .env.dev.local, NOT .env.local. Set them in the
+# deployed environment for staging and prod.
+# See docs/specs/contact-and-support.md §2.
 parameters:
     # `%env(default::VAR)%` resolves an unset VAR to NULL, not to an empty
     # string, and a null into a `string` constructor argument is a fatal error

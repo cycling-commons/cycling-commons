@@ -46,7 +46,9 @@ both duties.
 legally operates the site would be a misrepresentation surface. This changes by
 deploy, like the CSP hosts do and for the same reason.
 
-**The committed defaults are empty, and the page says so.** `isComplete()` is
+**The committed defaults are empty apart from the operator's name, and the page
+says so.** The name is already public in a dozen tracked files, so it leaks
+nothing; everything that names a place or a register stays empty. `isComplete()` is
 false until the legally required fields are set, and the block then renders a
 visible gap naming exactly what is missing. Rendering whatever happens to be
 configured and staying quiet about the rest produces a block that *looks* like
@@ -58,8 +60,13 @@ The VAT number is excluded from the completeness check on purpose: it is
 required only of an operator that is VAT-registered, and including it would make
 a foundation that is not permanently "incomplete".
 
-**Deploy prerequisite.** `CC_ORG_*` in `web/.env` must be filled per
-environment. Until they are, `/contact` shows the gap.
+**Deploy prerequisite.** `CC_ORG_*` must be filled per environment. Until they
+are, `/contact` shows the gap.
+
+Never in `web/.env`: that file is tracked and the repository is public, so a
+home address typed into it is published. In dev this project keeps its local
+overrides in **`.env.dev.local`**, not `.env.local`, and staging and prod take
+them from the deployed environment.
 
 ## 3. Anti-spam, with no third party
 
