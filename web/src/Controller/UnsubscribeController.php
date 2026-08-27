@@ -33,6 +33,8 @@ use Symfony\Component\Routing\Attribute\Route;
  * the flag can be turned straight back on in settings.
  *
  * @see docs/specs/roadmap-and-changelog.md §4
+ *
+ * @api
  */
 final class UnsubscribeController extends AbstractController
 {

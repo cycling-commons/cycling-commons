@@ -54,7 +54,6 @@ final class MediaResyncCreditsCommand extends Command
         $io = new SymfonyStyle($input, $output);
         $dryRun = (bool) $input->getOption('dry-run');
 
-        /** @var list<User> $users */
         $users = $this->em->getRepository(User::class)->findAll();
 
         $entries = 0;

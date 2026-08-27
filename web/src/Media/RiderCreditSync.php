@@ -57,7 +57,6 @@ final class RiderCreditSync
     {
         $credit = $user->isPublicProfile() ? $user->getDisplayName() : '';
 
-        /** @var list<MediaUpload> $uploads */
         $uploads = $this->em->getRepository(MediaUpload::class)->findBy([
             'userId' => $user->getId(),
             'status' => MediaStatus::Approved,
