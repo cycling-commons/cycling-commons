@@ -45,6 +45,25 @@
 
 <section class="pad"><div class="wrap">
 
+  {# EVERY ROW IN THIS GROUP IS TEMPORARY.
+     When App\Provider lands, these hand-written dataset rows are replaced by
+     one loop over credited_providers() (App\Twig\ProviderCreditsExtension),
+     so a provider admitted at /moderate/providers reaches this page with
+     nobody editing a template. A hand-written row for a dataset the registry
+     also carries is then a duplicate and must go in the same change, the
+     parked rows included: the owner's call is that those are deleted by hand
+     at the switchover, not restored.
+     The wording is NOT lost: the registry carries a blurb_key pointing at the
+     message key each row already uses, so credits.osm_p and the rest keep all
+     five translations. Do not delete a translation key during that sweep.
+     Do not add a dataset row here without reading
+     docs/specs/credits-page.md §8 and data-provider-hierarchy.md §9 first.
+     The groups BELOW this one (map, software, type) are not affected. The line
+     is HOW A SOURCE REACHES US, not what kind of thing it is: a dataset we
+     import on a schedule is a provider, anything fetched on demand per request
+     is not. So Mapillary, Esri, OpenFreeMap and Photon stay hand-written with
+     their hand-placed markers, and the #credits-req footnote is still needed
+     after the migration. credits-page.md §8.8 has the row-by-row table. #}
   <div class="cgroup">
     <h3>{% trans %}credits.data_h{% endtrans %}</h3>
     <div class="gsub">{% trans %}credits.data_sub{% endtrans %}</div>

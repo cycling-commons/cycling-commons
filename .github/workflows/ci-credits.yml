@@ -23,6 +23,13 @@ on:
   # credited on 2026-08-27 and did not resolve; nothing in the repository had
   # changed, so no change-triggered job could ever have caught it. A weekly
   # sweep is the only thing that can.
+  #
+  # DORMANT UNTIL GO-LIVE, and that is expected. GitHub runs schedule: from the
+  # DEFAULT BRANCH only. The public repo's default branch is `main`; this file
+  # lives on `symfony-base`, which becomes `main` at go-live. Until then the
+  # pull_request and push triggers work and this cron never fires. Nothing has
+  # to be installed on a host or in WSL either way: GitHub schedules it.
+  # Times are UTC and best-effort, not exact.
   schedule:
     - cron: '17 6 * * 1'
 
