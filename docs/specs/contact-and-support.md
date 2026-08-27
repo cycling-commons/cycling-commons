@@ -405,12 +405,10 @@ A partial index carries the overdue query, the one a curator runs most:
 3. Set `CC_SUPPORT_EMAILS`, or set it at `/admin/system-config` after deploy.
    Unset falls back to `SECURITY_ALERT_EMAIL`.
 4. `CC_SUPPORT_FROM_EMAIL` must be a domain this deployment may send as.
-5. **`php bin/console app:translations:sync`**, after the migration, on one host.
-   This work added about 350 English keys, and `/translate` reads
-   `translation_entry` rather than the YAML, so without it nobody can translate
-   a word of the contact form, the bug report or the two legal pages. It is
-   already a standing deploy step (`operations.md` §3); it is repeated here
-   because this change is the largest batch of new keys the catalogue has had.
+5. `app:translations:sync`. **Handled: `deploy-symfony.sh` runs it** as of
+   2026-08-27 (`operations.md` §3). Noted only because this change added about
+   350 English keys, the largest batch the catalogue has had, and `/translate`
+   reads `translation_entry` rather than the YAML. Nothing to do on deploy.
 
 ## 13. Copy rules the owner set
 
