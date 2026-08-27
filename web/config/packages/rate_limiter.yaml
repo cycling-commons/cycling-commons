@@ -51,7 +51,16 @@ framework:
                 adapter: cache.app
             cache.media_urgent_alert_limiter:
                 adapter: cache.app
-            cache.media_pow:
+            # Renamed from cache.media_pow when ProofOfWork moved out of the
+            # media domain: the contact form and the bug report use the same
+            # spent-challenge set (contact-and-support.md §3).
+            cache.pow_spent:
+                adapter: cache.app
+            cache.contact_form_limiter:
+                adapter: cache.app
+            cache.bug_report_limiter:
+                adapter: cache.app
+            cache.bug_report_nojs_limiter:
                 adapter: cache.app
             cache.public_api_limiter:
                 adapter: cache.app
@@ -263,6 +272,37 @@ framework:
             limit: 120
             interval: '1 minute'
             cache_pool: cache.public_api_limiter
+        # The contact form (contact-and-support.md §3). Three a day per hashed
+        # address, matching the budget the BikeCoders site has run on for a
+        # year. Deliberately tight: this is a front door, not a chat window,
+        # and anybody with three genuine separate things to say in one day can
+        # say them in one message. The key is a salted hash of the address, so
+        # the counter never becomes a list of who visited.
+        contact_form:
+            policy: sliding_window
+            limit: 3
+            interval: '1 day'
+            cache_pool: cache.contact_form_limiter
+        # Bug reports. Looser than the contact form on purpose: a rider who has
+        # found one broken thing has usually found three, and the whole point
+        # of the floating button is that reporting the third one costs nothing.
+        # Still bounded, because the form takes an image.
+        bug_report:
+            policy: sliding_window
+            limit: 12
+            interval: '1 day'
+            cache_pool: cache.bug_report_limiter
+        # The same form, submitted WITHOUT a solved proof of work: the plain
+        # /report-bug page with JavaScript off (contact-and-support.md §3).
+        # That door has to stay open, because a bug reporter must survive our
+        # own scripting being the broken thing. It is deliberately narrow, so
+        # the cheapest way in is also the most limited one, and the challenge
+        # keeps its point without locking anybody out.
+        bug_report_no_js:
+            policy: sliding_window
+            limit: 3
+            interval: '1 day'
+            cache_pool: cache.bug_report_nojs_limiter
 
 when@test:
     framework:
@@ -310,7 +350,13 @@ when@test:
                     adapter: cache.adapter.array
                 cache.media_urgent_alert_limiter:
                     adapter: cache.adapter.array
-                cache.media_pow:
+                cache.pow_spent:
+                    adapter: cache.adapter.array
+                cache.contact_form_limiter:
+                    adapter: cache.adapter.array
+                cache.bug_report_limiter:
+                    adapter: cache.adapter.array
+                cache.bug_report_nojs_limiter:
                     adapter: cache.adapter.array
                 cache.public_api_limiter:
                     adapter: cache.adapter.array

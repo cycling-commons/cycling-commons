@@ -4,15 +4,26 @@
 
 declare(strict_types=1);
 
-namespace App\Media;
+namespace App\Security;
 
 use Psr\Cache\CacheItemPoolInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
- * Local PoW for the urgent report path — no third-party bot check.
+ * Local proof of work: the site's own bot check, never a third party's.
+ *
+ * Lived in `App\Media` while the photo report was the only caller. It is now
+ * shared with the contact form and the bug report (contact-and-support.md §3),
+ * so it sits in `App\Security` where a form of any kind can reach it without
+ * pulling in the media domain.
+ *
+ * The deliberate choice behind it: no Turnstile, no reCAPTCHA, nothing that
+ * asks a rider's browser to talk to Cloudflare or Google before it can talk to
+ * us. The cost is paid in the visitor's own CPU, in their own tab, and the only
+ * party that learns anything is this server.
  *
  * @see docs/specs/photo-uploads.md §6c
+ * @see docs/specs/contact-and-support.md §3
  *
  * @api
  */
@@ -26,12 +37,12 @@ final class ProofOfWork
     public function __construct(
         #[Autowire('%kernel.secret%')]
         private readonly string $secret,
-        #[Autowire(service: 'cache.media_pow')]
+        #[Autowire(service: 'cache.pow_spent')]
         private readonly CacheItemPoolInterface $spent,
     ) {
     }
 
-    /** `<expiry>.<random>.<signature>` — self-contained, no server state. */
+    /** `<expiry>.<random>.<signature>`, self-contained, with no server state. */
     public function issue(\DateTimeImmutable $now): string
     {
         $expiry = $now->getTimestamp() + self::TTL_SECONDS;
@@ -100,6 +111,6 @@ final class ProofOfWork
 
     private function sign(string $body): string
     {
-        return hash_hmac('sha256', 'media-pow|'.$body, $this->secret);
+        return hash_hmac('sha256', 'cc-pow|'.$body, $this->secret);
     }
 }

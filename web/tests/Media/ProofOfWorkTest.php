@@ -6,7 +6,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Media;
 
-use App\Media\ProofOfWork;
+use App\Security\ProofOfWork;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
 /**
