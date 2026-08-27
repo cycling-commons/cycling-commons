@@ -114,6 +114,11 @@ services:
     volumes:
       - ../../web:/app
       - cc_api_vendor:/app/vendor   # keep built vendor/ from being shadowed by the bind mount
+      # Only `web/` is mounted, so a test resolving out of /app/tests/... lands
+      # on `/`, where the repo root's files are not. CI has the whole checkout
+      # and finds SECURITY.md; here SecurityTxtTest failed for that reason and
+      # nothing else. One file, read-only, and the two environments agree.
+      - ../../SECURITY.md:/SECURITY.md:ro
     extra_hosts:
       - "host.docker.internal:host-gateway"   # so the container can reach the host's Mailpit
     depends_on:
@@ -134,6 +139,16 @@ services:
   worker:
     build: ../../web
     command: ["php", "bin/console", "messenger:consume", "async", "--time-limit=3600", "--memory-limit=256M", "-vv"]
+    # The only service here that needs one, and it needs it because of the
+    # line above: a Messenger worker is SUPPOSED to exit on its time and
+    # memory limits, and something is supposed to start it again. In
+    # production that is the host supervisor. In this stack nothing did, so
+    # an hour after `make up` the worker was gone and every async job queued
+    # silently for ever: Commons photos never appeared, uploads were never
+    # scanned or released. Nothing errored, so it read as "the image just
+    # does not load" (found 2026-08-27 chasing exactly that on a station in
+    # Aichi).
+    restart: unless-stopped
     # The image has no USER on purpose: the php-fpm master must start as root
     # so it can drop each pool worker to www-data itself (see web/Dockerfile).
     # This service replaces that CMD with a plain console command, so it
