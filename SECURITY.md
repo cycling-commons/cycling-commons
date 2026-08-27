@@ -11,10 +11,21 @@ riders and the Commons safe.
 
 - **Email:** development@cyclingcommons.org
 - **GitHub:** use [private vulnerability reporting](https://github.com/cycling-commons/cycling-commons/security/advisories/new) (Security → Report a vulnerability).
-- **Languages:** English, Nederlands, Français.
+- **Languages:** English, Nederlands.
 
-This mirrors the machine-readable contact in
-[`/.well-known/security.txt`](atlas/demo/.well-known/security.txt) (RFC 9116).
+This mirrors the machine-readable contact at
+[`/.well-known/security.txt`](https://cyclingcommons.org/.well-known/security.txt)
+(RFC 9116).
+
+**There is exactly one of those, and the application generates it**
+(`SitemapController::securityTxt`) with a computed `Expires`, so it cannot
+quietly rot. A second static copy used to sit beside the old atlas demo and the
+two drifted within a day, disagreeing on the expiry, the languages and the
+policy URL. The demo host now redirects to the canonical URL instead.
+
+`SecurityTxtTest` asserts that this file and the served one still agree on the
+contact address and the languages, so the two documents cannot drift apart
+again without a test failing.
 
 Please include enough detail to reproduce: affected URL/endpoint or component, steps, and
 the impact you observed. Proof-of-concept code is welcome.

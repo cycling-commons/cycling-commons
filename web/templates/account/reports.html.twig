@@ -1,0 +1,87 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{#
+  "What happened to the bugs I reported?" (docs/specs/contact-and-support.md §10)
+
+  A rider who reports something and never hears anything learns not to bother a
+  second time. The outcome mail covers the moment a report finishes; this page
+  covers every moment before that, which is most of them.
+
+  Their own rows and nothing else: the controller filters on the signed-in
+  user's id and is never handed an id from the request.
+
+  Reports filed while signed out are NOT here and cannot be: they carry no
+  account, and signing in afterwards does not adopt them. The page says so
+  rather than leaving somebody hunting for a report that was never attached.
+#}
+{% extends 'base.html.twig' %}
+
+{% block head_styles %}
+{% include 'account/_shell_styles.html.twig' %}
+<style nonce="{{ csp_nonce() }}">
+  .rrow{border-bottom:1px solid rgba(20,22,14,.12);padding:.9rem 0}
+  .rrow:last-of-type{border-bottom:0}
+  .rtop{display:flex;gap:.55rem;align-items:baseline;flex-wrap:wrap}
+  .rtop h2{font-family:var(--serif);font-size:1rem;font-weight:600;margin:0;color:var(--ink)}
+  .tag{font-family:var(--mono);font-size:.56rem;letter-spacing:.1em;text-transform:uppercase;
+    padding:.18rem .42rem;border-radius:3px;background:var(--paper-deep);color:#4a4d40}
+  .tag.st-resolved{background:var(--spruce);color:var(--paper)}
+  .tag.st-in_progress,.tag.st-needs_testing,.tag.st-planned{background:var(--ochre);color:var(--ink)}
+  .tag.st-declined{background:#efe9dd;color:#5a5d4d}
+  .ref{font-family:var(--mono);font-size:.6rem;color:#6d7060}
+  .rmeta{font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;color:#6d7060;margin-top:.3rem}
+  .routcome{background:var(--paper-deep);border-left:2px solid var(--spruce);padding:.7rem .95rem;
+    border-radius:0 6px 6px 0;font-size:.87rem;color:#3a3d30;line-height:1.55;margin:.5rem 0 0}
+  .empty{background:var(--paper-deep);border-left:2px solid var(--ochre);padding:1.1rem 1.3rem;
+    border-radius:0 8px 8px 0;font-size:.92rem;color:#4a4d40;line-height:1.6}
+  .empty a,.note a{color:var(--clay);text-decoration:underline;text-underline-offset:3px}
+  .note{font-size:.85rem;color:#595c4d;line-height:1.6;margin:1.6rem 0 0}
+</style>
+{% endblock %}
+
+{% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'reports'} %}{% endblock %}
+
+{% block body %}
+<div class="dbody dmin" id="main">
+  <div class="mh">
+    <div class="kicker">{{ 'account.menu_personal'|trans }} · {{ cc_user.displayName }}</div>
+    <h1>{{ 'support.mine.title'|trans }}</h1>
+    <p class="lede">{{ 'support.mine.lede'|trans }}</p>
+  </div>
+
+  {% if reports is empty %}
+    <div class="empty">
+      {{ 'support.mine.empty'|trans }}
+      <a href="{{ path('bug_report') }}">{{ 'support.mine.empty_link'|trans }}</a>.
+    </div>
+  {% else %}
+    {% for r in reports %}
+      <div class="rrow">
+        <div class="rtop">
+          <h2>{{ r.title }}</h2>
+          <span class="tag st-{{ r.status.value }}">{{ ('support.bug.status.' ~ r.status.value)|trans }}</span>
+          <span class="tag">{{ ('support.bug.severity.' ~ r.severity.value)|trans }}</span>
+          <span class="ref">{{ references[r.id] }}</span>
+        </div>
+        <p class="rmeta">
+          {{ r.createdAt|cc_date }}
+          {%- if r.pageUrl %} · {{ r.pageUrl }}{% endif %}
+          {%- if r.isPublic %} · <a href="{{ path('known_issues') }}">{{ 'support.mine.on_known'|trans }}</a>{% endif %}
+        </p>
+        {% if r.outcomeNote %}
+          <p class="routcome">{{ r.outcomeNote }}</p>
+        {% endif %}
+      </div>
+    {% endfor %}
+
+    {% include 'partials/_pager.html.twig' with {pager: pager, route: 'my_reports', params: {}} %}
+  {% endif %}
+
+  <p class="note">{{ 'support.mine.anon_note'|trans }}</p>
+  <p class="note">
+    {{ 'support.mine.more'|trans }}
+    <a href="{{ path('known_issues') }}">{{ 'support.known.title'|trans }}</a> ·
+    <a href="{{ path('bug_report') }}">{{ 'support.mine.empty_link'|trans }}</a> ·
+    <a href="{{ path('contact') }}">{{ 'support.contact.title_short'|trans }}</a>
+  </p>
+</div>
+{% endblock %}

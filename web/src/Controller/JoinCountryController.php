@@ -12,6 +12,8 @@ use App\Community\CuratorApplicationException;
 use App\Community\CuratorApplicationService;
 use App\Community\InvalidNoteException;
 use App\Entity\User;
+use App\Routing\LocalePrefix;
+use App\Routing\LocalizedPath;
 use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -29,9 +31,14 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  *
  * @api
  */
+/* These two were the only public pages with no locale prefix, so `/nl/...`
+   404'd on them while every sibling page answered. Found while localising the
+   slugs (LocalizedPath): the localised paths generated fine and then had
+   nothing to sit under. */
+#[Route(LocalePrefix::PATHS)]
 final class JoinCountryController extends AbstractController
 {
-    #[Route('/join/{cc}', name: 'join_country', requirements: ['cc' => '[A-Za-z]{2}'], methods: ['GET', 'POST'])]
+    #[Route(LocalizedPath::JOIN_COUNTRY, name: 'join_country', requirements: ['cc' => '[A-Za-z]{2}'], methods: ['GET', 'POST'])]
     #[IsGranted('ROLE_USER')]
     public function index(
         string $cc,

@@ -55,10 +55,20 @@ final class ContentPagesTest extends WebTestCase
         );
     }
 
+    /**
+     * The slug is localised too, not only the prefix (`LocalizedPath`), so the
+     * URL is generated rather than typed. A hardcoded `/fr/licenses` broke the
+     * day the French slug became `/fr/licences`, and the next slug change would
+     * break it again.
+     */
     public function testLicensesRendersInFrench(): void
     {
         $client = static::createClient();
-        $client->request('GET', '/fr/licenses');
+        $url = static::getContainer()->get('router')->generate('licenses', ['_locale' => 'fr']);
+
+        self::assertSame('/fr/licences', $url, 'the French slug is translated, not just prefixed');
+
+        $client->request('GET', $url);
         self::assertResponseIsSuccessful();
     }
 

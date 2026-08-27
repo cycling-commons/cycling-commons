@@ -15,6 +15,13 @@
   .legal a{color:var(--clay);text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1.5px}
   .legal a:hover{color:var(--trail)}
   .banner{background:var(--spruce);color:var(--paper);border-radius:8px;padding:1rem 1.2rem;margin:1.4rem 0;font-size:.96rem;line-height:1.6}
+  {# `.banner` sets a light colour, but `.legal p` is MORE SPECIFIC (0,0,1,1
+     against 0,0,1,0), so any paragraph inside a banner is repainted the page's
+     dark ink and lands at 1.12:1 on the spruce: invisible. It happened first on
+     the accessibility statement, of all pages. These two lines make the banner
+     own its own text whatever is nested inside it. #}
+  .banner p,.banner li,.banner b{color:inherit}
+  .banner p{margin:0}
   /* --trail on spruce is 3.99:1 — under the 4.5:1 AA floor for text this size,
      and in a safety notice the emphasised word is the one that must not be the
      hardest to read. A lifted trail keeps the warning colour at 5.35:1, and the
@@ -83,14 +90,46 @@
     <p>{% trans %}terms.suspension_pre{% endtrans %} <a href="{{ path('settings') }}">{% trans %}terms.suspension_link{% endtrans %}</a>{% trans %}terms.suspension_post{% endtrans %}</p>
     <p>{{ 'terms.suspension_p2'|trans|rich }}</p>
 
-    <h2><span class="n">12</span>{% trans %}terms.h12_governing{% endtrans %}</h2>
+    {# DSA Article 14: the terms must state the content-moderation policies,
+       procedures and tools in clear and plain language, including any
+       algorithmic decision-making and human review, and the rules of any
+       internal complaint handling. Before this the terms said "we may suspend
+       or end access" and stopped, and the standard curators actually work to
+       lived in a rulebook behind a login, where nobody affected by it could
+       read it (docs/TODO.md item 4). #}
+    <h2><span class="n">12</span>{% trans %}terms.h12_moderation{% endtrans %}</h2>
+    <p>{% trans %}terms.mod_intro{% endtrans %}</p>
+
+    <h3>{% trans %}terms.mod_standard_h{% endtrans %}</h3>
+    <ul>
+      <li>{{ 'terms.mod_std1'|trans|rich }}</li>
+      <li>{{ 'terms.mod_std2'|trans|rich }}</li>
+      <li>{{ 'terms.mod_std3'|trans|rich }}</li>
+      <li>{{ 'terms.mod_std4'|trans|rich }}</li>
+      <li>{{ 'terms.mod_std5'|trans|rich }}</li>
+    </ul>
+
+    <h3>{% trans %}terms.mod_who_h{% endtrans %}</h3>
+    <p>{{ 'terms.mod_who'|trans|rich }}</p>
+    <p>{{ 'terms.mod_automated'|trans|rich }}</p>
+
+    <h3>{% trans %}terms.mod_told_h{% endtrans %}</h3>
+    <p>{% trans %}terms.mod_told_pre{% endtrans %} <a href="{{ path('messages') }}">{% trans %}terms.mod_told_link{% endtrans %}</a>{% trans %}terms.mod_told_post{% endtrans %}</p>
+
+    <h3>{% trans %}terms.mod_appeal_h{% endtrans %}</h3>
+    <p>{% trans %}terms.mod_appeal_pre{% endtrans %} <a href="{{ path('contact') }}">{% trans %}terms.mod_appeal_link{% endtrans %}</a>{% trans %}terms.mod_appeal_post{% endtrans %}</p>
+
+    <h3>{% trans %}terms.mod_report_h{% endtrans %}</h3>
+    <p>{% trans %}terms.mod_report_pre{% endtrans %} <a href="{{ path('contact') }}?topic=report">{% trans %}terms.mod_report_link{% endtrans %}</a>{% trans %}terms.mod_report_post{% endtrans %}</p>
+
+    <h2><span class="n">13</span>{% trans %}terms.h12_governing{% endtrans %}</h2>
     <p>{{ 'terms.governing_body'|trans|rich }}</p>
 
-    <h2><span class="n">13</span>{% trans %}terms.h13_changes{% endtrans %}</h2>
+    <h2><span class="n">14</span>{% trans %}terms.h13_changes{% endtrans %}</h2>
     <p>{% trans %}terms.changes_body{% endtrans %}</p>
 
-    <h2><span class="n">14</span>{% trans %}terms.h14_contact{% endtrans %}</h2>
-    <p>{% trans %}terms.contact_pre{% endtrans %} <a href="mailto:info@cyclingcommons.org">info@cyclingcommons.org</a>{% trans %}terms.contact_post{% endtrans %}</p>
+    <h2><span class="n">15</span>{% trans %}terms.h14_contact{% endtrans %}</h2>
+    <p>{% trans %}terms.contact_pre{% endtrans %} <a href="mailto:info@cyclingcommons.org">info@cyclingcommons.org</a> ({{ 'support.legal.or_form'|trans }} <a href="{{ path('contact') }}">{{ 'support.contact.title_short'|trans }}</a>){% trans %}terms.contact_post{% endtrans %}</p>
 
     <div class="disc" style="margin:2rem 0 0">{% trans %}terms.footer_disc_pre{% endtrans %} <a href="{{ path('privacy') }}">{% trans %}terms.footer_disc_privacy{% endtrans %}</a> {% trans %}terms.footer_disc_mid{% endtrans %} <a href="{{ path('licenses') }}">{% trans %}terms.footer_disc_licences{% endtrans %}</a>{% trans %}terms.footer_disc_post{% endtrans %}</div>
   </div>

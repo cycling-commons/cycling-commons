@@ -1,0 +1,54 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{# "We have it." Sent to whoever used the contact form.
+
+   Not optional. Somebody who writes to a project and hears nothing assumes it
+   went nowhere, and the second thing they do is give up. This also carries the
+   reference number, which is the only way they can chase it, and the answer-by
+   date for the topics that carry a legal clock.
+
+   **It must NEVER quote the sender's own words back.** Anyone can type a
+   message here and put somebody else's address in the email field, and this
+   mail then carries attacker-chosen text to that person, from our domain, with
+   our sending reputation behind it. That is a spam reflector, and building one
+   by accident is exactly how a small project's mail domain gets blocklisted
+   (owner 2026-08-27: "we can't send the receiver the message content to
+   themselves to prevent spam abuse").
+
+   So the body carries only values WE chose: the reference and the topic, from
+   a fixed list. The reference alone is enough to chase a message, and the
+   confirmation page prints it too.
+
+   Inline styles only, like every mail here: clients ignore the CSP and mostly
+   require inline styles anyway (docs/TODO.md, the style-src item). #}
+{% extends 'emails/_base.html.twig' %}
+
+{% block title %}{{ 'support.email.ack_subject'|trans({'%reference%': reference}, null, locale) }}{% endblock %}
+
+{% block content %}
+  <p style="margin:0 0 16px;font-size:19px;font-weight:600">{{ 'support.email.ack_headline'|trans([], null, locale) }}</p>
+
+  <p style="margin:0 0 14px">{{ 'support.email.ack_body'|trans([], null, locale) }}</p>
+
+  <table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0 0 18px">
+    <tr>
+      <td style="padding:4px 14px 4px 0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#8a6a3f">{{ 'support.email.ack_reference_label'|trans([], null, locale) }}</td>
+      <td style="padding:4px 0;font-family:monospace;font-size:14px">{{ reference }}</td>
+    </tr>
+    <tr>
+      <td style="padding:4px 14px 4px 0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#8a6a3f">{{ 'support.email.ack_topic_label'|trans([], null, locale) }}</td>
+      <td style="padding:4px 0;font-size:14px">{{ topic_label }}</td>
+    </tr>
+  </table>
+
+  {# No answer-by date here. The deadline is OURS to meet, and it belongs on the
+     desk notification, which is where somebody can act on it. Printing it to
+     the sender turns an internal commitment into a promise on a specific day,
+     and the first time we are a day late it reads as a broken one (owner
+     2026-08-27). #}
+
+  {# No echo of what they wrote. See the header of this file: it would make
+     this mail a spam reflector. #}
+  <p style="margin:22px 0 0;font-size:13px;color:#5a5d4d;line-height:1.55">
+    {{ 'support.email.ack_no_reply'|trans([], null, locale) }}
+  </p>
+{% endblock %}

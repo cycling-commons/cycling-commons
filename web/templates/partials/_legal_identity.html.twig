@@ -1,0 +1,67 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{#
+  Who legally operates this site (docs/specs/contact-and-support.md §2).
+
+  Dutch art. 3:15d BW, implementing Article 5 of the EU e-Commerce Directive
+  2000/31/EC, makes an information-society service publish its legal name,
+  geographic address, email address, Chamber of Commerce number and VAT
+  identification number in a directly and permanently accessible form. GDPR
+  Article 13(1)(a) separately wants the controller's identity and contact
+  details, which the privacy page names without ever saying where it is.
+
+  Values come from `cc.organisation.*` (config/packages/support.yaml), which are
+  env-backed and deliberately EMPTY in the committed defaults.
+
+  When they are unset this renders a visible gap and says what is missing,
+  rather than quietly dropping the lines. A block that looks complete and is not
+  is worse than an obviously unfinished one: the first misleads a reader into
+  thinking they know who they are dealing with.
+
+  Param: `organisation`, an App\Support\OrganisationIdentity.
+#}
+<div class="legalblock">
+  <h2>{{ 'support.legal.title'|trans }}</h2>
+
+  {% if organisation.name %}
+    <dl>
+      <dt>{{ 'support.legal.field_name'|trans }}</dt>
+      <dd>
+        {{ organisation.name }}{% if organisation.legalForm %} <span class="mono">{{ organisation.legalForm }}</span>{% endif %}
+      </dd>
+
+      {% if organisation.addressLines %}
+        <dt>{{ 'support.legal.field_address'|trans }}</dt>
+        <dd>{% for line in organisation.addressLines %}{{ line }}{% if not loop.last %}<br>{% endif %}{% endfor %}</dd>
+      {% endif %}
+
+      {% if organisation.contactEmail %}
+        <dt>{{ 'support.legal.field_email'|trans }}</dt>
+        <dd><a href="mailto:{{ organisation.contactEmail }}">{{ organisation.contactEmail }}</a></dd>
+      {% endif %}
+
+      {% if organisation.phone %}
+        <dt>{{ 'support.legal.field_phone'|trans }}</dt>
+        <dd>{{ organisation.phone }}</dd>
+      {% endif %}
+
+      {% if organisation.registrationNumber %}
+        <dt>{{ 'support.legal.field_registration'|trans }}</dt>
+        <dd>{{ organisation.registrationNumber }}</dd>
+      {% endif %}
+
+      {% if organisation.vatNumber %}
+        <dt>{{ 'support.legal.field_vat'|trans }}</dt>
+        <dd>{{ organisation.vatNumber }}</dd>
+      {% endif %}
+    </dl>
+  {% endif %}
+
+  {% if not organisation.isComplete %}
+    <p class="gap" role="note">
+      {{ 'support.legal.incomplete'|trans }}
+      {% for key in organisation.missing %}<b>{{ key|trans }}</b>{% if not loop.last %}, {% endif %}{% endfor %}.
+    </p>
+  {% endif %}
+
+  <p class="chint">{{ 'support.legal.controller_note'|trans }} <a href="{{ path('privacy') }}">{{ 'support.legal.controller_link'|trans }}</a>.</p>
+</div>

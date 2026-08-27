@@ -30,6 +30,14 @@ final class SettingsRegistry
     public const string MEDIA_URGENT_BREAKER_HOURLY = 'media.urgent_breaker_hourly';
     public const string MEDIA_URGENT_BREAKER_DAILY = 'media.urgent_breaker_daily';
     public const string ALERT_EMAILS = 'app.alert_emails';
+    /**
+     * Where the contact form and bug reports are announced.
+     *
+     * Separate from ALERT_EMAILS so the front door and the pager can point at
+     * different people. Empty is allowed and means "use the alert list", which
+     * is why this one has no non-empty validator (contact-and-support.md §7).
+     */
+    public const string SUPPORT_EMAILS = 'app.support_emails';
     public const string COMMUNITY_VOTING_LIVE = 'community.voting_live';
 
     public const string GROUP_MAP = 'map';
@@ -97,6 +105,28 @@ final class SettingsRegistry
                 return true;
             },
         );
+
+        $supportDefault = $params->get(self::SUPPORT_EMAILS);
+        $this->definitions[self::SUPPORT_EMAILS] = $this->define(
+            key: self::SUPPORT_EMAILS,
+            type: SettingDefinition::TYPE_STRING,
+            default: \is_string($supportDefault) ? $supportDefault : '',
+            group: self::GROUP_ALERTS,
+            maxLength: 500,
+            // Empty IS valid here, unlike ALERT_EMAILS: it means "fall back to
+            // the alert list" (SupportRecipients), so an unset value cannot
+            // leave the contact form shouting into nothing.
+            validator: static function (string $value): bool {
+                foreach (array_filter(array_map(trim(...), explode(',', $value)), static fn (string $p): bool => '' !== $p) as $part) {
+                    if (false === filter_var($part, \FILTER_VALIDATE_EMAIL)) {
+                        return false;
+                    }
+                }
+
+                return true;
+            },
+            allowsEmpty: true,
+        );
     }
 
     /** @param ?\Closure(string): bool $validator */
@@ -109,6 +139,7 @@ final class SettingsRegistry
         ?int $max = null,
         ?int $maxLength = null,
         ?\Closure $validator = null,
+        bool $allowsEmpty = false,
     ): SettingDefinition {
         $slug = str_replace('.', '_', $key);
 
@@ -123,6 +154,7 @@ final class SettingsRegistry
             group: $group,
             labelKey: 'admin.settings.field.'.$slug.'.label',
             helpKey: 'admin.settings.field.'.$slug.'.help',
+            allowsEmpty: $allowsEmpty,
         );
     }
 

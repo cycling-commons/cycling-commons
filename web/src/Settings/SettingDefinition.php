@@ -32,6 +32,16 @@ final readonly class SettingDefinition
         public string $group,
         public string $labelKey,
         public string $helpKey,
+        /**
+         * May a curator clear this field?
+         *
+         * False for every threshold and for the alert list, because an empty
+         * one silently disables something. True where empty is a MEANING rather
+         * than an omission: the support list, where empty means "fall back to
+         * the alert list" (SupportRecipients). The desk hard-coded "required"
+         * before this existed, which made such a setting unsaveable.
+         */
+        public bool $allowsEmpty = false,
     ) {
     }
 

@@ -1,0 +1,110 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{#
+  The accessibility statement (docs/TODO.md item 11).
+
+  Two rules shaped this page.
+
+  **Say what is not there.** A statement that lists only what works is
+  advertising. The value of one of these is the second list, because that is
+  what tells a reader whether the site will work for them today, and it is the
+  list nobody writes. Every line under "what does not work yet" is a real,
+  measured gap.
+
+  **Do not claim a duty we may not have.** The European Accessibility Act lists
+  specific consumer services; a free open map is not obviously one of them, and
+  micro-enterprises providing services are exempt. Writing "we comply with the
+  EAA" would be a guess dressed as a fact. The page says we hold ourselves to
+  WCAG because it is the right thing, and leaves the legal question open and
+  visible.
+
+  The "report a barrier" route is the contact form's existing accessibility
+  topic, which carries a one-month clock like the other legal ones. Nothing here
+  is a channel that does not exist.
+#}
+{% extends 'base.html.twig' %}
+
+{% block head_styles %}
+<style nonce="{{ csp_nonce() }}">
+  .lhero{background:var(--ink);color:var(--paper);padding:3rem 0}
+  .legal{max-width:760px}
+  .legal h2{font-family:var(--serif);font-weight:600;font-size:1.45rem;letter-spacing:-.01em;margin:2.4rem 0 .5rem}
+  .legal h2:first-of-type{margin-top:0}
+  .legal h3{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--clay);margin:1.2rem 0 .2rem}
+  .legal p{font-size:1rem;color:#3a3d30;margin:.55rem 0;line-height:1.65}
+  .legal ul{list-style:none;margin:.5rem 0}
+  .legal li{font-size:.96rem;color:#3a3d30;line-height:1.6;padding:.28rem 0 .28rem 1.4rem;position:relative}
+  .legal li::before{content:"–";position:absolute;left:0;color:var(--clay);font-weight:700}
+  .legal b{color:var(--ink)}
+  .legal a{color:var(--clay);text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1.5px}
+  .legal a:hover{color:var(--trail)}
+  .banner{background:var(--spruce);color:var(--paper);border-radius:8px;padding:1rem 1.2rem;margin:1.4rem 0;font-size:.96rem;line-height:1.6}
+  {# `.banner` sets a light colour, but `.legal p` is MORE SPECIFIC (0,0,1,1
+     against 0,0,1,0), so any paragraph inside a banner is repainted the page's
+     dark ink and lands at 1.12:1 on the spruce: invisible. It happened first on
+     the accessibility statement, of all pages. These two lines make the banner
+     own its own text whatever is nested inside it. #}
+  .banner p,.banner li,.banner b{color:inherit}
+  .banner p{margin:0}
+  .banner a{color:#FFC9A8}
+  .disc{background:var(--paper-deep);border-left:2px solid var(--ochre);padding:1rem 1.2rem;border-radius:0 8px 8px 0;font-size:.86rem;color:#4a4d40;margin:0 0 1.4rem;line-height:1.6}
+  .upd{font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:#595c4d;margin:0 0 2rem}
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="lhero"><div class="wrap">
+  <div class="kicker" style="color:var(--trail)">{{ 'a11y.kicker'|trans }}</div>
+  <h1 class="disp">{{ 'a11y.title'|trans }}</h1>
+  <p class="lead" style="color:rgba(239,230,212,.85);margin-top:.8rem">{{ 'a11y.lead'|trans|rich }}</p>
+</div></div>
+
+<section class="pad"><div class="wrap">
+  <div class="legal">
+    <p class="upd">{{ 'a11y.last_updated'|trans }}</p>
+
+    {# The one thing a reader in trouble needs is at the top, not the bottom. #}
+    <div class="banner">
+      <p>{{ 'a11y.report_pre'|trans }}
+        <a href="{{ path('contact') }}?topic=accessibility">{{ 'a11y.report_link'|trans }}</a>{{ 'a11y.report_post'|trans }}</p>
+    </div>
+
+    <h2>{{ 'a11y.h_aim'|trans }}</h2>
+    <p>{{ 'a11y.aim_body'|trans|rich }}</p>
+
+    <h2>{{ 'a11y.h_works'|trans }}</h2>
+    <p>{{ 'a11y.works_intro'|trans }}</p>
+    <ul>
+      <li>{{ 'a11y.works_keyboard'|trans|rich }}</li>
+      <li>{{ 'a11y.works_skip'|trans|rich }}</li>
+      <li>{{ 'a11y.works_contrast'|trans|rich }}</li>
+      <li>{{ 'a11y.works_targets'|trans|rich }}</li>
+      <li>{{ 'a11y.works_zoom'|trans|rich }}</li>
+      <li>{{ 'a11y.works_motion'|trans|rich }}</li>
+    </ul>
+
+    <h2>{{ 'a11y.h_gaps'|trans }}</h2>
+    <p>{{ 'a11y.gaps_intro'|trans }}</p>
+    <ul>
+      <li>{{ 'a11y.gap_map'|trans|rich }}</li>
+      <li>{{ 'a11y.gap_vendor'|trans|rich }}</li>
+      <li>{{ 'a11y.gap_audit'|trans|rich }}</li>
+      <li>{{ 'a11y.gap_media'|trans|rich }}</li>
+      <li>{{ 'a11y.gap_translations'|trans|rich }}</li>
+    </ul>
+
+    <h2>{{ 'a11y.h_instead'|trans }}</h2>
+    <p>{{ 'a11y.instead_pre'|trans }} <a href="{{ path('regions') }}">{{ 'a11y.instead_regions'|trans }}</a>{{ 'a11y.instead_mid'|trans }} <a href="{{ path('developers_api') }}">{{ 'a11y.instead_api'|trans }}</a>{{ 'a11y.instead_post'|trans }}</p>
+
+    <h2>{{ 'a11y.h_legal'|trans }}</h2>
+    <p>{{ 'a11y.legal_body'|trans|rich }}</p>
+
+    <h2>{{ 'a11y.h_how'|trans }}</h2>
+    <p>{{ 'a11y.how_body'|trans|rich }}</p>
+
+    <div class="disc" style="margin:2rem 0 0">
+      {{ 'a11y.footer_pre'|trans }}
+      <a href="{{ path('contact') }}?topic=accessibility">{{ 'a11y.footer_link'|trans }}</a>{{ 'a11y.footer_post'|trans }}
+    </div>
+  </div>
+</div></section>
+{% endblock %}

@@ -55,6 +55,11 @@ doctrine:
                 dir: '%kernel.project_dir%/src/Translation/Entity'
                 prefix: 'App\Translation\Entity'
                 alias: Translation
+            Support:
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Support/Entity'
+                prefix: 'App\Support\Entity'
+                alias: Support
 
 when@prod:
     doctrine:

@@ -1,0 +1,73 @@
+# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+#
+# Contact, bug reports, and the legal identity block (contact-and-support.md).
+#
+# Two different kinds of value live here and they are wired deliberately
+# differently:
+#
+#   cc.organisation.*  WHO WE LEGALLY ARE. Env-backed, never editable from
+#                        the admin UI. Dutch law implementing the e-Commerce
+#                        Directive (art. 3:15d BW, from Art. 5 of 2000/31/EC)
+#                        makes an information-society service publish its legal
+#                        name, geographic address, email, Chamber of Commerce
+#                        number and VAT identification number in a directly and
+#                        permanently accessible form. A web form that rewrites
+#                        who the operator is would be a misrepresentation
+#                        surface; this changes by deploy, like the CSP hosts do
+#                        and for the same reason (services.yaml).
+#
+#   app.support_emails WHO IS ON DUTY. A default only. SettingsRegistry reads
+#                        it as the starting value and /admin/system-config edits
+#                        it at runtime, because who reads the inbox changes far
+#                        more often than who the operator is.
+#
+# EVERY cc.organisation.* value below is deliberately EMPTY in the committed
+# defaults. The legal identity block renders only the lines that are filled, and
+# says plainly when it is incomplete, so an unconfigured deployment shows a
+# visible gap rather than a plausible-looking lie. The real values are
+# deployment configuration: set them in .env.local (dev) and the deployed
+# environment (staging, prod). See docs/specs/contact-and-support.md §2.
+parameters:
+    # `%env(default::VAR)%` resolves an unset VAR to NULL, not to an empty
+    # string, and a null into a `string` constructor argument is a fatal error
+    # at container-build time. Every one of these therefore defaults through
+    # `cc.blank`, so an unconfigured deployment gets "" and the identity block
+    # renders its honest gap instead of the site failing to boot.
+    cc.blank: ''
+
+    cc.organisation.name: '%env(default:cc.blank:CC_ORG_NAME)%'
+    cc.organisation.legal_form: '%env(default:cc.blank:CC_ORG_LEGAL_FORM)%'
+    cc.organisation.street: '%env(default:cc.blank:CC_ORG_STREET)%'
+    cc.organisation.postcode: '%env(default:cc.blank:CC_ORG_POSTCODE)%'
+    cc.organisation.city: '%env(default:cc.blank:CC_ORG_CITY)%'
+    cc.organisation.country: '%env(default:cc.blank:CC_ORG_COUNTRY)%'
+    # Chamber of Commerce (Kamer van Koophandel) registration number.
+    cc.organisation.registration_number: '%env(default:cc.blank:CC_ORG_KVK)%'
+    # BTW-ID, the public VAT identification number. Never the old btw-nummer:
+    # which for a sole trader contains the owner's citizen service number.
+    cc.organisation.vat_number: '%env(default:cc.blank:CC_ORG_VAT)%'
+    cc.organisation.contact_email: '%env(default:cc.blank:CC_ORG_CONTACT_EMAIL)%'
+    cc.organisation.phone: '%env(default:cc.blank:CC_ORG_PHONE)%'
+
+    # The envelope sender for acknowledgements and desk notifications. Must be a
+    # domain this deployment is allowed to send as, or SPF marks every
+    # acknowledgement as spam and the contact form silently stops working from
+    # the sender's point of view.
+    cc.support.from_email: '%env(default:cc.support.from_email_fallback:CC_SUPPORT_FROM_EMAIL)%'
+    cc.support.from_email_fallback: 'noreply@cyclingcommons.org'
+
+    # The address PUBLISHED beside the contact form. Not the same thing as the
+    # From address above (which is a no-reply sender) and not the same as
+    # cc.organisation.contact_email (which is the legal-identity duty and is
+    # empty until somebody fills it in).
+    #
+    # It has a real default on purpose. DSA Article 12 wants recipients of the
+    # service to be able to CHOOSE the means of communication, so a form on its
+    # own is not enough, and an unconfigured deployment that published no
+    # address at all would be worse than the mailto: links this page replaced.
+    cc.support.public_email: '%env(default:cc.support.public_email_fallback:CC_SUPPORT_PUBLIC_EMAIL)%'
+    cc.support.public_email_fallback: 'info@cyclingcommons.org'
+
+    # Default only; runtime value lives in system config. Empty falls back to
+    # the security alert list (SupportRecipients).
+    app.support_emails: '%env(default:cc.blank:CC_SUPPORT_EMAILS)%'

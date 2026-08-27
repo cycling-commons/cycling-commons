@@ -19,6 +19,7 @@ use App\Entity\User;
 use App\Form\ImproveType;
 use App\Form\VoteType;
 use App\Routing\LocalePrefix;
+use App\Routing\LocalizedPath;
 use App\Service\ContributionReceipt;
 use App\Service\ContributionStubInterface;
 use Doctrine\DBAL\Exception\TableNotFoundException;
@@ -87,7 +88,7 @@ final class ContributeController extends AbstractController
         return $this->redirectToRoute('improve', $params, Response::HTTP_MOVED_PERMANENTLY);
     }
 
-    #[Route('/vote', name: 'vote')]
+    #[Route(LocalizedPath::VOTE, name: 'vote')]
     #[IsGranted('ROLE_USER')]
     public function vote(Request $request): Response
     {

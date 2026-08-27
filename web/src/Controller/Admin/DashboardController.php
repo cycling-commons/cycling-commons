@@ -169,7 +169,11 @@ final class DashboardController extends AbstractDashboardController
             $posted = $request->request->all('settings');
             foreach ($registry->all() as $key => $def) {
                 $raw = trim((string) ($posted[$key] ?? ''));
-                if ('' === $raw) {
+                // Empty is an error for everything EXCEPT a setting that
+                // declares emptiness a meaning of its own: the support list,
+                // where blank means "fall back to the alert list". Hard-coding
+                // "required" here made such a setting impossible to save.
+                if ('' === $raw && !$def->allowsEmpty) {
                     $errors[$key] = $translator->trans('admin.settings.error_required');
                     $values[$key] = $raw;
                     continue;

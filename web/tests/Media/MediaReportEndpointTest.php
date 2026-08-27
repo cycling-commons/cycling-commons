@@ -130,12 +130,24 @@ final class MediaReportEndpointTest extends WebTestCase
         self::assertResponseIsSuccessful();
         $repeat = (string) $client->getResponse()->getContent();
 
-        // Compare the bodies with the uuid and the CSRF token normalised out —
-        // everything else must be byte-identical, or the form is an oracle.
+        // Compare the bodies with the uuid and every per-render secret
+        // normalised out. Everything else must be byte-identical, or the form
+        // is an oracle.
+        //
+        // The floating bug button (contact-and-support.md §5) renders on this
+        // page like every other and brings its own CSRF token, form stamp and
+        // proof-of-work challenge, all freshly random per request. None of them
+        // is derived from the uuid or from whether the photo exists, so they
+        // are normalised for the same reason the form's own token always was.
         $normalise = static function (string $html): string {
             $html = (string) preg_replace('/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i', 'UUID', $html);
+            $html = (string) preg_replace('/name="_token" value="[^"]*"/', 'TOKEN', $html);
+            $html = (string) preg_replace('/data-token="[^"]*"/', 'DATA-TOKEN', $html);
+            $html = (string) preg_replace('/data-stamp="[^"]*"/', 'DATA-STAMP', $html);
+            $html = (string) preg_replace('/data-pow-challenge="[^"]*"/', 'DATA-POW', $html);
+            $html = (string) preg_replace('/name="pow_challenge" value="[^"]*"/', 'POW', $html);
 
-            return (string) preg_replace('/name="_token" value="[^"]*"/', 'TOKEN', $html);
+            return (string) preg_replace('/nonce="[^"]*"/', 'NONCE', $html);
         };
         self::assertSame($normalise($real), $normalise($invented));
         self::assertSame($normalise($real), $normalise($repeat));

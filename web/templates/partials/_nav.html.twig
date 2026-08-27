@@ -11,6 +11,10 @@
     <a href="{{ path('vote') }}"{% if a == 'vote' %} class="on"{% endif %}>{{ 'nav.vote'|trans }}</a>
     <a href="{{ path('developers') }}"{% if a == 'developers' %} class="on"{% endif %}>{{ 'nav.developers'|trans }}</a>
     <a href="{{ path('about') }}"{% if a == 'about' %} class="on"{% endif %}>{{ 'nav.about'|trans }}</a>
+    {# The front door, in the top nav rather than only the footer: a visitor
+       looking for a way to reach a project looks up, not down
+       (contact-and-support.md §4). #}
+    <a href="{{ path('contact') }}"{% if a == 'contact' %} class="on"{% endif %}>{{ 'nav.contact'|trans }}</a>
     <a href="{{ path('licenses') }}"{% if a == 'licenses' %} class="on"{% endif %}>{{ 'nav.licence'|trans }}</a>
     <a class="acct join" href="{{ path('join') }}">{{ 'nav.get_involved'|trans }}</a>
     <a class="acct fill" href="{{ path('map') }}">{{ 'nav.explore_map'|trans }}</a>

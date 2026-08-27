@@ -35,7 +35,7 @@
   <div class="hnote"><b>{{ 'join.hnote_b'|trans }}</b> {{ 'join.hnote_body'|trans|rich }}</div>
   <ul class="howto">
     <li><b>{{ 'join.howto1_b'|trans }}</b> {% trans %}join.howto1_body_pre{% endtrans %} <a href="https://www.openstreetmap.org">OpenStreetMap</a>{% trans %}join.howto1_body_post{% endtrans %}</li>
-    <li><b>{{ 'join.howto2_b'|trans }}</b> {% trans %}join.howto2_body_pre{% endtrans %}<a href="{{ path('map') }}">{% trans %}join.howto2_themap{% endtrans %}</a>{% trans %}join.howto2_mid1{% endtrans %}<a href="{{ path('improve', {type: 'climbs', mode: 'add'}) }}">{% trans %}join.howto2_addclimb{% endtrans %}</a>{% trans %}join.howto2_mid2{% endtrans %} <a href="mailto:info@cyclingcommons.org?subject=Prototype%20feedback">{% trans %}join.howto2_email{% endtrans %}</a> {% trans %}join.howto2_mid3{% endtrans %} <a href="https://github.com/cycling-commons/cycling-commons/issues/new/choose">{% trans %}join.howto2_issue{% endtrans %}</a> {{ 'join.howto2_post'|trans|rich }}</li>
+    <li><b>{{ 'join.howto2_b'|trans }}</b> {% trans %}join.howto2_body_pre{% endtrans %}<a href="{{ path('map') }}">{% trans %}join.howto2_themap{% endtrans %}</a>{% trans %}join.howto2_mid1{% endtrans %}<a href="{{ path('improve', {type: 'climbs', mode: 'add'}) }}">{% trans %}join.howto2_addclimb{% endtrans %}</a>{% trans %}join.howto2_mid2{% endtrans %} <a href="{{ path('contact') }}?topic=question">{% trans %}join.howto2_email{% endtrans %}</a> {% trans %}join.howto2_mid3{% endtrans %} <a href="https://github.com/cycling-commons/cycling-commons/issues/new/choose">{% trans %}join.howto2_issue{% endtrans %}</a> {{ 'join.howto2_post'|trans|rich }}</li>
     <li><b>{{ 'join.howto3_b'|trans }}</b> <a href="{{ path('contribute') }}">{% trans %}join.howto3_link{% endtrans %}</a>{% trans %}join.howto3_post{% endtrans %}</li>
     <li><b>{{ 'join.howto4_b'|trans }}</b> <a href="{{ path('regions') }}">{% trans %}join.howto4_link{% endtrans %}</a>{% trans %}join.howto4_post{% endtrans %}</li>
   </ul>
@@ -55,22 +55,22 @@
       <span class="rk">{% trans %}join.role2_rk{% endtrans %}</span>
       <h3>{% trans %}join.role2_h{% endtrans %}</h3>
       <p>{% trans %}join.role2_p{% endtrans %}</p>
-      <a class="rl" href="mailto:info@cyclingcommons.org?subject=Get%20involved%20%E2%80%94%20community">{% trans %}join.role2_link{% endtrans %}</a>
+      <a class="rl" href="{{ path('contact') }}?topic=partnership">{% trans %}join.role2_link{% endtrans %}</a>
     </div>
     <div class="card">
       <span class="rk">{% trans %}join.role3_rk{% endtrans %}</span>
       <h3>{% trans %}join.role3_h{% endtrans %}</h3>
       <p>{% trans %}join.role3_p{% endtrans %}</p>
-      <a class="rl" href="mailto:info@cyclingcommons.org?subject=Get%20involved%20%E2%80%94%20funding">{% trans %}join.role3_link{% endtrans %}</a>
+      <a class="rl" href="{{ path('contact') }}?topic=partnership">{% trans %}join.role3_link{% endtrans %}</a>
     </div>
     <div class="card">
       <span class="rk">{% trans %}join.role4_rk{% endtrans %}</span>
       <h3>{% trans %}join.role4_h{% endtrans %}</h3>
       <p>{{ 'join.role4_p'|trans|rich }}</p>
-      <a class="rl" href="mailto:info@cyclingcommons.org?subject=Get%20involved%20%E2%80%94%20legal">{% trans %}join.role4_link{% endtrans %}</a>
+      <a class="rl" href="{{ path('contact') }}?topic=partnership">{% trans %}join.role4_link{% endtrans %}</a>
     </div>
   </div>
-  <p class="lead" style="margin-top:1.8rem">{{ 'join.also_welcome'|trans|rich }} <a href="mailto:info@cyclingcommons.org?subject=Get%20involved">{% trans %}join.also_tell{% endtrans %}</a></p>
+  <p class="lead" style="margin-top:1.8rem">{{ 'join.also_welcome'|trans|rich }} <a href="{{ path('contact') }}?topic=partnership">{% trans %}join.also_tell{% endtrans %}</a></p>
 </div></section>
 
 <section class="pad" style="background:var(--ink);color:var(--paper)"><div class="wrap" style="max-width:760px">
@@ -79,7 +79,7 @@
   <p class="lead" style="color:rgba(239,230,212,.85);margin-top:1rem">{% trans %}join.start_lead{% endtrans %}</p>
   <div style="display:flex;gap:.8rem;margin-top:1.8rem;flex-wrap:wrap">
     <a class="btn btn-p" href="https://github.com/cycling-commons/cycling-commons">{% trans %}join.start_cta_code{% endtrans %}</a>
-    <a class="btn btn-g" style="border-color:rgba(239,230,212,.4);color:var(--paper)" href="mailto:info@cyclingcommons.org?subject=Get%20involved">{% trans %}join.start_cta_email{% endtrans %}</a>
+    <a class="btn btn-g" style="border-color:rgba(239,230,212,.4);color:var(--paper)" href="{{ path('contact') }}?topic=partnership">{% trans %}join.start_cta_email{% endtrans %}</a>
   </div>
 </div></section>
 {% endblock %}

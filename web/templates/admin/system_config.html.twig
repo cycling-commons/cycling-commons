@@ -39,7 +39,7 @@
                                                name="settings[{{ def.key }}]"
                                                value="{{ values[def.key] }}"
                                                maxlength="{{ def.maxLength }}"
-                                               required>
+                                               {{ def.allowsEmpty ? '' : 'required' }}>
                                     {% else %}
                                         <input type="number"
                                                class="form-control{{ invalid ? ' is-invalid' }}"

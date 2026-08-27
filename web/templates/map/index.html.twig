@@ -914,5 +914,13 @@ window.CC_VENDOR = {{ {
 <script src="{{ asset('js/a11y.js') }}"></script>
 <script nonce="{{ csp_nonce() }}">window.CC_VERSION = {{ cc_build()|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
 <script src="{{ asset('js/version.js') }}"></script>
+{# The floating bug button (contact-and-support.md §5), as the circle alone.
+   This page is a standalone document rather than an extension of
+   base.html.twig, so it has to include the partial itself; that is why the
+   button was missing here rather than any deliberate exclusion. The map is the
+   page a rider is most likely to be on when something breaks. #}
+{% include 'partials/_bug_fab.html.twig' with {bug_fab: bug_fab_context(), on_map: true} only %}
+<script src="{{ asset('support/pow.js') }}"></script>
+<script src="{{ asset('support/bug-fab.js') }}" defer></script>
 </body>
 </html>

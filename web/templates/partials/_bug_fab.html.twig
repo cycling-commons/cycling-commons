@@ -1,0 +1,219 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{#
+  The floating bug button, on every page (docs/specs/contact-and-support.md §5).
+
+  The entrance matters as much as the form. A "report a problem" link in the
+  footer is found by people who were already looking for it; a button that is
+  always in the same corner is found by the person who just hit the bug, at the
+  moment they hit it, which is the only moment they still remember what they
+  did.
+
+  The button face says only what it is. It used to carry the current path as
+  well, which made the pill wide enough to clip at the edge of the window and
+  read as a second, competing name for the page (owner 2026-08-27: "bug tool is
+  partly out of view. do not also call it contact"). The path is still shown,
+  inside the panel, under "what gets sent with this", which is where somebody
+  checking what they are about to send will look for it.
+
+  On the map it renders as the circle alone (`is-mini`), lifted clear of the
+  attribution strip along the bottom edge. The map is the page a rider is most
+  likely to be on when something breaks, so leaving the button off it was the
+  wrong call; only the wide pill was ever the problem.
+
+  Everything here is markup and a nonce'd style block; behaviour is in
+  assets/support/bug-fab.js, because the CSP blocks inline handlers silently.
+#}
+{% set _path = app.request.pathInfo|default('/') %}
+<div id="cc-bugfab"
+     class="{{ on_map|default(false) ? 'is-mini' : '' }}"
+     data-endpoint="{{ path('bug_report_submit') }}"
+     data-page-path="{{ _path }}"
+     data-fallback="{{ path('bug_report') }}?on={{ _path|url_encode }}"
+     data-token="{{ csrf_token('bug_report') }}"
+     data-stamp-field="{{ bug_fab.stamp_field }}"
+     data-stamp="{{ bug_fab.stamp }}"
+     data-pow-challenge="{{ bug_fab.pow_challenge }}"
+     data-pow-difficulty="{{ bug_fab.pow_difficulty }}"
+     data-honeypot-a="{{ bug_fab.honeypot_a }}"
+     data-honeypot-b="{{ bug_fab.honeypot_b }}"
+     data-signed-in="{{ app.user ? '1' : '0' }}"
+     data-max-shots="{{ bug_fab.max_screenshots }}"
+     data-area="{{ bug_fab.guessed_area }}"
+     hidden>
+
+  <button type="button" class="bugfab-open" aria-expanded="false" aria-controls="cc-bugpanel">
+    {# The bug mark, drawn, never an emoji (see docs/TODO.md, no emoji icons). #}
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M8 6a4 4 0 0 1 8 0"/>
+      <rect x="7" y="8" width="10" height="12" rx="5"/>
+      <path d="M7 12H3M21 12h-4M7.5 17l-3.5 2M16.5 17l3.5 2M7.5 9L4 7M16.5 9L20 7"/>
+    </svg>
+    <span class="bugfab-label">{{ 'support.fab.open'|trans }}</span>
+  </button>
+
+  <div id="cc-bugpanel" class="bugfab-panel" role="dialog" aria-modal="false"
+       aria-labelledby="cc-bugpanel-title" hidden>
+    <header class="bugfab-head">
+      <span class="bugfab-grip" aria-hidden="true">
+        <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor"><circle cx="4" cy="4" r="1.3"/><circle cx="8" cy="4" r="1.3"/><circle cx="12" cy="4" r="1.3"/><circle cx="4" cy="8" r="1.3"/><circle cx="8" cy="8" r="1.3"/><circle cx="12" cy="8" r="1.3"/><circle cx="4" cy="12" r="1.3"/><circle cx="8" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/></svg>
+      </span>
+      <h2 id="cc-bugpanel-title">{{ 'support.fab.title'|trans }}</h2>
+      <button type="button" class="bugfab-min" aria-label="{{ 'support.fab.minimise'|trans }}">&minus;</button>
+      <button type="button" class="bugfab-close" aria-label="{{ 'support.fab.close'|trans }}">&times;</button>
+    </header>
+
+    <div class="bugfab-body">
+      <p class="bugfab-msg" role="alert" hidden></p>
+
+      <div class="bugfab-field">
+        <label for="bf-title">{{ 'support.bug.field_title'|trans }}</label>
+        <input type="text" id="bf-title" maxlength="160" placeholder="{{ 'support.bug.placeholder_title'|trans }}">
+      </div>
+
+      <div class="bugfab-field">
+        <span class="bugfab-legend">{{ 'support.bug.field_severity'|trans }}</span>
+        <div class="bugfab-sev" role="radiogroup" aria-label="{{ 'support.bug.field_severity'|trans }}">
+          {% for sev in bug_fab.severities %}
+            <button type="button" role="radio" data-value="{{ sev.value }}"
+                    aria-checked="{{ sev.value == 'minor' ? 'true' : 'false' }}"
+                    class="{{ sev.value == 'minor' ? 'on' : '' }}">{{ ('support.bug.severity.' ~ sev.value)|trans }}</button>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="bugfab-field">
+        <label for="bf-area">{{ 'support.bug.field_area'|trans }}</label>
+        <select id="bf-area">
+          {% for area in bug_fab.areas %}
+            <option value="{{ area.value }}"{{ area.value == bug_fab.guessed_area ? ' selected' : '' }}>{{ ('support.bug.area.' ~ area.value)|trans }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="bugfab-field">
+        <label for="bf-body">{{ 'support.bug.field_body'|trans }}</label>
+        <textarea id="bf-body" maxlength="8000" placeholder="{{ 'support.bug.placeholder_body'|trans }}"></textarea>
+      </div>
+
+      <div class="bugfab-field" id="bf-steps-wrap">
+        <label for="bf-steps">{{ 'support.bug.field_steps'|trans }} <span class="opt">{{ 'support.bug.optional'|trans }}</span></label>
+        <textarea id="bf-steps" maxlength="4000" placeholder="{{ 'support.bug.placeholder_steps'|trans }}"></textarea>
+      </div>
+
+      {% if not app.user %}
+        <div class="bugfab-field">
+          <label for="bf-email">{{ 'support.bug.field_email'|trans }} <span class="opt">{{ 'support.bug.optional'|trans }}</span></label>
+          <input type="email" id="bf-email" maxlength="320" placeholder="{{ 'support.bug.placeholder_email'|trans }}">
+          <p class="bugfab-hint">{{ 'support.bug.hint_email_anon'|trans }}</p>
+        </div>
+      {% endif %}
+
+      <div class="bugfab-shots">
+        <p class="bugfab-hint">{{ 'support.bug.paste_hint'|trans({'%max%': bug_fab.max_screenshots}) }}</p>
+        <div class="bugfab-thumbs"></div>
+      </div>
+
+      {# What is about to be sent, shown rather than promised. #}
+      <details class="bugfab-context">
+        <summary>{{ 'support.bug.context_summary'|trans }}</summary>
+        <dl>
+          <dt>{{ 'support.bug.context_page'|trans }}</dt><dd class="mono bf-ctx-page"></dd>
+          <dt>{{ 'support.bug.context_browser'|trans }}</dt><dd class="mono bf-ctx-browser"></dd>
+          <dt>{{ 'support.bug.context_screen'|trans }}</dt><dd class="mono bf-ctx-viewport"></dd>
+        </dl>
+        <p class="bugfab-hint">{{ 'support.bug.context_note'|trans }}</p>
+      </details>
+
+      <p class="bugfab-status mono" hidden
+         data-working="{{ 'support.challenge_working'|trans }}"
+         data-ready="{{ 'support.challenge_ready'|trans }}"
+         data-failed="{{ 'support.challenge_failed'|trans }}"></p>
+
+      <button type="button" class="btn btn-p bugfab-send">{{ 'support.bug.submit'|trans }}</button>
+
+      <p class="bugfab-hint">
+        <a href="{{ path('known_issues') }}">{{ 'support.bug.known_link'|trans }}</a>
+      </p>
+    </div>
+
+    <div class="bugfab-done" hidden>
+      <h3>{{ 'support.bug.sent_title'|trans }}</h3>
+      <p class="bugfab-done-ref"></p>
+      <p>{{ 'support.bug.sent_body'|trans }}</p>
+      <button type="button" class="btn btn-p bugfab-again">{{ 'support.bug.sent_again'|trans }}</button>
+    </div>
+  </div>
+</div>
+
+<style nonce="{{ csp_nonce() }}">
+  {# `width:auto` is load-bearing. atlas.css carries a site-wide
+     `body > * { width: 100% }`, and this button is a direct child of body, so
+     without it the container stretches the full viewport and the pill is pushed
+     off the left edge (owner 2026-08-27: "bug tool is partly out of view").
+     `left:auto` pins the same thing down against any future rule that sets it. #}
+  #cc-bugfab{position:fixed;right:1.1rem;bottom:1.1rem;left:auto;width:auto;max-width:calc(100vw - 2.2rem);
+    z-index:900;font-family:var(--sans,system-ui,sans-serif)}
+  #cc-bugfab[hidden]{display:none}
+  .bugfab-open{display:inline-flex;align-items:center;gap:.5rem;background:var(--clay);color:var(--paper);
+    border:0;border-radius:999px;padding:.62rem .95rem;cursor:pointer;font-size:.82rem;line-height:1;
+    box-shadow:0 4px 16px rgba(20,22,14,.28)}
+  .bugfab-open:hover{background:var(--trail)}
+  .bugfab-open:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  @media (max-width:640px){.bugfab-label{display:none}.bugfab-open{padding:.7rem;border-radius:50%}}
+
+  {# On the map: the circle only, and lifted over the attribution strip that
+     runs along the bottom edge. z-index sits above the map canvas and its
+     controls but BELOW the drawer (1100) and the mobile scrim (1540), so an
+     open drawer covers it rather than the other way round. #}
+  #cc-bugfab.is-mini{bottom:2.4rem;z-index:1050}
+  #cc-bugfab.is-mini .bugfab-label{display:none}
+  #cc-bugfab.is-mini .bugfab-open{padding:.7rem;border-radius:50%}
+  #cc-bugfab.is-mini .bugfab-panel{bottom:5.9rem}
+
+  .bugfab-panel{position:fixed;right:1.1rem;bottom:4.6rem;width:min(24rem,calc(100vw - 2.2rem));
+    max-height:min(38rem,calc(100vh - 6rem));display:flex;flex-direction:column;
+    background:var(--paper);border-radius:10px;overflow:hidden;box-shadow:0 12px 40px rgba(20,22,14,.34)}
+  .bugfab-panel[hidden]{display:none}
+  .bugfab-panel.is-min .bugfab-body,.bugfab-panel.is-min .bugfab-done{display:none}
+  .bugfab-head{display:flex;align-items:center;gap:.5rem;background:var(--clay);color:var(--paper);padding:.6rem .7rem}
+  .bugfab-head h2{flex:1;margin:0;font-family:var(--serif);font-size:.98rem;font-weight:600}
+  .bugfab-grip{cursor:grab;opacity:.7;display:flex}
+  .bugfab-head button{background:none;border:0;color:var(--paper);font-size:1.15rem;line-height:1;
+    cursor:pointer;padding:.15rem .4rem;border-radius:4px}
+  .bugfab-head button:hover{background:rgba(255,255,255,.16)}
+  .bugfab-body,.bugfab-done{overflow-y:auto;padding:.9rem 1rem 1.1rem}
+  .bugfab-field{margin:.8rem 0}
+  .bugfab-field label,.bugfab-legend{display:block;font-family:var(--mono);font-size:.58rem;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--clay);margin-bottom:.32rem}
+  .bugfab-field input,.bugfab-field select,.bugfab-field textarea{width:100%;font-family:inherit;font-size:.88rem;
+    padding:.5rem .55rem;color:var(--ink);border:1px solid rgba(20,22,14,.24);border-radius:5px;background:var(--paper)}
+  .bugfab-field textarea{min-height:6rem;line-height:1.55;resize:vertical}
+  .bugfab-sev{display:flex;gap:.3rem}
+  .bugfab-sev button{flex:1;font-family:var(--mono);font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;
+    padding:.45rem .2rem;border:1px solid rgba(20,22,14,.2);border-radius:5px;background:var(--paper);
+    color:#4a4d40;cursor:pointer}
+  .bugfab-sev button.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+  .bugfab-field .opt{color:#8c8f7d;letter-spacing:.09em}
+  .bugfab-hint{font-size:.76rem;color:#595c4d;line-height:1.5;margin:.35rem 0 0}
+  .bugfab-hint a{color:var(--clay)}
+  .bugfab-thumbs{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.45rem}
+  .bugfab-thumb{position:relative;width:4rem;height:3rem;border-radius:4px;overflow:hidden;border:1px solid rgba(20,22,14,.2)}
+  .bugfab-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+  .bugfab-thumb button{position:absolute;top:0;right:0;background:rgba(20,22,14,.72);color:#fff;border:0;
+    font-size:.7rem;line-height:1;padding:.15rem .3rem;cursor:pointer}
+  .bugfab-context{margin:.9rem 0;font-size:.8rem;color:#4a4d40}
+  .bugfab-context summary{cursor:pointer;color:var(--clay)}
+  .bugfab-context dt{font-family:var(--mono);font-size:.56rem;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--clay);margin-top:.5rem}
+  .bugfab-context dd{margin:.1rem 0 0;font-size:.76rem;word-break:break-all}
+  .bugfab-msg{background:#fff1ec;border-left:2px solid var(--trail);padding:.6rem .75rem;border-radius:0 5px 5px 0;
+    font-size:.82rem;color:#5a2716;line-height:1.5;margin:0 0 .6rem}
+  .bugfab-msg[hidden]{display:none}
+  .bugfab-status{font-size:.66rem;letter-spacing:.06em;color:#595c4d;margin:.5rem 0}
+  .bugfab-status[hidden]{display:none}
+  .bugfab-send{margin-top:.5rem}
+  .bugfab-done h3{font-family:var(--serif);font-size:1.05rem;margin:0 0 .5rem}
+  .bugfab-done p{font-size:.88rem;color:#3a3d30;line-height:1.6;margin:.4rem 0}
+  .bugfab-done-ref{font-family:var(--mono);font-size:.8rem;color:var(--clay)}
+</style>

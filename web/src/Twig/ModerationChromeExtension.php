@@ -10,6 +10,7 @@ use App\Entity\User;
 use App\Messaging\CuratorRoom;
 use App\Moderation\ModerationScopeProvider;
 use App\Moderation\SubmissionQueue;
+use App\Support\SupportRepository;
 use App\Translation\DecisionService;
 use Symfony\Bundle\SecurityBundle\Security;
 use Twig\Extension\AbstractExtension;
@@ -35,6 +36,7 @@ final class ModerationChromeExtension extends AbstractExtension
         private readonly SubmissionQueue $submissions,
         private readonly ModerationScopeProvider $scopes,
         private readonly CuratorRoom $room,
+        private readonly SupportRepository $support,
     ) {
     }
 
@@ -45,7 +47,35 @@ final class ModerationChromeExtension extends AbstractExtension
             new TwigFunction('pending_translation_count', $this->pendingTranslationCount(...)),
             new TwigFunction('pending_submission_count', $this->pendingSubmissionCount(...)),
             new TwigFunction('curator_room_unread', $this->curatorRoomUnread(...)),
+            new TwigFunction('open_contact_count', $this->openContactCount(...)),
+            new TwigFunction('open_bug_count', $this->openBugCount(...)),
         ];
+    }
+
+    /**
+     * Unanswered contact messages (contact-and-support.md §8).
+     *
+     * Unscoped, like the desk itself: a GDPR request has no region, and a
+     * badge shared out by geography would leave one sitting behind whichever
+     * curator happens to be away.
+     */
+    public function openContactCount(): int
+    {
+        if (!$this->security->getUser() instanceof User || !$this->security->isGranted('ROLE_CURATOR')) {
+            return 0;
+        }
+
+        return $this->support->openMessageCount();
+    }
+
+    /** Bugs still costing somebody something (contact-and-support.md §9). */
+    public function openBugCount(): int
+    {
+        if (!$this->security->getUser() instanceof User || !$this->security->isGranted('ROLE_CURATOR')) {
+            return 0;
+        }
+
+        return $this->support->openBugCount();
     }
 
     public function pendingTranslationCount(): int

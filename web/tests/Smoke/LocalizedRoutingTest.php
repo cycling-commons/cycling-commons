@@ -35,7 +35,19 @@ final class LocalizedRoutingTest extends WebTestCase
     public function testLocalizedHomeAndAuthPagesResolve(): void
     {
         $client = static::createClient();
-        foreach (['/fr/', '/nl/about', '/de/login', '/fr/reset-password'] as $path) {
+        // `/nl/about` is now `/nl/over-ons`: LocalizedPath translates the slug,
+        // not only the prefix. Generated, so a future slug change does not need
+        // this list edited.
+        $router = static::getContainer()->get('router');
+        $paths = [
+            '/fr/',
+            $router->generate('about', ['_locale' => 'nl']),
+            '/de/login',
+            '/fr/reset-password',
+        ];
+        self::assertSame('/nl/over-ons', $paths[1]);
+
+        foreach ($paths as $path) {
             $client->request('GET', $path);
             self::assertResponseIsSuccessful(sprintf('Expected 200 for %s', $path));
         }

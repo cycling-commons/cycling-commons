@@ -1,0 +1,117 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{#
+  The inbox desk (docs/specs/contact-and-support.md §8).
+
+  Sorted by DEADLINE, not by arrival. A GDPR request that came in three weeks
+  ago is more urgent than a general question that came in this morning, and a
+  desk sorted by arrival hides exactly that. Anything past its promised date is
+  marked in a way that cannot be scrolled past.
+
+  The default view is New, not everything: a desk that opens on the full archive
+  is a desk where this morning's message is on page four.
+#}
+{% extends 'base.html.twig' %}
+
+{% block head_styles %}
+{% include 'account/_shell_styles.html.twig' %}
+<style nonce="{{ csp_nonce() }}">
+  .chips{display:flex;gap:.4rem;flex-wrap:wrap;margin:1rem 0 1.4rem}
+  .chip{font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;
+    padding:.35rem .6rem;border-radius:4px;background:var(--paper-deep);color:#4a4d40;text-decoration:none}
+  .chip.on{background:var(--ink);color:var(--paper)}
+  .chip .n{opacity:.7;margin-left:.3rem}
+  .overdue-banner{background:#fff1ec;border-left:2px solid var(--trail);padding:.9rem 1.1rem;
+    border-radius:0 6px 6px 0;font-size:.9rem;color:#5a2716;line-height:1.55;margin:0 0 1.2rem}
+  .msgrow{border-bottom:1px solid rgba(20,22,14,.12);padding:.9rem 0}
+  .msgrow:last-child{border-bottom:0}
+  .msgrow.is-overdue{border-left:3px solid var(--trail);padding-left:.7rem}
+  .msgtop{display:flex;gap:.6rem;align-items:baseline;flex-wrap:wrap}
+  .msgtop a{font-family:var(--serif);font-size:1rem;color:var(--ink);text-decoration:none}
+  .msgtop a:hover{color:var(--clay);text-decoration:underline}
+  .tag{font-family:var(--mono);font-size:.56rem;letter-spacing:.1em;text-transform:uppercase;
+    padding:.18rem .42rem;border-radius:3px;background:var(--paper-deep);color:#4a4d40}
+  .tag.clock{background:var(--ochre);color:var(--ink)}
+  .tag.late{background:#5a2716;color:#FFD9C8}
+  .msgexcerpt{font-size:.88rem;color:#4a4d40;line-height:1.55;margin:.35rem 0 0}
+  .msgmeta{font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;color:#6d7060;margin-top:.35rem}
+  .handle{display:flex;gap:.4rem;flex-wrap:wrap;align-items:center;margin-top:.55rem}
+  .handle select,.handle input[type="text"]{font-family:inherit;font-size:.84rem;padding:.35rem .45rem;
+    border:1px solid rgba(20,22,14,.22);border-radius:4px;background:var(--paper)}
+  .handle input[type="text"]{flex:1;min-width:12rem}
+  .empty{background:var(--paper-deep);border-left:2px solid var(--ochre);padding:1.1rem 1.3rem;
+    border-radius:0 8px 8px 0;font-size:.92rem;color:#4a4d40}
+</style>
+{% endblock %}
+
+{% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate_inbox'} %}{% endblock %}
+
+{% block body %}
+<div class="dbody dmin" id="main">
+  <div class="mh">
+    <div class="kicker">{{ 'account.menu_moderation'|trans }}</div>
+    <h1>{{ 'support.inbox.title'|trans }}</h1>
+    <p class="lede">{{ 'support.inbox.lede'|trans }}</p>
+  </div>
+
+  {% if overdue > 0 %}
+    <p class="overdue-banner" role="alert">{{ 'support.inbox.overdue_banner'|trans({'%count%': overdue}) }}</p>
+  {% endif %}
+
+  <div class="chips">
+    {% for st in statuses %}
+      <a class="chip {{ filter_status == st.value ? 'on' : '' }}"
+         href="{{ path('moderate_inbox', {status: st.value}) }}">
+        {{ ('support.contact.status.' ~ st.value)|trans }}<span class="n">{{ counts[st.value] ?? 0 }}</span>
+      </a>
+    {% endfor %}
+    <a class="chip {{ filter_status is null and filter_topic is null ? 'on' : '' }}"
+       href="{{ path('moderate_inbox', {topic: 'question'}) }}">{{ 'support.inbox.all'|trans }}</a>
+  </div>
+
+  {% if messages is empty %}
+    <div class="empty">{{ 'support.inbox.empty'|trans }}</div>
+  {% else %}
+    {% for m in messages %}
+      {% set late = m.isOverdue(now) %}
+      <div class="msgrow {{ late ? 'is-overdue' : '' }}">
+        <div class="msgtop">
+          <a href="{{ path('moderate_inbox_detail', {id: m.id}) }}">{{ ('support.topic.' ~ m.topic.value)|trans }}</a>
+          <span class="tag">{{ ('support.contact.status.' ~ m.status.value)|trans }}</span>
+          {% if m.dueAt %}
+            <span class="tag {{ late ? 'late' : 'clock' }}">
+              {{ late ? 'support.inbox.late'|trans : 'support.inbox.due'|trans }} {{ m.dueAt|cc_date }}
+            </span>
+          {% endif %}
+        </div>
+        <p class="msgexcerpt">{{ m.body|length > 180 ? m.body|slice(0, 180) ~ '…' : m.body }}</p>
+        <p class="msgmeta">
+          {{ m.email }} · {{ m.createdAt|cc_datetime }}{% if m.locale %} · {{ m.locale }}{% endif %}
+          {%- if m.pageUrl %} · {{ m.pageUrl }}{% endif %}
+        </p>
+
+        <form class="handle" method="post" action="{{ path('moderate_inbox_handle') }}">
+          <input type="hidden" name="_token" value="{{ csrf_token('inbox-handle') }}">
+          <input type="hidden" name="id" value="{{ m.id }}">
+          <input type="hidden" name="return_to" value="{{ filter_status ?? '' }}">
+          <label class="vh" for="st-{{ m.id }}">{{ 'support.inbox.set_status'|trans }}</label>
+          <select id="st-{{ m.id }}" name="status">
+            {% for st in statuses %}
+              <option value="{{ st.value }}"{{ st == m.status ? ' selected' : '' }}>{{ ('support.contact.status.' ~ st.value)|trans }}</option>
+            {% endfor %}
+          </select>
+          <label class="vh" for="nt-{{ m.id }}">{{ 'support.inbox.note'|trans }}</label>
+          <input type="text" id="nt-{{ m.id }}" name="note" maxlength="500"
+                 placeholder="{{ 'support.inbox.note_placeholder'|trans }}">
+          <button type="submit" class="btn btn-sm">{{ 'support.inbox.save'|trans }}</button>
+        </form>
+      </div>
+    {% endfor %}
+
+    {% include 'partials/_pager.html.twig' with {
+      pager: pager,
+      route: 'moderate_inbox',
+      params: {status: filter_status, topic: filter_topic}
+    } %}
+  {% endif %}
+</div>
+{% endblock %}

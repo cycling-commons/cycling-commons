@@ -11,7 +11,7 @@
    reach it via the account-chip dropdown) — user pages show user tabs only,
    and on moderator pages the labelled group makes the section unmistakable. #}
 {% set active = active|default('contrib') %}
-{% set in_moderation = active in ['moderate', 'moderate_routes', 'moderate_regions', 'moderate_data', 'moderate_takedowns', 'moderate_translations', 'moderate_room', 'moderate_rulebook', 'moderate_history'] %}
+{% set in_moderation = active in ['moderate', 'moderate_routes', 'moderate_regions', 'moderate_data', 'moderate_takedowns', 'moderate_translations', 'moderate_room', 'moderate_rulebook', 'moderate_history', 'moderate_inbox', 'moderate_bugs'] %}
 <header class="dtop">
   <div class="brandblock">
     <a class="brand" href="{{ path('home') }}"><img src="{{ asset('brand/logo-nav.svg') }}" alt="Cycling Commons"></a>
@@ -26,6 +26,8 @@
 {# Moderator mode: the bar carries ONLY the moderation tabs, on its own darker
    colour — no user items. Back to the personal area via the account chip. #}
 {% set mod_translation_count = pending_translation_count() %}
+{% set mod_inbox_count = open_contact_count() %}
+{% set mod_bug_count = open_bug_count() %}
 {% set mod_room_count = curator_room_unread() %}
 <nav class="dtabs dtabs-modmode" aria-label="{{ 'account.menu_moderation'|trans }}">
   <span class="dtabs-modlabel" aria-hidden="true">{{ 'account.menu_moderation'|trans }}{% if mod_scope_names is defined and mod_scope_names is not null %} · {{ mod_scope_names is empty ? 'account.mod_scope_all'|trans : mod_scope_names|join(' · ') }}{% endif %}</span>
@@ -39,6 +41,16 @@
      clock does not belong at the bottom of an editorial backlog. Badge counts
      every open request, unscoped — these are not shared out by jurisdiction. #}
   <a href="{{ path('moderate_takedowns') }}" class="dtab-mod {{ active == 'moderate_takedowns' ? 'on' : '' }}">{{ 'nav.takedowns'|trans }}{% if mod_takedown_count is defined and mod_takedown_count %}<span class="dtab-count" title="{{ 'account.mod_takedowns_open'|trans }}">{{ mod_takedown_count }}</span>{% endif %}</a>
+  {# Inbox: everything written through the contact form. Unscoped like
+     takedowns and for the same reason: a GDPR request has no region, and a
+     message only one curator can see is one that waits for their holiday to
+     end. Badged, because it carries legal deadlines
+     (contact-and-support.md §8). #}
+  <a href="{{ path('moderate_inbox') }}" class="dtab-mod {{ active == 'moderate_inbox' ? 'on' : '' }}">{{ 'support.inbox.title'|trans }}{% if mod_inbox_count %}<span class="dtab-count" title="{{ 'support.inbox.title'|trans }}">{{ mod_inbox_count }}</span>{% endif %}</a>
+  {# Bugs: its own desk, not a queue inside the inbox. A message is finished
+     when somebody has an answer; a bug is a fact about the software that
+     outlives its reporter (contact-and-support.md §9). #}
+  <a href="{{ path('moderate_bugs') }}" class="dtab-mod {{ active == 'moderate_bugs' ? 'on' : '' }}">{{ 'support.bugs.title'|trans }}{% if mod_bug_count %}<span class="dtab-count" title="{{ 'support.bugs.title'|trans }}">{{ mod_bug_count }}</span>{% endif %}</a>
   {# Translations: site-wide overlays, unscoped like takedowns (translations.md §5). #}
   <a href="{{ path('moderate_translations') }}" class="dtab-mod {{ active == 'moderate_translations' ? 'on' : '' }}">{{ 'nav.translations'|trans }}{% if mod_translation_count %}<span class="dtab-count" title="{{ 'account.mod_translations_open'|trans }}">{{ mod_translation_count }}</span>{% endif %}</a>
   {# Regions desk: the gated
@@ -68,6 +80,9 @@
   <a href="{{ path('scout_review') }}" class="{{ active == 'scout' ? 'on' : '' }}">{{ 'account.tab_scout'|trans }}</a>
   <a href="{{ path('translate') }}" class="{{ active == 'translate' ? 'on' : '' }}">{{ 'account.tab_translate'|trans }}</a>
   <a href="{{ path('messages') }}" class="{{ active == 'messages' ? 'on' : '' }}">{{ 'account.tab_messages'|trans }}</a>
+  {# A rider who reports a bug and never hears anything learns not to bother a
+     second time. This is where they find out (contact-and-support.md §10). #}
+  <a href="{{ path('my_reports') }}" class="{{ active == 'reports' ? 'on' : '' }}">{{ 'support.mine.title'|trans }}</a>
   <a href="{{ path('settings') }}" class="{{ active == 'settings' ? 'on' : '' }}">{{ 'nav.settings'|trans }}</a>
 </nav>
 {% endif %}

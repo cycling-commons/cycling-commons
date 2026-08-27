@@ -1,0 +1,155 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{#
+  One bug, and everything a curator does to it (docs/specs/contact-and-support.md §9).
+
+  ONE form for status, severity, area, the public flag and the outcome note. A
+  curator triaging twenty reports must not have to save four times per report.
+
+  Two things this page is careful about:
+
+  * The reported text is escaped, in a pre-wrap block. It is a string a stranger
+    typed and it must never become markup.
+  * Screenshots are LINKS, not <img>. They are served as attachments from
+    /moderate/bugs/{id}/shot/{n} to curators only, out of the database
+    (App\Support\Entity\BugScreenshot). Rendering them inline on our own origin
+    would put a stranger's bytes into this page for no gain.
+#}
+{% extends 'base.html.twig' %}
+
+{% block head_styles %}
+{% include 'account/_shell_styles.html.twig' %}
+<style nonce="{{ csp_nonce() }}">
+  .bdet{max-width:760px}
+  .bdet dl.facts{display:grid;grid-template-columns:auto 1fr;gap:.3rem .9rem;margin:1rem 0 1.4rem}
+  .bdet dl.facts dt{font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--clay)}
+  .bdet dl.facts dd{margin:0;font-size:.9rem;color:#3a3d30;word-break:break-word}
+  .btext{background:var(--paper-deep);border-radius:6px;padding:1rem 1.2rem;font-family:inherit;
+    font-size:.95rem;line-height:1.65;color:#3a3d30;white-space:pre-wrap;word-wrap:break-word;margin:0 0 1.2rem}
+  .bsec{font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--clay);margin:1.4rem 0 .4rem}
+  .shots a{display:inline-block;font-family:var(--mono);font-size:.72rem;color:var(--clay);
+    border:1px solid rgba(20,22,14,.2);border-radius:5px;padding:.45rem .7rem;margin:0 .4rem .4rem 0;
+    text-decoration:none}
+  .shots a:hover{background:var(--paper-deep)}
+  .decide{margin-top:1.6rem;padding-top:1.3rem;border-top:1px solid rgba(20,22,14,.12)}
+  .decide label{display:block;font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--clay);margin:.9rem 0 .3rem}
+  .decide select,.decide input[type="text"],.decide textarea{width:100%;font-family:inherit;font-size:.9rem;
+    padding:.5rem .6rem;border:1px solid rgba(20,22,14,.22);border-radius:5px;background:var(--paper)}
+  .decide textarea{min-height:5rem;line-height:1.55;resize:vertical}
+  .decide .check{display:flex;align-items:flex-start;gap:.5rem;margin:1rem 0}
+  .decide .check label{margin:0;font-family:inherit;font-size:.9rem;letter-spacing:0;text-transform:none;color:#3a3d30}
+  .warn{background:var(--paper-deep);border-left:2px solid var(--ochre);padding:.85rem 1.05rem;
+    border-radius:0 6px 6px 0;font-size:.85rem;color:#4a4d40;line-height:1.55;margin:.9rem 0}
+</style>
+{% endblock %}
+
+{% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate_bugs'} %}{% endblock %}
+
+{% block body %}
+<div class="dbody dmin" id="main">
+  <div class="mh">
+    <div class="kicker">{{ 'account.menu_moderation'|trans }} · <a href="{{ path('moderate_bugs') }}">{{ 'support.bugs.title'|trans }}</a></div>
+    <h1>{{ report.title }}</h1>
+    <p class="lede mono">{{ reference }}</p>
+  </div>
+
+  <div class="bdet">
+    <dl class="facts">
+      <dt>{{ 'support.bug.field_severity'|trans }}</dt>
+      <dd>{{ ('support.bug.severity.' ~ report.severity.value)|trans }}</dd>
+      <dt>{{ 'support.bug.field_area'|trans }}</dt>
+      <dd>{{ ('support.bug.area.' ~ report.area.value)|trans }}</dd>
+      <dt>{{ 'support.inbox.status_label'|trans }}</dt>
+      <dd>{{ ('support.bug.status.' ~ report.status.value)|trans }}</dd>
+      <dt>{{ 'support.inbox.received'|trans }}</dt>
+      <dd>{{ report.createdAt|cc_datetime }}</dd>
+      <dt>{{ 'support.bug.context_page'|trans }}</dt>
+      <dd class="mono">{{ report.pageUrl ?? '–' }}</dd>
+      <dt>{{ 'support.bug.context_browser'|trans }}</dt>
+      <dd class="mono">{{ report.browser ?? '–' }}</dd>
+      <dt>{{ 'support.bug.context_screen'|trans }}</dt>
+      <dd class="mono">{{ report.viewport ?? '–' }}</dd>
+      <dt>{{ 'support.bugs.build'|trans }}</dt>
+      <dd class="mono">{{ report.appVersion ?? '–' }}</dd>
+      <dt>{{ 'support.inbox.from'|trans }}</dt>
+      <dd>
+        {%- if report.reporterEmail %}{{ report.reporterEmail }}{% else %}{{ 'support.bugs.anonymous'|trans }}{% endif -%}
+        {%- if report.userId %} · #{{ report.userId }}{% endif -%}
+      </dd>
+      {% if report.locale %}
+        <dt>{{ 'support.inbox.language'|trans }}</dt>
+        <dd>{{ report.locale }}</dd>
+      {% endif %}
+    </dl>
+
+    <p class="bsec">{{ 'support.bug.field_body'|trans }}</p>
+    <div class="btext">{{ report.body }}</div>
+
+    {% if report.steps %}
+      <p class="bsec">{{ 'support.bug.field_steps'|trans }}</p>
+      <div class="btext">{{ report.steps }}</div>
+    {% endif %}
+
+    {% if report.screenshots|length %}
+      <p class="bsec">{{ 'support.bug.field_screenshot'|trans }}</p>
+      <p class="shots">
+        {% for shot in report.screenshots %}
+          <a href="{{ path('moderate_bugs_screenshot', {id: report.id, shotId: shot.id}) }}">
+            {{ loop.index }} · {{ shot.width }}×{{ shot.height }} · {{ (shot.byteSize / 1024)|round }} kB
+          </a>
+        {% endfor %}
+      </p>
+      <p class="warn">{{ 'support.bugs.shot_note'|trans }}</p>
+    {% endif %}
+
+    {% if report.outcomeNote %}
+      <p class="bsec">{{ 'support.bugs.outcome'|trans }}</p>
+      <div class="btext">{{ report.outcomeNote }}</div>
+    {% endif %}
+
+    <form class="decide" method="post" action="{{ path('moderate_bugs_decide', {id: report.id}) }}">
+      <input type="hidden" name="_token" value="{{ csrf_token('bug-desk-decide') }}">
+
+      <label for="d-status">{{ 'support.inbox.set_status'|trans }}</label>
+      <select id="d-status" name="status">
+        {% for st in statuses %}
+          <option value="{{ st.value }}"{{ st == report.status ? ' selected' : '' }}>{{ ('support.bug.status.' ~ st.value)|trans }}</option>
+        {% endfor %}
+      </select>
+
+      <label for="d-sev">{{ 'support.bug.field_severity'|trans }}</label>
+      <select id="d-sev" name="severity">
+        {% for sev in severities %}
+          <option value="{{ sev.value }}"{{ sev == report.severity ? ' selected' : '' }}>{{ ('support.bug.severity.' ~ sev.value)|trans }}</option>
+        {% endfor %}
+      </select>
+
+      <label for="d-area">{{ 'support.bug.field_area'|trans }}</label>
+      <select id="d-area" name="area">
+        {% for ar in areas %}
+          <option value="{{ ar.value }}"{{ ar == report.area ? ' selected' : '' }}>{{ ('support.bug.area.' ~ ar.value)|trans }}</option>
+        {% endfor %}
+      </select>
+
+      <label for="d-note">{{ 'support.bugs.outcome'|trans }}</label>
+      <textarea id="d-note" name="outcome_note" maxlength="2000"
+                placeholder="{{ 'support.bugs.outcome_placeholder'|trans }}">{{ report.outcomeNote }}</textarea>
+      <p class="warn">{{ 'support.bugs.outcome_required'|trans }}</p>
+
+      <div class="check">
+        <input type="checkbox" id="d-public" name="is_public" value="1"{{ report.isPublic ? ' checked' : '' }}>
+        <label for="d-public">{{ 'support.bugs.publish'|trans }}</label>
+      </div>
+
+      <label for="d-ptitle">{{ 'support.bugs.public_title'|trans }}</label>
+      <input type="text" id="d-ptitle" name="public_title" maxlength="160"
+             value="{{ report.publicTitle == report.title ? '' : report.publicTitle }}"
+             placeholder="{{ 'support.bugs.public_title_placeholder'|trans }}">
+      <p class="warn">{{ 'support.bugs.publish_note'|trans }}</p>
+
+      <p><button type="submit" class="btn">{{ 'support.inbox.save'|trans }}</button></p>
+    </form>
+  </div>
+</div>
+{% endblock %}

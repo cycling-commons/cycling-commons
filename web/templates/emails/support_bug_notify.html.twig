@@ -1,0 +1,60 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{# "A bug landed." Sent to whoever is on duty (SupportRecipients).
+
+   Carries the whole context block, because the point of a bug notification is
+   that somebody can judge it without opening the desk: page, browser, viewport
+   and build are what separate "the map is broken" from something actionable.
+
+   Screenshots are NOT attached or embedded. They live in the database and are
+   served only to a signed-in curator (ModerateBugsController::screenshot), so
+   mail never carries a stranger's screen out of our infrastructure. #}
+{% extends 'emails/_base.html.twig' %}
+
+{% block title %}{{ reference }} · {{ report.title }}{% endblock %}
+
+{% block content %}
+  <p style="margin:0 0 6px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#8a6a3f">
+    {{ reference }} · {{ ('support.bug.severity.' ~ report.severity.value)|trans([], null, locale) }} · {{ ('support.bug.area.' ~ report.area.value)|trans([], null, locale) }}
+  </p>
+  <p style="margin:0 0 16px;font-size:19px;font-weight:600">{{ report.title }}</p>
+
+  <div style="padding:12px 16px;background:#f5eee0;border-radius:6px;font-size:14px;line-height:1.6;white-space:pre-wrap">{{ report.body }}</div>
+
+  {% if report.steps %}
+    <p style="margin:20px 0 6px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#8a6a3f">{{ 'support.bug.field_steps'|trans([], null, locale) }}</p>
+    <div style="padding:12px 16px;background:#f5eee0;border-radius:6px;font-size:14px;line-height:1.6;white-space:pre-wrap">{{ report.steps }}</div>
+  {% endif %}
+
+  <table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:20px 0 0">
+    <tr>
+      <td style="padding:4px 14px 4px 0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#8a6a3f">{{ 'support.bug.context_page'|trans([], null, locale) }}</td>
+      <td style="padding:4px 0;font-family:monospace;font-size:13px">{{ report.pageUrl ?? '–' }}</td>
+    </tr>
+    <tr>
+      <td style="padding:4px 14px 4px 0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#8a6a3f">{{ 'support.bug.context_browser'|trans([], null, locale) }}</td>
+      <td style="padding:4px 0;font-family:monospace;font-size:12px">{{ report.browser ?? '–' }}</td>
+    </tr>
+    <tr>
+      <td style="padding:4px 14px 4px 0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#8a6a3f">{{ 'support.bug.context_screen'|trans([], null, locale) }}</td>
+      <td style="padding:4px 0;font-family:monospace;font-size:13px">{{ report.viewport ?? '–' }}</td>
+    </tr>
+    <tr>
+      <td style="padding:4px 14px 4px 0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#8a6a3f">{{ 'support.bugs.build'|trans([], null, locale) }}</td>
+      <td style="padding:4px 0;font-family:monospace;font-size:13px">{{ report.appVersion ?? '–' }}</td>
+    </tr>
+    <tr>
+      <td style="padding:4px 14px 4px 0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#8a6a3f">{{ 'support.inbox.from'|trans([], null, locale) }}</td>
+      <td style="padding:4px 0;font-size:14px">{{ report.reporterEmail ?? 'support.bugs.anonymous'|trans([], null, locale) }}</td>
+    </tr>
+    {% if report.screenshots|length %}
+      <tr>
+        <td style="padding:4px 14px 4px 0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#8a6a3f">{{ 'support.bug.field_screenshot'|trans([], null, locale) }}</td>
+        <td style="padding:4px 0;font-size:14px">{{ report.screenshots|length }}</td>
+      </tr>
+    {% endif %}
+  </table>
+
+  <p style="margin:24px 0 0">
+    <a href="{{ desk_url }}" style="display:inline-block;background:#14160e;color:#fdfaf1;text-decoration:none;padding:11px 20px;border-radius:6px;font-size:14px">{{ 'support.email.notify_cta'|trans([], null, locale) }}</a>
+  </p>
+{% endblock %}

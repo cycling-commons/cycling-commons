@@ -15,6 +15,13 @@
   .legal a{color:var(--clay);text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1.5px}
   .legal a:hover{color:var(--trail)}
   .banner{background:var(--spruce);color:var(--paper);border-radius:8px;padding:1rem 1.2rem;margin:1.4rem 0;font-size:.96rem;line-height:1.6}
+  {# `.banner` sets a light colour, but `.legal p` is MORE SPECIFIC (0,0,1,1
+     against 0,0,1,0), so any paragraph inside a banner is repainted the page's
+     dark ink and lands at 1.12:1 on the spruce: invisible. It happened first on
+     the accessibility statement, of all pages. These two lines make the banner
+     own its own text whatever is nested inside it. #}
+  .banner p,.banner li,.banner b{color:inherit}
+  .banner p{margin:0}
   /* --trail on spruce is 3.99:1 — under the 4.5:1 AA floor for text this size,
      and in a safety notice the emphasised word is the one that must not be the
      hardest to read. A lifted trail keeps the warning colour at 5.35:1, and the
@@ -37,7 +44,7 @@
 
     <h2>{% trans %}privacy.h_responsible{% endtrans %}</h2>
     <p>{% trans %}privacy.responsible_p1_pre{% endtrans %} <b>{% trans %}privacy.responsible_p1_bikecoders{% endtrans %}</b> (<a href="https://bikecoders.life">bikecoders.life</a>){% trans %}privacy.responsible_p1_mid{% endtrans %} <a href="https://wiki.cyclingcommons.org/governance/">{% trans %}privacy.responsible_p1_governance{% endtrans %}</a>{{ 'privacy.responsible_p1_post'|trans|rich }}</p>
-    <p>{% trans %}privacy.responsible_p2_pre{% endtrans %} <a href="mailto:info@cyclingcommons.org">info@cyclingcommons.org</a>{% trans %}privacy.responsible_p2_mid{% endtrans %} <a href="https://autoriteitpersoonsgegevens.nl/">{% trans %}privacy.responsible_p2_ap{% endtrans %}</a>{% trans %}privacy.responsible_p2_post{% endtrans %}</p>
+    <p>{% trans %}privacy.responsible_p2_pre{% endtrans %} <a href="mailto:info@cyclingcommons.org">info@cyclingcommons.org</a> ({{ 'support.legal.or_form'|trans }} <a href="{{ path('contact') }}?topic=privacy">{{ 'support.contact.title_short'|trans }}</a>){% trans %}privacy.responsible_p2_mid{% endtrans %} <a href="https://autoriteitpersoonsgegevens.nl/">{% trans %}privacy.responsible_p2_ap{% endtrans %}</a>{% trans %}privacy.responsible_p2_post{% endtrans %}</p>
 
     <h2>{% trans %}privacy.h_collect{% endtrans %}</h2>
     <p>{% trans %}privacy.collect_intro{% endtrans %}</p>
@@ -111,7 +118,7 @@
          depend on having an account, and this page must not imply it does. #}
       <li>{{ 'privacy.rights_third_party_photo'|trans|rich }}</li>
     </ul>
-    <p>{% trans %}privacy.rights_contact_pre{% endtrans %} <a href="mailto:info@cyclingcommons.org">info@cyclingcommons.org</a>{% trans %}privacy.rights_contact_mid{% endtrans %} <a href="https://autoriteitpersoonsgegevens.nl/">{% trans %}privacy.rights_contact_ap{% endtrans %}</a>{% trans %}privacy.rights_contact_post{% endtrans %}</p>
+    <p>{% trans %}privacy.rights_contact_pre{% endtrans %} <a href="mailto:info@cyclingcommons.org">info@cyclingcommons.org</a> ({{ 'support.legal.or_form'|trans }} <a href="{{ path('contact') }}?topic=privacy">{{ 'support.contact.title_short'|trans }}</a>){% trans %}privacy.rights_contact_mid{% endtrans %} <a href="https://autoriteitpersoonsgegevens.nl/">{% trans %}privacy.rights_contact_ap{% endtrans %}</a>{% trans %}privacy.rights_contact_post{% endtrans %}</p>
 
     <h2>{% trans %}privacy.h_children{% endtrans %}</h2>
     <p>{{ 'privacy.children_body'|trans|rich }}</p>

@@ -1,0 +1,29 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{# "Your bug is filed." Sent only when the reporter gave an address.
+
+   Deliberately short. A bug report acknowledgement is not a newsletter; it
+   answers exactly two questions (did it arrive, and how do I find it again)
+   and stops.
+
+   It carries NO text the reporter typed, not even the title. Anyone can file a
+   report with somebody else's address on it, and echoing their words would turn
+   this into a way to mail attacker-chosen text from our domain. Same rule as
+   emails/support_contact_ack.html.twig. #}
+{% extends 'emails/_base.html.twig' %}
+
+{% block title %}{{ 'support.email.bug_ack_subject'|trans({'%reference%': reference}, null, locale) }}{% endblock %}
+
+{% block content %}
+  <p style="margin:0 0 6px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#8a6a3f">{{ reference }}</p>
+  <p style="margin:0 0 16px;font-size:19px;font-weight:600">{{ 'support.email.bug_ack_headline'|trans([], null, locale) }}</p>
+
+  <p style="margin:0 0 14px">{{ 'support.email.bug_ack_body'|trans([], null, locale) }}</p>
+
+  <p style="margin:18px 0 0;font-size:13px;color:#5a5d4d;line-height:1.55">
+    {{ 'support.email.bug_ack_outcome'|trans([], null, locale) }}
+  </p>
+
+  <p style="margin:22px 0 0">
+    <a href="{{ site_url }}/known-issues" style="display:inline-block;background:#14160e;color:#fdfaf1;text-decoration:none;padding:11px 20px;border-radius:6px;font-size:14px">{{ 'support.known.title'|trans([], null, locale) }}</a>
+  </p>
+{% endblock %}

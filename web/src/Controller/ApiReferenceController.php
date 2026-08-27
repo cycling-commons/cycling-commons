@@ -4,6 +4,8 @@
 
 namespace App\Controller;
 
+use App\Routing\LocalePrefix;
+use App\Routing\LocalizedPath;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -15,9 +17,14 @@ use Symfony\Component\Routing\Attribute\Route;
  *
  * @api
  */
+/* These two were the only public pages with no locale prefix, so `/nl/...`
+   404'd on them while every sibling page answered. Found while localising the
+   slugs (LocalizedPath): the localised paths generated fine and then had
+   nothing to sit under. */
+#[Route(LocalePrefix::PATHS)]
 final class ApiReferenceController extends AbstractController
 {
-    #[Route('/developers/api', name: 'developers_api')]
+    #[Route(LocalizedPath::DEVELOPERS_API, name: 'developers_api')]
     public function __invoke(): Response
     {
         return $this->render('pages/developers_api.html.twig');

@@ -95,7 +95,10 @@ final class TranslatePageTest extends WebTestCase
         self::assertStringContainsString('/nl/translate', $html);
         self::assertStringContainsString('/de/translate', $html);
         self::assertStringContainsString('/es/translate', $html);
-        self::assertSame(0, $crawler->filter('textarea')->count());
+        // Scoped to the page body: the floating bug button
+        // (contact-and-support.md §5) renders its own panel with two textareas
+        // on every page, and they are not this page's edit boxes.
+        self::assertSame(0, $crawler->filter('#main textarea')->count());
     }
 
     public function testFrenchListShowsSeededKeyAndEnglish(): void

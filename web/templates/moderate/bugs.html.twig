@@ -1,0 +1,98 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{#
+  The bugs desk (docs/specs/contact-and-support.md §9).
+
+  Its own desk, not a queue inside the inbox. A contact message is a
+  conversation with one person and it is finished when they have an answer. A
+  bug is a fact about the software that outlives the person who found it.
+
+  Newest first and nothing clever. A desk that reorders itself by severity hides
+  the report that arrived thirty seconds ago, which is the one most likely to be
+  about something that just broke.
+#}
+{% extends 'base.html.twig' %}
+
+{% block head_styles %}
+{% include 'account/_shell_styles.html.twig' %}
+<style nonce="{{ csp_nonce() }}">
+  .chips{display:flex;gap:.4rem;flex-wrap:wrap;margin:1rem 0 .6rem}
+  .chip{font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;
+    padding:.35rem .6rem;border-radius:4px;background:var(--paper-deep);color:#4a4d40;text-decoration:none}
+  .chip.on{background:var(--ink);color:var(--paper)}
+  .chip .n{opacity:.7;margin-left:.3rem}
+  .chips.areas .chip{font-size:.56rem}
+  .bugrow{border-bottom:1px solid rgba(20,22,14,.12);padding:.85rem 0}
+  .bugrow:last-child{border-bottom:0}
+  .bugtop{display:flex;gap:.55rem;align-items:baseline;flex-wrap:wrap}
+  .bugtop a{font-family:var(--serif);font-size:1rem;color:var(--ink);text-decoration:none}
+  .bugtop a:hover{color:var(--clay);text-decoration:underline}
+  .ref{font-family:var(--mono);font-size:.6rem;color:#6d7060}
+  .tag{font-family:var(--mono);font-size:.56rem;letter-spacing:.1em;text-transform:uppercase;
+    padding:.18rem .42rem;border-radius:3px;background:var(--paper-deep);color:#4a4d40}
+  .tag.sev-critical{background:#5a2716;color:#FFD9C8}
+  .tag.sev-major{background:#FFE0D2;color:#5a2716}
+  .tag.pub{background:var(--spruce);color:var(--paper)}
+  .bugmeta{font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;color:#6d7060;margin-top:.35rem}
+  .bugexcerpt{font-size:.87rem;color:#4a4d40;line-height:1.55;margin:.3rem 0 0}
+  .empty{background:var(--paper-deep);border-left:2px solid var(--ochre);padding:1.1rem 1.3rem;
+    border-radius:0 8px 8px 0;font-size:.92rem;color:#4a4d40}
+</style>
+{% endblock %}
+
+{% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate_bugs'} %}{% endblock %}
+
+{% block body %}
+<div class="dbody dmin" id="main">
+  <div class="mh">
+    <div class="kicker">{{ 'account.menu_moderation'|trans }}</div>
+    <h1>{{ 'support.bugs.title'|trans }}</h1>
+    <p class="lede">{{ 'support.bugs.lede'|trans }}</p>
+  </div>
+
+  <div class="chips">
+    {% for st in statuses %}
+      <a class="chip {{ filter_status == st.value ? 'on' : '' }}"
+         href="{{ path('moderate_bugs', {status: st.value}) }}">
+        {{ ('support.bug.status.' ~ st.value)|trans }}<span class="n">{{ counts[st.value] ?? 0 }}</span>
+      </a>
+    {% endfor %}
+  </div>
+
+  <div class="chips areas">
+    {% for ar in areas %}
+      <a class="chip {{ filter_area == ar.value ? 'on' : '' }}"
+         href="{{ path('moderate_bugs', {area: ar.value}) }}">{{ ('support.bug.area.' ~ ar.value)|trans }}</a>
+    {% endfor %}
+  </div>
+
+  {% if reports is empty %}
+    <div class="empty">{{ 'support.bugs.empty'|trans }}</div>
+  {% else %}
+    {% for b in reports %}
+      <div class="bugrow">
+        <div class="bugtop">
+          <a href="{{ path('moderate_bugs_detail', {id: b.id}) }}">{{ b.title }}</a>
+          <span class="tag sev-{{ b.severity.value }}">{{ ('support.bug.severity.' ~ b.severity.value)|trans }}</span>
+          <span class="tag">{{ ('support.bug.status.' ~ b.status.value)|trans }}</span>
+          <span class="tag">{{ ('support.bug.area.' ~ b.area.value)|trans }}</span>
+          {% if b.isPublic %}<span class="tag pub">{{ 'support.bugs.public'|trans }}</span>{% endif %}
+          {# A word, never an emoji (docs/TODO.md: type marks are drawn, not emoji). #}
+          {% if b.screenshots|length %}<span class="tag">{{ 'support.bugs.shots'|trans({'%count%': b.screenshots|length}) }}</span>{% endif %}
+        </div>
+        <p class="bugexcerpt">{{ b.body|length > 160 ? b.body|slice(0, 160) ~ '…' : b.body }}</p>
+        <p class="bugmeta">
+          {{ b.createdAt|cc_datetime }}
+          {%- if b.pageUrl %} · {{ b.pageUrl }}{% endif %}
+          {%- if b.reporterEmail %} · {{ b.reporterEmail }}{% else %} · {{ 'support.bugs.anonymous'|trans }}{% endif %}
+        </p>
+      </div>
+    {% endfor %}
+
+    {% include 'partials/_pager.html.twig' with {
+      pager: pager,
+      route: 'moderate_bugs',
+      params: {status: filter_status, area: filter_area}
+    } %}
+  {% endif %}
+</div>
+{% endblock %}

@@ -8,6 +8,7 @@ namespace App\Tests\Admin;
 
 use App\Entity\User;
 use App\Repository\AdminActionLogRepository;
+use App\Settings\SettingDefinition;
 use App\Settings\SettingsRegistry;
 use App\Settings\SystemSettings;
 use App\Settings\SystemSettingsWriter;
@@ -137,9 +138,14 @@ final class SystemConfigPageTest extends WebTestCase
     // ── Saving ───────────────────────────────────────────────────────────────
 
     /**
-     * No setting may be saved empty, whatever its type — and the page has to
+     * A setting may not be saved empty, whatever its type, and the page has to
      * say that, rather than answering an empty box with a complaint about a
      * number nobody typed.
+     *
+     * The exception is a setting that declares emptiness a MEANING rather than
+     * an omission ({@see SettingDefinition::$allowsEmpty}). Only the support
+     * recipients do, where blank means "fall back to the alert recipients"
+     * (contact-and-support.md §7). Those are covered by the test below.
      */
     public function testAnEmptyFieldIsRefusedWithItsOwnMessage(): void
     {
@@ -147,7 +153,10 @@ final class SystemConfigPageTest extends WebTestCase
         $client->loginUser($this->createUser('admin@example.com', ['ROLE_ADMIN'], admin2fa: true));
         $registry = static::getContainer()->get(SettingsRegistry::class);
 
-        foreach ($registry->all() as $key => $_def) {
+        foreach ($registry->all() as $key => $def) {
+            if ($def->allowsEmpty) {
+                continue;
+            }
             $crawler = $client->request('GET', $this->url());
             $form = $crawler->selectButton('Save settings')->form();
             $form['settings['.$key.']'] = '';
@@ -156,6 +165,41 @@ final class SystemConfigPageTest extends WebTestCase
             self::assertResponseIsSuccessful("{$key}: an empty value must not save");
             self::assertStringContainsString('This cannot be empty', $crawler->html(), "{$key}: says why");
             self::assertFalse($this->settings()->isOverridden($key), "{$key}: nothing was written");
+        }
+    }
+
+    /**
+     * A setting that declares emptiness a meaning can actually be cleared.
+     *
+     * Before `allowsEmpty` existed the desk hard-coded "required", so a setting
+     * whose blank value is deliberate could be rendered but never saved. That
+     * is the kind of gap nobody finds until somebody tries to change it during
+     * an incident.
+     */
+    public function testASettingThatAllowsEmptyCanBeSavedEmpty(): void
+    {
+        $client = static::createClient();
+        $client->loginUser($this->createUser('admin@example.com', ['ROLE_ADMIN'], admin2fa: true));
+        $registry = static::getContainer()->get(SettingsRegistry::class);
+
+        $allowEmpty = array_filter($registry->all(), static fn ($def): bool => $def->allowsEmpty);
+        self::assertNotSame([], $allowEmpty, 'at least one setting is expected to allow empty');
+
+        foreach ($allowEmpty as $key => $_def) {
+            // Put a value in first, so clearing it is a real change.
+            $crawler = $client->request('GET', $this->url());
+            $form = $crawler->selectButton('Save settings')->form();
+            $form['settings['.$key.']'] = 'desk@example.test';
+            $client->submit($form);
+            self::assertResponseRedirects('', null, "{$key}: a value must save");
+
+            $crawler = $client->request('GET', $this->url());
+            $form = $crawler->selectButton('Save settings')->form();
+            $form['settings['.$key.']'] = '';
+            $client->submit($form);
+
+            self::assertResponseRedirects('', null, "{$key}: clearing it must save too");
+            self::assertSame('', $this->settings()->getString($key), "{$key}: the empty value is what is stored");
         }
     }
 

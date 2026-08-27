@@ -15,7 +15,12 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\RouterInterface;
 
 /**
- * `robots.txt` and `sitemap.xml` from the live router and region registry.
+ * `robots.txt`, `sitemap.xml` and `security.txt` from the live router.
+ *
+ * The three machine-readable files at the root of the site. They share a
+ * controller because they share a property: none of them is a page, all of them
+ * must agree with what the router actually serves, and each one rots quietly if
+ * it is a static file somebody has to remember to edit.
  *
  * @api
  */
@@ -38,6 +43,16 @@ final class SitemapController extends AbstractController
         ['licenses', 'yearly'],
         ['credits', 'monthly'],
         ['pages', 'monthly'],
+        // The front door and the two support pages. `contact` carries the
+        // legal identity block, so it is one of the pages a reader most needs
+        // to be able to find from a search (contact-and-support.md §2).
+        // `report-bug` is deliberately NOT here: it is a form, reached from
+        // the button on every page, and has nothing for a search engine.
+        ['contact', 'monthly'],
+        ['known_issues', 'daily'],
+        // Yearly is optimistic for this one: it changes whenever a barrier is
+        // fixed or found, which is the point of it.
+        ['accessibility', 'monthly'],
         ['privacy', 'yearly'],
         ['terms', 'yearly'],
     ];
@@ -46,6 +61,54 @@ final class SitemapController extends AbstractController
         private readonly RouterInterface $router,
         private readonly RegionRegistryProvider $regions,
     ) {
+    }
+
+    /**
+     * RFC 9116 security contact, with an expiry that cannot rot.
+     *
+     * `SECURITY.md` has pointed at this URL since it was written, and until now
+     * this URL answered 404: the only `security.txt` was the one beside the old
+     * static atlas, whose `Canonical:` line named an address the application did
+     * not serve. A canonical URL that 404s is worse than no file, because a
+     * researcher who checks it concludes there is nowhere to report.
+     *
+     * `Expires` is REQUIRED by RFC 9116, must be under a year out, and a file
+     * past it is to be treated as invalid. A hand-written date is therefore a
+     * time bomb: the day it passes, the file stops counting and nobody notices,
+     * which is the usual way security.txt fails. This one is computed as the
+     * first of the month nine months from now. Always valid, never a year out,
+     * and stable for a whole month at a time so it still caches and still
+     * matches byte for byte between requests.
+     */
+    #[Route('/.well-known/security.txt', name: 'security_txt', methods: ['GET'])]
+    public function securityTxt(): Response
+    {
+        $expires = (new \DateTimeImmutable('first day of this month', new \DateTimeZone('UTC')))
+            ->setTime(0, 0)
+            ->modify('+9 months');
+
+        $lines = [
+            '# Cycling Commons security contact (RFC 9116).',
+            '# The open Commons is non-personal map data, but the platform holds account',
+            '# data (emails, salted password hashes) and security logs (IP addresses), so',
+            '# vulnerabilities matter to us. Report privately first; we will respond.',
+            '',
+            'Contact: mailto:development@cyclingcommons.org',
+            'Contact: '.$this->generateUrl('contact', [], UrlGeneratorInterface::ABSOLUTE_URL),
+            'Expires: '.$expires->format('Y-m-d\TH:i:s\Z'),
+            'Preferred-Languages: en, nl',
+            'Canonical: '.$this->generateUrl('security_txt', [], UrlGeneratorInterface::ABSOLUTE_URL),
+            'Policy: https://github.com/cycling-commons/cycling-commons/blob/main/SECURITY.md',
+        ];
+
+        $response = new Response(implode("\n", $lines)."\n");
+        $response->headers->set('Content-Type', 'text/plain; charset=utf-8');
+        // A day is plenty: the body only changes once a month, and a researcher
+        // reading a cached copy still gets a valid, unexpired file.
+        $response->setPublic();
+        $response->setMaxAge(86400);
+
+        return $response;
     }
 
     #[Route('/robots.txt', name: 'robots', methods: ['GET'])]

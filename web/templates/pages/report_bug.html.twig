@@ -1,0 +1,198 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{#
+  The bug form as a plain page (docs/specs/contact-and-support.md §5).
+
+  The floating panel is how almost everybody will report a bug. This page is
+  for the three cases the panel cannot serve: JavaScript off or blocked, a
+  browser without WebCrypto, and a link somebody was sent ("report it here").
+  It posts to the same route and the same validator, which is what stops the
+  fallback quietly falling behind the main path.
+
+  It takes ONE screenshot as a file rather than several by paste, because
+  pasting is a JavaScript trick and this page is the version that works without
+  one.
+#}
+{% extends 'base.html.twig' %}
+
+{% block head_styles %}
+<style nonce="{{ csp_nonce() }}">
+  .lhero{background:var(--ink);color:var(--paper);padding:3rem 0}
+  .bugpage{max-width:640px}
+  .bugpage h2{font-family:var(--serif);font-weight:600;font-size:1.25rem;margin:1.8rem 0 .5rem}
+  .bugpage p{font-size:.95rem;color:#3a3d30;line-height:1.65;margin:.55rem 0}
+  .bugpage a{color:var(--clay);text-decoration:underline;text-underline-offset:3px}
+  .cfield{margin:1.15rem 0}
+  .cfield label,.cfield .leg{display:block;font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--clay);margin-bottom:.4rem}
+  .cfield input[type="text"],.cfield input[type="email"],.cfield input[type="file"],.cfield select,.cfield textarea{
+    width:100%;font-family:inherit;font-size:.95rem;padding:.6rem .7rem;color:var(--ink);
+    border:1px solid rgba(20,22,14,.24);border-radius:5px;background:var(--paper)}
+  .cfield textarea{min-height:8rem;line-height:1.6;resize:vertical}
+  .chint{font-size:.82rem;color:#595c4d;margin:.35rem 0 0;line-height:1.55}
+  .opt{color:#8c8f7d;letter-spacing:.09em}
+  .ctxblock{margin:1.4rem 0;font-size:.88rem;color:#4a4d40}
+  .ctxblock summary{cursor:pointer;color:var(--clay)}
+  .ctxblock dt{font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--clay);margin-top:.6rem}
+  .ctxblock dd{margin:.1rem 0 0;font-size:.8rem;word-break:break-all}
+  .hp-field{position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden}
+  .cnote{background:var(--paper-deep);border-left:2px solid var(--ochre);padding:1rem 1.2rem;
+    border-radius:0 8px 8px 0;font-size:.88rem;color:#4a4d40;line-height:1.6;margin:1.4rem 0}
+  .cerr{background:#fff1ec;border-left:2px solid var(--trail);padding:1rem 1.2rem;
+    border-radius:0 8px 8px 0;font-size:.9rem;color:#5a2716;line-height:1.6;margin:0 0 1.4rem}
+  {# Same ochre note as the contact page, for the same readability reason. #}
+  .csent{background:var(--paper-deep);border-left:2px solid var(--ochre);padding:1.2rem 1.4rem;
+    border-radius:0 8px 8px 0;line-height:1.65}
+  .csent h2{margin-top:0}
+  .pow-status{font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;color:#595c4d;margin:.6rem 0 0}
+  {# Segmented chips, not bare radios. The input stays a real radio (keyboard,
+     no JavaScript, screen readers); only its box is hidden, and the label text
+     next to it carries the look. Never `display:none` on the input: that takes
+     it out of the tab order. #}
+  .sevrow{display:flex;gap:.4rem;flex-wrap:wrap;margin:0}
+  .sevrow label{margin:0}
+  .sevrow input{position:absolute;opacity:0;width:1px;height:1px}
+  .sevrow span{display:inline-block;font-family:var(--mono);font-size:.62rem;letter-spacing:.09em;
+    text-transform:uppercase;padding:.5rem .8rem;border:1px solid rgba(20,22,14,.2);border-radius:5px;
+    background:var(--paper);color:#4a4d40;cursor:pointer;transition:all .15s}
+  .sevrow label:hover span{border-color:var(--clay);color:var(--ink)}
+  .sevrow input:checked + span{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+  .sevrow input:focus-visible + span{outline:2px solid var(--clay);outline-offset:2px}
+</style>
+{% endblock %}
+
+{% block body_scripts %}
+<script src="{{ asset('support/form-challenge.js') }}" defer></script>
+<script src="{{ asset('support/bug-context.js') }}" defer></script>
+{% endblock %}
+
+{% block body %}
+<div class="lhero"><div class="wrap">
+  <div class="kicker" style="color:var(--trail)">{{ 'support.bug.kicker'|trans }}</div>
+  <h1 class="disp">{{ 'support.bug.title'|trans }}</h1>
+  <p class="lead" style="color:rgba(239,230,212,.85);margin-top:.8rem">{{ 'support.bug.lead'|trans|rich }}</p>
+</div></div>
+
+<section class="pad"><div class="wrap">
+  <div class="bugpage">
+    {% if sent %}
+      <div class="csent">
+        <h2>{{ 'support.bug.sent_title'|trans }}</h2>
+        <p>{{ 'support.bug.sent_body'|trans }}</p>
+        <p><a href="{{ path('known_issues') }}">{{ 'support.bug.known_link'|trans }}</a></p>
+      </div>
+    {% else %}
+      {% if error %}
+        <div class="cerr" role="alert">{{ error|trans }}</div>
+      {% endif %}
+
+      <p>{{ 'support.bug.check_known'|trans }} <a href="{{ path('known_issues') }}">{{ 'support.bug.known_link'|trans }}</a>.</p>
+
+      <form method="post" action="{{ path('bug_report_submit') }}" enctype="multipart/form-data"
+            id="cc-guarded-form"
+            data-pow-challenge="{{ pow_challenge }}"
+            data-pow-difficulty="{{ pow_difficulty }}">
+        <input type="hidden" name="_token" value="{{ csrf_token('bug_report') }}">
+        <input type="hidden" name="{{ stamp_field }}" value="{{ form_stamp }}">
+        <input type="hidden" name="pow_challenge" value="{{ pow_challenge }}">
+        <input type="hidden" name="pow_nonce" id="pow_nonce" value="">
+        <input type="hidden" name="page_url" value="{{ prefill_url }}">
+        {# Filled by support/bug-context.js, so this form sends the same context
+           the floating panel does. Empty with JavaScript off. #}
+        <input type="hidden" name="browser" value="">
+        <input type="hidden" name="viewport" value="">
+        <input type="hidden" name="app_version" value="">
+
+        <div class="hp-field" aria-hidden="true">
+          <label for="{{ honeypot_a }}">{{ 'support.honeypot_label'|trans }}</label>
+          <input type="text" id="{{ honeypot_a }}" name="{{ honeypot_a }}" tabindex="-1" autocomplete="off">
+          <label for="{{ honeypot_b }}">{{ 'support.honeypot_label'|trans }}</label>
+          <input type="text" id="{{ honeypot_b }}" name="{{ honeypot_b }}" tabindex="-1" autocomplete="off">
+        </div>
+
+        <div class="cfield">
+          <label for="b-title">{{ 'support.bug.field_title'|trans }}</label>
+          <input type="text" id="b-title" name="title" maxlength="160" required
+                 placeholder="{{ 'support.bug.placeholder_title'|trans }}">
+        </div>
+
+        <div class="cfield">
+          <span class="leg">{{ 'support.bug.field_severity'|trans }}</span>
+          <div class="sevrow">
+            {% for sev in severities %}
+              <label>
+                <input type="radio" name="severity" value="{{ sev.value }}"{{ sev.value == selected_severity ? ' checked' : '' }}>
+                <span>{{ ('support.bug.severity.' ~ sev.value)|trans }}</span>
+              </label>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="cfield">
+          <label for="b-area">{{ 'support.bug.field_area'|trans }}</label>
+          <select id="b-area" name="area">
+            {% for area in areas %}
+              <option value="{{ area.value }}"{{ area.value == selected_area ? ' selected' : '' }}>{{ ('support.bug.area.' ~ area.value)|trans }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="cfield">
+          <label for="b-body">{{ 'support.bug.field_body'|trans }}</label>
+          <textarea id="b-body" name="body" maxlength="8000" required
+                    placeholder="{{ 'support.bug.placeholder_body'|trans }}"></textarea>
+        </div>
+
+        <div class="cfield">
+          <label for="b-steps">{{ 'support.bug.field_steps'|trans }} <span class="opt">{{ 'support.bug.optional'|trans }}</span></label>
+          <textarea id="b-steps" name="steps" maxlength="4000"
+                    placeholder="{{ 'support.bug.placeholder_steps'|trans }}"></textarea>
+        </div>
+
+        <div class="cfield">
+          <label for="b-shot">{{ 'support.bug.field_screenshot'|trans }} <span class="opt">{{ 'support.bug.optional'|trans }}</span></label>
+          <input type="file" id="b-shot" name="screenshot[]" multiple
+                 accept="image/png,image/jpeg,image/gif,image/webp">
+          <p class="chint">{{ 'support.bug.hint_screenshot'|trans({'%max%': max_screenshots}) }}</p>
+        </div>
+
+        <div class="cfield">
+          <label for="b-email">{{ 'support.bug.field_email'|trans }}</label>
+          <input type="email" id="b-email" name="email" maxlength="320" value="{{ prefill_email }}" autocomplete="email">
+          <p class="chint">{{ prefill_email ? 'support.bug.hint_email_user'|trans : 'support.bug.hint_email_anon'|trans }}</p>
+        </div>
+
+        <details class="ctxblock">
+          <summary>{{ 'support.bug.context_summary'|trans }}</summary>
+          <dl>
+            <dt>{{ 'support.bug.context_page'|trans }}</dt>
+            <dd class="mono">{{ prefill_url ?? '–' }}</dd>
+            <dt class="ctx-jsonly" hidden>{{ 'support.bug.context_browser'|trans }}</dt>
+            <dd class="mono bf-ctx-browser ctx-jsonly" hidden></dd>
+            <dt class="ctx-jsonly" hidden>{{ 'support.bug.context_screen'|trans }}</dt>
+            <dd class="mono bf-ctx-viewport ctx-jsonly" hidden></dd>
+          </dl>
+          <p class="chint">{{ 'support.bug.context_note'|trans }}</p>
+        </details>
+
+        <div class="cnote">
+          <p>{{ 'support.bug.privacy_note'|trans }} <a href="{{ path('privacy') }}">{{ 'support.contact.privacy_link'|trans }}</a>.</p>
+        </div>
+
+        <p id="pow-status" class="pow-status" hidden
+           data-working="{{ 'support.challenge_working'|trans }}"
+           data-ready="{{ 'support.challenge_ready'|trans }}"
+           data-failed="{{ 'support.challenge_failed'|trans }}"></p>
+
+        <p><button type="submit" class="btn btn-p">{{ 'support.bug.submit'|trans }}</button></p>
+      </form>
+
+      <noscript>
+        <div class="cnote">
+          <p>{{ 'support.bug.no_js_note'|trans }}</p>
+        </div>
+      </noscript>
+    {% endif %}
+  </div>
+</div></section>
+{% endblock %}

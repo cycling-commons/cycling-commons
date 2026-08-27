@@ -17,6 +17,16 @@
 {% endfor %}
 {% block body %}{% endblock %}
 {% block footer %}{% include 'partials/_footer.html.twig' %}{% endblock %}
+{# The floating bug button (contact-and-support.md §5), on every page that uses
+   this layout. The MAP does not: templates/map/index.html.twig is a standalone
+   document and includes the partial itself, as the circle alone
+   (owner 2026-08-27: "why can't we have the popup on the map as only the little
+   circle with the bug in it?"). `bug_fab_context()` is a function rather than a
+   global so the challenge is only issued where the partial renders. #}
+{% include 'partials/_bug_fab.html.twig' with {
+  bug_fab: bug_fab_context(),
+  on_map: nav_active|default('') == 'map'
+} only %}
 <script nonce="{{ csp_nonce() }}">
 {# Only truly site-wide strings ship here (a11y.js, nav.js, version.js). Pages
    that need more merge their own via Object.assign(window.CC_I18N, {...}) in
@@ -64,6 +74,10 @@ window.CC_UNITS = {{ {
 <script src="{{ asset('js/nav-menus.js') }}" defer></script>
 <script nonce="{{ csp_nonce() }}">window.CC_VERSION = {{ cc_build()|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
 <script src="{{ asset('js/version.js') }}"></script>
+{# The proof-of-work solver, then the button that uses it. Not deferred past
+   each other: bug-fab.js reads window.ccPow at load and bails without it. #}
+<script src="{{ asset('support/pow.js') }}"></script>
+<script src="{{ asset('support/bug-fab.js') }}" defer></script>
 {% block body_scripts %}{% endblock %}
 </body>
 </html>

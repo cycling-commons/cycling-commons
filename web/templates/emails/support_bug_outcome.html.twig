@@ -1,0 +1,29 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{# "Here is what happened to your bug." Sent ONCE, on Resolved or Declined.
+
+   The one mail that decides whether somebody reports a second bug. It always
+   carries the curator's reason, and the desk refuses to reach either status
+   without one, because "we are not fixing this" with no explanation is the
+   message that makes a person stop bothering.
+
+   Not sent for Planned, In progress or Needs testing: being told a report moved
+   between two internal states is noise, and noise is what teaches people to
+   ignore the next mail. #}
+{% extends 'emails/_base.html.twig' %}
+
+{% block title %}{{ 'support.email.bug_outcome_subject'|trans({'%reference%': reference}, null, locale) }}{% endblock %}
+
+{% block content %}
+  <p style="margin:0 0 6px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#8a6a3f">{{ reference }} · {{ status_label }}</p>
+  <p style="margin:0 0 16px;font-size:19px;font-weight:600">{{ report.title }}</p>
+
+  {% if report.outcomeNote %}
+    <div style="padding:12px 16px;background:#f5eee0;border-left:3px solid #3f6152;border-radius:0 6px 6px 0;font-size:14px;line-height:1.6;white-space:pre-wrap">{{ report.outcomeNote }}</div>
+  {% endif %}
+
+  <p style="margin:20px 0 0;font-size:14px;line-height:1.6">{{ 'support.email.bug_outcome_thanks'|trans([], null, locale) }}</p>
+
+  <p style="margin:22px 0 0">
+    <a href="{{ site_url }}/known-issues" style="display:inline-block;background:#14160e;color:#fdfaf1;text-decoration:none;padding:11px 20px;border-radius:6px;font-size:14px">{{ 'support.known.title'|trans([], null, locale) }}</a>
+  </p>
+{% endblock %}

@@ -1,0 +1,185 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{#
+  The front door (docs/specs/contact-and-support.md §4).
+
+  Three things share this page on purpose, because the law and the reader both
+  want them in one place:
+
+  1. A form anybody can send without a mail client.
+  2. The address, published beside it. The Digital Services Act, Article 12,
+     wants recipients to be able to CHOOSE the means of communication, so
+     replacing the address with a form would trade one dead end for another.
+  3. The legal identity block (art. 3:15d BW): who operates this site, where
+     they are, and their register numbers.
+
+  The two honeypot fields hide by CLASS, never by an inline `style=` attribute.
+  docs/TODO.md is removing `'unsafe-inline'` from the CSP `style-src`, and a
+  honeypot that stops hiding on the day that lands would show two mysterious
+  extra boxes to every visitor.
+#}
+{% extends 'base.html.twig' %}
+
+{% block head_styles %}
+<style nonce="{{ csp_nonce() }}">
+  .lhero{background:var(--ink);color:var(--paper);padding:3rem 0}
+  .contact-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:3rem;align-items:start}
+  @media (max-width:860px){.contact-grid{grid-template-columns:1fr;gap:2.2rem}}
+  .cform h2,.caside h2{font-family:var(--serif);font-weight:600;font-size:1.3rem;margin:0 0 .6rem}
+  .cform p,.caside p{font-size:.95rem;color:#3a3d30;line-height:1.65;margin:.55rem 0}
+  .cform a,.caside a{color:var(--clay);text-decoration:underline;text-underline-offset:3px}
+  .cform a:hover,.caside a:hover{color:var(--trail)}
+  .cfield{margin:1.15rem 0}
+  .cfield label{display:block;font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--clay);margin-bottom:.4rem}
+  .cfield input[type="text"],.cfield input[type="email"],.cfield select,.cfield textarea{
+    width:100%;font-family:inherit;font-size:.95rem;padding:.6rem .7rem;color:var(--ink);
+    border:1px solid rgba(20,22,14,.24);border-radius:5px;background:var(--paper)}
+  .cfield textarea{min-height:9rem;line-height:1.6;resize:vertical}
+  .cfield input:focus,.cfield select:focus,.cfield textarea:focus{outline:2px solid var(--clay);outline-offset:1px;border-color:var(--clay)}
+  .chint{font-size:.82rem;color:#595c4d;margin:.35rem 0 0;line-height:1.55}
+  {# The honeypots. Off-screen, unfocusable, and hidden from assistive tech.
+     `left:-9999px` rather than `display:none`: a form filler that skips hidden
+     inputs is exactly the one we want to catch. #}
+  .hp-field{position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden}
+  .cnote{background:var(--paper-deep);border-left:2px solid var(--ochre);padding:1rem 1.2rem;
+    border-radius:0 8px 8px 0;font-size:.88rem;color:#4a4d40;line-height:1.6;margin:1.4rem 0}
+  .cerr{background:#fff1ec;border-left:2px solid var(--trail);padding:1rem 1.2rem;
+    border-radius:0 8px 8px 0;font-size:.9rem;color:#5a2716;line-height:1.6;margin:0 0 1.4rem}
+  {# The confirmation reuses the ochre note, not a coloured panel. The green one
+     it replaced set a light heading over spruce and left its paragraphs the
+     page's dark ink, so the words under the heading were nearly invisible
+     (owner 2026-08-27). #}
+  .csent{background:var(--paper-deep);border-left:2px solid var(--ochre);padding:1.2rem 1.4rem;
+    border-radius:0 8px 8px 0;line-height:1.65}
+  .csent h2{margin-top:0}
+  .csent .ref{font-family:var(--mono);font-size:1rem;color:var(--ink);letter-spacing:.04em}
+  .pow-status{font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;color:#595c4d;margin:.6rem 0 0}
+  .legalblock{background:var(--paper-deep);border-radius:8px;padding:1.3rem 1.4rem;margin:0 0 1.6rem}
+  .legalblock dt{font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--clay);margin-top:.8rem}
+  .legalblock dt:first-child{margin-top:0}
+  .legalblock dd{margin:.15rem 0 0;font-size:.92rem;color:#3a3d30;line-height:1.55}
+  .legalblock .gap{background:#fff1ec;border-left:2px solid var(--trail);padding:.8rem 1rem;border-radius:0 6px 6px 0;
+    font-size:.85rem;color:#5a2716;line-height:1.55;margin:.9rem 0 0}
+  .otherways li{font-size:.92rem;color:#3a3d30;line-height:1.6;padding:.3rem 0 .3rem 1.4rem;position:relative;list-style:none}
+  .otherways li::before{content:"–";position:absolute;left:0;color:var(--clay);font-weight:700}
+</style>
+{% endblock %}
+
+{% block body_scripts %}
+<script src="{{ asset('support/form-challenge.js') }}" defer></script>
+{% endblock %}
+
+{% block body %}
+<div class="lhero"><div class="wrap">
+  <div class="kicker" style="color:var(--trail)">{{ 'support.contact.kicker'|trans }}</div>
+  <h1 class="disp">{{ 'support.contact.title'|trans }}</h1>
+  <p class="lead" style="color:rgba(239,230,212,.85);margin-top:.8rem">{{ 'support.contact.lead'|trans|rich }}</p>
+</div></div>
+
+<section class="pad"><div class="wrap">
+  <div class="contact-grid">
+
+    <div class="cform">
+      {% if sent %}
+        <div class="csent">
+          <h2>{{ 'support.contact.sent_title'|trans }}</h2>
+          {# The reference is printed HERE, not only mailed. If the copy never
+             arrives, the sender still has the one thing they need to chase
+             this. #}
+          <p>{{ 'support.contact.sent_reference'|trans }}<br><span class="ref">{{ reference }}</span></p>
+          <p>{{ 'support.contact.sent_copy'|trans }}</p>
+          <p><a href="{{ path('home') }}">{{ 'support.contact.sent_home'|trans }}</a></p>
+        </div>
+      {% else %}
+        {% if error %}
+          <div class="cerr" role="alert">{{ error|trans }}</div>
+        {% endif %}
+
+        <h2>{{ 'support.contact.form_title'|trans }}</h2>
+        <p>{{ 'support.contact.form_intro'|trans }}</p>
+
+        <form method="post" action="{{ path('contact_submit') }}" id="cc-guarded-form"
+              data-pow-challenge="{{ pow_challenge }}"
+              data-pow-difficulty="{{ pow_difficulty }}">
+          <input type="hidden" name="_token" value="{{ csrf_token('contact_form') }}">
+          <input type="hidden" name="{{ stamp_field }}" value="{{ form_stamp }}">
+          <input type="hidden" name="pow_challenge" value="{{ pow_challenge }}">
+          <input type="hidden" name="pow_nonce" id="pow_nonce" value="">
+
+          {# Honeypots. Never remove the labels: a screen reader that ignores
+             aria-hidden must still be told these are not for a person. #}
+          <div class="hp-field" aria-hidden="true">
+            <label for="{{ honeypot_a }}">{{ 'support.honeypot_label'|trans }}</label>
+            <input type="text" id="{{ honeypot_a }}" name="{{ honeypot_a }}" tabindex="-1" autocomplete="off">
+            <label for="{{ honeypot_b }}">{{ 'support.honeypot_label'|trans }}</label>
+            <input type="text" id="{{ honeypot_b }}" name="{{ honeypot_b }}" tabindex="-1" autocomplete="off">
+          </div>
+
+          <div class="cfield">
+            <label for="c-topic">{{ 'support.contact.field_topic'|trans }}</label>
+            <select id="c-topic" name="topic">
+              {% for topic in topics %}
+                <option value="{{ topic.value }}"{{ topic.value == selected_topic ? ' selected' : '' }}>
+                  {{ ('support.topic.' ~ topic.value)|trans }}
+                </option>
+              {% endfor %}
+            </select>
+            <p class="chint">{{ 'support.contact.hint_topic'|trans }}</p>
+          </div>
+
+          <div class="cfield">
+            <label for="c-name">{{ 'support.contact.field_name'|trans }}</label>
+            <input type="text" id="c-name" name="name" maxlength="120" autocomplete="name" value="{{ prefill_name }}">
+            <p class="chint">{{ 'support.contact.hint_name'|trans }}</p>
+          </div>
+
+          <div class="cfield">
+            <label for="c-email">{{ 'support.contact.field_email'|trans }}</label>
+            <input type="email" id="c-email" name="email" maxlength="320" required autocomplete="email" value="{{ prefill_email }}">
+            <p class="chint">{{ 'support.contact.hint_email'|trans }}</p>
+          </div>
+
+          <div class="cfield">
+            <label for="c-message">{{ 'support.contact.field_message'|trans }}</label>
+            <textarea id="c-message" name="message" maxlength="6000" required></textarea>
+          </div>
+
+          <div class="cnote">
+            <p>{{ 'support.contact.promise'|trans|rich }}</p>
+            <p>{{ 'support.contact.privacy_note'|trans }} <a href="{{ path('privacy') }}">{{ 'support.contact.privacy_link'|trans }}</a>.</p>
+          </div>
+
+          <p id="pow-status" class="pow-status" hidden
+             data-working="{{ 'support.challenge_working'|trans }}"
+             data-ready="{{ 'support.challenge_ready'|trans }}"
+             data-failed="{{ 'support.challenge_failed'|trans }}"></p>
+
+          <p><button type="submit" class="btn btn-p">{{ 'support.contact.submit'|trans }}</button></p>
+        </form>
+      {% endif %}
+    </div>
+
+    <aside class="caside">
+      {% include 'partials/_legal_identity.html.twig' %}
+
+      {# The address, always. The legal identity block above is empty until a
+         deployment fills it in; this line is not, because a contact page with
+         no address on it is the thing this page exists to stop. #}
+      <h2>{{ 'support.contact.by_email_title'|trans }}</h2>
+      <p>
+        {{ 'support.contact.by_email_body'|trans }}
+        <a href="mailto:{{ public_email }}">{{ public_email }}</a>
+      </p>
+
+      <h2>{{ 'support.contact.other_ways_title'|trans }}</h2>
+      <ul class="otherways">
+        <li>{{ 'support.contact.other_bug'|trans }} <a href="{{ path('bug_report') }}">{{ 'support.contact.other_bug_link'|trans }}</a>.</li>
+        <li>{{ 'support.contact.other_known'|trans }} <a href="{{ path('known_issues') }}">{{ 'support.contact.other_known_link'|trans }}</a>.</li>
+        <li>{{ 'support.contact.other_photo'|trans }}</li>
+        <li>{{ 'support.contact.other_privacy'|trans }} <a href="{{ path('contact') }}?topic=privacy">{{ 'support.contact.other_privacy_link'|trans }}</a>.</li>
+        <li>{{ 'support.contact.other_code'|trans }} <a href="https://github.com/cycling-commons/cycling-commons">GitHub</a>. {{ 'support.contact.other_code_note'|trans }}</li>
+      </ul>
+    </aside>
+
+  </div>
+</div></section>
+{% endblock %}

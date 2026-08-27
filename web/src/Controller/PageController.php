@@ -11,6 +11,7 @@ use App\Catalog\RegionSilhouette;
 use App\Pagination\Pager;
 use App\Pagination\PageSize;
 use App\Routing\LocalePrefix;
+use App\Routing\LocalizedPath;
 use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -73,7 +74,31 @@ final class PageController extends AbstractController
         return $response;
     }
 
-    #[Route('/about', name: 'about')]
+    /**
+     * The accessibility statement.
+     *
+     * Whether the European Accessibility Act binds this site is genuinely
+     * unclear: it lists specific consumer services, a free open map is not
+     * obviously one of them, and micro-enterprises providing services are
+     * exempt. The page says so rather than implying a duty we may not have.
+     *
+     * It is published anyway, because the WCAG work is real and because the
+     * part the Act actually cares about, a channel for reporting a barrier,
+     * costs nothing once the contact form exists.
+     *
+     * @see docs/specs/contact-and-support.md §4
+     */
+    #[Route(LocalizedPath::ACCESSIBILITY, name: 'accessibility')]
+    public function accessibility(): Response
+    {
+        return $this->render('pages/accessibility.html.twig', [
+            'page_title' => 'meta.accessibility_title',
+            'page_description' => 'meta.accessibility_description',
+            'nav_active' => '',
+        ]);
+    }
+
+    #[Route(LocalizedPath::ABOUT, name: 'about')]
     public function about(): Response
     {
         return $this->render('pages/about.html.twig', [
@@ -83,7 +108,7 @@ final class PageController extends AbstractController
         ]);
     }
 
-    #[Route('/regions', name: 'regions')]
+    #[Route(LocalizedPath::REGIONS, name: 'regions')]
     public function regions(Request $request, RegionDirectoryProvider $directory, Connection $db): Response
     {
         $locale = $request->getLocale();
@@ -115,7 +140,7 @@ final class PageController extends AbstractController
         return $this->redirectToRoute('region_detail', ['slug' => 'wallonia'], Response::HTTP_MOVED_PERMANENTLY);
     }
 
-    #[Route('/regions/{slug}', name: 'region_detail', requirements: ['slug' => '[a-z0-9-]+'])]
+    #[Route(LocalizedPath::REGION_DETAIL, name: 'region_detail', requirements: ['slug' => '[a-z0-9-]+'])]
     public function regionDetail(string $slug, Request $request, RegionDirectoryProvider $directory, RegionSilhouette $silhouette): Response
     {
         $region = $directory->region($slug, $request->getLocale());
@@ -132,7 +157,7 @@ final class PageController extends AbstractController
         ]);
     }
 
-    #[Route('/coverage', name: 'coverage')]
+    #[Route(LocalizedPath::COVERAGE, name: 'coverage')]
     public function coverage(Request $request, CoverageStatsProvider $stats): Response
     {
         return $this->render('pages/coverage.html.twig', [
@@ -145,7 +170,7 @@ final class PageController extends AbstractController
         ]);
     }
 
-    #[Route('/developers', name: 'developers')]
+    #[Route(LocalizedPath::DEVELOPERS, name: 'developers')]
     public function developers(): Response
     {
         return $this->render('pages/developers.html.twig', [
@@ -155,7 +180,7 @@ final class PageController extends AbstractController
         ]);
     }
 
-    #[Route('/licenses', name: 'licenses')]
+    #[Route(LocalizedPath::LICENSES, name: 'licenses')]
     public function licenses(): Response
     {
         return $this->render('pages/licenses.html.twig', [
@@ -165,7 +190,7 @@ final class PageController extends AbstractController
         ]);
     }
 
-    #[Route('/credits', name: 'credits')]
+    #[Route(LocalizedPath::CREDITS, name: 'credits')]
     public function credits(): Response
     {
         return $this->render('pages/credits.html.twig', [
@@ -175,7 +200,7 @@ final class PageController extends AbstractController
         ]);
     }
 
-    #[Route('/join', name: 'join')]
+    #[Route(LocalizedPath::JOIN, name: 'join')]
     public function join(): Response
     {
         return $this->render('pages/join.html.twig', [
@@ -185,7 +210,7 @@ final class PageController extends AbstractController
         ]);
     }
 
-    #[Route('/contributors', name: 'contributors')]
+    #[Route(LocalizedPath::CONTRIBUTORS, name: 'contributors')]
     public function contributors(Request $request, ContributorWallProvider $wallProvider, PageSize $pageSize): Response
     {
         $q = trim($request->query->getString('q'));
@@ -211,7 +236,7 @@ final class PageController extends AbstractController
         ]);
     }
 
-    #[Route('/privacy', name: 'privacy')]
+    #[Route(LocalizedPath::PRIVACY, name: 'privacy')]
     public function privacy(): Response
     {
         return $this->render('pages/privacy.html.twig', [
@@ -221,7 +246,7 @@ final class PageController extends AbstractController
         ]);
     }
 
-    #[Route('/terms', name: 'terms')]
+    #[Route(LocalizedPath::TERMS, name: 'terms')]
     public function terms(): Response
     {
         return $this->render('pages/terms.html.twig', [
@@ -231,7 +256,7 @@ final class PageController extends AbstractController
         ]);
     }
 
-    #[Route('/pages', name: 'pages')]
+    #[Route(LocalizedPath::PAGES, name: 'pages')]
     public function pages(): Response
     {
         return $this->render('pages/pages.html.twig', [
@@ -241,7 +266,7 @@ final class PageController extends AbstractController
         ]);
     }
 
-    #[Route('/scout', name: 'scout')]
+    #[Route(LocalizedPath::SCOUT, name: 'scout')]
     public function scout(): Response
     {
         return $this->render('pages/scout.html.twig', [

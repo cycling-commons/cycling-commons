@@ -1,0 +1,53 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{# "Somebody wrote in." Sent to whoever is on duty (SupportRecipients).
+
+   Always in the site's default language, never the sender's: this goes to the
+   team, and a curator should not have to guess which of five languages today's
+   notification arrived in.
+
+   Reply-To is the sender's own address, set in SupportMailer. From stays our
+   own domain, because sending as somebody else's is how a support mailbox
+   collects SPF failures and a spam reputation. #}
+{% extends 'emails/_base.html.twig' %}
+
+{% block title %}{{ reference }} · {{ ('support.topic.' ~ message.topic.value)|trans([], null, locale) }}{% endblock %}
+
+{% block content %}
+  <p style="margin:0 0 6px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#8a6a3f">{{ reference }}</p>
+  <p style="margin:0 0 16px;font-size:19px;font-weight:600">{{ ('support.topic.' ~ message.topic.value)|trans([], null, locale) }}</p>
+
+  {% if message.dueAt %}
+    <p style="margin:0 0 16px;padding:12px 16px;background:#fff1ec;border-left:3px solid #c9502b;font-size:14px;line-height:1.55">
+      {{ 'support.email.notify_clock'|trans({'%date%': message.dueAt|date('j F Y')}, null, locale) }}
+    </p>
+  {% endif %}
+
+  <table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0 0 18px">
+    <tr>
+      <td style="padding:4px 14px 4px 0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#8a6a3f">{{ 'support.inbox.from'|trans([], null, locale) }}</td>
+      <td style="padding:4px 0;font-size:14px">{{ message.name ?? '–' }} &lt;{{ message.email }}&gt;</td>
+    </tr>
+    <tr>
+      <td style="padding:4px 14px 4px 0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#8a6a3f">{{ 'support.inbox.language'|trans([], null, locale) }}</td>
+      <td style="padding:4px 0;font-size:14px">{{ message.locale ?? '–' }}</td>
+    </tr>
+    {% if message.pageUrl %}
+      <tr>
+        <td style="padding:4px 14px 4px 0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#8a6a3f">{{ 'support.inbox.from_page'|trans([], null, locale) }}</td>
+        <td style="padding:4px 0;font-family:monospace;font-size:13px">{{ message.pageUrl }}</td>
+      </tr>
+    {% endif %}
+    {% if message.userId %}
+      <tr>
+        <td style="padding:4px 14px 4px 0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#8a6a3f">{{ 'support.inbox.account'|trans([], null, locale) }}</td>
+        <td style="padding:4px 0;font-size:14px">#{{ message.userId }}</td>
+      </tr>
+    {% endif %}
+  </table>
+
+  <div style="padding:12px 16px;background:#f5eee0;border-radius:6px;font-size:14px;line-height:1.6;white-space:pre-wrap">{{ message.body }}</div>
+
+  <p style="margin:24px 0 0">
+    <a href="{{ desk_url }}" style="display:inline-block;background:#14160e;color:#fdfaf1;text-decoration:none;padding:11px 20px;border-radius:6px;font-size:14px">{{ 'support.email.notify_cta'|trans([], null, locale) }}</a>
+  </p>
+{% endblock %}
