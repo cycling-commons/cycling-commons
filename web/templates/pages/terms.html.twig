@@ -107,6 +107,11 @@
       <li>{{ 'terms.mod_std3'|trans|rich }}</li>
       <li>{{ 'terms.mod_std4'|trans|rich }}</li>
       <li>{{ 'terms.mod_std5'|trans|rich }}</li>
+      {# Sixth ground, added 2026-08-28. It sits under "not true" in spirit, but
+         a rider will not infer it from there, and a generated photograph of a
+         place that does not look like that is now the easiest false thing to
+         add to a map. #}
+      <li>{{ 'terms.mod_std6'|trans|rich }}</li>
     </ul>
 
     <h3>{% trans %}terms.mod_who_h{% endtrans %}</h3>
@@ -122,10 +127,30 @@
     <h3>{% trans %}terms.mod_report_h{% endtrans %}</h3>
     <p>{% trans %}terms.mod_report_pre{% endtrans %} <a href="{{ path('contact') }}?topic=report">{% trans %}terms.mod_report_link{% endtrans %}</a>{% trans %}terms.mod_report_post{% endtrans %}</p>
 
-    <h2><span class="n">13</span>{% trans %}terms.h12_governing{% endtrans %}</h2>
+    {# Article 50 of the EU AI Act starts applying on 2 August 2026 and is about
+       telling people when they are reading something a machine produced. Whether
+       it reaches a description of a water tap is arguable, and the human-review
+       carve-out in 50(4) may well cover us. This section is written the way the
+       accessibility statement is: say what is true, do not claim a duty that may
+       not apply, and do not claim compliance with anything.
+
+       Kept short and kept honest, because the list is short: one machine
+       translator, and a scanner that flags but never decides. If that changes,
+       this section changes with it. #}
+    <h2><span class="n">13</span>{% trans %}terms.h13_ai{% endtrans %}</h2>
+    <p>{% trans %}terms.ai_intro{% endtrans %}</p>
+    <ul>
+      <li>{{ 'terms.ai_translation'|trans|rich }}</li>
+      <li>{{ 'terms.ai_checks'|trans|rich }}</li>
+      <li>{{ 'terms.ai_none'|trans|rich }}</li>
+    </ul>
+    <p>{{ 'terms.ai_uploads'|trans|rich }}</p>
+    <p>{{ 'terms.ai_stance'|trans|rich }}</p>
+
+    <h2><span class="n">14</span>{% trans %}terms.h12_governing{% endtrans %}</h2>
     <p>{{ 'terms.governing_body'|trans|rich }}</p>
 
-    <h2><span class="n">14</span>{% trans %}terms.h13_changes{% endtrans %}</h2>
+    <h2><span class="n">15</span>{% trans %}terms.h13_changes{% endtrans %}</h2>
     <p>{% trans %}terms.changes_body{% endtrans %}</p>
 
     <h2><span class="n">15</span>{% trans %}terms.h14_contact{% endtrans %}</h2>

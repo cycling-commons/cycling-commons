@@ -297,6 +297,14 @@ terms:
   mod_std3: '<b>Cosas que sencillamente no son ciertas.</b> Una fuente que nunca estuvo ahí, un firme que no se corresponde con el terreno, un puerto inventado para manipular una clasificación.'
   mod_std4: '<b>Los abusos.</b> Acoso, amenazas, o contenido dirigido a una persona en lugar de a un lugar.'
   mod_std5: '<b>La publicidad.</b> El Commons no es un directorio, y un lugar no está en él porque alguien pagara o lo pidiera.'
+  mod_std6: '<b>Fotografías que no lo son.</b> Una imagen generada o alterada de forma sustancial por IA, por buena que parezca. El Commons es un mapa del mundo real, y la imagen de un lugar que nunca ha tenido ese aspecto vale menos que ninguna imagen.'
+  h13_ai: 'Dónde intervienen las máquinas'
+  ai_intro: 'Lista corta, y preferimos contártela a que la adivines:'
+  ai_translation: '<b>Traducción automática.</b> Algunas descripciones de lugares vienen de Wikipedia en el idioma local y se traducen automáticamente al inglés. Todas llevan la marca <b>auto-translated</b> allí donde aparecen, porque una traducción automática de un puerto puede estar mal de una forma que se lee perfectamente.'
+  ai_checks: '<b>Comprobaciones automáticas.</b> Un programa revisa el catálogo buscando cosas que parecen erróneas, dos fuentes a un metro una de otra, un enlace que ya no responde, y se las pone delante a una persona curadora. Señala; nunca decide.'
+  ai_none: '<b>Nada más.</b> Ni chatbot, ni texto generado que hagamos pasar por nuestro, ni decisiones automatizadas sobre ti o tu cuenta, ni elaboración de perfiles. Si eso cambia algún día, esta sección cambia primero.'
+  ai_uploads: '<b>Lo que no puedes subir.</b> Nada de imágenes generadas ni retocadas por IA. La edición normal está bien: recortar, enderezar, levantar las sombras. Inventar o borrar algo que estaba ahí no lo está, y una imagen hecha por un modelo tampoco. El consentimiento que marcas antes de subir lo dice, y es motivo de retirada.'
+  ai_stance: 'Con esto no reclamamos el cumplimiento de nada. Las reglas de transparencia del Reglamento europeo de IA empiezan a aplicarse el <b>2 de agosto de 2026</b>, y es discutible hasta dónde alcanzan la descripción de una fuente. Te lo diríamos igualmente, porque un mapa solo vale si puedes distinguir lo que ha puesto una persona.'
   mod_who_h: 'Quién decide'
   mod_who: 'Decide un <b>curador</b>, y un curador es una persona. Los curadores son ciclistas que se presentaron y fueron aceptados, trabajan con un reglamento escrito, y cada decisión queda registrada con su nombre.'
   mod_automated: '<b>Nada se retira solo por software.</b> Hay comprobaciones automáticas que marcan cosas para que las mire un curador, pero nunca deciden. La única excepción funciona al revés y está para proteger a las personas, no para juzgarlas: una denuncia de imagen íntima o relativa a un menor oculta la foto de inmediato, antes de que nadie la haya visto, y después la revisa un curador.'
@@ -460,6 +468,8 @@ credits:
   mapillary_p: 'Cobertura fotográfica a pie de calle en el visor street-level del mapa.'
   esri_p: 'Imágenes de satélite tras la capa satélite del editor de puertos.'
   photon_p: 'Geocodificación con búsqueda sobre la marcha, de komoot, también construida sobre OpenStreetMap.'
+  lic_api: 'API'
+  mymemory_p: 'Traducción automática. Convierte un resumen de Wikipedia en el idioma local en la descripción inglesa del lugar que ves en el mapa, siempre marcada como auto-translated.'
   software_h: 'El software'
   software_sub: 'Sobre lo que funciona el sitio'
   symfony_p: 'El framework PHP con el que está construido todo el sitio.'
@@ -1983,7 +1993,7 @@ media:
     # La frase vinculante. Su texto exacto se resume criptográficamente en el
     # registro de consentimiento, así que cambiarlo implica subir
     # MediaConsent::VERSION (docs/specs/photo-uploads.md §4).
-    contract: 'Acepto licenciar mis fotos bajo CC BY-SA 4.0 y confirmo que las hice yo.'
+    contract: 'Licencio mi(s) foto(s) bajo CC BY-SA 4.0, confirmo que las hice yo, y que muestran un lugar real y no han sido generadas ni alteradas por IA.'
     read_licence: 'Leer la licencia'
     keep_ownership: 'Tú conservas la propiedad — el Commons solo obtiene una licencia para compartirla.'
     accept: 'Donarla'

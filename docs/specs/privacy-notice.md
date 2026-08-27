@@ -259,6 +259,40 @@ searching for the name they know finds it.
   `<b>Label.</b> Text` form when they were touched; the `collect_*`, `why_*`
   and `rights_*` lists still carry them and are a separate sweep.
 
+## 9a. Where machines are involved, and why it is not on this page
+
+`/terms` 13 carries the AI disclosure, not `/privacy`, and the split is
+deliberate: the machine translation processes **Wikipedia summaries**, not
+anybody's personal data, so it is not a processor, not a transfer, and not a
+legal basis. Putting it here would have implied all three.
+
+**The whole inventory, verified 2026-08-28 by grepping for every AI and ML
+dependency in the repository:**
+
+| What | Where | Disclosed |
+|---|---|---|
+| MyMemory machine translation | `tools/wallonia/enrich.py`, harvest pipeline only | `/terms` 13, `/credits`, and an `auto-translated` label on every description it produced |
+| Catalogue scanner | `App\Catalog\CatalogScanner` | `/terms` 13 and 12: it flags, a curator decides |
+
+Nothing else. No chatbot, no generated text, no automated decision about a
+person, no profiling. `/privacy`'s existing "Automated decisions" section
+already said the last two and stays true.
+
+**Why MyMemory is not in the browser-services table.** It is called by the
+pipeline, offline, before anything is published. A rider's browser never
+contacts it, and it never sees a rider.
+
+**The legal posture matches the accessibility statement.** The EU AI Act's
+Article 50 transparency obligations start applying on **2 August 2026**. Whether
+they reach a machine-translated description of a water tap is genuinely
+arguable, and the human-review carve-out in 50(4) may cover it. The page says
+what is true and explicitly claims compliance with nothing, exactly as
+`/accessibility` refuses to claim the European Accessibility Act.
+
+**Verify the date before relying on it.** It is the date in the Regulation as
+adopted; there were proposals during 2025 to delay parts of the Act, and this
+was written without access to anything later than mid-2026.
+
 ## 10. Deploy prerequisites
 
 None. The change is templates and translation copy only: no migration, no env

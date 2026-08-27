@@ -872,6 +872,39 @@ a reference (`SUB-123` or the uuid) and where to look.
 holiday, and an escalation cannot wait for them to come back. The list is
 validated where it is defined; an empty or malformed list cannot be saved.
 
+## 6d. No AI-generated images, and why the consent had to change
+
+Added 2026-08-28 (owner). The Commons is a map of the real world, so a
+photograph that was never taken is worse than no photograph: it is a claim about
+a place, made confidently, that nobody can check by going there.
+
+**Three surfaces, one rule:**
+
+- `/terms` 12 gains a sixth takedown ground, `mod_std6`. It sits under "things
+  that are simply not true" in spirit, but nobody would infer it from there, and
+  a generated photo is now the easiest false thing to put on a map.
+- `/terms` 13, a new section, states where machines are involved at all and
+  says plainly that AI-generated or AI-altered uploads are not allowed.
+- The upload consent itself now carries it, because that is the sentence a
+  contributor actually reads and agrees to.
+
+**`MediaConsent::VERSION` went v3 to v4.** The contract wording is hashed onto
+every consent record, so changing the words without bumping the version would
+leave old records pointing at text that no longer exists. v3 records stay valid
+evidence of the v3 promise; only uploads from here carry v4.
+
+**What "altered" means, and what it does not.** Cropping, straightening and
+lifting shadows are ordinary photography and are fine. Adding or removing
+something that was in the frame is not, and neither is an image a model
+produced. The copy says exactly that, because a rule nobody can apply is not a
+rule.
+
+**Detection is not claimed.** There is no classifier, and the terms do not
+pretend there is one. This is a ground a curator can act on when a photo is
+reported or looks wrong, in the same one-way-to-moderate flow as every other
+ground. Adding an automated detector would be a new mechanic and needs its own
+decision.
+
 ## 7. Limits & formats summary
 
 | thing | value |

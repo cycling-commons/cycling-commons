@@ -17,7 +17,13 @@ final class MediaConsent
 {
     public const string KIND = 'media-cc-by-sa';
     // Wording change must bump VERSION; text_hash is evidence of the exact words.
-    public const string VERSION = 'v3';
+    /**
+     * v4 (2026-08-28): the contract now also says the photo is not AI-generated.
+     * Bumped because the wording is hashed onto every consent record, and a
+     * record has to point at what was actually agreed. v3 records stay valid
+     * evidence of the v3 promise.
+     */
+    public const string VERSION = 'v4';
     public const string TEXT_KEY = 'media.consent.contract';
 
     public static function hash(string $text): string

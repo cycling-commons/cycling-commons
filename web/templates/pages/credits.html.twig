@@ -169,6 +169,14 @@
       <div class="who"><a href="https://github.com/komoot/photon" data-pkg="manual:photon-geocoder">Photon</a><span class="lic">Apache-2.0</span></div>
       <p>{% trans %}credits.photon_p{% endtrans %}</p>
     </div>
+    {# Named because /terms now says where machines are involved, and a
+       disclosure that does not name the machine is half a disclosure. Called by
+       the harvest pipeline, never by a browser, which is why it is here and not
+       in the privacy page's browser-services table. #}
+    <div class="crow">
+      <div class="who"><a href="https://mymemory.translated.net/" data-pkg="manual:mymemory">MyMemory</a><span class="lic">{% trans %}credits.lic_api{% endtrans %}</span></div>
+      <p>{% trans %}credits.mymemory_p{% endtrans %}</p>
+    </div>
   </div>
 
   <div class="cgroup">
