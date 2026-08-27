@@ -481,7 +481,38 @@ interstitial has no limiter of its own and needs none**: the per-account
 lockout described there already covers it, for reasons that are easy to miss.
 Read that section before adding one.
 
-## 8. Open questions
+## 8. Article 32 measures, in one list
+
+GDPR Art. 32 asks for measures appropriate to the risk. `/privacy` summarises
+these in four plain sentences and points here; **this is the canonical list**,
+and the page must not be the place anyone reads to find out what is actually in
+place. Owner's call 2026-08-27: the public page stays short, the detail lives in
+the specs.
+
+| Measure | Where it is built | Detail |
+|---|---|---|
+| Passwords never stored | `security.yaml` `password_hashers: auto` | Salted one-way hash; Symfony picks the strongest available algorithm |
+| TOTP secret encrypted at rest | `App\Doctrine\EncryptedStringType` | AES-256-GCM, key by HKDF-SHA256 from `ENCRYPTION_SECRET`, kept out of the database ([account-and-auth.md](account-and-auth.md) 4) |
+| Backup codes not reversible | `User::hashBackupCode()` | `HMAC-SHA256(code, HKDF(APP_SECRET))`; a database-only leak cannot even compute candidates |
+| Transport encrypted | nginx | TLS, plus HSTS so a browser refuses an unencrypted connection at all ([operations.md](operations.md) 4 owns the header) |
+| Backups unreadable at rest | infra, restic to Scaleway | Encrypted on our own servers before they leave; the storage provider holds ciphertext |
+| Uploads cannot carry malware | `ClamAvScanner` + `media.storage.private` | Scanned in a private quarantine bucket, released only on a pass ([media-storage-architecture.md](media-storage-architecture.md) 6) |
+| Uploads cannot carry hidden data | `PhotoProcessor` | Location metadata stripped, file re-encoded, only an authored licence packet written back (`XmpRights`) |
+| Least privilege | `security.yaml` roles + `LoginSuccessHandler` | Role-based access; every elevated account must have 2FA enabled before it can be used |
+| Credential stuffing bounded | `login_throttling` + `User` lockout | Section 6 above |
+| Injected script cannot exfiltrate | CSP | Section 2 above: nothing outside the enumerated hosts can be reached |
+
+**What is deliberately not claimed.** There is no penetration test, no
+certification, and no bug-bounty programme. `/privacy` says no system is perfect
+rather than implying any of those exist.
+
+**Keeping the page honest.** If a row here changes, the four sentences on
+`/privacy` have to still be true of it. They are written broadly for exactly
+that reason ("two-factor secrets and backup codes are encrypted" survives an
+algorithm change; "AES-256-GCM" would not). See
+[privacy-notice.md](privacy-notice.md) 6.
+
+## 9. Open questions
 
 - **`item-confirm` is not in `stateless_token_ids`** — the controller
   docblock and moderation-and-contribution.md describe the confirm POST as

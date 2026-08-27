@@ -39,7 +39,17 @@ export function localiseBasemapLabels(){
 
 /** Attribution, navigation and the live zoom readout. */
 export function initMapControls(){
-  map.addControl(new maplibregl.AttributionControl({customAttribution:'© OpenStreetMap contributors · ODbL'}),'bottom-right');
+  /* The Copernicus programme requires its notice on products derived from the
+     DEM, and the climb gradients are exactly that (credits.html.twig carries
+     the full wording). It was on /credits and missing here, which is the one
+     place the derived product is actually looked at. Short form plus a link,
+     because an attribution bar is not where anyone reads three sentences. */
+  const creditsUrl = document.getElementById('map')?.dataset.credits || '/credits';
+  map.addControl(new maplibregl.AttributionControl({customAttribution:
+    '© OpenStreetMap contributors · ODbL · Elevation: Copernicus WorldDEM-30 '
+    + '© DLR e.V. 2010-2014 · © Airbus Defence and Space GmbH 2014-2018 '
+    + `(<a href="${creditsUrl}">credits</a>)`
+  }),'bottom-right');
   map.addControl(new maplibregl.NavigationControl({showCompass:false}),'bottom-left');
   map.addControl({
     onAdd(m){

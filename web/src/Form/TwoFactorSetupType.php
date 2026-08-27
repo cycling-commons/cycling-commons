@@ -33,8 +33,8 @@ final class TwoFactorSetupType extends AbstractType
                 'autofocus' => 'autofocus',
             ],
             'constraints' => [
-                new NotBlank(message: 'Enter the 6-digit code from your authenticator app.'),
-                new Regex(pattern: '/^\d{6}$/', message: 'The code must be exactly 6 digits.'),
+                new NotBlank(message: 'form.error_totp_required'),
+                new Regex(pattern: '/^\d{6}$/', message: 'form.error_totp_length'),
             ],
         ]);
     }

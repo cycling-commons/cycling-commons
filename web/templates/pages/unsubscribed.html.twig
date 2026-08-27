@@ -1,0 +1,34 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{#
+  The page behind the unsubscribe link in every release email.
+
+  It says the same thing whether the link worked, was already used, or was
+  malformed: see UnsubscribeController for why. Short on purpose, and it offers
+  the way back rather than asking why they left.
+#}
+{% extends 'base.html.twig' %}
+
+{% block head_styles %}
+<style>
+  .uhero{background:var(--ink);color:var(--paper);padding:3rem 0}
+  .uwrap{max-width:620px}
+  .uwrap p{font-size:1rem;color:#3a3d30;line-height:1.65;margin:.6rem 0}
+  .uwrap a{color:var(--clay);text-decoration:underline;text-underline-offset:3px}
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="uhero"><div class="wrap">
+  <div class="kicker" style="color:var(--trail)">{% trans %}unsubscribed.kicker{% endtrans %}</div>
+  <h1 class="disp">{% trans %}unsubscribed.title{% endtrans %}</h1>
+</div></div>
+
+<section class="pad"><div class="wrap">
+  <div class="uwrap">
+    <p>{{ 'unsubscribed.body'|trans|rich }}</p>
+    <p>{% trans %}unsubscribed.back_pre{% endtrans %}
+      <a href="{{ path('changelog') }}">{% trans %}unsubscribed.back_changelog{% endtrans %}</a>{% trans %}unsubscribed.back_mid{% endtrans %}
+      <a href="{{ path('settings') }}">{% trans %}unsubscribed.back_settings{% endtrans %}</a>{% trans %}unsubscribed.back_post{% endtrans %}</p>
+  </div>
+</div></section>
+{% endblock %}

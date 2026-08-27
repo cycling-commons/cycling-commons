@@ -1,0 +1,39 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{#
+  The changelog as Atom. Same source as the HTML page (App\Content\ReleaseNotes),
+  English and unprefixed on purpose: a feed reader has no locale to route on,
+  people share the URL, and five per-locale feeds would split one project's
+  subscribers five ways. The controller sits under the class-level locale
+  prefix so five URLs exist and all serve these same bytes; every link the
+  site prints pins `_locale: 'en'`, so only one of them is ever advertised
+  and `rel="self"` always agrees with it.
+
+  `spaceless` and the leading `-` on the tag: an XML declaration has to be the
+  very first byte of the response, so not a single newline may precede it.
+#}
+{%- apply spaceless -%}
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>{{ 'changelog.feed_title'|trans({}, 'messages', 'en') }}</title>
+  <subtitle>{{ 'changelog.feed_subtitle'|trans({}, 'messages', 'en') }}</subtitle>
+  <link rel="self" href="{{ site }}{{ path('changelog_atom', {_locale: 'en'}) }}" />
+  <link href="{{ site }}{{ path('changelog', {_locale: 'en'}) }}" />
+  <id>{{ site }}{{ path('changelog_atom', {_locale: 'en'}) }}</id>
+  {%- if releases|length %}
+  <updated>{{ releases[0].date }}T00:00:00Z</updated>
+  {%- endif %}
+  {%- for release in releases %}
+  <entry>
+    <title>{{ release.version }}</title>
+    <id>tag:cyclingcommons.org,{{ release.date }}:{{ release.version }}</id>
+    <updated>{{ release.date }}T00:00:00Z</updated>
+    <link href="{{ site }}{{ path('changelog', {_locale: 'en'}) }}" />
+    <content type="html">
+      {%- apply escape('html') -%}
+        <ul>{% for key in release.keys %}<li>{{ key|trans({}, 'messages', 'en')|striptags }}</li>{% endfor %}</ul>
+      {%- endapply -%}
+    </content>
+  </entry>
+  {%- endfor %}
+</feed>
+{%- endapply -%}

@@ -55,7 +55,7 @@ final class ImproveType extends AbstractType
         $details = $builder->create('details', FormType::class, ['label' => false, 'required' => false]);
         // Add: required name (docs/specs/moderation-and-contribution.md §1.1). Edit: optional; empty means leave unchanged.
         $details->add(Item::NAME_FIELD, TextType::class, [
-            'label' => 'Name',
+            'label' => 'form.label_name',
             'required' => $addMode,
             'data' => $current[Item::NAME_FIELD] ?? null,
             'constraints' => $addMode

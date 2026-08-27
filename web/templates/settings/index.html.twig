@@ -95,9 +95,7 @@
   .chip-check input:focus-visible + span{outline:2px solid var(--trail);outline-offset:2px}
   /* .field label has higher specificity than .chip-check alone; force the override explicitly */
   .field label.chip-check{display:inline-flex;margin:0}
-  .field-errors,.wrap form ul{list-style:none;padding:0;margin:.5rem 0 .2rem}
-  .field-errors li,.wrap form ul li{display:flex;gap:.45rem;align-items:flex-start;font-size:.8rem;color:var(--clay);line-height:1.4;padding:.45rem .65rem;margin-top:.35rem;background:rgba(181,83,46,.09);border:1px solid rgba(181,83,46,.28);border-radius:5px}
-  .field-errors li::before,.wrap form ul li::before{content:"\26A0";flex:none;font-size:.9em;line-height:1.4}
+  {# Field-error styling lives in atlas.css (see .field-errors there). #}
   input.is-invalid{border-bottom-color:var(--clay)}
 
   /* toggle switch */
@@ -193,6 +191,7 @@
   {# ── Identity ── #}
   <h2 class="sec">{{ 'settings.section_identity'|trans }}</h2>
   {{ form_start(profileForm, {attr: {novalidate: 'novalidate', class: 'cc-validate'}}) }}
+  {% include 'partials/_form_errors.html.twig' with {form: profileForm} %}
     <div class="grid-2">
       <div class="field">
         {{ form_label(profileForm.displayName) }}
@@ -390,6 +389,28 @@
           </label>
         </div>
         {{ form_errors(profileForm.publicProfile) }}
+        {# The name on a map photo is a stored string, re-stamped the moment this
+           toggle is saved (App\Media\RiderCreditSync). Our copy is right at
+           once, but /map/catalog.json is `public, max-age=3600`, so a browser
+           that already has it keeps showing the old credit for up to an hour.
+           Said here rather than only on /privacy, because this is the screen
+           where somebody flips the switch and then goes looking. #}
+        <p class="hint" style="margin:.5rem 0 0">{{ 'settings.toggle_public_delay'|trans }}</p>
+      </div>
+      <div class="field">
+        {# The release list. Beside the public-profile toggle because both are
+           "what do you want to be true about your account", and it is the only
+           mail we ever send that a rider chose rather than needed. #}
+        <div class="toggle">
+          <span class="lab">
+            <small>{{ 'settings.updates_consent'|trans }}</small>
+          </span>
+          <label class="sw">
+            {{ form_widget(profileForm.updatesOptIn, {attr: {class: ''}}) }}
+            <span class="track"></span><span class="knob"></span>
+          </label>
+        </div>
+        {% include 'partials/_form_errors.html.twig' with {form: profileForm.updatesOptIn} %}
       </div>
       <div class="field">
         <div class="hint" style="margin:.1rem 0 0">
@@ -414,6 +435,7 @@
   {# ── Security ── #}
   <h2 class="sec">{{ 'settings.section_security'|trans }}</h2>
   {{ form_start(passwordForm, {attr: {novalidate: 'novalidate', id: 'password-form', class: 'cc-validate'}}) }}
+  {% include 'partials/_form_errors.html.twig' with {form: passwordForm} %}
     <div class="grid-2">
       <div class="field">
         {{ form_label(passwordForm.currentPassword) }}

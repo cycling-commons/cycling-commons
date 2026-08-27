@@ -56,11 +56,30 @@ final class LocalizedRoutingTest extends WebTestCase
     public function testSystemRoutesStayUnprefixed(): void
     {
         $client = static::createClient();
-        // No localized variant exists for the map or the email-verify link.
+        // No localized variant exists for the map.
         $client->request('GET', '/fr/map');
         self::assertResponseStatusCodeSame(404);
-        $client->request('GET', '/fr/verify/email');
-        self::assertResponseStatusCodeSame(404);
+    }
+
+    /**
+     * `/verify/email` used to be deliberately unprefixed, and this test asserted
+     * it 404'd under a locale. That was reversed on 2026-08-27 (owner): it is
+     * the one page a rider reaches from an email, with no referring page to
+     * inherit a language from, so the language it should answer in has to be
+     * written into the link at signup time. English keeps the bare path, so
+     * links already sitting in inboxes stay valid.
+     */
+    public function testTheEmailVerifyLinkIsLocalized(): void
+    {
+        $client = static::createClient();
+
+        // A missing `id` short-circuits to `register` before any signature
+        // check, which is enough to prove the route matched and which locale
+        // it resolved to.
+        foreach (['/nl/verify/email' => '/nl/register', '/fr/verify/email' => '/fr/register', '/verify/email' => '/register'] as $path => $expected) {
+            $client->request('GET', $path);
+            self::assertResponseRedirects($expected, null, sprintf('%s should route and redirect in its own locale', $path));
+        }
     }
 
     public function testHreflangAlternatesEmittedOnLocalizedPage(): void

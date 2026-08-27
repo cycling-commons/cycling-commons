@@ -25,6 +25,7 @@
       {% endfor %}
 
       {{ form_start(registrationForm, {attr: {novalidate: 'novalidate'}}) }}
+      {% include 'partials/_form_errors.html.twig' with {form: registrationForm} %}
 
         <div class="field">
           {{ form_label(registrationForm.email) }}

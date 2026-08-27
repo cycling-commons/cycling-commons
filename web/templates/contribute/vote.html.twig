@@ -69,6 +69,7 @@
 <div class="wrap" id="main">
   <p class="vdemo">{{ 'vote.demo_notice'|trans }}</p>
   {{ form_start(form, {attr: {id: 'vote-form'}}) }}
+  {% include 'partials/_form_errors.html.twig' with {form: form} %}
   {{ form_widget(form.ballot) }}
   <div class="vgrid">
     <div id="cands"></div>

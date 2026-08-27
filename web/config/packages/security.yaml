@@ -42,14 +42,24 @@ security:
         # locale (ja, zh, ...) must not silently fall outside these rules the
         # day it lands. Routing runs before the firewall, so a prefix that is
         # not a real locale 404s and the wider match never serves anything.
-        # `logout`, `verify`, scheb's `/2fa` interstitial, `/api`, and `/admin`
+        # `logout`, scheb's `/2fa` interstitial, `/api`, and `/admin`
         # stay unprefixed (see i18n design).
         - { path: '^(/[a-z]{2})?/(login|register|reset-password)', roles: PUBLIC_ACCESS }
-        - { path: ^/verify, roles: PUBLIC_ACCESS }
+        - { path: '^(/[a-z]{2})?/verify', roles: PUBLIC_ACCESS }
         # Crawler entry points. Explicit PUBLIC_ACCESS for the same scheb
         # lazy-firewall reason as /map/catalog.json below — a session read here
         # would make both uncacheable, and these are fetched by every crawler.
         - { path: '^/(robots\.txt|sitemap\.xml)$', roles: PUBLIC_ACCESS }
+        # The Atom feed, for the same reason and with the same shape: a feed
+        # reader polls it, it holds nothing personal, and without an explicit
+        # rule scheb reads the token, the session usage index moves, and
+        # AbstractSessionListener rewrites the controller's `public, max-age=3600`
+        # into `private, must-revalidate`. Caught by RoadmapChangelogTest.
+        - { path: '^(/[a-z]{2})?/changelog\.atom$', roles: PUBLIC_ACCESS }
+        # One click from an email, from somebody who by definition is not signed
+        # in and may never sign in again. Asking them to log in first to stop
+        # mail they did not want is the opposite of what the law asks for.
+        - { path: ^/unsubscribe, roles: PUBLIC_ACCESS }
         # Public rider profiles (spec 2026-07-14): explicit PUBLIC_ACCESS for the
         # same scheb lazy-firewall reason as /map/catalog.json below.
         - { path: '^(/[a-z]{2})?/riders/', roles: PUBLIC_ACCESS }

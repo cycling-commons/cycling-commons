@@ -1,0 +1,31 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{#
+  Form-LEVEL errors, the ones attached to the form root rather than to a field.
+
+  Every form page rendered `form_errors()` on each field and none on the form,
+  so anything Symfony attaches to the root fell on the floor. Two things land
+  there routinely and both matter: a rejected CSRF token, and a
+  `$form->addError()` from a controller (the sign-up rate limit, the wizard's
+  cross-field violations). The page came back with the form redrawn and no
+  explanation, which reads exactly like the submission being ignored.
+
+  Used as `{% include 'partials/_form_errors.html.twig' with {form: myForm} %}`
+  immediately after `form_start()`. Renders nothing when there is nothing to
+  say, so it is safe to include unconditionally.
+
+  `role="alert"` and `tabindex="-1"` so a screen reader announces it on arrival
+  and the block can be focused; the `id` gives a page a target to scroll to.
+
+  Styled by `.form-errors` in assets/styles/atlas.css, which is global, because
+  most of these pages style only their field-level <ul> and would otherwise
+  render this as a bare bullet list.
+
+  Paragraphs, NOT a <ul>. The auth shell and the settings page both style every
+  bare `form ul` as a field error, so a list in here came out as a second boxed
+  message nested inside the first. `.fe-msg` belongs to this partial alone.
+#}
+{% if form.vars.errors|length %}
+  <div class="form-errors" role="alert" tabindex="-1" id="{{ form.vars.id }}_errors">
+    {% for error in form.vars.errors %}<p class="fe-msg">{{ error.message|trans }}</p>{% endfor %}
+  </div>
+{% endif %}

@@ -24,8 +24,8 @@ final class ResetPasswordRequestFormType extends AbstractType
                 'placeholder' => 'form.ph_email',
             ],
             'constraints' => [
-                new NotBlank(message: 'Please enter your email address.'),
-                new Email(message: 'Please enter a valid email address.'),
+                new NotBlank(message: 'form.error_email_required'),
+                new Email(message: 'form.error_email_invalid'),
             ],
         ]);
     }

@@ -125,7 +125,17 @@ made would be a record of something that never happened.
   TOCTOU catch of `UniqueConstraintViolationException` at flush that re-renders
   the same duplicate-email form error as a 422 instead of a 500.
 - A verification mail is sent (verify-email bundle, signed URLs — no stored
-  token). `/verify/email` validates the signature and flags
+  token). **The link is localized** (owner, 2026-08-27): signing up on
+  `/nl/register` sends a `/nl/verify/email` link, not a bare `/verify/email`.
+  This is the one page a rider arrives at from an email, with no referring page
+  to inherit a language from, so the language is written into the link at signup
+  time rather than guessed on arrival. It falls out of Symfony's localized
+  routing on its own: `LocaleListener` puts the request locale on the routing
+  context, so `generateSignature('verify_email', ...)` picks the matching
+  variant, and the locale is inside the signed URI rather than beside it.
+  English keeps the bare `/verify/email`, so links already in inboxes stay
+  valid. Guarded by `LocalizedRoutingTest::testTheEmailVerifyLinkIsLocalized`.
+  `/verify/email` validates the signature and flags
   `emailVerified`/`emailVerifiedAt`, then redirects to login.
 - **Journey continuity (verified end-to-end):** the firewall's
   saved target path survives the whole register → verify → login detour in
@@ -361,13 +371,13 @@ codes and disables the flag — audited, confirm-gated.
 `access_control` (ordered; localized routes carry an optional two-letter
 locale prefix matched by the WILDCARD group `(/[a-z]{2})?` — a literal locale
 list would silently exclude the next locale added (owner, 2026-08-17); English
-paths are clean; `logout`, `verify`, `/2fa` interstitial, `/api`, `/admin`
+paths are clean; `logout`, `/2fa` interstitial, `/api`, `/admin`
 stay unprefixed):
 
 | Path pattern | Access |
 |---|---|
 | `(/[a-z]{2})?/(login\|register\|reset-password)` | `PUBLIC_ACCESS` |
-| `^/verify` | `PUBLIC_ACCESS` |
+| `^(/[a-z]{2})?/verify` | `PUBLIC_ACCESS` — the locale prefix is part of the match since the verify link was localized (above) |
 | `(/[a-z]{2})?/riders/` | `PUBLIC_ACCESS` (public rider profiles, §7) |
 | `^/map/catalog\.json$`, `^/map/best-of$`, `^/map/item/\d+/history$`, `^/routes/\d+\.gpx$`, `^/items/\d+/confirmations$` | `PUBLIC_ACCESS` — **exact-path, explicitly public** so scheb's lazy-firewall `TwoFactorAccessListener` skips the session read that would downgrade `Cache-Control` to private (data contracts: [catalog-data-model.md](catalog-data-model.md), [route-domain.md](route-domain.md), [moderation-and-contribution.md](moderation-and-contribution.md)) |
 | `(/[a-z]{2})?/2fa/setup` | `ROLE_USER` — must precede the interstitial rule: setup is reached *fully* authenticated |

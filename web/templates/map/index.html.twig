@@ -412,7 +412,12 @@
   <!-- ============ MAP ============ -->
   <div class="mapcol">
   <main class="map-wrap">
-    <div id="map"></div>
+    {# `data-credits` because the attribution control is built in JS and the
+       credits route is localized (/credits, /nl/met-dank-aan, ...). The
+       Copernicus licence wants its notice on derived products, and the climb
+       gradients are derived from the DEM, so the short form belongs in the
+       attribution with the full notice one click away. #}
+    <div id="map" data-credits="{{ path('credits') }}"></div>
     <div class="map-top">
       <div class="rg" id="regionLine">{{ 'map.region_line'|trans }}</div>
       <div class="sub">{{ 'map.curated'|trans }}</div>

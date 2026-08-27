@@ -70,7 +70,11 @@ final class RegistrationController extends AbstractController
             // redirect: unlike the reset form this page already tells you when
             // an address is taken, so there is no existence secret to keep.
             if (!$registrationLimiter->create(self::anonKey($request->getClientIp() ?? 'unknown', $secret))->consume()->isAccepted()) {
-                $form->addError(new FormError('Too many sign-up attempts from this connection. Try again later.'));
+                // A catalogue key, not a sentence: this error is form-level, and
+                // form-level errors only became visible on 2026-08-27 (the page
+                // rendered field errors and dropped the rest). The moment it is
+                // shown it has to exist in five languages like any other copy.
+                $form->addError(new FormError('security.register.error_rate_limited'));
 
                 return $this->render('security/register.html.twig', [
                     'registrationForm' => $form,
@@ -94,7 +98,7 @@ final class RegistrationController extends AbstractController
                 $entityManager->flush();
             } catch (UniqueConstraintViolationException) {
                 // TOCTOU: same duplicate-email form error, never a 500.
-                $form->get('email')->addError(new FormError('This email address is already registered.'));
+                $form->get('email')->addError(new FormError('form.error_email_taken'));
 
                 return $this->render('security/register.html.twig', [
                     'registrationForm' => $form,
@@ -137,7 +141,25 @@ final class RegistrationController extends AbstractController
         return PseudonymousKey::limiter('registration', $ip, $secret);
     }
 
-    #[Route('/verify/email', name: 'verify_email')]
+    /**
+     * Localized like every other page (owner, 2026-08-27). This route is reached
+     * from a link in an email, so it is the one page a rider arrives at with no
+     * referring page to inherit a language from. Carrying the locale in the path
+     * means the server writes down at signup time what it already knows, instead
+     * of guessing later: `/nl/register` signs a `/nl/verify/email` link, that
+     * link routes `_locale=nl`, and the "email confirmed" message and the
+     * redirect to `login` both come out Dutch, with no session involved.
+     *
+     * English keeps the bare `/verify/email`, so links already in inboxes stay
+     * valid.
+     */
+    #[Route([
+        'en' => '/verify/email',
+        'fr' => '/fr/verify/email',
+        'nl' => '/nl/verify/email',
+        'de' => '/de/verify/email',
+        'es' => '/es/verify/email',
+    ], name: 'verify_email')]
     public function verifyUserEmail(
         Request $request,
         UserRepository $userRepository,

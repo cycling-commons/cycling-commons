@@ -33,7 +33,7 @@ final class SettingsPasswordType extends AbstractType
                     'placeholder' => 'form.ph_current_password',
                 ],
                 'constraints' => [
-                    new NotBlank(message: 'Please enter your current password.'),
+                    new NotBlank(message: 'form.error_password_current_required'),
                 ],
             ])
             ->add('newPassword', RepeatedType::class, [
@@ -46,10 +46,10 @@ final class SettingsPasswordType extends AbstractType
                         'placeholder' => 'form.ph_min12',
                     ],
                     'constraints' => [
-                        new NotBlank(message: 'Please enter a new password.'),
-                        new Length(min: 12, minMessage: 'Password must be at least {{ limit }} characters.'),
+                        new NotBlank(message: 'form.error_password_new_required'),
+                        new Length(min: 12, minMessage: 'form.error_password_short'),
                         // docs/specs/account-and-auth.md §2 — HIBP k-anonymity; skipOnError so an outage cannot block a change.
-                        new NotCompromisedPassword(skipOnError: true, message: 'This password appears in a known data breach. Please choose a different one.'),
+                        new NotCompromisedPassword(skipOnError: true, message: 'form.error_password_breached'),
                     ],
                 ],
                 'second_options' => [
@@ -59,7 +59,7 @@ final class SettingsPasswordType extends AbstractType
                         'placeholder' => 'form.ph_repeat_new_password',
                     ],
                 ],
-                'invalid_message' => 'The password fields must match.',
+                'invalid_message' => 'form.error_password_mismatch',
             ]);
     }
 

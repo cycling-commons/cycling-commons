@@ -89,6 +89,7 @@
   <div class="rd-edit rd-decide">
     <h2>{{ 'moderate_routes.decision.heading'|trans }}</h2>
     {{ form_start(decision_form) }}
+    {% include 'partials/_form_errors.html.twig' with {form: decision_form} %}
       {{ form_widget(decision_form.route_id, {value: route.id}) }}
       <div class="rd-decide-row">
         <label for="{{ decision_form.decision.vars.id }}">{{ 'moderate_routes.decision.label'|trans }}</label>
@@ -103,6 +104,7 @@
 
   <div class="rd-edit">
     {{ form_start(edit_form, {attr: {novalidate: 'novalidate'}}) }}
+    {% include 'partials/_form_errors.html.twig' with {form: edit_form} %}
       {{ form_widget(edit_form.route_id) }}
       <label for="{{ edit_form.note.vars.id }}">{{ 'moderate_routes.meta.note'|trans }}</label>
       {{ form_widget(edit_form.note) }}
@@ -114,6 +116,7 @@
   <div class="rd-edit rd-retire">
     <h2>{{ 'moderate_routes.action.retire_route'|trans }}</h2>
     {{ form_start(retire_form) }}
+    {% include 'partials/_form_errors.html.twig' with {form: retire_form} %}
       {{ form_widget(retire_form.route_id) }}
       {{ form_widget(retire_form.decision) }}
       <label for="{{ retire_form.note.vars.id }}">{{ 'moderate_routes.meta.note'|trans }}</label>

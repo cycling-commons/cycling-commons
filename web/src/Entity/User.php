@@ -42,7 +42,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ORM\UniqueConstraint(name: 'uniq_users_email', columns: ['email'])]
 #[ORM\UniqueConstraint(name: 'uniq_users_uuid', columns: ['uuid'])]
 #[ORM\HasLifecycleCallbacks]
-#[UniqueEntity(fields: ['email'], message: 'This email address is already registered.')]
+#[UniqueEntity(fields: ['email'], message: 'form.error_email_taken')]
 class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFactorInterface, BackupCodeInterface
 {
     #[ORM\Id]
@@ -55,9 +55,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
 
     // Entity-level so every write path is covered; length matches the column.
     #[ORM\Column(type: 'string', length: 180, unique: true)]
-    #[Assert\NotBlank(message: 'Please enter an email address.')]
-    #[Assert\Email(message: 'Please enter a valid email address.')]
-    #[Assert\Length(max: 180, maxMessage: 'Email address may not exceed {{ limit }} characters.')]
+    #[Assert\NotBlank(message: 'form.error_email_required')]
+    #[Assert\Email(message: 'form.error_email_invalid')]
+    #[Assert\Length(max: 180, maxMessage: 'form.error_email_long')]
     private string $email = '';
 
     #[ORM\Column(type: 'string')]
@@ -71,7 +71,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     // LengthValidator skips null only, not ''.
     #[Assert\Length(
         max: 100,
-        maxMessage: 'Display name may not exceed {{ limit }} characters.',
+        maxMessage: 'form.error_display_name_long',
     )]
     #[Assert\NoSuspiciousCharacters(
         locales: CatalogFieldConstraints::LOCALES,
@@ -192,6 +192,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
 
     #[ORM\Column(type: 'boolean')]
     private bool $publicProfile = false;
+
+    /**
+     * Consent to be told when a release ships. Off unless a rider turns it on.
+     *
+     * The flag is the current answer; the proof that it was given, and to what
+     * wording, is a `consent_record` row under {@see \App\Account\UpdatesConsent}.
+     */
+    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    private bool $updatesOptIn = false;
 
     #[ORM\Column(type: 'datetime_immutable')]
     private ?\DateTimeImmutable $createdAt = null;
@@ -719,6 +728,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     public function isPublicProfile(): bool
     {
         return $this->publicProfile;
+    }
+
+    public function isUpdatesOptIn(): bool
+    {
+        return $this->updatesOptIn;
+    }
+
+    public function setUpdatesOptIn(bool $updatesOptIn): static
+    {
+        $this->updatesOptIn = $updatesOptIn;
+
+        return $this;
     }
 
     public function setPublicProfile(bool $publicProfile): static

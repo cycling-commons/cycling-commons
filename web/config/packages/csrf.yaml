@@ -18,3 +18,11 @@ framework:
             - my-area
             - country-interest
             - curator-application
+            # The floating bug button renders on EVERY page, anonymous readers
+            # included. A stateful token here writes to the session on a first
+            # visit, which makes the session non-empty, which sends PHPSESSID to
+            # every reader and creates a Redis entry for every crawler hit.
+            # Stateless is the same trade-off already accepted for `authenticate`
+            # and `submit` above. Pairs with LocaleSubscriber's session guard:
+            # BOTH are needed, either one alone still sets the cookie.
+            - bug_report

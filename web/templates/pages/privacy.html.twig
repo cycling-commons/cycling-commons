@@ -1,5 +1,20 @@
 {# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
 {% extends 'base.html.twig' %}
+{#
+  `/settings` is behind the firewall, so linking it to a signed-out reader sends
+  them to a login form for a page they were only being told about (owner,
+  2026-08-27: "links to nowhere/login form when not logged in"). Signed in it is
+  useful, so the link stays for them and the same words are plain text for
+  everyone else.
+#}
+{% macro settings_link(key) %}
+  {%- if app.user -%}
+    <a href="{{ path('settings') }}">{{ key|trans }}</a>
+  {%- else -%}
+    {{ key|trans }}
+  {%- endif -%}
+{% endmacro %}
+{% import _self as priv %}
 {% block head_styles %}
 <style>
   .lhero{background:var(--ink);color:var(--paper);padding:3rem 0}
@@ -28,6 +43,23 @@
      emphasis carries in <b>'s weight as well, so it never rests on hue alone. */
   .banner b{color:#FF8A5B}
   .disc{background:var(--paper-deep);border-left:2px solid var(--ochre);padding:1rem 1.2rem;border-radius:0 8px 8px 0;font-size:.86rem;color:#4a4d40;margin:0 0 1.4rem}
+  /* Article 13 wants the processor and cookie facts as facts, and a table is
+     the honest shape for them. `min-width` forces the horizontal scroll into
+     `.ptw` on a phone rather than letting the page body scroll sideways. */
+  .ptw{overflow-x:auto;margin:1rem 0 1.4rem;-webkit-overflow-scrolling:touch}
+  .ptab{border-collapse:collapse;width:100%;min-width:34rem;font-size:.88rem}
+  .ptab th,.ptab td{text-align:left;vertical-align:top;padding:.6rem .8rem;border-bottom:1px solid rgba(58,61,48,.16);color:#3a3d30;line-height:1.55}
+  .ptab th{font-family:var(--mono);font-size:.62rem;letter-spacing:.11em;text-transform:uppercase;color:var(--clay);border-bottom-width:2px;white-space:nowrap}
+  .ptab tr:last-child td{border-bottom:0}
+  /* Without this the first column is the one the browser squeezes, and
+     "Hetzner Online GmbH" came out stacked over three lines while the prose
+     columns had room to spare. The names in it are short by construction. */
+  .ptab td:first-child{white-space:nowrap}
+  /* Only the processor table has a fourth column; its "where" cell is two
+     short place names and reads badly broken one word per line. */
+  .ptab--proc td:nth-child(2){min-width:9rem}
+  .ptab td b{color:var(--ink)}
+  .ptab code{font-family:var(--mono);font-size:.84em;background:var(--paper-deep);padding:.12rem .4rem;border-radius:3px;color:var(--ink)}
   .upd{font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:#595c4d;margin:0 0 2rem}
 </style>
 {% endblock %}
@@ -45,6 +77,10 @@
     <h2>{% trans %}privacy.h_responsible{% endtrans %}</h2>
     <p>{% trans %}privacy.responsible_p1_pre{% endtrans %} <b>{% trans %}privacy.responsible_p1_bikecoders{% endtrans %}</b> (<a href="https://bikecoders.life">bikecoders.life</a>){% trans %}privacy.responsible_p1_mid{% endtrans %} <a href="https://wiki.cyclingcommons.org/governance/">{% trans %}privacy.responsible_p1_governance{% endtrans %}</a>{{ 'privacy.responsible_p1_post'|trans|rich }}</p>
     <p>{% trans %}privacy.responsible_p2_pre{% endtrans %} <a href="mailto:info@cyclingcommons.org">info@cyclingcommons.org</a> ({{ 'support.legal.or_form'|trans }} <a href="{{ path('contact') }}?topic=privacy">{{ 'support.contact.title_short'|trans }}</a>){% trans %}privacy.responsible_p2_mid{% endtrans %} <a href="https://autoriteitpersoonsgegevens.nl/">{% trans %}privacy.responsible_p2_ap{% endtrans %}</a>{% trans %}privacy.responsible_p2_post{% endtrans %}</p>
+    {# GDPR Art. 37 does not oblige us to appoint a DPO, but a notice that says
+       nothing leaves the reader guessing. Saying "no, and here is the address
+       instead" is the convention and answers the question outright. #}
+    <p>{% trans %}privacy.dpo_pre{% endtrans %} <a href="mailto:info@cyclingcommons.org">info@cyclingcommons.org</a> ({{ 'support.legal.or_form'|trans }} <a href="{{ path('contact') }}?topic=privacy">{{ 'support.contact.title_short'|trans }}</a>){% trans %}privacy.dpo_post{% endtrans %}</p>
 
     <h2>{% trans %}privacy.h_collect{% endtrans %}</h2>
     <p>{% trans %}privacy.collect_intro{% endtrans %}</p>
@@ -60,7 +96,7 @@
     <ul>
       <li>{{ 'privacy.collect_contribute_items'|trans|rich }}</li>
       <li>{{ 'privacy.collect_contribute_media'|trans|rich }}</li>
-      <li>{% trans %}privacy.collect_contribute_profile{% endtrans %} <a href="{{ path('settings') }}">{% trans %}privacy.collect_contribute_profile_link{% endtrans %}</a>{% trans %}privacy.collect_contribute_profile_post{% endtrans %}</li>
+      <li>{% trans %}privacy.collect_contribute_profile{% endtrans %} {{ priv.settings_link('privacy.collect_contribute_profile_link') }}{% trans %}privacy.collect_contribute_profile_post{% endtrans %}</li>
     </ul>
     <h3>{% trans %}privacy.h3_auto{% endtrans %}</h3>
     <ul>
@@ -74,20 +110,141 @@
     <h2>{% trans %}privacy.h_why{% endtrans %}</h2>
     <ul>
       <li>{{ 'privacy.why_contract'|trans|rich }}</li>
-      <li>{{ 'privacy.why_consent'|trans|rich }} <a href="{{ path('settings') }}">{% trans %}privacy.why_consent_link{% endtrans %}</a>{% trans %}privacy.why_consent_post{% endtrans %}</li>
+      <li>{{ 'privacy.why_consent'|trans|rich }} {{ priv.settings_link('privacy.why_consent_link') }}{% trans %}privacy.why_consent_post{% endtrans %}</li>
+      {# These were one bullet, and that was wrong: it read as though the photo
+         could be withdrawn along with the name. CC BY-SA 4.0 is irrevocable by
+         its own terms (photo-uploads.md 6b), so the two promises are different
+         and are now made separately. #}
+      <li>{{ 'privacy.why_licence'|trans|rich }}</li>
+      {# The release list is the only mail a rider chooses rather than needs, so
+         it is the only one that runs on consent and has to say so. #}
+      <li>{{ 'privacy.why_updates'|trans|rich }}</li>
       <li>{{ 'privacy.why_legitimate'|trans|rich }}</li>
       <li>{{ 'privacy.why_legal'|trans|rich }}</li>
     </ul>
 
     <h2>{% trans %}privacy.h_cookies{% endtrans %}</h2>
     <p>{{ 'privacy.cookies_body'|trans|rich }}</p>
+    {# Claiming "a single essential cookie" without naming it is unverifiable.
+       Both names were read off a live response, not off the config: the session
+       cookie has no `framework.session.name`, so it is PHP's default, and the
+       remember-me lifetime is `security.yaml`'s 604800 s. `main_auth_profile_token`
+       and `sf_redirect` also appear in dev - they are the Symfony profiler's and
+       do not exist in production, so they are deliberately absent here. #}
+    <h3>{% trans %}privacy.h3_cookie_table{% endtrans %}</h3>
+    <div class="ptw"><table class="ptab">
+      <thead><tr>
+        <th scope="col">{% trans %}privacy.ck_h_name{% endtrans %}</th>
+        <th scope="col">{% trans %}privacy.ck_h_purpose{% endtrans %}</th>
+        <th scope="col">{% trans %}privacy.ck_h_life{% endtrans %}</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td><code>PHPSESSID</code></td>
+          <td>{{ 'privacy.ck_session_purpose'|trans|rich }}</td>
+          <td>{% trans %}privacy.ck_session_life{% endtrans %}</td>
+        </tr>
+        <tr>
+          <td><code>REMEMBERME</code></td>
+          <td>{{ 'privacy.ck_remember_purpose'|trans|rich }}</td>
+          <td>{% trans %}privacy.ck_remember_life{% endtrans %}</td>
+        </tr>
+      </tbody>
+    </table></div>
+    <p>{{ 'privacy.cookies_none_body'|trans|rich }}</p>
+    <p>{{ 'privacy.cookies_local_body'|trans|rich }}</p>
 
     <h2>{% trans %}privacy.h_share{% endtrans %}</h2>
+    {# The lists below are short because of work that is otherwise invisible:
+       routing and elevation came back in-house in 2026 (security-architecture.md
+       2.3 records the two hosts that left the policy with them), the analytics
+       are self-hosted, the photos are ours. Saying so is not boasting, it is the
+       reason a rider's browser talks to five outside services instead of twenty. #}
+    <p>{{ 'privacy.share_selfhosted'|trans|rich }}</p>
     <ul>
       <li>{{ 'privacy.share_infra'|trans|rich }}</li>
       <li>{% trans %}privacy.share_osm_pre{% endtrans %} <a href="{{ path('licenses') }}">{% trans %}privacy.share_osm_link{% endtrans %}</a>{% trans %}privacy.share_osm_post{% endtrans %}</li>
       <li>{{ 'privacy.share_noone'|trans|rich }}</li>
     </ul>
+
+    {# "such as the map library CDN and Mapillary" is what an access request
+       will not accept. Both tables are the CSP host table (security-architecture.md
+       2.3) and the infrastructure spec (media-storage-architecture.md 2) written
+       out for a rider: nothing may be fetched that is not enumerated there, so
+       these two lists are complete by construction. Adding a third-party host
+       means adding a row here in the same change. #}
+    <h3>{% trans %}privacy.h3_processors{% endtrans %}</h3>
+    <p>{{ 'privacy.processors_intro'|trans|rich }}</p>
+    <div class="ptw"><table class="ptab ptab--proc">
+      <thead><tr>
+        <th scope="col">{% trans %}privacy.pr_h_who{% endtrans %}</th>
+        <th scope="col">{% trans %}privacy.pr_h_where{% endtrans %}</th>
+        <th scope="col">{% trans %}privacy.pr_h_what{% endtrans %}</th>
+        <th scope="col">{% trans %}privacy.pr_h_sees{% endtrans %}</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td><a href="https://www.hetzner.com/legal/privacy-policy/">Hetzner Online GmbH</a></td>
+          <td>{% trans %}privacy.pr_hetzner_where{% endtrans %}</td>
+          <td>{{ 'privacy.pr_hetzner_what'|trans|rich }}</td>
+          <td>{{ 'privacy.pr_hetzner_sees'|trans|rich }}</td>
+        </tr>
+        <tr>
+          <td><a href="https://www.scaleway.com/en/privacy-policy/">Scaleway SAS</a></td>
+          <td>{% trans %}privacy.pr_scaleway_where{% endtrans %}</td>
+          <td>{{ 'privacy.pr_scaleway_what'|trans|rich }}</td>
+          <td>{{ 'privacy.pr_scaleway_sees'|trans|rich }}</td>
+        </tr>
+        {# The mailbox is a processor too, and the easiest one to forget: no
+           code touches it, so it never shows up in a grep of the repo. Anyone
+           who writes to the address on this page has their message sitting
+           there (owner, 2026-08-27). #}
+        <tr>
+          <td><a href="https://proton.me/legal/privacy">Proton AG</a></td>
+          <td>{% trans %}privacy.pr_proton_where{% endtrans %}</td>
+          <td>{{ 'privacy.pr_proton_what'|trans|rich }}</td>
+          <td>{{ 'privacy.pr_proton_sees'|trans|rich }}</td>
+        </tr>
+      </tbody>
+    </table></div>
+
+    <h3>{% trans %}privacy.h3_browser_services{% endtrans %}</h3>
+    <p>{{ 'privacy.browser_services_intro'|trans|rich }}</p>
+    <div class="ptw"><table class="ptab">
+      <thead><tr>
+        <th scope="col">{% trans %}privacy.bs_h_service{% endtrans %}</th>
+        <th scope="col">{% trans %}privacy.bs_h_what{% endtrans %}</th>
+        <th scope="col">{% trans %}privacy.bs_h_sees{% endtrans %}</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td><a href="https://openfreemap.org/">OpenFreeMap</a></td>
+          <td>{{ 'privacy.bs_openfreemap_what'|trans|rich }}</td>
+          <td>{{ 'privacy.bs_sees_ip'|trans|rich }}</td>
+        </tr>
+        <tr>
+          <td><a href="https://www.esri.com/en-us/privacy/overview">Esri</a></td>
+          <td>{{ 'privacy.bs_esri_what'|trans|rich }}</td>
+          <td>{{ 'privacy.bs_esri_sees'|trans|rich }}</td>
+        </tr>
+        <tr>
+          <td><a href="https://www.mapillary.com/">Mapillary</a></td>
+          <td>{{ 'privacy.bs_mapillary_what'|trans|rich }}</td>
+          <td>{{ 'privacy.bs_mapillary_sees'|trans|rich }}</td>
+        </tr>
+        <tr>
+          <td><a href="https://photon.komoot.io/">Photon</a></td>
+          <td>{{ 'privacy.bs_photon_what'|trans|rich }}</td>
+          <td>{{ 'privacy.bs_photon_sees'|trans|rich }}</td>
+        </tr>
+        <tr>
+          <td><a href="https://foundation.wikimedia.org/wiki/Policy:Privacy_policy">Wikimedia Commons</a></td>
+          <td>{{ 'privacy.bs_wikimedia_what'|trans|rich }}</td>
+          <td>{{ 'privacy.bs_wikimedia_sees'|trans|rich }}</td>
+        </tr>
+      </tbody>
+    </table></div>
+    <p>{{ 'privacy.browser_services_post'|trans|rich }}</p>
 
     <h2>{% trans %}privacy.h_transfers{% endtrans %}</h2>
     <p>{% trans %}privacy.transfers_body{% endtrans %}</p>
@@ -103,7 +260,38 @@
          (docs/specs/photo-uploads.md §4). Leaving it undisclosed while the
          erasure bullet promised "permanent" was the actual gap. #}
       <li>{{ 'privacy.retention_consent'|trans|rich }}</li>
+      {# Art. 13(2)(a) wants a period or the criteria for one. A mailbox thread
+         has no fixed length, but it does have an end, so the criteria are
+         "while it is open" and the period runs from there (owner, 2026-08-27:
+         24 months). #}
+      <li>{{ 'privacy.retention_mail'|trans|rich }}</li>
+      <li>{{ 'privacy.retention_updates'|trans|rich }}</li>
     </ul>
+
+    {# Art. 32 is not in Art. 13's mandatory list, but a notice that describes
+       what it holds and never says how it is guarded reads as if nothing is.
+       Every claim below is a built thing with a file behind it, not an
+       aspiration: account-and-auth.md 4 (secret material at rest),
+       security-architecture.md 2 (CSP and headers), media-storage-architecture.md
+       6 (scanning and quarantine). #}
+    <h2>{% trans %}privacy.h_security{% endtrans %}</h2>
+    <p>{% trans %}privacy.security_intro{% endtrans %}</p>
+    <ul>
+      <li>{{ 'privacy.security_passwords'|trans|rich }}</li>
+      <li>{{ 'privacy.security_secrets'|trans|rich }}</li>
+      <li>{{ 'privacy.security_transport'|trans|rich }}</li>
+      <li>{{ 'privacy.security_access'|trans|rich }}</li>
+    </ul>
+    {# Owner's call 2026-08-27: four plain sentences here, the full Art. 32 list
+       in security-architecture.md 8. Naming AES-256-GCM and HSTS on a page
+       written for riders helped nobody who reads it and gave four more lines to
+       keep true; the people who want that detail can read the source, and this
+       paragraph tells them where. #}
+    <p>{% trans %}privacy.security_source_pre{% endtrans %} <a href="https://github.com/cycling-commons/cycling-commons">{% trans %}privacy.security_source_link{% endtrans %}</a>{% trans %}privacy.security_source_post{% endtrans %}</p>
+    <p>{{ 'privacy.security_honest'|trans|rich }}</p>
+
+    <h2>{% trans %}privacy.h_breach{% endtrans %}</h2>
+    <p>{% trans %}privacy.breach_pre{% endtrans %} <a href="https://autoriteitpersoonsgegevens.nl/">{% trans %}privacy.breach_ap{% endtrans %}</a>{{ 'privacy.breach_post'|trans|rich }}</p>
 
     <h2>{% trans %}privacy.h_rights{% endtrans %}</h2>
     <p>{% trans %}privacy.rights_intro{% endtrans %}</p>
@@ -128,6 +316,13 @@
 
     <h2>{% trans %}privacy.h_changes{% endtrans %}</h2>
     <p>{% trans %}privacy.changes_body{% endtrans %}</p>
+    {# The page promised a new date on change and kept no history, so "we
+       updated it" was unverifiable. The platform is source-available, so the
+       history already exists in public - this only points at it. The branch in
+       the URL is `main` because that is what `symfony-base` becomes at go-live
+       (go-live-and-deploy-strategy); until then the link 404s, and so does the
+       route it sits on. #}
+    <p>{% trans %}privacy.changes_versions_pre{% endtrans %} <a href="https://github.com/cycling-commons/cycling-commons/commits/main/web/templates/pages/privacy.html.twig">{% trans %}privacy.changes_versions_link{% endtrans %}</a>{% trans %}privacy.changes_versions_post{% endtrans %}</p>
 
     <div class="disc" style="margin:2rem 0 0">{% trans %}privacy.footer_disc_pre{% endtrans %} <a href="{{ path('terms') }}">{% trans %}privacy.footer_disc_terms{% endtrans %}</a> {% trans %}privacy.footer_disc_mid{% endtrans %} <a href="{{ path('licenses') }}">{% trans %}privacy.footer_disc_licences{% endtrans %}</a>{% trans %}privacy.footer_disc_post{% endtrans %}</div>
   </div>

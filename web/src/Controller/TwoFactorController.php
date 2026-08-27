@@ -92,9 +92,7 @@ final class TwoFactorController extends AbstractController
                 ]);
             }
 
-            $form->get('code')->addError(new FormError(
-                'That code did not match. Check your authenticator app and try again.'
-            ));
+            $form->get('code')->addError(new FormError('form.error_totp_mismatch'));
         }
 
         return $this->render('security/2fa_setup.html.twig', [

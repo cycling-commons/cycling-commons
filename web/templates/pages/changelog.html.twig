@@ -1,0 +1,59 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{#
+  What shipped. Same source as the roadmap (App\Content\ReleaseNotes), and the
+  version string is the git tag without the `v`, so this page and the footer
+  stamp cannot disagree: BuildVersion runs `git describe --tags --match 'v*'`.
+
+  The Atom link in the head is the point of the page as much as the list is: it
+  is the only update channel that needs no account and no email address.
+#}
+{% extends 'base.html.twig' %}
+
+{% block head_extra %}
+<link rel="alternate" type="application/atom+xml" title="{{ 'changelog.feed_title'|trans }}" href="{{ path('changelog_atom', {_locale: 'en'}) }}" />
+{% endblock %}
+
+{% block head_styles %}
+<style>
+  .chero{background:var(--ink);color:var(--paper);padding:3rem 0}
+  .cwrap{max-width:760px}
+  .crel{margin:0 0 2.8rem}
+  .crel-head{display:flex;align-items:baseline;gap:.8rem;flex-wrap:wrap;margin:0 0 .9rem;padding-bottom:.5rem;border-bottom:2px solid rgba(20,22,14,.14)}
+  .crel-v{font-family:var(--serif);font-weight:600;font-size:1.4rem;letter-spacing:-.01em}
+  .crel-d{font-family:var(--mono);font-size:.68rem;letter-spacing:.11em;text-transform:uppercase;color:#595c4d}
+  .cline{display:flex;gap:.7rem;align-items:flex-start;padding:.5rem 0;font-size:.98rem;color:#3a3d30;line-height:1.6}
+  .cline::before{content:"";flex:none;width:6px;height:6px;border-radius:50%;background:var(--clay);margin-top:.58rem}
+  .cfeed{background:var(--paper-deep);border-left:2px solid var(--ochre);padding:1.1rem 1.3rem;border-radius:0 8px 8px 0;font-size:.94rem;color:#4a4d40;line-height:1.6}
+  .cfeed a{color:var(--clay);text-decoration:underline;text-underline-offset:3px}
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="chero"><div class="wrap">
+  <div class="kicker" style="color:var(--trail)">{% trans %}changelog.kicker{% endtrans %}</div>
+  <h1 class="disp">{% trans %}changelog.title{% endtrans %}</h1>
+  <p class="lead" style="color:rgba(239,230,212,.85);margin-top:.8rem">{{ 'changelog.lead'|trans|rich }}</p>
+</div></div>
+
+<section class="pad"><div class="wrap">
+  <div class="cwrap">
+    {% for release in releases %}
+      <div class="crel">
+        <div class="crel-head">
+          <span class="crel-v">{{ release.version }}</span>
+          <span class="crel-d">{{ release.date }}</span>
+        </div>
+        {% for key in release.keys %}
+          <div class="cline">{{ key|trans|rich }}</div>
+        {% endfor %}
+      </div>
+    {% endfor %}
+
+    <div class="cfeed">
+      {% trans %}changelog.feed_pre{% endtrans %}
+      <a href="{{ path('changelog_atom', {_locale: 'en'}) }}">{% trans %}changelog.feed_link{% endtrans %}</a>{% trans %}changelog.feed_mid{% endtrans %}
+      <a href="{{ path('roadmap') }}">{% trans %}changelog.feed_roadmap{% endtrans %}</a>{% trans %}changelog.feed_post{% endtrans %}
+    </div>
+  </div>
+</div></section>
+{% endblock %}

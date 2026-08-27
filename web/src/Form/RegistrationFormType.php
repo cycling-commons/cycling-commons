@@ -33,8 +33,8 @@ final class RegistrationFormType extends AbstractType
                 'label' => 'form.label_display_name',
                 'attr' => ['autocomplete' => 'nickname', 'placeholder' => 'form.ph_display_name_register'],
                 'constraints' => [
-                    new NotBlank(message: 'Please enter a display name.'),
-                    new Length(min: 2, minMessage: 'Display name must be at least {{ limit }} characters.'),
+                    new NotBlank(message: 'form.error_display_name_required'),
+                    new Length(min: 2, minMessage: 'form.error_display_name_short'),
                 ],
             ])
             ->add('plainPassword', RepeatedType::class, [
@@ -44,17 +44,17 @@ final class RegistrationFormType extends AbstractType
                     'label' => 'form.label_password',
                     'attr' => ['autocomplete' => 'new-password', 'placeholder' => 'form.ph_min12'],
                     'constraints' => [
-                        new NotBlank(message: 'Please enter a password.'),
-                        new Length(min: 12, minMessage: 'Password must be at least {{ limit }} characters.'),
+                        new NotBlank(message: 'form.error_password_required'),
+                        new Length(min: 12, minMessage: 'form.error_password_short'),
                         // docs/specs/account-and-auth.md §2 — HIBP k-anonymity; skipOnError so an outage cannot block signup.
-                        new NotCompromisedPassword(skipOnError: true, message: 'This password appears in a known data breach. Please choose a different one.'),
+                        new NotCompromisedPassword(skipOnError: true, message: 'form.error_password_breached'),
                     ],
                 ],
                 'second_options' => [
                     'label' => 'form.label_confirm_password',
                     'attr' => ['autocomplete' => 'new-password', 'placeholder' => 'form.ph_repeat_password'],
                 ],
-                'invalid_message' => 'The password fields must match.',
+                'invalid_message' => 'form.error_password_mismatch',
             ])
             // Age gate (docs/specs/account-and-auth.md §2): self-declared 16+, not a date of birth.
             ->add('confirmAge', CheckboxType::class, [
@@ -62,7 +62,7 @@ final class RegistrationFormType extends AbstractType
                 'required' => false,
                 'label' => 'form.label_confirm_age',
                 'constraints' => [
-                    new IsTrue(message: 'You must be 16 or older to create an account.'),
+                    new IsTrue(message: 'form.error_age_16'),
                 ],
             ])
             ->add('agreeTerms', CheckboxType::class, [
@@ -70,7 +70,7 @@ final class RegistrationFormType extends AbstractType
                 'required' => false,
                 'label' => 'form.label_terms',
                 'constraints' => [
-                    new IsTrue(message: 'You must agree to the terms of service.'),
+                    new IsTrue(message: 'form.error_terms_required'),
                 ],
             ]);
     }

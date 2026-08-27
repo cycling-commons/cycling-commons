@@ -8,6 +8,7 @@ use App\Catalog\ContributorWallProvider;
 use App\Catalog\CoverageStatsProvider;
 use App\Catalog\RegionDirectoryProvider;
 use App\Catalog\RegionSilhouette;
+use App\Content\ReleaseNotes;
 use App\Pagination\Pager;
 use App\Pagination\PageSize;
 use App\Routing\LocalePrefix;
@@ -70,6 +71,70 @@ final class PageController extends AbstractController
             'home_compact' => true,
         ]);
         $response->headers->set('X-Robots-Tag', 'noindex, nofollow');
+
+        return $response;
+    }
+
+    /**
+     * What is coming. Deliberately a flat list (owner, 2026-08-28: "for now it
+     * must be a very simple list"), read straight out of {@see ReleaseNotes}
+     * with no database behind it.
+     *
+     * It shows only unfinished work. What landed is the changelog, linked from
+     * the foot of the page, so no item is described twice.
+     *
+     * @see docs/specs/roadmap-and-changelog.md
+     */
+    #[Route(LocalizedPath::ROADMAP, name: 'roadmap')]
+    public function roadmap(): Response
+    {
+        return $this->render('pages/roadmap.html.twig', [
+            'page_title' => 'meta.roadmap_title',
+            'page_description' => 'meta.roadmap_description',
+            'nav_active' => '',
+            'statuses' => ReleaseNotes::STATUSES,
+            'roadmap' => ReleaseNotes::ROADMAP,
+            'latest' => ReleaseNotes::latestRelease(),
+        ]);
+    }
+
+    /**
+     * What shipped, newest first.
+     *
+     * @see docs/specs/roadmap-and-changelog.md
+     */
+    #[Route(LocalizedPath::CHANGELOG, name: 'changelog')]
+    public function changelog(): Response
+    {
+        return $this->render('pages/changelog.html.twig', [
+            'page_title' => 'meta.changelog_title',
+            'page_description' => 'meta.changelog_description',
+            'nav_active' => '',
+            'releases' => ReleaseNotes::RELEASES,
+        ]);
+    }
+
+    /**
+     * The same list as Atom.
+     *
+     * Unprefixed and English, unlike every other page here. A feed reader is
+     * not a browser: it has no locale to route on, people share the URL, and a
+     * per-locale feed would fragment subscribers across five addresses for one
+     * project. This is the update channel that needs no account, no email
+     * address and no app, which is the whole reason it exists.
+     */
+    #[Route('/changelog.atom', name: 'changelog_atom')]
+    public function changelogAtom(Request $request): Response
+    {
+        $response = $this->render('pages/changelog.atom.twig', [
+            'releases' => ReleaseNotes::RELEASES,
+            'site' => $request->getSchemeAndHttpHost(),
+        ]);
+        $response->headers->set('Content-Type', 'application/atom+xml; charset=UTF-8');
+        // A feed reader polls; there is nothing personal in it and nothing that
+        // changes between visits, so let it be cached like the catalogue is.
+        $response->setPublic();
+        $response->setMaxAge(3600);
 
         return $response;
     }

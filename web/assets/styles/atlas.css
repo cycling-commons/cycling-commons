@@ -176,6 +176,43 @@ a .card:hover,.card.rv:hover,.card.is-link:hover{transform:translateY(-3px);box-
 .cc-notice .wrap{display:flex;align-items:center;gap:.5rem}
 .cc-notice .wrap::before{content:"◈";color:var(--clay);font-size:.8rem}
 
+/* Form-level errors (partials/_form_errors.html.twig). These are the errors
+   attached to the form itself rather than to a field: a rejected CSRF token, a
+   rate limit, a cross-field rule. Every form page needs the same look, and most
+   of them style only the field-level <ul>, so this one lives in the global
+   sheet rather than being copied into each page's <style> block. Loud on
+   purpose: unlike .cc-notice this IS an alert, and it says why the thing the
+   rider just pressed did not happen. */
+/* Not `var(--clay)`. Measured on the auth card: clay on its own 10% tint lands
+   at 4.02:1 at this size, under the 4.5:1 AA floor, and an error message is the
+   last text on a page that may be hard to read. This darker clay measures
+   5.11:1 on the same background. (The field-level errors beside it sit at
+   4.12:1 and have the same problem; see docs/TODO.md.) */
+.form-errors{background:rgba(150,69,38,.1);border-left:3px solid var(--clay);color:#7d3a20;
+  padding:.7rem 1rem;border-radius:0 5px 5px 0;font-size:.9rem;margin:0 0 1.2rem;line-height:1.5}
+/* `.fe-msg` and not a list: the auth shell and the settings page both style a
+   bare `form ul` as a field error, so a <ul> in here nested a second box inside
+   this one. */
+.form-errors .fe-msg{display:flex;gap:.45rem;align-items:flex-start;margin:0}
+.form-errors .fe-msg::before{content:"\26A0";flex:none;font-size:.9em}
+.form-errors .fe-msg+.fe-msg{margin-top:.35rem}
+
+/* Field-level errors, and the one-line alert above a form. Both used to be
+   copied into `_auth_shell_styles` and `settings/index`, and both were
+   `var(--clay)`, which measures 4.12:1 and 4.09:1 on the auth card: under the
+   4.5:1 AA floor at these sizes, on the one line a rider most needs to read.
+   `#7d3a20` measures 5.24 and 5.20 there, 6.10 and 5.99 on paper. Same colour
+   as `.form-errors` above, so the three error surfaces now agree by
+   construction instead of by memory.
+
+   The `.card`/`.wrap` selectors are kept exactly as they were: a bare `form ul`
+   is Symfony's default field-error markup, and widening this to every form on
+   the site would repaint any deliberate list inside one. */
+.field-errors,.card form ul,.wrap form ul{list-style:none;padding:0;margin:.5rem 0 .2rem}
+.field-errors li,.card form ul li,.wrap form ul li{display:flex;gap:.45rem;align-items:flex-start;font-size:.8rem;color:#7d3a20;line-height:1.4;padding:.45rem .65rem;margin-top:.35rem;background:rgba(181,83,46,.09);border:1px solid rgba(181,83,46,.28);border-radius:5px}
+.field-errors li::before,.card form ul li::before,.wrap form ul li::before{content:"\26A0";flex:none;font-size:.9em;line-height:1.4}
+.alert-error{background:rgba(181,83,46,.1);border-left:3px solid var(--clay);color:#7d3a20;padding:.7rem 1rem;border-radius:0 5px 5px 0;font-size:.9rem;margin-bottom:1.4rem}
+
 /* sections + footer */
 section.pad{padding:clamp(3rem,7vw,6rem) 0}
 /* a dark hero already separates the intro — tighten the first section under it */

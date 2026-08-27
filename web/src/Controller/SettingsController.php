@@ -5,9 +5,11 @@
 namespace App\Controller;
 
 use App\Account\RowsPerPage;
+use App\Account\UpdatesSubscription;
 use App\Entity\User;
 use App\Form\SettingsPasswordType;
 use App\Form\SettingsType;
+use App\Media\RiderCreditSync;
 use App\Routing\LocalePrefix;
 use App\Service\BaseLocationService;
 use App\Service\UserDeletionService;
@@ -38,6 +40,8 @@ final class SettingsController extends AbstractController
         private readonly UserDeletionService $deletionService,
         private readonly BaseLocationService $baseLocations,
         private readonly Connection $db,
+        private readonly RiderCreditSync $creditSync,
+        private readonly UpdatesSubscription $updates,
     ) {
     }
 
@@ -46,6 +50,13 @@ final class SettingsController extends AbstractController
     {
         /** @var User $user */
         $user = $this->getUser();
+
+        // The form binds straight onto $user, so the old values have to be read
+        // before handleRequest or they are already gone. Both of these are
+        // stamped into every gallery entry this rider owns; see RiderCreditSync.
+        $wasPublic = $user->isPublicProfile();
+        $wasNamed = $user->getDisplayName();
+        $wasSubscribed = $user->isUpdatesOptIn();
 
         $profileForm = $this->createForm(SettingsType::class, $user);
         $profileForm->handleRequest($request);
@@ -73,6 +84,17 @@ final class SettingsController extends AbstractController
                     (int) $radius,
                 );
             }
+            // A photo credit is stored, not resolved, so turning the profile off
+            // used to leave the name under every photo already on the map while
+            // the photo page correctly showed none. Same for a rename.
+            if ($user->isPublicProfile() !== $wasPublic || $user->getDisplayName() !== $wasNamed) {
+                $this->creditSync->resync($user);
+            }
+
+            // Consent is proved by a record, not by a checkbox that used to be
+            // ticked. @see App\Account\UpdatesSubscription
+            $this->updates->applied($user, $wasSubscribed);
+
             $this->em->flush();
 
             if (null !== $user->getLocale()) {

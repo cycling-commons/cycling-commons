@@ -4,6 +4,9 @@
 <head>
 {% include 'partials/_head.html.twig' %}
 {% block head_styles %}{% endblock %}
+{# For head elements that are not styles: /changelog advertises its Atom feed
+   here, which is how a feed reader finds it from the page. #}
+{% block head_extra %}{% endblock %}
 </head>
 <body>
 {% block chrome %}{% include 'partials/_nav.html.twig' %}{% endblock %}

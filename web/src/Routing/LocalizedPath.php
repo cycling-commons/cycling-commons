@@ -68,6 +68,24 @@ final class LocalizedPath
 
     /** Same word in three of the five, which is fine: the prefix separates them. */
     /** @var array<string, string> */
+    /** @var array<string, string> */
+    public const array ROADMAP = [
+        'en' => '/roadmap',
+        'fr' => '/feuille-de-route',
+        'nl' => '/routekaart',
+        'de' => '/fahrplan',
+        'es' => '/hoja-de-ruta',
+    ];
+
+    /** @var array<string, string> */
+    public const array CHANGELOG = [
+        'en' => '/changelog',
+        'fr' => '/nouveautes',
+        'nl' => '/wat-is-er-nieuw',
+        'de' => '/neuerungen',
+        'es' => '/novedades',
+    ];
+
     public const array CONTACT = [
         'en' => '/contact',
         'fr' => '/contact',

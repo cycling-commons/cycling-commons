@@ -49,6 +49,18 @@ committed — working docs stay local.
 - `credits-page.md` (**implemented**): what `/credits` promises, its three
   tiers of credit, the `data-pkg` marker contract, and the gate that stops the
   page drifting away from the dependencies it names.
+- `roadmap-and-changelog.md` (**implemented**): /roadmap, /changelog and the
+  Atom feed from one list, why the version needs a git tag and nothing else, and
+  the release-notes opt-in with its signed one-click unsubscribe.
+- `form-errors.md` (**implemented**): how a form tells a rider the submission
+  failed. The form-level errors every template used to drop, the shared partial
+  and the scan that stops a new form dropping them again, every validation
+  message as a catalogue key rather than an English sentence, and the measured
+  contrast of the three error surfaces.
+- `privacy-notice.md` (**implemented**): where every claim on `/privacy` is
+  true, the two "who sees my data" tables and the CSP list that keeps the
+  second one complete, the cookie table, and the account grace period that
+  never existed.
 - `dev-environment.md` — dev stack, platform decisions, conventions
   (locale routing and YAML parity; in-site translation proposals live in
   [translations.md](translations.md)).

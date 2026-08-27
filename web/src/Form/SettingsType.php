@@ -48,8 +48,8 @@ final class SettingsType extends AbstractType
                     'placeholder' => 'form.ph_display_name_settings',
                 ],
                 'constraints' => [
-                    new NotBlank(message: 'Please enter a display name.'),
-                    new Length(min: 2, minMessage: 'Display name must be at least {{ limit }} characters.'),
+                    new NotBlank(message: 'form.error_display_name_required'),
+                    new Length(min: 2, minMessage: 'form.error_display_name_short'),
                 ],
             ])
             ->add('country', EntityType::class, [
@@ -204,6 +204,14 @@ final class SettingsType extends AbstractType
                 'label' => 'form.label_public_profile',
                 'required' => false,
                 'help' => 'form.help_public_profile',
+            ])
+            // Release notes only, off unless a rider asks for it, and the
+            // consent behind it is recorded rather than assumed.
+            // @see \App\Account\UpdatesConsent
+            ->add('updatesOptIn', CheckboxType::class, [
+                'label' => 'form.label_updates_opt_in',
+                'required' => false,
+                'help' => 'form.help_updates_opt_in',
             ]);
     }
 

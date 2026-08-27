@@ -1,0 +1,66 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{#
+  What is coming. A flat list on purpose (owner, 2026-08-28), read out of
+  App\Content\ReleaseNotes with no database behind it: editing the roadmap is a
+  pull request, which leaves a history for free.
+
+  Only unfinished work appears here. What landed lives on /changelog, linked at
+  the foot, so nothing is described in two places.
+#}
+{% extends 'base.html.twig' %}
+
+{% block head_styles %}
+<style>
+  .rhero{background:var(--ink);color:var(--paper);padding:3rem 0}
+  .rwrap{max-width:760px}
+  .rgroup{margin:0 0 2.6rem}
+  .rgroup h2{font-family:var(--serif);font-weight:600;font-size:1.35rem;letter-spacing:-.01em;margin:0 0 .3rem}
+  .rgroup .gsub{font-size:.92rem;color:#595c4d;margin:0 0 1rem;line-height:1.55}
+  .ritem{display:flex;gap:.8rem;align-items:flex-start;padding:.85rem 0;border-bottom:1px solid rgba(20,22,14,.1)}
+  .ritem:last-child{border-bottom:0}
+  .ritem p{margin:0;font-size:.98rem;color:#3a3d30;line-height:1.6}
+  /* The status dot repeats the group heading, so it is decoration and hidden
+     from a screen reader rather than read out eight times. */
+  .rdot{flex:none;width:9px;height:9px;border-radius:50%;margin-top:.5rem}
+  .rdot--now{background:var(--trail)}
+  .rdot--next{background:var(--ochre)}
+  .rdot--later{background:var(--glacier)}
+  .rissue{font-family:var(--mono);font-size:.7rem;color:var(--clay);white-space:nowrap;margin-left:.4rem}
+  .rfoot{background:var(--paper-deep);border-left:2px solid var(--ochre);padding:1.1rem 1.3rem;border-radius:0 8px 8px 0;font-size:.94rem;color:#4a4d40;line-height:1.6}
+  .rfoot a{color:var(--clay);text-decoration:underline;text-underline-offset:3px}
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="rhero"><div class="wrap">
+  <div class="kicker" style="color:var(--trail)">{% trans %}roadmap.kicker{% endtrans %}</div>
+  <h1 class="disp">{% trans %}roadmap.title{% endtrans %}</h1>
+  <p class="lead" style="color:rgba(239,230,212,.85);margin-top:.8rem">{{ 'roadmap.lead'|trans|rich }}</p>
+</div></div>
+
+<section class="pad"><div class="wrap">
+  <div class="rwrap">
+    {% for status in statuses %}
+      {% set items = roadmap|filter(i => i.status == status) %}
+      {% if items|length %}
+        <div class="rgroup">
+          <h2>{{ ('roadmap.group_' ~ status)|trans }}</h2>
+          <p class="gsub">{{ ('roadmap.group_' ~ status ~ '_sub')|trans }}</p>
+          {% for item in items %}
+            <div class="ritem">
+              <span class="rdot rdot--{{ status }}" aria-hidden="true"></span>
+              <p>{{ item.key|trans|rich }}{% if item.issue is defined %}<a class="rissue" href="https://github.com/cycling-commons/cycling-commons/issues/{{ item.issue }}">#{{ item.issue }}</a>{% endif %}</p>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endfor %}
+
+    <div class="rfoot">
+      {% trans %}roadmap.foot_shipped_pre{% endtrans %}
+      <a href="{{ path('changelog') }}">{% trans %}roadmap.foot_shipped_link{% endtrans %}</a>{% trans %}roadmap.foot_shipped_mid{% endtrans %}
+      <a href="{{ path('contact') }}">{% trans %}roadmap.foot_contact_link{% endtrans %}</a>{% trans %}roadmap.foot_shipped_post{% endtrans %}
+    </div>
+  </div>
+</div></section>
+{% endblock %}
