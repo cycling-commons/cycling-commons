@@ -120,6 +120,13 @@ final class MediaDecisionService
             'credit' => $this->credit($upload),
             'license' => self::LICENSE,
         ];
+        // Only when there is one. An absent key lets the render side fall back
+        // to the item's name, which is better than an empty alt and much better
+        // than a filename. @see docs/specs/photo-uploads.md §5e
+        $alt = $upload->getAltText();
+        if (null !== $alt) {
+            $photo['alt'] = $alt;
+        }
         // Month granularity only. @see docs/specs/photo-uploads.md §5
         $takenAt = $upload->getTakenAt();
         if (null !== $takenAt) {

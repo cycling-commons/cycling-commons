@@ -48,7 +48,10 @@
       <img src="{{ photo.sm }}" srcset="{{ photo.sm }} 520w, {{ photo.lg }} 1400w"
            sizes="(max-width: 900px) 100vw, 880px"
            width="{{ photo.width }}" height="{{ photo.height }}"
-           alt="{{ 'media.page.alt'|trans }}" />
+           {# The uploader's description, then the item this photo belongs to,
+              then a generic string. A name read aloud beside a photo is real
+              information; "image" is not. #}
+           alt="{{ photo.alt ?? photo.item.name ?? 'media.page.alt'|trans }}" />
       <figcaption>
         {# Four attribution states here; the two external ones
            (docs/specs/photo-uploads.md §5d) arrive with the phase-2 write API

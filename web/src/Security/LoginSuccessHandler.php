@@ -36,6 +36,8 @@ final class LoginSuccessHandler implements AuthenticationSuccessHandlerInterface
         private readonly HttpUtils $httpUtils,
         private readonly UrlGeneratorInterface $urlGenerator,
         private readonly TwoFactorPolicy $twoFactorPolicy,
+        private readonly \Doctrine\ORM\EntityManagerInterface $em,
+        private readonly \Psr\Clock\ClockInterface $clock,
     ) {
     }
 
@@ -47,6 +49,15 @@ final class LoginSuccessHandler implements AuthenticationSuccessHandlerInterface
         }
 
         $user = $token->getUser();
+
+        // The dormancy clock, and only here: this runs after 2FA, so it means
+        // "somebody actually got in", not "somebody typed a password".
+        // Coming back also clears any warning already sent.
+        // @see \App\Account\DormancyLadder
+        if ($user instanceof User) {
+            $user->recordLogin($this->clock->now());
+            $this->em->flush();
+        }
 
         $locale = $user instanceof User ? $user->getLocale() : null;
         if (null !== $locale) {

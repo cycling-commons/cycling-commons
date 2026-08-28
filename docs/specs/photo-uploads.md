@@ -872,6 +872,41 @@ a reference (`SUB-123` or the uuid) and where to look.
 holiday, and an escalation cannot wait for them to come back. The list is
 validated where it is defined; an empty or malformed list cannot be saved.
 
+## 5e. Photo descriptions
+
+Shipped 2026-08-28. Until then a rider uploaded a photo and we never asked what
+was in it, so a screen reader announced "image" and stopped. WCAG 1.1.1 is the
+most basic success criterion there is and it was the one we failed, in our own
+words, on `/accessibility`.
+
+**Optional, and asked in plain language.** The wizard says *"what would somebody
+who cannot see it need to know?"* rather than "alt text", which means nothing to
+a rider. Required would have produced "photo" typed a thousand times, which is
+worse than nothing.
+
+**Its own endpoint** (`POST /media/photos/{id}/alt`), not a field on the upload:
+the upload POSTs the moment a file is chosen and the rider has not typed
+anything yet. It also means a description can be fixed afterwards, and a slow
+typist never holds up the scan queue.
+
+**The fallback is the item's name.** Owner's call, 2026-08-28, and it reverses
+the original draft of this item, which said fall back to `alt=""` on the grounds
+that a filename read aloud is worse than silence. That reasoning is right about
+filenames and wrong about place names: "Zuiderdijk" beside a climb is real
+information. The chain is the rider's description, then the item's name, then a
+generic string, and an empty or whitespace-only description collapses to null
+precisely so the fallback still fires.
+
+**Copied into the gallery entry at approval**, beside `credit`, so the map can
+render it without a per-photo query. Same trade-off as the credit, and the same
+consequence: it is a snapshot. Unlike the credit it does not go stale, because
+nothing else changes it.
+
+Two of the item's three open questions are answered by shipping: optional, and
+the uploader may edit it. **Whether it travels with the CC BY-SA export is still
+open**; it is a description *of* the photo rather than part of it, and the
+export work should settle it.
+
 ## 6d. No AI-generated images, and why the consent had to change
 
 Added 2026-08-28 (owner). The Commons is a map of the real world, so a

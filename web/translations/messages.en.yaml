@@ -1977,6 +1977,9 @@ media:
     unpublished_title: 'This photo is not published'
     unpublished_body: 'It may be awaiting review, or it may no longer be part of the Commons.'
     to_map: 'Go to the map'
+  alt:
+    label: 'Describe this photo'
+    placeholder: 'What would somebody who cannot see it need to know?'
   consent:
     title: 'Before you add a photo'
     intro: 'Your photo(s) join the open Commons so every rider can use them. That only works if they are genuinely free to share.'
@@ -3103,7 +3106,7 @@ support:
     kicker: 'Contact'
     title: 'Write to us.'
     title_short: 'Contact'
-    lead: 'No account needed, and no mail app needed. Fill in the form and it reaches us. If you would rather use your own mail, the address is right there beside it.'
+    lead: 'If you would rather use your own mail, the address is right there beside it.'
     form_title: 'Send a message'
     form_intro: 'Pick what it is about, so it reaches the right person.'
     field_topic: 'What is it about'
@@ -3316,7 +3319,6 @@ a11y:
   gap_map: '<b>The map is not usable with a screen reader.</b> It is a drawing on a canvas, and panning and zooming a picture has no meaning without sight. This is the biggest gap on the site and we have no quick fix for it. See below for what to use instead.'
   gap_vendor: '<b>Some map controls are not ours.</b> The zoom buttons and the attribution toggle come from the map library. They clear the minimum but they are smaller than we would draw them, and we cannot restyle them without forking it.'
   gap_audit: '<b>Nobody outside has audited this.</b> Everything above was measured by the people who built the site, which is not the same as being tested by someone who uses a screen reader every day.'
-  gap_media: '<b>Photos have no descriptions.</b> Riders upload them and we do not ask for alternative text yet, so a screen reader announces a photo and nothing more.'
   gap_translations: '<b>Translations lag behind English.</b> New wording appears in English first, so a page in another language can briefly show a mix.'
   h_instead: 'What to use instead of the map'
   instead_pre: 'Everything the map draws also exists as text or as data. The'

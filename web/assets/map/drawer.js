@@ -303,7 +303,7 @@ function waitingPhoto(ref){
    and the Commons link. */
 export function commonsPhotoHtml(p, name){
   return `<figure class="cc-d-photo">
-    <img src="${safeHref(p.sm)}" ${srcsetAttrs(p, '(max-width: 560px) 100vw, 480px')} alt="${escPend(name||'')}" data-i="0" />
+    <img src="${safeHref(p.sm)}" ${srcsetAttrs(p, '(max-width: 560px) 100vw, 480px')} alt="${escPend(p.alt||name||'')}" data-i="0" />
     <figcaption id="cc-d-cap">${photoCap(p)}</figcaption>
   </figure>`;
 }
@@ -319,10 +319,10 @@ function buildRecord(layer, f){
     <span class="cc-ap-b">＋ ${D.addPhoto||'Add the first photo'}</span>
   </a>` : '';
   const photo = pl.length ? `<figure class="cc-d-photo">
-    <img src="${safeHref(pl[0].sm)}" ${srcsetAttrs(pl[0], '(max-width: 560px) 100vw, 480px')} alt="${escPend(f.name)}" data-i="0" />
+    <img src="${safeHref(pl[0].sm)}" ${srcsetAttrs(pl[0], '(max-width: 560px) 100vw, 480px')} alt="${escPend(pl[0].alt||f.name)}" data-i="0" />
     <figcaption id="cc-d-cap">${photoCap(pl[0])}</figcaption>
     ${/* Thumbs are ~64px: sm only; a srcset here would fetch lg for nothing. */''}
-    ${pl.length>1 ? `<div class="cc-d-thumbs">${pl.map((p,i)=>`<img class="cc-d-thumb${i===0?' on':''}" src="${safeHref(p.sm)}" data-i="${i}" alt="${escPend(f.name)} — photo ${i+1}" />`).join('')}</div>` : ''}
+    ${pl.length>1 ? `<div class="cc-d-thumbs">${pl.map((p,i)=>`<img class="cc-d-thumb${i===0?' on':''}" src="${safeHref(p.sm)}" data-i="${i}" alt="${escPend(p.alt||f.name)}, ${i+1}" />`).join('')}</div>` : ''}
   </figure>` : (f.photoPending ? waitingPhoto(f.photoPending) : addPhoto);
   let recs = f.record || [];
   if(layer.key==='climbs'){
@@ -440,7 +440,7 @@ function buildRecord(layer, f){
     const modPhotos = photos.length ? `<div class="cc-mod-photos">${photos.map((p, i) => `
       <div class="cc-mod-photo">
         <button type="button" class="cc-mod-photo-zoom" data-mod-photo="${i}" aria-label="${escPend(D.photoOpen||'Open full size')}" title="${escPend(D.photoOpen||'Open full size')}">
-          <img src="${safeHref(p.sm)}" alt="${escPend(D.photoAlt||'Submitted photo')}" loading="lazy" />
+          <img src="${safeHref(p.sm)}" alt="${escPend(p.alt||D.photoAlt||'Submitted photo')}" loading="lazy" />
         </button>
         <span class="cc-mod-photo-meta">${escPend(
           (p.distanceM != null ? (D.photoDistance||'~{d} from the pin').replace('{d}', uM(p.distanceM)) : (D.photoNoGps||'No location in the file'))

@@ -2451,6 +2451,9 @@ media:
     unpublished_title: 'Cette photo n''est pas publiée'
     unpublished_body: 'Elle attend peut-être une relecture, ou elle ne fait plus partie du Commons.'
     to_map: 'Aller à la carte'
+  alt:
+    label: 'Décrivez cette photo'
+    placeholder: 'Que devrait savoir quelqu''un qui ne peut pas la voir ?'
   consent:
     title: 'Avant d''ajouter une photo'
     intro: 'Vos photo(s) rejoignent le Commons ouvert pour que chaque cycliste puisse les utiliser. Cela ne fonctionne que si elles sont réellement libres de partage.'
@@ -3084,7 +3087,7 @@ support:
     kicker: 'Contact'
     title: 'Écrivez-nous.'
     title_short: 'Contact'
-    lead: 'Pas besoin de compte, pas besoin de logiciel de messagerie. Remplissez le formulaire et il nous parvient. Si vous préférez votre propre messagerie, l''adresse est juste à côté.'
+    lead: 'Si vous préférez votre propre messagerie, l''adresse est juste à côté.'
     form_title: 'Envoyer un message'
     form_intro: 'Choisissez le sujet, pour que cela arrive au bon endroit.'
     field_topic: 'De quoi s''agit-il'
@@ -3297,7 +3300,6 @@ a11y:
   gap_map: '<b>La carte n''est pas utilisable au lecteur d''écran.</b> C''est un dessin sur un canvas, et déplacer et zoomer une image n''a aucun sens sans la vue. C''est le plus gros manque du site et nous n''avons pas de correctif rapide. Voir ci-dessous quoi utiliser à la place.'
   gap_vendor: '<b>Certains contrôles de la carte ne sont pas les nôtres.</b> Les boutons de zoom et le bouton d''attribution viennent de la bibliothèque cartographique. Ils atteignent le minimum mais sont plus petits que ce que nous dessinerions, et nous ne pouvons pas les restyler sans la forker.'
   gap_audit: '<b>Personne d''extérieur n''a audité cela.</b> Tout ce qui précède a été mesuré par ceux qui ont construit le site, ce qui n''est pas la même chose qu''un test par quelqu''un qui utilise un lecteur d''écran tous les jours.'
-  gap_media: '<b>Les photos n''ont pas de description.</b> Les cyclistes les téléversent et nous ne demandons pas encore de texte alternatif, donc un lecteur d''écran annonce une photo et rien de plus.'
   gap_translations: '<b>Les traductions sont en retard sur l''anglais.</b> Les nouveaux textes paraissent d''abord en anglais, une page dans une autre langue peut donc afficher brièvement un mélange.'
   h_instead: 'Quoi utiliser à la place de la carte'
   instead_pre: 'Tout ce que la carte dessine existe aussi en texte ou en données. Les'

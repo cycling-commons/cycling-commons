@@ -45,6 +45,9 @@ final class MediaController extends AbstractController
     public const string CSRF_INTENTION = 'media-upload';
 
     /** Leading-byte sniff only — worker decode is the real gate. */
+    /** Long enough for a useful sentence, short enough to stay out of the way. */
+    private const int ALT_MAX = 300;
+
     private const array SNIFFED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif', 'image/avif'];
 
     public function __construct(
@@ -193,6 +196,44 @@ final class MediaController extends AbstractController
         }
 
         return $this->json($this->state($upload));
+    }
+
+    /**
+     * Save what somebody who cannot see the photo needs to know.
+     *
+     * Its own endpoint rather than a field on the upload, because the upload
+     * POSTs the moment a file is chosen and the rider has not typed anything
+     * yet. Sending it separately also means a slow typist never blocks the scan
+     * queue, and a description can be fixed after the fact.
+     *
+     * Owner only. A curator edits it from the moderation queue instead, where
+     * they are already looking at the picture.
+     *
+     * @see docs/specs/photo-uploads.md §5e
+     */
+    #[Route('/media/photos/{id}/alt', name: 'media_photos_alt', methods: ['POST'])]
+    public function altText(string $id, Request $request): JsonResponse
+    {
+        $user = $this->requireUser();
+        $this->requireCsrf($request);
+
+        $upload = Uuid::isValid($id) ? $this->em->find(MediaUpload::class, Uuid::fromString($id)) : null;
+        if (null === $upload || $upload->getUserId() !== (int) $user->getId()) {
+            return $this->json(['error' => 'not_found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $alt = $request->request->get('alt');
+        $alt = \is_string($alt) ? $alt : null;
+        // A description longer than this is not a description; the cap keeps it
+        // out of the gallery JSON, which rides in cached tiles.
+        if (null !== $alt && mb_strlen($alt) > self::ALT_MAX) {
+            return $this->json(['error' => 'alt_too_long'], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $upload->setAltText($alt);
+        $this->em->flush();
+
+        return $this->json(['alt' => $upload->getAltText()]);
     }
 
     /**

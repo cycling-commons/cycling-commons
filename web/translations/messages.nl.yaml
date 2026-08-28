@@ -2451,6 +2451,9 @@ media:
     unpublished_title: 'Deze foto is niet gepubliceerd'
     unpublished_body: 'Misschien wacht hij op beoordeling, of hij maakt geen deel meer uit van de Commons.'
     to_map: 'Naar de kaart'
+  alt:
+    label: 'Beschrijf deze foto'
+    placeholder: 'Wat zou iemand die hem niet kan zien moeten weten?'
   consent:
     title: 'Voordat je een foto toevoegt'
     intro: 'Je foto(''s) komen in de open Commons zodat elke fietser ze kan gebruiken. Dat werkt alleen als ze echt vrij te delen zijn.'
@@ -3084,7 +3087,7 @@ support:
     kicker: 'Contact'
     title: 'Schrijf ons.'
     title_short: 'Contact'
-    lead: 'Geen account nodig, en geen mailprogramma nodig. Vul het formulier in en het komt bij ons binnen. Wil je liever je eigen mail gebruiken, dan staat het adres er direct naast.'
+    lead: 'Wil je liever je eigen mail gebruiken, dan staat het adres er direct naast.'
     form_title: 'Stuur een bericht'
     form_intro: 'Kies waar het over gaat, zodat het bij de juiste persoon komt.'
     field_topic: 'Waar gaat het over'
@@ -3297,7 +3300,6 @@ a11y:
   gap_map: '<b>De kaart is niet bruikbaar met een schermlezer.</b> Het is een tekening op een canvas, en het verschuiven en zoomen van een plaatje heeft zonder zicht geen betekenis. Dit is de grootste tekortkoming op de site en we hebben er geen snelle oplossing voor. Zie hieronder wat je in plaats daarvan kunt gebruiken.'
   gap_vendor: '<b>Sommige kaartknoppen zijn niet van ons.</b> De zoomknoppen en de attributieschakelaar komen uit de kaartbibliotheek. Ze halen de ondergrens, maar ze zijn kleiner dan wij ze zouden tekenen, en we kunnen ze niet aanpassen zonder de bibliotheek te forken.'
   gap_audit: '<b>Niemand van buiten heeft dit gecontroleerd.</b> Alles hierboven is gemeten door de mensen die de site hebben gebouwd, en dat is niet hetzelfde als getest zijn door iemand die dagelijks een schermlezer gebruikt.'
-  gap_media: '<b>Foto''s hebben geen beschrijving.</b> Renners uploaden ze en we vragen nog niet om alternatieve tekst, dus een schermlezer meldt een foto en verder niets.'
   gap_translations: '<b>Vertalingen lopen achter op het Engels.</b> Nieuwe teksten verschijnen eerst in het Engels, dus een pagina in een andere taal kan kort een mengeling tonen.'
   h_instead: 'Wat je in plaats van de kaart kunt gebruiken'
   instead_pre: 'Alles wat de kaart tekent bestaat ook als tekst of als data. De'

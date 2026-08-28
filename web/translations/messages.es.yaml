@@ -1987,6 +1987,9 @@ media:
     unpublished_title: 'Esta foto no está publicada'
     unpublished_body: 'Puede que esté esperando revisión, o que ya no forme parte del Commons.'
     to_map: 'Ir al mapa'
+  alt:
+    label: 'Describe esta foto'
+    placeholder: '¿Qué necesitaría saber alguien que no puede verla?'
   consent:
     title: 'Antes de añadir una foto'
     intro: 'Tus fotos se incorporan al Commons abierto para que cualquier ciclista pueda usarlas. Eso solo funciona si de verdad son libres de compartir.'
@@ -3110,7 +3113,7 @@ support:
     kicker: 'Contacto'
     title: 'Escríbanos.'
     title_short: 'Contacto'
-    lead: 'No hace falta cuenta ni programa de correo. Rellene el formulario y nos llega. Si prefiere usar su propio correo, la dirección está justo al lado.'
+    lead: 'Si prefiere usar su propio correo, la dirección está justo al lado.'
     form_title: 'Enviar un mensaje'
     form_intro: 'Elija el tema, para que llegue al sitio adecuado.'
     field_topic: 'De qué se trata'
@@ -3323,7 +3326,6 @@ a11y:
   gap_map: '<b>El mapa no se puede usar con lector de pantalla.</b> Es un dibujo sobre un lienzo, y desplazar y ampliar una imagen no significa nada sin vista. Es la mayor carencia del sitio y no tenemos un arreglo rápido. Abajo se indica qué usar en su lugar.'
   gap_vendor: '<b>Algunos controles del mapa no son nuestros.</b> Los botones de zoom y el conmutador de atribución vienen de la biblioteca de mapas. Superan el mínimo pero son más pequeños de lo que los dibujaríamos, y no podemos rediseñarlos sin bifurcarla.'
   gap_audit: '<b>Nadie de fuera lo ha auditado.</b> Todo lo anterior lo midieron quienes construyeron el sitio, que no es lo mismo que ser probado por alguien que usa un lector de pantalla a diario.'
-  gap_media: '<b>Las fotos no tienen descripción.</b> La gente las sube y todavía no pedimos texto alternativo, así que un lector de pantalla anuncia una foto y nada más.'
   gap_translations: '<b>Las traducciones van por detrás del inglés.</b> Los textos nuevos aparecen primero en inglés, así que una página en otro idioma puede mostrar brevemente una mezcla.'
   h_instead: 'Qué usar en lugar del mapa'
   instead_pre: 'Todo lo que dibuja el mapa existe también como texto o como datos. Las'

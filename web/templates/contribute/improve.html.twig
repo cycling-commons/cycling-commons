@@ -161,6 +161,13 @@
 
   /* upload queue + consent */
   .ulq{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.8rem}
+  /* The description field. Full width on its own line: a chip is a name and a
+     progress bar, and an input squeezed beside them is unusable on a phone,
+     which is where most photos are added. */
+  .ulq .chip{flex-wrap:wrap}
+  .ulq .chip-alt{flex:1 0 100%;margin-top:.3rem}
+  .ulq .chip-alt input{width:100%;font-family:var(--sans);font-size:.72rem;padding:.32rem .45rem;border:1px solid rgba(20,22,14,.22);border-radius:4px;background:var(--paper)}
+  .ulq .chip-alt.saved input{border-color:var(--glacier)}
   .ulq .chip{font-family:var(--mono);font-size:.6rem;letter-spacing:.04em;padding:.3rem .5rem;border-radius:5px;background:var(--paper-deep);border:1px solid rgba(20,22,14,.18);display:flex;align-items:center;gap:.35rem}
   .ulq .chip .dot{width:6px;height:6px;border-radius:50%;background:var(--ochre)}
 
@@ -367,6 +374,8 @@
       readContract: 'media.consent.read_contract'|trans,
       readLicence: 'media.consent.read_licence'|trans,
       siteTerms: 'media.consent.site_terms'|trans,
+      altLabel: 'media.alt.label'|trans,
+      altPlaceholder: 'media.alt.placeholder'|trans,
       remove: 'improve.step3.remove_photo'|trans,
       tooMany: 'improve.step3.too_many_photos'|trans,
       checking: 'media.pending.checking'|trans,

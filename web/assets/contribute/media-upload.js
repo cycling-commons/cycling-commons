@@ -203,10 +203,32 @@
         '<span class="chip-thumb"></span>' +
         '<span class="chip-name">' + esc(name) + '</span>' +
         '<span class="chip-bar"><i style="width:0%"></i></span>' +
-        '<button type="button" class="chip-x" aria-label="' + esc(t('remove', 'Remove')) + '">×</button>';
+        '<button type="button" class="chip-x" aria-label="' + esc(t('remove', 'Remove')) + '">×</button>' +
+        /* Hidden until the upload has an id to attach a description to. The
+           prompt asks what somebody who cannot see it needs to know, rather
+           than saying "alt text", which means nothing to a rider. */
+        '<label class="chip-alt" hidden><span class="vh">' + esc(t('altLabel', 'Describe this photo')) + '</span>' +
+        '<input type="text" maxlength="300" placeholder="' + esc(t('altPlaceholder', 'What would somebody who cannot see it need to know?')) + '" /></label>';
       queueEl.appendChild(row);
       var item = { id: null, name: name, row: row, bar: row.querySelector('.chip-bar i'), state: 'uploading' };
       row.querySelector('.chip-x').addEventListener('click', function () { removeItem(item); });
+
+      var altInput = row.querySelector('.chip-alt input');
+      altInput.addEventListener('change', function () {
+        /* No id yet means the upload has not landed; the field is hidden then,
+           so this is belt and braces rather than a real path. */
+        if (!item.id) return;
+        var body = new FormData();
+        body.append('_token', token);
+        body.append('alt', altInput.value);
+        fetch(cfg.uploadUrl + '/' + encodeURIComponent(item.id) + '/alt', {
+          method: 'POST', body: body, credentials: 'same-origin'
+        }).then(function (r) {
+          /* Silent on success. A failure must not eat what they typed, so the
+             field keeps its value and the next change tries again. */
+          row.querySelector('.chip-alt').classList.toggle('saved', r.ok);
+        }).catch(function () { /* offline: the value stays, retried on next change */ });
+      });
       items.push(item);
       announceBusy();
       return item;
@@ -234,6 +256,9 @@
     /* Id goes into the hidden field now so submit during scan still includes the photo. */
     function received(item, data, file) {
       item.id = data.id;
+      /* There is now something to attach a description to, so offer the field. */
+      var altWrap = item.row.querySelector('.chip-alt');
+      if (altWrap) altWrap.hidden = false;
       item.state = 'checking';
       item.row.classList.remove('indeterminate');
       item.row.classList.add('checking');

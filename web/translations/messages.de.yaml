@@ -2454,6 +2454,9 @@ media:
     unpublished_title: 'Dieses Foto ist nicht veröffentlicht'
     unpublished_body: 'Es wartet vielleicht auf eine Prüfung, oder es gehört nicht mehr zum Commons.'
     to_map: 'Zur Karte'
+  alt:
+    label: 'Beschreibe dieses Foto'
+    placeholder: 'Was müsste jemand wissen, der es nicht sehen kann?'
   consent:
     title: 'Bevor du ein Foto hinzufügst'
     intro: 'Dein(e) Foto(s) werden Teil des offenen Commons, damit alle Radfahrenden sie nutzen können. Das geht nur, wenn sie wirklich frei teilbar sind.'
@@ -3087,7 +3090,7 @@ support:
     kicker: 'Kontakt'
     title: 'Schreiben Sie uns.'
     title_short: 'Kontakt'
-    lead: 'Kein Konto nötig, kein Mailprogramm nötig. Füllen Sie das Formular aus, und es erreicht uns. Wenn Sie lieber Ihr eigenes Mailprogramm nutzen, steht die Adresse gleich daneben.'
+    lead: 'Wenn Sie lieber Ihr eigenes Mailprogramm nutzen, steht die Adresse gleich daneben.'
     form_title: 'Nachricht senden'
     form_intro: 'Wählen Sie das Thema, damit es an der richtigen Stelle landet.'
     field_topic: 'Worum geht es'
@@ -3300,7 +3303,6 @@ a11y:
   gap_map: '<b>Die Karte ist mit einem Screenreader nicht nutzbar.</b> Sie ist eine Zeichnung auf einem Canvas, und ein Bild zu verschieben und zu zoomen hat ohne Sehen keine Bedeutung. Das ist die größte Lücke auf der Website, und wir haben keine schnelle Lösung dafür. Unten steht, was Sie stattdessen nutzen können.'
   gap_vendor: '<b>Einige Kartenbedienelemente sind nicht unsere.</b> Die Zoom-Schaltflächen und der Attributionsschalter stammen aus der Kartenbibliothek. Sie erreichen die Untergrenze, sind aber kleiner, als wir sie zeichnen würden, und ohne Fork lassen sie sich nicht umgestalten.'
   gap_audit: '<b>Niemand von außen hat das geprüft.</b> Alles oben wurde von den Leuten gemessen, die die Website gebaut haben, und das ist nicht dasselbe wie ein Test durch jemanden, der täglich einen Screenreader nutzt.'
-  gap_media: '<b>Fotos haben keine Beschreibungen.</b> Radfahrende laden sie hoch, und wir fragen noch nicht nach einem Alternativtext, also meldet ein Screenreader ein Foto und sonst nichts.'
   gap_translations: '<b>Übersetzungen hinken dem Englischen hinterher.</b> Neue Formulierungen erscheinen zuerst auf Englisch, eine Seite in einer anderen Sprache kann also kurz gemischt sein.'
   h_instead: 'Was Sie statt der Karte nutzen können'
   instead_pre: 'Alles, was die Karte zeichnet, gibt es auch als Text oder als Daten. Die'

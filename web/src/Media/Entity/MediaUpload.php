@@ -158,6 +158,17 @@ class MediaUpload
     #[ORM\Column(name: 'escalated_by_id', type: Types::INTEGER, nullable: true)]
     private ?int $escalatedById = null;
 
+    /**
+     * What somebody who cannot see the photo needs to know.
+     *
+     * Optional, and the render side falls back to the item's name rather than
+     * to `alt=""`. Not part of the licensed work: a description OF a photo is
+     * not the photo, so a curator may fix it without it being a licence
+     * question. @see docs/specs/photo-uploads.md §5e
+     */
+    #[ORM\Column(name: 'alt_text', type: Types::TEXT, nullable: true)]
+    private ?string $altText = null;
+
     /** Curator's description before an admin looks. */
     #[ORM\Column(name: 'escalated_reason', type: Types::TEXT, nullable: true)]
     private ?string $escalatedReason = null;
@@ -429,6 +440,18 @@ class MediaUpload
     public function getSubmissionId(): ?int
     {
         return $this->submissionId;
+    }
+
+    /** Trimmed, or null: an empty string must never reach the `alt` attribute. */
+    public function setAltText(?string $altText): void
+    {
+        $altText = null === $altText ? null : trim($altText);
+        $this->altText = ('' === $altText) ? null : $altText;
+    }
+
+    public function getAltText(): ?string
+    {
+        return $this->altText;
     }
 
     public function getItemId(): ?int

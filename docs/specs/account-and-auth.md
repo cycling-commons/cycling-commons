@@ -588,6 +588,48 @@ Mechanism when built: idempotent scheduled command; localized notices via
 `User.locale`; automated removals write `AdminActionLog` rows with
 `actor = null`; admins can reset the clock or exempt an account.
 
+### 6.5 Dormant accounts
+
+Owner's schedule, 2026-08-28, ported from a sibling BikeCoders product rather
+than designed here.
+
+| months with no sign-in | what happens |
+|---|---|
+| 12 | first notice |
+| 22 | second notice |
+| 23 | final notice |
+| 24 | the account is deleted |
+
+`App\Account\DormancyLadder` holds the schedule, `DormancySweep` applies it,
+`app:accounts:dormancy` runs it. Meant for a daily timer on the worker host.
+
+**Each notice fires inside a one-month window**, not "at or past". That is the
+property worth protecting: an account already dormant for years when this ships
+matches no window, earns no notice, and so can never satisfy the deletion
+condition. Turning the sweep on cannot clear a backlog of old accounts. If the
+windows are ever widened to "at or past", that safety goes with them.
+
+**Deletion needs all three notices**, held as three timestamps rather than one
+"current stage", because the question is "were they told, three times?" and a
+single stage column cannot answer it. `/privacy` says in five languages that we
+write first and give time; one missing notice means that was not done.
+
+**Signing in clears all three** (`User::recordLogin()`), so a rider who returns
+after the final notice starts again from zero.
+
+**Deletion is the ordinary deletion.** It calls
+`UserDeletionService::purge()`, the same path a rider's own request takes, so
+contributions are anonymised rather than cascaded and a photo licence consent
+survives exactly as it does today. A second deletion path would have drifted
+from the first within a year.
+
+**Dry by default, `--force` to act.** For a command whose failure mode is
+deleting somebody's account, the cron entry should have to opt in.
+
+Guarded by `DormancyLadderTest` (the arithmetic, including that an unwarned
+account is never deletable however old) and `DormancySweepTest` (the
+consequences, including that a dry run changes nothing).
+
 ## 7. Public rider profile
 
 `App\Controller\RiderProfileController`, route `rider_profile` =

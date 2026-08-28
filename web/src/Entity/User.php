@@ -202,6 +202,29 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     #[ORM\Column(type: 'boolean', options: ['default' => false])]
     private bool $updatesOptIn = false;
 
+    /**
+     * The dormancy clock. Written on every successful sign-in.
+     *
+     * Backfilled to `createdAt` by the migration rather than left null, because
+     * null would read as "never signed in" for accounts that simply predate the
+     * column. @see \App\Account\DormancyLadder
+     */
+    #[ORM\Column(name: 'last_login_at', type: 'datetime_immutable', nullable: true)]
+    private ?\DateTimeImmutable $lastLoginAt = null;
+
+    /**
+     * When each dormancy warning went out. Three columns, not one stage, so
+     * deletion can ask "were they told three times?" and get a real answer.
+     */
+    #[ORM\Column(name: 'inactivity_12m_at', type: 'datetime_immutable', nullable: true)]
+    private ?\DateTimeImmutable $inactivity12mAt = null;
+
+    #[ORM\Column(name: 'inactivity_22m_at', type: 'datetime_immutable', nullable: true)]
+    private ?\DateTimeImmutable $inactivity22mAt = null;
+
+    #[ORM\Column(name: 'inactivity_23m_at', type: 'datetime_immutable', nullable: true)]
+    private ?\DateTimeImmutable $inactivity23mAt = null;
+
     #[ORM\Column(type: 'datetime_immutable')]
     private ?\DateTimeImmutable $createdAt = null;
 
@@ -728,6 +751,54 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     public function isPublicProfile(): bool
     {
         return $this->publicProfile;
+    }
+
+    public function getLastLoginAt(): ?\DateTimeImmutable
+    {
+        return $this->lastLoginAt;
+    }
+
+    /**
+     * Coming back clears the whole ladder.
+     *
+     * Both fields together, always: leaving a stale notice behind would mean a
+     * rider who returned after the final warning never gets warned again.
+     */
+    public function recordLogin(\DateTimeImmutable $at): static
+    {
+        $this->lastLoginAt = $at;
+        $this->inactivity12mAt = null;
+        $this->inactivity22mAt = null;
+        $this->inactivity23mAt = null;
+
+        return $this;
+    }
+
+    /**
+     * Which warnings have gone out, keyed by {@see \App\Account\DormancyLadder}
+     * notice code.
+     *
+     * @return array<string, bool>
+     */
+    public function dormancyNoticesSent(): array
+    {
+        return [
+            'm12' => null !== $this->inactivity12mAt,
+            'm22' => null !== $this->inactivity22mAt,
+            'm23_final' => null !== $this->inactivity23mAt,
+        ];
+    }
+
+    public function recordDormancyNotice(string $code, \DateTimeImmutable $at): static
+    {
+        match ($code) {
+            'm12' => $this->inactivity12mAt = $at,
+            'm22' => $this->inactivity22mAt = $at,
+            'm23_final' => $this->inactivity23mAt = $at,
+            default => throw new \InvalidArgumentException(sprintf('Unknown dormancy notice "%s".', $code)),
+        };
+
+        return $this;
     }
 
     public function isUpdatesOptIn(): bool

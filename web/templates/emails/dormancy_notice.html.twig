@@ -1,0 +1,50 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{#
+  Dormancy warning. One template, three rungs (12 / 22 / 23 months), because the
+  message is the same message with a rising urgency and only the final one has a
+  different shape.
+
+  Two things every rung must carry, and the reason this is not a generic
+  "your account is inactive" notice:
+
+    1. **The date it closes.** A rider can act on "4 March"; they cannot act on
+       "inactive". It is computed from their own last sign-in, not from today.
+    2. **What signing in costs them: nothing.** The single most likely reason
+       somebody ignores this email is fearing it is a trick.
+
+  It also says what would be lost and what would not, because the honest answer
+  is reassuring: their contributions stay on the map either way.
+
+  @see docs/specs/account-and-auth.md §6.5
+#}
+{% extends 'emails/_base.html.twig' %}
+
+{% block title %}Your Cycling Commons account{% endblock %}
+
+{% block content %}
+  <p style="margin:0 0 8px">Hello {{ user.displayName }},</p>
+
+  {% if isFinal %}
+    <p style="margin:0 0 8px"><strong>This is the last reminder.</strong> Nobody has signed in to your Cycling Commons account for {{ monthsIdle }} months.</p>
+  {% else %}
+    <p style="margin:0 0 8px">Nobody has signed in to your Cycling Commons account for {{ monthsIdle }} months, so this is a reminder that it is still here.</p>
+  {% endif %}
+
+  {% if closesOn %}
+    <p style="margin:22px 0;text-align:center">
+      <strong style="display:inline-block;font-family:monospace;font-size:18px;background:#efe6d4;border-radius:6px;padding:12px 22px">Closes on {{ closesOn|date('j F Y') }}</strong>
+    </p>
+  {% endif %}
+
+  <p style="margin:0 0 8px"><strong>Signing in is all it takes.</strong> One sign-in stops the clock completely and you will not hear from us about this again for another year. Nothing changes, nothing is charged, and we are not asking you for anything.</p>
+
+  <p style="margin:0 0 8px">
+    <a href="https://cyclingcommons.org/login" style="color:#c2551f">Sign in to keep your account</a>
+  </p>
+
+  <p style="margin:0 0 8px">If you would rather let it go, do nothing. On that date the account and its personal details are deleted. <strong>What you contributed stays on the map</strong>, without your name on it, because it belongs to the Commons now and other riders rely on it.</p>
+
+  <p style="margin:0 0 14px">You can also <a href="https://cyclingcommons.org/settings" style="color:#c2551f">close it yourself</a> at any time, or read <a href="https://cyclingcommons.org/privacy" style="color:#c2551f">what we keep and why</a>.</p>
+
+  <p style="color:#595c4d;font-size:13px;margin:0">— The Cycling Commons team</p>
+{% endblock %}

@@ -85,6 +85,10 @@ final class PhotoPageController extends AbstractController
                 'license' => MediaDecisionService::LICENSE,
                 'licenseUrl' => XmpRights::LICENSE_URL,
                 'takenAt' => $upload->getTakenAt()?->format('Y-m'),
+                // What a screen reader announces. Null falls back in the
+                // template to the item's name, then to the generic string.
+                // @see docs/specs/photo-uploads.md §5e
+                'alt' => $upload->getAltText(),
                 'credit' => $attribution->name,
                 'profileUuid' => $attribution->profileUuid,
                 'viaApp' => $attribution->viaApp,
