@@ -625,6 +625,69 @@ next rebuild of that continent.
     cells: 401 GB raw, or about **120 GB stored gzipped**, which Valhalla reads
     natively.
 
+## Automating it, and the one check that must not be skipped
+
+A whole-planet pass is six continents of fetch, convert, install, build, verify,
+compress. Every step is a single command, and none of them is where the time
+goes. The time goes into the gaps: during one rebuild the machine sat idle for
+hours on two separate occasions, each time because a stage finished and nothing
+picked up the next one. The tooling was never the bottleneck. Waiting for a
+person to notice was.
+
+So the work is worth wrapping in a runner. The interesting part is not the loop
+— it is what the loop is allowed to believe.
+
+### An exit code is not evidence
+
+<!-- CODE-ILLUSTRATIVE the shape of the check, not a source file -->
+```
+build the tiles          -> exit 0
+route a known climb      -> how many distinct grades came back?
+                            what was the steepest?
+```
+
+A tile build that cannot read its elevation **does not fail**. It writes a flat
+`weighted_grade` onto every edge, exits 0, and serves happily forever. `/status`
+is byte-identical either way. That is precisely the failure mode this whole page
+exists to prevent, and it is invisible to any check that trusts a return value.
+
+So an unattended runner must probe the *output*: route a road that genuinely
+climbs, and require a spread of grades — say five or more distinct values with a
+maximum above 3%. Anything flatter means the DEM was not read.
+
+And it must **stop the run**, not warn and continue. Halting after one bad
+continent is recoverable. Quietly building six is five more rebuilds.
+
+### Distinguish "inconclusive" from "failed"
+
+Two things can go wrong with that probe, and conflating them is dangerous:
+
+- **The route will not snap** — bad coordinates, a gap in the road data. That is
+  inconclusive. Pass, and say so.
+- **Nothing answers the port** — the container never came up. That is a
+  failure.
+
+An early version of the check treated both as inconclusive, so a service that
+had died would have sailed straight through the gate reporting success. Pick
+probe points on well-mapped roads, and treat silence from the port as a hard
+stop.
+
+### One build at a time
+
+If the containers are governed by a single unit or compose project, two
+concurrent builds will stop each other's service mid-run and both will look
+broken in confusing ways. The runner should wait for any in-flight build before
+starting — which also means it can be launched *while* one is already going,
+and that is the normal case, because that is exactly when someone thinks of it.
+
+!!! tip "The generalisable bit"
+
+    Automating a pipeline is mostly not about the steps. It is about deciding
+    what the automation is permitted to accept as proof that a step worked. If
+    the failure mode of your slowest step is *silent and plausible*, the check
+    after it has to look at the artefact, not the exit status — and it has to be
+    willing to stop the line.
+
 ## Faults no elevation source can fix
 
 While measuring, the comparison tool flagged problems in the *geometry*:
