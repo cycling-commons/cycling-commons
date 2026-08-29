@@ -15,6 +15,7 @@ use App\Translation\Exception\ConsentRequiredException;
 use App\Translation\Exception\EmptyTranslationException;
 use App\Translation\Exception\EnglishNotTranslatableException;
 use App\Translation\Exception\InvalidLocaleException;
+use App\Translation\Exception\InvalidMarkupException;
 use App\Translation\Exception\KeyNotFoundException;
 use App\Translation\Exception\TranslationConflictException;
 use App\Translation\Exception\TranslationTooLongException;
@@ -82,6 +83,22 @@ final class ProposalService
         }
         if (\strlen($value) > TranslationLimits::PROPOSED_VALUE_MAX) {
             throw new TranslationTooLongException(sprintf('Proposed translation exceeds %d bytes.', TranslationLimits::PROPOSED_VALUE_MAX));
+        }
+
+        // Catalogue strings carry markup, and a translator sees it in the box
+        // they type into. A dropped `</b>` bleeds bold into the rest of the
+        // page; a `<script>` is stripped at render, so the stored translation
+        // would not say what they wrote. The sanitizer repairs both silently,
+        // which is exactly why neither can be caught later: this is the only
+        // moment the person who made the mistake is still looking at it.
+        //
+        // Errors only. Tag DRIFT from the English is a warning the page shows
+        // and does not block on, because languages move emphasis and are
+        // sometimes right to.
+        $problems = TranslationMarkup::check($value, $entry->getEnglish());
+        $errors = array_values(array_filter($problems, static fn (array $p): bool => 'error' === $p['level']));
+        if ([] !== $errors) {
+            throw new InvalidMarkupException($errors);
         }
 
         $userId = (int) $user->getId();

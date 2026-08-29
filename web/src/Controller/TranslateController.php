@@ -18,6 +18,7 @@ use App\Translation\Exception\ConsentRequiredException;
 use App\Translation\Exception\EmptyTranslationException;
 use App\Translation\Exception\EnglishNotTranslatableException;
 use App\Translation\Exception\InvalidLocaleException;
+use App\Translation\Exception\InvalidMarkupException;
 use App\Translation\Exception\KeyNotFoundException;
 use App\Translation\Exception\TranslationConflictException;
 use App\Translation\Exception\TranslationTooLongException;
@@ -33,6 +34,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * Rider /translate browser and proposal form (translations.md §4).
@@ -49,6 +51,9 @@ final class TranslateController extends AbstractController
         private readonly TranslationConsentService $consent,
         private readonly PageSize $pageSize,
         private readonly EntityManagerInterface $em,
+        // The markup errors name a tag, so the message needs a parameter and
+        // the flash cannot be a bare catalogue key.
+        private readonly TranslatorInterface $translator,
     ) {
     }
 
@@ -380,6 +385,14 @@ final class TranslateController extends AbstractController
                 $this->addFlash('danger', 'translate.error.key_absent');
             } catch (InvalidLocaleException) {
                 $this->addFlash('danger', 'translate.error.bad_locale');
+            } catch (InvalidMarkupException $e) {
+                // Name the tag. "The HTML is wrong" to somebody who did not
+                // know there was any HTML is not a message they can act on.
+                $problem = $e->first();
+                $this->addFlash('danger', $this->translator->trans(
+                    'translate.error.markup_'.$problem['key'],
+                    ['%tag%' => $problem['tag'] ?? ''],
+                ));
             } catch (TranslationTooLongException) {
                 $this->addFlash('danger', 'translate.error.too_long');
             } catch (TranslationConflictException) {
