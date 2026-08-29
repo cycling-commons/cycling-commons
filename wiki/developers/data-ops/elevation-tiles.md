@@ -392,19 +392,22 @@ A rebuild buys something genuinely different: `build_elevation` bakes grade into
 the *routing* tiles so cycling costs can prefer flatter roads. That is a separate
 feature, and it is not required for climb profiles.
 
-### Store them gzipped
+### Gzip works, and costs more than it saves
 
-Valhalla reads `.hgt.gz` directly — `valhalla_build_elevation` has a
-`--decompress` flag precisely so you can decline it. Verified on the production
-host on 2026-08-28: the same tile served as `.hgt` and as `.hgt.gz` returned
-identical heights, `[316, 313, 289]`, after a container restart.
+**This section previously recommended storing tiles gzipped. That advice was
+wrong, and the measurement that overturned it is below.**
+
+Valhalla does read `.hgt.gz` directly — `valhalla_build_elevation` has a
+`--decompress` flag precisely so you can decline it. Verified on 2026-08-28: the
+same tile served raw and gzipped returned identical heights, `[316, 313, 289]`,
+after a container restart.
 
 The restart is what makes that a real test. Rename a `.hgt` and query again
 without restarting and you get the right answer from a file that is no longer
 there — the old inode is still mapped.
 
-The ratio is excellent, because a `.hgt` is 26 MB of 16-bit integers with a lot
-of local similarity. Measured at `gzip -6`:
+The disk ratio is genuinely excellent, because a `.hgt` is 26 MB of 16-bit
+integers with a lot of local similarity. Measured at `gzip -6`:
 
 | tile | terrain | raw | gzip |
 |---|---|---|---|
@@ -414,24 +417,50 @@ of local similarity. Measured at `gzip -6`:
 | N46E007 | Swiss Alps | 24.7 MB | 15.2 MB (61%) |
 | **mixed sample** | | **123.7 MB** | **37.4 MB (30%)** |
 
-At 30%, the entire planet's land — 19,406 tiles once Antarctica is dropped —
-is **140 GB instead of 468 GB**.
+Whole continents did better still: 127 GB to 25 GB, 38 GB to 5.8 GB. At that
+rate the planet's land is roughly 140 GB instead of 468 GB.
 
-What it costs, measured on the same host: **120 ms to inflate one tile**, versus
-effectively zero to read a raw one. That is a first-touch cost per tile, not per
-lookup, and it exists because a `.hgt` supports seeking straight to a byte offset
-while a gzip stream must be inflated from its start.
+### The measurement that changed the recommendation
 
-!!! note "The cost nobody has measured yet"
+Two instances on one host, same load — 600 distinct 1-degree cells, 40 points
+each — one serving raw tiles, one serving gzipped:
 
-    Raw tiles are `mmap`ed: the kernel pages them in lazily and evicts them under
-    pressure, so they barely count against resident memory. An inflated tile is
-    real allocated memory that cannot be reclaimed the same way. On a box that
-    also runs workers and other services, that is the number to watch after a
-    rollout — not the 120 ms.
+| | before | after | **anon** | file |
+|---|---|---|---|---|
+| gzipped, 4 GB limit | 73 MB | **4096.0 MB, pinned at the limit** | **+2474 MB** | +1531 MB |
+| raw, 16 GB limit | 69 MB | 2011 MB | **+0.8 MB** | +1911 MB |
 
-    `.lz4` is the middle setting if it becomes a problem: a worse ratio, several
-    times faster to inflate.
+Raw grew by **0.8 MB** of anonymous memory. Gzipped grew by **2.5 GB**, and
+`memory.events` recorded the cgroup hitting its ceiling 985 times. It survived
+only because the kernel could still reclaim the file half and swap absorbed the
+rest.
+
+That is the whole difference, and it is not about speed:
+
+- A raw `.hgt` is **mmap'ed**. Its pages are file-backed, so the kernel reclaims
+  them under pressure. Running out means slower requests.
+- A gzipped tile must be **inflated into anonymous memory**, which cannot be
+  reclaimed — only swapped, then OOM-killed. Skadi caches the result and shows
+  no sign of evicting it: the instance stopped at exactly the cgroup limit
+  because the cgroup stopped it, not because it stopped itself.
+
+The measured cost was **~4.1 MB of unreclaimable memory per 1-degree cell
+touched**. Extrapolated across a six-continent host that is tens of gigabytes of
+anonymous memory for a working set that raw would have cost nothing. Disk is the
+cheaper resource here, and by a wide margin.
+
+!!! danger "Store raw unless you can prove the working set is small"
+
+    Gzip trades disk you probably have for memory you probably do not, in the
+    one form the kernel cannot reclaim. It is defensible for an instance serving
+    a small, well-known area. It is not a default.
+
+    If disk genuinely forces compression, `.lz4` is the middle setting — worse
+    ratio, faster inflation — but it does not change the shape of the problem,
+    because the inflated result is still anonymous memory.
+
+    And keep the busiest instance raw regardless. That is the one where a hard
+    memory limit turns into a kill rather than a slowdown.
 
 One trap, and it is a nasty one: **a Valhalla with no elevation tiles loaded does
 not fail.** It returns `0` for every point — a perfectly valid-looking sea-level
@@ -622,8 +651,8 @@ next rebuild of that continent.
 
     So a continent must reach full coverage of everything anyone routes on
     *before* it is rebuilt, not after. For the whole platform that is 16,619
-    cells: 401 GB raw, or about **120 GB stored gzipped**, which Valhalla reads
-    natively.
+    cells: 401 GB raw. Store it raw — see "Gzip works, and costs more than it
+    saves" above; compression trades that disk for unreclaimable memory.
 
 ## Automating it, and the one check that must not be skipped
 
