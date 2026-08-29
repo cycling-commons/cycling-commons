@@ -323,8 +323,13 @@ section.pad+section.pad{padding-top:clamp(2rem,4vw,3rem)}
 .foot .footcols{display:grid;grid-template-columns:repeat(auto-fit,minmax(11rem,1fr));
   gap:1.6rem 2.5rem;margin-bottom:.6rem}
 .foot .footcol{display:flex;flex-direction:column;gap:.35rem;min-width:0}
+/* `line-height` and `max-width` are pinned as well as the type: the landing
+   page styles a bare `h2` for its section headings, and anything it declares
+   that this rule does not would reach the footer's column headings on that one
+   page only. */
 .foot .footcol h2{font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;
-  color:rgba(239,230,212,.45);margin:0 0 .3rem;font-weight:400;font-family:inherit}
+  color:rgba(239,230,212,.45);margin:0 0 .3rem;font-weight:400;font-family:inherit;
+  line-height:inherit;max-width:none}
 .foot .footcol a{display:inline-block}
 .foot .footby{color:rgba(239,230,212,.6)}
 .foot .colophon{margin-top:1.344rem}  /* 2 × the 0.672rem line-height step */

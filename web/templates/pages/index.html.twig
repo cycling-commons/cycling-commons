@@ -23,7 +23,13 @@
   a{color:inherit;text-decoration:none}
 
   /* ---------- NAV ---------- */
-  nav{position:absolute;top:0;left:0;right:0;z-index:50;display:flex;align-items:center;justify-content:space-between;padding:0.9rem clamp(1.25rem,4vw,3rem)}
+  /* No bare `nav{}` rule here. There used to be one, left over from the
+     standalone demo, that set position:absolute;top:0;left:0;right:0. It never
+     reached the site nav (`.topnav` is a class and wins on specificity), so it
+     did nothing at all until the footer grew three <nav> columns and a social
+     row. Those it did reach: all four stacked at the top of the page, on top of
+     each other. Style `.topnav` and the footer's own classes, never the
+     element. */
   .brand{font-family:var(--serif);font-weight:600;font-size:1.6rem;color:var(--paper);letter-spacing:-.02em}
   .brand b{color:var(--trail);font-style:italic;font-weight:600}
   .nav-links{display:flex;gap:2rem;align-items:center}
