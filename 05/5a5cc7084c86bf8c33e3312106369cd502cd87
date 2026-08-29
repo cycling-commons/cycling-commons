@@ -1,0 +1,66 @@
+web/tests/Support/ContentReportTest.php
+  s_e382572451f2d6::t_12ce7ece5a1ab9 245-247
+  s_e382572451f2d6::t_7ffb7b17ef490d 40-42,140-149,154-162,164,256-257,411-413
+  s_e382572451f2d6::t_e16911af15d917 229-244,248-253
+  s_e382572451f2d6::t_cc4b1612ba302f 258,303-331
+  s_e382572451f2d6::t_1e37db09388ce6 254-255,259
+web/src/Support/ReportTarget.php
+  s_e382572451f2d6::t_d669a9aa30f196 37-43,60,69-79
+  s_e382572451f2d6::t_a9a5aba48a6b68 80
+web/src/Support/ContentReportService.php
+  s_e382572451f2d6::t_0d52fe217168cc 10-11,50-55,93-94,104-139
+  s_e382572451f2d6::t_211f7d8b7d8261 140-141
+docs/specs/content-reports.md
+  s_e382572451f2d6::t_87737179f317db 80-90
+web/templates/support/report.html.twig
+  s_e382572451f2d6::t_6bf684e6a57aa2 40
+web/src/Controller/ContentReportController.php
+  s_e382572451f2d6::t_99399b39499f25 75-77,79,158
+  s_e382572451f2d6::t_d8b0001109b37e 92-97
+web/src/Support/ReportGround.php
+  s_e382572451f2d6::t_bf8c7fe2e297ff 126-141,146-148,155-157,159
+  s_e382572451f2d6::t_d8b0001109b37e 88-98,102
+  s_e382572451f2d6::t_7d2832c42399db 30-45,62-67,72-87,99-101,103-108,142-145,149-154,158,160-163
+  s_e382572451f2d6::t_a9a5aba48a6b68 109-110,164
+web/src/Support/ReportResolver.php
+  s_e382572451f2d6::t_38191f04c0fa82 14,65,192-219
+  s_e382572451f2d6::t_a9a5aba48a6b68 220-221
+docs/specs/2026-08-30-one-report-route-design.md
+  s_e382572451f2d6::t_0739e535967c18 150-163
+  s_e382572451f2d6::t_fdcd41b648d8d4 189-196,221-223
+  s_e382572451f2d6::t_12de2afeecd080 119-120,134-149
+  s_e382572451f2d6::t_656f0b00b22f44 87,89,108-118,121-133,164,208-210
+  s_e382572451f2d6::t_898287fec7cb2c 58-74,91-106,211-215,217-220,225
+  s_e382572451f2d6::t_28ae4de5504358 1-57,75-86,88,90,107,165-188,197-207,216,224
+web/translations/messages.de.yaml
+  s_e382572451f2d6::t_198149e69bd532 4368,4376,4384-4386
+web/translations/messages.en.yaml
+  s_e382572451f2d6::t_cfc5c59067de74 4387,4395,4403-4405
+web/translations/messages.es.yaml
+  s_e382572451f2d6::t_3e36956ed0d340 4396,4404,4412-4414
+web/translations/messages.fr.yaml
+  s_e382572451f2d6::t_5455e8ab5a396e 4365,4373,4381-4383
+web/translations/messages.nl.yaml
+  s_e382572451f2d6::t_1a550101057316 4365,4373,4381-4383
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "055a5cc7084c86bf8c33e3312106369cd502cd87",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_e382572451f2d6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6d86ff86-2562-4654-bb50-b5129c283f3f",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
