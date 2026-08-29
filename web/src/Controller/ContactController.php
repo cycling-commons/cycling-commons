@@ -110,12 +110,24 @@ final class ContactController extends AbstractController
 
         // Proof of work last of the cheap checks: it costs the visitor's CPU,
         // so it should not be spent on a submission that fails validation.
+        $now = new \DateTimeImmutable();
+        $challenge = (string) $request->request->get('pow_challenge', '');
         if (!$this->proofOfWork->verify(
-            (string) $request->request->get('pow_challenge', ''),
+            $challenge,
             (string) $request->request->get('pow_nonce', ''),
-            new \DateTimeImmutable(),
+            $now,
         )) {
-            return $this->again($request, 'support.error.challenge', Response::HTTP_UNPROCESSABLE_ENTITY);
+            // Expired is not failed: it is somebody who took their time. This
+            // form needs a solved nonce (it needs JavaScript to work at all),
+            // so it cannot be waved through the way the bug form's can. It gets
+            // its own message instead. The re-rendered page carries a fresh
+            // challenge, the script re-solves it, and one more press sends the
+            // words that are now still in the box.
+            $key = $this->proofOfWork->isExpired($challenge, $now)
+                ? 'support.error.challenge_stale'
+                : 'support.error.challenge';
+
+            return $this->again($request, $key, Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
         if (!$this->contactFormLimiter->create($this->guard->key($request))->consume()->isAccepted()) {
@@ -151,6 +163,16 @@ final class ContactController extends AbstractController
     {
         $user = $this->getUser();
 
+        // On a refusal, hand back every word they typed.
+        //
+        // This page used to re-render empty, exactly as the bug form did, and
+        // it matters more here: this is where somebody writes a data request or
+        // a long question. Losing it punishes the person who wrote the most.
+        $back = null !== $error;
+        $posted = static fn (string $field, string $fallback = ''): string => $back
+            ? (string) $request->request->get($field, $fallback)
+            : $fallback;
+
         return [
             'page_title' => 'meta.contact_title',
             'page_description' => 'meta.contact_description',
@@ -161,7 +183,14 @@ final class ContactController extends AbstractController
             'topics' => ContactTopic::all(),
             // ?topic=privacy from a deep link, so "exercise your rights" on the
             // privacy page lands on the form already set to the right thing.
-            'selected_topic' => ContactTopic::fromInput((string) $request->query->get('topic', ''))->value,
+            'selected_topic' => $back
+                ? ContactTopic::fromInput((string) $request->request->get('topic', ''))->value
+                : ContactTopic::fromInput((string) $request->query->get('topic', ''))->value,
+            'kept' => [
+                'name' => $posted('name'),
+                'email' => $posted('email'),
+                'message' => $posted('message'),
+            ],
             'organisation' => $this->organisation,
             // Published NEXT TO the form, never instead of it: DSA Art. 12
             // wants a choice of means, and this page replaced thirteen

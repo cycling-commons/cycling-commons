@@ -23,3 +23,25 @@ framework:
                 # through it, and the sanitizer cannot filter style VALUES.
                 # The two strings that used it (settings email_hint, the email
                 # footer) colour their links from the surrounding template now.
+
+            # Bug-report bodies (docs/specs/contact-and-support.md §11). A
+            # separate profile from the translations one, and deliberately
+            # narrower: this input comes from a stranger through a public form,
+            # not from a merged pull request.
+            #
+            # No `a` and no `span`. A report is not a place to publish a link
+            # somebody else will click, and a class attribute would let a
+            # report style itself into the surrounding page once it is
+            # published to /known-issues. The plain URL text still renders and
+            # is still readable; it just is not clickable.
+            app.bug_markdown:
+                allow_elements:
+                    p: []
+                    br: []
+                    strong: []
+                    em: []
+                    code: []
+                    pre: []
+                    ul: []
+                    ol: []
+                    li: []

@@ -49,6 +49,7 @@ final class ModerationChromeExtension extends AbstractExtension
             new TwigFunction('curator_room_unread', $this->curatorRoomUnread(...)),
             new TwigFunction('open_contact_count', $this->openContactCount(...)),
             new TwigFunction('open_bug_count', $this->openBugCount(...)),
+            new TwigFunction('open_report_count', $this->openReportCount(...)),
         ];
     }
 
@@ -76,6 +77,22 @@ final class ModerationChromeExtension extends AbstractExtension
         }
 
         return $this->support->openBugCount();
+    }
+
+    /**
+     * Reports nobody has answered (content-reports.md §9).
+     *
+     * Unscoped, like takedowns and the inbox. A DSA Article 16 report has a
+     * clock on it and no region, so a badge shared out by geography would leave
+     * one waiting behind whichever curator happens to be away.
+     */
+    public function openReportCount(): int
+    {
+        if (!$this->security->getUser() instanceof User || !$this->security->isGranted('ROLE_CURATOR')) {
+            return 0;
+        }
+
+        return $this->support->openReportCount();
     }
 
     public function pendingTranslationCount(): int

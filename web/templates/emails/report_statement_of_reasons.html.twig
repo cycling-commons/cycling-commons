@@ -1,0 +1,61 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{#
+  DSA Article 17, the statement of reasons, to the person whose content was
+  restricted. Sent only for an upheld report, and only once, because Article 17
+  is owed exactly when a restriction happened.
+
+  Article 17(3) lists what it must contain, and every item below is one of them:
+  what was restricted, that it was a report and not our own scan, the ground in
+  our terms, the facts the curator relied on, whether a machine decided (it did
+  not: a person did, every time), and how to contest it.
+
+  The tone is deliberately not accusatory. Most upheld reports are honest
+  mistakes about a gate, a surface or a photo, not bad faith.
+
+  @see docs/specs/content-reports.md §7
+#}
+{% extends 'emails/_base.html.twig' %}
+
+{% block title %}A decision about something you added{% endblock %}
+
+{% block content %}
+  <p style="margin:0 0 8px">Hello {{ author.displayName }},</p>
+
+  <p style="margin:0 0 8px">Somebody reported something you added to Cycling Commons, a curator agreed with them, and we have changed or removed it. This email explains why, which is your right under Article 17 of the Digital Services Act.</p>
+
+  <table role="presentation" style="margin:18px 0;border-collapse:collapse;font-size:14px">
+    <tr>
+      <td style="padding:4px 14px 4px 0;color:#595c4d;vertical-align:top">What</td>
+      <td style="padding:4px 0">{{ report.targetType.label|trans }}{% if report.targetLabel %}: {{ report.targetLabel }}{% endif %}</td>
+    </tr>
+    <tr>
+      <td style="padding:4px 14px 4px 0;color:#595c4d;vertical-align:top">Rule</td>
+      <td style="padding:4px 0">{{ report.ground.label|trans }}</td>
+    </tr>
+    <tr>
+      <td style="padding:4px 14px 4px 0;color:#595c4d;vertical-align:top">Reference</td>
+      <td style="padding:4px 0;font-family:monospace">{{ report.id }}</td>
+    </tr>
+  </table>
+
+  {% if report.decisionNote %}
+    <p style="margin:0 0 4px;color:#595c4d;font-size:13px">What the curator wrote:</p>
+    <blockquote style="margin:0 0 14px;padding:10px 14px;border-left:3px solid #8fb6a8;background:#f4efe3">{{ report.decisionNote|nl2br }}</blockquote>
+  {% endif %}
+
+  <p style="margin:0 0 8px">This came from <strong>a report by another person</strong>, not from an automatic check. <strong>No machine made this decision.</strong> A curator read the content and the report and decided, as a person, that the rule above was broken.</p>
+
+  {% if report.ground.isLegal %}
+    <p style="margin:0 0 8px">The report said this was unlawful rather than simply against our rules, so we may also have had to keep a record of it.</p>
+  {% else %}
+    <p style="margin:0 0 8px">The rule is one of ours, published at <a href="https://cyclingcommons.org/terms" style="color:#c2551f">our terms</a>, not a law.</p>
+  {% endif %}
+
+  <p style="margin:0 0 8px"><strong>Your account is fine.</strong> Nothing else you added was touched, and one upheld report does not count against you.</p>
+
+  <p style="margin:0 0 8px"><strong>If we got it wrong, tell us.</strong> Reply to this email with the reference above and a different curator will read it again. You can also take it to an out-of-court dispute settlement body, or to a court, in the country where you live.</p>
+
+  <p style="margin:0 0 14px">You can read the full rules and how we apply them at <a href="https://cyclingcommons.org/terms" style="color:#c2551f">cyclingcommons.org/terms</a>.</p>
+
+  <p style="color:#595c4d;font-size:13px;margin:0">- The Cycling Commons team</p>
+{% endblock %}

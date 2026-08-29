@@ -1,0 +1,96 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{#
+  The reports desk (docs/specs/content-reports.md §9).
+
+  Notice and action under DSA Article 16, for everything that is not a photo.
+  Photos keep their own desk because that one can hide an image before a person
+  has seen it, which nothing here does.
+
+  Legal grounds sort above the rest, then newest first. That is the one place
+  this desk orders where the bugs desk deliberately does not: an unlawfulness
+  claim has a clock on it, a quality complaint has a standard.
+#}
+{% extends 'base.html.twig' %}
+
+{% block head_styles %}
+{% include 'account/_shell_styles.html.twig' %}
+<style nonce="{{ csp_nonce() }}">
+  .chips{display:flex;gap:.4rem;flex-wrap:wrap;margin:1rem 0 .6rem}
+  .chip{font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;
+    padding:.35rem .6rem;border-radius:4px;background:var(--paper-deep);color:#4a4d40;text-decoration:none}
+  .chip.on{background:var(--ink);color:var(--paper)}
+  .chip .n{opacity:.7;margin-left:.3rem}
+  .chips.kinds .chip{font-size:.68rem}
+  .rrow{border-bottom:1px solid rgba(20,22,14,.12);padding:.85rem 0}
+  .rrow:last-child{border-bottom:0}
+  .rtop{display:flex;gap:.55rem;align-items:baseline;flex-wrap:wrap}
+  .rtop a{font-family:var(--serif);font-size:1rem;color:var(--ink);text-decoration:none}
+  .rtop a:hover{color:var(--clay);text-decoration:underline}
+  .tag{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;
+    padding:.18rem .42rem;border-radius:3px;background:var(--paper-deep);color:#4a4d40}
+  {# Legal claims read differently at a glance, and only those. #}
+  .tag.legal{background:#5a2716;color:#FFD9C8}
+  .tag.gone{background:#e4ded0;color:#6d7060}
+  .rmeta{font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;color:#6d7060;margin-top:.35rem}
+  .rex{font-size:.87rem;color:#4a4d40;line-height:1.55;margin:.3rem 0 0}
+  .empty{background:var(--paper-deep);border-left:2px solid var(--ochre);padding:1.1rem 1.3rem;
+    border-radius:0 8px 8px 0;font-size:.92rem;color:#4a4d40}
+</style>
+{% endblock %}
+
+{% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate_reports'} %}{% endblock %}
+
+{% block body %}
+<div class="dbody dmin" id="main">
+  <div class="mh">
+    <div class="kicker">{{ 'account.menu_moderation'|trans }}</div>
+    <h1>{{ 'report.desk.title'|trans }}</h1>
+    <p class="lede">{{ 'report.desk.lede'|trans }}</p>
+  </div>
+
+  <div class="chips">
+    {% for st in statuses %}
+      <a class="chip {{ filter_status == st.value ? 'on' : '' }}"
+         href="{{ path('moderate_reports', {status: st.value}) }}">
+        {{ st.label|trans }}<span class="n">{{ counts[st.value] ?? 0 }}</span>
+      </a>
+    {% endfor %}
+  </div>
+
+  <div class="chips kinds">
+    {% for tg in targets %}
+      <a class="chip {{ filter_target == tg.value ? 'on' : '' }}"
+         href="{{ path('moderate_reports', {target: tg.value}) }}">{{ tg.label|trans }}</a>
+    {% endfor %}
+  </div>
+
+  {% if rows is empty %}
+    <div class="empty">{{ 'report.desk.empty'|trans }}</div>
+  {% else %}
+    {% for row in rows %}
+      {% set r = row.report %}
+      <div class="rrow">
+        <div class="rtop">
+          <a href="{{ path('moderate_reports_detail', {id: r.id}) }}">{{ row.resolved.label ?? r.targetType.label|trans ~ ' #' ~ r.targetId }}</a>
+          <span class="tag {{ r.ground.isLegal ? 'legal' : '' }}">{{ r.ground.label|trans }}</span>
+          <span class="tag">{{ r.status.label|trans }}</span>
+          <span class="tag">{{ r.targetType.label|trans }}</span>
+          {% if not row.resolved.exists %}<span class="tag gone">{{ 'report.desk.target_gone'|trans }}</span>{% endif %}
+        </div>
+        <p class="rex">{{ r.reason|length > 160 ? r.reason|slice(0, 160) ~ '…' : r.reason }}</p>
+        <p class="rmeta">
+          {{ r.createdAt|cc_datetime }}
+          {#- Whether we can answer, never the address. -#}
+          {%- if r.reporterContact %} · {{ 'report.desk.answerable'|trans }}{% else %} · {{ 'report.desk.no_contact'|trans }}{% endif %}
+        </p>
+      </div>
+    {% endfor %}
+
+    {% include 'partials/_pager.html.twig' with {
+      pager: pager,
+      route: 'moderate_reports',
+      params: {status: filter_status, target: filter_target}
+    } %}
+  {% endif %}
+</div>
+{% endblock %}

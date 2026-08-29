@@ -50,6 +50,7 @@ enum MessageCategory: string
                 UserMessageKind::MediaRestoredAfterReview,
             ],
             self::General => [
+                UserMessageKind::BugOutcome,
                 UserMessageKind::CuratorMessage,
                 UserMessageKind::CuratorApplicationReceived,
                 UserMessageKind::ModeratorAreasChanged,

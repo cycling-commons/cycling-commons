@@ -133,6 +133,32 @@ class BugReport
     private ?string $outcomeNote = null;
 
     /** The curator who last moved it. */
+    /**
+     * Curator-only. Never mailed, never published.
+     *
+     * The outcome note is written FOR the reporter, so it cannot hold "same
+     * root cause as #7", "waiting on the map rebuild", or anybody's name. This
+     * is where those go. Pinned by
+     * {@see \App\Tests\Support\BugDeskNotesTest}.
+     */
+    #[ORM\Column(name: 'internal_note', type: Types::TEXT, nullable: true)]
+    private ?string $internalNote = null;
+
+    /**
+     * What `/known-issues` says about this bug.
+     *
+     * Separate from the outcome note because that note is a REPLY: "fixed in
+     * today's release, thank you for spotting it" reads as an answer to one
+     * person, because it is one. A stranger reading the public list needs a
+     * description instead. The public TITLE already worked this way.
+     */
+    #[ORM\Column(name: 'public_body', type: Types::TEXT, nullable: true)]
+    private ?string $publicBody = null;
+
+    /** The git tag the fix lands in, e.g. `v0.9.0`. */
+    #[ORM\Column(name: 'fix_release', length: 64, nullable: true)]
+    private ?string $fixRelease = null;
+
     #[ORM\Column(name: 'handled_by_user_id', type: Types::BIGINT, nullable: true)]
     private ?int $handledByUserId = null;
 
@@ -163,6 +189,23 @@ class BugReport
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    /**
+     * `#123`, the number a reporter can quote back at us.
+     *
+     * On the entity rather than in {@see \App\Support\SupportMailer} because
+     * three surfaces show it and only one of them sends mail.
+     *
+     * Short on purpose (owner 2026-08-28). It was `CC-B-000123`: unambiguous,
+     * and nobody reads it out loud or types it twice. `#123` is what people
+     * already say. Mails sent before the change still quote the old shape, so
+     * {@see \App\Support\SupportRepository::bugIdFromReference()} keeps
+     * accepting it forever.
+     */
+    public function getReference(): string
+    {
+        return '#'.($this->id ?? 0);
     }
 
     public function getTitle(): string
@@ -330,6 +373,46 @@ class BugReport
     {
         $this->outcomeNote = $note;
         $this->touch();
+    }
+
+    public function getPublicBody(): ?string
+    {
+        return $this->publicBody;
+    }
+
+    public function setPublicBody(?string $body): void
+    {
+        $body = null === $body ? null : trim($body);
+        $this->publicBody = '' !== $body ? $body : null;
+    }
+
+    public function getInternalNote(): ?string
+    {
+        return $this->internalNote;
+    }
+
+    public function setInternalNote(?string $note): void
+    {
+        $note = null === $note ? null : trim($note);
+        $this->internalNote = '' !== $note ? $note : null;
+    }
+
+    public function getFixRelease(): ?string
+    {
+        return $this->fixRelease;
+    }
+
+    /**
+     * A git tag, trimmed and capped at the column width.
+     *
+     * Deliberately not validated against a version pattern: this project has
+     * shipped `v0.8.0-beta`, and a desk that rejects the tag a curator is
+     * looking at is a desk that gets a wrong tag typed into it instead.
+     */
+    public function setFixRelease(?string $tag): void
+    {
+        $tag = null === $tag ? null : trim($tag);
+        $this->fixRelease = null !== $tag && '' !== $tag ? mb_substr($tag, 0, 64) : null;
     }
 
     public function getHandledByUserId(): ?int

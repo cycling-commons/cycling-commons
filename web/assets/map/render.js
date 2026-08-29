@@ -521,7 +521,13 @@ export function render(){
   dynamicIds.filter(id=>id.startsWith('experience-')).forEach(liftGroup);    
   liftInfoLayersAboveRoutes();                                               // Re-apply selection styling after render() rebuilds dynamic layers.
   if(selectedRouteLayerId && map.getLayer(selectedRouteLayerId)) highlightRoute(selectedRouteLayerId);
-  document.getElementById('count').textContent=n;
+  /* The tools drawer no longer shows a count (map/index.html.twig): the number
+     it displayed was "Commons features currently drawn", which read as
+     "places" and was neither the OSM coverage underneath nor everything
+     visible. Guarded rather than deleted, so a surface that wants a live count
+     can add the element back and get one. */
+  const countEl = document.getElementById('count');
+  if (countEl) countEl.textContent = n;
   _chipHidden=tally.hidden;
   /* Event rather than a direct call: this module must not import the chrome. */
   document.dispatchEvent(new CustomEvent('cc:filters', {detail: hiddenByFilters()}));

@@ -43,6 +43,8 @@ framework:
                 adapter: cache.app
             cache.data_export_limiter:
                 adapter: cache.app
+            cache.content_report_limiter:
+                adapter: cache.app
             cache.media_report_limiter:
                 adapter: cache.app
             cache.media_report_urgent_limiter:
@@ -237,6 +239,15 @@ framework:
         # story is this limiter, the queue-not-withhold design, the site-wide
         # circuit breaker below, and the local proof-of-work the breaker turns
         # on when it opens.
+        # Reports of everything that is not a photo. Deliberately more generous
+        # than the photo budget: this one covers five content types and carries
+        # no auto-withhold, so the worst a flood does is waste a curator's time
+        # rather than hide somebody's work. Still per IP, still a day.
+        content_report:
+            policy: sliding_window
+            limit: 15
+            interval: '1 day'
+            cache_pool: cache.content_report_limiter
         media_report:
             policy: sliding_window
             limit: 5

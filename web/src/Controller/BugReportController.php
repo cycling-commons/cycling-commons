@@ -173,16 +173,32 @@ final class BugReportController extends AbstractController
 
         $user = $this->getUser();
 
-        // An address is optional. A report we cannot answer is still worth
-        // having: the fix helps everybody, including the person who filed it.
-        // But a WRONG address is worth refusing, because the reporter will sit
-        // waiting for an answer that bounced.
-        if ('' !== $email) {
+        if ($user instanceof User) {
+            // Signed in: the ACCOUNT address, and whatever was posted is
+            // discarded. The form does not offer the field, so anything
+            // arriving in it was put there by hand, and honouring it would let
+            // a report make our server mail an address the reporter chose for
+            // somebody else. Changing it is a settings decision.
+            //
+            // Their answer arrives in /messages either way; the mail is the
+            // notification of it (SupportIntake::announceBugOutcome).
+            $email = $user->getEmail();
+        } else {
+            // REQUIRED without an account (owner, 2026-08-28). It was optional,
+            // and the thank-you page then had to hedge: "if you gave us an
+            // address, we will tell you what happened". That sentence existed
+            // only because the form declined to ask. A report nobody can be
+            // answered about is a dead end for the person who filed it, and the
+            // one thing they wanted was to hear back.
+            //
+            // A wrong address is refused for the same reason it always was:
+            // the reporter would sit waiting for an answer that bounced.
+            if ('' === $email) {
+                return ['support.bug.error.email_required', Response::HTTP_UNPROCESSABLE_ENTITY];
+            }
             if (false === filter_var($email, \FILTER_VALIDATE_EMAIL) || !$this->guard->domainResolves($email)) {
                 return ['support.error.email_domain', Response::HTTP_UNPROCESSABLE_ENTITY];
             }
-        } elseif ($user instanceof User) {
-            $email = $user->getEmail();
         }
 
         // The proof of work is OPTIONAL here, and only here.
@@ -202,14 +218,26 @@ final class BugReportController extends AbstractController
         // still a refusal: that is a failed attempt, not an absent one, and
         // treating it as absent would let anyone downgrade themselves on
         // purpose while looking like a solver.
+        $now = new \DateTimeImmutable();
+        $challenge = (string) $request->request->get('pow_challenge', '');
         $nonce = trim((string) $request->request->get('pow_nonce', ''));
         $solved = '' !== $nonce;
-        if ($solved && !$this->proofOfWork->verify(
-            (string) $request->request->get('pow_challenge', ''),
-            $nonce,
-            new \DateTimeImmutable(),
-        )) {
-            return ['support.error.challenge', Response::HTTP_UNPROCESSABLE_ENTITY];
+        if ($solved && !$this->proofOfWork->verify($challenge, $nonce, $now)) {
+            // An EXPIRED challenge is not a failed test, it is somebody who
+            // spent half an hour writing carefully. Refusing them was the
+            // worst possible trade: the most useful report of the day, thrown
+            // away, with a message blaming the reporter for a spam check.
+            //
+            // Downgrading it to "unsolved" gives away nothing, because an
+            // unsolved submission is a door anybody can already walk through
+            // by sending no nonce at all. It just lands on the narrow budget.
+            //
+            // A WRONG nonce is still a refusal: that is a failed attempt, not
+            // an absent one.
+            if (!$this->proofOfWork->isExpired($challenge, $now)) {
+                return ['support.error.challenge', Response::HTTP_UNPROCESSABLE_ENTITY];
+            }
+            $solved = false;
         }
 
         $limiter = $solved ? $this->bugReportLimiter : $this->bugReportNoJsLimiter;
@@ -300,6 +328,23 @@ final class BugReportController extends AbstractController
         // ?on=/map/... from the floating button's no-JavaScript link.
         $on = (string) $request->query->get('on', '');
 
+        // On a refusal, hand back every word they typed.
+        //
+        // This form used to re-render empty. Somebody who spent twenty minutes
+        // describing a bug, and hit a validation error or a stale challenge,
+        // lost all of it and was shown a spam warning. That is the worst
+        // failure this page can have: it punishes exactly the person taking
+        // the most care, on the one form whose whole premise is that something
+        // is already broken (owner, 2026-08-28: "and then my form was empty").
+        //
+        // Screenshots are the one thing that cannot come back: a browser will
+        // not let a server refill a file input. The page says so rather than
+        // letting somebody send a report believing the image went with it.
+        $back = null !== $error;
+        $posted = static fn (string $field, string $fallback = ''): string => $back
+            ? (string) $request->request->get($field, $fallback)
+            : $fallback;
+
         return [
             'page_title' => 'meta.bug_report_title',
             'page_description' => 'meta.bug_report_description',
@@ -308,9 +353,18 @@ final class BugReportController extends AbstractController
             'error' => $error,
             'severities' => BugSeverity::all(),
             'areas' => BugArea::all(),
-            'selected_severity' => BugSeverity::Minor->value,
-            'selected_area' => BugArea::guessFromPath('' !== $on ? $on : '/')->value,
-            'prefill_url' => $this->cleanPageUrl($request, $on),
+            'selected_severity' => $posted('severity', BugSeverity::Minor->value),
+            'selected_area' => $posted('area', BugArea::guessFromPath('' !== $on ? $on : '/')->value),
+            'prefill_url' => $back
+                ? $this->cleanPageUrl($request, (string) $request->request->get('page_url', ''))
+                : $this->cleanPageUrl($request, $on),
+            'kept' => [
+                'title' => $posted('title'),
+                'body' => $posted('body'),
+                'steps' => $posted('steps'),
+                'email' => $posted('email'),
+            ],
+            'lost_screenshots' => $back && [] !== $request->files->all('screenshot'),
             'prefill_email' => $user instanceof User ? $user->getEmail() : '',
             'form_stamp' => $this->guard->stamp(new \DateTimeImmutable()),
             'pow_challenge' => $this->proofOfWork->issue(new \DateTimeImmutable()),
@@ -319,6 +373,10 @@ final class BugReportController extends AbstractController
             'honeypot_b' => FormGuard::HONEYPOT_B,
             'stamp_field' => FormGuard::STAMP,
             'max_screenshots' => BugReport::MAX_SCREENSHOTS,
+            // Both forms: the bytes for the picker's own check, and a whole
+            // number of MB for the sentence a person reads.
+            'max_shot_bytes' => ScreenshotStore::MAX_UPLOAD_BYTES,
+            'max_shot_mb' => intdiv(ScreenshotStore::MAX_UPLOAD_BYTES, 1024 * 1024),
         ];
     }
 

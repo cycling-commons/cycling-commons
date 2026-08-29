@@ -42,6 +42,8 @@ enum UserMessageKind: string
     case TranslationApproved = 'translation_approved';
     case TranslationRejected = 'translation_rejected';
     case TranslationNeedsInfo = 'translation_needs_info';
+    /** A curator answered a bug report (docs/specs/contact-and-support.md §9). */
+    case BugOutcome = 'bug_outcome';
 
     /** @return list<string>
      *

@@ -27,7 +27,9 @@
   .msg-state .vh{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
   .msg-subject{color:var(--clay);text-decoration:underline;text-underline-offset:2px}
   .msg-subject:hover{color:var(--trail)}
-  .msg-from-curator{font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;color:var(--clay);margin-top:.5rem}
+  .msg-from-curator{font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:var(--clay);margin-top:.5rem}
+  .msg-report{margin:.7rem 0 0;font-size:.76rem}
+  .msg-report a{color:#6d7060}
   .msg-from-you{color:#595c4d}
 </style>
 {% endblock %}
@@ -89,7 +91,7 @@
       {% endif %}
     </div>
   {% else %}
-    <ul class="q-list msg-list" id="qList">
+    <ul class="cc-zebra q-list msg-list" id="qList">
       {% for m in messages %}
         {% set mine = m.senderId is not null and m.senderId == cc_user.id %}
         <li class="q-item msg-row {{ mine ? 'q-item--mine msg-mine' : (m.isRead ? '' : 'q-item--new msg-new') }}" id="msg-{{ m.id }}">
@@ -208,6 +210,12 @@
               <textarea id="msg-reply-{{ m.id }}" name="body" maxlength="2000" required></textarea>
               <button type="submit" class="btn-act">{{ 'messages.reply_send'|trans }}</button>
             </form>
+          {% endif %}
+          {# Notice and action, DSA Article 16. Only on a message somebody sent
+             you: reporting the system's own notices, or your own words back to
+             you, is noise (docs/specs/content-reports.md §5). #}
+          {% if not mine and m.senderId %}
+            <p class="msg-report"><a href="{{ path('content_report', {type: 'message', id: m.id, from: app.request.pathInfo}) }}">{{ 'report.link_message'|trans }}</a></p>
           {% endif %}
         </li>
       {% endfor %}

@@ -22,13 +22,13 @@
   .rrow:last-of-type{border-bottom:0}
   .rtop{display:flex;gap:.55rem;align-items:baseline;flex-wrap:wrap}
   .rtop h2{font-family:var(--serif);font-size:1rem;font-weight:600;margin:0;color:var(--ink)}
-  .tag{font-family:var(--mono);font-size:.56rem;letter-spacing:.1em;text-transform:uppercase;
+  .tag{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;
     padding:.18rem .42rem;border-radius:3px;background:var(--paper-deep);color:#4a4d40}
   .tag.st-resolved{background:var(--spruce);color:var(--paper)}
   .tag.st-in_progress,.tag.st-needs_testing,.tag.st-planned{background:var(--ochre);color:var(--ink)}
   .tag.st-declined{background:#efe9dd;color:#5a5d4d}
-  .ref{font-family:var(--mono);font-size:.6rem;color:#6d7060}
-  .rmeta{font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;color:#6d7060;margin-top:.3rem}
+  .ref{font-family:var(--mono);font-size:.7rem;color:#6d7060}
+  .rmeta{font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;color:#6d7060;margin-top:.3rem}
   .routcome{background:var(--paper-deep);border-left:2px solid var(--spruce);padding:.7rem .95rem;
     border-radius:0 6px 6px 0;font-size:.87rem;color:#3a3d30;line-height:1.55;margin:.5rem 0 0}
   .empty{background:var(--paper-deep);border-left:2px solid var(--ochre);padding:1.1rem 1.3rem;
@@ -68,7 +68,7 @@
           {%- if r.isPublic %} · <a href="{{ path('known_issues') }}">{{ 'support.mine.on_known'|trans }}</a>{% endif %}
         </p>
         {% if r.outcomeNote %}
-          <p class="routcome">{{ r.outcomeNote }}</p>
+          <div class="routcome">{{ r.outcomeNote|bug_markdown }}</div>
         {% endif %}
       </div>
     {% endfor %}

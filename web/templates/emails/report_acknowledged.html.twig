@@ -1,0 +1,44 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{#
+  DSA Article 16(4): a report with a reply address gets a confirmation "without
+  undue delay". This is that confirmation and nothing more, so it is sent the
+  moment the row is written rather than waiting on a curator.
+
+  It quotes back what was reported and on what ground, because a reporter who
+  picked the wrong item needs to be able to see that from the email alone. It
+  does not name the author, and it does not promise an outcome.
+
+  @see docs/specs/content-reports.md §6
+#}
+{% extends 'emails/_base.html.twig' %}
+
+{% block title %}We have your report{% endblock %}
+
+{% block content %}
+  <p style="margin:0 0 8px">Thank you. Your report reached us and a curator will look at it.</p>
+
+  <table role="presentation" style="margin:18px 0;border-collapse:collapse;font-size:14px">
+    <tr>
+      <td style="padding:4px 14px 4px 0;color:#595c4d;vertical-align:top">What</td>
+      <td style="padding:4px 0">{{ report.targetType.label|trans }}{% if report.targetLabel %}: {{ report.targetLabel }}{% endif %}</td>
+    </tr>
+    <tr>
+      <td style="padding:4px 14px 4px 0;color:#595c4d;vertical-align:top">Why</td>
+      <td style="padding:4px 0">{{ report.ground.label|trans }}</td>
+    </tr>
+    <tr>
+      <td style="padding:4px 14px 4px 0;color:#595c4d;vertical-align:top">Reference</td>
+      <td style="padding:4px 0;font-family:monospace">{{ report.id }}</td>
+    </tr>
+  </table>
+
+  <p style="margin:0 0 8px">A person reads every report. We will write to you again when the decision is made, whatever it is.</p>
+
+  {% if report.ground.isLegal %}
+    <p style="margin:0 0 8px">You marked this as a legal problem, so it goes to the front of the queue.</p>
+  {% endif %}
+
+  <p style="margin:0 0 14px">If you sent this by mistake, reply to this email and say so. Keep the reference above.</p>
+
+  <p style="color:#595c4d;font-size:13px;margin:0">- The Cycling Commons team</p>
+{% endblock %}

@@ -97,7 +97,54 @@ final class ProofOfWorkTest extends KernelTestCase
         $challenge = $this->pow->issue($now);
         $nonce = $this->solve($challenge);
 
-        self::assertFalse($this->pow->verify($challenge, $nonce, $now->modify('+11 minutes')));
+        self::assertFalse($this->pow->verify($challenge, $nonce, $now->modify('+31 minutes')));
+    }
+
+    /**
+     * The window is long enough to write in.
+     *
+     * It was ten minutes, measured against how long a challenge is worth
+     * replaying and never against how long a person takes. A useful bug report
+     * has steps in it and often a pasted screenshot, and that is regularly more
+     * than ten minutes; the challenge died mid-sentence and the reporter was
+     * told the spam check had failed (owner, 2026-08-28).
+     *
+     * Twenty minutes has to hold, so this is not a restatement of the constant.
+     */
+    public function testSomebodyWritingCarefullyIsStillInsideTheWindow(): void
+    {
+        $now = new \DateTimeImmutable();
+        $challenge = $this->pow->issue($now);
+        $nonce = $this->solve($challenge);
+
+        self::assertTrue($this->pow->verify($challenge, $nonce, $now->modify('+20 minutes')));
+    }
+
+    /**
+     * Expired and wrong are told apart.
+     *
+     * They say opposite things about the person on the other end, and the bug
+     * form treats them differently: a wrong nonce is a refusal, an expired one
+     * is somebody who took their time
+     * ({@see \App\Controller\BugReportController}).
+     */
+    public function testExpiryIsDistinguishableFromAWrongAnswer(): void
+    {
+        $now = new \DateTimeImmutable();
+        $challenge = $this->pow->issue($now);
+
+        self::assertFalse($this->pow->isExpired($challenge, $now), 'fresh');
+        self::assertTrue($this->pow->isExpired($challenge, $now->modify('+31 minutes')), 'stale');
+    }
+
+    /** A forged string is not "expired": it is not ours at all. */
+    public function testAForgedChallengeIsNeverCalledExpired(): void
+    {
+        $now = new \DateTimeImmutable();
+        $forged = ($now->getTimestamp() - 600).'.deadbeef.'.str_repeat('a', 64);
+
+        self::assertFalse($this->pow->isExpired($forged, $now));
+        self::assertFalse($this->pow->isExpired('nonsense', $now));
     }
 
     /**

@@ -16,23 +16,42 @@
 
 {% block head_styles %}
 <style nonce="{{ csp_nonce() }}">
-  .lhero{background:var(--ink);color:var(--paper);padding:3rem 0}
   .bugpage{max-width:640px}
   .bugpage h2{font-family:var(--serif);font-weight:600;font-size:1.25rem;margin:1.8rem 0 .5rem}
   .bugpage p{font-size:.95rem;color:#3a3d30;line-height:1.65;margin:.55rem 0}
   .bugpage a{color:var(--clay);text-decoration:underline;text-underline-offset:3px}
   .cfield{margin:1.15rem 0}
-  .cfield label,.cfield .leg{display:block;font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;
+  .cfield label,.cfield .leg{display:block;font-family:var(--mono);font-size:.72rem;letter-spacing:.12em;
     text-transform:uppercase;color:var(--clay);margin-bottom:.4rem}
   .cfield input[type="text"],.cfield input[type="email"],.cfield input[type="file"],.cfield select,.cfield textarea{
     width:100%;font-family:inherit;font-size:.95rem;padding:.6rem .7rem;color:var(--ink);
     border:1px solid rgba(20,22,14,.24);border-radius:5px;background:var(--paper)}
   .cfield textarea{min-height:8rem;line-height:1.6;resize:vertical}
+  .req{color:var(--clay);font-weight:700}
+  .reqlegend{font-size:.82rem;color:#595c4d;margin:0 0 1rem}
+  #b-shot-hint{margin:0 0 .45rem}
+  .reattach{color:var(--clay);font-weight:600}
+  /* What has been picked so far, which the native control cannot show and
+     which is the whole reason a second selection used to lose the first. */
+  .shotlist{list-style:none;margin:.5rem 0 0;padding:0;display:flex;flex-direction:column;gap:.3rem}
+  .shotlist li{display:flex;align-items:center;gap:.5rem;background:var(--paper-deep);
+    border-radius:5px;padding:.35rem .5rem .35rem .7rem;font-size:.84rem;color:#3a3d30}
+  .shotname{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .shotdrop{flex:none;width:26px;height:26px;line-height:1;font-size:1rem;cursor:pointer;
+    border:1px solid rgba(20,22,14,.2);border-radius:4px;background:var(--paper);color:#595c4d}
+  .shotdrop:hover{border-color:var(--clay);color:var(--clay)}
+  .shotdrop:focus-visible{outline:2px solid var(--clay);outline-offset:2px}
+  .shotnote{color:var(--clay)}
+  /* Context values: the mono FACE at the size of the surrounding text. The
+     site-wide `.mono` utility uppercases, and `/regions` shown as `/REGIONS`
+     is a different path. */
+  .ctxval{font-family:var(--mono);font-size:.86rem;letter-spacing:0;text-transform:none;
+    word-break:break-word}
   .chint{font-size:.82rem;color:#595c4d;margin:.35rem 0 0;line-height:1.55}
   .opt{color:#8c8f7d;letter-spacing:.09em}
   .ctxblock{margin:1.4rem 0;font-size:.88rem;color:#4a4d40}
   .ctxblock summary{cursor:pointer;color:var(--clay)}
-  .ctxblock dt{font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;
+  .ctxblock dt{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;
     color:var(--clay);margin-top:.6rem}
   .ctxblock dd{margin:.1rem 0 0;font-size:.8rem;word-break:break-all}
   .hp-field{position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden}
@@ -52,7 +71,7 @@
   .sevrow{display:flex;gap:.4rem;flex-wrap:wrap;margin:0}
   .sevrow label{margin:0}
   .sevrow input{position:absolute;opacity:0;width:1px;height:1px}
-  .sevrow span{display:inline-block;font-family:var(--mono);font-size:.62rem;letter-spacing:.09em;
+  .sevrow span{display:inline-block;font-family:var(--mono);font-size:.72rem;letter-spacing:.09em;
     text-transform:uppercase;padding:.5rem .8rem;border:1px solid rgba(20,22,14,.2);border-radius:5px;
     background:var(--paper);color:#4a4d40;cursor:pointer;transition:all .15s}
   .sevrow label:hover span{border-color:var(--clay);color:var(--ink)}
@@ -64,6 +83,14 @@
 {% block body_scripts %}
 <script src="{{ asset('support/form-challenge.js') }}" defer></script>
 <script src="{{ asset('support/bug-context.js') }}" defer></script>
+{# The picker, and the labels it builds its list from. Enhancement only: the
+   native input still works without it, one dialog at a time. #}
+<script nonce="{{ csp_nonce() }}">window.CC_SHOT_LABELS = {{ {
+  remove: 'support.bug.shot_remove'|trans,
+  tooBig: 'support.bug.shot_too_big'|trans,
+  full: 'support.bug.shot_full'|trans,
+}|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
+<script src="{{ asset('support/shot-picker.js') }}" defer></script>
 {% endblock %}
 
 {% block body %}
@@ -96,7 +123,10 @@
         <input type="hidden" name="{{ stamp_field }}" value="{{ form_stamp }}">
         <input type="hidden" name="pow_challenge" value="{{ pow_challenge }}">
         <input type="hidden" name="pow_nonce" id="pow_nonce" value="">
-        <input type="hidden" name="page_url" value="{{ prefill_url }}">
+        {# Only when we KNOW the page. When we do not, the reporter gets a
+           visible box further down with the same name, and two fields sharing
+           a name would leave PHP picking one by document order. #}
+        {% if prefill_url %}<input type="hidden" name="page_url" value="{{ prefill_url }}">{% endif %}
         {# Filled by support/bug-context.js, so this form sends the same context
            the floating panel does. Empty with JavaScript off. #}
         <input type="hidden" name="browser" value="">
@@ -110,11 +140,30 @@
           <input type="text" id="{{ honeypot_b }}" name="{{ honeypot_b }}" tabindex="-1" autocomplete="off">
         </div>
 
+
         <div class="cfield">
-          <label for="b-title">{{ 'support.bug.field_title'|trans }}</label>
+          <label for="b-title">{{ 'support.bug.field_title'|trans }} <span class="req" aria-hidden="true">*</span></label>
           <input type="text" id="b-title" name="title" maxlength="160" required
+                 value="{{ kept.title }}"
                  placeholder="{{ 'support.bug.placeholder_title'|trans }}">
         </div>
+
+        {% if not prefill_url %}
+          {# Nobody arrived from the page they are reporting, so there is no
+             path to record and until now no way for them to say. A QUESTION,
+             so it sits with the other questions rather than inside the block
+             that lists what we captured on our own. Optional: a report with no
+             page is still a report, and off-site URLs are dropped server side
+             (BugReportController::cleanPageUrl). #}
+          <div class="cfield">
+            <label for="b-url">{{ 'support.bug.field_page'|trans }}
+</label>
+            <input type="text" id="b-url" name="page_url" maxlength="500"
+                   inputmode="url" autocomplete="off" value="{{ prefill_url }}"
+                   placeholder="{{ 'support.bug.field_page_ph'|trans }}">
+            <p class="chint">{{ 'support.bug.field_page_hint_short'|trans }}</p>
+          </div>
+        {% endif %}
 
         <div class="cfield">
           <span class="leg">{{ 'support.bug.field_severity'|trans }}</span>
@@ -138,51 +187,68 @@
         </div>
 
         <div class="cfield">
-          <label for="b-body">{{ 'support.bug.field_body'|trans }}</label>
+          <label for="b-body">{{ 'support.bug.field_body'|trans }} <span class="req" aria-hidden="true">*</span></label>
           <textarea id="b-body" name="body" maxlength="8000" required
-                    placeholder="{{ 'support.bug.placeholder_body'|trans }}"></textarea>
+                    placeholder="{{ 'support.bug.placeholder_body'|trans }}">{{ kept.body }}</textarea>
         </div>
 
         <div class="cfield">
-          <label for="b-steps">{{ 'support.bug.field_steps'|trans }} <span class="opt">{{ 'support.bug.optional'|trans }}</span></label>
+          <label for="b-steps">{{ 'support.bug.field_steps'|trans }}</label>
           <textarea id="b-steps" name="steps" maxlength="4000"
-                    placeholder="{{ 'support.bug.placeholder_steps'|trans }}"></textarea>
+                    placeholder="{{ 'support.bug.placeholder_steps'|trans }}">{{ kept.steps }}</textarea>
         </div>
 
         <div class="cfield">
-          <label for="b-shot">{{ 'support.bug.field_screenshot'|trans }} <span class="opt">{{ 'support.bug.optional'|trans }}</span></label>
+          <label for="b-shot">{{ 'support.bug.field_screenshot'|trans }}</label>
+          <p class="chint" id="b-shot-hint">{{ 'support.bug.hint_screenshot'|trans({
+            '%max%': max_screenshots,
+            '%size%': max_shot_mb,
+            '%formats%': 'PNG, JPEG, GIF, WebP',
+          }) }}</p>
           <input type="file" id="b-shot" name="screenshot[]" multiple
-                 accept="image/png,image/jpeg,image/gif,image/webp">
-          <p class="chint">{{ 'support.bug.hint_screenshot'|trans({'%max%': max_screenshots}) }}</p>
+                 accept="image/png,image/jpeg,image/gif,image/webp"
+                 aria-describedby="b-shot-hint"
+                 data-max="{{ max_screenshots }}" data-max-bytes="{{ max_shot_bytes }}">
+          {% if lost_screenshots|default(false) %}
+            {# A browser will not let a server refill a file input, so this is
+               the honest thing to say rather than letting somebody send a
+               report believing the image went with it. #}
+            <p class="chint reattach">{{ 'support.bug.reattach'|trans }}</p>
+          {% endif %}
         </div>
 
-        <div class="cfield">
-          <label for="b-email">{{ 'support.bug.field_email'|trans }}</label>
-          <input type="email" id="b-email" name="email" maxlength="320" value="{{ prefill_email }}" autocomplete="email">
-          <p class="chint">{{ prefill_email ? 'support.bug.hint_email_user'|trans : 'support.bug.hint_email_anon'|trans }}</p>
-        </div>
+        {# Signed in: no address field at all. Showing somebody their own
+           address so they can read it and not change it is a question with one
+           answer. The reply goes to their account either way
+           (docs/specs/contact-and-support.md §5). #}
+        {% if not prefill_email %}
+          <div class="cfield">
+            <label for="b-email">{{ 'support.bug.field_email'|trans }} <span class="req" aria-hidden="true">*</span></label>
+            <input type="email" id="b-email" name="email" maxlength="320" required
+                   value="{{ kept.email }}" autocomplete="email">
+            <p class="chint">{{ 'support.bug.hint_email_anon'|trans }}</p>
+          </div>
+        {% endif %}
 
         <details class="ctxblock">
           <summary>{{ 'support.bug.context_summary'|trans }}</summary>
           <dl>
             <dt>{{ 'support.bug.context_page'|trans }}</dt>
-            <dd class="mono">{{ prefill_url ?? '–' }}</dd>
+            <dd class="ctxval">{{ prefill_url ?? '–' }}</dd>
             <dt class="ctx-jsonly" hidden>{{ 'support.bug.context_browser'|trans }}</dt>
-            <dd class="mono bf-ctx-browser ctx-jsonly" hidden></dd>
+            <dd class="ctxval bf-ctx-browser ctx-jsonly" hidden></dd>
             <dt class="ctx-jsonly" hidden>{{ 'support.bug.context_screen'|trans }}</dt>
-            <dd class="mono bf-ctx-viewport ctx-jsonly" hidden></dd>
+            <dd class="ctxval bf-ctx-viewport ctx-jsonly" hidden></dd>
           </dl>
-          <p class="chint">{{ 'support.bug.context_note'|trans }}</p>
-        </details>
 
-        <div class="cnote">
-          <p>{{ 'support.bug.privacy_note'|trans }} <a href="{{ path('privacy') }}">{{ 'support.contact.privacy_link'|trans }}</a>.</p>
-        </div>
+        </details>
 
         <p id="pow-status" class="pow-status" hidden
            data-working="{{ 'support.challenge_working'|trans }}"
            data-ready="{{ 'support.challenge_ready'|trans }}"
            data-failed="{{ 'support.challenge_failed'|trans }}"></p>
+
+        <p class="reqlegend">{{ 'support.required_legend'|trans|rich }}</p>
 
         <p><button type="submit" class="btn btn-p">{{ 'support.bug.submit'|trans }}</button></p>
       </form>

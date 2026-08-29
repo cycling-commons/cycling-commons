@@ -97,14 +97,17 @@
       </div>
 
       <div class="bugfab-field" id="bf-steps-wrap">
-        <label for="bf-steps">{{ 'support.bug.field_steps'|trans }} <span class="opt">{{ 'support.bug.optional'|trans }}</span></label>
+        <label for="bf-steps">{{ 'support.bug.field_steps'|trans }}</label>
         <textarea id="bf-steps" maxlength="4000" placeholder="{{ 'support.bug.placeholder_steps'|trans }}"></textarea>
       </div>
 
       {% if not app.user %}
         <div class="bugfab-field">
-          <label for="bf-email">{{ 'support.bug.field_email'|trans }} <span class="opt">{{ 'support.bug.optional'|trans }}</span></label>
-          <input type="email" id="bf-email" maxlength="320" placeholder="{{ 'support.bug.placeholder_email'|trans }}">
+          {# Required without an account, same as /report-bug: a report nobody
+             can be answered about is a dead end for the person who filed it. #}
+          <label for="bf-email">{{ 'support.bug.field_email'|trans }} <span class="req" aria-hidden="true">*</span></label>
+          <input type="email" id="bf-email" maxlength="320" required
+                 placeholder="{{ 'support.bug.placeholder_email'|trans }}">
           <p class="bugfab-hint">{{ 'support.bug.hint_email_anon'|trans }}</p>
         </div>
       {% endif %}
@@ -122,7 +125,6 @@
           <dt>{{ 'support.bug.context_browser'|trans }}</dt><dd class="mono bf-ctx-browser"></dd>
           <dt>{{ 'support.bug.context_screen'|trans }}</dt><dd class="mono bf-ctx-viewport"></dd>
         </dl>
-        <p class="bugfab-hint">{{ 'support.bug.context_note'|trans }}</p>
       </details>
 
       <p class="bugfab-status mono" hidden
@@ -184,13 +186,25 @@
   .bugfab-head button:hover{background:rgba(255,255,255,.16)}
   .bugfab-body,.bugfab-done{overflow-y:auto;padding:.9rem 1rem 1.1rem}
   .bugfab-field{margin:.8rem 0}
-  .bugfab-field label,.bugfab-legend{display:block;font-family:var(--mono);font-size:.58rem;letter-spacing:.12em;
+  .bugfab-field label,.bugfab-legend{display:block;font-family:var(--mono);font-size:.68rem;letter-spacing:.12em;
     text-transform:uppercase;color:var(--clay);margin-bottom:.32rem}
   .bugfab-field input,.bugfab-field select,.bugfab-field textarea{width:100%;font-family:inherit;font-size:.88rem;
     padding:.5rem .55rem;color:var(--ink);border:1px solid rgba(20,22,14,.24);border-radius:5px;background:var(--paper)}
   .bugfab-field textarea{min-height:6rem;line-height:1.55;resize:vertical}
+  /* Formatting toolbar (docs/specs/contact-and-support.md §15). Styled here
+     because the fab renders on every page, so these rules reach the panel and
+     /report-bug from one place. Built by JS, so nothing below ever applies to
+     a page with scripting off. */
+  .md-bar{display:flex;gap:.25rem;margin:0 0 .35rem;flex-wrap:wrap}
+  .md-btn{font-family:var(--mono);font-size:.72rem;line-height:1;min-width:30px;min-height:30px;
+    padding:.35rem .5rem;border:1px solid rgba(20,22,14,.2);border-radius:4px;
+    background:var(--paper);color:#4a4d40;cursor:pointer}
+  .md-btn:hover{background:var(--paper-deep);color:var(--ink)}
+  .md-btn:focus-visible{outline:2px solid var(--clay);outline-offset:2px}
+  .md-b{font-weight:800}.md-i{font-style:italic}
+  .md-hint{margin:.3rem 0 0;font-size:.74rem;color:#6d7060;line-height:1.5}
   .bugfab-sev{display:flex;gap:.3rem}
-  .bugfab-sev button{flex:1;font-family:var(--mono);font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;
+  .bugfab-sev button{flex:1;font-family:var(--mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;
     padding:.45rem .2rem;border:1px solid rgba(20,22,14,.2);border-radius:5px;background:var(--paper);
     color:#4a4d40;cursor:pointer}
   .bugfab-sev button.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
@@ -204,13 +218,13 @@
     font-size:.7rem;line-height:1;padding:.15rem .3rem;cursor:pointer}
   .bugfab-context{margin:.9rem 0;font-size:.8rem;color:#4a4d40}
   .bugfab-context summary{cursor:pointer;color:var(--clay)}
-  .bugfab-context dt{font-family:var(--mono);font-size:.56rem;letter-spacing:.1em;text-transform:uppercase;
+  .bugfab-context dt{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;
     color:var(--clay);margin-top:.5rem}
   .bugfab-context dd{margin:.1rem 0 0;font-size:.76rem;word-break:break-all}
   .bugfab-msg{background:#fff1ec;border-left:2px solid var(--trail);padding:.6rem .75rem;border-radius:0 5px 5px 0;
     font-size:.82rem;color:#5a2716;line-height:1.5;margin:0 0 .6rem}
   .bugfab-msg[hidden]{display:none}
-  .bugfab-status{font-size:.66rem;letter-spacing:.06em;color:#595c4d;margin:.5rem 0}
+  .bugfab-status{font-size:.74rem;letter-spacing:.06em;color:#595c4d;margin:.5rem 0}
   .bugfab-status[hidden]{display:none}
   .bugfab-send{margin-top:.5rem}
   .bugfab-done h3{font-family:var(--serif);font-size:1.05rem;margin:0 0 .5rem}

@@ -387,15 +387,8 @@
       <div class="grp">
         <h3>{{ 'map.contribute'|trans }}</h3>
         <a class="cc-addclimb-go" href="{{ path('contribute') }}">{{ 'map.contribute'|trans }}</a>
-        <p class="cc-addclimb-note">{{ 'map.contribute_hint'|trans }}</p>
       </div>
 
-      {# What the map is drawing right now. render.js rewrites #count on every
-         pass, so the id travels with the element. #}
-      <div class="grp">
-        <h3>{{ 'map.on_the_map'|trans }}</h3>
-        <div class="res"><b id="count">0</b> {{ 'map.places_shown'|trans }}</div>
-      </div>
       </section>
 
       </div>
@@ -929,5 +922,7 @@ window.CC_VENDOR = {{ {
 {% include 'partials/_bug_fab.html.twig' with {bug_fab: bug_fab_context(), on_map: true} only %}
 <script src="{{ asset('support/pow.js') }}"></script>
 <script src="{{ asset('support/bug-fab.js') }}" defer></script>
+{% include 'partials/_bug_markdown_i18n.html.twig' %}
+<script src="{{ asset('support/markdown-toolbar.js') }}" defer></script>
 </body>
 </html>

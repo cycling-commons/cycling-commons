@@ -3,7 +3,7 @@
    Included by the dashboard (/profile), settings (/settings), 2FA setup, and the
    moderation queue (/moderate) so the logged-in area is one continuous
    environment with the same account chip used in the public nav.
-   Param: `active` = contrib | votes | saved | scout | translate | messages | settings | moderate | moderate_routes | moderate_data | moderate_takedowns | moderate_translations | moderate_regions | moderate_room | moderate_rulebook. Submission history lives under the Submissions tab as Queue/History chips, so it keeps `active: moderate`.
+   Param: `active` = contrib | votes | saved | scout | translate | messages | settings | moderate | moderate_routes | moderate_data | moderate_takedowns | moderate_translations | moderate_regions | moderate_room | moderate_rulebook | moderate_reports. Submission history lives under the Submissions tab as Queue/History chips, so it keeps `active: moderate`.
    Param: `mod_scope_names` (moderator-areas spec 2026-07-14) = the curator's
    assigned area names (ModerationScopeProvider::describe()) — [] for global,
    omitted/null for pages that don't pass it. Only rendered in moderator mode.
@@ -11,11 +11,11 @@
    reach it via the account-chip dropdown) — user pages show user tabs only,
    and on moderator pages the labelled group makes the section unmistakable. #}
 {% set active = active|default('contrib') %}
-{% set in_moderation = active in ['moderate', 'moderate_routes', 'moderate_regions', 'moderate_data', 'moderate_takedowns', 'moderate_translations', 'moderate_room', 'moderate_rulebook', 'moderate_history', 'moderate_inbox', 'moderate_bugs'] %}
+{% set in_moderation = active in ['moderate', 'moderate_routes', 'moderate_regions', 'moderate_data', 'moderate_takedowns', 'moderate_translations', 'moderate_room', 'moderate_rulebook', 'moderate_history', 'moderate_bugs', 'moderate_reports'] %}
 <header class="dtop">
   <div class="brandblock">
     <a class="brand" href="{{ path('home') }}"><img src="{{ asset('brand/logo-nav.svg') }}" alt="Cycling Commons"></a>
-    <div class="brandsub"><span class="cc-coord">N 48.87° · E 2.29°</span><br>{{ 'account.brandsub'|trans }}</div>
+    <div class="brandsub"><span class="cc-coord">N 41.39° · E 2.16°</span><br>{{ 'account.brandsub'|trans }}</div>
   </div>
   <div class="dtop-right">
     {% include 'partials/_lang_menu.html.twig' %}
@@ -26,8 +26,8 @@
 {# Moderator mode: the bar carries ONLY the moderation tabs, on its own darker
    colour — no user items. Back to the personal area via the account chip. #}
 {% set mod_translation_count = pending_translation_count() %}
-{% set mod_inbox_count = open_contact_count() %}
 {% set mod_bug_count = open_bug_count() %}
+{% set mod_report_count = open_report_count() %}
 {% set mod_room_count = curator_room_unread() %}
 <nav class="dtabs dtabs-modmode" aria-label="{{ 'account.menu_moderation'|trans }}">
   <span class="dtabs-modlabel" aria-hidden="true">{{ 'account.menu_moderation'|trans }}{% if mod_scope_names is defined and mod_scope_names is not null %} · {{ mod_scope_names is empty ? 'account.mod_scope_all'|trans : mod_scope_names|join(' · ') }}{% endif %}</span>
@@ -41,12 +41,16 @@
      clock does not belong at the bottom of an editorial backlog. Badge counts
      every open request, unscoped — these are not shared out by jurisdiction. #}
   <a href="{{ path('moderate_takedowns') }}" class="dtab-mod {{ active == 'moderate_takedowns' ? 'on' : '' }}">{{ 'nav.takedowns'|trans }}{% if mod_takedown_count is defined and mod_takedown_count %}<span class="dtab-count" title="{{ 'account.mod_takedowns_open'|trans }}">{{ mod_takedown_count }}</span>{% endif %}</a>
-  {# Inbox: everything written through the contact form. Unscoped like
-     takedowns and for the same reason: a GDPR request has no region, and a
-     message only one curator can see is one that waits for their holiday to
-     end. Badged, because it carries legal deadlines
-     (contact-and-support.md §8). #}
-  <a href="{{ path('moderate_inbox') }}" class="dtab-mod {{ active == 'moderate_inbox' ? 'on' : '' }}">{{ 'support.inbox.title'|trans }}{% if mod_inbox_count %}<span class="dtab-count" title="{{ 'support.inbox.title'|trans }}">{{ mod_inbox_count }}</span>{% endif %}</a>
+  {# Reports: notice and action under DSA Article 16, for everything that is
+     not a photo. Next to takedowns because both run on a legal clock, and
+     unscoped for the same reason (content-reports.md §9). #}
+  <a href="{{ path('moderate_reports') }}" class="dtab-mod {{ active == 'moderate_reports' ? 'on' : '' }}">{{ 'report.desk.title'|trans }}{% if mod_report_count %}<span class="dtab-count" title="{{ 'report.desk.title'|trans }}">{{ mod_report_count }}</span>{% endif %}</a>
+  {# Inbox: GONE from here on 2026-08-28, and its routes answer 404.
+     It could show a message but not answer one, so it held half of every
+     conversation and a curator could not tell an answered one from an
+     unanswered one. Contact messages are still stored AND mailed to the
+     support address, so ordinary mail is the whole channel until the desk can
+     hold a thread. See App\Controller\ModerateInboxController::ENABLED. #}
   {# Bugs: its own desk, not a queue inside the inbox. A message is finished
      when somebody has an answer; a bug is a fact about the software that
      outlives its reporter (contact-and-support.md §9). #}

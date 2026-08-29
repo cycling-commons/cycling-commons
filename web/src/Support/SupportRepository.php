@@ -8,7 +8,9 @@ namespace App\Support;
 
 use App\Support\Entity\BugReport;
 use App\Support\Entity\ContactMessage;
+use App\Support\Entity\ContentReport;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\QueryBuilder;
 
 /**
  * Every read the two support desks and the public lists need.
@@ -29,29 +31,33 @@ final readonly class SupportRepository
     {
     }
 
-    // -- Bugs, for the curator desk -------------------------------------
+    // -- Content reports, for the curator desk ---------------------------
 
     /**
-     * @return list<BugReport>
+     * @return list<ContentReport>
      */
-    public function bugs(?BugStatus $status, ?BugArea $area, int $limit, int $offset): array
+    public function reports(?ReportStatus $status, ?ReportTarget $target, int $limit, int $offset): array
     {
         $qb = $this->em->createQueryBuilder()
-            ->select('b')
-            ->from(BugReport::class, 'b');
+            ->select('r')
+            ->from(ContentReport::class, 'r');
 
         if (null !== $status) {
-            $qb->andWhere('b.status = :status')->setParameter('status', $status);
+            $qb->andWhere('r.status = :status')->setParameter('status', $status);
         }
-        if (null !== $area) {
-            $qb->andWhere('b.area = :area')->setParameter('area', $area);
+        if (null !== $target) {
+            $qb->andWhere('r.targetType = :target')->setParameter('target', $target);
         }
 
-        // Newest first, and nothing clever: a desk that reorders itself by
-        // severity hides the report that arrived thirty seconds ago, which is
-        // the one most likely to be about something that just broke.
-        /** @var list<BugReport> $rows */
-        $rows = $qb->orderBy('b.createdAt', 'DESC')
+        // Legal grounds first, then newest. This desk sorts where the bug desk
+        // deliberately does not, because Article 16 gives the two kinds of
+        // report different clocks: an unlawfulness claim has to be handled
+        // "timely", a quality complaint has to be handled well.
+        /** @var list<ContentReport> $rows */
+        $rows = $qb->addSelect('CASE WHEN r.ground IN (:legal) THEN 0 ELSE 1 END AS HIDDEN legalFirst')
+            ->addOrderBy('legalFirst', 'ASC')
+            ->addOrderBy('r.createdAt', 'DESC')
+            ->setParameter('legal', ReportGround::legal())
             ->setMaxResults($limit)
             ->setFirstResult($offset)
             ->getQuery()
@@ -60,12 +66,193 @@ final readonly class SupportRepository
         return $rows;
     }
 
-    public function countBugs(?BugStatus $status, ?BugArea $area): int
+    public function countReports(?ReportStatus $status, ?ReportTarget $target): int
+    {
+        $qb = $this->em->createQueryBuilder()
+            ->select('COUNT(r.id)')
+            ->from(ContentReport::class, 'r');
+
+        if (null !== $status) {
+            $qb->andWhere('r.status = :status')->setParameter('status', $status);
+        }
+        if (null !== $target) {
+            $qb->andWhere('r.targetType = :target')->setParameter('target', $target);
+        }
+
+        return (int) $qb->getQuery()->getSingleScalarResult();
+    }
+
+    /** @return array<string, int> status value => count, for the filter chips */
+    public function reportCountsByStatus(): array
+    {
+        /** @var list<array{status: ReportStatus, n: int|string}> $rows */
+        $rows = $this->em->createQueryBuilder()
+            ->select('r.status AS status, COUNT(r.id) AS n')
+            ->from(ContentReport::class, 'r')
+            ->groupBy('r.status')
+            ->getQuery()
+            ->getResult();
+
+        $out = [];
+        foreach (ReportStatus::all() as $status) {
+            $out[$status->value] = 0;
+        }
+        foreach ($rows as $row) {
+            $out[$row['status']->value] = (int) $row['n'];
+        }
+
+        return $out;
+    }
+
+    /** Badge on the moderator tab. Only Open counts: the rest are answered. */
+    public function openReportCount(): int
+    {
+        return (int) $this->em->createQueryBuilder()
+            ->select('COUNT(r.id)')
+            ->from(ContentReport::class, 'r')
+            ->where('r.status = :open')
+            ->setParameter('open', ReportStatus::Open)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    /**
+     * Every other open report about the same thing.
+     *
+     * Ten reports about one route is a different fact from one report, and a
+     * curator deciding the first should be able to see the other nine.
+     *
+     * @return list<ContentReport>
+     */
+    public function siblingReports(ContentReport $report): array
+    {
+        /** @var list<ContentReport> $rows */
+        $rows = $this->em->createQueryBuilder()
+            ->select('r')
+            ->from(ContentReport::class, 'r')
+            ->where('r.targetType = :target')
+            ->andWhere('r.targetId = :id')
+            ->andWhere('r.id != :self')
+            ->setParameter('target', $report->getTargetType())
+            ->setParameter('id', $report->getTargetId())
+            ->setParameter('self', $report->getId(), 'uuid')
+            ->orderBy('r.createdAt', 'DESC')
+            ->setMaxResults(20)
+            ->getQuery()
+            ->getResult();
+
+        return $rows;
+    }
+
+    // -- Bugs, for the curator desk -------------------------------------
+
+    /**
+     * Turn `#123`, a bare `123`, or the old `CC-B-000123`, into the id it names.
+     *
+     * A reference is a LOOKUP, not a search: a curator pasting the number from
+     * a reporter's email wants that one report, not every report that mentions
+     * it.
+     *
+     * **`CC-B-` is kept forever.** The reference was that shape until
+     * 2026-08-28 and it is sitting in mail somebody already received. A reporter
+     * quoting it in a reply three years from now must still be findable.
+     */
+    public static function bugIdFromReference(string $query): ?int
+    {
+        if (1 === preg_match('/^\s*(?:#|cc-b-)?0*(\d{1,9})\s*$/i', $query, $m)) {
+            return (int) $m[1];
+        }
+
+        return null;
+    }
+
+    /**
+     * @return list<BugReport>
+     */
+    public function bugs(
+        ?BugStatus $status,
+        ?BugArea $area,
+        ?string $query,
+        int $limit,
+        int $offset,
+        ?BugSort $sort = null,
+    ): array {
+        $sort ??= BugSort::Newest;
+
+        $qb = $this->em->createQueryBuilder()
+            ->select('b')
+            ->from(BugReport::class, 'b');
+
+        $this->filterBugs($qb, $status, $area, $query);
+
+        // Severity is an enum column, so "worst first" is a CASE, not a plain
+        // ORDER BY: the stored strings sort alphabetically, which would put
+        // cosmetic above critical. HIDDEN because DQL will not take a CASE
+        // expression directly in ORDER BY, and the alias must not reach the
+        // hydrator as a column.
+        //
+        // Paid for only when it is asked for: the default order never builds it.
+        if ($sort->bySeverity()) {
+            $qb->addSelect(\sprintf(
+                'CASE %s ELSE %d END AS HIDDEN severityRank',
+                implode(' ', array_map(
+                    static fn (BugSeverity $s): string => \sprintf(
+                        "WHEN b.severity = '%s' THEN %d",
+                        $s->value,
+                        $s->weight(),
+                    ),
+                    BugSeverity::all(),
+                )),
+                \count(BugSeverity::all()),
+            ))->addOrderBy('severityRank', $sort->severityDirection());
+        }
+
+        // Recency is always the last word, even inside a severity band: a
+        // curator working through cosmetic bugs still wants this week's first.
+        /** @var list<BugReport> $rows */
+        $rows = $qb->addOrderBy('b.createdAt', $sort->dateDirection())
+            // created_at is DATETIME(0), so two reports filed in the same
+            // second tie and the database may return them in either order,
+            // differently on each page load. The id is the arrival order, so
+            // it is the tie-break the date was reaching for.
+            ->addOrderBy('b.id', $sort->dateDirection())
+            ->setMaxResults($limit)
+            ->setFirstResult($offset)
+            ->getQuery()
+            ->getResult();
+
+        return $rows;
+    }
+
+    public function countBugs(?BugStatus $status, ?BugArea $area, ?string $query = null): int
     {
         $qb = $this->em->createQueryBuilder()
             ->select('COUNT(b.id)')
             ->from(BugReport::class, 'b');
 
+        $this->filterBugs($qb, $status, $area, $query);
+
+        return (int) $qb->getQuery()->getSingleScalarResult();
+    }
+
+    /**
+     * The one place the desk's filters are built, so the rows and the count
+     * cannot disagree about what matched.
+     *
+     * Text search is a plain case-insensitive LIKE across the four fields a
+     * curator may search by. Not full-text: this table is small, the queries
+     * are one-word, and a tsvector column would be a migration and an index to
+     * maintain for a desk that never has ten thousand rows.
+     *
+     * **The reporter's address is NOT among them.** Curators cannot see an
+     * address anywhere on this site, and searching one is the same disclosure
+     * by another route: a hit confirms that a named person filed a report.
+     *
+     * `%` and `_` are escaped, so pasting a URL with an underscore in it does
+     * not quietly become a wildcard.
+     */
+    private function filterBugs(QueryBuilder $qb, ?BugStatus $status, ?BugArea $area, ?string $query): void
+    {
         if (null !== $status) {
             $qb->andWhere('b.status = :status')->setParameter('status', $status);
         }
@@ -73,7 +260,26 @@ final readonly class SupportRepository
             $qb->andWhere('b.area = :area')->setParameter('area', $area);
         }
 
-        return (int) $qb->getQuery()->getSingleScalarResult();
+        $query = null === $query ? '' : trim($query);
+        if ('' === $query) {
+            return;
+        }
+
+        // An exact reference short-circuits everything else.
+        $id = self::bugIdFromReference($query);
+        if (null !== $id) {
+            $qb->andWhere('b.id = :bugId')->setParameter('bugId', $id);
+
+            return;
+        }
+
+        $like = '%'.str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $query).'%';
+        $qb->andWhere($qb->expr()->orX(
+            'LOWER(b.title) LIKE LOWER(:q)',
+            'LOWER(b.body) LIKE LOWER(:q)',
+            'LOWER(b.steps) LIKE LOWER(:q)',
+            'LOWER(b.publicTitle) LIKE LOWER(:q)',
+        ))->setParameter('q', $like);
     }
 
     /** @return array<string, int> status value => count, for the filter chips */

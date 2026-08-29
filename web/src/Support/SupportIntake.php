@@ -6,6 +6,8 @@ declare(strict_types=1);
 
 namespace App\Support;
 
+use App\Messaging\MessageService;
+use App\Messaging\UserMessageKind;
 use App\Support\Entity\BugReport;
 use App\Support\Entity\ContactMessage;
 use Doctrine\ORM\EntityManagerInterface;
@@ -31,6 +33,7 @@ final readonly class SupportIntake
     public function __construct(
         private EntityManagerInterface $em,
         private SupportMailer $mailer,
+        private MessageService $messages,
     ) {
     }
 
@@ -72,6 +75,37 @@ final readonly class SupportIntake
         $report->markNotified(new \DateTimeImmutable());
         $this->em->flush();
 
+        // A reporter with an account hears back THROUGH the account: the
+        // outcome lands in /messages and the mail that follows is a
+        // notification of it. Two reasons that is the right shape.
+        //
+        // 1. **A form post leaves nothing in a sent folder.** Somebody who
+        //    reported a bug and deleted the mail has no record at all; their
+        //    own messages are the record.
+        // 2. **The address is ours to know, not theirs to type.** It is the
+        //    account address, changed in settings, so a report cannot be used
+        //    to send our mail to an address a stranger chose.
+        //
+        // MessageService::sendSystem persists the message and queues the
+        // notification; the outbox mails it after the request.
+        $userId = $report->getUserId();
+        if (null !== $userId) {
+            $this->messages->sendSystem(
+                $userId,
+                UserMessageKind::BugOutcome,
+                'bug',
+                (int) $report->getId(),
+                $report->getReference().' · '.$report->getTitle(),
+                'messages.body.bug_outcome',
+                ['%status%' => $report->getStatus()->value],
+                $report->getOutcomeNote(),
+            );
+            $this->em->flush();
+
+            return;
+        }
+
+        // No account: the address they typed is the only way to reach them.
         $this->mailer->notifyBugOutcome($report);
     }
 }

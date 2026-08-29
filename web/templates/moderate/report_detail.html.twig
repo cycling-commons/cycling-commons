@@ -1,0 +1,146 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{#
+  One report, and the decision a curator records about it
+  (docs/specs/content-reports.md §9).
+
+  What this page deliberately does NOT have: a delete button, a hide button, or
+  anything that edits the reported content. Following `one-way-to-moderate`, the
+  curator goes to the surface that already moderates that thing, does the work
+  there, and comes back here to record what happened. A second delete path would
+  be a second history and a second set of permissions.
+
+  Three careful things:
+
+  * The reason is escaped, in a pre-wrap block. A stranger typed it and it must
+    never become markup.
+  * "Tell the author" is a checkbox, not automatic. Only the curator knows
+    whether the person we found is really whose words were restricted, and the
+    Article 17 statement is not a message you can unsend.
+  * The other open reports about the same thing are listed. Ten reports about
+    one route is a different fact from one report.
+#}
+{% extends 'base.html.twig' %}
+
+{% block head_styles %}
+{% include 'account/_shell_styles.html.twig' %}
+<style nonce="{{ csp_nonce() }}">
+  .bdet{max-width:760px}
+  .bdet dl.facts{display:grid;grid-template-columns:auto 1fr;gap:.3rem .9rem;margin:1rem 0 1.4rem}
+  .bdet dl.facts dt{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--clay)}
+  .bdet dl.facts dd{margin:0;font-size:.9rem;color:#3a3d30;word-break:break-word}
+  .btext{background:var(--paper-deep);border-radius:6px;padding:1rem 1.2rem;font-family:inherit;
+    font-size:.95rem;line-height:1.65;color:#3a3d30;white-space:pre-wrap;word-wrap:break-word;margin:0 0 1.2rem}
+  .bsec{font-family:var(--mono);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--clay);margin:1.4rem 0 .4rem}
+  .decide{margin-top:1.6rem;padding-top:1.3rem;border-top:1px solid rgba(20,22,14,.12)}
+  .decide label{display:block;font-family:var(--mono);font-size:.7rem;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--clay);margin:.9rem 0 .3rem}
+  .decide select,.decide textarea{width:100%;font-family:inherit;font-size:.9rem;
+    padding:.5rem .6rem;border:1px solid rgba(20,22,14,.22);border-radius:5px;background:var(--paper)}
+  .decide textarea{min-height:5rem;line-height:1.55;resize:vertical}
+  .decide .check{display:flex;align-items:flex-start;gap:.5rem;margin:1rem 0}
+  .decide .check label{margin:0;font-family:inherit;font-size:.9rem;letter-spacing:0;text-transform:none;color:#3a3d30}
+  .warn{background:var(--paper-deep);border-left:2px solid var(--ochre);padding:.85rem 1.05rem;
+    border-radius:0 6px 6px 0;font-size:.85rem;color:#4a4d40;line-height:1.55;margin:.9rem 0}
+  .sib{border-top:1px solid rgba(20,22,14,.12);padding:.6rem 0;font-size:.85rem;color:#4a4d40}
+  .sib:first-of-type{border-top:0}
+  .sib a{color:var(--clay)}
+  .sibmeta{font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;color:#6d7060}
+</style>
+{% endblock %}
+
+{% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate_reports'} %}{% endblock %}
+
+{% block body %}
+<div class="dbody dmin" id="main">
+  <div class="mh">
+    <div class="kicker">{{ 'account.menu_moderation'|trans }} · <a href="{{ path('moderate_reports') }}">{{ 'report.desk.title'|trans }}</a></div>
+    <h1>{{ resolved.label ?? report.targetType.label|trans ~ ' #' ~ report.targetId }}</h1>
+    <p class="lede mono">{{ report.id }}</p>
+  </div>
+
+  <div class="bdet">
+    <dl class="facts">
+      <dt>{{ 'report.desk.field_target'|trans }}</dt>
+      <dd>
+        {{ report.targetType.label|trans }} · <span class="mono">{{ report.targetId }}</span>
+        {%- if not resolved.exists %} · {{ 'report.desk.target_gone'|trans }}{% endif -%}
+        {%- if resolved.link_route %} · <a href="{{ path(resolved.link_route, resolved.link_params) }}">{{ 'report.desk.open_target'|trans }}</a>{% endif -%}
+      </dd>
+      {% if report.fromPath %}
+        {# Where the reporter was standing. On the map this is the only thing
+           that says which view they meant. #}
+        <dt>{{ 'report.desk.field_from'|trans }}</dt>
+        <dd><a href="{{ report.fromPath }}">{{ report.fromPath }}</a></dd>
+      {% endif %}
+      <dt>{{ 'report.desk.field_ground'|trans }}</dt>
+      <dd>{{ report.ground.label|trans }}{% if report.ground.isLegal %} · {{ 'report.desk.legal_claim'|trans }}{% endif %}</dd>
+      <dt>{{ 'support.inbox.status_label'|trans }}</dt>
+      <dd>{{ report.status.label|trans }}</dd>
+      <dt>{{ 'support.inbox.received'|trans }}</dt>
+      <dd>{{ report.createdAt|cc_datetime }}</dd>
+      <dt>{{ 'report.desk.field_reporter'|trans }}</dt>
+      {# Whether we can answer, never the address. #}
+      <dd>{{ report.reporterContact ? ('report.desk.answerable'|trans) : ('report.desk.no_contact'|trans) }}</dd>
+      <dt>{{ 'report.desk.field_author'|trans }}</dt>
+      <dd>
+        {%- if resolved.author %}{{ resolved.author.displayName }}{% else %}{{ 'report.desk.no_author'|trans }}{% endif -%}
+      </dd>
+      {% if report.decidedAt %}
+        <dt>{{ 'report.desk.field_decided'|trans }}</dt>
+        <dd>{{ report.decidedAt|cc_datetime }}{% if decided_by %} · {{ decided_by.displayName }}{% endif %}</dd>
+        <dt>{{ 'report.desk.field_author_told'|trans }}</dt>
+        <dd>{{ report.isAuthorTold ? ('report.desk.told_yes'|trans) : ('report.desk.told_no'|trans) }}</dd>
+      {% endif %}
+    </dl>
+
+    <p class="bsec">{{ 'report.desk.field_reason'|trans }}</p>
+    <div class="btext">{{ report.reason }}</div>
+
+    {% if report.decisionNote %}
+      <p class="bsec">{{ 'report.desk.field_note'|trans }}</p>
+      <div class="btext">{{ report.decisionNote }}</div>
+    {% endif %}
+
+    {% if siblings|length %}
+      <p class="bsec">{{ 'report.desk.siblings'|trans({'%count%': siblings|length}) }}</p>
+      {% for s in siblings %}
+        <div class="sib">
+          <a href="{{ path('moderate_reports_detail', {id: s.id}) }}">{{ s.ground.label|trans }}</a> · {{ s.status.label|trans }}
+          <div class="sibmeta">{{ s.createdAt|cc_datetime }}</div>
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    <form class="decide" method="post" action="{{ path('moderate_reports_decide', {id: report.id}) }}">
+      <input type="hidden" name="_token" value="{{ csrf_token('report-desk-decide') }}">
+
+      <p class="warn">{{ 'report.desk.act_elsewhere'|trans }}</p>
+
+      <label for="d-status">{{ 'support.inbox.set_status'|trans }}</label>
+      <select id="d-status" name="status">
+        {% for st in statuses %}
+          {% if st.value != 'open' %}
+            <option value="{{ st.value }}"{{ st == report.status ? ' selected' : '' }}>{{ st.label|trans }}</option>
+          {% endif %}
+        {% endfor %}
+      </select>
+
+      <label for="d-note">{{ 'report.desk.field_note'|trans }}</label>
+      <textarea id="d-note" name="note" maxlength="2000"
+                placeholder="{{ 'report.desk.note_placeholder'|trans }}">{{ report.decisionNote }}</textarea>
+      <p class="warn">{{ 'report.desk.note_required'|trans }}</p>
+
+      {% if resolved.author and not report.isAuthorTold %}
+        <div class="check">
+          <input type="checkbox" id="d-tell" name="tell_author" value="1">
+          <label for="d-tell">{{ 'report.desk.tell_author'|trans({'%name%': resolved.author.displayName}) }}</label>
+        </div>
+        <p class="warn">{{ 'report.desk.tell_author_note'|trans }}</p>
+      {% endif %}
+
+      <p><button type="submit" class="btn btn-p">{{ 'support.inbox.save'|trans }}</button></p>
+    </form>
+  </div>
+</div>
+{% endblock %}

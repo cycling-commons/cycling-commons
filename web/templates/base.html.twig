@@ -81,6 +81,10 @@ window.CC_UNITS = {{ {
    each other: bug-fab.js reads window.ccPow at load and bails without it. #}
 <script src="{{ asset('support/pow.js') }}"></script>
 <script src="{{ asset('support/bug-fab.js') }}" defer></script>
+{# The formatting toolbar for the bug textareas, in the panel above and on
+   /report-bug. Labels first: the script reads them at build time. #}
+{% include 'partials/_bug_markdown_i18n.html.twig' %}
+<script src="{{ asset('support/markdown-toolbar.js') }}" defer></script>
 {% block body_scripts %}{% endblock %}
 </body>
 </html>

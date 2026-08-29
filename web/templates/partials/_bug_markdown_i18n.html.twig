@@ -1,0 +1,17 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{# Formatting-toolbar labels for the two bug-report textareas
+   (docs/specs/contact-and-support.md §15). Its own global rather than a merge
+   into CC_I18N, because this ships on every page for a panel most riders never
+   open, and a separate object makes that cost visible.
+
+   Included from base.html.twig BEFORE the deferred markdown-toolbar.js, which
+   reads it once at build time. #}
+<script nonce="{{ csp_nonce() }}">window.CC_MD_LABELS = {{ {
+  barLabel: 'support.md.bar'|trans,
+  bold: 'support.md.bold'|trans, italic: 'support.md.italic'|trans,
+  code: 'support.md.code'|trans, block: 'support.md.block'|trans,
+  bullet: 'support.md.bullet'|trans, number: 'support.md.number'|trans,
+  boldWord: 'support.md.bold_word'|trans, italicWord: 'support.md.italic_word'|trans,
+  codeWord: 'support.md.code_word'|trans, blockWord: 'support.md.block_word'|trans,
+  hint: 'support.md.hint'|trans
+}|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>

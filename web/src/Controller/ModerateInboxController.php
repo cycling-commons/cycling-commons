@@ -41,6 +41,10 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
  * The desk sorts by that deadline, not by arrival, and shows what is overdue in
  * a way that cannot be scrolled past.
  *
+ * **TURNED OFF, 2026-08-28.** Every action here answers 404. See
+ * {@see self::ENABLED} for why, and for what has to be true before it comes
+ * back.
+ *
  * @see docs/specs/contact-and-support.md §8
  *
  * @api
@@ -49,6 +53,33 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_CURATOR')]
 final class ModerateInboxController extends AbstractController
 {
+    /**
+     * The desk is off until it can hold a whole conversation.
+     *
+     * **Why it was turned off** (owner, 2026-08-28). It showed a message and a
+     * status and could not answer one. A curator read it here, replied from
+     * their own mail client, and the person's answer came back to that mailbox
+     * and never to this page. So the desk knew about half of every
+     * conversation, and the half it knew was the half nobody needed. Two
+     * records of one exchange is worse than one, because a curator checking
+     * this page cannot tell an unanswered message from an answered one.
+     *
+     * Until then the working channel is ordinary mail: the contact form still
+     * stores every message AND mails it to the support address
+     * ({@see SupportMailer::notifyContact()}), so nothing is
+     * lost and nobody has to look here.
+     *
+     * **404, not hidden.** A page that is merely unlinked is still reachable by
+     * anybody who guesses the path, and a half-working desk found by accident
+     * is exactly the thing that gets trusted. The rows are untouched, so
+     * turning this back to `true` shows the full history.
+     *
+     * **What has to be true before it comes back:** a curator can reply FROM
+     * this page, the person's reply comes back INTO it, and the thread is
+     * visible here. Filed as docs/TODO.md item 18.
+     */
+    private const bool ENABLED = false;
+
     private const string CSRF_TOKEN_ID = 'inbox-handle';
     private const int PER_PAGE = 25;
 
@@ -62,6 +93,8 @@ final class ModerateInboxController extends AbstractController
     #[Route('/moderate/inbox', name: 'moderate_inbox', methods: ['GET'])]
     public function index(Request $request): Response
     {
+        $this->guardEnabled();
+
         $status = ContactStatus::tryFrom((string) $request->query->get('status', ''));
         $topic = ContactTopic::tryFrom((string) $request->query->get('topic', ''));
 
@@ -104,6 +137,8 @@ final class ModerateInboxController extends AbstractController
     #[Route('/moderate/inbox/handle', name: 'moderate_inbox_handle', methods: ['POST'])]
     public function handle(Request $request): Response
     {
+        $this->guardEnabled();
+
         if (!$this->isCsrfTokenValid(self::CSRF_TOKEN_ID, (string) $request->request->get('_token'))) {
             $this->addFlash('notice', 'flash.invalid_token');
 
@@ -157,6 +192,8 @@ final class ModerateInboxController extends AbstractController
     #[Route('/moderate/inbox/{id}', name: 'moderate_inbox_detail', requirements: ['id' => '\d+'], methods: ['GET'])]
     public function detail(int $id): Response
     {
+        $this->guardEnabled();
+
         $message = $this->em->find(ContactMessage::class, $id);
         if (!$message instanceof ContactMessage) {
             throw $this->createNotFoundException();
@@ -172,5 +209,25 @@ final class ModerateInboxController extends AbstractController
             'statuses' => ContactStatus::all(),
             'now' => new \DateTimeImmutable(),
         ]);
+    }
+
+    /**
+     * The kill switch, checked first in every action.
+     *
+     * Both analysers fold this while the constant is off, and both are right:
+     * that is what a switch looks like when it is down. Keeping the branch is
+     * the point, because flipping {@see self::ENABLED} back to true is the
+     * whole of turning the desk on.
+     *
+     * @see self::ENABLED
+     *
+     * @psalm-suppress RedundantCondition
+     */
+    private function guardEnabled(): void
+    {
+        // @phpstan-ignore booleanNot.alwaysTrue
+        if (!self::ENABLED) {
+            throw $this->createNotFoundException();
+        }
     }
 }

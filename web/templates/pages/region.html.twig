@@ -2,11 +2,10 @@
 {% extends 'base.html.twig' %}
 {% block head_styles %}
 <style>
-  .rhero{background:var(--ink);color:var(--paper);padding:3rem 0}
   .rhero .co{display:flex;align-items:center;gap:.5rem;color:var(--glacier);margin-bottom:1rem;font-family:var(--mono);font-size:.7rem;letter-spacing:.14em;text-transform:uppercase}
   .rstats{display:flex;gap:2.4rem;flex-wrap:wrap;margin-top:1.6rem;padding-top:1.4rem;border-top:1px solid rgba(239,230,212,.18)}
   .rstats .s b{font-family:var(--serif);font-size:1.8rem;display:block}
-  .rstats .s span{font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(239,230,212,.6)}
+  .rstats .s span{font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(239,230,212,.6)}
   /* Label on its own line, figures under it. The two-number version outgrew a
      single row: "1 checked · 1483 on the map" beside a label in a 220px column
      wrapped "Water &/food" and ran the count into the next column. Stacking
@@ -25,6 +24,8 @@
   .kinds .k .c b{color:var(--trail);font-weight:700}
   .kinds .k .c i{font-style:normal}
   .kinds-note{font-size:.84rem;color:#595c4d;margin:.9rem 0 0;line-height:1.6;max-width:64ch}
+  .region-report{margin:1.4rem 0 0;padding-top:1rem;border-top:1px solid rgba(20,22,14,.12);font-size:.82rem}
+  .region-report a{color:#595c4d}
   /* The two terms this sentence defines, set apart from the sentence that
      defines them. Padding rather than bare <code>: the mono glyphs sit tight
      against the surrounding prose and the word boundary disappears. */
@@ -44,12 +45,12 @@
   .rsteward{margin-top:1.5rem;display:flex;flex-wrap:wrap;align-items:baseline;gap:.5rem;
     font-size:.88rem;color:rgba(239,230,212,.75);line-height:1.5}
   /* The heading owns its line; the chip and its sentence share the next one. */
-  .rsteward-h{flex:0 0 100%;font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;
+  .rsteward-h{flex:0 0 100%;font-family:var(--mono);font-size:.7rem;letter-spacing:.12em;
     text-transform:uppercase;color:rgba(239,230,212,.5)}
   .rsteward b{color:var(--paper);font-weight:600}
   .rsteward-chip{display:inline-block;margin-right:.45rem;padding:.16rem .5rem;border-radius:999px;
     border:1px solid rgba(239,230,212,.28);background:rgba(239,230,212,.07);
-    font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;
+    font-family:var(--mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;
     color:var(--paper);white-space:nowrap;vertical-align:.06em}
   .rsteward-d{color:rgba(239,230,212,.62)}
   .rsteward-sep{color:rgba(239,230,212,.35);padding:0 .1rem}
@@ -79,7 +80,7 @@
      header breathe identically at every width (owner 2026-08-16). */
   section.rg-about+section.pad{padding-top:clamp(1.75rem,3.5vw,2.75rem)}
   .rg-about-text{max-width:46rem;font-size:1.02rem;line-height:1.65;margin:.4rem 0 .5rem}
-  .rg-about-attrib{font-family:var(--mono);font-size:.66rem;letter-spacing:.06em;color:#5a5d4d}
+  .rg-about-attrib{font-family:var(--mono);font-size:.74rem;letter-spacing:.06em;color:#5a5d4d}
   .rg-about-attrib a{color:inherit}
 </style>
 {% endblock %}
@@ -232,5 +233,9 @@
     <p style="max-width:62ch;line-height:1.6">{% trans %}region.empty_p{% endtrans %}</p>
   {% endif %}
   <p style="margin-top:2rem"><a href="{{ path('regions') }}">{% trans %}region.back{% endtrans %}</a></p>
+  {# Notice and action, DSA Article 16. The description on this page is written
+     text like any other and can be wrong, or about a person
+     (docs/specs/content-reports.md §5). #}
+  <p class="region-report"><a href="{{ path('content_report', {type: 'region', id: region.id, from: app.request.pathInfo}) }}">{{ 'report.link_page'|trans }}</a></p>
 </div></section>
 {% endblock %}

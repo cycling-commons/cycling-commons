@@ -242,10 +242,10 @@ final readonly class SupportMailer
         return \sprintf('CC-M-%06d', $message->getId() ?? 0);
     }
 
-    /** `CC-B-000123`. */
+    /** `#123`. Delegates: the format lives on the row that has it. */
     public function bugReference(BugReport $report): string
     {
-        return \sprintf('CC-B-%06d', $report->getId() ?? 0);
+        return $report->getReference();
     }
 
     /**

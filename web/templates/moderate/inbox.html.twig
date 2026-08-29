@@ -16,7 +16,7 @@
 {% include 'account/_shell_styles.html.twig' %}
 <style nonce="{{ csp_nonce() }}">
   .chips{display:flex;gap:.4rem;flex-wrap:wrap;margin:1rem 0 1.4rem}
-  .chip{font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;
+  .chip{font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;
     padding:.35rem .6rem;border-radius:4px;background:var(--paper-deep);color:#4a4d40;text-decoration:none}
   .chip.on{background:var(--ink);color:var(--paper)}
   .chip .n{opacity:.7;margin-left:.3rem}
@@ -28,12 +28,12 @@
   .msgtop{display:flex;gap:.6rem;align-items:baseline;flex-wrap:wrap}
   .msgtop a{font-family:var(--serif);font-size:1rem;color:var(--ink);text-decoration:none}
   .msgtop a:hover{color:var(--clay);text-decoration:underline}
-  .tag{font-family:var(--mono);font-size:.56rem;letter-spacing:.1em;text-transform:uppercase;
+  .tag{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;
     padding:.18rem .42rem;border-radius:3px;background:var(--paper-deep);color:#4a4d40}
   .tag.clock{background:var(--ochre);color:var(--ink)}
   .tag.late{background:#5a2716;color:#FFD9C8}
   .msgexcerpt{font-size:.88rem;color:#4a4d40;line-height:1.55;margin:.35rem 0 0}
-  .msgmeta{font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;color:#6d7060;margin-top:.35rem}
+  .msgmeta{font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;color:#6d7060;margin-top:.35rem}
   .handle{display:flex;gap:.4rem;flex-wrap:wrap;align-items:center;margin-top:.55rem}
   .handle select,.handle input[type="text"]{font-family:inherit;font-size:.84rem;padding:.35rem .45rem;
     border:1px solid rgba(20,22,14,.22);border-radius:4px;background:var(--paper)}
@@ -85,7 +85,10 @@
         </div>
         <p class="msgexcerpt">{{ m.body|length > 180 ? m.body|slice(0, 180) ~ '…' : m.body }}</p>
         <p class="msgmeta">
-          {{ m.email }} · {{ m.createdAt|cc_datetime }}{% if m.locale %} · {{ m.locale }}{% endif %}
+          {# The desk is off (ModerateInboxController::ENABLED); the address is
+             gone from here so that turning it back on cannot quietly undo the
+             rule that nobody sees anybody else's email. #}
+          {{ m.createdAt|cc_datetime }}{% if m.locale %} · {{ m.locale }}{% endif %}
           {%- if m.pageUrl %} · {{ m.pageUrl }}{% endif %}
         </p>
 
@@ -102,7 +105,7 @@
           <label class="vh" for="nt-{{ m.id }}">{{ 'support.inbox.note'|trans }}</label>
           <input type="text" id="nt-{{ m.id }}" name="note" maxlength="500"
                  placeholder="{{ 'support.inbox.note_placeholder'|trans }}">
-          <button type="submit" class="btn btn-sm">{{ 'support.inbox.save'|trans }}</button>
+          <button type="submit" class="btn btn-p btn-sm">{{ 'support.inbox.save'|trans }}</button>
         </form>
       </div>
     {% endfor %}

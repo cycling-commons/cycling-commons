@@ -11,6 +11,7 @@ use App\Pagination\Pager;
 use App\Routing\LocalePrefix;
 use App\Support\BugArea;
 use App\Support\BugSeverity;
+use App\Support\BugSort;
 use App\Support\BugStatus;
 use App\Support\Entity\BugReport;
 use App\Support\Entity\BugScreenshot;
@@ -53,6 +54,8 @@ final class ModerateBugsController extends AbstractController
 {
     private const string CSRF_TOKEN_ID = 'bug-desk-decide';
     private const int PER_PAGE = 25;
+    /** Long enough for an error message, short enough that a URL is not a payload. */
+    private const int MAX_QUERY = 120;
 
     public function __construct(
         private readonly EntityManagerInterface $em,
@@ -67,14 +70,39 @@ final class ModerateBugsController extends AbstractController
     {
         $status = BugStatus::tryFrom((string) $request->query->get('status', ''));
         $area = BugArea::tryFrom((string) $request->query->get('area', ''));
+        $query = trim((string) $request->query->get('q', ''));
+        $query = '' !== $query ? mb_substr($query, 0, self::MAX_QUERY) : '';
+        $sort = BugSort::fromInput((string) $request->query->get('sort', ''));
 
         // Same default as the inbox: unfiltered means "the new ones", because a
         // desk that opens on the full archive is a desk nobody opens.
-        $showing = null === $status && null === $area ? BugStatus::New : $status;
+        //
+        // A SEARCH clears that default, though. Somebody typing a reference is
+        // usually chasing a report a reporter has replied about, which by then
+        // is rarely still New, and a search that silently hides it is worse
+        // than no search.
+        $searching = '' !== $query;
+
+        // A bare number OPENS that report, rather than filtering the list down
+        // to it. The hint under the box has always said so; until now the page
+        // did the other thing. Jumping is what somebody pasting a number out of
+        // a reporter's reply is actually after.
+        //
+        // Only when the row exists: a number nobody has used yet falls through
+        // to the search, which then says nothing matched. A redirect to a 404
+        // would be a worse answer to the same question.
+        if ($searching) {
+            $id = SupportRepository::bugIdFromReference($query);
+            if (null !== $id && $this->em->find(BugReport::class, $id) instanceof BugReport) {
+                return $this->redirectToRoute('moderate_bugs_detail', ['id' => $id]);
+            }
+        }
+
+        $showing = !$searching && null === $status && null === $area ? BugStatus::New : $status;
 
         $pager = Pager::of(
             $request->query->getInt('page', 1),
-            $this->repository->countBugs($showing, $area),
+            $this->repository->countBugs($showing, $area, $query),
             self::PER_PAGE,
         );
 
@@ -83,12 +111,15 @@ final class ModerateBugsController extends AbstractController
             'page_description' => 'support.bugs.title',
             'nav_active' => '',
             'active' => 'moderate_bugs',
-            'reports' => $this->repository->bugs($showing, $area, $pager['perPage'], $pager['offset']),
+            'reports' => $this->repository->bugs($showing, $area, $query, $pager['perPage'], $pager['offset'], $sort),
             'counts' => $this->repository->bugCountsByStatus(),
             'statuses' => BugStatus::all(),
             'areas' => BugArea::all(),
             'filter_status' => $showing?->value,
             'filter_area' => $area?->value,
+            'query' => $query,
+            'sorts' => BugSort::all(),
+            'sort' => $sort->value,
             'pager' => $pager,
         ]);
     }
@@ -111,6 +142,12 @@ final class ModerateBugsController extends AbstractController
             'statuses' => BugStatus::all(),
             'severities' => BugSeverity::all(),
             'areas' => BugArea::all(),
+            // Which statuses actually mail the reporter, so the template does
+            // not have to keep its own copy of that list and drift from it.
+            'notifying_statuses' => array_map(
+                static fn (BugStatus $s): string => $s->value,
+                array_filter(BugStatus::all(), static fn (BugStatus $s): bool => $s->notifiesReporter()),
+            ),
         ]);
     }
 
@@ -154,10 +191,20 @@ final class ModerateBugsController extends AbstractController
 
         $publicTitle = trim((string) $request->request->get('public_title', ''));
         $wantsPublic = $request->request->getBoolean('is_public');
+        // Read BEFORE the setters below, so the flash can say what changed
+        // rather than what is now true.
+        $wasPublic = $report->isPublic();
+        $mailed = null === $report->getNotifiedAt() && $report->isAnswerable();
 
         $report->setSeverity(BugSeverity::fromInput((string) $request->request->get('severity', $report->getSeverity()->value)));
         $report->setArea(BugArea::fromInput((string) $request->request->get('area', $report->getArea()->value)));
         $report->setPublicTitle('' !== $publicTitle ? $publicTitle : null);
+        $report->setPublicBody((string) $request->request->get('public_body', ''));
+        // Curator-only, and the release the fix lands in. Neither is required,
+        // and neither gates the status: a bug can be resolved before anybody
+        // knows which tag will carry it.
+        $report->setInternalNote((string) $request->request->get('internal_note', ''));
+        $report->setFixRelease((string) $request->request->get('fix_release', ''));
         $report->setPublic($wantsPublic);
         if ('' !== $note) {
             $report->setOutcomeNote($note);
@@ -173,7 +220,14 @@ final class ModerateBugsController extends AbstractController
         // an outcome (SupportIntake::announceBugOutcome).
         $this->intake->announceBugOutcome($report);
 
-        $this->addFlash('notice', 'support.bugs.flash_saved');
+        // Say what happened, not just that something did. Publishing is the
+        // part worth naming: it is the only one a stranger can see.
+        $this->addFlash('notice', match (true) {
+            $wantsPublic && !$wasPublic => 'support.bugs.flash_published',
+            !$wantsPublic && $wasPublic => 'support.bugs.flash_unpublished',
+            $status->notifiesReporter() && $mailed => 'support.bugs.flash_saved_mailed',
+            default => 'support.bugs.flash_saved',
+        });
 
         return $this->redirectToRoute('moderate_bugs_detail', ['id' => $id]);
     }

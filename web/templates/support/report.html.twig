@@ -1,0 +1,124 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{#
+  Notice and action for everything that is not a photo (DSA Article 16).
+
+  An ORDINARY PAGE, in the same shape as /contact and /report-bug: dark hero,
+  then the form in the page body, with the same `.cfield` conventions and the
+  same rust labels. It used to be a narrow card floating in the middle of a
+  wide screen, in its own typography, which made a legal notice-and-action
+  route look like a modal somebody bolted on (owner, 2026-08-28: "why not a
+  normal page like contactform").
+
+  Reachable with no account, so nothing here asks who you are. The reply
+  address is optional and says so: requiring one would exclude exactly the
+  person the Article exists for.
+
+  The grounds are the same six /terms §12 publishes, in the same words, because
+  a reporter should be choosing from the rules we actually apply.
+
+  @see docs/specs/content-reports.md §5
+#}
+{% extends 'base.html.twig' %}
+
+{% block head_styles %}
+<style nonce="{{ csp_nonce() }}">
+  .reppage{max-width:640px}
+  .reppage h2{font-family:var(--serif);font-weight:600;font-size:1.25rem;margin:1.8rem 0 .5rem}
+  .reppage p{font-size:.95rem;color:#3a3d30;line-height:1.65;margin:.55rem 0}
+  .reppage a{color:var(--clay);text-decoration:underline;text-underline-offset:3px}
+  {# The same field conventions as every other form on the site. Rust labels,
+     because that is what a field label looks like here. #}
+  .cfield{margin:1.15rem 0}
+  .cfield label{display:block;font-family:var(--mono);font-size:.68rem;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--clay);margin-bottom:.4rem}
+  .cfield select,.cfield textarea,.cfield input[type="email"]{
+    width:100%;font-family:inherit;font-size:.95rem;padding:.6rem .7rem;color:var(--ink);
+    border:1px solid rgba(20,22,14,.24);border-radius:5px;background:var(--paper)}
+  .cfield textarea{min-height:8rem;line-height:1.6;resize:vertical}
+  .cfield input:focus,.cfield select:focus,.cfield textarea:focus{
+    outline:2px solid var(--clay);outline-offset:1px;border-color:var(--clay)}
+  .chint{font-size:.88rem;color:#4f5344;line-height:1.6;margin:.35rem 0 0}
+  .req{color:var(--clay);font-weight:700}
+  .reqlegend{font-size:.85rem;color:#4f5344;margin:0 0 1rem}
+  .cerr{background:#FFF1EC;border-left:3px solid var(--trail);padding:.9rem 1.1rem;
+    border-radius:0 6px 6px 0;font-size:.92rem;color:#5a2716;margin:0 0 1.2rem}
+  .cnote{background:var(--paper-deep);border-left:3px solid var(--glacier);padding:1rem 1.2rem;
+    border-radius:0 8px 8px 0;margin:1.6rem 0 0}
+  .cnote p{margin:0;font-size:.9rem}
+  .csent{background:rgba(143,182,168,.18);border-left:3px solid var(--glacier);
+    padding:1.2rem 1.4rem;border-radius:0 8px 8px 0}
+  {# Off-screen, never display:none: a bot fills what it can read, and a real
+     assistive technology is told to skip it. #}
+  .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="lhero"><div class="wrap">
+  <div class="kicker" style="color:var(--trail)">{{ target.label|trans }}</div>
+  <h1 class="disp">{{ 'report.title'|trans }}</h1>
+  <p class="lead" style="color:rgba(239,230,212,.85);margin-top:.8rem">{{ 'report.intro'|trans|rich }}</p>
+</div></div>
+
+<section class="pad"><div class="wrap">
+  <div class="reppage">
+    {% if sent %}
+      <div class="csent">
+        <h2>{{ 'report.sent_title'|trans }}</h2>
+        <p>{{ 'report.sent_body'|trans|rich }}</p>
+        <p><a href="{{ path('map') }}">{{ 'report.back_to_map'|trans }}</a></p>
+      </div>
+    {% else %}
+      {% if error %}
+        <div class="cerr" role="alert">{{ error|trans }}</div>
+      {% endif %}
+
+      <form method="post" action="{{ path('content_report_submit', {type: target.value, id: target_id}) }}">
+        <input type="hidden" name="_token" value="{{ csrf_token('content_report') }}">
+        <input type="hidden" name="{{ guard.stamp_field }}" value="{{ guard.stamp }}">
+        {# Where they clicked from. Carried, never shown: it is context for the
+           curator, not a question for the reporter. #}
+        {% if from_path %}<input type="hidden" name="from" value="{{ from_path }}">{% endif %}
+        {# Honeypots. Not a captcha, and never a third party: see contact-and-support.md §3. #}
+        <div class="hp" aria-hidden="true">
+          <input type="text" name="{{ guard.honeypot_a }}" tabindex="-1" autocomplete="off">
+          <input type="text" name="{{ guard.honeypot_b }}" tabindex="-1" autocomplete="off">
+        </div>
+
+
+        <div class="cfield">
+          <label for="rep-ground">{{ 'report.field_ground'|trans }} <span class="req" aria-hidden="true">*</span></label>
+          <select id="rep-ground" name="ground" required>
+            {% for g in grounds %}
+              <option value="{{ g.value }}">{{ g.label|trans }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="cfield">
+          <label for="rep-reason">{{ 'report.field_reason'|trans }} <span class="req" aria-hidden="true">*</span></label>
+          <textarea id="rep-reason" name="reason" required maxlength="2000" aria-describedby="rep-reason-hint"></textarea>
+          <p class="chint" id="rep-reason-hint">{{ 'report.field_reason_hint'|trans }}</p>
+        </div>
+
+        <div class="cfield">
+          {# Optional here, unlike the bug form, and deliberately: DSA Article
+             16 is written for the person a display name is aimed at, who very
+             often has no account and no wish to leave an address. #}
+          <label for="rep-contact">{{ 'report.field_contact'|trans }}</label>
+          <input type="email" id="rep-contact" name="contact" autocomplete="email" aria-describedby="rep-contact-hint">
+          <p class="chint" id="rep-contact-hint">{{ 'report.field_contact_hint'|trans }}</p>
+        </div>
+
+        <p class="reqlegend">{{ 'support.required_legend'|trans|rich }}</p>
+
+        <p><button type="submit" class="btn btn-p">{{ 'report.submit'|trans }}</button></p>
+      </form>
+
+      <div class="cnote">
+        <p>{{ 'report.privacy_note'|trans|rich }}</p>
+      </div>
+    {% endif %}
+  </div>
+</div></section>
+{% endblock %}

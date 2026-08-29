@@ -96,7 +96,9 @@ final class BugReportTest extends WebTestCase
             'steps' => '',
             'severity' => 'major',
             'area' => 'map',
-            'email' => '',
+            // Required without an account since 2026-08-28. A report nobody can
+            // be answered about is a dead end for the person who filed it.
+            'email' => 'reporter@cyclingcommons.org',
             FormGuard::HONEYPOT_A => '',
             FormGuard::HONEYPOT_B => '',
         ];
@@ -155,20 +157,48 @@ final class BugReportTest extends WebTestCase
 
         $rows = $this->reports();
         self::assertCount(1, $rows);
+        // No ACCOUNT, which is the point of this test. An address is still
+        // needed, so that we can answer.
         self::assertNull($rows[0]->getUserId());
-        self::assertNull($rows[0]->getReporterEmail());
+        self::assertSame('reporter@cyclingcommons.org', $rows[0]->getReporterEmail());
         self::assertSame(BugStatus::New, $rows[0]->getStatus());
         self::assertSame(BugSeverity::Major, $rows[0]->getSeverity());
         self::assertSame(BugArea::Map, $rows[0]->getArea());
     }
 
-    /** A report we cannot answer is still worth having, and says so. */
-    public function testAReportWithNoAddressIsAcceptedAndNotAnswerable(): void
+    /**
+     * Without an account, an address is REQUIRED.
+     *
+     * It used to be optional, and the thank-you page then had to hedge: "if you
+     * gave us an address, we will tell you what happened". That sentence
+     * existed only because the form declined to ask, and the one thing a
+     * reporter wants is to hear back (owner, 2026-08-28).
+     */
+    public function testAnAnonymousReportNeedsAnAddress(): void
     {
         $client = $this->client();
-        $this->file($client);
+        $this->file($client, ['email' => '']);
 
-        self::assertFalse($this->reports()[0]->isAnswerable());
+        self::assertResponseStatusCodeSame(422);
+        self::assertCount(0, $this->reports());
+    }
+
+    /** A signed-in reporter is never asked: the account address is used. */
+    public function testASignedInReporterNeedsNoAddressField(): void
+    {
+        $client = $this->client();
+        $rider = (new User())->setEmail('quiet@cyclingcommons.org');
+        $rider->setPassword('x');
+        $rider->setDisplayName('Quiet Rider');
+        $this->em()->persist($rider);
+        $this->em()->flush();
+        $client->loginUser($rider);
+
+        $this->file($client, ['email' => '']);
+
+        self::assertResponseIsSuccessful();
+        self::assertSame('quiet@cyclingcommons.org', $this->reports()[0]->getReporterEmail());
+        self::assertTrue($this->reports()[0]->isAnswerable());
     }
 
     public function testASignedInReporterGetsTheirAccountAndAddressAttached(): void

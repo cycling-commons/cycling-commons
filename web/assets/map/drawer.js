@@ -585,11 +585,28 @@ function buildRecord(layer, f){
          </svg></button>`
     : '';
 
+  /* Notice and action, DSA Article 16 (docs/specs/content-reports.md §5).
+     Real DB ids only: a coverage POI we do not store has nothing of ours to
+     report, and its words belong to OpenStreetMap, not to us. `experience` is
+     the routes layer, and a route is its own kind of target with its own
+     author. No account needed, so it renders the same signed in or not. */
+  const reportKind = layer.key === 'experience' ? 'route' : 'item';
+  /* `from` carries the map URL the rider is actually on, which is the only way
+     a curator can tell WHICH view they meant: on the map the path alone says
+     nothing, and the scope and layers live in the query string.
+     `location.pathname + search`, never the hash, and the server keeps the
+     path only (ContentReportController::cleanPath). */
+  const reportFrom = encodeURIComponent(location.pathname + location.search);
+  const reportLink = (f.id != null && !layer.pendingLayer)
+    ? `<p class="cc-d-report"><a href="/report/${reportKind}/${encodeURIComponent(f.id)}?from=${reportFrom}">${
+        escPend(D.reportPage || 'Report this page')}</a></p>`
+    : '';
+
   return `<div class="cc-d-head"><span class="cc-d-type" style="--c:${layer.color};color:${txtOn(layer.color)}"><i class="cc-g">${layerGlyph(layer)}</i> ${layer.label}</span>${share}</div>
     <div class="cc-d-name">${escPend(f.name)}</div>${cur}${photo}${desc}${diff}${elev}${len}${grad}
     <ul class="cc-d-rec">${rows}</ul>${fresh}${up}
     <div class="cc-d-src">${D.source||'Source'} · ${who || srcLine(f, osmHref)}${
-      who ? `<div class="cc-d-prov">${srcLine(f, osmHref)}</div>` : ''}</div>${act}${moderate}${histSlot}`;
+      who ? `<div class="cc-d-prov">${srcLine(f, osmHref)}</div>` : ''}</div>${act}${moderate}${histSlot}${reportLink}`;
 }
 // docs/specs/security-architecture.md §4.2 — every history field through escPend. docs/specs/photo-uploads.md §5 — gallery history is a count.
 function photoCount(n){

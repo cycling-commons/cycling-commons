@@ -54,6 +54,14 @@ final class RiderProfileController extends AbstractController
                 'SELECT COUNT(*) FROM item_confirmation WHERE user_id = :uid',
                 ['uid' => (int) $rider->getId()],
             ),
+            // Approved translations are contributions like any other, and were
+            // the only kind this page did not count (owner, 2026-08-29). A
+            // rider who translated forty strings had a profile that said they
+            // had done nothing.
+            'translations' => (int) $db->fetchOne(
+                "SELECT COUNT(*) FROM translation_proposal WHERE submitter_id = :uid AND status = 'approved'",
+                ['uid' => (int) $rider->getId()],
+            ),
         ];
         $contribCount = $counters['places'] + $counters['edits'];
 

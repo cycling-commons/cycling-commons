@@ -16,23 +16,65 @@
 {% include 'account/_shell_styles.html.twig' %}
 <style nonce="{{ csp_nonce() }}">
   .chips{display:flex;gap:.4rem;flex-wrap:wrap;margin:1rem 0 .6rem}
-  .chip{font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;
+  .chip{font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;
     padding:.35rem .6rem;border-radius:4px;background:var(--paper-deep);color:#4a4d40;text-decoration:none}
   .chip.on{background:var(--ink);color:var(--paper)}
   .chip .n{opacity:.7;margin-left:.3rem}
-  .chips.areas .chip{font-size:.56rem}
+  .chips.areas .chip{font-size:.68rem}
   .bugrow{border-bottom:1px solid rgba(20,22,14,.12);padding:.85rem 0}
   .bugrow:last-child{border-bottom:0}
   .bugtop{display:flex;gap:.55rem;align-items:baseline;flex-wrap:wrap}
   .bugtop a{font-family:var(--serif);font-size:1rem;color:var(--ink);text-decoration:none}
   .bugtop a:hover{color:var(--clay);text-decoration:underline}
-  .ref{font-family:var(--mono);font-size:.6rem;color:#6d7060}
-  .tag{font-family:var(--mono);font-size:.56rem;letter-spacing:.1em;text-transform:uppercase;
+  .ref{font-family:var(--mono);font-size:.7rem;color:#6d7060}
+  /* The reference reads as an identifier, not as the title: same mono face the
+     detail page uses, and quiet enough that the title still leads the row. */
+  .bugref{font-family:var(--mono);font-size:.74rem;color:#6d7060;letter-spacing:.04em;
+    text-decoration:none;flex:none}
+  .bugref:hover{color:var(--clay);text-decoration:underline}
+  .bugfind{display:flex;gap:.45rem;align-items:center;flex-wrap:wrap;margin:1.1rem 0 .3rem}
+  .bugfind label{font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:#595c4d}
+  /* Capped: a reference is four characters and the longest useful query is an
+     email address. A box the width of the page suggested neither, and made the
+     desk look like a search engine rather than a queue. */
+  .bugfind input[type=search]{flex:0 1 26rem;min-width:0;font-family:inherit;font-size:.9rem;
+    padding:.45rem .6rem;border:1px solid rgba(20,22,14,.22);border-radius:5px;background:var(--paper)}
+  .bugfind input[type=search]:focus-visible{outline:2px solid var(--clay);outline-offset:1px}
+  /* Orange, like every other submit on the site: a submit is the primary
+     action of its form, and the ink-coloured one read as a cancel. */
+  .bugfind button{font-family:inherit;font-weight:700;font-size:.85rem;padding:.45rem .9rem;border:0;
+    border-radius:5px;background:var(--trail);color:var(--ink);cursor:pointer}
+  .bugfind button:hover{background:#ff703d}
+  .bugfind button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  .bugclear{font-size:.8rem;color:#6d7060}
+  .bugfind-hint{margin:0 0 .5rem;font-size:.76rem;color:#6d7060}
+  .bugfound{margin:.2rem 0 .6rem;font-size:.85rem;color:#4a4d40}
+  .listhead .bugsort label{color:#6d7060}
+  /* Count on the left, order on the right, sharing one baseline. */
+  .listhead{display:flex;justify-content:space-between;align-items:center;gap:.6rem 1rem;
+    flex-wrap:wrap;margin:1.1rem 0 .3rem;padding-bottom:.5rem;
+    border-bottom:1px solid rgba(20,22,14,.12)}
+  .listhead .bugfound{margin:0}
+  .bugsort{display:flex;gap:.45rem;align-items:center;flex-wrap:wrap;margin:0}
+  .bugsort label{font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:#595c4d}
+  .bugsort select{font-family:inherit;font-size:.85rem;padding:.4rem .5rem;
+    border:1px solid rgba(20,22,14,.22);border-radius:5px;background:var(--paper)}
+  .bugsort select:focus-visible{outline:2px solid var(--clay);outline-offset:1px}
+  .bugsort-go{font-family:inherit;font-weight:700;font-size:.82rem;padding:.4rem .8rem;border:0;
+    border-radius:5px;background:var(--trail);color:var(--ink);cursor:pointer}
+  .bugsort-go:hover{background:#ff703d}
+  .bugsort-go:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  /* Hidden only once the script that replaces it has run, so it is a real
+     control with scripting off rather than a dead one. */
+  .bugsort.auto .bugsort-go{display:none}
+  /* The release tag reads as a fact about the fix, not as a status. */
+  .tag.rel{background:var(--spruce);color:var(--paper);letter-spacing:.06em}
+  .tag{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;
     padding:.18rem .42rem;border-radius:3px;background:var(--paper-deep);color:#4a4d40}
   .tag.sev-critical{background:#5a2716;color:#FFD9C8}
   .tag.sev-major{background:#FFE0D2;color:#5a2716}
   .tag.pub{background:var(--spruce);color:var(--paper)}
-  .bugmeta{font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;color:#6d7060;margin-top:.35rem}
+  .bugmeta{font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;color:#6d7060;margin-top:.35rem}
   .bugexcerpt{font-size:.87rem;color:#4a4d40;line-height:1.55;margin:.3rem 0 0}
   .empty{background:var(--paper-deep);border-left:2px solid var(--ochre);padding:1.1rem 1.3rem;
     border-radius:0 8px 8px 0;font-size:.92rem;color:#4a4d40}
@@ -49,10 +91,26 @@
     <p class="lede">{{ 'support.bugs.lede'|trans }}</p>
   </div>
 
+  {# GET, so a search is a link a curator can bookmark or paste to a colleague.
+     The status and area chips are dropped on submit rather than carried: a
+     search that silently keeps "New" hides the report somebody is chasing. #}
+  <form class="bugfind" method="get" action="{{ path('moderate_bugs') }}" role="search">
+    <label for="bugq">{{ 'support.bugs.search_label'|trans }}</label>
+    <input type="search" id="bugq" name="q" value="{{ query }}" maxlength="120"
+           placeholder="{{ 'support.bugs.search_ph'|trans }}"
+           aria-describedby="bugq-hint" autocomplete="off">
+    <button type="submit">{{ 'support.bugs.search_go'|trans }}</button>
+    {% if query %}
+      <a class="bugclear" href="{{ path('moderate_bugs') }}">{{ 'support.bugs.search_clear'|trans }}</a>
+    {% endif %}
+  </form>
+  <p class="bugfind-hint" id="bugq-hint">{{ 'support.bugs.search_hint'|trans }}</p>
+
+
   <div class="chips">
     {% for st in statuses %}
       <a class="chip {{ filter_status == st.value ? 'on' : '' }}"
-         href="{{ path('moderate_bugs', {status: st.value}) }}">
+         href="{{ path('moderate_bugs', {status: st.value, q: query ?: null, sort: sort != 'newest' ? sort : null}) }}">
         {{ ('support.bug.status.' ~ st.value)|trans }}<span class="n">{{ counts[st.value] ?? 0 }}</span>
       </a>
     {% endfor %}
@@ -61,29 +119,66 @@
   <div class="chips areas">
     {% for ar in areas %}
       <a class="chip {{ filter_area == ar.value ? 'on' : '' }}"
-         href="{{ path('moderate_bugs', {area: ar.value}) }}">{{ ('support.bug.area.' ~ ar.value)|trans }}</a>
+         href="{{ path('moderate_bugs', {area: ar.value, q: query ?: null, sort: sort != 'newest' ? sort : null}) }}">{{ ('support.bug.area.' ~ ar.value)|trans }}</a>
     {% endfor %}
   </div>
 
+  {# The list's own header: what is being shown, and how it is ordered.
+     The order is a property OF this list, so it sits on the list rather than
+     in the filter stack above. #}
+  <div class="listhead">
+    <p class="bugfound" role="status">
+      {%- if query -%}
+        {{ 'support.bugs.search_found'|trans({'%count%': pager.total, '%q%': query}) }}
+      {%- else -%}
+        {{ 'support.bugs.showing'|trans({'%count%': pager.total}) }}
+      {%- endif -%}
+    </p>
+    {# GET, carrying every other filter, so changing the order never quietly
+       drops the search or the status somebody was looking at. Submits on
+       change where there is scripting, and keeps a real button where not. #}
+    <form class="bugsort" method="get" action="{{ path('moderate_bugs') }}">
+      {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
+      {% if filter_status %}<input type="hidden" name="status" value="{{ filter_status }}">{% endif %}
+      {% if filter_area %}<input type="hidden" name="area" value="{{ filter_area }}">{% endif %}
+      <label for="bugsort">{{ 'support.bugs.sort_label'|trans }}</label>
+      <select id="bugsort" name="sort" data-autosubmit>
+        {% for so in sorts %}
+          <option value="{{ so.value }}"{{ sort == so.value ? ' selected' : '' }}>{{ so.label|trans }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit" class="bugsort-go">{{ 'support.bugs.sort_go'|trans }}</button>
+    </form>
+  </div>
+
   {% if reports is empty %}
-    <div class="empty">{{ 'support.bugs.empty'|trans }}</div>
+    <div class="empty">{{ (query ? 'support.bugs.search_none' : 'support.bugs.empty')|trans({'%q%': query}) }}</div>
   {% else %}
     {% for b in reports %}
       <div class="bugrow">
         <div class="bugtop">
+          {# The reference FIRST, and always: it is what a reporter quotes back
+             in a reply, so a curator scanning for one should not have to open
+             a report to see it. #}
+          <a class="bugref" href="{{ path('moderate_bugs_detail', {id: b.id}) }}">{{ b.reference }}</a>
           <a href="{{ path('moderate_bugs_detail', {id: b.id}) }}">{{ b.title }}</a>
           <span class="tag sev-{{ b.severity.value }}">{{ ('support.bug.severity.' ~ b.severity.value)|trans }}</span>
           <span class="tag">{{ ('support.bug.status.' ~ b.status.value)|trans }}</span>
           <span class="tag">{{ ('support.bug.area.' ~ b.area.value)|trans }}</span>
           {% if b.isPublic %}<span class="tag pub">{{ 'support.bugs.public'|trans }}</span>{% endif %}
+          {% if b.fixRelease %}<span class="tag rel">{{ b.fixRelease }}</span>{% endif %}
           {# A word, never an emoji (docs/TODO.md: type marks are drawn, not emoji). #}
           {% if b.screenshots|length %}<span class="tag">{{ 'support.bugs.shots'|trans({'%count%': b.screenshots|length}) }}</span>{% endif %}
         </div>
-        <p class="bugexcerpt">{{ b.body|length > 160 ? b.body|slice(0, 160) ~ '…' : b.body }}</p>
+        {# Plain text, markers stripped. A 160-character slice through a code
+           fence is neither markdown nor prose (contact-and-support.md §15). #}
+        <p class="bugexcerpt">{{ b.body|bug_excerpt }}</p>
         <p class="bugmeta">
           {{ b.createdAt|cc_datetime }}
           {%- if b.pageUrl %} · {{ b.pageUrl }}{% endif %}
-          {%- if b.reporterEmail %} · {{ b.reporterEmail }}{% else %} · {{ 'support.bugs.anonymous'|trans }}{% endif %}
+          {#- Whether we can answer, never the address itself. Nobody sees
+              anybody else's email anywhere on this site. -#}
+          {%- if b.isAnswerable %} · {{ 'support.bugs.answerable'|trans }}{% else %} · {{ 'support.bugs.anonymous'|trans }}{% endif %}
         </p>
       </div>
     {% endfor %}
@@ -91,8 +186,18 @@
     {% include 'partials/_pager.html.twig' with {
       pager: pager,
       route: 'moderate_bugs',
-      params: {status: filter_status, area: filter_area}
+      params: {status: filter_status, area: filter_area, q: query ?: null, sort: sort != 'newest' ? sort : null}
     } %}
   {% endif %}
 </div>
+<script nonce="{{ csp_nonce() }}">
+  /* Submit on change, and only then hide the button: with scripting off the
+     button is the control, and hiding it in CSS would leave a dead select. */
+  (function () {
+    var sel = document.querySelector('.bugsort [data-autosubmit]');
+    if (!sel) return;
+    sel.form.classList.add('auto');
+    sel.addEventListener('change', function () { sel.form.submit(); });
+  })();
+</script>
 {% endblock %}

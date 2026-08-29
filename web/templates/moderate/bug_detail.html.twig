@@ -21,18 +21,38 @@
 <style nonce="{{ csp_nonce() }}">
   .bdet{max-width:760px}
   .bdet dl.facts{display:grid;grid-template-columns:auto 1fr;gap:.3rem .9rem;margin:1rem 0 1.4rem}
-  .bdet dl.facts dt{font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--clay)}
+  .bdet dl.facts dt{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--clay)}
   .bdet dl.facts dd{margin:0;font-size:.9rem;color:#3a3d30;word-break:break-word}
+  /* Values that are machine strings: the mono FACE, at the same size and case
+     as every other value. NOT the site-wide `.mono` utility, which uppercases
+     and wide-tracks for chrome labels: `/regions` shown as `/REGIONS` is a
+     different path, and a user-agent string in caps is unreadable. */
+  /* The SAME number as the dd rule above, not `inherit`: `inherit` takes the
+     parent's size, which is the <dl>, not the sibling declaration. Machine
+     strings differ only in FACE, never in size, case or tracking. */
+  .bdet dl.facts dd.val{font-family:var(--mono);font-size:.9rem;letter-spacing:0;
+    text-transform:none;line-height:1.5}
+  .bdet .ref-lede{font-family:var(--mono);font-size:.9rem;letter-spacing:.04em;text-transform:none}
   .btext{background:var(--paper-deep);border-radius:6px;padding:1rem 1.2rem;font-family:inherit;
     font-size:.95rem;line-height:1.65;color:#3a3d30;white-space:pre-wrap;word-wrap:break-word;margin:0 0 1.2rem}
-  .bsec{font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;
+  .btext.md{white-space:normal}
+  .btext.md p{margin:0 0 .8rem}
+  .btext.md p:last-child{margin-bottom:0}
+  .btext.md ul,.btext.md ol{margin:0 0 .8rem;padding-left:1.3rem}
+  .btext.md li{margin:.2rem 0}
+  .btext.md code{background:rgba(20,22,14,.07);border-radius:3px;padding:.1em .35em;font-size:.9em}
+  /* A pasted stack trace keeps its own lines and scrolls in its own box
+     rather than widening the page. */
+  .btext.md pre{background:rgba(20,22,14,.07);border-radius:5px;padding:.7rem .9rem;overflow-x:auto;margin:0 0 .8rem}
+  .btext.md pre code{background:none;padding:0;font-size:.85em;white-space:pre}
+  .bsec{font-family:var(--mono);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;
     color:var(--clay);margin:1.4rem 0 .4rem}
   .shots a{display:inline-block;font-family:var(--mono);font-size:.72rem;color:var(--clay);
     border:1px solid rgba(20,22,14,.2);border-radius:5px;padding:.45rem .7rem;margin:0 .4rem .4rem 0;
     text-decoration:none}
   .shots a:hover{background:var(--paper-deep)}
   .decide{margin-top:1.6rem;padding-top:1.3rem;border-top:1px solid rgba(20,22,14,.12)}
-  .decide label{display:block;font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;
+  .decide label{display:block;font-family:var(--mono);font-size:.7rem;letter-spacing:.12em;
     text-transform:uppercase;color:var(--clay);margin:.9rem 0 .3rem}
   .decide select,.decide input[type="text"],.decide textarea{width:100%;font-family:inherit;font-size:.9rem;
     padding:.5rem .6rem;border:1px solid rgba(20,22,14,.22);border-radius:5px;background:var(--paper)}
@@ -41,6 +61,20 @@
   .decide .check label{margin:0;font-family:inherit;font-size:.9rem;letter-spacing:0;text-transform:none;color:#3a3d30}
   .warn{background:var(--paper-deep);border-left:2px solid var(--ochre);padding:.85rem 1.05rem;
     border-radius:0 6px 6px 0;font-size:.85rem;color:#4a4d40;line-height:1.55;margin:.9rem 0}
+  /* The internal block has to be distinguishable at a glance from the block
+     that gets mailed. Different ground, and a rule down the side in the same
+     colour as its warning. */
+  .btext.internal{background:rgba(90,39,22,.06);border-left:3px solid var(--clay)}
+  .internal-warn{border-left-color:var(--clay)}
+  .decide input[type="text"]{width:100%}
+  .decide textarea[rows="3"]{min-height:4.5rem}
+  .req{color:var(--clay);font-weight:700}
+  /* auto-fit rather than three fixed columns: at a narrow window they stack on
+     their own, with no breakpoint to keep in sync with the sidebar. */
+  .drow{display:grid;grid-template-columns:repeat(auto-fit,minmax(12rem,1fr));gap:0 .8rem}
+  /* The first label in each cell keeps the row's top edge flush: the shared
+     `.decide label` margin would only apply to the leftmost one otherwise. */
+  .drow .dcell label{margin-top:.9rem}
 </style>
 {% endblock %}
 
@@ -51,7 +85,7 @@
   <div class="mh">
     <div class="kicker">{{ 'account.menu_moderation'|trans }} · <a href="{{ path('moderate_bugs') }}">{{ 'support.bugs.title'|trans }}</a></div>
     <h1>{{ report.title }}</h1>
-    <p class="lede mono">{{ reference }}</p>
+    <p class="lede ref-lede">{{ reference }}</p>
   </div>
 
   <div class="bdet">
@@ -65,30 +99,36 @@
       <dt>{{ 'support.inbox.received'|trans }}</dt>
       <dd>{{ report.createdAt|cc_datetime }}</dd>
       <dt>{{ 'support.bug.context_page'|trans }}</dt>
-      <dd class="mono">{{ report.pageUrl ?? '–' }}</dd>
+      <dd class="val">{{ report.pageUrl ?? '–' }}</dd>
       <dt>{{ 'support.bug.context_browser'|trans }}</dt>
-      <dd class="mono">{{ report.browser ?? '–' }}</dd>
+      <dd class="val">{{ report.browser ?? '–' }}</dd>
       <dt>{{ 'support.bug.context_screen'|trans }}</dt>
-      <dd class="mono">{{ report.viewport ?? '–' }}</dd>
+      <dd class="val">{{ report.viewport ?? '–' }}</dd>
       <dt>{{ 'support.bugs.build'|trans }}</dt>
-      <dd class="mono">{{ report.appVersion ?? '–' }}</dd>
+      <dd class="val">{{ report.appVersion ?? '–' }}</dd>
       <dt>{{ 'support.inbox.from'|trans }}</dt>
       <dd>
-        {%- if report.reporterEmail %}{{ report.reporterEmail }}{% else %}{{ 'support.bugs.anonymous'|trans }}{% endif -%}
-        {%- if report.userId %} · #{{ report.userId }}{% endif -%}
+        {#- Whether we can answer, and whether it came from an account. Never
+            the address: nobody sees anybody else's email anywhere here. -#}
+        {%- if report.reporterEmail %}{{ 'support.bugs.answerable'|trans }}{% else %}{{ 'support.bugs.anonymous'|trans }}{% endif -%}
+        {%- if report.userId %} · {{ 'support.bugs.from_account'|trans }}{% endif -%}
       </dd>
       {% if report.locale %}
         <dt>{{ 'support.inbox.language'|trans }}</dt>
         <dd>{{ report.locale }}</dd>
       {% endif %}
+      {% if report.fixRelease %}
+        <dt>{{ 'support.bugs.release'|trans }}</dt>
+        <dd class="val">{{ report.fixRelease }}</dd>
+      {% endif %}
     </dl>
 
     <p class="bsec">{{ 'support.bug.field_body'|trans }}</p>
-    <div class="btext">{{ report.body }}</div>
+    <div class="btext md">{{ report.body|bug_markdown }}</div>
 
     {% if report.steps %}
       <p class="bsec">{{ 'support.bug.field_steps'|trans }}</p>
-      <div class="btext">{{ report.steps }}</div>
+      <div class="btext md">{{ report.steps|bug_markdown }}</div>
     {% endif %}
 
     {% if report.screenshots|length %}
@@ -100,56 +140,120 @@
           </a>
         {% endfor %}
       </p>
-      <p class="warn">{{ 'support.bugs.shot_note'|trans }}</p>
+    {% endif %}
+
+    {% if report.internalNote %}
+      <p class="bsec">{{ 'support.bugs.internal'|trans }}</p>
+      <div class="btext md internal">{{ report.internalNote|bug_markdown }}</div>
     {% endif %}
 
     {% if report.outcomeNote %}
       <p class="bsec">{{ 'support.bugs.outcome'|trans }}</p>
-      <div class="btext">{{ report.outcomeNote }}</div>
+      <div class="btext md">{{ report.outcomeNote|bug_markdown }}</div>
     {% endif %}
 
     <form class="decide" method="post" action="{{ path('moderate_bugs_decide', {id: report.id}) }}">
       <input type="hidden" name="_token" value="{{ csrf_token('bug-desk-decide') }}">
 
-      <label for="d-status">{{ 'support.inbox.set_status'|trans }}</label>
-      <select id="d-status" name="status">
-        {% for st in statuses %}
-          <option value="{{ st.value }}"{{ st == report.status ? ' selected' : '' }}>{{ ('support.bug.status.' ~ st.value)|trans }}</option>
-        {% endfor %}
-      </select>
+      {# The triage a curator sets in one glance, so it sits on one line. Three
+         short pickers stacked full width made the form look longer than the
+         work it asks for, and pushed the note that matters below the fold. #}
+      <div class="drow">
+        <div class="dcell">
+          <label for="d-status">{{ 'support.inbox.set_status'|trans }}</label>
+          <select id="d-status" name="status">
+            {% for st in statuses %}
+              <option value="{{ st.value }}"{{ st == report.status ? ' selected' : '' }}>{{ ('support.bug.status.' ~ st.value)|trans }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="dcell">
+          <label for="d-sev">{{ 'support.bug.field_severity'|trans }}</label>
+          <select id="d-sev" name="severity">
+            {% for sev in severities %}
+              <option value="{{ sev.value }}"{{ sev == report.severity ? ' selected' : '' }}>{{ ('support.bug.severity.' ~ sev.value)|trans }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="dcell">
+          <label for="d-area">{{ 'support.bug.field_area'|trans }}</label>
+          <select id="d-area" name="area">
+            {% for ar in areas %}
+              <option value="{{ ar.value }}"{{ ar == report.area ? ' selected' : '' }}>{{ ('support.bug.area.' ~ ar.value)|trans }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
 
-      <label for="d-sev">{{ 'support.bug.field_severity'|trans }}</label>
-      <select id="d-sev" name="severity">
-        {% for sev in severities %}
-          <option value="{{ sev.value }}"{{ sev == report.severity ? ' selected' : '' }}>{{ ('support.bug.severity.' ~ sev.value)|trans }}</option>
-        {% endfor %}
-      </select>
+      {# Our own notes sit WITH the release: both are things we record for
+         ourselves, on one row, and neither is ever sent anywhere. #}
+      <div class="drow">
+        <div class="dcell">
+          <label for="d-internal">{{ 'support.bugs.internal'|trans }}</label>
+          <textarea id="d-internal" name="internal_note" maxlength="4000" rows="3"
+                    placeholder="{{ 'support.bugs.internal_placeholder'|trans }}">{{ report.internalNote }}</textarea>
+        </div>
+        <div class="dcell">
+          <label for="d-release">{{ 'support.bugs.release'|trans }}</label>
+          <input type="text" id="d-release" name="fix_release" maxlength="64"
+                 value="{{ report.fixRelease }}"
+                 placeholder="{{ 'support.bugs.release_placeholder'|trans }}">
+        </div>
+      </div>
 
-      <label for="d-area">{{ 'support.bug.field_area'|trans }}</label>
-      <select id="d-area" name="area">
-        {% for ar in areas %}
-          <option value="{{ ar.value }}"{{ ar == report.area ? ' selected' : '' }}>{{ ('support.bug.area.' ~ ar.value)|trans }}</option>
-        {% endfor %}
-      </select>
-
-      <label for="d-note">{{ 'support.bugs.outcome'|trans }}</label>
-      <textarea id="d-note" name="outcome_note" maxlength="2000"
-                placeholder="{{ 'support.bugs.outcome_placeholder'|trans }}">{{ report.outcomeNote }}</textarea>
-      <p class="warn">{{ 'support.bugs.outcome_required'|trans }}</p>
+      {# The reply, and ONLY when one is going. Fixed and Not-changing-this are
+         the two statuses that mail the reporter (BugStatus::notifiesReporter);
+         on any other, this box would be a message written to nobody. Hidden by
+         the script at the foot of the page, so with scripting off it is simply
+         always there and the server still requires it for those two. #}
+      <div class="d-reply" data-when="{{ notifying_statuses|join(' ') }}">
+        <label for="d-note">{{ 'support.bugs.outcome'|trans }} <span class="req" aria-hidden="true">*</span></label>
+        <textarea id="d-note" name="outcome_note" maxlength="2000" aria-required="true"
+                  placeholder="{{ 'support.bugs.outcome_placeholder'|trans }}">{{ report.outcomeNote }}</textarea>
+      </div>
 
       <div class="check">
         <input type="checkbox" id="d-public" name="is_public" value="1"{{ report.isPublic ? ' checked' : '' }}>
         <label for="d-public">{{ 'support.bugs.publish'|trans }}</label>
       </div>
 
-      <label for="d-ptitle">{{ 'support.bugs.public_title'|trans }}</label>
-      <input type="text" id="d-ptitle" name="public_title" maxlength="160"
-             value="{{ report.publicTitle == report.title ? '' : report.publicTitle }}"
-             placeholder="{{ 'support.bugs.public_title_placeholder'|trans }}">
-      <p class="warn">{{ 'support.bugs.publish_note'|trans }}</p>
+      {# The public wording: a title AND a description. The list used to print
+         the outcome note, which is a reply to one person and reads like one on
+         a page a stranger opens cold. #}
+      <div class="d-public">
+        <label for="d-ptitle">{{ 'support.bugs.public_title'|trans }}</label>
+        <input type="text" id="d-ptitle" name="public_title" maxlength="160"
+               value="{{ report.publicTitle == report.title ? '' : report.publicTitle }}"
+               placeholder="{{ 'support.bugs.public_title_placeholder'|trans }}">
 
-      <p><button type="submit" class="btn">{{ 'support.inbox.save'|trans }}</button></p>
+        <label for="d-pbody">{{ 'support.bugs.public_body'|trans }}</label>
+        <textarea id="d-pbody" name="public_body" maxlength="2000" rows="3"
+                  placeholder="{{ 'support.bugs.public_body_placeholder'|trans }}">{{ report.publicBody }}</textarea>
+        <p class="warn">{{ 'support.bugs.publish_note'|trans }}</p>
+      </div>
+
+      <p><button type="submit" class="btn btn-p">{{ 'support.inbox.save'|trans }}</button></p>
     </form>
   </div>
 </div>
+<script nonce="{{ csp_nonce() }}">
+  /* The reply box appears only for the statuses that actually mail the
+     reporter. On any other status it is a message written to nobody, and a
+     visible empty box invites somebody to write one.
+
+     Progressive: with scripting off the box is simply always there, and the
+     server still refuses those two statuses without a note. */
+  (function () {
+    var status = document.getElementById('d-status');
+    var reply = document.querySelector('.d-reply');
+    if (!status || !reply) return;
+
+    var sends = (reply.dataset.when || '').split(' ').filter(Boolean);
+    function sync() {
+      reply.hidden = sends.indexOf(status.value) === -1;
+    }
+    status.addEventListener('change', sync);
+    sync();
+  })();
+</script>
 {% endblock %}

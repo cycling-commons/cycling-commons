@@ -395,6 +395,13 @@
       fBody.focus();
       return;
     }
+    /* Required without an account, same as /report-bug. The field only exists
+       for anonymous visitors, so its absence IS the signed-in case. */
+    if (fEmail && !fEmail.value.trim()) {
+      warn(t('bug_need_email', 'We need an address to tell you what happened.'));
+      fEmail.focus();
+      return;
+    }
 
     sendBtn.disabled = true;
     startSolving();

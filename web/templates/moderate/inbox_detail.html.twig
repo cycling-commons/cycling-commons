@@ -16,14 +16,14 @@
 <style nonce="{{ csp_nonce() }}">
   .mdet{max-width:720px}
   .mdet dl{display:grid;grid-template-columns:auto 1fr;gap:.3rem .9rem;margin:1rem 0 1.4rem}
-  .mdet dt{font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--clay)}
+  .mdet dt{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--clay)}
   .mdet dd{margin:0;font-size:.9rem;color:#3a3d30}
   .mbody{background:var(--paper-deep);border-radius:6px;padding:1rem 1.2rem;font-family:inherit;
     font-size:.95rem;line-height:1.65;color:#3a3d30;white-space:pre-wrap;word-wrap:break-word;margin:0 0 1.4rem}
   .late{background:#fff1ec;border-left:2px solid var(--trail);padding:.85rem 1.05rem;border-radius:0 6px 6px 0;
     font-size:.88rem;color:#5a2716;margin:0 0 1.2rem}
   .handle{margin-top:1.4rem;padding-top:1.2rem;border-top:1px solid rgba(20,22,14,.12)}
-  .handle label{display:block;font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;
+  .handle label{display:block;font-family:var(--mono);font-size:.7rem;letter-spacing:.12em;
     text-transform:uppercase;color:var(--clay);margin:.9rem 0 .3rem}
   .handle select,.handle textarea{width:100%;font-family:inherit;font-size:.9rem;padding:.5rem .6rem;
     border:1px solid rgba(20,22,14,.22);border-radius:5px;background:var(--paper)}
@@ -50,7 +50,7 @@
 
     <dl>
       <dt>{{ 'support.inbox.from'|trans }}</dt>
-      <dd>{{ message.name ?? '–' }} &lt;{{ message.email }}&gt;</dd>
+      <dd>{{ message.name ?? '–' }}</dd>
       <dt>{{ 'support.inbox.received'|trans }}</dt>
       <dd>{{ message.createdAt|cc_datetime }}</dd>
       {% if message.dueAt %}
@@ -79,7 +79,10 @@
 
     <p class="reply-cta">
       {{ 'support.inbox.reply_note'|trans }}
-      <a href="mailto:{{ message.email }}?subject={{ ('[' ~ reference ~ '] ' ~ ('support.topic.' ~ message.topic.value)|trans)|url_encode }}">{{ 'support.inbox.reply_link'|trans }}</a>
+      {# No mailto: it would put the address in the markup and in the status
+         bar. When this desk returns it replies through the system, which is
+         the whole of TODO item 18. #}
+      <span class="mono">{{ 'support.inbox.reply_via_system'|trans }}</span>
     </p>
 
     {% if message.handlingNote %}

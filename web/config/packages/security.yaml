@@ -60,6 +60,10 @@ security:
         # in and may never sign in again. Asking them to log in first to stop
         # mail they did not want is the opposite of what the law asks for.
         - { path: ^/unsubscribe, roles: PUBLIC_ACCESS }
+        # DSA Article 16: any person, no account, any content. A notice-and-action
+        # route behind a login is not one. Same reason /photo/{uuid}/report is
+        # public, and this is its generalisation.
+        - { path: ^/report/, roles: PUBLIC_ACCESS }
         # Public rider profiles (spec 2026-07-14): explicit PUBLIC_ACCESS for the
         # same scheb lazy-firewall reason as /map/catalog.json below.
         - { path: '^(/[a-z]{2})?/riders/', roles: PUBLIC_ACCESS }

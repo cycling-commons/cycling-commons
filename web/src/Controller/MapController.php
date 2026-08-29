@@ -256,6 +256,7 @@ final class MapController extends AbstractController
             'waitingOnRider' => 'd_waiting_on_rider', 'youAsked' => 'd_you_asked', 'riderReplied' => 'd_rider_replied',
             'priorRejected' => 'd_prior_rejected',
             'share' => 'd_share', 'shareHint' => 'd_share_hint', 'shareCopied' => 'd_share_copied',
+            'reportPage' => 'd_report_page',
             'photoAlt' => 'd_photo_alt', 'photoDistance' => 'd_photo_distance',
             'photoNoGps' => 'd_photo_no_gps', 'photoKeep' => 'd_photo_keep',
             'photoOpen' => 'd_photo_open',

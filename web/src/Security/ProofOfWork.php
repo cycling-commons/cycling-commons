@@ -32,7 +32,20 @@ final class ProofOfWork
     /** Leading zero bits. 20 ≈ 1–2s of browser CPU. */
     public const int DIFFICULTY = 20;
 
-    private const int TTL_SECONDS = 600;
+    /**
+     * Thirty minutes, not ten.
+     *
+     * Ten was measured against how long a challenge is worth replaying, and
+     * never against how long a person takes to write. A useful bug report has
+     * steps in it and often a pasted screenshot, and that is regularly more
+     * than ten minutes; the challenge then died mid-sentence and the reporter
+     * was told the spam check had failed (owner, 2026-08-28).
+     *
+     * Widening it costs nothing here: every challenge is single-use
+     * ({@see verify()} spends it), so a longer life is a longer window on a
+     * token that still works exactly once.
+     */
+    private const int TTL_SECONDS = 1800;
 
     public function __construct(
         #[Autowire('%kernel.secret%')]
@@ -83,6 +96,32 @@ final class ProofOfWork
         $this->spent->save($item);
 
         return true;
+    }
+
+    /**
+     * Is this one of ours, correctly signed, and simply too old?
+     *
+     * Separate from {@see verify()} because "expired" and "wrong" say opposite
+     * things about the person on the other end. A wrong nonce is somebody
+     * failing a test. An expired one is somebody who took their time, which on
+     * a bug form is the person writing the most useful report of the day.
+     *
+     * Signature-checked first: an unsigned or forged string is not "expired",
+     * it is not ours at all, and must not get the softer treatment.
+     */
+    public function isExpired(string $challenge, \DateTimeImmutable $now): bool
+    {
+        $parts = explode('.', $challenge);
+        if (3 !== \count($parts)) {
+            return false;
+        }
+        [$expiry, $random, $signature] = $parts;
+
+        if (!hash_equals($this->sign($expiry.'.'.$random), $signature)) {
+            return false;
+        }
+
+        return ctype_digit($expiry) && (int) $expiry < $now->getTimestamp();
     }
 
     /** Does `sha256(challenge . nonce)` begin with DIFFICULTY zero bits? */

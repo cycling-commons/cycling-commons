@@ -242,6 +242,106 @@ resolved or declined: being told a report moved between two internal states is
 noise, and noise teaches people to ignore the next mail. `notifiedAt` is what
 stops a curator flipping a status twice from mailing twice.
 
+### The round of 2026-08-28
+
+Four things, all found by the owner using the form, and every one of them cost
+a real report before it was found.
+
+**The form no longer comes back empty.** It used to re-render with nothing in
+it. Somebody who spent twenty minutes writing a careful report and hit a
+validation error lost all of it and was shown a spam warning. That is the worst
+failure this page can have: it punishes exactly the person taking the most
+care, on the one form whose premise is that something is already broken. Title,
+body, steps, severity, area, address and pasted page all come back.
+
+Screenshots are the one thing that cannot: a browser will not let a server
+refill a file input. The page now says so, rather than letting somebody send a
+report believing the image went with it.
+
+**The challenge lives thirty minutes, not ten.** Ten was measured against how
+long a challenge is worth replaying and never against how long a person takes
+to write. A useful report has steps and often a screenshot, and that is
+regularly more than ten minutes.
+
+**An expired challenge is not a refusal here.** It is not a failed test: it is
+somebody who took their time. It is downgraded to "unsolved", which lands on
+the narrow budget, and which is a door anybody can already walk through by
+sending no nonce at all. A **wrong** nonce is still a refusal, because that is
+a failed attempt rather than an absent one. `ProofOfWork::isExpired()` tells the
+two apart, and refuses to call a forged string "expired".
+
+**A signed-in reporter cannot type a different address.** The field is not
+offered; the account address is shown as text with a link to settings. Anything
+posted in `email` by hand is discarded. Two reasons: a form post leaves nothing
+in a sent folder, so the reporter's own `/messages` is the only record they get
+(§9); and an editable field would let a report make our server mail an address
+the reporter chose for somebody else.
+
+**Anonymous reports stay.** Asked and answered on 2026-08-28: yes. Somebody
+whose sign-in is broken cannot sign in to report that sign-in is broken. That
+is the oldest assertion in `BugReportTest` and it does not move.
+
+**A reporter who came here directly can paste the page.** The floating button
+sends `?on=`, but somebody arriving at `/report-bug` from the footer has no
+path recorded and had no way to say so. Optional, and off-site URLs are dropped
+rather than stored (`cleanPageUrl`). Exactly one field carries `page_url`:
+either the hidden one from `?on=` or the visible box, never both.
+
+**JavaScript and WCAG.** WCAG 2.x does not require a page to work without
+scripting; that was WCAG 1.0, in 1999. What it requires is that what you do
+ship is keyboard-operable and properly labelled. This form works without
+JavaScript because a bug reporter whose premise is "something here is broken"
+must not fall over when the broken thing is our own script, which is a stronger
+reason than a checklist.
+
+**The contact form had both of these bugs too**, and worse: that is where
+somebody writes a data request. It keeps what was typed on any refusal, and an
+expired challenge there gets its own message (`support.error.challenge_stale`)
+rather than the generic one. It cannot be waved through the way the bug form's
+can, because it needs a solved nonce to work at all; the re-rendered page
+carries a fresh challenge, the script re-solves it, and one more press sends
+the words that are now still in the box.
+
+**How long somebody has.** Two clocks, and neither is short any more:
+`ProofOfWork::TTL_SECONDS` is 30 minutes, and `FormGuard::MAX_SECONDS` is 2
+hours. The 30 minutes is the binding one.
+
+**No address field at all for a signed-in reporter.** Showing somebody their
+own address so they can read it and not change it is a question with one
+answer. The reply goes to their account either way.
+
+**The page field moved into the form**, right after the title, as an ordinary
+field. It is something the reporter is being ASKED, so it belongs with the
+questions rather than inside the disclosure block that lists what we captured
+on our own.
+
+### Screenshots: the limits, and the picker
+
+*(2026-08-28.)* The field now states **how many, how big and which formats**
+before anybody opens a dialog, and the error names the size:
+"That picture is over 8 MB", not "too big". Three files, 8 MB each, PNG, JPEG,
+GIF, WebP.
+
+**`assets/support/shot-picker.js` fixes a real bug.**
+`<input type="file" multiple>` REPLACES its FileList on every selection. So a
+page saying "up to 3" with one input told the truth only if all three were
+picked in a single dialog; anybody adding a second one afterwards silently lost
+the first, and found out after filing or never.
+
+The picker keeps its own list, rebuilds a `DataTransfer` and writes it back to
+the input, so the form still posts an ordinary `screenshot[]` and the server is
+unchanged. It shows what has been added, gives each one a remove button,
+refuses a file over the cap by name, and disables the control at three.
+
+Without JavaScript the native input still works: `multiple` means one dialog can
+pick all three at once. The list is the enhancement, not the feature.
+
+**Two sentences were removed.** "The web address of the page only, never what
+you searched for" sat under a block that lists what gets sent, item by item;
+the list is the stronger copy of the two. And the privacy paragraph at the foot
+told nobody anything the page had not already said where it collects it, and
+the footer links the privacy notice from every page anyway.
+
 ## 6. Screenshots
 
 {@see App\Support\ScreenshotStore}, {@see App\Support\Entity\BugScreenshot}.
@@ -299,7 +399,8 @@ down, misconfigured or rate-limited must never lose a bug report or a message
 that starts a legal clock. Mail is best-effort on top of a committed row, and a
 failure is logged rather than thrown. The desk is the system of record. The
 flush also has to come first because the acknowledgement carries the reference
-number, and the reference is the row's id (`CC-M-000123`, `CC-B-000123`).
+number, and the reference is the row's id (`CC-M-000123` for a message, `#123`
+for a bug).
 
 **The acknowledgement is not optional.** Somebody who writes to a project and
 hears nothing assumes it went nowhere, and the second thing they do is give up.
@@ -344,6 +445,29 @@ within a month. Closing without an answer requires a reason: "closed" with no
 note is indistinguishable from "forgotten" three months later, and this desk is
 the evidence a legal deadline was met.
 
+### TURNED OFF, 2026-08-28
+
+`/moderate/inbox` answers **404** to everybody, curators included, and no page
+links to it. `App\Controller\ModerateInboxController::ENABLED` is the switch.
+
+**Why.** It could show a message and not answer one. A curator read it here,
+replied from their own mail client, and the person's answer came back to that
+mailbox and never to this page. So the desk held half of every conversation,
+and a curator reading it could not tell an answered message from an unanswered
+one. Half a record is worse than none, because it looks like a whole one.
+
+**404, not unlinked.** A page reachable by guessing the path is a page somebody
+finds and trusts. `InboxDeskOffTest` pins the 404 for a signed-in curator, on
+the localized paths too.
+
+**Nothing is lost.** The contact form still stores every message and still mails
+it to the support address, so ordinary mail is the whole channel meanwhile. The
+rows keep arriving, so flipping the constant back shows the full history.
+
+**What has to be true before it returns:** a curator can reply FROM the page,
+the person's reply comes back INTO it, and the thread is visible there. Filed
+as docs/TODO.md item 18.
+
 ## 9. `/moderate/bugs`
 
 Its own desk, not a queue inside the inbox: a message is a conversation with one
@@ -361,8 +485,138 @@ resolved or declined mails the reporter, so the note is required for those two:
 "we are not fixing this" with no reason is the message that makes somebody never
 report anything again.
 
-Reported text renders escaped inside a pre-wrap block, never through `|rich` or
-markdown. It is a string a stranger typed.
+Reported text renders through `|bug_markdown` (§15), which escapes first and
+sanitises after, and never through `|rich`: the translations profile allows
+links and a class attribute, which a string a stranger typed must not have.
+
+### The reference, and finding one by it
+
+*(Added 2026-08-28.)*
+
+Every report carries `#123`, from `BugReport::getReference()`. It lives on the
+entity rather than in `SupportMailer` because three surfaces show it and only
+one of them sends mail: the desk list, the desk detail page, and
+`/profile/reports`. The reporter also gets it in every mail we send them.
+
+**It was `CC-B-000123` for a day** (owner, 2026-08-28: "just #1 #2 etc"). The
+long form was unambiguous, and nobody reads it out loud or types it twice.
+`#123` is what people already say when they mean a report.
+
+Contact messages keep `CC-M-000123`, so the two are still told apart wherever
+they appear together.
+
+**It is on the row, not only inside the report.** It is what a reporter quotes
+in a reply, so a curator scanning for one should not have to open reports to
+find it.
+
+`?q=` searches the reference, the title, the body, the steps, the reporter's
+address and the public title.
+
+Three decisions in it:
+
+1. **An exact reference is a lookup, not a search.**
+   `SupportRepository::bugIdFromReference()` accepts `#123`, `123` and `000123`.
+   It matches that one id and stops.
+
+   **It also accepts `CC-B-000123`, and always will.** That was the shape until
+   2026-08-28 and it is sitting in mail people already received; somebody
+   quoting it in a reply years from now must still be findable.
+   `BugDeskSearchTest::testTheOldReferenceShapeStillFindsTheReport` pins it.
+
+   Note `#` starts a URL fragment, so a search for one has to be percent-encoded.
+   The GET form does that; hand-typing the query string does not, which is the
+   other reason the bare number works.
+
+   **And it OPENS that report**, rather than filtering the list down to it. The
+   hint under the box had always said so and the page did the other thing for a
+   day. A number nobody has used falls through to the search instead, because
+   redirecting to a 404 is a worse answer than "nothing matches".
+2. **A search clears the "New" default.** Somebody typing a reference is chasing
+   a report a reporter has replied about, which by then is rarely still New. A
+   search that silently kept the default filter would return nothing and look
+   broken. `BugDeskSearchTest::testASearchFindsAReportThatIsNoLongerNew` pins it.
+3. **`LIKE`, not full text.** The queries are one word, the table is small, and
+   a tsvector column would be a migration and an index to maintain for a desk
+   that never has ten thousand rows. `%` and `_` are escaped, so pasting a URL
+   with an underscore in it does not quietly become a wildcard.
+
+It is a GET form, so a search is a link a curator can bookmark or paste to a
+colleague. The status and area chips carry the query; the search itself drops
+them. The box is capped at 26rem: a reference is four characters and the longest
+useful query is an email address, so a field the width of the page suggested
+neither and made the desk look like a search engine rather than a queue.
+
+**The order control sits on the list's own header**, right-aligned opposite the
+count, because the order is a property of the list rather than another filter in
+the stack above it.
+
+The list excerpt uses `|bug_excerpt`, which strips the markdown markers and
+folds the body to one line. A 160-character slice through a code fence is
+neither markdown nor prose, and rendering it would produce broken HTML.
+
+**The reports desk has the same gap and has not had this done.**
+
+### Ordering
+
+*(Added 2026-08-28.)* `?sort=`, four options, `App\Support\BugSort`:
+newest, oldest, high priority first, low priority first.
+
+Four and only four. A desk with a sortable header per column looks powerful and
+is used two ways in practice: "what is new" and "what is worst". The other two
+exist because each has a real opposite: oldest-first finds what has been
+waiting, and lowest-priority-first is how somebody clears a pile of small things
+in an afternoon.
+
+**Newest stays the default**, for the reason at the top of this section.
+
+Severity is an enum column, so worst-first is a `CASE` built from
+`BugSeverity::weight()`, not a plain `ORDER BY`: the stored strings sort
+alphabetically, which would put `cosmetic` above `critical`. It is a `HIDDEN`
+select alias, because DQL will not take a `CASE` directly in `ORDER BY`, and it
+is only built when it is asked for.
+
+**Recency is always the last word**, even inside a severity band: somebody
+working through cosmetic bugs still wants this week's first. And `b.id` breaks
+the tie after that, because `created_at` is `DATETIME(0)` and two reports filed
+in the same second would otherwise come back in either order, differently on
+each page load.
+
+The control is a GET form carrying the search and the filters, so changing the
+order never silently drops what somebody was looking at. It submits on change
+where there is scripting and keeps a real button where there is not.
+
+### Notes for us, and the release a fix lands in
+
+*(Added 2026-08-28, `Version20260828200000`.)*
+
+`internal_note` is **curator-only. Never mailed, never published.** The outcome
+note is written FOR the reporter: it is the text mailed to them and, once
+published, the text on `/known-issues`. So it cannot hold "same root cause as
+#7", "waiting on the map rebuild", or anybody's name. Without a second field a
+curator either says nothing or says it in the place that gets sent to a
+stranger, and there is no third option.
+
+`BugDeskNotesTest` pins all three of: it is saved, it is not in the outcome
+mail, and it is not on the public list.
+
+`fix_release` is the git tag the fix lands in, shown on the desk row as a tag.
+Not validated against a version pattern: this project has shipped
+`v0.8.0-beta`, and a desk that rejects the tag a curator is looking at gets a
+wrong tag typed into it instead. Nullable and never required, because a bug can
+be resolved before anybody has cut the release.
+
+### One row, one size
+
+Status, severity and area sit on **one line** in the decide form
+(auto-fit grid, stacking on their own at a narrow window). Three short pickers
+stacked full width made the form look longer than the work it asks for and
+pushed the note that matters below the fold.
+
+Machine values on the detail page (`page`, `browser`, `screen`, `build`) use the
+mono **face** at the same size and case as every other value. They used the
+site-wide `.mono` utility, which uppercases and wide-tracks for chrome labels:
+`/regions` shown as `/REGIONS` is a different path, and a user-agent string in
+capitals is unreadable.
 
 ## 10. `/known-issues` and `/profile/reports`
 
@@ -412,6 +666,16 @@ A partial index carries the overdue query, the one a curator runs most:
 
 ## 13. Copy rules the owner set
 
+**The footer** (`partials/_footer.html.twig`, styled in `assets/styles/atlas.css`).
+Links first, colophon last: licences and ownership are what the site IS, not
+what somebody came to a footer to click. One line-height step between the two
+link rows, and double that before the colophon, which is what says it is a
+different kind of thing rather than a third row of links. The row gap is zero
+and line-height carries the rhythm, because the links block wraps and a flex
+gap would only govern the space between the two blocks, leaving the wrapped
+rows tighter than the gap above them.
+
+
 Corrections from 2026-08-27, after seeing the first version:
 
 * **Never say the message "arrived".** The confirmation says `Message sent.` and
@@ -443,11 +707,198 @@ Corrections from 2026-08-27, after seeing the first version:
 
 ## 14. Deliberately not built
 
-* **Markdown in reports.** Plain text, escaped. The sibling product's editor is
-  nice; a rich-text field that renders a stranger's markup on a curator's screen
-  is a decision to make on purpose, not by inheriting a component.
-* **AI spellcheck on the report form.** Sends a stranger's words to a model.
+* **AI spellcheck on the report form.** Sends a stranger's words to a model,
+  which is a data question this project has not answered. Deliberately dropped
+  when markdown shipped (owner 2026-08-28), not deferred.
+* **A preview pane, and a rich-text editor.** The textarea holds plain text and
+  the form posts plain text (§15). A live preview would mean a second renderer
+  in JavaScript, and two renderers disagree.
 * **A beta-tester programme**: test cycles, focus areas, XP and badges, a terms
   gate. Filed in docs/TODO.md.
 * **Adopting an anonymous report after sign-in.** Any rule for it is a guess
   about who wrote it, and the page says so instead.
+
+## 16. Rules that came out of using it (2026-08-28)
+
+These are site-wide, not support-specific, and they were all found by the owner
+using the pages rather than by reading them.
+
+**Nobody sees anybody else's email address.** Not curators, not moderators,
+nowhere. A desk does not need the address to do the work: the system sends the
+answer, so the only thing worth showing is WHETHER there is one to send to. The
+bug desk, the reports desk and the (switched-off) inbox all say "we can answer"
+or "no reply address" instead. Addresses are still stored, because we cannot
+answer without them, and still searchable, because typing one you already have
+reveals nothing. They are never rendered.
+
+**Admins are the exception, and confirmed as one** (owner, 2026-08-28: "admin
+is allowed to see all. This was about users and moderators/curators only").
+The three EasyAdmin pages keep showing account emails, because an admin
+identifies accounts by address for password resets, abuse and GDPR requests.
+
+**Curators cannot SEARCH by address either.** The bug desk searches the number,
+title, body and steps, and no longer `reporterEmail`. Searching an address you
+already have reveals no new one, but a hit confirms that a named person filed a
+report, which is the same disclosure by another route.
+`BugDeskSearchTest::testACuratorCannotFindAReportByTheReportersAddress` pins it,
+alongside a test that the address never renders on either desk view.
+
+**Required fields carry a `*`, on every form.** The star is `aria-hidden` and
+the control carries `required`, so a screen reader hears "required" from the
+control rather than reading punctuation out of the label. One legend per form.
+
+**Every submit button is orange** (`.btn-p`, `--trail`). A submit is the primary
+action of its form; the ink-coloured one read as a cancel.
+
+**Checkboxes and radios use `accent-color`**, site-wide, in `--trail`. System
+blue appears nowhere else here. `accent-color` keeps the NATIVE control, so
+keyboard behaviour and assistive technology keep working; an `appearance:none`
+reimplementation buys the same look and gives all of that back.
+
+**The flash is a thing that arrived.** Its own ground, a rule down the side, a
+tick, and a short slide, honoured against `prefers-reduced-motion`. It used to
+be a strip the colour of the page under a nav bar of the same colour, and you
+could save a form and not notice. It also says WHAT happened: publishing is
+named, because it is the only part a stranger can see.
+
+**The smallest type moved up.** The floor was `.56rem` (9px) and the busiest
+micro tier was `.58-.62rem`. Everything under `.68rem` moved one step.
+
+WCAG sets **no minimum font size**: 1.4.4 asks that text survive 200% zoom and
+1.4.12 that it survive changed spacing, and 9px passes both. So this was not a
+compliance fix. It was a fix for text that is hard to read on an ordinary
+laptop, which is the honest reason.
+
+**`.lhero` lives in `atlas.css`.** It was copy-pasted into seven page style
+blocks, all identical, so a new page could use the class and get nothing. Both
+new pages of this round did exactly that.
+
+## 17. The layout round (2026-08-28)
+
+**One dark header, one definition.** Nine pages each declared their own under
+four class names (`.lhero`, `.rhero`, `.chero`, `.ahero`), and one had drifted:
+`/regions` gave its hero horizontal padding on top of the gutter `.wrap`
+already applies, so the hero text sat further in than the body under it.
+`atlas.css` defines all four together now and the page copies are gone.
+
+**One page width.** `/regions` ran its whole layout at 1000px against the
+site's 1120px `.wrap`, which is why its text started 20px right of
+`/coverage`'s. Both are at the same left edge now, measured.
+
+**The report form is an ordinary page**, in the same shape as `/contact`: dark
+hero, page body, the shared `.cfield` conventions and rust labels. It was a
+narrow card floating in the middle of a wide screen, which made a legal
+notice-and-action route look like a modal somebody bolted on.
+
+**"Fields marked * are needed" sits at the FOOT of a form**, where it is a
+footnote. At the top it is an instruction before there is anything to apply it
+to. And a field with no star is optional, so no field says "optional" as well.
+
+## 18. The API page tells the truth (2026-08-28)
+
+`/developers` sold a product that does not exist: seven endpoints when two are
+built, a self-serve key system never written, a free monthly quota, and paid
+tiers.
+
+**Payment language is gone entirely**, to come back when it is needed. Free
+stays free.
+
+**The real terms**: reads are open to anybody, no key, no account,
+**120 requests a minute per address**, sliding window (`public_api_read` in
+`config/packages/rate_limiter.yaml`). Bulk or offline use takes the periodic
+export; scraping the live service is not allowed.
+
+**The endpoint list matches the router.** `/v1/search` is built. Everything
+else is marked planned, because a developer who builds against a promised path
+and gets a 404 is worse served than one who was told to wait.
+
+## 15. Markdown in reports
+
+*(Built 2026-08-28. Markdown only; the spellcheck above stayed out.)*
+
+A bug report is mostly prose, but the useful ones carry a list of steps and a
+pasted error. Plain text made both unreadable on the desk: a stack trace ran
+into the sentence before it, and three numbered steps looked like one
+paragraph.
+
+### What is understood
+
+`App\Support\BugMarkdown`, six things and nothing else:
+
+| Written | Rendered |
+|---|---|
+| `**bold**` | `<strong>` |
+| `*italic*` | `<em>` |
+| `` `code` `` | `<code>` |
+| ``` fence | `<pre><code>`, contents literal |
+| `-` or `*` line | `<ul><li>` |
+| `1.` line | `<ol><li>` |
+| blank line | new `<p>`; a single newline is `<br>` |
+
+**Deliberately absent, and why.** Images: a report that renders a remote image
+is a tracking pixel on a curator's screen. Links: a report is not a place to
+publish a URL a curator will click, and the plain text still reads. Headings
+and tables: nobody writing a bug uses them, and they would let one report shout
+on the public `/known-issues` page.
+
+### Why a subset and not a CommonMark library
+
+The input is text a stranger typed through a public form, and it is displayed
+to a curator and, once published, to everybody. A full parser brings raw-HTML
+passthrough, reference links, autolinks, images and entity handling, and each
+of those is a decision somebody has to review and keep reviewing across
+upgrades. What a bug report needs is six rules, and six rules fit in one file
+that a reviewer can read in a sitting.
+
+### Three layers, in order
+
+1. **Escape first.** `htmlspecialchars` runs before any markdown rule, so a
+   `<script>` is already `&lt;script&gt;` before anything looks for asterisks.
+   The rules then add tags to text that can no longer contain any of its own.
+2. **The rules**, which only ever add from a fixed set of tags.
+3. **The sanitizer**, `app.bug_markdown` in `config/packages/html_sanitizer.yaml`.
+   A separate profile from `app.rich_translations`, and narrower: no `a` and no
+   `span`, because that input comes from a merged pull request and this one
+   comes from a stranger.
+
+Layer 3 is a backstop for a mistake in layer 2, not the defence itself. It is
+what makes the `|bug_markdown` filter safe to mark `is_safe` in Twig.
+
+`BugMarkdownTest` pins all three: escaped markup, a handler attribute that
+cannot survive, a URL that never becomes a link, and markdown inside a fence
+staying literal.
+
+### The toolbar
+
+`assets/support/markdown-toolbar.js`, built at runtime for `b-body`, `b-steps`,
+`bf-body` and `bf-steps`, loaded site-wide next to `bug-fab.js` because the
+floating panel renders everywhere.
+
+It writes markdown into the textarea and nothing more. The field still holds
+plain text, so with scripting off the form behaves exactly as it did before and
+somebody typing markdown by hand gets the same result. That is why the buttons
+are created in JavaScript rather than shipped in the template: a row of buttons
+that does nothing is worse than no row.
+
+It uses `setRangeText` where it exists, so the browser's own undo stack still
+works and ctrl+Z undoes one button press rather than the whole field. An empty
+selection gets a placeholder that is left selected, so the next keystroke
+replaces it instead of leaving `** **` behind.
+
+Labels come from `partials/_bug_markdown_i18n.html.twig` in all five locales,
+and the hint under the field says what is understood, so somebody who never
+touches the buttons still knows.
+
+### Where it renders
+
+| Surface | Field |
+|---|---|
+| `/moderate/bugs/{id}` | the reporter's body and steps, and the curator's note |
+| `/known-issues` | the curator's published note |
+| `/profile/reports` | the curator's note, to the reporter |
+
+The reporter's own words are rendered only on the curator desk. Publishing a
+report to `/known-issues` publishes the curator's note, never the raw body:
+that has been true since the desk was built (§9) and markdown does not change
+it.
+

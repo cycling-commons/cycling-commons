@@ -1,0 +1,55 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{#
+  The decision, to the reporter. DSA Article 16(5): they are told the outcome
+  and how to contest it.
+
+  The curator's note is shown verbatim to every status, including "rejected",
+  because a reporter who disagrees can only argue with a reason they can read.
+  Four outcomes, four different last paragraphs, and only "moot" needs no
+  appeal line: nothing was decided about the content, it was already gone.
+
+  @see docs/specs/content-reports.md §6
+#}
+{% extends 'emails/_base.html.twig' %}
+
+{% block title %}About the content you reported{% endblock %}
+
+{% block content %}
+  <p style="margin:0 0 8px">A curator has looked at the report you sent us.</p>
+
+  <table role="presentation" style="margin:18px 0;border-collapse:collapse;font-size:14px">
+    <tr>
+      <td style="padding:4px 14px 4px 0;color:#595c4d;vertical-align:top">What</td>
+      <td style="padding:4px 0">{{ report.targetType.label|trans }}{% if report.targetLabel %}: {{ report.targetLabel }}{% endif %}</td>
+    </tr>
+    <tr>
+      <td style="padding:4px 14px 4px 0;color:#595c4d;vertical-align:top">Outcome</td>
+      <td style="padding:4px 0"><strong>{{ report.status.label|trans }}</strong></td>
+    </tr>
+    <tr>
+      <td style="padding:4px 14px 4px 0;color:#595c4d;vertical-align:top">Reference</td>
+      <td style="padding:4px 0;font-family:monospace">{{ report.id }}</td>
+    </tr>
+  </table>
+
+  {% if report.decisionNote %}
+    <p style="margin:0 0 4px;color:#595c4d;font-size:13px">What the curator wrote:</p>
+    <blockquote style="margin:0 0 14px;padding:10px 14px;border-left:3px solid #8fb6a8;background:#f4efe3">{{ report.decisionNote|nl2br }}</blockquote>
+  {% endif %}
+
+  {% if report.status.value == 'upheld' %}
+    <p style="margin:0 0 8px">We agreed with you. The content has been changed or taken down, and the person who added it has been told why.</p>
+  {% elseif report.status.value == 'rejected' %}
+    <p style="margin:0 0 8px">We did not agree, so the content stays. That is a judgement call and you are allowed to disagree with it.</p>
+  {% elseif report.status.value == 'moot' %}
+    <p style="margin:0 0 8px">There was nothing left to decide: the content had already been removed or changed before we got to it. Reporting it was still useful.</p>
+  {% endif %}
+
+  {% if report.status.value != 'moot' %}
+    <p style="margin:0 0 8px">If you think this is wrong, reply to this email with the reference above and a person will read it again. You can also take the matter to an out-of-court dispute settlement body, or to a court, in the country where you live. Nothing here takes that right away.</p>
+  {% endif %}
+
+  <p style="margin:0 0 14px">Thank you for taking the time. Reports are how the map stays honest.</p>
+
+  <p style="color:#595c4d;font-size:13px;margin:0">- The Cycling Commons team</p>
+{% endblock %}

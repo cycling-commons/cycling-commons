@@ -36,7 +36,6 @@ final class MapPageTest extends WebTestCase
         self::assertStringContainsString('lang="en"', $html);
         self::assertStringContainsString('View mode', $html);
         self::assertStringContainsString('Data layers', $html);
-        self::assertStringContainsString('places shown', $html);
     }
 
     public function testFrenchMapRailIsTranslated(): void
@@ -51,10 +50,8 @@ final class MapPageTest extends WebTestCase
         // rail chrome must come from the FR catalog, not baked-in English
         self::assertStringContainsString('Rechercher en Wallonie', $html);
         self::assertStringContainsString('Couches de données', $html);
-        self::assertStringContainsString('lieux affichés', $html);
         self::assertStringNotContainsString('View mode', $html);
         self::assertStringNotContainsString('Data layers', $html);
-        self::assertStringNotContainsString('places shown', $html);
 
         // map.js renders the layer list and subtitle — it gets its strings from
         // the injected CC_I18N bundle, layer labels reusing item_type.*.label.

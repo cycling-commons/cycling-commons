@@ -8,15 +8,17 @@
   .rp-head h1{font-family:var(--serif);font-weight:600;font-size:2rem;margin:0}
   .rp-head img{border-radius:2px;box-shadow:0 0 0 1px rgba(0,0,0,.08)}
   .rp-since{font-family:var(--mono);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:#5a5d4d;margin:.4rem 0 2rem}
-  .rp-sec{font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--trail);margin:2.2rem 0 .8rem}
+  .rp-sec{font-family:var(--mono);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--trail);margin:2.2rem 0 .8rem}
   .rp-chips{display:flex;flex-wrap:wrap;gap:.5rem}
   .rp-chip{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;padding:.35rem .75rem;border:1px solid rgba(20,22,14,.25);border-radius:30px}
   .rp-routes li{margin:.35rem 0}
   .rp-empty{font-size:.9rem;color:#595c4d}
+  .rp-report{margin:2rem 0 0;padding-top:1rem;border-top:1px solid rgba(20,22,14,.12);font-size:.82rem}
+  .rp-report a{color:#595c4d}
   .rp-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(8.5rem,1fr));gap:.6rem}
   .rp-stat{border:1px solid rgba(20,22,14,.14);border-radius:8px;padding:.7rem .8rem}
   .rp-stat-n{display:block;font-family:var(--serif);font-size:1.6rem;font-weight:600;line-height:1.1}
-  .rp-stat-l{font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:#5a5d4d}
+  .rp-stat-l{font-family:var(--mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:#5a5d4d}
 </style>
 {% endblock %}
 
@@ -47,6 +49,7 @@
     <div class="rp-stat"><span class="rp-stat-n">{{ counters.edits }}</span><span class="rp-stat-l">{{ 'profile.counter_edits'|trans }}</span></div>
     <div class="rp-stat"><span class="rp-stat-n">{{ counters.photos }}</span><span class="rp-stat-l">{{ 'profile.counter_photos'|trans }}</span></div>
     <div class="rp-stat"><span class="rp-stat-n">{{ counters.checks }}</span><span class="rp-stat-l">{{ 'profile.counter_checks'|trans }}</span></div>
+    <div class="rp-stat"><span class="rp-stat-n">{{ counters.translations }}</span><span class="rp-stat-l">{{ 'profile.counter_translations'|trans }}</span></div>
   </div>
 
   <h2 class="rp-sec">{{ 'profile.public_routes'|trans }}</h2>
@@ -62,5 +65,12 @@
   {% if pending_count > 0 %}
     <p class="rp-empty">{{ (pending_count == 1 ? 'profile.public_pending_one' : 'profile.public_pending_many')|trans({'%count%': pending_count}) }}</p>
   {% endif %}
+
+  {# Notice and action, DSA Article 16. A display name is content like any
+     other, and the person it is aimed at is very often not a member here, so
+     this link takes no account (docs/specs/content-reports.md §5). #}
+  <p class="rp-report">
+    <a href="{{ path('content_report', {type: 'rider', id: rider.uuid, from: app.request.pathInfo}) }}">{{ 'report.link_page'|trans }}</a>
+  </p>
 </div>
 {% endblock %}
