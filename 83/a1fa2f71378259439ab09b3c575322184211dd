@@ -1,0 +1,127 @@
+web/config/packages/doctrine.yaml
+  s_7ca916eeb157fa::t_c333ca41c09c75 63-67
+web/templates/partials/_nav.html.twig
+  s_7ca916eeb157fa::t_ce75726d52b1b9 6
+  s_7ca916eeb157fa::t_6a2e527f43b810 17
+web/migrations/Version20260829090000.php
+  s_7ca916eeb157fa::t_28751cce2466ed 1-69
+web/templates/blog/index.html.twig
+  s_7ca916eeb157fa::t_e2ad9a8998eaab 1-23,28-48,61-81
+  s_7ca916eeb157fa::t_fb6cd159019985 24-27,49-60
+web/src/Controller/Admin/BlogPostCrudController.php
+  s_7ca916eeb157fa::t_f0d2227c7d703f 13,121-127
+  s_7ca916eeb157fa::t_2bdb05fc702fd8 119,130
+  s_7ca916eeb157fa::t_c7dc7fc6e0539b 1-12,14-118,120,128-129,131-132
+web/templates/pages/join.html.twig
+  s_7ca916eeb157fa::t_6391a725de06ea 35,37-45
+  s_7ca916eeb157fa::t_57ea1e7d87da7a 48-53
+  s_7ca916eeb157fa::t_1ab462ea60880e 36
+  s_7ca916eeb157fa::t_1cd49d0415ff07 46
+web/tests/Blog/BlogTest.php
+  s_7ca916eeb157fa::t_40e9d7ec1eaf3d 1-269
+web/config/packages/support.yaml
+  s_7ca916eeb157fa::t_a88b86f9e5d55c 59-75
+web/templates/partials/_footer.html.twig
+  s_7ca916eeb157fa::t_e0ce93c4dda55c 56-59,61-88
+  s_7ca916eeb157fa::t_5bd30034343477 3-6,10-11,14-19,22-30,32-40,42-50
+  s_7ca916eeb157fa::t_a8f5fb9ce5b6c8 2,7-9,12-13,20,31,41,51,54,60
+  s_7ca916eeb157fa::t_27e0e877b11d57 52-53,55
+web/src/Routing/LocalizedPath.php
+  s_7ca916eeb157fa::t_12f01d7de530ae 89-106
+web/src/Twig/SocialLinksExtension.php
+  s_7ca916eeb157fa::t_0151d8b27d25e4 1-100
+web/templates/blog/feed.atom.twig
+  s_7ca916eeb157fa::t_6ea76f77d6b51e 1-41
+web/src/Blog/Entity/BlogPost.php
+  s_7ca916eeb157fa::t_43a9193bfc8daa 1-245
+web/src/Controller/BlogController.php
+  s_7ca916eeb157fa::t_790beb28d94f58 93-95
+  s_7ca916eeb157fa::t_17c81142302a5e 1-11,13-34,36-65,69-92,96-112,114-115,122-125
+  s_7ca916eeb157fa::t_69d0fbbd5e876a 12,35
+  s_7ca916eeb157fa::t_6ea76f77d6b51e 113,116-121
+  s_7ca916eeb157fa::t_fb6cd159019985 66-68
+web/templates/pages/join_country.html.twig
+  s_7ca916eeb157fa::t_7fe1b20249a4bf 27-31,38,44-53
+web/templates/pages/contributors.html.twig
+  s_7ca916eeb157fa::t_a39ce572bd2b01 25-26,32,38
+  s_7ca916eeb157fa::t_7922110fcccf29 9,12,15,20
+docs/specs/blog.md
+  s_7ca916eeb157fa::t_34029bd64996e3 1-87,101-123
+  s_7ca916eeb157fa::t_46824cc672b747 88-100
+web/src/Controller/PageController.php
+  s_7ca916eeb157fa::t_93cc658b6c74c5 181-187,192-194,197,199-201,212
+  s_7ca916eeb157fa::t_92dec7ed668b88 188-191
+web/src/Blog/BlogStatus.php
+  s_7ca916eeb157fa::t_f4c1692b1b8472 1-41
+web/src/Blog/BlogRepository.php
+  s_7ca916eeb157fa::t_b4dab94f2e38e9 105,130-133
+  s_7ca916eeb157fa::t_790beb28d94f58 106-129
+  s_7ca916eeb157fa::t_3d04529f3b990f 1-104,134-153
+web/.env
+  s_7ca916eeb157fa::t_f94ae9733167f8 93-106
+web/templates/pages/developers.html.twig
+  s_7ca916eeb157fa::t_7922110fcccf29 8
+web/src/Controller/Admin/DashboardController.php
+  s_7ca916eeb157fa::t_358601a7e27aa7 95
+web/templates/pages/regions.html.twig
+  s_7ca916eeb157fa::t_358537ac4d0e58 21,149
+  s_7ca916eeb157fa::t_affd4807fb2c9d 26
+  s_7ca916eeb157fa::t_7922110fcccf29 17,35-36,40,47,52-53,58,61,88
+  s_7ca916eeb157fa::t_93cc658b6c74c5 22-23,205,210-216
+web/src/Blog/BlogLocales.php
+  s_7ca916eeb157fa::t_f4c1692b1b8472 1-47
+web/templates/partials/_social_icon.html.twig
+  s_7ca916eeb157fa::t_d62c9d510b975e 1-24
+web/templates/blog/post.html.twig
+  s_7ca916eeb157fa::t_14fefd0a377ffe 15-38,62,84-103
+  s_7ca916eeb157fa::t_e2ad9a8998eaab 1-14,39-61,63-83,104-106
+web/translations/messages.de.yaml
+  s_e382572451f2d6::t_a7e13d0c21813a 2-26,34,57-59,65-66,702,707,711,713,717-722,731,802-803,809,811,813,815,817,819,825,863,3700
+web/translations/messages.en.yaml
+  s_e382572451f2d6::t_c6284c53651fcb 2-26,34,57-59,65-66,702-703,707,711,713,717-722,731,803,809,811,813,815,817,819,825,863,3719
+web/translations/messages.es.yaml
+  s_e382572451f2d6::t_9555358a0272f1 2-26,34,57-59,65-66,703-704,708,712,714,718-723,732,803-804,808,810,812,814,816,818,820,826,864,3727
+web/translations/messages.fr.yaml
+  s_e382572451f2d6::t_147bd4263f6aac 2-26,34,57-59,65-66,702-703,707,711,713,717-722,731,802-803,807,809,811,813,815,817,819,825,863,3697
+web/translations/messages.nl.yaml
+  s_e382572451f2d6::t_f2b16441f6dc93 2-26,34,57-59,65-66,702,707,711,713,717-722,731,803,807,809,811,813,815,817,819,825,863,3697
+brand-src/description-long.md
+  s_49f356af1fd73b::t_2bbe793099d488 1-46
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "83a1fa2f71378259439ab09b3c575322184211dd",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_49f356af1fd73b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c2fa5753-3624-4f35-a926-717362ae0233",
+        "model": "unknown"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_7ca916eeb157fa": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e8be2531-9ac2-4db0-b37d-277f0b28cb93",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_e382572451f2d6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6d86ff86-2562-4654-bb50-b5129c283f3f",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
