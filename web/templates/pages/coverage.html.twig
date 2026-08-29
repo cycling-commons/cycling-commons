@@ -8,10 +8,15 @@
   table{width:100%;border-collapse:collapse;margin-top:1rem}
   th{text-align:left;font-family:var(--mono);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:#595c4d;padding:.6rem .8rem;border-bottom:1px solid rgba(20,22,14,.15)}
   td{padding:.7rem .8rem;border-bottom:1px solid rgba(20,22,14,.08);font-size:.92rem;vertical-align:middle}
+  /* Every mono figure in the table at ONE size. `.mono` sets a family and
+     not a size, so these cells inherited the row's .92rem and rendered a
+     step above the reference-places number beside them, which had been
+     given .72rem inline to escape exactly that (owner, 2026-08-29). */
+  td.mono,td .mono{font-size:.72rem}
   td .bar{width:120px}
   .dens{display:block;font-family:var(--mono);font-size:.72rem;letter-spacing:.04em;color:#7a7d6c;margin-top:.15rem}
   td .flag{width:1.1rem;height:.8rem;vertical-align:-1px;margin-right:.45rem;border-radius:2px}
-  .tnote{font-size:.88rem;color:#4a4d40;max-width:72ch;margin-top:1.4rem;line-height:1.55;padding-left:1.1rem}
+  .tnote{font-size:.90rem;color:#4a4d40;max-width:72ch;margin-top:1.4rem;line-height:1.55;padding-left:1.1rem}
   .tnote li{margin:.3rem 0}
   .gaps{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem;margin-top:1.6rem}
 </style>
@@ -48,7 +53,7 @@
          the column could only claim "Germany is longer than Luxembourg". #}
       <td>
         <div class="bar"><span style="width:{{ c.share }}%"></span></div>
-        <span class="mono" style="font-size:.72rem">{{ c.coveragePois|number_format(0, '.', ',') }}</span>
+        <span class="mono">{{ c.coveragePois|number_format(0, '.', ',') }}</span>
         <span class="dens">{{ 'coverage.per_km2'|trans({'%n%': c.poisPerKm2 < 0.01 and c.poisPerKm2 > 0 ? '<0.01' : c.poisPerKm2|cc_per_km2, '%u%': cc_area_suffix()}) }}</span>
       </td>
       {# Where the catalog rows came from. This is the column with a real mix:
@@ -85,7 +90,7 @@
   <div class="kicker">{% trans %}coverage.gaps_kicker{% endtrans %}</div>
   <div class="gaps">
     {% for gap in thinnest %}
-    <div class="card"><b>{{ gap.labelKey|trans }}</b><p style="font-size:.88rem;color:#4a4d40">{{ 'coverage.gap_body'|trans({'%count%': gap.count}) }}</p></div>
+    <div class="card"><b>{{ gap.labelKey|trans }}</b><p style="font-size:.90rem;color:#4a4d40">{{ 'coverage.gap_body'|trans({'%count%': gap.count}) }}</p></div>
     {% endfor %}
   </div>
   <p style="margin-top:1.6rem;font-size:.95rem;color:#4a4d40">{% trans %}coverage.gaps_cta_pre{% endtrans %} <a href="{{ path('contributors') }}">{% trans %}coverage.gaps_cta_link{% endtrans %}</a>{% trans %}coverage.gaps_cta_post{% endtrans %}</p>

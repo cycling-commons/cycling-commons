@@ -22,7 +22,7 @@
   <div class="footcols mono">
     <nav class="footcol" aria-label="{{ 'footer.col_atlas'|trans }}">
       <h2>{{ 'footer.col_atlas'|trans }}</h2>
-      <a href="{{ path('regions') }}#your-country">{{ 'footer.your_region'|trans }}</a>
+      <a href="{{ path('regions') }}">{{ 'footer.regions'|trans }}</a>
       <a href="{{ path('blog') }}">{{ 'nav.blog'|trans }}</a>
       <a href="{{ path('changelog') }}">{{ 'footer.changelog'|trans }}</a>
       <a href="{{ path('roadmap') }}">{{ 'footer.roadmap'|trans }}</a>
@@ -46,6 +46,12 @@
       <a href="{{ path('terms') }}">{{ 'footer.terms'|trans }}</a>
       <a href="{{ path('credits') }}">{{ 'footer.credits'|trans }}</a>
       <span class="footby">{{ 'footer.stewarded_by'|trans }} <a href="https://bikecoders.life">BikeCoders</a></span>
+      {# The build marker lands HERE and not wherever version.js finds a .mono
+         first. Without a slot it appended itself to .footcols, which is the
+         grid, so it opened a fourth column of its own beside the three real
+         ones (owner, 2026-08-29). It belongs with the steward line: both say
+         who and what made this, not where to click. #}
+      <span class="footver" data-cc-version></span>
     </nav>
   </div>
 

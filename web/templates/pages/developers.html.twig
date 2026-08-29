@@ -6,20 +6,33 @@
   .dhero .lead{color:rgba(239,230,212,.85)}
   .ep{display:flex;align-items:center;gap:.8rem;padding:.9rem 0;border-bottom:1px solid rgba(20,22,14,.1);font-family:var(--mono);font-size:.85rem;flex-wrap:wrap}
   .ep .verb{background:var(--spruce);color:var(--paper);font-size:.72rem;letter-spacing:.08em;padding:.2rem .5rem;border-radius:3px}
-  .ep .path{color:var(--ink)}.ep .desc{margin-left:auto;font-family:var(--sans);font-size:.85rem;color:#595c4d;text-transform:none;letter-spacing:0}
+  .ep .path{color:var(--ink)}.ep .desc{margin-left:auto;font-family:var(--sans);font-size:.90rem;color:#595c4d;text-transform:none;letter-spacing:0}
   .code{background:var(--ink);color:var(--paper);border-radius:10px;padding:1.3rem 1.5rem;font-family:var(--mono);font-size:.82rem;line-height:1.7;overflow-x:auto;margin-top:1rem}
   .code .k{color:var(--glacier)}.code .s{color:var(--trail)}.code .c{color:#8f9281}
   .two{display:grid;grid-template-columns:1fr 1fr;gap:2rem}@media(max-width:760px){.two{grid-template-columns:1fr}}
-  .note{background:var(--paper-deep);border-left:2px solid var(--glacier);padding:1rem 1.2rem;border-radius:0 8px 8px 0;font-size:.9rem;color:#4a4d40}
+  /* The rules are the part of this page somebody has to have read, so they
+     are set at full body size and not as fine print (owner, 2026-08-29:
+     "the rules on the developer page are important make them bigger").
+     NO top padding. This box's background is the same --paper-deep as the
+     section it sits in, so its padding is invisible dead space, while the
+     .code box beside it has a real dark edge. Matching the two paddings put
+     the text level with the OTHER box's text and left the rules looking a
+     line low against the box edge the eye actually reads. The first line
+     starts at the top instead, level with that edge. */
+  .note{background:var(--paper-deep);border-left:2px solid var(--glacier);padding:0 1.2rem .2rem;border-radius:0 8px 8px 0;font-size:1rem;line-height:1.6;color:#4a4d40}
 </style>
 {% endblock %}
 {% block body %}
 
 <div class="dhero"><div class="wrap">
   <div class="kicker" style="color:var(--trail)">{% trans %}developers.kicker{% endtrans %}</div>
-  <h1 class="disp">{% trans %}developers.title{% endtrans %}</h1>
+  {# |rich, so the title can carry its own line break. Where a two-line title
+     splits is a typographic call per language, not one the template makes:
+     the sanitizer allows <br>, so each locale breaks where its own sentence
+     does (owner, 2026-08-29). #}
+  <h1 class="disp">{{ 'developers.title'|trans|rich }}</h1>
   <p class="lead" style="margin-top:1rem">{% trans %}developers.lead{% endtrans %}</p>
-  <p style="margin-top:1.2rem;font-size:.85rem;color:rgba(239,230,212,.7);border-left:2px solid var(--trail);padding-left:.9rem">{{ 'developers.status'|trans|rich }}</p>
+  <p style="margin-top:1.2rem;font-size:.90rem;color:rgba(239,230,212,.7);border-left:2px solid var(--trail);padding-left:.9rem">{{ 'developers.status'|trans|rich }}</p>
 </div></div>
 
 <section class="pad"><div class="wrap">
@@ -40,7 +53,7 @@
     <div>
       <div class="kicker">{% trans %}developers.resp_kicker{% endtrans %}</div>
       <div class="code">{<br/>&nbsp;<span class="k">"type"</span>:<span class="s">"FeatureCollection"</span>,<br/>&nbsp;<span class="k">"licence"</span>:<span class="s">"ODbL-1.0"</span>,<br/>&nbsp;<span class="k">"features"</span>:[{<br/>&nbsp;&nbsp;<span class="k">"type"</span>:<span class="s">"Feature"</span>,<br/>&nbsp;&nbsp;<span class="k">"geometry"</span>:{<span class="k">"type"</span>:<span class="s">"Point"</span>,<br/>&nbsp;&nbsp;&nbsp;<span class="k">"coordinates"</span>:[5.865,50.492]},<br/>&nbsp;&nbsp;<span class="k">"properties"</span>:{<br/>&nbsp;&nbsp;&nbsp;<span class="k">"osm_ref"</span>:<span class="s">"node/4207030426"</span>,<br/>&nbsp;&nbsp;&nbsp;<span class="k">"letter"</span>:<span class="s">"B"</span>, <span class="k">"tier"</span>:<span class="s">"curated"</span>,<br/>&nbsp;&nbsp;&nbsp;<span class="k">"potable"</span>:true, <span class="k">"confirmed"</span>:3<br/>&nbsp;&nbsp;}<br/>&nbsp;}]<br/>}</div>
-      <p style="margin-top:.6rem;font-size:.8rem;color:#595c4d">{{ 'developers.ex_hydrate'|trans|rich }}</p>
+      <p style="margin-top:.6rem;font-size:.90rem;color:#595c4d">{{ 'developers.ex_hydrate'|trans|rich }}</p>
     </div>
   </div>
 </div></section>

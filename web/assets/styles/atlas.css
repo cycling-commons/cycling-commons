@@ -134,7 +134,7 @@ select:focus{border-bottom-color:var(--trail)}
 select option{color:var(--ink)}
 
 /* type */
-.kicker{font-family:var(--mono);font-size:.7rem;letter-spacing:.18em;text-transform:uppercase;color:var(--clay);margin-bottom:1rem;display:flex;align-items:center;gap:.6rem}
+.kicker{font-family:var(--mono);font-size:.82rem;letter-spacing:.18em;text-transform:uppercase;color:var(--clay);margin-bottom:1rem;display:flex;align-items:center;gap:.6rem}
 .kicker::before{content:"";width:13px;height:17px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 130'%3E%3Cpath fill='%23B5532E' d='M50 8 C31 8 16 23 16 42 C16 68 50 124 50 124 C50 124 84 68 84 42 C84 23 69 8 50 8 Z'/%3E%3C/svg%3E") center/contain no-repeat;transform:translateY(-1px)}
 h1.disp{font-family:var(--serif);font-weight:500;font-size:clamp(2.4rem,5vw,4.2rem);line-height:1.03;letter-spacing:-.025em}
 h2.disp{font-family:var(--serif);font-weight:500;font-size:clamp(1.8rem,3.4vw,2.8rem);line-height:1.07;letter-spacing:-.02em}
@@ -207,7 +207,9 @@ input[type="checkbox"]:disabled,input[type="radio"]:disabled{cursor:not-allowed;
 /* The dark page header. It lived in seven page-level <style> blocks, all
    saying the same thing, which meant a new page could use the class and get
    nothing (owner, 2026-08-28: the curator page and the report page both). */
-.lhero,.rhero,.chero,.ahero{background:var(--ink);color:var(--paper);padding:3rem 0}
+/* Top padding 2.4rem and not 3rem: the kicker that opens each hero had to sit
+   about ten pixels higher (owner, 2026-08-29). The bottom keeps its 3rem. */
+.lhero,.rhero,.chero,.ahero{background:var(--ink);color:var(--paper);padding:2.4rem 0 3rem}
 .lhero h1,.lhero h2,.rhero h1,.chero h1,.ahero h1{color:var(--paper)}
 
 .btn{display:inline-flex;align-items:center;gap:.5rem;font-family:var(--sans);font-weight:700;font-size:.95rem;padding:.8rem 1.4rem;border-radius:5px;border:1.5px solid transparent;cursor:pointer;transition:all .2s}
@@ -286,7 +288,7 @@ a .card:hover,.card.rv:hover,.card.is-link:hover{transform:translateY(-3px);box-
    is Symfony's default field-error markup, and widening this to every form on
    the site would repaint any deliberate list inside one. */
 .field-errors,.card form ul,.wrap form ul{list-style:none;padding:0;margin:.5rem 0 .2rem}
-.field-errors li,.card form ul li,.wrap form ul li{display:flex;gap:.45rem;align-items:flex-start;font-size:.8rem;color:#7d3a20;line-height:1.4;padding:.45rem .65rem;margin-top:.35rem;background:rgba(181,83,46,.09);border:1px solid rgba(181,83,46,.28);border-radius:5px}
+.field-errors li,.card form ul li,.wrap form ul li{display:flex;gap:.45rem;align-items:flex-start;font-size:.90rem;color:#7d3a20;line-height:1.4;padding:.45rem .65rem;margin-top:.35rem;background:rgba(181,83,46,.09);border:1px solid rgba(181,83,46,.28);border-radius:5px}
 .field-errors li::before,.card form ul li::before,.wrap form ul li::before{content:"\26A0";flex:none;font-size:.9em;line-height:1.4}
 .alert-error{background:rgba(181,83,46,.1);border-left:3px solid var(--clay);color:#7d3a20;padding:.7rem 1rem;border-radius:0 5px 5px 0;font-size:.9rem;margin-bottom:1.4rem}
 
@@ -326,13 +328,36 @@ section.pad+section.pad{padding-top:clamp(2rem,4vw,3rem)}
 /* `line-height` and `max-width` are pinned as well as the type: the landing
    page styles a bare `h2` for its section headings, and anything it declares
    that this rule does not would reach the footer's column headings on that one
-   page only. */
-.foot .footcol h2{font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;
-  color:rgba(239,230,212,.45);margin:0 0 .3rem;font-weight:400;font-family:inherit;
-  line-height:inherit;max-width:none}
-.foot .footcol a{display:inline-block}
-.foot .footby{color:rgba(239,230,212,.6)}
-.foot .colophon{margin-top:1.344rem}  /* 2 × the 0.672rem line-height step */
+   page only.
+
+   The heading is BRIGHTER and heavier than the links under it, not dimmer
+   (owner, 2026-08-29: "the headers should be visually differentiated for the
+   items below them"). At .45 and the same size and weight as a link, it read
+   as a link that had been greyed out. Bigger, bold and .92 says heading, and
+   takes it from 3.81:1 on --ink, which failed WCAG AA, to 11.4:1.
+
+   It also sets its OWN line-height rather than inheriting the footer's 2.1. At
+   that leading the label carried five pixels of empty space above its caps,
+   which read as a gap rather than as a heading. */
+.foot .footcol h2{font-size:.78rem;letter-spacing:.18em;text-transform:uppercase;
+  color:rgba(239,230,212,.92);margin:0 0 .6rem;font-weight:700;font-family:inherit;
+  line-height:1.25;max-width:none}
+/* Menu items in normal case (owner, 2026-08-29: "all this uppercase is too
+   much, menu items must be normal case"). The three column headings keep
+   their capitals and are now the only ones in the footer, which is what
+   makes them read as headings rather than as one more link.
+   Tracking drops with the case: .14em is spacing for capitals, and on
+   lower-case words it pulls the letters of a word apart. */
+.foot .footcol a{display:inline-block;text-transform:none;letter-spacing:.01em}
+.foot .footby{color:rgba(239,230,212,.6);text-transform:none;letter-spacing:.01em}
+/* The build marker sits under the steward line, in the same column and the
+   same quiet grey. Empty until version.js fills it, and :empty keeps it from
+   taking a line of its own before that. */
+.foot .footver{color:rgba(239,230,212,.6);text-transform:none;letter-spacing:.01em}
+.foot .footver:empty{display:none}
+/* Normal case here too, which is also what lets ODbL, CC BY-SA and PolyForm
+   keep the capitalisation their licences are actually named with. */
+.foot .colophon{margin-top:1.344rem;text-transform:none;letter-spacing:.02em}  /* 2 × the 0.672rem line-height step */
 /* Where to find us, under the licences. Icons rather than words: a row of
    logos reads faster than any label and stays one line in five languages.
    Each is a 40px target, which is the floor for a thumb. */

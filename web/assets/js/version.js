@@ -7,6 +7,10 @@
   var label = T('build', 'Build') + ' ' + V.number + (V.date ? ' · ' + V.date : '');
 
   function stamp() {
+    /* A page that offers a slot decides where the marker goes. Everything below
+       is the fallback for layouts that do not (the map rail, and the badge). */
+    var slot = document.querySelector('[data-cc-version]');
+    if (slot) { slot.textContent = label; return; }
     var foot = document.querySelector('.foot .mono, footer .mono');
     if (foot) {
       var s = document.createElement('span');
