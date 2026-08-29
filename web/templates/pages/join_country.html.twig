@@ -24,26 +24,33 @@
 </style>
 {% endblock %}
 {% block body %}
-<main class="wrap" style="padding-top:2.5rem;padding-bottom:3.5rem;max-width:640px">
+{# The dark hero every page of this kind has. Without it the heading sat
+   straight under the nav, and the green band above it was the nav ending
+   rather than a header (owner, 2026-08-28). #}
+<div class="lhero"><div class="wrap">
+  <div class="kicker" style="color:var(--trail)">{{ 'join.kicker'|trans }}</div>
   {% if onboarded %}
     {# Say the region's name back when they arrived from its page. The
        country-level headline ("Nobody is curating Netherlands yet") is both
        wrong and discouraging for someone who came from North Holland to
        volunteer for North Holland: the country may well have a curator
        already, and it is the region that is short of one. #}
-    <h1 class="disp" style="font-size:clamp(1.9rem,4vw,2.6rem)">{{ pending_app
+    <h1 class="disp">{{ pending_app
       ? 'join.pending_h'|trans
       : (wanted
         ? 'join.headline_curate_region'|trans({'%region%': wanted.name})
         : 'join.headline_curate'|trans({'%country%': country.name})) }}</h1>
-    {# The "show us your edits" nudge belongs to somebody who is about to
-       apply, not to somebody whose application is already being read. #}
-    {% if not pending_app %}
-      <p class="hint">{{ 'join.evidence_hint'|trans }}
-         <a href="{{ path('improve') }}">{{ 'join.evidence_link'|trans }}</a></p>
-    {% endif %}
   {% else %}
-    <h1 class="disp" style="font-size:clamp(1.9rem,4vw,2.6rem)">{{ 'join.headline_request'|trans({'%country%': country.name}) }}</h1>
+    <h1 class="disp">{{ 'join.headline_request'|trans({'%country%': country.name}) }}</h1>
+  {% endif %}
+</div></div>
+
+<main class="wrap" style="padding-top:2.5rem;padding-bottom:3.5rem;max-width:640px">
+  {# The "show us your edits" nudge belongs to somebody who is about to apply,
+     not to somebody whose application is already being read. #}
+  {% if onboarded and not pending_app %}
+    <p class="hint">{{ 'join.evidence_hint'|trans }}
+       <a href="{{ path('improve') }}">{{ 'join.evidence_link'|trans }}</a></p>
   {% endif %}
 
   {% if error %}<p class="form-error" role="alert">{{ error }}</p>{% endif %}

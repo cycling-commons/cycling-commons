@@ -2,8 +2,6 @@
 {% extends 'base.html.twig' %}
 {% block head_styles %}
 <style>
-  .rhero{background:var(--ink);color:var(--paper);padding:3rem clamp(1.25rem,4vw,3rem) 3rem}
-  .rhero .wrap{max-width:1000px;margin:0 auto;padding:0}
   .rhero .ey{font-family:var(--mono);font-size:.7rem;letter-spacing:.18em;text-transform:uppercase;color:var(--glacier);margin-bottom:1.3rem}
   .rhero h1{font-family:var(--serif);font-weight:500;font-size:clamp(2.4rem,5vw,4.2rem);line-height:1.03;letter-spacing:-.025em;margin-bottom:.9rem}
   .rhero p{max-width:62ch;color:rgba(239,230,212,.85);line-height:1.6;font-size:1.15rem}
@@ -16,13 +14,16 @@
     background:rgba(239,230,212,.05)}
   .rhero-cta h2{font-family:var(--serif);font-weight:600;font-size:1.3rem;margin-bottom:.5rem}
   .rhero-cta p{font-size:.92rem;line-height:1.55;color:rgba(239,230,212,.8);margin-bottom:1rem}
-  .rhero-cta-go{display:inline-block;font-family:var(--mono);font-size:.66rem;letter-spacing:.08em;
+  .rhero-cta-go{display:inline-block;font-family:var(--mono);font-size:.74rem;letter-spacing:.08em;
     text-transform:uppercase;font-weight:700;background:var(--trail);color:var(--ink);
     padding:.55rem .9rem;border-radius:6px}
   .rhero-cta-go:hover{background:#ff703d}
+  .country{scroll-margin-top:5rem}
+  .cc-here{font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;
+    color:#2f6b52;background:rgba(143,182,168,.28);border-radius:3px;padding:.1rem .35rem;margin-left:.4rem}
   @media(max-width:780px){.rhero-grid{grid-template-columns:1fr;gap:1.6rem}}
 
-  .rwrap{max-width:1000px;margin:0 auto;padding:2.2rem clamp(1.25rem,4vw,3rem) 3rem}
+  .rwrap{max-width:1120px;margin:0 auto;padding:2.2rem clamp(1.25rem,4vw,2.5rem) 3rem}
 
   .legend-lead{font-size:.85rem;color:#4a4d40;margin:0 0 .7rem;max-width:64ch;line-height:1.5}
   /* Two columns because they are two questions: what the region holds, and who
@@ -31,33 +32,33 @@
   .legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(20rem,1fr));gap:1.1rem 2.4rem;
     margin-bottom:1.6rem;font-size:.82rem;color:#4a4d40}
   .lcol{display:flex;flex-direction:column;gap:.45rem}
-  .lcol .lh{font-family:var(--mono);font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:var(--clay)}
-  .legend b{font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase}
+  .lcol .lh{font-family:var(--mono);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--clay)}
+  .legend b{font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase}
 
   h2.cont{font-family:var(--serif);font-weight:600;font-size:1.5rem;margin:2.2rem 0 1rem;padding-bottom:.55rem;
     border-bottom:1px solid rgba(20,22,14,.16);display:flex;align-items:baseline;gap:.7rem}
-  h2.cont span{font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:#7a7d6c}
+  h2.cont span{font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:#7a7d6c}
 
   .country{margin:0 0 1.2rem}
   {# flex-wrap: on a phone the name + count + Apply button overflowed the
      viewport by ~25px (found 2026-08-15 while checking the hero split); the
      button drops to its own line instead of pushing the page wider. #}
   .country .ch{display:flex;flex-wrap:wrap;align-items:center;gap:.6rem;margin-bottom:.55rem}
-  .country .ch .join-cta{font-family:var(--mono);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;
+  .country .ch .join-cta{font-family:var(--mono);font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;
     padding:.42rem .75rem;border:1.5px solid var(--trail);border-radius:6px;color:var(--trail);
     text-decoration:none;white-space:nowrap;flex:none}
   .country .ch .join-cta:hover{background:var(--trail);color:var(--paper)}
   .country .ch h3{font-family:var(--sans);font-weight:700;font-size:1.05rem}
-  .country .ch .cc{font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;color:#7a7d6c;text-transform:uppercase}
-  .country .ch .n{font-family:var(--mono);font-size:.58rem;letter-spacing:.06em;color:#7a7d6c;margin-left:auto}
+  .country .ch .cc{font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;color:#7a7d6c;text-transform:uppercase}
+  .country .ch .n{font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;color:#7a7d6c;margin-left:auto}
 
   .regions{display:flex;flex-wrap:wrap;gap:.5rem}
   .reg{display:inline-flex;align-items:center;gap:.5rem;background:var(--paper-deep);border:1px solid rgba(20,22,14,.1);
     border-radius:8px;padding:.45rem .7rem;font-size:.9rem}
-  .reg .km{font-family:var(--mono);font-size:.56rem;letter-spacing:.04em;color:#7a7d6c}
+  .reg .km{font-family:var(--mono);font-size:.68rem;letter-spacing:.04em;color:#7a7d6c}
   a.reg{text-decoration:none;color:inherit}
   a.reg:hover{border-color:var(--spruce-lift)}
-  .reg .tag{font-family:var(--mono);font-size:.52rem;letter-spacing:.08em;text-transform:uppercase;padding:.1rem .3rem;border-radius:3px;background:rgba(20,22,14,.08)}
+  .reg .tag{font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;padding:.1rem .3rem;border-radius:3px;background:rgba(20,22,14,.08)}
   /* Two independent facts, two chips: how much the region holds, and who looks
      after it. A region can have either, both or neither. */
   .reg.has-curator{background:var(--spruce-lift);color:var(--paper);border-color:var(--spruce-lift)}
@@ -84,7 +85,7 @@
   #cc-country-q{width:100%;box-sizing:border-box;padding:.6rem .8rem;font-size:1rem;border:1px solid rgba(20,22,14,.18);border-radius:8px;background:var(--paper);color:inherit}
   #cc-country-hits a{display:flex;justify-content:space-between;padding:.45rem .7rem;border:1px solid rgba(20,22,14,.1);border-radius:8px;margin-top:.4rem;text-decoration:none;color:inherit}
   #cc-country-hits a:hover{border-color:var(--spruce-lift)}
-  #cc-country-hits .cc{font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;color:#7a7d6c;text-transform:uppercase}
+  #cc-country-hits .cc{font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;color:#7a7d6c;text-transform:uppercase}
 </style>
 {% endblock %}
 {% block body %}
@@ -145,7 +146,7 @@
       {% set continent = country.continentCode %}
       <h2 class="cont">{{ ('continent.' ~ continent|lower)|trans }}</h2>
     {% endif %}
-    <div class="country">
+    <div class="country" id="country-{{ country.code }}">
       <div class="ch">
         <img src="{{ asset(country.flag) }}" alt="" width="20" height="15">
         <h3>{{ country.name }}</h3><span class="cc">{{ country.code }}</span>
@@ -201,13 +202,18 @@
     // targets only the final path segment.
     const joinHref = {{ path('join_country', {cc: 'ZZ'})|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
     const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    const hereLabel = {{ 'regions.already_here'|trans|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
     q.addEventListener('input', () => {
       const needle = q.value.trim().toLowerCase();
       if (needle.length < 2) { hits.innerHTML = ''; return; }
       const top = data.filter(c => c.name.toLowerCase().includes(needle)).slice(0, 8);
-      hits.innerHTML = top.map(c =>
-        `<a role="option" href="${joinHref.replace(/ZZ(?=[^/]*$)/, c.code)}">${esc(c.name)} <span class="cc">${esc(c.code)}</span></a>`
-      ).join('');
+      /* A country already on the Commons says so and jumps to its own place in
+         the list above, rather than offering to request what is already there. */
+      hits.innerHTML = top.map(c => {
+        const href = c.here ? ('#country-' + c.code) : joinHref.replace(/ZZ(?=[^/]*$)/, c.code);
+        const mark = c.here ? ` <span class="cc-here">${esc(hereLabel)}</span>` : '';
+        return `<a role="option" href="${href}">${esc(c.name)} <span class="cc">${esc(c.code)}</span>${mark}</a>`;
+      }).join('');
     });
   });
 </script>

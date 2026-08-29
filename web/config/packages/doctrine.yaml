@@ -60,6 +60,11 @@ doctrine:
                 dir: '%kernel.project_dir%/src/Support/Entity'
                 prefix: 'App\Support\Entity'
                 alias: Support
+            Blog:
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Blog/Entity'
+                prefix: 'App\Blog\Entity'
+                alias: Blog
 
 when@prod:
     doctrine:

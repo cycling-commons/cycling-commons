@@ -3,7 +3,7 @@
 <nav class="topnav">
   <div class="brandblock" style="display:flex;flex-direction:column;gap:.28rem;align-items:flex-start;flex:none">
     <a class="brand" href="{{ path('home') }}"><img src="{{ asset('brand/logo-nav.svg') }}" alt="Cycling Commons" style="height:1.8rem;display:block"></a>
-    <div class="brandsub" style="font-family:var(--mono,'Spline Sans Mono',monospace);font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(239,230,212,.55);line-height:1.6;white-space:nowrap"><span class="cc-coord">N 48.87° · E 2.29°</span><br>{{ 'nav.tagline'|trans }}</div>
+    <div class="brandsub" style="font-family:var(--mono,'Spline Sans Mono',monospace);font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(239,230,212,.55);line-height:1.6;white-space:nowrap"><span class="cc-coord">N 41.39° · E 2.16°</span><br>{{ 'nav.tagline'|trans }}</div>
   </div>
   <div class="links">
     <a href="{{ path('regions') }}"{% if a == 'regions' %} class="on"{% endif %}>{{ 'nav.regions'|trans }}</a>
@@ -14,7 +14,7 @@
     {# The front door, in the top nav rather than only the footer: a visitor
        looking for a way to reach a project looks up, not down
        (contact-and-support.md §4). #}
-    <a href="{{ path('contact') }}"{% if a == 'contact' %} class="on"{% endif %}>{{ 'nav.contact'|trans }}</a>
+    <a href="{{ path('blog') }}"{% if a == 'blog' %} class="on"{% endif %}>{{ 'nav.blog'|trans }}</a>
     <a href="{{ path('licenses') }}"{% if a == 'licenses' %} class="on"{% endif %}>{{ 'nav.licence'|trans }}</a>
     <a class="acct join" href="{{ path('join') }}">{{ 'nav.get_involved'|trans }}</a>
     <a class="acct fill" href="{{ path('map') }}">{{ 'nav.explore_map'|trans }}</a>

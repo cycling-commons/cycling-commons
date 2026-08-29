@@ -1,0 +1,106 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{#
+  One post (docs/specs/blog.md §5).
+
+  The body goes through `|bug_markdown`, which is the SAME restricted markdown
+  the bug desk renders: escape first, six rules, sanitise after. Deliberately
+  not a second profile. It also means a post cannot embed an image or an
+  external link, which for a first blog is a feature rather than a limit: the
+  posts worth writing are prose.
+#}
+{% extends 'base.html.twig' %}
+
+{% block head_styles %}
+<style nonce="{{ csp_nonce() }}">
+  .blogwrap{display:grid;grid-template-columns:minmax(0,680px) minmax(0,15rem);
+    gap:clamp(2rem,5vw,4rem);align-items:start}
+  .blogpage{min-width:0}
+  /* Sticky, so the archive stays reachable through a long post, and only when
+     there is room for it to be. */
+  .blogside{position:sticky;top:6rem;min-width:0}
+  .blogside h2{font-family:var(--mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--clay);margin:0 0 .8rem}
+  .blogside ol{list-style:none;margin:0;padding:0}
+  .blogside li{border-top:1px solid rgba(20,22,14,.12);padding:.7rem 0}
+  .blogside li:first-child{border-top:0;padding-top:0}
+  .blogside a{color:var(--ink);text-decoration:none;font-size:.92rem;line-height:1.45;display:block}
+  .blogside a:hover{color:var(--clay);text-decoration:underline}
+  .blogside .swhen{display:block;font-family:var(--mono);font-size:.7rem;letter-spacing:.05em;
+    color:#6d7060;margin-top:.2rem}
+  .blogside .sall{margin:1rem 0 0;font-size:.88rem}
+  .blogside .sall a{color:var(--clay);font-size:.88rem}
+  /* One column below the point where a 680px post and a 15rem rail stop
+     fitting side by side. The archive follows the post rather than preceding
+     it: on a phone somebody came to read this one. */
+  @media(max-width:1000px){
+    .blogwrap{grid-template-columns:1fr}
+    .blogside{position:static;border-top:1px solid rgba(20,22,14,.12);padding-top:1.4rem}
+  }
+  .bmeta{font-family:var(--mono);font-size:.72rem;letter-spacing:.06em;color:#6d7060;margin:0 0 1.4rem}
+  .bbody{font-size:1.02rem;line-height:1.75;color:#2f3227}
+  .bbody p{margin:0 0 1.1rem}
+  .bbody ul,.bbody ol{margin:0 0 1.1rem;padding-left:1.4rem}
+  .bbody li{margin:.3rem 0}
+  .bbody code{background:rgba(20,22,14,.07);border-radius:3px;padding:.1em .35em;font-size:.9em}
+  .bbody pre{background:rgba(20,22,14,.07);border-radius:6px;padding:.9rem 1.1rem;overflow-x:auto;margin:0 0 1.1rem}
+  .bbody pre code{background:none;padding:0;font-size:.85em;white-space:pre}
+  .blede{font-size:1.1rem;line-height:1.6;color:#3a3d30;margin:0 0 1.4rem}
+  .bother{margin-top:2.4rem;padding-top:1.2rem;border-top:1px solid rgba(20,22,14,.12);font-size:.9rem}
+  .bother a{color:var(--clay)}
+  .bback{margin-top:1.2rem;font-size:.9rem}
+  .bback a{color:var(--clay)}
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="lhero"><div class="wrap">
+  <div class="kicker" style="color:var(--trail)">{{ 'blog.kicker'|trans }}</div>
+  <h1 class="disp">{{ post.title }}</h1>
+</div></div>
+
+<section class="pad"><div class="wrap">
+  <div class="blogwrap">
+  <div class="blogpage">
+    <p class="bmeta">
+      <time datetime="{{ post.publishedAt|date('Y-m-d') }}">{{ post.publishedAt|cc_date }}</time>
+      {# The language it was WRITTEN in, which is not always the one the reader
+         asked for. #}
+      · {{ post.locale|upper }}
+    </p>
+
+    {% if post.lede %}<p class="blede">{{ post.lede }}</p>{% endif %}
+
+    <div class="bbody">{{ post.body|bug_markdown }}</div>
+
+    {% if siblings is not empty %}
+      <p class="bother">{{ 'blog.also_in'|trans }}
+        {% for other in siblings %}
+          <a href="{{ path('blog_post', {slug: other.slug, _locale: other.locale}) }}">{{ other.locale|upper }}</a>{% if not loop.last %} · {% endif %}
+        {% endfor %}
+      </p>
+    {% endif %}
+
+    <p class="bback"><a href="{{ path('blog') }}">{{ 'blog.back'|trans }}</a></p>
+  </div>
+
+  {# The archive, beside the post. Somebody who has just finished one is the
+     likeliest person on the site to read a second, and the index is a click
+     they mostly will not make. #}
+  {% if others is not empty %}
+    <aside class="blogside">
+      <h2>{{ 'blog.archive'|trans }}</h2>
+      <ol>
+        {% for other in others %}
+          <li>
+            <a href="{{ path('blog_post', {slug: other.slug}) }}">{{ other.title }}
+              <span class="swhen"><time datetime="{{ other.publishedAt|date('Y-m-d') }}">{{ other.publishedAt|cc_date }}</time></span>
+            </a>
+          </li>
+        {% endfor %}
+      </ol>
+      <p class="sall"><a href="{{ path('blog') }}">{{ 'blog.back'|trans }}</a></p>
+    </aside>
+  {% endif %}
+  </div>
+</div></section>
+{% endblock %}

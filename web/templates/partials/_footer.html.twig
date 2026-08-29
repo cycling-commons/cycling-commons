@@ -1,5 +1,89 @@
 {# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{#
+  Three columns, grouped by what somebody came for (owner, 2026-08-29). It was
+  one run of fourteen links that wrapped wherever the window happened to end,
+  so "Privacy" could sit beside "Get involved" and the grouping was whatever
+  the browser decided that day.
+
+  The groups, in the order somebody needs them:
+
+    1. THE ATLAS        what to go and look at
+    2. TAKE PART        how to put something in, or ask us something
+    3. THE SMALL PRINT  licences, policies, the things you read once
+
+  Then the colophon, then where to find us.
+
+  Columns rather than rows, so each group is a shape the eye takes in at once
+  instead of three lines that read as one paragraph. Each is a <nav> with its
+  own heading, which is what makes the grouping real to a screen reader too
+  and not only to somebody looking at it.
+#}
 <footer class="foot"><div class="wrap">
-  <span class="mono">{{ 'footer.rights'|trans }}</span>
-  <span class="mono"><a href="https://wiki.cyclingcommons.org/">{{ 'footer.wiki'|trans }}</a> · <a href="https://wiki.cyclingcommons.org/governance/">{{ 'footer.governance'|trans }}</a> · <a href="https://github.com/cycling-commons/cycling-commons">{{ 'footer.github'|trans }}</a> · <a href="{{ path('join') }}">{{ 'footer.get_involved'|trans }}</a> · <a href="{{ path('regions') }}#your-country">{{ 'footer.your_region'|trans }}</a> · <a href="{{ path('pages') }}">{{ 'footer.all_pages'|trans }}</a> · <a href="{{ path('changelog') }}">{{ 'footer.changelog'|trans }}</a> · <a href="{{ path('roadmap') }}">{{ 'footer.roadmap'|trans }}</a> · <a href="{{ path('contact') }}">{{ 'footer.contact'|trans }}</a> · <a href="{{ path('bug_report') }}">{{ 'footer.report_bug'|trans }}</a> · <a href="{{ path('accessibility') }}">{{ 'footer.accessibility'|trans }}</a> · <a href="{{ path('privacy') }}">{{ 'footer.privacy'|trans }}</a> · <a href="{{ path('terms') }}">{{ 'footer.terms'|trans }}</a> · <a href="{{ path('credits') }}">{{ 'footer.credits'|trans }}</a> · {{ 'footer.stewarded_by'|trans }} <a href="https://bikecoders.life">BikeCoders</a></span>
+  <div class="footcols mono">
+    <nav class="footcol" aria-label="{{ 'footer.col_atlas'|trans }}">
+      <h2>{{ 'footer.col_atlas'|trans }}</h2>
+      <a href="{{ path('regions') }}#your-country">{{ 'footer.your_region'|trans }}</a>
+      <a href="{{ path('blog') }}">{{ 'nav.blog'|trans }}</a>
+      <a href="{{ path('changelog') }}">{{ 'footer.changelog'|trans }}</a>
+      <a href="{{ path('roadmap') }}">{{ 'footer.roadmap'|trans }}</a>
+      <a href="{{ path('pages') }}">{{ 'footer.all_pages'|trans }}</a>
+    </nav>
+
+    <nav class="footcol" aria-label="{{ 'footer.col_take_part'|trans }}">
+      <h2>{{ 'footer.col_take_part'|trans }}</h2>
+      <a href="{{ path('join') }}">{{ 'footer.get_involved'|trans }}</a>
+      <a href="{{ path('contributors') }}">{{ 'footer.contributors'|trans }}</a>
+      <a href="https://wiki.cyclingcommons.org/">{{ 'footer.wiki'|trans }}</a>
+      <a href="https://wiki.cyclingcommons.org/governance/">{{ 'footer.governance'|trans }}</a>
+      <a href="{{ path('contact') }}">{{ 'footer.contact'|trans }}</a>
+      <a href="{{ path('bug_report') }}">{{ 'footer.report_bug'|trans }}</a>
+    </nav>
+
+    <nav class="footcol" aria-label="{{ 'footer.col_small_print'|trans }}">
+      <h2>{{ 'footer.col_small_print'|trans }}</h2>
+      <a href="{{ path('accessibility') }}">{{ 'footer.accessibility'|trans }}</a>
+      <a href="{{ path('privacy') }}">{{ 'footer.privacy'|trans }}</a>
+      <a href="{{ path('terms') }}">{{ 'footer.terms'|trans }}</a>
+      <a href="{{ path('credits') }}">{{ 'footer.credits'|trans }}</a>
+      <span class="footby">{{ 'footer.stewarded_by'|trans }} <a href="https://bikecoders.life">BikeCoders</a></span>
+    </nav>
+  </div>
+
+  {# The colophon LAST: licences and ownership are what this is, not what
+     somebody came to the footer to click. Its own class, because it sits
+     further down than the gap between the link rows. #}
+  <span class="mono colophon">{{ 'footer.rights'|trans }}</span>
+
+  {#
+    Where to find us, below the licences.
+
+    GitHub moved OUT of the link rows and in here (owner, 2026-08-28): it is a
+    place we are, not a page of this site, and a text link between "Governance"
+    and "Get involved" read as the latter.
+
+    ICONS, not words, because the row is a set of logos a reader recognises
+    faster than any label, and because it stays one line in five languages.
+    Every one carries a real accessible name, and `title` for a pointer, so the
+    glyph is never the only thing saying what it is.
+
+    `rel="me"` on each: it is what lets a Mastodon profile verify that this site
+    claims that account back, and it costs nothing on the others.
+
+    Bluesky stands in for X. Not a slot we are leaving empty out of neglect:
+    an atlas built on open data has no business sending riders somewhere that
+    is not (and Bluesky's AT Protocol is).
+
+    Handles come from config/packages/support.yaml, so a channel that has no
+    account yet simply does not render rather than linking to a 404.
+  #}
+  {% if social|default([]) is not empty %}
+    <nav class="foot-social" aria-label="{{ 'footer.social_label'|trans }}">
+      {% for s in social %}
+        <a href="{{ s.url }}" rel="me noopener" target="_blank"
+           title="{{ s.label }}" aria-label="{{ s.label }}">
+          {% include 'partials/_social_icon.html.twig' with {name: s.name} only %}
+        </a>
+      {% endfor %}
+    </nav>
+  {% endif %}
 </div></footer>

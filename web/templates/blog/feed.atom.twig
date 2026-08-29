@@ -1,0 +1,41 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{#
+  The blog as Atom (docs/specs/blog.md §5).
+
+  ONE feed, not one per language. A feed reader subscribes once and people
+  share the URL; five per-locale feeds would split one small readership five
+  ways. Which posts a subscriber gets follows the Accept-Language they send,
+  and the feed says which language it served in `xml:lang`.
+
+  Entries carry the LEDE, not the body. The body is restricted markdown and
+  would have to be rendered and re-escaped into XML to travel; a standfirst and
+  a link is what a feed is for.
+
+  `spaceless` and the leading `-`: an XML declaration has to be the very first
+  byte of the response, so not one newline may precede it.
+#}
+{%- apply spaceless -%}
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="{{ written_locale }}">
+  <title>{{ 'blog.feed_title'|trans({}, 'messages', written_locale) }}</title>
+  <subtitle>{{ 'blog.feed_subtitle'|trans({}, 'messages', written_locale) }}</subtitle>
+  <link rel="self" href="{{ site }}{{ path('blog_atom') }}" />
+  <link href="{{ site }}{{ path('blog', {_locale: written_locale}) }}" />
+  <id>{{ site }}{{ path('blog_atom') }}</id>
+  {%- if posts|length %}
+  <updated>{{ posts[0].publishedAt|date('c') }}</updated>
+  {%- endif %}
+  {%- for post in posts %}
+  <entry>
+    <title>{{ post.title }}</title>
+    <link href="{{ site }}{{ path('blog_post', {slug: post.slug, _locale: post.locale}) }}" />
+    <id>{{ site }}{{ path('blog_post', {slug: post.slug, _locale: post.locale}) }}</id>
+    <updated>{{ post.updatedAt|date('c') }}</updated>
+    <published>{{ post.publishedAt|date('c') }}</published>
+    {%- if post.lede %}
+    <summary>{{ post.lede }}</summary>
+    {%- endif %}
+  </entry>
+  {%- endfor %}
+</feed>
+{%- endapply -%}

@@ -86,6 +86,24 @@ final class LocalizedPath
         'es' => '/novedades',
     ];
 
+    /** @var array<string, string> */
+    public const array BLOG = [
+        'en' => '/blog',
+        'fr' => '/blog',
+        'nl' => '/blog',
+        'de' => '/blog',
+        'es' => '/blog',
+    ];
+
+    /** @var array<string, string> */
+    public const array BLOG_POST = [
+        'en' => '/blog/{slug}',
+        'fr' => '/blog/{slug}',
+        'nl' => '/blog/{slug}',
+        'de' => '/blog/{slug}',
+        'es' => '/blog/{slug}',
+    ];
+
     public const array CONTACT = [
         'en' => '/contact',
         'fr' => '/contact',

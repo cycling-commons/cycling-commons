@@ -178,11 +178,27 @@ final class PageController extends AbstractController
     {
         $locale = $request->getLocale();
         $codes = $db->fetchFirstColumn('SELECT iso2 FROM world_country ORDER BY iso2');
+
+        // Which of them are already on the Commons. Without this the typeahead
+        // offered "request your country" for a country listed further up the
+        // same page, and somebody would ask us for something they were looking
+        // at (owner, 2026-08-28).
+        $directoryList = $directory->directory($locale);
+        $onboarded = [];
+        foreach ($directoryList as $country) {
+            $code = (string) ($country['code'] ?? '');
+            if ('' !== $code) {
+                $onboarded[strtoupper($code)] = true;
+            }
+        }
+
         $allCountries = [];
         foreach ($codes as $code) {
+            $code = (string) $code;
             $allCountries[] = [
-                'code' => (string) $code,
-                'name' => Countries::exists((string) $code) ? Countries::getName((string) $code, $locale) : (string) $code,
+                'code' => $code,
+                'name' => Countries::exists($code) ? Countries::getName($code, $locale) : $code,
+                'here' => isset($onboarded[strtoupper($code)]),
             ];
         }
         // Collator (locale rules), not strcoll (byte order).
@@ -193,7 +209,7 @@ final class PageController extends AbstractController
             'page_title' => 'meta.regions_title',
             'page_description' => 'meta.regions_description',
             'nav_active' => 'regions',
-            'countries' => $directory->directory($request->getLocale()),
+            'countries' => $directoryList,
             'all_countries' => $allCountries,
         ]);
     }

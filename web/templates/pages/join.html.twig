@@ -2,7 +2,6 @@
 {% extends 'base.html.twig' %}
 {% block head_styles %}
 <style>
-  .ahero{background:var(--ink);color:var(--paper);padding:3rem 0}
   .ahero .lead{color:rgba(239,230,212,.85)}
   .hnote{margin-top:1.4rem;padding:1rem 1.2rem;border-left:3px solid var(--trail);
     background:var(--paper-deep);border-radius:0 6px 6px 0;font-size:.95rem;color:#3b3d31}
@@ -32,12 +31,26 @@
   <div class="kicker">{% trans %}join.heart_kicker{% endtrans %}</div>
   <h2 class="disp">{{ 'join.heart_h2'|trans|rich }}</h2>
   <p class="lead" style="margin-top:1rem">{% trans %}join.heart_lead{% endtrans %}</p>
-  <div class="hnote"><b>{{ 'join.hnote_b'|trans }}</b> {{ 'join.hnote_body'|trans|rich }}</div>
   <ul class="howto">
-    <li><b>{{ 'join.howto1_b'|trans }}</b> {% trans %}join.howto1_body_pre{% endtrans %} <a href="https://www.openstreetmap.org">OpenStreetMap</a>{% trans %}join.howto1_body_post{% endtrans %}</li>
-    <li><b>{{ 'join.howto2_b'|trans }}</b> {% trans %}join.howto2_body_pre{% endtrans %}<a href="{{ path('map') }}">{% trans %}join.howto2_themap{% endtrans %}</a>{% trans %}join.howto2_mid1{% endtrans %}<a href="{{ path('improve', {type: 'climbs', mode: 'add'}) }}">{% trans %}join.howto2_addclimb{% endtrans %}</a>{% trans %}join.howto2_mid2{% endtrans %} <a href="{{ path('contact') }}?topic=question">{% trans %}join.howto2_email{% endtrans %}</a> {% trans %}join.howto2_mid3{% endtrans %} <a href="https://github.com/cycling-commons/cycling-commons/issues/new/choose">{% trans %}join.howto2_issue{% endtrans %}</a> {{ 'join.howto2_post'|trans|rich }}</li>
+    <li><b>{{ 'join.howto1_b'|trans }}</b> {{ 'join.howto1_body_pre'|trans }}
+      <a href="https://www.openstreetmap.org">OpenStreetMap</a> {{ 'join.howto1_body_post'|trans }}</li>
+    {# Spacing lives HERE, never inside the catalogue strings: a translator
+       working in a text box cannot see a trailing space, and any editor round
+       trip eats it. That is what produced "Openthe map". #}
+    <li><b>{{ 'join.howto2_b'|trans }}</b> {{ 'join.howto2_body_pre'|trans }}
+      <a href="{{ path('map') }}">{{ 'join.howto2_themap'|trans }}</a>
+      {{ 'join.howto2_mid1'|trans }}
+      <a href="{{ path('improve', {type: 'climbs', mode: 'add'}) }}">{{ 'join.howto2_addclimb'|trans }}</a>{{ 'join.howto2_mid2'|trans }}
+      <a href="{{ path('contact') }}?topic=question">{{ 'join.howto2_email'|trans }}</a>
+      {{ 'join.howto2_mid3'|trans }}
+      <a href="https://github.com/cycling-commons/cycling-commons/issues/new/choose">{{ 'join.howto2_issue'|trans }}</a>{{ 'join.howto2_post'|trans|rich }}</li>
     <li><b>{{ 'join.howto3_b'|trans }}</b> <a href="{{ path('contribute') }}">{% trans %}join.howto3_link{% endtrans %}</a>{% trans %}join.howto3_post{% endtrans %}</li>
-    <li><b>{{ 'join.howto4_b'|trans }}</b> <a href="{{ path('regions') }}">{% trans %}join.howto4_link{% endtrans %}</a>{% trans %}join.howto4_post{% endtrans %}</li>
+    <li><b>{{ 'join.howto4_b'|trans }}</b>
+      <a href="{{ path('map') }}">{{ 'join.howto4_link'|trans }}</a>
+      {{ 'join.howto4_post'|trans }}</li>
+    <li><b>{{ 'join.howto5_b'|trans }}</b>
+      <a href="{{ path('regions') }}">{{ 'join.howto5_link'|trans }}</a>
+      {{ 'join.howto5_post'|trans }}</li>
   </ul>
 </div></section>
 

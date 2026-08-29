@@ -56,6 +56,23 @@ parameters:
     # which for a sole trader contains the owner's citizen service number.
     cc.organisation.vat_number: '%env(default:cc.blank:CC_ORG_VAT)%'
     cc.organisation.contact_email: '%env(default:cc.blank:CC_ORG_CONTACT_EMAIL)%'
+
+    # Where to find us, for the footer's icon row. A handle, not a URL, except
+    # Mastodon, whose instance is part of the address.
+    #
+    # EMPTY means the icon does not render. That is the point: a fresh
+    # deployment shows the channels it actually has rather than a row of links
+    # to somebody else's account, and a channel we open later needs a variable
+    # rather than a deploy of new markup.
+    #
+    # Bluesky rather than X, deliberately: an atlas built on open data has no
+    # business sending riders somewhere that is not.
+    cc.social.github: '%env(default:cc.blank:CC_SOCIAL_GITHUB)%'
+    cc.social.youtube: '%env(default:cc.blank:CC_SOCIAL_YOUTUBE)%'
+    cc.social.instagram: '%env(default:cc.blank:CC_SOCIAL_INSTAGRAM)%'
+    cc.social.facebook: '%env(default:cc.blank:CC_SOCIAL_FACEBOOK)%'
+    cc.social.bluesky: '%env(default:cc.blank:CC_SOCIAL_BLUESKY)%'
+    cc.social.mastodon: '%env(default:cc.blank:CC_SOCIAL_MASTODON)%'
     cc.organisation.phone: '%env(default:cc.blank:CC_ORG_PHONE)%'
 
     # The envelope sender for acknowledgements and desk notifications. Must be a
