@@ -3,14 +3,14 @@
 {% block head_styles %}
 <link rel="stylesheet" href="{{ asset('lib/maplibre-gl-5.24.0.css') }}" />
 <style>
-  .ey{font-family:var(--mono);font-size:.64rem;letter-spacing:.16em;text-transform:uppercase;color:var(--clay);margin-bottom:.5rem}
+  .ey{font-family:var(--mono);font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--clay);margin-bottom:.5rem}
   h1.disp{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4vw,2.5rem);line-height:1.05;margin-bottom:.4rem}
   .sub{color:#4a4d40;margin-bottom:1.6rem}
 
   /* stepper */
   .stepper{list-style:none;display:flex;flex-wrap:wrap;gap:.4rem 1.4rem;margin-bottom:2rem;border-bottom:1px solid rgba(20,22,14,.15);padding-bottom:1rem}
-  .stepper li{font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:#9a9d8c;display:flex;align-items:center;gap:.45rem}
-  .stepper li::before{content:counter(step);counter-increment:step;display:inline-flex;align-items:center;justify-content:center;width:1.4rem;height:1.4rem;border-radius:50%;border:1.5px solid rgba(20,22,14,.25);font-size:.62rem;color:#595c4d}
+  .stepper li{font-family:var(--mono);font-size:.74rem;letter-spacing:.1em;text-transform:uppercase;color:#9a9d8c;display:flex;align-items:center;gap:.45rem}
+  .stepper li::before{content:counter(step);counter-increment:step;display:inline-flex;align-items:center;justify-content:center;width:1.4rem;height:1.4rem;border-radius:50%;border:1.5px solid rgba(20,22,14,.25);font-size:.72rem;color:#595c4d}
   .stepper{counter-reset:step}
   .stepper li.done{color:#5a5d4d}.stepper li.done::before{background:var(--spruce);border-color:var(--spruce);color:var(--paper);content:"✓"}
   .stepper li.on{color:var(--ink);font-weight:700}.stepper li.on::before{border-color:var(--trail);color:var(--ink)}
@@ -21,7 +21,7 @@
   .pane{display:none}.pane.on{display:block}
   .pane h2{font-family:var(--serif);font-weight:600;font-size:1.5rem;margin-bottom:.3rem}
   .pane .help{color:#595c4d;font-size:.9rem;margin-bottom:1.3rem}
-  .subhead{font-family:var(--mono);font-size:.64rem;letter-spacing:.14em;text-transform:uppercase;color:var(--clay);margin:1.6rem 0 1rem;padding-bottom:.4rem;border-bottom:1px solid rgba(20,22,14,.12)}
+  .subhead{font-family:var(--mono);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--clay);margin:1.6rem 0 1rem;padding-bottom:.4rem;border-bottom:1px solid rgba(20,22,14,.12)}
   .subhead:first-of-type{margin-top:.3rem}
 
   /* `hidden` must actually hide. An author rule that sets `display` beats the
@@ -85,14 +85,14 @@
   .lk-x:hover{color:var(--danger, #8b1a1a)}
   .lk-actions{display:flex;gap:1rem;flex-wrap:wrap;margin-top:.7rem}
   .lk-add,.lk-drop{border:none;background:transparent;cursor:pointer;padding:0;
-    font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase}
+    font-family:var(--mono);font-size:.74rem;letter-spacing:.1em;text-transform:uppercase}
   .lk-add{color:var(--clay)}
   .lk-drop{color:#9a9d8c}
   .lk-add:hover,.lk-drop:hover{text-decoration:underline}
   .lk-add-entry{align-self:flex-start}
   /* Say WHY the add button is gone. A control that vanishes at a threshold
      reads as a bug. */
-  .lk-full{font-family:var(--mono);font-size:.62rem;color:#9a9d8c;margin:0}
+  .lk-full{font-family:var(--mono);font-size:.72rem;color:#9a9d8c;margin:0}
 
   /* step 1 map */
   #wmap{height:clamp(420px,74vh,720px);border-radius:8px;overflow:hidden;border:1px solid rgba(20,22,14,.15);margin-bottom:.8rem;background:var(--paper-deep)}
@@ -105,7 +105,7 @@
   }
   .maplibregl-canvas{filter:none}  /* no per-frame filter chain on the WebGL canvas (same call as map.css) */
   .readout{display:flex;align-items:center;justify-content:space-between;gap:1rem;font-family:var(--mono);font-size:.72rem;letter-spacing:.04em;color:#4a4d40;flex-wrap:wrap}
-  .readout #wzReset,.readout #wzUndo{color:var(--clay);cursor:pointer;text-transform:uppercase;letter-spacing:.1em;font-size:.64rem}
+  .readout #wzReset,.readout #wzUndo{color:var(--clay);cursor:pointer;text-transform:uppercase;letter-spacing:.1em;font-size:.72rem}
   .readout #wzUndo{margin-left:auto}
   /* How to place a climb — read before the map, not after a mistake. */
   .wmap-stage{position:relative}
@@ -113,15 +113,15 @@
   .map-hint[hidden]{display:none}
   .wz-measured{display:flex;flex-wrap:wrap;gap:.6rem 2rem;margin:.8rem 0 0}
   .wz-measured div{display:flex;flex-direction:column;gap:.15rem}
-  .wz-measured dt{font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:#595c4d}
+  .wz-measured dt{font-family:var(--mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:#595c4d}
   .wz-measured dd{margin:0;font-size:1.05rem;color:var(--ink)}
   .climb-howto{margin:0 0 .9rem;padding:.75rem 1rem .75rem 2.1rem;background:var(--paper-deep);
     border-left:2px solid var(--trail);border-radius:0 6px 6px 0;font-size:.86rem;line-height:1.55;color:#4a4d40}
   .climb-howto li{margin:.18rem 0}
   .cc-pin{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50% 50% 50% 0;background:var(--ink);border:2px solid var(--paper);box-shadow:0 3px 8px rgba(20,22,14,.4)}
   /* known-places overlay (add mode): visual context only, taps pass through */
-  .cc-cov-dot{display:flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--paper);border:1.5px solid rgba(20,22,14,.5);font-size:.62rem;opacity:.8;pointer-events:none;box-shadow:0 1px 4px rgba(20,22,14,.25)}
-  .covnote{font-family:var(--mono);font-size:.66rem;color:#595c4d;margin-top:.5rem;line-height:1.5}
+  .cc-cov-dot{display:flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--paper);border:1.5px solid rgba(20,22,14,.5);font-size:.72rem;opacity:.8;pointer-events:none;box-shadow:0 1px 4px rgba(20,22,14,.25)}
+  .covnote{font-family:var(--mono);font-size:.74rem;color:#595c4d;margin-top:.5rem;line-height:1.5}
   /* Why a submission was refused — the wizard used to fail silently. */
   .wiz-errors{border:1.5px solid #8b1a1a;border-left-width:4px;border-radius:0 6px 6px 0;background:rgba(139,26,26,.06);
     padding:.8rem 1rem;margin:0 0 1.4rem;color:#6b1414;font-size:.9rem;line-height:1.5}
@@ -135,7 +135,7 @@
      containing block. line-height only kills the inline-SVG baseline gap, so the
      label restores its own. */
   .cc-marker{line-height:0;filter:drop-shadow(0 3px 6px rgba(20,22,14,.4))}
-  .cc-mk-label{font-family:var(--mono);font-size:.56rem;line-height:1.35;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);background:var(--paper);border:1px solid rgba(20,22,14,.3);border-radius:3px;padding:.12rem .4rem;white-space:nowrap;position:absolute;bottom:100%;left:50%;transform:translateX(-50%);margin-bottom:.3rem;box-shadow:0 2px 6px rgba(20,22,14,.3)}
+  .cc-mk-label{font-family:var(--mono);font-size:.68rem;line-height:1.35;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);background:var(--paper);border:1px solid rgba(20,22,14,.3);border-radius:3px;padding:.12rem .4rem;white-space:nowrap;position:absolute;bottom:100%;left:50%;transform:translateX(-50%);margin-bottom:.3rem;box-shadow:0 2px 6px rgba(20,22,14,.3)}
   .cc-mk-label:empty{display:none}
 
   /* place search */
@@ -157,7 +157,7 @@
   .cur-photo img{display:block;width:200px;height:150px;object-fit:cover;border-radius:6px;border:1px solid rgba(20,22,14,.18);background:var(--paper-deep);transition:transform .15s}
   .cur-photo a:hover img{transform:scale(1.02)}
   .cur-photo a:focus-visible{outline:2px solid var(--trail);outline-offset:2px}
-  .cur-photo figcaption{font-family:var(--mono);font-size:.6rem;color:#9a9d8c;margin-top:.3rem;line-height:1.35}
+  .cur-photo figcaption{font-family:var(--mono);font-size:.7rem;color:#9a9d8c;margin-top:.3rem;line-height:1.35}
 
   /* upload queue + consent */
   .ulq{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.8rem}
@@ -168,7 +168,7 @@
   .ulq .chip-alt{flex:1 0 100%;margin-top:.3rem}
   .ulq .chip-alt input{width:100%;font-family:var(--sans);font-size:.72rem;padding:.32rem .45rem;border:1px solid rgba(20,22,14,.22);border-radius:4px;background:var(--paper)}
   .ulq .chip-alt.saved input{border-color:var(--glacier)}
-  .ulq .chip{font-family:var(--mono);font-size:.6rem;letter-spacing:.04em;padding:.3rem .5rem;border-radius:5px;background:var(--paper-deep);border:1px solid rgba(20,22,14,.18);display:flex;align-items:center;gap:.35rem}
+  .ulq .chip{font-family:var(--mono);font-size:.7rem;letter-spacing:.04em;padding:.3rem .5rem;border-radius:5px;background:var(--paper-deep);border:1px solid rgba(20,22,14,.18);display:flex;align-items:center;gap:.35rem}
   .ulq .chip .dot{width:6px;height:6px;border-radius:50%;background:var(--ochre)}
 
   /* modal */
@@ -258,18 +258,18 @@
 
   /* the photos, on review — shown rather than listed as filenames */
   .review-media{margin-top:1.2rem}
-  .rm-h{font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:#595c4d;margin-bottom:.5rem}
+  .rm-h{font-family:var(--mono);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:#595c4d;margin-bottom:.5rem}
   .rm-list{display:flex;flex-wrap:wrap;gap:.7rem}
   .rm-item{margin:0;width:118px}
   .rm-item img{display:block;width:118px;height:88px;object-fit:cover;border-radius:5px;background:var(--paper-deep)}
-  .rm-item figcaption{font-family:var(--mono);font-size:.58rem;letter-spacing:.04em;color:#595c4d;margin-top:.25rem;
+  .rm-item figcaption{font-family:var(--mono);font-size:.68rem;letter-spacing:.04em;color:#595c4d;margin-top:.25rem;
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .rm-item.is-link{width:auto}
   .rm-item.is-link figcaption{font-size:.72rem;letter-spacing:0;white-space:normal;color:#3f4234}
 
   /* what happens next */
   .lifecycle{background:var(--paper-deep);border:1px solid rgba(20,22,14,.14);border-left:2px solid var(--spruce);border-radius:0 8px 8px 0;padding:1.1rem 1.3rem;margin-top:1.3rem}
-  .lifecycle .lc-h{font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--clay);margin-bottom:.7rem}
+  .lifecycle .lc-h{font-family:var(--mono);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--clay);margin-bottom:.7rem}
   .lifecycle .lc-funnel{font-size:.86rem;color:#3f4234;line-height:1.6;margin-bottom:.6rem}
   .lifecycle .lc-verdict{font-size:.9rem;line-height:1.6;color:var(--ink);margin:0}
 

@@ -19,7 +19,7 @@
      legal clock, so the wait is the number this desk is judged on. */
   .td-track{white-space:nowrap}
   @media(max-width:700px){.td-track{white-space:normal}}
-  .td-gone{font-family:var(--mono);font-size:.6rem;color:#8a8d7d;margin-left:.4rem;font-weight:400}
+  .td-gone{font-family:var(--mono);font-size:.7rem;color:#8a8d7d;margin-left:.4rem;font-weight:400}
 </style>
 {% endblock %}
 {% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate_takedowns', mod_scope_names: mod_scope_names is defined ? mod_scope_names : null, mod_submission_count: mod_submission_count is defined ? mod_submission_count : null, mod_route_count: mod_route_count is defined ? mod_route_count : null, mod_takedown_count: mod_takedown_count is defined ? mod_takedown_count : null} %}{% endblock %}

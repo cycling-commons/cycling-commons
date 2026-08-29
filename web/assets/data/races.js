@@ -14,7 +14,7 @@
     {key:'giro',    name:'Giro d’Italia', outer:'#F06EAA', inner:'#C0397A', icon:'🌸', finish:{label:'FINISH · ROMA', lat:41.90, lng:12.50}, windows:[['2026-05-09','2026-05-31']]},
     {key:'tour',    name:'Tour de France', outer:'#F4D03F', inner:'#C9A227', icon:'🟡', finish:{label:'FINISH · PARIS', lat:48.87, lng:2.29}, windows:[['2026-07-04','2026-07-26']]},
     {key:'mtb-worlds',name:'UCI MTB Worlds', rainbow:true, icon:'🌈', finish:{label:'FINISH · CRANS-MONTANA', lat:46.31, lng:7.48}, windows:[['2026-08-29','2026-09-06']]},
-    {key:'vuelta',  name:'Vuelta a España',outer:'#E06C5E', inner:'#B3261E', icon:'🔴', finish:{label:'FINISH · MADRID', lat:40.42, lng:-3.70}, windows:[['2026-08-22','2026-09-13']]},
+    {key:'vuelta',  name:'Vuelta a España',outer:'#E8332A', inner:'#8C0B14', icon:'🔴', finish:{label:'FINISH · MADRID', lat:40.42, lng:-3.70}, windows:[['2026-08-22','2026-09-13']]},
     {key:'road-worlds',name:'UCI Road Worlds', rainbow:true, icon:'🌈', finish:{label:'FINISH · MONTRÉAL', lat:45.50, lng:-73.57}, windows:[['2026-09-20','2026-09-27']]},
     {key:'lombardia',name:'Il Lombardia',  outer:'#FCA5A5', inner:'#B91C1C', icon:'🍂', finish:{label:'FINISH · COMO', lat:45.81, lng:9.08}, windows:[['2026-10-10','2026-10-10']]},
     {key:'gravel-worlds',name:'UCI Gravel Worlds', rainbow:true, icon:'🌈', finish:{label:'FINISH · NICE', lat:43.70, lng:7.27}, windows:[['2026-10-17','2026-10-18']]},

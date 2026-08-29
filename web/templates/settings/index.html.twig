@@ -7,7 +7,7 @@
 {% include 'account/_shell_styles.html.twig' %}
 <style>
 
-  h2.sec{font-family:var(--mono);font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;color:var(--clay);
+  h2.sec{font-family:var(--mono);font-size:.74rem;letter-spacing:.16em;text-transform:uppercase;color:var(--clay);
     margin:2.2rem 0 1.1rem;padding-bottom:.5rem;border-bottom:1px solid rgba(20,22,14,.14)}
 
   /* two-column grids (fields + status), collapse on narrow screens */
@@ -24,7 +24,7 @@
   .fhelp{font-size:.82rem;color:#595c4d;line-height:1.5}
 
   .field{margin-bottom:1.3rem}
-  .field label{display:block;font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:#5a5d4d;margin-bottom:.4rem}
+  .field label{display:block;font-family:var(--mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:#5a5d4d;margin-bottom:.4rem}
   .field input[type=text],
   .field input[type=email],
   .field input[type=password]{width:100%;background:transparent;border:none;border-bottom:1.5px solid rgba(20,22,14,.25);font-family:var(--sans);font-size:1rem;padding:.45rem 0;outline:none;color:var(--ink)}
@@ -50,7 +50,7 @@
     font-family:var(--sans);font-size:.88rem;padding:.5rem .6rem;cursor:pointer}
   .base-loc-res li:last-child button{border-bottom:none}
   .base-loc-res button:hover,.base-loc-res button:focus-visible{background:rgba(255,90,31,.1)}
-  .base-loc-res .sub{flex:0 0 auto;font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;
+  .base-loc-res .sub{flex:0 0 auto;font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;
     text-transform:uppercase;color:#8a8d7d}
   /* derived-area remark: second grid column, palette green; top margin lines it
      up with the neighbouring column's input (label row above it), collapses
@@ -510,7 +510,7 @@
     </div>
 
     <details style="margin-top:.6rem">
-      <summary style="font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--clay);cursor:pointer">
+      <summary style="font-family:var(--mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--clay);cursor:pointer">
         {{ 'settings.delete_summary'|trans }}
       </summary>
       <form method="post" action="{{ path('settings_delete_confirm') }}" style="margin-top:1rem">
@@ -530,7 +530,7 @@
              chosen; the server still fails closed to anonymize if the field is
              absent (consent-fail-closed). #}
           <fieldset class="field" style="margin-bottom:.8rem;border:none;padding:0">
-            <legend style="font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:#5a5d4d;margin-bottom:.4rem">{{ 'settings.delete.keep_media_credit'|trans }}</legend>
+            <legend style="font-family:var(--mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:#5a5d4d;margin-bottom:.4rem">{{ 'settings.delete.keep_media_credit'|trans }}</legend>
             <label style="display:flex;gap:.5rem;align-items:flex-start;margin-bottom:.35rem">
               <input type="radio" name="keep_media_credit" value="1" required>
               <span>{{ 'settings.delete.keep_media_credit_yes'|trans }}</span>

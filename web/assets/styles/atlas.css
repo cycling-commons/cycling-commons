@@ -59,7 +59,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:9999;o
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
 
 /* nav */
-.topnav{position:sticky;top:0;z-index:500;background:radial-gradient(70% 200% at 90% -50%,rgba(250,190,80,.20),transparent 60%),linear-gradient(105deg,#15301f 0%,#27513a 100%);color:var(--paper);line-height:1.6;display:flex;align-items:center;justify-content:space-between;gap:clamp(1.5rem,4vw,3rem);padding:0.9rem clamp(1.25rem,4vw,3rem) 2.1rem;border-bottom:1px solid var(--spruce-lift)}
+.topnav{position:sticky;top:0;z-index:500;background:radial-gradient(70% 200% at 90% -50%,rgba(250,190,80,.20),transparent 60%),linear-gradient(105deg,#15301f 0%,#27513a 100%);color:var(--paper);line-height:1.6;display:flex;align-items:center;justify-content:space-between;gap:clamp(1.5rem,4vw,3rem);padding:0.6rem clamp(1.25rem,4vw,3rem) 2.4rem;border-bottom:1px solid var(--spruce-lift)}
 .topnav .brandblock{position:relative}
 .topnav .brandsub{position:absolute;top:100%;left:0;margin-top:.3rem;line-height:1.6}
 .topnav .brand{font-family:var(--serif);font-weight:600;font-size:1.6rem;letter-spacing:-.02em}.topnav .brand b{color:var(--trail);font-style:italic}
@@ -76,7 +76,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:9999;o
 .acct-chip{display:inline-flex;align-items:center;gap:.5rem;background:none;border:1.5px solid rgba(239,230,212,.4);border-radius:999px;padding:.26rem .7rem .26rem .28rem;color:var(--paper);cursor:pointer;font-family:var(--sans);font-size:.9rem;line-height:1;transition:border-color .2s}
 .acct-chip:hover,.acct-chip[aria-expanded=true]{border-color:var(--trail)}
 .acct-chip .av{width:30px;height:30px;border-radius:50%;background:var(--trail);color:var(--ink);display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-weight:600;font-size:.82rem;flex:none}
-.acct-bulb{position:absolute;top:-4px;left:22px;z-index:2;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:var(--trail);color:var(--ink);border:2px solid var(--ink);font-family:var(--mono);font-size:.6rem;font-weight:700;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.acct-bulb{position:absolute;top:-4px;left:22px;z-index:2;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:var(--trail);color:var(--ink);border:2px solid var(--ink);font-family:var(--mono);font-size:.7rem;font-weight:700;display:flex;align-items:center;justify-content:center;pointer-events:none}
 .acct-chip .acct-name{max-width:14ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .acct-chip .acct-caret{opacity:.65;transition:transform .18s}
 .acct-chip[aria-expanded=true] .acct-caret{transform:rotate(180deg)}
@@ -88,7 +88,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:9999;o
    place it actually refers to. */
 .acct-dropdown .acct-count{display:inline-flex;align-items:center;justify-content:center;min-width:1.2rem;height:1.2rem;
   margin-left:.45rem;padding:0 .35rem;border-radius:999px;background:var(--trail);color:var(--ink);
-  font-family:var(--mono);font-size:.62rem;font-weight:700;line-height:1;vertical-align:middle}
+  font-family:var(--mono);font-size:.72rem;font-weight:700;line-height:1;vertical-align:middle}
 /* section labels group the menu — makes clear what's personal vs. moderation/admin work */
 /* Personal / Moderation groups: a solid header block (spruce / clay, matching
    the account-shell tab-bar labels) over a light tint of the same hue behind
@@ -98,7 +98,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:9999;o
 .acct-group:first-child{margin-top:0}
 .acct-group-personal{background:rgba(28,58,42,.07)}
 .acct-group-mod{background:rgba(181,83,46,.08)}
-.acct-sec{font-family:var(--mono);font-size:.58rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.4rem .7rem;pointer-events:none;color:var(--paper)}
+.acct-sec{font-family:var(--mono);font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.4rem .7rem;pointer-events:none;color:var(--paper)}
 .acct-sec-personal{background:var(--spruce)}
 .acct-sec-mod{background:var(--clay)}
 /* links inside a group: transparent (so the group tint shows) + square (the
@@ -139,12 +139,77 @@ select option{color:var(--ink)}
 h1.disp{font-family:var(--serif);font-weight:500;font-size:clamp(2.4rem,5vw,4.2rem);line-height:1.03;letter-spacing:-.025em}
 h2.disp{font-family:var(--serif);font-weight:500;font-size:clamp(1.8rem,3.4vw,2.8rem);line-height:1.07;letter-spacing:-.02em}
 .lead{font-size:1.15rem;max-width:62ch;color:#3a3d30}
-.co{font-family:var(--mono);font-size:.66rem;letter-spacing:.06em;color:#595c4d;text-transform:uppercase}
+.co{font-family:var(--mono);font-size:.74rem;letter-spacing:.06em;color:#595c4d;text-transform:uppercase}
 /* inline text links (in prose) — visible by default */
 .lead a,.tldr a,.note a,.disc a,p a{color:var(--clay);text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1.5px;font-weight:500}
 .lead a:hover,.tldr a:hover,.note a:hover,.disc a:hover,p a:hover{color:var(--trail)}
 
 /* buttons + chips */
+/* Checkboxes and radios, site-wide. System blue appears nowhere else here.
+   `accent-color` keeps the NATIVE control, so keyboard behaviour and every
+   assistive technology keep working; an appearance:none reimplementation buys
+   the same look and gives all of that back. */
+input[type="checkbox"],input[type="radio"]{accent-color:var(--trail);width:1.05rem;height:1.05rem;cursor:pointer}
+input[type="checkbox"]:focus-visible,input[type="radio"]:focus-visible{outline:2px solid var(--clay);outline-offset:2px}
+input[type="checkbox"]:disabled,input[type="radio"]:disabled{cursor:not-allowed;opacity:.55}
+
+/* A tiny zebra on the row lists (owner, 2026-08-28).
+   Roughly two percent of contrast: enough to carry the eye across a wide row
+   to its right-hand column, not enough to read as a table or to fight the
+   status colours the rows already carry. Odd rows only, so a single-row list
+   looks exactly as it did.
+
+   `background-color` and not `background`, so a row that sets its own (an
+   unread message, a row of one's own) keeps it and wins on specificity. */
+.cc-zebra > *:nth-child(odd){background-color:rgba(232,224,206,.35)}
+@media (prefers-contrast:more){
+  .cc-zebra > *:nth-child(odd){background-color:rgba(232,224,206,.7)}
+}
+
+/* The shared pager (partials/_pager.html.twig).
+   It lived in the ACCOUNT shell only, so any page outside that shell included
+   the partial and got no styling at all: on /known-issues the navigation
+   rendered at the browser's 16px default, larger than the bug titles it was
+   navigating (owner, 2026-08-28). A shared partial has to carry its own look.
+
+   Small on purpose. The list is the page; the pager is the furniture. */
+.pager{display:flex;align-items:center;flex-wrap:wrap;gap:.8rem 1.2rem;
+  margin:2rem 0 3.5rem;padding:.9rem 1.1rem;
+  border:1px solid rgba(20,22,14,.18);border-top:2px solid var(--clay);border-radius:0 0 8px 8px;
+  background:var(--paper-deep);font-family:var(--mono);font-size:.74rem}
+.pager-steps{display:flex;gap:.5rem;flex:none}
+.pager-step{color:var(--clay);text-decoration:none;border:1px solid rgba(20,22,14,.25);border-radius:30px;
+  padding:.45rem .9rem;min-height:32px;display:inline-flex;align-items:center;
+  letter-spacing:.06em;text-transform:uppercase;background:var(--paper)}
+.pager-step:hover{border-color:var(--clay);background:var(--clay);color:var(--paper)}
+.pager-step.is-off{opacity:.32;border-style:dashed;background:none;pointer-events:none}
+/* The range is the headline: "26-50 of 213" answers the question a reader
+   actually has. The page number is the supporting detail, so it is quieter
+   and sits under it. */
+.pager-at{margin:0 auto 0 0;display:flex;flex-direction:column;gap:.15rem;line-height:1.35}
+.pager-range{color:var(--ink);font-size:.72rem}
+.pager-of{color:#595c4d;font-size:.7rem;letter-spacing:.06em;text-transform:uppercase}
+.pager-size{display:flex;align-items:center;gap:.5rem;flex:none}
+.pager-size label{color:#595c4d;letter-spacing:.08em;text-transform:uppercase}
+.pager-size select{font-family:var(--mono);font-size:.74rem;padding:.35rem .5rem;min-height:32px;
+  border:1px solid rgba(20,22,14,.25);border-radius:6px;background:var(--paper);color:var(--ink)}
+/* On a phone the range leads, the steps sit under it full width, and the
+   page-length control keeps its own row rather than being squeezed to a
+   sliver beside them. */
+@media(max-width:640px){
+  .pager{flex-direction:column;align-items:stretch;gap:.8rem}
+  .pager-steps{order:2}
+  .pager-steps .pager-step{flex:1;justify-content:center}
+  .pager-at{order:1;margin:0}
+  .pager-size{order:3;justify-content:space-between}
+}
+
+/* The dark page header. It lived in seven page-level <style> blocks, all
+   saying the same thing, which meant a new page could use the class and get
+   nothing (owner, 2026-08-28: the curator page and the report page both). */
+.lhero,.rhero,.chero,.ahero{background:var(--ink);color:var(--paper);padding:3rem 0}
+.lhero h1,.lhero h2,.rhero h1,.chero h1,.ahero h1{color:var(--paper)}
+
 .btn{display:inline-flex;align-items:center;gap:.5rem;font-family:var(--sans);font-weight:700;font-size:.95rem;padding:.8rem 1.4rem;border-radius:5px;border:1.5px solid transparent;cursor:pointer;transition:all .2s}
 .btn-p{background:var(--trail);color:var(--ink)}.btn-p:hover{background:#ff703d}
 .btn-g{border-color:rgba(20,22,14,.3);color:var(--ink)}.btn-g:hover{background:var(--ink);color:var(--paper)}
@@ -161,8 +226,8 @@ h2.disp{font-family:var(--serif);font-weight:500;font-size:clamp(1.8rem,3.4vw,2.
    contributor stat tiles and the contribute wizard's review summary all rose
    under the pointer as though they were buttons. */
 a .card:hover,.card.rv:hover,.card.is-link:hover{transform:translateY(-3px);box-shadow:0 14px 30px -16px rgba(20,22,14,.5)}
-.tag{font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;padding:.2rem .45rem;border:1px solid rgba(20,22,14,.2);border-radius:3px;color:#4a4d40}
-.pill{font-family:var(--mono);font-size:.58rem;text-transform:uppercase;letter-spacing:.08em;padding:.22rem .5rem;border-radius:30px}
+.tag{font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;padding:.2rem .45rem;border:1px solid rgba(20,22,14,.2);border-radius:3px;color:#4a4d40}
+.pill{font-family:var(--mono);font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;padding:.22rem .5rem;border-radius:30px}
 .bar{height:7px;background:rgba(20,22,14,.12);border-radius:4px;overflow:hidden}
 .bar>span{display:block;height:100%;background:var(--spruce);border-radius:4px}
 .bar>span.t{background:var(--trail)}.bar>span.o{background:var(--ochre)}
@@ -171,10 +236,22 @@ a .card:hover,.card.rv:hover,.card.is-link:hover{transform:translateY(-3px);box-
 /* Site-wide notice band (base.html.twig). Sits directly under the nav, full
    bleed so it is not mistaken for page content, and quiet — it explains a
    redirect, it is not an alert. */
-.cc-notice{background:var(--paper-deep);border-bottom:1px solid rgba(20,22,14,.14);
-  padding:.7rem 0;font-size:.9rem;color:#3f4234}
-.cc-notice .wrap{display:flex;align-items:center;gap:.5rem}
-.cc-notice .wrap::before{content:"◈";color:var(--clay);font-size:.8rem}
+/* Site-wide flash. It used to be a strip the colour of the page, with a small
+   mark on it, under a nav bar of the same colour: you could save a form and
+   not notice anything had happened at all.
+
+   It now reads as something that ARRIVED. Its own ground, a rule down the
+   side in the confirming colour, a tick rather than a diamond, and a short
+   slide so the eye catches the movement. */
+.cc-notice{background:rgba(143,182,168,.22);border-bottom:1px solid rgba(20,22,14,.12);
+  border-left:4px solid var(--glacier);padding:.9rem 0;font-size:.95rem;color:#26291f;
+  animation:cc-notice-in .28s ease-out both}
+.cc-notice .wrap{display:flex;align-items:center;gap:.6rem}
+.cc-notice .wrap::before{content:"✓";color:#2f6b52;font-weight:700;font-size:1.05rem;flex:none}
+@keyframes cc-notice-in{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+/* Somebody who asked for less motion gets the colour and the tick, not the
+   slide. The message is the point; the movement is only a way of noticing it. */
+@media (prefers-reduced-motion:reduce){.cc-notice{animation:none}}
 
 /* Form-level errors (partials/_form_errors.html.twig). These are the errors
    attached to the form itself rather than to a field: a rejected CSRF token, a
@@ -229,8 +306,38 @@ section.pad+section.pad{padding-top:clamp(2rem,4vw,3rem)}
 .foot{background:var(--ink);color:rgba(239,230,212,.8);border-top:1px solid rgba(239,230,212,.14);padding:2rem 0 4rem}
 /* Row gap kept small: `gap:1rem` set the space BETWEEN the two wrapped lines as
    well as between the columns, which read as a hole in the footer. */
-.foot .wrap{display:flex;justify-content:space-between;gap:.4rem 1rem;flex-wrap:wrap}
-.foot .mono{font-size:.64rem;color:rgba(239,230,212,.72)}  /* lightened: ≈7.7:1 on --ink (WCAG AAA); was .5 ≈4.4:1 */
+/* Row gap ZERO, and the rhythm carried by line-height instead.
+   The links block WRAPS to two rows. With a row gap, the space between the two
+   flex items came from the gap and the space between the wrapped lines inside
+   the second one came from its line-height, so three visible rows sat at two
+   different spacings. Line-height governs both, so every wrapped row is one
+   step apart whatever the width.
+
+   The colophon then takes DOUBLE that step, which is what says it is a
+   different kind of thing rather than a third row of links. */
+.foot .wrap{display:flex;flex-direction:column;gap:0}
+.foot .mono{font-size:.72rem;line-height:2.1;color:rgba(239,230,212,.72)}  /* lightened: ≈7.7:1 on --ink (WCAG AAA); was .5 ≈4.4:1 */
+/* Three grouped columns rather than one run of fourteen links wrapping
+   wherever the window ended. auto-fit, so they stack on their own at a narrow
+   window with no breakpoint to keep in sync. */
+.foot .footcols{display:grid;grid-template-columns:repeat(auto-fit,minmax(11rem,1fr));
+  gap:1.6rem 2.5rem;margin-bottom:.6rem}
+.foot .footcol{display:flex;flex-direction:column;gap:.35rem;min-width:0}
+.foot .footcol h2{font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;
+  color:rgba(239,230,212,.45);margin:0 0 .3rem;font-weight:400;font-family:inherit}
+.foot .footcol a{display:inline-block}
+.foot .footby{color:rgba(239,230,212,.6)}
+.foot .colophon{margin-top:1.344rem}  /* 2 × the 0.672rem line-height step */
+/* Where to find us, under the licences. Icons rather than words: a row of
+   logos reads faster than any label and stays one line in five languages.
+   Each is a 40px target, which is the floor for a thumb. */
+.foot-social{display:flex;gap:.35rem;margin-top:1.344rem}
+.foot-social a{display:inline-flex;align-items:center;justify-content:center;
+  width:40px;height:40px;border-radius:6px;color:rgba(239,230,212,.72);
+  transition:color .15s,background .15s}
+.foot-social a:hover{color:var(--trail);background:rgba(239,230,212,.08)}
+.foot-social a:focus-visible{outline:2px solid var(--trail);outline-offset:2px}
+.foot-social svg{display:block}
 .foot a:hover{color:var(--trail)}
 
 /* ── Submission receipts ──────────────────────────────────────────────────
@@ -257,7 +364,7 @@ section.pad+section.pad{padding-top:clamp(2rem,4vw,3rem)}
 .ed-base.maplibregl-ctrl-group{display:flex;overflow:hidden;width:auto}
 .ed-base.maplibregl-ctrl-group button{display:block;flex:0 0 auto;padding:.34rem .62rem;
   border:0;background:#FBF4E4;color:#20241c;
-  font-family:var(--mono,ui-monospace,monospace);font-size:.62rem;letter-spacing:.06em;
+  font-family:var(--mono,ui-monospace,monospace);font-size:.72rem;letter-spacing:.06em;
   text-transform:uppercase;cursor:pointer;white-space:nowrap;width:auto;height:auto}
 .ed-base.maplibregl-ctrl-group button+button{border-left:1px solid rgba(32,36,28,.18)}
 .ed-base.maplibregl-ctrl-group button:hover{background:#F2E7CE}

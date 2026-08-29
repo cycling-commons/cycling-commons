@@ -2,17 +2,16 @@
 {% extends 'base.html.twig' %}
 {% block head_styles %}
 <style>
-  .lhero{background:var(--ink);color:var(--paper);padding:3rem 0}
   .lic{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.4rem;margin-top:1.6rem}
   @media(max-width:760px){.lic{grid-template-columns:1fr}}
   .lic .card h3{font-family:var(--serif);font-weight:600;font-size:1.4rem}
-  .lic .card .sub{font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--clay);margin:.2rem 0 .9rem}
+  .lic .card .sub{font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--clay);margin:.2rem 0 .9rem}
   .lic .tldr{font-size:.98rem;color:#3a3d30;border-left:2px solid var(--trail);padding-left:.8rem;margin-bottom:1.1rem}
   .lic ul{list-style:none;margin:.6rem 0}
   .lic li{font-size:.9rem;padding:.28rem 0 .28rem 1.5rem;position:relative}
   .lic li .m{position:absolute;left:0;top:.28rem;font-family:var(--mono);font-weight:700}
   .can .m{color:#3e7d4f}.must .m{color:var(--clay)}
-  .lic h5{font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:#595c4d;margin-top:1rem}
+  .lic h5{font-family:var(--mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:#595c4d;margin-top:1rem}
   .snippet{background:var(--ink);color:var(--paper);font-family:var(--mono);font-size:.8rem;line-height:1.7;border-radius:8px;padding:1rem 1.2rem;margin-top:1rem}
   .snippet .s{color:var(--trail)}
   .disc{background:var(--paper-deep);border-left:2px solid var(--ochre);padding:1rem 1.2rem;border-radius:0 8px 8px 0;font-size:.86rem;color:#4a4d40;margin-top:1.6rem}
@@ -104,7 +103,7 @@
     </div>
   </div>
 
-  <h5 style="font-family:var(--mono);font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--clay);margin-top:2.2rem">{% trans %}licenses.attribution_h{% endtrans %}</h5>
+  <h5 style="font-family:var(--mono);font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;color:var(--clay);margin-top:2.2rem">{% trans %}licenses.attribution_h{% endtrans %}</h5>
   <div class="snippet">{% trans %}licenses.attribution_line1{% endtrans %} <span class="s">{% trans %}licenses.attribution_cc{% endtrans %}</span> {% trans %}licenses.attribution_line2{% endtrans %}<br/>{% trans %}licenses.attribution_line3{% endtrans %} <span class="s">{% trans %}licenses.attribution_osm{% endtrans %}</span> {% trans %}licenses.attribution_line4{% endtrans %}<br/>{% trans %}licenses.attribution_line5{% endtrans %}<br/>{% trans %}licenses.attribution_line6{% endtrans %}</div>
 
   <div class="disc"><b>{% trans %}licenses.disc_bold{% endtrans %}</b> {% trans %}licenses.disc_body_pre{% endtrans %}

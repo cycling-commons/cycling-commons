@@ -52,7 +52,8 @@
     background:radial-gradient(120% 90% at 75% 15%,#27513a 0%,var(--spruce) 38%,#0f1f16 80%,var(--ink) 100%)}
   .hero-contours{position:absolute;inset:0;width:100%;height:100%;opacity:.5}
   .hero-contours path{fill:none;stroke:var(--ride-outer,var(--ochre));stroke-width:1.7;opacity:.85;transition:stroke .6s ease}
-  .hero-contours path:nth-child(even){stroke:var(--ride-inner,var(--glacier));opacity:.55}
+  .hero-contours path:nth-child(even){stroke:var(--ride-inner,var(--glacier));opacity:.72;
+    filter:drop-shadow(0 0 1.6px rgba(239,230,212,.38))}
   /* map-style surface line types — solid road, dashed gravel, dotted path, dash-dot track, long-dash bridleway */
   .hero-contours .s-gravel{stroke-dasharray:13 8}
   .hero-contours .s-path{stroke-dasharray:2 7;stroke-linecap:round}
@@ -121,7 +122,7 @@
      the way there is the chip row wrapping to two: at this width the eleven
      chips fit on one line if they give back a little padding. */
   @media(max-height:700px){
-    .chip{padding:.3rem .65rem;font-size:.66rem}
+    .chip{padding:.3rem .65rem;font-size:.74rem}
     .disc .chips{gap:.3rem}
   }
 
@@ -169,14 +170,14 @@
   .panel{background:var(--spruce);color:var(--paper);border-radius:8px;padding:clamp(1.6rem,3vw,2.4rem);position:relative;overflow:hidden}
   /* Caption under the title on the best-of card. The silo panel has no pin,
      so its h3 still carries the gap above the list. */
-  .panel .pin{display:block;margin:.15rem 0 1.1rem;font-family:var(--mono);font-size:.66rem;letter-spacing:.14em;line-height:1.5;color:var(--paper)}
+  .panel .pin{display:block;margin:.15rem 0 1.1rem;font-family:var(--mono);font-size:.74rem;letter-spacing:.14em;line-height:1.5;color:var(--paper)}
   .panel h3{font-family:var(--serif);font-weight:500;font-size:1.5rem;margin-bottom:1.1rem}
   #curation .panel h3{margin-bottom:0}
   .rank{display:flex;align-items:center;gap:.9rem;padding:.7rem 0;border-bottom:1px solid rgba(239,230,212,.14)}
   .rank .n{font-family:var(--mono);color:var(--trail);font-size:.85rem;width:1.4rem}
   .rank .nm{flex:1;font-weight:500}
-  .rank .co{font-family:var(--mono);font-size:.66rem;color:rgba(239,230,212,.55)}
-  .silo-more{display:block;margin-top:1rem;font-family:var(--mono);font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;color:var(--trail);text-decoration:underline}
+  .rank .co{font-family:var(--mono);font-size:.74rem;color:rgba(239,230,212,.55)}
+  .silo-more{display:block;margin-top:1rem;font-family:var(--mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--trail);text-decoration:underline}
   .silo-more:hover{color:#ff703d}
   .vs{font-family:var(--mono);font-size:.7rem;letter-spacing:.14em;color:var(--trail);margin:1.4rem 0 .4rem;text-align:center}
 
@@ -208,7 +209,7 @@
   .card.suggest .co{color:var(--clay);opacity:.5}
   .card.suggest h4{color:var(--clay)}
   .card.suggest p{margin-bottom:.7rem}
-  .card.suggest a{font-family:var(--mono);font-size:.66rem;letter-spacing:.06em;text-transform:uppercase;color:var(--clay);text-decoration:none;font-weight:600}
+  .card.suggest a{font-family:var(--mono);font-size:.74rem;letter-spacing:.06em;text-transform:uppercase;color:var(--clay);text-decoration:none;font-weight:600}
   .card.suggest a:hover{text-decoration:underline}
   .dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:.3rem}
   .dot.g{background:#3e7d4f}.dot.o{background:var(--ochre)}

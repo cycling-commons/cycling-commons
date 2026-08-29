@@ -42,14 +42,14 @@
   .dtabs.dtabs-modmode{background:#D8CBB1;border-bottom-color:rgba(20,22,14,.22)}
   /* the MODERATION label is a solid full-height block bleeding to the bar's
      left edge — you cannot miss whose bar this is. */
-  .dtabs-modlabel{display:flex;align-items:center;align-self:stretch;background:var(--clay);color:var(--paper);font-family:var(--mono);font-size:.6rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;white-space:nowrap;margin-left:calc(-1 * clamp(1.25rem,4vw,2rem));padding:0 1rem 0 clamp(1.25rem,4vw,2rem)}
+  .dtabs-modlabel{display:flex;align-items:center;align-self:stretch;background:var(--clay);color:var(--paper);font-family:var(--mono);font-size:.7rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;white-space:nowrap;margin-left:calc(-1 * clamp(1.25rem,4vw,2rem));padding:0 1rem 0 clamp(1.25rem,4vw,2rem)}
   /* the personal (default) area gets the same bleeding block, in the site's
      spruce — a clear, calm counterpart to moderation's clay so you always
      know which mode you are in. */
   .dtabs-personallabel{background:var(--spruce)}
   .dtabs.dtabs-modmode a.on{background:rgba(255,90,31,.2)}
   /* per-tab open-count badge (scoped to the moderator's jurisdiction) */
-  .dtab-count{display:inline-flex;align-items:center;justify-content:center;min-width:1.15rem;height:1.15rem;margin-left:.45rem;padding:0 .35rem;border-radius:999px;background:var(--clay);color:var(--paper);font-size:.62rem;font-weight:700;line-height:1;vertical-align:middle}
+  .dtab-count{display:inline-flex;align-items:center;justify-content:center;min-width:1.15rem;height:1.15rem;margin-left:.45rem;padding:0 .35rem;border-radius:999px;background:var(--clay);color:var(--paper);font-size:.72rem;font-weight:700;line-height:1;vertical-align:middle}
 
   /* ── The page: one container, one head ──────────────────────────────────
      `.dbody` is the content column of every shell page, rider or curator; it
@@ -62,18 +62,18 @@
   /* A head with no intro paragraph does not need the intro's breathing room
      underneath it (takedowns, routes, translations). */
   .mh:not(:has(.lead)){padding-bottom:.5rem}
-  .mh .kicker{font-family:var(--mono);font-size:.64rem;letter-spacing:.16em;text-transform:uppercase;color:var(--clay);margin-bottom:.6rem}
+  .mh .kicker{font-family:var(--mono);font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--clay);margin-bottom:.6rem}
   .mh h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4vw,2.4rem);line-height:1.08;margin:0 0 .4rem;color:var(--ink)}
   .mh .lead{color:#4a4d40;max-width:88ch;font-size:.94rem;line-height:1.55;margin:0}
   .mh .lead a{color:var(--clay);text-decoration:underline;text-underline-offset:2px}
   /* A section inside a page: a coloured label on a thin rule, with an optional
      count. The same band whether it says "Route proposals" to a rider or
      "Pending corrections" to a curator. */
-  .sec-band{display:flex;align-items:center;gap:.6rem;font-family:var(--mono);font-size:.66rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--clay);padding:0 0 .5rem;margin:1.6rem 0 .8rem;border-bottom:1.5px solid rgba(184,89,58,.4)}
+  .sec-band{display:flex;align-items:center;gap:.6rem;font-family:var(--mono);font-size:.74rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--clay);padding:0 0 .5rem;margin:1.6rem 0 .8rem;border-bottom:1.5px solid rgba(184,89,58,.4)}
   .sec-band:first-child{margin-top:0}
   .sec-band--corr{color:var(--spruce);border-color:rgba(28,58,42,.35)}
   .sec-band--quiet{color:#8a8d7d;border-color:rgba(20,22,14,.14);font-weight:600}
-  .sec-band .sec-count{display:inline-flex;align-items:center;justify-content:center;min-width:1.2rem;height:1.2rem;padding:0 .35rem;border-radius:999px;background:rgba(20,22,14,.08);color:#595c4d;font-size:.62rem}
+  .sec-band .sec-count{display:inline-flex;align-items:center;justify-content:center;min-width:1.2rem;height:1.2rem;padding:0 .35rem;border-radius:999px;background:rgba(20,22,14,.08);color:#595c4d;font-size:.72rem}
   .sec-empty{color:#595c4d;font-size:.9rem;padding:.4rem 0 1.5rem}
   .sec-lead{font-size:.86rem;color:#4a4d40;margin:0 0 1rem;line-height:1.5;max-width:88ch}
   .sec-lead a{color:var(--clay);text-decoration:underline;text-underline-offset:2px}
@@ -90,9 +90,9 @@
   .mod-bar:has(> .q-density:only-child){margin:-.6rem 0 .5rem}
   .mod-bar > .q-density:only-child{margin-left:0}
   .mod-filters{display:flex;gap:1rem;flex-wrap:wrap;align-items:end;margin:0}
-  .mod-filters label{font-family:var(--mono);font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;color:#595c4d;display:flex;flex-direction:column;gap:.3rem}
+  .mod-filters label{font-family:var(--mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:#595c4d;display:flex;flex-direction:column;gap:.3rem}
   .mod-filters select{font-family:var(--sans);font-size:.9rem;padding:.5rem;min-height:34px;border:1px solid rgba(20,22,14,.25);border-radius:6px;background:var(--paper);min-width:150px}
-  .mod-search{font-family:var(--mono);font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;color:#595c4d;display:flex;flex-direction:column;gap:.3rem}
+  .mod-search{font-family:var(--mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:#595c4d;display:flex;flex-direction:column;gap:.3rem}
   .mod-search input{font-family:var(--sans);font-size:.9rem;padding:.5rem;min-height:34px;border:1px solid rgba(20,22,14,.25);border-radius:6px;background:var(--paper);min-width:16rem}
   .mod-go{align-self:flex-end}
   /* A queue narrowed to one person's work has to say so. */
@@ -103,7 +103,7 @@
   .lfilter{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center;margin:0 0 1rem}
   .lfilter .lsep{width:1px;height:20px;background:rgba(20,22,14,.18);margin:0 .4rem}
   .lchip{display:inline-flex;align-items:center;gap:.3rem;border:1px solid rgba(20,22,14,.3);border-radius:30px;padding:.3rem .7rem;min-height:30px;
-    font-family:var(--mono);font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;
+    font-family:var(--mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;
     color:#595c4d;text-decoration:none;background:transparent;cursor:pointer}
   .lchip:hover{border-color:var(--clay);color:var(--clay)}
   .lchip.on{background:var(--ink);border-color:var(--ink);color:var(--paper)}
@@ -113,7 +113,7 @@
   @media(max-width:520px){.lchip--push{margin-left:0}}
 
   /* ── Pills, links, notes: the small vocabulary every card shares ──────── */
-  .q-pill{font-family:var(--mono);font-size:.58rem;text-transform:uppercase;letter-spacing:.08em;padding:.25rem .5rem;border-radius:30px;white-space:nowrap;flex:0 0 auto;line-height:1.3}
+  .q-pill{font-family:var(--mono);font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;padding:.25rem .5rem;border-radius:30px;white-space:nowrap;flex:0 0 auto;line-height:1.3}
   .q-pill--ok{background:#3e7d4f;color:#fff}
   .q-pill--pend{background:var(--ochre);color:var(--ink)}
   .q-pill--conf{background:var(--spruce);color:var(--paper)}
@@ -129,13 +129,13 @@
      not load map.css), flattened to the same dark mark as the drawn ones. */
   .q-icon--glyph{width:18px;height:18px;justify-content:center;font-size:1rem;line-height:1;font-style:normal;font-family:"Apple Color Emoji","Noto Color Emoji","Segoe UI Emoji","Noto Sans Symbols2",system-ui,sans-serif;filter:grayscale(1) brightness(.35) contrast(1.4)}
   /* The item's own kind, small, after a title ("Thier Antoine CLIMBS"). */
-  .q-kind{font-family:var(--mono);font-size:.58rem;letter-spacing:.06em;text-transform:uppercase;color:#8a8d7d;margin-left:.4rem;font-weight:400;white-space:nowrap}
+  .q-kind{font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;color:#8a8d7d;margin-left:.4rem;font-weight:400;white-space:nowrap}
   .q-links{display:inline-flex;gap:.9rem;align-items:center;flex-wrap:wrap}
-  .q-link{font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;color:var(--clay);white-space:nowrap;text-decoration:none}
+  .q-link{font-family:var(--mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--clay);white-space:nowrap;text-decoration:none}
   .q-link:hover{color:var(--trail)}
   .q-link--act{color:var(--trail)!important;font-weight:700}
   /* A link-styled trigger: the "Show details" button in an action row. */
-  button.q-link,summary.q-link{border:0;background:none;padding:0;cursor:pointer;font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;color:var(--trail);text-decoration:underline;text-underline-offset:2px;list-style:none;display:inline-flex;align-items:center}
+  button.q-link,summary.q-link{border:0;background:none;padding:0;cursor:pointer;font-family:var(--mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--trail);text-decoration:underline;text-underline-offset:2px;list-style:none;display:inline-flex;align-items:center}
   summary.q-link::-webkit-details-marker{display:none}
   button.q-link[aria-expanded="true"],summary.q-link:hover,button.q-link:hover{background:none;color:var(--ink)}
   /* The date sits in the action row on a rider's card, on one line with the
@@ -159,22 +159,22 @@
   .q-note--answer{border-left-color:var(--ochre)}
   .q-note--prior{border-left-color:var(--clay)}
   .q-note--prior strong{color:var(--clay)}
-  .q-note-h{font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;color:#595c4d;display:block}
+  .q-note-h{font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:#595c4d;display:block}
   .q-note .q-when{display:block;margin:.3rem 0 0}
   /* The was → now diff as a label/value grid (a rider's contribution, a
      message). The desk's two-line was/now inside .q-diff keeps its shape. */
   .q-diff dl{display:grid;grid-template-columns:auto 1fr;gap:.15rem .7rem;margin:0}
-  .q-diff dt{font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;color:#595c4d;align-self:baseline;padding-top:.15rem}
+  .q-diff dt{font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:#595c4d;align-self:baseline;padding-top:.15rem}
   .q-diff dd{margin:0;min-width:0;overflow-wrap:anywhere}
   .q-diff .was,.q-diff .q-was{color:#8a8d7d;text-decoration:line-through;margin-right:.4rem}
   .q-diff .now,.q-diff .q-now{color:var(--trail)}
-  .q-diff-h{font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;color:#595c4d;display:block;margin-bottom:.25rem}
+  .q-diff-h{font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:#595c4d;display:block;margin-bottom:.25rem}
   @media(max-width:520px){.q-diff dl{grid-template-columns:1fr;gap:0}.q-diff dt{padding-top:.35rem}}
   /* Folded diff: a small link, the grid opens under it. Native <details>, no
      script (owner 2026-08-25). */
   /* Tight under the meta line: the link is part of the row, not a new block (owner 2026-08-25). */
   details.q-diff{background:none;padding:0;margin:.1rem 0 0}
-  details.q-diff summary{display:inline;cursor:pointer;font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;color:var(--trail);text-decoration:underline;text-underline-offset:2px;list-style:none}
+  details.q-diff summary{display:inline;cursor:pointer;font-family:var(--mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--trail);text-decoration:underline;text-underline-offset:2px;list-style:none}
   details.q-diff summary::-webkit-details-marker{display:none}
   details.q-diff summary:focus-visible{outline:2px solid var(--ochre);outline-offset:2px}
   details.q-diff .q-diff-show{display:inline}details.q-diff .q-diff-hide{display:none}
@@ -182,22 +182,22 @@
   details.q-diff .q-diff-body{margin-top:.5rem;padding:.5rem .7rem;background:rgba(20,22,14,.05);border-radius:5px}
   /* A folded conversation under a settled row. */
   .q-thread{margin:.4rem 0 0}
-  .q-thread summary{cursor:pointer;font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;color:var(--clay);padding:.2rem 0;list-style:none}
+  .q-thread summary{cursor:pointer;font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:var(--clay);padding:.2rem 0;list-style:none}
   .q-thread summary::-webkit-details-marker{display:none}
   .q-thread summary:hover{color:var(--ink)}
   .q-msgs{list-style:none;margin:.35rem 0 .2rem;padding:0;border-left:2px solid rgba(20,22,14,.14)}
   .q-msg{display:flex;gap:.6rem;align-items:baseline;padding:.25rem 0 .25rem .7rem;font-size:.84rem;color:#3a3d33}
-  .q-msg-who{font-family:var(--mono);font-size:.55rem;letter-spacing:.08em;text-transform:uppercase;flex:0 0 4.2rem;color:#595c4d}
+  .q-msg-who{font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;flex:0 0 4.2rem;color:#595c4d}
   .q-msg--rider .q-msg-who{color:var(--clay)}
   .q-msg-body{flex:1 1 auto;min-width:0}
-  .q-msg-when{font-family:var(--mono);font-size:.6rem;color:#8a8d7d;flex:0 0 auto}
+  .q-msg-when{font-family:var(--mono);font-size:.7rem;color:#8a8d7d;flex:0 0 auto}
   /* A quiet map pointer under a card ("see both on the map"). */
   .q-map{margin:.7rem 0 0;font-size:.82rem;color:#5c5f50}
   .q-map a{color:var(--spruce-lift);font-weight:600}
   .q-map span{margin-left:.4rem}
   /* A reply box inside a card. */
   .q-reply{margin-top:.8rem;padding-top:.7rem;border-top:1px solid rgba(20,22,14,.1);display:flex;flex-direction:column;gap:.45rem}
-  .q-reply label{font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;color:#595c4d}
+  .q-reply label{font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:#595c4d}
   .q-reply textarea{width:100%;min-height:80px;font-family:var(--sans);font-size:.85rem;padding:.5rem;border:1px solid rgba(20,22,14,.25);border-radius:6px;resize:vertical}
   .q-reply button{align-self:flex-start}
   /* Arriving from a link that names one row. */
@@ -224,43 +224,15 @@
      controls floating after it: a hairline rule above, a tinted strip, and
      enough space below that the page's own footer never crowds it (owner,
      2026-08-09). */
-  .pager{display:flex;align-items:center;flex-wrap:wrap;gap:.8rem 1.2rem;
-         margin:2rem 0 3.5rem;padding:.9rem 1.1rem;
-         border:1px solid rgba(20,22,14,.18);border-top:2px solid var(--clay);border-radius:0 0 8px 8px;
-         background:var(--paper-deep);font-family:var(--mono);font-size:.66rem}
-  .pager-steps{display:flex;gap:.5rem;flex:none}
-  .pager-step{color:var(--clay);text-decoration:none;border:1px solid rgba(20,22,14,.25);border-radius:30px;
-              padding:.45rem .9rem;min-height:32px;display:inline-flex;align-items:center;
-              letter-spacing:.06em;text-transform:uppercase;background:var(--paper)}
-  .pager-step:hover{border-color:var(--clay);background:var(--clay);color:var(--paper)}
-  .pager-step.is-off{opacity:.32;border-style:dashed;background:none;pointer-events:none}
-  /* The range is the headline — "26–50 of 213" answers the question a reader
-     actually has; the page number is the supporting detail, so it is quieter
-     and sits under it. */
-  .pager-at{margin:0 auto 0 0;display:flex;flex-direction:column;gap:.15rem;line-height:1.35}
-  .pager-range{color:var(--ink);font-size:.72rem}
-  .pager-of{color:#595c4d;font-size:.6rem;letter-spacing:.06em;text-transform:uppercase}
+  {# The pager now lives in assets/styles/atlas.css, so every page that
+     includes partials/_pager.html.twig gets it, not only this shell. #}
   /* Withdraw: the rider's own exit on an undecided contribution row. Styled
      as a quiet bordered chip beside the status pill, never a primary action. */
   .withdraw-form{display:inline;margin-left:.4rem}
   .withdraw-btn{background:none;border:1px solid rgba(20,22,14,.3);border-radius:30px;
-    padding:.25rem .65rem;min-height:26px;font-family:var(--mono);font-size:.6rem;
+    padding:.25rem .65rem;min-height:26px;font-family:var(--mono);font-size:.7rem;
     letter-spacing:.08em;text-transform:uppercase;color:#595c4d;cursor:pointer}
   .withdraw-btn:hover{border-color:var(--clay);color:var(--clay)}
-  .pager-size{display:flex;align-items:center;gap:.5rem;flex:none}
-  .pager-size label{color:#595c4d;letter-spacing:.08em;text-transform:uppercase}
-  .pager-size select{font-family:var(--mono);font-size:.66rem;padding:.35rem .5rem;min-height:32px;
-                     border:1px solid rgba(20,22,14,.25);border-radius:6px;background:var(--paper);color:var(--ink)}
-  /* On a phone the range leads, the steps sit under it full-width, and the
-     page-length control keeps its own row rather than being squeezed to a
-     sliver beside them. */
-  @media(max-width:640px){
-    .pager{flex-direction:column;align-items:stretch;gap:.8rem}
-    .pager-steps{order:2}
-    .pager-steps .pager-step{flex:1;justify-content:center}
-    .pager-at{order:1;margin:0}
-    .pager-size{order:3;justify-content:space-between}
-  }
 
   /* ONE button system for the account/moderation desks — the site's brand orange
      (--trail), matching .export/.cc-d-act. Primary actions = orange fill; the

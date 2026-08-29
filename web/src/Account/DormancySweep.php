@@ -137,7 +137,7 @@ final class DormancySweep
 
         $email = (new TemplatedEmail())
             ->from(new Address('noreply@cyclingcommons.org', 'Cycling Commons'))
-            ->to(new Address((string) $user->getEmail(), (string) $user->getDisplayName()))
+            ->to(new Address($user->getEmail(), $user->getDisplayName()))
             ->subject('Your Cycling Commons account')
             ->htmlTemplate('emails/dormancy_notice.html.twig')
             ->context([
