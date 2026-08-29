@@ -4325,7 +4325,6 @@ report:
   sent_title: 'Merci. C''est entre les mains d''un curateur.'
   sent_body: 'Une personne va l''examiner. Si vous avez laissé une adresse, nous confirmerons la réception et vous dirons ce qui a été décidé, <b>dans un délai d''un mois au plus tard</b>. Le contenu reste en ligne pendant l''examen : un signalement est une demande, pas un retrait.'
   back_to_map: 'Retour à la carte'
-  privacy_note: 'Nous conservons ce que vous avez écrit, et votre adresse si vous en avez laissé une, pour qu''un curateur puisse agir et vous répondre. Nous ne stockons pas votre adresse IP, seulement une empreinte à sens unique, et c''est elle qui empêche une personne de déposer mille signalements.'
   link_page: 'Signaler cette page'
   link_message: 'Signaler ce message'
   desk:
@@ -4363,6 +4362,7 @@ report:
     reason: 'Dites-nous ce que nous devons savoir.'
     reason_long: 'C''est plus long que ce que nous pouvons accepter. Raccourcissez un peu.'
     contact: 'Cela ne ressemble pas à une adresse électronique.'
+    contact_required: 'Il nous faut une adresse, pour qu''un curateur puisse vous dire ce qui a été décidé. Elle n''est montrée à personne d''autre.'
     rate_limited: 'Cela fait beaucoup de signalements depuis un même endroit aujourd''hui. Réessayez demain, ou utilisez la page de contact.'
   target:
     route: 'Un itinéraire'
@@ -4370,6 +4370,7 @@ report:
     region: 'Une description de région'
     rider: 'Un profil de cycliste'
     message: 'Un message'
+    photo: 'Une photo'
   ground:
     unlawful: 'C''est illicite, ou cela porte atteinte aux droits de quelqu''un'
     personal_data: 'Cela contient des données personnelles'
@@ -4377,6 +4378,9 @@ report:
     abuse: 'C''est de l''abus, du harcèlement ou une menace'
     advertising: 'C''est de la publicité'
     generated: 'C''est produit par une IA et présenté comme réel'
+    intimate_or_child: 'C''est une image intime, ou elle montre un enfant'
+    private_property: 'Cela montre une propriété privée qui ne devrait pas être publique'
+    copyright: 'C''est mon œuvre et je n''ai pas donné mon accord'
   status:
     open: 'En attente d''un curateur'
     upheld: 'Retenu, et suivi d''effet'

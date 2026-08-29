@@ -4328,7 +4328,6 @@ report:
   sent_title: 'Danke. Sie liegt bei einer Kuratorin.'
   sent_body: 'Ein Mensch sieht sich das an. Wenn du eine Adresse hinterlassen hast, bestätigen wir den Eingang und teilen dir die Entscheidung mit, <b>spätestens innerhalb eines Monats</b>. Der Inhalt bleibt online, solange die Meldung wartet: eine Meldung ist eine Bitte, keine Entfernung.'
   back_to_map: 'Zurück zur Karte'
-  privacy_note: 'Wir bewahren auf, was du geschrieben hast, und deine Adresse, falls du eine angegeben hast, damit jemand handeln und dir antworten kann. Deine IP-Adresse speichern wir nicht, nur einen Einweg-Hash davon, und der ist es, der verhindert, dass eine Person tausend Meldungen macht.'
   link_page: 'Diese Seite melden'
   link_message: 'Diese Nachricht melden'
   desk:
@@ -4366,6 +4365,7 @@ report:
     reason: 'Sag uns, was wir wissen sollten.'
     reason_long: 'Das ist länger, als wir annehmen können. Bitte kürze es.'
     contact: 'Das sieht nicht nach einer E-Mail-Adresse aus.'
+    contact_required: 'Wir brauchen eine Adresse, damit ein Kurator dir sagen kann, was entschieden wurde. Sie wird niemandem sonst gezeigt.'
     rate_limited: 'Das sind viele Meldungen von einem Ort heute. Versuch es morgen wieder, oder nutze die Kontaktseite.'
   target:
     route: 'Eine Route'
@@ -4373,6 +4373,7 @@ report:
     region: 'Eine Regionsbeschreibung'
     rider: 'Ein Fahrerprofil'
     message: 'Eine Nachricht'
+    photo: 'Ein Foto'
   ground:
     unlawful: 'Es ist rechtswidrig oder verletzt die Rechte anderer'
     personal_data: 'Es enthält personenbezogene Daten einer Person'
@@ -4380,6 +4381,9 @@ report:
     abuse: 'Es ist Missbrauch, Belästigung oder eine Drohung'
     advertising: 'Es ist Werbung'
     generated: 'Es ist KI-erzeugt und als echt dargestellt'
+    intimate_or_child: 'Es ist ein intimes Bild oder zeigt ein Kind'
+    private_property: 'Es zeigt Privatgelände, das nicht öffentlich sein sollte'
+    copyright: 'Es ist mein Werk und ich habe dem nicht zugestimmt'
   status:
     open: 'Wartet auf eine Kuratorin'
     upheld: 'Bestätigt, und es wurde gehandelt'

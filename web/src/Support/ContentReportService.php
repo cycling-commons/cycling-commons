@@ -7,6 +7,8 @@ declare(strict_types=1);
 namespace App\Support;
 
 use App\Entity\User;
+use App\Media\Entity\MediaUpload;
+use App\Media\MediaTakedownService;
 use App\Security\PseudonymousKey;
 use App\Support\Entity\ContentReport;
 use Doctrine\ORM\EntityManagerInterface;
@@ -45,6 +47,12 @@ final class ContentReportService
         private readonly EntityManagerInterface $em,
         private readonly MailerInterface $mailer,
         private readonly ClockInterface $clock,
+        // A photo report on the one withholding ground is handed to the media
+        // service rather than reimplemented here: the circuit breaker, the
+        // moderation event and the "your photo is hidden" message are all
+        // already there and are the part that must not be got wrong
+        // (2026-08-30-one-report-route-design.md §3).
+        private readonly MediaTakedownService $takedowns,
         #[Autowire('%kernel.secret%')]
         private readonly string $secret,
     ) {
@@ -82,6 +90,8 @@ final class ContentReportService
         $this->em->persist($report);
         $this->em->flush();
 
+        $this->withholdIfUrgent($report, $target, $targetId, $ground, $reason, $contact, $reporterIp);
+
         if (null !== $contact) {
             $this->send($contact, 'emails/report_acknowledged.html.twig', 'We have your report', [
                 'report' => $report,
@@ -89,6 +99,44 @@ final class ContentReportService
         }
 
         return $report;
+    }
+
+    /**
+     * Hide the picture now, where the ground and the target both allow it.
+     *
+     * Only intimate imagery or a child, and only on a photo. Everything else
+     * waits for a curator, because nothing else can be un-seen by hiding it:
+     * pulling a region description offline does not undo somebody reading it.
+     *
+     * The report row is already saved when this runs, so a failure to withhold
+     * loses the withhold and never the report.
+     */
+    private function withholdIfUrgent(
+        ContentReport $report,
+        ReportTarget $target,
+        string $targetId,
+        ReportGround $ground,
+        string $reason,
+        ?string $contact,
+        string $reporterIp,
+    ): void {
+        if (!$target->canAutoWithhold() || !$ground->autoWithholds()) {
+            return;
+        }
+        if (!Uuid::isValid($targetId)) {
+            return;
+        }
+
+        $upload = $this->em->find(MediaUpload::class, Uuid::fromString($targetId));
+        if (!$upload instanceof MediaUpload) {
+            return;
+        }
+
+        // The media service keeps its own vocabulary for the event log. The
+        // ground's value IS that vocabulary for this one case, on purpose:
+        // `intimate_or_child` was carried over whole from MediaTakedownCategory
+        // so that the merge needed no mapping table for the urgent path.
+        $this->takedowns->report($upload, $ground->value, $reason, $contact, $reporterIp);
     }
 
     /**

@@ -4356,7 +4356,6 @@ report:
   sent_title: 'Gracias. Está con una persona curadora.'
   sent_body: 'Una persona lo revisará. Si dejaste una dirección, te confirmaremos que lo tenemos y te diremos qué se decidió, <b>en un plazo máximo de un mes</b>. El contenido sigue publicado mientras el aviso espera: un aviso es una petición, no una retirada.'
   back_to_map: 'Volver al mapa'
-  privacy_note: 'Guardamos lo que escribiste, y tu dirección si la diste, para que alguien pueda actuar y responderte. No guardamos tu dirección IP, solo un hash de un solo sentido, que es lo que impide que una persona presente mil avisos.'
   link_page: 'Denunciar esta página'
   link_message: 'Denunciar este mensaje'
   desk:
@@ -4394,6 +4393,7 @@ report:
     reason: 'Cuéntanos qué deberíamos saber.'
     reason_long: 'Es más largo de lo que podemos aceptar. Acórtalo un poco.'
     contact: 'Eso no parece una dirección de correo.'
+    contact_required: 'Necesitamos una dirección para que un curador pueda decirte qué se decidió. No se muestra a nadie más.'
     rate_limited: 'Son muchos avisos desde un mismo sitio hoy. Inténtalo mañana, o usa la página de contacto.'
   target:
     route: 'Una ruta'
@@ -4401,6 +4401,7 @@ report:
     region: 'Una descripción de región'
     rider: 'Un perfil de ciclista'
     message: 'Un mensaje'
+    photo: 'Una foto'
   ground:
     unlawful: 'Es ilícito, o vulnera los derechos de alguien'
     personal_data: 'Contiene datos personales de alguien'
@@ -4408,6 +4409,9 @@ report:
     abuse: 'Es abuso, acoso o una amenaza'
     advertising: 'Es publicidad'
     generated: 'Está generado por IA y se presenta como real'
+    intimate_or_child: 'Es una imagen íntima, o aparece un menor'
+    private_property: 'Muestra propiedad privada que no debería ser pública'
+    copyright: 'Es mi obra y no he dado mi permiso'
   status:
     open: 'Esperando a una persona curadora'
     upheld: 'Estimado, y se ha actuado'

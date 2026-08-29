@@ -4347,7 +4347,6 @@ report:
   sent_title: 'Thank you. It is with a curator.'
   sent_body: 'A person will look at this. If you left an address we will confirm we have it, and tell you what was decided, <b>within one month at the latest</b>. The content stays up while the report waits: a report is a request, not a removal.'
   back_to_map: 'Back to the map'
-  privacy_note: 'We keep what you wrote, and your address if you gave one, so a curator can act on it and answer you. We do not store your IP address, only a one-way hash of it, which is what stops one person filing a thousand reports.'
   link_page: 'Report this page'
   link_message: 'Report this message'
   desk:
@@ -4385,6 +4384,7 @@ report:
     reason: 'Tell us what we should know.'
     reason_long: 'That is longer than we can take. Please shorten it.'
     contact: 'That does not look like an email address.'
+    contact_required: 'We need an address, so a curator can tell you what was decided. It is not shown to anybody else.'
     rate_limited: 'That is a lot of reports from one place today. Try again tomorrow, or use the contact page.'
   target:
     route: 'A route'
@@ -4392,6 +4392,7 @@ report:
     region: 'A region description'
     rider: 'A rider profile'
     message: 'A message'
+    photo: 'A photo'
   ground:
     unlawful: 'It is unlawful, or it infringes somebody''s rights'
     personal_data: 'It has personal information about somebody'
@@ -4399,6 +4400,9 @@ report:
     abuse: 'It is abuse, harassment or a threat'
     advertising: 'It is advertising'
     generated: 'It is AI-generated and presented as real'
+    intimate_or_child: 'It is intimate imagery, or it shows a child'
+    private_property: 'It shows private property that should not be public'
+    copyright: 'It is my work and I did not agree to this'
   status:
     open: 'Waiting for a curator'
     upheld: 'Upheld, and acted on'

@@ -27,6 +27,22 @@ enum ReportGround: string
     case Abuse = 'abuse';
     case Advertising = 'advertising';
     case Generated = 'generated';
+    /**
+     * Intimate imagery, or a child. The one ground that hides the picture
+     * before a curator has seen it (@see self::autoWithholds()). Carried over
+     * whole from `MediaTakedownCategory` on 2026-08-30.
+     */
+    case IntimateOrChild = 'intimate_or_child';
+    /** "It shows private property or something that should not be public." */
+    case PrivateProperty = 'private_property';
+    /**
+     * "That is my work." Backlog item 6: photos arrive under CC BY-SA 4.0 on
+     * the contributor's word, and when that word is wrong the rights holder had
+     * nowhere to go but the general address. Not image only: copyrighted prose
+     * can be pasted into a route description as easily as a photograph can be
+     * uploaded.
+     */
+    case Copyright = 'copyright';
 
     /** The catalogue key. Mirrors the `terms.mod_std*` line it comes from. */
     public function label(): string
@@ -43,9 +59,53 @@ enum ReportGround: string
     public function isLegal(): bool
     {
         return match ($this) {
-            self::Unlawful, self::PersonalData => true,
+            self::Unlawful, self::PersonalData, self::IntimateOrChild, self::Copyright => true,
+            // PrivateProperty is deliberately NOT here. Photographing a house
+            // from a public road is lawful in most of Europe, so "that is my
+            // drive" is a request we usually grant out of courtesy rather than
+            // a claim with a statutory clock. Treating it as legal would sort
+            // every garden above an actual defamation claim.
             default => false,
         };
+    }
+
+    /**
+     * Does a report on this ground hide the thing on the spot?
+     *
+     * Moved off `MediaTakedownCategory` on 2026-08-30. It is only ever true
+     * with a target that can be withheld at all, which the caller checks with
+     * `ReportTarget::canAutoWithhold()`; the circuit breaker in front of it is
+     * unchanged.
+     */
+    public function autoWithholds(): bool
+    {
+        return self::IntimateOrChild === $this;
+    }
+
+    /**
+     * Is an address required, rather than merely invited?
+     *
+     * Required for every ground but one (owner, 2026-08-30: "I still say email
+     * required unless legal not allowed in case of child"). DSA Article 16(2)(c)
+     * lists the reporter's name and email as elements a notice should carry, so
+     * asking for it is what the Article describes, not a barrier against it.
+     * The thing Article 16 forbids is requiring an ACCOUNT, and this form still
+     * requires none.
+     *
+     * The exception is the same one the Article writes down: a notice about
+     * information involving the offences in Articles 3 to 7 of Directive
+     * 2011/93/EU, which is what `IntimateOrChild` covers. There, an address may
+     * not be demanded, so it is not.
+     */
+    public function requiresContact(): bool
+    {
+        return self::IntimateOrChild !== $this;
+    }
+
+    /** Does this ground ask for the extra rights-holder fields? */
+    public function needsOwnershipProof(): bool
+    {
+        return self::Copyright === $this;
     }
 
     /**
@@ -62,5 +122,44 @@ enum ReportGround: string
     public static function all(): array
     {
         return self::cases();
+    }
+
+    /**
+     * The grounds a picture can be reported on, but nothing else can.
+     *
+     * `Generated` is about an image presented as a real photograph (terms §7).
+     * None of the five things THIS form reports are images: a route, a place, a
+     * region description, a rider profile and a message are all text, and
+     * photos have their own desk at `/media/report`. Offering it here asked a
+     * reporter to consider a rule that cannot apply to what they are looking at
+     * (owner, 2026-08-29: "that last one is only of interest for images").
+     *
+     * The case stays in the enum. `/terms` §12 publishes it, the photo flow
+     * needs it, and a stored row has to keep resolving.
+     */
+    public function isImageOnly(): bool
+    {
+        return match ($this) {
+            self::Generated, self::IntimateOrChild, self::PrivateProperty => true,
+            default => false,
+        };
+    }
+
+    /**
+     * What the form offers for one kind of target, and the only values it
+     * accepts for it.
+     *
+     * A photo gets every ground; everything else gets the ones that are not
+     * about a picture. One list, one predicate, so the rule lives in the enum
+     * and cannot be changed by editing a template.
+     *
+     * @return list<self>
+     */
+    public static function forTarget(ReportTarget $target): array
+    {
+        return array_values(array_filter(
+            self::all(),
+            static fn (self $g): bool => !$g->isImageOnly() || $target->canAutoWithhold(),
+        ));
     }
 }

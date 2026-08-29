@@ -77,6 +77,17 @@ apply:
 | `advertising` | The Commons is not a listings site |
 | `generated` | Photographs that are not photographs |
 
+**Five of the six reach this form.** `generated` is about a picture, and none of
+the five things reported here is one: a route, a place, a region description, a
+rider profile and a message are all text, and photos are reported at
+`/media/report` instead. `ReportGround::forContent()` is what the form offers,
+`isImageOnly()` is the predicate behind it, and the controller refuses the
+ground on POST as well, so the rule lives in the enum rather than in a template.
+The case stays in the enum because `/terms` §12 publishes it and a stored row
+has to keep resolving. Pinned by
+`ContentReportTest::testTheImageOnlyGroundIsNotOfferedAndNotAccepted`
+(owner, 2026-08-29).
+
 `isLegal()` is true for `unlawful` and `personal_data` only. Those two are a
 legal claim rather than a quality judgement, so they sort to the top of the desk
 and the acknowledgement email says so. `untrue` covers stale as well as false:

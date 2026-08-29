@@ -4325,7 +4325,6 @@ report:
   sent_title: 'Dank je. Hij ligt bij een curator.'
   sent_body: 'Een mens kijkt ernaar. Liet je een adres achter, dan bevestigen we dat we het hebben en laten we je weten wat er besloten is, <b>uiterlijk binnen een maand</b>. De inhoud blijft staan zolang de melding wacht: een melding is een verzoek, geen verwijdering.'
   back_to_map: 'Terug naar de kaart'
-  privacy_note: 'We bewaren wat je schreef, en je adres als je dat gaf, zodat een curator ermee aan de slag kan en je antwoord krijgt. Je IP-adres bewaren we niet, alleen een onomkeerbare hash ervan, en dat is wat voorkomt dat één persoon duizend meldingen doet.'
   link_page: 'Deze pagina melden'
   link_message: 'Dit bericht melden'
   desk:
@@ -4363,6 +4362,7 @@ report:
     reason: 'Vertel ons wat we moeten weten.'
     reason_long: 'Dat is langer dan we aankunnen. Kort het wat in.'
     contact: 'Dat lijkt geen e-mailadres.'
+    contact_required: 'We hebben een adres nodig, zodat een curator je kan laten weten wat er is besloten. Het wordt aan niemand anders getoond.'
     rate_limited: 'Dat zijn veel meldingen vanaf één plek vandaag. Probeer het morgen opnieuw, of gebruik de contactpagina.'
   target:
     route: 'Een route'
@@ -4370,6 +4370,7 @@ report:
     region: 'Een regiobeschrijving'
     rider: 'Een rijdersprofiel'
     message: 'Een bericht'
+    photo: 'Een foto'
   ground:
     unlawful: 'Het is onrechtmatig, of het schendt iemands rechten'
     personal_data: 'Er staan persoonsgegevens van iemand in'
@@ -4377,6 +4378,9 @@ report:
     abuse: 'Het is misbruik, intimidatie of een bedreiging'
     advertising: 'Het is reclame'
     generated: 'Het is door AI gemaakt en gepresenteerd als echt'
+    intimate_or_child: 'Het is intiem beeld, of er staat een kind op'
+    private_property: 'Het toont privéterrein dat niet openbaar hoort te zijn'
+    copyright: 'Het is mijn werk en ik heb hier geen toestemming voor gegeven'
   status:
     open: 'Wacht op een curator'
     upheld: 'Toegekend, en er is iets mee gedaan'

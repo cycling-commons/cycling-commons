@@ -37,6 +37,9 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
  */
 final class ContentReportTest extends WebTestCase
 {
+    /** Any well-formed uuid: the form deliberately does not look one up. */
+    private const string PHOTO_UUID = '0192f5c1-7a3b-7c4d-8e9f-0a1b2c3d4e5f';
+
     private function client(): KernelBrowser
     {
         $client = static::createClient();
@@ -134,12 +137,31 @@ final class ContentReportTest extends WebTestCase
     }
 
     /** A report we cannot answer is still a report, and is still kept. */
-    public function testAReportWithNoAddressIsAccepted(): void
+    /**
+     * An address is required, and the one ground where the law forbids
+     * requiring it is the one place it is not.
+     *
+     * DSA Article 16(2)(c) lists the reporter's email among the elements a
+     * notice should carry, "except in the case of information considered to
+     * involve one of the offences referred to in Articles 3 to 7 of Directive
+     * 2011/93/EU". `intimate_or_child` is that case (owner, 2026-08-30).
+     */
+    public function testAnAddressIsRequiredExceptWhereTheLawForbidsAsking(): void
     {
         $client = $this->client();
         $this->file($client, contact: null);
 
+        self::assertResponseStatusCodeSame(422);
+        self::assertCount(0, $this->reports());
+    }
+
+    public function testTheChildGroundStillTakesAReportWithNoAddress(): void
+    {
+        $client = $this->client();
+        $this->file($client, type: 'photo', id: self::PHOTO_UUID, ground: 'intimate_or_child', contact: null);
+
         self::assertResponseIsSuccessful();
+        self::assertCount(1, $this->reports());
         self::assertNull($this->reports()[0]->getReporterContact());
     }
 
@@ -204,6 +226,37 @@ final class ContentReportTest extends WebTestCase
         self::assertCount(0, $this->reports());
     }
 
+    /**
+     * The image-only ground is neither offered nor accepted here.
+     *
+     * "AI-generated and presented as real" is about a picture (terms §7), and
+     * none of the five things this form reports is one. Photos have their own
+     * desk. Dropping it from the markup is not enough on its own: posting it
+     * straight at the endpoint has to fail too, or the rule would live in a
+     * template rather than in the enum (owner, 2026-08-29).
+     */
+    public function testTheImageOnlyGroundIsNotOfferedAndNotAccepted(): void
+    {
+        $client = $this->client();
+        $page = $client->request('GET', '/report/route/1');
+        $guard = static::getContainer()->get(FormGuard::class);
+
+        self::assertCount(0, $page->filter('input[value="generated"], option[value="generated"]'));
+        self::assertNotContains(ReportGround::Generated, ReportGround::forTarget(ReportTarget::Route));
+        // ...and a picture is exactly where it does belong.
+        self::assertContains(ReportGround::Generated, ReportGround::forTarget(ReportTarget::Photo));
+
+        $client->request('POST', '/report/route/1', [
+            '_token' => (string) $page->filter('input[name="_token"]')->attr('value'),
+            FormGuard::STAMP => $guard->stamp(new \DateTimeImmutable('-30 seconds')),
+            'ground' => 'generated',
+            'reason' => 'This looks made up to me.',
+        ]);
+
+        self::assertResponseStatusCodeSame(422);
+        self::assertCount(0, $this->reports());
+    }
+
     public function testAReportFiledInstantlyIsRefused(): void
     {
         $client = $this->client();
@@ -247,6 +300,35 @@ final class ContentReportTest extends WebTestCase
      * `one-way-to-moderate`: a delete button here would be a second moderation
      * path with its own history and its own permissions.
      */
+    /**
+     * The desk never prints the reporter's address, to anybody.
+     *
+     * Both desk templates only ask whether one is PRESENT, to show "we can
+     * answer" or "no reply address". The value itself is read in exactly one
+     * place, `ContentReportService::send()`, which hands it to the mailer.
+     * So it is write-only as far as a human is concerned, and requiring an
+     * address costs a reporter no exposure at all: the person they reported
+     * cannot learn who filed it, and neither can the curator deciding it
+     * (owner, 2026-08-30: "we do not share this with anybody else").
+     */
+    public function testTheDeskNeverShowsTheReporterAddress(): void
+    {
+        $client = $this->client();
+        $this->file($client, contact: 'whistleblower@cyclingcommons.org');
+
+        $client->loginUser($this->curator());
+        $report = $this->reports()[0];
+
+        $client->request('GET', '/moderate/reports');
+        self::assertStringNotContainsString('whistleblower@', (string) $client->getResponse()->getContent());
+
+        $client->request('GET', '/moderate/reports/'.$report->getId());
+        self::assertResponseIsSuccessful();
+        self::assertStringNotContainsString('whistleblower@', (string) $client->getResponse()->getContent());
+        // ...and it really is on the row, so the assertion above means something.
+        self::assertSame('whistleblower@cyclingcommons.org', $report->getReporterContact());
+    }
+
     public function testTheDeskHasNoWayToTouchTheContent(): void
     {
         $client = $this->client();
@@ -326,7 +408,9 @@ final class ContentReportTest extends WebTestCase
     public function testAnAnonymousReporterIsNotMailed(): void
     {
         $client = $this->client();
-        $this->file($client, contact: null);
+        // The only route to an anonymous report, now that an address is
+        // required everywhere else.
+        $this->file($client, type: 'photo', id: self::PHOTO_UUID, ground: 'intimate_or_child', contact: null);
         self::assertEmailCount(0, null, 'nothing to acknowledge to');
 
         $client->loginUser($this->curator());

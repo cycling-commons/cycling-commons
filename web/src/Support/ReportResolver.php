@@ -11,6 +11,7 @@ use App\Catalog\Entity\RecommendedRoute;
 use App\Catalog\Entity\Region;
 use App\Catalog\Entity\Submission;
 use App\Entity\User;
+use App\Media\Entity\MediaUpload;
 use App\Messaging\Entity\UserMessage;
 use App\Support\Entity\ContentReport;
 use Doctrine\ORM\EntityManagerInterface;
@@ -61,6 +62,7 @@ final class ReportResolver
             ReportTarget::RegionText => $this->region($report->getTargetId()),
             ReportTarget::DisplayName => $this->rider($report->getTargetId()),
             ReportTarget::Message => $this->message($report->getTargetId()),
+            ReportTarget::Photo => $this->photo($report->getTargetId()),
         };
     }
 
@@ -185,6 +187,36 @@ final class ReportResolver
         $user = $this->em->find(User::class, $id);
 
         return $user instanceof User ? $user : null;
+    }
+
+    /**
+     * A picture.
+     *
+     * The uploader IS the author here, unlike a place or a region text: one
+     * person pressed upload, and Article 17 owes that person the statement of
+     * reasons. The label is the description they wrote, because a photo has no
+     * name, and a curator reading the desk needs something other than a uuid.
+     *
+     * @return array{label: ?string, author: ?User, exists: bool, link_route: ?string, link_params: array<string, string|int>}
+     */
+    private function photo(string $id): array
+    {
+        if (!Uuid::isValid($id)) {
+            return self::gone();
+        }
+
+        $photo = $this->em->find(MediaUpload::class, Uuid::fromString($id));
+        if (!$photo instanceof MediaUpload) {
+            return self::gone();
+        }
+
+        return [
+            'label' => $photo->getAltText(),
+            'author' => $this->user($photo->getUserId()),
+            'exists' => true,
+            'link_route' => 'photo_page',
+            'link_params' => ['uuid' => $id],
+        ];
     }
 
     /** @return array{label: null, author: null, exists: false, link_route: null, link_params: array<string, string|int>} */

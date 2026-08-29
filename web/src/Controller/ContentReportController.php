@@ -72,8 +72,11 @@ final class ContentReportController extends AbstractController
             return $this->error($type, $id, $rejected, Response::HTTP_UNPROCESSABLE_ENTITY, $request);
         }
 
+        // A ground that does not apply to THIS target is not merely absent from
+        // the list: posting it straight at the endpoint has to fail too, or the
+        // enum's meaning would depend on the markup.
         $ground = ReportGround::tryFrom((string) $request->request->get('ground', ''));
-        if (null === $ground) {
+        if (null === $ground || !\in_array($ground, ReportGround::forTarget($target), true)) {
             return $this->error($type, $id, 'report.error.ground', Response::HTTP_UNPROCESSABLE_ENTITY, $request);
         }
 
@@ -86,6 +89,12 @@ final class ContentReportController extends AbstractController
         }
 
         $contact = trim((string) $request->request->get('contact', ''));
+        // An address is required for every ground but the child one, where the
+        // DSA forbids demanding it. The check is on the GROUND and not on the
+        // markup, so a form rendered before the rule changed cannot slip past.
+        if ('' === $contact && $ground->requiresContact()) {
+            return $this->error($type, $id, 'report.error.contact_required', Response::HTTP_UNPROCESSABLE_ENTITY, $request);
+        }
         if ('' !== $contact && false === filter_var($contact, \FILTER_VALIDATE_EMAIL)) {
             return $this->error($type, $id, 'report.error.contact', Response::HTTP_UNPROCESSABLE_ENTITY, $request);
         }
@@ -146,7 +155,7 @@ final class ContentReportController extends AbstractController
             'nav_active' => '',
             'target' => $target,
             'target_id' => $id,
-            'grounds' => ReportGround::all(),
+            'grounds' => ReportGround::forTarget($target),
             'sent' => $sent,
             'error' => $error,
             'from_path' => $this->cleanPath(

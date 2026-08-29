@@ -34,6 +34,13 @@ enum ReportTarget: string
     case RegionText = 'region';
     case DisplayName = 'rider';
     case Message = 'message';
+    /**
+     * A picture. Added 2026-08-30 when the media report flow folded into this
+     * one: a photo is a thing on a page, and the page it sits on has an entry
+     * on it too, so both have to be reportable through the same door
+     * (2026-08-30-one-report-route-design.md §2).
+     */
+    case Photo = 'photo';
 
     /** The catalogue key naming this kind of thing to a reader. */
     public function label(): string
@@ -50,7 +57,7 @@ enum ReportTarget: string
     public function acceptsId(string $id): bool
     {
         return match ($this) {
-            self::DisplayName => 1 === preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $id),
+            self::DisplayName, self::Photo => 1 === preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $id),
             default => 1 === preg_match('/^[1-9][0-9]{0,9}$/', $id),
         };
     }
@@ -58,5 +65,17 @@ enum ReportTarget: string
     public static function tryFromPath(string $value): ?self
     {
         return self::tryFrom($value);
+    }
+
+    /**
+     * Can a report on this kind hide the thing before a curator has looked?
+     *
+     * Only a picture. Withholding a photograph un-shows it; pulling a region
+     * description offline does not undo somebody having read it, so there is
+     * nothing to win by racing a curator to it.
+     */
+    public function canAutoWithhold(): bool
+    {
+        return self::Photo === $this;
     }
 }
