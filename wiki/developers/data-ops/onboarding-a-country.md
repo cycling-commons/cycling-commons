@@ -219,6 +219,24 @@ curl -sG --data-urlencode 'json={"shape":[{"lat":46.06,"lon":14.51}]}' \
 # {"height":[null]} -> no tile; install below
 ```
 
+**Ask more than one point, and insist on a non-zero.** `null` is only one of the
+two ways this goes wrong. A Valhalla with no elevation loaded answers **`0`**,
+which is numeric, plausible, and passes any check that only rejects `null`.
+
+The reverse trap is just as easy: three points inside `N70E025` once came back
+`[0, 0, 0]` from a perfectly healthy tile, because all three landed in a fjord.
+A single sample cannot tell "no data" from "sea level".
+
+<!-- CODE-ILLUSTRATIVE a spread rather than a single sample -->
+```bash
+curl -sG --data-urlencode 'json={"shape":[
+  {"lat":46.06,"lon":14.51},{"lat":46.21,"lon":14.66},
+  {"lat":46.21,"lon":14.36},{"lat":45.91,"lon":14.66}]}' \
+  http://127.0.0.1:8002/height
+# some values above zero -> covered
+# all zero, or all null    -> not covered, whatever the client thinks
+```
+
 If it comes back `null`, run the installer **on the Valhalla host**:
 
 <!-- CODE-ILLUSTRATIVE the installer, run on the routing host -->
@@ -231,10 +249,21 @@ service reads, and moves the result into that instance's `elevation_data`. All t
 so an interrupted run picks up where it stopped.
 
 **Then restart that continent's instance, or nothing changes.** Valhalla builds its elevation index
-at startup, so a running instance answers `null` for a tile sitting readable in its own mount. Each
-continent is a separate container, so restart the one you touched — `docker restart
-valhalla-<continent>` — and never the systemd unit, which starts all six and would interrupt routing
-for every continent on the box.
+at startup, so a running instance answers `null` for a tile sitting readable in its own mount. Restart
+only the continent you touched — `docker restart valhalla-<continent>`.
+
+!!! tip "If restarting one continent means restarting all six, fix the unit"
+    That instruction is a workaround for a service definition that runs every
+    continent from a single unit. It is worth removing rather than working
+    around: a systemd **template** unit — `valhalla@europe`, `valhalla@asia`,
+    one instance per continent, with port and memory in
+    `/etc/valhalla/<continent>.env` — makes each independent, so an elevation
+    install *or* a tile rebuild costs one continent's downtime instead of the
+    whole box.
+
+    Measured on a six-continent host after that change: **101 s** for a cold
+    start of all six (about 100 GB of tiles, 22,611 elevation tiles), and one
+    continent could be stopped and started with the other five still answering.
 
 Two details worth knowing rather than rediscovering:
 
