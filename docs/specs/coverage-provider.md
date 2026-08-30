@@ -616,6 +616,25 @@ non-empty) is NOT prop-less — it hides under a region scope (matching
   nonce'd global `window.CC_COVERAGE_URL`, emitted only when non-null. Result:
   a new artifact goes live within an hour of upload with no deploy and no
   client manifest fetch on boot, and the map always renders, tiles or not.
+- **The three readers share one base, and one page starts them together.**
+  `CoverageManifest`, `SurfaceManifest` and `RoutesManifest` all extend
+  `App\Coverage\BucketManifest` (`web/src/Coverage/BucketManifest.php`), which
+  owns the fetch, the positive and negative cache, and the degrade-never-throw
+  rule. Each subclass supplies only what differs: whether a pin or a flag makes
+  the bucket moot (`needsManifest()`), the shape check (`validate()`), the
+  cache key, and its two log lines.
+
+  `BucketManifest::prefetch()` starts a fetch and returns without waiting.
+  A page that reads more than one manifest must prefetch them all before
+  reading any: `/map` reads three and `/v1/map-config` reads two, and read in
+  sequence their `FETCH_TIMEOUT` (value `5` s) applies per fetch, so the page
+  itself had no upper bound. Staging measured 10.6 s on a cold
+  `/v1/map-config` (2026-08-30) for exactly this reason. Started together the
+  page's worst case is one `FETCH_TIMEOUT`, not one per manifest. A prefetch is
+  skipped when the value is already cached and cancelled when it turns out
+  unnecessary, so a warm cache still costs no round trip. Prefetching is an
+  optimisation only: every reader still fetches inline when nobody prefetched,
+  which is what a page that needs a single manifest keeps doing.
 - **CSP:** the tile host is appended to `connect-src` (host enumeration owned
   by [security-architecture.md §2](security-architecture.md)) by
   `App\EventSubscriber\CspSubscriber` from the dedicated `COVERAGE_CSP_HOST`

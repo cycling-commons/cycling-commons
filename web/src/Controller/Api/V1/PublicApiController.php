@@ -43,6 +43,11 @@ final class PublicApiController extends AbstractController
             return $limited;
         }
 
+        // Both manifests come from the bucket. Started together they cost one
+        // round trip, read one after the other they cost two.
+        $routesManifest->prefetch();
+        $coverageManifest->prefetch();
+
         $payload = [
             'version' => '0.1',
             'attribution' => CategoryTable::ATTRIBUTION,

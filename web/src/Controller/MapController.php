@@ -63,6 +63,13 @@ final class MapController extends AbstractController
     #[Route('/map', name: 'map')]
     public function map(Request $request, SubmissionQueue $queue, CatalogSchemaProvider $schema, TranslatorInterface $translator, ModerationScopeProvider $scopeProvider, TwoFactorPolicy $twoFactorPolicy, CoverageManifest $coverage, SurfaceManifest $surface, RoutesManifest $routes, RegionRegistryProvider $regions, CatalogProvider $catalogProvider, SettingsProviderInterface $settings, bool $scoutReview = false): Response
     {
+        // Three bucket round trips, started together instead of one after the
+        // other. Read in sequence they add up, and each carries its own
+        // timeout, so the page had no upper bound of its own.
+        $coverage->prefetch();
+        $surface->prefetch();
+        $routes->prefetch();
+
         $user = $this->getUser();
         $regionRows = array_map(
             static fn (array $r): array => $r + [
