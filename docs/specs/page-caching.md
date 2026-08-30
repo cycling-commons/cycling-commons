@@ -2,7 +2,7 @@
 
 # Caching the public pages
 
-Status: **steps 1 to 3 of §4 built, step 4 open.** Measured 2026-08-30
+Status: **steps 1 to 3 built, step 4 written and waiting on devOps.** Measured 2026-08-30
 against staging.
 
 ## 1. Why
@@ -195,8 +195,12 @@ the laziest bots. Worth knowing, not worth blocking on.
    And a session being *started* is not a reason to refuse: anything that looks
    at the session opens one. What matters is whether it holds anything, because
    an empty session sends no cookie.
-4. Hand the nginx rule to devOps (§5), then re-measure with
-   `tools/bench/pages-staging.sh`.
+4. **Written, not applied.** The nginx rule is a handoff, because the vhosts
+   live on the hosts rather than in this repo:
+   [2026-08-31-nginx-page-cache-devops.md](../plans/handoffs/2026-08-31-nginx-page-cache-devops.md).
+   Until somebody applies it nothing is stored anywhere, and nothing has
+   changed for any visitor. Re-measure with `tools/bench/pages-staging.sh`
+   afterwards.
 
 Steps 1 and 2 are worth doing whether or not step 4 ever happens.
 
