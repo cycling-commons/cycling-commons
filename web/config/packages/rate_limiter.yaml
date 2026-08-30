@@ -66,6 +66,8 @@ framework:
                 adapter: cache.app
             cache.public_api_limiter:
                 adapter: cache.app
+            cache.pow_challenge_limiter:
+                adapter: cache.app
     rate_limiter:
         contribution_submit:
             policy: sliding_window
@@ -283,6 +285,16 @@ framework:
             limit: 120
             interval: '1 minute'
             cache_pool: cache.public_api_limiter
+        # Minting a proof-of-work challenge for the bug button
+        # (page-caching.md §3.1). The panel asks for one when a rider opens it,
+        # so a real reporter needs one or two; the ceiling is here because the
+        # endpoint is public, unauthenticated, and hands out signed tokens.
+        # Loose enough that reopening the panel all afternoon never trips it.
+        pow_challenge:
+            policy: sliding_window
+            limit: 60
+            interval: '1 hour'
+            cache_pool: cache.pow_challenge_limiter
         # The contact form (contact-and-support.md §3). Three a day per hashed
         # address, matching the budget the BikeCoders site has run on for a
         # year. Deliberately tight: this is a front door, not a chat window,
@@ -368,6 +380,8 @@ when@staging:
                 cache.password_reset_limiter:
                     adapter: cache.adapter.array
                 cache.public_api_limiter:
+                    adapter: cache.adapter.array
+                cache.pow_challenge_limiter:
                     adapter: cache.adapter.array
                 cache.registration_limiter:
                     adapter: cache.adapter.array

@@ -35,8 +35,6 @@ use Twig\TwigFunction;
 final class BugFabExtension extends AbstractExtension
 {
     public function __construct(
-        private readonly FormGuard $guard,
-        private readonly ProofOfWork $proofOfWork,
         private readonly RequestStack $requests,
     ) {
     }
@@ -50,18 +48,21 @@ final class BugFabExtension extends AbstractExtension
     }
 
     /**
+     * Everything the panel needs that is the same for every visitor.
+     *
+     * Deliberately nothing single-use: the challenge, the stamp and the CSRF
+     * token moved to {@see BugReportController::challenge()} so this partial,
+     * which renders on every page, can sit inside a cached page
+     * (page-caching.md §3.1).
+     *
      * @return array<string, mixed>
      */
     public function context(): array
     {
-        $now = new \DateTimeImmutable();
         $path = $this->requests->getCurrentRequest()?->getPathInfo() ?? '/';
 
         return [
-            'stamp' => $this->guard->stamp($now),
             'stamp_field' => FormGuard::STAMP,
-            'pow_challenge' => $this->proofOfWork->issue($now),
-            'pow_difficulty' => ProofOfWork::DIFFICULTY,
             'honeypot_a' => FormGuard::HONEYPOT_A,
             'honeypot_b' => FormGuard::HONEYPOT_B,
             'severities' => BugSeverity::all(),

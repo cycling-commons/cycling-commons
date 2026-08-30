@@ -60,6 +60,8 @@
   var shots = [];
   var nonce = null;
   var solving = null;
+  /* {challenge, difficulty, stamp, token} from the challenge endpoint. */
+  var tokens = null;
 
   /* --- context ---------------------------------------------------------- */
 
@@ -240,17 +242,46 @@
 
   /* --- proof of work ---------------------------------------------------- */
 
+  /* The challenge, the stamp and the CSRF token are fetched when the panel
+     opens, not baked into the page. Three reasons, in order of severity: a
+     challenge is single use, so a page held in a shared cache would hand the
+     same one to every reader and only the first report would be accepted
+     (page-caching.md §3.1); a retry after a rejected send used to reuse the
+     spent challenge and so could never succeed; and every page view used to
+     mint a challenge that almost nobody ever spends. */
+  function fetchTokens() {
+    return fetch(root.dataset.challengeUrl, {
+      headers: { Accept: 'application/json' },
+      credentials: 'same-origin'
+    }).then(function (r) {
+      return r.json();
+    }).then(function (out) {
+      if (!out || !out.ok || !out.challenge) throw new Error('no challenge');
+      tokens = out;
+      return out;
+    });
+  }
+
   function startSolving() {
     if (solving || nonce) return;
     if (!window.ccPow.available()) { say('failed'); return; }
     say('working');
-    solving = window.ccPow
-      .solve(root.dataset.powChallenge, root.dataset.powDifficulty)
+    solving = fetchTokens()
+      .then(function (out) {
+        return window.ccPow.solve(out.challenge, out.difficulty);
+      })
       .then(function (value) {
         nonce = value;
         say(value ? 'ready' : 'failed');
       })
       .catch(function () { say('failed'); });
+  }
+
+  /* A spent challenge cannot be reused, so a retry starts from nothing. */
+  function resetProof() {
+    nonce = null;
+    solving = null;
+    tokens = null;
   }
 
   /* --- open / close ----------------------------------------------------- */
@@ -373,8 +404,7 @@
     renderShots();
     setSeverity('minor');
     warn('');
-    nonce = null;
-    solving = null;
+    resetProof();
     body.hidden = false;
     done.hidden = true;
     startSolving();
@@ -407,16 +437,16 @@
     startSolving();
 
     Promise.resolve(solving).then(function () {
-      if (!nonce) {
+      if (!nonce || !tokens) {
         sendBtn.disabled = false;
         warn(t('bug_no_pow', 'This browser cannot finish the spam check. Use the contact page instead.'));
         return;
       }
 
       var data = new FormData();
-      data.append('_token', root.dataset.token);
-      data.append(root.dataset.stampField, root.dataset.stamp);
-      data.append('pow_challenge', root.dataset.powChallenge);
+      data.append('_token', tokens.token);
+      data.append(root.dataset.stampField, tokens.stamp);
+      data.append('pow_challenge', tokens.challenge);
       data.append('pow_nonce', nonce);
       data.append('title', fTitle.value.trim());
       data.append('body', fBody.value.trim());
@@ -449,8 +479,7 @@
              the key is never shown raw to a rider. */
           warn(t('bug_send_failed', 'That did not send. Try again, or use the contact page.'));
           /* The challenge is spent either way; a retry needs a fresh one. */
-          nonce = null;
-          solving = null;
+          resetProof();
           return;
         }
         clearDraft();
