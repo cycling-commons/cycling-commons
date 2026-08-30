@@ -2,6 +2,9 @@
 
 # Translations — catalogue, overlays, and in-site proposals
 
+> **Law cited here is listed with its source in [`legal-sources.md`](legal-sources.md).** Article numbers are named in the text; the link goes to the act, because EUR-Lex article anchors do not survive consolidation.
+
+
 **Status:** canonical reference · **implemented** · **Audience:** contributors to Cycling Commons
 
 This document owns how user-facing copy is stored, who may change a

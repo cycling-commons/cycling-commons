@@ -1,5 +1,8 @@
 # The privacy notice
 
+> **Law cited here is listed with its source in [`legal-sources.md`](legal-sources.md).** Article numbers are named in the text; the link goes to the act, because EUR-Lex article anchors do not survive consolidation.
+
+
 Canonical. Covers `/privacy` (`web/templates/pages/privacy.html.twig`) and the
 `privacy.*` keys in `web/translations/messages.*.yaml`, in all five locales.
 

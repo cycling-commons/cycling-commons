@@ -1,5 +1,8 @@
 # Contact and support
 
+> **Law cited here is listed with its source in [`legal-sources.md`](legal-sources.md).** Article numbers are named in the text; the link goes to the act, because EUR-Lex article anchors do not survive consolidation.
+
+
 How a person reaches the Cycling Commons, how they tell us something is broken,
 and how those two arrive at a desk somebody actually reads.
 

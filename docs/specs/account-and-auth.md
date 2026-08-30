@@ -2,6 +2,9 @@
 
 # Account & Authentication
 
+> **Law cited here is listed with its source in [`legal-sources.md`](legal-sources.md).** Article numbers are named in the text; the link goes to the act, because EUR-Lex article anchors do not survive consolidation.
+
+
 **Status:** canonical reference · **Audience:** contributors to Cycling Commons
 
 This document defines the identity and authentication contract of Cycling
