@@ -2,7 +2,7 @@
 
 # Caching the public pages
 
-Status: **steps 1 and 2 of §4 built, steps 3 and 4 open.** Measured 2026-08-30
+Status: **steps 1 to 3 of §4 built, step 4 open.** Measured 2026-08-30
 against staging.
 
 ## 1. Why
@@ -182,12 +182,36 @@ the laziest bots. Worth knowing, not worth blocking on.
    Verified in a real browser, because a CSP failure is silent: `/` and
    `/regions` render, the typeahead filters and links correctly, the bug panel
    fetches its challenge and solves it, and the console is empty.
-3. Let the app mark those responses `public`, with a short `s-maxage`, only
-   when no session exists.
+3. **Done.** `App\EventSubscriber\PublicPageCacheSubscriber` marks the §6
+   routes `public, s-maxage=60, max-age=0, must-revalidate`, and only when
+   nobody is signed in, no session cookie came in, and the session holds
+   nothing. One subscriber rather than an edit per action, so the rule lives in
+   one place and the allowlist is readable.
+
+   Two things it taught us. Asking Security for the user touches the session,
+   which makes Symfony downgrade the response to private, so the route
+   allowlist has to be checked **first** or the subscriber silently strips
+   `public` off pages it does not own; `/changelog.atom` is how that surfaced.
+   And a session being *started* is not a reason to refuse: anything that looks
+   at the session opens one. What matters is whether it holds anything, because
+   an empty session sends no cookie.
 4. Hand the nginx rule to devOps (§5), then re-measure with
    `tools/bench/pages-staging.sh`.
 
 Steps 1 and 2 are worth doing whether or not step 4 ever happens.
+
+### 4a. Found on the way, not fixed here
+
+`/blog.atom` asks to be public (`setPublic()`, `setMaxAge(3600)`) and ships
+`private`. Something on that unprefixed route opens a session, and Symfony's
+session listener then downgrades the response; `/changelog.atom`, which does the
+same thing one route away, is unaffected. So the blog feed has never been
+cacheable, which for a polled feed is the whole point of it.
+
+It predates this work, it is not caused by it, and the obvious fix
+(`NO_AUTO_CACHE_CONTROL_HEADER`, as `PublicApiController` uses) made
+`/changelog.atom` worse rather than better when tried, so it wants its own look
+rather than a quick patch on the way past.
 
 ## 5. What nginx has to do
 
