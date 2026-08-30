@@ -74,9 +74,33 @@ final class TwoFactorTest extends WebTestCase
     }
 
     /** Compute the current valid TOTP code for a raw (base32) secret, matching the entity config. */
+    /**
+     * A TOTP code that will still be valid when the server checks it.
+     *
+     * `leeway` is 0 (`debug:container scheb_two_factor.totp.leeway`), so a code
+     * minted in one 30-second window and verified in the next is rejected,
+     * correctly. Three call sites here generate a code and then drive a full
+     * kernel request to submit it, and on a slow runner that round trip can
+     * cross the boundary: green on a laptop, red in CI, and nothing wrong with
+     * the code under test (2026-08-30).
+     *
+     * So this waits out the tail of a window rather than racing it. The wait
+     * only happens in the last few seconds of one, which is rare, and it is
+     * bounded by that: the alternative is a test whose result depends on how
+     * busy the machine is.
+     */
     private function currentTotpCode(string $secret): string
     {
-        return TOTP::create($secret, 30, 'sha1', 6)->now();
+        $period = 30;
+        /* Enough for a form submit through the kernel, with room to spare. */
+        $needed = 5;
+
+        $left = $period - (time() % $period);
+        if ($left < $needed) {
+            usleep($left * 1_000_000 + 100_000);
+        }
+
+        return TOTP::create($secret, $period, 'sha1', 6)->now();
     }
 
     /** Submit the primary login form. Returns the client after submission (before following redirects). */
