@@ -77,17 +77,15 @@ final class TwoFactorTest extends WebTestCase
     /**
      * A TOTP code that will still be valid when the server checks it.
      *
-     * `leeway` is 0 (`debug:container scheb_two_factor.totp.leeway`), so a code
-     * minted in one 30-second window and verified in the next is rejected,
-     * correctly. Three call sites here generate a code and then drive a full
-     * kernel request to submit it, and on a slow runner that round trip can
-     * cross the boundary: green on a laptop, red in CI, and nothing wrong with
-     * the code under test (2026-08-30).
+     * `leeway` is 1 since 2026-08-30, so one window either side is accepted and
+     * an ordinary boundary crossing no longer fails. This still waits out the
+     * tail of a window rather than racing it, for two reasons: the wait is what
+     * makes the result independent of how busy the machine is, and a test that
+     * leans on the leeway is a test that stops covering the leeway. Green on a
+     * laptop and red in CI is exactly what this removes.
      *
-     * So this waits out the tail of a window rather than racing it. The wait
-     * only happens in the last few seconds of one, which is rare, and it is
-     * bounded by that: the alternative is a test whose result depends on how
-     * busy the machine is.
+     * The wait only happens in the last few seconds of a window, which is rare,
+     * and it is bounded by that.
      */
     private function currentTotpCode(string $secret): string
     {

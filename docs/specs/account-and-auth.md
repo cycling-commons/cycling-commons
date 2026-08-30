@@ -329,6 +329,15 @@ key from a wrong code. That asymmetry is why the audit names TOTP only.
 - TOTP parameters: SHA1, 30 s period, 6 digits
   (`User::getTotpAuthenticationConfiguration()`); issuer `Cycling Commons`
   (`web/config/packages/scheb_2fa.yaml`).
+- **`leeway: 1`** since 2026-08-30, owner's call: one window either side is
+  accepted, so a code stays valid for about 90 seconds rather than 30. At the
+  bundle default of 0, a phone clock a few seconds out, or a code typed at
+  second 29 of its own window, is refused as wrong, and the person is told they
+  entered the wrong code when they did not. The cost is a shoulder-surfing
+  window three times as long; the GUESS space is unchanged at one in a million
+  per attempt, and attempts are bounded by the login limiter that a wrong TOTP
+  code already counts against (§ above). Every authenticator app makes the same
+  trade.
 - The 2FA setup page carries a "Settings · Security" breadcrumb back-link and
   its post-enrolment Done button targets `/settings?tab=security` (§8).
 

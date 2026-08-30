@@ -9,6 +9,19 @@ scheb_two_factor:
         enabled: true
         issuer: 'Cycling Commons'
         template: security/2fa_login.html.twig
+        # One window either side, so a phone clock that drifts by a few seconds
+        # is not a lockout (owner, 2026-08-30). At the bundle default of 0, a
+        # code typed at second 29 of its own window arrives in the next one and
+        # is refused: the failure mode is a correct person being told they are
+        # wrong, with nothing on screen to explain it.
+        #
+        # The cost is stated plainly: a code stays valid for about 90 seconds
+        # rather than 30, so an attacker who can SEE one has three times as long
+        # to use it. That is a shoulder-surfing window, not a guessing one; the
+        # guess space is unchanged at a million per attempt, and the login
+        # limiter is what bounds attempts. Every authenticator app and most
+        # services make the same trade for the same reason.
+        leeway: 1
 
     backup_codes:
         enabled: true
