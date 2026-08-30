@@ -13,7 +13,9 @@
 {% extends 'base.html.twig' %}
 
 {% block head_styles %}
-<style nonce="{{ csp_nonce() }}">
+{# No nonce: style-src is 'self' + 'unsafe-inline', so one does nothing here
+   except tie the page to a per-request value (docs/specs/page-caching.md §3.2). #}
+<style>
   .issues{max-width:820px}
   .issue{border-bottom:1px solid rgba(20,22,14,.12);padding:1rem 0}
   .issue:last-child{border-bottom:0}

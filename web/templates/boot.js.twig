@@ -1,0 +1,64 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{# The globals every page needs before its other scripts run.
+   Served by App\Controller\BootScriptController as a file rather than inlined
+   into base.html.twig, so the pages that carry it need no CSP nonce and can
+   therefore be held in a shared cache (docs/specs/page-caching.md §3.2).
+
+   Everything here is the same for every visitor of one locale and one build.
+   The two things that are NOT (the rider's date and unit preferences) ride on
+   <body> as data attributes and are read back below, which is what keeps this
+   file itself shareable. #}
+{# Only truly site-wide strings ship here (a11y.js, nav.js, version.js). Pages
+   that need more merge their own via Object.assign(window.CC_I18N, {...}) in
+   body_scripts, see partials/_auth_i18n.html.twig for the auth-form set. #}
+window.CC_I18N = {{ {
+  skip: 'js.skip'|trans,
+  nav_open: 'js.nav_open'|trans, nav_menu: 'js.nav_menu'|trans, nav_close: 'js.nav_close'|trans,
+  build: 'js.build'|trans
+}|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
+window.ccT = function (k, fb, vars) { var s = (window.CC_I18N && window.CC_I18N[k]) || fb; if (vars) { for (var p in vars) { s = s.replace('%' + p + '%', vars[p]); } } return s; };
+{# Formatting-toolbar labels for the two bug-report textareas
+   (docs/specs/contact-and-support.md §15). Its own global rather than a merge
+   into CC_I18N, because it exists for a panel most riders never open and a
+   separate object keeps that visible. It used to be its own inline block on
+   every page; here it costs one shared, cached file instead. Read once at load
+   by the deferred markdown-toolbar.js. #}
+window.CC_MD_LABELS = {{ {
+  barLabel: 'support.md.bar'|trans,
+  bold: 'support.md.bold'|trans, italic: 'support.md.italic'|trans,
+  code: 'support.md.code'|trans, block: 'support.md.block'|trans,
+  bullet: 'support.md.bullet'|trans, number: 'support.md.number'|trans,
+  boldWord: 'support.md.bold_word'|trans, italicWord: 'support.md.italic_word'|trans,
+  codeWord: 'support.md.code_word'|trans, blockWord: 'support.md.block_word'|trans,
+  hint: 'support.md.hint'|trans
+}|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
+window.CC_VERSION = {{ cc_build()|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
+(function () {
+  /* The rider's date preference, and one formatter for every client-rendered
+     date (account-and-auth.md §9). Server-rendered dates go through the
+     cc_date Twig filters; without this the two would disagree on the same
+     page, which is the failure a preference is supposed to prevent. Anonymous
+     visitors get 'auto', which is what the filters give them too.
+
+     Same contract for kilometres/miles and metres/feet: the map draws a
+     route's length in JS while the page beside it renders one in Twig, and a
+     rider who asked for miles must not read both. Values crossing to the
+     client stay metric; cc-units.js converts at the point of writing, exactly
+     as the Twig filters do. Anonymous visitors get metric, as they always
+     have.
+
+     Read from <body> rather than written here, because those two are the only
+     per-rider values on the page and inlining them would make this file
+     unshareable for the sake of four strings. The fallbacks are the anonymous
+     defaults, so a page that somehow ships no attributes still behaves. */
+  var d = (document.body && document.body.dataset) || {};
+  window.CC_DATE = {
+    format: d.ccDateFormat || 'auto',
+    time: d.ccTimeFormat || 'auto',
+    locale: {{ app.request.locale|default('en')|json_encode|raw }}
+  };
+  window.CC_UNITS = {
+    distance: d.ccDistanceUnit || 'km',
+    elevation: d.ccElevationUnit || 'm'
+  };
+})();

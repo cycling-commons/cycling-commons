@@ -149,7 +149,9 @@ final class UnitPreferencesTest extends WebTestCase
         $this->loginAs($client, 'units-bridge@example.com', $plain);
 
         $client->request('GET', '/settings');
-        self::assertStringContainsString('"distance":"km"', (string) $client->getResponse()->getContent());
+        // On <body>, not in a script: boot.js is one shared file for everyone
+        // and reads the two per-rider values from there (page-caching.md §3.2).
+        self::assertStringContainsString('data-cc-distance-unit="km"', (string) $client->getResponse()->getContent());
 
         $crawler = $client->request('GET', '/settings');
         $form = $crawler->selectButton('Save profile')->form();
@@ -160,8 +162,8 @@ final class UnitPreferencesTest extends WebTestCase
         $client->followRedirect();
 
         $html = (string) $client->getResponse()->getContent();
-        self::assertStringContainsString('"distance":"mi"', $html);
-        self::assertStringContainsString('"elevation":"ft"', $html);
+        self::assertStringContainsString('data-cc-distance-unit="mi"', $html);
+        self::assertStringContainsString('data-cc-elevation-unit="ft"', $html);
     }
 
     /** The radius read-out beside the base-location slider follows it too. */

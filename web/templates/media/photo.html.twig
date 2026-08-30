@@ -9,7 +9,9 @@
 {% extends 'base.html.twig' %}
 
 {% block head_styles %}
-<style nonce="{{ csp_nonce() }}">
+{# No nonce: style-src is 'self' + 'unsafe-inline', so one does nothing here
+   except tie the page to a per-request value (docs/specs/page-caching.md §3.2). #}
+<style>
   .photo-page{max-width:880px;margin:0 auto}
   .photo-page img{display:block;width:100%;height:auto;border-radius:8px;background:var(--paper-deep)}
   .photo-page figcaption{font-family:var(--mono);font-size:.72rem;letter-spacing:.04em;color:#595c4d;margin-top:.6rem}

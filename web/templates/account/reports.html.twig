@@ -17,7 +17,9 @@
 
 {% block head_styles %}
 {% include 'account/_shell_styles.html.twig' %}
-<style nonce="{{ csp_nonce() }}">
+{# No nonce: style-src is 'self' + 'unsafe-inline', so one does nothing here
+   except tie the page to a per-request value (docs/specs/page-caching.md §3.2). #}
+<style>
   .rrow{border-bottom:1px solid rgba(20,22,14,.12);padding:.9rem 0}
   .rrow:last-of-type{border-bottom:0}
   .rtop{display:flex;gap:.55rem;align-items:baseline;flex-wrap:wrap}

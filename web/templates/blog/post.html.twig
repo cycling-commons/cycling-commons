@@ -11,7 +11,9 @@
 {% extends 'base.html.twig' %}
 
 {% block head_styles %}
-<style nonce="{{ csp_nonce() }}">
+{# No nonce: style-src is 'self' + 'unsafe-inline', so one does nothing here
+   except tie the page to a per-request value (docs/specs/page-caching.md §3.2). #}
+<style>
   .blogwrap{display:grid;grid-template-columns:minmax(0,680px) minmax(0,15rem);
     gap:clamp(2rem,5vw,4rem);align-items:start}
   .blogpage{min-width:0}

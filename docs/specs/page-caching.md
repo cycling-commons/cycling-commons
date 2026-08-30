@@ -2,7 +2,7 @@
 
 # Caching the public pages
 
-Status: **step 1 of §4 built, steps 2 to 4 open.** Measured 2026-08-30
+Status: **steps 1 and 2 of §4 built, steps 3 and 4 open.** Measured 2026-08-30
 against staging.
 
 ## 1. Why
@@ -83,20 +83,43 @@ almost none are ever spent.
 
 ### 3.2 The CSP nonce (security)
 
-`base.html.twig` carries two inline scripts, each tagged
+`base.html.twig` carried two inline scripts, each tagged
 `nonce="{{ csp_nonce() }}"`, and `App\Security\CspNonce` mints
 `base64_encode(random_bytes(16))` per request.
 
 A cached page freezes that nonce for every visitor who receives it. A nonce is
-only worth anything while it is unpredictable: an attacker who can get
-markup onto the page can also simply fetch the page and read the nonce that
-will be honoured.
+only worth anything while it is unpredictable: an attacker who can get markup
+onto the page can also simply fetch the page and read the nonce that will be
+honoured.
 
-**Fix:** on the cacheable pages, do not use a nonce. The two inline blocks are
-known at render time, so `script-src` names their `sha256-` hashes instead. The
-i18n block differs per locale and the version block per build; both are
-constant for a given URL and build, so the hash is cached with the response it
-belongs to. Pages outside this cache keep the nonce untouched.
+**Done, by removing the need for one rather than by working around it.** The
+pages in §6 now carry no executable inline script at all, so nothing on them
+references the nonce. What moved, and where it went:
+
+- The i18n strings, `ccT`, `CC_VERSION` and the bug panel's formatting labels
+  are one file, `GET /boot.js`, one route per locale
+  (`App\Controller\BootScriptController`). Constant for a locale and a build,
+  which is what a cache wants.
+- The rider's date and unit preferences, the only per-visitor values, ride on
+  `<body>` as `data-cc-*` attributes and are read back by `boot.js`. That is
+  what keeps `boot.js` itself one shared file. A cached page can only have been
+  rendered for an anonymous visitor, so it carries the defaults.
+- The landing page's hero behaviour is `assets/home/hero.js`, and the country
+  typeahead is `assets/pages/regions-typeahead.js`. Neither reads server data,
+  except two values the typeahead now takes from the JSON block's own
+  attributes.
+- The analytics loader no longer copies a nonce onto the Umami script it
+  injects. `script-src` names `https://analytics.bikecoders.life` instead, the
+  same host already trusted in `connect-src`.
+- Eighteen templates carried `<style nonce="...">`. `style-src` is
+  `'self' 'unsafe-inline'`, so those nonces did nothing except tie their pages
+  to a per-request value. Removed.
+- `<script type="application/json">` data blocks keep no nonce either: they are
+  not executed, so `script-src` never gates them.
+
+The nonce itself stays, for `/map` and every page outside §6.
+`CspTest::testCacheablePagesCarryNoNonceAtAll` is the guard: it fails if an
+inline block reappears on any page in scope. It found the `<style>` blocks.
 
 ### 3.3 The account chip (correctness, and it fails safe)
 
@@ -153,7 +176,12 @@ the laziest bots. Worth knowing, not worth blocking on.
    stamp and the CSRF token together, `no-store`, bounded by its own
    `pow_challenge` limiter. Verified end to end against the running app:
    fetch, solve, post, `{"ok":true}`.
-2. Replace the nonce with hashes on the pages in scope (§3.2).
+2. **Done.** Remove the need for a nonce on the pages in scope (§3.2).
+   Hashes turned out to be the wrong tool: moving the inline blocks into files
+   leaves nothing to hash and nothing to keep in step across a deploy.
+   Verified in a real browser, because a CSP failure is silent: `/` and
+   `/regions` render, the typeahead filters and links correctly, the bug panel
+   fetches its challenge and solves it, and the console is empty.
 3. Let the app mark those responses `public`, with a short `s-maxage`, only
    when no session exists.
 4. Hand the nginx rule to devOps (§5), then re-measure with
@@ -183,11 +211,16 @@ aim at:
 
 `/`, `/about`, `/developers`, `/licenses`, `/privacy`, `/terms`,
 `/accessibility`, `/roadmap`, `/changelog`, `/credits`, `/regions`,
-`/regions/{slug}`, `/coverage`, `/blog`, `/known-issues`
+`/regions/{slug}`, `/blog`, `/known-issues`
 
-Deliberately out of scope: `/contributors` (a paged wall that moves),
-`/map` (per-rider preferences, and the heaviest page to store), anything under
+Deliberately out of scope: `/contributors` (a paged wall that moves), `/map`
+(per-rider preferences, and the heaviest page to store), anything under
 `/moderate`, `/admin`, `/profile` or `/translate`, and every form that posts.
+
+`/coverage` is out for now, and only for now: it is the right shape for this
+list, but it grew its own nonce'd inline script for the density sort while this
+was being written. It joins the list when that script becomes a file, and the
+guard test in §3.2 is where to add it.
 
 ## 7. What it is worth
 

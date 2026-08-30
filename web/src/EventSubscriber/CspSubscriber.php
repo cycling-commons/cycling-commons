@@ -47,7 +47,13 @@ final class CspSubscriber implements EventSubscriberInterface
         $request = $event->getRequest();
         $isMap = 'map' === $request->attributes->get('_route')
             || str_ends_with($request->getPathInfo(), '/map');
-        $scriptSrc = "script-src 'self' 'nonce-{$nonce}'"
+        // The analytics host is named rather than nonce-carried. A nonce was
+        // the old way in, and it forced the loader to copy its own nonce onto
+        // the script it injects; naming the host is both simpler and what lets
+        // a page carry no nonce at all, which is what a shared cache needs
+        // (docs/specs/page-caching.md §3.2). It is the same host already
+        // trusted in connect-src below.
+        $scriptSrc = "script-src 'self' 'nonce-{$nonce}' https://analytics.bikecoders.life"
             .($isMap ? " 'unsafe-eval'" : '');
 
         $connectSrc = [

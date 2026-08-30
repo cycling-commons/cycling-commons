@@ -28,9 +28,15 @@ final class CspTest extends WebTestCase
         self::assertNotNull($csp, 'HTML responses must carry a CSP header');
         self::assertStringContainsString("default-src 'self'", $csp);
         self::assertStringContainsString("object-src 'none'", $csp);
-        // No third-party script host at all since 2026-08-09: the libraries are
-        // vendored same-origin, so 'self' + the nonce is the whole allowlist.
-        self::assertMatchesRegularExpression("/script-src 'self' 'nonce-[A-Za-z0-9+\\/=]+';/", $csp);
+        // The libraries are vendored same-origin, so the allowlist is 'self',
+        // the nonce, and exactly one named host: the analytics origin, which is
+        // named rather than nonce-carried so that a page can be cached without
+        // freezing a nonce (page-caching.md §3.2). Anything else appearing here
+        // is a third-party script host and has to be argued for.
+        self::assertMatchesRegularExpression(
+            "/script-src 'self' 'nonce-[A-Za-z0-9+\\/=]+' https:\\/\\/analytics\\.bikecoders\\.life;/",
+            $csp,
+        );
         self::assertStringNotContainsString('unpkg.com', $csp);
         self::assertStringNotContainsString("script-src 'self' 'unsafe-inline'", $csp, 'script-src must not allow unsafe-inline');
     }
@@ -62,8 +68,12 @@ final class CspTest extends WebTestCase
     }
 
     /**
-     * Every inline script block on a page must carry the SAME nonce the
+     * Any inline script block that remains must carry the SAME nonce the
      * header advertises — a missed block is a page break under enforcement.
+     *
+     * Having none is fine, and on most pages is now the case. A data block
+     * (`type="application/json"`) is not executed, so script-src never gates
+     * it and it needs no nonce.
      */
     #[DataProvider('inlineScriptPages')]
     public function testEveryInlineScriptCarriesTheHeaderNonce(string $path): void
@@ -76,10 +86,7 @@ final class CspTest extends WebTestCase
         self::assertSame(1, preg_match("/'nonce-([^']+)'/", $csp, $m), 'CSP must advertise a nonce');
         $nonce = $m[1];
 
-        $html = (string) $client->getResponse()->getContent();
-        preg_match_all('/<script(?![^>]*\bsrc=)([^>]*)>/i', $html, $tags);
-        self::assertNotEmpty($tags[1], "expected inline scripts on {$path}");
-        foreach ($tags[1] as $attrs) {
+        foreach (self::executableInlineScripts((string) $client->getResponse()->getContent()) as $attrs) {
             self::assertStringContainsString('nonce="'.$nonce.'"', $attrs, "un-nonced inline <script{$attrs}> on {$path}");
         }
     }
@@ -91,6 +98,73 @@ final class CspTest extends WebTestCase
         yield 'map' => ['/map'];
         yield 'regions' => ['/regions'];
         yield 'contributors' => ['/contributors'];
+    }
+
+    /**
+     * The pages meant to be cacheable must carry no nonce at all.
+     *
+     * This is the invariant the whole page-caching design rests on
+     * (page-caching.md §3.2). A nonce is worth something only while it is
+     * unpredictable; a stored copy freezes it, and everyone served that copy
+     * gets the same one, which an attacker can simply read. So these pages
+     * carry no executable inline script, and nothing on them may reference the
+     * nonce either.
+     *
+     * If this fails, somebody added an inline block to a shared template or to
+     * one of these pages. Move it into a file, as `assets/home/hero.js` and
+     * `assets/pages/regions-typeahead.js` were, rather than relaxing the test.
+     */
+    #[DataProvider('cacheablePages')]
+    public function testCacheablePagesCarryNoNonceAtAll(string $path): void
+    {
+        $client = static::createClient();
+        $client->request('GET', $path);
+        self::assertResponseIsSuccessful();
+
+        $html = (string) $client->getResponse()->getContent();
+        self::assertSame([], self::executableInlineScripts($html),
+            "inline script on {$path}: it needs a nonce, and a nonce cannot be cached");
+        self::assertStringNotContainsString('nonce=', $html,
+            "something on {$path} references the CSP nonce, which a shared cache would freeze");
+    }
+
+    /** @return iterable<string, array{string}> */
+    public static function cacheablePages(): iterable
+    {
+        // page-caching.md §6. /coverage and /map are deliberately absent.
+        foreach ([
+            'home' => '/',
+            'about' => '/about',
+            'developers' => '/developers',
+            'licenses' => '/licenses',
+            'privacy' => '/privacy',
+            'terms' => '/terms',
+            'accessibility' => '/accessibility',
+            'roadmap' => '/roadmap',
+            'changelog' => '/changelog',
+            'credits' => '/credits',
+            'regions' => '/regions',
+            'blog' => '/blog',
+            'known-issues' => '/known-issues',
+        ] as $name => $path) {
+            yield $name => [$path];
+        }
+    }
+
+    /**
+     * Inline `<script>` blocks the browser will execute: no `src`, and not a
+     * data block.
+     *
+     * @return list<string> the attribute string of each, for the failure message
+     */
+    private static function executableInlineScripts(string $html): array
+    {
+        preg_match_all('/<script(?![^>]*\bsrc=)([^>]*)>/i', $html, $tags);
+
+        return array_values(array_filter(
+            $tags[1],
+            static fn (string $attrs): bool => !str_contains($attrs, 'type="application/json"'),
+        ));
     }
 
     public function testNonHtmlResponsesSkipCsp(): void

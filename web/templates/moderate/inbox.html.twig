@@ -14,7 +14,9 @@
 
 {% block head_styles %}
 {% include 'account/_shell_styles.html.twig' %}
-<style nonce="{{ csp_nonce() }}">
+{# No nonce: style-src is 'self' + 'unsafe-inline', so one does nothing here
+   except tie the page to a per-request value (docs/specs/page-caching.md §3.2). #}
+<style>
   .chips{display:flex;gap:.4rem;flex-wrap:wrap;margin:1rem 0 1.4rem}
   .chip{font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;
     padding:.35rem .6rem;border-radius:4px;background:var(--paper-deep);color:#4a4d40;text-decoration:none}

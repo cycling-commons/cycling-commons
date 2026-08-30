@@ -20,7 +20,9 @@
 {% block content_title %}{{ 'admin.curator.title'|trans }}{% endblock %}
 
 {% block main %}
-    <style nonce="{{ csp_nonce() }}">
+    {# No nonce: style-src is 'self' + 'unsafe-inline', so one does nothing here
+   except tie the page to a per-request value (docs/specs/page-caching.md §3.2). #}
+<style>
       .cur-row{border:1px solid rgba(0,0,0,.125);border-radius:.375rem;margin-bottom:.5rem;background:var(--bs-body-bg,#fff)}
       .cur-row > summary{cursor:pointer;padding:.7rem .9rem;display:flex;flex-wrap:wrap;align-items:baseline;gap:.5rem;list-style:none}
       .cur-row > summary::-webkit-details-marker{display:none}

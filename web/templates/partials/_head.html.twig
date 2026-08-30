@@ -28,6 +28,6 @@
 <link rel="preload" as="font" type="font/woff2" href="{{ asset('fonts/spline-sans-400-latin.woff2') }}" crossorigin>
 <link rel="stylesheet" href="{{ asset('styles/fonts.css') }}" />
 <link rel="stylesheet" href="{{ asset('styles/atlas.css') }}" />
-{# nonce: the loader hands it to the cross-origin Umami script it injects
-   (assets/js/analytics.js) - without it, script-src silently blocks analytics. #}
-<script defer src="{{ asset('js/analytics.js') }}" nonce="{{ csp_nonce() }}"></script>
+{# No nonce: script-src names the analytics host, so neither this file nor the
+   cross-origin script it injects needs one (page-caching.md §3.2). #}
+<script defer src="{{ asset('js/analytics.js') }}"></script>

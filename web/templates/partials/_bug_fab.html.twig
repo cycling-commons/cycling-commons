@@ -20,7 +20,7 @@
   likely to be on when something breaks, so leaving the button off it was the
   wrong call; only the wide pill was ever the problem.
 
-  Everything here is markup and a nonce'd style block; behaviour is in
+  Everything here is markup and a style block; behaviour is in
   assets/support/bug-fab.js, because the CSP blocks inline handlers silently.
 #}
 {% set _path = app.request.pathInfo|default('/') %}
@@ -145,7 +145,10 @@
   </div>
 </div>
 
-<style nonce="{{ csp_nonce() }}">
+{# No nonce: style-src is 'self' + 'unsafe-inline', so one does nothing here
+   except tie every page carrying this panel to a per-request value, which is
+   what stops a page being cached (docs/specs/page-caching.md §3.2). #}
+<style>
   {# `width:auto` is load-bearing. atlas.css carries a site-wide
      `body > * { width: 100% }`, and this button is a direct child of body, so
      without it the container stretches the full viewport and the pill is pushed

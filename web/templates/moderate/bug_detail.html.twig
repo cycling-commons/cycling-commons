@@ -18,7 +18,9 @@
 
 {% block head_styles %}
 {% include 'account/_shell_styles.html.twig' %}
-<style nonce="{{ csp_nonce() }}">
+{# No nonce: style-src is 'self' + 'unsafe-inline', so one does nothing here
+   except tie the page to a per-request value (docs/specs/page-caching.md §3.2). #}
+<style>
   .bdet{max-width:760px}
   .bdet dl.facts{display:grid;grid-template-columns:auto 1fr;gap:.3rem .9rem;margin:1rem 0 1.4rem}
   .bdet dl.facts dt{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--clay)}

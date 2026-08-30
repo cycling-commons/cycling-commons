@@ -9,7 +9,9 @@
 {% extends 'base.html.twig' %}
 
 {% block head_styles %}
-<style nonce="{{ csp_nonce() }}">
+{# No nonce: style-src is 'self' + 'unsafe-inline', so one does nothing here
+   except tie the page to a per-request value (docs/specs/page-caching.md §3.2). #}
+<style>
   .blogpage{max-width:760px}
   .bp{border-bottom:1px solid rgba(20,22,14,.12);padding:1.4rem 0}
   .bp:last-of-type{border-bottom:0}

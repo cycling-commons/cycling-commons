@@ -186,35 +186,15 @@
     <div id="cc-country-hits" role="listbox"></div>
     <noscript><p><a href="{{ path('join') }}">{% trans %}regions.your_country_noscript{% endtrans %}</a></p></noscript>
   </div>
-  <script type="application/json" id="cc-countries" nonce="{{ csp_nonce() }}">{{ all_countries|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }}</script>
+  {# No nonce: a JSON data block is not executed, so script-src never gates it,
+     and a nonce here would tie the page to a per-request value (page-caching.md §3.2). #}
+  <script type="application/json" id="cc-countries"
+          data-join-href="{{ path('join_country', {cc: 'ZZ'}) }}"
+          data-here-label="{{ 'regions.already_here'|trans }}">{{ all_countries|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }}</script>
 </div>
 {% endblock %}
 {% block body_scripts %}
-<script nonce="{{ csp_nonce() }}">
-  /* Country typeahead: filter the baked localized country list, link to /join/{cc}.
-     Keyboard: results are plain links — Tab/Enter work natively. */
-  document.addEventListener('DOMContentLoaded', () => {
-    const data = JSON.parse(document.getElementById('cc-countries').textContent);
-    const q = document.getElementById('cc-country-q');
-    const hits = document.getElementById('cc-country-hits');
-    // 'ZZ' satisfies the route's [A-Za-z]{2} requirement at generation time and
-    // is a user-assigned ISO code no real country will ever use; the replace
-    // targets only the final path segment.
-    const joinHref = {{ path('join_country', {cc: 'ZZ'})|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
-    const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-    const hereLabel = {{ 'regions.already_here'|trans|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
-    q.addEventListener('input', () => {
-      const needle = q.value.trim().toLowerCase();
-      if (needle.length < 2) { hits.innerHTML = ''; return; }
-      const top = data.filter(c => c.name.toLowerCase().includes(needle)).slice(0, 8);
-      /* A country already on the Commons says so and jumps to its own place in
-         the list above, rather than offering to request what is already there. */
-      hits.innerHTML = top.map(c => {
-        const href = c.here ? ('#country-' + c.code) : joinHref.replace(/ZZ(?=[^/]*$)/, c.code);
-        const mark = c.here ? ` <span class="cc-here">${esc(hereLabel)}</span>` : '';
-        return `<a role="option" href="${href}">${esc(c.name)} <span class="cc">${esc(c.code)}</span>${mark}</a>`;
-      }).join('');
-    });
-  });
-</script>
+{# Behaviour in a file, so this page needs no CSP nonce
+   (docs/specs/page-caching.md §3.2). #}
+<script src="{{ asset('pages/regions-typeahead.js') }}" defer></script>
 {% endblock %}

@@ -21,7 +21,9 @@
 {% extends 'base.html.twig' %}
 
 {% block head_styles %}
-<style nonce="{{ csp_nonce() }}">
+{# No nonce: style-src is 'self' + 'unsafe-inline', so one does nothing here
+   except tie the page to a per-request value (docs/specs/page-caching.md §3.2). #}
+<style>
   /* The rights statement: a checkbox and its sentence on one line, the box not
      stretching to the sentence's height.
 

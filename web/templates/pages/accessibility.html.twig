@@ -24,7 +24,9 @@
 {% extends 'base.html.twig' %}
 
 {% block head_styles %}
-<style nonce="{{ csp_nonce() }}">
+{# No nonce: style-src is 'self' + 'unsafe-inline', so one does nothing here
+   except tie the page to a per-request value (docs/specs/page-caching.md §3.2). #}
+<style>
   .legal{max-width:760px}
   .legal h2{font-family:var(--serif);font-weight:600;font-size:1.45rem;letter-spacing:-.01em;margin:2.4rem 0 .5rem}
   .legal h2:first-of-type{margin-top:0}

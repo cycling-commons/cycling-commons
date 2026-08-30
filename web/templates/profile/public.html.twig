@@ -2,7 +2,9 @@
 {% extends 'base.html.twig' %}
 
 {% block head_styles %}
-<style nonce="{{ csp_nonce() }}">
+{# No nonce: style-src is 'self' + 'unsafe-inline', so one does nothing here
+   except tie the page to a per-request value (docs/specs/page-caching.md §3.2). #}
+<style>
   .rp-wrap{max-width:44rem;margin:0 auto;padding:3rem 1.2rem 4rem}
   .rp-head{display:flex;align-items:center;gap:.8rem;flex-wrap:wrap}
   .rp-head h1{font-family:var(--serif);font-weight:600;font-size:2rem;margin:0}

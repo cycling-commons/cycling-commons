@@ -20,7 +20,9 @@
 {% extends 'base.html.twig' %}
 
 {% block head_styles %}
-<style nonce="{{ csp_nonce() }}">
+{# No nonce: style-src is 'self' + 'unsafe-inline', so one does nothing here
+   except tie the page to a per-request value (docs/specs/page-caching.md §3.2). #}
+<style>
   .contact-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:3rem;align-items:start}
   @media (max-width:860px){.contact-grid{grid-template-columns:1fr;gap:2.2rem}}
   .cform h2,.caside h2{font-family:var(--serif);font-weight:600;font-size:1.3rem;margin:0 0 .6rem}
