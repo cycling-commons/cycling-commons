@@ -39,3 +39,35 @@ timings measure the limiter, not the application.
 Keep the total under 120 requests (workers x requests) for a clean baseline.
 To measure the real ceiling, the limit has to be raised on staging for the
 duration of the test.
+
+## The website, not the API
+
+    tools/bench/pages-staging.sh              # 2 workers x 5 requests
+    tools/bench/pages-staging.sh 3 8
+
+`api-staging.sh` measures the JSON endpoints. `pages-staging.sh` measures the
+pages a visitor opens, and answers three different questions:
+
+1. **Did the page render?** A 200 is not proof. The site serves its own error
+   page as markup, and a template that renders nothing still returns 200. Each
+   page therefore has to carry a marker string: `ERROR-PAGE` means the failure
+   page came back, `NO-MARKER` means a 200 arrived without the content the page
+   is supposed to hold. The script exits non-zero if any page fails, so it
+   works as a smoke test after a deploy, not only as a benchmark.
+2. **How fast, cold and warm.** Cold is what the first visitor of the hour
+   pays. On this site that is where the tile-bucket manifests are read
+   (coverage-provider.md §4).
+3. **How heavy.** The HTML is the small half. The script follows the
+   same-origin CSS and JS the page names and totals them.
+
+The region page is discovered from `/regions` at run time rather than pinned,
+so the test does not rot as countries are onboarded.
+
+### Reading the weight columns
+
+`wire_kb` is what crosses the network, `raw_kb` is what the server holds. Only
+`wire_kb` is what a rider on a phone waits for; for text assets the two differ
+several times over. The script gets the wire number by asking for gzip and
+leaving the body encoded, because curl's `%{size_download}` reports the decoded
+size, and the `content-length` header cannot stand in for it: nginx sends
+gzipped responses chunked and omits that header.
