@@ -1,0 +1,28 @@
+web/tests/js/shell-list-system.test.cjs
+  s_e382572451f2d6::t_6d3af69252c7c3 57-66,71,109-111,135
+web/tests/js/rail-shell.test.cjs
+  s_e382572451f2d6::t_d5730406e5132f 272-279
+web/assets/styles/map.css
+  s_e382572451f2d6::t_564f0d0419857b 989-993
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "1f23ce4fa7011201332c4e523343842219a9ea6b",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_e382572451f2d6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6d86ff86-2562-4654-bb50-b5129c283f3f",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
