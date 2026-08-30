@@ -192,9 +192,12 @@ for cont in "${TARGETS[@]}"; do
      $VALHALLA_DATA/$cont/elevation_data held raw .hgt when the build ran."
   fi
 
-  # 5. compress, except the busiest instance - see the memory note in the docs
-  if [ "$cont" = "europe" ]; then
-    log "keeping europe raw on purpose (hard --memory cap, gz inflation is unreclaimable)"
+  # 5. compress - OPT-IN ONLY. Measured 2026-08-30 on one continent with storage
+  #    as the only variable: gzipped tiles cost ~1.3 GB of unreclaimable memory
+  #    per instance (skadi inflates into a malloc cache capped at 50 tiles) and
+  #    ran 2.6x slower from cache thrash. Disk is the cheaper resource.
+  if [ "${COMPRESS:-0}" != "1" ] || [ "$cont" = "europe" ]; then
+    log "leaving $cont raw (set COMPRESS=1 to gzip after a build)"
   else
     log "compressing DEM"
     "$BIN/fetch-global-dem.sh" --compress "$cont" >> "$LOG_DIR/dem-$cont.log" 2>&1 \
