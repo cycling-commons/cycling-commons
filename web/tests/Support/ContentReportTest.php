@@ -209,6 +209,38 @@ final class ContentReportTest extends WebTestCase
         self::assertResponseStatusCodeSame(404);
     }
 
+    /**
+     * Nothing is chosen for you.
+     *
+     * The select opens on an empty, disabled option rather than on its first
+     * real answer. This field decides which desk queue a report joins and, on
+     * one ground, whether a picture comes down before a person has looked, so
+     * "unlawful" must never be what somebody files by not reading (owner,
+     * 2026-08-30). The server refuses an empty ground either way.
+     */
+    public function testNoGroundIsChosenForYou(): void
+    {
+        $client = $this->client();
+        $page = $client->request('GET', '/report/route/1');
+
+        $first = $page->filter('#rep-ground option')->first();
+        self::assertSame('', $first->attr('value'), 'the first option carries no answer');
+        self::assertNotNull($first->attr('disabled'), 'and cannot be submitted');
+        self::assertNotNull($first->attr('selected'), 'and is what the form opens on');
+
+        $guard = static::getContainer()->get(FormGuard::class);
+        $client->request('POST', '/report/route/1', [
+            '_token' => (string) $page->filter('input[name="_token"]')->attr('value'),
+            FormGuard::STAMP => $guard->stamp(new \DateTimeImmutable('-30 seconds')),
+            'ground' => '',
+            'reason' => 'Something is wrong but I did not say what.',
+            'contact' => 'reporter@cyclingcommons.org',
+        ]);
+
+        self::assertResponseStatusCodeSame(422);
+        self::assertCount(0, $this->reports());
+    }
+
     public function testAnEmptyReasonIsRefused(): void
     {
         $client = $this->client();
@@ -274,6 +306,115 @@ final class ContentReportTest extends WebTestCase
     }
 
     // -- the desk --------------------------------------------------------
+
+    /**
+     * A rights claim asks for two more things, and will not be filed without
+     * them (backlog item 6).
+     *
+     * A curator cannot compare an original they were never shown, and the
+     * uploader cannot answer a claim without the name it is made under, which
+     * is why both are required and why the name, unlike the reporter's address,
+     * is one the other side gets to see.
+     */
+    public function testACopyrightClaimNeedsTheWorkAndAName(): void
+    {
+        $client = $this->client();
+        $page = $client->request('GET', '/report/route/1');
+        $guard = static::getContainer()->get(FormGuard::class);
+        $base = [
+            '_token' => (string) $page->filter('input[name="_token"]')->attr('value'),
+            FormGuard::STAMP => $guard->stamp(new \DateTimeImmutable('-30 seconds')),
+            'ground' => 'copyright',
+            'reason' => 'This is my photograph and I never licensed it.',
+            'contact' => 'rights@cyclingcommons.org',
+        ];
+
+        $client->request('POST', '/report/route/1', $base);
+        self::assertResponseStatusCodeSame(422, 'no original named');
+
+        $client->request('POST', '/report/route/1', $base + ['work_original' => 'https://example.test/original.jpg']);
+        self::assertResponseStatusCodeSame(422, 'no claimant named');
+
+        $client->request('POST', '/report/route/1', $base + [
+            'work_original' => 'https://example.test/original.jpg',
+            'claimant_name' => 'A. Photographer',
+        ]);
+        self::assertResponseStatusCodeSame(422, 'good-faith statement not ticked');
+        self::assertCount(0, $this->reports());
+
+        $client->request('POST', '/report/route/1', $base + [
+            'work_original' => 'https://example.test/original.jpg',
+            'claimant_name' => 'A. Photographer',
+            'rights_statement' => '1',
+        ]);
+        self::assertResponseIsSuccessful();
+
+        $report = $this->reports()[0];
+        self::assertSame(ReportGround::Copyright, $report->getGround());
+        self::assertSame('https://example.test/original.jpg', $report->getWorkOriginal());
+        self::assertSame('A. Photographer', $report->getClaimantName());
+        self::assertTrue($report->getGround()->isLegal(), 'a rights claim sorts with the legal ones');
+    }
+
+    /** Only a rights claim is asked for them; every other ground ignores them. */
+    public function testAnOrdinaryGroundStoresNoRightsClaim(): void
+    {
+        $client = $this->client();
+        $this->file($client);
+
+        $report = $this->reports()[0];
+        self::assertNull($report->getWorkOriginal());
+        self::assertNull($report->getClaimantName());
+    }
+
+    /**
+     * A picture chosen in the picker is reported as itself, not as the entry.
+     *
+     * The case the whole merge exists for: one open drawer holds the entry AND
+     * its photographs, so "Report this page" has to ask which
+     * (2026-08-30-one-report-route-design.md §2).
+     */
+    public function testAPictureOnThePageIsReportedAsItself(): void
+    {
+        $client = $this->client();
+        $page = $client->request('GET', '/report/item/1');
+        $guard = static::getContainer()->get(FormGuard::class);
+
+        // An id that is not in this entry's gallery is refused, so one item's
+        // form cannot file against somebody else's photograph.
+        $client->request('POST', '/report/item/1', [
+            '_token' => (string) $page->filter('input[name="_token"]')->attr('value'),
+            FormGuard::STAMP => $guard->stamp(new \DateTimeImmutable('-30 seconds')),
+            'about' => self::PHOTO_UUID,
+            'ground' => 'untrue',
+            'reason' => 'Not this one.',
+            'contact' => 'reporter@cyclingcommons.org',
+        ]);
+
+        self::assertResponseStatusCodeSame(422);
+        self::assertCount(0, $this->reports());
+    }
+
+    /** `entry` is the default and means what it always meant. */
+    public function testChoosingTheEntryReportsTheEntry(): void
+    {
+        $client = $this->client();
+        $page = $client->request('GET', '/report/item/1');
+        $guard = static::getContainer()->get(FormGuard::class);
+
+        $client->request('POST', '/report/item/1', [
+            '_token' => (string) $page->filter('input[name="_token"]')->attr('value'),
+            FormGuard::STAMP => $guard->stamp(new \DateTimeImmutable('-30 seconds')),
+            'about' => 'entry',
+            'ground' => 'untrue',
+            'reason' => 'The opening hours have been wrong all summer.',
+            'contact' => 'reporter@cyclingcommons.org',
+        ]);
+
+        self::assertResponseIsSuccessful();
+        self::assertSame(ReportTarget::Item, $this->reports()[0]->getTargetType());
+        self::assertSame('1', $this->reports()[0]->getTargetId());
+    }
 
     public function testTheDeskIsForCuratorsOnly(): void
     {

@@ -88,7 +88,7 @@
     {# The third-party route (docs/specs/photo-uploads.md §6c) is for everyone —
        most of the people it protects have no account and are not the uploader. #}
     <p class="photo-links">
-      <a href="{{ path('photo_report', {uuid: photo_uuid}) }}">{{ 'media.report.link'|trans }}</a>
+      <a href="{{ path('content_report', {type: 'photo', id: photo_uuid}) }}">{{ 'media.report.link'|trans }}</a>
     </p>
 
     {% if can_request_takedown|default(false) %}

@@ -90,7 +90,7 @@ final class ContentReportService
         $this->em->persist($report);
         $this->em->flush();
 
-        $this->withholdIfUrgent($report, $target, $targetId, $ground, $reason, $contact, $reporterIp);
+        $this->raiseMediaTakedown($target, $targetId, $ground, $reason, $contact, $reporterIp);
 
         if (null !== $contact) {
             $this->send($contact, 'emails/report_acknowledged.html.twig', 'We have your report', [
@@ -102,17 +102,25 @@ final class ContentReportService
     }
 
     /**
-     * Hide the picture now, where the ground and the target both allow it.
+     * Raise the media takedown request behind a photo report.
      *
-     * Only intimate imagery or a child, and only on a photo. Everything else
-     * waits for a curator, because nothing else can be un-seen by hiding it:
-     * pulling a region description offline does not undo somebody reading it.
+     * EVERY ground, not only the urgent one. The report row is the DSA record
+     * and carries the mails; the takedown request is the operational state, and
+     * a curator can only grant or decline a request that exists. Without this a
+     * photo reported for, say, advertising would leave the desk with a decision
+     * to record and no picture to act on.
      *
-     * The report row is already saved when this runs, so a failure to withhold
-     * loses the withhold and never the report.
+     * The urgent ground still hides the file on the spot, because the media
+     * service does that itself: `MediaTakedownService::report()` checks the
+     * category, spends the circuit-breaker budget, detaches the object and
+     * tells the uploader. All of that stays where it has been running since
+     * August, and the ground's value IS that service's vocabulary for the one
+     * case where it matters, since `intimate_or_child` was carried over whole.
+     *
+     * The report row is already saved when this runs, so a failure here loses
+     * the takedown and never the report.
      */
-    private function withholdIfUrgent(
-        ContentReport $report,
+    private function raiseMediaTakedown(
         ReportTarget $target,
         string $targetId,
         ReportGround $ground,
@@ -120,10 +128,7 @@ final class ContentReportService
         ?string $contact,
         string $reporterIp,
     ): void {
-        if (!$target->canAutoWithhold() || !$ground->autoWithholds()) {
-            return;
-        }
-        if (!Uuid::isValid($targetId)) {
+        if (!$target->canAutoWithhold() || !Uuid::isValid($targetId)) {
             return;
         }
 
@@ -132,11 +137,34 @@ final class ContentReportService
             return;
         }
 
-        // The media service keeps its own vocabulary for the event log. The
-        // ground's value IS that vocabulary for this one case, on purpose:
-        // `intimate_or_child` was carried over whole from MediaTakedownCategory
-        // so that the merge needed no mapping table for the urgent path.
         $this->takedowns->report($upload, $ground->value, $reason, $contact, $reporterIp);
+    }
+
+    /**
+     * Carry a decision about a photo through to the photo itself.
+     *
+     * The desk records what a curator decided; for a picture that decision has
+     * to move a file as well. Upheld grants the pending takedown, which is what
+     * takes it down for good; rejected declines it, which puts back anything
+     * that was withheld while it was waiting. `Moot` does neither: there is
+     * nothing left to act on, which is the whole meaning of that outcome.
+     */
+    private function carryDecisionToPhoto(ContentReport $report, ReportStatus $status, string $note, User $curator): void
+    {
+        if (!$report->getTargetType()->canAutoWithhold() || !Uuid::isValid($report->getTargetId())) {
+            return;
+        }
+
+        $upload = $this->em->find(MediaUpload::class, Uuid::fromString($report->getTargetId()));
+        if (!$upload instanceof MediaUpload) {
+            return;
+        }
+
+        match ($status) {
+            ReportStatus::Upheld => $this->takedowns->grant($upload, $curator, $note),
+            ReportStatus::Rejected => $this->takedowns->decline($upload, $curator, $note),
+            default => null,
+        };
     }
 
     /**
@@ -151,6 +179,8 @@ final class ContentReportService
         $now = $this->clock->now();
         $report->decide($status, trim($note), (int) $curator->getId(), $now);
         $this->em->flush();
+
+        $this->carryDecisionToPhoto($report, $status, trim($note), $curator);
 
         $contact = $report->getReporterContact();
         if (null !== $contact) {

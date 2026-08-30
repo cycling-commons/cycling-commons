@@ -22,6 +22,17 @@
 
 {% block head_styles %}
 <style nonce="{{ csp_nonce() }}">
+  /* The rights statement: a checkbox and its sentence on one line, the box not
+     stretching to the sentence's height.
+
+     It has to UNDO `.cfield label`, which is the small rust mono cap style
+     every field label on this form uses. That style is right for "Your email"
+     and wrong for a sentence somebody has to read and agree to: a paragraph
+     set in tracked capitals is not a paragraph anybody reads. */
+  .cfield label.cinline{display:flex;align-items:flex-start;gap:.6rem;margin-top:1.1rem;
+    font-family:inherit;font-size:.90rem;line-height:1.55;letter-spacing:normal;
+    text-transform:none;color:#3a3d30}
+  .cfield label.cinline input{flex:0 0 auto;margin-top:.2rem}
   .reppage{max-width:640px}
   .reppage h2{font-family:var(--serif);font-weight:600;font-size:1.25rem;margin:1.8rem 0 .5rem}
   .reppage p{font-size:.95rem;color:#3a3d30;line-height:1.65;margin:.55rem 0}
@@ -31,7 +42,19 @@
   .cfield{margin:1.15rem 0}
   .cfield label{display:block;font-family:var(--mono);font-size:.68rem;letter-spacing:.12em;
     text-transform:uppercase;color:var(--clay);margin-bottom:.4rem}
-  .cfield select,.cfield textarea,.cfield input[type="email"]{
+  /* The "which thing" picker. Rows a thumb tall, so a picture is chosen by
+     looking at it rather than by reading a caption of it. */
+  .cpick{border:1px solid rgba(20,22,14,.18);border-radius:6px;padding:.9rem 1rem;margin:1.15rem 0}
+  .cpick legend{font-family:var(--mono);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--clay);padding:0 .35rem}
+  .cpick-row{display:flex;align-items:center;gap:.7rem;padding:.45rem 0;cursor:pointer;
+    font-size:.90rem;line-height:1.4;color:#3a3d30}
+  .cpick-row + .cpick-row{border-top:1px solid rgba(20,22,14,.08)}
+  .cpick-row input{flex:0 0 auto}
+  .cpick-thumb{flex:0 0 auto;width:56px;height:56px;object-fit:cover;border-radius:4px;
+    background:var(--paper-deep)}
+  .cpick .chint{margin-top:.7rem}
+  .cfield select,.cfield textarea,.cfield input[type="email"],.cfield input[type="text"]{
     width:100%;font-family:inherit;font-size:.95rem;padding:.6rem .7rem;color:var(--ink);
     border:1px solid rgba(20,22,14,.24);border-radius:5px;background:var(--paper)}
   .cfield textarea{min-height:8rem;line-height:1.6;resize:vertical}
@@ -86,11 +109,51 @@
         </div>
 
 
+        {# WHICH THING. One open drawer holds the entry and its photographs, so
+           "Report this page" has to start by asking which of them is wrong
+           (design spec §2). Absent when the page carries no pictures, and the
+           whole block is absent when the target IS already a picture. #}
+        {% if photos is not empty %}
+          <fieldset class="cpick">
+            <legend>{{ 'report.field_about'|trans }} <span class="req" aria-hidden="true">*</span></legend>
+            <label class="cpick-row">
+              <input type="radio" name="about" value="entry" checked>
+              <span class="cpick-lab">{{ 'report.about_entry'|trans({'%what%': target.label|trans}) }}</span>
+            </label>
+            {% for p in photos %}
+              <label class="cpick-row">
+                <input type="radio" name="about" value="{{ p.id }}">
+                <img src="{{ p.sm }}" alt="" class="cpick-thumb" width="56" height="56" loading="lazy">
+                <span class="cpick-lab">{{ p.alt ?: ('report.about_photo'|trans({'%n%': loop.index})) }}</span>
+              </label>
+            {% endfor %}
+            <p class="chint">{{ 'report.field_about_hint'|trans }}</p>
+          </fieldset>
+        {% endif %}
+
         <div class="cfield">
           <label for="rep-ground">{{ 'report.field_ground'|trans }} <span class="req" aria-hidden="true">*</span></label>
+          {# data-needs-proof / data-no-contact are read by the script below, so
+             the enum stays the single source of what a ground means and the
+             markup only carries it. #}
+          {# When the page carries pictures, the list has to hold the grounds for
+             BOTH: the entry's, and the extra ones only a photograph can break.
+             The picker decides which are offered; the server checks the pair
+             again, so a hand-posted mismatch is a 422 either way. #}
           <select id="rep-ground" name="ground" required>
-            {% for g in grounds %}
-              <option value="{{ g.value }}">{{ g.label|trans }}</option>
+            {# An empty first option, selected and disabled, so the form opens
+               with nothing chosen (owner, 2026-08-30). A select that defaults
+               to its first real answer files "unlawful" for anybody who did not
+               read it, and this field decides which desk queue a report joins
+               and whether a picture comes down on the spot. `required` then
+               means what it says; the server refuses an empty ground anyway,
+               because `tryFrom('')` is null. #}
+            <option value="" selected disabled>{{ 'report.choose'|trans }}</option>
+            {% for g in (photos is not empty ? photo_grounds : grounds) %}
+              <option value="{{ g.value }}"
+                      {% if g.isImageOnly %}data-photo-only="1"{% endif %}
+                      {% if g.needsOwnershipProof %}data-needs-proof="1"{% endif %}
+                      {% if not g.requiresContact %}data-no-contact="1"{% endif %}>{{ g.label|trans }}</option>
             {% endfor %}
           </select>
         </div>
@@ -101,19 +164,112 @@
           <p class="chint" id="rep-reason-hint">{{ 'report.field_reason_hint'|trans }}</p>
         </div>
 
+        {# A rights claim, and only a rights claim, asks for these two. Hidden
+           until the ground is chosen, and validated on the server against the
+           ground rather than against what the markup happened to show, so a
+           page rendered before the rule changed cannot slip past. #}
+        <div class="cfield" id="rep-rights" hidden>
+          <label for="rep-work">{{ 'report.field_work'|trans }} <span class="req" aria-hidden="true">*</span></label>
+          <textarea id="rep-work" name="work_original" maxlength="2000" aria-describedby="rep-work-hint"></textarea>
+          <p class="chint" id="rep-work-hint">{{ 'report.field_work_hint'|trans }}</p>
+
+          <label for="rep-claimant">{{ 'report.field_claimant'|trans }} <span class="req" aria-hidden="true">*</span></label>
+          <input type="text" id="rep-claimant" name="claimant_name" maxlength="180" autocomplete="name" aria-describedby="rep-claimant-hint">
+          <p class="chint" id="rep-claimant-hint">{{ 'report.field_claimant_hint'|trans }}</p>
+
+          <label class="cinline" for="rep-statement">
+            <input type="checkbox" id="rep-statement" name="rights_statement" value="1">
+            <span>{{ 'report.field_statement'|trans }}</span>
+          </label>
+        </div>
+
         <div class="cfield">
-          {# Optional here, unlike the bug form, and deliberately: DSA Article
-             16 is written for the person a display name is aimed at, who very
-             often has no account and no wish to leave an address. #}
-          <label for="rep-contact">{{ 'report.field_contact'|trans }}</label>
-          <input type="email" id="rep-contact" name="contact" autocomplete="email" aria-describedby="rep-contact-hint">
-          <p class="chint" id="rep-contact-hint">{{ 'report.field_contact_hint'|trans }}</p>
+          {# Required for every ground but the child one, where DSA Article
+             16(2)(c) forbids demanding it. The label and the hint swap with the
+             ground; the server decides either way. #}
+          <label for="rep-contact">
+            <span id="rep-contact-label">{{ 'report.field_contact'|trans }}</span>
+            <span class="req" id="rep-contact-req" aria-hidden="true">*</span>
+          </label>
+          <input type="email" id="rep-contact" name="contact" autocomplete="email" required aria-describedby="rep-contact-hint-optional">
+          {# No hint on the ordinary path (owner, 2026-08-30). The label and the
+             asterisk already say what the field is and that it is needed; a
+             paragraph explaining that we will not show the address to anybody
+             was answering a question nobody asked here. The one case that DOES
+             need a word is the child ground, where the address stops being
+             required and a reader has to be told they may leave it blank. #}
+          <p class="chint" id="rep-contact-hint-optional" hidden>{{ 'report.field_contact_hint_optional'|trans }}</p>
         </div>
 
         <p class="reqlegend">{{ 'support.required_legend'|trans|rich }}</p>
 
         <p><button type="submit" class="btn btn-p">{{ 'report.submit'|trans }}</button></p>
       </form>
+
+      {#
+        What the chosen ground asks for. Nothing here decides anything: the
+        server validates against the enum, and this only stops the form asking
+        for a rights claim from somebody reporting a locked gate, and stops it
+        demanding an address on the one ground where the law forbids demanding
+        one.
+
+        Nonce'd rather than a file of its own: it is fifteen lines that exist
+        only for this form, and the CSP blocks inline handlers so an onchange
+        attribute would silently do nothing.
+      #}
+      <script nonce="{{ csp_nonce() }}">
+        (function () {
+          var sel = document.getElementById('rep-ground');
+          if (!sel) { return; }
+          var rights = document.getElementById('rep-rights');
+          var work = document.getElementById('rep-work');
+          var claimant = document.getElementById('rep-claimant');
+          var statement = document.getElementById('rep-statement');
+          var contact = document.getElementById('rep-contact');
+          var req = document.getElementById('rep-contact-req');
+          var hintOpt = document.getElementById('rep-contact-hint-optional');
+
+          var about = document.getElementsByName('about');
+
+          /* A ground that only a photograph can break is offered only while a
+             photograph is the thing being reported. Hidden AND disabled: a
+             hidden option stays selectable with a keyboard in some browsers. */
+          function syncGrounds() {
+            if (!about.length) { return; }
+            var onPhoto = false;
+            for (var i = 0; i < about.length; i++) {
+              if (about[i].checked && about[i].value !== 'entry') { onPhoto = true; }
+            }
+            for (var j = 0; j < sel.options.length; j++) {
+              var o = sel.options[j];
+              if (o.dataset.photoOnly !== '1') { continue; }
+              o.hidden = !onPhoto;
+              o.disabled = !onPhoto;
+              if (!onPhoto && o.selected) { sel.selectedIndex = 0; }
+            }
+          }
+
+          function sync() {
+            syncGrounds();
+            var opt = sel.options[sel.selectedIndex];
+            var proof = opt && opt.dataset.needsProof === '1';
+            var noContact = opt && opt.dataset.noContact === '1';
+
+            rights.hidden = !proof;
+            work.required = proof;
+            claimant.required = proof;
+            statement.required = proof;
+
+            contact.required = !noContact;
+            req.hidden = noContact;
+            hintOpt.hidden = !noContact;
+          }
+
+          sel.addEventListener('change', sync);
+          for (var k = 0; k < about.length; k++) { about[k].addEventListener('change', sync); }
+          sync();
+        })();
+      </script>
 
     {% endif %}
   </div>

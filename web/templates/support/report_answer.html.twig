@@ -1,0 +1,96 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{#
+  The uploader answers a rights claim (backlog item 6).
+
+  Reached from the Article 17 statement of reasons, and from nowhere else: a
+  copyright report that was upheld tells the author what happened and links
+  here so they can say the work is theirs.
+
+  SIGNED IN, unlike the report form itself. Whoever posted the content has an
+  account by definition, and the statement went to that account's address, so a
+  login proves who they are better than any token in a mailed URL would.
+
+  Once. The link was mailed once, and a second answer would be a conversation
+  this desk cannot hold; a curator who needs more asks in the normal message
+  thread. The answer lands as part of the same report, not as a new one, so
+  whoever decides sees the claim and the reply side by side.
+
+  There is no automatic put-back after a fortnight. That clock is US DMCA
+  512(g), a safe-harbour mechanism we are not obliged to run, and running it
+  would mean restoring something we believe is stolen because two weeks passed.
+
+  @see docs/specs/2026-08-30-one-report-route-design.md §3
+#}
+{% extends 'base.html.twig' %}
+
+{% block head_styles %}
+<style nonce="{{ csp_nonce() }}">
+  .reppage{max-width:640px}
+  .reppage h2{font-family:var(--serif);font-weight:600;font-size:1.25rem;margin:1.8rem 0 .5rem}
+  .reppage p{font-size:.95rem;color:#3a3d30;line-height:1.65;margin:.55rem 0}
+  .reppage a{color:var(--clay);text-decoration:underline;text-underline-offset:3px}
+  .cfield{margin:1.15rem 0}
+  .cfield label{display:block;font-family:var(--mono);font-size:.68rem;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--clay);margin-bottom:.4rem}
+  .cfield textarea{width:100%;font-family:inherit;font-size:.95rem;padding:.6rem .7rem;color:var(--ink);
+    border:1px solid rgba(20,22,14,.24);border-radius:5px;background:var(--paper);min-height:9rem}
+  .cfield textarea:focus-visible{outline:2px solid var(--clay);outline-offset:1px}
+  .chint{font-size:.90rem;color:#595c4d;line-height:1.5;margin:.4rem 0 0}
+  .claim{background:var(--paper-deep);border-left:2px solid var(--glacier);
+    padding:1rem 1.2rem;border-radius:0 8px 8px 0;font-size:.90rem;line-height:1.6;margin:1.4rem 0}
+  .claim dt{font-family:var(--mono);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--clay);margin-top:.7rem}
+  .claim dt:first-child{margin-top:0}
+  .claim dd{margin:.15rem 0 0}
+  .cerr{background:rgba(150,69,38,.1);border-left:2px solid var(--clay);padding:.8rem 1rem;
+    border-radius:0 6px 6px 0;font-size:.90rem;color:#7a3a1e;margin:1.2rem 0}
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="lhero"><div class="wrap">
+  <div class="kicker" style="color:var(--trail)">{{ report.targetType.label|trans }}</div>
+  <h1 class="disp">{{ 'report.answer.title'|trans }}</h1>
+  <p class="lead" style="color:rgba(239,230,212,.85);margin-top:.8rem">{{ 'report.answer.intro'|trans|rich }}</p>
+</div></div>
+
+<section class="pad"><div class="wrap">
+  <div class="reppage">
+    {% if done %}
+      <h2>{{ 'report.answer.sent_title'|trans }}</h2>
+      <p>{{ 'report.answer.sent_body'|trans|rich }}</p>
+      <p><a href="{{ path('messages_index') }}">{{ 'report.answer.back'|trans }}</a></p>
+    {% else %}
+      {% if error %}<div class="cerr" role="alert">{{ error|trans }}</div>{% endif %}
+
+      {# What was claimed, so the answer is written against something and not
+         from memory. The claimant's name is here on purpose: nobody can answer
+         a claim without knowing who is making it. #}
+      <dl class="claim">
+        <dt>{{ 'report.desk.field_ground'|trans }}</dt>
+        <dd>{{ report.ground.label|trans }}</dd>
+        {% if report.claimantName %}
+          <dt>{{ 'report.answer.field_claimant'|trans }}</dt>
+          <dd>{{ report.claimantName }}</dd>
+        {% endif %}
+        {% if report.workOriginal %}
+          <dt>{{ 'report.answer.field_work'|trans }}</dt>
+          <dd>{{ report.workOriginal }}</dd>
+        {% endif %}
+        <dt>{{ 'report.desk.field_decided'|trans }}</dt>
+        <dd>{{ report.decisionNote }}</dd>
+      </dl>
+
+      <form method="post" action="{{ path('content_report_answer', {id: report.id}) }}">
+        <input type="hidden" name="_token" value="{{ csrf_token('content_report_answer') }}">
+        <div class="cfield">
+          <label for="ans">{{ 'report.answer.field_answer'|trans }} <span class="req" aria-hidden="true">*</span></label>
+          <textarea id="ans" name="answer" required maxlength="2000" aria-describedby="ans-hint"></textarea>
+          <p class="chint" id="ans-hint">{{ 'report.answer.field_answer_hint'|trans }}</p>
+        </div>
+        <p><button type="submit" class="btn btn-p">{{ 'report.answer.submit'|trans }}</button></p>
+      </form>
+    {% endif %}
+  </div>
+</div></section>
+{% endblock %}

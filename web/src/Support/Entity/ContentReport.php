@@ -97,6 +97,34 @@ class ContentReport
     #[ORM\Column(name: 'created_at', type: 'datetime_immutable')]
     private \DateTimeImmutable $createdAt;
 
+    /**
+     * Where the original work is, for a `copyright` report only.
+     *
+     * A URL if it was ever online, a description of the work if it was not.
+     * Free text on purpose: a rights holder should not have to own a website
+     * to say "it is the print hanging in my hallway, shot on 12 June 2019".
+     */
+    #[ORM\Column(name: 'work_original', type: Types::TEXT, nullable: true)]
+    private ?string $workOriginal = null;
+
+    /**
+     * The name the rights claim is made under, for a `copyright` report only.
+     *
+     * Not the same as the reporter's address, which nobody sees: this one IS
+     * shown to the uploader in the Article 17 statement, because a person
+     * cannot answer a claim without knowing who is making it. The form says so
+     * at the field.
+     */
+    #[ORM\Column(name: 'claimant_name', length: 180, nullable: true)]
+    private ?string $claimantName = null;
+
+    /** What the uploader said back, once, after the Article 17 statement. */
+    #[ORM\Column(name: 'counter_notice', type: Types::TEXT, nullable: true)]
+    private ?string $counterNotice = null;
+
+    #[ORM\Column(name: 'counter_notice_at', type: 'datetime_immutable', nullable: true)]
+    private ?\DateTimeImmutable $counterNoticeAt = null;
+
     public function __construct(
         Uuid $id,
         ReportTarget $targetType,
@@ -230,6 +258,54 @@ class ContentReport
         $this->decisionNote = $note;
         $this->decidedById = $curatorId;
         $this->decidedAt = $at;
+    }
+
+    public function getWorkOriginal(): ?string
+    {
+        return $this->workOriginal;
+    }
+
+    public function getClaimantName(): ?string
+    {
+        return $this->claimantName;
+    }
+
+    /** Set together: a rights claim without either is not one. */
+    public function setRightsClaim(?string $workOriginal, ?string $claimantName): void
+    {
+        $this->workOriginal = $workOriginal;
+        $this->claimantName = $claimantName;
+    }
+
+    public function getCounterNotice(): ?string
+    {
+        return $this->counterNotice;
+    }
+
+    public function getCounterNoticeAt(): ?\DateTimeImmutable
+    {
+        return $this->counterNoticeAt;
+    }
+
+    public function hasCounterNotice(): bool
+    {
+        return null !== $this->counterNoticeAt;
+    }
+
+    /**
+     * The uploader answers the claim, once.
+     *
+     * Once, because the link that reaches this is in a mail that was sent once,
+     * and a second answer would be a conversation this desk cannot hold. A
+     * curator who needs more asks through the normal message thread.
+     */
+    public function recordCounterNotice(string $text, \DateTimeImmutable $at): void
+    {
+        if (null !== $this->counterNoticeAt) {
+            return;
+        }
+        $this->counterNotice = $text;
+        $this->counterNoticeAt = $at;
     }
 
     public function isAuthorTold(): bool

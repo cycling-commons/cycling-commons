@@ -21,7 +21,7 @@
 {% block content %}
   <p style="margin:0 0 8px">Hello {{ author.displayName }},</p>
 
-  <p style="margin:0 0 8px">Somebody reported something you added to Cycling Commons, a curator agreed with them, and we have changed or removed it. This email explains why, which is your right under Article 17 of the Digital Services Act.</p>
+  <p style="margin:0 0 8px">Somebody reported something you added to Cycling Commons, a curator agreed with them, and we have changed or removed it. This email explains why, which is your right under <a href="https://eur-lex.europa.eu/eli/reg/2022/2065/oj" style="color:#c2551f">Article 17 of the Digital Services Act</a>.</p>
 
   <table role="presentation" style="margin:18px 0;border-collapse:collapse;font-size:14px">
     <tr>
@@ -52,6 +52,16 @@
   {% endif %}
 
   <p style="margin:0 0 8px"><strong>Your account is fine.</strong> Nothing else you added was touched, and one upheld report does not count against you.</p>
+
+  {% if report.ground.needsOwnershipProof %}
+    {# A rights claim, so the person answering needs to know who made it and
+       what they say the original is. Article 17(3)(f) wants a redress route;
+       for copyright that route is a specific page rather than a reply, because
+       the answer has to sit on the same row as the claim. #}
+    <p style="margin:0 0 8px">This was a <strong>copyright claim</strong>{% if report.claimantName %}, made by <strong>{{ report.claimantName }}</strong>{% endif %}. {% if report.workOriginal %}They say the original is: {{ report.workOriginal }}{% endif %}</p>
+
+    <p style="margin:0 0 14px"><strong>If the work is yours, say so.</strong> <a href="https://cyclingcommons.org/report/{{ report.id }}/answer" style="color:#c2551f">Answer the claim here</a>, signed in with this account. Your answer goes on the same record as the claim, so whoever looks next reads both. You can answer once, so say everything at once. Nothing goes back up on a timer: a person decides.</p>
+  {% endif %}
 
   <p style="margin:0 0 8px"><strong>If we got it wrong, tell us.</strong> Reply to this email with the reference above and a different curator will read it again. You can also take it to an out-of-court dispute settlement body, or to a court, in the country where you live.</p>
 

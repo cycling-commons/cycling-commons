@@ -33,8 +33,21 @@ final class MediaTakedownService
     public const int PER_PAGE = 25;
 
     /** Open requests, excluding legal hold. @see docs/specs/photo-uploads.md §6d */
-    private const string PENDING_DQL = 'm.takedownRequestedAt IS NOT NULL AND m.objectsDeletedAt IS NULL
-               AND m.escalatedAt IS NULL';
+    /**
+     * The takedown desk's own queue: what an UPLOADER asked us to remove.
+     *
+     * Third-party reports left this desk on 2026-08-30 and are decided at
+     * /moderate/reports instead, where the DSA record lives and where deciding
+     * also sends the reporter their Article 16(5) outcome and the author their
+     * Article 17 statement. They still raise a takedown request here, which is
+     * what a decision over there then grants or declines; what changed is which
+     * desk holds the button, because two desks that can both decide the same
+     * row is exactly how a reporter ends up never hearing back.
+     *
+     * @see docs/specs/2026-08-30-one-report-route-design.md §3
+     */
+    private const string PENDING_DQL = "m.takedownRequestedAt IS NOT NULL AND m.objectsDeletedAt IS NULL
+               AND m.escalatedAt IS NULL AND m.takedownSource = 'uploader'";
 
     /** Recovery desk: withheld third-party reports still waiting. */
     private const string WITHHELD_THIRD_PARTY_DQL = 'm.takedownRequestedAt IS NOT NULL AND m.objectsDeletedAt IS NULL

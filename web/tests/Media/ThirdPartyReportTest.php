@@ -311,18 +311,43 @@ final class ThirdPartyReportTest extends KernelTestCase
         self::assertTrue($this->filesystem->fileExists($upload->getPathPrefix().'/sm.webp'));
     }
 
-    public function testTheDeskCardCarriesSourceCategoryContactAndState(): void
+    /**
+     * A third-party report raises the request but does NOT sit on this desk.
+     *
+     * It is decided at /moderate/reports from 2026-08-30, where the DSA record
+     * lives and where deciding also sends the reporter their Article 16(5)
+     * outcome and the author their Article 17 statement. Two desks that can
+     * both decide the same row is how a reporter ends up never hearing back,
+     * so this one keeps only what an UPLOADER asked us to remove.
+     *
+     * @see docs/specs/2026-08-30-one-report-route-design.md §3
+     */
+    public function testAThirdPartyReportRaisesTheRequestButLeavesThisDesk(): void
     {
         $upload = $this->approved($this->rider('report-desk@example.com'));
 
         $this->takedowns->report($upload, MediaTakedownCategory::IdentifiableSelf, 'Me, foreground.', 'reply@example.org', '203.0.113.17');
 
+        // The operational state is there, which is what a decision over on the
+        // reports desk then grants or declines.
+        self::assertTrue($upload->isTakedownPending());
+        self::assertSame(MediaTakedownSource::ThirdParty, $upload->getTakedownSource());
+        self::assertSame(MediaTakedownCategory::IdentifiableSelf, $upload->getTakedownCategory());
+
+        // ...and this desk does not offer a button for it.
+        self::assertCount(0, $this->takedowns->pendingCards());
+    }
+
+    /** What an uploader asked us to remove still belongs here. */
+    public function testAnUploaderRequestStaysOnThisDesk(): void
+    {
+        $upload = $this->approved($this->rider('report-own@example.com'));
+
+        $this->takedowns->request($upload, 'I would rather it came down.');
+
         $cards = $this->takedowns->pendingCards();
         self::assertCount(1, $cards);
-        self::assertSame(MediaTakedownSource::ThirdParty, $cards[0]['source']);
-        self::assertSame(MediaTakedownCategory::IdentifiableSelf, $cards[0]['category']);
-        self::assertSame('reply@example.org', $cards[0]['contact']);
-        self::assertFalse($cards[0]['withheld']);
+        self::assertSame(MediaTakedownSource::Uploader, $cards[0]['source']);
     }
 
     public function testContactsAreSweptNinetyDaysAfterResolutionAndNotBefore(): void

@@ -1,5 +1,8 @@
 # Content reports
 
+> **Law cited here is listed with its source in [`legal-sources.md`](legal-sources.md).** Article numbers are named in the text; the link goes to the act, because EUR-Lex article anchors do not survive consolidation.
+
+
 How anybody, with or without an account, tells us that something on the Commons
 is wrong, and how a curator answers them.
 

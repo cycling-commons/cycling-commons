@@ -190,6 +190,48 @@ final class ReportResolver
     }
 
     /**
+     * The pictures showing on an item's page, for the "which thing" picker.
+     *
+     * A DELIBERATE narrowing of the no-oracle rule, and the only one: the form
+     * looks this up before anything is filed, so the page differs between an
+     * item that exists with photographs and one that does not. That is a fact
+     * the map already publishes to anybody who scrolls to it, unlike whether a
+     * rider uuid or a message id is real, which stay unlooked-up.
+     *
+     * @return list<array{id: string, sm: string, alt: ?string}>
+     */
+    public function photosOn(ReportTarget $target, string $id): array
+    {
+        if (ReportTarget::Item !== $target || 1 !== preg_match('/^[1-9][0-9]{0,9}$/', $id)) {
+            return [];
+        }
+
+        $item = $this->em->find(Item::class, (int) $id);
+        if (!$item instanceof Item) {
+            return [];
+        }
+
+        $gallery = $item->getAttributes()['photos'] ?? [];
+        if (!\is_array($gallery)) {
+            return [];
+        }
+
+        $out = [];
+        foreach ($gallery as $photo) {
+            if (!\is_array($photo) || !\is_string($photo['id'] ?? null) || !\is_string($photo['sm'] ?? null)) {
+                continue;
+            }
+            $out[] = [
+                'id' => $photo['id'],
+                'sm' => $photo['sm'],
+                'alt' => \is_string($photo['alt'] ?? null) ? $photo['alt'] : null,
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
      * A picture.
      *
      * The uploader IS the author here, unlike a place or a region text: one

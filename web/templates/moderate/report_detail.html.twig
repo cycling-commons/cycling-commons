@@ -79,6 +79,19 @@
       <dd>{{ report.status.label|trans }}</dd>
       <dt>{{ 'support.inbox.received'|trans }}</dt>
       <dd>{{ report.createdAt|cc_datetime }}</dd>
+      {% if report.ground.needsOwnershipProof %}
+        {# A rights claim carries two things no other ground does. The claimant
+           name is shown here AND to the author, unlike the reporter address,
+           which is shown to nobody. #}
+        <dt>{{ 'report.answer.field_claimant'|trans }}</dt>
+        <dd>{{ report.claimantName ?: ('report.desk.no_author'|trans) }}</dd>
+        <dt>{{ 'report.answer.field_work'|trans }}</dt>
+        <dd>{{ report.workOriginal }}</dd>
+      {% endif %}
+      {% if report.hasCounterNotice %}
+        <dt>{{ 'report.desk.field_counter'|trans }}</dt>
+        <dd>{{ report.counterNotice|nl2br }}</dd>
+      {% endif %}
       <dt>{{ 'report.desk.field_reporter'|trans }}</dt>
       {# Whether we can answer, never the address. #}
       <dd>{{ report.reporterContact ? ('report.desk.answerable'|trans) : ('report.desk.no_contact'|trans) }}</dd>
