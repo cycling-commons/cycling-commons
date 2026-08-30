@@ -2487,12 +2487,15 @@ media:
     to_map: 'Zur Karte'
   alt:
     label: 'Beschreibe dieses Foto'
+    yours: 'Dein Foto. Änderungen hier gelten sofort.'
+    suggest_note: 'Jemand anderes hat es hochgeladen. Deine Formulierung geht mit deinen übrigen Änderungen an einen Kurator.'
     placeholder: 'Was müsste jemand wissen, der es nicht sehen kann?'
   consent:
     title: 'Bevor du ein Foto hinzufügst'
     intro: 'Dein(e) Foto(s) werden Teil des offenen Commons, damit alle Radfahrenden sie nutzen können. Das geht nur, wenn sie wirklich frei teilbar sind.'
     contract: 'Ich lizenziere meine Fotos unter CC BY-SA 4.0, ich bestätige, dass ich sie selbst aufgenommen habe, und dass sie einen echten Ort zeigen und nicht von KI erzeugt oder verändert wurden.'
-    read_licence: 'Lizenz lesen'
+    read_licence: 'CC BY-SA 4.0 lesen'
+    read_rules: 'Was wir annehmen, und was nicht'
     keep_ownership: 'Du behältst das Eigentum — das Commons erhält nur eine Lizenz zum Teilen.'
     accept: 'Ich spende es'
     cancel: 'Abbrechen'

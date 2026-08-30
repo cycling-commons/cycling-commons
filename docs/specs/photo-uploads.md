@@ -2,6 +2,9 @@
 
 # Photo Uploads — contribution media storage
 
+> **Law cited here is listed with its source in [`legal-sources.md`](legal-sources.md).** Article numbers are named in the text; the link goes to the act, because EUR-Lex article anchors do not survive consolidation.
+
+
 **Status:** canonical reference (design final 2026-07-31; EXECUTED
 2026-07-31) · **Audience:** contributors to Cycling Commons
 
@@ -888,6 +891,36 @@ worse than nothing.
 the upload POSTs the moment a file is chosen and the rider has not typed
 anything yet. It also means a description can be fixed afterwards, and a slow
 typist never holds up the scan queue.
+
+**It lives in TWO places and both are written together** (fixed 2026-08-30). The
+upload row, and a copy inside the item's `photos` gallery, which is what the
+map, the vector tiles and the wizard's review step all read. That copy is not a
+cache: it rides inside cached tiles, so it cannot be rebuilt on read. Writing
+only the row left every surface showing the description as it stood at approval,
+which made an edit look as though it had not happened. Pinned by
+`PhotoAltGallerySyncTest`.
+
+**Anybody signed in can write one; only the uploader's takes effect at once**
+(owner, 2026-08-30). Before this, a wrong or missing description was stuck until
+whoever took the picture happened to return. Two routes, and the server enforces
+the split both ways:
+
+| Who | Route | What happens |
+|---|---|---|
+| the uploader | `POST /media/photos/{id}/alt` | written straight through, both copies |
+| anybody else signed in | `POST /media/photos/{id}/alt-suggestion` | an edit on the place, in the ordinary review queue |
+| signed out | neither | no field is rendered |
+
+The direct route refuses a non-owner and the suggestion route refuses the owner,
+so the `data-mine` attribute the template writes only chooses which 404 a
+tampered request gets. A suggestion is a normal `Edit` submission whose change
+key is `photoAlt:<uuid>` (`App\Media\PhotoAltSuggestion`), namespaced with a
+colon because no catalogue field name contains one. An open submission on the
+same item is amended rather than duplicated, the same rule the edit path
+follows. Approving it writes both copies through
+`ModerationService::applyPhotoAlt()`, and only for a picture still attached to
+that item. No new moderation mechanic appears, which is the house rule
+(`one-way-to-moderate`). Pinned by `PhotoAltSuggestionTest`.
 
 **The fallback is the item's name.** Owner's call, 2026-08-28, and it reverses
 the original draft of this item, which said fall back to `alt=""` on the grounds

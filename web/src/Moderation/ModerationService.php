@@ -20,11 +20,13 @@ use App\Entity\User;
 use App\Media\Entity\MediaUpload;
 use App\Media\MediaDecisionService;
 use App\Media\MediaDisposalService;
+use App\Media\PhotoAltSuggestion;
 use App\Messaging\MessageService;
 use App\Messaging\UserMessageKind;
 use App\Service\AdminActionLogger;
 use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Uid\Uuid;
 
 /**
  * Write-path for moderation decisions. History records the item's value at apply time.
@@ -289,6 +291,17 @@ final class ModerationService
                 }
                 continue;
             }
+            $suggestedPhoto = PhotoAltSuggestion::photoOf($field);
+            if (null !== $suggestedPhoto) {
+                // A description somebody who did not upload the picture
+                // suggested. It goes to the upload row AND to the gallery copy
+                // the map reads, the same pair `MediaController::altText()`
+                // writes, because the two must never disagree.
+                $this->applyPhotoAlt($item, $suggestedPhoto, \is_string($now) ? $now : null, $attributes);
+                $changed = true;
+                $this->history($item, $submission, $curator, $field, $pair['was'] ?? null, $now);
+                continue;
+            }
             if (Item::NAME_FIELD === $field) {
                 $item->setName((string) $now);
             } elseif (null === $now) {
@@ -308,6 +321,43 @@ final class ModerationService
         if ($changed) {
             $item->setAttributes($attributes); // also bumps updated_at
         }
+    }
+
+    /**
+     * Write an approved description onto the photo and onto the gallery entry.
+     *
+     * `$attributes` is passed by reference because the caller writes it back
+     * once at the end; touching the item twice would bump `updated_at` twice
+     * for one decision.
+     *
+     * @param array<string, mixed> $attributes
+     */
+    private function applyPhotoAlt(Item $item, Uuid $photo, ?string $alt, array &$attributes): void
+    {
+        $upload = $this->em->find(MediaUpload::class, $photo);
+        // Only a picture that is still on THIS item. A submission cannot be
+        // used to retitle somebody else's photograph on another place.
+        if (!$upload instanceof MediaUpload || $upload->getItemId() !== $item->getId()) {
+            return;
+        }
+
+        $upload->setAltText($alt);
+
+        $photos = $attributes['photos'] ?? null;
+        if (!\is_array($photos)) {
+            return;
+        }
+        foreach ($photos as $index => $entry) {
+            if (!$this->mediaDecisions->isEntryFor($entry, $upload)) {
+                continue;
+            }
+            if (null === $alt || '' === $alt) {
+                unset($photos[$index]['alt']);
+            } else {
+                $photos[$index]['alt'] = $alt;
+            }
+        }
+        $attributes['photos'] = array_values($photos);
     }
 
     private function history(Item $item, Submission $submission, User $curator, string $field, mixed $old, mixed $new): void

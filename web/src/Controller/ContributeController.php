@@ -18,6 +18,7 @@ use App\Coverage\CoverageRepository;
 use App\Entity\User;
 use App\Form\ImproveType;
 use App\Form\VoteType;
+use App\Media\Entity\MediaUpload;
 use App\Routing\LocalePrefix;
 use App\Routing\LocalizedPath;
 use App\Service\ContributionReceipt;
@@ -32,6 +33,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\Uid\Uuid;
 use Symfony\Component\Validator\Exception\ValidationFailedException;
 
 /**
@@ -48,6 +50,7 @@ final class ContributeController extends AbstractController
         private readonly ContributionStubInterface $contributionStub,
         private readonly CatalogContributionService $contributions,
         private readonly CatalogFormRegistry $registry,
+        private readonly EntityManagerInterface $em,
     ) {
     }
 
@@ -404,7 +407,52 @@ final class ContributeController extends AbstractController
             'receipt' => null,
             'form' => $form,
             'current' => $current,
+            'own_photo_ids' => $this->ownPhotoIds($current),
             'pending_submission_id' => $pendingSubmissionId,
         ]);
+    }
+
+    /**
+     * Which of this item's photographs the signed-in rider uploaded.
+     *
+     * A description can be fixed after the fact, but only by the person who
+     * wrote it: `MediaController::altText()` is owner-only and would answer 404
+     * to anybody else. Offering a field that silently fails is worse than
+     * offering none, so the template asks this before it renders one (owner,
+     * 2026-08-30: "it should be possible to change the description of an
+     * existing image").
+     *
+     * One query for the whole gallery, and none at all for a signed-out reader.
+     *
+     * @param array<string, mixed> $current
+     *
+     * @return list<string>
+     */
+    private function ownPhotoIds(array $current): array
+    {
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            return [];
+        }
+
+        $gallery = $current['photos'] ?? ($current['photo'] ?? null);
+        $gallery = \is_array($gallery) ? (isset($gallery['id']) ? [$gallery] : $gallery) : [];
+
+        $ids = [];
+        foreach ($gallery as $photo) {
+            if (\is_array($photo) && \is_string($photo['id'] ?? null) && Uuid::isValid($photo['id'])) {
+                $ids[] = Uuid::fromString($photo['id']);
+            }
+        }
+        if ([] === $ids) {
+            return [];
+        }
+
+        /** @var list<MediaUpload> $rows */
+        $rows = $this->em->createQuery(
+            'SELECT m FROM '.MediaUpload::class.' m WHERE m.id IN (:ids) AND m.userId = :uid',
+        )->setParameter('ids', $ids)->setParameter('uid', (int) $user->getId())->getResult();
+
+        return array_map(static fn (MediaUpload $m): string => $m->getId()->toRfc4122(), $rows);
     }
 }

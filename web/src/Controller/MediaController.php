@@ -6,6 +6,8 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Catalog\Entity\Item;
+use App\Contribution\CatalogContributionService;
 use App\Entity\User;
 use App\Media\ConsentMissing;
 use App\Media\ConsentService;
@@ -13,6 +15,7 @@ use App\Media\ContinentResolver;
 use App\Media\Entity\MediaUpload;
 use App\Media\MediaAction;
 use App\Media\MediaConsent;
+use App\Media\MediaDecisionService;
 use App\Media\MediaEventLog;
 use App\Media\MediaStatus;
 use App\Media\MediaStorage;
@@ -57,6 +60,8 @@ final class MediaController extends AbstractController
         private readonly MediaEventLog $events,
         private readonly EntityManagerInterface $em,
         private readonly MessageBusInterface $bus,
+        private readonly MediaDecisionService $decisions,
+        private readonly CatalogContributionService $contributions,
     ) {
     }
 
@@ -231,9 +236,110 @@ final class MediaController extends AbstractController
         }
 
         $upload->setAltText($alt);
+        // The description lives in TWO places, and writing only one of them was
+        // the bug: the upload row, and a copy inside the item's `photos`
+        // gallery, which is what the map, the tiles and the wizard's review
+        // step all read. Editing an approved photo's description used to update
+        // the row and leave the gallery saying what it said at approval
+        // (owner, 2026-08-30: "again the text for the already existing image is
+        // not visible"). The gallery copy is not a cache to be rebuilt: it
+        // rides inside cached tiles, so it has to be written here.
+        $this->syncGalleryAlt($upload, $alt);
         $this->em->flush();
 
         return $this->json(['alt' => $upload->getAltText()]);
+    }
+
+    /**
+     * Suggest a description for a photograph somebody else uploaded.
+     *
+     * The owner-only endpoint above writes straight through. Everybody else
+     * lands here, and their words go into the same review queue as every other
+     * edit on that place: a curator sees the suggestion beside the rest and
+     * approving it writes both copies (owner, 2026-08-30). No new moderation
+     * mechanic, which is the house rule.
+     *
+     * The OWNER is deliberately refused here rather than quietly handled: they
+     * have a route that takes effect immediately, and sending their own words
+     * to a queue would be a worse answer, not a kinder one.
+     *
+     * @see docs/specs/photo-uploads.md §5e
+     */
+    #[Route('/media/photos/{id}/alt-suggestion', name: 'media_photos_alt_suggest', methods: ['POST'])]
+    public function suggestAltText(string $id, Request $request): JsonResponse
+    {
+        $user = $this->requireUser();
+        $this->requireCsrf($request);
+
+        $upload = Uuid::isValid($id) ? $this->em->find(MediaUpload::class, Uuid::fromString($id)) : null;
+        if (null === $upload || $upload->getUserId() === (int) $user->getId()) {
+            return $this->json(['error' => 'not_found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $itemId = $upload->getItemId();
+        $item = null === $itemId ? null : $this->em->find(Item::class, $itemId);
+        // A picture nobody has approved onto a place yet has no item to file an
+        // edit against, and nothing public to correct either.
+        if (!$item instanceof Item) {
+            return $this->json(['error' => 'not_found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $alt = $request->request->get('alt');
+        $alt = \is_string($alt) ? trim($alt) : null;
+        if (null !== $alt && mb_strlen($alt) > self::ALT_MAX) {
+            return $this->json(['error' => 'alt_too_long'], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $submission = $this->contributions->suggestPhotoAlt($item, $upload, '' === $alt ? null : $alt, $user);
+
+        return $this->json(['submission' => $submission->getId()]);
+    }
+
+    /**
+     * Carry a changed description into the item's published gallery entry.
+     *
+     * Only an approved photo has one, and only the entry that IS this upload is
+     * touched: `isEntryFor()` matches on the uuid, falling back to the small
+     * URL for entries written before ids were stored.
+     */
+    private function syncGalleryAlt(MediaUpload $upload, ?string $alt): void
+    {
+        $itemId = $upload->getItemId();
+        if (null === $itemId) {
+            return;
+        }
+
+        $item = $this->em->find(Item::class, $itemId);
+        if (!$item instanceof Item) {
+            return;
+        }
+
+        $attributes = $item->getAttributes();
+        $photos = $attributes['photos'] ?? null;
+        if (!\is_array($photos)) {
+            return;
+        }
+
+        $changed = false;
+        foreach ($photos as $index => $photo) {
+            if (!$this->decisions->isEntryFor($photo, $upload)) {
+                continue;
+            }
+            if (null === $alt || '' === $alt) {
+                // An emptied description leaves no key at all, which is what
+                // lets the render side fall back to the place's name rather
+                // than to an empty alt.
+                unset($photos[$index]['alt']);
+            } else {
+                $photos[$index]['alt'] = $alt;
+            }
+            $changed = true;
+        }
+
+        if ($changed) {
+            $attributes['photos'] = array_values($photos);
+            $item->setAttributes($attributes);
+        }
     }
 
     /**

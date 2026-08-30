@@ -41,17 +41,27 @@
     var name = isLink ? entry : str(entry && entry.name);
     var src = isLink ? '' : safeSrc(entry && entry.sm);
 
+    /* The caption is what the rider WROTE about the picture, and the filename
+       only when they wrote nothing (owner, 2026-08-30: "I do not see the image
+       description I gave"). `IMG_20240714_11302.jpg` reviews nothing: the point
+       of this step is to read back what you are about to send. */
+    var alt = isLink ? '' : str(entry && entry.alt);
+    var caption = alt || name;
+
     var fig = doc.createElement('figure');
     fig.className = src ? 'rm-item' : 'rm-item is-link';
+    if (alt) { fig.className += ' has-alt'; }
     if (src) {
       var img = doc.createElement('img');
       img.src = src;
-      img.alt = str(name);
+      /* The description IS the alt text once there is one, which is the whole
+         reason it was asked for. */
+      img.alt = caption;
       img.loading = 'lazy';
       fig.appendChild(img);
     }
     var cap = doc.createElement('figcaption');
-    cap.textContent = str(name);
+    cap.textContent = caption;
     fig.appendChild(cap);
     return fig;
   }

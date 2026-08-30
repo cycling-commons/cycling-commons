@@ -20,7 +20,9 @@ use App\Catalog\SubmissionStatus;
 use App\Catalog\SubmissionType;
 use App\Elevation\ClimbProfiler;
 use App\Entity\User;
+use App\Media\Entity\MediaUpload;
 use App\Media\MediaClaimService;
+use App\Media\PhotoAltSuggestion;
 use App\Service\ContributionReceipt;
 use App\Service\ContributionStubInterface;
 use Doctrine\ORM\EntityManagerInterface;
@@ -392,6 +394,82 @@ final class CatalogContributionService implements ContributionStubInterface
         return new ContributionReceipt(
             'SUB-'.(string) $submission->getId(), 'improve', true, $submission->getCreatedAt(), $submission->getId(),
         );
+    }
+
+    /**
+     * "This photograph should say something else", from somebody who did not
+     * upload it.
+     *
+     * A description belongs to its uploader, and the direct endpoint takes one
+     * only from them. Everybody else goes through the queue every other field
+     * on the wizard already uses, so a curator sees it beside the rest and no
+     * new moderation mechanic appears (owner, 2026-08-30).
+     *
+     * An open submission on the same item is AMENDED, never duplicated, which
+     * is the same rule the edit path follows: a rider who suggests a
+     * description and then fixes a surface tag files one submission, not two.
+     *
+     * @see docs/specs/photo-uploads.md §5e
+     *
+     * @api
+     */
+    public function suggestPhotoAlt(Item $item, MediaUpload $upload, ?string $alt, User $by): Submission
+    {
+        $field = PhotoAltSuggestion::field($upload->getId());
+        $change = [$field => ['was' => $upload->getAltText(), 'now' => $alt]];
+
+        $open = $this->openSubmissionFor((int) $item->getId(), $by);
+        if (null !== $open) {
+            $this->em->wrapInTransaction(function () use ($open, $change): void {
+                $open->setChanges($open->getChanges() + $change)
+                    ->setStatus(SubmissionStatus::Pending)
+                    ->setDecisionNote(null)
+                    ->setDecidedAt(null)
+                    ->setDecidedBy(null);
+            });
+
+            return $open;
+        }
+
+        $point = $this->pointOf($item);
+
+        return $this->submitDraft(
+            new SubmissionDraft(
+                type: ItemType::fromParam($item->getLetter()),
+                title: '' !== $item->getName() ? $item->getName() : 'Photo description',
+                lat: $point[0],
+                lng: $point[1],
+                attributes: [],
+                itemId: $item->getId(),
+            ),
+            SubmissionType::Edit,
+            $by,
+            [],
+            $change,
+        );
+    }
+
+    /**
+     * Where an item is, as a lat/lng pair.
+     *
+     * A segment's start point, for the same reason `submitDraft` keeps one: a
+     * submission is a pin on a moderation map, not the geometry itself.
+     *
+     * @return array{float, float}
+     */
+    private function pointOf(Item $item): array
+    {
+        /** @var array{type?: string, coordinates?: mixed} $geo */
+        $geo = json_decode($item->getGeom(), true, 512, \JSON_THROW_ON_ERROR);
+        $coords = $geo['coordinates'] ?? null;
+        if ('LineString' === ($geo['type'] ?? '') && \is_array($coords) && \is_array($coords[0] ?? null)) {
+            $coords = $coords[0];
+        }
+        if (!\is_array($coords) || !isset($coords[0], $coords[1])) {
+            return [0.0, 0.0];
+        }
+
+        return [(float) $coords[1], (float) $coords[0]];
     }
 
     /**

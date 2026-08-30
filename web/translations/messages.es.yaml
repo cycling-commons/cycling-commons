@@ -2022,6 +2022,8 @@ media:
     to_map: 'Ir al mapa'
   alt:
     label: 'Describe esta foto'
+    yours: 'Tu foto. Los cambios aquí se aplican al momento.'
+    suggest_note: 'Lo subió otra persona. Tu redacción va a un curador junto con tus demás cambios.'
     placeholder: '¿Qué necesitaría saber alguien que no puede verla?'
   consent:
     title: 'Antes de añadir una foto'
@@ -2030,7 +2032,8 @@ media:
     # registro de consentimiento, así que cambiarlo implica subir
     # MediaConsent::VERSION (docs/specs/photo-uploads.md §4).
     contract: 'Licencio mi(s) foto(s) bajo CC BY-SA 4.0, confirmo que las hice yo, y que muestran un lugar real y no han sido generadas ni alteradas por IA.'
-    read_licence: 'Leer la licencia'
+    read_licence: 'Leer CC BY-SA 4.0'
+    read_rules: 'Qué aceptamos y qué no'
     keep_ownership: 'Tú conservas la propiedad — el Commons solo obtiene una licencia para compartirla.'
     accept: 'Donarla'
     cancel: 'Cancelar'

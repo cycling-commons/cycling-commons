@@ -2484,12 +2484,15 @@ media:
     to_map: 'Aller à la carte'
   alt:
     label: 'Décrivez cette photo'
+    yours: 'Votre photo. Les modifications prennent effet immédiatement.'
+    suggest_note: 'Quelqu''un d''autre l''a envoyée. Votre formulation part chez un curateur avec vos autres modifications.'
     placeholder: 'Que devrait savoir quelqu''un qui ne peut pas la voir ?'
   consent:
     title: 'Avant d''ajouter une photo'
     intro: 'Vos photo(s) rejoignent le Commons ouvert pour que chaque cycliste puisse les utiliser. Cela ne fonctionne que si elles sont réellement libres de partage.'
     contract: 'Je place ma ou mes photos sous licence CC BY-SA 4.0, je confirme les avoir prises moi-même, et qu''elles montrent un lieu réel et n''ont pas été produites ni retouchées par une IA.'
-    read_licence: 'Lire la licence'
+    read_licence: 'Lire la licence CC BY-SA 4.0'
+    read_rules: 'Ce que nous acceptons, et ce que nous refusons'
     keep_ownership: 'Vous en gardez la propriété — le Commons ne reçoit qu''une licence de partage.'
     accept: 'Je la donne'
     cancel: 'Annuler'

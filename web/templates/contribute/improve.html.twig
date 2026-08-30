@@ -165,8 +165,16 @@
      progress bar, and an input squeezed beside them is unusable on a phone,
      which is where most photos are added. */
   .ulq .chip{flex-wrap:wrap}
-  .ulq .chip-alt{flex:1 0 100%;margin-top:.3rem}
-  .ulq .chip-alt input{width:100%;font-family:var(--sans);font-size:.72rem;padding:.32rem .45rem;border:1px solid rgba(20,22,14,.22);border-radius:4px;background:var(--paper)}
+  /* The description is a SENTENCE somebody writes, so it gets the site's field
+     conventions and not the chip's. It sat at .72rem with a chip's padding,
+     which is a caption size on a box you are meant to type a line of prose
+     into, and under the 0.90rem floor every other piece of running text on the
+     site keeps (owner, 2026-08-30). Same size, padding, border and radius as
+     the inputs on /contact and /report. */
+  .ulq .chip-alt{flex:1 0 100%;margin-top:.5rem}
+  .ulq .chip-alt input{width:100%;font-family:var(--sans);font-size:.95rem;padding:.6rem .7rem;
+    color:var(--ink);border:1px solid rgba(20,22,14,.24);border-radius:5px;background:var(--paper)}
+  .ulq .chip-alt input:focus-visible{outline:2px solid var(--clay);outline-offset:1px}
   .ulq .chip-alt.saved input{border-color:var(--glacier)}
   .ulq .chip{font-family:var(--mono);font-size:.7rem;letter-spacing:.04em;padding:.3rem .5rem;border-radius:5px;background:var(--paper-deep);border:1px solid rgba(20,22,14,.18);display:flex;align-items:center;gap:.35rem}
   .ulq .chip .dot{width:6px;height:6px;border-radius:50%;background:var(--ochre)}
@@ -256,15 +264,50 @@
   .rm-item.is-existing img{opacity:.85}
   .prov{font-size:.8rem;color:#595c4d;margin-top:1rem;line-height:1.5}
 
+  /* Editing an existing photo's description, in place under its thumbnail.
+     Same field conventions as the rest of the site, at the site's smallest
+     prose size rather than a caption size. */
+  .cur-alt{display:block;margin-top:.4rem}
+  .cur-alt input{width:100%;font-family:var(--sans);font-size:.90rem;padding:.5rem .6rem;
+    color:var(--ink);border:1px solid rgba(20,22,14,.24);border-radius:5px;background:var(--paper)}
+  .cur-alt input:focus-visible{outline:2px solid var(--clay);outline-offset:1px}
+  .cur-alt.saved input{border-color:var(--glacier)}
+  .cur-alt.failed input{border-color:var(--clay)}
+  .cur-alt-note{display:block;font-size:.90rem;color:#595c4d;line-height:1.4;margin-top:.3rem}
+  .cur-alt.saved .cur-alt-note{color:#2f6b52}
+  .cur-alt.failed .cur-alt-note{color:var(--clay)}
+
   /* the photos, on review — shown rather than listed as filenames */
   .review-media{margin-top:1.2rem}
   .rm-h{font-family:var(--mono);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:#595c4d;margin-bottom:.5rem}
-  .rm-list{display:flex;flex-wrap:wrap;gap:.7rem}
-  .rm-item{margin:0;width:118px}
+  /* One ROW per photograph, two columns: the picture, and what it says
+     (owner, 2026-08-30). A grid of small tiles was fine while the caption was a
+     filename nobody reads; now that it carries the description somebody just
+     wrote, the description is the half worth reading and needs the width. */
+  /* image text ... image text, then a new line and repeat (owner, 2026-08-30).
+     The LIST wraps at two pairs; each PAIR is a picture beside what it says.
+     `auto-fill` with a floor rather than a hard `repeat(2, ...)`, so a narrow
+     phone drops to one pair per line on its own and needs no breakpoint kept
+     in sync with anything. */
+  .rm-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:.9rem 1.4rem;align-items:start}
+  /* One pair per line once two of them would squeeze the text to nothing. */
+  @media(max-width:680px){.rm-list{grid-template-columns:1fr}}
+  .rm-item{margin:0;display:grid;grid-template-columns:118px minmax(0,1fr);gap:.9rem;
+    align-items:start}
   .rm-item img{display:block;width:118px;height:88px;object-fit:cover;border-radius:5px;background:var(--paper-deep)}
-  .rm-item figcaption{font-family:var(--mono);font-size:.68rem;letter-spacing:.04em;color:#595c4d;margin-top:.25rem;
-    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .rm-item.is-link{width:auto}
+  .rm-item figcaption{font-family:var(--mono);font-size:.68rem;letter-spacing:.04em;color:#595c4d;
+    align-self:center;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  /* A caption that is a DESCRIPTION rather than a filename is a sentence, so it
+     wraps and is set like prose. A filename stays clipped to one mono line:
+     truncating `IMG_20240714_113002.jpg` loses nothing. */
+  .rm-item.has-alt figcaption{font-family:var(--sans);font-size:.90rem;letter-spacing:0;
+    white-space:normal;color:#3f4234;line-height:1.45;align-self:start}
+  /* An existing photo nobody has described yet shows no caption line at all,
+     rather than an empty one holding space open. */
+  .rm-item.is-existing:not(.has-alt) figcaption{display:none}
+  /* No picture to put in the first column, so the caption takes the row. */
+  .rm-item.is-link{grid-template-columns:1fr}
   .rm-item.is-link figcaption{font-size:.90rem;letter-spacing:0;white-space:normal;color:#3f4234}
 
   /* what happens next */
@@ -373,6 +416,7 @@
       standing: 'media.consent.standing'|trans,
       readContract: 'media.consent.read_contract'|trans,
       readLicence: 'media.consent.read_licence'|trans,
+      readRules: 'media.consent.read_rules'|trans,
       siteTerms: 'media.consent.site_terms'|trans,
       altLabel: 'media.alt.label'|trans,
       altPlaceholder: 'media.alt.placeholder'|trans,
@@ -665,6 +709,24 @@
               {% if p.credit is defined and p.credit %}
                 <figcaption>© {{ p.credit }}{% if p.license is defined and p.license %} · {{ p.license }}{% endif %}</figcaption>
               {% endif %}
+              {# Anybody signed in can write a description here. The UPLOADER's
+                 goes straight through; everybody else's becomes a suggestion in
+                 the same review queue as every other edit on this place, which
+                 is what stops a wrong description being stuck until whoever
+                 took the photo happens to come back (owner, 2026-08-30).
+                 `data-mine` picks the endpoint, and the server enforces the
+                 same split: the direct route refuses a non-owner, and the
+                 suggestion route refuses the owner. #}
+              {% if p.id is defined and app.user %}
+                {% set mine = p.id in own_photo_ids|default([]) %}
+                <label class="cur-alt{{ mine ? '' : ' suggests' }}" data-photo="{{ p.id }}"
+                       data-mine="{{ mine ? '1' : '0' }}">
+                  <span class="vh">{{ 'media.alt.label'|trans }}</span>
+                  <input type="text" maxlength="300" value="{{ p.alt|default('') }}"
+                         placeholder="{{ 'media.alt.placeholder'|trans }}">
+                  <span class="cur-alt-note">{{ (mine ? 'media.alt.yours' : 'media.alt.suggest_note')|trans }}</span>
+                </label>
+              {% endif %}
             </figure>
           {% endfor %}
         </div>
@@ -732,9 +794,16 @@
       <div class="review-media">
         <div class="rm-h">{{ 'improve.step4.media_existing'|trans }}</div>
         <div class="rm-list">
+          {# `data-photo` is what lets a description edited two steps earlier
+             reach this caption without a page load. The caption itself is
+             server-rendered, so it is right for a reader who never touches it
+             (owner, 2026-08-30). #}
           {% for p in currentPhotos %}
-            <figure class="rm-item is-existing">
-              <img src="{{ p.sm|default(p.lg|default('')) }}" alt="{{ 'improve.step3.current_alt'|trans({'%name%': current.name|default('')}) }}" loading="lazy" />
+            <figure class="rm-item is-existing{% if p.alt|default('') %} has-alt{% endif %}"
+                    {% if p.id is defined %}data-photo="{{ p.id }}"{% endif %}>
+              <img src="{{ p.sm|default(p.lg|default('')) }}"
+                   alt="{{ p.alt|default('') ?: 'improve.step3.current_alt'|trans({'%name%': current.name|default('')}) }}" loading="lazy" />
+              <figcaption>{{ p.alt|default('') }}</figcaption>
             </figure>
           {% endfor %}
         </div>

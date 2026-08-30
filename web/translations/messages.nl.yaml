@@ -2484,12 +2484,15 @@ media:
     to_map: 'Naar de kaart'
   alt:
     label: 'Beschrijf deze foto'
+    yours: 'Jouw foto. Wijzigingen hier gaan meteen in.'
+    suggest_note: 'Iemand anders heeft deze geüpload. Jouw tekst gaat met je andere wijzigingen naar een curator.'
     placeholder: 'Wat zou iemand die hem niet kan zien moeten weten?'
   consent:
     title: 'Voordat je een foto toevoegt'
     intro: 'Je foto(''s) komen in de open Commons zodat elke fietser ze kan gebruiken. Dat werkt alleen als ze echt vrij te delen zijn.'
     contract: 'Ik geef mijn foto(''s) in licentie onder CC BY-SA 4.0, ik bevestig dat ik ze zelf gemaakt heb, en dat ze een echte plek tonen en niet door AI gemaakt of aangepast zijn.'
-    read_licence: 'Lees de licentie'
+    read_licence: 'Lees CC BY-SA 4.0'
+    read_rules: 'Wat we wel en niet accepteren'
     keep_ownership: 'Je blijft eigenaar — de Commons krijgt alleen een licentie om te delen.'
     accept: 'Doneer hem'
     cancel: 'Annuleren'

@@ -2012,6 +2012,8 @@ media:
     to_map: 'Go to the map'
   alt:
     label: 'Describe this photo'
+    yours: 'Your photo. Changes here take effect straight away.'
+    suggest_note: 'Somebody else uploaded this. Your wording goes to a curator with the rest of your edits.'
     placeholder: 'What would somebody who cannot see it need to know?'
   consent:
     title: 'Before you add a photo'
@@ -2019,7 +2021,8 @@ media:
     # The binding sentence. Its exact wording is hashed onto the consent record,
     # so changing it means bumping MediaConsent::VERSION (docs/specs/photo-uploads.md §4).
     contract: 'I agree to license my photo(s) under CC BY-SA 4.0, I confirm I took them myself, and that they show a real place and were not generated or altered by AI.'
-    read_licence: 'Read the licence'
+    read_licence: 'Read CC BY-SA 4.0'
+    read_rules: 'What we accept, and what we do not'
     keep_ownership: 'You keep ownership — the Commons only gets a licence to share it.'
     accept: 'Donate it'
     cancel: 'Cancel'

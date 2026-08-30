@@ -89,10 +89,22 @@
         // Licence link sits outside the label so clicking it does not toggle the checkbox.
         '<label class="ok-check"><input type="checkbox" id="ok-check" />' +
         '<span>' + esc(t('contract', '')) + '</span></label>' +
+        /* TWO links, because the sentence above makes two different promises
+           and only one of them is the licence's. CC BY-SA 4.0 governs how the
+           photo may be shared and says nothing whatever about who took it or
+           about AI: those are OUR conditions and they live in our terms.
+           Offering the licence alone invited somebody to tick "not generated
+           or altered by AI" and then read a document that never mentions it
+           (owner, 2026-08-30). */
         (cfg.licenceUrl
           ? '<p class="consent-licence"><a href="' + esc(cfg.licenceUrl)
             + '" target="_blank" rel="noopener license">'
-            + esc(t('readLicence', 'Read the licence')) + ' \u2197</a></p>'
+            + esc(t('readLicence', 'Read CC BY-SA 4.0')) + ' \u2197</a></p>'
+          : '') +
+        (cfg.termsUrl
+          ? '<p class="consent-licence"><a href="' + esc(cfg.termsUrl)
+            + '" target="_blank" rel="noopener">'
+            + esc(t('readRules', 'What we accept, and what we do not')) + ' \u2197</a></p>'
           : '') +
         '<div class="consent-err" id="consent-err" hidden></div>' +
         '<div class="mrow"><button type="button" class="b-cancel" id="modal-cancel">' +
@@ -193,7 +205,11 @@
       var ids = items.filter(function (i) { return i.id; }).map(function (i) { return i.id; });
       hidden.value = ids.length ? JSON.stringify(ids) : '';
       syncReviewNotice();
-      onChange(items.map(function (i) { return { name: i.name, sm: i.sm || null }; }));
+      /* `alt` travels with the entry so the review card can show what the rider
+         WROTE about the picture rather than what their phone called the file
+         (owner, 2026-08-30). A filename is not a description, and reviewing
+         one tells somebody nothing about what they just added. */
+      onChange(items.map(function (i) { return { name: i.name, sm: i.sm || null, alt: i.alt || '' }; }));
     }
 
     function addRow(name) {
@@ -210,11 +226,15 @@
         '<label class="chip-alt" hidden><span class="vh">' + esc(t('altLabel', 'Describe this photo')) + '</span>' +
         '<input type="text" maxlength="300" placeholder="' + esc(t('altPlaceholder', 'What would somebody who cannot see it need to know?')) + '" /></label>';
       queueEl.appendChild(row);
-      var item = { id: null, name: name, row: row, bar: row.querySelector('.chip-bar i'), state: 'uploading' };
+      var item = { id: null, name: name, alt: '', row: row, bar: row.querySelector('.chip-bar i'), state: 'uploading' };
       row.querySelector('.chip-x').addEventListener('click', function () { removeItem(item); });
 
       var altInput = row.querySelector('.chip-alt input');
       altInput.addEventListener('change', function () {
+        /* Held on the item whether or not the save lands, so the review card
+           shows what they typed even while the network is being difficult. */
+        item.alt = altInput.value;
+        syncHidden();
         /* No id yet means the upload has not landed; the field is hidden then,
            so this is belt and braces rather than a real path. */
         if (!item.id) return;
@@ -453,6 +473,60 @@
     });
     zone.addEventListener('drop', function (e) {
       if (e.dataTransfer && e.dataTransfer.files) accept(e.dataTransfer.files);
+    });
+
+    /* Carry an edited description through to the review card's copy of it.
+       Matched on the photo's uuid, because a caption is the only thing the two
+       places share and a filename is not stable between them. */
+    function syncExistingCaption(id, text) {
+      var fig = document.querySelector('.rm-item.is-existing[data-photo="' + id.replace(/"/g, '') + '"]');
+      if (!fig) return;
+      var cap = fig.querySelector('figcaption');
+      if (cap) cap.textContent = text;
+      var img = fig.querySelector('img');
+      if (img && text) img.alt = text;
+      fig.classList.toggle('has-alt', !!text);
+    }
+
+    /* Fixing the description of a photograph that is ALREADY on the item.
+       Rendered by the template only for the rider's own pictures, because
+       `/media/photos/{id}/alt` is owner-only and would answer 404 to anybody
+       else (owner, 2026-08-30: "it should be possible to change the description
+       of an existing image").
+
+       Same endpoint, same silence on success as a new upload's field: a green
+       edge says saved, a clay edge says it did not, and either way what they
+       typed stays in the box so the next change tries again. */
+    Array.prototype.forEach.call(document.querySelectorAll('.cur-alt'), function (wrap) {
+      var input = wrap.querySelector('input');
+      var id = wrap.getAttribute('data-photo');
+      if (!input || !id) return;
+
+      /* The uploader's words take effect at once; anybody else's go to the
+         queue. The server enforces the same split either way: the direct route
+         refuses a non-owner and the suggestion route refuses the owner, so a
+         tampered attribute changes nothing but which 404 you get. */
+      var mine = wrap.getAttribute('data-mine') !== '0';
+      var endpoint = cfg.uploadUrl + '/' + encodeURIComponent(id) + (mine ? '/alt' : '/alt-suggestion');
+
+      input.addEventListener('change', function () {
+        wrap.classList.remove('saved', 'failed');
+        /* The review two steps on is server-rendered, so it would otherwise
+           keep showing the description as it was when the page loaded (owner,
+           2026-08-30). Only for the OWNER: a suggestion has not changed
+           anything yet, and showing it there would tell somebody their words
+           are live when a curator has not seen them. */
+        if (mine) { syncExistingCaption(id, input.value); }
+        ensureToken().then(function (tok) {
+          var body = new FormData();
+          body.append('_token', tok);
+          body.append('alt', input.value);
+          return fetch(endpoint, { method: 'POST', body: body, credentials: 'same-origin' });
+        }).then(function (r) {
+          wrap.classList.toggle('saved', r.ok);
+          wrap.classList.toggle('failed', !r.ok);
+        }).catch(function () { wrap.classList.add('failed'); });
+      });
     });
 
     return { count: function () { return items.length; } };
