@@ -1,6 +1,21 @@
 # SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
 framework:
     cache:
+        # Stable namespace for every CyclingCommons cache key.
+        #
+        # Without it Symfony derives the namespace from the container build id,
+        # which hashes kernel.project_dir. Capistrano-style deploys give each
+        # web server its own release path (web-1 .../releases/20260826110543,
+        # web-2 .../releases/20260826110848), so the two nodes wrote to
+        # DIFFERENT Redis keys. Every "site-wide" limit below silently became
+        # per-node: public_api_read allowed 240 requests a minute, not 120
+        # (measured 2026-08-30). Same for the withhold breaker and the
+        # proof-of-work store, which is exactly what this pool exists to stop.
+        #
+        # Changing this value orphans the current keys (a one-off cache miss).
+        # Sessions are unaffected: those use the FPM pool's own phpredis prefix.
+        prefix_seed: cyclingcommons
+
         # Redis, not the filesystem — because production is a cluster.
         #
         # Everything that has to agree across nodes lives in this pool: every
