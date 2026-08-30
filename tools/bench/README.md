@@ -19,8 +19,8 @@ Replace `USER` and `PASS`. Nothing else needs the password after this.
 
 ## Run
 
-    tools/bench/api-staging.sh              # 5 workers x 10 requests
-    tools/bench/api-staging.sh 5 10         # same, explicit
+    tools/bench/api-staging.sh              # 2 workers x 5 requests
+    tools/bench/api-staging.sh 2 5          # same, explicit
     CC_BENCH_HOST=https://cyclingcommons.org tools/bench/api-staging.sh
 
 ## Reading the result

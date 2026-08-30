@@ -11,8 +11,11 @@
 set -euo pipefail
 
 HOST="${CC_BENCH_HOST:-https://staging.cyclingcommons.org}"
-CONC="${1:-5}"
-REQS="${2:-10}"
+# Four cases x (1 warm + CONC*REQS) + 8 single requests. At 2x5 that is 52,
+# comfortably inside the 120-a-minute per-address budget the README explains.
+# Raise it and the run measures the limiter instead of the application.
+CONC="${1:-2}"
+REQS="${2:-5}"
 
 if [ ! -f "$HOME/.netrc" ]; then
   echo "No ~/.netrc. See tools/bench/README.md for the one-time setup." >&2
