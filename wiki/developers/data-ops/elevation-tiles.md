@@ -420,47 +420,53 @@ integers with a lot of local similarity. Measured at `gzip -6`:
 Whole continents did better still: 127 GB to 25 GB, 38 GB to 5.8 GB. At that
 rate the planet's land is roughly 140 GB instead of 468 GB.
 
-### The measurement that changed the recommendation
+### What the source says, and what the measurement says
 
-Two instances on one host, same load — 600 distinct 1-degree cells, 40 points
-each — one serving raw tiles, one serving gzipped:
+Two rounds of measurement and a read of `src/skadi/sample.cc` upstream. The
+first round compared two different continents and drew the wrong lesson from
+it; this is the controlled version: **one continent, the same 400 cells and
+seed, storage the only variable**, and the workload mirrors a real job (route a
+hop with `elevation_interval`, then sample heights) rather than `/height` alone.
 
-| | before | after | **anon** | file |
-|---|---|---|---|---|
-| gzipped, 4 GB limit | 73 MB | **4096.0 MB, pinned at the limit** | **+2474 MB** | +1531 MB |
-| raw, 16 GB limit | 69 MB | 2011 MB | **+0.8 MB** | +1911 MB |
+| | anon | file | wall time |
+|---|---|---|---|
+| gzipped | **+1260 MB** | +1186 MB | 14.7 s |
+| raw | **+23 MB** | +702 MB | **5.7 s** |
 
-Raw grew by **0.8 MB** of anonymous memory. Gzipped grew by **2.5 GB**, and
-`memory.events` recorded the cgroup hitting its ceiling 985 times. It survived
-only because the kernel could still reclaim the file half and swap absorbed the
-rest.
+The mechanism is in the code, not a guess:
 
-That is the whole difference, and it is not about speed:
+- A raw `.hgt` is **`mmap`ed** (`mem_map<char>`) and read in place. Its pages
+  are file-backed, so the kernel reclaims them under pressure; running out means
+  slower requests, never a kill.
+- A gzipped tile is also `mmap`ed, but then **inflated with `malloc(HGT_BYTES)`**
+  into a global `cache_t`. That is anonymous memory: it can be swapped, then
+  OOM-killed, but never reclaimed.
+- The unpacked cache is **capped at 50 tiles** (`UNPACKED_TILES_COUNT = 50`,
+  hard-coded, not configurable). 50 × 25.9 MB ≈ 1.3 GB — which is exactly the
+  +1260 MB measured. So the cost is **bounded**, not runaway. An earlier draft
+  of this page said skadi showed no sign of evicting; that was wrong.
+- Eviction is **pseudo-random**: when the cap is hit it drops the first tile in
+  an `unordered_set` whose usage count is zero, and usage counts drop to zero
+  between every edge. A tile needed for the very next point is as likely to be
+  evicted as any other, so a busy instance **re-inflates the same tiles over and
+  over**. That thrash, plus one global `recursive_mutex` around it, is the
+  2.6× slowdown.
 
-- A raw `.hgt` is **mmap'ed**. Its pages are file-backed, so the kernel reclaims
-  them under pressure. Running out means slower requests.
-- A gzipped tile must be **inflated into anonymous memory**, which cannot be
-  reclaimed — only swapped, then OOM-killed. Skadi caches the result and shows
-  no sign of evicting it: the instance stopped at exactly the cgroup limit
-  because the cgroup stopped it, not because it stopped itself.
+Upstream knows. Issue **#6163** (open, July 2026, "Optimize compressed HGT file
+support") describes precisely this — the maintainer's own words for the current
+design are *"the caching mechanism is pretty dumb"* — and proposes a per-worker
+LRU. Until that lands, the behaviour above is what you get.
 
-The measured cost was **~4.1 MB of unreclaimable memory per 1-degree cell
-touched**. Extrapolated across a six-continent host that is tens of gigabytes of
-anonymous memory for a working set that raw would have cost nothing. Disk is the
-cheaper resource here, and by a wide margin.
+!!! danger "Store raw unless the instance has a small memory cap AND you accept the slowdown"
 
-!!! danger "Store raw unless you can prove the working set is small"
+    Gzip costs a fixed ~1.3 GB of unreclaimable memory per instance, plus a
+    2-3× latency penalty from cache thrash, in exchange for ~70% less disk.
 
-    Gzip trades disk you probably have for memory you probably do not, in the
-    one form the kernel cannot reclaim. It is defensible for an instance serving
-    a small, well-known area. It is not a default.
-
-    If disk genuinely forces compression, `.lz4` is the middle setting — worse
-    ratio, faster inflation — but it does not change the shape of the problem,
-    because the inflated result is still anonymous memory.
-
-    And keep the busiest instance raw regardless. That is the one where a hard
-    memory limit turns into a kill rather than a slowdown.
+    On an instance with a 4 GB limit that 1.3 GB is a third of everything it
+    has. On one with 16 GB it is noise. So the question is not "gzip or not"
+    but "what is this instance's cap, and does it serve latency-sensitive
+    traffic". Keep anything busy raw. `.lz4` inflates into the same cache and
+    changes nothing structural.
 
 One trap, and it is a nasty one: **a Valhalla with no elevation tiles loaded does
 not fail.** It returns `0` for every point — a perfectly valid-looking sea-level
