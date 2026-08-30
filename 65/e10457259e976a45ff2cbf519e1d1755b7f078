@@ -1,0 +1,41 @@
+web/src/Coverage/SurfaceManifest.php
+  s_bd35b13142b2fa::t_3b092908f11f8a 22,28-31,36,39,73-75,78,81,84-87,90-97,103,107,109-113,115-118
+  s_bd35b13142b2fa::t_5cc08851b254bc 77,89,102,108,114
+web/src/Controller/Api/V1/PublicApiController.php
+  s_bd35b13142b2fa::t_25a73786764188 46-50
+web/src/Coverage/RoutesManifest.php
+  s_bd35b13142b2fa::t_5cc08851b254bc 49,55,65,71,77
+  s_bd35b13142b2fa::t_38c09d02836df9 15,22,25-28,31,34,50,52-53,56-60,66,70,72-76,78-81
+docs/specs/coverage-provider.md
+  s_bd35b13142b2fa::t_c26382b15ec444 619-637
+web/src/Coverage/CoverageManifest.php
+  s_bd35b13142b2fa::t_5cc08851b254bc 59,65,75,81,87
+  s_bd35b13142b2fa::t_daee86c1e9fdb3 21,24-26,28,30,60,62-63,66-70,76,80,82-86,88-91
+web/tests/Coverage/BucketManifestPrefetchTest.php
+  s_bd35b13142b2fa::t_3314aba69fe648 1-153
+web/src/Coverage/BucketManifest.php
+  s_bd35b13142b2fa::t_404756f6cd14e7 1-187
+web/src/Controller/MapController.php
+  s_bd35b13142b2fa::t_008177d195388b 66-72
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "65e10457259e976a45ff2cbf519e1d1755b7f078",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_bd35b13142b2fa": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c348108d-a15c-4a6f-a1f0-9ab7e633bdf4",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
