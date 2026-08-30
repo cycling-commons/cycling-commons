@@ -54,11 +54,21 @@ const SHARED_RULES = [
   '.mod-search{', '.sec-band{', '.q-note{', '.q-diff dl{', '.wrap{',
 ];
 
+// `.pager{` is deliberately NOT in the list below. It moved to
+// assets/styles/atlas.css so that every page including partials/_pager.html.twig
+// gets it, not only the pages inside the account shell. Still defined exactly
+// once, one level out, and the "and nowhere else" rule still holds it there.
+test('the pager is defined once, in the global stylesheet', () => {
+  const atlas = read('assets/styles/atlas.css');
+  assert.ok(atlas.includes('.pager{'), '.pager{ must be defined in atlas.css');
+  assert.ok(!read(SHELL).includes('.pager{'), 'the shell defines .pager a second time');
+});
+
 test('the shell defines the system once', () => {
   const shell = read(SHELL);
   for (const rule of ['.dbody{', '.mh{', '.mh .kicker{', '.mh h1{', '.mod-bar{', '.mod-filters{',
                       '.lchip{', '.q-pill{', '.q-note{', '.q-diff dl{', '.sec-band{', '.empty-state{',
-                      '.pager{', '.btn-act{']) {
+                      '.btn-act{']) {
     assert.ok(shell.includes(rule), `${rule} must be defined in the shell`);
   }
   assert.ok(shell.includes("{% include 'moderate/_card_styles.html.twig' %}"),
@@ -96,7 +106,9 @@ test('every list page renders the record card and offers the density switch', ()
     // The queue, routes, and translation-mine desks render their card through an included partial.
     assert.ok(src.includes('q-item') || /_queue_item\.html\.twig/.test(src) || /_mine_item\.html\.twig/.test(src), `${page} must render rows as .q-item cards`);
     if (page.endsWith('moderate_regions/index.html.twig')) continue;   // a settings desk: no density, no pager (owner 2026-08-14)
-    assert.ok(src.includes('class="q-list'), `${page} must group its cards in a .q-list`);
+    // A list may carry other classes beside q-list (the zebra is one). Matching
+    // on the string START made the class ORDER part of the contract.
+    assert.match(src, /class="[^"]*\bq-list\b/, `${page} must group its cards in a .q-list`);
     assert.ok(src.includes("{% include 'account/_density.html.twig' %}"), `${page} must offer the cards/list switch`);
     assert.ok(src.includes("{% include 'moderate/_card_script.html.twig' %}"), `${page} must load the card script that drives the switch`);
   }
@@ -120,7 +132,7 @@ test('the messages page keeps its state hooks on top of the shared card', () => 
   const src = read('templates/messages/index.html.twig');
   // The tests and the unread styling read these; they name message states, not looks.
   assert.match(src, /class="q-item msg-row \{\{ mine \? 'q-item--mine msg-mine' : \(m\.isRead \? '' : 'q-item--new msg-new'\) \}\}"/);
-  assert.ok(src.includes('<ul class="q-list msg-list"'));
+  assert.match(src, /<ul class="[^"]*\bq-list\b[^"]*\bmsg-list\b/);
   const shell = read(SHELL);
   assert.match(shell, /ul\.q-list,ol\.q-list\{list-style:none/, 'a ul-based card list must not grow bullets');
 });

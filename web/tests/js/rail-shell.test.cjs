@@ -269,8 +269,14 @@ test('the ride tools panel holds the things a rider does with a ride', () => {
   assert.ok(s.includes('map.ride_check_intro'), 'the ride check has no one-line explainer');
   assert.ok(s.includes("path('scout_review')"), 'no scout row in the tools panel');
   assert.ok(s.includes('id="addClimbHere"'), 'the contribute row left the tools panel');
-  // render.js writes this element on every pass; the id must survive the move.
-  assert.ok(s.includes('id="count"'), 'the places count did not move into the tools panel');
+  // The feature count is GONE, and deliberately (owner, 2026-08-29). It said
+  // "N places shown", where N was "Commons features currently drawn": neither
+  // the OSM coverage underneath nor everything visible, so the one number a
+  // rider could read off the panel was the one thing it did not mean.
+  // render.js guards the element rather than assuming it, so a surface that
+  // wants a live count can put the id back and get one.
+  assert.ok(!s.includes('id="count"'), 'the feature count is back in the tools panel');
+  assert.ok(!s.includes('map.places_shown'), 'the "places shown" label is back');
   assert.ok(!twig.includes('class="rail-foot"'), 'the old .rail-foot is still in the template');
 });
 

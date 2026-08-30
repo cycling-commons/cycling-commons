@@ -986,7 +986,11 @@
      the same shape as a footer: present, never competing. */
   .cc-d-report{margin:1.1rem 0 0;padding-top:.7rem;border-top:1px solid rgb(var(--chrome-fg) / .14);
     font-size:.7rem;line-height:1.5}
-  .cc-d-report a{color:rgb(var(--chrome-fg) / .62);text-decoration:underline;text-underline-offset:2px}
+  /* .75, not .62. A fg-token alpha under .65 fails WCAG AA on one of the two
+     chrome themes, which map-theme.test.cjs holds the line on, and this is a
+     LINK: quieter than the body around it is a look, not a licence to make
+     it hard to read. Matches the drawer's other underlined link. */
+  .cc-d-report a{color:rgb(var(--chrome-fg) / .75);text-decoration:underline;text-underline-offset:2px}
   .cc-d-report a:hover{color:var(--chrome-head)}
   .cc-d-report a:focus-visible{outline:2px solid var(--trail);outline-offset:2px;border-radius:3px}
   /* Share sits on the source line rather than with the actions: it is about
