@@ -18,6 +18,9 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\DomCrawler\Crawler;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\Storage\InMemoryStorage;
 
 /**
  * "Something is broken", from anybody (docs/specs/contact-and-support.md §5).
@@ -351,6 +354,33 @@ final class BugReportTest extends WebTestCase
         $this->file($client, ['email' => 'someone@definitely-not-real.invalid']);
 
         self::assertResponseStatusCodeSame(422);
+        self::assertSame([], $this->reports());
+    }
+
+    /**
+     * The DNS check has no timeout and is the one step that leaves the
+     * process, so it runs BEHIND the limiter: a stalled resolver costs the
+     * caller a token. With the budget already spent, an unroutable domain comes
+     * back as 429, which it could not if DNS were asked first. The limiter is
+     * swapped before the first request because the container's test pool is
+     * reset between requests.
+     */
+    public function testTheRateLimitIsSpentBeforeDnsIsAsked(): void
+    {
+        $client = $this->client();
+
+        $budget = new RateLimiterFactory(
+            ['id' => 'bug_report_test', 'policy' => 'sliding_window', 'limit' => 1, 'interval' => '1 day'],
+            new InMemoryStorage(),
+        );
+        static::getContainer()->set('limiter.bug_report', $budget);
+        $guard = static::getContainer()->get(FormGuard::class);
+        $key = $guard->key(Request::create('/report-bug', 'POST', server: ['REMOTE_ADDR' => '127.0.0.1']));
+        self::assertTrue($budget->create($key)->consume()->isAccepted());
+
+        $this->file($client, ['email' => 'someone@definitely-not-real.invalid']);
+
+        self::assertResponseStatusCodeSame(429);
         self::assertSame([], $this->reports());
     }
 

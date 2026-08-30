@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Translation;
 
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 
 /**
@@ -29,6 +30,9 @@ final class OverlayCatalogueLoader
     {
         ++$this->loads;
 
+        // The consent contracts are excluded HERE as well as at proposal
+        // time, so a row that reached the table by any other road (a direct
+        // write, a rule that changes later) still cannot reword them.
         /** @var array<string, string> $rows */
         $rows = $this->db->fetchAllKeyValue(
             <<<'SQL'
@@ -36,8 +40,10 @@ final class OverlayCatalogueLoader
             FROM translation_overlay o
             JOIN translation_entry e ON e.id = o.entry_id
             WHERE o.locale = :locale AND e.absent_at IS NULL
+              AND e.message_key NOT IN (:protected)
             SQL,
-            ['locale' => $locale],
+            ['locale' => $locale, 'protected' => ProtectedKeys::KEYS],
+            ['protected' => ArrayParameterType::STRING],
         );
 
         return $rows;

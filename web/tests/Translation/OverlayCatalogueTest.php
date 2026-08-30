@@ -9,6 +9,7 @@ namespace App\Tests\Translation;
 use App\Translation\Entity\TranslationOverlay;
 use App\Translation\OverlayCatalogue;
 use App\Translation\OverlayCatalogueLoader;
+use App\Translation\TranslationConsent;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
@@ -47,6 +48,24 @@ final class OverlayCatalogueTest extends KernelTestCase
         $catalogue->invalidate('fr');
 
         self::assertSame([], $catalogue->map('fr'));
+    }
+
+    /**
+     * A row on a consent contract is ignored however it got there: the words a
+     * rider consented to are changed by a VERSION bump in code, never by an
+     * overlay (ProtectedKeys).
+     */
+    public function testARowOnTheConsentContractIsNeverLoaded(): void
+    {
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $entry = $this->findOrCreateEntry($em, TranslationConsent::TEXT_KEY, 'I license this translation under CC BY-SA 4.0.');
+        $em->persist(new TranslationOverlay($entry, 'fr', 'Je cède tous mes droits.', null, null));
+        $em->flush();
+
+        $catalogue = static::getContainer()->get(OverlayCatalogue::class);
+        $catalogue->invalidate('fr');
+
+        self::assertArrayNotHasKey(TranslationConsent::TEXT_KEY, $catalogue->map('fr'));
     }
 
     public function testSecondMapDoesNotReloadAndInvalidateForcesReload(): void

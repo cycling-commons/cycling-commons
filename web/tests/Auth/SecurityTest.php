@@ -88,6 +88,51 @@ final class SecurityTest extends WebTestCase
         self::assertResponseIsSuccessful();
     }
 
+    /**
+     * A rider who comes back on the remember-me cookie has signed in, as far as
+     * the dormancy ladder is concerned. The login form's success handler never
+     * runs for them, so RememberedLoginListener stamps the clock instead and
+     * clears any warning already sent (account-and-auth.md §6.5).
+     */
+    public function testComingBackOnTheRememberMeCookieCountsAsASignIn(): void
+    {
+        $client = static::createClient();
+
+        $email = 'remembered@example.com';
+        $plain = $this->createVerifiedUser($email, 'hunter2secure!');
+
+        $crawler = $client->request('GET', '/login');
+        $form = $crawler->selectButton('Sign in')->form([
+            '_username' => $email,
+            '_password' => $plain,
+        ]);
+        $form['_remember_me']->tick();
+        $client->submit($form);
+        self::assertResponseRedirects('/profile');
+        self::assertNotNull($client->getCookieJar()->get('REMEMBERME'), 'the remember-me cookie was set');
+
+        // Age the clock and leave a warning on file, then drop the session so
+        // the next request is signed in by the cookie alone.
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $user = $em->getRepository(User::class)->findOneBy(['email' => $email]);
+        self::assertInstanceOf(User::class, $user);
+        $user->recordLogin(new \DateTimeImmutable('-400 days'));
+        $user->recordDormancyNotice('m12', new \DateTimeImmutable('-30 days'));
+        $em->flush();
+        $client->getCookieJar()->expire('MOCKSESSID');
+
+        $client->request('GET', '/profile');
+        self::assertResponseIsSuccessful();
+
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $em->clear();
+        $user = $em->getRepository(User::class)->findOneBy(['email' => $email]);
+        self::assertInstanceOf(User::class, $user);
+        self::assertNotNull($user->getLastLoginAt());
+        self::assertGreaterThan(new \DateTimeImmutable('-1 hour'), $user->getLastLoginAt());
+        self::assertFalse($user->dormancyNoticesSent()['m12'], 'coming back clears the warning');
+    }
+
     public function testInvalidPasswordShowsError(): void
     {
         $client = static::createClient();

@@ -4,6 +4,7 @@
 
 namespace App\Tests\Account;
 
+use App\Account\DormancyLadder;
 use App\Account\DormancySweep;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
@@ -118,6 +119,28 @@ final class DormancySweepTest extends KernelTestCase
     }
 
     /** A rider already deleting their account has their own clock running. */
+    /**
+     * An administrator is never closed for silence: a sweep that removes the
+     * last operator of the site is a lockout, not housekeeping. Neither the
+     * notices nor, with all three on file, the deletion.
+     */
+    public function testAnAdministratorIsNeverWarnedNorDeleted(): void
+    {
+        $admin = $this->rider(monthsIdle: DormancyLadder::DELETE_AFTER_MONTHS);
+        $admin->setRoles(['ROLE_ADMIN']);
+        foreach (array_keys(DormancyLadder::NOTICES) as $code) {
+            $admin->recordDormancyNotice($code, $this->now->modify('-2 months'));
+        }
+        $this->em->flush();
+        $id = $admin->getId();
+
+        $result = $this->sweep->run($this->now);
+
+        self::assertSame(0, $result['considered']);
+        self::assertSame(0, $result['deleted']);
+        self::assertNotNull($this->em->find(User::class, $id));
+    }
+
     public function testAnAccountAlreadyOnItsWayOutIsSkipped(): void
     {
         $user = $this->rider(monthsIdle: 25);

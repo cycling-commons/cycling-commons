@@ -2134,6 +2134,7 @@ translate:
     consent_required: 'Tick the licence consent to submit.'
     english: 'English cannot be proposed from the website.'
     key_absent: 'That catalogue key is no longer available.'
+    protected: 'That text is a licence agreement. The site changes it itself, with a new version, and it cannot be translated here.'
     markup_unbalanced: 'The <%tag%> tag is not closed, or closes something it did not open. Check the tags around your text.'
     markup_tag_not_allowed: 'The <%tag%> tag is not allowed here, so it would be removed. Only <b>, <i>, <code>, <br>, <span> and links can be used.'
     markup_stray_angle: 'There is a stray < in your text. If you meant a tag, check it is complete.'
@@ -4404,6 +4405,9 @@ report:
     flash_bad_status: 'Choose an outcome.'
     flash_needs_note: 'Write what you decided and why. Everybody who gets a mail about this reads it.'
     flash_saved: 'Decision recorded, and everybody who was owed a mail has one.'
+  challenge_working: 'Running a security check in your browser…'
+  challenge_ready: 'Security check complete.'
+  challenge_failed: 'The security check could not run. If the report will not send, email info@cyclingcommons.org.'
   error:
     ground: 'Choose what is wrong with it.'
     about: 'That picture is not on this page.'
@@ -4416,6 +4420,7 @@ report:
     statement_required: 'Please confirm you hold the rights, or act for whoever does.'
     answer_required: 'Tell us why the work is yours.'
     rate_limited: 'That is a lot of reports from one place today. Try again tomorrow, or use the contact page.'
+    challenge: 'Please wait for the security check to finish, then send the report again.'
   target:
     route: 'A route'
     item: 'A place on the map'

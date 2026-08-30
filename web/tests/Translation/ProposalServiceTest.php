@@ -15,6 +15,7 @@ use App\Translation\Exception\EmptyTranslationException;
 use App\Translation\Exception\EnglishNotTranslatableException;
 use App\Translation\Exception\InvalidLocaleException;
 use App\Translation\Exception\KeyNotFoundException;
+use App\Translation\Exception\ProtectedKeyException;
 use App\Translation\Exception\TranslationTooLongException;
 use App\Translation\ProposalService;
 use App\Translation\TranslationConsent;
@@ -92,6 +93,30 @@ final class ProposalServiceTest extends KernelTestCase
         }
 
         self::assertSame($beforeConsent, $this->consentCount($em, (int) $user->getId()));
+        self::assertSame($beforeProposal, $this->proposalCount($em));
+    }
+
+    /**
+     * The consent contract is the text a rider agreed to; the ledger keeps a
+     * hash of it under a VERSION and standing consent is keyed on that VERSION
+     * alone. Reworded through the overlay, every earlier record would cover
+     * words its rider never saw. So the key is refused here, and ignored by
+     * the loader even if a row exists (translations.md §4).
+     */
+    public function testAConsentContractCannotBeProposed(): void
+    {
+        self::bootKernel();
+        $em = $this->em();
+        $user = $this->user($em, 'prop-protected@test.test');
+        $entry = $this->entry($em, TranslationConsent::TEXT_KEY, 'I license this translation under CC BY-SA 4.0.');
+        $beforeProposal = $this->proposalCount($em);
+
+        try {
+            $this->svc()->submit($user, $entry, 'fr', 'Je cède tous mes droits.', true);
+            self::fail('Expected ProtectedKeyException');
+        } catch (ProtectedKeyException) {
+        }
+
         self::assertSame($beforeProposal, $this->proposalCount($em));
     }
 

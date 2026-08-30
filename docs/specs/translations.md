@@ -246,6 +246,19 @@ to the translation licence on <date>" — with the contract and the site
 terms one tap away. A new `TranslationConsent::VERSION` brings the tick
 back; never a silent carry-over of stale wording.
 
+**The contracts themselves are not translatable in-site.**
+`App\Translation\ProtectedKeys` names `translate.consent.contract` and
+`media.consent.contract`. Both are the exact words a rider agreed to, hashed
+into the consent ledger under a VERSION, and standing consent is keyed on that
+VERSION alone; a contract that could be reworded through an approved overlay
+would leave every earlier record covering words its rider never saw, with
+nothing asking them again (review 2026-08-30). Legal text changes by a VERSION
+bump in code and nowhere else. Held in three places, each on its own:
+`ProposalService::submit()` refuses the key (`ProtectedKeyException`, flash
+`translate.error.protected`), `CatalogueBrowser` does not list it, and
+`OverlayCatalogueLoader` ignores any row that reached the table by another
+road. Pinned by `ProposalServiceTest` and `OverlayCatalogueTest`.
+
 ---
 
 ## 5. Curator desk

@@ -2599,6 +2599,7 @@ translate:
     consent_required: 'Setze den Haken bei der Lizenzzustimmung zum Absenden.'
     english: 'Englisch kann nicht von der Website vorgeschlagen werden.'
     key_absent: 'Dieser Katalogschlüssel ist nicht mehr verfügbar.'
+    protected: 'Dieser Text ist eine Lizenzvereinbarung. Die Website ändert ihn selbst, mit einer neuen Version; hier lässt er sich nicht übersetzen.'
     markup_unbalanced: 'Das Tag <%tag%> ist nicht geschlossen, oder schließt etwas, das es nicht geöffnet hat. Prüfen Sie die Tags um Ihren Text.'
     markup_tag_not_allowed: 'Das Tag <%tag%> ist hier nicht erlaubt und würde entfernt. Nur <b>, <i>, <code>, <br>, <span> und Links sind möglich.'
     markup_stray_angle: 'In Ihrem Text steht ein einzelnes <. Wenn Sie ein Tag meinten, prüfen Sie, ob es vollständig ist.'
@@ -4385,6 +4386,9 @@ report:
     flash_bad_status: 'Wählen Sie ein Ergebnis.'
     flash_needs_note: 'Schreiben Sie, was Sie entschieden haben und warum. Alle, die dazu eine Mail bekommen, lesen es.'
     flash_saved: 'Entscheidung festgehalten, und alle, denen eine Mail zustand, haben sie.'
+  challenge_working: 'Sicherheitsprüfung läuft in deinem Browser…'
+  challenge_ready: 'Sicherheitsprüfung abgeschlossen.'
+  challenge_failed: 'Die Sicherheitsprüfung konnte nicht ausgeführt werden. Lässt sich die Meldung nicht senden, schreib an info@cyclingcommons.org.'
   error:
     ground: 'Wähle aus, was daran falsch ist.'
     about: 'Dieses Bild ist nicht auf dieser Seite.'
@@ -4397,6 +4401,7 @@ report:
     statement_required: 'Bitte bestätige, dass du die Rechte hältst oder für die rechthaltende Person handelst.'
     answer_required: 'Sag uns, warum das Werk deins ist.'
     rate_limited: 'Das sind viele Meldungen von einem Ort heute. Versuch es morgen wieder, oder nutze die Kontaktseite.'
+    challenge: 'Bitte warte, bis die Sicherheitsprüfung fertig ist, und sende die Meldung erneut.'
   target:
     route: 'Eine Route'
     item: 'Ein Ort auf der Karte'

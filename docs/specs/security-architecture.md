@@ -302,7 +302,8 @@ Configuration: `web/config/packages/csrf.yaml`.
   **statelessly** (Symfony's same-origin/double-submit check — no session
   write, which keeps responses cacheable and JSON endpoints session-free):
   `submit`, `authenticate`, `logout`, `route-community`, `ride-check`,
-  `elevation`, `route-snap`, `scout-tags`.
+  `elevation`, `route-snap`, `scout-tags`, `my-area`, `country-interest`,
+  `curator-application`, `bug_report`, `content_report`, `contact_form`.
 - Token ids **not** in that list fall back to Symfony's default
   session-backed storage.
 
@@ -364,6 +365,18 @@ session-free:
 |---|---|---|---|
 | `country-interest` | `App\Controller\JoinCountryController` | `POST /join/{cc}` (country not yet onboarded) | [moderation-and-contribution.md](moderation-and-contribution.md) §11 |
 | `curator-application` | `App\Controller\JoinCountryController` | `POST /join/{cc}` (country onboarded) | [moderation-and-contribution.md](moderation-and-contribution.md) §11 |
+| `bug_report` | `App\Controller\BugReportController` | `POST /report-bug` (page form and floating panel) | [contact-and-support.md](contact-and-support.md) §5 |
+| `content_report` | `App\Controller\ContentReportController` | `POST /report/{type}/{id}` | [content-reports.md](content-reports.md) §5 |
+| `contact_form` | `App\Controller\ContactController` | `POST /contact` | [contact-and-support.md](contact-and-support.md) §4 |
+
+The last three are public forms that anybody may open. That is the reason they
+are stateless: a stateful token is minted into the session on the GET, so a
+form nobody has posted yet already starts a session, sends a cookie to every
+reader and leaves a Redis row behind every crawler hit (review 2026-08-30 for
+`content_report` and `contact_form`; `bug_report` earlier, because the floating
+button renders on every page). Pairs with `LocaleSubscriber`'s
+`hasPreviousSession()` guard: both are needed, either one alone still sets the
+cookie. Pinned by the `testLookingAtTheFormStartsNoSession` tests.
 
 One route picks between the two ids **from server-known state alone** — whether
 the country has any `region` rows — never from the client-submitted form, so a

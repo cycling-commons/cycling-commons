@@ -2139,6 +2139,7 @@ translate:
     consent_required: 'Marca el consentimiento de licencia para enviar.'
     english: 'El inglés no se puede proponer desde el sitio web.'
     key_absent: 'Esa clave del catálogo ya no está disponible.'
+    protected: 'Ese texto es un acuerdo de licencia. El propio sitio lo cambia, con una nueva versión; no se puede traducir aquí.'
     markup_unbalanced: 'La etiqueta <%tag%> no está cerrada, o cierra algo que no abrió. Revisa las etiquetas alrededor de tu texto.'
     markup_tag_not_allowed: 'La etiqueta <%tag%> no se permite aquí y se eliminaría. Solo se pueden usar <b>, <i>, <code>, <br>, <span> y enlaces.'
     markup_stray_angle: 'Hay un < suelto en tu texto. Si querías una etiqueta, comprueba que esté completa.'
@@ -4413,6 +4414,9 @@ report:
     flash_bad_status: 'Elige un resultado.'
     flash_needs_note: 'Escribe qué decidiste y por qué. Todo el que reciba un correo sobre esto lo lee.'
     flash_saved: 'Decisión registrada, y todo el que merecía un correo lo tiene.'
+  challenge_working: 'Ejecutando una comprobación de seguridad en tu navegador…'
+  challenge_ready: 'Comprobación de seguridad terminada.'
+  challenge_failed: 'La comprobación de seguridad no se ha podido ejecutar. Si el informe no se envía, escribe a info@cyclingcommons.org.'
   error:
     ground: 'Elige qué le pasa.'
     about: 'Esa imagen no está en esta página.'
@@ -4425,6 +4429,7 @@ report:
     statement_required: 'Confirma que tienes los derechos, o que actúas en nombre de quien los tiene.'
     answer_required: 'Dinos por qué la obra es tuya.'
     rate_limited: 'Son muchos avisos desde un mismo sitio hoy. Inténtalo mañana, o usa la página de contacto.'
+    challenge: 'Espera a que termine la comprobación de seguridad y vuelve a enviar el informe.'
   target:
     route: 'Una ruta'
     item: 'Un lugar del mapa'

@@ -15,6 +15,9 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\DomCrawler\Crawler;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\Storage\InMemoryStorage;
 
 /**
  * The front door, end to end (docs/specs/contact-and-support.md §4).
@@ -130,6 +133,20 @@ final class ContactFormTest extends WebTestCase
         // The address stays published beside the form: the DSA wants a CHOICE
         // of means, so a form that replaced the address would be no better.
         self::assertStringContainsString('mailto:', $page->html());
+    }
+
+    /**
+     * Reading the contact page must not start a session: the CSRF token id is
+     * stateless (csrf.yaml), so no reader is handed a cookie and no crawler
+     * leaves a Redis row behind.
+     */
+    public function testLookingAtTheFormStartsNoSession(): void
+    {
+        $client = $this->client();
+        $client->request('GET', '/contact');
+
+        self::assertResponseIsSuccessful();
+        self::assertSame([], $client->getCookieJar()->all(), 'a GET of the contact form must set no cookie');
     }
 
     public function testASignedOutStrangerCanSendAMessage(): void
@@ -259,7 +276,14 @@ final class ContactFormTest extends WebTestCase
         self::assertSame('/map', $this->messages()[0]->getPageUrl());
     }
 
-    public function testAnOffSiteReferrerIsNotKeptAtAll(): void
+    /**
+     * A POST that arrives from another site is not a message with an odd
+     * referrer, it is a cross-site request. The stateless CSRF token
+     * (csrf.yaml) checks the origin before the controller runs, so nothing is
+     * written and the page URL is never even read. `cleanPageUrl()` still
+     * refuses an off-site referrer on its own, as the second line.
+     */
+    public function testAPostFromAnotherSiteIsRefused(): void
     {
         $client = $this->client();
         $page = $client->request('GET', '/contact');
@@ -276,7 +300,39 @@ final class ContactFormTest extends WebTestCase
             'HTTP_REFERER' => 'https://someone-elses-site.example/where-i-came-from',
         ]);
 
-        self::assertNull($this->messages()[0]->getPageUrl());
+        self::assertResponseStatusCodeSame(422);
+        self::assertSame([], $this->messages());
+    }
+
+    /**
+     * The DNS check is the only step that leaves the process, and it has no
+     * timeout. It must therefore sit BEHIND the rate limiter: an address at a
+     * domain whose nameserver never answers costs a token, so a stranger
+     * cannot hold a worker per request for free. Proven by exhausting the
+     * budget first and watching an unroutable domain come back as 429, not as
+     * the domain error it would get if DNS ran first.
+     *
+     * The limiter is swapped for one with a one-token budget before the first
+     * request, because the container's own test pool is reset between
+     * requests (see ProofOfWorkSpentTest for the same trap).
+     */
+    public function testTheRateLimitIsSpentBeforeDnsIsAsked(): void
+    {
+        $client = $this->client();
+
+        $budget = new RateLimiterFactory(
+            ['id' => 'contact_form_test', 'policy' => 'sliding_window', 'limit' => 1, 'interval' => '1 day'],
+            new InMemoryStorage(),
+        );
+        static::getContainer()->set('limiter.contact_form', $budget);
+        $guard = static::getContainer()->get(FormGuard::class);
+        $key = $guard->key(Request::create('/contact', 'POST', server: ['REMOTE_ADDR' => '127.0.0.1']));
+        self::assertTrue($budget->create($key)->consume()->isAccepted());
+
+        $this->submit($client, ['email' => 'someone@definitely-not-real.invalid']);
+
+        self::assertResponseStatusCodeSame(429);
+        self::assertSame([], $this->messages());
     }
 
     /** A deep link from the privacy page must arrive with its topic chosen. */

@@ -2596,6 +2596,7 @@ translate:
     consent_required: 'Vink de licentieconsent aan om in te dienen.'
     english: 'Engels kan niet vanaf de website worden voorgesteld.'
     key_absent: 'Die catalogsleutel is niet meer beschikbaar.'
+    protected: 'Die tekst is een licentieovereenkomst. De site wijzigt die zelf, met een nieuwe versie; hier kan die niet worden vertaald.'
     markup_unbalanced: 'De tag <%tag%> is niet gesloten, of sluit iets dat hij niet opende. Controleer de tags rond je tekst.'
     markup_tag_not_allowed: 'De tag <%tag%> mag hier niet en zou verwijderd worden. Alleen <b>, <i>, <code>, <br>, <span> en links kunnen gebruikt worden.'
     markup_stray_angle: 'Er staat een losse < in je tekst. Als je een tag bedoelde, controleer dan of die compleet is.'
@@ -4382,6 +4383,9 @@ report:
     flash_bad_status: 'Kies een uitkomst.'
     flash_needs_note: 'Schrijf wat je besloot en waarom. Iedereen die hier bericht over krijgt, leest het.'
     flash_saved: 'Besluit vastgelegd, en iedereen die bericht toekwam heeft het.'
+  challenge_working: 'Veiligheidscontrole loopt in je browser…'
+  challenge_ready: 'Veiligheidscontrole voltooid.'
+  challenge_failed: 'De veiligheidscontrole kon niet worden uitgevoerd. Lukt versturen niet, mail dan info@cyclingcommons.org.'
   error:
     ground: 'Kies wat er mis mee is.'
     about: 'Die foto staat niet op deze pagina.'
@@ -4394,6 +4398,7 @@ report:
     statement_required: 'Bevestig dat je de rechten hebt, of namens de rechthebbende handelt.'
     answer_required: 'Vertel ons waarom het werk van jou is.'
     rate_limited: 'Dat zijn veel meldingen vanaf één plek vandaag. Probeer het morgen opnieuw, of gebruik de contactpagina.'
+    challenge: 'Wacht tot de veiligheidscontrole klaar is en verstuur de melding opnieuw.'
   target:
     route: 'Een route'
     item: 'Een plek op de kaart'

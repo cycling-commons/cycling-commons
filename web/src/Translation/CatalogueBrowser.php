@@ -10,6 +10,7 @@ use App\Entity\User;
 use App\Pagination\Pager;
 use App\Translation\Entity\TranslationEntry;
 use App\Translation\Entity\TranslationProposal;
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\SecurityBundle\Security;
@@ -44,8 +45,10 @@ final class CatalogueBrowser
      */
     public function search(string $q, string $locale, int $page, int $perPage): array
     {
-        $where = ['absent_at IS NULL'];
-        $params = [];
+        // The consent contracts are not offered: see ProtectedKeys.
+        $where = ['absent_at IS NULL', 'message_key NOT IN (:protected)'];
+        $params = ['protected' => ProtectedKeys::KEYS];
+        $types = ['protected' => ArrayParameterType::STRING];
 
         $q = trim($q);
         if ('' !== $q) {
@@ -58,6 +61,7 @@ final class CatalogueBrowser
         $total = (int) $this->db->fetchOne(
             "SELECT COUNT(*) FROM translation_entry WHERE {$whereSql}",
             $params,
+            $types,
         );
 
         $pager = Pager::of($page, $total, $perPage);
@@ -70,6 +74,7 @@ final class CatalogueBrowser
              ORDER BY message_key ASC
              LIMIT {$pager['perPage']} OFFSET {$pager['offset']}",
             $params,
+            $types,
         );
 
         $overlayMap = $this->overlays->map($locale);

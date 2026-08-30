@@ -26,3 +26,10 @@ framework:
             # and `submit` above. Pairs with LocaleSubscriber's session guard:
             # BOTH are needed, either one alone still sets the cookie.
             - bug_report
+            # The same reasoning, one step further: /report/{type}/{id} and
+            # /contact are standalone pages, but they are LINKED from every
+            # drawer and every footer, and a form that anybody may open must
+            # cost nothing to open. A stateful token here minted a Redis
+            # session per crawler hit on GET, before anything was posted.
+            - content_report
+            - contact_form

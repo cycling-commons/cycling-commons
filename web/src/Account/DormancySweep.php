@@ -99,7 +99,8 @@ final class DormancySweep
     {
         $firstRung = min(DormancyLadder::NOTICES);
 
-        return $this->em->createQueryBuilder()
+        /** @var list<User> $idle */
+        $idle = $this->em->createQueryBuilder()
             ->select('u')
             ->from(User::class, 'u')
             ->where('u.lastLoginAt IS NOT NULL')
@@ -109,6 +110,16 @@ final class DormancySweep
             ->setParameter('cutoff', $now->modify(sprintf('-%d months', $firstRung)))
             ->getQuery()
             ->getResult();
+
+        // An administrator is never closed for silence. There may be exactly
+        // one, and a sweep that removes the last operator of the site is a
+        // lockout, not housekeeping: nobody would be left to restore anything.
+        // Filtered here rather than in DQL because roles live in a JSON column
+        // that Postgres will not LIKE against, and the list is short.
+        return array_values(array_filter(
+            $idle,
+            static fn (User $user): bool => !\in_array('ROLE_ADMIN', $user->getRoles(), true),
+        ));
     }
 
     private function monthsIdle(User $user, \DateTimeImmutable $now): int

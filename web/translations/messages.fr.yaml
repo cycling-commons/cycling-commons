@@ -2596,6 +2596,7 @@ translate:
     consent_required: 'Cochez le consentement de licence pour envoyer.'
     english: 'L''anglais ne peut pas être proposé depuis le site.'
     key_absent: 'Cette clé du catalogue n''est plus disponible.'
+    protected: 'Ce texte est un accord de licence. Le site le modifie lui-même, avec une nouvelle version ; il ne peut pas être traduit ici.'
     markup_unbalanced: 'La balise <%tag%> n''est pas fermée, ou ferme quelque chose qu''elle n''a pas ouvert. Vérifiez les balises autour de votre texte.'
     markup_tag_not_allowed: 'La balise <%tag%> n''est pas autorisée ici et serait supprimée. Seules <b>, <i>, <code>, <br>, <span> et les liens sont utilisables.'
     markup_stray_angle: 'Il y a un < isolé dans votre texte. Si vous vouliez une balise, vérifiez qu''elle est complète.'
@@ -4382,6 +4383,9 @@ report:
     flash_bad_status: 'Choisissez une issue.'
     flash_needs_note: 'Écrivez ce que vous avez décidé et pourquoi. Toute personne qui reçoit un message le lit.'
     flash_saved: 'Décision enregistrée, et chaque personne à qui un message était dû l''a reçu.'
+  challenge_working: 'Vérification de sécurité en cours dans votre navigateur…'
+  challenge_ready: 'Vérification de sécurité terminée.'
+  challenge_failed: 'La vérification de sécurité n''a pas pu s''exécuter. Si le signalement ne part pas, écrivez à info@cyclingcommons.org.'
   error:
     ground: 'Choisissez ce qui ne va pas.'
     about: 'Cette image n''est pas sur cette page.'
@@ -4394,6 +4398,7 @@ report:
     statement_required: 'Merci de confirmer que vous détenez les droits, ou que vous agissez pour la personne qui les détient.'
     answer_required: 'Dites-nous pourquoi l''œuvre est la vôtre.'
     rate_limited: 'Cela fait beaucoup de signalements depuis un même endroit aujourd''hui. Réessayez demain, ou utilisez la page de contact.'
+    challenge: 'Veuillez attendre la fin de la vérification de sécurité, puis renvoyez le signalement.'
   target:
     route: 'Un itinéraire'
     item: 'Un lieu sur la carte'

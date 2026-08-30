@@ -108,7 +108,17 @@ Notes that matter if you change any of this:
 * **Order of checks.** Cheap checks first, so a flood of obvious bots does not
   spend a genuine visitor's rate-limit budget; proof of work verified before the
   limiter, so CPU already spent is not wasted on a submission that fails
-  validation anyway; the limiter before anything is written.
+  validation anyway; the limiter before anything is written; and the **DNS
+  check last, behind the limiter**. `FormGuard::domainResolves()` is the one
+  step that leaves the process, `checkdnsrr()` has no timeout of its own, and a
+  resolver that never answers holds a PHP-FPM worker for the whole wait. Run
+  before the limiter, as it first was, an unauthenticated POST with an address
+  at such a domain stalled a worker per request without spending a token
+  (review 2026-08-30). Behind it, a stall costs the caller one of the day's
+  budget, and a genuine rider with a typo in the domain pays the same token,
+  which is the cheaper of the two mistakes. Same order on both forms; pinned
+  by `testTheRateLimitIsSpentBeforeDnsIsAsked` in `ContactFormTest` and
+  `BugReportTest`.
 * **`ProofOfWork` moved out of `App\Media`.** It was written for the photo
   report and is now shared. The cache pool moved with it:
   `cache.media_pow` → `cache.pow_spent`.

@@ -746,8 +746,13 @@ down or a curator busy.
    every genuine reporter — including the ones least able to pay it — for a
    threat the breaker already bounds. The option held in reserve is **adaptive**
    friction: demand a bot check on the urgent path *only while the breaker is
-   open*, so peacetime stays frictionless and third-party-script-free. Not
-   built; it needs a CSP host allowance and revisits the standing decision.
+   open*, so peacetime stays frictionless and third-party-script-free. **Built
+   that way, with no third party**: the local proof of work
+   (`App\Security\ProofOfWork`, the same one the contact form uses) is
+   demanded on the urgent ground only while the breaker is open, by
+   `ContentReportController` since the photo form folded into `/report`
+   ([content-reports.md §5](content-reports.md)). The standing decision holds:
+   no CAPTCHA, no script from anybody else, and nothing asked in peacetime.
 4. Email verification of the reporter was considered and **rejected**: the
    address is deliberately optional (Art. 12(2) says facilitate the exercise of
    rights), disposable mailboxes make it a weak gate anyway, and requiring it

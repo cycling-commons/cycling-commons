@@ -74,6 +74,13 @@
      assistive technology is told to skip it. #}
   .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
 </style>
+  .pow-status{font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;color:#595c4d;margin:.6rem 0 0}
+{% endblock %}
+
+{% block body_scripts %}
+{# Solves the proof of work once the urgent ground is picked; see the script's
+   own header for why it is not form-challenge.js. #}
+<script src="{{ asset('support/report-challenge.js') }}" defer></script>
 {% endblock %}
 
 {% block body %}
@@ -96,9 +103,19 @@
         <div class="cerr" role="alert">{{ error|trans }}</div>
       {% endif %}
 
-      <form method="post" action="{{ path('content_report_submit', {type: target.value, id: target_id}) }}">
+      {# The proof-of-work challenge rides on every render. The server asks
+         for a solved nonce only on the ground that hides a photo before
+         review, and only while the auto-withhold breaker is open
+         (photo-uploads.md §6c); the script solves it as soon as that ground
+         is picked either way, so the breaker's state never shows here. #}
+      <form method="post" action="{{ path('content_report_submit', {type: target.value, id: target_id}) }}"
+            id="report-form"
+            data-pow-challenge="{{ pow.challenge }}"
+            data-pow-difficulty="{{ pow.difficulty }}">
         <input type="hidden" name="_token" value="{{ csrf_token('content_report') }}">
         <input type="hidden" name="{{ guard.stamp_field }}" value="{{ guard.stamp }}">
+        <input type="hidden" name="pow_challenge" value="{{ pow.challenge }}">
+        <input type="hidden" name="pow_nonce" id="pow_nonce" value="">
         {# Where they clicked from. Carried, never shown: it is context for the
            curator, not a question for the reporter. #}
         {% if from_path %}<input type="hidden" name="from" value="{{ from_path }}">{% endif %}
@@ -153,6 +170,7 @@
               <option value="{{ g.value }}"
                       {% if g.isImageOnly %}data-photo-only="1"{% endif %}
                       {% if g.needsOwnershipProof %}data-needs-proof="1"{% endif %}
+                      {% if g.autoWithholds %}data-auto-withholds="1"{% endif %}
                       {% if not g.requiresContact %}data-no-contact="1"{% endif %}>{{ g.label|trans }}</option>
             {% endfor %}
           </select>
@@ -202,6 +220,11 @@
         </div>
 
         <p class="reqlegend">{{ 'support.required_legend'|trans|rich }}</p>
+
+        <p id="pow-status" class="pow-status" hidden
+           data-working="{{ 'report.challenge_working'|trans }}"
+           data-ready="{{ 'report.challenge_ready'|trans }}"
+           data-failed="{{ 'report.challenge_failed'|trans }}"></p>
 
         <p><button type="submit" class="btn btn-p">{{ 'report.submit'|trans }}</button></p>
       </form>

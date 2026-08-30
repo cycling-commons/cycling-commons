@@ -102,12 +102,6 @@ final class ContactController extends AbstractController
         if (mb_strlen($name) > ContactMessage::NAME_MAX) {
             return $this->again($request, 'support.error.name_too_long', Response::HTTP_UNPROCESSABLE_ENTITY);
         }
-        // A domain that resolves nowhere means the acknowledgement, and any
-        // answer, will bounce. Checked here rather than by mailing and hoping.
-        if (!$this->guard->domainResolves($email)) {
-            return $this->again($request, 'support.error.email_domain', Response::HTTP_UNPROCESSABLE_ENTITY);
-        }
-
         // Proof of work last of the cheap checks: it costs the visitor's CPU,
         // so it should not be spent on a submission that fails validation.
         $now = new \DateTimeImmutable();
@@ -132,6 +126,21 @@ final class ContactController extends AbstractController
 
         if (!$this->contactFormLimiter->create($this->guard->key($request))->consume()->isAccepted()) {
             return $this->again($request, 'support.error.rate_limited', Response::HTTP_TOO_MANY_REQUESTS);
+        }
+
+        // A domain that resolves nowhere means the acknowledgement, and any
+        // answer, will bounce. Checked here rather than by mailing and hoping.
+        //
+        // AFTER the limiter, deliberately. This is the one check that leaves
+        // the process: checkdnsrr() has no timeout of its own, and a resolver
+        // that answers slowly holds a PHP-FPM worker for the whole wait. Run
+        // before the limiter, a stranger could post an address at a domain
+        // whose nameserver never answers, as often as they liked, and each
+        // attempt would tie up a worker without spending a single token. Here
+        // it costs a genuine rider with a typo in the domain one of the day's
+        // budget, which is the cheaper of the two mistakes.
+        if (!$this->guard->domainResolves($email)) {
+            return $this->again($request, 'support.error.email_domain', Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
         $message = new ContactMessage($topic, $email, $body);

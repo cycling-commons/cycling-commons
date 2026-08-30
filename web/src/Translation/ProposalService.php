@@ -17,6 +17,7 @@ use App\Translation\Exception\EnglishNotTranslatableException;
 use App\Translation\Exception\InvalidLocaleException;
 use App\Translation\Exception\InvalidMarkupException;
 use App\Translation\Exception\KeyNotFoundException;
+use App\Translation\Exception\ProtectedKeyException;
 use App\Translation\Exception\TranslationConflictException;
 use App\Translation\Exception\TranslationTooLongException;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
@@ -75,6 +76,13 @@ final class ProposalService
 
         if (null !== $entry->getAbsentAt()) {
             throw new KeyNotFoundException(sprintf('Catalogue key "%s" is absent.', $entry->getMessageKey()));
+        }
+
+        // The consent contracts are the words a rider agreed to, hashed into
+        // the ledger under a VERSION. Reworded here, every earlier record
+        // would cover words its rider never saw. See ProtectedKeys.
+        if (ProtectedKeys::isProtected($entry->getMessageKey())) {
+            throw new ProtectedKeyException(sprintf('Catalogue key "%s" is a consent contract and is not translatable in-site.', $entry->getMessageKey()));
         }
 
         $value = trim($value);

@@ -629,6 +629,25 @@ write first and give time; one missing notice means that was not done.
 **Signing in clears all three** (`User::recordLogin()`), so a rider who returns
 after the final notice starts again from zero.
 
+**The remember-me cookie is a sign-in.** `LoginSuccessHandler` stamps the
+clock after the login form, and only there, because it runs after 2FA. A rider
+who ticked "remember me" never sees the form again: the seven-day cookie signs
+them in on the first request of every browser session and is renewed on use, so
+somebody who visited weekly for two years still carried a `lastLoginAt` from
+the last password they typed, and the sweep would have warned and closed an
+account in daily use (review 2026-08-30). `App\Security\RememberedLoginListener`
+listens to `LoginSuccessEvent` for the remember-me authenticator alone and
+calls the same `recordLogin()`. It is safe to count: scheb withholds the cookie
+until 2FA has passed. Once per browser session, not per request, because the
+authenticator only runs while there is no session token yet. Pinned by
+`SecurityTest::testComingBackOnTheRememberMeCookieCountsAsASignIn`.
+
+**Administrators are never swept.** `DormancySweep::candidates()` drops
+`ROLE_ADMIN` accounts before any notice or deletion. There may be exactly one,
+and a sweep that closes the last operator of the site is a lockout, not
+housekeeping. Filtered in PHP rather than DQL because roles live in a JSON
+column. Pinned by `DormancySweepTest::testAnAdministratorIsNeverWarnedNorDeleted`.
+
 **Deletion is the ordinary deletion.** It calls
 `UserDeletionService::purge()`, the same path a rider's own request takes, so
 contributions are anonymised rather than cascaded and a photo licence consent

@@ -7,7 +7,9 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Entity\User;
+use App\Media\UrgentWithholdBreaker;
 use App\Security\FormGuard;
+use App\Security\ProofOfWork;
 use App\Support\ContentReportService;
 use App\Support\Entity\ContentReport;
 use App\Support\ReportGround;
@@ -61,6 +63,8 @@ final class ContentReportController extends AbstractController
         private readonly EntityManagerInterface $em,
         private readonly ReportResolver $resolver,
         private readonly ClockInterface $clock,
+        private readonly ProofOfWork $proofOfWork,
+        private readonly UrgentWithholdBreaker $breaker,
     ) {
     }
 
@@ -205,6 +209,28 @@ final class ContentReportController extends AbstractController
             }
         }
 
+        // The one ground that changes anything before a person has looked is
+        // the one worth automating: it takes an approved photo down on the
+        // spot. In peacetime the per-IP budget and the site-wide breaker price
+        // it, and the reporter with the most to lose pays nothing. Once the
+        // breaker has opened a flood is already running, and from then on the
+        // urgent path also asks for the proof of work the contact form asks for
+        // on every message (photo-uploads.md §6c, "adaptive friction"). The
+        // page solves it as soon as the ground is picked, breaker or no
+        // breaker, so a report written while the breaker opens still carries a
+        // nonce and the breaker's state never shows on the page. The photo
+        // form did exactly this before it was folded into this route, and the
+        // fold had dropped it.
+        if ($ground->autoWithholds() && $this->breaker->isOpen()
+            && !$this->proofOfWork->verify(
+                (string) $request->request->get('pow_challenge', ''),
+                (string) $request->request->get('pow_nonce', ''),
+                new \DateTimeImmutable(),
+            )
+        ) {
+            return $this->error($type, $id, 'report.error.challenge', Response::HTTP_UNPROCESSABLE_ENTITY, $request);
+        }
+
         $ip = $request->getClientIp() ?? 'unknown';
         if (!$this->contentReportLimiter->create('ip-'.$ip)->consume()->isAccepted()) {
             return $this->error($type, $id, 'report.error.rate_limited', Response::HTTP_TOO_MANY_REQUESTS, $request);
@@ -286,6 +312,13 @@ final class ContentReportController extends AbstractController
                 'stamp' => $this->guard->stamp(new \DateTimeImmutable()),
                 'honeypot_a' => FormGuard::HONEYPOT_A,
                 'honeypot_b' => FormGuard::HONEYPOT_B,
+            ],
+            // Embedded on every render; the page only solves it when the
+            // urgent ground is picked, and the server only asks for it while
+            // the breaker is open.
+            'pow' => [
+                'challenge' => $this->proofOfWork->issue(new \DateTimeImmutable()),
+                'difficulty' => ProofOfWork::DIFFICULTY,
             ],
         ];
     }

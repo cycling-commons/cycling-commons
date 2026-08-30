@@ -7,14 +7,19 @@ declare(strict_types=1);
 namespace App\Tests\Support;
 
 use App\Entity\User;
+use App\Media\UrgentWithholdAlert;
+use App\Media\UrgentWithholdBreaker;
 use App\Security\FormGuard;
+use App\Settings\SystemSettings;
 use App\Support\Entity\ContentReport;
 use App\Support\ReportGround;
 use App\Support\ReportStatus;
 use App\Support\ReportTarget;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\Cache\Adapter\ArrayAdapter;
 
 /**
  * "Report this", from anybody, about anything but a photo
@@ -77,12 +82,15 @@ final class ContentReportTest extends WebTestCase
         string $id = '1',
         string $ground = 'untrue',
         ?string $contact = 'reporter@cyclingcommons.org',
+        bool $solve = false,
     ): void {
         $page = $client->request('GET', '/report/'.$type.'/'.$id);
         self::assertResponseIsSuccessful();
 
         $guard = static::getContainer()->get(FormGuard::class);
         $token = (string) $page->filter('input[name="_token"]')->attr('value');
+        $form = $page->filter('#report-form')->first();
+        $challenge = (string) $form->attr('data-pow-challenge');
 
         $client->request('POST', '/report/'.$type.'/'.$id, [
             '_token' => $token,
@@ -90,7 +98,64 @@ final class ContentReportTest extends WebTestCase
             'ground' => $ground,
             'reason' => 'The gate at the top has been locked since spring and the way through is fenced.',
             'contact' => $contact ?? '',
+            'pow_challenge' => $challenge,
+            'pow_nonce' => $solve ? $this->solve($challenge, (int) $form->attr('data-pow-difficulty')) : '',
         ]);
+    }
+
+    /** What the browser does in report-challenge.js, in PHP. */
+    private function solve(string $challenge, int $difficulty): string
+    {
+        for ($nonce = 0;; ++$nonce) {
+            $digest = hash('sha256', $challenge.'.'.$nonce, true);
+            $bits = 0;
+            foreach (str_split($digest) as $byte) {
+                $value = \ord($byte);
+                if (0 === $value) {
+                    $bits += 8;
+                    if ($bits >= $difficulty) {
+                        return (string) $nonce;
+                    }
+                    continue;
+                }
+                for ($mask = 0x80; $mask > 0; $mask >>= 1) {
+                    if (0 !== ($value & $mask)) {
+                        break 2;
+                    }
+                    if (++$bits >= $difficulty) {
+                        return (string) $nonce;
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Trip the site-wide auto-withhold breaker (photo-uploads.md §6c).
+     *
+     * A breaker of our own, on a pool the container does not reset between
+     * requests, put in place before the first request so every service that
+     * asks for one gets this instance. Spent through its own method rather
+     * than by a literal count, so the test holds whatever the setting says.
+     */
+    private function openBreaker(): UrgentWithholdBreaker
+    {
+        $container = static::getContainer();
+        $breaker = new UrgentWithholdBreaker(
+            new ArrayAdapter(),
+            $container->get(SystemSettings::class),
+            $container->get(LoggerInterface::class),
+            $container->get(UrgentWithholdAlert::class),
+        );
+        $container->set(UrgentWithholdBreaker::class, $breaker);
+
+        $spent = 0;
+        while ($breaker->allowWithhold()) {
+            self::assertLessThan(2000, ++$spent, 'the hourly budget must be finite');
+        }
+        self::assertTrue($breaker->isOpen());
+
+        return $breaker;
     }
 
     private function curator(): User
@@ -120,6 +185,21 @@ final class ContentReportTest extends WebTestCase
     }
 
     // -- filing ----------------------------------------------------------
+
+    /**
+     * A GET of the form must not start a session. Every crawler that follows a
+     * "Report this" link would otherwise leave a Redis row behind, and every
+     * reader would be handed a session cookie for looking at a form. The CSRF
+     * token id is stateless for that reason (csrf.yaml).
+     */
+    public function testLookingAtTheFormStartsNoSession(): void
+    {
+        $client = $this->client();
+        $client->request('GET', '/report/route/1');
+
+        self::assertResponseIsSuccessful();
+        self::assertSame([], $client->getCookieJar()->all(), 'a GET of the report form must set no cookie');
+    }
 
     public function testAnyoneCanReportWithoutAnAccount(): void
     {
@@ -163,6 +243,48 @@ final class ContentReportTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertCount(1, $this->reports());
         self::assertNull($this->reports()[0]->getReporterContact());
+    }
+
+    /**
+     * The urgent ground hides a photo before a curator has looked, which makes
+     * it the one lever worth automating. In peacetime the budgets price it and
+     * the reporter pays nothing; once the breaker has opened, a flood is
+     * running and the urgent path also demands the proof of work
+     * (photo-uploads.md §6c). The photo form had this and the shared route had
+     * dropped it.
+     */
+    public function testOnceTheBreakerIsOpenTheUrgentGroundNeedsTheProofOfWork(): void
+    {
+        $client = $this->client();
+        $this->openBreaker();
+
+        $this->file($client, 'photo', self::PHOTO_UUID, 'intimate_or_child', contact: null);
+
+        self::assertResponseStatusCodeSame(422);
+        self::assertSame([], $this->reports());
+    }
+
+    public function testWithTheBreakerOpenASolvedChallengeStillFiles(): void
+    {
+        $client = $this->client();
+        $this->openBreaker();
+
+        $this->file($client, 'photo', self::PHOTO_UUID, 'intimate_or_child', contact: null, solve: true);
+
+        self::assertResponseIsSuccessful();
+        self::assertCount(1, $this->reports());
+    }
+
+    /** No breaker, no challenge: the ordinary grounds never ask for one. */
+    public function testWithTheBreakerOpenAnOrdinaryGroundAsksForNoChallenge(): void
+    {
+        $client = $this->client();
+        $this->openBreaker();
+
+        $this->file($client);
+
+        self::assertResponseIsSuccessful();
+        self::assertCount(1, $this->reports());
     }
 
     public function testTheReporterIpIsHashedAndNotStored(): void

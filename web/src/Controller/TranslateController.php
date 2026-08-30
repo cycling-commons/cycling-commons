@@ -20,6 +20,7 @@ use App\Translation\Exception\EnglishNotTranslatableException;
 use App\Translation\Exception\InvalidLocaleException;
 use App\Translation\Exception\InvalidMarkupException;
 use App\Translation\Exception\KeyNotFoundException;
+use App\Translation\Exception\ProtectedKeyException;
 use App\Translation\Exception\TranslationConflictException;
 use App\Translation\Exception\TranslationTooLongException;
 use App\Translation\ProposalService;
@@ -383,6 +384,8 @@ final class TranslateController extends AbstractController
                 $this->addFlash('danger', 'translate.error.english');
             } catch (KeyNotFoundException) {
                 $this->addFlash('danger', 'translate.error.key_absent');
+            } catch (ProtectedKeyException) {
+                $this->addFlash('danger', 'translate.error.protected');
             } catch (InvalidLocaleException) {
                 $this->addFlash('danger', 'translate.error.bad_locale');
             } catch (InvalidMarkupException $e) {

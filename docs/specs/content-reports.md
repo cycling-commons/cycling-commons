@@ -125,9 +125,31 @@ counts without it.
 
 Spam control is the same guard the contact form uses: two off-screen honeypots
 and a signed timestamp (`App\Security\FormGuard`), never a third-party captcha.
-CSRF is the stateful `content_report` token, like `contact_form`, because this
-is a standalone page and not chrome on every page. Compare `bug_report`, which
-is stateless precisely because the floating button renders everywhere.
+CSRF is the **stateless** `content_report` token
+([security-architecture.md §5.2](security-architecture.md)), like `contact_form`
+and `bug_report`. It was stateful at first, on the reasoning that a standalone
+page is not chrome on every page; but the page is linked from every drawer and
+every footer, and a stateful token starts a session on the GET, so every
+crawler that followed a "Report this" link left a Redis row behind and every
+reader was handed a session cookie for looking at a form. Stateless costs
+nothing to open. One consequence worth knowing: a POST whose `Origin`/`Referer`
+is another site is refused before the controller runs, which is the right
+answer for a cross-site post and is pinned by `ContactFormTest`.
+
+**Proof of work, adaptive.** The `intimate_or_child` ground takes an approved
+photo down before a curator has looked, which makes it the one lever worth
+automating. In peacetime nothing is asked of the reporter beyond the guard
+above: the per-IP `media_report_urgent` budget (one a day) and the site-wide
+breaker ([photo-uploads.md §6c](photo-uploads.md)) price it, and the reporter
+with the most to lose pays nothing. Once the breaker has opened a flood is
+already running, and from then on the urgent ground also demands the local
+proof of work the contact form demands on every message
+(`App\Security\ProofOfWork`, 20 bits, no third party). The challenge rides on
+every render; `assets/support/report-challenge.js` solves it as soon as the
+urgent ground is picked, breaker or no breaker, so the breaker's state never
+shows on the page and a report written while it opens still carries a nonce.
+The photo form had this from the start; folding it into this route had dropped
+it (review 2026-08-30). Pinned by `ContentReportTest`.
 
 **Where the links are:**
 

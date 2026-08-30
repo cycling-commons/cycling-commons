@@ -196,7 +196,7 @@ final class BugReportController extends AbstractController
             if ('' === $email) {
                 return ['support.bug.error.email_required', Response::HTTP_UNPROCESSABLE_ENTITY];
             }
-            if (false === filter_var($email, \FILTER_VALIDATE_EMAIL) || !$this->guard->domainResolves($email)) {
+            if (false === filter_var($email, \FILTER_VALIDATE_EMAIL)) {
                 return ['support.error.email_domain', Response::HTTP_UNPROCESSABLE_ENTITY];
             }
         }
@@ -243,6 +243,17 @@ final class BugReportController extends AbstractController
         $limiter = $solved ? $this->bugReportLimiter : $this->bugReportNoJsLimiter;
         if (!$limiter->create($this->guard->key($request))->consume()->isAccepted()) {
             return ['support.error.rate_limited', Response::HTTP_TOO_MANY_REQUESTS];
+        }
+
+        // Does the reporter's domain resolve at all? A wrong address is refused
+        // for the reason it always was: they would sit waiting for an answer
+        // that bounced. But this check is the one that leaves the process, and
+        // checkdnsrr() has no timeout, so it runs AFTER the limiter: a stranger
+        // posting addresses at a domain whose nameserver never answers spends
+        // a token per stalled worker instead of stalling for free. A signed-in
+        // reporter's address came from their account and is not re-checked.
+        if (!$user instanceof User && !$this->guard->domainResolves($email)) {
+            return ['support.error.email_domain', Response::HTTP_UNPROCESSABLE_ENTITY];
         }
 
         $report = new BugReport($title, $body);
