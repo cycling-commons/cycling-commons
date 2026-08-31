@@ -566,6 +566,17 @@ for one thing in five languages. Fixed across all five.
   are different words in each of the five locales; it renders through `|rich`,
   whose sanitiser allow-lists `<code>` and nothing that can carry script.
 
+- **The hint under the switch describes the mode that is ON (2026-08-31).** It
+  used to be one paragraph naming all three in sequence, sitting under a
+  three-way toggle, so whichever mode a rider was in they had to find their own
+  sentence inside a description of two others. The three strings ride on the
+  element as `data-curated` / `data-confirmed` / `data-all`, keyed by the same
+  values the buttons carry, and `panels.js` copies the matching one into the
+  text: no client i18n plumbing and no second vocabulary to drift. Each sentence
+  was rewritten to stand alone, because "Confirmed ADDS every place somebody has
+  checked" has nothing to add to once the other two are hidden. Pinned by
+  `view-mode-hint.test.cjs`.
+
 ### 4.2b Basemap labels follow the site language
 
 The place names baked into the **basemap** — countries, states, cities, streets —
@@ -649,6 +660,12 @@ four returned once the reason they looked broken was fixed:
   because a list computed on the client could only name the way each segment is
   filed under and never the ways it spans, trading a vanishing road for a
   doubled one. Pinned by `surface-is-an-overlay.test.cjs`.
+
+  **Select-all reads the ROWS, not the catalogue** (`catalogRows()`). Walking
+  every layer would switch the surface items on while the overlay switch still
+  read Off, which is the half-on state this change exists to make impossible,
+  reached by the one control never meant to touch it; it also made the label
+  lie, since an invisible row could never be "all on".
 
   The letter stays. `A` is still the catalog type, the API type, the
   contribution type and what the coverage page counts; only the map's control
@@ -1822,6 +1839,25 @@ requirement).
 
 ## 11. Ride heatmap (no letter) and the illustrative planner
 
+**The heatmap is HIDDEN as of 2026-08-31**, and the planner's code is DELETED.
+The rest of this section describes what is behind the comments, because putting
+the heatmap back is uncommenting two blocks and nothing else.
+
+- **Hidden until there are rides to draw (owner 2026-08-31).** With a handful of
+  contributed routes a heatmap does not read as a thin feature, it reads as a
+  wrong one: a few riders' habits drawn as if they were where people ride, which
+  is a claim the data cannot support and the kind a rider would plan around. Two
+  Twig comments, not deletions: the heading, the On/Off toggle (`#heattoggle`)
+  and the season chips (`#season`) in `map/index.html.twig`, and the whole
+  **derived** category on the contribute hub, heading included, because the
+  heatmap was the only card in it and a heading over an empty grid reads as
+  broken rather than as coming. Nothing else changed: the layer, the season
+  facet and the scope filter all still work, and everything that reads those
+  elements does so through `querySelectorAll` or a null check, so their absence
+  is a no-op. Every string stays in all five catalogues. What it needs before it
+  returns is in docs/TODO.md, and the first item is the hard one: somebody has
+  to pick the number of routes that counts as enough, defensibly, because that
+  threshold is partly a privacy question.
 - The ride heatmap is a **derived overlay** (never a catalog entry, never editable,
   and it carries no catalogue letter — see the items table in
   [edit-items/README.md](edit-items/README.md)): its own
@@ -1839,10 +1875,20 @@ requirement).
   decision; §4.3's chip groups came back the same day, the planner did not). It was openly faked: distance chips
   picked the nearest sample loop by km, drew it, and opened a drawer carrying
   the warning "⚠ Faked — the real planner stitches from the heatmap" — honest,
-  but a control that looks like a planner and is not one. `planner.js` and its
-  translation keys stay; the chips are gone from the template, `initPlanner()`
-  binds nothing, and the smoke sweep's planner checkpoint reports `skipped`
-  rather than failing. The real planner and geolocation remain deferred.
+  but a control that looks like a planner and is not one. The real planner and
+  geolocation remain deferred.
+- **The planner's code was deleted on 2026-08-31.** For four weeks after the
+  control went, `planner.js` was still imported, still called, still
+  `modulepreload`ed on every map view, and still shipped ten translated strings
+  in five languages for a drawer nobody could open. `initPlanner()` queried
+  `#planner .chip`, got an empty list from an element that is not in the markup,
+  and did nothing. `scope-ui.js` still listed two layer ids nothing creates.
+  Fifty-three lines of module, one preload, two dead ids and fifty catalogue
+  entries, all removed; each of the ten strings was checked to be used by that
+  module alone. The reasoning was already written here and in the map template's
+  own comment, so this only finished the job the 2026-08-02 decision started.
+  The frozen pre-Symfony demo at `atlas/demo/map.html` keeps its own copy, which
+  is what a frozen snapshot is for.
 - **Ride privacy:** route/heat fixture tracks have their first and last
   ~350–750 m trimmed (`trimEnds()`, **seeded by route id** so the trim is
   deterministic per route — located-correction fractions are stored relative

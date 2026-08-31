@@ -153,6 +153,35 @@ shipped and did not fire reliably, so it was removed, code and copy both
 (owner 2026-08-14); a gesture that works sometimes teaches riders the
 feature is flaky.
 
+**3 · Grabbing the line itself (2026-08-31).** Press the drawn line, drag to
+the road it should follow, let go. This is what a rider means by "move the
+route", and until now the only way to do it was to add a control point on the
+line and then drag that point: two gestures, nothing on screen connecting them,
+and a help line that described only the first. Worse, an armed tap on the road
+you actually wanted was ignored in silence, because `rightClickAt()` gives up
+beyond 35px of the line already drawn, and a parallel road is always further
+than that. Reported as "I do not drag the marker, I want to drag the road"
+(owner 2026-08-31), on a stretch the router had put on Dorpsweg when the dike
+beside it was meant.
+
+Underneath it is the same two steps, deliberately: the grab calls
+`rightClickAt()` to insert the control at the vertex grabbed (quietly, since the
+toast belongs to a deliberate add and not to a point about to move), then runs
+the marker's own drag-end work. One path, so a grabbed line and a dragged pin
+can never re-route differently.
+
+- **8px to grab, against the tap's 35.** You have to be ON the road you are
+  dragging, or a press meant for the map starts reshaping it.
+- **`dragPan` is disabled for the duration**, or the map slides out from under
+  the drag.
+- **The cursor turns to `grab` over the line**, because a thing that can be
+  dragged has to look like one.
+- **Mouse only.** Touch keeps the mode button below, which is what the help line
+  describes and what works without a hover to hint at grabbing.
+
+The help line now leads with the drag and keeps the control point as the way to
+pin a bend, which is the order a rider needs them in.
+
 **Touch route (built 2026-08-16): the "Add a point" MODE BUTTON**, the
 design the owner's candidate list called safest - discoverable, works with
 any pointer, and never fights MapLibre for a gesture. `#wzAddPt` sits beside

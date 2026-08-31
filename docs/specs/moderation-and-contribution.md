@@ -390,6 +390,23 @@ data-loss bug class this contract closes.
   was → now is computed server-side at submit (§3.2), never trusted from the
   client.
 
+### 1.5 The receipt offers the way forward, not only the way back (2026-08-31)
+
+After submitting, the only thing on the page was "Back to the map". The
+reference printed directly above it is a real submission id, and Contributions
+(`/profile`) is the page that tracks it: where a rider answers a curator's
+question and sees the decision. Sending them back to the map left the one thing
+they might want to do next off the screen.
+
+Two buttons, and the order is the argument: Contributions is the forward action
+and carries the weight, back to the map is the way back and stays quiet. They
+wrap rather than squeeze, because two full-width buttons on a phone read better
+than two half-width ones with a label broken across lines.
+
+The improve receipt only. The vote receipt is a different flow for a deferred
+feature, and giving it the same treatment would be guessing at where a vote
+should send somebody.
+
 ## 2. Intake boundary: `SubmissionDraft`, validate twice
 
 One envelope DTO, not eleven: `App\Contribution\SubmissionDraft` carries
@@ -1078,24 +1095,6 @@ Everything else is untouched — a word stays a word, a multi-select joins with
 commas. Malformed geometry degrades to something printable rather than throwing,
 because a broken payload must not take the whole queue card down with it.
 
-### 5.2c A new item is reviewed as itself, not as a diff (2026-08-31)
-
-There is nothing to diff a new item against, so the item **is** the proposal: it
-waits in state `submitted` holding exactly what the rider asked for. The desk
-therefore builds a NEW submission's rows from the item's own attributes rather
-than from its `changes` map (`SubmissionQueue::changeRows()`), with `was` null
-throughout, because everything is proposed from nothing.
-
-That is also what makes the card survive a revision. A revision is diffed
-against the item, and the item already carries the earlier round, so the second
-round records nothing for those fields. `mergeChanges()` (§7.3b) keeps them in
-the map from now on; reading the item is what shows the submissions filed before
-that existed, without rewriting their rows. Two independent reasons for the same
-answer, which is why this is the rule and not a patch.
-
-Shape fields stay out either way. A stretch or a line is reviewed on the map
-(§5.2a, §5.2b) and never as text, whichever side the rows are built from.
-
 ### 5.2b Before/after for a proposed shape (2026-08-03)
 
 Summarising geometry as text (§5.2a) made the card readable, but it did not make
@@ -1132,6 +1131,74 @@ never leave a second line behind; **all layers are removed before the shared
 source**, because removing a source still in use by a sibling layer throws, and
 a throw there leaves the old side on screen while the switch says otherwise. The
 switch is delegated off `document` like every other card control (§5.2).
+
+### 5.2c The Before side never claims a road is unrecorded (2026-08-31)
+
+A new stretch has a Before, and it is the same road: an unavailable Before
+button told a curator nothing about what the proposal replaces (owner
+2026-08-12). That Before used to be flagged `unrecorded`, which the client draws
+in the legend's red "Surface not recorded" dashes.
+
+`shapeSides()` cannot know that. A new stretch means WE held nothing for that
+way; OSM's surface tags live in the tile artifact and never reach the query. On
+a road nobody has tagged the flag happened to be right, which is why it survived
+since August; on a road OSM describes it was a red line asserting ignorance that
+the drawer beside it disproved, reading "Paved · asphalt · OSM" two inches away
+(owner-reported 2026-08-31).
+
+The Before is drawn in the neutral before-style instead: where the stretch sits,
+without claiming what was known about it. **This reverses the 2026-08-12
+decision and the cost is real:** a genuinely untagged road no longer stands out
+here. That signal was only ever correct by luck. Getting it back means asking
+the tile under the way what class it carries, which is a client-side question;
+the `unrecorded` key stays in the shape's type and `pending-shape.js` still
+styles it, so the answer has somewhere to land. §5.2d records the baseline that
+would make it answerable.
+
+### 5.2d What OSM said, so a curator can see what changed (2026-08-31)
+
+A rider can turn an asphalt road into a gravel one. Usually they are right,
+having ridden it; when they are not, the desk is the only place anybody would
+notice, and the desk could not tell. `was` is what OUR catalogue held, which for
+a new item is nothing, so changing what OSM already said produced exactly the
+same submission as describing a road nobody had touched.
+
+The map already knows: it draws the tile and prints the OSM values in the drawer
+two inches from the edit button. It now carries them on the edit link
+(`osm_surface`, `osm_highway`), `ContributeController::osmBaseline()` maps them
+through the form's own vocabularies, and `CatalogContributionService::newItemChanges()`
+records them as the side the rider changed FROM. The desk needs no new UI: the
+card already draws `was → now`, so a contradiction reads as
+**SURFACE Asphalt → Gravel**, which is the trigger to look twice.
+
+Only surface and road type: they are the two with server-side OSM mappings
+(`SurfaceVocabulary::fromTileClass()`, `RoadType::fromHighway()`). Smoothness is
+mapped client-side only, so there is nothing here to map it with, and a guessed
+baseline is worse than none. An OSM value the form cannot express is left out.
+
+Safe on this path specifically, because `approveNew()` applies nothing from the
+change map: `was` here is a display fact and nothing reads it as state. On an
+edit `was` keeps its old meaning, which `applyEdit()` still compares against.
+Showing the OSM value even when the rider AGREES with it needs its own field
+rather than more weight on `was`, and is an optional item in docs/TODO.md.
+
+### 5.2e A new item is reviewed as itself, not as a diff (2026-08-31)
+
+There is nothing to diff a new item against, so the item **is** the proposal: it
+waits in state `submitted` holding exactly what the rider asked for. The desk
+therefore builds a NEW submission's rows from the item's own attributes rather
+than from its `changes` map (`SubmissionQueue::changeRows()`), with `was` null
+throughout, because everything is proposed from nothing.
+
+That is also what makes the card survive a revision. A revision is diffed
+against the item, and the item already carries the earlier round, so the second
+round records nothing for those fields. `mergeChanges()` (§7.3b) keeps them in
+the map from now on; reading the item is what shows the submissions filed before
+that existed, without rewriting their rows. Two independent reasons for the same
+answer, which is why this is the rule and not a patch.
+
+Shape fields stay out either way. A stretch or a line is reviewed on the map
+(§5.2a, §5.2b) and never as text, whichever side the rows are built from.
 
 ### 7.3a A rider can see WHAT they contributed (2026-08-03, owner)
 
@@ -1206,7 +1273,7 @@ the curator's question attached to the abandoned one.
   message thread the rider and curator have already exchanged still names the
   thing they are discussing.
 - **A revision of a NEW submission is written to the ITEM.** For a new item the
-  item is the proposal (§5.2c), and `ModerationService::approveNew()` only flips
+  item is the proposal (§5.2e), and `ModerationService::approveNew()` only flips
   its state because there is by design nothing to apply. So a revision recorded
   only in `changes` was read by nobody and dropped the moment a curator
   approved: a rider filed a road, went back and lengthened it, and the approved
