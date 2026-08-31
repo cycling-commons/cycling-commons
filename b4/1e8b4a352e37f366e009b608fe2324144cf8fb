@@ -1,31 +1,23 @@
-pipeline/tests/test_load.py
-  s_3c392b244b902c::t_75e8f259a1e6e5 342-381
-  s_3c392b244b902c::t_501f8a08fbba43 382-446
 pipeline/coverage/load.py
-  s_3c392b244b902c::t_dc490abcb8cb11 228-240,244-255,284-290,292,297-299
-  s_3c392b244b902c::t_c4220dc059bd53 43-76
-  s_3c392b244b902c::t_9e4f2495e15c17 256-259,262,267-280
-  s_3c392b244b902c::t_546d1d50f87634 204-209
-  s_3c392b244b902c::t_614f86c84a780d 29-34
+  s_16e7d98f40a315::t_0b9eb8c8510378 29-34,43-76,204-209,228-240,244-259,262,267-280,284-290,292,297-299
 pipeline/coverage/run.py
-  s_3c392b244b902c::t_8ae4d958ff1cde 119-123,127-128
-  s_3c392b244b902c::t_7bb7d0f4e0cb1f 25
+  s_16e7d98f40a315::t_0c762d681d04a8 25,119-123,127-128
+pipeline/tests/test_load.py
+  s_16e7d98f40a315::t_ca2efd23a251c8 342-446
 pipeline/tests/test_run.py
-  s_3c392b244b902c::t_0d9af2f0d0e661 188-190
-  s_3c392b244b902c::t_f3b5b211bd7414 191-192
-  s_3c392b244b902c::t_1b37793e9efe35 148-153
+  s_16e7d98f40a315::t_03be29471d1c56 148-153,188-192
 ---
 {
   "schema_version": "authorship/3.0.0",
-  "git_ai_version": "1.6.15",
+  "git_ai_version": "1.7.0",
   "base_commit_sha": "b41e8b4a352e37f366e009b608fe2324144cf8fb",
   "prompts": {},
   "sessions": {
-    "s_3c392b244b902c": {
+    "s_16e7d98f40a315": {
       "agent_id": {
         "tool": "claude",
-        "id": "950237fb-f9e4-4e5b-ab5a-56a70b4212a3",
-        "model": "claude-opus-4-8"
+        "id": "a9fcd11a-43a8-477a-bd05-612aaa422d99",
+        "model": "claude-opus-5"
       },
       "human_author": "X. Koevoet <development@bikecoders.life>"
     }
