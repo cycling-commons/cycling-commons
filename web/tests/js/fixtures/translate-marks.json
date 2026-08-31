@@ -1,0 +1,26 @@
+[
+  {
+    "id": 812,
+    "stale": false,
+    "text": "Fietsen zonder grenzen",
+    "encoded": "⁡​​​​​​​​​​‌‌​​‌​‌‌​​​Fietsen zonder grenzen⁢"
+  },
+  {
+    "id": 812,
+    "stale": true,
+    "text": "Fietsen zonder grenzen",
+    "encoded": "⁡​​​​​​​​​​‌‌​​‌​‌‌​​‌Fietsen zonder grenzen⁢"
+  },
+  {
+    "id": 1,
+    "stale": false,
+    "text": "x",
+    "encoded": "⁡​​​​​​​​​​​​​​​​​​​‌​x⁢"
+  },
+  {
+    "id": 1048575,
+    "stale": true,
+    "text": "max",
+    "encoded": "⁡‌‌‌‌‌‌‌‌‌‌‌‌‌‌‌‌‌‌‌‌‌max⁢"
+  }
+]

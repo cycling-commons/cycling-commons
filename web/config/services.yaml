@@ -78,6 +78,15 @@ services:
         arguments:
             $inner: '@.inner'
 
+    # Translate mode marks (translations.md §4.1). Priority -20 sits OUTSIDE the
+    # overlay decorator (-10), so the overlay resolves the live wording first and
+    # the mark wraps that, not the YAML default underneath it.
+    App\Translation\MarkedTranslator:
+        decorates: translator
+        decoration_priority: -20
+        arguments:
+            $inner: '@.inner'
+
     # /translate live display: YAML via decorator inner (no double overlay).
     App\Translation\CatalogueBrowser:
         arguments:
