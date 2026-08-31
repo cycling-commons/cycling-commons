@@ -353,6 +353,30 @@ export function openSurfaceDrawer(p, lngLat, geometry, tileCtx) {
     const lossy = p.sm !== SM_LABEL[p.sm].toLowerCase().replace(' ', '_');
     rec.push({ label: D.smoothness || 'Smoothness',
                value: lossy ? smLabel + ' · ' + p.sm : smLabel, method: 'OSM' });
+  } else {
+    /* Say so rather than leave the row out. An absent row reads as "we do not
+       track this"; the map's ticks draw only where smoothness exists, so a road
+       with none looks exactly like a road nobody has tagged, and a rider cannot
+       tell the two apart. Naming the gap is what the Traffic row and the
+       "Surface not recorded" legend class already do (owner 2026-08-31).
+
+       The `empty` row style plus a link into the wizard is the same affordance
+       the catalog drawer uses for an unset field (drawer.js). The wizard is
+       reached by ref, the way the Edit action below it is: this stretch may
+       have no item behind it yet, and materialize-on-edit is what creates one
+       (osm-data-architecture.md §6). */
+    const href = p.ref
+      ? '/improve?ref=' + encodeURIComponent(p.ref)
+        + '&type=' + encodeURIComponent(layer.letter) + '&field=smoothness'
+      : null;
+    rec.push({
+      label: D.smoothness || 'Smoothness',
+      empty: true,
+      html: !!href,
+      value: href
+        ? '<a class="cc-d-add" href="' + href + '">＋ ' + (D.add || 'add') + '</a>'
+        : (D.notRecorded || 'Not recorded'),
+    });
   }
   if (p.mtb) {
     rec.push({ label: D.mtbScale || 'MTB scale', value: p.mtb, method: 'OSM' });

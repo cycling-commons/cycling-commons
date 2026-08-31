@@ -215,6 +215,7 @@ final class MapController extends AbstractController
             'surface' => 'd_surface', 'roadType' => 'd_road_type',
             'surfaceConfirm' => 'd_surface_confirm', 'srcScout' => 'd_src_scout',
             'smoothness' => 'd_smoothness', 'mtbScale' => 'd_mtb_scale',
+            'notRecorded' => 'd_not_recorded',
             'length' => 'd_length',
             'asDescribed' => 'd_as_described', 'surfaceCfQ' => 'd_surface_cf_q',
             'surfaceCfA' => 'd_surface_cf_a', 'notAsDescribed' => 'd_not_as_described',

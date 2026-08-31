@@ -184,7 +184,14 @@
           <button data-m="confirmed">{{ 'map.confirmed'|trans }}</button>
           <button class="on" data-m="all">{{ 'map.everything'|trans }}</button>
         </div>
-        <div class="hint">{{ 'map.curated_hint'|trans }}</div>
+        {# One line, for the mode that is on. All three ride as attributes and
+           panels.js swaps the text, so the rider reads what they chose rather
+           than a paragraph describing three things at once (owner 2026-08-31).
+           The rendered text matches the button marked `on` above. #}
+        <div class="hint" id="modeHint"
+             data-curated="{{ 'map.view_hint_curated'|trans }}"
+             data-confirmed="{{ 'map.view_hint_confirmed'|trans }}"
+             data-all="{{ 'map.view_hint_all'|trans }}">{{ 'map.view_hint_all'|trans }}</div>
       </div>
 
       {# Data layers. The rows are rendered by panels.js initLayerList() in

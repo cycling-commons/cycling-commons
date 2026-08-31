@@ -347,6 +347,11 @@ export function initViewMode(){
   );
   setMode(m);
   document.querySelectorAll('#mode button').forEach(b=>b.classList.toggle('on', b.dataset.m===m));
+  /* The hint describes the mode that is ON, not all three at once. Strings ride
+     on the element as data-curated / data-confirmed / data-all, so this needs
+     no client i18n plumbing of its own. */
+  const hint=document.getElementById('modeHint');
+  if(hint && hint.dataset[m]) hint.textContent = hint.dataset[m];
   const bf=document.getElementById('bestFacets'); if(bf) bf.hidden = (m!=='curated');
 }
 

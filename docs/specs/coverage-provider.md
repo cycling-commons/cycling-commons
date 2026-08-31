@@ -543,6 +543,19 @@ non-empty) is NOT prop-less — it hides under a region scope (matching
   `surface.quality.values` list — an unlisted value is dropped at extract
   time, never guessed) and `mtb` (`mtb:scale`, `0`–`6` with optional `+`/`-`),
   both omitted when absent so absence stays absent.
+
+  **Absent in the tile, named in the drawer (2026-08-31).** Omitting the prop is
+  right for the artifact and wrong for the rider on its own: the ticks draw only
+  where `sm` exists, so a road nobody has assessed looks exactly like any other
+  road without ticks. `openSurfaceDrawer` therefore always renders the
+  Smoothness row, and when the prop is missing renders it in the `empty` style
+  with a link into the wizard for that way (`/improve?ref=…&field=smoothness`),
+  the same affordance the catalog drawer uses for an unset field. Same principle
+  as the Traffic row, which says when it inferred rather than measured, and as
+  the `legend_unverified` class: name the gap, and make naming it the way to
+  close it. Whether "unknown" also earns a mark on the MAP is deliberately
+  unanswered until the tag's coverage is measured (docs/TODO.md, "Surface
+  quality").
 - **The cycle-route network has its own artifact and manifest since
   2026-08-13** (plan:
   `docs/plans/handoffs/2026-08-12-routes-layer-and-surface-quality.md`):
