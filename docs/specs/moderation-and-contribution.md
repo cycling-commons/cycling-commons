@@ -1205,6 +1205,17 @@ the curator's question attached to the abandoned one.
   always the newest. **The reference is unchanged**, so the
   message thread the rider and curator have already exchanged still names the
   thing they are discussing.
+- **A revision of a NEW submission is written to the ITEM.** For a new item the
+  item is the proposal (§5.2c), and `ModerationService::approveNew()` only flips
+  its state because there is by design nothing to apply. So a revision recorded
+  only in `changes` was read by nobody and dropped the moment a curator
+  approved: a rider filed a road, went back and lengthened it, and the approved
+  item kept the first, shorter line (owner-reported 2026-08-31). Not a display
+  fault; the longer road was gone. The amend now writes the revised attributes,
+  and the geometry when the revision carries a stretch, straight onto the item.
+  Only while the item is still `submitted`, which is exactly the window in which
+  it belongs to this one undecided submission; an edit to a live item keeps
+  going through `changes` and the curator, as it always has.
 - **It returns to `pending`**, and the previous round's `decision_note` /
   `decided_at` / `decided_by` are cleared — a stale "we need more information"
   sitting on a freshly revised submission reads as a new complaint.

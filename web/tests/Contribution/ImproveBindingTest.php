@@ -260,6 +260,71 @@ final class ImproveBindingTest extends WebTestCase
     }
 
     /**
+     * A revision of a pending NEW item reaches the ITEM, and survives approval.
+     *
+     * For a new item the item IS the proposal: it waits in state `submitted`
+     * holding what the rider asked for, and `ModerationService::approveNew()`
+     * only flips its state, because by design there is nothing to apply. So a
+     * revision recorded only in `changes` was read by nobody and dropped the
+     * moment a curator approved: a rider filed a road, went back and lengthened
+     * it, and the approved item kept the first, shorter line
+     * (owner-reported 2026-08-31). Not a display fault. The longer road was
+     * gone.
+     *
+     * The assertion is deliberately on the ITEM, because that is what the map
+     * draws and what approval keeps.
+     */
+    public function testARevisionOfAPendingNewItemReachesTheItemItself(): void
+    {
+        self::bootKernel();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $service = static::getContainer()->get(\App\Service\ContributionStubInterface::class);
+
+        $rider = (new User())->setEmail('lengthener@test.test');
+        $rider->setPassword('x');
+        $em->persist($rider);
+
+        // A stretch as the first round leaves it: two points, filed and pending.
+        $short = ['a' => [5.1076, 52.6543], 'b' => [5.1201, 52.6503],
+            'line' => [[5.1076, 52.6543], [5.1201, 52.6503]]];
+        $item = (new Item())->setLetter('A')->setName('Zuiderdracht · revise')
+            ->setGeom('{"type":"LineString","coordinates":[[5.1076,52.6543],[5.1201,52.6503]]}')
+            ->setCountryCode('NL')
+            ->setState(ItemState::Submitted)->setSource(ItemSource::Osm)->setSourceRef('way/999077')
+            ->setAttributes(['surface' => 'Asphalt', 'segment' => $short]);
+        $em->persist($item);
+        $em->flush();
+
+        $open = (new Submission())
+            ->setType(SubmissionType::NewItem)->setLetter('A')->setUserId((int) $rider->getId())
+            ->setItemId((int) $item->getId())
+            ->setTitle('Zuiderdracht · revise')
+            ->setGeom('{"type":"Point","coordinates":[5.1076,52.6543]}')
+            ->setCountryCode('NL')
+            ->setChanges(['surface' => ['was' => null, 'now' => 'Asphalt']])
+            ->setPayload([]);
+        $em->persist($open);
+        $em->flush();
+
+        // Round two: the rider only lengthens the stretch, northward.
+        $longer = json_encode(['a' => [5.1076, 52.6637], 'b' => [5.1201, 52.6503],
+            'line' => [[5.1076, 52.6637], [5.1100, 52.6580], [5.1201, 52.6503]]], \JSON_THROW_ON_ERROR);
+        $service->submit('improve', [
+            '_item_id' => $item->getId(), 'type' => 'road-surface',
+            'details' => ['surface' => 'Asphalt'], 'extras' => [],
+            'segment' => $longer,
+            'lat' => '52.6637', 'lng' => '5.1076',
+        ], $rider);
+
+        $em->refresh($item);
+        $attrs = $item->getAttributes();
+        self::assertIsArray($attrs['segment'] ?? null, 'the item must carry the revised stretch');
+        self::assertCount(3, $attrs['segment']['line'], 'the item kept the shorter line: the revision was lost');
+        self::assertStringContainsString('52.6637', (string) $item->getGeom(),
+            'the drawn geometry must follow the revised stretch, since that is what the map shows');
+    }
+
+    /**
      * A revision ADDS to the proposal. It must never erase the earlier round.
      *
      * The second round is diffed against the ITEM, and the item already holds

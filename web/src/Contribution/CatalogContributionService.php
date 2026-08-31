@@ -281,6 +281,24 @@ final class CatalogContributionService implements ContributionStubInterface
     }
 
     /**
+     * The geometry an item takes from its attributes: a stretch is a LineString,
+     * everything else is the pin.
+     *
+     * @param array<string, mixed> $attributes
+     */
+    private static function geomFor(array $attributes, string $point): string
+    {
+        $segment = $attributes['segment'] ?? null;
+        if (!\is_array($segment) || !isset($segment['a'], $segment['b'])) {
+            return $point;
+        }
+        /** @var list<array{float, float}> $path */
+        $path = \is_array($segment['line'] ?? null) ? $segment['line'] : [$segment['a'], $segment['b']];
+
+        return json_encode(['type' => 'LineString', 'coordinates' => $path], \JSON_THROW_ON_ERROR);
+    }
+
+    /**
      * A revision adds to the proposal; it never replaces it.
      *
      * The second round is diffed against the ITEM, and for a submission that
@@ -409,7 +427,34 @@ final class CatalogContributionService implements ContributionStubInterface
         if (null !== $open) {
             // Edit carries no attributes column; apply the was/now map on approve.
             $merged = self::mergeChanges($open->getChanges(), $changes);
-            $this->em->wrapInTransaction(function () use ($open, $merged, $payload): void {
+            /* A revision of a NEW submission has to reach the ITEM, not only the
+               change map. For a new item the item IS the proposal: it waits in
+               state `submitted` holding what the rider asked for, and
+               ModerationService::approveNew() only flips its state, because
+               there is by design nothing to apply. So a revision recorded only
+               in `changes` was read by nobody and dropped on approval: a rider
+               filed a road, went back and lengthened it, and the approved item
+               kept the first, shorter line (owner-reported 2026-08-31). It was
+               not a display fault. The longer road was gone.
+
+               Only while the item is still `submitted`, which is exactly the
+               window in which the item belongs to this undecided submission and
+               nothing else reads it. An edit to a live item keeps going through
+               `changes` and the curator, as it always has. */
+            $newItem = SubmissionType::NewItem === $open->getType() && ItemState::Submitted === $item->getState();
+            /* Only when the revision carries a stretch. A new item with no
+               segment keeps the pin it was filed with; the wizard cannot move
+               a pin and a shape in the same step. */
+            $itemGeom = ($newItem && isset($attributes['segment']))
+                ? self::geomFor($attributes, (string) $item->getGeom())
+                : null;
+            $this->em->wrapInTransaction(function () use ($open, $merged, $payload, $newItem, $item, $attributes, $itemGeom): void {
+                if ($newItem) {
+                    $item->setAttributes($attributes);
+                    if (null !== $itemGeom) {
+                        $item->setGeom($itemGeom);
+                    }
+                }
                 $open->setChanges($merged)
                     ->setPayload($payload)
                     ->setStatus(SubmissionStatus::Pending)
@@ -549,13 +594,7 @@ final class CatalogContributionService implements ContributionStubInterface
         $geo = $this->resolver->resolve($draft->lat, $draft->lng);
         $point = json_encode(['type' => 'Point', 'coordinates' => [$draft->lng, $draft->lat]], \JSON_THROW_ON_ERROR);
         // Segment items store a LineString; the submission keeps the start point.
-        $segment = $draft->attributes['segment'] ?? null;
-        $itemGeom = $point;
-        if (\is_array($segment) && isset($segment['a'], $segment['b'])) {
-            /** @var list<array{float, float}> $path */
-            $path = \is_array($segment['line'] ?? null) ? $segment['line'] : [$segment['a'], $segment['b']];
-            $itemGeom = json_encode(['type' => 'LineString', 'coordinates' => $path], \JSON_THROW_ON_ERROR);
-        }
+        $itemGeom = self::geomFor($draft->attributes, $point);
 
         return $this->em->wrapInTransaction(function () use ($draft, $type, $by, $rawPayload, $geo, $point, $itemGeom, $changes): Submission {
             $submission = (new Submission())
