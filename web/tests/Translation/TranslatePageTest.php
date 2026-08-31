@@ -8,6 +8,7 @@ namespace App\Tests\Translation;
 
 use App\Entity\User;
 use App\Translation\Entity\TranslationEntry;
+use App\Translation\Entity\TranslationOverlay;
 use App\Translation\Entity\TranslationProposal;
 use App\Translation\ProposalService;
 use App\Translation\TranslationCaches;
@@ -511,5 +512,68 @@ final class TranslatePageTest extends WebTestCase
         $next = $client->request('GET', '/nl/translate');
         self::assertResponseIsSuccessful();
         self::assertSame(0, $next->filter('.flash-success')->count());
+    }
+
+    /**
+     * translate.consent.standing is an overlayable key exactly like any
+     * other catalogue string (translations.md §3, §8): a curator-approved
+     * translation of it must not be able to inject live markup into the
+     * standing-consent notice. Only the template's own %date% substitution
+     * (the <time> element) is trusted; the surrounding overlay text is not,
+     * and must render escaped even though the notice as a whole is |raw.
+     */
+    public function testStandingConsentOverlayMarkupIsEscaped(): void
+    {
+        $client = static::createClient();
+        $user = $this->createUser('translate-standing-xss@example.com', 'hunter2secure!');
+        $first = $this->seedEntry('home.cta_map', 'Explore the map');
+        $later = $this->seedEntry('nav.home', 'Home');
+        $standingEntry = $this->seedEntry(
+            'translate.consent.standing',
+            'You agreed to the translation licence on %date%. Your translations join the Commons under CC BY-SA 4.0.',
+        );
+        $client->loginUser($user);
+
+        // Give this rider a standing consent record the same way a real
+        // proposal does: ProposalService calls TranslationConsentService::record()
+        // when a proposal is submitted with consent checked.
+        $crawler = $client->request('GET', '/fr/translate/'.$first->getId());
+        $form = $crawler->filter('form[name="translation_proposal"]')->form([
+            'translation_proposal[value]' => 'Explorer la carte',
+            'translation_proposal[consent]' => true,
+        ]);
+        $client->submit($form);
+        self::assertResponseRedirects();
+
+        /** @var EntityManagerInterface $em */
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        // The client reboots the kernel on each request, so $standingEntry
+        // (fetched before the submit above) belongs to a stale EntityManager.
+        // Re-find it through the current one before wiring the overlay to it.
+        $standingEntry = $em->find(TranslationEntry::class, $standingEntry->getId());
+        self::assertNotNull($standingEntry);
+        $em->persist(new TranslationOverlay(
+            $standingEntry,
+            'fr',
+            'Vous avez accepte <b onclick="alert(1)">le contrat</b> le %date%. <script>alert(1)</script>',
+            null,
+            null,
+            $standingEntry->getEnglishVersion(),
+        ));
+        $em->flush();
+        static::getContainer()->get(TranslationCaches::class)->invalidateAll();
+
+        $crawler = $client->request('GET', '/fr/translate/'.$later->getId());
+        self::assertResponseIsSuccessful();
+        self::assertSame(1, $crawler->filter('.consent-ok')->count());
+
+        $html = (string) $client->getResponse()->getContent();
+        self::assertStringNotContainsString('<b onclick="alert(1)">', $html);
+        self::assertStringNotContainsString('<script>alert(1)</script>', $html);
+        self::assertStringContainsString('&lt;b onclick=&quot;alert(1)&quot;&gt;', $html);
+        self::assertStringContainsString('&lt;script&gt;alert(1)&lt;/script&gt;', $html);
+
+        // The trusted %date% substitution still produces a real <time> element.
+        self::assertSelectorExists('.consent-ok time.consent-when');
     }
 }

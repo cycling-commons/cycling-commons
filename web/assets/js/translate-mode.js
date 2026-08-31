@@ -120,11 +120,11 @@
       // AND end) carries an end too, but that end is already spoken for by
       // the start right before it in the same node, and pairing it with
       // THIS open mark would stop the search short of the true close.
-      var closeIdx = -1, close = null;
+      var closeIdx = -1;
       for (var j = i + 1; j < nodes.length; j++) {
         if (used[j]) continue;
         var r = residualMarks(nodes[j].nodeValue);
-        if (r.ends > 0) { closeIdx = j; close = { start: r.firstEnd, end: r.firstEnd + 1 }; break; }
+        if (r.ends > 0) { closeIdx = j; break; }
       }
       if (closeIdx === -1) continue;
       var closeNode = nodes[closeIdx];

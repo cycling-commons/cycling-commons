@@ -83,7 +83,14 @@
     {% if not is_english %}
       {% if standing %}
         {% set when %}<time class="consent-when" datetime="{{ standing.consentedAt|date('c') }}">{{ standing.consentedAt|cc_date }}</time>{% endset %}
-        <div class="consent-ok">✓ {{ 'translate.consent.standing'|trans({'%date%': when})|raw }}
+        {# translate.consent.standing is an overlayable key: a curator-approved translation is
+           untrusted HTML at render (translations.md §3, §8), same as any other catalogue string.
+           Escape the catalogue text FIRST, substituting a placeholder no translator would type in
+           place of %date%, THEN swap that placeholder for our own trusted <time> markup and |raw only
+           the result we built ourselves. Doing it the other way round, interpolating %date% before
+           escaping, lets the catalogue text carry live HTML again - do not "simplify" it back to that. #}
+        {% set standing_text = 'translate.consent.standing'|trans({'%date%': '%%DATE%%'})|escape('html') %}
+        <div class="consent-ok">✓ {{ standing_text|replace({'%%DATE%%': when})|raw }}
           <details class="consent-more">
             <summary>{{ 'translate.consent.read_contract'|trans }}</summary>
             <p>{{ 'translate.consent.contract'|trans }}</p>
