@@ -1,0 +1,31 @@
+web/tests/Contribution/ImproveBindingTest.php
+  s_bd35b13142b2fa::t_60147dc8afa2a3 263-326
+  s_bd35b13142b2fa::t_faffb978ee564c 262
+web/src/Contribution/CatalogContributionService.php
+  s_bd35b13142b2fa::t_c570d467762b48 284-300,430-444,451-457,597
+  s_bd35b13142b2fa::t_c72188ff92b3d7 445-450
+  s_bd35b13142b2fa::t_5742ad9ef3b3ad 283
+docs/specs/moderation-and-contribution.md
+  s_bd35b13142b2fa::t_a8f8c8395d8aeb 1208-1218
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "be4e417f8c82df93c7f670b2fdcfb6cb35959f4a",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_bd35b13142b2fa": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c348108d-a15c-4a6f-a1f0-9ab7e633bdf4",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
