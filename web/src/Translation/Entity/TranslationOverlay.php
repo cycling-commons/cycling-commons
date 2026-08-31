@@ -49,12 +49,16 @@ class TranslationOverlay
     #[ORM\Column(name: 'approved_at', type: Types::DATETIME_IMMUTABLE)]
     private \DateTimeImmutable $approvedAt;
 
+    #[ORM\Column(name: 'english_version', type: Types::INTEGER)]
+    private int $englishVersion;
+
     public function __construct(
         TranslationEntry $entry,
         string $locale,
         string $value,
         ?TranslationProposal $sourceProposal,
         ?int $approvedById,
+        int $englishVersion,
     ) {
         $this->entry = $entry;
         $this->locale = $locale;
@@ -62,17 +66,20 @@ class TranslationOverlay
         $this->sourceProposal = $sourceProposal;
         $this->approvedById = $approvedById;
         $this->approvedAt = new \DateTimeImmutable();
+        $this->englishVersion = $englishVersion;
     }
 
     public function applyApproval(
         string $value,
         ?TranslationProposal $sourceProposal,
         ?int $approvedById,
+        int $englishVersion,
         \DateTimeImmutable $approvedAt = new \DateTimeImmutable(),
     ): void {
         $this->value = $value;
         $this->sourceProposal = $sourceProposal;
         $this->approvedById = $approvedById;
+        $this->englishVersion = $englishVersion;
         $this->approvedAt = $approvedAt;
     }
 
@@ -109,5 +116,10 @@ class TranslationOverlay
     public function getApprovedAt(): \DateTimeImmutable
     {
         return $this->approvedAt;
+    }
+
+    public function getEnglishVersion(): int
+    {
+        return $this->englishVersion;
     }
 }

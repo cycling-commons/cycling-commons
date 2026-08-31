@@ -7,7 +7,9 @@ declare(strict_types=1);
 namespace App\Translation\Command;
 
 use App\Translation\CatalogueSync;
+use App\Translation\TranslationCaches;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -29,6 +31,8 @@ final class SyncTranslationsCommand extends Command
     public function __construct(
         private readonly CatalogueSync $catalogueSync,
         private readonly EntityManagerInterface $em,
+        private readonly LoggerInterface $logger,
+        private readonly TranslationCaches $caches,
     ) {
         parent::__construct();
     }
@@ -51,7 +55,7 @@ final class SyncTranslationsCommand extends Command
 
         $file = $input->getOption('file');
         $sync = \is_string($file) && '' !== $file
-            ? new CatalogueSync($this->em, $file)
+            ? new CatalogueSync($this->em, $file, $this->logger, $this->caches)
             : $this->catalogueSync;
 
         $count = $sync->sync();

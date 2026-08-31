@@ -34,6 +34,15 @@ class TranslationEntry
     #[ORM\Column(type: Types::TEXT)]
     private string $english;
 
+    #[ORM\Column(name: 'english_yaml', type: Types::TEXT)]
+    private string $englishYaml;
+
+    #[ORM\Column(name: 'english_version', type: Types::INTEGER)]
+    private int $englishVersion = 1;
+
+    #[ORM\Column(name: 'yaml_english_version', type: Types::INTEGER)]
+    private int $yamlEnglishVersion = 1;
+
     #[ORM\Column(name: 'synced_at', type: Types::DATETIME_IMMUTABLE)]
     private \DateTimeImmutable $syncedAt;
 
@@ -44,6 +53,7 @@ class TranslationEntry
     {
         $this->messageKey = $messageKey;
         $this->english = $english;
+        $this->englishYaml = $english;
         $this->syncedAt = $now;
     }
 
@@ -53,11 +63,53 @@ class TranslationEntry
         $this->syncedAt = $now;
     }
 
-    public function restoreFromYaml(string $english, \DateTimeImmutable $now = new \DateTimeImmutable()): void
+    /** Git changed the wording (translations.md §3.3, "from git"). */
+    public function applyGitEnglish(string $yaml, \DateTimeImmutable $now = new \DateTimeImmutable()): void
     {
-        $this->english = $english;
+        $this->englishYaml = $yaml;
+        $this->english = $yaml;
+        ++$this->englishVersion;
+        $this->yamlEnglishVersion = $this->englishVersion;
         $this->absentAt = null;
         $this->syncedAt = $now;
+    }
+
+    /** Git now carries the live overlay wording (translations.md §3.3, "git catches up"). */
+    public function absorbGitEnglish(string $yaml, \DateTimeImmutable $now = new \DateTimeImmutable()): void
+    {
+        $this->englishYaml = $yaml;
+        $this->yamlEnglishVersion = $this->englishVersion;
+        $this->absentAt = null;
+        $this->syncedAt = $now;
+    }
+
+    /** A curator's English edit was approved (translations.md §3.3, "from an approve"). */
+    public function applyApprovedEnglish(string $english): void
+    {
+        $this->english = $english;
+        ++$this->englishVersion;
+    }
+
+    /** The sync saw this key and nothing moved. */
+    public function touchSynced(\DateTimeImmutable $now = new \DateTimeImmutable()): void
+    {
+        $this->absentAt = null;
+        $this->syncedAt = $now;
+    }
+
+    public function getEnglishYaml(): string
+    {
+        return $this->englishYaml;
+    }
+
+    public function getEnglishVersion(): int
+    {
+        return $this->englishVersion;
+    }
+
+    public function getYamlEnglishVersion(): int
+    {
+        return $this->yamlEnglishVersion;
     }
 
     public function getId(): ?int

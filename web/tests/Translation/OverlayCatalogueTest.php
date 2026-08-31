@@ -32,7 +32,7 @@ final class OverlayCatalogueTest extends KernelTestCase
     {
         $em = static::getContainer()->get(EntityManagerInterface::class);
         $entry = $this->findOrCreateEntry($em, 'home.cta_map', 'Explore the map');
-        $em->persist(new TranslationOverlay($entry, 'fr', 'Explorer la carte (overlay)', null, null));
+        $em->persist(new TranslationOverlay($entry, 'fr', 'Explorer la carte (overlay)', null, null, 1));
         $em->flush();
 
         $catalogue = static::getContainer()->get(OverlayCatalogue::class);
@@ -59,7 +59,7 @@ final class OverlayCatalogueTest extends KernelTestCase
     {
         $em = static::getContainer()->get(EntityManagerInterface::class);
         $entry = $this->findOrCreateEntry($em, TranslationConsent::TEXT_KEY, 'I license this translation under CC BY-SA 4.0.');
-        $em->persist(new TranslationOverlay($entry, 'fr', 'Je cède tous mes droits.', null, null));
+        $em->persist(new TranslationOverlay($entry, 'fr', 'Je cède tous mes droits.', null, null, 1));
         $em->flush();
 
         $catalogue = static::getContainer()->get(OverlayCatalogue::class);
@@ -72,7 +72,7 @@ final class OverlayCatalogueTest extends KernelTestCase
     {
         $em = static::getContainer()->get(EntityManagerInterface::class);
         $entry = $this->findOrCreateEntry($em, 'home.cta_map', 'Explore the map');
-        $em->persist(new TranslationOverlay($entry, 'fr', 'Overlay FR', null, null));
+        $em->persist(new TranslationOverlay($entry, 'fr', 'Overlay FR', null, null, 1));
         $em->flush();
 
         $loader = static::getContainer()->get(OverlayCatalogueLoader::class);
@@ -91,14 +91,33 @@ final class OverlayCatalogueTest extends KernelTestCase
         self::assertSame($before + 2, $loader->loads);
     }
 
-    public function testEnglishAndInvalidLocaleReturnEmptyWithoutLoading(): void
+    public function testInvalidLocaleReturnsEmptyWithoutLoading(): void
     {
         $loader = static::getContainer()->get(OverlayCatalogueLoader::class);
         $catalogue = static::getContainer()->get(OverlayCatalogue::class);
         $before = $loader->loads;
 
-        self::assertSame([], $catalogue->map('en'));
         self::assertSame([], $catalogue->map('pt'));
         self::assertSame($before, $loader->loads);
+    }
+
+    /**
+     * English is an overlay locale (translations.md §3): it loads and caches
+     * like any other overlay locale, it is not special-cased away any more.
+     */
+    public function testEnglishOverlayLocaleLoadsLikeAnyOther(): void
+    {
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $entry = $this->findOrCreateEntry($em, 'home.cta_map', 'Explore the map');
+        $em->persist(new TranslationOverlay($entry, 'en', 'Explore the map (overlay)', null, null, 1));
+        $em->flush();
+
+        $catalogue = static::getContainer()->get(OverlayCatalogue::class);
+        $catalogue->invalidate('en');
+
+        self::assertSame(
+            ['home.cta_map' => 'Explore the map (overlay)'],
+            $catalogue->map('en'),
+        );
     }
 }

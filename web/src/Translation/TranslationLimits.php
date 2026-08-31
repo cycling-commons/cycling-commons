@@ -21,11 +21,19 @@ final class TranslationLimits
 {
     public const int PROPOSED_VALUE_MAX = 4869;
 
-    /** @var list<string> */
+    /** Locales a rider may propose (translations.md §1). */
     public const array LOCALES = ['fr', 'nl', 'de', 'es'];
+
+    /** Locales an overlay may carry: the rider locales plus English (translations.md §3). */
+    public const array OVERLAY_LOCALES = ['en', 'fr', 'nl', 'de', 'es'];
 
     public static function isTranslatableLocale(string $locale): bool
     {
         return \in_array($locale, self::LOCALES, true);
+    }
+
+    public static function isOverlayLocale(string $locale): bool
+    {
+        return \in_array($locale, self::OVERLAY_LOCALES, true);
     }
 }

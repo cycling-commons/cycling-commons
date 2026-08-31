@@ -49,7 +49,7 @@ final class OverlayTranslator implements TranslatorInterface, TranslatorBagInter
         $locale ??= $this->inner->getLocale();
         $effectiveDomain = $domain ?? 'messages';
 
-        if ('messages' === $effectiveDomain && TranslationLimits::isTranslatableLocale($locale)) {
+        if ('messages' === $effectiveDomain && TranslationLimits::isOverlayLocale($locale)) {
             $map = $this->overlays->map($locale);
             if (isset($map[$id])) {
                 return strtr($map[$id], $parameters);
@@ -65,7 +65,7 @@ final class OverlayTranslator implements TranslatorInterface, TranslatorBagInter
         $catalogue = clone $this->inner->getCatalogue($locale);
         $resolved = $locale ?? $this->inner->getLocale();
 
-        if (TranslationLimits::isTranslatableLocale($resolved)) {
+        if (TranslationLimits::isOverlayLocale($resolved)) {
             foreach ($this->overlays->map($resolved) as $key => $value) {
                 $catalogue->set($key, $value, 'messages');
             }
@@ -81,7 +81,7 @@ final class OverlayTranslator implements TranslatorInterface, TranslatorBagInter
         foreach ($this->inner->getCatalogues() as $catalogue) {
             $cloned = clone $catalogue;
             $loc = $cloned->getLocale();
-            if (TranslationLimits::isTranslatableLocale($loc)) {
+            if (TranslationLimits::isOverlayLocale($loc)) {
                 foreach ($this->overlays->map($loc) as $key => $value) {
                     $cloned->set($key, $value, 'messages');
                 }

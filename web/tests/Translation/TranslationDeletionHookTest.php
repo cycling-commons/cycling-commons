@@ -71,13 +71,14 @@ final class TranslationDeletionHookTest extends KernelTestCase
             'Map',
             $riderId,
             $consent->getId(),
+            $entry->getEnglishVersion(),
         );
         $proposal->setStatus(TranslationProposalStatus::Approved);
         $proposal->setReviewerId($riderId);
         $proposal->setDecidedAt(new \DateTimeImmutable());
         $em->persist($proposal);
 
-        $overlay = new TranslationOverlay($entry, 'fr', 'Carte du purge', $proposal, $riderId);
+        $overlay = new TranslationOverlay($entry, 'fr', 'Carte du purge', $proposal, $riderId, $entry->getEnglishVersion());
         $em->persist($overlay);
         $em->flush();
 

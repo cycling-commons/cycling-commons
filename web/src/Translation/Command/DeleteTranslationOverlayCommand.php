@@ -9,6 +9,7 @@ namespace App\Translation\Command;
 use App\Translation\Entity\TranslationEntry;
 use App\Translation\Entity\TranslationOverlay;
 use App\Translation\OverlayCatalogue;
+use App\Translation\TranslationCaches;
 use App\Translation\TranslationLimits;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -22,7 +23,8 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 /**
  * Ops revert-to-YAML: delete one live overlay so the locale YAML shows again.
  *
- * Dry-run by default; pass --write to apply. English is refused.
+ * Dry-run by default; pass --write to apply. English is allowed since
+ * 2026-08-31 (translations.md §4.2).
  *
  * @see docs/specs/translations.md §9
  *
@@ -37,6 +39,7 @@ final class DeleteTranslationOverlayCommand extends Command
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly OverlayCatalogue $overlays,
+        private readonly TranslationCaches $caches,
     ) {
         parent::__construct();
     }
@@ -45,7 +48,7 @@ final class DeleteTranslationOverlayCommand extends Command
     protected function configure(): void
     {
         $this
-            ->addArgument('locale', InputArgument::REQUIRED, 'Non-English locale (fr, nl, de, es)')
+            ->addArgument('locale', InputArgument::REQUIRED, 'Overlay locale (en, fr, nl, de, es)')
             ->addArgument('key', InputArgument::REQUIRED, 'Catalogue message_key')
             ->addOption('write', null, InputOption::VALUE_NONE, 'Actually delete (default is a dry run)');
     }
@@ -58,11 +61,11 @@ final class DeleteTranslationOverlayCommand extends Command
         $key = (string) $input->getArgument('key');
         $write = (bool) $input->getOption('write');
 
-        if ('en' === $locale || !TranslationLimits::isTranslatableLocale($locale)) {
+        if (!TranslationLimits::isOverlayLocale($locale)) {
             $io->error(\sprintf(
                 'Locale "%s" is not a translatable overlay locale (allowed: %s).',
                 $locale,
-                implode(', ', TranslationLimits::LOCALES),
+                implode(', ', TranslationLimits::OVERLAY_LOCALES),
             ));
 
             return Command::FAILURE;
@@ -101,6 +104,7 @@ final class DeleteTranslationOverlayCommand extends Command
         $this->em->remove($overlay);
         $this->em->flush();
         $this->overlays->invalidate($locale);
+        $this->caches->invalidateAll();
 
         $io->success(\sprintf('Deleted overlay for %s / %s.', $locale, $key));
 

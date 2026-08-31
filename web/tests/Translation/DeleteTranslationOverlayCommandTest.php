@@ -32,7 +32,7 @@ final class DeleteTranslationOverlayCommandTest extends KernelTestCase
     {
         $em = static::getContainer()->get(EntityManagerInterface::class);
         $entry = $this->findOrCreateEntry($em, 'nav.map', 'Map');
-        $em->persist(new TranslationOverlay($entry, 'fr', 'Carte (overlay)', null, null));
+        $em->persist(new TranslationOverlay($entry, 'fr', 'Carte (overlay)', null, null, 1));
         $em->flush();
 
         static::getContainer()->get(OverlayCatalogue::class)->invalidate('fr');
@@ -70,11 +70,38 @@ final class DeleteTranslationOverlayCommandTest extends KernelTestCase
         self::assertSame('Carte', $t->trans('nav.map', [], 'messages', 'fr'));
     }
 
-    public function testLocaleEnIsRefused(): void
+    public function testEnglishOverlayDeleteWritesAndSucceeds(): void
     {
-        $tester = $this->runCommand(['locale' => 'en', 'key' => 'nav.map']);
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $entry = $this->findOrCreateEntry($em, 'nav.map', 'Map');
+        $em->persist(new TranslationOverlay($entry, 'en', 'Map view', null, null, 1));
+        $em->flush();
+
+        static::getContainer()->get(OverlayCatalogue::class)->invalidate('en');
+
+        $t = static::getContainer()->get('translator');
+        self::assertSame('Map view', $t->trans('nav.map', [], 'messages', 'en'));
+
+        $write = $this->runCommand(['locale' => 'en', 'key' => 'nav.map', '--write' => true]);
+        $write->assertCommandIsSuccessful();
+
+        $em->clear();
+        $entryAgain = $em->getRepository(TranslationEntry::class)->findOneBy(['messageKey' => 'nav.map']);
+        self::assertNotNull($entryAgain);
+        self::assertNull(
+            $em->getRepository(TranslationOverlay::class)->findOneBy([
+                'entry' => $entryAgain,
+                'locale' => 'en',
+            ]),
+        );
+        self::assertSame('Map', $t->trans('nav.map', [], 'messages', 'en'));
+    }
+
+    public function testLocaleUnknownIsRefused(): void
+    {
+        $tester = $this->runCommand(['locale' => 'pt', 'key' => 'nav.map']);
         self::assertSame(Command::FAILURE, $tester->getStatusCode());
-        self::assertStringContainsString('en', $tester->getDisplay());
+        self::assertStringContainsString('pt', $tester->getDisplay());
     }
 
     public function testUnknownKeyErrors(): void

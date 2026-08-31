@@ -47,8 +47,11 @@ class TranslationProposal
     #[ORM\Column(name: 'submitter_id', type: Types::BIGINT, nullable: true)]
     private ?int $submitterId;
 
-    #[ORM\Column(name: 'consent_record_id', type: 'uuid')]
-    private Uuid $consentRecordId;
+    #[ORM\Column(name: 'consent_record_id', type: 'uuid', nullable: true)]
+    private ?Uuid $consentRecordId;
+
+    #[ORM\Column(name: 'english_version_at_submit', type: Types::INTEGER)]
+    private int $englishVersionAtSubmit;
 
     #[ORM\Column(type: Types::STRING, length: 12, enumType: TranslationProposalStatus::class)]
     private TranslationProposalStatus $status;
@@ -71,7 +74,8 @@ class TranslationProposal
         string $proposedValue,
         string $englishAtSubmit,
         ?int $submitterId,
-        Uuid $consentRecordId,
+        ?Uuid $consentRecordId,
+        int $englishVersionAtSubmit,
     ) {
         $this->entry = $entry;
         $this->locale = $locale;
@@ -79,6 +83,7 @@ class TranslationProposal
         $this->englishAtSubmit = $englishAtSubmit;
         $this->submitterId = $submitterId;
         $this->consentRecordId = $consentRecordId;
+        $this->englishVersionAtSubmit = $englishVersionAtSubmit;
         $this->status = TranslationProposalStatus::Pending;
         $this->createdAt = new \DateTimeImmutable();
     }
@@ -103,9 +108,14 @@ class TranslationProposal
         $this->englishAtSubmit = $englishAtSubmit;
     }
 
-    public function setConsentRecordId(Uuid $consentRecordId): void
+    public function setConsentRecordId(?Uuid $consentRecordId): void
     {
         $this->consentRecordId = $consentRecordId;
+    }
+
+    public function setEnglishVersionAtSubmit(int $englishVersionAtSubmit): void
+    {
+        $this->englishVersionAtSubmit = $englishVersionAtSubmit;
     }
 
     public function setReviewerId(?int $reviewerId): void
@@ -159,9 +169,14 @@ class TranslationProposal
         return $this->submitterId;
     }
 
-    public function getConsentRecordId(): Uuid
+    public function getConsentRecordId(): ?Uuid
     {
         return $this->consentRecordId;
+    }
+
+    public function getEnglishVersionAtSubmit(): int
+    {
+        return $this->englishVersionAtSubmit;
     }
 
     public function getStatus(): TranslationProposalStatus
