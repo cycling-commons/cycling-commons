@@ -8,6 +8,8 @@ namespace App\Catalog;
 
 use Doctrine\DBAL\Connection;
 use Symfony\Component\Intl\Countries;
+use Symfony\Contracts\Cache\CacheInterface;
+use Symfony\Contracts\Cache\ItemInterface;
 
 /**
  * Live /coverage page KPIs. Reads of `coverage_poi` are guarded by to_regclass() and degrade to zero.
@@ -18,8 +20,26 @@ use Symfony\Component\Intl\Countries;
  */
 final class CoverageStatsProvider
 {
-    public function __construct(private readonly Connection $db)
-    {
+    /**
+     * How long, in seconds, the per-country POI counts stay cached.
+     *
+     * They change only when the pipeline harvests, which is not on a page
+     * view's timescale. Ten minutes because the number is a headline figure on
+     * a stats page, not a fact anybody acts on within the minute.
+     */
+    private const int POIS_TTL = 600;
+
+    /**
+     * Within one request, so kpis() and countries() do not both pay for it.
+     *
+     * @var array<string, int>|null
+     */
+    private ?array $poisMemo = null;
+
+    public function __construct(
+        private readonly Connection $db,
+        private readonly CacheInterface $cache,
+    ) {
     }
 
     /** @return array{coveragePois:int, items:int, itemsVerified:int, routes:int, countries:int} */
@@ -45,15 +65,26 @@ final class CoverageStatsProvider
         ];
     }
 
+    /** The two orders the table offers, and the default. */
+    public const string SORT_DENSITY = 'density';
+    public const string SORT_TOTAL = 'total';
+
     /**
      * Operational countries. `share` is density (POIs/km² vs densest), not absolute volume.
+     *
+     * Ordered here rather than in the browser. It used to be a client-side
+     * toggle, which needed an inline script, which needed a CSP nonce, which is
+     * the one thing a shared cache cannot hold (page-caching.md §3.2). Sorting
+     * on the server makes the two orders two URLs, so both are cacheable and
+     * both work without JavaScript. `$sort` is validated by the caller against
+     * the two constants above; anything else falls back to density.
      *
      * @return list<array{code:string, name:string, flag:string, regions:int,
      *                    areaKm2:float, coveragePois:int, poisPerKm2:float,
      *                    items:int, itemsVerified:int, sources:list<array{key:string, count:int}>,
      *                    routes:int, share:int}>
      */
-    public function countries(string $locale): array
+    public function countries(string $locale, string $sort = self::SORT_DENSITY): array
     {
         $served = ItemState::servedSqlTuple();
         /** @var list<array<string, int|string>> $rows */
@@ -109,7 +140,10 @@ final class CoverageStatsProvider
                 'share' => $maxDensity > 0 ? (int) round(100.0 * $density / $maxDensity) : 0,
             ];
         }
-        usort($out, static fn (array $a, array $b): int => [$b['coveragePois'], $a['code']] <=> [$a['coveragePois'], $b['code']]);
+        // Country code as tiebreaker either way, so the order is total and a
+        // cached page cannot differ from the next render of the same URL.
+        $key = self::SORT_TOTAL === $sort ? 'coveragePois' : 'poisPerKm2';
+        usort($out, static fn (array $a, array $b): int => [$b[$key], $a['code']] <=> [$a[$key], $b['code']]);
 
         return $out;
     }
@@ -191,6 +225,37 @@ final class CoverageStatsProvider
      * @return array<string, int>
      */
     private function poisByCountry(): array
+    {
+        // Twice per render before this: once for the headline total in kpis()
+        // and once for the per-country table in countries(). Each pass was an
+        // index-only scan over every coverage POI, 167 ms against two million
+        // rows on staging (measured 2026-08-31), so the page spent most of its
+        // time counting the same thing twice.
+        if (null !== $this->poisMemo) {
+            return $this->poisMemo;
+        }
+
+        try {
+            $counts = $this->cache->get('coverage.pois_by_country.v1', function (ItemInterface $item): array {
+                $item->expiresAfter(self::POIS_TTL);
+
+                return $this->countPoisByCountry();
+            });
+        } catch (\Throwable) {
+            // A cache backend that cannot answer is not a reason to show a
+            // wrong page. Count it, as this always used to.
+            $counts = $this->countPoisByCountry();
+        }
+
+        return $this->poisMemo = $counts;
+    }
+
+    /**
+     * The count itself, straight from the table.
+     *
+     * @return array<string, int>
+     */
+    private function countPoisByCountry(): array
     {
         // to_regclass: null/false fetchOne() means the pipeline never ran.
         $exists = $this->db->fetchOne("SELECT to_regclass('public.coverage_poi')");

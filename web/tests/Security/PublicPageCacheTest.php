@@ -88,6 +88,9 @@ final class PublicPageCacheTest extends WebTestCase
         yield 'privacy' => ['/privacy'];
         yield 'regions' => ['/regions'];
         yield 'blog' => ['/blog'];
+        // Both orders of the coverage table, because each is its own cache entry.
+        yield 'coverage' => ['/coverage'];
+        yield 'coverage by total' => ['/coverage?sort=total'];
         // The guarded forms: cacheable only because the single-use challenge
         // moved out of their markup (page-caching.md §3.1).
         yield 'contact' => ['/contact'];
@@ -124,8 +127,7 @@ final class PublicPageCacheTest extends WebTestCase
 
     /**
      * A page whose content depends on the visitor, or that moves under them,
-     * stays out. `/coverage` belongs in the set and is held back only until its
-     * inline sort script becomes a file (page-caching.md §6).
+     * stays out.
      */
     #[DataProvider('privatePaths')]
     public function testEverythingElseStaysPrivate(string $path): void
@@ -144,7 +146,6 @@ final class PublicPageCacheTest extends WebTestCase
     {
         yield 'map' => ['/map'];
         yield 'contributors' => ['/contributors'];
-        yield 'coverage' => ['/coverage'];
         yield 'login' => ['/login'];
     }
 

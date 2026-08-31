@@ -607,6 +607,15 @@ non-empty) is NOT prop-less — it hides under a region scope (matching
   still renders (degrade, don't blank), matching this document's
   manifest-failure convention (coverage-provider.md §4 below:
   `CoverageManifest` returns `null` on every failure path).
+- **The per-country POI counts are cached for ten minutes.**
+  `CoverageStatsProvider::poisByCountry()` was called twice per render, once for
+  the headline total and once for the table, and each pass was an index-only
+  scan over every row in `coverage_poi`: 167 ms against two million rows
+  (measured 2026-08-31), so `/coverage` spent most of its time counting the same
+  thing twice. It is now memoised within the request and cached in `cache.app`
+  between them, which took the page from ~300 ms to ~75 ms. Ten minutes because
+  the number changes only when the pipeline harvests. A cache backend that
+  cannot answer falls through to the query rather than to a wrong page.
 - **Server-side manifest read.** `App\Coverage\CoverageManifest`
   (`web/src/Coverage/CoverageManifest.php`) fetches the manifest server-side,
   caches the versioned URL for `CoverageManifest::CACHE_TTL` (value `3600` s,
@@ -892,9 +901,20 @@ per-country percentage table) was replaced by a DB-driven page:
 RegionDirectoryProvider posture) serves live KPIs (POI/item/route/country
 COUNTs), a per-country volume table (operational countries only, same
 L2-exclusion predicate as the region pages; the bar compares POI **density**
-— places per km² of onboarded area, scaled to the densest country — because
-an absolute-volume bar would dwarf small countries under the biggest one
-forever, owner correction 2026-07-30), and "biggest gaps" cards computed as the three catalog
+— reference items per km² of onboarded area, scaled to the densest country —
+because an absolute-volume bar would dwarf small countries under the biggest
+one forever, owner correction 2026-07-30; rows sort by that same density,
+highest first, country code as tiebreaker — owner correction 2026-08-30,
+previously absolute POI count. The reference-items column header offers the
+other order, absolute total, as a **link** to `?sort=total` rather than a
+client-side toggle: a toggle needs an inline script, an inline script needs a
+CSP nonce, and a nonce is the one thing a shared cache cannot hold
+([page-caching.md §3.2](page-caching.md)). As two URLs both orders are cached
+and both work with no JavaScript. `CoverageStatsProvider::countries()` takes the
+sort key, the controller validates it against the two constants and falls back
+to density rather than 404ing, and whichever metric is the active sort is
+rendered as the first of the cell's two lines, styled by position), and
+"biggest gaps" cards computed as the three catalog
 categories with the fewest publicly-served items. Because `coverage_poi` is
 pipeline-owned DDL (§2) and absent on a fresh contributor stack, every read
 of it in the provider is guarded by `to_regclass()` and degrades to zero

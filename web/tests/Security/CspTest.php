@@ -146,6 +146,8 @@ final class CspTest extends WebTestCase
             'regions' => '/regions',
             'blog' => '/blog',
             'known-issues' => '/known-issues',
+            'coverage' => '/coverage',
+            'coverage by total' => '/coverage?sort=total',
             // The three guarded forms. They were the last public pages that
             // could not be cached, and an inline block creeping back onto one
             // is exactly how that would silently return.

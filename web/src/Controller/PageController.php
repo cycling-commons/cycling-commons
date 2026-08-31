@@ -241,12 +241,26 @@ final class PageController extends AbstractController
     #[Route(LocalizedPath::COVERAGE, name: 'coverage')]
     public function coverage(Request $request, CoverageStatsProvider $stats): Response
     {
+        // The table's order is a query parameter, not a button. A client-side
+        // toggle needed an inline script, an inline script needs a CSP nonce,
+        // and a nonce is the one thing a shared cache cannot hold
+        // (page-caching.md §3.2). As two URLs both orders are cached, and both
+        // work without JavaScript. Anything unrecognised falls back rather than
+        // 404s: this is a sort order, not an identifier.
+        $sort = $request->query->get('sort');
+        $sort = CoverageStatsProvider::SORT_TOTAL === $sort
+            ? CoverageStatsProvider::SORT_TOTAL
+            : CoverageStatsProvider::SORT_DENSITY;
+
         return $this->render('pages/coverage.html.twig', [
             'page_title' => 'meta.coverage_title',
             'page_description' => 'meta.coverage_description',
             'nav_active' => 'coverage',
             'kpis' => $stats->kpis(),
-            'countries' => $stats->countries($request->getLocale()),
+            'countries' => $stats->countries($request->getLocale(), $sort),
+            'sort' => $sort,
+            'sort_density' => CoverageStatsProvider::SORT_DENSITY,
+            'sort_total' => CoverageStatsProvider::SORT_TOTAL,
             'thinnest' => $stats->thinnestCategories(),
         ]);
     }

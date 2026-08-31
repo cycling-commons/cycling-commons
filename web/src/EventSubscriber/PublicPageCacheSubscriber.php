@@ -71,9 +71,8 @@ final readonly class PublicPageCacheSubscriber implements EventSubscriberInterfa
      * Names, not paths, because every one of these has five localized paths.
      * The locale suffix routing adds (`home.en`) is stripped before the lookup.
      *
-     * Absent on purpose: `contributors` (a paged wall that moves), `map`
-     * (per-rider preferences, and the heaviest page to store), and `coverage`,
-     * which belongs here but still carries a nonce'd inline script.
+     * Absent on purpose: `contributors` (a paged wall that moves) and `map`
+     * (per-rider preferences, and the heaviest page to store).
      */
     private const array CACHEABLE_ROUTES = [
         'home',
@@ -93,6 +92,7 @@ final readonly class PublicPageCacheSubscriber implements EventSubscriberInterfa
         'blog_post',
         'known_issues',
         'pages',
+        'coverage',
         // The three guarded public forms. They belong here for the same reason
         // as the rest, and they were the last public pages that could not join:
         // each used to mint a single-use proof-of-work challenge into its own
