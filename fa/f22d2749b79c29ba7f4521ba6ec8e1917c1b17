@@ -1,20 +1,14 @@
 docs/specs/2026-07-23-map-js-phase0-extraction-design.md
-  s_3c392b244b902c::t_c778e5a0ed2644 109-113,115-116
-  s_3c392b244b902c::t_b0dbb411dcf31a 1-108,114,117-175
+  h_fb5318cde6cf17 1-175
 ---
 {
   "schema_version": "authorship/3.0.0",
-  "git_ai_version": "1.6.15",
+  "git_ai_version": "1.7.0",
   "base_commit_sha": "faf22d2749b79c29ba7f4521ba6ec8e1917c1b17",
   "prompts": {},
-  "sessions": {
-    "s_3c392b244b902c": {
-      "agent_id": {
-        "tool": "claude",
-        "id": "950237fb-f9e4-4e5b-ab5a-56a70b4212a3",
-        "model": "claude-opus-4-8"
-      },
-      "human_author": "X. Koevoet <development@bikecoders.life>"
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
     }
   }
 }
