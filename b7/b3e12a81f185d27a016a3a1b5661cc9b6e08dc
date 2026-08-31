@@ -1,33 +1,19 @@
-docs/specs/2026-07-19-region-scoping-design.md
-  s_df3998a6d85dff::t_491ce0ad7bbafa 712-713
-  s_df3998a6d85dff::t_743b391414ee9d 706-711,714-729
-docs/specs/2026-07-22-coverage-scope-rendering-design.md
-  s_df3998a6d85dff::t_155b166f7c177c 3,9-40
-  s_df3998a6d85dff::t_cabe50f67bf557 42-43
-  s_df3998a6d85dff::t_0fe82620ec7c99 41
-  s_df3998a6d85dff::t_57c8defa08a99c 44
 docs/specs/coverage-provider.md
-  s_df3998a6d85dff::t_1908a05431d686 201-202
-  s_df3998a6d85dff::t_cf8af2c66dfdd1 258-267
-  s_df3998a6d85dff::t_c9dc1223f74d52 192-200,206-211
-  s_df3998a6d85dff::t_dc9a7686c962c9 268-276
-  s_df3998a6d85dff::t_45d2fafd0647a9 203-205
+  s_c9732475dad57d::t_71d336c197dfc5 192-211,258-276
 docs/specs/map-and-search.md
-  s_df3998a6d85dff::t_6e2a679b22464b 273
-  s_df3998a6d85dff::t_c5a9d8cbf29db1 274-276
-  s_df3998a6d85dff::t_f8f599b1cad817 259-272
+  s_c9732475dad57d::t_fc6db80abd38ae 259-276
 ---
 {
   "schema_version": "authorship/3.0.0",
-  "git_ai_version": "1.6.15",
+  "git_ai_version": "1.7.0",
   "base_commit_sha": "b7b3e12a81f185d27a016a3a1b5661cc9b6e08dc",
   "prompts": {},
   "sessions": {
-    "s_df3998a6d85dff": {
+    "s_c9732475dad57d": {
       "agent_id": {
         "tool": "claude",
-        "id": "0b62ab3d-4369-4c6c-b455-8e080dcc93fb",
-        "model": "claude-opus-4-8"
+        "id": "46c5725f-c3f2-432b-800a-d5b4d3807b37",
+        "model": "claude-opus-5"
       },
       "human_author": "X. Koevoet <development@bikecoders.life>"
     }
