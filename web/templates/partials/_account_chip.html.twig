@@ -6,6 +6,15 @@
 {% set _initials = (_words|length > 1 ? _words|first|first ~ _words|last|first : app.user.displayName|trim|slice(0, 2))|upper %}
 {# A disclosure of plain links (button + aria-expanded), NOT an ARIA menu:
    role=menu/menuitem would promise arrow-key navigation we don't implement. #}
+{# The translate-mode toggle (translations.md §4.1) is a <form>, like logout,
+   but it is a menu row next to Translate, not a destructive action, so it
+   must not pick up atlas.css's ".acct-dropdown form"/"form button" rules
+   (the top border and the clay logout colour). Both overrides need the extra
+   ".acct-inline-form" class in their selector to outrank those by specificity. #}
+<style>
+  .acct-dropdown .acct-inline-form{margin:0;padding-top:0;border-top:0}
+  .acct-dropdown .acct-inline-form button{color:var(--ink)!important}
+</style>
 <div class="acct-menu" data-nav-menu>
   {# One set of reads: the chip bulb is the total of open work (unread
      messages + open submissions + open translations). Each contributing
@@ -16,6 +25,15 @@
   {% set _sub_open = pending_submission_count() %}
   {% set _tr_open = pending_translation_count() %}
   {% set _open = _unread + _sub_open + _tr_open %}
+  {# Translate mode (translations.md §4.1): the toggle sits next to the
+     Translate link itself, not merely wherever the mode is already on, so a
+     rider can turn it on from any page. Shown only where turning it on would
+     do something: a locale a rider may propose, or a curator on English (who
+     may also edit it, §4.2). The answer comes from TranslateMode itself, via
+     translate_can_page(), rather than from a locale list repeated here: the
+     two used to disagree, and a sixth locale would have been markable with no
+     toggle to switch marking on. #}
+  {% set _can_translate_page = translate_can_page() %}
   <button type="button" class="acct-chip" data-nav-toggle aria-expanded="false" aria-controls="cc-acct-dd">
     <span class="av" aria-hidden="true">{{ _initials }}</span>
     {% if _open > 0 %}<span class="acct-bulb" title="{{ 'account.open_items'|trans({'%count%': _open}) }}" aria-label="{{ 'account.open_items'|trans({'%count%': _open}) }}">{{ _open }}</span>{% endif %}
@@ -31,14 +49,42 @@
         <div class="acct-sec acct-sec-personal">{{ 'account.menu_personal'|trans }}</div>
         <a href="{{ path('profile') }}">{{ 'account.tab_contributions'|trans }}</a>
         <a href="{{ path('scout_review') }}">{{ 'account.tab_scout'|trans }}</a>
-        <a href="{{ path('translate') }}">{{ 'account.tab_translate'|trans }}</a>
+        <a href="{{ path('translate') }}">{{ 'account.tab_translate'|trans }}
+          {%- set _stale = translate_stale_count() %}
+          {%- if _stale > 0 %}<span class="acct-count tr-stale-count" title="{{ 'translate.stale.badge_title'|trans }}">{{ _stale }}</span>{% endif %}</a>
+        {% if _can_translate_page %}
+          <form method="post" action="{{ path('translate_mode') }}" class="acct-inline-form">
+            {# "_csrf_token", like the logout form below, not Symfony's
+               default "_token": this chip renders in shared chrome, ahead
+               of the page's own content, so its field must not shadow the
+               page's own "_token" input for a test (or any scraper) that
+               reads the first match in the raw HTML. #}
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token('translate_mode') }}">
+            <input type="hidden" name="on" value="{{ translate_mode() ? 0 : 1 }}">
+            <button type="submit">{{ (translate_mode() ? 'translate.mode.off_short' : 'translate.mode.on_short')|trans }}</button>
+          </form>
+        {% endif %}
         <a href="{{ path('messages') }}">{{ 'nav.messages'|trans }}{% if _unread > 0 %}<span class="acct-count">{{ _unread }}</span>{% endif %}</a>
         <a href="{{ path('settings') }}">{{ 'nav.settings'|trans }}</a>
       </div>
     {% else %}
       <a href="{{ path('profile') }}">{{ 'account.tab_contributions'|trans }}</a>
       <a href="{{ path('scout_review') }}">{{ 'account.tab_scout'|trans }}</a>
-      <a href="{{ path('translate') }}">{{ 'account.tab_translate'|trans }}</a>
+      <a href="{{ path('translate') }}">{{ 'account.tab_translate'|trans }}
+        {%- set _stale = translate_stale_count() %}
+        {%- if _stale > 0 %}<span class="acct-count tr-stale-count" title="{{ 'translate.stale.badge_title'|trans }}">{{ _stale }}</span>{% endif %}</a>
+      {% if _can_translate_page %}
+        <form method="post" action="{{ path('translate_mode') }}" class="acct-inline-form">
+          {# "_csrf_token", like the logout form below, not Symfony's
+             default "_token": this chip renders in shared chrome, ahead of
+             the page's own content, so its field must not shadow the
+             page's own "_token" input for a test (or any scraper) that
+             reads the first match in the raw HTML. #}
+          <input type="hidden" name="_csrf_token" value="{{ csrf_token('translate_mode') }}">
+          <input type="hidden" name="on" value="{{ translate_mode() ? 0 : 1 }}">
+          <button type="submit">{{ (translate_mode() ? 'translate.mode.off_short' : 'translate.mode.on_short')|trans }}</button>
+        </form>
+      {% endif %}
       <a href="{{ path('messages') }}">{{ 'nav.messages'|trans }}{% if _unread > 0 %}<span class="acct-count">{{ _unread }}</span>{% endif %}</a>
       <a href="{{ path('settings') }}">{{ 'nav.settings'|trans }}</a>
     {% endif %}

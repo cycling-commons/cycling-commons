@@ -26,6 +26,9 @@
 {% endfor %}
 {% block body %}{% endblock %}
 {% block footer %}{% include 'partials/_footer.html.twig' %}{% endblock %}
+{# Translate mode (translations.md §4.1): the on-page bar and drawer, only
+   when the mode is active for this request. #}
+{% if translate_mode() %}{% include 'partials/_translate_bar.html.twig' %}{% endif %}
 {# The floating bug button (contact-and-support.md §5), on every page that uses
    this layout. The MAP does not: templates/map/index.html.twig is a standalone
    document and includes the partial itself, as the circle alone
@@ -57,6 +60,11 @@
 <script src="{{ asset('js/nav.js') }}" defer></script>
 <script src="{{ asset('js/nav-menus.js') }}" defer></script>
 <script src="{{ asset('js/version.js') }}"></script>
+{# Translate mode's browser half (translations.md §4.1). Not deferred: nav.js,
+   nav-menus.js and the other `defer` scripts below run after the document is
+   parsed regardless of their position in it, so this must stay a plain
+   (non-deferred) tag to turn every mark into a clickable span first. #}
+{% if translate_mode() %}<script src="{{ asset('js/translate-mode.js') }}"></script>{% endif %}
 {# The proof-of-work solver, then the button that uses it. Not deferred past
    each other: bug-fab.js reads window.ccPow at load and bails without it. #}
 <script src="{{ asset('support/pow.js') }}"></script>

@@ -1,0 +1,118 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{# Translate mode bar and drawer (docs/specs/translations.md §4.1). Rendered only
+   when translate_mode() is true. Behaviour is in assets/js/translate-mode.js.
+
+   translate/embed.html.twig carries no styles of its own, and it includes
+   translate/_form.html.twig, whose classes are otherwise defined only in
+   account/_shell_styles.html.twig and translate/edit.html.twig's own head
+   block, neither of which loads on an arbitrary page this bar appears on.
+   Everything from ".tr-warn" down to the form-error rules below is copied
+   from those two files so the drawer renders the same product as the full
+   /translate/{id} page, not an unstyled echo of it (task-10-brief.md
+   carry-forward). The ".tr-embed*" rules have no earlier copy to draw from:
+   embed.html.twig's own header names this file as the place they get their
+   first styling. #}
+<style>
+  .tr-hit{box-shadow:inset 0 -2px 0 rgba(20,22,14,.35);cursor:default}
+  .tr-hit.is-stale{box-shadow:inset 0 -2px 0 #b8781a;background:rgba(184,120,26,.10)}
+  body.tr-editing .tr-hit{cursor:pointer}
+  body.tr-editing .tr-hit:hover,body.tr-editing .tr-hit:focus{background:rgba(20,22,14,.08);outline:2px solid var(--ink);outline-offset:1px}
+  #tr-bar{position:fixed;left:0;right:0;bottom:0;z-index:900;display:flex;gap:.8rem;align-items:center;flex-wrap:wrap;padding:.55rem 1rem;background:var(--ink);color:var(--paper);font-family:var(--mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase}
+  #tr-bar .tr-seg button{font:inherit;color:inherit;background:transparent;border:1px solid rgba(255,255,255,.4);padding:.35rem .6rem;border-radius:4px;cursor:pointer}
+  #tr-bar .tr-seg button[aria-pressed="true"]{background:var(--paper);color:var(--ink)}
+  #tr-bar form{margin-left:auto}
+  #tr-bar form button{font:inherit;color:inherit;background:transparent;border:1px solid rgba(255,255,255,.4);padding:.35rem .6rem;border-radius:4px;cursor:pointer}
+  #tr-drawer{position:fixed;top:0;right:0;bottom:2.6rem;width:min(34rem,100%);z-index:901;background:var(--paper);border-left:1px solid rgba(20,22,14,.2);overflow:auto;padding:1rem 1.2rem}
+  #tr-drawer .tr-drawer-close{position:absolute;top:.6rem;right:.8rem;font:inherit;background:transparent;border:0;cursor:pointer;font-size:1.2rem}
+  body{padding-bottom:3rem}
+
+  /* ---- the shared form partial (translate/_form.html.twig), copied from
+     account/_shell_styles.html.twig and translate/edit.html.twig's head block
+     so the drawer needs neither. ---- */
+  .tr-warn{font-size:.90rem;line-height:1.45;color:#7d2018;background:rgba(163,52,43,.09);border-left:2px solid #a3342b;padding:.45rem .8rem;border-radius:0 5px 5px 0;margin:.5rem 0 .7rem}
+  .q-diff dl{display:grid;grid-template-columns:auto 1fr;gap:.15rem .7rem;margin:0}
+  .q-diff dt{font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:#595c4d;align-self:baseline;padding-top:.15rem}
+  .q-diff dd{margin:0;min-width:0;overflow-wrap:anywhere}
+  .q-diff .was,.q-diff .q-was{color:#8a8d7d;text-decoration:line-through;margin-right:.4rem}
+  .q-diff .now,.q-diff .q-now{color:var(--trail)}
+  .tr-diff{padding:.9rem 1.05rem;margin-top:1.4rem}
+  .tr-diff dl{row-gap:1.15rem}
+  .tr-diff .tr-form{margin-top:1rem}
+  .tr-change{margin:.9rem 0 0}
+  .tr-change-k{display:block;font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:#8a8d7d;margin-bottom:.35rem}
+  .tr-panel{margin-top:1.4rem;padding:1.1rem 1.2rem;background:var(--paper-deep);border:1px solid rgba(20,22,14,.14);border-radius:8px}
+  .tr-panel + .tr-panel{margin-top:.9rem}
+  .tr-lab{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:#595c4d;margin-bottom:.35rem}
+  .tr-val{font-size:.95rem;line-height:1.55;color:var(--ink);white-space:pre-wrap;overflow-wrap:anywhere}
+  .tr-note{margin-top:1rem;padding:.75rem .9rem;background:var(--paper);border-left:2px solid var(--glacier);border-radius:0 6px 6px 0;font-size:.90rem;line-height:1.55;color:#4a4d40}
+  .preview{margin-top:.8rem;padding:.7rem .85rem;background:var(--paper);border-radius:6px;font-size:.9rem;line-height:1.5}
+  .tr-form{margin-top:1.4rem}
+  .tr-form .field{margin-bottom:1.1rem}
+  .tr-form .field label{display:block;font-family:var(--mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:#595c4d;margin-bottom:.4rem}
+  .tr-form .field textarea{width:100%;min-height:8rem;padding:.7rem .85rem;border:1px solid rgba(20,22,14,.22);border-radius:6px;background:var(--paper);font:inherit;line-height:1.5}
+  .consent{display:flex;gap:.7rem;align-items:flex-start;margin:1.2rem 0}
+  .consent input{margin-top:.25rem}
+  .consent label{font-size:.9rem;line-height:1.5}
+  .consent-ok{font-size:.86rem;line-height:1.5;color:#3f6b3f;margin:1.2rem 0}
+  .consent-when{font-family:var(--mono);font-size:.68rem;color:#595c4d}
+  .consent-more{display:block;margin:.4rem 0 0}
+  .consent-more summary{cursor:pointer;font-size:.78rem;color:var(--clay)}
+  .consent-ok > a{display:block;margin-top:.25rem;color:var(--clay);text-decoration:underline}
+  .tr-actions{display:flex;gap:.8rem;flex-wrap:wrap;margin-top:1.2rem}
+  .tr-actions button{font-family:var(--mono);font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;padding:.75rem 1.1rem;border:1px solid var(--ink);background:var(--ink);color:var(--paper);border-radius:6px;cursor:pointer}
+  .tr-actions a{font-family:var(--mono);font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;padding:.75rem 1.1rem;border:1px solid rgba(20,22,14,.25);border-radius:6px;color:var(--ink);text-decoration:none}
+  /* Symfony's form_errors() renders a bare <ul><li>, never an element with
+     a class: the ".err" rule that stood here matched no live markup, so a
+     validation error rendered unstyled. Direct children only, so a list
+     inside the sanitized preview keeps its own look. */
+  .tr-form > ul,.tr-form .field > ul{list-style:none;margin:0;padding:0}
+  .tr-form > ul > li,.tr-form .field > ul > li{color:#8b2e2e;font-size:.84rem;margin-top:.35rem}
+
+  /* ---- the drawer frame (translate/embed.html.twig) itself: no earlier
+     copy exists, this is the first styling these classes get. ---- */
+  .tr-embed-key{font-family:var(--mono);font-size:.9rem;letter-spacing:.02em;color:var(--ink);word-break:break-word}
+  .flash-error{background:rgba(179,38,30,.1);border-left:3px solid var(--danger);color:var(--danger-ink);padding:.7rem 1rem;border-radius:0 5px 5px 0;font-size:.9rem;margin:.9rem 0}
+  .tr-embed-sent{margin-top:1.2rem;padding:1.1rem 1.2rem;background:rgba(44,84,64,.1);border-left:3px solid var(--spruce-lift);border-radius:0 6px 6px 0}
+  {# :not(.tr-note) so this does not outrank .tr-note's own colour/size above
+     by element-plus-class specificity: the "nothing is live yet" line must
+     read exactly like a note everywhere else, not slightly darker here. #}
+  .tr-embed-sent p:not(.tr-note){font-size:.92rem;line-height:1.55;color:var(--ink)}
+  .tr-embed-sent .tr-embed-close{margin-top:.9rem;font-family:var(--mono);font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;padding:.6rem 1rem;border:1px solid var(--ink);background:var(--ink);color:var(--paper);border-radius:6px;cursor:pointer}
+  .tr-embed-english{display:inline-block;margin-top:1rem;font-family:var(--mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--clay);text-decoration:underline;text-underline-offset:3px}
+</style>
+<div id="tr-bar" role="region" aria-label="{{ 'translate.mode.bar_aria'|trans }}">
+  {# The two counts are assembled here rather than substituted into one
+     translated string. Every catalogue key is overlayable, an overlay is
+     untrusted text (translations.md §3, §8), and a |raw on catalogue text is
+     the one way markup from an approved overlay could reach the page as
+     markup. The <b> elements belong to this template; the script fills them.
+     Two label keys, one per count, render the same bar as before. #}
+  <span><b data-tr-count>0</b> {{ 'translate.mode.bar_strings'|trans }} · <b data-tr-stale>0</b> {{ 'translate.mode.bar_stale'|trans }}</span>
+  <span class="tr-seg" role="group" aria-label="{{ 'translate.mode.switch_aria'|trans }}">
+    <button type="button" data-tr-edit aria-pressed="true">{{ 'translate.mode.edit'|trans }}</button>
+    <button type="button" data-tr-browse aria-pressed="false">{{ 'translate.mode.browse'|trans }}</button>
+  </span>
+  <form method="post" action="{{ path('translate_mode') }}">
+    {# "_csrf_token", not Symfony's default "_token": this bar sits in every
+       page's chrome, ahead of the page's own content, so its field must not
+       shadow the page's own "_token" input for a test (or any scraper)
+       reading the first match in the raw HTML. #}
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token('translate_mode') }}">
+    <input type="hidden" name="on" value="0">
+    <button type="submit">{{ 'translate.mode.off_short'|trans }}</button>
+  </form>
+</div>
+{# The drawer's edit URL is handed over as a base and a suffix, and the script
+   concatenates the entry id between them. It used to be one URL that the
+   script string-replaced the literal "/0?" inside, which would silently
+   no-op the moment the query string gained a parameter or lost `embed`, and
+   then every click would open entry 0 and 404. `id: 0` is exactly one
+   character, so the base is the generated path minus its last character. #}
+{% set _edit = path('translate_edit', {id: 0, embed: 1})|split('?', 2) %}
+<aside id="tr-drawer" hidden aria-label="{{ 'translate.mode.drawer_aria'|trans }}"
+       data-edit-base="{{ _edit[0]|slice(0, -1) }}"
+       data-edit-suffix="{{ _edit|length > 1 ? '?' ~ _edit[1] : '' }}"
+       data-error="{{ 'translate.mode.load_failed'|trans }}">
+  <button type="button" class="tr-drawer-close" aria-label="{{ 'translate.mode.close'|trans }}">×</button>
+  <div class="tr-drawer-body"></div>
+</aside>
