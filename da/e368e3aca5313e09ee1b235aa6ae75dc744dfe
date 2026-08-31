@@ -1,17 +1,17 @@
 web/tests/Moderation/ModerationScopeProviderTest.php
-  s_c5bcd8e7c7eb21::t_936b1c24cbf329 1-93
+  s_8f9941cdcf9eca::t_290e150988b1bd 1-93
 ---
 {
   "schema_version": "authorship/3.0.0",
-  "git_ai_version": "1.6.15",
+  "git_ai_version": "1.7.0",
   "base_commit_sha": "dae368e3aca5313e09ee1b235aa6ae75dc744dfe",
   "prompts": {},
   "sessions": {
-    "s_c5bcd8e7c7eb21": {
+    "s_8f9941cdcf9eca": {
       "agent_id": {
         "tool": "claude",
-        "id": "42d1e61a-9a1a-41ac-a48c-fe97eaf5201c",
-        "model": "claude-opus-4-8"
+        "id": "be8228a9-eb05-456e-bed2-ccf9fe1d7437",
+        "model": "unknown"
       },
       "human_author": "X. Koevoet <development@bikecoders.life>"
     }
