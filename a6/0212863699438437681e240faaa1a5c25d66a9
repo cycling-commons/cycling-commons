@@ -1,27 +1,43 @@
-developers/docker/README.md
-  s_c5bcd8e7c7eb21::t_3fdd2758cdfc49 164
-pipeline/tests/test_run.py
-  s_c5bcd8e7c7eb21::t_5d4db845c784b0 136-141
-developers/docker/.env.example
-  s_c5bcd8e7c7eb21::t_2d97c959c095b6 43
 developers/coverage-batch.md
-  s_c5bcd8e7c7eb21::t_e75614ea741160 45
-pipeline/coverage/run.py
-  s_c5bcd8e7c7eb21::t_b93905c8f12c38 31
+  s_16e7d98f40a315::t_e7bf1ff36ea05f 45
+developers/docker/.env.example
+  s_cfe1af103ed2ab::t_115224711cd494 43
+developers/docker/README.md
+  s_cfe1af103ed2ab::t_fffd4600f7ee47 164
 developers/docker/compose.yaml
-  s_c5bcd8e7c7eb21::t_c63805f76b9441 88
+  s_7ca916eeb157fa::t_b1119e3226cedc 88
+pipeline/coverage/run.py
+  s_16e7d98f40a315::t_5c2e04c55b9ef0 31
+pipeline/tests/test_run.py
+  s_16e7d98f40a315::t_a684f43d7048c2 136-141
 ---
 {
   "schema_version": "authorship/3.0.0",
-  "git_ai_version": "1.6.15",
+  "git_ai_version": "1.7.0",
   "base_commit_sha": "a60212863699438437681e240faaa1a5c25d66a9",
   "prompts": {},
   "sessions": {
-    "s_c5bcd8e7c7eb21": {
+    "s_16e7d98f40a315": {
       "agent_id": {
         "tool": "claude",
-        "id": "42d1e61a-9a1a-41ac-a48c-fe97eaf5201c",
-        "model": "claude-opus-4-8"
+        "id": "a9fcd11a-43a8-477a-bd05-612aaa422d99",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_7ca916eeb157fa": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e8be2531-9ac2-4db0-b37d-277f0b28cb93",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_cfe1af103ed2ab": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d5045d54-e534-4106-88fe-6c8265de0229",
+        "model": "claude-opus-5"
       },
       "human_author": "X. Koevoet <development@bikecoders.life>"
     }
