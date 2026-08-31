@@ -60,6 +60,19 @@ test('our items honour neither the rungs nor the scope, matching the skin', () =
     'a scope gate here does the same thing, more quietly');
 });
 
+test('select all cannot reach the overlay', () => {
+  // It walks every layer that has a ROW. Walking the whole catalogue would turn
+  // our surface items on while the Surfaces switch still read Off: the half-on
+  // state this whole change exists to make impossible, reached by the one
+  // control that was never meant to touch it.
+  assert.match(catalog, /catalogRows = \(\) => CATALOG\.filter\(l => !l\.overlay\)/,
+    'catalogRows names the layers that have a row');
+  assert.doesNotMatch(panels, /const allOn=CATALOG\.every/,
+    'select-all must read the rows, not the whole catalogue');
+  assert.match(panels, /const allOn=catalogRows\(\)\.every/);
+  assert.match(panels, /catalogRows\(\)\.forEach\(l=>\{ if\(allOn\)/);
+});
+
 test('the skin still hides itself where we hold an item', () => {
   const tiles = fs.readFileSync(path.join(ROOT, 'assets/map/surface-tiles.js'), 'utf8');
   assert.match(tiles, /CC_CURATED_REFS/,

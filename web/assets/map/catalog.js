@@ -76,6 +76,11 @@ export const CITIES = {
 export const cityLink = name => `<a class="cc-city" data-city="${escPend(name)}">${escPend(name)}</a>`;
 
 // Functions, not constants: the curator-only pending layer is pushed into CATALOG at runtime.
+/* Everything that has a ROW in the layer list. An overlay has its own switch
+   in Map overlays instead, so select-all must not reach it: toggling it from
+   here would turn our items on while the overlay switch still read Off, which
+   is the half-on state the one-control change exists to make impossible. */
+export const catalogRows = () => CATALOG.filter(l => !l.overlay);
 export const catalogUtility = () => CATALOG.filter(l => !l.votable && !l.pendingLayer && !l.overlay);
 export const catalogVotable = () => CATALOG.filter(l => l.votable && !l.pendingLayer);
 export const catalogModeration = () => CATALOG.filter(l => l.pendingLayer);

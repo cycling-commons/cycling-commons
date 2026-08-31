@@ -7,7 +7,7 @@
 import { I18N, D, tpl, CC_SEASON_LABEL, CC_BIKE_LABEL } from './i18n.js';
 import { txtOn, currentSeason } from './util.js';
 import { map, satelliteConfigured } from './map-init.js';
-import { CATALOG, catalogUtility, catalogVotable, catalogModeration,
+import { CATALOG, catalogRows, catalogUtility, catalogVotable, catalogModeration,
          active, layerByKey, mode, setMode,
          resolveInitialMode, MODE_LS_KEY } from './catalog.js';
 import { PREFS, addHeatmap, updateHeatFilter, layerCounts, updateCounts, render,
@@ -65,10 +65,10 @@ export function initLayerList(){
   group(I18N.groupModeration||'Moderation', catalogModeration());
   // (de)select-all toggle for the data layers
   const layersAll=document.getElementById('layersAll');
-  function syncLayersAll(){ layersAll.textContent = CATALOG.every(l=>active.has(l.key)) ? (I18N.deselectAll||'deselect all') : (I18N.selectAll||'select all'); }
+  function syncLayersAll(){ layersAll.textContent = catalogRows().every(l=>active.has(l.key)) ? (I18N.deselectAll||'deselect all') : (I18N.selectAll||'select all'); }
   layersAll.onclick=()=>{
-    const allOn=CATALOG.every(l=>active.has(l.key));
-    CATALOG.forEach(l=>{ if(allOn) active.delete(l.key); else active.add(l.key); });
+    const allOn=catalogRows().every(l=>active.has(l.key));
+    catalogRows().forEach(l=>{ if(allOn) active.delete(l.key); else active.add(l.key); });
     document.querySelectorAll('#layers .layer').forEach(el=>el.classList.toggle('off', !active.has(el.dataset.key)));
     syncLayersAll(); render();
   };
