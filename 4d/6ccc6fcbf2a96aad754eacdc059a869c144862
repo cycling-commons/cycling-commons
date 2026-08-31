@@ -4,7 +4,7 @@ docs/specs/2026-07-22-scope-selector-scale-design.md
 ---
 {
   "schema_version": "authorship/3.0.0",
-  "git_ai_version": "1.6.15",
+  "git_ai_version": "1.7.0",
   "base_commit_sha": "4d6ccc6fcbf2a96aad754eacdc059a869c144862",
   "prompts": {},
   "sessions": {
