@@ -1,0 +1,24 @@
+web/src/Controller/MapController.php
+  s_71e62148fd80e8::t_45f6ce561d2619 14
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "114e4c69e920c42a5b67c3ea472227e83a3a9348",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_71e62148fd80e8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e135c2f1-9eca-49d8-bc4f-2ead6e883463",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

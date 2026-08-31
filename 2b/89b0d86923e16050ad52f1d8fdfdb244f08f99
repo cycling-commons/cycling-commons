@@ -1,0 +1,71 @@
+wiki/developers/gis-beyond/geocoding.md
+  s_d6eab02dcad899::t_42611347c81f84 35
+docs/specs/security-architecture.md
+  s_d6eab02dcad899::t_42611347c81f84 284-287
+  s_16e7d98f40a315::t_99deb04cdb90bd 288,410
+docs/specs/account-and-auth.md
+  s_d6eab02dcad899::t_42611347c81f84 931,934-937
+  s_16e7d98f40a315::t_5f63c326a1e089 938-940
+web/templates/map/index.html.twig
+  s_d6eab02dcad899::t_d53ba679343855 369,377
+web/tests/Contribution/WizardMediaTest.php
+  s_d6eab02dcad899::t_d53ba679343855 73,78,83-86,89-91
+docs/specs/moderation-and-contribution.md
+  s_d6eab02dcad899::t_afb79b533ec570 111
+  s_16e7d98f40a315::t_765988cb7ddfd8 112-113
+web/src/Controller/ContributeController.php
+  s_d6eab02dcad899::t_de10c590e44d6a 274
+  s_d6eab02dcad899::t_7c38bc3650b866 72-73,77-83
+  s_d6eab02dcad899::t_6d649b40f75f07 382-393,406
+  s_d6eab02dcad899::t_d53ba679343855 64-67,74,87,296,299
+  s_16e7d98f40a315::t_735458764619cd 69-70,84
+web/assets/contribute/improve.js
+  s_d6eab02dcad899::t_7c38bc3650b866 25
+  s_d6eab02dcad899::t_d53ba679343855 26-28,165,167,169,196,268-289,297-301,303-304,314,317-319,321,325
+web/src/Contribution/CatalogContributionService.php
+  s_d6eab02dcad899::t_d53ba679343855 89-99,138-147
+  s_16e7d98f40a315::t_ee41e8a3ecaf64 148-149
+web/tests/Contribution/AddClimbFromMapTest.php
+  s_d6eab02dcad899::t_d53ba679343855 45
+  s_d6eab02dcad899::t_7a655bbfabee07 64-65,67,69-72
+  s_d6eab02dcad899::t_7c38bc3650b866 92,94,96,106
+README.md
+  s_d6eab02dcad899::t_42611347c81f84 132-133,136
+web/tests/Contribution/AddPlaceFlowTest.php
+  s_d6eab02dcad899::t_d53ba679343855 93,96-102
+  s_d6eab02dcad899::t_09f0a7bf66a667 91
+docs/specs/map-and-search.md
+  s_d6eab02dcad899::t_42611347c81f84 650
+  s_16e7d98f40a315::t_7f1772617c68c1 401-403,651,653-654,659-660
+web/translations/messages.es.yaml
+  s_16e7d98f40a315::t_d5fa85776935db 3005
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "2b89b0d86923e16050ad52f1d8fdfdb244f08f99",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_16e7d98f40a315": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a9fcd11a-43a8-477a-bd05-612aaa422d99",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_d6eab02dcad899": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b5577347-6bee-425e-a6b0-d01f31e69be7",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
