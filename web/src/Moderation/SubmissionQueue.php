@@ -10,6 +10,7 @@ use App\Catalog\ItemType;
 use App\Catalog\Links\LinkVerdictStore;
 use App\Catalog\Links\SafeBrowsing;
 use App\Catalog\RiderPseudonym;
+use App\Catalog\SubmissionType;
 use App\Contribution\ChangeValue;
 use App\Media\Entity\MediaUpload;
 use App\Media\MediaStorage;
@@ -466,10 +467,12 @@ final class SubmissionQueue
             'SELECT s.id, s.item_id, s.type, s.letter, s.country_code, COALESCE(r.name, \'\') AS region, s.title, s.status, s.decision_note,
                     ST_Y(s.geom) AS lat, ST_X(s.geom) AS lng, s.user_id, s.created_at, s.changes,
                     COALESCE(s.payload->\'details\'->>\'note\', \'\') AS body,
+                    it.attributes AS item_attributes,
                     rr.body_text AS rider_reply,
                     u.public_profile, u.display_name, u.uuid AS user_uuid
              FROM submission s LEFT JOIN region r ON r.id = s.region_id
                   LEFT JOIN users u ON u.id = s.user_id
+                  LEFT JOIN item it ON it.id = s.item_id
                   LEFT JOIN LATERAL (
                       SELECT um.body_text
                       FROM user_message um
@@ -524,7 +527,11 @@ final class SubmissionQueue
                 /* Proposed shape for the drawer before/after switch (docs/specs/moderation-and-contribution.md §5.2b). */
                 'shape' => self::shapeSides((string) $r['changes']),
                 /* Per-field changes for the drawer; labels stay client-side. */
-                'changes' => self::changeRows((string) $r['changes']),
+                'changes' => self::changeRows(
+                    (string) $r['changes'],
+                    SubmissionType::NewItem->value === (string) $r['type'],
+                    null !== $r['item_attributes'] ? (string) $r['item_attributes'] : null,
+                ),
                 /* Safe Browsing flag on proposed links; never silently reject. */
                 'linkFlag' => $linkFlags[(int) $r['id']] ?? null,
             ];
@@ -775,10 +782,26 @@ final class SubmissionQueue
      *
      * @return list<array{key: string, was: ?string, now: string}>
      */
-    private static function changeRows(string $changesJson): array
+    private static function changeRows(string $changesJson, bool $isNew = false, ?string $itemAttrsJson = null): array
     {
         /** @var array<string, mixed> $changes */
         $changes = json_decode($changesJson, true) ?: [];
+
+        /* A NEW submission proposes the whole item, so the item IS the
+           proposal: while it waits it sits in state `submitted` holding exactly
+           what the rider asked for, and there is nothing to diff it against.
+           Reading it directly also survives a revision, which re-diffs against
+           the item and therefore records nothing for the fields it already
+           carries. A rider who filed a road and then only lengthened it left
+           the curator a shape and no values at all (owner-reported
+           2026-08-31); mergeChanges() stops that happening again, and this is
+           what shows the submissions it already happened to. */
+        if ($isNew && null !== $itemAttrsJson) {
+            /** @var array<string, mixed> $attrs */
+            $attrs = json_decode($itemAttrsJson, true) ?: [];
+            $changes = array_map(static fn (mixed $v): array => ['was' => null, 'now' => $v], $attrs);
+        }
+
         $out = [];
         foreach ($changes as $field => $pair) {
             // Geometry is reviewed on the map, never as text.

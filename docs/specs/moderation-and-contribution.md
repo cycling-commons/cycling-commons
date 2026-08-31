@@ -1078,6 +1078,24 @@ Everything else is untouched — a word stays a word, a multi-select joins with
 commas. Malformed geometry degrades to something printable rather than throwing,
 because a broken payload must not take the whole queue card down with it.
 
+### 5.2c A new item is reviewed as itself, not as a diff (2026-08-31)
+
+There is nothing to diff a new item against, so the item **is** the proposal: it
+waits in state `submitted` holding exactly what the rider asked for. The desk
+therefore builds a NEW submission's rows from the item's own attributes rather
+than from its `changes` map (`SubmissionQueue::changeRows()`), with `was` null
+throughout, because everything is proposed from nothing.
+
+That is also what makes the card survive a revision. A revision is diffed
+against the item, and the item already carries the earlier round, so the second
+round records nothing for those fields. `mergeChanges()` (§7.3b) keeps them in
+the map from now on; reading the item is what shows the submissions filed before
+that existed, without rewriting their rows. Two independent reasons for the same
+answer, which is why this is the rule and not a patch.
+
+Shape fields stay out either way. A stretch or a line is reviewed on the map
+(§5.2a, §5.2b) and never as text, whichever side the rows are built from.
+
 ### 5.2b Before/after for a proposed shape (2026-08-03)
 
 Summarising geometry as text (§5.2a) made the card readable, but it did not make
