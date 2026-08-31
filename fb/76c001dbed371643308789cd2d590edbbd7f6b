@@ -1,17 +1,17 @@
 web/src/Service/ResetPasswordCleanupHook.php
-  s_c5bcd8e7c7eb21::t_9a7f68b4485dc2 27
+  s_f68f52eab6f3c4::t_054218c4b308d0 27
 ---
 {
   "schema_version": "authorship/3.0.0",
-  "git_ai_version": "1.6.15",
+  "git_ai_version": "1.7.0",
   "base_commit_sha": "fb76c001dbed371643308789cd2d590edbbd7f6b",
   "prompts": {},
   "sessions": {
-    "s_c5bcd8e7c7eb21": {
+    "s_f68f52eab6f3c4": {
       "agent_id": {
         "tool": "claude",
-        "id": "42d1e61a-9a1a-41ac-a48c-fe97eaf5201c",
-        "model": "claude-opus-4-8"
+        "id": "c7a55b70-80fe-4d7b-a5a8-04f70def4f1e",
+        "model": "claude-opus-5"
       },
       "human_author": "X. Koevoet <development@bikecoders.life>"
     }
