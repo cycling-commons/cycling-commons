@@ -19,6 +19,7 @@ use App\Translation\DecisionService;
 use App\Translation\Entity\TranslationOverlay;
 use App\Translation\Entity\TranslationProposal;
 use App\Translation\ProposalService;
+use App\Translation\TranslationCaches;
 use App\Translation\TranslationProposalStatus;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -264,7 +265,7 @@ final class ModerateTranslationsTest extends WebTestCase
         $curator = $this->loginCurator('mod-tr-en-curator@example.com');
         static::getContainer()->get(DecisionService::class)->decide((int) $first->getId(), 'approve', $curator, null);
         $entry = $this->findOrCreateEntry($em, 'test.tr.story.english', 'Old English source');
-        $entry->restoreFromYaml('New English source');
+        $entry->applyGitEnglish('New English source');
         $em->flush();
         $second = $this->seedPendingProposal(
             $rider,
@@ -592,6 +593,64 @@ final class ModerateTranslationsTest extends WebTestCase
         self::assertSame(0, $crawler->filter('button[value="approve"]')->count());
         self::assertSame(0, $crawler->filter('textarea[name="translation_decision[published]"]')->count());
         self::assertSame(1, $crawler->filter('a.tr-back[href$="/moderate/translations/history"]')->count());
+    }
+
+    public function testEnglishProposalShowsInQueueWithApproveNoticeAndVersions(): void
+    {
+        $client = static::createClient();
+        $author = $this->createUser('en-author-desk@example.com', 'hunter2secure!', ['ROLE_CURATOR'], 'JBSWY3DPEHPK3PXP', true);
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $entry = $this->findOrCreateEntry($em, 'nav.map', 'Map');
+        $proposal = new TranslationProposal($entry, 'en', 'Map view', 'Map', (int) $author->getId(), null, 1);
+        $em->persist($proposal);
+        $em->flush();
+
+        $this->loginCurator('en-reviewer-desk@example.com');
+        $crawler = $client->request('GET', '/moderate/translations');
+        self::assertStringContainsString('nav.map', $crawler->filter('#main')->html());
+
+        $crawler = $client->request('GET', '/moderate/translations/'.$proposal->getId());
+        $html = $crawler->filter('#main')->html();
+        self::assertStringContainsString('marks the four translations', $html);
+        self::assertStringContainsString('v1', $html);
+    }
+
+    public function testHistoryShowsSettledEnglishProposal(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $entry = $this->findOrCreateEntry($em, 'zzz.desk.en.history', 'Photos up to 5 MB');
+        // Null submitter and null consent record are the shape of a system-
+        // authored 'en' proposal (translations.md §4.2, §6): settledCard()
+        // must survive both without a curator ever seeing them explicitly.
+        $proposal = new TranslationProposal($entry, 'en', 'Photos up to 10 MB', 'Photos up to 5 MB', null, null, $entry->getEnglishVersion());
+        $em->persist($proposal);
+        $em->flush();
+
+        $curator = $this->loginCurator('en-history-curator@example.com');
+        static::getContainer()->get(DecisionService::class)->decide((int) $proposal->getId(), 'approve', $curator, null, 'Photos up to 10 MB');
+
+        $crawler = $client->request('GET', '/moderate/translations/history');
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('.q-list', 'zzz.desk.en.history');
+    }
+
+    public function testStaleListPerLocale(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $entry = $this->findOrCreateEntry($em, 'zzz.desk.stale', 'Photos up to 5 MB');
+        $entry->applyApprovedEnglish('Photos up to 10 MB');
+        $em->flush();
+        static::getContainer()->get(TranslationCaches::class)->invalidateAll();
+
+        $this->loginCurator('stale-desk@example.com');
+        $crawler = $client->request('GET', '/moderate/translations/stale?locale=nl');
+        self::assertResponseIsSuccessful();
+        $html = $crawler->filter('#main')->html();
+        self::assertStringContainsString('zzz.desk.stale', $html);
+        self::assertStringContainsString('v2', $html);
     }
 
     public function testRiderForbiddenOnSettledHistory(): void

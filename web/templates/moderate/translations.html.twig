@@ -19,6 +19,7 @@
   <nav class="lfilter" aria-label="{{ 'moderate.translation.section_aria'|trans }}">
     <a class="lchip on" href="{{ path('moderate_translations') }}">{{ 'moderate.translation.desk_queue'|trans }}</a>
     <a class="lchip tr-desk-hist" href="{{ path('moderate_translations_history') }}">{{ 'moderate.translation.desk_history'|trans }}</a>
+    <a class="lchip" href="{{ path('moderate_translations_stale') }}">{{ 'moderate.translation.desk_stale'|trans }}</a>
   </nav>
 
   {% for msg in app.flashes('success') %}<div class="flash-success" role="alert">{{ msg|trans }}</div>{% endfor %}

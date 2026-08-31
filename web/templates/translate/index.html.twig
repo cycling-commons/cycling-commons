@@ -19,6 +19,9 @@
   .row-live{font-size:.84rem;color:#4a4d40;margin-top:.35rem;line-height:1.45}
   .row-meta{font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:#7a7d6d;margin-top:.45rem}
   .row-meta.is-pending{color:var(--ochre)}
+  .row-meta.is-stale{color:#8a5a00}
+  .tr-mode-toggle{margin:0 0 1.2rem}
+  .tr-mode-toggle button{font-family:var(--mono);font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;padding:.6rem .9rem;border:1px solid rgba(20,22,14,.25);background:var(--paper);color:var(--ink);border-radius:6px;cursor:pointer}
 </style>
 {% endblock %}
 {% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'translate'} %}{% endblock %}
@@ -27,7 +30,12 @@
   <div class="mh">
     <div class="kicker">{{ 'account.menu_personal'|trans }} · {{ 'translate.kicker'|trans }}</div>
     <h1>{{ 'translate.title'|trans }}</h1>
-    <p class="lead">{% if chooser %}{{ 'translate.chooser_lead'|trans }}{% else %}{{ 'translate.list_lead'|trans }}{% endif %}</p>
+    <p class="lead">
+      {%- if chooser %}{{ 'translate.chooser_lead'|trans }}
+      {%- elseif is_english|default(false) %}{{ 'translate.english.list_lead'|trans }}
+      {%- else %}{{ 'translate.list_lead'|trans }}
+      {%- endif %}
+    </p>
   </div>
 
   {% for msg in app.flashes('success') %}<div class="flash-success" role="alert">{{ msg|trans }}</div>{% endfor %}
@@ -36,6 +44,9 @@
   <nav class="lfilter" aria-label="{{ 'translate.section_aria'|trans }}">
     <a class="lchip on" href="{{ path('translate') }}">{{ 'translate.catalogue'|trans }}</a>
     <a class="lchip tr-yours" href="{{ path('translate_mine') }}">{{ 'translate.mine.yours'|trans }}</a>
+    {% if not chooser and not is_english|default(false) %}
+      <a class="lchip tr-stale{{ stale_only ? ' on' }}" href="{{ path('translate', {stale: 1}) }}">{{ 'translate.stale.chip'|trans }}</a>
+    {% endif %}
   </nav>
 
   {% if chooser %}
@@ -55,6 +66,20 @@
       <button type="submit">{{ 'translate.search'|trans }}</button>
     </form>
 
+    {# Translate mode (translations.md §4.1): opens the same form from the
+       page a string is on. `translate_mode()` reports what
+       `App\Translation\TranslateMode` decided for this request, so the button
+       is a toggle: it posts the opposite of what is showing. #}
+    <form method="post" action="{{ path('translate_mode') }}" class="tr-mode-toggle">
+      {# Field name is "_csrf_token", not Symfony's default "_token": this
+         page has other forms with their own tokens further down, and the
+         first "_token" in the document is what a test (or any scraper)
+         reading raw HTML would grab. #}
+      <input type="hidden" name="_csrf_token" value="{{ csrf_token('translate_mode') }}">
+      <input type="hidden" name="on" value="{{ translate_mode() ? 0 : 1 }}">
+      <button type="submit">{{ (translate_mode() ? 'translate.mode.off' : 'translate.mode.on')|trans }}</button>
+    </form>
+
     {% if rows is empty %}
       <div class="empty-state">
         <p>{{ 'translate.empty'|trans }}</p>
@@ -65,10 +90,18 @@
           <li>
             <a class="tr-row row" href="{{ path('translate_edit', {id: row.id}) }}">
               <div class="row-key">{{ row.message_key }}</div>
-              <div class="row-en">{{ row.english }}</div>
-              <div class="row-live">{{ row.live }}</div>
+              {% if is_english|default(false) %}
+                <div class="row-en">{{ row.yaml_default }}</div>
+                <div class="row-live">{{ row.live }} v{{ row.english_version }}</div>
+              {% else %}
+                <div class="row-en">{{ row.english }}</div>
+                <div class="row-live">{{ row.live }}</div>
+              {% endif %}
               {% if row.has_pending %}
                 <div class="row-meta is-pending">{{ 'translate.pending'|trans }}</div>
+              {% endif %}
+              {% if row.stale %}
+                <div class="row-meta is-stale">{{ 'translate.stale.tag'|trans({'%from%': row.made_against, '%to%': row.english_version}) }}</div>
               {% endif %}
             </a>
           </li>

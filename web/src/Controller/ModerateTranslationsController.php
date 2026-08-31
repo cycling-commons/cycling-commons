@@ -17,11 +17,13 @@ use App\Pagination\PageSize;
 use App\Routing\LocalePrefix;
 use App\Translation\CatalogueBrowser;
 use App\Translation\DecisionService;
+use App\Translation\Entity\TranslationEntry;
 use App\Translation\Entity\TranslationProposal;
 use App\Translation\Exception\EmptyTranslationException;
 use App\Translation\Exception\SelfReviewException;
 use App\Translation\Exception\TranslationTooLongException;
 use App\Translation\Exception\UnknownProposalException;
+use App\Translation\StaleIndex;
 use App\Translation\TranslationDiff;
 use App\Translation\TranslationLimits;
 use App\Translation\TranslationProposalStatus;
@@ -49,6 +51,7 @@ final class ModerateTranslationsController extends AbstractController
         private readonly ModerationScopeProvider $scopeProvider,
         private readonly EntityManagerInterface $em,
         private readonly PageSize $pageSize,
+        private readonly StaleIndex $stale,
     ) {
     }
 
@@ -100,6 +103,37 @@ final class ModerateTranslationsController extends AbstractController
             'page_description' => 'meta.moderate_translations_description',
             'cards' => $cards,
             'pager' => $pager,
+            ...$this->chrome($curator),
+        ]);
+    }
+
+    /**
+     * Reading list of stale keys for one locale (translations.md §5).
+     *
+     * Placed above the `{id}` route: the `\d+` requirement already keeps
+     * `stale` from being swallowed by it, this is belt and braces.
+     */
+    #[Route('/moderate/translations/stale', name: 'moderate_translations_stale', methods: ['GET'])]
+    public function stale(Request $request): Response
+    {
+        $locale = $request->query->getString('locale', 'nl');
+        if (!TranslationLimits::isTranslatableLocale($locale)) {
+            $locale = 'nl';
+        }
+        $rows = [];
+        foreach ($this->stale->listFor($locale) as $row) {
+            $entry = $this->em->find(TranslationEntry::class, $row['id']);
+            $rows[] = $row + ['live' => null !== $entry ? $this->browser->liveFor($entry, $locale)['live'] : ''];
+        }
+        /** @var User $curator */
+        $curator = $this->getUser();
+
+        return $this->render('moderate/translations_stale.html.twig', [
+            'page_title' => 'meta.moderate_translations_title',
+            'page_description' => 'meta.moderate_translations_description',
+            'locale' => $locale,
+            'locales' => TranslationLimits::LOCALES,
+            'rows' => $rows,
             ...$this->chrome($curator),
         ]);
     }
@@ -231,6 +265,9 @@ final class ModerateTranslationsController extends AbstractController
             'locale' => $proposal->getLocale(),
             'status' => $proposal->getStatus()->value,
             'who' => $this->who($proposal->getSubmitterId()),
+            'english_version' => $proposal->getEnglishVersionAtSubmit(),
+            'english_now_version' => $entry->getEnglishVersion(),
+            'is_english' => 'en' === $proposal->getLocale(),
         ];
     }
 
@@ -359,6 +396,9 @@ final class ModerateTranslationsController extends AbstractController
             'status' => $proposal->getStatus()->value,
             'edit' => $edit,
             'note' => $proposal->getReviewerNote(),
+            'english_version' => $proposal->getEnglishVersionAtSubmit(),
+            'english_now_version' => $proposal->getEntry()->getEnglishVersion(),
+            'is_english' => 'en' === $proposal->getLocale(),
         ];
     }
 

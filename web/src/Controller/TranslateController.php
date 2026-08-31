@@ -24,6 +24,7 @@ use App\Translation\Exception\ProtectedKeyException;
 use App\Translation\Exception\TranslationConflictException;
 use App\Translation\Exception\TranslationTooLongException;
 use App\Translation\ProposalService;
+use App\Translation\TranslateMode;
 use App\Translation\TranslationConsentService;
 use App\Translation\TranslationDiff;
 use App\Translation\TranslationLimits;
@@ -62,8 +63,14 @@ final class TranslateController extends AbstractController
     public function index(Request $request): Response
     {
         $locale = $request->getLocale();
+        /** @var User $user */
+        $user = $this->getUser();
+        // A curator on /en/translate sees the English catalogue, not the
+        // locale chooser: English is proposable to curators only
+        // (translations.md §4.2).
+        $canEnglish = 'en' === $locale && $this->proposals->canProposeEnglish($user);
 
-        if (!TranslationLimits::isTranslatableLocale($locale)) {
+        if (!TranslationLimits::isTranslatableLocale($locale) && !$canEnglish) {
             return $this->render('translate/index.html.twig', [
                 'page_title' => 'meta.translate_title',
                 'page_description' => 'meta.translate_description',
@@ -74,11 +81,13 @@ final class TranslateController extends AbstractController
         }
 
         $q = $request->query->getString('q');
+        $staleOnly = $request->query->getBoolean('stale');
         $result = $this->browser->search(
             $q,
             $locale,
             $request->query->getInt('page', 1),
             $this->pageSize->resolve(CatalogueBrowser::PER_PAGE),
+            $staleOnly,
         );
 
         return $this->render('translate/index.html.twig', [
@@ -89,8 +98,11 @@ final class TranslateController extends AbstractController
             'q' => $q,
             'rows' => $result['rows'],
             'pager' => $result['pager'],
+            'stale_only' => $staleOnly,
+            'is_english' => 'en' === $locale,
             'pager_params' => array_filter([
                 'q' => '' !== $q ? $q : null,
+                'stale' => $staleOnly ? '1' : null,
             ], static fn (?string $v): bool => null !== $v),
             'locale' => $locale,
         ]);
@@ -340,11 +352,48 @@ final class TranslateController extends AbstractController
         ];
     }
 
+    public const string MODE_CSRF = 'translate_mode';
+
+    /**
+     * Turns translate mode (translations.md §4.1) on or off for this
+     * session only: a transient flag, never an account preference, so it
+     * cannot follow the rider into another browser.
+     *
+     * This only writes the flag. {@see TranslateMode} reads it back at
+     * `kernel.request`, after the firewall, and decides from there whether the
+     * mode applies to the request's route, locale and role.
+     */
+    #[Route('/translate/mode', name: 'translate_mode', methods: ['POST'])]
+    public function mode(Request $request): Response
+    {
+        // The field is named "_csrf_token", not Symfony's default "_token":
+        // every form that renders this button sits in shared chrome, ahead
+        // of the page's own content, so it must not shadow the page's own
+        // "_token" input for a test (or any scraper) reading the first
+        // match in the raw HTML. The CSRF token id (MODE_CSRF) is unrelated
+        // and unchanged; only the POST field name differs.
+        if (!$this->isCsrfTokenValid(self::MODE_CSRF, (string) $request->request->get('_csrf_token'))) {
+            throw $this->createAccessDeniedException('Bad CSRF token.');
+        }
+        $request->getSession()->set(TranslateMode::SESSION_KEY, $request->request->getBoolean('on'));
+
+        $referer = (string) $request->headers->get('referer', '');
+        $host = parse_url($referer, \PHP_URL_HOST);
+        if ('' !== $referer && $host === $request->getHost()) {
+            return $this->redirect($referer);
+        }
+
+        return $this->redirectToRoute('translate');
+    }
+
     #[Route('/translate/{id}', name: 'translate_edit', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
     public function edit(int $id, Request $request): Response
     {
         $locale = $request->getLocale();
-        if (!TranslationLimits::isTranslatableLocale($locale)) {
+        /** @var User $user */
+        $user = $this->getUser();
+        $isEnglish = 'en' === $locale;
+        if ($isEnglish ? !$this->proposals->canProposeEnglish($user) : !TranslationLimits::isTranslatableLocale($locale)) {
             return $this->redirectToRoute('translate');
         }
 
@@ -353,19 +402,20 @@ final class TranslateController extends AbstractController
             throw $this->createNotFoundException();
         }
 
-        /** @var User $user */
-        $user = $this->getUser();
+        $embed = $request->query->getBoolean('embed');
         $open = $this->proposals->openFor($user, $locale, $entry);
         $live = $this->browser->liveFor($entry, $locale);
         $proposed = $open?->getProposedValue() ?? '';
-        $standing = $this->consent->current($user);
+        $standing = $isEnglish ? null : $this->consent->current($user);
         $form = $this->createForm(TranslationProposalType::class, [
             'value' => $proposed,
         ], [
             'standing' => null !== $standing,
+            'consent' => !$isEnglish,
         ]);
         $form->handleRequest($request);
 
+        $sent = false;
         if ($form->isSubmitted() && $form->isValid()) {
             /** @var array{value: string} $data */
             $data = $form->getData();
@@ -373,9 +423,17 @@ final class TranslateController extends AbstractController
 
             try {
                 $this->proposals->submit($user, $entry, $locale, (string) $data['value'], $consentTick);
-                $this->addFlash('success', 'translate.flash.submitted');
+                if (!$embed) {
+                    $this->addFlash('success', 'translate.flash.submitted');
 
-                return $this->redirectToRoute('translate');
+                    return $this->redirectToRoute('translate');
+                }
+                // No flash on the drawer path. translate/embed.html.twig
+                // renders the sent state from its own key and never drains
+                // the bag on that branch, so a flash added here would survive
+                // in the session and reappear as a duplicate banner on the
+                // translator's next full page load (translations.md §4.1).
+                $sent = true;
             } catch (ConsentRequiredException) {
                 $this->addFlash('danger', 'translate.error.consent_required');
             } catch (EmptyTranslationException) {
@@ -408,7 +466,9 @@ final class TranslateController extends AbstractController
         $english = $entry->getEnglish();
         $hasMarkup = 1 === preg_match('/<[a-zA-Z\/]/', $english);
 
-        return $this->render('translate/edit.html.twig', [
+        $view = $embed ? 'translate/embed.html.twig' : 'translate/edit.html.twig';
+
+        return $this->render($view, [
             'page_title' => 'meta.translate_title',
             'page_description' => 'meta.translate_description',
             'nav_active' => 'contribute',
@@ -424,6 +484,13 @@ final class TranslateController extends AbstractController
             'proposed_preview' => $form->isSubmitted()
                 ? (string) ($form->get('value')->getData() ?? '')
                 : '',
+            'is_english' => $isEnglish,
+            'embed' => $embed,
+            'sent' => $sent,
+            'stale' => $live['stale'],
+            'english_version' => $live['english_version'],
+            'made_against' => $live['made_against'],
+            'can_english' => $this->proposals->canProposeEnglish($user),
         ]);
     }
 }

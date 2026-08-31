@@ -31,17 +31,15 @@
   .tr-actions{display:flex;gap:.8rem;flex-wrap:wrap;margin-top:1.2rem}
   .tr-actions button{font-family:var(--mono);font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;padding:.75rem 1.1rem;border:1px solid var(--ink);background:var(--ink);color:var(--paper);border-radius:6px;cursor:pointer}
   .tr-actions a{font-family:var(--mono);font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;padding:.75rem 1.1rem;border:1px solid rgba(20,22,14,.25);border-radius:6px;color:var(--ink);text-decoration:none}
-  .err{color:#8b2e2e;font-size:.84rem;margin-top:.35rem}
+  /* Symfony's form_errors() renders a bare <ul><li>, never an element with
+     a class: the ".err" rule that stood here matched no live markup, so a
+     validation error rendered unstyled. Direct children only, so a list
+     inside the sanitized preview keeps its own look. */
+  .tr-form > ul,.tr-form .field > ul{list-style:none;margin:0;padding:0}
+  .tr-form > ul > li,.tr-form .field > ul > li{color:#8b2e2e;font-size:.84rem;margin-top:.35rem}
 </style>
 {% endblock %}
 {% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'translate'} %}{% endblock %}
-
-{% macro worddiff(segments) %}{%- for s in segments -%}
-  {%- if s.type == 'del' -%}<span class="q-was">{{ s.text }}</span>
-  {%- elseif s.type == 'ins' -%}<span class="q-now">{{ s.text }}</span>
-  {%- else -%}{{ s.text }}{%- endif -%}
-  {%- if not loop.last %} {% endif -%}
-{%- endfor -%}{% endmacro %}
 
 {% block body %}
 <div class="dbody" id="main">
@@ -60,81 +58,6 @@
     <a class="lchip tr-yours {{ open ? 'on' }}" href="{{ path('translate_mine') }}">{{ 'translate.mine.yours'|trans }}</a>
   </nav>
 
-  {% if open %}
-    {% if open.englishAtSubmit != entry.english %}
-      <p class="tr-warn" role="status">{{ 'moderate.translation.english_changed'|trans }}</p>
-    {% endif %}
-    <div class="q-diff tr-diff">
-      <dl>
-        <dt>{{ 'moderate.translation.english_at_submit'|trans }}</dt>
-        <dd>{{ open.englishAtSubmit }}</dd>
-        <dt>{{ 'moderate.translation.english_now'|trans }}</dt>
-        <dd>{{ entry.english }}</dd>
-        <dt>{{ 'moderate.translation.live'|trans }}</dt>
-        <dd>{{ live }}</dd>
-      </dl>
-      <div class="tr-change">
-        <span class="tr-change-k">{{ 'moderate.translation.change'|trans }}</span>
-        <div class="q-diff">{{ _self.worddiff(change) }}</div>
-      </div>
-    {% else %}
-  <div class="tr-panel">
-    <div class="tr-lab">{{ 'translate.field.english'|trans }}</div>
-    <div class="tr-val">{{ entry.english }}</div>
-  </div>
-  <div class="tr-panel">
-    <div class="tr-lab">{{ 'translate.field.yaml'|trans }}</div>
-    <div class="tr-val">{{ yaml_default }}</div>
-  </div>
-  <div class="tr-panel">
-    <div class="tr-lab">{{ 'translate.field.live'|trans }}</div>
-    <div class="tr-val">{{ live }}</div>
-  </div>
-    {% endif %}
-
-  {% if has_markup %}
-    <p class="tr-note note">{{ 'translate.markup_note'|trans }}</p>
-  {% endif %}
-
-  {{ form_start(form, {attr: {class: 'tr-form'}}) }}
-    <div class="field">
-      {{ form_label(form.value) }}
-      {{ form_widget(form.value) }}
-      {{ form_errors(form.value) }}
-    </div>
-
-    {% if proposed_preview is not empty %}
-      <div class="tr-panel">
-        <div class="tr-lab">{{ 'translate.field.preview'|trans }}</div>
-        <div class="preview">{{ proposed_preview|rich }}</div>
-      </div>
-    {% endif %}
-
-    {% if standing %}
-      {% set when %}<time class="consent-when" datetime="{{ standing.consentedAt|date('c') }}">{{ standing.consentedAt|cc_date }}</time>{% endset %}
-      <div class="consent-ok">✓ {{ 'translate.consent.standing'|trans({'%date%': when})|raw }}
-        <details class="consent-more">
-          <summary>{{ 'translate.consent.read_contract'|trans }}</summary>
-          <p>{{ 'translate.consent.contract'|trans }}</p>
-        </details>
-        <a href="{{ path('terms') }}">{{ 'translate.consent.site_terms'|trans }}</a>
-      </div>
-    {% else %}
-    <div class="consent">
-      {{ form_widget(form.consent) }}
-      {{ form_label(form.consent) }}
-    </div>
-    {{ form_errors(form.consent) }}
-    {% endif %}
-    {{ form_errors(form) }}
-
-    <div class="tr-actions">
-      <button type="submit">{{ 'translate.submit'|trans }}</button>
-      <a href="{{ path('translate') }}">{{ 'translate.cancel'|trans }}</a>
-    </div>
-  {{ form_end(form) }}
-  {% if open %}
-    </div>
-  {% endif %}
+  {% include 'translate/_form.html.twig' %}
 </div>
 {% endblock %}

@@ -1,0 +1,59 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{# Reading list of stale keys per locale (translations.md §3.3, §5). A stale
+   translation stays live; this list never hides or replaces it, and carries
+   no approve/edit control of its own. A curator who wants to fix one goes
+   to /translate/{id} in that locale like any rider, and a second curator
+   approves. #}
+{% extends 'base.html.twig' %}
+{% block head_styles %}
+{% include 'account/_shell_styles.html.twig' %}
+<style>
+  .stale-item dl{display:grid;grid-template-columns:auto 1fr;gap:.15rem .7rem;margin:.4rem 0 0}
+  .stale-item dt{font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:#595c4d;align-self:baseline;padding-top:.15rem}
+  .stale-item dd{margin:0;min-width:0;overflow-wrap:anywhere}
+  @media(max-width:520px){.stale-item dl{grid-template-columns:1fr;gap:0}.stale-item dt{padding-top:.35rem}}
+  .row-meta{font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:#7a7d6d;margin-top:.5rem}
+  .row-meta.is-stale{color:#8a5a00}
+</style>
+{% endblock %}
+{% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate_translations', mod_scope_names: mod_scope_names is defined ? mod_scope_names : null, mod_submission_count: mod_submission_count is defined ? mod_submission_count : null, mod_route_count: mod_route_count is defined ? mod_route_count : null, mod_takedown_count: mod_takedown_count is defined ? mod_takedown_count : null} %}{% endblock %}
+
+{% block body %}
+<div class="dbody" id="main">
+  <div class="mh">
+    <div class="kicker">{{ 'moderate.translation.kicker'|trans }}</div>
+    <h1>{{ 'moderate.translation.stale_heading'|trans }}</h1>
+    <p class="lead">{{ 'moderate.translation.stale_lead'|trans }}</p>
+  </div>
+
+  <nav class="lfilter" aria-label="{{ 'moderate.translation.section_aria'|trans }}">
+    <a class="lchip" href="{{ path('moderate_translations') }}">{{ 'moderate.translation.desk_queue'|trans }}</a>
+    <a class="lchip tr-desk-hist" href="{{ path('moderate_translations_history') }}">{{ 'moderate.translation.desk_history'|trans }}</a>
+    <a class="lchip on" href="{{ path('moderate_translations_stale') }}">{{ 'moderate.translation.desk_stale'|trans }}</a>
+  </nav>
+
+  <nav class="lfilter" aria-label="{{ 'translate.section_aria'|trans }}">
+    {% for loc in locales %}
+      <a class="lchip{{ loc == locale ? ' on' }}" href="{{ path('moderate_translations_stale', {locale: loc}) }}">{{ ('translate.locale.' ~ loc)|trans }}</a>
+    {% endfor %}
+  </nav>
+
+  {% if rows is empty %}
+    <div class="empty-state"><p>{{ 'moderate.translation.stale_empty'|trans }}</p></div>
+  {% else %}
+    <h2 class="sec-band">{{ 'moderate.translation.stale_heading'|trans }} <span class="sec-count">{{ rows|length }}</span></h2>
+    <ul class="q-list">
+      {% for row in rows %}
+        <li class="q-item stale-item">
+          <h3 class="q-title"><a class="q-title-link" href="{{ path('translate_edit', {_locale: locale, id: row.id}) }}">{{ row.message_key }}</a></h3>
+          <dl>
+            <dt>{{ 'moderate.translation.english'|trans }} v{{ row.english_version }}</dt><dd>{{ row.english }}</dd>
+            <dt>{{ 'moderate.translation.live'|trans }}</dt><dd>{{ row.live }}</dd>
+          </dl>
+          <div class="row-meta is-stale">{{ 'moderate.translation.made_against'|trans({'%v%': row.made_against}) }}</div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+</div>
+{% endblock %}

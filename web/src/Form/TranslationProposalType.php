@@ -41,7 +41,7 @@ final class TranslationProposalType extends AbstractType
             ],
         ]);
 
-        if (true !== $options['standing']) {
+        if ($options['consent'] && true !== $options['standing']) {
             $builder->add('consent', CheckboxType::class, [
                 'label' => TranslationConsent::TEXT_KEY,
                 'mapped' => false,
@@ -60,7 +60,12 @@ final class TranslationProposalType extends AbstractType
         $resolver->setDefaults([
             'csrf_protection' => true,
             'standing' => false,
+            // English carries no CC BY-SA consent (translations.md §4.2, §6):
+            // it is product copy proposed by a curator, not a creative work
+            // licensed in by a rider.
+            'consent' => true,
         ]);
         $resolver->setAllowedTypes('standing', 'bool');
+        $resolver->setAllowedTypes('consent', 'bool');
     }
 }

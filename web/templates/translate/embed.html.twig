@@ -1,0 +1,24 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{# The drawer frame for translate mode (translations.md §4.1): the same form
+   as translate/edit.html.twig with no page chrome. Fetched, never navigated
+   to. Task 10 wires the drawer that loads this and its own styling; this
+   template only has to render the right markup. #}
+<div class="tr-embed" data-entry="{{ entry.id }}" data-locale="{{ locale }}">
+  <h2 class="tr-embed-key">{{ entry.messageKey }}</h2>
+  {% for msg in app.flashes('danger') %}<div class="flash-error" role="alert">{{ msg|trans }}</div>{% endfor %}
+  {% if sent %}
+    <div class="tr-embed-sent" role="status">
+      <p>{{ 'translate.flash.submitted'|trans }}</p>
+      <p class="tr-note">{{ 'translate.mode.not_live_yet'|trans }}</p>
+      <button type="button" class="tr-embed-close">{{ 'translate.mode.close'|trans }}</button>
+    </div>
+  {% else %}
+    {# Drains a stale success flash from an earlier full-page submit so it
+       never resurfaces on the next full page load. #}
+    {% for msg in app.flashes('success') %}{% endfor %}
+    {% include 'translate/_form.html.twig' %}
+    {% if can_english and not is_english %}
+      <a class="tr-embed-english" href="{{ path('translate_edit', {_locale: 'en', id: entry.id, embed: 1}) }}">{{ 'translate.mode.edit_english'|trans }}</a>
+    {% endif %}
+  {% endif %}
+</div>

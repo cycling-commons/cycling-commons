@@ -10,9 +10,11 @@ use App\Entity\User;
 use App\Translation\Entity\TranslationEntry;
 use App\Translation\Entity\TranslationProposal;
 use App\Translation\ProposalService;
+use App\Translation\TranslationCaches;
 use App\Translation\TranslationProposalStatus;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\HttpFoundation\Session\FlashBagAwareSessionInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 /**
@@ -31,6 +33,8 @@ final class TranslatePageTest extends WebTestCase
         string $email,
         string $plain,
         array $roles = [],
+        ?string $totpSecret = null,
+        bool $twoFaEnabled = false,
     ): User {
         $container = static::getContainer();
 
@@ -46,6 +50,16 @@ final class TranslatePageTest extends WebTestCase
         $user->setEmailVerifiedAt(new \DateTimeImmutable());
         $user->setRoles($roles);
         $user->setPassword($hasher->hashPassword($user, $plain));
+
+        // ROLE_CURATOR (and ROLE_ADMIN through the hierarchy) is redirected
+        // to /2fa/setup by TwoFactorSetupEnforcer on every page until TOTP is
+        // configured (docs/specs/account-and-auth.md §4). Any test that logs
+        // in a curator must set these, or it fails on a redirect rather than
+        // on the feature under test (see ModerateTranslationsTest).
+        if (null !== $totpSecret) {
+            $user->setTotpSecret($totpSecret);
+            $user->setTwoFaEnabled($twoFaEnabled);
+        }
 
         $em->persist($user);
         $em->flush();
@@ -376,5 +390,126 @@ final class TranslatePageTest extends WebTestCase
         $textarea = $crawler->filter('textarea[name="translation_proposal[value]"]');
         self::assertSame(1, $textarea->count());
         self::assertSame('', trim((string) $textarea->text()));
+    }
+
+    public function testStaleRowsCarryTagAndSortFirstAndChipFilters(): void
+    {
+        $client = static::createClient();
+        $user = $this->createUser('stale-list@example.com', 'hunter2secure!');
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $fresh = $this->seedEntry('aaa.fresh', 'Fresh');
+        $stale = $this->seedEntry('zzz.stale', 'Photos up to 5 MB');
+        $translator = static::getContainer()->get('translator');
+        $dutchBefore = $translator->trans('zzz.stale', [], 'messages', 'nl');
+        $stale->applyApprovedEnglish('Photos up to 10 MB');
+        $em->flush();
+        static::getContainer()->get(TranslationCaches::class)->invalidateAll();
+        $client->loginUser($user);
+
+        $html = (string) $client->request('GET', '/nl/translate')->html();
+        self::assertStringContainsString('v1 → v2', $html);
+        self::assertLessThan(strpos($html, 'aaa.fresh'), strpos($html, 'zzz.stale'), 'stale sorts first');
+
+        $crawler = $client->request('GET', '/nl/translate?stale=1');
+        self::assertStringContainsString('zzz.stale', $crawler->html());
+        self::assertStringNotContainsString('aaa.fresh', $crawler->filter('#main')->html());
+
+        // A stale translation STAYS LIVE: stale is a work list, never a
+        // fallback to English (translations.md §4, owner decision 2026-08-31).
+        // Pin that at the serving level, not just on the /translate list: the
+        // Dutch wording the site's translator hands out for this key is
+        // unaffected by the English change that just made it stale.
+        $dutchAfter = $translator->trans('zzz.stale', [], 'messages', 'nl');
+        self::assertSame($dutchBefore, $dutchAfter, 'a stale translation keeps serving its unchanged wording');
+        self::assertNotSame('Photos up to 10 MB', $dutchAfter, 'a stale translation must never silently become the new English');
+    }
+
+    public function testCuratorSeesEnglishCatalogueAndRiderSeesChooser(): void
+    {
+        $client = static::createClient();
+        $this->seedEntry('nav.map', 'Map');
+        $rider = $this->createUser('en-list-rider@example.com', 'hunter2secure!');
+        $client->loginUser($rider);
+        $crawler = $client->request('GET', '/translate');
+        self::assertStringContainsString('/fr/translate', $crawler->html());
+
+        $curator = $this->createUser('en-list-curator@example.com', 'hunter2secure!', ['ROLE_CURATOR'], totpSecret: 'JBSWY3DPEHPK3PXP', twoFaEnabled: true);
+        $client->loginUser($curator);
+        $crawler = $client->request('GET', '/translate?q=nav.map');
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('nav.map', $crawler->filter('#main')->html());
+        self::assertStringContainsString('/translate/', $crawler->filter('#main a.tr-row')->attr('href'));
+    }
+
+    public function testCuratorEnglishFormHasNoConsentAndSubmits(): void
+    {
+        $client = static::createClient();
+        $entry = $this->seedEntry('nav.map', 'Map');
+        $curator = $this->createUser('en-form@example.com', 'hunter2secure!', ['ROLE_CURATOR'], totpSecret: 'JBSWY3DPEHPK3PXP', twoFaEnabled: true);
+        $client->loginUser($curator);
+
+        $crawler = $client->request('GET', '/translate/'.$entry->getId());
+        self::assertResponseIsSuccessful();
+        self::assertSame(0, $crawler->filter('#main input[name="translation_proposal[consent]"]')->count());
+
+        $form = $crawler->filter('#main form.tr-form')->form(['translation_proposal[value]' => 'Map view']);
+        $client->submit($form);
+        self::assertResponseRedirects('/translate');
+        self::assertSame(1, $this->proposalCount());
+    }
+
+    public function testEmbedFrameRendersWithoutChromeAndAnswersSentOnPost(): void
+    {
+        $client = static::createClient();
+        $entry = $this->seedEntry('nav.map', 'Map');
+        $user = $this->createUser('embed@example.com', 'hunter2secure!');
+        $client->loginUser($user);
+
+        $crawler = $client->request('GET', '/nl/translate/'.$entry->getId().'?embed=1');
+        self::assertResponseIsSuccessful();
+        self::assertSame(0, $crawler->filter('nav.topnav')->count());
+        self::assertSame(1, $crawler->filter('form.tr-form')->count());
+
+        $form = $crawler->filter('form.tr-form')->form([
+            'translation_proposal[value]' => 'Kaart',
+            'translation_proposal[consent]' => true,
+        ]);
+        $client->submit($form);
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('tr-embed-sent', (string) $client->getResponse()->getContent());
+    }
+
+    /**
+     * A drawer POST leaves NOTHING in the flash bag (translations.md §4.1).
+     *
+     * translate/embed.html.twig renders the sent state from its own key and
+     * never drains the success bag on that branch, so a success flash added
+     * on the drawer path would survive in the session and reappear as a
+     * duplicate banner on the translator's next full page load, on a page
+     * that has nothing to do with the string they just proposed.
+     */
+    public function testADrawerPostLeavesNoPendingFlash(): void
+    {
+        $client = static::createClient();
+        $entry = $this->seedEntry('nav.map', 'Map');
+        $client->loginUser($this->createUser('embed-flash@example.com', 'hunter2secure!'));
+
+        $crawler = $client->request('GET', '/nl/translate/'.$entry->getId().'?embed=1');
+        self::assertResponseIsSuccessful();
+        $client->submit($crawler->filter('form.tr-form')->form([
+            'translation_proposal[value]' => 'Kaart',
+            'translation_proposal[consent]' => true,
+        ]));
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('tr-embed-sent', (string) $client->getResponse()->getContent());
+
+        $session = $client->getRequest()->getSession();
+        self::assertInstanceOf(FlashBagAwareSessionInterface::class, $session);
+        self::assertSame([], $session->getFlashBag()->peekAll(), 'the drawer path must add no flash');
+
+        // And nothing surfaces on the next full page load either.
+        $next = $client->request('GET', '/nl/translate');
+        self::assertResponseIsSuccessful();
+        self::assertSame(0, $next->filter('.flash-success')->count());
     }
 }
