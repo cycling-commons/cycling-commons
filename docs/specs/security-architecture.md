@@ -192,6 +192,18 @@ New pages with inline scripts should be added to `inlineScriptPages()`.
 **Rule: `|trans|raw` is banned.** Translation strings that carry inline
 markup (`<b>`, `<a href>`, `<code>`, …) render through `|trans|rich`. There
 are zero `|trans|raw` occurrences in `web/templates/`; keep it that way.
+Enforced by `web/tools/check-raw-translations.sh` (wired into `make
+app-test`), which greps every tracked Twig template for a `|trans` reaching
+`|raw` in one statement, filter form, function form, or the `{% apply raw
+%}{% trans %}…{% endapply %}` block form. The claim was untrue between the
+overlay feature landing and 2026-08-31:
+`web/templates/translate/_form.html.twig` (and, before it,
+`web/templates/translate/edit.html.twig`) rendered
+`{{ 'translate.consent.standing'|trans({'%date%': when})|raw }}` with no gate
+to catch it; a reviewer found it by reading the template, not by a failing
+check. The gate closes that gap for the single-statement shape; it does not
+and cannot cover the cross-statement, dataflow shape (security-architecture.md
+§4.1, category 3), which stays a human-review question.
 
 - `|rich` is `App\Twig\RichTranslationExtension`
   (`web/src/Twig/RichTranslationExtension.php`): it runs
@@ -220,7 +232,7 @@ convenience edit.
 
 ### 4.1 Server-rendered (Twig)
 
-Twig autoescape (framework default) covers everything. Exactly two `|raw`
+Twig autoescape (framework default) covers everything. Exactly three `|raw`
 categories are permitted:
 
 1. **`|rich` output** (security-architecture.md §3) — sanitizer-marked safe.
@@ -234,6 +246,58 @@ categories are permitted:
    `window.CC_MAP_SRC` in `web/templates/map/index.html.twig`) are encoded
    with `JSON_UNESCAPED_SLASHES` only; they contain no user input, but new
    code must use the `JSON_HEX` set.
+3. **Escaped catalogue text with a template-built element substituted into
+   it.** The ordering that makes this safe: translate with a placeholder
+   standing in for the parameter (a marker no translator would type), escape
+   the translated result, then substitute the template's own markup for the
+   placeholder, and only then `|raw` the assembled string. Everything that
+   reaches `|raw` is either catalogue text that has already been through
+   escaping, or markup the template itself wrote, never catalogue text that
+   goes straight to `|raw` unescaped. Doing the substitution *before*
+   escaping (interpolating the parameter, then escaping) defeats this: the
+   catalogue text would carry live HTML again. Two sites use this category,
+   with two different escaping mechanisms:
+   - **Explicit `|escape('html')` on a single-line `{% set %}`.**
+     `web/templates/translate/_form.html.twig` builds the "you already
+     consented on \<date\>" line. `standing.consentedAt` needs to render as
+     a real `<time datetime="…">` element, which `|rich`'s allowlist does
+     not carry, so the placeholder-substitution shape stands in for it:
+     ```twig
+     {% set standing_text = 'translate.consent.standing'|trans({'%date%': '%%DATE%%'})|escape('html') %}
+     {{ standing_text|replace({'%%DATE%%': when})|raw }}
+     ```
+     where `when` is a `<time>` element built entirely by the template, not
+     by the catalogue.
+   - **Twig's auto-escape running inside a `{% set %}…{% endset %}` block,
+     with no explicit `|escape` filter.** `web/templates/pages/coverage.html.twig`
+     (line number omitted deliberately: the file is under active edit by
+     another workstream) sorts the density/total columns by wrapping each
+     in its own template-written `<span>`, built with a block-form `{% set
+     %}`, then concatenating and `|raw`-ing the pair:
+     ```twig
+     {% set _density %}<span class="mval" data-m="density">{{ 'coverage.per_km2'|trans({...}) }}</span>{% endset %}
+     {% set _total %}<span class="mval" data-m="total">{{ c.coveragePois|number_format(...) }}</span>{% endset %}
+     {{ (sort == sort_total ? _total ~ _density : _density ~ _total)|raw }}
+     ```
+     No `|escape('html')` filter appears anywhere in this shape, and none is
+     needed: autoescape (the framework default named at the top of this
+     section) applies to every `{{ … }}` expression captured inside a
+     `{% set %}…{% endset %}` block exactly as it would on the page, so
+     `'coverage.per_km2'|trans({...})` is escaped before it ever reaches
+     `_density`. The `<span>` tags are, again, the template's own. This is
+     the same safety argument as the first site, carried by the language's
+     default behaviour instead of a filter written at the call site.
+
+   Both sites are cross-statement (dataflow) shapes:
+   `web/tools/check-raw-translations.sh` (security-architecture.md §3)
+   cannot verify either one, in either direction. A new site using either
+   variant of this category needs human review, the same as these two did.
+   A repo-wide search for the block-form variant
+   (`grep -rnP '\{%-?\s*set\s+[a-zA-Z_][a-zA-Z0-9_]*\s*-?%\}' web/templates/`)
+   turns up exactly these two files (three `{% set %}…{% endset %}` blocks:
+   `_form.html.twig`'s `when`, which carries no translation and is not this
+   category by itself, plus `coverage.html.twig`'s `_density` and `_total`);
+   there is no third site as of 2026-09-01.
 
 Any other `|raw` is a finding.
 

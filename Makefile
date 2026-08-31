@@ -167,7 +167,7 @@ app-serve: ## run the Symfony app locally at http://127.0.0.1:8010
 	cd web && php -S 127.0.0.1:8010 -t public
 
 app-test: ## run the app test suite + static analysis + gates
-	cd web && php bin/phpunit && vendor/bin/phpstan analyse --no-progress && vendor/bin/psalm --no-cache && vendor/bin/php-cs-fixer fix --dry-run --diff && ./tools/check-spdx.sh && ./tools/check-licenses.sh && ./tools/check-translations.sh
+	cd web && php bin/phpunit && vendor/bin/phpstan analyse --no-progress && vendor/bin/psalm --no-cache && vendor/bin/php-cs-fixer fix --dry-run --diff && ./tools/check-spdx.sh && ./tools/check-licenses.sh && ./tools/check-translations.sh && ./tools/check-raw-translations.sh
 	$(MAKE) scope-test
 
 scope-test: ## run the map scope-model + vendored-parser Node tests (no deps — node:test ships with Node ≥18)

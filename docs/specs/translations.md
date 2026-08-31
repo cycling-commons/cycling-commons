@@ -681,6 +681,11 @@ English.
   file, not an inline script; the CSP does not change.
 - `POST /translate/mode` carries the same stateless CSRF token as every other
   form.
+- The escaping/`|raw` posture for catalogue and overlay text (what `|rich`
+  covers, the `json_encode` exception, and the one template-built-element
+  exception) is the security-architecture.md §4.1 contract, gated by
+  security-architecture.md §3; this section only points there, it does not
+  restate it.
 
 ---
 
