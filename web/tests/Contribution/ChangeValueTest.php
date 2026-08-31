@@ -80,6 +80,28 @@ final class ChangeValueTest extends TestCase
         );
     }
 
+    /**
+     * A road-surface stretch reads as a shape, not as its coordinates.
+     *
+     * `segment` is {a, b, line}, and `line` is every vertex of the marked
+     * stretch: sixty pairs for a dike road. Printed raw it fills the card twice
+     * over, above a Before/After map switch already showing the same thing
+     * (owner-reported 2026-08-31). Same treatment `route` has always had.
+     */
+    public function testAMarkedStretchReadsAsLengthAndEndsRatherThanSixtyPairs(): void
+    {
+        $out = ChangeValue::format('segment', [
+            'a' => [5.107, 52.663],
+            'b' => [5.120, 52.650],
+            'line' => [[52.663, 5.107], [52.660, 5.112], [52.650, 5.120]],
+        ]);
+
+        self::assertStringContainsString('km', $out);
+        self::assertStringContainsString('3 points', $out);
+        self::assertStringNotContainsString('[[', $out, 'a coordinate list must never reach the card');
+        self::assertLessThan(120, \strlen($out), 'the summary has to fit a card, not fill one');
+    }
+
     /** Malformed geometry must degrade to something printable, never throw. */
     public function testMalformedGeometryDoesNotBlowUpTheCard(): void
     {
@@ -88,5 +110,7 @@ final class ChangeValueTest extends TestCase
         self::assertIsString(ChangeValue::format('grad', ['x', 'y']));
         self::assertIsString(ChangeValue::format('steep', 'nope'));
         self::assertIsString(ChangeValue::format('steep', ['pct' => '20%']));
+        self::assertIsString(ChangeValue::format('segment', 'not a segment'));
+        self::assertIsString(ChangeValue::format('segment', ['a' => [1, 2]]));
     }
 }

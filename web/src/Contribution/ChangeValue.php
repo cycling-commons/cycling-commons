@@ -28,6 +28,12 @@ final class ChangeValue
 
         return match ($field) {
             'route' => self::route($value),
+            // A road-surface stretch: {a, b, line}. Same reason as `route`,
+            // and the case that made it matter: an edit that changed only the
+            // shape printed sixty coordinate pairs twice, and the Before/After
+            // switch beneath it was already showing exactly that
+            // (owner-reported 2026-08-31).
+            'segment' => self::segment($value),
             'grad' => self::grad($value),
             'steep' => self::steep($value),
             default => self::scalar($value),
@@ -58,6 +64,32 @@ final class ChangeValue
             );
         }
         $parts[] = sprintf('%d points', \count($v));
+
+        return implode(' · ', $parts);
+    }
+
+    /**
+     * A marked stretch as length and endpoints, the way `route` reads.
+     *
+     * Falls back to the raw scalar only when the shape is not the {a, b, line}
+     * this field always carries, because a wrong guess reads worse than a dump.
+     */
+    private static function segment(mixed $v): string
+    {
+        if (!\is_array($v) || !isset($v['line']) || !\is_array($v['line']) || [] === $v['line']) {
+            return self::scalar($v);
+        }
+        $line = array_values($v['line']);
+        $km = self::lengthKm($line);
+        $parts = [sprintf('%.1f km', $km)];
+        $first = $line[0] ?? null;
+        $last = $line[\count($line) - 1] ?? null;
+        if (self::isPair($first) && self::isPair($last)) {
+            /* @var array{0: float|int|string, 1: float|int|string} $first */
+            /* @var array{0: float|int|string, 1: float|int|string} $last */
+            $parts[] = sprintf('%s → %s', self::point($first), self::point($last));
+        }
+        $parts[] = sprintf('%d points', \count($line));
 
         return implode(' · ', $parts);
     }

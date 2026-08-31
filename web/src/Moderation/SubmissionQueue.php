@@ -154,7 +154,18 @@ final class SubmissionQueue
         $was = [];
         $new = [];
         foreach ($changes as $field => $pair) {
-            // Geometry is summarised, not dumped (docs/specs/moderation-and-contribution.md §5.2a).
+            /* Geometry is reviewed on the map, never as text, exactly as
+               changeRows() below already does. This loop said so in a comment
+               and did not do it: an edit that changed only the shape printed
+               the whole coordinate list twice, directly above the Before/After
+               switch that was already showing it (owner-reported 2026-08-31).
+               With every shape field skipped, a shape-only edit leaves both
+               strings empty, the drawer renders no "Proposed change" block at
+               all, and the map switch is the whole review, which is the point
+               of having it. */
+            if (\in_array($field, self::SHAPE_FIELDS, true)) {
+                continue;
+            }
             if (null !== ($pair['was'] ?? null)) {
                 $was[] = $field.': '.ChangeValue::format($field, $pair['was']);
             }
