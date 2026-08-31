@@ -15,7 +15,6 @@ import { OSM_BULK, addWaterOsm, addOsmDots, setupConfClusters, updateConfMarkers
 import { trimEnds } from './item-index.js';
 import { sheet, initSheet } from './sheet.js';
 import { initLightbox } from './lightbox.js';
-import { initPlanner } from './planner.js';
 import { render, updateZoomHint } from './render.js';
 import { COVERAGE_ON, addCoverage, widenForDeepLink, openCoverageFeatureByName,
          openCoverageByOsmRef, fetchCoverageCounts, covShownCount } from './coverage.js';
@@ -289,7 +288,6 @@ import { layerGlyph } from './icons.js';
 
   initMapillaryDock();
 
-  initPlanner();
 
   // Catalog hot-refresh hook (catalog-load.js); window global because that
   // script cannot import.

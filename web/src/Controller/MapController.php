@@ -326,9 +326,6 @@ final class MapController extends AbstractController
             'youAnsweredOnForm' => 'd_you_answered_on_form', 'changeAnswer' => 'd_change_answer',
             'stateField' => 'd_state_field', 'stateSubmitted' => 'd_state_submitted', 'stateUnverified' => 'd_state_unverified',
             'stateVerified' => 'd_state_verified', 'stateRejected' => 'd_state_rejected',
-            'suggestedRoute' => 'd_suggested_route', 'start' => 'd_start', 'shape' => 'd_shape',
-            'roundtrip' => 'd_roundtrip', 'season' => 'd_season', 'why' => 'd_why', 'note' => 'd_note',
-            'popularSeason' => 'd_popular_season', 'fakedNote' => 'd_faked_note', 'fakedSrc' => 'd_faked_src',
         ];
 
         return [

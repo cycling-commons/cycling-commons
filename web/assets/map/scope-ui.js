@@ -247,7 +247,7 @@ export function initClickToScope(){
     // map scopes to the region under the point. Query only feature-layer ids
     // (not the whole style — basemap polygons would always look "non-empty").
     function selectableLayers(){
-      const ids=['mly-img','mly-cov','cov-sel-icon','planroute','planroute-case'];
+      const ids=['mly-img','mly-cov','cov-sel-icon'];
       COVERAGE_KEYS.forEach(([key])=>COVERAGE_CCS.forEach(cc=>{
         const id = cc ? key+'-'+cc+'-cov' : key+'-cov';
         ids.push(id);
