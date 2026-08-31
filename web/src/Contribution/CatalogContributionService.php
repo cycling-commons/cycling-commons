@@ -280,6 +280,40 @@ final class CatalogContributionService implements ContributionStubInterface
         return 6371000.0 * sqrt($dx * $dx + $dy * $dy);
     }
 
+    /**
+     * A revision adds to the proposal; it never replaces it.
+     *
+     * The second round is diffed against the ITEM, and for a submission that
+     * created the item the item already holds round one's values. So round two
+     * finds them unchanged, records nothing for them, and replacing the map
+     * with that result erased them from the review: a rider filed a road with
+     * surface, road type, smoothness and traffic, lengthened the stretch, and
+     * the curator was left looking at a shape with no values at all
+     * (owner-reported 2026-08-31). They were still being proposed. The item
+     * carries them, in state `submitted`, waiting on the same decision.
+     *
+     * `was` stays the one from the round that first touched the field, because
+     * that is the value the item had before this submission started. `now` is
+     * always the newest. `+` on arrays would have kept the older `now`, which
+     * is why this is a loop and not a union: {@see suggestPhotoAlt()} merges
+     * disjoint keys and can use `+` safely; here the keys collide by design.
+     *
+     * @param array<string, mixed> $open  the changes already on the submission
+     * @param array<string, mixed> $fresh this round's diff against the item
+     *
+     * @return array<string, mixed>
+     */
+    private static function mergeChanges(array $open, array $fresh): array
+    {
+        foreach ($fresh as $field => $pair) {
+            $open[$field] = (isset($open[$field]) && \is_array($open[$field]) && \is_array($pair))
+                ? ['was' => $open[$field]['was'] ?? null, 'now' => $pair['now'] ?? null]
+                : $pair;
+        }
+
+        return $open;
+    }
+
     /** @param array<string, mixed> $payload */
     private function submitImprove(array $payload, User $by): ContributionReceipt
     {
@@ -374,8 +408,9 @@ final class CatalogContributionService implements ContributionStubInterface
         $open = $this->openSubmissionFor((int) $item->getId(), $by);
         if (null !== $open) {
             // Edit carries no attributes column; apply the was/now map on approve.
-            $this->em->wrapInTransaction(function () use ($open, $changes, $payload): void {
-                $open->setChanges($changes)
+            $merged = self::mergeChanges($open->getChanges(), $changes);
+            $this->em->wrapInTransaction(function () use ($open, $merged, $payload): void {
+                $open->setChanges($merged)
                     ->setPayload($payload)
                     ->setStatus(SubmissionStatus::Pending)
                     // Clear the previous round's verdict from a freshly revised submission.

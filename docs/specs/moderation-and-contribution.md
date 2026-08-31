@@ -1171,10 +1171,20 @@ the curator's question attached to the abandoned one.
   not what the item currently says. Answering "is that ending really right?"
   was otherwise impossible: the form showed the current climb, and re-submitting
   would have re-proposed the item's own values.
-- **Submitting amends.** `CatalogContributionService::improve()` looks for the
-  rider's own undecided submission on that item
+- **Submitting amends, and amending ADDS.** `CatalogContributionService::improve()`
+  looks for the rider's own undecided submission on that item
   (`openSubmissionFor()`: status `pending` or `needs_info`) and updates its
-  `changes` and `payload` in place. **The reference is unchanged**, so the
+  `changes` and `payload` in place. The new round is **merged into** the
+  existing `changes`, never substituted for it
+  (`CatalogContributionService::mergeChanges()`), because the second round is
+  diffed against the ITEM and the item already holds the first round's values
+  while the submission is still pending. Replacing left the curator reviewing
+  only whatever the rider touched last: a road filed with a surface, a road
+  type and a smoothness, then lengthened, showed a shape and no values at all,
+  and would have been approved on values never shown (owner-reported
+  2026-08-31). `was` keeps the value from the round that first touched the
+  field, since that is what the item held before the submission began; `now` is
+  always the newest. **The reference is unchanged**, so the
   message thread the rider and curator have already exchanged still names the
   thing they are discussing.
 - **It returns to `pending`**, and the previous round's `decision_note` /

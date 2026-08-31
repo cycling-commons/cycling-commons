@@ -260,6 +260,62 @@ final class ImproveBindingTest extends WebTestCase
     }
 
     /**
+     * A revision ADDS to the proposal. It must never erase the earlier round.
+     *
+     * The second round is diffed against the ITEM, and the item already holds
+     * round one's values while the submission is still pending. So round two
+     * finds them unchanged and records nothing for them. Replacing the map
+     * with that result left the curator reviewing whatever the rider touched
+     * last and nothing else: a road filed with a surface, a road type and a
+     * smoothness, then lengthened, showed a shape and no values at all
+     * (owner-reported 2026-08-31). They were still being proposed, and the
+     * curator would have approved values never shown to them.
+     */
+    public function testARevisionKeepsWhatTheEarlierRoundProposed(): void
+    {
+        self::bootKernel();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $service = static::getContainer()->get(\App\Service\ContributionStubInterface::class);
+
+        $item = (new Item())->setLetter('D')->setName('Repair station · Revision')
+            ->setGeom('{"type":"Point","coordinates":[6.028,50.427]}')->setCountryCode('BE')
+            ->setState(ItemState::Unverified)->setSource(ItemSource::Osm)->setSourceRef('node/999011')
+            ->setAttributes([]);
+        $rider = (new User())->setEmail('reviser@test.test');
+        $rider->setPassword('x');
+        $em->persist($item);
+        $em->persist($rider);
+        $em->flush();
+
+        $payload = [
+            '_item_id' => $item->getId(), 'type' => 'bike-services',
+            'extras' => [], 'lat' => '50.427', 'lng' => '6.028',
+        ];
+        $service->submit('improve', ['details' => ['pumpValve' => 'Presta + Schrader']] + $payload, $rider);
+
+        // The rider files the first round, so the item now carries it. Round
+        // two touches a different field only, exactly as lengthening a stretch
+        // leaves every form field alone.
+        $open = $service->openSubmissionFor((int) $item->getId(), $rider);
+        self::assertNotNull($open);
+        $item->setAttributes($item->getAttributes() + ['pumpValve' => 'Presta + Schrader']);
+        $em->flush();
+
+        $second = $service->submit('improve', ['details' => ['pumpKind' => 'Floor pump']] + $payload, $rider);
+        $open = $em->getRepository(Submission::class)->find((int) $second->submissionId);
+        self::assertNotNull($open);
+
+        $changes = $open->getChanges();
+        self::assertArrayHasKey('pumpKind', $changes, 'the new round has to be recorded');
+        self::assertArrayHasKey(
+            'pumpValve',
+            $changes,
+            'the first round is still being proposed and must stay in the review',
+        );
+        self::assertSame('Presta + Schrader', $changes['pumpValve']['now'] ?? null);
+    }
+
+    /**
      * A rider revising an undecided submission AMENDS it (owner decision,
      * 2026-08-04) — "he needs to update his update".
      *
