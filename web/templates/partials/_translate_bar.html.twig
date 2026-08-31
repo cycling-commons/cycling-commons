@@ -13,10 +13,23 @@
    embed.html.twig's own header names this file as the place they get their
    first styling. #}
 <style>
+  {# The fixed near-ink rgba below was tuned for the paper-background chrome
+     the bar itself sits in. A spanning mark (translations.md §4.1) can now
+     land on a block element anywhere on the page, including the homepage
+     hero, whose colours run text-cream on background-ink: an ink-coloured
+     line is invisible against an ink background. currentColor ties the
+     underline and the hover/focus affordance to whatever colour the hit's
+     own text already resolves to, so the mark stays visible on either kind
+     of background without knowing which one it landed on. Each rgba rule
+     stays first as the fallback for a browser without color-mix(): the
+     second declaration is simply invalid there and dropped, leaving today's
+     look everywhere the mark already worked. #}
   .tr-hit{box-shadow:inset 0 -2px 0 rgba(20,22,14,.35);cursor:default}
+  .tr-hit{box-shadow:inset 0 -2px 0 color-mix(in srgb,currentColor 42%,transparent)}
   .tr-hit.is-stale{box-shadow:inset 0 -2px 0 #b8781a;background:rgba(184,120,26,.10)}
   body.tr-editing .tr-hit{cursor:pointer}
   body.tr-editing .tr-hit:hover,body.tr-editing .tr-hit:focus{background:rgba(20,22,14,.08);outline:2px solid var(--ink);outline-offset:1px}
+  body.tr-editing .tr-hit:hover,body.tr-editing .tr-hit:focus{background:color-mix(in srgb,currentColor 10%,transparent);outline:2px solid currentColor;outline-offset:1px}
   #tr-bar{position:fixed;left:0;right:0;bottom:0;z-index:900;display:flex;gap:.8rem;align-items:center;flex-wrap:wrap;padding:.55rem 1rem;background:var(--ink);color:var(--paper);font-family:var(--mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase}
   #tr-bar .tr-seg button{font:inherit;color:inherit;background:transparent;border:1px solid rgba(255,255,255,.4);padding:.35rem .6rem;border-radius:4px;cursor:pointer}
   #tr-bar .tr-seg button[aria-pressed="true"]{background:var(--paper);color:var(--ink)}

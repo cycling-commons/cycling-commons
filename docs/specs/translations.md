@@ -416,15 +416,52 @@ contains one is untouched.
   The bar hands it the edit URL as a base and a suffix and the script puts
   the entry id between them, rather than substituting into a finished URL.
 
-**Known limit: a key whose English contains a tag is not clickable on the
-page.** The script pairs a start mark with an end mark inside ONE text node,
-and a string carrying markup (`<b>`, `<a>`, a `<br>`) is several text nodes
-by the time the browser has parsed it, so the pair never matches. The marks
-are stripped and the string renders exactly as it always does; it simply has
-no `.tr-hit` around it and nothing happens on a click. About 145 English keys
-are in that class. This is a limit, not a gap in coverage: every one of them
-is still listed, searchable and editable on `/translate`, which is one click
-away in the same account menu that switches the mode on.
+**A key whose English contains a tag is clickable too, on the element that
+brackets it.** A string carrying markup (`<b>`, `<a>`, a `<br>`) is several
+text nodes by the time the browser has parsed it, so its start mark and end
+mark never share ONE text node and the same-node pass above never matches
+it. A second pass walks text nodes looking for a start mark with no end in
+its own node, walks forward to the next node that carries a mark end NOT
+already spoken for by a start earlier in that same node (see the paragraph
+below on why that qualifier matters), and takes the closest common ancestor
+ELEMENT of the two: on the homepage hero that is the `<h1>` itself. It
+claims that element directly, putting `tr-hit`, `data-tr` and `data-stale`
+on it instead of on a span inside it, and strips every mark out of its
+descendant text nodes. The bar's counts include it exactly as they would a
+same-node hit; `.tr-hit`'s underline on a block element reads as a line
+under the whole block, which is deliberate, not a same-node span squeezed to
+look that way.
+
+**A translated parameter nested inside the string does not defeat this.**
+`improve.lifecycle.funnel_votable` reads `'... pin. <b>%type%</b> can also
+be voted on...'`, and the template resolves `%type%` through its own
+`|trans` call before the outer key is marked
+(`'...'|trans({'%type%': item_type.labelKey|trans})|rich`), so the rendered
+markup nests one mark pair inside another, inside the `<b>`. That inner pair
+opens and closes within a single text node, exactly like an ordinary
+same-node hit, so the pass discards it the same way the same-node pass
+already discards a nested parameter: the outer key wins, inner marks go.
+Concretely, before counting marks toward the ancestor it might claim, the
+pass discards every pair that both opens and closes within ONE text node,
+counting only what is left; a nested parameter always nets to nothing, so it
+never affects the count, and the outer pair still claims its ancestor
+correctly. The same discard is why the closest-end search above skips a
+node's own self-contained pair: pairing the outer start with the nested
+parameter's end, rather than the outer's own end further on, would stop the
+search short and misidentify the ancestor.
+
+The one shape this still declines is two INDEPENDENT marked strings sharing
+a parent, neither containing the other (true siblings, not one nested inside
+the other): if the ancestor it would claim brackets more than one start mark
+or more than one end mark once every self-contained same-node pair has been
+discarded, claiming it would swallow both strings into one hit, so the pass
+leaves it alone. Both strings are stripped and render exactly as they always
+did, with no `.tr-hit` around either and nothing happens on a click. This is
+a limit, not a gap in coverage: every key in that class is still listed,
+searchable and editable on `/translate`, which is one click away in the same
+account menu that switches the mode on. No template in this codebase
+currently produces that shape (checked while fixing the nested-parameter
+case above); the guard exists for the day one does.
 
 **The bar** sits at the bottom of the page while the mode is on: the count
 of marked strings, the count of stale ones, an **Edit | Browse** switch, and
