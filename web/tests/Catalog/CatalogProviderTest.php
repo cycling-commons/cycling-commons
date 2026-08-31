@@ -291,6 +291,40 @@ final class CatalogProviderTest extends KernelTestCase
         self::assertGreaterThan(0, $seg['id']);
     }
 
+    /**
+     * A road surface carries who filed it, on the same terms as every other
+     * layer.
+     *
+     * This shape carried no contributor at all, so the drawer fell back to
+     * citing OSM for a surface, a smoothness and a traffic level a rider had
+     * typed (owner-reported 2026-08-31). OSM is still the source of the LINE,
+     * which `srcType` and the provenance line under the name say; it is not the
+     * source of the values.
+     *
+     * The consent rule is the part that has to match `mapRow()` exactly: named
+     * only with a public profile, fail-closed to anonymous, never a leaked
+     * name. `by` absent entirely means a harvested row nobody filed.
+     */
+    public function testASurfaceSegmentSaysWhoFiledIt(): void
+    {
+        $seg = $this->payload()['A'][0];
+
+        // The fixture's row is harvested, so it must name nobody at all: an
+        // absent `by` is the honest answer, not `by:0`, which claims a rider.
+        self::assertArrayNotHasKey('byName', $seg, 'a harvested row has no contributor to name');
+
+        // What the shape must be capable of carrying, so the drawer can read it.
+        $reflection = new \ReflectionMethod(CatalogProvider::class, 'surfaceSegments');
+        self::assertTrue($reflection->isPrivate(), 'surfaceSegments stays internal');
+        $src = file_get_contents((string) $reflection->getFileName());
+        self::assertIsString($src);
+        self::assertStringContainsString("\$seg['by'] = \$public ? 1 : 0;", $src,
+            'the segment must carry `by`, or the drawer has nobody to name');
+        self::assertStringContainsString("\$seg['byName'] = (string) \$row['by_name'];", $src);
+        self::assertStringContainsString('if ($public) {', $src,
+            'a name may only be shown with a public profile');
+    }
+
     public function testRouteShapeAndHeat(): void
     {
         $p = $this->payload();

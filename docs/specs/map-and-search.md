@@ -548,9 +548,9 @@ for one thing in five languages. Fixed across all five.
   refused, not truncated. Pinned by `RegionAboutTextTest`.
 
   **The hero opens with the same three figures as `/coverage`**, in the same
-  order and under the same labels: reference places on file, verified items,
+  order and under the same labels: reference items on file, verified items,
   routes. A region page that opened with only the last two made a region
-  holding thousands of reference places look like it held three, and asked a
+  holding thousands of reference items look like it held three, and asked a
   reader moving between the two pages to learn the vocabulary twice. The total
   is summed from the per-letter counts the by-kind block already fetches, not
   queried again, and is zero when the pipeline's `coverage_poi` is absent.
@@ -632,6 +632,35 @@ four returned once the reason they looked broken was fixed:
   one-file edit rather than a way to empty a layer.
 - The accessibility filter applies to the stays dot layer (`setFilter`), the
   clustered confirmed pins, and the legend counts alike.
+- **Road surface (A) is an OVERLAY, not a data layer (2026-08-31).** It had a
+  row in Data layers *and* a Surfaces switch in Map overlays, one word apart, in
+  two different groups. Worse than confusing: they were not independent. The OSM
+  skin hides itself wherever a catalog item exists for that way
+  (`CC_CURATED_REFS`), so any rule that dropped our line while leaving the skin
+  hidden did not fall back to OSM. It left the road blank and the basemap showed
+  through, which is what a rider saw as a road "going orange" after a third
+  confirmation.
+
+  One control now, the overlay switch, which drives the skin and our items
+  together so the pair can never be half on (`catalog.js` `overlay: true`, and
+  `catalogUtility()` excludes overlays). And our items honour **neither the
+  view-mode rungs nor the region scope**, because the skin honours neither: that
+  agreement is the whole fix. Two absent gates rather than a second dedupe list,
+  because a list computed on the client could only name the way each segment is
+  filed under and never the ways it spans, trading a vanishing road for a
+  doubled one. Pinned by `surface-is-an-overlay.test.cjs`.
+
+  The letter stays. `A` is still the catalog type, the API type, the
+  contribution type and what the coverage page counts; only the map's control
+  moved.
+- **A surface segment names who filed it (2026-08-31).** The segment shape
+  served in `CC_SURFACE` carried no contributor, so a road a rider had described
+  showed the OSM citation and nobody's name, while every other layer credited
+  its author. `CatalogProvider::surfaceSegments()` now carries `by`/`byName`/
+  `byUuid` on the same terms as `mapRow()`: named only with a public profile,
+  fail-closed to anonymous, never a leaked name. OSM remains the source of the
+  LINE, which `srcType` and the provenance line under the name still say; it was
+  never the source of the values.
 - **Discipline chips (`#disc`): RETIRED (2026-08-03).** They were re-based onto
   the 7 `RidingStyle` values and preselected from the rider's saved styles, but
   they never filtered anything, because no server path tags an item with a

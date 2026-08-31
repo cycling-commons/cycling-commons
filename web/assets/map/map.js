@@ -169,6 +169,11 @@ import { layerGlyph } from './icons.js';
       return {
         id:s.id, rid:s.rid, name:s.name, headline:`${trVal(s.surface)} · ${trVal(s.smoothness)}`, cur:(s.cls!=='paved'), edit:'road-surface',
         geom:{path:s.path}, surfaceClass:s.cls, width:s.width, smoothness:s.smoothness,
+        /* Who filed it. Every other layer's drawer names the rider; this shape
+           carried no contributor, so the drawer cited OSM for values a rider
+           typed. by:0 is a rider who has not made their profile public, and
+           reads as "Shared anonymously" rather than as nobody. */
+        by:s.by, byName:s.byName, byUuid:s.byUuid, srcType:s.srcType,
         photo: s.photoFile ? wc(s.photoFile, s.photoCredit, s.photoUser, s.photoLicense) : undefined,
         source:isRiderSource(s.srcType) ? sourceLabel(s.srcType) : 'OSM (surface=*)',
         record:rec

@@ -268,9 +268,20 @@ export const surfaceClsLayerIds=()=>SURFACE_CLS.map(c=>'surface-cls-'+c);
 const CURATED_SM_TONE={excellent:'#1E8E4F',good:'#5FA845',intermediate:'#D9A62E',bad:'#D4763B',very_bad:'#C2402F'};
 export function renderSurfaceLayer(layer, visible){
   const feats=[];
+  /* Neither the rung gate nor the scope gate. Road surface is an OVERLAY, not
+     a data layer, and it has to agree with the OSM skin underneath it, because
+     the skin hides itself wherever we hold an item for that way. Any rule that
+     drops our line while leaving the skin hidden does not fall back to OSM: it
+     leaves the road blank, and the basemap shows through
+     (owner-reported 2026-08-31, a road that "went orange" after a third
+     confirmation).
+
+     The skin honours neither rung nor scope, so neither do we. That is the
+     whole of the agreement, and it is why this is two absent gates rather than
+     a second dedupe list: a list computed here could only name the way each
+     segment is filed under, never the ways it spans, so it would trade a
+     vanishing road for a doubled one. */
   if(visible) layer.features.forEach((f,i)=>{
-    if(!modeShows(mode(), layer, f)) return;         // the rung rule, shared with featureVisible() via filters.js
-    if(!inScope(f.rid)) return;                        // docs/specs/map-and-search.md §4.5 — region scope gate.
     const sm=(f.smoothness||'').toLowerCase().replace(/\s+/g,'_');
     feats.push({type:'Feature',
       properties:{idx:i, cls:SURFACE_STYLE[f.surfaceClass]?f.surfaceClass:'other',

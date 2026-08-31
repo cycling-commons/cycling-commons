@@ -11,7 +11,15 @@ import { escPend } from './util.js';
 export const TYPE_ICON = l => (((window.CC_TYPE_ICONS || {})[l] || {}).glyph) || '\u2022';
 export const TYPE_SVG = l => (((window.CC_TYPE_ICONS || {})[l] || {}).svg) || '';
 export const CATALOG = [
-  { key:'surface', letter:'A', label:LAYER_L10N.surface||'Road surface', color:'#4E8C84', icon:TYPE_ICON('A'), kind:'surface', exp:true, votable:false, features:[] }
+  /* A · Road surface is an OVERLAY, not a data layer: it answers "what is
+     under my tyres on this road", which is a property of the map rather than a
+     set of places on it. It had a row in Data layers AND a Surfaces switch in
+     Map overlays, one word apart, and the two quietly handed work to each other
+     through the curated-ref dedupe: a road could fall between them and vanish
+     (owner-reported 2026-08-31). One control now, the overlay switch.
+     `overlay: true` keeps it out of the layer list while render() still walks
+     it. */
+  { key:'surface', letter:'A', label:LAYER_L10N.surface||'Road surface', color:'#4E8C84', icon:TYPE_ICON('A'), kind:'surface', exp:true, votable:false, overlay:true, features:[] }
   ,{ key:'climbs', letter:'N', label:LAYER_L10N.climbs||'Climbs', color:'#6A2C8F', icon:TYPE_ICON('N'), kind:'point', exp:true, votable:true, features:[] }
   ,{ key:'water', letter:'B', label:LAYER_L10N.water||'Water & food', color:'#8FB6A8', icon:TYPE_ICON('B'), kind:'point', exp:false, votable:false, features:[] }
   ,{ key:'toilets', letter:'C', label:LAYER_L10N.toilets||'Public toilets', color:'#4E6E8C', icon:TYPE_ICON('C'), kind:'point', exp:false, votable:false, features:[] }
@@ -68,7 +76,7 @@ export const CITIES = {
 export const cityLink = name => `<a class="cc-city" data-city="${escPend(name)}">${escPend(name)}</a>`;
 
 // Functions, not constants: the curator-only pending layer is pushed into CATALOG at runtime.
-export const catalogUtility = () => CATALOG.filter(l => !l.votable && !l.pendingLayer);
+export const catalogUtility = () => CATALOG.filter(l => !l.votable && !l.pendingLayer && !l.overlay);
 export const catalogVotable = () => CATALOG.filter(l => l.votable && !l.pendingLayer);
 export const catalogModeration = () => CATALOG.filter(l => l.pendingLayer);
 

@@ -122,12 +122,22 @@ export function initLayerList(){
     surfBtn.hidden=false;
     surfBtn.onclick=()=>{
       const on=setSurfaceTiles(!surfaceTilesVisible());
+      /* One switch for the whole thing. The OSM skin and the items riders have
+         corrected are one answer to one question, and they used to be two
+         controls a word apart in two different groups (catalog.js). Our items
+         follow the same switch, so the pair can never be half on: the skin
+         hides itself wherever we hold an item, and a skin hidden with nothing
+         drawn over it is a blank road. */
+      if(on) active.add('surface'); else active.delete('surface');
+      render();
       paintOverlay(surfBtn, on);
       if(on && map.getZoom() < CLASSIFIED_MIN_ZOOM){
         mapToast(I18N.zoomForSurfaces||'Zoom in to see road surfaces');
       }
       syncStudyGate(); syncLegend();
     };
+    /* The switch starts off, so the items do too. */
+    if(!surfaceTilesVisible()) active.delete('surface');
     map.on('zoomend', ()=>paintOverlay(surfBtn, surfaceTilesVisible()));
   }
 
