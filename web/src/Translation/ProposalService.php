@@ -25,6 +25,7 @@ use Doctrine\DBAL\ParameterType;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
+use Symfony\Component\Security\Core\Role\RoleHierarchyInterface;
 use Symfony\Component\Uid\Uuid;
 
 /**
@@ -42,13 +43,25 @@ final class ProposalService
         private readonly EntityManagerInterface $em,
         private readonly TranslationConsentService $consent,
         private readonly RateLimiterFactoryInterface $translationProposeLimiter,
+        private readonly RoleHierarchyInterface $roleHierarchy,
     ) {
     }
 
     /**
+     * Whether this user may propose a new English wording
+     * (translations.md §4.2). `ROLE_ADMIN` implies `ROLE_CURATOR` through the
+     * role hierarchy, so this checks the reachable set, not the literal
+     * roles on the row.
+     */
+    public function canProposeEnglish(User $user): bool
+    {
+        return \in_array('ROLE_CURATOR', $this->roleHierarchy->getReachableRoleNames($user->getRoles()), true);
+    }
+
+    /**
      * @throws TooManyRequestsHttpException    over the hourly proposal limit
-     * @throws ConsentRequiredException        when there is no current consent and no tick
-     * @throws EnglishNotTranslatableException when locale is en
+     * @throws ConsentRequiredException        when there is no current consent and no tick, for a rider locale
+     * @throws EnglishNotTranslatableException when locale is en and the user cannot propose English
      * @throws InvalidLocaleException          locale is not a translatable one
      * @throws KeyNotFoundException            when the entry is marked absent
      * @throws EmptyTranslationException       when the value is empty after trim
@@ -62,16 +75,18 @@ final class ProposalService
         string $value,
         bool $consentTick,
     ): TranslationProposal {
-        $currentConsent = $this->consent->current($user);
-        if (!$consentTick && null === $currentConsent) {
-            throw new ConsentRequiredException('Consent tick required.');
+        $isEnglish = 'en' === $locale;
+        if ($isEnglish && !$this->canProposeEnglish($user)) {
+            throw new EnglishNotTranslatableException('English is proposed by curators only (translations.md §4.2).');
+        }
+        if (!$isEnglish && !TranslationLimits::isTranslatableLocale($locale)) {
+            throw new InvalidLocaleException(sprintf('Locale "%s" is not translatable.', $locale));
         }
 
-        if ('en' === $locale) {
-            throw new EnglishNotTranslatableException('English is not proposed from the website.');
-        }
-        if (!TranslationLimits::isTranslatableLocale($locale)) {
-            throw new InvalidLocaleException(sprintf('Locale "%s" is not translatable.', $locale));
+        // English edits are product copy, not a CC BY-SA grant (translations.md §6).
+        $currentConsent = $isEnglish ? null : $this->consent->current($user);
+        if (!$isEnglish && !$consentTick && null === $currentConsent) {
+            throw new ConsentRequiredException('Consent tick required.');
         }
 
         if (null !== $entry->getAbsentAt()) {
@@ -126,7 +141,7 @@ final class ProposalService
             throw new TooManyRequestsHttpException(null, 'Too many translation proposals.');
         }
 
-        $consentRecord = $currentConsent ?? $this->consent->record($user);
+        $consentRecord = $isEnglish ? null : ($currentConsent ?? $this->consent->record($user));
 
         $open = $this->findOpenProposal($userId, $locale, $entry);
         if (null !== $open) {
@@ -136,7 +151,7 @@ final class ProposalService
             $open->setReviewerId(null);
             $open->setReviewerNote(null);
             $open->setDecidedAt(null);
-            if (!$this->consentStillCurrent($open->getConsentRecordId())) {
+            if (null !== $consentRecord && (null === $open->getConsentRecordId() || !$this->consentStillCurrent($open->getConsentRecordId()))) {
                 $open->setConsentRecordId($consentRecord->getId());
             }
             $this->em->flush();
@@ -150,7 +165,8 @@ final class ProposalService
             $value,
             $entry->getEnglish(),
             $userId,
-            $consentRecord->getId(),
+            $consentRecord?->getId(),
+            $entry->getEnglishVersion(),
         );
         $this->em->persist($proposal);
         try {

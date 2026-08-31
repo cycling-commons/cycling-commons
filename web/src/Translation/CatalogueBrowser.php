@@ -9,6 +9,7 @@ namespace App\Translation;
 use App\Entity\User;
 use App\Pagination\Pager;
 use App\Translation\Entity\TranslationEntry;
+use App\Translation\Entity\TranslationOverlay;
 use App\Translation\Entity\TranslationProposal;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
@@ -39,59 +40,70 @@ final class CatalogueBrowser
 
     /**
      * @return array{
-     *     rows: list<array{id: int, message_key: string, english: string, live: string, has_pending: bool}>,
+     *     rows: list<array{id: int, message_key: string, english: string, yaml_default: string, live: string, has_pending: bool, stale: bool, english_version: int, made_against: int}>,
      *     pager: array{page: int, pages: int, total: int, perPage: int, offset: int, prev: ?int, next: ?int}
      * }
      */
-    public function search(string $q, string $locale, int $page, int $perPage): array
+    public function search(string $q, string $locale, int $page, int $perPage, bool $staleOnly = false): array
     {
         // The consent contracts are not offered: see ProtectedKeys.
-        $where = ['absent_at IS NULL', 'message_key NOT IN (:protected)'];
+        $where = ['e.absent_at IS NULL', 'e.message_key NOT IN (:protected)'];
         $params = ['protected' => ProtectedKeys::KEYS];
         $types = ['protected' => ArrayParameterType::STRING];
 
         $q = trim($q);
         if ('' !== $q) {
             // ILIKE wildcards escaped in the bound value, never concatenated into SQL.
-            $where[] = '(message_key ILIKE :q OR english ILIKE :q)';
+            $where[] = '(e.message_key ILIKE :q OR e.english ILIKE :q)';
             $params['q'] = '%'.$this->escapeIlike($q).'%';
         }
 
+        // One copy of the stale predicate, shared with StaleIndex: the two
+        // had already drifted on the protected-key exclusion (translations.md
+        // §3.3). The aliases `e` and `o` below are what it expects.
+        $staleSql = StaleIndex::PREDICATE_SQL;
+        $from = 'translation_entry e LEFT JOIN translation_overlay o ON o.entry_id = e.id AND o.locale = :locale';
+        $params['locale'] = $locale;
+        if ($staleOnly) {
+            $where[] = $staleSql;
+        }
         $whereSql = implode(' AND ', $where);
-        $total = (int) $this->db->fetchOne(
-            "SELECT COUNT(*) FROM translation_entry WHERE {$whereSql}",
-            $params,
-            $types,
-        );
 
+        $total = (int) $this->db->fetchOne("SELECT COUNT(*) FROM {$from} WHERE {$whereSql}", $params, $types);
         $pager = Pager::of($page, $total, $perPage);
 
-        /** @var list<array{id: int|string, message_key: string, english: string}> $raw */
+        /** @var list<array{id: int|string, message_key: string, english: string, english_yaml: string, english_version: int|string, made_against: int|string, stale: bool|string, overlay_value: ?string}> $raw */
         $raw = $this->db->fetchAllAssociative(
-            "SELECT id, message_key, english
-             FROM translation_entry
+            "SELECT e.id, e.message_key, e.english, e.english_yaml, e.english_version,
+                    COALESCE(o.english_version, e.yaml_english_version) AS made_against,
+                    ({$staleSql}) AS stale, o.value AS overlay_value
+             FROM {$from}
              WHERE {$whereSql}
-             ORDER BY message_key ASC
+             ORDER BY ({$staleSql}) DESC, e.message_key ASC
              LIMIT {$pager['perPage']} OFFSET {$pager['offset']}",
             $params,
             $types,
         );
 
-        $overlayMap = $this->overlays->map($locale);
         $entryIds = array_map(static fn (array $r): int => (int) $r['id'], $raw);
         $pendingIds = $this->pendingEntryIds($locale, $entryIds);
 
+        $isEnglish = 'en' === $locale;
         $rows = [];
         foreach ($raw as $row) {
             $key = $row['message_key'];
-            $yamlDefault = $this->yamlTranslator->trans($key, [], 'messages', $locale);
             $id = (int) $row['id'];
+            $yamlDefault = $isEnglish ? (string) $row['english_yaml'] : $this->yamlTranslator->trans($key, [], 'messages', $locale);
             $rows[] = [
                 'id' => $id,
                 'message_key' => $key,
-                'english' => $row['english'],
-                'live' => $overlayMap[$key] ?? $yamlDefault,
+                'english' => (string) $row['english'],
+                'yaml_default' => $yamlDefault,
+                'live' => $isEnglish ? (string) $row['english'] : ((string) ($row['overlay_value'] ?? $yamlDefault)),
                 'has_pending' => isset($pendingIds[$id]),
+                'stale' => !$isEnglish && (bool) $row['stale'],
+                'english_version' => (int) $row['english_version'],
+                'made_against' => (int) $row['made_against'],
             ];
         }
 
@@ -99,17 +111,31 @@ final class CatalogueBrowser
     }
 
     /**
-     * @return array{yaml_default: string, live: string}
+     * @return array{yaml_default: string, live: string, stale: bool, english_version: int, made_against: int}
      */
     public function liveFor(TranslationEntry $entry, string $locale): array
     {
         $key = $entry->getMessageKey();
+        if ('en' === $locale) {
+            return [
+                'yaml_default' => $entry->getEnglishYaml(),
+                'live' => $entry->getEnglish(),
+                'stale' => false,
+                'english_version' => $entry->getEnglishVersion(),
+                'made_against' => $entry->getEnglishVersion(),
+            ];
+        }
         $yamlDefault = $this->yamlTranslator->trans($key, [], 'messages', $locale);
         $overlayMap = $this->overlays->map($locale);
+        $overlay = $this->em->getRepository(TranslationOverlay::class)->findOneBy(['entry' => $entry, 'locale' => $locale]);
+        $madeAgainst = null !== $overlay ? $overlay->getEnglishVersion() : $entry->getYamlEnglishVersion();
 
         return [
             'yaml_default' => $yamlDefault,
             'live' => $overlayMap[$key] ?? $yamlDefault,
+            'stale' => $madeAgainst < $entry->getEnglishVersion(),
+            'english_version' => $entry->getEnglishVersion(),
+            'made_against' => $madeAgainst,
         ];
     }
 

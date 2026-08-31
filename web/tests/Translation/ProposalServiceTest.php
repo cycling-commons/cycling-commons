@@ -40,10 +40,14 @@ final class ProposalServiceTest extends KernelTestCase
         return static::getContainer()->get(ProposalService::class);
     }
 
-    private function user(EntityManagerInterface $em, string $email): User
+    /**
+     * @param list<string> $roles
+     */
+    private function user(EntityManagerInterface $em, string $email, array $roles = []): User
     {
         $u = (new User())->setEmail($email)->setDisplayName(strstr($email, '@', true) ?: $email);
         $u->setPassword('x');
+        $u->setRoles($roles);
         $em->persist($u);
         $em->flush();
 
@@ -138,6 +142,7 @@ final class ProposalServiceTest extends KernelTestCase
         self::assertSame(TranslationProposalStatus::Pending, $found->getStatus());
         self::assertSame((int) $user->getId(), $found->getSubmitterId());
 
+        self::assertNotNull($found->getConsentRecordId());
         $consent = $em->find(ConsentRecord::class, $found->getConsentRecordId());
         self::assertNotNull($consent);
         self::assertSame(TranslationConsent::KIND, $consent->getKind());
@@ -228,6 +233,60 @@ final class ProposalServiceTest extends KernelTestCase
         $this->svc()->submit($user, $entry, 'en', 'Help', true);
     }
 
+    /**
+     * A plain rider has no ROLE_CURATOR reachable, so English stays refused
+     * (translations.md §4.2).
+     */
+    public function testRiderCannotProposeEnglish(): void
+    {
+        self::bootKernel();
+        $em = $this->em();
+        $rider = $this->user($em, 'en-rider@test.test');
+        $entry = $this->entry($em, 'nav.map', 'Map');
+
+        $this->expectException(EnglishNotTranslatableException::class);
+        $this->svc()->submit($rider, $entry, 'en', 'Map view', true);
+    }
+
+    public function testCuratorProposesEnglishWithoutConsentAndWithVersion(): void
+    {
+        self::bootKernel();
+        $em = $this->em();
+        $curator = $this->user($em, 'en-curator@test.test', ['ROLE_CURATOR']);
+        $entry = $this->entry($em, 'nav.map', 'Map');
+        $entry->applyApprovedEnglish('Map (v2)');
+        $em->flush();
+
+        $p = $this->svc()->submit($curator, $entry, 'en', 'Map view', false);
+
+        self::assertSame('en', $p->getLocale());
+        self::assertNull($p->getConsentRecordId());
+        self::assertSame('Map (v2)', $p->getEnglishAtSubmit());
+        self::assertSame(2, $p->getEnglishVersionAtSubmit());
+    }
+
+    public function testAdminMayProposeEnglishThroughTheRoleHierarchy(): void
+    {
+        self::bootKernel();
+        $em = $this->em();
+        $admin = $this->user($em, 'en-admin@test.test', ['ROLE_ADMIN']);
+        $entry = $this->entry($em, 'nav.map', 'Map');
+
+        $p = $this->svc()->submit($admin, $entry, 'en', 'Map view', false);
+        self::assertSame('en', $p->getLocale());
+    }
+
+    public function testRiderProposalRecordsEnglishVersionAtSubmit(): void
+    {
+        self::bootKernel();
+        $em = $this->em();
+        $rider = $this->user($em, 'v-rider@test.test');
+        $entry = $this->entry($em, 'nav.map', 'Map');
+
+        $p = $this->svc()->submit($rider, $entry, 'nl', 'Kaart', true);
+        self::assertSame($entry->getEnglishVersion(), $p->getEnglishVersionAtSubmit());
+    }
+
     public function testUnknownLocaleThrows(): void
     {
         self::bootKernel();
@@ -283,6 +342,8 @@ final class ProposalServiceTest extends KernelTestCase
         self::assertGreaterThan(0, $beforeConsent);
 
         $b = $this->svc()->submit($user, $later, 'nl', 'Start', false);
+        self::assertNotNull($a->getConsentRecordId());
+        self::assertNotNull($b->getConsentRecordId());
         self::assertSame($a->getConsentRecordId()->toRfc4122(), $b->getConsentRecordId()->toRfc4122());
         self::assertSame($beforeConsent, $this->consentCount($em, (int) $user->getId()));
         self::assertSame('Start', $b->getProposedValue());

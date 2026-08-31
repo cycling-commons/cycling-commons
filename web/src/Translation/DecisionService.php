@@ -34,7 +34,7 @@ final class DecisionService
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly MessageService $messages,
-        private readonly OverlayCatalogue $overlays,
+        private readonly TranslationCaches $caches,
     ) {
     }
 
@@ -84,7 +84,15 @@ final class DecisionService
                         throw new TranslationTooLongException(sprintf('Published translation exceeds %d bytes.', TranslationLimits::PROPOSED_VALUE_MAX));
                     }
                     $proposal->setPublishedValue($text);
-                    $this->upsertOverlay($proposal, (int) $curator->getId());
+                    // upsertOverlay() runs before applyApprovedEnglish(), so the
+                    // entry still carries the OLD version at this point. The
+                    // overlay records the version the approval creates
+                    // (translations.md §3.3), computed once, up front.
+                    $versionForOverlay = 'en' === $locale ? $entry->getEnglishVersion() + 1 : $entry->getEnglishVersion();
+                    $this->upsertOverlay($proposal, (int) $curator->getId(), $versionForOverlay);
+                    if ('en' === $locale) {
+                        $entry->applyApprovedEnglish($text);
+                    }
                     $proposal->setStatus(TranslationProposalStatus::Approved);
                     break;
                 case 'reject':
@@ -123,8 +131,11 @@ final class DecisionService
         });
 
         // After commit — same order as DeleteTranslationOverlayCommand (flush, then invalidate).
+        // TranslationCaches::invalidateAll() covers every locale because an
+        // approved English change makes all four translations stale
+        // (translations.md §3.3, §4.2).
         if ('approve' === $decision) {
-            $this->overlays->invalidate($proposal->getLocale());
+            $this->caches->invalidateAll();
         }
 
         return $proposal;
@@ -312,7 +323,7 @@ final class DecisionService
         return $ordered;
     }
 
-    private function upsertOverlay(TranslationProposal $proposal, int $approvedById): void
+    private function upsertOverlay(TranslationProposal $proposal, int $approvedById, int $englishVersion): void
     {
         $entry = $proposal->getEntry();
         $locale = $proposal->getLocale();
@@ -336,6 +347,7 @@ final class DecisionService
                 $proposal->getPublishedValue(),
                 $proposal,
                 $approvedById,
+                $englishVersion,
             ));
 
             return;
@@ -345,6 +357,7 @@ final class DecisionService
             $proposal->getPublishedValue(),
             $proposal,
             $approvedById,
+            $englishVersion,
         );
     }
 }

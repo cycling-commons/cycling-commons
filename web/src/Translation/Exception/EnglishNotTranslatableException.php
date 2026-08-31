@@ -7,9 +7,10 @@ declare(strict_types=1);
 namespace App\Translation\Exception;
 
 /**
- * English is never proposed from the website.
+ * English is proposed only by a user whose reachable roles include
+ * ROLE_CURATOR.
  *
- * @see docs/specs/translations.md §1, §4
+ * @see docs/specs/translations.md §1, §4.2
  *
  * @api
  */
