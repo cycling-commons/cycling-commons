@@ -1,0 +1,93 @@
+docs/specs/edit-items/README.md
+  s_58bfb339467e97::t_2cb910ba295e45 154-155,158-162
+  s_58bfb339467e97::t_8db550e3fbe6b9 62
+  s_58bfb339467e97::t_5b5791b9a2e5fc 31
+  s_58bfb339467e97::t_f2799822ed876a 220
+  s_58bfb339467e97::t_aaf860c563d8d5 44-61,63-72
+  s_58bfb339467e97::t_ccde9740502009 42
+  s_58bfb339467e97::t_4839706e2128ed 15
+  s_58bfb339467e97::t_1e6e78c0c97566 230-234
+  s_58bfb339467e97::t_54baf52d75fe0b 100-102
+  s_58bfb339467e97::t_0a304042f06853 166-168
+  s_58bfb339467e97::t_0ab431c89888cf 99
+  s_58bfb339467e97::t_22894b29b48a61 20
+  s_58bfb339467e97::t_bd625d8a83c058 189-190,192-195
+  s_58bfb339467e97::t_699405d3f53b17 73-75
+  s_58bfb339467e97::t_0ae40db78a0963 202
+  s_58bfb339467e97::t_cc5678243a7f33 150
+  s_58bfb339467e97::t_0063c50eb3ac4f 156-157
+  s_58bfb339467e97::t_e438c222b657a7 80-90
+  s_58bfb339467e97::t_7c3717f931a81e 222
+  s_58bfb339467e97::t_e31a6d7a137245 1-2,5
+  s_58bfb339467e97::t_5ed9c2d8c4692c 145
+  s_58bfb339467e97::t_47a3b02971eff2 40
+  s_58bfb339467e97::t_7cf129b7c621c5 146
+  s_58bfb339467e97::t_b5feb31288095e 177
+  s_58bfb339467e97::t_435006fcf57574 6
+  s_58bfb339467e97::t_d690b7e1b06bf2 43
+docs/specs/edit-items/H-shelter.md
+  s_58bfb339467e97::t_3639ecd208315d 1-2,5
+  s_58bfb339467e97::t_d1cff88e45fb4e 6
+docs/specs/edit-items/A-road-surface.md
+  s_58bfb339467e97::t_3639ecd208315d 1-2,5
+  s_58bfb339467e97::t_544a701876275a 75-80
+  s_58bfb339467e97::t_4648c2ac935f96 53-71
+  s_58bfb339467e97::t_3398ee4fd5e692 6
+  s_58bfb339467e97::t_2cb60ab3e770eb 72
+docs/specs/edit-items/E-where-to-sleep.md
+  s_58bfb339467e97::t_3639ecd208315d 1-2,5
+  s_58bfb339467e97::t_aa835855138e67 6
+docs/specs/osm-data-architecture.md
+  s_58bfb339467e97::t_91a019e5eed201 217-220
+  s_58bfb339467e97::t_ac1f8f4bb49ff4 139-140
+  s_58bfb339467e97::t_ace2ae749f2e49 93-96
+docs/specs/edit-items/B-climbs.md
+  s_58bfb339467e97::t_04c4d1abd8522e 87
+  s_58bfb339467e97::t_ffd56ca4b737b1 16-86,88-101
+  s_58bfb339467e97::t_3639ecd208315d 1-2,5
+  s_58bfb339467e97::t_f01c21919837d8 6
+  s_58bfb339467e97::t_c361aee523b8b8 102
+docs/specs/edit-items/J-history-culture.md
+  s_58bfb339467e97::t_3639ecd208315d 1-2,5
+  s_58bfb339467e97::t_31c6f9b19b37ca 6
+docs/specs/edit-items/C-water-food.md
+  s_58bfb339467e97::t_3639ecd208315d 1-2,5
+  s_58bfb339467e97::t_db9d15ad46e45a 6
+docs/specs/edit-items/D-bike-services.md
+  s_58bfb339467e97::t_b170769b7621c4 16-36,39-52
+  s_58bfb339467e97::t_a6c392de79d792 37-38
+  s_58bfb339467e97::t_74a2368ae3ec88 94-97
+  s_58bfb339467e97::t_3639ecd208315d 1-2,5
+  s_58bfb339467e97::t_d17dd9fbea321b 6
+  s_58bfb339467e97::t_33cb5cc366a9f0 53
+docs/specs/edit-items/F-hazards.md
+  s_58bfb339467e97::t_3639ecd208315d 1-2,5
+  s_58bfb339467e97::t_c5ada04350d9b6 6
+docs/specs/edit-items/I-scenic-views.md
+  s_58bfb339467e97::t_3639ecd208315d 1-2,5
+  s_58bfb339467e97::t_ba5912233c3364 6
+docs/specs/edit-items/G-getting-there.md
+  s_58bfb339467e97::t_3639ecd208315d 1-2,5
+  s_58bfb339467e97::t_b95a6b4d64cbb2 6
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "e6983db4b797cf0ac1782dc09bdb05ca6326282c",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_58bfb339467e97": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c9429297-08ac-4b41-b3f6-76a0097d2e4f",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
