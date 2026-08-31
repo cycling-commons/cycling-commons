@@ -5,7 +5,7 @@
 > **Law cited here is listed with its source in [`legal-sources.md`](legal-sources.md).** Article numbers are named in the text; the link goes to the act, because EUR-Lex article anchors do not survive consolidation.
 
 
-**Status:** canonical reference · **implemented** · **Audience:** contributors to Cycling Commons
+**Status:** canonical reference · **implemented**; §3.3, §4.1, §4.2 specified 2026-08-31 and planned in `docs/plans/2026-08-31-translate-mode-and-english-edits.md` · **Audience:** contributors to Cycling Commons
 
 This document owns how user-facing copy is stored, who may change a
 non-English string from the website, how a curator publishes it, and how
@@ -20,17 +20,28 @@ the `|rich` sanitizer stay in
 
 ---
 
-## 1. English is static and leading
+## 1. English is leading, and git is its home
 
-`messages.en.yaml` is product copy. It is written in git, reviewed like code,
-and is never edited from the website.
+`messages.en.yaml` is product copy. It is written in git and reviewed like
+code. Since 2026-08-31 a curator or admin may also propose a change to an
+**existing** English string from the website (§4.2). A second curator
+approves it, and the approved wording lives as an `en` overlay (§3) until git
+says the same thing. Git stays the home: `app:translations:english-export`
+prints the live English overlays as YAML so a developer can carry them into
+`messages.en.yaml`, and the next sync drops an overlay the moment YAML agrees
+with it.
+
+Every English string carries a **version** (§3.3). The version moves when
+the English changes, whether from git or from an approve. A translation
+records the version it was made against, so the site can say which
+translations are **stale** and put them at the top of the work list.
 
 A translation is a rendering of that English string into one of the other
 enabled locales (`fr`, `nl`, `de`, `es`). Website users may propose a value
 for an **existing** key in those locales only. They may not:
 
 - add, rename, or delete keys
-- change English
+- change English (a `ROLE_USER` cannot; a curator proposes it, §4.2)
 - submit a locale the app does not enable
 
 New English keys still land in git first. The parity gate
@@ -46,6 +57,7 @@ keys that already exist, not extra keys.
 |---|---|---|---|
 | Git YAML | contributors, via PR | all five catalogues, including English | on deploy |
 | In-site proposal | any logged-in `ROLE_USER` | one non-English key | when a curator **approves** |
+| In-site English edit | `ROLE_CURATOR` (admin implies it) | one English key | when a **second** curator approves (§4.2) |
 
 Rejected alternatives (do not re-propose for v1):
 
@@ -72,6 +84,11 @@ Resolution order for locale `L`, key `k`:
 1. If an overlay exists for `(L, k)`, use it.
 2. Else the YAML catalogue for `L`.
 3. Else Symfony's usual fallback (English).
+
+English resolves the same way: an `en` overlay if one exists, else
+`messages.en.yaml`. `TranslationLimits::OVERLAY_LOCALES` names the five
+locales an overlay may carry; `TranslationLimits::LOCALES` stays the four a
+rider may propose.
 
 The translator loads YAML first, then applies overlays. The overlay cache is
 per-locale and is invalidated when a row for that locale is written. Tests
@@ -101,7 +118,10 @@ sync. Rows are not deleted on a whim: a key removed in git is marked absent
 |---|---|
 | id | PK |
 | message_key | unique, the Symfony key (`home.cta_map`) |
-| english | current English from YAML |
+| english | current **live** English: the `en` overlay wording when one exists, else the git wording. This is the search index. |
+| english_yaml | the git wording, as of the last sync |
+| english_version | integer, starts at 1, +1 on every change to the live English (§3.3) |
+| yaml_english_version | the `english_version` the git locale files were last shipped against (§3.3) |
 | synced_at | when the last YAML import wrote this row |
 
 `/translate` search runs on `translation_entry` (`message_key` and `english`).
@@ -117,6 +137,8 @@ That is the index. Do not full-text-index proposal snapshots for the browser.
 | proposed_value | the rider's text — never overwritten by a curator copy-edit |
 | published_value | wording written to the overlay on approve. Null until approved. May differ from `proposed_value` when a curator fixed typos. Reject / needs-info leave this null (a curator edit in the form is discarded). |
 | english_at_submit | copy of `entry.english` at submit time — **audit/drift only**, not the join, not the search index. The curator card compares this to `entry.english` and warns if git has moved. |
+| english_version_at_submit | `entry.english_version` at submit. The card says "made against v2 · English is now v3". |
+| consent_record_id | the CC BY-SA consent (§4, §6). **Null on an `en` row**: English edits are product copy, not a rider grant. |
 | submitter_id | FK `users`. Credit is resolved live (`rider#` plus display name only if the profile is public). Do **not** denormalize a display name onto this row (GDPR; account deletion unlinks the person). |
 | status | `pending` / `needs_info` / `approved` / `rejected` |
 | reviewer_id | FK, null until decided |
@@ -132,6 +154,7 @@ That is the index. Do not full-text-index proposal snapshots for the browser.
 | source_proposal_id | FK, provenance |
 | approved_by_id | FK |
 | approved_at | |
+| english_version | `entry.english_version` at approve. The translation is stale when this is below the entry's current version (§3.3). |
 
 Approve upserts the overlay from the proposal. Reject / needs-info does not
 touch the overlay. A later approved proposal for the same entry+locale
@@ -169,6 +192,54 @@ proposals remain with `submitter_id` nulled (or equivalent) so provenance of
 *what* was said is kept without *who*. Do not store the display name on the
 row.
 
+### 3.3 Versions and stale translations
+
+`translation_entry.english_version` starts at 1 and moves by one on every
+change to the live English:
+
+- **From git.** The sync finds `messages.en.yaml` different from
+  `english_yaml`. It writes both `english_yaml` and `english`, bumps the
+  version, and sets `yaml_english_version` to the new version. A pull
+  request that changes English is expected to change the four locale files
+  with it (every catalogue change so far has been made that way), so the git
+  locale files count as fresh.
+- **From an approve.** A curator approves an `en` proposal (§4.2). The
+  overlay is written, `english` becomes the approved wording, the version
+  bumps. `yaml_english_version` does not move: git has not seen this change.
+
+**Git catches up.** The sync finds `messages.en.yaml` equal to the live `en`
+overlay. It deletes the overlay and sets `english_yaml`. The version does
+not move. `yaml_english_version` is set to the current version, for the same
+reason as above: the pull request that carried the English is expected to
+carry the four locales.
+
+**Git disagrees.** The sync finds `messages.en.yaml` changed to a third
+wording while an `en` overlay exists. **Git wins.** The overlay is deleted,
+the event is logged at `warning` with the key and both wordings, and the
+version bumps as a git change. `app:translations:english-export` exists so
+a developer pulls live English into the pull request first and this case
+stays rare.
+
+**Stale**, for locale `L` and entry `e`:
+
+- an overlay `(e, L)` exists: stale when
+  `overlay.english_version < e.english_version`;
+- no overlay (YAML serves it): stale when
+  `e.yaml_english_version < e.english_version`.
+
+A stale translation **stays live** (owner decision 2026-08-31). Stale is a
+work list, not a fallback; a page does not turn half English because a
+curator fixed one sentence. Approving a new translation for `(e, L)` stores
+the current `english_version` on the overlay and clears the flag.
+
+`App\Translation\StaleIndex` holds the stale entry ids per locale. It is
+cached next to the overlay map and invalidated with it: on every approve, on
+every overlay delete, and by the sync. It carries the one copy of the
+predicate above (`StaleIndex::PREDICATE_SQL`), which `CatalogueBrowser` uses
+too, and it excludes `ProtectedKeys` exactly as the browser does: a consent
+contract is not work a translator can pick up, so it is neither listed nor
+counted.
+
 ---
 
 ## 4. Rider surface
@@ -183,8 +254,10 @@ a Catalogue | Yours chip pair.
 
 The list is `translation_entry` (the English catalogue in the database).
 Each row shows: key, English, current live string for the **viewing locale**
-(YAML or overlay), and whether a pending proposal already exists for that
-pair. Search is `ILIKE` / trigram on `message_key` and `english` of that
+(YAML or overlay), whether a pending proposal already exists for that pair,
+and whether the translation is **stale** (an amber tag, "English changed
+v2 → v3"). A **Stale** chip filters to stale rows (`?stale=1`); stale rows
+sort first in every view. Search is `ILIKE` / trigram on `message_key` and `english` of that
 table — not on `english_at_submit`.
 
 Actions:
@@ -227,8 +300,8 @@ Account deletion still nulls `submitter_id`, so this list exists only
 while the account does. Messages remain the ping; this page is the
 history.
 
-A later nicety, not v1: “Improve this wording” on a public page, passing the
-key. v1 is the `/translate` browser with search over key and English text.
+“Improve this wording” on a public page is translate mode (§4.1): the same
+form, opened from the page the string is on.
 
 Length: cap `proposed_value` to a generous max (the longest current catalogue
 string plus headroom — state the number in the implementation as a named
@@ -259,6 +332,160 @@ bump in code and nowhere else. Held in three places, each on its own:
 `OverlayCatalogueLoader` ignores any row that reached the table by another
 road. Pinned by `ProposalServiceTest` and `OverlayCatalogueTest`.
 
+### 4.1 Translate mode: editing on the page
+
+`/translate` is a list. Translate mode is the same form, opened from the
+page the string is on. Owner request 2026-08-31.
+
+**Switching it on.** `POST /translate/mode` with `on=1` or `on=0` and a CSRF
+token sets a boolean in the session (`translate_mode`) and redirects back to
+the page the request came from (same-origin `Referer`, else `/translate`).
+The button sits on `/translate` and in the account chip menu. It is a
+session flag, not an account preference: it is transient, and it must never
+follow the account into another browser.
+
+**When it is active.** `App\Translation\TranslateMode` decides once per
+request, at `kernel.request` after the firewall, and stores the answer on the
+main request as the attribute `_translate_mode`. All of these must hold:
+
+- the request is a **GET**. Translate mode is a reading mode, and a
+  translated string rendered into a downloadable artifact is reachable by
+  neither net: `App\Account\DataExportService` puts `export.readme` through
+  the translator on `POST /settings/export`, and net 1 cannot strip inside a
+  `BinaryFileResponse` (review 2026-08-31);
+- the session flag is set and the user is granted `ROLE_USER`;
+- the request locale is one a rider may propose (`fr`, `nl`, `de`, `es`), or
+  it is `en` and the user is granted `ROLE_CURATOR` (§4.2);
+- the route is not the map (`map`, `map_*`) and not EasyAdmin (`/admin`).
+  The map builds its text in JavaScript from `boot.js`; it is out of scope.
+
+**Marks.** With the mode active, `App\Translation\MarkedTranslator` (a
+decorator outside `OverlayTranslator`) wraps every `messages`-domain string it
+returns for the request locale in two invisible marks:
+
+    U+2061  [21 × (U+200B | U+200C)]  text  U+2062
+
+The 21 zero-width characters are 20 bits of `translation_entry.id` (most
+significant first, U+200B is 0, U+200C is 1; an id above 1,048,575 is not
+marked) and one flag bit: stale for this locale. Keys with no live entry row,
+absent rows, and `ProtectedKeys` come back unmarked. A nested translation (a
+parameter that was itself translated) keeps the outer mark; the script drops
+the inner ones. Marks are plain text: Twig auto-escape, `|rich` and the HTML
+sanitizer leave them alone, and a page without JavaScript shows nothing
+unusual. `App\Translation\MarkerCodec` owns the encoding; a Node test decodes
+the fixture the PHP test encodes, so the two sides cannot drift.
+
+The key → `(id, stale)` map per locale is `App\Translation\MarkerIndex`,
+cached with the overlay map and invalidated with it (§3.3).
+
+**Two nets.** Marks may only leave the server inside an HTML document:
+
+1. `MarkStripResponseSubscriber` strips the marks from every response whose
+   content type is not `text/html` (JSON, `boot.js`, GPX, the sitemap). It
+   strips **two** forms, and both are required (found while implementing,
+   2026-08-31). `json_encode` without `JSON_UNESCAPED_UNICODE` turns every
+   mark into an ASCII escape, so a JSON body carries
+   `\u2061\u200b...\u2062` and contains not one byte of U+2061. Symfony's
+   `JsonResponse` uses encoding options `15`, which does not include that
+   flag, and `boot.js.twig` pipes through `|json_encode` with the same four
+   HEX flags, so the escaped form is what those two bodies actually hold. A
+   subscriber that matched only the raw characters would report success and
+   strip nothing.
+2. `MarkStripMailSubscriber` strips it from every mail body. Mail is
+   rendered inside the request (there is no async transport for it), so a
+   needs-info message sent by a curator with the mode on would otherwise
+   carry marks.
+
+Both strip the **pattern**, in both its raw and its JSON-escaped form, and
+never bare zero-width characters, so a catalogue string that legitimately
+contains one is untouched.
+
+**The script.** `assets/js/translate-mode.js` is a file, loaded at the end of
+`base.html.twig` only when the mode is active (Twig function
+`translate_mode()`), before the deferred scripts run. It:
+
+- walks text nodes, finds mark pairs, and wraps each in
+  `<span class="tr-hit" data-tr="{id}" data-stale="0|1">`; inside `<option>`,
+  `<textarea>`, `<title>` and `<script>` it only strips;
+- strips marks from every attribute (`title`, `placeholder`, `aria-label`,
+  `alt`, `content`, `value`, every `data-*`);
+- keeps a `MutationObserver`, so text a later script inserts is treated the
+  same way;
+- drives the bar and the drawer, whose markup is
+  `partials/_translate_bar.html.twig` (server markup; the script toggles).
+  The bar hands it the edit URL as a base and a suffix and the script puts
+  the entry id between them, rather than substituting into a finished URL.
+
+**Known limit: a key whose English contains a tag is not clickable on the
+page.** The script pairs a start mark with an end mark inside ONE text node,
+and a string carrying markup (`<b>`, `<a>`, a `<br>`) is several text nodes
+by the time the browser has parsed it, so the pair never matches. The marks
+are stripped and the string renders exactly as it always does; it simply has
+no `.tr-hit` around it and nothing happens on a click. About 145 English keys
+are in that class. This is a limit, not a gap in coverage: every one of them
+is still listed, searchable and editable on `/translate`, which is one click
+away in the same account menu that switches the mode on.
+
+**The bar** sits at the bottom of the page while the mode is on: the count
+of marked strings, the count of stale ones, an **Edit | Browse** switch, and
+**Off** (posts `on=0`). In *Edit*, a click or Enter on a marked string opens
+the drawer and the link or button under it does not fire; marked strings are
+focusable (`tabindex="0"`, `role="button"`). In *Browse*, links work and
+strings are only underlined. Fresh strings underline grey; stale ones amber.
+On `/en/` for a rider the bar is not rendered: the mode is inactive there,
+and `/translate` says why.
+
+**The stale count follows the translator.** While the mode is on, the
+Translate row in the account chip carries the number of keys that are stale
+for the viewing locale, as a real count in the same `.acct-count` badge the
+moderation rows already use. It renders ONLY while the mode is on (owner,
+2026-08-31: "only visible as long as translate status is on"), so a rider who
+is not translating sees nothing new, and a translator moving from page to page
+keeps the number in view without opening `/translate`. English is never stale,
+so on `/en/` there is no badge. The bar's own count stays the per-page figure;
+this one is the whole locale.
+
+**The drawer** loads `GET /translate/{id}?embed=1`, which renders
+`translate/_form.html.twig` inside a chrome-less wrapper: the same form as
+`/translate/{id}`, the same validation, the same consent block. `POST` with
+`embed=1` answers the wrapper again: on success with a "sent" state and a
+close button (no redirect), on error with the error inline where the full
+page uses a flash. One form, two frames; there is no second form. For a
+curator on a non-English page the drawer carries an **Edit English** link
+that loads the `en` frame (`/en/translate/{id}?embed=1`) in the same drawer.
+
+The string on the page does not change after a send: nothing is live until a
+curator approves, and the drawer says so.
+
+**Caching.** A response with the mode active is never marked shareable:
+`PublicPageCacheSubscriber` already refuses any request that carries a
+session, and the mode needs one. A test pins that.
+
+### 4.2 English edits (curators and admins)
+
+`ROLE_CURATOR` (which `ROLE_ADMIN` implies) may propose a new wording for an
+existing English key. Owner decision 2026-08-31: this goes through the
+**same queue** and a **second curator approves**. Nobody publishes their own
+English, and nothing new is added to moderation (one way to moderate).
+
+- `/en/translate` lists the English catalogue for a curator: key, git
+  English, live English with its version, pending marker. A `ROLE_USER` on
+  `/en/translate` still sees the locale chooser, as today.
+- `/en/translate/{id}` is the same form without the consent block (§6): git
+  English, live English (`v3`), textarea. `ProposalService::submit()` refuses
+  `en` from anyone without `ROLE_CURATOR` (`EnglishNotTranslatableException`,
+  flash `translate.error.english`). `english_at_submit` holds the live
+  English being replaced, `english_version_at_submit` its version. Same
+  length cap, same markup check, same limiter, same one-open-proposal rule.
+- Approve (§5) writes the `en` overlay, sets `entry.english`, bumps
+  `english_version` (§3.3), and invalidates the overlay map for `en` plus the
+  stale and marker caches for every locale. All four translations of that
+  key are stale from that moment. The detail page says so above the approve
+  button: "Approving marks the four translations of this key stale."
+- `ProtectedKeys` apply to English too. The consent contracts change by a
+  `VERSION` bump in code and nowhere else.
+- Translate mode on `/en/` is active only for curators (§4.1).
+
 ---
 
 ## 5. Curator desk
@@ -273,6 +500,16 @@ The open count (pending + needs-info) badges the Translations tab and
 the same row in the account-chip dropdown, as a real count (not `9+`),
 and is added into the chip bulb together with unread messages
 and open submissions. The bulb is that sum, also as a real number.
+
+`en` proposals sit in the same queue with the locale chip `en`. The detail
+page shows the English versions on every change row ("made against v2 ·
+English is now v3") next to the existing English-at-submit / English-now
+warning. A **Stale** chip beside Queue and History opens
+`/moderate/translations/stale`: one list per locale of stale keys (key,
+English `vN`, live translation, "made against vM"), newest English change
+first. It is a reading list. A curator who wants to fix one goes to
+`/translate/{id}` in that locale like any rider, and a second curator
+approves.
 
 The queue is a scan: key, locale, status. Queue and History chips switch
 between the open list and `/moderate/translations/history`, including
@@ -327,6 +564,15 @@ code.
 |---|---|---|
 | English keys and English values; developer-shipped locale YAML | PolyForm Shield (the software) | `web/translations/messages.*.yaml` in git |
 | A rider's proposed / approved string | **CC BY-SA 4.0** | `translation_proposal` / `translation_overlay` in the database |
+| A curator's or admin's in-site English edit | **PolyForm Shield** (product copy; owner decision 2026-08-31) | `translation_overlay` with locale `en`, until git absorbs it |
+
+English edits are staff work on product copy, not a rider grant. They need no
+CC BY-SA tick, and `translation_proposal.consent_record_id` is null on an
+`en` row. Because they are PolyForm they **may** go back into
+`messages.en.yaml`: that is what `app:translations:english-export` is for,
+and the sync deletes the overlay once git carries the same words (§3.3). The
+rule below (do not merge overlays into the locale YAML) is unchanged for
+`fr` / `nl` / `de` / `es`.
 
 They are not ODbL (that is map facts) and not PolyForm (that is the app).
 Share-alike and attribution follow CC BY-SA the same way media does: credit
@@ -391,6 +637,13 @@ English.
   `style` stays off the sanitizer allowlist (html_sanitizer.yaml).
 - Do not interpolate overlay values into JS `innerHTML` (the map already has
   this rule for YAML).
+- Translate mode (§4.1): marks never leave a `text/html` response and never
+  enter a mail (two strip subscribers, both tested, both stripping the raw
+  and the JSON-escaped form). The mode needs a
+  session, so a marked page is never shareable. `translate-mode.js` is a
+  file, not an inline script; the CSP does not change.
+- `POST /translate/mode` carries the same stateless CSRF token as every other
+  form.
 
 ---
 
@@ -404,17 +657,18 @@ English.
    rider.
 4. CC BY-SA consent tick + `consent_record` on submit; overlays never written
    back into locale YAML.
+5. Translate mode on the page (§4.1), English edits by curators (§4.2), and
+   English versions with stale flags (§3.3). Specified 2026-08-31; the plan is
+   `docs/plans/2026-08-31-translate-mode-and-english-edits.md`.
 
 **Later:**
 
-- “Improve this wording” from a public page.
 - DeepL admin assist (§7).
 - Curator “revert this key to YAML” control (until then: ops runs
   `app:translations:overlay-delete {locale} {key}` — dry-run by default;
   `--write` deletes the overlay and invalidates the cache).
 
-**Out of scope until separately specified:** new locales, editing English
-in-product.
+**Out of scope until separately specified:** new locales.
 
 **Per-translator karma** is not a v1 feature. If a later spec adds it, it is
 curator-desk metadata only (“8 of this rider’s last 10 were approved”). It

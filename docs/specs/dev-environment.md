@@ -312,7 +312,11 @@ Day-one internationalisation across **EN / FR / NL / DE / ES**:
   Approved overlays may lead for individual non-English keys at runtime.
   Run `php bin/console app:translations:sync` on deploy so `translation_entry`
   stays aligned with `messages.en.yaml`. Do not merge overlays back into
-  locale YAML.
+  locale YAML. `en` is now an overlay locale too, curator-edited in-site
+  (`translations.md` §4.2): before hand-editing `messages.en.yaml`, run
+  `php bin/console app:translations:english-export` on prod first, or the
+  next sync overwrites any approved English overlay that pull request did
+  not carry.
 
 ## 7a. Shared state — Redis (2026-08-08)
 
