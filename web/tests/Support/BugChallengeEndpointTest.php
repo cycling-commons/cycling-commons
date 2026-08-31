@@ -39,7 +39,7 @@ final class BugChallengeEndpointTest extends WebTestCase
     /** @return array<string, mixed> */
     private function fetch(KernelBrowser $client): array
     {
-        $client->request('GET', '/report-bug/challenge', server: ['HTTP_ACCEPT' => 'application/json']);
+        $client->request('GET', '/form-challenge', server: ['HTTP_ACCEPT' => 'application/json']);
 
         return (array) json_decode($client->getResponse()->getContent() ?: '', true);
     }
@@ -97,7 +97,7 @@ final class BugChallengeEndpointTest extends WebTestCase
         static::getContainer()->set('limiter.pow_challenge', $budget);
         self::assertTrue($budget->create('ip-127.0.0.1')->consume()->isAccepted());
 
-        $client->request('GET', '/report-bug/challenge', server: ['HTTP_ACCEPT' => 'application/json']);
+        $client->request('GET', '/form-challenge', server: ['HTTP_ACCEPT' => 'application/json']);
 
         self::assertResponseStatusCodeSame(429);
     }

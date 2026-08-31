@@ -241,23 +241,6 @@ final class LocalizedPath
         'es' => '/informar-de-un-error',
     ];
 
-    /**
-     * The tokens the floating bug panel asks for when a rider opens it
-     * (page-caching.md §3.1). A machine endpoint, so the last segment stays
-     * English, but it hangs off the localized form path rather than sitting at
-     * its own root: a reader who notices it in the network tab should be able
-     * to see what it belongs to.
-     *
-     * @var array<string, string>
-     */
-    public const array REPORT_BUG_CHALLENGE = [
-        'en' => '/report-bug/challenge',
-        'fr' => '/signaler-un-bogue/challenge',
-        'nl' => '/bug-melden/challenge',
-        'de' => '/fehler-melden/challenge',
-        'es' => '/informar-de-un-error/challenge',
-    ];
-
     /** @var array<string, string> */
     public const array TERMS = [
         'en' => '/terms',

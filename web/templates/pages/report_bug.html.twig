@@ -87,11 +87,6 @@
 <script src="{{ asset('support/bug-context.js') }}" defer></script>
 {# The picker, and the labels it builds its list from. Enhancement only: the
    native input still works without it, one dialog at a time. #}
-<script nonce="{{ csp_nonce() }}">window.CC_SHOT_LABELS = {{ {
-  remove: 'support.bug.shot_remove'|trans,
-  tooBig: 'support.bug.shot_too_big'|trans,
-  full: 'support.bug.shot_full'|trans,
-}|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
 <script src="{{ asset('support/shot-picker.js') }}" defer></script>
 {% endblock %}
 
@@ -119,11 +114,13 @@
 
       <form method="post" action="{{ path('bug_report_submit') }}" enctype="multipart/form-data"
             id="cc-guarded-form"
-            data-pow-challenge="{{ pow_challenge }}"
+            data-challenge-url="{{ path('form_challenge') }}"
             data-pow-difficulty="{{ pow_difficulty }}">
         <input type="hidden" name="_token" value="{{ csrf_token('bug_report') }}">
         <input type="hidden" name="{{ stamp_field }}" value="{{ form_stamp }}">
-        <input type="hidden" name="pow_challenge" value="{{ pow_challenge }}">
+        {# Filled by form-challenge.js from data-challenge-url above; empty
+           here because a challenge is single use (page-caching.md §3.1). #}
+        <input type="hidden" name="pow_challenge" id="pow_challenge" value="">
         <input type="hidden" name="pow_nonce" id="pow_nonce" value="">
         {# Only when we KNOW the page. When we do not, the reporter gets a
            visible box further down with the same name, and two fields sharing
@@ -210,7 +207,14 @@
           <input type="file" id="b-shot" name="screenshot[]" multiple
                  accept="image/png,image/jpeg,image/gif,image/webp"
                  aria-describedby="b-shot-hint"
-                 data-max="{{ max_screenshots }}" data-max-bytes="{{ max_shot_bytes }}">
+                 data-max="{{ max_screenshots }}" data-max-bytes="{{ max_shot_bytes }}"
+                 {# The picker's three strings, here rather than in an inline
+                    script: an inline block needs a CSP nonce, and a nonce
+                    cannot sit in a page a cache may hold (page-caching.md
+                    §3.2). shot-picker.js already reads this element. #}
+                 data-label-remove="{{ 'support.bug.shot_remove'|trans }}"
+                 data-label-too-big="{{ 'support.bug.shot_too_big'|trans }}"
+                 data-label-full="{{ 'support.bug.shot_full'|trans }}">
           {% if lost_screenshots|default(false) %}
             {# A browser will not let a server refill a file input, so this is
                the honest thing to say rather than letting somebody send a

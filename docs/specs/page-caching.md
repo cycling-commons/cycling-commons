@@ -65,21 +65,35 @@ they are. This is why the change is not a one-line nginx rule.
 
 ### 3.1 The proof-of-work challenge (functional, and the worst of the four)
 
-`base.html.twig` includes `partials/_bug_fab.html.twig` unconditionally, and
-`App\Twig\BugFabExtension` calls `ProofOfWork::issue()` on every render. A
-challenge is **single use**: `ProofOfWork::verify()` records it in the
+A challenge is **single use**: `ProofOfWork::verify()` records it in the
 `cache.pow_spent` pool and refuses it a second time
-([contact-and-support.md §3](contact-and-support.md)).
+([contact-and-support.md §3](contact-and-support.md)). Four places minted one
+into their own markup:
 
-Cache the page and every visitor for that minute receives the same challenge.
-The first person to report a bug spends it. Everybody else's report is
+- `partials/_bug_fab.html.twig`, included unconditionally by
+  `base.html.twig`, so **every page** carried one;
+- the three full-page guarded forms, `/contact`, `/report/{type}/{id}` and
+  `/report-bug`.
+
+Cache any of those and every visitor for that minute receives the same
+challenge. The first person to send anything spends it. Everybody else is
 rejected, having solved a puzzle that was already used. A spam guard turned
 into a lottery.
 
-**Fix:** the bug button asks for a challenge when a rider opens the form,
-rather than the page carrying one it usually never needs. That is the better
-design regardless of caching: today every page view mints a challenge, and
-almost none are ever spent.
+**Done.** All four now fetch it from
+`App\Controller\FormChallengeController` (`GET /form-challenge`) when somebody
+starts using the form, rather than the page carrying one it usually never
+needs. That is the better design regardless of caching: the bug button is on
+every page, the contact and report forms are linked from every footer and every
+drawer, so almost every challenge minted was one nobody would ever spend.
+
+It also fixed a failure that predates caching: after a rejected send the bug
+panel cleared its solution but kept the spent challenge, so every retry failed
+for the same reason as the first attempt.
+
+Nothing else moved out of those forms. The CSRF token and the form stamp stay
+in the markup, because a form has to be postable without JavaScript, and both
+are safe to share: §3.5 and §3.6.
 
 ### 3.2 The CSP nonce (security)
 
@@ -239,11 +253,18 @@ aim at:
 
 `/`, `/about`, `/developers`, `/licenses`, `/privacy`, `/terms`,
 `/accessibility`, `/roadmap`, `/changelog`, `/credits`, `/regions`,
-`/regions/{slug}`, `/blog`, `/known-issues`
+`/regions/{slug}`, `/blog`, `/known-issues`, and the three guarded forms
+`/contact`, `/report-bug`, `/report/{type}/{id}`
 
 Deliberately out of scope: `/contributors` (a paged wall that moves), `/map`
 (per-rider preferences, and the heaviest page to store), anything under
-`/moderate`, `/admin`, `/profile` or `/translate`, and every form that posts.
+`/moderate`, `/admin`, `/profile` or `/translate`, and `/report/{id}/answer`,
+which is a private link for one reporter.
+
+The contribution forms need no rule: `/improve`, `/propose-route` and their
+siblings are behind `IsGranted('ROLE_USER')`, so a logged-out visitor gets a
+redirect rather than a render. They were never a flood target and are per-rider
+by definition.
 
 `/coverage` is out for now, and only for now: it is the right shape for this
 list, but it grew its own nonce'd inline script for the density sort while this

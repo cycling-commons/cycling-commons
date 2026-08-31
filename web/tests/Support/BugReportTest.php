@@ -8,7 +8,6 @@ namespace App\Tests\Support;
 
 use App\Entity\User;
 use App\Security\FormGuard;
-use App\Security\ProofOfWork;
 use App\Support\BugArea;
 use App\Support\BugSeverity;
 use App\Support\BugStatus;
@@ -73,8 +72,24 @@ final class BugReportTest extends WebTestCase
     }
 
     /**
-     * @param array<string, mixed> $overrides
+     * A challenge, from the endpoint the browser asks, not from the page.
+     *
+     * The form no longer carries one: a challenge is single use, so one baked
+     * into the markup could not sit in a page a cache may hold
+     * (docs/specs/page-caching.md §3.1). The script fetches it when somebody
+     * starts typing, and so does this.
+     *
+     * @return array{0: string, 1: int} the challenge and its difficulty
      */
+    private function fetchChallenge(KernelBrowser $client): array
+    {
+        $client->request('GET', '/form-challenge', server: ['HTTP_ACCEPT' => 'application/json']);
+        $out = (array) json_decode($client->getResponse()->getContent() ?: '', true);
+        self::assertTrue($out['ok'] ?? false, 'the challenge endpoint must answer');
+
+        return [(string) $out['challenge'], (int) $out['difficulty']];
+    }
+
     private function file(KernelBrowser $client, array $overrides = [], array $server = []): Crawler
     {
         $page = $client->request('GET', '/report-bug');
@@ -84,11 +99,9 @@ final class BugReportTest extends WebTestCase
         foreach ($page->filter('#cc-guarded-form input[type="hidden"]') as $node) {
             $fields[$node->getAttribute('name')] = $node->getAttribute('value');
         }
-        $form = $page->filter('#cc-guarded-form')->first();
-        $fields['pow_nonce'] = $this->solve(
-            $form->attr('data-pow-challenge') ?? '',
-            (int) ($form->attr('data-pow-difficulty') ?? ProofOfWork::DIFFICULTY),
-        );
+        [$challenge, $difficulty] = $this->fetchChallenge($client);
+        $fields['pow_challenge'] = $challenge;
+        $fields['pow_nonce'] = $this->solve($challenge, $difficulty);
 
         $guard = static::getContainer()->get(FormGuard::class);
         $fields[FormGuard::STAMP] = $guard->stamp(new \DateTimeImmutable('-30 seconds'));

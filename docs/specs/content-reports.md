@@ -144,10 +144,15 @@ breaker ([photo-uploads.md §6c](photo-uploads.md)) price it, and the reporter
 with the most to lose pays nothing. Once the breaker has opened a flood is
 already running, and from then on the urgent ground also demands the local
 proof of work the contact form demands on every message
-(`App\Security\ProofOfWork`, 20 bits, no third party). The challenge rides on
-every render; `assets/support/report-challenge.js` solves it as soon as the
-urgent ground is picked, breaker or no breaker, so the breaker's state never
-shows on the page and a report written while it opens still carries a nonce.
+(`App\Security\ProofOfWork`, 20 bits, no third party).
+`assets/support/report-challenge.js` **fetches** a challenge from
+`GET /form-challenge` and solves it as soon as the urgent ground is picked,
+breaker or no breaker, so the breaker's state never shows on the page and a
+report written while it opens still carries a nonce. Fetched rather than
+rendered into the form, because a challenge is single use and one in the markup
+could not survive the page being cached
+([page-caching.md §3.1](page-caching.md)); it also means an ordinary report,
+which is nearly all of them, costs no challenge at all.
 The photo form had this from the start; folding it into this route had dropped
 it (review 2026-08-30). Pinned by `ContentReportTest`.
 

@@ -208,7 +208,6 @@ final class ContactController extends AbstractController
             'prefill_email' => $user instanceof User ? $user->getEmail() : '',
             'prefill_name' => $user instanceof User ? $user->getDisplayName() : '',
             'form_stamp' => $this->guard->stamp(new \DateTimeImmutable()),
-            'pow_challenge' => $this->proofOfWork->issue(new \DateTimeImmutable()),
             'pow_difficulty' => ProofOfWork::DIFFICULTY,
             'honeypot_a' => FormGuard::HONEYPOT_A,
             'honeypot_b' => FormGuard::HONEYPOT_B,

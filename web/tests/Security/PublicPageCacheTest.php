@@ -88,6 +88,11 @@ final class PublicPageCacheTest extends WebTestCase
         yield 'privacy' => ['/privacy'];
         yield 'regions' => ['/regions'];
         yield 'blog' => ['/blog'];
+        // The guarded forms: cacheable only because the single-use challenge
+        // moved out of their markup (page-caching.md §3.1).
+        yield 'contact' => ['/contact'];
+        yield 'report a bug' => ['/report-bug'];
+        yield 'report content' => ['/report/item/1'];
         // The locale arms are separate routes; the allowlist names each page
         // once and the suffix is stripped, so this proves the stripping works.
         yield 'french home' => ['/fr/'];
@@ -140,7 +145,6 @@ final class PublicPageCacheTest extends WebTestCase
         yield 'map' => ['/map'];
         yield 'contributors' => ['/contributors'];
         yield 'coverage' => ['/coverage'];
-        yield 'contact form' => ['/contact'];
         yield 'login' => ['/login'];
     }
 
@@ -152,7 +156,7 @@ final class PublicPageCacheTest extends WebTestCase
     public function testTheChallengeEndpointIsNeverMadePublic(): void
     {
         $client = static::createClient();
-        $client->request('GET', '/report-bug/challenge', server: ['HTTP_ACCEPT' => 'application/json']);
+        $client->request('GET', '/form-challenge', server: ['HTTP_ACCEPT' => 'application/json']);
 
         $cc = $this->cacheControl($client);
         self::assertStringContainsString('no-store', $cc);

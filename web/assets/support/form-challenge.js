@@ -2,12 +2,15 @@
 /* Solve the proof-of-work on a guarded public form, using window.ccPow.
    docs/specs/contact-and-support.md §3
 
-   Any form carrying `id="cc-guarded-form"` with `data-pow-challenge` is picked
+   Any form carrying `id="cc-guarded-form"` with `data-challenge-url` is picked
    up. Two behaviours are deliberate:
 
    1. Solving starts on FIRST INPUT, not on page load. Somebody who opened the
       contact page only to read the address should not have their CPU spun for
-      a submission they are not going to make.
+      a submission they are not going to make. The challenge is fetched at the
+      same moment, from `data-challenge-url`, for the same reason and one more:
+      a single-use challenge cannot sit in a page a cache may hold
+      (page-caching.md §3.1).
 
    2. If solving has not finished when submit is pressed, the submit WAITS
       instead of failing. A 20-bit challenge is a second or two on a laptop and
@@ -24,9 +27,10 @@
 
   var nonceField = document.getElementById('pow_nonce');
   var status = document.getElementById('pow-status');
-  var challenge = form.dataset.powChallenge || '';
+  var challengeField = document.getElementById('pow_challenge');
+  var challenge = '';
   var difficulty = form.dataset.powDifficulty;
-  if (!challenge || !nonceField || !window.ccPow) return;
+  if (!form.dataset.challengeUrl || !nonceField || !window.ccPow) return;
 
   var pending = null;
   var solved = false;
@@ -43,10 +47,34 @@
     return;
   }
 
+  /* The challenge is fetched, not baked into the page. It is single use, so
+     one in the markup would be shared by everybody served a cached copy and
+     only the first sender would be accepted (page-caching.md §3.1). Fetching
+     also means a page nobody submits from costs no challenge at all, which is
+     most of them: these forms are linked from every footer and every drawer.
+     The hidden field is filled here so the ordinary form post still carries it. */
+  function fetchChallenge() {
+    if (challenge) return Promise.resolve(challenge);
+    return fetch(form.dataset.challengeUrl, {
+      headers: { Accept: 'application/json' },
+      credentials: 'same-origin'
+    }).then(function (r) {
+      return r.json();
+    }).then(function (out) {
+      if (!out || !out.ok || !out.challenge) throw new Error('no challenge');
+      challenge = out.challenge;
+      difficulty = out.difficulty || difficulty;
+      if (challengeField) challengeField.value = challenge;
+      return challenge;
+    });
+  }
+
   function start() {
     if (pending) return pending;
     say('working');
-    pending = window.ccPow.solve(challenge, difficulty).then(function (nonce) {
+    pending = fetchChallenge().then(function (value) {
+      return window.ccPow.solve(value, difficulty);
+    }).then(function (nonce) {
       if (!nonce) { say('failed'); return; }
       nonceField.value = nonce;
       solved = true;

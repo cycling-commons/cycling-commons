@@ -317,7 +317,6 @@ final class ContentReportController extends AbstractController
             // urgent ground is picked, and the server only asks for it while
             // the breaker is open.
             'pow' => [
-                'challenge' => $this->proofOfWork->issue(new \DateTimeImmutable()),
                 'difficulty' => ProofOfWork::DIFFICULTY,
             ],
         ];

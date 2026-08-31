@@ -90,7 +90,22 @@ final class ContentReportTest extends WebTestCase
         $guard = static::getContainer()->get(FormGuard::class);
         $token = (string) $page->filter('input[name="_token"]')->attr('value');
         $form = $page->filter('#report-form')->first();
-        $challenge = (string) $form->attr('data-pow-challenge');
+
+        // The form no longer carries a challenge: it is single use, so one in
+        // the markup could not sit in a page a cache may hold
+        // (docs/specs/page-caching.md §3.1). report-challenge.js fetches one
+        // when an urgent ground is picked, and so does this. Only fetched when
+        // it will be solved, because that is the shape the script has: an
+        // ordinary report never asks for a challenge at all.
+        $challenge = '';
+        $difficulty = (int) $form->attr('data-pow-difficulty');
+        if ($solve) {
+            $client->request('GET', '/form-challenge', server: ['HTTP_ACCEPT' => 'application/json']);
+            $out = (array) json_decode($client->getResponse()->getContent() ?: '', true);
+            self::assertTrue($out['ok'] ?? false, 'the challenge endpoint must answer');
+            $challenge = (string) $out['challenge'];
+            $difficulty = (int) $out['difficulty'];
+        }
 
         $client->request('POST', '/report/'.$type.'/'.$id, [
             '_token' => $token,
@@ -99,7 +114,7 @@ final class ContentReportTest extends WebTestCase
             'reason' => 'The gate at the top has been locked since spring and the way through is fenced.',
             'contact' => $contact ?? '',
             'pow_challenge' => $challenge,
-            'pow_nonce' => $solve ? $this->solve($challenge, (int) $form->attr('data-pow-difficulty')) : '',
+            'pow_nonce' => $solve ? $this->solve($challenge, $difficulty) : '',
         ]);
     }
 

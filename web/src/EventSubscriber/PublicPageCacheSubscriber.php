@@ -93,6 +93,16 @@ final readonly class PublicPageCacheSubscriber implements EventSubscriberInterfa
         'blog_post',
         'known_issues',
         'pages',
+        // The three guarded public forms. They belong here for the same reason
+        // as the rest, and they were the last public pages that could not join:
+        // each used to mint a single-use proof-of-work challenge into its own
+        // markup, which no cache may hold. The forms fetch it now
+        // (App\Controller\FormChallengeController), so what is left in the page
+        // is the same for everybody. `content_report_answer` is deliberately
+        // absent: that URL is a private link for one reporter.
+        'contact',
+        'content_report',
+        'bug_report',
     ];
 
     /** @param list<string> $enabledLocales */

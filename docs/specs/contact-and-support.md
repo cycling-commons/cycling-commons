@@ -105,6 +105,17 @@ Notes that matter if you change any of this:
   toll rather than a per-message cost. Pinned by `ProofOfWorkSpentTest`, which
   is a kernel test rather than a functional one because Symfony's service
   resetter clears the test `ArrayAdapter` between requests.
+* **A challenge is fetched, never baked into the page.** `GET /form-challenge`
+  (`App\Controller\FormChallengeController`) issues one when a visitor starts
+  filling a form in; the markup ships an empty `pow_challenge` field that the
+  script fills. Being single use, a challenge in the markup could not survive a
+  page being held in a shared cache: one copy would hand the same challenge to
+  every reader and only the first sender would be accepted
+  ([page-caching.md §3.1](page-caching.md)). It is also most of the waste gone.
+  The bug button is on every page and these forms are linked from every footer
+  and every drawer, so nearly every challenge minted was one nobody would spend.
+  The endpoint is bounded by its own `pow_challenge` limiter, and answers
+  `no-store`.
 * **Order of checks.** Cheap checks first, so a flood of obvious bots does not
   spend a genuine visitor's rate-limit budget; proof of work verified before the
   limiter, so CPU already spent is not wasted on a submission that fails

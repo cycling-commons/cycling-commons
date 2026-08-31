@@ -30,7 +30,7 @@
      data-page-path="{{ _path }}"
      data-fallback="{{ path('bug_report') }}?on={{ _path|url_encode }}"
      data-stamp-field="{{ bug_fab.stamp_field }}"
-     data-challenge-url="{{ path('bug_report_challenge') }}"
+     data-challenge-url="{{ path('form_challenge') }}"
      data-honeypot-a="{{ bug_fab.honeypot_a }}"
      data-honeypot-b="{{ bug_fab.honeypot_b }}"
      data-signed-in="{{ app.user ? '1' : '0' }}"

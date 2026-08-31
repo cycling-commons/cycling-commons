@@ -21,9 +21,10 @@
   var select = document.getElementById('rep-ground');
   var nonceField = document.getElementById('pow_nonce');
   var status = document.getElementById('pow-status');
-  var challenge = form.dataset.powChallenge || '';
+  var challengeField = document.getElementById('pow_challenge');
+  var challenge = '';
   var difficulty = form.dataset.powDifficulty;
-  if (!select || !challenge || !nonceField || !window.ccPow) return;
+  if (!select || !form.dataset.challengeUrl || !nonceField || !window.ccPow) return;
 
   var pending = null;
   var solved = false;
@@ -32,6 +33,28 @@
     if (!status) return;
     status.textContent = status.dataset[key] || '';
     status.hidden = !status.textContent;
+  }
+
+  /* The challenge is fetched, not baked into the page. It is single use, so
+     one in the markup would be shared by everybody served a cached copy and
+     only the first sender would be accepted (page-caching.md §3.1). Fetching
+     also means a page nobody submits from costs no challenge at all, which is
+     most of them: these forms are linked from every footer and every drawer.
+     The hidden field is filled here so the ordinary form post still carries it. */
+  function fetchChallenge() {
+    if (challenge) return Promise.resolve(challenge);
+    return fetch(form.dataset.challengeUrl, {
+      headers: { Accept: 'application/json' },
+      credentials: 'same-origin'
+    }).then(function (r) {
+      return r.json();
+    }).then(function (out) {
+      if (!out || !out.ok || !out.challenge) throw new Error('no challenge');
+      challenge = out.challenge;
+      difficulty = out.difficulty || difficulty;
+      if (challengeField) challengeField.value = challenge;
+      return challenge;
+    });
   }
 
   function urgentPicked() {
@@ -47,7 +70,9 @@
       return pending;
     }
     say('working');
-    pending = window.ccPow.solve(challenge, difficulty).then(function (nonce) {
+    pending = fetchChallenge().then(function (value) {
+      return window.ccPow.solve(value, difficulty);
+    }).then(function (nonce) {
       if (!nonce) { say('failed'); return; }
       nonceField.value = nonce;
       solved = true;

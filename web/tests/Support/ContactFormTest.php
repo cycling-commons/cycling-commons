@@ -7,7 +7,6 @@ declare(strict_types=1);
 namespace App\Tests\Support;
 
 use App\Security\FormGuard;
-use App\Security\ProofOfWork;
 use App\Support\ContactStatus;
 use App\Support\ContactTopic;
 use App\Support\Entity\ContactMessage;
@@ -64,22 +63,40 @@ final class ContactFormTest extends WebTestCase
     }
 
     /**
-     * @return array<string, string> everything the rendered form carries
+     * @return array<string, string> the rendered form's fields, plus a solved
+     *                               challenge fetched the way the script does
      */
-    private function fieldsFrom(Crawler $page): array
+    private function fieldsFrom(KernelBrowser $client, Crawler $page): array
     {
         $hidden = [];
         foreach ($page->filter('#cc-guarded-form input[type="hidden"]') as $node) {
             $hidden[$node->getAttribute('name')] = $node->getAttribute('value');
         }
 
-        $form = $page->filter('#cc-guarded-form')->first();
-        $challenge = $form->attr('data-pow-challenge') ?? '';
-        $difficulty = (int) ($form->attr('data-pow-difficulty') ?? ProofOfWork::DIFFICULTY);
-
+        [$challenge, $difficulty] = $this->fetchChallenge($client);
+        $hidden['pow_challenge'] = $challenge;
         $hidden['pow_nonce'] = $this->solve($challenge, $difficulty);
 
         return $hidden;
+    }
+
+    /**
+     * A challenge, from the endpoint the browser asks, not from the page.
+     *
+     * The form no longer carries one: a challenge is single use, so one baked
+     * into the markup could not sit in a page a cache may hold
+     * (docs/specs/page-caching.md §3.1). The script fetches it when somebody
+     * starts typing, and so does this.
+     *
+     * @return array{0: string, 1: int} the challenge and its difficulty
+     */
+    private function fetchChallenge(KernelBrowser $client): array
+    {
+        $client->request('GET', '/form-challenge', server: ['HTTP_ACCEPT' => 'application/json']);
+        $out = (array) json_decode($client->getResponse()->getContent() ?: '', true);
+        self::assertTrue($out['ok'] ?? false, 'the challenge endpoint must answer');
+
+        return [(string) $out['challenge'], (int) $out['difficulty']];
     }
 
     /**
@@ -102,7 +119,7 @@ final class ContactFormTest extends WebTestCase
         $page = $client->request('GET', '/contact');
         self::assertResponseIsSuccessful();
 
-        $fields = $this->fieldsFrom($page) + [
+        $fields = $this->fieldsFrom($client, $page) + [
             'topic' => 'question',
             'name' => 'A Rider',
             'email' => 'rider@cyclingcommons.org',
@@ -260,7 +277,7 @@ final class ContactFormTest extends WebTestCase
     {
         $client = $this->client();
         $page = $client->request('GET', '/contact');
-        $fields = $this->fieldsFrom($page) + [
+        $fields = $this->fieldsFrom($client, $page) + [
             'topic' => 'question',
             'email' => 'rider@cyclingcommons.org',
             'message' => 'Referrer check.',
@@ -287,7 +304,7 @@ final class ContactFormTest extends WebTestCase
     {
         $client = $this->client();
         $page = $client->request('GET', '/contact');
-        $fields = $this->fieldsFrom($page) + [
+        $fields = $this->fieldsFrom($client, $page) + [
             'topic' => 'question',
             'email' => 'rider@cyclingcommons.org',
             'message' => 'Off-site referrer check.',

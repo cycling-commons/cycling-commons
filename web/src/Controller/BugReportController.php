@@ -25,7 +25,6 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\RateLimiter\RateLimiterFactory;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 
 /**
  * "Something is broken", from anybody, from any page.
@@ -73,8 +72,6 @@ final class BugReportController extends AbstractController
         private readonly ScreenshotStore $screenshots,
         private readonly RateLimiterFactory $bugReportLimiter,
         private readonly RateLimiterFactory $bugReportNoJsLimiter,
-        private readonly RateLimiterFactory $powChallengeLimiter,
-        private readonly CsrfTokenManagerInterface $csrf,
     ) {
     }
 
@@ -82,46 +79,6 @@ final class BugReportController extends AbstractController
     public function form(Request $request): Response
     {
         return $this->render('pages/report_bug.html.twig', $this->context($request));
-    }
-
-    /**
-     * The three single-use values the floating panel needs, fetched when a
-     * rider opens it rather than minted into every page.
-     *
-     * The button renders on every page, and almost nobody ever files a report,
-     * so the old shape minted a proof-of-work challenge for every page view
-     * and spent none of them. Worse, a challenge is single use
-     * ({@see ProofOfWork::verify()}), so a page held in a shared cache would
-     * hand the same one to every reader and only the first report would be
-     * accepted. Moving it here is what lets the public pages be cached at all
-     * (page-caching.md §3.1), and it fixes a failure that predates caching:
-     * after a rejected send the panel cleared its solution but kept the spent
-     * challenge, so every retry failed too. A retry now asks again.
-     *
-     * Nothing here is a secret and nothing identifies the caller: a signed
-     * timestamp, a signed challenge, and a CSRF token. It is bounded anyway,
-     * because it is public, unauthenticated, and mints signed tokens.
-     */
-    #[Route(LocalizedPath::REPORT_BUG_CHALLENGE, name: 'bug_report_challenge', methods: ['GET'])]
-    public function challenge(Request $request): Response
-    {
-        if (!$this->powChallengeLimiter->create('ip-'.($request->getClientIp() ?? 'unknown'))->consume()->isAccepted()) {
-            return $this->json(['ok' => false, 'error' => 'rate_limited'], Response::HTTP_TOO_MANY_REQUESTS);
-        }
-
-        $now = new \DateTimeImmutable();
-        $response = $this->json([
-            'ok' => true,
-            'challenge' => $this->proofOfWork->issue($now),
-            'difficulty' => ProofOfWork::DIFFICULTY,
-            'stamp' => $this->guard->stamp($now),
-            'token' => $this->csrf->getToken(self::CSRF_TOKEN_ID)->getValue(),
-        ]);
-        // Single use, so it must never be stored by anything, anywhere.
-        $response->setPrivate();
-        $response->headers->addCacheControlDirective('no-store');
-
-        return $response;
     }
 
     /**
@@ -421,7 +378,6 @@ final class BugReportController extends AbstractController
             'lost_screenshots' => $back && [] !== $request->files->all('screenshot'),
             'prefill_email' => $user instanceof User ? $user->getEmail() : '',
             'form_stamp' => $this->guard->stamp(new \DateTimeImmutable()),
-            'pow_challenge' => $this->proofOfWork->issue(new \DateTimeImmutable()),
             'pow_difficulty' => ProofOfWork::DIFFICULTY,
             'honeypot_a' => FormGuard::HONEYPOT_A,
             'honeypot_b' => FormGuard::HONEYPOT_B,

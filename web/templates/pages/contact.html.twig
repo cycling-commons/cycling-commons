@@ -101,11 +101,15 @@
         <p>{{ 'support.contact.form_intro'|trans }}</p>
 
         <form method="post" action="{{ path('contact_submit') }}" id="cc-guarded-form"
-              data-pow-challenge="{{ pow_challenge }}"
+              data-challenge-url="{{ path('form_challenge') }}"
               data-pow-difficulty="{{ pow_difficulty }}">
             <input type="hidden" name="_token" value="{{ csrf_token('contact_form') }}">
           <input type="hidden" name="{{ stamp_field }}" value="{{ form_stamp }}">
-          <input type="hidden" name="pow_challenge" value="{{ pow_challenge }}">
+          {# Filled by form-challenge.js from data-challenge-url above. Empty in
+             the markup on purpose: a challenge is single use, and one baked into
+             the page would be shared by everybody served a cached copy
+             (page-caching.md §3.1). #}
+          <input type="hidden" name="pow_challenge" id="pow_challenge" value="">
           <input type="hidden" name="pow_nonce" id="pow_nonce" value="">
 
           {# Honeypots. Never remove the labels: a screen reader that ignores

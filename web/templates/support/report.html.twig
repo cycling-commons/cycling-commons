@@ -112,11 +112,13 @@
          is picked either way, so the breaker's state never shows here. #}
       <form method="post" action="{{ path('content_report_submit', {type: target.value, id: target_id}) }}"
             id="report-form"
-            data-pow-challenge="{{ pow.challenge }}"
+            data-challenge-url="{{ path('form_challenge') }}"
             data-pow-difficulty="{{ pow.difficulty }}">
         <input type="hidden" name="_token" value="{{ csrf_token('content_report') }}">
         <input type="hidden" name="{{ guard.stamp_field }}" value="{{ guard.stamp }}">
-        <input type="hidden" name="pow_challenge" value="{{ pow.challenge }}">
+        {# Filled by report-challenge.js from data-challenge-url above; empty
+           here because a challenge is single use (page-caching.md §3.1). #}
+        <input type="hidden" name="pow_challenge" id="pow_challenge" value="">
         <input type="hidden" name="pow_nonce" id="pow_nonce" value="">
         {# Where they clicked from. Carried, never shown: it is context for the
            curator, not a question for the reporter. #}
@@ -238,63 +240,14 @@
         demanding an address on the one ground where the law forbids demanding
         one.
 
-        Nonce'd rather than a file of its own: it is fifteen lines that exist
-        only for this form, and the CSP blocks inline handlers so an onchange
-        attribute would silently do nothing.
+        A file rather than an inline block: an inline one needs a CSP nonce,
+        and a nonce cannot be held in a shared cache (page-caching.md §3.2).
+        An onchange attribute is not an option either, inline handlers being
+        blocked by the CSP, and silently so.
       #}
-      <script nonce="{{ csp_nonce() }}">
-        (function () {
-          var sel = document.getElementById('rep-ground');
-          if (!sel) { return; }
-          var rights = document.getElementById('rep-rights');
-          var work = document.getElementById('rep-work');
-          var claimant = document.getElementById('rep-claimant');
-          var statement = document.getElementById('rep-statement');
-          var contact = document.getElementById('rep-contact');
-          var req = document.getElementById('rep-contact-req');
-          var hintOpt = document.getElementById('rep-contact-hint-optional');
-
-          var about = document.getElementsByName('about');
-
-          /* A ground that only a photograph can break is offered only while a
-             photograph is the thing being reported. Hidden AND disabled: a
-             hidden option stays selectable with a keyboard in some browsers. */
-          function syncGrounds() {
-            if (!about.length) { return; }
-            var onPhoto = false;
-            for (var i = 0; i < about.length; i++) {
-              if (about[i].checked && about[i].value !== 'entry') { onPhoto = true; }
-            }
-            for (var j = 0; j < sel.options.length; j++) {
-              var o = sel.options[j];
-              if (o.dataset.photoOnly !== '1') { continue; }
-              o.hidden = !onPhoto;
-              o.disabled = !onPhoto;
-              if (!onPhoto && o.selected) { sel.selectedIndex = 0; }
-            }
-          }
-
-          function sync() {
-            syncGrounds();
-            var opt = sel.options[sel.selectedIndex];
-            var proof = opt && opt.dataset.needsProof === '1';
-            var noContact = opt && opt.dataset.noContact === '1';
-
-            rights.hidden = !proof;
-            work.required = proof;
-            claimant.required = proof;
-            statement.required = proof;
-
-            contact.required = !noContact;
-            req.hidden = noContact;
-            hintOpt.hidden = !noContact;
-          }
-
-          sel.addEventListener('change', sync);
-          for (var k = 0; k < about.length; k++) { about[k].addEventListener('change', sync); }
-          sync();
-        })();
-      </script>
+      {# Behaviour in a file, so this page needs no CSP nonce
+         (docs/specs/page-caching.md §3.2). #}
+      <script src="{{ asset('support/report-grounds.js') }}" defer></script>
 
     {% endif %}
   </div>

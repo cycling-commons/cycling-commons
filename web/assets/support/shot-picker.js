@@ -22,7 +22,15 @@
   var input = document.getElementById('b-shot');
   if (!input || typeof DataTransfer !== 'function') return;
 
-  var L = window.CC_SHOT_LABELS || {};
+  /* The three strings, from the input's own attributes rather than a global an
+     inline script had to set. A page carrying an inline script needs a CSP
+     nonce, and a nonce cannot be held in a shared cache (page-caching.md
+     §3.2). */
+  var L = {
+    remove: input.dataset.labelRemove || '',
+    tooBig: input.dataset.labelTooBig || '',
+    full: input.dataset.labelFull || ''
+  };
   var max = parseInt(input.dataset.max, 10) || 3;
   var maxBytes = parseInt(input.dataset.maxBytes, 10) || 0;
 
