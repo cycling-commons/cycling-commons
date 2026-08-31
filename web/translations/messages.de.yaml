@@ -2297,7 +2297,7 @@ improve:
     toast_ctrl_added: 'Punkt festgesetzt — der Abschnitt behält seine Form bis hierher'
     toast_ctrl_removed: 'Festgesetzter Punkt entfernt'
     ctrl_remove_title: 'Ziehen zum Umformen · Rechtsklick zum Entfernen'
-    ctrl_point_help: 'Linie fixieren: Rechtsklick auf die gezeichnete Linie setzt einen Kontrollpunkt — beim Ziehen eines Pins behält alles bis zum Kontrollpunkt seine Form. Rechtsklick auf den Punkt entfernt ihn wieder. Auf dem Touchscreen: drücke „Punkt hinzufügen" und tippe auf die Linie.'
+    ctrl_point_help: 'Ziehe die gezeichnete Linie auf die Straße, der sie folgen soll. Um eine Kurve festzuhalten, mache einen Rechtsklick auf die Linie für einen Kontrollpunkt und ziehe dann an anderer Stelle: alles bis zum Punkt behält seine Form. Rechtsklick auf einen Punkt entfernt ihn. Auf dem Touchscreen "Punkt hinzufügen" drücken und die Linie antippen.'
     ctrl_point_btn: 'Punkt hinzufügen'
     ctrl_point_armed: 'Tippe auf die Linie, um einen Punkt zu setzen. Tippe auf einen gesetzten Punkt, um ihn zu entfernen. Drücke erneut auf den Knopf, wenn du fertig bist.'
     seg_hide: 'Linie ausblenden'

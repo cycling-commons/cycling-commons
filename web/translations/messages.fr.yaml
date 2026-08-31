@@ -2294,7 +2294,7 @@ improve:
     toast_ctrl_added: 'Point fixé — le tronçon garde sa forme jusqu''ici'
     toast_ctrl_removed: 'Point fixé supprimé'
     ctrl_remove_title: 'Glisser pour remodeler · clic droit pour supprimer'
-    ctrl_point_help: 'Fixez la ligne : un clic droit sur la ligne dessinée pose un point de contrôle — quand vous faites glisser une épingle, tout ce qui précède le point garde sa forme. Clic droit sur le point pour le supprimer. Sur écran tactile, appuyez sur « Ajouter un point » puis touchez la ligne.'
+    ctrl_point_help: 'Faites glisser le tracé sur la route qu''il doit suivre. Pour figer un virage, faites un clic droit sur le tracé pour poser un point de contrôle, puis déplacez une autre partie : tout ce qui précède le point garde sa forme. Clic droit sur un point pour le retirer. Sur écran tactile, appuyez sur « Ajouter un point » puis touchez le tracé.'
     ctrl_point_btn: 'Ajouter un point'
     ctrl_point_armed: 'Touchez la ligne pour poser un point. Touchez un point posé pour le supprimer. Appuyez à nouveau sur le bouton quand vous avez terminé.'
     seg_hide: 'Masquer le tracé'

@@ -715,8 +715,10 @@
       };
 
       /* Right-click on the line (35px) pins a control point. */
-      var rightClickAt = function (lngLat, screenPt) {
-        if (confirmView || placed.length < 2) return;
+      /* Nearest vertex of the drawn line to a screen point, within maxPx. Shared
+         by the armed tap (generous: a finger) and the line grab (tight: you
+         have to be ON the road you are dragging). */
+      var nearestOnLine = function (screenPt, maxPx) {
         var best = null;
         for (var li = 0; li < legs.length; li++) {
           var L = legLine(li);
@@ -727,9 +729,18 @@
             if (!best || d < best.d) best = { d: d, li: li, vi: vi, pt: L[vi] };
           }
         }
-        if (!best || best.d > 35 * 35) return;
+        return (best && best.d <= maxPx * maxPx) ? best : null;
+      };
+
+      /* Insert a control point at the line vertex nearest the tap. Returns the
+         marker so the caller can keep hold of it; the line grab drags the one
+         it just made. */
+      var rightClickAt = function (lngLat, screenPt, quiet) {
+        if (confirmView || placed.length < 2) return null;
+        var best = nearestOnLine(screenPt, 35);
+        if (!best) return null;
         var L2 = legLine(best.li);
-        if (L2.length < 3) return;                       // nothing between the ends to pin
+        if (L2.length < 3) return null;                  // nothing between the ends to pin
         if (best.vi < 1) best.vi = 1;
         if (best.vi > L2.length - 2) best.vi = L2.length - 2;
         pushHistory();
@@ -738,13 +749,76 @@
         var head = { line: hasLine ? leg.line.slice(0, best.vi + 1) : null, src: hasLine ? leg.src : null };
         var tail = { line: hasLine ? leg.line.slice(best.vi) : null, src: hasLine ? leg.src : null };
         legs.splice(best.li, 1, head, tail);
-        ctrls.splice(best.li, 0, mkCtrl({ lng: L2[best.vi][0], lat: L2[best.vi][1] }));
+        var made = mkCtrl({ lng: L2[best.vi][0], lat: L2[best.vi][1] });
+        ctrls.splice(best.li, 0, made);
         if (!head.line) snapLeg(head);
         if (!tail.line) snapLeg(tail);
         syncLoc();
         drawSeg();
-        toast(t('toast_ctrl_added'));
+        if (!quiet) toast(t('toast_ctrl_added'));
+        return made;
       };
+
+      /* Grab the drawn road and pull it onto another one.
+         
+         This is what a rider means by "move the route": press the line where it
+         is wrong, drag to the road it should follow, let go. Before this the
+         only way was to add a control point on the line and then drag that
+         point, two gestures with nothing on screen connecting them, and an
+         armed tap on the road you actually wanted was ignored because it was
+         further than 35px from the line (owner-reported 2026-08-31: "I do not
+         drag the marker, I want to drag the road").
+         
+         It is the same two steps underneath: insert a control at the vertex
+         grabbed, then move it. Fusing them into one press-drag-release is the
+         whole change, which is why it reuses rightClickAt rather than routing
+         by itself. Quiet: the toast belongs to the deliberate add, not to a
+         drag that is about to move the thing anyway.
+         
+         Mouse only. Touch keeps the armed-tap path, which is what the help text
+         describes and what works without a hover state to hint at grabbing. */
+      var GRAB_PX = 8;
+      var lineDrag = null;
+      var canvas = wmap.getCanvas();
+
+      var atPoint = function (ev) {
+        var rect = canvas.getBoundingClientRect();
+        return { x: ev.clientX - rect.left, y: ev.clientY - rect.top };
+      };
+
+      canvas.addEventListener('mousedown', function (ev) {
+        if (ev.button !== 0 || armed || confirmView || placed.length < 2) return;
+        var pt = atPoint(ev);
+        if (!nearestOnLine(pt, GRAB_PX)) return;
+        var m = rightClickAt(wmap.unproject(pt), pt, true);
+        if (!m) return;
+        lineDrag = { m: m, from: m.getLngLat().toArray() };
+        wmap.dragPan.disable();          // or the map slides out from under the drag
+        ev.preventDefault();
+      });
+
+      window.addEventListener('mousemove', function (ev) {
+        if (!lineDrag) return;
+        lineDrag.m.setLngLat(wmap.unproject(atPoint(ev)));
+      });
+
+      window.addEventListener('mouseup', function () {
+        if (!lineDrag) return;
+        var d = lineDrag;
+        lineDrag = null;
+        wmap.dragPan.enable();
+        /* Exactly what the marker's own dragend does: one path, so a grabbed
+           line and a dragged pin can never re-route differently. */
+        pushHistory(d.m, d.from);
+        legUpdateForWaypoint(d.m);
+        syncLoc(); drawSeg(); announceMove();
+      });
+
+      /* The line is grabbable, so say so under the cursor. */
+      wmap.on('mousemove', function (e) {
+        if (armed || lineDrag || confirmView || placed.length < 2) return;
+        canvas.style.cursor = nearestOnLine(e.point, GRAB_PX) ? 'grab' : '';
+      });
 
       wmap.on('click', function (e) {
         if (armed) { rightClickAt(e.lngLat, e.point); return; }

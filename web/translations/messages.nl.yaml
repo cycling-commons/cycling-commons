@@ -2294,7 +2294,7 @@ improve:
     toast_ctrl_added: 'Punt vastgezet — het stuk houdt zijn vorm tot hier'
     toast_ctrl_removed: 'Vastgezet punt verwijderd'
     ctrl_remove_title: 'Slepen om te vervormen · rechtsklik om te verwijderen'
-    ctrl_point_help: 'Zet de lijn vast: rechtsklik op de getekende lijn voor een controlepunt — als je een speld sleept, houdt alles tot aan het controlepunt zijn vorm. Rechtsklik op het punt om het weer te verwijderen. Op een aanraakscherm: druk op "Punt toevoegen" en tik op de lijn.'
+    ctrl_point_help: 'Sleep de getekende lijn naar de weg die hij moet volgen. Wil je een bocht vastzetten, klik dan met rechts op de lijn voor een controlepunt en versleep daarna een ander deel: alles tot aan het punt houdt zijn vorm. Rechtsklik op een punt om het te verwijderen. Op een touchscreen: druk op "Punt toevoegen" en tik op de lijn.'
     ctrl_point_btn: 'Punt toevoegen'
     ctrl_point_armed: 'Tik op de lijn om een punt te zetten. Tik op een gezet punt om het te verwijderen. Druk nogmaals op de knop als je klaar bent.'
     seg_hide: 'Lijn verbergen'

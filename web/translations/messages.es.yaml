@@ -1834,7 +1834,7 @@ improve:
     toast_ctrl_added: 'Punto fijado — el tramo mantiene su forma hasta aquí'
     toast_ctrl_removed: 'Punto fijado eliminado'
     ctrl_remove_title: 'Arrastra para remodelar · clic derecho para eliminar'
-    ctrl_point_help: 'Fija la línea: clic derecho sobre la línea dibujada coloca un punto de control — al arrastrar un pin, todo lo anterior al punto conserva su forma. Clic derecho sobre el punto para quitarlo. En pantalla táctil, pulsa «Añadir un punto» y toca la línea.'
+    ctrl_point_help: 'Arrastra la línea dibujada hasta la carretera que debe seguir. Para fijar una curva, haz clic derecho en la línea para poner un punto de control y luego arrastra otra parte: todo lo anterior al punto mantiene su forma. Clic derecho en un punto para quitarlo. En pantalla táctil, pulsa "Añadir un punto" y toca la línea.'
     ctrl_point_btn: 'Añadir un punto'
     ctrl_point_armed: 'Toca la línea para poner un punto. Toca un punto puesto para quitarlo. Pulsa el botón otra vez cuando termines.'
     seg_hide: 'Ocultar el trazado'
