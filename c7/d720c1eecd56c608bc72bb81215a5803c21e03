@@ -1,23 +1,23 @@
-web/translations/messages.fr.yaml
-  s_c5bcd8e7c7eb21::t_93870d42dcb70c 569-594
 web/translations/messages.de.yaml
-  s_c5bcd8e7c7eb21::t_19760c5b6075f4 569-594
+  s_c9732475dad57d::t_90e5e346ded108 569-594
 web/translations/messages.en.yaml
-  s_c5bcd8e7c7eb21::t_dca6faa550f0ec 573-598
+  s_c9732475dad57d::t_de5c58fb640179 573-598
+web/translations/messages.fr.yaml
+  s_c9732475dad57d::t_ef5219f6873383 569-594
 web/translations/messages.nl.yaml
-  s_c5bcd8e7c7eb21::t_e165f3cde82d4e 569-594
+  s_c9732475dad57d::t_6498e8ca54e8d5 569-594
 ---
 {
   "schema_version": "authorship/3.0.0",
-  "git_ai_version": "1.6.15",
+  "git_ai_version": "1.7.0",
   "base_commit_sha": "c7d720c1eecd56c608bc72bb81215a5803c21e03",
   "prompts": {},
   "sessions": {
-    "s_c5bcd8e7c7eb21": {
+    "s_c9732475dad57d": {
       "agent_id": {
         "tool": "claude",
-        "id": "42d1e61a-9a1a-41ac-a48c-fe97eaf5201c",
-        "model": "claude-opus-4-8"
+        "id": "46c5725f-c3f2-432b-800a-d5b4d3807b37",
+        "model": "claude-opus-5"
       },
       "human_author": "X. Koevoet <development@bikecoders.life>"
     }
