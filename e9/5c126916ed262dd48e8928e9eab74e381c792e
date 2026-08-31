@@ -1,0 +1,119 @@
+web/tests/Translation/TranslationPersistenceTest.php
+  s_c9732475dad57d::t_c68a96e512cc5e 40,43,46-116
+  s_c9732475dad57d::t_f83b03050a2caa 11
+  s_c9732475dad57d::t_d547a3bd609095 117
+web/src/Translation/OverlayTranslator.php
+  s_c9732475dad57d::t_981affa353e612 52,68,84
+web/src/Translation/TranslationLimits.php
+  s_c9732475dad57d::t_d547a3bd609095 38
+  s_c9732475dad57d::t_08ae208029195d 24,27-29,34-37
+web/src/Translation/OverlayCatalogue.php
+  s_c9732475dad57d::t_ef077924087fdd 22-38,53-54,57,67
+  s_c9732475dad57d::t_5ffc2da09809c2 50
+  s_c9732475dad57d::t_c6ce5026e03a19 15-16
+  s_c9732475dad57d::t_d547a3bd609095 55
+web/src/Translation/Command/SyncTranslationsCommand.php
+  s_c9732475dad57d::t_0be871161976ee 58
+  s_c9732475dad57d::t_036947c0d149a0 35
+  s_c9732475dad57d::t_fc423d86d8940c 34
+  s_c9732475dad57d::t_59a1e84a169f1d 10
+  s_c9732475dad57d::t_cc4071a07fe091 12
+web/tests/Translation/OverlayTranslatorTest.php
+  s_c9732475dad57d::t_fe0b4d19a3d7e9 54,82
+  s_c9732475dad57d::t_8ea9c6f03158c3 66,70,72,74-75
+  s_c9732475dad57d::t_02726b79b966a8 40
+web/src/Translation/Entity/TranslationOverlay.php
+  s_c9732475dad57d::t_346bd3eaa75d3e 52-54,61,69,76,82
+  s_c9732475dad57d::t_d547a3bd609095 124
+  s_c9732475dad57d::t_533df59bae5719 120-123
+web/tests/Translation/OverlayCatalogueTest.php
+  s_c9732475dad57d::t_a3adf1c9d8eb94 35
+  s_c9732475dad57d::t_d547a3bd609095 122
+  s_c9732475dad57d::t_fe0b4d19a3d7e9 62,75
+  s_c9732475dad57d::t_93786362820cac 94,103-121
+web/src/Translation/Command/ExportEnglishOverlaysCommand.php
+  s_c9732475dad57d::t_f6ee374b1a7ef8 44
+  s_c9732475dad57d::t_69aa72a002061a 71
+  s_c9732475dad57d::t_87d536af01dd83 1-37,40-43,45-46,95-96
+  s_c9732475dad57d::t_4f557345e621da 47-56,72,74,76-78,82-85,90-93
+  s_c9732475dad57d::t_a8d8395174cbe0 57-59,62-70,73,75,79,81,86,88-89,94
+  s_c9732475dad57d::t_dd9aa124b1e50d 60-61
+  s_c9732475dad57d::t_d2fcc09f076f42 80,87
+  s_c9732475dad57d::t_844344216c3a5c 38-39
+web/tests/Translation/DeleteTranslationOverlayCommandTest.php
+  s_c9732475dad57d::t_a083992575ca32 35
+  s_c9732475dad57d::t_2b955c5ab1f13a 73,75-102,104
+web/src/Translation/CatalogueSync.php
+  s_c9732475dad57d::t_e5265eb782f88d 10,12,16,18-22,31,48-59,61-80,82
+  s_c9732475dad57d::t_4f7a58ff9e8f2c 32
+  s_c9732475dad57d::t_3b0fa5ac93c775 92
+web/src/Translation/Entity/TranslationEntry.php
+  s_c9732475dad57d::t_41f14f8c2cfa8f 56,66-87,90-95,100-112
+  s_c9732475dad57d::t_ed8348bd5c63a5 37-45
+  s_c9732475dad57d::t_d547a3bd609095 113-114
+web/migrations/Version20260831130000.php
+  s_c9732475dad57d::t_9a451154e1e2be 21
+  s_c9732475dad57d::t_8046c2d290d345 1-20,22-63
+web/tests/Translation/ExportEnglishOverlaysCommandTest.php
+  s_c9732475dad57d::t_803d04166f5680 30
+  s_c9732475dad57d::t_a09a855d9d8b89 9,32-41,44-55,57-58,60-104,106-110
+  s_c9732475dad57d::t_c2334bea5296a0 1-8,10-27,29,31,111-112
+  s_c9732475dad57d::t_50a0ac9965ec82 28,42,56,105
+  s_c9732475dad57d::t_11f7f4598b6937 43
+  s_c9732475dad57d::t_26b367f797d960 59
+web/tests/Translation/TranslationDeletionHookTest.php
+  s_c9732475dad57d::t_dd9ad7b5ff4691 81
+  s_c9732475dad57d::t_1b7cecdcdde18c 74
+web/src/Translation/StaleIndex.php
+  s_c9732475dad57d::t_14e3815e56f020 9,24-32,34-41,47-50,71-73,75,96-98,100
+  s_c9732475dad57d::t_c790ca04780d0c 33,42-43,51-52,74,99
+  s_c9732475dad57d::t_4ffcd17e8683ce 1-8,10-23,44-46,53-70,76-95,101-117
+web/tests/Translation/CatalogueSyncTest.php
+  s_c9732475dad57d::t_633caea9693f2d 12
+  s_c9732475dad57d::t_6205f75485a8b7 58,82,85,114-115,128,152,157,168,175,188,196
+  s_c9732475dad57d::t_6663ee417d9bd0 147-151,153-156,158-167,169-174,176-187,189-195,197-202
+  s_c9732475dad57d::t_0b180cd072b5d1 11,14,16,19,26-50
+  s_c9732475dad57d::t_d547a3bd609095 203
+  s_c9732475dad57d::t_38abe9dc0d49e5 51
+web/src/Translation/TranslationCaches.php
+  s_c9732475dad57d::t_f693c7c1e6e71e 1-33
+web/tests/Translation/StaleIndexTest.php
+  s_c9732475dad57d::t_ef315a56630bfa 10,56-90
+  s_c9732475dad57d::t_1ce5ff60b020ee 1-9,11-55,91-92
+web/src/Translation/Command/DeleteTranslationOverlayCommand.php
+  s_c9732475dad57d::t_dd6c08f4a7e770 51
+  s_c9732475dad57d::t_43106513b54666 12
+  s_c9732475dad57d::t_e83d7432e5efc7 26-27
+  s_c9732475dad57d::t_4bc5e2fb0d5158 42
+  s_c9732475dad57d::t_bb3536234c38a8 64,68
+  s_c9732475dad57d::t_3c6bbdfba1f769 107
+web/tests/Translation/RecordingLogger.php
+  s_c9732475dad57d::t_4401b224d34ad8 1-31
+web/src/Translation/Entity/TranslationProposal.php
+  s_c9732475dad57d::t_dc0a8f4011698e 50-54
+  s_c9732475dad57d::t_70c762c8e8e94a 77-78,86
+  s_c9732475dad57d::t_4f257713e42369 111,116-118
+  s_c9732475dad57d::t_8086b4d08ba0ef 172,177-179
+  s_c9732475dad57d::t_3c3c542da93b9d 119-120,180-181
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "e95c126916ed262dd48e8928e9eab74e381c792e",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_c9732475dad57d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "46c5725f-c3f2-432b-800a-d5b4d3807b37",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
