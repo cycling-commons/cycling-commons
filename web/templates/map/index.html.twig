@@ -298,6 +298,17 @@
           <div class="chips f-optin"><span class="chip" id="prefFilter" role="button" tabindex="0" aria-pressed="false">{{ 'map.pref_filter'|trans }}</span></div>
         </div>
 
+        {# HIDDEN UNTIL THERE ARE RIDES TO DRAW (docs/TODO.md, "Ride heatmap").
+           A heatmap built from a handful of routes is not a quiet feature, it
+           is a wrong one: it shows a few riders' habits as if they were where
+           people ride. Turn it back on when contributed routes are numerous
+           enough that the shape means something.
+
+           The markup is commented rather than deleted because nothing else
+           changed: the layer, the season facet and the scope filter all still
+           work. Everything that reads these elements does so through
+           querySelectorAll or a null check, so their absence breaks nothing
+           (assets/map/panels.js, assets/map/render.js:updateHeatFilter).
         <h4 class="fh">{{ 'map.heatmap_title'|trans }} <span class="fh-note">{{ 'map.heatmap_derived'|trans }}</span></h4>
         <div class="toggle" id="heattoggle">
           <button class="on" data-h="off">{{ 'map.heat_off'|trans }}</button>
@@ -306,6 +317,7 @@
         <div class="chips" id="season" style="margin-top:.6rem">
           <span class="chip on" data-s="all">{{ 'map.season_all'|trans }}</span><span class="chip" data-s="spring">{{ 'map.season_spring'|trans }}</span><span class="chip" data-s="summer">{{ 'map.season_summer'|trans }}</span><span class="chip" data-s="autumn">{{ 'map.season_autumn'|trans }}</span><span class="chip" data-s="winter">{{ 'map.season_winter'|trans }}</span>
         </div>
+        #}
       </div>
       </section>
 
