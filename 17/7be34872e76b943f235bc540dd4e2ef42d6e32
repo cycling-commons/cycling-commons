@@ -1,19 +1,14 @@
 docs/specs/2026-07-22-coverage-scope-rendering-design.md
-  s_c5bcd8e7c7eb21::t_ca1cd041310c79 1-134
+  h_fb5318cde6cf17 1-134
 ---
 {
   "schema_version": "authorship/3.0.0",
-  "git_ai_version": "1.6.15",
+  "git_ai_version": "1.7.0",
   "base_commit_sha": "177be34872e76b943f235bc540dd4e2ef42d6e32",
   "prompts": {},
-  "sessions": {
-    "s_c5bcd8e7c7eb21": {
-      "agent_id": {
-        "tool": "claude",
-        "id": "42d1e61a-9a1a-41ac-a48c-fe97eaf5201c",
-        "model": "claude-opus-4-8"
-      },
-      "human_author": "X. Koevoet <development@bikecoders.life>"
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
     }
   }
 }
