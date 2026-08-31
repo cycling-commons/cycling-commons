@@ -1,0 +1,49 @@
+web/assets/map/map.js
+  s_bd35b13142b2fa::t_d68a8c70646eb6 172-176
+docs/specs/map-and-search.md
+  s_9676dec97fb5cf::t_a56c0078ff8e52 551,553
+  s_bd35b13142b2fa::t_bcf92bbf291532 635-663
+web/tests/Catalog/CatalogProviderTest.php
+  s_bd35b13142b2fa::t_4fcc27e2b24a8d 294-316,319-323,325-327
+  s_bd35b13142b2fa::t_a7eee65d02737f 318
+  s_bd35b13142b2fa::t_37c27a826e0a07 317,324
+web/assets/map/catalog.js
+  s_bd35b13142b2fa::t_7a0bd32ad815eb 14-22,79
+web/tests/js/surface-is-an-overlay.test.cjs
+  s_bd35b13142b2fa::t_06c0154b3bb9e1 1-67
+web/assets/map/render.js
+  s_bd35b13142b2fa::t_d329975af63d1c 271-283
+web/assets/map/panels.js
+  s_bd35b13142b2fa::t_d65636827377a1 125-132,139-140
+web/src/Catalog/CatalogProvider.php
+  s_bd35b13142b2fa::t_42e9dccb1f73bc 374-391
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "db946d99a0eb0867e4381d0f192223f1f9750379",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_9676dec97fb5cf": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "af233b2e-a2af-4096-b44d-1b3f2c245fc1",
+        "model": "claude-fable-5"
+      },
+      "human_author": null
+    },
+    "s_bd35b13142b2fa": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c348108d-a15c-4a6f-a1f0-9ab7e633bdf4",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
