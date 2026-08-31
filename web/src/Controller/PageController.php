@@ -39,43 +39,6 @@ final class PageController extends AbstractController
     }
 
     /**
-     * Side-by-side homepage: same page, fragmentation then voting.
-     * Throwaway once the order is chosen — not in the sitemap.
-     */
-    #[Route('/home-pair', name: 'home_pair')]
-    public function homePair(): Response
-    {
-        $response = $this->render('pages/index.html.twig', [
-            'page_title' => 'meta.home_title',
-            'page_description' => 'meta.home_description',
-            'nav_active' => '',
-            'home_pair_order' => true,
-        ]);
-        $response->headers->set('X-Robots-Tag', 'noindex, nofollow');
-
-        return $response;
-    }
-
-    /**
-     * Same proposed order as home_pair, with the compact copy.
-     * Hero lede stays the community-built original.
-     */
-    #[Route('/home-pair2', name: 'home_pair2')]
-    public function homePair2(): Response
-    {
-        $response = $this->render('pages/index.html.twig', [
-            'page_title' => 'meta.home_title',
-            'page_description' => 'meta.home_description',
-            'nav_active' => '',
-            'home_pair_order' => true,
-            'home_compact' => true,
-        ]);
-        $response->headers->set('X-Robots-Tag', 'noindex, nofollow');
-
-        return $response;
-    }
-
-    /**
      * What is coming. Deliberately a flat list (owner, 2026-08-28: "for now it
      * must be a very simple list"), read straight out of {@see ReleaseNotes}
      * with no database behind it.

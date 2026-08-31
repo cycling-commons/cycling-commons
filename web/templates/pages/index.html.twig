@@ -1,9 +1,6 @@
 {# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
 {% extends 'base.html.twig' %}
 {% block head_styles %}
-{% if home_pair_order|default(false) %}
-<meta name="robots" content="noindex, nofollow" />
-{% endif %}
 <link rel="stylesheet" href="{{ asset('styles/scout-devices.css') }}" />
 <style>
   :root{
@@ -149,15 +146,10 @@
     .disc .chips{gap:.3rem}
   }
 
-  /* Local compare strip — overlay, so it does not change the fold. */
-  .home-order-cmp{position:fixed;bottom:2.8rem;left:50%;transform:translateX(-50%);z-index:10000;background:var(--ink);color:var(--paper);font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;padding:.55rem 1rem;display:flex;flex-wrap:wrap;gap:.6rem 1.2rem;align-items:center;border-radius:4px;box-shadow:0 10px 28px rgba(0,0,0,.4);max-width:calc(100vw - 2rem)}
-  .home-order-cmp a{color:var(--trail);text-decoration:underline;text-underline-offset:.18em}
-
   /* ---------- SECTIONS ---------- */
   section.pad{padding:clamp(4rem,9vw,8rem) 0;position:relative}
-  /* Scout (pair order) or How (current order) is the last paper block before
-     the green band. A full 8rem under it is a hole; match the section-to-
-     section seam instead. */
+  /* Scout is the last paper block before the green band. A full 8rem under
+     it is a hole; match the section-to-section seam instead. */
   section.pad:has(+ .cta-band){padding-bottom:clamp(2rem,4vw,3rem)}
   .kicker{font-family:var(--mono);font-size:.74rem;letter-spacing:.18em;color:var(--clay);margin-bottom:1.1rem;display:flex;align-items:center;gap:.6rem}
   .kicker::before{content:"";width:13px;height:17px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 130'%3E%3Cpath fill='%23B5532E' d='M50 8 C31 8 16 23 16 42 C16 68 50 124 50 124 C50 124 84 68 84 42 C84 23 69 8 50 8 Z'/%3E%3C/svg%3E") center/contain no-repeat;transform:translateY(-1px)}
@@ -242,30 +234,11 @@
   footer .wrap{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;align-items:center}
   footer .mono{font-size:.68rem;color:rgba(239,230,212,.72)}
   footer a{color:rgba(239,230,212,.8)}footer a:hover{color:var(--trail)}
-  /* Compare chip sits on the footer unless the links have room above it. */
-  body:has(.home-order-cmp) .foot{padding-bottom:7rem}
 
   @media(prefers-reduced-motion:reduce){.hero .hero-contours{animation:none;clip-path:none}.rv{transition:none;opacity:1;transform:none}}
 </style>
 {% endblock %}
 {% block body %}
-{% if app.debug %}
-  <div class="home-order-cmp">
-    {% if home_compact|default(false) %}
-      Compact copy on the proposed order.
-      <a href="{{ path('home_pair') }}">Proposed order, original copy</a>
-      <a href="{{ path('home') }}">Current homepage</a>
-    {% elseif home_pair_order|default(false) %}
-      Proposed order — original copy.
-      <a href="{{ path('home') }}">Current homepage</a>
-      <a href="{{ path('home_pair2') }}">Compact copy</a>
-    {% else %}
-      Current homepage.
-      <a href="{{ path('home_pair') }}">Proposed order</a>
-      <a href="{{ path('home_pair2') }}">Compact copy</a>
-    {% endif %}
-  </div>
-{% endif %}
 <!-- ===================== HERO ===================== -->
 <header class="hero">
   <svg class="hero-contours" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
@@ -307,8 +280,8 @@
     <div>
       <div class="kicker rv">{{ 'home.frag_kicker'|trans }}</div>
       <h2 class="rv" data-d="1">{{ 'home.frag_h2'|trans }}</h2>
-      <p class="lead rv" data-d="2">{{ (home_compact|default(false) ? 'home.frag_lead1_short' : 'home.frag_lead1')|trans }}</p>
-      <p class="lead rv" data-d="2" style="margin-top:1.1rem">{{ (home_compact|default(false) ? 'home.frag_lead2_short' : 'home.frag_lead2')|trans|rich }}</p>
+      <p class="lead rv" data-d="2">{{ 'home.frag_lead1'|trans }}</p>
+      <p class="lead rv" data-d="2" style="margin-top:1.1rem">{{ 'home.frag_lead2'|trans|rich }}</p>
     </div>
     <div class="panel rv" data-d="2">
       <h3>{{ 'home.frag_panel_h'|trans }}</h3>
@@ -323,14 +296,9 @@
   </div>
 </section>
 
-{% if home_pair_order|default(false) %}
-{# Proposed: fragmentation, then voting — principle does not sit between. #}
+{# Fragmentation, then voting — principle does not sit between. #}
 {% include 'pages/_home_curation.html.twig' %}
 {% include 'pages/_home_principle.html.twig' %}
-{% else %}
-{% include 'pages/_home_principle.html.twig' %}
-{% include 'pages/_home_curation.html.twig' %}
-{% endif %}
 
 <!-- ===================== CATALOG ===================== -->
 <section class="pad">
@@ -361,14 +329,9 @@
   </div>
 </section>
 
-{% if home_pair_order|default(false) %}
 {# Idea first, then the tool: one tap at a time, Scout is how you do it. #}
 {% include 'pages/_home_how.html.twig' %}
 {% include 'pages/_home_scout.html.twig' %}
-{% else %}
-{% include 'pages/_home_scout.html.twig' %}
-{% include 'pages/_home_how.html.twig' %}
-{% endif %}
 
 <!-- ===================== CTA ===================== -->
 <div class="cta-band">

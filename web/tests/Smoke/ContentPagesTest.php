@@ -148,62 +148,16 @@ final class ContentPagesTest extends WebTestCase
         self::assertSelectorTextContains('h1', 'open atlas');
     }
 
-    public function testHomeKeepsPrincipleBetweenFragmentationAndVoting(): void
+    public function testHomeUsesFinalOrderAndCompactCopy(): void
     {
         $client = static::createClient();
         $client->request('GET', '/');
         self::assertResponseIsSuccessful();
 
-        $html = (string) $client->getResponse()->getContent();
-        $frag = strpos($html, 'Cycling knowledge is scattered');
-        $what = strpos($html, 'Open data about the world');
-        $cur = strpos($html, 'The best of a region');
-        self::assertNotFalse($frag);
-        self::assertNotFalse($what);
-        self::assertNotFalse($cur);
-        self::assertLessThan($what, $frag);
-        self::assertLessThan($cur, $what);
-
-        $scout = strpos($html, 'Scout — tag it while you ride');
-        $how = strpos($html, 'One tap at a time');
-        self::assertNotFalse($scout);
-        self::assertNotFalse($how);
-        self::assertLessThan($how, $scout);
-    }
-
-    public function testHomePairPutsVotingBesideFragmentation(): void
-    {
-        $client = static::createClient();
-        $client->request('GET', '/home-pair');
-        self::assertResponseIsSuccessful();
-        self::assertStringContainsString('noindex', (string) $client->getResponse()->headers->get('X-Robots-Tag'));
-        self::assertSelectorExists('meta[name="robots"][content="noindex, nofollow"]');
-
-        $html = (string) $client->getResponse()->getContent();
-        $frag = strpos($html, 'Cycling knowledge is scattered');
-        $cur = strpos($html, 'The best of a region');
-        $what = strpos($html, 'Open data about the world');
-        self::assertNotFalse($frag);
-        self::assertNotFalse($cur);
-        self::assertNotFalse($what);
-        self::assertLessThan($cur, $frag);
-        self::assertLessThan($what, $cur);
-
-        $how = strpos($html, 'One tap at a time');
-        $scout = strpos($html, 'Scout — tag it while you ride');
-        self::assertNotFalse($how);
-        self::assertNotFalse($scout);
-        self::assertLessThan($scout, $how);
-        self::assertStringContainsString('community-built map of the world', $html);
-        self::assertStringContainsString('Today every layer lives in its own silo', $html);
-    }
-
-    public function testHomePair2UsesCompactCopyAndKeepsTheHero(): void
-    {
-        $client = static::createClient();
-        $client->request('GET', '/home-pair2');
-        self::assertResponseIsSuccessful();
-        self::assertStringContainsString('noindex', (string) $client->getResponse()->headers->get('X-Robots-Tag'));
+        // The chosen homepage (was /home-pair2) is the real one: indexable.
+        // Only the template-level check works here: in debug/test the framework
+        // stamps X-Robots-Tag: noindex on every response by itself.
+        self::assertSelectorNotExists('meta[name="robots"]');
 
         $html = (string) $client->getResponse()->getContent();
         self::assertStringContainsString('community-built map of the world', $html);
@@ -223,6 +177,15 @@ final class ContentPagesTest extends WebTestCase
         self::assertLessThan($cur, $frag);
         self::assertLessThan($what, $cur);
         self::assertLessThan($scout, $how);
+    }
+
+    public function testRetiredHomeVariantsAreGone(): void
+    {
+        $client = static::createClient();
+        $client->request('GET', '/home-pair');
+        self::assertResponseStatusCodeSame(404);
+        $client->request('GET', '/home-pair2');
+        self::assertResponseStatusCodeSame(404);
     }
 
     public function testJoinRenders(): void
