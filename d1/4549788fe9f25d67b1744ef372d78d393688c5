@@ -1,18 +1,13 @@
 mkdocs.yml
-  s_f945338197163d::t_3b0f97e7d958c6 69
+  s_f945338197163d::t_587e8d1679c7da 69
 wiki/javascripts/diagrams.js
-  s_f945338197163d::t_8e2038d3f8a3bf 58-70,72,75-80,94,97-99,109-111,114-121
+  s_f945338197163d::t_c1dff8012a56b6 58-70,72,75-80,94,97-99,109-111,114-121
 ---
 {
   "schema_version": "authorship/3.0.0",
-  "git_ai_version": "1.6.24",
+  "git_ai_version": "1.7.0",
   "base_commit_sha": "d14549788fe9f25d67b1744ef372d78d393688c5",
   "prompts": {},
-  "humans": {
-    "h_fb5318cde6cf17": {
-      "author": "X. Koevoet <development@bikecoders.life>"
-    }
-  },
   "sessions": {
     "s_f945338197163d": {
       "agent_id": {
