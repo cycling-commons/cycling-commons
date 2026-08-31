@@ -2364,6 +2364,7 @@ improve:
     body: 'Dein Vorschlag ist in der Kuratoren-Warteschlange. Auf der Karte erscheint nichts, bevor ein Kurator es angesehen hat.'
     reference: 'Referenz:'
     cta: '← Zurück zur Karte'
+    cta_contributions: 'Deine Beiträge ansehen'
   error:
     what_changed_required: 'Bitte beschreibe, was du hinzufügst oder änderst.'
     what_changed_too_long: 'Die Beschreibung darf höchstens 2000 Zeichen lang sein.'

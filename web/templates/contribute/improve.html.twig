@@ -329,6 +329,9 @@
   .receipt{text-align:center;padding:4rem 1rem}
   .receipt h2{font-family:var(--serif);font-size:1.8rem;margin:.5rem 0}
   .receipt .ref{font-family:var(--mono);font-size:.72rem;color:#595c4d;margin-top:.5rem}
+  /* Wraps rather than squeezing: two full-width buttons on a phone read better
+     than two half-width ones with the label broken across lines. */
+  .receipt-cta{display:flex;flex-wrap:wrap;justify-content:center;gap:.75rem;margin-top:2rem}
 
   .btn-p{background:var(--trail);color:var(--ink)}.btn-p:hover{background:#ff703d}
   .btn-p:disabled,.btn-p[disabled]{background:var(--paper-deep);color:#9a9d8c;cursor:not-allowed}
@@ -371,7 +374,12 @@
        persisted", which stopped being true once the moderation queue went in —
        the reference above is a real submission id. #}
     <p class="ref">{{ 'improve.receipt.reference'|trans }} {{ receipt.reference }}</p>
-    <div style="margin-top:2rem">
+    {# Two ways on, and the order is the point: the reference above is a real
+       submission id, and Contributions is the page that tracks it, answers a
+       curator's question on it, and shows the decision. Back to the map is the
+       way back, not the way forward. #}
+    <div class="receipt-cta">
+      <a class="btn btn-p" href="{{ path('profile') }}">{{ 'improve.receipt.cta_contributions'|trans }}</a>
       <a class="btn btn-g" href="{{ path('map') }}">{{ 'improve.receipt.cta'|trans }}</a>
     </div>
   </div>

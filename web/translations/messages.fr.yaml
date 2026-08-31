@@ -2361,6 +2361,7 @@ improve:
     body: 'Votre suggestion est dans la file des curateurs. Rien n''apparaît sur la carte tant qu''un curateur ne l''a pas examinée.'
     reference: 'Référence :'
     cta: '← Retour à la carte'
+    cta_contributions: 'Voir vos contributions'
   error:
     what_changed_required: 'Veuillez décrire ce que vous ajoutez ou modifiez.'
     what_changed_too_long: 'La description doit comporter 2000 caractères ou moins.'

@@ -1906,6 +1906,7 @@ improve:
     body: 'Tu sugerencia está en la cola de los curadores. No aparece nada en el mapa hasta que un curador la haya mirado.'
     reference: 'Referencia:'
     cta: '← Volver al mapa'
+    cta_contributions: 'Ver tus contribuciones'
   error:
     what_changed_required: 'Describe qué estás añadiendo o cambiando.'
     what_changed_too_long: 'La descripción no puede pasar de 2000 caracteres.'

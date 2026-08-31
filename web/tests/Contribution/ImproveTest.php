@@ -489,6 +489,15 @@ final class ImproveTest extends WebTestCase
         // The old amber note said suggestions were "not yet persisted" while
         // this very assertion reads the persisted row's id off the page.
         self::assertSelectorNotExists('.receipt .stub-note');
+
+        /* Two ways on, and the order matters. The reference just above is a
+           real submission id, and Contributions is where a rider follows it:
+           answers a curator's question, sees the decision. Back to the map is
+           the way back, not the way forward, so it is the quieter of the two
+           (owner-requested 2026-08-31). */
+        self::assertSelectorExists('.receipt-cta a[href="/profile"]');
+        self::assertSelectorTextContains('.receipt-cta a[href="/profile"]', 'contributions');
+        self::assertSelectorExists('.receipt-cta a[href="/map"]');
     }
 
     /**

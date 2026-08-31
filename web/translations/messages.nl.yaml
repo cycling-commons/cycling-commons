@@ -2361,6 +2361,7 @@ improve:
     body: 'Jouw suggestie staat in de wachtrij van de curators. Er verschijnt niets op de kaart totdat een curator ernaar heeft gekeken.'
     reference: 'Referentie:'
     cta: '← Terug naar de kaart'
+    cta_contributions: 'Bekijk je bijdragen'
   error:
     what_changed_required: 'Beschrijf wat je toevoegt of wijzigt.'
     what_changed_too_long: 'De beschrijving mag maximaal 2000 tekens bevatten.'

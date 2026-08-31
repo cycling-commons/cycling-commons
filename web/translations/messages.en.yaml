@@ -1896,6 +1896,7 @@ improve:
     body: 'Your suggestion is in the curator queue. Nothing appears on the map until a curator has looked at it.'
     reference: 'Reference:'
     cta: '← Back to the map'
+    cta_contributions: 'See your contributions'
   error:
     what_changed_required: 'Please describe what you are adding or changing.'
     what_changed_too_long: 'Description must be 2000 characters or fewer.'
