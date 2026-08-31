@@ -419,6 +419,14 @@ export function openSurfaceDrawer(p, lngLat, geometry, tileCtx) {
     segmentEnds: ends,
     spannedRefs,
     confirmClass: CONFIRMABLE.has(p.cls) ? p.cls : undefined,  // cycleway/unverified claim no surface
+    /* What OSM says, carried through the edit link so the submission can record
+       it as the side the rider changed FROM. Without it a rider turning an
+       asphalt road to gravel produces the same submission as one filling in a
+       blank road, and a curator cannot tell the two apart
+       (owner-reported 2026-08-31). Separate from confirmClass, which is only
+       set for classes a rider may confirm. */
+    osmSurface: p.cls || undefined,
+    osmHighway: p.hw || undefined,
     record: rec,
     source: 'OpenStreetMap',
     osmUrl: p.ref ? 'https://www.openstreetmap.org/' + p.ref : undefined,

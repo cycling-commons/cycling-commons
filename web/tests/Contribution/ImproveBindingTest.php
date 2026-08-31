@@ -260,6 +260,62 @@ final class ImproveBindingTest extends WebTestCase
     }
 
     /**
+     * Changing what OSM already said shows up as a change, not as a blank
+     * filled in.
+     *
+     * `was` is normally what our catalogue held, which for a new item is
+     * nothing. But "our catalogue held nothing" is not "nothing was known". A
+     * rider turning an asphalt road into a gravel one produced exactly the same
+     * submission as one describing a road nobody had touched, and the curator
+     * could not tell them apart. The first is the one worth a second look:
+     * usually the rider is right, and when they are not, this is the only place
+     * anybody would notice (owner-reported 2026-08-31).
+     */
+    public function testChangingWhatOsmSaidReadsAsAChange(): void
+    {
+        self::bootKernel();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $service = static::getContainer()->get(\App\Service\ContributionStubInterface::class);
+
+        $rider = (new User())->setEmail('contradictor@test.test');
+        $rider->setPassword('x');
+        $em->persist($rider);
+        $em->flush();
+
+        $receipt = $service->submit('add', [
+            'type' => 'road-surface',
+            '_osm_ref' => 'way/999123',
+            '_ways_spanned' => '',
+            // What the map handed the wizard: OSM calls this paved asphalt.
+            '_osm_was' => ['surface' => 'Asphalt', 'roadType' => 'Local road'],
+            'details' => ['name' => 'Contradiction Road', 'surface' => 'Gravel', 'roadType' => 'Local road'],
+            'extras' => [],
+            'segment' => json_encode(['a' => [5.1, 52.6], 'b' => [5.2, 52.7],
+                'line' => [[5.1, 52.6], [5.2, 52.7]]], \JSON_THROW_ON_ERROR),
+            'lat' => '52.6', 'lng' => '5.1',
+        ], $rider);
+
+        $sub = $em->getRepository(Submission::class)->find((int) $receipt->submissionId);
+        self::assertNotNull($sub);
+        $changes = $sub->getChanges();
+
+        // The contradiction the curator has to see.
+        self::assertSame('Asphalt', $changes['surface']['was'] ?? null,
+            'the side the rider changed FROM must be what OSM said');
+        self::assertSame('Gravel', $changes['surface']['now'] ?? null);
+
+        // Agreeing with OSM still records the baseline: the desk decides what
+        // to show, this only has to stop throwing the fact away.
+        self::assertSame('Local road', $changes['roadType']['was'] ?? null);
+
+        // A field OSM said nothing about stays honestly blank on the was side.
+        // array_key_exists, not ??: the point is that the key is there AND null.
+        self::assertArrayHasKey('segment', $changes);
+        self::assertTrue(array_key_exists('was', $changes['segment']));
+        self::assertNull($changes['segment']['was'], 'nobody had said anything about the shape');
+    }
+
+    /**
      * A revision of a pending NEW item reaches the ITEM, and survives approval.
      *
      * For a new item the item IS the proposal: it waits in state `submitted`

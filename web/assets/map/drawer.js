@@ -391,6 +391,11 @@ function buildRecord(layer, f){
     }
     // Prefill OSM surface on the edit link too, not only confirm.
     if(f.confirmClass) refQ += `&surface=${encodeURIComponent(f.confirmClass)}`;
+    /* The OSM baseline, so the submission can say what the rider changed FROM.
+       Sent even when it equals the prefill: `surface` above is a form default a
+       rider may overwrite, these two are a record of what the map held. */
+    if(f.osmSurface) refQ += `&osm_surface=${encodeURIComponent(f.osmSurface)}`;
+    if(f.osmHighway) refQ += `&osm_highway=${encodeURIComponent(f.osmHighway)}`;
     if(f.osmName) refQ += `&name=${encodeURIComponent(f.osmName)}`;
     edit = `<a class="cc-d-act edit" href="/improve?${refQ}">✎ ${D.editItem||'Edit this item'}</a>`;
     // Confirm is the same submission, one step shorter (location already confirmed).

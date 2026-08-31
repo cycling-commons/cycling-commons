@@ -11,6 +11,7 @@ use App\Catalog\Entity\Item;
 use App\Catalog\ItemState;
 use App\Catalog\ItemType;
 use App\Catalog\LocationMode;
+use App\Catalog\RoadType;
 use App\Catalog\ServiceKind;
 use App\Catalog\SurfaceVocabulary;
 use App\Contribution\CatalogContributionService;
@@ -124,6 +125,31 @@ final class ContributeController extends AbstractController
         ]);
     }
 
+    /**
+     * The OSM values the map handed the wizard, in the form's own vocabulary.
+     *
+     * Read from the query rather than re-fetched: the map already has the tile
+     * open and knows what it drew, and a second lookup here could disagree with
+     * what the rider was looking at. Anything OSM says that the form cannot
+     * express is left out; a missing baseline is honest, a guessed one is not.
+     *
+     * @return array<string, string>
+     */
+    private static function osmBaseline(Request $request): array
+    {
+        $was = [];
+        $surface = SurfaceVocabulary::fromTileClass((string) $request->query->get('osm_surface', ''));
+        if (null !== $surface) {
+            $was['surface'] = $surface;
+        }
+        $roadType = RoadType::fromHighway((string) $request->query->get('osm_highway', ''));
+        if (null !== $roadType) {
+            $was['roadType'] = $roadType;
+        }
+
+        return $was;
+    }
+
     private function renderUnbound(): Response
     {
         return $this->render('contribute/improve.html.twig', [
@@ -203,6 +229,15 @@ final class ContributeController extends AbstractController
                     'type' => $type->value,
                     '_osm_ref' => $ref,
                     '_ways_spanned' => implode(',', \array_slice($srefs, 0, 120)),
+                    /* What OSM held when the rider opened the form, so the
+                       submission can say what they changed FROM. Our catalogue
+                       held nothing (this is a new item), which is not the same
+                       as OSM holding nothing, and without this a rider turning
+                       asphalt into gravel looks exactly like one filling in a
+                       blank road (owner-reported 2026-08-31). Mapped through
+                       the same vocabularies the form offers, so an OSM value we
+                       cannot express is simply absent rather than guessed. */
+                    '_osm_was' => self::osmBaseline($request),
                 ] + $data, $user);
 
                 return $this->renderAddPlace($type, receipt: $receipt);

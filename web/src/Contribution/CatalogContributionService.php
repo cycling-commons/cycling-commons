@@ -299,6 +299,39 @@ final class CatalogContributionService implements ContributionStubInterface
     }
 
     /**
+     * A new item's change map, with OSM as the side it changed FROM.
+     *
+     * `was` is normally what our catalogue held, and for a new item that is
+     * nothing. But "our catalogue held nothing" is not "nothing was known": the
+     * road may be one OSM already describes, and a rider turning an asphalt
+     * road into a gravel one then produced exactly the same submission as one
+     * filling in a blank road. A curator could not tell them apart, and the
+     * first is the one worth a second look (owner-reported 2026-08-31).
+     *
+     * Only fields the map actually carried a value for. The rest keep `was`
+     * null, which is the truth: nobody had said anything about them.
+     *
+     * Safe on this side specifically because `approveNew()` applies nothing
+     * from the change map; the item already holds the values. On an edit `was`
+     * keeps its old meaning, and `applyEdit()` still compares against it.
+     *
+     * @param array<string, mixed> $attributes
+     *
+     * @return array<string, array{was: mixed, now: mixed}>
+     */
+    private static function newItemChanges(array $attributes, mixed $osmWas): array
+    {
+        $baseline = \is_array($osmWas) ? $osmWas : [];
+        $out = [];
+        foreach ($attributes as $field => $now) {
+            $was = $baseline[$field] ?? null;
+            $out[$field] = ['was' => \is_string($was) && '' !== $was ? $was : null, 'now' => $now];
+        }
+
+        return $out;
+    }
+
+    /**
      * A revision adds to the proposal; it never replaces it.
      *
      * The second round is diffed against the ITEM, and for a submission that
@@ -608,7 +641,7 @@ final class CatalogContributionService implements ContributionStubInterface
                 ->setCountryCode($geo['countryCode'])
                 ->setRegionId($geo['regionId'])
                 ->setChanges(SubmissionType::NewItem === $type
-                    ? array_map(static fn (mixed $v): array => ['was' => null, 'now' => $v], $draft->attributes)
+                    ? self::newItemChanges($draft->attributes, $rawPayload['_osm_was'] ?? null)
                     : $changes /* Edit passes a ready was/now map */)
                 ->setPayload($rawPayload);
             $this->em->persist($submission);
