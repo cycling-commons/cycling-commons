@@ -37,12 +37,27 @@ final class SegmentShapeReviewTest extends TestCase
         ]]]);
 
         self::assertIsArray($shape);
-        /* A new stretch HAS a before, and it is the state the map was already
-           drawing: the same road, with no surface anybody recorded (owner
-           2026-08-12). An unavailable Before button told a curator nothing
-           about what the proposal replaces. */
+        /* A new stretch HAS a before, and it is the same road (owner
+           2026-08-12): an unavailable Before button told a curator nothing
+           about what the proposal replaces.
+
+           It is no longer flagged `unrecorded`. That flag draws the legend's
+           red "Surface not recorded" dashes, and this method cannot know
+           whether the road is unrecorded. A new stretch means WE held nothing
+           for that way; OSM's surface tags live in the tile artifact and never
+           reach this query. A curator reviewing a road OSM has tagged asphalt
+           was shown red dashes saying nobody had recorded it, with the drawer
+           beside it reading "Paved · asphalt · OSM" (owner-reported
+           2026-08-31).
+
+           The cost is real and deliberate: a genuinely untagged road no longer
+           stands out in red here. Restoring that means asking the tile under
+           the way what class it carries, which is a client-side question. The
+           `unrecorded` key stays in the shape's type and pending-shape.js still
+           styles it, so that answer has somewhere to land. */
         self::assertSame($shape['after']['route'], $shape['before']['route'], 'the before side is the same road');
-        self::assertTrue($shape['before']['unrecorded'], 'drawn in the legend\'s "not recorded" style, not as a past shape');
+        self::assertArrayNotHasKey('unrecorded', $shape['before'],
+            'this method cannot know what OSM recorded, so it must not claim it');
         // Flipped to [lat,lng]: showPendingShape() reads climb order, and one
         // renderer for both is the point.
         self::assertSame([[50.49, 6.04], [50.50, 6.05], [50.51, 6.06]], $shape['after']['route']);

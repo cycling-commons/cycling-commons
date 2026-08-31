@@ -741,9 +741,23 @@ final class SubmissionQueue
             };
             $before = $seg('was');
             $after = $seg('now');
-            /* New stretch: Before is the unrecorded road, not empty. */
+            /* New stretch: Before is the road as it already sits, not empty.
+               It used to be flagged `unrecorded`, which the client draws in the
+               legend's red "Surface not recorded" dashes. That was a claim this
+               method cannot make. A new stretch means WE held nothing for that
+               way; it says nothing about OSM, whose surface tags live in the
+               tile artifact and never reach this query. A curator reviewing an
+               asphalt road that OSM has tagged asphalt was shown red dashes
+               saying nobody had recorded it, with the drawer beside it reading
+               "Paved · asphalt · OSM" (owner-reported 2026-08-31).
+
+               So the Before is drawn in the neutral before-style instead: this
+               is where the stretch sits, without asserting what was known about
+               it. Putting the red back means asking the tile under the way what
+               class it carries, which is a client-side question, not one this
+               method can answer. */
             if (null === $before && null !== $after) {
-                $before = $after + ['unrecorded' => true];
+                $before = $after;
             }
             if (null === $after && null === $before) {
                 return null;
