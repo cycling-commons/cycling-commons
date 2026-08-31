@@ -1,66 +1,93 @@
-wiki/developers/gis/routes.md
-  s_f3f9c3dc9409c4::t_d36e882acc46e2 33
-  s_f3f9c3dc9409c4::t_efb3b7f9d30149 83
-wiki/developers/gis/on-screen.md
-  s_f3f9c3dc9409c4::t_3fa20d27818a34 242,244-245
-  s_f3f9c3dc9409c4::t_53979929dc3162 53
-  s_f3f9c3dc9409c4::t_8f68a4fdcb1949 156,158
-  s_f3f9c3dc9409c4::t_eb9dd753bfca60 25,28
-  s_f3f9c3dc9409c4::t_ef7b70427440f4 197,199-200
-  s_f3f9c3dc9409c4::t_f8f9ad5befa03f 113,116-117
-  s_f3f9c3dc9409c4::t_e1c5b96de989b2 218,220
 .pre-commit-config.yaml
-  s_f3f9c3dc9409c4::t_6765e2cbec4f92 48-63
-wiki/developers/gis/spatial-questions.md
-  s_f3f9c3dc9409c4::t_c949ff3df017a2 208
-  s_f3f9c3dc9409c4::t_e198e250a1c04c 95
-  s_f3f9c3dc9409c4::t_786e0ba6fc1d4b 132
-  s_f3f9c3dc9409c4::t_19d8c13351b8bf 39
-  s_f3f9c3dc9409c4::t_782202011aae16 270
-  s_f3f9c3dc9409c4::t_fa256741812432 230
-  s_f3f9c3dc9409c4::t_78cf1c54634ccb 72
-  s_f3f9c3dc9409c4::t_110342d93aadd0 173
-wiki/governance.md
-  s_f3f9c3dc9409c4::t_d30eb353dd2620 12
-wiki/developers/gis/making-it-fast.md
-  s_f3f9c3dc9409c4::t_a5e5ec23e282ac 209
-  s_f3f9c3dc9409c4::t_7d171e1ae6874a 243
-  s_f3f9c3dc9409c4::t_da3431c4ed63e0 342
-wiki/developers/gis/coordinates.md
-  s_f3f9c3dc9409c4::t_a282bce50e7e65 82
-  s_f3f9c3dc9409c4::t_41fb1c5ad73e67 146
-  s_f3f9c3dc9409c4::t_aa213a22ef14e5 271
-  s_f3f9c3dc9409c4::t_2fafb56a6f34a3 124
-wiki/developers/gis/shapes.md
-  s_f3f9c3dc9409c4::t_f802b56080f11b 87
-wiki/developers/gis/metres-vs-degrees.md
-  s_f3f9c3dc9409c4::t_3a2522b9503a10 115
-  s_f3f9c3dc9409c4::t_4a33dc2668b564 150
-  s_f3f9c3dc9409c4::t_7425133ddd0ad7 163
-  s_f3f9c3dc9409c4::t_4b7704ab99d22e 25
-  s_f3f9c3dc9409c4::t_ca842dace1460e 124
-wiki/building.md
-  s_f3f9c3dc9409c4::t_4a6644293f55cc 22
-  s_f3f9c3dc9409c4::t_a4d5643abb852d 44
+  s_eeef2f2e784b1a::t_8c35e5b6b1eac6 48-63
 Makefile
-  s_f3f9c3dc9409c4::t_ffb51fbef62a86 169-173
+  s_17396619d306c4::t_ef10b981763db4 169-173
+wiki/building.md
+  s_51f279dd04af7d::t_a2e51f8047e464 22,44
+wiki/developers/gis/coordinates.md
+  s_16e7d98f40a315::t_50d221732a4aaa 82,124,146,271
+wiki/developers/gis/metres-vs-degrees.md
+  s_f68f52eab6f3c4::t_15ed9d4055a480 25,115,124,150,163
+wiki/developers/gis/on-screen.md
+  s_16e7d98f40a315::t_53de6ca93452fc 25,28,53,113,116-117,156,158,197,199-200,218,220,242,244-245
 wiki/developers/gis/tiles.md
-  s_f3f9c3dc9409c4::t_9fa35482cbdf9f 39
-  s_f3f9c3dc9409c4::t_d2582595820207 202-213
+  s_16e7d98f40a315::t_a95bcc06b659dd 39,202-213
 tools/check-wiki-code-drift.py
-  s_f3f9c3dc9409c4::t_9df30c4a8cd5fb 1-168
+  s_f3f9c3dc9409c4::t_9c97a00924e3f9 1-168
+wiki/developers/gis/making-it-fast.md
+  s_8f9941cdcf9eca::t_29b767cc71f81d 209,243,342
+wiki/developers/gis/spatial-questions.md
+  s_8f9941cdcf9eca::t_26b97a397d4795 39,72,95,132,173,208,230,270
+wiki/governance.md
+  s_bbe01d4f023787::t_9d9c349a450f26 12
 ---
 {
   "schema_version": "authorship/3.0.0",
-  "git_ai_version": "1.6.15",
+  "git_ai_version": "1.7.0",
   "base_commit_sha": "db1e40477792fcb77cf8ad5e61f60552772c7a91",
   "prompts": {},
   "sessions": {
+    "s_16e7d98f40a315": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a9fcd11a-43a8-477a-bd05-612aaa422d99",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_17396619d306c4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "de24113b-ff92-4db1-b177-1da3cfa74b70",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_51f279dd04af7d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ffbf0480-8c49-47aa-8570-af5cdd0802af",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_8f9941cdcf9eca": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "be8228a9-eb05-456e-bed2-ccf9fe1d7437",
+        "model": "unknown"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_bbe01d4f023787": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f33f7278-f7f4-4cb2-9afc-feac3942b2cd",
+        "model": "unknown"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_eeef2f2e784b1a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d8417b74-eceb-454f-89a7-1f8d471f09ad",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
     "s_f3f9c3dc9409c4": {
       "agent_id": {
         "tool": "claude",
         "id": "7cd63df9-2d7a-4d1e-9c16-710e0af8d50b",
-        "model": "claude-opus-4-8"
+        "model": "unknown"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_f68f52eab6f3c4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c7a55b70-80fe-4d7b-a5a8-04f70def4f1e",
+        "model": "claude-opus-5"
       },
       "human_author": "X. Koevoet <development@bikecoders.life>"
     }
