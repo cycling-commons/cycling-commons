@@ -100,6 +100,18 @@ services:
         arguments:
             $apiKey: '%env(SAFE_BROWSING_KEY)%'
 
+    # The dev-only DeepL drafting tool (translations.md §7.1). Empty key = OFF;
+    # DeepLAvailability::isOn() also requires kernel.environment to be "dev",
+    # which cannot be set here or by any env var, so this cannot light up on
+    # staging or production regardless of what DEEPL_API_KEY holds there.
+    App\Translation\DeepL\DeepLAvailability:
+        arguments:
+            $apiKey: '%env(DEEPL_API_KEY)%'
+
+    App\Translation\DeepL\DeepLClient:
+        arguments:
+            $apiKey: '%env(DEEPL_API_KEY)%'
+
     App\Elevation\ElevationClient:
         arguments:
             $valhallaUrl: '%env(ELEVATION_URL)%'
