@@ -6,7 +6,7 @@
 # disagree; only the order differs, cheapest first, so a formatting slip
 # fails in seconds instead of after the four-minute suite.
 #
-# ci-app.yml runs the same gate, but staging/symfony-base pushes deploy
+# ci-app.yml runs the same gate, but staging pushes deploy
 # immediately, so the push is the last moment to catch a red suite.
 #
 # Every run is full-project, never just the outgoing files: an untouched

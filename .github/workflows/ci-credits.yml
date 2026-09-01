@@ -15,10 +15,10 @@ name: ci-credits
 on:
   pull_request:
   push:
-    # staging and symfony-base are deploy sources (deploy-staging.yaml), and
+    # staging is a deploy source (deploy-staging.yaml), and
     # production ships from deploy-production.yaml. A stale credits page must
     # not reach any of them.
-    branches: [main, staging, symfony-base, production]
+    branches: [main, staging, production]
   # Link rot is the one failure here that no commit causes. uvicorn.org was
   # credited on 2026-08-27 and did not resolve; nothing in the repository had
   # changed, so no change-triggered job could ever have caught it. A weekly

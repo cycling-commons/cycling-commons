@@ -30,7 +30,7 @@ on:
   push:
     # Same deploy-source reasoning as ci-app.yml: a push to a branch that
     # deploys must run its tests.
-    branches: [main, staging, symfony-base, production]
+    branches: [main, staging, production]
     paths: ['pipeline/**', '.github/workflows/ci-pipeline.yml']
 
 jobs:

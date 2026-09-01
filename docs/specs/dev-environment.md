@@ -405,9 +405,9 @@ REDIS_URL=redis://host.docker.internal:6379
 - **The push runs that same gate (2026-09-01).** `tools/app-gate-prepush.sh`
   is a pre-push hook fired by any outgoing change under `web/`, and it runs
   every `make app-test` command, cheapest first, so a formatting slip fails in
-  seconds instead of after the suite. `staging` and `symfony-base` deploy on
-  push, so the push is the last moment to stop a red gate. Bypass with
-  `git push --no-verify`; the next red CI run is the price.
+  seconds instead of after the suite. `staging` deploys on push, so the push
+  is the last moment to stop a red gate. Bypass with `git push --no-verify`;
+  the next red CI run is the price.
 - **CI seeds the catalogue into the test database, a local run may not.**
   `ci-app.yml` runs `app:translations:sync --env=test` before the suite, so
   `translation_entry` holds every key and `/translate` paginates at 25 rows

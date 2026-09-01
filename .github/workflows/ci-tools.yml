@@ -4,10 +4,11 @@ on:
   pull_request:
     paths: ['tools/**', '.github/workflows/ci-tools.yml']
   push:
-    # staging and symfony-base are deploy sources (deploy-staging.yaml) —
-    # without them here, a push could deploy code that never passed CI.
+    # staging is a deploy source (deploy-staging.yaml); without it here, a
+    # push could deploy code that never passed CI. symfony-base does not
+    # deploy and runs no CI.
     # production included: deploy-production.yaml ships from that branch.
-    branches: [main, staging, symfony-base, production]
+    branches: [main, staging, production]
     paths: ['tools/**', '.github/workflows/ci-tools.yml']
 jobs:
   wallonia:

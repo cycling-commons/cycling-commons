@@ -39,7 +39,7 @@ repos:
 
       # The whole `make app-test` gate before code leaves the machine: the
       # test suite, both analyzers, php-cs-fixer and the four shell gates.
-      # ci-app.yml runs the same set, but staging/symfony-base pushes deploy
+      # ci-app.yml runs the same set, but staging pushes deploy
       # right away, so the push is the last moment to catch a red gate.
       #
       # Fires on any change under web/, not only PHP: a Twig template, a
