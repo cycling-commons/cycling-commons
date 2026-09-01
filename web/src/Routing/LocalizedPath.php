@@ -131,6 +131,15 @@ final class LocalizedPath
     ];
 
     /** @var array<string, string> */
+    public const array MAP_KEY = [
+        'en' => '/map-key',
+        'fr' => '/legende-carte',
+        'nl' => '/kaartlegenda',
+        'de' => '/kartenlegende',
+        'es' => '/leyenda-del-mapa',
+    ];
+
+    /** @var array<string, string> */
     public const array CREDITS = [
         'en' => '/credits',
         'fr' => '/remerciements',

@@ -126,6 +126,25 @@ final class PageController extends AbstractController
         ]);
     }
 
+    /**
+     * The map key: every mark the map draws, explained in one place.
+     *
+     * Marks that are designed but not drawn yet stay on the page too, each
+     * carrying a visible "planned" tag, so the page is the one complete
+     * reference without ever promising a mark a rider cannot find.
+     *
+     * @see docs/specs/map-and-search.md §4.7
+     */
+    #[Route(LocalizedPath::MAP_KEY, name: 'map_key')]
+    public function mapKey(): Response
+    {
+        return $this->render('pages/map_key.html.twig', [
+            'page_title' => 'meta.map_key_title',
+            'page_description' => 'meta.map_key_description',
+            'nav_active' => '',
+        ]);
+    }
+
     #[Route(LocalizedPath::ABOUT, name: 'about')]
     public function about(): Response
     {

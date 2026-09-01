@@ -961,6 +961,49 @@ Mechanism, one attribute end to end:
   the script is emitted only in the visitor branch, so a shared device's
   localStorage can never override a logged-in rider's profile value.
 
+### 4.7 Map key (2026-09-01)
+
+The marks stack four independent signals on one shape, and the key says so in
+two places, sized to their audience:
+
+- **The Key rail panel** (`data-panel="key"`, `#p-key`, title
+  `map.rail_key`). The quick reference while riding: the source tiers
+  (baseline disc, water drop pair, community `?` pin, our pin, verified dot)
+  and the state marks (stale ring, cluster bubble, look-here ring). LIVE
+  MARKS ONLY: the panel never shows a mark the map does not draw. The
+  pending-border row is moderation chrome, gated by `pending_is_curator`
+  from the controller (never `is_granted()`, per §"the 2FA policy applies in
+  exactly one place"). Swatches reuse the real `.cc-pin` / `.cc-cluster` /
+  `.cc-highlight` classes so the key cannot drift from the map. The panel
+  links to the full page.
+- **The `/map-key` page** (`PageController::mapKey`,
+  `LocalizedPath::MAP_KEY`, `pages/map_key.html.twig`, `legend.*` strings,
+  all five locales, slug localised per locale). The full story: the four
+  axes (shape = store, fill = category, border = who brought it + state,
+  badge = a fact that survives colour blindness), the tier ladder, state
+  marks, per-place fact badges, the category table and every line paint.
+  Designed-but-unbuilt marks (the cycling-keeper tier, the `!` out-of-order
+  and `◷` limited-access badges) stay on the page with a visible "planned"
+  tag (`legend.tag_plan` + `legend.plan_note`): the page may describe a
+  planned mark, but must say it is not drawn yet (owner 2026-09-01).
+
+The one category-colour table on the website lives in this template and
+mirrors `catalog.js`; a colour change lands in both in the same commit. The
+glyphs come from `cc_type_icons()` (`ItemType::iconSet()`), THE icon set.
+Line-legend strings reuse the on-map key's `map.legend_*` ids rather than
+duplicating them.
+
+Tier semantics pinned here (ruled 2026-09-01): grey FILL keeps one meaning,
+water potability unknown; bulk registries (e.g. Kadaster, RIVM) draw as the
+imported baseline until riders confirm records here; only a
+cycling-dedicated provider earns the planned keeper tier, whose visibility
+rides on the shared `?` badge (`?` = no rider confirmed yet, everywhere),
+the border only saying who brought the record. Dashed borders are
+MONOCHROME (also ruled 2026-09-01, replacing the ochre dash: it did not
+read on a busy basemap): the community pin wears ink dashes over a white
+halo, and the planned keeper tier wears the same dashes inverted, white
+over ink: legible on any ground, light or dark, without spending a colour.
+
 ## 5. Layer rendering strategy
 
 - **Point features (curated/confirmed)** render as **DOM markers**

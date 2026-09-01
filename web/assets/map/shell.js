@@ -12,6 +12,7 @@ const TITLES = () => ({
   search: I18N.railSearch || 'Search & region',
   layers: I18N.railLayers || 'Layers & filters',
   tools: I18N.railTools || 'Ride tools',
+  key: I18N.railKey || 'Map key',
 });
 
 let active = null;

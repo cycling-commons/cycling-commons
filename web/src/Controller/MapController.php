@@ -339,6 +339,7 @@ final class MapController extends AbstractController
             'railSearch' => $t->trans('map.rail_search'),
             'railLayers' => $t->trans('map.rail_layers'),
             'railTools' => $t->trans('map.rail_tools'),
+            'railKey' => $t->trans('map.rail_key'),
             'filtersHide' => $t->trans('map.filters_hide'),
             'filtersHideOne' => $t->trans('map.filters_hide_one'),
             'filtersNarrowing' => $t->trans('map.filters_narrowing'),

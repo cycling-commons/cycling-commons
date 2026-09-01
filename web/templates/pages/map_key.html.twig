@@ -1,0 +1,288 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{#
+  The map key (docs/specs/map-and-search.md §4.7).
+
+  One page that explains every mark the map draws. Two rules shaped it.
+
+  **Only THE icon set.** Every category mark comes from ItemType::iconSet()
+  via cc_type_icons(), the same set the map's pins and layer list use. The
+  colours are the catalog.js layer colours; if a colour changes there it must
+  change here in the same commit (both carry the same spec reference).
+
+  **A planned mark never looks live.** Marks that are designed but not drawn
+  yet (the provider tier, the out-of-order and limited-access badges) stay on
+  the page so the design is public, but each carries the planned tag and the
+  section says plainly that the map does not draw them yet.
+#}
+{% extends 'base.html.twig' %}
+
+{# The one category-colour table on the website, mirroring catalog.js. #}
+{% set mkc = {
+  'A': '#4E8C84', 'B': '#8FB6A8', 'C': '#4E6E8C', 'D': '#6b6f5e',
+  'E': '#C8923A', 'F': '#3E7D8C', 'G': '#9A8FB6', 'N': '#6A2C8F',
+  'O': '#B5532E', 'P': '#2C5440', 'Q': '#6E5849', 'R': '#FF5A1F',
+} %}
+{# Light fills whose glyph flattens dark instead of white (txtOn in util.js). #}
+{% set mklt = ['B', 'E', 'G'] %}
+
+{% macro glyph(letter, size) %}
+{%- set ic = cc_type_icons()[letter] ?? null -%}
+{%- if ic and ic.svg -%}
+<span class="drawn"><svg viewBox="0 0 24 24" width="{{ size|default(15) }}" height="{{ size|default(15) }}" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="{{ ic.svg }}"/></svg></span>
+{%- elseif ic -%}
+<span class="g">{{ ic.glyph }}</span>
+{%- endif -%}
+{% endmacro %}
+
+{% import _self as mk %}
+
+{% block head_styles %}
+<style>
+  .mkwrap{max-width:860px}
+  .mk-note{color:#4a4d40;font-size:.95rem;max-width:64ch;margin:0 0 1.3rem}
+  .mkwrap h2{font-family:var(--serif);font-weight:600;font-size:1.45rem;letter-spacing:-.01em;margin:2.6rem 0 .3rem}
+  .mk-axes{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:1px;
+    border:1px solid rgba(16,30,22,.14);border-radius:10px;overflow:hidden;background:rgba(16,30,22,.14);margin:1.3rem 0 0}
+  .mk-axis{background:var(--paper);padding:.9rem 1rem}
+  .mk-axis b{display:block;font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--clay);margin-bottom:.35rem}
+  .mk-axis span{font-size:.86rem;line-height:1.5;color:#4a4d40}
+  .mk-rows{display:flex;flex-direction:column;border:1px solid rgba(16,30,22,.14);border-radius:10px;overflow:hidden;background:var(--paper)}
+  .mk-row{display:grid;grid-template-columns:76px 1fr auto;gap:1rem;align-items:center;padding:.85rem 1rem}
+  .mk-row + .mk-row{border-top:1px solid rgba(16,30,22,.12)}
+  .mk-sw{display:flex;align-items:center;justify-content:center;gap:.4rem;height:52px;border-radius:8px;background:#DED2B8;position:relative}
+  .mk-t strong{display:block;font-weight:600;font-size:.95rem;margin-bottom:.1rem;color:var(--ink)}
+  .mk-t span{display:block;font-size:.85rem;line-height:1.5;color:#4a4d40}
+  .mk-tag{font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;
+    padding:.22rem .5rem;border-radius:30px;border:1px solid currentColor;white-space:nowrap;color:var(--spruce)}
+  .mk-tag--plan{color:var(--clay)}
+  .mk-plan-note{border:1px solid rgba(16,30,22,.14);border-left:3px solid var(--ochre);border-radius:0 9px 9px 0;
+    padding:.9rem 1.1rem;background:var(--paper-deep);margin:1.2rem 0 0;font-size:.9rem;line-height:1.6;color:#4a4d40}
+  .mk-grp{font-family:var(--mono);font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:var(--clay);margin:1.5rem 0 .5rem}
+
+  /* The pin, drawn as the map draws it (styles/map.css .cc-pin): the
+     50% 50% 50% 0 radius points the drop down-left with NO rotate. */
+  .mk-pin{position:relative;display:flex;align-items:center;justify-content:center;width:30px;height:30px;flex:none;
+    border-radius:50% 50% 50% 0;background:var(--c);box-shadow:0 3px 8px rgba(16,30,22,.4);border:2px solid var(--paper)}
+  .mk-pin .g{font-size:.85rem;line-height:1;font-family:"Apple Color Emoji","Noto Color Emoji","Segoe UI Emoji","Noto Sans Symbols2",system-ui,sans-serif;
+    filter:brightness(0) invert(1)}
+  .mk-pin .drawn{display:flex;color:#fff}
+  .mk-pin.lt .g{filter:brightness(0)}
+  .mk-pin.lt .drawn{color:#20241c}
+  .mk-pin.stale{border-color:var(--trail);box-shadow:0 3px 8px rgba(16,30,22,.4),0 0 0 1px rgba(255,90,31,.45)}
+  .mk-pin.cur::after{content:"";position:absolute;width:6px;height:6px;background:var(--paper);border-radius:50%;top:-3px;right:-3px}
+  .mk-pin.pending{border-color:#D92D20;border-width:3px}
+  /* Monochrome dashes read on any basemap (owner 2026-09-01): a rider's pin
+     is ink dashes over a white halo; the keeper tier inverts them. */
+  .mk-pin.community{border:2.5px dashed #14160E;
+    box-shadow:0 0 0 1.5px rgba(255,255,255,.95),0 3px 8px rgba(16,30,22,.4)}
+  .mk-pin.community::after,.mk-pin.provider::after{content:"?";position:absolute;width:13px;height:13px;top:-5px;right:-5px;
+    background:var(--ochre);color:#14160E;border-radius:50%;font-family:var(--mono);font-size:9px;font-weight:700;line-height:13px;text-align:center}
+  .mk-pin.provider{border:2.5px dashed #FFFFFF;
+    box-shadow:0 0 0 1.5px rgba(20,22,14,.9),0 3px 8px rgba(16,30,22,.4)}
+  .mk-pin.warn::before{content:"!";position:absolute;width:14px;height:14px;top:-6px;left:-6px;
+    background:#D92D20;color:#fff;border-radius:50%;font-family:var(--mono);font-size:10px;font-weight:700;line-height:14px;text-align:center}
+  .mk-pin.hours::before{content:"◷";position:absolute;width:14px;height:14px;top:-6px;left:-6px;
+    background:var(--ink);color:#F3EBD8;border-radius:50%;font-family:var(--mono);font-size:10px;font-weight:700;line-height:14px;text-align:center}
+  .mk-disc{width:24px;height:24px;border-radius:50%;background:var(--c);flex:none;
+    border:1.6px solid rgba(20,22,14,.85);display:flex;align-items:center;justify-content:center;font-size:.72rem}
+  .mk-disc .g{font-family:"Apple Color Emoji","Noto Color Emoji","Segoe UI Emoji","Noto Sans Symbols2",system-ui,sans-serif;filter:brightness(0) invert(1)}
+  .mk-disc.lt .g{filter:brightness(0)}
+  .mk-disc .drawn{display:flex;color:#fff}
+  .mk-cluster{display:flex;align-items:center;justify-content:center;min-width:28px;height:28px;padding:0 7px;flex:none;
+    border-radius:15px;background:var(--c);color:#fff;font:700 13px/1 var(--mono);border:2px solid rgba(255,255,255,.85)}
+  .mk-ring{position:relative;width:24px;height:24px;border-radius:50%;flex:none;
+    box-shadow:0 0 10px 3px rgba(255,90,31,.5),inset 0 0 0 2px rgba(255,90,31,.55)}
+  .mk-line{width:46px;height:0;border-top-width:4px;border-top-style:solid;border-radius:2px;flex:none}
+  .mk-line.dash{border-top-style:dashed}
+  .mk-grad{width:52px;height:5px;border-radius:2px;flex:none;
+    background:linear-gradient(90deg,#D9A6F2 0 20%,#B25BE8 20% 40%,#8A2BD0 40% 60%,#5E18A0 60% 80%,#3A0A66 80% 100%)}
+  .mk-grad.down{background:linear-gradient(90deg,#A6CFF2 0 20%,#5BA0E8 20% 40%,#2B76D0 40% 60%,#184F9F 60% 80%,#0A2A66 80% 100%)}
+  .mk-ticks{width:46px;height:5px;border-radius:2px;flex:none;background:
+    linear-gradient(90deg,#1E8E4F 0 3px,transparent 3px 12px,#D9A62E 12px 15px,transparent 15px 23px,#C2402F 23px 26px,transparent 26px 46px)}
+  .mk-chip{display:inline-flex;align-items:center;gap:.2rem;background:var(--ink);color:#F3EBD8;
+    font:700 .62rem/1 var(--mono);letter-spacing:.04em;padding:.16rem .44rem;border-radius:3px;
+    border:1.5px solid #F3EBD8;box-shadow:0 2px 7px rgba(0,0,0,.45);white-space:nowrap}
+  .mk-chip.summit{text-transform:uppercase}
+  .mk-chip.summit::before{content:"⚑";font-size:.68rem;color:var(--trail)}
+  .mk-chip.steep{color:#C79BE8;border-color:#8B45C0;border-radius:10px}
+  .mk-chip.steep::before{content:"▲";font-size:.62rem}
+  .mk-chip.rider{color:#F2C46B;border-color:#C98A22;border-radius:10px}
+  .mk-chip.rider::before{content:"⬗";font-size:.62rem}
+  .mk-knoop{display:flex;align-items:center;justify-content:center;width:17px;height:17px;flex:none;
+    background:#fff;color:#5B3A9E;border:1.5px solid #7A4FCF;border-radius:50%;font:700 .62rem/1 var(--mono)}
+  .mk-tile{width:26px;height:26px;border-radius:6px;background:var(--c);flex:none;
+    display:flex;align-items:center;justify-content:center;color:#fff;font-size:.9rem;line-height:1}
+  .mk-tile .g{font-family:"Apple Color Emoji","Noto Color Emoji","Segoe UI Emoji","Noto Sans Symbols2",system-ui,sans-serif;filter:brightness(0) invert(1)}
+  .mk-tile.lt .g{filter:brightness(0)}
+  .mk-tile.lt{color:#101E16}
+  .mk-tile .drawn{display:flex}
+  .mk-cats{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:1px;
+    border:1px solid rgba(16,30,22,.14);border-radius:10px;overflow:hidden;background:rgba(16,30,22,.14)}
+  .mk-cat{background:var(--paper);display:flex;align-items:center;gap:.7rem;padding:.75rem .85rem}
+  .mk-cat b{display:block;font-weight:600;font-size:.88rem;color:var(--ink)}
+  .mk-cat i{display:block;font-style:normal;font-family:var(--mono);font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;color:#7c8070}
+  .mk-back{display:inline-block;margin-top:2.4rem;font-family:var(--mono);font-size:.74rem;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--clay);text-decoration:underline;text-underline-offset:3px}
+  @media (max-width:560px){
+    .mk-row{grid-template-columns:64px 1fr;row-gap:.4rem}
+    .mk-row .mk-tag{grid-column:2}
+  }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="lhero"><div class="wrap">
+  <div class="kicker" style="color:var(--trail)">{{ 'legend.kicker'|trans }}</div>
+  <h1 class="disp">{{ 'legend.title'|trans }}</h1>
+  <p class="lead" style="color:rgba(239,230,212,.85);margin-top:.8rem">{{ 'legend.lead'|trans }}</p>
+</div></div>
+
+<section class="pad"><div class="wrap">
+  <div class="mkwrap">
+
+  <div class="mk-axes">
+    <div class="mk-axis"><b>{{ 'legend.axis_shape_h'|trans }}</b><span>{{ 'legend.axis_shape_t'|trans }}</span></div>
+    <div class="mk-axis"><b>{{ 'legend.axis_fill_h'|trans }}</b><span>{{ 'legend.axis_fill_t'|trans }}</span></div>
+    <div class="mk-axis"><b>{{ 'legend.axis_border_h'|trans }}</b><span>{{ 'legend.axis_border_t'|trans }}</span></div>
+    <div class="mk-axis"><b>{{ 'legend.axis_badge_h'|trans }}</b><span>{{ 'legend.axis_badge_t'|trans }}</span></div>
+  </div>
+
+  <h2>{{ 'legend.tiers_h'|trans }}</h2>
+  <p class="mk-note">{{ 'legend.tiers_note'|trans }}</p>
+  <div class="mk-rows">
+    <div class="mk-row">
+      <div class="mk-sw"><span class="mk-disc" style="--c:{{ mkc.F }}" aria-hidden="true"><span class="g">{{ (cc_type_icons()['F'] ?? {glyph:''}).glyph }}</span></span></div>
+      <div class="mk-t"><strong>{{ 'legend.tier_osm_h'|trans }}</strong><span>{{ 'legend.tier_osm_t'|trans }}</span></div>
+      <span class="mk-tag">{{ 'legend.tag_live'|trans }}</span>
+    </div>
+    <div class="mk-row">
+      <div class="mk-sw" aria-hidden="true">
+        <svg width="20" height="26" viewBox="0 0 14 18"><path d="M7 1 C13 8.3 11.2 17 7 17 C2.8 17 1 8.3 7 1 Z" fill="#3E8FB0" stroke="#0d2b3a" stroke-width="1.4"/></svg>
+        <svg width="20" height="26" viewBox="0 0 14 18"><path d="M7 1 C13 8.3 11.2 17 7 17 C2.8 17 1 8.3 7 1 Z" fill="#7F8C93" stroke="#2b3338" stroke-width="1.4"/></svg>
+      </div>
+      <div class="mk-t"><strong>{{ 'legend.tier_water_h'|trans }}</strong><span>{{ 'legend.tier_water_t'|trans }}</span></div>
+      <span class="mk-tag">{{ 'legend.tag_live'|trans }}</span>
+    </div>
+    <div class="mk-row">
+      <div class="mk-sw"><span class="mk-pin provider lt" style="--c:{{ mkc.B }}" aria-hidden="true">{{ mk.glyph('B') }}</span></div>
+      <div class="mk-t"><strong>{{ 'legend.tier_provider_h'|trans }}</strong><span>{{ 'legend.tier_provider_t'|trans }}</span></div>
+      <span class="mk-tag mk-tag--plan">{{ 'legend.tag_plan'|trans }}</span>
+    </div>
+    <div class="mk-row">
+      <div class="mk-sw"><span class="mk-pin community lt" style="--c:{{ mkc.B }}" aria-hidden="true">{{ mk.glyph('B') }}</span></div>
+      <div class="mk-t"><strong>{{ 'legend.tier_community_h'|trans }}</strong><span>{{ 'legend.tier_community_t'|trans }}</span></div>
+      <span class="mk-tag">{{ 'legend.tag_live'|trans }}</span>
+    </div>
+    <div class="mk-row">
+      <div class="mk-sw"><span class="mk-pin lt" style="--c:{{ mkc.B }}" aria-hidden="true">{{ mk.glyph('B') }}</span></div>
+      <div class="mk-t"><strong>{{ 'legend.tier_ours_h'|trans }}</strong><span>{{ 'legend.tier_ours_t'|trans }}</span></div>
+      <span class="mk-tag">{{ 'legend.tag_live'|trans }}</span>
+    </div>
+    <div class="mk-row">
+      <div class="mk-sw"><span class="mk-pin cur lt" style="--c:{{ mkc.B }}" aria-hidden="true">{{ mk.glyph('B') }}</span></div>
+      <div class="mk-t"><strong>{{ 'legend.tier_verified_h'|trans }}</strong><span>{{ 'legend.tier_verified_t'|trans }}</span></div>
+      <span class="mk-tag">{{ 'legend.tag_live'|trans }}</span>
+    </div>
+  </div>
+
+  <h2>{{ 'legend.state_h'|trans }}</h2>
+  <p class="mk-note">{{ 'legend.state_note'|trans }}</p>
+  <div class="mk-rows">
+    <div class="mk-row">
+      <div class="mk-sw"><span class="mk-pin stale lt" style="--c:{{ mkc.B }}" aria-hidden="true">{{ mk.glyph('B') }}</span></div>
+      <div class="mk-t"><strong>{{ 'legend.state_stale_h'|trans }}</strong><span>{{ 'legend.state_stale_t'|trans }}</span></div>
+      <span class="mk-tag">{{ 'legend.tag_live'|trans }}</span>
+    </div>
+    <div class="mk-row">
+      <div class="mk-sw"><span class="mk-pin pending" style="--c:{{ mkc.C }}" aria-hidden="true">{{ mk.glyph('C') }}</span></div>
+      <div class="mk-t"><strong>{{ 'legend.state_pending_h'|trans }}</strong><span>{{ 'legend.state_pending_t'|trans }}</span></div>
+      <span class="mk-tag">{{ 'legend.tag_live'|trans }}</span>
+    </div>
+    <div class="mk-row">
+      <div class="mk-sw"><span class="mk-cluster" style="--c:{{ mkc.N }}" aria-hidden="true">24</span></div>
+      <div class="mk-t"><strong>{{ 'legend.state_cluster_h'|trans }}</strong><span>{{ 'legend.state_cluster_t'|trans }}</span></div>
+      <span class="mk-tag">{{ 'legend.tag_live'|trans }}</span>
+    </div>
+    <div class="mk-row">
+      <div class="mk-sw"><span class="mk-ring" aria-hidden="true"></span></div>
+      <div class="mk-t"><strong>{{ 'legend.state_look_h'|trans }}</strong><span>{{ 'legend.state_look_t'|trans }}</span></div>
+      <span class="mk-tag">{{ 'legend.tag_live'|trans }}</span>
+    </div>
+    <div class="mk-row">
+      <div class="mk-sw"><span class="mk-pin cur" style="--c:#05CB63" aria-hidden="true"><span class="g">📷</span></span></div>
+      <div class="mk-t"><strong>{{ 'legend.state_camera_h'|trans }}</strong><span>{{ 'legend.state_camera_t'|trans }}</span></div>
+      <span class="mk-tag">{{ 'legend.tag_live'|trans }}</span>
+    </div>
+  </div>
+
+  <h2>{{ 'legend.fact_h'|trans }}</h2>
+  <p class="mk-note">{{ 'legend.fact_note'|trans }}</p>
+  <div class="mk-rows">
+    <div class="mk-row">
+      <div class="mk-sw"><span class="mk-pin warn lt" style="--c:{{ mkc.B }}" aria-hidden="true">{{ mk.glyph('B') }}</span></div>
+      <div class="mk-t"><strong>{{ 'legend.fact_broken_h'|trans }}</strong><span>{{ 'legend.fact_broken_t'|trans }}</span></div>
+      <span class="mk-tag mk-tag--plan">{{ 'legend.tag_plan'|trans }}</span>
+    </div>
+    <div class="mk-row">
+      <div class="mk-sw"><span class="mk-pin hours lt" style="--c:{{ mkc.B }}" aria-hidden="true">{{ mk.glyph('B') }}</span></div>
+      <div class="mk-t"><strong>{{ 'legend.fact_hours_h'|trans }}</strong><span>{{ 'legend.fact_hours_t'|trans }}</span></div>
+      <span class="mk-tag mk-tag--plan">{{ 'legend.tag_plan'|trans }}</span>
+    </div>
+  </div>
+  <div class="mk-plan-note">{{ 'legend.plan_note'|trans }}</div>
+
+  <h2>{{ 'legend.cats_h'|trans }}</h2>
+  <p class="mk-note">{{ 'legend.cats_note'|trans }}</p>
+  <p class="mk-grp">{{ 'legend.cats_practical'|trans }}</p>
+  <div class="mk-cats">
+    {% for letter, key in {'B':'water-food','C':'public-toilets','D':'bike-services','E':'hazards','F':'getting-there','G':'shelter'} %}
+    <div class="mk-cat"><span class="mk-tile{{ letter in mklt ? ' lt' }}" style="--c:{{ mkc[letter] }}" aria-hidden="true">{{ mk.glyph(letter, 16) }}</span><div><b>{{ ('item_type.' ~ key ~ '.label')|trans }}</b><i>{{ letter }} · {{ mkc[letter] }}</i></div></div>
+    {% endfor %}
+  </div>
+  <p class="mk-grp">{{ 'legend.cats_voted'|trans }}</p>
+  <div class="mk-cats">
+    {% for letter, key in {'N':'climbs','O':'where-to-sleep','P':'scenic-views','Q':'history-culture','R':'quality-rides'} %}
+    <div class="mk-cat"><span class="mk-tile{{ letter in mklt ? ' lt' }}" style="--c:{{ mkc[letter] }}" aria-hidden="true">{{ mk.glyph(letter, 16) }}</span><div><b>{{ ('item_type.' ~ key ~ '.label')|trans }}</b><i>{{ letter }} · {{ mkc[letter] }}</i></div></div>
+    {% endfor %}
+  </div>
+  <p class="mk-grp">{{ 'legend.cats_overlays'|trans }}</p>
+  <div class="mk-cats">
+    <div class="mk-cat"><span class="mk-tile lt" style="--c:#C8923A" aria-hidden="true"><span class="g">▰</span></span><div><b>{{ 'legend.overlay_surface_h'|trans }}</b><i>{{ 'legend.overlay_switch'|trans }}</i></div></div>
+    <div class="mk-cat"><span class="mk-tile" style="--c:#7A4FCF" aria-hidden="true"><span class="g">⤳</span></span><div><b>{{ 'legend.overlay_routes_h'|trans }}</b><i>{{ 'legend.overlay_switch'|trans }}</i></div></div>
+  </div>
+  <p class="mk-note" style="margin-top:.9rem">{{ 'legend.overlay_note'|trans }}</p>
+
+  <h2>{{ 'legend.lines_h'|trans }}</h2>
+  <p class="mk-note">{{ 'legend.lines_note'|trans }}</p>
+  <p class="mk-grp">{{ 'legend.lines_surfaces'|trans }}</p>
+  <div class="mk-rows">
+    <div class="mk-row"><div class="mk-sw"><span class="mk-line" style="border-top-color:#4E6E66" aria-hidden="true"></span></div><div class="mk-t"><strong>{{ 'map.legend_paved'|trans }}</strong></div><span class="mk-tag">{{ 'legend.tag_live'|trans }}</span></div>
+    <div class="mk-row"><div class="mk-sw"><span class="mk-line" style="border-top-color:#C8923A" aria-hidden="true"></span></div><div class="mk-t"><strong>{{ 'map.legend_gravel'|trans }}</strong></div><span class="mk-tag">{{ 'legend.tag_live'|trans }}</span></div>
+    <div class="mk-row"><div class="mk-sw"><span class="mk-line" style="border-top-color:#6E7B96" aria-hidden="true"></span></div><div class="mk-t"><strong>{{ 'map.legend_cobbles'|trans }}</strong></div><span class="mk-tag">{{ 'legend.tag_live'|trans }}</span></div>
+    <div class="mk-row"><div class="mk-sw"><span class="mk-line" style="border-top-color:#6E5849" aria-hidden="true"></span></div><div class="mk-t"><strong>{{ 'map.legend_dirt'|trans }}</strong></div><span class="mk-tag">{{ 'legend.tag_live'|trans }}</span></div>
+    <div class="mk-row"><div class="mk-sw"><span class="mk-line" style="border-top-color:#5F5A54" aria-hidden="true"></span></div><div class="mk-t"><strong>{{ 'map.legend_rock'|trans }}</strong></div><span class="mk-tag">{{ 'legend.tag_live'|trans }}</span></div>
+    <div class="mk-row"><div class="mk-sw"><span class="mk-line dash" style="border-top-color:#D92D20" aria-hidden="true"></span></div><div class="mk-t"><strong>{{ 'map.legend_unverified'|trans }}</strong><span>{{ 'legend.line_unverified_t'|trans }}</span></div><span class="mk-tag">{{ 'legend.tag_live'|trans }}</span></div>
+    <div class="mk-row"><div class="mk-sw"><span class="mk-ticks" aria-hidden="true"></span></div><div class="mk-t"><strong>{{ 'legend.line_ticks_h'|trans }}</strong><span>{{ 'legend.line_ticks_t'|trans }}</span></div><span class="mk-tag">{{ 'legend.tag_live'|trans }}</span></div>
+  </div>
+  <p class="mk-grp">{{ 'legend.lines_climbs'|trans }}</p>
+  <div class="mk-rows">
+    <div class="mk-row"><div class="mk-sw"><span class="mk-grad" aria-hidden="true"></span></div><div class="mk-t"><strong>{{ 'legend.line_climb_up_h'|trans }}</strong><span>{{ 'legend.line_climb_up_t'|trans }}</span></div><span class="mk-tag">{{ 'legend.tag_live'|trans }}</span></div>
+    <div class="mk-row"><div class="mk-sw"><span class="mk-grad down" aria-hidden="true"></span></div><div class="mk-t"><strong>{{ 'legend.line_climb_down_h'|trans }}</strong><span>{{ 'legend.line_climb_down_t'|trans }}</span></div><span class="mk-tag">{{ 'legend.tag_live'|trans }}</span></div>
+    <div class="mk-row"><div class="mk-sw"><span class="mk-chip summit" aria-hidden="true">{{ 'map.d_climb_finish'|trans }}</span></div><div class="mk-t"><strong>{{ 'legend.line_summit_h'|trans }}</strong><span>{{ 'legend.line_summit_t'|trans }}</span></div><span class="mk-tag">{{ 'legend.tag_live'|trans }}</span></div>
+    <div class="mk-row"><div class="mk-sw"><span class="mk-chip steep" aria-hidden="true">12%</span></div><div class="mk-t"><strong>{{ 'legend.line_steep_h'|trans }}</strong><span>{{ 'legend.line_steep_t'|trans }}</span></div><span class="mk-tag">{{ 'legend.tag_live'|trans }}</span></div>
+    <div class="mk-row"><div class="mk-sw"><span class="mk-chip rider" aria-hidden="true">14%</span></div><div class="mk-t"><strong>{{ 'legend.line_rider_h'|trans }}</strong><span>{{ 'legend.line_rider_t'|trans }}</span></div><span class="mk-tag">{{ 'legend.tag_live'|trans }}</span></div>
+  </div>
+  <p class="mk-grp">{{ 'legend.lines_routes'|trans }}</p>
+  <div class="mk-rows">
+    <div class="mk-row"><div class="mk-sw"><span class="mk-line" style="border-top-color:#FD986E" aria-hidden="true"></span></div><div class="mk-t"><strong>{{ 'legend.line_route_rest_h'|trans }}</strong><span>{{ 'legend.line_route_rest_t'|trans }}</span></div><span class="mk-tag">{{ 'legend.tag_live'|trans }}</span></div>
+    <div class="mk-row"><div class="mk-sw"><span class="mk-line" style="border-top-color:#FF5A1F;border-top-width:6px" aria-hidden="true"></span></div><div class="mk-t"><strong>{{ 'legend.line_route_sel_h'|trans }}</strong><span>{{ 'legend.line_route_sel_t'|trans }}</span></div><span class="mk-tag">{{ 'legend.tag_live'|trans }}</span></div>
+    <div class="mk-row"><div class="mk-sw"><span class="mk-line" style="border-top-color:#C84E64" aria-hidden="true"></span></div><div class="mk-t"><strong>{{ 'map.legend_route_national'|trans }}</strong></div><span class="mk-tag">{{ 'legend.tag_live'|trans }}</span></div>
+    <div class="mk-row"><div class="mk-sw"><span class="mk-line" style="border-top-color:#7A4FCF" aria-hidden="true"></span></div><div class="mk-t"><strong>{{ 'map.legend_route_regional'|trans }}</strong></div><span class="mk-tag">{{ 'legend.tag_live'|trans }}</span></div>
+    <div class="mk-row"><div class="mk-sw"><span class="mk-line" style="border-top-color:#8A5A32" aria-hidden="true"></span></div><div class="mk-t"><strong>{{ 'map.legend_route_mtb'|trans }}</strong></div><span class="mk-tag">{{ 'legend.tag_live'|trans }}</span></div>
+    <div class="mk-row"><div class="mk-sw"><span class="mk-knoop" aria-hidden="true">42</span></div><div class="mk-t"><strong>{{ 'legend.line_knoop_h'|trans }}</strong><span>{{ 'legend.line_knoop_t'|trans }}</span></div><span class="mk-tag">{{ 'legend.tag_live'|trans }}</span></div>
+  </div>
+
+  <a class="mk-back" href="{{ path('map') }}">{{ 'legend.back_to_map'|trans }}</a>
+  </div>
+</div></section>
+{% endblock %}

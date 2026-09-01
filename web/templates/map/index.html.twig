@@ -73,6 +73,9 @@
     <button class="ib" id="ib-tools" type="button" data-panel="tools" data-tip="{{ 'map.rail_tools'|trans }}" aria-label="{{ 'map.rail_tools'|trans }}" aria-controls="dwr" aria-expanded="false">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19c4 0 3-9 7-9m0 0c4 0 3 9 7 9M12 10V5"/><circle cx="12" cy="4" r="1.4"/><circle cx="5" cy="19" r="2.6"/><circle cx="19" cy="19" r="2.6"/></svg>
     </button>
+    <button class="ib" id="ib-key" type="button" data-panel="key" data-tip="{{ 'map.rail_key'|trans }}" aria-label="{{ 'map.rail_key'|trans }}" aria-controls="dwr" aria-expanded="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="6" r="2"/><path d="M11.5 6H20"/><circle cx="6" cy="12" r="2"/><path d="M11.5 12H20"/><circle cx="6" cy="18" r="2"/><path d="M11.5 18H20"/></svg>
+    </button>
     <span class="spring"></span>
     <hr />
     {# The chrome theme toggle. theme.js paints the glyph and the label, both of
@@ -409,6 +412,37 @@
         <a class="cc-addclimb-go" href="{{ path('propose_route') }}">{{ 'propose_route.title'|trans }}</a>
       </div>
 
+      </section>
+
+      <section class="panel" id="p-key">
+      {# The map key (map-and-search.md §4.7): live marks only. The panel is
+         the quick reference; the /map-key page is the full story, planned
+         marks included. Pins reuse the real .cc-pin classes, so this key can
+         never drift from what the map draws. Colours mirror catalog.js; the
+         glyphs are THE icon set (cc_type_icons). #}
+      {% set keyIcons = cc_type_icons() %}
+      <div class="grp">
+        <h3>{{ 'legend.tiers_h'|trans }}</h3>
+        <div class="mkp-row"><span class="mkp-sw"><span class="mk-disc" style="--c:#3E7D8C"><span class="ic">{{ keyIcons['F'].glyph|default('•') }}</span></span></span><div class="mkp-t"><b>{{ 'legend.tier_osm_h'|trans }}</b><span>{{ 'legend.tier_osm_t'|trans }}</span></div></div>
+        <div class="mkp-row"><span class="mkp-sw" aria-hidden="true"><svg width="16" height="21" viewBox="0 0 14 18"><path d="M7 1 C13 8.3 11.2 17 7 17 C2.8 17 1 8.3 7 1 Z" fill="#3E8FB0" stroke="#0d2b3a" stroke-width="1.4"/></svg><svg width="16" height="21" viewBox="0 0 14 18"><path d="M7 1 C13 8.3 11.2 17 7 17 C2.8 17 1 8.3 7 1 Z" fill="#7F8C93" stroke="#2b3338" stroke-width="1.4"/></svg></span><div class="mkp-t"><b>{{ 'legend.tier_water_h'|trans }}</b><span>{{ 'legend.tier_water_t'|trans }}</span></div></div>
+        <div class="mkp-row"><span class="mkp-sw"><span class="cc-pin community" style="--c:#8FB6A8"><span style="filter:brightness(0)">{{ keyIcons['B'].glyph|default('•') }}</span></span></span><div class="mkp-t"><b>{{ 'legend.tier_community_h'|trans }}</b><span>{{ 'legend.tier_community_t'|trans }}</span></div></div>
+        <div class="mkp-row"><span class="mkp-sw"><span class="cc-pin" style="--c:#8FB6A8"><span style="filter:brightness(0)">{{ keyIcons['B'].glyph|default('•') }}</span></span></span><div class="mkp-t"><b>{{ 'legend.tier_ours_h'|trans }}</b><span>{{ 'legend.tier_ours_t'|trans }}</span></div></div>
+        <div class="mkp-row"><span class="mkp-sw"><span class="cc-pin cur" style="--c:#8FB6A8"><span style="filter:brightness(0)">{{ keyIcons['B'].glyph|default('•') }}</span></span></span><div class="mkp-t"><b>{{ 'legend.tier_verified_h'|trans }}</b><span>{{ 'legend.tier_verified_t'|trans }}</span></div></div>
+      </div>
+      <div class="grp">
+        <h3>{{ 'legend.state_h'|trans }}</h3>
+        <div class="mkp-row"><span class="mkp-sw"><span class="cc-pin stale" style="--c:#8FB6A8"><span style="filter:brightness(0)">{{ keyIcons['B'].glyph|default('•') }}</span></span></span><div class="mkp-t"><b>{{ 'legend.state_stale_h'|trans }}</b><span>{{ 'legend.state_stale_t'|trans }}</span></div></div>
+        <div class="mkp-row"><span class="mkp-sw"><span class="cc-cluster" style="--c:#6A2C8F">24</span></span><div class="mkp-t"><b>{{ 'legend.state_cluster_h'|trans }}</b><span>{{ 'legend.state_cluster_t'|trans }}</span></div></div>
+        <div class="mkp-row"><span class="mkp-sw"><span class="cc-highlight" aria-hidden="true"></span></span><div class="mkp-t"><b>{{ 'legend.state_look_h'|trans }}</b><span>{{ 'legend.state_look_t'|trans }}</span></div></div>
+        {# Moderation chrome: the flag comes from the CONTROLLER, never
+           is_granted() — the 2FA policy applies in exactly one place. #}
+        {% if pending_is_curator|default(false) %}
+        <div class="mkp-row mk-curator"><span class="mkp-sw"><span class="cc-pin pending" style="--c:#D92D20"><span style="filter:brightness(0) invert(1)">⏳</span></span></span><div class="mkp-t"><b>{{ 'legend.state_pending_h'|trans }}</b><span>{{ 'legend.state_pending_t'|trans }}</span></div></div>
+        {% endif %}
+      </div>
+      <div class="grp">
+        <a class="cc-addclimb-go" href="{{ path('map_key') }}">{{ 'map.key_full'|trans }}</a>
+      </div>
       </section>
 
       </div>
