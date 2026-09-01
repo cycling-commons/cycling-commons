@@ -24,6 +24,7 @@
     --chrome-glass:20 22 14;          /* translucent panel ground */
     --chrome-glass-deep:20 33 24;     /* search-results well */
     --paper-glass:239 230 212;        /* .map-top: cream in BOTH themes */
+    --mark-ink:20 22 14;              /* pin outline on the canvas (icons.js): ink in BOTH themes */
     --chrome-head:#8FB6A8;            /* mono section headings (= --glacier) */
     --chrome-lift:#2C5440;            /* raised/active surface (= --spruce-lift) */
     --chrome-well:#1C3A2A;            /* inset card ground (= --spruce) */
@@ -361,7 +362,7 @@
   .mkp-t b{display:block;font-size:.84rem;font-weight:600}
   .mkp-t span{display:block;font-size:.74rem;line-height:1.45;color:rgb(var(--chrome-fg) / .72)}
   .mk-disc{width:22px;height:22px;border-radius:50%;background:var(--c,#3E7D8C);flex:none;
-    border:1.5px solid rgba(20,22,14,.85);display:flex;align-items:center;justify-content:center;font-size:.66rem}
+    border:1.5px solid rgb(var(--mark-ink) / .85);display:flex;align-items:center;justify-content:center;font-size:.66rem}
   .mk-disc .ic{font-family:var(--emoji);filter:brightness(0) invert(1);line-height:1}
 
   .toggle{display:flex;border:1px solid rgb(var(--chrome-fg) / .25);border-radius:6px;overflow:hidden}

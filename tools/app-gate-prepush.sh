@@ -27,28 +27,32 @@ for bin in phpstan psalm php-cs-fixer; do
     fi
 done
 
-echo "1/8 php-cs-fixer..."
+echo "1/9 php-cs-fixer..."
 vendor/bin/php-cs-fixer fix --dry-run --diff
 
-echo "2/8 SPDX headers..."
+echo "2/9 SPDX headers..."
 ./tools/check-spdx.sh
 
-echo "3/8 licences..."
+echo "3/9 licences..."
 ./tools/check-licenses.sh
 
-echo "4/8 translation parity..."
+echo "4/9 translation parity..."
 ./tools/check-translations.sh
 
-echo "5/8 no |trans|raw..."
+echo "5/9 no |trans|raw..."
 ./tools/check-raw-translations.sh
 
-echo "6/8 PHPStan..."
+echo "6/9 Node tests (make scope-test)..."
+node --test tests/js/*.test.cjs
+node --test tests/js/*.test.mjs
+
+echo "7/9 PHPStan..."
 vendor/bin/phpstan analyse --no-progress
 
-echo "7/8 Psalm..."
+echo "8/9 Psalm..."
 vendor/bin/psalm --no-cache
 
-echo "8/8 PHPUnit (full suite, a few minutes)..."
+echo "9/9 PHPUnit (full suite, a few minutes)..."
 if ! php bin/phpunit; then
     echo >&2
     echo "pre-push: the test suite failed." >&2

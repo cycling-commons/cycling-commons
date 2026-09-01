@@ -398,7 +398,8 @@ REDIS_URL=redis://host.docker.internal:6379
 ## 8. Testing discipline
 
 - `make app-test` is the full local gate: `phpunit` + `phpstan` + `psalm` +
-  `php-cs-fixer --dry-run` + the SPDX, licence, and translation checks.
+  `php-cs-fixer --dry-run` + the SPDX, licence, and translation checks +
+  the Node tests (`make scope-test`).
   CI (`.github/workflows/ci-app.yml`) runs the same tool chain against a
   `postgis/postgis:18-3.6` service container, plus an advisory Rector pass.
 - **The push runs that same gate (2026-09-01).** `tools/app-gate-prepush.sh`

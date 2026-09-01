@@ -7,7 +7,7 @@
 //
 // What they protect:
 //
-//  - the three rider sections exist and each still OWNS the ids its module
+//  - the four rider sections exist and each still OWNS the ids its module
 //    binds to. panels.js, scope-ui.js, search-ui.js and render.js all reach
 //    for these by id, so the markup may MOVE between panels but may never be
 //    renamed or dropped;
@@ -32,10 +32,10 @@ const shellJs = read('assets/map/shell.js');
 const entry = read('assets/map/map.js');
 const controller = read('src/Controller/MapController.php');
 
-// The three panels are siblings in source order, so a panel's markup is
+// The four panels are siblings in source order, so a panel's markup is
 // everything from its own id up to the next panel's (the last one runs to the
 // end of the drawer body).
-const PANELS = ['p-search', 'p-layers', 'p-tools'];
+const PANELS = ['p-search', 'p-layers', 'p-tools', 'p-key'];
 function panelSrc(id) {
   const at = twig.indexOf(`id="${id}"`);
   assert.ok(at >= 0, `no <section id="${id}"> in the template`);
@@ -47,11 +47,11 @@ function panelSrc(id) {
   return twig.slice(at, end);
 }
 
-test('the icon rail carries exactly the three rider sections', () => {
+test('the icon rail carries exactly the four rider sections', () => {
   assert.ok(/<nav class="irail"/.test(twig), 'no <nav class="irail"> in the template');
   const panels = [...twig.matchAll(/<button[^>]*class="ib"[^>]*data-panel="([a-z]+)"/g)].map(m => m[1]);
-  assert.deepEqual(panels, ['search', 'layers', 'tools'],
-    'the rail must carry search, layers and tools, in that order and no others');
+  assert.deepEqual(panels, ['search', 'layers', 'tools', 'key'],
+    'the rail must carry search, layers, tools and key, in that order and no others');
   assert.ok(twig.includes('id="ib-theme"'), 'the rail has no theme button');
   assert.ok(twig.includes('id="ib-layers"'), 'the layers button needs its id for the filter dot');
 });
@@ -135,7 +135,7 @@ test('the drawer opens closed and titles itself from the locale bundle', () => {
   // page must not.
   assert.ok(twig.includes('<aside class="dwr" id="dwr" aria-hidden="true">'),
     'the drawer does not ship closed and aria-hidden');
-  for (const key of ['railSearch', 'railLayers', 'railTools']) {
+  for (const key of ['railSearch', 'railLayers', 'railTools', 'railKey']) {
     assert.ok(shellJs.includes(key), `shell.js has no ${key} title`);
     assert.ok(controller.includes(`'${key}' =>`), `MapController::mapI18n() does not emit ${key}`);
   }

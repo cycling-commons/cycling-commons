@@ -62,8 +62,8 @@ skips with a notice otherwise — CI (`make app-test`) enforces it regardless.
 
 **Pushing runs the whole test gate.** Any outgoing change under `web/` triggers
 `tools/app-gate-prepush.sh`, which runs everything `make app-test` runs:
-php-cs-fixer, the SPDX/licence/translation gates, PHPStan, Psalm, then the full
-PHPUnit suite. Cheapest checks come first, so a formatting slip fails in seconds;
+php-cs-fixer, the SPDX/licence/translation gates, the Node tests, PHPStan, Psalm,
+then the full PHPUnit suite. Cheapest checks come first, so a formatting slip fails in seconds;
 a clean run takes a few minutes. `staging` deploys on push, so this is the last
 point before a red gate reaches a server. `git push --no-verify` skips it.
 
