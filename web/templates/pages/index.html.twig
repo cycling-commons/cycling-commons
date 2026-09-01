@@ -19,25 +19,6 @@
   .wrap{max-width:1200px;margin:0 auto;padding:0 clamp(1.25rem,4vw,3rem)}
   a{color:inherit;text-decoration:none}
 
-  /* ---------- NAV ---------- */
-  /* No bare `nav{}` rule here. There used to be one, left over from the
-     standalone demo, that set position:absolute;top:0;left:0;right:0. It never
-     reached the site nav (`.topnav` is a class and wins on specificity), so it
-     did nothing at all until the footer grew three <nav> columns and a social
-     row. Those it did reach: all four stacked at the top of the page, on top of
-     each other. Style `.topnav` and the footer's own classes, never the
-     element. */
-  .brand{font-family:var(--serif);font-weight:600;font-size:1.6rem;color:var(--paper);letter-spacing:-.02em}
-  .brand b{color:var(--trail);font-style:italic;font-weight:600}
-  .nav-links{display:flex;gap:2rem;align-items:center}
-  .nav-links a{color:var(--paper);font-size:.95rem;opacity:.85;transition:opacity .2s}
-  .nav-links a:hover{opacity:1}
-  .nav-cta{border:1.5px solid rgba(239,230,212,.4);padding:.55rem 1.1rem;border-radius:4px;transition:all .25s}
-  .nav-cta:hover{background:var(--trail);border-color:var(--trail);color:var(--ink)!important;opacity:1!important}
-  .nav-cta.fill{background:var(--trail);border-color:var(--trail);color:var(--ink)!important}
-  .nav-cta.fill:hover{background:#ff703d;border-color:#ff703d}
-  @media(max-width:760px){.nav-links a:not(.nav-cta){display:none}}
-
   /* ---------- HERO ---------- */
   /* The hero is one screenful MINUS THE NAV, not one screenful. `.topnav` is
      sticky and sits in the flow above it, so a plain 100svh pushed the hero's
@@ -185,7 +166,7 @@
   .card:hover{transform:translateY(-3px);box-shadow:0 14px 30px -16px rgba(20,22,14,.5)}
   /* Letter and icon share one 2rem-tall row at the card's top padding, so they sit
      on the same line instead of the letter riding higher (owner 2026-08-25). */
-  .card .co{position:absolute;top:1.3rem;right:1.3rem;height:2rem;font-family:var(--serif);font-weight:600;font-size:2rem;line-height:1;letter-spacing:0;color:#8A6425}  /* the ochre token darkened: #C8923A at 45% was ~1.3:1 on the card; this is 3.68:1, AA for large text (owner 2026-08-25) */
+  .card .co{position:absolute;top:1.3rem;right:1.3rem;height:2rem;font-family:var(--serif);font-weight:600;font-size:2rem;line-height:1;letter-spacing:0;color:#8A6425}  /* darker than the --ochre token: 3.68:1 on the card, AA for large text (owner 2026-08-25) */
   .scout-cta{display:flex;gap:1.6rem;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
   .scout-cta h3{font-family:var(--serif);font-size:1.5rem;line-height:1.2}
   .scout-cta-lead{display:flex;gap:1.1rem;align-items:flex-start;flex:1 1 300px;min-width:0}
@@ -231,9 +212,6 @@
      type — same shape as Explore, clearly the second action, no outline. */
   .cta-band .btn-ghost{background:var(--paper);border-color:transparent;color:var(--ink)}
   .cta-band .btn-ghost:hover{background:var(--paper-deep);border-color:transparent;color:var(--ink)}
-  footer .wrap{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;align-items:center}
-  footer .mono{font-size:.68rem;color:rgba(239,230,212,.72)}
-  footer a{color:rgba(239,230,212,.8)}footer a:hover{color:var(--trail)}
 
   @media(prefers-reduced-motion:reduce){.hero .hero-contours{animation:none;clip-path:none}.rv{transition:none;opacity:1;transform:none}}
 </style>
@@ -344,9 +322,6 @@
     <h2>{{ 'home.cta_band_h2'|trans }}</h2>
     <div class="btn-row">
       <a class="btn btn-primary" href="{{ path('map') }}">{{ 'home.cta_band_map'|trans }} <span class="arw">→</span></a>
-      {# Offered only to people who do not have one. It pointed at /login,
-         which bounces a signed-in visitor to this very page with no
-         explanation — a button that silently does nothing. #}
       {% if not app.user %}
         <a class="btn btn-ghost" href="{{ path('register') }}">{{ 'home.cta_band_account'|trans }}</a>
       {% endif %}
