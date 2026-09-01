@@ -2,12 +2,7 @@
 {% extends 'base.html.twig' %}
 {% block head_styles %}
 <style>
-  .wrap{max-width:1080px;margin:0 auto;padding:2.6rem 2rem}
-  @media(max-width:560px){.wrap{padding:1.8rem 1.25rem}}
-
-  .ey{font-family:var(--mono);font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--clay);margin-bottom:.6rem}
-  h1{font-family:var(--serif);font-weight:600;font-size:2rem;line-height:1.05}
-  .sub{color:#4a4d40;margin-top:.6rem;max-width:74ch;line-height:1.65}
+  .ahero .lead{color:rgba(239,230,212,.85)}
 
   .cat-h{font-family:var(--mono);font-size:.92rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink);margin-top:2.6rem;display:flex;align-items:baseline;gap:.8rem}
   .cat-h b{color:var(--clay)}
@@ -38,11 +33,13 @@
 </style>
 {% endblock %}
 {% block body %}
-<div class="wrap" id="main">
-  <div class="ey">{{ 'contribute_hub.kicker'|trans }}</div>
-  <h1>{{ 'contribute_hub.title'|trans }}</h1>
-  <p class="sub">{{ 'contribute_hub.lead'|trans }}</p>
+<div class="ahero"><div class="wrap">
+  <div class="kicker" style="color:var(--trail)">{{ 'contribute_hub.kicker'|trans }}</div>
+  <h1 class="disp">{{ 'contribute_hub.title'|trans }}</h1>
+  <p class="lead" style="margin-top:1rem">{{ 'contribute_hub.lead'|trans }}</p>
+</div></div>
 
+<section class="pad"><div class="wrap">
   <h3 class="cat-h"><b>{{ 'contribute_hub.cat_practical_h'|trans }}</b> <span>{{ 'contribute_hub.cat_practical_sub'|trans }}</span></h3>
   <div class="grid">
     <a class="card" href="{{ path('improve', {type: 'road-surface', mode: 'add'}) }}">
@@ -158,5 +155,5 @@
   <div class="notice">
     {{ 'contribute_hub.notice_pre'|trans }} <b>{{ 'contribute_hub.notice_odbl'|trans }}</b>{{ 'contribute_hub.notice_mid'|trans }} <b>{{ 'contribute_hub.notice_ccbysa'|trans }}</b>{{ 'contribute_hub.notice_post'|trans }}
   </div>
-</div>
+</div></section>
 {% endblock %}
