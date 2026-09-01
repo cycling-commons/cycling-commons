@@ -116,6 +116,44 @@ final class TranslatePageTest extends WebTestCase
         self::assertSame(0, $crawler->filter('#main textarea')->count());
     }
 
+    /**
+     * The chooser is a fork in the road, not a dead end (translations.md
+     * §4.1). A non-curator never sees a translatable locale by default
+     * (English is the site default and English is curator-only, §4.2), so
+     * every card here must offer BOTH the catalogue list and the on-page
+     * door, or the second feature stays undiscoverable to exactly the rider
+     * it was built for.
+     */
+    public function testChooserOffersBothBrowseAndTranslateOnThePageForEveryLanguage(): void
+    {
+        $client = static::createClient();
+        $user = $this->createUser('chooser-both-doors@example.com', 'hunter2secure!');
+        $client->loginUser($user);
+
+        $crawler = $client->request('GET', '/translate');
+        self::assertResponseIsSuccessful();
+        $html = (string) $crawler->filter('#main')->html();
+
+        foreach (['fr', 'nl', 'de', 'es'] as $loc) {
+            self::assertStringContainsString('/'.$loc.'/translate', $html, $loc.' is missing its catalogue link');
+            self::assertSame(
+                1,
+                $crawler->filterXPath(
+                    '//form[input[@name="locale" and @value="'.$loc.'"]]'
+                    .'[input[@name="on" and @value="1"]]'
+                    .'[input[@name="_csrf_token"]]',
+                )->count(),
+                $loc.' is missing its "translate on the page" door',
+            );
+        }
+
+        // The shared-chrome CSRF field name, never Symfony's default: a bare
+        // "_token" here would shadow a page's own form for anything reading
+        // the first match in raw HTML (translations.md §4.1).
+        self::assertStringNotContainsString('name="_token"', $html);
+        self::assertStringContainsString('name="_csrf_token"', $html);
+    }
+
     public function testFrenchListShowsSeededKeyAndEnglish(): void
     {
         $client = static::createClient();

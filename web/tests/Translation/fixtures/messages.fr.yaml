@@ -1,0 +1,142 @@
+# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+blog:
+  kicker: 'Du Commons'
+  title: 'Ce que nous faisons.'
+  lead: 'Des notes sur ce qui se construit, ce que les cyclistes ont ajouté, et comment la carte change.'
+  meta_title: 'Blog · Cycling Commons'
+  meta_description: 'Notes du Cycling Commons: ce qui se construit, ce que les cyclistes ont ajouté, et comment la carte change.'
+  read: 'Lire'
+  back: 'Tous les articles'
+  archive: 'Autres articles'
+  empty: 'Rien ici pour l''instant. Le premier article arrive.'
+  feed_link: 'Suivre par flux'
+  feed_title: 'Cycling Commons'
+  feed_subtitle: 'Des notes sur ce qui se construit et comment la carte change.'
+  fallback_note: 'Le blog est écrit en anglais et en néerlandais. Vous lisez les articles en anglais.'
+  also_in: 'Aussi en:'
+  status.draft: 'Brouillon'
+  status.published: 'Publié'
+footer:
+  col_atlas: 'L''atlas'
+  col_take_part: 'Participer'
+translate:
+  consent:
+    contract: 'J''accepte de placer cette traduction sous licence CC BY-SA 4.0 et je confirme qu''elle est mon propre travail.'
+    standing: 'Vous avez accepté la licence de traduction le %date%. Vos traductions rejoignent le Commons sous CC BY-SA 4.0.'
+    read_contract: 'Voir exactement ce que vous avez accepté'
+    site_terms: 'Conditions du site'
+  kicker: 'Traductions'
+  title: 'Traduire le site'
+  catalogue: 'Catalogue'
+  section_aria: 'Pages de traduction'
+  chooser_lead: 'L''anglais est le catalogue source et ne peut pas être proposé ici. Choisissez le français, le néerlandais, l''allemand ou l''espagnol : le site bascule dans cette langue, et vous pouvez ensuite chercher dans le catalogue ou cliquer sur n''importe quelle phrase de la page pour la corriger.'
+  chooser:
+    browse: 'Parcourir le catalogue'
+  list_lead: 'Cherchez par clé ou texte anglais, puis proposez une traduction pour cette langue.'
+  search_ph: 'Chercher une clé ou l''anglais…'
+  search: 'Chercher'
+  empty: 'Aucune clé du catalogue ne correspond.'
+  pending: 'Vous avez une proposition en attente'
+  back: 'Retour au catalogue'
+  submit: 'Proposer la traduction'
+  cancel: 'Annuler'
+  markup_note: 'La source anglaise contient des balises. Conservez les mêmes balises dans votre proposition ; sur le site public elles sont filtrées par le filtre de texte enrichi.'
+  field:
+    english: 'Anglais (source)'
+    yaml: 'Défaut YAML pour cette langue'
+    live: 'En ligne sur le site'
+    preview: 'Aperçu (filtré)'
+    english_yaml: 'Anglais dans git'
+    english_live: 'Anglais en ligne'
+  form:
+    value: 'Votre traduction'
+  stale:
+    tag: 'L''anglais a changé v%from% → v%to%'
+    notice: 'L''anglais a changé après que cette traduction a été faite (v%from% → v%to%). Relisez-la en la comparant à l''anglais actuel.'
+    chip: 'Obsolète'
+    badge_title: 'Traductions dans cette langue que l''anglais a dépassées'
+export:
+  readme: |
+    VOS DONNÉES CYCLING COMMONS
+    ===========================
+
+    Généré le %generated% pour le compte « %account% ».
+
+    Cette archive répond à deux droits du RGPD à la fois : le droit d'accès
+    (Art. 15) et le droit à la portabilité des données (Art. 20). La
+    portabilité ne couvre que ce que vous nous avez fourni vous-même et
+    l'accès couvre davantage, donc plutôt que de vous faire choisir entre deux
+    téléchargements, voici l'ensemble.
+
+    CE QU'ELLE CONTIENT
+
+      account.json        Votre compte : email, nom affiché, langue, pays,
+                          localisation de base, préférences et horodatages.
+      contributions.json  Les soumissions que vous avez faites, et les
+                          modifications de champs qu'elles ont produites sur la
+                          carte une fois acceptées par un curateur.
+      community.json      Confirmations, votes d'itinéraires, sorties,
+                          suggestions de correction, demandes de pays,
+                          candidatures de curateur.
+      messages.json       Vos messages de tableau de bord, dans les deux sens.
+      consent.json        Chaque licence photo accordée : quel texte, quelle
+                          version, et quand.
+      translations.json   Vos propositions de traduction de l'interface. Ce
+                          sont des contributions CC BY-SA, pas des données
+                          personnelles sur le cycliste.
+      photos/index.json   Une entrée par photo envoyée, avec son statut et le
+                          fichier correspondant.
+      photos/*.webp       Les photos elles-mêmes.
+
+    CE QU'ELLE NE CONTIENT PAS, ET POURQUOI
+
+      Votre mot de passe, votre secret à deux facteurs et vos codes de secours.
+      Ce sont les identifiants qui protègent ce compte. Une exportation est un
+      fichier que l'on transfère et que l'on sauvegarde, et livrer les clés
+      avec le contenu vous rendrait moins en sécurité, pas mieux informé.
+
+      L'identité des curateurs qui ont traité votre travail. Ce qui a été
+      décidé sur vos soumissions est votre donnée et tout figure ici, notes
+      comprises. Qui a pris la décision est la leur.
+
+    À PROPOS DES PHOTOS
+
+      Ce sont nos copies traitées, pas les fichiers que vous avez envoyés. Nous
+      réencodons chaque photo à l'arrivée et supprimons ses métadonnées, y
+      compris toute localisation enregistrée par l'appareil : le fichier tel
+      que vous l'avez envoyé n'est pas quelque chose que nous conservons. Une
+      entrée de l'index avec "file": null est une photo dont les objets
+      stockés ont déjà été supprimés ; sa trace subsiste.
+
+      Les photos approuvées par un curateur sont sous licence CC BY-SA 4.0 et
+      restent dans le Commons. Cette licence ne peut pas être retirée. Votre
+      nom, en revanche, n'est pas dans les fichiers : l'attribution est résolue
+      en direct depuis votre profil, donc rendre votre profil privé, ou fermer
+      votre compte, change ce que crédite chaque copie de votre photo, y
+      compris celles téléchargées il y a longtemps.
+
+    QUESTIONS
+
+      info@cyclingcommons.org
+scout:
+  kicker: 'Scout · le CC Tagger'
+error404:
+  code: '404 · Hors carte'
+  heading_pre: 'Ce chemin'
+  heading_em: "n'existe pas"
+regions:
+  # Region labels are the strings this tool exists to draft, and 74 keys in
+  # every real catalogue carry a hyphen. Both shapes sit here so the walker's
+  # indentation stack is exercised by a hyphenated parent AND by the ordinary
+  # one that follows it: before the key pattern admitted a hyphen, this
+  # section's `label:` lines all resolved to the phantom path `regions.label`
+  # and every real key here was refused as "does not exist".
+  groningen:
+    label: 'Groningue'
+  limburg-nl:
+    label: 'Limbourg'
+    blurb: 'Les seules vraies bosses des Pays-Bas.'
+  noord-brabant:
+    label: 'Brabant-Septentrional'
+  drenthe:
+    label: 'Drenthe'

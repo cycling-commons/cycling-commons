@@ -139,6 +139,22 @@ final class CatalogueBrowser
         ];
     }
 
+    /**
+     * True when `english_yaml` (what the last `app:translations:sync` read)
+     * no longer matches what `messages.en.yaml` holds right now: English
+     * moved in git (or an editor's working copy) and nobody has re-run the
+     * sync since (translations.md §3.4, rule 7). Read through the same
+     * decorator-inner translator `search()`/`liveFor()` use, never a fresh
+     * file read, so this can never disagree with what the rest of the
+     * browser already shows for the key.
+     */
+    public function englishSourceDrifted(TranslationEntry $entry): bool
+    {
+        $current = $this->yamlTranslator->trans($entry->getMessageKey(), [], 'messages', 'en');
+
+        return $current !== $entry->getEnglishYaml();
+    }
+
     private function escapeIlike(string $value): string
     {
         return str_replace(

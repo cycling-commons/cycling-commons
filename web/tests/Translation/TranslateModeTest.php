@@ -17,6 +17,7 @@ use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 /**
  * Translate mode: the marks on the page (translations.md §4.1).
@@ -296,6 +297,66 @@ final class TranslateModeTest extends WebTestCase
         $client->request('POST', '/nl/translate/mode', ['on' => '1', '_csrf_token' => 'nope']);
 
         self::assertResponseStatusCodeSame(403);
+    }
+
+    /**
+     * The chooser's second door (translations.md §4.1): posting the
+     * "translate on the page" action for a language turns the session flag
+     * on AND lands the reader on the home page in that language, not on
+     * `/translate` and not on whatever page they happened to be on. This is
+     * the exact discoverability bug: a non-curator on the English home page
+     * never sees the in-page toggle at all (English is curator-only, §4.2),
+     * so the chooser is the only place they can reach translate mode from.
+     */
+    public function testChooserTranslateOnPageDoorTurnsModeOnAndLandsOnTheHomePageInThatLocale(): void
+    {
+        $client = static::createClient();
+        $client->loginUser($this->createUser('chooser-onpage@example.com', 'hunter2secure!'));
+
+        $crawler = $client->request('GET', '/translate');
+        self::assertResponseIsSuccessful();
+
+        $form = $crawler->filterXPath(
+            '//form[input[@name="locale" and @value="nl"]][input[@name="on" and @value="1"]]',
+        )->form();
+        $client->submit($form);
+
+        /** @var UrlGeneratorInterface $urlGenerator */
+        $urlGenerator = static::getContainer()->get(UrlGeneratorInterface::class);
+        self::assertResponseRedirects($urlGenerator->generate('home', ['_locale' => 'nl']));
+
+        $client->followRedirect();
+        self::assertResponseIsSuccessful();
+        // Mode is on AND the reader is on the Dutch site: the bar renders,
+        // which it only does while `translate_mode()` is true for this
+        // request's locale (translations.md §4.1).
+        self::assertStringContainsString('id="tr-bar"', $this->body($client));
+    }
+
+    /**
+     * A toggle that sends no `locale` field (the account chip, the on-page
+     * bar, the /translate list page's own toggle) must keep working exactly
+     * as before: back to the same-host page the request came from, or
+     * `/translate` with no Referer at all. The chooser's new `locale`
+     * branch in `TranslateController::mode()` must not swallow this path.
+     */
+    public function testATogglerWithNoLocaleStillFollowsTheRefererFallback(): void
+    {
+        $client = static::createClient();
+        $client->loginUser($this->createUser('mode-referer@example.com', 'hunter2secure!'));
+
+        $crawler = $client->request('GET', '/nl/translate');
+        $token = (string) $crawler->filter('form.tr-mode-toggle input[name="_csrf_token"]')->attr('value');
+
+        $client->request(
+            'POST',
+            '/nl/translate/mode',
+            ['on' => '1', '_csrf_token' => $token],
+            [],
+            ['HTTP_REFERER' => 'http://localhost'.self::DUTCH_PAGE],
+        );
+
+        self::assertResponseRedirects(self::DUTCH_PAGE);
     }
 
     /**

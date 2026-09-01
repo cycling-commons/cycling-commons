@@ -17,6 +17,16 @@
   .tr-change-k{display:block;font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:#8a8d7d;margin-bottom:.35rem}
   .tr-form{margin-top:1.4rem}
   .tr-diff .tr-form{margin-top:1rem}
+  /* Dev-only DeepL controls (translations.md §7.2). Copied verbatim into
+     partials/_translate_bar.html.twig, same convention as every other
+     .tr-* rule above: see that file's own header for why. */
+  .tr-deepl{margin:0 0 1.1rem;padding:.85rem .95rem;background:var(--paper);border:1px dashed rgba(20,22,14,.3);border-radius:6px}
+  .tr-deepl-actions{display:flex;gap:.6rem;flex-wrap:wrap}
+  .tr-deepl button{font-family:var(--mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;padding:.5rem .8rem;border:1px solid var(--clay);background:transparent;color:var(--clay);border-radius:6px;cursor:pointer}
+  .tr-deepl button:disabled{opacity:.5;cursor:default}
+  .tr-deepl-status{margin:.6rem 0 0;font-size:.82rem;line-height:1.5;color:#4a4d40}
+  .tr-deepl-status.is-error{color:#7d2018}
+  .tr-deepl-note{margin:0 0 1.1rem;font-size:.84rem;line-height:1.5;color:#595c4d}
   .tr-form .field{margin-bottom:1.1rem}
   .tr-form .field label{display:block;font-family:var(--mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:#595c4d;margin-bottom:.4rem}
   .tr-form .field textarea{width:100%;min-height:8rem;padding:.7rem .85rem;border:1px solid rgba(20,22,14,.22);border-radius:6px;background:var(--paper);font:inherit;line-height:1.5}

@@ -8,8 +8,16 @@
   {% for msg in app.flashes('danger') %}<div class="flash-error" role="alert">{{ msg|trans }}</div>{% endfor %}
   {% if sent %}
     <div class="tr-embed-sent" role="status">
-      <p>{{ 'translate.flash.submitted'|trans }}</p>
-      <p class="tr-note">{{ 'translate.mode.not_live_yet'|trans }}</p>
+      {# A dev submit (translations.md §7.3) never goes to a curator: it is
+         already in the catalogue file by the time this renders, so the
+         "a curator will review it" / "nothing changes yet" wording below
+         would be wrong here, not just imprecise. #}
+      {% if dev_submit %}
+        <p>{{ 'translate.deepl.written'|trans }}</p>
+      {% else %}
+        <p>{{ 'translate.flash.submitted'|trans }}</p>
+        <p class="tr-note">{{ 'translate.mode.not_live_yet'|trans }}</p>
+      {% endif %}
       <button type="button" class="tr-embed-close">{{ 'translate.mode.close'|trans }}</button>
     </div>
   {% else %}

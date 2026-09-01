@@ -4,10 +4,20 @@
 {% include 'account/_shell_styles.html.twig' %}
 <style>
   .chooser{list-style:none;padding:0;margin:1.8rem 0 0;display:grid;gap:.8rem}
-  .chooser a{display:block;padding:1.1rem 1.2rem;background:var(--paper-deep);border:1px solid rgba(20,22,14,.14);border-radius:8px;text-decoration:none;color:var(--ink);transition:all .2s}
-  .chooser a:hover{border-color:var(--trail);transform:translateY(-2px);box-shadow:0 10px 24px -16px rgba(20,22,14,.45)}
+  .chooser li{padding:1.1rem 1.2rem;background:var(--paper-deep);border:1px solid rgba(20,22,14,.14);border-radius:8px;transition:border-color .2s,transform .2s,box-shadow .2s}
+  .chooser li:hover{border-color:var(--trail);transform:translateY(-2px);box-shadow:0 10px 24px -16px rgba(20,22,14,.45)}
   .chooser .loc{font-family:var(--mono);font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--clay)}
   .chooser .nm{font-family:var(--serif);font-weight:600;font-size:1.15rem;margin-top:.2rem}
+  {# Two doors per card (translations.md §4.1): a plain link to that locale's
+     catalogue list, and a POST that turns translate mode on and lands on
+     that locale's home page. A single <a> can only carry one destination,
+     so the card itself is not the link; the two actions below are. #}
+  .chooser-actions{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.85rem}
+  .chooser-actions form{margin:0}
+  .chooser-actions a,.chooser-actions button{font:inherit;font-family:var(--mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;padding:.55rem .8rem;border-radius:6px;cursor:pointer;text-decoration:none;line-height:1.2}
+  .chooser-actions a{border:1px solid rgba(20,22,14,.25);background:var(--paper);color:var(--ink)}
+  .chooser-actions a:hover{border-color:var(--trail)}
+  .chooser-actions button{border:1px solid var(--ink);background:var(--ink);color:var(--paper)}
   .tr-search{display:flex;gap:.6rem;margin:0 0 1.2rem;flex-wrap:wrap}
   .tr-search input[type=search]{flex:1;min-width:12rem;padding:.65rem .85rem;border:1px solid rgba(20,22,14,.22);border-radius:6px;background:var(--paper);font:inherit}
   .tr-search button{font-family:var(--mono);font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;padding:.7rem 1rem;border:1px solid var(--ink);background:var(--ink);color:var(--paper);border-radius:6px;cursor:pointer}
@@ -53,10 +63,24 @@
     <ul class="chooser">
       {% for loc in locales %}
         <li>
-          <a href="{{ path('translate', {_locale: loc}) }}">
-            <div class="loc">{{ loc }}</div>
-            <div class="nm">{{ ('translate.locale.' ~ loc)|trans }}</div>
-          </a>
+          <div class="loc">{{ loc }}</div>
+          <div class="nm">{{ ('translate.locale.' ~ loc)|trans }}</div>
+          <div class="chooser-actions">
+            <a href="{{ path('translate', {_locale: loc}) }}">{{ 'translate.chooser.browse'|trans }}</a>
+            {# Turns translate mode on and sends the reader to that locale's
+               home page (translations.md §4.1). A form, not a link: it
+               carries the CSRF token that /translate/mode requires. #}
+            <form method="post" action="{{ path('translate_mode') }}">
+              {# "_csrf_token", not Symfony's default "_token": this page
+                 renders the on-page bar's own toggle form further down with
+                 the same name, and a bare "_token" here would be the first
+                 match a scraper reading raw HTML finds. #}
+              <input type="hidden" name="_csrf_token" value="{{ csrf_token('translate_mode') }}">
+              <input type="hidden" name="on" value="1">
+              <input type="hidden" name="locale" value="{{ loc }}">
+              <button type="submit">{{ 'translate.mode.on'|trans }}</button>
+            </form>
+          </div>
         </li>
       {% endfor %}
     </ul>

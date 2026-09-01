@@ -6,7 +6,14 @@
 
    Expects: entry, locale, open, live, yaml_default, has_markup, form, change,
    proposed_preview, standing, is_english, embed, stale, english_version,
-   made_against. #}
+   made_against, source_drift, is_dev, deepl_on, dev_submit.
+
+   deepl_on and dev_submit are the dev-only DeepL tool (translations.md §7):
+   deepl_on (DeepLAvailability::isOn(), plus "not English" below) gates the
+   two draft buttons; dev_submit (kernel environment is "dev", plus "not
+   English") is broader on purpose: a developer with no DeepL key configured
+   still gets the direct-write submit path and the no-consent note below, just
+   no buttons to draft with. #}
 
 {% macro worddiff(segments) %}{%- for s in segments -%}
   {%- if s.type == 'del' -%}<span class="q-was">{{ s.text }}</span>
@@ -17,6 +24,10 @@
 
 {% if stale %}
   <p class="tr-warn" role="status">{{ 'translate.stale.notice'|trans({'%from%': made_against, '%to%': english_version}) }}</p>
+{% endif %}
+
+{% if source_drift %}
+  <p class="tr-warn" role="status">{{ (is_dev ? 'translate.source_drift.dev' : 'translate.source_drift.other')|trans }}</p>
 {% endif %}
 
 {% if open %}
@@ -67,6 +78,37 @@
   {% endif %}
 
   {{ form_start(form, {attr: {class: 'tr-form'}, action: path('translate_edit', {id: entry.id, embed: embed ? 1 : null})}) }}
+    {% if deepl_on and not is_english %}
+      {# Dev-only DeepL controls (translations.md §7.2). The %%LOCALES%%
+         %%DETAILS%% and %%MESSAGE%% placeholders are the same substitute-after-escape
+         trick the consent block below uses for %date%: the translated
+         template is rendered once here, and deepl-draft.js fills in the
+         technical (locale codes, a DeepL error string) part client-side,
+         via textContent, never innerHTML: nothing here is HTML. #}
+      <div class="tr-deepl" data-deepl
+           data-draft-url="{{ path('translate_deepl_draft', {id: entry.id}) }}"
+           data-draft-all-url="{{ path('translate_deepl_draft_all', {id: entry.id}) }}"
+           data-csrf="{{ csrf_token('deepl_draft') }}"
+           data-drafting-label="{{ 'translate.deepl.drafting'|trans }}"
+           data-wrote-tpl="{{ 'translate.deepl.wrote'|trans({'%locales%': '%%LOCALES%%'}) }}"
+           data-failed-tpl="{{ 'translate.deepl.failed_locales'|trans({'%details%': '%%DETAILS%%'}) }}"
+           data-error-tpl="{{ 'translate.deepl.error'|trans({'%message%': '%%MESSAGE%%'}) }}">
+        <div class="tr-deepl-actions">
+          <button type="button" class="tr-deepl-one">{{ 'translate.deepl.draft_this'|trans }}</button>
+          {# Draft-all WRITES all four catalogue files, so it needs the
+             CC_CATALOGUE_WRITE opt-in (dev_submit), not only a DeepL key.
+             Its endpoint answers 404 without that opt-in, so a button
+             rendered here without it would be a button that cannot work. #}
+          {% if dev_submit %}
+            <button type="button" class="tr-deepl-all">{{ 'translate.deepl.draft_all'|trans }}</button>
+          {% endif %}
+        </div>
+        <p class="tr-deepl-status" data-deepl-status hidden></p>
+      </div>
+    {% endif %}
+    {% if dev_submit %}
+      <p class="tr-deepl-note">{{ 'translate.deepl.no_consent_note'|trans }}</p>
+    {% endif %}
     <div class="field">
       {{ form_label(form.value) }}
       {{ form_widget(form.value) }}
@@ -80,7 +122,15 @@
       </div>
     {% endif %}
 
-    {% if not is_english %}
+    {# The consent block never applies to a dev submit (translations.md
+       §7.3): no CC BY-SA grant is being created, so a tick asking for one,
+       or a line saying one was already given, would be actively misleading
+       for output headed into PolyForm source instead. dev_submit already
+       makes `form.consent is defined` false via the createForm() options
+       above and $standing null in the controller, so this `not dev_submit`
+       is belt and suspenders, not the only thing doing the hiding, but it
+       is the one place that says so in one look. #}
+    {% if not is_english and not dev_submit %}
       {% if standing %}
         {% set when %}<time class="consent-when" datetime="{{ standing.consentedAt|date('c') }}">{{ standing.consentedAt|cc_date }}</time>{% endset %}
         {# translate.consent.standing is an overlayable key: a curator-approved translation is
@@ -108,7 +158,11 @@
     {{ form_errors(form) }}
 
     <div class="tr-actions">
-      <button type="submit">{{ 'translate.submit'|trans }}</button>
+      {# The button is the last thing read before acting, so on the dev
+         write path it has to name the act: this submit does not propose
+         anything to anybody, it edits a source file in the working tree
+         (translations.md §7.3). #}
+      <button type="submit">{{ (dev_submit ? 'translate.deepl.submit' : 'translate.submit')|trans }}</button>
       <a href="{{ path('translate') }}">{{ 'translate.cancel'|trans }}</a>
     </div>
   {{ form_end(form) }}

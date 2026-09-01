@@ -65,6 +65,15 @@
    parsed regardless of their position in it, so this must stay a plain
    (non-deferred) tag to turn every mark into a clickable span first. #}
 {% if translate_mode() %}<script src="{{ asset('js/translate-mode.js') }}"></script>{% endif %}
+{# The dev-only DeepL drafting tool (translations.md §7.1, §7.2). Loaded
+   the same way translate-mode.js is, and for the same reason: the panel
+   this wires up can arrive already in the page (a full /translate/{id}
+   load) or fetched as text and set via innerHTML into the translate-mode
+   drawer above, where an inline <script> would never run. `deepl_available()`
+   is the same DeepLAvailability::isOn() gate the buttons themselves render
+   behind (App\Twig\DeepLExtension), so this script never ships where the
+   feature does not exist. #}
+{% if deepl_available() %}<script src="{{ asset('js/deepl-draft.js') }}" defer></script>{% endif %}
 {# The proof-of-work solver, then the button that uses it. Not deferred past
    each other: bug-fab.js reads window.ccPow at load and bails without it. #}
 <script src="{{ asset('support/pow.js') }}"></script>
