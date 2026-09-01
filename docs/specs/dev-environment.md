@@ -202,6 +202,21 @@ re-seedable.
 - **EA CRUD pages need the `intl` C extension** in the container
   (`web/Dockerfile` installs it); `symfony/intl` (pure PHP) does not satisfy
   it, and host-run tests passing proves nothing about the container.
+- **The php-fpm pool runs as the host user, not `www-data`.** The dev-only
+  translation tool writes straight into the bind-mounted
+  `web/translations/messages.<locale>.yaml` (translations.md §7.3), which
+  needs directory write permission from the same uid that owns the checkout.
+  `developers/docker/php-fpm-dev-user.conf`, mounted by the `app` service as
+  `zz-dev-user.conf`, overrides the pool's `user`/`group` to
+  `DEV_UID`/`DEV_GID` (default 1000; override in `developers/docker/.env`).
+  `web/Dockerfile` keeps its php-fpm master root on purpose so it can drop
+  each worker itself; this changes only what it drops *to*. `composer
+  install`, `assets:install` and `app:region:scaffold` in the `Makefile`
+  likewise run as `$(DEV_UID):$(DEV_GID)` via `docker compose exec --user`,
+  for the same reason: `composer install` running as root is why
+  `cc_api_vendor` and `public/bundles` used to end up root-owned on the host.
+  A restart of the `app` service is required after changing `DEV_UID`/
+  `DEV_GID`.
 
 ## 6. Web application architecture
 
@@ -307,6 +322,31 @@ Day-one internationalisation across **EN / FR / NL / DE / ES**:
   yet. The catalogue is complete and in parity, and it is enabled, but treat
   its copy as unreviewed until a Spanish-speaking rider has read it. Tracked
   in `docs/TODO.md`.
+- **DeepL drafting, dev only** (translations.md §7.1): each developer supplies
+  their own `DEEPL_API_KEY` in their own gitignored local environment
+  override, never a shared secret. An absent or empty key means the feature is
+  simply off, the same convention `SAFE_BROWSING_KEY` already uses above. It
+  exists only on dev: the kernel environment must be `dev` too, and there is
+  no flag that turns it on anywhere else.
+
+  **Writing into the catalogue files needs a second variable**,
+  `CC_CATALOGUE_WRITE=1`, also per developer and also empty in the committed
+  `web/.env`. The key alone does not enable it and neither does `APP_ENV`:
+  `web/.env` commits `APP_ENV=dev`, so a deployed box that lost its
+  server-side override would otherwise write rider translations straight into
+  a shipped source file (translations.md §7.1). Without the opt-in,
+  `/translate/{id}` behaves exactly as it does in production.
+
+  **Set either one and restart the app.** Environment values are
+  container-cached, so editing the file and reloading the page shows nothing
+  new and explains nothing.
+
+  **Do not paste the profiler's curl command into a bug report.** On dev
+  Symfony's traceable HTTP client records the full request options, so the
+  DeepL key lands in `var/cache/dev/profiler/` and in the toolbar's copyable
+  curl command for every draft request. That is normal for a dev profiler and
+  nothing in the app should change to hide it, but the copied command carries
+  a live credential.
 - **In-site overlays** ([translations.md](translations.md)): YAML remains the
   shipped default and the parity gate still compares locale YAML to English.
   Approved overlays may lead for individual non-English keys at runtime.

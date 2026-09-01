@@ -111,9 +111,18 @@ services:
       MEDIA_PUBLIC_BASE: "${MEDIA_PUBLIC_BASE:-http://localhost:9102/img}"
       MEDIA_CSP_HOST: "${MEDIA_CSP_HOST:-http://localhost:9102}"
       MESSENGER_TRANSPORT_DSN: "${MESSENGER_TRANSPORT_DSN:-redis://redis:6379/cc_messages}"
+      # Consumed by php-fpm-dev-user.conf (mounted below): the pool workers
+      # drop to this uid/gid instead of www-data. Override in
+      # developers/docker/.env if your host user isn't 1000; the Makefile's
+      # composer/assets:install steps read the same DEV_UID/DEV_GID.
+      DEV_UID: "${DEV_UID:-1000}"
+      DEV_GID: "${DEV_GID:-1000}"
     volumes:
       - ../../web:/app
       - cc_api_vendor:/app/vendor   # keep built vendor/ from being shadowed by the bind mount
+      # Dev-only pool user override (see the file itself). Named zz- so it
+      # sorts after www.conf in php-fpm's glob include order and wins.
+      - ./php-fpm-dev-user.conf:/usr/local/etc/php-fpm.d/zz-dev-user.conf:ro
       # Only `web/` is mounted, so a test resolving out of /app/tests/... lands
       # on `/`, where the repo root's files are not. CI has the whole checkout
       # and finds SECURITY.md; here SecurityTxtTest failed for that reason and

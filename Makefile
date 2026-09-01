@@ -5,6 +5,17 @@
 # Executables (local)
 DOCKER_COMP = docker compose -f developers/docker/compose.yaml
 
+# Host uid/gid: the php-fpm pool (developers/docker/php-fpm-dev-user.conf) and
+# the `exec --user` calls below run as this, so files written into the
+# bind-mounted web/ (composer install, assets:install, translations.md §7.3)
+# stay owned by the developer instead of root or www-data. Exported so
+# docker compose's ${DEV_UID:-1000}/${DEV_GID:-1000} substitution
+# (developers/docker/compose.yaml) resolves to the same value used below;
+# override either on the command line (make setup DEV_UID=1001) if `id -u`
+# is ever wrong for your setup.
+export DEV_UID ?= $(shell id -u)
+export DEV_GID ?= $(shell id -g)
+
 # Optional service selector: make logs c=pipeline / make sh c=pipeline
 
 # Misc
@@ -17,10 +28,12 @@ help: ## Outputs this help screen
 ## —— 🚲 Stack ————————————————————————————————————————————————————————————————
 setup: ## First-time dev setup: start the stack, install deps, migrate, seed world data + demo users
 	@$(DOCKER_COMP) up --build --force-recreate --detach --wait
+	@echo "→ Handing the vendor volume to the host user (composer runs non-root below)…"
+	@$(DOCKER_COMP) exec -T app chown -R $(DEV_UID):$(DEV_GID) /app/vendor
 	@echo "→ Installing PHP dependencies…"
-	@$(DOCKER_COMP) exec -T app composer install --no-interaction --no-progress
+	@$(DOCKER_COMP) exec -T --user $(DEV_UID):$(DEV_GID) app composer install --no-interaction --no-progress
 	@echo "→ Publishing bundle web assets (EasyAdmin CSS/JS → public/bundles)…"
-	@$(DOCKER_COMP) exec -T app php bin/console assets:install public --symlink --relative
+	@$(DOCKER_COMP) exec -T --user $(DEV_UID):$(DEV_GID) app php bin/console assets:install public --symlink --relative
 	@echo "→ Running database migrations…"
 	@$(DOCKER_COMP) exec -T app php bin/console doctrine:migrations:migrate --no-interaction
 	@echo "→ Importing world reference data (continents, countries, subdivisions)…"
@@ -242,7 +255,7 @@ region-probe: ## Onboarding step 1: probe Overture subdivision areas (make regio
 	cd tools && python3 -m divisions.probe_areas --country $(or $(c),NL) $(if $(subtypes),--subtypes $(subtypes))
 
 region-scaffold: ## Onboarding step 2: emit region config + label stubs for review (make region-scaffold c="NL" [flags="--probe-areas"])
-	@$(DOCKER_COMP) exec -T app php bin/console app:region:scaffold $(or $(c),NL) $(flags)
+	@$(DOCKER_COMP) exec -T --user $(DEV_UID):$(DEV_GID) app php bin/console app:region:scaffold $(or $(c),NL) $(flags)
 
 tools-test: ## Run the tools Python test suites (wallonia + divisions + wikimedia + credits)
 	cd tools && python3 -m pytest wallonia/tests divisions/tests wikimedia/tests credits/tests -q
