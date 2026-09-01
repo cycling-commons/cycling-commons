@@ -507,7 +507,6 @@ final class DeepLDevToolTest extends WebTestCase
                 if (!is_file($path)) {
                     return $id;
                 }
-                /** @var mixed $cursor */
                 $cursor = Yaml::parseFile($path);
                 foreach (explode('.', $id) as $segment) {
                     if (!\is_array($cursor) || !\array_key_exists($segment, $cursor)) {

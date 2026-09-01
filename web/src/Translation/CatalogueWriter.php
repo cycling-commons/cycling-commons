@@ -159,12 +159,7 @@ final class CatalogueWriter
             ? TranslationLimits::isOverlayLocale($locale)
             : TranslationLimits::isTranslatableLocale($locale);
         if (!$localeAllowed) {
-            throw new InvalidLocaleException(sprintf(
-                'Refusing to write "%s": locale "%s" is not %s (translations.md §7.1).',
-                $messageKey,
-                $locale,
-                $allowEnglish ? 'one of the five catalogues this call may write' : 'one of the four rider locales',
-            ));
+            throw new InvalidLocaleException(sprintf('Refusing to write "%s": locale "%s" is not %s (translations.md §7.1).', $messageKey, $locale, $allowEnglish ? 'one of the five catalogues this call may write' : 'one of the four rider locales'));
         }
 
         $path = sprintf('%s/messages.%s.yaml', $this->translationsDir, $locale);
