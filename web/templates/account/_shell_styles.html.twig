@@ -12,8 +12,9 @@
   .dtop .brandblock{display:flex;flex-direction:column;gap:.28rem;align-items:flex-start;flex:none}
   .dtop .brand img{height:1.8rem;display:block}
   .dtop .brandsub{font-family:var(--mono);font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(239,230,212,.55);line-height:1.6;white-space:nowrap}
-  /* the account chip (global styles) sits in the dtop's right slot, next to the
-     shared language switcher (scoped copies of the .topnav lang styles — the
+  /* The map link and the account chip (both global .acct / .acct-chip styles,
+     shared with the public nav) sit in the dtop's right slot, next to the
+     language switcher (a scoped copy of the .topnav lang styles here — the
      shell header is its own dark bar, not .topnav). */
   .dtop-right{display:flex;align-items:center;gap:.8rem}
   .dtop .lang-menu{position:relative}
@@ -22,6 +23,13 @@
   .dtop .lang-caret{transition:transform .2s}
   .dtop [aria-expanded="true"] .lang-caret{transform:rotate(180deg)}
   .dtop .lang-dropdown{right:0;left:auto}
+  /* Below phone width the brandblock's nowrap subtitle already claims most of
+     the row, so the right slot wraps onto its own line rather than pushing
+     the account chip past the viewport edge. */
+  @media(max-width:480px){
+    .dtop{flex-wrap:wrap;row-gap:.6rem}
+    .dtop-right{flex-wrap:wrap;justify-content:flex-end;flex:1 0 100%}
+  }
   /* Shared account-page presence: content areas keep vertical height even when
      empty, so sparse pages keep their shape. */
   .dbody,.dmin{min-height:46vh}
