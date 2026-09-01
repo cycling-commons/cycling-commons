@@ -66,11 +66,11 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:9999;o
 .topnav .links{display:flex;gap:1rem;align-items:center}
 .topnav .links a{font-family:var(--sans,"Spline Sans",sans-serif);font-size:.9rem;color:var(--paper);opacity:.85;transition:opacity .2s}
 .topnav .links a:hover{opacity:1}.topnav .links a.on{color:var(--trail);opacity:1}
-.topnav .acct{border:1.5px solid rgba(239,230,212,.4);padding:.5rem .85rem;border-radius:4px;color:var(--paper)!important;opacity:1}
-.topnav .acct:hover{background:var(--trail);border-color:var(--trail);color:var(--ink)!important}
-.topnav .acct.fill{background:var(--trail);border-color:var(--trail);color:var(--ink)!important}
-.topnav .acct.fill:hover{background:#ff703d;border-color:#ff703d}
-.topnav .acct.join{border-color:var(--trail);color:var(--trail)!important}.topnav .acct.join:hover{background:var(--trail);color:var(--ink)!important}
+.topnav .acct,.dtop .acct{border:1.5px solid rgba(239,230,212,.4);padding:.5rem .85rem;border-radius:4px;color:var(--paper)!important;opacity:1}
+.topnav .acct:hover,.dtop .acct:hover{background:var(--trail);border-color:var(--trail);color:var(--ink)!important}
+.topnav .acct.fill,.dtop .acct.fill{background:var(--trail);border-color:var(--trail);color:var(--ink)!important}
+.topnav .acct.fill:hover,.dtop .acct.fill:hover{background:#ff703d;border-color:#ff703d}
+.topnav .acct.join,.dtop .acct.join{border-color:var(--trail);color:var(--trail)!important}.topnav .acct.join:hover,.dtop .acct.join:hover{background:var(--trail);color:var(--ink)!important}
 /* logged-in account chip + dropdown — used in the public topnav AND the account-shell dtop */
 .acct-menu{position:relative;flex:none}
 .acct-chip{display:inline-flex;align-items:center;gap:.5rem;background:none;border:1.5px solid rgba(239,230,212,.4);border-radius:999px;padding:.26rem .7rem .26rem .28rem;color:var(--paper);cursor:pointer;font-family:var(--sans);font-size:.9rem;line-height:1;transition:border-color .2s}
