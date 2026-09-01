@@ -12,8 +12,11 @@
 #   - pre-commit : gitleaks on STAGED changes — blocks the commit before it exists.
 #   - pre-push   : gitleaks on the OUTGOING commit range — catches anything that
 #                  bypassed pre-commit (--no-verify / committed before install),
-#                  before it leaves the machine.
-# Both are fast + fully offline and honour .gitleaks.toml. TruffleHog's value is
+#                  before it leaves the machine. Plus the full `make app-test`
+#                  gate whenever the push touches web/.
+# Both gitleaks layers are fast + fully offline and honour .gitleaks.toml. The
+# app gate takes a few minutes, which is the price of never deploying a red
+# suite. TruffleHog's value is
 # live-credential *verification* (network calls) — too heavy per-commit, so it
 # runs in CI (--only-verified) instead.
 default_install_hook_types: [pre-commit, pre-push]
@@ -34,17 +37,20 @@ repos:
         pass_filenames: false
         always_run: true
 
-      # Full PHPStan + Psalm before code leaves the machine. ci-app.yml runs
-      # the same analyzers, but staging/symfony-base pushes deploy right away,
-      # so the push itself is the last moment to catch a red analysis. Fires
-      # only when the outgoing commits touch the app (PHP, deps, or analyzer
-      # config); the run itself is always full-project — see the script.
-      - id: app-analysis-prepush
-        name: PHPStan + Psalm (full run over web/)
-        entry: tools/analysis-prepush.sh
+      # The whole `make app-test` gate before code leaves the machine: the
+      # test suite, both analyzers, php-cs-fixer and the four shell gates.
+      # ci-app.yml runs the same set, but staging/symfony-base pushes deploy
+      # right away, so the push is the last moment to catch a red gate.
+      #
+      # Fires on any change under web/, not only PHP: a Twig template, a
+      # translation catalogue or an asset breaks tests just as readily. The
+      # run itself is always full-project, see the script.
+      - id: app-gate-prepush
+        name: full app gate (PHPUnit + analyzers + format, over web/)
+        entry: tools/app-gate-prepush.sh
         language: script
         stages: [pre-push]
-        files: ^web/(.*\.php|composer\.lock|phpstan\.dist\.neon|psalm\.xml)$
+        files: ^web/
         pass_filenames: false
 
       # Wiki prose is CC BY-SA 4.0 (README §License): every wiki/**/*.md must

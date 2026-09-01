@@ -401,6 +401,20 @@ REDIS_URL=redis://host.docker.internal:6379
   `php-cs-fixer --dry-run` + the SPDX, licence, and translation checks.
   CI (`.github/workflows/ci-app.yml`) runs the same tool chain against a
   `postgis/postgis:18-3.6` service container, plus an advisory Rector pass.
+- **The push runs that same gate (2026-09-01).** `tools/app-gate-prepush.sh`
+  is a pre-push hook fired by any outgoing change under `web/`, and it runs
+  every `make app-test` command, cheapest first, so a formatting slip fails in
+  seconds instead of after the suite. `staging` and `symfony-base` deploy on
+  push, so the push is the last moment to stop a red gate. Bypass with
+  `git push --no-verify`; the next red CI run is the price.
+- **CI seeds the catalogue into the test database, a local run may not.**
+  `ci-app.yml` runs `app:translations:sync --env=test` before the suite, so
+  `translation_entry` holds every key and `/translate` paginates at 25 rows
+  (`CatalogueBrowser::PER_PAGE`). A local test database with few rows shows
+  every seeded key on page one, so a list test can pass locally and fail in
+  CI. A list test must pin its rows with a `q=` filter rather than trust the
+  page-one window. Match CI locally with
+  `php bin/console app:translations:sync --env=test`.
 - **Every local gate now has a workflow (2026-08-24).** Four ran only on
   developer machines, so a green pull request could still ship a broken
   coverage contract, an untranslated key, or a map module that throws
