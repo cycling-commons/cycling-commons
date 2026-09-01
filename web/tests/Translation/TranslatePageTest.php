@@ -436,29 +436,33 @@ final class TranslatePageTest extends WebTestCase
         $client = static::createClient();
         $user = $this->createUser('stale-list@example.com', 'hunter2secure!');
         $em = static::getContainer()->get(EntityManagerInterface::class);
-        $fresh = $this->seedEntry('aaa.fresh', 'Fresh');
-        $stale = $this->seedEntry('zzz.stale', 'Photos up to 5 MB');
+        $fresh = $this->seedEntry('zzsort.aaa.fresh', 'Fresh');
+        $stale = $this->seedEntry('zzsort.zzz.stale', 'Photos up to 5 MB');
         $translator = static::getContainer()->get('translator');
-        $dutchBefore = $translator->trans('zzz.stale', [], 'messages', 'nl');
+        $dutchBefore = $translator->trans('zzsort.zzz.stale', [], 'messages', 'nl');
         $stale->applyApprovedEnglish('Photos up to 10 MB');
         $em->flush();
         static::getContainer()->get(TranslationCaches::class)->invalidateAll();
         $client->loginUser($user);
 
-        $html = (string) $client->request('GET', '/nl/translate')->html();
+        // The list pages at 25 rows and this environment's catalogue may hold
+        // the whole 3,855-key projection, so the two seeded rows are pinned to
+        // one page by their shared key prefix. Ordering is unaffected: the
+        // filter narrows the set, the SQL still sorts stale first.
+        $html = (string) $client->request('GET', '/nl/translate?q=zzsort.')->html();
         self::assertStringContainsString('v1 → v2', $html);
-        self::assertLessThan(strpos($html, 'aaa.fresh'), strpos($html, 'zzz.stale'), 'stale sorts first');
+        self::assertLessThan(strpos($html, 'zzsort.aaa.fresh'), strpos($html, 'zzsort.zzz.stale'), 'stale sorts first');
 
-        $crawler = $client->request('GET', '/nl/translate?stale=1');
-        self::assertStringContainsString('zzz.stale', $crawler->html());
-        self::assertStringNotContainsString('aaa.fresh', $crawler->filter('#main')->html());
+        $crawler = $client->request('GET', '/nl/translate?stale=1&q=zzsort.');
+        self::assertStringContainsString('zzsort.zzz.stale', $crawler->html());
+        self::assertStringNotContainsString('zzsort.aaa.fresh', $crawler->filter('#main')->html());
 
         // A stale translation STAYS LIVE: stale is a work list, never a
         // fallback to English (translations.md §4, owner decision 2026-08-31).
         // Pin that at the serving level, not just on the /translate list: the
         // Dutch wording the site's translator hands out for this key is
         // unaffected by the English change that just made it stale.
-        $dutchAfter = $translator->trans('zzz.stale', [], 'messages', 'nl');
+        $dutchAfter = $translator->trans('zzsort.zzz.stale', [], 'messages', 'nl');
         self::assertSame($dutchBefore, $dutchAfter, 'a stale translation keeps serving its unchanged wording');
         self::assertNotSame('Photos up to 10 MB', $dutchAfter, 'a stale translation must never silently become the new English');
     }
