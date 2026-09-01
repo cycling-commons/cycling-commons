@@ -2558,7 +2558,9 @@ translate:
   title: 'Traduire le site'
   catalogue: 'Catalogue'
   section_aria: 'Pages de traduction'
-  chooser_lead: 'L''anglais est le catalogue source et ne peut pas être proposé ici. Passez en français, néerlandais, allemand ou espagnol pour chercher des clés et suggérer une formulation.'
+  chooser_lead: 'L''anglais est le catalogue source et ne peut pas être proposé ici. Choisissez le français, le néerlandais, l''allemand ou l''espagnol : le site bascule dans cette langue, et vous pouvez ensuite chercher dans le catalogue ou cliquer sur n''importe quelle phrase de la page pour la corriger.'
+  chooser:
+    browse: 'Parcourir le catalogue'
   list_lead: 'Cherchez par clé ou texte anglais, puis proposez une traduction pour cette langue.'
   search_ph: 'Chercher une clé ou l''anglais…'
   search: 'Chercher'
@@ -2577,6 +2579,17 @@ translate:
     english_live: 'Anglais en ligne'
   form:
     value: 'Votre traduction'
+  deepl:
+    draft_this: 'Ébaucher cette langue'
+    draft_all: 'Ébaucher les quatre langues'
+    submit: 'Écrire dans le fichier du catalogue'
+    drafting: 'Ébauche en cours...'
+    wrote: 'Écrit : %locales%.'
+    failed_locales: 'Écriture impossible. %details%'
+    error: 'DeepL n''a pas pu générer d''ébauche : %message%'
+    written: 'Écrit directement dans le fichier du catalogue. Rien n''a été soumis pour relecture.'
+    no_consent_note: 'Aucun consentement ne s''applique ici. Cela s''écrit directement dans le fichier du catalogue que vous allez committer, pas une traduction CC BY-SA d''un cycliste.'
+    write_failed: 'Impossible d''écrire dans le fichier du catalogue : %message%'
   flash:
     submitted: 'Proposition reçue — un curateur la relira.'
   error:
@@ -2604,6 +2617,9 @@ translate:
     notice: 'L''anglais a changé après que cette traduction a été faite (v%from% → v%to%). Relisez-la en la comparant à l''anglais actuel.'
     chip: 'Obsolète'
     badge_title: 'Traductions dans cette langue que l''anglais a dépassées'
+  source_drift:
+    dev: 'L''anglais affiché ici est peut-être dépassé : le catalogue a changé depuis la dernière projection. Lancez php bin/console app:translations:sync pour le rafraîchir.'
+    other: 'L''anglais affiché ici est peut-être dépassé : le catalogue a changé depuis la dernière projection. Il est en cours de correction.'
   english:
     list_lead: 'Le catalogue anglais. Proposez une formulation ; un autre curateur l''approuve et elle est mise en ligne aussitôt.'
   mode:

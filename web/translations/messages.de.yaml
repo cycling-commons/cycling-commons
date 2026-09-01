@@ -2561,7 +2561,9 @@ translate:
   title: 'Die Site übersetzen'
   catalogue: 'Katalog'
   section_aria: 'Übersetzungsseiten'
-  chooser_lead: 'Englisch ist der Quellkatalog und kann hier nicht vorgeschlagen werden. Wechsle zu Französisch, Niederländisch, Deutsch oder Spanisch, um Schlüssel zu suchen und Formulierungen vorzuschlagen.'
+  chooser_lead: 'Englisch ist der Quellkatalog und kann hier nicht vorgeschlagen werden. Wähle Französisch, Niederländisch, Deutsch oder Spanisch: Die Seite wechselt in diese Sprache, und du kannst dann im Katalog suchen oder auf einen beliebigen Satz auf der Seite klicken, um ihn zu verbessern.'
+  chooser:
+    browse: 'Katalog durchsuchen'
   list_lead: 'Suche nach Schlüssel oder englischem Text und schlage dann eine Übersetzung für diese Sprache vor.'
   search_ph: 'Schlüssel oder Englisch suchen…'
   search: 'Suchen'
@@ -2580,6 +2582,17 @@ translate:
     english_live: 'Englisch live'
   form:
     value: 'Deine Übersetzung'
+  deepl:
+    draft_this: 'Diese Sprache entwerfen'
+    draft_all: 'Alle vier Sprachen entwerfen'
+    submit: 'In die Katalogdatei schreiben'
+    drafting: 'Entwurf wird erstellt...'
+    wrote: 'Geschrieben: %locales%.'
+    failed_locales: 'Schreiben fehlgeschlagen. %details%'
+    error: 'DeepL konnte hierfür keinen Entwurf erstellen: %message%'
+    written: 'Direkt in die Katalogdatei geschrieben. Nichts wurde zur Prüfung eingereicht.'
+    no_consent_note: 'Hier gilt keine Zustimmung. Das wird direkt in die Katalogdatei geschrieben, die du committen wirst, keine CC-BY-SA-Übersetzung eines Radfahrers.'
+    write_failed: 'Konnte nicht in die Katalogdatei schreiben: %message%'
   flash:
     submitted: 'Vorschlag eingegangen — ein:e Kurator:in prüft ihn.'
   error:
@@ -2607,6 +2620,9 @@ translate:
     notice: 'Das Englische hat sich geändert, nachdem diese Übersetzung erstellt wurde (v%from% → v%to%). Lies sie im Vergleich zum aktuellen Englisch.'
     chip: 'Veraltet'
     badge_title: 'Übersetzungen in dieser Sprache, die das Englische inzwischen überholt hat'
+  source_drift:
+    dev: 'Das hier angezeigte Englisch ist möglicherweise veraltet: Der Katalog hat sich seit der letzten Projektion geändert. Führe php bin/console app:translations:sync aus, um es zu aktualisieren.'
+    other: 'Das hier angezeigte Englisch ist möglicherweise veraltet: Der Katalog hat sich seit der letzten Projektion geändert. Es wird korrigiert.'
   english:
     list_lead: 'Der englische Katalog. Schlage eine Formulierung vor; ein:e andere:r Kurator:in genehmigt sie, und sie geht sofort live.'
   mode:

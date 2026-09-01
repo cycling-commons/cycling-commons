@@ -2108,7 +2108,9 @@ translate:
   title: 'Traducir el sitio'
   catalogue: 'Catálogo'
   section_aria: 'Páginas de traducción'
-  chooser_lead: 'El inglés es el catálogo fuente y no se puede proponer aquí. Cambia a francés, neerlandés, alemán o español para buscar claves y sugerir formulaciones.'
+  chooser_lead: 'El inglés es el catálogo fuente y no se puede proponer aquí. Elige francés, neerlandés, alemán o español: el sitio cambia a ese idioma y desde ahí puedes buscar en el catálogo o hacer clic en cualquier frase de la página para corregirla.'
+  chooser:
+    browse: 'Buscar en el catálogo'
   list_lead: 'Busca por clave o texto en inglés y luego propón una traducción para este idioma.'
   search_ph: 'Buscar clave o inglés…'
   search: 'Buscar'
@@ -2127,6 +2129,17 @@ translate:
     english_live: 'Inglés en vivo'
   form:
     value: 'Tu traducción'
+  deepl:
+    draft_this: 'Borrador de este idioma'
+    draft_all: 'Borrador de los cuatro idiomas'
+    submit: 'Escribir en el archivo del catálogo'
+    drafting: 'Generando borrador...'
+    wrote: 'Escrito: %locales%.'
+    failed_locales: 'No se pudo escribir. %details%'
+    error: 'DeepL no pudo generar el borrador: %message%'
+    written: 'Escrito directamente en el archivo del catálogo. No se envió nada para revisión.'
+    no_consent_note: 'Aquí no aplica ningún consentimiento. Esto se escribe directamente en el archivo del catálogo que vas a confirmar (commit), no es una traducción CC BY-SA de un ciclista.'
+    write_failed: 'No se pudo escribir en el archivo del catálogo: %message%'
   flash:
     submitted: 'Propuesta recibida — un curador la revisará.'
   error:
@@ -2154,6 +2167,9 @@ translate:
     notice: 'El inglés cambió después de hacer esta traducción (v%from% → v%to%). Léela comparándola con el inglés actual.'
     chip: 'Desactualizada'
     badge_title: 'Traducciones en este idioma que el inglés ya ha dejado atrás'
+  source_drift:
+    dev: 'El inglés que se muestra aquí puede estar desactualizado: el catálogo ha cambiado desde la última proyección. Ejecuta php bin/console app:translations:sync para actualizarlo.'
+    other: 'El inglés que se muestra aquí puede estar desactualizado: el catálogo ha cambiado desde la última proyección. Se está corrigiendo.'
   english:
     list_lead: 'El catálogo en inglés. Propón una redacción; otro curador la aprueba y queda publicada de inmediato.'
   mode:

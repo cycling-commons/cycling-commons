@@ -2103,7 +2103,9 @@ translate:
   title: 'Translate the site'
   catalogue: 'Catalogue'
   section_aria: 'Translation pages'
-  chooser_lead: 'English is the source catalogue and cannot be proposed here. Switch to French, Dutch, German or Spanish to search keys and suggest wording.'
+  chooser_lead: 'English is the source catalogue and cannot be proposed here. Pick French, Dutch, German or Spanish and the site switches to that language, so you can search the catalogue or click any sentence on the page to fix it.'
+  chooser:
+    browse: 'Browse the catalogue'
   list_lead: 'Search by key or English text, then propose a translation for this locale.'
   search_ph: 'Search key or English…'
   search: 'Search'
@@ -2122,6 +2124,19 @@ translate:
     english_live: 'English live'
   form:
     value: 'Your translation'
+  # Dev-only DeepL drafting tool (translations.md §7). Never shown outside
+  # dev with a DEEPL_API_KEY configured (translations.md §7.1).
+  deepl:
+    draft_this: 'Draft this locale'
+    draft_all: 'Draft all four locales'
+    submit: 'Write to catalogue file'
+    drafting: 'Drafting...'
+    wrote: 'Wrote: %locales%.'
+    failed_locales: 'Could not write. %details%'
+    error: 'DeepL could not draft this: %message%'
+    written: 'Written straight into the catalogue file. Nothing was submitted for review.'
+    no_consent_note: 'No consent applies here. This writes straight into the catalogue file you are about to commit, not a rider''s CC BY-SA translation.'
+    write_failed: 'Could not write to the catalogue file: %message%'
   flash:
     submitted: 'Proposal received — a curator will review it.'
   error:
@@ -2149,6 +2164,9 @@ translate:
     notice: 'The English changed after this translation was made (v%from% → v%to%). Read it against the current English.'
     chip: 'Stale'
     badge_title: 'Translations in this language that the English has moved past'
+  source_drift:
+    dev: 'The English shown here may be out of date: the catalogue has moved since this was last projected. Run php bin/console app:translations:sync to refresh it.'
+    other: 'The English shown here may be out of date: the catalogue has moved since this was last projected. It is being corrected.'
   english:
     list_lead: 'The English catalogue. Propose a wording; another curator approves it and it goes live at once.'
   mode:

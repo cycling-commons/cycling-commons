@@ -2558,7 +2558,9 @@ translate:
   title: 'Vertaal de site'
   catalogue: 'Catalogus'
   section_aria: 'Vertaalpagina''s'
-  chooser_lead: 'Engels is de broncatalogus en kan hier niet worden voorgesteld. Schakel over naar Frans, Nederlands, Duits of Spaans om sleutels te zoeken en formuleringen voor te stellen.'
+  chooser_lead: 'Engels is de broncatalogus en kan hier niet worden voorgesteld. Kies Frans, Nederlands, Duits of Spaans en de site schakelt naar die taal: zoek dan in de catalogus, of klik op een willekeurige zin op de pagina om die te verbeteren.'
+  chooser:
+    browse: 'Catalogus doorzoeken'
   list_lead: 'Zoek op sleutel of Engelse tekst en stel dan een vertaling voor deze taal voor.'
   search_ph: 'Zoek sleutel of Engels…'
   search: 'Zoeken'
@@ -2577,6 +2579,17 @@ translate:
     english_live: 'Engels live'
   form:
     value: 'Jouw vertaling'
+  deepl:
+    draft_this: 'Concept voor deze taal'
+    draft_all: 'Concept voor alle vier talen'
+    submit: 'Naar catalogusbestand schrijven'
+    drafting: 'Concept wordt gemaakt...'
+    wrote: 'Geschreven: %locales%.'
+    failed_locales: 'Schrijven mislukt. %details%'
+    error: 'DeepL kon hier geen concept van maken: %message%'
+    written: 'Direct in het catalogusbestand geschreven. Er is niets ter beoordeling ingediend.'
+    no_consent_note: 'Hier geldt geen toestemming. Dit wordt direct in het catalogusbestand geschreven dat je gaat committen, geen CC BY-SA-vertaling van een fietser.'
+    write_failed: 'Kon niet naar het catalogusbestand schrijven: %message%'
   flash:
     submitted: 'Voorstel ontvangen — een curator beoordeelt het.'
   error:
@@ -2604,6 +2617,9 @@ translate:
     notice: 'Het Engels is gewijzigd nadat deze vertaling is gemaakt (v%from% → v%to%). Lees hem tegenover het huidige Engels.'
     chip: 'Verouderd'
     badge_title: 'Vertalingen in deze taal die het Engels inmiddels is voorbijgegaan'
+  source_drift:
+    dev: 'Het Engels hier is mogelijk verouderd: de catalogus is gewijzigd sinds de laatste projectie. Voer php bin/console app:translations:sync uit om dit te verversen.'
+    other: 'Het Engels hier is mogelijk verouderd: de catalogus is gewijzigd sinds de laatste projectie. Dit wordt gecorrigeerd.'
   english:
     list_lead: 'De Engelse catalogus. Stel een formulering voor; een andere curator keurt ze goed en ze gaat meteen live.'
   mode:
