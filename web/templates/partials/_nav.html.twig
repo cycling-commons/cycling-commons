@@ -16,9 +16,9 @@
        (contact-and-support.md §4). #}
     <a href="{{ path('blog') }}"{% if a == 'blog' %} class="on"{% endif %}>{{ 'nav.blog'|trans }}</a>
     <a href="{{ path('licenses') }}"{% if a == 'licenses' %} class="on"{% endif %}>{{ 'nav.licence'|trans }}</a>
+    <a class="acct fill" href="{{ path('map') }}">{{ 'nav.explore_map'|trans }}</a>
     <a class="acct join" href="{{ path('contribute') }}">{{ 'nav.contribute'|trans }}</a>
     <a class="acct join" href="{{ path('join') }}">{{ 'nav.get_involved'|trans }}</a>
-    <a class="acct fill" href="{{ path('map') }}">{{ 'nav.explore_map'|trans }}</a>
     {% if app.user %}
       {% include 'partials/_account_chip.html.twig' %}
     {% else %}
