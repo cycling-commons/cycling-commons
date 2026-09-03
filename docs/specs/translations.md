@@ -927,15 +927,23 @@ Two configuration gates that fail independently, honestly described as such.
 
 ### 7.2 The form
 
-- The controls sit on the existing `/translate/{id}` form, above the "Your
-  translation" field, visible only when translations.md §7.1's two
+- The controls sit on the existing `/translate/{id}` form, above the
+  translation fields, visible only when translations.md §7.1's two
   conditions both hold.
-- Two actions: draft the locale the developer is currently viewing, and
-  draft all four rider locales (`fr`, `nl`, `de`, `es`) at once. The second
-  is the one that pays for itself on a new feature key, where a developer
-  would otherwise run the single-locale action four times.
+- **The developer picks the languages.** One tick box per rider locale
+  (`fr`, `nl`, `de`, `es`) and one Draft button: DeepL is asked for every
+  ticked language at once, which is what pays for itself on a new feature
+  key. With the DeepL key on but no `CC_CATALOGUE_WRITE` opt-in there are no
+  tick boxes and no per-locale fields, so the endpoint drafts the locale
+  being edited, the only field such a page has.
+- **Drafting never writes.** The answer lands in each language's own text
+  field and nothing reaches a file. Machine output is a suggestion that only
+  the developer can judge, so the catalogue write is a separate, deliberate
+  act with its own tick boxes and its own button (translations.md §7.3). An
+  earlier design had the four-locale action write all four files itself;
+  that put unread machine output into source, and is gone.
 - English is never a DeepL target; it is the source DeepL translates from.
-  Neither button renders on `/en/translate/{id}`.
+  The panel does not render on `/en/translate/{id}`.
 - Only the catalogue string for that key is sent, key and English together,
   the same per-row shape translations.md §3.2 already requires, so DeepL is
   never asked to translate a word once and paste it onto every match. No
@@ -955,6 +963,37 @@ all five catalogues, English included, and writes the result straight into
 `web/translations/messages.<locale>.yaml`. There is no `pending` row, no
 curator, no overlay: the value lands in the catalogue file the developer is
 about to commit.
+
+**The dev form edits every rider locale at once.** One text field per
+locale, each prefilled with that locale's live wording, each with its own
+"write this one" tick box; the tick box for the locale being viewed starts
+on and the rest start off. The unit a developer works in is one English
+string across four files, and reviewing four drafts one page at a time hides
+exactly the differences worth catching. English keeps the single field: it
+has no siblings. Every other form on the site, the rider proposal included,
+is unchanged and still carries one field for one locale.
+
+Only ticked locales are written, and the tick boxes are ONE group directly
+above the write button rather than one box trailing each field: what gets
+written is a single decision, made where it is acted on. Every ticked value
+is checked (below) before any of them is written, so an ordinary refusal
+leaves every catalogue file untouched rather than half the set written;
+submitting with nothing ticked writes nothing and says so, rather than
+redirecting with a success banner for a write that never happened.
+
+**A changed field is visible, and an unticked change is not lost silently.**
+Editing a field and ticking it to be written are two separate acts, which is
+exactly how work gets lost: edit Dutch, forget to tick Dutch, submit, and the
+edit is gone with nothing said. So a field whose text no longer matches what
+the server sent is tinted, and submitting with such a field unticked asks
+first, naming the languages whose changes would be dropped
+(`assets/js/catalogue-form.js`). Both are conveniences on top of a server
+that is already correct: with scripting off, the untinted, unasked form
+behaves exactly as the rules above describe. It is not a transaction, and cannot
+be: whether a file carries the key at all is something only the write finds
+out, so a locale whose catalogue is missing the key stops the run with the
+earlier locales already written, which on a dev machine is a `git diff` away
+from being read and undone.
 
 **English gets no exception here.** `translation_entry.english_yaml` is a
 projection of `messages.en.yaml`, refreshed by `app:translations:sync`
@@ -990,13 +1029,11 @@ the checks:
   path, this one included. Their exact wording is hashed into the consent
   ledger under a VERSION (translations.md §4), so a machine paraphrase of a
   binding licence sentence would leave every stored consent record covering
-  words its rider never saw. That refusal lives in `CatalogueWriter::write()`
-  so both write callers, the hand-typed submit and the draft-all-four route,
-  are covered by one check.
-- **Every value is checked before it is written**, per locale, on both write
-  paths: the byte cap, the markup checker, and placeholder parity with the
-  English. The draft-all route used to skip these on the grounds that machine
-  output from checked English needs no checking. It does. English catalogue
+  words its rider never saw. That refusal lives in `CatalogueWriter::write()`,
+  which every write goes through, so one check covers all of them.
+- **Every value is checked before it is written**, per locale: the byte cap,
+  the markup checker, and placeholder parity with the English. A draft the
+  developer left in a field unread is not checked English. English catalogue
   values carry HTML and `%name%` placeholders; DeepL can reformat a tag or
   translate, space or reorder a placeholder, and French and German run longer
   than English, so a draft of a near-cap string can cross a cap a hand-typed

@@ -12,6 +12,7 @@ use App\Form\TranslationProposalType;
 use App\Pagination\PageSize;
 use App\Routing\LocalePrefix;
 use App\Translation\CatalogueBrowser;
+use App\Translation\CatalogueCommit;
 use App\Translation\CatalogueWriter;
 use App\Translation\DeepL\DeepLAvailability;
 use App\Translation\DeepL\DeepLClient;
@@ -33,6 +34,7 @@ use App\Translation\Exception\EnglishNotTranslatableException;
 use App\Translation\Exception\InvalidLocaleException;
 use App\Translation\Exception\InvalidMarkupException;
 use App\Translation\Exception\KeyNotFoundException;
+use App\Translation\Exception\NoLocaleTickedException;
 use App\Translation\Exception\NotDevEnvironmentException;
 use App\Translation\Exception\PlaceholderMismatchException;
 use App\Translation\Exception\ProtectedKeyException;
@@ -76,11 +78,14 @@ final class TranslateController extends AbstractController
         // The markup errors name a tag, so the message needs a parameter and
         // the flash cannot be a bare catalogue key.
         private readonly TranslatorInterface $translator,
-        // The dev-only DeepL drafting tool (translations.md §7): the surgical
-        // catalogue writer a dev submit calls instead of ProposalService, the
-        // DeepL client the two draft endpoints call, and the gate that says
-        // whether the buttons calling either exist at all.
+        // The dev-only DeepL drafting tool (translations.md §7): the writer
+        // whose isEnabled() carries the CC_CATALOGUE_WRITE half of the
+        // dev-submit gate, the commit that performs a write and drops the
+        // overlay superseded by it, the DeepL client the draft endpoint
+        // calls, and the gate that says whether the panel calling it exists
+        // at all.
         private readonly CatalogueWriter $catalogueWriter,
+        private readonly CatalogueCommit $catalogueCommit,
         private readonly DeepLClient $deepl,
         private readonly DeepLAvailability $deeplAvailability,
         // Kept in step after a dev submit writes English straight into
@@ -461,9 +466,17 @@ final class TranslateController extends AbstractController
     public const string DEEPL_CSRF = 'deepl_draft';
 
     /**
-     * Drafts one locale through DeepL and hands the text back as JSON.
-     * Writes nothing: the developer reads the draft in the textarea and
-     * still has to submit the form themselves (translations.md §7.2).
+     * Drafts the ticked locales through DeepL and hands the texts back as
+     * JSON, keyed by locale.
+     *
+     * Writes nothing, ever. Machine output is a suggestion, and the
+     * developer is the only one who can judge it, so the drafts land in the
+     * form's own per-locale fields and the write stays a separate,
+     * deliberate act with its own tick boxes (translations.md §7.2).
+     *
+     * `locales[]` is the panel's tick boxes. An empty or absent list means
+     * the locale being edited, which is what a page with the DeepL key on
+     * but no catalogue-write opt-in renders.
      */
     #[Route('/translate/{id}/deepl-draft', name: 'translate_deepl_draft', requirements: ['id' => '\d+'], methods: ['POST'])]
     public function deeplDraft(int $id, Request $request): Response
@@ -481,7 +494,7 @@ final class TranslateController extends AbstractController
         $locale = $request->getLocale();
         if (!TranslationLimits::isTranslatableLocale($locale)) {
             // English is never a DeepL target (translations.md §7.2); the
-            // button that calls this never renders on /en/translate/{id}.
+            // panel that calls this never renders on /en/translate/{id}.
             throw $this->createNotFoundException();
         }
 
@@ -490,86 +503,46 @@ final class TranslateController extends AbstractController
             throw $this->createNotFoundException();
         }
 
+        $targets = $this->requestedDraftLocales($request, $locale);
+        if ([] === $targets) {
+            // Every tick box was off, or every value in the list was
+            // something no catalogue carries. Nothing to ask DeepL for, and
+            // an empty request to it would still spend quota.
+            throw $this->createNotFoundException();
+        }
+
         try {
-            $draft = $this->deepl->translate($entry->getEnglish(), [$locale]);
+            $drafts = $this->deepl->translate($entry->getEnglish(), $targets);
         } catch (DeepLAuthenticationException|DeepLNetworkException|DeepLQuotaExceededException|DeepLRateLimitedException|DeepLRequestException $e) {
             return new JsonResponse(['error' => $e->getMessage()], 502);
         }
 
-        return new JsonResponse(['value' => $draft[$locale]]);
+        return new JsonResponse(['drafts' => $drafts]);
     }
 
     /**
-     * Drafts every rider locale through DeepL and writes each one straight
-     * into its catalogue file through CatalogueWriter (translations.md
-     * §7.2, §7.3). Reports which locales actually landed, so the developer
-     * knows what to expect in `git diff`.
+     * The ticked locales, in catalogue order, unknown values dropped.
      *
-     * The DeepL call itself is all-or-nothing (see DeepLClient::translate()'s
-     * own doc block): either every locale comes back drafted, or the whole
-     * call throws and nothing is written at all. Once the drafts are in
-     * hand, though, each catalogue write is its own independently fallible
-     * step (a key one locale's file does not carry, a verification refusal,
-     * a draft that fails the acceptance check, ...), so "written" can still
-     * come back short of all four even though DeepL answered for every one
-     * of them. Every one of those failures is reported with its reason, not
-     * only its locale code: the developer is the only person who can act on
-     * it.
+     * Order comes from {@see TranslationLimits::LOCALES} rather than from
+     * the request so the DeepL calls and the fields they fill line up the
+     * same way whatever order a client posts.
+     *
+     * @return list<string>
      */
-    #[Route('/translate/{id}/deepl-draft-all', name: 'translate_deepl_draft_all', requirements: ['id' => '\d+'], methods: ['POST'])]
-    public function deeplDraftAll(int $id, Request $request): Response
+    private function requestedDraftLocales(Request $request, string $fallback): array
     {
-        // This route WRITES, so it needs the catalogue-write opt-in on top
-        // of the draft gate (translations.md §7.1). Same 404 as a route that
-        // does not exist: without the opt-in, this endpoint does not.
-        if (!$this->deeplAvailability->isOn() || !$this->catalogueWriter->isEnabled()) {
-            throw $this->createNotFoundException();
-        }
-        if (!$this->isCsrfTokenValid(self::DEEPL_CSRF, (string) $request->request->get('_csrf_token'))) {
-            throw $this->createAccessDeniedException('Bad CSRF token.');
+        /** @var list<mixed> $raw */
+        $raw = $request->request->all('locales');
+        if ([] === $raw) {
+            return [$fallback];
         }
 
-        $entry = $this->em->find(TranslationEntry::class, $id);
-        if (null === $entry || null !== $entry->getAbsentAt()) {
-            throw $this->createNotFoundException();
-        }
+        $wanted = array_filter($raw, static fn (mixed $v): bool => \is_string($v));
 
-        try {
-            $drafts = $this->deepl->translate($entry->getEnglish(), TranslationLimits::LOCALES);
-        } catch (DeepLAuthenticationException|DeepLNetworkException|DeepLQuotaExceededException|DeepLRateLimitedException|DeepLRequestException $e) {
-            return new JsonResponse(['error' => $e->getMessage()], 502);
-        }
-
-        $written = [];
-        $failed = [];
-        foreach ($drafts as $draftLocale => $value) {
-            try {
-                // The SAME acceptance check the hand-typed path runs, per
-                // locale, before the write. The old justification for
-                // skipping it here (machine output from English that
-                // already passed the check) does not survive the real
-                // catalogue: English values carry HTML and %name%
-                // placeholders, and DeepL may reformat a tag or translate,
-                // space or reorder a placeholder. French and German also run
-                // noticeably longer than English, so a draft of a near-cap
-                // string can exceed a cap a hand-typed value would be
-                // refused for. Nothing downstream catches either: the parity
-                // gate compares key sets only, and CatalogueWriter's
-                // self-check proves the edit touched one key, not that the
-                // value is sound.
-                $this->assertDevSubmitAcceptable($value, $entry);
-                $this->catalogueWriter->write($draftLocale, $entry->getMessageKey(), $value);
-                $written[] = $draftLocale;
-            } catch (InvalidMarkupException $e) {
-                $failed[$draftLocale] = $this->markupFailureMessage($e);
-                $this->logCatalogueWriteFailure($draftLocale, $entry->getMessageKey(), $e);
-            } catch (CatalogueBlockScalarException|CatalogueKeyNotFoundException|CatalogueProtectedKeyException|CatalogueWriteNotOptedInException|CatalogueWriteVerificationException|InvalidLocaleException|NotDevEnvironmentException|PlaceholderMismatchException|TranslationTooLongException $e) {
-                $failed[$draftLocale] = $e->getMessage();
-                $this->logCatalogueWriteFailure($draftLocale, $entry->getMessageKey(), $e);
-            }
-        }
-
-        return new JsonResponse(['written' => $written, 'failed' => $failed]);
+        return array_values(array_filter(
+            TranslationLimits::LOCALES,
+            static fn (string $locale): bool => \in_array($locale, $wanted, true),
+        ));
     }
 
     /**
@@ -664,21 +637,40 @@ final class TranslateController extends AbstractController
         // _form.html.twig's consent block; see that template's own
         // `not dev_submit` guard for the third.
         $standing = ($isEnglish || $isDevSubmit) ? null : $this->consent->current($user);
-        $form = $this->createForm(TranslationProposalType::class, [
-            'value' => $proposed,
-        ], [
-            'standing' => null !== $standing,
-            'consent' => !$isEnglish && !$isDevSubmit,
-        ]);
+        // The dev catalogue form edits every rider locale at once, because
+        // that is the unit the developer actually works in: one English
+        // string is one line in four files, and reviewing DeepL's four
+        // drafts one page at a time hides exactly the differences worth
+        // catching. English keeps the single field: it has no siblings.
+        $devLocales = ($isDevSubmit && !$isEnglish) ? TranslationLimits::LOCALES : [];
+        $form = $this->createForm(
+            TranslationProposalType::class,
+            [] === $devLocales ? ['value' => $proposed] : $this->devFormData($entry, $devLocales, $locale),
+            [
+                'standing' => null !== $standing,
+                'consent' => !$isEnglish && !$isDevSubmit,
+                'locales' => $devLocales,
+            ],
+        );
         $form->handleRequest($request);
 
         $sent = false;
         if ($form->isSubmitted() && $form->isValid()) {
-            /** @var array{value: string} $data */
+            /** @var array<string, bool|string> $data */
             $data = $form->getData();
 
+            // Null on every path but the multi-locale dev form; a list there,
+            // so the flash below can name what actually reached a file
+            // instead of claiming the tick boxes were all on.
+            $written = null;
+
             try {
-                if ($isDevSubmit) {
+                if ($isDevSubmit && [] !== $devLocales) {
+                    $written = $this->writeTickedLocales($entry, $devLocales, $data);
+                    if ([] === $written) {
+                        throw new NoLocaleTickedException('No locale was ticked to write.');
+                    }
+                } elseif ($isDevSubmit) {
                     $value = trim((string) $data['value']);
                     if ('' === $value) {
                         // Same refusal ProposalService::submit() gives an
@@ -690,12 +682,9 @@ final class TranslateController extends AbstractController
                     // no curator between it and a reader (translations.md
                     // §7.3), so it gets the same two checks a rider's
                     // proposal gets in ProposalService::submit() before that
-                    // one only reaches a pending row. The draft-all-four
-                    // route above runs the identical check per locale, for
-                    // the reason stated there: machine output from checked
-                    // English is not itself checked English.
+                    // one only reaches a pending row.
                     $this->assertDevSubmitAcceptable($value, $entry);
-                    $this->catalogueWriter->write($locale, $entry->getMessageKey(), $value, allowEnglish: $isEnglish);
+                    $this->catalogueCommit->commit($entry, $locale, $value, allowEnglish: $isEnglish);
                     if ($isEnglish) {
                         // English just moved in messages.en.yaml. Move the
                         // projection the same way a git-side change does
@@ -712,7 +701,11 @@ final class TranslateController extends AbstractController
                     $this->proposals->submit($user, $entry, $locale, (string) $data['value'], $consentTick);
                 }
                 if (!$embed) {
-                    $this->addFlash('success', $isDevSubmit ? 'translate.deepl.written' : 'translate.flash.submitted');
+                    $this->addFlash('success', match (true) {
+                        null !== $written => $this->translator->trans('translate.deepl.wrote', ['%locales%' => implode(', ', $written)]),
+                        $isDevSubmit => $this->translator->trans('translate.deepl.written'),
+                        default => $this->translator->trans('translate.flash.submitted'),
+                    });
 
                     return $this->redirectToRoute('translate');
                 }
@@ -726,6 +719,8 @@ final class TranslateController extends AbstractController
                 $this->addFlash('danger', 'translate.error.consent_required');
             } catch (EmptyTranslationException) {
                 $this->addFlash('danger', 'translate.error.empty');
+            } catch (NoLocaleTickedException) {
+                $this->addFlash('danger', 'translate.deepl.nothing_ticked');
             } catch (EnglishNotTranslatableException) {
                 $this->addFlash('danger', 'translate.error.english');
             } catch (KeyNotFoundException) {
@@ -783,7 +778,11 @@ final class TranslateController extends AbstractController
             'open' => $open,
             'standing' => $standing,
             'change' => null !== $open ? TranslationDiff::words($live['live'], $proposed) : [],
-            'proposed_preview' => $form->isSubmitted()
+            // The preview is of the ONE value under review. The dev form has
+            // four, and rendering four previews of source text nobody is
+            // reviewing would only crowd the fields; the dev reads the diff
+            // in git instead (translations.md §7.3).
+            'proposed_preview' => $form->isSubmitted() && $form->has('value')
                 ? (string) ($form->get('value')->getData() ?? '')
                 : '',
             'is_english' => $isEnglish,
@@ -811,7 +810,85 @@ final class TranslateController extends AbstractController
             // still submits through the ordinary rider proposal flow.
             'deepl_on' => $this->deeplAvailability->isOn(),
             'dev_submit' => $isDevSubmit,
+            // Empty on every path but the dev catalogue form, where it is
+            // both the tick boxes DeepL is asked for and the fields those
+            // drafts land in, in one order.
+            'dev_locales' => $devLocales,
         ]);
+    }
+
+    /**
+     * The dev form's starting state: every rider locale's live wording, and
+     * the tick box for the locale being edited already on.
+     *
+     * "Live" rather than the YAML default on purpose. It is what a reader
+     * sees right now, so a field showing it is showing the truth the write
+     * is about to replace, and a locale whose overlay is what the developer
+     * came to remove starts out holding that overlay's text rather than a
+     * file value nobody has been reading (translations.md §7.3).
+     *
+     * @param list<string> $locales
+     *
+     * @return array<string, bool|string>
+     */
+    private function devFormData(TranslationEntry $entry, array $locales, string $editing): array
+    {
+        $data = [];
+        foreach ($locales as $locale) {
+            $data[TranslationProposalType::valueField($locale)] = $this->browser->liveFor($entry, $locale)['live'];
+            $data[TranslationProposalType::saveField($locale)] = $locale === $editing;
+        }
+
+        return $data;
+    }
+
+    /**
+     * Writes every ticked locale and returns the ones that reached a file.
+     *
+     * Each locale is checked the way a single dev submit is checked, then
+     * committed, which also drops the overlay the new base supersedes
+     * ({@see CatalogueCommit}). Nothing is caught here: a refusal on any
+     * locale aborts the whole submit and is reported by `edit()`'s own catch
+     * arms, so a form that reports success reports it for writes that all
+     * happened.
+     *
+     * @param list<string>               $locales
+     * @param array<string, bool|string> $data
+     *
+     * @return list<string>
+     *
+     * @throws EmptyTranslationException a ticked locale's field was blank
+     */
+    private function writeTickedLocales(TranslationEntry $entry, array $locales, array $data): array
+    {
+        // Every ticked value is checked before any of them is written, so
+        // the ordinary refusals (an empty field, broken markup, a mangled
+        // placeholder, a value over the cap) leave every catalogue file
+        // untouched instead of half the set written and the rest refused.
+        //
+        // It is not a transaction, and cannot be: whether a file carries the
+        // key at all is something only the write itself finds out. A locale
+        // whose catalogue is missing the key still stops the run with the
+        // earlier locales already written, which on a dev machine is a
+        // `git diff` away from being read and undone.
+        $ticked = [];
+        foreach ($locales as $locale) {
+            if (true !== ($data[TranslationProposalType::saveField($locale)] ?? false)) {
+                continue;
+            }
+            $value = trim((string) ($data[TranslationProposalType::valueField($locale)] ?? ''));
+            if ('' === $value) {
+                throw new EmptyTranslationException(sprintf('Ticked locale "%s" has an empty value.', $locale));
+            }
+            $this->assertDevSubmitAcceptable($value, $entry);
+            $ticked[$locale] = $value;
+        }
+
+        foreach ($ticked as $locale => $value) {
+            $this->catalogueCommit->commit($entry, $locale, $value);
+        }
+
+        return array_keys($ticked);
     }
 
     /**

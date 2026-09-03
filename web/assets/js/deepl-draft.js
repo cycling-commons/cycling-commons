@@ -1,16 +1,20 @@
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
-/* Dev-only DeepL drafting controls (docs/specs/translations.md §7.1, §7.2, §7.3).
+/* Dev-only DeepL drafting controls (docs/specs/translations.md §7.1, §7.2).
 
-   Two buttons render on translate/_form.html.twig, above the "Your
-   translation" field, only when DeepLAvailability::isOn() and the locale
-   being edited is not English:
-     .tr-deepl-one  draft this locale, fill the textarea, write nothing.
-     .tr-deepl-all  draft fr/nl/de/es and write them straight into the
-                    catalogue through CatalogueWriter, then report back
-                    which locales landed.
+   One panel renders on translate/_form.html.twig, above the translation
+   fields, only when DeepLAvailability::isOn() and the locale being edited
+   is not English:
+     [data-deepl-locale] one tick box per language DeepL may be asked for,
+                         rendered only on the dev catalogue form.
+     .tr-deepl-draft     ask DeepL for every ticked language and drop each
+                         answer into that language's own field.
+
+   It NEVER writes. A draft is machine output that only the developer can
+   judge, so it lands in a field and the catalogue write stays a separate
+   act, behind its own per-language tick boxes and its own button.
 
    Loaded once, from base.html.twig, the same way assets/js/translate-mode.js
-   is: the panel these buttons live in can arrive already in the page (a
+   is: the panel these controls live in can arrive already in the page (a
    full /translate/{id} load) or fetched as text and set via innerHTML into
    the translate-mode drawer, and a <script> tag inside fetched HTML never
    runs. Event delegation on `document` covers both without caring which one
@@ -35,9 +39,26 @@
     el.classList.toggle('is-error', !!isError);
   }
 
-  function textareaFor(panel) {
+  /* The ticked languages, or [] on a form that renders no tick boxes at
+     all. The server reads an empty list as "the locale being edited", which
+     is the only field such a form has. */
+  function tickedLocales(panel) {
+    var boxes = panel.querySelectorAll('[data-deepl-locale]');
+    var picked = [];
+    for (var i = 0; i < boxes.length; i++) {
+      if (boxes[i].checked) picked.push(boxes[i].getAttribute('data-deepl-locale'));
+    }
+    return picked;
+  }
+
+  /* Where a draft for `locale` goes. The dev catalogue form names its
+     fields by locale (translation_proposal[nl]); every other form has one
+     textarea and one locale, so the first textarea is that locale's. */
+  function fieldFor(panel, locale) {
     var form = panel.closest('form');
-    return form ? form.querySelector('textarea') : null;
+    if (!form) return null;
+    var byLocale = form.querySelector('[data-locale-row="' + locale + '"] textarea');
+    return byLocale || form.querySelector('textarea');
   }
 
   function setBusy(panel, busy) {
@@ -53,9 +74,10 @@
      drawer form submit already uses, and always resolves (never rejects
      on a non-2xx status): the caller reads `ok` and `data` itself, since a
      4xx/5xx response here still carries a JSON body worth showing. */
-  function post(url, csrfToken) {
+  function post(url, csrfToken, locales) {
     var body = new FormData();
     body.append('_csrf_token', csrfToken);
+    for (var i = 0; i < locales.length; i++) body.append('locales[]', locales[i]);
     return fetch(url, {
       method: 'POST',
       credentials: 'same-origin',
@@ -73,60 +95,22 @@
     });
   }
 
-  function draftThis(panel) {
-    var textarea = textareaFor(panel);
+  function draft(panel) {
     setBusy(panel, true);
     setStatus(panel, panel.getAttribute('data-drafting-label'), false);
-    post(panel.getAttribute('data-draft-url'), panel.getAttribute('data-csrf'))
+    post(panel.getAttribute('data-draft-url'), panel.getAttribute('data-csrf'), tickedLocales(panel))
       .then(function (result) {
         setBusy(panel, false);
-        if (result.ok && typeof result.data.value === 'string') {
-          if (textarea) textarea.value = result.data.value;
-          setStatus(panel, '', false);
-          return;
-        }
-        setStatus(panel, errorText(panel, result.data && result.data.error), true);
-      })
-      .catch(function () {
-        setBusy(panel, false);
-        setStatus(panel, errorText(panel, ''), true);
-      });
-  }
-
-  function draftAll(panel) {
-    setBusy(panel, true);
-    setStatus(panel, panel.getAttribute('data-drafting-label'), false);
-    post(panel.getAttribute('data-draft-all-url'), panel.getAttribute('data-csrf'))
-      .then(function (result) {
-        setBusy(panel, false);
-        if (!result.ok) {
+        var drafts = result.ok && result.data ? result.data.drafts : null;
+        if (!drafts) {
           setStatus(panel, errorText(panel, result.data && result.data.error), true);
           return;
         }
-        var written = (result.data && result.data.written) || [];
-        var failed = (result.data && result.data.failed) || {};
-        var failedLocales = Object.keys(failed);
-        var text = '';
-        if (written.length) {
-          text = panel.getAttribute('data-wrote-tpl').replace('%%LOCALES%%', written.join(', '));
-        }
-        if (failedLocales.length) {
-          /* The reason, not only the locale code. Every refusal on the
-             server composes a full explanation (the key, the file, the
-             cause, and the spec section that governs it) and rendering
-             just "fr, de" here threw all of it away, leaving a developer
-             with no way to learn what went wrong. Set through textContent
-             by setStatus(), so a message is text, never markup. */
-          var details = failedLocales
-            .map(function (locale) {
-              var reason = failed[locale];
-              return reason ? locale + ': ' + reason : locale;
-            })
-            .join(' ');
-          var failedText = panel.getAttribute('data-failed-tpl').replace('%%DETAILS%%', details);
-          text = text ? text + ' ' + failedText : failedText;
-        }
-        setStatus(panel, text, written.length === 0);
+        Object.keys(drafts).forEach(function (locale) {
+          var field = fieldFor(panel, locale);
+          if (field) field.value = drafts[locale];
+        });
+        setStatus(panel, '', false);
       })
       .catch(function () {
         setBusy(panel, false);
@@ -135,18 +119,13 @@
   }
 
   document.addEventListener('click', function (ev) {
-    var oneButton = ev.target.closest && ev.target.closest('.tr-deepl-one');
-    var allButton = !oneButton && ev.target.closest && ev.target.closest('.tr-deepl-all');
-    if (!oneButton && !allButton) return;
+    var button = ev.target.closest && ev.target.closest('.tr-deepl-draft');
+    if (!button) return;
 
-    var panel = panelOf(oneButton || allButton);
+    var panel = panelOf(button);
     if (!panel) return;
 
     ev.preventDefault();
-    if (oneButton) {
-      draftThis(panel);
-    } else {
-      draftAll(panel);
-    }
+    draft(panel);
   });
 })();

@@ -74,6 +74,12 @@
    behind (App\Twig\DeepLExtension), so this script never ships where the
    feature does not exist. #}
 {% if deepl_available() %}<script src="{{ asset('js/deepl-draft.js') }}" defer></script>{% endif %}
+{# The dev catalogue form's change tint and its "you did not tick that one"
+   question (translations.md §7.3). Gated on the CC_CATALOGUE_WRITE opt-in
+   rather than on a DeepL key: that form renders, with its four fields and
+   its tick boxes, for a developer who has the opt-in and no DeepL key at
+   all. Same delegation reason as the line above. #}
+{% if catalogue_write_available() %}<script src="{{ asset('js/catalogue-form.js') }}" defer></script>{% endif %}
 {# The proof-of-work solver, then the button that uses it. Not deferred past
    each other: bug-fab.js reads window.ccPow at load and bails without it. #}
 <script src="{{ asset('support/pow.js') }}"></script>

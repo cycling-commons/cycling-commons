@@ -2585,12 +2585,14 @@ translate:
   form:
     value: 'Votre traduction'
   deepl:
-    draft_this: 'Ébaucher cette langue'
-    draft_all: 'Ébaucher les quatre langues'
+    draft_pick: 'Brouillon avec DeepL'
+    draft_selected: 'Traduire les langues cochées'
     submit: 'Écrire dans le fichier du catalogue'
     drafting: 'Ébauche en cours...'
+    save: 'Écrire dans le fichier du catalogue'
+    discard_confirm: 'Modifié mais non coché pour l''écriture : %locales%. Ces modifications seront perdues. Continuer ?'
+    nothing_ticked: 'Rien n''a été écrit : aucune langue n''était cochée.'
     wrote: 'Écrit : %locales%.'
-    failed_locales: 'Écriture impossible. %details%'
     error: 'DeepL n''a pas pu générer d''ébauche : %message%'
     written: 'Écrit directement dans le fichier du catalogue. Rien n''a été soumis pour relecture.'
     no_consent_note: 'Aucun consentement ne s''applique ici. Cela s''écrit directement dans le fichier du catalogue que vous allez committer, pas une traduction CC BY-SA d''un cycliste.'

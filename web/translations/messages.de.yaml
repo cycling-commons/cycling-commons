@@ -2588,12 +2588,14 @@ translate:
   form:
     value: 'Deine Übersetzung'
   deepl:
-    draft_this: 'Diese Sprache entwerfen'
-    draft_all: 'Alle vier Sprachen entwerfen'
+    draft_pick: 'Entwurf mit DeepL'
+    draft_selected: 'Angehakte Sprachen übersetzen'
     submit: 'In die Katalogdatei schreiben'
     drafting: 'Entwurf wird erstellt...'
+    save: 'In die Katalogdatei schreiben'
+    discard_confirm: 'Geändert, aber nicht zum Schreiben angehakt: %locales%. Diese Änderungen gehen verloren. Fortfahren?'
+    nothing_ticked: 'Es wurde nichts geschrieben: es war keine Sprache angehakt.'
     wrote: 'Geschrieben: %locales%.'
-    failed_locales: 'Schreiben fehlgeschlagen. %details%'
     error: 'DeepL konnte hierfür keinen Entwurf erstellen: %message%'
     written: 'Direkt in die Katalogdatei geschrieben. Nichts wurde zur Prüfung eingereicht.'
     no_consent_note: 'Hier gilt keine Zustimmung. Das wird direkt in die Katalogdatei geschrieben, die du committen wirst, keine CC-BY-SA-Übersetzung eines Radfahrers.'

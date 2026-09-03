@@ -10,6 +10,7 @@ use App\Controller\TranslateController;
 use App\Entity\User;
 use App\Pagination\PageSize;
 use App\Translation\CatalogueBrowser;
+use App\Translation\CatalogueCommit;
 use App\Translation\CatalogueWriter;
 use App\Translation\DeepL\DeepLAvailability;
 use App\Translation\DeepL\DeepLClient;
@@ -115,6 +116,11 @@ final class StaleSourceWarningTest extends WebTestCase
             $container->get(EntityManagerInterface::class),
             $container->get(TranslatorInterface::class),
             new CatalogueWriter(sys_get_temp_dir(), $environment, '0'),
+            new CatalogueCommit(
+                new CatalogueWriter(sys_get_temp_dir(), $environment, '0'),
+                $container->get(EntityManagerInterface::class),
+                $container->get(TranslationCaches::class),
+            ),
             new DeepLClient(new MockHttpClient([]), ''),
             new DeepLAvailability($environment, ''),
             $container->get(TranslationCaches::class),

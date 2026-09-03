@@ -2133,12 +2133,14 @@ translate:
   form:
     value: 'Tu traducción'
   deepl:
-    draft_this: 'Borrador de este idioma'
-    draft_all: 'Borrador de los cuatro idiomas'
+    draft_pick: 'Borrador con DeepL'
+    draft_selected: 'Traducir los idiomas marcados'
     submit: 'Escribir en el archivo del catálogo'
     drafting: 'Generando borrador...'
+    save: 'Escribir en el archivo del catálogo'
+    discard_confirm: 'Modificado pero no marcado para escribir: %locales%. Esos cambios se pierden. ¿Continuar?'
+    nothing_ticked: 'No se escribió nada: no había ningún idioma marcado.'
     wrote: 'Escrito: %locales%.'
-    failed_locales: 'No se pudo escribir. %details%'
     error: 'DeepL no pudo generar el borrador: %message%'
     written: 'Escrito directamente en el archivo del catálogo. No se envió nada para revisión.'
     no_consent_note: 'Aquí no aplica ningún consentimiento. Esto se escribe directamente en el archivo del catálogo que vas a confirmar (commit), no es una traducción CC BY-SA de un ciclista.'

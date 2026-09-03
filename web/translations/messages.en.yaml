@@ -2130,12 +2130,14 @@ translate:
   # Dev-only DeepL drafting tool (translations.md §7). Never shown outside
   # dev with a DEEPL_API_KEY configured (translations.md §7.1).
   deepl:
-    draft_this: 'Draft this locale'
-    draft_all: 'Draft all four locales'
+    draft_pick: 'Draft with DeepL'
+    draft_selected: 'Draft the ticked languages'
     submit: 'Write to catalogue file'
     drafting: 'Drafting...'
+    save: 'Write to the catalogue file'
+    discard_confirm: 'Changed but not ticked to write: %locales%. Those changes are dropped. Continue?'
+    nothing_ticked: 'Nothing was written: no language was ticked.'
     wrote: 'Wrote: %locales%.'
-    failed_locales: 'Could not write. %details%'
     error: 'DeepL could not draft this: %message%'
     written: 'Written straight into the catalogue file. Nothing was submitted for review.'
     no_consent_note: 'No consent applies here. This writes straight into the catalogue file you are about to commit, not a rider''s CC BY-SA translation.'

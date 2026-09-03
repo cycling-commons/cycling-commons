@@ -10,6 +10,7 @@ use App\Controller\TranslateController;
 use App\Entity\User;
 use App\Pagination\PageSize;
 use App\Translation\CatalogueBrowser;
+use App\Translation\CatalogueCommit;
 use App\Translation\CatalogueWriter;
 use App\Translation\DeepL\DeepLAvailability;
 use App\Translation\DeepL\DeepLClient;
@@ -180,6 +181,7 @@ final class DeepLDevToolTest extends WebTestCase
             $container->get(EntityManagerInterface::class),
             $container->get(TranslatorInterface::class),
             $writer,
+            new CatalogueCommit($writer, $container->get(EntityManagerInterface::class), $container->get(TranslationCaches::class)),
             $deepl,
             $availability,
             $container->get(TranslationCaches::class),
@@ -223,8 +225,9 @@ final class DeepLDevToolTest extends WebTestCase
 
         $crawler = $client->request('GET', '/fr/translate/'.$entry->getId());
         self::assertResponseIsSuccessful();
-        self::assertSame(1, $crawler->filter('.tr-deepl-one')->count());
-        self::assertSame(1, $crawler->filter('.tr-deepl-all')->count());
+        self::assertSame(1, $crawler->filter('.tr-deepl-draft')->count());
+        // One tick box per rider locale: the panel drafts what is ticked.
+        self::assertSame(\count(self::LOCALES), $crawler->filter('[data-deepl-locale]')->count());
     }
 
     public function testButtonsDoNotRenderWithoutAConfiguredKey(): void
@@ -237,8 +240,8 @@ final class DeepLDevToolTest extends WebTestCase
 
         $crawler = $client->request('GET', '/fr/translate/'.$entry->getId());
         self::assertResponseIsSuccessful();
-        self::assertSame(0, $crawler->filter('.tr-deepl-one')->count());
-        self::assertSame(0, $crawler->filter('.tr-deepl-all')->count());
+        self::assertSame(0, $crawler->filter('.tr-deepl-draft')->count());
+        self::assertSame(0, $crawler->filter('[data-deepl-locale]')->count());
     }
 
     public function testButtonsDoNotRenderOffDev(): void
@@ -251,8 +254,8 @@ final class DeepLDevToolTest extends WebTestCase
 
         $crawler = $client->request('GET', '/fr/translate/'.$entry->getId());
         self::assertResponseIsSuccessful();
-        self::assertSame(0, $crawler->filter('.tr-deepl-one')->count());
-        self::assertSame(0, $crawler->filter('.tr-deepl-all')->count());
+        self::assertSame(0, $crawler->filter('.tr-deepl-draft')->count());
+        self::assertSame(0, $crawler->filter('[data-deepl-locale]')->count());
     }
 
     public function testButtonsNeverRenderOnTheEnglishPage(): void
@@ -270,8 +273,8 @@ final class DeepLDevToolTest extends WebTestCase
 
         $crawler = $client->request('GET', '/translate/'.$entry->getId());
         self::assertResponseIsSuccessful();
-        self::assertSame(0, $crawler->filter('.tr-deepl-one')->count());
-        self::assertSame(0, $crawler->filter('.tr-deepl-all')->count());
+        self::assertSame(0, $crawler->filter('.tr-deepl-draft')->count());
+        self::assertSame(0, $crawler->filter('[data-deepl-locale]')->count());
     }
 
     // --- Draft this locale (translations.md §7.2) -------------------------
@@ -294,9 +297,10 @@ final class DeepLDevToolTest extends WebTestCase
 
         $client->request('POST', '/fr/translate/'.$entry->getId().'/deepl-draft', ['_csrf_token' => $csrf]);
         self::assertResponseIsSuccessful();
-        /** @var array{value?: string} $data */
+        /** @var array{drafts?: array<string, string>} $data */
         $data = json_decode((string) $client->getResponse()->getContent(), true, flags: \JSON_THROW_ON_ERROR);
-        self::assertSame('Texte drafte', $data['value'] ?? null);
+        // No tick box posted: the endpoint drafts the locale being edited.
+        self::assertSame(['fr' => 'Texte drafte'], $data['drafts'] ?? null);
 
         $after = $this->scratchBytes('fr').$this->scratchBytes('nl').$this->scratchBytes('de').$this->scratchBytes('es');
         self::assertSame($before, $after, 'draft-this-locale must write nothing');
@@ -323,78 +327,206 @@ final class DeepLDevToolTest extends WebTestCase
         self::assertResponseStatusCodeSame(404);
     }
 
-    // --- Draft all four (translations.md §7.2, §7.3) ---------------------
-
-    public function testDraftAllFourWritesAllFourLocalesAndReportsThem(): void
+    /**
+     * The panel's language tick boxes decide what DeepL is asked for, and
+     * the answer only ever fills fields: the write is the developer's own
+     * separate act (translations.md §7.2).
+     */
+    public function testDraftDraftsEveryTickedLocaleAndWritesNothing(): void
     {
         $client = static::createClient();
         $client->disableReboot();
         $entry = $this->seedEntry(self::TEST_KEY, 'Original text');
-        $client->loginUser($this->createUser('deepl-draft-all@example.com'));
+        $client->loginUser($this->createUser('deepl-draft-ticked@example.com'));
+        $this->installController(
+            new CatalogueWriter($this->scratchDir, 'dev', '1'),
+            new DeepLClient($this->echoingDeepL(['fr' => 'Texte fr', 'nl' => 'Tekst nl', 'de' => 'Text de', 'es' => 'Texto es']), 'test-key'),
+            new DeepLAvailability('dev', 'test-key'),
+        );
 
-        $texts = ['fr' => 'Bonjour test', 'nl' => 'Hallo test', 'de' => 'Hallo Test', 'es' => 'Hola prueba'];
-        $http = new MockHttpClient(function (string $method, string $url, array $options) use ($texts): MockResponse {
+        $before = '';
+        foreach (self::LOCALES as $locale) {
+            $before .= $this->scratchBytes($locale);
+        }
+
+        $crawler = $client->request('GET', '/fr/translate/'.$entry->getId());
+        $csrf = (string) $crawler->filter('[data-deepl]')->attr('data-csrf');
+
+        $client->request('POST', '/fr/translate/'.$entry->getId().'/deepl-draft', [
+            '_csrf_token' => $csrf,
+            'locales' => ['fr', 'nl'],
+        ]);
+        self::assertResponseIsSuccessful();
+        /** @var array{drafts?: array<string, string>} $data */
+        $data = json_decode((string) $client->getResponse()->getContent(), true, flags: \JSON_THROW_ON_ERROR);
+        self::assertSame(['fr' => 'Texte fr', 'nl' => 'Tekst nl'], $data['drafts'] ?? null);
+
+        $after = '';
+        foreach (self::LOCALES as $locale) {
+            $after .= $this->scratchBytes($locale);
+        }
+        self::assertSame($before, $after, 'drafting must write nothing');
+    }
+
+    /**
+     * @param array<string, string> $texts
+     */
+    private function echoingDeepL(array $texts): MockHttpClient
+    {
+        return new MockHttpClient(function (string $method, string $url, array $options) use ($texts): MockResponse {
             /** @var array{target_lang: string} $body */
             $body = json_decode((string) $options['body'], true, flags: \JSON_THROW_ON_ERROR);
             $target = strtolower($body['target_lang']);
 
             return new MockResponse(json_encode(['translations' => [['text' => $texts[$target]]]], \JSON_THROW_ON_ERROR));
         });
-        $this->installController(
-            new CatalogueWriter($this->scratchDir, 'dev', '1'),
-            new DeepLClient($http, 'test-key'),
-            new DeepLAvailability('dev', 'test-key'),
-        );
-
-        $crawler = $client->request('GET', '/fr/translate/'.$entry->getId());
-        $csrf = (string) $crawler->filter('[data-deepl]')->attr('data-csrf');
-
-        $client->request('POST', '/fr/translate/'.$entry->getId().'/deepl-draft-all', ['_csrf_token' => $csrf]);
-        self::assertResponseIsSuccessful();
-        /** @var array{written: list<string>, failed: array<string, string>} $data */
-        $data = json_decode((string) $client->getResponse()->getContent(), true, flags: \JSON_THROW_ON_ERROR);
-        self::assertEqualsCanonicalizing(self::LOCALES, $data['written']);
-        self::assertSame([], $data['failed']);
-
-        foreach ($texts as $locale => $text) {
-            self::assertStringContainsString("'".$text."'", $this->scratchBytes($locale));
-        }
     }
 
-    public function testDraftAllFourReportsAFailedLocaleWithoutFailingTheOthers(): void
+    // --- Writing the ticked locales (translations.md §7.3) ---------------
+
+    /**
+     * The write tick boxes are one group directly above the write button,
+     * not one box trailing each field: the developer decides what to write
+     * as a single act, at the point of writing.
+     */
+    public function testTheWriteTickBoxesAreOneGroupAboveTheButton(): void
     {
         $client = static::createClient();
         $client->disableReboot();
         $entry = $this->seedEntry(self::TEST_KEY, 'Original text');
-        $client->loginUser($this->createUser('deepl-draft-all-partial@example.com'));
-
-        // "es" carries no such key in its catalogue file, so its write
-        // refuses (CatalogueKeyNotFoundException) while fr/nl/de succeed.
-        unlink($this->scratchPath('es'));
-        file_put_contents($this->scratchPath('es'), "# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0\ntranslate:\n  someone_else_key: 'nothing to do with the test key'\n");
-
-        $http = new MockHttpClient(function (): MockResponse {
-            return new MockResponse(json_encode(['translations' => [['text' => 'drafted']]], \JSON_THROW_ON_ERROR));
-        });
-        $this->installController(
-            new CatalogueWriter($this->scratchDir, 'dev', '1'),
-            new DeepLClient($http, 'test-key'),
-            new DeepLAvailability('dev', 'test-key'),
-        );
+        $client->loginUser($this->createUser('deepl-tickbox-layout@example.com'));
+        $this->useDevTools();
 
         $crawler = $client->request('GET', '/fr/translate/'.$entry->getId());
-        $csrf = (string) $crawler->filter('[data-deepl]')->attr('data-csrf');
-
-        $client->request('POST', '/fr/translate/'.$entry->getId().'/deepl-draft-all', ['_csrf_token' => $csrf]);
         self::assertResponseIsSuccessful();
-        /** @var array{written: list<string>, failed: array<string, string>} $data */
-        $data = json_decode((string) $client->getResponse()->getContent(), true, flags: \JSON_THROW_ON_ERROR);
-        sort($data['written']);
-        self::assertSame(['de', 'fr', 'nl'], $data['written']);
-        self::assertArrayHasKey('es', $data['failed']);
+
+        self::assertSame(
+            \count(self::LOCALES),
+            $crawler->filter('.tr-save-pick input[type="checkbox"]')->count(),
+            'every locale has its write tick box in the group',
+        );
+        self::assertSame(
+            0,
+            $crawler->filter('[data-locale-row] input[type="checkbox"]')->count(),
+            'no write tick box may trail a text field',
+        );
+        // Each text field still carries the value it started with, so the
+        // browser can tell a changed field from an untouched one.
+        self::assertSame(
+            \count(self::LOCALES),
+            $crawler->filter('[data-locale-row] textarea[data-initial]')->count(),
+        );
+    }
+
+    /**
+     * A refusal on one ticked locale is a refusal for the whole submit: the
+     * values are all checked before any of them is written.
+     */
+    public function testARefusedTickedLocaleStopsTheWholeSubmit(): void
+    {
+        $client = static::createClient();
+        $client->disableReboot();
+        $entry = $this->seedEntry(self::TEST_KEY, 'Original text');
+        $client->loginUser($this->createUser('deepl-ticked-refused@example.com'));
+        $this->useDevTools();
+
+        $crawler = $client->request('GET', '/fr/translate/'.$entry->getId());
+        $form = $crawler->filter('form[name="translation_proposal"]')->form([
+            'translation_proposal[fr]' => 'Texte correct',
+            'translation_proposal[nl]' => '',
+            'translation_proposal[save_nl]' => true,
+        ]);
+        $client->submit($form);
+
+        self::assertResponseIsSuccessful();
+        self::assertStringNotContainsString('Texte correct', $this->scratchBytes('fr'), 'no locale may be written when another ticked one is refused');
+        self::assertSelectorExists('[role="alert"]');
+    }
+
+    /**
+     * Untick everything and the form says so, rather than redirecting with a
+     * success banner for a write that never happened.
+     */
+    public function testSubmittingWithNoLocaleTickedWritesNothingAndSaysSo(): void
+    {
+        $client = static::createClient();
+        $client->disableReboot();
+        $entry = $this->seedEntry(self::TEST_KEY, 'Original text');
+        $client->loginUser($this->createUser('deepl-ticked-none@example.com'));
+        $this->useDevTools();
+
+        $crawler = $client->request('GET', '/fr/translate/'.$entry->getId());
+        $form = $crawler->filter('form[name="translation_proposal"]')->form([
+            'translation_proposal[fr]' => 'Texte jamais écrit',
+        ]);
+        $form['translation_proposal[save_fr]']->untick();
+        $client->submit($form);
+
+        self::assertResponseIsSuccessful();
+        self::assertStringNotContainsString('Texte jamais écrit', $this->scratchBytes('fr'));
+        self::assertSelectorExists('[role="alert"]');
     }
 
     // --- The dev submit path (translations.md §7.3) -----------------------
+
+    /**
+     * The dev form carries every rider locale, and its per-locale tick box
+     * is what decides which of them reaches a file (translations.md §7.3).
+     */
+    public function testADevSubmitWritesOnlyTheTickedLocales(): void
+    {
+        $client = static::createClient();
+        $client->disableReboot();
+        $entry = $this->seedEntry(self::TEST_KEY, 'Original text');
+        $client->loginUser($this->createUser('deepl-ticked-write@example.com'));
+        $this->useDevTools();
+
+        $crawler = $client->request('GET', '/fr/translate/'.$entry->getId());
+        self::assertResponseIsSuccessful();
+
+        $form = $crawler->filter('form[name="translation_proposal"]')->form([
+            'translation_proposal[fr]' => 'Texte coché',
+            'translation_proposal[nl]' => 'Niet aangevinkte tekst',
+        ]);
+        $client->submit($form);
+
+        self::assertResponseRedirects();
+        self::assertStringContainsString("'Texte coché'", $this->scratchBytes('fr'));
+        self::assertStringNotContainsString('Niet aangevinkte tekst', $this->scratchBytes('nl'));
+    }
+
+    /**
+     * The point of the whole exercise: the file is the base, so what it now
+     * says is what the site says, with no row left on top of it.
+     */
+    public function testADevSubmitDropsTheOverlayOfEveryTickedLocaleOnly(): void
+    {
+        $client = static::createClient();
+        $client->disableReboot();
+        $entry = $this->seedEntry(self::TEST_KEY, 'Original text');
+        $client->loginUser($this->createUser('deepl-ticked-overlay@example.com'));
+        $this->useDevTools();
+
+        /** @var EntityManagerInterface $em */
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $em->persist(new TranslationOverlay($entry, 'fr', 'Texte overlay', null, null, 1));
+        $em->persist(new TranslationOverlay($entry, 'nl', 'Overlay-tekst', null, null, 1));
+        $em->flush();
+
+        $crawler = $client->request('GET', '/fr/translate/'.$entry->getId());
+        $form = $crawler->filter('form[name="translation_proposal"]')->form([
+            'translation_proposal[fr]' => 'Texte de base',
+        ]);
+        $client->submit($form);
+        self::assertResponseRedirects();
+
+        $em->clear();
+        $again = $em->getRepository(TranslationEntry::class)->findOneBy(['messageKey' => self::TEST_KEY]);
+        self::assertNotNull($again);
+        $overlays = $em->getRepository(TranslationOverlay::class);
+        self::assertNull($overlays->findOneBy(['entry' => $again, 'locale' => 'fr']));
+        self::assertNotNull($overlays->findOneBy(['entry' => $again, 'locale' => 'nl']));
+    }
 
     public function testADevSubmitWritesTheCatalogueAndCreatesNoProposalRow(): void
     {
@@ -412,7 +544,7 @@ final class DeepLDevToolTest extends WebTestCase
         // "value" (see testTheConsentBlockIsAbsentOnDev below for the
         // assertion that covers this directly).
         $form = $crawler->filter('form[name="translation_proposal"]')->form([
-            'translation_proposal[value]' => 'Hand typed on dev',
+            'translation_proposal[fr]' => 'Hand typed on dev',
         ]);
         $client->submit($form);
 
@@ -422,10 +554,9 @@ final class DeepLDevToolTest extends WebTestCase
 
         $client->followRedirect();
         self::assertResponseIsSuccessful();
-        self::assertSelectorTextContains(
-            '[role="alert"]',
-            'Écrit directement dans le fichier du catalogue. Rien n\'a été soumis pour relecture.',
-        );
+        // The multi-locale dev form names what it wrote, rather than the
+        // single-field path's "written straight into the catalogue file".
+        self::assertSelectorTextContains('[role="alert"]', 'Écrit : fr.');
     }
 
     public function testADevSubmitThroughTheEmbedDrawerAnswersItsOwnWrittenMessage(): void
@@ -439,7 +570,7 @@ final class DeepLDevToolTest extends WebTestCase
         $crawler = $client->request('GET', '/fr/translate/'.$entry->getId().'?embed=1');
         self::assertResponseIsSuccessful();
         $form = $crawler->filter('form.tr-form')->form([
-            'translation_proposal[value]' => 'Drawer dev submit',
+            'translation_proposal[fr]' => 'Drawer dev submit',
         ]);
         $client->submit($form);
 
@@ -540,6 +671,11 @@ final class DeepLDevToolTest extends WebTestCase
             $container->get(EntityManagerInterface::class),
             $container->get(TranslatorInterface::class),
             new CatalogueWriter($this->scratchDir, 'dev', '1'),
+            new CatalogueCommit(
+                new CatalogueWriter($this->scratchDir, 'dev', '1'),
+                static::getContainer()->get(EntityManagerInterface::class),
+                static::getContainer()->get(TranslationCaches::class),
+            ),
             new DeepLClient(new MockHttpClient(), 'test-key'),
             new DeepLAvailability('dev', 'test-key'),
             $container->get(TranslationCaches::class),
@@ -664,7 +800,7 @@ final class DeepLDevToolTest extends WebTestCase
         // An unclosed <b>: exactly the case TranslationMarkup::check() exists
         // to catch, the same way it catches it for a rider's proposal.
         $form = $crawler->filter('form[name="translation_proposal"]')->form([
-            'translation_proposal[value]' => '<b>Broken tag, never closed',
+            'translation_proposal[fr]' => '<b>Broken tag, never closed',
         ]);
         $client->submit($form);
 
@@ -687,7 +823,7 @@ final class DeepLDevToolTest extends WebTestCase
         $before = $this->scratchBytes('fr');
         $crawler = $client->request('GET', '/fr/translate/'.$entry->getId());
         $form = $crawler->filter('form[name="translation_proposal"]')->form([
-            'translation_proposal[value]' => str_repeat('a', TranslationLimits::PROPOSED_VALUE_MAX + 1),
+            'translation_proposal[fr]' => str_repeat('a', TranslationLimits::PROPOSED_VALUE_MAX + 1),
         ]);
         $client->submit($form);
 
@@ -730,6 +866,11 @@ final class DeepLDevToolTest extends WebTestCase
             static::getContainer()->get(EntityManagerInterface::class),
             static::getContainer()->get(TranslatorInterface::class),
             new CatalogueWriter($this->scratchDir, 'dev', '1'),
+            new CatalogueCommit(
+                new CatalogueWriter($this->scratchDir, 'dev', '1'),
+                static::getContainer()->get(EntityManagerInterface::class),
+                static::getContainer()->get(TranslationCaches::class),
+            ),
             new DeepLClient(new MockHttpClient(), 'test-key'),
             new DeepLAvailability('dev', 'test-key'),
             static::getContainer()->get(TranslationCaches::class),
@@ -806,7 +947,12 @@ final class DeepLDevToolTest extends WebTestCase
         self::assertStringContainsString("'Original fr'", $this->scratchBytes('fr'));
     }
 
-    public function testWithoutTheOptInTheDraftAllEndpointDoesNotExist(): void
+    /**
+     * Without the write opt-in the panel still drafts, because drafting
+     * writes nothing; what it does not get is the per-locale machinery,
+     * which exists only to write (translations.md §7.1).
+     */
+    public function testWithoutTheOptInTheDraftPanelHasNoPerLocaleControls(): void
     {
         $client = static::createClient();
         $client->disableReboot();
@@ -816,28 +962,21 @@ final class DeepLDevToolTest extends WebTestCase
 
         $crawler = $client->request('GET', '/fr/translate/'.$entry->getId());
         self::assertResponseIsSuccessful();
-        // The read-only draft button is still there (it writes nothing);
-        // the one that writes four files is not.
-        self::assertSame(1, $crawler->filter('.tr-deepl-one')->count());
-        self::assertSame(0, $crawler->filter('.tr-deepl-all')->count());
-
-        $csrf = (string) $crawler->filter('[data-deepl]')->attr('data-csrf');
-        $client->request('POST', '/fr/translate/'.$entry->getId().'/deepl-draft-all', ['_csrf_token' => $csrf]);
-        self::assertResponseStatusCodeSame(404);
+        self::assertSame(1, $crawler->filter('.tr-deepl-draft')->count());
+        self::assertSame(0, $crawler->filter('[data-deepl-locale]')->count(), 'no language tick boxes without the write opt-in');
+        self::assertSame(0, $crawler->filter('[data-locale-row]')->count(), 'no per-locale fields without the write opt-in');
         self::assertStringContainsString("'Original fr'", $this->scratchBytes('fr'));
     }
 
     // --- Protected keys on the write paths (translations.md §4) -----------
 
-    public function testDraftAllRefusesAProtectedConsentContractInEveryLocale(): void
+    public function testAProtectedConsentContractIsRefusedForEveryTickedLocale(): void
     {
         $client = static::createClient();
         $client->disableReboot();
         // The consent contract, whose exact wording is hashed into the
-        // consent ledger under a VERSION. A machine paraphrase here would
-        // leave every stored consent record covering words its rider never
-        // saw. ProposalService::submit() has always refused this key; the
-        // catalogue write path did not.
+        // consent ledger under a VERSION. A paraphrase here would leave
+        // every stored consent record covering words its rider never saw.
         $entry = $this->seedEntry('translate.consent.contract', 'I agree to license this translation under CC BY-SA 4.0.');
         $client->loginUser($this->createUser('deepl-protected-all@example.com'));
 
@@ -847,118 +986,92 @@ final class DeepLDevToolTest extends WebTestCase
                 "# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0\ntranslate:\n  consent:\n    contract: 'Original {$locale}'\n",
             );
         }
-
-        $http = new MockHttpClient(static fn (): MockResponse => new MockResponse(
-            json_encode(['translations' => [['text' => 'A machine paraphrase of a binding licence sentence']]], \JSON_THROW_ON_ERROR),
-        ));
-        $this->installController(
-            new CatalogueWriter($this->scratchDir, 'dev', '1'),
-            new DeepLClient($http, 'test-key'),
-            new DeepLAvailability('dev', 'test-key'),
-        );
+        $this->useDevTools();
 
         $crawler = $client->request('GET', '/fr/translate/'.$entry->getId());
-        $csrf = (string) $crawler->filter('[data-deepl]')->attr('data-csrf');
-        $client->request('POST', '/fr/translate/'.$entry->getId().'/deepl-draft-all', ['_csrf_token' => $csrf]);
+        $form = $crawler->filter('form[name="translation_proposal"]')->form();
+        foreach (self::LOCALES as $locale) {
+            $form['translation_proposal['.$locale.']'] = 'A paraphrase of a binding licence sentence';
+            $form['translation_proposal[save_'.$locale.']']->tick();
+        }
+        $client->submit($form);
 
         self::assertResponseIsSuccessful();
-        /** @var array{written: list<string>, failed: array<string, string>} $data */
-        $data = json_decode((string) $client->getResponse()->getContent(), true, flags: \JSON_THROW_ON_ERROR);
-        self::assertSame([], $data['written']);
-        self::assertEqualsCanonicalizing(self::LOCALES, array_keys($data['failed']));
-        self::assertStringContainsString('consent contract', $data['failed']['fr']);
-
+        self::assertSelectorTextContains('[role="alert"]', 'consent contract');
         foreach (self::LOCALES as $locale) {
             self::assertStringContainsString("'Original {$locale}'", $this->scratchBytes($locale));
         }
     }
 
-    // --- The draft-all route runs the acceptance check too (I4) -----------
+    // --- The write path runs the acceptance check per locale (I4) ---------
 
-    public function testDraftAllReportsALocaleWhoseDraftFailsTheAcceptanceCheck(): void
+    /**
+     * What DeepL really does to a marked-up, placeholder-carrying string:
+     * an unclosed tag in one language, a translated placeholder in another.
+     * The developer can leave either in a field by accident, so the write
+     * refuses it and no language is written at all.
+     */
+    public function testATickedLocaleWithBrokenMarkupIsRefusedAndWritesNothing(): void
     {
         $client = static::createClient();
         $client->disableReboot();
         $entry = $this->seedEntry(self::TEST_KEY, 'Read the <b>rules</b> for %name%.');
-        $client->loginUser($this->createUser('deepl-draft-all-check@example.com'));
-
-        // What DeepL really does to a marked-up, placeholder-carrying
-        // string when nothing checks the result: "de" comes back with an
-        // unclosed tag, "es" with the placeholder translated, and both
-        // would have been written verbatim into a source file.
-        $texts = [
-            'fr' => 'Lisez les <b>règles</b> pour %name%.',
-            'nl' => 'Lees de <b>regels</b> voor %name%.',
-            'de' => 'Lies die <b>Regeln für %name%.',
-            'es' => 'Lee las <b>reglas</b> para %nombre%.',
-        ];
-        $http = new MockHttpClient(function (string $method, string $url, array $options) use ($texts): MockResponse {
-            /** @var array{target_lang: string} $body */
-            $body = json_decode((string) $options['body'], true, flags: \JSON_THROW_ON_ERROR);
-
-            return new MockResponse(json_encode(
-                ['translations' => [['text' => $texts[strtolower($body['target_lang'])]]]],
-                \JSON_THROW_ON_ERROR,
-            ));
-        });
-        $this->installController(
-            new CatalogueWriter($this->scratchDir, 'dev', '1'),
-            new DeepLClient($http, 'test-key'),
-            new DeepLAvailability('dev', 'test-key'),
-        );
+        $client->loginUser($this->createUser('deepl-ticked-markup@example.com'));
+        $this->useDevTools();
 
         $crawler = $client->request('GET', '/fr/translate/'.$entry->getId());
-        $csrf = (string) $crawler->filter('[data-deepl]')->attr('data-csrf');
-        $client->request('POST', '/fr/translate/'.$entry->getId().'/deepl-draft-all', ['_csrf_token' => $csrf]);
+        $form = $crawler->filter('form[name="translation_proposal"]')->form([
+            'translation_proposal[fr]' => 'Lisez les <b>règles</b> pour %name%.',
+            'translation_proposal[de]' => 'Lies die <b>Regeln für %name%.',
+        ]);
+        $form['translation_proposal[save_de]']->tick();
+        $client->submit($form);
 
         self::assertResponseIsSuccessful();
-        /** @var array{written: list<string>, failed: array<string, string>} $data */
-        $data = json_decode((string) $client->getResponse()->getContent(), true, flags: \JSON_THROW_ON_ERROR);
-        sort($data['written']);
-        self::assertSame(['fr', 'nl'], $data['written']);
-        self::assertEqualsCanonicalizing(['de', 'es'], array_keys($data['failed']));
-
-        // Reported with a REASON, not just a locale code (I5).
-        self::assertNotSame('', $data['failed']['de']);
-        self::assertStringContainsString('%name%', $data['failed']['es']);
-
-        // And neither bad draft reached its file.
+        self::assertSelectorExists('[role="alert"]');
         self::assertStringContainsString("'Original de'", $this->scratchBytes('de'));
+        self::assertStringContainsString("'Original fr'", $this->scratchBytes('fr'));
+    }
+
+    public function testATickedLocaleWithATranslatedPlaceholderIsRefused(): void
+    {
+        $client = static::createClient();
+        $client->disableReboot();
+        $entry = $this->seedEntry(self::TEST_KEY, 'Read the rules for %name%.');
+        $client->loginUser($this->createUser('deepl-ticked-placeholder@example.com'));
+        $this->useDevTools();
+
+        $crawler = $client->request('GET', '/fr/translate/'.$entry->getId());
+        $form = $crawler->filter('form[name="translation_proposal"]')->form([
+            'translation_proposal[es]' => 'Lee las reglas para %nombre%.',
+        ]);
+        $form['translation_proposal[save_es]']->tick();
+        $client->submit($form);
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('[role="alert"]');
         self::assertStringContainsString("'Original es'", $this->scratchBytes('es'));
     }
 
-    public function testDraftAllReportsALocaleWhoseDraftExceedsTheLengthCap(): void
+    public function testATickedLocaleOverTheLengthCapIsRefusedAndWritesNothing(): void
     {
         $client = static::createClient();
         $client->disableReboot();
         $entry = $this->seedEntry(self::TEST_KEY, 'Short English.');
-        $client->loginUser($this->createUser('deepl-draft-all-long@example.com'));
+        $client->loginUser($this->createUser('deepl-ticked-long@example.com'));
+        $this->useDevTools();
 
-        // French and German run longer than English, so a draft of a
-        // near-cap string can cross a cap the hand-typed path would refuse.
         $long = str_repeat('a', TranslationLimits::PROPOSED_VALUE_MAX + 1);
-        $http = new MockHttpClient(function (string $method, string $url, array $options) use ($long): MockResponse {
-            /** @var array{target_lang: string} $body */
-            $body = json_decode((string) $options['body'], true, flags: \JSON_THROW_ON_ERROR);
-            $text = 'DE' === $body['target_lang'] ? $long : 'Kort.';
-
-            return new MockResponse(json_encode(['translations' => [['text' => $text]]], \JSON_THROW_ON_ERROR));
-        });
-        $this->installController(
-            new CatalogueWriter($this->scratchDir, 'dev', '1'),
-            new DeepLClient($http, 'test-key'),
-            new DeepLAvailability('dev', 'test-key'),
-        );
-
         $crawler = $client->request('GET', '/fr/translate/'.$entry->getId());
-        $csrf = (string) $crawler->filter('[data-deepl]')->attr('data-csrf');
-        $client->request('POST', '/fr/translate/'.$entry->getId().'/deepl-draft-all', ['_csrf_token' => $csrf]);
+        $form = $crawler->filter('form[name="translation_proposal"]')->form([
+            'translation_proposal[de]' => $long,
+        ]);
+        $form['translation_proposal[save_de]']->tick();
+        $client->submit($form);
 
-        self::assertResponseIsSuccessful();
-        /** @var array{written: list<string>, failed: array<string, string>} $data */
-        $data = json_decode((string) $client->getResponse()->getContent(), true, flags: \JSON_THROW_ON_ERROR);
-        self::assertSame(['de'], array_keys($data['failed']));
-        self::assertStringContainsString('bytes', $data['failed']['de']);
+        // The field's own Length constraint refuses it before the write
+        // path is reached, which Symfony reports as 422.
+        self::assertResponseStatusCodeSame(422);
         self::assertStringContainsString("'Original de'", $this->scratchBytes('de'));
     }
 
@@ -976,7 +1089,7 @@ final class DeepLDevToolTest extends WebTestCase
 
         $crawler = $client->request('GET', '/fr/translate/'.$entry->getId());
         $form = $crawler->filter('form[name="translation_proposal"]')->form([
-            'translation_proposal[value]' => 'Anything at all',
+            'translation_proposal[fr]' => 'Anything at all',
         ]);
         $client->submit($form);
 

@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Twig;
 
+use App\Translation\CatalogueWriter;
 use App\Translation\DeepL\DeepLAvailability;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
@@ -35,6 +36,10 @@ final class DeepLExtension extends AbstractExtension
 {
     public function __construct(
         private readonly DeepLAvailability $deeplAvailability,
+        // The other half of the dev tooling gate: the DeepL panel needs a
+        // key, the per-locale catalogue form needs the write opt-in, and a
+        // developer can have either without the other (translations.md §7.1).
+        private readonly CatalogueWriter $catalogueWriter,
     ) {
     }
 
@@ -43,6 +48,7 @@ final class DeepLExtension extends AbstractExtension
     {
         return [
             new TwigFunction('deepl_available', $this->deeplAvailability->isOn(...)),
+            new TwigFunction('catalogue_write_available', $this->catalogueWriter->isEnabled(...)),
         ];
     }
 }

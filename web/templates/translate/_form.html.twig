@@ -87,33 +87,54 @@
          via textContent, never innerHTML: nothing here is HTML. #}
       <div class="tr-deepl" data-deepl
            data-draft-url="{{ path('translate_deepl_draft', {id: entry.id}) }}"
-           data-draft-all-url="{{ path('translate_deepl_draft_all', {id: entry.id}) }}"
            data-csrf="{{ csrf_token('deepl_draft') }}"
            data-drafting-label="{{ 'translate.deepl.drafting'|trans }}"
-           data-wrote-tpl="{{ 'translate.deepl.wrote'|trans({'%locales%': '%%LOCALES%%'}) }}"
-           data-failed-tpl="{{ 'translate.deepl.failed_locales'|trans({'%details%': '%%DETAILS%%'}) }}"
            data-error-tpl="{{ 'translate.deepl.error'|trans({'%message%': '%%MESSAGE%%'}) }}">
+        {# One tick box per language DeepL may be asked for. They exist only
+           on the dev catalogue form, which is the only form carrying a field
+           per language for the answers to land in; with a DeepL key but no
+           CC_CATALOGUE_WRITE opt-in there is one textarea, so the endpoint's
+           own default (the locale being edited) is the whole choice. #}
+        {% if dev_locales is not empty %}
+          <fieldset class="tr-deepl-pick">
+            <legend>{{ 'translate.deepl.draft_pick'|trans }}</legend>
+            {% for locale in dev_locales %}
+              <label>
+                <input type="checkbox" data-deepl-locale="{{ locale }}"{{ locale == app.request.locale ? ' checked' : '' }}>
+                {{ ('lang.' ~ locale)|trans }}
+              </label>
+            {% endfor %}
+          </fieldset>
+        {% endif %}
         <div class="tr-deepl-actions">
-          <button type="button" class="tr-deepl-one">{{ 'translate.deepl.draft_this'|trans }}</button>
-          {# Draft-all WRITES all four catalogue files, so it needs the
-             CC_CATALOGUE_WRITE opt-in (dev_submit), not only a DeepL key.
-             Its endpoint answers 404 without that opt-in, so a button
-             rendered here without it would be a button that cannot work. #}
-          {% if dev_submit %}
-            <button type="button" class="tr-deepl-all">{{ 'translate.deepl.draft_all'|trans }}</button>
-          {% endif %}
+          <button type="button" class="tr-deepl-draft">{{ 'translate.deepl.draft_selected'|trans }}</button>
         </div>
         <p class="tr-deepl-status" data-deepl-status hidden></p>
       </div>
     {% endif %}
-    {% if dev_submit %}
-      <p class="tr-deepl-note">{{ 'translate.deepl.no_consent_note'|trans }}</p>
+    {# The dev catalogue form edits every rider locale at once: one field per
+       language, each with the tick box that decides whether it is written
+       (translations.md §7.3). Every other form carries the single "value"
+       field, for the one locale being proposed. #}
+    {% if dev_locales is not empty %}
+      {% for locale in dev_locales %}
+        {# data-initial is the wording this field arrived holding. The
+           browser compares against it to mark a field the developer has
+           edited, and to ask before dropping an edit that is not ticked to
+           be written (assets/js/catalogue-form.js). #}
+        <div class="field tr-locale" data-locale-row="{{ locale }}">
+          {{ form_label(attribute(form, locale)) }}
+          {{ form_widget(attribute(form, locale), {attr: {'data-initial': attribute(form, locale).vars.value}}) }}
+          {{ form_errors(attribute(form, locale)) }}
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="field">
+        {{ form_label(form.value) }}
+        {{ form_widget(form.value) }}
+        {{ form_errors(form.value) }}
+      </div>
     {% endif %}
-    <div class="field">
-      {{ form_label(form.value) }}
-      {{ form_widget(form.value) }}
-      {{ form_errors(form.value) }}
-    </div>
 
     {% if proposed_preview is not empty %}
       <div class="tr-panel">
@@ -157,6 +178,27 @@
     {% endif %}
     {{ form_errors(form) }}
 
+    {# What gets written, decided in one place, at the point of writing, with
+       the note about what that write means beside it rather than paragraphs
+       up the page. A field that was edited and is NOT ticked here has its
+       change dropped, which catalogue-form.js asks about before letting the
+       form go. #}
+    {% if dev_locales is not empty %}
+      <fieldset class="tr-save-pick" data-save-pick
+                data-discard-tpl="{{ 'translate.deepl.discard_confirm'|trans({'%locales%': '%%LOCALES%%'}) }}">
+        <legend>{{ 'translate.deepl.save'|trans }}</legend>
+        {% for locale in dev_locales %}
+          <label>
+            {{ form_widget(attribute(form, 'save_' ~ locale)) }}
+            {{ ('lang.' ~ locale)|trans }}
+          </label>
+        {% endfor %}
+      </fieldset>
+    {% endif %}
+
+    {% if dev_submit %}
+      <p class="tr-deepl-note">{{ 'translate.deepl.no_consent_note'|trans }}</p>
+    {% endif %}
     <div class="tr-actions">
       {# The button is the last thing read before acting, so on the dev
          write path it has to name the act: this submit does not propose

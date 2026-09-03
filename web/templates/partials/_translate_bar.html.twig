@@ -69,7 +69,22 @@
   .tr-deepl button:disabled{opacity:.5;cursor:default}
   .tr-deepl-status{margin:.6rem 0 0;font-size:.82rem;line-height:1.5;color:#4a4d40}
   .tr-deepl-status.is-error{color:#7d2018}
-  .tr-deepl-note{margin:0 0 1.1rem;font-size:.84rem;line-height:1.5;color:#595c4d}
+  /* Two tick-box groups, one per question: which languages to draft (top
+     of the DeepL panel) and which to write (directly above the write
+     button). Both are rows of small inline controls, so they opt out of
+     .tr-form .field's block, uppercase label. */
+  .tr-deepl-pick,.tr-save-pick{margin:0;padding:0;border:0;display:flex;gap:1.1rem;flex-wrap:wrap;align-items:center}
+  .tr-deepl-pick{margin:0 0 .9rem}
+  .tr-save-pick{margin:1.8rem 0 .2rem;padding:.9rem 1rem;background:var(--paper);border:1px dashed rgba(20,22,14,.3);border-radius:6px}
+  .tr-deepl-pick legend,.tr-save-pick legend{float:left;width:100%;padding:0;margin:0 0 .6rem;font-family:var(--mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:#595c4d}
+  .tr-deepl-pick label,.tr-save-pick label{display:inline-flex;gap:.4rem;align-items:center;font-size:.9rem;line-height:1.4}
+  /* Room to read four blocks of prose at once. */
+  .tr-form .tr-locale{margin-bottom:1.9rem}
+  .tr-form .tr-locale textarea{min-height:6.5rem}
+  /* A field whose text no longer matches what the server sent, so an
+     unticked edit is visible before it is dropped (catalogue-form.js). */
+  .tr-form .tr-locale textarea.is-changed{background:#fdf1e3;border-color:rgba(193,106,44,.55)}
+  .tr-deepl-note{margin:.8rem 0 0;font-size:.84rem;line-height:1.5;color:#595c4d}
   .tr-form .field{margin-bottom:1.1rem}
   .tr-form .field label{display:block;font-family:var(--mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:#595c4d;margin-bottom:.4rem}
   .tr-form .field textarea{width:100%;min-height:8rem;padding:.7rem .85rem;border:1px solid rgba(20,22,14,.22);border-radius:6px;background:var(--paper);font:inherit;line-height:1.5}

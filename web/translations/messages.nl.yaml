@@ -2585,12 +2585,14 @@ translate:
   form:
     value: 'Jouw vertaling'
   deepl:
-    draft_this: 'Concept voor deze taal'
-    draft_all: 'Concept voor alle vier talen'
+    draft_pick: 'Concept maken met DeepL'
+    draft_selected: 'Aangevinkte talen vertalen'
     submit: 'Naar catalogusbestand schrijven'
     drafting: 'Concept wordt gemaakt...'
+    save: 'Naar het catalogusbestand schrijven'
+    discard_confirm: 'Gewijzigd maar niet aangevinkt om te schrijven: %locales%. Die wijzigingen gaan verloren. Doorgaan?'
+    nothing_ticked: 'Er is niets geschreven: er was geen enkele taal aangevinkt.'
     wrote: 'Geschreven: %locales%.'
-    failed_locales: 'Schrijven mislukt. %details%'
     error: 'DeepL kon hier geen concept van maken: %message%'
     written: 'Direct in het catalogusbestand geschreven. Er is niets ter beoordeling ingediend.'
     no_consent_note: 'Hier geldt geen toestemming. Dit wordt direct in het catalogusbestand geschreven dat je gaat committen, geen CC BY-SA-vertaling van een fietser.'
