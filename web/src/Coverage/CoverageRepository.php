@@ -55,7 +55,7 @@ final class CoverageRepository
         // (pipeline/coverage/tiles.py). Without this tag the drawer cannot
         // tell the second case from "nobody said anything", so the panel said
         // "unknown" beside a blue pin. The pin and the panel have to agree.
-        'amenity',
+        'amenity', 'shop',
         // Scenic-view detail (letter P): a peak's altitude, which way a
         // viewpoint faces, and how far a waterfall drops. All three are plain
         // OSM tags the harvest now stores; the drawer reads them for P only,

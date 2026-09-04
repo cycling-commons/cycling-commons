@@ -196,6 +196,13 @@ export function covProps(key, tp, d){
       // not claim a tag that is not there, though.
       p.osmPotableTagged = tags.drinking_water!=null;
     }
+    // What this pin IS, for the source line. Letter B is water AND food, so a
+    // pin here is as likely to be a bakery as a tap and the line may not
+    // assume either.
+    if(key==='water'){
+      if(tags.amenity) p.osmAmenity=tags.amenity;
+      if(tags.shop) p.osmShop=tags.shop;
+    }
     const web=tags.website||tags['contact:website'];
     if(web) p.web=web;
     // coverage-provider.md §7 - the detail endpoint says only WHETHER a

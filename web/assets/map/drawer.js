@@ -261,6 +261,26 @@ const WATER_CHECK_LINKS={
   BE:[{label:'SWDE · Wallonia',href:'https://www.swde.be'},{label:'eaupotable.info',href:'https://eaupotable.info/nl/be-belgie'}],
   // NL:[{label:'Drinkwaterkaart · NL',href:'https://www.drinkwaterkaart.nl'}],
 };
+/* What OSM calls this place, from its own tag, when nothing better is known.
+   "bakery" to "Bakery": the tag value IS the answer, and inventing a
+   translation table for every shop value in OSM would be a second vocabulary
+   to keep in step with theirs. */
+function osmKindLabel(p){
+  const raw=String(p.osmShop||p.osmAmenity||'').replace(/_/g,' ').trim();
+  return raw ? raw.charAt(0).toUpperCase()+raw.slice(1) : (D.drinkingWater||'Drinking water');
+}
+
+/* The OSM tags this water-layer pin actually carries, for the source line.
+   Empty parentheses would read worse than none, so a pin we know nothing
+   specific about is credited to OpenStreetMap flat. */
+function osmWaterSource(p){
+  const tags=[];
+  if(p.osmAmenity) tags.push('amenity='+p.osmAmenity);
+  else if(p.osmShop) tags.push('shop='+p.osmShop);
+  if(p.osmPotableTagged) tags.push('drinking_water='+(p.osmPotable?'yes':'no'));
+  return 'OpenStreetMap'+(tags.length?' ('+tags.join(' / ')+')':'');
+}
+
 export function waterDrawer(p, ll){
   // Rider-set potable/type win over OSM; v:1 is verification, not potability (docs/specs/map-and-search.md §12).
   //
@@ -283,17 +303,23 @@ export function waterDrawer(p, ll){
             ? {label:D.potable||'Potable', value:D.potableOsmNo||'Tagged not drinkable in OSM — not utility-verified; avoid unless confirmed on the spot', method:'unverified'}
             : {label:D.potable||'Potable', value:D.potableOsmUnknown||'Nobody has tagged whether this is drinkable, so treat it as unknown', method:'unknown'}));
   const community = isRiderSource(p.srcType);
-  const rec=[{label:D.type||'Type', value:(p.type||p.t) ? trVal(p.type||p.t) : (D.drinkingWater||'Drinking water'), method: p.type?undefined:'OSM'}, potable,
+  // Letter B is water AND food, and 44% of it is shops and eateries. The type
+  // fell back to "Drinking water" whenever the tile properties were missing,
+  // which is every deep link and every search hit, so a bakery opened as a
+  // drinking-water point. Fall back to what OSM calls it before claiming that.
+  const typeValue = (p.type||p.t) ? trVal(p.type||p.t)
+    : (p.osmShop||p.osmAmenity ? osmKindLabel(p) : (D.drinkingWater||'Drinking water'));
+  const rec=[{label:D.type||'Type', value:typeValue, method: p.type?undefined:'OSM'}, potable,
     {label:D.verify||'Verify', value:D.verifyWater||'Cross-check tap-water quality with the regional utility / fountain directory', links:WATER_CHECK_LINKS[p.cc]||[]}];
   // Remaining WaterFood fields; type and potable are structural above.
   rec.push(...schemaRows('B', p, p.id, {skip:['type','potable']}));
   const d={name:p.n||p.t||D.drinkingWater||'Drinking water', headline:(D.headlineDrinking||'drinking water')+' · '+(community?sourceLabel(p.srcType):'OSM'), cur:!!p.v, geom:{ll:[ll.lat,ll.lng]},
     record:rec,
-    // Names what the row ACTUALLY carries. It claimed `drinking_water=yes` for
-    // every OSM water pin, tagged or not, which is the same lie as the row
-    // above wearing a different hat.
-    source: community?sourceLabel(p.srcType)
-      :('OpenStreetMap (amenity=drinking_water'+(p.osmPotableTagged?(p.osmPotable?' / drinking_water=yes':' / drinking_water=no'):'')+')')};
+    // Names what the row ACTUALLY carries, tag by tag. It printed
+    // "amenity=drinking_water / drinking_water=yes" for every pin in this
+    // layer, which is wrong twice over: letter B is water AND food, so 44% of
+    // it is bakeries and cafes that carry neither tag.
+    source: community?sourceLabel(p.srcType):osmWaterSource(p)};
   // Provenance rides along so srcLine can link Scout.
   if(p.srcType) d.srcType=p.srcType;
   // Carry contributor fields: bulk-OSM layers otherwise drop the rider who added the place.
