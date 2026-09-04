@@ -1,7 +1,7 @@
 # Data provider hierarchy and the provider registry
 
-**Status: specified 2026-08-27 (owner). Phases 1-4 built 2026-09-04; phases 5
-and 6 not built.** The Dutch public drinking-water taps are its first real-world
+**Status: specified 2026-08-27 (owner). Phases 1-5 built 2026-09-04; phase 6
+not built.** The Dutch public drinking-water taps are its first real-world
 test, not a separate task.
 
 Phase 1 landed the registry table, the seeded rows, the `pivot` to `authority`
@@ -586,6 +586,65 @@ Measured against the harvest on 2026-08-26 (3287 upstream points, 2744 OSM
 Those numbers are the acceptance test. A run that produces wildly different ones
 means the matcher is wrong, not that the data changed.
 
+**Run for real on 2026-09-04, against the live service and the dev catalogue.**
+The fetch returned **3287 features, 0 refused**, which is the 2026-08-26 count
+exactly. The ingest, dry:
+
+| | count |
+|---|---|
+| read | 3287 |
+| attach to an OSM node | **2429** |
+| insert with no counterpart | **854** |
+| update (two upstream records rounding to one ref) | 4 |
+| left to a rider | 0 |
+| contested (a node a nearer record already holds) | 9 |
+
+**The first run found two defects, and both are fixed rather than accepted.**
+
+*One node, one claim.* The matcher attached the nearest node within the radius
+without asking whether another record already held it, so 10 nodes out of 2515
+were claimed by two taps each. Two items pointing at one `osm_ref` breaks the
+suppression that hides the raw pin: it assumes a single claimant. The nearest
+record now takes the node and the next inserts unattached, which says "a real
+place we could not tie to a node" rather than a wrong tie.
+
+*A letter is not a kind.* §5 said "restricted to the provider's letters", and
+letter B holds **7024** rows in the Netherlands: 2744 `amenity=drinking_water`,
+137 `water_point`, 150 toilets, 35 cafés, 15 fast food and 3910 carrying no
+`amenity` at all. Matching by letter alone tied public taps to the café across
+the road and put the attach count 4% above the number measured for taps alone.
+`data_provider.match_tags` narrows it, and the numbers say the narrowing is
+right: with `amenity=drinking_water` alone the run attaches **2416**, which
+reproduces the 2418 above almost exactly. The configured value also accepts
+`water_point`, because OSM uses it for the same street tap often enough that
+excluding it inserts a second pin beside a mapped one; that is the +13 between
+2416 and 2429.
+
+The third number is NOT reproduced and the difference is understood: 229 was
+counted against the 2744-node snapshot of 2026-08-26, and the dev coverage
+cache has been re-harvested since. Nothing in it is a matcher question.
+
+**The row is seeded PAUSED, and no rows have been written.** `/credits` lists
+every enabled provider, and until a harvest has run there is not one RIVM row
+on the map; naming them would be a claim about the future on a page whose job
+is to be true, which is why the Georegister row is commented out. Enabling it
+and running with `--write` is one deliberate operator act:
+
+```
+make provider-fetch   key=rivm-drinkwater out=/tmp/rivm.json
+make provider-harvest key=rivm-drinkwater file=/tmp/rivm.json          # dry
+make provider-harvest key=rivm-drinkwater file=/tmp/rivm.json write=1
+```
+
+**Two mapping decisions worth knowing.** `beschrijvi` feeds the NOTE, not the
+name: it runs to 254 characters and reads as a paragraph, and `item.name` holds
+200, so these rows carry no name, which is honest because RIVM does not name
+its taps. RIVM's own `type` (`Regulier, 24-7 open` / `Alleen overdag
+bereikbaar` / `Storing`) is dropped for now, because letter B has no field that
+means availability and filling an attribute with no form field behind it would
+break the rule that anything filled in for a rider must be editable by one. It
+goes in when B gains an availability field.
+
 **Licence discipline for this row.** The Public Domain Mark 1.0 statement covers
 the RIVM publication, dataset 30660 on data.overheid.nl. It does **not** cover the GPX
 download on drinkwaterkaart.nl, whose own page says "voor eigen gebruik". We
@@ -653,7 +712,10 @@ than discovered:
    matches and writes. `wallonie-pivot` was NOT moved onto it: its rows come
    from a committed fixture export rather than a live service, so pointing it
    at a WFS is a data-source decision for the register, not a refactor.
-5. **The Dutch taps.** §11. The first dataset added by the intended path.
+5. **The Dutch taps.** ✅ Built 2026-09-04. §11, and it WAS the intended path:
+   a registry row plus a field map, no new code. Its first real run found the
+   two matcher defects recorded above; the acceptance numbers hold once they
+   are fixed. Seeded paused, nothing written yet.
 6. **The pin styling and the legend.** §6, last, because it touches every layer
    and wants the other five settled first. §6.5 is a blocking decision inside
    this phase: the grey collision on water is resolved before a pixel changes.

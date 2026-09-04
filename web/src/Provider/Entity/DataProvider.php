@@ -194,6 +194,26 @@ class DataProvider
     #[ORM\Column(name: 'match_radius_m', type: Types::INTEGER)]
     private int $matchRadiusM = 50;
 
+    /**
+     * Which OSM tags count as the same THING as this dataset's records.
+     *
+     * A letter is not a kind. Letter B holds 7024 rows in the Netherlands, of
+     * which 2744 are `amenity=drinking_water` and the rest are toilets, water
+     * points, cafés and 3910 rows with no `amenity` at all; matching a public
+     * tap by letter alone tied it to the café across the road. This narrows
+     * the match to tags that mean the same thing: `{"amenity":
+     * ["drinking_water", "water_point"]}`.
+     *
+     * NULL keeps the letter-wide match, which is right for a dataset whose
+     * letter really is its kind.
+     *
+     * @var array<string, list<string>>|null
+     *
+     * @see docs/specs/data-provider-hierarchy.md §5
+     */
+    #[ORM\Column(name: 'match_tags', type: Types::JSON, nullable: true)]
+    private ?array $matchTags = null;
+
     /** Free text for a curator: "twice yearly", "monthly". */
     #[ORM\Column(name: 'refresh_cadence', type: Types::STRING, length: 60, nullable: true)]
     private ?string $refreshCadence = null;
@@ -425,6 +445,18 @@ class DataProvider
     public function setMatchRadiusM(int $matchRadiusM): void
     {
         $this->matchRadiusM = $matchRadiusM;
+    }
+
+    /** @return array<string, list<string>>|null */
+    public function getMatchTags(): ?array
+    {
+        return $this->matchTags;
+    }
+
+    /** @param array<string, list<string>>|null $matchTags */
+    public function setMatchTags(?array $matchTags): void
+    {
+        $this->matchTags = $matchTags;
     }
 
     public function getRefreshCadence(): ?string

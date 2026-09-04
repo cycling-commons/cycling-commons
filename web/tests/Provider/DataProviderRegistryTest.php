@@ -32,7 +32,7 @@ final class DataProviderRegistryTest extends KernelTestCase
         // Rank 0 means the question does not apply: a boundary set or a photo
         // library never produces an item row, so it is here to be cited
         // rather than ranked (data-provider-hierarchy.md §9).
-        self::assertSame(['osm', 'wikidata', 'wallonie-pivot'], $keys);
+        self::assertSame(['osm', 'wikidata', 'wallonie-pivot', 'rivm-drinkwater'], $keys);
     }
 
     /**

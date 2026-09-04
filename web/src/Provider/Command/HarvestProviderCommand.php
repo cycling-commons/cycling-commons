@@ -39,6 +39,9 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 #[AsCommand(name: 'app:providers:harvest', description: 'Ingest one provider\'s normalised records into the catalogue')]
 final class HarvestProviderCommand extends Command
 {
+    /** `item.name` is varchar(200); a longer value is a mapping mistake. */
+    private const int NAME_MAX = 200;
+
     public function __construct(
         private readonly ProviderRegistry $registry,
         private readonly ProviderHarvest $harvest,
@@ -115,8 +118,8 @@ final class HarvestProviderCommand extends Command
         }
 
         $io->table(
-            ['read', 'inserted', 'attached to OSM', 'updated', 'left to riders', 'stale upstream'],
-            [[\count($features), $counts['inserted'], $counts['attached'], $counts['updated'], $counts['skipped_rider'], $counts['stale']]],
+            ['read', 'inserted', 'attached to OSM', 'updated', 'left to riders', 'contested node', 'stale upstream'],
+            [[\count($features), $counts['inserted'], $counts['attached'], $counts['updated'], $counts['skipped_rider'], $counts['contested'], $counts['stale']]],
         );
 
         if (!$write) {
@@ -192,13 +195,23 @@ final class HarvestProviderCommand extends Command
                 throw new \RuntimeException(sprintf('Feature %d is outside WGS84 bounds; was it reprojected?', $i));
             }
 
+            $name = \is_string($props['name'] ?? null) ? $props['name'] : '';
+            if (mb_strlen($name) > self::NAME_MAX) {
+                // Almost always a description mapped to `name`: RIVM's
+                // `beschrijvi` runs to 254 characters and is a paragraph a
+                // rider reads, not a title. Refused here rather than left to
+                // fail on the column, because the message has to say WHICH
+                // field is wrong for anybody to fix the map.
+                throw new \RuntimeException(sprintf('Feature %d has a %d-character name; the column holds %d. Is a description mapped to `name`?', $i, mb_strlen($name), self::NAME_MAX));
+            }
+
             $attributes = $props;
             unset($attributes['ref'], $attributes['letter'], $attributes['name'], $attributes['country_code']);
 
             $out[] = [
                 'ref' => $ref,
                 'letter' => $letter,
-                'name' => \is_string($props['name'] ?? null) ? $props['name'] : '',
+                'name' => $name,
                 'lat' => $lat,
                 'lng' => $lng,
                 'attributes' => $attributes,

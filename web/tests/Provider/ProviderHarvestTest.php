@@ -33,7 +33,7 @@ final class ProviderHarvestTest extends KernelTestCase
         self::bootKernel();
         self::ensureCoverageSchema($this->db());
         $this->db()->executeStatement("DELETE FROM item WHERE source_ref LIKE 'harvest-test:%'");
-        $this->db()->executeStatement("DELETE FROM coverage_poi WHERE ref LIKE 'node/9990%'");
+        $this->db()->executeStatement("DELETE FROM coverage_poi WHERE ref LIKE 'node/999%'");
     }
 
     /**
@@ -150,6 +150,68 @@ final class ProviderHarvestTest extends KernelTestCase
         self::assertNotFalse($this->db()->fetchOne(
             "SELECT id FROM item WHERE source_ref = 'harvest-test:vanishes'",
         ), 'a vanished feature keeps its row');
+    }
+
+    /**
+     * Two taps 30 m apart are both inside a 50 m radius of one node. Letting
+     * both attach would point two rows at one node, and the suppression that
+     * hides the raw pin assumes a single claimant. Measured on the Dutch
+     * register: 10 nodes out of 2515 were contested by exactly two taps.
+     */
+    public function testOneOsmNodeIsClaimedByOneFeatureOnly(): void
+    {
+        $provider = $this->provider(50);
+        $this->coveragePoi('node/99903', self::LAT, self::LNG);
+
+        $counts = $this->harvest()->apply($provider, [
+            $this->feature('harvest-test:near', self::LAT, self::LNG),
+            // ~28 m north: inside the radius, but the node is taken.
+            $this->feature('harvest-test:alsonear', self::LAT + 0.00025, self::LNG),
+        ]);
+
+        self::assertSame(2, $counts['inserted'], 'the second is still a real place');
+        self::assertSame(1, $counts['attached']);
+        self::assertSame(1, $counts['contested']);
+        self::assertSame(1, (int) $this->db()->fetchOne(
+            "SELECT COUNT(*) FROM item WHERE osm_ref = 'node/99903'",
+        ));
+        self::assertNull($this->db()->fetchOne(
+            "SELECT osm_ref FROM item WHERE source_ref = 'harvest-test:alsonear'",
+        ));
+    }
+
+    /**
+     * A letter is not a kind. Letter B holds 7024 rows in the Netherlands and
+     * only 2744 of them are taps; matching by letter alone tied a public tap
+     * to the café across the road, and pushed the attach count 4% above the
+     * number the spec measured for taps alone (measured 2026-09-04).
+     */
+    public function testTheMatchIsNarrowedToTagsThatMeanTheSameThing(): void
+    {
+        $provider = $this->provider(50);
+        $provider->setMatchTags(['amenity' => ['drinking_water']]);
+        $this->em()->flush();
+        // A café, in the same letter, right on top of the tap.
+        $this->coveragePoi('node/99904', self::LAT, self::LNG, ['amenity' => 'cafe']);
+
+        $counts = $this->harvest()->apply($provider, [$this->feature('harvest-test:cafe', self::LAT, self::LNG)]);
+
+        self::assertSame(0, $counts['attached'], 'a tap is not the café it stands beside');
+        self::assertNull($this->db()->fetchOne(
+            "SELECT osm_ref FROM item WHERE source_ref = 'harvest-test:cafe'",
+        ));
+    }
+
+    public function testTheSameTapDoesMatchANodeCarryingAnAcceptedTag(): void
+    {
+        $provider = $this->provider(50);
+        $provider->setMatchTags(['amenity' => ['drinking_water', 'water_point']]);
+        $this->em()->flush();
+        $this->coveragePoi('node/99905', self::LAT, self::LNG, ['amenity' => 'water_point']);
+
+        $counts = $this->harvest()->apply($provider, [$this->feature('harvest-test:wp', self::LAT, self::LNG)]);
+
+        self::assertSame(1, $counts['attached']);
     }
 
     // --- the command ------------------------------------------------------
@@ -289,12 +351,13 @@ final class ProviderHarvestTest extends KernelTestCase
         return $provider;
     }
 
-    private function coveragePoi(string $ref, float $lat, float $lng): void
+    /** @param array<string, string> $tags */
+    private function coveragePoi(string $ref, float $lat, float $lng, array $tags = []): void
     {
         $this->db()->executeStatement(
             "INSERT INTO coverage_poi (ref, letter, name, geom, tags, country_code)
-             VALUES (:ref, 'B', 'OSM tap', ST_SetSRID(ST_MakePoint(:lng, :lat), 4326), '{}', 'BE')",
-            ['ref' => $ref, 'lat' => $lat, 'lng' => $lng],
+             VALUES (:ref, 'B', 'OSM tap', ST_SetSRID(ST_MakePoint(:lng, :lat), 4326), :tags, 'BE')",
+            ['ref' => $ref, 'lat' => $lat, 'lng' => $lng, 'tags' => json_encode($tags, \JSON_THROW_ON_ERROR)],
         );
     }
 

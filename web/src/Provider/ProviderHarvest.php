@@ -20,8 +20,11 @@ use Doctrine\DBAL\Connection;
  * three decisions per feature.
  *
  * **Match.** Look for an OpenStreetMap counterpart within the provider's own
- * `match_radius_m`, restricted to the letter. Found means this record and that
- * node are one real place.
+ * `match_radius_m`, restricted to the letter AND, where the provider says so,
+ * to tags that mean the same kind of thing. A letter is not a kind: letter B
+ * holds 7024 rows in the Netherlands and only 2744 of them are taps, so
+ * matching by letter alone tied a public tap to the café across the road.
+ * Found means this record and that node are one real place.
  *
  * **Attach or insert.** A match writes the item with `osm_ref` set to that
  * node, and the existing suppression does the rest: `CoverageRepository`
@@ -29,6 +32,15 @@ use Doctrine\DBAL\Connection;
  * raw pin disappears rather than sitting beside the authority's. No match
  * writes the item with `osm_ref` NULL and `osm_checked_at` set, which is the
  * tri-state "we looked and there is nothing" rather than "nobody looked".
+ *
+ * **One node, one claim.** An OSM node may be claimed by at most one item. Two
+ * taps 30 m apart are both within 50 m of the same node, and letting both
+ * attach would point two rows at one node: the suppression that hides the raw
+ * pin assumes a single claimant, and the second row would be a duplicate
+ * carrying somebody else's identity. The nearest feature takes the node; the
+ * next one inserts unattached, which says "a real place we could not tie to a
+ * node" rather than a wrong tie. Measured on the Dutch register: 10 nodes out
+ * of 2515 were contested by exactly two taps each.
  *
  * **Never touch a rider row.** If the place is already held by `manual`,
  * `user` or `scout`, the authority record is dropped for that place. A curator
@@ -58,11 +70,11 @@ final class ProviderHarvest
     /**
      * @param list<array{ref: string, letter: string, name: string, lat: float, lng: float, attributes: array<string, mixed>, country_code?: string|null}> $features
      *
-     * @return array{attached: int, inserted: int, updated: int, skipped_rider: int, stale: int}
+     * @return array{attached: int, inserted: int, updated: int, skipped_rider: int, stale: int, contested: int}
      */
     public function apply(DataProvider $provider, array $features, \DateTimeImmutable $now = new \DateTimeImmutable()): array
     {
-        $counts = ['attached' => 0, 'inserted' => 0, 'updated' => 0, 'skipped_rider' => 0, 'stale' => 0];
+        $counts = ['attached' => 0, 'inserted' => 0, 'updated' => 0, 'skipped_rider' => 0, 'stale' => 0, 'contested' => 0];
         $seen = [];
 
         foreach ($features as $feature) {
@@ -75,6 +87,13 @@ final class ProviderHarvest
             }
 
             $osmRef = $this->osmCounterpart($provider, $feature);
+            if (null === $osmRef && $this->hasHeldNeighbour($provider, $feature)) {
+                // There WAS a node in range; a nearer record already holds it.
+                // Counted apart from a plain miss, because "nothing is mapped
+                // here" and "somebody got there first" are different answers
+                // and only one of them means the radius is too wide.
+                ++$counts['contested'];
+            }
             $existing = $this->existingRef($ref);
 
             if (null !== $existing) {
@@ -135,11 +154,21 @@ final class ProviderHarvest
      */
     private function osmCounterpart(DataProvider $provider, array $feature): ?string
     {
+        [$tagSql, $tagParams] = $this->tagFilter($provider);
+
         $ref = $this->db->fetchOne(
             'SELECT cp.ref
                FROM coverage_poi cp
               WHERE cp.letter = :letter
                 AND ST_DWithin(cp.geom::geography, ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography, :radius)
+                -- Not a node some other row already IS. `osm_ref` is the
+                -- identity spine, and two items claiming one node is two rows
+                -- claiming to be the same thing.
+                AND NOT EXISTS (
+                    SELECT 1 FROM item held
+                     WHERE held.osm_ref = cp.ref AND held.source_ref <> :self
+                )
+                '.$tagSql.'
               ORDER BY ST_Distance(cp.geom::geography, ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography)
               LIMIT 1',
             [
@@ -147,10 +176,70 @@ final class ProviderHarvest
                 'lat' => $feature['lat'],
                 'lng' => $feature['lng'],
                 'radius' => $provider->getMatchRadiusM(),
-            ],
+                'self' => $feature['ref'],
+            ] + $tagParams,
         );
 
         return false === $ref ? null : (string) $ref;
+    }
+
+    /**
+     * True when a node was in range but already spoken for.
+     *
+     * Only asked when the first query found nothing free, so the common case
+     * still costs one query.
+     *
+     * @param array{ref: string, letter: string, name: string, lat: float, lng: float, attributes: array<string, mixed>, country_code?: string|null} $feature
+     */
+    private function hasHeldNeighbour(DataProvider $provider, array $feature): bool
+    {
+        [$tagSql, $tagParams] = $this->tagFilter($provider);
+
+        return false !== $this->db->fetchOne(
+            'SELECT 1
+               FROM coverage_poi cp
+              WHERE cp.letter = :letter
+                AND ST_DWithin(cp.geom::geography, ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography, :radius)
+                '.$tagSql.'
+              LIMIT 1',
+            [
+                'letter' => $feature['letter'],
+                'lat' => $feature['lat'],
+                'lng' => $feature['lng'],
+                'radius' => $provider->getMatchRadiusM(),
+            ] + $tagParams,
+        );
+    }
+
+    /**
+     * The tag test, as SQL and its parameters.
+     *
+     * Empty when the provider names no tags, which keeps the letter-wide
+     * match for a dataset whose letter really is its kind.
+     *
+     * @return array{0: string, 1: array<string, string>}
+     */
+    private function tagFilter(DataProvider $provider): array
+    {
+        $tags = $provider->getMatchTags() ?? [];
+        if ([] === $tags) {
+            return ['', []];
+        }
+
+        $clauses = [];
+        $params = [];
+        $i = 0;
+        foreach ($tags as $key => $values) {
+            foreach ($values as $value) {
+                $name = 'tag'.$i++;
+                // `->>` rather than `@>`: the value is a plain string, and the
+                // containment operator would want a JSON document built per row.
+                $clauses[] = 'cp.tags->>'.$this->db->quote($key).' = :'.$name;
+                $params[$name] = $value;
+            }
+        }
+
+        return [[] === $clauses ? '' : 'AND ('.implode(' OR ', $clauses).')', $params];
     }
 
     private function existingRef(string $ref): ?int
