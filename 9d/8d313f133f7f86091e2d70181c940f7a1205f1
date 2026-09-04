@@ -1,0 +1,30 @@
+pipeline/tests/test_contract.py
+  s_7e0805b9b01558::t_2ff54862262702 49-52
+pipeline/contract/coverage-contract.json
+  s_7e0805b9b01558::t_84447da1aff57d 28-29
+pipeline/coverage/tiles.py
+  s_7e0805b9b01558::t_84447da1aff57d 45-51
+pipeline/coverage/contract.py
+  s_7e0805b9b01558::t_2ff54862262702 26
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "9d8d313f133f7f86091e2d70181c940f7a1205f1",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_7e0805b9b01558": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "33a81c58-e18b-4166-9873-c160cdde84a9",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
