@@ -179,6 +179,23 @@ export function covProps(key, tp, d){
     if(d.name) p.n=d.name;
     if(key==='services' && d.kind) p.serviceKind=d.kind;
     const tags=d.tags||{};
+    // The deep-link and search paths build `tp` by hand ({ref, n, kind}), so
+    // they carry no `potable` and the drawer used to fall back to "tagged
+    // drinkable in OSM" for every water POI they opened, including ones
+    // tagged drinking_water=no. Derive it from the tags the detail response
+    // does carry, using the SAME rule the tile expression uses
+    // (pipeline/coverage/tiles.py, osm-data-architecture.md §5): drinkable
+    // unless OSM says otherwise. The pin and the panel have to agree, and the
+    // pin is drawn from that rule.
+    if(key==='water' && p.osmPotable===undefined && (tags.drinking_water!=null || tags.amenity!=null)){
+      p.osmPotable = tags.drinking_water==='yes'
+        || (tags.amenity==='drinking_water' && tags.drinking_water==null);
+      // Whether OSM SAID it or we inferred it from `amenity=drinking_water`.
+      // The pin is the same blue either way, and it should be: a mapped tap
+      // with nothing said against it is worth riding to. The sentence must
+      // not claim a tag that is not there, though.
+      p.osmPotableTagged = tags.drinking_water!=null;
+    }
     const web=tags.website||tags['contact:website'];
     if(web) p.web=web;
     // coverage-provider.md §7 - the detail endpoint says only WHETHER a

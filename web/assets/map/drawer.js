@@ -263,11 +263,25 @@ const WATER_CHECK_LINKS={
 };
 export function waterDrawer(p, ll){
   // Rider-set potable/type win over OSM; v:1 is verification, not potability (docs/specs/map-and-search.md §12).
+  //
+  // FOUR answers, and they are the pin's own two colours split by how we
+  // know. The pipeline draws a tap blue when OSM says `drinking_water=yes` OR
+  // when it is an `amenity=drinking_water` node with nothing said against it
+  // (pipeline/coverage/tiles.py). Only the first of those was ever TAGGED
+  // drinkable, and until 2026-09-04 the panel called both of them tagged, on
+  // 194,751 of the 201,049 taps in the cache. Worse, the deep-link and search
+  // paths build their properties by hand and carried no potability at all, so
+  // every water POI opened that way claimed to be tagged drinkable, including
+  // ones tagged drinking_water=no.
   const potable = p.potable
     ? {label:D.potable||'Potable', value:trVal(p.potable)}
-    : (p.osmPotable===false
-        ? {label:D.potable||'Potable', value:D.potableOsmNo||'Tagged not drinkable in OSM — not utility-verified; avoid unless confirmed on the spot', method:'unverified'}
-        : {label:D.potable||'Potable', value:D.potableOsm||'Tagged drinkable in OSM — not utility-verified; confirm on the spot', method:'unverified'});
+    : (p.osmPotable===true
+        ? (p.osmPotableTagged===false
+            ? {label:D.potable||'Potable', value:D.potableOsmImplied||'Mapped in OSM as a drinking-water tap, and nothing says otherwise; confirm on the spot', method:'unverified'}
+            : {label:D.potable||'Potable', value:D.potableOsm||'Tagged drinkable in OSM — not utility-verified; confirm on the spot', method:'unverified'})
+        : (p.osmPotable===false
+            ? {label:D.potable||'Potable', value:D.potableOsmNo||'Tagged not drinkable in OSM — not utility-verified; avoid unless confirmed on the spot', method:'unverified'}
+            : {label:D.potable||'Potable', value:D.potableOsmUnknown||'Nobody has tagged whether this is drinkable, so treat it as unknown', method:'unknown'}));
   const community = isRiderSource(p.srcType);
   const rec=[{label:D.type||'Type', value:(p.type||p.t) ? trVal(p.type||p.t) : (D.drinkingWater||'Drinking water'), method: p.type?undefined:'OSM'}, potable,
     {label:D.verify||'Verify', value:D.verifyWater||'Cross-check tap-water quality with the regional utility / fountain directory', links:WATER_CHECK_LINKS[p.cc]||[]}];
@@ -275,7 +289,11 @@ export function waterDrawer(p, ll){
   rec.push(...schemaRows('B', p, p.id, {skip:['type','potable']}));
   const d={name:p.n||p.t||D.drinkingWater||'Drinking water', headline:(D.headlineDrinking||'drinking water')+' · '+(community?sourceLabel(p.srcType):'OSM'), cur:!!p.v, geom:{ll:[ll.lat,ll.lng]},
     record:rec,
-    source: community?sourceLabel(p.srcType):'OpenStreetMap (amenity=drinking_water / drinking_water=yes)'};
+    // Names what the row ACTUALLY carries. It claimed `drinking_water=yes` for
+    // every OSM water pin, tagged or not, which is the same lie as the row
+    // above wearing a different hat.
+    source: community?sourceLabel(p.srcType)
+      :('OpenStreetMap (amenity=drinking_water'+(p.osmPotableTagged?(p.osmPotable?' / drinking_water=yes':' / drinking_water=no'):'')+')')};
   // Provenance rides along so srcLine can link Scout.
   if(p.srcType) d.srcType=p.srcType;
   // Carry contributor fields: bulk-OSM layers otherwise drop the rider who added the place.

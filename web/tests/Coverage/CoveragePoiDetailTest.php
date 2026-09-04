@@ -99,11 +99,16 @@ final class CoveragePoiDetailTest extends WebTestCase
         // the server. assertEquals — jsonb does not preserve key order.
         // `wikidata` joined the whitelist with the Commons photo cache
         // (coverage-provider.md §7): it is the citation for a picture a rider
-        // may be looking at. `source` is still trimmed, which is the assertion
-        // that matters here.
+        // may be looking at. `amenity` joined it on 2026-09-04: the water pin
+        // is drawn blue for `drinking_water=yes` OR for an
+        // `amenity=drinking_water` node with nothing said against it, and
+        // without the tag the drawer could not tell the second case from
+        // "nobody said anything", so the panel read "unknown" beside a blue
+        // pin. `source` is still trimmed, which is the assertion that matters
+        // here.
         self::assertEquals(
-            ['drinking_water' => 'yes', 'opening_hours' => '24/7', 'operator' => 'Ville de Test',
-                'wikidata' => 'Q1234567'],
+            ['amenity' => 'drinking_water', 'drinking_water' => 'yes', 'opening_hours' => '24/7',
+                'operator' => 'Ville de Test', 'wikidata' => 'Q1234567'],
             $data['tags'],
         );
         self::assertArrayNotHasKey('source', (array) $data['tags'], 'the whitelist still trims');

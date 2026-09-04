@@ -49,6 +49,13 @@ final class CoverageRepository
         'opening_hours', 'website', 'contact:website', 'url', 'phone', 'contact:phone',
         'addr:city', 'addr:street', 'addr:housenumber', 'operator', 'description',
         'wheelchair', 'drinking_water', 'fee', 'capacity',
+        // `amenity` is here for one reason: the water pin is drawn blue when
+        // OSM says `drinking_water=yes` OR when the node is an
+        // `amenity=drinking_water` with nothing said against it
+        // (pipeline/coverage/tiles.py). Without this tag the drawer cannot
+        // tell the second case from "nobody said anything", so the panel said
+        // "unknown" beside a blue pin. The pin and the panel have to agree.
+        'amenity',
         // Scenic-view detail (letter P): a peak's altitude, which way a
         // viewpoint faces, and how far a waterfall drops. All three are plain
         // OSM tags the harvest now stores; the drawer reads them for P only,
