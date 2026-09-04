@@ -1,0 +1,92 @@
+web/assets/map/i18n.js
+  s_7e0805b9b01558::t_65b941cb8998e4 19
+web/src/Catalog/Entity/DataProvider.php
+  s_7e0805b9b01558::t_40921b3869929e 1-409
+web/assets/map/catalog-load.js
+  s_7e0805b9b01558::t_65b941cb8998e4 39,50-54,56
+web/tests/Catalog/SeedManualCatalogCommandTest.php
+  s_7e0805b9b01558::t_68e75aa039e322 291
+web/tests/fixtures/catalog/stays.json
+  s_7e0805b9b01558::t_a98a0e9f78612b 3
+docs/specs/coverage-provider.md
+  s_7e0805b9b01558::t_b6cb7499d4f421 904
+web/src/Catalog/ItemSource.php
+  s_7e0805b9b01558::t_b0a39202621512 13,20-26,28-29,51-57,68
+  s_7e0805b9b01558::t_d347093582147e 27
+web/tests/Command/Coverage/RetireLegacyOsmCommandTest.php
+  s_7e0805b9b01558::t_3ae11485266d82 110
+tools/wallonia/export.py
+  s_7e0805b9b01558::t_a98a0e9f78612b 81-86
+web/assets/map/drawer.js
+  s_7e0805b9b01558::t_65b941cb8998e4 185-188
+web/tests/Command/DedupePlacesCommandTest.php
+  s_7e0805b9b01558::t_3ae11485266d82 44,60,73,88,102,142,152
+web/migrations/Version20260904110000.php
+  s_7e0805b9b01558::t_23be37733de1d3 1-125
+web/src/Catalog/Import/OsmLinker.php
+  s_7e0805b9b01558::t_65b941cb8998e4 19-20
+web/tests/Catalog/DataProviderRegistryTest.php
+  s_7e0805b9b01558::t_5efd37351c94cb 1-98
+web/tests/Catalog/DuplicateGuardTest.php
+  s_7e0805b9b01558::t_3ae11485266d82 117,137
+  s_7e0805b9b01558::t_8683710a56d02a 119
+web/src/Catalog/CuratedReadiness.php
+  s_7e0805b9b01558::t_65b941cb8998e4 95
+web/tests/Moderation/ModerateDataDeskTest.php
+  s_7e0805b9b01558::t_3ae11485266d82 306
+web/src/Catalog/CoverageStatsProvider.php
+  s_7e0805b9b01558::t_65b941cb8998e4 194
+docs/specs/data-provider-hierarchy.md
+  s_7e0805b9b01558::t_3398610c749e53 3-4,7-11,91-97,558-564
+web/src/Api/V1/PublicItemsProvider.php
+  s_7e0805b9b01558::t_504999d671da3b 37
+docs/specs/data-source-register.md
+  s_7e0805b9b01558::t_b6cb7499d4f421 8-10
+web/src/Catalog/CatalogProvider.php
+  s_7e0805b9b01558::t_86ee80e8ee3033 147
+  s_7e0805b9b01558::t_65b941cb8998e4 52-54,56-57
+web/tests/Catalog/ManualSourceTest.php
+  s_7e0805b9b01558::t_68e75aa039e322 20
+web/src/Catalog/Entity/Item.php
+  s_7e0805b9b01558::t_b0a39202621512 67-85,96,254-262
+  s_7e0805b9b01558::t_76377604234fcb 263
+wiki/data-priority.md
+  s_7e0805b9b01558::t_b6cb7499d4f421 74
+web/src/Coverage/CoverageRepository.php
+  s_7e0805b9b01558::t_65b941cb8998e4 23
+web/assets/map/places.js
+  s_7e0805b9b01558::t_504999d671da3b 154-155
+  s_7e0805b9b01558::t_65b941cb8998e4 114-116,118
+  s_7e0805b9b01558::t_6fcd83ea2dfc13 158,217
+web/assets/map/item-index.js
+  s_7e0805b9b01558::t_65b941cb8998e4 54
+  s_7e0805b9b01558::t_2afe02f57b6d49 7,62
+web/tests/Catalog/CatalogProviderTest.php
+  s_7e0805b9b01558::t_3ae11485266d82 152,154,156,159,172,178
+  s_7e0805b9b01558::t_8683710a56d02a 168,175,179
+web/tests/Catalog/ItemSourceRankTest.php
+  s_7e0805b9b01558::t_3ae11485266d82 30,43,56
+docs/specs/catalog-data-model.md
+  s_7e0805b9b01558::t_b6cb7499d4f421 257,268-275,279,349,960,1040
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "3d1577359d8d7d5645f9f8c36f88e2807090f4c9",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_7e0805b9b01558": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "33a81c58-e18b-4166-9873-c160cdde84a9",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
