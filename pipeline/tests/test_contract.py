@@ -46,7 +46,10 @@ def test_selectors_carry_tag_key_value_label():
 
 def test_letter_specific_tile_props():
     contract = load_contract()
-    assert contract.letters["B"].tile_props == ["potable"]
+    # `food` joined `potable` on 2026-09-04: letter B is water AND food, and
+    # 44% of its rows are shops and eateries that drew a water drop because a
+    # letter was all the tile said.
+    assert contract.letters["B"].tile_props == ["potable", "food"]
     assert contract.letters["D"].tile_props == ["kind"]
     assert contract.letters["O"].tile_props == ["acc"]
     for letter in ("F", "G", "P", "Q"):

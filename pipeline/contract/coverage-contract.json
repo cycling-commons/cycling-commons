@@ -25,7 +25,8 @@
         }
       ],
       "tileProps": [
-        "potable"
+        "potable",
+        "food"
       ]
     },
     "C": {

@@ -23,7 +23,7 @@ LETTERS = frozenset("BCDFGOPQ")
 # per-letter tile properties. They must survive the storedTagKeys trim or the
 # derived tile column is silently always NULL; load_contract enforces that, and
 # test_tiles.py pins this constant to the SQL so the two cannot drift.
-TILE_DERIVED_TAG_KEYS = frozenset({"amenity", "drinking_water", "wheelchair"})
+TILE_DERIVED_TAG_KEYS = frozenset({"amenity", "drinking_water", "shop", "wheelchair"})
 
 
 @dataclass(frozen=True)
