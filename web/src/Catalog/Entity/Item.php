@@ -8,6 +8,7 @@ namespace App\Catalog\Entity;
 
 use App\Catalog\ItemSource;
 use App\Catalog\ItemState;
+use App\Provider\Entity\DataProvider;
 use Doctrine\ORM\Mapping as ORM;
 
 /**

@@ -4,10 +4,10 @@
 
 declare(strict_types=1);
 
-namespace App\Tests\Catalog;
+namespace App\Tests\Provider;
 
-use App\Catalog\Entity\DataProvider;
 use App\Catalog\ItemSource;
+use App\Provider\Entity\DataProvider;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;

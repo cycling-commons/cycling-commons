@@ -30,6 +30,11 @@ doctrine:
                 dir: '%kernel.project_dir%/src/Catalog/Entity'
                 prefix: 'App\Catalog\Entity'
                 alias: Catalog
+            Provider:
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Provider/Entity'
+                prefix: 'App\Provider\Entity'
+                alias: Provider
             Messaging:
                 is_bundle: false
                 dir: '%kernel.project_dir%/src/Messaging/Entity'

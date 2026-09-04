@@ -2007,7 +2007,7 @@ map:
   d_where: 'Où'
   d_place: 'Lieu'
   d_wallonia: 'Wallonie'
-  d_official_registry: 'Registre officiel Tourisme Wallonie'
+  d_official_registry: 'Inscrit à un registre officiel'
   d_confirmed: 'Confirmé'
   d_simulated: 'simulé'
   d_drinking_water: 'Eau potable'

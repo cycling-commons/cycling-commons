@@ -2479,7 +2479,7 @@ map:
   d_where: 'Dónde'
   d_place: 'Lugar'
   d_wallonia: 'Valonia'
-  d_official_registry: 'Registro oficial de Tourisme Wallonie'
+  d_official_registry: 'Inscrito en un registro oficial'
   d_confirmed: 'Confirmado'
   d_simulated: 'simulado'
   d_drinking_water: 'Agua potable'

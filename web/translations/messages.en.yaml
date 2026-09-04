@@ -2475,7 +2475,7 @@ map:
   d_where: 'Where'
   d_place: 'Place'
   d_wallonia: 'Wallonia'
-  d_official_registry: 'Official Tourisme Wallonie registry'
+  d_official_registry: 'Official registry entry'
   d_confirmed: 'Confirmed'
   d_simulated: 'simulated'
   d_drinking_water: 'Drinking water'

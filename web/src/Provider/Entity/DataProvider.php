@@ -4,7 +4,7 @@
 
 declare(strict_types=1);
 
-namespace App\Catalog\Entity;
+namespace App\Provider\Entity;
 
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
@@ -29,7 +29,12 @@ use Doctrine\ORM\Mapping as ORM;
  * answers "who do we cite, and under what licence" for every row on the map.
  * A credits page assembled from two places drifts.
  *
- * @see docs/specs/data-provider-hierarchy.md §3
+ * `App\Provider` is its own top-level module beside `App\Catalog` and
+ * `App\Coverage` because it is owned by neither: the catalog consumes its
+ * rows, the coverage cache is suppressed by them, and the credits page and
+ * the map both cite it (data-provider-hierarchy.md §9.1).
+ *
+ * @see docs/specs/data-provider-hierarchy.md §3, §9.1
  *
  * @api
  */

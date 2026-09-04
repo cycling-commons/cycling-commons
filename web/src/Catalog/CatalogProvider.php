@@ -8,6 +8,7 @@ namespace App\Catalog;
 
 use App\Catalog\Links\LinkVerdictStore;
 use App\Moderation\ModerationScope;
+use App\Provider\ProviderCitations;
 use App\Service\BuildVersion;
 use Doctrine\DBAL\Connection;
 
@@ -30,6 +31,10 @@ final class CatalogProvider
         private readonly BuildVersion $buildVersion,
         private readonly ConfirmationFreshness $freshness,
         private readonly LinkVerdictStore $linkVerdicts,
+        // Who published each authority row, sent with the payload so the map
+        // never holds a table of providers in a constant
+        // (data-provider-hierarchy.md §7).
+        private readonly ProviderCitations $citations,
     ) {
     }
 
@@ -62,6 +67,10 @@ final class CatalogProvider
             // The heat layer is derived and carries no letter; it is /map/heat.json, not this payload.
             // docs/specs/osm-data-architecture.md §8 — client-side tile dedupe.
             'refs' => $this->curatedRefs(),
+            // Who to credit, keyed by the `pk` a feature carries. The map used
+            // to hold one provider's citation as a front-end constant; a table
+            // of them belongs where the table is (data-provider-hierarchy.md §7).
+            'providers' => $this->citations->all(),
         ];
     }
 
@@ -133,16 +142,16 @@ final class CatalogProvider
     }
 
     /**
-     * Verified = verified state, a non-`form` confirmation, or PIVOT provenance.
+     * Verified = verified state, a non-`form` confirmation, or authority provenance.
      *
      * @see docs/specs/map-and-search.md §12
      *
-     * @return list<array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null, region_id: int|null, verified: bool, by_name: string|null, by_public: bool|null, by_uuid: string|null, letter: string, last_confirmed: string|null}>
+     * @return list<array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null, pk: string|null, region_id: int|null, verified: bool, by_name: string|null, by_public: bool|null, by_uuid: string|null, letter: string, last_confirmed: string|null}>
      */
     private function itemRows(string $letter, ?string $source = null, ?string $excludeSource = null, ?int $onlyId = null, bool $anyState = false): array
     {
         // Creator is the earliest type=new submission; harvested rows stay anonymous.
-        $sql = 'SELECT i.id, i.name, i.letter, ST_AsGeoJSON(i.geom) AS geom, i.attributes, i.source_ref, i.source, s.name AS prov, i.region_id,
+        $sql = 'SELECT i.id, i.name, i.letter, ST_AsGeoJSON(i.geom) AS geom, i.attributes, i.source_ref, i.source, s.name AS prov, i.region_id, dp.provider_key AS pk,
                        contributor.display_name AS by_name, contributor.public_profile AS by_public, contributor.uuid AS by_uuid,
                        (i.state = \'verified\' OR i.source = \'authority\' OR EXISTS (SELECT 1 FROM item_confirmation c WHERE c.item_id = i.id AND c.source <> \'form\')) AS verified,
                        -- docs/specs/moderation-and-contribution.md 6.3: `form` must not reset freshness.
@@ -150,6 +159,10 @@ final class CatalogProvider
                          WHERE c2.item_id = i.id AND c2.source <> \'form\') AS last_confirmed
                 FROM item i
                 LEFT JOIN world_subdivision s ON s.id = i.subdivision_id
+                -- Which authority published the row, for the citation line in
+                -- the drawer. NULL for every other source
+                -- (data-provider-hierarchy.md 7).
+                LEFT JOIN data_provider dp ON dp.id = i.provider_id
                 LEFT JOIN LATERAL (
                     SELECT u.display_name, u.public_profile, u.uuid
                       FROM submission sub
@@ -255,7 +268,7 @@ final class CatalogProvider
      * The per-row mapping shared by the bulk payload and featureForItem(), so
      * a live-inserted feature can never drift from the served one.
      *
-     * @param array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null, region_id: int|null, verified: bool, by_name: string|null, by_public: bool|null, by_uuid: string|null, letter: string, last_confirmed: string|null} $row
+     * @param array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null, pk: string|null, region_id: int|null, verified: bool, by_name: string|null, by_public: bool|null, by_uuid: string|null, letter: string, last_confirmed: string|null} $row
      *
      * @return array{type: string, properties: array<string, mixed>, geometry: mixed}
      */
@@ -269,6 +282,13 @@ final class CatalogProvider
             $props['prov'] = $row['prov'];
         }
         $props['srcType'] = $row['source'];
+        // The publisher's slug, resolved against the payload's own `providers`
+        // map by the drawer. Absent for every source that has no publisher, so
+        // the payload stays byte-stable for the rows that had no such key
+        // before (data-provider-hierarchy.md §7).
+        if (null !== $row['pk']) {
+            $props['pk'] = $row['pk'];
+        }
         // Named only with consent. Fail-closed: missing/private profile → by:0 (anonymous), never a leaked name.
         if (null !== ($row['by_name'] ?? null)) {
             $public = (bool) $row['by_public'];

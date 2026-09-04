@@ -34,8 +34,21 @@ test('ItemSource enum still parses out of the PHP file', () => {
   assert.ok(labelsBlock, 'SOURCE_LABELS block not found in i18n.js');
 });
 
+// `authority` is deliberately absent from SOURCE_LABELS: its label is the
+// publisher's name, which lives in the data_provider row and reaches the map
+// with the payload (docs/specs/data-provider-hierarchy.md 7). A constant here
+// could only name one of them.
+const LABELLED_BY_DATA = ['authority'];
+
+test('the drawer resolves an authority label from the payload, not a constant', () => {
+  assert.doesNotMatch(labelsBlock[0], /(^|[\s{,])authority:/,
+    'SOURCE_LABELS must not name a provider: a second one makes the constant a lie');
+  assert.match(read('assets/map/drawer.js'), /window\.CC_PROVIDERS/,
+    'the drawer must read the provider map the payload delivers');
+});
+
 test('every ItemSource case has a SOURCE_LABELS mapping', () => {
-  for (const c of enumCases) {
+  for (const c of enumCases.filter(c => !LABELLED_BY_DATA.includes(c))) {
     assert.match(
       labelsBlock[0],
       new RegExp(`(^|[\\s{,])${c}:`),

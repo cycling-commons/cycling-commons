@@ -181,6 +181,11 @@ services:
 
 when@test:
     services:
+        # Fetched directly by the provider-citation tests.
+        App\Provider\ProviderCitations:
+            public: true
+            autowire: true
+
         # Swapped by the inactive-locale tests to serve a narrower set of
         # languages than the build carries (dev-environment.md §7 i18n).
         App\Routing\ActiveLocales:

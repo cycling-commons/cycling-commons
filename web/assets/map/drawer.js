@@ -180,18 +180,41 @@ function recRowsHtml(recs){
   }).join('');
 }
 
+/* The registry row that published this feature, or null.
+   `pk` is on the feature; the map of providers came with the payload
+   (docs/specs/data-provider-hierarchy.md §7). A feature with no `pk`, or a
+   `pk` the payload does not carry, is simply not credited to anybody: the
+   drawer falls back to OSM rather than inventing a name. */
+/* The full provenance line for an authority row, composed from the registry
+   fields rather than written out here. This was one hardcoded string naming
+   one publisher, which is the thing the registry exists to end
+   (docs/specs/data-provider-hierarchy.md 7). */
+function providerSource(prov){
+  const parts=[prov.name];
+  if(prov.licence) parts.push(prov.licence);
+  const head=parts.join(' - ');
+  return prov.fullName && prov.fullName!==prov.name ? head+' \u00b7 '+prov.fullName : head;
+}
+
+function providerOf(p){
+  if(!p || !p.pk) return null;
+  const all = (typeof window!=='undefined' && window.CC_PROVIDERS) || {};
+  return all[p.pk] || null;
+}
+
 export function osmDrawer(layer, p, ll, src){
   const lbl=(layer||{}).label||D.place||'Place';
   // An authority row: its publisher is the body of record, so the drawer
-  // credits them, not OSM. The name is still hardcoded here; it moves to
-  // the registry row with the citation work (data-provider-hierarchy.md §7).
-  const pivot=p.src==='authority';
+  // credits them and not OSM. The name comes from the payload's own provider
+  // map, so a provider added at the desk is credited without a deploy and a
+  // licence corrected there is corrected here (data-provider-hierarchy.md §7).
+  const provider = providerOf(p);
   const community = isRiderSource(p.srcType);
-  const originLbl = pivot?'Tourisme Wallonie':(community?sourceLabel(p.srcType):'OSM');
+  const originLbl = provider ? provider.name : (community?sourceLabel(p.srcType):'OSM');
   // serviceKind label wins over raw OSM p.t when present.
   const kindLbl = p.serviceKind && ({shop:D.kindShop, station:D.kindStation, pump:D.kindPump}[p.serviceKind] || lbl);
   const typeLbl = kindLbl || p.t || lbl;
-  let rec=[{label:D.type||'Type', value:typeLbl, method: pivot?'Tourisme Wallonie':'OSM'}];
+  let rec=[{label:D.type||'Type', value:typeLbl, method: provider ? provider.name : 'OSM'}];
   if(p.town && layer.letter!=='O') rec.push({label:D.town||'Town', value:p.town});  // docs/specs/coverage-provider.md §2 — no province row when region_id is null (no Wallonia fallback).
   if(p.prov) rec.push({label:D.province||'Province', value:p.prov});
   // Scenic-view facts OSM already holds (docs/specs/coverage-provider.md §5):
@@ -200,7 +223,10 @@ export function osmDrawer(layer, p, ll, src){
   if(p.ele!=null) rec.push({label:D.elevation||'Elevation', value:elevValue(p.ele)});
   if(p.viewDir) rec.push({label:D.viewDirection||'View direction', value:p.viewDir});
   if(p.drop!=null) rec.push({label:D.drop||'Drop', value:elevValue(p.drop)});
-  if(pivot) rec.push({label:D.listed||'Listed', value:D.officialRegistry||'Official Tourisme Wallonie registry', method:'official'});
+  // The row says WHAT this is (an official register entry) and the method
+  // says WHOSE. The wording carried the publisher's name until 2026-09-04,
+  // which stopped being true the moment a second authority existed.
+  if(provider) rec.push({label:D.listed||'Listed', value:D.officialRegistry||'Official registry entry', method:provider.name});
   // docs/specs/map-and-search.md §12 — simulated flags die. Skip structural `web` when the letter schema already declares it.
   const schemaHasWeb = (((window.CC_FIELD_SCHEMA||{})[(layer||{}).letter])||[]).some(f=>f.key==='web');
   if(p.web && !schemaHasWeb) rec.push({label:D.website||'Website', html:true, value:linkValue(p.web, p.web.replace(/^https?:\/\//,'').replace(/\/$/,''))});
@@ -210,7 +236,7 @@ export function osmDrawer(layer, p, ll, src){
   const attrLabels = new Set(attrRows.filter(r=>!r.empty).map(r=>r.label));
   rec = rec.filter(r=>!attrLabels.has(r.label)).concat(attrRows);
   const d={name:p.n||p.t||lbl, headline:typeLbl+' · '+originLbl, cur:!!p.v, geom:{ll:[ll.lat,ll.lng]}, record:rec,
-    source: pivot?'Tourisme Wallonie (TW) — CC-BY 4.0 · PIVOT / Géoportail de la Wallonie'
+    source: provider?providerSource(provider)
       :(community?sourceLabel(p.srcType):(src||sourceLabel(p.srcType)||'OpenStreetMap'))};
   // Provenance rides along so srcLine can link Scout.
   if(p.srcType) d.srcType=p.srcType;

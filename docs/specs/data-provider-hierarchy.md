@@ -564,6 +564,20 @@ than discovered:
    a second authority for it to order.
 2. **Citation from the registry.** Drawer and credits read the table. The
    hardcoded string goes.
+   - **The drawer half is built (2026-09-04).** The catalog payload carries a
+     `providers` map (`App\Provider\ProviderCitations`) and every authority
+     feature carries `pk`, its publisher's slug. `assets/map/drawer.js` looks
+     the citation up in what it was given, so a provider added at the desk is
+     credited with no deploy. `authority:'Tourisme Wallonie (CC-BY)'` is gone
+     from `assets/map/i18n.js`, and the "Listed" row's wording no longer names
+     one publisher: it reads "Official registry entry" with the publisher as
+     the method, in all five catalogues.
+   - **The credits half is not.** It needs registry rows for the other six
+     providers §8.8 of credits-page.md lists (Overture, Geofabrik, Wikimedia
+     Commons, Wikipedia, Copernicus, and the parked Georegister), the
+     `blurb_key` / `blurb` columns of §9.2, and the licence-derived weight of
+     §9.3. Removing a hand-written row before its registry row exists would
+     drop a required attribution, so the two land together.
 3. **The curator desk.** §8.
 4. **The generic harvester.** §5, with `wallonie-pivot` moved onto it as the
    proof that it is generic, since that dataset already works.

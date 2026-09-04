@@ -24,7 +24,7 @@ enum ItemSource: string
      * `pivot` until 2026-09-04, after the first such dataset we ingested
      * (Geoportail Wallonie), which said nothing about what the value meant.
      * Which authority a row came from is `item.provider`, a row in
-     * `data_provider` ({@see Entity\DataProvider}).
+     * `data_provider` ({@see \App\Provider\Entity\DataProvider}).
      */
     case Authority = 'authority';
     case Wikidata = 'wikidata';

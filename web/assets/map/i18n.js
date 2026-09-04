@@ -16,7 +16,7 @@ export const trVal = v => VALUE_TR[v] || v;
 // srcType (ItemSource) → drawer "Source ·" label, so a rider-added item never
 // reads as OpenStreetMap just because it lives in a bulk-OSM layer.
 const SOURCE_LABELS = {
-  osm:'OpenStreetMap', authority:'Tourisme Wallonie (CC-BY)', wikidata:'Wikidata',
+  osm:'OpenStreetMap', wikidata:'Wikidata',
   // `manual` is a SeedManualCatalogCommand row — stays in RIDER_SOURCES so it
   // never falls back to OSM, but the label must not claim a rider added it.
   auto:D.srcAuto||'Derived by the pipeline', user:D.srcRider||'Rider-contributed', manual:D.srcManual||'Hand-curated',

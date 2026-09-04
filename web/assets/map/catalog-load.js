@@ -47,6 +47,10 @@
     window.CC_TOILETS_OSM = d.C;
     // Coverage dedupe (docs/specs/coverage-provider.md §6): source_refs already served as items.
     window.CC_CURATED_REFS = d.refs || [];
+    // Who to credit, keyed by the `pk` a feature carries. Sent with the
+    // payload rather than held here, so adding a provider is a row in a table
+    // and never a deploy (docs/specs/data-provider-hierarchy.md §7).
+    window.CC_PROVIDERS = d.providers || {};
     // Stays merge: tag the authority's features and append them once, so
     // the drawer can credit their publisher instead of OSM.
     var O = window.CC_STAYS_OSM, P = window.CC_STAYS_AUTHORITY;
