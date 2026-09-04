@@ -98,6 +98,31 @@ class DataProvider
     #[ORM\Column(type: Types::STRING, length: 255, nullable: true)]
     private ?string $creator = null;
 
+    /**
+     * The credits sentence as a message key, for rows that live in git.
+     *
+     * What WE use the dataset for. That sentence is copy about us, not about
+     * them, and it is the only translatable part of a credit row: a licence
+     * name is not prose, and an attribution line must never be translated at
+     * all. The seeded rows carry the keys the template already rendered, so
+     * the registry took over the page without changing a word in any
+     * language.
+     *
+     * @see docs/specs/data-provider-hierarchy.md §9.2
+     */
+    #[ORM\Column(name: 'blurb_key', type: Types::STRING, length: 120, nullable: true)]
+    private ?string $blurbKey = null;
+
+    /**
+     * The same sentence as free English, for a row a curator adds.
+     *
+     * A curator cannot write Spanish, so this is English and the site
+     * translates it the way it translates everything else. `blurbKey` wins
+     * when both are set.
+     */
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $blurb = null;
+
     /** Lifts a courtesy credit into a full row on the credits page. */
     #[ORM\Column(type: Types::BOOLEAN)]
     private bool $promoted = false;
@@ -126,6 +151,11 @@ class DataProvider
      * outranks a rider's own contribution. `auto` stays below everything.
      * Seeded to today's values, so admitting the registry moves nothing:
      * `osm` 100, `wikidata` 200, and the Wallonia rows above both.
+     *
+     * **0 means the question does not apply.** Rank orders authorities when
+     * two of them describe one place; a boundary set, an extract mirror or a
+     * photo library never produces an `item` row, and those are in the
+     * registry to be cited rather than ranked.
      *
      * @see docs/specs/data-provider-hierarchy.md §4
      */
@@ -256,6 +286,26 @@ class DataProvider
     public function setPromoted(bool $promoted): void
     {
         $this->promoted = $promoted;
+    }
+
+    public function getBlurbKey(): ?string
+    {
+        return $this->blurbKey;
+    }
+
+    public function setBlurbKey(?string $blurbKey): void
+    {
+        $this->blurbKey = $blurbKey;
+    }
+
+    public function getBlurb(): ?string
+    {
+        return $this->blurb;
+    }
+
+    public function setBlurb(?string $blurb): void
+    {
+        $this->blurb = $blurb;
     }
 
     public function getAttribution(): ?string

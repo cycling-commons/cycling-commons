@@ -181,6 +181,15 @@ services:
 
 when@test:
     services:
+        # Fetched directly by the credits tests. `autoconfigure` is NOT
+        # optional here: a second definition of the same id REPLACES the first,
+        # so without it this loses the `twig.extension` tag and every page
+        # calling the function dies with "unknown function".
+        App\Twig\ProviderCreditsExtension:
+            public: true
+            autowire: true
+            autoconfigure: true
+
         # Fetched directly by the provider-citation tests.
         App\Provider\ProviderCitations:
             public: true

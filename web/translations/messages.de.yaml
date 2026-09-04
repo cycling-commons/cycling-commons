@@ -493,6 +493,7 @@ credits:
   wikipedia_p: 'Regionsseiten beginnen mit einer kurzen enzyklopädischen Einleitung aus der lokalen Wikipedia, beim Bauen der Seite geholt und wörtlich gezeigt; jede Seite verlinkt den genauen Artikel, den sie zitiert.'
   copernicus_p: 'Höhenmodell hinter den Steigungswerten. "produced using Copernicus WorldDEM-30 © DLR e.V. 2010-2014 and © Airbus Defence and Space GmbH 2014-2018 provided under COPERNICUS by the European Union and ESA; all rights reserved". The organisations in charge of the Copernicus programme by law or by delegation do not incur any liability for any use of the Copernicus WorldDEM-30.'
   req_badge: 'Pflichthinweis'
+  made_by: 'Datensatz erstellt von %creator%.'
   req_legend: 'kennzeichnet eine Namensnennung, die die Lizenz oder Bedingungen der Quelle rechtlich verlangen — die Formulierung ist ihre, nicht unsere, und darf nicht verändert werden. Alles andere auf dieser Seite ist ein Dankeschön.'
   valhalla_p: 'Die Routing- und Höhen-Engine, die wir selbst betreiben: sie misst jedes Anstiegsprofil gegen das Copernicus-Höhenmodell und legt die Linien des Anstiegs-Editors auf das Straßennetz.'
   redoc_p: 'Rendert die öffentliche API-Referenz, ausgeliefert von dieser Seite.'

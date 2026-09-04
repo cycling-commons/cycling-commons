@@ -1,13 +1,14 @@
 # Data provider hierarchy and the provider registry
 
-**Status: specified 2026-08-27 (owner). Phase 1 built 2026-09-04; phases 2-6
-not built.** The Dutch public drinking-water taps are its first real-world
+**Status: specified 2026-08-27 (owner). Phases 1 and 2 built 2026-09-04;
+phases 3-6 not built.** The Dutch public drinking-water taps are its first real-world
 test, not a separate task.
 
-Phase 1 landed the registry table, the three seeded rows, the `pivot` to
-`authority` rename and the sweep of §12. Nothing a rider can see moved: the
-ranks are seeded to the old ladder and the citation is still the hardcoded
-string §7 removes.
+Phase 1 landed the registry table, the seeded rows, the `pivot` to `authority`
+rename and the sweep of §12; the ranks reproduce the old ladder, so nothing
+reordered. Phase 2 moved every citation onto it: the map drawer reads the
+provider map the catalog payload delivers, and `/credits` generates its data
+group from the table. Both hardcoded provider strings are gone.
 
 Related, and deliberately not merged into this document:
 
@@ -362,10 +363,18 @@ It returns every enabled `data_provider` row that owes a credit, each carrying
 is legally required or courtesy, ordered for display. The template renders one
 `.crow` per entry. Nothing else on the page changes.
 
-Until it exists the page keeps its hand-written rows. The contract is that
-**a provider added at `/moderate/providers` appears on `/credits` without anyone
-editing a template**, and the reverse: a hand-written row for something the
-registry also carries is a duplicate and must go when this lands.
+**Built 2026-09-04.** The contract holds: a provider added to the registry
+appears on `/credits` with nobody editing a template, and the hand-written rows
+for the datasets the registry now carries are gone. The rows for things that
+reach us on demand rather than on a schedule stay hand-written, which is the
+line credits-page.md §8.8 draws.
+
+One thing the gate had to learn. `tools/credits/check_credits.py` reads
+`data-pkg` markers out of the template to diff them against composer.json and
+friends; a generated row's marker is a Twig expression there and read
+literally it looked like a package called `p.key`. The gate now skips a marker
+carrying an expression, which loses nothing: a generated row cannot drift from
+an installed dependency, because it is not claiming one.
 
 ### 9.1 Module names
 
@@ -572,12 +581,15 @@ than discovered:
      from `assets/map/i18n.js`, and the "Listed" row's wording no longer names
      one publisher: it reads "Official registry entry" with the publisher as
      the method, in all five catalogues.
-   - **The credits half is not.** It needs registry rows for the other six
-     providers §8.8 of credits-page.md lists (Overture, Geofabrik, Wikimedia
-     Commons, Wikipedia, Copernicus, and the parked Georegister), the
-     `blurb_key` / `blurb` columns of §9.2, and the licence-derived weight of
-     §9.3. Removing a hand-written row before its registry row exists would
-     drop a required attribution, so the two land together.
+   - **The credits half is built too (2026-09-04).** `credited_providers()`
+     (`App\Twig\ProviderCreditsExtension`) generates the data group, split by
+     what the licence obliges (`App\Provider\LicenceObligation`): a notice
+     owed gets its own row with the required marker, a notice owed to nobody
+     gets a linked name in the comma run. The five datasets the page named by
+     hand became registry rows in `Version20260904140000`, each taking the
+     message key the template already rendered, so no wording changed in any
+     language. The parked Georegister and Drinkwaterkaart rows stay parked:
+     seeding them would put them back on the page.
 3. **The curator desk.** §8.
 4. **The generic harvester.** §5, with `wallonie-pivot` moved onto it as the
    proof that it is generic, since that dataset already works.

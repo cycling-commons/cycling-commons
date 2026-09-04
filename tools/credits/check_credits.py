@@ -197,10 +197,26 @@ def live_text(page: Path = CREDITS_PAGE) -> str:
 
 
 def markers(page: Path = CREDITS_PAGE) -> set[str]:
-    """Every token of every data-pkg attribute on the credits page."""
+    """Every token of every data-pkg attribute on the credits page.
+
+    A token carrying a Twig expression is skipped. Since 2026-09-04 the data
+    credits are GENERATED from the `data_provider` registry
+    (docs/specs/data-provider-hierarchy.md 9), so their marker reads
+    `manual:provider-{{ p.key }}` in the template and only becomes a name when
+    the page renders. Reading it literally saw a package called `p.key`.
+
+    Nothing is lost by skipping them. This gate exists to keep the page in
+    step with composer.json, the requirements files, the compose images and
+    web/assets/lib: an installed dependency that nobody credited, or a credit
+    for something no longer installed. A generated row cannot drift from any
+    of those, because it is not claiming one; it is claiming a row in a table,
+    and the row is the source of both the claim and the page.
+    """
     text = live_text(page)
     tokens: set[str] = set()
     for group in DATA_PKG.findall(text):
+        if "{{" in group or "{%" in group:
+            continue
         tokens.update(t for t in group.split() if t)
     return tokens
 

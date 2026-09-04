@@ -63,74 +63,37 @@
      is not. So Mapillary, Esri, OpenFreeMap and Photon stay hand-written with
      their hand-placed markers, and the #credits-req footnote is still needed
      after the migration. credits-page.md §8.8 has the row-by-row table. #}
+  {# The data credits are GENERATED from the provider registry
+     (docs/specs/data-provider-hierarchy.md §9). They were hand-written rows
+     here until 2026-09-04, which meant adding the eleventh provider was an
+     edit in five languages, and a row could disagree with the registry about
+     a licence with nothing to notice.
+
+     The weight is the licence's call, not ours: a licence that obliges an
+     attribution notice gets its own row with the required marker, because a
+     mandated text has to be DISPLAYED and a name in a comma run does not
+     display it. A licence that obliges nothing gets a linked name in the run.
+
+     The rows BELOW this group (map, software, type) stay hand-written on
+     purpose. The line is HOW A SOURCE REACHES US, not what kind of thing it
+     is: a dataset imported on a schedule is a provider, anything fetched on
+     demand per request is not. So Mapillary, Esri, OpenFreeMap and Photon
+     keep their hand-placed markers, and the #credits-req footnote is still
+     needed by rows outside this group. credits-page.md §8.8 has the table. #}
+  {% set _credits = credited_providers() %}
   <div class="cgroup">
     <h3>{% trans %}credits.data_h{% endtrans %}</h3>
     <div class="gsub">{% trans %}credits.data_sub{% endtrans %}</div>
-    <div class="crow">
-      <div class="who"><a href="https://www.openstreetmap.org/copyright" data-pkg="manual:openstreetmap-data">OpenStreetMap</a><a class="req" href="#credits-req"><span class="vh">{% trans %}credits.req_badge{% endtrans %}</span><span aria-hidden="true">*</span></a><span class="lic">ODbL 1.0 · © OpenStreetMap contributors</span></div>
-      <p>{% trans %}credits.osm_p{% endtrans %}</p>
-    </div>
-    {# Every region boundary on the site is an Overture `divisions` polygon:
-       271 of 271 region rows carry source='overture'. The theme is ODbL
-       (it conflates OSM with geoBoundaries), so this credit is required, not
-       courtesy. Release pinned in tools/divisions/config.py:OVERTURE_RELEASE;
-       bumping it is a versioned re-import, and the year below moves with it. #}
-    <div class="crow">
-      <div class="who"><a href="https://overturemaps.org/" data-pkg="manual:overture-divisions">Overture Maps Foundation</a><a class="req" href="#credits-req"><span class="vh">{% trans %}credits.req_badge{% endtrans %}</span><span aria-hidden="true">*</span></a><span class="lic">ODbL 1.0 · © Overture Maps Foundation · © OpenStreetMap contributors</span></div>
-      <p>{% trans %}credits.overture_p{% endtrans %}</p>
-    </div>
-    <div class="crow">
-      <div class="who"><a href="https://geoportail.wallonie.be/" data-pkg="manual:wallonia-pivot">Géoportail de la Wallonie · PIVOT</a><a class="req" href="#credits-req"><span class="vh">{% trans %}credits.req_badge{% endtrans %}</span><span aria-hidden="true">*</span></a><span class="lic">{% trans %}credits.lic_open_data{% endtrans %}</span></div>
-      <p>{% trans %}credits.wallonia_p{% endtrans %}</p>
-    </div>
-    {# Hidden with the Drinkwaterkaart row above (owner, 2026-08-27): nothing in
-       the code reads the Georegister yet, so crediting it as a source was a
-       claim about the future on a page whose job is to be true. The text is
-       already corrected in the catalogs and names the creator, so this comes
-       back with the tap ingest (data-provider-hierarchy.md, phase 5) rather
-       than being re-decided. See "Drinkwaterkaart.nl" in docs/TODO.md.
-    <div class="crow">
-      <div class="who"><a href="https://www.nationaalgeoregister.nl/" data-pkg="manual:nl-georegister">Nationaal Georegister (NL)</a><span class="lic">Public Domain Mark 1.0</span></div>
-      <p>{% trans %}credits.georegister_p{% endtrans %}</p>
-    </div>
-    #}
-    <div class="crow">
-      <div class="who"><a href="https://www.geofabrik.de/" data-pkg="manual:geofabrik-extracts">Geofabrik</a><span class="lic">{% trans %}credits.lic_osm_extracts{% endtrans %}</span></div>
-      <p>{% trans %}credits.geofabrik_p{% endtrans %}</p>
-    </div>
-    {# Drinkwaterkaart.nl is hidden until its developer has been asked (owner,
-       2026-08-26). We link riders to it and credit it here, but nobody has
-       spoken to them yet, and the owner wants that conversation to happen
-       before the site keeps sending them traffic. Its map link in
-       assets/map/drawer.js is commented out with it, and credits.lic_linked
-       and credits.drinkwater_p stay in the catalogs so both come back
-       together. See "Drinkwaterkaart.nl" in docs/TODO.md.
-    <div class="crow">
-      <div class="who"><a href="https://www.drinkwaterkaart.nl/" data-pkg="manual:drinkwaterkaart-link">Drinkwaterkaart.nl</a><span class="lic">{% trans %}credits.lic_linked{% endtrans %}</span></div>
-      <p>{% trans %}credits.drinkwater_p{% endtrans %}</p>
-    </div>
-    #}
-    <div class="crow">
-      <div class="who"><a href="https://commons.wikimedia.org/" data-pkg="manual:wikimedia-commons">Wikimedia Commons</a><a class="req" href="#credits-req"><span class="vh">{% trans %}credits.req_badge{% endtrans %}</span><span aria-hidden="true">*</span></a><span class="lic">{% trans %}credits.lic_per_photo{% endtrans %}</span></div>
-      <p>{% trans %}credits.wikimedia_p{% endtrans %}</p>
-    </div>
-    {# CC BY-SA requires attribution wherever the text is reused; each region
-       page carries its own per-article line, and this row is the site-wide
-       half of that credit. #}
-    <div class="crow">
-      <div class="who"><a href="https://www.wikipedia.org/" data-pkg="manual:wikipedia">Wikipedia</a><a class="req" href="#credits-req"><span class="vh">{% trans %}credits.req_badge{% endtrans %}</span><span aria-hidden="true">*</span></a><span class="lic">CC BY-SA 4.0</span></div>
-      <p>{% trans %}credits.wikipedia_p{% endtrans %}</p>
-    </div>
-    {# The Copernicus programme's licence conditions require this credit on
-       derived products, and the climb gradients are exactly that. The product
-       is WorldDEM-30, not "DEM GLO-30" as this row said until 2026-08-27, and
-       Airbus's years run to 2018: the paragraph below had the required notice
-       right all along, the summary line beside it did not, and the summary is
-       what most people read. #}
-    <div class="crow">
-      <div class="who"><a href="https://dataspace.copernicus.eu/explore-data/data-collections/copernicus-contributing-missions/collections-description/COP-DEM" data-pkg="manual:copernicus-dem">Copernicus WorldDEM-30</a><a class="req" href="#credits-req"><span class="vh">{% trans %}credits.req_badge{% endtrans %}</span><span aria-hidden="true">*</span></a><span class="lic">© DLR e.V. 2010-2014 · © Airbus Defence and Space GmbH 2014-2018</span></div>
-      <p>{% trans %}credits.copernicus_p{% endtrans %}</p>
-    </div>
+    {% for p in _credits.required %}
+      <div class="crow">
+        <div class="who"><a href="{{ p.homepage }}" data-pkg="manual:provider-{{ p.key }}">{{ p.name }}</a><a class="req" href="#credits-req"><span class="vh">{% trans %}credits.req_badge{% endtrans %}</span><span aria-hidden="true">*</span></a><span class="lic">{{ p.licence }}{% if p.attribution %} · {{ p.attribution }}{% endif %}</span></div>
+        <p>{{ p.blurb }}{% if p.creator %} {% trans with {'%creator%': p.creator} %}credits.made_by{% endtrans %}{% endif %}</p>
+      </div>
+    {% endfor %}
+    {% if _credits.courtesy is not empty %}
+      {# Named because naming them is decency, not because a licence says so. #}
+      <p class="pkglist">{% for p in _credits.courtesy %}<a href="{{ p.homepage }}" data-pkg="manual:provider-{{ p.key }}">{{ p.name }}</a>{% if not loop.last %}, {% endif %}{% endfor %}</p>
+    {% endif %}
   </div>
 
   <div class="cgroup">

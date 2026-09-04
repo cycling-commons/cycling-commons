@@ -23,12 +23,15 @@ final class DataProviderRegistryTest extends KernelTestCase
         self::bootKernel();
     }
 
-    public function testTheThreeSeededRowsAreThere(): void
+    public function testTheItemProducingProvidersRankInTodaysOrder(): void
     {
         $keys = $this->connection()->fetchFirstColumn(
-            'SELECT provider_key FROM data_provider ORDER BY rank',
+            'SELECT provider_key FROM data_provider WHERE rank > 0 ORDER BY rank',
         );
 
+        // Rank 0 means the question does not apply: a boundary set or a photo
+        // library never produces an item row, so it is here to be cited
+        // rather than ranked (data-provider-hierarchy.md §9).
         self::assertSame(['osm', 'wikidata', 'wallonie-pivot'], $keys);
     }
 
