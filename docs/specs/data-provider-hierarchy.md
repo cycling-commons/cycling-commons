@@ -1,7 +1,7 @@
 # Data provider hierarchy and the provider registry
 
-**Status: specified 2026-08-27 (owner). Phases 1, 2 and 3 built 2026-09-04;
-phases 4-6 not built.** The Dutch public drinking-water taps are its first real-world
+**Status: specified 2026-08-27 (owner). Phases 1-4 built 2026-09-04; phases 5
+and 6 not built.** The Dutch public drinking-water taps are its first real-world
 test, not a separate task.
 
 Phase 1 landed the registry table, the seeded rows, the `pivot` to `authority`
@@ -151,6 +151,38 @@ One generic harvester, configured per registry row, replacing the
 provider-specific script (`tools/wallonia/pivot.py` becomes a registry row plus
 a field map). It lives in Python, because reading a geospatial service and
 reprojecting is squarely on the Python side of the boundary.
+
+**Built 2026-09-04, in two halves that meet at a file.** `pipeline/providers/`
+fetches and normalises; `app:providers:harvest <key> <file>` matches and
+writes. The file between them is the same shape `app:catalog:import` already
+reads, which is what lets the tabular half be tested against a fixture instead
+of against a publisher having a good day. The ingest is DRY by default: it
+inserts into the catalogue riders read, so seeing the counts first is the
+normal way to run it and `--write` is the deliberate second step.
+
+**Deviation, deliberate: we do not reproject.** We ask the service for
+`srsName=EPSG:4326` and refuse anything that comes back outside WGS84 bounds.
+The publisher's own transform is more authoritative than one applied to their
+data from outside, and it keeps a projection library out of the pipeline
+image. A service that ignores `srsName` fails loudly, which is the case
+`wiki/developers/gis-beyond/reprojection.md` warns about: unreprojected
+EPSG:28992 metres read as degrees land in the hundreds of thousands.
+
+**Four refusals, all of them a fetch that went wrong rather than data:** a
+coordinate outside WGS84 bounds, a feature carrying a letter the registry says
+this provider does not fill (a field map pointed at the wrong layer is how one
+click floods a catalogue), an empty result (an empty fetch is not an empty
+publisher), and a paused provider (paused means keep the rows, stop
+refreshing).
+
+**`wallonie-pivot` has NOT been moved onto it, and that is not a refactor.**
+Its rows come from a committed fixture export (`tools/wallonia/export.py`),
+not from a live service, so pointing it at the Géoportail WFS would change
+which upstream we ingest from. That is a policy question for
+[data-source-register.md](data-source-register.md), not a code move. What the
+harvester's genericity rests on instead is that it holds no provider-specific
+code at all: the endpoint, the layer, the field map, the letters, the match
+radius and the id field all come from the row.
 
 For each upstream feature:
 
@@ -616,8 +648,11 @@ than discovered:
    provider that owes an attribution cannot be served without one, and a
    provider whose rows are on the map cannot be deleted at all (pause it: that
    keeps the rows and stops the refreshing).
-4. **The generic harvester.** §5, with `wallonie-pivot` moved onto it as the
-   proof that it is generic, since that dataset already works.
+4. **The generic harvester.** ✅ Built 2026-09-04. §5, in two halves meeting at
+   a normalised file: `pipeline/providers/` fetches, `app:providers:harvest`
+   matches and writes. `wallonie-pivot` was NOT moved onto it: its rows come
+   from a committed fixture export rather than a live service, so pointing it
+   at a WFS is a data-source decision for the register, not a refactor.
 5. **The Dutch taps.** §11. The first dataset added by the intended path.
 6. **The pin styling and the legend.** §6, last, because it touches every layer
    and wants the other five settled first. §6.5 is a blocking decision inside

@@ -190,6 +190,11 @@ when@test:
             autowire: true
             autoconfigure: true
 
+        # Fetched directly by the harvest tests.
+        App\Provider\ProviderHarvest:
+            public: true
+            autowire: true
+
         # Fetched directly by the provider-desk tests.
         App\Provider\ProviderRegistry:
             public: true

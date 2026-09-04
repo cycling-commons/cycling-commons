@@ -20,7 +20,7 @@ export DEV_GID ?= $(shell id -g)
 
 # Misc
 .DEFAULT_GOAL = help
-.PHONY        : help up down check-env map-refs start restart build rebuild logs ps sh up-routing up-storage up-all git-status wallonia-data wallonia-export divisions-data tools-test app-install app-serve app-test app-rector app-create-admin app-create-curator test-db-reset pipeline-test coverage-refresh surface-tiles routes-tiles region-probe region-scaffold course-data
+.PHONY        : help up down check-env map-refs start restart build rebuild logs ps sh up-routing up-storage up-all git-status wallonia-data wallonia-export divisions-data tools-test app-install app-serve app-test app-rector app-create-admin app-create-curator test-db-reset pipeline-test coverage-refresh provider-fetch provider-harvest surface-tiles routes-tiles region-probe region-scaffold course-data
 
 help: ## Outputs this help screen
 	@grep -E '(^[a-zA-Z0-9\./_-]+:.*?##.*$$)|(^##)' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}{printf "\033[32m%-18s\033[0m %s\n", $$1, $$2}' | sed -e 's/\[32m##/[33m/'
@@ -290,6 +290,12 @@ coverage-refresh: ## Refresh the coverage index + PMTiles (dev: Geofabrik → Po
 		$(if $(pbf),-e COVERAGE_PBF_PATH=$(pbf)) \
 		$(if $(timeout),-e COVERAGE_STATEMENT_TIMEOUT=$(timeout)) \
 		pipeline python -m coverage.run
+
+provider-fetch: ## Fetch one provider's service into a normalised file: make provider-fetch key=rivm-drinkwater out=/tmp/rivm.json
+	@$(DOCKER_COMP) exec -T pipeline python -m providers.run --key $(key) --out $(out)
+
+provider-harvest: ## Ingest a fetched file (DRY by default; add write=1): make provider-harvest key=rivm-drinkwater file=/tmp/rivm.json
+	@$(DOCKER_COMP) exec -T app php bin/console app:providers:harvest $(key) $(file) $(if $(write),--write)
 
 coverage-tiles: ## Rebuild + publish the coverage PMTiles from the rows already in PostGIS (no harvest)
 	@$(DOCKER_COMP) --profile storage up --detach --wait minio
