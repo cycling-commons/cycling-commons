@@ -14,6 +14,7 @@ use App\Catalog\MapTheme;
 use App\Catalog\MapViewMode;
 use App\Catalog\RidingStyle;
 use App\Entity\User;
+use App\Routing\ActiveLocales;
 use App\World\Entity\Country;
 use Doctrine\ORM\EntityRepository;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
@@ -33,9 +34,36 @@ use Symfony\Component\Validator\Constraints\NotBlank;
  * Settings: display name, units, map prefs, public profile.
  *
  * @see docs/specs/account-and-auth.md §9
+ *
+ * @api
  */
 final class SettingsType extends AbstractType
 {
+    /** Names for every built language; the served subset is picked below. */
+    private const array LANGUAGE_NAMES = [
+        'en' => 'English',
+        'fr' => 'Français',
+        'nl' => 'Nederlands',
+        'de' => 'Deutsch',
+        'es' => 'Español',
+    ];
+
+    public function __construct(
+        private readonly ActiveLocales $activeLocales,
+    ) {
+    }
+
+    /** @return array<string, string> label => locale */
+    private function languageChoices(): array
+    {
+        $choices = [];
+        foreach ($this->activeLocales->all() as $locale) {
+            $choices[self::LANGUAGE_NAMES[$locale] ?? strtoupper($locale)] = $locale;
+        }
+
+        return $choices;
+    }
+
     /** @param array<array-key,mixed> $options */
     #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
@@ -99,13 +127,11 @@ final class SettingsType extends AbstractType
                 'label' => 'form.label_language',
                 'required' => false,
                 'placeholder' => 'form.ph_language',
-                'choices' => [
-                    'English' => 'en',
-                    'Français' => 'fr',
-                    'Nederlands' => 'nl',
-                    'Deutsch' => 'de',
-                    'Español' => 'es',
-                ],
+                // Only the languages this deployment serves (dev-environment.md §7 i18n).
+                // Storing a preference for a language whose every page
+                // answers 404 would leave a rider stuck on a setting nobody
+                // can honour.
+                'choices' => $this->languageChoices(),
                 'choice_translation_domain' => false,
             ])
             ->add('dateFormat', EnumType::class, [

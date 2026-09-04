@@ -7,7 +7,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Catalog\RegionRegistryProvider;
-use App\Routing\LocalePrefix;
+use App\Routing\ActiveLocales;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -64,6 +64,7 @@ final class SitemapController extends AbstractController
     public function __construct(
         private readonly RouterInterface $router,
         private readonly RegionRegistryProvider $regions,
+        private readonly ActiveLocales $activeLocales,
     ) {
     }
 
@@ -145,7 +146,10 @@ final class SitemapController extends AbstractController
     #[Route('/sitemap.xml', name: 'sitemap', methods: ['GET'])]
     public function sitemap(): Response
     {
-        $locales = array_keys(LocalePrefix::PATHS);
+        // What this deployment serves, not every prefix compiled in: a
+        // sitemap entry for a language that answers 404 is an error
+        // report waiting in a search console (dev-environment.md §7 i18n).
+        $locales = $this->activeLocales->all();
         $urls = [];
 
         foreach (self::PAGES as [$name, $freq]) {

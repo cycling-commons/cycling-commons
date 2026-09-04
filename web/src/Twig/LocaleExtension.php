@@ -6,7 +6,7 @@ declare(strict_types=1);
 
 namespace App\Twig;
 
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use App\Routing\ActiveLocales;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Routing\RouterInterface;
 use Twig\Extension\AbstractExtension;
@@ -19,11 +19,13 @@ use Twig\TwigFunction;
  */
 final class LocaleExtension extends AbstractExtension
 {
-    /** @param list<string> $enabledLocales */
     public function __construct(
         private readonly RouterInterface $router,
         private readonly RequestStack $requestStack,
-        #[Autowire('%kernel.enabled_locales%')] private readonly array $enabledLocales,
+        // What this deployment serves, not what it was built with: a
+        // language nobody may reach has no switcher entry and no hreflang
+        // line pointing search engines at a 404 (dev-environment.md §7 i18n).
+        private readonly ActiveLocales $activeLocales,
     ) {
     }
 
@@ -32,6 +34,7 @@ final class LocaleExtension extends AbstractExtension
     {
         return [
             new TwigFunction('locale_alternates', $this->localeAlternates(...)),
+            new TwigFunction('active_locales', $this->activeLocales->all(...)),
         ];
     }
 
@@ -68,7 +71,7 @@ final class LocaleExtension extends AbstractExtension
         $urls = [];
 
         try {
-            foreach ($this->enabledLocales as $locale) {
+            foreach ($this->activeLocales->all() as $locale) {
                 $context->setParameter('_locale', $locale);
                 try {
                     $urls[$locale] = $this->router->generate($route, $params).$suffix;

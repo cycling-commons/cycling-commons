@@ -6,9 +6,11 @@ declare(strict_types=1);
 
 namespace App\EventSubscriber;
 
+use App\Routing\ActiveLocales;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\KernelEvents;
 
 /**
@@ -18,10 +20,12 @@ use Symfony\Component\HttpKernel\KernelEvents;
  */
 final class LocaleSubscriber implements EventSubscriberInterface
 {
-    /** @param list<string> $enabledLocales */
     public function __construct(
         #[Autowire('%kernel.default_locale%')] private readonly string $defaultLocale,
-        #[Autowire('%kernel.enabled_locales%')] private readonly array $enabledLocales,
+        // The runtime list, not %kernel.enabled_locales%: a catalogue this
+        // build carries is not automatically one this deployment serves
+        // (dev-environment.md §7 i18n).
+        private readonly ActiveLocales $activeLocales,
     ) {
     }
 
@@ -30,7 +34,15 @@ final class LocaleSubscriber implements EventSubscriberInterface
         $request = $event->getRequest();
 
         $routed = $request->attributes->get('_locale');
-        if (\is_string($routed) && \in_array($routed, $this->enabledLocales, true)) {
+        if (\is_string($routed) && !$this->activeLocales->isActive($routed)) {
+            // The route exists, because the prefix is compiled in for every
+            // built catalogue, but this deployment does not serve that
+            // language. Answer exactly as a URL that was never a route: a
+            // reader typing /fr/ or following an old link learns nothing
+            // about a translation that is not ready to be read.
+            throw new NotFoundHttpException(sprintf('Locale "%s" is not served here.', $routed));
+        }
+        if (\is_string($routed)) {
             // `hasPreviousSession()`, NOT `hasSession()`. `hasSession()` is true
             // on every request the moment sessions are enabled, so writing here
             // started and filled a session for every anonymous reader, which
@@ -52,14 +64,14 @@ final class LocaleSubscriber implements EventSubscriberInterface
 
         if ($request->hasPreviousSession()) {
             $stored = $request->getSession()->get('_locale');
-            if (\is_string($stored) && \in_array($stored, $this->enabledLocales, true)) {
+            if (\is_string($stored) && $this->activeLocales->isActive($stored)) {
                 $request->setLocale($stored);
 
                 return;
             }
         }
 
-        $request->setLocale($request->getPreferredLanguage($this->enabledLocales) ?: $this->defaultLocale);
+        $request->setLocale($request->getPreferredLanguage($this->activeLocales->all()) ?: $this->defaultLocale);
     }
 
     #[\Override]

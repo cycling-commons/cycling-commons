@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Routing\ActiveLocales;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -21,8 +22,16 @@ use Symfony\Component\Routing\Attribute\Route;
 final class LocaleController extends AbstractController
 {
     #[Route('/i18n/{_locale}', name: 'locale_switch', requirements: ['_locale' => 'en|fr|nl|de|es'])]
-    public function switch(string $_locale, Request $request): Response
+    public function switch(string $_locale, Request $request, ActiveLocales $activeLocales): Response
     {
+        // The route requirement lists every BUILT language, because it is
+        // compiled in; whether this deployment serves one is a runtime
+        // question, and the answer for a language it does not serve is the
+        // same 404 its prefixed paths give (dev-environment.md §7 i18n).
+        if (!$activeLocales->isActive($_locale)) {
+            throw $this->createNotFoundException(sprintf('Locale "%s" is not served here.', $_locale));
+        }
+
         $request->getSession()->set('_locale', $_locale);
 
         // Relative `to` only; same allowlist as the pager (docs/specs/account-and-auth.md §9.4).

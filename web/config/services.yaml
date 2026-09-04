@@ -181,6 +181,12 @@ services:
 
 when@test:
     services:
+        # Swapped by the inactive-locale tests to serve a narrower set of
+        # languages than the build carries (dev-environment.md §7 i18n).
+        App\Routing\ActiveLocales:
+            public: true
+            autowire: true
+
         # Fetched directly by the link-verdict tests.
         App\Catalog\Links\LinkVerdictStore:
             public: true

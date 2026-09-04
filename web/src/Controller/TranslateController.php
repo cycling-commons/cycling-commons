@@ -10,6 +10,7 @@ use App\Catalog\RiderPseudonym;
 use App\Entity\User;
 use App\Form\TranslationProposalType;
 use App\Pagination\PageSize;
+use App\Routing\ActiveLocales;
 use App\Routing\LocalePrefix;
 use App\Translation\CatalogueBrowser;
 use App\Translation\CatalogueCommit;
@@ -71,6 +72,11 @@ final class TranslateController extends AbstractController
 {
     public function __construct(
         private readonly CatalogueBrowser $browser,
+        // Which languages this deployment serves (dev-environment.md §7 i18n). A language
+        // nobody may read is not one anybody may translate: its catalogue
+        // list, its chooser card and its field on the dev form would all be
+        // work on a page whose only door answers 404.
+        private readonly ActiveLocales $activeLocales,
         private readonly ProposalService $proposals,
         private readonly TranslationConsentService $consent,
         private readonly PageSize $pageSize,
@@ -127,13 +133,13 @@ final class TranslateController extends AbstractController
         // (translations.md §4.2).
         $canEnglish = 'en' === $locale && $this->proposals->canProposeEnglish($user);
 
-        if (!TranslationLimits::isTranslatableLocale($locale) && !$canEnglish) {
+        if (!$this->isTranslatable($locale) && !$canEnglish) {
             return $this->render('translate/index.html.twig', [
                 'page_title' => 'meta.translate_title',
                 'page_description' => 'meta.translate_description',
                 'nav_active' => 'contribute',
                 'chooser' => true,
-                'locales' => TranslationLimits::LOCALES,
+                'locales' => $this->translatableLocales(),
             ]);
         }
 
@@ -206,7 +212,7 @@ final class TranslateController extends AbstractController
     #[Route('/translate/mine/{locale}/{id}', name: 'translate_mine_key', requirements: ['locale' => 'fr|nl|de|es', 'id' => '\d+'], methods: ['GET'])]
     public function mineKey(string $locale, int $id): Response
     {
-        if (!TranslationLimits::isTranslatableLocale($locale)) {
+        if (!$this->isTranslatable($locale)) {
             throw $this->createNotFoundException();
         }
 
@@ -244,11 +250,11 @@ final class TranslateController extends AbstractController
         if ('all' === $param) {
             return null;
         }
-        if (TranslationLimits::isTranslatableLocale($param)) {
+        if ($this->isTranslatable($param)) {
             return $param;
         }
         $current = $request->getLocale();
-        if (TranslationLimits::isTranslatableLocale($current)) {
+        if ($this->isTranslatable($current)) {
             return $current;
         }
 
@@ -444,7 +450,7 @@ final class TranslateController extends AbstractController
         // /translate list, the on-page bar) sends no locale and keeps the
         // Referer behaviour below unchanged.
         $locale = $request->request->getString('locale');
-        if (TranslationLimits::isTranslatableLocale($locale)) {
+        if ($this->isTranslatable($locale)) {
             return $this->redirectToRoute('home', ['_locale' => $locale]);
         }
 
@@ -492,7 +498,7 @@ final class TranslateController extends AbstractController
         }
 
         $locale = $request->getLocale();
-        if (!TranslationLimits::isTranslatableLocale($locale)) {
+        if (!$this->isTranslatable($locale)) {
             // English is never a DeepL target (translations.md §7.2); the
             // panel that calls this never renders on /en/translate/{id}.
             throw $this->createNotFoundException();
@@ -521,6 +527,28 @@ final class TranslateController extends AbstractController
     }
 
     /**
+     * The rider locales this deployment serves, in catalogue order.
+     *
+     * {@see TranslationLimits::LOCALES} is what the build can translate;
+     * this is the subset a reader can reach, which is the only subset worth
+     * anybody's translating time (dev-environment.md §7 i18n).
+     *
+     * @return list<string>
+     */
+    private function translatableLocales(): array
+    {
+        return array_values(array_filter(
+            TranslationLimits::LOCALES,
+            $this->activeLocales->isActive(...),
+        ));
+    }
+
+    private function isTranslatable(string $locale): bool
+    {
+        return TranslationLimits::isTranslatableLocale($locale) && $this->activeLocales->isActive($locale);
+    }
+
+    /**
      * The ticked locales, in catalogue order, unknown values dropped.
      *
      * Order comes from {@see TranslationLimits::LOCALES} rather than from
@@ -540,7 +568,7 @@ final class TranslateController extends AbstractController
         $wanted = array_filter($raw, static fn (mixed $v): bool => \is_string($v));
 
         return array_values(array_filter(
-            TranslationLimits::LOCALES,
+            $this->translatableLocales(),
             static fn (string $locale): bool => \in_array($locale, $wanted, true),
         ));
     }
@@ -590,7 +618,7 @@ final class TranslateController extends AbstractController
         /** @var User $user */
         $user = $this->getUser();
         $isEnglish = 'en' === $locale;
-        if ($isEnglish ? !$this->proposals->canProposeEnglish($user) : !TranslationLimits::isTranslatableLocale($locale)) {
+        if ($isEnglish ? !$this->proposals->canProposeEnglish($user) : !$this->isTranslatable($locale)) {
             return $this->redirectToRoute('translate');
         }
 
@@ -642,7 +670,7 @@ final class TranslateController extends AbstractController
         // string is one line in four files, and reviewing DeepL's four
         // drafts one page at a time hides exactly the differences worth
         // catching. English keeps the single field: it has no siblings.
-        $devLocales = ($isDevSubmit && !$isEnglish) ? TranslationLimits::LOCALES : [];
+        $devLocales = ($isDevSubmit && !$isEnglish) ? $this->translatableLocales() : [];
         $form = $this->createForm(
             TranslationProposalType::class,
             [] === $devLocales ? ['value' => $proposed] : $this->devFormData($entry, $devLocales, $locale),

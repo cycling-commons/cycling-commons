@@ -9,6 +9,7 @@ namespace App\Tests\Translation;
 use App\Controller\TranslateController;
 use App\Entity\User;
 use App\Pagination\PageSize;
+use App\Routing\ActiveLocales;
 use App\Translation\CatalogueBrowser;
 use App\Translation\CatalogueCommit;
 use App\Translation\CatalogueWriter;
@@ -110,6 +111,7 @@ final class StaleSourceWarningTest extends WebTestCase
         $container = static::getContainer();
         $controller = new TranslateController(
             $container->get(CatalogueBrowser::class),
+            $container->get(ActiveLocales::class),
             $container->get(ProposalService::class),
             $container->get(TranslationConsentService::class),
             $container->get(PageSize::class),

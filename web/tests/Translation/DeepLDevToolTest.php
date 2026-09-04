@@ -9,6 +9,7 @@ namespace App\Tests\Translation;
 use App\Controller\TranslateController;
 use App\Entity\User;
 use App\Pagination\PageSize;
+use App\Routing\ActiveLocales;
 use App\Translation\CatalogueBrowser;
 use App\Translation\CatalogueCommit;
 use App\Translation\CatalogueWriter;
@@ -175,6 +176,7 @@ final class DeepLDevToolTest extends WebTestCase
         $container = static::getContainer();
         $controller = new TranslateController(
             $container->get(CatalogueBrowser::class),
+            $container->get(ActiveLocales::class),
             $container->get(ProposalService::class),
             $container->get(TranslationConsentService::class),
             $container->get(PageSize::class),
@@ -665,6 +667,7 @@ final class DeepLDevToolTest extends WebTestCase
 
         $controller = new TranslateController(
             $browser,
+            $container->get(ActiveLocales::class),
             $container->get(ProposalService::class),
             $container->get(TranslationConsentService::class),
             $container->get(PageSize::class),
@@ -860,6 +863,7 @@ final class DeepLDevToolTest extends WebTestCase
         $entry = $this->seedEntry(self::TEST_KEY, 'Original text');
         $controller = new TranslateController(
             static::getContainer()->get(CatalogueBrowser::class),
+            static::getContainer()->get(ActiveLocales::class),
             static::getContainer()->get(ProposalService::class),
             static::getContainer()->get(TranslationConsentService::class),
             static::getContainer()->get(PageSize::class),

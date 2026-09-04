@@ -292,6 +292,30 @@ Day-one internationalisation across **EN / FR / NL / DE / ES**:
 - **Enabled locales:** `framework.default_locale: en`,
   `enabled_locales: [en, fr, nl, de, es]`
   (`web/config/packages/translation.yaml`).
+- **Active locales, per deployment (`CC_ACTIVE_LOCALES`).** The list above is
+  what the application is BUILT with: the catalogues that exist, are compiled
+  and can be translated. It is compile-time and cannot vary per environment.
+  Which of them a reader may actually reach is a separate, runtime question,
+  answered by `CC_ACTIVE_LOCALES` (a comma-separated list, committed in
+  `web/.env`, `.env.staging`, `.env.prod` and `.env.test` as all five) and
+  read by the single service `App\Routing\ActiveLocales`.
+
+  A language left out of it is invisible and unreachable: no language-menu
+  entry, no `hreflang` line, no sitemap URL, not offered on `/translate` or in
+  the account language setting, its `GET /i18n/{locale}` answers 404, and
+  `App\EventSubscriber\LocaleSubscriber` answers 404 for every one of its
+  prefixed paths. That is how a half-drafted catalogue stays translatable on
+  dev while production serves only what is finished.
+
+  Two rules hold whatever the variable says. **The default locale is always
+  served**, because it is every unprefixed route and the source every
+  translation is made from. **An empty or unrecognised value leaves only the
+  default locale**: a typo takes the site down to English, which somebody
+  notices within a page load, rather than quietly publishing the language that
+  was meant to stay hidden.
+
+  The routes themselves are unchanged: every prefix is still compiled in, so
+  turning a language back on is a variable and a restart, never a deploy.
 - **Path-prefix routing with clean EN.** English is served unprefixed; the
   other locales carry a path prefix (`/regions`, `/fr/regions`, `/nl/…`,
   `/de/…`, `/es/…`). The prefix map is the single constant
