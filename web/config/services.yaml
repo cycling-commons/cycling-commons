@@ -190,6 +190,11 @@ when@test:
             autowire: true
             autoconfigure: true
 
+        # Fetched directly by the provider-desk tests.
+        App\Provider\ProviderRegistry:
+            public: true
+            autowire: true
+
         # Fetched directly by the provider-citation tests.
         App\Provider\ProviderCitations:
             public: true

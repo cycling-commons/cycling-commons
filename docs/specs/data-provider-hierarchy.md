@@ -1,7 +1,7 @@
 # Data provider hierarchy and the provider registry
 
-**Status: specified 2026-08-27 (owner). Phases 1 and 2 built 2026-09-04;
-phases 3-6 not built.** The Dutch public drinking-water taps are its first real-world
+**Status: specified 2026-08-27 (owner). Phases 1, 2 and 3 built 2026-09-04;
+phases 4-6 not built.** The Dutch public drinking-water taps are its first real-world
 test, not a separate task.
 
 Phase 1 landed the registry table, the seeded rows, the `pivot` to `authority`
@@ -328,6 +328,20 @@ What a curator can do: add a provider, edit its citation and licence fields, set
 its rank and match radius, enable and disable it, run a refresh, and read the
 last run's counts and errors.
 
+**Built 2026-09-04**, minus the refresh: there is no harvester to run until §5
+exists (phase 4), and a button that cannot do anything is worse than no button.
+The last run's counts and errors already render, so the field is ready for it.
+
+`App\Provider\ProviderRegistry` is the only writer and the only place the rules
+live. A rule enforced in the controller is a rule the next caller does not
+have, so the controller validates nothing: it reads the form, hands it over,
+and renders whatever refusal comes back. A refusal carries a catalogue KEY
+rather than a sentence, so a curator reads it in their own language.
+
+Adding a provider is not on the form yet either. Every field a new row needs is
+editable on an existing one, and the shape of "new" belongs with the harvester
+that gives a new row something to do.
+
 What a curator **cannot** do, enforced server-side:
 
 - Delete or re-rank a `system` row (OSM, Wikidata).
@@ -337,8 +351,13 @@ What a curator **cannot** do, enforced server-side:
   existing rows for that letter without a second confirmation. A wrong
   `field_map` on a national dataset is how you flood a catalogue in one click.
 
-Every save and every run is recorded in the existing moderation history, because
-a provider's rank decides what riders see and that is a moderation act.
+Every save and every run is recorded, because a provider's rank decides what
+riders see and that is a moderation act. `change_history` could not carry it:
+that table is item-scoped (`item_id NOT NULL`). So `data_provider_change`
+follows the same shape one table over, append-only, the way
+`media_moderation_event` does for photos: one row per FIELD that actually
+moved, with who moved it and when. A save that changed nothing writes nothing;
+a trail of no-ops is a trail nobody reads.
 
 Licence admission stays a **policy** decision in
 [data-source-register.md](data-source-register.md). The desk records the answer;
@@ -590,7 +609,13 @@ than discovered:
      message key the template already rendered, so no wording changed in any
      language. The parked Georegister and Drinkwaterkaart rows stay parked:
      seeding them would put them back on the page.
-3. **The curator desk.** §8.
+3. **The curator desk.** ✅ Built 2026-09-04. §8, minus the refresh button and
+   the add-a-provider form, both of which wait on the harvester below. The four
+   server-side refusals are enforced in `ProviderRegistry` and tested: a system
+   row cannot be deleted or re-ranked, a rank must sit inside the band, a
+   provider that owes an attribution cannot be served without one, and a
+   provider whose rows are on the map cannot be deleted at all (pause it: that
+   keeps the rows and stops the refreshing).
 4. **The generic harvester.** §5, with `wallonie-pivot` moved onto it as the
    proof that it is generic, since that dataset already works.
 5. **The Dutch taps.** §11. The first dataset added by the intended path.

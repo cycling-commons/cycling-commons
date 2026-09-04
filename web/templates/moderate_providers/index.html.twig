@@ -1,0 +1,127 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{# The curator Providers desk (docs/specs/data-provider-hierarchy.md §8): who
+   we take data from, and what we owe them. Until this page existed the
+   registry could only be changed by a migration.
+
+   One row per provider, opening into its own form. The server is the
+   authority on every rule (App\Provider\ProviderRegistry); nothing here is
+   validated twice, so the page never claims a save is fine that the registry
+   will refuse. #}
+{% extends 'base.html.twig' %}
+{% block head_styles %}
+{% include 'account/_shell_styles.html.twig' %}
+<style>
+  .pv-list{margin:.9rem 0 3rem;display:flex;flex-direction:column;gap:.35rem}
+  .pv-row{border:1px solid rgba(20,22,14,.14);border-radius:8px;background:var(--paper-deep)}
+  .pv-row > summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:.7rem;flex-wrap:wrap;
+    min-height:44px;padding:.6rem .85rem;font-family:var(--serif);font-weight:600;color:var(--ink)}
+  .pv-row > summary::-webkit-details-marker{display:none}
+  .pv-row > summary::marker{content:''}
+  .pv-row > summary:hover{background:rgba(20,22,14,.05);border-radius:8px}
+  .pv-row > summary:focus-visible{outline:2px solid var(--trail);outline-offset:2px}
+  .pv-row > summary::before{content:'\25B8';font-size:.7rem;color:#8a8d7d;transition:transform .12s ease;flex:0 0 auto}
+  .pv-row[open] > summary::before{transform:rotate(90deg)}
+  .pv-key{font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;color:#8a8d7d;
+    border:1px solid rgba(20,22,14,.2);border-radius:3px;padding:.05rem .3rem}
+  /* Three facts a curator scans for, in the order they matter: is it on, does
+     it owe a notice, and can anyone touch it. */
+  .pv-tag{font-family:var(--mono);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;
+    border-radius:3px;padding:.1rem .35rem;border:1px solid rgba(20,22,14,.2);color:#595c4d}
+  .pv-tag.on{border-color:var(--trail);color:var(--trail)}
+  .pv-tag.off{border-color:rgba(20,22,14,.2);color:#8a8d7d}
+  .pv-tag.req{border-color:var(--clay);color:var(--clay)}
+  .pv-form{padding:.2rem .95rem 1.1rem;display:grid;gap:.9rem}
+  .pv-form label{display:block;font-family:var(--mono);font-size:.7rem;letter-spacing:.08em;
+    text-transform:uppercase;color:#595c4d;margin-bottom:.3rem}
+  .pv-form input[type=text],.pv-form input[type=url],.pv-form input[type=number],.pv-form textarea{
+    width:100%;padding:.55rem .7rem;border:1px solid rgba(20,22,14,.22);border-radius:6px;
+    background:var(--paper);font:inherit}
+  .pv-form textarea{min-height:4.5rem;line-height:1.5}
+  .pv-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.9rem}
+  .pv-check{display:flex;align-items:center;gap:.45rem}
+  .pv-check label{margin:0;text-transform:none;letter-spacing:0;font-family:inherit;font-size:.9rem;color:var(--ink)}
+  .pv-note{font-size:.82rem;color:#595c4d;line-height:1.5;margin:0}
+  .pv-hist{margin:.4rem 0 0;font-size:.82rem;color:#595c4d;line-height:1.7}
+  .pv-hist li{list-style:none}
+  .pv-hist .f{font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:#8a8d7d}
+  @media(max-width:640px){.pv-grid{grid-template-columns:1fr}}
+</style>
+{% endblock %}
+
+{% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate_providers'} %}{% endblock %}
+
+{% block body %}
+<div class="dbody" id="main">
+  <div class="mh">
+    <div class="kicker">{{ 'provider.desk.kicker'|trans }}</div>
+    <h1>{{ 'provider.desk.title'|trans }}</h1>
+    <p class="lead">{{ 'provider.desk.lead'|trans }}</p>
+  </div>
+  {% for msg in app.flashes('success') %}<div class="flash-success" role="alert">{{ msg|trans }}</div>{% endfor %}
+  {% for msg in app.flashes('danger') %}<div class="flash-error" role="alert">{{ msg|trans }}</div>{% endfor %}
+
+  <div class="pv-list">
+    {% for p in providers %}
+      <details class="pv-row"{{ p.id == open_id ? ' open' : '' }}>
+        <summary>
+          <span>{{ p.name }}</span>
+          <span class="pv-key">{{ p.key }}</span>
+          <span class="pv-tag {{ p.enabled ? 'on' : 'off' }}">{{ (p.enabled ? 'provider.enabled' : 'provider.disabled')|trans }}</span>
+          {% if p.owesNotice %}<span class="pv-tag req">{{ 'provider.owes_notice'|trans }}</span>{% endif %}
+          {% if p.system %}<span class="pv-tag">{{ 'provider.system'|trans }}</span>{% endif %}
+        </summary>
+        <form class="pv-form" method="post" action="{{ path('moderate_providers_save', {id: p.id}) }}">
+          <input type="hidden" name="_csrf_token" value="{{ csrf }}">
+          <div class="pv-grid">
+            <div><label for="pv-name-{{ p.id }}">{{ 'provider.field.name'|trans }}</label>
+              <input type="text" id="pv-name-{{ p.id }}" name="name" value="{{ p.name }}" maxlength="120" required></div>
+            <div><label for="pv-full-{{ p.id }}">{{ 'provider.field.full_name'|trans }}</label>
+              <input type="text" id="pv-full-{{ p.id }}" name="fullName" value="{{ p.fullName }}" maxlength="255" required></div>
+          </div>
+          <div><label for="pv-home-{{ p.id }}">{{ 'provider.field.homepage'|trans }}</label>
+            <input type="url" id="pv-home-{{ p.id }}" name="homepage" value="{{ p.homepage }}" maxlength="500" required></div>
+          <div class="pv-grid">
+            <div><label for="pv-lic-{{ p.id }}">{{ 'provider.field.licence'|trans }}</label>
+              <input type="text" id="pv-lic-{{ p.id }}" name="licence" value="{{ p.licence }}" maxlength="255" required></div>
+            <div><label for="pv-code-{{ p.id }}">{{ 'provider.field.licence_code'|trans }}</label>
+              <input type="text" id="pv-code-{{ p.id }}" name="licenceCode" value="{{ p.licenceCode }}" maxlength="40" required></div>
+          </div>
+          <div><label for="pv-attr-{{ p.id }}">{{ 'provider.field.attribution'|trans }}</label>
+            <input type="text" id="pv-attr-{{ p.id }}" name="attribution" value="{{ p.attribution }}">
+            {# Says WHY it will be refused, not only that it was. #}
+            <p class="pv-note">{{ (p.owesNotice ? 'provider.help.attribution_required' : 'provider.help.attribution_optional')|trans }}</p></div>
+          <div><label for="pv-creator-{{ p.id }}">{{ 'provider.field.creator'|trans }}</label>
+            <input type="text" id="pv-creator-{{ p.id }}" name="creator" value="{{ p.creator }}">
+            <p class="pv-note">{{ 'provider.help.creator'|trans }}</p></div>
+          <div><label for="pv-blurb-{{ p.id }}">{{ 'provider.field.blurb'|trans }}</label>
+            <textarea id="pv-blurb-{{ p.id }}" name="blurb">{{ p.blurb }}</textarea>
+            <p class="pv-note">{% if p.blurbKey %}{{ 'provider.help.blurb_key'|trans({'%key%': p.blurbKey}) }}{% else %}{{ 'provider.help.blurb'|trans }}{% endif %}</p></div>
+          <div class="pv-grid">
+            <div><label for="pv-rank-{{ p.id }}">{{ 'provider.field.rank'|trans }}</label>
+              <input type="number" id="pv-rank-{{ p.id }}" name="rank" value="{{ p.rank }}" min="0" max="{{ rank_max }}"{{ p.system ? ' readonly' : '' }}>
+              <p class="pv-note">{{ (p.system ? 'provider.help.rank_system' : 'provider.help.rank')|trans }}</p></div>
+            <div><label for="pv-radius-{{ p.id }}">{{ 'provider.field.match_radius'|trans }}</label>
+              <input type="number" id="pv-radius-{{ p.id }}" name="matchRadiusM" value="{{ p.matchRadiusM }}" min="1" max="5000">
+              <p class="pv-note">{{ 'provider.help.match_radius'|trans }}</p></div>
+          </div>
+          <div class="pv-check">
+            <input type="checkbox" id="pv-on-{{ p.id }}" name="enabled" value="1"{{ p.enabled ? ' checked' : '' }}>
+            <label for="pv-on-{{ p.id }}">{{ 'provider.field.enabled'|trans }}</label>
+          </div>
+          <div class="pv-check">
+            <input type="checkbox" id="pv-promo-{{ p.id }}" name="promoted" value="1"{{ p.promoted ? ' checked' : '' }}>
+            <label for="pv-promo-{{ p.id }}">{{ 'provider.field.promoted'|trans }}</label>
+          </div>
+          <p class="pv-note">{{ 'provider.help.promoted'|trans }}</p>
+          {% if p.lastRunAt %}
+            <p class="pv-note">{{ 'provider.last_run'|trans({'%when%': p.lastRunAt|cc_date, '%count%': p.lastCount ?? 0}) }}{% if p.lastError %} · {{ p.lastError }}{% endif %}</p>
+          {% endif %}
+          <div class="tr-actions">
+            <button type="submit">{{ 'provider.save'|trans }}</button>
+          </div>
+        </form>
+      </details>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

@@ -248,9 +248,19 @@ class DataProvider
         return $this->name;
     }
 
+    public function setName(string $name): void
+    {
+        $this->name = $name;
+    }
+
     public function getFullName(): string
     {
         return $this->fullName;
+    }
+
+    public function setFullName(string $fullName): void
+    {
+        $this->fullName = $fullName;
     }
 
     public function getHomepage(): string
@@ -258,14 +268,29 @@ class DataProvider
         return $this->homepage;
     }
 
+    public function setHomepage(string $homepage): void
+    {
+        $this->homepage = $homepage;
+    }
+
     public function getLicence(): string
     {
         return $this->licence;
     }
 
+    public function setLicence(string $licence): void
+    {
+        $this->licence = $licence;
+    }
+
     public function getLicenceCode(): string
     {
         return $this->licenceCode;
+    }
+
+    public function setLicenceCode(string $licenceCode): void
+    {
+        $this->licenceCode = $licenceCode;
     }
 
     public function getCreator(): ?string

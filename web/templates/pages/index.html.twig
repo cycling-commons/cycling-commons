@@ -159,6 +159,126 @@
   .silo-more:hover{color:#ff703d}
   .vs{font-family:var(--mono);font-size:.7rem;letter-spacing:.14em;color:var(--trail);margin:1.4rem 0 .4rem;text-align:center}
 
+  /* ---------- SILO PANEL (fragmentation) ----------
+     Six tiles, one per layer a rider needs today, each walled off from the
+     next: a SOLID border with a hatch is a closed silo, a DASHED one is data
+     that exists but lies scattered across sources. The small opposing tilts
+     say the pieces were never cut to fit together; the funnel under them
+     carries all six into the one open atlas. The list this replaced is kept,
+     commented out, in the markup (owner 2026-09-04). */
+  .silo .silo-grid{display:grid;grid-template-columns:1fr 1fr;gap:.55rem;margin-top:1.25rem;list-style:none}
+  .silo .silo-tile{position:relative;display:grid;grid-template-columns:auto 1fr;grid-template-areas:"ic nm" "ic tag";gap:.15rem .6rem;
+    padding:.62rem .7rem;border-radius:5px;background:rgba(239,230,212,.055);border:1px solid rgba(239,230,212,.22);
+    opacity:0;transform:translate(var(--dx,0),12px);
+    transition:opacity .5s ease,transform .5s cubic-bezier(.2,.7,.3,1),background .25s ease,border-color .25s ease;
+    transition-delay:calc(var(--i) * .07s)}
+  .silo.in .silo-tile{opacity:1;transform:rotate(var(--rot,0deg))}
+  .silo .silo-tile.scat{border-style:dashed}
+  /* the hatch is the wall: only the closed ones carry it */
+  .silo .silo-tile.shut::after{content:"";position:absolute;inset:0;border-radius:4px;pointer-events:none;
+    background:repeating-linear-gradient(135deg,transparent 0 5px,rgba(239,230,212,.06) 5px 6px)}
+  /* hover straightens the tile: the piece a rider is looking at is the only one that lines up */
+  .silo.in .silo-tile:hover{transform:rotate(0deg);background:rgba(239,230,212,.1);border-color:rgba(239,230,212,.4);transition-delay:0s}
+  .silo .silo-tile .q-icon{grid-area:ic;align-self:start;margin-top:.15rem;display:inline-flex;color:var(--glacier)}
+  .silo .silo-tile .q-icon svg{display:block;width:17px;height:17px}
+  /* the shared icon set's glyph half, flipped to a LIGHT silhouette for the dark panel */
+  .silo .silo-tile .q-icon--glyph{width:17px;height:17px;align-items:center;justify-content:center;font-size:.95rem;line-height:1;font-style:normal;
+    font-family:"Apple Color Emoji","Noto Color Emoji","Segoe UI Emoji","Noto Sans Symbols2",system-ui,sans-serif;
+    filter:grayscale(1) brightness(0) invert(.8)}
+  .silo .silo-nm{grid-area:nm;font-size:.84rem;font-weight:500;line-height:1.25}
+  .silo .silo-tag{grid-area:tag;display:flex;align-items:center;gap:.34rem;font-family:var(--mono);font-size:.6rem;
+    letter-spacing:.1em;text-transform:uppercase;color:rgba(239,230,212,.55)}
+  .silo .silo-tag::before{content:"";flex:none;width:11px;height:11px;-webkit-mask:var(--m) center/contain no-repeat;mask:var(--m) center/contain no-repeat}
+  .silo .shut .silo-tag::before{background:var(--ochre);
+    --m:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 10V7a6 6 0 0 1 12 0v3h1a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1h1Zm2 0h8V7a4 4 0 0 0-8 0v3Z'/%3E%3C/svg%3E")}
+  .silo .scat .silo-tag::before{background:var(--glacier);
+    --m:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='5' cy='7' r='2.6'/%3E%3Ccircle cx='18' cy='5' r='2.6'/%3E%3Ccircle cx='11' cy='17' r='2.6'/%3E%3Ccircle cx='20' cy='16' r='2.6'/%3E%3C/svg%3E")}
+  /* the funnel: six strands in, one out. pathLength=1 so every strand draws at
+     the same rate whatever its real length. */
+  .silo .silo-funnel{display:block;width:100%;height:46px;margin:.9rem 0 .1rem}
+  .silo .silo-funnel path{fill:none;stroke:rgba(239,230,212,.32);stroke-width:1;stroke-dasharray:1;stroke-dashoffset:1;vector-effect:non-scaling-stroke}
+  .silo .silo-funnel .out{stroke:var(--trail);stroke-width:1.6}
+  .silo.in .silo-funnel path{animation:siloDraw .85s ease-out .55s forwards}
+  .silo.in .silo-funnel .out{animation-delay:1.05s;animation-duration:.35s}
+  @keyframes siloDraw{to{stroke-dashoffset:0}}
+  .silo .silo-atlas{display:flex;align-items:center;gap:.6rem;padding:.8rem .95rem;border-radius:5px;
+    border:1px solid rgba(255,90,31,.5);background:rgba(255,90,31,.1);color:var(--trail);
+    font-family:var(--mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;line-height:1.4;
+    opacity:0;transform:translateY(10px);transition:opacity .5s ease 1.25s,transform .5s ease 1.25s}
+  .silo.in .silo-atlas{opacity:1;transform:none}
+  .silo .silo-atlas::before{content:"";flex:none;width:12px;height:15px;
+    background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 130'%3E%3Cpath fill='%23FF5A1F' d='M50 8 C31 8 16 23 16 42 C16 68 50 124 50 124 C50 124 84 68 84 42 C84 23 69 8 50 8 Z'/%3E%3C/svg%3E") center/contain no-repeat}
+  /* one column of tiles is narrower than the two words on a tag; go single-file */
+  @media(max-width:420px){.silo .silo-grid{grid-template-columns:1fr}}
+
+  /* ---------- review toggle + the three drafts ---------- */
+  .silo{position:relative}
+  .silo .silo-pick{position:absolute;opacity:0;width:0;height:0;pointer-events:none}
+  .silo .silo-sw{display:flex;justify-content:flex-end;gap:.3rem;margin:0 0 .8rem}
+  .silo .silo-sw label{font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;padding:.28rem .62rem;
+    border:1px solid rgba(20,22,14,.3);border-radius:40px;color:var(--clay);cursor:pointer;user-select:none;transition:all .2s}
+  .silo .silo-sw label:hover{border-color:var(--ink);color:var(--ink)}
+  #silo-v1:checked ~ .silo-sw label[for="silo-v1"],#silo-v2:checked ~ .silo-sw label[for="silo-v2"],#silo-v3:checked ~ .silo-sw label[for="silo-v3"]{
+    background:var(--trail);border-color:var(--trail);color:var(--ink)}
+  #silo-v1:focus-visible ~ .silo-sw label[for="silo-v1"],#silo-v2:focus-visible ~ .silo-sw label[for="silo-v2"],#silo-v3:focus-visible ~ .silo-sw label[for="silo-v3"]{
+    outline:2px solid var(--ink);outline-offset:2px}
+  .silo .silo-v{display:none}
+  #silo-v1:checked ~ .silo-v1,#silo-v2:checked ~ .silo-v2,#silo-v3:checked ~ .silo-v3{display:block}
+
+  /* ---------- v3: the phone ----------
+     No green box: the phone IS the box. Keyframes rather than transitions on
+     purpose: an element that goes from display:none to shown restarts its
+     keyframes, so flipping the toggle to this draft replays the whole thing.
+     Timeline: apps pop in (0.15s+), the locked ones jiggle once (1s), then
+     every app flies into the Commons icon (2.1s+) and that icon climbs into
+     the emptied screen and grows (2.6s). --tx/--ty/--up come from hero.js. */
+  .silo-v3 h3{font-family:var(--serif);font-weight:500;font-size:1.5rem;margin-bottom:1.1rem;color:var(--ink)}
+  .silo .phone{width:min(100%,360px);margin:0 auto;padding:1rem 1rem 1.3rem;border-radius:32px;position:relative;overflow:hidden;
+    background:var(--ink);border:1px solid rgba(239,230,212,.28);box-shadow:0 0 0 5px rgba(16,30,22,.55),0 30px 50px -28px rgba(0,0,0,.8)}
+  .silo .ph-notch{width:84px;height:18px;margin:0 auto;border-radius:12px;background:#000;border:1px solid rgba(239,230,212,.18)}
+  .silo .ph-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.1rem .5rem;list-style:none;margin:1.4rem 0 1.6rem;padding:0 .2rem}
+  .silo .ph-app{display:flex;flex-direction:column;align-items:center;text-align:center;gap:.35rem;opacity:0;will-change:transform,opacity}
+  .silo.in .ph-app{animation:phPop .45s cubic-bezier(.3,1.4,.5,1) forwards,phFly .75s cubic-bezier(.55,0,.85,.35) forwards;
+    animation-delay:calc(.15s + var(--i) * .08s),calc(2.1s + var(--i) * .07s)}
+  .silo .ph-ic{position:relative;display:inline-flex;align-items:center;justify-content:center;width:62px;height:62px;border-radius:16px;
+    background:linear-gradient(160deg,color-mix(in srgb,var(--tint) 100%,white 18%),var(--tint));color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 8px 16px -8px rgba(0,0,0,.9)}
+  .silo .ph-ic .q-icon{display:inline-flex;color:#fff}
+  .silo .ph-ic .q-icon svg{display:block;width:30px;height:30px}
+  .silo .ph-ic .q-icon--glyph{width:30px;height:30px;align-items:center;justify-content:center;font-size:1.55rem;line-height:1;font-style:normal;
+    font-family:"Apple Color Emoji","Noto Color Emoji","Segoe UI Emoji","Noto Sans Symbols2",system-ui,sans-serif;filter:grayscale(1) brightness(0) invert(1)}
+  /* closed: a padlock badge, and one short jiggle once the icons have landed (the
+     "you cannot move these" gesture), three wiggles and then still */
+  .silo .ph-app.shut .ph-ic::after{content:"";position:absolute;top:-7px;right:-7px;width:20px;height:20px;border-radius:50%;background-color:var(--clay);border:2px solid var(--ink);
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23EFE6D4' d='M8 10V8a4 4 0 0 1 8 0v2h.5a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1h-9a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1H8Zm1.6 0h4.8V8a2.4 2.4 0 0 0-4.8 0v2Z'/%3E%3C/svg%3E");background-size:13px;background-position:center;background-repeat:no-repeat}
+  .silo.in .ph-app.shut .ph-ic{animation:phJiggle .22s ease-in-out 3;animation-delay:calc(1s + var(--i) * .05s)}
+  /* scattered: never really an app. Dashed ghost of a tile, the glyph half there. */
+  .silo .ph-app.scat .ph-ic{background:transparent;border:1.5px dashed color-mix(in srgb,var(--tint) 70%,white 30%);box-shadow:none;color:color-mix(in srgb,var(--tint) 55%,white 45%)}
+  .silo .ph-app.scat .ph-ic .q-icon{color:inherit;opacity:.9}
+  .silo .ph-app.scat .ph-ic .q-icon--glyph{filter:grayscale(1) brightness(0) invert(.75)}
+  .silo .ph-app.scat .ph-ic::after{content:"";position:absolute;inset:7px;border-radius:9px;
+    background:radial-gradient(circle at 20% 30%,currentColor 1.8px,transparent 2.3px),radial-gradient(circle at 75% 20%,currentColor 1.8px,transparent 2.3px),
+      radial-gradient(circle at 30% 80%,currentColor 1.8px,transparent 2.3px),radial-gradient(circle at 82% 72%,currentColor 1.8px,transparent 2.3px);opacity:.6}
+  .silo .ph-nm{font-size:.7rem;font-weight:500;line-height:1.2;color:var(--paper);max-width:7rem}
+  .silo .ph-tag{font-family:var(--mono);font-size:.54rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ochre)}
+  .silo .ph-app.scat .ph-tag{color:var(--glacier)}
+  /* the one app: the brand mark as an app icon, its name under it */
+  .silo .ph-dock{display:flex;flex-direction:column;align-items:center;gap:.6rem;opacity:0;will-change:transform,opacity}
+  .silo .ph-cc{display:block;width:64px;height:64px;border-radius:16px;border:1px solid rgba(239,230,212,.25);
+    box-shadow:0 0 0 0 rgba(255,90,31,0),0 10px 20px -10px rgba(0,0,0,.9);transform-origin:50% 100%}
+  .silo .ph-cc-nm{font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--trail);text-align:center;line-height:1.4;max-width:15rem}
+  .silo.in .ph-dock{animation:phDock .5s ease-out .75s forwards,phRise .9s cubic-bezier(.2,.8,.2,1) 2.6s forwards}
+  .silo.in .ph-cc{animation:phGrow 1s cubic-bezier(.3,1.5,.5,1) 2.65s forwards}
+  @keyframes phPop{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:none}}
+  @keyframes phJiggle{0%,100%{transform:rotate(0)}25%{transform:rotate(-3deg)}75%{transform:rotate(3deg)}}
+  @keyframes phFly{from{opacity:1;transform:none}60%{opacity:.9}to{opacity:0;transform:translate(var(--tx,0),var(--ty,120px)) scale(.15)}}
+  @keyframes phDock{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  @keyframes phRise{from{opacity:1;transform:none}to{opacity:1;transform:translateY(var(--up,-120px))}}
+  @keyframes phGrow{from{transform:none;box-shadow:0 0 0 0 rgba(255,90,31,0),0 10px 20px -10px rgba(0,0,0,.9)}
+    60%{box-shadow:0 0 0 14px rgba(255,90,31,.18),0 10px 20px -10px rgba(0,0,0,.9)}
+    to{transform:scale(1.9);box-shadow:0 0 0 0 rgba(255,90,31,0),0 12px 24px -10px rgba(0,0,0,.9)}}
+  .silo.in .ph-cc-nm{animation:phNm .4s ease-out 3.2s both}
+  @keyframes phNm{from{transform:translateY(-.4rem)}to{transform:translateY(0)}}
+
   /* catalog grid */
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem;margin-top:2.6rem}
   .card{background:var(--paper-deep);border:1px solid rgba(20,22,14,.14);border-radius:6px;padding:1.3rem;position:relative;transition:all .25s;overflow:hidden}
@@ -212,7 +332,12 @@
   .cta-band .btn-ghost{background:var(--paper);border-color:transparent;color:var(--ink)}
   .cta-band .btn-ghost:hover{background:var(--paper-deep);border-color:transparent;color:var(--ink)}
 
-  @media(prefers-reduced-motion:reduce){.hero .hero-contours{animation:none;clip-path:none}.rv{transition:none;opacity:1;transform:none}}
+  @media(prefers-reduced-motion:reduce){.hero .hero-contours{animation:none;clip-path:none}.rv{transition:none;opacity:1;transform:none}
+    .silo .silo-tile{opacity:1;transform:rotate(var(--rot,0deg));transition:background .25s ease,border-color .25s ease}
+    .silo .silo-atlas{opacity:1;transform:none;transition:none}
+    .silo .silo-funnel path{stroke-dashoffset:0;animation:none}
+    .silo .ph-app,.silo .ph-dock{opacity:1;animation:none}
+    .silo .ph-app.shut .ph-ic,.silo .ph-cc,.silo .ph-cc-nm{animation:none}}
 </style>
 {% endblock %}
 {% block body %}
@@ -260,7 +385,18 @@
       <p class="lead rv" data-d="2">{{ 'home.frag_lead1'|trans }}</p>
       <p class="lead rv" data-d="2" style="margin-top:1.1rem">{{ 'home.frag_lead2'|trans|rich }}</p>
     </div>
-    <div class="panel rv" data-d="2">
+    <div class="silo rv" data-d="2">
+      {# REVIEW TOGGLE (owner 2026-09-04): three drafts of this box, side by
+         side, so one can be picked. Pure CSS: the radios sit first so the
+         `:checked ~` selectors below reach both the chips and the variants.
+         Drop the radios, the chips and the two losing variants once chosen. #}
+      <input type="radio" name="silo-pick" id="silo-v1" class="silo-pick">
+      <input type="radio" name="silo-pick" id="silo-v2" class="silo-pick">
+      <input type="radio" name="silo-pick" id="silo-v3" class="silo-pick" checked>
+      <div class="silo-sw" aria-label="Draft"><label for="silo-v1">v1 list</label><label for="silo-v2">v2 tiles</label><label for="silo-v3">v3 phone</label></div>
+
+      {# v1: the list #}
+      <div class="silo-v silo-v1 panel">
       <h3>{{ 'home.frag_panel_h'|trans }}</h3>
       <div class="rank"><span class="n">→</span><span class="nm">{{ 'home.frag_climbs'|trans|rich }}</span><span class="co">{{ 'home.frag_climbs_tag'|trans }}</span></div>
       <div class="rank"><span class="n">→</span><span class="nm">{{ 'home.frag_rides'|trans|rich }}</span><span class="co">{{ 'home.frag_rides_tag'|trans }}</span></div>
@@ -269,6 +405,56 @@
       <div class="rank"><span class="n">→</span><span class="nm">{{ 'home.frag_road'|trans }}</span><span class="co">{{ 'home.frag_road_tag'|trans }}</span></div>
       <div class="rank" style="border:none"><span class="n">→</span><span class="nm">{{ 'home.frag_water'|trans }}</span><span class="co">{{ 'home.frag_water_tag'|trans }}</span></div>
       <div class="vs" style="font-size:1.1rem;text-align:left">{{ 'home.frag_vs'|trans }}</div>
+      </div>
+
+      {# v2: the tiles. The letters are the catalog's own (ItemType::letter()),
+         so a tile here and a card further down the page carry the same icon. #}
+      <div class="silo-v silo-v2 panel">
+      <h3>{{ 'home.frag_panel_h'|trans }}</h3>
+      <ul class="silo-grid">
+        <li class="silo-tile shut" style="--i:0;--rot:-1.3deg;--dx:-10px">{% include 'partials/_type_icon.html.twig' with {letter: 'N'} only %}<span class="silo-nm">{{ 'home.frag_climbs'|trans|rich }}</span><span class="silo-tag">{{ 'home.frag_climbs_tag'|trans }}</span></li>
+        <li class="silo-tile shut" style="--i:1;--rot:1.1deg;--dx:12px">{% include 'partials/_type_icon.html.twig' with {letter: 'R'} only %}<span class="silo-nm">{{ 'home.frag_rides'|trans|rich }}</span><span class="silo-tag">{{ 'home.frag_rides_tag'|trans }}</span></li>
+        <li class="silo-tile scat" style="--i:2;--rot:1.4deg;--dx:14px">{% include 'partials/_type_icon.html.twig' with {letter: 'P'} only %}<span class="silo-nm">{{ 'home.frag_scenic'|trans }}</span><span class="silo-tag">{{ 'home.frag_scenic_tag'|trans }}</span></li>
+        <li class="silo-tile shut" style="--i:3;--rot:-1.1deg;--dx:-12px">{% include 'partials/_type_icon.html.twig' with {letter: 'O'} only %}<span class="silo-nm">{{ 'home.frag_stays'|trans }}</span><span class="silo-tag">{{ 'home.frag_stays_tag'|trans }}</span></li>
+        <li class="silo-tile scat" style="--i:4;--rot:-1.5deg;--dx:-8px">{% include 'partials/_type_icon.html.twig' with {letter: 'A'} only %}<span class="silo-nm">{{ 'home.frag_road'|trans }}</span><span class="silo-tag">{{ 'home.frag_road_tag'|trans }}</span></li>
+        <li class="silo-tile scat" style="--i:5;--rot:1.2deg;--dx:10px">{% include 'partials/_type_icon.html.twig' with {letter: 'B'} only %}<span class="silo-nm">{{ 'home.frag_water'|trans }}</span><span class="silo-tag">{{ 'home.frag_water_tag'|trans }}</span></li>
+      </ul>
+
+      <svg class="silo-funnel" viewBox="0 0 300 46" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+        <path pathLength="1" d="M18 0 C18 22 150 12 150 34"/>
+        <path pathLength="1" d="M70 0 C70 24 150 16 150 34"/>
+        <path pathLength="1" d="M122 0 C122 26 150 22 150 34"/>
+        <path pathLength="1" d="M178 0 C178 26 150 22 150 34"/>
+        <path pathLength="1" d="M230 0 C230 24 150 16 150 34"/>
+        <path pathLength="1" d="M282 0 C282 22 150 12 150 34"/>
+        <path class="out" pathLength="1" d="M150 34 L150 46"/>
+      </svg>
+
+      <div class="silo-atlas">{{ 'home.frag_vs'|trans }}</div>
+      </div>
+
+      {# v3: the phone. "A dozen apps" taken literally: a home screen where
+         every layer is its own app, the closed ones padlocked, the scattered
+         ones never really installed. Then they all fly into the one app that
+         holds them, and that app grows. hero.js measures the flight paths. #}
+      <div class="silo-v silo-v3">
+      <h3>{{ 'home.frag_panel_h'|trans }}</h3>
+      <div class="phone">
+        <div class="ph-notch"></div>
+        <ul class="ph-grid">
+          <li class="ph-app shut" style="--i:0;--tint:#6b4f9e"><span class="ph-ic">{% include 'partials/_type_icon.html.twig' with {letter: 'N'} only %}</span><span class="ph-nm">{{ 'home.frag_climbs'|trans|rich }}</span><span class="ph-tag">{{ 'home.frag_climbs_tag'|trans }}</span></li>
+          <li class="ph-app shut" style="--i:1;--tint:#c3402b"><span class="ph-ic">{% include 'partials/_type_icon.html.twig' with {letter: 'R'} only %}</span><span class="ph-nm">{{ 'home.frag_rides'|trans|rich }}</span><span class="ph-tag">{{ 'home.frag_rides_tag'|trans }}</span></li>
+          <li class="ph-app scat" style="--i:2;--tint:#2f7fa8"><span class="ph-ic">{% include 'partials/_type_icon.html.twig' with {letter: 'P'} only %}</span><span class="ph-nm">{{ 'home.frag_scenic'|trans }}</span><span class="ph-tag">{{ 'home.frag_scenic_tag'|trans }}</span></li>
+          <li class="ph-app shut" style="--i:3;--tint:#c98a2e"><span class="ph-ic">{% include 'partials/_type_icon.html.twig' with {letter: 'O'} only %}</span><span class="ph-nm">{{ 'home.frag_stays'|trans }}</span><span class="ph-tag">{{ 'home.frag_stays_tag'|trans }}</span></li>
+          <li class="ph-app scat" style="--i:4;--tint:#5a6a72"><span class="ph-ic">{% include 'partials/_type_icon.html.twig' with {letter: 'A'} only %}</span><span class="ph-nm">{{ 'home.frag_road'|trans }}</span><span class="ph-tag">{{ 'home.frag_road_tag'|trans }}</span></li>
+          <li class="ph-app scat" style="--i:5;--tint:#2a8f8a"><span class="ph-ic">{% include 'partials/_type_icon.html.twig' with {letter: 'B'} only %}</span><span class="ph-nm">{{ 'home.frag_water'|trans }}</span><span class="ph-tag">{{ 'home.frag_water_tag'|trans }}</span></li>
+        </ul>
+        <div class="ph-dock">
+          <img class="ph-cc" src="{{ asset('brand/logo-square-mark.svg') }}" alt="" width="64" height="64">
+          <span class="ph-cc-nm">{{ 'home.frag_vs'|trans }}</span>
+        </div>
+      </div>
+      </div>
     </div>
   </div>
 </section>
