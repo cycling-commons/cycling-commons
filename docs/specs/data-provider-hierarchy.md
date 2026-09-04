@@ -1,8 +1,13 @@
 # Data provider hierarchy and the provider registry
 
-**Status: specified 2026-08-27 (owner). Not built.** Scheduled after this week's
-live deployment. The Dutch public drinking-water taps are its first real-world
+**Status: specified 2026-08-27 (owner). Phase 1 built 2026-09-04; phases 2-6
+not built.** The Dutch public drinking-water taps are its first real-world
 test, not a separate task.
+
+Phase 1 landed the registry table, the three seeded rows, the `pivot` to
+`authority` rename and the sweep of §12. Nothing a rider can see moved: the
+ranks are seeded to the old ladder and the citation is still the hardcoded
+string §7 removes.
 
 Related, and deliberately not merged into this document:
 
@@ -82,6 +87,13 @@ A new table, `data_provider`, one row per dataset. Curator-maintained (§8).
 | `last_run_at`, `last_count`, `last_error` | what the desk shows. |
 | `enabled` | off means "keep the rows, stop refreshing". |
 | `system` | true for seeded rows nobody may delete (§3.1). |
+
+**How a row points at its provider: `item.provider_id`.** A nullable foreign
+key, set exactly when `item.source` is `authority` and NULL for everything
+else. `source_ref` cannot answer this: it is the harvest's own upsert key, and
+the historical Wallonia refs (`fx:pivot:hotel-koru|ramillies`) name the bucket
+that no longer exists rather than a provider. Added by the phase 1 migration
+alongside the table.
 
 ### 3.1 OpenStreetMap and Wikidata are registry rows too
 
@@ -543,8 +555,13 @@ than discovered:
 
 ## 13. Phases
 
-1. **Registry and rename.** Table, seeded rows, the migration of §10, the enum
-   change, the doc and wiki sweep of §12. No behaviour change a rider can see.
+1. **Registry and rename.** ✅ Built 2026-09-04. Table, seeded rows, the
+   migration of §10 plus the `item.provider_id` link of §3, the enum change,
+   and the doc and wiki sweep of §12. No behaviour change a rider can see: the
+   seeded ranks reproduce the old ladder, and `dedupeRank()` still returns one
+   fixed step for every authority. Reading the rank from the registry (§4) is
+   deliberately NOT in this phase; it lands with the harvester, when there is
+   a second authority for it to order.
 2. **Citation from the registry.** Drawer and credits read the table. The
    hardcoded string goes.
 3. **The curator desk.** §8.

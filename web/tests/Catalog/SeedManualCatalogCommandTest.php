@@ -288,7 +288,7 @@ final class SeedManualCatalogCommandTest extends KernelTestCase
         self::assertContains(
             'Cyclist-friendly gîte · Amblève valley',
             $names,
-            'a manual (source=manual) letter-O stay must be served in the osm bucket, not dropped by the pivot split',
+            'a manual (source=manual) letter-O stay must be served in the osm bucket, not dropped by the authority split',
         );
 
         $gite = array_values(array_filter(

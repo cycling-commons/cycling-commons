@@ -49,10 +49,12 @@ final class CatalogProvider
             'F' => $this->featureCollection('F'),
             'G' => $this->featureCollection('G'),
             'N' => $this->climbs(),
-            // O splits by source: PIVOT is its own bucket; every other source lands in 'osm'.
+            // O splits by source: an authority's rows are their own
+            // bucket, because they carry their publisher's citation and
+            // licence; every other source lands in 'osm'.
             'O' => [
-                'osm' => $this->featureCollection('O', excludeSource: 'pivot'),
-                'pivot' => $this->featureCollection('O', 'pivot'),
+                'osm' => $this->featureCollection('O', excludeSource: 'authority'),
+                'authority' => $this->featureCollection('O', 'authority'),
             ],
             'P' => $this->featureCollection('P'),
             'Q' => $this->featureCollection('Q'),
@@ -142,7 +144,7 @@ final class CatalogProvider
         // Creator is the earliest type=new submission; harvested rows stay anonymous.
         $sql = 'SELECT i.id, i.name, i.letter, ST_AsGeoJSON(i.geom) AS geom, i.attributes, i.source_ref, i.source, s.name AS prov, i.region_id,
                        contributor.display_name AS by_name, contributor.public_profile AS by_public, contributor.uuid AS by_uuid,
-                       (i.state = \'verified\' OR i.source = \'pivot\' OR EXISTS (SELECT 1 FROM item_confirmation c WHERE c.item_id = i.id AND c.source <> \'form\')) AS verified,
+                       (i.state = \'verified\' OR i.source = \'authority\' OR EXISTS (SELECT 1 FROM item_confirmation c WHERE c.item_id = i.id AND c.source <> \'form\')) AS verified,
                        -- docs/specs/moderation-and-contribution.md 6.3: `form` must not reset freshness.
                        (SELECT max(c2.created_at) FROM item_confirmation c2
                          WHERE c2.item_id = i.id AND c2.source <> \'form\') AS last_confirmed

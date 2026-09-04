@@ -111,10 +111,11 @@ export function resolveLocalFeature(name){
   let found=null;
   CATALOG.forEach(layer=>layer.features.forEach(f=>{ if(f.name===name) found={layer,f}; }));
   if(found) return found;
-  // PIVOT stays are not in CATALOG; resolving here avoids a coverage 404 on fx:pivot: refs.
-  const pv=(window.CC_STAYS_PIVOT && CC_STAYS_PIVOT.features || [])
+  // An authority's stays are not in CATALOG; resolving here avoids a coverage
+  // 404 on their synthetic refs.
+  const pv=(window.CC_STAYS_AUTHORITY && CC_STAYS_AUTHORITY.features || [])
     .find(f=>f.properties && f.properties.n===name);
-  if(pv) return {pivot:pv};
+  if(pv) return {authority:pv};
   // docs/specs/map-and-search.md §12 — pool features are not in CATALOG; skip this and a name deep-link opens the OSM twin.
   for(const key of Object.keys(osmLayers)){
     const info=osmLayers[key];
@@ -150,11 +151,11 @@ export function openFeatureById(id){
 export function openFeatureByName(name){
   const found=resolveLocalFeature(name);
   if(!found) return false;
-  if(found.pivot){
-    const pv=found.pivot;
+  if(found.authority){
+    const pv=found.authority;
     const c=pv.geometry && pv.geometry.coordinates;
     if(c && c.length>=2) flyToPin([+c[0],+c[1]]);
-    openStayPivot(pv);
+    openStayAuthority(pv);
     return true;
   }
   if(found.poolKey) return openPoolFeature(found.poolKey, found.f);
@@ -213,7 +214,7 @@ export function openPendingById(id){
   const p=featurePoint(f); if(p) flyToPin([p[1],p[0]]);
   return true;
 }
-export function openStayPivot(f){
+export function openStayAuthority(f){
   const layer=layerByKey.stays; if(!layer) return false;
   if(!active.has('stays')){
     active.add('stays');

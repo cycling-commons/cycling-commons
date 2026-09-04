@@ -107,7 +107,7 @@ final class RetireLegacyOsmCommandTest extends KernelTestCase
         self::assertStringContainsString('Deleted 3 legacy OSM row(s)', $display);
 
         self::assertSame($shopId, (int) $conn->fetchOne("SELECT id FROM item WHERE letter = 'D'"));   // confirmed shop survives, alone
-        self::assertSame('pivot', $conn->fetchOne("SELECT source FROM item WHERE letter = 'O'"));     // pivot stay survives
+        self::assertSame('authority', $conn->fetchOne("SELECT source FROM item WHERE letter = 'O'"));     // pivot stay survives
         self::assertSame(1, (int) $conn->fetchOne("SELECT COUNT(*) FROM item WHERE letter = 'A'"));   // surface letter-exempt
         self::assertSame(1, (int) $conn->fetchOne("SELECT COUNT(*) FROM item WHERE letter = 'N'"));   // wikidata off-predicate
     }

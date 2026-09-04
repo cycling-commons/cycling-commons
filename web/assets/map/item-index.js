@@ -4,7 +4,7 @@
    because an ES import cannot reassign them. rebuildItemIndex() rebuilds both. */
 import { CATALOG, layerByKey } from './catalog.js';
 import { slug, haversine, featurePoint } from './util.js';
-import { openLocalFeature, openStayPivot, openPoolFeature } from './places.js';
+import { openLocalFeature, openStayAuthority, openPoolFeature } from './places.js';
 import { layerGlyph } from './icons.js';
 
 // Bulk-pool globals, read at BUILD time (catalog-load fills them asynchronously).
@@ -51,7 +51,7 @@ export function buildItemIndex(){
       pend:f.pending?String(f.pending.id):undefined,
       go:()=>openLocalFeature(layer,f)});   // exact feature, not a name re-lookup
   }));
-  (window.CC_STAYS_PIVOT && CC_STAYS_PIVOT.features || []).forEach(f=>{ const p=f.properties;
+  (window.CC_STAYS_AUTHORITY && CC_STAYS_AUTHORITY.features || []).forEach(f=>{ const p=f.properties;
     if(!p || !p.n) return; const layer=layerByKey.stays; if(!layer) return;
     const c=f.geometry && f.geometry.coordinates; if(!c || c.length<2) return;
     push({name:p.n, key:slug(p.n+' '+(p.town||'')+' '+layer.label), kind:layer.label, badge:layerGlyph(layer),
@@ -59,7 +59,7 @@ export function buildItemIndex(){
       rid:p.rid,
       verified:!!p.v,
       hlOff: p.v ? [0,-16] : [0,0],
-      go:()=>openStayPivot(f)});
+      go:()=>openStayAuthority(f)});
   });
   /* DB-backed items in bulk-OSM pools (id present). Raw OSM stays a live /map/coverage/search lookup. */
   POOL_GLOBALS.forEach(([key, g])=>{

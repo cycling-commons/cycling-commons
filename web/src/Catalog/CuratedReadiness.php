@@ -92,7 +92,7 @@ final class CuratedReadiness
                FROM item i
               WHERE i.region_id IN (:ids)
                 AND i.state IN '.ItemState::servedSqlTuple()."
-                AND (i.state = 'verified' OR i.source = 'pivot'
+                AND (i.state = 'verified' OR i.source = 'authority'
                      OR EXISTS (SELECT 1 FROM item_confirmation c
                                  WHERE c.item_id = i.id AND c.source <> 'form'))
               GROUP BY i.region_id",

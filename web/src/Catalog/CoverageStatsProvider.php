@@ -191,7 +191,7 @@ final class CoverageStatsProvider
 
         $bucketOf = [
             ItemSource::Osm->value => 'osm',
-            ItemSource::Pivot->value => 'partner',
+            ItemSource::Authority->value => 'partner',
             ItemSource::Wikidata->value => 'partner',
             ItemSource::User->value => 'riders',
             ItemSource::Manual->value => 'riders',

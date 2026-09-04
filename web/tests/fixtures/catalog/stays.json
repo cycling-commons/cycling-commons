@@ -1,3 +1,3 @@
 {"layer":"stays","letter":"O","features":[
  {"type":"Feature","properties":{"t":"Campsite","n":"Camping Test","town":"Testville","prov":"Namur","source":"osm","ref":"node/5001"},"geometry":{"type":"Point","coordinates":[4.6,50.4]}},
- {"type":"Feature","properties":{"t":"Gîte","n":"Gîte Test","town":"Testbourg","prov":"Namur","c":"Official listing","web":"http://example.test","source":"pivot","ref":"fx:pivot:gite-test|testbourg"},"geometry":{"type":"Point","coordinates":[4.7,50.45]}}]}
+ {"type":"Feature","properties":{"t":"Gîte","n":"Gîte Test","town":"Testbourg","prov":"Namur","c":"Official listing","web":"http://example.test","source":"authority","ref":"fx:pivot:gite-test|testbourg"},"geometry":{"type":"Point","coordinates":[4.7,50.45]}}]}

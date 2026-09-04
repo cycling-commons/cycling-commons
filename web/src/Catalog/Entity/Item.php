@@ -64,6 +64,25 @@ class Item
     #[ORM\Column(type: 'string', length: 10, enumType: ItemSource::class)]
     private ItemSource $source = ItemSource::Auto;
 
+    /**
+     * Which authority published this row, when one did.
+     *
+     * NULL for everything else: an OSM or Wikidata row is credited through
+     * its own seeded registry row, and a rider's `manual`, `user` or `scout`
+     * row has no publisher to credit at all. Set exactly when `source` is
+     * {@see ItemSource::Authority}.
+     *
+     * `sourceRef` cannot answer this. It is the harvest's own upsert key and
+     * the historical ones predate the registry: a Wallonia row still carries
+     * `fx:pivot:hotel-koru|ramillies`, which names a bucket that no longer
+     * exists rather than a provider.
+     *
+     * @see docs/specs/data-provider-hierarchy.md §3, §10
+     */
+    #[ORM\ManyToOne(targetEntity: DataProvider::class)]
+    #[ORM\JoinColumn(name: 'provider_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
+    private ?DataProvider $provider = null;
+
     /** Upstream id (node/…, way/…, Q…) or stable synthetic fx:* ref. Never NULL in practice. */
     #[ORM\Column(type: 'string', length: 160)]
     private string $sourceRef = '';
@@ -74,7 +93,7 @@ class Item
      * OSM is the identity spine ([osm-data-architecture.md §1] — "the join key
      * between our data and OSM is always `osm_ref`"). `sourceRef` cannot serve
      * that role for every source: it is the harvest's own upsert key, so a
-     * PIVOT row carries `fx:pivot:hotel-koru|ramillies` and could never match
+     * Wallonia row carries `fx:pivot:hotel-koru|ramillies` and could never match
      * `node/6123208864`. That mismatch is why one hotel was served twice, once
      * from the catalog and once from the coverage cache.
      *
@@ -230,6 +249,16 @@ class Item
         $this->touch();
 
         return $this;
+    }
+
+    public function getProvider(): ?DataProvider
+    {
+        return $this->provider;
+    }
+
+    public function setProvider(?DataProvider $provider): void
+    {
+        $this->provider = $provider;
     }
 
     public function getSource(): ItemSource

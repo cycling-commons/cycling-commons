@@ -901,7 +901,7 @@ interim clause retires):
   DB. Display is already correct either way — untouched legacy rows are out of
   the payload *and* out of `refs` (mirror rule, coverage-provider.md §6), so
   the destructive run is pure database cleanup with zero display change.
-- **PIVOT rows stay canonical** (`source=pivot`, Tourisme Wallonie CC-BY
+- **PIVOT rows stay canonical** (`source=authority`, Tourisme Wallonie CC-BY
   attribution). `tools/wallonia` is relieved of OSM POI duty but kept for the
   retired atlas demo and the canonical seeds (climbs, routes, surface, PIVOT);
   the coverage path never touches Overpass again.

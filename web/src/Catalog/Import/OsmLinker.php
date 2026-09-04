@@ -16,7 +16,8 @@ use Doctrine\DBAL\Connection;
  * between our data and OSM is always `osm_ref`"). A rider editing an OSM object
  * already inherits that ref as the new row's identity
  * (`CatalogContributionService`). PIVOT and Wikidata never did, so their rows
- * carry refs like `fx:pivot:hotel-koru|ramillies`, and the dedupe between the
+ * carry refs like `fx:pivot:hotel-koru|ramillies` (a historical upsert key,
+ * not a provider name), and the dedupe between the
  * catalog and the coverage cache — which is by ref — could not see that a PIVOT
  * hotel and an OSM hotel were one hotel. The result was two entries in one
  * drawer for one building.

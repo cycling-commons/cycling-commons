@@ -41,7 +41,7 @@ final class DedupePlacesCommandTest extends KernelTestCase
     public function testTheDryRunChangesNothing(): void
     {
         $osm = $this->seed('O', 'Hôtel Koru', 50.66887, 4.90664, ItemSource::Osm, 'a');
-        $pivot = $this->seed('O', 'Hôtel Koru', 50.66884, 4.90664, ItemSource::Pivot, 'b');
+        $pivot = $this->seed('O', 'Hôtel Koru', 50.66884, 4.90664, ItemSource::Authority, 'b');
 
         $tester = $this->run_();
 
@@ -57,7 +57,7 @@ final class DedupePlacesCommandTest extends KernelTestCase
         // on the map. PIVOT is canonical for accommodation and carries its own
         // CC-BY attribution, so it is the one that stays.
         $osm = $this->seed('O', 'Hôtel Koru', 50.66887, 4.90664, ItemSource::Osm, 'a');
-        $pivot = $this->seed('O', 'Hôtel Koru', 50.66884, 4.90664, ItemSource::Pivot, 'b');
+        $pivot = $this->seed('O', 'Hôtel Koru', 50.66884, 4.90664, ItemSource::Authority, 'b');
 
         $this->run_(['--write' => true]);
 
@@ -70,7 +70,7 @@ final class DedupePlacesCommandTest extends KernelTestCase
         // Retire, never delete: the row's id may be referenced by
         // confirmations, history and moderation rows that must not dangle.
         $osm = $this->seed('O', 'Hôtel Koru', 50.66887, 4.90664, ItemSource::Osm, 'a');
-        $this->seed('O', 'Hôtel Koru', 50.66884, 4.90664, ItemSource::Pivot, 'b');
+        $this->seed('O', 'Hôtel Koru', 50.66884, 4.90664, ItemSource::Authority, 'b');
 
         $this->run_(['--write' => true]);
 
@@ -85,7 +85,7 @@ final class DedupePlacesCommandTest extends KernelTestCase
         // Seeded the other way round: the OSM row is the OLDER one. Rank must
         // still decide, or whichever harvest happened to run first wins by
         // accident and the canonical row is the casualty.
-        $pivot = $this->seed('O', 'Auberge du Test', 50.60000, 4.60000, ItemSource::Pivot, 'later');
+        $pivot = $this->seed('O', 'Auberge du Test', 50.60000, 4.60000, ItemSource::Authority, 'later');
         $osm = $this->seed('O', 'Auberge du Test', 50.60001, 4.60000, ItemSource::Osm, 'aaa-earlier');
 
         $this->run_(['--write' => true]);
@@ -99,7 +99,7 @@ final class DedupePlacesCommandTest extends KernelTestCase
         // A human spent time on this row. The command cannot weigh that against
         // a source ranking, so it declines to choose and says so.
         $osm = $this->seed('O', 'Hôtel Koru', 50.66887, 4.90664, ItemSource::Osm, 'a');
-        $pivot = $this->seed('O', 'Hôtel Koru', 50.66884, 4.90664, ItemSource::Pivot, 'b');
+        $pivot = $this->seed('O', 'Hôtel Koru', 50.66884, 4.90664, ItemSource::Authority, 'b');
         $this->edit($osm);
 
         $tester = $this->run_(['--write' => true]);
@@ -139,7 +139,7 @@ final class DedupePlacesCommandTest extends KernelTestCase
     public function testTheLetterFilterBoundsTheSweep(): void
     {
         $osm = $this->seed('O', 'Hôtel Koru', 50.66887, 4.90664, ItemSource::Osm, 'a');
-        $this->seed('O', 'Hôtel Koru', 50.66884, 4.90664, ItemSource::Pivot, 'b');
+        $this->seed('O', 'Hôtel Koru', 50.66884, 4.90664, ItemSource::Authority, 'b');
 
         $this->run_(['--write' => true, '--letter' => 'P']);
 
@@ -149,7 +149,7 @@ final class DedupePlacesCommandTest extends KernelTestCase
     public function testASecondRunIsAQuietNoOp(): void
     {
         $this->seed('O', 'Hôtel Koru', 50.66887, 4.90664, ItemSource::Osm, 'a');
-        $this->seed('O', 'Hôtel Koru', 50.66884, 4.90664, ItemSource::Pivot, 'b');
+        $this->seed('O', 'Hôtel Koru', 50.66884, 4.90664, ItemSource::Authority, 'b');
 
         $this->run_(['--write' => true]);
         $second = $this->run_(['--write' => true]);

@@ -182,7 +182,10 @@ function recRowsHtml(recs){
 
 export function osmDrawer(layer, p, ll, src){
   const lbl=(layer||{}).label||D.place||'Place';
-  const pivot=p.src==='pivot';   // official Tourisme Wallonie accommodation (CC-BY), not OSM
+  // An authority row: its publisher is the body of record, so the drawer
+  // credits them, not OSM. The name is still hardcoded here; it moves to
+  // the registry row with the citation work (data-provider-hierarchy.md §7).
+  const pivot=p.src==='authority';
   const community = isRiderSource(p.srcType);
   const originLbl = pivot?'Tourisme Wallonie':(community?sourceLabel(p.srcType):'OSM');
   // serviceKind label wins over raw OSM p.t when present.

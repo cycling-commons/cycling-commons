@@ -78,7 +78,12 @@ def pivot_features():
     out = []
     for f in fc["features"]:
         props = dict(f["properties"])
-        props["source"] = "pivot"
+        # The rank, not the dataset: "pivot" was a bucket named after this
+        # very dataset until the authority registry replaced it
+        # (docs/specs/data-provider-hierarchy.md §2). The ref keeps its old
+        # shape on purpose: it is a historical upsert key, and rewriting it
+        # would turn every existing row into a duplicate on the next import.
+        props["source"] = "authority"
         props["ref"] = f"fx:pivot:{slug(props['n'])}|{slug(props.get('town', ''))}"
         out.append({"type": "Feature", "properties": props, "geometry": f["geometry"]})
     return out

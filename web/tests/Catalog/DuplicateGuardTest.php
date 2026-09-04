@@ -114,9 +114,9 @@ final class DuplicateGuardTest extends KernelTestCase
     {
         // Re-importing is normal; every import would otherwise skip everything
         // it imported last time.
-        $this->seed('O', 'Hôtel Koru', 50.66887, 4.90664, ItemSource::Pivot, 'h');
+        $this->seed('O', 'Hôtel Koru', 50.66887, 4.90664, ItemSource::Authority, 'h');
 
-        self::assertNull($this->guard->existing('O', 'Hôtel Koru', 50.66887, 4.90664, 'pivot:test:dup:h'));
+        self::assertNull($this->guard->existing('O', 'Hôtel Koru', 50.66887, 4.90664, 'authority:test:dup:h'));
     }
 
     public function testAPunctuationOnlyNameNeverMatches(): void
@@ -134,7 +134,7 @@ final class DuplicateGuardTest extends KernelTestCase
         $held = $this->guard->existing('O', 'Hôtel Koru', 50.66884, 4.90664);
         self::assertNotNull($held);
 
-        $line = DuplicateGuard::explain('Hôtel Koru', ItemSource::Pivot, $held);
+        $line = DuplicateGuard::explain('Hôtel Koru', ItemSource::Authority, $held);
 
         // "skipped 4 duplicates" is not actionable. The operator needs the id.
         self::assertStringContainsString('#'.$held['id'], $line);

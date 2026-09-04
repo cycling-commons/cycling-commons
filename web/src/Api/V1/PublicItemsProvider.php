@@ -34,7 +34,7 @@ final class PublicItemsProvider
     public function featuresInBbox(?string $letter, array $bbox, int $limit, ?string $tier = null): array
     {
         // Named once so SELECT and the tier filter cannot disagree; no contributor join.
-        $verified = '(i.state = \'verified\' OR i.source = \'pivot\' OR EXISTS (SELECT 1 FROM item_confirmation c WHERE c.item_id = i.id AND c.source <> \'form\'))';
+        $verified = '(i.state = \'verified\' OR i.source = \'authority\' OR EXISTS (SELECT 1 FROM item_confirmation c WHERE c.item_id = i.id AND c.source <> \'form\'))';
 
         $sql = 'SELECT i.id, i.name, i.letter, ST_AsGeoJSON(i.geom) AS geom, '.$verified.' AS verified
                 FROM item i

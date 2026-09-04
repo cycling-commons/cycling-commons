@@ -1,0 +1,409 @@
+<?php
+
+// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+
+declare(strict_types=1);
+
+namespace App\Catalog\Entity;
+
+use Doctrine\DBAL\Types\Types;
+use Doctrine\ORM\Mapping as ORM;
+
+/**
+ * One dataset we take records from, and everything we owe it.
+ *
+ * The `authority` bucket used to be one enum case named after its first
+ * member (`pivot`, Geoportail Wallonie), with the rider-facing citation a
+ * string in a front-end constant. One provider fits in a constant; a world of
+ * them does not. This table is the registry that replaces both.
+ *
+ * A dataset earns the `authority` rank when its publisher is the body of
+ * record for the thing being mapped: RIVM publishes the Dutch tap register
+ * because the water companies that fit the taps report to it. A dataset that
+ * is merely somebody else's good map does not, and is either an OSM-grade
+ * crowd source or not ingested at all.
+ *
+ * **OpenStreetMap and Wikidata are rows here too**, seeded with `system` set
+ * so nobody can delete them. Their `endpoint` and `fieldMap` are ignored,
+ * because their harvests are their own code; they live here so that ONE table
+ * answers "who do we cite, and under what licence" for every row on the map.
+ * A credits page assembled from two places drifts.
+ *
+ * @see docs/specs/data-provider-hierarchy.md §3
+ *
+ * @api
+ */
+#[ORM\Entity]
+#[ORM\Table(name: 'data_provider')]
+#[ORM\UniqueConstraint(name: 'uniq_data_provider_key', columns: ['provider_key'])]
+class DataProvider
+{
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: Types::BIGINT)]
+    private ?int $id = null;
+
+    /**
+     * The stable slug, used in `source_ref` and in desk URLs.
+     *
+     * Immutable once rows reference it: an upsert key that changes is an
+     * upsert key that stops matching, which turns every refresh into a full
+     * set of duplicates.
+     *
+     * Stored as `provider_key` because `key` is reserved in several of the
+     * places this column is read from.
+     */
+    #[ORM\Column(name: 'provider_key', type: Types::STRING, length: 64)]
+    private string $key;
+
+    /** What a rider sees in a drawer line: "RIVM", "Tourisme Wallonie". */
+    #[ORM\Column(type: Types::STRING, length: 120)]
+    private string $name;
+
+    /** The long form, for the credits page. */
+    #[ORM\Column(name: 'full_name', type: Types::STRING, length: 255)]
+    private string $fullName;
+
+    /** Where the citation links. */
+    #[ORM\Column(type: Types::STRING, length: 500)]
+    private string $homepage;
+
+    /** Free text for a reader: "Public Domain Mark 1.0", "CC BY 4.0". */
+    #[ORM\Column(type: Types::STRING, length: 255)]
+    private string $licence;
+
+    /**
+     * The machine-readable form of the same fact.
+     *
+     * Separate from `licence` because it is what decides the credit's weight
+     * on the credits page: a public-domain dataset owes no attribution line
+     * and a CC BY one does.
+     */
+    #[ORM\Column(name: 'licence_code', type: Types::STRING, length: 40)]
+    private string $licenceCode;
+
+    /**
+     * Who made the dataset, when that is not who publishes it.
+     *
+     * NULL when publisher and creator are the same body, which is the common
+     * case. Named separately because a courtesy credit to the maker of a
+     * dataset somebody else republishes is a debt the licence does not
+     * always spell out.
+     */
+    #[ORM\Column(type: Types::STRING, length: 255, nullable: true)]
+    private ?string $creator = null;
+
+    /** Lifts a courtesy credit into a full row on the credits page. */
+    #[ORM\Column(type: Types::BOOLEAN)]
+    private bool $promoted = false;
+
+    /** The exact line the licence obliges us to show, when it names one. */
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $attribution = null;
+
+    /** ISO 3166-1 alpha-2, or NULL for a worldwide dataset. */
+    #[ORM\Column(name: 'country_code', type: Types::STRING, length: 2, nullable: true)]
+    private ?string $countryCode = null;
+
+    /**
+     * Which catalogue letters this dataset fills, e.g. `["B"]` for taps.
+     *
+     * @var list<string>
+     */
+    #[ORM\Column(type: Types::JSON)]
+    private array $letters = [];
+
+    /**
+     * Where this dataset sits in the keeper hierarchy.
+     *
+     * Rider rows (`manual`, `user`, `scout`) sit above every row here and are
+     * not expressible as one: a curator cannot give a provider a rank that
+     * outranks a rider's own contribution. `auto` stays below everything.
+     * Seeded to today's values, so admitting the registry moves nothing:
+     * `osm` 100, `wikidata` 200, and the Wallonia rows above both.
+     *
+     * @see docs/specs/data-provider-hierarchy.md §4
+     */
+    #[ORM\Column(type: Types::INTEGER)]
+    private int $rank = 300;
+
+    /** False while nobody here has touched a row from this dataset. */
+    #[ORM\Column(name: 'community_edited', type: Types::BOOLEAN)]
+    private bool $communityEdited = false;
+
+    /** URL of the machine-readable source. Ignored for a `system` row. */
+    #[ORM\Column(type: Types::STRING, length: 500, nullable: true)]
+    private ?string $endpoint = null;
+
+    /** `wfs`, `geojson`, `csv`, `arcgis`. Ignored for a `system` row. */
+    #[ORM\Column(name: 'endpoint_kind', type: Types::STRING, length: 20, nullable: true)]
+    private ?string $endpointKind = null;
+
+    /**
+     * Which upstream field feeds which of our attributes.
+     *
+     * @var array<string, string>
+     */
+    #[ORM\Column(name: 'field_map', type: Types::JSON)]
+    private array $fieldMap = [];
+
+    /**
+     * How close an upstream point must be to an OSM node to be the same thing.
+     *
+     * A judgement per provider, not a constant: for the Dutch taps 25 m
+     * under-matches and creates duplicate pins, 250 m can swallow two real
+     * taps at either end of a square.
+     *
+     * @see docs/specs/data-provider-hierarchy.md §5.1
+     */
+    #[ORM\Column(name: 'match_radius_m', type: Types::INTEGER)]
+    private int $matchRadiusM = 50;
+
+    /** Free text for a curator: "twice yearly", "monthly". */
+    #[ORM\Column(name: 'refresh_cadence', type: Types::STRING, length: 60, nullable: true)]
+    private ?string $refreshCadence = null;
+
+    #[ORM\Column(name: 'last_run_at', type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $lastRunAt = null;
+
+    #[ORM\Column(name: 'last_count', type: Types::INTEGER, nullable: true)]
+    private ?int $lastCount = null;
+
+    #[ORM\Column(name: 'last_error', type: Types::TEXT, nullable: true)]
+    private ?string $lastError = null;
+
+    /** Off means "keep the rows, stop refreshing", never "delete the rows". */
+    #[ORM\Column(type: Types::BOOLEAN)]
+    private bool $enabled = true;
+
+    /** True for the seeded rows nobody may delete. */
+    #[ORM\Column(type: Types::BOOLEAN)]
+    private bool $system = false;
+
+    public function __construct(
+        string $key,
+        string $name,
+        string $fullName,
+        string $homepage,
+        string $licence,
+        string $licenceCode,
+        int $rank,
+    ) {
+        $this->key = $key;
+        $this->name = $name;
+        $this->fullName = $fullName;
+        $this->homepage = $homepage;
+        $this->licence = $licence;
+        $this->licenceCode = $licenceCode;
+        $this->rank = $rank;
+    }
+
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
+
+    public function getKey(): string
+    {
+        return $this->key;
+    }
+
+    public function getName(): string
+    {
+        return $this->name;
+    }
+
+    public function getFullName(): string
+    {
+        return $this->fullName;
+    }
+
+    public function getHomepage(): string
+    {
+        return $this->homepage;
+    }
+
+    public function getLicence(): string
+    {
+        return $this->licence;
+    }
+
+    public function getLicenceCode(): string
+    {
+        return $this->licenceCode;
+    }
+
+    public function getCreator(): ?string
+    {
+        return $this->creator;
+    }
+
+    public function setCreator(?string $creator): void
+    {
+        $this->creator = $creator;
+    }
+
+    public function isPromoted(): bool
+    {
+        return $this->promoted;
+    }
+
+    public function setPromoted(bool $promoted): void
+    {
+        $this->promoted = $promoted;
+    }
+
+    public function getAttribution(): ?string
+    {
+        return $this->attribution;
+    }
+
+    public function setAttribution(?string $attribution): void
+    {
+        $this->attribution = $attribution;
+    }
+
+    public function getCountryCode(): ?string
+    {
+        return $this->countryCode;
+    }
+
+    public function setCountryCode(?string $countryCode): void
+    {
+        $this->countryCode = $countryCode;
+    }
+
+    /** @return list<string> */
+    public function getLetters(): array
+    {
+        return $this->letters;
+    }
+
+    /** @param list<string> $letters */
+    public function setLetters(array $letters): void
+    {
+        $this->letters = $letters;
+    }
+
+    public function getRank(): int
+    {
+        return $this->rank;
+    }
+
+    public function setRank(int $rank): void
+    {
+        $this->rank = $rank;
+    }
+
+    public function isCommunityEdited(): bool
+    {
+        return $this->communityEdited;
+    }
+
+    public function setCommunityEdited(bool $communityEdited): void
+    {
+        $this->communityEdited = $communityEdited;
+    }
+
+    public function getEndpoint(): ?string
+    {
+        return $this->endpoint;
+    }
+
+    public function setEndpoint(?string $endpoint): void
+    {
+        $this->endpoint = $endpoint;
+    }
+
+    public function getEndpointKind(): ?string
+    {
+        return $this->endpointKind;
+    }
+
+    public function setEndpointKind(?string $endpointKind): void
+    {
+        $this->endpointKind = $endpointKind;
+    }
+
+    /** @return array<string, string> */
+    public function getFieldMap(): array
+    {
+        return $this->fieldMap;
+    }
+
+    /** @param array<string, string> $fieldMap */
+    public function setFieldMap(array $fieldMap): void
+    {
+        $this->fieldMap = $fieldMap;
+    }
+
+    public function getMatchRadiusM(): int
+    {
+        return $this->matchRadiusM;
+    }
+
+    public function setMatchRadiusM(int $matchRadiusM): void
+    {
+        $this->matchRadiusM = $matchRadiusM;
+    }
+
+    public function getRefreshCadence(): ?string
+    {
+        return $this->refreshCadence;
+    }
+
+    public function setRefreshCadence(?string $refreshCadence): void
+    {
+        $this->refreshCadence = $refreshCadence;
+    }
+
+    public function getLastRunAt(): ?\DateTimeImmutable
+    {
+        return $this->lastRunAt;
+    }
+
+    public function getLastCount(): ?int
+    {
+        return $this->lastCount;
+    }
+
+    public function getLastError(): ?string
+    {
+        return $this->lastError;
+    }
+
+    /** Records the outcome of a harvest, whichever way it went. */
+    public function recordRun(\DateTimeImmutable $at, ?int $count, ?string $error): void
+    {
+        $this->lastRunAt = $at;
+        $this->lastCount = $count;
+        $this->lastError = $error;
+    }
+
+    public function isEnabled(): bool
+    {
+        return $this->enabled;
+    }
+
+    public function setEnabled(bool $enabled): void
+    {
+        $this->enabled = $enabled;
+    }
+
+    public function isSystem(): bool
+    {
+        return $this->system;
+    }
+
+    /**
+     * Marks a row as one of the seeded ones nobody may delete.
+     *
+     * No setter to turn it back off: a row becomes untouchable by being one
+     * of ours, and a curator who could clear the flag could then delete the
+     * OpenStreetMap row that every raw pin on the map is credited to.
+     */
+    public function markSystem(): void
+    {
+        $this->system = true;
+    }
+}

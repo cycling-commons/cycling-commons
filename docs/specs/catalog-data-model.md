@@ -254,7 +254,7 @@ diagrammed in [osm-data-architecture.md §2](osm-data-architecture.md).
 | Value | Meaning |
 |---|---|
 | `osm` | Harvested from OpenStreetMap (`source_ref` = `node/…` / `way/…`) |
-| `pivot` | Géoportail Wallonie PIVOT (official Tourisme Wallonie accommodation) |
+| `authority` | A publisher of record for the thing mapped. Which one is `item.provider`, a row in `data_provider` ([data-provider-hierarchy.md](data-provider-hierarchy.md) §3). Today the only one is Géoportail Wallonie PIVOT, official Tourisme Wallonie accommodation |
 | `wikidata` | Wikidata-anchored rows (`source_ref` = `Q…`) |
 | `user` | Rider contribution through the app |
 | `scout` | Rider ride-trace intake ([moderation-and-contribution.md](moderation-and-contribution.md), Scout intake). How it arrived, not verification: the server never saw the ride file |
@@ -265,16 +265,18 @@ diagrammed in [osm-data-architecture.md §2](osm-data-architecture.md).
 (`RIDER_SOURCES` in `web/assets/map/i18n.js`); the rest keep their upstream
 citation in the drawer.
 
-!!! note "Planned: `pivot` becomes `authority`, ranked from a registry"
-    [data-provider-hierarchy.md](data-provider-hierarchy.md) replaces the
-    `pivot` value and the fixed ladder below with an `authority` value whose
-    rank comes from a curator-maintained `data_provider` table. Specified
-    2026-08-27, not built. The rider sources and `auto` keep their positions;
-    only the middle of the ladder moves.
+!!! note "`pivot` became `authority` on 2026-09-04; the registry rank is still to come"
+    The value was a bucket named after its first member. It is now
+    `authority`, and every row in it points at a `data_provider` row
+    ([data-provider-hierarchy.md](data-provider-hierarchy.md) §3, §10).
+    The ladder below is unchanged: every authority still sits on the one
+    rung `pivot` sat on. Ranking each provider from its own registry row
+    (that document's §4) is specified and not built, and lands with the
+    generic harvester.
 
 **Keeper order**, used by the duplicate guard alone
 (catalog-data-model.md §5a) and by nothing else:
-`manual` > `user` > `scout` > `pivot` > `wikidata` > `osm` > `auto`. The
+`manual` > `user` > `scout` > `authority` > `wikidata` > `osm` > `auto`. The
 authority is `App\Catalog\ItemSource::dedupeRank()`, which carries the reason
 for each position; do not restate the numbers here, they would drift. It is not
 a quality score and says nothing about a row's lifecycle state.
@@ -344,7 +346,7 @@ and drift here means the import guard and the pre-screen report disagree about
 what a duplicate is.
 
 **Which row wins.** `ItemSource::dedupeRank()`:
-`manual` > `user` > `scout` > `pivot` > `wikidata` > `osm` > `auto`. It is not a
+`manual` > `user` > `scout` > `authority` > `wikidata` > `osm` > `auto`. It is not a
 quality score and says nothing about lifecycle state; it answers one question,
 "which of these two records of one place is ours to keep". Without it the winner
 is whichever harvest happened to import first, which is how a canonical PIVOT
@@ -955,7 +957,7 @@ Harvest-side rules that shape what arrives (toolchain:
 | `A` | surface-segment list | `path` = [[lat,lng]…]; `wayId` only for `way/…` refs |
 | `N` | climbs list | `geom.ll` = [lat,lng]; stored `attribution` served as `source` (citation) |
 | `B`,`C`,`D`,`E`,`F`,`G`,`P`,`Q` | GeoJSON FeatureCollection | properties = attributes + `n` (name) + `prov` (subdivision name) + `id` |
-| `O` | `{osm, pivot}` | the only source-split letter: `pivot` rows are their own bucket; every other source lands in `osm` |
+| `O` | `{osm, authority}` | the only source-split letter: an authority's rows are their own bucket, because they carry their publisher's citation and licence; every other source lands in `osm` |
 | `R` | routes list | includes raw `state` (map badges "proposed"), canonicalized `difficulty` and `bikeTypes` |
 | `refs` | `["node/123", …]` | source_ref of every served `source='osm'` item, so the client can drop the coverage-tile twin (osm-data-architecture.md §8) |
 | heat | **absent** | the ride heatmap (no letter) moved to its own endpoint on 2026-08-09 (below) |
@@ -1035,7 +1037,7 @@ the catalog pipeline enforces:
 | Wikidata | CC0 | used for notability ranking/identifiers; no attribution required (credited anyway) |
 | Wikipedia | CC BY-SA 4.0 | short descriptions → `desc` (truncated at 260 chars, `enrich.py`); machine-translated ones flagged `descTr` |
 | Wikimedia Commons | per-file | **every photo attribute structurally carries `credit` + `license` + `source`** (`enrich._photo()` always stamps all three); only free licences are ever attached (the `FREE` allowlist in `tools/wallonia/enrich.py`); the drawer renders credit (linked to the author's profile) + licence deed link + Commons file-page link |
-| Géoportail Wallonie PIVOT | open data (CC-BY-compatible) | own `pivot` source + own `O` bucket, driving the Tourisme-Wallonie attribution branch in the stays merge |
+| Géoportail Wallonie PIVOT | open data (CC-BY-compatible) | `authority` source + own `O` bucket, driving the Tourisme-Wallonie attribution branch in the stays merge |
 
 Photos are the one real licence trap: a photo that cannot be licensed cleanly
 is dropped, never guessed.

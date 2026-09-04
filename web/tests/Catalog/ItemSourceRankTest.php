@@ -27,7 +27,7 @@ final class ItemSourceRankTest extends TestCase
         // five OSM rows for the same five buildings. PIVOT is canonical for O
         // and carries its own CC-BY attribution, so losing it to an OSM row
         // that imported first would drop the attribution with it.
-        self::assertGreaterThan(ItemSource::Osm->dedupeRank(), ItemSource::Pivot->dedupeRank());
+        self::assertGreaterThan(ItemSource::Osm->dedupeRank(), ItemSource::Authority->dedupeRank());
     }
 
     public function testWikidataOutranksOsm(): void
@@ -40,7 +40,7 @@ final class ItemSourceRankTest extends TestCase
     {
         // Hand-authored by us and never upserted by a harvest
         // (catalog-data-model.md §5). Nothing may displace it.
-        foreach ([ItemSource::Osm, ItemSource::Pivot, ItemSource::Wikidata, ItemSource::Scout, ItemSource::User, ItemSource::Auto] as $other) {
+        foreach ([ItemSource::Osm, ItemSource::Authority, ItemSource::Wikidata, ItemSource::Scout, ItemSource::User, ItemSource::Auto] as $other) {
             self::assertGreaterThan(
                 $other->dedupeRank(),
                 ItemSource::Manual->dedupeRank(),
@@ -53,7 +53,7 @@ final class ItemSourceRankTest extends TestCase
     {
         // Someone was there, and a moderator has already spent time on it.
         foreach ([ItemSource::User, ItemSource::Scout] as $rider) {
-            self::assertGreaterThan(ItemSource::Pivot->dedupeRank(), $rider->dedupeRank());
+            self::assertGreaterThan(ItemSource::Authority->dedupeRank(), $rider->dedupeRank());
         }
     }
 

@@ -71,7 +71,7 @@ values, and they are what a drawer's citation line is built from:
 | `manual` | Hand-authored by us. A seeded hero pin, a demo route. The harvest never touches it | rider |
 | `user` | A rider added or edited it through the app | rider |
 | `scout` | A rider's ride trace suggested it. How it arrived, not proof: the server never saw the ride file | rider |
-| `pivot` | An open-data provider. Today that is Géoportail Wallonie PIVOT, official accommodation, CC-BY | Tourisme Wallonie |
+| `authority` | A publisher of record for the thing mapped, named in the provider registry. Today the only one is Géoportail Wallonie PIVOT, official accommodation, CC-BY | Tourisme Wallonie |
 | `wikidata` | Anchored to a Wikidata entry | Wikidata |
 | `osm` | Straight from the harvest. Most of the map | OpenStreetMap |
 | `auto` | Our own pipeline computed it, for example a surface stretch. Deleted and rebuilt wholesale, never edited in place | derived |

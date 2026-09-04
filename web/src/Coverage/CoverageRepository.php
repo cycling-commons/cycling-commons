@@ -20,7 +20,7 @@ use Doctrine\DBAL\ParameterType;
  * `source_ref` for a harvested row and `osm_ref` for everything else.
  *
  * source_ref alone was not enough. It is the harvest's own upsert key, so a
- * PIVOT row carries `fx:pivot:hotel-koru|ramillies` and a Wikidata row
+ * Wallonia row carries `fx:pivot:hotel-koru|ramillies` and a Wikidata row
  * `wikidata:Q322824`; neither can ever equal `node/6123208864`. OSM is the
  * identity spine and `osm_ref` is the join key (catalog-data-model.md §5b,
  * osm-data-architecture.md §1), which is why the Item entity carries it at all.

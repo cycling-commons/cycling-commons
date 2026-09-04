@@ -36,7 +36,7 @@
     window.CC_WATER_OSM = d.B;
     window.CC_SERVICES_OSM = d.D;
     window.CC_STAYS_OSM = d.O.osm;
-    window.CC_STAYS_PIVOT = d.O.pivot;
+    window.CC_STAYS_AUTHORITY = d.O.authority;
     window.CC_HAZARDS = d.E;
     window.CC_TRANSIT_OSM = d.F;
     window.CC_SHELTER_OSM = d.G;
@@ -47,12 +47,13 @@
     window.CC_TOILETS_OSM = d.C;
     // Coverage dedupe (docs/specs/coverage-provider.md §6): source_refs already served as items.
     window.CC_CURATED_REFS = d.refs || [];
-    // Stays merge: tag PIVOT features and append them once (Tourisme-Wallonie attribution).
-    var O = window.CC_STAYS_OSM, P = window.CC_STAYS_PIVOT;
-    if (O && P && !O._pivot) {
-      P.features.forEach(function (f) { f.properties.src = 'pivot'; });
+    // Stays merge: tag the authority's features and append them once, so
+    // the drawer can credit their publisher instead of OSM.
+    var O = window.CC_STAYS_OSM, P = window.CC_STAYS_AUTHORITY;
+    if (O && P && !O._authority) {
+      P.features.forEach(function (f) { f.properties.src = 'authority'; });
       O.features = O.features.concat(P.features);
-      O._pivot = 1;
+      O._authority = 1;
     }
   }
 

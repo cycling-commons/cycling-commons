@@ -149,14 +149,14 @@ final class CatalogProviderTest extends KernelTestCase
     {
         $e = $this->payload()['O'];
         self::assertCount(1, $e['osm']['features']);
-        self::assertCount(1, $e['pivot']['features']);
+        self::assertCount(1, $e['authority']['features']);
         self::assertSame('Camping Test', $e['osm']['features'][0]['properties']['n']);
-        self::assertSame('http://example.test', $e['pivot']['features'][0]['properties']['web']);
+        self::assertSame('http://example.test', $e['authority']['features'][0]['properties']['web']);
         self::assertIsInt($e['osm']['features'][0]['properties']['id']);
-        self::assertIsInt($e['pivot']['features'][0]['properties']['id']);
+        self::assertIsInt($e['authority']['features'][0]['properties']['id']);
         // W6: each bucket's srcType matches the split it was fetched by.
         self::assertSame('osm', $e['osm']['features'][0]['properties']['srcType']);
-        self::assertSame('pivot', $e['pivot']['features'][0]['properties']['srcType']);
+        self::assertSame('authority', $e['authority']['features'][0]['properties']['srcType']);
     }
 
     /**
@@ -165,18 +165,18 @@ final class CatalogProviderTest extends KernelTestCase
      * even in unverified state with zero confirmations — the registry listing
      * is the trust signal, so it never renders as community tier.
      */
-    public function testPivotRowsCarryVerifiedFlagFromRegistryProvenance(): void
+    public function testAuthorityRowsCarryVerifiedFlagFromRegistryProvenance(): void
     {
         $conn = $this->em->getConnection();
         $conn->executeStatement(
-            "UPDATE item SET state = 'unverified' WHERE source = 'pivot'",
+            "UPDATE item SET state = 'unverified' WHERE source = 'authority'",
         );
         $conn->executeStatement(
-            'DELETE FROM item_confirmation WHERE item_id IN (SELECT id FROM item WHERE source = \'pivot\')',
+            'DELETE FROM item_confirmation WHERE item_id IN (SELECT id FROM item WHERE source = \'authority\')',
         );
 
-        foreach ($this->payload()['O']['pivot']['features'] as $f) {
-            self::assertSame(1, $f['properties']['v'], 'registry provenance alone must verify a pivot row');
+        foreach ($this->payload()['O']['authority']['features'] as $f) {
+            self::assertSame(1, $f['properties']['v'], 'registry provenance alone must verify an authority row');
         }
     }
 

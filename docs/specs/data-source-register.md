@@ -5,9 +5,9 @@
 !!! note "This register admits a source. It does not run one."
     How an admitted dataset is stored, ranked against OpenStreetMap, refreshed,
     cited and drawn is
-    [data-provider-hierarchy.md](data-provider-hierarchy.md), which turns the
-    `pivot` bucket into a curator-maintained registry of authorities. Licence
-    admission stays here.
+    [data-provider-hierarchy.md](data-provider-hierarchy.md), which turned the
+    `pivot` bucket into `authority` plus a curator-maintained registry of
+    publishers. Licence admission stays here.
 
 **Status:** canonical reference · **Audience:** contributors and curators
 adding data, or evaluating a new upstream source

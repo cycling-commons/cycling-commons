@@ -303,7 +303,7 @@ final class ModerateDataDeskTest extends WebTestCase
     private function pair(string $slug): array
     {
         return [
-            $this->item($slug.'-keep', 'Hôtel Koru', ItemSource::Pivot, 'O'),
+            $this->item($slug.'-keep', 'Hôtel Koru', ItemSource::Authority, 'O'),
             $this->item($slug.'-lose', 'Hôtel Koru', ItemSource::Osm, 'O'),
         ];
     }
