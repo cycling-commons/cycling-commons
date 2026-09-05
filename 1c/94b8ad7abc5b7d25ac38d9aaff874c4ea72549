@@ -1,0 +1,26 @@
+wiki/developers/gis/on-screen.md
+  s_e0ffb8a06b8555::t_fc569e8d948c29 281-284,288-294,297-300
+web/tests/Catalog/CoverageContractTest.php
+  s_e0ffb8a06b8555::t_fc569e8d948c29 95-99
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "1c94b8ad7abc5b7d25ac38d9aaff874c4ea72549",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_e0ffb8a06b8555": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4fe85470-dd9e-4fe5-8777-dfb41a0c5082",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
