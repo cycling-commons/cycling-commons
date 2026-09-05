@@ -278,18 +278,26 @@ nested-array formula that MapLibre evaluates separately for every feature, readi
 properties out of the tile. This is how one layer draws many different-looking things instead of
 needing one layer per variant.
 
-`addCoverage()`'s water icon is exactly that. Instead of one drop icon for every water point, it
-reads each feature's own `potable` property and picks between two icons:
+`addCoverage()`'s water-and-food icon is exactly that. Instead of one drop icon for every letter-B
+point, it reads each feature's own `food` and `potable` properties and picks one of five kind glyphs
+(the drawings live in one registry, `KindIcons`, and are minted into map images named
+`kind-b-<kind>`):
 
 <!-- CODE-FROM web/assets/map/coverage.js -->
 ```js
-['match',['to-string',['get','potable']],['yes','true','1'],'water-drop','water-drop-unk']
+const isFood = ['match',['to-string',['get','food']],['true','1','yes'],true,false];
+const isPotable = ['match',['to-string',['get','potable']],['yes','true','1'],true,false];
+const isNotPotable = ['==',['to-string',['get','potable']],'no'];
+const icon = key==='water'
+  ? ['case', isFood,
+      ['case', isPotable, kindImageId('B','food_water'), kindImageId('B','food')],
+      ['case', isPotable, kindImageId('B','tap'), isNotPotable, kindImageId('B','no'), kindImageId('B','unk')]]
 ```
 
-Read it like an if/else: get the feature's `potable` value, treat it as a string, and if that string
-is `'yes'`, `'true'` or `'1'`, use the `water-drop` icon; otherwise fall back to `water-drop-unk` (an
-unknown-potability variant). One layer, one `icon-image` line, and every one of the thousands of
-water points in the source draws its own correct icon. The D · bike-services layer does the same
+Read it like nested if/else: is it a food stop? Then the fork-and-knife disc, with a small drop if it
+also gives water. Otherwise a tap: the filled blue drop when `potable` says yes, the barred drop when
+it says `'no'`, and the unfilled drop when it says nothing. One layer, one `icon-image` line, and
+every one of the hundreds of thousands of letter-B points draws its own correct icon. The D · bike-services layer does the same
 trick on a `kind` property, picking between a shop, station and pump glyph:
 
 <!-- CODE-FROM web/assets/map/coverage.js -->

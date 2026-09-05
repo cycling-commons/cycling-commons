@@ -92,8 +92,11 @@ final class CoverageContractTest extends TestCase
         $letters = $this->loadContract()['letters'];
 
         // coverage-provider.md §4: ref/n/t are implicit
-        // on every layer; tileProps lists only the per-letter extras.
-        self::assertSame(['potable'], $letters['B']['tileProps']);
+        // on every layer; tileProps lists only the per-letter extras. Letter B
+        // carries two: `potable` (yes / no / absent) and `food`, the shop and
+        // eatery half, because the pin draws a kind for each
+        // (data-provider-hierarchy.md §6.3a).
+        self::assertSame(['potable', 'food'], $letters['B']['tileProps']);
         self::assertSame(['kind'], $letters['D']['tileProps']);
         self::assertSame(['acc'], $letters['O']['tileProps']);
         foreach (['F', 'G', 'P', 'Q'] as $letter) {
