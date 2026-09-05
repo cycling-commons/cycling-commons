@@ -486,7 +486,14 @@ re-harvested, so it is computed once and stored on the row:
 
 `App\Catalog\Import\OsmCandidates` owns it: intake computes it when the row
 is created (`refresh()`), an approved pin move recomputes it at the new point
-(`refreshAt()`, ModerationService), and the desk reads it (`forItems()`),
+(`refreshAt()`, ModerationService, answered or not: the old answer was about
+the old spot) and, when the new point lies within `OsmLinker::ON_TOP_M` (15 m)
+of an OSM object of its letter that no other served row claims, links the row
+to it (`onTopOf()`, `answerOsm()`, a `change_history` row on `osmRef`). Owner
+2026-09-05, after moving a nameless RIVM tap onto the spot of a deleted CC-row
+and seeing the raw OSM drop come back beside it: "when location is changed it
+must also look if it is now on top of an OSM spot. Not only for water but for
+other types." The desk reads the list with (`forItems()`),
 computing only where the column is NULL. The pipeline's per-region swap
 (`load.py`, in the swap transaction, right after the delete-disappeared arm)
 sets both columns back to NULL for every **open** row whose `country_code` is

@@ -11,6 +11,7 @@ use App\Catalog\Entity\ChangeHistory;
 use App\Catalog\Entity\Item;
 use App\Catalog\Entity\Submission;
 use App\Catalog\Import\OsmCandidates;
+use App\Catalog\Import\OsmLinker;
 use App\Catalog\ItemState;
 use App\Catalog\ItemType;
 use App\Catalog\SubmissionStatus;
@@ -54,6 +55,7 @@ final class ModerationService
         private readonly ItemConfirmationService $confirmations,
         private readonly EscalationAlert $escalationAlert,
         private readonly OsmCandidates $osmCandidates,
+        private readonly OsmLinker $osmLinker,
     ) {
     }
 
@@ -282,9 +284,18 @@ final class ModerationService
                         'coordinates' => [(float) $parts[1], (float) $parts[0]],
                     ], \JSON_THROW_ON_ERROR));
                     // The place moved: its stored OSM-candidate list is stale
-                    // (catalog-data-model.md §5b). Recompute at the new point.
-                    if (!$item->osmAnswered()) {
-                        $this->osmCandidates->refreshAt((int) $item->getId(), $item->getLetter(), (float) $parts[0], (float) $parts[1]);
+                    // (catalog-data-model.md §5b). Recompute at the new point,
+                    // answered or not: the old answer was about the old spot.
+                    $this->osmCandidates->refreshAt((int) $item->getId(), $item->getLetter(), (float) $parts[0], (float) $parts[1]);
+                    // And if it now sits on top of an OSM object nobody claims,
+                    // it IS that object: link it, so the raw pin under it goes
+                    // (owner 2026-09-05, every letter). A row already linked to
+                    // something else keeps its link only while that object is
+                    // still the one it sits on.
+                    $twin = $this->osmLinker->onTopOf($item->getLetter(), (float) $parts[0], (float) $parts[1], (int) $item->getId());
+                    if (null !== $twin && $twin !== $item->getOsmRef()) {
+                        $this->history($item, $submission, $curator, 'osmRef', $item->getOsmRef(), $twin);
+                        $item->answerOsm($twin);
                     }
                     $changed = true;
                     $this->history($item, $submission, $curator, $field, $pair['was'] ?? null, $now);

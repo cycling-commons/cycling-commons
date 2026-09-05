@@ -10,9 +10,15 @@
   change here in the same commit (both carry the same spec reference).
 
   **A planned mark never looks live.** Marks that are designed but not drawn
-  yet (the provider tier, the out-of-order and limited-access badges) stay on
-  the page so the design is public, but each carries the planned tag and the
-  section says plainly that the map does not draw them yet.
+  yet (the provider tier) stay on the page so the design is public, but each
+  carries the planned tag and the section says plainly that the map does not
+  draw them yet.
+
+  **Kinds come from the registry.** The pin grammar
+  (docs/specs/data-provider-hierarchy.md §6.3): kind lives in the glyph, state
+  is two shared badges, everything else is drawer content. The kinds section
+  is generated from KindIcons::set() through cc_kind_icons(), the same paths
+  the map mints its tile icons from, so it cannot drift.
 #}
 {% extends 'base.html.twig' %}
 
@@ -35,6 +41,8 @@
 {% endmacro %}
 
 {% import _self as mk %}
+{# A letter-B pin draws its kind glyph (KindIcons), as pinEl does on the map. #}
+{% set bTap %}<span class="drawn">{% include 'partials/_kind_icon.html.twig' with {letter: 'B', kind: 'tap', size: 16} %}</span>{% endset %}
 
 {% block head_styles %}
 <style>
@@ -79,10 +87,12 @@
     background:var(--ochre);color:#14160E;border-radius:50%;font-family:var(--mono);font-size:9px;font-weight:700;line-height:13px;text-align:center}
   .mk-pin.provider{border:2.5px dashed #FFFFFF;
     box-shadow:0 0 0 1.5px rgba(20,22,14,.9),0 3px 8px rgba(16,30,22,.4)}
-  .mk-pin.warn::before{content:"!";position:absolute;width:14px;height:14px;top:-6px;left:-6px;
-    background:#D92D20;color:#fff;border-radius:50%;font-family:var(--mono);font-size:10px;font-weight:700;line-height:14px;text-align:center}
-  .mk-pin.hours::before{content:"◷";position:absolute;width:14px;height:14px;top:-6px;left:-6px;
-    background:var(--ink);color:#F3EBD8;border-radius:50%;font-family:var(--mono);font-size:10px;font-weight:700;line-height:14px;text-align:center}
+  /* The two shared state badges, top-left, as map.css .cc-pin .cc-st draws them. */
+  .mk-pin .cc-st{position:absolute;width:14px;height:14px;top:-6px;left:-6px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;font:700 10px/14px var(--mono);box-shadow:0 1px 3px rgba(16,30,22,.5)}
+  .mk-pin .cc-st.warn{background:#D92D20;color:#fff}
+  .mk-pin .cc-st.hours{background:#14160E;color:#F3EBD8}
+  .mk-kind-sw .cc-kind--glyph{font-family:"Apple Color Emoji","Noto Color Emoji","Segoe UI Emoji","Noto Sans Symbols2",system-ui,sans-serif}
   .mk-disc{width:24px;height:24px;border-radius:50%;background:var(--c);flex:none;
     border:1.6px solid rgba(20,22,14,.85);display:flex;align-items:center;justify-content:center;font-size:.72rem}
   .mk-disc .g{font-family:"Apple Color Emoji","Noto Color Emoji","Segoe UI Emoji","Noto Sans Symbols2",system-ui,sans-serif;filter:brightness(0) invert(1)}
@@ -156,40 +166,47 @@
       <span class="mk-tag">{{ 'legend.tag_live'|trans }}</span>
     </div>
     <div class="mk-row">
-      <div class="mk-sw" aria-hidden="true">
-        <svg width="20" height="26" viewBox="0 0 14 18"><path d="M7 1 C13 8.3 11.2 17 7 17 C2.8 17 1 8.3 7 1 Z" fill="#3E8FB0" stroke="#0d2b3a" stroke-width="1.4"/></svg>
-        <svg width="20" height="26" viewBox="0 0 14 18"><path d="M7 1 C13 8.3 11.2 17 7 17 C2.8 17 1 8.3 7 1 Z" fill="#7F8C93" stroke="#2b3338" stroke-width="1.4"/></svg>
-      </div>
-      <div class="mk-t"><strong>{{ 'legend.tier_water_h'|trans }}</strong><span>{{ 'legend.tier_water_t'|trans }}</span></div>
-      <span class="mk-tag">{{ 'legend.tag_live'|trans }}</span>
-    </div>
-    <div class="mk-row">
-      <div class="mk-sw"><span class="mk-pin provider lt" style="--c:{{ mkc.B }}" aria-hidden="true">{{ mk.glyph('B') }}</span></div>
+      <div class="mk-sw"><span class="mk-pin provider lt" style="--c:{{ mkc.B }}" aria-hidden="true">{{ bTap }}</span></div>
       <div class="mk-t"><strong>{{ 'legend.tier_provider_h'|trans }}</strong><span>{{ 'legend.tier_provider_t'|trans }}</span></div>
       <span class="mk-tag mk-tag--plan">{{ 'legend.tag_plan'|trans }}</span>
     </div>
     <div class="mk-row">
-      <div class="mk-sw"><span class="mk-pin community lt" style="--c:{{ mkc.B }}" aria-hidden="true">{{ mk.glyph('B') }}</span></div>
+      <div class="mk-sw"><span class="mk-pin community lt" style="--c:{{ mkc.B }}" aria-hidden="true">{{ bTap }}</span></div>
       <div class="mk-t"><strong>{{ 'legend.tier_community_h'|trans }}</strong><span>{{ 'legend.tier_community_t'|trans }}</span></div>
       <span class="mk-tag">{{ 'legend.tag_live'|trans }}</span>
     </div>
     <div class="mk-row">
-      <div class="mk-sw"><span class="mk-pin lt" style="--c:{{ mkc.B }}" aria-hidden="true">{{ mk.glyph('B') }}</span></div>
+      <div class="mk-sw"><span class="mk-pin lt" style="--c:{{ mkc.B }}" aria-hidden="true">{{ bTap }}</span></div>
       <div class="mk-t"><strong>{{ 'legend.tier_ours_h'|trans }}</strong><span>{{ 'legend.tier_ours_t'|trans }}</span></div>
       <span class="mk-tag">{{ 'legend.tag_live'|trans }}</span>
     </div>
     <div class="mk-row">
-      <div class="mk-sw"><span class="mk-pin cur lt" style="--c:{{ mkc.B }}" aria-hidden="true">{{ mk.glyph('B') }}</span></div>
+      <div class="mk-sw"><span class="mk-pin cur lt" style="--c:{{ mkc.B }}" aria-hidden="true">{{ bTap }}</span></div>
       <div class="mk-t"><strong>{{ 'legend.tier_verified_h'|trans }}</strong><span>{{ 'legend.tier_verified_t'|trans }}</span></div>
       <span class="mk-tag">{{ 'legend.tag_live'|trans }}</span>
     </div>
   </div>
 
+  <h2>{{ 'legend.kinds_h'|trans }}</h2>
+  <p class="mk-note">{{ 'legend.kinds_note'|trans }}</p>
+  {% for kLetter, kinds in cc_kind_icons() %}
+  <p class="mk-grp">{{ ('item_type.' ~ {'B':'water-food','D':'bike-services'}[kLetter] ~ '.label')|trans }}</p>
+  <div class="mk-rows">
+    {% for kind, kd in kinds %}
+    <div class="mk-row mk-kind" data-kind="{{ kLetter }}:{{ kind }}">
+      <div class="mk-sw mk-kind-sw" aria-hidden="true">{% if kd.paths is defined %}{% include 'partials/_kind_icon.html.twig' with {letter: kLetter, kind: kind, size: 28, color: mkc[kLetter], ink: kLetter in mklt ? '#14160e' : '#fff'} %}{% else %}<span class="mk-disc{{ kLetter in mklt ? ' lt' }}" style="--c:{{ mkc[kLetter] }}"><span class="g">{{ kd.glyph }}</span></span>{% endif %}</div>
+      <div class="mk-t"><strong>{{ ('legend.kind_' ~ kLetter|lower ~ '_' ~ kind ~ '_h')|trans }}</strong><span>{{ ('legend.kind_' ~ kLetter|lower ~ '_' ~ kind ~ '_t')|trans }}</span></div>
+      <span class="mk-tag">{{ 'legend.tag_live'|trans }}</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% endfor %}
+
   <h2>{{ 'legend.state_h'|trans }}</h2>
   <p class="mk-note">{{ 'legend.state_note'|trans }}</p>
   <div class="mk-rows">
     <div class="mk-row">
-      <div class="mk-sw"><span class="mk-pin stale lt" style="--c:{{ mkc.B }}" aria-hidden="true">{{ mk.glyph('B') }}</span></div>
+      <div class="mk-sw"><span class="mk-pin stale lt" style="--c:{{ mkc.B }}" aria-hidden="true">{{ bTap }}</span></div>
       <div class="mk-t"><strong>{{ 'legend.state_stale_h'|trans }}</strong><span>{{ 'legend.state_stale_t'|trans }}</span></div>
       <span class="mk-tag">{{ 'legend.tag_live'|trans }}</span>
     </div>
@@ -219,14 +236,14 @@
   <p class="mk-note">{{ 'legend.fact_note'|trans }}</p>
   <div class="mk-rows">
     <div class="mk-row">
-      <div class="mk-sw"><span class="mk-pin warn lt" style="--c:{{ mkc.B }}" aria-hidden="true">{{ mk.glyph('B') }}</span></div>
+      <div class="mk-sw"><span class="mk-pin lt" style="--c:{{ mkc.B }}" aria-hidden="true">{{ bTap }}<b class="cc-st warn">!</b></span></div>
       <div class="mk-t"><strong>{{ 'legend.fact_broken_h'|trans }}</strong><span>{{ 'legend.fact_broken_t'|trans }}</span></div>
-      <span class="mk-tag mk-tag--plan">{{ 'legend.tag_plan'|trans }}</span>
+      <span class="mk-tag">{{ 'legend.tag_live'|trans }}</span>
     </div>
     <div class="mk-row">
-      <div class="mk-sw"><span class="mk-pin hours lt" style="--c:{{ mkc.B }}" aria-hidden="true">{{ mk.glyph('B') }}</span></div>
+      <div class="mk-sw"><span class="mk-pin lt" style="--c:{{ mkc.B }}" aria-hidden="true">{{ bTap }}<b class="cc-st hours"><svg viewBox="0 0 24 24" width="9" height="9" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="3"/><path d="M12 7v5.5l3.5 2.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></b></span></div>
       <div class="mk-t"><strong>{{ 'legend.fact_hours_h'|trans }}</strong><span>{{ 'legend.fact_hours_t'|trans }}</span></div>
-      <span class="mk-tag mk-tag--plan">{{ 'legend.tag_plan'|trans }}</span>
+      <span class="mk-tag">{{ 'legend.tag_live'|trans }}</span>
     </div>
   </div>
   <div class="mk-plan-note">{{ 'legend.plan_note'|trans }}</div>

@@ -7,12 +7,16 @@ declare(strict_types=1);
 namespace App\Twig;
 
 use App\Catalog\ItemType;
+use App\Catalog\KindIcons;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
 
 /**
  * `cc_type_icons()`: the one category icon set (ItemType::iconSet()) for
  * server-rendered pages. partials/_type_icon.html.twig is its only reader.
+ *
+ * `cc_kind_icons()`: the one kind glyph set (KindIcons::set()), read by
+ * partials/_kind_icon.html.twig and by the two legends that list every kind.
  *
  * @api
  */
@@ -23,6 +27,7 @@ final class TypeIconExtension extends AbstractExtension
     {
         return [
             new TwigFunction('cc_type_icons', static fn (): array => ItemType::iconSet()),
+            new TwigFunction('cc_kind_icons', static fn (): array => KindIcons::set()),
         ];
     }
 }

@@ -1,30 +1,109 @@
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
 /* Pins, cluster bubbles, minted tile icons. Idempotent hasImage guards. */
 import { map } from './map-init.js';
-import { layerByKey, TYPE_SVG } from './catalog.js';
+import { layerByKey, TYPE_SVG, KEY_LETTER } from './catalog.js';
 import { escPend, txtOn } from './util.js';
 
-// docs/specs/coverage-provider.md §4 — blue drinkable, grey untagged.
-export function mintWaterDrops(){
-  if(map.hasImage('water-drop')) return;
-  const S=2, W=14*S, H=18*S, cx=W/2;
-  const drop=(fill,stroke)=>{
-    const cv=document.createElement('canvas'); cv.width=W; cv.height=H;
-    const x=cv.getContext('2d');
-    x.beginPath(); x.moveTo(cx,S);
-    x.bezierCurveTo(W-S, H*0.46, W*0.80, H-S, cx, H-S);
-    x.bezierCurveTo(W*0.20, H-S, S, H*0.46, cx, S);
-    x.closePath();
-    x.fillStyle=fill; x.fill();
-    x.lineWidth=1.4*S; x.strokeStyle=stroke; x.stroke();
-    return new Uint8Array(x.getImageData(0,0,W,H).data.buffer);
-  };
-  map.addImage('water-drop', {width:W, height:H, data:drop('#3E8FB0','#0d2b3a')}, {pixelRatio:S});
-  map.addImage('water-drop-unk', {width:W, height:H, data:drop('#7F8C93','#2b3338')}, {pixelRatio:S});
+/* THE kind glyphs (KindIcons::set(), window.CC_KIND_ICONS): what a pin IS
+   within its category. The pin grammar (data-provider-hierarchy.md §6.3):
+   kind lives in the glyph, state is two shared badges, everything else is
+   drawer content. The same paths mint the tile icons below and draw the DOM
+   pins and both legends, so nothing here may define a kind on its own. */
+export const KIND_ICONS = window.CC_KIND_ICONS || {};
+const kindDef = (letter, kind) => (KIND_ICONS[letter] || {})[kind] || null;
+export const kindImageId = (letter, kind) => 'kind-'+letter.toLowerCase()+'-'+kind;
+// Resolve the two colour tokens against a category colour.
+function kindFill(token, color){
+  if(token==='@cat') return color;
+  if(token==='@ink') return txtOn(color)==='#fff' ? '#fff' : '#14160e';
+  return token;
 }
 
-// BMP symbols, not colour-emoji: the silhouette filter otherwise renders tofu.
-export const SERVICE_GLYPH={shop:'⚙', station:'⚒', pump:'⊕'};
+/* The water half of letter B, in one rule for every path a pin's facts can
+   arrive by: tile properties (`potable` yes/no/absent, `food`), the detail
+   response (`osmPotable`, `osmFood`), and a rider's own record (`potable` in
+   the form vocabulary, `type`). A non-potable tap is a different KIND of
+   thing, not a broken one, so it is a glyph and not a colour. */
+export const WATER_KINDS=['tap','no','unk','food','food_water'];
+const yes = v => v===true || v==='true' || v===1 || v==='1' || v==='yes';
+export function waterKind(p){
+  p=p||{};
+  const food = yes(p.food) || p.osmFood===true || p.type==='Café — refill point';
+  let pot;
+  if(typeof p.potable==='string' && /^(Yes|No|Unsigned)/.test(p.potable)){   // rider vocabulary wins
+    pot = p.potable.startsWith('Yes') ? true : p.potable.startsWith('No') ? false : undefined;
+  } else if(p.osmPotable!==undefined){
+    pot = p.osmPotable;
+  } else if(yes(p.potable)){
+    pot = true;
+  } else if(p.potable==='no'){
+    // Tiles published before 2026-09-04 carry a boolean `potable`, whose
+    // `false` covered both "tagged not drinkable" and "nobody said": those
+    // read as unknown until the detail response hydrates the tags.
+    pot = false;
+  }
+  if(food) return pot===true ? 'food_water' : 'food';
+  return pot===true ? 'tap' : pot===false ? 'no' : 'unk';
+}
+/* The two shared state badges, meaning the same in every category (§6.4: a
+   fact earns a pin channel only when it changes whether a rider goes there
+   NOW). `warn` = not usable right now; `hours` = there, but not always. */
+export function stateOf(p, now){
+  p=p||{};
+  if(p.condition==='Out of order' || p.condition==='Closed') return 'warn';
+  if(p.availability==='Daytime only' || p.availability==='Ask or behind a gate') return 'hours';
+  // A seasonal closure earns the clock only in the months it is shut: the
+  // badge answers "can I use it NOW" (§6.4), and every Dutch register tap is
+  // frost-shut in winter, so a year-round clock would mark all of them and
+  // mean nothing. Frost-shut: November to March. Summer only: October to April.
+  const m=(now||new Date()).getMonth()+1;
+  if(p.seasonal==='Frost-shut in winter' && (m>=11 || m<=3)) return 'hours';
+  if(p.seasonal==='Summer only' && (m>=10 || m<=4)) return 'hours';
+  return null;
+}
+const CLOCK_SVG='<svg viewBox="0 0 24 24" width="9" height="9" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="3"/><path d="M12 7v5.5l3.5 2.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>';
+export function stateBadgeHtml(state){
+  if(state==='warn') return '<b class="cc-st warn">!</b>';
+  if(state==='hours') return '<b class="cc-st hours">'+CLOCK_SVG+'</b>';
+  return '';
+}
+
+// Inline SVG of one kind, for DOM pins and HTML surfaces.
+export function kindSvg(letter, kind, color, size){
+  const d=kindDef(letter, kind); if(!d) return '';
+  const s=size||16;
+  if(d.paths){
+    const paths=d.paths.map(p=>`<path d="${p.d}" fill="${kindFill(p.fill, color)}"${p.stroke?` stroke="${p.stroke}" stroke-width="${p.width||1.5}" stroke-linejoin="round"`:''}/>`).join('');
+    return `<svg class="cc-kind" viewBox="0 0 24 24" width="${s}" height="${s}" aria-hidden="true">${paths}</svg>`;
+  }
+  return escPend(d.glyph||'');
+}
+
+// Mint every path-drawn kind as a map image, `kind-<letter>-<kind>`, in the
+// same 24-box (×2) miniIcon() uses, so kinds and discs share one size ramp.
+export function mintKindIcons(){
+  const S=2, D=24*S;
+  Object.keys(KIND_ICONS).forEach(letter=>{
+    const key=Object.keys(KEY_LETTER).find(k=>KEY_LETTER[k]===letter);
+    const color=((key && layerByKey[key])||{}).color||'#6b6f5e';
+    Object.keys(KIND_ICONS[letter]).forEach(kind=>{
+      const d=KIND_ICONS[letter][kind]; if(!d.paths) return;
+      const id=kindImageId(letter, kind); if(map.hasImage(id)) return;
+      const cv=document.createElement('canvas'); cv.width=D; cv.height=D; const x=cv.getContext('2d');
+      x.scale(S,S);
+      d.paths.forEach(p=>{
+        const path=new Path2D(p.d);
+        x.fillStyle=kindFill(p.fill, color); x.fill(path);
+        if(p.stroke){ x.lineWidth=p.width||1.5; x.lineJoin='round'; x.strokeStyle=p.stroke; x.stroke(path); }
+      });
+      map.addImage(id,{width:D,height:D,data:new Uint8Array(x.getImageData(0,0,D,D).data.buffer)},{pixelRatio:S});
+    });
+  });
+}
+
+// Text glyphs for the service kinds, from the same registry.
+const svcGlyph = k => ((kindDef('D', k)||{}).glyph) || '';
+export const SERVICE_GLYPH={shop:svcGlyph('shop')||'⚙', station:svcGlyph('station')||'⚒', pump:svcGlyph('pump')||'⊕'};
 // Emoji camera flattens to a rounded box under the white-icon filter; draw the shape.
 export const CAMERA_PATH=TYPE_SVG('P');   // ItemType::svgPath(), via window.CC_TYPE_ICONS
 const cameraSvg=(fill,size)=>`<svg viewBox="0 0 24 24" width="${size||15}" height="${size||15}" aria-hidden="true"><path fill-rule="evenodd" fill="${fill}" d="${CAMERA_PATH}"/></svg>`;
@@ -97,19 +176,34 @@ export function pinEl(layer,cur,props){
   const stale = props && props.freshness && props.freshness.state==='stale';
   d.className='cc-pin'+(cur?' cur':'')+(layer.pendingLayer?' pending':'')+(stale?' stale':''); d.style.setProperty('--c',layer.color);
   const white = txtOn(layer.color)==='#fff';
-  if(layer.key==='scenic'){ d.innerHTML=`<span>${cameraSvg(white?'#fff':'#20241c')}</span>`; return d; }
-  if(layer.key==='toilets'){ d.innerHTML=`<span>${toiletSvg(white?'#fff':'#20241c')}</span>`; return d; }
-  if(layer.key==='climbs'){ d.innerHTML=`<span>${mountainSvg(white?'#fff':'#20241c')}</span>`; return d; }
-  d.innerHTML=`<span${white?' style="filter:brightness(0) invert(1)"':''}>${pinGlyph(layer, props)}</span>`; return d;
+  // The shared state badges ride on top of any category's pin (§6.4).
+  const badge = stateBadgeHtml(stateOf(props));
+  if(layer.key==='scenic'){ d.innerHTML=`<span>${cameraSvg(white?'#fff':'#20241c')}</span>`+badge; return d; }
+  if(layer.key==='toilets'){ d.innerHTML=`<span>${toiletSvg(white?'#fff':'#20241c')}</span>`+badge; return d; }
+  if(layer.key==='climbs'){ d.innerHTML=`<span>${mountainSvg(white?'#fff':'#20241c')}</span>`+badge; return d; }
+  // Water & food: the kind IS the glyph, drawn from the registry, not the 💧.
+  if(layer.key==='water'){ d.innerHTML=`<span class="kd">${kindSvg('B', waterKind(props), layer.color, 17)}</span>`+badge; return d; }
+  d.innerHTML=`<span${white?' style="filter:brightness(0) invert(1)"':''}>${pinGlyph(layer, props)}</span>`+badge; return d;
 }
 
 // Tile icon-image id for the selected-coverage overlay (survives cluster hide).
 export function coverageIconId(key, tp){
-  if(key==='water') return ['yes','true','1'].includes(String(tp.potable)) ? 'water-drop' : 'water-drop-unk';
+  if(key==='water') return kindImageId('B', waterKind(tp));
   if(key==='services'){
     if(tp.kind==='station') return miniIcon('services', SERVICE_GLYPH.station, 'station');
     if(tp.kind==='pump') return miniIcon('services', SERVICE_GLYPH.pump, 'pump');
     return miniIcon('services');
   }
   return miniIcon(key);
+}
+/* icon-size stops at z8/z13/z18 for a coverage icon. Every disc (every
+   category, and the food half of letter B) shares one ramp; the drop is
+   narrower than a disc in the same 24-box, so it rides a slightly larger one
+   to keep the height the drops always had. */
+export const DISC_SIZES=[0.42,0.7,0.95];
+export const DROP_SIZES=[0.46,0.76,1.09];
+export function covIconSizes(key, tp){
+  if(key!=='water') return DISC_SIZES;
+  const k=waterKind(tp);
+  return (k==='food' || k==='food_water') ? DISC_SIZES : DROP_SIZES;
 }

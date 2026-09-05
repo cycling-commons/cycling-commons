@@ -488,13 +488,14 @@ manifest's `country_codes`-based client wiring (below).
 | `ridtok` | all (always; `""` when unstamped) | region scope filter — `"|<region_id>|"` (map-and-search.md §4.5, Phase 3) |
 | `cctok` | all (always; `""` when unstamped) | country scope filter — `"|<cc>|"` (map-and-search.md §4.5, Phase 3) |
 | `kind` | D | shop/station/pump icon match |
-| `potable` | B | water marker variant, derived from OSM `drinking_water` tags |
+| `potable` | B | water kind glyph: `yes` / `no` / absent (nobody said), derived from OSM `drinking_water` and `amenity` tags (data-provider-hierarchy.md §6.3a) |
+| `food` | B | `true` for the shop and eatery half of letter B, absent for the water half; picks the food kind glyph |
 | `acc` | O | stays accessibility filter |
 
 `ref`/`n`/`t`/`ridtok`/`cctok` are the **universal** props (every layer, declared
 as `universalTileProps` in `coverage-contract.json`, consumed by
 `tiles.py::_universal_props` and pinned by both language contract suites);
-`kind`/`potable`/`acc` are per-letter extras (`tileProps`). **No cluster props
+`kind`/`potable`/`food`/`acc` are per-letter extras (`tileProps`). **No cluster props
 exist:** tippecanoe never injects `point_count`/`clustered`/`sqrt_point_count`/
 `point_count_abbreviated` because nothing clusters. There is a single icon
 layer per `(letter, country)`, `{key}-{cc}-cov`; the former `{key}-{cc}-cov-cl`
@@ -778,7 +779,10 @@ the data-plane facts it consumes:
 - **Client dedupe + the refs-mirror rule.** `CatalogProvider::payload()`
   (`web/src/Catalog/CatalogProvider.php`) gains a top-level
   `refs: list<string>` — the DISTINCT `source_ref`s of the `source='osm'`
-  item rows **the payload itself serves**. Tile layers filter these refs out
+  item rows **the payload itself serves**, plus the `osm_ref` twin of every
+  served row that has one (an authority row attached to a tap,
+  data-provider-hierarchy.md §4.1; added 2026-09-05 when the first RIVM
+  harvest drew 2429 taps twice). Tile layers filter these refs out
   (`window.CC_CURATED_REFS`). The mirror rule is the invariant:
   `curatedRefs()` applies *exactly* the same exclusion as the payload's item
   collections, so `refs` excludes exactly what the payload excludes — a tile

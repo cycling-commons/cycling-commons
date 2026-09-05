@@ -34,6 +34,10 @@ FIXTURE_ROWS = [
      {"amenity": "drinking_water", "drinking_water": "no"}),
     ("node/900000004", "O", None, "Camping Dijle", 4.70, 50.88,
      {"tourism": "camp_site", "wheelchair": "yes", "name": "Camping Dijle"}),
+    ("node/900000005", "B", None, None, 4.42, 50.82,
+     {"man_made": "water_tap"}),
+    ("node/900000006", "B", None, "Bakkerij", 4.43, 50.81,
+     {"shop": "bakery", "name": "Bakkerij"}),
 ]
 
 
@@ -72,9 +76,13 @@ def test_export_geojsonl_shapes(db, tmp_path):
     assert shop["properties"]["n"] == "Vélodroom"
 
     water = _features(out[("B", "ZZ")])
-    assert water["node/900000002"]["properties"]["potable"] is True
+    # Tri-state (data-provider-hierarchy.md §6.3): 'yes' / 'no' / absent.
+    assert water["node/900000002"]["properties"]["potable"] == "yes"
     assert "n" not in water["node/900000002"]["properties"]  # jsonb_strip_nulls
-    assert water["node/900000003"]["properties"]["potable"] is False
+    assert water["node/900000003"]["properties"]["potable"] == "no"
+    assert "potable" not in water["node/900000005"]["properties"]  # a water point nobody tagged
+    assert "food" not in water["node/900000005"]["properties"]
+    assert water["node/900000006"]["properties"]["food"] is True
 
     stay = _features(out[("O", "ZZ")])["node/900000004"]
     assert stay["properties"]["t"] == _label("O", "tourism=camp_site")
@@ -168,8 +176,8 @@ def _geojsonl(path, rows):
 def built(tmp_path):
     files = {
         ("B", "BE"): _geojsonl(tmp_path / "b_be.geojsonl", [
-            (4.35, 50.85, {"ref": "node/1", "t": "Drinking water", "potable": True}),
-            (5.57, 50.63, {"ref": "node/2", "t": "Drinking water", "potable": False}),
+            (4.35, 50.85, {"ref": "node/1", "t": "Drinking water", "potable": "yes"}),
+            (5.57, 50.63, {"ref": "node/2", "t": "Drinking water", "potable": "no"}),
         ]),
         ("D", "BE"): _geojsonl(tmp_path / "d_be.geojsonl", [
             (4.40, 50.84, {"ref": "node/3", "n": "Bike shop BXL", "t": "Bike shop", "kind": "shop"}),

@@ -440,6 +440,18 @@
      NO rotate — so the glyph inside stays upright on its own (don't rotate .cc-pin or the span) */
   .cc-pin{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50% 50% 50% 0;background:var(--c);box-shadow:0 3px 8px rgba(16,30,22,.4);border:2px solid var(--paper)}
   .cc-pin span{font-size:.85rem;line-height:1;font-family:var(--emoji)}
+  /* The kind glyph (KindIcons::set() via icons.js kindSvg): drawn, not typed. */
+  .cc-pin span.kd{display:flex}
+  .cc-kind--glyph{font-family:var(--emoji);font-style:normal}
+  /* The two shared state badges (data-provider-hierarchy.md §6.3, top-left,
+     opposite the "?" and the verified dot): red "!" = not usable right now,
+     ink clock = there, but not always. A child element rather than ::before
+     so the one-off reveal pulse keeps its own pseudo-element. */
+  .cc-pin .cc-st{position:absolute;width:14px;height:14px;top:-6px;left:-6px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;font:700 10px/14px var(--mono);
+    box-shadow:0 1px 3px rgba(16,30,22,.5)}
+  .cc-pin .cc-st.warn{background:#D92D20;color:#fff}
+  .cc-pin .cc-st.hours{background:#14160E;color:#F3EBD8}
   /* Every remaining surface that prints a category glyph. Without --emoji these
      draw tofu boxes on any machine whose browser has no colour-emoji font —
      which is silent: the pin still renders, it just says nothing. */
@@ -559,7 +571,7 @@
   .cc-mod-btn.armed{box-shadow:0 0 0 3px rgba(255,90,31,.45)}   /* keyboard-armed decision — Enter in the note sends it */
   .cc-mod-btn:disabled{opacity:.5;cursor:not-allowed}
   .cc-mod-preview{font-family:var(--mono);font-size:.7rem;color:rgb(var(--chrome-fg) / .68);margin-top:.5rem}
-  .cc-toast{position:fixed;left:50%;bottom:1.5rem;transform:translateX(-50%) translateY(1rem);background:var(--ink);color:var(--paper);padding:.7rem 1.1rem;border-radius:8px;font-size:.85rem;max-width:90vw;text-align:center;box-shadow:0 10px 28px -10px rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:3000}
+  .cc-toast{position:fixed;left:50%;bottom:1.5rem;transform:translateX(-50%) translateY(1rem);background:var(--ink);color:var(--paper);padding:.7rem 1.1rem;border-radius:8px;font-size:.85rem;width:max-content;max-width:min(90vw,34rem);text-align:center;box-shadow:0 10px 28px -10px rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:3000}
   .cc-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
   /* A confirmation recorded is worth a beat in the middle of the screen, not a
      footnote at the bottom of a full-screen map. */

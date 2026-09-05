@@ -33,11 +33,46 @@ final class ItemConfirmationService
     }
 
     /**
+     * The stances this ROW offers, which is the type's set with one exception:
+     * a water row whose potability an authority has settled (a tap in the
+     * national drinking-water register) is not asked whether it is drinkable.
+     * The register is the answer; what a rider can still add is "I stood
+     * there and it is here". Owner 2026-09-06: "should not be a question, as
+     * this is a drinking water provider".
+     *
+     * @return list<ConfirmationStance>
+     */
+    public static function offeredFor(Item $item): array
+    {
+        $type = ItemType::fromParam($item->getLetter());
+        if (ItemType::WaterFood === $type && null !== $item->getProvider()
+            && str_starts_with((string) ($item->getAttributes()['potable'] ?? ''), 'Yes')) {
+            return [ConfirmationStance::Exists];
+        }
+
+        return $type->confirmationStances();
+    }
+
+    /** The question the drawer asks, from the offered stances. */
+    public static function stanceKindFor(Item $item): string
+    {
+        $offered = self::offeredFor($item);
+        if (\in_array(ConfirmationStance::Potable, $offered, true)) {
+            return 'potability';
+        }
+        if (\in_array(ConfirmationStance::NotAsDescribed, $offered, true)) {
+            return 'accuracy';
+        }
+
+        return 'existence';
+    }
+
+    /**
      * Record or switch a stance. Rejects a stance the item's type does not offer.
      */
     public function record(Item $item, User $user, ConfirmationStance $stance, ConfirmationSource $source = ConfirmationSource::Drawer): void
     {
-        $allowed = ItemType::fromParam($item->getLetter())->confirmationStances();
+        $allowed = self::offeredFor($item);
         if (!\in_array($stance, $allowed, true)) {
             throw new \InvalidArgumentException(sprintf('Stance "%s" is not offered for a %s item.', $stance->value, $item->getLetter()));
         }
@@ -106,7 +141,7 @@ final class ItemConfirmationService
      */
     public function snapshot(Item $item, ?User $user): array
     {
-        $offered = ItemType::fromParam($item->getLetter())->confirmationStances();
+        $offered = self::offeredFor($item);
         $stances = [];
         foreach ($offered as $s) {
             $stances[$s->value] = 0;

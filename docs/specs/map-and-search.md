@@ -975,17 +975,22 @@ two places, sized to their audience:
   from the controller (never `is_granted()`, per §"the 2FA policy applies in
   exactly one place"). Swatches reuse the real `.cc-pin` / `.cc-cluster` /
   `.cc-highlight` classes so the key cannot drift from the map. The panel
-  links to the full page.
+  links to the full page. Since 2026-09-04 it also carries a **Kinds** group
+  generated from `cc_kind_icons()` (one row per registry kind, `.mk-kind`
+  with `data-kind="<letter>:<kind>"`) and the two live state badges (`!`
+  and the clock, `.mk-state-warn` / `.mk-state-hours`).
 - **The `/map-key` page** (`PageController::mapKey`,
   `LocalizedPath::MAP_KEY`, `pages/map_key.html.twig`, `legend.*` strings,
   all five locales, slug localised per locale). The full story: the four
   axes (shape = store, fill = category, border = who brought it + state,
-  badge = a fact that survives colour blindness), the tier ladder, state
-  marks, per-place fact badges, the category table and every line paint.
-  Designed-but-unbuilt marks (the cycling-keeper tier, the `!` out-of-order
-  and `◷` limited-access badges) stay on the page with a visible "planned"
-  tag (`legend.tag_plan` + `legend.plan_note`): the page may describe a
-  planned mark, but must say it is not drawn yet (owner 2026-09-01).
+  badge = a fact that survives colour blindness), the tier ladder, the kinds
+  per category (generated from the registry, see below), state marks,
+  per-place fact badges, the category table and every line paint.
+  Designed-but-unbuilt marks (the cycling-keeper tier) stay on the page with
+  a visible "planned" tag (`legend.tag_plan` + `legend.plan_note`): the page
+  may describe a planned mark, but must say it is not drawn yet (owner
+  2026-09-01). The `!` and clock badges left that list on 2026-09-04: they
+  are drawn.
 
 The one category-colour table on the website lives in this template and
 mirrors `catalog.js`; a colour change lands in both in the same commit. The
@@ -993,9 +998,25 @@ glyphs come from `cc_type_icons()` (`ItemType::iconSet()`), THE icon set.
 Line-legend strings reuse the on-map key's `map.legend_*` ids rather than
 duplicating them.
 
-Tier semantics pinned here (ruled 2026-09-01): grey FILL keeps one meaning,
-water potability unknown; bulk registries (e.g. Kadaster, RIVM) draw as the
-imported baseline until riders confirm records here; only a
+**The pin grammar (owner 2026-09-04, data-provider-hierarchy.md §6.3a):
+kind lives in the glyph, state is two shared badges, everything else is
+drawer content.** `App\Catalog\KindIcons::set()` is the one definition of
+every kind glyph; the map mints tile icons from it (`icons.js`), the DOM pins
+draw it inline, and both keys render it through
+`partials/_kind_icon.html.twig`, so a letter-B pin never shows the 💧 and
+the keys cannot drift. Water & food kinds: drinking tap (blue drop), not for
+drinking (barred drop), nothing said (unfilled drop), food stop (fork and
+knife on the category disc), food stop with water (plus a small drop). Bike
+services: shop, repair stand, pump. The state badges sit top-left, opposite
+the `?` and the verified dot: red `!` = not usable right now (`condition`
+Out of order or Closed), ink clock = there, but not always (`seasonal`
+Summer only or Frost-shut in winter). `waterKind()` and `stateOf()` in
+`icons.js` are the two rules, shared by every renderer.
+
+Tier semantics pinned here (ruled 2026-09-01, amended 2026-09-04): grey
+FILL no longer means anything on water, potability having moved into the
+kind glyph (the grey drop is gone); bulk registries (e.g. Kadaster, RIVM)
+draw as the imported baseline until riders confirm records here; only a
 cycling-dedicated provider earns the planned keeper tier, whose visibility
 rides on the shared `?` badge (`?` = no rider confirmed yet, everywhere),
 the border only saying who brought the record. Dashed borders are
@@ -1476,6 +1497,17 @@ way to find a person - it went to the *reader's* own account page. The
 bulk-OSM drawer builders (`osmDrawer`, `waterDrawer`) construct their own
 object, so they must copy these keys over explicitly, as they do `srcType`.
 
+Both builders credit an authority row's publisher through the payload's
+provider map (`providerOf`, `providerSource`; data-provider-hierarchy.md §7):
+the headline's origin word, the Type row's method, a "Listed · Official
+registry entry" row and the Source line. `waterDrawer` joined on 2026-09-05,
+when the first RIVM tap opened read "Drinking water, OSM" twice. A register
+row that has no name (RIVM names none) also shows its `town`, so a rider who
+finds nothing there has a handle to report it by, beside the share link that
+carries the CC-row's id. The Verify row ("cross-check with the regional
+utility") is advice for an OSM tap nobody vouches for and is dropped on an
+authority row: the register IS the utility's answer.
+
 **Scout is a link.** The provenance label for `scout` ends in the product name,
 and it points at `/scout`, the page that explains what it is. Gated on the
 item's `srcType`, not on the word appearing in the citation string: a free-text
@@ -1943,10 +1975,14 @@ the heatmap back is uncommenting two blocks and nothing else.
 Approved 2026-07-15; implemented via
 [coverage-provider.md](coverage-provider.md) (its §6 rebases these decisions
 onto the tile/endpoint data source; the `verified` flag derives from real
-canonical state — `CatalogProvider`'s `v:1`: verified state, a rider
-confirmation, or official-registry provenance (Tourisme Wallonie PIVOT rows
-count as verified) — never the simulated `c`
-attribute).
+canonical state: `CatalogProvider`'s `v:1` is verified state or a rider's
+non-form confirmation, and nothing else, never the simulated `c`
+attribute). An authority row (a Tourisme Wallonie stay, a RIVM tap) wears the
+dashed "?" community pin until a rider confirms it: the register's authority is
+its rank (data-provider-hierarchy.md §4), not a dot, and the harvester writes
+new rows `unverified` (its §5 rule 6). Ruled 2026-09-06, the night the first
+RIVM harvest drew 3283 taps nobody here had seen with the plain pin; pinned by
+`CatalogProviderTest::testAuthorityRowsAreNotVerifiedByProvenanceAlone`.
 
 **`state` never reaches a rider in our words.** The item history renders the
 `state` field as **Status**, and its values as what they mean to a rider —

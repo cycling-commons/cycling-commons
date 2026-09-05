@@ -17,6 +17,8 @@ final readonly class ContributionReceipt
         public bool $persisted,
         public \DateTimeImmutable $submittedAt,
         public ?int $submissionId = null,
+        /** True when the change was applied at once: a curator's own edit (moderation-and-contribution.md §1.6). */
+        public bool $applied = false,
     ) {
     }
 }

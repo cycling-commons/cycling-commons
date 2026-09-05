@@ -79,16 +79,33 @@ def make_ref(key: str, props: dict[str, Any], id_field: str | None,
     return f"{key}:{round(lat, REF_PRECISION)},{round(lng, REF_PRECISION)}"
 
 
-def apply_field_map(props: dict[str, Any], field_map: dict[str, str]) -> dict[str, Any]:
+def apply_field_map(props: dict[str, Any],
+                    field_map: dict[str, str | dict[str, Any]]) -> dict[str, Any]:
     """Upstream properties to ours, dropping everything unmapped.
+
+    An entry is either the upstream field name (the value is carried as is)
+    or ``{"from": <field>, "values": {<theirs>: <ours>, ...}}`` when the
+    upstream values must land in one of our form vocabularies. A value the
+    map does not name is dropped, never carried: an attribute has to be one
+    a rider can pick in the form, or it is not editable and not ours. Two of
+    our fields may read the same upstream column: RIVM's ``type`` feeds both
+    ``availability`` (24-7 / daytime) and ``condition`` (Storing).
 
     Unmapped fields are dropped rather than carried: an upstream column nobody
     asked for becomes an attribute nobody renders, and a schema change
     upstream then silently changes what we store.
     """
     out: dict[str, Any] = {}
-    for ours, theirs in field_map.items():
-        value = props.get(theirs)
+    for ours, spec in field_map.items():
+        if isinstance(spec, dict):
+            value = props.get(spec.get("from", ""))
+            if value in (None, ""):
+                continue
+            translated = (spec.get("values") or {}).get(str(value))
+            if translated not in (None, ""):
+                out[ours] = translated
+            continue
+        value = props.get(spec)
         if value not in (None, ""):
             out[ours] = value
     return out

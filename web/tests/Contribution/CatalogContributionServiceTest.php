@@ -44,6 +44,57 @@ final class CatalogContributionServiceTest extends KernelTestCase
         return $user;
     }
 
+    private function curator(): User
+    {
+        $user = (new User())->setEmail('curator-'.uniqid('', true).'@test.test')->setRoles(['ROLE_CURATOR']);
+        $user->setPassword('x');
+        $this->em->persist($user);
+        $this->em->flush();
+
+        return $user;
+    }
+
+    /**
+     * A curator's own edit does not wait for a curator (owner 2026-09-06). It
+     * runs the same approve step the desk button runs, so the history row and
+     * the item change are the ones an approval would have made.
+     */
+    public function testACuratorsEditIsAppliedAtOnce(): void
+    {
+        $this->wallonia();
+        $item = $this->item('B', '{"type":"Point","coordinates":[5.86,50.47]}', ['availability' => 'Always']);
+
+        $receipt = $this->service->submit('improve', [
+            '_item_id' => $item->getId(),
+            'details' => ['condition' => 'Out of order'],
+        ], $this->curator());
+
+        self::assertTrue($receipt->applied);
+        $sub = $this->em->find(Submission::class, $receipt->submissionId);
+        self::assertNotNull($sub);
+        self::assertSame('approved', $sub->getStatus()->value);
+        $this->em->refresh($item);
+        self::assertSame('Out of order', $item->getAttributes()['condition'] ?? null, 'the change is on the item');
+    }
+
+    public function testARidersEditStillWaitsForACurator(): void
+    {
+        $this->wallonia();
+        $item = $this->item('B', '{"type":"Point","coordinates":[5.86,50.47]}', ['availability' => 'Always']);
+
+        $receipt = $this->service->submit('improve', [
+            '_item_id' => $item->getId(),
+            'details' => ['condition' => 'Out of order'],
+        ], $this->user());
+
+        self::assertFalse($receipt->applied);
+        $sub = $this->em->find(Submission::class, $receipt->submissionId);
+        self::assertNotNull($sub);
+        self::assertSame('pending', $sub->getStatus()->value);
+        $this->em->refresh($item);
+        self::assertArrayNotHasKey('condition', $item->getAttributes());
+    }
+
     private function wallonia(): Region
     {
         $region = (new Region())->setSlug('wallonia')->setName('Wallonia')->setCountryCode('BE')
@@ -155,6 +206,28 @@ final class CatalogContributionServiceTest extends KernelTestCase
     {
         $this->expectException(ValidationFailedException::class);
         $this->service->submit('add', ['type' => 'climbs', 'details' => ['name' => 'No coords']], $this->user());
+    }
+
+    /**
+     * A register row has no name (RIVM names no tap), and an edit must not
+     * demand one: the submission is titled by the place's type instead. Found
+     * on 2026-09-05 when the owner tried to move a RIVM tap and the wizard
+     * answered "This value should not be blank.".
+     */
+    public function testImproveOnANamelessPlaceTitlesTheSubmissionByItsType(): void
+    {
+        $this->wallonia();
+        $item = $this->item('B', '{"type":"Point","coordinates":[5.86,50.47]}', ['availability' => 'Always'], '');
+
+        $receipt = $this->service->submit('improve', [
+            '_item_id' => $item->getId(),
+            'details' => ['condition' => 'Out of order'],
+        ], $this->user());
+
+        $sub = $this->em->find(Submission::class, $receipt->submissionId);
+        self::assertNotNull($sub);
+        self::assertSame(\App\Catalog\ItemType::WaterFood->label(), $sub->getTitle());
+        self::assertSame('', $this->em->find(Item::class, $item->getId())?->getName(), 'the item is not renamed by the fallback');
     }
 
     public function testImproveOnLineStringItemLocatesAtFirstVertex(): void

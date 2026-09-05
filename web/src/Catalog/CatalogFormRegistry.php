@@ -75,9 +75,13 @@ final class CatalogFormRegistry
 
             ItemType::WaterFood => new ItemFieldSet(
                 fields: [
-                    CatalogField::select('type', 'Type', ['Public fountain', 'Drinking tap', 'Cemetery tap', 'Café — refill point']),
+                    CatalogField::select('type', 'Type', ['Public fountain', 'Drinking tap', 'Cemetery tap', 'Public toilet', 'Café — refill point']),
                     CatalogField::select('potable', 'Potable?', ['Yes (public supply)', 'Unsigned — use judgement', 'No / non-potable']),
                     CatalogField::select('seasonal', 'Seasonal availability', ['Year-round', 'Summer only', 'Frost-shut in winter', 'Unknown']),
+                    // When in the day it can be used; `seasonal` is the year.
+                    // The clock badge reads both (icons.js stateOf), and the
+                    // Dutch register's `type` column fills this one.
+                    CatalogField::select('availability', 'Availability', ['Unknown', 'Always', 'Daytime only', 'Ask or behind a gate']),
                     CatalogField::select('condition', 'Still as mapped?', self::CONDITION),
                     CatalogField::textarea('note', 'Note for riders', 'e.g. low flow, or hard to spot behind the church'),
                 ],

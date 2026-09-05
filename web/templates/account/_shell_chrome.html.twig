@@ -19,8 +19,9 @@
   </div>
   <div class="dtop-right">
     <a class="acct fill" href="{{ path('map') }}">{{ 'nav.explore_map'|trans }}</a>
-    {% include 'partials/_lang_menu.html.twig' %}
     {% include 'partials/_account_chip.html.twig' %}
+    {# Language switcher last (far right), as in the public nav and the map rail. #}
+    {% include 'partials/_lang_menu.html.twig' %}
   </div>
 </header>
 {% if in_moderation and is_granted('ROLE_CURATOR') %}

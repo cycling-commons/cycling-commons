@@ -39,8 +39,16 @@
   .pv-form textarea{min-height:4.5rem;line-height:1.5}
   .pv-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.9rem}
   .pv-check{display:flex;align-items:center;gap:.45rem}
+  /* The shell's own button (.btn-act, _shell_styles), not the browser default. */
+  .pv-actions{display:flex;gap:.8rem;flex-wrap:wrap;margin-top:.2rem}
   .pv-check label{margin:0;text-transform:none;letter-spacing:0;font-family:inherit;font-size:.9rem;color:var(--ink)}
   .pv-note{font-size:.82rem;color:#595c4d;line-height:1.5;margin:0}
+  .pv-src{border:1px solid rgba(20,22,14,.14);border-radius:8px;padding:.7rem .9rem;background:rgba(20,22,14,.03);display:grid;gap:.45rem}
+  .pv-src h4{margin:0 0 .2rem;font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:#8a8d7d}
+  .pv-src dl{margin:0;display:grid;grid-template-columns:max-content 1fr;gap:.25rem .9rem;font-size:.86rem}
+  .pv-src dt{font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;color:#8a8d7d;align-self:baseline}
+  .pv-src dd{margin:0;word-break:break-all}
+  .pv-src pre{margin:0;padding:.55rem .7rem;border-radius:6px;background:var(--ink);color:var(--paper);font-family:var(--mono);font-size:.74rem;line-height:1.6;overflow-x:auto;white-space:pre}
   .pv-hist{margin:.4rem 0 0;font-size:.82rem;color:#595c4d;line-height:1.7}
   .pv-hist li{list-style:none}
   .pv-hist .f{font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:#8a8d7d}
@@ -116,8 +124,31 @@
           {% if p.lastRunAt %}
             <p class="pv-note">{{ 'provider.last_run'|trans({'%when%': p.lastRunAt|cc_date, '%count%': p.lastCount ?? 0}) }}{% if p.lastError %} · {{ p.lastError }}{% endif %}</p>
           {% endif %}
-          <div class="tr-actions">
-            <button type="submit">{{ 'provider.save'|trans }}</button>
+          {# Where the rows come from, read-only (owner 2026-09-05). A built-in
+             row has no endpoint: its harvest is its own code. #}
+          {% if not p.system %}
+          {% set fm = p.fieldMap|default({}) %}
+          {% set fmShown = fm|filter((v, k) => k|slice(0, 1) != '_') %}
+          <div class="pv-src" data-provider-source="{{ p.key }}">
+            <h4>{{ 'provider.source.h'|trans }}</h4>
+            <dl>
+              <dt>{{ 'provider.source.letters'|trans }}</dt><dd>{{ p.letters|join(', ') }} · {{ p.countryCode ?: 'provider.source.worldwide'|trans }}</dd>
+              <dt>{{ 'provider.source.endpoint'|trans }}</dt><dd>{% if p.endpoint %}<code>{{ p.endpointKind|upper }}</code> {{ p.endpoint }}{% else %}{{ 'provider.source.none'|trans }}{% endif %}</dd>
+              {% if fm._layer is defined %}<dt>{{ 'provider.source.layer'|trans }}</dt><dd><code>{{ fm._layer }}</code></dd>{% endif %}
+              <dt>{{ 'provider.source.field_map'|trans }}</dt><dd><code>{{ fmShown|json_encode(constant('JSON_UNESCAPED_SLASHES') b-or constant('JSON_UNESCAPED_UNICODE')) }}</code></dd>
+              <dt>{{ 'provider.source.cadence'|trans }}</dt><dd>{{ p.refreshCadence ?: 'provider.source.none'|trans }}</dd>
+            </dl>
+            <h4>{{ 'provider.run.h'|trans }}</h4>
+            <p class="pv-note">{{ 'provider.run.note'|trans }}</p>
+            <pre>docker compose -f developers/docker/compose.yaml exec -T pipeline python -m providers.run --key {{ p.key }} --out /tmp/{{ p.key }}.json
+docker cp cycling-commons-dev-pipeline-1:/tmp/{{ p.key }}.json /tmp/{{ p.key }}.json
+docker cp /tmp/{{ p.key }}.json cycling-commons-dev-app-1:/tmp/{{ p.key }}.json
+docker exec cycling-commons-dev-app-1 php bin/console app:providers:harvest {{ p.key }} /tmp/{{ p.key }}.json
+docker exec cycling-commons-dev-app-1 php bin/console app:providers:harvest {{ p.key }} /tmp/{{ p.key }}.json --write</pre>
+          </div>
+          {% endif %}
+          <div class="pv-actions">
+            <button type="submit" class="btn-act">{{ 'provider.save'|trans }}</button>
           </div>
         </form>
       </details>

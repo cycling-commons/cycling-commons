@@ -12,6 +12,7 @@ use App\Catalog\CatalogSchemaProvider;
 use App\Catalog\ChangeHistoryView;
 use App\Catalog\ClosureExpiryService;
 use App\Catalog\ItemType;
+use App\Catalog\KindIcons;
 use App\Catalog\MapTheme;
 use App\Catalog\MapViewMode;
 use App\Catalog\RegionBoundaryProvider;
@@ -82,6 +83,8 @@ final class MapController extends AbstractController
             'field_schema' => $schema->all(),
             // The one category icon set (ItemType::iconSet()); catalog.js and icons.js read it.
             'type_icons' => ItemType::iconSet(),
+            // The one kind glyph set (KindIcons::set()); icons.js mints tile icons from it.
+            'kind_icons' => KindIcons::set(),
             'map_i18n' => $this->mapI18n($translator),
             'regions' => $regionRows,
             'rider_prefs' => [
@@ -194,7 +197,7 @@ final class MapController extends AbstractController
             'age' => 'd_age', 'where' => 'd_where', 'place' => 'd_place', 'wallonia' => 'd_wallonia',
             'close' => 'd_close',
             'officialRegistry' => 'd_official_registry', 'confirmed' => 'd_confirmed', 'simulated' => 'd_simulated',
-            'drinkingWater' => 'd_drinking_water', 'headlineDrinking' => 'd_headline_drinking',
+            'drinkingWater' => 'd_drinking_water', 'headlineDrinking' => 'd_headline_drinking', 'headlineFood' => 'd_headline_food',
             'potableOsm' => 'd_potable_osm', 'potableOsmNo' => 'd_potable_osm_no',
             'potableOsmUnknown' => 'd_potable_osm_unknown', 'potableOsmImplied' => 'd_potable_osm_implied',
             'verifyWater' => 'd_verify_water',

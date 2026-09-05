@@ -407,6 +407,21 @@ The improve receipt only. The vote receipt is a different flow for a deferred
 feature, and giving it the same treatment would be guessing at where a vote
 should send somebody.
 
+### 1.6 A curator's own edit is applied at once (2026-09-06)
+
+Owner: "If I change anything on an item when I have curator rights I should not
+have to approve it." Built the same night, and deliberately NOT a new
+mechanic: `CatalogContributionService::applyIfCurator()` runs
+`ModerationService::decide(approve)` on the edit it just filed, as the same
+person, so the item change, the `change_history` rows, the OSM re-check on a
+move and the area check are exactly the ones the desk button would have made.
+Outside the curator's assigned areas the edit queues like anyone's
+(`OutOfScopeException`). The receipt then reads "Change applied" instead of
+"Suggestion submitted" (`ContributionReceipt::$applied`,
+`improve.receipt.applied_*`). Edits only: a NEW place still queues, because
+approval requires the OSM answer (§5b of catalog-data-model.md) and that
+question is asked on the queue card, not in the wizard (docs/TODO.md).
+
 ## 2. Intake boundary: `SubmissionDraft`, validate twice
 
 One envelope DTO, not eleven: `App\Contribution\SubmissionDraft` carries
@@ -1676,6 +1691,7 @@ source of truth:
 | Type | Stances (`ConfirmationStance`) | `stanceKind` |
 |---|---|---|
 | B · Water & food | `potable` / `not_potable` | `potability` |
+| B · Water & food, **authority row whose `potable` starts with "Yes"** (a register tap) | `exists` | `existence`. The register is the potability answer; asking a rider whether RIVM's tap is drinkable was the wrong question (owner 2026-09-06). `ItemConfirmationService::offeredFor()` is the one rule; the snapshot, the POST validation and `stanceKind` all read it. |
 | C · Public toilets, D · Services, E · Hazards, F · Getting there, G · Shelter, N · Climbs, O · Where to sleep, P · Scenic views, Q · History & culture | `exists` | `existence` |
 | A · Road surface, all remaining votable types | none — they vote, or are measured | — |
 

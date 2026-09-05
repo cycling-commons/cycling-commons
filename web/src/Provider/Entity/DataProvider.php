@@ -177,7 +177,7 @@ class DataProvider
     /**
      * Which upstream field feeds which of our attributes.
      *
-     * @var array<string, string>
+     * @var array<string, string|array{from: string, values: array<string, string>}>
      */
     #[ORM\Column(name: 'field_map', type: Types::JSON)]
     private array $fieldMap = [];
@@ -425,13 +425,19 @@ class DataProvider
         $this->endpointKind = $endpointKind;
     }
 
-    /** @return array<string, string> */
+    /** @return array<string, string|array{from: string, values: array<string, string>}> */
     public function getFieldMap(): array
     {
         return $this->fieldMap;
     }
 
-    /** @param array<string, string> $fieldMap */
+    /**
+     * Ours to theirs: a plain upstream field name, or `{from, values}` when
+     * the upstream values must be translated into one of our vocabularies
+     * (pipeline/providers/normalise.py apply_field_map).
+     *
+     * @param array<string, string|array{from: string, values: array<string, string>}> $fieldMap
+     */
     public function setFieldMap(array $fieldMap): void
     {
         $this->fieldMap = $fieldMap;

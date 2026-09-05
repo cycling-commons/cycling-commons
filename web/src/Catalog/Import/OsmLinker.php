@@ -48,6 +48,15 @@ final readonly class OsmLinker
     /** Written without asking. */
     public const int TIGHT_M = 50;
 
+    /**
+     * "On top of": a pin moved to within this distance of an OSM object of
+     * its letter IS that object (owner 2026-09-05: "when location is changed
+     * it must also look if it is now on top of an OSM spot"). Tighter than
+     * TIGHT_M because no name check backs it: letter B holds bakeries beside
+     * taps, and 50 m would marry a moved tap to the nearest café.
+     */
+    public const int ON_TOP_M = 15;
+
     /** Beyond this, not even worth showing a curator. */
     public const int LOOSE_M = 250;
 
@@ -132,6 +141,33 @@ final readonly class OsmLinker
             'name' => null !== $r['name'] && '' !== $r['name'] ? $r['name'] : null,
             'distanceM' => round((float) $r['distance_m'], 1),
         ], $rows);
+    }
+
+    /**
+     * The OSM object a moved pin now sits on top of, if any: the nearest of
+     * its letter within ON_TOP_M that no other served row claims. Name is
+     * not consulted, because the rows this exists for have none (a register
+     * tap moved onto the spot a rider found it at).
+     */
+    public function onTopOf(string $letter, float $lat, float $lng, int $exceptItemId): ?string
+    {
+        /** @var list<string> $refs */
+        $refs = $this->db->fetchFirstColumn(
+            'SELECT cp.ref
+               FROM coverage_poi cp
+              WHERE cp.letter = :letter
+                AND ST_DWithin(cp.geom::geography, ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography, :radius)
+              ORDER BY ST_Distance(cp.geom::geography, ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography)
+              LIMIT 3',
+            ['letter' => $letter, 'lat' => $lat, 'lng' => $lng, 'radius' => self::ON_TOP_M],
+        );
+        foreach ($refs as $ref) {
+            if (!$this->refIsTaken($ref, $letter, $exceptItemId)) {
+                return $ref;
+            }
+        }
+
+        return null;
     }
 
     /**

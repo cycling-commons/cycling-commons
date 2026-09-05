@@ -160,12 +160,14 @@ final class CatalogProviderTest extends KernelTestCase
     }
 
     /**
-     * Official-registry provenance counts as verified (map-and-search.md §12,
-     * owner decision 2026-07-17): a Tourisme Wallonie PIVOT row serves v:1
-     * even in unverified state with zero confirmations — the registry listing
-     * is the trust signal, so it never renders as community tier.
+     * Registry provenance is NOT verification (owner 2026-09-06, reversing the
+     * 2026-07-17 decision that a Tourisme Wallonie PIVOT row served v:1 on its
+     * listing alone): a row nobody here has stood at wears the dashed "?" pin
+     * until a rider confirms it, whoever published it. The register's
+     * authority is its rank (data-provider-hierarchy.md §4), not a dot. Found
+     * when 3283 RIVM taps drew the plain pin the night they were harvested.
      */
-    public function testAuthorityRowsCarryVerifiedFlagFromRegistryProvenance(): void
+    public function testAuthorityRowsAreNotVerifiedByProvenanceAlone(): void
     {
         $conn = $this->em->getConnection();
         $conn->executeStatement(
@@ -175,9 +177,20 @@ final class CatalogProviderTest extends KernelTestCase
             'DELETE FROM item_confirmation WHERE item_id IN (SELECT id FROM item WHERE source = \'authority\')',
         );
 
-        foreach ($this->payload()['O']['authority']['features'] as $f) {
-            self::assertSame(1, $f['properties']['v'], 'registry provenance alone must verify an authority row');
+        $features = $this->payload()['O']['authority']['features'];
+        self::assertNotEmpty($features);
+        foreach ($features as $f) {
+            self::assertArrayNotHasKey('v', $f['properties'], 'a listing alone does not verify a row');
         }
+
+        // A rider's confirmation does, exactly as for any other row.
+        $id = (int) $features[0]['properties']['id'];
+        $conn->executeStatement(
+            "INSERT INTO item_confirmation (item_id, user_id, stance, source, created_at, updated_at) VALUES (:item, 1, 'exists', 'drawer', NOW(), NOW())",
+            ['item' => $id],
+        );
+        $again = array_values(array_filter($this->payload()['O']['authority']['features'], static fn (array $f): bool => $f['properties']['id'] === $id));
+        self::assertSame(1, $again[0]['properties']['v'] ?? null);
     }
 
     /**
@@ -508,6 +521,26 @@ final class CatalogProviderTest extends KernelTestCase
         // Served-only: a rejected row's ref must disappear (ItemState::SERVED).
         $this->em->getConnection()->executeStatement("UPDATE item SET state = 'rejected' WHERE source_ref = 'node/1001'");
         self::assertNotContains('node/1001', $this->payload()['refs']);
+    }
+
+    /**
+     * An authority row attached to an OSM tap (data-provider-hierarchy.md
+     * §4.1) is served as a pin, so the tap's own tile drop must be hidden:
+     * its `osm_ref` ships in `refs` like a curated OSM ref does. Found on
+     * 2026-09-05, the first RIVM harvest: 2429 taps drew twice.
+     */
+    public function testPayloadCarriesTheOsmTwinOfAnAttachedAuthorityRow(): void
+    {
+        $conn = $this->em->getConnection();
+        $conn->executeStatement(
+            "INSERT INTO item (letter, name, geom, country_code, state, source, source_ref, osm_ref, attributes, created_at, updated_at)
+             VALUES ('B', '', ST_GeomFromText('POINT(4.75 52.57)', 4326), 'NL',
+                     'unverified', 'authority', 'rivm-drinkwater:52.57,4.75', 'node/7001', '{}', now(), now())",
+        );
+        self::assertContains('node/7001', $this->payload()['refs']);
+
+        $conn->executeStatement("UPDATE item SET state = 'rejected' WHERE osm_ref = 'node/7001'");
+        self::assertNotContains('node/7001', $this->payload()['refs'], 'a row no longer served frees its twin');
     }
 
     /**

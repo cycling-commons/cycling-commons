@@ -4,7 +4,9 @@
 
 namespace App\Tests\Smoke;
 
+use App\Catalog\KindIcons;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\DomCrawler\Crawler;
 
 /**
  * The map key: the /map-key explainer page and the Key panel on the map rail.
@@ -56,7 +58,8 @@ final class MapKeyTest extends WebTestCase
     /**
      * Designed marks that the map does not draw yet stay on the page, but
      * every one of them wears the planned tag (owner 2026-09-01: "with a
-     * small notification waiting implementation").
+     * small notification waiting implementation"). Since 2026-09-04 that is
+     * the provider tier alone: the two state badges are drawn.
      */
     public function testPlannedMarksAreTaggedOnThePage(): void
     {
@@ -64,15 +67,55 @@ final class MapKeyTest extends WebTestCase
         $crawler = $client->request('GET', '/map-key');
         self::assertResponseIsSuccessful();
 
-        self::assertGreaterThanOrEqual(
-            3,
+        self::assertSame(
+            1,
             $crawler->filter('.mk-tag--plan')->count(),
-            'the provider tier and both proposed badges carry the planned tag',
+            'the provider tier carries the planned tag, and nothing else does',
         );
         self::assertStringContainsString(
             'not on the map yet',
             (string) $client->getResponse()->getContent(),
         );
+        // The state badges went live with the pin grammar: no planned tag on them.
+        foreach (['Out of order', 'Not always reachable'] as $live) {
+            $row = $crawler->filter('.mk-row')->reduce(static fn (Crawler $n): bool => str_contains($n->text(), $live));
+            self::assertSame(1, $row->count(), "$live has a row");
+            self::assertSame(0, $row->filter('.mk-tag--plan')->count(), "$live is on the map, not planned");
+            self::assertSame(1, $row->filter('.cc-st')->count(), "$live shows its badge");
+        }
+    }
+
+    /**
+     * The kinds section is GENERATED from the kind registry (the same
+     * definitions the map mints its tile icons from), so every registry kind
+     * has a row and no row exists without one.
+     */
+    public function testKindsAreGeneratedFromTheRegistry(): void
+    {
+        $expected = [];
+        foreach (KindIcons::set() as $letter => $kinds) {
+            foreach (array_keys($kinds) as $kind) {
+                $expected[] = "$letter:$kind";
+            }
+        }
+        sort($expected);
+
+        $client = static::createClient();
+        $crawler = $client->request('GET', '/map-key');
+        self::assertResponseIsSuccessful();
+        $page = $crawler->filter('.mk-kind')->each(static fn (Crawler $n): string => (string) $n->attr('data-kind'));
+        sort($page);
+        self::assertSame($expected, $page, 'the page lists exactly the registry kinds');
+        self::assertSame(\count($expected), $crawler->filter('.mk-kind svg.cc-kind, .mk-kind .mk-disc')->count(), 'every kind row draws its glyph');
+
+        // The rail panel too, from the same registry.
+        $crawler = $client->request('GET', '/map');
+        self::assertResponseIsSuccessful();
+        $panel = $crawler->filter('#p-key .mk-kind')->each(static fn (Crawler $n): string => (string) $n->attr('data-kind'));
+        sort($panel);
+        self::assertSame($expected, $panel, 'the Key panel lists exactly the registry kinds');
+        self::assertSame(1, $crawler->filter('#p-key .mk-state-warn .cc-st.warn')->count());
+        self::assertSame(1, $crawler->filter('#p-key .mk-state-hours .cc-st.hours')->count());
     }
 
     public function testMapRailHasKeyPanel(): void

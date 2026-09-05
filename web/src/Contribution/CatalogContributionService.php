@@ -23,11 +23,14 @@ use App\Entity\User;
 use App\Media\Entity\MediaUpload;
 use App\Media\MediaClaimService;
 use App\Media\PhotoAltSuggestion;
+use App\Moderation\ModerationService;
+use App\Moderation\OutOfScopeException;
 use App\Service\ContributionReceipt;
 use App\Service\ContributionStubInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
+use Symfony\Component\Security\Core\Role\RoleHierarchyInterface;
 use Symfony\Component\Validator\ConstraintViolation;
 use Symfony\Component\Validator\ConstraintViolationList;
 use Symfony\Component\Validator\Exception\ValidationFailedException;
@@ -52,6 +55,8 @@ final class CatalogContributionService implements ContributionStubInterface
         private readonly SafeBrowsing $safeBrowsing,
         private readonly LinkVerdictStore $linkVerdicts,
         private readonly OsmCandidates $osmCandidates,
+        private readonly ModerationService $moderation,
+        private readonly RoleHierarchyInterface $roleHierarchy,
     ) {
     }
 
@@ -444,10 +449,13 @@ final class CatalogContributionService implements ContributionStubInterface
 
         $draft = new SubmissionDraft(
             type: ItemType::fromParam($item->getLetter()),
-            /* Nameless places use `_title_fallback`; the item is not renamed by it. */
+            /* Nameless places use `_title_fallback`, and failing that their
+               type's label; the item is not renamed by either. A register row
+               (RIVM names no tap) edited from the wizard used to fail here
+               with "should not be blank" (owner 2026-09-05). */
             title: '' !== $item->getName()
                 ? $item->getName()
-                : trim((string) ($payload['_title_fallback'] ?? '')),
+                : (trim((string) ($payload['_title_fallback'] ?? '')) ?: ItemType::fromParam($item->getLetter())->label()),
             // Submission sits where the rider put it, not where the item still is.
             lat: $newLat,
             lng: $newLng,
@@ -506,7 +514,31 @@ final class CatalogContributionService implements ContributionStubInterface
 
         return new ContributionReceipt(
             'SUB-'.(string) $submission->getId(), 'improve', true, $submission->getCreatedAt(), $submission->getId(),
+            applied: $this->applyIfCurator($submission, $by),
         );
+    }
+
+    /**
+     * A curator's own edit does not wait for a curator (owner 2026-09-06: "if
+     * I change anything on an item when I have curator rights I should not
+     * have to approve it"). Not a new mechanic: the SAME approve step the
+     * desk button runs, with the same area check, run at submit time by the
+     * same person. Outside their area the edit queues like anyone's. Only
+     * edits of existing places: a NEW place still needs the OSM question
+     * answered, which lives on the queue card (docs/TODO.md, 2026-09-06).
+     */
+    private function applyIfCurator(Submission $submission, User $by): bool
+    {
+        if (!\in_array('ROLE_CURATOR', $this->roleHierarchy->getReachableRoleNames($by->getRoles()), true)) {
+            return false;
+        }
+        try {
+            $this->moderation->decide((int) $submission->getId(), 'approve', $by, null);
+        } catch (OutOfScopeException) {
+            return false;
+        }
+
+        return true;
     }
 
     /**

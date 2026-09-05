@@ -38,7 +38,7 @@ final class ProviderCitationsTest extends KernelTestCase
     {
         $row = $this->citations()->all()['wallonie-pivot'];
 
-        self::assertSame(['name', 'fullName', 'homepage', 'licence', 'attribution'], array_keys($row));
+        self::assertSame(['name', 'fullName', 'homepage', 'licence', 'attribution', 'creator'], array_keys($row));
         self::assertSame('Tourisme Wallonie', $row['name']);
         self::assertSame('Creative Commons BY 4.0', $row['licence']);
         self::assertSame('Tourisme Wallonie (CC-BY)', $row['attribution']);

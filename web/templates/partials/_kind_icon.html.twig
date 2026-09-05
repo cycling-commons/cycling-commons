@@ -1,0 +1,23 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{# One kind glyph, drawn from THE kind set (KindIcons::set() via
+   cc_kind_icons()): the same paths the map mints its tile icons from, so a
+   legend row can never drift from the pin it explains.
+
+   Parameters: letter (catalogue letter), kind (key within that letter),
+   size (px, default 22), color (the category colour, replaces the "@cat"
+   token), ink (the glyph colour that reads on that fill, replaces "@ink";
+   default dark). A text-glyph kind renders in the emoji stack, flattened to
+   the ink colour. #}
+{% set kd = (cc_kind_icons()[letter] ?? {})[kind] ?? null %}
+{% set sz = size|default(22) %}
+{% set ink = ink|default('#14160e') %}
+{% if kd and kd.paths is defined %}
+<svg class="cc-kind" viewBox="0 0 24 24" width="{{ sz }}" height="{{ sz }}" aria-hidden="true">
+  {%- for pth in kd.paths -%}
+    {%- set fill = pth.fill == '@cat' ? color|default('#6b6f5e') : (pth.fill == '@ink' ? ink : pth.fill) -%}
+    <path d="{{ pth.d }}" fill="{{ fill }}"{% if pth.stroke is defined %} stroke="{{ pth.stroke }}" stroke-width="{{ pth.width|default(1.5) }}" stroke-linejoin="round"{% endif %}/>
+  {%- endfor -%}
+</svg>
+{% elseif kd %}
+<span class="cc-kind cc-kind--glyph" style="color:{{ ink }}" aria-hidden="true">{{ kd.glyph }}</span>
+{% endif %}

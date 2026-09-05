@@ -56,14 +56,14 @@ final class ProviderCitations
      * The slug is what a feature carries as `pk`, so the drawer resolves a
      * citation with one lookup and no knowledge of who exists.
      *
-     * @return array<string, array{name: string, fullName: string, homepage: string, licence: string, attribution: ?string}>
+     * @return array<string, array{name: string, fullName: string, homepage: string, licence: string, attribution: ?string, creator: ?string}>
      */
     public function all(): array
     {
         $map = $this->cache->get(self::CACHE_KEY, function (ItemInterface $_item): array {
-            /** @var list<array{provider_key: string, name: string, full_name: string, homepage: string, licence: string, attribution: ?string}> $rows */
+            /** @var list<array{provider_key: string, name: string, full_name: string, homepage: string, licence: string, attribution: ?string, creator: ?string}> $rows */
             $rows = $this->db->fetchAllAssociative(
-                'SELECT provider_key, name, full_name, homepage, licence, attribution
+                'SELECT provider_key, name, full_name, homepage, licence, attribution, creator
                    FROM data_provider
                   WHERE enabled = TRUE
                   ORDER BY rank DESC',
@@ -77,6 +77,9 @@ final class ProviderCitations
                     'homepage' => $row['homepage'],
                     'licence' => $row['licence'],
                     'attribution' => $row['attribution'],
+                    // Who made the dataset when that is not who publishes it: the
+                    // drawer names them, or it credits the pipe and not the person.
+                    'creator' => $row['creator'],
                 ];
             }
 

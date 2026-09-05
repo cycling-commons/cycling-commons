@@ -80,6 +80,15 @@ final class ModerateProvidersController extends AbstractController
                 'lastRunAt' => $p->getLastRunAt(),
                 'lastCount' => $p->getLastCount(),
                 'lastError' => $p->getLastError(),
+                // The source, read-only for now (owner 2026-09-05: "show the
+                // source and the run command"). Editing it, and running it
+                // from here, are the open items in docs/TODO.md.
+                'endpoint' => $p->getEndpoint(),
+                'endpointKind' => $p->getEndpointKind(),
+                'fieldMap' => $p->getFieldMap(),
+                'letters' => $p->getLetters(),
+                'countryCode' => $p->getCountryCode(),
+                'refreshCadence' => $p->getRefreshCadence(),
             ];
         }
 

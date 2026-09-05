@@ -7,7 +7,7 @@ import { openClimbProfile } from './climb-profile.js';
 import { uKm, uM, uElev, uKmValue, uElevValue, uDistUnit } from './units.js';
 import { map } from './map-init.js';
 import { CATALOG, CITIES } from './catalog.js';
-import { layerGlyph, pinEl } from './icons.js';
+import { layerGlyph, pinEl, waterKind } from './icons.js';
 import { itemLinks } from './links.js';
 import { sheet } from './sheet.js';
 import { openLightbox } from './lightbox.js';
@@ -193,7 +193,12 @@ function providerSource(prov){
   const parts=[prov.name];
   if(prov.licence) parts.push(prov.licence);
   const head=parts.join(' - ');
-  return prov.fullName && prov.fullName!==prov.name ? head+' \u00b7 '+prov.fullName : head;
+  const tail=[];
+  if(prov.fullName && prov.fullName!==prov.name) tail.push(prov.fullName);
+  // The person who made the dataset, when that is not the publisher (owner
+  // 2026-09-05: the desk had the field and the drawer never showed it).
+  if(prov.creator) tail.push(prov.creator);
+  return tail.length ? head+' \u00b7 '+tail.join(' \u00b7 ') : head;
 }
 
 function providerOf(p){
@@ -303,23 +308,48 @@ export function waterDrawer(p, ll){
             ? {label:D.potable||'Potable', value:D.potableOsmNo||'Tagged not drinkable in OSM — not utility-verified; avoid unless confirmed on the spot', method:'unverified'}
             : {label:D.potable||'Potable', value:D.potableOsmUnknown||'Nobody has tagged whether this is drinkable, so treat it as unknown', method:'unknown'}));
   const community = isRiderSource(p.srcType);
+  // An authority row (a RIVM tap): its publisher is the body of record, so
+  // the drawer credits them and not OSM, exactly as osmDrawer does. Until
+  // 2026-09-05 every RIVM tap read "Type: Drinking water, OSM" and
+  // "Source: OpenStreetMap", which was false twice on the first pin opened.
+  const provider = providerOf(p);
+  // What this pin IS: the same rule that picks its glyph (icons.js). A food
+  // stop is not asked about drinking water unless it claims to give some.
+  const kind = waterKind(p);
+  const food = kind==='food' || kind==='food_water';
   // Letter B is water AND food, and 44% of it is shops and eateries. The type
   // fell back to "Drinking water" whenever the tile properties were missing,
   // which is every deep link and every search hit, so a bakery opened as a
   // drinking-water point. Fall back to what OSM calls it before claiming that.
   const typeValue = (p.type||p.t) ? trVal(p.type||p.t)
     : (p.osmShop||p.osmAmenity ? osmKindLabel(p) : (D.drinkingWater||'Drinking water'));
-  const rec=[{label:D.type||'Type', value:typeValue, method: p.type?undefined:'OSM'}, potable,
-    {label:D.verify||'Verify', value:D.verifyWater||'Cross-check tap-water quality with the regional utility / fountain directory', links:WATER_CHECK_LINKS[p.cc]||[]}];
+  const rec=[{label:D.type||'Type', value:typeValue, method: p.type?undefined:(provider?provider.name:'OSM')}];
+  if(kind!=='food'){
+    rec.push(potable);
+    // "Cross-check with the regional utility" is advice for an OSM tap nobody
+    // vouches for. An authority row IS the utility's register (RIVM), so the
+    // row would tell a rider to check RIVM against RIVM (owner 2026-09-05).
+    if(!provider) rec.push({label:D.verify||'Verify', value:D.verifyWater||'Cross-check tap-water quality with the regional utility / fountain directory', links:WATER_CHECK_LINKS[p.cc]||[]});
+  }
+  // The row says WHAT this is (an official register entry) and the method
+  // says WHOSE; the town is the one handle a register row without a name
+  // gives a rider who wants to report it (RIVM names no tap).
+  if(provider) rec.push({label:D.listed||'Listed', value:D.officialRegistry||'Official registry entry', method:provider.name});
+  if(p.town) rec.push({label:D.town||'Town', value:p.town});
   // Remaining WaterFood fields; type and potable are structural above.
   rec.push(...schemaRows('B', p, p.id, {skip:['type','potable']}));
-  const d={name:p.n||p.t||D.drinkingWater||'Drinking water', headline:(D.headlineDrinking||'drinking water')+' · '+(community?sourceLabel(p.srcType):'OSM'), cur:!!p.v, geom:{ll:[ll.lat,ll.lng]},
+  const headline = kind==='food' ? (D.headlineFood||'food stop')
+    : kind==='food_water' ? (D.headlineFood||'food stop')+' + '+(D.headlineDrinking||'drinking water')
+    : (D.headlineDrinking||'drinking water');
+  const origin = provider ? provider.name : (community?sourceLabel(p.srcType):'OSM');
+  const d={name:p.n||p.t||(food ? osmKindLabel(p) : (D.drinkingWater||'Drinking water')), headline:headline+' · '+origin, cur:!!p.v, geom:{ll:[ll.lat,ll.lng]},
+    waterKind:kind,
     record:rec,
     // Names what the row ACTUALLY carries, tag by tag. It printed
     // "amenity=drinking_water / drinking_water=yes" for every pin in this
     // layer, which is wrong twice over: letter B is water AND food, so 44% of
     // it is bakeries and cafes that carry neither tag.
-    source: community?sourceLabel(p.srcType):osmWaterSource(p)};
+    source: provider ? providerSource(provider) : (community?sourceLabel(p.srcType):osmWaterSource(p))};
   // Provenance rides along so srcLine can link Scout.
   if(p.srcType) d.srcType=p.srcType;
   // Carry contributor fields: bulk-OSM layers otherwise drop the rider who added the place.
@@ -615,7 +645,8 @@ function buildRecord(layer, f){
         /* Anonymous: login line, not a dead button. */
         ? `<div class="cc-osmcf"><span class="cc-cf-login">${D.loginConfirm||'Log in to confirm'} · <a href="/login">${I18N.login||'Log in'}</a></span></div>`
         : `<div class="cc-osmcf" data-osm-ref="${escPend(f.osmRef)}">`
-        + ('water' === layer.key
+        // A food stop is confirmed as present, not as drinkable.
+        + ('water' === layer.key && f.waterKind !== 'food'
             ? `<button type="button" class="cc-d-act confirm-osm" data-osm-stance="potable">✓ ${D.waterA||'Drinking water'}</button>`
               + `<button type="button" class="cc-d-act confirm-osm-no" data-osm-stance="not_potable">✕ ${D.notPotable||'Not potable'}</button>`
             : `<button type="button" class="cc-d-act confirm-osm" data-osm-stance="exists">✓ ${D.confirmHere||'Confirm it\u2019s here'}</button>`)

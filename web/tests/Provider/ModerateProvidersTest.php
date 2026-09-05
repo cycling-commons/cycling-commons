@@ -44,6 +44,16 @@ final class ModerateProvidersTest extends WebTestCase
         // OpenStreetMap is a system row, and the page says so rather than
         // offering a control that would be refused.
         self::assertGreaterThan(0, $crawler->filter('input[name="rank"][readonly]')->count());
+
+        // The source shows, read-only, with the run commands (owner 2026-09-05:
+        // "show the source and the run command"); a built-in row has none.
+        $src = $crawler->filter('[data-provider-source="rivm-drinkwater"]');
+        self::assertSame(1, $src->count());
+        self::assertStringContainsString('https://data.rivm.nl/geo/alo/wfs', $src->text());
+        self::assertStringContainsString('alo:rivm_drinkwaterkranen_actueel', $src->text());
+        self::assertStringContainsString('providers.run --key rivm-drinkwater', $src->filter('pre')->text());
+        self::assertStringContainsString('app:providers:harvest rivm-drinkwater /tmp/rivm-drinkwater.json --write', $src->filter('pre')->text());
+        self::assertSame(0, $crawler->filter('[data-provider-source="osm"]')->count(), 'a built-in row has no fetchable source');
     }
 
     /**

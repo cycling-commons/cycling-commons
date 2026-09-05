@@ -22,9 +22,10 @@ Ride-critical drinking water / refill points (fountains, taps, cemetery taps, ca
 ### Fix details
 | Field | Control | Provenance |
 |---|---|---|
-| Type | select(Public fountain / Drinking tap / Cemetery tap / Café — refill point) | `[OSM]` |
+| Type | select(Public fountain / Drinking tap / Cemetery tap / Public toilet / Café — refill point) | `[OSM]`; Public toilet added 2026-09-05: a tap at a public toilet, the commonest Dutch register case after fountains |
 | Potable? | select(Yes — public supply / Unsigned — use judgement / No / non-potable) | `[tap]` |
 | Seasonal availability | select(Year-round / Summer only / Frost-shut in winter / Unknown) | `[tap]` |
+| Availability | select(Unknown / Always / Daytime only / Ask or behind a gate) | `[tap]`, filled by the Dutch register's `type` where it has one; the clock badge reads it |
 | Still as mapped? | select(As mapped / Out of order / Closed / Not there anymore) | `[tap]` |
 | Note | textarea | `[edit]` |
 

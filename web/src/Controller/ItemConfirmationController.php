@@ -93,11 +93,7 @@ final class ItemConfirmationController extends AbstractController
     {
         return [
             ...$this->confirmations->snapshot($item, $user),
-            'stanceKind' => match (ItemType::fromParam($item->getLetter())) {
-                ItemType::WaterFood => 'potability',
-                ItemType::RoadSurface => 'accuracy',
-                default => 'existence',
-            },
+            'stanceKind' => ItemConfirmationService::stanceKindFor($item),
         ];
     }
 

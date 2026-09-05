@@ -36,6 +36,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Uid\Uuid;
 use Symfony\Component\Validator\Exception\ValidationFailedException;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * Contribution wizards.
@@ -302,7 +303,7 @@ final class ContributeController extends AbstractController
 
     #[Route('/improve', name: 'improve')]
     #[IsGranted('ROLE_USER')]
-    public function improve(Request $request, EntityManagerInterface $em, CoverageRepository $coverage): Response
+    public function improve(Request $request, EntityManagerInterface $em, CoverageRepository $coverage, TranslatorInterface $translator): Response
     {
         // docs/specs/moderation-and-contribution.md §1.4 — non-numeric item is unbound, never a 400.
         $item = null;
@@ -385,7 +386,13 @@ final class ContributeController extends AbstractController
             $user = $this->getUser();
 
             try {
-                $receipt = $this->contributionStub->submit('improve', ['type' => $type->value, '_item_id' => $item->getId()] + $data, $user);
+                // A nameless place (a register tap) titles its submission by
+                // its type, in the rider's language; the item is not renamed.
+                $receipt = $this->contributionStub->submit('improve', [
+                    'type' => $type->value,
+                    '_item_id' => $item->getId(),
+                    '_title_fallback' => $translator->trans('item_type.'.$type->value.'.label'),
+                ] + $data, $user);
             } catch (TooManyRequestsHttpException) {
                 $this->addFlash('error', 'contribute.error.rate_limited');
                 $receipt = null;

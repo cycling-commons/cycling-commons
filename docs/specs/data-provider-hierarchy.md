@@ -82,7 +82,7 @@ A new table, `data_provider`, one row per dataset. Curator-maintained (§8).
 | `community_edited` | false while nobody here has touched a row (§6, the grey pins). |
 | `endpoint` | URL of the machine-readable source. |
 | `endpoint_kind` | `wfs`, `geojson`, `csv`, `arcgis`. |
-| `field_map` | JSON: which upstream field feeds which of our attributes. |
+| `field_map` | JSON: which upstream field feeds which of our attributes. An entry is the upstream field name, or `{"from": <field>, "values": {<theirs>: <ours>}}` when the upstream values must land in one of our form vocabularies; a value the map does not name is dropped (`apply_field_map`). |
 | `match_radius_m` | how close an upstream point must be to an OSM node to count as the same thing (§5). |
 | `refresh_cadence` | how often the harvest should re-read it. |
 | `last_run_at`, `last_count`, `last_error` | what the desk shows. |
@@ -211,6 +211,35 @@ For each upstream feature:
    It is marked stale and raised on the Data desk, because "the publisher
    dropped it" and "the publisher's export broke" look identical from here.
 
+6. **A harvested row enters `unverified`**, like every row
+   (catalog-data-model.md §5): verification is a rider standing there, never
+   provenance, so it draws the dashed "?" pin until one does. The register's
+   authority lives in its rank. The harvester wrote `verified` until
+   2026-09-06, which gave 3283 RIVM taps the plain pin (owner: "according to
+   the legend this should be the icon while not confirmed by one of our
+   users").
+7. **Every row gets its region.** After the pass, the run stamps `item.region_id`
+   for the provider's rows with the same smallest-area-wins rule the catalogue
+   import applies (catalog-data-model.md §6). Added 2026-09-05, when the first
+   RIVM run produced 3283 rows with no region: under a region scope the map
+   hides a served row that has none, and the OSM tap it replaced is hidden by
+   the dedupe, so a Dutch rider scoped to their province saw no water at all.
+8. **A point that moved a little is the same row.** A register with no stable
+   id (RIVM) keys a row by its coordinates to six decimals, so any GPS shift
+   is a new key. When a run meets a key nobody has, it first looks for this
+   provider's rows the run has not seen within `MOVE_RADIUS_M` (100 m, owner
+   2026-09-05) and re-keys the nearest one instead of inserting a twin and
+   counting the old row stale. Beyond 100 m two taps are two taps. Counted as
+   `moved`.
+9. **A re-import never overwrites what a person changed.** Rule 1 of §4, at
+   the field level: the fields a row's `change_history` names were touched by
+   a person, and the update fills in around them. Upstream fills every other
+   mapped field, keeps fields a person added that upstream does not carry,
+   and leaves the geometry alone when `location` is in the history. Before
+   2026-09-05 the update replaced the whole attributes object and the
+   geometry, so the second RIVM run would have undone every rider's "Not
+   there anymore", note, photo and relocation.
+
 ### 5.1 The match radius is a judgement, and it is per provider
 
 For the Dutch taps, 69.6% of upstream points sit within 25 m of an OSM node and
@@ -251,24 +280,72 @@ has no equivalent of it, so it may not be lost to a styling rule.
 ### 6.3 The marker's channels are a fixed budget, and they are nearly spent
 
 A marker can carry a limited number of independent signals before it stops being
-readable. There are nine, and five were already spent before this document
-proposed anything:
+readable. There are ten:
 
 | Channel | Answers | State |
 | --- | --- | --- |
 | Shape (small disc vs teardrop) | which store the record lives in | taken |
 | Fill colour | which category | taken |
+| Glyph | which KIND, within the category (§6.3a) | taken (2026-09-04) |
 | Border colour and style | our handling: pending moderation, community-added | taken |
 | Ring | going stale, and selection | taken |
-| Badge, top right | unconfirmed (`?`) | taken |
-| Saturation (greyscale) | who maintains the record (§6) | **proposed here** |
-| Badge, top left | the thing's own status (§6.2) | **proposed here** |
+| Badge, top right | unconfirmed (`?`), verified (paper dot) | taken |
+| Badge, top left | the thing's own STATE (§6.2, §6.3a) | taken (2026-09-04) |
+| Saturation (greyscale) | who maintains the record (§6) | proposed, **free since §6.5 was settled** |
 | Size | nothing | free |
 | Cluster bubble | density | taken |
 
-After the two proposals in §6, **one channel is left**. That is the entire
-budget for every dataset we add after this one, so it is not spent on a
-first-come basis.
+Two channels are left, saturation and size. That is the entire budget for
+every dataset we add after this one, so it is not spent on a first-come basis.
+
+### 6.3a The pin grammar (owner, 2026-09-04)
+
+The owner, on being shown the water/food split: "water has potable yes/no,
+still there, broken, only on time xy, closed during autumn winter. Bike
+services has other kinds of traits, bike shop or Shimano self repair stand,
+pump yes no etc. So apples and oranges." No single symbol grammar carries every
+category's traits, so the grammar is this, and the owner accepted it the same
+night:
+
+> **Kind lives in the glyph. State is two shared badges. Everything else is
+> drawer content.**
+
+- **Kind** is per category and never compared across categories. Water &
+  food: drinking tap (blue drop), tap not for drinking (the drop with a bar
+  across it), tap nobody has said anything about (the drop unfilled), food
+  stop (fork and knife on the category disc), food stop that also gives water
+  (the same with a small blue drop). Bike services: shop, repair stand, pump.
+  A non-potable tap is a different KIND of thing, not a broken one, which is
+  why potability lives here and not in a colour. Colour is never the only
+  signal: every water kind differs in shape.
+- **State** is the only thing shared, and it means the same in every
+  category. Top-left badge: a red `!` for "not usable right now" (a rider's
+  `condition` of Out of order or Closed) and an ink clock for "there, but not
+  always": letter B's `availability` of Daytime only or Ask or behind a gate,
+  and its `seasonal` closure ONLY in the months it is shut (frost-shut:
+  November to March; summer only: October to April). The badge answers "can I
+  use it now" (§6.4), and every Dutch register tap is frost-shut in winter, so
+  a year-round clock would mark all 3283 of them and mean nothing. A rider
+  learns two marks once.
+- Everything else is a drawer row or a filter facet, per §6.4.
+
+**The definitions live once.** `App\Catalog\KindIcons::set()` is the kind
+registry: per letter, per kind, either a list of 24-box paths (with `@cat`
+and `@ink` colour tokens the renderer resolves) or a text glyph. The map
+mints its tile icons from it on a canvas (`icons.js mintKindIcons()`, images
+`kind-<letter>-<kind>`), the DOM pins draw it as inline SVG (`kindSvg()`),
+and both legends render it through `partials/_kind_icon.html.twig`
+(`cc_kind_icons()`). The rule that maps a record's facts to a kind is
+`waterKind()` in `icons.js`, shared by the tile paint, the selected-icon
+overlay, the DOM pin and the drawer; the rule for state is `stateOf()` beside
+it. The tile carries `potable` as `yes` / `no` / absent (it was a boolean,
+which folded "tagged no" into "nobody said") and `food` for the shop and
+eatery half.
+
+**What the water fix cost, in rows (2026-09-04):** of letter B's 375,252,
+the water half is 195,336 implied-drinkable, 38,843 tagged yes, 7,221 tagged
+no and 14,599 water points nobody tagged; the food half is 119,113 plain and
+140 that also claim drinking water.
 
 ### 6.4 The rule that rations it
 
@@ -285,24 +362,18 @@ A provider cannot buy a channel. `data_provider` has no styling column beyond
 `community_edited` (§3), and adding one is a change to this document, not a
 configuration.
 
-### 6.5 Blocking decision: grey already means something on water
+### 6.5 Blocking decision: grey already means something on water. SETTLED 2026-09-04
 
-**This must be settled before §6 or §11 is built.** On water points a grey drop
-already means "nobody tagged whether this is drinkable"
-(`water-drop-unk`, `web/assets/map/icons.js`, coverage-provider.md §4). If
-greyscale also comes to mean "an authority record nobody here has touched", the
-two meanings land on the same pins. Water is where they collide, and water is
-the first dataset being imported, so this is not hypothetical.
+Until 2026-09-04 a grey drop meant "nobody tagged whether this is drinkable"
+(`water-drop-unk`), and if greyscale also came to mean "an authority record
+nobody here has touched" the two meanings would land on the same pins. Water
+is where they collide, and water is the first dataset being imported.
 
-Two ways out, and one has to be chosen:
-
-1. Give the untouched-authority tier a treatment other than greyscale, leaving
-   potability where it is.
-2. Move potability onto a badge and let saturation mean provenance alone. This
-   costs the last free channel by §6.3's count, or forces potability into the
-   drawer.
-
-Neither is obviously right. What is not allowed is shipping both meanings.
+**Settled by §6.3a, a third way:** potability moved into the KIND glyph (a
+barred drop, an unfilled drop), so grey no longer means anything on water.
+The grey drop image is gone. Saturation is free again and may carry
+provenance when §6 is built; it costs no badge and forces nothing into the
+drawer. What stays not allowed is shipping two meanings on one channel.
 
 ### 6.6 The legend
 
@@ -363,6 +434,17 @@ last run's counts and errors.
 **Built 2026-09-04**, minus the refresh: there is no harvester to run until §5
 exists (phase 4), and a button that cannot do anything is worse than no button.
 The last run's counts and errors already render, so the field is ready for it.
+
+**2026-09-05: the source shows, read-only, with the run.** The owner ran the
+first real harvest and asked where the source is set and how it runs. Every
+non-system row now shows what it fills (letters, country), the service and
+its kind, the WFS layer, the field map without its underscore keys, the
+cadence, and the exact commands of a refresh in order, dry then `--write`.
+Editing those fields, adding a row, and a Run button that crosses the two
+containers are filed in docs/TODO.md ("Opened 2026-09-05"). One row is one
+provider in one country for one or more letters: another country's register
+for the same letter is another row with its own endpoint and field map, which
+is why `country_code` and `letters` live on the row and not on the letter.
 
 `App\Provider\ProviderRegistry` is the only writer and the only place the rules
 live. A rule enforced in the controller is a rule the next caller does not
@@ -572,9 +654,16 @@ Registry row:
 | `match_radius_m` | 50 |
 | `refresh_cadence` | twice yearly, matching the publisher |
 
-Field map: `beschrijvi` to the description, `plaats` to the town, `type` to a
-status attribute (`Regulier, 24-7 open` / `Alleen overdag bereikbaar` /
-`Storing`).
+Field map: `beschrijvi` to the note, `plaats` to the town, and `type` twice
+through a value map (2026-09-05): `Regulier, 24-7 open` / `Alleen overdag
+bereikbaar` to `availability` (Always / Daytime only), `Storing` to
+`condition` (Out of order). Both are form fields on letter B, so a rider can
+correct what the register says. And `potable` is `Yes (public supply)` for
+every `type` the register uses (`Version20260905010000`): being in the
+national drinking-water register IS the answer, and without it the map drew
+the "nobody said" drop on every RIVM tap. What is true of every tap in the
+register is said once on the row too (`Version20260905030000`, owner
+2026-09-05): `cost` Free, `bottleFill` Yes, `seasonal` Frost-shut in winter.
 
 Measured against the harvest on 2026-08-26 (3287 upstream points, 2744 OSM
 `amenity=drinking_water` nodes in NL):
@@ -644,6 +733,15 @@ bereikbaar` / `Storing`) is dropped for now, because letter B has no field that
 means availability and filling an attribute with no form field behind it would
 break the rule that anything filled in for a rider must be editable by one. It
 goes in when B gains an availability field.
+
+**Filled since 2026-09-05.** Letter B gained the `availability` field
+(Unknown / Always / Daytime only / Ask or behind a gate,
+docs/specs/edit-items/B-water-food.md), so the register's `type` now lands
+through a value map: 24-7 and daytime to `availability`, `Storing` to
+`condition`. `Version20260905000000` rewrites the RIVM row's field map. The
+clock badge (§6.3a) reads `availability` beside `seasonal`, and the red `!`
+reads `condition`, so the 152 daytime-only and 68 broken taps show as such the
+day the row is enabled and harvested.
 
 **Licence discipline for this row.** The Public Domain Mark 1.0 statement covers
 the RIVM publication, dataset 30660 on data.overheid.nl. It does **not** cover the GPX
@@ -715,7 +813,13 @@ than discovered:
 5. **The Dutch taps.** ✅ Built 2026-09-04. §11, and it WAS the intended path:
    a registry row plus a field map, no new code. Its first real run found the
    two matcher defects recorded above; the acceptance numbers hold once they
-   are fixed. Seeded paused, nothing written yet.
+   are fixed. Seeded paused. **Enabled by the owner on 2026-09-05 and
+   harvested on dev the same evening:** 3287 read, 2429 attached, 854
+   inserted, 9 contested, 0 refused; 152 daytime-only and 68 out of order
+   through the value map. That run found that the client dedupe list
+   (`CatalogProvider::curatedRefs()`) shipped only `source='osm'` refs, so
+   every attached tap drew twice; it now ships the `osm_ref` twins too, the
+   same key CoverageRepository joins on (§4.1).
 6. **The pin styling and the legend.** §6, last, because it touches every layer
    and wants the other five settled first. §6.5 is a blocking decision inside
    this phase: the grey collision on water is resolved before a pixel changes.

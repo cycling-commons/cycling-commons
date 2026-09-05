@@ -421,17 +421,33 @@
          never drift from what the map draws. Colours mirror catalog.js; the
          glyphs are THE icon set (cc_type_icons). #}
       {% set keyIcons = cc_type_icons() %}
+      {# A letter-B pin carries its kind glyph (KindIcons), never the 💧. #}
+      {% set bTap %}<span class="kd">{% include 'partials/_kind_icon.html.twig' with {letter: 'B', kind: 'tap', size: 17} %}</span>{% endset %}
       <div class="grp">
         <h3>{{ 'legend.tiers_h'|trans }}</h3>
         <div class="mkp-row"><span class="mkp-sw"><span class="mk-disc" style="--c:#3E7D8C"><span class="ic">{{ keyIcons['F'].glyph|default('•') }}</span></span></span><div class="mkp-t"><b>{{ 'legend.tier_osm_h'|trans }}</b><span>{{ 'legend.tier_osm_t'|trans }}</span></div></div>
-        <div class="mkp-row"><span class="mkp-sw" aria-hidden="true"><svg width="16" height="21" viewBox="0 0 14 18"><path d="M7 1 C13 8.3 11.2 17 7 17 C2.8 17 1 8.3 7 1 Z" fill="#3E8FB0" stroke="#0d2b3a" stroke-width="1.4"/></svg><svg width="16" height="21" viewBox="0 0 14 18"><path d="M7 1 C13 8.3 11.2 17 7 17 C2.8 17 1 8.3 7 1 Z" fill="#7F8C93" stroke="#2b3338" stroke-width="1.4"/></svg></span><div class="mkp-t"><b>{{ 'legend.tier_water_h'|trans }}</b><span>{{ 'legend.tier_water_t'|trans }}</span></div></div>
-        <div class="mkp-row"><span class="mkp-sw"><span class="cc-pin community" style="--c:#8FB6A8"><span style="filter:brightness(0)">{{ keyIcons['B'].glyph|default('•') }}</span></span></span><div class="mkp-t"><b>{{ 'legend.tier_community_h'|trans }}</b><span>{{ 'legend.tier_community_t'|trans }}</span></div></div>
-        <div class="mkp-row"><span class="mkp-sw"><span class="cc-pin" style="--c:#8FB6A8"><span style="filter:brightness(0)">{{ keyIcons['B'].glyph|default('•') }}</span></span></span><div class="mkp-t"><b>{{ 'legend.tier_ours_h'|trans }}</b><span>{{ 'legend.tier_ours_t'|trans }}</span></div></div>
-        <div class="mkp-row"><span class="mkp-sw"><span class="cc-pin cur" style="--c:#8FB6A8"><span style="filter:brightness(0)">{{ keyIcons['B'].glyph|default('•') }}</span></span></span><div class="mkp-t"><b>{{ 'legend.tier_verified_h'|trans }}</b><span>{{ 'legend.tier_verified_t'|trans }}</span></div></div>
+        <div class="mkp-row"><span class="mkp-sw"><span class="cc-pin community" style="--c:#8FB6A8">{{ bTap }}</span></span><div class="mkp-t"><b>{{ 'legend.tier_community_h'|trans }}</b><span>{{ 'legend.tier_community_t'|trans }}</span></div></div>
+        <div class="mkp-row"><span class="mkp-sw"><span class="cc-pin" style="--c:#8FB6A8">{{ bTap }}</span></span><div class="mkp-t"><b>{{ 'legend.tier_ours_h'|trans }}</b><span>{{ 'legend.tier_ours_t'|trans }}</span></div></div>
+        <div class="mkp-row"><span class="mkp-sw"><span class="cc-pin cur" style="--c:#8FB6A8">{{ bTap }}</span></span><div class="mkp-t"><b>{{ 'legend.tier_verified_h'|trans }}</b><span>{{ 'legend.tier_verified_t'|trans }}</span></div></div>
+      </div>
+      {# Kinds (data-provider-hierarchy.md §6.3): generated from KindIcons,
+         the same definitions the map mints its tile icons from. Only the
+         categories that have more than one kind appear. #}
+      <div class="grp">
+        <h3>{{ 'legend.kinds_h'|trans }}</h3>
+        {% set kindCol = {'B': '#8FB6A8', 'D': '#6b6f5e'} %}
+        {% set kindInk = {'B': '#14160e', 'D': '#fff'} %}
+        {% for kLetter, kinds in cc_kind_icons() %}
+        {% for kind, kd in kinds %}
+        <div class="mkp-row mk-kind" data-kind="{{ kLetter }}:{{ kind }}"><span class="mkp-sw">{% if kd.paths is defined %}{% include 'partials/_kind_icon.html.twig' with {letter: kLetter, kind: kind, size: 24, color: kindCol[kLetter]|default('#6b6f5e'), ink: kindInk[kLetter]|default('#fff')} %}{% else %}<span class="mk-disc" style="--c:{{ kindCol[kLetter]|default('#6b6f5e') }}"><span class="ic">{{ kd.glyph }}</span></span>{% endif %}</span><div class="mkp-t"><b>{{ ('legend.kind_' ~ kLetter|lower ~ '_' ~ kind ~ '_h')|trans }}</b><span>{{ ('legend.kind_' ~ kLetter|lower ~ '_' ~ kind ~ '_t')|trans }}</span></div></div>
+        {% endfor %}
+        {% endfor %}
       </div>
       <div class="grp">
         <h3>{{ 'legend.state_h'|trans }}</h3>
-        <div class="mkp-row"><span class="mkp-sw"><span class="cc-pin stale" style="--c:#8FB6A8"><span style="filter:brightness(0)">{{ keyIcons['B'].glyph|default('•') }}</span></span></span><div class="mkp-t"><b>{{ 'legend.state_stale_h'|trans }}</b><span>{{ 'legend.state_stale_t'|trans }}</span></div></div>
+        <div class="mkp-row"><span class="mkp-sw"><span class="cc-pin stale" style="--c:#8FB6A8">{{ bTap }}</span></span><div class="mkp-t"><b>{{ 'legend.state_stale_h'|trans }}</b><span>{{ 'legend.state_stale_t'|trans }}</span></div></div>
+        <div class="mkp-row mk-state-warn"><span class="mkp-sw"><span class="cc-pin" style="--c:#8FB6A8">{{ bTap }}<b class="cc-st warn">!</b></span></span><div class="mkp-t"><b>{{ 'legend.fact_broken_h'|trans }}</b><span>{{ 'legend.fact_broken_t'|trans }}</span></div></div>
+        <div class="mkp-row mk-state-hours"><span class="mkp-sw"><span class="cc-pin" style="--c:#8FB6A8">{{ bTap }}<b class="cc-st hours"><svg viewBox="0 0 24 24" width="9" height="9" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="3"/><path d="M12 7v5.5l3.5 2.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></b></span></span><div class="mkp-t"><b>{{ 'legend.fact_hours_h'|trans }}</b><span>{{ 'legend.fact_hours_t'|trans }}</span></div></div>
         <div class="mkp-row"><span class="mkp-sw"><span class="cc-cluster" style="--c:#6A2C8F">24</span></span><div class="mkp-t"><b>{{ 'legend.state_cluster_h'|trans }}</b><span>{{ 'legend.state_cluster_t'|trans }}</span></div></div>
         <div class="mkp-row"><span class="mkp-sw"><span class="cc-highlight" aria-hidden="true"></span></span><div class="mkp-t"><b>{{ 'legend.state_look_h'|trans }}</b><span>{{ 'legend.state_look_t'|trans }}</span></div></div>
         {# Moderation chrome: the flag comes from the CONTROLLER, never
@@ -765,6 +781,8 @@ window.CC_VENDOR = {{ {
   window.CC_FIELD_SCHEMA = {{ field_schema|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
   {# The category icon set, letter → {glyph, svg}: ItemType::iconSet(), the only definition. #}
   window.CC_TYPE_ICONS = {{ type_icons|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
+  {# The kind glyph set, letter → kind → drawing: KindIcons::set(), the only definition. #}
+  window.CC_KIND_ICONS = {{ kind_icons|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
   {# Locale bundle for the strings map.js renders itself (layer list, subtitle,
      drawer, toasts) — built by MapController::mapI18n, one source of truth. #}
   window.CC_I18N = {{ map_i18n|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};

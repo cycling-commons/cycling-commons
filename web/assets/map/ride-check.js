@@ -6,7 +6,7 @@ import { map, flyToPin } from './map-init.js';
 import { I18N, D, tpl } from './i18n.js';
 import { escPend, txtOn } from './util.js';
 import { uKm, uM, uElev } from './units.js';
-import { coverageIconId, layerGlyph } from './icons.js';
+import { coverageIconId, covIconSizes, layerGlyph } from './icons.js';
 import { openCoverageByRef, invalidateCoverageDrawer } from './coverage.js';
 import { itemIndex } from './item-index.js';
 import { CATALOG, layerByKey } from './catalog.js';
@@ -83,13 +83,13 @@ export function initRideCheck(){
       const features=[];
       groups.forEach(g=>{
         const key=COV_KEY[g.letter]; if(!key) return;
-        const water=key==='water';
+        const [s8,s13,s18]=covIconSizes(key,{});
         g.items.forEach(it=>{
-          // Same shape as a tile feature's props; potability/kind unknown here.
+          // Same shape as a tile feature's props; potability/kind unknown
+          // here, so a water hit draws as the unknown-tap kind.
           features.push({type:'Feature',
             geometry:{type:'Point',coordinates:[it.ll[1],it.ll[0]]},
-            properties:{_icon:coverageIconId(key,{}),
-              _s8:water?0.55:0.42, _s13:water?0.9:0.7, _s18:water?1.3:0.95}});
+            properties:{_icon:coverageIconId(key,{}), _s8:s8, _s13:s13, _s18:s18}});
         });
       });
       if(!features.length) return;

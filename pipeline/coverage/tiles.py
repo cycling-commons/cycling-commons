@@ -37,11 +37,16 @@ def _label_case(selectors) -> str:
 # attributes cost nothing in the tile.
 _EXTRA_SQL = {
     "kind": "'kind', kind",
-    # B: potable unless OSM says otherwise — drinking_water=yes explicit, or
-    # amenity=drinking_water with no contradicting drinking_water tag
-    # (osm-data-architecture.md §5 water selectors).
-    "potable": ("'potable', (tags->>'drinking_water' = 'yes' OR "
-                "(tags->>'amenity' = 'drinking_water' AND NOT (tags ? 'drinking_water')))"),
+    # B: three answers, because the pin draws three kinds of tap
+    # (data-provider-hierarchy.md §6.3): 'yes' = drinking_water=yes explicit,
+    # or amenity=drinking_water with no contradicting tag (osm-data-architecture.md
+    # §5 water selectors); 'no' = drinking_water=no; NULL (stripped) = a water
+    # point nobody has said anything about. A boolean here folded 'no' into
+    # 'nobody said' (7,221 vs 14,599 rows, measured 2026-09-04) and the map
+    # called both "tagged not drinkable".
+    "potable": ("'potable', CASE WHEN tags->>'drinking_water' = 'yes' OR "
+                "(tags->>'amenity' = 'drinking_water' AND NOT (tags ? 'drinking_water')) THEN 'yes' "
+                "WHEN tags->>'drinking_water' = 'no' THEN 'no' END"),
     # B is "water AND food", and the food half is not small: 119,192 shops and
     # 4,678 eateries out of 375,252 rows, about 44% (measured 2026-09-04).
     # Without this flag every one of them drew a water drop and opened a panel

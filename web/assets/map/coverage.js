@@ -6,7 +6,7 @@ import { map, flyToPin } from './map-init.js';
 import { showTip, hideTip } from './sheet.js';
 import { layerByKey, active, mode, LETTER_KEY, KEY_LETTER } from './catalog.js';
 import { curScope } from './scope-ui.js';
-import { mintWaterDrops, miniIcon, SERVICE_GLYPH, coverageIconId } from './icons.js';
+import { mintKindIcons, miniIcon, SERVICE_GLYPH, coverageIconId, kindImageId, covIconSizes, DISC_SIZES, DROP_SIZES } from './icons.js';
 import { updateCounts, applyStaysAccessFilter } from './render.js';
 import { openDrawer, renderDrawerBody, osmDrawer, waterDrawer, revealPinAt } from './drawer.js';
 import { isPicking } from './picking.js';
@@ -100,7 +100,7 @@ export function syncCoverageLayers(){
 export function addCoverage(){
   if(!COVERAGE_ON || map.getSource('coverage')) return;
   maplibregl.addProtocol('pmtiles', new pmtiles.Protocol().tile);
-  mintWaterDrops();
+  mintKindIcons();
   map.addSource('coverage',{type:'vector', url:'pmtiles://'+window.CC_COVERAGE_URL});
   const iconLayerIds=[]; const iconLayerKey=new Map();
   COVERAGE_KEYS.forEach(([key, letter])=>{
@@ -108,8 +108,17 @@ export function addCoverage(){
     COVERAGE_CCS.forEach(cc=>{
       const srcLayer = cc ? letter+'_'+cc : letter;
       const id = cc ? key+'-'+cc+'-cov' : key+'-cov';
+      // Letter B: kind in the glyph (data-provider-hierarchy.md §6.3). The
+      // tile says `food` for the shop/eatery half and `potable` as yes / no /
+      // absent (tiles before 2026-09-04 said true / false; false reads as
+      // unknown, since it covered both). The ids are minted by mintKindIcons.
+      const isFood = ['match',['to-string',['get','food']],['true','1','yes'],true,false];
+      const isPotable = ['match',['to-string',['get','potable']],['yes','true','1'],true,false];
+      const isNotPotable = ['==',['to-string',['get','potable']],'no'];
       const icon = key==='water'
-        ? ['match',['to-string',['get','potable']],['yes','true','1'],'water-drop','water-drop-unk']
+        ? ['case', isFood,
+            ['case', isPotable, kindImageId('B','food_water'), kindImageId('B','food')],
+            ['case', isPotable, kindImageId('B','tap'), isNotPotable, kindImageId('B','no'), kindImageId('B','unk')]]
         : key==='services'
           ? ['match',['get','kind'],
               'shop', miniIcon('services'),
@@ -139,9 +148,13 @@ export function addCoverage(){
         minzoom: 9,
         filter:covIconFilter(),   // dedupe + scope
         layout:{visibility:'none','icon-image':icon,'icon-allow-overlap':true,
+          // One ramp per shape: the food discs size like every other disc.
           'icon-size': key==='water'
-            ? ['interpolate',['linear'],['zoom'],8,0.55,13,0.9,18,1.3]
-            : ['interpolate',['linear'],['zoom'],8,0.42,13,0.7,18,0.95]}});
+            ? ['interpolate',['linear'],['zoom'],
+                8,['case',isFood,DISC_SIZES[0],DROP_SIZES[0]],
+                13,['case',isFood,DISC_SIZES[1],DROP_SIZES[1]],
+                18,['case',isFood,DISC_SIZES[2],DROP_SIZES[2]]]
+            : ['interpolate',['linear'],['zoom'],8,DISC_SIZES[0],13,DISC_SIZES[1],18,DISC_SIZES[2]]}});
       iconLayerIds.push(id); iconLayerKey.set(id, key);
     });
   });
@@ -170,11 +183,16 @@ export function covProps(key, tp, d){
   if(cc) p.cc=cc.toUpperCase();
   if(tp.ref) p.ref=tp.ref;
   if(key==='services' && tp.kind) p.serviceKind=tp.kind;
-  // potable (docs/specs/coverage-provider.md §4): coerce like the icon match.
+  // potable (docs/specs/coverage-provider.md §4): yes / no / absent, coerced
+  // like the icon match. A pre-2026-09-04 tile's boolean `false` stays
+  // undefined here: it covered both "tagged no" and "nobody said", and the
+  // detail response below settles which.
   if(key==='water' && tp.potable!=null){
     const v=tp.potable;
-    p.osmPotable = v===true || v==='true' || v===1 || v==='1' || v==='yes';
+    if(v===true || v==='true' || v===1 || v==='1' || v==='yes') p.osmPotable=true;
+    else if(v==='no') p.osmPotable=false;
   }
+  if(key==='water' && (tp.food===true || tp.food==='true' || tp.food===1 || tp.food==='1')) p.osmFood=true;
   if(d){
     if(d.name) p.n=d.name;
     if(key==='services' && d.kind) p.serviceKind=d.kind;
@@ -202,6 +220,8 @@ export function covProps(key, tp, d){
     if(key==='water'){
       if(tags.amenity) p.osmAmenity=tags.amenity;
       if(tags.shop) p.osmShop=tags.shop;
+      // The same rule as the tile's `food` flag (pipeline/coverage/tiles.py).
+      if(tags.shop!=null || ['cafe','fast_food','restaurant','bar','pub'].includes(tags.amenity)) p.osmFood=true;
     }
     const web=tags.website||tags['contact:website'];
     if(web) p.web=web;
@@ -238,7 +258,11 @@ export function openCoverageDrawer(key, tp, ll){
     .catch(()=>null)   // detail is an enhancement — the tile props already opened the drawer
     .then(d=>{ if(!d || myReq!==_covReq || isPicking()) return;   // superseded by a newer drawer render, or a picking session started mid-flight
       if(!document.getElementById('drawer').classList.contains('open')) return;   // closed while in flight
-      renderDrawerBody(layer, feat(covProps(key, tp, d))); });
+      const p=covProps(key, tp, d);
+      renderDrawerBody(layer, feat(p));
+      // The detail response can settle a kind the tile could not (a
+      // pre-tri-state tile's `false`, a food stop that also gives water).
+      showSelectedCoverageIcon(key, p, ll); });
 }
 export function openCoverageByRef(ref, letter, ll, name, itemId){
   const key=LETTER_KEY[letter]; if(!key) return;
@@ -254,7 +278,7 @@ export function openCoverageByRef(ref, letter, ll, name, itemId){
         return map.getLayer(id) && map.getLayoutProperty(id,'visibility')==='visible';
       });
       if(!drawn) revealPinAt(layer, ll);
-      else showSelectedCoverageIcon(key, {kind:p.serviceKind}, lo);
+      else showSelectedCoverageIcon(key, Object.assign({kind:p.serviceKind}, p), lo);   // the kind rules read the record's own fields
       return;
     }
   }
@@ -278,8 +302,10 @@ function paintCoverageDetail(key, ref, ll, name, d){
     const id = cc ? key+'-'+cc+'-cov' : key+'-cov';
     return map.getLayer(id) && map.getLayoutProperty(id,'visibility')==='visible';
   });
+  // `p` carries the kind facts the tile would have (osmFood, osmPotable), so
+  // a deep-linked bakery draws the food glyph and not the unknown tap.
   if(!drawn) revealPinAt(layer, ll);
-  else showSelectedCoverageIcon(key, {kind:d&&d.kind}, lo);
+  else showSelectedCoverageIcon(key, Object.assign({kind:d&&d.kind}, p), lo);
 }
 /* ?ref=node/462149319 deep link (docs/specs/map-and-search.md §8). Unlike
    ?feature=<name> this names one POI: thousands of scenic views are called
@@ -349,10 +375,9 @@ export function covShownCount(key){
 
 export function showSelectedCoverageIcon(key, tp, ll){
   const src=map.getSource('cov-sel'); if(!src||!ll) return;
-  const w=key==='water';
+  const [s8,s13,s18]=covIconSizes(key,tp);
   src.setData({type:'FeatureCollection',features:[{type:'Feature',
     geometry:{type:'Point',coordinates:[ll.lng,ll.lat]},
-    properties:{_icon:coverageIconId(key,tp),
-      _s8:w?0.55:0.42, _s13:w?0.9:0.7, _s18:w?1.3:0.95}}]});
+    properties:{_icon:coverageIconId(key,tp), _s8:s8, _s13:s13, _s18:s18}}]});
 }
 export function clearSelectedCoverageIcon(){ const src=map.getSource('cov-sel'); if(src) src.setData({type:'FeatureCollection',features:[]}); }

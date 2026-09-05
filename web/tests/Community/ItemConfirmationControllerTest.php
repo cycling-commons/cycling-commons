@@ -61,6 +61,42 @@ final class ItemConfirmationControllerTest extends WebTestCase
         self::assertArrayNotHasKey('token', $snap, 'anonymous viewers get no CSRF token');
     }
 
+    /**
+     * A tap from the national drinking-water register is not asked whether it
+     * is drinkable: the register is the answer. What a rider can add is that
+     * it is still there (owner 2026-09-06).
+     */
+    public function testARegisterTapIsConfirmedAsPresentNotAsDrinkable(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $rivm = $em->getRepository(\App\Provider\Entity\DataProvider::class)->findOneBy(['key' => 'rivm-drinkwater']);
+        self::assertNotNull($rivm, 'the RIVM registry row is seeded by migration');
+        $tap = $this->item($em, 'B');
+        $tap->setProvider($rivm);
+        $tap->setAttributes(['potable' => 'Yes (public supply)', 'availability' => 'Always']);
+        $em->flush();
+
+        $snap = $this->snapshot($client, $tap->getId());
+        self::assertSame('existence', $snap['stanceKind']);
+        self::assertSame(['exists' => 0], $snap['stances']);
+
+        $u = $this->rider($em, 'register-tap@test.test');
+        $client->loginUser($u);
+        $token = $this->snapshot($client, $tap->getId())['token'];
+        $client->request('POST', '/items/'.$tap->getId().'/confirm', ['stance' => 'potable', '_token' => $token]);
+        self::assertResponseStatusCodeSame(422, 'the drinkable answer is not on offer for a register tap');
+        $client->request('POST', '/items/'.$tap->getId().'/confirm', ['stance' => 'exists', '_token' => $token]);
+        self::assertResponseIsSuccessful();
+
+        // The same facts without the register behind them are still the water question.
+        $em = static::getContainer()->get(EntityManagerInterface::class);   // the client rebooted the kernel
+        $plain = $this->item($em, 'B');
+        $plain->setAttributes(['potable' => 'Yes (public supply)']);
+        $em->flush();
+        self::assertSame('potability', $this->snapshot($client, $plain->getId())['stanceKind']);
+    }
+
     public function testLoggedInRiderCanConfirmPotableAndTallyUpdates(): void
     {
         $client = static::createClient();

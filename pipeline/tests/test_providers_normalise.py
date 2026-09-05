@@ -67,6 +67,24 @@ def test_unmapped_upstream_fields_are_dropped():
     assert mapped == {"name": "Kraan", "town": "Alkmaar"}
 
 
+def test_a_value_map_lands_upstream_values_in_our_vocabulary():
+    """RIVM's `type` is availability AND condition, in Dutch. Each of our
+    fields names the values it accepts; anything else is dropped, because an
+    attribute a rider cannot pick in the form is not ours to store."""
+    field_map = {
+        "town": "plaats",
+        "availability": {"from": "type", "values": {
+            "Regulier, 24-7 open": "Always",
+            "Alleen overdag bereikbaar": "Daytime only"}},
+        "condition": {"from": "type", "values": {"Storing": "Out of order"}},
+    }
+    assert apply_field_map({"type": "Regulier, 24-7 open"}, field_map) == {"availability": "Always"}
+    assert apply_field_map({"type": "Alleen overdag bereikbaar"}, field_map) == {"availability": "Daytime only"}
+    assert apply_field_map({"type": "Storing"}, field_map) == {"condition": "Out of order"}
+    assert apply_field_map({"type": "Iets nieuws"}, field_map) == {}
+    assert apply_field_map({"plaats": "Alkmaar"}, field_map) == {"town": "Alkmaar"}
+
+
 def test_normalise_builds_the_shape_the_ingest_reads():
     out = normalise(
         feature(4.745706, 52.570650, beschrijvi="Kraan", plaats="Alkmaar",

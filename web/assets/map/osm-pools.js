@@ -6,14 +6,14 @@ import { showTip, hideTip } from './sheet.js';
 import { D } from './i18n.js';
 import { layerByKey, active, mode } from './catalog.js';
 import { inScope } from './scope-ui.js';
-import { mintWaterDrops, pinEl, clusterEl } from './icons.js';
+import { mintKindIcons, pinEl, clusterEl } from './icons.js';
 import { staysAccessible } from './render.js';
 import { openDrawer, osmDrawer, waterDrawer } from './drawer.js';
 
 export function addWaterOsm(){
   if(!window.CC_WATER_OSM || osmLayers['water']) return;
   osmLayers['water']={data:CC_WATER_OSM, water:true};
-  mintWaterDrops();
+  mintKindIcons();
 }
 
 // docs/specs/map-and-search.md §4.2, §4.5 — scope + Confirmed (`v`/`cur`); Best of / Everything draw the whole pool.

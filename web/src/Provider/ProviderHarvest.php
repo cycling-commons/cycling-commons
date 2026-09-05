@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Provider;
 
+use App\Catalog\Entity\Item;
 use App\Catalog\ItemSource;
 use App\Provider\Entity\DataProvider;
 use Doctrine\DBAL\Connection;
@@ -61,6 +62,15 @@ final class ProviderHarvest
     /** Sources a harvest may never displace (data-provider-hierarchy.md §4). */
     private const array RIDER_SOURCES = ['manual', 'user', 'scout'];
 
+    /**
+     * How far an upstream point may move and still be the same CC-row
+     * (owner 2026-09-05: 100 m). A register with no stable id keys its rows
+     * by coordinates, so any GPS shift is a new key; within this radius the
+     * old row is re-keyed rather than duplicated. Beyond it, two taps are two
+     * taps.
+     */
+    public const int MOVE_RADIUS_M = 100;
+
     public function __construct(
         private readonly Connection $db,
         private readonly ProviderCitations $citations,
@@ -70,11 +80,14 @@ final class ProviderHarvest
     /**
      * @param list<array{ref: string, letter: string, name: string, lat: float, lng: float, attributes: array<string, mixed>, country_code?: string|null}> $features
      *
-     * @return array{attached: int, inserted: int, updated: int, skipped_rider: int, stale: int, contested: int}
+     * @return array{attached: int, inserted: int, updated: int, moved: int, skipped_rider: int, stale: int, contested: int}
      */
     public function apply(DataProvider $provider, array $features, \DateTimeImmutable $now = new \DateTimeImmutable()): array
     {
-        $counts = ['attached' => 0, 'inserted' => 0, 'updated' => 0, 'skipped_rider' => 0, 'stale' => 0, 'contested' => 0];
+        $counts = ['attached' => 0, 'inserted' => 0, 'updated' => 0, 'moved' => 0, 'skipped_rider' => 0, 'stale' => 0, 'contested' => 0];
+        // Every ref this run carries, known up front: a row whose ref is not
+        // among them and that sits near a ref nobody has is a point that MOVED.
+        $refs = array_map(static fn (array $f): string => $f['ref'], $features);
         $seen = [];
 
         foreach ($features as $feature) {
@@ -86,6 +99,19 @@ final class ProviderHarvest
                 continue;
             }
 
+            $existing = $this->existingRef($ref);
+            $moved = false;
+            if (null === $existing) {
+                $near = $this->movedRowNear($provider, $feature, $refs);
+                if (null !== $near) {
+                    // Re-key BEFORE looking for the OSM twin, so the row's own
+                    // claim on that node is not read as somebody else's.
+                    $this->rekey($near, $ref, $now);
+                    $existing = $near;
+                    $moved = true;
+                }
+            }
+
             $osmRef = $this->osmCounterpart($provider, $feature);
             if (null === $osmRef && $this->hasHeldNeighbour($provider, $feature)) {
                 // There WAS a node in range; a nearer record already holds it.
@@ -94,11 +120,10 @@ final class ProviderHarvest
                 // and only one of them means the radius is too wide.
                 ++$counts['contested'];
             }
-            $existing = $this->existingRef($ref);
 
             if (null !== $existing) {
                 $this->updateRow($existing, $feature, $osmRef, $now);
-                ++$counts['updated'];
+                ++$counts[$moved ? 'moved' : 'updated'];
                 continue;
             }
 
@@ -110,8 +135,30 @@ final class ProviderHarvest
         }
 
         $counts['stale'] = $this->countVanished($provider, $seen);
+        $this->stampRegions($provider);
 
         return $counts;
+    }
+
+    /**
+     * Every row of this provider gets the region its point falls in, the
+     * same smallest-area-wins rule the catalogue import applies
+     * (catalog-data-model.md §6). Without it a region scope on the map hides
+     * the whole harvest: a served row with no `rid` is out of every region,
+     * and the OSM tap it replaced is hidden too, so the rider sees nothing
+     * where there used to be a drop. Found on the first RIVM run, 2026-09-05.
+     */
+    private function stampRegions(DataProvider $provider): void
+    {
+        $this->db->executeStatement(
+            'UPDATE item SET region_id = m.region_id FROM (
+                SELECT DISTINCT ON (i.id) i.id AS item_id, r.id AS region_id
+                FROM item i JOIN region r ON ST_Contains(r.geom, ST_PointOnSurface(i.geom))
+                WHERE i.provider_id = :provider
+                ORDER BY i.id, r.area_km2 ASC NULLS LAST, r.id ASC
+             ) m WHERE item.id = m.item_id AND item.region_id IS DISTINCT FROM m.region_id',
+            ['provider' => $provider->getId()],
+        );
     }
 
     /**
@@ -268,9 +315,13 @@ final class ProviderHarvest
                 'lat' => $feature['lat'],
                 'lng' => $feature['lng'],
                 'cc' => $feature['country_code'] ?? $provider->getCountryCode(),
-                // An authority record is verified by its provenance, which is
-                // the whole reason the rank exists (catalog-data-model.md §5).
-                'state' => 'verified',
+                // Unverified, like every row that enters the catalogue
+                // (catalog-data-model.md §5): verification is a rider standing
+                // there, never provenance. The register's authority lives in
+                // its RANK, not in the state. Written as `verified` until
+                // 2026-09-06, which drew 3283 taps nobody here had seen with
+                // the plain pin instead of the dashed "?" one (owner).
+                'state' => 'unverified',
                 'source' => ItemSource::Authority->value,
                 'ref' => $feature['ref'],
                 'provider' => $provider->getId(),
@@ -286,31 +337,101 @@ final class ProviderHarvest
     }
 
     /**
+     * This provider's row that the run has not seen, nearest to an upstream
+     * point whose ref nobody has, within MOVE_RADIUS_M: the same place with a
+     * shifted coordinate, and therefore a shifted key.
+     *
+     * @param array{ref: string, letter: string, name: string, lat: float, lng: float, attributes: array<string, mixed>, country_code?: string|null} $feature
+     * @param list<string>                                                                                                                           $refs
+     */
+    private function movedRowNear(DataProvider $provider, array $feature, array $refs): ?int
+    {
+        $id = $this->db->fetchOne(
+            'SELECT i.id
+               FROM item i
+              WHERE i.provider_id = :provider
+                AND i.source_ref NOT IN (:refs)
+                AND i.geom IS NOT NULL
+                AND ST_DWithin(i.geom::geography, ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography, :radius)
+              ORDER BY ST_Distance(i.geom::geography, ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography)
+              LIMIT 1',
+            [
+                'provider' => $provider->getId(),
+                'refs' => $refs,
+                'lat' => $feature['lat'],
+                'lng' => $feature['lng'],
+                'radius' => self::MOVE_RADIUS_M,
+            ],
+            ['refs' => \Doctrine\DBAL\ArrayParameterType::STRING],
+        );
+
+        return false === $id ? null : (int) $id;
+    }
+
+    private function rekey(int $id, string $ref, \DateTimeImmutable $now): void
+    {
+        $this->db->executeStatement(
+            'UPDATE item SET source_ref = :ref, updated_at = :now WHERE id = :id',
+            ['id' => $id, 'ref' => $ref, 'now' => $now->format('Y-m-d H:i:s')],
+        );
+    }
+
+    /**
+     * The fields a person has changed on this row, from its history. The
+     * register never outranks a rider (§4), so a re-import fills in around
+     * those and never over them: a tap a rider moved 50 m stays where the
+     * rider put it, and "Not there anymore" stays said.
+     *
+     * @return list<string>
+     */
+    private function touchedFields(int $id): array
+    {
+        /* @var list<string> */
+        return $this->db->fetchFirstColumn('SELECT DISTINCT field FROM change_history WHERE item_id = :id', ['id' => $id]);
+    }
+
+    /**
      * @param array{ref: string, letter: string, name: string, lat: float, lng: float, attributes: array<string, mixed>, country_code?: string|null} $feature
      */
     private function updateRow(int $id, array $feature, ?string $osmRef, \DateTimeImmutable $now): void
     {
         // Lifecycle state is not touched: a re-import updates facts, never
         // what a curator decided about the row (catalog-data-model.md §8).
+        $touched = $this->touchedFields($id);
+        /** @var array<string, mixed> $current */
+        $current = json_decode((string) $this->db->fetchOne('SELECT attributes FROM item WHERE id = :id', ['id' => $id]), true, 512, \JSON_THROW_ON_ERROR);
+        // Upstream fills in; what a person changed, and what a person added
+        // that upstream does not carry, stays. Before 2026-09-05 this line
+        // replaced the whole object, so the next run would have wiped every
+        // rider photo, note and condition on every RIVM tap.
+        $attrs = $feature['attributes'];
+        foreach ($current as $key => $value) {
+            if (!\array_key_exists($key, $attrs) || \in_array($key, $touched, true)) {
+                $attrs[$key] = $value;
+            }
+        }
+        $keepName = \in_array(Item::NAME_FIELD, $touched, true);
+        $keepGeom = \in_array('location', $touched, true);
+
         $this->db->executeStatement(
             'UPDATE item
-                SET name = :name,
-                    geom = ST_SetSRID(ST_MakePoint(:lng, :lat), 4326),
+                SET name = '.($keepName ? 'name' : ':name').',
+                    geom = '.($keepGeom ? 'geom' : 'ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)').',
                     osm_ref = :osm_ref,
                     osm_checked_at = :checked,
                     attributes = :attrs,
                     updated_at = :now
               WHERE id = :id',
-            [
+            array_filter([
                 'id' => $id,
-                'name' => $feature['name'],
-                'lat' => $feature['lat'],
-                'lng' => $feature['lng'],
+                'name' => $keepName ? null : $feature['name'],
+                'lat' => $keepGeom ? null : $feature['lat'],
+                'lng' => $keepGeom ? null : $feature['lng'],
                 'osm_ref' => $osmRef,
                 'checked' => $now->format('Y-m-d H:i:s'),
-                'attrs' => json_encode($feature['attributes'], \JSON_THROW_ON_ERROR),
+                'attrs' => json_encode($attrs, \JSON_THROW_ON_ERROR),
                 'now' => $now->format('Y-m-d H:i:s'),
-            ],
+            ], static fn (mixed $v, string $k): bool => null !== $v || 'osm_ref' === $k, \ARRAY_FILTER_USE_BOTH),
         );
     }
 

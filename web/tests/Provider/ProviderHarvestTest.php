@@ -34,6 +34,36 @@ final class ProviderHarvestTest extends KernelTestCase
         self::ensureCoverageSchema($this->db());
         $this->db()->executeStatement("DELETE FROM item WHERE source_ref LIKE 'harvest-test:%'");
         $this->db()->executeStatement("DELETE FROM coverage_poi WHERE ref LIKE 'node/999%'");
+        $this->db()->executeStatement("DELETE FROM region WHERE slug LIKE 'harvest-test-%'");
+        $this->db()->executeStatement('DELETE FROM change_history WHERE item_id NOT IN (SELECT id FROM item)');
+    }
+
+    /**
+     * A harvested row gets the region its point falls in, smallest area
+     * first, like every other row. Without it a region scope on the map hid
+     * the whole first RIVM harvest (2026-09-05): a served row with no region
+     * is out of every scope, and the OSM tap it replaced was hidden with it.
+     */
+    public function testAHarvestedRowIsStampedWithItsRegion(): void
+    {
+        $db = $this->db();
+        // Two nested squares around the tap: the smaller one must win.
+        foreach ([['harvest-test-big', 'POLYGON((3 49,3 51,5 51,5 49,3 49))', 40000], ['harvest-test-small', 'POLYGON((4 50,4 50.5,4.5 50.5,4.5 50,4 50))', 2500]] as [$slug, $wkt, $area]) {
+            $db->executeStatement(
+                "INSERT INTO region (slug, name, geom, area_km2, country_code, iso_code, admin_level, source, created_at, updated_at)
+                 VALUES (:slug, :slug, ST_GeomFromText(:wkt, 4326), :area, 'BE', :iso, 2, 'test', NOW(), NOW())",
+                ['slug' => $slug, 'wkt' => $wkt, 'area' => $area, 'iso' => strtoupper(substr($slug, -5))],
+            );
+        }
+        $small = (int) $db->fetchOne("SELECT id FROM region WHERE slug = 'harvest-test-small'");
+
+        $this->harvest()->apply($this->provider(50), [$this->feature('harvest-test:region', self::LAT, self::LNG)]);
+
+        self::assertSame(
+            $small,
+            (int) $db->fetchOne("SELECT region_id FROM item WHERE source_ref = 'harvest-test:region'"),
+            'the row carries the smallest region containing it',
+        );
     }
 
     /**
@@ -130,6 +160,84 @@ final class ProviderHarvestTest extends KernelTestCase
         self::assertSame('Renamed upstream', $this->db()->fetchOne(
             "SELECT name FROM item WHERE source_ref = 'harvest-test:again'",
         ));
+    }
+
+    /**
+     * A register with no stable id keys a row by its coordinates, so a GPS
+     * shift is a new key. Within MOVE_RADIUS_M the old row is re-keyed rather
+     * than duplicated (owner 2026-09-05: "GPS could shift a bit", 100 m).
+     */
+    public function testAnUpstreamPointThatMovedALittleStaysTheSameRow(): void
+    {
+        $provider = $this->provider(50);
+        $this->harvest()->apply($provider, [$this->feature('harvest-test:before', self::LAT, self::LNG)]);
+        $id = (int) $this->db()->fetchOne("SELECT id FROM item WHERE source_ref = 'harvest-test:before'");
+
+        // About 55 m north, and a new key with it.
+        $counts = $this->harvest()->apply($provider, [$this->feature('harvest-test:after', self::LAT + 0.0005, self::LNG)]);
+
+        self::assertSame(1, $counts['moved']);
+        self::assertSame(0, $counts['inserted']);
+        self::assertSame(0, $counts['stale'], 'the old key is not mourned: it moved');
+        self::assertSame($id, (int) $this->db()->fetchOne("SELECT id FROM item WHERE source_ref = 'harvest-test:after'"), 'same row, new key');
+        self::assertFalse($this->db()->fetchOne("SELECT id FROM item WHERE source_ref = 'harvest-test:before'"));
+    }
+
+    public function testAnUpstreamPointThatMovedFarIsANewRow(): void
+    {
+        $provider = $this->provider(50);
+        $this->harvest()->apply($provider, [$this->feature('harvest-test:here', self::LAT, self::LNG)]);
+
+        // About 220 m: two taps 220 m apart are two taps.
+        $counts = $this->harvest()->apply($provider, [$this->feature('harvest-test:there', self::LAT + 0.002, self::LNG)]);
+
+        self::assertSame(0, $counts['moved']);
+        self::assertSame(1, $counts['inserted']);
+        self::assertSame(1, $counts['stale']);
+    }
+
+    /**
+     * The register never outranks a rider (§4): a re-import fills in around
+     * what a person changed and never over it. Before 2026-09-05 the update
+     * replaced the whole attributes object and the geometry, so the next RIVM
+     * run would have undone every rider's "Not there anymore", note, photo
+     * and relocation on 3283 taps.
+     */
+    public function testWhatAPersonChangedSurvivesARerun(): void
+    {
+        $provider = $this->provider(50);
+        $first = $this->feature('harvest-test:kept', self::LAT, self::LNG);
+        $first['attributes'] = ['potable' => 'Yes (public supply)', 'availability' => 'Always'];
+        $this->harvest()->apply($provider, [$first]);
+        $db = $this->db();
+        $id = (int) $db->fetchOne("SELECT id FROM item WHERE source_ref = 'harvest-test:kept'");
+
+        // A rider says it is gone, adds a note, and moves it 40 m: three
+        // history rows, and the row as the rider left it.
+        foreach ([['condition', null, 'Not there anymore'], ['note', null, 'behind the church'], ['location', null, 'moved']] as [$field, $was, $now]) {
+            $db->executeStatement(
+                'INSERT INTO change_history (item_id, field, old_value, new_value, changed_by, changed_at) VALUES (:id, :f, :o, :n, 1, NOW())',
+                ['id' => $id, 'f' => $field, 'o' => json_encode($was), 'n' => json_encode($now)],
+            );
+        }
+        $db->executeStatement(
+            "UPDATE item SET attributes = attributes || '{\"condition\": \"Not there anymore\", \"note\": \"behind the church\"}'::jsonb,
+                             geom = ST_SetSRID(ST_MakePoint(:lng, :lat), 4326) WHERE id = :id",
+            ['id' => $id, 'lat' => self::LAT + 0.00036, 'lng' => self::LNG],
+        );
+
+        // Upstream now says daytime-only, and has an opinion on condition too.
+        $second = $this->feature('harvest-test:kept', self::LAT, self::LNG);
+        $second['attributes'] = ['potable' => 'Yes (public supply)', 'availability' => 'Daytime only', 'condition' => 'Out of order'];
+        $counts = $this->harvest()->apply($provider, [$second]);
+        self::assertSame(1, $counts['updated']);
+
+        /** @var array<string, mixed> $attrs */
+        $attrs = json_decode((string) $db->fetchOne('SELECT attributes FROM item WHERE id = :id', ['id' => $id]), true);
+        self::assertSame('Daytime only', $attrs['availability'], 'an untouched fact follows upstream');
+        self::assertSame('Not there anymore', $attrs['condition'], 'a fact a person changed stays');
+        self::assertSame('behind the church', $attrs['note'], 'a fact a person added stays');
+        self::assertEqualsWithDelta(self::LAT + 0.00036, (float) $db->fetchOne('SELECT ST_Y(geom) FROM item WHERE id = :id', ['id' => $id]), 0.000001, 'a relocation stays');
     }
 
     /**

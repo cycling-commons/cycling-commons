@@ -335,7 +335,7 @@
 
   .btn-p:disabled,.btn-p[disabled]{background:var(--paper-deep);color:#9a9d8c;cursor:not-allowed}
 
-  .cc-toast{position:fixed;left:50%;bottom:1.5rem;transform:translateX(-50%) translateY(1rem);background:var(--ink);color:var(--paper);padding:.7rem 1.1rem;border-radius:8px;font-size:.85rem;max-width:90vw;text-align:center;box-shadow:0 10px 28px -10px rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:3000}
+  .cc-toast{position:fixed;left:50%;bottom:1.5rem;transform:translateX(-50%) translateY(1rem);background:var(--ink);color:var(--paper);padding:.7rem 1.1rem;border-radius:8px;font-size:.85rem;width:max-content;max-width:min(90vw,34rem);text-align:center;box-shadow:0 10px 28px -10px rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:3000}
   .cc-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
   /* The top gap is atlas.css's `.wrap#main` rule now, shared with every other
@@ -346,6 +346,10 @@
 
   .btn:focus-visible,#wzReset:focus-visible,.drop:focus-visible{outline:2px solid var(--trail);outline-offset:2px;border-radius:4px}
   @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+  /* Required fields: Symfony marks the label; the star makes it visible. */
+  .fgrid label.required::after{content:" *";color:var(--trail);font-weight:700}
+  .wz-req{font-family:var(--mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:#7c8070;margin:0 0 .6rem}
+  .wz-req::before{content:"* ";color:var(--trail);font-weight:700}
 </style>
 {% endblock %}
 {% block body %}
@@ -365,8 +369,13 @@
 <div class="wrap" id="main">
   <div class="receipt">
     {{ include('contribute/_receipt_mark.html.twig') }}
+    {% if receipt.applied|default(false) %}
+    <h2>{{ 'improve.receipt.applied_heading'|trans }}</h2>
+    <p>{{ 'improve.receipt.applied_body'|trans }}</p>
+    {% else %}
     <h2>{{ 'improve.receipt.heading'|trans }}</h2>
     <p>{{ 'improve.receipt.body'|trans }}</p>
+    {% endif %}
     {# One statement of what happens next, not two. The amber note under this
        repeated the line above it and also claimed suggestions were "not yet
        persisted", which stopped being true once the moderation queue went in —
@@ -657,6 +666,12 @@
     {# fgrid-a: the road-surface form ends Width | Note on ONE row (owner
        2026-08-14) — the generic textarea-spans-both-columns rule is undone for
        A's note so it sits beside width instead of below it. #}
+    {# Symfony puts `required` on a required field's label; the star and the
+       one-line key below are what the owner asked for (2026-09-05): "show on
+       the form with a * what fields are required". Only shown when something is. #}
+    {% if (form.details|filter(c => c.vars.required)|length) + (form.extras|filter(c => c.vars.required)|length) > 0 %}
+    <p class="wz-req">{{ 'improve.step2.required_hint'|trans }}</p>
+    {% endif %}
     <div class="fgrid{{ item_type.letter == 'A' ? ' fgrid-a' }}">
     {% for child in form.details %}
       {# A links editor is a nested repeatable, not a control: it spans both
