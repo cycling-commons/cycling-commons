@@ -40,7 +40,26 @@ export function initSearchUi(){
     /* The switch beside the title says the reach out loud and lets the rider
        set it before typing. Same state as the results' last row. */
     const reachBtn=document.getElementById('searchReach');
-    const setReach=(on)=>{ _worldwide=!!on; if(reachBtn) reachBtn.setAttribute('aria-pressed', _worldwide?'true':'false'); };
+    const everywhereLabel = reachBtn ? reachBtn.textContent.trim() : (I18N.everywhereLabel||'Everywhere');
+    const setReach=(on)=>{
+      _worldwide=!!on;
+      if(reachBtn){
+        reachBtn.setAttribute('aria-pressed', _worldwide?'true':'false');
+        // A true toggle: while the reach is on, the chip names the scope you
+        // would go back to; off, it names the reach you could switch on.
+        const s = window.CCScope ? window.CCScope.get() : null;
+        const back = (s && s.kind==='myArea') ? (I18N.myAreaLabel||'My area') : (scopeLabel(s) || everywhereLabel);
+        reachBtn.textContent = _worldwide ? back : everywhereLabel;
+      }
+      // The title says where the search looks: "Search everywhere" while the
+      // reach is on, the scope's own name again when it is off (the header
+      // module owns that string, so it repaints it).
+      const title=document.getElementById('searchTitle');
+      if(title){
+        if(_worldwide) title.textContent = I18N.searchEverywhere||'Search everywhere';
+        else if(window.CCScopeHeader) window.CCScopeHeader.paint(I18N);
+      }
+    };
     const closeS=()=>{ sRes.hidden=true; sRes.innerHTML=''; sMatches=[]; sHL=-1; setReach(false); if(sBox.getAttribute('aria-expanded')!=='false') sBox.setAttribute('aria-expanded','false'); };
     if(reachBtn) reachBtn.addEventListener('click', ()=>{
       setReach(!_worldwide);
@@ -202,6 +221,7 @@ export function initSearchUi(){
       else if(e.key==='Enter'){ e.preventDefault(); pickS(sHL<0?0:sHL); }
       else if(e.key==='Escape'){ closeS(); }
     });
-    document.addEventListener('click', e=>{ if(e.target!==sBox && !e.target.closest('#searchRes')) closeS(); });
+    // The reach switch is part of the search: its click must not count as "elsewhere".
+    document.addEventListener('click', e=>{ if(e.target!==sBox && !e.target.closest('#searchRes, #searchReach')) closeS(); });
   }
 }
