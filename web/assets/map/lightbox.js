@@ -25,6 +25,14 @@ export function renderLightbox(){
   const lb=document.getElementById('lightbox'), p=_lb.photos[_lb.i], multi=_lb.photos.length>1;
   const img = lb.querySelector('img');
   img.src=safeHref(p.lg);
+  // The rider's description, under the picture in plain type, and as the
+  // image's own alt: the same words a screen reader gets (owner, 2026-09-06).
+  // Name as the fallback alt, exactly as the drawer does; the visible line
+  // shows only when somebody actually wrote one.
+  const desc = lb.querySelector('.cc-lb-desc');
+  img.alt = p.alt || _lb.name || '';
+  desc.textContent = p.alt || '';
+  desc.hidden = !p.alt;
   // docs/specs/photo-uploads.md §5 — never offer `orig` in srcset.
   if(p.sm && p.lg){ img.srcset = `${safeHref(p.sm)} 520w, ${safeHref(p.lg)} 1400w`; img.sizes = '100vw'; }
   else { img.removeAttribute('srcset'); img.removeAttribute('sizes'); }

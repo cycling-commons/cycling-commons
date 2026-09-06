@@ -919,6 +919,12 @@ own alt in the wizard falls back through the description, the place's name and
 then the place's type, so an unnamed registry tap reads "Photo of Water & food"
 rather than "Photo of".
 
+**The lightbox shows it** (2026-09-06, owner: "show the alt text in the image
+popup below the image"). `assets/map/lightbox.js` puts the description under
+the picture in plain type (`.cc-lb-desc`, hidden when nobody wrote one) and
+sets it as the image's alt, with the place's name as the fallback alt exactly
+as the drawer does. The credit line below it is unchanged.
+
 **It lives in TWO places and both are written together** (fixed 2026-08-30). The
 upload row, and a copy inside the item's `photos` gallery, which is what the
 map, the vector tiles and the wizard's review step all read. That copy is not a
