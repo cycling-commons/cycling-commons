@@ -85,7 +85,17 @@ export function initSearchUi(){
     const commRow=m=>!m.town && !m.pend && (m.community || m.verified===false);
     const sRow=(m,i)=>`<li role="option"><button data-i="${i}"><span class="sw" style="background:${m.color};color:${txtOn(m.color)}">${m.badge}</span><span class="snm">${escH(m.name)}${commRow(m)?`<span class="scomm">${escH(D.community||'community')}</span>`:''}</span><span class="sub">${escH(m.kind)}</span></button></li>`;
     const SCOPE_COLOR='#B5532E';
-    const scopeRow=(m,i)=>`<li role="option"><button data-i="${i}" class="s-scope"><span class="sw" style="background:${SCOPE_COLOR};color:${txtOn(SCOPE_COLOR)}">${m.kind==='country'?'◆':'◇'}</span><span class="snm">${escPend(m.name)}</span><span class="sub">${escPend(m.kind==='country'?(D.wholeCountry||'Whole country'):(D.region||'Region'))}</span></button></li>`;
+    // A scope hit is a jump, and the registry is searched whole so "More
+    // regions…" can reach any region by name. A region in another country
+    // than the one on the map says so, or "Provence-Alpes-Côte d'Azur" under
+    // a Dutch scope reads as a stale result (owner, 2026-09-06).
+    const scopeSub=m=>{
+      if(m.kind==='country') return D.wholeCountry||'Whole country';
+      const s=window.CCScope ? window.CCScope.get() : null;
+      const foreign = m.cc && !(s && s.countryCode===m.cc);
+      return (D.region||'Region') + (foreign ? ` · ${m.cc}` : '');
+    };
+    const scopeRow=(m,i)=>`<li role="option"><button data-i="${i}" class="s-scope"><span class="sw" style="background:${SCOPE_COLOR};color:${txtOn(SCOPE_COLOR)}">${m.kind==='country'?'◆':'◇'}</span><span class="snm">${escPend(m.name)}</span><span class="sub">${escPend(scopeSub(m))}</span></button></li>`;
     // docs/specs/map-and-search.md §7.2 — Photon, never Nominatim; silent degrade.
     let _phAbort=null, _phHits=[], _phQ='';
     const PH_BASE='https://photon.komoot.io/api/?limit=6'
@@ -170,7 +180,7 @@ export function initSearchUi(){
       }
       const scopeHits = window.CCScope ? window.CCScope.searchScopes(sBox.value) : [];
       const groups=scopeHits.length ? [{label:D.scopes||'Scopes', rows:scopeHits.map(s=>({
-        scope:true, kind:s.kind, name:s.label,
+        scope:true, kind:s.kind, name:s.label, cc:s.cc,
         go:()=> s.kind==='country' ? window.CCScope.setCountry(s.cc) : window.CCScope.setRegion(s.slug),
       }))}] : [];
       if(towns.length) groups.push({label:D.places||'Places', rows:towns});
