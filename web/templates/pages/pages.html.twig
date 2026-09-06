@@ -3,58 +3,229 @@
 {% block head_styles %}
 <style>
   .phero{background:var(--ink);color:var(--paper);padding:3rem 0}
-  .pg{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1rem;margin-top:1.8rem}
+  /* The toggle: two links that read as one control. */
+  .dirbar{display:flex;justify-content:flex-end;margin-bottom:1.4rem}
+  .dirnote{font-size:.85rem;color:#4a4d40;margin-top:1.2rem}
+  .dirtoggle{display:inline-flex;border:1px solid var(--ink);border-radius:30px;overflow:hidden;flex:none}
+  .dirtoggle a{font-family:var(--sans);font-size:.9rem;padding:.45rem 1.05rem;color:var(--ink);text-decoration:none;min-height:34px;display:inline-flex;align-items:center}
+  .dirtoggle a[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+  .dirtoggle a:focus-visible{outline:2px solid var(--trail);outline-offset:-3px}
+  /* The map. Pans sideways on a narrow screen rather than shrinking to a smudge. */
+  .pmap-wrap{overflow-x:auto;border:1px solid rgba(20,22,14,.14);border-radius:8px;background:var(--paper)}
+  .pmap{display:block;min-width:820px;width:100%;height:auto;font-family:var(--sans)}
+  /* Roads and borders: one set of rules for the map and for the key's samples. */
+  .pmap .land,.pkey .land{fill:var(--paper-deep);fill-opacity:.55;stroke:var(--ink);stroke-width:1;stroke-dasharray:7 4 1.5 4;stroke-opacity:.7}
+  .pmap .land-name{font-family:var(--serif);font-weight:600;font-size:17px;fill:var(--ink)}
+  .pmap .road,.pkey .road{fill:none;stroke:var(--ink);stroke-linecap:round}
+  .pmap .road-main,.pkey .road-main{stroke-width:3.5}
+  .pmap .road-trail,.pkey .road-trail{stroke-width:2;stroke-dasharray:8 6;stroke:var(--clay)}
+  .pmap .road-track,.pkey .road-track{stroke-width:2;stroke-dasharray:9 5 2 5;stroke:var(--spruce)}
+  .pmap .road-path,.pkey .road-path{stroke-width:2;stroke-dasharray:1.5 5;stroke:var(--ink);stroke-opacity:.75}
+  .pmap .hub circle{fill:var(--paper);stroke:var(--ink);stroke-width:2}
+  .pmap .hub.capital circle{fill:var(--clay);stroke:var(--ink);stroke-width:2.5}
+  /* The one touch of trail orange on the map: a capital's centre, like a city dot. */
+  .pmap .hub.capital .cap{fill:var(--trail);stroke:none}
+  .pmap .hub text{font-size:13px;fill:var(--ink);paint-order:stroke;stroke:var(--paper);stroke-width:5px;stroke-linejoin:round}
+  .pmap .hub.capital text{font-weight:600}
+  .pmap a.hub{cursor:pointer}
+  .pmap a.hub:hover text{text-decoration:underline;text-underline-offset:3px}
+  .pmap a.hub:hover circle{stroke:var(--clay)}
+  .pmap a.hub:focus{outline:none}
+  .pmap a.hub:focus-visible circle{stroke:var(--trail);stroke-width:4}
+  /* The key: line samples drawn with the same classes as the roads. */
+  .pkey{display:flex;flex-wrap:wrap;gap:.6rem 1.6rem;margin-top:.9rem;font-size:.85rem;color:#4a4d40}
+  .pkey span{display:inline-flex;align-items:center;gap:.5rem}
+  .pkey svg{width:44px;height:12px;flex:none;overflow:visible}
+  .pkey .land{stroke-width:1.5}
+  /* The list: one section per country, same border as on the map. */
+  .pgc{margin-top:1.6rem;padding-top:1.2rem;border-top:1px dashed rgba(20,22,14,.35)}
+  .pgc:first-child{margin-top:0;padding-top:0;border-top:0}
+  .pgc h2{font-family:var(--serif);font-weight:600;font-size:1.35rem;margin:0 0 .9rem;display:flex;align-items:center;gap:.6rem}
+  /* The same touch of trail orange on the list: a short dash before each country. */
+  .pgc h2::before{content:"";width:1.1rem;height:3px;border-radius:2px;background:var(--trail);flex:none}
+  .pg{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1rem}
   @media(max-width:600px){.pg{grid-template-columns:repeat(2,1fr);gap:.7rem}}
   .pg a{display:flex;min-width:0}
-  .pg .card{flex:1;min-width:0;overflow-wrap:break-word}
-  .pg .card h4{font-family:var(--serif);font-weight:600;font-size:1.25rem;margin-bottom:.3rem}
-  .pg .card .lab{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--clay)}
-  .pg .card p{font-size:.90rem;color:#4a4d40;margin-top:.4rem}
+  .pg .card{flex:1;min-width:0}
+  /* Headings wrap between words only, never inside one, and sit tight. */
+  .pg .card h4{font-family:var(--serif);font-weight:600;font-size:1.25rem;line-height:1.15;margin-bottom:.3rem;overflow-wrap:normal;word-break:normal;hyphens:manual}
+  .pg .card p{font-size:.90rem;color:#4a4d40;margin-top:.4rem;overflow-wrap:break-word}
+  @media(max-width:600px){.pg .card h4{font-size:1.05rem}}
 </style>
 {% endblock %}
 {% block body %}
+{#
+  One directory, two drawings. Every page is listed exactly once below; the
+  map and the list both read from it, so a page cannot be on one and off the
+  other. Coordinates are map units in a 1000 x 660 viewBox.
+
+  Groups are countries: pages that belong together share a border (the
+  quality country holds what is known to be wrong, how to report more, and
+  how usable the site is). Roads say
+  how the pages relate: a main road is the usual way through the site, a
+  trail is a contributor's route, a track leads into a rider's own account,
+  a footpath joins reference pages. Capitals are the hubs a first visit
+  reaches first. A road may carry `via` points to bend around a label, and a
+  hub may set `lp` (above, left, right) when a road would otherwise run
+  through the label below it.
+#}
+{% set account_href = app.user ? path('profile') : path('login') %}
+{% set groups = [
+  {id: 'atlas', name: 'pages.group_atlas'|trans, box: {x: 20, y: 20, w: 440, h: 250}, pages: [
+    {id: 'home',     href: path('home'),     x: 90,  y: 100, capital: true,  h: 'pages.card_landing_h'|trans, p: 'pages.card_landing_p'|trans},
+    {id: 'map',      href: path('map'),      x: 240, y: 90,  capital: true,  h: 'pages.card_map_h'|trans,     p: 'pages.card_map_p'|trans},
+    {id: 'mapkey',   href: path('map_key'),  x: 390, y: 70,  capital: false, h: 'pages.card_mapkey_h'|trans,  p: 'pages.card_mapkey_p'|trans},
+    {id: 'regions',  href: path('regions'),  x: 130, y: 200, capital: false, h: 'pages.card_region_h'|trans,  p: 'pages.card_region_p'|trans},
+    {id: 'scout',    href: path('scout'),    x: 320, y: 195, capital: false, h: 'pages.card_scout_h'|trans,   p: 'pages.card_scout_p'|trans},
+    {id: 'coverage', href: path('coverage'), x: 400, y: 235, capital: false, h: 'pages.card_coverage_h'|trans, p: 'pages.card_coverage_p'|trans},
+  ]},
+  {id: 'part', name: 'pages.group_part'|trans, box: {x: 500, y: 20, w: 480, h: 250}, pages: [
+    {id: 'contribute',   href: path('contribute'),    x: 590, y: 100, capital: true, lp: 'above',  h: 'pages.card_contribute_h'|trans,   p: 'pages.card_contribute_p'|trans},
+    {id: 'improve',      href: path('improve'),       x: 790, y: 95,  capital: false, lp: 'above', h: 'pages.card_improve_h'|trans,      p: 'pages.card_improve_p'|trans},
+    {id: 'addclimb',     href: path('improve', {type: 'climbs', mode: 'add'}), x: 730, y: 140, capital: false, h: 'pages.card_addclimb_h'|trans, p: 'pages.card_addclimb_p'|trans},
+    {id: 'route',        href: path('propose_route'), x: 620, y: 200, capital: false, h: 'pages.card_route_h'|trans,        p: 'pages.card_route_p'|trans},
+    {id: 'vote',         href: path('vote'),          x: 790, y: 210, capital: false, note: true, h: 'pages.card_vote_h'|trans, p: 'pages.card_vote_p'|trans},
+    {id: 'join',         href: path('join'),          x: 900, y: 80,  capital: false, lp: 'above', h: 'pages.card_join_h'|trans,         p: 'pages.card_join_p'|trans},
+    {id: 'contributors', href: path('contributors'),  x: 930, y: 190, capital: false, lp: 'left', h: 'pages.card_contributors_h'|trans, p: 'pages.card_contributors_p'|trans},
+    {id: 'wiki',         href: 'https://wiki.cyclingcommons.org/', x: 860, y: 150, capital: false, h: 'pages.card_wiki_h'|trans, p: ''},
+  ]},
+  {id: 'data', name: 'pages.group_data'|trans, box: {x: 20, y: 300, w: 590, h: 150}, pages: [
+    {id: 'developers', href: path('developers'), x: 90,  y: 370, capital: false, h: 'pages.card_developers_h'|trans, p: 'pages.card_developers_p'|trans},
+    {id: 'licenses',   href: path('licenses'),   x: 220, y: 360, capital: false, lp: 'right', h: 'pages.card_licenses_h'|trans, p: 'pages.card_licenses_p'|trans},
+    {id: 'credits',    href: path('credits'),    x: 270, y: 415, capital: false, h: 'pages.card_credits_h'|trans,    p: 'pages.card_credits_p'|trans},
+    {id: 'changelog',  href: path('changelog'),  x: 420, y: 350, capital: false, h: 'changelog.kicker'|trans,        p: 'changelog.lead'|trans|striptags},
+    {id: 'roadmap',    href: path('roadmap'),    x: 540, y: 405, capital: false, lp: 'left', h: 'roadmap.kicker'|trans,  p: 'roadmap.lead'|trans|striptags},
+  ]},
+  {id: 'account', name: 'pages.group_account'|trans, box: {x: 650, y: 300, w: 330, h: 150}, pages: [
+    {id: 'account',  href: account_href,     x: 740, y: 405, capital: false, h: 'pages.card_login_h'|trans,    p: 'pages.card_login_p'|trans},
+    {id: 'profile',  href: path('profile'),  x: 830, y: 350, capital: false, lp: 'left', h: 'pages.card_profile_h'|trans,  p: 'pages.card_profile_p'|trans},
+    {id: 'messages', href: path('messages'), x: 930, y: 350, capital: false, h: 'pages.card_messages_h'|trans, p: 'pages.card_messages_p'|trans},
+    {id: 'settings', href: path('settings'), x: 880, y: 415, capital: false, h: 'pages.card_settings_h'|trans, p: 'pages.card_settings_p'|trans},
+  ]},
+  {id: 'print', name: 'pages.group_print'|trans, box: {x: 20, y: 480, w: 450, h: 160}, pages: [
+    {id: 'about',   href: path('about'),   x: 90,  y: 565, capital: false, h: 'pages.card_about_h'|trans,   p: 'pages.card_about_p'|trans},
+    {id: 'privacy', href: path('privacy'), x: 220, y: 545, capital: false, h: 'pages.card_privacy_h'|trans, p: 'pages.card_privacy_p'|trans},
+    {id: 'terms',   href: path('terms'),   x: 330, y: 545, capital: false, h: 'pages.card_terms_h'|trans,   p: 'pages.card_terms_p'|trans},
+    {id: 'contact', href: path('contact'), x: 425, y: 565, capital: false, h: 'support.contact.title_short'|trans, p: 'support.contact.lead'|trans|striptags},
+  ]},
+  {id: 'quality', name: 'pages.group_quality'|trans, box: {x: 500, y: 480, w: 480, h: 160}, pages: [
+    {id: 'known',  href: path('known_issues'),  x: 600, y: 560, capital: false, lp: 'above', h: 'support.known.kicker'|trans, p: 'support.known.lead'|trans|striptags},
+    {id: 'bug',    href: path('bug_report'),    x: 710, y: 545, capital: false, h: 'support.bug.kicker'|trans,   p: 'support.bug.lead'|trans|striptags},
+    {id: 'report', href: path('report_guide'),  x: 830, y: 592, capital: true,  h: 'support.guide.kicker'|trans, p: 'support.guide.lead'|trans},
+    {id: 'a11y',   href: path('accessibility'), x: 930, y: 545, capital: false, h: 'a11y.kicker'|trans,          p: 'a11y.lead'|trans|striptags},
+  ]},
+] %}
+{% set roads = [
+  {a: 'home', b: 'map', kind: 'main'}, {a: 'map', b: 'contribute', kind: 'main'}, {a: 'home', b: 'about', kind: 'main', bend: 0, wobble: 0.3, via: [{x: 12, y: 100}, {x: 12, y: 565}]},
+  {a: 'contribute', b: 'improve', kind: 'trail'}, {a: 'contribute', b: 'addclimb', kind: 'trail'}, {a: 'contribute', b: 'route', kind: 'trail'},
+  {a: 'route', b: 'vote', kind: 'trail'}, {a: 'improve', b: 'join', kind: 'trail'}, {a: 'join', b: 'wiki', kind: 'trail'}, {a: 'join', b: 'contributors', kind: 'trail'}, {a: 'map', b: 'scout', kind: 'trail'},
+  {a: 'account', b: 'profile', kind: 'track'}, {a: 'profile', b: 'messages', kind: 'track'}, {a: 'profile', b: 'settings', kind: 'track'}, {a: 'contributors', b: 'profile', kind: 'track'},
+  {a: 'map', b: 'mapkey', kind: 'path'}, {a: 'map', b: 'regions', kind: 'path'}, {a: 'map', b: 'coverage', kind: 'path'},
+  {a: 'developers', b: 'licenses', kind: 'path'}, {a: 'licenses', b: 'credits', kind: 'path'}, {a: 'changelog', b: 'roadmap', kind: 'path'}, {a: 'roadmap', b: 'known', kind: 'path', via: [{x: 512, y: 592}]},
+  {a: 'known', b: 'bug', kind: 'path'}, {a: 'bug', b: 'report', kind: 'path'}, {a: 'report', b: 'a11y', kind: 'path'}, {a: 'contact', b: 'report', kind: 'path', via: [{x: 540, y: 622}]}, {a: 'about', b: 'privacy', kind: 'path'}, {a: 'privacy', b: 'terms', kind: 'path'},
+] %}
+{% set at = {} %}
+{% for g in groups %}{% for p in g.pages %}{% set at = at|merge({(p.id): {x: p.x, y: p.y}}) %}{% endfor %}{% endfor %}
+
 <div class="phero"><div class="wrap">
   <div class="kicker" style="color:var(--trail)">{% trans %}pages.kicker{% endtrans %}</div>
   <h1 class="disp">{% trans %}pages.title{% endtrans %}</h1>
   <p class="lead" style="color:rgba(239,230,212,.85);margin-top:.8rem">{% trans %}pages.lead{% endtrans %}</p>
 </div></div>
 
-<section class="pad"><div class="wrap">
-  <div class="pg">
-    <a href="{{ path('home') }}"><div class="card"><div class="lab">{% trans %}pages.lab_public{% endtrans %}</div><h4>{% trans %}pages.card_landing_h{% endtrans %}</h4><p>{% trans %}pages.card_landing_p{% endtrans %}</p></div></a>
-    <a href="{{ path('map') }}"><div class="card"><div class="lab">{% trans %}pages.lab_public{% endtrans %}</div><h4>{% trans %}pages.card_map_h{% endtrans %}</h4><p>{% trans %}pages.card_map_p{% endtrans %}</p></div></a>
-    <a href="{{ path('regions') }}"><div class="card"><div class="lab">{% trans %}pages.lab_public{% endtrans %}</div><h4>{% trans %}pages.card_region_h{% endtrans %}</h4><p>{% trans %}pages.card_region_p{% endtrans %}</p></div></a>
-    <a href="{{ path('contribute') }}"><div class="card"><div class="lab">{% trans %}pages.lab_contributor{% endtrans %}</div><h4>{% trans %}pages.card_contribute_h{% endtrans %}</h4><p>{% trans %}pages.card_contribute_p{% endtrans %}</p></div></a>
-    <a href="{{ path('improve', {type: 'climbs', mode: 'add'}) }}"><div class="card"><div class="lab">{% trans %}pages.lab_contributor{% endtrans %}</div><h4>{% trans %}pages.card_addclimb_h{% endtrans %}</h4><p>{% trans %}pages.card_addclimb_p{% endtrans %}</p></div></a>
-    <a href="{{ path('vote') }}"><div class="card"><div class="lab">{% trans %}pages.lab_contributor{% endtrans %}</div><h4>{% trans %}pages.card_vote_h{% endtrans %}</h4><p>{% trans %}pages.card_vote_p{% endtrans %}</p></div></a>
-    <a href="{{ path('improve') }}"><div class="card"><div class="lab">{% trans %}pages.lab_contributor{% endtrans %}</div><h4>{% trans %}pages.card_improve_h{% endtrans %}</h4><p>{% trans %}pages.card_improve_p{% endtrans %}</p></div></a>
-    <a href="{{ path('propose_route') }}"><div class="card"><div class="lab">{% trans %}pages.lab_contributor{% endtrans %}</div><h4>{% trans %}pages.card_route_h{% endtrans %}</h4><p>{% trans %}pages.card_route_p{% endtrans %}</p></div></a>
-    {# A site directory entry, so it stays for everyone — but pointed where the
-       reader can actually go. /login sends a signed-in visitor to the homepage
-       with no explanation, which in a list of destinations is the one thing a
-       link must not do. #}
-    <a href="{{ app.user ? path('profile') : path('login') }}"><div class="card"><div class="lab">{% trans %}pages.lab_account{% endtrans %}</div><h4>{% trans %}pages.card_login_h{% endtrans %}</h4><p>{% trans %}pages.card_login_p{% endtrans %}</p></div></a>
-    <a href="{{ path('moderate') }}"><div class="card"><div class="lab">{% trans %}pages.lab_curator{% endtrans %}</div><h4>{% trans %}pages.card_moderate_h{% endtrans %}</h4><p>{% trans %}pages.card_moderate_p{% endtrans %}</p></div></a>
-    <a href="{{ path('developers') }}"><div class="card"><div class="lab">{% trans %}pages.lab_opendata{% endtrans %}</div><h4>{% trans %}pages.card_developers_h{% endtrans %}</h4><p>{% trans %}pages.card_developers_p{% endtrans %}</p></div></a>
-    <a href="{{ path('licenses') }}"><div class="card"><div class="lab">{% trans %}pages.lab_opendata{% endtrans %}</div><h4>{% trans %}pages.card_licenses_h{% endtrans %}</h4><p>{% trans %}pages.card_licenses_p{% endtrans %}</p></div></a>
-    <a href="{{ path('credits') }}"><div class="card"><div class="lab">{% trans %}pages.lab_transparency{% endtrans %}</div><h4>{% trans %}pages.card_credits_h{% endtrans %}</h4><p>{% trans %}pages.card_credits_p{% endtrans %}</p></div></a>
-    <a href="{{ path('coverage') }}"><div class="card"><div class="lab">{% trans %}pages.lab_transparency{% endtrans %}</div><h4>{% trans %}pages.card_coverage_h{% endtrans %}</h4><p>{% trans %}pages.card_coverage_p{% endtrans %}</p></div></a>
-    <a href="{{ path('map_key') }}"><div class="card"><div class="lab">{% trans %}pages.lab_public{% endtrans %}</div><h4>{% trans %}pages.card_mapkey_h{% endtrans %}</h4><p>{% trans %}pages.card_mapkey_p{% endtrans %}</p></div></a>
-    <a href="{{ path('contributors') }}"><div class="card"><div class="lab">{% trans %}pages.lab_community{% endtrans %}</div><h4>{% trans %}pages.card_contributors_h{% endtrans %}</h4><p>{% trans %}pages.card_contributors_p{% endtrans %}</p></div></a>
-    <a href="{{ path('profile') }}"><div class="card"><div class="lab">{% trans %}pages.lab_community{% endtrans %}</div><h4>{% trans %}pages.card_profile_h{% endtrans %}</h4><p>{% trans %}pages.card_profile_p{% endtrans %}</p></div></a>
-    <a href="{{ path('about') }}"><div class="card"><div class="lab">{% trans %}pages.lab_identity{% endtrans %}</div><h4>{% trans %}pages.card_about_h{% endtrans %}</h4><p>{% trans %}pages.card_about_p{% endtrans %}</p></div></a>
-    <a href="{{ path('join') }}"><div class="card"><div class="lab">{% trans %}pages.lab_public{% endtrans %}</div><h4>{% trans %}pages.card_join_h{% endtrans %}</h4><p>{% trans %}pages.card_join_p{% endtrans %}</p></div></a>
-    <a href="{{ path('scout') }}"><div class="card"><div class="lab">{% trans %}pages.lab_public{% endtrans %}</div><h4>{% trans %}pages.card_scout_h{% endtrans %}</h4><p>{% trans %}pages.card_scout_p{% endtrans %}</p></div></a>
-    <a href="{{ path('messages') }}"><div class="card"><div class="lab">{% trans %}pages.lab_account{% endtrans %}</div><h4>{% trans %}pages.card_messages_h{% endtrans %}</h4><p>{% trans %}pages.card_messages_p{% endtrans %}</p></div></a>
-    <a href="{{ path('settings') }}"><div class="card"><div class="lab">{% trans %}pages.lab_account{% endtrans %}</div><h4>{% trans %}pages.card_settings_h{% endtrans %}</h4><p>{% trans %}pages.card_settings_p{% endtrans %}</p></div></a>
-    <a href="{{ path('contact') }}"><div class="card"><div class="lab">{% trans %}pages.lab_public{% endtrans %}</div><h4>{{ 'support.contact.title_short'|trans }}</h4><p>{{ 'support.contact.lead'|trans|striptags }}</p></div></a>
-    <a href="{{ path('bug_report') }}"><div class="card"><div class="lab">{% trans %}pages.lab_public{% endtrans %}</div><h4>{{ 'support.bug.kicker'|trans }}</h4><p>{{ 'support.bug.lead'|trans|striptags }}</p></div></a>
-    <a href="{{ path('known_issues') }}"><div class="card"><div class="lab">{% trans %}pages.lab_transparency{% endtrans %}</div><h4>{{ 'support.known.kicker'|trans }}</h4><p>{{ 'support.known.lead'|trans|striptags }}</p></div></a>
-    <a href="{{ path('changelog') }}"><div class="card"><div class="lab">{% trans %}pages.lab_project{% endtrans %}</div><h4>{{ 'changelog.kicker'|trans }}</h4><p>{{ 'changelog.lead'|trans|striptags }}</p></div></a>
-    <a href="{{ path('roadmap') }}"><div class="card"><div class="lab">{% trans %}pages.lab_project{% endtrans %}</div><h4>{{ 'roadmap.kicker'|trans }}</h4><p>{{ 'roadmap.lead'|trans|striptags }}</p></div></a>
-    <a href="{{ path('accessibility') }}"><div class="card"><div class="lab">{% trans %}pages.lab_legal{% endtrans %}</div><h4>{{ 'a11y.kicker'|trans }}</h4><p>{{ 'a11y.lead'|trans|striptags }}</p></div></a>
-    <a href="{{ path('privacy') }}"><div class="card"><div class="lab">{% trans %}pages.lab_legal{% endtrans %}</div><h4>{% trans %}pages.card_privacy_h{% endtrans %}</h4><p>{% trans %}pages.card_privacy_p{% endtrans %}</p></div></a>
-    <a href="{{ path('terms') }}"><div class="card"><div class="lab">{% trans %}pages.lab_legal{% endtrans %}</div><h4>{% trans %}pages.card_terms_h{% endtrans %}</h4><p>{% trans %}pages.card_terms_p{% endtrans %}</p></div></a>
+<section class="pad"><div class="wrap" id="dir">
+  <div class="dirbar">
+    <nav class="dirtoggle" aria-label="{{ 'pages.view_aria'|trans }}">
+      <a href="{{ path('pages', {view: 'map'}) }}" data-view="map" aria-pressed="{{ view == 'map' ? 'true' : 'false' }}">{% trans %}pages.view_map{% endtrans %}</a>
+      <a href="{{ path('pages', {view: 'list'}) }}" data-view="list" aria-pressed="{{ view == 'list' ? 'true' : 'false' }}">{% trans %}pages.view_list{% endtrans %}</a>
+    </nav>
   </div>
+
+  <div id="dir-map"{{ view == 'map' ? '' : ' hidden' }}>
+    <div class="pmap-wrap">
+      <svg class="pmap" viewBox="0 0 1000 660" role="img" aria-label="{{ 'pages.map_aria'|trans }}">
+        {% for g in groups %}
+        <rect class="land" x="{{ g.box.x }}" y="{{ g.box.y }}" width="{{ g.box.w }}" height="{{ g.box.h }}" rx="26" />
+        <text class="land-name" x="{{ g.box.x + 18 }}" y="{{ g.box.y + 30 }}">{{ g.name }}</text>
+        {% endfor %}
+        {#
+          Roads bend. Each leg is cut into pieces of roughly 60 map units, and
+          every cut point is pushed a little off the straight line: a wide lean
+          that arcs the whole leg to one side, plus a small wobble that changes
+          direction from piece to piece. The wobble comes from the coordinates
+          themselves, so the same map draws the same way every time. The path
+          then runs smoothly through those points (a quadratic curve per piece,
+          joined at the midpoints). Roads alternate the side they lean to, and a
+          road may set its own `bend` (0 for no lean, negative to lean the other
+          way) and its own `wobble` strength (1 by default; the coast road along
+          the western edge keeps a small one so it stays on the map).
+        #}
+        {% for r in roads %}
+        {% set legs = [at[r.a]]|merge(r.via|default([]))|merge([at[r.b]]) %}
+        {% set bend = r.bend|default(loop.index is odd ? 1 : -1) %}
+        {% set seed = loop.index %}
+        {% set wob = r.wobble|default(1) %}
+        {% set d = 'M' ~ legs[0].x ~ ' ' ~ legs[0].y %}
+        {% for i in 1..(legs|length - 1) %}
+          {% set a = legs[i - 1] %}{% set b = legs[i] %}
+          {% set dx = b.x - a.x %}{% set dy = b.y - a.y %}
+          {% set len = (dx * dx + dy * dy) ** 0.5 %}
+          {% set nx = len > 0 ? -dy / len : 0 %}{% set ny = len > 0 ? dx / len : 0 %}
+          {% set n = max(2, (len / 60)|round) %}
+          {% set pts = [a] %}
+          {% for j in 1..(n - 1) %}
+            {% set t = j / n %}
+            {% set wobble = ((a.x * 7 + a.y * 13 + j * 31 + seed * 17) % 11 - 5) / 5 %}
+            {% set off = bend * len * 0.10 * 4 * t * (1 - t) + wobble * wob * (len / n) * 0.22 %}
+            {% set pts = pts|merge([{x: a.x + dx * t + nx * off, y: a.y + dy * t + ny * off}]) %}
+          {% endfor %}
+          {% set pts = pts|merge([b]) %}
+          {% for j in 1..(n - 1) %}
+            {% set c = pts[j] %}{% set e = j < n - 1 ? {x: (pts[j].x + pts[j + 1].x) / 2, y: (pts[j].y + pts[j + 1].y) / 2} : pts[n] %}
+            {% set d = d ~ ' Q' ~ c.x|round(1) ~ ' ' ~ c.y|round(1) ~ ' ' ~ e.x|round(1) ~ ' ' ~ e.y|round(1) %}
+          {% endfor %}
+        {% endfor %}
+        <path class="road road-{{ r.kind }}" d="{{ d }}" />
+        {% endfor %}
+        {% for g in groups %}{% for p in g.pages %}
+        <a class="hub{{ p.capital ? ' capital' }}" href="{{ p.href }}">
+          <title>{{ p.h }}{% if p.p %}. {{ p.p }}{% endif %}</title>
+          <circle cx="{{ p.x }}" cy="{{ p.y }}" r="{{ p.capital ? 9 : 6 }}" />{% if p.capital %}<circle class="cap" cx="{{ p.x }}" cy="{{ p.y }}" r="3" />{% endif %}
+          {% set lp = p.lp|default('below') %}{% set label = p.h ~ (p.note|default(false) ? '*' : '') %}
+          {% if lp == 'above' %}<text x="{{ p.x }}" y="{{ p.y - (p.capital ? 16 : 13) }}" text-anchor="middle">{{ label }}</text>
+          {% elseif lp == 'left' %}<text x="{{ p.x - 12 }}" y="{{ p.y + 4 }}" text-anchor="end">{{ label }}</text>
+          {% elseif lp == 'right' %}<text x="{{ p.x + 12 }}" y="{{ p.y + 4 }}" text-anchor="start">{{ label }}</text>
+          {% else %}<text x="{{ p.x }}" y="{{ p.y + (p.capital ? 26 : 22) }}" text-anchor="middle">{{ label }}</text>{% endif %}
+        </a>
+        {% endfor %}{% endfor %}
+      </svg>
+    </div>
+    <div class="pkey" aria-label="{{ 'pages.key_aria'|trans }}">
+      <span><svg viewBox="0 0 44 12" aria-hidden="true"><line class="road road-main" x1="2" y1="6" x2="42" y2="6"/></svg>{% trans %}pages.key_main{% endtrans %}</span>
+      <span><svg viewBox="0 0 44 12" aria-hidden="true"><line class="road road-trail" x1="2" y1="6" x2="42" y2="6"/></svg>{% trans %}pages.key_trail{% endtrans %}</span>
+      <span><svg viewBox="0 0 44 12" aria-hidden="true"><line class="road road-track" x1="2" y1="6" x2="42" y2="6"/></svg>{% trans %}pages.key_track{% endtrans %}</span>
+      <span><svg viewBox="0 0 44 12" aria-hidden="true"><line class="road road-path" x1="2" y1="6" x2="42" y2="6"/></svg>{% trans %}pages.key_path{% endtrans %}</span>
+      <span><svg viewBox="0 0 44 12" aria-hidden="true"><rect class="land" x="2" y="1" width="40" height="10" rx="4"/></svg>{% trans %}pages.key_border{% endtrans %}</span>
+    </div>
+  </div>
+
+  <div id="dir-list"{{ view == 'list' ? '' : ' hidden' }}>
+    {# The same six countries as the map, in the same order, one heading each. #}
+    {% for g in groups %}
+    <section class="pgc" aria-labelledby="pgc-{{ g.id }}">
+      <h2 id="pgc-{{ g.id }}">{{ g.name }}</h2>
+      <div class="pg">
+        {% for p in g.pages %}
+        <a href="{{ p.href }}"><div class="card"><h4>{{ p.h }}{% if p.note|default(false) %}*{% endif %}</h4>{% if p.p %}<p>{{ p.p }}</p>{% endif %}</div></a>
+        {% endfor %}
+      </div>
+    </section>
+    {% endfor %}
+  </div>
+  <p class="dirnote">* {% trans %}pages.footnote_vote{% endtrans %}</p>
 </div></section>
+{% endblock %}
+{% block body_scripts %}
+{{ parent() }}
+<script src="{{ asset('pages/directory-view.js') }}" defer></script>
 {% endblock %}

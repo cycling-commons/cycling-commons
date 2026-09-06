@@ -103,6 +103,9 @@ final readonly class PublicPageCacheSubscriber implements EventSubscriberInterfa
         'contact',
         'content_report',
         'bug_report',
+        // A GET page that only reads an address back; a miss renders the
+        // same page for everyone who pastes the same link.
+        'report_guide',
     ];
 
     /** @param list<string> $enabledLocales */

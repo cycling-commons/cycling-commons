@@ -57,6 +57,8 @@ committed — working docs stay local.
   and the scan that stops a new form dropping them again, every validation
   message as a catalogue key rather than an English sentence, and the measured
   contrast of the three error surfaces.
+- `site-directory.md` (**implemented**): `/pages` drawn as a touring map with a
+  list toggle; one data structure feeds both drawings; the road vocabulary.
 - `privacy-notice.md` (**implemented**): where every claim on `/privacy` is
   true, the two "who sees my data" tables and the CSP list that keeps the
   second one complete, the cookie table, and the account grace period that

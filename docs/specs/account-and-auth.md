@@ -459,6 +459,11 @@ Machine-translation assist (DeepL), when built, is an `/admin` operator
 tool that only creates *drafts*; publishing still goes through `/moderate`
 ([translations.md](translations.md) §7).
 
+The desk is reached from the account chip's moderation group only
+(2026-09-06, owner). The `/pages` directory is the public face of the site
+and lists no moderator surface for anyone, curator included. Pinned by
+`ContentPagesTest::testTheDirectoryNeverListsTheModerationDesk`.
+
 ## 6. Admin support desk (`/admin`)
 
 EasyAdmin 5; every surface is double-gated (`^/admin` firewall rule **and**

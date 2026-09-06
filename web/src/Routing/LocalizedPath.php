@@ -242,6 +242,15 @@ final class LocalizedPath
     ];
 
     /** @var array<string, string> */
+    public const array REPORT = [
+        'en' => '/report',
+        'fr' => '/signaler',
+        'nl' => '/melden',
+        'de' => '/melden',
+        'es' => '/denunciar',
+    ];
+
+    /** @var array<string, string> */
     public const array REPORT_BUG = [
         'en' => '/report-bug',
         'fr' => '/signaler-un-bogue',

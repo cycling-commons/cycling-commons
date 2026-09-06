@@ -96,6 +96,7 @@ final class PublicPageCacheTest extends WebTestCase
         yield 'contact' => ['/contact'];
         yield 'report a bug' => ['/report-bug'];
         yield 'report content' => ['/report/item/1'];
+        yield 'report guide' => ['/report'];
         // The locale arms are separate routes; the allowlist names each page
         // once and the suffix is stripped, so this proves the stripping works.
         yield 'french home' => ['/fr/'];

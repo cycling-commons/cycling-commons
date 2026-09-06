@@ -4,6 +4,8 @@
 
 namespace App\Tests\Smoke;
 
+use App\Entity\User;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 final class ContentPagesTest extends WebTestCase
@@ -117,15 +119,86 @@ final class ContentPagesTest extends WebTestCase
         self::assertNotEmpty($hrefs, 'the directory grid rendered no cards at all');
         foreach ($hrefs as $href) {
             self::assertNotSame('#', $href, 'a directory card still points at nothing');
-            self::assertStringStartsWith('/', (string) $href);
+            // The wiki is the one door that leaves the site; everything else is ours.
+            self::assertMatchesRegularExpression('#^(/|https://wiki\.cyclingcommons\.org/)#', (string) $href);
         }
 
         // The surfaces that were missing entirely until the same audit. Named
         // one by one, because "some links exist" is what the bug looked like.
         foreach (['/join', '/scout', '/propose-route', '/messages', '/settings', '/privacy', '/terms',
-            '/contribute', '/improve', '/moderate'] as $path) {
+            '/contribute', '/improve'] as $path) {
             self::assertContains($path, $hrefs, $path.' is a live surface and belongs in the directory');
         }
+    }
+
+    /**
+     * The directory is the public face of the site. The moderation desk is a
+     * curator's workroom, reached from the account chip, and is not listed
+     * here for anyone, curator included.
+     */
+    public function testTheDirectoryNeverListsTheModerationDesk(): void
+    {
+        $client = static::createClient();
+        $crawler = $client->request('GET', '/pages');
+        self::assertResponseIsSuccessful();
+        self::assertNotContains('/moderate', $crawler->filter('.pg a')->extract(['href']));
+
+        $curator = (new User())->setEmail('pages-directory-curator@example.com');
+        $curator->setPassword('x');
+        $curator->setDisplayName('Directory Curator');
+        $curator->setRoles(['ROLE_CURATOR']);
+        // A curator without a second factor is sent to /2fa/setup before any
+        // page renders, so the account arrives with one already enrolled.
+        $curator->setTotpSecret('JBSWY3DPEHPK3PXP');
+        $curator->setTwoFaEnabled(true);
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $em->persist($curator);
+        $em->flush();
+
+        $client->loginUser($curator);
+        $crawler = $client->request('GET', '/pages');
+        self::assertResponseIsSuccessful();
+        self::assertNotContains('/moderate', $crawler->filter('.pg a')->extract(['href']));
+    }
+
+    /**
+     * The map and the list are two drawings of one directory. They read the
+     * same data in the template, and this pins that they cannot drift: every
+     * page on one is on the other, and nothing else.
+     */
+    public function testTheDirectoryMapAndListLinkTheSamePages(): void
+    {
+        $client = static::createClient();
+        $crawler = $client->request('GET', '/pages');
+        self::assertResponseIsSuccessful();
+
+        $map = array_values(array_unique($crawler->filter('#dir-map a.hub')->extract(['href'])));
+        $list = array_values(array_unique($crawler->filter('#dir-list .pg a')->extract(['href'])));
+        sort($map);
+        sort($list);
+        self::assertNotEmpty($map);
+        self::assertSame($list, $map);
+        self::assertGreaterThan(0, $crawler->filter('#dir-map svg.pmap .road')->count(), 'the map draws its roads');
+        self::assertSame(6, $crawler->filter('#dir-map svg.pmap .land')->count(), 'six countries');
+    }
+
+    /** The toggle is two links, so it works with no script and each view has its own URL. */
+    public function testTheDirectoryToggleWorksWithoutAScript(): void
+    {
+        $client = static::createClient();
+
+        $crawler = $client->request('GET', '/pages');
+        self::assertResponseIsSuccessful();
+        self::assertSame(0, $crawler->filter('#dir-map[hidden]')->count(), 'the map is the default drawing');
+        self::assertSame(1, $crawler->filter('#dir-list[hidden]')->count());
+        self::assertSame(1, $crawler->filter('.dirtoggle a[data-view="map"][aria-pressed="true"]')->count());
+
+        $crawler = $client->request('GET', '/pages?view=list');
+        self::assertResponseIsSuccessful();
+        self::assertSame(1, $crawler->filter('#dir-map[hidden]')->count());
+        self::assertSame(0, $crawler->filter('#dir-list[hidden]')->count());
+        self::assertSame(1, $crawler->filter('.dirtoggle a[data-view="list"][aria-pressed="true"]')->count());
+        self::assertSame('/pages?view=map', $crawler->filter('.dirtoggle a[data-view="map"]')->attr('href'));
     }
 
     public function testUnknownPathReturns404(): void

@@ -334,12 +334,16 @@ final class PageController extends AbstractController
     }
 
     #[Route(LocalizedPath::PAGES, name: 'pages')]
-    public function pages(): Response
+    public function pages(Request $request): Response
     {
+        // Two drawings of one directory. The toggle is a pair of links, so
+        // the choice works without a script and a shared cache holds each
+        // drawing under its own URL (page-caching.md §3).
         return $this->render('pages/pages.html.twig', [
             'page_title' => 'meta.pages_title',
             'page_description' => 'meta.pages_description',
             'nav_active' => '',
+            'view' => 'list' === $request->query->getString('view') ? 'list' : 'map',
         ]);
     }
 

@@ -1,0 +1,73 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{#
+  Report a page or a photo (docs/specs/content-reports.md §12).
+
+  The report forms live on the things themselves. This page is for a reader
+  who is not standing in front of the thing: it says where each Report link
+  is, and takes a pasted Commons link straight to the right form. A plain GET
+  form, so it works with scripts off and needs no challenge: nothing is
+  written, the server only reads an address back.
+#}
+{% extends 'base.html.twig' %}
+{% block head_styles %}
+<style>
+  .rg-find{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:1rem}
+  .rg-find input{flex:1;min-width:240px;font-family:var(--mono);font-size:.9rem;padding:.55rem .8rem;border:1px solid rgba(20,22,14,.25);border-radius:6px;background:var(--paper);color:var(--ink)}
+  .rg-find input:focus{outline:none;border-color:var(--trail)}
+  .rg-find button{font-family:var(--mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;padding:.55rem 1rem;min-height:34px;border:1px solid var(--clay);border-radius:30px;background:var(--paper);color:var(--clay);cursor:pointer}
+  .rg-find button:hover{background:var(--clay);color:var(--paper)}
+  .rg-miss{margin-top:.9rem;padding:.8rem 1rem;border-left:3px solid var(--clay);background:var(--paper-deep);font-size:.95rem;max-width:62ch}
+  .rg-where{list-style:none;padding:0;margin:1rem 0 0;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem}
+  .rg-where li{background:var(--paper-deep);border:1px solid rgba(20,22,14,.1);border-radius:8px;padding:1rem 1.1rem}
+  .rg-where b{font-family:var(--serif);font-size:1.1rem;display:block;margin-bottom:.3rem}
+  .rg-where p{font-size:.92rem;color:#4a4d40;margin:0}
+  .rg-p{max-width:62ch;margin-top:.8rem}
+  .rg-p a{color:var(--clay)}
+  .rg-sec{margin-top:2.4rem}
+</style>
+{% endblock %}
+{% block body %}
+<div class="lhero"><div class="wrap">
+  <div class="kicker" style="color:var(--trail)">{{ 'support.guide.kicker'|trans }}</div>
+  <h1 class="disp">{{ 'support.guide.title'|trans }}</h1>
+  <p class="lead" style="color:rgba(239,230,212,.85);margin-top:.8rem">{{ 'support.guide.lead'|trans }}</p>
+</div></div>
+
+<section class="pad"><div class="wrap">
+  <div class="kicker">{{ 'support.guide.find_kicker'|trans }}</div>
+  <p class="rg-p">{{ 'support.guide.find_note'|trans }}</p>
+  <form class="rg-find" method="get" action="{{ path('report_guide') }}">
+    <input type="url" name="url" value="{{ url }}" required inputmode="url" autocomplete="off"
+           aria-label="{{ 'support.guide.find_label'|trans }}" placeholder="{{ 'support.guide.find_placeholder'|trans }}" />
+    <button type="submit">{{ 'support.guide.find_submit'|trans }}</button>
+  </form>
+  {% if outcome == 'osm' %}
+  <p class="rg-miss" role="status">{{ 'support.guide.find_osm'|trans }} <a href="{{ path('bug_report') }}">{{ 'support.guide.find_osm_bug'|trans }}</a></p>
+  {% elseif outcome == 'unknown' %}
+  <p class="rg-miss" role="status">{{ 'support.guide.find_none'|trans }} <a href="{{ path('contact') }}">{{ 'support.guide.find_none_contact'|trans }}</a></p>
+  {% endif %}
+
+  <div class="rg-sec">
+    <div class="kicker">{{ 'support.guide.where_kicker'|trans }}</div>
+    <ul class="rg-where">
+      <li><b>{{ 'report.target.item'|trans }}</b><p>{{ 'support.guide.where_place'|trans }}</p></li>
+      <li><b>{{ 'report.target.route'|trans }}</b><p>{{ 'support.guide.where_route'|trans }}</p></li>
+      <li><b>{{ 'report.target.region'|trans }}</b><p>{{ 'support.guide.where_region'|trans }}</p></li>
+      <li><b>{{ 'report.target.rider'|trans }}</b><p>{{ 'support.guide.where_rider'|trans }}</p></li>
+      <li><b>{{ 'report.target.message'|trans }}</b><p>{{ 'support.guide.where_message'|trans }}</p></li>
+      <li><b>{{ 'report.target.photo'|trans }}</b><p>{{ 'support.guide.where_photo'|trans }}</p></li>
+    </ul>
+  </div>
+
+  <div class="rg-sec">
+    <div class="kicker">{{ 'support.guide.what_kicker'|trans }}</div>
+    <p class="rg-p">{{ 'support.guide.what_p'|trans }} <a href="{{ path('terms') }}">{{ 'support.guide.what_terms'|trans }}</a></p>
+  </div>
+
+  <div class="rg-sec">
+    <div class="kicker">{{ 'support.guide.not_kicker'|trans }}</div>
+    <p class="rg-p">{{ 'support.guide.not_bug'|trans }} <a href="{{ path('bug_report') }}">{{ 'support.bug.kicker'|trans }}</a></p>
+    <p class="rg-p">{{ 'support.guide.not_contact'|trans }} <a href="{{ path('contact') }}">{{ 'support.contact.title_short'|trans }}</a></p>
+  </div>
+</div></section>
+{% endblock %}

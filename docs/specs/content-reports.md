@@ -273,3 +273,36 @@ the mail retention line in `/privacy`.
 * **No transparency report yet.** Articles 15 and 24 want published numbers.
   `SupportRepository::reportCountsByStatus()` already computes them for the
   desk chips; publishing them is a page, not a data problem.
+
+## 12. The guide page, `/report`
+
+Built 2026-09-06 (owner: "report a bug, but also, very important, report a
+page or a photo; that page is missing"). The report forms stay on the things
+themselves (§5, "where the links are"); this page is the door for a reader
+who is not standing in front of the thing: the footer and the directory link
+it next to Report a bug.
+
+- **Route** `report_guide`, `LocalizedPath::REPORT` (`/report`, `/fr/signaler`,
+  `/nl/melden`, `/de/melden`, `/es/denunciar`), `ReportGuideController`,
+  template `pages/report_guide.html.twig`, copy under `support.guide.*`.
+  Public, GET only, in the shared-cache allowlist and the sitemap.
+- **Paste a link.** A plain GET form (`?url=`), no challenge: nothing is
+  written. `App\Support\ReportLinkResolver` reads the address back:
+  `/riders/{uuid}` to `rider`, `/photo/{uuid}` to `photo`,
+  `/regions/{slug}` (any locale's word for regions) to `region` by a slug
+  lookup, `/map?item=<id>[/slug]` to `item`, `/map?route=<id>` to `route`.
+  A locale prefix is stripped first. A hit redirects to `/report/{type}/{id}`.
+  `/map?ref=...` is a coverage point straight from OpenStreetMap: the page
+  says the words are theirs and offers the bug form for a drawing error.
+  Anything else says the link leads nowhere of ours and offers Contact.
+  Only the region slug is looked up; ids are passed through as typed, so the
+  box is not an oracle for which ids exist (same rule as
+  `ReportTarget::acceptsId()`).
+- **Six cards**, one per `ReportTarget`, saying where the Report link is on
+  that surface; the photo card says a photo reported for showing a person
+  is withheld at once (`canAutoWithhold()`).
+- **What happens next** repeats §6 and §7 in plain words, and claims no
+  more: a confirmation with a reference, the decision with reasons, the
+  author told only when a report is upheld, a person deciding every time.
+- Pinned by `tests/Support/ReportGuideTest.php`.
+

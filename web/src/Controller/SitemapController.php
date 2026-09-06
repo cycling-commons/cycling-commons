@@ -49,6 +49,9 @@ final class SitemapController extends AbstractController
         // `report-bug` is deliberately NOT here: it is a form, reached from
         // the button on every page, and has nothing for a search engine.
         ['contact', 'monthly'],
+        // Unlike the bug form, the report guide is a page a reader searches
+        // for ("how do I report a photo"), so it belongs here.
+        ['report_guide', 'monthly'],
         ['known_issues', 'daily'],
         // Yearly is optimistic for this one: it changes whenever a barrier is
         // fixed or found, which is the point of it.
