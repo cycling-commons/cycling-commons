@@ -201,6 +201,27 @@ final class ContentPagesTest extends WebTestCase
         self::assertSame('/pages?view=map', $crawler->filter('.dirtoggle a[data-view="map"]')->attr('href'));
     }
 
+    /**
+     * A CSS rule that lands one line past its </style> prints as text at the
+     * top of the page (found on the content-report form, 2026-09-06, just
+     * before a deploy). Every public page is read with its style and script
+     * blocks removed; a selector followed by a brace is the leak.
+     */
+    public function testNoPublicPagePrintsAStylesheetAsText(): void
+    {
+        $client = static::createClient();
+        foreach (['/', '/about', '/contact', '/report-bug', '/report/item/1', '/report', '/pages', '/contributors', '/roadmap', '/known-issues', '/privacy', '/terms', '/accessibility', '/credits', '/licenses', '/developers', '/regions', '/coverage', '/join', '/scout', '/map-key'] as $path) {
+            $client->request('GET', $path);
+            self::assertResponseIsSuccessful($path);
+            // The whole document, not the body: a rule that escaped its
+            // <style> in the head block is still head markup, and a browser
+            // moves stray head text into the body, which is what was seen.
+            $html = (string) $client->getResponse()->getContent();
+            $visible = preg_replace(['#<style\b.*?</style>#s', '#<script\b.*?</script>#s'], '', $html) ?? '';
+            self::assertDoesNotMatchRegularExpression('/^\s*[.#][A-Za-z][\w-]*[^{}\n]*\{[^{}]*\}\s*$/m', $visible, $path.' prints a CSS rule as page text');
+        }
+    }
+
     public function testUnknownPathReturns404(): void
     {
         $client = static::createClient();
