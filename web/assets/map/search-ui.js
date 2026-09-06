@@ -50,6 +50,8 @@ export function initSearchUi(){
         const s = window.CCScope ? window.CCScope.get() : null;
         const back = (s && s.kind==='myArea') ? (I18N.myAreaLabel||'My area') : (scopeLabel(s) || everywhereLabel);
         reachBtn.textContent = _worldwide ? back : everywhereLabel;
+        // A long region name is cut by CSS; the tooltip keeps the whole of it.
+        reachBtn.title = _worldwide ? back : (I18N.searchEverywhere||'Search everywhere');
       }
       // The title says where the search looks. scope-header.js is the one
       // writer of that heading, so it is asked to repaint with the reach.

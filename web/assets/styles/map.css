@@ -247,7 +247,7 @@
   .grp h3.dl-head{display:flex;align-items:center;gap:.6rem}
   .search-head{display:flex;align-items:center;justify-content:space-between;gap:.6rem;margin-bottom:.8rem}
   .search-head h3{margin-bottom:0;flex:1;min-width:0}
-  .search-reach{flex:none;padding:.25rem .6rem;font-size:.66rem;background:transparent;color:rgb(var(--chrome-fg) / .85);border:1px solid rgb(var(--chrome-fg) / .4)}
+  .search-reach{flex:0 1 auto;max-width:50%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:.25rem .6rem;font-size:.66rem;background:transparent;color:rgb(var(--chrome-fg) / .85);border:1px solid rgb(var(--chrome-fg) / .4)}
   .search-reach:hover{border-color:var(--trail);color:var(--trail)}
   .search-reach[aria-pressed="true"]{background:var(--trail);border-color:var(--trail);color:var(--ink)}
   .dl-all{margin-left:auto;background:transparent;border:1px solid rgb(var(--chrome-fg) / .25);color:var(--chrome-head);font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;padding:.2rem .45rem;border-radius:4px;cursor:pointer;transition:all .15s}
