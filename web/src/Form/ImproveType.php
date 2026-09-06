@@ -89,6 +89,9 @@ final class ImproveType extends AbstractType
             ->add('subject', HiddenType::class, ['required' => false])
             // Upload uuids (docs/specs/photo-uploads.md §4); intake re-validates ownership.
             ->add('mediaIds', HiddenType::class, ['required' => false])
+            // Descriptions keyed by upload uuid, the copy that survives a Next
+            // pressed before the live save landed (photo-uploads.md §5e).
+            ->add('mediaAlts', HiddenType::class, ['required' => false])
             ->add('lat', HiddenType::class, ['required' => false])
             ->add('lng', HiddenType::class, ['required' => false])
             ->add('place', HiddenType::class, ['required' => false])

@@ -21,6 +21,12 @@
     var noticeEl = document.getElementById('media-consent');
     var reviewNoticeEl = document.getElementById('media-consent-review');
     var hidden = options && options.hidden;
+    /* The descriptions, keyed by upload id, in a second hidden field. The
+       live save below is what normally lands them; this copy is what lands
+       them when it does not, at claim time on the server. Typing a
+       description and pressing Next in one breath used to lose it
+       (owner, 2026-09-06). */
+    var hiddenAlts = options && options.hiddenAlts;
     var onChange = (options && options.onChange) || function () {};
     if (!input || !zone || !queueEl || !hidden) return null;
 
@@ -204,6 +210,11 @@
       announceBusy();
       var ids = items.filter(function (i) { return i.id; }).map(function (i) { return i.id; });
       hidden.value = ids.length ? JSON.stringify(ids) : '';
+      if (hiddenAlts) {
+        var alts = {};
+        items.forEach(function (i) { if (i.id && i.alt) alts[i.id] = i.alt; });
+        hiddenAlts.value = Object.keys(alts).length ? JSON.stringify(alts) : '';
+      }
       syncReviewNotice();
       /* `alt` travels with the entry so the review card can show what the rider
          WROTE about the picture rather than what their phone called the file
@@ -230,6 +241,12 @@
       row.querySelector('.chip-x').addEventListener('click', function () { removeItem(item); });
 
       var altInput = row.querySelector('.chip-alt input');
+      /* Every keystroke reaches the hidden copy, so the last word typed
+         before Next is in the submission even if no change event fires. */
+      altInput.addEventListener('input', function () {
+        item.alt = altInput.value;
+        syncHidden();
+      });
       altInput.addEventListener('change', function () {
         /* Held on the item whether or not the save lands, so the review card
            shows what they typed even while the network is being difficult. */
@@ -241,8 +258,11 @@
         var body = new FormData();
         body.append('_token', token);
         body.append('alt', altInput.value);
+        /* keepalive: the change event fires on the blur that a click on
+           Next causes, and without it the browser cancels this request
+           when the page moves on. */
         fetch(cfg.uploadUrl + '/' + encodeURIComponent(item.id) + '/alt', {
-          method: 'POST', body: body, credentials: 'same-origin'
+          method: 'POST', body: body, credentials: 'same-origin', keepalive: true
         }).then(function (r) {
           /* Silent on success. A failure must not eat what they typed, so the
              field keeps its value and the next change tries again. */
@@ -521,7 +541,7 @@
           var body = new FormData();
           body.append('_token', tok);
           body.append('alt', input.value);
-          return fetch(endpoint, { method: 'POST', body: body, credentials: 'same-origin' });
+          return fetch(endpoint, { method: 'POST', body: body, credentials: 'same-origin', keepalive: true });
         }).then(function (r) {
           wrap.classList.toggle('saved', r.ok);
           wrap.classList.toggle('failed', !r.ok);

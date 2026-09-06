@@ -29,12 +29,13 @@ final class MediaClaimService
     ) {
     }
 
-    public function claim(mixed $rawMediaIds, User $by, Submission $submission): void
+    public function claim(mixed $rawMediaIds, User $by, Submission $submission, mixed $rawAlts = null): void
     {
         $ids = self::parse($rawMediaIds);
         if ([] === $ids) {
             return;
         }
+        $alts = self::parseAlts($rawAlts);
         if (\count($ids) > self::MAX_PER_SUBMISSION) {
             throw new \InvalidArgumentException(\sprintf('A submission carries at most %d photos, %d given.', self::MAX_PER_SUBMISSION, \count($ids)));
         }
@@ -65,9 +66,54 @@ final class MediaClaimService
             }
 
             $upload->claim($submissionId);
+            // The description typed in the wizard normally lands through its
+            // own request; when that request lost to the page moving on, the
+            // copy in the submission is the one that survives. Never over a
+            // description already there: the live save is the fresher word.
+            $typed = $alts[$id->toRfc4122()] ?? null;
+            if (null !== $typed && '' === trim((string) $upload->getAltText())) {
+                $upload->setAltText($typed);
+            }
             $upload->resolveGps(GpsDistance::metres($upload->getGpsLat(), $upload->getGpsLng(), $pinLat, $pinLng));
             $this->events->append($upload->getId(), (int) $by->getId(), MediaAction::Claimed);
         }
+    }
+
+    /**
+     * `{"<uuid>": "<description>"}` from the wizard's hidden field, lower-cased
+     * keys, trimmed values, the same 300-character cap the live route applies.
+     * Anything malformed is simply no descriptions: a photo must never be
+     * refused because of the words beside it.
+     *
+     * @return array<string, string>
+     */
+    private static function parseAlts(mixed $raw): array
+    {
+        if (!\is_string($raw) || '' === trim($raw)) {
+            return [];
+        }
+        try {
+            $decoded = json_decode($raw, true, 8, \JSON_THROW_ON_ERROR);
+        } catch (\JsonException) {
+            return [];
+        }
+        if (!\is_array($decoded)) {
+            return [];
+        }
+        $out = [];
+        /** @var mixed $text */
+        foreach ($decoded as $key => $text) {
+            if (!\is_string($key) || !\is_string($text) || !Uuid::isValid($key)) {
+                continue;
+            }
+            $text = trim($text);
+            if ('' === $text || mb_strlen($text) > 300) {
+                continue;
+            }
+            $out[strtolower($key)] = $text;
+        }
+
+        return $out;
     }
 
     /** @return list<Uuid> */

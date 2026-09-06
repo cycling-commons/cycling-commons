@@ -104,6 +104,39 @@ final class MediaClaimTest extends KernelTestCase
         self::assertCount(1, $events);
     }
 
+    /**
+     * The description typed beside a new photo rides in the submission as a
+     * second copy. It fills a row that has none and never overwrites one the
+     * live save already wrote (owner, 2026-09-06: "I had added a description
+     * to the photos when I uploaded them; now it is not visible").
+     */
+    public function testTheTypedDescriptionSurvivesInTheSubmission(): void
+    {
+        $rider = $this->rider('alts@test.test');
+        $blank = $this->upload($rider);
+        $kept = $this->upload($rider);
+        $kept->setAltText('Already saved live');
+        $this->em->flush();
+
+        $this->contributions->submit('add', [
+            'type' => 'water-food',
+            'lat' => 50.47,
+            'lng' => 5.86,
+            'details' => ['name' => 'Fontaine des mots'],
+            'mediaIds' => json_encode([$blank->getId()->toRfc4122(), $kept->getId()->toRfc4122()], \JSON_THROW_ON_ERROR),
+            'mediaAlts' => json_encode([
+                strtoupper($blank->getId()->toRfc4122()) => '  A tap beside the picnic shelter  ',
+                $kept->getId()->toRfc4122() => 'Late words',
+                'not-a-uuid' => 'ignored',
+            ], \JSON_THROW_ON_ERROR),
+        ], $rider);
+
+        $this->em->refresh($blank);
+        $this->em->refresh($kept);
+        self::assertSame('A tap beside the picnic shelter', $blank->getAltText());
+        self::assertSame('Already saved live', $kept->getAltText(), 'the live save is the fresher word');
+    }
+
     public function testAnotherRidersUploadCannotBeClaimed(): void
     {
         $rider = $this->rider('claim-thief@example.test');

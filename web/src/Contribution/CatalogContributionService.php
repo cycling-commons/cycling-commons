@@ -721,7 +721,7 @@ final class CatalogContributionService implements ContributionStubInterface
 
             // Photos ride the same intake transaction (docs/specs/photo-uploads.md §4).
             try {
-                $this->mediaClaims->claim($rawPayload['mediaIds'] ?? null, $by, $submission);
+                $this->mediaClaims->claim($rawPayload['mediaIds'] ?? null, $by, $submission, $rawPayload['mediaAlts'] ?? null);
             } catch (\InvalidArgumentException) {
                 $this->reject('contribute.error.media_invalid', 'mediaIds');
             }

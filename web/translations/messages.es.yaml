@@ -2043,7 +2043,6 @@ media:
     to_map: 'Ir al mapa'
   alt:
     label: 'Describe esta foto'
-    yours: 'Tu foto. Los cambios aquí se aplican al momento.'
     suggest_note: 'Lo subió otra persona. Tu redacción va a un curador junto con tus demás cambios.'
     placeholder: '¿Qué necesitaría saber alguien que no puede verla?'
   consent:

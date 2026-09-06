@@ -1162,6 +1162,7 @@
   if (mediaField && window.Cc && window.Cc.mountMediaUploads) {
     window.Cc.mountMediaUploads({
       hidden: mediaField,
+      hiddenAlts: fld('mediaAlts'),
       onChange: function (photos) { WZ.media = photos; }
     });
   }

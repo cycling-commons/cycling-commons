@@ -2503,7 +2503,6 @@ media:
     to_map: 'Naar de kaart'
   alt:
     label: 'Beschrijf deze foto'
-    yours: 'Jouw foto. Wijzigingen hier gaan meteen in.'
     suggest_note: 'Iemand anders heeft deze geüpload. Jouw tekst gaat met je andere wijzigingen naar een curator.'
     placeholder: 'Wat zou iemand die hem niet kan zien moeten weten?'
   consent:

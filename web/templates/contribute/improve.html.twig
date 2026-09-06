@@ -725,7 +725,7 @@
                  new machinery on a page that has enough. #}
               <a href="{{ p.lg|default(p.sm|default('')) }}" target="_blank" rel="noopener"
                  title="{{ 'improve.step3.open_full'|trans }}">
-                <img src="{{ p.sm|default(p.lg|default('')) }}" alt="{{ 'improve.step3.current_alt'|trans({'%name%': current.name|default('')}) }}" loading="lazy" />
+                <img src="{{ p.sm|default(p.lg|default('')) }}" alt="{{ p.alt|default('') ?: 'improve.step3.current_alt'|trans({'%name%': current.name|default('') ?: item_type.labelKey|trans}) }}" loading="lazy" />
               </a>
               {% if p.credit is defined and p.credit %}
                 <figcaption>© {{ p.credit }}{% if p.license is defined and p.license %} · {{ p.license }}{% endif %}</figcaption>
@@ -745,7 +745,7 @@
                   <span class="vh">{{ 'media.alt.label'|trans }}</span>
                   <input type="text" maxlength="300" value="{{ p.alt|default('') }}"
                          placeholder="{{ 'media.alt.placeholder'|trans }}">
-                  <span class="cur-alt-note">{{ (mine ? 'media.alt.yours' : 'media.alt.suggest_note')|trans }}</span>
+                  {% if not mine %}<span class="cur-alt-note">{{ 'media.alt.suggest_note'|trans }}</span>{% endif %}
                 </label>
               {% endif %}
             </figure>
@@ -780,6 +780,7 @@
          and the image FETCHED into our own quarantine-scan-publish pipeline
          rather than hot-linked from somebody else's server. #}
       {{ form_widget(form.mediaIds) }}
+      {{ form_widget(form.mediaAlts) }}
     </div>
     <div class="notice"><b>{{ 'improve.step3.notice_b'|trans }}</b> {{ 'improve.step3.notice'|trans }}</div>
   </section>
@@ -823,7 +824,7 @@
             <figure class="rm-item is-existing{% if p.alt|default('') %} has-alt{% endif %}"
                     {% if p.id is defined %}data-photo="{{ p.id }}"{% endif %}>
               <img src="{{ p.sm|default(p.lg|default('')) }}"
-                   alt="{{ p.alt|default('') ?: 'improve.step3.current_alt'|trans({'%name%': current.name|default('')}) }}" loading="lazy" />
+                   alt="{{ p.alt|default('') ?: 'improve.step3.current_alt'|trans({'%name%': current.name|default('') ?: item_type.labelKey|trans}) }}" loading="lazy" />
               <figcaption>{{ p.alt|default('') }}</figcaption>
             </figure>
           {% endfor %}

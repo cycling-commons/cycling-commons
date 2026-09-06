@@ -897,6 +897,28 @@ the upload POSTs the moment a file is chosen and the rider has not typed
 anything yet. It also means a description can be fixed afterwards, and a slow
 typist never holds up the scan queue.
 
+**The typed words ride in the submission too** (fixed 2026-09-06). The
+endpoint above is called from the `change` event of the description box, which
+fires on the blur that a click on Next causes, and the browser cancelled that
+request as the page moved on: the rider typed a description, pressed Next, and
+the row kept no words at all (owner: "I had added a description to the photos
+when I uploaded them; now it is not visible"). Two fixes, belt and braces. The
+request is sent with `keepalive`, so it outlives the navigation. And the wizard
+keeps a second copy in a hidden field, `mediaAlts` (`{"<uuid>": "<text>"}`,
+updated on every keystroke), which `MediaClaimService::claim()` reads at claim
+time and writes onto any upload whose row still has no description, never over
+one the live save already wrote, because that one is the fresher word. The
+test that was missing was the one for this path; it is
+`MediaClaimTest::testTheTypedDescriptionSurvivesInTheSubmission`.
+
+The wizard's describe box under an existing photo of the rider's own no longer
+says "Your photo. Changes here take effect straight away." (owner, 2026-09-06):
+the box is the affordance and the sentence was noise. A stranger's box keeps
+its note, because that one changes what happens to the words. And the picture's
+own alt in the wizard falls back through the description, the place's name and
+then the place's type, so an unnamed registry tap reads "Photo of Water & food"
+rather than "Photo of".
+
 **It lives in TWO places and both are written together** (fixed 2026-08-30). The
 upload row, and a copy inside the item's `photos` gallery, which is what the
 map, the vector tiles and the wizard's review step all read. That copy is not a

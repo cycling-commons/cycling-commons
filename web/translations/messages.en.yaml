@@ -2033,7 +2033,6 @@ media:
     to_map: 'Go to the map'
   alt:
     label: 'Describe this photo'
-    yours: 'Your photo. Changes here take effect straight away.'
     suggest_note: 'Somebody else uploaded this. Your wording goes to a curator with the rest of your edits.'
     placeholder: 'What would somebody who cannot see it need to know?'
   consent:

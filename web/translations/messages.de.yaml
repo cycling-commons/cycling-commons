@@ -2506,7 +2506,6 @@ media:
     to_map: 'Zur Karte'
   alt:
     label: 'Beschreibe dieses Foto'
-    yours: 'Dein Foto. Änderungen hier gelten sofort.'
     suggest_note: 'Jemand anderes hat es hochgeladen. Deine Formulierung geht mit deinen übrigen Änderungen an einen Kurator.'
     placeholder: 'Was müsste jemand wissen, der es nicht sehen kann?'
   consent:
