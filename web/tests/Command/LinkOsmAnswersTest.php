@@ -56,7 +56,7 @@ final class LinkOsmAnswersTest extends KernelTestCase
 
     public function testARowInTheReviewBandIsLeftUnanswered(): void
     {
-        // Same name key but ~120 m away: the 50-250 m band is a human call.
+        // Same name key but ~120 m away: the 100-250 m band is a human call.
         $id = $this->seed('Panorama Testberg', 50.5011, 4.9);
 
         $this->runCommand(['--write' => true]);

@@ -412,9 +412,10 @@ alphabet with an OSM ref. So the link is made three ways, in this order:
 2. **`app:catalog:link-osm`** backfills existing rows from `coverage_poi`, the
    mirror we already hold. Nothing is fetched from OSM. Three outcomes, and only
    the first writes:
-   - **within `OsmLinker::TIGHT_M` (50 m) with an identical name key**: linked
-     automatically. Close enough and named the same is not a judgement call.
-   - **50 m to `OsmLinker::LOOSE_M` (250 m)**: never written here. It becomes
+   - **within `OsmLinker::TIGHT_M` (100 m; 50 until 2026-09-06, owner) with an
+     identical name key**: linked automatically. Close enough and named the
+     same is not a judgement call.
+   - **100 m to `OsmLinker::LOOSE_M` (250 m)**: never written here. It becomes
      an `OsmLink` finding on the curator data desk.
    - **the OSM object is already claimed by another served row**: that is a
      duplicate wearing a link, so it goes to the desk as a duplicate rather than
@@ -530,7 +531,7 @@ reconciling two databases.
 `app:catalog:findings` run on a schedule and their output is what the curator
 data desk shows. The desk is the queue for everything the gate does not catch:
 rows that existed before the gate, rows whose OSM counterpart appeared later,
-and links that need a human because they fall in the 50 m to 250 m band.
+and links that need a human because they fall in the 100 m to 250 m band.
 
 **Built 2026-08-25** (plan `docs/plans/2026-08-25-osm-identity-spine.md`):
 materialisation answers by construction, `Version20260825110000` added

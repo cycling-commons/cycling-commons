@@ -45,8 +45,12 @@ use Doctrine\DBAL\Connection;
  */
 final readonly class OsmLinker
 {
-    /** Written without asking. */
-    public const int TIGHT_M = 50;
+    /** Written without asking. 50 until 2026-09-06; the owner widened it to
+     *  100, the same distance the provider harvest uses for a moved pin
+     *  (data-provider-hierarchy.md, MOVE_RADIUS_M): a register's coordinate
+     *  and OSM's for one tap are often that far apart, and the name key still
+     *  has to agree. */
+    public const int TIGHT_M = 100;
 
     /**
      * "On top of": a pin moved to within this distance of an OSM object of
