@@ -1,0 +1,48 @@
+# Known issues seeded from the backlog (docs/TODO.md), so the public list at
+# /known-issues says the same thing in every environment. Each entry becomes
+# a public bug report once; the seed command skips a public title it already
+# finds, so a curator's later edits on the desk survive a re-run.
+#
+# severity: critical | major | minor | cosmetic
+# area: map | search | contributing | photos | routes | account | regions | translations | pages | unsure
+# status: new | planned | in_progress | needs_testing | resolved
+#
+# Filed 2026-09-06 (owner: "update the buglist with things from the todo").
+issues:
+  - public_title: 'Surfaces view: a road without a surface tag draws nothing'
+    severity: major
+    area: map
+    status: planned
+    body: |
+      In the Surfaces view a classified road that OpenStreetMap carries no surface tag for is drawn as nothing at all, so a stretch of ordinary tarmac can look like a gap in the road.
+      Until the surface layer learns to draw "unknown" in its own colour, read a blank as "no data", not as "no road".
+  - public_title: 'Three Belgian climbs have unconfirmed start and end points'
+    severity: minor
+    area: map
+    status: planned
+    body: |
+      Côte de la Redoute, Mur de Huy and Côte de Stockeu were drawn from a first pass. Their foot and summit still have to be checked against a reference, and the gradient figures will move a little when they are.
+  - public_title: 'Susten Pass shows a 10% descent inside the climb'
+    severity: minor
+    area: map
+    status: new
+    body: |
+      One segment of the Susten Pass reads as a 10% descent on a 28 km climb. That is plausible on a pass, but it has not been checked against the elevation source for that stretch. Listed here so nobody reports it twice.
+  - public_title: 'Some places are filed under the wrong country, or shown as a single pin'
+    severity: minor
+    area: regions
+    status: new
+    body: |
+      The Matterhorn is filed under Switzerland but its summit point lies in Italy. Sixteen large areas, Yosemite National Park among them, are shown as one pin at their centre rather than as an outline.
+  - public_title: 'The Spanish site has had one pass by one translator'
+    severity: minor
+    area: translations
+    status: planned
+    body: |
+      The Spanish text was written in one pass in August 2026 and has not yet been read by a native speaker. If a phrase reads oddly, Translate mode on any page lets you propose a better one.
+  - public_title: 'Country and region pickers are not yet checked for keyboard use'
+    severity: minor
+    area: pages
+    status: new
+    body: |
+      The country and region pickers on Regions and Get involved have not been tested with a keyboard alone. If Tab and Enter do not get you through them, that is this issue.

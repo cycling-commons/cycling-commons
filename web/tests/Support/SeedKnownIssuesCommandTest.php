@@ -1,0 +1,59 @@
+<?php
+
+// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+
+declare(strict_types=1);
+
+namespace App\Tests\Support;
+
+use App\Support\Entity\BugReport;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bundle\FrameworkBundle\Console\Application;
+use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
+use Symfony\Component\Console\Tester\CommandTester;
+
+/** The seeded known issues reach /known-issues once, and only once. */
+final class SeedKnownIssuesCommandTest extends KernelTestCase
+{
+    public function testTheRepositoryFileSeedsPublicIssuesAndARerunAddsNothing(): void
+    {
+        self::bootKernel();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $before = \count($em->getRepository(BugReport::class)->findBy(['isPublic' => true]));
+
+        $tester = new CommandTester((new Application(self::$kernel))->find('app:bugs:seed-known'));
+        self::assertSame(0, $tester->execute([]));
+        $filed = \count($em->getRepository(BugReport::class)->findBy(['isPublic' => true])) - $before;
+        self::assertGreaterThan(0, $filed, 'the repository file has entries and they were filed');
+        self::assertStringContainsString(sprintf('%d filed', $filed), $tester->getDisplay());
+
+        $surface = $em->getRepository(BugReport::class)->findOneBy(['publicTitle' => 'Surfaces view: a road without a surface tag draws nothing']);
+        self::assertNotNull($surface);
+        self::assertTrue($surface->isPublic());
+        self::assertSame('map', $surface->getArea()->value);
+        self::assertStringContainsString('no road', (string) $surface->getPublicBody());
+
+        self::assertSame(0, $tester->execute([]));
+        self::assertStringContainsString('0 filed', $tester->getDisplay(), 'a second run files nothing');
+    }
+
+    public function testAFileWithABadEntryFilesNothing(): void
+    {
+        self::bootKernel();
+        $bad = sys_get_temp_dir().'/known-issues-bad-'.uniqid('', true).'.yaml';
+        file_put_contents($bad, "issues:\n  - public_title: 'Half an entry'\n    severity: minor\n");
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $before = \count($em->getRepository(BugReport::class)->findAll());
+
+        $tester = new CommandTester((new Application(self::$kernel))->find('app:bugs:seed-known'));
+        try {
+            $tester->execute(['file' => $bad]);
+            self::fail('a half entry must not be filed');
+        } catch (\RuntimeException $e) {
+            self::assertStringContainsString('"body"', $e->getMessage());
+        } finally {
+            @unlink($bad);
+        }
+        self::assertCount($before, $em->getRepository(BugReport::class)->findAll());
+    }
+}

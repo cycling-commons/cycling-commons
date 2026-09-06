@@ -651,6 +651,17 @@ public page by accident. Resolved issues stay on for a while so nobody
 re-reports last week's bug; declined ones do not, because "we are not fixing
 this" is a conversation with the reporter, not a public notice.
 
+**Seeded known issues** (2026-09-06, owner: "update the buglist with things
+from the todo"). Bugs found in the backlog before anybody filed them belong on
+the public list too, and in every environment alike. They live in
+`web/config/known_issues.yaml` (public title, body, severity, area, status) and
+`app:bugs:seed-known` files them through the same `BugReport` entity the desk
+uses, public from the start, with an internal note saying where they came
+from. A public title already present is skipped, so a re-run never overwrites
+what a curator changed on the desk, and a resolved one stays resolved.
+Deploying a new entry is: add it to the file, deploy, run the command once.
+Pinned by `SeedKnownIssuesCommandTest`.
+
 **My reports** shows a rider their own rows and only their own. The query
 filters on the signed-in user's id and is never handed an id from the request.
 

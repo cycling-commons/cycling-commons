@@ -118,6 +118,16 @@ catches the symptom whatever causes it next time.
 5. Tag it `v<version>` so the footer agrees with the page.
 6. Run the tests: the key check fails on any locale you forgot.
 
+## 6a. What goes on the roadmap
+
+Refreshed 2026-09-06 from `docs/TODO.md` (owner). The roadmap is for
+riders, so it carries **features only**: bugs, deploy prerequisites,
+operations chores and content review rows stay in the backlog and never
+appear here. An item that shipped is removed the day it ships, whether or
+not a release has been tagged yet; the changelog names it at the next tag
+(§6 step 4). Twenty items is the size it has now; it should not grow much
+past that, because a list nobody reads to the end is not a roadmap.
+
 ## 7. Deliberately not built
 
 - **A standalone signup for people without an account** (`docs/TODO.md` 10). It

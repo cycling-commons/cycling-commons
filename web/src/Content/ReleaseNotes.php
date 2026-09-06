@@ -42,11 +42,25 @@ final class ReleaseNotes
      * @var list<array{key: string, status: string, issue?: int}>
      */
     public const array ROADMAP = [
-        ['key' => 'roadmap.item_copyright', 'status' => 'now'],
-        ['key' => 'roadmap.item_report_flow', 'status' => 'now'],
-        ['key' => 'roadmap.item_email_updates', 'status' => 'next'],
-        ['key' => 'roadmap.item_photo_alt', 'status' => 'next'],
-        ['key' => 'roadmap.item_dormant_accounts', 'status' => 'next'],
+        // Refreshed 2026-09-06 from docs/TODO.md: features only, no bugs, no
+        // deploy chores; anything that shipped left for the changelog.
+        ['key' => 'roadmap.item_curator_direct', 'status' => 'now'],
+        ['key' => 'roadmap.item_pending_notice', 'status' => 'next'],
+        ['key' => 'roadmap.item_provider_refresh', 'status' => 'next'],
+        ['key' => 'roadmap.item_release_mail', 'status' => 'next'],
+        ['key' => 'roadmap.item_support_thread', 'status' => 'next'],
+        ['key' => 'roadmap.item_surface_loop', 'status' => 'next'],
+        ['key' => 'roadmap.item_photo_link', 'status' => 'next'],
+        ['key' => 'roadmap.item_phone_map', 'status' => 'next'],
+        ['key' => 'roadmap.item_region_vote', 'status' => 'later'],
+        ['key' => 'roadmap.item_heatmap', 'status' => 'later'],
+        ['key' => 'roadmap.item_saved_regions', 'status' => 'later'],
+        ['key' => 'roadmap.item_observations', 'status' => 'later'],
+        ['key' => 'roadmap.item_item_links', 'status' => 'later'],
+        ['key' => 'roadmap.item_standing', 'status' => 'later'],
+        ['key' => 'roadmap.item_curator_room', 'status' => 'later'],
+        ['key' => 'roadmap.item_beta', 'status' => 'later'],
+        ['key' => 'roadmap.item_osm_giveback', 'status' => 'later'],
         ['key' => 'roadmap.item_map_a11y', 'status' => 'later'],
         ['key' => 'roadmap.item_route_export', 'status' => 'later'],
         ['key' => 'roadmap.item_roadmap_votes', 'status' => 'later'],
