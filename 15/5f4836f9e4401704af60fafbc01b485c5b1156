@@ -1,0 +1,44 @@
+pipeline/tests/test_load.py
+  s_ec895423d98b88::t_7dad6d71c35010 781-783,786-788,791
+web/tests/Coverage/CoverageSchema.php
+  s_ec895423d98b88::t_1548b695d039af 50-54
+pipeline/coverage/load.py
+  s_ec895423d98b88::t_03f41b19c94d12 273
+  s_ec895423d98b88::t_1548b695d039af 271-272,274-280
+docs/specs/coverage-provider.md
+  s_ec895423d98b88::t_03f41b19c94d12 991-1034
+web/migrations/Version20260906180000.php
+  s_ec895423d98b88::t_03f41b19c94d12 30
+  s_ec895423d98b88::t_5aee5d72b5efb1 1-29,31-232
+web/src/Command/Coverage/RecountCommand.php
+  s_ec895423d98b88::t_1548b695d039af 1-21,23-45
+  s_ec895423d98b88::t_03f41b19c94d12 22
+web/src/Coverage/CoverageRepository.php
+  s_ec895423d98b88::t_1548b695d039af 355-366,368-387
+  s_ec895423d98b88::t_d3f6ba848bdbe9 367
+  s_ec895423d98b88::t_88a6d53e3a2c93 351-354
+web/tests/Coverage/CoverageCountTest.php
+  s_ec895423d98b88::t_1548b695d039af 1-55,57-124
+  s_ec895423d98b88::t_f8cf797696e2ff 56
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "155f4836f9e4401704af60fafbc01b485c5b1156",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_ec895423d98b88": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a0de6d79-989a-45d6-9f80-10287ec2dd13",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
