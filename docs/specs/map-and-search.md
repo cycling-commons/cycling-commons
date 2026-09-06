@@ -2007,10 +2007,13 @@ RIVM harvest drew 3283 taps nobody here had seen with the plain pin; pinned by
 `CatalogProviderTest::testAuthorityRowsAreNotVerifiedByProvenanceAlone`.
 
 **Three tiers, the pin legend's three, and the same three in every list**
-(owner, 2026-09-06: "osm, provider or community?"). OSM is the imported
-baseline; community is an unconfirmed row whoever put it there, a rider or a
-public register (the legend's "Community, unconfirmed", `verified === false`);
-no tag is a confirmed row. A provider is a source, not a tier: the record
+(owner, 2026-09-06: "it is our community that confirms; it confirms OSM or
+RIVM or PIVOT and at that moment it becomes our community"). "community" is a
+row our community has CONFIRMED (`verified`), whatever put it there first;
+"unconfirmed" is a row nobody here has checked yet (`verified === false`, a
+rider's or a register's); "OSM" is the imported baseline the catalogue does
+not hold. The legend's middle pin is therefore headed "Unconfirmed", not
+"Community, unconfirmed". A provider is a source, not a tier: the record
 panel names it. For that to hold, the item index carries UNNAMED items too
 (name = the layer's label, `unnamed` set, off text search): before, an
 unnamed registry tap reached the nearby list only through its OpenStreetMap

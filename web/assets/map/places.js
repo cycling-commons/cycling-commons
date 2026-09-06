@@ -68,13 +68,16 @@ function renderPlaceCard(name, meta, near, covGroups){
   const byLetter={};
   all.forEach((n,i)=>{ n._i=i; (byLetter[n.e.letter]=byLetter[n.e.letter]||[]).push(n); });
   const letters=Object.keys(byLetter).sort();
-  // "Community" is a rider's work not yet confirmed. An OpenStreetMap row is
-  // neither ours nor a rider's: it wears OSM (owner, 2026-09-06: "Bakkerij
-  // Otten is said to be community but it is OSM"). Both sort after the
-  // confirmed rows and share the cap, since both are the crowd's tier.
-  const isComm=n=>n.e.community || n.e.verified===false;
-  const isSecond=n=>isComm(n) || !!n.e.osm;
-  const tierTag=n=>isComm(n) ? `<span class="cc-comm-tag">${escPend(D.community||'community')}</span>`
+  // Three tiers (map-and-search.md §12, owner 2026-09-06): "community" is a
+  // row OUR community has confirmed, whatever put it there first (OSM, a
+  // register, a rider); "unconfirmed" is a row nobody here has checked yet;
+  // "OSM" is the imported baseline the catalogue does not hold. Confirmed
+  // rows list first; the other two share the capped second tier.
+  const isUnconfirmed=n=>!n.e.osm && (n.e.community || n.e.verified===false);
+  const isConfirmed=n=>!n.e.osm && !isUnconfirmed(n) && n.e.verified!==undefined;
+  const isSecond=n=>!isConfirmed(n);
+  const tierTag=n=>isConfirmed(n) ? `<span class="cc-comm-tag">${escPend(D.community||'community')}</span>`
+    : isUnconfirmed(n) ? `<span class="cc-comm-tag">${escPend(D.unconfirmed||'unconfirmed')}</span>`
     : (n.e.osm ? `<span class="cc-comm-tag">${escPend(D.osmTag||'OSM')}</span>` : '');
   const list = all.length
     ? letters.map(L=>{ const rows=byLetter[L], e0=rows[0].e;

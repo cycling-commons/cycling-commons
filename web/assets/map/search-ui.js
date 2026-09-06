@@ -84,11 +84,15 @@ export function initSearchUi(){
       sBox.value=m.name; closeS();
       m.go(); }
     // docs/specs/map-and-search.md §12 — community sub-tag; towns and pending never.
-    const commRow=m=>!m.town && !m.pend && (m.community || m.verified===false);
-    // An OpenStreetMap hit is tagged OSM, not community: community is a
-    // rider's work awaiting confirmation (owner, 2026-09-06).
-    const secondRow=m=>commRow(m) || !!m.osm;
-    const tierTag=m=>commRow(m) ? `<span class="scomm">${escH(D.community||'community')}</span>` : (m.osm ? `<span class="scomm">${escH(D.osmTag||'OSM')}</span>` : '');
+    // Three tiers (map-and-search.md §12, owner 2026-09-06): "community" is a
+    // row our community has confirmed, "unconfirmed" one nobody here has
+    // checked yet, "OSM" the imported baseline. Towns and pending rows carry none.
+    const unconfRow=m=>!m.town && !m.pend && !m.osm && (m.community || m.verified===false);
+    const confRow=m=>!m.town && !m.pend && !m.osm && !unconfRow(m) && m.verified!==undefined;
+    const secondRow=m=>!m.town && !confRow(m);
+    const tierTag=m=>confRow(m) ? `<span class="scomm">${escH(D.community||'community')}</span>`
+      : unconfRow(m) ? `<span class="scomm">${escH(D.unconfirmed||'unconfirmed')}</span>`
+      : (m.osm ? `<span class="scomm">${escH(D.osmTag||'OSM')}</span>` : '');
     const sRow=(m,i)=>`<li role="option"><button data-i="${i}"><span class="sw" style="background:${m.color};color:${txtOn(m.color)}">${m.badge}</span><span class="snm">${escH(m.name)}${tierTag(m)}</span><span class="sub">${escH(m.kind)}</span></button></li>`;
     const SCOPE_COLOR='#B5532E';
     // A scope hit is a jump, and the registry is searched whole so "More
