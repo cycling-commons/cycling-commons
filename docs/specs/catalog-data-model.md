@@ -355,7 +355,10 @@ row loses to an OSM row.
 **Two halves, and the split is deliberate.**
 
 - `App\Catalog\Import\DuplicateGuard` runs inside every import path
-  (`app:catalog:import`, `seed-manual`, `seed-climbs`, `seed-wikidata`) and
+  (`app:catalog:import`, `seed-manual`, `seed-climbs`, `seed-wikidata`; the
+  one way OUT is `app:items:purge`, 2026-09-06: an item with its photos,
+  submissions, checks and history, dry run by default, for test rows that
+  reached the catalogue, never a moderation act) and
   **never writes**. It declines to ADD a second row, and names every skip with
   the id in the way, the distance, and — when the row being held out comes from
   a better source — the command that resolves it. A count alone would let a
