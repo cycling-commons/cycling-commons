@@ -120,7 +120,7 @@
            everywhere"). Off on every open; search-ui.js owns it. #}
         <div class="search-head">
           <h3 id="searchTitle">{{ 'map.search_title'|trans }}</h3>
-          <button type="button" class="chip search-reach" id="searchReach" aria-pressed="false">{{ 'map.search_everywhere'|trans }}</button>
+          <button type="button" class="chip search-reach" id="searchReach" aria-pressed="false" title="{{ 'map.search_everywhere'|trans }}">{{ 'region.everywhere.label'|trans }}</button>
         </div>
         <input class="search" id="search" placeholder="{{ 'map.search_placeholder'|trans }}" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="searchRes" aria-label="{{ 'map.search_aria'|trans }}" />
         <ul class="search-res" id="searchRes" role="listbox" hidden></ul>
