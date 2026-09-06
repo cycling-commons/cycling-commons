@@ -83,7 +83,11 @@ export function initSearchUi(){
       m.go(); }
     // docs/specs/map-and-search.md §12 — community sub-tag; towns and pending never.
     const commRow=m=>!m.town && !m.pend && (m.community || m.verified===false);
-    const sRow=(m,i)=>`<li role="option"><button data-i="${i}"><span class="sw" style="background:${m.color};color:${txtOn(m.color)}">${m.badge}</span><span class="snm">${escH(m.name)}${commRow(m)?`<span class="scomm">${escH(D.community||'community')}</span>`:''}</span><span class="sub">${escH(m.kind)}</span></button></li>`;
+    // An OpenStreetMap hit is tagged OSM, not community: community is a
+    // rider's work awaiting confirmation (owner, 2026-09-06).
+    const secondRow=m=>commRow(m) || !!m.osm;
+    const tierTag=m=>commRow(m) ? `<span class="scomm">${escH(D.community||'community')}</span>` : (m.osm ? `<span class="scomm">${escH(D.osmTag||'OSM')}</span>` : '');
+    const sRow=(m,i)=>`<li role="option"><button data-i="${i}"><span class="sw" style="background:${m.color};color:${txtOn(m.color)}">${m.badge}</span><span class="snm">${escH(m.name)}${tierTag(m)}</span><span class="sub">${escH(m.kind)}</span></button></li>`;
     const SCOPE_COLOR='#B5532E';
     // A scope hit is a jump, and the registry is searched whole so "More
     // regions…" can reach any region by name. A region in another country
@@ -148,7 +152,7 @@ export function initSearchUi(){
             .filter(h=>!(h.itemId!=null && idxIds().has(h.letter+':'+h.itemId)))
             .map(h=>{ const layer=layerByKey[LETTER_KEY[h.letter]];
               return {name:h.n, key:slug(h.n), kind:layer.label, badge:layerGlyph(layer), color:layer.color,
-                letter:h.letter, ll:h.ll, cov:1, community:!h.curated,
+                letter:h.letter, ll:h.ll, cov:1, osm:!h.curated,
                 go:()=>openCoverageByRef(h.ref, h.letter, h.ll, h.n, h.itemId)}; });
           _covSQ=slug(q);
           if(!sRes.hidden) runS();
@@ -172,13 +176,21 @@ export function initSearchUi(){
       const byLetter={};
       items.forEach(m=>{ (byLetter[m.letter]=byLetter[m.letter]||[]).push(m); });
       if(_covSQ===q) _covHits.forEach(m=>{ (byLetter[m.letter]=byLetter[m.letter]||[]).push(m); });
-      Object.keys(byLetter).forEach(L=>byLetter[L].sort((a,b)=>(commRow(a)?1:0)-(commRow(b)?1:0)));
+      Object.keys(byLetter).forEach(L=>byLetter[L].sort((a,b)=>(secondRow(a)?1:0)-(secondRow(b)?1:0)));
       // A · one row per route name (up to "·"); other letters keep same-named distinct places.
       if(byLetter.A){
         const seen=new Set();
         byLetter.A=byLetter.A.filter(m=>{ const k=String(m.name||'').split(' · ')[0]; if(seen.has(k)) return false; seen.add(k); return true; });
       }
-      const scopeHits = window.CCScope ? window.CCScope.searchScopes(sBox.value) : [];
+      // Scope hits stay inside the country on the map unless the reach is on:
+      // a search in the Netherlands must not surface a French region (owner,
+      // 2026-09-06). With the reach on, any region or country can be typed.
+      const scopeHits = (window.CCScope ? window.CCScope.searchScopes(sBox.value) : []).filter(h=>{
+        if(_worldwide) return true;
+        const cur=window.CCScope.get();
+        const ccs = cur && cur.kind==='myArea' && cur.myArea ? cur.myArea.countryCodes : (cur && cur.countryCode ? [cur.countryCode] : []);
+        return !!h.cc && ccs.indexOf(h.cc)!==-1;
+      });
       const groups=scopeHits.length ? [{label:D.scopes||'Scopes', rows:scopeHits.map(s=>({
         scope:true, kind:s.kind, name:s.label, cc:s.cc,
         go:()=> s.kind==='country' ? window.CCScope.setCountry(s.cc) : window.CCScope.setRegion(s.slug),

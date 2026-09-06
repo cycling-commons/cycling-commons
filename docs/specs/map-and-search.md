@@ -2006,6 +2006,16 @@ new rows `unverified` (its §5 rule 6). Ruled 2026-09-06, the night the first
 RIVM harvest drew 3283 taps nobody here had seen with the plain pin; pinned by
 `CatalogProviderTest::testAuthorityRowsAreNotVerifiedByProvenanceAlone`.
 
+**An OpenStreetMap row is tagged OSM, never community** (owner, 2026-09-06:
+"Bakkerij Otten is said to be community but it is OSM"). In the nearby list
+and the search results, "community" is a rider's work not yet confirmed
+(`verified === false`, or a rider source); a coverage row the catalogue does
+not claim wears "OSM" instead. Both sit after the confirmed rows and share
+the capped second tier, since both are the crowd's, but they are not the same
+crowd. And a scope hit in the search stays inside the country on the map
+unless the Everywhere reach is on: a search in the Netherlands does not
+surface a French region.
+
 **`state` never reaches a rider in our words.** The item history renders the
 `state` field as **Status**, and its values as what they mean to a rider —
 `submitted` → "waiting for review", `unverified` → "on the map, not confirmed

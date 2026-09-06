@@ -61,19 +61,26 @@ function renderPlaceCard(name, meta, near, covGroups){
       if(!it || !Array.isArray(it.ll)) return;
       if(it.itemId!=null && idxIds().has(g.letter+':'+it.itemId)) return;
       all.push({dist:haversine(meta.ll, it.ll), e:{name:it.n||layer.label, kind:layer.label,
-        badge:layerGlyph(layer), color:layer.color, letter:g.letter, ll:it.ll, hlOff:[0,0], community:!it.curated,
+        badge:layerGlyph(layer), color:layer.color, letter:g.letter, ll:it.ll, hlOff:[0,0], osm:!it.curated,
         go:()=>openCoverageByRef(it.ref, g.letter, it.ll, it.n, it.itemId)}});
     });
   });
   const byLetter={};
   all.forEach((n,i)=>{ n._i=i; (byLetter[n.e.letter]=byLetter[n.e.letter]||[]).push(n); });
   const letters=Object.keys(byLetter).sort();
+  // "Community" is a rider's work not yet confirmed. An OpenStreetMap row is
+  // neither ours nor a rider's: it wears OSM (owner, 2026-09-06: "Bakkerij
+  // Otten is said to be community but it is OSM"). Both sort after the
+  // confirmed rows and share the cap, since both are the crowd's tier.
   const isComm=n=>n.e.community || n.e.verified===false;
+  const isSecond=n=>isComm(n) || !!n.e.osm;
+  const tierTag=n=>isComm(n) ? `<span class="cc-comm-tag">${escPend(D.community||'community')}</span>`
+    : (n.e.osm ? `<span class="cc-comm-tag">${escPend(D.osmTag||'OSM')}</span>` : '');
   const list = all.length
     ? letters.map(L=>{ const rows=byLetter[L], e0=rows[0].e;
         // docs/specs/map-and-search.md §12 — verified first; community subgroup capped at 3.
-        const ver=rows.filter(n=>!isComm(n)), com=rows.filter(isComm);
-        const row=(n,hidden)=>`<li${hidden?` hidden data-more="${L}"`:''}><button class="cc-near" data-i="${n._i}"><span class="cc-near-nm">${escPend(n.e.name)}${isComm(n)?`<span class="cc-comm-tag">${escPend(D.community||'community')}</span>`:''}</span><em>${n.dist<1?uM(Math.round(n.dist*1000)):uKm(n.dist)}</em></button></li>`;
+        const ver=rows.filter(n=>!isSecond(n)), com=rows.filter(isSecond);
+        const row=(n,hidden)=>`<li${hidden?` hidden data-more="${L}"`:''}><button class="cc-near" data-i="${n._i}"><span class="cc-near-nm">${escPend(n.e.name)}${tierTag(n)}</span><em>${n.dist<1?uM(Math.round(n.dist*1000)):uKm(n.dist)}</em></button></li>`;
         let html=`<li class="cc-near-grp"><span class="cc-near-k" style="background:${e0.color};color:${txtOn(e0.color)}">${e0.badge}</span>${escPend(e0.kind)} · ${rows.length}</li>`;
         html+=ver.map(n=>row(n,false)).join('');
         html+=com.slice(0,3).map(n=>row(n,false)).join('');
