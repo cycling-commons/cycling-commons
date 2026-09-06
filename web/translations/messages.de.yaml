@@ -796,9 +796,9 @@ join:
 contributors:
   kicker: 'Beitragende'
   title: 'Von Fahrern gebaut.'
-  lead: 'Fahrer, die ein <b>öffentliches Profil</b> einschalten, erscheinen hier unter ihrem gewählten Namen. Alle anderen tragen genauso viel bei, ohne Nennung — das ist eine Einstellung, kein Status.'
+  lead: 'Die Fahrer, die die Karte bauen, mit Dank. Die Wand ist alphabetisch, nie nach Volumen: eine Rangfolge gibt es hier nicht. Jede Zeile zeigt, was ein Fahrer beigetragen hat: Fakten, Anstiege, Fotos, Prüfungen vor Ort und Routen.'
   active_kicker: 'Die Wand des Dankes'
-  search_note: 'Keine Rangfolge — Beitragende sind alphabetisch aufgelistet, nie nach Volumen. Suche nach Name oder filtere nach Land.'
+  search_note: 'Suche nach Name oder filtere nach Land.'
   search_placeholder: 'Nach Name suchen…'
   search_aria: 'Beitragende nach Name suchen'
   search_submit: 'Suchen'

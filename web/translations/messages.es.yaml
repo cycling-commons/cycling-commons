@@ -797,9 +797,9 @@ join:
 contributors:
   kicker: 'Colaboradores'
   title: 'Hecho por ciclistas.'
-  lead: 'Los ciclistas que activan un <b>perfil público</b> aparecen aquí con el nombre que hayan elegido. El resto aporta exactamente igual, sin aparecer — es un ajuste, no una categoría.'
+  lead: 'Los ciclistas que construyen el mapa, con nuestro agradecimiento. El muro es alfabético, nunca por volumen: aquí no hay clasificación. Cada fila muestra lo que un ciclista ha añadido: hechos, subidas, fotos, comprobaciones in situ y rutas.'
   active_kicker: 'El muro de reconocimiento · con gratitud'
-  search_note: 'Sin clasificación — los colaboradores se listan por orden alfabético, nunca por volumen. Busca por nombre o filtra por país.'
+  search_note: 'Busca por nombre o filtra por país.'
   search_placeholder: 'Buscar por nombre…'
   search_aria: 'Buscar colaboradores por nombre'
   search_submit: 'Buscar'

@@ -796,9 +796,9 @@ join:
 contributors:
   kicker: 'Contributors'
   title: 'Built by riders.'
-  lead: 'Riders who turn on a <b>public profile</b> appear here under their chosen name. Everyone else contributes just as much, uncredited — that''s a setting, not a status.'
+  lead: 'The riders who build the map, with thanks. The wall is alphabetical, never by volume: there is no ranking here. Each row shows what a rider has added: facts, climbs, photos, on-the-spot checks and routes.'
   active_kicker: 'The acknowledgment wall · with thanks'
-  search_note: 'No ranking — contributors are listed alphabetically, never by volume. Search by name, or filter to a country.'
+  search_note: 'Search by name, or filter to a country.'
   search_placeholder: 'Search by name…'
   search_aria: 'Search contributors by name'
   search_submit: 'Search'

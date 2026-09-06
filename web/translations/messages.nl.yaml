@@ -796,9 +796,9 @@ join:
 contributors:
   kicker: 'Bijdragers'
   title: 'Gebouwd door fietsers.'
-  lead: 'Fietsers die een <b>openbaar profiel</b> aanzetten, verschijnen hier onder hun gekozen naam. Alle anderen dragen net zoveel bij, zonder vermelding — dat is een instelling, geen status.'
+  lead: 'De fietsers die de kaart bouwen, met dank. De muur is alfabetisch, nooit op volume: er is hier geen rangschikking. Elke rij toont wat een fietser heeft toegevoegd: feiten, beklimmingen, foto''s, controles ter plaatse en routes.'
   active_kicker: 'De muur van dank'
-  search_note: 'Geen rangschikking — bijdragers staan alfabetisch, nooit op volume. Zoek op naam, of filter op land.'
+  search_note: 'Zoek op naam, of filter op land.'
   search_placeholder: 'Zoek op naam…'
   search_aria: 'Zoek bijdragers op naam'
   search_submit: 'Zoeken'
