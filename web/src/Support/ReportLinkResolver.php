@@ -18,6 +18,8 @@ use Doctrine\DBAL\Connection;
  * learn whether an id exists (ReportTarget::acceptsId() has the same rule).
  *
  * @see docs/specs/content-reports.md §12
+ *
+ * @api
  */
 final class ReportLinkResolver
 {

@@ -21,6 +21,8 @@ use Symfony\Component\Routing\Attribute\Route;
  * The report forms themselves stay per thing, at /report/{type}/{id}; this
  * page is the door a reader finds from the footer or the directory when they
  * are not standing in front of the thing.
+ *
+ * @api
  */
 #[Route(LocalePrefix::PATHS)]
 final class ReportGuideController extends AbstractController

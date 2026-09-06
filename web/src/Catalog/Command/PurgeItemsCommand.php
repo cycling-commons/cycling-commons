@@ -27,6 +27,8 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  * who wants a place gone rejects it on the desk, where the author is told.
  * Dry run by default; --force writes. A photo under legal hold is left
  * standing and named, and its item is left with it.
+ *
+ * @api
  */
 #[AsCommand(name: 'app:items:purge', description: 'Delete items outright with their photos, submissions, checks and history (dry run unless --force)')]
 final class PurgeItemsCommand extends Command

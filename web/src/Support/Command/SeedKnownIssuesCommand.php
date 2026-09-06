@@ -29,6 +29,8 @@ use Symfony\Component\Yaml\Yaml;
  * they live in config/known_issues.yaml and this writes them through the
  * same entity the desk uses. A public title already present is skipped:
  * re-running never overwrites what a curator changed on the desk.
+ *
+ * @api
  */
 #[AsCommand(name: 'app:bugs:seed-known', description: 'File the known issues listed in config/known_issues.yaml as public bug reports (idempotent)')]
 final class SeedKnownIssuesCommand extends Command

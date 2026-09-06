@@ -20,6 +20,8 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  * loaded rows with triggers off, or wants proof. It is the slow walk, once.
  *
  * @see docs/specs/coverage-provider.md §11
+ *
+ * @api
  */
 #[AsCommand(name: 'app:coverage:recount', description: 'Rebuild the kept coverage counts from the coverage rows (slow, once)')]
 final class RecountCommand extends Command
