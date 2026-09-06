@@ -988,6 +988,50 @@ than four with three noughts.
   **out of scope here** (Plan 3): coverage drawers show contribution CTAs only
   where an `item` exists.
 
+## 11. Kept counts: `coverage_count` (2026-09-06)
+
+`/map/coverage/counts` used to walk every coverage row and, for each, ask
+whether one of our items claims it. Unscoped that took **26.6 s** on dev
+(2.06 M rows) against 0.2 s for one region, and the first visitor each hour
+paid it (owner: "Everywhere gets slow"). It is now a sum over
+`coverage_count`, one row per (country_code, region_id, letter) with the
+number of coverage rows still shown, and the database keeps that table
+right on its own, because the coverage rows are written by the Python
+pipeline and the claims by PHP, and neither side can see the other's writes.
+
+`web/migrations/Version20260906180000.php` owns every piece:
+
+- `coverage_poi_shown(ref)`: the predicate, in SQL, that mirrors
+  `CoverageRepository::liveCounts()` and `CoverageRetirement::untouchedOsmSql()`:
+  shown unless a served item claims the ref through `source_ref` or `osm_ref`
+  and that item is more than an untouched OSM import.
+  `CoverageCountTest::testTheCountTableAgreesWithALiveCount` keeps the two
+  languages equal.
+- `coverage_count_refresh(cc, rid, letter)` recounts one bucket;
+  `coverage_count_rebuild()` recounts everything (the slow walk, once);
+  `coverage_count_refresh_refs(text[])` recounts the buckets a set of refs
+  lives in.
+- **Statement-level triggers with transition tables**, so a 300 000-row
+  harvest recounts each touched bucket once rather than once per row: on
+  `coverage_poi` (insert, update, delete: the buckets old and new), on
+  `item` (the refs old and new), and on `change_history`,
+  `item_confirmation` and `submission` (the first touch on an OSM import is
+  what hides its twin, so those tables move counts too).
+- `coverage_count_install()` creates the `coverage_poi` triggers and the
+  bucket index if that table exists, and rebuilds when the table is empty.
+  The migration calls it; the pipeline's `ensure_schema()` calls it after
+  creating the table (guarded on the function existing, so pipeline and app
+  can deploy in either order); the test trait `CoverageSchema` calls it after
+  its own CREATE. Nothing else may create `coverage_poi` without calling it.
+- `app:coverage:recount` runs install and rebuild by hand, for the day rows
+  were loaded with triggers off, or for proof.
+
+The read side sums buckets under the same scope arms as before
+(`region_id IN (:rids) OR country_code = :cc`), `HAVING SUM(n) > 0` so an
+emptied bucket does not surface as a zero. Measured after: unscoped 0.06 s.
+The migration's one full count took 51 s on dev; on prod expect minutes, in
+the deploy window.
+
 ## Open questions
 
 - **Multipolygon relations** (~1–3 % of objects, e.g. some castles) are not in

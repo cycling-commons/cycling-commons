@@ -47,6 +47,11 @@ trait CoverageSchema
         $db->executeStatement('CREATE INDEX IF NOT EXISTS coverage_poi_region_id_idx ON coverage_poi (region_id)');
         $db->executeStatement('CREATE INDEX IF NOT EXISTS coverage_poi_name_trgm_idx ON coverage_poi USING GIN (name gin_trgm_ops)');
         $db->executeStatement('DELETE FROM coverage_poi');
+        // The count bookkeeping (Version20260906180000): the pipeline calls the
+        // same function after its own ensure_schema(); the triggers must exist
+        // before the first row lands or the kept counts start out wrong.
+        $db->executeStatement('SELECT coverage_count_install()');
+        $db->executeStatement('SELECT coverage_count_rebuild()');
     }
 
     /**

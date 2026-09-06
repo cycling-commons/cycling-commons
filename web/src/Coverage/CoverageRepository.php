@@ -352,6 +352,43 @@ final class CoverageRepository
         $params = [];
         $types = [];
         $this->scopeBind($params, $types, $rids, $cc);
+        // A sum over coverage_count, the per (country, region, letter) table the
+        // database keeps current by trigger (Version20260906180000), rather
+        // than a walk over every coverage row: the unscoped walk took 26.6 s
+        // on dev (owner, 2026-09-06, "Everywhere gets slow"). The predicate
+        // that decides whether a row is counted lives in coverage_poi_shown();
+        // liveCounts() below is the same question asked the slow way, and
+        // CoverageCountTest keeps the two answers equal.
+        /** @var list<array{letter: string, n: int|string}> $rows */
+        $rows = $this->db->fetchAllAssociative(
+            'SELECT cc.letter, SUM(cc.n) AS n FROM coverage_count cc
+             WHERE cc.letter IN '.self::POI_LETTERS_SQL
+               .$this->scopeArm('cc', $rids, $cc).'
+             GROUP BY cc.letter HAVING SUM(cc.n) > 0 ORDER BY cc.letter',
+            $params,
+            $types,
+        );
+        $counts = [];
+        foreach ($rows as $row) {
+            $counts[$row['letter']] = (int) $row['n'];
+        }
+
+        return $counts;
+    }
+
+    /**
+     * The same counts, computed from the coverage rows themselves. Slow by
+     * design; exists so a test can prove the kept table tells the truth.
+     *
+     * @param list<int> $rids
+     *
+     * @return array<string, int>
+     */
+    public function liveCounts(array $rids = [], ?string $cc = null): array
+    {
+        $params = [];
+        $types = [];
+        $this->scopeBind($params, $types, $rids, $cc);
         /** @var list<array{letter: string, n: int|string}> $rows */
         $rows = $this->db->fetchAllAssociative(
             'SELECT cp.letter, COUNT(*) AS n FROM coverage_poi cp

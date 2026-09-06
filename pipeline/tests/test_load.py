@@ -778,12 +778,17 @@ def test_load_region_clears_stored_osm_candidates_of_its_country_only(db):
     """The app stores each open row's OSM-candidate list on item (catalog-data-model.md §5b);
     a swapped slice invalidates that country's open lists, answered rows and other countries keep theirs."""
     ensure_schema(db)
+    # The stub carries the columns the app's coverage_count triggers read
+    # (source, state, source_ref, osm_ref; coverage-provider.md §11): a load
+    # fires them, and they resolve `item` through the same search_path.
     db.execute(
         "CREATE TABLE item (id bigint PRIMARY KEY, country_code char(2), osm_checked_at timestamp, "
-        "osm_candidates jsonb, osm_candidates_at timestamp)"
+        "osm_candidates jsonb, osm_candidates_at timestamp, "
+        "source varchar(16) DEFAULT 'osm', state varchar(16) DEFAULT 'unverified', "
+        "source_ref varchar(160), osm_ref varchar(160))"
     )
     db.execute(
-        "INSERT INTO item VALUES "
+        "INSERT INTO item (id, country_code, osm_checked_at, osm_candidates, osm_candidates_at) VALUES "
         "(1, 'BE', NULL, '[]', now()), "          # open, BE: cleared
         "(2, 'BE', now(), '[]', now()), "         # answered, BE: kept
         "(3, 'NL', NULL, '[]', now()), "          # open, NL: kept

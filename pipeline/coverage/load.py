@@ -268,6 +268,16 @@ def ensure_schema(conn: psycopg.Connection) -> None:
             ) from exc
     conn.execute(_SOURCE_DDL)
     conn.execute(_TABLE_DDL)
+    # The app keeps per (country, region, letter) counts of this table by
+    # trigger (web/migrations/Version20260906180000.php, coverage-provider.md
+    # §11). The function lives on the app side and is a no-op until that
+    # migration has run, so a pipeline older or newer than the app is fine;
+    # once both are there the triggers are installed here, because this is
+    # where the table is created and the app cannot know when that happens.
+    conn.execute(
+        "DO $$ BEGIN IF to_regproc('coverage_count_install') IS NOT NULL THEN "
+        "PERFORM coverage_count_install(); END IF; END $$"
+    )
     conn.commit()
     # CREATE INDEX CONCURRENTLY cannot run inside a transaction block, so run the
     # index loop in autocommit (each stmt its own txn) and restore after.
