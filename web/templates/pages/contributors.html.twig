@@ -9,9 +9,11 @@
   .ack .av{width:32px;height:32px;border-radius:50%;background:var(--spruce);color:var(--paper);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:.72rem;flex:none}
   .ack .nm{font-family:var(--mono);font-size:.9rem;color:var(--ink);text-decoration:none}
   .ack a.nm:hover{color:var(--clay);text-decoration:underline;text-underline-offset:3px}
+  .ack .role{color:var(--clay);font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;border:1px solid var(--clay);border-radius:30px;padding:.18rem .5rem}
   .ack .rg{color:#7a7d6c;font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;background:var(--paper-deep);border:1px solid rgba(20,22,14,.1);border-radius:30px;padding:.18rem .5rem}
   .ack .st{margin-left:auto;font-family:var(--mono);font-size:.7rem;color:#595c4d;text-align:right;white-space:nowrap}
   .ack .st b{font-family:var(--serif);font-size:1.05rem;color:var(--ink);margin-right:.35rem}
+  @media(max-width:720px){.ack .st{white-space:normal;max-width:14rem}}
   @media(max-width:520px){.ack .rg{display:none}.ack .st{font-size:.72rem}}
   .ack-bar{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:1rem}
   .ack-q,.ack-rg{font-family:var(--mono);font-size:.85rem;padding:.5rem .8rem;border:1px solid rgba(20,22,14,.2);border-radius:6px;background:var(--paper);color:var(--ink)}
@@ -20,6 +22,10 @@
   .ack-go{font-family:var(--mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;padding:.5rem 1rem;min-height:34px;border:1px solid var(--clay);border-radius:30px;background:var(--paper);color:var(--clay);cursor:pointer}
   .ack-go:hover{background:var(--clay);color:var(--paper)}
   .ack-empty{font-size:.9rem;color:#7a7d6c;margin-top:1.2rem}
+  /* Four cards wide at most: six cards read as a row of four and a centred row of two. */
+  .ack-stats{display:flex;flex-wrap:wrap;justify-content:center;gap:1rem;margin:2.4rem auto 0;max-width:calc(4 * 180px + 3rem)}
+  .ack-stats .card{flex:0 0 180px;text-align:center}
+  @media(max-width:520px){.ack-stats .card{flex:1 1 calc(50% - .5rem)}}
   /* The shared pager (partials/_pager.html.twig) is styled by the account
      shell, which a public page does not load. Same rules, same look. */
   {# The pager styles itself now (assets/styles/atlas.css), so this page
@@ -59,8 +65,9 @@
     <div class="row">
       <span class="av">{{ c.initials }}</span>
       <a class="nm" href="{{ path('rider_profile', {uuid: c.uuid}) }}">{{ c.name }}</a>
+      {% if c.curator %}<span class="role">{% trans %}contributors.badge_curator{% endtrans %}</span>{% endif %}
       {% if c.country %}<span class="rg">{{ c.country }}</span>{% endif %}
-      <span class="st">{{ 'contributors.row_stats'|trans({'%facts%': c.facts|number_format(0, '.', ','), '%routes%': c.routes}) }}</span>
+      <span class="st">{{ 'contributors.row_stats'|trans({'%facts%': c.facts|number_format(0, '.', ','), '%climbs%': c.climbs, '%photos%': c.photos, '%checks%': c.checks, '%routes%': c.routes}) }}</span>
     </div>
     {% endfor %}
   </div>
@@ -71,10 +78,13 @@
   <p class="ack-empty">{% trans %}contributors.wall_empty{% endtrans %}</p>
   {% endif %}
 
-  <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr));margin-top:2.4rem">
+  <div class="ack-stats">
     <div class="card"><b style="font-family:var(--serif);font-size:1.6rem">{{ stats.facts|number_format(0, '.', ',') }}</b><div class="co" style="margin-top:.3rem">{% trans %}contributors.stat_facts{% endtrans %}</div></div>
     <div class="card"><b style="font-family:var(--serif);font-size:1.6rem">{{ stats.contributors|number_format(0, '.', ',') }}</b><div class="co" style="margin-top:.3rem">{% trans %}contributors.stat_contributors{% endtrans %}</div></div>
     <div class="card"><b style="font-family:var(--serif);font-size:1.6rem">{{ stats.routes|number_format(0, '.', ',') }}</b><div class="co" style="margin-top:.3rem">{% trans %}contributors.stat_routes{% endtrans %}</div></div>
+    <div class="card"><b style="font-family:var(--serif);font-size:1.6rem">{{ stats.climbs|number_format(0, '.', ',') }}</b><div class="co" style="margin-top:.3rem">{% trans %}contributors.stat_climbs{% endtrans %}</div></div>
+    <div class="card"><b style="font-family:var(--serif);font-size:1.6rem">{{ stats.photos|number_format(0, '.', ',') }}</b><div class="co" style="margin-top:.3rem">{% trans %}contributors.stat_photos{% endtrans %}</div></div>
+    <div class="card"><b style="font-family:var(--serif);font-size:1.6rem">{{ stats.checks|number_format(0, '.', ',') }}</b><div class="co" style="margin-top:.3rem">{% trans %}contributors.stat_checks{% endtrans %}</div></div>
   </div>
 </div></section>
 {% endblock %}

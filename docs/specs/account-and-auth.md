@@ -676,11 +676,22 @@ consequences, including that a dry run changes nothing).
   `App\Catalog\ContributorWallProvider` lists riders with `publicProfile`
   ON **and** ≥1 public contribution (approved submissions + served route
   proposals), alphabetical/non-ranked, each row linking `rider_profile`;
-  per-row counts are the same figures the profile page already exposes.
+  per-row counts are the same figures the profile page already exposes
+  (facts, climbs, photos, checks, routes since 2026-09-06).
   Riders without the toggle never appear regardless of volume. The page's
-  three stat cards are aggregate site totals over ALL contributors
+  six stat cards are aggregate site totals over ALL contributors
   (opt-in or not) — aggregates credit the crowd without identifying anyone.
-  This replaced the demo's fake sample-handle wall.
+  Facts, contributors and routes since the wall was built; climbs added
+  (approved `type=new`, letter N), photos shared and on-the-spot checks
+  since 2026-09-06 (owner), each under the same boundary as the profile
+  tiles below. This replaced the demo's fake sample-handle wall.
+- **A curator's wall row carries a "Curator" chip** (2026-09-06, owner):
+  `ROLE_CURATOR` or `ROLE_ADMIN` in the stored roles, read in
+  `ContributorWallProvider::wall()`. It is an office, not a score: no
+  count, no effect on the alphabetical order, and only on riders who are on
+  the wall anyway (opt-in plus a public contribution). The public profile
+  page still shows no role (the frozen exposure list below is unchanged).
+  Pinned by `ContributorsPageTest::testACuratorRowCarriesTheCuratorChipAndARiderRowDoesNot`.
 - **"View as others see it" is the real page**: settings links the rider's own
   public URL (`target="_blank"`) with **zero owner special-casing** — what the
   owner sees is byte-for-byte what others get. When the toggle is OFF the link

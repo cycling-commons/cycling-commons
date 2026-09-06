@@ -26,6 +26,14 @@ final class ContributorWallProvider
                LEFT JOIN (SELECT user_id, COUNT(*) AS n FROM submission
                            WHERE status = \'approved\' GROUP BY user_id) s
                       ON s.user_id = u.id
+               LEFT JOIN (SELECT user_id, COUNT(*) AS n FROM submission
+                           WHERE status = \'approved\' AND type = \'new\' AND letter = :climbs GROUP BY user_id) cl
+                      ON cl.user_id = u.id
+               LEFT JOIN (SELECT user_id, COUNT(*) AS n FROM media_upload
+                           WHERE status = \'approved\' AND objects_deleted_at IS NULL GROUP BY user_id) ph
+                      ON ph.user_id = u.id
+               LEFT JOIN (SELECT user_id, COUNT(*) AS n FROM item_confirmation GROUP BY user_id) ck
+                      ON ck.user_id = u.id
                LEFT JOIN (SELECT proposed_by, COUNT(*) AS n FROM recommended_route
                            WHERE state IN ';
 
@@ -43,7 +51,7 @@ final class ContributorWallProvider
                       ON rt.proposed_by = u.id
               WHERE u.public_profile = TRUE
                 AND (COALESCE(s.n, 0) + COALESCE(rt.n, 0)) > 0';
-        $params = [];
+        $params = ['climbs' => ItemType::Climbs->letter()];
 
         if (null !== $q && '' !== $q) {
             // ILIKE, wildcards escaped so `%`/`_` in a name search for themselves.
@@ -60,7 +68,8 @@ final class ContributorWallProvider
 
     /**
      * @return list<array{uuid:string, name:string, initials:string,
-     *                    country:?string, facts:int, routes:int}>
+     *                    country:?string, facts:int, routes:int, climbs:int,
+     *                    photos:int, checks:int, curator:bool}>
      */
     public function wall(?string $q = null, ?string $country = null, int $page = 1, int $perPage = self::PER_PAGE): array
     {
@@ -72,8 +81,9 @@ final class ContributorWallProvider
 
         /** @var list<array<string, int|string|null>> $rows */
         $rows = $this->db->fetchAllAssociative(
-            'SELECT u.uuid, u.display_name, wc.name AS country_name,
-                    COALESCE(s.n, 0) AS facts, COALESCE(rt.n, 0) AS routes
+            'SELECT u.uuid, u.display_name, u.roles, wc.name AS country_name,
+                    COALESCE(s.n, 0) AS facts, COALESCE(rt.n, 0) AS routes,
+                    COALESCE(cl.n, 0) AS climbs, COALESCE(ph.n, 0) AS photos, COALESCE(ck.n, 0) AS checks
                '.$src['sql'].'
               ORDER BY LOWER(u.display_name) ASC, u.id ASC
               LIMIT :lim OFFSET :off',
@@ -90,10 +100,28 @@ final class ContributorWallProvider
                 'country' => null === $row['country_name'] ? null : (string) $row['country_name'],
                 'facts' => (int) $row['facts'],
                 'routes' => (int) $row['routes'],
+                'climbs' => (int) $row['climbs'],
+                'photos' => (int) $row['photos'],
+                'checks' => (int) $row['checks'],
+                'curator' => self::moderates((string) $row['roles']),
             ];
         }
 
         return $out;
+    }
+
+    /**
+     * Whether a stored roles column names someone who moderates. Admin is
+     * included because the role hierarchy grants admins the curator role.
+     */
+    private static function moderates(string $rolesJson): bool
+    {
+        $roles = json_decode($rolesJson, true);
+        if (!\is_array($roles)) {
+            return false;
+        }
+
+        return [] !== array_intersect(['ROLE_CURATOR', 'ROLE_ADMIN'], $roles);
     }
 
     /** How many riders the wall holds under these filters, for the pager. */
@@ -125,7 +153,11 @@ final class ContributorWallProvider
     /**
      * Site-wide totals count everyone, opt-in or not — an aggregate that identifies nobody.
      *
-     * @return array{facts:int, contributors:int, routes:int}
+     * Climbs, photos and checks follow the rider profile's boundaries
+     * (RiderProfileController): approved work only, a taken-down photo stops
+     * scoring, every check stance lands in one counter.
+     *
+     * @return array{facts:int, contributors:int, routes:int, climbs:int, photos:int, checks:int}
      */
     public function stats(): array
     {
@@ -140,13 +172,22 @@ final class ContributorWallProvider
                      WHERE state IN '.ItemState::servedSqlTuple().' AND proposed_by IS NOT NULL
                  ) q) AS contributors,
                 (SELECT COUNT(*) FROM recommended_route
-                  WHERE state IN '.ItemState::servedSqlTuple().') AS routes',
+                  WHERE state IN '.ItemState::servedSqlTuple().') AS routes,
+                (SELECT COUNT(*) FROM submission
+                  WHERE status = \'approved\' AND type = \'new\' AND letter = :climbs) AS climbs,
+                (SELECT COUNT(*) FROM media_upload
+                  WHERE status = \'approved\' AND objects_deleted_at IS NULL) AS photos,
+                (SELECT COUNT(*) FROM item_confirmation) AS checks',
+            ['climbs' => ItemType::Climbs->letter()],
         );
 
         return [
             'facts' => (int) $row['facts'],
             'contributors' => (int) $row['contributors'],
             'routes' => (int) $row['routes'],
+            'climbs' => (int) $row['climbs'],
+            'photos' => (int) $row['photos'],
+            'checks' => (int) $row['checks'],
         ];
     }
 }

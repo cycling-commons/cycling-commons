@@ -6,14 +6,20 @@ declare(strict_types=1);
 
 namespace App\Tests\Controller;
 
+use App\Catalog\ConfirmationStance;
 use App\Catalog\ContributorWallProvider;
+use App\Catalog\Entity\ItemConfirmation;
 use App\Catalog\Entity\Submission;
 use App\Catalog\SubmissionStatus;
 use App\Catalog\SubmissionType;
 use App\Entity\User;
+use App\Media\Entity\ConsentRecord;
+use App\Media\Entity\MediaUpload;
+use App\Media\MediaConsent;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Component\Uid\Uuid;
 
 final class ContributorsPageTest extends WebTestCase
 {
@@ -30,10 +36,10 @@ final class ContributorsPageTest extends WebTestCase
         return $u;
     }
 
-    private function approvedSubmission(int $userId): void
+    private function approvedSubmission(int $userId, string $letter = 'N', SubmissionType $type = SubmissionType::NewItem): void
     {
         $em = static::getContainer()->get(EntityManagerInterface::class);
-        $sub = (new Submission())->setType(SubmissionType::NewItem)->setLetter('N')->setUserId($userId)
+        $sub = (new Submission())->setType($type)->setLetter($letter)->setUserId($userId)
             ->setTitle('Wall submission')
             ->setGeom('{"type":"Point","coordinates":[5.86,50.47]}')->setCountryCode('BE')
             ->setChanges([])->setPayload([]);
@@ -163,5 +169,140 @@ final class ContributorsPageTest extends WebTestCase
         $html = (string) $client->getResponse()->getContent();
         self::assertStringContainsString('Cent Percent 100%', $html);
         self::assertStringNotContainsString('Plain Namerider', $html);
+    }
+
+    /**
+     * The stat cards credit the crowd as a whole. Climbs, photos and checks
+     * are the three kinds of work a rider can do that the facts and routes
+     * cards did not show, and each follows the same approved-only boundary
+     * the rider profile uses (account-and-auth.md §7).
+     */
+    public function testStatsCountClimbsPhotosAndChecksWithTheProfileBoundaries(): void
+    {
+        static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $wall = static::getContainer()->get(ContributorWallProvider::class);
+        $before = $wall->stats();
+
+        $rider = $this->rider('wall-stats@test.test', 'Stats Rider', false);
+        $uid = (int) $rider->getId();
+
+        // Two climbs added, one climb edit (a fact, not a new climb), one new tap.
+        $this->approvedSubmission($uid, 'N');
+        $this->approvedSubmission($uid, 'N');
+        $this->approvedSubmission($uid, 'N', SubmissionType::Edit);
+        $this->approvedSubmission($uid, 'B');
+
+        // One live photo, one taken down, one still pending: only the first scores.
+        $consent = new ConsentRecord(Uuid::v4(), $uid, MediaConsent::KIND, MediaConsent::VERSION, MediaConsent::hash('x'));
+        $em->persist($consent);
+        $live = new MediaUpload(Uuid::v4(), $uid, $consent->getId(), 'EU', 1200, 900, 4242, bucket: 'test-bucket-eu-01');
+        $live->approve(null);
+        $em->persist($live);
+        $gone = new MediaUpload(Uuid::v4(), $uid, $consent->getId(), 'EU', 1200, 900, 4242, bucket: 'test-bucket-eu-01');
+        $gone->approve(null);
+        $gone->markObjectsDeleted();
+        $em->persist($gone);
+        $em->persist(new MediaUpload(Uuid::v4(), $uid, $consent->getId(), 'EU', 1200, 900, 4242, bucket: 'test-bucket-eu-01'));
+        $em->flush();
+
+        // Two checks of either stance, one counter.
+        $mkItem = static fn (string $ref): int => (int) $em->getConnection()->fetchOne(
+            "INSERT INTO item (letter, name, geom, country_code, state, source, source_ref, attributes, created_at, updated_at, imported_at)
+             VALUES ('B', 'Wall Tap', ST_SetSRID(ST_MakePoint(6.0, 50.4), 4326), 'BE', 'unverified', 'osm', :ref, '{}', NOW(), NOW(), NOW())
+             RETURNING id",
+            ['ref' => $ref],
+        );
+        $em->persist(new ItemConfirmation($mkItem('osm:node:880001'), $uid, ConfirmationStance::Exists));
+        $em->persist(new ItemConfirmation($mkItem('osm:node:880002'), $uid, ConfirmationStance::Potable));
+        $em->flush();
+
+        $after = $wall->stats();
+        self::assertSame($before['climbs'] + 2, $after['climbs'], 'climbs added: approved new-climb submissions only');
+        self::assertSame($before['photos'] + 1, $after['photos'], 'photos: approved and still stored');
+        self::assertSame($before['checks'] + 2, $after['checks'], 'checks: every stance in one counter');
+        self::assertSame($before['facts'] + 4, $after['facts'], 'the facts card still counts every approved submission');
+    }
+
+    /** Each wall row shows the same five kinds of work as the stat cards. */
+    public function testEachRowShowsClimbsPhotosAndChecks(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $rider = $this->rider('wall-rowstats@test.test', 'Rowstats Rider', true);
+        $uid = (int) $rider->getId();
+
+        $this->approvedSubmission($uid, 'N');
+        $this->approvedSubmission($uid, 'N');
+        $this->approvedSubmission($uid, 'B');
+
+        $consent = new ConsentRecord(Uuid::v4(), $uid, MediaConsent::KIND, MediaConsent::VERSION, MediaConsent::hash('x'));
+        $em->persist($consent);
+        $live = new MediaUpload(Uuid::v4(), $uid, $consent->getId(), 'EU', 1200, 900, 4242, bucket: 'test-bucket-eu-01');
+        $live->approve(null);
+        $em->persist($live);
+        $em->persist(new MediaUpload(Uuid::v4(), $uid, $consent->getId(), 'EU', 1200, 900, 4242, bucket: 'test-bucket-eu-01'));
+        $em->flush();
+
+        $itemId = (int) $em->getConnection()->fetchOne(
+            "INSERT INTO item (letter, name, geom, country_code, state, source, source_ref, attributes, created_at, updated_at, imported_at)
+             VALUES ('B', 'Row Tap', ST_SetSRID(ST_MakePoint(6.0, 50.4), 4326), 'BE', 'unverified', 'osm', 'osm:node:770001', '{}', NOW(), NOW(), NOW())
+             RETURNING id",
+        );
+        $em->persist(new ItemConfirmation($itemId, $uid, ConfirmationStance::Exists));
+        $em->flush();
+
+        $crawler = $client->request('GET', '/contributors?q=Rowstats');
+        self::assertResponseIsSuccessful();
+        $row = $crawler->filter('.ack .row .st')->first()->text();
+        self::assertStringContainsString('3 facts', $row);
+        self::assertStringContainsString('2 climbs', $row);
+        self::assertStringContainsString('1 photos', $row);
+        self::assertStringContainsString('1 checks', $row);
+        self::assertStringContainsString('0 routes', $row);
+    }
+
+    public function testTheStatCardsRenderClimbsPhotosAndChecks(): void
+    {
+        $client = static::createClient();
+        $client->request('GET', '/contributors');
+        self::assertResponseIsSuccessful();
+        $html = (string) $client->getResponse()->getContent();
+        foreach (['Climbs added', 'Photos shared', 'On-the-spot checks'] as $label) {
+            self::assertStringContainsString($label, $html);
+        }
+    }
+
+    /**
+     * A curator's row says so. The role is a public office on the wall, not
+     * a ranking: the chip carries no count and changes no order.
+     */
+    public function testACuratorRowCarriesTheCuratorChipAndARiderRowDoesNot(): void
+    {
+        $client = static::createClient();
+        $curator = $this->rider('wall-curator@test.test', 'Chip Curator', true);
+        $curator->setRoles(['ROLE_CURATOR']);
+        $admin = $this->rider('wall-admin@test.test', 'Chip Admin', true);
+        $admin->setRoles(['ROLE_ADMIN']);
+        static::getContainer()->get(EntityManagerInterface::class)->flush();
+        $rider = $this->rider('wall-rider@test.test', 'Chip Rider', true);
+        foreach ([$curator, $admin, $rider] as $u) {
+            $this->approvedSubmission((int) $u->getId());
+        }
+
+        $crawler = $client->request('GET', '/contributors?q=Chip');
+        self::assertResponseIsSuccessful();
+
+        $rows = $crawler->filter('.ack .row');
+        self::assertCount(3, $rows);
+        $byName = [];
+        foreach ($rows as $row) {
+            $node = new \Symfony\Component\DomCrawler\Crawler($row);
+            $byName[$node->filter('.nm')->text()] = $node->filter('.role')->count();
+        }
+        self::assertSame(1, $byName['Chip Curator']);
+        self::assertSame(1, $byName['Chip Admin'], 'an admin moderates too, so the chip shows');
+        self::assertSame(0, $byName['Chip Rider']);
+        self::assertStringContainsString('Curator', $crawler->filter('.ack .row .role')->first()->text());
     }
 }
