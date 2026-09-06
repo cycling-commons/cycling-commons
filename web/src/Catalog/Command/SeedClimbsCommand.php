@@ -181,7 +181,7 @@ final class SeedClimbsCommand extends Command
                    number the real run will not produce. */
                 $held = $this->duplicates->existing('N', $name, $sLat, $sLng, 'wikidata:'.$ref);
                 if (null !== $held) {
-                    $skipped['duplicate-place'][] = DuplicateGuard::explain($name, ItemSource::Wikidata, $held);
+                    $skipped['duplicate-place'][] = DuplicateGuard::explain($name, ItemSource::from(self::sourceFor($entry['row'])), $held);
                     continue;
                 }
 
@@ -197,7 +197,7 @@ final class SeedClimbsCommand extends Command
                         'cc' => $cc,
                         'sub' => null,
                         'state' => 'unverified',
-                        'source' => 'wikidata',
+                        'source' => self::sourceFor($entry['row']),
                         'ref' => $ref,
                         'attrs' => json_encode($attributes, \JSON_THROW_ON_ERROR | \JSON_PRESERVE_ZERO_FRACTION),
                     ]);
@@ -238,6 +238,12 @@ final class SeedClimbsCommand extends Command
         return Command::SUCCESS;
     }
 
+    /** @param array<string, mixed> $row */
+    private static function sourceFor(array $row): string
+    {
+        return str_starts_with((string) ($row['qid'] ?? ''), 'osm:') ? ItemSource::Osm->value : ItemSource::Wikidata->value;
+    }
+
     /**
      * One SIDE: `wikidata:<qid>:<side>` (or a name slug when Wikidata has no Q-id).
      *
@@ -247,6 +253,12 @@ final class SeedClimbsCommand extends Command
     {
         $index = (int) ($row['side_index'] ?? 0);
         $qid = (string) ($row['qid'] ?? '');
+        // A col the harvester took from OpenStreetMap carries `osm:node:<id>`
+        // where a Wikidata col carries a Q-id (climb_candidates.py --source osm);
+        // the ref keeps that prefix so provenance reads true on the item.
+        if (str_starts_with($qid, 'osm:')) {
+            return sprintf('%s:%d', $qid, $index);
+        }
         if ('' !== $qid) {
             return sprintf('wikidata:%s:%d', $qid, $index);
         }

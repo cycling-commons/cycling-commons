@@ -235,18 +235,28 @@ def main() -> int:
     ap.add_argument("--name", default="(unnamed)")
     ap.add_argument("--country", help="run every candidate from climb_candidates.py for this country")
     ap.add_argument("--limit", type=int, default=12, help="candidates per country (default 12)")
+    ap.add_argument("--class", dest="cls", default="pass", choices=("pass", "hill", "climb", "steep", "mountain"),
+                    help="Wikidata class to harvest: pass (default) or hill, for countries without a col")
+    ap.add_argument("--source", default="wikidata", choices=("wikidata", "osm"),
+                    help="candidates from wikidata (default) or osm, for countries Wikidata barely knows")
     ap.add_argument("--out", help="write the artifact here")
     ap.add_argument("--bearings", type=int, default=16)
     ap.add_argument("--radius-km", type=float, default=28.0)
     ap.add_argument("--flat-km", type=float, default=2.0)
     ap.add_argument("--flat-pct", type=float, default=2.5)
+    # A pass road runs for kilometres; a Flemish or Dutch berg is 500 m of
+    # 10%. The defaults describe the first; --class hill wants the second, so
+    # both floors are knobs rather than constants (and --flat-km with them).
+    ap.add_argument("--min-km", type=float, default=1.0, help="shortest side worth keeping (default 1.0)")
+    ap.add_argument("--min-pct", type=float, default=4.0, help="gentlest average worth keeping (default 4.0)")
     ap.add_argument("--valhalla", default=None)
     args = ap.parse_args()
 
     if args.summit:
         base = args.valhalla or VALHALLA
         lat, lng = (float(x) for x in args.summit.split(","))
-        for s in sides((lat, lng), base, args.bearings, args.radius_km, args.flat_km, args.flat_pct):
+        for s in sides((lat, lng), base, args.bearings, args.radius_km, args.flat_km, args.flat_pct,
+                       args.min_km, args.min_pct):
             print(f"  {args.name}: {s['length_m'] / 1000:5.2f} km  {s['gain_m']:5} m  "
                   f"{s['avg_pct']:5.1f}%   foot {s['foot'][0]:.5f},{s['foot'][1]:.5f} "
                   f"({s['foot_ele']} m -> {s['summit_ele']} m)")
@@ -258,14 +268,14 @@ def main() -> int:
     import climb_candidates
     cc = args.country.upper()
     base = args.valhalla or BY_COUNTRY.get(cc, VALHALLA)
-    cands = climb_candidates.candidates(cc, args.limit)
+    cands = climb_candidates.candidates(cc, args.limit, args.cls, args.source)
     print(f"{cc}: {len(cands)} candidate col(s), routing through {base}", file=sys.stderr)
 
     out = []
     for c in cands:
         t0 = time.time()
         found = sides(tuple(c["summit"]), base, args.bearings, args.radius_km,
-                      args.flat_km, args.flat_pct)
+                      args.flat_km, args.flat_pct, args.min_km, args.min_pct)
         print(f"  {c['name']}: {len(found)} side(s)  [{time.time() - t0:.0f}s]", file=sys.stderr)
         for s in found:
             print(f"     {s['length_m'] / 1000:5.2f} km {s['gain_m']:5} m {s['avg_pct']:5.1f}%"

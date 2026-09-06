@@ -57,6 +57,15 @@ CH/IT/FR/ES have 10+ each, BE gets its Flemish bergs correctly, GB about eight,
 DE/JP/AU are thin, and NL has none — there are no mountain passes in the
 Netherlands.
 
+Since 2026-09-06 the finder also takes `--class hill|climb|steep|mountain`
+(Wikidata classes beside mountain pass: the Dutch and Luxembourg climbs are
+hills, the Flemish walls are "hillclimbing", the Cauberg and Ventoux are
+mountains) and `--source osm` (named `mountain_pass=yes` nodes via Overpass,
+for a country Wikidata barely knows: Colombia has one pass there and 106 in
+OpenStreetMap). `climb_sides.py` takes the same two flags, plus `--min-km`
+and `--min-pct` so a 600 m Dutch berg is not thrown away by Alpine floors
+(climb-elevation.md §7c).
+
 **It gives you the col, never the foot.** Where a climb begins is a judgement
 about which junction the pass road leaves the valley at, and getting it wrong is
 the defect already logged in docs/TODO.md against the climbs we have. Treat this

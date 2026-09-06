@@ -1421,6 +1421,54 @@ inside the pass name is not repeated, and two sides that would still collide are
 told apart by their road, or by their length when they share one. Pinned by
 `SeedClimbsCommandTest`.
 
+### 7c. Ten climbs in every country (2026-09-06)
+
+Owner: "does every country have at least ten climbs; if not, add them."
+Fourteen of nineteen did not. The gap was never the geometry, it was the
+candidate list: §7b harvested the twelve best-known *mountain passes* per
+country, and a flat country has none, a Canadian one has gravel tracks,
+and Colombia's raced climbs are not passes in Wikidata's sense (one item
+for the whole country). Four widenings, all in `climb_candidates.py` /
+`climb_sides.py` and all flags, so the old behaviour is the default:
+
+- **`--limit`** raised from 12 to 40, then 150 where a country has the
+  passes (Chile 575, Canada 520, Japan 484 in Wikidata).
+- **`--class hill | climb | steep | mountain`**: Wikidata classes beside
+  mountain pass. Dutch and Luxembourg climbs are `hill` (Q54050), the
+  Flemish walls are `hillclimbing` (Q5762701), and the big summit roads
+  (Cauberg, Ventoux, Alto de Letras) are `mountain` (Q8502). A mountain
+  with no road to its top yields no side, so asking costs time only.
+- **`--source osm`**: named `mountain_pass=yes` nodes from OpenStreetMap
+  via Overpass, ordered by tagged elevation because no fame proxy exists
+  there. Colombia went from one candidate to 106. Such a col carries
+  `osm:node:<id>` where a Wikidata col carries a Q-id;
+  `app:catalog:seed-climbs` files it with `source = osm` and ref
+  `osm:node:<id>:<side>` (`testAnOpenStreetMapColKeepsItsOwnProvenance`).
+- **`--min-km` and `--min-pct`**, and `--flat-km` with them: the walker's
+  floors were Alpine (1 km, 4%, a 2 km flat window). A Dutch berg is 600 m
+  of 10% (Keutenberg came back 0.61 km at 10.5% only with `--flat-km 0.5
+  --min-km 0.5`), so hills run with short windows.
+- Candidate labels fall back through nl, fr, de, es, it, ja when English
+  has none, so a Slovenian pass is "Razdrto", not "Q22693587".
+
+The audit is unchanged and did its job: 371 sides, 241 KEEP, and its DROPs
+were tracks and paths (23 of Canada's 31 Wikidata sides). Hand rulings
+before seeding, all listed at the foot of
+`docs/plans/2026-09-06-climb-review.md`: OpenStreetMap nodes named by
+their elevation dropped; two British walkers' cols dropped because the
+walk had snapped onto a neighbouring road climb (Lairig Ghru onto the
+Cairngorm ski road, Sty Head onto Honister); five Luxembourg CHECK rows
+kept (a real road with a short track section, 9 to 16% off-road), owner
+may veto; Rwanda's volcano rows left out because both walks land on the
+same park road far below the summit, which would name a climb after a
+top it never reaches. 181 sides seeded, then measured by
+`app:climbs:recompute --write` as always.
+
+Result: every country at ten or more except Rwanda (4). Rwanda has no
+named pass in either source and its raced climbs (the Tour du Rwanda's
+Kigali walls) are streets, not features; they need a hand-drawn line each,
+which is the editor's job, not a harvester's.
+
 ---
 
 ## 8. Testing

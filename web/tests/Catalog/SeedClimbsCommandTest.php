@@ -122,6 +122,24 @@ final class SeedClimbsCommandTest extends KernelTestCase
         self::assertSame('From Testville', $item['attrs']['approach']);
     }
 
+    /** A col the harvester took from OpenStreetMap is filed under osm, ref and all. */
+    public function testAnOpenStreetMapColKeepsItsOwnProvenance(): void
+    {
+        $this->seedRegion();
+        $tester = $this->tester();
+        $row = self::row();
+        $row['qid'] = 'osm:node:4242';
+        $row['name'] = 'Osm Pass';
+        $tester->execute(['artifact' => $this->artifact([$row])]);
+        $tester->assertCommandIsSuccessful();
+
+        $item = $this->stored('Osm Pass from Testville');
+        self::assertIsArray($item);
+        self::assertSame('osm:node:4242:0', $item['ref']);
+        $source = static::getContainer()->get(Connection::class)->fetchOne('SELECT source FROM item WHERE source_ref = :r', ['r' => 'osm:node:4242:0']);
+        self::assertSame('osm', (string) $source);
+    }
+
     /** DROP rows are hiking trails and a via ferrata. There is no way in. */
     public function testDropRowsCannotBeSeededEvenOnRequest(): void
     {

@@ -67,16 +67,42 @@ import urllib.request
 UA = "CyclingCommons-climb-probe/1.0 (https://cyclingcommons.org; info@cyclingcommons.org)"
 SPARQL = "https://query.wikidata.org/sparql"
 API = "https://www.wikidata.org/w/api.php"
+OVERPASS = "https://overpass-api.de/api/interpreter"
 
-# Q133056 = mountain pass, plus anything that subclasses it.
+# OpenStreetMap as a second source (added 2026-09-06). Wikidata knows one
+# mountain pass in Colombia; OpenStreetMap names 106. The candidate carries
+# `osm:node:<id>` where a Wikidata row carries a Q-id, so the seed can file
+# it under its own provenance. No fame proxy exists here, so the list is
+# ordered by the pass's tagged elevation, highest first, and a pass without
+# an `ele` tag sorts last rather than being dropped.
+OSM_QUERY = """
+[out:json][timeout:120];
+area["ISO3166-1"="%s"][admin_level=2]->.a;
+node["mountain_pass"="yes"]["name"](area.a);
+out body;
+"""
+
+# Q133056 = mountain pass, plus anything that subclasses it. Q54050 = hill:
+# the class the Flemish bergs and the Dutch and Luxembourg climbs live under,
+# because a country without a col still has hills a race goes over
+# (Côte de Desnié and Haute-Levée are "hill", not "pass"). Chosen per run
+# with --class; the summit is a hilltop then, and climb_sides.py walks down
+# from it the same way.
+# Q5762701 "hillclimbing" is the class the Flemish walls and many raced
+# climbs sit in (Muur van Geraardsbergen, Oude Kwaremont); Q5409910 "steep
+# road" its neighbour; Q8502 "mountain" holds the big road climbs that are a
+# summit and not a col (Cauberg, Mont Ventoux, Alto de Letras). A mountain
+# without a road to its top simply yields no side, so asking costs time, not
+# correctness.
+CLASSES = {"pass": "Q133056", "hill": "Q54050", "climb": "Q5762701", "steep": "Q5409910", "mountain": "Q8502"}
 CANDIDATES_QUERY = """
 SELECT ?item ?itemLabel ?coord ?ele ?links WHERE {
-  ?item wdt:P31/wdt:P279* wd:Q133056 ;
+  ?item wdt:P31/wdt:P279* wd:%s ;
         wdt:P17 wd:%s ;
         wdt:P625 ?coord ;
         wikibase:sitelinks ?links .
   OPTIONAL { ?item wdt:P2044 ?ele }
-  SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "en,nl,fr,de,es,it,ja". }
 }
 ORDER BY DESC(?links) LIMIT %d
 """
@@ -104,12 +130,65 @@ def _get(url: str) -> dict:
         return json.load(resp)
 
 
-def candidates(cc: str, limit: int = 15) -> list[dict]:
+def _post(url: str, data: dict) -> dict:
+    req = urllib.request.Request(url, data=urllib.parse.urlencode(data).encode(),
+                                 headers={"User-Agent": UA, "Accept": "application/json"})
+    with urllib.request.urlopen(req, timeout=150) as resp:
+        return json.load(resp)
+
+
+def osm_candidates(cc: str, limit: int = 15) -> list[dict]:
+    """Named mountain passes from OpenStreetMap, via Overpass (retries on 504/429)."""
+    last = None
+    for attempt in range(4):
+        try:
+            rows = _post(OVERPASS, {"data": OSM_QUERY % cc.upper()}).get("elements", [])
+            break
+        except urllib.error.HTTPError as exc:
+            last = exc
+            if exc.code not in (429, 502, 503, 504):
+                raise
+            time.sleep(15 * (attempt + 1))
+    else:
+        raise SystemExit(f"Overpass kept failing for {cc}: {last}")
+
+    out, seen = [], set()
+    for n in rows:
+        tags = n.get("tags", {})
+        name = tags.get("name", "").strip()
+        if not name or name in seen or "lat" not in n:
+            continue
+        seen.add(name)
+        ele = None
+        raw = tags.get("ele", "").replace("m", "").replace(",", ".").strip()
+        try:
+            ele = float(raw) if raw else None
+        except ValueError:
+            ele = None
+        out.append({
+            "name": name,
+            "qid": f"osm:node:{n['id']}",
+            "summit": [round(float(n["lat"]), 5), round(float(n["lon"]), 5)],
+            "ele": ele,
+            "sitelinks": 0,
+        })
+    out.sort(key=lambda c: -(c["ele"] or -1.0))
+    return out[:limit]
+
+
+def candidates(cc: str, limit: int = 15, cls: str = "pass", source: str = "wikidata") -> list[dict]:
+    if source == "osm":
+        return osm_candidates(cc, limit)
+    if source != "wikidata":
+        raise SystemExit(f"unknown source {source!r}; wikidata or osm")
     qid = COUNTRY_QID.get(cc.upper())
     if qid is None:
         raise SystemExit(f"no Wikidata item known for country {cc!r}")
+    class_qid = CLASSES.get(cls)
+    if class_qid is None:
+        raise SystemExit(f"unknown class {cls!r}; one of {sorted(CLASSES)}")
     url = SPARQL + "?" + urllib.parse.urlencode(
-        {"query": CANDIDATES_QUERY % (qid, limit), "format": "json"})
+        {"query": CANDIDATES_QUERY % (class_qid, qid, limit), "format": "json"})
     rows = _get(url)["results"]["bindings"]
 
     seen, out = set(), []
@@ -170,6 +249,10 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--country", action="append", default=[], help="ISO 3166-1 alpha-2 (repeatable)")
     ap.add_argument("--limit", type=int, default=15)
+    ap.add_argument("--class", dest="cls", default="pass", choices=sorted(CLASSES),
+                    help="Wikidata class to harvest: pass (default) or hill")
+    ap.add_argument("--source", default="wikidata", choices=("wikidata", "osm"),
+                    help="where candidates come from: wikidata (default) or osm (Overpass, mountain_pass=yes)")
     ap.add_argument("--verify", action="store_true",
                     help="compare our stored summitEle against Wikidata's published elevation")
     args = ap.parse_args()
@@ -194,7 +277,7 @@ def main() -> int:
 
     result = {}
     for cc in args.country:
-        found = candidates(cc, args.limit)
+        found = candidates(cc, args.limit, args.cls, args.source)
         result[cc.upper()] = found
         print(f"{cc.upper()}: {len(found)} distinct pass(es)", file=sys.stderr)
         for c in found[:10]:
