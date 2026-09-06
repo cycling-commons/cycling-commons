@@ -174,7 +174,8 @@ test('the widen ladder ends in "Search everywhere", a reach for this search only
     'the widen row is not gated on the worldwide reach');
   assert.ok(searchUi.includes("I18N.searchEverywhere||'Search everywhere'"), 'no "Search everywhere" rung at the top');
   assert.ok(searchUi.includes('class="search-widen"'), 'no widen row in the results list');
-  assert.ok(/_worldwide=true/.test(searchUi), 'widening at the top must set the search reach, not the scope');
+  assert.ok(/setReach\(true\)/.test(searchUi), 'widening at the top must set the search reach, not the scope');
+  assert.ok(searchUi.includes("getElementById('searchReach')"), 'the reach has a visible switch beside the search title');
   assert.ok(searchUi.includes('countryAt('), 'a worldwide hit must move the scope to its country when picked');
   const scopeUi = read('assets/map/scope-ui.js');
   assert.ok(!/setEverywhere\(\)/.test(scopeUi), 'the rail and the nudge must not set Everywhere');

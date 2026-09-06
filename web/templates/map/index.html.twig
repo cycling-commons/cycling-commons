@@ -115,7 +115,13 @@
          region so those 2 must be combined"). The heading names the scope,
          written by scope-header.js paint(). #}
       <div class="grp">
-        <h3 id="searchTitle">{{ 'map.search_title'|trans }}</h3>
+        {# The whole world is a search reach the rider switches on, never a
+           default (owner, 2026-09-06: "you do not always want to search
+           everywhere"). Off on every open; search-ui.js owns it. #}
+        <div class="search-head">
+          <h3 id="searchTitle">{{ 'map.search_title'|trans }}</h3>
+          <button type="button" class="chip search-reach" id="searchReach" aria-pressed="false">{{ 'map.search_everywhere'|trans }}</button>
+        </div>
         <input class="search" id="search" placeholder="{{ 'map.search_placeholder'|trans }}" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="searchRes" aria-label="{{ 'map.search_aria'|trans }}" />
         <ul class="search-res" id="searchRes" role="listbox" hidden></ul>
         <div class="co" id="regionCoords">{{ 'map.coords'|trans }}</div>

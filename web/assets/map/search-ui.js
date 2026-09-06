@@ -37,11 +37,20 @@ export function initSearchUi(){
        Earth to search them was what made the browser sluggish (owner,
        2026-09-06), so Everywhere lives here and nowhere else. */
     let _worldwide=false;
-    const closeS=()=>{ sRes.hidden=true; sRes.innerHTML=''; sMatches=[]; sHL=-1; _worldwide=false; if(sBox.getAttribute('aria-expanded')!=='false') sBox.setAttribute('aria-expanded','false'); };
+    /* The switch beside the title says the reach out loud and lets the rider
+       set it before typing. Same state as the results' last row. */
+    const reachBtn=document.getElementById('searchReach');
+    const setReach=(on)=>{ _worldwide=!!on; if(reachBtn) reachBtn.setAttribute('aria-pressed', _worldwide?'true':'false'); };
+    const closeS=()=>{ sRes.hidden=true; sRes.innerHTML=''; sMatches=[]; sHL=-1; setReach(false); if(sBox.getAttribute('aria-expanded')!=='false') sBox.setAttribute('aria-expanded','false'); };
+    if(reachBtn) reachBtn.addEventListener('click', ()=>{
+      setReach(!_worldwide);
+      sBox.focus();
+      if(sBox.value.trim()){ runPhoton(sBox.value); runCoverageSearch(sBox.value); runS(); }
+    });
     const hlS=()=>sRes.querySelectorAll('button').forEach((b,i)=>b.classList.toggle('hl',i===sHL));
     function widenSearch(){
       if(!window.CCScope) return;
-      if(window.CCScope.canWiden()) window.CCScope.widen(); else _worldwide=true;
+      if(window.CCScope.canWiden()) window.CCScope.widen(); else setReach(true);
       runPhoton(sBox.value); runCoverageSearch(sBox.value); runS();
     }
     /* A hit found worldwide sits in some country: look there before opening it. */
