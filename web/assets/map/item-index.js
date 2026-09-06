@@ -41,8 +41,13 @@ export function buildItemIndex(){
     }
     out.push(e);
   }
-  CATALOG.forEach(layer=>(layer.features||[]).forEach(f=>{ if(!f.name) return;
-    push({name:f.name, unnamed:f.unnamed, key:slug(f.name+' '+(layer.label||'')), kind:layer.label||'', badge:layerGlyph(layer)||'•',
+  // Unnamed items are indexed too (name = the layer's label, `unnamed` set):
+  // text search skips them, but the nearby list and the hover highlight need
+  // OUR row, not its OpenStreetMap twin, or a registry tap lists at the
+  // twin's position with no tier (owner, 2026-09-06: "highlight not on the
+  // right spot", "why does this one have no tag").
+  CATALOG.forEach(layer=>(layer.features||[]).forEach(f=>{ if(!f.name && f.id==null) return;
+    push({name:f.name||layer.label||'', unnamed:f.unnamed||!f.name, key:slug((f.name||'')+' '+(layer.label||'')), kind:layer.label||'', badge:layerGlyph(layer)||'•',
       color:layer.color||'#6b6f5e', letter:layer.letter||'•', ll:featurePoint(f), id:f.id,
       rid:f.rid,
       // Real signal only (docs/specs/map-and-search.md §12) — never the demo 'c'.
@@ -58,18 +63,20 @@ export function buildItemIndex(){
       color:layer.color, letter:layer.letter, ll:[+c[1],+c[0]], id:p.id,
       rid:p.rid,
       verified:!!p.v,
-      hlOff: p.v ? [0,-16] : [0,0],
+      hlOff:[0,-16],
       go:()=>openStayAuthority(f)});
   });
   /* DB-backed items in bulk-OSM pools (id present). Raw OSM stays a live /map/coverage/search lookup. */
   POOL_GLOBALS.forEach(([key, g])=>{
     const layer=layerByKey[key]; if(!layer) return;
     (((window[g]||{}).features)||[]).forEach(f=>{ const p=f.properties;
-      if(!p || !p.n || p.id==null) return;
+      if(!p || p.id==null) return;
       const c=f.geometry && f.geometry.coordinates; if(!c || c.length<2) return;
-      push({name:p.n, key:slug(p.n+' '+(p.town||'')+' '+layer.label), kind:layer.label, badge:layerGlyph(layer),
+      push({name:p.n||layer.label, unnamed:!p.n, key:slug((p.n||'')+' '+(p.town||'')+' '+layer.label), kind:layer.label, badge:layerGlyph(layer),
         color:layer.color, letter:layer.letter, ll:[+c[1],+c[0]], id:p.id, rid:p.rid,
-        verified:!!p.v, hlOff: p.v ? [0,-16] : [0,0],
+        // Every leaf pin is a bottom-anchored teardrop now, confirmed or not
+        // (map-and-search.md §6.4), so the pulse sits on the pin body for both.
+        verified:!!p.v, hlOff:[0,-16],
         go:()=>openPoolFeature(key, f)});
     });
   });

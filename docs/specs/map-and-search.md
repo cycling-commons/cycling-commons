@@ -2006,6 +2006,19 @@ new rows `unverified` (its §5 rule 6). Ruled 2026-09-06, the night the first
 RIVM harvest drew 3283 taps nobody here had seen with the plain pin; pinned by
 `CatalogProviderTest::testAuthorityRowsAreNotVerifiedByProvenanceAlone`.
 
+**Three tiers, the pin legend's three, and the same three in every list**
+(owner, 2026-09-06: "osm, provider or community?"). OSM is the imported
+baseline; community is an unconfirmed row whoever put it there, a rider or a
+public register (the legend's "Community, unconfirmed", `verified === false`);
+no tag is a confirmed row. A provider is a source, not a tier: the record
+panel names it. For that to hold, the item index carries UNNAMED items too
+(name = the layer's label, `unnamed` set, off text search): before, an
+unnamed registry tap reached the nearby list only through its OpenStreetMap
+twin, at the twin's position (up to `OsmLinker::TIGHT_M` off, so the hover
+highlight missed the pin) with no tier at all. Every leaf pin is a
+bottom-anchored teardrop, confirmed or not, so the highlight offset is the
+pin body's for both.
+
 **An OpenStreetMap row is tagged OSM, never community** (owner, 2026-09-06:
 "Bakkerij Otten is said to be community but it is OSM"). In the nearby list
 and the search results, "community" is a rider's work not yet confirmed
