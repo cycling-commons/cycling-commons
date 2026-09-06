@@ -138,7 +138,9 @@
              the contextual home country (map-and-search.md §4.5);
              the flat all-regions wall is gone. #}
           <div id="scopeChips"></div>
-          <button data-scope="everywhere">{{ 'region.everywhere.label'|trans }}</button>
+          {# No Everywhere button (owner, 2026-09-06): a country is the widest
+             place to look at; the whole world is a search reach, offered as
+             "Search everywhere" in the search box (map-and-search.md §4.5). #}
         </div>
         {# "Set my area" cold-start prompt (map-and-search.md §4.5
            Phase 4): the pref-chip pattern — hidden here, revealed by map.js only

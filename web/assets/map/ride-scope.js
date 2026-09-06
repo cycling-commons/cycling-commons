@@ -13,7 +13,9 @@ export function scopeKey(s){
  *
  * A scope holds a SET of region ids, so a ride through three provinces takes
  * all three rather than picking a winner and leaving the last stretch unscoped.
- * Two countries have no common region scope, so that widens to Everywhere.
+ * A ride across a border keeps every region it crosses in that one set,
+ * whatever their country: Everywhere is not a place to look at (owner,
+ * 2026-09-06), and a region set never asks the server for more than the ride.
  * A ride outside every onboarded region answers null: there is nothing better
  * to show it, and moving the rider's scope for nothing is worse than leaving it.
  */
@@ -22,6 +24,5 @@ export function rideScopeFor(regions){
   const ids = regions.map(r => r && r.id).filter(id => id != null);
   if(!ids.length) return null;
   const ccs = [...new Set(regions.map(r => r && r.countryCode).filter(Boolean))];
-  if(ccs.length > 1) return { kind:'everywhere', regionIds:[], countryCode:null };
-  return { kind:'region', regionIds:ids, countryCode:ccs[0] || null };
+  return { kind:'region', regionIds:ids, countryCode: ccs.length === 1 ? ccs[0] : null };
 }

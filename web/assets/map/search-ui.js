@@ -31,12 +31,31 @@ export function initSearchUi(){
       dropPendingFromIndex(id);
     };
     let sMatches=[], sHL=-1;
-    const closeS=()=>{ sRes.hidden=true; sRes.innerHTML=''; sMatches=[]; sHL=-1; if(sBox.getAttribute('aria-expanded')!=='false') sBox.setAttribute('aria-expanded','false'); };
+    /* Worldwide reach for THIS search only (docs/specs/map-and-search.md §4.5):
+       the scope stays where it is while the list looks everywhere, and picking
+       a hit moves the scope to that hit's country. Drawing every item on
+       Earth to search them was what made the browser sluggish (owner,
+       2026-09-06), so Everywhere lives here and nowhere else. */
+    let _worldwide=false;
+    const closeS=()=>{ sRes.hidden=true; sRes.innerHTML=''; sMatches=[]; sHL=-1; _worldwide=false; if(sBox.getAttribute('aria-expanded')!=='false') sBox.setAttribute('aria-expanded','false'); };
     const hlS=()=>sRes.querySelectorAll('button').forEach((b,i)=>b.classList.toggle('hl',i===sHL));
-    function widenSearch(){ if(!window.CCScope) return; window.CCScope.widen(); runPhoton(sBox.value); runCoverageSearch(sBox.value); runS(); }
+    function widenSearch(){
+      if(!window.CCScope) return;
+      if(window.CCScope.canWiden()) window.CCScope.widen(); else _worldwide=true;
+      runPhoton(sBox.value); runCoverageSearch(sBox.value); runS();
+    }
+    /* A hit found worldwide sits in some country: look there before opening it. */
+    function followHit(m){
+      if(!_worldwide || !window.CCScope || !Array.isArray(m.ll)) return;
+      if(m.rid!=null && inScope(m.rid)) return;
+      const cc=window.CCScope.countryAt(+m.ll[0], +m.ll[1]);
+      const s=window.CCScope.get();
+      if(cc && !(s && s.kind==='country' && s.countryCode===cc)) window.CCScope.setCountry(cc);
+    }
     function pickS(i){ const m=sMatches[i]; if(!m) return;
       if(m.widen){ m.go(); return; }
       if(m.scope){ m.go(); closeS(); sBox.blur(); return; }
+      followHit(m);
       sBox.value=m.name; closeS();
       m.go(); }
     // docs/specs/map-and-search.md §12 — community sub-tag; towns and pending never.
@@ -53,7 +72,7 @@ export function initSearchUi(){
       if(q.length<3){ _phHits=[]; _phQ=''; return; }
       if(_phAbort) _phAbort.abort();
       const ctl=new AbortController(); _phAbort=ctl;
-      const pp = window.CCScope ? window.CCScope.photonParams() : {bbox:null, countrycode:null};
+      const pp = (window.CCScope && !_worldwide) ? window.CCScope.photonParams() : {bbox:null, countrycode:null};
       const url = PH_BASE + (pp.bbox ? '&bbox='+pp.bbox.join(',') : '') + '&q='+encodeURIComponent(q);
       fetch(url, {signal:ctl.signal})
         .then(r=>{ if(!r.ok) throw new Error(String(r.status)); return r.json(); })
@@ -86,7 +105,7 @@ export function initSearchUi(){
         return;
       }
       const ctl=new AbortController(); _covAbort=ctl;
-      const sq=covScopeQuery();
+      const sq=_worldwide ? '' : covScopeQuery();
       fetch('/map/coverage/search?q='+encodeURIComponent(q)+(sq?('&'+sq):''), {signal:ctl.signal, headers:{'Accept':'application/json'}})
         .then(r=>{ if(!r.ok) throw new Error(String(r.status)); return r.json(); })
         .then(d=>{
@@ -108,8 +127,9 @@ export function initSearchUi(){
       if(!q){ closeS(); return; }
       const starts=[], has=[];
       for(const it of SEARCH_IDX){
-        // docs/specs/map-and-search.md §4.5 — hidden pins must not resurface as search rows.
-        if(!it.town && !inScope(it.rid)) continue;
+        // docs/specs/map-and-search.md §4.5 — hidden pins must not resurface as
+        // search rows, unless this search was widened to the whole world.
+        if(!_worldwide && !it.town && !inScope(it.rid)) continue;
         const i=it.key.indexOf(q); if(i===0) starts.push(it); else if(i>0) has.push(it);
       }
       const ranked=starts.concat(has);
@@ -146,10 +166,12 @@ export function initSearchUi(){
       if(sBox.getAttribute('aria-expanded')!=='true') sBox.setAttribute('aria-expanded','true');
       const realCount=sMatches.length;
       let widenHtml='';
-      if(window.CCScope && window.CCScope.canWiden()){
+      if(window.CCScope && !_worldwide){
+        // One rung up while there is one; at the widest scope, the whole world,
+        // for this search only.
         const nw = window.CCScope.nextWider();
-        const wl = (nw && nw.kind==='everywhere') ? (I18N.searchEverywhere||'Search everywhere')
-          : tpl(I18N.searchWiden||'Search in {area} instead', {area:scopeLabel(nw)});
+        const wl = nw ? tpl(I18N.searchWiden||'Search in {area} instead', {area:scopeLabel(nw)})
+          : (I18N.searchEverywhere||'Search everywhere');
         widenHtml = `<li class="search-widen" role="option"><button type="button" data-widen="1" data-i="${sMatches.length}">${escH(wl)}</button></li>`;
         sMatches.push({widen:true, go:widenSearch});
       }

@@ -164,12 +164,20 @@ test('the scope heading has exactly one writer', () => {
   assert.deepEqual(modules, ['scope-header.js'], 'searchTitle is written from more than one module');
 });
 
-test('the widen ladder is offered only while the scope can widen', () => {
+test('the widen ladder ends in "Search everywhere", a reach for this search only', () => {
   const searchUi = read('assets/map/search-ui.js');
-  // canWiden() is false at Everywhere, which is what hides the last rung.
-  assert.ok(/if\(window\.CCScope && window\.CCScope\.canWiden\(\)\)/.test(searchUi),
-    'the widen row is not gated on CCScope.canWiden()');
+  // A country is the top of the scope ladder (owner, 2026-09-06). The last
+  // row of the search list is the one place the whole world is offered, and
+  // it widens the SEARCH, never the scope: the row is gated on not already
+  // searching worldwide, not on canWiden().
+  assert.ok(/if\(window\.CCScope && !_worldwide\)/.test(searchUi),
+    'the widen row is not gated on the worldwide reach');
+  assert.ok(searchUi.includes("I18N.searchEverywhere||'Search everywhere'"), 'no "Search everywhere" rung at the top');
   assert.ok(searchUi.includes('class="search-widen"'), 'no widen row in the results list');
+  assert.ok(/_worldwide=true/.test(searchUi), 'widening at the top must set the search reach, not the scope');
+  assert.ok(searchUi.includes('countryAt('), 'a worldwide hit must move the scope to its country when picked');
+  const scopeUi = read('assets/map/scope-ui.js');
+  assert.ok(!/setEverywhere\(\)/.test(scopeUi), 'the rail and the nudge must not set Everywhere');
 });
 
 test('Escape reaches the drawer only when nothing nearer owns it', () => {

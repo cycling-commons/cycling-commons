@@ -209,7 +209,11 @@
 
   const deserialize = (str) => {
     if (!str) return null;
-    if (str === 'everywhere') return everywhereScope();
+    // 'everywhere' is no longer a browsing scope (owner, 2026-09-06: drawing
+    // every item on Earth makes the browser sluggish; Everywhere is a search
+    // reach, not a place to look at). An old link or stored token falls
+    // through to the default like any other token that no longer resolves.
+    if (str === 'everywhere') return null;
     // May be null (no CC_MY_AREA payload and no anon circle) — caller falls
     // through to localStorage/default, same as any other unresolvable token.
     if (str === 'myarea') return myAreaScope();
@@ -395,36 +399,42 @@
       return this.get();
     },
 
-    setRegion(slugOrId) {
+    setRegion(slugOrId, opts) {
       const r = bySlug.get(slugOrId) || byId.get(slugOrId);
-      return r ? this.set(regionScope(r)) : this.get();
+      return r ? this.set(regionScope(r), opts) : this.get();
     },
-    setCountry(cc) { return byCountry.has(cc) ? this.set(countryScope(cc)) : this.get(); },
+    setCountry(cc, opts) { return byCountry.has(cc) ? this.set(countryScope(cc), opts) : this.get(); },
+    /** Search-only (docs/specs/map-and-search.md §4.5): no rail button and no
+     *  widen rung lead here; the search box uses it to look worldwide. */
     setEverywhere() { return this.set(everywhereScope()); },
 
-    /** One rung wider: region → country → everywhere; myArea → its single
-     *  registry-known country (if exactly one) → everywhere. A region that
-     *  already covers every region its country has skips the country rung. */
+    /** One rung wider: region → its country, and myArea → its single
+     *  registry-known country. A country is the widest place to look at:
+     *  wider than that is a search, not a scope (owner, 2026-09-06). A region
+     *  that already covers every region its country has stays put. */
     widen() {
-      if (!scope || scope.kind === 'everywhere') return this.get();
-      if (scope.kind === 'country') return this.setEverywhere();
-      if (scope.kind === 'myArea') {
-        const cc = singleMyAreaCountry();
-        return cc ? this.setCountry(cc) : this.setEverywhere();
-      }
-      return countryRungWidens(scope) ? this.setCountry(scope.countryCode) : this.setEverywhere();
+      const next = this.nextWider();
+      return next ? this.set(next) : this.get();
     },
-    canWiden() { return !!scope && scope.kind !== 'everywhere'; },
+    canWiden() { return this.nextWider() !== null; },
 
-    /** The next-wider scope WITHOUT applying it (for labelling the widen chip). */
+    /** The next-wider scope WITHOUT applying it (for labelling the widen chip);
+     *  null when the scope is already as wide as the map goes. */
     nextWider() {
-      if (!scope || scope.kind === 'everywhere') return null;
-      if (scope.kind === 'country') return everywhereScope();
+      if (!scope || scope.kind === 'everywhere' || scope.kind === 'country') return null;
       if (scope.kind === 'myArea') {
         const cc = singleMyAreaCountry();
-        return cc ? countryScope(cc) : everywhereScope();
+        return cc ? countryScope(cc) : null;
       }
-      return countryRungWidens(scope) ? countryScope(scope.countryCode) : everywhereScope();
+      return countryRungWidens(scope) ? countryScope(scope.countryCode) : null;
+    },
+
+    /** The onboarded country under a point, from the region registry; null
+     *  outside every region. What a deep link and the pan-away nudge jump to
+     *  now that Everywhere is not a place to look at. */
+    countryAt(lat, lng) {
+      const r = this.regionOfPoint(lng, lat);
+      return r && r.countryCode && byCountry.has(r.countryCode) ? r.countryCode : null;
     },
 
     /** Region registry objects currently in scope (for spotlight + labels). */

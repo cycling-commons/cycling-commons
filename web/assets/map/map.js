@@ -16,7 +16,7 @@ import { trimEnds } from './item-index.js';
 import { sheet, initSheet } from './sheet.js';
 import { initLightbox } from './lightbox.js';
 import { render, updateZoomHint } from './render.js';
-import { COVERAGE_ON, addCoverage, widenForDeepLink, openCoverageFeatureByName,
+import { COVERAGE_ON, addCoverage, widenForDeepLink, featureLL, openCoverageFeatureByName,
          openCoverageByOsmRef, fetchCoverageCounts, covShownCount } from './coverage.js';
 import { addSurfaceTiles, setSurfaceTiles, surfaceTilesVisible } from './surface-tiles.js';
 import { schemaRows, initDrawerChrome } from './drawer.js';
@@ -71,7 +71,6 @@ import { layerGlyph } from './icons.js';
       (fp && !!resolveLocalFeature(fp)) ||
       (pp && !!(layerByKey.pending && (layerByKey.pending.features||[]).some(x=>x.pending && String(x.pending.id)===String(pp)))) ||
       (rp && ((layerByKey['experience']||{}).features||[]).some(x=>String(x.id)===String(rp)));
-    if(_dlHit) widenForDeepLink();
     // docs/specs/map-and-search.md §8: the rider's own mode may not draw the
     // target (Best of hides a Verified climb): lift it before the drawer opens,
     // or the halo lands on an empty map. Pool hits and pivots keep their own path.
@@ -79,6 +78,8 @@ import { layerGlyph } from './icons.js';
       const hit = (ip && resolveLocalFeatureById(ip))
         || (fp && resolveLocalFeature(fp))
         || (rp && (()=>{ const l=layerByKey['experience']; const f=l && (l.features||[]).find(x=>String(x.id)===String(rp)); return f ? {layer:l, f} : null; })());
+      // The scope follows the target to its country, not to Everywhere.
+      if(hit && hit.f) widenForDeepLink(featureLL(hit.f));
       if(hit && hit.layer && hit.f) liftModeFor(hit.layer, hit.f);
     }
     // ?feature=<name> drawer + zoom; coverage POIs via search when local index misses.

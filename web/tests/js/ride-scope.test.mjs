@@ -22,9 +22,11 @@ test('several regions in one country all come along, in ride order', () => {
     { kind: 'region', regionIds: [11, 12], countryCode: 'FR' });
 });
 
-test('a ride crossing a border widens to everywhere, never half the ride', () => {
+test('a ride crossing a border keeps every region it crosses, never half the ride', () => {
+  // Everywhere is not a place to look at (owner, 2026-09-06): the set of
+  // crossed regions is the scope, and with two countries no single one names it.
   assert.deepEqual(rideScopeFor([LIEGE, VAUCLUSE]),
-    { kind: 'everywhere', regionIds: [], countryCode: null });
+    { kind: 'region', regionIds: [LIEGE.id, VAUCLUSE.id], countryCode: null });
 });
 
 test('a ride outside every onboarded region leaves the scope alone', () => {

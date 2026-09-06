@@ -106,16 +106,6 @@ globalThis.runMapSmoke = async function runMapSmoke(opts) {
       },
     },
     {
-      name: 'scope switch to Everywhere clears the spotlight',
-      async run() {
-        const ev = $('#regionScope button[data-scope="everywhere"]');
-        assert(ev, 'no Everywhere chip');
-        ev.click();
-        await sleep(800);
-        assert(ev.classList.contains('on'), 'Everywhere chip did not become active');
-      },
-    },
-    {
       name: 'layer toggle',
       async run() {
         const t = $('#layers .layer:not(.off)');

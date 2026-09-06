@@ -157,12 +157,12 @@ export function initScope(){
 }
 
 export function initScopeRail(){
-  // Static myarea/everywhere buttons; region/country chips bind in renderScopeChips().
+  // Static myarea button; region/country chips bind in renderScopeChips().
+  // There is no Everywhere button: a country is the widest place to look at.
   document.querySelectorAll('#regionScope > button').forEach(b=>b.onclick=()=>{
     const tok = b.dataset.scope||'';
     if(!window.CCScope) return;
-    if(tok==='everywhere') window.CCScope.setEverywhere();
-    else if(tok==='myarea') window.CCScope.setMyArea();
+    if(tok==='myarea') window.CCScope.setMyArea();
     else if(tok.startsWith('country:')) window.CCScope.setCountry(tok.slice(8));
     else if(tok.startsWith('region:')) window.CCScope.setRegion(tok.slice(7));
   });
@@ -195,13 +195,26 @@ export function initAreaNudge(){
   };
   const showWiden=()=>{
     const nw=window.CCScope.nextWider();
-    // Reuse the search-widen label; Everywhere reads "Search everywhere".
+    // Nothing wider than the country: offer the country under the map instead.
+    if(!nw){ showCountryUnderMap(); return; }
     show(
       I18N.outsideArea||'Outside your area',
-      (nw && nw.kind==='everywhere')
-        ? (I18N.searchEverywhere||'Search everywhere')
-        : tpl(I18N.searchWiden||'Search in {area} instead', {area:scopeLabel(nw)}),
+      tpl(I18N.searchWiden||'Search in {area} instead', {area:scopeLabel(nw)}),
       ()=>window.CCScope.widen()
+    );
+  };
+  /* The rider panned into another country: name it and offer it. Everywhere
+     is not a place to look at any more (owner, 2026-09-06), so the jump is to
+     the country under the map centre, or nothing when that is open sea. */
+  const showCountryUnderMap=()=>{
+    const s=curScope(), c=map.getCenter();
+    const cc=window.CCScope.countryAt(c.lat, c.lng);
+    if(!cc || (s && s.kind==='country' && s.countryCode===cc)){ hide(); return; }
+    const area=scopeLabel({kind:'country', regionIds:[], countryCode:cc}) || cc;
+    show(
+      tpl(I18N.scopeMiss||'Only showing {area}', {area:scopeLabel(s)||''}),
+      tpl(I18N.scopeMissGo||'Show {area}', {area}),
+      ()=>window.CCScope.setCountry(cc)
     );
   };
   /* Named-scope miss: viewport and scope bbox do not intersect. Names the
@@ -227,12 +240,7 @@ export function initAreaNudge(){
     }
     if(scopeMiss()){
       if(dismissed) return;
-      const ev=I18N.everywhereLabel||'Everywhere';
-      show(
-        tpl(I18N.scopeMiss||'Only showing {area}', {area:scopeLabel(s)}),
-        tpl(I18N.scopeMissGo||'Show {area}', {area:ev}),
-        ()=>window.CCScope.setEverywhere()
-      );
+      showCountryUnderMap();
       return;
     }
     hide();

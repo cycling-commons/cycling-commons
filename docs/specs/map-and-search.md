@@ -785,9 +785,29 @@ the newest rung of that same ladder.
   fall back to GLOBAL results (the leak-safe-hide rule of
   map-and-search.md §4.5, extended to this client-side seam).
 - **Widen ladder:** myArea → the single registry-known country among the
-  derived `countryCodes` (exactly one such country, else straight to
-  Everywhere — an ambiguous/border myArea has no single "wider" country) →
-  Everywhere.
+  derived `countryCodes` (exactly one such country, else nothing wider: an
+  ambiguous/border myArea has no single "wider" country); region → its
+  country. **A country is the top** (owner, 2026-09-06). Everywhere left
+  the ladder, the rail and the deep links: drawing every item on Earth made
+  the browser sluggish, and the one unscoped server call behind it took
+  26.6 s (coverage-provider.md §11). `nextWider()` answers null at the top
+  and `canWiden()` follows it.
+- **Everywhere is a search reach, not a scope** (owner, 2026-09-06: "only
+  everywhere in search"). The search box's last row reads "Search in {next
+  rung} instead" while there is a rung, and "Search everywhere" at the top.
+  That row widens THIS search only (`search-ui.js` `_worldwide`): the item
+  index stops filtering on `inScope()`, the coverage lookup and Photon go
+  unscoped, and the scope itself does not move. Picking a hit found that way
+  first sets the scope to the hit's country (`CCScope.countryAt()`, the
+  registry's region under the point), then opens it. Closing the search
+  drops the reach. `CCScope.setEverywhere()` and the `everywhere` kind stay
+  in the model for that use; `deserialize('everywhere')` returns null, so an
+  old `?scope=everywhere` link or stored token falls through to the default.
+- **Deep links follow their target to its country.** `widenForDeepLink(ll)`
+  takes the target's [lat, lng], finds the registry region under it and sets
+  that country transiently (`persist:false`); a target outside every
+  onboarded region leaves the scope alone. Rides crossing a border keep every
+  crossed region in one region set (`ride-scope.js`), never Everywhere.
 - **Cold-start chip:** a rider/anonymous visitor with no base location sees a
   dismissable "Set my area" chip driven from the current map centre
   (`map.set_my_area`); dismissal persists in localStorage
@@ -806,8 +826,10 @@ the newest rung of that same ladder.
   - **Named scope (region/country):** when the viewport bbox stops
     **intersecting** `CCScope.bbox()` at all, the chip reads
     `map.scope_miss` ("Only showing {area}") with a one-tap
-    `map.scope_miss_go` ("Show {area}", filled with the Everywhere label) that
-    calls `CCScope.setEverywhere()`.
+    `map.scope_miss_go` ("Show {area}", filled with the label of the country
+    under the map centre, `CCScope.countryAt()`) that calls
+    `CCScope.setCountry()`; over open sea, or already in that country, the
+    chip stays hidden (2026-09-06; it used to offer Everywhere).
     **The message names the filter, not the place** (owner 2026-08-15). It
     first read "Nothing here in Free State", which is a claim about the
     *region* and a false one: the map is blank because the scope is drawing one
@@ -831,7 +853,7 @@ the newest rung of that same ladder.
 - **Out-of-scope town opens transiently widen:**
   town search is scope-exempt (a place is an explicit location choice), so
   opening a town whose coordinates fall **outside the current scope's bbox**
-  transiently widens to Everywhere via the deep-link mechanism
+  transiently moves the scope to the town's country via the deep-link mechanism
   (`persist:false` — localStorage/URL keep the saved scope, which returns on
   the next plain load). Without this, the scope-exempt town drawer filled
   with nearby items while the scoped map rendered the same area empty — the

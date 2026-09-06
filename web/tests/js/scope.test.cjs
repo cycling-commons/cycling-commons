@@ -118,24 +118,40 @@ test('get returns a copy — mutating it never changes internal state', () => {
   assert.deepEqual(CCScope.get(), DEFAULT);
 });
 
-test('widen ladder: region -> its country -> everywhere; canWiden tracks it', () => {
+test('widen ladder: region -> its country, and the country is the top; canWiden tracks it', () => {
+  // A country is the widest place to look at. Wider than that is a search,
+  // not a scope (owner, 2026-09-06): drawing every item on Earth made the
+  // browser sluggish, and Everywhere is offered only in the search box.
   boot();
   CCScope.setRegion('wallonia');
   assert.equal(CCScope.canWiden(), true);
   assert.deepEqual(CCScope.widen(), { kind: 'country', regionIds: [1, 24, 23], countryCode: 'BE' });
-  assert.deepEqual(CCScope.widen(), { kind: 'everywhere', regionIds: [], countryCode: null });
   assert.equal(CCScope.canWiden(), false);
-  assert.deepEqual(CCScope.widen(), { kind: 'everywhere', regionIds: [], countryCode: null });
+  assert.deepEqual(CCScope.widen(), { kind: 'country', regionIds: [1, 24, 23], countryCode: 'BE' }, 'widen at the top stays put');
 });
 
-test('a single-region country widens straight to everywhere', () => {
+test('a single-region country has nothing wider to offer', () => {
   // Luxembourg's one region IS the country: the country rung is the same
   // polygon wearing a different label, and "Search in All Luxembourg
   // instead" from it widened nothing (owner-reported 2026-08-16).
   boot({ regionsList: REGIONS.concat([{ id: 54, slug: 'luxembourg', countryCode: 'LU', bbox: [5.7, 49.4, 6.5, 50.2] }]) });
   CCScope.setRegion('luxembourg');
-  assert.equal(CCScope.nextWider().kind, 'everywhere', 'the chip must not offer the same area again');
-  assert.deepEqual(CCScope.widen(), { kind: 'everywhere', regionIds: [], countryCode: null });
+  assert.equal(CCScope.nextWider(), null, 'the chip must not offer the same area again');
+  assert.equal(CCScope.canWiden(), false);
+  assert.deepEqual(CCScope.widen(), { kind: 'region', regionIds: [54], countryCode: 'LU' });
+});
+
+test('an everywhere token in the URL or storage falls through to the default', () => {
+  const s = boot({ search: '?scope=everywhere' });
+  assert.notEqual(s.kind, 'everywhere', 'Everywhere is not a browsing scope any more');
+  const t = boot({ ls: 'everywhere' });
+  assert.notEqual(t.kind, 'everywhere');
+});
+
+test('countryAt names the onboarded country under a point, or null at sea', () => {
+  boot();
+  assert.equal(CCScope.countryAt(50.45, 4.85), 'BE');
+  assert.equal(CCScope.countryAt(0, -30), null);
 });
 
 test('nextWider previews without applying', () => {
@@ -144,7 +160,7 @@ test('nextWider previews without applying', () => {
   assert.deepEqual(CCScope.nextWider(), { kind: 'country', regionIds: [1, 24, 23], countryCode: 'BE' });
   assert.deepEqual(CCScope.get(), { kind: 'region', regionIds: [23], countryCode: 'BE' });   // unchanged
   CCScope.setCountry('BE');
-  assert.deepEqual(CCScope.nextWider(), { kind: 'everywhere', regionIds: [], countryCode: null });
+  assert.equal(CCScope.nextWider(), null, 'a country is the top of the ladder');
   CCScope.setEverywhere();
   assert.equal(CCScope.nextWider(), null);
 });
@@ -307,7 +323,7 @@ test('anonymous circle derives ids from registry bboxes, capped', () => {
   assert.equal(s.myArea.place, null);
 });
 
-test('myArea widen goes to single country then everywhere', () => {
+test('myArea widen goes to its single country, and no further', () => {
   // Exactly one derived country present in the registry -> widen to it.
   boot({ myArea: { lat: 50.45, lng: 4.85, radiusKm: 40, regionIds: [1, 24], countryCodes: ['BE'] } });
   CCScope.setMyArea();
@@ -319,11 +335,12 @@ test('myArea widen goes to single country then everywhere', () => {
   CCScope.setMyArea();
   assert.deepEqual(CCScope.nextWider(), { kind: 'country', regionIds: [1, 24, 23], countryCode: 'BE' });
 
-  // Both derived ccs present in the registry -> ambiguous -> everywhere.
+  // Both derived ccs present in the registry -> ambiguous -> nothing wider:
+  // there is no single country to name, and Everywhere is not a scope.
   boot({ myArea: { lat: 50.45, lng: 4.85, radiusKm: 40, regionIds: [1, 24], countryCodes: ['BE', 'NL'] }, regionsList: REGIONS_NL });
   CCScope.setMyArea();
-  assert.deepEqual(CCScope.nextWider(), { kind: 'everywhere', regionIds: [], countryCode: null });
-  assert.deepEqual(CCScope.widen(), { kind: 'everywhere', regionIds: [], countryCode: null });
+  assert.equal(CCScope.nextWider(), null);
+  assert.equal(CCScope.widen().kind, 'myArea', 'widen with nothing wider stays put');
   assert.equal(CCScope.canWiden(), false);
 });
 

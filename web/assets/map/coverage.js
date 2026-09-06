@@ -321,16 +321,33 @@ export function openCoverageByOsmRef(ref){
     .then(d=>{
       if(myReq!==_covReq || !d || !Array.isArray(d.ll) || d.ll.length!==2) return;
       const key=LETTER_KEY[d.letter]; if(!key) return;
-      widenForDeepLink();
+      widenForDeepLink(d.ll);
       flyToPin([d.ll[1], d.ll[0]]);
       paintCoverageDetail(key, ref, d.ll, d.name, d);
     });
 }
-// Widen to Everywhere for a resolved deep-link (docs/specs/map-and-search.md §4.5). persist:false.
-export function widenForDeepLink(){
-  if(window.CCScope && curScope().kind!=='everywhere'){
-    window.CCScope.set({kind:'everywhere', regionIds:[], countryCode:null}, {persist:false});
-  }
+// A resolved deep link outside the scope moves the scope to the target's
+// COUNTRY, transiently (persist:false), never to Everywhere: drawing every item
+// on Earth to show one of them is what made the browser sluggish (owner,
+// 2026-09-06; docs/specs/map-and-search.md §4.5). `ll` is [lat, lng]; a
+// target outside every onboarded region leaves the scope alone.
+export function widenForDeepLink(ll){
+  if(!window.CCScope || !Array.isArray(ll) || ll.length!==2) return;
+  const r=window.CCScope.regionOfPoint(+ll[1], +ll[0]);
+  if(!r) return;
+  const s=curScope();
+  if(s && s.kind!=='everywhere' && s.regionIds && s.regionIds.indexOf(r.id)!==-1) return;
+  const cc=window.CCScope.countryAt(+ll[0], +ll[1]);
+  if(cc) window.CCScope.setCountry(cc, {persist:false});
+}
+// [lat, lng] of a catalogue feature, whichever shape it carries.
+export function featureLL(f){
+  if(!f) return null;
+  if(Array.isArray(f.ll) && f.ll.length===2) return [+f.ll[0], +f.ll[1]];
+  const c=f.geometry && f.geometry.coordinates;
+  if(Array.isArray(c) && c.length>=2 && typeof c[0]==='number') return [+c[1], +c[0]];
+  if(f.geom && Array.isArray(f.geom.ll)) return [+f.geom.ll[0], +f.geom.ll[1]];
+  return null;
 }
 // ?feature= fallback (docs/specs/coverage-provider.md §6): one unscoped search lookup, then widen.
 export function openCoverageFeatureByName(name){
@@ -342,7 +359,7 @@ export function openCoverageFeatureByName(name){
       const hits=((d&&d.results)||[]).filter(h=>h && h.n && LETTER_KEY[h.letter] && Array.isArray(h.ll));
       if(!hits.length) return;
       const hit=hits.find(h=>h.n.toLowerCase()===name.toLowerCase())||hits[0];
-      widenForDeepLink();
+      widenForDeepLink(hit.ll);
       openCoverageByRef(hit.ref, hit.letter, hit.ll, hit.n, hit.itemId);
     });
 }

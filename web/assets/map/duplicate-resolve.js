@@ -42,10 +42,6 @@ function clearMarkers() {
 }
 
 function showResolve(finding) {
-  // The rows may sit outside the current scope; a resolve link that shows an
-  // empty map would be worse than no link.
-  try { widenForDeepLink(); } catch (e) { /* noop */ }
-
   clearMarkers();
   const pts = [];
   finding.items.forEach((it, i) => {
@@ -63,6 +59,10 @@ function showResolve(finding) {
       .setLngLat([lng, lat]).addTo(map));
   });
 
+  // The rows may sit outside the current scope; a resolve link that shows an
+  // empty map would be worse than no link. The scope follows the first row
+  // to its country.
+  if (pts.length) { try { widenForDeepLink([pts[0][1], pts[0][0]]); } catch (e) { /* noop */ } }
   if (pts.length >= 2) fitBoth(pts);
 
   document.getElementById('drawerBody').innerHTML = panelHtml(finding);

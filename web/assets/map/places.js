@@ -29,7 +29,7 @@ export function openPlace(name, meta){
   // docs/specs/map-and-search.md §4.5 — town outside the saved scope transiently widens (persist:false).
   const sbb = window.CCScope && window.CCScope.bbox ? window.CCScope.bbox() : null;
   if(sbb && (meta.ll[1]<sbb[0] || meta.ll[0]<sbb[1] || meta.ll[1]>sbb[2] || meta.ll[0]>sbb[3])){
-    widenForDeepLink();
+    widenForDeepLink(meta.ll);
   }
   // A · segments are corridor data, not places — they would flood the card.
   const near = nearbyItems(meta.ll, NEARBY_KM).filter(n=>n.e.letter!=='A');
