@@ -51,14 +51,9 @@ export function initSearchUi(){
         const back = (s && s.kind==='myArea') ? (I18N.myAreaLabel||'My area') : (scopeLabel(s) || everywhereLabel);
         reachBtn.textContent = _worldwide ? back : everywhereLabel;
       }
-      // The title says where the search looks: "Search everywhere" while the
-      // reach is on, the scope's own name again when it is off (the header
-      // module owns that string, so it repaints it).
-      const title=document.getElementById('searchTitle');
-      if(title){
-        if(_worldwide) title.textContent = I18N.searchEverywhere||'Search everywhere';
-        else if(window.CCScopeHeader) window.CCScopeHeader.paint(I18N);
-      }
+      // The title says where the search looks. scope-header.js is the one
+      // writer of that heading, so it is asked to repaint with the reach.
+      if(window.CCScopeHeader) window.CCScopeHeader.paint(I18N, {worldwide:_worldwide});
     };
     const closeS=()=>{ sRes.hidden=true; sRes.innerHTML=''; sMatches=[]; sHL=-1; setReach(false); if(sBox.getAttribute('aria-expanded')!=='false') sBox.setAttribute('aria-expanded','false'); };
     if(reachBtn) reachBtn.addEventListener('click', ()=>{
