@@ -1,0 +1,54 @@
+web/translations/messages.en.yaml
+  s_985a6f4653b290::t_b43facb08722ca 4297
+  s_985a6f4653b290::t_14a21a4028f1b1 4164,4298
+docs/specs/edit-items/Q-history-culture.md
+  s_985a6f4653b290::t_b43facb08722ca 24
+web/translations/messages.es.yaml
+  s_985a6f4653b290::t_b43facb08722ca 4303
+  s_985a6f4653b290::t_443d418829bc9d 4170,4304
+tools/wikimedia/out/places-us.json
+  s_985a6f4653b290::t_b43facb08722ca 97,112
+web/migrations/Version20260907210000.php
+  s_985a6f4653b290::t_b43facb08722ca 1-56
+web/src/Scout/ScoutTag.php
+  s_985a6f4653b290::t_b43facb08722ca 46,48-49,67-73
+  s_985a6f4653b290::t_68eb8b4f5ea700 74
+web/src/Catalog/CatalogFormRegistry.php
+  s_985a6f4653b290::t_b43facb08722ca 198-199,217
+web/src/Controller/ScoutIntakeController.php
+  s_985a6f4653b290::t_b43facb08722ca 114-116
+tools/wikimedia/country_places.py
+  s_985a6f4653b290::t_b43facb08722ca 88
+docs/specs/edit-items/P-scenic-views.md
+  s_985a6f4653b290::t_b43facb08722ca 34
+web/translations/messages.nl.yaml
+  s_985a6f4653b290::t_b43facb08722ca 4273
+  s_985a6f4653b290::t_3be7f33256c61c 4140,4274
+web/tests/Scout/ScoutIntakeTest.php
+  s_985a6f4653b290::t_cde9883fa9af5c 399,469-541,548-551
+  s_985a6f4653b290::t_b43facb08722ca 9,542-547
+docs/specs/moderation-and-contribution.md
+  s_985a6f4653b290::t_b43facb08722ca 2317-2333
+web/translations/messages.de.yaml
+  s_985a6f4653b290::t_b43facb08722ca 4276
+  s_985a6f4653b290::t_83201bf9f34a16 4143,4277
+web/translations/messages.fr.yaml
+  s_985a6f4653b290::t_b43facb08722ca 4273
+  s_985a6f4653b290::t_ee7885abdcce65 4140,4274
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "74b7119971c438e6ca274a31116a6e50102f07e8",
+  "prompts": {},
+  "sessions": {
+    "s_985a6f4653b290": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e5c75010-816e-4e18-8eae-3cd0c486f2cb",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
