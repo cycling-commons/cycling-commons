@@ -6,7 +6,10 @@ declare(strict_types=1);
 
 namespace App\Tests\Contribution;
 
+use App\Catalog\ConfirmationSource;
+use App\Catalog\ConfirmationStance;
 use App\Catalog\Entity\Item;
+use App\Catalog\Entity\ItemConfirmation;
 use App\Catalog\Entity\Region;
 use App\Catalog\Entity\Submission;
 use App\Catalog\ItemSource;
@@ -75,6 +78,76 @@ final class CatalogContributionServiceTest extends KernelTestCase
         self::assertSame('approved', $sub->getStatus()->value);
         $this->em->refresh($item);
         self::assertSame('Out of order', $item->getAttributes()['condition'] ?? null, 'the change is on the item');
+    }
+
+    /**
+     * The tick box on a curator's own edit (owner 2026-09-07: the Eiffel
+     * Tower is there without a French rider confirming it; a fountain from a
+     * holiday years ago may not be). Ticked, the same drawer confirmation the
+     * "Still here?" button writes is recorded, so the pin turns full.
+     */
+    public function testACuratorsEditCanAlsoConfirmThePlace(): void
+    {
+        $this->wallonia();
+        $item = $this->item('P', '{"type":"Point","coordinates":[5.86,50.47]}')->setState(ItemState::Unverified);
+        $this->em->flush();
+        $curator = $this->curator();
+
+        $receipt = $this->service->submit('improve', [
+            '_item_id' => $item->getId(),
+            'details' => ['name' => 'Signal de Botrange'],
+            'confirmNow' => true,
+        ], $curator);
+
+        self::assertTrue($receipt->applied);
+        self::assertTrue($receipt->confirmed);
+        $this->em->refresh($item);
+        self::assertSame(ItemState::Verified, $item->getState(), 'a curator confirming verifies');
+        $row = $this->em->getRepository(ItemConfirmation::class)
+            ->findOneBy(['itemId' => (int) $item->getId(), 'userId' => (int) $curator->getId()]);
+        self::assertNotNull($row);
+        self::assertSame(ConfirmationStance::Exists, $row->getStance());
+        self::assertSame(ConfirmationSource::Drawer, $row->getSource(), 'the same confirmation the drawer button writes');
+    }
+
+    public function testTheConfirmBoxLeftOffConfirmsNothing(): void
+    {
+        $this->wallonia();
+        $item = $this->item('P', '{"type":"Point","coordinates":[5.86,50.47]}')->setState(ItemState::Unverified);
+        $this->em->flush();
+        $curator = $this->curator();
+
+        $receipt = $this->service->submit('improve', [
+            '_item_id' => $item->getId(),
+            'details' => ['name' => 'Signal de Botrange'],
+        ], $curator);
+
+        self::assertTrue($receipt->applied);
+        self::assertFalse($receipt->confirmed);
+        $this->em->refresh($item);
+        self::assertSame(ItemState::Unverified, $item->getState());
+        self::assertSame(0, $this->em->getRepository(ItemConfirmation::class)->count(['itemId' => (int) $item->getId()]));
+    }
+
+    public function testTheConfirmBoxIsIgnoredWhenTheEditQueues(): void
+    {
+        // A rider cannot tick their way past the review: the box only means
+        // something on an edit that applied.
+        $this->wallonia();
+        $item = $this->item('P', '{"type":"Point","coordinates":[5.86,50.47]}')->setState(ItemState::Unverified);
+        $this->em->flush();
+
+        $receipt = $this->service->submit('improve', [
+            '_item_id' => $item->getId(),
+            'details' => ['name' => 'Signal de Botrange'],
+            'confirmNow' => true,
+        ], $this->user());
+
+        self::assertFalse($receipt->applied);
+        self::assertFalse($receipt->confirmed);
+        $this->em->refresh($item);
+        self::assertSame(ItemState::Unverified, $item->getState());
+        self::assertSame(0, $this->em->getRepository(ItemConfirmation::class)->count(['itemId' => (int) $item->getId()]));
     }
 
     public function testARidersEditStillWaitsForACurator(): void

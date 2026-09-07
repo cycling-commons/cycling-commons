@@ -1,5 +1,7 @@
 {# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
 {% extends 'base.html.twig' %}
+{# A curator's own EDIT is applied at once (moderation-and-contribution.md 1.6); a new place still queues. #}
+{% set self_applies = not add_mode|default(false) and is_granted('ROLE_CURATOR') %}
 {% block head_styles %}
 <link rel="stylesheet" href="{{ asset('lib/maplibre-gl-5.24.0.css') }}" />
 <style>
@@ -260,6 +262,9 @@
   }
   .nochange{font-size:.85rem;color:var(--clay);background:var(--paper-deep);border-left:2px solid var(--clay);padding:.6rem .85rem;border-radius:0 6px 6px 0;margin-top:.9rem}
   .curator-decide{color:var(--ink);border-left-color:var(--spruce)}
+  .confirm-now{display:flex;gap:.6rem;align-items:flex-start;margin:1rem 0 .2rem;font-weight:600;cursor:pointer}
+  .confirm-now input{margin-top:.25rem}
+  .confirm-now-help{margin-top:0}
   .curator-decide a{color:var(--clay);font-weight:600;text-decoration:underline;margin-left:.3rem}
   .rm-item.is-existing img{opacity:.85}
   .prov{font-size:.8rem;color:#595c4d;margin-top:1rem;line-height:1.5}
@@ -371,7 +376,7 @@
     {{ include('contribute/_receipt_mark.html.twig') }}
     {% if receipt.applied|default(false) %}
     <h2>{{ 'improve.receipt.applied_heading'|trans }}</h2>
-    <p>{{ 'improve.receipt.applied_body'|trans }}</p>
+    <p>{{ (receipt.confirmed|default(false) ? 'improve.receipt.applied_confirmed_body' : 'improve.receipt.applied_body')|trans }}</p>
     {% else %}
     <h2>{{ 'improve.receipt.heading'|trans }}</h2>
     <p>{{ 'improve.receipt.body'|trans }}</p>
@@ -466,7 +471,7 @@
      |rich sanitises it. #}
   <script nonce="{{ csp_nonce() }}">window.CC_IMPROVE_I18N = {{ {
     nav_next: 'improve.nav.next'|trans,
-    nav_submit: 'improve.nav.submit'|trans,
+    nav_submit: (self_applies ? 'improve.nav.submit_applies' : 'improve.nav.submit')|trans,
     readout_initial: 'improve.step1.readout_initial'|trans,
     readout_point_set: 'improve.step1.readout_point_set'|trans,
     readout_confirm: 'improve.step1.readout_confirm'|trans,
@@ -790,6 +795,14 @@
     <h2>{{ 'improve.step4.heading'|trans }}</h2>
     <p class="help">{{ 'improve.step4.help'|trans }}</p>
     <div class="card" id="reviewBody"></div>
+    {% if self_applies and confirm_offered|default(false) %}
+      {# Optional, off by default (moderation-and-contribution.md 1.6): the
+         same drawer confirmation the "Still here?" button writes. #}
+      <label class="confirm-now">{{ form_widget(form.confirmNow) }}<span>{{ 'improve.review.confirm_now'|trans }}</span></label>
+      <p class="help confirm-now-help">{{ 'improve.review.confirm_now_help'|trans }}</p>
+    {% else %}
+      {% do form.confirmNow.setRendered() %}
+    {% endif %}
     {# Filled + revealed by improve.js when an edit carries no change at all
        (the Submit button is disabled in the same breath). #}
     <p class="nochange" id="wz-nochange" hidden></p>
@@ -842,8 +855,15 @@
        confirm it" — which is the same sentence twice. The type-specific half
        (votable or confirmable) now rides in the funnel line itself. #}
     <div class="lifecycle">
+      {% if self_applies %}
+      {# moderation-and-contribution.md 1.6: a curator's own edit is applied at
+         once, so the promise must say so, not only the receipt. #}
+      <h3 class="lc-h">{{ 'improve.lifecycle.heading_curator'|trans }}</h3>
+      <p class="lc-funnel">{{ 'improve.lifecycle.funnel_curator'|trans }}</p>
+      {% else %}
       <h3 class="lc-h">{{ 'improve.lifecycle.heading'|trans }}</h3>
       <p class="lc-funnel">{{ (item_type.isVotable ? 'improve.lifecycle.funnel_votable' : 'improve.lifecycle.funnel_utility')|trans({'%type%': item_type.labelKey|trans})|rich }}</p>
+      {% endif %}
     </div>
 
     <p class="prov">{{ 'improve.step4.prov'|trans|rich }}</p>

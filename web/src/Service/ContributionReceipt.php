@@ -19,6 +19,8 @@ final readonly class ContributionReceipt
         public ?int $submissionId = null,
         /** True when the change was applied at once: a curator's own edit (moderation-and-contribution.md §1.6). */
         public bool $applied = false,
+        /** True when the curator also ticked "Mark it confirmed" on an applied edit (moderation-and-contribution.md §1.6). */
+        public bool $confirmed = false,
     ) {
     }
 }

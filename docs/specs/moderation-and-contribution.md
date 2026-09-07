@@ -422,6 +422,32 @@ Outside the curator's assigned areas the edit queues like anyone's
 approval requires the OSM answer (§5b of catalog-data-model.md) and that
 question is asked on the queue card, not in the wizard (docs/TODO.md).
 
+The promise matches the result (owner 2026-09-07: the admin's own name edit
+went live at once, but the wizard had said "Submit for review"). On an EDIT
+by a user who reaches `ROLE_CURATOR`, the wizard's button reads "Apply
+change" (`improve.nav.submit_applies`) and the lifecycle box reads
+`improve.lifecycle.heading_curator` / `funnel_curator`, which also says an
+edit outside their areas still queues. A new place keeps the rider copy,
+since it queues for everyone. `improve.html.twig` sets `self_applies` once
+at the top. Pinned by `CuratorWizardCopyTest`.
+
+**Optional "Mark it confirmed"** (owner 2026-09-07: "the Eiffel Tower will be
+there without a French rider confirming it, but a fountain the moderator
+remembers from a holiday tour may be out of date"). On that same applying
+edit, and only on a row that offers the `exists` stance, the last step shows
+one tick box, OFF by default: "I know this place is there now. Mark it
+confirmed." (`improve.review.confirm_now`, form field `confirmNow`, never
+part of the change set). Ticked, `CatalogContributionService::confirmNow()`
+records the SAME drawer confirmation the "Still here?" button writes
+(`ItemConfirmationService::record()`, source `drawer`), so the curator's tick
+verifies the row exactly as their click would; the receipt then reads
+`improve.receipt.applied_confirmed_body` (`ContributionReceipt::$confirmed`).
+The box is ignored on an edit that queues, so a rider cannot tick past the
+review, and section 6.3 stands: this is a curator confirming somebody else's
+row, not a submitter counting their own new place. Pinned by
+`CatalogContributionServiceTest::testACuratorsEditCanAlsoConfirmThePlace`
+and its two siblings.
+
 ## 2. Intake boundary: `SubmissionDraft`, validate twice
 
 One envelope DTO, not eleven: `App\Contribution\SubmissionDraft` carries
@@ -1711,7 +1737,10 @@ the state change. Three riders should not be needed to agree that a castle is a
 castle. `NotPotable` never promotes: it is a warning, not a verification. The
 POST response carries `verified: true` on the transition so the map can flip the
 "?" badge in place (`markItemVerified()`), instead of leaving a rider looking at
-a payload fetched before their own confirmation.
+a payload fetched before their own confirmation. The same promotion runs from
+the wizard when a curator ticks "Mark it confirmed" on their own applied edit
+(§1.6, `CatalogContributionService::confirmNow()`): one confirmation path, two
+buttons.
 
 `ItemType::isConfirmable()` = "has stances". One stance **per rider per item**
 (`item_confirmation`, UNIQUE `(item_id, user_id)`, tally index

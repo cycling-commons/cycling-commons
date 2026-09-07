@@ -2372,6 +2372,8 @@ improve:
     loc_climb: '◎ voet %foot% → top %summit%'
     curator_decide: 'Dit is een inzending van een fietser. Keur ze goed of af op de kaart, waar je ze op haar plek ziet met de wijzigingen.'
     curator_decide_link: 'Open op de kaart'
+    confirm_now: 'Ik weet dat deze plek er nu is. Markeer als bevestigd.'
+    confirm_now_help: 'Laat het uit als je de plek niet recent hebt gezien. Fietsers bevestigen haar op de kaart.'
     measured_avg: 'gem. %pct% %'
     measured_max: 'max %pct%'
   locate:
@@ -2381,14 +2383,18 @@ improve:
       help: 'Deze locatie is al ingesteld — controleer of ze klopt, of wijzig ze.'
   lifecycle:
     heading: 'Wat er met je suggestie gebeurt'
+    heading_curator: 'Wat er met je wijziging gebeurt'
+    funnel_curator: 'Je bent curator, dus deze wijziging staat meteen op de kaart, binnen de gebieden die je beheert. Daarbuiten wacht ze op de curator van dat gebied, zoals elke suggestie. Elke wijziging wordt in de geschiedenis vastgelegd.'
     funnel_votable: 'Er verschijnt niets meteen op de kaart — een curator leest het eerst. Zodra het erdoor is, verschijnt het als een klein stipje, en de eerste fietser die bevestigt dat het er echt is maakt er een volledige speld van. Op <b>%type%</b> kan ook gestemd worden, en de hoogst gewaardeerde komen op de best-of-kaart.'
     funnel_utility: 'Er verschijnt niets meteen op de kaart — een curator leest het eerst. Zodra het erdoor is, verschijnt het als een klein stipje, en de eerste fietser die bevestigt dat het er echt is maakt er een volledige speld van. <b>%type%</b> is een praktische stop: fietsers bevestigen deze, ze stemmen er nooit op.'
   nav:
     back: 'Terug'
     next: 'Volgende'
     submit: 'Indienen ter controle'
+    submit_applies: 'Wijziging toepassen'
   receipt:
     applied_body: 'Je bent curator, dus je wijziging staat nu op de kaart. Ze is vastgelegd in de geschiedenis, zoals elke andere beslissing.'
+    applied_confirmed_body: 'Je bent curator, dus je wijziging staat nu op de kaart, en je hebt de plek bevestigd: ze toont als volle speld. Beide staan in de geschiedenis.'
     applied_heading: 'Wijziging toegepast.'
     heading: 'Suggestie ingediend.'
     body: 'Jouw suggestie staat in de wachtrij van de curators. Er verschijnt niets op de kaart totdat een curator ernaar heeft gekeken.'

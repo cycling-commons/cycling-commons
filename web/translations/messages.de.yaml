@@ -2375,6 +2375,8 @@ improve:
     loc_climb: '◎ Fuß %foot% → Gipfel %summit%'
     curator_decide: 'Das ist die Einreichung eines Fahrers. Freigeben oder ablehnen tust du auf der Karte, wo du sie an Ort und Stelle mit ihren Änderungen siehst.'
     curator_decide_link: 'Auf der Karte öffnen'
+    confirm_now: 'Ich weiß, dass dieser Ort jetzt da ist. Als bestätigt markieren.'
+    confirm_now_help: 'Lass es aus, wenn du den Ort nicht kürzlich gesehen hast. Radfahrer bestätigen ihn auf der Karte.'
     measured_avg: 'Ø %pct% %'
     measured_max: 'max %pct%'
   locate:
@@ -2384,14 +2386,18 @@ improve:
       help: 'Dieser Standort ist bereits gesetzt — prüfe, ob er stimmt, oder ändere ihn.'
   lifecycle:
     heading: 'Was mit deinem Vorschlag geschieht'
+    heading_curator: 'Was mit deiner Änderung geschieht'
+    funnel_curator: 'Du bist Kurator, deshalb erscheint diese Änderung sofort auf der Karte, innerhalb der Gebiete, die du betreust. Außerhalb wartet sie wie jeder Vorschlag auf den Kurator dieses Gebiets. Jede Änderung wird in der Historie festgehalten.'
     funnel_votable: 'Es erscheint nichts sofort auf der Karte — zuerst liest ein Kurator es. Sobald es durch ist, taucht es als kleiner Punkt auf, und die erste fahrende Person, die bestätigt, dass es wirklich da ist, macht daraus eine vollständige Markierung. Über <b>%type%</b> kann außerdem abgestimmt werden, und die bestbewerteten landen auf der Best-of-Karte.'
     funnel_utility: 'Es erscheint nichts sofort auf der Karte — zuerst liest ein Kurator es. Sobald es durch ist, taucht es als kleiner Punkt auf, und die erste fahrende Person, die bestätigt, dass es wirklich da ist, macht daraus eine vollständige Markierung. <b>%type%</b> ist ein praktischer Halt: Fahrende bestätigen diese, abgestimmt wird darüber nie.'
   nav:
     back: 'Zurück'
     next: 'Weiter'
     submit: 'Zur Prüfung einreichen'
+    submit_applies: 'Änderung anwenden'
   receipt:
     applied_body: 'Du bist Kurator, deine Änderung ist jetzt auf der Karte. Sie steht wie jede andere Entscheidung in der Historie.'
+    applied_confirmed_body: 'Du bist Kurator, deshalb ist deine Änderung jetzt auf der Karte, und du hast den Ort bestätigt: er erscheint als volle Nadel. Beides steht in der Historie.'
     applied_heading: 'Änderung übernommen.'
     heading: 'Vorschlag eingereicht.'
     body: 'Dein Vorschlag ist in der Kuratoren-Warteschlange. Auf der Karte erscheint nichts, bevor ein Kurator es angesehen hat.'

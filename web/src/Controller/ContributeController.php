@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Catalog\CatalogFormRegistry;
+use App\Catalog\ConfirmationStance;
 use App\Catalog\Entity\Item;
 use App\Catalog\ItemState;
 use App\Catalog\ItemType;
@@ -14,6 +15,7 @@ use App\Catalog\LocationMode;
 use App\Catalog\RoadType;
 use App\Catalog\ServiceKind;
 use App\Catalog\SurfaceVocabulary;
+use App\Community\ItemConfirmationService;
 use App\Contribution\CatalogContributionService;
 use App\Coverage\CoverageRepository;
 use App\Entity\User;
@@ -446,6 +448,8 @@ final class ContributeController extends AbstractController
             'edit_name' => $item->getName(),
             'item_lat' => $itemLat,
             'item_lng' => $itemLng,
+            // The "Mark it confirmed" box needs a row that offers "it exists".
+            'confirm_offered' => \in_array(ConfirmationStance::Exists, ItemConfirmationService::offeredFor($item), true),
             'receipt' => null,
             'form' => $form,
             'current' => $current,

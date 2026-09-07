@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Contribution;
 
+use App\Catalog\ConfirmationStance;
 use App\Catalog\Entity\Item;
 use App\Catalog\Entity\Submission;
 use App\Catalog\Import\OsmCandidates;
@@ -18,6 +19,7 @@ use App\Catalog\Links\SafeBrowsing;
 use App\Catalog\LocationMode;
 use App\Catalog\SubmissionStatus;
 use App\Catalog\SubmissionType;
+use App\Community\ItemConfirmationService;
 use App\Elevation\ClimbProfiler;
 use App\Entity\User;
 use App\Media\Entity\MediaUpload;
@@ -57,6 +59,7 @@ final class CatalogContributionService implements ContributionStubInterface
         private readonly OsmCandidates $osmCandidates,
         private readonly ModerationService $moderation,
         private readonly RoleHierarchyInterface $roleHierarchy,
+        private readonly ItemConfirmationService $confirmations,
     ) {
     }
 
@@ -377,6 +380,9 @@ final class CatalogContributionService implements ContributionStubInterface
         if (null === $item) {
             throw new \InvalidArgumentException('improve requires a valid _item_id');
         }
+        // The tick box means something only on an edit that applies; it is not part of the change set.
+        $confirmNow = (bool) ($payload['confirmNow'] ?? false);
+        unset($payload['confirmNow']);
 
         /** @var array<string, mixed> $details */
         $details = (array) ($payload['details'] ?? []);
@@ -511,11 +517,31 @@ final class CatalogContributionService implements ContributionStubInterface
         }
 
         $submission = $this->submitDraft($draft, SubmissionType::Edit, $by, $payload, $changes);
+        $applied = $this->applyIfCurator($submission, $by);
 
         return new ContributionReceipt(
             'SUB-'.(string) $submission->getId(), 'improve', true, $submission->getCreatedAt(), $submission->getId(),
-            applied: $this->applyIfCurator($submission, $by),
+            applied: $applied,
+            confirmed: $applied && $confirmNow && $this->confirmNow($item, $by),
         );
+    }
+
+    /**
+     * "I know this place is there now" on a curator's own applied edit (owner
+     * 2026-09-07: the Eiffel Tower is there without a French rider confirming
+     * it; a fountain from a holiday years ago may not be). Optional and off by
+     * default. Not a new mechanic: the SAME drawer confirmation the "Still
+     * here?" button writes, so a curator's tick verifies the row exactly as
+     * their click would. Only rows that offer "it exists" take it.
+     */
+    private function confirmNow(Item $item, User $by): bool
+    {
+        if (!\in_array(ConfirmationStance::Exists, ItemConfirmationService::offeredFor($item), true)) {
+            return false;
+        }
+        $this->confirmations->record($item, $by, ConfirmationStance::Exists);
+
+        return true;
     }
 
     /**

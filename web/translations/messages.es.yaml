@@ -1911,6 +1911,8 @@ improve:
     loc_climb: '◎ pie %foot% → cima %summit%'
     curator_decide: 'Esto es una propuesta de un ciclista. Apruébala o recházala en el mapa, donde la ves en su sitio con sus cambios.'
     curator_decide_link: 'Abrir en el mapa'
+    confirm_now: 'Sé que este lugar existe ahora. Marcarlo como confirmado.'
+    confirm_now_help: 'Déjalo sin marcar si no lo has visto hace poco. Los ciclistas lo confirman en el mapa.'
     measured_avg: 'media %pct% %'
     measured_max: 'máx %pct%'
   locate:
@@ -1920,14 +1922,18 @@ improve:
       help: 'Esta ubicación ya está fijada — comprueba que está bien, o cámbiala.'
   lifecycle:
     heading: 'Qué pasa con tu sugerencia'
+    heading_curator: 'Qué pasa con tu cambio'
+    funnel_curator: 'Eres curador, así que este cambio aparece en el mapa de inmediato, dentro de las zonas que moderas. Fuera de ellas espera al curador de esa zona, como cualquier sugerencia. Cada cambio queda registrado en el historial.'
     funnel_votable: 'Nada aparece en el mapa de inmediato — antes lo lee un curador. Cuando pasa, sale como un punto pequeño, y el primer ciclista que confirma que de verdad está ahí lo convierte en una chincheta completa. <b>%type%</b> también se puede votar, y los que mejor valoran los ciclistas acaban en el mapa de lo mejor.'
     funnel_utility: 'Nada aparece en el mapa de inmediato — antes lo lee un curador. Cuando pasa, sale como un punto pequeño, y el primer ciclista que confirma que de verdad está ahí lo convierte en una chincheta completa. <b>%type%</b> es una parada práctica: los ciclistas las confirman, nunca las votan.'
   nav:
     back: 'Atrás'
     next: 'Siguiente'
     submit: 'Enviar a revisión'
+    submit_applies: 'Aplicar el cambio'
   receipt:
     applied_body: 'Eres curador, así que tu cambio ya está en el mapa. Queda registrado en el historial como cualquier otra decisión.'
+    applied_confirmed_body: 'Eres curador, así que tu cambio ya está en el mapa, y has confirmado el lugar: se muestra como alfiler completo. Ambas cosas quedan en el historial.'
     applied_heading: 'Cambio aplicado.'
     heading: 'Sugerencia enviada.'
     body: 'Tu sugerencia está en la cola de los curadores. No aparece nada en el mapa hasta que un curador la haya mirado.'

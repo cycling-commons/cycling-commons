@@ -14,6 +14,7 @@ use App\Catalog\ItemType;
 use App\Catalog\LocationMode;
 use App\Catalog\ServiceKind;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\FormType;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
@@ -96,6 +97,8 @@ final class ImproveType extends AbstractType
             ->add('lng', HiddenType::class, ['required' => false])
             ->add('place', HiddenType::class, ['required' => false])
             ->add('mode', HiddenType::class, ['required' => false])
+            // A curator's optional "Mark it confirmed" on their own applied edit (moderation-and-contribution.md §1.6).
+            ->add('confirmNow', CheckboxType::class, ['required' => false, 'label' => false])
         ;
 
         if (ItemType::Climbs === $type) {
