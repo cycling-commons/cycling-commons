@@ -1,0 +1,50 @@
+docs/specs/edit-items/D-bike-services.md
+  s_985a6f4653b290::t_f57460b9ab81f3 24-38
+web/translations/messages.de.yaml
+  s_985a6f4653b290::t_f57460b9ab81f3 4211
+  s_985a6f4653b290::t_e7406918f9cd7d 4174,4177,4212
+web/tests/Contribution/ImproveTest.php
+  s_985a6f4653b290::t_e417d6d448f961 194-219
+  s_985a6f4653b290::t_744c476f02bfdd 10,330,333,395,397,400,561
+web/src/Catalog/CatalogField.php
+  s_985a6f4653b290::t_f57460b9ab81f3 34-35,39-48
+  s_985a6f4653b290::t_265146c185406a 18-21
+  s_985a6f4653b290::t_f583dbcb81e89e 49-50
+web/translations/messages.nl.yaml
+  s_985a6f4653b290::t_f57460b9ab81f3 4208
+  s_985a6f4653b290::t_2cb160fed3b791 4171,4174,4209
+web/src/Catalog/Import/AttributeVocabulary.php
+  s_985a6f4653b290::t_f57460b9ab81f3 32
+web/translations/messages.fr.yaml
+  s_985a6f4653b290::t_f57460b9ab81f3 4208
+  s_985a6f4653b290::t_465d9cfb8d3191 4171,4174,4209
+web/src/Form/ImproveType.php
+  s_985a6f4653b290::t_f57460b9ab81f3 134
+web/translations/messages.es.yaml
+  s_985a6f4653b290::t_c24b50535ba935 4238
+  s_985a6f4653b290::t_57c0bc8d775640 4201,4204,4239
+web/src/Catalog/CatalogFormRegistry.php
+  s_985a6f4653b290::t_f57460b9ab81f3 113
+  s_985a6f4653b290::t_e357678c4b30e8 114-117
+web/translations/messages.en.yaml
+  s_985a6f4653b290::t_f57460b9ab81f3 4232
+  s_985a6f4653b290::t_36fcf726722705 4195,4198,4233
+web/src/Catalog/CatalogSchemaProvider.php
+  s_985a6f4653b290::t_5e952f0f069db1 41-42
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "2bc6b6332901ca24399b46575603fa58267f5515",
+  "prompts": {},
+  "sessions": {
+    "s_985a6f4653b290": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e5c75010-816e-4e18-8eae-3cd0c486f2cb",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
