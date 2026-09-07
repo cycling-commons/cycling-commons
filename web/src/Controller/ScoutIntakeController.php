@@ -111,8 +111,9 @@ final class ScoutIntakeController extends AbstractController
             }
         }
 
-        foreach (ScoutTag::fieldsFor($type, $detail) as $field => $value) {
-            if ('E' === $letter) {
+        // A sub-menu answer never follows a tag re-filed onto another letter: the field would not exist there.
+        if ($letter === (ScoutTag::lettersFor($type, $detail)[0] ?? null)) {
+            foreach (ScoutTag::fieldsFor($type, $detail) as $field => $value) {
                 $details[$field] = $value;
             }
         }

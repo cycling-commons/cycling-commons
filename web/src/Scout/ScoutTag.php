@@ -43,9 +43,10 @@ final class ScoutTag
         // CLOSED FOR?  TODAY · DAYS · WEEKS · MONTHS · UNKNOWN
         'closure' => [1 => ['E'], 2 => ['E'], 3 => ['E'], 4 => ['E'], 5 => ['E']],
         // SCENERY?  NATURE · HISTORY · CULTURE · VIEW · ARCHITECTURE · UNKNOWN
+        // One pick, one home (owner 2026-09-07); UNKNOWN offers both.
         'scenery' => [
-            1 => ['P'], 2 => ['Q', 'P'], 3 => ['Q', 'P'],
-            4 => ['P'], 5 => ['Q', 'P'], 6 => ['P', 'Q'],
+            1 => ['P'], 2 => ['Q'], 3 => ['Q'],
+            4 => ['P'], 5 => ['Q'], 6 => ['P', 'Q'],
         ],
         // WHAT KIND?  WATER · FOOD · REPAIR
         'resupply' => [1 => ['B'], 2 => ['B'], 3 => ['D']],
@@ -62,6 +63,14 @@ final class ScoutTag
             2 => ['hazardType' => 'Junction / crossing'],
             3 => ['hazardType' => 'Bad corner'],
             4 => ['hazardType' => 'Other'],
+        ],
+        // The pick IS the Type on its home letter; a re-filed tag carries none.
+        'scenery' => [
+            1 => ['type' => 'Natural feature'],
+            2 => ['type' => 'Heritage site'],
+            3 => ['type' => 'Museum / culture'],
+            4 => ['type' => 'Viewpoint / high point'],
+            5 => ['type' => 'Architecture'],
         ],
         // Road-closed + duration so ClosureLifetime can retire it.
         'closure' => [

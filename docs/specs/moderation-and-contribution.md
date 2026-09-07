@@ -2314,13 +2314,23 @@ outstanding, in order.
   cap is unchanged.
 - **The sub-menu decides the letter and fills the fields.** Scout's second tap
   is the half that says what the rider meant, and it does not always land where
-  the tag type alone would put it: SCENERY · HISTORY and SCENERY · ARCHITECTURE
-  are Q, not P. NOTICE · POTHOLES arrives as E with `hazardType` already
-  answered; CLOSURE · WEEKS as E with `closedFor`, which is what lets the map
-  retire it by itself. `ScoutTag::DETAIL_LETTERS` and `DETAIL_FIELDS` own both
-  tables and the panel reads them from the server, so it cannot offer a letter
-  the endpoint refuses. A sub-menu answer never follows a tag the rider re-filed
-  onto another letter — the field would not exist there.
+  the tag type alone would put it. **One pick, one home** (owner 2026-09-07):
+  every SCENERY pick lands on exactly one letter with `type` already answered.
+  VIEW is P · Viewpoint / high point, NATURE is P · Natural feature, HISTORY is
+  Q · Heritage site, CULTURE is Q · Museum / culture, ARCHITECT is Q ·
+  Architecture; UNKNOWN offers P then Q and fills nothing. The two Type lists
+  hold only these values plus Q's Monument and Religious site, so Monument
+  and Heritage site no longer sit on both letters. NOTICE · POTHOLES arrives
+  as E with `hazardType` already answered; CLOSURE · WEEKS as E with
+  `closedFor`, which is what lets the map retire it by itself.
+  `ScoutTag::DETAIL_LETTERS` and `DETAIL_FIELDS` own both tables and the panel
+  reads them from the server, so it cannot offer a letter the endpoint refuses.
+  A sub-menu answer never follows a tag the rider re-filed onto another letter
+  (the field would not exist there): `ScoutIntakeController` fills the fields
+  only when the letter is the pick's first offer. Pinned by
+  `ScoutIntakeTest::testEveryScenerySubmenuPickHasOneHomeAndItsTypeExistsThere`.
+  Vocabulary rename `Version20260907210000`: Nature reserve to Natural feature
+  on P, Museum to Museum / culture on Q, in items and undecided payloads.
 - **`hazardType` gained Potholes, Junction / crossing and Bad corner**, because
   the device offers them and every notice tapped on the bars was otherwise
   flattened to "Other".

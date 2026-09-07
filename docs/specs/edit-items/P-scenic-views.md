@@ -31,7 +31,7 @@ article, where repeating the panel title would be redundant.
 | Field | Control | Provenance |
 |---|---|---|
 | Name | input | `[edit]` |
-| Type | select(Viewpoint / high point / Monument / Heritage site / Nature reserve) (tourism=viewpoint) | `[OSM]` |
+| Type | select(Viewpoint / high point / Natural feature) (tourism=viewpoint) | `[OSM]` |
 | Access for bikes | select(Roadside / Short walk / Path only) | `[edit]` |
 | What can you see? | input | `[edit]` |
 | Still as mapped? | select(As mapped / Closed / Not there anymore) | `[tap]` |

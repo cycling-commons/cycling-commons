@@ -94,7 +94,7 @@
     {
       "qid": "Q180402",
       "name": "Yosemite National Park",
-      "type": "Nature reserve",
+      "type": "Natural feature",
       "note": "national park in California, United States",
       "lat": 37.7425,
       "lng": -119.5375,
@@ -109,7 +109,7 @@
     {
       "qid": "Q220289",
       "name": "Grand Canyon National Park",
-      "type": "Nature reserve",
+      "type": "Natural feature",
       "note": "national park in Coconino and Mohave counties in Arizona, United States",
       "lat": 36.0553,
       "lng": -112.122,

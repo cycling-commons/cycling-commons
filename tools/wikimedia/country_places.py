@@ -85,7 +85,7 @@ SCENIC = {
     "Q8502": "Viewpoint / high point",    # mountain
     "Q23397": "Viewpoint / high point",   # lake
     "Q34038": "Viewpoint / high point",   # waterfall
-    "Q46169": "Nature reserve",           # national park
+    "Q46169": "Natural feature",          # national park
     "Q179049": "Viewpoint / high point",  # gorge
 }
 HISTORY = {

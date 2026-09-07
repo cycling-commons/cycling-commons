@@ -21,7 +21,7 @@ Landmarks, local stories and cycling-heritage sites to ride past. (Split out fro
 | Field | Control | Provenance |
 |---|---|---|
 | Name | input | `[edit]` |
-| Type | select(Heritage site / Museum / Monument / Religious site) (historic=) | `[OSM]` |
+| Type | select(Heritage site / Museum / culture / Monument / Religious site / Architecture) (historic=) | `[OSM]` |
 | Bike parking | select(Unknown / Yes / No) | `[OSM]` |
 | Still as mapped? | select(As mapped / Closed / Not there anymore) | `[tap]` |
 | Anything to add? | textarea | `[edit]` |

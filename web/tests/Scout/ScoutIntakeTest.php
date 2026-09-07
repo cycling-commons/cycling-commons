@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Scout;
 
+use App\Catalog\CatalogFormRegistry;
 use App\Catalog\Entity\Item;
 use App\Catalog\Entity\Submission;
 use App\Catalog\ItemSource;
@@ -395,7 +396,7 @@ final class ScoutIntakeTest extends WebTestCase
         // The device's submenu says which kind of view it was, and HISTORY is
         // letter Q — not the scenic-views letter the tag type alone implies.
         // Offering only P made the rider re-file their own answer.
-        self::assertSame(['Q', 'P'], ScoutTag::lettersFor('scenery', 2));
+        self::assertSame(['Q'], ScoutTag::lettersFor('scenery', 2));
         self::assertSame(['P'], ScoutTag::lettersFor('scenery', 4), 'a VIEW is a scenic view');
         self::assertSame(['D'], ScoutTag::lettersFor('resupply', 3), 'REPAIR is a bike service');
         self::assertSame(['B'], ScoutTag::lettersFor('resupply', 1), 'WATER is water & food');
@@ -464,5 +465,88 @@ final class ScoutIntakeTest extends WebTestCase
         /** @var Item $item */
         $item = $em->getRepository(Item::class)->find($submission->getItemId());
         self::assertArrayNotHasKey('hazardType', $item->getAttributes());
+    }
+
+    public function testASceneryPickFillsTheTypeOnItsHomeLetter(): void
+    {
+        // One pick, one home (owner 2026-09-07): ARCHITECT is Q with Type
+        // "Architecture" already answered, so the rider never picks it twice.
+        $client = static::createClient();
+        $this->login($client, 'arch');
+
+        $this->post($client, [
+            'tag' => 'scenery', 'letter' => 'Q', 'detail' => 5,
+            'lat' => 50.8949, 'lng' => 4.3415,
+            'details' => ['name' => 'Atomium'],
+        ]);
+
+        self::assertResponseIsSuccessful();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $submission = $em->getRepository(Submission::class)->findOneBy(['title' => 'Atomium']);
+        self::assertSame('Q', $submission->getLetter());
+        /** @var Item $item */
+        $item = $em->getRepository(Item::class)->find($submission->getItemId());
+        self::assertSame('Architecture', $item->getAttributes()['type'] ?? null);
+    }
+
+    public function testASceneryViewFillsTheTypeOnScenicViews(): void
+    {
+        $client = static::createClient();
+        $this->login($client, 'view');
+
+        $this->post($client, [
+            'tag' => 'scenery', 'letter' => 'P', 'detail' => 4,
+            'lat' => 50.5, 'lng' => 6.0,
+            'details' => ['name' => 'Over the Ardennes'],
+        ]);
+
+        self::assertResponseIsSuccessful();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $submission = $em->getRepository(Submission::class)->findOneBy(['title' => 'Over the Ardennes']);
+        /** @var Item $item */
+        $item = $em->getRepository(Item::class)->find($submission->getItemId());
+        self::assertSame('Viewpoint / high point', $item->getAttributes()['type'] ?? null);
+    }
+
+    public function testASceneryPickRefiledToAnotherLetterCarriesNoType(): void
+    {
+        // "Architecture" is not a scenic-views type; a rider who re-files the
+        // tag onto P answers Type at home.
+        $client = static::createClient();
+        $this->login($client, 'archrefiled');
+
+        $this->post($client, [
+            'tag' => 'scenery', 'letter' => 'P', 'detail' => 5,
+            'lat' => 50.5, 'lng' => 6.0,
+            'details' => ['name' => 'Refiled tower'],
+        ]);
+
+        self::assertResponseIsSuccessful();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $submission = $em->getRepository(Submission::class)->findOneBy(['title' => 'Refiled tower']);
+        self::assertSame('P', $submission->getLetter());
+        /** @var Item $item */
+        $item = $em->getRepository(Item::class)->find($submission->getItemId());
+        self::assertArrayNotHasKey('type', $item->getAttributes());
+    }
+
+    public function testEveryScenerySubmenuPickHasOneHomeAndItsTypeExistsThere(): void
+    {
+        // The two Type lists and the Scout picker must not drift apart.
+        $registry = static::getContainer()->get(CatalogFormRegistry::class);
+        foreach ([1, 2, 3, 4, 5] as $detail) {
+            $home = ScoutTag::lettersFor('scenery', $detail);
+            self::assertCount(1, $home, "SCENERY pick $detail has one home");
+            $type = ScoutTag::fieldsFor('scenery', $detail)['type'] ?? null;
+            self::assertNotNull($type, "SCENERY pick $detail fills Type");
+            $options = [];
+            foreach ($registry->for(ScoutTag::itemTypeFor($home[0]))->all() as $field) {
+                if ('type' === $field->name) {
+                    $options = $field->choices;
+                }
+            }
+            self::assertContains($type, $options, "$type is a Type on $home[0]");
+        }
+        self::assertSame([], ScoutTag::fieldsFor('scenery', 6), 'UNKNOWN fills nothing');
     }
 }

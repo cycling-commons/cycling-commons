@@ -195,7 +195,8 @@ final class CatalogFormRegistry
             ItemType::ScenicViews => new ItemFieldSet(
                 fields: [
                     CatalogField::text('name', 'Name', display: false),
-                    CatalogField::select('type', 'Type', ['Viewpoint / high point', 'Monument', 'Heritage site', 'Nature reserve']),
+                    // One pick, one home: the Scout scenery picker's VIEW and NATURE land here; HISTORY, CULTURE and ARCHITECT are Q (ScoutTag::DETAIL_FIELDS).
+                    CatalogField::select('type', 'Type', ['Viewpoint / high point', 'Natural feature']),
                     CatalogField::select('bikeAccess', 'Access for bikes', ['Roadside', 'Short walk', 'Path only']),
                     CatalogField::text('whatYouSee', 'What can you see?'),
                     CatalogField::select('condition', 'Still as mapped?', self::CONDITION_NO_PARTS),
@@ -213,7 +214,7 @@ final class CatalogFormRegistry
             ItemType::HistoryCulture => new ItemFieldSet(
                 fields: [
                     CatalogField::text('name', 'Name', display: false),
-                    CatalogField::select('type', 'Type', ['Heritage site', 'Museum', 'Monument', 'Religious site']),
+                    CatalogField::select('type', 'Type', ['Heritage site', 'Museum / culture', 'Monument', 'Religious site', 'Architecture']),
                     CatalogField::select('bikeParking', 'Bike parking', self::UNKNOWN_YES_NO),
                     CatalogField::select('condition', 'Still as mapped?', self::CONDITION_NO_PARTS),
                     CatalogField::textarea('note', 'Description', 'A useful tip about this spot'),
