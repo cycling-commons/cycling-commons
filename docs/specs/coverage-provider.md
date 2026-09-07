@@ -681,6 +681,13 @@ itemId?}`.
 | `GET /map/coverage/counts` | rail totals | `{"counts": {"B": n, …}, "attribution"}`; **scope-aware** (Phase 3); `max-age=3600` |
 | `GET /map/coverage/poi/{osmType}/{osmId}` | new: drawer detail for tile POIs | `{ref, letter, name, kind, ll, tags, curated, attribution}` — `tags` filtered to `CoverageRepository::TAG_WHITELIST` (store rich, serve trimmed); `curated` = `{itemId, state, fields, confirmations}` or `null`; `osmType ∈ {node, way}`; 404 when the ref is not cached; ETag + `max-age=300` |
 
+- **A gone row lists nowhere (catalog-data-model.md §7; 2026-09-07).** The
+  curated arm of `search` and `nearby` carries `GoneRows::notGoneSql('i')`,
+  the predicate the payload and the public API already use, so a row
+  approved as "Not there anymore" is neither a curated entry nor, through
+  its still-claimed OSM ref, a community one. Before this the nearby list
+  named a "Scenic views" the map did not draw (owner, Atomium 2026-09-07).
+  Pinned by `CoverageQueryTest::test{Search,Nearby}GoneRowListsNowhereAndStillShadowsTwin`.
 - **Region scope params (Phase 3, map-and-search.md §4.5).** `search`,
   `nearby` and `counts` accept optional `rids` (csv region ids →
   `region_id IN (…)`) and `cc` (2-letter country → `country_code = :cc`). The

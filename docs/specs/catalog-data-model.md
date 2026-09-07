@@ -877,11 +877,14 @@ mapped" about a place its editor never looked at, and turn a no-op edit into a
 change the intake refuses. Silence means nobody has said.
 
 `condition = 'Not there anymore'` is the only attribute value that changes what
-is served: `CatalogProvider::itemRows()` drops the row from the payload while
+is served. One predicate, `App\Catalog\GoneRows::notGoneSql()`, is shared by
+every served read: `CatalogProvider::itemRows()` drops the row from the payload,
+`PublicItemsProvider` from the API, and `CoverageRepository::search()` and
+`nearby()` from their curated arm (coverage-provider.md §5), while
 `curatedRefs()` still claims its `source_ref`, so the coverage POI it was
 materialized from stays hidden too. A place reported gone leaves the map without
 handing itself back to the reference layer, and the row stays in the table
-because a curator may disagree.
+because a curator may disagree (the curator ghost layer, map-and-search.md §5).
 
 ### The `JSON_PRESERVE_ZERO_FRACTION` gotcha
 

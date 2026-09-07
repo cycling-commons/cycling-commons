@@ -65,6 +65,16 @@ final class CoverageQueryTest extends WebTestCase
         return $item;
     }
 
+    /** A served row a rider reported gone: dropped from the payload, twin still claimed (catalog-data-model.md §7). */
+    private function goneItem(string $sourceRef, string $name, float $lat = 50.4, float $lng = 5.8, string $letter = 'B'): Item
+    {
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $item = $this->item($sourceRef, $name, $lat, $lng, $letter)->setAttributes(['condition' => 'Not there anymore']);
+        $em->flush();
+
+        return $item;
+    }
+
     /** @return array<string, mixed> */
     private function getJson(KernelBrowser $client, string $url): array
     {
@@ -237,6 +247,37 @@ final class CoverageQueryTest extends WebTestCase
         self::assertSame('node/9561', $group['items'][0]['ref']);
         self::assertFalse($group['items'][0]['curated']);
         self::assertArrayNotHasKey('itemId', $group['items'][0]);
+    }
+
+    /**
+     * A row reported "Not there anymore" is gone from the map payload
+     * (catalog-data-model.md §7). The query plane must agree: it lists in
+     * neither tier, and its coverage twin stays hidden too, or the nearby
+     * list names a pin the map does not draw.
+     */
+    public function testSearchGoneRowListsNowhereAndStillShadowsTwin(): void
+    {
+        $client = static::createClient();
+        $db = $this->db();
+        self::ensureCoverageSchema($db);
+        self::insertCoveragePoi($db, ['ref' => 'node/9012', 'name' => 'Fontaine disparue']);
+        $this->goneItem('node/9012', 'Fontaine disparue');
+
+        $results = $this->getJson($client, '/map/coverage/search?q=fontaine')['results'];
+        self::assertSame([], $results);
+    }
+
+    public function testNearbyGoneRowListsNowhereAndStillShadowsTwin(): void
+    {
+        $client = static::createClient();
+        $db = $this->db();
+        self::ensureCoverageSchema($db);
+        self::insertCoveragePoi($db, ['ref' => 'node/9562', 'name' => 'Fontaine disparue', 'lat' => 50.401, 'lng' => 5.8]);
+        $this->goneItem('node/9562', 'Fontaine disparue', 50.401, 5.8);
+
+        $data = $this->getJson($client, '/map/coverage/nearby?lat=50.4&lng=5.8&km=5');
+        self::assertResponseIsSuccessful();
+        self::assertSame([], $data['groups']);
     }
 
     public function testNearbyKmClampsAtTwentyFiveKm(): void

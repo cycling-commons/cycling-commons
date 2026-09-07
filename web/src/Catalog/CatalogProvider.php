@@ -89,7 +89,7 @@ final class CatalogProvider
      */
     public function goneForMap(ModerationScope $scope, int $limit = 500): array
     {
-        $where = "i.attributes->>'condition' = 'Not there anymore'";
+        $where = "i.attributes->>'condition' = '".GoneRows::CONDITION."'";
         $params = ['limit' => $limit];
         $types = ['limit' => \Doctrine\DBAL\ParameterType::INTEGER];
         $frag = $scope->sqlFragment('i');
@@ -198,7 +198,7 @@ final class CatalogProvider
             $sql .= ' AND NOT ('.CoverageRetirement::untouchedOsmSql('i').')';
         }
         // docs/specs/catalog-data-model.md §7 — gone from the map; curatedRefs() still claims the OSM ref.
-        $sql .= " AND COALESCE(i.attributes->>'condition', '') <> 'Not there anymore'";
+        $sql .= ' AND '.GoneRows::notGoneSql('i');
 
         /* @var list<array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null, region_id: int|null, verified: bool, by_name: string|null, by_public: bool|null, by_uuid: string|null, letter: string, last_confirmed: string|null}> */
         return $this->db->fetchAllAssociative($sql.' ORDER BY i.id', $params);

@@ -8,6 +8,7 @@ namespace App\Api\V1;
 
 use App\Api\V1\Dto\ItemFeature;
 use App\Catalog\CoverageRetirement;
+use App\Catalog\GoneRows;
 use App\Catalog\ItemState;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
@@ -63,9 +64,9 @@ final class PublicItemsProvider
         } elseif ('community' === $tier) {
             $sql .= ' AND NOT '.$verified;
         }
-        $sql .= " AND COALESCE(i.attributes->>'condition', '') <> 'Not there anymore'
+        $sql .= ' AND '.GoneRows::notGoneSql('i').'
                   ORDER BY i.id
-                  LIMIT :lim";
+                  LIMIT :lim';
 
         $rows = $this->db->fetchAllAssociative($sql, $params, ['lim' => ParameterType::INTEGER]);
 

@@ -8,6 +8,7 @@ namespace App\Coverage;
 
 use App\Catalog\CoverageRetirement;
 use App\Catalog\Entity\Item;
+use App\Catalog\GoneRows;
 use App\Catalog\ItemState;
 use App\Media\Commons\CommonsFile;
 use Doctrine\DBAL\ArrayParameterType;
@@ -220,7 +221,8 @@ final class CoverageRepository
              WHERE i.letter IN ".self::POI_LETTERS_SQL.'
                AND i.state IN '.ItemState::servedSqlTuple().'
                AND i.name ILIKE :like
-               AND NOT ('.CoverageRetirement::untouchedOsmSql('i').')'
+               AND NOT ('.CoverageRetirement::untouchedOsmSql('i').')
+               AND '.GoneRows::notGoneSql('i')
                .$this->scopeArm('i', $rids, null).'
              ORDER BY similarity(i.name, :q) DESC, i.id
              LIMIT :limit',
@@ -287,7 +289,8 @@ final class CoverageRepository
              WHERE i.letter IN ".self::POI_LETTERS_SQL.'
                AND i.state IN '.ItemState::servedSqlTuple()."
                AND ST_DWithin(i.geom::geography, $point, :m)
-               AND NOT (".CoverageRetirement::untouchedOsmSql('i').')'
+               AND NOT (".CoverageRetirement::untouchedOsmSql('i').')
+               AND '.GoneRows::notGoneSql('i')
                .$this->scopeArm('i', $rids, null)."
              ORDER BY i.letter, ST_Distance(i.geom::geography, $point), i.id",
             $curatedParams,
