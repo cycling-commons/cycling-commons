@@ -52,6 +52,30 @@ final class ReportResolver
     }
 
     /**
+     * A town card. Not a row anybody owns and not one that can be gone: the
+     * card exists for every town Photon names. The label is the title any
+     * language row holds, else the element ref itself.
+     *
+     * @return array{label: ?string, author: ?User, exists: bool, link_route: ?string, link_params: array<string, string|int>}
+     */
+    private function town(string $id): array
+    {
+        [$type, $osmId] = explode('-', $id, 2) + [1 => '0'];
+        $title = $this->em->getConnection()->fetchOne(
+            'SELECT title FROM town_summary WHERE osm_ref = :r AND title IS NOT NULL ORDER BY (lang = \'en\') DESC, lang LIMIT 1',
+            ['r' => $type.'/'.$osmId],
+        );
+
+        return [
+            'label' => \is_string($title) ? $title : $type.'/'.$osmId,
+            'author' => null,
+            'exists' => true,
+            'link_route' => 'moderate_town',
+            'link_params' => ['osmType' => $type, 'osmId' => (int) $osmId],
+        ];
+    }
+
+    /**
      * @return array{label: ?string, author: ?User, exists: bool, link_route: ?string, link_params: array<string, string|int>}
      */
     public function resolve(ContentReport $report): array
@@ -63,6 +87,7 @@ final class ReportResolver
             ReportTarget::DisplayName => $this->rider($report->getTargetId()),
             ReportTarget::Message => $this->message($report->getTargetId()),
             ReportTarget::Photo => $this->photo($report->getTargetId()),
+            ReportTarget::Town => $this->town($report->getTargetId()),
         };
     }
 

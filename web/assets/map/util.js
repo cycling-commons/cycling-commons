@@ -72,3 +72,8 @@ export function featureSummary(f, D){
   if(bits.length) return bits.join(' · ');
   return f.headline || '';
 }
+
+/* docs/specs/map-and-search.md §7.2: the name Photon returns. Photon speaks
+   default, de, en and fr; `default` is the place's own name (Antwerpen, not
+   Antwerp), which is the right answer for every language Photon lacks. */
+export const photonLang = htmlLang => { const l = String(htmlLang || '').slice(0, 2).toLowerCase(); return ['en', 'fr', 'de'].includes(l) ? l : 'default'; };

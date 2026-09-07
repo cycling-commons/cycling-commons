@@ -1639,6 +1639,88 @@ pulses an anchor-aware halo (`hlOff`, §6.1). A pulse over empty map in Curated
 mode is intentional — it locates items whose dots the mode filter hides. Route
 drawers link their towns (`Starts at` / `Towns on route`) to the same card.
 
+**What Wikipedia and Wikidata know, fetched on first open (2026-09-07).**
+Owner: "the first time a town is shown in the drawer we see a spinner and it
+fetches text and images from wiki", the way the coverage photo already does,
+"and of course cycling related knowledge for that town". The "community notes,
+none yet" placeholder that stood there since the demo is gone; nothing was ever
+behind it. A Photon hit now carries the element ref Photon named
+(`osm_type`+`osm_id`, `search-ui.js`), and a card opened from one shows a
+spinner slot that polls `GET /map/town/{node|way|relation}/{id}?lang=&lat=&lng=`
+(`TownController`, no-store, the coverage photo's poll and admission budgets).
+The first reader claims a `town_summary` row for (ref, language) and queues
+`ResolveTownSummary`; its handler makes four server-side, identified requests:
+
+1. OpenStreetMap, the element's `wikidata` tag (`OsmElementApi`). No tag: an
+   answered, empty row. Kept, so nobody asks twice.
+2. Wikidata `wbgetentities`, the page titles in the reader's language and
+   English (`CommonsApi::entities()`).
+3. Wikipedia REST `page/summary`, the first paragraph, plain text, clipped at
+   a sentence near 700 characters (`CommonsApi::pageSummary()`). The reader's
+   Wikipedia wins when it has the page; English is the fallback;
+   `page_lang` records which was served. Text is CC BY-SA 4.0 and the card
+   says so beside the "Wikipedia ↗" link.
+4. Two Wikidata claims, `wbgetclaims` each (`CommonsApi::townFacts()`, owner
+   2026-09-08): inception (P571) and the newest dated population (P1082, by
+   its point-in-time qualifier; a preferred-rank claim wins a tie, a dated
+   count beats an undated one). Shown as a two-line list under the paragraph,
+   "Founded · c. 1200" and "Inhabitants · 565,039 (2024)", each line only when
+   Wikidata has it; Antwerp has no inception there. Precision travels with the
+   year: century and decade precisions (7, 8) read "c.", finer ones read the
+   year, and a negative year reads "BC" in the reader's language.
+5. The Wikidata query service, once: every cycling race or route that starts
+   (P1427), finishes (P1444) or passes (P2825) here, grouped by the race its
+   editions are instances of and kept only when that race is a kind of cycling
+   race, which is what drops the generic "plain stage" rows. An edition that
+   is part of a bigger one (P361) groups under that one's race instead, when
+   that is a stage race, a Grand Tour, a world championship or a national
+   championship: the men's, women's and under-23 road races of the 2021
+   Worlds are one line, counted as one edition, and a Tour de France stage
+   reads "Tour de France, a stage starts here" (owner: "you can combine
+   these, they are all the same year"). A season series such as the UCI World
+   Tour is not such a parent, so a Tour of Flanders stays itself. Every discipline
+   counts: the sport is any subclass of cycle sport (Q53121), so road, gravel,
+   mountain bike, cyclo-cross, track and BMX all qualify (owner: "not only road
+   cycling"). Signed cycling routes (Q102307360) and mountain biking routes
+   (Q71716093) that name the place list as themselves, though few carry start
+   or end points on Wikidata: the Great Divide has none, so Banff shows no
+   route yet. Labels and links come from one more `wbgetentities` batch. The
+   card shows up to eight, newest last edition first, as "Tour of Flanders,
+   starts here, 21 editions, last 2025". This arm failing costs the town its
+   list, not its paragraph; the query service is the slowest of the four
+   (7 s for Antwerp on 2026-09-07, 45 s cap).
+
+The photo is the P18 path every scenic POI takes (`ResolveWikidataImage`,
+then Commons, then our own storage, never a hotlink): the handler claims the
+QID when it has a continent, and the endpoint reports the photo's state beside
+the text, so the paragraph shows as soon as it is there and the picture lands a
+few seconds later through a second bounded poll (`watchJson` in
+`commons-photo.js`, the generalised coverage-photo poll).
+
+**Report it, and write over it (owner 2026-09-08: "there should be an
+exclamation mark so people could report the text").** The card's credit line
+ends in a small "!" that opens the one report door, `/report/town/node-59518`
+(`ReportTarget::Town`, id = the element, never a language: the report is
+about the town). It lands on the reports desk like every other kind, and the
+desk's "open target" link goes to the curator's pen, `/moderate/town/{type}/{id}`
+(`ModerateTownController`): one box per language, the fetched paragraph shown
+above it, save per language. Saving calls `TownSummaryRepository::overrideText()`:
+the row becomes answered, `edited_by`/`edited_at` are set, and from then on it
+is LOCAL, "we can't connect to online anymore": the fetch never claims an
+answered row, and any future refresh sweep must skip `edited_at IS NOT NULL`.
+The endpoint carries `edited: true` and the card's credit reads "Edited by our
+curators, after Wikipedia CC BY-SA 4.0" (a rewrite of CC BY-SA text keeps its
+attribution; the Wikipedia link stays). Riders do not edit directly: the "!"
+is their pen, and a curator writes. Pinned by `ModerateTownControllerTest`.
+
+The five hand-written
+`CITIES` blurbs keep precedence: a card with `meta.info` never polls. No page,
+no races, no photo are answers, recorded; only a source that did not reply
+releases the claim so a later reader asks again. Pinned by
+`ResolveTownSummaryHandlerTest`, `TownControllerTest`, and the `watchJson`
+cases in `tests/js/commons-photo.test.mjs`. Not built: routes through a town
+from our own routes layer, which needs geometry, not Wikidata.
+
 ### 6.6 Mobile snap sheet (≤ 820 px)
 
 Three resting states: **peek** ≈ `7.5rem` (handle + title, map fully
@@ -1716,6 +1798,13 @@ the index and the dropdown.
   (stale ones aborted), bbox-biased to the region, filtered to place types
   (`place:city|town|village|hamlet|municipality`), capped at 6 with local
   quick-picks winning over their Photon twin.
+- **Names in the reader's language** (owner-reported 2026-09-07: Dutch UI,
+  "Antwerp" in the list). Photon takes `lang`, and speaks only `default`,
+  `de`, `en` and `fr`; `util.js photonLang()` maps the page language to one
+  of those, and every language Photon lacks (nl, es) gets `default`, the
+  place's own `name` tag, which is "Antwerpen" for a Dutch reader and
+  "Anvers" for a French one. The town card, its Wikipedia lookup and the
+  drawer title all carry that name. Pinned by `tests/js/photon-lang.test.mjs`.
 - The hardcoded `CITIES` constants remain instant quick-picks (matched first,
   no network).
 - **Failure mode: silent degradation** to index + quick-picks — no toast, no
@@ -2170,5 +2259,6 @@ The coverage tiles themselves are specified in
   worldwide readiness for the map shell has no owner yet beyond the coverage
   plan's Belgium-first staging.
 - The **city blurbs in `CITIES`** are hand-authored English constants
-  (untranslated, unsourced); production intent was Wikidata/Wikipedia-derived
-  or community notes — unowned.
+  (untranslated, unsourced) for five Wallonia towns. Every other town gets the
+  Wikipedia paragraph, photo and race list fetched on first open (§6.5,
+  2026-09-07); the five could be dropped in favour of the same path.

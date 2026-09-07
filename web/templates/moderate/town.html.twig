@@ -1,0 +1,83 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{#
+  A town card's text, one box per language (docs/specs/map-and-search.md §6.5).
+
+  What a reader sees on the map is fetched from Wikipedia the first time
+  anybody opens the town. A curator who knows better writes over it here.
+  Saving a language makes it local: the fetch never touches that row again,
+  and the card says our curators wrote it. Riders reach this page through the
+  card's report link, the one door every content type uses.
+#}
+{% extends 'base.html.twig' %}
+
+{% block head_styles %}
+{% include 'account/_shell_styles.html.twig' %}
+<style>
+  .townref{font-family:var(--mono);font-size:.74rem;color:#6d7060;letter-spacing:.04em}
+  .langblock{border-bottom:1px solid rgba(20,22,14,.12);padding:1.1rem 0 1.3rem}
+  .langblock:last-child{border-bottom:0}
+  .langhead{display:flex;gap:.6rem;align-items:baseline;flex-wrap:wrap}
+  .langhead h2{font-family:var(--serif);font-size:1.15rem;margin:0}
+  .tag{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;
+    padding:.18rem .42rem;border-radius:3px;background:var(--paper-deep);color:#4a4d40}
+  .tag.local{background:var(--spruce);color:var(--paper)}
+  .fetched{font-size:.9rem;color:#4a4d40;line-height:1.55;margin:.5rem 0 .7rem;padding:.7rem .9rem;
+    background:var(--paper-deep);border-left:2px solid var(--ochre);border-radius:0 8px 8px 0}
+  .fetched a{color:var(--clay)}
+  .townform label{display:block;font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:#595c4d;margin:.6rem 0 .3rem}
+  .townform textarea{width:100%;min-height:7rem;font-family:inherit;font-size:.92rem;line-height:1.5;padding:.55rem .7rem;
+    border:1px solid rgba(20,22,14,.22);border-radius:5px;background:var(--paper)}
+  .townform input[type=text]{width:100%;font-family:inherit;font-size:.92rem;padding:.45rem .6rem;
+    border:1px solid rgba(20,22,14,.22);border-radius:5px;background:var(--paper)}
+  .townform textarea:focus-visible,.townform input:focus-visible{outline:2px solid var(--clay);outline-offset:1px}
+  .townform button{margin-top:.6rem;font-family:inherit;font-weight:700;font-size:.85rem;padding:.45rem .9rem;border:0;
+    border-radius:5px;background:var(--trail);color:var(--ink);cursor:pointer}
+  .townform button:hover{background:#ff703d}
+  .townform button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  .hint{font-size:.85rem;color:#6d7060;margin:.3rem 0 0}
+</style>
+{% endblock %}
+
+{% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate'} %}{% endblock %}
+
+{% block body %}
+<div class="dbody dmin" id="main">
+  <div class="mh">
+    <div class="kicker">{{ 'account.menu_moderation'|trans }}</div>
+    <h1>{{ title ?? ref }}</h1>
+    <p class="lede">{{ 'moderate.town.lede'|trans }}</p>
+    <p class="townref">{{ ref }}</p>
+  </div>
+
+  {% for label, messages in app.flashes %}
+    {% for m in messages %}<p class="flash {{ label }}">{{ m|trans }}</p>{% endfor %}
+  {% endfor %}
+
+  {% for lang in langs %}
+    {% set row = rows[lang]|default(null) %}
+    <section class="langblock">
+      <div class="langhead">
+        <h2>{{ ('lang.' ~ lang)|trans }}</h2>
+        {% if row and row.edited %}<span class="tag local">{{ 'moderate.town.local'|trans }}</span>
+        {% elseif row and row.answered and row.extract %}<span class="tag">{{ 'moderate.town.fetched'|trans({'%lang%': row.page_lang|default(lang)}) }}</span>
+        {% else %}<span class="tag">{{ 'moderate.town.none'|trans }}</span>{% endif %}
+      </div>
+      {% if row and row.extract and not row.edited %}
+        <div class="fetched">{{ row.extract }}{% if row.page_url %} <a href="{{ row.page_url }}" target="_blank" rel="noopener">Wikipedia ↗</a>{% endif %}</div>
+      {% endif %}
+      <form method="post" class="townform" action="{{ path('moderate_town_save', {osmType: osm_type, osmId: osm_id}) }}">
+        <input type="hidden" name="_token" value="{{ csrf_token(csrf_id) }}">
+        <input type="hidden" name="lang" value="{{ lang }}">
+        {% if not title %}
+          <label for="title-{{ lang }}">{{ 'moderate.town.field_title'|trans }}</label>
+          <input type="text" id="title-{{ lang }}" name="title" maxlength="240" value="{{ row.title|default('') }}">
+        {% endif %}
+        <label for="text-{{ lang }}">{{ 'moderate.town.field_text'|trans }}</label>
+        <textarea id="text-{{ lang }}" name="text" maxlength="{{ text_max }}" required>{{ row.extract|default('') }}</textarea>
+        <p class="hint">{{ 'moderate.town.hint'|trans({'%max%': text_max}) }}</p>
+        <button type="submit">{{ 'moderate.town.save'|trans }}</button>
+      </form>
+    </section>
+  {% endfor %}
+</div>
+{% endblock %}

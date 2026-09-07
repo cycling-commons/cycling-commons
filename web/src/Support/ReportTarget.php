@@ -41,6 +41,12 @@ enum ReportTarget: string
      * (2026-08-30-one-report-route-design.md §2).
      */
     case Photo = 'photo';
+    /**
+     * A town card's fetched text (map-and-search.md §6.5, 2026-09-08). The id
+     * is the OpenStreetMap element, `node-59518`, never a language: the report
+     * is about the town, and the desk shows every language of it.
+     */
+    case Town = 'town';
 
     /** The catalogue key naming this kind of thing to a reader. */
     public function label(): string
@@ -58,6 +64,7 @@ enum ReportTarget: string
     {
         return match ($this) {
             self::DisplayName, self::Photo => 1 === preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $id),
+            self::Town => 1 === preg_match('/^(node|way|relation)-[1-9][0-9]{0,11}$/', $id),
             default => 1 === preg_match('/^[1-9][0-9]{0,9}$/', $id),
         };
     }

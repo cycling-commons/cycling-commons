@@ -49,7 +49,7 @@ them is a real difference and not an accident.
 
 ## 3. What can be reported
 
-`App\Support\ReportTarget`, five cases:
+`App\Support\ReportTarget`, the cases:
 
 | Path | Case | Points at | Has an author |
 |---|---|---|---|
@@ -58,6 +58,7 @@ them is a real difference and not an accident.
 | `region` | `RegionText` | `Catalog\Entity\Region` | no |
 | `rider` | `DisplayName` | `Entity\User` by uuid | yes, themselves |
 | `message` | `Message` | `Messaging\Entity\UserMessage` | yes, `senderId`, if any |
+| `town` | `Town` | a `town_summary` ref, `node-59518` (map-and-search.md §6.5, 2026-09-08) | no |
 
 **Why places and regions have no author.** They are not written by one person.
 A place starts as a seeded or harvested row (`seeded-rows-stay-unassigned`) and

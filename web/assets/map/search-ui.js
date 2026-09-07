@@ -2,7 +2,7 @@
 /* Sidebar search: towns, item index, coverage lookup, widen chip.
    @see docs/specs/map-and-search.md §7 */
 import { I18N, D, tpl } from './i18n.js';
-import { escPend, slug, txtOn } from './util.js';
+import { escPend, slug, txtOn, photonLang } from './util.js';
 import { CITIES, layerByKey, LETTER_KEY } from './catalog.js';
 import { inScope, scopeLabel } from './scope-ui.js';
 import { itemIndex, idxIds, rebuildItemIndex, dropPendingFromIndex } from './item-index.js';
@@ -116,7 +116,7 @@ export function initSearchUi(){
       if(_phAbort) _phAbort.abort();
       const ctl=new AbortController(); _phAbort=ctl;
       const pp = (window.CCScope && !_worldwide) ? window.CCScope.photonParams() : {bbox:null, countrycode:null};
-      const url = PH_BASE + (pp.bbox ? '&bbox='+pp.bbox.join(',') : '') + '&q='+encodeURIComponent(q);
+      const url = PH_BASE + '&lang=' + photonLang(document.documentElement.lang) + (pp.bbox ? '&bbox='+pp.bbox.join(',') : '') + '&q='+encodeURIComponent(q);
       fetch(url, {signal:ctl.signal})
         .then(r=>{ if(!r.ok) throw new Error(String(r.status)); return r.json(); })
         .then(d=>{
@@ -127,9 +127,12 @@ export function initSearchUi(){
             // docs/specs/map-and-search.md §7.2 — countrycode is the precise gate; bbox spills borders.
             .filter(f=>!pp.countrycode || String(f.properties.countrycode||'').toLowerCase()===pp.countrycode)
             .filter(f=>{ const k=slug(f.properties.name); if(!k || seen.has(k)) return false; seen.add(k); return true; })
-            .map(f=>{ const c=f.geometry.coordinates, name=f.properties.name;
+            .map(f=>{ const c=f.geometry.coordinates, p=f.properties, name=p.name;
+              // docs/specs/map-and-search.md §6.5: the element ref is what the town card's Wikipedia lookup is keyed by.
+              const osmType={N:'node', W:'way', R:'relation'}[p.osm_type];
+              const osm=(osmType && /^\d+$/.test(String(p.osm_id||''))) ? osmType+'/'+p.osm_id : null;
               return {name, key:slug(name), kind:'Town', badge:'◎', color:'#3E7D8C', town:true, ph:1,
-                go:()=>openPlace(name, {ll:[+c[1],+c[0]]})}; });
+                go:()=>openPlace(name, {ll:[+c[1],+c[0]], osm})}; });
           _phQ=slug(q);
           if(!sRes.hidden) runS();
         })

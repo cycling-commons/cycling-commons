@@ -88,3 +88,24 @@ test('the poll schedule is bounded and backs off', () => {
   assert.ok(d.every((v, i) => i === 0 || v >= d[i - 1]), 'never speeds up');
   assert.ok(d.reduce((a, b) => a + b, 0) <= 45000, 'gives up inside 45s');
 });
+
+// watchJson: the same bounded poll, with the caller saying what ready and
+// pending look like. The town card polls twice with it: text, then photo.
+import { watchJson } from '../../assets/map/commons-photo.js';
+
+test('watchJson answers ready by the caller\'s own test, not a fixed state name', async () => {
+  let got = null;
+  const fetchImpl = replies([{ state: 'ready', photo: { state: 'pending' } }, { state: 'ready', photo: { state: 'ready', sm: 'x' } }]);
+  await watchJson('/map/town/node/1',
+    { isReady: d => d.photo && d.photo.state !== 'pending', isPending: d => d.state === 'ready' },
+    d => { got = d; }, () => { throw new Error('gave up'); }, { fetchImpl, ...noSleep });
+  assert.equal(got.photo.sm, 'x');
+});
+
+test('watchJson gives up on an answer that is neither ready nor pending', async () => {
+  let gaveUp = false;
+  await watchJson('/map/town/node/1',
+    { isReady: d => d.state === 'ready', isPending: d => d.state === 'pending' },
+    () => { throw new Error('not ready'); }, () => { gaveUp = true; }, { fetchImpl: replies([{ state: 'none' }]), ...noSleep });
+  assert.equal(gaveUp, true);
+});

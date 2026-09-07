@@ -11,11 +11,13 @@ import { osmLayers } from './osm-pools.js';
 import { nearbyItems, idxIds } from './item-index.js';
 import { render } from './render.js';
 import { sheet } from './sheet.js';
-import { openDrawer, osmDrawer, waterDrawer, highlightAt, clearHighlight, revealPinAt } from './drawer.js';
+import { openDrawer, osmDrawer, waterDrawer, highlightAt, clearHighlight, revealPinAt, commonsPhotoHtml } from './drawer.js';
+import { openLightbox } from './lightbox.js';
 import { COVERAGE_ON, widenForDeepLink, openCoverageByRef,
          invalidateCoverageDrawer } from './coverage.js';
 import { showRouteCorrections } from './corrections.js';
 import { layerGlyph } from './icons.js';
+import { watchJson } from './commons-photo.js';
 
 export function bumpPlaceReq(){ _placeReq++; }
 
@@ -97,9 +99,11 @@ function renderPlaceCard(name, meta, near, covGroups){
     `<span class="cc-d-type" style="--c:#3E7D8C;color:#fff">◎ ${meta.t==='City'?(D.city||'City'):(D.town||'Town')}</span>
      <div class="cc-d-name">${escPend(name)}</div>
      ${meta.info?`<div class="cc-city-info">${escPend(meta.info)}</div>`:''}
-     <div class="cc-city-links">${meta.wiki?`<a href="${safeHref(meta.wiki)}" target="_blank" rel="noopener">Wikipedia ↗</a> · `:''}<span class="cc-city-ua">${D.notesNone||'community notes — none yet'}</span></div>
+     ${meta.wiki?`<div class="cc-city-links"><a href="${safeHref(meta.wiki)}" target="_blank" rel="noopener">Wikipedia ↗</a></div>`:''}
+     ${(!meta.info && meta.osm)?townWaiting(meta):''}
      <h4 class="cc-near-h">${(D.nearbyH||'In the Commons nearby · ≤ {d}').replace('{d}', uKm(NEARBY_KM, 0))}</h4>
      <ul class="cc-near-list">${list}</ul>`;
+  if(!meta.info && meta.osm) startTownWatch(name, meta);
   document.querySelectorAll('#drawerBody .cc-near').forEach(b=>{
     const n=all[+b.dataset.i];
     b.onclick=()=>n.e.go();
@@ -112,6 +116,81 @@ function renderPlaceCard(name, meta, near, covGroups){
   const d=document.getElementById('drawer'); d.classList.add('open'); d.setAttribute('aria-hidden','false');
   d.focus({preventScroll:true});
   if(window.innerWidth<=820) sheet.reset();
+}
+/* docs/specs/map-and-search.md §6.5: what Wikipedia and Wikidata know about a
+   town, fetched the first time anyone opens it and cached, the way the
+   coverage photo is. The slot in the DOM is what says whether to keep polling:
+   open something else and it is gone, and the poll stops by itself. */
+function townUrl(meta){
+  return '/map/town/'+meta.osm+'?lang='+encodeURIComponent((document.documentElement.lang||'en').slice(0,2))
+    +'&lat='+(+meta.ll[0]).toFixed(5)+'&lng='+(+meta.ll[1]).toFixed(5);
+}
+function townWaiting(meta){
+  return `<div class="cc-town" data-town-ref="${escPend(meta.osm)}">
+    <div class="cc-d-photo-wait cc-town-wait"><span class="cc-d-spin" aria-hidden="true"></span>
+    <span role="status">${escPend(D.townLoading||'Looking up Wikipedia…')}</span></div></div>`;
+}
+function relWords(rels){
+  const w={start:D.raceStart||'starts here', finish:D.raceFinish||'finishes here', via:D.raceVia||'passes through',
+    'stage-start':D.raceStageStart||'a stage starts here', 'stage-finish':D.raceStageFinish||'a stage finishes here', 'stage-via':D.raceVia||'passes through'};
+  const has=r=>rels.includes(r);
+  const out=[];
+  if(has('start') && has('finish')) out.push(D.raceStartFinish||'starts and finishes here');
+  else { if(has('start')) out.push(w.start); if(has('finish')) out.push(w.finish); }
+  if(has('stage-start') && has('stage-finish')) out.push(D.raceStageStartFinish||'stages start and finish here');
+  else { if(has('stage-start')) out.push(w['stage-start']); if(has('stage-finish')) out.push(w['stage-finish']); }
+  if(has('via') || has('stage-via')) out.push(w.via);
+  return out.join(' · ');
+}
+function townHtml(d, name, meta){
+  const t=d.text, c=Array.isArray(d.cycling)?d.cycling:[], p=d.photo||{};
+  const photo = p.state==='ready' ? commonsPhotoHtml(p, name)
+    : (p.state==='pending' ? `<div class="cc-d-photo-wait" data-town-photo="1"><span class="cc-d-spin" aria-hidden="true"></span><span role="status">${escPend(D.photoLoading||'Loading image…')}</span></div>` : '');
+  const f=d.facts||{}, lang=document.documentElement.lang||'en';
+  const yearTxt=y=>{ if(!y || !y.year) return ''; const abs=Math.abs(y.year);
+    let s=(y.year<0)?(D.yearBc||'{y} BC').replace('{y}', abs):String(abs);
+    if(y.precision<9) s=(D.circa||'c.')+' '+s;   // Wikidata precision 7 = century, 8 = decade
+    return s; };
+  const popTxt=p=>(p && p.n) ? p.n.toLocaleString(lang)+(p.year?' ('+p.year+')':'') : '';
+  const factRows=[[D.founded||'Founded', yearTxt(f.founded)], [D.inhabitants||'Inhabitants', popTxt(f.population)]].filter(r=>r[1]);
+  const facts = factRows.length ? `<ul class="cc-town-facts">${factRows.map(r=>`<li><span>${escPend(r[0])}</span><b>${escPend(r[1])}</b></li>`).join('')}</ul>` : '';
+  // docs/specs/content-reports.md: the one report door, keyed by the element, never a page.
+  const reportHref = '/report/town/'+encodeURIComponent(String(meta.osm||'').replace('/', '-'))+'?from='+encodeURIComponent(location.pathname+location.search);
+  const report = `<a class="cc-town-report" href="${safeHref(reportHref)}" title="${escPend(D.reportText||'Report this text')}" aria-label="${escPend(D.reportText||'Report this text')}">!</a>`;
+  const credit = d.edited ? escPend(D.wikiEdited||'Edited by our curators, after Wikipedia CC BY-SA 4.0') : escPend(D.wikiText||'Text CC BY-SA 4.0');
+  // Facts first, then the paragraph (owner 2026-09-08: "place these 2 info points above the text").
+  const text = facts + (t ? `<div class="cc-city-info">${escPend(t.extract)}</div>` : '') + (t ? `
+    <div class="cc-city-links"><a href="${safeHref(t.url)}" target="_blank" rel="noopener">Wikipedia ↗</a> · <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener">${credit}</a> ${report}</div>` : '');
+  const races = c.length ? `<h4 class="cc-near-h">${escPend(D.cyclingH||'Cycling here')}</h4>
+    <ul class="cc-town-races">${c.map(r=>{
+      const label = r.url ? `<a href="${safeHref(r.url)}" target="_blank" rel="noopener">${escPend(r.label)}</a>` : escPend(r.label);
+      const when = r.n>1 ? (D.raceEditions||'{n} editions · last {y}').replace('{n}', r.n).replace('{y}', r.last||'') : (r.last ? (D.raceOnce||'last {y}').replace('{y}', r.last) : '');
+      return `<li class="cc-town-race">${label}<small>${escPend(relWords(r.rels||[]))}${when?' · '+escPend(when):''}</small></li>`; }).join('')}</ul>` : '';
+  return photo + text + races;
+}
+function startTownWatch(name, meta){
+  const find = () => document.querySelector(`#drawerBody .cc-town[data-town-ref="${CSS.escape(meta.osm)}"]`);
+  if(!find()) return;
+  const url = townUrl(meta);
+  watchJson(url, { isReady: d => d.state==='ready', isPending: d => d.state==='pending' },
+    d => {
+      const el=find(); if(!el) return;
+      el.innerHTML = townHtml(d, name, meta);
+      const img = el.querySelector('.cc-d-photo > img');
+      if(img) img.addEventListener('click', () => openLightbox([d.photo], 0, name||''));
+      if(d.photo && d.photo.state==='pending'){
+        // The text is here; the picture is still on its way. Same bounded poll again.
+        watchJson(url, { isReady: x => !(x.photo && x.photo.state==='pending'), isPending: x => x.state==='ready' },
+          x => { const slot=find() && find().querySelector('[data-town-photo]'); if(!slot) return;
+            if(x.photo && x.photo.state==='ready'){ slot.outerHTML = commonsPhotoHtml(x.photo, name);
+              const im=find().querySelector('.cc-d-photo > img'); if(im) im.addEventListener('click', () => openLightbox([x.photo], 0, name||'')); }
+            else slot.remove(); },
+          () => { const slot=find() && find().querySelector('[data-town-photo]'); if(slot) slot.remove(); },
+          { cancelled: () => !find() });
+      }
+    },
+    () => { const el=find(); if(el) el.remove(); },
+    { cancelled: () => !find() });
 }
 export function openCity(name){
   const c = CITIES[name]; if(!c) return;

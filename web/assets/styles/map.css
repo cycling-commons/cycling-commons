@@ -1209,7 +1209,18 @@
   .cc-city-info{font-size:.92rem;color:rgb(var(--chrome-fg) / .85);line-height:1.55;margin-top:.7rem}
   .cc-city-links{margin-top:.6rem;font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase}
   .cc-city-links a{color:rgb(var(--chrome-fg) / .85);text-decoration:underline}
-  .cc-city-ua{color:rgb(var(--chrome-fg) / .65)}
+  .cc-town{margin-top:.2rem}
+  .cc-town-wait{aspect-ratio:auto;min-height:3.2rem;margin-top:.8rem}
+  .cc-town-report{display:inline-flex;align-items:center;justify-content:center;width:1.15rem;height:1.15rem;margin-left:.35rem;border-radius:50%;border:1px solid rgb(var(--chrome-fg) / .45);color:rgb(var(--chrome-fg) / .85);font-weight:700;font-size:.72rem;text-decoration:none;vertical-align:middle}
+  .cc-town-report:hover{border-color:var(--clay);color:var(--clay)}
+  .cc-town-facts{list-style:none;margin:.75rem 0 .2rem;padding:0;display:grid;grid-template-columns:auto 1fr;gap:.3rem 1rem;font-size:.9rem}
+  .cc-town-facts li{display:contents}
+  .cc-town-facts span{font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;color:rgb(var(--chrome-fg) / .65);align-self:baseline}
+  .cc-town-facts b{font-weight:600}
+  .cc-town-races{list-style:none;margin:0;padding:0}
+  .cc-town-race{padding:.42rem 0;border-bottom:1px solid rgb(var(--chrome-fg) / .1);font-size:.9rem;line-height:1.35}
+  .cc-town-race a{color:var(--chrome-link);text-decoration:underline}
+  .cc-town-race small{display:block;font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;color:rgb(var(--chrome-fg) / .65);margin-top:.15rem}
   .cc-near-h{font-family:var(--mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--clay);margin:1.3rem 0 .5rem}
   .cc-near-list{list-style:none;margin:0;padding:0}
   .cc-near{display:flex;align-items:center;gap:.55rem;width:100%;background:none;border:none;border-bottom:1px solid rgb(var(--chrome-fg) / .1);padding:.5rem 0;color:var(--chrome-fg-solid);font-family:var(--sans);font-size:.9rem;text-align:left;cursor:pointer}

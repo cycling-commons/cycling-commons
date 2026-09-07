@@ -27,9 +27,26 @@ export function photoPollDelays(){
  * @param {{fetchImpl?: Function, sleep?: Function, cancelled?: () => boolean}} [opts]
  */
 export async function watchCommonsPhoto(ref, onReady, onGiveUp, opts = {}){
+  return watchJson('/map/coverage/photo/' + ref,
+    { isReady: d => d.state === 'ready', isPending: d => d.state === 'pending' },
+    onReady, onGiveUp, opts);
+}
+
+/**
+ * The same bounded poll for any no-store JSON endpoint that answers
+ * pending / ready / none. The town card uses it twice: once for the text,
+ * then again for the photo that lands a few seconds later
+ * (docs/specs/map-and-search.md §6.5).
+ *
+ * @param {string} url
+ * @param {{isReady: (d: object) => boolean, isPending: (d: object) => boolean}} test
+ * @param {(data: object) => void} onReady
+ * @param {() => void} onGiveUp
+ * @param {{fetchImpl?: Function, sleep?: Function, cancelled?: () => boolean}} [opts]
+ */
+export async function watchJson(url, test, onReady, onGiveUp, opts = {}){
   const doFetch = opts.fetchImpl || (u => fetch(u, {headers:{Accept:'application/json'}}));
   const sleep = opts.sleep || (ms => new Promise(r => setTimeout(r, ms)));
-  const url = '/map/coverage/photo/' + ref;
   const delays = photoPollDelays();
 
   for(let i = 0; ; i++){
@@ -40,12 +57,12 @@ export async function watchCommonsPhoto(ref, onReady, onGiveUp, opts = {}){
       const res = await doFetch(url);
       if(res && res.ok) data = await res.json();
     }catch(e){
-      /* Offline, a 429, a proxy in the way: all mean "no photo right now", and
+      /* Offline, a 429, a proxy in the way: all mean "nothing right now", and
          none of them are worth an error in a rider's console. */
     }
 
-    if(data && data.state === 'ready'){ onReady(data); return; }
-    if(!data || data.state !== 'pending'){ onGiveUp(); return; }
+    if(data && test.isReady(data)){ onReady(data); return; }
+    if(!data || !test.isPending(data)){ onGiveUp(); return; }
     if(i >= delays.length){ onGiveUp(); return; }
     await sleep(delays[i]);
   }
