@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace App\Tests\Contribution;
 
 use App\Catalog\Entity\Item;
+use App\Catalog\Entity\Submission;
 use App\Catalog\ItemSource;
 use App\Catalog\ItemState;
 use App\Entity\User;
@@ -190,6 +191,32 @@ final class ImproveTest extends WebTestCase
         self::assertSelectorNotExists('[name="improve[whatChanged]"]');
     }
 
+    public function testABikeServiceOffersItsKindAndStoresTheKey(): void
+    {
+        // A rider's own stand wore the shop's cog because the harvest-stamped
+        // kind had no field (owner 2026-09-08: "this should be a hammer and
+        // pick"). The select shows words and stores the key.
+        $client = static::createClient();
+        $this->loginFreshUser($client, 'kind');
+        $item = $this->createItem('D', name: 'Shimano SOS toolstation');
+
+        $crawler = $client->request('GET', '/improve?item='.$item->getId());
+        self::assertResponseIsSuccessful();
+        $select = $crawler->filter('[name="improve[details][serviceKind]"]');
+        self::assertCount(1, $select);
+        self::assertSame('Repair stand', trim($select->filter('option[value="station"]')->text()));
+
+        $form = $crawler->selectButton('Next →')->form(['improve[details][serviceKind]' => 'station']);
+        $client->submit($form);
+        self::assertResponseIsSuccessful();
+
+        /** @var EntityManagerInterface $em */
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $submission = $em->getRepository(Submission::class)->findOneBy(['itemId' => $item->getId()]);
+        self::assertNotNull($submission);
+        self::assertSame('station', $submission->getChanges()['serviceKind']['now'] ?? null, 'the key is stored, not the label');
+    }
+
     // ── Type-aware rendering (driven by the bound item's own letter) ─────────
 
     public function testItemLetterRendersThatTypesFields(): void
@@ -300,10 +327,10 @@ final class ImproveTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('.receipt .ref', 'SUB-');
 
-        /** @var \App\Catalog\Entity\Submission $submission */
+        /** @var Submission $submission */
         $submission = static::getContainer()
             ->get(EntityManagerInterface::class)
-            ->getRepository(\App\Catalog\Entity\Submission::class)
+            ->getRepository(Submission::class)
             ->findOneBy([], ['id' => 'DESC']);
         self::assertNotNull($submission);
         self::assertSame($segment, $submission->getPayload()['segment'] ?? null, 'the drawn segment must be recorded in the submission payload');
@@ -365,12 +392,12 @@ final class ImproveTest extends WebTestCase
         self::assertArrayHasKey('potable', $changes, 'the rest of the edit still lands');
     }
 
-    private function latestSubmission(): \App\Catalog\Entity\Submission
+    private function latestSubmission(): Submission
     {
-        /** @var \App\Catalog\Entity\Submission|null $submission */
+        /** @var Submission|null $submission */
         $submission = static::getContainer()
             ->get(EntityManagerInterface::class)
-            ->getRepository(\App\Catalog\Entity\Submission::class)
+            ->getRepository(Submission::class)
             ->findOneBy([], ['id' => 'DESC']);
         self::assertNotNull($submission);
 
@@ -531,7 +558,7 @@ final class ImproveTest extends WebTestCase
 
         $submissions = static::getContainer()
             ->get(EntityManagerInterface::class)
-            ->getRepository(\App\Catalog\Entity\Submission::class)
+            ->getRepository(Submission::class)
             ->count([]);
         self::assertSame(0, $submissions, 'a javascript: URL must be blocked before any Submission is created');
     }

@@ -38,7 +38,8 @@ final class CatalogSchemaProvider
             if ([] !== $field->choices && 'rating' !== $entry['kind']) {
                 $choices = [];
                 foreach ($field->choices as $choice) {
-                    $choices[$choice] = $this->translator->trans($choice);
+                    // A keyed select stores a key and shows its label (CatalogField::selectKeyed()).
+                    $choices[$choice] = $this->translator->trans($field->choiceLabels[$choice] ?? $choice);
                 }
                 $entry['choices'] = $choices;
             }

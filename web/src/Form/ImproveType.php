@@ -131,7 +131,7 @@ final class ImproveType extends AbstractType
                 'label' => $field->label,
                 'required' => false,
                 'placeholder' => '—',
-                'choices' => array_combine($field->choices, $field->choices),
+                'choices' => [] === $field->choiceLabels ? array_combine($field->choices, $field->choices) : array_flip($field->choiceLabels),
                 'data' => $data,
             ]),
             FieldKind::MultiSelect => $builder->add($field->name, ChoiceType::class, [

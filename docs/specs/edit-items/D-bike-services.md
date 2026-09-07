@@ -21,14 +21,21 @@ kind, and why the distinction is a data fact rather than presentation — is own
 by [../osm-data-architecture.md](../osm-data-architecture.md) §5; this section
 records only the edit-flow consequences.
 
-**Derivation, never a form field.** `serviceKind` is stamped by the pipeline:
-`ServiceKind::fromOsmTags()` at harvest, with `ServiceKind::fromLegacyLabel()`
-as the import-time fallback for pre-split export artifacts
-(`ImportCatalogCommand`). It is an import-allowed attribute key
-(`App\Catalog\Import\AttributeVocabulary`, `'D' => ['serviceKind']`) but never a
-rider/curator-editable field. Kind selection on a manual add is **specified,
-pending implementation** — deferred until an add-new-bike-service flow exists
-(osm-data-architecture.md §5).
+**Stamped by the harvest, editable in the wizard (2026-09-08).** `serviceKind`
+is stamped by the pipeline: `ServiceKind::fromOsmTags()` at harvest, with
+`ServiceKind::fromLegacyLabel()` as the import-time fallback for pre-split
+export artifacts (`ImportCatalogCommand`). A rider's own stand got nothing and
+wore the shop's cog (owner, the Shimano SOS tool station: "this should be a
+hammer and pick"), which broke the rule that every system-filled value has its
+wizard field. The wizard's first field after the name is now **Type**, a keyed
+select (`CatalogField::selectKeyed()`: stored `shop|station|pump`, shown as
+Bike shop / Repair stand / Pump, translated through the field schema's choice
+labels), on the edit and the add form alike. On the drawer it is the Type row:
+`schemaRows()` renders it, which replaces the generic "Bike services · OSM"
+line a rider-added stand used to wear. The intake validates the value through
+the form's choice list; `serviceKind` is no longer an `AttributeVocabulary`
+extra. Pinned by
+`ImproveTest::testABikeServiceOffersItsKindAndStoresTheKey`.
 
 **Kind-specific opening-hours default.** The registry field set is kind-aware:
 `CatalogFormRegistry::for(ItemType::BikeServices, ?ServiceKind)` — the improve

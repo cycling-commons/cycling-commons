@@ -29,8 +29,7 @@ final class AttributeVocabulary
             'steep', 'steepPoint', 'lineGrad', 'binM', 'length', 'gain', 'demSource',
             'steepWindowM',
             'footEle', 'summitEle'],
-        // serviceKind is harvest-stamped, not a form field.
-        'D' => ['serviceKind'],
+        'D' => [],
     ];
 
     public function __construct(private readonly CatalogFormRegistry $registry)

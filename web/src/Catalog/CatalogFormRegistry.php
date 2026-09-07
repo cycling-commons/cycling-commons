@@ -110,6 +110,11 @@ final class CatalogFormRegistry
             ItemType::BikeServices => new ItemFieldSet(
                 fields: [
                     CatalogField::text('name', 'Name', display: false),
+                    // The harvest stamps this from OSM tags; a rider's own
+                    // stand got nothing and wore the shop's cog until 2026-09-08
+                    // (owner: "this should be a hammer and pick"). Labelled
+                    // Type: on the drawer it IS the Type row.
+                    CatalogField::selectKeyed('serviceKind', 'Type', ['shop' => 'Bike shop', 'station' => 'Repair stand', 'pump' => 'Pump']),
                     CatalogField::url('web', 'Website', placeholder: 'https://… (the shop’s own site)'),
                     CatalogField::select('pumpValve', 'Pump valve', ['Presta + Schrader', 'Presta only', 'Schrader only', 'No pump']),
                     // docs/specs/osm-data-architecture.md §5 — unmanned station/pump defaults to 24/7; a shop stays Unknown.

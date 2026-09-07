@@ -15,7 +15,10 @@ namespace App\Catalog;
  */
 final readonly class CatalogField
 {
-    /** @param list<string> $choices non-empty for {@see FieldKind::Select}, empty otherwise */
+    /**
+     * @param list<string>          $choices      non-empty for {@see FieldKind::Select}, empty otherwise
+     * @param array<string, string> $choiceLabels
+     */
     private function __construct(
         public string $name,
         public string $label,
@@ -28,7 +31,21 @@ final readonly class CatalogField
         public bool $display = true,
         /** Shown, never typed — opposite of `display: false` (editable, hidden). */
         public bool $derived = false,
+        /** For a keyed select: stored value => label. Empty when the label IS the value. */
+        public array $choiceLabels = [],
     ) {
+    }
+
+    /**
+     * A select whose stored value is a machine key, not its label: `station`
+     * shows as "Repair stand". `$choices` (the keys) stays the vocabulary the
+     * intake validates against.
+     *
+     * @param array<string, string> $labelsByValue value => label
+     */
+    public static function selectKeyed(string $name, string $label, array $labelsByValue, bool $display = true): self
+    {
+        return new self($name, $label, FieldKind::Select, choices: array_keys($labelsByValue), display: $display, choiceLabels: $labelsByValue);
     }
 
     /** A value the app computes and displays; nobody types it. */
