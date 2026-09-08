@@ -1,0 +1,100 @@
+web/translations/messages.en.yaml
+  s_190feadae0fef2::t_8f2d538d0c80aa 853
+  s_bda768b13cee07::t_08d6c18a98ebb1 882
+  s_e382572451f2d6::t_c6284c53651fcb 881
+web/templates/pages/regions.html.twig
+  s_985a6f4653b290::t_edb75364f2d642 81-88,90-92,223
+  s_985a6f4653b290::t_1329f6c3838919 89,93-103,135,240,243
+  s_985a6f4653b290::t_fc537a3b456a78 67-69
+  s_985a6f4653b290::t_7d6e078703ff88 70-72,201
+  s_985a6f4653b290::t_6f85da79211236 236-239,241
+  s_985a6f4653b290::t_454e2913a6dfe3 43-48,76-79,203-205,209,212,220-222,248
+  s_985a6f4653b290::t_34ade20e093a49 53-57
+  s_985a6f4653b290::t_4ad5a3800e1363 73-75,189-190
+  s_985a6f4653b290::t_bac97465a98ac4 193
+web/translations/messages.fr.yaml
+  s_bda768b13cee07::t_497f0c95f65fc8 882
+  s_190feadae0fef2::t_077dcc95c1ce2f 853
+  s_e382572451f2d6::t_147bd4263f6aac 881
+docs/specs/map-and-search.md
+  s_985a6f4653b290::t_e4209bfa2890ce 483-506,511
+  s_985a6f4653b290::t_6f85da79211236 507-510
+web/translations/messages.de.yaml
+  s_e382572451f2d6::t_a7e13d0c21813a 881
+  s_190feadae0fef2::t_ca85dd4e190619 853
+  s_bda768b13cee07::t_7caabcb412d375 882
+web/tests/Controller/RegionOutlinesTest.php
+  s_985a6f4653b290::t_b79d3132d6db6a 14-15,19,38-39,41
+web/translations/messages.nl.yaml
+  s_e382572451f2d6::t_f2b16441f6dc93 881
+  s_190feadae0fef2::t_e6dfa4f02bcb08 853
+  s_bda768b13cee07::t_0f4dcacfdc6557 882
+web/translations/messages.es.yaml
+  s_e382572451f2d6::t_9555358a0272f1 882
+  s_40a002d02fdfd2::t_22be381c5bfec1 854,883
+web/src/Controller/PageController.php
+  s_985a6f4653b290::t_edb75364f2d642 12
+  s_985a6f4653b290::t_358ea053c329d4 24-25,124-131,134,136-157,159,174,180,182-193,197
+  s_985a6f4653b290::t_7d6e078703ff88 271-279,286
+web/assets/pages/regions-map.js
+  s_985a6f4653b290::t_6269a9f240b1a8 117-118,157,159,162
+  s_985a6f4653b290::t_b79d3132d6db6a 6-8,34,61,123
+  s_985a6f4653b290::t_edb75364f2d642 22-32,36,38,42-43,49,55
+  s_985a6f4653b290::t_31143a942126c2 81,88,108-109,112-113
+  s_985a6f4653b290::t_7d6e078703ff88 82-87,90-94,116
+  s_985a6f4653b290::t_7512b8918aa726 9-12,89
+  s_985a6f4653b290::t_454e2913a6dfe3 14-18,33,35,37,39-41,44-45,48,50-51,53-54,56-60
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "6800ac9631eccbe2ed56bfc0dc3e9824fb160fe6",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_190feadae0fef2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ed6e4b7c-6e75-4531-a2b6-ac04eb20119f",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_40a002d02fdfd2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f434c5a5-23e5-4d99-bf56-2c92d9db49b0",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_985a6f4653b290": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e5c75010-816e-4e18-8eae-3cd0c486f2cb",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": null
+    },
+    "s_bda768b13cee07": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bc3484d5-25c1-442a-9655-b30ae7c5ba22",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_e382572451f2d6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6d86ff86-2562-4654-bb50-b5129c283f3f",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
