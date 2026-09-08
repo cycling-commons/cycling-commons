@@ -1,0 +1,21 @@
+docs/specs/content-reports.md
+  s_985a6f4653b290::t_a7e11b779a39ef 126-132,251-268,277-278,280-292,294,296-298
+docs/specs/map-and-search.md
+  s_985a6f4653b290::t_3ae8a144625d77 997-999
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "8911de76afc609adcf0c8f013c93a963a92f15cb",
+  "prompts": {},
+  "sessions": {
+    "s_985a6f4653b290": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e5c75010-816e-4e18-8eae-3cd0c486f2cb",
+        "model": "unknown"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
