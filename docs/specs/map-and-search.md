@@ -480,15 +480,35 @@ for one thing in five languages. Fixed across all five.
   whole-country default rather than being trusted.
 
   **On a region's own page the three states are sentences, not glossary
-  entries.** Since 2026-09-08 each country's regions sit closed behind a
-  count chip (a `<details>`, so scripting off still works; a link or the map
-  opens the one it points at), and a List / Map switch offers a world map:
-  `assets/pages/regions-map.js` loads the vendored MapLibre only when asked,
-  draws every stored `region.outline` from `GET /regions/outlines.json`
-  (`PageController::regionOutlines()`, on the public cache list with an ETag,
-  under half a megabyte for 19 countries), and a click on a region opens its country's
-  block below (owner: "a map version where you select the country on a world
-  map"). `/regions` is a directory and wants fragments a reader scans down
+  entries.** Since 2026-09-08 `/regions` has two views, chips Globe then List
+  (owner: "a map version where you select the country on a world map"; the
+  flat map was a chip for an hour and was removed: "remove the map option").
+  The globe: `assets/pages/regions-map.js` loads the vendored MapLibre only
+  when asked and draws one shape per country from `GET /regions/outlines.json`
+  (`PageController::regionOutlines()`: PostGIS unions each country's stored
+  `region.outline` rings, about a second for all nineteen, kept a day in the
+  app cache keyed on the region table's last change; on the public cache list
+  with an ETag; the full geometries took 36 seconds for five). Countries, not
+  regions (owner: "just the countries"); a click opens that country's tab in
+  the list below. MapLibre's globe projection, framed close on Europe, or on
+  a signed-in rider's base when they have one (owner: "turn the globe already
+  to their home base"; the page is private for them, so nothing personal is
+  cached); no zoom (no buttons, wheel or pinch; owner: "without a zoom
+  option"); on the page's own paper with no frame; a spinner from the click
+  until the first idle frame, so the flat map never shows first.
+  The list: one grid per continent, three columns from 900px, and a tab strip
+  (owner: "regions must open full width as some sort of tab"): the count chip
+  under a country is the tab, its regions are one panel across the full row,
+  placed by the script on the grid row under that country's, one country open
+  at a time. The panel says whose it is twice, a notch under the open chip and
+  the country's flag and name as its first line, and fades and slides in and
+  out (none under prefers-reduced-motion). Inside, a grid of equal cards, each
+  the same four columns (name, tier, stewardship, numbers) so the tags line up
+  (owner: "a bit messy with all different sizes and alignments"); the numbers
+  are one count, verified items and routes together as "N community items",
+  and the area (owner: "just count different things into X community
+  items"). With
+  scripting off every panel shows in place. `/regions` is a directory and wants fragments a reader scans down
   a column; `/regions/{slug}` is about one place and wants a line that answers
   the question it is under. So the page has its own `regions.steward_line_*`
   copy rather than reusing the legend's `status_*_desc`, and the state itself

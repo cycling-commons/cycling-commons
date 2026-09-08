@@ -9,6 +9,7 @@ use App\Catalog\CoverageStatsProvider;
 use App\Catalog\RegionDirectoryProvider;
 use App\Catalog\RegionSilhouette;
 use App\Content\ReleaseNotes;
+use App\Entity\User;
 use App\Pagination\Pager;
 use App\Pagination\PageSize;
 use App\Routing\LocalePrefix;
@@ -20,6 +21,8 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Intl\Countries;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Contracts\Cache\CacheInterface;
+use Symfony\Contracts\Cache\ItemInterface;
 
 /**
  * Static content pages through the shared Twig layout.
@@ -118,28 +121,46 @@ final class PageController extends AbstractController
      * @see docs/specs/contact-and-support.md §4
      */
     /**
-     * Every region's stored outline as GeoJSON, for the world map on /regions
-     * (owner 2026-09-08: "a map version where you select the country on a
-     * world map"). The rings are the simplified `region.outline` the map's
-     * scope registry already serves, so this costs one indexed read and no
-     * geometry work; 19 countries came to under half a megabyte on 2026-09-08.
-     * On the public cache list like the page: the shared cache holds it a
-     * minute and the ETag answers 304 after that. It changes when a country is
-     * onboarded.
+     * One shape per country as GeoJSON, for the world map on /regions (owner
+     * 2026-09-08: "a map version where you select the country on a world map",
+     * then "do not show the regions on the map, just the countries"). Each
+     * shape is the union of that country's stored `region.outline` rings,
+     * the simplified ones the map's scope registry serves, so PostGIS merges a
+     * few thousand points per country in about a second for all nineteen; the
+     * full geometries took 36 seconds for five. Kept in the app cache for a
+     * day, keyed on the region table's last change, so an onboarding shows.
      */
     #[Route('/regions/outlines.json', name: 'regions_outlines', methods: ['GET'])]
-    public function regionOutlines(Request $request, Connection $db): Response
+    public function regionOutlines(Request $request, Connection $db, CacheInterface $cache): Response
     {
-        /** @var list<array{slug: string, cc: string, outline: string}> $rows */
-        $rows = $db->fetchAllAssociative('SELECT slug, country_code AS cc, outline FROM region WHERE outline IS NOT NULL ORDER BY country_code, slug');
-        $features = [];
+        /** @var array{n: int|string, at: string|null} $stamp */
+        $stamp = $db->fetchAssociative('SELECT COUNT(*) AS n, MAX(updated_at)::text AS at FROM region WHERE outline IS NOT NULL') ?: ['n' => 0, 'at' => null];
+        $key = 'regions-outlines-'.substr(hash('xxh128', $stamp['n'].'|'.(string) $stamp['at']), 0, 16);
+
+        $json = $cache->get($key, function (ItemInterface $item) use ($db): string {
+            $item->expiresAfter(86400);
+
+            return $this->countryShapes($db);
+        });
+        $response = new JsonResponse($json, Response::HTTP_OK, [], true);
+        $response->setEtag(md5($json));
+        $response->isNotModified($request);
+
+        return $response;
+    }
+
+    /** The FeatureCollection itself: one Feature per country, `cc` as its property. */
+    private function countryShapes(Connection $db): string
+    {
+        /** @var list<array{cc: string, outline: string}> $rows */
+        $rows = $db->fetchAllAssociative('SELECT country_code AS cc, outline FROM region WHERE outline IS NOT NULL ORDER BY country_code, slug');
+        $parts = [];
         foreach ($rows as $row) {
-            // Flat [x,y,x,y,…] per ring, as the scope registry stores it.
+            // Flat [x,y,x,y,…] per ring, as the scope registry stores it; each ring is one part, never a hole.
             $rings = json_decode($row['outline'], true);
             if (!\is_array($rings)) {
                 continue;
             }
-            $polygon = [];
             /** @var mixed $ring */
             foreach ($rings as $ring) {
                 if (!\is_array($ring) || \count($ring) < 8) {
@@ -150,28 +171,30 @@ final class PageController extends AbstractController
                 for ($i = 0, $n = \count($flat) - 1; $i < $n; $i += 2) {
                     $pairs[] = [round($flat[$i], 3), round($flat[$i + 1], 3)];
                 }
-                if ([] === $pairs) {
+                if (\count($pairs) < 4) {
                     continue;
                 }
                 if (end($pairs) !== $pairs[0]) {
                     $pairs[] = $pairs[0];
                 }
-                $polygon[] = $pairs;
-            }
-            if ([] === $polygon) {
-                continue;
-            }
-            // Each ring stands alone: the stored outline is one ring per part, never holes.
-            foreach ($polygon as $ring) {
-                $features[] = ['type' => 'Feature', 'properties' => ['slug' => $row['slug'], 'cc' => $row['cc']], 'geometry' => ['type' => 'Polygon', 'coordinates' => [$ring]]];
+                $parts[] = ['cc' => $row['cc'], 'g' => json_encode(['type' => 'Polygon', 'coordinates' => [$pairs]], \JSON_THROW_ON_ERROR)];
             }
         }
-        $json = json_encode(['type' => 'FeatureCollection', 'features' => $features], \JSON_THROW_ON_ERROR | \JSON_UNESCAPED_SLASHES | \JSON_PRESERVE_ZERO_FRACTION);
-        $response = new JsonResponse($json, Response::HTTP_OK, [], true);
-        $response->setEtag(md5($json));
-        $response->isNotModified($request);
+        $features = [];
+        if ([] !== $parts) {
+            /** @var list<array{cc: string, shape: string}> $merged */
+            $merged = $db->fetchAllAssociative(
+                'SELECT t.cc, ST_AsGeoJSON(ST_Union(ST_MakeValid(ST_GeomFromGeoJSON(t.g))), 3) AS shape
+                   FROM json_to_recordset(CAST(:parts AS json)) AS t(cc text, g text)
+                  GROUP BY t.cc ORDER BY t.cc',
+                ['parts' => json_encode($parts, \JSON_THROW_ON_ERROR)],
+            );
+            foreach ($merged as $row) {
+                $features[] = ['type' => 'Feature', 'properties' => ['cc' => $row['cc']], 'geometry' => json_decode($row['shape'], true, 512, \JSON_THROW_ON_ERROR)];
+            }
+        }
 
-        return $response;
+        return json_encode(['type' => 'FeatureCollection', 'features' => $features], \JSON_THROW_ON_ERROR | \JSON_UNESCAPED_SLASHES | \JSON_PRESERVE_ZERO_FRACTION);
     }
 
     #[Route(LocalizedPath::ACCESSIBILITY, name: 'accessibility')]
@@ -245,12 +268,22 @@ final class PageController extends AbstractController
         $collator = new \Collator($locale);
         usort($allCountries, static fn (array $a, array $b): int => $collator->compare($a['name'], $b['name']));
 
+        // A signed-in rider's globe starts turned to their base (owner
+        // 2026-09-08). Safe on a cached route: a signed-in response is never
+        // marked shareable (PublicPageCacheSubscriber rule 1).
+        $user = $this->getUser();
+        $home = null;
+        if ($user instanceof User && null !== $user->getBaseLat() && null !== $user->getBaseLng()) {
+            $home = [$user->getBaseLng(), $user->getBaseLat()];
+        }
+
         return $this->render('pages/regions.html.twig', [
             'page_title' => 'meta.regions_title',
             'page_description' => 'meta.regions_description',
             'nav_active' => 'regions',
             'countries' => $directoryList,
             'all_countries' => $allCountries,
+            'home' => $home,
         ]);
     }
 

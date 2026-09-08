@@ -40,14 +40,21 @@
   h2.cont span{font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:#7a7d6c}
 
   .country{margin:0 0 1.2rem}
+  {# A tab strip per continent (owner 2026-09-08: "regions must open full
+     width as some sort of tab"): countries are the cells, three across from
+     900px, and the open country's regions are one panel across the whole
+     row, placed by the script on the row under that country. #}
+  .cgrid{display:grid;grid-template-columns:minmax(0,1fr);column-gap:2rem;align-items:start}
+  @media(min-width:900px){.cgrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
   {# flex-wrap: on a phone the name + count + Apply button overflowed the
      viewport by ~25px (found 2026-08-15 while checking the hero split); the
      button drops to its own line instead of pushing the page wider. #}
   .country .ch{display:flex;flex-wrap:wrap;align-items:center;gap:.6rem;margin-bottom:.55rem}
-  .country .ch .join-cta{font-family:var(--mono);font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;
-    padding:.42rem .75rem;border:1.5px solid var(--trail);border-radius:6px;color:var(--trail);
-    text-decoration:none;white-space:nowrap;flex:none}
-  .country .ch .join-cta:hover{background:var(--trail);color:var(--paper)}
+  {# A quiet link, not a button (owner 2026-09-08: "a bit too much"): nineteen
+     of them on one page, so each is a small underlined offer at the row's end. #}
+  .country .ch .join-cta{font-size:.82rem;color:var(--trail);text-decoration:underline;
+    text-underline-offset:3px;text-decoration-color:rgba(184,90,53,.45);white-space:nowrap;flex:none;margin-left:auto}
+  .country .ch .join-cta:hover{color:var(--clay);text-decoration-color:currentColor}
   .country .ch h3{font-family:var(--sans);font-weight:700;font-size:1.05rem}
   .country .ch .cc{font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;color:#7a7d6c;text-transform:uppercase}
   .country .ch .n{font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;color:#7a7d6c;margin-left:auto}
@@ -57,17 +64,43 @@
   .viewrow .vhint{font-size:.85rem;color:#6d7060;margin-left:.4rem}
   .regions-map{position:relative}
   .regions-tip{position:absolute;z-index:2;pointer-events:none;background:var(--ink);color:var(--paper);font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;padding:.25rem .5rem;border-radius:4px}
-  .regions-map{height:min(70vh,560px);border-radius:8px;overflow:hidden;border:1px solid rgba(20,22,14,.18);margin:0 0 1.4rem;background:#dfe7dc}
-  .regs>summary.chip{display:inline-flex;align-items:center;gap:.4rem;cursor:pointer;list-style:none;font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;padding:.35rem .7rem;border:1px solid rgba(20,22,14,.25);border-radius:30px;color:#595c4d;background:transparent;margin:0 0 .55rem}
-  .regs>summary.chip::-webkit-details-marker{display:none}
-  .regs>summary.chip::after{content:'▾'}
-  .regs[open]>summary.chip{background:var(--ink);border-color:var(--ink);color:var(--paper)}
-  .regs[open]>summary.chip::after{content:'▴'}
+  {# No frame and the page's own paper behind it (owner 2026-09-08), so the
+     globe floats on the page instead of sitting in a box. #}
+  .regions-map{height:min(70vh,560px);overflow:hidden;margin:0 0 1.4rem;background:var(--paper)}
+  {# Nothing until the first full frame in the asked-for projection: the
+     flat map used to show, then jump into a globe (owner 2026-09-08). #}
+  .regions-map.loading>*{visibility:hidden}
+  .regions-map.loading::after{content:'';position:absolute;top:50%;left:50%;width:28px;height:28px;margin:-14px 0 0 -14px;
+    border:3px solid rgba(20,22,14,.15);border-top-color:var(--trail);border-radius:50%;animation:regs-spin .8s linear infinite}
+  @keyframes regs-spin{to{transform:rotate(360deg)}}
+  .regtab{display:inline-flex;align-items:center;gap:.4rem;cursor:pointer;font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;padding:.35rem .7rem;border:1px solid rgba(20,22,14,.25);border-radius:30px;color:#595c4d;background:transparent;margin:0 0 .55rem}
+  .regtab::after{content:'▾'}
+  .regtab[aria-expanded=true]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+  .regtab[aria-expanded=true]::after{content:'▴'}
 
-  .regions{display:flex;flex-wrap:wrap;gap:.5rem}
-  .reg{display:inline-flex;align-items:center;gap:.5rem;background:var(--paper-deep);border:1px solid rgba(20,22,14,.1);
-    border-radius:8px;padding:.45rem .7rem;font-size:.9rem}
-  .reg .km{font-family:var(--mono);font-size:.68rem;letter-spacing:.04em;color:#7a7d6c}
+  {# The panel says whose it is twice (owner 2026-09-08: "make more clear
+     the region showing belong to which of the 3 items per row"): a notch
+     on its top edge under the open chip (--tab-x, set by the script), and
+     the country's flag and name as its first line. A short fade and slide
+     on open and close; none for readers who asked for less motion. #}
+  .regions{display:none;flex-wrap:wrap;gap:.5rem;grid-column:1/-1;position:relative;margin:.2rem 0 1.6rem;padding:1rem;
+    background:rgba(20,22,14,.06);border-radius:8px}
+  .regions::before{content:'';position:absolute;top:-9px;left:var(--tab-x,2rem);border:9px solid transparent;border-top:0;border-bottom-color:rgba(20,22,14,.06)}
+  .regions.open{display:grid;animation:regs-in .18s ease-out}
+  .regions.closing{animation:regs-in .15s ease-in reverse}
+  @keyframes regs-in{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+  @media(prefers-reduced-motion:reduce){.regions.open,.regions.closing{animation:none}}
+  .rhead{grid-column:1/-1;display:flex;align-items:center;gap:.5rem;font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:#595c4d;margin-bottom:.15rem}
+  {# Equal cards in straight columns (owner 2026-09-08: "a bit messy with
+     all different sizes and alignments"): the panel is a grid of cards, and
+     every card is the same four columns, name, tier, stewardship, numbers,
+     so the tags line up down the panel. #}
+  .regions{grid-template-columns:repeat(auto-fill,minmax(min(100%,400px),1fr))}
+  .reg{display:grid;grid-template-columns:minmax(0,1fr) 7.5em 9.5em minmax(5em,auto);align-items:center;gap:.5rem;
+    background:var(--paper-deep);border:1px solid rgba(20,22,14,.1);border-radius:8px;padding:.45rem .7rem;font-size:.9rem}
+  .reg .tag{justify-self:start;white-space:nowrap}
+  .reg .stats{display:flex;flex-direction:column;align-items:flex-end;gap:.1rem;justify-self:end;text-align:right}
+  .reg .km{font-family:var(--mono);font-size:.68rem;letter-spacing:.04em;color:#7a7d6c;white-space:nowrap}
   a.reg{text-decoration:none;color:inherit}
   a.reg:hover{border-color:var(--spruce-lift)}
   .reg .tag{font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;padding:.1rem .3rem;border-radius:3px;background:rgba(20,22,14,.08)}
@@ -99,6 +132,7 @@
   #cc-country-hits a:hover{border-color:var(--spruce-lift)}
   #cc-country-hits .cc{font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;color:#7a7d6c;text-transform:uppercase}
 </style>
+<noscript><style>.regions{display:grid}</style></noscript>
 {% endblock %}
 {% block body %}
 
@@ -152,25 +186,30 @@
     <div class="empty">{% trans %}regions.no_regions{% endtrans %}</div>
   {% endif %}
 
-  {# Two views of one list (owner 2026-09-08): the list, and a world map where
-     a country is picked by clicking it. The map is loaded only when asked for,
+  {# Two views of one list (owner 2026-09-08): a globe where a country is
+     picked by clicking it, and the list; the flat map went the same day. The map is loaded only when asked for,
      so the page does not carry MapLibre for readers who never open it. #}
   <div class="viewrow" id="regions-viewrow" hidden>
+    <button type="button" class="chip" data-view="globe" aria-pressed="false">{% trans %}regions.view_globe{% endtrans %}</button>
     <button type="button" class="chip on" data-view="list" aria-pressed="true">{% trans %}regions.view_list{% endtrans %}</button>
-    <button type="button" class="chip" data-view="map" aria-pressed="false">{% trans %}regions.view_map{% endtrans %}</button>
     <span class="vhint">{% trans %}regions.map_hint{% endtrans %}</span>
   </div>
   <div id="regions-map" class="regions-map" hidden
        data-outlines="{{ path('regions_outlines') }}"
        data-maplibre-js="{{ asset('lib/maplibre-gl-5.24.0.js') }}"
        data-maplibre-css="{{ asset('lib/maplibre-gl-5.24.0.css') }}"
-       data-style="https://tiles.openfreemap.org/styles/liberty"></div>
+       data-style="https://tiles.openfreemap.org/styles/liberty"{% if home %} data-home="{{ home[0] }},{{ home[1] }}"{% endif %}></div>
 
+  {# One grid per continent: the countries, and after each one its regions
+     panel, which the script shows one at a time across the full row (the
+     noscript rule above shows them all, in place). #}
   {% set continent = '' %}
   {% for country in countries %}
     {% if country.continentCode != continent %}
+      {% if continent != '' %}</div>{% endif %}
       {% set continent = country.continentCode %}
       <h2 class="cont">{{ ('continent.' ~ continent|lower)|trans }}</h2>
+      <div class="cgrid">
     {% endif %}
     <div class="country" id="country-{{ country.code }}">
       <div class="ch">
@@ -178,13 +217,10 @@
         <h3>{{ country.name }}</h3><span class="cc">{{ country.code }}</span>
         <a class="join-cta" href="{{ path('join_country', {cc: country.code}) }}">{% trans %}regions.apply{% endtrans %}</a>
       </div>
-      {# Closed by default (owner 2026-09-08): nineteen countries of regions
-         made one long wall. The chip is the count; open it to see them. A
-         <details>, so it works with scripting off; the script below opens the
-         one a link or the map points at. #}
-      <details class="regs">
-        <summary class="chip">{{ (country.regions|length == 1 ? 'regions.count_region' : 'regions.count_regions')|trans({'%n%': country.regions|length}) }}</summary>
-      <div class="regions">
+      <button type="button" class="regtab" data-country="{{ country.code }}" aria-expanded="false" aria-controls="regions-{{ country.code }}">{{ (country.regions|length == 1 ? 'regions.count_region' : 'regions.count_regions')|trans({'%n%': country.regions|length}) }}</button>
+    </div>
+      <div class="regions" id="regions-{{ country.code }}">
+        <div class="rhead"><img src="{{ asset(country.flag) }}" alt="" width="20" height="15">{{ country.name }}</div>
         {% for reg in country.regions %}
           <a class="reg tier-{{ reg.tier }}{{ reg.stewardship == 'curated' ? ' has-curator' }}"
              href="{{ path('region_detail', {slug: reg.slug}) }}">
@@ -197,15 +233,19 @@
                reads as an oversight, not as a fact. It is the one status a
                reader can act on, so it is the one that must not be silent. #}
             <span class="tag tag-{{ reg.stewardship }}">{{ ('regions.status_' ~ reg.stewardship)|trans }}</span>
-            {% if reg.itemsVerified > 0 %}<span class="km">{{ (reg.itemsVerified == 1 ? 'regions.items_one' : 'regions.items_many')|trans({'%n%': reg.itemsVerified}) }}</span>{% endif %}
-            {% if reg.routes > 0 %}<span class="km">{{ (reg.routes == 1 ? 'regions.routes_one' : 'regions.routes_many')|trans({'%n%': reg.routes}) }}</span>{% endif %}
+            {# One number for what the community holds here, verified items
+               and routes together (owner 2026-09-08: "just count different
+               things into X community items"). #}
+            {% set community = reg.itemsVerified + reg.routes %}
+            <span class="stats">
+            {% if community > 0 %}<span class="km">{{ (community == 1 ? 'regions.community_one' : 'regions.community_many')|trans({'%n%': community}) }}</span>{% endif %}
             {% if reg.areaKm2 %}<span class="km">{{ reg.areaKm2|cc_km2 }}</span>{% endif %}
+            </span>
           </a>
         {% endfor %}
       </div>
-      </details>
-    </div>
   {% endfor %}
+  {% if continent != '' %}</div>{% endif %}
 
   <div id="your-country" class="yourc">
     <h2>{% trans %}regions.your_country_h{% endtrans %}</h2>

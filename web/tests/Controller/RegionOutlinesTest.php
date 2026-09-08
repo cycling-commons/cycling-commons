@@ -11,12 +11,12 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 /**
- * The world map on /regions reads every stored outline as GeoJSON
- * (owner 2026-09-08). One ring per polygon, closed, three decimals.
+ * The world map on /regions reads one shape per country as GeoJSON, the
+ * union of that country's stored outlines (owner 2026-09-08).
  */
 final class RegionOutlinesTest extends WebTestCase
 {
-    public function testOutlinesAreServedAsClosedPolygonsPerCountry(): void
+    public function testOneClosedShapePerCountry(): void
     {
         $client = static::createClient();
         $em = static::getContainer()->get(EntityManagerInterface::class);
@@ -35,10 +35,9 @@ final class RegionOutlinesTest extends WebTestCase
         self::assertSame('FeatureCollection', $data['type']);
         $mine = array_values(array_filter($data['features'], static fn (array $f): bool => 'XX' === $f['properties']['cc']));
         self::assertCount(1, $mine);
-        $ring = $mine[0]['geometry']['coordinates'][0];
-        self::assertSame('Polygon', $mine[0]['geometry']['type']);
-        self::assertSame([5.0, 50.0], $ring[0]);
+        self::assertContains($mine[0]['geometry']['type'], ['Polygon', 'MultiPolygon']);
+        $ring = 'Polygon' === $mine[0]['geometry']['type'] ? $mine[0]['geometry']['coordinates'][0] : $mine[0]['geometry']['coordinates'][0][0];
         self::assertSame($ring[0], $ring[\count($ring) - 1], 'closed');
-        self::assertCount(5, $ring, 'four corners and the closing point');
+        self::assertGreaterThanOrEqual(4, \count($ring));
     }
 }
