@@ -1,56 +1,70 @@
 {# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
 {#
-  Three columns, grouped by what somebody came for (owner, 2026-08-29). It was
-  one run of fourteen links that wrapped wherever the window happened to end,
-  so "Privacy" could sit beside "Get involved" and the grouping was whatever
-  the browser decided that day.
+  The whole site, in the six groups of /pages (owner 2026-09-08, "header is
+  for doing, footer is the whole site"; site-directory.md §5). One rule for
+  three places: the header holds what a rider does, this footer holds every
+  page, /pages draws the same list. Five columns; the sixth group, the
+  account pages, sits behind the account chip in the header and is left out
+  here, where a signed-out reader would only meet a login wall.
 
-  The groups, in the order somebody needs them:
-
-    1. THE ATLAS        what to go and look at
-    2. TAKE PART        how to put something in, or ask us something
-    3. THE SMALL PRINT  licences, policies, the things you read once
-
-  Then the colophon, then where to find us.
-
-  Columns rather than rows, so each group is a shape the eye takes in at once
-  instead of three lines that read as one paragraph. Each is a <nav> with its
-  own heading, which is what makes the grouping real to a screen reader too
-  and not only to somebody looking at it.
+  Each column is a <nav> with its own heading, which is what makes the
+  grouping real to a screen reader too and not only to somebody looking.
 #}
 <footer class="foot"><div class="wrap">
   <div class="footcols mono">
     <nav class="footcol" aria-label="{{ 'footer.col_atlas'|trans }}">
       <h2>{{ 'footer.col_atlas'|trans }}</h2>
+      <a href="{{ path('map') }}">{{ 'pages.card_map_h'|trans }}</a>
+      <a href="{{ path('map_key') }}">{{ 'pages.card_mapkey_h'|trans }}</a>
       <a href="{{ path('regions') }}">{{ 'footer.regions'|trans }}</a>
+      <a href="{{ path('coverage') }}">{{ 'nav.coverage'|trans }}</a>
+      <a href="{{ path('scout') }}">{{ 'pages.card_scout_h'|trans }}</a>
+    </nav>
+
+    <nav class="footcol" aria-label="{{ 'footer.col_take_part'|trans }}">
+      <h2>{{ 'footer.col_take_part'|trans }}</h2>
+      <a href="{{ path('contribute') }}">{{ 'nav.contribute'|trans }}</a>
+      <a href="{{ path('propose_route') }}">{{ 'pages.card_route_h'|trans }}</a>
+      <a href="{{ path('vote') }}">{{ 'pages.card_vote_h'|trans }}</a>
+      <a href="{{ path('join') }}">{{ 'footer.get_involved'|trans }}</a>
+      <a href="{{ path('roles') }}">{{ 'roles.title'|trans }}</a>
+      <a href="{{ path('contributors') }}">{{ 'footer.contributors'|trans }}</a>
+      <a href="https://wiki.cyclingcommons.org/">{{ 'footer.wiki'|trans }}</a>
+      <a href="https://wiki.cyclingcommons.org/governance/">{{ 'footer.governance'|trans }}</a>
+    </nav>
+
+    <nav class="footcol" aria-label="{{ 'pages.group_data'|trans }}">
+      <h2>{{ 'pages.group_data'|trans }}</h2>
+      <a href="{{ path('developers') }}">{{ 'pages.card_developers_h'|trans }}</a>
+      <a href="{{ path('developers_api') }}">{{ 'pages.card_api_h'|trans }}</a>
+      <a href="{{ path('licenses') }}">{{ 'pages.card_licenses_h'|trans }}</a>
+      <a href="{{ path('credits') }}">{{ 'footer.credits'|trans }}</a>
       <a href="{{ path('blog') }}">{{ 'nav.blog'|trans }}</a>
       <a href="{{ path('changelog') }}">{{ 'footer.changelog'|trans }}</a>
       <a href="{{ path('roadmap') }}">{{ 'footer.roadmap'|trans }}</a>
       <a href="{{ path('pages') }}">{{ 'footer.all_pages'|trans }}</a>
     </nav>
 
-    <nav class="footcol" aria-label="{{ 'footer.col_take_part'|trans }}">
-      <h2>{{ 'footer.col_take_part'|trans }}</h2>
-      <a href="{{ path('join') }}">{{ 'footer.get_involved'|trans }}</a>
-      <a href="{{ path('contributors') }}">{{ 'footer.contributors'|trans }}</a>
-      <a href="https://wiki.cyclingcommons.org/">{{ 'footer.wiki'|trans }}</a>
-      <a href="https://wiki.cyclingcommons.org/governance/">{{ 'footer.governance'|trans }}</a>
-      <a href="{{ path('contact') }}">{{ 'footer.contact'|trans }}</a>
+    <nav class="footcol" aria-label="{{ 'pages.group_quality'|trans }}">
+      <h2>{{ 'pages.group_quality'|trans }}</h2>
+      <a href="{{ path('known_issues') }}">{{ 'support.known.kicker'|trans }}</a>
       <a href="{{ path('bug_report') }}">{{ 'footer.report_bug'|trans }}</a>
       <a href="{{ path('report_guide') }}">{{ 'footer.report_content'|trans }}</a>
+      <a href="{{ path('contact') }}">{{ 'footer.contact'|trans }}</a>
     </nav>
 
-    <nav class="footcol" aria-label="{{ 'footer.col_small_print'|trans }}">
-      <h2>{{ 'footer.col_small_print'|trans }}</h2>
+    <nav class="footcol" aria-label="{{ 'pages.group_print'|trans }}">
+      <h2>{{ 'pages.group_print'|trans }}</h2>
+      <a href="{{ path('about') }}">{{ 'pages.card_about_h'|trans }}</a>
       <a href="{{ path('accessibility') }}">{{ 'footer.accessibility'|trans }}</a>
       <a href="{{ path('privacy') }}">{{ 'footer.privacy'|trans }}</a>
       <a href="{{ path('terms') }}">{{ 'footer.terms'|trans }}</a>
-      <a href="{{ path('credits') }}">{{ 'footer.credits'|trans }}</a>
-      <span class="footby">{{ 'footer.stewarded_by'|trans }} <a href="https://bikecoders.life">BikeCoders</a></span>
+      {# The whole line is the link, not only the name (owner 2026-09-09). #}
+      <a class="footby" href="https://bikecoders.life">{{ 'footer.stewarded_by'|trans }} BikeCoders</a>
       {# The build marker lands HERE and not wherever version.js finds a .mono
          first. Without a slot it appended itself to .footcols, which is the
-         grid, so it opened a fourth column of its own beside the three real
-         ones (owner, 2026-08-29). It belongs with the steward line: both say
+         grid, so it opened a column of its own beside the real ones
+         (owner, 2026-08-29). It belongs with the steward line: both say
          who and what made this, not where to click. #}
       <span class="footver" data-cc-version></span>
     </nav>

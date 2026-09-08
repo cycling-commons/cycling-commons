@@ -134,7 +134,7 @@ final class ItemTypeTest extends TestCase
         self::assertTrue(ItemType::WaterFood->isConfirmable());
     }
 
-    /** Owner 2026-08-25: one icon set for the whole system, letter-keyed, with the three drawn paths. */
+    /** Owner 2026-08-25: one icon set for the whole system, letter-keyed; since 2026-09-09 every type draws its own path ("no coloured icons"). */
     public function testIconSetCoversEveryTypeOnce(): void
     {
         $set = ItemType::iconSet();
@@ -146,7 +146,11 @@ final class ItemTypeTest extends TestCase
         self::assertNotNull($set['N']['svg'], 'climbs draw a mountain');
         self::assertNotNull($set['P']['svg'], 'scenic views draw a camera');
         self::assertNotNull($set['C']['svg'], 'toilets draw their sign');
-        self::assertNull($set['B']['svg'], 'water is its glyph');
+        self::assertNotNull($set['B']['svg'], 'water draws a drop');
+        self::assertNotNull($set['R']['svg'], 'rides draw a route across the land');
+        foreach ($set as $letter => $icon) {
+            self::assertNotNull($icon['svg'], sprintf('%s draws its own icon; no emoji on the map or the page', $letter));
+        }
         self::assertSame('📷', ItemType::ScenicViews->icon(), 'the map and the server agree on the camera');
     }
 }

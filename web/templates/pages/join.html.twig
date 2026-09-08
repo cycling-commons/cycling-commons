@@ -5,10 +5,6 @@
   .ahero .lead{color:rgba(239,230,212,.85)}
   .hnote{margin-top:1.4rem;padding:1rem 1.2rem;border-left:3px solid var(--trail);
     background:var(--paper-deep);border-radius:0 6px 6px 0;font-size:.95rem;color:#3b3d31}
-  .howto{margin-top:1.2rem;padding-left:1.1rem;display:flex;flex-direction:column;gap:.9rem}
-  .howto li{font-size:.95rem;color:#4a4d40;line-height:1.55}
-  .howto a{color:var(--clay);text-decoration:underline;text-underline-offset:3px;font-weight:500}
-  .howto a:hover{color:var(--trail)}
   .roles{display:grid;grid-template-columns:repeat(2,1fr);gap:1.2rem;margin-top:1.6rem}
   @media(max-width:680px){.roles{grid-template-columns:1fr}}
   .roles .card .rk{font-family:var(--mono);font-size:.7rem;color:var(--clay)}
@@ -27,33 +23,9 @@
   <p class="lead" style="margin-top:1rem">{% trans %}join.lead2{% endtrans %}</p>
 </div></div>
 
-<section class="pad"><div class="wrap" style="max-width:820px">
-  <div class="kicker">{% trans %}join.heart_kicker{% endtrans %}</div>
-  <h2 class="disp">{{ 'join.heart_h2'|trans|rich }}</h2>
-  <p class="lead" style="margin-top:1rem">{% trans %}join.heart_lead{% endtrans %}
-    <a href="{{ path('roles') }}">{{ 'join.roles_link'|trans }}</a>.</p>
-  <ul class="howto">
-    <li><b>{{ 'join.howto1_b'|trans }}</b> {{ 'join.howto1_body_pre'|trans }}
-      <a href="https://www.openstreetmap.org">OpenStreetMap</a> {{ 'join.howto1_body_post'|trans }}</li>
-    {# Spacing lives HERE, never inside the catalogue strings: a translator
-       working in a text box cannot see a trailing space, and any editor round
-       trip eats it. That is what produced "Openthe map". #}
-    <li><b>{{ 'join.howto2_b'|trans }}</b> {{ 'join.howto2_body_pre'|trans }}
-      <a href="{{ path('map') }}">{{ 'join.howto2_themap'|trans }}</a>
-      {{ 'join.howto2_mid1'|trans }}
-      <a href="{{ path('improve', {type: 'climbs', mode: 'add'}) }}">{{ 'join.howto2_addclimb'|trans }}</a>{{ 'join.howto2_mid2'|trans }}
-      <a href="{{ path('contact') }}?topic=question">{{ 'join.howto2_email'|trans }}</a>
-      {{ 'join.howto2_mid3'|trans }}
-      <a href="https://github.com/cycling-commons/cycling-commons/issues/new/choose">{{ 'join.howto2_issue'|trans }}</a>{{ 'join.howto2_post'|trans|rich }}</li>
-    <li><b>{{ 'join.howto3_b'|trans }}</b> <a href="{{ path('contribute') }}">{% trans %}join.howto3_link{% endtrans %}</a>{% trans %}join.howto3_post{% endtrans %}</li>
-    <li><b>{{ 'join.howto4_b'|trans }}</b>
-      <a href="{{ path('map') }}">{{ 'join.howto4_link'|trans }}</a>
-      {{ 'join.howto4_post'|trans }}</li>
-    <li><b>{{ 'join.howto5_b'|trans }}</b>
-      <a href="{{ path('regions') }}">{{ 'join.howto5_link'|trans }}</a>
-      {{ 'join.howto5_post'|trans }}</li>
-  </ul>
-</div></section>
+{# The riders-and-local-knowledge block that stood here moved to its own page,
+   /contributors-and-curators, on 2026-09-09 (owner: this page "should be
+   really about all things needed beyond curators and contributors"). #}
 
 <section class="pad" style="background:var(--paper-deep)"><div class="wrap">
   <div class="kicker">{% trans %}join.skills_kicker{% endtrans %}</div>
@@ -87,7 +59,9 @@
   <p class="lead" style="margin-top:1.8rem">{{ 'join.also_welcome'|trans|rich }} <a href="{{ path('contact') }}?topic=partnership">{% trans %}join.also_tell{% endtrans %}</a></p>
 </div></section>
 
-<section class="pad" style="background:var(--ink);color:var(--paper)"><div class="wrap" style="max-width:760px">
+{# Left-aligned like every other block on the page, not a centred column
+   (owner 2026-09-09). #}
+<section class="pad" style="background:var(--ink);color:var(--paper)"><div class="wrap">
   <div class="kicker" style="color:var(--trail)">{% trans %}join.start_kicker{% endtrans %}</div>
   <h2 class="disp">{% trans %}join.start_h2{% endtrans %}</h2>
   <p class="lead" style="color:rgba(239,230,212,.85);margin-top:1rem">{% trans %}join.start_lead{% endtrans %}</p>

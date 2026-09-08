@@ -79,3 +79,75 @@ All strings live under `pages.*` in `translations/messages.*.yaml` (five
 locales): group names `group_*`, the toggle `view_map` / `view_list` /
 `view_aria`, the SVG's `map_aria`, and the key `key_*`. Page headings and
 descriptions reuse the `card_*` keys the list always had.
+
+## 5. Header, footer and this page follow one rule (2026-09-08)
+
+The header is for doing; the footer is the whole site; `/pages` draws the
+same list. Owner: the top row had "the most important items on top", the
+footer "multiple others, not all", and the directory everything, with no
+rule between the three.
+
+- **Header** (`partials/_nav.html.twig`): the three buttons (Explore the map,
+  Contribute, Get involved), then Regions, Coverage, Blog, About, then the
+  account chip or Log in, then the language pill. Vote, Developers and
+  Licence left the header for the footer; Vote comes back up when it ships.
+- **Footer** (`partials/_footer.html.twig`): five columns in the order of
+  this page's groups, The atlas, Take part, Open data and the project,
+  Quality and reports, About and the small print, every public page in its
+  group. The sixth group, Your account, stays behind the account chip and is
+  not in the footer, where a signed-out reader would only meet a login wall.
+  Headings and labels reuse the `pages.group_*` and `pages.card_*_h` keys
+  where a `footer.*` key did not already exist, so the two lists cannot
+  drift in wording.
+- **Landing page, the hero** (settled the night of 2026-09-08/09): the right
+  half is the drawn loop, `home.way_*` keys, five stops on a lopsided lap (a
+  spline through eight hand-placed points, every stop nudged a hair, level,
+  not tilted). Riding "Ride with the map" (the map, orange) and Adding "Put
+  in what you found" (Contribute, paper) are the two big stops; Curating
+  "Look after a region" (the contributors-and-curators page), Extending
+  "Grow the platform" (Get involved, the same URL as the header button) and
+  Offspring "Build on the data" (the API reference) the small ones. Each stop
+  is a kicker (the kind of person) and one verb phrase, nothing under it,
+  nothing in the middle but the brand globe: the owner's earthGlobe.svg,
+  inlined as `partials/_earth_globe.svg.twig` so CSS colours it, a green a
+  shade darker than the hero, tilted 23.4 degrees, 54 units wide. One arrow
+  halfway along each stretch; three dotted lines with arrowheads leave the
+  Offspring stop to three small nodes at different distances, tinted trail,
+  ochre and glacier; from the lowest node one dotted way back swings wide
+  under both lower cards and arrives under Adding. The owner's rendered
+  image (`assets/brand/cc-ecosystem-mainpage.webp`, English text baked in,
+  alt `home.ecosystem_alt`) is kept as a test state: a CSS-only switch
+  under the drawing, two hidden radio boxes and the labels "1 / 3"
+  (`home.loop_toggle`), the drawn loop checked by default; the switch and
+  the image go when the choice is final. Below 1000px the lap goes and the
+  stops stack in two columns; the dashes creep at 150 s a lap and stop under
+  prefers-reduced-motion. A faint 56px grid lies over the hero and the
+  closing band, fading to the foot; the five thin trail contours sit in the
+  lower third, clear of the drawing; the discipline label sits on its own
+  line above its chips, no trailing dash.
+- **Landing page, below the hero**: the "best of a region" block carries a
+  row of the five votable kinds (`home.cur_votable_k`, `ItemType::isVotable()`),
+  each a chip with the drawn type icon and its label, icon and text in the
+  deep ochre `#8A6425`. The catalogue cards show the drawn icon alone, big,
+  in that ochre, no letter; the two group headings read "Utility: aiming for
+  full coverage" and "Experience: curated & voted by riders", a colon, never
+  a dash. The closing band keeps its map button and the account offer.
+- **Footer colophon**: "stewarded by BikeCoders" is one link, the whole line.
+- **About page** (`pages/about.html.twig`, 2026-09-09): every block is
+  left-aligned inside the full wrap, the reading column (`.col`) capping
+  paragraphs and lists at 760px and never a heading. The beliefs run in the
+  homepage's order (curation, the map not the rider, open for everyone,
+  governed), each a bold clay numeral in front of its title on one line.
+  Under them one body-size sentence on Elinor Ostrom (her name linking her
+  Wikipedia article; the 2009 prize named as shared with Oliver E.
+  Williamson, her half for the commons) and the Governance link to the wiki
+  for the long version. Then "How it gets made. Five kinds of people, one
+  loop." (`about.made_*`): riders, contributors, curators, makers (not
+  "developers", the platform grows by code, data pipelines, design,
+  translations and funding), builders; dash bullets, no links under it. No
+  em dashes anywhere on the page.
+- **Copy rule, the licence name**: in visible copy the media licence is
+  always written `CC BY-SA 4.0`, never bare "CC BY-SA" or "CC-BY-SA" (owner
+  2026-09-09); a borrowed photo or text keeps its own version (3.0, 2.0).
+  SPDX headers and internal record names keep their own forms.
+

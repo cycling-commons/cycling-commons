@@ -2699,7 +2699,7 @@ five, on the sitemap and the public cache list). Owner: "a specific page
 about what a contributor/moderator does"; option 1 chosen over two pages,
 because riders rarely read both and one page cannot drift from itself. The
 left half is the contributor (any rider with an account: adds, fixes,
-confirms; the edit shows at once as unconfirmed), the right half the curator
+confirms; a curator checks the edit before it goes on the map, owner 2026-09-08: "it shows on the map at once is not true, there is moderation"), the right half the curator
 (a rider accepted for a region or a country, "the person who brings that
 place to life"). The curator's list is what a curator can do, never must
 (owner: "things a curator can do, not what they must do"; the line above it
@@ -2722,6 +2722,18 @@ the curator application's lede and from Get involved. The application's
 story field asks for hints, not credentials (owner: "sounds too much like it
 is needed"): where you ride, what you know about the place, what you have
 mapped before. Pinned by `RolesPageTest`.
+
+The same night the application page (`/join/{cc}`) took the site's full
+width with a 760px reading column from the left, its intro became two
+columns, the words left and one outlined `.btn.btn-g` to the roles page on
+the right, and the "add or fix something" link under it went. Get involved
+(`/join`) lost its "Riders and local knowledge" block and its five how-to
+lines (25 `join.howto*`/`heart_*` keys removed): that story lives on the
+roles page, and Get involved is "about all things needed beyond curators
+and contributors", opening on the skills the project needs; its closing
+block is left-aligned like the rest. On `/regions` the curator link on each
+country row is an icon (a person with a plus), quiet grey, orange on hover,
+named by title and aria-label.
 
 ## 15. Open questions
 

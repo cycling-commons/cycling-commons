@@ -5,8 +5,19 @@
   .ahero .lead{color:rgba(239,230,212,.85)}
   .princ{display:grid;grid-template-columns:repeat(2,1fr);gap:1.4rem 2.4rem;margin-top:1.6rem}
   @media(max-width:680px){.princ{grid-template-columns:1fr}}
+  .ostrom{margin-top:1.6rem;max-width:66ch;font-size:.95rem;line-height:1.6;color:#4a4d40}
+  .ostrom a{color:var(--clay);text-decoration:underline;text-underline-offset:3px}
+  /* The reading column caps the running text only; a heading spans the wrap
+     like every other heading on the page (owner 2026-09-09: "why does the
+     title get cut off"). */
+  .col p,.col ul{max-width:760px}
+  .made{list-style:none;margin:1.2rem 0 0;padding:0;display:flex;flex-direction:column;gap:.6rem}
+  .made li{font-size:1.05rem;line-height:1.6;color:#3a3d30;padding-left:1.3rem;position:relative}
+  .made li::before{content:"–";position:absolute;left:0;color:var(--clay);font-weight:700}  /* the site's dash bullet, as on the legal pages */
+  .made li b{color:var(--ink)}
   .princ .p b{font-family:var(--serif);font-size:1.1rem}.princ .p p{font-size:.92rem;color:#4a4d40}
-  .princ .p .n{font-family:var(--mono);color:var(--clay);font-size:.7rem}
+  {# The numeral sits in front of the title on one line, bold (owner 2026-09-09). #}
+  .princ .p .n{font-family:var(--mono);color:var(--clay);font-size:.85rem;font-weight:700;margin-right:.35rem}
 </style>
 {% endblock %}
 {% block body %}
@@ -17,32 +28,53 @@
   <p class="lead" style="margin-top:1rem">{% trans %}about.lead2{% endtrans %}</p>
 </div></div>
 
-<section class="pad"><div class="wrap" style="max-width:760px">
+{# Left-aligned reading column inside the full wrap, not a centred one
+   (owner 2026-09-09: "same here, left align"). #}
+<section class="pad"><div class="wrap"><div class="col">
   <div class="kicker">{% trans %}about.problem_kicker{% endtrans %}</div>
   <h2 class="disp">{% trans %}about.problem_title{% endtrans %}</h2>
   <p class="lead" style="margin-top:1rem">{% trans %}about.problem_lead1{% endtrans %}</p>
   <p class="lead" style="margin-top:1rem">{% trans %}about.problem_lead2{% endtrans %}</p>
-</div></section>
+</div></div></section>
 
 <section class="pad" style="background:var(--paper-deep)"><div class="wrap">
   <div class="kicker">{% trans %}about.believe_kicker{% endtrans %}</div>
   <div class="princ">
-    <div class="p"><span class="n">{% trans %}about.believe_princ1_num{% endtrans %}</span><br/><b>{% trans %}about.believe_princ1_title{% endtrans %}</b><p>{% trans %}about.believe_princ1_body{% endtrans %}</p></div>
-    <div class="p"><span class="n">{% trans %}about.believe_princ2_num{% endtrans %}</span><br/><b>{% trans %}about.believe_princ2_title{% endtrans %}</b><p>{% trans %}about.believe_princ2_body{% endtrans %}</p></div>
-    <div class="p"><span class="n">{% trans %}about.believe_princ3_num{% endtrans %}</span><br/><b>{% trans %}about.believe_princ3_title{% endtrans %}</b><p>{% trans %}about.believe_princ3_body{% endtrans %}</p></div>
-    <div class="p"><span class="n">{% trans %}about.believe_princ4_num{% endtrans %}</span><br/><b>{% trans %}about.believe_princ4_title{% endtrans %}</b><p>{% trans %}about.believe_princ4_body{% endtrans %}</p></div>
+    {# The homepage's order (owner 2026-09-09): curation first, then the map
+       not the rider, open for everyone, governed. #}
+    <div class="p"><b><span class="n">{% trans %}about.believe_princ3_num{% endtrans %}</span> {% trans %}about.believe_princ3_title{% endtrans %}</b><p>{% trans %}about.believe_princ3_body{% endtrans %}</p></div>
+    <div class="p"><b><span class="n">{% trans %}about.believe_princ1_num{% endtrans %}</span> {% trans %}about.believe_princ1_title{% endtrans %}</b><p>{% trans %}about.believe_princ1_body{% endtrans %}</p></div>
+    <div class="p"><b><span class="n">{% trans %}about.believe_princ2_num{% endtrans %}</span> {% trans %}about.believe_princ2_title{% endtrans %}</b><p>{% trans %}about.believe_princ2_body{% endtrans %}</p></div>
+    <div class="p"><b><span class="n">{% trans %}about.believe_princ4_num{% endtrans %}</span> {% trans %}about.believe_princ4_title{% endtrans %}</b><p>{% trans %}about.believe_princ4_body{% endtrans %}</p></div>
   </div>
-  <p class="lead" style="margin-top:1.8rem;max-width:66ch"><b>Elinor Ostrom</b> {% trans %}about.believe_ostrom{% endtrans %} <a href="https://wiki.cyclingcommons.org/governance/">{% trans %}about.believe_ostrom_link{% endtrans %}</a> {% trans %}about.believe_ostrom_suffix{% endtrans %}</p>
+  {# One sentence and the door to the wiki, in body size, not a second lead
+     (owner 2026-09-09: "much bigger, make it smaller"). #}
+  <p class="ostrom"><b><a href="https://en.wikipedia.org/wiki/Elinor_Ostrom" rel="noopener">Elinor Ostrom</a></b> {% trans %}about.believe_ostrom{% endtrans %} <a href="https://wiki.cyclingcommons.org/governance/">{% trans %}about.believe_ostrom_link{% endtrans %}</a> {% trans %}about.believe_ostrom_suffix{% endtrans %}</p>
 </div></section>
 
-<section class="pad"><div class="wrap" style="max-width:760px">
+{# How the map gets made: the five kinds of people of the landing page's loop,
+   one line each (owner 2026-09-09: the About page "never says how the map
+   gets made"; the links under it went the same night, "no need"). #}
+<section class="pad"><div class="wrap"><div class="col">
+  <div class="kicker">{% trans %}about.made_kicker{% endtrans %}</div>
+  <h2 class="disp">{% trans %}about.made_title{% endtrans %}</h2>
+  <ul class="made">
+    <li>{{ 'about.made_ride'|trans|rich }}</li>
+    <li>{{ 'about.made_add'|trans|rich }}</li>
+    <li>{{ 'about.made_curate'|trans|rich }}</li>
+    <li>{{ 'about.made_extend'|trans|rich }}</li>
+    <li>{{ 'about.made_build'|trans|rich }}</li>
+  </ul>
+</div></div></section>
+
+<section class="pad" style="background:var(--paper-deep)"><div class="wrap"><div class="col">
   <div class="kicker">{% trans %}about.partners_kicker{% endtrans %}</div>
   <h2 class="disp">{% trans %}about.partners_title{% endtrans %}</h2>
   <p class="lead" style="margin-top:1rem">{% trans %}about.partners_lead1_pre{% endtrans %} <b>{% trans %}about.partners_lead1_osm{% endtrans %}</b> {% trans %}about.partners_lead1_mid{% endtrans %} <b>{% trans %}about.partners_lead1_partner{% endtrans %}</b>{% trans %}about.partners_lead1_post{% endtrans %}</p>
   <p class="lead" style="margin-top:1rem">{% trans %}about.partners_lead2{% endtrans %}</p>
-</div></section>
+</div></div></section>
 
-<section class="pad" style="background:var(--ink);color:var(--paper)"><div class="wrap" style="max-width:760px">
+<section class="pad" style="background:var(--ink);color:var(--paper)"><div class="wrap"><div class="col">
   <div class="kicker" style="color:var(--trail)">{% trans %}about.steward_kicker{% endtrans %}</div>
   <h2 class="disp">{% trans %}about.steward_title{% endtrans %}</h2>
   <p class="lead" style="color:rgba(239,230,212,.85);margin-top:1rem">{% trans %}about.steward_lead{% endtrans %}</p>
@@ -53,5 +85,5 @@
       <a class="btn btn-g" style="border-color:rgba(239,230,212,.4);color:var(--paper)" href="{{ path('register') }}">{% trans %}about.steward_cta_account{% endtrans %}</a>
     {% endif %}
   </div>
-</div></section>
+</div></div></section>
 {% endblock %}

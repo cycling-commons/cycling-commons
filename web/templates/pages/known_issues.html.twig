@@ -19,7 +19,16 @@
   .issues{max-width:820px}
   .issue{border-bottom:1px solid rgba(20,22,14,.12);padding:1rem 0}
   .issue:last-child{border-bottom:0}
+  .issue{scroll-margin-top:5rem}
+  .issue summary{cursor:pointer;list-style:none;position:relative;padding-right:1.6rem}
+  .issue summary::-webkit-details-marker{display:none}
+  .issue summary::after{content:'▾';position:absolute;right:.2rem;top:0;color:var(--clay);font-size:.9rem}
+  .issue[open] summary::after{content:'▴'}
   .issue h2{font-family:var(--serif);font-size:1.02rem;font-weight:600;margin:0 0 .35rem;color:var(--ink)}
+  .issue summary:hover h2{color:var(--clay)}
+  .issue .body{margin-top:.5rem}
+  .issue .body .tagrow:empty{display:none}
+  .issue:target{background:rgba(200,146,58,.12);margin:0 -.8rem;padding-left:.8rem;padding-right:.8rem;border-radius:6px}
   .issue p{font-size:.9rem;color:#4a4d40;line-height:1.6;margin:.3rem 0}
   .tagrow{display:flex;gap:.4rem;flex-wrap:wrap;align-items:center;margin-top:.4rem}
   .tag{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;
@@ -49,22 +58,32 @@
       <div class="empty">{{ 'support.known.empty'|trans }}</div>
     {% else %}
       {% for issue in issues %}
-        <article class="issue">
-          <h2>{{ issue.publicTitle }}</h2>
-          <div class="tagrow">
-            <span class="tag st-{{ issue.status.value }}">{{ ('support.bug.status.' ~ issue.status.value)|trans }}</span>
-            <span class="tag sev-{{ issue.severity.value }}">{{ ('support.bug.severity.' ~ issue.severity.value)|trans }}</span>
-            <span class="tag">{{ ('support.bug.area.' ~ issue.area.value)|trans }}</span>
-            {% if issue.githubIssue and github_repo %}<a class="tag" href="https://github.com/{{ github_repo }}/issues/{{ issue.githubIssue }}" target="_blank" rel="noopener">GitHub #{{ issue.githubIssue }} ↗</a>{% endif %}
-            <span class="when">{{ issue.updatedAt|cc_date }}</span>
-          </div>
+        {# Each issue folds (owner 2026-09-09: "do not show description by
+           default; not logged in users get the public description when
+           clicked on"): the title is the summary, the tags stay visible, the
+           description opens on a click. A curator also gets a link to the
+           desk page inside. #}
+        <details class="issue" id="issue-{{ issue.id }}">
+          <summary>
+            <h2>{{ issue.publicTitle }}</h2>
+            <div class="tagrow">
+              <span class="tag st-{{ issue.status.value }}">{{ ('support.bug.status.' ~ issue.status.value)|trans }}</span>
+              <span class="tag sev-{{ issue.severity.value }}">{{ ('support.bug.severity.' ~ issue.severity.value)|trans }}</span>
+              <span class="tag">{{ ('support.bug.area.' ~ issue.area.value)|trans }}</span>
+              <span class="when">{{ issue.updatedAt|cc_date }}</span>
+            </div>
+          </summary>
           {# The public DESCRIPTION, not the reply. The outcome note is written
              to one person and reads like it; a stranger opening this list cold
              needs a description (contact-and-support.md §10). #}
-          {% if issue.publicBody %}
-            <div class="inote">{{ issue.publicBody|bug_markdown }}</div>
-          {% endif %}
-        </article>
+          <div class="body">
+            {% if issue.publicBody %}<div class="inote">{{ issue.publicBody|bug_markdown }}</div>{% endif %}
+            <div class="tagrow">
+              {% if issue.githubIssue and github_repo %}<a class="tag" href="https://github.com/{{ github_repo }}/issues/{{ issue.githubIssue }}" target="_blank" rel="noopener">GitHub #{{ issue.githubIssue }} ↗</a>{% endif %}
+              {% if is_granted('ROLE_CURATOR') %}<a class="tag" href="{{ path('moderate_bugs_detail', {id: issue.id}) }}">{{ 'support.known.desk_link'|trans }}</a>{% endif %}
+            </div>
+          </div>
+        </details>
       {% endfor %}
       {% include 'partials/_pager.html.twig' with {pager: pager, route: 'known_issues', params: {}} %}
     {% endif %}

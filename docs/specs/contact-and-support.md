@@ -635,6 +635,16 @@ is translated copy; this table is the list of names. The internal note field
 is labelled "Internal note" and carries no placeholder: the example text read
 as a real note.
 
+**Known issues fold (2026-09-09).** Each entry on `/known-issues` is a
+`<details>`: the title, the tags and the date are the summary, the public
+description opens on a click, for everyone, signed in or not (owner: "do not
+show description by default; not logged in users get the public description
+when clicked on"). Inside the open entry sit the GitHub link when there is
+one and, for a curator, "Open on the desk" (`support.known.desk_link`). Each
+entry carries `id="issue-N"`, so a URL can point at one, and `:target` tints
+it. In the facts grid of the desk page the GitHub link is one row, the three
+hint sentences having gone the day before.
+
 **GitHub: a link, not a sync** (owner 2026-09-08: "only admins are allowed to
 put site issues to github"). A public bug carries an admin-only "Open on
 GitHub" link in its facts grid, one row, no explaining prose (owner: "the

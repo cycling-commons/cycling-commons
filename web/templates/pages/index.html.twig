@@ -45,6 +45,14 @@
   /* draw-on: left-to-right wipe (works with dashed lines, unlike a dashoffset draw) */
   .hero .hero-contours{clip-path:inset(0 100% 0 0);animation:wipe 2.8s ease-out forwards}
   @keyframes wipe{to{clip-path:inset(0 0 0 0)}}
+  {# A faint map grid over the green (owner 2026-09-08: "a little grid
+     texture"): two hairline gradients, fading towards the foot so the
+     strip below it stays calm. Behind everything; the contours, glow and
+     copy paint over it. #}
+  .hero::before,.cta-band::before{content:'';position:absolute;inset:0;pointer-events:none;z-index:0;
+    background-image:linear-gradient(rgba(239,230,212,.055) 1px,transparent 1px),linear-gradient(90deg,rgba(239,230,212,.055) 1px,transparent 1px);
+    background-size:56px 56px;
+    -webkit-mask-image:linear-gradient(180deg,rgba(0,0,0,.95),rgba(0,0,0,.3));mask-image:linear-gradient(180deg,rgba(0,0,0,.95),rgba(0,0,0,.3))}
   .hero-glow{position:absolute;width:60vw;height:60vw;right:-12vw;top:-14vw;border-radius:50%;
     background:radial-gradient(circle,rgba(255,90,31,.22),transparent 62%);filter:blur(20px)}
   .corner{position:absolute;font-family:var(--mono);text-transform:uppercase;letter-spacing:.16em;font-size:.68rem;color:rgba(239,230,212,.55);z-index:5}
@@ -53,6 +61,64 @@
   /* mobile: drop the top-right licence/stewardship banner (it crowds the hero) */
   @media(max-width:760px){.corner.tr{display:none}}
 
+  /* THE LOOP (owner 2026-09-08: "those 5 on the hero, that is the full
+     concept... Ride and Add are the main items. All are interlinked"). One
+     ring on the hero's right half, five stops on it, arrows running round:
+     riders use the map, riders fill it, curators keep it true, builders
+     grow the platform, and offspring, the apps built on the data, carry it
+     back to the ride: three fading lines leave that stop for nodes outside
+     the ring. Ride and Add are the two big stops. Below 1000px the ring goes and the stops stack. */
+  .hero-inner .wrap{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:clamp(1.5rem,4vw,4rem);align-items:center}
+  .loop-col{position:relative}
+  .loop-col .loop,.loop-col .loop-img{display:none}
+  #lv-1:checked ~ .loop-img.v1{display:block}
+  #lv-3:checked ~ .loop{display:block}
+  .loop-switch{display:block;margin:.4rem 0 0 auto;width:max-content;font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(239,230,212,.45)}
+  .loop-switch label{cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+  .loop-switch label:hover{color:var(--trail)}
+  .loop-img{max-width:520px;width:100%;margin-left:auto}
+  .loop-img img{display:block;width:100%;height:auto;border-radius:12px}
+  @media(max-width:999px){.loop-img{margin:1.2rem auto 0}}
+  .loop{position:relative;aspect-ratio:1;max-width:476px;width:85%;margin-left:auto}
+  .loop svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+  .loop .ring{fill:none;stroke:rgba(239,230,212,.45);stroke-width:.5;stroke-dasharray:1.2 2.2;animation:loop-run 150s linear infinite}
+  .loop .globe{fill:#15301F;opacity:1}
+  .loop .arrow{fill:var(--trail)}
+  .loop .off{stroke-width:.55;stroke-dasharray:1.2 1.2}
+  .loop .back{fill:none;stroke:rgba(239,230,212,.45);stroke-width:.5;stroke-dasharray:1.2 1.4}
+  /* Each offspring node its own tint from the site's palette: trail, ochre,
+     glacier (owner 2026-09-08). */
+  .loop .offnode{fill:none;stroke-width:.5}
+  .loop .offnode.n0{stroke:var(--trail);fill:rgba(255,90,31,.25)}
+  .loop .offnode.n1{stroke:var(--ochre);fill:rgba(200,146,58,.25)}
+  .loop .offnode.n2{stroke:var(--glacier);fill:rgba(143,182,168,.25)}
+  @keyframes loop-run{to{stroke-dashoffset:-256}}
+  .stop{position:absolute;transform:translate(-50%,-50%);display:block;width:31%;text-align:center;background:rgba(16,30,22,.85);border:1px solid rgba(239,230,212,.18);border-radius:8px;padding:.5rem .65rem .6rem;color:var(--paper);text-decoration:none;backdrop-filter:blur(2px)}
+  .stop:hover{border-color:rgba(239,230,212,.5);background:rgba(16,30,22,.95)}
+  .stop.big{width:38%;padding:.7rem .8rem .8rem;background:var(--trail);border-color:var(--trail);color:var(--ink)}
+  .stop.big:hover{background:var(--clay);border-color:var(--clay)}
+  .stop.big.add{background:var(--paper);border-color:var(--paper)}
+  .stop.big.add:hover{background:var(--paper-deep);border-color:var(--paper-deep)}
+  .stop .k{display:block;font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;opacity:.72;margin-bottom:.2rem}
+  .stop b{display:block;font-family:var(--serif);font-weight:600;font-size:.95rem;line-height:1.2}
+  .stop.big b{font-size:1.15rem}
+  /* Five stops on a lopsided lap, not a circle (owner 2026-09-08: "still
+     very much a circle"): the lap is a spline through eight hand-placed
+     points, the stops sit on five of them, each nudged a hair; level, not
+     tilted (owner 2026-09-09: "keep the cards horizontal"). */
+  .stop.s1{left:46.0%;top:10.5%;transform:translate(-50%,-50%)}
+  .stop.s2{left:89.0%;top:41.0%;transform:translate(-50%,-50%)}
+  .stop.s3{width:29%;left:69.0%;top:81.0%;transform:translate(-50%,-50%)}
+  .stop.s4{left:24.0%;top:78.5%;transform:translate(-50%,-50%)}
+  .stop.s5{width:28%;left:15.5%;top:32.0%;transform:translate(-50%,-50%)}
+  @media(max-width:999px){
+    .hero-inner .wrap{grid-template-columns:1fr}
+    #lv-3:checked ~ .loop{aspect-ratio:auto;max-width:none;margin:1.2rem 0 0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.6rem}
+    .loop svg{display:none}
+    .stop,.stop.s1,.stop.s2,.stop.s3,.stop.s4,.stop.s5{position:static;transform:none;width:auto}
+    .stop.big{width:auto}
+  }
+  @media(max-width:520px){.loop{grid-template-columns:1fr}}
   .hero-inner{position:relative;z-index:10;padding-bottom:clamp(2.5rem,6vw,5rem);padding-top:clamp(2.5rem,5vw,4rem);width:100%}
   /* flex-start, not center: the pin marks the START of the line, so on a narrow
      screen where the eyebrow wraps to two it must stay level with the first
@@ -112,7 +178,8 @@
   /* ---------- DISCIPLINE STRIP (pinned to hero bottom) ---------- */
   .disc{margin-top:auto;color:var(--paper);width:100%;position:relative;z-index:10;
     padding:clamp(1.4rem,3vw,2.4rem) 0}
-  .disc .wrap{display:flex;align-items:baseline;gap:.5rem .9rem;flex-wrap:nowrap}
+  {# The label on its own line, the chips under it (owner 2026-09-08). #}
+  .disc .wrap{display:flex;flex-direction:column;align-items:flex-start;gap:.55rem}
   .disc .label{font-family:var(--mono);font-size:.7rem;letter-spacing:.18em;color:var(--glacier);flex:none;white-space:nowrap}
   .disc .chips{display:flex;flex-wrap:wrap;gap:.4rem;min-width:0}
   .chip{font-family:var(--mono);text-transform:uppercase;letter-spacing:.1em;font-size:.72rem;padding:.4rem .85rem;border:1px solid rgba(239,230,212,.28);border-radius:40px;color:var(--paper);user-select:none;white-space:nowrap}
@@ -121,7 +188,7 @@
      screen. The strip pays for its own extra rows rather than the headline
      shrinking again. */
   @media(max-width:640px){
-    .disc .wrap{flex-wrap:wrap;gap:.35rem .8rem}
+    .disc .wrap{gap:.4rem}
     .disc{padding:clamp(.6rem,1.3svh,1.2rem) 0}
     .disc .chips{gap:.3rem}
   }
@@ -151,6 +218,14 @@
   .panel .pin{display:block;margin:.15rem 0 1.1rem;font-family:var(--mono);font-size:.74rem;letter-spacing:.14em;line-height:1.5;color:var(--paper)}
   .panel h3{font-family:var(--serif);font-weight:500;font-size:1.5rem;margin-bottom:1.1rem}
   #curation .panel h3{margin-bottom:0}
+  .votable{margin-top:1.6rem}
+  .votable .vk{display:block;font-family:var(--mono);font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--clay);margin-bottom:.6rem}
+  .votable ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:.5rem}
+  .votable li{display:inline-flex;align-items:center;gap:.5rem;padding:.35rem .8rem .35rem .55rem;border:1px solid rgba(20,22,14,.18);border-radius:30px;font-size:.88rem;color:#8A6425;background:var(--paper)}
+  /* The icon in the deep ochre, a touch bigger, and on the text's centre line
+     (owner 2026-09-09: "icons do not align with the text... dark brown, not black"). */
+  .votable li .q-icon{display:inline-flex;align-items:center;color:#8A6425;line-height:0}
+  .votable li svg{width:1.3rem;height:1.3rem;flex:none;display:block}
   .rank{display:flex;align-items:center;gap:.9rem;padding:.7rem 0;border-bottom:1px solid rgba(239,230,212,.14)}
   .rank .n{font-family:var(--mono);color:var(--trail);font-size:.85rem;width:1.4rem}
   .rank .nm{flex:1;font-weight:500}
@@ -283,9 +358,11 @@
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem;margin-top:2.6rem}
   .card{background:var(--paper-deep);border:1px solid rgba(20,22,14,.14);border-radius:6px;padding:1.3rem;position:relative;transition:all .25s;overflow:hidden}
   .card:hover{transform:translateY(-3px);box-shadow:0 14px 30px -16px rgba(20,22,14,.5)}
-  /* Letter and icon share one 2rem-tall row at the card's top padding, so they sit
-     on the same line instead of the letter riding higher (owner 2026-08-25). */
-  .card .co{position:absolute;top:1.3rem;right:1.3rem;height:2rem;font-family:var(--serif);font-weight:600;font-size:2rem;line-height:1;letter-spacing:0;color:#8A6425}  /* darker than the --ochre token: 3.68:1 on the card, AA for large text (owner 2026-08-25) */
+  /* The icon alone, big and in the deep ochre the letter used to wear
+     (owner 2026-09-09: "drop the letters, only the icons bigger in that
+     brownish colour"). */
+  .card .q-icon{display:flex;align-items:center;height:2rem;margin-bottom:.7rem;color:#8A6425}
+  .card .q-icon svg{width:2rem;height:2rem}
   .scout-cta{display:flex;gap:1.6rem;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
   .scout-cta h3{font-family:var(--serif);font-size:1.5rem;line-height:1.2}
   .scout-cta-lead{display:flex;gap:1.1rem;align-items:flex-start;flex:1 1 300px;min-width:0}
@@ -327,12 +404,13 @@
   .cta-band{background:var(--ink);color:var(--paper);text-align:center;padding:clamp(2.2rem,4.5vw,3.6rem) 0 clamp(1.6rem,3vw,2.4rem);position:relative;overflow:hidden}
   .cta-band h2{margin:0 auto;max-width:20ch}
   .cta-band .btn-row{display:flex;gap:1rem;justify-content:center;margin-top:1.35rem;flex-wrap:wrap}
+
   /* Ghost is ink-on-ink on this band, so it disappeared. Cream fill, ink
      type — same shape as Explore, clearly the second action, no outline. */
   .cta-band .btn-ghost{background:var(--paper);border-color:transparent;color:var(--ink)}
   .cta-band .btn-ghost:hover{background:var(--paper-deep);border-color:transparent;color:var(--ink)}
 
-  @media(prefers-reduced-motion:reduce){.hero .hero-contours{animation:none;clip-path:none}.rv{transition:none;opacity:1;transform:none}
+  @media(prefers-reduced-motion:reduce){.hero .hero-contours{animation:none;clip-path:none}.loop .ring{animation:none}.rv{transition:none;opacity:1;transform:none}
     .silo .silo-tile{opacity:1;transform:rotate(var(--rot,0deg));transition:background .25s ease,border-color .25s ease}
     .silo .silo-atlas{opacity:1;transform:none;transition:none}
     .silo .silo-funnel path{stroke-dashoffset:0;animation:none}
@@ -344,24 +422,86 @@
 <!-- ===================== HERO ===================== -->
 <header class="hero">
   <svg class="hero-contours" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-    <path class="s-road"   d="M-50,720 C260,640 420,760 700,690 C980,620 1180,710 1500,650"/>
-    <path class="s-gravel" d="M-50,640 C240,560 460,680 720,600 C1000,520 1200,620 1500,560"/>
-    <path class="s-path"   d="M-50,560 C260,500 440,600 700,520 C980,440 1200,540 1500,470"/>
-    <path class="s-track"  d="M-50,470 C220,420 480,520 740,440 C1000,370 1220,460 1500,390"/>
-    <path class="s-bridle" d="M-50,380 C260,340 440,430 700,360 C980,290 1200,370 1500,300"/>
+    <path class="s-road"   d="M-50,820 C260,774 420,826 700,790 C980,754 1180,810 1500,776"/>
+    <path class="s-gravel" d="M-50,786 C260,740 420,792 700,756 C980,720 1180,776 1500,742"/>
+    <path class="s-path"   d="M-50,752 C260,706 420,758 700,722 C980,686 1180,742 1500,708"/>
+    <path class="s-track"  d="M-50,718 C260,672 420,724 700,688 C980,652 1180,708 1500,674"/>
+    <path class="s-bridle" d="M-50,684 C260,638 420,690 700,654 C980,618 1180,674 1500,640"/>
   </svg>
   <div class="hero-glow"></div>
   <div class="corner br">{{ 'home.corner_br'|trans }}</div>
 
   <div class="hero-inner">
     <div class="wrap">
+    <div class="copy">
       <div class="eyebrow mono rv in">{{ 'home.eyebrow'|trans }}</div>
       <h1 class="rv in" data-d="1">{{ 'home.h1'|trans|rich }}</h1>
       <p class="lede rv in" data-d="2">{{ 'home.lede'|trans }}</p>
-      <div class="cta-row rv in" data-d="3">
-        <a class="btn btn-primary" href="{{ path('map') }}">{{ 'home.cta_map'|trans }} <span class="arw">→</span></a>
-        <a class="btn btn-ghost" href="{{ path('contribute') }}">{{ 'home.cta_contribute'|trans }} <span class="arw">→</span></a>
-      </div>
+    </div>
+    {# THE LOOP: five stops, arrows between them. Ride and Add are the big
+       ones. Each stop is a kind of person and one verb phrase, nothing more
+       (owner 2026-09-08: "only the subtitle, not the follow-up texts"), and
+       each links to its page. The ring and arrows are decoration for a
+       sighted reader; the stops read as a list to everyone else. #}
+    {# The rendered ecosystem image shows by default; the drawn loop is kept
+       below it (owner 2026-09-08: "hide the current work and place this
+       image in it"), its stops, ring, globe and offspring lines intact. #}
+    {# A tiny test toggle between the two, CSS only (a checked box hides the
+       image and shows the drawn loop), so the page needs no script for it
+       (owner 2026-09-08: "just for testing"). Two radio boxes, two states:
+       the image (1) and the drawn loop (3), the drawn loop first since the
+       owner's pick ("draw with globe. keep version 1 and 3"). Remove the
+       boxes, the switch and the :checked rules when the image goes. #}
+    <div class="loop-col">
+    <input type="radio" name="loopv" id="lv-1" class="loop-toggle" hidden>
+    <input type="radio" name="loopv" id="lv-3" class="loop-toggle" hidden checked>
+    <div class="loop-img v1 rv in" data-d="3">
+      <img src="{{ asset('brand/cc-ecosystem-mainpage.webp') }}" alt="{{ 'home.ecosystem_alt'|trans }}" width="800" height="546" decoding="async" fetchpriority="high">
+    </div>
+    <div class="loop rv in" data-d="3">
+      <svg viewBox="0 0 100 100" aria-hidden="true">
+      <defs>
+        <linearGradient id="offfade0" gradientUnits="userSpaceOnUse" x1="15.5" y1="32.0" x2="0.5" y2="10.0"><stop offset="0" stop-color="#EFE6D4" stop-opacity=".85"/><stop offset="1" stop-color="#EFE6D4" stop-opacity=".25"/></linearGradient>
+        <linearGradient id="offfade1" gradientUnits="userSpaceOnUse" x1="15.5" y1="32.0" x2="-11.5" y2="35.0"><stop offset="0" stop-color="#EFE6D4" stop-opacity=".85"/><stop offset="1" stop-color="#EFE6D4" stop-opacity=".25"/></linearGradient>
+        <linearGradient id="offfade2" gradientUnits="userSpaceOnUse" x1="15.5" y1="32.0" x2="0.5" y2="59.0"><stop offset="0" stop-color="#EFE6D4" stop-opacity=".85"/><stop offset="1" stop-color="#EFE6D4" stop-opacity=".25"/></linearGradient>
+      </defs>
+        {# The brand globe inside the lap (owner 2026-09-08: "use the
+           earthGlobe.svg file in the brand folder"), the owner's drawing in
+           paper on the green. #}
+        {% include 'partials/_earth_globe.svg.twig' %}
+        </g>
+        </g>
+        <path class="ring" d="M44.0,9.0 L45.2,8.8 L46.3,8.6 L47.5,8.4 L48.7,8.4 L49.9,8.3 L51.1,8.4 L52.3,8.4 L53.5,8.6 L54.6,8.8 L55.8,9.0 L57.0,9.2 L58.2,9.5 L59.3,9.9 L60.5,10.2 L61.6,10.6 L62.7,11.1 L63.8,11.5 L64.9,12.0 L66.0,12.5 L67.1,13.1 L68.1,13.6 L69.1,14.2 L70.1,14.8 L71.1,15.4 L72.0,16.0 L72.9,16.6 L73.8,17.3 L74.8,18.1 L75.7,18.8 L76.6,19.6 L77.5,20.5 L78.4,21.3 L79.3,22.2 L80.2,23.1 L81.1,24.1 L81.9,25.1 L82.7,26.1 L83.5,27.1 L84.3,28.1 L85.0,29.2 L85.7,30.2 L86.4,31.3 L87.0,32.4 L87.6,33.5 L88.1,34.5 L88.6,35.6 L89.0,36.7 L89.4,37.8 L89.7,38.9 L90.0,40.0 L90.2,41.1 L90.4,42.2 L90.5,43.4 L90.6,44.6 L90.6,45.8 L90.6,47.0 L90.5,48.3 L90.4,49.6 L90.3,50.9 L90.1,52.1 L89.9,53.4 L89.6,54.7 L89.4,56.0 L89.0,57.3 L88.7,58.6 L88.3,59.8 L87.9,61.1 L87.5,62.3 L87.1,63.5 L86.6,64.7 L86.1,65.8 L85.6,66.9 L85.1,68.0 L84.6,69.0 L84.0,70.0 L83.4,71.0 L82.8,71.9 L82.2,72.8 L81.5,73.8 L80.8,74.7 L80.0,75.6 L79.3,76.5 L78.5,77.3 L77.7,78.2 L76.8,79.0 L76.0,79.8 L75.1,80.6 L74.2,81.4 L73.2,82.1 L72.3,82.8 L71.3,83.5 L70.3,84.1 L69.3,84.8 L68.3,85.3 L67.3,85.9 L66.3,86.4 L65.2,86.8 L64.1,87.3 L63.1,87.7 L62.0,88.0 L60.9,88.3 L59.7,88.6 L58.6,88.8 L57.3,89.0 L56.1,89.2 L54.8,89.4 L53.5,89.5 L52.1,89.6 L50.8,89.7 L49.4,89.7 L48.0,89.7 L46.6,89.7 L45.2,89.6 L43.9,89.5 L42.5,89.3 L41.1,89.2 L39.8,89.0 L38.4,88.7 L37.1,88.4 L35.9,88.1 L34.6,87.8 L33.4,87.4 L32.2,87.0 L31.1,86.5 L30.0,86.0 L28.9,85.5 L27.9,84.8 L26.8,84.2 L25.7,83.5 L24.7,82.7 L23.6,81.9 L22.6,81.1 L21.6,80.2 L20.6,79.3 L19.6,78.4 L18.6,77.4 L17.6,76.4 L16.7,75.4 L15.8,74.3 L15.0,73.2 L14.2,72.1 L13.4,71.0 L12.7,69.9 L12.0,68.8 L11.4,67.7 L10.8,66.5 L10.2,65.4 L9.8,64.3 L9.4,63.1 L9.0,62.0 L8.7,60.9 L8.4,59.7 L8.2,58.5 L8.1,57.2 L7.9,55.9 L7.9,54.6 L7.8,53.3 L7.8,52.0 L7.8,50.6 L7.9,49.2 L8.1,47.9 L8.2,46.5 L8.4,45.1 L8.7,43.8 L9.0,42.4 L9.3,41.0 L9.6,39.7 L10.1,38.4 L10.5,37.1 L11.0,35.8 L11.5,34.6 L12.1,33.4 L12.7,32.2 L13.3,31.1 L14.0,30.0 L14.7,28.9 L15.6,27.9 L16.5,26.8 L17.4,25.7 L18.4,24.6 L19.5,23.6 L20.6,22.5 L21.8,21.5 L23.0,20.5 L24.3,19.5 L25.6,18.5 L26.9,17.5 L28.2,16.6 L29.6,15.7 L30.9,14.9 L32.3,14.0 L33.7,13.3 L35.0,12.5 L36.4,11.9 L37.7,11.2 L39.0,10.7 L40.3,10.1 L41.6,9.7 L42.8,9.3 Z"/>
+        {# one arrow halfway along each stretch between two stops, turned to face the way round #}
+        <polygon class="arrow" points="-1.8,-1.3 1.2,0 -1.8,1.3" transform="translate(73.3,16.9) rotate(38)"/>
+        <polygon class="arrow" points="-1.8,-1.3 1.2,0 -1.8,1.3" transform="translate(86.3,65.4) rotate(114)"/>
+        <polygon class="arrow" points="-1.8,-1.3 1.2,0 -1.8,1.3" transform="translate(45.3,89.6) rotate(-176)"/>
+        <polygon class="arrow" points="-1.8,-1.3 1.2,0 -1.8,1.3" transform="translate(8.1,57.3) rotate(-94)"/>
+        <polygon class="arrow" points="-1.8,-1.3 1.2,0 -1.8,1.3" transform="translate(23.5,20.1) rotate(-38)"/>
+        {# OFFSPRING: three fading lines out of the lap to what gets built on the data #}
+        <line class="off" x1="15.5" y1="32.0" x2="0.5" y2="10.0" stroke="url(#offfade0)"/>
+        <polygon class="arrow" points="-1.8,-1.3 1.2,0 -1.8,1.3" transform="translate(2.3,12.6) rotate(-124)"/>
+        <circle class="offnode n0" cx="0.5" cy="10.0" r="1.7"/>
+        <line class="off" x1="15.5" y1="32.0" x2="-11.5" y2="35.0" stroke="url(#offfade1)"/>
+        <polygon class="arrow" points="-1.8,-1.3 1.2,0 -1.8,1.3" transform="translate(-8.3,34.6) rotate(174)"/>
+        <circle class="offnode n1" cx="-11.5" cy="35.0" r="1.7"/>
+        <line class="off" x1="15.5" y1="32.0" x2="0.5" y2="59.0" stroke="url(#offfade2)"/>
+        <polygon class="arrow" points="-1.8,-1.3 1.2,0 -1.8,1.3" transform="translate(2.1,56.2) rotate(119)"/>
+        <circle class="offnode n2" cx="0.5" cy="59.0" r="1.7"/>
+        {# and one way back, from the lowest node round the outside to Adding: what
+           gets built comes back as new finds (owner 2026-09-09). Wide enough to
+           clear the two cards it passes. #}
+        <path class="back" d="M0.5,59.0 C-9,118 130,112 91.0,54.5"/>
+        <polygon class="arrow" points="-1.8,-1.3 1.2,0 -1.8,1.3" transform="translate(91.0,54.5) rotate(-124)"/>
+      </svg>
+      <a class="stop big s1" href="{{ path('map') }}"><span class="k">{{ 'home.way_ride_k'|trans }}</span><b>{{ 'home.way_ride_h'|trans }}</b></a>
+      <a class="stop big add s2" href="{{ path('contribute') }}"><span class="k">{{ 'home.way_add_k'|trans }}</span><b>{{ 'home.way_add_h'|trans }}</b></a>
+      <a class="stop s3" href="{{ path('roles') }}"><span class="k">{{ 'home.way_curate_k'|trans }}</span><b>{{ 'home.way_curate_h'|trans }}</b></a>
+      <a class="stop s4" href="{{ path('join') }}"><span class="k">{{ 'home.way_extend_k'|trans }}</span><b>{{ 'home.way_extend_h'|trans }}</b></a>
+      <a class="stop s5" href="{{ path('developers_api') }}"><span class="k">{{ 'home.way_build_k'|trans }}</span><b>{{ 'home.way_build_h'|trans }}</b></a>
+    </div>
+    <div class="loop-switch mono">{{ 'home.loop_toggle'|trans }}
+      <label for="lv-1">1</label> / <label for="lv-3">3</label></div>
     </div>
   </div>
 
@@ -469,24 +609,24 @@
     <div class="kicker rv">{{ 'home.cat_kicker'|trans }}</div>
     <h2 class="rv" data-d="1" style="max-width:none">{{ 'home.cat_h2'|trans }}</h2>
 
-    <h3 class="cat-h rv" data-d="1"><b>{{ 'home.cat_practical_h'|trans }}</b> <span>{{ 'home.cat_practical_sub'|trans|rich }}</span></h3>
+    <h3 class="cat-h rv" data-d="1"><b>{{ 'home.cat_practical_h'|trans }}:</b> <span>{{ 'home.cat_practical_sub'|trans|rich }}</span></h3>
     <div class="grid">
-      <div class="card rv" data-d="1"><span class="co">A</span><span class="ic">▰</span><h4>{{ 'home.cat_card_surface_h'|trans }}</h4><p>{{ 'home.cat_card_surface_p'|trans }}</p></div>
-      <div class="card rv" data-d="1"><span class="co">B</span><span class="ic">💧</span><h4>{{ 'home.cat_card_water_h'|trans }}</h4><p>{{ 'home.cat_card_water_p'|trans|rich }}</p></div>
-      <div class="card rv" data-d="2"><span class="co">D</span><span class="ic">⚙</span><h4>{{ 'home.cat_card_services_h'|trans }}</h4><p>{{ 'home.cat_card_services_p'|trans }}</p></div>
-      <div class="card rv" data-d="2"><span class="co">E</span><span class="ic">⚠</span><h4>{{ 'home.cat_card_hazards_h'|trans }}</h4><p>{{ 'home.cat_card_hazards_p'|trans|rich }}</p></div>
-      <div class="card rv" data-d="3"><span class="co">F</span><span class="ic">🚆</span><h4>{{ 'home.cat_card_getting_h'|trans }}</h4><p>{{ 'home.cat_card_getting_p'|trans }}</p></div>
-      <div class="card rv" data-d="3"><span class="co">G</span><span class="ic">⛑</span><h4>{{ 'home.cat_card_shelter_h'|trans|rich }}</h4><p>{{ 'home.cat_card_shelter_p'|trans|rich }}</p></div>
-      <div class="card suggest rv" data-d="3"><span class="co">+</span><span class="ic">✎</span><h4>{{ 'home.cat_suggest_h'|trans }}</h4><p>{{ 'home.cat_suggest_p'|trans }}</p><a href="https://github.com/cycling-commons/cycling-commons/issues/new/choose">{{ 'home.cat_suggest_link'|trans }}</a></div>
+      <div class="card rv" data-d="1">{% include 'partials/_type_icon.html.twig' with {letter: 'A'} only %}<h4>{{ 'home.cat_card_surface_h'|trans }}</h4><p>{{ 'home.cat_card_surface_p'|trans }}</p></div>
+      <div class="card rv" data-d="1">{% include 'partials/_type_icon.html.twig' with {letter: 'B'} only %}<h4>{{ 'home.cat_card_water_h'|trans }}</h4><p>{{ 'home.cat_card_water_p'|trans|rich }}</p></div>
+      <div class="card rv" data-d="2">{% include 'partials/_type_icon.html.twig' with {letter: 'D'} only %}<h4>{{ 'home.cat_card_services_h'|trans }}</h4><p>{{ 'home.cat_card_services_p'|trans }}</p></div>
+      <div class="card rv" data-d="2">{% include 'partials/_type_icon.html.twig' with {letter: 'E'} only %}<h4>{{ 'home.cat_card_hazards_h'|trans }}</h4><p>{{ 'home.cat_card_hazards_p'|trans|rich }}</p></div>
+      <div class="card rv" data-d="3">{% include 'partials/_type_icon.html.twig' with {letter: 'F'} only %}<h4>{{ 'home.cat_card_getting_h'|trans }}</h4><p>{{ 'home.cat_card_getting_p'|trans }}</p></div>
+      <div class="card rv" data-d="3">{% include 'partials/_type_icon.html.twig' with {letter: 'G'} only %}<h4>{{ 'home.cat_card_shelter_h'|trans|rich }}</h4><p>{{ 'home.cat_card_shelter_p'|trans|rich }}</p></div>
+      <div class="card suggest rv" data-d="3"><span class="ic">✎</span><h4>{{ 'home.cat_suggest_h'|trans }}</h4><p>{{ 'home.cat_suggest_p'|trans }}</p><a href="https://github.com/cycling-commons/cycling-commons/issues/new/choose">{{ 'home.cat_suggest_link'|trans }}</a></div>
     </div>
 
-    <h3 class="cat-h rv" data-d="1"><b>{{ 'home.cat_emotional_h'|trans }}</b> <span>{{ 'home.cat_emotional_sub'|trans|rich }}</span></h3>
+    <h3 class="cat-h rv" data-d="1"><b>{{ 'home.cat_emotional_h'|trans }}:</b> <span>{{ 'home.cat_emotional_sub'|trans|rich }}</span></h3>
     <div class="grid">
-      <div class="card rv" data-d="1"><span class="co">N</span><span class="ic"><svg class="ic-mtn" viewBox="0 0 24 18" width="26" height="20" aria-hidden="true" focusable="false"><path d="M0 18 L7.5 4 L11 10 L14.5 5.5 L24 18 Z" fill="currentColor"/></svg></span><h4>{{ 'home.cat_card_climbs_h'|trans }}</h4><p>{{ 'home.cat_card_climbs_p'|trans }}</p></div>
-      <div class="card rv" data-d="1"><span class="co">O</span><span class="ic">⛺</span><h4>{{ 'home.cat_card_sleep_h'|trans }}</h4><p>{{ 'home.cat_card_sleep_p'|trans }}</p></div>
-      <div class="card rv" data-d="2"><span class="co">P</span><span class="ic">📷</span><h4>{{ 'home.cat_card_scenic_h'|trans }}</h4><p>{{ 'home.cat_card_scenic_p'|trans }}</p></div>
-      <div class="card rv" data-d="2"><span class="co">Q</span><span class="ic">🏛</span><h4>{{ 'home.cat_card_history_h'|trans|rich }}</h4><p>{{ 'home.cat_card_history_p'|trans|rich }}</p></div>
-      <div class="card rv" data-d="3"><span class="co">R</span><span class="ic">★</span><h4>{{ 'home.cat_card_quality_h'|trans }}</h4><p>{{ 'home.cat_card_quality_p'|trans|rich }}</p></div>
+      <div class="card rv" data-d="1">{% include 'partials/_type_icon.html.twig' with {letter: 'N'} only %}<h4>{{ 'home.cat_card_climbs_h'|trans }}</h4><p>{{ 'home.cat_card_climbs_p'|trans }}</p></div>
+      <div class="card rv" data-d="1">{% include 'partials/_type_icon.html.twig' with {letter: 'O'} only %}<h4>{{ 'home.cat_card_sleep_h'|trans }}</h4><p>{{ 'home.cat_card_sleep_p'|trans }}</p></div>
+      <div class="card rv" data-d="2">{% include 'partials/_type_icon.html.twig' with {letter: 'P'} only %}<h4>{{ 'home.cat_card_scenic_h'|trans }}</h4><p>{{ 'home.cat_card_scenic_p'|trans }}</p></div>
+      <div class="card rv" data-d="2">{% include 'partials/_type_icon.html.twig' with {letter: 'Q'} only %}<h4>{{ 'home.cat_card_history_h'|trans|rich }}</h4><p>{{ 'home.cat_card_history_p'|trans|rich }}</p></div>
+      <div class="card rv" data-d="3">{% include 'partials/_type_icon.html.twig' with {letter: 'R'} only %}<h4>{{ 'home.cat_card_quality_h'|trans }}</h4><p>{{ 'home.cat_card_quality_p'|trans|rich }}</p></div>
       <div class="card suggest rv" data-d="3"><span class="co">+</span><span class="ic">✎</span><h4>{{ 'home.cat_suggest2_h'|trans }}</h4><p>{{ 'home.cat_suggest2_p'|trans }}</p><a href="https://github.com/cycling-commons/cycling-commons/issues/new/choose">{{ 'home.cat_suggest_link'|trans }}</a></div>
     </div>
   </div>

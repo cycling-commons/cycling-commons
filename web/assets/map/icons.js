@@ -118,12 +118,12 @@ export const MOUNTAIN_PATH=TYPE_SVG('N');   // ItemType::svgPath(), via window.C
 const mountainSvg=(fill,size)=>`<svg viewBox="0 0 24 24" width="${size||15}" height="${size||15}" aria-hidden="true"><path fill="${fill}" d="${MOUNTAIN_PATH}"/></svg>`;
 export const climbGlyph=size=>mountainSvg('currentColor', size);
 // One glyph for every HTML surface (drawer head, rail, badges, nearby groups):
-// the drawn shapes where we have them, the escaped text glyph otherwise.
+// the type's drawn path (every type has one since 2026-09-09, owner: "no
+// coloured icons"; the rail's route row still showed the old star), the
+// escaped text glyph only if a path is somehow missing.
 export function layerGlyph(layer, size){
-  const k=(layer||{}).key;
-  if(k==='scenic') return cameraSvg('currentColor', size);
-  if(k==='toilets') return toiletSvg('currentColor', size);
-  if(k==='climbs') return mountainSvg('currentColor', size);
+  const d=TYPE_SVG((layer||{}).letter||'');
+  if(d) return `<svg viewBox="0 0 24 24" width="${size||15}" height="${size||15}" aria-hidden="true"><path fill-rule="evenodd" fill="currentColor" d="${d}"/></svg>`;
   return escPend((layer||{}).icon||'');
 }
 // Unverified disc; `suffix` keeps per-kind cache ids distinct.

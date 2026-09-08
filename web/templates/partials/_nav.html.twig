@@ -5,17 +5,15 @@
     <a class="brand" href="{{ path('home') }}"><img src="{{ asset('brand/logo-nav.svg') }}" alt="Cycling Commons" style="height:1.8rem;display:block"></a>
     <div class="brandsub" style="font-family:var(--mono,'Spline Sans Mono',monospace);font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(239,230,212,.55);line-height:1.6;white-space:nowrap"><span class="cc-coord">N 41.39° · E 2.16°</span><br>{{ 'nav.tagline'|trans }}</div>
   </div>
+  {# The header is for doing (owner 2026-09-08, site-directory.md §5): the
+     three buttons, and the pages a rider opens on a ride, plus the blog and
+     About as the front door. Everything else lives in the footer, which is
+     the whole site in the six groups of /pages. #}
   <div class="links">
     <a href="{{ path('regions') }}"{% if a == 'regions' %} class="on"{% endif %}>{{ 'nav.regions'|trans }}</a>
     <a href="{{ path('coverage') }}"{% if a == 'coverage' %} class="on"{% endif %}>{{ 'nav.coverage'|trans }}</a>
-    <a href="{{ path('vote') }}"{% if a == 'vote' %} class="on"{% endif %}>{{ 'nav.vote'|trans }}</a>
-    <a href="{{ path('developers') }}"{% if a == 'developers' %} class="on"{% endif %}>{{ 'nav.developers'|trans }}</a>
-    <a href="{{ path('about') }}"{% if a == 'about' %} class="on"{% endif %}>{{ 'nav.about'|trans }}</a>
-    {# The front door, in the top nav rather than only the footer: a visitor
-       looking for a way to reach a project looks up, not down
-       (contact-and-support.md §4). #}
     <a href="{{ path('blog') }}"{% if a == 'blog' %} class="on"{% endif %}>{{ 'nav.blog'|trans }}</a>
-    <a href="{{ path('licenses') }}"{% if a == 'licenses' %} class="on"{% endif %}>{{ 'nav.licence'|trans }}</a>
+    <a href="{{ path('about') }}"{% if a == 'about' %} class="on"{% endif %}>{{ 'nav.about'|trans }}</a>
     <a class="acct fill" href="{{ path('map') }}">{{ 'nav.explore_map'|trans }}</a>
     <a class="acct join" href="{{ path('contribute') }}">{{ 'nav.contribute'|trans }}</a>
     <a class="acct join" href="{{ path('join') }}">{{ 'nav.get_involved'|trans }}</a>

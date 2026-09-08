@@ -18,6 +18,10 @@
   .field input:focus,.field textarea:focus,.field select:focus{border-color:var(--trail)}
   .field.check label{display:flex;align-items:center;gap:.5rem;font-family:var(--sans);font-size:.95rem;letter-spacing:normal;text-transform:none;color:var(--ink)}
   .hint{font-family:var(--sans);font-size:1rem;color:#6b6e5c;margin:.8rem 0 1.4rem;line-height:1.6}
+  .intro{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:1rem 2rem;align-items:center;margin:0 0 1.4rem}
+  .intro .hint{margin:0}
+  .intro .btn{white-space:nowrap;text-decoration:none}
+  @media(max-width:640px){.intro{grid-template-columns:1fr}.intro .btn{justify-self:start}}
   .hint a{color:var(--clay);text-decoration:underline;text-underline-offset:3px}
   .form-error,.flash-error{background:rgba(179,38,30,.1);border-left:3px solid var(--danger);color:var(--danger-ink);padding:.7rem 1rem;border-radius:0 5px 5px 0;font-size:.9rem;margin-bottom:1.4rem}
   .flash-success{background:rgba(44,84,64,.12);border-left:3px solid var(--trail);color:#1f3a2c;padding:.7rem 1rem;border-radius:0 5px 5px 0;font-size:.9rem;margin-bottom:1.4rem}
@@ -51,9 +55,12 @@
   {# The "show us your edits" nudge belongs to somebody who is about to apply,
      not to somebody whose application is already being read. #}
   {% if onboarded and not pending_app %}
-    <p class="hint">{{ 'join.evidence_hint'|trans }}
-      <a href="{{ path('roles') }}">{{ 'join.roles_link'|trans }}</a>.
-       <a href="{{ path('improve') }}">{{ 'join.evidence_link'|trans }}</a></p>
+    {# Two columns (owner 2026-09-08): the words on the left, and on the
+       right one outlined button to the page that explains the roles. #}
+    <div class="intro">
+      <p class="hint">{{ 'join.evidence_hint'|trans }}</p>
+      <a class="btn btn-g" href="{{ path('roles') }}">{{ 'join.roles_link'|trans }}</a>
+    </div>
   {% endif %}
 
   {% if error %}<p class="form-error" role="alert">{{ error }}</p>{% endif %}

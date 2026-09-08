@@ -65,7 +65,8 @@
   .mk-tag--plan{color:var(--clay)}
   .mk-plan-note{border:1px solid rgba(16,30,22,.14);border-left:3px solid var(--ochre);border-radius:0 9px 9px 0;
     padding:.9rem 1.1rem;background:var(--paper-deep);margin:1.2rem 0 0;font-size:.9rem;line-height:1.6;color:#4a4d40}
-  .mk-grp{font-family:var(--mono);font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:var(--clay);margin:1.5rem 0 .5rem}
+  /* The group heading at the site's kicker size, not a footnote (owner 2026-09-09). */
+  .mk-grp{font-family:var(--mono);font-size:.82rem;letter-spacing:.18em;text-transform:uppercase;color:var(--clay);margin:1.8rem 0 .6rem}
 
   /* The pin, drawn as the map draws it (styles/map.css .cc-pin): the
      50% 50% 50% 0 radius points the drop down-left with NO rotate. */
@@ -126,9 +127,12 @@
   .mk-tile.lt .g{filter:brightness(0)}
   .mk-tile.lt{color:#101E16}
   .mk-tile .drawn{display:flex}
+  {# Hairlines from each cell's own shadow, not from a painted grid gap: a
+     painted gap showed as a grey block wherever a row had no cell to fill it
+     (owner 2026-09-09: "those greyish blocks can go"). #}
   .mk-cats{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:1px;
-    border:1px solid rgba(16,30,22,.14);border-radius:10px;overflow:hidden;background:rgba(16,30,22,.14)}
-  .mk-cat{background:var(--paper);display:flex;align-items:center;gap:.7rem;padding:.75rem .85rem}
+    border:1px solid rgba(16,30,22,.14);border-radius:10px;overflow:hidden}
+  .mk-cat{background:var(--paper);display:flex;align-items:center;gap:.7rem;padding:.75rem .85rem;box-shadow:0 0 0 1px rgba(16,30,22,.14)}
   .mk-cat b{display:block;font-weight:600;font-size:.88rem;color:var(--ink)}
   .mk-cat i{display:block;font-style:normal;font-family:var(--mono);font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;color:#7c8070}
   .mk-back{display:inline-block;margin-top:2.4rem;font-family:var(--mono);font-size:.74rem;letter-spacing:.1em;text-transform:uppercase;

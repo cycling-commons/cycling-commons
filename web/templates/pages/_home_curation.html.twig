@@ -6,6 +6,17 @@
       <div class="kicker rv">{{ 'home.cur_kicker'|trans }}</div>
       <h2 class="rv" data-d="1">{{ 'home.cur_h2'|trans }}</h2>
       <p class="lead rv" data-d="2">{{ 'home.cur_lead'|trans }}</p>
+      {# What riders vote on: the five votable kinds, drawn icons from THE
+         icon set with their catalogue labels (owner 2026-09-09: "add icons
+         for what is voteable"). The list mirrors ItemType::isVotable(). #}
+      <div class="votable rv" data-d="3">
+        <span class="vk">{{ 'home.cur_votable_k'|trans }}</span>
+        <ul>
+          {% for t in [{l: 'N', k: 'climbs'}, {l: 'R', k: 'quality-rides'}, {l: 'P', k: 'scenic-views'}, {l: 'Q', k: 'history-culture'}, {l: 'O', k: 'where-to-sleep'}] %}
+            <li>{% include 'partials/_type_icon.html.twig' with {letter: t.l} only %}<span>{{ ('item_type.' ~ t.k ~ '.label')|trans }}</span></li>
+          {% endfor %}
+        </ul>
+      </div>
     </div>
     <div class="panel rv" data-d="2">
       <h3>{{ 'home.cur_panel_h'|trans }}</h3>

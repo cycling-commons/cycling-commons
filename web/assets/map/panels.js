@@ -13,7 +13,7 @@ import { CATALOG, catalogRows, catalogUtility, catalogVotable, catalogModeration
 import { PREFS, addHeatmap, updateHeatFilter, layerCounts, updateCounts, render,
          applyStaysAccessFilter, syncFacetChips, prefFilterEnabled, setPrefFilter, PREF_FILTER_KEY } from './render.js';
 import { mapToast, clearRevealPin } from './drawer.js';
-import { climbGlyph, scenicGlyph, toiletGlyph } from './icons.js';
+import { layerGlyph } from './icons.js';
 import { refilterClusters, updateConfMarkers } from './osm-pools.js';
 import { curScope, inScope } from './scope-ui.js';
 import { modeToShow } from './filters.js';
@@ -46,9 +46,7 @@ export function initLayerList(){
     if(!active.has(layer.key)) el.classList.add('off');
     const _lc=layerCounts(layer);
     const ct=`${_lc.shown}/${_lc.total}`;
-    const glyph = layer.key==='scenic' ? scenicGlyph(13)
-      : layer.key==='toilets' ? toiletGlyph(13)
-      : layer.key==='climbs' ? climbGlyph(13) : layer.icon;
+    const glyph = layerGlyph(layer, 13);
     el.innerHTML=`<span class="sw"><i class="sw-g">${glyph}</i></span><span class="nm">${layer.label}</span><span class="ct">${ct}</span>`;
     el.onclick=()=>{ if(active.has(layer.key)){active.delete(layer.key);el.classList.add('off')} else {active.add(layer.key);el.classList.remove('off')} syncLayersAll(); render(); };
     lc.appendChild(el);

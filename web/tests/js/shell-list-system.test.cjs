@@ -153,6 +153,6 @@ test('category icons have exactly one home: ItemType', () => {
   // PHP: the enum is the source, with the glyph and the three drawn paths.
   const php = read('src/Catalog/ItemType.php');
   assert.match(php, /public function icon\(\): string/);
-  assert.match(php, /public function svgPath\(\): \?string/);
+  assert.match(php, /public function svgPath\(\): string/, 'every type draws its own path since 2026-09-09; the method never returns null');
   assert.match(php, /public static function iconSet\(\): array/);
 });

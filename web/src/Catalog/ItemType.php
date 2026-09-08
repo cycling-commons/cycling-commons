@@ -146,17 +146,29 @@ enum ItemType: string
     }
 
     /**
-     * A drawn 24-box path for the types whose glyph is not good enough as a
-     * pin or a row icon; the map's own paths (they used to live in icons.js).
-     * Null = the glyph is the icon.
+     * A drawn 24-box path for every type, one colour, filled with
+     * currentColor (owner 2026-09-09: "no coloured icons"; the emoji glyphs
+     * painted themselves in whatever colours the platform's font chose). The
+     * map's own paths (they used to live in icons.js). The glyph stays as the
+     * text fallback. Quality rides are a route winding across the land, a
+     * ribbon rather than a star (owner: "an icon of a route across a
+     * landscape, a slinger line").
      */
-    public function svgPath(): ?string
+    public function svgPath(): string
     {
         return match ($this) {
+            self::RoadSurface => 'M7 6h15l-5 12H2z',
+            self::WaterFood => 'M12 2C12 2 5 10 5 15a7 7 0 0 0 14 0c0-5-7-13-7-13Z',
+            self::BikeServices => 'M21.7 6.3a5.5 5.5 0 0 1-7.4 6.9L7 20.5a2.1 2.1 0 0 1-3-3l7.3-7.3a5.5 5.5 0 0 1 6.9-7.4l-3.3 3.3 1.1 3.1 3.1 1.1 3.3-3.3Z',
+            self::WhereToSleep => 'M12 3L23 20H1L12 3Zm0 5.5L6.2 18h4.6v-4h2.4v4h4.6L12 8.5Z',
+            self::Hazards => 'M12 2 23 21H1L12 2Zm-1 7v6h2V9h-2Zm0 7.5v2h2v-2h-2Z',
+            self::GettingThere => 'M6 3h12a2 2 0 0 1 2 2v10a3 3 0 0 1-3 3l1.5 3h-2l-1.5-3H9l-1.5 3h-2L7 18a3 3 0 0 1-3-3V5a2 2 0 0 1 2-2Zm0 3v5h12V6H6Zm1.5 7.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Zm9 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Z',
+            self::Shelter => 'M12 3l10 8h-3v9H5v-9H2l10-8Zm-2 9v7h4v-7h-4Z',
             self::Climbs => 'M2 20 L9.5 6 L13 12 L16 8 L22 20 Z',
+            self::HistoryCulture => 'M12 2 22 7v2H2V7l10-5ZM3 10h3v8H3zm5.5 0h3v8h-3zm5.5 0h3v8h-3zm5.5 0h3v8h-3zM2 19h20v3H2z',
+            self::QualityRides => 'M2 16C5 8 9 8 12 13s7 5 10-3l1.8 1.1C20.3 20 15.3 20.6 11.5 14.6S6.2 9.2 3.8 17.1L2 16Z',
             self::ScenicViews => 'M9 4h6l1.5 2.5H20a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8.5a2 2 0 0 1 2-2h3.5L9 4Zm3 4.6a4.7 4.7 0 1 0 0 9.4 4.7 4.7 0 0 0 0-9.4Zm0 2a2.7 2.7 0 1 1 0 5.4 2.7 2.7 0 0 1 0-5.4Z',
             self::PublicToilets => 'M5 3h5.6v8H5zM4 12h16a1 1 0 0 1 1 1.1c-.3 3.4-2.3 6-4.9 7.1v1.3a.9.9 0 0 1-.9.9H8.8a.9.9 0 0 1-.9-.9v-1.3C5.3 19.1 3.3 16.5 3 13.1A1 1 0 0 1 4 12z',
-            default => null,
         };
     }
 
@@ -164,7 +176,7 @@ enum ItemType: string
      * Letter → {glyph, svg} for every type: the payload both the map and the
      * Twig partial consume.
      *
-     * @return array<string, array{glyph: string, svg: ?string}>
+     * @return array<string, array{glyph: string, svg: string}>
      */
     public static function iconSet(): array
     {
