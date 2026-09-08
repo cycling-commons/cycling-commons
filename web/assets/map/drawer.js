@@ -113,8 +113,17 @@ const OFF_SCHEMA_LABELS = {
 export function fieldLabelFor(letter, name){
   const f = ((window.CC_FIELD_SCHEMA||{})[letter]||[]).find(x => x.key === name);
   if(f && f.label) return f.label;
+  // A description suggested for one photo: `photoAlt:<uuid>` (photo-uploads.md 5e). The uuid is not a label.
+  if(String(name).startsWith('photoAlt:')) return D.photoDesc || 'Photo description';
   const off = OFF_SCHEMA_LABELS[name];
   return off ? off() : name;
+}
+
+/** A change's value as the reader should see it: a stored code such as `station` shows as its label, "Repair stand" (schema choice labels); everything else verbatim. */
+function changeValueFor(letter, name, value){
+  const f = ((window.CC_FIELD_SCHEMA||{})[letter]||[]).find(x => x.key === name);
+  const cv = (f && f.choices) || {};
+  return cv[value] != null ? cv[value] : value;
 }
 
 /* A metres-valued OSM tag in the rider's unit; anything else stays verbatim. */
@@ -526,7 +535,7 @@ function buildRecord(layer, f){
       ? `<div class="cc-mod-diff"><div class="cc-mod-diff-h">${D.proposedChange||'Proposed change'}</div>
           <dl class="cc-mod-chg">${chList.map(c=>`
             <dt>${escPend(fieldLabelFor(s.letter, c.key))}</dt>
-            <dd>${c.was!=null?`<span class="was">${escPend(c.was)}</span><span class="arw">→</span>`:''}<span class="now">${escPend(c.now)}</span></dd>`).join('')}
+            <dd>${c.was!=null?`<span class="was">${escPend(changeValueFor(s.letter, c.key, c.was))}</span><span class="arw">→</span>`:''}<span class="now">${escPend(changeValueFor(s.letter, c.key, c.now))}</span></dd>`).join('')}
           </dl></div>`
       : (s.now
         ? `<div class="cc-mod-diff"><div class="cc-mod-diff-h">${D.proposedChange||'Proposed change'}</div>${s.was?`<div class="cc-mod-was">${escPend(s.was)}</div>`:''}<div class="cc-mod-now">${escPend(s.now)}</div></div>`
@@ -707,7 +716,7 @@ function buildRecord(layer, f){
      path only (ContentReportController::cleanPath). */
   const reportFrom = encodeURIComponent(location.pathname + location.search);
   const reportLink = (f.id != null && !layer.pendingLayer)
-    ? `<p class="cc-d-report"><a href="/report/${reportKind}/${encodeURIComponent(f.id)}?from=${reportFrom}">${
+    ? `<p class="cc-d-report"><a href="/report/${reportKind}/${encodeURIComponent(f.id)}?from=${reportFrom}"><span class="cc-bang" aria-hidden="true">!</span>${
         escPend(D.reportPage || 'Report this page')}</a></p>`
     : '';
 

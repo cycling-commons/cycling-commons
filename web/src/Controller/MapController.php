@@ -270,7 +270,7 @@ final class MapController extends AbstractController
             'priorRejected' => 'd_prior_rejected',
             'share' => 'd_share', 'shareHint' => 'd_share_hint', 'shareCopied' => 'd_share_copied',
             'reportPage' => 'd_report_page',
-            'photoAlt' => 'd_photo_alt', 'photoDistance' => 'd_photo_distance',
+            'photoAlt' => 'd_photo_alt', 'photoDesc' => 'd_photo_desc', 'photoDistance' => 'd_photo_distance',
             'photoNoGps' => 'd_photo_no_gps', 'photoKeep' => 'd_photo_keep',
             'photoOpen' => 'd_photo_open',
             'anonCredit' => 'anon_credit',

@@ -303,10 +303,16 @@ final readonly class CommonsApi
         return \array_slice($out, 0, 8);
     }
 
+    /** A population count older than this is history, not a fact about the town today. */
+    public const int POPULATION_MAX_AGE_YEARS = 25;
+
     /**
      * Two facts for the town card: when the place was founded (P571) and the
      * newest population count (P1082) with the year it was taken. Either may
      * be missing; Antwerp itself has no inception on Wikidata (2026-09-08).
+     * A count with no date, or older than POPULATION_MAX_AGE_YEARS, is not
+     * shown: Zwaag's newest count on Wikidata is from 1971 (owner
+     * 2026-09-08), and "Inhabitants 2,712 (1971)" reads as a fact about now.
      *
      * @return array{founded?: array{year: int, precision: int}, population?: array{n: int, year: ?int}}
      *
@@ -337,9 +343,11 @@ final readonly class CommonsApi
             }
             $when = $claim['qualifiers']['P585'][0]['datavalue']['value']['time'] ?? null;
             $year = \is_string($when) && 1 === preg_match('~^\+(\d{4})~', $when, $y) ? (int) $y[1] : null;
-            // Newest by year; a preferred-rank claim wins a tie, and a dated
-            // count always beats an undated one.
-            $score = [$year ?? -1, 'preferred' === ($claim['rank'] ?? '') ? 1 : 0];
+            if (null === $year || $year < (int) date('Y') - self::POPULATION_MAX_AGE_YEARS) {
+                continue;
+            }
+            // Newest by year; a preferred-rank claim wins a tie.
+            $score = [$year, 'preferred' === ($claim['rank'] ?? '') ? 1 : 0];
             if (null === $best || $score > $best) {
                 $best = $score;
                 $facts['population'] = ['n' => (int) $amount, 'year' => $year];

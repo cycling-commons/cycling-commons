@@ -2151,6 +2151,7 @@ map:
   d_mod_keys: 'Tasten: A genehmigen · R ablehnen — merkt die Entscheidung vor; Notiz hinzufügen, Enter sendet.'
   d_decision_err: 'Die Entscheidung konnte nicht erfasst werden — bitte erneut versuchen.'
   d_photo_alt: 'Eingereichtes Foto'
+  d_photo_desc: 'Fotobeschreibung'
   d_photo_distance: 'etwa {d} vom Punkt entfernt'
   d_photo_no_gps: 'keine Ortsangabe in der Datei'
   d_photo_keep: 'Behalten'

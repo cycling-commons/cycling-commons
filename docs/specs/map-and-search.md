@@ -142,10 +142,14 @@ approve-in-the-desk-tab → switch back to the open map, and that tab never
 refetched anything. catalog-load.js keeps the boot ETag and revalidates on
 `visibilitychange`/`focus` (throttled); a 304 costs headers, a change
 re-assigns the CC_* globals and calls `window.__ccApplyCatalog` (registered
-by map.js): the surface features re-map, the tile dedupe filters re-apply —
-so a just-approved way's green line appears and its red dash disappears in
-the same moment — and `render()` runs. Other letters pick their new data up
-on the next reload.
+by map.js): `populateCatalogLayers()` re-maps climbs, routes, hazards and
+the surface features from the new variables, `refreshPools()` (osm-pools.js)
+swaps every pool's data, re-seeds its cluster source and drops the on-screen
+markers so they are minted again from the new properties, the search index
+is rebuilt, the tile dedupe filters re-apply, and `render()` runs. Until
+2026-09-08 only the surface re-mapped and every other letter waited for a
+reload: a stand approved on the desk kept its old icon and its old drawer in
+the open tab (owner: "it should invalidate the old drawer and icon cache").
 
 ## 4. The shell: icon rail and drawer
 
@@ -1662,8 +1666,12 @@ The first reader claims a `town_summary` row for (ref, language) and queues
    says so beside the "Wikipedia ↗" link.
 4. Two Wikidata claims, `wbgetclaims` each (`CommonsApi::townFacts()`, owner
    2026-09-08): inception (P571) and the newest dated population (P1082, by
-   its point-in-time qualifier; a preferred-rank claim wins a tie, a dated
-   count beats an undated one). Shown as a two-line list under the paragraph,
+   its point-in-time qualifier; a preferred-rank claim wins a tie; an undated
+   count, or one older than `CommonsApi::POPULATION_MAX_AGE_YEARS` (25), is
+   dropped: Zwaag's newest Wikidata count is 1971, while its Wikipedia infobox
+   says 3,255 for 2025 from the national statistics office, which Wikidata
+   never got; the national offices are the source to harvest for this, see
+   docs/plans/2026-09-08-town-knowledge-sources.md). Shown as a two-line list above the paragraph,
    "Founded · c. 1200" and "Inhabitants · 565,039 (2024)", each line only when
    Wikidata has it; Antwerp has no inception there. Precision travels with the
    year: century and decade precisions (7, 8) read "c.", finer ones read the

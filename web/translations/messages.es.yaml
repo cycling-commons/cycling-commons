@@ -2628,6 +2628,7 @@ map:
   d_mod_keys: 'Teclas: A aprobar · R rechazar — prepara la decisión; añade una nota y Intro la envía.'
   d_decision_err: 'No se ha podido registrar la decisión — inténtalo otra vez.'
   d_photo_alt: 'Foto enviada'
+  d_photo_desc: 'Descripción de la foto'
   d_photo_distance: 'a unos {d} de la chincheta'
   d_photo_no_gps: 'el archivo no lleva ubicación'
   d_photo_keep: 'Conservar'

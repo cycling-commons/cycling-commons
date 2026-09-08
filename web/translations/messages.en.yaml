@@ -2624,6 +2624,7 @@ map:
   d_mod_keys: 'Keys: A approve · R reject — arms the decision; add a note, Enter sends it.'
   d_decision_err: 'Could not record the decision — please try again.'
   d_photo_alt: 'Submitted photo'
+  d_photo_desc: 'Photo description'
   d_photo_distance: 'about {d} from the pin'
   d_photo_no_gps: 'no location in the file'
   d_photo_keep: 'Keep'

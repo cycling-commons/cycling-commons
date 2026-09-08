@@ -62,7 +62,7 @@ final class ResolveTownSummaryHandlerTest extends KernelTestCase
         self::assertStringStartsWith('Antwerpen is een stad', (string) $row['extract']);
 
         self::assertSame(['year' => 1200, 'precision' => 7], $row['facts']['founded'] ?? null, 'founded, with Wikidata\'s own precision (7 = century)');
-        self::assertSame(['n' => 565039, 'year' => 2024], $row['facts']['population'] ?? null, 'the newest dated count, not the first or the undated one');
+        self::assertSame(['n' => 565039, 'year' => 2024], $row['facts']['population'] ?? null, 'the newest dated count: not the first, not the undated one, not the preferred 1971 one');
 
         self::assertCount(4, $row['cycling']);
         self::assertSame('UCI Road World Championships men\'s road race', $row['cycling'][2]['label'], 'a list-article label gives way to the English name');
@@ -186,6 +186,7 @@ final class ResolveTownSummaryHandlerTest extends KernelTestCase
                 ['rank' => 'normal', 'mainsnak' => ['datavalue' => ['value' => ['amount' => '+520504']]], 'qualifiers' => ['P585' => [['datavalue' => ['value' => ['time' => '+2017-00-00T00:00:00Z']]]]]],
                 ['rank' => 'normal', 'mainsnak' => ['datavalue' => ['value' => ['amount' => '+565039']]], 'qualifiers' => ['P585' => [['datavalue' => ['value' => ['time' => '+2024-01-01T00:00:00Z']]]]]],
                 ['rank' => 'normal', 'mainsnak' => ['datavalue' => ['value' => ['amount' => '+500000']]]],
+                ['rank' => 'preferred', 'mainsnak' => ['datavalue' => ['value' => ['amount' => '+999999']]], 'qualifiers' => ['P585' => [['datavalue' => ['value' => ['time' => '+1971-01-01T00:00:00Z']]]]]],
             ]]],
             'summary_nl' => ['title' => 'Antwerpen', 'extract' => 'Antwerpen is een stad in België.', 'content_urls' => ['desktop' => ['page' => 'https://nl.wikipedia.org/wiki/Antwerpen_(stad)']]],
             'summary_en' => ['title' => 'Antwerp', 'extract' => 'Antwerp is a city in Belgium.', 'content_urls' => ['desktop' => ['page' => 'https://en.wikipedia.org/wiki/Antwerp']]],

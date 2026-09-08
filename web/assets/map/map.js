@@ -11,8 +11,8 @@ import { CATALOG, active, layerByKey, cityLink, mode } from './catalog.js';
 import { addMapillary, initMapillaryDock, initStreetToggle } from './mapillary.js';
 import { curScope, scopeLabel, renderScopeChips, applyScope, initScope, initScopeRail,
          initAreaNudge, initClickToScope } from './scope-ui.js';
-import { OSM_BULK, addWaterOsm, addOsmDots, setupConfClusters, updateConfMarkers } from './osm-pools.js';
-import { trimEnds } from './item-index.js';
+import { OSM_BULK, addWaterOsm, addOsmDots, setupConfClusters, updateConfMarkers, refreshPools } from './osm-pools.js';
+import { trimEnds, rebuildItemIndex } from './item-index.js';
 import { sheet, initSheet } from './sheet.js';
 import { initLightbox } from './lightbox.js';
 import { render, updateZoomHint } from './render.js';
@@ -100,11 +100,15 @@ import { layerGlyph } from './icons.js';
   initCuratorKeys();
 
 
+  /* Catalog layers from the payload's variables. Run at boot, and again by
+     the tab-return refresh (__ccApplyCatalog) once a fresh payload has landed,
+     so climbs, routes and hazards follow an approval like the pools do. */
+  function populateCatalogLayers(){
   // Rider-added climbs must not keep an OSM-flavoured citation.
   if(window.CC_CLIMBS){
     const climbSrc = CC_CLIMBS.map(c => isRiderSource(c.srcType)
       ? Object.assign({}, c, {source: sourceLabel(c.srcType)}) : c);
-    layerByKey['climbs'].features = layerByKey['climbs'].features.concat(climbSrc);
+    layerByKey['climbs'].features = climbSrc;
   }
   if(window.CC_ROUTES){
     const RIDE_CITIES={
@@ -200,6 +204,8 @@ import { layerGlyph } from './icons.js';
       };
     });
   }
+  }
+  populateCatalogLayers();
   // Pending submissions: CC_PENDING builds the layer (curators: whole queue;
   // riders: their own rows). CC_IS_CURATOR only switches moderation chrome.
   if(Array.isArray(window.CC_PENDING)){
@@ -298,7 +304,9 @@ import { layerGlyph } from './icons.js';
   // Catalog hot-refresh hook (catalog-load.js); window global because that
   // script cannot import.
   window.__ccApplyCatalog = () => {
-    populateSurfaceA();
+    populateCatalogLayers();   // includes populateSurfaceA()
+    refreshPools();
+    rebuildItemIndex();
     setSurfaceTiles(surfaceTilesVisible());
     render();
   };

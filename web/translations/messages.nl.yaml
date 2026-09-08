@@ -2148,6 +2148,7 @@ map:
   d_mod_keys: 'Toetsen: A goedkeuren · R afwijzen — zet de keuze klaar; voeg een notitie toe, Enter verstuurt.'
   d_decision_err: 'Kon de beslissing niet vastleggen — probeer opnieuw.'
   d_photo_alt: 'Ingezonden foto'
+  d_photo_desc: 'Fotobeschrijving'
   d_photo_distance: 'ongeveer {d} van de speld'
   d_photo_no_gps: 'geen locatie in het bestand'
   d_photo_keep: 'Behouden'

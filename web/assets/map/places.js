@@ -155,8 +155,8 @@ function townHtml(d, name, meta){
   const factRows=[[D.founded||'Founded', yearTxt(f.founded)], [D.inhabitants||'Inhabitants', popTxt(f.population)]].filter(r=>r[1]);
   const facts = factRows.length ? `<ul class="cc-town-facts">${factRows.map(r=>`<li><span>${escPend(r[0])}</span><b>${escPend(r[1])}</b></li>`).join('')}</ul>` : '';
   // docs/specs/content-reports.md: the one report door, keyed by the element, never a page.
-  const reportHref = '/report/town/'+encodeURIComponent(String(meta.osm||'').replace('/', '-'))+'?from='+encodeURIComponent(location.pathname+location.search);
-  const report = `<a class="cc-town-report" href="${safeHref(reportHref)}" title="${escPend(D.reportText||'Report this text')}" aria-label="${escPend(D.reportText||'Report this text')}">!</a>`;
+  const reportHref = '/report/town/'+encodeURIComponent(String(meta.osm||'').replace('/', '-'))+'?name='+encodeURIComponent(name||'')+'&from='+encodeURIComponent(location.pathname+location.search);
+  const report = `<a class="cc-bang" href="${safeHref(reportHref)}" title="${escPend(D.reportText||'Report this text')}" aria-label="${escPend(D.reportText||'Report this text')}">!</a>`;
   const credit = d.edited ? escPend(D.wikiEdited||'Edited by our curators, after Wikipedia CC BY-SA 4.0') : escPend(D.wikiText||'Text CC BY-SA 4.0');
   // Facts first, then the paragraph (owner 2026-09-08: "place these 2 info points above the text").
   const text = facts + (t ? `<div class="cc-city-info">${escPend(t.extract)}</div>` : '') + (t ? `

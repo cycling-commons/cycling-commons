@@ -2148,6 +2148,7 @@ map:
   d_mod_keys: 'Touches : A approuver · R rejeter — prépare la décision ; ajoutez une note, Entrée envoie.'
   d_decision_err: 'Impossible d''enregistrer la décision — veuillez réessayer.'
   d_photo_alt: 'Photo soumise'
+  d_photo_desc: 'Description de la photo'
   d_photo_distance: 'à environ {d} du point'
   d_photo_no_gps: 'aucune localisation dans le fichier'
   d_photo_keep: 'Garder'

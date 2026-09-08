@@ -467,7 +467,8 @@
      read as a selection state, which is what .cur already means. Trail orange,
      the colour every "your turn" affordance on the site uses. */
   .cc-pin.stale{border-color:var(--trail);box-shadow:0 3px 8px rgba(16,30,22,.4),0 0 0 1px rgba(255,90,31,.45)}
-  .cc-pin.cur::after{content:"";position:absolute;width:6px;height:6px;background:var(--paper);border-radius:50%;top:-3px;right:-3px;transform:rotate(45deg)}
+  /* Ringed in the pin ink: a bare paper dot vanished on the light basemap (owner 2026-09-08). */
+  .cc-pin.cur::after{content:"";position:absolute;box-sizing:border-box;width:8px;height:8px;background:var(--paper);border:1.5px solid rgb(var(--mark-ink) / .85);border-radius:50%;top:-4px;right:-4px;transform:rotate(45deg)}
   .cc-pin.pending{border-color:#D92D20;border-width:3px}
   /* community tier (07-15 decisions B/D): same per-type marker, lighter — no new icon set.
      !important: MapLibre's Marker._updateOpacity() sets an inline style.opacity on every
@@ -500,8 +501,9 @@
      the MAP — coordinates in the text diff above are not reviewable. */
   /* Grouped, per field. One run-on sentence of every changed value was
      technically complete and practically unreadable. */
-  .cc-mod-chg{display:grid;grid-template-columns:auto 1fr;gap:.2rem .7rem;margin:.35rem 0 0}
-  .cc-mod-chg dt{font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;
+  /* minmax, not auto: an unbreakable label (a uuid key, once) grew the first column to its width and wrapped every value one letter per line (owner 2026-09-08). */
+  .cc-mod-chg{display:grid;grid-template-columns:minmax(4rem,max-content) minmax(0,1fr);gap:.2rem .7rem;margin:.35rem 0 0}
+  .cc-mod-chg dt{font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;overflow-wrap:anywhere;max-width:11rem;
     color:var(--chrome-mut);align-self:baseline;padding-top:.15rem;white-space:nowrap}
   .cc-mod-chg dd{margin:0;min-width:0;overflow-wrap:anywhere;font-size:.82rem;line-height:1.45}
   .cc-mod-chg .was{color:var(--chrome-mut);text-decoration:line-through}
@@ -1211,8 +1213,10 @@
   .cc-city-links a{color:rgb(var(--chrome-fg) / .85);text-decoration:underline}
   .cc-town{margin-top:.2rem}
   .cc-town-wait{aspect-ratio:auto;min-height:3.2rem;margin-top:.8rem}
-  .cc-town-report{display:inline-flex;align-items:center;justify-content:center;width:1.15rem;height:1.15rem;margin-left:.35rem;border-radius:50%;border:1px solid rgb(var(--chrome-fg) / .45);color:rgb(var(--chrome-fg) / .85);font-weight:700;font-size:.72rem;text-decoration:none;vertical-align:middle}
-  .cc-town-report:hover{border-color:var(--clay);color:var(--clay)}
+  /* The report badge: a ringed exclamation mark before every report link on the map (owner 2026-09-08). */
+  .cc-bang{display:inline-flex;align-items:center;justify-content:center;width:1.15rem;height:1.15rem;margin-left:.35rem;border-radius:50%;border:1px solid rgb(var(--chrome-fg) / .45);color:rgb(var(--chrome-fg) / .85);font-weight:700;font-size:.72rem;text-decoration:none;vertical-align:middle}
+  .cc-bang:hover,a:hover>.cc-bang{border-color:var(--clay);color:var(--clay)}
+  .cc-d-report .cc-bang,.cc-lb-report .cc-bang{margin:0 .35rem 0 0}
   .cc-town-facts{list-style:none;margin:.75rem 0 .2rem;padding:0;display:grid;grid-template-columns:auto 1fr;gap:.3rem 1rem;font-size:.9rem}
   .cc-town-facts li{display:contents}
   .cc-town-facts span{font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;color:rgb(var(--chrome-fg) / .65);align-self:baseline}
