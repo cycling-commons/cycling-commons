@@ -8,7 +8,11 @@ surface of the Commons. Built 2026-09-06 (owner).
 
 The template holds the directory once, as data: five groups, each with its
 pages (route, heading, description, map position). Both drawings read from
-that one structure, so a page cannot be on one and off the other. Six
+that one structure, so a page cannot be on one and off the other. Every
+public page without a parameter is on it, including the Blog and the API
+reference (added 2026-09-06 after the owner found Coverage under its old
+card name and the Blog missing); a page's heading is the word the nav uses
+for it where the nav has one, so Coverage reads "Coverage" here too. Six
 groups: The atlas, Take part, Open data and the project, Quality and reports
 (what is known to be wrong, how to report more, how usable the site is:
 Known issues, Report a bug, Report a page or a photo as its capital,

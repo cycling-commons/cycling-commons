@@ -46,3 +46,30 @@
     };
     applyRace(pickRace().r);
   }
+
+  /* The silo box's phone draft: the six apps fly into the Commons icon and
+     that icon climbs into the emptied screen. The flight paths are measured,
+     not written down, so they land on the icon whatever the fonts and the
+     viewport did to the layout: --tx/--ty per app, --up for the dock. Measured
+     again whenever the draft toggle shows the phone, since a hidden element
+     has no geometry. */
+  (function(){
+    const silo=document.querySelector('.silo');
+    if(!silo) return;
+    const aim=()=>{
+      const cc=silo.querySelector('.ph-cc'), grid=silo.querySelector('.ph-grid'), dock=silo.querySelector('.ph-dock');
+      if(!cc||!cc.offsetParent) return;
+      const c=cc.getBoundingClientRect();
+      silo.querySelectorAll('.ph-app').forEach(a=>{
+        const r=a.querySelector('.ph-ic').getBoundingClientRect();
+        a.style.setProperty('--tx',(c.left+c.width/2-(r.left+r.width/2)).toFixed(1)+'px');
+        a.style.setProperty('--ty',(c.top+c.height/2-(r.top+r.height/2)).toFixed(1)+'px');
+      });
+      const g=grid.getBoundingClientRect(), d=dock.getBoundingClientRect();
+      dock.style.setProperty('--up',((g.top+g.height/2)-(d.top+d.height/2)).toFixed(1)+'px');
+    };
+    aim();
+    silo.querySelectorAll('.silo-pick').forEach(i=>i.addEventListener('change',()=>requestAnimationFrame(aim)));
+    window.addEventListener('resize',aim);
+    if(document.fonts&&document.fonts.ready) document.fonts.ready.then(aim);
+  })();

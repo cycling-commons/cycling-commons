@@ -74,10 +74,10 @@
   {id: 'atlas', name: 'pages.group_atlas'|trans, box: {x: 20, y: 20, w: 440, h: 250}, pages: [
     {id: 'home',     href: path('home'),     x: 90,  y: 100, capital: true,  h: 'pages.card_landing_h'|trans, p: 'pages.card_landing_p'|trans},
     {id: 'map',      href: path('map'),      x: 240, y: 90,  capital: true,  h: 'pages.card_map_h'|trans,     p: 'pages.card_map_p'|trans},
-    {id: 'mapkey',   href: path('map_key'),  x: 390, y: 70,  capital: false, h: 'pages.card_mapkey_h'|trans,  p: 'pages.card_mapkey_p'|trans},
+    {id: 'mapkey',   href: path('map_key'),  x: 410, y: 145, capital: false, h: 'pages.card_mapkey_h'|trans,  p: 'pages.card_mapkey_p'|trans},
     {id: 'regions',  href: path('regions'),  x: 130, y: 200, capital: false, h: 'pages.card_region_h'|trans,  p: 'pages.card_region_p'|trans},
     {id: 'scout',    href: path('scout'),    x: 320, y: 195, capital: false, h: 'pages.card_scout_h'|trans,   p: 'pages.card_scout_p'|trans},
-    {id: 'coverage', href: path('coverage'), x: 400, y: 235, capital: false, h: 'pages.card_coverage_h'|trans, p: 'pages.card_coverage_p'|trans},
+    {id: 'coverage', href: path('coverage'), x: 400, y: 235, capital: false, h: 'nav.coverage'|trans, p: 'pages.card_coverage_p'|trans},
   ]},
   {id: 'part', name: 'pages.group_part'|trans, box: {x: 500, y: 20, w: 480, h: 250}, pages: [
     {id: 'contribute',   href: path('contribute'),    x: 590, y: 100, capital: true, lp: 'above',  h: 'pages.card_contribute_h'|trans,   p: 'pages.card_contribute_p'|trans},
@@ -91,10 +91,12 @@
   ]},
   {id: 'data', name: 'pages.group_data'|trans, box: {x: 20, y: 300, w: 590, h: 150}, pages: [
     {id: 'developers', href: path('developers'), x: 90,  y: 370, capital: false, h: 'pages.card_developers_h'|trans, p: 'pages.card_developers_p'|trans},
+    {id: 'api',        href: path('developers_api'), x: 150, y: 420, capital: false, h: 'pages.card_api_h'|trans, p: 'pages.card_api_p'|trans},
+    {id: 'blog',       href: path('blog'),       x: 390, y: 410, capital: false, h: 'nav.blog'|trans,              p: 'pages.card_blog_p'|trans},
     {id: 'licenses',   href: path('licenses'),   x: 220, y: 360, capital: false, lp: 'right', h: 'pages.card_licenses_h'|trans, p: 'pages.card_licenses_p'|trans},
     {id: 'credits',    href: path('credits'),    x: 270, y: 415, capital: false, h: 'pages.card_credits_h'|trans,    p: 'pages.card_credits_p'|trans},
     {id: 'changelog',  href: path('changelog'),  x: 420, y: 350, capital: false, h: 'changelog.kicker'|trans,        p: 'changelog.lead'|trans|striptags},
-    {id: 'roadmap',    href: path('roadmap'),    x: 540, y: 405, capital: false, lp: 'left', h: 'roadmap.kicker'|trans,  p: 'roadmap.lead'|trans|striptags},
+    {id: 'roadmap',    href: path('roadmap'),    x: 545, y: 350, capital: false, h: 'roadmap.kicker'|trans,  p: 'roadmap.lead'|trans|striptags},
   ]},
   {id: 'account', name: 'pages.group_account'|trans, box: {x: 650, y: 300, w: 330, h: 150}, pages: [
     {id: 'account',  href: account_href,     x: 740, y: 405, capital: false, h: 'pages.card_login_h'|trans,    p: 'pages.card_login_p'|trans},
@@ -109,8 +111,8 @@
     {id: 'contact', href: path('contact'), x: 425, y: 565, capital: false, h: 'support.contact.title_short'|trans, p: 'support.contact.lead'|trans|striptags},
   ]},
   {id: 'quality', name: 'pages.group_quality'|trans, box: {x: 500, y: 480, w: 480, h: 160}, pages: [
-    {id: 'known',  href: path('known_issues'),  x: 600, y: 560, capital: false, lp: 'above', h: 'support.known.kicker'|trans, p: 'support.known.lead'|trans|striptags},
-    {id: 'bug',    href: path('bug_report'),    x: 710, y: 545, capital: false, h: 'support.bug.kicker'|trans,   p: 'support.bug.lead'|trans|striptags},
+    {id: 'known',  href: path('known_issues'),  x: 600, y: 560, capital: false, h: 'support.known.kicker'|trans, p: 'support.known.lead'|trans|striptags},
+    {id: 'bug',    href: path('bug_report'),    x: 745, y: 520, capital: false, h: 'support.bug.kicker'|trans,   p: 'support.bug.lead'|trans|striptags},
     {id: 'report', href: path('report_guide'),  x: 830, y: 592, capital: true,  h: 'support.guide.kicker'|trans, p: 'support.guide.lead'|trans},
     {id: 'a11y',   href: path('accessibility'), x: 930, y: 545, capital: false, h: 'a11y.kicker'|trans,          p: 'a11y.lead'|trans|striptags},
   ]},
@@ -121,7 +123,7 @@
   {a: 'route', b: 'vote', kind: 'trail'}, {a: 'improve', b: 'join', kind: 'trail'}, {a: 'join', b: 'wiki', kind: 'trail'}, {a: 'join', b: 'contributors', kind: 'trail'}, {a: 'map', b: 'scout', kind: 'trail'},
   {a: 'account', b: 'profile', kind: 'track'}, {a: 'profile', b: 'messages', kind: 'track'}, {a: 'profile', b: 'settings', kind: 'track'}, {a: 'contributors', b: 'profile', kind: 'track'},
   {a: 'map', b: 'mapkey', kind: 'path'}, {a: 'map', b: 'regions', kind: 'path'}, {a: 'map', b: 'coverage', kind: 'path'},
-  {a: 'developers', b: 'licenses', kind: 'path'}, {a: 'licenses', b: 'credits', kind: 'path'}, {a: 'changelog', b: 'roadmap', kind: 'path'}, {a: 'roadmap', b: 'known', kind: 'path', via: [{x: 512, y: 592}]},
+  {a: 'developers', b: 'licenses', kind: 'path'}, {a: 'developers', b: 'api', kind: 'path'}, {a: 'changelog', b: 'blog', kind: 'path'}, {a: 'licenses', b: 'credits', kind: 'path'}, {a: 'changelog', b: 'roadmap', kind: 'path'}, {a: 'changelog', b: 'known', kind: 'path', bend: 0, wobble: 0.3, via: [{x: 485, y: 470}, {x: 485, y: 560}]},
   {a: 'known', b: 'bug', kind: 'path'}, {a: 'bug', b: 'report', kind: 'path'}, {a: 'report', b: 'a11y', kind: 'path'}, {a: 'contact', b: 'report', kind: 'path', via: [{x: 540, y: 622}]}, {a: 'about', b: 'privacy', kind: 'path'}, {a: 'privacy', b: 'terms', kind: 'path'},
 ] %}
 {% set at = {} %}
