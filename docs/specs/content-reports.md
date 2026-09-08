@@ -35,17 +35,21 @@ Two things follow from Article 16 that shape every decision below:
    round trip before the notice is accepted. See
    `docs/specs/contact-and-support.md` §3.
 
-## 2. Why photos keep their own route
+## 2. Photos: one door since 2026-08-30
 
-`/photo/{uuid}/report` does something this form deliberately does not: an
+Until 2026-08-30 photos had their own form, `/photo/{uuid}/report`, because an
 intimate-imagery report there **withholds the photo before any person has seen
-it**. That is right for an image and wrong for everything else. Auto-hiding a
-route because one stranger objected to it would hand any passer-by a delete
-button.
-
-Folding photos into this form would either lose that auto-withhold or apply it
-to things where it does harm. So there are two forms, and the difference between
-them is a real difference and not an accident.
+it**, which is right for an image and wrong for everything else. The owner
+asked for one door ("we need one to rule them all", docs/TODO.md 19), and the
+merge kept the one thing photos really do have: the auto-withhold is now a
+property of the ground-and-target pair (`ReportTarget::canAutoWithhold()`,
+photos only; `ReportGround::autoWithholds()`, the intimate-or-child ground
+only), behind the site-wide circuit breaker photo-uploads.md §6b describes.
+`/photo/{uuid}/report` answers 301 to `/report/photo/{uuid}`; a page that
+carries pictures asks which thing is meant, the entry or one of its photos
+(§5); the reports desk carries a decision through to the file; and the
+takedowns desk keeps only what an uploader asked us to remove about their own
+picture. Design record: `docs/specs/2026-08-30-one-report-route-design.md`.
 
 ## 3. What can be reported
 
