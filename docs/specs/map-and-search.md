@@ -480,7 +480,15 @@ for one thing in five languages. Fixed across all five.
   whole-country default rather than being trusted.
 
   **On a region's own page the three states are sentences, not glossary
-  entries.** `/regions` is a directory and wants fragments a reader scans down
+  entries.** Since 2026-09-08 each country's regions sit closed behind a
+  count chip (a `<details>`, so scripting off still works; a link or the map
+  opens the one it points at), and a List / Map switch offers a world map:
+  `assets/pages/regions-map.js` loads the vendored MapLibre only when asked,
+  draws every stored `region.outline` from `GET /regions/outlines.json`
+  (`PageController::regionOutlines()`, on the public cache list with an ETag,
+  under half a megabyte for 19 countries), and a click on a region opens its country's
+  block below (owner: "a map version where you select the country on a world
+  map"). `/regions` is a directory and wants fragments a reader scans down
   a column; `/regions/{slug}` is about one place and wants a line that answers
   the question it is under. So the page has its own `regions.steward_line_*`
   copy rather than reusing the legend's `status_*_desc`, and the state itself

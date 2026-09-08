@@ -88,6 +88,7 @@ final readonly class PublicPageCacheSubscriber implements EventSubscriberInterfa
         'changelog',
         'regions',
         'region_detail',
+        'regions_outlines',
         'blog',
         'blog_post',
         'known_issues',

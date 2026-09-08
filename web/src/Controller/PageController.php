@@ -15,6 +15,7 @@ use App\Routing\LocalePrefix;
 use App\Routing\LocalizedPath;
 use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Intl\Countries;
@@ -116,6 +117,63 @@ final class PageController extends AbstractController
      *
      * @see docs/specs/contact-and-support.md §4
      */
+    /**
+     * Every region's stored outline as GeoJSON, for the world map on /regions
+     * (owner 2026-09-08: "a map version where you select the country on a
+     * world map"). The rings are the simplified `region.outline` the map's
+     * scope registry already serves, so this costs one indexed read and no
+     * geometry work; 19 countries came to under half a megabyte on 2026-09-08.
+     * On the public cache list like the page: the shared cache holds it a
+     * minute and the ETag answers 304 after that. It changes when a country is
+     * onboarded.
+     */
+    #[Route('/regions/outlines.json', name: 'regions_outlines', methods: ['GET'])]
+    public function regionOutlines(Request $request, Connection $db): Response
+    {
+        /** @var list<array{slug: string, cc: string, outline: string}> $rows */
+        $rows = $db->fetchAllAssociative('SELECT slug, country_code AS cc, outline FROM region WHERE outline IS NOT NULL ORDER BY country_code, slug');
+        $features = [];
+        foreach ($rows as $row) {
+            // Flat [x,y,x,y,…] per ring, as the scope registry stores it.
+            $rings = json_decode($row['outline'], true);
+            if (!\is_array($rings)) {
+                continue;
+            }
+            $polygon = [];
+            /** @var mixed $ring */
+            foreach ($rings as $ring) {
+                if (!\is_array($ring) || \count($ring) < 8) {
+                    continue;
+                }
+                $flat = array_values(array_map(static fn (mixed $v): float => (float) $v, $ring));
+                $pairs = [];
+                for ($i = 0, $n = \count($flat) - 1; $i < $n; $i += 2) {
+                    $pairs[] = [round($flat[$i], 3), round($flat[$i + 1], 3)];
+                }
+                if ([] === $pairs) {
+                    continue;
+                }
+                if (end($pairs) !== $pairs[0]) {
+                    $pairs[] = $pairs[0];
+                }
+                $polygon[] = $pairs;
+            }
+            if ([] === $polygon) {
+                continue;
+            }
+            // Each ring stands alone: the stored outline is one ring per part, never holes.
+            foreach ($polygon as $ring) {
+                $features[] = ['type' => 'Feature', 'properties' => ['slug' => $row['slug'], 'cc' => $row['cc']], 'geometry' => ['type' => 'Polygon', 'coordinates' => [$ring]]];
+            }
+        }
+        $json = json_encode(['type' => 'FeatureCollection', 'features' => $features], \JSON_THROW_ON_ERROR | \JSON_UNESCAPED_SLASHES | \JSON_PRESERVE_ZERO_FRACTION);
+        $response = new JsonResponse($json, Response::HTTP_OK, [], true);
+        $response->setEtag(md5($json));
+        $response->isNotModified($request);
+
+        return $response;
+    }
+
     #[Route(LocalizedPath::ACCESSIBILITY, name: 'accessibility')]
     public function accessibility(): Response
     {

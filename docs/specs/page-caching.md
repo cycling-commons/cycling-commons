@@ -121,7 +121,10 @@ references the nonce. What moved, and where it went:
 - The landing page's hero behaviour is `assets/home/hero.js`, and the country
   typeahead is `assets/pages/regions-typeahead.js`. Neither reads server data,
   except two values the typeahead now takes from the JSON block's own
-  attributes.
+  attributes. The regions world map, `assets/pages/regions-map.js`, is the
+  same shape: its four inputs ride as `data-*` on the map box, and the
+  outlines it draws come from `/regions/outlines.json`, a public route on the
+  cache list like the page itself.
 - The analytics loader no longer copies a nonce onto the Umami script it
   injects. `script-src` names `https://analytics.bikecoders.life` instead, the
   same host already trusted in `connect-src`.

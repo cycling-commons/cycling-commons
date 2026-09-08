@@ -51,6 +51,18 @@
   .country .ch h3{font-family:var(--sans);font-weight:700;font-size:1.05rem}
   .country .ch .cc{font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;color:#7a7d6c;text-transform:uppercase}
   .country .ch .n{font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;color:#7a7d6c;margin-left:auto}
+  .viewrow{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;margin:0 0 1rem}
+  .viewrow .chip{font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;padding:.35rem .7rem;border:1px solid rgba(20,22,14,.25);border-radius:30px;background:transparent;color:#595c4d;cursor:pointer}
+  .viewrow .chip.on{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+  .viewrow .vhint{font-size:.85rem;color:#6d7060;margin-left:.4rem}
+  .regions-map{position:relative}
+  .regions-tip{position:absolute;z-index:2;pointer-events:none;background:var(--ink);color:var(--paper);font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;padding:.25rem .5rem;border-radius:4px}
+  .regions-map{height:min(70vh,560px);border-radius:8px;overflow:hidden;border:1px solid rgba(20,22,14,.18);margin:0 0 1.4rem;background:#dfe7dc}
+  .regs>summary.chip{display:inline-flex;align-items:center;gap:.4rem;cursor:pointer;list-style:none;font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;padding:.35rem .7rem;border:1px solid rgba(20,22,14,.25);border-radius:30px;color:#595c4d;background:transparent;margin:0 0 .55rem}
+  .regs>summary.chip::-webkit-details-marker{display:none}
+  .regs>summary.chip::after{content:'▾'}
+  .regs[open]>summary.chip{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+  .regs[open]>summary.chip::after{content:'▴'}
 
   .regions{display:flex;flex-wrap:wrap;gap:.5rem}
   .reg{display:inline-flex;align-items:center;gap:.5rem;background:var(--paper-deep);border:1px solid rgba(20,22,14,.1);
@@ -140,6 +152,20 @@
     <div class="empty">{% trans %}regions.no_regions{% endtrans %}</div>
   {% endif %}
 
+  {# Two views of one list (owner 2026-09-08): the list, and a world map where
+     a country is picked by clicking it. The map is loaded only when asked for,
+     so the page does not carry MapLibre for readers who never open it. #}
+  <div class="viewrow" id="regions-viewrow" hidden>
+    <button type="button" class="chip on" data-view="list" aria-pressed="true">{% trans %}regions.view_list{% endtrans %}</button>
+    <button type="button" class="chip" data-view="map" aria-pressed="false">{% trans %}regions.view_map{% endtrans %}</button>
+    <span class="vhint">{% trans %}regions.map_hint{% endtrans %}</span>
+  </div>
+  <div id="regions-map" class="regions-map" hidden
+       data-outlines="{{ path('regions_outlines') }}"
+       data-maplibre-js="{{ asset('lib/maplibre-gl-5.24.0.js') }}"
+       data-maplibre-css="{{ asset('lib/maplibre-gl-5.24.0.css') }}"
+       data-style="https://tiles.openfreemap.org/styles/liberty"></div>
+
   {% set continent = '' %}
   {% for country in countries %}
     {% if country.continentCode != continent %}
@@ -150,11 +176,14 @@
       <div class="ch">
         <img src="{{ asset(country.flag) }}" alt="" width="20" height="15">
         <h3>{{ country.name }}</h3><span class="cc">{{ country.code }}</span>
-        <span class="n">
-          {{ (country.regions|length == 1 ? 'regions.count_region' : 'regions.count_regions')|trans({'%n%': country.regions|length}) }}
-        </span>
         <a class="join-cta" href="{{ path('join_country', {cc: country.code}) }}">{% trans %}regions.apply{% endtrans %}</a>
       </div>
+      {# Closed by default (owner 2026-09-08): nineteen countries of regions
+         made one long wall. The chip is the count; open it to see them. A
+         <details>, so it works with scripting off; the script below opens the
+         one a link or the map points at. #}
+      <details class="regs">
+        <summary class="chip">{{ (country.regions|length == 1 ? 'regions.count_region' : 'regions.count_regions')|trans({'%n%': country.regions|length}) }}</summary>
       <div class="regions">
         {% for reg in country.regions %}
           <a class="reg tier-{{ reg.tier }}{{ reg.stewardship == 'curated' ? ' has-curator' }}"
@@ -174,6 +203,7 @@
           </a>
         {% endfor %}
       </div>
+      </details>
     </div>
   {% endfor %}
 
@@ -197,4 +227,5 @@
 {# Behaviour in a file, so this page needs no CSP nonce
    (docs/specs/page-caching.md §3.2). #}
 <script src="{{ asset('pages/regions-typeahead.js') }}" defer></script>
+<script src="{{ asset('pages/regions-map.js') }}" defer></script>
 {% endblock %}
