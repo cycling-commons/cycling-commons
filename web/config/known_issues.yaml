@@ -46,3 +46,36 @@ issues:
     status: new
     body: |
       The country and region pickers on Regions and Get involved have not been tested with a keyboard alone. If Tab and Enter do not get you through them, that is this issue.
+  # Filed 2026-09-08 (owner: "what part of the site is not including the API,
+  # add those to the bug list and look for other missing base elements").
+  - public_title: 'The public API answers two of the twelve endpoints in its contract'
+    severity: minor
+    area: pages
+    status: planned
+    body: |
+      The contract at /developers/api describes twelve endpoints. Two answer today: /v1/map-config and /v1/search. The other ten do not exist yet: the item-type catalogue, one item by id, coverage counts, regions and their best-of, the route list, one route and its GPX under /v1, and the write path for contributions.
+      A GPX still downloads from /routes/{id}.gpx, outside the versioned API.
+  - public_title: 'The API reference says the API is not live, and lives outside the site'
+    severity: cosmetic
+    area: pages
+    status: new
+    body: |
+      The banner on /developers/api still reads "Draft contract, API not live yet", while two endpoints answer. The page is English only, sits outside the site chrome, and is not in the sitemap.
+  - public_title: 'The sitemap leaves out the blog, its posts, the map key, the API reference and the vote page'
+    severity: minor
+    area: pages
+    status: new
+    body: |
+      /sitemap.xml lists the fixed pages and every region, but not the blog index, the blog posts, the map key, the API reference or the vote page. A search engine finds them only by following links.
+  - public_title: 'A town card shows no population when Wikidata has no recent count'
+    severity: minor
+    area: map
+    status: new
+    body: |
+      The town card reads its two facts from Wikidata. A count older than 25 years, or undated, is not shown, so a town whose newest Wikidata count is from 1971 shows no Inhabitants line at all, while its Wikipedia box carries a 2025 figure from the national statistics office. The founding date is missing for most towns for the same reason: Wikidata has none.
+  - public_title: 'A town card does not list the routes that pass through the town'
+    severity: minor
+    area: map
+    status: planned
+    body: |
+      The card lists the races Wikidata ties to a town, but not the signed routes that pass through it: the Westfriese Omringdijk for Hoorn, the Great Divide for Banff. Those live in the map's own routes layer and need geometry, not Wikidata.
