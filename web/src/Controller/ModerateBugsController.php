@@ -133,6 +133,7 @@ final class ModerateBugsController extends AbstractController
         }
 
         return $this->render('moderate/bug_detail.html.twig', [
+            'releases' => $this->releaseTags(),
             'page_title' => 'support.bugs.title',
             'page_description' => 'support.bugs.title',
             'nav_active' => '',
@@ -204,7 +205,9 @@ final class ModerateBugsController extends AbstractController
         // and neither gates the status: a bug can be resolved before anybody
         // knows which tag will carry it.
         $report->setInternalNote((string) $request->request->get('internal_note', ''));
-        $report->setFixRelease((string) $request->request->get('fix_release', ''));
+        // A known release or nothing: the list is kept by an admin (owner 2026-09-08).
+        $wanted = (string) $request->request->get('fix_release', '');
+        $report->setFixRelease(\in_array($wanted, $this->releaseTags(), true) ? $wanted : '');
         $report->setPublic($wantsPublic);
         if ('' !== $note) {
             $report->setOutcomeNote($note);
@@ -264,5 +267,20 @@ final class ModerateBugsController extends AbstractController
         $response->headers->set('X-Robots-Tag', 'noindex, nofollow');
 
         return $response;
+    }
+
+    /**
+     * The release tags an admin has recorded, newest first.
+     *
+     * @return list<string>
+     */
+    private function releaseTags(): array
+    {
+        /** @var list<string> $tags */
+        $tags = $this->em->getConnection()->fetchFirstColumn(
+            'SELECT tag FROM release_tag ORDER BY released_at DESC NULLS FIRST, created_at DESC',
+        );
+
+        return $tags;
     }
 }

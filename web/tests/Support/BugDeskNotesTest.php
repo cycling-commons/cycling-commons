@@ -13,6 +13,7 @@ use App\Support\BugSeverity;
 use App\Support\BugSort;
 use App\Support\BugStatus;
 use App\Support\Entity\BugReport;
+use App\Support\Entity\ReleaseTag;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -97,6 +98,29 @@ final class BugDeskNotesTest extends WebTestCase
         ]);
     }
 
+    public function testFixedInTakesOnlyAReleaseAnAdminRecorded(): void
+    {
+        // Owner 2026-09-08: a dropdown of release tags, kept in the admin.
+        $client = $this->client();
+        $report = $this->bug();
+        $client->loginUser($this->curator());
+        $tag = (new ReleaseTag())->setTag('v9.9.9-test');
+        $this->em()->persist($tag);
+        $this->em()->flush();
+
+        $page = $client->request('GET', '/moderate/bugs/'.$report->getId());
+        self::assertCount(1, $page->filter('select[name="fix_release"] option[value="v9.9.9-test"]'), 'the recorded tag is offered');
+        self::assertCount(1, $page->filter('select[name="fix_release"] option[value="v0.8.0-beta"]'), 'and so is the seeded first release');
+
+        $this->decide($client, $report, ['fix_release' => 'v9.9.9-test']);
+        $this->em()->clear();
+        self::assertSame('v9.9.9-test', $this->em()->find(BugReport::class, $report->getId())?->getFixRelease());
+
+        $this->decide($client, $report, ['fix_release' => 'v1.2.3-typed']);
+        $this->em()->clear();
+        self::assertSame('', (string) $this->em()->find(BugReport::class, $report->getId())?->getFixRelease(), 'a tag nobody recorded is not stored');
+    }
+
     // -- the internal note stays internal ---------------------------------
 
     public function testTheInternalNoteIsSavedAndShownToACurator(): void
@@ -174,8 +198,11 @@ final class BugDeskNotesTest extends WebTestCase
         $client = $this->client();
         $report = $this->bug();
         $client->loginUser($this->curator());
+        // Recorded first: the desk offers only what an admin recorded (2026-09-08).
+        $this->em()->persist((new ReleaseTag())->setTag('v0.9.0'));
+        $this->em()->flush();
 
-        $this->decide($client, $report, ['fix_release' => ' v0.9.0 ']);
+        $this->decide($client, $report, ['fix_release' => 'v0.9.0']);
 
         $this->em()->clear();
         self::assertSame('v0.9.0', $this->em()->find(BugReport::class, $report->getId())?->getFixRelease());

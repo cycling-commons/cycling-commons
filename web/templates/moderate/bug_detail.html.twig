@@ -192,14 +192,17 @@
       <div class="drow">
         <div class="dcell">
           <label for="d-internal">{{ 'support.bugs.internal'|trans }}</label>
-          <textarea id="d-internal" name="internal_note" maxlength="4000" rows="3"
-                    placeholder="{{ 'support.bugs.internal_placeholder'|trans }}">{{ report.internalNote }}</textarea>
+          <textarea id="d-internal" name="internal_note" maxlength="4000" rows="3">{{ report.internalNote }}</textarea>
         </div>
         <div class="dcell">
           <label for="d-release">{{ 'support.bugs.release'|trans }}</label>
-          <input type="text" id="d-release" name="fix_release" maxlength="64"
-                 value="{{ report.fixRelease }}"
-                 placeholder="{{ 'support.bugs.release_placeholder'|trans }}">
+          {# The releases an admin recorded (/admin, Releases); nothing else is accepted (owner 2026-09-08). #}
+          <select id="d-release" name="fix_release">
+            <option value="">{{ 'support.bugs.release_none'|trans }}</option>
+            {% for tag in releases %}
+              <option value="{{ tag }}"{{ tag == report.fixRelease ? ' selected' : '' }}>{{ tag }}</option>
+            {% endfor %}
+          </select>
         </div>
       </div>
 

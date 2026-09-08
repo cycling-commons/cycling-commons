@@ -624,10 +624,16 @@ stranger, and there is no third option.
 mail, and it is not on the public list.
 
 `fix_release` is the git tag the fix lands in, shown on the desk row as a tag.
-Not validated against a version pattern: this project has shipped
-`v0.8.0-beta`, and a desk that rejects the tag a curator is looking at gets a
-wrong tag typed into it instead. Nullable and never required, because a bug can
-be resolved before anybody has cut the release.
+Since 2026-09-08 it is a choice, not free text (owner: "Fixed in should be a
+dropdown with release tags, release tags can be added in the admin section"):
+`release_tag` rows (`App\Support\Entity\ReleaseTag`: tag, released on, note),
+kept at /admin under Releases, seeded with `v0.8.0-beta`. The desk offers
+exactly those and stores nothing else; an unknown value falls back to empty.
+Nullable and never required, because a bug can be resolved before anybody has
+cut the release. The changelog's text stays in code (`ReleaseNotes`), since it
+is translated copy; this table is the list of names. The internal note field
+is labelled "Internal note" and carries no placeholder: the example text read
+as a real note.
 
 ### One row, one size
 

@@ -92,6 +92,7 @@ final class DashboardController extends AbstractDashboardController
         yield MenuItem::linkTo(UserCrudController::class, new TranslatableMessage('admin.menu.users'), 'fa fa-users')->setAction('index');
         yield MenuItem::linkTo(AdminActionLogCrudController::class, new TranslatableMessage('admin.menu.activity'), 'fa fa-clock-rotate-left')->setAction('index');
         yield MenuItem::linkTo(ResetPasswordRequestCrudController::class, new TranslatableMessage('admin.menu.reset_requests'), 'fa fa-key')->setAction('index');
+        yield MenuItem::linkTo(ReleaseTagCrudController::class, new TranslatableMessage('admin.menu.releases'), 'fa fa-tag');
         yield MenuItem::linkTo(BlogPostCrudController::class, new TranslatableMessage('admin.menu.blog'), 'fa fa-pen-nib')->setAction('index');
         yield MenuItem::section(new TranslatableMessage('admin.menu.playbooks'));
         yield MenuItem::linkToRoute(new TranslatableMessage('admin.menu.playbook_email'), 'fa fa-envelope-circle-check', 'admin_playbook_email_change');
