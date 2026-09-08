@@ -22,7 +22,9 @@
    except tie the page to a per-request value (docs/specs/page-caching.md §3.2). #}
 <style>
   .bdet{max-width:760px}
-  .bdet dl.facts{display:grid;grid-template-columns:auto 1fr;gap:.3rem .9rem;margin:1rem 0 1.4rem}
+  .bdet dl.facts{display:grid;grid-template-columns:auto 1fr;gap:.3rem .9rem;margin:1rem 0 1.4rem;align-items:baseline}
+  /* Two label-value pairs per row on a wide screen (owner 2026-09-08). */
+  @media(min-width:760px){.bdet dl.facts{grid-template-columns:auto minmax(0,1fr) auto minmax(0,1fr);column-gap:1.4rem}}
   .bdet dl.facts dt{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--clay)}
   .bdet dl.facts dd{margin:0;font-size:.9rem;color:#3a3d30;word-break:break-word}
   /* Values that are machine strings: the mono FACE, at the same size and case
@@ -136,6 +138,8 @@
         <button type="submit" class="btn-act">{{ 'support.bugs.github_open'|trans }}</button>
         <span class="chint">{{ 'support.bugs.github_hint'|trans }}</span>
       </form>
+    {% elseif is_granted('ROLE_ADMIN') and not report.githubIssue %}
+      <p class="chint">{{ (github.isConfigured ? 'support.bugs.github_needs_public' : 'support.bugs.github_unset')|trans }}</p>
     {% endif %}
 
     <p class="bsec">{{ 'support.bug.field_body'|trans }}</p>

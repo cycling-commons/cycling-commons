@@ -3469,6 +3469,8 @@ support:
     github_opened: 'Auf GitHub geöffnet.'
     github_failed: 'GitHub hat es nicht angenommen. Hier wurde nichts geändert.'
     github_not_public: 'Nur ein öffentlicher Bug mit öffentlichem Titel kann zu GitHub.'
+    github_needs_public: 'GitHub: mach diesen Bug erst öffentlich mit öffentlichem Titel; dann erscheint der Knopf.'
+    github_unset: 'GitHub: Repository und Zugang sind auf diesem Server nicht gesetzt, also kann von hier nichts geöffnet werden.'
     release_note: 'Das Release, in dem der Fix landet. Releases werden im Admin angelegt.'
     flash_outcome_needs_note: 'Schreiben Sie zuerst, was der meldenden Person gesagt wird. Dieser Status sendet es ihr.'
     flash_saved: 'Gespeichert.'

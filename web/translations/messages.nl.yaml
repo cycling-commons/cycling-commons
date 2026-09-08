@@ -3466,6 +3466,8 @@ support:
     github_opened: 'Geopend op GitHub.'
     github_failed: 'GitHub nam het niet aan. Hier is niets veranderd.'
     github_not_public: 'Alleen een publieke bug met een publieke titel kan naar GitHub.'
+    github_needs_public: 'GitHub: maak deze bug eerst publiek met een publieke titel; dan verschijnt de knop.'
+    github_unset: 'GitHub: de repository en de sleutel zijn op deze server niet ingesteld, dus hier kan niets worden geopend.'
     release_note: 'De release waarin de fix landt. Releases voeg je toe in de admin.'
     flash_outcome_needs_note: 'Schrijf eerst wat je de melder vertelt. Die status stuurt het naar ze toe.'
     flash_saved: 'Opgeslagen.'
