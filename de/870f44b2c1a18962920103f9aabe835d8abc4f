@@ -1,0 +1,102 @@
+web/translations/messages.de.yaml
+  s_985a6f4653b290::t_1d9fc67a068cc3 4577
+  s_985a6f4653b290::t_53d5ed7f0fc5d4 4615
+  s_985a6f4653b290::t_ff10b0262d1f40 4578-4579
+web/assets/support/report-grounds.js
+  s_985a6f4653b290::t_7125be07e89b74 55-58
+web/translations/messages.es.yaml
+  s_985a6f4653b290::t_1d9fc67a068cc3 4605
+  s_985a6f4653b290::t_53d5ed7f0fc5d4 4643
+  s_985a6f4653b290::t_d8f83181165832 4606-4607
+web/templates/messages/index.html.twig
+  s_985a6f4653b290::t_1f05480a346200 218
+web/assets/styles/atlas.css
+  s_985a6f4653b290::t_a0008311744682 425-428
+web/tests/Media/MediaReportEndpointTest.php
+  s_985a6f4653b290::t_48cdf719d6a51d 148
+web/translations/messages.fr.yaml
+  s_985a6f4653b290::t_53d5ed7f0fc5d4 4612
+  s_985a6f4653b290::t_1d9fc67a068cc3 4574
+  s_985a6f4653b290::t_2303c80914a05c 4575-4576
+web/templates/profile/public.html.twig
+  s_985a6f4653b290::t_1f05480a346200 75
+web/src/Controller/ModerateReportsController.php
+  s_985a6f4653b290::t_5c07bdd1211009 161-165
+  s_985a6f4653b290::t_f5623ce62e1c80 151,157-160
+web/src/Support/ReportResolver.php
+  s_985a6f4653b290::t_48cdf719d6a51d 127-131
+web/templates/moderate/reports.html.twig
+  s_985a6f4653b290::t_c2673246f481f7 53
+  s_985a6f4653b290::t_602525a1eb4f0d 31-33,80-81
+web/src/Support/ReportStatus.php
+  s_985a6f4653b290::t_5c07bdd1211009 24-29,51-62
+web/tests/Support/ContentReportTest.php
+  s_985a6f4653b290::t_5c07bdd1211009 18,711,713-715,718-734,744
+  s_985a6f4653b290::t_c743660d15f001 121-122,124-139
+  s_985a6f4653b290::t_48cdf719d6a51d 87,123,533-534,599,755
+  s_985a6f4653b290::t_7125be07e89b74 197-221,735,738,740,746,750,753-754
+  s_985a6f4653b290::t_2fa6198931abaf 620-623,736-737,739,741-743,745,747-749,751-752
+docs/specs/content-reports.md
+  s_985a6f4653b290::t_5e66021ed27d08 63-65,81
+  s_985a6f4653b290::t_7125be07e89b74 75-76
+  s_985a6f4653b290::t_1d9fc67a068cc3 77-80
+  s_985a6f4653b290::t_48cdf719d6a51d 66,71
+  s_985a6f4653b290::t_416ecb5286c580 67-70
+  s_985a6f4653b290::t_c743660d15f001 72-74
+  s_985a6f4653b290::t_f81dcaabf73b0d 116-117
+web/templates/pages/region.html.twig
+  s_985a6f4653b290::t_1f05480a346200 239
+web/src/Support/SupportRepository.php
+  s_985a6f4653b290::t_5c07bdd1211009 46-51,62-63,65,81-86,123-124
+web/templates/moderate/report_detail.html.twig
+  s_985a6f4653b290::t_65c9648bb03fea 147
+  s_985a6f4653b290::t_416ecb5286c580 30-31,33-36,75,77-79,102-107
+  s_985a6f4653b290::t_6f252ebc52f9ab 141,143
+web/tests/Controller/ModerateTownControllerTest.php
+  s_985a6f4653b290::t_1d9fc67a068cc3 95,97-100
+web/templates/support/report.html.twig
+  s_985a6f4653b290::t_7125be07e89b74 221-223,241
+  s_985a6f4653b290::t_5e66021ed27d08 94-96,100-103
+  s_985a6f4653b290::t_a0008311744682 111-112
+  s_985a6f4653b290::t_1d9fc67a068cc3 97-99,138
+  s_985a6f4653b290::t_2d41592f324c3c 38-39
+web/translations/messages.en.yaml
+  s_985a6f4653b290::t_1d9fc67a068cc3 4598
+  s_985a6f4653b290::t_53d5ed7f0fc5d4 4636
+  s_985a6f4653b290::t_5c23c0ed75c073 4599-4600
+web/src/Support/ContentReportService.php
+  s_985a6f4653b290::t_f5623ce62e1c80 177-178,180
+  s_985a6f4653b290::t_5c07bdd1211009 179,181-183
+web/templates/media/photo.html.twig
+  s_985a6f4653b290::t_1f05480a346200 93
+web/src/Support/Entity/ContentReport.php
+  s_985a6f4653b290::t_f5623ce62e1c80 255-256,258-261
+  s_985a6f4653b290::t_5c07bdd1211009 257,262-263
+web/translations/messages.nl.yaml
+  s_985a6f4653b290::t_1d9fc67a068cc3 4574
+  s_985a6f4653b290::t_53d5ed7f0fc5d4 4612
+  s_985a6f4653b290::t_70af8b96767c14 4575-4576
+web/src/Controller/ContentReportController.php
+  s_985a6f4653b290::t_7125be07e89b74 183-186,188
+  s_985a6f4653b290::t_1d9fc67a068cc3 248,282-289,337-340
+  s_985a6f4653b290::t_c743660d15f001 258-271
+  s_985a6f4653b290::t_24d71cf5869389 187
+web/src/Support/ReportGround.php
+  s_985a6f4653b290::t_170fcf78f9d806 121-136
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "de870f44b2c1a18962920103f9aabe835d8abc4f",
+  "prompts": {},
+  "sessions": {
+    "s_985a6f4653b290": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e5c75010-816e-4e18-8eae-3cd0c486f2cb",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
