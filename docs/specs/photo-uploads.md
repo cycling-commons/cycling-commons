@@ -941,8 +941,16 @@ the split both ways:
 | Who | Route | What happens |
 |---|---|---|
 | the uploader | `POST /media/photos/{id}/alt` | written straight through, both copies |
+| a curator, on anybody's photo | `POST /media/photos/{id}/alt` | the same, at once: a curator's word applies (moderation-and-contribution.md 1.6; owner 2026-09-08) |
 | anybody else signed in | `POST /media/photos/{id}/alt-suggestion` | an edit on the place, in the ordinary review queue |
 | signed out | neither | no field is rendered |
+
+On the map's pending card the change key `photoAlt:<uuid>` is labelled
+"Photo description" (`fieldLabelFor()`), never by its uuid: the raw key once
+grew the diff's label column to the uuid's width and wrapped every value one
+letter per line (owner 2026-09-08, "broken display in the drawer").
+
+The review step shows the words either way (owner 2026-09-08: "missing my added alt text"): the owner's caption reads as live, anybody else's carries a small "proposed" tag (`.rm-item.is-proposed`, `improve.step4.proposed`), since a suggestion has not changed anything until a curator has seen it. The note that used to say so under the box is gone.
 
 The direct route refuses a non-owner and the suggestion route refuses the owner,
 so the `data-mine` attribute the template writes only chooses which 404 a

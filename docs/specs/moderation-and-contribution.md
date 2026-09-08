@@ -442,8 +442,12 @@ records the SAME drawer confirmation the "Still here?" button writes
 (`ItemConfirmationService::record()`, source `drawer`), so the curator's tick
 verifies the row exactly as their click would; the receipt then reads
 `improve.receipt.applied_confirmed_body` (`ContributionReceipt::$confirmed`).
-The box is ignored on an edit that queues, so a rider cannot tick past the
-review, and section 6.3 stands: this is a curator confirming somebody else's
+The self-apply also runs when the edit MERGES into the curator's own open
+submission on that place (§7.3b): the merge path skipped it until 2026-09-08,
+so a curator who fixed a place that already carried their description
+suggestion found their own words in the queue (the Shimano stand). Edits
+only, as ever. The box is ignored on an edit that queues, so a rider cannot
+tick past the review, and section 6.3 stands: this is a curator confirming somebody else's
 row, not a submitter counting their own new place. Pinned by
 `CatalogContributionServiceTest::testACuratorsEditCanAlsoConfirmThePlace`
 and its two siblings.

@@ -2380,6 +2380,7 @@ improve:
     notice_b: 'Fotos stehen unter CC BY-SA 4.0.'
     notice: 'Lade nur Fotos hoch, die du selbst aufgenommen hast — niemals Bilder von anderen Seiten. Du behältst das Eigentum; so bleibt das Commons frei von Rechtsverletzungen.'
   step4:
+    proposed: 'vorgeschlagen'
     label: 'Prüfen'
     heading: 'Prüfen & einreichen'
     help: 'Sieh es dir kurz an, bevor du es abschickst.'
@@ -2531,7 +2532,6 @@ media:
     to_map: 'Zur Karte'
   alt:
     label: 'Beschreibe dieses Foto'
-    suggest_note: 'Jemand anderes hat es hochgeladen. Deine Formulierung geht mit deinen übrigen Änderungen an einen Kurator.'
     placeholder: 'Was müsste jemand wissen, der es nicht sehen kann?'
   consent:
     title: 'Bevor du ein Foto hinzufügst'

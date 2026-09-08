@@ -511,8 +511,17 @@ final class CatalogContributionService implements ContributionStubInterface
                     ->setDecidedBy(null);
             });
 
+            // A curator's edit applies at once here too (1.6): the merge used
+            // to skip this, so a curator who fixed a place that already had an
+            // open suggestion on it found their own words waiting in the queue
+            // (owner 2026-09-08). Edits only, as below: a revised NEW place
+            // still needs its OSM answer on the queue card.
+            $applied = SubmissionType::Edit === $open->getType() && $this->applyIfCurator($open, $by);
+
             return new ContributionReceipt(
                 'SUB-'.(string) $open->getId(), 'improve', true, $open->getCreatedAt(), $open->getId(),
+                applied: $applied,
+                confirmed: $applied && $confirmNow && $this->confirmNow($item, $by),
             );
         }
 

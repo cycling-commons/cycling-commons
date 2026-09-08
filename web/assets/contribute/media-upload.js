@@ -498,7 +498,7 @@
     /* Carry an edited description through to the review card's copy of it.
        Matched on the photo's uuid, because a caption is the only thing the two
        places share and a filename is not stable between them. */
-    function syncExistingCaption(id, text) {
+    function syncExistingCaption(id, text, mine) {
       var fig = document.querySelector('.rm-item.is-existing[data-photo="' + id.replace(/"/g, '') + '"]');
       if (!fig) return;
       var cap = fig.querySelector('figcaption');
@@ -506,6 +506,10 @@
       var img = fig.querySelector('img');
       if (img && text) img.alt = text;
       fig.classList.toggle('has-alt', !!text);
+      /* Somebody else's photo: the words are a proposal until a curator has
+         seen them, and the caption says so rather than hiding them (owner
+         2026-09-08: "missing my added alt text"). */
+      fig.classList.toggle('is-proposed', !mine && !!text);
     }
 
     /* Fixing the description of a photograph that is ALREADY on the item.
@@ -533,10 +537,9 @@
         wrap.classList.remove('saved', 'failed');
         /* The review two steps on is server-rendered, so it would otherwise
            keep showing the description as it was when the page loaded (owner,
-           2026-08-30). Only for the OWNER: a suggestion has not changed
-           anything yet, and showing it there would tell somebody their words
-           are live when a curator has not seen them. */
-        if (mine) { syncExistingCaption(id, input.value); }
+           2026-08-30). For anybody but the owner the caption is tagged as
+           proposed: shown, since it is what they typed, but not claimed live. */
+        syncExistingCaption(id, input.value, mine);
         ensureToken().then(function (tok) {
           var body = new FormData();
           body.append('_token', tok);

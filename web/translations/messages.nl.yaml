@@ -2377,6 +2377,7 @@ improve:
     notice_b: 'Foto''s staan onder de CC BY-SA 4.0-licentie.'
     notice: 'Upload alleen foto''s die je zelf hebt gemaakt — nooit afbeeldingen die van een andere site zijn geschraapt of opnieuw gehost. Je blijft eigenaar; zo blijft de Commons vrij van inbreuk.'
   step4:
+    proposed: 'voorgesteld'
     label: 'Controleren'
     heading: 'Controleren & indienen'
     help: 'Controleer het even voordat je het verstuurt.'
@@ -2528,7 +2529,6 @@ media:
     to_map: 'Naar de kaart'
   alt:
     label: 'Beschrijf deze foto'
-    suggest_note: 'Iemand anders heeft deze geüpload. Jouw tekst gaat met je andere wijzigingen naar een curator.'
     placeholder: 'Wat zou iemand die hem niet kan zien moeten weten?'
   consent:
     title: 'Voordat je een foto toevoegt'

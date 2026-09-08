@@ -1888,6 +1888,7 @@ improve:
     notice_b: 'Photos are licensed CC BY-SA 4.0.'
     notice: 'Only upload photos you took yourself — never images scraped or re-hosted from another site. You keep ownership; this keeps the Commons free of infringement.'
   step4:
+    proposed: 'proposed'
     label: 'Review'
     heading: 'Review & submit'
     help: 'Check it over before you send it.'
@@ -2039,7 +2040,6 @@ media:
     to_map: 'Go to the map'
   alt:
     label: 'Describe this photo'
-    suggest_note: 'Somebody else uploaded this. Your wording goes to a curator with the rest of your edits.'
     placeholder: 'What would somebody who cannot see it need to know?'
   consent:
     title: 'Before you add a photo'

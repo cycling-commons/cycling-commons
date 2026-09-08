@@ -107,6 +107,63 @@ final class PhotoAltGallerySyncTest extends WebTestCase
         );
     }
 
+    public function testACuratorEditsAnybodysDescriptionStraightThrough(): void
+    {
+        // Owner 2026-09-08: "I can also change the alt text on an existing
+        // photo, has nothing to do with who added the photo". A curator's word
+        // applies at once, as on every other edit; a rider who is not the
+        // uploader still gets the 404 an unknown id gets.
+        $client = static::createClient();
+        $client->disableReboot();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+
+        $owner = (new User())->setEmail('alt-owner-2@example.test');
+        $owner->setPassword('x');
+        $owner->setDisplayName('Uploader');
+        $em->persist($owner);
+        $curator = (new User())->setEmail('alt-curator@example.test');
+        $curator->setPassword('x');
+        $curator->setDisplayName('Curator');
+        $curator->setRoles(['ROLE_CURATOR']);
+        $curator->setTotpSecret('JBSWY3DPEHPK3PXP');
+        $curator->setTwoFaEnabled(true);
+        $em->persist($curator);
+        $rider = (new User())->setEmail('alt-rider@example.test');
+        $rider->setPassword('x');
+        $rider->setDisplayName('Rider');
+        $em->persist($rider);
+
+        $item = (new Item())->setLetter('D')->setName('Shimano SOS toolstation')
+            ->setGeom('{"type":"Point","coordinates":[4.75,52.70]}')->setCountryCode('NL')
+            ->setSourceRef('alt-curator-test')
+            ->setSource(ItemSource::User)->setState(ItemState::Verified);
+        $em->persist($item);
+        $em->flush();
+
+        $consent = new ConsentRecord(Uuid::v4(), (int) $owner->getId(), MediaConsent::KIND, MediaConsent::VERSION, MediaConsent::hash('x'));
+        $em->persist($consent);
+        $upload = new MediaUpload(Uuid::v4(), (int) $owner->getId(), $consent->getId(), 'EU', 1200, 900, 4242, bucket: 'test-bucket-eu-01');
+        $em->persist($upload);
+        $upload->approve($item->getId());
+        $upload->setAltText('The old words.');
+        $em->flush();
+        $entry = static::getContainer()->get(MediaDecisionService::class)->describe($upload);
+        $item->setAttributes(['photos' => [$entry]]);
+        $em->flush();
+
+        $client->loginUser($rider);
+        $client->request('POST', '/media/photos/'.$upload->getId()->toRfc4122().'/alt', ['_token' => $this->tokenFor($client), 'alt' => 'Not mine to change.']);
+        self::assertResponseStatusCodeSame(404, 'a rider who did not upload it gets what an unknown id gets');
+
+        $client->loginUser($curator);
+        $client->request('POST', '/media/photos/'.$upload->getId()->toRfc4122().'/alt', ['_token' => $this->tokenFor($client), 'alt' => 'Shimano SOS repair stand']);
+        self::assertResponseIsSuccessful();
+        $em->clear();
+        $freshItem = $em->find(Item::class, $item->getId());
+        self::assertInstanceOf(Item::class, $freshItem);
+        self::assertSame('Shimano SOS repair stand', $freshItem->getAttributes()['photos'][0]['alt'] ?? null, 'the gallery follows the curator at once');
+    }
+
     /**
      * Emptying it removes the key rather than storing an empty string.
      *

@@ -223,7 +223,12 @@ final class MediaController extends AbstractController
         $this->requireCsrf($request);
 
         $upload = Uuid::isValid($id) ? $this->em->find(MediaUpload::class, Uuid::fromString($id)) : null;
-        if (null === $upload || $upload->getUserId() !== (int) $user->getId()) {
+        // The uploader, or a curator: a curator's word applies at once here as
+        // it does on every other edit (moderation-and-contribution.md 1.6;
+        // owner 2026-09-08: "has nothing to do with who added the photo").
+        // Anybody else gets the same 404 an unknown id gets, so the route is
+        // not an oracle for whose photo this is.
+        if (null === $upload || ($upload->getUserId() !== (int) $user->getId() && !$this->isGranted('ROLE_CURATOR'))) {
             return $this->json(['error' => 'not_found'], Response::HTTP_NOT_FOUND);
         }
 

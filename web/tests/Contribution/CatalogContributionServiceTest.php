@@ -150,6 +150,35 @@ final class CatalogContributionServiceTest extends KernelTestCase
         self::assertSame(0, $this->em->getRepository(ItemConfirmation::class)->count(['itemId' => (int) $item->getId()]));
     }
 
+    public function testACuratorsEditAppliesEvenWhenItMergesIntoAnOpenSuggestion(): void
+    {
+        // A rider's suggestion was open on the place; the curator's edit merged
+        // into it and the merge path never ran the self-apply, so the curator's
+        // own words sat in the queue (owner 2026-09-08, the Shimano stand).
+        $this->wallonia();
+        $item = $this->item('D', '{"type":"Point","coordinates":[5.86,50.47]}', ['pumpValve' => 'Presta only']);
+        $curator = $this->curator();
+        // The open one: a description suggestion the same curator filed before
+        // curators could write descriptions straight through.
+        $open = (new Submission())->setType(SubmissionType::Edit)->setLetter('D')->setUserId((int) $curator->getId())
+            ->setItemId((int) $item->getId())->setStatus(SubmissionStatus::Pending)->setTitle('Existing')
+            ->setGeom('{"type":"Point","coordinates":[5.86,50.47]}')->setCountryCode('BE')
+            ->setChanges(['tools' => ['was' => null, 'now' => 'chain tool']])->setPayload([]);
+        $this->em->persist($open);
+        $this->em->flush();
+
+        $receipt = $this->service->submit('improve', ['_item_id' => $item->getId(), 'details' => ['name' => 'Shimano OnderhoudsStation']], $curator);
+
+        self::assertSame($open->getId(), $receipt->submissionId, 'merged into the open one, not a second submission');
+        self::assertTrue($receipt->applied);
+        $sub = $this->em->find(Submission::class, $receipt->submissionId);
+        self::assertNotNull($sub);
+        self::assertSame('approved', $sub->getStatus()->value);
+        $this->em->refresh($item);
+        self::assertSame('Shimano OnderhoudsStation', $item->getName());
+        self::assertSame('chain tool', $item->getAttributes()['tools'] ?? null, 'the earlier suggestion rode along and is on the item too');
+    }
+
     public function testARidersEditStillWaitsForACurator(): void
     {
         $this->wallonia();

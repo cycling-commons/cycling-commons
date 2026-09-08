@@ -1898,6 +1898,7 @@ improve:
     notice_b: 'Las fotos se licencian bajo CC BY-SA 4.0.'
     notice: 'Sube solo fotos que hayas hecho tú — nunca imágenes extraídas o rehospedadas de otro sitio. Tú conservas la propiedad; esto mantiene el Commons libre de infracciones.'
   step4:
+    proposed: 'propuesto'
     label: 'Revisar'
     heading: 'Revisar y enviar'
     help: 'Repásalo antes de enviarlo.'
@@ -2049,7 +2050,6 @@ media:
     to_map: 'Ir al mapa'
   alt:
     label: 'Describe esta foto'
-    suggest_note: 'Lo subió otra persona. Tu redacción va a un curador junto con tus demás cambios.'
     placeholder: '¿Qué necesitaría saber alguien que no puede verla?'
   consent:
     title: 'Antes de añadir una foto'

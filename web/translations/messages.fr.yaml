@@ -2377,6 +2377,7 @@ improve:
     notice_b: 'Les photos sont sous licence CC BY-SA 4.0.'
     notice: 'N''envoyez que des photos que vous avez prises vous-même — jamais d''images récupérées ou ré-hébergées depuis un autre site. Vous en gardez la propriété ; c''est ce qui garde le Commons libre de toute contrefaçon.'
   step4:
+    proposed: 'proposé'
     label: 'Révision'
     heading: 'Réviser & soumettre'
     help: 'Vérifiez avant d''envoyer.'
@@ -2528,7 +2529,6 @@ media:
     to_map: 'Aller à la carte'
   alt:
     label: 'Décrivez cette photo'
-    suggest_note: 'Quelqu''un d''autre l''a envoyée. Votre formulation part chez un curateur avec vos autres modifications.'
     placeholder: 'Que devrait savoir quelqu''un qui ne peut pas la voir ?'
   consent:
     title: 'Avant d''ajouter une photo'

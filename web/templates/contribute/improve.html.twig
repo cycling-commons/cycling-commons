@@ -278,12 +278,10 @@
   .cur-alt input:focus-visible{outline:2px solid var(--clay);outline-offset:1px}
   .cur-alt.saved input{border-color:var(--glacier)}
   .cur-alt.failed input{border-color:var(--clay)}
-  .cur-alt-note{display:block;font-size:.90rem;color:#595c4d;line-height:1.4;margin-top:.3rem}
-  .cur-alt.saved .cur-alt-note{color:#2f6b52}
-  .cur-alt.failed .cur-alt-note{color:var(--clay)}
 
   /* the photos, on review — shown rather than listed as filenames */
   .review-media{margin-top:1.2rem}
+  .rm-item.is-proposed figcaption::after{content:' · ' attr(data-proposed);font-family:var(--mono);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;color:#A0472A}
   .rm-h{font-family:var(--mono);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:#595c4d;margin-bottom:.5rem}
   /* One ROW per photograph, two columns: the picture, and what it says
      (owner, 2026-08-30). A grid of small tiles was fine while the caption was a
@@ -322,7 +320,8 @@
   .lifecycle .lc-verdict{font-size:.9rem;line-height:1.6;color:var(--ink);margin:0}
 
   /* nav row */
-  .navrow{position:sticky;bottom:0;display:flex;align-items:center;gap:1rem;margin-top:2rem;padding:1rem 0;border-top:1px solid rgba(20,22,14,.12);background:linear-gradient(to top,var(--paper) 70%,rgba(239,230,212,0))}
+  /* Tight to the step above (owner 2026-09-08: "move the Next button up"); sticky, so it still sits at the bottom of a tall step. */
+  .navrow{position:sticky;bottom:0;display:flex;align-items:center;gap:1rem;margin-top:.6rem;padding:.6rem 0;border-top:1px solid rgba(20,22,14,.12);background:linear-gradient(to top,var(--paper) 70%,rgba(239,230,212,0))}
   .navrow .spacer{flex:1}
 
   /* submitted (client-side wizard) */
@@ -744,13 +743,13 @@
                  same split: the direct route refuses a non-owner, and the
                  suggestion route refuses the owner. #}
               {% if p.id is defined and app.user %}
-                {% set mine = p.id in own_photo_ids|default([]) %}
+                {# The uploader, or a curator, writes straight through (photo-uploads.md 5e). #}
+                {% set mine = (p.id in own_photo_ids|default([])) or is_granted('ROLE_CURATOR') %}
                 <label class="cur-alt{{ mine ? '' : ' suggests' }}" data-photo="{{ p.id }}"
                        data-mine="{{ mine ? '1' : '0' }}">
                   <span class="vh">{{ 'media.alt.label'|trans }}</span>
                   <input type="text" maxlength="300" value="{{ p.alt|default('') }}"
                          placeholder="{{ 'media.alt.placeholder'|trans }}">
-                  {% if not mine %}<span class="cur-alt-note">{{ 'media.alt.suggest_note'|trans }}</span>{% endif %}
                 </label>
               {% endif %}
             </figure>
@@ -835,7 +834,7 @@
              (owner, 2026-08-30). #}
           {% for p in currentPhotos %}
             <figure class="rm-item is-existing{% if p.alt|default('') %} has-alt{% endif %}"
-                    {% if p.id is defined %}data-photo="{{ p.id }}"{% endif %}>
+                    {% if p.id is defined %}data-photo="{{ p.id }}"{% endif %} data-proposed="{{ 'improve.step4.proposed'|trans }}">
               <img src="{{ p.sm|default(p.lg|default('')) }}"
                    alt="{{ p.alt|default('') ?: 'improve.step3.current_alt'|trans({'%name%': current.name|default('') ?: item_type.labelKey|trans}) }}" loading="lazy" />
               <figcaption>{{ p.alt|default('') }}</figcaption>
