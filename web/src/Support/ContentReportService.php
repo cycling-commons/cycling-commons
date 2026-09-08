@@ -174,6 +174,13 @@ final class ContentReportService
      * lose it, and the author flag is set only after the message is queued, so
      * a retry cannot tell them twice.
      */
+    /** Move a report between its waiting states. Nothing is sent: the reporter hears from us when it is decided. */
+    public function takeUp(ContentReport $report, ReportStatus $status = ReportStatus::InProgress): void
+    {
+        $report->takeUp($status);
+        $this->em->flush();
+    }
+
     public function decide(ContentReport $report, ReportStatus $status, string $note, User $curator): void
     {
         $now = $this->clock->now();

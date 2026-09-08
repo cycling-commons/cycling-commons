@@ -52,9 +52,10 @@
             claimant.required = proof;
             statement.required = proof;
 
-            contact.required = !noContact;
-            req.hidden = noContact;
-            hintOpt.hidden = !noContact;
+            /* Absent for a signed-in reader: the account's address is the contact. */
+            if (contact) { contact.required = !noContact; }
+            if (req) { req.hidden = noContact; }
+            if (hintOpt) { hintOpt.hidden = !noContact; }
           }
 
           sel.addEventListener('change', sync);

@@ -145,7 +145,7 @@ final class MediaReportEndpointTest extends WebTestCase
             'contact' => 'seen-it@cyclingcommons.org',
         ]);
 
-        self::assertResponseIsSuccessful();
+        self::assertResponseRedirects();
 
         $fresh = $em->find(MediaUpload::class, $upload->getId());
         self::assertInstanceOf(MediaUpload::class, $fresh);

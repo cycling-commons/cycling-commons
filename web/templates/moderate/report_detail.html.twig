@@ -27,8 +27,13 @@
    except tie the page to a per-request value (docs/specs/page-caching.md §3.2). #}
 <style>
   .bdet{max-width:760px}
-  .bdet dl.facts{display:grid;grid-template-columns:auto 1fr;gap:.3rem .9rem;margin:1rem 0 1.4rem}
+  /* baseline, not top: the small mono label sat above the value's baseline (owner 2026-09-08). */
+  .bdet dl.facts{display:grid;grid-template-columns:auto 1fr;gap:.45rem .9rem;margin:1rem 0 1.4rem;align-items:baseline}
   .bdet dl.facts dt{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--clay)}
+  /* The way to the thing reported: a button, not a word at the end of a line (owner 2026-09-08). */
+  .bdet .open-target{display:inline-block;margin-left:.5rem;padding:.28rem .7rem;border-radius:5px;background:var(--trail);color:var(--ink);font-weight:700;font-size:.8rem;text-decoration:none;vertical-align:baseline}
+  .bdet .open-target:hover{background:#ff703d}
+  .bdet .open-target:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
   .bdet dl.facts dd{margin:0;font-size:.9rem;color:#3a3d30;word-break:break-word}
   .btext{background:var(--paper-deep);border-radius:6px;padding:1rem 1.2rem;font-family:inherit;
     font-size:.95rem;line-height:1.65;color:#3a3d30;white-space:pre-wrap;word-wrap:break-word;margin:0 0 1.2rem}
@@ -67,11 +72,11 @@
       <dd>
         {{ report.targetType.label|trans }} · <span class="mono">{{ report.targetId }}</span>
         {%- if not resolved.exists %} · {{ 'report.desk.target_gone'|trans }}{% endif -%}
-        {%- if resolved.link_route %} · <a href="{{ path(resolved.link_route, resolved.link_params) }}">{{ 'report.desk.open_target'|trans }}</a>{% endif -%}
+        {%- if resolved.link_route %} <a class="open-target" href="{{ path(resolved.link_route, resolved.link_params) }}">{{ 'report.desk.open_target'|trans }} ↗</a>{% endif -%}
       </dd>
-      {% if report.fromPath %}
-        {# Where the reporter was standing. On the map this is the only thing
-           that says which view they meant. #}
+      {% if report.fromPath and not resolved.link_route %}
+        {# Where the reporter was standing: shown only when the thing itself
+           has no link of its own (owner 2026-09-08). #}
         <dt>{{ 'report.desk.field_from'|trans }}</dt>
         <dd><a href="{{ report.fromPath }}">{{ report.fromPath }}</a></dd>
       {% endif %}
@@ -94,13 +99,12 @@
         <dt>{{ 'report.desk.field_counter'|trans }}</dt>
         <dd>{{ report.counterNotice|nl2br }}</dd>
       {% endif %}
-      <dt>{{ 'report.desk.field_reporter'|trans }}</dt>
-      {# Whether we can answer, never the address. #}
-      <dd>{{ report.reporterContact ? ('report.desk.answerable'|trans) : ('report.desk.no_contact'|trans) }}</dd>
-      <dt>{{ 'report.desk.field_author'|trans }}</dt>
-      <dd>
-        {%- if resolved.author %}{{ resolved.author.displayName }}{% else %}{{ 'report.desk.no_author'|trans }}{% endif -%}
-      </dd>
+      {# Only when somebody wrote it. A place has contributors, not an author,
+         and "nobody in particular" told the curator nothing (owner 2026-09-08). #}
+      {% if resolved.author %}
+        <dt>{{ 'report.desk.field_author'|trans }}</dt>
+        <dd>{{ resolved.author.displayName }}</dd>
+      {% endif %}
       {% if report.decidedAt %}
         <dt>{{ 'report.desk.field_decided'|trans }}</dt>
         <dd>{{ report.decidedAt|cc_datetime }}{% if decided_by %} · {{ decided_by.displayName }}{% endif %}</dd>
@@ -134,17 +138,15 @@
 
       <label for="d-status">{{ 'support.inbox.set_status'|trans }}</label>
       <select id="d-status" name="status">
+        {# Every state, the current one selected: a fresh report reads Open (owner 2026-09-08). #}
         {% for st in statuses %}
-          {% if st.value != 'open' %}
-            <option value="{{ st.value }}"{{ st == report.status ? ' selected' : '' }}>{{ st.label|trans }}</option>
-          {% endif %}
+          <option value="{{ st.value }}"{{ st == report.status ? ' selected' : '' }}>{{ st.label|trans }}</option>
         {% endfor %}
       </select>
 
-      <label for="d-note">{{ 'report.desk.field_note'|trans }}</label>
+      <label for="d-note">{{ 'report.desk.field_note'|trans }} <span class="req" aria-hidden="true">*</span></label>
       <textarea id="d-note" name="note" maxlength="2000"
                 placeholder="{{ 'report.desk.note_placeholder'|trans }}">{{ report.decisionNote }}</textarea>
-      <p class="warn">{{ 'report.desk.note_required'|trans }}</p>
 
       {% if resolved.author and not report.isAuthorTold %}
         <div class="check">

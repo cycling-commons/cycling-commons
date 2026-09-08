@@ -252,6 +252,15 @@ class ContentReport
      * Article 17 wants reasons, and a reporter told only "rejected" learns
      * nothing and reports again.
      */
+    /** A waiting state, open or being looked at. Not a decision: no note, no time stamp, nobody told. */
+    public function takeUp(ReportStatus $status = ReportStatus::InProgress): void
+    {
+        if ($status->isDecided()) {
+            throw new \LogicException('takeUp() moves between waiting states only.');
+        }
+        $this->status = $status;
+    }
+
     public function decide(ReportStatus $status, string $note, int $curatorId, \DateTimeImmutable $at): void
     {
         $this->status = $status;

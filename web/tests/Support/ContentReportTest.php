@@ -15,6 +15,7 @@ use App\Support\Entity\ContentReport;
 use App\Support\ReportGround;
 use App\Support\ReportStatus;
 use App\Support\ReportTarget;
+use App\Support\SupportRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
@@ -83,6 +84,7 @@ final class ContentReportTest extends WebTestCase
         string $ground = 'untrue',
         ?string $contact = 'reporter@cyclingcommons.org',
         bool $solve = false,
+        bool $follow = true,
     ): void {
         $page = $client->request('GET', '/report/'.$type.'/'.$id);
         self::assertResponseIsSuccessful();
@@ -116,6 +118,25 @@ final class ContentReportTest extends WebTestCase
             'pow_challenge' => $challenge,
             'pow_nonce' => $solve ? $this->solve($challenge, $difficulty) : '',
         ]);
+        // A filed report answers with a redirect to its own thank-you page
+        // (owner 2026-09-08); a refused one re-renders the form with its status.
+        if ($follow && $client->getResponse()->isRedirection()) {
+            $client->followRedirect();
+        }
+    }
+
+    public function testReloadingTheThankYouPageFilesNothingAgain(): void
+    {
+        $client = $this->client();
+        $this->file($client);
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('/report/route/1/sent', (string) $client->getRequest()->getUri(), 'the thank-you has its own address');
+        self::assertCount(1, $this->reports());
+
+        $client->reload();
+        self::assertResponseIsSuccessful();
+        self::assertCount(1, $this->reports(), 'a reload shows the thank-you again and files nothing');
+        self::assertStringContainsString('no-store', (string) $client->getResponse()->headers->get('Cache-Control'));
     }
 
     /** What the browser does in report-challenge.js, in PHP. */
@@ -171,6 +192,31 @@ final class ContentReportTest extends WebTestCase
         self::assertTrue($breaker->isOpen());
 
         return $breaker;
+    }
+
+    public function testASignedInReporterIsNotAskedForAnAddressWeHold(): void
+    {
+        // Owner 2026-09-08: "if it is a logged in user we already have their
+        // email". The field is not rendered, and the account's address becomes
+        // the reporter contact the desk answers to.
+        $client = $this->client();
+        $rider = (new User())->setEmail('signed-in-reporter@cyclingcommons.org');
+        $rider->setPassword('x');
+        $rider->setDisplayName('Signed-in reporter');
+        $rider->setEmailVerified(true);
+        $this->em()->persist($rider);
+        $this->em()->flush();
+        $client->loginUser($rider);
+
+        $page = $client->request('GET', '/report/route/1');
+        self::assertResponseIsSuccessful();
+        self::assertCount(0, $page->filter('#rep-contact'), 'no email field for a signed-in reader');
+
+        $this->file($client, contact: null);
+        self::assertResponseIsSuccessful();
+        $reports = $this->reports();
+        self::assertCount(1, $reports);
+        self::assertSame('signed-in-reporter@cyclingcommons.org', $reports[0]->getReporterContact());
     }
 
     private function curator(): User
@@ -484,6 +530,8 @@ final class ContentReportTest extends WebTestCase
             'claimant_name' => 'A. Photographer',
             'rights_statement' => '1',
         ]);
+        self::assertResponseRedirects();
+        $client->followRedirect();
         self::assertResponseIsSuccessful();
 
         $report = $this->reports()[0];
@@ -548,7 +596,7 @@ final class ContentReportTest extends WebTestCase
             'contact' => 'reporter@cyclingcommons.org',
         ]);
 
-        self::assertResponseIsSuccessful();
+        self::assertResponseRedirects();
         self::assertSame(ReportTarget::Item, $this->reports()[0]->getTargetType());
         self::assertSame('1', $this->reports()[0]->getTargetId());
     }
@@ -569,7 +617,10 @@ final class ContentReportTest extends WebTestCase
 
         $page = $client->request('GET', '/moderate/reports');
         self::assertResponseIsSuccessful();
-        self::assertStringContainsString('locked since spring', $page->text());
+        // The row names the thing and its ground; the words wait on the detail page (owner 2026-09-08).
+        self::assertCount(1, $page->filter('.rrow'));
+        self::assertStringContainsString('It is not true', $page->filter('.rrow .cats')->text());
+        self::assertStringNotContainsString('locked since spring', $page->text());
     }
 
     /**
@@ -657,10 +708,51 @@ final class ContentReportTest extends WebTestCase
         self::assertNull($this->reports()[0]->getDecidedAt());
     }
 
+    public function testACuratorCanTakeAReportUpWithoutDecidingIt(): void
+    {
+        // Owner 2026-09-08: the list had no way to say somebody is on it.
+        // Taking it up is not a decision: no note, no mail, the clock runs on,
+        // and it still counts as open on the desk.
+        $client = $this->client();
+        $this->file($client);
+        $report = $this->reports()[0];
+        $client->loginUser($this->curator());
+        $token = $this->deskToken($client, $report);
+
+        $client->request('POST', '/moderate/reports/'.$report->getId().'/decide', [
+            '_token' => $token,
+            'status' => 'in_progress',
+            'note' => '',
+        ]);
+        self::assertResponseRedirects();
+        self::assertEmailCount(0, null, 'nobody is told about work in progress');
+
+        $fresh = $this->reports()[0];
+        self::assertSame(ReportStatus::InProgress, $fresh->getStatus());
+        self::assertFalse($fresh->getStatus()->isDecided());
+        self::assertNull($fresh->getDecidedAt());
+        self::assertSame(1, static::getContainer()->get(SupportRepository::class)->openReportCount(), 'still open on the badge');
+    }
+
+    public function testAbuseSortsToTheTopWithTheLegalClaims(): void
+    {
+        // Owner 2026-09-08: "both abuse and legal should float to the top".
+        $client = $this->client();
+        $this->file($client, id: '1', ground: 'untrue');
+        $this->file($client, id: '2', ground: 'abuse');
+        $this->file($client, id: '3', ground: 'untrue');
+        $client->loginUser($this->curator());
+        $page = $client->request('GET', '/moderate/reports');
+        self::assertResponseIsSuccessful();
+        $first = $page->filter('.rrow .rtop a')->first()->attr('href');
+        $abuse = array_values(array_filter($this->reports(), static fn ($r) => 'abuse' === $r->getGround()->value))[0];
+        self::assertStringContainsString((string) $abuse->getId(), (string) $first, 'the abuse report leads, though two newer ones came after it');
+    }
+
     public function testTheReporterIsMailedWhateverTheOutcome(): void
     {
         $client = $this->client();
-        $this->file($client);
+        $this->file($client, follow: false);
 
         // Asserted here, not after the desk requests: the mailer collector is
         // per request, so a later GET clears what the POST before it sent.

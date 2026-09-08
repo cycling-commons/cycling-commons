@@ -72,7 +72,7 @@
      other, and the person it is aimed at is very often not a member here, so
      this link takes no account (docs/specs/content-reports.md §5). #}
   <p class="rp-report">
-    <a href="{{ path('content_report', {type: 'rider', id: rider.uuid, from: app.request.pathInfo}) }}">{{ 'report.link_page'|trans }}</a>
+    <a href="{{ path('content_report', {type: 'rider', id: rider.uuid, from: app.request.pathInfo}) }}"><span class="rep-bang" aria-hidden="true">!</span>{{ 'report.link_page'|trans }}</a>
   </p>
 </div>
 {% endblock %}

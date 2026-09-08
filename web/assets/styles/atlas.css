@@ -422,3 +422,7 @@ section.pad+section.pad{padding-top:clamp(2rem,4vw,3rem)}
 #wzAddPt:disabled{border-color:#bbb;color:#999;background:#f4f4f2;cursor:default}
 #wzAddPt:focus-visible{outline:2px solid #FF5A1F;outline-offset:2px}
 .ed-base.maplibregl-ctrl-group button:focus-visible{outline:2px solid #FF5A1F;outline-offset:-2px}
+
+/* The report badge: a ringed exclamation mark before every "Report this page" link (owner 2026-09-08). Same shape as the map's .cc-bang. */
+.rep-bang{display:inline-flex;align-items:center;justify-content:center;width:1.15rem;height:1.15rem;margin:0 .35rem 0 0;border-radius:50%;border:1px solid rgba(20,22,14,.45);color:inherit;font-weight:700;font-size:.72rem;line-height:1;vertical-align:middle;text-decoration:none}
+a:hover>.rep-bang{border-color:var(--clay);color:var(--clay)}

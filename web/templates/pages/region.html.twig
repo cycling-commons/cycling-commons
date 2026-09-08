@@ -236,6 +236,6 @@
   {# Notice and action, DSA Article 16. The description on this page is written
      text like any other and can be wrong, or about a person
      (docs/specs/content-reports.md §5). #}
-  <p class="region-report"><a href="{{ path('content_report', {type: 'region', id: region.id, from: app.request.pathInfo}) }}">{{ 'report.link_page'|trans }}</a></p>
+  <p class="region-report"><a href="{{ path('content_report', {type: 'region', id: region.id, from: app.request.pathInfo}) }}"><span class="rep-bang" aria-hidden="true">!</span>{{ 'report.link_page'|trans }}</a></p>
 </div></section>
 {% endblock %}

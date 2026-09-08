@@ -118,6 +118,22 @@ enum ReportGround: string
         return array_values(array_filter(self::all(), static fn (self $g): bool => $g->isLegal()));
     }
 
+    /**
+     * What the desk puts first: every legal claim, and abuse (owner
+     * 2026-09-08: "both abuse and legal should float to the top"). Abuse is
+     * not a legal claim, but a person is being hurt while it waits.
+     */
+    public function isUrgent(): bool
+    {
+        return $this->isLegal() || self::Abuse === $this;
+    }
+
+    /** @return list<self> */
+    public static function urgent(): array
+    {
+        return array_values(array_filter(self::all(), static fn (self $g): bool => $g->isUrgent()));
+    }
+
     /** @return list<self> */
     public static function all(): array
     {

@@ -28,6 +28,9 @@
   .rtop{display:flex;gap:.55rem;align-items:baseline;flex-wrap:wrap}
   .rtop a{font-family:var(--serif);font-size:1rem;color:var(--ink);text-decoration:none}
   .rtop a:hover{color:var(--clay);text-decoration:underline}
+  .cats{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--clay);margin-left:.5rem}
+  .cats .legal{color:#5a2716;font-weight:700}
+  .cats .gone{color:#6d7060}
   .tag{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;
     padding:.18rem .42rem;border-radius:3px;background:var(--paper-deep);color:#4a4d40}
   {# Legal claims read differently at a glance, and only those. #}
@@ -47,7 +50,7 @@
   <div class="mh">
     <div class="kicker">{{ 'account.menu_moderation'|trans }}</div>
     <h1>{{ 'report.desk.title'|trans }}</h1>
-    <p class="lede">{{ 'report.desk.lede'|trans }}</p>
+    <p class="lede">{{ 'report.desk.lede'|trans({'%takedowns%': path('moderate_takedowns')})|rich }}</p>
   </div>
 
   <div class="chips">
@@ -74,16 +77,11 @@
       <div class="rrow">
         <div class="rtop">
           <a href="{{ path('moderate_reports_detail', {id: r.id}) }}">{{ row.resolved.label ?? r.targetType.label|trans ~ ' #' ~ r.targetId }}</a>
-          <span class="tag {{ r.ground.isLegal ? 'legal' : '' }}">{{ r.ground.label|trans }}</span>
-          <span class="tag">{{ r.status.label|trans }}</span>
-          <span class="tag">{{ r.targetType.label|trans }}</span>
-          {% if not row.resolved.exists %}<span class="tag gone">{{ 'report.desk.target_gone'|trans }}</span>{% endif %}
+          {# Plain orange text, not blocks (owner 2026-09-08). #}
+          <span class="cats"><span class="{{ r.ground.isUrgent ? 'legal' : '' }}">{{ r.ground.label|trans }}</span> · {{ r.status.label|trans }} · {{ r.targetType.label|trans }}{% if not row.resolved.exists %} · <span class="gone">{{ 'report.desk.target_gone'|trans }}</span>{% endif %}</span>
         </div>
-        <p class="rex">{{ r.reason|length > 160 ? r.reason|slice(0, 160) ~ '…' : r.reason }}</p>
         <p class="rmeta">
           {{ r.createdAt|cc_datetime }}
-          {#- Whether we can answer, never the address. -#}
-          {%- if r.reporterContact %} · {{ 'report.desk.answerable'|trans }}{% else %} · {{ 'report.desk.no_contact'|trans }}{% endif %}
         </p>
       </div>
     {% endfor %}

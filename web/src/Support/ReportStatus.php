@@ -21,6 +21,12 @@ namespace App\Support;
 enum ReportStatus: string
 {
     case Open = 'open';
+    /**
+     * A curator has taken it up and is on it: still open, nobody has been
+     * answered, no clock has stopped (owner 2026-09-08: the list had no way
+     * to say somebody is working on it).
+     */
+    case InProgress = 'in_progress';
     /** Acted on: something was removed or restricted. The author must be told. */
     case Upheld = 'upheld';
     /** Looked at, nothing was wrong. The reporter is told why. */
@@ -42,7 +48,18 @@ enum ReportStatus: string
 
     public function isDecided(): bool
     {
-        return self::Open !== $this;
+        return !\in_array($this, self::open(), true);
+    }
+
+    /**
+     * The states a report is still waiting in. Both count on the desk badge
+     * and both show under the desk's default filter.
+     *
+     * @return list<self>
+     */
+    public static function open(): array
+    {
+        return [self::Open, self::InProgress];
     }
 
     /** Only an upheld report restricted somebody, so only it owes a statement of reasons. */

@@ -215,7 +215,7 @@
              you: reporting the system's own notices, or your own words back to
              you, is noise (docs/specs/content-reports.md §5). #}
           {% if not mine and m.senderId %}
-            <p class="msg-report"><a href="{{ path('content_report', {type: 'message', id: m.id, from: app.request.pathInfo}) }}">{{ 'report.link_message'|trans }}</a></p>
+            <p class="msg-report"><a href="{{ path('content_report', {type: 'message', id: m.id, from: app.request.pathInfo}) }}"><span class="rep-bang" aria-hidden="true">!</span>{{ 'report.link_message'|trans }}</a></p>
           {% endif %}
         </li>
       {% endfor %}

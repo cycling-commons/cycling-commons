@@ -180,6 +180,12 @@ final class ContentReportController extends AbstractController
         }
 
         $contact = trim((string) $request->request->get('contact', ''));
+        // A signed-in reporter is not asked for an address we already hold
+        // (owner 2026-09-08); the account's email is the reporter contact.
+        $signedIn = $this->getUser();
+        if ('' === $contact && $signedIn instanceof User) {
+            $contact = $signedIn->getEmail();
+        }
         // An address is required for every ground but the child one, where the
         // DSA forbids demanding it. The check is on the GROUND and not on the
         // markup, so a form rendered before the rule changed cannot slip past.
@@ -239,7 +245,7 @@ final class ContentReportController extends AbstractController
             return $this->error($type, $id, 'report.error.rate_limited', Response::HTTP_TOO_MANY_REQUESTS, $request);
         }
 
-        $report = $this->reports->file($target, $id, $ground, $reason, '' !== $contact ? $contact : null, null, $ip);
+        $report = $this->reports->file($target, $id, $ground, $reason, '' !== $contact ? $contact : null, $this->cleanName((string) $request->request->get('name', '')), $ip);
         $report->setFromPath($this->cleanPath((string) $request->request->get('from', '')));
         if ($ground->needsOwnershipProof()) {
             $report->setRightsClaim(
@@ -249,7 +255,20 @@ final class ContentReportController extends AbstractController
         }
         $this->em->flush();
 
-        return $this->render('support/report.html.twig', $this->context($type, $id, sent: true, request: $request));
+        // Redirect after the POST: a reload of the thank-you page must not
+        // file the report again (owner 2026-09-08: "I can reload the
+        // confirmation page and it sends the form again").
+        return $this->redirectToRoute('content_report_sent', ['type' => $type, 'id' => $id, 'c' => '' !== $contact ? 1 : 0], Response::HTTP_SEE_OTHER);
+    }
+
+    /** The thank-you, on its own GET so a reload shows it again and files nothing. */
+    #[Route('/report/{type}/{id}/sent', name: 'content_report_sent', methods: ['GET'], requirements: ['id' => '[A-Za-z0-9-]{1,64}'])]
+    public function sent(string $type, string $id, Request $request): Response
+    {
+        $response = $this->render('support/report.html.twig', $this->context($type, $id, sent: true, request: $request) + ['sent_contact' => '1' === $request->query->get('c')]);
+        $response->headers->set('Cache-Control', 'no-store, private');
+
+        return $response;
     }
 
     /**
@@ -260,6 +279,14 @@ final class ContentReportController extends AbstractController
      * a query string on this site can carry somebody's search terms, and an
      * off-site URL is somebody else's business.
      */
+    /** A display name the page sent along: plain text, one line, short. Never trusted as anything else. */
+    private function cleanName(string $candidate): ?string
+    {
+        $name = trim(preg_replace('~\s+~u', ' ', strip_tags($candidate)) ?? '');
+
+        return '' === $name ? null : mb_substr($name, 0, 120);
+    }
+
     private function cleanPath(string $candidate): ?string
     {
         if ('' === $candidate) {
@@ -307,6 +334,10 @@ final class ContentReportController extends AbstractController
             'from_path' => $this->cleanPath(
                 (string) ($request?->query->get('from') ?? '')
             ),
+            // What the page called the thing, e.g. the town's name. Shown to
+            // the reporter and stored as the report's label, so the desk reads
+            // "Zwaag" even for a target nothing resolves (owner 2026-09-08).
+            'about_name' => $this->cleanName((string) ($request?->query->get('name') ?? $request?->request->get('name') ?? '')),
             'guard' => [
                 'stamp_field' => FormGuard::STAMP,
                 'stamp' => $this->guard->stamp(new \DateTimeImmutable()),

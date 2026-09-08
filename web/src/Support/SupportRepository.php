@@ -43,7 +43,12 @@ final readonly class SupportRepository
             ->from(ContentReport::class, 'r');
 
         if (null !== $status) {
-            $qb->andWhere('r.status = :status')->setParameter('status', $status);
+            // "Open" on the desk means every report still waiting, taken up or not.
+            if (ReportStatus::Open === $status) {
+                $qb->andWhere('r.status IN (:status)')->setParameter('status', ReportStatus::open());
+            } else {
+                $qb->andWhere('r.status = :status')->setParameter('status', $status);
+            }
         }
         if (null !== $target) {
             $qb->andWhere('r.targetType = :target')->setParameter('target', $target);
@@ -54,10 +59,10 @@ final readonly class SupportRepository
         // report different clocks: an unlawfulness claim has to be handled
         // "timely", a quality complaint has to be handled well.
         /** @var list<ContentReport> $rows */
-        $rows = $qb->addSelect('CASE WHEN r.ground IN (:legal) THEN 0 ELSE 1 END AS HIDDEN legalFirst')
-            ->addOrderBy('legalFirst', 'ASC')
+        $rows = $qb->addSelect('CASE WHEN r.ground IN (:urgent) THEN 0 ELSE 1 END AS HIDDEN urgentFirst')
+            ->addOrderBy('urgentFirst', 'ASC')
             ->addOrderBy('r.createdAt', 'DESC')
-            ->setParameter('legal', ReportGround::legal())
+            ->setParameter('urgent', ReportGround::urgent())
             ->setMaxResults($limit)
             ->setFirstResult($offset)
             ->getQuery()
@@ -73,7 +78,12 @@ final readonly class SupportRepository
             ->from(ContentReport::class, 'r');
 
         if (null !== $status) {
-            $qb->andWhere('r.status = :status')->setParameter('status', $status);
+            // "Open" on the desk means every report still waiting, taken up or not.
+            if (ReportStatus::Open === $status) {
+                $qb->andWhere('r.status IN (:status)')->setParameter('status', ReportStatus::open());
+            } else {
+                $qb->andWhere('r.status = :status')->setParameter('status', $status);
+            }
         }
         if (null !== $target) {
             $qb->andWhere('r.targetType = :target')->setParameter('target', $target);
@@ -110,8 +120,8 @@ final readonly class SupportRepository
         return (int) $this->em->createQueryBuilder()
             ->select('COUNT(r.id)')
             ->from(ContentReport::class, 'r')
-            ->where('r.status = :open')
-            ->setParameter('open', ReportStatus::Open)
+            ->where('r.status IN (:open)')
+            ->setParameter('open', ReportStatus::open())
             ->getQuery()
             ->getSingleScalarResult();
     }

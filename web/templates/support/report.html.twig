@@ -35,7 +35,8 @@
     font-family:inherit;font-size:.90rem;line-height:1.55;letter-spacing:normal;
     text-transform:none;color:#3a3d30}
   .cfield label.cinline input{flex:0 0 auto;margin-top:.2rem}
-  .reppage{max-width:640px}
+  /* Same column as the other text pages (.legal, 760px); 640 read as a smaller page (owner 2026-09-08). */
+  .reppage{max-width:760px}
   .reppage h2{font-family:var(--serif);font-weight:600;font-size:1.25rem;margin:1.8rem 0 .5rem}
   .reppage p{font-size:.95rem;color:#3a3d30;line-height:1.65;margin:.55rem 0}
   .reppage a{color:var(--clay);text-decoration:underline;text-underline-offset:3px}
@@ -90,6 +91,16 @@
   <div class="kicker" style="color:var(--trail)">{{ target.label|trans }}</div>
   <h1 class="disp">{{ 'report.title'|trans }}</h1>
   <p class="lead" style="color:rgba(239,230,212,.85);margin-top:.8rem">{{ 'report.intro'|trans|rich }}</p>
+  {# The page the reporter was standing on travels with the form (from_path,
+     cleaned server-side). Shown here so they can see it is the right one
+     before they write (owner 2026-09-08). #}
+  {% if about_name %}
+    <p class="lead" style="color:rgba(239,230,212,.95);margin-top:.5rem;font-size:1.05rem">{{ 'report.about_name'|trans({'%name%': about_name}) }}</p>
+  {% endif %}
+  {% if from_path %}
+    <p class="lead" style="color:rgba(239,230,212,.85);margin-top:.5rem;font-size:.95rem">{{ 'report.from_page'|trans }}
+      <a href="{{ from_path }}" style="color:var(--trail);word-break:break-all">{{ from_path }} ↗</a></p>
+  {% endif %}
 </div></div>
 
 <section class="pad"><div class="wrap">
@@ -97,7 +108,8 @@
     {% if sent %}
       <div class="csent">
         <h2>{{ 'report.sent_title'|trans }}</h2>
-        <p>{{ 'report.sent_body'|trans|rich }}</p>
+        {# We nearly always hold an address (the field is required, or the account has one); only the child ground may leave it blank. #}
+        <p>{{ (sent_contact|default(false) ? 'report.sent_body' : 'report.sent_body_no_contact')|trans|rich }}</p>
         <p><a href="{{ path('map') }}">{{ 'report.back_to_map'|trans }}</a></p>
       </div>
     {% else %}
@@ -123,6 +135,7 @@
         {# Where they clicked from. Carried, never shown: it is context for the
            curator, not a question for the reporter. #}
         {% if from_path %}<input type="hidden" name="from" value="{{ from_path }}">{% endif %}
+        {% if about_name %}<input type="hidden" name="name" value="{{ about_name }}">{% endif %}
         {# Honeypots. Not a captcha, and never a third party: see contact-and-support.md §3. #}
         <div class="hp" aria-hidden="true">
           <input type="text" name="{{ guard.honeypot_a }}" tabindex="-1" autocomplete="off">
@@ -205,6 +218,9 @@
           </label>
         </div>
 
+        {# A signed-in reader is not asked for an address we hold (owner
+           2026-09-08): the server takes the account's email as the contact. #}
+        {% if not app.user %}
         <div class="cfield">
           {# Required for every ground but the child one, where DSA Article
              16(2)(c) forbids demanding it. The label and the hint swap with the
@@ -222,6 +238,7 @@
              required and a reader has to be told they may leave it blank. #}
           <p class="chint" id="rep-contact-hint-optional" hidden>{{ 'report.field_contact_hint_optional'|trans }}</p>
         </div>
+        {% endif %}
 
         <p class="reqlegend">{{ 'support.required_legend'|trans|rich }}</p>
 

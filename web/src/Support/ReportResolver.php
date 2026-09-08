@@ -124,8 +124,11 @@ final class ReportResolver
             // contributors, not an author.
             'author' => null,
             'exists' => true,
-            'link_route' => null,
-            'link_params' => [],
+            // The map's own deep link (map-and-search.md 8): opens the drawer
+            // on this place, so the curator sees what was reported (owner
+            // 2026-09-08: "how can a moderator view the place without a link").
+            'link_route' => 'map',
+            'link_params' => ['item' => (int) $id],
         ];
     }
 

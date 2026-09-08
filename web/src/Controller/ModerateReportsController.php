@@ -148,8 +148,17 @@ final class ModerateReportsController extends AbstractController
         $report = $this->report($id);
 
         $status = ReportStatus::tryFrom((string) $request->request->get('status', ''));
-        if (null === $status || ReportStatus::Open === $status) {
+        if (null === $status) {
             $this->addFlash('notice', 'report.desk.flash_bad_status');
+
+            return $this->redirectToRoute('moderate_reports_detail', ['id' => $id]);
+        }
+
+        // Open and being-looked-at are the two waiting states: no note, no
+        // mail, the clock runs on. Open again is how a curator hands it back.
+        if (!$status->isDecided()) {
+            $this->reports->takeUp($report, $status);
+            $this->addFlash('notice', 'report.desk.flash_taken_up');
 
             return $this->redirectToRoute('moderate_reports_detail', ['id' => $id]);
         }

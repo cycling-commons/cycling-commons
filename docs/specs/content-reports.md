@@ -60,6 +60,25 @@ them is a real difference and not an accident.
 | `message` | `Message` | `Messaging\Entity\UserMessage` | yes, `senderId`, if any |
 | `town` | `Town` | a `town_summary` ref, `node-59518` (map-and-search.md §6.5, 2026-09-08) | no |
 
+The form's header shows the page the reporter came from (`from_path`, the
+cleaned `?from=` the map and every entry page send), as a link, so they can
+see it is the right one before they write (owner 2026-09-08). The desk shows
+the same path on the report. On the desk, a report about a place links to `/map?item=<id>`, the map's own
+deep link, so the curator sees the place in its drawer (owner 2026-09-08);
+the link is a button beside the target line, the "Seen on" path shows only
+when the target has no link of its own, and the "Who wrote it" row shows
+only when there is an author.
+A filed report answers 303 to `/report/{type}/{id}/sent`, its own GET, so a
+reload of the thank-you shows it again and files nothing (owner 2026-09-08:
+a reload had filed the same report twice, and the desk showed the place's id
+twice). A signed-in reader is not shown the email field: the account's address is
+the reporter contact (owner 2026-09-08, "we already have their email"), which
+is what the desk answers to. A page may also send `?name=`, what it called
+the thing (the town card sends the town's name): the form says "This report
+is about Zwaag", and the name is stored as the report's `target_label`, so
+the desk reads it even when nothing resolves. Plain text, one line, 120
+characters, never used for anything but display.
+
 **Why places and regions have no author.** They are not written by one person.
 A place starts as a seeded or harvested row (`seeded-rows-stay-unassigned`) and
 grows through submissions from many riders. Naming the last editor as "the
@@ -94,6 +113,8 @@ has to keep resolving. Pinned by
 
 `isLegal()` is true for `unlawful` and `personal_data` only. Those two are a
 legal claim rather than a quality judgement, so they sort to the top of the desk
+(`ReportGround::urgent()`, which since 2026-09-08 also holds `abuse`: not a
+legal claim, but a person is being hurt while it waits)
 and the acknowledgement email says so. `untrue` covers stale as well as false:
 a map goes out of date as often as it is wrong.
 
