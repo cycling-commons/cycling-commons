@@ -1,0 +1,76 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{#
+  Contributors and curators: the two roles, side by side, on one page (owner
+  2026-09-08: "a specific page about what a contributor/moderator does";
+  option 1, one page, two halves). One worked example under both halves,
+  because the example is the explanation. Every link goes to a working
+  channel: the wizard, and the regions page where a curator applies.
+#}
+{% extends 'base.html.twig' %}
+
+{% block head_styles %}
+{# No nonce: style-src is 'self' + 'unsafe-inline', so one does nothing here
+   except tie the page to a per-request value (docs/specs/page-caching.md §3.2). #}
+<style>
+  .halves{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.6rem;max-width:960px}
+  @media(max-width:720px){.halves{grid-template-columns:1fr}}
+  .half{background:var(--paper-deep);border-radius:10px;padding:1.4rem 1.5rem 1.5rem}
+  .half h2{font-family:var(--serif);font-weight:600;font-size:1.45rem;letter-spacing:-.01em;margin:0 0 .2rem}
+  .half .who{font-family:var(--mono);font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--clay);margin:0 0 .9rem}
+  .half ul{list-style:none;margin:0 0 .9rem}
+  .half li{font-size:.98rem;color:#3a3d30;line-height:1.6;padding:.22rem 0 .22rem 1.3rem;position:relative}
+  .half li::before{content:"–";position:absolute;left:0;color:var(--clay);font-weight:700}
+  .half p{font-size:.94rem;color:#4a4d40;line-height:1.6;margin:0 0 1rem}
+  .example{max-width:760px;margin:2.2rem 0 0}
+  .example h2{font-family:var(--mono);font-size:.74rem;letter-spacing:.12em;text-transform:uppercase;color:var(--clay);margin:0 0 .5rem}
+  .example p{font-size:1rem;color:#3a3d30;line-height:1.65;margin:0 0 .8rem}
+  .example .one{font-size:.9rem;color:#595c4d}
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="lhero"><div class="wrap">
+  <div class="kicker" style="color:var(--trail)">{{ 'roles.kicker'|trans }}</div>
+  <h1 class="disp">{{ 'roles.title'|trans }}</h1>
+  <p class="lead" style="color:rgba(239,230,212,.85);margin-top:.8rem">{{ 'roles.lead'|trans }}</p>
+</div></div>
+
+<section class="pad"><div class="wrap">
+  <div class="halves">
+    <div class="half">
+      <h2>{{ 'roles.contributor_h'|trans }}</h2>
+      <p class="who">{{ 'roles.contributor_who'|trans }}</p>
+      <ul>
+        <li>{{ 'roles.contributor_l1'|trans }}</li>
+        <li>{{ 'roles.contributor_l2'|trans }}</li>
+        <li>{{ 'roles.contributor_l3'|trans }}</li>
+      </ul>
+      <p>{{ 'roles.contributor_note'|trans }}</p>
+      <a class="btn btn-p" href="{{ path('improve') }}">{{ 'roles.contributor_cta'|trans }}</a>
+    </div>
+    <div class="half">
+      <h2>{{ 'roles.curator_h'|trans }}</h2>
+      <p class="who">{{ 'roles.curator_who'|trans }}</p>
+      {# Things a curator CAN do, never must (owner 2026-09-08). Bringing
+         the place to life comes first, checking last ("now it is all
+         policing"). #}
+      <p>{{ 'roles.curator_can'|trans }}</p>
+      <ul>
+        <li>{{ 'roles.curator_l1'|trans }}</li>
+        <li>{{ 'roles.curator_l2'|trans }}</li>
+        <li>{{ 'roles.curator_l3'|trans }}</li>
+        <li>{{ 'roles.curator_l4'|trans }}</li>
+        <li>{{ 'roles.curator_l5'|trans }}</li>
+        <li>{{ 'roles.curator_l6'|trans }}</li>
+      </ul>
+      <p>{{ 'roles.curator_note'|trans }}</p>
+      <a class="btn btn-p" href="{{ path('regions') }}">{{ 'roles.curator_cta'|trans }}</a>
+    </div>
+  </div>
+  <div class="example">
+    <h2>{{ 'roles.example_h'|trans }}</h2>
+    <p>{{ 'roles.example_p'|trans }}</p>
+    <p class="one">{{ 'roles.one_account'|trans }}</p>
+  </div>
+</div></section>
+{% endblock %}

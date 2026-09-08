@@ -45,11 +45,14 @@
   {% endif %}
 </div></div>
 
-<main class="wrap" style="padding-top:2.5rem;padding-bottom:3.5rem;max-width:640px">
+{# The wrap keeps the page's width; only the text column is capped, from the
+   left, like the report page (owner 2026-09-08: "smaller, center aligned?"). #}
+<main class="wrap" style="padding-top:2.5rem;padding-bottom:3.5rem"><div style="max-width:760px">
   {# The "show us your edits" nudge belongs to somebody who is about to apply,
      not to somebody whose application is already being read. #}
   {% if onboarded and not pending_app %}
     <p class="hint">{{ 'join.evidence_hint'|trans }}
+      <a href="{{ path('roles') }}">{{ 'join.roles_link'|trans }}</a>.
        <a href="{{ path('improve') }}">{{ 'join.evidence_link'|trans }}</a></p>
   {% endif %}
 
@@ -125,5 +128,5 @@
       <button type="submit" class="btn btn-p">{{ 'join.submit_application'|trans }}</button>
     </form>
   {% endif %}
-</main>
+</div></main>
 {% endblock %}

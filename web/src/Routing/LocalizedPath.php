@@ -131,6 +131,15 @@ final class LocalizedPath
     ];
 
     /** @var array<string, string> */
+    public const array ROLES = [
+        'en' => '/contributors-and-curators',
+        'fr' => '/contributeurs-et-curateurs',
+        'nl' => '/bijdragers-en-curatoren',
+        'de' => '/beitragende-und-kuratoren',
+        'es' => '/colaboradores-y-curadores',
+    ];
+
+    /** @var array<string, string> */
     public const array MAP_KEY = [
         'en' => '/map-key',
         'fr' => '/legende-carte',

@@ -56,6 +56,7 @@ final class SitemapController extends AbstractController
         // Yearly is optimistic for this one: it changes whenever a barrier is
         // fixed or found, which is the point of it.
         ['accessibility', 'monthly'],
+        ['roles', 'monthly'],
         // Both change with every release, which is more often than the rest of
         // this list, and both are how somebody finds out the project is alive.
         ['roadmap', 'weekly'],

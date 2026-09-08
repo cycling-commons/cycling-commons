@@ -2691,7 +2691,39 @@ anchor becomes `path('moderate_room')` and the comment goes. The
 `span.rb-print` twin stays: §5's PDF must carry no link annotations, and the
 route existing does not change that.
 
-## 14. Open questions
+## 14. Contributors and curators, the public explainer (2026-09-08)
+
+One page, two halves: `/contributors-and-curators` (`LocalizedPath::ROLES`,
+`PageController::roles()`, `pages/roles.html.twig`, slug localised in all
+five, on the sitemap and the public cache list). Owner: "a specific page
+about what a contributor/moderator does"; option 1 chosen over two pages,
+because riders rarely read both and one page cannot drift from itself. The
+left half is the contributor (any rider with an account: adds, fixes,
+confirms; the edit shows at once as unconfirmed), the right half the curator
+(a rider accepted for a region or a country, "the person who brings that
+place to life"). The curator's list is what a curator can do, never must
+(owner: "things a curator can do, not what they must do"; the line above it
+says so: "as much or as little as suits you, none of it is a duty"), and it
+leads with the living work and ends with the checking (owner: "now it is all
+policing"): finds open data to
+import there, knows the place and fills its gaps, makes the Commons known
+locally (clubs, shops, tourist offices), welcomes new contributors; then
+checks, confirms or declines with a note, and adds or fixes directly with
+no wait for a check. The two buttons are the site's `.btn.btn-p`, orange
+with ink text (owner: "orange buttons have black text unless they are in
+the header"). One worked example
+under both, with local names and a local place in each language (owner:
+"depending on languages use local names"; Bath and England in English, Hoorn
+and Noord-Holland in Dutch, Annecy in French, Freiburg in German, Girona in
+Spanish), and
+the line that every curator is also a contributor. Two roles only; "curator"
+is the public word for what the code calls the moderator role. Linked from
+the curator application's lede and from Get involved. The application's
+story field asks for hints, not credentials (owner: "sounds too much like it
+is needed"): where you ride, what you know about the place, what you have
+mapped before. Pinned by `RolesPageTest`.
+
+## 15. Open questions
 
 - **Confirmations vs the verification threshold (X):** whether
   `item_confirmation` tallies are the counter feeding the

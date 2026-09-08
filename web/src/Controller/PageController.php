@@ -226,6 +226,24 @@ final class PageController extends AbstractController
         ]);
     }
 
+    /**
+     * The two roles, side by side: what a contributor does and what a curator
+     * does (owner 2026-09-08: "a specific page about what a contributor/
+     * moderator does"; one page, two halves). Curator is the word: in code it
+     * is the moderator role.
+     *
+     * @see docs/specs/moderation-and-contribution.md §8
+     */
+    #[Route(LocalizedPath::ROLES, name: 'roles')]
+    public function roles(): Response
+    {
+        return $this->render('pages/roles.html.twig', [
+            'page_title' => 'meta.roles_title',
+            'page_description' => 'meta.roles_description',
+            'nav_active' => '',
+        ]);
+    }
+
     #[Route(LocalizedPath::ABOUT, name: 'about')]
     public function about(): Response
     {

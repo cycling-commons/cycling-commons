@@ -773,8 +773,9 @@ join:
   password_hint: 'You are signed in from a saved session. Confirming your password makes sure this application is really from you.'
   osm_label: 'Your OpenStreetMap username (optional)'
   social_label: 'Where can we find you online? A website or social profile (optional)'
-  about_label: 'Who are you, why would you like to curate here, and what experience do you bring?'
-  evidence_hint: "You don't need to have added anything to the map before applying — a person reads every application, and your story is what matters most. If you have already fixed or added things here, we'll gladly take a look."
+  about_label: 'Tell us about yourself: where you ride, what you know about this place, anything you have mapped before'
+  evidence_hint: "You don't need to have added anything to the map before applying. Your story is what matters most. If you have already fixed or added things here, we'll gladly take a look."
+  roles_link: 'What contributors and curators do'
   evidence_link: 'Add or fix something on the map'
   submit_application: 'Apply to curate'
   flash:
@@ -3525,6 +3526,31 @@ support:
     bug_outcome_subject: 'About your bug report (%reference%)'
     bug_outcome_thanks: 'Reports like yours are how this gets better. Thank you for the trouble.'
 
+roles:
+  kicker: 'Get involved'
+  title: 'Contributors and curators'
+  lead: 'Two ways to keep the map true. Anyone can do the first. The second is for a place you know.'
+  contributor_h: 'A contributor'
+  contributor_who: 'Any rider with an account.'
+  contributor_l1: 'Adds a place, a climb or a route.'
+  contributor_l2: 'Fixes what is wrong or gone.'
+  contributor_l3: 'Confirms a place is still there.'
+  contributor_note: 'Your edit shows on the map at once, marked unconfirmed. A curator checks it.'
+  contributor_cta: 'Add or fix something on the map'
+  curator_h: 'A curator'
+  curator_who: 'A rider we accepted for a region or a whole country. The person who brings that place to life.'
+  curator_can: 'Any of these, as much or as little as suits you. None of it is a duty.'
+  curator_l1: 'Find open data we can import there: taps, repair stands, routes, climbs.'
+  curator_l2: 'Fill the gaps only someone who knows the place would see.'
+  curator_l3: 'Make the Commons known there: clubs, shops, tourist offices, local riders.'
+  curator_l4: 'Welcome new contributors and answer their questions.'
+  curator_l5: 'Check the edits riders send in, and confirm, correct or decline them with a note back.'
+  curator_l6: 'Add new items and fix what is there directly, with no wait for a check.'
+  curator_note: 'You apply from the regions page, for one region or a whole country.'
+  curator_cta: 'Pick a place to curate'
+  example_h: 'How it works'
+  example_p: 'Sam adds a water tap in Bath. It shows on the map at once, marked unconfirmed. Alice curates England. She sees it in her queue, checks it and confirms it. Now it shows as confirmed by the community.'
+  one_account: 'One account, both roles: every curator is also a contributor.'
 a11y:
   kicker: 'Accessibility'
   title: 'What works, and what does not yet.'
@@ -3658,6 +3684,8 @@ meta:
   accessibility_description: 'How usable the Cycling Commons is, including the parts that are not good enough yet, and how to report a barrier.'
   map_key_title: 'Cycling Commons — Map key'
   map_key_description: 'Every mark on the Cycling Commons map and what it means: pins, discs, borders, badges, lines and clusters.'
+  roles_title: 'Cycling Commons: contributors and curators'
+  roles_description: 'What a contributor does and what a curator does on the Cycling Commons map, and how an edit becomes confirmed.'
 legend:
   kicker: 'Map key'
   title: 'Every mark on the map'
