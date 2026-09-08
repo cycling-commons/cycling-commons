@@ -636,8 +636,9 @@ is labelled "Internal note" and carries no placeholder: the example text read
 as a real note.
 
 **GitHub: a link, not a sync** (owner 2026-09-08: "only admins are allowed to
-put site issues to github"). A public bug carries an admin-only button on its
-desk page, "Open on GitHub": `POST /moderate/bugs/{id}/github`,
+put site issues to github"). A public bug carries an admin-only "Open on
+GitHub" link in its facts grid, one row, no explaining prose (owner: "the
+button is enough"): `POST /moderate/bugs/{id}/github`,
 `ROLE_ADMIN`, once per bug. `App\\Support\\GitHubIssues` sends exactly two
 fields to the repository named by `GITHUB_REPO`, the public title and the
 public body, with a footer that links back to /known-issues; the issue
