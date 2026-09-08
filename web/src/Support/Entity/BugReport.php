@@ -159,6 +159,10 @@ class BugReport
     #[ORM\Column(name: 'fix_release', length: 64, nullable: true)]
     private ?string $fixRelease = null;
 
+    /** The issue an admin opened for this bug on the public repository, by number. Never set by anything else. */
+    #[ORM\Column(name: 'github_issue', type: Types::INTEGER, nullable: true)]
+    private ?int $githubIssue = null;
+
     #[ORM\Column(name: 'handled_by_user_id', type: Types::BIGINT, nullable: true)]
     private ?int $handledByUserId = null;
 
@@ -395,6 +399,18 @@ class BugReport
     {
         $note = null === $note ? null : trim($note);
         $this->internalNote = '' !== $note ? $note : null;
+    }
+
+    public function getGithubIssue(): ?int
+    {
+        return $this->githubIssue;
+    }
+
+    public function setGithubIssue(?int $number): static
+    {
+        $this->githubIssue = null !== $number && $number > 0 ? $number : null;
+
+        return $this;
     }
 
     public function getFixRelease(): ?string

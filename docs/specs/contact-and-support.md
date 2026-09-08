@@ -635,6 +635,19 @@ is translated copy; this table is the list of names. The internal note field
 is labelled "Internal note" and carries no placeholder: the example text read
 as a real note.
 
+**GitHub: a link, not a sync** (owner 2026-09-08: "only admins are allowed to
+put site issues to github"). A public bug carries an admin-only button on its
+desk page, "Open on GitHub": `POST /moderate/bugs/{id}/github`,
+`ROLE_ADMIN`, once per bug. `App\\Support\\GitHubIssues` sends exactly two
+fields to the repository named by `GITHUB_REPO`, the public title and the
+public body, with a footer that links back to /known-issues; the issue
+number comes back onto `bug_report.github_issue`, and the desk row and the
+public list link it. Nothing else leaves: not the reporter's address, not the
+internal note, not the page they stood on. Nothing syncs back: status lives on
+the desk, closing the issue is a git act. The button is absent when the two
+settings are empty, and a curator who is not an admin gets 403 on the route.
+Pinned by `GitHubIssuesTest` and `BugDeskNotesTest`.
+
 ### One row, one size
 
 Status, severity and area sit on **one line** in the decide form

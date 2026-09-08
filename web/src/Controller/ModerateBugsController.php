@@ -15,6 +15,7 @@ use App\Support\BugSort;
 use App\Support\BugStatus;
 use App\Support\Entity\BugReport;
 use App\Support\Entity\BugScreenshot;
+use App\Support\GitHubIssues;
 use App\Support\SupportIntake;
 use App\Support\SupportMailer;
 use App\Support\SupportRepository;
@@ -62,6 +63,7 @@ final class ModerateBugsController extends AbstractController
         private readonly SupportRepository $repository,
         private readonly SupportIntake $intake,
         private readonly SupportMailer $mailer,
+        private readonly GitHubIssues $github,
     ) {
     }
 
@@ -133,6 +135,7 @@ final class ModerateBugsController extends AbstractController
         }
 
         return $this->render('moderate/bug_detail.html.twig', [
+            'github' => $this->github,
             'releases' => $this->releaseTags(),
             'page_title' => 'support.bugs.title',
             'page_description' => 'support.bugs.title',
@@ -150,6 +153,39 @@ final class ModerateBugsController extends AbstractController
                 array_filter(BugStatus::all(), static fn (BugStatus $s): bool => $s->notifiesReporter()),
             ),
         ]);
+    }
+
+    /**
+     * Open an issue on the public repository for a public bug. Admins only
+     * (owner 2026-09-08): a public repository is public, so the act of putting
+     * a site issue there is the operator's, not a curator's. Two fields go,
+     * the public title and body; the number comes back onto the row.
+     */
+    #[Route('/moderate/bugs/{id}/github', name: 'moderate_bugs_github', requirements: ['id' => '\d+'], methods: ['POST'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function github(int $id, Request $request): Response
+    {
+        if (!$this->isCsrfTokenValid(self::CSRF_TOKEN_ID, (string) $request->request->get('_token'))) {
+            $this->addFlash('notice', 'flash.invalid_token');
+
+            return $this->redirectToRoute('moderate_bugs_detail', ['id' => $id]);
+        }
+        $report = $this->em->find(BugReport::class, $id);
+        if (!$report instanceof BugReport) {
+            throw $this->createNotFoundException();
+        }
+        if (null !== $report->getGithubIssue()) {
+            return $this->redirectToRoute('moderate_bugs_detail', ['id' => $id]);
+        }
+        try {
+            $report->setGithubIssue($this->github->open($report));
+            $this->em->flush();
+            $this->addFlash('notice', 'support.bugs.github_opened');
+        } catch (\RuntimeException $e) {
+            $this->addFlash('notice', 'not_public' === $e->getMessage() ? 'support.bugs.github_not_public' : 'support.bugs.github_failed');
+        }
+
+        return $this->redirectToRoute('moderate_bugs_detail', ['id' => $id]);
     }
 
     /**

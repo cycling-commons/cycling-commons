@@ -14,9 +14,12 @@ use App\Support\BugSort;
 use App\Support\BugStatus;
 use App\Support\Entity\BugReport;
 use App\Support\Entity\ReleaseTag;
+use App\Support\GitHubIssues;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\HttpClient\MockHttpClient;
+use Symfony\Component\HttpClient\Response\MockResponse;
 
 /**
  * The curator-only note, the release tag, and the desk's ordering
@@ -45,6 +48,8 @@ final class BugDeskNotesTest extends WebTestCase
     {
         return static::getContainer()->get(EntityManagerInterface::class);
     }
+
+    private int $curatorId = 0;
 
     private function curator(): User
     {
@@ -119,6 +124,45 @@ final class BugDeskNotesTest extends WebTestCase
         $this->decide($client, $report, ['fix_release' => 'v1.2.3-typed']);
         $this->em()->clear();
         self::assertSame('', (string) $this->em()->find(BugReport::class, $report->getId())?->getFixRelease(), 'a tag nobody recorded is not stored');
+    }
+
+    public function testOnlyAnAdminMayOpenAPublicBugOnGithub(): void
+    {
+        // Owner 2026-09-08: "only admins are allowed to put site issues to github".
+        $client = $this->client();
+        static::getContainer()->set(GitHubIssues::class, new GitHubIssues(
+            new MockHttpClient(static fn (): MockResponse => new MockResponse('{"number":77}', ['http_code' => 201])),
+            'cycling/commons', 'k-1', 'https://example.test',
+        ));
+        $report = $this->bug();
+        $report->setPublic(true);
+        $report->setPublicTitle('A public title');
+        $this->em()->flush();
+
+        $curator = $this->curator();
+        $this->curatorId = (int) $curator->getId();
+        $client->loginUser($curator);
+        $page = $client->request('GET', '/moderate/bugs/'.$report->getId());
+        self::assertResponseIsSuccessful();
+        self::assertCount(0, $page->filter('form.github-open'), 'a curator sees no button');
+        $client->request('POST', '/moderate/bugs/'.$report->getId().'/github', ['_token' => 'x']);
+        self::assertResponseStatusCodeSame(403, 'and cannot post to the route either');
+
+        // The same person, promoted: one account, no second row with the same address.
+        $admin = $this->em()->find(User::class, $this->curatorId);
+        self::assertInstanceOf(User::class, $admin);
+        $admin->setRoles(['ROLE_ADMIN']);
+        $this->em()->flush();
+        $client->loginUser($admin);
+        $page = $client->request('GET', '/moderate/bugs/'.$report->getId());
+        $form = $page->filter('form.github-open');
+        self::assertCount(1, $form, 'an admin sees the button');
+        $client->submit($form->form());
+        self::assertResponseRedirects();
+        $client->followRedirect();
+        self::assertStringContainsString('#77', (string) $client->getResponse()->getContent());
+        $this->em()->clear();
+        self::assertSame(77, $this->em()->find(BugReport::class, $report->getId())?->getGithubIssue());
     }
 
     // -- the internal note stays internal ---------------------------------

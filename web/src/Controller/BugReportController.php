@@ -15,6 +15,7 @@ use App\Security\ProofOfWork;
 use App\Support\BugArea;
 use App\Support\BugSeverity;
 use App\Support\Entity\BugReport;
+use App\Support\GitHubIssues;
 use App\Support\ScreenshotRejected;
 use App\Support\ScreenshotStore;
 use App\Support\SupportIntake;
@@ -72,6 +73,7 @@ final class BugReportController extends AbstractController
         private readonly ScreenshotStore $screenshots,
         private readonly RateLimiterFactory $bugReportLimiter,
         private readonly RateLimiterFactory $bugReportNoJsLimiter,
+        private readonly GitHubIssues $github,
     ) {
     }
 
@@ -128,6 +130,7 @@ final class BugReportController extends AbstractController
         );
 
         return $this->render('pages/known_issues.html.twig', [
+            'github_repo' => $this->github->repo(),
             'page_title' => 'meta.known_issues_title',
             'page_description' => 'meta.known_issues_description',
             'nav_active' => '',

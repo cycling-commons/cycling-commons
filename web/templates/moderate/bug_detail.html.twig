@@ -123,7 +123,20 @@
         <dt>{{ 'support.bugs.release'|trans }}</dt>
         <dd class="val">{{ report.fixRelease }}</dd>
       {% endif %}
+      {% if report.githubIssue %}
+        <dt>GitHub</dt>
+        <dd class="val"><a href="{{ github.issueUrl(report.githubIssue) }}" target="_blank" rel="noopener">#{{ report.githubIssue }} ↗</a></dd>
+      {% endif %}
     </dl>
+    {# Admins only, public bugs only, once: a link to the public repository,
+       never a sync (contact-and-support.md 9, owner 2026-09-08). #}
+    {% if is_granted('ROLE_ADMIN') and github.isConfigured and report.public and report.publicTitle and not report.githubIssue %}
+      <form method="post" action="{{ path('moderate_bugs_github', {id: report.id}) }}" class="github-open">
+        <input type="hidden" name="_token" value="{{ csrf_token('bug-desk-decide') }}">
+        <button type="submit" class="btn-act">{{ 'support.bugs.github_open'|trans }}</button>
+        <span class="chint">{{ 'support.bugs.github_hint'|trans }}</span>
+      </form>
+    {% endif %}
 
     <p class="bsec">{{ 'support.bug.field_body'|trans }}</p>
     <div class="btext md">{{ report.body|bug_markdown }}</div>
