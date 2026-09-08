@@ -222,6 +222,11 @@ input[type="checkbox"]:disabled,input[type="radio"]:disabled{cursor:not-allowed;
 
 /* cards + bars */
 .grid{display:grid;gap:1rem}
+.globe{position:relative;height:min(70vh,560px);overflow:hidden;background:var(--paper)}
+.globe-tip{position:absolute;z-index:2;pointer-events:none;background:var(--ink);color:var(--paper);font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;padding:.25rem .5rem;border-radius:4px;white-space:nowrap}
+.globe.loading>*{visibility:hidden}
+.globe.loading::after{content:'';position:absolute;top:50%;left:50%;width:28px;height:28px;margin:-14px 0 0 -14px;border:3px solid rgba(20,22,14,.15);border-top-color:var(--trail);border-radius:50%;animation:globe-spin .8s linear infinite}
+@keyframes globe-spin{to{transform:rotate(360deg)}}
 .card{background:var(--paper-deep);border:1px solid rgba(20,22,14,.14);border-radius:8px;padding:1.4rem;transition:all .22s}
 /* The lift is an affordance, so it belongs only to cards you can act on: one
    inside a link, and the landing page's catalogue grid (.rv), which is a

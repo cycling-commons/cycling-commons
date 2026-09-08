@@ -342,16 +342,23 @@ final class PageController extends AbstractController
         $sort = CoverageStatsProvider::SORT_TOTAL === $sort
             ? CoverageStatsProvider::SORT_TOTAL
             : CoverageStatsProvider::SORT_DENSITY;
+        // The same rule for the view: the table, or the globe painted by
+        // density (owner 2026-09-08). Two URLs, two chips that are links, so
+        // both are cached and the table needs no script at all.
+        $view = 'globe' === $request->query->get('view') ? 'globe' : 'table';
+        $countries = $stats->countries($request->getLocale(), $sort);
 
         return $this->render('pages/coverage.html.twig', [
             'page_title' => 'meta.coverage_title',
             'page_description' => 'meta.coverage_description',
             'nav_active' => 'coverage',
             'kpis' => $stats->kpis(),
-            'countries' => $stats->countries($request->getLocale(), $sort),
+            'countries' => $countries,
             'sort' => $sort,
             'sort_density' => CoverageStatsProvider::SORT_DENSITY,
             'sort_total' => CoverageStatsProvider::SORT_TOTAL,
+            'view' => $view,
+            'density_classes' => 'globe' === $view ? CoverageStatsProvider::densityClasses($countries) : ['bounds' => [], 'byCode' => []],
             'thinnest' => $stats->thinnestCategories(),
         ]);
     }

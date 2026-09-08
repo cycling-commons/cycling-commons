@@ -480,17 +480,28 @@ for one thing in five languages. Fixed across all five.
   whole-country default rather than being trusted.
 
   **On a region's own page the three states are sentences, not glossary
-  entries.** Since 2026-09-08 `/regions` has two views, chips Globe then List
+  entries.** Since 2026-09-08 `/regions` has two views, chips Globe then List,
+  and a screen 900px or wider opens on the globe, a phone on the list (owner:
+  "should open on the globe page if not mobile"),
   (owner: "a map version where you select the country on a world map"; the
   flat map was a chip for an hour and was removed: "remove the map option").
-  The globe: `assets/pages/regions-map.js` loads the vendored MapLibre only
-  when asked and draws one shape per country from `GET /regions/outlines.json`
+  The globe: `assets/pages/country-globe.js` (shared with `/coverage?view=globe`,
+  [coverage-provider.md §9.1](coverage-provider.md)) loads the vendored MapLibre
+  only when asked, closer on /regions (`data-zoom="2.8"`, so a small country is
+  a target a pointer can hit), and draws one shape per country from `GET /regions/outlines.json`
   (`PageController::regionOutlines()`: PostGIS unions each country's stored
   `region.outline` rings, about a second for all nineteen, kept a day in the
   app cache keyed on the region table's last change; on the public cache list
   with an ETag; the full geometries took 36 seconds for five). Countries, not
   regions (owner: "just the countries"); a click opens that country's tab in
-  the list below. MapLibre's globe projection, framed close on Europe, or on
+  the list below. Since the night of 2026-09-08 the basemap is made in the
+  shared module `assets/pages/country-globe.js`, not fetched: one colour for
+  the land, the sea, admin-2 borders, no names, no relief (owner: "more
+  simple, rest of the world one colour"), from the same planet vector tiles.
+  Raising each country by its item count was tried the same night and
+  reverted within the hour (owner: "raised effect is too much, revert to
+  normal flatland"; the blocks also hid the pointer's target). The coverage
+  globe shares the basemap. MapLibre's globe projection, framed close on Europe, or on
   a signed-in rider's base when they have one (owner: "turn the globe already
   to their home base"; the page is private for them, so nothing personal is
   cached); no zoom (no buttons, wheel or pinch; owner: "without a zoom
@@ -503,12 +514,19 @@ for one thing in five languages. Fixed across all five.
   at a time. The panel says whose it is twice, a notch under the open chip and
   the country's flag and name as its first line, and fades and slides in and
   out (none under prefers-reduced-motion). Inside, a grid of equal cards, each
-  the same four columns (name, tier, stewardship, numbers) so the tags line up
-  (owner: "a bit messy with all different sizes and alignments"); the numbers
+  two lines, the name and the numbers on the first and the two tags on the
+  second (owner: "a bit messy with all different sizes and alignments"; a
+  four-column card squeezed the name out first); the numbers
   are one count, verified items and routes together as "N community items",
   and the area (owner: "just count different things into X community
   items"). With
-  scripting off every panel shows in place. `/regions` is a directory and wants fragments a reader scans down
+  scripting off every panel shows in place. The key (the two-axis legend,
+  maturity and stewardship) sits under the list since 2026-09-09, not above
+  the globe (owner: "the explanations must go to the bottom"). The curator
+  application link on
+  each country row is an icon, a person with a plus, quiet grey and orange on
+  hover, named by title and aria-label (owner: the text was "getting too
+  much attention" nineteen times over). `/regions` is a directory and wants fragments a reader scans down
   a column; `/regions/{slug}` is about one place and wants a line that answers
   the question it is under. So the page has its own `regions.steward_line_*`
   copy rather than reusing the legend's `status_*_desc`, and the state itself
@@ -1016,6 +1034,18 @@ Mechanism, one attribute end to end:
   localStorage can never override a logged-in rider's profile value.
 
 ### 4.7 Map key (2026-09-01)
+
+Since 2026-09-09 every type draws its own one-colour icon
+(`ItemType::svgPath()` is never null): the emoji glyphs painted themselves
+in the platform font's colours, and the tent came out green and yellow on
+the landing page (owner: "no coloured icons"). Quality rides are a route
+winding across the land, a ribbon, not a star (owner: "a slinger line").
+The glyph stays as the text fallback only. The map rail's layer rows draw
+the same paths through `layerGlyph()` in `assets/map/icons.js`, so the
+route row shows the ribbon and not the old star. On `/map-key` the category
+tiles draw their hairlines from each tile's own shadow, so an empty slot at
+a row's end stays page-coloured, and the group headings sit at the site's
+kicker size.
 
 The marks stack four independent signals on one shape, and the key says so in
 two places, sized to their audience:

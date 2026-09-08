@@ -463,6 +463,16 @@ coverage:
   gaps_cta_pre: 'Diese Lücken werden von Menschen geschlossen, nicht von Algorithmen:'
   gaps_cta_link: 'sieh, wer beigetragen hat →'
   gaps_cta_post: ''
+  view_table: 'Tabelle'
+  view_globe: 'Globus'
+  globe_hint: 'Ziehe, um den Globus zu drehen. Klicke ein Land an für seine Zahlen.'
+  globe_pick: 'Klicke ein Land auf dem Globus an. Seine Zahlen erscheinen hier.'
+  legend_density: 'Referenzeinträge pro %u%'
+  legend_range: '%a% bis %b%'
+  legend_none: 'noch nichts'
+  globe_regions_link: 'Seine Regionen ansehen →'
+  globe_noscript: 'Der Globus braucht JavaScript.'
+  globe_noscript_link: 'Die Tabelle zeigt dieselben Zahlen.'
 
 # Credits — worauf die Commons aufbauen. Projektnamen, URLs und
 # Lizenzbezeichnungen stehen im Template; nur der Fließtext ist übersetzt.

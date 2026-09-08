@@ -149,6 +149,55 @@ final class CoverageStatsProvider
     }
 
     /**
+     * How many density steps the globe paints, one hue light to dark.
+     *
+     * Five is the most a single-hue ramp holds apart on a small shape, and
+     * enough that nineteen countries do not all land in two colours.
+     */
+    public const int DENSITY_STEPS = 5;
+
+    /**
+     * Density classes for the globe on /coverage?view=globe: equal-count
+     * steps, so each colour has about as many countries as the next.
+     *
+     * Equal-count and not equal-width, because density spans three orders
+     * of magnitude (a city-state next to Australia); on a linear scale every
+     * country but one would be the palest step. A country with no reference
+     * items at all is class 0, outside the steps, so the legend never claims a
+     * range that starts at nothing. Ties rank by country code, so the same
+     * rows give the same classes in any order, which a cached page needs.
+     *
+     * @param list<array{code: string, poisPerKm2: float, ...}> $countries
+     *
+     * @return array{bounds: list<array{min: float, max: float}>, byCode: array<string, int>}
+     */
+    public static function densityClasses(array $countries): array
+    {
+        $byCode = [];
+        $ranked = [];
+        foreach ($countries as $country) {
+            if ($country['poisPerKm2'] <= 0.0) {
+                $byCode[$country['code']] = 0;
+                continue;
+            }
+            $ranked[] = $country;
+        }
+        usort($ranked, static fn (array $a, array $b): int => [$a['poisPerKm2'], $a['code']] <=> [$b['poisPerKm2'], $b['code']]);
+
+        $n = \count($ranked);
+        $steps = min(self::DENSITY_STEPS, $n);
+        $bounds = [];
+        foreach ($ranked as $i => $country) {
+            $class = intdiv($i * $steps, $n) + 1;
+            $byCode[$country['code']] = $class;
+            $bounds[$class - 1] ??= ['min' => $country['poisPerKm2'], 'max' => $country['poisPerKm2']];
+            $bounds[$class - 1]['max'] = $country['poisPerKm2'];
+        }
+
+        return ['bounds' => array_values($bounds), 'byCode' => $byCode];
+    }
+
+    /**
      * Thinnest catalog categories. R is excluded — volume is the per-region cap, not coverage.
      *
      * @see docs/specs/route-domain.md §5.1

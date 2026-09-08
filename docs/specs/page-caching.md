@@ -121,7 +121,8 @@ references the nonce. What moved, and where it went:
 - The landing page's hero behaviour is `assets/home/hero.js`, and the country
   typeahead is `assets/pages/regions-typeahead.js`. Neither reads server data,
   except two values the typeahead now takes from the JSON block's own
-  attributes. The regions world map, `assets/pages/regions-map.js`, is the
+  attributes. The globe, `assets/pages/country-globe.js` (driven by
+  `regions-map.js` on /regions and `coverage-globe.js` on /coverage), is the
   same shape: its four inputs ride as `data-*` on the map box, and the
   outlines it draws come from `/regions/outlines.json`, a public route on the
   cache list like the page itself.
@@ -269,10 +270,11 @@ siblings are behind `IsGranted('ROLE_USER')`, so a logged-out visitor gets a
 redirect rather than a render. They were never a flood target and are per-rider
 by definition.
 
-`/coverage` is out for now, and only for now: it is the right shape for this
-list, but it grew its own nonce'd inline script for the density sort while this
-was being written. It joins the list when that script becomes a file, and the
-guard test in §3.2 is where to add it.
+`/coverage` is in. Its density sort and its view (the table, or the globe at
+`?view=globe`) are each two URLs with links between them, not a toggle, so the
+page carries no inline script and no nonce; the globe view loads MapLibre and
+its own behaviour from files, and its per-country cards are Twig output. The
+smoke test on the page asserts both views are nonce-free.
 
 ## 7. What it is worth
 

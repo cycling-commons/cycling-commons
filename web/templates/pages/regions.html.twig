@@ -29,17 +29,18 @@
   /* Two columns because they are two questions: what the region holds, and who
      looks after it. Stacked below 640px, where side-by-side would leave each
      description two words wide. */
+  .legend-block{margin-top:2.6rem;padding-top:1.6rem;border-top:1px solid rgba(20,22,14,.12)}
   .legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(20rem,1fr));gap:1.1rem 2.4rem;
     margin-bottom:1.6rem;font-size:.82rem;color:#4a4d40}
   .lcol{display:flex;flex-direction:column;gap:.45rem}
   .lcol .lh{font-family:var(--mono);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--clay)}
   .legend b{font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase}
 
-  h2.cont{font-family:var(--serif);font-weight:600;font-size:1.5rem;margin:2.2rem 0 1rem;padding-bottom:.55rem;
+  h2.cont{font-family:var(--serif);font-weight:600;font-size:1.5rem;margin:1.3rem 0 .7rem;padding-bottom:.4rem;
     border-bottom:1px solid rgba(20,22,14,.16);display:flex;align-items:baseline;gap:.7rem}
   h2.cont span{font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:#7a7d6c}
 
-  .country{margin:0 0 1.2rem}
+  .country{margin:0 0 .5rem}
   {# A tab strip per continent (owner 2026-09-08: "regions must open full
      width as some sort of tab"): countries are the cells, three across from
      900px, and the open country's regions are one panel across the whole
@@ -49,12 +50,13 @@
   {# flex-wrap: on a phone the name + count + Apply button overflowed the
      viewport by ~25px (found 2026-08-15 while checking the hero split); the
      button drops to its own line instead of pushing the page wider. #}
-  .country .ch{display:flex;flex-wrap:wrap;align-items:center;gap:.6rem;margin-bottom:.55rem}
-  {# A quiet link, not a button (owner 2026-09-08: "a bit too much"): nineteen
-     of them on one page, so each is a small underlined offer at the row's end. #}
-  .country .ch .join-cta{font-size:.82rem;color:var(--trail);text-decoration:underline;
-    text-underline-offset:3px;text-decoration-color:rgba(184,90,53,.45);white-space:nowrap;flex:none;margin-left:auto}
-  .country .ch .join-cta:hover{color:var(--clay);text-decoration-color:currentColor}
+  .country .ch{display:flex;flex-wrap:wrap;align-items:center;gap:.6rem;margin-bottom:.3rem}
+  {# A quiet icon, not a button and not words (owner 2026-09-08: "a bit too
+     much", then "the text getting too much attention"): nineteen of them on
+     one page, so each is a small grey mark at the row's end. #}
+  .country .ch .join-cta{display:inline-flex;align-items:center;justify-content:center;width:1.7rem;height:1.7rem;border-radius:50%;
+    color:#8a8d7c;flex:none;margin-left:auto}
+  .country .ch .join-cta:hover,.country .ch .join-cta:focus-visible{color:var(--trail);background:rgba(20,22,14,.06)}
   .country .ch h3{font-family:var(--sans);font-weight:700;font-size:1.05rem}
   .country .ch .cc{font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;color:#7a7d6c;text-transform:uppercase}
   .country .ch .n{font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;color:#7a7d6c;margin-left:auto}
@@ -62,18 +64,9 @@
   .viewrow .chip{font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;padding:.35rem .7rem;border:1px solid rgba(20,22,14,.25);border-radius:30px;background:transparent;color:#595c4d;cursor:pointer}
   .viewrow .chip.on{background:var(--ink);border-color:var(--ink);color:var(--paper)}
   .viewrow .vhint{font-size:.85rem;color:#6d7060;margin-left:.4rem}
-  .regions-map{position:relative}
-  .regions-tip{position:absolute;z-index:2;pointer-events:none;background:var(--ink);color:var(--paper);font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;padding:.25rem .5rem;border-radius:4px}
-  {# No frame and the page's own paper behind it (owner 2026-09-08), so the
-     globe floats on the page instead of sitting in a box. #}
-  .regions-map{height:min(70vh,560px);overflow:hidden;margin:0 0 1.4rem;background:var(--paper)}
-  {# Nothing until the first full frame in the asked-for projection: the
-     flat map used to show, then jump into a globe (owner 2026-09-08). #}
-  .regions-map.loading>*{visibility:hidden}
-  .regions-map.loading::after{content:'';position:absolute;top:50%;left:50%;width:28px;height:28px;margin:-14px 0 0 -14px;
-    border:3px solid rgba(20,22,14,.15);border-top-color:var(--trail);border-radius:50%;animation:regs-spin .8s linear infinite}
-  @keyframes regs-spin{to{transform:rotate(360deg)}}
-  .regtab{display:inline-flex;align-items:center;gap:.4rem;cursor:pointer;font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;padding:.35rem .7rem;border:1px solid rgba(20,22,14,.25);border-radius:30px;color:#595c4d;background:transparent;margin:0 0 .55rem}
+  {# The globe's own rules (.globe) are in atlas.css, shared with /coverage. #}
+  #regions-map{margin:0 0 1.4rem}
+  .regtab{display:inline-flex;align-items:center;gap:.4rem;cursor:pointer;font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;padding:.35rem .7rem;border:1px solid rgba(20,22,14,.25);border-radius:30px;color:#595c4d;background:transparent;margin:0 0 .2rem}
   .regtab::after{content:'▾'}
   .regtab[aria-expanded=true]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
   .regtab[aria-expanded=true]::after{content:'▴'}
@@ -91,15 +84,17 @@
   @keyframes regs-in{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
   @media(prefers-reduced-motion:reduce){.regions.open,.regions.closing{animation:none}}
   .rhead{grid-column:1/-1;display:flex;align-items:center;gap:.5rem;font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:#595c4d;margin-bottom:.15rem}
-  {# Equal cards in straight columns (owner 2026-09-08: "a bit messy with
-     all different sizes and alignments"): the panel is a grid of cards, and
-     every card is the same four columns, name, tier, stewardship, numbers,
-     so the tags line up down the panel. #}
-  .regions{grid-template-columns:repeat(auto-fill,minmax(min(100%,400px),1fr))}
-  .reg{display:grid;grid-template-columns:minmax(0,1fr) 7.5em 9.5em minmax(5em,auto);align-items:center;gap:.5rem;
-    background:var(--paper-deep);border:1px solid rgba(20,22,14,.1);border-radius:8px;padding:.45rem .7rem;font-size:.9rem}
-  .reg .tag{justify-self:start;white-space:nowrap}
-  .reg .stats{display:flex;flex-direction:column;align-items:flex-end;gap:.1rem;justify-self:end;text-align:right}
+  {# Equal cards, two lines each (owner 2026-09-08: "a bit messy with all
+     different sizes and alignments", then the name squeezed out by a tag
+     column): the name and the numbers on the first line, the two tags on
+     the second. Nothing to line up across cards but the lines themselves. #}
+  .regions{grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr))}
+  .reg{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"name stats" "tags tags";align-items:center;column-gap:.7rem;row-gap:.4rem;
+    background:var(--paper-deep);border:1px solid rgba(20,22,14,.1);border-radius:8px;padding:.55rem .75rem .6rem;font-size:.9rem}
+  .reg>span:first-child{grid-area:name;font-weight:600}
+  .reg .tags{grid-area:tags;display:flex;flex-wrap:wrap;gap:.35rem}
+  .reg .tag{white-space:nowrap}
+  .reg .stats{grid-area:stats;display:flex;gap:.7rem;justify-self:end;white-space:nowrap}
   .reg .km{font-family:var(--mono);font-size:.68rem;letter-spacing:.04em;color:#7a7d6c;white-space:nowrap}
   a.reg{text-decoration:none;color:inherit}
   a.reg:hover{border-color:var(--spruce-lift)}
@@ -108,7 +103,10 @@
      after it. A region can have either, both or neither. */
   .reg.has-curator{background:var(--spruce-lift);color:var(--paper);border-color:var(--spruce-lift)}
   .reg.has-curator .km{color:rgba(239,230,212,.7)}
-  .reg.has-curator .tag{background:rgba(239,230,212,.22)}
+  {# On the dark curated card the plain tier tag read as grey on grey
+     (owner 2026-09-08: "onboarded hardly readable"): full paper text and a
+     hairline outline, the same treatment as the "no curator" tag. #}
+  .reg.has-curator .tag{background:rgba(239,230,212,.08);color:var(--paper);box-shadow:inset 0 0 0 1px rgba(239,230,212,.5)}
   /* Solid, not a 22%-paper wash on spruce: the badge naming the thing the card
      is coloured for must not be the least readable thing on it. */
   .reg.has-curator .tag-curated{background:var(--paper);color:var(--spruce)}
@@ -154,6 +152,86 @@
 </div></div>
 
 <div class="rwrap">
+  {% if countries is empty %}
+    <div class="empty">{% trans %}regions.no_regions{% endtrans %}</div>
+  {% endif %}
+
+  {# Two views of one list (owner 2026-09-08): a globe where a country is
+     picked by clicking it, and the list; the flat map went the same day. The map is loaded only when asked for,
+     so the page does not carry MapLibre for readers who never open it. #}
+  <div class="viewrow" id="regions-viewrow" hidden>
+    <button type="button" class="chip" data-view="globe" aria-pressed="false">{% trans %}regions.view_globe{% endtrans %}</button>
+    <button type="button" class="chip on" data-view="list" aria-pressed="true">{% trans %}regions.view_list{% endtrans %}</button>
+    <span class="vhint">{% trans %}regions.map_hint{% endtrans %}</span>
+  </div>
+  <div id="regions-map" class="globe" hidden data-zoom="2.8"
+       data-outlines="{{ path('regions_outlines') }}"
+       data-maplibre-js="{{ asset('lib/maplibre-gl-5.24.0.js') }}"
+       data-maplibre-css="{{ asset('lib/maplibre-gl-5.24.0.css') }}"
+       data-style="https://tiles.openfreemap.org/styles/liberty" data-tiles="https://tiles.openfreemap.org/planet"{% if home %} data-home="{{ home[0] }},{{ home[1] }}"{% endif %}></div>
+
+  {# One grid per continent: the countries, and after each one its regions
+     panel, which the script shows one at a time across the full row (the
+     noscript rule above shows them all, in place). #}
+  {% set continent = '' %}
+  {% for country in countries %}
+    {% if country.continentCode != continent %}
+      {% if continent != '' %}</div>{% endif %}
+      {% set continent = country.continentCode %}
+      <h2 class="cont">{{ ('continent.' ~ continent|lower)|trans }}</h2>
+      <div class="cgrid">
+    {% endif %}
+    <div class="country" id="country-{{ country.code }}">
+      <div class="ch">
+        <img src="{{ asset(country.flag) }}" alt="" width="20" height="15">
+        <h3>{{ country.name }}</h3><span class="cc">{{ country.code }}</span>
+        {# An icon, not words (owner 2026-09-08: "the text getting too much
+           attention" nineteen times over): a person with a plus, quiet grey,
+           orange on hover, its name in title and aria-label. #}
+        <a class="join-cta" href="{{ path('join_country', {cc: country.code}) }}" title="{{ 'regions.apply'|trans|e('html_attr') }}" aria-label="{{ 'regions.apply'|trans|e('html_attr') }}">
+          <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="8" cy="6.5" r="3.2"/>
+            <path d="M2.5 17c.6-3.4 2.8-5 5.5-5s4.9 1.6 5.5 5"/>
+            <path d="M15.5 6.5v5M13 9h5"/>
+          </svg>
+        </a>
+      </div>
+      <button type="button" class="regtab" data-country="{{ country.code }}" aria-expanded="false" aria-controls="regions-{{ country.code }}">{{ (country.regions|length == 1 ? 'regions.count_region' : 'regions.count_regions')|trans({'%n%': country.regions|length}) }}</button>
+    </div>
+      <div class="regions" id="regions-{{ country.code }}">
+        <div class="rhead"><img src="{{ asset(country.flag) }}" alt="" width="20" height="15">{{ country.name }}</div>
+        {% for reg in country.regions %}
+          <a class="reg tier-{{ reg.tier }}{{ reg.stewardship == 'curated' ? ' has-curator' }}"
+             href="{{ path('region_detail', {slug: reg.slug}) }}">
+            <span>{{ ('region.' ~ reg.slug ~ '.label')|trans }}</span>
+            <span class="tags">
+            <span class="tag tag-tier">{{ ('regions.tier_' ~ reg.tier)|trans }}</span>
+            {# The stewardship badge is shown for EVERY region, including the
+               ones nobody looks after (owner, 2026-08-14). It used to be hidden
+               when there was no curator, so "nobody has taken this on" was
+               drawn as blank space next to regions that had a badge — which
+               reads as an oversight, not as a fact. It is the one status a
+               reader can act on, so it is the one that must not be silent. #}
+            <span class="tag tag-{{ reg.stewardship }}">{{ ('regions.status_' ~ reg.stewardship)|trans }}</span>
+            </span>
+            {# One number for what the community holds here, verified items
+               and routes together (owner 2026-09-08: "just count different
+               things into X community items"). #}
+            {% set community = reg.itemsVerified + reg.routes %}
+            <span class="stats">
+            {% if community > 0 %}<span class="km">{{ (community == 1 ? 'regions.community_one' : 'regions.community_many')|trans({'%n%': community}) }}</span>{% endif %}
+            {% if reg.areaKm2 %}<span class="km">{{ reg.areaKm2|cc_km2 }}</span>{% endif %}
+            </span>
+          </a>
+        {% endfor %}
+      </div>
+  {% endfor %}
+  {% if continent != '' %}</div>{% endif %}
+
+  {# The key comes AFTER the list (owner 2026-09-09: "the explanations must
+     go to the bottom"): the globe and the countries are what a reader came
+     for; the chips explain themselves once they have been seen. #}
+  <div class="legend-block">
   <div class="kicker" style="margin-bottom:.6rem">{% trans %}regions.legend_title{% endtrans %}</div>
   {# Two axes, and the legend says which is which — the single ladder this
      replaced described one flag ("the map opens in Curated view") with the
@@ -181,71 +259,7 @@
       <span><b>{% trans %}regions.status_none{% endtrans %}</b> {% trans %}regions.status_none_desc{% endtrans %}</span>
     </div>
   </div>
-
-  {% if countries is empty %}
-    <div class="empty">{% trans %}regions.no_regions{% endtrans %}</div>
-  {% endif %}
-
-  {# Two views of one list (owner 2026-09-08): a globe where a country is
-     picked by clicking it, and the list; the flat map went the same day. The map is loaded only when asked for,
-     so the page does not carry MapLibre for readers who never open it. #}
-  <div class="viewrow" id="regions-viewrow" hidden>
-    <button type="button" class="chip" data-view="globe" aria-pressed="false">{% trans %}regions.view_globe{% endtrans %}</button>
-    <button type="button" class="chip on" data-view="list" aria-pressed="true">{% trans %}regions.view_list{% endtrans %}</button>
-    <span class="vhint">{% trans %}regions.map_hint{% endtrans %}</span>
   </div>
-  <div id="regions-map" class="regions-map" hidden
-       data-outlines="{{ path('regions_outlines') }}"
-       data-maplibre-js="{{ asset('lib/maplibre-gl-5.24.0.js') }}"
-       data-maplibre-css="{{ asset('lib/maplibre-gl-5.24.0.css') }}"
-       data-style="https://tiles.openfreemap.org/styles/liberty"{% if home %} data-home="{{ home[0] }},{{ home[1] }}"{% endif %}></div>
-
-  {# One grid per continent: the countries, and after each one its regions
-     panel, which the script shows one at a time across the full row (the
-     noscript rule above shows them all, in place). #}
-  {% set continent = '' %}
-  {% for country in countries %}
-    {% if country.continentCode != continent %}
-      {% if continent != '' %}</div>{% endif %}
-      {% set continent = country.continentCode %}
-      <h2 class="cont">{{ ('continent.' ~ continent|lower)|trans }}</h2>
-      <div class="cgrid">
-    {% endif %}
-    <div class="country" id="country-{{ country.code }}">
-      <div class="ch">
-        <img src="{{ asset(country.flag) }}" alt="" width="20" height="15">
-        <h3>{{ country.name }}</h3><span class="cc">{{ country.code }}</span>
-        <a class="join-cta" href="{{ path('join_country', {cc: country.code}) }}">{% trans %}regions.apply{% endtrans %}</a>
-      </div>
-      <button type="button" class="regtab" data-country="{{ country.code }}" aria-expanded="false" aria-controls="regions-{{ country.code }}">{{ (country.regions|length == 1 ? 'regions.count_region' : 'regions.count_regions')|trans({'%n%': country.regions|length}) }}</button>
-    </div>
-      <div class="regions" id="regions-{{ country.code }}">
-        <div class="rhead"><img src="{{ asset(country.flag) }}" alt="" width="20" height="15">{{ country.name }}</div>
-        {% for reg in country.regions %}
-          <a class="reg tier-{{ reg.tier }}{{ reg.stewardship == 'curated' ? ' has-curator' }}"
-             href="{{ path('region_detail', {slug: reg.slug}) }}">
-            <span>{{ ('region.' ~ reg.slug ~ '.label')|trans }}</span>
-            <span class="tag tag-tier">{{ ('regions.tier_' ~ reg.tier)|trans }}</span>
-            {# The stewardship badge is shown for EVERY region, including the
-               ones nobody looks after (owner, 2026-08-14). It used to be hidden
-               when there was no curator, so "nobody has taken this on" was
-               drawn as blank space next to regions that had a badge — which
-               reads as an oversight, not as a fact. It is the one status a
-               reader can act on, so it is the one that must not be silent. #}
-            <span class="tag tag-{{ reg.stewardship }}">{{ ('regions.status_' ~ reg.stewardship)|trans }}</span>
-            {# One number for what the community holds here, verified items
-               and routes together (owner 2026-09-08: "just count different
-               things into X community items"). #}
-            {% set community = reg.itemsVerified + reg.routes %}
-            <span class="stats">
-            {% if community > 0 %}<span class="km">{{ (community == 1 ? 'regions.community_one' : 'regions.community_many')|trans({'%n%': community}) }}</span>{% endif %}
-            {% if reg.areaKm2 %}<span class="km">{{ reg.areaKm2|cc_km2 }}</span>{% endif %}
-            </span>
-          </a>
-        {% endfor %}
-      </div>
-  {% endfor %}
-  {% if continent != '' %}</div>{% endif %}
 
   <div id="your-country" class="yourc">
     <h2>{% trans %}regions.your_country_h{% endtrans %}</h2>
@@ -267,5 +281,6 @@
 {# Behaviour in a file, so this page needs no CSP nonce
    (docs/specs/page-caching.md §3.2). #}
 <script src="{{ asset('pages/regions-typeahead.js') }}" defer></script>
+<script src="{{ asset('pages/country-globe.js') }}" defer></script>
 <script src="{{ asset('pages/regions-map.js') }}" defer></script>
 {% endblock %}

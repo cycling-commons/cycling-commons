@@ -463,6 +463,16 @@ coverage:
   gaps_cta_pre: 'Estos huecos los cierran personas, no algoritmos:'
   gaps_cta_link: 'mira quién ha estado aportando →'
   gaps_cta_post: ''
+  view_table: 'Tabla'
+  view_globe: 'Globo'
+  globe_hint: 'Arrastra para girar el globo. Pulsa un país para ver sus cifras.'
+  globe_pick: 'Pulsa un país en el globo. Sus cifras aparecen aquí.'
+  legend_density: 'Elementos de referencia por %u%'
+  legend_range: '%a% a %b%'
+  legend_none: 'nada todavía'
+  globe_regions_link: 'Ver sus regiones →'
+  globe_noscript: 'El globo necesita JavaScript.'
+  globe_noscript_link: 'La tabla muestra las mismas cifras.'
 
 # Créditos — a quién y a qué se debe el Commons. Los nombres de proyecto, las
 # URL y los identificadores de licencia viven en la plantilla; aquí solo se

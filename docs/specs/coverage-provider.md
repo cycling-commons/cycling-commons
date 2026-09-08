@@ -936,8 +936,9 @@ CSP nonce, and a nonce is the one thing a shared cache cannot hold
 ([page-caching.md §3.2](page-caching.md)). As two URLs both orders are cached
 and both work with no JavaScript. `CoverageStatsProvider::countries()` takes the
 sort key, the controller validates it against the two constants and falls back
-to density rather than 404ing, and whichever metric is the active sort is
-rendered as the first of the cell's two lines, styled by position), and
+to density rather than 404ing, the cell is two lines, the bar with the
+absolute total at its end and the density under it, and whichever metric is
+the active sort is ink while the other is grey, owner 2026-09-08), and
 "biggest gaps" cards computed as the three catalog
 categories with the fewest publicly-served items. Because `coverage_poi` is
 pipeline-owned DDL (§2) and absent on a fresh contributor stack, every read
@@ -969,6 +970,31 @@ unrecognised source falls into `derived` rather than vanishing, so a new
 importer shows up as an unexplained number instead of silently shrinking the
 total. Zero buckets are dropped, so an OSM-only country shows one word rather
 than four with three noughts.
+
+**A second view, the globe** (owner 2026-09-08: "a cool way to visualize the
+coverage besides a list"). `/coverage?view=globe` shows the same countries on
+the globe the regions page uses (`assets/pages/country-globe.js`, one shape per
+country from `/regions/outlines.json`), each filled by a **density class**:
+`CoverageStatsProvider::densityClasses()` ranks the countries with any
+reference items by POIs per km² and cuts them into `DENSITY_STEPS` (five)
+equal-count steps, one hue from pale to spruce. Equal-count and not
+equal-width, because density spans three orders of magnitude and a linear
+scale would paint every country but one the palest step. A country with
+nothing on file is class 0, a wash of ink outside the ramp, so the legend never
+claims a range that starts at nothing; ties rank by country code so a cached
+page and its next render agree. The controller computes the classes only for
+the globe view. The legend under the globe prints each step's density range
+from the same bounds the paint uses, and the five colours are one Twig list
+handed to the script on `data-ramp`, so paint and legend cannot drift. Hover
+names the country and its density; a click shows a card with the figures of
+that country's table row (regions, density and total, catalog items with
+provenance, routes) and a link to its regions. Every card is rendered by Twig
+and waits hidden, so the script holds no string and the view needs no nonce.
+The two views are two URLs with two chip links, for the same reason the sort
+is ([page-caching.md §3.2](page-caching.md)); an unknown `view` falls back to
+the table. The ramp (`#84AC98 #63937C #46785F #2D5A44 #1C3A2A` on the paper
+surface) passed the ordinal checks, lightness monotone and a 2:1 light-end
+contrast, on 2026-09-08.
 
 ## 10. Relationship to other documents
 
@@ -1088,3 +1114,23 @@ verifying before a worldwide flip under the old clustered design
   above. If it bloats tiles, dedup the tokens in a post-tile pass (needs an MVT
   round-trip lib the pipeline does not yet carry) rather than truncating (which
   would mis-hide regions).
+
+## The globe is plain (2026-09-08)
+
+Both globes come from `assets/pages/country-globe.js`: a one-colour land,
+a sea, admin-2 borders and nothing else (owner: "more simple, rest of the
+world one colour"). Raising countries by item count was tried and reverted
+the same night ("too much"). The density paint stays as the coverage
+globe's colour.
+
+## Desktop opens on the globe (2026-09-08)
+
+`/coverage` without a `view` is the table; on a screen 900px or wider a
+head script, `assets/pages/desktop-default-view.js`, replaces the URL with
+`?view=globe` before paint (owner: "should open on the globe page if not
+mobile"). A phone keeps the table and never loads MapLibre; a URL that names
+its view is left alone, which is why the Table chip links `?view=table`
+and not the bare URL (owner: clicking Table "again loads the globe"). The same script is generic (data-param, data-value,
+data-min) and `/regions` does the same in its own script by clicking the
+Globe chip.
+

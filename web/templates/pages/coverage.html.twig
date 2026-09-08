@@ -13,13 +13,13 @@
      step above the reference-places number beside them, which had been
      given .72rem inline to escape exactly that (owner, 2026-08-29). */
   td.mono,td .mono{font-size:.72rem}
-  td .bar{width:120px}
+  td .bar{width:120px;flex:none}
+  td .barrow{display:flex;align-items:center;gap:.6rem}
   .dens{display:block;font-family:var(--mono);font-size:.72rem;letter-spacing:.04em;color:#7a7d6c;margin-top:.15rem}
-  /* The two metric lines style by POSITION, not by metric: whichever line is
-     first reads as the sorted-by figure, the other steps back to grey. The
-     sort script only reorders DOM nodes and never touches classes. */
-  td .mval{display:block;font-family:var(--mono);font-size:.72rem;letter-spacing:.04em}
-  td .mval + .mval{color:#7a7d6c;margin-top:.15rem}
+  /* The sorted-by figure is ink, the other grey, whichever line it sits on. */
+  td .mval{display:block;font-family:var(--mono);font-size:.72rem;letter-spacing:.04em;color:#7a7d6c}
+  td .mval.on{color:inherit}
+  td .barrow + .mval{margin-top:.15rem}
   .sorttog{margin-left:.4rem;white-space:nowrap}
   /* Links, not buttons, since the order is a URL now (page-caching.md §3.2).
      Same look; text-decoration is the only thing an anchor adds. */
@@ -28,6 +28,39 @@
   td .flag{width:1.1rem;height:.8rem;vertical-align:-1px;margin-right:.45rem;border-radius:2px}
   .tnote{font-size:.90rem;color:#4a4d40;max-width:72ch;margin-top:1.4rem;line-height:1.55;padding-left:1.1rem}
   .tnote li{margin:.3rem 0}
+  .viewrow{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;margin:0 0 1rem}
+  /* Links, not buttons: the view is a URL (page-caching.md §3.2), and the
+     active one is ink on paper the way the regions page draws its switch. */
+  .viewrow a.chip{text-decoration:none;color:#595c4d;background:transparent}
+  .viewrow a.chip.on{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+  .viewrow .vhint{font-size:.85rem;color:#6d7060;margin-left:.4rem}
+  /* The globe and, beside it, the one card for the country under the
+     pointer's last click; stacked below 860px where a side card would be
+     two words wide. */
+  .cglobe{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(17rem,1fr);gap:1.6rem;align-items:start}
+  @media(max-width:860px){.cglobe{grid-template-columns:1fr}}
+  .ccard-slot{position:sticky;top:5rem}
+  .ccard-empty{font-size:.92rem;color:#6d7060;line-height:1.55;padding:1.2rem 0}
+  .ccard{background:var(--paper-deep);border:1px solid rgba(20,22,14,.14);border-radius:10px;padding:1.1rem 1.25rem;animation:ccard-in .18s ease-out}
+  @keyframes ccard-in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+  @media(prefers-reduced-motion:reduce){.ccard{animation:none}}
+  .ccard .ch{display:flex;align-items:center;gap:.5rem;margin-bottom:.8rem}
+  .ccard .ch b{font-family:var(--serif);font-weight:600;font-size:1.25rem}
+  .ccard .ch .flag{width:1.3rem;height:1rem;border-radius:2px}
+  .ccard dl{display:grid;grid-template-columns:auto 1fr;gap:.45rem .9rem;margin:0;font-size:.9rem}
+  .ccard dt{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:#595c4d;padding-top:.15rem}
+  .ccard dd{margin:0}
+  .ccard dd .mono{font-size:.8rem}
+  .ccard dd .dens{margin-top:.1rem}
+  .ccard .more{display:inline-block;margin-top:1rem;font-size:.88rem;color:var(--trail);text-decoration:underline;text-underline-offset:3px;text-decoration-color:rgba(184,90,53,.45)}
+  .ccard .more:hover{color:var(--clay);text-decoration-color:currentColor}
+  /* Five steps of one hue, light to dark, and a sixth swatch outside the
+     ramp for a country with nothing on file. One row; it wraps on a phone. */
+  .clegend{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem 1.1rem;margin:1rem 0 0;font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;color:#595c4d}
+  .clegend .lh{letter-spacing:.12em;text-transform:uppercase;color:var(--clay)}
+  .clegend .lstep{display:inline-flex;align-items:center;gap:.4rem;white-space:nowrap}
+  .clegend i{width:1.1rem;height:.75rem;border-radius:2px;border:1px solid rgba(20,22,14,.18)}
+  .cglobe .globe{margin:0;border:1px solid rgba(20,22,14,.14);border-radius:10px;overflow:hidden}
   .gaps{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem;margin-top:1.6rem}
 </style>
 {% endblock %}
@@ -45,8 +78,71 @@
   </div>
 </div></div>
 
+{# Five steps of one green, pale to spruce, on the paper surface; validated
+   light to dark and against the surface (dataviz ordinal check, 2026-09-08).
+   The legend and the paint (data-ramp) read this one list. #}
+{% set ramp = ['#84AC98', '#63937C', '#46785F', '#2D5A44', '#1C3A2A'] %}
+{% set none_fill = 'rgba(20,22,14,0.10)' %}
 <section class="pad"><div class="wrap">
   <div class="kicker">{% trans %}coverage.table_kicker{% endtrans %}</div>
+  {# Two views, two URLs (owner 2026-09-08: "2 different pages with chips to
+     choose one or the other"): the chips are links for the same reason the
+     sort is, page-caching.md §3.2. The globe page loads MapLibre from a
+     file; the table page loads nothing. #}
+  <nav class="viewrow" aria-label="{{ 'coverage.table_kicker'|trans|e('html_attr') }}">
+    {# Globe first, then the table, the same order as /regions (owner 2026-09-08). #}
+    <a class="chip{{ view == 'globe' ? ' on' }}" href="{{ path('coverage', {view: 'globe'}) }}"{% if view == 'globe' %} aria-current="page"{% endif %}>{% trans %}coverage.view_globe{% endtrans %}</a>
+    {# ?view=table, not the bare URL: the bare URL is the one a wide screen
+       forwards to the globe, so a click on Table must name its view. #}
+    <a class="chip{{ view == 'table' ? ' on' }}" href="{{ path('coverage', {view: 'table'}) }}"{% if view == 'table' %} aria-current="page"{% endif %}>{% trans %}coverage.view_table{% endtrans %}</a>
+    {% if view == 'globe' %}<span class="vhint">{% trans %}coverage.globe_hint{% endtrans %}</span>{% endif %}
+  </nav>
+{% if view == 'globe' %}
+  <div class="cglobe">
+    <div id="coverage-globe" class="globe loading"
+         data-outlines="{{ path('regions_outlines') }}"
+         data-maplibre-js="{{ asset('lib/maplibre-gl-5.24.0.js') }}"
+         data-maplibre-css="{{ asset('lib/maplibre-gl-5.24.0.css') }}"
+         data-style="https://tiles.openfreemap.org/styles/liberty" data-tiles="https://tiles.openfreemap.org/planet"
+         data-ramp="{{ ramp|join(',') }}" data-none="{{ none_fill }}"></div>
+    {# One card per country, rendered here so every word is Twig's; the
+       script shows the one that was clicked. The card holds the same figures
+       as the country's table row, so the two views never disagree. #}
+    <aside class="ccard-slot" aria-live="polite">
+      <p class="ccard-empty" id="ccard-empty">{% trans %}coverage.globe_pick{% endtrans %}</p>
+      {% for c in countries %}
+      {% set _dens = 'coverage.per_km2'|trans({'%n%': c.poisPerKm2 < 0.01 and c.poisPerKm2 > 0 ? '<0.01' : c.poisPerKm2|cc_per_km2, '%u%': cc_area_suffix()}) %}
+      <div class="ccard" id="ccard-{{ c.code }}" data-code="{{ c.code }}" data-cls="{{ density_classes.byCode[c.code]|default(0) }}"
+           data-tip="{{ (c.name ~ ' · ' ~ _dens)|e('html_attr') }}" hidden>
+        <div class="ch"><img class="flag" src="{{ asset(c.flag) }}" alt=""><b>{{ c.name }}</b></div>
+        <dl>
+          <dt>{% trans %}coverage.th_regions{% endtrans %}</dt><dd class="mono">{{ c.regions }}</dd>
+          <dt>{% trans %}coverage.th_pois{% endtrans %}</dt>
+          <dd><span class="mono">{{ _dens }}</span><span class="dens">{{ c.coveragePois|number_format(0, '.', ',') }} {% trans %}coverage.sort_total{% endtrans %}</span></dd>
+          <dt>{% trans %}coverage.th_items{% endtrans %}</dt>
+          <dd><span class="mono">{{ c.items|number_format(0, '.', ',') }}</span> <span style="color:#595c4d">· {{ 'coverage.items_verified'|trans({'%count%': c.itemsVerified}) }}</span>
+            {% if c.sources is not empty %}<span class="dens">
+              {%- for s in c.sources -%}
+                {{ s.count|number_format(0, '.', ',') }} {{ ('coverage.src_' ~ s.key)|trans }}{{ not loop.last ? ' · ' }}
+              {%- endfor -%}
+            </span>{% endif %}
+          </dd>
+          <dt>{% trans %}coverage.th_routes{% endtrans %}</dt><dd class="mono">{{ c.routes }}</dd>
+        </dl>
+        <a class="more" href="{{ path('regions') }}#country-{{ c.code }}">{% trans %}coverage.globe_regions_link{% endtrans %}</a>
+      </div>
+      {% endfor %}
+    </aside>
+  </div>
+  <div class="clegend">
+    <span class="lh">{{ 'coverage.legend_density'|trans({'%u%': cc_area_suffix()}) }}</span>
+    {% for b in density_classes.bounds %}
+    <span class="lstep"><i style="background:{{ ramp[loop.index0] }}"></i>{{ 'coverage.legend_range'|trans({'%a%': b.min|cc_per_km2, '%b%': b.max|cc_per_km2}) }}</span>
+    {% endfor %}
+    <span class="lstep"><i style="background:{{ none_fill }}"></i>{% trans %}coverage.legend_none{% endtrans %}</span>
+  </div>
+  <noscript><p class="tnote" style="padding-left:0">{% trans %}coverage.globe_noscript{% endtrans %} <a href="{{ path('coverage') }}">{% trans %}coverage.globe_noscript_link{% endtrans %}</a></p></noscript>
+{% else %}
   <table>
     <tr>
       <th>{% trans %}coverage.th_country{% endtrans %}</th>
@@ -76,14 +172,13 @@
       <td class="mono">{{ c.regions }}</td>
       {# The bar has always meant density and never said so. Without the number
          the column could only claim "Germany is longer than Luxembourg". #}
+      {# Two lines (owner 2026-09-08: "put the amount behind the bar so we
+         get 1 line"): the bar with the total at its end, and the density
+         under it. The metric being sorted on is ink, the other grey. #}
       <td>
-        <div class="bar"><span style="width:{{ c.share }}%"></span></div>
-        {# The metric being sorted on reads first: it is styled by position, so
-           the order of these two lines is the styling. The script used to move
-           them; the server does it now. #}
-        {% set _density %}<span class="mval" data-m="density">{{ 'coverage.per_km2'|trans({'%n%': c.poisPerKm2 < 0.01 and c.poisPerKm2 > 0 ? '<0.01' : c.poisPerKm2|cc_per_km2, '%u%': cc_area_suffix()}) }}</span>{% endset %}
-        {% set _total %}<span class="mval" data-m="total">{{ c.coveragePois|number_format(0, '.', ',') }}</span>{% endset %}
-        {{ (sort == sort_total ? _total ~ _density : _density ~ _total)|raw }}
+        <div class="barrow"><div class="bar"><span style="width:{{ c.share }}%"></span></div>
+          <span class="mval{{ sort == sort_total ? ' on' }}" data-m="total">{{ c.coveragePois|number_format(0, '.', ',') }}</span></div>
+        <span class="mval{{ sort == sort_density ? ' on' }}" data-m="density">{{ 'coverage.per_km2'|trans({'%n%': c.poisPerKm2 < 0.01 and c.poisPerKm2 > 0 ? '<0.01' : c.poisPerKm2|cc_per_km2, '%u%': cc_area_suffix()}) }}</span>
       </td>
       {# Where the catalog rows came from. This is the column with a real mix:
          the reference layer is OSM top to bottom, but the catalog already holds
@@ -113,6 +208,7 @@
     <li>{{ 'coverage.terms_bars'|trans({'%u%': cc_area_suffix()})|rich }}</li>
     <li>{% trans %}coverage.terms_catalog{% endtrans %}</li>
   </ul>
+{% endif %}
 </div></section>
 
 <section class="pad" style="background:var(--paper-deep)"><div class="wrap">
@@ -124,6 +220,20 @@
   </div>
   <p style="margin-top:1.6rem;font-size:.95rem;color:#4a4d40">{% trans %}coverage.gaps_cta_pre{% endtrans %} <a href="{{ path('contributors') }}">{% trans %}coverage.gaps_cta_link{% endtrans %}</a>{% trans %}coverage.gaps_cta_post{% endtrans %}</p>
 </div></section>
+{% endblock %}
+{% block head_extra %}
+{# The table is the URL without a view; a wide screen goes on to the globe
+   before paint (owner 2026-09-08: "should open on the globe page if not
+   mobile"). A file, not inline, so no nonce; a phone keeps the table. #}
+{% if view != 'globe' %}<script src="{{ asset('pages/desktop-default-view.js') }}" data-param="view" data-value="globe" data-min="900"></script>{% endif %}
+{% endblock %}
+{% block body_scripts %}
+{# Files, not inline, so the page needs no CSP nonce (page-caching.md §3.2);
+   the table carries only the head redirect above. #}
+{% if view == 'globe' %}
+<script src="{{ asset('pages/country-globe.js') }}" defer></script>
+<script src="{{ asset('pages/coverage-globe.js') }}" defer></script>
+{% endif %}
 {% endblock %}
 
 

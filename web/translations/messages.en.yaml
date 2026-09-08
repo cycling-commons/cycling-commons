@@ -463,6 +463,16 @@ coverage:
   gaps_cta_pre: 'These gaps get closed by people, not algorithms:'
   gaps_cta_link: 'see who''s been contributing →'
   gaps_cta_post: ''
+  view_table: 'Table'
+  view_globe: 'Globe'
+  globe_hint: 'Drag to turn the globe. Click a country for its numbers.'
+  globe_pick: 'Click a country on the globe. Its numbers show here.'
+  legend_density: 'Reference items per %u%'
+  legend_range: '%a% to %b%'
+  legend_none: 'none on file yet'
+  globe_regions_link: 'See its regions →'
+  globe_noscript: 'The globe needs JavaScript.'
+  globe_noscript_link: 'The table shows the same numbers.'
 
 # Credits — who and what the Commons builds on. Project names, URLs and
 # licence identifiers live in the template; only the prose is translated.

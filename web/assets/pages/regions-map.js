@@ -6,10 +6,8 @@
    map"). MapLibre and the shapes are fetched only when the reader asks for
    the globe, from the same vendored file the map page uses. One shape per
    country, not its regions (owner 2026-09-08); a click opens that
-   country's block in the list below and scrolls to it. A globe, MapLibre's
-   globe projection, and only a globe: the flat map was a chip for an hour
-   (owner 2026-09-08: "remove the map option"). A spinner shows from the
-   click until the globe's first idle frame.
+   country's block in the list below and scrolls to it. The globe itself is
+   country-globe.js, shared with /coverage.
 
    Also the tab strip (owner 2026-09-08: "regions must open full width as
    some sort of tab"): the count chip under a country is a tab, its regions
@@ -68,7 +66,7 @@
 
   var row = document.getElementById('regions-viewrow');
   var box = document.getElementById('regions-map');
-  if (!row || !box) { return; }
+  if (!row || !box || typeof window.ccCountryGlobe !== 'function') { return; }
   row.hidden = false;   // the switch exists only where the script runs
 
   var names = {};
@@ -77,92 +75,31 @@
     JSON.parse(src.textContent).forEach(function (c) { names[c.code] = c.name; });
   } catch (e) { /* names are a courtesy; codes still work */ }
 
-  var map = null, loading = null;
-  /* The globe sits closer, so it fills the box the way the owner's
-     screenshot had it, turned to a signed-in rider's base when they have one
-     (data-home, owner 2026-09-08); the flat map shows the whole world. */
-  function frame() {
-    var home = (box.getAttribute('data-home') || '').split(',').map(Number);
-    var centre = home.length === 2 && isFinite(home[0]) && isFinite(home[1]) ? home : [10, 42];
-    return { center: centre, zoom: 2.2 };
-  }
-  /* Hidden, spinner showing, until the first idle frame as a globe, so the
-     reader never sees the flat map jump into the globe. */
-  function settle() {
-    box.classList.add('loading');
-    map.once('idle', function () { box.classList.remove('loading'); });
-  }
-  function loadOnce(src, css) {
-    if (loading) { return loading; }
-    loading = new Promise(function (resolve, reject) {
-      var link = document.createElement('link');
-      link.rel = 'stylesheet'; link.href = css; document.head.appendChild(link);
-      var s = document.createElement('script');
-      s.src = src; s.onload = resolve; s.onerror = reject; document.head.appendChild(s);
-    });
-    return loading;
+  /* The globe itself lives in country-globe.js, shared with /coverage; this
+     page only says what a hover shows and what a click does. Built once, on
+     the first press of the chip; the list chip hides the box again. */
+  var built = null;
+  function showGlobe() {
+    if (built) { box.hidden = false; return; }
+    built = window.ccCountryGlobe(box, {
+      tip: function (cc) { return names[cc] || cc; },
+      onPick: function (cc) { history.replaceState(null, '', '#country-' + cc); openCountry(cc); }
+    }).catch(function () { built = null; });
   }
 
-  function buildMap() {
-    if (map) { return; }
-    /* No zoom at all (owner 2026-09-08: "without a zoom option"): no
-       buttons, no wheel, no pinch. The map is a picker; drag turns it. */
-    map = new maplibregl.Map({
-      container: box, style: box.getAttribute('data-style'),
-      center: [10, 25], zoom: 1.3, attributionControl: { compact: true },
-      scrollZoom: false, doubleClickZoom: false, touchZoomRotate: false, keyboard: false, boxZoom: false
-    });
-    map.on('load', function () {
-      settle();
-      map.setProjection({ type: 'globe' });
-      map.jumpTo(frame());
-      map.addSource('regions', { type: 'geojson', data: box.getAttribute('data-outlines'), generateId: true });
-      map.addLayer({ id: 'regions-fill', type: 'fill', source: 'regions',
-        paint: { 'fill-color': '#1C3A2A', 'fill-opacity': ['case', ['boolean', ['feature-state', 'hover'], false], 0.55, 0.28] } });
-      map.addLayer({ id: 'regions-line', type: 'line', source: 'regions',
-        paint: { 'line-color': '#1C3A2A', 'line-width': 1.2, 'line-opacity': 0.8 } });
-
-      var hovered = null;
-      var tip = document.createElement('div');
-      tip.className = 'regions-tip'; tip.hidden = true; box.appendChild(tip);
-      map.on('mousemove', 'regions-fill', function (e) {
-        var f = e.features && e.features[0]; if (!f) { return; }
-        map.getCanvas().style.cursor = 'pointer';
-        if (hovered !== null && hovered !== f.id) { map.setFeatureState({ source: 'regions', id: hovered }, { hover: false }); }
-        hovered = f.id; map.setFeatureState({ source: 'regions', id: hovered }, { hover: true });
-        var cc = f.properties.cc;
-        tip.textContent = (names[cc] || cc);
-        tip.hidden = false;
-        tip.style.left = (e.point.x + 12) + 'px'; tip.style.top = (e.point.y + 12) + 'px';
-      });
-      map.on('mouseleave', 'regions-fill', function () {
-        map.getCanvas().style.cursor = '';
-        if (hovered !== null) { map.setFeatureState({ source: 'regions', id: hovered }, { hover: false }); hovered = null; }
-        tip.hidden = true;
-      });
-      map.on('click', 'regions-fill', function (e) {
-        var f = e.features && e.features[0]; if (!f) { return; }
-        var cc = String(f.properties.cc || '').toUpperCase();
-        if (/^[A-Z]{2}$/.test(cc)) { history.replaceState(null, '', '#country-' + cc); openCountry(cc); }
-      });
-    });
+  /* A wide screen opens on the globe (owner 2026-09-08: "should open on the
+     globe page if not mobile"); a phone keeps the list, MapLibre unloaded. */
+  var globeChip = row.querySelector('.chip[data-view="globe"]');
+  if (globeChip && window.matchMedia && window.matchMedia('(min-width: 900px)').matches) {
+    setTimeout(function () { globeChip.click(); }, 0);
   }
-
   row.querySelectorAll('.chip[data-view]').forEach(function (chip) {
     chip.addEventListener('click', function () {
       var view = chip.getAttribute('data-view');
       row.querySelectorAll('.chip[data-view]').forEach(function (c) {
         var on = c === chip; c.classList.toggle('on', on); c.setAttribute('aria-pressed', on ? 'true' : 'false');
       });
-      if (view === 'globe') {
-        box.hidden = false;
-        box.classList.add('loading');
-        loadOnce(box.getAttribute('data-maplibre-js'), box.getAttribute('data-maplibre-css'))
-          .then(buildMap)
-          .catch(function () { box.hidden = true; box.classList.remove('loading'); });
-      } else {
-        box.hidden = true;
-      }
+      if (view === 'globe') { showGlobe(); } else { box.hidden = true; }
     });
   });
 }());

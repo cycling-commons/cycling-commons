@@ -91,6 +91,48 @@ final class ContentPagesTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertSelectorExists('footer.foot');
         self::assertSelectorTextContains('h1', 'How complete is the map');
+        // The table view: a table, the two view chips as links (Globe first,
+        // and Table naming its view, since the bare URL forwards a wide
+        // screen to the globe), no globe and no globe script.
+        self::assertSelectorExists('table');
+        self::assertSelectorExists('.viewrow a.chip[aria-current="page"][href$="/coverage?view=table"]');
+        self::assertSelectorExists('.viewrow a.chip[href$="/coverage?view=globe"]');
+        self::assertSelectorExists('script[src*="pages/desktop-default-view"]');
+        self::assertSelectorNotExists('#coverage-globe');
+        self::assertStringNotContainsString('pages/coverage-globe', (string) $client->getResponse()->getContent());
+    }
+
+    public function testCoverageGlobeRenders(): void
+    {
+        $client = static::createClient();
+        $client->request('GET', '/coverage?view=globe');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('h1', 'How complete is the map');
+        // The globe view: the box the script paints, the scripts as files, the
+        // Globe chip current, and no table. One card per country waits hidden
+        // with its density class for the paint.
+        self::assertSelectorExists('#coverage-globe[data-ramp][data-outlines]');
+        self::assertSelectorExists('script[src*="pages/country-globe"]');
+        self::assertSelectorExists('script[src*="pages/coverage-globe"]');
+        self::assertSelectorExists('.viewrow a.chip.on[aria-current="page"][href$="/coverage?view=globe"]');
+        self::assertSelectorNotExists('table');
+        self::assertSelectorExists('.clegend');
+        $html = (string) $client->getResponse()->getContent();
+        self::assertStringNotContainsString('nonce=', $html, 'the globe page must stay nonce-free so a shared cache can hold it');
+        if (preg_match_all('/class="ccard"[^>]*data-cls="(\d)"/', $html, $m) > 0) {
+            foreach ($m[1] as $cls) {
+                self::assertLessThanOrEqual(5, (int) $cls);
+            }
+        }
+    }
+
+    public function testCoverageUnknownViewFallsBackToTheTable(): void
+    {
+        $client = static::createClient();
+        $client->request('GET', '/coverage?view=pie');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('table');
+        self::assertSelectorNotExists('#coverage-globe');
     }
 
     public function testPagesRenders(): void
@@ -210,7 +252,7 @@ final class ContentPagesTest extends WebTestCase
     public function testNoPublicPagePrintsAStylesheetAsText(): void
     {
         $client = static::createClient();
-        foreach (['/', '/about', '/contact', '/report-bug', '/report/item/1', '/report', '/pages', '/contributors', '/roadmap', '/known-issues', '/privacy', '/terms', '/accessibility', '/credits', '/licenses', '/developers', '/regions', '/coverage', '/join', '/scout', '/map-key'] as $path) {
+        foreach (['/', '/about', '/contact', '/report-bug', '/report/item/1', '/report', '/pages', '/contributors', '/roadmap', '/known-issues', '/privacy', '/terms', '/accessibility', '/credits', '/licenses', '/developers', '/regions', '/coverage', '/coverage?view=globe', '/join', '/scout', '/map-key'] as $path) {
             $client->request('GET', $path);
             self::assertResponseIsSuccessful($path);
             // The whole document, not the body: a rule that escaped its
