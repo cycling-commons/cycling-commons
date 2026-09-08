@@ -994,7 +994,9 @@ two places, sized to their audience:
 
 - **The Key rail panel** (`data-panel="key"`, `#p-key`, title
   `map.rail_key`). The quick reference while riding: the source tiers
-  (baseline disc, water drop pair, community `?` pin, our pin, verified dot)
+  (baseline disc, water drop pair, community `?` pin, our pin, verified dot;
+  the dot wears a ring in the pin ink since 2026-09-08, a bare paper dot
+  vanished on the light basemap)
   and the state marks (stale ring, cluster bubble, look-here ring). LIVE
   MARKS ONLY: the panel never shows a mark the map does not draw. The
   pending-border row is moderation chrome, gated by `pending_is_curator`

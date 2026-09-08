@@ -123,6 +123,13 @@ a map goes out of date as often as it is wrong.
 `/report/{type}/{id}`, GET and POST, **outside the firewall**.
 `ContentReportController`, rendering `templates/support/report.html.twig`.
 
+Every "Report" link that leads here, on the map drawer, the lightbox, the town
+card, and the region, profile, photo and message pages, carries the same
+ringed exclamation badge (`.cc-bang` on the map, `.rep-bang` in atlas.css;
+owner 2026-09-08). The page's intro is three plain sentences and no promise
+about anonymity: the address is required by Article 16 for every ground but
+one, so the old "you do not have to tell us who you are" was wrong.
+
 Three properties it borrows from the photo report, which has been running since
 August and got them right:
 
@@ -241,8 +248,24 @@ region, like takedowns and the inbox: an Article 16 report has a clock on it and
 no geography, so a badge shared out by region would leave one waiting behind
 whichever curator is away.
 
-Unfiltered means **open**, the same default the bugs desk and the inbox use.
-Ordered legal-first, then newest.
+Unfiltered means **open**, the same default the bugs desk and the inbox use;
+open is the two waiting states together (`ReportStatus::open()`). Ordered
+urgent-first, then newest: the legal claims and abuse (`ReportGround::urgent()`,
+owner 2026-09-08: "both abuse and legal should float to the top").
+
+**The rows** (owner 2026-09-08): a name, one line of orange text with the
+ground, the status and the target ("IT IS ADVERTISING · OPEN · A PLACE ON THE
+MAP", a legal or abuse ground dark red, "no longer on the site" appended when
+the target resolves to nothing), and the date. Not the reporter's words: they
+wait on the detail page. The lede names the takedowns desk, with a link, as
+the place for requests to take a photo down.
+
+**The detail page** shows the target line with an "Open it" button (the
+resolver's link, `/map?item=<id>` for a place), the path the reporter stood
+on only when the target has no link of its own, the ground, the status, the
+date, and the author only when there is one. It does not show whether the
+reporter can be answered: the system handles that. The note's label carries
+the star; nothing explains it.
 
 **It decides about the report, never about the content.** Following
 `one-way-to-moderate`, the decide form has exactly three fields: `_token`,
@@ -251,18 +274,28 @@ surface that already moderates that thing, does the work there, and comes back
 to record what happened. `ContentReportTest::testTheDeskHasNoWayToTouchTheContent`
 asserts the field list, so a fourth field cannot be added by accident.
 
-Four statuses, and `open` is not choosable: it is where a report starts.
+Five statuses. The select lists all of them with the current one chosen, so
+a fresh report reads Open (owner 2026-09-08).
 
-| Status | Meaning | Reporter mailed | Author mailed |
-|---|---|---|---|
-| `open` | waiting | - | - |
-| `upheld` | we agreed, and acted | yes | yes, once, if there is one |
-| `rejected` | we looked, nothing wrong | yes | no |
-| `moot` | already gone before we got there | yes | no |
+| Status | Label | Meaning | Reporter mailed | Author mailed |
+|---|---|---|---|---|
+| `open` | Open | waiting | - | - |
+| `in_progress` | Being looked at | a curator is on it (2026-09-08) | - | - |
+| `upheld` | Upheld, and acted on | we agreed, and acted | yes | yes, once, if there is one |
+| `rejected` | Looked at, nothing wrong | we looked, nothing wrong | yes | no |
+| `moot` | Closed | nothing left to act on: already gone, or never there | yes | no |
 
-**The note is required for every outcome**, not only the ones that go against
+`open` and `in_progress` are the waiting states (`ReportStatus::open()`,
+`isDecided()` false): a curator moves between them without a note
+(`ContentReportService::takeUp()`), nothing is sent, `decided_at` stays
+empty and the Article 16 clock runs on; both count on the desk badge. Open
+again is how a curator hands a report back.
+
+**The note is required for every decision**, not only the ones that go against
 somebody. It is the text that lands in both emails, so "upheld" with an empty
-note produces a legally required message that explains nothing.
+note produces a legally required message that explains nothing. Its
+placeholder says so in one line: "Your reason, in plain words. The reporter
+reads it."
 
 **Telling the author is a checkbox, not automatic.** Only the curator knows
 whether the person the resolver found is really the person whose words were
