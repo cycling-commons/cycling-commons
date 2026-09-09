@@ -4,7 +4,7 @@
 
 A rider finishes a long day in the Ardennes, exports the GPX from their bike computer, and drops it
 into the map's ride-check box. The question is easy to say out loud: *which of the things on this
-map did I actually pass?* Our fountain is one of the answers — 80 metres off the track, somewhere
+map did I actually pass?* Our fountain is one of the answers, 80 metres off the track, somewhere
 around kilometre 23.
 
 Chapter 4 ([`spatial-questions.md`](spatial-questions.md)) already gave you everything you need to
@@ -18,29 +18,30 @@ That gap is what this chapter is about, and it is the one thing in this series y
 by reading code carefully. A query that compares your shape against every row in the table works
 perfectly on a freshly seeded development database with a few hundred catalog items. It works so
 well that nothing suggests there is a problem. Then the same code meets a table that has grown:
-this project's `coverage_poi` table holds **375,078 rows** across Belgium, the Netherlands and
-Germany, of which Germany alone contributed **317,887** (see
-`tools/divisions/README.md` for the onboarding that produced them), and the planet-wide target for that table is
-around 4.7 million points (`pipeline/coverage/load.py`, the sizing comment above `_SOURCE_DDL`). The
-query does not change. The answer does not change. What changes is how many rows it has to touch —
+this project's `coverage_poi` table holds around **two million rows** across nineteen countries at
+the time of writing (Germany alone contributes close to 400,000), and the planet-wide target for that
+table is around 4.7 million points (`pipeline/coverage/load.py`, the sizing comment above
+`_SOURCE_DDL`). The
+query does not change. The answer does not change. What changes is how many rows it has to touch,
 and for a query with no index to help it, that is the whole of the cost, because every row gets the
 same treatment. A freshly seeded development catalog is a few hundred rows. The planet-wide target
 is 4.7 million. That is four orders of magnitude more rows put through an identical statement.
 
-The thing that closes that gap is an index. Not the ordinary kind — the ordinary kind cannot help
-here at all — but a spatial one, and it works differently enough from a B-tree that it is worth
+The thing that closes that gap is an index. Not the ordinary kind (the ordinary kind cannot help
+here at all) but a spatial one, and it works differently enough from a B-tree that it is worth
 understanding rather than just switching on.
 
 This chapter ends with a real rewrite that happened in this repository, is recorded in the code's
-own comments, and took one query from 62 seconds to under a second without changing what it
-returns.
+own comment and in the design note that shipped it
+(`docs/specs/Dated/2026-07-14-town-search-and-ride-check-design.md`), and took one query from 62
+seconds to under a second without changing what it returns.
 
 ## Bounding boxes
 
 Start with the simplest idea in spatial indexing, because everything else is built on it.
 
 A **bounding box** is the smallest upright rectangle that completely contains a shape. "Upright"
-means its sides run parallel to the axes — it is never rotated to fit the shape more snugly. That
+means its sides run parallel to the axes, it is never rotated to fit the shape more snugly. That
 makes it four numbers and nothing else: the smallest x, the smallest y, the largest x, the largest
 y. For a shape stored in EPSG:4326 (chapter 1, [`coordinates.md`](coordinates.md)) those are degrees
 of longitude and latitude, which is fine, because a box is only ever compared with other boxes
@@ -60,7 +61,7 @@ Now the part that matters, and that people get backwards:
 
 > A bounding box test can prove that two shapes **cannot** touch. It can never prove that they do.
 
-If the boxes do not overlap, you are finished — the shapes are definitely apart, and you did not
+If the boxes do not overlap, you are finished: the shapes are definitely apart, and you did not
 have to look at either shape to know it. That is a proof, not a guess.
 
 If the boxes *do* overlap, you have learned nothing certain. Wallonia's bounding box contains a
@@ -74,13 +75,13 @@ be used to throw work away safely, and it means a box test alone can never be th
 ## What a GiST index actually does
 
 **GiST** stands for Generalised Search Tree. The generalisation is the point. An ordinary B-tree
-index — the one you get by default on an integer or a string column — works because those values
+index, the one you get by default on an integer or a string column, works because those values
 can be put in order. `4` is less than `7`; `"amsterdam"` sorts before `"berlin"`. A tree of sorted
 values lets the database jump straight to a range and ignore the rest.
 
 Geometry has no such order. Is a Belgian province "less than" a drinking fountain? The question is
-meaningless. PostGIS does ship a B-tree operator class for geometry — `btree_geometry_ops`, which is
-why `ORDER BY geom` and `GROUP BY geom` are legal statements at all — but the ordering it imposes is
+meaningless. PostGIS does ship a B-tree operator class for geometry, `btree_geometry_ops`, which is
+why `ORDER BY geom` and `GROUP BY geom` are legal statements at all, but the ordering it imposes is
 an arbitrary tie-break, there so that sorting and grouping have *something* to work with. It does
 not put nearby shapes near each other, and it cannot answer "overlaps" or "contains". So a B-tree
 over a geometry column is not a slow spatial index; for the questions in this chapter it is not a
@@ -94,7 +95,7 @@ pointer to the row.
 
 Searching is then a descent. You give the tree the box of the thing you are asking about, and at
 each node you compare boxes. If a node's box does not overlap your query box, nothing underneath it
-can possibly match — so you skip the node and every row beneath it, without ever touching them.
+can possibly match, so you skip the node and every row beneath it, without ever touching them.
 That is why the tree wins: it discards rows in whole branches instead of one at a time.
 
 What comes out of the descent is a **candidate set**: every row whose box overlaps yours. From the
@@ -112,29 +113,31 @@ Two phases, and they have different jobs:
    over. Slow per row, but there are now very few rows.
 
 PostGIS wires this into the functions themselves. Something like `ST_Intersects(a, b)` is defined
-as a bounding-box overlap test — written `a && b`, and that is the part the GiST index can answer —
+as a bounding-box overlap test, written `a && b`, and that is the part the GiST index can answer,
 combined with the exact internal test. You write one function call; you get both phases.
 
-<figure class="gis-fig"><svg viewBox="0 0 640 620" role="img" aria-labelledby="f8-t f8-d" xmlns="http://www.w3.org/2000/svg"><title id="f8-t">A bounding box around a region outline, and the four points it sorts differently</title><desc id="f8-d">An irregular, many-sided region outline is drawn as a filled shape. Around it, touching it on all four sides, is a dashed rectangle labelled "phase 1, the bounding box". The outline itself is labelled "phase 2, the real shape". Four numbered points are placed on the picture. Point 1 sits well outside the dashed rectangle: the index rejects it without ever looking at the region's real outline. Point 2 sits inside the rectangle but in a corner of it that the region's outline does not reach, so it passes the box test and is then dropped by the exact recheck against the real shape. Points 3 and 4 sit inside both the rectangle and the outline, and are the genuine answers. A key below repeats the three outcomes: point 1, outside the box, rejected free; point 2, in the box only, dropped at recheck; points 3 and 4, in both, the real answers.</desc><rect class="gis-muted" x="120" y="90" width="400" height="260" stroke-dasharray="7 6"/><path class="gis-ink gis-fill-paper" d="M 120 250 L 180 150 L 260 90 L 330 160 L 420 110 L 520 200 L 470 300 L 380 350 L 300 290 L 200 340 Z"/><line class="gis-muted" x1="238" y1="374" x2="252" y2="318"/><circle class="gis-ink gis-fill-glacier" cx="62" cy="140" r="11"/><circle class="gis-ink gis-fill-clay" cx="470" cy="130" r="11"/><circle class="gis-ink gis-fill-accent" cx="300" cy="200" r="11"/><circle class="gis-ink gis-fill-accent" cx="400" cy="250" r="11"/><text class="gis-label-sm gis-halo" x="62" y="118" text-anchor="middle">1</text><text class="gis-label-sm gis-halo" x="470" y="108" text-anchor="middle">2</text><text class="gis-label-sm gis-halo" x="300" y="178" text-anchor="middle">3</text><text class="gis-label-sm gis-halo" x="400" y="228" text-anchor="middle">4</text><text class="gis-label-sm gis-halo" x="120" y="74">phase 1 · the bounding box</text><text class="gis-label-sm gis-halo" x="120" y="386">phase 2 · the real shape</text><text x="20" y="446">Two phases, one question</text><circle class="gis-ink gis-fill-glacier" cx="34" cy="486" r="11"/><text class="gis-label-sm" x="58" y="494">1 — outside the box: rejected free</text><circle class="gis-ink gis-fill-clay" cx="34" cy="530" r="11"/><text class="gis-label-sm" x="58" y="538">2 — in the box only: dropped at recheck</text><circle class="gis-ink gis-fill-accent" cx="34" cy="574" r="11"/><text class="gis-label-sm" x="58" y="582">3, 4 — in both: the real answers</text></svg><figcaption>The dashed rectangle is the region's bounding box: the smallest upright rectangle that contains it. The index stores that rectangle, not the outline. Point 1 fails the box test, so it is discarded without the outline ever being read. Point 2 passes the box test and then fails the exact one — the box promised nothing, and this is the price of that. Points 3 and 4 pass both. The index's job is not to answer the question; it is to make the question much smaller before the expensive part starts.</figcaption></figure>
+<figure class="gis-fig"><svg viewBox="0 0 640 620" role="img" aria-labelledby="f8-t f8-d" xmlns="http://www.w3.org/2000/svg"><title id="f8-t">A bounding box around a region outline, and the four points it sorts differently</title><desc id="f8-d">An irregular, many-sided region outline is drawn as a filled shape. Around it, touching it on all four sides, is a dashed rectangle labelled "phase 1, the bounding box". The outline itself is labelled "phase 2, the real shape". Four numbered points are placed on the picture. Point 1 sits well outside the dashed rectangle: the index rejects it without ever looking at the region's real outline. Point 2 sits inside the rectangle but in a corner of it that the region's outline does not reach, so it passes the box test and is then dropped by the exact recheck against the real shape. Points 3 and 4 sit inside both the rectangle and the outline, and are the genuine answers. A key below repeats the three outcomes: point 1, outside the box, rejected free; point 2, in the box only, dropped at recheck; points 3 and 4, in both, the real answers.</desc><rect class="gis-muted" x="120" y="90" width="400" height="260" stroke-dasharray="7 6"/><path class="gis-ink gis-fill-paper" d="M 120 250 L 180 150 L 260 90 L 330 160 L 420 110 L 520 200 L 470 300 L 380 350 L 300 290 L 200 340 Z"/><line class="gis-muted" x1="238" y1="374" x2="252" y2="318"/><circle class="gis-ink gis-fill-glacier" cx="62" cy="140" r="11"/><circle class="gis-ink gis-fill-clay" cx="470" cy="130" r="11"/><circle class="gis-ink gis-fill-accent" cx="300" cy="200" r="11"/><circle class="gis-ink gis-fill-accent" cx="400" cy="250" r="11"/><text class="gis-label-sm gis-halo" x="62" y="118" text-anchor="middle">1</text><text class="gis-label-sm gis-halo" x="470" y="108" text-anchor="middle">2</text><text class="gis-label-sm gis-halo" x="300" y="178" text-anchor="middle">3</text><text class="gis-label-sm gis-halo" x="400" y="228" text-anchor="middle">4</text><text class="gis-label-sm gis-halo" x="120" y="74">phase 1 · the bounding box</text><text class="gis-label-sm gis-halo" x="120" y="386">phase 2 · the real shape</text><text x="20" y="446">Two phases, one question</text><circle class="gis-ink gis-fill-glacier" cx="34" cy="486" r="11"/><text class="gis-label-sm" x="58" y="494">1, outside the box: rejected free</text><circle class="gis-ink gis-fill-clay" cx="34" cy="530" r="11"/><text class="gis-label-sm" x="58" y="538">2, in the box only: dropped at recheck</text><circle class="gis-ink gis-fill-accent" cx="34" cy="574" r="11"/><text class="gis-label-sm" x="58" y="582">3, 4, in both: the real answers</text></svg><figcaption>The dashed rectangle is the region's bounding box: the smallest upright rectangle that contains it. The index stores that rectangle, not the outline. Point 1 fails the box test, so it is discarded without the outline ever being read. Point 2 passes the box test and then fails the exact one, the box promised nothing, and this is the price of that. Points 3 and 4 pass both. The index's job is not to answer the question; it is to make the question much smaller before the expensive part starts.</figcaption></figure>
 
 Every geometry column this project searches spatially carries one of these indexes, created in the
 same statement block that created its table:
 
-- `CREATE INDEX idx_item_geom ON item USING GIST (geom)` —
+- `CREATE INDEX idx_item_geom ON item USING GIST (geom)`,
   `web/migrations/Version20260703153611.php:27`
 - `idx_route_geom` on `recommended_route` and `idx_heat_geom` on `heat_point`, same file, lines 31
   and 33
-- `idx_region_geom` on `region` — `web/migrations/Version20260703152605.php:24`
-- `idx_submission_geom` on `submission` — `web/migrations/Version20260704222148.php:30`
-- `coverage_poi_geom_idx` on `coverage_poi` — not a Symfony migration at all. That table is owned by
+- `idx_region_geom` on `region`, `web/migrations/Version20260703152605.php:24`
+- `idx_submission_geom` on `submission`, `web/migrations/Version20260704222148.php:30`
+- `coverage_poi_geom_idx` on `coverage_poi`, not a Symfony migration at all. That table is owned by
   the Python pipeline, so its schema and its indexes live in `pipeline/coverage/load.py`, in the
-  `_INDEX_DDL` tuple next to the table's own DDL.
+  `_INDEX_DDL` tuple next to the table's own DDL. The same tuple adds a second spatial index,
+  `coverage_poi_geog_idx`, built on `(geom::geography)` rather than on the bare column; the next
+  section is about why that one exists.
 
 One geometry column in this codebase has no GiST index: `users.base_point`, the rider's coarse home
 location added by `web/migrations/Version20260721160000.php`. That is deliberate rather than
 forgotten. Nothing ever searches for users *by* that point. It is read back out for a row the code
-already has — `BaseLocationService` pulls it apart with `ST_X` and `ST_Y`
-(`web/src/Service/BaseLocationService.php`) — and the searching it feeds is done against `region`,
+already has, `BaseLocationService` pulls it apart with `ST_X` and `ST_Y`
+(`web/src/Service/BaseLocationService.php`), and the searching it feeds is done against `region`,
 which does have an index. An index you never search is storage and write cost for nothing.
 
 ## Which predicates can use it
@@ -142,20 +145,20 @@ which does have an index. An index you never search is storage and write cost fo
 Here is the rule that the rest of this chapter is a demonstration of. It is short, and it is easy
 to half-remember in a way that is wrong.
 
-> An index holds boxes for **the exact expression it was built on**. Every one of ours was built on
-> the bare column: `USING GIST (geom)`. So the only comparisons the index can serve are comparisons
-> whose indexed side is `geom`, exactly as it is stored.
+> An index holds boxes for **the exact expression it was built on**. Every one of ours on the
+> application tables was built on the bare column: `USING GIST (geom)`. So the only comparisons those
+> indexes can serve are comparisons whose indexed side is `geom`, exactly as it is stored.
 
 The predicates from chapter 4 are all built to cooperate with that. `ST_Intersects`, `ST_Contains`
 and the geometry form of `ST_DWithin` are each defined in terms of a bounding-box operator over
-their arguments, which is precisely the thing a GiST index answers — and so is the rest of the
+their arguments, which is precisely the thing a GiST index answers, and so is the rest of the
 PostGIS relationship family alongside them. Hand one of them a bare indexed column and a value that
 does not depend on the row, and the two-phase machinery from the previous section is available.
 
 Two things take that away.
 
 **A function wrapping the indexed column.** `ST_Buffer(i.geom, 0.01)`, `ST_Centroid(i.geom)`,
-`ST_PointOnSurface(i.geom)` — each of these computes a *new* shape, per row. `idx_item_geom` holds
+`ST_PointOnSurface(i.geom)`: each of these computes a *new* shape, per row. `idx_item_geom` holds
 boxes for `i.geom`. It holds nothing whatsoever about `ST_Centroid(i.geom)`. It is not that the
 database refuses to use the index; it is that the index genuinely contains no information about the
 value being asked for.
@@ -164,23 +167,34 @@ You can watch both halves of that in one line of this repository. The region bac
 `web/src/Catalog/Command/ImportCatalogCommand.php` joins items to regions with
 `ST_Contains(r.geom, ST_PointOnSurface(i.geom))`. The right-hand side is a function of `i.geom`, so
 nothing about `idx_item_geom` applies to it. The left-hand side is `r.geom`, bare and indexed, so
-the box test on the region side is available. One predicate, one indexed side and one not — which
+the box test on the region side is available. One predicate, one indexed side and one not, which
 is the right shape for a backfill that has to visit every item anyway.
 
 **A cast.** This is the one that bites, because a cast does not look like a function call and does
 not read like work.
 
 `i.geom::geography` is not `i.geom`. It is a different value, of a different type, with different
-semantics — chapter 3 is entirely about what those semantics buy you. It has to be computed, and it
+semantics, chapter 3 is entirely about what those semantics buy you. It has to be computed, and it
 is computed once per row. The GiST index was built on `i.geom`, so it knows nothing about
 `i.geom::geography`, and it cannot serve a comparison phrased in terms of it.
 
 This is worth saying slowly, because the wrong lesson is easy to take away here. The problem is
-**not** that geography maths is expensive. It is expensive — an ellipsoid distance is real
-trigonometry and it is much more work than comparing four numbers — but that is not what breaks. The
+**not** that geography maths is expensive. It is expensive (an ellipsoid distance is real
+trigonometry, much more work than comparing four numbers), but that is not what breaks. The
 problem is that phrasing the comparison in terms of the cast puts it outside what the index knows,
 so *every row in the table* reaches the expensive part. Cheap maths on every row would also be too
 slow, once there are enough rows.
+
+There is one way round that, and `coverage_poi` uses it: build a second index on the cast itself.
+`coverage_poi_geog_idx` is `USING gist ((geom::geography))`, a *functional* index. It holds boxes for
+the expression `geom::geography`, so a predicate phrased in exactly those terms,
+`ST_DWithin(cp.geom::geography, …)`, which is what `CoverageRepository::nearby()` and the
+OSM-linking candidate search run, is served by it. The comment beside it in `_INDEX_DDL` records the
+measurement that justified it: 716 ms down to 2 ms for a radius query that had been reading every
+water POI in the table for every moderation card. The price is a second index to build and keep on a
+table the pipeline rewrites region by region, and it is paid there because those radius queries run
+constantly. The application tables do not carry one: `item` is small enough that the rewrite below,
+which needs no extra index at all, is the right tool, and it is the more general lesson.
 
 Keep that distinction in hand for the next section, because the fix that follows does not make the
 maths cheaper. It makes fewer rows reach it.
@@ -195,7 +209,7 @@ This happened here. The code, the comment explaining it, and the measurement are
 A rider uploads a GPX file. `RideCheckService::check()` parses it, simplifies the track, and turns
 it into a GeoJSON `LineString` (chapter 2, [`shapes.md`](shapes.md)). Then it asks the database:
 which served catalog items lie within the rider's chosen radius of that track? The radius is one of
-`ALLOWED_RADII` — 100, 250, 500 or 1000 metres, defaulting to 250 — and the work happens in the
+`ALLOWED_RADII`, 100, 250, 500 or 1000 metres, defaulting to 250, and the work happens in the
 private method `RideCheckService::corridorGroups()`.
 
 Each match also needs two numbers to be useful: how far off the track it was, and how far along the
@@ -216,23 +230,23 @@ is in metres, honestly measured on the ellipsoid, which is the entire reason for
 review would pass it.
 
 And it is the shape the previous section just described. The cast sits on `item.geom`, the indexed
-column, so `idx_item_geom` cannot serve the comparison. Every row in `item` is read — a **sequential
+column, so `idx_item_geom` cannot serve the comparison. Every row in `item` is read, a **sequential
 scan**, `Seq Scan` in a query plan, meaning the database walks the table from the first row to the
-last because it has no better way in — and for every one of those rows it computes an exact
+last because it has no better way in, and for every one of those rows it computes an exact
 ellipsoid distance against the whole simplified track, a line with a lot of vertices in it.
 
-The comment in `corridorGroups()` records what that cost, and it is not a rounding error:
-
-> `62 s down to sub-second, dev catalog`
-
-Sixty-two seconds, on a development catalog, for a request a rider is sitting and waiting for.
+The design note that shipped the rewrite
+(`docs/specs/Dated/2026-07-14-town-search-and-ride-check-design.md`, the execution note on the §4.2
+corridor predicate) records what that cost, and it is not a rounding error: `ST_DWithin(::geography)`
+on the column, with an inlined `track` CTE re-parsing the GeoJSON per row per `ST_*` call, came to
+**62 s live**. Sixty-two seconds, for a request a rider is sitting and waiting for.
 
 ### The fix
 
 The rewrite does not touch the maths and does not change the answer. It changes *where the cast
 sits*.
 
-Build the corridor first. Take the track, cast **it** to geography, and buffer it by the radius —
+Build the corridor first. Take the track, cast **it** to geography, and buffer it by the radius,
 `ST_Buffer` on a geography argument grows the shape by that many real metres, for the same reason
 `ST_DWithin` on geography measured in real metres. Then cast the *result* back to geometry, so what
 comes out is an ordinary EPSG:4326 shape. That is a single value, computed once, that does not
@@ -249,7 +263,7 @@ WITH track AS MATERIALIZED (SELECT ST_SetSRID(ST_GeomFromGeoJSON(:geom), 4326) A
 The test in the `WHERE` clause is then simply `ST_Intersects(i.geom, (SELECT b FROM corridor))`:
 the bare indexed column on one side, one constant geometry on the other. That is exactly the
 comparison `idx_item_geom` was built to answer, so the two-phase machinery from the top of this
-chapter switches on — the tree prunes the table down to the handful of items whose boxes overlap
+chapter switches on, the tree prunes the table down to the handful of items whose boxes overlap
 the corridor, and only those get an exact geometry test.
 
 Notice what did *not* happen:
@@ -263,19 +277,19 @@ Notice what did *not* happen:
   an exact test. Phase 2 is still there. It just has almost nothing left to check.
 
 The distance and along-the-ride numbers are still computed with `ST_Distance` and
-`ST_LineLocatePoint`, in the `SELECT` list — which means they now run only for rows that already
+`ST_LineLocatePoint`, in the `SELECT` list, which means they now run only for rows that already
 survived the corridor test, rather than for the whole table.
 
 The same idiom appears immediately below in `RideCheckService::followedRoutes()`, which reuses the
 identical corridor and probes `recommended_route` with `ST_Intersects(r.geom, …)`. Its own comment
 names the index it rides: `idx_route_geom`.
 
-<figure class="gis-fig"><svg viewBox="0 0 640 1320" role="img" aria-labelledby="f9-t f9-d" xmlns="http://www.w3.org/2000/svg"><title id="f9-t">The same ride-check question written two ways: cast on the column, and cast on the track</title><desc id="f9-d">Two stacked panels comparing one query before and after a rewrite. The upper panel is headed "Before" and badged "Seq Scan". It shows a vertical stack of six identical row boxes, labelled "every row in item, one by one", with an arrow from each row converging on a large globe drawn with a meridian and parallels, labelled "ellipsoid maths on every single row". Below it the predicate is written out over three lines, WHERE ST_DWithin, then i.geom colon colon geography, then track colon colon geography comma 250. The middle line, the one carrying the cast, is highlighted, and a note reads "the cast sits on the indexed column". The lower panel is headed "After" and badged "Index Scan". It shows a track drawn as a bent line with a wide shaded band around it, labelled "one corridor, built once". Four filled points lie on the track inside the band and are the matches; eight pale points lie well outside the band and are never examined. A note reads "a handful of candidates, not the table". Beneath that is a small tree of three levels: a root box, two child boxes of which the left one is drawn dashed and empty and labelled "pruned", and two leaf boxes under the right child labelled "candidates", with the label "the GiST tree drops whole branches". Below the tree the rewritten query is written over three lines, ST_Buffer of track colon colon geography comma 250, then colon colon geometry AS corridor, then WHERE ST_Intersects of i.geom and corridor. The buffer line, which now carries the cast, is highlighted, and a note reads "the column is compared as it is stored".</desc><defs><marker id="gis-arrow-f9" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="14" markerHeight="14" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 Z"/></marker></defs><text x="20" y="48">Before</text><text class="gis-label-mono" x="620" y="48" text-anchor="end">Seq Scan</text><text class="gis-label-sm" x="20" y="86">every row in item, one by one</text><rect class="gis-box" rx="4" x="20" y="100" width="170" height="26"/><rect class="gis-box" rx="4" x="20" y="138" width="170" height="26"/><rect class="gis-box" rx="4" x="20" y="176" width="170" height="26"/><rect class="gis-box" rx="4" x="20" y="214" width="170" height="26"/><rect class="gis-box" rx="4" x="20" y="252" width="170" height="26"/><rect class="gis-box" rx="4" x="20" y="290" width="170" height="26"/><line class="gis-ink" x1="196" y1="113" x2="400" y2="208" marker-end="url(#gis-arrow-f9)"/><line class="gis-ink" x1="196" y1="151" x2="400" y2="208" marker-end="url(#gis-arrow-f9)"/><line class="gis-ink" x1="196" y1="189" x2="400" y2="208" marker-end="url(#gis-arrow-f9)"/><line class="gis-ink" x1="196" y1="227" x2="400" y2="208" marker-end="url(#gis-arrow-f9)"/><line class="gis-ink" x1="196" y1="265" x2="400" y2="208" marker-end="url(#gis-arrow-f9)"/><line class="gis-ink" x1="196" y1="303" x2="400" y2="208" marker-end="url(#gis-arrow-f9)"/><circle class="gis-ink gis-fill-paper" cx="470" cy="208" r="62"/><ellipse class="gis-muted" cx="470" cy="208" rx="24" ry="62"/><line class="gis-muted" x1="408" y1="208" x2="532" y2="208"/><line class="gis-muted" x1="424" y1="170" x2="516" y2="170"/><line class="gis-muted" x1="424" y1="246" x2="516" y2="246"/><text class="gis-label-sm" x="470" y="302" text-anchor="middle">ellipsoid maths</text><text class="gis-label-sm" x="470" y="330" text-anchor="middle">on every single row</text><rect class="gis-fill-clay" fill-opacity=".22" rx="4" x="24" y="392" width="320" height="34"/><text class="gis-label-mono" x="30" y="386">WHERE ST_DWithin(</text><text class="gis-label-mono" x="30" y="418">  i.geom::geography,</text><text class="gis-label-mono" x="30" y="450">  track::geography, 250)</text><text class="gis-label-sm" x="30" y="490">the cast sits on the indexed column</text><line class="gis-muted" x1="20" y1="524" x2="620" y2="524"/><text x="20" y="572">After</text><text class="gis-label-mono" x="620" y="572" text-anchor="end">Index Scan</text><path class="gis-fill-glacier" fill-opacity=".3" d="M 53.9 682.7 L 330 621 L 606.5 687.8 A 28 28 0 0 1 593.5 742.2 L 330 679 L 66.1 737.3 A 28 28 0 0 1 53.9 682.7 Z"/><path class="gis-muted" d="M 53.9 682.7 L 330 621 L 606.5 687.8 A 28 28 0 0 1 593.5 742.2 L 330 679 L 66.1 737.3 A 28 28 0 0 1 53.9 682.7 Z"/><path class="gis-accent" d="M 60 710 L 330 650 L 600 715"/><circle class="gis-ink gis-fill-glacier" cx="75" cy="640" r="8"/><circle class="gis-ink gis-fill-glacier" cx="200" cy="770" r="8"/><circle class="gis-ink gis-fill-glacier" cx="350" cy="600" r="8"/><circle class="gis-ink gis-fill-glacier" cx="390" cy="775" r="8"/><circle class="gis-ink gis-fill-glacier" cx="480" cy="605" r="8"/><circle class="gis-ink gis-fill-glacier" cx="560" cy="770" r="8"/><circle class="gis-ink gis-fill-glacier" cx="620" cy="640" r="8"/><circle class="gis-ink gis-fill-glacier" cx="40" cy="780" r="8"/><circle class="gis-ink gis-fill-accent" cx="150" cy="690" r="10"/><circle class="gis-ink gis-fill-accent" cx="255" cy="667" r="10"/><circle class="gis-ink gis-fill-accent" cx="420" cy="672" r="10"/><circle class="gis-ink gis-fill-accent" cx="520" cy="696" r="10"/><text class="gis-label-sm gis-halo" x="20" y="612">one corridor, built once</text><text class="gis-label-sm" x="20" y="820">a handful of candidates, not the table</text><text class="gis-label-sm" x="20" y="856">the GiST tree drops whole branches</text><rect class="gis-box" rx="8" x="278" y="876" width="84" height="56"/><line class="gis-muted" stroke-dasharray="6 5" x1="320" y1="932" x2="192" y2="960"/><line class="gis-ink" x1="320" y1="932" x2="448" y2="960"/><rect class="gis-muted" rx="8" stroke-dasharray="6 5" x="132" y="960" width="120" height="56"/><rect class="gis-box" rx="8" x="406" y="960" width="84" height="56"/><line class="gis-ink" x1="448" y1="1016" x2="388" y2="1044"/><line class="gis-ink" x1="448" y1="1016" x2="508" y2="1044"/><rect class="gis-box" rx="8" x="346" y="1044" width="84" height="56"/><rect class="gis-box" rx="8" x="466" y="1044" width="84" height="56"/><text class="gis-label-sm" x="192" y="1052" text-anchor="middle">pruned</text><text class="gis-label-sm" x="448" y="1136" text-anchor="middle">candidates</text><rect class="gis-fill-clay" fill-opacity=".22" rx="4" x="24" y="1152" width="475" height="34"/><text class="gis-label-mono" x="30" y="1178">ST_Buffer(track::geography, 250)</text><text class="gis-label-mono" x="30" y="1210">  ::geometry AS corridor</text><text class="gis-label-mono" x="30" y="1250">WHERE ST_Intersects(i.geom, corridor)</text><text class="gis-label-sm" x="30" y="1290">the column is compared as it is stored</text></svg><figcaption>The same question, the same answer, the same radius in real metres. What moved is the <code>::geography</code> cast. Above, it sits on <code>i.geom</code> — the indexed column — so the index holds nothing about the value being compared and every row in the table has to be read and measured. Below, it sits on the track, inside a corridor that is built once; the comparison that reaches the table is <code>i.geom</code> exactly as stored, which is what <code>idx_item_geom</code> holds boxes for, so whole branches of the tree are skipped and only a handful of rows are ever examined exactly. The plan node may appear as <code>Index Scan</code> or as <code>Bitmap Index Scan</code> feeding a <code>Bitmap Heap Scan</code>; both mean the index was used.</figcaption></figure>
+<figure class="gis-fig"><svg viewBox="0 0 640 1320" role="img" aria-labelledby="f9-t f9-d" xmlns="http://www.w3.org/2000/svg"><title id="f9-t">The same ride-check question written two ways: cast on the column, and cast on the track</title><desc id="f9-d">Two stacked panels comparing one query before and after a rewrite. The upper panel is headed "Before" and badged "Seq Scan". It shows a vertical stack of six identical row boxes, labelled "every row in item, one by one", with an arrow from each row converging on a large globe drawn with a meridian and parallels, labelled "ellipsoid maths on every single row". Below it the predicate is written out over three lines, WHERE ST_DWithin, then i.geom colon colon geography, then track colon colon geography comma 250. The middle line, the one carrying the cast, is highlighted, and a note reads "the cast sits on the indexed column". The lower panel is headed "After" and badged "Index Scan". It shows a track drawn as a bent line with a wide shaded band around it, labelled "one corridor, built once". Four filled points lie on the track inside the band and are the matches; eight pale points lie well outside the band and are never examined. A note reads "a handful of candidates, not the table". Beneath that is a small tree of three levels: a root box, two child boxes of which the left one is drawn dashed and empty and labelled "pruned", and two leaf boxes under the right child labelled "candidates", with the label "the GiST tree drops whole branches". Below the tree the rewritten query is written over three lines, ST_Buffer of track colon colon geography comma 250, then colon colon geometry AS corridor, then WHERE ST_Intersects of i.geom and corridor. The buffer line, which now carries the cast, is highlighted, and a note reads "the column is compared as it is stored".</desc><defs><marker id="gis-arrow-f9" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="14" markerHeight="14" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 Z"/></marker></defs><text x="20" y="48">Before</text><text class="gis-label-mono" x="620" y="48" text-anchor="end">Seq Scan</text><text class="gis-label-sm" x="20" y="86">every row in item, one by one</text><rect class="gis-box" rx="4" x="20" y="100" width="170" height="26"/><rect class="gis-box" rx="4" x="20" y="138" width="170" height="26"/><rect class="gis-box" rx="4" x="20" y="176" width="170" height="26"/><rect class="gis-box" rx="4" x="20" y="214" width="170" height="26"/><rect class="gis-box" rx="4" x="20" y="252" width="170" height="26"/><rect class="gis-box" rx="4" x="20" y="290" width="170" height="26"/><line class="gis-ink" x1="196" y1="113" x2="400" y2="208" marker-end="url(#gis-arrow-f9)"/><line class="gis-ink" x1="196" y1="151" x2="400" y2="208" marker-end="url(#gis-arrow-f9)"/><line class="gis-ink" x1="196" y1="189" x2="400" y2="208" marker-end="url(#gis-arrow-f9)"/><line class="gis-ink" x1="196" y1="227" x2="400" y2="208" marker-end="url(#gis-arrow-f9)"/><line class="gis-ink" x1="196" y1="265" x2="400" y2="208" marker-end="url(#gis-arrow-f9)"/><line class="gis-ink" x1="196" y1="303" x2="400" y2="208" marker-end="url(#gis-arrow-f9)"/><circle class="gis-ink gis-fill-paper" cx="470" cy="208" r="62"/><ellipse class="gis-muted" cx="470" cy="208" rx="24" ry="62"/><line class="gis-muted" x1="408" y1="208" x2="532" y2="208"/><line class="gis-muted" x1="424" y1="170" x2="516" y2="170"/><line class="gis-muted" x1="424" y1="246" x2="516" y2="246"/><text class="gis-label-sm" x="470" y="302" text-anchor="middle">ellipsoid maths</text><text class="gis-label-sm" x="470" y="330" text-anchor="middle">on every single row</text><rect class="gis-fill-clay" fill-opacity=".22" rx="4" x="24" y="392" width="320" height="34"/><text class="gis-label-mono" x="30" y="386">WHERE ST_DWithin(</text><text class="gis-label-mono" x="30" y="418">  i.geom::geography,</text><text class="gis-label-mono" x="30" y="450">  track::geography, 250)</text><text class="gis-label-sm" x="30" y="490">the cast sits on the indexed column</text><line class="gis-muted" x1="20" y1="524" x2="620" y2="524"/><text x="20" y="572">After</text><text class="gis-label-mono" x="620" y="572" text-anchor="end">Index Scan</text><path class="gis-fill-glacier" fill-opacity=".3" d="M 53.9 682.7 L 330 621 L 606.5 687.8 A 28 28 0 0 1 593.5 742.2 L 330 679 L 66.1 737.3 A 28 28 0 0 1 53.9 682.7 Z"/><path class="gis-muted" d="M 53.9 682.7 L 330 621 L 606.5 687.8 A 28 28 0 0 1 593.5 742.2 L 330 679 L 66.1 737.3 A 28 28 0 0 1 53.9 682.7 Z"/><path class="gis-accent" d="M 60 710 L 330 650 L 600 715"/><circle class="gis-ink gis-fill-glacier" cx="75" cy="640" r="8"/><circle class="gis-ink gis-fill-glacier" cx="200" cy="770" r="8"/><circle class="gis-ink gis-fill-glacier" cx="350" cy="600" r="8"/><circle class="gis-ink gis-fill-glacier" cx="390" cy="775" r="8"/><circle class="gis-ink gis-fill-glacier" cx="480" cy="605" r="8"/><circle class="gis-ink gis-fill-glacier" cx="560" cy="770" r="8"/><circle class="gis-ink gis-fill-glacier" cx="620" cy="640" r="8"/><circle class="gis-ink gis-fill-glacier" cx="40" cy="780" r="8"/><circle class="gis-ink gis-fill-accent" cx="150" cy="690" r="10"/><circle class="gis-ink gis-fill-accent" cx="255" cy="667" r="10"/><circle class="gis-ink gis-fill-accent" cx="420" cy="672" r="10"/><circle class="gis-ink gis-fill-accent" cx="520" cy="696" r="10"/><text class="gis-label-sm gis-halo" x="20" y="612">one corridor, built once</text><text class="gis-label-sm" x="20" y="820">a handful of candidates, not the table</text><text class="gis-label-sm" x="20" y="856">the GiST tree drops whole branches</text><rect class="gis-box" rx="8" x="278" y="876" width="84" height="56"/><line class="gis-muted" stroke-dasharray="6 5" x1="320" y1="932" x2="192" y2="960"/><line class="gis-ink" x1="320" y1="932" x2="448" y2="960"/><rect class="gis-muted" rx="8" stroke-dasharray="6 5" x="132" y="960" width="120" height="56"/><rect class="gis-box" rx="8" x="406" y="960" width="84" height="56"/><line class="gis-ink" x1="448" y1="1016" x2="388" y2="1044"/><line class="gis-ink" x1="448" y1="1016" x2="508" y2="1044"/><rect class="gis-box" rx="8" x="346" y="1044" width="84" height="56"/><rect class="gis-box" rx="8" x="466" y="1044" width="84" height="56"/><text class="gis-label-sm" x="192" y="1052" text-anchor="middle">pruned</text><text class="gis-label-sm" x="448" y="1136" text-anchor="middle">candidates</text><rect class="gis-fill-clay" fill-opacity=".22" rx="4" x="24" y="1152" width="475" height="34"/><text class="gis-label-mono" x="30" y="1178">ST_Buffer(track::geography, 250)</text><text class="gis-label-mono" x="30" y="1210">  ::geometry AS corridor</text><text class="gis-label-mono" x="30" y="1250">WHERE ST_Intersects(i.geom, corridor)</text><text class="gis-label-sm" x="30" y="1290">the column is compared as it is stored</text></svg><figcaption>The same question, the same answer, the same radius in real metres. What moved is the <code>::geography</code> cast. Above, it sits on <code>i.geom</code>, the indexed column, so the index holds nothing about the value being compared and every row in the table has to be read and measured. Below, it sits on the track, inside a corridor that is built once; the comparison that reaches the table is <code>i.geom</code> exactly as stored, which is what <code>idx_item_geom</code> holds boxes for, so whole branches of the tree are skipped and only a handful of rows are ever examined exactly. The plan node may appear as <code>Index Scan</code> or as <code>Bitmap Index Scan</code> feeding a <code>Bitmap Heap Scan</code>; both mean the index was used.</figcaption></figure>
 
 One honest footnote. A buffer is a polygon, and a polygon's edge approximates a true circle with a
 finite number of straight segments. So "inside the corridor" and "within exactly N metres" are not
 character-for-character the same set: a point sitting almost precisely on the boundary could fall on
-either side of it. At the radii this feature offers — 100 metres to a kilometre — that difference is
+either side of it. At the radii this feature offers, 100 metres to a kilometre, that difference is
 far below the accuracy of the GPS trace being measured against, and well below the point where it
 could change an answer a rider would notice.
 
@@ -284,32 +298,31 @@ could change an answer a rider would notice.
 You will have noticed the word `MATERIALIZED` in both of those CTEs. It is not decoration, and the
 reasons it is there are worth separating, because there are two of them and they are independent.
 
-A **CTE** — a Common Table Expression — is the `WITH name AS (…)` block at the top of a query. It
+A **CTE**, a Common Table Expression, is the `WITH name AS (…)` block at the top of a query. It
 names a subquery so the rest of the statement can refer to it. PostgreSQL is allowed to *inline* a
 CTE: instead of computing it once and keeping the result, it substitutes the definition at each
 place the name is used, which lets the planner optimise across the boundary. Usually that is a good
 thing. Writing `MATERIALIZED` removes the choice: compute it once, keep the result, use it
 everywhere.
 
-The comment above `corridorGroups()` states both reasons in the developers' own words:
+The comment above the query in `corridorGroups()` states both reasons in the developers' own words:
 
-> MATERIALIZED is load-bearing twice over: an inlined `track` CTE re-parses the whole GeoJSON per
-> row per ST_* occurrence, and the one-off `corridor` buffer turns the containment test into a plain
-> ST_Intersects the idx_item_geom GIST index can serve.
+> MATERIALIZED is load-bearing: an inlined track CTE re-parses GeoJSON per ST_*; ST_Intersects can
+> use the GIST index.
 
-**Reason one: the parsing.** The `track` CTE's body is `ST_GeomFromGeoJSON(:geom)` — it takes the
+**Reason one: the parsing.** The `track` CTE's body is `ST_GeomFromGeoJSON(:geom)`: it takes the
 uploaded track as a JSON string and parses it into a geometry. The query then refers to `track` in
 four separate places: once to build the corridor, once inside `ST_Distance`, and twice inside the
 `ST_LineLocatePoint` / `ST_ClosestPoint` pair. If that CTE were inlined, each of those references
 would become its own parse of the entire GeoJSON text, and the three of them that sit in the
-`SELECT` list — the one inside `ST_Distance` and the two inside the `ST_LineLocatePoint` /
-`ST_ClosestPoint` pair — would do it again for every row that comes back. `MATERIALIZED` means the
+`SELECT` list, the one inside `ST_Distance` and the two inside the `ST_LineLocatePoint` /
+`ST_ClosestPoint` pair, would do it again for every row that comes back. `MATERIALIZED` means the
 string is parsed exactly once.
 
-**Reason two: the shape of the test.** As the comment puts it, it is the *one-off* corridor that
-turns the containment question into a plain `ST_Intersects` the GiST index can serve. "One-off" is
-the load-bearing part of that sentence, and `MATERIALIZED` is what guarantees it: one buffer, one
-value, computed before the table is touched.
+**Reason two: the shape of the test.** As the comment puts it, `ST_Intersects` can use the GiST
+index, and it can only do so because the corridor it is compared against is one value, not a
+per-row expression. `MATERIALIZED` is what guarantees that: one buffer, one value, computed before
+the table is touched.
 
 Do not merge those two into one idea. The first is about how many times a string is parsed. The
 second is about which comparison arrives at the table. Fixing either one alone would leave the
@@ -318,7 +331,7 @@ query slow for the other's reason.
 And here is the property that makes this section worth a heading of its own: **none of this is
 visible in the query's text.** The version with `MATERIALIZED` and the version without it look
 almost identical, return identical rows, and differ by one word. There is no error, no warning, and
-no test that fails. The only way to see the difference is to read the query plan — which is the next
+no test that fails. The only way to see the difference is to read the query plan, which is the next
 section.
 
 ## How to tell
@@ -333,7 +346,7 @@ back.
 **You cannot copy the SQL out of the PHP file and paste it in.** That statement is assembled at
 runtime. `:geom` and `:radius` are Doctrine DBAL placeholders, not values, and
 `ItemState::servedSqlTuple()` (`web/src/Catalog/ItemState.php`) is PHP string interpolation that
-expands to the tuple `('unverified', 'verified')`. You need the expanded statement — either from the
+expands to the tuple `('unverified', 'verified')`. You need the expanded statement, either from the
 Doctrine panel of the Symfony profiler in the dev environment, which logs what was actually sent, or
 by substituting a real GeoJSON `LineString` and a radius by hand.
 
@@ -346,7 +359,7 @@ docker compose -f developers/docker/compose.yaml exec db psql -U cc -d cyclingco
 
 (`make sh c=db` opens a shell in the same container if you would rather get there that way.)
 
-Now read the output. Do not try to memorise what a good plan looks like — plans vary with the data,
+Now read the output. Do not try to memorise what a good plan looks like, plans vary with the data,
 the version, and the statistics. Look for these four things instead.
 
 **The scan node on the spatial table.** If you see `Seq Scan on item` and you know `idx_item_geom`
@@ -357,13 +370,13 @@ column before you look anywhere else.
 
 **The index actually being named.** A healthy plan mentions it: `Index Scan using idx_item_geom`, or
 a `Bitmap Index Scan using idx_item_geom` feeding a `Bitmap Heap Scan`. The second form is the
-two-step one — the index scan collects the locations of all matching rows into an in-memory bitmap,
+two-step one, the index scan collects the locations of all matching rows into an in-memory bitmap,
 and the heap scan then fetches them in physical table order rather than one at a time in index
 order. Both mean the index was used. Which one the planner chooses depends on how many rows it
 expects to get back, and neither is a problem.
 
 **`Rows Removed by Filter`.** That number is phase 2 doing its job: candidates the box test let
-through and the exact geometry rejected — point 2 in figure F8. Where it appears depends on which of
+through and the exact geometry rejected, point 2 in figure F8. Where it appears depends on which of
 those two shapes the plan took. On the bitmap path the recheck is the `Filter` on the `Bitmap Heap
 Scan`, the node *above* the `Bitmap Index Scan`. On a plain `Index Scan` there is no node above: the
 `Index Cond` and the `Filter` sit on the same node, and `Rows Removed by Filter` is reported there.
@@ -383,14 +396,15 @@ missing-index problem is completely invisible at that size. If you want to know 
 query will hold up, test it against a table with a realistic number of rows in it.
 
 Finally, a caution against reading this chapter as a checklist. The `::geography` shape appears in
-several other places in this repository — `SurfaceProfiler::profile()`
+several other places in this repository, `SurfaceProfiler::profile()`
 (`web/src/Catalog/SurfaceProfiler.php`), `BaseAreaResolver::resolve()`
 (`web/src/Service/BaseAreaResolver.php`), and both arms of `CoverageRepository::nearby()`
 (`web/src/Coverage/CoverageRepository.php`). That is not a list of bugs. Whether the shape matters
-depends entirely on how many rows the *other* conditions leave for it: `BaseAreaResolver` filters
-region outlines, of which there are not many, and the coverage queries carry region and country
-filters with their own ordinary indexes. The rule is not "never cast a column". The rule is know
-which comparison the index can serve, and measure the path you are actually changing.
+depends entirely on how many rows the *other* conditions leave for it, and on which indexes exist:
+`BaseAreaResolver` filters region outlines, of which there are not many, and the coverage queries
+run against `coverage_poi_geog_idx`, the functional index built for exactly that shape. The rule is
+not "never cast a column". The rule is know which comparison the index can serve, and measure the
+path you are actually changing.
 
 ## What to carry into chapter 6
 
@@ -401,9 +415,10 @@ which comparison the index can serve, and measure the path you are actually chan
 - Every spatial query therefore has **two phases**: a cheap approximate filter from the index, then
   an exact recheck on the survivors. Both are real work, and only the second one is correct on its
   own.
-- An index holds boxes for **the expression it was built on**. Ours are built on the bare `geom`
-  column, so a cast or a function applied to that column puts the comparison beyond the index's
-  reach.
+- An index holds boxes for **the expression it was built on**. The application tables' indexes are
+  built on the bare `geom` column, so a cast or a function applied to that column puts the comparison
+  beyond their reach. `coverage_poi` adds a functional index on `geom::geography` so that its radius
+  queries stay served; that is the exception that proves the rule.
 - The ride-check fix was not cheaper maths. The maths is the same and the metres are still real.
   What changed is **which side of the comparison the cast sits on**, so the question that reaches
   the table is one the index can answer.
@@ -414,107 +429,104 @@ which comparison the index can serve, and measure the path you are actually chan
 
 The fountain now has a position, a shape, a way to be asked about, and a way to be asked about
 quickly. What it does not yet have is an origin. Everything so far has assumed the row already
-exists in our database — but somebody mapped that fountain in OpenStreetMap, in a data model that
+exists in our database, but somebody mapped that fountain in OpenStreetMap, in a data model that
 looks nothing like ours, and it had to get from there to here. Chapter 6
 ([`osm-to-database.md`](osm-to-database.md)) follows it the whole way.
 
 ## Try it
 
-!!! tip "Hands-on — watch Seq Scan become an Index Scan"
-    Run the naive `::geography` form of "within 250 m of this point" against `coverage_poi`, then run
-    the `ST_Intersects`-on-a-precomputed-corridor rewrite this chapter just walked through, and read
-    the two query plans side by side. The point is a drinking-water node from the committed OSM
-    fixture `make course-data` loads, at the 250 m radius one of `RideCheckService::ALLOWED_RADII`
-    actually offers. Open a `psql` session the way this chapter already showed, then run the naive
-    form first:
+!!! tip "Hands-on: watch Seq Scan become an Index Scan"
+    Run the naive `::geography` form of "within 250 m of this point" against `item`, then run the
+    `ST_Intersects`-on-a-precomputed-corridor rewrite this chapter just walked through, and read the
+    two query plans side by side. The point is the centre of Stavelot, where three of the pins
+    `make course-data` seeds sit within a couple of hundred metres of each other, at the 250 m
+    radius one of `RideCheckService::ALLOWED_RADII` actually offers. Open a `psql` session the way
+    this chapter already showed, then run the naive form first:
 
-    <!-- CODE-ILLUSTRATIVE psql query against the dev stack's coverage_poi table, the cast sits on the indexed column -->
+    <!-- CODE-ILLUSTRATIVE psql query against the dev stack's item table, the cast sits on the indexed column -->
     ```sql
     EXPLAIN ANALYZE
     SELECT count(*)
-    FROM coverage_poi
+    FROM item
     WHERE ST_DWithin(geom::geography,
-                      ST_SetSRID(ST_Point(4.8800, 50.4800), 4326)::geography, 250);
+                      ST_SetSRID(ST_Point(5.9300, 50.3950), 4326)::geography, 250);
     ```
 
-    <!-- CODE-ILLUSTRATIVE sample output on a stack seeded by `make course-data`, trimmed of Planning/Buffers detail -->
+    <!-- CODE-ILLUSTRATIVE sample output at the time of writing, on an item table of about 5,000 rows, trimmed of Planning/Buffers detail -->
     ```text
-     Aggregate (actual time=7.754..7.755 rows=1.00 loops=1)
-       ->  Seq Scan on coverage_poi (actual time=7.739..7.750 rows=1.00 loops=1)
+     Aggregate (actual time=51.541..51.544 rows=1.00 loops=1)
+       ->  Seq Scan on item (actual time=26.876..51.524 rows=3.00 loops=1)
              Filter: st_dwithin((geom)::geography, …, '250'::double precision, true)
-             Rows Removed by Filter: 9
-     Execution Time: 7.814 ms
+             Rows Removed by Filter: 4972
+     Execution Time: 52.304 ms
     ```
 
-    `Seq Scan on coverage_poi` — the whole table, every row read and tested. Now the rewrite: buffer
-    the point once, cast back to `geometry`, and test with `ST_Intersects` against the bare indexed
-    column:
+    `Seq Scan on item`: the whole table, every row read and tested, and `Rows Removed by Filter`
+    is the table minus the three answers. Now the rewrite: buffer the point once, cast back to
+    `geometry`, and test with `ST_Intersects` against the bare indexed column:
 
     <!-- CODE-ILLUSTRATIVE psql query against the same table, the same MATERIALIZED-corridor idiom RideCheckService::corridorGroups() uses -->
     ```sql
     EXPLAIN ANALYZE
     WITH corridor AS MATERIALIZED (
-      SELECT ST_Buffer(ST_SetSRID(ST_Point(4.8800, 50.4800), 4326)::geography, 250)::geometry AS b
+      SELECT ST_Buffer(ST_SetSRID(ST_Point(5.9300, 50.3950), 4326)::geography, 250)::geometry AS b
     )
     SELECT count(*)
-    FROM coverage_poi
+    FROM item
     WHERE ST_Intersects(geom, (SELECT b FROM corridor));
     ```
 
-    <!-- CODE-ILLUSTRATIVE sample output on the same stack, trimmed of Planning/Buffers detail -->
+    <!-- CODE-ILLUSTRATIVE sample output on the same table, trimmed of Planning/Buffers detail -->
     ```text
-     Aggregate (actual time=0.104..0.105 rows=1.00 loops=1)
+     Aggregate (actual time=3.555..3.582 rows=1.00 loops=1)
        CTE corridor
-         ->  Result (actual time=0.000..0.001 rows=1.00 loops=1)
-       ->  Index Scan using coverage_poi_geom_idx on coverage_poi (actual time=0.101..0.102 rows=1.00 loops=1)
+         ->  Result (actual time=0.001..0.002 rows=1.00 loops=1)
+       ->  Index Scan using idx_item_geom on item (actual time=1.368..3.569 rows=3.00 loops=1)
              Index Cond: (geom && (InitPlan 2).col1)
              Filter: st_intersects(geom, (InitPlan 2).col1)
-     Execution Time: 0.157 ms
+     Execution Time: 3.706 ms
     ```
 
-    `Index Scan using coverage_poi_geom_idx` instead of a scan of the whole table. Both queries agree
-    the answer is `1` — the rewrite changes the plan, never the result. **The scan-node names are the
-    reproducible part**; the millisecond figures are this machine, right now, and will move every run.
+    `Index Scan using idx_item_geom` instead of a scan of the whole table. Both queries agree the
+    answer is `3` (the two Stavelot fountains and the abbey). The rewrite changes the plan, never the
+    result. **The scan-node names are the reproducible part**; the row counts depend on what your
+    install holds, and the millisecond figures are this machine, right now, and will move every run.
+    On a freshly seeded catalog of a few hundred rows the planner may pick a sequential scan for the
+    corridor form too, because reading a tiny table really is cheaper than descending a tree; the
+    warning at the end of "How to tell" is about exactly that.
 
-    ??? note "What this looks like on a real coverage index, and how to get one"
-        `make course-data` loads ten `coverage_poi` rows, from an 847-byte OSM fixture committed to
-        this repo, so that the whole course runs offline. Ten rows is enough to flip the plan — you
-        just saw it — but not enough to *feel* why the flip matters, because scanning ten rows is
-        free either way.
+    ??? note "The same two queries on `coverage_poi`, and why the naive form is not a Seq Scan there"
+        Run both statements again with `coverage_poi` in place of `item`. The corridor form behaves
+        the same way, riding `coverage_poi_geom_idx`. The naive form does not fall back to a
+        sequential scan, and the reason is the functional index this chapter introduced:
 
-        Filling the table for real means downloading a country extract from Geofabrik, which needs
-        network and a few gigabytes of disk. It is one command, and chapter 6 explains everything it
-        does:
+        <!-- CODE-ILLUSTRATIVE sample output at the time of writing, on a coverage_poi table of about two million rows, trimmed of Planning/Buffers detail -->
+        ```text
+         Aggregate (actual time=0.584..0.585 rows=1.00 loops=1)
+           ->  Index Scan using coverage_poi_geog_idx on coverage_poi (actual time=0.225..0.581 rows=8.00 loops=1)
+                 Index Cond: ((geom)::geography && _st_expand(…, '250'::double precision))
+                 Filter: st_dwithin((geom)::geography, …, '250'::double precision, true)
+         Execution Time: 0.613 ms
+        ```
+
+        Read the `Index Cond` line: the indexed side is `(geom)::geography`, the exact expression
+        `coverage_poi_geog_idx` was built on, so the box test runs against the cast and the table is
+        never walked. Take that index away and this query reads two million rows for every
+        moderation card, which is the measurement recorded next to the index in
+        `pipeline/coverage/load.py`. So `coverage_poi` can afford the naive spelling and `item`
+        cannot, and the difference is not the size of the table or the cost of the maths. It is
+        which expression each table has an index for.
+
+        `make course-data` builds `coverage_poi` from an 847-byte OSM fixture committed to this
+        repo, ten rows, so the whole course runs offline. Filling the table for real means
+        downloading a country extract from Geofabrik, which needs network and a few gigabytes of
+        disk. It is one command, and chapter 6 explains everything it does:
 
         <!-- CODE-ILLUSTRATIVE shell command that downloads real OSM extracts; needs network, unlike the rest of this course -->
         ```sh
         make coverage-refresh
         ```
 
-        On a machine that has run it for Belgium, the Netherlands and Germany — 375,078 rows — the
-        same two queries produce the same two scan nodes, with the stakes visible:
-
-        <!-- CODE-ILLUSTRATIVE sample output captured on a 375,078-row coverage index, trimmed of Planning/JIT detail; the row counts are that machine's, the scan nodes are not -->
-        ```text
-         Finalize Aggregate (actual time=455.390..473.237 rows=1.00 loops=1)
-           ->  Gather (actual time=455.380..473.228 rows=3.00 loops=1)
-                 ->  Partial Aggregate (actual time=430.431..430.432 rows=1.00 loops=3)
-                       ->  Parallel Seq Scan on coverage_poi (actual time=430.204..430.391 rows=0.33 loops=3)
-                             Filter: st_dwithin((geom)::geography, …, '250'::double precision, true)
-                             Rows Removed by Filter: 125026
-         Execution Time: 491.042 ms
-        ```
-
-        <!-- CODE-ILLUSTRATIVE sample output for the rewritten query on the same 375,078-row index -->
-        ```text
-         Aggregate (actual time=0.134..0.134 rows=1.00 loops=1)
-           ->  Index Scan using coverage_poi_geom_idx on coverage_poi (actual time=0.121..0.131 rows=1.00 loops=1)
-                 Index Cond: (geom && (InitPlan 2).col1)
-                 Rows Removed by Filter: 1
-         Execution Time: 0.188 ms
-        ```
-
-        `Rows Removed by Filter: 125026` per parallel worker, and half a second for one point,
-        against `Rows Removed by Filter: 1` and well under a millisecond. That is the number this
-        chapter is really about: not "an index is faster", but "the table scan grows with the table
-        and the index descent does not".
+        With a real extract loaded, the `Rows Removed by Filter` line on a sequential scan is the
+        number this chapter is really about: not "an index is faster", but "the table scan grows
+        with the table and the index descent does not".
