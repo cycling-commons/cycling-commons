@@ -2,10 +2,19 @@
 
 # Curation & Voting
 
-This is the heart of what makes the Cycling Commons different: **curation over completeness.** The
-Commons doesn't try to list *every* climb that exists. It surfaces **the ones worth your weekend**,
-as judged by the riders who know the area. For things that are a matter of taste, the best-of is the
-point; an exhaustive dump helps no one plan a ride.
+!!! warning "Part design, part built"
+    This page is the intention for curation, and only part of it runs today. **Live:** the map's
+    three view modes, and the whole route path (propose, curator review, *I rode this*
+    verification, and seasonal recommend-votes in the drawer). **Design only:** the seasonal
+    ballot rounds, and voting on climbs, stays, views and heritage. The sections below say which
+    is which.
+
+**Curation over completeness** is one of the things that set the Cycling Commons apart. It is an
+important part of the Commons, not the whole of its intention: what the Commons is for, and the
+principles under it, are in the [Manifesto](manifesto.md). The Commons doesn't try to list *every*
+climb that exists. It surfaces **the ones worth your weekend**, as judged by the riders who know the
+area. For things that are a matter of taste, the best-of is the point; an exhaustive dump helps no
+one plan a ride.
 
 ## Two kinds of data, two strategies
 
@@ -15,7 +24,7 @@ The single organising principle of the Commons:
 |---|---|---|
 | **Examples** | best climbs, bike-friendly stays, finest views, history & culture, top quality rides | road surface, water points, toilets, repair stations, hazards, bike shops |
 | **Goal** | **curated**: the best, ranked | **complete**: as exhaustive as possible |
-| **How** | **routes** (live today): rode-it counts plus seasonal recommend-votes on the map drawer. Climbs, stays, views & heritage (design): riders vote, refreshed in rounds | one-tap reports; confirm & decay |
+| **How** | **routes**: rode-it counts plus seasonal recommend-votes on the map drawer. Climbs, stays, views & heritage (design): riders vote, refreshed in rounds | one-tap reports; confirm & decay |
 | **The value is** | the *ranking* | the *coverage* |
 
 Voting makes no sense for a water tap: it's either there or it isn't, and you want them all. Ranking
@@ -23,14 +32,19 @@ is the whole point for a climb: you want the best ten, not all two hundred.
 
 ## Regions
 
-Curation happens **per region**. A region is standard public geography, a country or one of its
-first-level subdivisions (provinces, states, or the equivalent), **not** a game shape from any app
-built on top. Keeping the Commons' regions neutral and independent is deliberate: an app's game layer
-may *map onto* Commons regions, never the reverse. That keeps the Commons usable by anyone, decoupled
-from any one product.
+Curation happens **per region**. A region is ordinary public geography: a country, or one of its
+first-level subdivisions such as a province or a state. It is never a shape invented by an app built
+on top of the Commons. An app may line its own shapes up with Commons regions. The Commons never
+bends its regions to fit an app. That is what keeps the Commons useful to everyone, and tied to no
+single product.
 
-For each region the Commons surfaces a **best-of** (the map's *Best of* view mode, one switch away
-from the default *Everything* view):
+For each region the Commons surfaces a **best-of**. It is one of the map's three view modes:
+
+- ***Best of***: the curated list, what this page is about.
+- ***Confirmed***: everything in *Best of*, plus every place a rider or curator has checked.
+- ***Everything***: every place the Commons holds. This is the default view.
+
+The best-of covers:
 
 - the best **climbs**
 - the best **bike-friendly stays**
