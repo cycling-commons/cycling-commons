@@ -43,16 +43,11 @@ on this page, where they name a section.
 - Traffic exposure: derived from road class, speed limit, lanes and cycleway, the input for a route's sensory load; never collected by hand [auto][OSM] *(design, not built)*
 - Lit / unlit at night [OSM]
 - One-way / cycling-permitted-against-traffic [OSM]
-- Signed cycle routes & node networks — the map can show the signed routes
-  (national long-distance routes, regional routes, MTB loops) and the numbered
-  junction networks riders navigate by, drawn from OpenStreetMap's route
-  relations. The corridors and numbers are OSM's; what we add on top is ours —
-  which stretches of a signed route have a recorded surface, its quality where
-  someone has said, and a one-tap way to fill the gaps. Every surface colour
-  on this map traces to a recorded fact: OpenStreetMap's `surface` and
-  `smoothness` tags where they exist, a rider's answer where someone has said,
-  and nothing where nobody has. It is never a copy of another map's colouring
-  [tap][edit][OSM]
+- Signed cycle routes & node networks: the signed routes and numbered junction
+  networks riders navigate by, drawn from OpenStreetMap's route relations. The
+  corridors and numbers are OSM's. Ours is the surface along them: OSM's tag
+  where it exists, a rider's answer where someone has said, nothing where
+  nobody has, and a one-tap way to fill the gaps [tap][edit][OSM]
 
 ## B. Water & food  *(ride-critical)*
 - Drinking water / refill points: fountains, taps, cemeteries, churches [tap][edit][OSM][provider]
