@@ -4575,6 +4575,7 @@ roadmap:
   item_osm_giveback: '<b>Teruggeven aan OpenStreetMap.</b> Wat fietsers hier bevestigen, stroomopwaarts aangeboden in een vorm die OpenStreetMap kan opnemen.'
   item_map_a11y: '<b>De kaart bruikbaar maken zonder muis.</b> Het eerlijke gat in onze toegankelijkheidsverklaring: toetsenbord- en schermlezertoegang tot de kaart zelf, niet alleen tot de pagina''s eromheen.'
   item_route_export: '<b>Een route meenemen.</b> Exporteren naar je toestel of je planner, en een permanente link naar een kaartweergave.'
+  item_contraflow: '<b>Eenrichtingsstraten waar je tegen het verkeer in mag fietsen.</b> In Belgische en Nederlandse steden is dat gewoon, en OpenStreetMap legt het vast. De kaart hoort het te tonen, en een route hoort je niet om een straat heen te sturen die je gewoon in mag rijden.'
   item_roadmap_votes: '<b>Meepraten over deze lijst.</b> Stemmen op wat jou uitmaakt, een punt volgen, en zelf iets voorstellen.'
   foot_shipped_pre: 'Wat al uit is staat in het'
   foot_shipped_link: 'wijzigingslogboek'

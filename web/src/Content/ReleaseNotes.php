@@ -63,6 +63,7 @@ final class ReleaseNotes
         ['key' => 'roadmap.item_osm_giveback', 'status' => 'later'],
         ['key' => 'roadmap.item_map_a11y', 'status' => 'later'],
         ['key' => 'roadmap.item_route_export', 'status' => 'later'],
+        ['key' => 'roadmap.item_contraflow', 'status' => 'later'],
         ['key' => 'roadmap.item_roadmap_votes', 'status' => 'later'],
     ];
 
