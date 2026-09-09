@@ -1054,12 +1054,12 @@ It is recorded as **`source = 'form'`**, and form-sourced rows do not count:
 - not in the public tally (`ItemConfirmationService::snapshot()`,
   `CoverageRepository`) — "2 riders confirmed" must mean two riders confirmed
   it, not one rider plus the person making the claim;
-- not in the verified derivation (`CatalogProvider`, map-and-search.md §12) —
-  and this is the load-bearing half. A single counted confirmation turns a dot
-  into a full verified pin, so counting a submitter's own answer would let
-  anyone verify their own contribution with nobody else ever having seen the
-  place. The funnel in the lifecycle copy ("after a few of them agree it is
-  really there") depends on that not being possible.
+- not towards the verification threshold (`ItemConfirmationService::verifyIfEarned()`,
+  §10), which is the load-bearing half. Counting a submitter's own answer
+  would let them supply one of the confirmations their own contribution needs,
+  with one stranger's tap then enough to verify it. The funnel in the lifecycle
+  copy ("after a few of them agree it is really there") depends on that not
+  being possible.
 
 Answering in the drawer later **promotes** the row to `drawer` (the submitter
 has now confirmed it as a rider, and it starts counting); a form answer never
@@ -1734,16 +1734,99 @@ exactly what a second rider standing at the spot disproves. Everything a rider
 can stand in front of is confirmable; voting (best-of) remains a separate,
 additional funnel for the types that have it.
 
-**A curator's word settles it.** `ItemConfirmationService::verifyIfCurator()`
-promotes an item from Unverified to Verified on a single Drawer-sourced
-confirmation by a `ROLE_CURATOR`/`ROLE_ADMIN`, writing a `ChangeHistory` row for
-the state change. Three riders should not be needed to agree that a castle is a
-castle. `NotPotable` never promotes: it is a warning, not a verification. The
-POST response carries `verified: true` on the transition so the map can flip the
-"?" badge in place (`markItemVerified()`), instead of leaving a rider looking at
-a payload fetched before their own confirmation. The same promotion runs from
-the wizard when a curator ticks "Mark it confirmed" on their own applied edit
-(§1.6, `CatalogContributionService::confirmNow()`): one confirmation path, two
+**Two ways to Verified, one destination.** `ItemConfirmationService::verifyIfEarned()`
+promotes an item from Unverified to Verified and writes a `ChangeHistory` row
+for the state change, on either of two grounds:
+
+- **A curator's word settles it.** A single Drawer-sourced confirmation by a
+  `ROLE_CURATOR`/`ROLE_ADMIN`. Three riders should not be needed to agree that
+  a castle is a castle.
+- **`map.item_verify_threshold` independent riders**, 2 by default
+  (system-configuration.md §2). Repetition by strangers is the only real check
+  this project has, since a photo can be generated and a place invented. It is
+  deliberately lower than the route threshold of 3: "I rode this whole route"
+  is a bigger claim than "this tap is here", and a region thin enough that
+  three riders never meet at one fountain would keep a `?` on it forever. One
+  row per rider is a database constraint, so a count of rows is a count of
+  people.
+
+Ruled 2026-09-09, after the owner found the hole: "if the `?` mark is gone, it
+has verified state". Until then a lone confirmation removed the badge on the map
+while the record stayed Unverified, so the map and the database disagreed about
+what verified meant and a rider clearing a badge changed nothing a curator could
+see. `CatalogProvider`, `PublicItemsProvider` and `CuratedReadiness` now all read
+`state = 'verified'` and nothing else (map-and-search.md §12).
+
+**The rule does not read provenance.** An OpenStreetMap node, a national
+register entry and a rider's own pin all start Unverified and all leave it the
+same way: somebody stood there. `Version20260909210000` swept the rows that had
+already collected the threshold so no rider's existing work was thrown away.
+
+**It does not read type or region either. The threshold is one number, and it is
+never scoped** (owner ruling 2026-09-09). `map.item_verify_threshold` is global:
+not per item type, not per category, not per country, not per region. Per-region
+scoping is the worse of the two, because it makes the same word mean different
+things in different places, but neither is allowed. Three reasons, in the order
+they cost.
+
+1. **A shared dataset cannot afford two meanings of one word.** The whole value
+   of publishing `verified` is that a consumer who has never met us can rank on
+   it. If a Dutch tap earned it at 2 and a Spanish col at 4, nothing can compare
+   the two, and the field stops carrying information at the exact moment
+   somebody outside relies on it. That is the failure this project exists to
+   fix, so it is not one to re-create in our own schema.
+
+2. **It re-opens the hole that was closed on 2026-09-09, one layer down.** Until
+   that ruling `verified` was derived three different ways in three files and
+   they could disagree. A scoped threshold moves that same variation out of the
+   queries and into the data, where it is harder to see: every row still reads
+   `state = 'verified'`, but two rows holding it earned it under different bars,
+   and no query can tell them apart.
+
+3. **Every difference people will point at is real, and none of them is a
+   threshold problem.** Each already has its own instrument, and reaching for
+   the threshold instead answers a different question:
+
+   - **Perishability.** A road closure goes stale in a week; a col does not.
+     That is decay, and `web/src/Catalog/ConfirmationFreshness.php` carries it
+     with a configurable `map.confirmation_stale_months`
+     (system-configuration.md §2).
+   - **Seasonality.** Dutch taps are shut off over winter; the same kind of tap
+     in a warmer country runs all year. The place already answers that itself:
+     B · Water carries a `seasonal` field with `Year-round`, `Summer only`,
+     `Frost-shut in winter` and `Unknown`
+     (`web/src/Catalog/CatalogFormRegistry.php`), and the confirmation window
+     rolls rather than resetting on 1 January. A tap nobody can reach in
+     January is not a tap two riders disagree about, so a cheaper Dutch bar
+     would publish confidence where there is only an empty season, and it would
+     do it in the one country whose register we already read.
+   - **A region too thin for two riders to meet at one fountain.** That is a
+     coverage problem, and the curator door above already answers it: one
+     curator's word settles an item outright, precisely so a quiet region is not
+     stuck behind a bar its population cannot clear.
+
+   So a future change that appears to need a scoped threshold is a signal that
+   the question belongs to decay, to a seasonal attribute, or to the curator
+   door. Move it there rather than splitting this number.
+
+**A confirmation outlives the row's custody.** A provider harvest may change an
+item's attributes, its freshness and which tier keeps it
+(data-provider-hierarchy.md §6.7.2), and it may never delete an
+`item_confirmation` row. Custody moves both ways; evidence only accumulates. A
+rider who confirmed a tap in May still confirmed it after a register publishes a
+newer survey in September, the drawer says both (data-provider-hierarchy.md
+§6.7.3), and the tally keeps counting the rider. Any harvest path that deletes
+confirmations is a defect, not a cleanup.
+
+`NotPotable` never promotes, and neither does `NotAsDescribed`: a warning is not
+a vouching. Only `Potable` and `Exists` count towards the threshold
+(`ItemConfirmationService::VOUCHING`). Form-sourced answers never count at all,
+because a submitter is not a witness to their own submission. The POST response
+carries `verified: true` on the transition so the map can flip the "?" badge in
+place (`markItemVerified()`), instead of leaving a rider looking at a payload
+fetched before their own confirmation. The same promotion runs from the wizard
+when a curator ticks "Mark it confirmed" on their own applied edit (§1.6,
+`CatalogContributionService::confirmNow()`): one confirmation path, two
 buttons.
 
 `ItemType::isConfirmable()` = "has stances". One stance **per rider per item**

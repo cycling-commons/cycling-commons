@@ -410,6 +410,233 @@ on 2026-08-27, is at
 snapshot for review, not a source of truth: when the legend is generated, that
 is the source of truth.
 
+### 6.7 Custody and evidence: two axes, one mark each
+
+**Specified 2026-09-09 (owner ruling), pending implementation.** Supersedes the
+greyscale proposal in §6: custody moves to the border, not to saturation. §6.5's
+rule is what forces the shape below, one channel carrying one meaning.
+
+A rider asks two different questions and the map had been answering them with
+one muddled signal:
+
+- *Who keeps this record?* That is **custody**. It never says the record is worse.
+- *Has anybody stood here?* That is **evidence**. It never says who owns it.
+
+Mixing them is what produced the contradiction §6.7.5 records.
+
+**Axis 1, the border, answers custody.**
+
+| Border | Custody |
+| --- | --- |
+| Small disc | a **gross** provider: no scope registered for this category and region. OpenStreetMap is the fallback member of this tier. |
+| Dashed | a **specialty** provider: a `data_provider` row scoped to this category and region. |
+| Solid paper | ours: this community keeps the record. |
+
+**Specialty is a registry fact, never a judgement.** A provider is specialty for
+a (category, region) pair because its registry row carries that scope, not
+because anyone rated it. Nothing is decided at render time, so the tier cannot
+drift with opinion and a new provider inherits its tier the moment its row is
+written. This is the same discipline moderation-and-contribution.md §10.1 applies
+to the verification threshold, for the same reason: a signal that a human grades
+case by case stops being comparable.
+
+**Axis 2, the badge, answers evidence, and it has exactly one mark.** `?`
+present: no dated witness is on record. `?` absent: a dated witness is on record.
+That is the whole vocabulary.
+
+**The paper dot is removed.** Until this ruling `verified` wore a second mark, so
+our tier read by a different rule from the provider tiers and a rider had two
+symbols to learn rather than one. Absence of the `?` is the verified signal on
+every tier. That hands a mark back to a budget §6.3 calls nearly spent.
+
+Three borders by two badge states, and one sentence explains the whole grid:
+**the `?` means nobody has stood here on record.**
+
+| Border | with `?` | without `?` |
+| --- | --- | --- |
+| Small disc | nobody has stood here | the source published a dated survey |
+| Dashed | the specialty provider publishes no dated survey | the specialty provider publishes a dated survey |
+| Solid paper | no rider has confirmed it yet | `map.item_verify_threshold` riders have (moderation-and-contribution.md §10.1) |
+
+**Small disc without a `?` is not a theoretical cell.** 21,541 of the 366,887
+`amenity=drinking_water` objects in OpenStreetMap carry `check_date` (5.9%,
+taginfo, 2026-09-09). Those have a dated witness and lose the badge on the same
+rule as everyone else. Reading a provider's own freshness tag instead of
+ignoring it is the reciprocity of §6.7.2 pointed upstream.
+
+#### 6.7.0 The rungs are utility. They never reach Best of
+
+Owner ruling 2026-09-09, and the boundary the rest of §6.7 depends on.
+
+Two different questions, two different layers, and they must not be joined:
+
+- **Is this thing here, and is that current?** Utility. Every category has it,
+  the experiential ones included: a viewpoint can be felled, a hotel closes, a
+  route is withdrawn. This is what the rungs answer, and all they ever answer is
+  **how the thing is presented**: which border, whether a `?` rides on it, and
+  whether it is drawn at all.
+- **Is this thing worth riding to?** Emotional value, and it is a layer on top.
+  It is settled by rider votes, never by evidence of existence. Best of is that
+  layer.
+
+So no rung, however high, puts anything into Best of. A scenic view confirmed by
+fifty riders is fifty riders saying *it is there*. Not one of them said it was
+good. Reading a high rung as quality would let a well-surveyed car park outrank a
+col, which is the failure this boundary exists to prevent.
+
+`CuratedReadiness` already draws the same line from the other side: its docblock
+reads "Utility layers do not count, they render in both modes", and its `BLOCKS`
+list holds only the experiential letters A, N, O, P, Q and the R routes. Water
+taps were never in that count and must never enter it.
+
+**What this means for the 2026-09-09 collapse.** Removing `OR i.source =
+'authority'` from `CuratedReadiness` took North Holland from 840 countable items
+to 15. Those 825 rows were authority-sourced rows in the experiential letters:
+imported viewpoints, historic sites and sleep spots that nobody here had rated.
+The count did not break. It stopped lying. A region that has 15 pieces of curated
+experiential content has 15, and the honest answer is that it is not ready to
+open in Best of by default, which is exactly what `legend.tier_onboarded_desc`
+already says out loud: "on the map, waiting for its first verified entries".
+
+The fix is therefore **not** to restore the count by another route. Either the
+readiness gate is redefined around what Best of actually ranks, or regions stay
+un-unlocked until rider-backed content exists. Restoring 825 unrated imports
+would put a Best-of view in front of riders built from places no rider chose.
+
+#### 6.7.1 Dashed is a source signal, not a verdict
+
+A dashed pin says *somebody else keeps this*, never *this is worse*. The
+distinction is load bearing: it is what lets the drawer link out honestly instead
+of apologetically. Where a specialty provider holds better material for a region
+than we do, the drawer names them and links to them. It does not paraphrase them
+and keep the rider.
+
+That is the rule wiki/data-catalog.md already sets for licensing, "signposted, a
+link out and no copy", applied to the interface instead of the licence. Provide
+the best data and you get the rider; never stand between a rider and somebody who
+has better.
+
+#### 6.7.2 Custody moves both ways
+
+Ours is not a terminal state.
+
+- A provider row **becomes ours** when `map.item_verify_threshold` riders vouch
+  for it (moderation-and-contribution.md §10.1). Provenance still verifies
+  nothing; riders do.
+- Ours **returns to dashed** when the provider's dated survey is newer than our
+  newest confirmation, and only then. A provider that publishes no dates can
+  never take custody back, which is the same reciprocity rule again: a provider
+  earns standing by showing its receipts, not by being official.
+
+Two brakes, both required. Custody flips only at harvest, never per request, so a
+pin cannot change between page loads. And the provider must be newer by a
+configured margin rather than by a day, or a pin bounces on every harvest.
+
+Whether a given provider may take custody back at all is a per-provider setting
+on its registry row. It is a judgement about that organisation's field operation,
+not a property of the data model, so it belongs beside the provider and not in
+the rule.
+
+**Rider evidence is never cache.** Custody bounces; `item_confirmation` rows
+accumulate forever and keep weighing in on the tally. A harvest may change a
+row's custody, its attributes and its freshness. It may never delete a
+confirmation. Read §6.7.4 with this sentence attached, or a later harvest will
+clear rider work in the name of a refresh.
+
+#### 6.7.3 The drawer says both, and one half of it is personal
+
+When custody returns to a provider the drawer states both facts and subtracts
+neither:
+
+> You confirmed this on 12 May. The register published a newer survey on 3 September.
+
+Never "external data replaced yours". A rider whose confirmation appears to
+vanish is a rider who stops confirming, and it has not in fact vanished (§6.7.2).
+
+That makes half the drawer user bound, which a shared cache cannot hold. The
+split:
+
+- The public half, the provider's survey date included, stays in the cached
+  drawer body.
+- The **one sentence** beginning "You" is a separate fragment, fetched
+  asynchronously and served `private, no-store`.
+- Anonymous visitors hold no confirmations, so the fragment renders nothing and
+  is never requested. The common case pays nothing.
+- The client memoises it per item id, so reopening a drawer costs no request.
+- It degrades: if the fragment fails the drawer is still correct, only shorter.
+  Facts never sit behind a spinner.
+
+**The trap this must not spring.** The personal fragment has to be the only route
+that touches the session. If the drawer body route reads the user in order to
+decide whether to show the line, the body stops being cacheable and the split has
+bought nothing. That is the "Security touches session" blocker already recorded
+against the page-caching work.
+
+#### 6.7.4 The model: a provider is a warm-up cache
+
+A provider row is a head start, not an answer. It puts a pin on the map so a
+region is not empty on its first day, and it says plainly that somebody else
+keeps the record. Riders convert it into a record this community keeps, one
+confirmation at a time.
+
+The metaphor carries two consequences, both deliberate. A cache is refreshable,
+so a re-harvest may correct or retire a provider row. And a cache is not the
+truth, so the `?` stays on it until a dated witness exists, whoever produced that
+witness. Rider evidence sits outside the cache and survives every refresh
+(§6.7.2).
+
+#### 6.7.5 Known defect: the shipped legend gives registers three answers
+
+Recorded, not yet fixed. The fix lands with the code that draws the grammar
+above, never before it.
+
+| Translation key | Says a public register is |
+| --- | --- |
+| `legend.tier_osm_t` | a small disc, "joined by public registries as they are imported" |
+| `legend.tier_provider_t` | "Full colour, the ? badge" |
+| `legend.tier_community_t` | a dashed border and a `?` badge |
+
+Three answers to one question, in five locales. Under §6.7 there is one answer: a
+register is a small disc when it is gross and dashed when it is specialty, and
+its badge depends only on whether it publishes a dated survey.
+`legend.tier_verified_t` additionally describes the paper dot this ruling
+removes. The legend copy, the key rail in `templates/map/index.html.twig` and
+`templates/pages/map_key.html.twig` all change in the same commit as the markers,
+so the key never describes a map that does not exist.
+
+
+#### 6.7.6 Blocking defect: nothing records when a provider last republished a row
+
+Checked 2026-09-09. The rung that says *the register republished this record and
+did not retract it* needs a per-row date, and no maintained one exists.
+
+| Field | What it holds | Fit |
+| --- | --- | --- |
+| `data_provider.last_run_at` | when this provider was last harvested | per provider, not per row. Says the feed ran, not that this row was in it |
+| `item.updated_at` | last write of any kind | touched by riders and curators too, so it cannot tell "the register republished" from "a rider fixed the name" |
+| `item.osm_checked_at` | when the OpenStreetMap link was last resolved | a different question entirely |
+| `item.imported_at` | its docblock says "last harvest touch: staleness signal" | **the docblock is not true.** It is set once in `Item::__construct()` and nothing in `web/src/` ever writes it again. There is no setter and no UPDATE. It records creation, not touch |
+
+`ProviderHarvest::countVanished()` compounds it: a row the upstream no longer
+carries is *counted* for the run summary and never marked, so after the run
+finishes nothing distinguishes a row the register still lists from one it
+dropped.
+
+**The fix is one field used properly, not a new one.** Write `imported_at` on
+every row the harvest *sees*, on insert, on update, and on the no-change path,
+and read its name as "last seen in an upstream export". Two things then fall out
+with no extra column:
+
+- Rung 4 is `imported_at` inside the freshness window.
+- A vanished row simply stops advancing and drops out of rung 4 by itself, so
+  upstream removal becomes a derived fact instead of a number that exists only in
+  one run's log.
+
+Nothing about Best of waits on this. That was a category error, corrected by the
+owner on 2026-09-09 and recorded in §6.7.7: the rungs never reach Best of. What
+waits on this field is rung 4 itself, and therefore how a specialty provider's
+rows are drawn between harvests.
+
 ## 7. Citation
 
 The bucket word is not a citation and is never shown. Every drawer line and

@@ -167,6 +167,21 @@ All three are exact-path `PUBLIC_ACCESS` in `security.yaml` (the scheb
 lazy-firewall caching gotcha — see
 [account-and-auth.md](account-and-auth.md) §5).
 
+**The one planned exception, and the shape it has to take**
+(specified 2026-09-09, pending implementation). When a provider takes custody of
+an item back, the drawer owes the rider a sentence about their own confirmation
+(data-provider-hierarchy.md §6.7.3). That sentence is user bound and a shared
+cache cannot hold it, so it does not join the drawer body. It is a separate
+fragment, served `private, no-store`, requested only for a signed-in rider,
+memoised client-side per item id, and skipped entirely for anonymous visitors,
+who hold no confirmations. The drawer body stays public and cacheable.
+
+That fragment must be the **only** route that touches the session. A drawer-body
+route that reads the user in order to decide whether to render the line stops
+being cacheable and the split buys nothing, which is the "Security touches
+session" blocker recorded against the page-caching work. It degrades too: if the
+fragment fails the drawer is still correct, only shorter.
+
 **catalog.json is fetched through a versioned URL** (2026-08-13): /map embeds
 `CC_CATALOG_URL = /map/catalog.json?v=<tag>` where the tag
 (`CatalogProvider::versionTag()`) hashes the feeding tables' row counts +
@@ -2246,12 +2261,26 @@ the heatmap back is uncommenting two blocks and nothing else.
 
 ## 12. Community tier
 
+**The marker grammar this tier is drawn with is specified in
+data-provider-hierarchy.md §6.7** (owner ruling 2026-09-09, pending
+implementation): the border answers custody (small disc for a gross provider,
+dashed for a specialty provider, solid for ours) and the badge answers evidence
+(`?` means nobody has stood here on record). The paper dot that marked verified
+is removed there, because absence of the `?` already says it on every tier.
+
 Approved 2026-07-15; implemented via
 [coverage-provider.md](coverage-provider.md) (its §6 rebases these decisions
 onto the tile/endpoint data source; the `verified` flag derives from real
-canonical state: `CatalogProvider`'s `v:1` is verified state or a rider's
-non-form confirmation, and nothing else, never the simulated `c`
-attribute). An authority row (a Tourisme Wallonie stay, a RIVM tap) wears the
+canonical state: `CatalogProvider`'s `v:1` is `state = 'verified'` and nothing
+else, never the simulated `c` attribute). **One definition of verified**, ruled
+2026-09-09 ("we must draw 1 line else everything gets too confusing"): the map,
+the public API (`PublicItemsProvider`) and the Best-of readiness gate
+(`CuratedReadiness`) all read that one column, so a `?` disappearing from a pin
+means the record itself was promoted and a curator sees the same thing a rider
+does. Before this, three queries each carried their own extra clause and a
+single confirmation drew a full pin over an Unverified row. How that state is
+earned is `ItemConfirmationService`'s question, not this one, and is specified
+in moderation-and-contribution.md §10. An authority row (a Tourisme Wallonie stay, a RIVM tap) wears the
 dashed "?" community pin until a rider confirms it: the register's authority is
 its rank (data-provider-hierarchy.md §4), not a dot, and the harvester writes
 new rows `unverified` (its §5 rule 6). Ruled 2026-09-06, the night the first
