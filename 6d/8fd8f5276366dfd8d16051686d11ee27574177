@@ -1,0 +1,26 @@
+wiki/javascripts/diagrams.js
+  s_be192d0027462f::t_7d67ac1da0fdfb 90
+  s_be192d0027462f::t_56e38bbd2bc494 5
+  s_be192d0027462f::t_44d2641a7a1381 39
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "6d8fd8f5276366dfd8d16051686d11ee27574177",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_be192d0027462f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8679c804-4184-4341-85c1-bf21e1c7a212",
+        "model": "claude-haiku-4-5-20251001"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
