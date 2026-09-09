@@ -44,15 +44,6 @@
 </script>
 {% endif %}
 <link rel="stylesheet" href="{{ asset('lib/maplibre-gl/6.8.0/maplibre-gl.css') }}" />
-{# MapLibre is ~1 MB of module across two files, and the second is only
-   discovered once the first has been parsed. Preloading both from the
-   preamble puts them in flight together, and in parallel with the rest of
-   the page, rather than one after the other from the boot module far down
-   this template. No crossorigin attribute: modulepreload already fetches
-   the way a module script does, so there is no mode to reconcile (unlike
-   the catalog preload lower down, which needs one). #}
-<link rel="modulepreload" href="{{ asset('lib/maplibre-gl/6.8.0/maplibre-gl.mjs') }}" />
-<link rel="modulepreload" href="{{ asset('lib/maplibre-gl/6.8.0/maplibre-gl-shared.mjs') }}" />
 <link rel="stylesheet" href="{{ asset('styles/fonts.css') }}" />
 <link rel="stylesheet" href="{{ asset('styles/map.css') }}" />
 <link rel="icon" href="/favicon.ico" sizes="32x32" />
@@ -939,6 +930,24 @@ window.CC_VENDOR = {{ {
    (frontend review 2026-08-09 #1). The list is maintained by hand — a module
    missing here still works, it just loads one wave later. Preloading does not
    execute anything, so the catalog gate below is untouched. #}
+{# MapLibre is ~1 MB of module across two files, and the second is only
+   discovered once the first has been parsed, so both are preloaded to put them
+   in flight together rather than one after the other.
+
+   HERE, under importmap(), and not up in the preamble where they started. A
+   modulepreload TRIGGERS A MODULE LOAD, and an import map is only honoured
+   while none has been triggered yet, so two links in the head were enough to
+   make the browser throw the whole map away: every rewritten relative import
+   then 404s into index.php and comes back as HTML the browser refuses on MIME
+   type. Firefox does that; Chromium ignored it, so this cost a round trip
+   through a "fixed" map that was still dead in one browser. The rest of this
+   preload block sits below importmap() for the same reason.
+
+   No crossorigin attribute: modulepreload already fetches the way a module
+   script does, so there is no mode to reconcile (unlike the catalog preload
+   below, which needs one). #}
+<link rel="modulepreload" href="{{ asset('lib/maplibre-gl/6.8.0/maplibre-gl.mjs') }}" />
+<link rel="modulepreload" href="{{ asset('lib/maplibre-gl/6.8.0/maplibre-gl-shared.mjs') }}" />
 <link rel="modulepreload" href="{{ asset('map/catalog.js') }}">
 <link rel="modulepreload" href="{{ asset('map/climb-profile.js') }}">
 <link rel="modulepreload" href="{{ asset('map/community.js') }}">

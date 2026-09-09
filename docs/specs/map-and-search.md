@@ -86,18 +86,25 @@ Implementation surfaces: `web/assets/map/map.js` (all client behaviour),
   head preloads both halves of the library (`maplibre-gl.mjs` and the
   `maplibre-gl-shared.mjs` it imports) with `modulepreload`, because the second
   is otherwise only discovered once the first has been parsed.
-- **The import map must come before every module script, and that is a hard
-  constraint, not a preference.** A browser honours an import map only while it
-  has seen no module script yet; one above `importmap()` makes the map be
-  discarded. On this page the map is the only thing that resolves the rewritten
+- **The import map must come before every module script AND every
+  `modulepreload`, and that is a hard constraint, not a preference.** A browser
+  honours an import map only while no module load has been triggered yet. A
+  `<script type="module">` triggers one. So does a
+  `<link rel="modulepreload">`, which is why the whole preload block on this
+  page sits below `importmap()` and not up in the preamble where a preload
+  would normally go. Either one above it makes the map be discarded. On this page the map is the only thing that resolves the rewritten
   relative imports AssetMapper emits, so losing it means `/assets/map/i18n.js`
   and its siblings are fetched at paths that exist nowhere, 404 into
   `index.php`, and return HTML the browser refuses on MIME type: no map at all.
   Firefox does exactly this; Chromium happened to survive the same page, so a
-  green browser check is not evidence. The MapLibre boot module therefore sits
-  **below** `importmap()`, next to `catalog-load.js`, and the head preload above
-  is what keeps that from costing any download time.
-  `tests/Smoke/ImportMapOrderTest.php` pins the ordering.
+  green browser check is not evidence. It caught us twice on 2026-09-09: once
+  with the boot module above `importmap()`, and again after that was fixed, with
+  two MapLibre `modulepreload` links left in the preamble. The MapLibre boot
+  module and its preloads therefore both sit **below** `importmap()`, beside
+  `catalog-load.js` and the rest of the preload block.
+  `tests/Smoke/ImportMapOrderTest.php` pins both orderings, and the preload half
+  exists because the first version of that test checked only script tags and
+  passed over the second bug.
 - **No WebGL2, no map.** v6 dropped WebGL1 and now **throws**
   `GPUInitializationError` from the `Map` constructor where v5 returned a map
   that silently never painted. `catalog-load.js` catches it, puts
