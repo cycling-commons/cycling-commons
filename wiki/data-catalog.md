@@ -103,13 +103,6 @@ short (owner 2026-09-09).
 - One spot a rider can pin: a bend where you cannot see what is coming, or a busy road you must cross in one go with no island in the middle. The form calls these *bad corner* and *junction / crossing*, never *dangerous*: one rider's fright is not a fact [tap][edit][safety]
 - Crosswind / fog on an exposed stretch: real on a dam or a col; a stretch, not a pin, so it reads as a quality of the road [tap][edit]
 
-Moved: "roads to avoid" is traffic exposure, derived under **A** from what
-OpenStreetMap already carries, not collected. Gone: tram tracks, level
-crossings and cattle grids, which a rider sees coming and OSM already maps;
-private and no-entry roads, which OSM's `access` tags hold in full and we
-never copy; and dog warnings, which name a household, exactly the personal
-data about a place the moderation standards refuse.
-
 ## F. Getting there & multimodal
 - Train stations with bike access; bikes-on-train rules [tap][edit][OSM]
 - Ferries cyclists can use (+ bikes-allowed, rough schedule) [tap][edit][OSM]
