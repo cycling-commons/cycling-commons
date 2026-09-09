@@ -24,8 +24,11 @@ viewpoints, and more. All of it is **community-contributed**, useful to **anyone
 
 Letters are stable identifiers, not an order: practical categories take A-M,
 experiential (votable) categories take N-Z, and the ride heatmap is a derived
-layer with no letter. The letters are what `?type=`, the coverage tiles and
-the public API use.
+layer with no letter. A rider never sees a letter: wherever the site names a
+category it shows the category's icon and name, on the map's layer list, the
+drawer, search results and the contribution forms alike. The letters live in
+`?type=`, the coverage tiles, `coverage_poi.letter` and the public API, and
+on this page, where they name a section.
 
 ## A. Road surface & base map  *(the base)* — mostly [OSM]
 - Area / region / municipality boundaries [OSM]
