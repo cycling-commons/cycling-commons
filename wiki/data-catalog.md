@@ -18,6 +18,7 @@ viewpoints, and more. All of it is **community-contributed**, useful to **anyone
 - **[edit]** — structured attribute edit (climb metrics, POI details)
 - **[safety]** — dynamic/perishable; needs freshness, expiry, and confirm/decay
 - **[OSM]** — overlaps OpenStreetMap; sync rather than duplicate
+- **[provider]** — imported from an open data provider of record, named in the provider registry and attributed on every row it gave (source `authority`). For example: the RIVM drinking-water register in the Netherlands, Tourisme Wallonie PIVOT for stays in Belgium
 - **[media]** — photo/video, CC BY-SA 4.0, consent-gated (own-it-and-donate, or licence-validated link). For example: three photos of a col and a short clip of the descent, shown on the item as a slideshow
 
 ---
@@ -49,7 +50,7 @@ on this page, where they name a section.
   [tap][OSM]
 
 ## B. Water & food  *(ride-critical)*
-- Drinking water / refill points: fountains, taps, cemeteries, churches [tap][OSM]
+- Drinking water / refill points: fountains, taps, cemeteries, churches [tap][OSM][provider]
   - **Potability is stated, never assumed.** The map says what it knows about each water point and marks what it does not. The rule has two parts:
     - **What the OpenStreetMap tags say** sets the baseline, in three states: `drinking_water=yes`, or `amenity=drinking_water` with nothing said against it, is a drinking tap; `drinking_water=no` is not for drinking; a water point carrying neither is unknown. The coverage tiles carry this tri-state per point (`pipeline/coverage/tiles.py`).
     - **A public register of record** can vouch for a point where one exists. In the Netherlands the RIVM drinking-water register is imported as its own rows under letter B, named in the record panel and shown as *official register* until a rider confirms it on the spot. The registry of providers is described in [How data earns its place](data-priority.md).
@@ -119,7 +120,7 @@ Sourced from OSM only. The obvious specialist directory for the Netherlands
 - Per-area relief / total climbing [auto]
 
 ## O. Where to sleep
-- Bike-friendly accommodation riders have actually used — B&B, hotel, hostel, campsite [tap][edit][OSM]
+- Bike-friendly accommodation riders have actually used — B&B, hotel, hostel, campsite [tap][edit][OSM][provider]
 - Secure bike storage at a stay [edit]
 - Bivouac / shelter / wild-camp spots (where legal) [tap]
 - *Signpost layer (links out, not Commons): cyclist-accommodation & hospitality schemes*
