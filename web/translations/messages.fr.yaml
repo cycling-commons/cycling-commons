@@ -1958,6 +1958,7 @@ map:
   rail_layers: 'Couches & filtres'
   rail_tools: 'Outils de sortie'
   rail_key: 'Légende'
+  gpu_unsupported: 'La carte ne peut pas être affichée dans ce navigateur. Elle a besoin de WebGL 2, une fonction graphique que ce navigateur n''a pas ou a désactivée. Essayez un navigateur plus récent, ou réactivez l''accélération matérielle dans les réglages du navigateur.'
   key_full: 'La légende complète, expliquée'
   rail_theme: 'Panneaux clairs ou sombres'
   panel_close: 'Fermer le panneau'

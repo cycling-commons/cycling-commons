@@ -162,17 +162,35 @@ mapillary-js upgrade.
 
 ### 2.5 Vendored libraries (SRI on unpkg, superseded 2026-08-09)
 
-The third-party libraries are **vendored same-origin** under
-`web/assets/lib/` (`maplibre-gl-5.24.0`, `mapillary-js-4.1.2`,
-`pmtiles-4.4.1`, `redoc-standalone-2.5.3`, `scout-fit`), so `script-src`
+The third-party libraries are **vendored same-origin**, so `script-src`
 carries no third-party host and no SRI hashes are needed: the bytes are ours,
 served from our own origin, pinned by the repository itself. mapillary-js is
-still injected lazily (`web/assets/map/mapillary.js`) but from
-`/assets/lib/…`, not a CDN. This replaced the earlier unpkg + SRI-pin
-arrangement: a compromised CDN response is no longer a case that needs
-defending against, because no CDN is in the policy at all. Upgrading a
-library means replacing the vendored file and the version-suffixed filename
-everywhere it appears.
+still injected lazily (`web/assets/map/mapillary.js`) but from our own path,
+not a CDN. This replaced the earlier unpkg + SRI-pin arrangement: a
+compromised CDN response is no longer a case that needs defending against,
+because no CDN is in the policy at all.
+
+They sit in **two places**, and which one a library belongs in is decided by
+the library, not by taste:
+
+| Where | Which | Why |
+|---|---|---|
+| `web/assets/lib/` | `mapillary-js-4.1.2`, `pmtiles-4.4.1`, `redoc-standalone-2.5.3`, `scout-fit` | single self-contained files. AssetMapper digests them, the version rides in the filename, and upgrading means replacing the file and the version-suffixed name everywhere it appears |
+| `web/public/lib/<name>/<version>/` | `maplibre-gl/6.8.0` | **multi-file libraries whose own files find each other by relative URL at run time.** AssetMapper's content hash rewrites the names, which breaks exactly that: `maplibre-gl.mjs` resolves its worker with `new URL('./maplibre-gl-worker.mjs', import.meta.url)`, and the worker then imports `./maplibre-gl-shared.mjs` from its own location. Both would 404 against digested filenames. Undigested with the version in the path keeps the sibling lookups working and keeps the URL immutable, so it is still cacheable for a year |
+
+A library in `public/lib/` bypasses AssetMapper entirely, so two things move
+with it: nginx must know the `.mjs` MIME type (operations.md §4, deploy
+prerequisite) and the credits gate reads that directory separately
+(credits-page.md §4.1).
+
+MapLibre v6 is **ES-module only**: the UMD bundle, and the `maplibregl` global
+it defined, are gone. One inline `<script type="module">` per map-bearing page
+imports the library and assigns `window.maplibregl`, which is what the ~70
+existing call sites read. It carries the page nonce like every other inline
+script. Because a module script is deferred, any script that touches MapLibre
+during parse has to be a module too: that is `catalog-load.js` on `/map` and
+`improve.js` on the contribution wizard. `country-globe.js` reaches it through
+a dynamic `import()` instead, since it loads the library only when a page asks.
 
 ### 2.6 Test anchoring
 
@@ -182,6 +200,7 @@ everywhere it appears.
 |---|---|
 | `testHtmlResponseCarriesCspWithNonce` | Header present on HTML; `default-src 'self'`; `object-src 'none'`; `script-src 'self' 'nonce-…'` and **no** unpkg host; **no** `'unsafe-inline'` in script-src |
 | `testUnsafeEvalIsScopedToTheMapPage` | `'unsafe-eval'` present on `/map`, absent on `/` |
+| `testWorkerSrcAllowsSameOriginAndBlob` | `worker-src 'self' blob:` on `/map`. MapLibre v6's tile worker is a same-origin module URL; dropping `'self'` blocks every tile and says so only in the console |
 | `testEveryInlineScriptCarriesTheHeaderNonce` | On `/`, `/map`, `/regions`, `/contributors`: every `<script>` without `src` carries exactly the header's nonce |
 | `testNonHtmlResponsesSkipCsp` | `/map/catalog.json` has no CSP header |
 

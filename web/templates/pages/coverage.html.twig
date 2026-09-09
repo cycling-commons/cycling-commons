@@ -101,8 +101,8 @@
   <div class="cglobe">
     <div id="coverage-globe" class="globe loading"
          data-outlines="{{ path('regions_outlines') }}"
-         data-maplibre-js="{{ asset('lib/maplibre-gl-5.24.0.js') }}"
-         data-maplibre-css="{{ asset('lib/maplibre-gl-5.24.0.css') }}"
+         data-maplibre-js="{{ asset('lib/maplibre-gl/6.8.0/maplibre-gl.mjs') }}"
+         data-maplibre-css="{{ asset('lib/maplibre-gl/6.8.0/maplibre-gl.css') }}"
          data-style="https://tiles.openfreemap.org/styles/liberty" data-tiles="https://tiles.openfreemap.org/planet"
          data-ramp="{{ ramp|join(',') }}" data-none="{{ none_fill }}"></div>
     {# One card per country, rendered here so every word is Twig's; the

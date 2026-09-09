@@ -281,7 +281,12 @@ globalThis.runMapSmoke = async function runMapSmoke(opts) {
     {
       name: 'curated pin opens a drawer',
       async run() {
-        const pin = $('.cc-pin');
+        /* `.maplibregl-marker` matters: since the Map key panel landed
+           (map-and-search.md 4.7) the rail draws the SAME pin classes as
+           swatches, and those sit earlier in the DOM than any marker. A bare
+           `.cc-pin` selected a legend swatch, which has no click handler and
+           opens nothing, so this checkpoint failed on a working map. */
+        const pin = $('.maplibregl-marker.cc-pin');
         if (!pin) return 'skip: no curated pin drawn in the current viewport';
         await closeDrawerIfOpen();
         pin.click();
@@ -335,13 +340,19 @@ globalThis.runMapSmoke = async function runMapSmoke(opts) {
     {
       name: 'best-of facets repaint',
       async run() {
-        const s = $('#boSeason');
-        if (!s) return 'skip: no best-of facets on this view';
-        const opts2 = Array.from(s.options).map(o => o.value);
-        s.value = opts2[(opts2.indexOf(s.value) + 1) % opts2.length];
-        s.dispatchEvent(new Event('change', { bubbles: true }));
+        /* #boSeason is a chip set, not a <select>: reading `.options` threw
+           "undefined is not iterable" and reported a failure that was this
+           file being out of date. Clicking the next chip is the same gesture a
+           rider makes, and asserts the same thing: the facet change repaints
+           without taking the page down. */
+        const box = $('#boSeason');
+        if (!box) return 'skip: no best-of facets on this view';
+        const chips = Array.from(box.querySelectorAll('.chip'));
+        if (chips.length < 2) return 'skip: fewer than two season chips';
+        const at = chips.findIndex(c => c.classList.contains('on'));
+        chips[(at + 1) % chips.length].click();
         await sleep(1200);
-        assert($('#subtitle') || $('.cc-subtitle') || true, 'subtitle vanished');
+        assert($('#boSeason'), 'the facet row vanished after a season change');
       },
     },
     {

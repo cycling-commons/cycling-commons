@@ -166,8 +166,8 @@
   </div>
   <div id="regions-map" class="globe" hidden data-zoom="2.8"
        data-outlines="{{ path('regions_outlines') }}"
-       data-maplibre-js="{{ asset('lib/maplibre-gl-5.24.0.js') }}"
-       data-maplibre-css="{{ asset('lib/maplibre-gl-5.24.0.css') }}"
+       data-maplibre-js="{{ asset('lib/maplibre-gl/6.8.0/maplibre-gl.mjs') }}"
+       data-maplibre-css="{{ asset('lib/maplibre-gl/6.8.0/maplibre-gl.css') }}"
        data-style="https://tiles.openfreemap.org/styles/liberty" data-tiles="https://tiles.openfreemap.org/planet"{% if home %} data-home="{{ home[0] }},{{ home[1] }}"{% endif %}></div>
 
   {# One grid per continent: the countries, and after each one its regions

@@ -1958,6 +1958,7 @@ map:
   rail_layers: 'Lagen & filters'
   rail_tools: 'Ritgereedschap'
   rail_key: 'Legenda'
+  gpu_unsupported: 'De kaart kan niet worden getekend in deze browser. Daarvoor is WebGL 2 nodig, een grafische functie die deze browser niet heeft of heeft uitgeschakeld. Probeer een nieuwere browser, of zet hardwareversnelling weer aan in de browserinstellingen.'
   key_full: 'De volledige legenda, uitgelegd'
   rail_theme: 'Lichte of donkere panelen'
   panel_close: 'Paneel sluiten'

@@ -188,14 +188,39 @@
 
   var wmap = null;
 
+  /* MapLibre v6 needs WebGL2 and throws GPUInitializationError from the
+     constructor when it cannot have it, where v5 handed back a map that simply
+     never painted. Catching it keeps the rest of the wizard alive: the name,
+     the details and the coordinate fields all still work without a map, so a
+     browser with no GPU costs a rider the pin, not the contribution. */
+  function makeWizardMap() {
+    try {
+      return new maplibregl.Map({
+        container: 'wmap',
+        style: 'https://tiles.openfreemap.org/styles/liberty',
+        center: DEFAULTS.center,
+        zoom: hasCoords ? (isNaN(initZoom) ? 14 : initZoom) : 12,
+        attributionControl: false
+      });
+    } catch (e) {
+      var box = document.getElementById('wmap');
+      if (box) {
+        var note = document.createElement('p');
+        note.className = 'wmap-gpu-error';
+        note.setAttribute('role', 'alert');
+        note.textContent = BAG.gpu_unsupported || 'The map cannot be drawn in this browser.';
+        box.replaceChildren(note);
+      }
+      console.error('MapLibre could not start.', e);
+      return null;
+    }
+  }
+
   if (LOCATE !== 'off') {
-    wmap = new maplibregl.Map({
-      container: 'wmap',
-      style: 'https://tiles.openfreemap.org/styles/liberty',
-      center: DEFAULTS.center,
-      zoom: hasCoords ? (isNaN(initZoom) ? 14 : initZoom) : 12,
-      attributionControl: false
-    });
+    wmap = makeWizardMap();
+  }
+
+  if (wmap) {
     window.__ccWizMap = wmap;  // smoke tests: project()/unproject()
     wmap.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
     wmap.addControl(new maplibregl.AttributionControl({ customAttribution: '© OpenStreetMap contributors · ODbL' }), 'bottom-right');

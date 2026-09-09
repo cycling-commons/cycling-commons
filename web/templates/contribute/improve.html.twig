@@ -3,7 +3,7 @@
 {# A curator's own EDIT is applied at once (moderation-and-contribution.md 1.6); a new place still queues. #}
 {% set self_applies = not add_mode|default(false) and is_granted('ROLE_CURATOR') %}
 {% block head_styles %}
-<link rel="stylesheet" href="{{ asset('lib/maplibre-gl-5.24.0.css') }}" />
+<link rel="stylesheet" href="{{ asset('lib/maplibre-gl/6.8.0/maplibre-gl.css') }}" />
 <style>
   .ey{font-family:var(--mono);font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--clay);margin-bottom:.5rem}
   h1.disp{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4vw,2.5rem);line-height:1.05;margin-bottom:.4rem}
@@ -99,6 +99,10 @@
   /* step 1 map */
   #wmap{height:clamp(420px,74vh,720px);border-radius:8px;overflow:hidden;border:1px solid rgba(20,22,14,.15);margin-bottom:.8rem;background:var(--paper-deep)}
   #wmap.confirm{height:clamp(280px,40vh,420px)}
+  /* Replaces the canvas when MapLibre cannot get a WebGL2 context
+     (improve.js). The wizard itself carries on without it. */
+  .wmap-gpu-error{height:100%;margin:0;display:flex;align-items:center;justify-content:center;
+    text-align:center;padding:2rem;color:var(--ink);font-size:.95rem;line-height:1.5}
   #wzChange{margin-bottom:.8rem}
   .cc-pin.glow{animation:pinpulse 1.8s ease-in-out infinite}
   @keyframes pinpulse{
@@ -468,7 +472,10 @@
      Everything in this bag is TEXT. improve.js sets it with textContent and
      never with innerHTML; copy that needs markup stays in this template, where
      |rich sanitises it. #}
+  {# gpu_unsupported is the map page's string, not a second copy: same failure,
+     same sentence, one thing to translate. #}
   <script nonce="{{ csp_nonce() }}">window.CC_IMPROVE_I18N = {{ {
+    gpu_unsupported: 'map.gpu_unsupported'|trans,
     nav_next: 'improve.nav.next'|trans,
     nav_submit: (self_applies ? 'improve.nav.submit_applies' : 'improve.nav.submit')|trans,
     readout_initial: 'improve.step1.readout_initial'|trans,
@@ -889,7 +896,14 @@
 {% endif %}
 {% endblock %}
 {% block body_scripts %}
-<script src="{{ asset('lib/maplibre-gl-5.24.0.js') }}"></script>
+{# MapLibre v6 is ES-module only and defines no `maplibregl` global. This
+   inline module restores it, exactly as the map page does; see the long note
+   in templates/map/index.html.twig for why the library sits in public/lib/
+   rather than under assets/. #}
+<script type="module" nonce="{{ csp_nonce() }}">
+  import * as maplibregl from "{{ asset('lib/maplibre-gl/6.8.0/maplibre-gl.mjs') }}";
+  window.maplibregl = maplibregl;
+</script>
 {# climb-elevation.js + climb-editor.js must load before improve.js (Task 5: the
    climb edit path calls window.Cc.mountClimbEditor / window.Cc.profileFromRoute).
    Harmless no-op include for non-climb items — the scripts only attach to window.Cc. #}
@@ -921,5 +935,8 @@
    escaper of its own), so it has to be defined first. #}
 <script src="{{ asset('contribute/links-editor.js') }}"></script>
 <script src="{{ asset('contribute/review-card.js') }}"></script>
-<script src="{{ asset('contribute/improve.js') }}"></script>
+{# type="module" so this runs after the MapLibre boot module above: improve.js
+   creates its wizard map at evaluation time, and v6 has no global until that
+   import has resolved. Deferred module scripts run in document order. #}
+<script type="module" src="{{ asset('contribute/improve.js') }}"></script>
 {% endblock %}

@@ -4,8 +4,27 @@
    The MapLibre instance is built here before that fetch so the basemap does
    not queue behind the catalog. */
 (function () {
-  /* MapLibre instance. Handshake via window: a classic script cannot import
-     an ES module. pmtiles protocol is registered later by the module graph. */
+  /* Said in place of the map when the browser has no WebGL2 context. v6 removed
+     WebGL1 and throws GPUInitializationError from the constructor instead of
+     returning a map that silently never paints, so this is the first release
+     that can tell a rider what is wrong. English fallback for the same reason
+     i18n.js carries them: the file must still work with no bundle injected. */
+  function reportNoGpu() {
+    var box = document.getElementById('map');
+    if (!box) return;
+    var p = document.createElement('p');
+    p.className = 'map-gpu-error';
+    p.setAttribute('role', 'alert');
+    p.textContent = (window.CC_I18N && window.CC_I18N.gpuUnsupported)
+      || 'The map cannot be drawn in this browser. It needs WebGL 2, a graphics '
+       + 'feature this browser does not have or has switched off.';
+    box.replaceChildren(p);
+  }
+
+  /* MapLibre instance. Handshake via window: the boot module in the template
+     imports maplibre-gl.mjs and assigns the `maplibregl` global v6 no longer
+     defines itself. This file is a module too, so it runs after that one.
+     pmtiles protocol is registered later by the module graph. */
   function buildMap() {
     if (window.__ccMapInstance || typeof maplibregl === 'undefined') return;
     if (!document.getElementById('map')) return;
@@ -17,10 +36,22 @@
       bounds: bb ? [[bb[0], bb[1]], [bb[2], bb[3]]] : [[2.84, 49.45], [6.41, 50.85]],
       fitBoundsOptions: { padding: 24 }, attributionControl: false
     };
-    window.__ccMapInstance = new maplibregl.Map(window.__ccMapOpts);
+    try {
+      window.__ccMapInstance = new maplibregl.Map(window.__ccMapOpts);
+    } catch (e) {
+      // Any constructor failure ends the map, not just a missing GPU: without
+      // an instance map-init.js throws on import and nothing downstream runs.
+      window.__ccMapOpts = null;
+      window.CC_MAP_STATE = 'FAILED: ' + (e && e.message ? e.message : e);
+      reportNoGpu();
+      console.error('MapLibre could not start.', e);
+    }
   }
 
   function boot() {
+    // map.js adopts the instance built above; with none, importing it only
+    // throws. The message reportNoGpu() left in #map stands on its own.
+    if (!window.__ccMapInstance) { return; }
     var s = document.createElement('script');
     s.type = 'module';
     s.src = window.CC_MAP_SRC;

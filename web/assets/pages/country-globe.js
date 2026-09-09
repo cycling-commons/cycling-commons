@@ -22,14 +22,17 @@
   'use strict';
 
   var loading = null;
+  /* MapLibre v6 is ES-module only and defines no global of its own, so the
+     library arrives through import() rather than a <script> tag, and the
+     namespace is published as `maplibregl` for the builder below. The URL is a
+     variable on purpose: AssetMapper only rewrites import() calls that carry a
+     string literal, and this file must keep the digest-free public/lib/ path
+     the page hands it. */
   function loadOnce(src, css) {
     if (loading) { return loading; }
-    loading = new Promise(function (resolve, reject) {
-      var link = document.createElement('link');
-      link.rel = 'stylesheet'; link.href = css; document.head.appendChild(link);
-      var s = document.createElement('script');
-      s.src = src; s.onload = resolve; s.onerror = reject; document.head.appendChild(s);
-    });
+    var link = document.createElement('link');
+    link.rel = 'stylesheet'; link.href = css; document.head.appendChild(link);
+    loading = import(src).then(function (ns) { window.maplibregl = ns; return ns; });
     return loading;
   }
 

@@ -168,16 +168,70 @@ def test_a_header_below_the_scan_window_does_not_exempt(tmp_path: Path):
 @pytest.mark.parametrize(
     ("filename", "expected"),
     [
-        ("maplibre-gl-5.24.0.js", "maplibre-gl"),
+        ("mapillary-js-4.1.2.js", "mapillary-js"),
         ("pmtiles-4.4.1.js", "pmtiles"),
         ("redoc-standalone-2.5.3.js", "redoc-standalone"),
-        ("maplibre-gl-5.24.0.css", "maplibre-gl"),
+        ("mapillary-js-4.1.2.css", "mapillary-js"),
         ("no-version.js", "no-version"),
     ],
 )
 def test_versions_are_stripped_from_vendored_filenames(tmp_path: Path, filename, expected):
     _lib(tmp_path, filename)
     assert cc.vendored_ids(tmp_path) == {expected}
+
+
+# --------------------------------------------------------------------------
+# Undigested libraries in web/public/lib (version in the path, not the name)
+# --------------------------------------------------------------------------
+
+
+def _public_lib(root: Path, package: str, version: str, name: str, header: str = "") -> Path:
+    directory = root / package / version
+    directory.mkdir(parents=True, exist_ok=True)
+    path = directory / name
+    path.write_text(header + "\nconst x = 1;\n", encoding="utf-8")
+    return path
+
+
+def test_a_public_lib_package_is_a_dependency(tmp_path: Path):
+    _public_lib(tmp_path, "maplibre-gl", "6.8.0", "maplibre-gl.mjs")
+    _public_lib(tmp_path, "maplibre-gl", "6.8.0", "maplibre-gl-worker.mjs")
+    assert cc.public_lib_ids(tmp_path) == {"maplibre-gl"}
+
+
+def test_public_lib_reads_the_package_directory_not_the_filename(tmp_path: Path):
+    """The files are named after the module, never after the version.
+
+    maplibre-gl.mjs must not become a package called `maplibre-gl.mjs`, and the
+    sibling it loads at run time (maplibre-gl-worker.mjs) must not become a
+    second package. Only the top directory names the dependency.
+    """
+    _public_lib(tmp_path, "maplibre-gl", "6.8.0", "maplibre-gl-shared.mjs")
+    _public_lib(tmp_path, "maplibre-gl", "6.8.0", "maplibre-gl.css")
+    assert cc.public_lib_ids(tmp_path) == {"maplibre-gl"}
+
+
+def test_our_own_public_lib_code_needs_no_credit(tmp_path: Path):
+    header = "// SPDX-License-Identifier: MIT\n// SPDX-FileCopyrightText: 2026 BikeCoders\n"
+    _public_lib(tmp_path, "ours", "1.0.0", "ours.mjs", header)
+    assert cc.public_lib_ids(tmp_path) == set()
+
+
+def test_one_unheadered_file_still_demands_a_credit(tmp_path: Path):
+    """Fails closed, exactly like vendored_ids().
+
+    A package is only ours when EVERY file in it says so, so dropping a
+    third-party module beside our own cannot buy it an exemption.
+    """
+    header = "// SPDX-FileCopyrightText: 2026 BikeCoders\n"
+    _public_lib(tmp_path, "mixed", "1.0.0", "ours.mjs", header)
+    _public_lib(tmp_path, "mixed", "1.0.0", "theirs.mjs")
+    assert cc.public_lib_ids(tmp_path) == {"mixed"}
+
+
+def test_a_loose_file_is_not_a_package(tmp_path: Path):
+    (tmp_path / "README.md").write_text("not a package\n", encoding="utf-8")
+    assert cc.public_lib_ids(tmp_path) == set()
 
 
 # --------------------------------------------------------------------------
@@ -237,4 +291,5 @@ def test_the_real_inventory_is_not_accidentally_empty():
     assert len(cc.requirement_ids()) > 5
     assert len(cc.docker_ids()) > 3
     assert len(cc.vendored_ids()) > 2
+    assert len(cc.public_lib_ids()) > 0
     assert len(cc.markers()) > 40

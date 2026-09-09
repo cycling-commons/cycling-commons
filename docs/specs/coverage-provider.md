@@ -667,7 +667,10 @@ non-empty) is NOT prop-less — it hides under a region scope (matching
   parsing the manifest URL, because the server fetches the manifest from a
   different origin than the browser range-reads tiles from (dev:
   `http://minio:9000` vs `http://localhost:9100`). The `pmtiles` protocol
-  library is SRI-pinned from unpkg exactly like maplibre-gl.
+  library is vendored same-origin at `web/assets/lib/pmtiles-4.4.1.js`
+  (security-architecture.md §2.5). It is a classic script that publishes
+  `window.pmtiles`, so it is untouched by MapLibre's move to ES modules; the
+  map code still registers it with `maplibregl.addProtocol('pmtiles', …)`.
 
 ## 5. Symfony query plane: `/map/coverage/*`
 

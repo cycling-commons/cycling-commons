@@ -96,6 +96,20 @@ final class MapPageTest extends WebTestCase
         );
         self::assertStringContainsString('window.CC_MAP_SRC', $html);
         self::assertStringContainsString('map/catalog-load', $html);
+
+        // The preload must name the SAME url the fetch will ask for, ?v= tag
+        // and all. A preload is matched on the exact URL, so a bare
+        // /map/catalog.json here preloads something nobody requests: the
+        // browser downloads the catalog twice (1 MB gzipped each time) and
+        // then warns that the preload went unused. That was live until
+        // 2026-09-09.
+        self::assertMatchesRegularExpression('~window\.CC_CATALOG_URL = "([^"]+)"~', $html);
+        preg_match('~window\.CC_CATALOG_URL = "([^"]+)"~', $html, $fetched);
+        self::assertStringContainsString(
+            'rel="preload" as="fetch" href="'.$fetched[1].'"',
+            $html,
+            'the catalog preload and the catalog fetch must be the same URL, or the preload is wasted',
+        );
         self::assertStringNotContainsString('src="/assets/data/', $html);
         self::assertStringNotContainsString('stays-merge', $html);
         self::assertSame(0, preg_match('#<script src="[^"]*\bmap/map\b[^"]*"#', $html), 'map.js must arrive via the loader, not a direct script tag');

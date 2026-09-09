@@ -64,9 +64,12 @@ Implementation surfaces: `web/assets/map/map.js` (all client behaviour),
 
 ## 2. Map shell and boot contract
 
-- **Stack:** MapLibre GL JS (SRI-pinned from unpkg, see
-  [security-architecture.md](security-architecture.md)), OpenFreeMap `liberty`
-  basemap style, attribution control `© OpenStreetMap contributors · ODbL`.
+- **Stack:** MapLibre GL JS **6.8.0**, vendored same-origin and undigested at
+  `web/public/lib/maplibre-gl/6.8.0/` (three `.mjs` files plus the stylesheet;
+  see [security-architecture.md §2.5](security-architecture.md) for why it sits
+  outside AssetMapper and what nginx has to know about `.mjs`). OpenFreeMap
+  `liberty` basemap style, attribution control
+  `© OpenStreetMap contributors · ODbL`.
   Optional Esri World Imagery satellite base (hidden by default, `#baseSeg`
   Map/Satellite toggle; its terms are an open item —
   `Dated/2026-08-09-esri-imagery-terms.md`). The region boundary renders as a
@@ -75,6 +78,33 @@ Implementation surfaces: `web/assets/map/map.js` (all client behaviour),
   (`RegionBoundaryProvider`, simplified and cacheable), not from Nominatim:
   that fetch was both an external dependency and a usage-policy problem at
   any real traffic.
+- **Getting MapLibre onto the page.** v6 ships ES modules only, so there is no
+  `maplibregl` global to load: one inline `<script type="module">` in the
+  template imports the library and assigns `window.maplibregl`, which every map
+  module reads. That module is deferred, so `catalog-load.js` (which builds the
+  map instance while evaluating) is `type="module"` too, and runs after it. The
+  head preloads both halves of the library (`maplibre-gl.mjs` and the
+  `maplibre-gl-shared.mjs` it imports) with `modulepreload`, because the second
+  is otherwise only discovered once the first has been parsed.
+- **The import map must come before every module script, and that is a hard
+  constraint, not a preference.** A browser honours an import map only while it
+  has seen no module script yet; one above `importmap()` makes the map be
+  discarded. On this page the map is the only thing that resolves the rewritten
+  relative imports AssetMapper emits, so losing it means `/assets/map/i18n.js`
+  and its siblings are fetched at paths that exist nowhere, 404 into
+  `index.php`, and return HTML the browser refuses on MIME type: no map at all.
+  Firefox does exactly this; Chromium happened to survive the same page, so a
+  green browser check is not evidence. The MapLibre boot module therefore sits
+  **below** `importmap()`, next to `catalog-load.js`, and the head preload above
+  is what keeps that from costing any download time.
+  `tests/Smoke/ImportMapOrderTest.php` pins the ordering.
+- **No WebGL2, no map.** v6 dropped WebGL1 and now **throws**
+  `GPUInitializationError` from the `Map` constructor where v5 returned a map
+  that silently never painted. `catalog-load.js` catches it, puts
+  `map.gpu_unsupported` in the map area (`.map-gpu-error`) and does not inject
+  `map.js`; the contribution wizard does the same in its own box and carries on
+  without a map, so a browser with no GPU costs a rider the pin, not the
+  contribution.
 - **Boot sequence** (`catalog-load.js`): fetch `window.CC_CATALOG_URL`
   (`GET /map/catalog.json`, `MapController::catalog()`, public, ETag,
   `max-age 3600`) → expose the layers as the `window.CC_*` globals → apply the
@@ -84,6 +114,12 @@ Implementation surfaces: `web/assets/map/map.js` (all client behaviour),
   (`window.CC_MAP_SRC`). `map.js` **execution** waits on the catalog; its
   **download** does not — the template preloads it so both requests are in
   flight together. Catalog-fetch failure still boots the map (empty pools).
+  The preload and `window.CC_CATALOG_URL` are **one Twig value**
+  (`catalog_url`), because a preload only counts when the URL matches the
+  request exactly: while the preload named the bare path and the fetch carried
+  the `?v=` tag, the browser downloaded the catalog twice (1 MB gzipped each
+  time) and then warned that the preload went unused. Fixed 2026-09-09 and
+  pinned by `tests/Smoke/MapPageTest.php::testMapBootsFromCatalogEndpoint`.
 - **`_styleReady` rule:** `render()` no-ops until the map `load` event flips
   `_styleReady` — async responses (e.g. the initial best-of fetch) may resolve
   before the style loads, and `addSource`/`addLayer` throw on an unloaded
@@ -2085,11 +2121,12 @@ requirement).
 | No / placeholder token | control unavailable + hint; zero network calls |
 | Vector tiles fail | MapLibre logs; rest of the map unaffected |
 | No image dot near the click | dock message "Zoom in and click a green dot…" (`map.mly_zoom`) |
-| mapillary-js CDN fails | dock closes; popup "Viewer failed to load." |
+| mapillary-js fails to load | dock closes; popup "Viewer failed to load." |
 
 - **CSP companion:** `'unsafe-eval'` scoped to `/map` exists solely for
-  mapillary-js (§2); the unpkg dependency is the accepted external exception,
-  SRI-pinned like maplibre-gl.
+  mapillary-js (§2). It is vendored same-origin like every other library
+  (security-architecture.md §2.5), so there is no CDN in the policy; the
+  `'unsafe-eval'` grant is what remains, and it is scoped to the one page.
 
 ## 11. Ride heatmap (no letter) and the illustrative planner
 

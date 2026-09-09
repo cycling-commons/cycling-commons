@@ -141,9 +141,11 @@ data, CC BY-SA media, and other people's software — and they stay composable
 only because each inbound licence is matched to the one *work* it touches.
 Four rules keep it that way:
 
-**1 · Anything shipped to the browser must be permissive.** Everything under
-`web/assets/lib/` (MapLibre, pmtiles, mapillary-js, Redoc, and Scout's FIT reader
-`scout-fit.js`) is BSD or MIT.
+**1 · Anything shipped to the browser must be permissive.** Every vendored
+library is BSD or MIT: `web/assets/lib/` holds the single-file ones (pmtiles,
+mapillary-js, Redoc, and Scout's FIT reader `scout-fit.js`), and
+`web/public/lib/` holds MapLibre, which is several files that load each other
+by relative URL and so cannot be renamed by the asset pipeline.
 Serving a file **is** distribution, so a copyleft (GPL-family) library there
 would attach obligations to the page it ships with. Never vendor one. Each
 vendored dist keeps its upstream copyright header, the licence texts live in

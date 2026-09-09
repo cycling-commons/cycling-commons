@@ -2434,6 +2434,7 @@ map:
   rail_layers: 'Layers & filters'
   rail_tools: 'Ride tools'
   rail_key: 'Map key'
+  gpu_unsupported: 'The map cannot be drawn in this browser. It needs WebGL 2, a graphics feature this browser does not have or has switched off. Try a newer browser, or turn hardware acceleration back on in the browser settings.'
   key_full: 'The full key, explained'
   rail_theme: 'Light or dark panels'
   panel_close: 'Close panel'

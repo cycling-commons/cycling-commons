@@ -92,7 +92,12 @@ final class CspSubscriber implements EventSubscriberInterface
             'img-src '.implode(' ', $imgSrc),
             "font-src 'self'",
             'connect-src '.implode(' ', $connectSrc),
-            'worker-src blob:',
+            // 'self' is MapLibre v6: it starts its tile worker from the
+            // same-origin module URL (public/lib/.../maplibre-gl-worker.mjs)
+            // rather than the blob: URL the v5 UMD bundle built. blob: stays
+            // for mapillary-js, and is also v6's own fallback path when the
+            // library is loaded cross-origin.
+            "worker-src 'self' blob:",
             'child-src blob:',
             "object-src 'none'",
             "base-uri 'self'",

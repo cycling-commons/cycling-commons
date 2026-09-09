@@ -51,6 +51,11 @@ REQUIREMENTS = [
 ]
 DOCKER_DIR = REPO / "developers/docker"
 VENDORED_LIB_DIR = REPO / "web/assets/lib"
+# A library whose own files find each other by relative path cannot go
+# through AssetMapper, because the content hash breaks those paths. MapLibre
+# GL JS v6 is the standing case (its worker resolves a sibling at run time),
+# so it is vendored undigested here instead, one directory per version.
+PUBLIC_LIB_DIR = REPO / "web/public/lib"
 
 # A vendored file is ours, and needs no credit, only if it says so in its own
 # header. Never a list in this file: see docs/specs/credits-page.md §4.1 for
@@ -58,7 +63,7 @@ VENDORED_LIB_DIR = REPO / "web/assets/lib"
 FIRST_PARTY_HOLDER = "BikeCoders"
 FIRST_PARTY_HEADER_LINES = 20
 
-# `web/assets/lib/maplibre-gl-5.24.0.js` -> `maplibre-gl`.
+# `web/assets/lib/pmtiles-4.4.1.js` -> `pmtiles`.
 VERSIONED_LIB = re.compile(r"^(?P<name>.+?)-\d[\d.]*$")
 # `uvicorn[standard]==0.34.0` -> `uvicorn`.
 REQUIREMENT_LINE = re.compile(r"^(?P<name>[A-Za-z0-9][A-Za-z0-9._-]*)")
@@ -180,8 +185,37 @@ def vendored_ids(directory: Path | None = None) -> set[str]:
     return ids
 
 
+def public_lib_ids(directory: Path | None = None) -> set[str]:
+    """Front-end libraries vendored undigested into web/public/lib.
+
+    Shape is `web/public/lib/<name>/<version>/<files>`, so the package id is
+    the first directory and the version is the second. That is the whole
+    difference from vendored_ids(): there the version rides in the filename,
+    here it rides in the path, because these libraries load their own siblings
+    by relative URL and must keep a stable directory to do it.
+    """
+    ids: set[str] = set()
+    root = PUBLIC_LIB_DIR if directory is None else directory
+    if not root.exists():
+        return ids
+    for pkg in sorted(root.iterdir()):
+        if not pkg.is_dir():
+            continue
+        files = [f for f in pkg.rglob("*") if f.is_file()]
+        if files and all(is_first_party(f) for f in files):
+            continue
+        ids.add(pkg.name.lower())
+    return ids
+
+
 def build_inventory() -> set[str]:
-    return composer_ids() | requirement_ids() | docker_ids() | vendored_ids()
+    return (
+        composer_ids()
+        | requirement_ids()
+        | docker_ids()
+        | vendored_ids()
+        | public_lib_ids()
+    )
 
 
 # --------------------------------------------------------------------------

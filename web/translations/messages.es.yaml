@@ -2438,6 +2438,7 @@ map:
   rail_layers: 'Capas y filtros'
   rail_tools: 'Herramientas de ruta'
   rail_key: 'Leyenda'
+  gpu_unsupported: 'El mapa no se puede dibujar en este navegador. Necesita WebGL 2, una función gráfica que este navegador no tiene o ha desactivado. Prueba un navegador más reciente, o vuelve a activar la aceleración por hardware en los ajustes del navegador.'
   key_full: 'La leyenda completa, explicada'
   rail_theme: 'Paneles claros u oscuros'
   panel_close: 'Cerrar el panel'

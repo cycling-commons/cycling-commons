@@ -350,6 +350,12 @@ final class MapController extends AbstractController
             'railLayers' => $t->trans('map.rail_layers'),
             'railTools' => $t->trans('map.rail_tools'),
             'railKey' => $t->trans('map.rail_key'),
+            // Shown INSTEAD of the map when the browser cannot give
+            // MapLibre v6 a WebGL2 context. v6 dropped WebGL1 and now
+            // throws from the Map constructor rather than returning a
+            // map that never paints, so catalog-load.js has something
+            // to catch and something to say.
+            'gpuUnsupported' => $t->trans('map.gpu_unsupported'),
             'filtersHide' => $t->trans('map.filters_hide'),
             'filtersHideOne' => $t->trans('map.filters_hide_one'),
             'filtersNarrowing' => $t->trans('map.filters_narrowing'),

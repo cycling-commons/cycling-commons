@@ -1,4 +1,8 @@
 {# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{# The catalog URL is used twice, far apart: the preamble preload and
+   window.CC_CATALOG_URL. A preload only counts when the two URLs match
+   exactly, so this is one value rather than two expressions that drifted. #}
+{% set catalog_url = path('map_catalog') ~ '?v=' ~ catalog_version %}
 <!DOCTYPE html>
 {# data-map-theme keys the light chrome palette in map.css. The server renders
    the logged-in rider's stored choice, so the first paint is already right.
@@ -39,7 +43,16 @@
   try{var t=localStorage.getItem('cc:mapTheme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-map-theme',t);}catch(e){}
 </script>
 {% endif %}
-<link rel="stylesheet" href="{{ asset('lib/maplibre-gl-5.24.0.css') }}" />
+<link rel="stylesheet" href="{{ asset('lib/maplibre-gl/6.8.0/maplibre-gl.css') }}" />
+{# MapLibre is ~1 MB of module across two files, and the second is only
+   discovered once the first has been parsed. Preloading both from the
+   preamble puts them in flight together, and in parallel with the rest of
+   the page, rather than one after the other from the boot module far down
+   this template. No crossorigin attribute: modulepreload already fetches
+   the way a module script does, so there is no mode to reconcile (unlike
+   the catalog preload lower down, which needs one). #}
+<link rel="modulepreload" href="{{ asset('lib/maplibre-gl/6.8.0/maplibre-gl.mjs') }}" />
+<link rel="modulepreload" href="{{ asset('lib/maplibre-gl/6.8.0/maplibre-gl-shared.mjs') }}" />
 <link rel="stylesheet" href="{{ asset('styles/fonts.css') }}" />
 <link rel="stylesheet" href="{{ asset('styles/map.css') }}" />
 <link rel="icon" href="/favicon.ico" sizes="32x32" />
@@ -663,7 +676,6 @@
   </main>
   </div>
 </div>
-<script src="{{ asset('lib/maplibre-gl-5.24.0.js') }}"></script>
 {# pmtiles protocol adapter for the coverage vector source
    (coverage-provider.md §4/§6) — vendored same-origin (self-hosted 2026-08-09)
    exactly like maplibre-gl above. map.js only registers the protocol when
@@ -779,7 +791,7 @@ window.CC_VENDOR = {{ {
      changes (CatalogProvider::versionTag) — without it, a rider whose
      submission was just approved reloads into the pre-approval payload and
      watches their contribution "disappear" until the max-age runs out. #}
-  window.CC_CATALOG_URL = {{ (path('map_catalog') ~ '?v=' ~ catalog_version)|json_encode(constant('JSON_UNESCAPED_SLASHES'))|raw }};
+  window.CC_CATALOG_URL = {{ catalog_url|json_encode(constant('JSON_UNESCAPED_SLASHES'))|raw }};
   {# The heat points live off the critical payload; fetched on the first heatmap-On only. #}
   window.CC_HEAT_URL = {{ path('map_heat')|json_encode(constant('JSON_UNESCAPED_SLASHES'))|raw }};
   {# Seasonal voting go-live (community.voting_live): false hides every vote
@@ -961,8 +973,12 @@ window.CC_VENDOR = {{ {
    same-origin: fetch() runs mode=cors + credentials=same-origin, and a bare
    preload runs credentials=include — Chrome reports the mismatch and refetches
    (verified in the console, 2026-08-09). crossorigin(=anonymous) makes the
-   preload's credentials mode match fetch()'s. #}
-<link rel="preload" as="fetch" href="{{ path('map_catalog') }}" crossorigin>
+   preload's credentials mode match fetch()'s.
+   `catalog_url` and NOT path('map_catalog'): a preload is matched on the exact
+   URL, and the fetch carries the ?v= cache-buster. Without the tag this
+   preloaded the wrong URL, so the browser downloaded the catalog TWICE (1 MB
+   gzipped each time) and then warned that the preload went unused. #}
+<link rel="preload" as="fetch" href="{{ catalog_url }}" crossorigin>
 {# The rider's units (account-and-auth.md §9). This page does NOT extend
    base.html.twig, so it carries its own copy of the bridge — without it every
    distance the map draws would stay metric while the same rider's moderation
@@ -976,6 +992,38 @@ window.CC_VENDOR = {{ {
   }|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
 </script>
 <script src="{{ asset('js/cc-units.js') }}"></script>
+{# MapLibre GL JS v6 ships ES modules only. The UMD build went with it, and so
+   did the `maplibregl` global that every one of our map files reads. This
+   inline module restores that global once, and is the ONLY place the library
+   is imported.
+
+   The library is NOT under assets/: it lives in public/lib/, undigested.
+   maplibre-gl.mjs resolves its own worker at run time with
+   `new URL('./maplibre-gl-worker.mjs', import.meta.url)`, and AssetMapper's
+   content hash would make that URL a 404 (the worker's own relative import of
+   maplibre-gl-shared.mjs would break the same way). The version lives in the
+   directory name instead, so the files stay cacheable and stay side by side.
+
+   POSITION IS LOAD-BEARING, and it is the whole reason this block sits here
+   rather than beside the other vendor scripts up in the body. An import map is
+   only honoured while NO module script has been seen yet. Put this module above
+   importmap() and Firefox rejects the map outright, so every rewritten
+   relative import (`/assets/map/i18n.js` and its twenty-odd siblings) is
+   fetched at its UNDIGESTED path, 404s into index.php, and comes back as HTML:
+   the console fills with "blocked because of a disallowed MIME type" and the
+   map never boots. Chromium happened to survive it, which is exactly what makes
+   it worth a test rather than a comment alone
+   (tests/Frontend/ImportMapOrderTest.php).
+
+   The head still preloads both halves of the library, so nothing is downloaded
+   any later for sitting down here; only the execution moved.
+
+   A module script is deferred, so `maplibregl` exists before DOMContentLoaded
+   but NOT during parse, which is why catalog-load.js below is a module too. #}
+<script type="module" nonce="{{ csp_nonce() }}">
+  import * as maplibregl from "{{ asset('lib/maplibre-gl/6.8.0/maplibre-gl.mjs') }}";
+  window.maplibregl = maplibregl;
+</script>
 {# Scope model (window.CCScope) — must be defined before catalog-load.js injects map.js. #}
 <script src="{{ asset('map/scope.js') }}"></script>
 {# Scope-chip view model (window.CCScopeChips) — pure, unit-tested decision logic
@@ -990,7 +1038,7 @@ window.CC_VENDOR = {{ {
    round trip; map.js relabelling once IT loads is real but too late to stop
    that flash. See scope-header.js's own docstring for the full reasoning. #}
 <script src="{{ asset('map/scope-header.js') }}"></script>
-<script src="{{ asset('map/catalog-load.js') }}"></script>
+<script type="module" src="{{ asset('map/catalog-load.js') }}"></script>
 <script src="{{ asset('js/a11y.js') }}"></script>
 <script nonce="{{ csp_nonce() }}">window.CC_VERSION = {{ cc_build()|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
 <script src="{{ asset('js/version.js') }}"></script>

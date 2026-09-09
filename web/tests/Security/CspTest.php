@@ -42,6 +42,26 @@ final class CspTest extends WebTestCase
     }
 
     /**
+     * MapLibre v6 starts its tile worker from the same-origin module URL under
+     * public/lib/, where the v5 UMD bundle built a blob: worker. Without 'self'
+     * the worker is blocked and the map never loads a tile, and CSP failures
+     * are console-only: nothing on the page says why. blob: stays for
+     * mapillary-js and for v6's own cross-origin fallback path.
+     */
+    public function testWorkerSrcAllowsSameOriginAndBlob(): void
+    {
+        $client = static::createClient();
+        $client->request('GET', '/map');
+
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString(
+            "worker-src 'self' blob:",
+            (string) $client->getResponse()->headers->get('Content-Security-Policy'),
+            "MapLibre v6's worker is same-origin; dropping 'self' silently kills every tile",
+        );
+    }
+
+    /**
      * The Mapillary street-level viewer (mapillary-js) compiles filter
      * expressions with new Function(), so /map — and ONLY /map — relaxes
      * script-src with 'unsafe-eval'; every other page keeps the strict policy.

@@ -124,7 +124,8 @@ none of them is a second list that can drift.
 | `web/composer.json` | `require` + `require-dev` keys | includes `php` and every `ext-*` |
 | `pipeline/requirements.txt`, `tools/divisions/requirements.txt`, `developers/docker/wiki/requirements.txt` | distribution names | version pins and extras stripped: `uvicorn[standard]==0.34.0` yields `uvicorn` |
 | `developers/docker/**` compose `image:` and Dockerfile `FROM` | image name without tag | `nginx:alpine` yields `nginx`; `ghcr.io/valhalla/valhalla:latest` yields `valhalla` |
-| `web/assets/lib/*.js`, `*.css` | filename with the version stripped | `maplibre-gl-5.24.0.js` yields `maplibre-gl` |
+| `web/assets/lib/*.js`, `*.css` | filename with the version stripped | `pmtiles-4.4.1.js` yields `pmtiles` |
+| `web/public/lib/<name>/<version>/` | the package directory | `maplibre-gl/6.8.0/maplibre-gl.mjs` yields `maplibre-gl`. A separate reader because the version is in the path here, not the filename: these are libraries whose files find each other by relative URL and so cannot be digested (security-architecture.md §2.5). The first-party exemption still applies, and still fails closed: a package counts as ours only when **every** file in it carries the header |
 
 ### 4.1 First-party vendored code is exempt, by its own header
 

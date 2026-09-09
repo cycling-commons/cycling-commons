@@ -1961,6 +1961,7 @@ map:
   rail_layers: 'Ebenen & Filter'
   rail_tools: 'Tourwerkzeuge'
   rail_key: 'Legende'
+  gpu_unsupported: 'Die Karte lässt sich in diesem Browser nicht zeichnen. Sie braucht WebGL 2, eine Grafikfunktion, die dieser Browser nicht hat oder abgeschaltet hat. Probier einen neueren Browser, oder schalte die Hardwarebeschleunigung in den Browsereinstellungen wieder ein.'
   key_full: 'Die vollständige Legende, erklärt'
   rail_theme: 'Helle oder dunkle Panels'
   panel_close: 'Panel schliessen'
