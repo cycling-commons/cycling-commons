@@ -214,6 +214,16 @@ passes, unless somebody confirms it is still shut (`app:catalog:expire-closures`
 Nothing else auto-expires: a hazard with no stated end date needs a human to
 clear it. The one-tap confirm is built for every place.
 
+Scout, the ride-file tool, is a partial provider of freshness, at both ends of
+a report's life. Adding: a rider who meets a closed road drops a tag on the
+device at the spot, with a word on it; at home, in the Scout review, that tag
+becomes a hazard report of type *Road closed* with the closure window filled in,
+and from then on it expires by itself. The moment and the place come from the
+ride, so the report carries the timestamp the model asks for without anyone
+typing it. Clearing *(design)*: rides that keep passing through a spot flagged
+closed are the aggregate evidence the auto-clear rule below needs, with no
+trace of any one ride kept.
+
 - **Timestamp + reporter count** on every report: when, and how many independent riders.
 - **Confidence from confirmations.** 1 report = *unconfirmed*; several independent ones = *confirmed*. Show the state, don't hide it.
 - **Decay / expiry by type** (design). Each hazard has a half-life: a pothole persists for months, "closed for an event" expires in days, "loose gravel" fades over weeks. After expiry it's hidden (not deleted) pending re-confirmation. Only the closure window exists today.
