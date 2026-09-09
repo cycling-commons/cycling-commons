@@ -1,0 +1,103 @@
+web/src/Media/ContinentResolver.php
+  s_5ddb20b83427c8::t_cba2448e0bc998 44-70
+web/src/Media/Command/LocaliseCommonsPhotosCommand.php
+  s_5ddb20b83427c8::t_0d72be6e362acf 186,189,192,197,268,361
+  s_5ddb20b83427c8::t_8679784169ddd0 112-113,120-124,135,236,295-320
+  s_5ddb20b83427c8::t_7d77e422243849 60
+  s_5ddb20b83427c8::t_ff6e8176876d64 114-119,136-142
+  s_5ddb20b83427c8::t_61bd7c77c9eb04 1-59,61-70,81-83,85-86,94-111,125-134,143-176,178,190,194,201-202,209,253,266,269-271,275-294,321-323,325-332,335,337-338,396-415
+  s_5ddb20b83427c8::t_fa8b63795e47c0 177,179-185,187-188,191,193,195-196,198-200,203-208,210-235,237-252,254-265,267,272-274,324,333-334,336,339-360,362-395
+  s_5ddb20b83427c8::t_b741e8dd80fdb0 71-80,84,87-93
+docs/specs/security-architecture.md
+  s_5ddb20b83427c8::t_0726df2cff5a81 111
+  s_5ddb20b83427c8::t_7b94fd3b0e6fc3 108
+web/tests/Media/FreeLicenceLinkabilityTest.php
+  s_5ddb20b83427c8::t_1078a863982a82 1-8,10-44,46-49,51-55,61-96
+  s_5ddb20b83427c8::t_f149d75f4e8812 9,45,50,56-60
+web/src/Media/MessageHandler/FetchCommonsPhotoHandler.php
+  s_5ddb20b83427c8::t_adeacd0b00a980 139-143
+  s_5ddb20b83427c8::t_1131b0b3442df1 123-133,135-136
+  s_5ddb20b83427c8::t_981bb5a1278bed 20,26,32-34,49,105-116
+  s_5d3029d326707c::t_b1f568913f50bb 134
+web/src/Media/Commons/CommonsApi.php
+  s_5ddb20b83427c8::t_f149d75f4e8812 67-70,72
+  s_5ddb20b83427c8::t_2b255a76217b22 9,71
+web/src/Media/Commons/CommonsPhotoAdmission.php
+  s_5ddb20b83427c8::t_f2ccb9a4649209 59-63,65,67-87
+web/tests/Media/RestampCommonsRightsCommandTest.php
+  s_5ddb20b83427c8::t_066a42237fd644 161-162
+  s_5ddb20b83427c8::t_2dc06ebc8c378d 1-160,163-223
+web/src/Media/LicenceUrls.php
+  s_5ddb20b83427c8::t_2b255a76217b22 1-28,35-46,48-53,61-74
+  s_5ddb20b83427c8::t_a5b21e0c19cbb2 29-34,47,54-60
+web/src/Media/XmpRights.php
+  s_5ddb20b83427c8::t_cb06b22463a6c1 60-103,105-129
+  s_5ddb20b83427c8::t_a443e600286ac7 104
+web/tests/Media/LocaliseCommonsPhotosCommandTest.php
+  s_5d3029d326707c::t_3c32a5c0cd593a 182-223
+  s_5ddb20b83427c8::t_a84b2e35a23fe6 119-154
+  s_5ddb20b83427c8::t_4b0450f4539e37 77-83
+  s_5ddb20b83427c8::t_01e7f6ee409eb7 327
+  s_5ddb20b83427c8::t_914e498f49a42c 224-300
+  s_5ddb20b83427c8::t_be4fa57db78848 73,105,112,157,166,176,303
+  s_5ddb20b83427c8::t_066a42237fd644 330-331
+  s_5ddb20b83427c8::t_943e0fe7406103 74
+  s_5ddb20b83427c8::t_b4ddf3b3f34db6 1-19,21-72,75-76,84-104,106-111,113-118,155-156,158-165,167-175,177-181,301-302,304-320,322-326,328-329,332-411
+  s_5ddb20b83427c8::t_49e844f8773c3f 20,321
+web/src/Media/Commons/CommonsFile.php
+  s_5ddb20b83427c8::t_e3d429ff493dcd 59-66,69-73,76
+web/src/Media/Command/RestampCommonsRightsCommand.php
+  s_5ddb20b83427c8::t_8bf8a03dfbf149 85-86
+  s_5ddb20b83427c8::t_8679784169ddd0 69-75,83,128,158-182
+  s_5ddb20b83427c8::t_fd1e959ea816ae 1-68,76-82,84,87-107,109-127,129,135,137-157,183-185,187,196,198-200,202-203,212-226
+  s_5ddb20b83427c8::t_207a7a437486ae 130-134,136
+  s_5ddb20b83427c8::t_5d158f3c1218e0 108,186,188-195,197,201,204-211
+web/tests/Media/FetchCommonsPhotoHandlerTest.php
+  s_5ddb20b83427c8::t_4d14df9d0910c7 123-126
+  s_5ddb20b83427c8::t_eecf91ab8fd142 101-122,127-154
+  s_5ddb20b83427c8::t_49e844f8773c3f 18,179
+web/src/Media/Commons/CommonsPhotoRepository.php
+  s_5ddb20b83427c8::t_ff6e8176876d64 83-101,105-110
+  s_5ddb20b83427c8::t_2d1a2255cdc07c 102-104
+  s_5ddb20b83427c8::t_adeacd0b00a980 111-135
+docs/specs/photo-uploads.md
+  s_5ddb20b83427c8::t_8f708be50a16ac 623-630,646,724-741
+  s_5ddb20b83427c8::t_d5d8584dac2aad 647-671,696-699,723
+  s_5ddb20b83427c8::t_4cea127aa51a13 569,571-581
+  s_5ddb20b83427c8::t_8fff43ba19fef8 550,614-615
+  s_5ddb20b83427c8::t_da9f81ea16ef42 521-549,551,553,564-568,582-596,611-613,616-622
+  s_5ddb20b83427c8::t_14de3fefabb120 552,554-563,631-645
+  s_5ddb20b83427c8::t_27f926013f3bc2 672-695
+  s_5ddb20b83427c8::t_319d2347f0e678 700-719
+  s_5ddb20b83427c8::t_c460f1194e9e91 570,597-610,720-722
+web/tests/Media/CommonsFileTest.php
+  s_5ddb20b83427c8::t_b64dd29aa3ac86 50-90
+web/tests/Media/XmpRightsTest.php
+  s_5ddb20b83427c8::t_6e8e5edda0a8fc 29-103
+web/assets/map/util.js
+  s_5ddb20b83427c8::t_a5b21e0c19cbb2 36,42-45
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "a36489b32840e8b208acab1267a2a654d44e418c",
+  "prompts": {},
+  "sessions": {
+    "s_5d3029d326707c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "795f70b7-c0e1-4883-a4e6-53909db571af",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_5ddb20b83427c8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b4cdc923-f65e-4720-a542-1d8c7e643cdd",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
