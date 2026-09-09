@@ -9,6 +9,7 @@ viewpoints, and more. All of it is **community-contributed**, useful to **anyone
 ## Principles
 - **Build on OSM, don't reinvent it.** Items tagged **[OSM]** already have a home in OpenStreetMap (ODbL). Sync with / contribute back to OSM for those; layer cycling-specific curation on top. the Commons's added value is *curation, normalization, freshness, and the cycling lens* — not re-collecting the base map.
 - **Non-personal only.** No identity, no tracking, nothing personal. The Commons is the map, not the rider.
+- **Every body rides (Manifesto §II).** The facts an adapted bike, a handbike, a cargo bike or a rider who needs a calm, legible road depends on are data, not an afterthought: the clearance width of a barrier, the traffic a road carries, how many decisions a route asks per kilometre, whether it follows signed routes. They are collected under **A** and derived under **R**.
 - **Media is a first-class, consent-gated contribution.** Photos and video join the Commons under **CC BY-SA 4.0** with provenance — the contributor explicitly confirms they own it and *donate* it (first-time consent), or links a photo from a recognised source whose licence is validated. Never scraped. Always a real capture: nothing generated or composed by AI or any other artificial means, and nothing added to or removed from the scene, with one exclusion: faces and number plates are blurred before upload. Light editing is fine, with AI tools or without: colour toning, cropping, sharpening, noise removal.
 - **Closed providers are signposted, not absorbed.** Bike-friendly-stay *schemes* (national cyclist-accommodation networks) are a referral layer that links out — not part of the open Commons. Only data riders contribute (or that's already open) goes in the Commons.
 
@@ -37,7 +38,10 @@ on this page, where they name a section.
 - Cycleways, bike lanes, segregated paths, gravel/MTB trails [OSM]
 - Surface type — asphalt / concrete / paving / cobbles / gravel / dirt / sand [tap][edit][OSM]
 - Surface smoothness / quality [tap][edit][OSM]
-- Path width, barriers, gates, bollards [OSM]
+- Path width [OSM]
+- Barriers on the way, chicanes (single, double, triple, squeeze), A-frames, kissing gates, bollards and blocks, with the **type and the clearance width in centimetres**. The width is the fact, the type is the hint: a double chicane at 150 cm passes a trailer, one at 90 cm stops a handbike. OpenStreetMap has the model (`barrier=cycle_barrier` + `cycle_barrier=*`, `barrier=bollard|kissing_gate|gate|swing_gate|block`, `maxwidth:physical`, `opening`, `spacing`, `bicycle=*`, `wheelchair=*`) and, for most bollards, no width; a rider measures where OSM is silent, in centimetres against a known reference (road bars about 42 cm, a cargo bike about 65 cm, a trailer about 80 cm). Harvested only from cycleways, paths and tracks, never from car roads, or every bollard in Europe lands on the map [tap][edit][OSM] *(harvest and form: design, not built)*
+- Tram tracks, level crossings, cattle grids: permanent, in OSM, shown as a feature of the road rather than as a report that decays [OSM]
+- Traffic exposure: derived from road class, speed limit, lanes and cycleway, the input for a route's sensory load; never collected by hand [auto][OSM] *(design, not built)*
 - Lit / unlit at night [OSM]
 - One-way / cycling-permitted-against-traffic [OSM]
 - Signed cycle routes & node networks — the map can show the signed routes
@@ -88,15 +92,22 @@ Sourced from OSM only. The obvious specialist directory for the Netherlands
 - E-bike charging points: design. The harvest takes three kinds from OpenStreetMap, bike shops, repair stations and pumps (`shop=bicycle`, `amenity=bicycle_repair_station`, `amenity=compressed_air`); no charging kind is harvested.
 
 ## E. Hazards & conditions  *(dynamic — needs freshness)*
-- Road-surface problems — potholes, broken surface, loose gravel [tap][edit][safety]
-- Dangerous junctions, blind corners, bad sightlines [tap][edit][safety]
-- Tram tracks, level crossings, cattle grids, slippery surfaces [tap][edit][safety][OSM]
-- High-traffic / unsafe roads to avoid for cyclists [tap][edit][safety]
-- Private / restricted / no-entry roads — *don't trespass* (Manifesto §IX) [tap][edit][OSM]
-- Seasonal closures — cols under snow, flood-prone, seasonal gates [tap][edit][safety][OSM]
-- Construction / temporary closures / diversions [tap][edit][safety]
-- Aggressive-dog warnings [tap][edit][safety]
-- Notorious crosswind / exposed sections [tap][edit]
+A hazard is a point a rider can stand at, that will not be there for ever,
+that another rider can check, and that names no person. Four lines pass that
+test; the rest of what used to sit here moved or went (2026-09-09).
+
+- Road-surface problems: potholes, broken surface, loose gravel, ice [tap][edit][safety]
+- Seasonal closures: cols under snow, flood-prone dips, snow gates; the closure lifetime and its expiry are built for these [tap][edit][safety][OSM]
+- Construction / temporary closures / diversions, with the detour [tap][edit][safety]
+- A blind corner or a crossing without refuge a rider can point at. The form says *junction / crossing* and *bad corner*, never *dangerous*, because one rider's fright is not a fact [tap][edit][safety]
+- Crosswind / fog on an exposed stretch: real on a dam or a col; a stretch, not a pin, so it reads as a quality of the road [tap][edit]
+
+Moved: tram tracks, level crossings and cattle grids are permanent road
+features under **A**; "roads to avoid" is traffic exposure, derived under **A**
+from what OpenStreetMap already carries, not collected. Gone: private and
+no-entry roads, which OSM's `access` tags hold in full and we never copy; and
+dog warnings, which name a household, exactly the personal data about a place
+the moderation standards refuse.
 
 ## F. Getting there & multimodal
 - Train stations with bike access; bikes-on-train rules [tap][edit][OSM]
@@ -141,6 +152,8 @@ Sourced from OSM only. The obvious specialist directory for the Netherlands
 - Start point, loop or point-to-point, difficulty, the season it is best ridden in [edit]
 - *I rode this* confirmations from other riders, which are what verify a route [tap]
 - A photo of the ride [media]
+- What the route asks of a body, derived along the line from **A** and the geometry we already measure *(design, not built)*: the **narrowest passage** in centimetres and where it is; **turn density**, decisions per kilometre; the share of the line on **signed routes**, from OSM route relations; **traffic exposure** per kilometre, worst stretch named. Predictability, legibility and sensory load are stable qualities of a route, not hazards that perish, which is why they are here and not under **E** [auto]
+- One rider-answered prompt for what tags cannot say, *quiet road?*, on the drawer of a route *(design, not built)* [tap]
 
 R is a route layer, not a per-road rating. What a road is like (quietness,
 smoothness, surface, lit or not, seasonal closure) is recorded on the road
@@ -229,8 +242,10 @@ show how rich each item can get. **[OSM]** = an established OSM tag exists for i
 ## A. Map & surface — per road/segment
 Road type (road / cycleway / gravel path / singletrack) [OSM] · surface material (asphalt · concrete
 · cobbles/setts · gravel · compacted · dirt · sand · grass) [OSM] · smoothness (excellent → impassable)
-[OSM] · width [OSM] · segregated vs shared · lit / unlit [OSM] · typical traffic level · barriers
-(gate · bollard · steps · ford · stile) [OSM] · one-way / contraflow allowed [OSM] · seasonal access.
+[OSM] · width [OSM] · segregated vs shared · lit / unlit [OSM] · traffic exposure (derived) · barriers
+(chicane single/double/triple/squeeze · A-frame · kissing gate · bollard · block · steps · ford · stile) with
+**clearance width in cm** and its source (OSM `maxwidth:physical` / `opening` / `spacing`, or measured by a
+rider) [OSM] · tram tracks / level crossing / cattle grid [OSM] · one-way / contraflow allowed [OSM] · seasonal access.
 
 ## B. Water & food — per point
 **Water:** source type (fountain · public tap · cemetery tap · church · spring) · potable? · seasonal (frost
@@ -248,9 +263,9 @@ type (presta/schrader) · tools available · chain tool · work stand · 24/7? [
 free/paid · location. **Vending:** tubes / CO2 / spares.
 
 ## E. Hazards & conditions — per report  *(all [safety])*
-Type (pothole · loose gravel · dangerous junction · blind corner · tram tracks · level/cattle crossing · road
-closure · construction · flooding · ice · aggressive dog · notorious crosswind) · severity · **date observed /
-last confirmed** · temporary vs permanent · seasonal window · direction affected · suggested detour · confirm/decay state.
+Type, as the form offers it (crosswind / fog · ice / frost · loose surface / gravel · potholes · junction /
+crossing · bad corner · flooding · roadworks · road closed · other) · severity · when it is worst · **date
+observed / last confirmed** · if closed, for how long · direction affected · suggested detour · confirm/decay state.
 
 ## F. Getting there — per node
 **Station:** bikes allowed (always / off-peak / reservation) · bike spaces · lifts/ramps · bike ticket needed? [OSM].
@@ -284,8 +299,11 @@ coat of arms · a fact or two. **Cycling heritage:** Tour/Classics history · ve
 
 ## R. Recommended routes: per route
 Name · the line (drawn or GPX) · start · loop or point-to-point · distance · climbing · elevation profile ·
-difficulty · best season · a photo · who proposed it · *I rode this* count · state (unverified → verified).
-Road qualities (quietness, smoothness, surface) are per road under **A**, never per route.
+difficulty · best season · a photo · who proposed it · *I rode this* count · state (unverified → verified) ·
+derived along the line *(design)*: narrowest passage (cm, and where) · turns per km · share on signed routes ·
+traffic exposure per km and its worst stretch · *quiet road?* answers.
+Road qualities (quietness, smoothness, surface, barriers) are per road under **A**, never per route; a route
+only sums them up.
 
 ## Derived & aggregate — computed, not entered  *(all [auto])*
 Road popularity score · rideability inference (is this gravel OK on a road bike?) · under-explored areas · per-area
