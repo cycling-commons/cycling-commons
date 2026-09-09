@@ -1,0 +1,21 @@
+docs/specs/security-architecture.md
+  s_5ddb20b83427c8::t_a75cffb669bb33 202
+web/tests/Security/CspTest.php
+  s_5ddb20b83427c8::t_d3dc2b3b49d6f3 41-104
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "3ebf2386dbf95ccad29c54ef29c1f8516c3e3aeb",
+  "prompts": {},
+  "sessions": {
+    "s_5ddb20b83427c8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b4cdc923-f65e-4720-a542-1d8c7e643cdd",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
