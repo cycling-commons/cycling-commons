@@ -15,6 +15,7 @@ use App\Media\MessageHandler\FetchCommonsPhotoHandler;
 use App\Media\PhotoProcessor;
 use App\Media\Scan\ScanVerdict;
 use App\Media\Scan\VirusScannerInterface;
+use App\Media\XmpRights;
 use Doctrine\DBAL\Connection;
 use Psr\Log\NullLogger;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
@@ -97,6 +98,60 @@ final class FetchCommonsPhotoHandlerTest extends KernelTestCase
         self::assertNull($row['storage_bucket'], 'nothing was stored');
     }
 
+    /**
+     * The stored bytes must carry the file's own rights, not ours and not none.
+     *
+     * The re-encode drops whatever XMP arrived from Commons, so for a while
+     * every Commons photo in our bucket was an orphan: no author, no licence,
+     * nothing. A caption on one HTML page is not the attribution travelling
+     * with the work, which is what CC BY-SA asks for, and the file is the thing
+     * that gets downloaded.
+     *
+     * Reading the object back rather than trusting the wiring: the packet has
+     * to survive the webp encode, and that is the step that used to eat it.
+     */
+    public function testTheStoredFileCarriesTheCommonsRightsPacket(): void
+    {
+        $downloads = 0;
+        $this->handle($this->client($this->metadata('CC BY-SA 3.0'), $downloads));
+
+        $row = $this->row();
+        self::assertSame(CommonsPhotoState::Ready->value, $row['state']);
+
+        /** @var MediaStorage $storage */
+        $storage = self::getContainer()->get(MediaStorage::class);
+        // `lg`, not `sm`: the thumbnail deliberately carries no packet (a 1 KB
+        // rights block on a 520px preview is most of the file), exactly as for
+        // a rider's photo. `orig` and `lg` are the ones anybody downloads.
+        $stream = $storage->readStream((string) $row['storage_bucket'], (string) $row['storage_prefix'], 'lg');
+        self::assertIsResource($stream);
+        $bytes = stream_get_contents($stream);
+        self::assertIsString($bytes);
+
+        $image = new \Imagick();
+        $image->readImageBlob($bytes);
+        $xmp = $image->getImageProfile('xmp');
+        $image->clear();
+
+        self::assertStringContainsString('CC BY-SA 3.0', $xmp, 'the licence must be in the file, not only in the caption');
+        self::assertStringContainsString(
+            'https://creativecommons.org/licenses/by-sa/3.0/',
+            $xmp,
+            'their deed, resolved through LicenceUrls',
+        );
+        self::assertStringContainsString('Jean-Pol GRANDMONT', $xmp, 'the author Commons named');
+        self::assertStringContainsString(
+            'https://commons.wikimedia.org/wiki/File:Test_handler.jpg',
+            $xmp,
+            'attribution points back at the Commons file page',
+        );
+        self::assertStringNotContainsString(
+            XmpRights::LICENSE_URL,
+            $xmp,
+            'our own default licence must never be asserted over somebody else\'s work',
+        );
+    }
+
     public function testARedeliveryOfASettledRowChangesNothing(): void
     {
         $downloads = 0;
@@ -121,6 +176,7 @@ final class FetchCommonsPhotoHandlerTest extends KernelTestCase
             $processor,
             $storage,
             $this->scanner($verdict ?? ScanVerdict::clean()),
+            new XmpRights('https://cyclingcommons.example'),
             new NullLogger(),
         );
         $handler(new FetchCommonsPhoto(self::FILE, 'EU'));

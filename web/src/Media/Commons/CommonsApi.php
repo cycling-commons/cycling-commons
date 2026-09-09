@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Media\Commons;
 
+use App\Media\LicenceUrls;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
@@ -25,17 +26,6 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
  */
 final readonly class CommonsApi
 {
-    /**
-     * Licences we may republish. The strings are Commons' own
-     * `LicenseShortName`, which is also what `ccUrl()` in
-     * web/assets/map/util.js already maps to a licence URL, so a name that
-     * reaches the drawer is a name the drawer can link.
-     */
-    public const array FREE_LICENCES = [
-        'CC0', 'Public domain', 'CC BY 4.0', 'CC BY 3.0', 'CC BY 2.0',
-        'CC BY-SA 4.0', 'CC BY-SA 3.0', 'CC BY-SA 3.0 lu', 'CC BY-SA 2.5', 'CC BY-SA 2.0',
-    ];
-
     public function __construct(
         private HttpClientInterface $http,
         #[Autowire('%env(APP_COMMONS_USER_AGENT)%')]
@@ -74,8 +64,12 @@ final readonly class CommonsApi
         $meta = \is_array($info['extmetadata'] ?? null) ? $info['extmetadata'] : [];
         $licenseRaw = $meta['LicenseShortName']['value'] ?? null;
         $license = \is_string($licenseRaw) ? trim($licenseRaw) : '';
-        if (!\in_array($license, self::FREE_LICENCES, true)) {
-            return null;   // fail closed: a licence we cannot name is one we do not republish
+        // Fail closed, and the test is deliberately "can we point at its deed?"
+        // rather than a second list of names: a licence we cannot identify is
+        // one we cannot attribute, and a file we cannot attribute is one we do
+        // not republish (LicenceUrls).
+        if (null === LicenceUrls::urlFor($license)) {
+            return null;
         }
 
         $artistRaw = $meta['Artist']['value'] ?? null;

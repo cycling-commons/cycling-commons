@@ -33,12 +33,16 @@ export const ccUrl = lic => ({
   'Public domain':'https://en.wikipedia.org/wiki/Public_domain',
   'CC BY 4.0':'https://creativecommons.org/licenses/by/4.0/',
   'CC BY 3.0':'https://creativecommons.org/licenses/by/3.0/',
+  'CC BY 2.5':'https://creativecommons.org/licenses/by/2.5/',
   'CC BY 2.0':'https://creativecommons.org/licenses/by/2.0/',
   'CC BY-SA 4.0':'https://creativecommons.org/licenses/by-sa/4.0/',
   'CC BY-SA 3.0':'https://creativecommons.org/licenses/by-sa/3.0/',
   'CC BY-SA 3.0 lu':'https://creativecommons.org/licenses/by-sa/3.0/lu/',
   'CC BY-SA 2.5':'https://creativecommons.org/licenses/by-sa/2.5/',
-  'CC BY-SA 2.0':'https://creativecommons.org/licenses/by-sa/2.0/'
+  'CC BY-SA 2.0':'https://creativecommons.org/licenses/by-sa/2.0/',
+  // Jurisdiction ports, common on older Belgian and German Commons uploads.
+  'CC BY-SA 2.0 be':'https://creativecommons.org/licenses/by-sa/2.0/be/',
+  'CC BY-SA 2.0 de':'https://creativecommons.org/licenses/by-sa/2.0/de/'
 }[lic] || 'https://commons.wikimedia.org/wiki/Commons:Licensing');
 export const wc = (file, credit, user, license) => {
   const enc = encodeURIComponent(file), page = file.replace(/ /g,'_');

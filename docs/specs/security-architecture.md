@@ -105,10 +105,10 @@ reading):
 | `default-src` | `'self'` | Deny-by-default baseline |
 | `script-src` | `'self' 'nonce-<per-request>'` (+ `'unsafe-eval'` on `/map` only — security-architecture.md §2.4) | No `'unsafe-inline'` and **no third-party script host at all** since 2026-08-09: the libraries are vendored same-origin (security-architecture.md §2.5) |
 | `style-src` | `'self' 'unsafe-inline'` | **Known gap, tracked in docs/TODO.md under "Opened 2026-08-25".** 209 `style="..."` attributes in `web/templates/` need it; each has to become a class before it can go. Runtime styling is NOT the reason and never was: CSP only restricts styles arriving as markup, so MapLibre's and the site JS's `.style` assignments are unaffected either way (the earlier note here said otherwise). What `'unsafe-inline'` leaves open is CSS-based exfiltration and UI redressing, not script execution, which `script-src` handles with a nonce |
-| `img-src` | `'self' data: blob: https://commons.wikimedia.org https://upload.wikimedia.org https://*.mapillary.com https://*.fbcdn.net` (+ `MEDIA_CSP_HOST` when set — rider photos, photo-uploads.md §2) | Wikimedia `Special:FilePath` 302s to `upload.wikimedia.org` and CSP checks every hop, so both hosts are listed; `data:`/`blob:` for MapLibre sprites and generated icons |
+| `img-src` | `'self' data: blob: https://commons.wikimedia.org https://upload.wikimedia.org https://*.mapillary.com https://*.fbcdn.net` (+ `MEDIA_CSP_HOST` when set, for rider photos: photo-uploads.md §2) | Wikimedia `Special:FilePath` 302s to `upload.wikimedia.org` and CSP checks every hop, so both hosts are listed; `data:`/`blob:` for MapLibre sprites and generated icons. **The two Wikimedia hosts are on their way out**: they exist only for the catalogue rows that still hotlink a Commons photo, and `app:media:localise-commons` (photo-uploads.md §5f) copies those into our own bucket. Wikimedia also moved thumbnails to a third host (`thumb.wikimedia.org`) in 2026, which broke every remaining hotlink; the fix is to finish the localisation, not to name a third host we would then delete |
 | `font-src` | `'self'` | |
 | `connect-src` | see host table below | |
-| `worker-src` | `blob:` | MapLibre spawns its worker from a blob URL |
+| `worker-src` | `'self' blob:` | MapLibre v6 starts its tile worker from the same-origin module URL under `public/lib/`; `blob:` stays for mapillary-js and for v6's own cross-origin fallback |
 | `child-src` | `blob:` | |
 | `object-src` | `'none'` | |
 | `base-uri` | `'self'` | |

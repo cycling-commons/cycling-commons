@@ -81,6 +81,59 @@ final readonly class CommonsPhotoRepository
     }
 
     /**
+     * Forget every "no free licence" verdict, so the gate is asked again.
+     *
+     * `unusable` is terminal on purpose: the verdict is about the file, and
+     * asking Commons twice gets the same answer. That reasoning holds only
+     * while OUR list of accepted licences is unchanged, and it is the list that
+     * moves. The first real backfill refused nine photos, and every one of them
+     * was freely licensed: they carried `CC BY 2.5`, `CC BY-SA 2.0 be` or
+     * `CC BY-SA 2.0 de`, names {@see \App\Media\LicenceUrls} simply did not
+     * have yet. Without this they would have stayed hotlinked forever, with the
+     * report calmly saying they were not ours to republish.
+     *
+     * Scoped to `no_free_licence`. An `infected` or `decompression_bomb`
+     * verdict is about the bytes and does not change because a list did.
+     *
+     * @return int rows put back in the queue
+     */
+    public function requeueLicenceRefusals(): int
+    {
+        // (int): DBAL widens an affected-row count to int|numeric-string, and
+        // the callers here count and report it.
+        return (int) $this->db->executeStatement(
+            'DELETE FROM commons_photo WHERE state = :unusable AND failed_reason = :why',
+            ['unusable' => CommonsPhotoState::Unusable->value, 'why' => 'no_free_licence'],
+        );
+    }
+
+    /**
+     * Queue a re-fetch of a photo we already hold, KEEPING its storage prefix.
+     *
+     * The prefix is the whole point. Every item that shows this photo stores
+     * the URL built from it, so a re-fetch into a fresh prefix would mean
+     * hunting down and rewriting each of those rows; keeping it means the
+     * published URLs stay valid and only the bytes behind them change.
+     *
+     * Written for one job: photos fetched before the rights packet existed
+     * (photo-uploads.md §5f) are stored with no author and no licence inside
+     * them, and nothing else would ever revisit them. `retry()` cannot do it,
+     * because a `ready` row is not stuck and must not be re-queued by the
+     * ordinary path.
+     *
+     * True only for the caller that re-queued it, so one dispatch.
+     */
+    public function markForRestamp(string $file): bool
+    {
+        return 1 === $this->db->executeStatement(
+            'UPDATE commons_photo
+                SET state = :pending, failed_reason = NULL, requested_at = NOW()
+              WHERE file = :f AND state = :ready AND storage_prefix IS NOT NULL',
+            ['pending' => CommonsPhotoState::Pending->value, 'ready' => CommonsPhotoState::Ready->value, 'f' => $file],
+        );
+    }
+
+    /**
      * Put a row back in the queue when nothing is going to happen otherwise.
      *
      * Two cases, both of which left a photo permanently absent before this

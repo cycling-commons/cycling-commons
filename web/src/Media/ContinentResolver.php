@@ -41,4 +41,31 @@ final class ContinentResolver
 
         return \is_string($code) && 2 === \strlen($code) ? strtoupper($code) : null;
     }
+
+    /**
+     * The same answer from a country code we already hold.
+     *
+     * A catalogue item stores its `country_code`, so asking which polygon its
+     * centroid falls inside is a slower way to reach a fact the row already
+     * states. It also fails on a coastline, where the centroid can land just
+     * outside every region, and a photo that resolves nowhere is refused
+     * rather than filed under a neighbour (photo-uploads.md §1). Same contract
+     * as resolve(): unresolvable means null, never a guess.
+     */
+    public function forCountry(?string $iso2): ?string
+    {
+        if (null === $iso2 || 2 !== \strlen($iso2)) {
+            return null;
+        }
+
+        $code = $this->db->fetchOne(
+            'SELECT c.code
+             FROM world_country wc
+             JOIN world_continent c ON c.id = wc.continent_id
+             WHERE wc.iso2 = :iso2',
+            ['iso2' => strtoupper($iso2)],
+        );
+
+        return \is_string($code) && 2 === \strlen($code) ? strtoupper($code) : null;
+    }
 }

@@ -518,6 +518,227 @@ identity is stated in exactly one place, under their control, and changing it
 is retroactive across every copy of the file that has ever been downloaded or
 mirrored.
 
+### 5f. Localising the catalogue's Commons hotlinks
+
+Until 2026-09-09 there were **two** ways a photo reached a rider, and only one
+of them kept a copy.
+
+A town card and a coverage POI have no photo until somebody opens them, so the
+server goes and finds one at request time: licence gate, download, virus scan,
+re-encode to three webp variants, store in our own bucket
+(`CommonsPhotoAdmission`, `FetchCommonsPhotoHandler`, coverage-provider.md §7).
+A seeded or harvested catalogue item is the other shape.
+`SeedWikidataPlacesCommand` and the Wallonia enrich step turned an OSM
+`wikimedia_commons` tag into a `Special:FilePath` URL and **stored the URL**, so
+the drawer printed it and the rider's browser fetched the pixels from
+Wikimedia. Nothing was ever cached, because nothing ever asked: the row already
+"had" a photo.
+
+That was leftover rather than a decision, and it cost three things:
+
+1. **Wikimedia serves our traffic.** One request per rider per photo, from a
+   project that gives its bandwidth away and does not owe us any of it.
+2. **The picture can vanish under us.** A file renamed or deleted on Commons
+   takes our page's photo with it, silently.
+3. **The URL is a redirect chain we do not control.** When Wikimedia moved
+   thumbnails to `thumb.wikimedia.org`, every one of those photos went blank
+   behind our own `img-src` and nothing on our side had changed. That is what
+   surfaced this.
+
+`app:media:localise-commons` ends it. It walks every item whose stored photo
+still points at Wikimedia, reads the filename back out of the URL
+(`CommonsFile`), and puts it through **the same handler a town card uses**:
+same licence gate, same scan, same re-encode, same bucket. Only then does it
+rewrite the row.
+
+**Both photo shapes, and the gallery is the one that gets forgotten.** `photo`
+is the legacy singular field the seeders wrote; `photos` is the array a rider's
+uploads live in (§5), and `SeedManualCatalogCommand` used it for the
+hand-curated multi-photo climbs, so it holds Commons hotlinks too. A first cut
+of this command read only the singular field, left five photos on four items
+hotlinked, and reported success. Gallery entries are reported with their
+position (`#11003 Côte de la Roche-aux-Faucons [2]`), and a rider's own upload
+sitting in the same array is skipped: it is already ours and has no Commons
+attribution to carry.
+
+| Option | For |
+|---|---|
+| `--dry-run` | report what would be fetched, write nothing, claim nothing |
+| `--limit=N` | a first run worth keeping short |
+| `--letter=Q` | one catalogue letter at a time |
+| `--sleep=MS` | milliseconds after each Wikimedia fetch, **default 1000** |
+| `--recheck-licences` | forget past `no_free_licence` refusals first, so files are judged against the current list |
+
+**The pause is not a tuning knob, it is the manners.** Wikimedia gives its
+bandwidth away and asks clients to come one at a time and unhurried. A backfill
+is the exact shape of request that abuses that: several hundred files, back to
+back, from one address, for a job with no deadline. The default is therefore
+the polite one and going faster has to be typed out on purpose, because getting
+it wrong shows up as a 429 or a block on the whole site rather than as a red
+test. Measured on the dev catalogue: about 4 s per photo at `--sleep=2000`,
+roughly fifteen requests a minute, half an hour for 419 items. Nothing is
+waiting on it. `app:media:restamp-commons-rights` carries the same option and
+the same default.
+
+Two rules the command exists to keep:
+
+- **Attribution travels with the copy.** The written shape comes from
+  `CommonsPhotoAdmission::readyPhoto()`, the same method that answers a live
+  town card, so credit, the uploader's Commons page, the licence and the
+  file's Commons page land on the row beside our URLs. CC BY-SA is satisfied
+  only while they do, and a row that lost them would be a licence breach that
+  looks like a working page. This is why the shape is shared rather than
+  written twice: two copies would eventually disagree, and the half that lost
+  would be the half nobody was looking at.
+- **A file the licence gate refuses keeps its hotlink.** Linking is not
+  republishing, and only one of the two needs permission. Those rows are
+  reported as refused and left exactly as they were.
+
+  A refusal is `unusable`, which is terminal because the verdict is about the
+  file. That reasoning holds only while OUR list is unchanged, and the first
+  real run proved it moves: nine photos were refused and **eight of them were
+  freely licensed**, carrying `CC BY 2.5`, `CC BY-SA 2.0 be` or
+  `CC BY-SA 2.0 de`, names `LicenceUrls` did not have yet. All three are now
+  accepted, and `--recheck-licences` re-opens past refusals so a list that grew
+  is applied to files already judged. Without it those eight would have stayed
+  hotlinked forever while the report said calmly that they were not ours.
+
+  The ninth is refused correctly and still is: Commons' bare `Attribution`
+  template is not a licence but a request for credit on terms written in prose,
+  with no deed to point a reader at. A licence we cannot identify is one we
+  cannot attribute.
+
+Re-runnable by design: a localised row no longer matches the query, and a file
+we already hold (a coverage POI may have fetched it first) is reused rather
+than downloaded again. The continent comes from the item's own `country_code`
+before its centroid (`ContinentResolver::forCountry()`), because the row states
+the country as a fact where a point-in-polygon lookup misses on any coastal shape,
+and a photo that resolves to no continent is refused rather than filed under a
+neighbour (§1).
+
+**Once every deployment has run it**, the two Wikimedia hosts in `img-src` can
+go (security-architecture.md §2.2): no page will hotlink anything, which is the
+point.
+
+A localised photo reaches the rider through the SAME caption a rider's own
+upload does (`photoCap()`), so it carries the uploader as a link to their
+Commons page, the licence as a link to that licence's own deed, and the file's
+Commons page:
+
+```
+© Les Meloures at lb.wikipedia · CC BY-SA 3.0 lu · Wikimedia Commons ↗
+```
+
+**`creditUrl` never points at a rider on our own site, and that is deliberate.**
+A rider cannot be the author of a file somebody else uploaded to Commons, so
+the two credits are built from different places and can never be swapped:
+
+| Photo | `credit` | `creditUrl` | `source` |
+|---|---|---|---|
+| Rider upload | their display name, frozen at approval (§5d) | **absent**: plain text, no link | absent |
+| Commons | the Commons uploader | their page on `commons.wikimedia.org` | the file's Commons page |
+
+Every producer of `creditUrl` in the codebase hardcodes the
+`commons.wikimedia.org` host: `CommonsPhotoAdmission::readyPhoto()` and the two
+seeders. Nothing builds one from a rider. The `/riders/<uuid>` profile link the
+drawer does render belongs to a different row entirely, the one naming who
+contributed the **item**, and never appears inside a photo caption.
+
+#### The licence has to be in the FILE, not only in the caption
+
+A rider's upload carries an XMP packet naming our licence and linking our photo
+page (§1.3c). A Commons copy carried **nothing at all** until 2026-09-09: the
+Imagick re-encode drops whatever XMP arrived with the file, and
+`FetchCommonsPhotoHandler` passed no packet of its own. Every Commons photo in
+our bucket was an orphan, with no author and no licence in the bytes. The
+caption on our page said the right thing; the file did not, and the file is
+what gets downloaded. CC BY-SA asks for the attribution to travel with the
+work.
+
+`XmpRights::forCommonsFile()` fixes it, and is deliberately NOT `forPhoto()`:
+
+| | `forPhoto()` (rider) | `forCommonsFile()` (Commons) |
+|---|---|---|
+| `dc:creator` | absent, never a display name (§1.3c) | the uploader Commons names |
+| `cc:license` | always CC BY-SA 4.0, ours | **theirs**, resolved through `LicenceUrls` |
+| `cc:attributionURL` | our `/photo/<uuid>` page | the **Commons file page** |
+| `xmpRights:Owner` | absent | their Commons user page, when there is one |
+| `UsageTerms` | attribution via our page | their licence, plus a note that this copy was resized and re-encoded |
+
+Reusing the rider packet would have been worse than writing none: it would
+assert our licence over somebody else's work and send a reader following the
+file's own metadata to a page of ours that does not name them.
+
+**Why we write one instead of keeping what arrives.** We fetch the API's
+`thumburl`, not the original file, and Wikimedia's thumbnailer decides what
+survives. Measured over five files on 2026-09-09:
+
+| Thumbnail | Profiles | EXIF keys | Artist/Copyright |
+|---|---|---|---|
+| `LBL 2008 Côte de Wanne.jpg` | none | 0 | no |
+| `Mur de Huy 001.jpg` | none | 0 | no |
+| `Sint joriskerk te Amersfoort.JPG` | exif | 5 | no |
+| `Abbaye de Stavelot.01.jpg` | exif | 5 | no |
+| `Signal de Botrange (DSCF6640).jpg` | exif + icc | 7 | **yes** |
+
+**No XMP on any of them.** There is nothing to preserve: keeping what arrives
+would give attribution on one file in five.
+
+Worse, the one that has it is wrong. Its EXIF says `Copyright: cc-by-sa-4.0`
+while the Commons record says `LicenseShortName: CC BY 4.0`, which is a
+different licence. The file page is the statement that governs; a camera field
+the photographer typed once is not. So `PhotoProcessor` strips the arriving
+profiles (which is also what keeps a photographer's GPS and camera serial out
+of our bucket) and the packet is built from `extmetadata`, the same
+authoritative source the licence gate already reads and refuses a file for
+lacking.
+
+The packet goes on `orig` and `lg` only. `sm` is a 520px preview and a 1.4 KB
+rights block is most of that file; this matches what a rider's photo already
+does, and `sm` is not a copy anyone redistributes.
+
+**Files fetched before this change carry no packet**, and nothing else would
+ever revisit them: `app:media:localise-commons` looks for items still pointing
+at Wikimedia and these no longer do, while `CommonsPhotoRepository::retry()`
+only re-queues rows that are stuck. A `ready` row is not stuck.
+
+`app:media:restamp-commons-rights` closes that. It reads each stored `lg`
+object, and re-fetches the ones carrying no XMP profile. Reading the file rather
+than trusting a `ready_at` date: the date is a guess about when the fix landed,
+the profile is the fact, so the command is safe to run repeatedly and reports
+zero once there is nothing left.
+
+**The photo keeps its bucket and prefix.** They are baked into every published
+URL, so a re-fetch that moved the file would trade one broken thing for another,
+quietly, and only on the pages nobody opened that day.
+`CommonsPhotoRepository::markForRestamp()` sets the row back to `pending`
+*without* clearing them, and `FetchCommonsPhotoHandler` reuses a prefix (and
+bucket) when the pending row already carries one. Same URL, new bytes; nothing
+outside the command has to know it ran.
+
+Run on the dev catalogue 2026-09-09: 14 re-stamped, 2 already carried a packet,
+0 failed, and a second pass reported 16 already stamped and nothing to do. After
+the full localisation the same check reports **425 stored photos, all carrying a
+packet, none to do**.
+
+The licence link is the part with a trap under it. The set of licences we
+accept lives in `CommonsApi::FREE_LICENCES`, and the set the caption can turn
+into a deed URL lives in `ccUrl()` in `assets/map/util.js`. Both files said in
+prose that they must agree and nothing made them. Adding a licence to the gate
+alone would start us republishing files under it while the caption pointed at
+the generic `Commons:Licensing` index, which lists every licence Commons has
+ever seen and therefore identifies none: CC BY-SA asks for the licence to be
+identified, and the page would still look perfectly fine.
+`tests/Media/FreeLicenceLinkabilityTest.php` now fails on exactly that, reading
+the JS table rather than restating it. Only that direction is checked: `ccUrl()`
+may know more names than the gate accepts, because it also captions rider
+uploads.
+
+`tools/wikimedia/commons_photo.py` holds a third copy for the harvest side. It
+is deliberately allowed to be narrower (today it lacks `CC BY-SA 3.0 lu`), since
+accepting fewer licences at harvest time only means fewer photos, never a
+mislabelled one.
+
 ## 6. Disposal & garbage collection
 
 The disposal *classes* are owned by

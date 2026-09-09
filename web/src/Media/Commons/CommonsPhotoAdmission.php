@@ -56,11 +56,35 @@ final readonly class CommonsPhotoAdmission
             $this->bus->dispatch(new FetchCommonsPhoto($file, $continent));
         }
 
+        $ready = $this->readyPhoto($file);
+        if (null !== $ready) {
+            return $ready;
+        }
+
+        $row = $this->photos->find($file);
+        $pending = CommonsPhotoState::Pending->value === ($row['state'] ?? '');
+
+        return ['state' => $pending ? 'pending' : 'none'];
+    }
+
+    /**
+     * The published shape of a file we already hold, or null when we do not.
+     *
+     * Public because the backfill that localises the catalogue's old Commons
+     * hotlinks writes exactly this into `item.attributes->photo`
+     * (LocaliseCommonsPhotosCommand). Attribution is the reason it is shared
+     * rather than copied: credit, the uploader's Commons page and the licence
+     * travel with the URLs, and CC BY-SA is only satisfied while they do. Two
+     * implementations of this shape would eventually disagree, and the half
+     * that lost would be the half nobody was looking at.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function readyPhoto(string $file): ?array
+    {
         $row = $this->photos->find($file);
         if (null === $row || CommonsPhotoState::Ready->value !== $row['state']) {
-            $pending = CommonsPhotoState::Pending->value === ($row['state'] ?? '');
-
-            return ['state' => $pending ? 'pending' : 'none'];
+            return null;
         }
 
         /** @var string $bucket */

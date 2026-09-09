@@ -56,12 +56,24 @@ final class CommonsFile
             return self::clean(rawurldecode($m[1]));
         }
 
-        // A thumbnail URL names the file it is a thumbnail OF, one segment on
-        // from the hash directories, so the size prefix is never the answer.
-        if (preg_match('~^https?://upload\.wikimedia\.org/wikipedia/commons/thumb/[0-9a-f]/[0-9a-f]{2}/([^/?#]+)~u', $raw, $m)) {
+        // What 419 catalog rows carry: SeedWikidataPlacesCommand and the
+        // Wallonia enrich step wrote Special:FilePath URLs straight into
+        // item.attributes->photo, so localising a row means reading the
+        // filename back out of one.
+        if (preg_match('~^https?://commons\.wikimedia\.org/wiki/Special:FilePath/([^?#]+)~u', $raw, $m)) {
             return self::clean(rawurldecode($m[1]));
         }
-        if (preg_match('~^https?://upload\.wikimedia\.org/wikipedia/commons/[0-9a-f]/[0-9a-f]{2}/([^/?#]+)~u', $raw, $m)) {
+
+        // A thumbnail URL names the file it is a thumbnail OF, one segment on
+        // from the hash directories, so the size prefix is never the answer.
+        // Two hosts because Wikimedia split thumbnails onto thumb.wikimedia.org;
+        // the redirect chain out of Special:FilePath ends there now, and a file
+        // reached that way must resolve to the same name as one reached any
+        // other way or we would fetch and store it twice.
+        if (preg_match('~^https?://(?:upload|thumb)\.wikimedia\.org/wikipedia/commons/thumb/[0-9a-f]/[0-9a-f]{2}/([^/?#]+)~u', $raw, $m)) {
+            return self::clean(rawurldecode($m[1]));
+        }
+        if (preg_match('~^https?://(?:upload|thumb)\.wikimedia\.org/wikipedia/commons/[0-9a-f]/[0-9a-f]{2}/([^/?#]+)~u', $raw, $m)) {
             return self::clean(rawurldecode($m[1]));
         }
 
