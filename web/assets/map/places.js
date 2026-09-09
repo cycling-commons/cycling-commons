@@ -29,8 +29,10 @@ const NEARBY_KM = 5;
 
 export function openPlace(name, meta){
   // docs/specs/map-and-search.md §4.5 — town outside the saved scope transiently widens (persist:false).
-  const sbb = window.CCScope && window.CCScope.bbox ? window.CCScope.bbox() : null;
-  if(sbb && (meta.ll[1]<sbb[0] || meta.ll[0]<sbb[1] || meta.ll[1]>sbb[2] || meta.ll[0]>sbb[3])){
+  /* CCScope owns the comparison: a scope box may cross the antimeridian and
+     read west > east (RFC 7946 §5.2), which no inline test gets right. meta.ll
+     is [lat, lng]; the helper takes them the other way round. */
+  if(window.CCScope && window.CCScope.bboxHasPoint && !window.CCScope.bboxHasPoint(meta.ll[1], meta.ll[0])){
     widenForDeepLink(meta.ll);
   }
   // A · segments are corridor data, not places — they would flood the card.

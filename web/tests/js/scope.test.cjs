@@ -1263,3 +1263,90 @@ test('regionOfPointPrecise: no bbox candidate — null', async () => {
   ], { kind: 'everywhere', regionIds: [], countryCode: null });
   assert.equal(await CCScope.regionOfPointPrecise(50, 50), null);
 });
+
+// ---- boxes that cross the antimeridian (RFC 7946 §5.2) ----------------------
+// A region box whose WEST value is greater than its EAST is read the long way
+// round. RegionRegistryProvider emits that shape, and two countries we carry
+// need it: the United States through the Aleutians (172.45E to 66.95W) and New
+// Zealand through the Chathams (165.87E to 175.83W).
+//
+// Before this, PostGIS reported those two as -180..180 and every comparison
+// here read `b[0] <= lng && lng <= b[2]`, so both regions contained every point
+// on Earth. Nothing errored. `regionOfPoint()` handed anyone anywhere the
+// United States, because a box containing everything also wins on centre
+// distance; the town search sent Photon a box spanning the world; and the "you
+// are looking outside your filter" nudge could never fire. The whole point of
+// the wrapped shape is that it cannot be compared naively, so a future naive
+// comparison is a test failure rather than a silent global scope.
+const WRAP = [
+  { id: 90, slug: 'aotearoa', countryCode: 'NZ', bbox: [165.87, -47.4, -175.83, -34.0] },
+  { id: 91, slug: 'chile', countryCode: 'CL', bbox: [-75.7, -55.9, -66.4, -17.5] },
+];
+
+test('a point on either side of the seam is inside a crossing box', () => {
+  boot({ regionsList: WRAP, defaultScope: { kind: 'region', regionIds: [90], countryCode: 'NZ' } });
+
+  // Auckland, east of 180 in longitude terms; and the Chathams, west of it.
+  assert.equal(CCScope.regionOfPoint(174.76, -36.85).slug, 'aotearoa');
+  assert.equal(CCScope.regionOfPoint(-176.55, -43.95).slug, 'aotearoa');
+});
+
+test('a crossing box does not swallow the rest of the world', () => {
+  boot({ regionsList: WRAP, defaultScope: { kind: 'region', regionIds: [90], countryCode: 'NZ' } });
+
+  // Brussels, Santiago and mid-Pacific-east: none of these are New Zealand.
+  assert.equal(CCScope.regionOfPoint(4.35, 50.85), null);
+  assert.equal(CCScope.regionOfPoint(-70.65, -33.45).slug, 'chile');
+  assert.equal(CCScope.regionOfPoint(-140.0, -40.0), null);
+});
+
+test('the scope bbox helpers read a crossing box the long way round', () => {
+  boot({ regionsList: WRAP, defaultScope: { kind: 'region', regionIds: [90], countryCode: 'NZ' } });
+
+  assert.equal(CCScope.bboxHasPoint(179.9, -40.0), true, 'just west of the seam');
+  assert.equal(CCScope.bboxHasPoint(-179.9, -40.0), true, 'just east of the seam');
+  assert.equal(CCScope.bboxHasPoint(4.35, 50.85), false, 'Brussels is not in New Zealand');
+});
+
+test('the out-of-scope nudge can still fire for a crossing scope', () => {
+  boot({ regionsList: WRAP, defaultScope: { kind: 'region', regionIds: [90], countryCode: 'NZ' } });
+
+  // A viewport over Europe does not overlap New Zealand. The old inline test
+  // read a -180..180 box as overlapping everything, so this was always true.
+  assert.equal(CCScope.bboxOverlaps([2.0, 49.0, 6.5, 51.6]), false);
+  // One over the Tasman does.
+  assert.equal(CCScope.bboxOverlaps([170.0, -45.0, 178.0, -36.0]), true);
+  // And one straddling the seam east of New Zealand does too.
+  assert.equal(CCScope.bboxOverlaps([178.0, -45.0, -177.0, -40.0]), true);
+});
+
+test('Photon is never handed a crossing box', () => {
+  boot({ regionsList: WRAP, defaultScope: { kind: 'region', regionIds: [90], countryCode: 'NZ' } });
+
+  // Photon reads minLon,minLat,maxLon,maxLat and has no way back round the
+  // world, so a crossing box is dropped and the country carries the filter.
+  const pp = CCScope.photonParams();
+  assert.equal(pp.bbox, null);
+  assert.equal(pp.countrycode, 'nz');
+
+  boot({ regionsList: WRAP, defaultScope: { kind: 'region', regionIds: [91], countryCode: 'CL' } });
+  assert.deepEqual(CCScope.photonParams().bbox, [-75.7, -55.9, -66.4, -17.5]);
+});
+
+test('the scope centre of a crossing box lands inside it, not on the far meridian', () => {
+  boot({ regionsList: WRAP, defaultScope: { kind: 'region', regionIds: [90], countryCode: 'NZ' } });
+
+  const [lng, lat] = CCScope.scopeCenter();
+  // Midpoint of 165.87E .. 175.83W the short way is about 179.0E, not the 5W
+  // that averaging the two numbers would give.
+  assert.ok(lng > 170 || lng < -170, `centre ${lng} must sit near the seam, not on the far side`);
+  assert.equal(CCScope.bboxHasPoint(lng, lat), true, 'the centre must be inside its own box');
+});
+
+test('an ordinary union is unchanged by the wrapping arithmetic', () => {
+  boot({});
+  // Two neighbouring Belgian regions: the union is their extent, never the gap
+  // between them. This is the regression the wrapped-union guard exists for.
+  const b = CCScope.bbox();
+  assert.ok(b[0] < b[2], 'an ordinary scope box stays west < east');
+});

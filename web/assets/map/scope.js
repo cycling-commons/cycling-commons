@@ -118,6 +118,65 @@
   // is the bare literal 'myarea'.
 
   // [west, south, east, north] bbox around a lat/lng circle of radius rkm.
+  /* ---- boxes that may cross the antimeridian --------------------------------
+     A region box whose WEST value is greater than its EAST crosses ±180 and is
+     read the long way round. That is the GeoJSON convention (RFC 7946 §5.2) and
+     RegionRegistryProvider emits it; two countries we carry need it, the United
+     States through the Aleutians and New Zealand through the Chathams.
+
+     Every longitude question goes through these. Reading a box as
+     `b[0] <= lng && lng <= b[2]` was the bug: for those two it is false almost
+     everywhere the region actually is, and PostGIS's -180..180 answer made it
+     true everywhere else, so the United States contained the whole planet and
+     won every "nearest region" contest on Earth. Latitude never wraps, so it is
+     left alone. */
+  const bboxWraps = (b) => !!b && b[0] > b[2];
+  /** The box's longitude span in degrees, the short way round. */
+  const bboxWidth = (b) => (bboxWraps(b) ? (b[2] + 360) - b[0] : b[2] - b[0]);
+  /** Centre longitude, normalised back into -180..180. */
+  const bboxCentreLng = (b) => {
+    const cx = b[0] + bboxWidth(b) / 2;
+    return cx > 180 ? cx - 360 : cx;
+  };
+  const bboxHasLng = (b, lng) => (bboxWraps(b) ? (lng >= b[0] || lng <= b[2]) : (lng >= b[0] && lng <= b[2]));
+  const bboxHasPoint = (b, lng, lat) => !!b && lat >= b[1] && lat <= b[3] && bboxHasLng(b, lng);
+  /** Do two boxes overlap? A wrapping box is two spans, so it is tested as two. */
+  const bboxesOverlap = (a, b) => {
+    if (!a || !b) return false;
+    if (a[3] < b[1] || b[3] < a[1]) return false;              // latitude first: no wrap there
+    const spans = (x) => (bboxWraps(x) ? [[x[0], 180], [-180, x[2]]] : [[x[0], x[2]]]);
+    for (const p of spans(a)) for (const q of spans(b)) {
+      if (p[0] <= q[1] && q[0] <= p[1]) return true;
+    }
+    return false;
+  };
+  /** Union of two boxes, keeping a crossing crossing rather than exploding it. */
+  const bboxUnion = (a, b) => {
+    if (!a) return b ? b.slice() : null;
+    if (!b) return a.slice();
+    const lat = [Math.min(a[1], b[1]), Math.max(a[3], b[3])];
+    if (!bboxWraps(a) && !bboxWraps(b)) {
+      const plain = [Math.min(a[0], b[0]), lat[0], Math.max(a[2], b[2]), lat[1]];
+      /* Two ordinary boxes far apart either side of the seam union to a box
+         spanning the world, and going round the back is shorter. The guard is
+         the whole of it: this alternative only exists when the two really do
+         sit apart, `west > east`. Without it, two neighbouring regions produced
+         the gap BETWEEN them (Belgium's own scope came out 0.24 degrees wide
+         instead of 3.87), because the candidate was then their intersection
+         wearing a union's name. */
+      const gw = Math.max(a[0], b[0]); const ge = Math.min(a[2], b[2]);
+      if (gw > ge) {
+        const wrapped = [gw, lat[0], ge, lat[1]];
+        if (bboxWidth(wrapped) < bboxWidth(plain)) return wrapped;
+      }
+      return plain;
+    }
+    // With a crossing box involved, widen it in whichever direction costs least.
+    const w = bboxHasLng(a, b[0]) ? a[0] : b[0];
+    const e = bboxHasLng(a, b[2]) ? a[2] : b[2];
+    return [w, lat[0], e, lat[1]];
+  };
+
   const circleBbox = (center, rkm) => {
     const dLat = rkm / 111.32;
     // Pole safety: cos(lat) -> 0 near +/-90 would blow dLng up to Infinity/NaN.
@@ -157,8 +216,8 @@
     const hits = [];
     regions.forEach((r) => {
       const b = r.bbox;
-      if (b && b[0] <= cb[2] && cb[0] <= b[2] && b[1] <= cb[3] && cb[1] <= b[3]) {
-        const cx = (b[0] + b[2]) / 2; const cy = (b[1] + b[3]) / 2;
+      if (bboxesOverlap(b, cb)) {
+        const cx = bboxCentreLng(b); const cy = (b[1] + b[3]) / 2;
         hits.push({ id: r.id, cc: r.countryCode, d: (cx - center[1]) ** 2 + (cy - center[0]) ** 2 });
       }
     });
@@ -295,7 +354,7 @@
       // No outline (a region imported before the column existed, or a test
       // fixture): fall back to the bbox centre, in the same units.
       const b = r && r.bbox;
-      const cx = b ? (b[0] + b[2]) / 2 : lng; const cy = b ? (b[1] + b[3]) / 2 : lat;
+      const cx = b ? bboxCentreLng(b) : lng; const cy = b ? (b[1] + b[3]) / 2 : lat;
       return ((cx - lng) * kx) ** 2 + (cy - lat) ** 2;
     }
     let best = Infinity;
@@ -468,13 +527,12 @@
       if (scope && scope.kind === 'myArea' && scope.myArea) return circleBbox(scope.myArea.center, scope.myArea.radiusKm);
       const rs = this.regions();
       if (!rs.length) return null;
-      let w = Infinity; let s = Infinity; let e = -Infinity; let n = -Infinity;
+      let acc = null;
       for (const r of rs) {
         if (!r.bbox) continue;
-        w = Math.min(w, r.bbox[0]); s = Math.min(s, r.bbox[1]);
-        e = Math.max(e, r.bbox[2]); n = Math.max(n, r.bbox[3]);
+        acc = bboxUnion(acc, r.bbox);
       }
-      return Number.isFinite(w) ? [w, s, e, n] : null;
+      return acc;
     },
 
     /** Camera frame for this scope — not always bbox(). Distant islands make
@@ -483,14 +541,30 @@
       if (scope && scope.kind === 'myArea' && scope.myArea) return this.bbox();
       const rs = this.regions();
       if (!rs.length) return null;
-      let w = Infinity; let s = Infinity; let e = -Infinity; let n = -Infinity;
+      let acc = null;
       for (const r of rs) {
         const b = r.view || r.bbox;
         if (!b) continue;
-        w = Math.min(w, b[0]); s = Math.min(s, b[1]);
-        e = Math.max(e, b[2]); n = Math.max(n, b[3]);
+        acc = bboxUnion(acc, b);
       }
-      return Number.isFinite(w) ? [w, s, e, n] : this.bbox();
+      return acc || this.bbox();
+    },
+
+    /** Does the active scope's box overlap this [w,s,e,n]? The one way to ask.
+     *  Used for the "you are looking outside your filter" nudge, where a naive
+     *  test on a crossing box said "always overlapping" and the nudge never
+     *  fired for the two scopes that wrap. */
+    bboxOverlaps(box) {
+      const b = this.bbox();
+      return b ? bboxesOverlap(b, box) : true;       // Everywhere overlaps everything
+    },
+
+    /** Does the active scope's box contain this point? The one way to ask.
+     *  A scope box may cross the antimeridian (RegionRegistryProvider), and a
+     *  hand-rolled `b[0] <= lng` comparison is wrong for the two that do. */
+    bboxHasPoint(lng, lat) {
+      const b = this.bbox();
+      return b ? bboxHasPoint(b, lng, lat) : true;   // Everywhere contains everything
     },
 
     /** [lng, lat] centre of the active scope, or null for Everywhere.
@@ -498,7 +572,7 @@
      *  scope bbox, not the map (chips render before applyScope fits the view). */
     scopeCenter() {
       const b = this.bbox();
-      return b ? [(b[0] + b[2]) / 2, (b[1] + b[3]) / 2] : null;
+      return b ? [bboxCentreLng(b), (b[1] + b[3]) / 2] : null;
     },
 
     /** Single region id for best-of &region= (only a single named region qualifies).
@@ -568,7 +642,17 @@
     /** Photon geocode hints: scoped bbox + country gate. */
     photonParams() {
       if (!scope || scope.kind === 'everywhere') return { bbox: null, countrycode: null };
-      return { bbox: this.bbox(), countrycode: scope.countryCode ? scope.countryCode.toLowerCase() : null };
+      /* A crossing box is dropped rather than sent. Photon reads a bbox as
+         minLon,minLat,maxLon,maxLat and has no notion of going round the back,
+         so west > east would either return nothing or be silently normalised
+         into a box spanning the world, which is the bug this whole change
+         exists to remove. `countrycode` still narrows the search, and for the
+         two scopes that wrap it is the country that matters anyway. */
+      const b = this.bbox();
+      return {
+        bbox: bboxWraps(b) ? null : b,
+        countrycode: scope.countryCode ? scope.countryCode.toLowerCase() : null,
+      };
     },
 
     /** Coverage params {rids, cc} (docs/specs/map-and-search.md §4.5). Region:
@@ -612,8 +696,8 @@
       let best = null; let bestD = Infinity;
       for (const r of regions) {
         const b = r.bbox;
-        if (!b || lng < b[0] || lng > b[2] || lat < b[1] || lat > b[3]) continue;
-        const cx = (b[0] + b[2]) / 2; const cy = (b[1] + b[3]) / 2;
+        if (!bboxHasPoint(b, lng, lat)) continue;
+        const cx = bboxCentreLng(b); const cy = (b[1] + b[3]) / 2;
         // Scale longitude by cos(lat); raw degrees over-weight east-west.
         const kx = Math.cos(lat * Math.PI / 180);
         const d = ((cx - lng) * kx) ** 2 + (cy - lat) ** 2;
@@ -643,8 +727,7 @@
     async regionOfPointPrecise(lng, lat) {
       const cands = [];
       for (const r of regions) {
-        const b = r.bbox;
-        if (!b || lng < b[0] || lng > b[2] || lat < b[1] || lat > b[3]) continue;
+        if (!bboxHasPoint(r.bbox, lng, lat)) continue;
         cands.push(r);
       }
       if (!cands.length) return null;
@@ -654,7 +737,7 @@
         let best = null; let bestD = Infinity;
         for (const r of cands) {
           const b = r.bbox;
-          const cx = (b[0] + b[2]) / 2; const cy = (b[1] + b[3]) / 2;
+          const cx = bboxCentreLng(b); const cy = (b[1] + b[3]) / 2;
           const d = ((cx - lng) * kx) ** 2 + (cy - lat) ** 2;
           if (d < bestD) { bestD = d; best = r; }
         }

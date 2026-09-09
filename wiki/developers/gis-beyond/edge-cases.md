@@ -12,7 +12,7 @@ Each section states its own kind up front, because they are not all the same kin
 
 ## The antimeridian
 
-**Kind: we do not do it yet: a known open defect, named before it was live, and live now.**
+**Kind: we do it, and the way we do it is worth reading: named as a risk before it was live, live for a while, fixed once it was.**
 
 [`pitfalls.md`](../gis/pitfalls.md)'s own row on this is accurate and worth re-reading rather than
 re-deriving: longitude wraps from +180 back to −180, and a naive minimum/maximum union of longitudes
@@ -46,43 +46,49 @@ across that one seam:
 
 This project has an exact, named, verified answer for where this breaks, because it was looked for
 and written down before it happened rather than discovered by accident later. The region-scoping
-design's risk register (`docs/specs/Dated/2026-07-19-region-scoping-design.md` §8, risk 11) names
-both break points precisely:
+design's risk register (`docs/specs/Dated/2026-07-19-region-scoping-design.md` §8, risk 11) named
+both break points, a naive union on the client and a naive `ST_XMin`/`ST_XMax` on the server, and
+recorded the fix as required before any straddling country was seeded. Two were seeded first, so for
+a while the register described something live.
 
-<!-- CODE-FROM web/assets/map/scope.js -->
-```js
-    bbox() {
-      if (scope && scope.kind === 'myArea' && scope.myArea) return circleBbox(scope.myArea.center, scope.myArea.radiusKm);
-      const rs = this.regions();
-      if (!rs.length) return null;
-      let w = Infinity; let s = Infinity; let e = -Infinity; let n = -Infinity;
-      for (const r of rs) {
-        if (!r.bbox) continue;
-        w = Math.min(w, r.bbox[0]); s = Math.min(s, r.bbox[1]);
-        e = Math.max(e, r.bbox[2]); n = Math.max(n, r.bbox[3]);
-      }
-      return Number.isFinite(w) ? [w, s, e, n] : null;
-    },
+The shape chosen is the second of the two general fixes above, and the reason is that it is not
+ours: GeoJSON already specifies it. RFC 7946 §5.2 says a bounding box that crosses the antimeridian
+is written with its **west value greater than its east value**, and is read the long way round. So
+`[166.4, -47.3, -175.8, -34.4]` is a box 17.7° wide sitting over New Zealand, not a 344° box over
+everything else. Splitting into two boxes was the alternative; it keeps every comparison trivially
+simple, at the cost of changing the shape of the data every consumer reads.
+
+The server emits that shape:
+
+<!-- CODE-FROM web/src/Catalog/RegionRegistryProvider.php -->
+```php
+                    CASE WHEN ST_XMax(geom) - ST_XMin(geom) > 180
+                         THEN CASE WHEN ST_XMin(ST_ShiftLongitude(geom)) > 180
+                                   THEN ST_XMin(ST_ShiftLongitude(geom)) - 360
+                                   ELSE ST_XMin(ST_ShiftLongitude(geom)) END
+                         ELSE ST_XMin(geom) END AS w,
 ```
 
-`CCScope.bbox()`'s union is exactly the naive `Math.min`/`Math.max` shape described above, and the
-server-side counterpart the register names is the same shape in SQL: `RegionRegistryProvider`
-(`web/src/Catalog/RegionRegistryProvider.php`) publishes each region's `ST_XMin`/`ST_XMax` extent as
-its `bbox`, a naive min/max on the database side. Both produce a world-wrapping box for a region
-that genuinely straddles 180°; the register's own examples are Chukotka, Fiji, and New Zealand. It
-records the fix as **required** before any such country is seeded, not optional: "split boxes or
-lon-normalised union," to be added to the per-country seeding checklist.
+`ST_ShiftLongitude` is the normalisation described above, into a 0–360° range where the seam is not
+a discontinuity. The test for whether to apply it is a **raw span wider than 180°**, and the reason
+it is not the more obvious "did shifting make the span narrower?" is worth knowing: shifting adds
+360 to a negative longitude, and the result cannot hold the original number's mantissa, so every
+region in the western hemisphere comes back roughly 1e-14 narrower. Asturias and Madrid answer yes
+to that question. Only a box reaching from one edge of the seam to the other is wider than 180°.
 
-Two onboarded countries straddle the seam, and the fix is not in. New Zealand's outline includes
-outlying islands on both sides of 180°, so its `region.geom` runs from about 178.6°W to 179.0°E; the
-United States' outline follows the Aleutian chain across it, from about 179.2°W to 179.8°E. Ask
-PostGIS for either country's extent and the naive box comes back well over 350° wide, the
-world-wrapping box the register predicted, and per the register that is what the viewport fit, the
-Photon search bbox and the widen chip read. That is why this section's kind is a known open defect
-rather than a deferred risk: the trigger the register named has fired, and the fix it named is still
-the right one. The camera is the one consumer already protected, and for an unrelated reason:
+The client half matters more than it looks, because **no single region we ship crosses the seam**.
+New Zealand's country scope is the union of seventeen regions running from Southland at 166.4°E to
+the Chatham Islands at 175.8°W, and taking the minimum west and maximum east of those built the
+world-wrapping box out of seventeen perfectly ordinary ones. `CCScope`'s union now compares the
+width each way and keeps the shorter, and every longitude question goes through helpers that
+understand the wrapped shape rather than through `b[0] <= lng && lng <= b[2]`, which is false almost
+everywhere a crossing region actually is. `docs/specs/map-and-search.md` §4.5a is the contract.
+
+Two consumers need naming. **Photon is not handed a crossing box at all**: it reads
+`minLon,minLat,maxLon,maxLat` and has no notion of going round the back, so a wrapping scope sends
+its country code and no bbox. And **the camera was never affected**, for an unrelated reason:
 `RegionRegistryProvider` frames on the largest outline ring rather than the true bbox, because
-distant islands would frame empty ocean.
+distant islands would otherwise frame empty ocean.
 
 ## The poles
 

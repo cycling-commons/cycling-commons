@@ -223,10 +223,13 @@ export function initAreaNudge(){
   const scopeMiss=()=>{
     const s=curScope();
     if(!s||s.kind==='everywhere'||s.kind==='myArea') return false;
-    const b=window.CCScope.bbox();
-    if(!b) return false;
+    if(!window.CCScope.bbox()) return false;
     const v=map.getBounds();
-    return v.getWest()>b[2] || v.getEast()<b[0] || v.getSouth()>b[3] || v.getNorth()<b[1];
+    /* CCScope owns the comparison: a scope box may cross the antimeridian and
+       read west > east, and the inline test that used to live here read such a
+       box as overlapping everything, so this nudge never fired for the United
+       States or New Zealand. */
+    return !window.CCScope.bboxOverlaps([v.getWest(), v.getSouth(), v.getEast(), v.getNorth()]);
   };
   const evaluate=()=>{
     const s=curScope();

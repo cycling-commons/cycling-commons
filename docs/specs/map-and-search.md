@@ -935,9 +935,8 @@ the newest rung of that same ladder.
     visible and stay silent in a bbox corner with no data near it. Everywhere cannot miss, so it is excluded; myArea has
     its own arm above. Evaluated on `moveend` **and** once on `idle`, because a
     deep link can land outside the saved scope with no move ever happening.
-    Antimeridian: bboxes are unnormalized `[w,s,e,n]`, so a viewport straddling
-    ±180° can read as non-overlapping; the outcome is a chip that does not
-    appear, never a wrong one.
+    Antimeridian: the comparison is `CCScope.bboxOverlaps()`, never an inline
+    test (§4.5a).
 
   *Why it exists:* coverage and catalog layers are scope-filtered, correctly and
   deliberately, so panning to South Africa under a Netherlands scope drew an
@@ -1029,6 +1028,58 @@ the newest rung of that same ladder.
   about a row that is not a scope), `Version20260824120000` backfills deployed
   databases with that same SQL, and `RegionRegistryProvider` drops any adj id it
   is not itself shipping — so a stale row cannot reach the client either.
+
+#### 4.5a Boxes that cross the antimeridian
+
+A scope box whose **west value is greater than its east value** crosses ±180°
+and is read the long way round. That is the GeoJSON convention
+(RFC 7946 §5.2), `RegionRegistryProvider` emits it, and `CCScope` is the only
+thing allowed to interpret it.
+
+It is not hypothetical. No single region we ship crosses the seam, but **New
+Zealand's country scope is the union of seventeen regions** running from
+Southland at 166.4°E to the Chatham Islands at 175.8°W. Taking the minimum west
+and the maximum east of those, which is what the union used to do, produced
+
+    [-176.9, -47.3, 178.6, -34.4]     355.5° wide
+
+a box containing every point on Earth. Nothing errored. New Zealand simply
+became everywhere: town search sent Photon a worldwide box, the
+"you are looking outside your filter" chip could never fire because the box
+always overlapped, and `regionOfPoint()` would hand a rider in Belgium a New
+Zealand region, because a box that contains everything also wins on centre
+distance. The same shape waits for the United States the day Alaska is
+onboarded. Fixed 2026-09-09; the same scope now reads
+
+    [166.4, -47.3, -175.8, -34.4]     17.7° wide
+
+**The rule: never compare a box by hand.** `b[0] <= lng && lng <= b[2]` is false
+almost everywhere a crossing region actually is, and was true everywhere else.
+`CCScope` exposes the questions instead, and `scope-ui.js` and `places.js` ask
+them rather than reaching into the array:
+
+| Ask | For |
+|---|---|
+| `CCScope.bboxHasPoint(lng, lat)` | is this point in the active scope |
+| `CCScope.bboxOverlaps([w,s,e,n])` | does this viewport meet the active scope |
+| `CCScope.bbox()` | the scope box, which may cross |
+| `CCScope.scopeCenter()` | a centre that lands inside its own box, not on the far meridian |
+
+Two things fall out of it. **Photon is never handed a crossing box**: it reads
+`minLon,minLat,maxLon,maxLat` and has no notion of going round the back, so the
+bbox is dropped for a wrapping scope and `countrycode` carries the filter.
+And **the union keeps a crossing crossing**: `bboxUnion()` compares the width
+each way and takes the shorter, which is what turns those seventeen regions
+into 17.7° instead of 355.5°.
+
+On the server, the crossing is detected by a **raw longitude span wider than
+180°**, not by comparing the shifted and unshifted spans. `ST_ShiftLongitude`
+adds 360 to a negative longitude and the result cannot hold the original
+mantissa, so every western-hemisphere region comes back about 1e-14 narrower;
+the span test says "crossing" for Madrid and Asturias too. It happens to map
+back to the same numbers for them, so that answer was right by luck rather than
+by reasoning. Only a box reaching from one edge of the seam to the other is
+wider than 180°.
 
 ### 4.6 Chrome theme: dark and light
 

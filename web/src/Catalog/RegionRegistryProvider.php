@@ -24,6 +24,13 @@ final class RegionRegistryProvider
     /**
      * `countryCode` matches the CCScope contract. `bbox` is true extent; camera framing uses the largest outline ring.
      *
+     * A `bbox` whose **west value is greater than its east value** crosses the
+     * antimeridian and is read the long way round, which is the GeoJSON
+     * convention (RFC 7946 §5.2). Two of the countries we carry do it: the
+     * United States through the Aleutians and New Zealand through the Chathams.
+     * Client code must never compare `bbox[0] <= lng && lng <= bbox[2]`; the
+     * helpers in assets/map/scope.js exist so it does not have to.
+     *
      * @return list<array{id: int, slug: string, countryCode: string, bbox: array{0: float, 1: float, 2: float, 3: float}, adj: list<int>, outline: list<list<float>>, defaultMode: string}>
      */
     public function all(): array
@@ -31,7 +38,36 @@ final class RegionRegistryProvider
         /** @var list<array{id: int, slug: string, cc: string, w: float, s: float, e: float, n: float, adj: string, outline: ?string, default_map_mode: string}> $rows */
         $rows = $this->db->fetchAllAssociative(
             'SELECT id, slug, country_code AS cc,
-                    ST_XMin(geom) AS w, ST_YMin(geom) AS s, ST_XMax(geom) AS e, ST_YMax(geom) AS n,
+                    ST_YMin(geom) AS s, ST_YMax(geom) AS n,
+                    /* Longitude, the seam-aware way. ST_XMin/ST_XMax are a
+                       minimum and a maximum over numbers and know nothing about
+                       ±180, so a region straddling it reports -180 to 180: a box
+                       359 degrees wide that contains everywhere. ST_ShiftLongitude
+                       moves the geometry into a continuous 0..360 space where the
+                       seam is not a discontinuity; the shifted edges are then
+                       mapped back and come out west > east, which is how GeoJSON
+                       writes a crossing box (RFC 7946 §5.2).
+
+                       The test is the RAW span, not a comparison of the two
+                       spans. Shifting adds 360 to a negative longitude and the
+                       result cannot hold the original mantissa, so every region
+                       in the western hemisphere comes back about 1e-14 narrower
+                       and "is the shifted span smaller?" says yes for Madrid and
+                       Asturias too. It happens to map back to the same numbers
+                       for them, so the answer was right by luck; a span wider
+                       than 180 degrees says what is actually meant, since only a
+                       box reaching from one edge of the seam to the other has
+                       one. */
+                    CASE WHEN ST_XMax(geom) - ST_XMin(geom) > 180
+                         THEN CASE WHEN ST_XMin(ST_ShiftLongitude(geom)) > 180
+                                   THEN ST_XMin(ST_ShiftLongitude(geom)) - 360
+                                   ELSE ST_XMin(ST_ShiftLongitude(geom)) END
+                         ELSE ST_XMin(geom) END AS w,
+                    CASE WHEN ST_XMax(geom) - ST_XMin(geom) > 180
+                         THEN CASE WHEN ST_XMax(ST_ShiftLongitude(geom)) > 180
+                                   THEN ST_XMax(ST_ShiftLongitude(geom)) - 360
+                                   ELSE ST_XMax(ST_ShiftLongitude(geom)) END
+                         ELSE ST_XMax(geom) END AS e,
                     to_json(COALESCE(adj, ARRAY[]::int[])) AS adj,
                     outline, default_map_mode
              FROM region
