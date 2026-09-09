@@ -187,7 +187,7 @@ letting a new contributor discover it by noticing a castle is missing and wonder
 
 ## Try it
 
-!!! tip "Hands-on — verify the gap yourself, on whatever coverage you have loaded"
+!!! tip "Hands-on: verify the gap yourself, on whatever coverage you have loaded"
     Two checks against the live `coverage_poi` table, together proving what this chapter argued: no
     relation-derived row exists in it today, and even if one did, the column has nowhere to put
     anything but a point. Neither check names a row, so both are true at every size — they are
@@ -213,10 +213,10 @@ letting a new contributor discover it by noticing a castle is missing and wonder
     ```
 
     Two kinds, `node` and `way`, and nothing else. Ten rows here, because `make course-data` builds
-    coverage from a small committed OSM fixture so the course runs offline; on a machine that has run
-    the full `make coverage-refresh` for Belgium, the Netherlands and Germany the same query returns
-    `node | 295592` and `way | 79486` — 375,078 rows, still exactly two kinds. **That the list has
-    two entries is the finding; how long each one is is not.** Confirm the third primitive is
+    coverage from a small committed OSM fixture so the course runs offline; on a machine that has
+    harvested every onboarded country the same query returns, at the time of writing, roughly 1.6
+    million `node` rows and 440,000 `way` rows across 19 countries, still exactly two kinds. **That
+    the list has two entries is the finding; how long each one is is not.** Confirm the third primitive is
     genuinely absent, not merely rare enough to round to zero in a table of whatever size yours is:
 
     <!-- CODE-ILLUSTRATIVE psql query against the same table -->

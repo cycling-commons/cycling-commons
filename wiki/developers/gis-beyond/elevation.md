@@ -2,19 +2,23 @@
 
 # Elevation and terrain
 
-**This is mostly a "we do not do it yet" chapter**, with one narrow exception already live in the
-app, described precisely below. Cycling Commons does not run its own elevation model. Where it
-reports a climb figure today, it either reads a number a rider's own device already recorded, or it
-asks a third party's elevation service for one, live, in the browser, for a preview only. Building a
-DEM (digital elevation model) sampling pipeline of its own is recorded direction, not shipped code.
+**This is a "we do it, in one deliberate way" chapter**, and the boundary of that way matters more
+than the headline. Cycling Commons runs its own elevation service: one Valhalla instance per
+continent, each reading Copernicus GLO-30 rasters that this project fetched, converted to `.hgt`
+tiles and installed itself, answering `/height` for a list of coordinates. Every published climb
+gradient comes from it, measured server-side in PHP (`ElevationClient` feeding `ClimbProfiler`,
+both under `web/src/Elevation/`), called from the contribute wizard through
+`POST /contribute/elevation` and re-measured across the whole catalogue by `app:climbs:recompute`.
+A route's stored ascent is the other case: it is read off the rider's own device, never off the
+DEM (digital elevation model). The Python pipeline's `/dem` endpoint is only a mount check and takes
+no part in any of this.
 
-!!! note "That direction now has a pipeline and an evaluation"
+!!! note "The operational half lives elsewhere"
 
-    Nothing in the app reads it yet, so this chapter's framing still holds. But the tooling to
-    build elevation tiles exists, and it has been used to choose a source by measurement rather
-    than by reputation — including why a finer raster is not automatically a better one, and why
-    the trees are in the data. That is
-    [Building elevation tiles](../data-ops/elevation-tiles.md).
+    How the rasters are fetched, converted, proven and installed, and why a finer raster is not
+    automatically a better one (the trees are in the data), is
+    [Building elevation tiles](../data-ops/elevation-tiles.md). This chapter is the conceptual
+    half: where elevation numbers come from, and why two tools disagree about the same ride.
 
 Course 1's [`routes.md`](../gis/routes.md) already made the general point that a derived spatial
 number is a choice, using `ascent_m` as its example. This chapter is where that point gets its full
@@ -131,73 +135,75 @@ That window is the feature's own smoothing threshold, chosen for a different job
 steepest representative stretch for display — than the routes feature's deliberate no-smoothing sum.
 Same underlying problem, two defensible choices, made for two different purposes.
 
-**The number has been wrong twice, and the way it was wrong is the lesson.** It started at 150 m,
-picked as "long enough to average out DEM noise". It moved to 100 m on 2026-08-04 for a reason that
-had nothing to do with smoothing: climb databases publish the steepest **100 m**, so a longer window
+**Why 250 m, and not the 100 m the climb databases quote.** Two parties have a claim on that
+window. The first is convention: climb databases publish the steepest **100 m**, so a longer window
 reads gentler than every other source describing the same road, and a rider comparing us against a
-site they trust would see us understate a climb they had ridden. Matching the convention beat the
-marginal extra smoothing. The principle stated at the time was that a threshold only answerable to
-itself is one you get to choose, while one your readers will compare against someone else's is not.
+site they trust would see us understate a climb they had ridden. A threshold only answerable to
+itself is one you get to choose; one your readers will compare against someone else's is not.
 
-That principle was right and the conclusion was still wrong, because it left out a third party the
-threshold has to answer to: **the data**. A 100 m window over a 30 m grid asks for a figure across
-barely three cells — under this course's own four-cell rule. It survived on short Ardennes climbs and
-collapsed in the Alps, where the Furka published 20% for a road that is about 10%. It moved to 250 m
-on 2026-08-07, and the published figure became the 95th percentile of the sliding windows rather than
-the steepest of them, because a maximum asks "what is the single worst reading here", which on a
-surface model is a question about the noise rather than the road.
+The second party outranks the first: **the data**. A 100 m window over a 30 m grid asks for a figure
+across barely three cells, under the four-cell floor the
+[elevation tiles chapter](../data-ops/elevation-tiles.md) derives for GLO-30. Such a window holds on
+short Ardennes climbs and collapses in the Alps, where the Furka comes out near 20% for a road that
+is about 10%. So the window is 250 m, and the published figure is the 95th percentile of the sliding
+windows rather than the steepest of them (`STEEPEST_PERCENTILE`, in the same class), because a
+maximum asks "what is the single worst reading here", which on a surface model is a question about
+the noise rather than the road.
 
 So the ordering is: **the source constrains the window, the convention only gets what is left.** A
-threshold your readers will compare against someone else's is not free — but a threshold finer than
+threshold your readers will compare against someone else's is not free, but a threshold finer than
 your data can answer is not available at all, and matching a convention you cannot actually measure
 just publishes someone else's number with your name on it. The full account, with the measurements,
 is in [Building elevation tiles](../data-ops/elevation-tiles.md#measuring-a-climb-end-to-end).
 
-## Where that preview's elevation actually comes from
+## Where that elevation actually comes from
 
-That gradient preview is this project's one live exception to "no DEM anywhere." Drawing a climb
-fetches a real elevation profile for the drawn line — and **where it fetches it from changed on
-2026-08-04**, in a way worth understanding, because the reason is not tidiness.
+Drawing a climb fetches a real elevation profile for the drawn line, and the whole path of that
+request is this project's own. That is not tidiness; it is three decisions kept in-house.
 
-It used to call a third-party elevation API directly from the browser. That worked, and it quietly
-decided two things nobody had chosen. The dataset was whatever that API happened to serve —
-Copernicus GLO-90, on a ~90 m grid. And the sample count was that API's cap of 100 points, which on
-a 4 km climb is one reading every 43 m.
-
-Both surfaced at once. When the published "max gradient" began being measured over 100 m — the
-distance climb databases use — a redrawn climb reported a **32% ramp that does not exist**. One
-hundred metres on a 90 m grid is barely one cell, so two adjacent readings on a staircase read as a
-wall. The number was arithmetically correct and completely wrong about the road.
-
-So the call moved server-side:
+The browser never talks to an elevation provider. `climb-elevation.js` posts the drawn line to the
+app:
 
 <!-- CODE-FROM web/assets/contribute/climb-elevation.js -->
 ```js
 return fetch('/contribute/elevation', {
 ```
 
-Nothing about that is a bigger feature — it is the same lookup — but it moves three decisions back
-to us: **which dataset** (a deployment setting, not a third party's default), **how densely to
-sample** (200 points, ~20 m on a 4 km climb), and **what happens when it fails**. It also removes an
-external host from the page's content-security policy, which is a security win that came free.
+`ElevationController` (`web/src/Controller/ElevationController.php`) checks the caller is signed in,
+validates the coordinates, applies a per-user limiter, and hands the line to `ClimbProfiler`, which
+samples it at a fixed 200 points (about 20 m apart on a 4 km climb) and asks `ElevationClient` for
+the ground height at each. `ElevationClient` posts them to Valhalla's `/height`, choosing the
+instance for the continent the shape lies in (`ElevationEndpoints`): `ELEVATION_URL` is the default
+and the master switch, `ELEVATION_URLS` lists the other continents. Each instance reads Copernicus
+GLO-30 tiles that `tools/elevation/` fetched, converted and installed, and the dataset name recorded
+on the item and shown beside a profile is the deployment's `ELEVATION_DEM_SOURCE`, an attribution
+rather than a guess. In the dev environment those URLs point at host-run instances reached through
+`host.docker.internal` (`web/.env`), not at the Compose `routing` profile.
 
-Then the *arithmetic* followed the lookup across. Sampling, binning, the average and the
-steepest-window search all used to run in the browser, and the server stored whatever came back
-after checking only that it looked like a gradient — so the client was the author of every published
-number, and re-measuring the whole catalogue was impossible because the maths was not where the data
-is. It is one implementation in PHP now, which is why the constant quoted above is a PHP constant.
-The lesson generalises: **a computation belongs where its results are trusted**, not where they
-happen to be displayed.
+Owning the path settles three things a third-party API decides for you. **Which dataset**: a
+deployment setting, not somebody else's default. **How densely to sample**: a fixed 200 points, so
+a 30 m grid is not under-sampled on a 4 km climb. **What happens when it fails**: honestly. An unset
+`ELEVATION_URL` disables profiles entirely rather than guessing; a reply in which fewer than half
+the heights are non-zero is rejected as a missing tile rather than published as a flat road
+(`MIN_NONZERO_SHARE` in `ElevationClient`); and the endpoint answers `503`, never `200` with nulls.
+It also keeps every external elevation host out of the page's content-security policy.
 
-Read precisely what this preview is and is not. It genuinely samples a digital elevation model, not
-any rider's device. But it exists only to draw a gradient profile while someone is drawing a climb.
-Nothing about a route's stored `ascent_m` goes through it, and no rider-facing feature calls it.
+The arithmetic lives beside the lookup. Sampling, binning, the ascent-only average and the
+steepest-window search are one implementation in PHP, which is why the constant quoted above is a
+PHP constant, and why `app:climbs:recompute` can re-measure the whole catalogue against the current
+source without a browser in the loop. The lesson generalises: **a computation belongs where its
+results are trusted**, not where they happen to be displayed.
+
+Read precisely what this profile is and is not. It samples a digital elevation model, not any
+rider's device, and its output is a climb's published gradient, average and profile chart. Nothing
+about a route's stored `ascent_m` goes through it: routes keep the device figure, as the section
+above explains.
 
 ## DEM sources, and the resolution question
 
-Two DEM sources come up repeatedly in this project's own specs as the intended production direction
-for climb gradients, and they are worth knowing by name because they are the two most commonly used
-worldwide:
+Two DEM sources come up repeatedly in this project's own specs, and they are worth knowing by name
+because they are the two most commonly used worldwide, and because this project measured one against
+the other on its own climbs before choosing:
 
 - **SRTM (Shuttle Radar Topography Mission)** — a near-global elevation survey flown by radar from
   the Space Shuttle in February 2000. It is old by satellite standards but still widely used, at
@@ -205,7 +211,7 @@ worldwide:
   mountainous terrain and open water.
 - **Copernicus DEM (GLO-30)** — a newer, higher-quality global DEM built from more recent radar
   survey data, also at roughly 30-metre resolution, generally cited as filling in SRTM's voids and
-  as the more current default choice today.
+  as the more current default choice today. It is the source this project serves, worldwide.
 
 **Resolution** here means the size of one grid cell — the ground distance a single stored elevation
 value actually represents. A 30-metre DEM reports one elevation figure for every 30x30-metre patch of
@@ -217,11 +223,10 @@ diverge even before any smoothing choice enters the picture: one source is measu
 fixed grid resolution, the other is measuring wherever the rider's own sensor happened to be, as
 often as it happened to sample.
 
-`docs/specs/edit-items/N-climbs.md` records exactly this pairing as the intended production path for
-climb gradients — "gradient auto via DEM (SRTM / Copernicus GLO-30)" — and `docs/specs/map-and-search.md`
-§14 names the same pairing again for elevation generally. Neither is built yet. The pipeline service
-that would eventually sample a downloaded DEM currently does no more than check that one is mounted at
-all:
+`docs/specs/map-and-search.md` §14 records the pair as "Copernicus GLO-30 / SRTM for elevation",
+and `docs/specs/climb-elevation.md` §1b and §2a are where the two were measured against each other
+on this project's own climbs, GLO-30 winning. The Python pipeline is not on that path at all. Its
+`/dem` endpoint does no more than check that a DEM directory is mounted in the pipeline container:
 
 <!-- CODE-FROM pipeline/app/main.py -->
 ```python
@@ -233,12 +238,15 @@ def dem() -> dict:
 
 That endpoint answers "is a DEM directory present on disk," nothing more. It does not open a raster,
 does not look up a single elevation value, and is not called from anywhere a route or climb's stored
-figures are computed.
+figures are computed. Elevation values are served by Valhalla, as the previous section describes,
+not by the pipeline.
 
-!!! note "Not in the Commons — yet"
-    Sampling our own downloaded DEM (SRTM or Copernicus GLO-30, per the specs above) to compute or
-    cross-check an elevation figure is recorded direction, not built. The pipeline currently proves
-    only that a DEM directory can be mounted, and nothing downstream reads a value out of it.
+!!! note "In the Commons, with one boundary"
+    Sampling this project's own Copernicus GLO-30 rasters, through its own Valhalla instances, is
+    built, and it is what every published climb gradient uses (`ClimbProfiler` with `ElevationClient`;
+    `app:climbs:recompute` re-measures the catalogue). The boundary is routes: a route's `ascent_m`
+    is never computed from, or cross-checked against, the DEM. It stays the device's own figure, or
+    `null`.
 
 ## Why a DEM disagrees with a barometric altimeter
 
@@ -253,7 +261,7 @@ calibrating against a known starting elevation, or quietly blending in GPS altit
 correction is itself another choice, invisible in the exported `<ele>` values this project reads.
 
 A DEM has none of that weather-driven drift, because it is not measuring "how high is this sensor
-right now" at all — it is reporting a fixed, previously-surveyed elevation for a stationary patch of
+right now" at all. It is reporting a fixed elevation, surveyed in advance, for a stationary patch of
 ground. That is precisely why the two disagree: a barometric device is measuring itself, continuously
 and imperfectly, while riding; a DEM is reporting the ground, once, in advance, at whatever resolution
 it was originally surveyed at. Neither is "wrong" in the way a bug is wrong. They are answering two
@@ -262,7 +270,7 @@ yet another one of the disclosed-or-undisclosed choices this whole chapter has b
 
 ## Try it
 
-!!! tip "Hands-on — the threshold IS the answer, on a real route's own stored profile"
+!!! tip "Hands-on: the threshold IS the answer, on a real route's own stored profile"
     "Rondje Super Stockeu" — the same route course 1's
     [`spatial-questions.md`](../gis/spatial-questions.md) already used — carries its own display
     elevation profile in `attributes.elev`, the array `CatalogProvider.php` forwards to the map's
@@ -344,4 +352,4 @@ yet another one of the disclosed-or-undisclosed choices this whole chapter has b
     ascent sitting underneath the others, waiting to be uncovered. For this profile, at this
     resolution, the threshold is not a detail obscuring the answer — it *is* the answer, exactly the
     point this chapter's own text made contrasting routes' no-smoothing sum against the climb-editor's
-    150 m sliding window.
+    250 m sliding window.

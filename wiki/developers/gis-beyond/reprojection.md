@@ -11,8 +11,10 @@ then gets concrete about the one kind of day that would change the "today" in th
 ## Recap: what this codebase already decided
 
 [`coordinates.md`](../gis/coordinates.md) covers this ground properly; here is only the part this
-chapter builds on. Every geometry column in this project is declared `geometry(Geometry, 4326)` —
-plain latitude/longitude, in degrees, WGS84. `ST_SetSRID` *labels* a geometry with a coordinate
+chapter builds on. Every geometry column in this project is declared `geometry(Geometry, 4326)`,
+with one narrower sibling, `coverage_poi.geom`, declared `geometry(Point, 4326)` because a coverage
+row is always a single point; all of them are plain latitude/longitude, in degrees, WGS84.
+`ST_SetSRID` *labels* a geometry with a coordinate
 system, changing nothing about its numbers. `ST_Transform` *converts* it, recomputing every
 coordinate so the same real-world position is expressed in a different system. The two are easy to
 confuse because both take a geometry and an SRID and return a geometry — but one is a relabelling
@@ -165,7 +167,7 @@ a different system at all.
 
 ## Try it
 
-!!! tip "Hands-on — three numbers for one pair of climbs"
+!!! tip "Hands-on: three numbers for one pair of climbs"
     Ask PostGIS the distance between two real catalog climbs three ways: in degrees, cast to
     `geography`, and reprojected into Belgian Lambert 72 (EPSG:31370) — the national grid this
     chapter just introduced. The two pins are Côte de la Redoute and Cascade de Coo, the same pair

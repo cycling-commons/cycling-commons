@@ -5,12 +5,24 @@
 Course 1 already introduced geocoding, right at the end of
 [`spatial-questions.md`](../gis/spatial-questions.md): turning a place name into coordinates is a
 text-matching problem with a spatial tiebreak, not really a spatial question at all. This chapter
-is the other half of that idea — the direction this project never calls.
+is about the other direction, and about drawing its boundary precisely, because "this project never
+reverse-geocodes" is true in one sense and false in another.
 
-**This is a "we deliberately do not" chapter.** Cycling Commons only ever geocodes one way: name in,
-coordinates out. It never asks a coordinate what place it is near. That is not an oversight. It is a
-design decision, made on purpose, and recorded in this project's own specs. The rest of this chapter
-explains what the other direction would cost, and why this project chose to avoid paying it.
+**This is a "we deliberately do not" chapter, with a boundary worth stating carefully.** Cycling
+Commons calls exactly one external geocoder, Photon, and only ever name in, coordinates out. It never
+sends a coordinate to anybody else's server and asks for a place name back. That is a design
+decision, made on purpose and recorded in this project's own specs.
+
+It is not the same as saying the app never turns a point into a place. It does, in PostGIS, against
+its own `region` table, three times over: ride-check lists the regions an uploaded GPX passes
+through (`RideCheckService::crossedRegions()`, `web/src/Catalog/RideCheckService.php`), the settings
+page's base point becomes a set of regions and countries (`BaseAreaResolver::resolve()`,
+`web/src/Service/BaseAreaResolver.php`), and every submission is assigned its containing region
+(`SpatialResolver::resolve()`, `web/src/Contribution/SpatialResolver.php`). Each of those is a
+containment or distance query over polygons this project already stores, with the answer level fixed
+in advance: the region. What this project does not do is the open-ended version, "what is this
+coordinate called", answered by an external service. The rest of this chapter explains what that
+version would cost, and why the project avoids paying it.
 
 ## Forward and reverse, defined
 
@@ -22,27 +34,29 @@ understanding before deciding whether to build the second one.
 
 ## Forward geocoding, in this project
 
-Course 1's closing section already covered this project's forward-geocoding calls in detail: the
-map's place search and the settings page's base-location field both call **Photon**, a free,
-keyless, OpenStreetMap-based geocoder, and neither call needs a server-side proxy. The CSP
-allow-list for external geocoders is now exactly one entry long, and it is a name-in service:
+Course 1's closing section already covered this project's forward-geocoding call in detail. There
+is one geocoder, **Photon**, a free, keyless, OpenStreetMap-based service, and three browser callers:
+the map's place search (`web/assets/map/search-ui.js`), the settings page's base-location field
+(`web/assets/settings/base-location.js`), and the contribute wizard's place search
+(`web/assets/contribute/improve.js`). None of the three needs a server-side proxy. The CSP
+allow-list for external geocoders is exactly one entry long, and it is a name-in service:
 
 <!-- CODE-FROM web/src/EventSubscriber/CspSubscriber.php -->
 ```php
 'https://photon.komoot.io',
 ```
 
-It used to be two. `web/assets/contribute/add-climb.js` (retired 2026-08-25) once drew a dimmed backdrop around the
-region on the add-climb map by asking **Nominatim** for the name 'Wallonia' and taking the polygon
-from the answer — a call retired on 2026-08-09, and its reasons are a compact lesson in external
-geocoders: the name was hardcoded (wrong backdrop once the wizard went worldwide), the polygon was
-data the project had started serving itself (`/map/region/{slug}/boundary`), and Nominatim's usage
-policy caps an application at one request per second — a cap no code can honour when the calls come
-from thousands of riders' browsers. The only way to respect it at scale was to need it zero times.
+`docs/specs/map-and-search.md` §7.2 records the rule behind that single entry: Photon for
+type-ahead, never **Nominatim**, whose usage policy forbids autocomplete and caps an application at
+one request per second, a cap no code can honour when the calls come from thousands of riders'
+browsers. The only way to respect it at scale is to need it zero times. The same section draws the
+corollary for region outlines: the polygon a rider sees around a region comes from this project's
+own `/map/region/{slug}/boundary` (`RegionBoundaryProvider`), never from a geocoder's answer, so
+there is no second external host to allow.
 
-The shape of every remaining geocoder call is the same: a `/search`-style endpoint, a `q` (query)
-parameter carrying a name, and a response carrying coordinates. Name in. Shape out. None of them
-takes a coordinate and asks for a name back.
+The shape of every geocoder call is the same: a `/search`-style endpoint, a `q` (query) parameter
+carrying a name, and a response carrying coordinates. Name in. Shape out. None of them takes a
+coordinate and asks for a name back.
 
 ## Why reverse is genuinely harder
 
@@ -104,14 +118,18 @@ from the forward-search results Photon already returned. The name was never look
 it was captured forwards, at pick time, and stored from then on. Showing "Near Namur" later is a
 column read, not a network call.
 
-That single design choice is why this project can honestly claim it never reverse-geocodes anything:
-every place name it ever displays next to a coordinate was typed or picked by a person first, at the
-moment that coordinate was chosen, and stored rather than re-derived. The same reasoning shows up
-again, independently, in `web/src/Catalog/RegionBoundaryProvider.php`'s own doc comment, explaining
-why the map's region backdrop moved off a live third-party call entirely: a live lookup on every
-request is "both an external dependency and a … usage-policy problem in production." Storing the
-answer once, rather than asking a stranger's server for it on every page load, is the same tradeoff
-made twice, in two different corners of this project, for two different features.
+That single design choice is why this project can honestly claim it never reverse-geocodes a
+*name*: every place name it displays next to a coordinate was typed or picked by a person first, at
+the moment that coordinate was chosen, and stored rather than re-derived. What the base point does
+get derived into, on the server, is a *scope*. `BaseAreaResolver::resolve()` asks PostGIS which
+operational regions lie within the chosen radius (`ST_DWithin` on `geography`, the containing region
+ranked first) and stores their ids and country codes in `base_region_ids` and `base_country_codes`
+beside the point. That is a point-to-polygon query over this project's own data with the answer
+level fixed in advance, which is exactly the part of reverse geocoding that is easy. The hard part,
+choosing a name at the right level of the nesting, is the part the stored `base_place` sidesteps.
+Storing the answer once, rather than asking a stranger's server for it on every page load, is the
+same tradeoff the region backdrop makes: the outline comes from `RegionBoundaryProvider` and this
+project's own `region` rows, not from a live lookup.
 
 The one place this project's own specs admit the gap plainly is route start-towns. The map already
 shows which towns a featured route passes through, but not by reverse-geocoding the track — by a
@@ -133,18 +151,22 @@ is genuinely ambiguous — rather than papering over it with a lookup table that
 somebody happened to type in by hand.
 
 !!! info "A deliberate omission, not a missing feature"
-    Cycling Commons never calls a reverse-geocoding service, anywhere. Every place name shown next
-    to a coordinate in this project was captured once, from a rider's own forward search, at the
-    moment they picked it — never derived backwards from the coordinate afterward. This is a design
-    decision taken deliberately and recorded at the time, not a gap waiting to be
-    closed.
+    The application never calls a reverse-geocoding service. Every place name shown next to a
+    coordinate in this project was captured once, from a rider's own forward search, at the moment
+    they picked it, never derived backwards from the coordinate afterward. Point-to-region lookups
+    do happen, but in PostGIS, against this project's own `region` table, as the introduction lists.
+    The one caller of an external reverse endpoint in the repository is curator tooling, not the
+    app: `tools/wikimedia/climb_audit.py` asks Nominatim `/reverse` for the settlement a climb side
+    starts from, at audit time, one climb at a time, sleeping 1.1 s between calls to stay under
+    Nominatim's published one-request-per-second limit. A script a curator runs by hand can honour
+    that limit; a page in thousands of browsers cannot, which is the whole reason the app does not.
 
 ## Try it
 
-!!! tip "Hands-on — one direction, called for real; the other, checked absent"
+!!! tip "Hands-on: one direction, called for real; the other, checked absent from the app"
     Call the exact Photon endpoint the settings page's base-location field builds
     (`base-location.js`'s `PH_BASE`), then check the whole tracked codebase for anything that calls a
-    reverse endpoint at all.
+    reverse endpoint, and see where the one hit lands.
 
     **This is the one exercise in either course that needs the internet.** Everything else runs
     against your own stack; this reaches out to `photon.komoot.io`, a third-party service this
@@ -166,21 +188,35 @@ somebody happened to type in by hand.
 
     Name in — `Namur` — coordinates out: `[4.8661892, 50.4665284]`, `lng, lat`, in exactly the order
     course 1's [`pitfalls.md`](../gis/pitfalls.md) already warned matters. That is the only direction
-    this project ever calls. Check that the other direction is genuinely absent from the source, not
-    merely unused by convention:
+    the app ever calls. Now grep the whole tracked tree for the other direction:
 
     <!-- CODE-ILLUSTRATIVE shell command against this repository's own tracked source -->
     ```sh
     git grep -n "/reverse" -- . ':!wiki'
     ```
 
-    <!-- CODE-ILLUSTRATIVE sample output from this repository; git grep prints nothing and exits non-zero when no line matches -->
+    <!-- CODE-ILLUSTRATIVE sample output from this repository -->
     ```text
-    (no output — no match anywhere in the tracked tree)
+    tools/wikimedia/climb_audit.py:147:NOMINATIM = "https://nominatim.openstreetmap.org/reverse"
     ```
 
-    Not one `/reverse` call, on Photon, Nominatim, or anything else, anywhere this project's own code
-    is tracked. Forward geocoding is a real, working call you can make right now, against a real
-    third-party service, and just did. Reverse geocoding is not a call this project has — not hidden,
-    not disabled, simply not written, exactly as the admonition above this exercise already states on
-    the record.
+    One hit, and it is under `tools/`, the curator audit script the admonition above names. Narrow
+    the same grep to the application and it goes quiet:
+
+    <!-- CODE-ILLUSTRATIVE shell command restricted to the application tree -->
+    ```sh
+    git grep -n "/reverse" -- web
+    ```
+
+    <!-- CODE-ILLUSTRATIVE sample output from this repository; git grep prints nothing and exits non-zero when no line matches -->
+    ```text
+    (no output, exit status 1: nothing under web/ matches)
+    ```
+
+    Not one `/reverse` call, on Photon, Nominatim, or anything else, anywhere under `web/`, which is
+    everything a rider's browser or the server runs. Forward geocoding is a real, working call you
+    can make right now, against a real third-party service, and just did. Reverse geocoding of a name
+    is not a call the app has: not hidden, not disabled, simply not written, exactly as the admonition
+    above this exercise states. The point-to-region lookups the introduction lists are `ST_Contains`
+    and `ST_DWithin` queries over this project's own tables, and course 1's
+    [`spatial-questions.md`](../gis/spatial-questions.md) is where those live.

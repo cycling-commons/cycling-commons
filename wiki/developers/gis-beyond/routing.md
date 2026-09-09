@@ -114,11 +114,18 @@ places relate to each other."
 
 ## What this project actually does
 
-!!! note "Not in the Commons — yet"
+!!! note "Not in the Commons, yet"
     Turn-by-turn route computation between two points is not wired into the application anywhere a
-    rider can reach it. **Valhalla**, an open-source routing engine, exists in the dev stack as an
-    opt-in Docker Compose profile that a developer can start locally against a downloaded tile
-    set — but nothing under `web/src/` calls it.
+    rider can reach it. **Valhalla**, an open-source routing engine, is nevertheless part of this
+    project's stack: the project runs its own instances, one per continent (`tools/valhalla/` builds
+    their tiles), and two classes under `web/src/Elevation/` call them. `RouteSnapper` posts to
+    `/route` with the `bicycle` costing, and `ElevationClient` posts to `/height`. Both reach the
+    instances through `ELEVATION_URL` and the per-continent `ELEVATION_URLS`; in the dev environment
+    those point at host-run instances via `host.docker.internal` (`web/.env`). Neither call plans a
+    ride for anyone.
+
+The dev stack also carries a separate, opt-in Compose profile for a local Valhalla, which a developer
+can start against a downloaded tile set:
 
 <!-- CODE-FROM developers/docker/compose.yaml -->
 ```yaml
@@ -127,8 +134,8 @@ valhalla:
   image: ghcr.io/valhalla/valhalla:latest
 ```
 
-Even inside that opt-in profile, Valhalla's own elevation-augmented routing is switched off — this
-is a bare graph-routing service, nothing more:
+That local profile has Valhalla's own elevation-augmented routing switched off, a bare graph-routing
+service and nothing more:
 
 <!-- CODE-FROM developers/docker/compose.yaml -->
 ```yaml
@@ -147,8 +154,7 @@ There is a narrow, already-existing routing call in this codebase, and honesty a
 naming it precisely rather than either hiding it or overselling it. When a rider draws a new climb
 on the `/improve` climb map — clicking a start point and a summit point to define a new catalog entry — the
 two clicked points are snapped onto the actual road network by the project's **own Valhalla**
-instance, through a small server-side proxy (it asked a public OSRM demo server until 2026-08-09,
-when the call moved in-house — the demo server's own policy forbids production reliance):
+instance, through a small server-side proxy:
 
 <!-- CODE-FROM web/assets/contribute/climb-editor.js -->
 ```js
@@ -163,15 +169,15 @@ when the call moved in-house — the demo server's own policy forbids production
 
 What this is and is not:
 
-- The proxy (`/contribute/route` → `RouteSnapper`) asks Valhalla with its **`bicycle`** costing —
-  so unlike the old car-profile call, it will follow the cycleways and greenways some climbs
-  actually ride. But it is still not a route *planner*: it answers "which road connects these two
-  points," nothing about cheapest, flattest, or nicest.
+- The proxy (`/contribute/route` → `RouteSnapper`) asks Valhalla with its **`bicycle`** costing,
+  so it follows the cycleways and greenways some climbs actually ride. But it is still not a route
+  *planner*: it answers "which road connects these two points," nothing about cheapest, flattest,
+  or nicest.
 - It exists to turn **two curator-clicked points** into a road-following line for a **single new
   catalog entry** — it is a drawing aid for data entry, not a feature riders can reach.
 - It degrades honestly when it fails: a straight line between the two points stays on screen, and the
   curator is told the snap did not work, rather than the tool silently pretending it succeeded.
-- It is **guarded like any other JSON endpoint here**, since 2026-08-24: a signed-out caller gets a
+- It is **guarded like any other JSON endpoint here**: a signed-out caller gets a
   clean `401` rather than a redirect to a login page it cannot render, the `X-CC-Token` header above
   is a stateless CSRF token the server requires, and a per-user limiter caps how much of the shared
   routing engine one account can spend. Being a drawing aid is not a reason to be an open proxy.
@@ -185,7 +191,7 @@ just clicked" — and nothing broader.
 
 ## Try it
 
-!!! tip "Hands-on — nothing routes, and the honest reason this exercise cannot fake it"
+!!! tip "Hands-on: nothing routes, and the honest reason this exercise cannot fake it"
     First, check that no rider-reachable code calls a routing engine at all — not by trusting this
     chapter's word for it, by grepping the tracked source directly:
 
@@ -202,9 +208,8 @@ just clicked" — and nothing broader.
 
     Two hits, both server-side and both already named above: the elevation client, and the
     `RouteSnapper` behind the curator tool's `/contribute/route` proxy. No browser file calls a
-    routing engine directly any more (the old OSRM demo-server URL left `climb-editor.js` on
-    2026-08-09), and nothing under `web/assets/map/` — the map a rider actually uses — appears in
-    that list.
+    routing engine directly, and nothing under `web/assets/map/`, the map a rider actually uses,
+    appears in that list.
 
     Starting Valhalla to demonstrate an actual route would be dishonest here, and the compose file
     says exactly why before the service is even defined:
@@ -255,6 +260,7 @@ just clicked" — and nothing broader.
     buildings, the works. Course 1's [`spatial-questions.md`](../gis/spatial-questions.md) already
     established exactly what this number is: a geometric relationship between two shapes, nothing
     about what connects them. A bicycle router's real road distance between Côte de la Redoute and
-    Mur de Huy would necessarily come out **larger** than 32,054 m — a road bends around terrain and
-    property lines, a straight line does not — and by how much is precisely the graph-search question
-    this chapter opened with, the one this project has no code path able to answer.
+    Mur de Huy would necessarily come out **larger** than 32,054 m, because a road bends around
+    terrain and property lines and a straight line does not, and by how much is precisely the
+    graph-search question this chapter opened with, the one this project only ever asks for two
+    curator-clicked points a few kilometres apart, and never for a rider.

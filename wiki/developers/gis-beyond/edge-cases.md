@@ -12,7 +12,7 @@ Each section states its own kind up front, because they are not all the same kin
 
 ## The antimeridian
 
-**Kind: we do not do it yet — a named, accepted risk, not an oversight.**
+**Kind: we do not do it yet: a known open defect, named before it was live, and live now.**
 
 [`pitfalls.md`](../gis/pitfalls.md)'s own row on this is accurate and worth re-reading rather than
 re-deriving: longitude wraps from +180 back to −180, and a naive minimum/maximum union of longitudes
@@ -44,9 +44,10 @@ across that one seam:
   in advance, roughly where the data actually sits, so you can choose a range with the seam somewhere
   the data never touches.
 
-This project has an exact, named, verified answer for where this would actually break, because it
-was already looked for and written down rather than discovered by accident later.
-The region-scoping work's risk register named both break points precisely:
+This project has an exact, named, verified answer for where this breaks, because it was looked for
+and written down before it happened rather than discovered by accident later. The region-scoping
+design's risk register (`docs/specs/Dated/2026-07-19-region-scoping-design.md` §8, risk 11) names
+both break points precisely:
 
 <!-- CODE-FROM web/assets/map/scope.js -->
 ```js
@@ -65,22 +66,27 @@ The region-scoping work's risk register named both break points precisely:
 ```
 
 `CCScope.bbox()`'s union is exactly the naive `Math.min`/`Math.max` shape described above, and the
-region-scoping design document's own §8 risk 11 names its server-side counterpart too:
-`RegionRegistryProvider`'s `ST_XMin`/`ST_XMax` extents take the same naive approach on the database
-side. Both would produce a world-wrapping box the day a region genuinely straddling 180° — the
-document's own examples are Chukotka, Fiji, and New Zealand including the Chathams — got onboarded.
-The document records the fix as **required** before that day, not optional: "split boxes, or a
-longitude-normalised union," added to the per-country seeding checklist when it happens.
+server-side counterpart the register names is the same shape in SQL: `RegionRegistryProvider`
+(`web/src/Catalog/RegionRegistryProvider.php`) publishes each region's `ST_XMin`/`ST_XMax` extent as
+its `bbox`, a naive min/max on the database side. Both produce a world-wrapping box for a region
+that genuinely straddles 180°; the register's own examples are Chukotka, Fiji, and New Zealand. It
+records the fix as **required** before any such country is seeded, not optional: "split boxes or
+lon-normalised union," to be added to the per-country seeding checklist.
 
-No country this project has onboarded needs that fix yet. Belgium, the Netherlands and Germany all
-sit comfortably between roughly 2°E and 15°E — nowhere near the seam. That is exactly why this is
-the "we do not do it yet" kind and not simply a bug nobody noticed: the risk was found, named, and
-deliberately deferred, with the exact fix and the exact trigger already written down for whoever
-onboards the first country that needs it.
+Two onboarded countries straddle the seam, and the fix is not in. New Zealand's outline includes
+outlying islands on both sides of 180°, so its `region.geom` runs from about 178.6°W to 179.0°E; the
+United States' outline follows the Aleutian chain across it, from about 179.2°W to 179.8°E. Ask
+PostGIS for either country's extent and the naive box comes back well over 350° wide, the
+world-wrapping box the register predicted, and per the register that is what the viewport fit, the
+Photon search bbox and the widen chip read. That is why this section's kind is a known open defect
+rather than a deferred risk: the trigger the register named has fired, and the fix it named is still
+the right one. The camera is the one consumer already protected, and for an unrelated reason:
+`RegionRegistryProvider` frames on the largest outline ring rather than the true bbox, because
+distant islands would frame empty ocean.
 
 ## The poles
 
-**Kind: we do not need it — general knowledge, no counterpart required.**
+**Kind: we do not need it: general knowledge, no counterpart required.**
 
 [`coordinates.md`](../gis/coordinates.md) already explains why Web Mercator cannot represent the
 poles at all, and why the cutoff sits at exactly ±85.05112878° — the latitude where the projected
@@ -110,16 +116,19 @@ reach one, because the real ground distance one degree of longitude represents k
 `cos(latitude)` the whole way there ([`coordinates.md`](../gis/coordinates.md) covers this shrinkage
 in full) and hits exactly zero only at the pole itself.
 
-This project's data has never been anywhere near the point where either of these matters. The
-northernmost onboarded region sits around 55°N — closer to the Arctic Circle than the equator, but
-still roughly 30° of latitude short of Web Mercator's cutoff, and further still from an actual pole.
-This is why it is the "we do not need it" kind, cleanly: not a deferred risk with a named trigger, the
-way the antimeridian is, just real GIS knowledge this system's own footprint has no reason to
-encounter.
+This project's data has not reached the point where either of these matters, and the margin is
+worth stating with the real numbers. The northernmost onboarded region is Canada, whose outline
+reaches about 83°N at the top of Ellesmere Island; the United States follows at about 71°N, on
+Alaska's north coast, and the United Kingdom at about 61°N, in Shetland. Canada's tip sits some 2° of
+latitude short of Web Mercator's cutoff at 85.05°: close enough that the tile pyramid's hard edge is
+a real property of that country's own extent, but every point of it still has a projected position,
+and none of it is anywhere near an actual pole, where longitude stops meaning anything. This is why
+it is the "we do not need it" kind, cleanly: not a live defect with a named trigger, the way the
+antimeridian is, just real GIS knowledge this system's own footprint stops short of.
 
 ## Ring winding order, properly
 
-**Kind: we do not need it — general knowledge, no counterpart required.**
+**Kind: we do not need it: general knowledge, no counterpart required.**
 
 [`shapes.md`](../gis/shapes.md) and [`pitfalls.md`](../gis/pitfalls.md) both already cover the
 practical shape of this trap: the direction a polygon's ring is walked — clockwise or
@@ -170,7 +179,7 @@ optional.
 
 ## Antipodal points and great-circle surprises
 
-**Kind: we do not need it — a real GIS concept, and a structural (not incidental) non-issue here.**
+**Kind: we do not need it: a real GIS concept, and a structural (not incidental) non-issue here.**
 
 Two points are **antipodal** if they sit exactly opposite each other on the globe — as far apart as
 two points on a sphere can possibly be. Antipodal, or nearly-antipodal, pairs are where flat-plane
@@ -206,13 +215,13 @@ chain of GPS points recorded a few metres apart along an actual road or path, ne
 endpoints with the path between them left for something else to infer. Over a few metres, a straight
 chord and a great-circle arc are indistinguishable to well beyond any precision this project's data
 already carries. The great-circle-versus-straight-line gap only shows up at scales orders of
-magnitude larger than a bike ride — larger, in fact, than the widest country this project has ever
-onboarded end to end. It is a real trap in general GIS work; it simply has no scale at which to bite
-here.
+magnitude larger than a bike ride, and nothing in this project ever draws a chord between two
+endpoints that far apart and treats it as a path. It is a real trap in general GIS work; it simply
+has no scale at which to bite here.
 
 ## Floating-point comparison of coordinates
 
-**Kind: we already handle this correctly — general knowledge, with real anchors in this codebase.**
+**Kind: we already handle this correctly: general knowledge, with real anchors in this codebase.**
 
 Every coordinate in this system — every latitude, every longitude, at every layer from a GPS
 receiver to a rendered pixel — is a floating-point number: an approximation, to a fixed number of
@@ -265,12 +274,13 @@ present in this codebase before this chapter ever pointed at them.
 
 ## Try it
 
-!!! tip "Hands-on — run the naive union CCScope.bbox() would produce, on the seam"
-    No region this project has onboarded straddles ±180°, so there is no live `region.bbox` row that
-    actually triggers this bug today — but the arithmetic itself needs no onboarded region at all,
-    only the same two example longitudes that risk register and this
-    chapter's own antimeridian section both already use: a sliver running from 179.5°E to 179.7°W.
-    Run `CCScope.bbox()`'s own `Math.min`/`Math.max` union directly on those two numbers:
+!!! tip "Hands-on: run the naive union CCScope.bbox() produces, on the seam"
+    Two onboarded countries, New Zealand and the United States, straddle ±180°, so on a stack that
+    has seeded them the live `region` rows trigger this defect. `make course-data` seeds neither, so
+    start with the arithmetic itself, which needs no onboarded region at all, only the same two
+    example longitudes this chapter's own antimeridian section already uses: a sliver running from
+    179.5°E to 179.7°W. Run `CCScope.bbox()`'s own `Math.min`/`Math.max` union directly on those two
+    numbers:
 
     <!-- CODE-ILLUSTRATIVE psql query — the same Math.min/Math.max union CCScope.bbox() performs, run on the two example longitudes this chapter's antimeridian section names -->
     ```sql
@@ -308,7 +318,25 @@ present in this codebase before this chapter ever pointed at them.
 
     `0.8` degrees — the real width, recovered by refusing to treat ±180° as an ordinary number line
     for exactly the length of one comparison. This is the precise failure the region-scoping risk
-    register names as **required** to fix before the first region straddling the seam is
-    onboarded, and the query above is exactly `CCScope.bbox()`'s own `Math.min`/`Math.max` shape — run
-    here on two literal numbers because no onboarded region needs the fix yet, not because the
-    arithmetic itself would be any different once one does.
+    register names as **required** to fix before any seam-straddling country is seeded, and the query
+    above is exactly `CCScope.bbox()`'s own `Math.min`/`Math.max` shape, run on two literal numbers
+    so it works on any install. On a stack that has seeded the two countries, the same arithmetic on
+    the real rows shows the defect live:
+
+    <!-- CODE-ILLUSTRATIVE psql query against the region table; only returns rows on a stack that has seeded New Zealand and the United States -->
+    ```sql
+    SELECT slug, round(ST_XMin(geom)::numeric, 2) AS w, round(ST_XMax(geom)::numeric, 2) AS e,
+           round((ST_XMax(geom) - ST_XMin(geom))::numeric, 1) AS naive_width_degrees
+    FROM region WHERE slug IN ('new-zealand', 'united-states');
+    ```
+
+    <!-- CODE-ILLUSTRATIVE sample output at the time of writing; the outlines come from Overture, so the decimals may move with a re-import, the shape of the failure does not -->
+    ```text
+         slug      |    w    |   e    | naive_width_degrees
+    ---------------+---------+--------+---------------------
+     new-zealand   | -178.57 | 179.03 |               357.6
+     united-states | -179.15 | 179.77 |               358.9
+    ```
+
+    Those are the `w` and `e` values `RegionRegistryProvider` publishes as each country's `bbox`,
+    and the width `CCScope.bbox()` inherits: a box that wraps the world to describe a country.
