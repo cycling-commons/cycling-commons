@@ -18,7 +18,7 @@ viewpoints, and more. All of it is **community-contributed**, useful to **anyone
 - **[edit]** — structured attribute edit (climb metrics, POI details)
 - **[safety]** — dynamic/perishable; needs freshness, expiry, and confirm/decay
 - **[OSM]** — overlaps OpenStreetMap; sync rather than duplicate
-- **[media]** — photo/video, CC BY-SA 4.0, consent-gated (own-it-and-donate, or licence-validated link); several photos per item plus short video, shown as a slideshow
+- **[media]** — photo/video, CC BY-SA 4.0, consent-gated (own-it-and-donate, or licence-validated link). For example: three photos of a col and a short clip of the descent, shown on the item as a slideshow
 
 ---
 
