@@ -572,3 +572,220 @@ pre.cc-diagram[data-diagram-error]::after {
 @media screen and (min-width: 60em) {
   .md-header__title > .md-header__ellipsis > .md-header__topic:first-child { display: none; }
 }
+
+/* ── Openness x price matrix (landscape.md) ───────────────────────────────
+   A 3x3 count grid: columns are the licence stance, rows are what a rider
+   pays. The cell tint is a single-hue sequential ramp, spruce over the paper
+   ground and paper over the night ground, so "more services sit here" reads
+   as "darker" in BOTH schemes without a second hue entering. Four steps only:
+   a finer ramp is not distinguishable at these tints, and the point of the
+   figure is one cluster being far heavier than the rest, not exact ranking. */
+[data-md-color-scheme="atlas"] {
+  --cc-heat-1: rgba(28,58,42,.06);
+  --cc-heat-2: rgba(28,58,42,.14);
+  --cc-heat-3: rgba(28,58,42,.24);
+  --cc-heat-4: rgba(28,58,42,.36);
+  --cc-heat-edge: rgba(28,58,42,.20);
+  /* The service names are the smallest text on the page and they sit on the
+     tinted cells, so they get their OWN muted value rather than the theme's
+     --md-default-fg-color--light (.66): measured on the heaviest tint that one
+     lands at 3.63:1, under AA. .80 holds 4.8:1 on the same ground. */
+  --cc-heat-names: rgba(16,30,22,.80);
+}
+[data-md-color-scheme="atlas-dark"] {
+  --cc-heat-1: rgba(231,224,208,.05);
+  --cc-heat-2: rgba(231,224,208,.10);
+  --cc-heat-3: rgba(231,224,208,.16);
+  --cc-heat-4: rgba(231,224,208,.24);
+  --cc-heat-edge: rgba(231,224,208,.22);
+  --cc-heat-names: rgba(231,224,208,.78);
+}
+.md-typeset .cc-matrix { margin: 1.6em 0; }
+/* The grid is wider than a phone. Scroll it rather than let the names wrap to
+   one word per line, and keep the scroll on its own element so the figcaption
+   below stays full-width and readable. */
+.md-typeset .cc-matrix-scroll { overflow-x: auto; }
+.md-typeset .cc-matrix table {
+  border-collapse: collapse;
+  min-width: 34rem;
+  width: 100%;
+  display: table;
+  font-size: .72rem;
+}
+.md-typeset .cc-matrix th,
+.md-typeset .cc-matrix td {
+  border: 1px solid var(--cc-heat-edge);
+  padding: .5rem .6rem;
+  vertical-align: top;
+  text-align: left;
+}
+.md-typeset .cc-matrix thead th,
+.md-typeset .cc-matrix tbody th {
+  background: none;
+  font-family: "Fraunces", Georgia, serif;
+  font-weight: 600;
+  color: var(--md-default-fg-color);
+  white-space: nowrap;
+}
+.md-typeset .cc-matrix thead th:first-child { border: 0; }
+.md-typeset .cc-matrix tbody th { width: 6.5rem; }
+.md-typeset .cc-matrix td { width: 31%; }
+.md-typeset .cc-matrix .cc-n {
+  display: block;
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 1.5rem;
+  line-height: 1.1;
+  font-weight: 600;
+}
+.md-typeset .cc-matrix .cc-names {
+  display: block;
+  margin-top: .3rem;
+  line-height: 1.45;
+  color: var(--cc-heat-names);
+}
+.md-typeset .cc-matrix .cc-h0 { color: var(--md-default-fg-color--lighter); }
+.md-typeset .cc-matrix .cc-h1 { background: var(--cc-heat-1); }
+.md-typeset .cc-matrix .cc-h2 { background: var(--cc-heat-2); }
+.md-typeset .cc-matrix .cc-h3 { background: var(--cc-heat-3); }
+.md-typeset .cc-matrix .cc-h4 { background: var(--cc-heat-4); }
+.md-typeset .cc-matrix figcaption {
+  margin-top: .6rem;
+  text-align: left;
+  max-width: none;
+  margin-left: 0;
+  margin-right: 0;
+  font-style: normal;
+  font-size: .74rem;
+  line-height: 1.6;
+  color: var(--md-default-fg-color--light);
+}
+
+/* ── Dot plot: every service as one mark (landscape.md) ───────────────────
+   Position carries the two facts (stance across, price down) and the axis
+   labels name them, so colour is deliberately REDUNDANT with the x axis: it
+   is there to make the weight of the page read as a shape, not to carry
+   identity on its own.
+
+   It is therefore a single-hue ORDINAL ramp, not a categorical set. Six
+   category hues were tried first and failed: over all pairs on this cream
+   ground the best six-hue set measured CVD deltaE 1.2, far under the floor,
+   because dots of every colour touch inside one cluster. One hue separated by
+   lightness cannot fail that way. "Closed" is the strongest mark in BOTH
+   schemes, which means darkest on the paper ground and lightest on the night
+   ground - the mass stays the mass either way, so the ramp is not a flip.
+   Validated with the dataviz palette checker: ordinal, all checks pass. */
+[data-md-color-scheme="atlas"] {
+  --cc-plot-open:   #6B9E80;
+  --cc-plot-mixed:  #387656;
+  --cc-plot-closed: #0F2E1C;
+  --cc-plot-gone:   rgba(16,30,22,.55);
+  --cc-plot-rule:   rgba(28,58,42,.16);
+}
+[data-md-color-scheme="atlas-dark"] {
+  --cc-plot-open:   #3A6A52;
+  --cc-plot-mixed:  #72AC8E;
+  --cc-plot-closed: #CFE8D8;
+  --cc-plot-gone:   rgba(231,224,208,.55);
+  --cc-plot-rule:   rgba(231,224,208,.18);
+}
+.md-typeset .cc-plot { margin: 1.6rem auto; width: 100%; max-width: 40rem; }
+.md-typeset .cc-plot svg { display: block; width: 100%; height: auto; }
+.md-typeset .cc-plot figcaption {
+  margin-top: .6rem;
+  text-align: left;
+  max-width: none;
+  margin-left: 0;
+  margin-right: 0;
+  font-style: normal;
+  font-size: .74rem;
+  line-height: 1.6;
+  color: var(--md-default-fg-color--light);
+}
+.cc-plot .cc-d-open   { fill: var(--cc-plot-open); }
+.cc-plot .cc-d-mixed  { fill: var(--cc-plot-mixed); }
+.cc-plot .cc-d-closed { fill: var(--cc-plot-closed); }
+/* Shape, not colour, says "gone": a broken ring survives greyscale, print and
+   every kind of colour blindness. */
+.cc-plot .cc-d-gone {
+  fill: none;
+  stroke: var(--cc-plot-gone);
+  stroke-width: 1.6;
+  stroke-dasharray: 2.4 2.4;
+}
+.cc-plot circle { cursor: default; }
+.cc-plot .cc-plot-rule { stroke: var(--cc-plot-rule); stroke-width: 1; }
+.cc-plot .cc-plot-frame { fill: none; stroke: var(--cc-plot-rule); stroke-width: 1; }
+.cc-plot text { fill: var(--md-default-fg-color); font-family: inherit; }
+.cc-plot .cc-plot-ax { font-family: "Fraunces", Georgia, serif; font-size: 15px; }
+.cc-plot .cc-plot-ax-y { text-anchor: end; }
+.cc-plot .cc-plot-ax-x { text-anchor: middle; }
+.cc-plot .cc-plot-n {
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 14px;
+  text-anchor: middle;
+  fill: var(--md-default-fg-color--light);
+}
+.cc-plot .cc-plot-zero,
+.cc-plot .cc-plot-key,
+.cc-plot .cc-plot-cap {
+  font-size: 12.5px;
+  fill: var(--md-default-fg-color--light);
+}
+.cc-plot .cc-plot-zero { text-anchor: middle; }
+.cc-plot .cc-plot-cap-x { text-anchor: middle; }
+/* A struck-out name in the counted table and in the lists below it. */
+.md-typeset s { color: var(--md-default-fg-color--light); }
+
+/* ── Picture / Table switch (landscape.md) ────────────────────────────────
+   Two views of the same 77 services, one shown at a time. Radio inputs plus
+   :checked rather than a script: the wiki loads no page JS beyond the diagram
+   renderer, and a reader with JS blocked still gets a working switch. The
+   inputs stay in the tab order (offscreen, not display:none) so the pair is
+   reachable and operable by keyboard as a normal radio group, and the focus
+   ring is drawn on the label the focused input belongs to. */
+.md-typeset .cc-views { margin: 1.6em 0; }
+.md-typeset .cc-views-r {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+}
+.md-typeset .cc-views-tabs {
+  margin: 0 0 .2em;
+  font-size: .78rem;
+  text-align: center;
+}
+.md-typeset .cc-views-tabs label {
+  cursor: pointer;
+  color: var(--cc-clay);
+  text-decoration: underline;
+  text-underline-offset: .2em;
+}
+.md-typeset .cc-views-tabs label:hover { color: var(--cc-trail); }
+.md-typeset .cc-views-sep {
+  margin: 0 .55em;
+  color: var(--md-default-fg-color--lighter);
+}
+/* the selected view's own label stops looking clickable */
+#cc-view-plot:checked ~ .cc-views-tabs label[for="cc-view-plot"],
+#cc-view-table:checked ~ .cc-views-tabs label[for="cc-view-table"] {
+  color: var(--md-default-fg-color);
+  text-decoration: none;
+  font-weight: 600;
+  cursor: default;
+}
+#cc-view-plot:focus-visible ~ .cc-views-tabs label[for="cc-view-plot"],
+#cc-view-table:focus-visible ~ .cc-views-tabs label[for="cc-view-table"] {
+  outline: 2px solid var(--cc-trail);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+.md-typeset .cc-view { display: none; }
+#cc-view-plot:checked ~ .cc-view-plot,
+#cc-view-table:checked ~ .cc-view-table { display: block; }
+.md-typeset .cc-view > figure { margin-top: 0; }
+/* On paper there is nothing to click, so print both. */
+@media print {
+  .md-typeset .cc-view { display: block; }
+  .md-typeset .cc-views-tabs { display: none; }
+}
