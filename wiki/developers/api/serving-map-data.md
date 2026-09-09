@@ -37,13 +37,13 @@ it for an hour (the response allows exactly that).
 GET https://cyclingcommons.org/v1/map-config
 ```
 
-<!-- CODE-ILLUSTRATIVE example response, abridged; the category list continues through all letters -->
+<!-- CODE-ILLUSTRATIVE example response, abridged; the country lists run through every onboarded country and the category list through all letters -->
 ```json
 {
   "version": "0.1",
   "attribution": "© Cycling Commons contributors (ODbL) · © OpenStreetMap contributors",
   "routes": {
-    "tilesUrl": "https://tiles.cyclingcommons.org/routes/20260813/routes.pmtiles",
+    "tilesUrl": "https://tiles.cyclingcommons.org/routes/20260816-2223/routes.pmtiles",
     "countries": ["be", "nl", "de"],
     "sourceLayers": { "lines": "routes_{cc}", "nodes": "knoop_{cc}" },
     "style": {
@@ -56,7 +56,7 @@ GET https://cyclingcommons.org/v1/map-config
     }
   },
   "coverage": {
-    "tilesUrl": "https://tiles.cyclingcommons.org/coverage/20260814/coverage.pmtiles",
+    "tilesUrl": "https://tiles.cyclingcommons.org/coverage/20260904-2154.pmtiles",
     "countries": ["be", "nl", "de", "zz"],
     "sourceLayers": { "points": "{letter}_{cc}" },
     "letters": ["b", "c", "d", "f", "g", "o", "p", "q"],
@@ -74,14 +74,17 @@ Field by field:
 
 - **`attribution`**: the string your map must display while Commons overlays are visible. Pass it
   to your map library's attribution control and you are done.
-- **`routes.tilesUrl`**: the current PMTiles archive for the route network. This URL changes when
-  a new build is published, which is exactly why you read it from the config instead of hardcoding
-  it. It **can be `null`**: when no tileset is currently published, skip the routes overlay and
-  carry on; the REST endpoint still works.
+- **`routes.tilesUrl`**: the current PMTiles archive for the route network. Each build lives under
+  its own stamped prefix (`routes/<YYYYMMDD-HHMM>/routes.pmtiles`), so this URL changes when a new
+  build is published, which is exactly why you read it from the config instead of hardcoding it.
+  It **can be `null`**: when no tileset is currently published, skip the routes overlay and carry
+  on; the REST endpoint still works.
 - **`routes.countries`** and **`routes.sourceLayers`**: the archive holds one source-layer per
   country, named by the pattern in `sourceLayers` with `{cc}` replaced by each lowercase country
-  code. For the example above, the line layers are `routes_be`, `routes_nl`, `routes_de`. Line
-  features carry a `net` property (network class: `icn` international, `ncn` national, `rcn`
+  code. The country list is the set of onboarded countries as published by the coverage build's
+  manifest; the routes and coverage builds run over the same region list, so the two agree, and a
+  source-layer with no features in view simply draws nothing. For the example above, the line
+  layers are `routes_be`, `routes_nl`, `routes_de`. Line features carry a `net` property (network class: `icn` international, `ncn` national, `rcn`
   regional, `lcn` local, `mtb` mountain bike, `other`), an `rr` property (the route code a rider
   knows, such as `LF3`), and a `ref` (`way/<openstreetmap-id>`).
 - **`routes.style.groups`**: the Commons' own colour grouping, offered so your overlay can match
@@ -89,10 +92,13 @@ Field by field:
   how you paint them. `badgeMinZoom` is the zoom from which the tiles carry junction-node points
   (the numbered "knooppunt" badges); below it they simply are not in the tiles.
 - **`coverage`**: the dense "everything" layer, raw OpenStreetMap coverage as a second PMTiles
-  archive. Source-layers are named per letter and country (`b_be`, `d_nl`, ...); the `zz` bucket
-  holds rows not stamped with a country, so append it as the country list already does. Individual
-  points exist in the tiles from `minZoom` (9). Colour them by letter from the category table.
-  Like the routes URL, `tilesUrl` can be null; skip the layer then.
+  archive, versioned as `coverage/<YYYYMMDD-HHMM>.pmtiles`. Source-layers are named per letter and
+  country (`b_be`, `d_nl`, ...); the `zz` bucket holds rows not stamped with a country, so append it
+  as the country list already does. The archive carries tiles from zoom 6 to 14: z6-10 tiles are
+  thinned to a density sample (the Commons draws them as a heatmap), z11-14 tiles carry every point.
+  `minZoom` (9) is the zoom from which the Commons map draws individual icons; treat it as the floor
+  for point markers and use the lower zooms, if at all, for a density overview. Colour the points by
+  letter from the category table. Like the routes URL, `tilesUrl` can be null; skip the layer then.
 - **`categories`**: the full category table (letters A-M are the practical categories, N-Z the experiential ones): machine key, English label,
   colour, glyph, kind (`point`, `line`, or `surface`), and `bestOf` (whether the Commons map's
   Best of view shows this category). Use it to colour markers, build a legend, and reproduce the

@@ -4,20 +4,19 @@
 
 How a climb gets a gradient that is *measured* rather than typed: choosing a
 digital elevation model, converting it into the format the routing engine reads,
-and — the part that matters most — proving it is good enough before anyone
+and, the part that matters most, proving it is good enough before anyone
 believes it.
 
 !!! info "What this project runs today"
 
-    **Copernicus GLO-30 is the source**, worldwide — 30 m cells, served from
+    **Copernicus GLO-30 is the source**, worldwide: 30 m cells, served from
     Valhalla's `/height`, so the gradients a rider sees come from it. The Europe
-    tiles were built with the pipeline on this page (1137 `.hgt` tiles, 28 GB)
-    and replaced the earlier EU-DEM set on 2026-08-05.
+    tiles were built with the pipeline on this page (1137 `.hgt` tiles, 28 GB).
 
-    Everything below about **GLO-90 describes the source that was replaced.** It
-    is kept because it is the clearest lesson available in why resolution is not
-    accuracy, and because the failure was measured on our own climbs rather than
-    borrowed from a textbook.
+    The **GLO-90** measurements below are of a coarser product this project does
+    not serve. They are kept because they are the clearest lesson available in
+    why resolution is not accuracy, and because the failure was measured on our
+    own climbs rather than borrowed from a textbook.
 
 Course 2's [Elevation and terrain](../gis-beyond/elevation.md) explains what a
 **DEM (digital elevation model)** is and why two tools disagree about the same
@@ -31,7 +30,7 @@ the tool reference is
 
 The Côte de la Redoute was published as **"2.0 km · 8.4% avg"**. That string was
 typed into a JavaScript literal while the map was a static prototype and carried
-into the seed command unchanged — in the same commit whose comment says to *omit
+into the seed command unchanged, in the same commit whose comment says to *omit
 any attribute we cannot verify*.
 
 When three independent sources were finally asked, they said ~9.0%. The
@@ -49,7 +48,7 @@ The single most useful thing to understand: **a DEM never produces
 coordinates.** It has no idea a road exists.
 
 It is a lookup table. You hand it a latitude and longitude, it returns a height.
-The trajectory — where the climb actually goes — comes from a routing engine,
+The trajectory, where the climb actually goes, comes from a routing engine,
 and the two are completely independent:
 
 <!-- CODE-ILLUSTRATIVE the shape of the pipeline, not a source file -->
@@ -77,10 +76,9 @@ elevation data produces a more precise wrong answer.
 The obvious question is "how many metres per cell?", and the obvious answer
 misleads.
 
-**Copernicus GLO-90** — *the source used until 2026-08-05, not the one used
-now* — has 90 m cells. Sampled every 25 m along La Redoute it
-returned 30 distinct values across 99 samples, with runs of seven identical
-readings and eight samples going *downhill* on a climb that never descends.
+**Copernicus GLO-90**, the 90 m product, is the demonstration. Sampled every
+25 m along La Redoute it returned 30 distinct values across 99 samples, with runs
+of seven identical readings and eight samples going *downhill* on a climb that never descends.
 Binned at 100 m it published a **10% descent through the middle of the climb**.
 
 <figure class="gis-fig"><svg viewBox="0 0 680 476" role="img" aria-labelledby="dem1-t dem1-d" xmlns="http://www.w3.org/2000/svg"><title id="dem1-t">The same climb measured by a reference source and by a 90 metre elevation model</title><desc id="dem1-d">Two elevation profiles of the Cote de la Redoute drawn from real measurements, in one hundred metre bins. The accent line is the reference profile from another source, rising continuously from foot to summit. The stepped line is what Copernicus GLO-90, a ninety metre model, returns for the identical road: it follows the general shape but in flat jumps, and in two bins it goes down instead of up. Those two descending bins are tinted, and the larger reports minus ten percent through the middle of a climb that never descends, bracketed by a twenty-five percent bin and a zero percent bin. The model is not slightly noisy here; it is reporting terrain that is not there.</desc>
@@ -90,14 +88,14 @@ Binned at 100 m it published a **10% descent through the middle of the climb**.
 <text class="gis-label-sm gis-halo" x="262.6" y="88" text-anchor="middle">−10%</text>
 <text class="gis-label-sm gis-halo" x="56" y="340">foot</text>
 <text class="gis-label-sm gis-halo" x="660" y="340" text-anchor="end">summit</text>
-<rect class="gis-ink gis-fill-accent" x="56" y="352" width="20" height="20"/><text class="gis-label-sm" x="86" y="368">the road</text><rect class="gis-ink gis-fill-glacier" x="56" y="382" width="20" height="20"/><text class="gis-label-sm" x="86" y="398">what GLO-90 returns</text><rect class="gis-ink gis-fill-clay" x="56" y="412" width="20" height="20"/><text class="gis-label-sm" x="86" y="428">bins it reports as DOWNHILL</text></svg><figcaption>Both lines measure the same road. The accent line is the reference profile; the stepped line is Copernicus GLO-90, which stores one elevation per 90&nbsp;m cell and so answers in flat jumps. Follow it through the middle: <strong>25%, then 0%, then −10%</strong> — a ten-percent <em>descent</em> on a climb that never descends, with a wall on one side and a flat on the other. None of that is on the road. This is why a bin is never narrower than about four DEM cells: ask a grid a question finer than its cells and it answers with its own shape.</figcaption></figure>
+<rect class="gis-ink gis-fill-accent" x="56" y="352" width="20" height="20"/><text class="gis-label-sm" x="86" y="368">the road</text><rect class="gis-ink gis-fill-glacier" x="56" y="382" width="20" height="20"/><text class="gis-label-sm" x="86" y="398">what GLO-90 returns</text><rect class="gis-ink gis-fill-clay" x="56" y="412" width="20" height="20"/><text class="gis-label-sm" x="86" y="428">bins it reports as DOWNHILL</text></svg><figcaption>Both lines measure the same road. The accent line is the reference profile; the stepped line is Copernicus GLO-90, which stores one elevation per 90&nbsp;m cell and so answers in flat jumps. Follow it through the middle: <strong>25%, then 0%, then −10%</strong>, a ten-percent <em>descent</em> on a climb that never descends, with a wall on one side and a flat on the other. None of that is on the road. This is why a bin is never narrower than about four DEM cells: ask a grid a question finer than its cells and it answers with its own shape.</figcaption></figure>
 
 That is not noise. It is asking a grid a question finer than its cells, and
 getting the grid's shape back instead of the road's. The rule that falls out:
 
 > **A bin is never narrower than about four DEM cells.**
 
-At 90 m cells that means bins no narrower than 360 m — which is why GLO-90
+At 90 m cells that means bins no narrower than 360 m, which is why GLO-90
 cannot draw the 100 m bars we want, at any level of cleverness. **GLO-30's 30 m
 cells clear the same rule at 120 m**, which is what makes the profile actually
 published honest.
@@ -120,12 +118,12 @@ climb, a reading over a tree-lined stretch is partly the trees.
 <text class="gis-label-sm" x="40" y="46">What the model measures, not what you ride</text>
 <text class="gis-label-sm gis-halo" x="196" y="126">model reads HERE</text>
 <text class="gis-label-sm gis-halo" x="196" y="284">you ride HERE</text>
-<rect class="gis-ink gis-fill-accent" x="40" y="314" width="20" height="20"/><text class="gis-label-sm" x="70" y="330">the road — a DTM follows this</text><rect class="gis-ink gis-fill-glacier" x="40" y="344" width="20" height="20"/><text class="gis-label-sm" x="70" y="360">what a DSM records</text></svg><figcaption>A <strong>DSM</strong> (digital surface model) records "the first surface as illuminated by the sensors" — EU-DEM's own words. Through woodland that surface is the canopy, not the tarmac, so readings over a tree-lined stretch are partly the trees. A <strong>DTM</strong> (terrain model) is the bare-earth counterpart and would follow the road, but none is available worldwide at useful resolution, and <em>both</em> EU-DEM and Copernicus DEM are surface models. So this is not a defect to fix by choosing a different dataset — it is a permanent error term, and the likeliest explanation whenever two good sources agree on a climb's total gain and disagree over one stretch of it.</figcaption></figure>
+<rect class="gis-ink gis-fill-accent" x="40" y="314" width="20" height="20"/><text class="gis-label-sm" x="70" y="330">the road, a DTM follows this</text><rect class="gis-ink gis-fill-glacier" x="40" y="344" width="20" height="20"/><text class="gis-label-sm" x="70" y="360">what a DSM records</text></svg><figcaption>A <strong>DSM</strong> (digital surface model) records "the first surface as illuminated by the sensors", EU-DEM's own words. Through woodland that surface is the canopy, not the tarmac, so readings over a tree-lined stretch are partly the trees. A <strong>DTM</strong> (terrain model) is the bare-earth counterpart and would follow the road, but none is available worldwide at useful resolution, and <em>both</em> EU-DEM and Copernicus DEM are surface models. So this is not a defect to fix by choosing a different dataset; it is a permanent error term, and the likeliest explanation whenever two good sources agree on a climb's total gain and disagree over one stretch of it.</figcaption></figure>
 
 This is not a defect you fix by choosing a different version, because the
 alternatives are DSMs too. It is a permanent error term, and it is the most
 likely explanation when two good sources disagree locally while agreeing on the
-total — exactly the pattern measured here: 2.02 points of per-bin disagreement
+total, exactly the pattern measured here: 2.02 points of per-bin disagreement
 between EU-DEM and GLO-30, but gains within 2 m of each other.
 
 A **DTM (digital terrain model)** is the bare-earth counterpart. Where one is
@@ -137,11 +135,11 @@ The section above is the theory. Here is what it did to a real climb.
 
 Côte de Stockeu is wooded and steep. Our figure for its steepest 100 m, from
 Copernicus GLO-30, was **27%**. Another source put the same climb at **19%**. The
-*averages* agreed almost exactly — 10.2% against 9.9% — which is the clue: an
+*averages* agreed almost exactly, 10.2% against 9.9%, which is the clue: an
 error that cancels over a whole climb but not over its worst hundred metres is
 not random noise, it is something concentrated in one place.
 
-Wallonia publishes a **50 cm LiDAR terrain model** — bare earth, vegetation and
+Wallonia publishes a **50 cm LiDAR terrain model**, bare earth, vegetation and
 buildings removed. Sampled along the same road:
 
 | | average | steepest 100 m |
@@ -167,7 +165,7 @@ Two things worth taking from this.
 
 **The maximum is far more fragile than the average.** A sliding maximum searches
 every position and keeps the largest reading, so it *selects for* wherever the
-error happened to be worst — the one statistic guaranteed to find the canopy.
+error happened to be worst, the one statistic guaranteed to find the canopy.
 Averages let errors cancel; maxima accumulate them by construction. When two
 sources agree on a climb's average and disagree on its maximum, suspect the
 maximum, not the average.
@@ -179,7 +177,7 @@ of numbers does not.
 
 **You can check this without downloading anything.** The Wallonia model is served
 as an ArcGIS `MapServer` with query enabled, so a single HTTP request returns the
-elevation at one coordinate — ninety-three of them profiled the whole climb in
+elevation at one coordinate, ninety-three of them profiled the whole climb in
 about thirty seconds. That is enough to *test* a hypothesis about a source, which
 is a different job from serving a catalogue and needs none of the storage.
 
@@ -197,13 +195,13 @@ Size is 2400, 3600
 Pixel Size = (0.000416666666667,-0.000277777777778)
 ```
 
-**2400 columns, not 3600.** The tile is decimated in longitude — 1.5 arc-seconds
+**2400 columns, not 3600.** The tile is decimated in longitude, 1.5 arc-seconds
 across, 1 arc-second down.
 
 That is not a defect. Meridians converge toward the poles, so at 50°N one arc-
 second of longitude is only about 20 m of ground while one of latitude is about
-31 m. By sampling longitude at 1.5″, Copernicus keeps its cells roughly *square*
-— about 30 m each way. It is the sensible choice, and `.hgt` cannot express it,
+31 m. By sampling longitude at 1.5″, Copernicus keeps its cells roughly *square*,
+about 30 m each way. It is the sensible choice, and `.hgt` cannot express it,
 being 1″ by definition.
 
 <figure class="gis-fig"><svg viewBox="0 0 700 468" role="img" aria-labelledby="dem3-t dem3-d" xmlns="http://www.w3.org/2000/svg"><title id="dem3-t">Why a Copernicus tile is 2400 columns wide instead of 3600</title><desc id="dem3-d">Two grids compared at fifty degrees north. On the left, a grid sampled one arc-second in both directions: because a degree of longitude is worth only about two thirds of a degree of latitude here, its ground cells come out as tall narrow rectangles, roughly twenty metres wide by thirty-one metres high. On the right, the same ground sampled one and a half arc-seconds in longitude and one in latitude: fewer columns, but cells close to square at about thirty metres each way. That is what Copernicus ships, and it is why a one degree tile at this latitude measures 2400 columns by 3600 rows. The SRTM hgt format is one arc-second in both directions by definition, so converting upsamples longitude back to 3600 columns, adding no information and destroying none.</desc>
@@ -215,7 +213,7 @@ being 1″ by definition.
 <text class="gis-label-sm gis-halo" x="348" y="352">≈30 m × ≈30 m</text>
 <text class="gis-label-sm gis-halo" x="348" y="382">Copernicus: 2400 × 3600</text>
 <text class="gis-label-sm" x="40" y="432">Fewer columns is not less detail.</text>
-</svg><figcaption>Meridians converge toward the poles, so at 50°&nbsp;N one arc-second of longitude buys about 20&nbsp;m of ground while one of latitude buys about 31&nbsp;m. Sampling both axes at 1″ therefore gives tall, thin cells — <em>oversampled</em> east–west. Copernicus samples longitude at 1.5″ instead, keeping the ground cell roughly square, which is why the tile covering La&nbsp;Redoute measures <code>2400 × 3600</code> rather than <code>3601 × 3601</code>. The <code>.hgt</code> format is 1″ both ways by definition, so conversion upsamples longitude back to 3600 columns: no information added, none destroyed. Two consequences — the decimation factor <strong>changes with latitude band</strong>, so a converter that hard-codes 2400 is right in Belgium and wrong in Norway; and every <code>.hgt</code> tile is 24.7&nbsp;MB whatever it really carries.</figcaption></figure>
+</svg><figcaption>Meridians converge toward the poles, so at 50°&nbsp;N one arc-second of longitude buys about 20&nbsp;m of ground while one of latitude buys about 31&nbsp;m. Sampling both axes at 1″ therefore gives tall, thin cells, <em>oversampled</em> east–west. Copernicus samples longitude at 1.5″ instead, keeping the ground cell roughly square, which is why the tile covering La&nbsp;Redoute measures <code>2400 × 3600</code> rather than <code>3601 × 3601</code>. The <code>.hgt</code> format is 1″ both ways by definition, so conversion upsamples longitude back to 3600 columns: no information added, none destroyed. Two consequences: the decimation factor <strong>changes with latitude band</strong>, so a converter that hard-codes 2400 is right in Belgium and wrong in Norway; and every <code>.hgt</code> tile is 24.7&nbsp;MB whatever it really carries.</figcaption></figure>
 
 So the conversion **upsamples longitude onto the uniform grid**. It adds no
 information and destroys none, which is why the converted data measures just as
@@ -230,7 +228,7 @@ well. But two things follow:
 ## Reading a `.hgt` tile
 
 Worth knowing, because it demystifies the format entirely. Tiles are named for
-their **south-west corner** — `N50E005.hgt` covers 50–51°N, 5–6°E. Row 0 is the
+their **south-west corner**, `N50E005.hgt` covers 50–51°N, 5–6°E. Row 0 is the
 north edge, column 0 the west edge.
 
 The lookup is arithmetic:
@@ -242,7 +240,7 @@ const r0 = Math.floor(r), c0 = Math.floor(c), dr = r - r0, dc = c - c0;
 ```
 
 The integer part of a coordinate picks the tile, the fractional part indexes the
-grid. The service then **interpolates between the four surrounding cells** — it
+grid. The service then **interpolates between the four surrounding cells**: it
 does not snap to the nearest one.
 
 You can see the interpolation from outside: walking 60 m in 2 m steps returns
@@ -251,7 +249,7 @@ values that change every ~14 m on a 6.7% slope. The run length tracks the
 
 **But the reply is integer metres**, and that is a second, independent reason for
 the four-cell bin rule. Rounding is ±0.5 m per reading no matter how good the
-raster is. Over a 100 m bin at 9% — 9 m of rise — that is ±0.5 of a point,
+raster is. Over a 100 m bin at 9%, 9 m of rise, that is ±0.5 of a point,
 tolerable. Over a 20 m bin it would be ±2.5 points, and the bar would be mostly
 rounding error.
 
@@ -264,14 +262,14 @@ rounding error.
 node compare-sources.js ./old/hgt ./data/dem/hgt   # PROVE IT
 ```
 
-**Fetching needs no account.** GLO-30 Public is on the AWS Open Data registry —
+**Fetching needs no account.** GLO-30 Public is on the AWS Open Data registry:
 plain HTTPS against a public bucket, no credentials, no AWS CLI. Registration
 with the Copernicus Data Space Ecosystem unlocks the *restricted* instances,
 which we do not need. A few countries are withheld from the public set, and
 sea-only cells simply do not exist, so "missing tile" is normal and not an error.
 
 **Converting cuts from a mosaic, not tile by tile.** `.hgt` tiles overlap their
-neighbours by one row and column — the value at exactly 6°E belongs to both
+neighbours by one row and column, the value at exactly 6°E belongs to both
 `E005` and `E006`. Convert each GeoTIFF independently and every tile gets a
 nodata stripe along its north and east edges. Building a VRT mosaic first and
 cutting from that fixes it.
@@ -289,9 +287,9 @@ carries the whole method: comparing through two different *services* measures
 their interpolation as much as their data. Reading the rasters directly with one
 reader isolates the thing you are actually asking about.
 
-The reader was first checked against the real service on a tile both could see —
+The reader was first checked against the real service on a tile both could see:
 179 m of gain and 8.62% against Valhalla's 179 m and 8.61%. Only then were its
-numbers used to judge anything.
+numbers trusted to judge anything.
 
 Three measures, each earning its place:
 
@@ -303,7 +301,7 @@ Three measures, each earning its place:
 
 ### The downhill-bin trap
 
-It is tempting to treat a bin that reads downhill as proof the source is wrong —
+It is tempting to treat a bin that reads downhill as proof the source is wrong:
 a climb that descends in its middle sounds impossible. **It is not.** Plenty of
 real climbs go up, drop, and go up again.
 
@@ -316,8 +314,8 @@ source" would have thrown out the correct answer in both cases.
 What makes the measure useful is knowing **whether that stretch of road actually
 descends**:
 
-- On a climb known to rise monotonically — Mur de Huy, a 1.4 km wall with no
-  descent anywhere in it — a downhill bin is unambiguously an artifact. That is
+- On a climb known to rise monotonically, Mur de Huy, a 1.4 km wall with no
+  descent anywhere in it, a downhill bin is unambiguously an artifact. That is
   what condemned GLO-90 on La Redoute: the road never descends, and GLO-90
   published a 10% drop through its middle.
 - On any other climb, a downhill bin is a **question, not a verdict**.
@@ -329,7 +327,7 @@ the road, which is what makes it usable on climbs nobody has profiled.
 
 The lesson generalises past elevation: a metric that is decisive on the example
 you developed it against can be nonsense one climb over. The fix is not a better
-threshold — it is knowing which question the number actually answers.
+threshold; it is knowing which question the number actually answers.
 
 ## What the evaluation concluded
 
@@ -338,36 +336,36 @@ EU-DEM v1 against Copernicus GLO-30, all seven seeded Wallonia climbs:
 | | EU-DEM v1 | GLO-30 |
 |---|---|---|
 | La Redoute, gain | 179 m | 181 m *(reference: 180 m)* |
-| mean per-bin disagreement | — | 2.02 points |
+| mean per-bin disagreement | | 2.02 points |
 | downhill bins on Mur de Huy *(never descends)* | 1 | **0** |
 
 The gain match against an independent reference is the load-bearing result. The
-Mur de Huy row is the narrow version of the downhill test — that climb genuinely
+Mur de Huy row is the narrow version of the downhill test, that climb genuinely
 rises the whole way, so EU-DEM's bin there is an artifact and GLO-30's absence of
 one is real. It is one bin on one climb, so it is a tiebreak, not the argument.
 
 **The decision that followed: GLO-30 is the single source, worldwide.** No
 chain, no per-coordinate resolution order, no regional fallback.
 
-That is worth dwelling on, because the thing it removed was never a feature. The
-earlier design ranked three sources — EU-DEM in Europe, SRTM, then GLO-90 as a
-worldwide floor — and every mechanism that ranking demanded (a priority list, a
-per-continent raster inventory, a provenance field that varies by where you are
-standing) existed **only to work around a first choice that covered one
-continent**. Choosing a source that covers the world deleted all of it at once.
+That is worth dwelling on, because the alternative is a chain: a regional DEM
+first, SRTM next, GLO-90 as a worldwide floor. Every mechanism such a ranking
+demands (a priority list, a per-continent raster inventory, a provenance field
+that varies by where you are standing) exists **only to work around a first
+choice that covers one continent**. A source that covers the world needs none
+of it.
 
-GLO-90 really was too coarse. But GLO-90 is a 3× downsample of GLO-30, and that
-verdict got applied to GLO-30 by association — which left the better dataset
-untested for the entire design. **The cheapest thing on this page is measuring
-the option you assumed was bad.**
+GLO-90 really is too coarse. But GLO-90 is a 3× downsample of GLO-30, and a
+verdict on the coarse product says nothing about the fine one until it is
+measured. **The cheapest thing on this page is measuring the option you assumed
+was bad.**
 
-Three things stop being problems rather than getting solved: EU-DEM's regulated
-access terms, the per-region raster inventory, and the provenance field, which
-becomes a constant.
+Three things are not problems at all with a single worldwide source: EU-DEM's
+regulated access terms, a per-region raster inventory, and a provenance field,
+which is a constant.
 
 The honest caveat, recorded rather than glossed: the evidence is one tile, one
 massif, one latitude band. Benelux is the widening that confirms it, and the
-storage arithmetic is why scope still matters — 24.7 MB per tile, ~1,500 tiles
+storage arithmetic is why scope still matters, 24.7 MB per tile, ~1,500 tiles
 for Europe (37 GB), 14,000–26,000 for global land (**340–630 GB**). Scope
 rasters to onboarded countries, not the globe.
 
@@ -394,17 +392,17 @@ feature, and it is not required for climb profiles.
 
 ### Gzip works, and costs more than it saves
 
-**This section previously recommended storing tiles gzipped. That advice was
-wrong, and the measurement that overturned it is below.**
+**Tiles are stored raw.** Gzip is tempting, and the measurement below is why it
+is not used.
 
-Valhalla does read `.hgt.gz` directly — `valhalla_build_elevation` has a
-`--decompress` flag precisely so you can decline it. Verified on 2026-08-28: the
-same tile served raw and gzipped returned identical heights, `[316, 313, 289]`,
-after a container restart.
+Valhalla does read `.hgt.gz` directly: `valhalla_build_elevation` has a
+`--decompress` flag precisely so you can decline it. Verified: the same tile
+served raw and gzipped returns identical heights, `[316, 313, 289]`, after a
+container restart.
 
 The restart is what makes that a real test. Rename a `.hgt` and query again
-without restarting and you get the right answer from a file that is no longer
-there — the old inode is still mapped.
+without restarting and you get the right answer from a file that is not there
+any more: the old inode is still mapped.
 
 The disk ratio is genuinely excellent, because a `.hgt` is 26 MB of 16-bit
 integers with a lot of local similarity. Measured at `gzip -6`:
@@ -442,7 +440,7 @@ The mechanism is in the code, not a guess:
   into a global `cache_t`. That is anonymous memory: it can be swapped, then
   OOM-killed, but never reclaimed.
 - The unpacked cache is **capped at 50 tiles** (`UNPACKED_TILES_COUNT = 50`,
-  hard-coded, not configurable). 50 × 25.9 MB ≈ 1.3 GB — which is exactly the
+  hard-coded, not configurable). 50 × 25.9 MB ≈ 1.3 GB, which is exactly the
   +1260 MB measured. So the cost is **bounded**, not runaway. An earlier draft
   of this page said skadi showed no sign of evicting; that was wrong.
 - Eviction is **pseudo-random**: when the cap is hit it drops the first tile in
@@ -453,8 +451,8 @@ The mechanism is in the code, not a guess:
   2.6× slowdown.
 
 Upstream knows. Issue **#6163** (open, July 2026, "Optimize compressed HGT file
-support") describes precisely this — the maintainer's own words for the current
-design are *"the caching mechanism is pretty dumb"* — and proposes a per-worker
+support") describes precisely this, the maintainer's own words for the current
+design are *"the caching mechanism is pretty dumb"*, and proposes a per-worker
 LRU. Until that lands, the behaviour above is what you get.
 
 !!! danger "Store raw unless the instance has a small memory cap AND you accept the slowdown"
@@ -469,7 +467,7 @@ LRU. Until that lands, the behaviour above is what you get.
     changes nothing structural.
 
 One trap, and it is a nasty one: **a Valhalla with no elevation tiles loaded does
-not fail.** It returns `0` for every point — a perfectly valid-looking sea-level
+not fail.** It returns `0` for every point, a perfectly valid-looking sea-level
 profile. Any client must require some minimum share of non-zero samples before
 believing a result. A silent zero is worse than an error, because nothing
 downstream can detect it.
@@ -498,14 +496,14 @@ Compare the installed coverage against the presets in `fetch-glo30.sh`:
 | oceania | -48--9 / 112-179 | `AUSTRALIA` ∪ `NEWZEALAND` |
 | north-america | 32-63 / -140--56 | `USWEST` ∪ `USROCKY` ∪ `CANADAWEST` ∪ `CANADAEAST` |
 
-Six continents, six exact matches. Not "roughly ours" — **precisely** the union
+Six continents, six exact matches. Not "roughly ours" but **precisely** the union
 of our seventeen presets, to the degree. That is the fingerprint of a pipeline
 that has only ever had one requester.
 
 That application meanwhile covers 175 countries, whose areas touch
 **16,619** one-degree cells. Installed: 3,897, of which 3,439 are in cells it
 cares about. So 32 of its 175 countries have elevation and 143 do not. In those
-143, `/height` answers `0`, and — per the trap two sections above — nothing
+143, `/height` answers `0`, and, per the trap two sections above, nothing
 errors. Rides there have been recording zero climb.
 
 !!! warning "The lesson, which is not about elevation"
@@ -516,7 +514,7 @@ errors. Rides there have been recording zero climb.
     requirement was fully met.
 
     If you own a pipeline that more than one thing reads, the input is the
-    **union of every consumer's requirement** — and each consumer has to be able
+    **union of every consumer's requirement**, and each consumer has to be able
     to state its own, mechanically, rather than by someone remembering.
 
 ### Consumers declare, this pipeline acts
@@ -525,7 +523,7 @@ The split that fixes it:
 
 - **This repository owns the action.** Fetch, convert, validate, install. One
   pipeline, one validator, one write-up. Nobody else should carry a copy of
-  `fetch-glo30.sh` — a second copy drifts, and the copy without
+  `fetch-glo30.sh`, a second copy drifts, and the copy without
   `compare-sources.js` is the one that will be trusted by accident.
 - **Every consumer owns its requirement**, and must be able to print it. Cycling
   Commons declares through the presets in `fetch-glo30.sh`. The other consumer
@@ -573,7 +571,7 @@ costs nothing but a few wasted requests.
 ```
 
 GLO-30 ships as Cloud-Optimised GeoTIFF; Valhalla reads SRTMHGT. The conversion
-runs inside `ghcr.io/osgeo/gdal` on purpose — the routing host deliberately has
+runs inside `ghcr.io/osgeo/gdal` on purpose, the routing host deliberately has
 no GDAL, because it is a routing box and not a GIS box, and a tool installed for
 one job in 2026 is a dependency nobody can safely remove in 2028.
 
@@ -596,7 +594,7 @@ is how "2.0 km · 8.4%" got published in the first place.
 docker restart valhalla-europe
 ```
 
-The restart is unavoidable and it is a real outage for that continent — seconds
+The restart is unavoidable and it is a real outage for that continent, seconds
 to a couple of minutes, but real. That is why this is an operator action and not
 a hook on someone's import script.
 
@@ -623,12 +621,12 @@ old (or absent) DEM keeps its old numbers until it is recomputed:
 # here
 bin/console app:climbs:recompute --country=SI
 
-# in every other consumer — anything of theirs that reads /height
+# in every other consumer: anything of theirs that reads /height
 bin/console <their-recompute-command> --country=SI
 ```
 
 A well-behaved consumer refuses to report success when more than 95% of a
-country's results come back with zero climb — the same silent-zero trap, caught
+country's results come back with zero climb, the same silent-zero trap, caught
 one layer further out.
 
 ### 7. Note what a DEM install does *not* fix
@@ -639,7 +637,7 @@ is worth restating with the consequence attached:
 | | reads | fixed by installing a DEM? |
 |---|---|---|
 | climb profiles, ride climb metres, energy priors | `/height`, at request time | **yes**, immediately after restart |
-| `use_hills` preferring flatter roads | `weighted_grade`, baked into the tiles | **no** — only a tile rebuild |
+| `use_hills` preferring flatter roads | `weighted_grade`, baked into the tiles | **no**, only a tile rebuild |
 
 So a newly onboarded region measures correctly the moment the DEM lands. What it
 does not get is a router that knows to avoid its hills, and that waits for the
@@ -652,12 +650,12 @@ next rebuild of that continent.
     own SRTM-derived set for the whole graph.
 
     A rebuild bakes only what is in `elevation_data` at that moment. Any cell
-    without a GLO-30 tile comes back **flat** — a downgrade from the SRTM grades
+    without a GLO-30 tile comes back **flat**, a downgrade from the SRTM grades
     it has today, and an invisible one.
 
     So a continent must reach full coverage of everything anyone routes on
     *before* it is rebuilt, not after. For the whole platform that is 16,619
-    cells: 401 GB raw. Store it raw — see "Gzip works, and costs more than it
+    cells: 401 GB raw. Store it raw; see "Gzip works, and costs more than it
     saves" above; compression trades that disk for unreclaimable memory.
 
 ## Automating it, and the one check that must not be skipped
@@ -669,8 +667,8 @@ hours on two separate occasions, each time because a stage finished and nothing
 picked up the next one. The tooling was never the bottleneck. Waiting for a
 person to notice was.
 
-So the work is worth wrapping in a runner. The interesting part is not the loop
-— it is what the loop is allowed to believe.
+So the work is worth wrapping in a runner. The interesting part is not the loop,
+it is what the loop is allowed to believe.
 
 ### An exit code is not evidence
 
@@ -687,7 +685,7 @@ is byte-identical either way. That is precisely the failure mode this whole page
 exists to prevent, and it is invisible to any check that trusts a return value.
 
 So an unattended runner must probe the *output*: route a road that genuinely
-climbs, and require a spread of grades — say five or more distinct values with a
+climbs, and require a spread of grades, say five or more distinct values with a
 maximum above 3%. Anything flatter means the DEM was not read.
 
 And it must **stop the run**, not warn and continue. Halting after one bad
@@ -697,9 +695,9 @@ continent is recoverable. Quietly building six is five more rebuilds.
 
 Two things can go wrong with that probe, and conflating them is dangerous:
 
-- **The route will not snap** — bad coordinates, a gap in the road data. That is
+- **The route will not snap**: bad coordinates, a gap in the road data. That is
   inconclusive. Pass, and say so.
-- **Nothing answers the port** — the container never came up. That is a
+- **Nothing answers the port**: the container never came up. That is a
   failure.
 
 An early version of the check treated both as inconclusive, so a service that
@@ -712,7 +710,7 @@ stop.
 If the containers are governed by a single unit or compose project, two
 concurrent builds will stop each other's service mid-run and both will look
 broken in confusing ways. The runner should wait for any in-flight build before
-starting — which also means it can be launched *while* one is already going,
+starting, which also means it can be launched *while* one is already going,
 and that is the normal case, because that is exactly when someone thinks of it.
 
 !!! tip "The generalisable bit"
@@ -720,7 +718,7 @@ and that is the normal case, because that is exactly when someone thinks of it.
     Automating a pipeline is mostly not about the steps. It is about deciding
     what the automation is permitted to accept as proof that a step worked. If
     the failure mode of your slowest step is *silent and plausible*, the check
-    after it has to look at the artefact, not the exit status — and it has to be
+    after it has to look at the artefact, not the exit status, and it has to be
     willing to stop the line.
 
 ## Faults no elevation source can fix
@@ -729,14 +727,14 @@ While measuring, the comparison tool flagged problems in the *geometry*:
 
 - **Côte de la Redoute** runs 361 m past its summit, and those metres descend.
   Averaged over the stored line the climb is 6.80%; trimmed at the top it is
-  8.61%. **Overshooting the summit understates a climb by 1.8 points** — several
+  8.61%. **Overshooting the summit understates a climb by 1.8 points**, several
   times the gap between the DEM sources we agonised over.
 - **Côte de la Roche-aux-Faucons** is stored **backwards**, starting at 242 m and
   ending at 181 m.
 
 Three of seven stored climbs had an endpoint defect. The reversed one is the
 dangerous case: "measure to the highest point" puts the summit at index 0, giving
-a length of 0 m, a gain of 0 m and 0% — numbers that look unremarkable in a
+a length of 0 m, a gain of 0 m and 0%, numbers that look unremarkable in a
 database column.
 
 The lesson generalises well beyond elevation. **Getting the source right and the
@@ -746,7 +744,7 @@ zero rather than to an error is worse than no validation.
 ## Measuring a climb, end to end
 
 Everything above is about the *source*. This is the method built on top of it,
-as it finally stands — and the order in which it went wrong is more instructive
+as it finally stands, and the order in which it went wrong is more instructive
 than the finished shape.
 
 A climb becomes numbers in six steps:
@@ -771,7 +769,7 @@ the two published figures was ever in trouble.
 ### One of these two figures is robust and the other is not
 
 **The average is safe.** It is a sum over hundreds of samples, and a Digital
-Surface Model's errors — canopy, cuttings, roofs — are scattered, so they cancel.
+Surface Model's errors, canopy, cuttings, roofs, are scattered, so they cancel.
 Measured against published figures for six Swiss passes, ours agreed to within a
 few tenths: Nufenen 13.27 km at 8.5% against a published 13.4 km at 8.5%.
 
@@ -793,19 +791,19 @@ spans less than one interval. Plausible, and **wrong**: resampling the Furka at
 The real tell was the opposite of what a bug usually does. **The raw maximum got
 worse as sampling improved.** On the Grimsel it went from 35% to 77% when
 spacing tightened from 50 m to 20 m. Nothing that reads the road behaves like
-that — finer sampling was finding more *spikes*, not more road. That single
+that, finer sampling was finding more *spikes*, not more road. That single
 observation is what identified the fault: if refining your input degrades your
 answer, you are measuring your noise.
 
 Two causes came out of it.
 
 **The window was finer than the data could answer.** The rule earlier on this
-page — a bin is never narrower than about four DEM cells — puts GLO-30's floor
+page, a bin is never narrower than about four DEM cells, puts GLO-30's floor
 at 120 m. The window was 100 m. It had been below the source's resolution from
 the first day; short, unroofed Ardennes climbs simply never exposed it.
 
 **And a clamp was hiding the damage.** The code capped the published figure at
-35%. Grimsel, Susten and Klausen all published exactly 35% — which looks like
+35%. Grimsel, Susten and Klausen all published exactly 35%, which looks like
 three steep passes and is really one ceiling that three artifacts hit. *Any time
 several independent things report the identical value, suspect that you are
 reading a limit rather than a measurement.*
@@ -833,12 +831,12 @@ resolution floor, and a statistic that a single bad cell cannot move.
 <text class="gis-label-sm gis-halo" x="500" y="128" text-anchor="middle">the tail is artifacts</text>
 <text class="gis-label-sm" x="70" y="40">Every 250 m window, ordered by gradient</text>
 <text class="gis-label-sm gis-halo" x="200" y="262">the road</text>
-<text class="gis-label-sm" x="70" y="302">gentlest &#8594; steepest</text></svg><figcaption>Every sliding window on one climb, gentlest to steepest. For 95% of them the curve is <strong>smooth and slow</strong> — that is the road. Then it turns almost vertical. <strong>A maximum reads the very last point of that tail</strong>, which is a cutting, a rock face or a roof; the 95th percentile reads the top of the smooth part. This is why the average was always trustworthy and the steepest figure never was: an average is a question the noise cancels out of, a maximum is a question <em>about</em> the noise.</figcaption></figure>
+<text class="gis-label-sm" x="70" y="302">gentlest &#8594; steepest</text></svg><figcaption>Every sliding window on one climb, gentlest to steepest. For 95% of them the curve is <strong>smooth and slow</strong>: that is the road. Then it turns almost vertical. <strong>A maximum reads the very last point of that tail</strong>, which is a cutting, a rock face or a roof; the 95th percentile reads the top of the smooth part. This is why the average was always trustworthy and the steepest figure never was: an average is a question the noise cancels out of; a maximum is a question <em>about</em> the noise.</figcaption></figure>
 
 It was checked against the only two independent truths available, and it hits
 both: Wallonia's 50 cm LiDAR puts the Côte de Stockeu's steepest at **16.7%**
 and we read **16.7%**; the Furka is about **10%** and we read **10.3%**. Two
-points, two countries, two kinds of terrain — enough to adopt, not enough to
+points, two countries, two kinds of terrain, enough to adopt, not enough to
 stop testing.
 
 ### Tunnels, or: ask the road, don't guess from the profile
@@ -858,25 +856,25 @@ alpine roads have a large one.
 <text class="gis-label-sm gis-halo" x="320" y="222" text-anchor="middle">gallery</text>
 <text class="gis-label-sm" x="40" y="44">What the model reads where the road is roofed</text>
 <rect class="gis-ink gis-fill-accent" x="40" y="306" width="18" height="14"/><text class="gis-label-sm" x="66" y="318">the road you ride</text>
-<rect class="gis-ink gis-fill-glacier" x="290" y="306" width="18" height="14"/><text class="gis-label-sm" x="316" y="318">what the surface model records</text></svg><figcaption>Where a road runs under an avalanche gallery or through a tunnel, a <strong>surface model reads the mountain on top of it</strong>. On the Grimsel the profile climbs <strong>768&nbsp;m to 822&nbsp;m in 140&nbsp;m and then goes flat</strong> — a 54&nbsp;m step that is the roof, not tarmac. The flat afterwards is the signature: real ramps do not stop dead. The road underneath never changes gradient at all.</figcaption></figure>
+<rect class="gis-ink gis-fill-glacier" x="290" y="306" width="18" height="14"/><text class="gis-label-sm" x="316" y="318">what the surface model records</text></svg><figcaption>Where a road runs under an avalanche gallery or through a tunnel, a <strong>surface model reads the mountain on top of it</strong>. On the Grimsel the profile climbs <strong>768&nbsp;m to 822&nbsp;m in 140&nbsp;m and then goes flat</strong>, a 54&nbsp;m step that is the roof, not tarmac. The flat afterwards is the signature: real ramps do not stop dead. The road underneath never changes gradient at all.</figcaption></figure>
 
-The tempting fix is to detect that signature — find the step-then-flat pattern
+The tempting fix is to detect that signature, find the step-then-flat pattern
 and discard it. Resist it. **The road network already knows.** Valhalla's
 `/trace_attributes` map-matches a shape onto real edges and reports OpenStreetMap's
 `tunnel` flag for each one, so the covered stretches are a *lookup*, not an
 inference about what a shape in a profile probably means. A heuristic would also
 have to be right about steep-but-real ramps, and this never has to guess.
 
-The Grimsel turns out to carry **2,082 m under cover across 9 spans** — 8% of the
+The Grimsel turns out to carry **2,082 m under cover across 9 spans**, 8% of the
 climb. Windows overlapping those spans are simply not candidates for the steepest
 stretch.
 
 | | before | tunnel-aware | independent figure |
 |---|---:|---:|---:|
 | Grimsel | 14% | **12%** | ~11% |
-| Susten | 12% | **11%** | — |
-| Klausen | 15% | **14%** | — |
-| Furka, Gotthard, Nufenen, Stockeu, Redoute, Huy | — | **unchanged** | — |
+| Susten | 12% | **11%** | |
+| Klausen | 15% | **14%** | |
+| Furka, Gotthard, Nufenen, Stockeu, Redoute, Huy | | **unchanged** | |
 
 **The last row is the row that matters.** Every climb with no cover measured
 identically. A change that only moves what it claims to move is a change you can
@@ -887,7 +885,7 @@ Three implementation details carry more weight than they look like they should:
 - **Covered stretches are recorded as fractions of the line, not metres.**
   Map-matching snaps to the carriageway, so the matched geometry is *not* the
   shape you sent and its length differs. A proportion survives that. A metre
-  offset drifts quietly along the climb — and quietly wrong is the failure mode
+  offset drifts quietly along the climb, and quietly wrong is the failure mode
   this whole page exists to avoid.
 - **One lookup, on the same 200 samples.** Matching follows the *road* between
   your samples, so a 33 m tunnel is still found from points 130 m apart. Checked
@@ -907,7 +905,7 @@ Stating this plainly is the point of the page.
 - **Cover is excluded from the steepest search only.** Those readings are still
   in the gain, in the chart bars and in the line colouring, where they are
   diluted enough that nothing has shown up as wrong. That is a reason to leave
-  them until someone measures a case where they *are* wrong — not evidence that
+  them until someone measures a case where they *are* wrong, not evidence that
   they are right.
 - **A percentile is not a maximum**, and the label has to say so. The width the
   figure was averaged over is stored beside the figure and the caption is built
@@ -920,9 +918,9 @@ Stating this plainly is the point of the page.
    `./fetch-glo30.sh 50,5,51,6 ./data/dem/glo30`
 2. Run `gdalinfo` on it. Find the row count and the column count, and work out
    the latitude band's decimation factor from the ratio.
-3. Convert it, then run `compare-sources.js` against it twice — the same
+3. Convert it, then run `compare-sources.js` against it twice, the same
    directory as both arguments. Every number should be zero. If a comparison
    tool cannot report "identical", its other numbers are not trustworthy either.
-4. Look up the elevation at a point you can verify — a summit with a signpost,
+4. Look up the elevation at a point you can verify, a summit with a signpost,
    or a spot height on a paper map. Note whether the DEM reads high, and whether
    you are standing under trees.

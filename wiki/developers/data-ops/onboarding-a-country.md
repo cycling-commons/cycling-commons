@@ -9,7 +9,7 @@ This page is the practical walk-through; the tool reference is
 and the coverage side of what onboarding feeds is
 [coverage-provider.md](https://github.com/cycling-commons/cycling-commons/blob/main/docs/specs/coverage-provider.md).
 
-The regions come from the **Overture Maps `divisions` theme** (ODbL — it conflates OSM and
+The regions come from the **Overture Maps `divisions` theme** (ODbL, it conflates OSM and
 geoBoundaries and carries ISO 3166 codes), not from the OSM harvest. Two different data sources for
 two different jobs: Overture draws the boundaries, Geofabrik fills them with points.
 
@@ -22,23 +22,23 @@ One sequence for every country. ⚑ marks a human judgment call.
 | 1 | ⚑ **Choose the operating level** | `make region-probe c="XX"` lists the country's official subdivisions and their sizes. You decide which level to seed at (see below). |
 | 2 | **Scaffold** | `make region-scaffold c="XX"` emits a config block + label stubs. It *emits, never applies*. |
 | 3 | ⚑ **Review & merge** | Freeze slugs (permanent identity), fix exonyms in every locale, add the `all_<cc>` rung, add the timezone. |
-| 4 | **Export** | `make divisions-data c="XX"` queries Overture and writes `region-<slug>.geojson` artifacts. |
-| 5 | **Seed** | Import the artifacts as `Region` rows. |
+| 4 | **Export** | `make divisions-data c="XX"` queries Overture and writes one `region-<slug>.geojson` per subdivision **plus** one for the level-2 country outline, in the same run. |
+| 5 | **Seed** | Stage the artifacts, the country outline included, and import them as `Region` rows. |
 | 6 | **Coverage** | Add the Geofabrik region to the harvest, then run it. |
 | 6b | **Elevation** | Check the country's box already has DEM tiles; install them if not. |
 | 6c | **The other tile sets** | Coverage is not the only per-country artifact: build the road-surface and cycle-route tiles too. |
 | 7 | ⚑ **Moderators** | Assign region atoms to moderators. |
 | 8 | **Specs** | Record the rollout. |
 
-## Step 1 — the operating-level decision
+## Step 1: the operating-level decision
 
 The rule: seed at the **official administrative level whose subdivisions are a reasonable riding size**,
-preferring a stable ISO 3166-2 identity. Small official regions are fine — moderation composes
+preferring a stable ISO 3166-2 identity. Small official regions are fine, moderation composes
 upward, one moderator can hold several. Only invent synthetic macro-regions when *no* official level
 fits.
 
 But an official level can also be *too fine*. **Luxembourg** is the worked example: its only official
-subdivision level is 12 cantons, all 78–343 km² — an order of magnitude below every other onboarded
+subdivision level is 12 cantons, all 78–343 km², an order of magnitude below every other onboarded
 region, and finer scope granularity than a country crossable in an hour needs. So Luxembourg is
 seeded as **one whole-country region** at Overture's `country` level, not its cantons.
 
@@ -59,16 +59,16 @@ exporter keys it on the ISO 3166-1 code. The config block that produced it:
 A normal country instead uses `"subtype": "region"` with an ISO-3166-2 → slug map (one entry per
 subdivision), exactly like Belgium's three regions or Germany's sixteen.
 
-## Step 3 — what you must freeze by hand
+## Step 3: what you must freeze by hand
 
 The scaffolder emits stubs; you make the permanent decisions:
 
 - **Slugs are identity.** A region row is upserted by slug, so a slug must never change afterwards.
   Use an established English exonym where one truly exists (`wallonia`, `flanders`), otherwise the
-  native form (`noord-holland`). **Act on every collision warning** — the Netherlands has a Limburg
+  native form (`noord-holland`). **Act on every collision warning**: the Netherlands has a Limburg
   and so does Belgium, so the Dutch one is `limburg-nl`.
 - **Exonyms in every locale.** Region display labels come from the `messages` translation domain,
-  not from Overture. Add the label and the country rung to each of `en`/`fr`/`nl`/`de`/`es` — the
+  not from Overture. Add the label and the country rung to each of `en`/`fr`/`nl`/`de`/`es`, the
   parity gate fails the build if one catalogue is missing a key, so a half-done country cannot ship:
 
 <!-- CODE-FROM web/translations/messages.en.yaml -->
@@ -88,29 +88,47 @@ The scaffolder emits stubs; you make the permanent decisions:
     'Europe/Luxembourg': 'LU',
 ```
 
-## Steps 4–5 — export and seed
+## Steps 4–5: export and seed
 
 <!-- CODE-ILLUSTRATIVE export then import the region artifacts -->
 ```bash
-make divisions-data c="LU"                      # -> tools/divisions/out/region-*.geojson
-mkdir -p web/var/catalog-lu
-cp tools/divisions/out/region-luxembourg.geojson web/var/catalog-lu/
-docker exec cycling-commons-dev-app-1 php bin/console app:catalog:import /app/var/catalog-lu
+make divisions-data c="NL"                      # -> tools/divisions/out/region-*.geojson
+mkdir -p web/var/catalog-nl
+cp tools/divisions/out/region-<each-new-slug>.geojson web/var/catalog-nl/   # the subdivisions
+cp tools/divisions/out/region-netherlands.geojson web/var/catalog-nl/       # the L2 country outline
+docker exec cycling-commons-dev-app-1 php -d memory_limit=2G \
+  bin/console app:catalog:import /app/var/catalog-nl
 ```
 
-!!! tip "Import an isolated directory"
-    `app:catalog:import` processes *every* file in the directory you give it. Point it at a folder
-    holding only the new region's geojson, not the shared `catalog-out` — otherwise it reprocesses
-    every stale artifact sitting there.
+Every export emits the **level-2 country outline** alongside the operating-level subdivisions (a
+country operating at level 2, like Luxembourg, emits it as its only artifact). Stage the outline too.
+It is infrastructure, not an operating region: it never appears in the scope selector or on
+`/regions` while finer rows exist, but evidence in a country without subdivisions anchors to it and
+it provides the country polygon. Import it only as part of onboarding the country, never on its own
+ahead of the rest of the playbook, because a country whose only row is its outline is public by the
+same rule.
 
-The import upserts the `Region` row(s) and re-derives region memberships. Confirm before moving on:
+`-d memory_limit=2G` is not optional past a handful of countries: in the dev environment Doctrine's
+SQL logger retains every region geometry sent as a query parameter for the profiler, and the default
+128 MB runs out part-way through. The import is one transaction, so a crash rolls back cleanly and
+re-running is safe.
+
+!!! tip "Import an isolated directory"
+    `app:catalog:import` processes *every* file in the directory you give it, and `make divisions-data`
+    adds to `tools/divisions/out/` without clearing it. Point the import at a folder holding only the
+    new country's artifacts, not the shared `catalog-out` and not a `region-*` glob over `out/`,
+    otherwise it reprocesses every stale artifact sitting there.
+
+The import upserts the `Region` row(s) and re-derives region memberships. Confirm before moving on;
+expect the operating-level rows plus one row at `admin_level = 2`, the outline (for a country
+operating at level 2, that one row is all there is):
 
 <!-- CODE-ILLUSTRATIVE verify the region seeded -->
 ```sql
-SELECT slug, country_code, area_km2, admin_level FROM region WHERE country_code = 'LU';
+SELECT slug, country_code, area_km2, admin_level FROM region WHERE country_code = 'NL';
 ```
 
-## Step 6 — coverage
+## Step 6: coverage
 
 Add the country to **both** the coverage country map and the harvest region list. The country map
 tells the pipeline which country an extract owns:
@@ -148,32 +166,44 @@ it does mean a thin band of the neighbour's POIs carries your country code until
 onboarded too.
 
 !!! warning "The guard will stop you if you skip step 5"
-    A missing `COUNTRY_BY_REGION` entry now **hard-fails** that region's harvest rather than silently
+    A missing `COUNTRY_BY_REGION` entry **hard-fails** that region's harvest rather than silently
     disabling ownership, and harvesting a country with **no seeded regions** fails loudly too (the
-    ownership filter would otherwise drop every row). Both are deliberate — seed the regions first.
+    ownership filter would otherwise drop every row). Both are deliberate: seed the regions first.
 
-Then run the harvest with the new country folded into the full list (never one country alone — see
+Then run the harvest with the new country folded into the full list (never one country alone; see
 [Harvesting](harvesting.md#running-it)):
 
-<!-- CODE-ILLUSTRATIVE harvest including the new country -->
+<!-- CODE-ILLUSTRATIVE harvest including the new country: every onboarded region (the COVERAGE_REGIONS default in developers/docker/compose.yaml) plus the new extract -->
 ```bash
-make coverage-refresh regions=europe/belgium,europe/netherlands,europe/germany,europe/luxembourg,europe/france
+REGIONS=europe/belgium,europe/netherlands,europe/germany,europe/luxembourg,europe/france,\
+europe/switzerland,europe/great-britain,europe/ireland-and-northern-ireland,europe/italy,\
+europe/spain,europe/slovenia,africa/rwanda,africa/south-africa,south-america/colombia,\
+south-america/chile,australia-oceania/australia,australia-oceania/new-zealand,asia/japan,\
+north-america/us/california,north-america/us/colorado,north-america/canada/british-columbia,\
+north-america/canada/quebec
+make coverage-refresh regions=$REGIONS,<new-region>
 ```
 
-Once it completes, the new country's regions appear in the scope selector automatically — the client
-region registry is served straight from the `region` table — and its POIs render from the rebuilt
+Then add the new extract to the `COVERAGE_REGIONS` default in `developers/docker/compose.yaml`, or
+nothing that follows the committed configuration refreshes it again.
+
+Once it completes, the new country's regions appear in the scope selector automatically, the client
+region registry is served straight from the `region` table, and its POIs render from the rebuilt
 tiles.
 
-## Step 6c — the other tile sets
+## Step 6c: the other tile sets
 
 Step 6 builds the POI coverage tiles. **Two more tile sets are built per country**, from
 the same Geofabrik extract and taking the same `regions=` list:
 
-<!-- CODE-ILLUSTRATIVE the two builds a new country also needs -->
+<!-- CODE-ILLUSTRATIVE the two builds a new country also needs, over every onboarded region -->
 ```bash
-make surface-tiles regions=south-america/chile   # road surface: classified, to-do, gap grid
-make routes-tiles  regions=south-america/chile   # cycle-route network + junction numbers
+make routes-tiles  regions=$REGIONS,<new-region>   # cycle-route network + junction numbers, first
+make surface-tiles regions=$REGIONS,<new-region>   # road surface: classified, to-do, gap grid, second
 ```
+
+Routes first: the routes run writes the per-region way-id sets the surface build reads to make its
+to-do arm route-aware (see [Building road-surface tiles](surface-tiles.md)).
 
 !!! danger "Pass every region, not just the new one"
     Coverage accumulates in a database, so refreshing one country and rebuilding its
@@ -185,27 +215,25 @@ make routes-tiles  regions=south-america/chile   # cycle-route network + junctio
 
 A country with coverage but without these looks *broken* rather than incomplete: the
 Surfaces skin is blank over it while every neighbouring country is coloured, and node
-networks simply are not there. Because every country onboarded before 2026-08-14 has all
-three artifacts, the missing ones read as a bug in the layer rather than as work nobody
-did.
+networks simply are not there. Every onboarded country has all three artifacts, so a
+missing one reads as a bug in the layer rather than as work nobody did.
 
 Both manifests publish a `country_codes` list, so whether a country is covered is a
 question with a factual answer rather than an assumption. Check it before and after.
 
-## Step 6b — elevation
+## Step 6b: elevation
 
 Coverage fills the country with points. **Elevation is what lets a climb in it have a gradient
 profile**, and it is a separate dataset on a separate host, so it is a separate step.
 
-This step exists because it was missed. Seven countries were onboarded on 2026-08-14 and only one of
-them had elevation — the procedure lived as scripts on the routing host and lines in a shell history,
-so each rollout rediscovered it and that one didn't.
+This step is easy to skip: the procedure runs on the routing host rather than in this repository's
+containers, and nothing in the harvest fails when it is missed.
 
 **Why it fails quietly.** Elevation is served by one Valhalla instance per continent, each holding
 only the tiles in its own directory. `ElevationEndpoints` picks the instance from the shape's first
 point; a continent with no configured instance falls back to the **default**, which answers `null`
 for ground it does not hold, and the client refuses any reply with a non-numeric sample. So a climb
-in an uncovered country gets **no profile rather than a wrong one** — the right failure, and an
+in an uncovered country gets **no profile rather than a wrong one**, the right failure, and an
 invisible one.
 
 **Check before you fetch.** The box may already cover the country: Slovenia needed nothing, because
@@ -250,25 +278,25 @@ so an interrupted run picks up where it stopped.
 
 **Then restart that continent's instance, or nothing changes.** Valhalla builds its elevation index
 at startup, so a running instance answers `null` for a tile sitting readable in its own mount. Restart
-only the continent you touched — `docker restart valhalla-<continent>`.
+only the continent you touched: `docker restart valhalla-<continent>`.
 
 !!! tip "If restarting one continent means restarting all six, fix the unit"
     That instruction is a workaround for a service definition that runs every
     continent from a single unit. It is worth removing rather than working
-    around: a systemd **template** unit — `valhalla@europe`, `valhalla@asia`,
+    around: a systemd **template** unit (`valhalla@europe`, `valhalla@asia`,
     one instance per continent, with port and memory in
-    `/etc/valhalla/<continent>.env` — makes each independent, so an elevation
+    `/etc/valhalla/<continent>.env`) makes each independent, so an elevation
     install *or* a tile rebuild costs one continent's downtime instead of the
     whole box.
 
-    Measured on a six-continent host after that change: **101 s** for a cold
+    Measured on a six-continent host running template units: **101 s** for a cold
     start of all six (about 100 GB of tiles, 22,611 elevation tiles), and one
     continent could be stopped and started with the other five still answering.
 
 Two details worth knowing rather than rediscovering:
 
-- **The conversion runs in a container.** The routing host has no GDAL on purpose — it is a routing
-  box, not a GIS box — so `osgeo/gdal` supplies the tools for the length of the job and leaves
+- **The conversion runs in a container.** The routing host has no GDAL on purpose (it is a routing
+  box, not a GIS box), so `osgeo/gdal` supplies the tools for the length of the job and leaves
   nothing behind. It is CPU-capped, because that host is serving live routing while the conversion
   runs.
 - **The whole continent is converted at once**, never per country. `.hgt` tiles overlap by one row
@@ -277,12 +305,11 @@ Two details worth knowing rather than rediscovering:
 
 !!! warning "Tiles the app never asks for are the same as no tiles"
     The instance must also be named in `ELEVATION_URLS`, or the box falls through to the default and
-    the tiles you just installed are never queried. The `africa` and `south-america` instances
-    existed, were empty, *and* were unlisted for months — three ways of being absent at once.
+    the tiles you just installed are never queried. An instance can exist, hold no tiles, *and* be
+    unlisted all at once: three ways of being absent, each of them silent.
 
 ## Where to go deeper
 
-- [`tools/divisions/README.md`](https://github.com/cycling-commons/cycling-commons/blob/main/tools/divisions/README.md) — the exporter, the scaffolder,
-  Overture provenance, and the full command reference.
-- This page — the operating-level rule, the tessellation invariant, and the
-  BE/NL/DE/LU rollout notes.
+- [`tools/divisions/README.md`](https://github.com/cycling-commons/cycling-commons/blob/main/tools/divisions/README.md): the exporter, the scaffolder,
+  Overture provenance, the operational-versus-infrastructure rule for level-2 rows, the per-country
+  rollout notes, and the full command reference.
