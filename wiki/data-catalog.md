@@ -234,9 +234,11 @@ trace of any one ride kept.
 This turns perishable reports into a self-healing layer instead of an ever-growing pile of stale warnings.
 
 ## Access: the map is one view; the data is queryable
-The Commons is **open data, not a walled map.** Every layer is reachable two ways today, with a third designed:
-- **Map**: [/map](https://cyclingcommons.org/map), with toggleable layers.
-- **Query API**: `/v1/search`, filtered by **type + bounding box**, like OSM Overpass: "all drinking-water points in this bbox," "climbs in this bbox." A bbox is required and capped in size. Country and region as API filters are design, not built; today "per country" is a map scope and a region page.
+The Commons is **open data, not a walled map.** For now the map is the one
+way in that counts as fully active; the other two exist or are designed, and
+are named here so nobody mistakes the map for the product:
+- **Map**: [/map](https://cyclingcommons.org/map), with toggleable layers. **Fully active.**
+- **Query API**: `/v1/search`, filtered by **type + bounding box**, like OSM Overpass: "all drinking-water points in this bbox," "climbs in this bbox." A bbox is required and capped in size. Live in an early, two-endpoint form; country and region as API filters are design, not built.
 - **Bulk export** (design, not built): per-country / per-region open dumps for anyone to download and build on (ODbL).
 
 The intent is that "per country" is a first-class query, not a map-only view: that is what makes it a commons rather than a feature.
