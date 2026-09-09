@@ -48,8 +48,10 @@ on this page, where they name a section.
   junction networks riders navigate by, drawn from OpenStreetMap's route
   relations. The corridors and numbers are OSM's; what we add on top is ours —
   which stretches of a signed route have a recorded surface, its quality where
-  someone has said, and a one-tap way to fill the gaps. Surfaces on this map
-  are our own recorded answers, not a re-rendering of somebody else's style
+  someone has said, and a one-tap way to fill the gaps. Every surface colour
+  on this map traces to a recorded fact: OpenStreetMap's `surface` and
+  `smoothness` tags where they exist, a rider's answer where someone has said,
+  and nothing where nobody has. It is never a copy of another map's colouring
   [tap][edit][OSM]
 
 ## B. Water & food  *(ride-critical)*
