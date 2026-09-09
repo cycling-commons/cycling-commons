@@ -412,7 +412,9 @@ is the source of truth.
 
 ### 6.7 Custody and evidence: two axes, one mark each
 
-**Specified 2026-09-09 (owner ruling), pending implementation.** Supersedes the
+**Specified 2026-09-09 (owner ruling). The ladder (§6.7.7) and the per-row
+upstream sighting (§6.7.6) are built as of 2026-09-10; the marker grammar, the
+API envelope and custody take-back are pending.** Supersedes the
 greyscale proposal in §6: custody moves to the border, not to saturation. §6.5's
 rule is what forces the shape below, one channel carrying one meaning.
 
@@ -605,37 +607,78 @@ removes. The legend copy, the key rail in `templates/map/index.html.twig` and
 so the key never describes a map that does not exist.
 
 
-#### 6.7.6 Blocking defect: nothing records when a provider last republished a row
+#### 6.7.6 `imported_at` is the per-row upstream sighting
 
-Checked 2026-09-09. The rung that says *the register republished this record and
-did not retract it* needs a per-row date, and no maintained one exists.
+Built 2026-09-10. The rung that says *the register republished this record and
+did not retract it* needs a per-row date, and `item.imported_at` is that date,
+read as "last seen in an upstream export".
 
-| Field | What it holds | Fit |
-| --- | --- | --- |
-| `data_provider.last_run_at` | when this provider was last harvested | per provider, not per row. Says the feed ran, not that this row was in it |
-| `item.updated_at` | last write of any kind | touched by riders and curators too, so it cannot tell "the register republished" from "a rider fixed the name" |
-| `item.osm_checked_at` | when the OpenStreetMap link was last resolved | a different question entirely |
-| `item.imported_at` | its docblock says "last harvest touch: staleness signal" | **the docblock is not true.** It is set once in `Item::__construct()` and nothing in `web/src/` ever writes it again. There is no setter and no UPDATE. It records creation, not touch |
+`ProviderHarvest::apply()` writes it on every row the export carries, on all
+three paths:
 
-`ProviderHarvest::countVanished()` compounds it: a row the upstream no longer
-carries is *counted* for the run summary and never marked, so after the run
-finishes nothing distinguishes a row the register still lists from one it
-dropped.
+| Path | Where it is stamped |
+| --- | --- |
+| insert | the `INSERT` in `insertRow()` |
+| update | the `UPDATE` in `updateRow()`, beside `updated_at` |
+| seen but left alone (a rider pin sits at the spot, so the loop skipped the row) | `stampSeen()`, one `UPDATE ... WHERE source_ref IN (:seen)` over the run's whole seen set, before `countVanished()` |
 
-**The fix is one field used properly, not a new one.** Write `imported_at` on
-every row the harvest *sees*, on insert, on update, and on the no-change path,
-and read its name as "last seen in an upstream export". Two things then fall out
-with no extra column:
+Two things fall out with no extra column:
 
 - Rung 4 is `imported_at` inside the freshness window.
 - A vanished row simply stops advancing and drops out of rung 4 by itself, so
-  upstream removal becomes a derived fact instead of a number that exists only in
-  one run's log.
+  upstream removal is a derived fact rather than a number that exists only in
+  one run's log. `countVanished()` still reports the count for the desk; nothing
+  marks or deletes the row (catalog-data-model.md §4: no auto-retire).
 
-Nothing about Best of waits on this. That was a category error, corrected by the
-owner on 2026-09-09 and recorded in §6.7.7: the rungs never reach Best of. What
-waits on this field is rung 4 itself, and therefore how a specialty provider's
+The other candidate fields answer different questions and stay as they are:
+`data_provider.last_run_at` is per provider, not per row; `item.updated_at` is
+touched by riders and curators too; `item.osm_checked_at` dates the
+OpenStreetMap link, not the sighting.
+
+Nothing about Best of waits on this (§6.7.0: the rungs never reach Best of).
+What reads this field is rung 4 itself, and therefore how a specialty provider's
 rows are drawn between harvests.
+
+#### 6.7.7 The ladder
+
+Built 2026-09-10 as `App\Catalog\EvidenceRung::of()`, one pure function with
+no container and no database, so the map, the public API, the curator marker
+page and the wiki table can all call it and get one answer. Its inputs are the
+custody tier (`App\Catalog\CustodyTier`: `gross`, `specialty`, `ours`), the
+last upstream sighting (§6.7.6), the count and newest date of the row's
+`item_confirmation` rows, a published witness date (an OpenStreetMap
+`check_date`, a register's dated survey), and the clock. The window is six
+months unless the caller passes another.
+
+Ordered by three tie-breaks in this order: the **kind** of evidence, then how
+**many**, then how **recent**. Three kinds, and they are not close. A fossil
+claim was typed once and carries no interpretable date. A live claim is a source
+that republished this record inside the window without retracting it. A witness
+is a human at the point on a known date.
+
+| Rung | Evidence | Badge | Grade |
+| --- | --- | --- | --- |
+| 1 | gross provider, fossil claim | `?` | claimed |
+| 2 | gross provider, live claim | `?` | claimed |
+| 3 | specialty provider, fossil claim | `?` | claimed |
+| 4 | specialty provider, live claim | `?` | attested |
+| 5 | specialty provider with a per-record operational status field (RIVM's `Storing`) | `?` | attested |
+| 6 | a witness that aged out of the window; still a witness, so above every claim | `?` | attested |
+| 7 | a published witness inside the window | none | attested |
+| 8 | one of our riders inside the window, below `map.item_verify_threshold` | `?` | attested |
+| 9 | `map.item_verify_threshold` riders inside the window (moderation-and-contribution.md §10.1) | none | minimum |
+| 10 | a curator | none | minimum |
+| 11 | five or more riders inside the window | none | high |
+
+The badge column is `EvidenceRung::showsQuestionBadge()`: the `?` is on exactly
+the rungs with no dated witness inside the window, which is the one sentence of
+§6.7. The grade column is `EvidenceRung::grade()`, the coarse word the public API
+publishes ahead of the receipt that produced it.
+
+Two rungs the function cannot return yet, stated rather than hidden: rung 5
+needs a registry field naming which attribute carries operational state, and
+rung 10 needs a curator argument, which arrives with the API envelope. Neither
+is a gap in the ladder; both are inputs no caller passes today.
 
 ## 7. Citation
 

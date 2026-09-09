@@ -149,7 +149,17 @@ class Item
     #[ORM\Column(type: 'datetime_immutable')]
     private \DateTimeImmutable $updatedAt;
 
-    /** Last harvest touch: staleness signal, no auto-retire. docs/specs/catalog-data-model.md §4 */
+    /**
+     * Last time an upstream export contained this row.
+     *
+     * Seeded at construction and rewritten by every harvest that sees the row,
+     * including the pass where nothing changed. Read as "last seen upstream",
+     * which is what puts a provider row on rung 4 of the evidence ladder
+     * (docs/specs/data-provider-hierarchy.md §6.7.6). A row the publisher has
+     * dropped simply stops advancing and falls off rung 4 on its own, so
+     * upstream removal is derived and needs no second column. Never an
+     * auto-retire (docs/specs/catalog-data-model.md §4).
+     */
     #[ORM\Column(type: 'datetime_immutable', nullable: true)]
     private ?\DateTimeImmutable $importedAt = null;
 

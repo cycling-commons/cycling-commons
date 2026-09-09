@@ -134,6 +134,7 @@ final class ProviderHarvest
             }
         }
 
+        $this->stampSeen($provider, $seen, $now);
         $counts['stale'] = $this->countVanished($provider, $seen);
         $this->stampRegions($provider);
 
@@ -306,9 +307,9 @@ final class ProviderHarvest
     {
         $this->db->executeStatement(
             'INSERT INTO item (letter, name, geom, country_code, state, source, source_ref, provider_id,
-                               osm_ref, osm_checked_at, attributes, created_at, updated_at)
+                               osm_ref, osm_checked_at, attributes, created_at, updated_at, imported_at)
              VALUES (:letter, :name, ST_SetSRID(ST_MakePoint(:lng, :lat), 4326), :cc, :state, :source, :ref, :provider,
-                     :osm_ref, :checked, :attrs, :now, :now)',
+                     :osm_ref, :checked, :attrs, :now, :now, :now)',
             [
                 'letter' => $feature['letter'],
                 'name' => $feature['name'],
@@ -420,7 +421,8 @@ final class ProviderHarvest
                     osm_ref = :osm_ref,
                     osm_checked_at = :checked,
                     attributes = :attrs,
-                    updated_at = :now
+                    updated_at = :now,
+                    imported_at = :now
               WHERE id = :id',
             array_filter([
                 'id' => $id,
@@ -432,6 +434,30 @@ final class ProviderHarvest
                 'attrs' => json_encode($attrs, \JSON_THROW_ON_ERROR),
                 'now' => $now->format('Y-m-d H:i:s'),
             ], static fn (mixed $v, string $k): bool => null !== $v || 'osm_ref' === $k, \ARRAY_FILTER_USE_BOTH),
+        );
+    }
+
+    /**
+     * Every ref the export carried is a sighting, whatever the loop did with
+     * it. Rung 4 is "the publisher still carries this row", not "the publisher
+     * changed it" (data-provider-hierarchy.md §6.7.6), so a row the loop left
+     * alone because a rider pin sits at the spot advances too. Without this
+     * an untouched register entry would age out of rung 4 while the register
+     * republishes it every week.
+     *
+     * @param list<string> $seen
+     */
+    private function stampSeen(DataProvider $provider, array $seen, \DateTimeImmutable $now): void
+    {
+        if ([] === $seen) {
+            return;
+        }
+
+        $this->db->executeStatement(
+            'UPDATE item SET imported_at = :now
+              WHERE provider_id = :provider AND source_ref IN (:seen)',
+            ['now' => $now->format('Y-m-d H:i:s'), 'provider' => $provider->getId(), 'seen' => $seen],
+            ['seen' => \Doctrine\DBAL\ArrayParameterType::STRING],
         );
     }
 

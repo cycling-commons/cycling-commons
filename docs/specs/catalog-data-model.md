@@ -89,7 +89,7 @@ raw SQL/DBAL. Timestamps are `TIMESTAMP(0) WITHOUT TIME ZONE`
 | `source_ref` | varchar(160) | upstream id (`node/…`, `way/…`, `Q…`, PIVOT id) or stable synthetic ref (`fx:…`, `manual:…`); never NULL in practice |
 | `attributes` | jsonb | registry-validated only (catalog-data-model.md §7) |
 | `created_at` / `updated_at` | timestamp | every content setter (name/geom/state/attributes) touches `updated_at` |
-| `imported_at` | timestamp nullable | last harvest touch — the staleness signal (there is **no auto-retire**, catalog-data-model.md §4) |
+| `imported_at` | timestamp nullable | last seen in an upstream export: every harvest that carries the row stamps it, on insert, update and the no-change pass (data-provider-hierarchy.md §6.7.6). A staleness signal only; there is **no auto-retire** (catalog-data-model.md §4) |
 
 Composite indexes: btree `idx_item_letter_state (letter, state)` — the serving
 filter; unique `uniq_item_source_ref_letter (source, source_ref, letter)` —
