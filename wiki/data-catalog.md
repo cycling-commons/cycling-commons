@@ -132,7 +132,7 @@ than uploaded, is not built yet.
 - Difficulty category (HC/1–4) [auto]
 - Named climbs & famous segments [edit]
 - Descents: technicality, hairpin count, surface [edit]. Gravel or sand on a paved bend is not a note on the climb: it is a hazard pinned on that bend under **E**, so the ride check can warn about it [safety]
-- Per-area relief: one number per region for how hilly it is, metres climbed per kilometre ridden, from the same elevation source the climbs use. It needs a region summary to live on, and there is none yet; the region page lists climbs and nothing about the region as a whole *(not built)* [auto]
+- Per-area relief: one number per region for how hilly it is, metres climbed per kilometre ridden, from the same elevation source the climbs use. It belongs at the top of the region page, which today counts area, items and routes and says nothing about the riding; the region portrait that would carry it is on the roadmap *(not built)* [auto]
 
 ## O. Where to sleep
 - Bike-friendly accommodation riders have actually used — B&B, hotel, hostel, campsite [tap][edit][OSM][provider]

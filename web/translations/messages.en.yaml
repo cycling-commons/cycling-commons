@@ -4600,6 +4600,7 @@ roadmap:
   item_map_a11y: '<b>Make the map usable without a mouse.</b> The honest gap in our accessibility statement: keyboard and screen-reader access to the map itself, not only to the pages around it.'
   item_route_export: '<b>Take a route with you.</b> Export to your device or your planner, and a permanent link to a view of the map.'
   item_contraflow: '<b>One-way streets a bike may ride against.</b> Contraflow cycling is common in Belgian and Dutch towns and OpenStreetMap records it. The map should show it, and a route should not send you the long way round a street you are allowed to ride up.'
+  item_region_portrait: '<b>A portrait of each region.</b> The region page counts what is there. It should say what the riding is like: how hilly, how much is paved, the big climbs, the signed network, water and toilets per hundred kilometres, the routes riders recommend, and how fresh the data is.'
   item_roadmap_votes: '<b>Have a say in this list.</b> Vote on what matters to you, follow an item, and propose one of your own.'
   foot_shipped_pre: 'Already shipped is on the'
   foot_shipped_link: 'changelog'
