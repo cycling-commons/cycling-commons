@@ -100,7 +100,7 @@ short (owner 2026-09-09).
 - Road-surface problems: potholes, broken surface, loose gravel, ice [tap][edit][safety]
 - Seasonal closures: cols under snow, flood-prone dips, snow gates; the closure lifetime and its expiry are built for these [tap][edit][safety][OSM]
 - Construction / temporary closures / diversions, with the detour [tap][edit][safety]
-- A blind corner or a crossing without refuge a rider can point at. The form says *junction / crossing* and *bad corner*, never *dangerous*, because one rider's fright is not a fact [tap][edit][safety]
+- One spot a rider can pin: a bend where you cannot see what is coming, or a busy road you must cross in one go with no island in the middle. The form calls these *bad corner* and *junction / crossing*, never *dangerous*: one rider's fright is not a fact [tap][edit][safety]
 - Crosswind / fog on an exposed stretch: real on a dam or a col; a stretch, not a pin, so it reads as a quality of the road [tap][edit]
 
 Moved: "roads to avoid" is traffic exposure, derived under **A** from what
