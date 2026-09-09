@@ -38,7 +38,7 @@ on this page, where they name a section.
 - Cycleways, bike lanes, segregated paths, gravel/MTB trails [OSM]
 - Surface type — asphalt / concrete / paving / cobbles / gravel / dirt / sand [tap][edit][OSM]
 - Surface smoothness / quality [tap][edit][OSM]
-- Path width [OSM]
+- Path width [OSM] *(not harvested; OSM has it on few paths. Useful if it comes, not for now)*
 - Barriers on the way, chicanes (single, double, triple, squeeze), A-frames, kissing gates, bollards and blocks, with the **type and the clearance width in centimetres**. The width is the fact, the type is the hint: a double chicane at 150 cm passes a trailer, one at 90 cm stops a handbike. OpenStreetMap has the model (`barrier=cycle_barrier` + `cycle_barrier=*`, `barrier=bollard|kissing_gate|gate|swing_gate|block`, `maxwidth:physical`, `opening`, `spacing`, `bicycle=*`, `wheelchair=*`) and, for most bollards, no width; a rider measures where OSM is silent, in centimetres against a known reference (road bars about 42 cm, a cargo bike about 65 cm, a trailer about 80 cm). Harvested only from cycleways, paths and tracks, never from car roads, or every bollard in Europe lands on the map [tap][edit][OSM] *(harvest and form: design, not built)*
 - Traffic exposure: derived from road class, speed limit, lanes and cycleway, the input for a route's sensory load; never collected by hand [auto][OSM] *(design, not built)*
 - Lit / unlit at night [OSM]
