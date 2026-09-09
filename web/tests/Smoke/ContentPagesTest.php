@@ -297,7 +297,7 @@ final class ContentPagesTest extends WebTestCase
 
         $html = (string) $client->getResponse()->getContent();
         self::assertStringContainsString('community-built map of the world', $html);
-        self::assertStringContainsString('Each layer lives in its own app', $html);
+        self::assertStringContainsString('Each answer lives in its own app', $html);
         self::assertStringNotContainsString('Today every layer lives in its own silo', $html);
 
         $frag = strpos($html, 'Cycling knowledge is scattered');

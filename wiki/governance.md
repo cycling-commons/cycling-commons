@@ -52,7 +52,7 @@ resources (see [Manifesto](manifesto.md)). Each maps to a concrete part of the s
 
 | Ostrom principle | In the Cycling Commons |
 |------------------|------------------------|
-| **1. Clearly defined boundaries** | Non-personal data only; the firm line between Commons and personal data (Manifesto §IV), drawn at the aggregate by [the sensing boundary](#the-sensing-boundary-how-activity-becomes-a-place-fact) |
+| **1. Clearly defined boundaries** | Non-personal data only; the firm line between Commons and personal data (Manifesto §I), drawn at the aggregate by [the sensing boundary](#the-sensing-boundary-how-activity-becomes-a-place-fact) |
 | **2. Rules fit local conditions** | Curation is **per region**; the curated target `X` scales with local density |
 | **3. Collective-choice (those affected make the rules)** | The seasonal **voting rounds**: riders rank their own regions. *(Rounds are design, planned to open after launch; the shipped half is routes, which riders verify by riding and rank by seasonal recommend-vote. See [Curation & Voting](curation-and-voting.md))* |
 | **4. Monitoring** | The **freshness model**: timestamps, reporter counts, confirm/decay |
@@ -96,7 +96,7 @@ form.
 
 The design has the Commons seeded and kept fresh from *aggregate activity* (above), which raises the
 obvious question: how can "where riders go" feed a map that promises a person's movements **never
-enter the Commons** (§I, §IV)? The answer is a hard boundary. The Commons never collects or holds
+enter the Commons** (§I)? The answer is a hard boundary. The Commons never collects or holds
 movement; a separate, **consented sensing layer** would, and only an irreversible *place-fact* ever
 crosses the line.
 
@@ -110,7 +110,7 @@ crosses the line.
   is never persisted anywhere as a queryable dataset.
 
 A seasonal heatmap is therefore stored as **a property of a road** (usage intensity by season), not
-as a collection of rides. §I and §IV hold verbatim: the Commons is still the map, not the rider. It is
+as a collection of rides. §I holds verbatim: the Commons is still the map, not the rider. It is
 the same shape as §VIII: the Commons learns *that* a place is used and *when*, never *who*.
 
 **What makes an aggregate safe to cross the line.** A place-fact is only a place-fact if it cannot be

@@ -220,7 +220,7 @@ wiki and those specs so there's a single source of truth (see
 conversation is welcome.
 
 **With local knowledge.** The flows are real now; the value is real riders' knowledge of real
-places — the climbs worth the detour, where the water is, which junction is dangerous, the finest
+places — the climbs worth the detour, where the water is, where to sleep after a long day, the finest
 views. Telling us whether the flows match how you actually think about your roads is worth a lot.
 How contribution works is described in [Contributing](contributing.md).
 

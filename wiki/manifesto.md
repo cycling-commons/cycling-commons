@@ -5,8 +5,9 @@
 A commons is not a free-for-all and it is not a company's database with an open licence bolted on. It
 is a shared resource that a community governs, sustains, and protects from enclosure. Cyclists already
 produce an enormous amount of knowledge about the world they ride through: where the water is, which
-climb is worth the detour, which junction is dangerous. Today that knowledge is locked in closed
-silos or lost entirely. The Cycling Commons exists to set it free and keep it free.
+climb is worth the detour, where to sleep after a long day. Today that knowledge is scattered, and what
+a rider adds to an app stays locked inside that app. The Cycling Commons exists to set it free and
+keep it free.
 
 ## The theory underneath: Ostrom, not Hardin
 
@@ -31,48 +32,59 @@ Commons can be open *and* survive: it is governed, not merely published.
 ## The principles
 
 **I. The Commons is the map, not the rider.** Everything in the Commons is about *the world*: roads,
-climbs, water, hazards. Never about a person's fitness, identity, or movements.
+climbs, water, hazards. Never about a person's fitness, identity, or movements. Nothing of that kind
+enters the dataset or the API: the map is public; the person is not. Accounts exist so one rider
+counts once. What a rider contributes stays in the Commons under its licence; what is about the rider,
+the account, can be exported or erased at any time. A rider who wants credit gets it by display name,
+never by anything more. The design for letting aggregate activity *inform* the map without any trace
+entering it is
+[the sensing boundary](governance.md#the-sensing-boundary-how-activity-becomes-a-place-fact); nothing
+of that kind is collected today.
 
-**II. Open for everyone.** The data is published under the Open Database Licence (ODbL). A free
+**II. Cycling is for every body.** Accessibility is first-class: adapted-bike and handbike
+friendliness, gradient limits, and surface suitability are data the Commons actively collects, not an
+afterthought.
+
+**III. Open for everyone.** The data is published under the Open Database Licence (ODbL). Photos,
+video and the written word, this wiki included, are Creative Commons Attribution-ShareAlike 4.0
+(CC BY-SA 4.0), so a picture a rider gives travels as freely as the row it illustrates. A free
 read API is live in an early, two-endpoint form
 ([cyclingcommons.org/developers/api](https://cyclingcommons.org/developers/api)); bulk exports are
 designed, not yet live. Anyone may build on it, commercial or not.
 
-**III. Build on OpenStreetMap; give back to it.** OSM is the open base map. We do not re-collect it;
+**IV. Build on OpenStreetMap; give back to it.** OSM is the open base map. We do not re-collect it;
 we curate the cycling layers it is thin on, and we intend to contribute durable facts back upstream.
 The ODbL is chosen precisely so data can flow back to OSM. (The give-back itself is design, not yet
 built; see [Contributing](contributing.md).)
 
-**IV. Nothing personal, ever.** A person's identity, history, fitness metrics, and movements
-never enter the Commons. The map is public; the person is not. The design for letting aggregate
-activity *inform* the map without any trace entering it is
-[the sensing boundary](governance.md#the-sensing-boundary-how-activity-becomes-a-place-fact); nothing
-of that kind is collected today.
-
-**V. Curation, not overload.** The Commons is not a contest to hold the most rows. For the things that
-are a matter of taste (best climbs, bike-friendly stays, finest views, history & culture, top quality
-rides) it surfaces the *best* of a region, as judged by the riders who know it, not an
-undifferentiated firehose.
+**V. Curation where taste rules, completeness where need does.** For the things that are a matter
+of taste (best climbs, bike-friendly stays, finest views, history & culture, top quality rides) the
+Commons is not a contest to hold the most rows: it surfaces the *best* of a region, as judged by the
+riders who know it, not an undifferentiated firehose. For the things a rider simply needs (water,
+toilets, shelter, a shop, a supermarket) it wants every one there is, checked in proportion to what a
+wrong answer costs. A supermarket needs no review. A tap is shown as drinking water only once a rider
+has confirmed it is drinkable and still running, and it stays so only while riders keep confirming it
+(principle VII).
 
 **VI. The community governs the Commons.** The people who contribute decide what rises to the top, by
 voting, in open rounds. Curators serve the community; they do not rule it. (Routes work this way
 today; the seasonal rounds for climbs, stays, views and heritage are design, planned to open after
 launch. See [Curation & Voting](curation-and-voting.md).)
 
-**VII. Freshness is a duty.** A "road closed" that never expires becomes a lie. Perishable data carries
-a lifecycle (timestamps, confirmations, and decay) so the map heals itself instead of rotting.
+**VII. Freshness is a duty.** A "road closed" that never expires becomes a lie, and so does a tap that
+ran in May and is dry in August. Perishable data carries a lifecycle (timestamps, confirmations, and
+decay) so the map heals itself instead of rotting: a fact nobody has confirmed for long enough is
+asked about again, and shown with less certainty until somebody answers.
 
-**VIII. Provenance kept, identity never.** The Commons records *that* riders confirmed a fact and
-*when*, never *who*. Trust without surveillance.
+**VIII. Provenance kept.** Every fact carries where it came from: the source it was imported from
+and the licence it arrived under, or the trail of rider confirmations, *that* and *when*. A reader can
+see why the map believes something, and a partner's data is cited as theirs, never absorbed as ours.
+Trust without surveillance.
 
 **IX. Respect the ground. Never trespass.** Nothing in the Commons encourages entering a private,
 restricted, or no-entry road. If access information ever enters the catalog, it is there so those
 roads can be *avoided*. The Commons makes riders better guests of the places they ride.
 
-**X. Cycling is for every body.** Accessibility is first-class: adapted-bike and handbike
-friendliness, gradient limits, and surface suitability are data the Commons actively collects, not an
-afterthought.
-
-**XI. Never scraped, never sold, never enclosed.** Data is contributed or already open, never
+**X. Never scraped, never sold, never enclosed.** Data is contributed or already open, never
 scraped. The Commons is not a foundation's asset to one day paywall. Its licence and its governance are
 built so it *cannot* be enclosed later, even by the people who started it.
