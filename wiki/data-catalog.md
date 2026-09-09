@@ -20,6 +20,7 @@ viewpoints, and more. All of it is **community-contributed**, useful to **anyone
 - **[safety]** — dynamic/perishable; needs freshness, expiry, and confirm/decay
 - **[OSM]** — overlaps OpenStreetMap; sync rather than duplicate
 - **[provider]** — imported from an open data provider of record, named in the provider registry and attributed on every row it gave (source `authority`). For example: the RIVM drinking-water register in the Netherlands, Tourisme Wallonie PIVOT for stays in Belgium
+- **[review]** — a rider's own words on any place or route: a short dated note under their display name, several per item, shown in the drawer beside the facts and moderated like everything else. Today every form has one *note for riders* field, which is an attribute of the item, not a voice: the last edit overwrites it *(design, not built)*
 - **[media]** — photo/video, CC BY-SA 4.0, consent-gated (own-it-and-donate, or licence-validated link). For example: three photos of a col and a short clip of the descent, shown on the item as a slideshow
 
 ---
@@ -256,62 +257,168 @@ order · closed · not there anymore); that is the freshness question and is not
 repeated below.
 
 ## A. Map & surface, per road or stretch
-- **Form:** surface (asphalt · concrete · paving stones · sett / pavé · compacted · fine gravel · gravel · dirt · rock) · road type (main road · local road · residential street · farm or forest track · path or trail · cycleway) · smoothness (excellent → very bad) · traffic (quiet · moderate · busy · car-free), one answer per edit · segregated from cars? · lit at night? · seasonal closure (none · winter · forestry work) · width in metres · a note
+- **Form:**
+  - *surface* (asphalt · concrete · paving stones · sett / pavé · compacted · fine gravel · gravel · dirt · rock)
+  - *road type* (main road · local road · residential street · farm or forest track · path or trail · cycleway)
+  - *smoothness* (excellent → very bad)
+  - *traffic* (quiet · moderate · busy · car-free), one answer per edit
+  - *segregated from cars?*
+  - *lit at night?*
+  - *seasonal closure* (none · winter · forestry work)
+  - *width in metres*
+  - *a note*
 - **OSM:** road type, surface, smoothness, width, lit, one-way and contraflow
 - **Design:** barriers, the type (chicane single / double / triple / squeeze · A-frame · kissing gate · bollard · block) and the clearance width in cm with its source (OSM `maxwidth:physical` / `opening` / `spacing`, or measured by a rider) · traffic exposure, derived · the traffic tally with the hour attached, so that ten quiet and two moderate replaces one voice
 
 ## B. Water & food, per point
-- **Form:** type (public fountain · drinking tap · cemetery tap · café refill point) · potable? (yes, public supply · unsigned, use judgement · no) · seasonal (year-round · summer only · frost-shut in winter) · availability (always · daytime only · ask or behind a gate) · bottle-fill friendly? · cost (free · customers only) · website · a note for riders
+- **Form:**
+  - *type* (public fountain · drinking tap · cemetery tap · café refill point)
+  - *potable?* (yes, public supply · unsigned, use judgement · no)
+  - *seasonal* (year-round · summer only · frost-shut in winter)
+  - *availability* (always · daytime only · ask or behind a gate)
+  - *bottle-fill friendly?*
+  - *cost* (free · customers only)
+  - *website*
+  - *a note for riders*
 - **OSM / provider:** `amenity=drinking_water` and `drinking_water=*`, bakeries, shops and cafés with their hours; the RIVM register's own rows in the Netherlands
-- **Design:** what a café or shop is like for a rider (weekly closing day · indoor bike parking · outdoor seating · card or cash · open on Sunday? · what they stock); today a café enters only as a refill point. The water form still offers *public toilet* as a type; toilets have their own form under **C** and that choice should go
+- **Design:** what a café or shop is like for a rider (weekly closing day · indoor bike parking · outdoor seating · card or cash · open on Sunday? · what they stock); today a café enters only as a refill point.
 
 ## C. Public toilets, per point
-- **Form:** fee (free · paid) · wheelchair accessible? · opening hours · baby changing table? · shower? · website · a note for riders
+- **Form:**
+  - *fee* (free · paid)
+  - *wheelchair accessible?*
+  - *opening hours*
+  - *baby changing table?*
+  - *shower?*
+  - *website*
+  - *a note for riders*
 - **OSM:** `amenity=toilets`, with fee, wheelchair and hours where somebody mapped them
 
 ## D. Bike services, per point
-- **Form:** type (bike shop · repair stand · pump) · pump valve (presta + schrader · presta only · schrader only · no pump) · opening hours (24/7 · see website · unknown) · tools available · work stand? · chain tool? · e-bike charging? · website
+- **Form:**
+  - *type* (bike shop · repair stand · pump)
+  - *pump valve* (presta + schrader · presta only · schrader only · no pump)
+  - *opening hours* (24/7 · see website · unknown)
+  - *tools available*
+  - *work stand?*
+  - *chain tool?*
+  - *e-bike charging?*
+  - *website*
 - **OSM:** `shop=bicycle`, `amenity=bicycle_repair_station`, `amenity=compressed_air`; charging points are in OSM and not harvested (in the backlog)
 - **Design:** brands serviced · rental? · e-bike service? · a charging kind of its own, with connector and fee, instead of a yes/no on a shop
 
 ## E. Hazards, per report
-- **Form:** type (crosswind / fog · ice / frost · loose surface / gravel · potholes · junction / crossing · bad corner · flooding · roadworks · road closed · other) · if closed, for how long (today · days · weeks · months · unknown) · severity (low · moderate · high) · when is it worst (autumn / winter · year-round · after rain · windy days) · still present? (confirmed today · reduced · gone) · what did you see · a detour · time of day
+- **Form:**
+  - *type* (crosswind / fog · ice / frost · loose surface / gravel · potholes · junction / crossing · bad corner · flooding · roadworks · road closed · other)
+  - *if closed*, for how long (today · days · weeks · months · unknown)
+  - *severity* (low · moderate · high)
+  - *when is it worst* (autumn / winter · year-round · after rain · windy days)
+  - *still present?* (confirmed today · reduced · gone)
+  - *what did you see*
+  - *a detour*
+  - *time of day*
 - **Built around it:** a closure expires itself when its window runs out; the ride check lists the hazards along an uploaded GPX in riding order
 - **Design:** decay by type for everything that is not a closure · direction affected
 
 ## F. Getting there, per node
-- **Form:** bikes on board (allowed, free · allowed with supplement · restricted at peak · not allowed) · step-free access? · bike parking at the station (covered racks · open racks · none) · lift or ramp? · bike ticket needed? · website · a note for riders
+- **Form:**
+  - *bikes on board* (allowed, free · allowed with supplement · restricted at peak · not allowed)
+  - *step-free access?*
+  - *bike parking at the station* (covered racks · open racks · none)
+  - *lift or ramp?*
+  - *bike ticket needed?*
+  - *website*
+  - *a note for riders*
 - **OSM:** stations, ferry terminals, bike parking, bike-share docks
 - **Design:** ferries (schedule · season · cost · crossing time), tunnels and bridges (allowed? · shuttle? · alternative), ride-start parking and bike-share as kinds of their own; today everything enters through the one station-shaped form
 
 ## G. Shelter, per point
-- **Form:** shelter type (refuge / chapel · bus shelter · café, seasonal · picnic hut) · always accessible? (open structure · daytime only · seasonal) · water nearby? · bench? · phone signal? · website · a note on how useful it is in bad weather
+- **Form:**
+  - *shelter type* (refuge / chapel · bus shelter · café, seasonal · picnic hut)
+  - *always accessible?* (open structure · daytime only · seasonal)
+  - *water nearby?*
+  - *bench?*
+  - *phone signal?*
+  - *website*
+  - *a note on how useful it is in bad weather*
 - **OSM:** `amenity=shelter` with `shelter_type`, huts
 - **Design:** staffed refuges (food · sleeping · open season) · medical (hospital · pharmacy · first aid) · SOS phones and rescue points; none of these are asked today
 
 ## N. Climbs, per climb and side
-- **Form:** name · approach (which side, from where) · surface (smooth asphalt · asphalt · worn asphalt · cobbles · gravel) · road quality (smooth → broken / loose) · traffic (traffic-free · quiet · moderate · busy) · effort (steady · challenging · tough · very steep) · water on the climb? · hairpins (count) · shade / exposure (wooded · partly shaded · exposed) · famous for · anything to correct
+- **Form:**
+  - *name*
+  - *approach* (which side, from where)
+  - *surface* (smooth asphalt · asphalt · worn asphalt · cobbles · gravel)
+  - *road quality* (smooth → broken / loose)
+  - *traffic* (traffic-free · quiet · moderate · busy)
+  - *effort* (steady · challenging · tough · very steep)
+  - *water on the climb?*
+  - *hairpins* (count)
+  - *shade / exposure* (wooded · partly shaded · exposed)
+  - *famous for*
+  - *anything to correct*
 - **Measured, never typed:** ascent · average gradient · steepest sustained gradient, from the elevation model, recomputed whenever the line changes; the gradient profile is drawn from the same source
 - **OSM / Wikidata:** the name and its alternates, the top point and its elevation
 - **Design:** difficulty category (HC / 1–4) · where it tops out · a segment reference · open season and snow gates · descent notes
 
 ## O. Stays, per place
-- **Form:** name · town · website · secure bike storage (locked room · garage or shed · on request · no) · drying / washing for kit? · booking link · pets? · meals or breakfast? · tools to borrow? · accessibility (step-free · handbike-friendly · wheelchair-accessible) · a note on what makes it good for cyclists
+- **Form:**
+  - *name*
+  - *town*
+  - *website*
+  - *secure bike storage* (locked room · garage or shed · on request · no)
+  - *drying / washing for kit?*
+  - *booking link*
+  - *pets?*
+  - *meals or breakfast?*
+  - *tools to borrow?*
+  - *accessibility* (step-free · handbike-friendly · wheelchair-accessible)
+  - *a note on what makes it good for cyclists*
 - **OSM / provider:** the type (`tourism=hotel` · `guest_house` · `hostel` · `camp_site` · `alpine_hut`); a scheme's own rows where it publishes openly
 - **Design:** price band · open season · minimum nights · a rating once the vote ships
 
 ## P. Scenic views, per POI
-- **Form:** name · type (viewpoint / high point · natural feature) · access for bikes (roadside · short walk · path only) · what can you see · best light (morning · golden hour · sunset · any) · bench? · official site · other pages about this place · a description
+- **Form:**
+  - *name*
+  - *type* (viewpoint / high point · natural feature)
+  - *access for bikes* (roadside · short walk · path only)
+  - *what can you see*
+  - *best light* (morning · golden hour · sunset · any)
+  - *bench?*
+  - *official site*
+  - *other pages about this place*
+  - *a description*
 - **OSM / media:** `tourism=viewpoint`; photos under CC BY-SA, a rider's own or from Wikimedia Commons with the licence checked
 - **Design:** photo spots as a kind of their own, with the best angle
 
 ## Q. History & culture, per POI
-- **Form:** name · type (heritage site · museum / culture · monument · religious site · architecture) · bike parking? · opening hours · entry fee? · cycling story · official site · other pages about this place · a description
+- **Form:**
+  - *name*
+  - *type* (heritage site · museum / culture · monument · religious site · architecture)
+  - *bike parking?*
+  - *opening hours*
+  - *entry fee?*
+  - *cycling story*
+  - *official site*
+  - *other pages about this place*
+  - *a description*
 - **OSM / Wikidata:** the place, its class and coordinates; Wikimedia Commons photos with the licence checked
 - **Design:** era · local stories as community text with a source · municipality facts and public-domain coats of arms · velodromes and famous finish lines as kinds of their own
 
 ## R. Recommended routes, per route
-- **Form:** ride name · the line (drawn or GPX) · difficulty (easy · moderate · challenging · hard · very hard) · best season (spring · summer · autumn · winter) · dominant surface · quietness (1–5) · scenic (1–5) · cycling-friendliness (1–5) · suitable bike types (road · gravel · MTB · e-bike · handbike · recumbent · trike · tandem) · gradient-limited? (no · ≤6% · ≤9%) · best direction · a note
+- **Form:**
+  - *ride name*
+  - *the line* (drawn or GPX)
+  - *difficulty* (easy · moderate · challenging · hard · very hard)
+  - *best season* (spring · summer · autumn · winter)
+  - *dominant surface*
+  - *quietness* (1–5)
+  - *scenic* (1–5)
+  - *cycling-friendliness* (1–5)
+  - *suitable bike types* (road · gravel · MTB · e-bike · handbike · recumbent · trike · tandem)
+  - *gradient-limited?* (no · ≤6% · ≤9%)
+  - *best direction*
+  - *a note*
 - **Measured or counted, never typed:** distance · climbing · elevation profile · who proposed it · *I rode this* count · state (unverified → verified) · a photo
 - **Design:** categories (cultural · architecture · scenic · quiet · …) · what lies along the line in riding order · the narrowest passage · turns per km · share on signed routes · traffic exposure per km · quiet stretches as Scout detects them. Road qualities live on the road under **A**; a route only sums them up
 
