@@ -24,8 +24,8 @@ viewpoints, and more. All of it is **community-contributed**, useful to **anyone
 
 Letters are stable identifiers, not an order: practical categories take A-M,
 experiential (votable) categories take N-Z, and the ride heatmap is a derived
-layer with no letter. Renumbered 2026-08-25; the letters are what `?type=`,
-the coverage tiles and the public API use.
+layer with no letter. The letters are what `?type=`, the coverage tiles and
+the public API use.
 
 ## A. Road surface & base map  *(the base)* — mostly [OSM]
 - Area / region / municipality boundaries [OSM]
@@ -46,16 +46,20 @@ the coverage tiles and the public API use.
   [tap][OSM]
 
 ## B. Water & food  *(ride-critical)*
-- Drinking water / refill points — fountains, taps, cemeteries, churches [tap][OSM]
-  - **Potability is verified, not assumed.** OSM `amenity=drinking_water` is frequently *not* confirmed potable, so a point is only shown as drinking water once cross-checked against the regional utility: **SWDE** ([swde.be](https://www.swde.be), distribution-zone open data on the [Géoportail de la Wallonie](https://geoportail.wallonie.be)) in Wallonia, **De Watergroep** ([drinkwatertappunten](https://www.dewatergroep.be/nl-be/drinkwater/extra-services/drinkwatertappunten)) in Flanders. Natural mineral springs (e.g. the Spa *pouhons*) are labelled as such — potable, but not utility tap water. eaupotable.info ([be-belgie](https://eaupotable.info/nl/be-belgie)) is an OSM-based public-fountain directory usable as a cross-reference.
-  - **Verification state drives the map symbol** (planned implementation; the demo only previews it with sample data):
+- Drinking water / refill points: fountains, taps, cemeteries, churches [tap][OSM]
+  - **Potability is stated, never assumed.** The map says what it knows about each water point and marks what it does not. The rule has two parts:
+    - **What the OpenStreetMap tags say** sets the baseline, in three states: `drinking_water=yes`, or `amenity=drinking_water` with nothing said against it, is a drinking tap; `drinking_water=no` is not for drinking; a water point carrying neither is unknown. The coverage tiles carry this tri-state per point (`pipeline/coverage/tiles.py`).
+    - **A public register of record** can vouch for a point where one exists. In the Netherlands the RIVM drinking-water register is imported as its own rows under letter B, named in the record panel and shown as *official register* until a rider confirms it on the spot. The registry of providers is described in [How data earns its place](data-priority.md).
+    - A rider's one-tap *drinkable?* answer on the drawer proposes a correction; a curator decides, and the symbol changes once it is accepted.
+  - **The symbol grammar is shipped.** The map's Key panel and [/map-key](https://cyclingcommons.org/map-key) are the reference:
 
     | State | Map symbol | Source of truth |
     |---|---|---|
-    | **Verified potable** | curated **icon** (💧 marker) | confirmed against the utility (SWDE / De Watergroep) or by a steward; mineral springs flagged as such |
-    | **Unverified** | small **dot** | raw OSM `drinking_water=*`, shown but labelled *"verify locally"* |
+    | **Drinking tap** | a blue drop | mapped as drinking water and nothing says otherwise; confirm on the spot |
+    | **Not for drinking** | a drop with a bar across it | tagged not drinkable, or a rider said so |
+    | **Tap, nothing said** | an unfilled drop | a water point nobody has said anything about; treat it as unknown |
 
-    A point starts as a dot (imported from OSM) and is **promoted to an icon** once a verification step (utility cross-check or steward confirmation) passes. Demotion/expiry follows the freshness rules. The demo fakes the verification, but the dot-vs-icon distinction is the real intended UX.
+    Every icon is drawn SVG (`ItemType::svgPath()` and the `KindIcons` registry), never an emoji, so it renders the same in every browser and can carry the badges. The shape says which store the record lives in: a small disc or drop is imported baseline data, a teardrop pin is a record this community keeps. A "?" badge at the top right means no rider has confirmed it yet. Natural mineral springs (the Spa *pouhons*, for one) are labelled as such: potable, but not utility tap water.
 - Public toilets — their **own** category, **C** (next); listed here too because a rider looking for water and a rider looking for a toilet are usually the same rider, and the map shows C right after this group [tap][OSM]
 - Cyclist-friendly cafés / coffee stops [tap][edit]
 - Resupply — shops, supermarkets, bakeries (+ opening hours) [tap][OSM]
@@ -68,9 +72,7 @@ the coverage tiles and the public API use.
 Its own letter rather than a line inside **B** because it answers a different
 question at a different moment, and folding it into "Water & food" made it
 unfindable - a rider looking for a toilet does not think of it as food. It sits
-at C, straight after Water & food, which is also where the map displays it
-(it was M until the 2026-08-25 renumbering, when L was still kept free for the
-derived heatmap; the heatmap has no letter now).
+at C, straight after Water & food, which is also where the map displays it.
 
 Sourced from OSM only. The obvious specialist directory for the Netherlands
 (HogeNood) is closed and partner-only, so nothing of theirs is copied.
@@ -78,8 +80,8 @@ Sourced from OSM only. The obvious specialist directory for the Netherlands
 ## D. Bike services
 - Bike shops (+ hours, brands serviced) [edit][OSM]
 - Public repair stations / pumps / tool stands [tap][OSM]
-- E-bike charging points [tap][OSM]
 - Emergency / mobile mechanics [edit]
+- E-bike charging points: design. The harvest takes three kinds from OpenStreetMap, bike shops, repair stations and pumps (`shop=bicycle`, `amenity=bicycle_repair_station`, `amenity=compressed_air`); no charging kind is harvested.
 
 ## E. Hazards & conditions  *(dynamic — needs freshness)*
 - Road-surface problems — potholes, broken surface, loose gravel [tap][safety]
@@ -130,22 +132,31 @@ Sourced from OSM only. The obvious specialist directory for the Netherlands
 - Municipality facts / public-domain coats of arms [edit]
 - Cycling-heritage sites — famous finish lines, velodromes, monuments [edit]
 
-## R. Quality rides — cyclist-experience attributes  *(ratings / suitability)*
-- Quietness / traffic level of a road [auto][tap]
-- Scenic rating [tap]
-- Overall cycling-friendliness [tap]
-- Suitability by bike type — road / gravel / MTB / e-bike [edit]
-- Accessibility — adapted-bike / handbike friendly, gradient-limited (Manifesto §X) [edit]
-- Best direction to ride a loop or climb [edit]
+## R. Recommended routes  *(rides riders vouch for)*
+- A route a rider proposes: a drawn or GPX-uploaded line, with its distance and climbing measured [edit]
+- Start point, loop or point-to-point, difficulty, the season it is best ridden in [edit]
+- *I rode this* confirmations from other riders, which are what verify a route [tap]
+- A photo of the ride [media]
+
+R is a route layer, not a per-road rating. What a road is like (quietness,
+smoothness, surface, lit or not, seasonal closure) is recorded on the road
+itself, under **A**. Best-of rankings of routes are derived from riders, never
+hand-picked; the vote mechanics are design, see
+[How data earns its place](data-priority.md).
 
 ## Ride heatmap — derived & aggregate  *(auto, anonymized — never per-rider)*
+What renders today: the map's heat layer draws from `heat_point`, which the
+catalog importer seeds from a committed demo file. Nothing is ingested from
+rider uploads; the engine below is design, and the list here is what it is
+meant to produce.
+
 - Road popularity / "is this actually used" heatmap (aggregate) [auto]
 - Rideability inference — e.g. is this gravel OK on a road bike (from aggregate use) [auto]
 - Under-explored areas (shows where the map is thin) [auto]
 - Coverage & freshness per area [auto]
 - **Seasonal route shift** — how the popular lines move spring → summer → autumn → winter [auto]
 
-### Optional engine: a seasonal ride-heatmap *(design — not yet built)*
+### Optional engine: a seasonal ride-heatmap *(design, not built)*
 Riders can upload their rides; the Commons keeps the **lines, never the riders**. The heatmap is the
 real engine behind road-popularity (and could suggest popular loops), and stays manifesto-safe **only if
 anonymization happens at ingest, not in storage**:
@@ -160,8 +171,8 @@ anonymization happens at ingest, not in storage**:
   start from those before any first-party uploads exist.
 
 Result: a purely aggregate layer, publishable openly (ODbL), holding **the map, not the rider**
-(Manifesto §IV). This is the *measured* side of routes; the rider-verified side is **R** — rode-it
-counts plus seasonal recommend-votes cast on the map drawer.
+(Manifesto §IV). This is the *measured* side of routes; the rider-verified side is **R**: *I rode
+this* confirmations on the map drawer (seasonal recommend-votes are design).
 
 ---
 
@@ -177,23 +188,31 @@ These are never collected (Manifesto §IV) or are external. The Commons holds th
 - The Commons's defensible curation: **climbs (N), bike-friendly stays riders vouch for (O), quality rides / cyclist-experience attributes (R), and live conditions reported by riders (E)** — the layers OSM is thin on and that closed, single-app data leaves out.
 
 ## Freshness model (for the [safety] / dynamic layers)
-A "road closed" or "pothole" report that never expires becomes a lie. Perishable items need a lifecycle, or the map rots:
-- **Timestamp + reporter count** on every report — when, and how many independent riders.
+A "road closed" or "pothole" report that never expires becomes a lie. Perishable items need a lifecycle, or the map rots.
+
+What runs today is narrower than the model below, and the difference is
+marked per item. A hazard reported as *Road closed* carries the reporter's own
+answer to "closed for how long?" and stops being shown once that window
+passes, unless somebody confirms it is still shut (`app:catalog:expire-closures`).
+Nothing else auto-expires: a hazard with no stated end date needs a human to
+clear it. The one-tap confirm is built for every place.
+
+- **Timestamp + reporter count** on every report: when, and how many independent riders.
 - **Confidence from confirmations.** 1 report = *unconfirmed*; several independent ones = *confirmed*. Show the state, don't hide it.
-- **Decay / expiry by type.** Each hazard has a half-life: a pothole persists for months, "closed for an event" expires in days, "loose gravel" fades over weeks. After expiry it's hidden (not deleted) pending re-confirmation.
-- **Auto-clear from aggregate use.** If riders keep passing through a spot flagged "closed," that's evidence it reopened — [auto] data downgrades a stale [tap] report.
-- **One-tap confirm / dispute.** A rider passing a flagged spot gets a light "still there? yes / gone" prompt that feeds confidence. **Built for every place, not only hazards** (2026-08): the drawer asks the letter's own question — *drinkable?* for water, *still here?* for the rest — and offers the three ways a place stops being true beside it: **out of order**, **closed**, **not there anymore**. Out of order is offered only where something can break; a viewpoint cannot. Each writes the same field the edit form offers, so a one-tap answer and a typed correction are one record rather than two, and each goes through the ordinary review queue: a tap proposes, a curator decides. A place confirmed gone leaves the map and does **not** reappear from the OpenStreetMap layer underneath it.
+- **Decay / expiry by type** (design). Each hazard has a half-life: a pothole persists for months, "closed for an event" expires in days, "loose gravel" fades over weeks. After expiry it's hidden (not deleted) pending re-confirmation. Only the closure window exists today.
+- **Auto-clear from aggregate use** (design). If riders keep passing through a spot flagged "closed," that's evidence it reopened: [auto] data downgrades a stale [tap] report.
+- **One-tap confirm / dispute.** A rider passing a flagged spot gets a light "still there? yes / gone" prompt that feeds confidence. **Built for every place, not only hazards:** the drawer asks the letter's own question, *drinkable?* for water, *still here?* for the rest, and offers the three ways a place stops being true beside it: **out of order**, **closed**, **not there anymore**. Out of order is offered only where something can break; a viewpoint cannot. Each writes the same field the edit form offers, so a one-tap answer and a typed correction are one record rather than two, and each goes through the ordinary review queue: a tap proposes, a curator decides. A place confirmed gone leaves the map and does **not** reappear from the OpenStreetMap layer underneath it.
 - **Provenance kept, identity not.** Store *that* N riders confirmed and *when* — never *who* — in the public Commons.
 
 This turns perishable reports into a self-healing layer instead of an ever-growing pile of stale warnings.
 
 ## Access: the map is one view; the data is queryable
-The Commons is **open data, not a walled map.** Every layer is reachable three ways:
-- **Map** — render with toggleable layers (the /commons demo).
-- **Query API** — filter by **type + area** (country / region / bounding box), like OSM Overpass: "all drinking-water points in France," "climbs in Wallonia," "hazards in this bbox."
-- **Bulk export** — per-country / per-region open dumps for anyone to download and build on (ODbL).
+The Commons is **open data, not a walled map.** Every layer is reachable two ways today, with a third designed:
+- **Map**: [/map](https://cyclingcommons.org/map), with toggleable layers.
+- **Query API**: `/v1/search`, filtered by **type + bounding box**, like OSM Overpass: "all drinking-water points in this bbox," "climbs in this bbox." A bbox is required and capped in size. Country and region as API filters are design, not built; today "per country" is a map scope and a region page.
+- **Bulk export** (design, not built): per-country / per-region open dumps for anyone to download and build on (ODbL).
 
-So "per country" is a first-class query, not a map-only view — that's what makes it a commons rather than a feature.
+The intent is that "per country" is a first-class query, not a map-only view: that is what makes it a commons rather than a feature.
 
 ---
 
@@ -213,15 +232,15 @@ Road type (road / cycleway / gravel path / singletrack) [OSM] · surface materia
 **Water:** source type (fountain · public tap · cemetery tap · church · spring) · potable? · seasonal (frost
 shut-off) · reliability. **Café:** cyclist-friendly? · open days & hours [OSM] · weekly closing day · indoor bike
 parking · outdoor seating · card/cash · coffee-stop reputation. **Shop/bakery:** type · hours · open Sunday? · what
-they stock. (Toilets moved to their own category, **C** - see next.)
+they stock. (Toilets are their own category, **C**, next.)
 
 ## C. Public toilets — per point
-Public · free or paid · accessible · opening hours [OSM]. (These four used to be the "Toilet:" clause of **B**'s
-field list; they became their own category so the map could show them as their own thing.)
+Public · free or paid · accessible · opening hours [OSM]. Their own category, so the map can show them as
+their own thing.
 
 ## D. Bike services — per point
 **Shop:** brands serviced · repairs? · rental? · e-bike service? · hours [OSM]. **Repair station:** pump + valve
-type (presta/schrader) · tools available · chain tool · work stand · 24/7? [OSM]. **Charging:** connector ·
+type (presta/schrader) · tools available · chain tool · work stand · 24/7? [OSM]. **Charging** (design): connector ·
 free/paid · location. **Vending:** tubes / CO2 / spares.
 
 ## E. Hazards & conditions — per report  *(all [safety])*
@@ -259,10 +278,10 @@ booking link / contact · open season · minimum nights · cyclist-rated.
 **Landmark:** type · era · one-line story. **Local story:** short text + source. **Municipality:** public-domain
 coat of arms · a fact or two. **Cycling heritage:** Tour/Classics history · velodrome · memorial · famous finish line.
 
-## R. Quality rides — cyclist-experience attributes — per road/route  *(ratings, 1–5 unless noted)*
-Quietness · scenery · surface quality · **bike-type suitability** (road · gravel · MTB · e-bike) · **accessibility**
-(adapted-bike / handbike friendly, gradient cap) · best direction to ride · effort/difficulty · family/kid-safe ·
-seasonal best.
+## R. Recommended routes: per route
+Name · the line (drawn or GPX) · start · loop or point-to-point · distance · climbing · elevation profile ·
+difficulty · best season · a photo · who proposed it · *I rode this* count · state (unverified → verified).
+Road qualities (quietness, smoothness, surface) are per road under **A**, never per route.
 
 ## Derived & aggregate — computed, not entered  *(all [auto])*
 Road popularity score · rideability inference (is this gravel OK on a road bike?) · under-explored areas · per-area

@@ -34,7 +34,7 @@ rider sees it **once**, as the curated record.
 ```mermaid
 flowchart TD
     OSM["OpenStreetMap<br/>the base layer · ODbL<br/>the fountain exists, here"]
-    PROV["Open data providers<br/>e.g. Géoportail Wallonie PIVOT<br/>licensed, attributed"]
+    PROV["Open data providers<br/>e.g. Géoportail Wallonie PIVOT, RIVM<br/>licensed, attributed"]
     RIDER["Riders<br/>new places, edits, photos"]
 
     OSM --> POOL
@@ -71,7 +71,7 @@ values, and they are what a drawer's citation line is built from:
 | `manual` | Hand-authored by us. A seeded hero pin, a demo route. The harvest never touches it | rider |
 | `user` | A rider added or edited it through the app | rider |
 | `scout` | A rider's ride trace suggested it. How it arrived, not proof: the server never saw the ride file | rider |
-| `authority` | A publisher of record for the thing mapped, named in the provider registry. Today the only one is Géoportail Wallonie PIVOT, official accommodation, CC-BY | Tourisme Wallonie |
+| `authority` | A publisher of record for the thing mapped, named in the provider registry. Two at the time of writing: Géoportail Wallonie PIVOT (Tourisme Wallonie, official accommodation in Belgium, letter O, CC BY 4.0) and the RIVM drinking-water register (the Netherlands, letter B, public domain) | the publisher: Tourisme Wallonie, RIVM |
 | `wikidata` | Anchored to a Wikidata entry | Wikidata |
 | `osm` | Straight from the harvest. Most of the map | OpenStreetMap |
 | `auto` | Our own pipeline computed it, for example a surface stretch. Deleted and rebuilt wholesale, never edited in place | derived |
@@ -91,10 +91,11 @@ does not remove the OpenStreetMap credit: it adds ours beside it.
 !!! warning "A photograph is not a source"
     These seven say where a *place record* came from. A photo of that place is
     not a place. A Wikimedia Commons image reached through OpenStreetMap or
-    Wikidata is cached media, carrying its own credit and its own licence per
-    file, shown beside the record it illustrates. It is never a rider
-    contribution and never enters a moderation queue, because there is no
-    contributor and nothing was submitted.
+    Wikidata is shown beside the record it illustrates, carrying its own credit
+    and its own licence per file: the drawer links it straight from Commons,
+    and the media pipeline keeps a licence-checked, scanned copy of it in our
+    own store. It is never a rider contribution and never enters a moderation
+    queue, because there is no contributor and nothing was submitted.
 
 ---
 
