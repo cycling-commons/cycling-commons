@@ -78,8 +78,12 @@ question at a different moment, and folding it into "Water & food" made it
 unfindable - a rider looking for a toilet does not think of it as food. It sits
 at C, straight after Water & food, which is also where the map displays it.
 
-Sourced from OSM only. The obvious specialist directory for the Netherlands
-(HogeNood) is closed and partner-only, so nothing of theirs is copied.
+Sourced from OSM today. Municipal toilet datasets that publish openly, and
+there are dozens, can enter as **[provider]** rows the way the RIVM taps do,
+one adapter per city rather than a decision per city *(not built)*. HogeNood,
+the Dutch specialist directory, is closed and partner-only, so it is a link out
+and no copy until it agrees; the British toilet map has no clear licence, so it
+is asked first.
 
 ## D. Bike services
 - Bike shops (+ hours, brands serviced) [tap][edit][OSM]
