@@ -4579,6 +4579,7 @@ roadmap:
   item_route_export: '<b>Eine Route mitnehmen.</b> Export auf dein Gerät oder in deinen Planer, und ein dauerhafter Link auf einen Kartenausschnitt.'
   item_contraflow: '<b>Einbahnstraßen, die Räder in Gegenrichtung befahren dürfen.</b> In belgischen und niederländischen Städten ist das üblich, und OpenStreetMap hält es fest. Die Karte sollte es zeigen, und eine Route sollte dich nicht um eine Straße herumführen, die du hinauffahren darfst.'
   item_region_portrait: '<b>Ein Porträt jeder Region.</b> Die Regionsseite zählt, was da ist. Sie sollte sagen, wie das Radfahren dort ist: wie hügelig, wie viel asphaltiert, die großen Anstiege, das beschilderte Netz, Wasser und Toiletten pro hundert Kilometer, die Routen, die Radfahrer empfehlen, und wie frisch die Daten sind.'
+  item_reviews: '<b>Deine eigenen Worte zu jedem Ort.</b> Eine kurze Notiz unter deinem Namen zu einem Brunnen, einem Anstieg, einer Unterkunft oder einer Route, neben den Fakten: wie es war, als du dort warst. Mehrere Radfahrer, mehrere Notizen. Keine Bewertung, und kein Teil des offenen Datensatzes.'
   item_roadmap_votes: '<b>Bei dieser Liste mitreden.</b> Abstimmen, was dir wichtig ist, einem Punkt folgen, und selbst einen vorschlagen.'
   foot_shipped_pre: 'Was schon draußen ist, steht im'
   foot_shipped_link: 'Änderungsprotokoll'

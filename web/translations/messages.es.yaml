@@ -4607,6 +4607,7 @@ roadmap:
   item_route_export: '<b>Llevarte una ruta.</b> Exportar a tu dispositivo o a tu planificador, y un enlace permanente a una vista del mapa.'
   item_contraflow: '<b>Calles de sentido único que una bici puede recorrer a contramano.</b> Es habitual en las ciudades belgas y neerlandesas y OpenStreetMap lo registra. El mapa debería mostrarlo, y una ruta no debería hacerte rodear una calle por la que tienes permiso para subir.'
   item_region_portrait: '<b>Un retrato de cada región.</b> La página de una región cuenta lo que hay. Debería decir cómo se rueda allí: cuánto desnivel, cuánto asfalto, los grandes puertos, la red señalizada, agua y aseos por cada cien kilómetros, las rutas que recomiendan los ciclistas y lo frescos que son los datos.'
+  item_reviews: '<b>Tus propias palabras sobre cualquier lugar.</b> Una nota breve con tu nombre sobre una fuente, un puerto, un alojamiento o una ruta, junto a los datos: cómo era cuando estuviste. Varios ciclistas, varias notas. Ni una puntuación ni parte del conjunto de datos abierto.'
   item_roadmap_votes: '<b>Opinar sobre esta lista.</b> Votar lo que te importa, seguir un punto y proponer el tuyo.'
   foot_shipped_pre: 'Lo que ya ha salido está en el'
   foot_shipped_link: 'registro de cambios'

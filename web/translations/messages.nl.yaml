@@ -4576,6 +4576,7 @@ roadmap:
   item_route_export: '<b>Een route meenemen.</b> Exporteren naar je toestel of je planner, en een permanente link naar een kaartweergave.'
   item_contraflow: '<b>Eenrichtingsstraten waar je tegen het verkeer in mag fietsen.</b> In Belgische en Nederlandse steden is dat gewoon, en OpenStreetMap legt het vast. De kaart hoort het te tonen, en een route hoort je niet om een straat heen te sturen die je gewoon in mag rijden.'
   item_region_portrait: '<b>Een portret van elke regio.</b> De regiopagina telt wat er is. Ze zou moeten zeggen hoe het fietsen er is: hoe heuvelachtig, hoeveel verhard, de grote klimmen, het bewegwijzerde netwerk, water en toiletten per honderd kilometer, de routes die fietsers aanraden, en hoe vers de gegevens zijn.'
+  item_reviews: '<b>Je eigen woorden bij elke plek.</b> Een korte notitie onder je naam bij een kraan, een klim, een overnachting of een route, naast de feiten: hoe het was toen jij er was. Meerdere fietsers, meerdere notities. Geen cijfer, en geen deel van de open dataset.'
   item_roadmap_votes: '<b>Meepraten over deze lijst.</b> Stemmen op wat jou uitmaakt, een punt volgen, en zelf iets voorstellen.'
   foot_shipped_pre: 'Wat al uit is staat in het'
   foot_shipped_link: 'wijzigingslogboek'

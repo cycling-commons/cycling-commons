@@ -4576,6 +4576,7 @@ roadmap:
   item_route_export: '<b>Emporter un itinéraire.</b> Export vers votre appareil ou votre planificateur, et un lien permanent vers une vue de la carte.'
   item_contraflow: '<b>Les sens uniques ouverts aux vélos à contresens.</b> Le contresens cyclable est courant dans les villes belges et néerlandaises et OpenStreetMap l''enregistre. La carte devrait le montrer, et un itinéraire ne devrait pas vous faire contourner une rue que vous avez le droit de remonter.'
   item_region_portrait: '<b>Un portrait de chaque région.</b> La page d''une région compte ce qui s''y trouve. Elle devrait dire à quoi ressemble le vélo là-bas : le relief, la part de routes revêtues, les grands cols, le réseau balisé, l''eau et les toilettes aux cent kilomètres, les itinéraires que les cyclistes recommandent, et la fraîcheur des données.'
+  item_reviews: '<b>Vos propres mots sur n''importe quel lieu.</b> Une courte note sous votre nom sur une fontaine, un col, un hébergement ou un itinéraire, à côté des faits : ce que c''était quand vous y étiez. Plusieurs cyclistes, plusieurs notes. Ni une note chiffrée, ni une partie du jeu de données ouvert.'
   item_roadmap_votes: '<b>Avoir voix au chapitre.</b> Voter pour ce qui compte pour vous, suivre un élément, et en proposer un.'
   foot_shipped_pre: 'Ce qui est déjà sorti est dans le'
   foot_shipped_link: 'journal des nouveautés'
