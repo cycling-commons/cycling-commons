@@ -199,12 +199,6 @@ this* confirmations on the map drawer (seasonal recommend-votes are design).
 
 ---
 
-## The boundary — what is NOT in the Commons
-- Personal data: a person's identity, history, fitness metrics, and movements.
-- Anything that re-identifies an individual.
-- Closed partners' proprietary data (their exact host addresses) — signposted, never copied.
-These are never collected (Manifesto §I) or are external. The Commons holds the *world*, not the people in it.
-
 ## Notes for product / schema
 - Most of A–G, N and O, and parts of P, have **OSM tags already** — design the Commons to *interoperate with* OSM (import + contribute back under ODbL), so you inherit a huge head start and avoid duplicating the base map.
 - **[safety]** items need a freshness model: timestamp, confirmations, and decay/expiry, or the map rots.
