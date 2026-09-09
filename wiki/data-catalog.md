@@ -14,8 +14,8 @@ viewpoints, and more. All of it is **community-contributed**, useful to **anyone
 
 ## Contribution methods (legend)
 - **[auto]** — derived automatically from aggregate, anonymous signals (a road exists, is rideable, is popular)
-- **[tap]** — one-tap rider report in the moment ("water here", "road closed")
-- **[edit]** — structured attribute edit (climb metrics, POI details)
+- **[tap]** — a one-tap answer on a pin that is already on the map, from its drawer: *still here?*, *drinkable?* on water, *I rode this* on a route. A tap never adds a point
+- **[edit]** — entered or changed through the one improve form per category: a pin placed on the map, then that category's fields. Every new point arrives this way, and a curator approves it before it shows
 - **[safety]** — dynamic/perishable; needs freshness, expiry, and confirm/decay
 - **[OSM]** — overlaps OpenStreetMap; sync rather than duplicate
 - **[provider]** — imported from an open data provider of record, named in the provider registry and attributed on every row it gave (source `authority`). For example: the RIVM drinking-water register in the Netherlands, Tourisme Wallonie PIVOT for stays in Belgium
@@ -35,8 +35,8 @@ on this page, where they name a section.
 - Area / region / municipality boundaries [OSM]
 - Road & path geometry and names [auto][OSM]
 - Cycleways, bike lanes, segregated paths, gravel/MTB trails [OSM]
-- Surface type — asphalt / concrete / paving / cobbles / gravel / dirt / sand [edit][OSM]
-- Surface smoothness / quality [tap][OSM]
+- Surface type — asphalt / concrete / paving / cobbles / gravel / dirt / sand [tap][edit][OSM]
+- Surface smoothness / quality [tap][edit][OSM]
 - Path width, barriers, gates, bollards [OSM]
 - Lit / unlit at night [OSM]
 - One-way / cycling-permitted-against-traffic [OSM]
@@ -47,10 +47,10 @@ on this page, where they name a section.
   which stretches of a signed route have a recorded surface, its quality where
   someone has said, and a one-tap way to fill the gaps. Surfaces on this map
   are our own recorded answers, not a re-rendering of somebody else's style
-  [tap][OSM]
+  [tap][edit][OSM]
 
 ## B. Water & food  *(ride-critical)*
-- Drinking water / refill points: fountains, taps, cemeteries, churches [tap][OSM][provider]
+- Drinking water / refill points: fountains, taps, cemeteries, churches [tap][edit][OSM][provider]
   - **Potability is stated, never assumed.** The map says what it knows about each water point and marks what it does not. The rule has two parts:
     - **What the OpenStreetMap tags say** sets the baseline, in three states: `drinking_water=yes`, or `amenity=drinking_water` with nothing said against it, is a drinking tap; `drinking_water=no` is not for drinking; a water point carrying neither is unknown. The coverage tiles carry this tri-state per point (`pipeline/coverage/tiles.py`).
     - **A public register of record** can vouch for a point where one exists. In the Netherlands the RIVM drinking-water register is imported as its own rows under letter B, named in the record panel and shown as *official register* until a rider confirms it on the spot. The registry of providers is described in [How data earns its place](data-priority.md).
@@ -66,12 +66,12 @@ on this page, where they name a section.
     Every icon is drawn SVG (`ItemType::svgPath()` and the `KindIcons` registry), never an emoji, so it renders the same in every browser and can carry the badges. The shape says which store the record lives in: a small disc or drop is imported baseline data, a teardrop pin is a record this community keeps. A "?" badge at the top right means no rider has confirmed it yet. Natural mineral springs (the Spa *pouhons*, for one) are labelled as such: potable, but not utility tap water.
 - Public toilets — their **own** category, **C** (next); listed here too because a rider looking for water and a rider looking for a toilet are usually the same rider, and the map shows C right after this group [tap][OSM]
 - Cyclist-friendly cafés / coffee stops [tap][edit]
-- Resupply — shops, supermarkets, bakeries (+ opening hours) [tap][OSM]
-- Notable on-route food stops [edit]
+- Resupply — shops, supermarkets, bakeries (+ opening hours) [tap][edit][OSM]
+- Notable on-route food stops [tap][edit]
 
 ## C. Public toilets  *(the stop nobody maps well)*
-- Public toilets — municipal blocks, station and park facilities, serviced stops [tap][OSM]
-- Free or paid · accessible · opening hours, where they are known [tap][OSM]
+- Public toilets — municipal blocks, station and park facilities, serviced stops [tap][edit][OSM]
+- Free or paid · accessible · opening hours, where they are known [edit][OSM]
 
 Its own letter rather than a line inside **B** because it answers a different
 question at a different moment, and folding it into "Water & food" made it
@@ -82,36 +82,36 @@ Sourced from OSM only. The obvious specialist directory for the Netherlands
 (HogeNood) is closed and partner-only, so nothing of theirs is copied.
 
 ## D. Bike services
-- Bike shops (+ hours, brands serviced) [edit][OSM]
-- Public repair stations / pumps / tool stands [tap][OSM]
-- Emergency / mobile mechanics [edit]
+- Bike shops (+ hours, brands serviced) [tap][edit][OSM]
+- Public repair stations / pumps / tool stands [tap][edit][OSM]
+- Emergency / mobile mechanics — a service that comes to you, not a place on a map; whether it belongs here at all is undecided *(not built)*
 - E-bike charging points: design. The harvest takes three kinds from OpenStreetMap, bike shops, repair stations and pumps (`shop=bicycle`, `amenity=bicycle_repair_station`, `amenity=compressed_air`); no charging kind is harvested.
 
 ## E. Hazards & conditions  *(dynamic — needs freshness)*
-- Road-surface problems — potholes, broken surface, loose gravel [tap][safety]
-- Dangerous junctions, blind corners, bad sightlines [tap][safety]
-- Tram tracks, level crossings, cattle grids, slippery surfaces [tap][safety][OSM]
-- High-traffic / unsafe roads to avoid for cyclists [tap][safety]
-- Private / restricted / no-entry roads — *don't trespass* (Manifesto §IX) [tap][OSM]
-- Seasonal closures — cols under snow, flood-prone, seasonal gates [tap][safety][OSM]
-- Construction / temporary closures / diversions [tap][safety]
-- Aggressive-dog warnings [tap][safety]
-- Notorious crosswind / exposed sections [tap]
+- Road-surface problems — potholes, broken surface, loose gravel [tap][edit][safety]
+- Dangerous junctions, blind corners, bad sightlines [tap][edit][safety]
+- Tram tracks, level crossings, cattle grids, slippery surfaces [tap][edit][safety][OSM]
+- High-traffic / unsafe roads to avoid for cyclists [tap][edit][safety]
+- Private / restricted / no-entry roads — *don't trespass* (Manifesto §IX) [tap][edit][OSM]
+- Seasonal closures — cols under snow, flood-prone, seasonal gates [tap][edit][safety][OSM]
+- Construction / temporary closures / diversions [tap][edit][safety]
+- Aggressive-dog warnings [tap][edit][safety]
+- Notorious crosswind / exposed sections [tap][edit]
 
 ## F. Getting there & multimodal
-- Train stations with bike access; bikes-on-train rules [edit][OSM]
-- Ferries cyclists can use (+ bikes-allowed, rough schedule) [edit][OSM]
-- Tunnels & bridges a cyclist may use — or must avoid [edit][OSM]
+- Train stations with bike access; bikes-on-train rules [tap][edit][OSM]
+- Ferries cyclists can use (+ bikes-allowed, rough schedule) [tap][edit][OSM]
+- Tunnels & bridges a cyclist may use — or must avoid [tap][edit][OSM]
 - Bike-share / rental stations [OSM]
-- Park-and-ride / trailheads / good ride-start parking [tap][OSM]
+- Park-and-ride / trailheads / good ride-start parking [tap][edit][OSM]
 
 ## G. Shelter & emergency
-- Rain shelters / covered spots / bus stops to wait out weather [tap][OSM]
+- Rain shelters / covered spots / bus stops to wait out weather [tap][edit][OSM]
 - Hospitals, pharmacies, first aid [OSM]
 - Mountain refuges / huts / emergency phones [OSM]
 
 ## N. Climbs, descents & terrain  *(the layer closed databases lock down)*
-- Climbs / cols / bergs: start & top points, length, elevation gain [auto][edit]
+- Climbs / cols / bergs: start & top points, length, elevation gain [auto][tap][edit]
 - Average gradient, max gradient, full gradient profile [auto]
 - Climb surface & whether it's paved/gravel [edit]
 - Difficulty category (HC/1–4) [auto]
@@ -122,19 +122,19 @@ Sourced from OSM only. The obvious specialist directory for the Netherlands
 ## O. Where to sleep
 - Bike-friendly accommodation riders have actually used — B&B, hotel, hostel, campsite [tap][edit][OSM][provider]
 - Secure bike storage at a stay [edit]
-- Bivouac / shelter / wild-camp spots (where legal) [tap]
+- Bivouac / shelter / wild-camp spots (where legal) [tap][edit]
 - *Signpost layer (links out, not Commons): cyclist-accommodation & hospitality schemes*
 
 ## P. Scenic views  *(the photo-stop layer)*
-- Viewpoints / panoramas [tap][OSM][media]
-- Photo spots — where the shot is [tap][media]
+- Viewpoints / panoramas [tap][edit][OSM][media]
+- Photo spots — where the shot is [tap][edit][media]
 - Best light / time of day [edit]
 
 ## Q. History & culture  *(the story layer — stories about the region or its cities)*
-- Landmarks & points of interest to ride past [edit][OSM]
+- Landmarks & points of interest to ride past [tap][edit][OSM]
 - Local stories & history (community text) [edit]
 - Municipality facts / public-domain coats of arms [edit]
-- Cycling-heritage sites — famous finish lines, velodromes, monuments [edit]
+- Cycling-heritage sites — famous finish lines, velodromes, monuments [tap][edit]
 
 ## R. Recommended routes  *(rides riders vouch for)*
 - A route a rider proposes: a drawn or GPX-uploaded line, with its distance and climbing measured [edit]
