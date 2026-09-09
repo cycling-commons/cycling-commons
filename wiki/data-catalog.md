@@ -11,7 +11,7 @@ viewpoints, and more. All of it is **community-contributed**, useful to **anyone
 - **Non-personal only.** No identity, no tracking, nothing personal. The Commons is the map, not the rider.
 - **Every body rides (Manifesto §II).** The facts an adapted bike, a handbike, a cargo bike or a rider who needs a calm, legible road depends on are data, not an afterthought: the clearance width of a barrier, the traffic a road carries, how many decisions a route asks per kilometre, whether it follows signed routes. They are collected under **A** and derived under **R**.
 - **Media is a first-class, consent-gated contribution.** Photos and video join the Commons under **CC BY-SA 4.0** with provenance — the contributor explicitly confirms they own it and *donate* it (first-time consent), or links a photo from a recognised source whose licence is validated. Never scraped. Always a real capture: nothing generated or composed by AI or any other artificial means, and nothing added to or removed from the scene, with one exclusion: faces and number plates are blurred before upload. Light editing is fine, with AI tools or without: colour toning, cropping, sharpening, noise removal.
-- **Closed providers are signposted, not absorbed.** Bike-friendly-stay *schemes* (national cyclist-accommodation networks) are a referral layer that links out — not part of the open Commons. Only data riders contribute (or that's already open) goes in the Commons.
+- **Providers are partners, on their licence.** A scheme or register that publishes under an open licence enters as its own rows, cited as theirs, the way the RIVM drinking-water register does (**[provider]**). One that is closed is signposted, a link out and no copy, until it agrees. What riders add on top of a provider's row is offered back to the provider where they can take it.
 
 ## Contribution methods (legend)
 - **[auto]** — derived automatically from aggregate, anonymous signals (a road exists, is rideable, is popular)
@@ -128,7 +128,7 @@ short (owner 2026-09-09).
 - Bike-friendly accommodation riders have actually used — B&B, hotel, hostel, campsite [tap][edit][OSM][provider]
 - Secure bike storage at a stay [edit]
 - Bivouac / shelter / wild-camp spots (where legal) [tap][edit]
-- *Signpost layer (links out, not Commons): cyclist-accommodation & hospitality schemes*
+- Cyclist-accommodation schemes, the same way as the RIVM taps (owner 2026-09-09): a scheme that publishes openly, Accueil Vélo in France under Licence Ouverte, enters as **[provider]** rows, each cited as the scheme's and updated by the harvest; a closed scheme, Bett+Bike in Germany or Vrienden op de Fiets in the Netherlands, is a signpost, a link out and no copy, until it agrees. On top of a provider's row riders add what the scheme does not hold: *still here?* and *I stayed here* confirmations, photos, a written note, and a rating once the vote ships. Where the scheme can take it, that is offered back to them under its licence, the same shape as the OSM give-back below *(open schemes: design, not built; closed schemes: ask first)* [provider][tap][edit][media]
 
 ## P. Scenic views  *(the photo-stop layer)*
 - Viewpoints / panoramas [tap][edit][OSM][media]
