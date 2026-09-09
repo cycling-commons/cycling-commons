@@ -505,6 +505,21 @@
    same colour on the page instead of looking loose at a smaller size. */
 .md-typeset { font-size: .75rem; line-height: 1.6; }
 
+/* Material ships admonitions and tables at .64rem, a second step down from the
+   body size above, so a note and a data table read as footnotes to the prose
+   they sit in. On these pages both carry the argument rather than an aside, so
+   they run at the body size. Placed BEFORE `.cc-matrix table`, which has equal
+   specificity and its own smaller setting to keep a wide grid on one screen. */
+.md-typeset .admonition,
+.md-typeset details,
+.md-typeset table:not([class]) { font-size: .75rem; line-height: 1.6; }
+
+/* Inline code carries `word-break: break-word` further down, which a wide
+   paragraph needs and a narrow table column abuses: it split `authority` over
+   two lines as "authorit / y". A code span is one token, so inside a table it
+   stays whole and the column takes the width that token needs. */
+.md-typeset table:not([class]) code { word-break: normal; white-space: nowrap; }
+
 /* Diagrams (javascripts/diagrams.js). The rendered SVG sits in a bordered,
    scrollable frame so a wide flowchart never widens the page body. Until the
    renderer runs — or if it cannot, offline — the source stays visible as a

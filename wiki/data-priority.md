@@ -2,7 +2,7 @@
 
 # How data earns its place
 
-Everything on the map has a source, a level of trust, and — for some things — a
+Everything on the map has a source, a level of trust, and, for some things, a
 ranking. Those are **three separate questions**, and the single most common
 misunderstanding is treating them as one ladder.
 
@@ -19,12 +19,12 @@ flowchart LR
 ```
 
 If you remember one thing: **provenance decides which row you see, trust decides
-whether you see it at all, ranking decides what order the good ones come in —
-and ranking only exists for subjective things.**
+whether you see it at all, ranking decides what order the good ones come in.
+Ranking only exists for subjective things.**
 
 ---
 
-## 1 · Provenance — which record wins
+## 1 · Provenance: which record wins
 
 We do **not** copy OpenStreetMap and edit our copy. We *reference* it, and our
 own additions sit alongside. When the same real-world object exists in both, the
@@ -34,7 +34,7 @@ rider sees it **once**, as the curated record.
 ```mermaid
 flowchart TD
     OSM["OpenStreetMap<br/>the base layer · ODbL<br/>the fountain exists, here"]
-    PROV["Open data providers<br/>e.g. Géoportail Wallonie PIVOT, RIVM<br/>licensed, attributed"]
+    PROV["Open data providers<br/>e.g. the RIVM drinking-water register<br/>licensed, attributed"]
     RIDER["Riders<br/>new places, edits, photos"]
 
     OSM --> POOL
@@ -45,12 +45,25 @@ flowchart TD
     POOL --> DEC
 
     DEC{"Do we hold our own<br/>curated record for<br/>this same object?"}
-    DEC -->|yes| CUR["Ours is shown<br/>full pin, our fields,<br/>OSM still credited"]
-    DEC -->|no| COM["The source record is shown<br/>lighter marker, tagged<br/>community"]
+    DEC -->|yes| CUR["Ours is shown<br/>our fields on top,<br/>still credited to its source"]
+    DEC -->|no| COM["The harvested record is shown<br/>as it arrived"]
+    COM -->|"a rider edits it,<br/>a curator approves"| CUR
 
     style CUR fill:#1C3A2A,color:#EFE6D4
     style POOL fill:#FF5A1F,color:#101E16
 ```
+
+!!! note "One record, one credit"
+    A row carries exactly one source, so the drawer's *Source* line names one
+    body, never a stack. A tap the RIVM published reads *RIVM*; a tap
+    OpenStreetMap holds reads *OpenStreetMap*; a tap a rider added reads as a
+    rider source. A rider who edits an OSM or RIVM row is named as the
+    contributor beside it and the row keeps its publisher's credit: approving
+    the edit does not make the row ours to sign.
+
+    What the *pin* says is a separate question. A dashed pin with a `?` means
+    nobody has confirmed the place yet, whatever published it, so both branches
+    above can wear one.
 
 !!! note "What this means for a curator"
     Approving a rider's edit to an OSM-sourced place does not change OSM and does
@@ -58,7 +71,7 @@ flowchart TD
     then on is what the map shows. The OSM attribution stays.
 
 **Upstream fixes belong upstream.** If the underlying geometry or the basic fact
-is wrong in OSM, the honest fix is an OSM edit — not a Commons override that
+is wrong in OSM, the honest fix is an OSM edit, not a Commons override that
 quietly diverges forever.
 
 ### The seven sources, by name
@@ -99,7 +112,7 @@ does not remove the OpenStreetMap credit: it adds ours beside it.
 
 ---
 
-## 2 · Trust — the funnel every record climbs
+## 2 · Trust: the funnel every record climbs
 
 Nothing arrives trusted. Everything climbs the same funnel, and **two kinds of
 thing get off at different stops**.
@@ -128,7 +141,7 @@ flowchart TD
 
 !!! warning "A water tap is never 'best-of'"
     Utility types **stop at Verified, permanently**. You do not rank a drinking
-    fountain — you want to know it is there. Ranking is the whole point for a
+    fountain: you want to know it is there. Ranking is the whole point for a
     climb: you want the best ten, not all two hundred.
 
 !!! note "What of this funnel is running today"
@@ -140,8 +153,8 @@ flowchart TD
       *I rode this* promotes a route from Unverified to Verified, the count
       excludes the proposer, and the threshold is an admin setting rather than
       a constant.
-    - **Everything else does not gate yet.** For a place — water, services,
-      views, climbs, stays — a rider confirmation lifts how the map *presents*
+    - **Everything else does not gate yet.** For a place (water, services,
+      views, climbs, stays) a rider confirmation lifts how the map *presents*
       it (a full pin rather than a help-confirm dot) from the **first**
       independent confirmation, and the record's state is changed only by a
       curator. The tiered X below, and the modifiers under it, are the design
@@ -153,12 +166,12 @@ flowchart TD
     - **Anything you can stand in front of can be confirmed.** The old rule
       asked whether a place could *vanish*, which excluded castles and
       mountains. The right question is whether a rider was there and this is
-      right — its existence, its position, its name — and a climb can be wrong
+      right about its existence, its position and its name. A climb can be wrong
       about all three. An invented viewpoint with a generated photo is exactly
       what the next rider at that spot disproves.
     - **Decay is built for closures, and only for closures.** A hazard reported
       as *Road closed* carries the reporter's own answer to "closed for how
-      long?" — today, days, weeks, months — and retires itself once that window
+      long?", today, days, weeks or months, and retires itself once that window
       passes, unless somebody confirms it is still shut, which restarts the
       clock. Retired means it stops being shown, not deleted: the closure was
       true when it was reported, and keeping it is what makes a repeat closure
@@ -175,10 +188,10 @@ tiers, plus modifiers.
 
 | Tier | Types | Base X | Why |
 |---|---|---|---|
-| **Objective utility** | water *exists*, bike services, getting there | ~2 | existence is binary — cheap to confirm |
+| **Objective utility** | water *exists*, bike services, getting there | ~2 | existence is binary, cheap to confirm |
 | **Experiential** | climbs, stays, views, history | ~2–3 | verification only confirms it *exists*; **voting** does the quality filtering, so no punishing bar |
 | **Routes** | quality rides | ~3 × *"I rode this"* | the confirmation asserts *I rode it*, not *it exists* |
-| **Safety / time-sensitive** | hazards, shelter, the water *potable* flag | ~1 to publish | publish fast, then **decay** — auto-stale after N days unless re-confirmed |
+| **Safety / time-sensitive** | hazards, shelter, the water *potable* flag | ~1 to publish | publish fast, then **decay**, auto-stale after N days unless re-confirmed |
 
 **Modifiers** adjust the base (never below 1):
 
@@ -234,18 +247,18 @@ and they read the lifecycle above from the top down.
 <!-- CODE-ILLUSTRATIVE mermaid diagram source, rendered by javascripts/diagrams.js -->
 ```mermaid
 flowchart LR
-    subgraph EV["Everything — the on-the-road map"]
+    subgraph EV["Everything · the on-the-road map"]
         E1["verified pins"]
         E2["unverified “help confirm” dots"]
         E3["full utility coverage"]
         E4["all experiential places"]
     end
-    subgraph CO["Confirmed — what somebody has vouched for"]
+    subgraph CO["Confirmed · what somebody has vouched for"]
         O1["every place a rider or curator confirmed"]
         O2["plus the best-of picks"]
         O3["no unchecked reference data"]
     end
-    subgraph CU["Best of — the trip-planning map"]
+    subgraph CU["Best of · the trip-planning map"]
         C1["best-of experiential only"]
         C2["full utility coverage<br/>(unchanged)"]
     end
@@ -255,8 +268,8 @@ flowchart LR
 
 **Confirmed is the middle rung**, and it contains Best of rather than sitting
 beside it: a curator verifying a place *is* somebody vouching for it. What it
-leaves out is the reference layer — the OpenStreetMap data we mirror but nobody
-here has checked — because a mode meaning *someone looked at this* cannot carry
+leaves out is the reference layer, the OpenStreetMap data we mirror but nobody
+here has checked, because a mode meaning *someone looked at this* cannot carry
 the one layer where nobody has.
 
 That also means Confirmed starts nearly empty in a new region, and stays that
@@ -265,12 +278,12 @@ imply a check that never happened; it is also the one screen that makes pressing
 *Confirm* worth something.
 
 **Search always reaches everything, in both modes.** "Too much" is solved by
-ranking and collapsing — curated first, community tagged — never by hiding.
+ranking and collapsing, curated first and community tagged, never by hiding.
 
 ### Which mode a region opens in
 
 A region opens in **Everything** by default. Best of is something a region
-*earns*, because a best-of map of an uncurated region is an empty map — and an
+*earns*, because a best-of map of an uncurated region is an empty map, and an
 empty map reads as "there's nothing here" even when the rail says 1,488 places.
 
 A moderator can flip a region to open in Best of once it has enough curated
@@ -288,7 +301,7 @@ flowchart TD
     style OK fill:#FF5A1F,color:#101E16
 ```
 
-The **blocks** are the data layers themselves — road surface, climbs, where to
+The **blocks** are the data layers themselves: road surface, climbs, where to
 sleep, scenic views, history & culture, best-of routes. Utility layers do not
 count towards readiness, because they render in *both* modes: a full map of
 water taps is no evidence that Best of has anything to show.
@@ -305,9 +318,9 @@ new value. The Regions desk shows every region's count per block and states
 exactly what is still missing.
 
 This is the general rule, not a special case for this one gate: the numbers the
-site runs on — this readiness gate, how many routes a region may have live at
+site runs on (this readiness gate, how many routes a region may have live at
 once, how many riders must confirm a route before it verifies itself, how long
-decided moderation items are kept — are all editorial decisions, and editorial
+decided moderation items are kept) are all editorial decisions, and editorial
 decisions belong to the people making them rather than to a release cycle.
 
 ---
@@ -338,7 +351,7 @@ flowchart TD
 !!! danger "Best-of is derived, never hand-picked"
     Moderation is a **spam/abuse/duplicate gate**, not a quality ranking. What
     rises to best-of is decided by riders' votes. The one deliberate exception is
-    **routes**, where supply *is* editorially reviewed in the Routes queue —
+    **routes**, where supply *is* editorially reviewed in the Routes queue, and
     riders then rank within that reviewed set.
 
 ---
