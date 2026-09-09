@@ -1,0 +1,43 @@
+web/src/Catalog/EvidenceRung.php
+  s_3b3b121fcbab96::t_3c59562f8111e4 39-40
+  s_3b3b121fcbab96::t_5fd6b5c06bfdfc 1-35,41-118
+  s_3b3b121fcbab96::t_af47463e1cb98c 36-38
+web/src/Catalog/CustodyTier.php
+  s_3b3b121fcbab96::t_ed8c245e08a43a 1-22
+web/src/Provider/ProviderHarvest.php
+  s_3b3b121fcbab96::t_d425ca9de9522f 137,310,312,424-425,440-460
+  s_3b3b121fcbab96::t_76fe22d8d015e9 461-463
+web/tests/Provider/ProviderHarvestImportedAtTest.php
+  s_3b3b121fcbab96::t_52f3915df27315 1-92,95-170
+  s_3b3b121fcbab96::t_ba684dfbe0ffaa 93-94
+web/src/Catalog/Entity/Item.php
+  s_3b3b121fcbab96::t_1971f77c41b25a 152-162
+web/tests/Catalog/EvidenceRungTest.php
+  s_3b3b121fcbab96::t_819740e967fa4b 1-185
+docs/specs/catalog-data-model.md
+  s_3b3b121fcbab96::t_5a06ae62974d77 92
+docs/specs/data-provider-hierarchy.md
+  s_3b3b121fcbab96::t_5a06ae62974d77 415-417,610,612-614,616-617,619-623,625,629-631,633-639,642-681
+  s_3b3b121fcbab96::t_e1e8a23fc133c7 682
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "40da814739383544a3d3b62e7c9ddd03b7edd67d",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_3b3b121fcbab96": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "aef68f16-50de-4bc2-b718-847e4744d25a",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
