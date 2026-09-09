@@ -103,12 +103,24 @@ does not remove the OpenStreetMap credit: it adds ours beside it.
 
 !!! warning "A photograph is not a source"
     These seven say where a *place record* came from. A photo of that place is
-    not a place. A Wikimedia Commons image reached through OpenStreetMap or
-    Wikidata is shown beside the record it illustrates, carrying its own credit
-    and its own licence per file: the drawer links it straight from Commons,
-    and the media pipeline keeps a licence-checked, scanned copy of it in our
-    own store. It is never a rider contribution and never enters a moderation
-    queue, because there is no contributor and nothing was submitted.
+    not a place, and adding one never changes the row's source. Photos arrive
+    two ways, and they are handled differently.
+
+    A **Wikimedia Commons image** reached through OpenStreetMap or Wikidata is
+    shown beside the record it illustrates, carrying its own credit and its own
+    licence per file: the drawer links it straight from Commons, and the media
+    pipeline keeps a licence-checked, scanned copy of it in our own store. That
+    one is not a rider contribution and does not enter a moderation queue,
+    because there is no contributor and nothing was submitted.
+
+    A **rider's own upload** is a contribution. The bytes go to a private
+    quarantine, get scanned, and the photo waits in the moderation queue until a
+    moderator accepts it, exactly like any other submission. Specified in
+    `docs/specs/photo-uploads.md`.
+
+    What neither kind does is prove anything. A picture is not evidence that the
+    place exists, sits where the row says, or still works. Only the funnel below
+    settles that, and it takes riders standing there, not pixels.
 
 ---
 
@@ -128,7 +140,7 @@ flowchart TD
     GATE --> V["Verified<br/>a full pin"]
 
     V --> SPLIT{"What kind of thing<br/>is this?"}
-    SPLIT -->|"Utility<br/>water · services · shelter<br/>transit · hazards · surface"| STOP(["Stops here.<br/>Never voted on.<br/>The value is coverage."])
+    SPLIT -->|"Utility<br/>water · services · shelter<br/>transit · hazards · surface"| STOP(["Stops here, never ranked.<br/>Riders keep answering<br/>still here · drinkable · as described.<br/>The value is coverage."])
     SPLIT -->|"Experiential<br/>climbs · stays · views<br/>history · routes"| VOTABLE["Votable<br/>now collects rider votes"]
 
     VOTABLE --> BEST(["Best-of<br/>top-voted<br/>this is what Best of shows"])
@@ -144,47 +156,97 @@ flowchart TD
     fountain: you want to know it is there. Ranking is the whole point for a
     climb: you want the best ten, not all two hundred.
 
+!!! note "A confirmation is not a vote"
+    Stopping at Verified does not mean the row goes quiet. Utility rows keep
+    taking rider input for as long as they exist; what they never take is a
+    ranking. `ConfirmationStance` holds the whole vocabulary, four answers:
+    **drinkable** and **not drinkable** on water, **still here** on anything a
+    rider can stand in front of, and **not as described** on a road surface,
+    which is a warning rather than a vouching and counts in the tally without
+    verifying anything. A reported closure carries the reporter's own answer to
+    "closed for how long?" and retires itself when that runs out.
+
+    Every one of those answers a question of *fact*: is this row still true
+    today. A vote answers a different question, which of two true things is
+    better, and that question only means anything on the experiential branch. A
+    climb takes both, because "it is there" and "it is worth your weekend" are
+    not the same claim.
+
 !!! note "What of this funnel is running today"
-    The funnel above is the design. Two parts of it are live and one is not,
-    and the difference matters if you are reading this to predict what the map
-    will do:
+    The funnel above is the design. Most of it is live, and where the shipped
+    numbers differ from the tiered X further down, the numbers here are the
+    ones the map actually uses:
 
     - **Routes gate exactly as described.** Three independent riders tapping
       *I rode this* promotes a route from Unverified to Verified, the count
       excludes the proposer, and the threshold is an admin setting rather than
       a constant.
-    - **Everything else does not gate yet.** For a place (water, services,
-      views, climbs, stays) a rider confirmation lifts how the map *presents*
-      it (a full pin rather than a help-confirm dot) from the **first**
-      independent confirmation, and the record's state is changed only by a
-      curator. The tiered X below, and the modifiers under it, are the design
-      for that gate, not a description of it.
+    - **A place gates on two riders.** Two riders confirming a place promote it
+      from Unverified to Verified, which is what takes the `?` off its pin. The
+      submitter's own answer never counts, a *not drinkable* or *not as
+      described* warning never counts, and one row per rider is a database
+      constraint, so the same person tapping twice can never add up. The number
+      is one global admin setting, `map.item_verify_threshold`, and it is lower
+      than the route threshold on purpose: "I rode this whole route" is a bigger
+      claim than "this tap is here".
     - **A curator's own confirmation settles it.** When the person confirming
       holds curator rights, the place becomes Verified on that one answer. Three
       riders should not be needed to agree that a castle is a castle, and a
       curator standing at a place is the strongest signal the system has.
+    - **The `?` and the record say the same thing.** There is one definition of
+      verified and it is the record's own state, read by the map, the public API
+      and the Best-of readiness gate alike. Until September 2026 each of those
+      carried its own extra clause, so a single tap could clear the badge on a
+      row the database still called Unverified, and a listing in an official
+      register counted as verified with nobody having stood there. Both are
+      gone: whatever published a row, it leaves Unverified the same way.
     - **Anything you can stand in front of can be confirmed.** The old rule
       asked whether a place could *vanish*, which excluded castles and
       mountains. The right question is whether a rider was there and this is
       right about its existence, its position and its name. A climb can be wrong
       about all three. An invented viewpoint with a generated photo is exactly
       what the next rider at that spot disproves.
-    - **Decay is built for closures, and only for closures.** A hazard reported
-      as *Road closed* carries the reporter's own answer to "closed for how
-      long?", today, days, weeks or months, and retires itself once that window
-      passes, unless somebody confirms it is still shut, which restarts the
-      clock. Retired means it stops being shown, not deleted: the closure was
-      true when it was reported, and keeping it is what makes a repeat closure
-      legible next year. Nothing else auto-stales yet; a hazard with no stated
-      end date still needs a human to clear it.
+    - **Two clocks age a place, and only one of them takes it off the map.**
+      *Retirement* is built for closures. A hazard reported as *Road closed*
+      carries the reporter's own answer to "closed for how long?", today, days,
+      weeks or months, and retires itself once that window passes, unless
+      somebody confirms it is still shut, which restarts the clock. Retired
+      means it stops being shown, not deleted: the closure was true when it was
+      reported, and keeping it is what makes a repeat closure legible next
+      year. A hazard with no stated end date still needs a human to clear it.
+    - **Freshness is the second clock, and it removes nothing.** Every type
+      where the built world ages carries the age of its newest confirmation:
+      water, bike services, where to sleep, getting there, shelter, public
+      toilets, hazards and road surface. Half the window in, the row reads
+      *ageing*; at the full window it reads *stale* and the pin wears an orange
+      ring. Views, history and climbs take no freshness at all, because a
+      viewpoint does not stop being a view. The window is one global admin
+      setting, `map.confirmation_stale_months`, six months today and anything
+      from one to sixty.
 
     The potable/labelling rule in §3 and the view-mode gate in §4 *are* shipped
     as written.
 
+!!! note "An orange ring is a request, not a verdict"
+    A stale ring says one thing: nobody has stood there in six months. In a
+    region with few riders that will be most of the map, and it should be. The
+    honest reading of a thin community is "we do not know", never "it is gone".
+    So the ring hides nothing, changes no record, and blocks no view mode. It is
+    the map asking for the one tap that clears it.
+
+    A map that is permanently orange is telling you the window is wrong for that
+    place, not that the data is bad. `map.confirmation_stale_months` is the
+    lever, one to sixty, and it is global: widening it for a quiet country
+    widens it for a busy one too. A per-region window is not built.
+
 ### How many confirmations is X?
 
-X is **not one number**, and it is not eleven knobs either. It is a small set of
-tiers, plus modifiers.
+What shipped is **two numbers**: a place takes `map.item_verify_threshold`
+riders, two today, whatever its type, and a route takes
+`route.ride_verify_threshold`, three. No tiers, no modifiers. The design below is
+where the tiers would go if two blunt numbers turn out to be too blunt, and the
+safety row is the one it already contradicts: a hazard needs the same two riders
+as a water tap today, and decay does the rest.
 
 | Tier | Types | Base X | Why |
 |---|---|---|---|
@@ -193,7 +255,7 @@ tiers, plus modifiers.
 | **Routes** | quality rides | ~3 × *"I rode this"* | the confirmation asserts *I rode it*, not *it exists* |
 | **Safety / time-sensitive** | hazards, shelter, the water *potable* flag | ~1 to publish | publish fast, then **decay**, auto-stale after N days unless re-confirmed |
 
-**Modifiers** adjust the base (never below 1):
+**Modifiers** would adjust the base (never below 1). None of them is built:
 
 <!-- CODE-ILLUSTRATIVE mermaid diagram source, rendered by javascripts/diagrams.js -->
 ```mermaid
