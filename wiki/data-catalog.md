@@ -69,7 +69,7 @@ on this page, where they name a section.
 - Resupply — shops, supermarkets, bakeries (+ opening hours) [tap][edit][OSM]
 - Notable on-route food stops [tap][edit]
 
-## C. Public toilets  *(the stop nobody maps well)*
+## C. Public toilets  *(mapped, but rarely with hours, fee or access)*
 - Public toilets — municipal blocks, station and park facilities, serviced stops [tap][edit][OSM]
 - Free or paid · accessible · opening hours, where they are known [edit][OSM]
 
