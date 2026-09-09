@@ -1,0 +1,25 @@
+wiki/curation-and-voting.md
+  s_47febc1d06946f::t_4aa1be2475a2b1 16-17
+  s_47febc1d06946f::t_84fd5268c1292a 41-47
+  s_47febc1d06946f::t_23a6f6942ea765 27
+  s_47febc1d06946f::t_ff3d93e27fb9f6 35-39
+  s_47febc1d06946f::t_d65a34902139ff 12-13
+  s_47febc1d06946f::t_f9fc647c5a8c02 14-15
+  s_47febc1d06946f::t_a2390f604ad150 5-11
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "7f0bc91a705bbff1d06dddc2a67fd4558ea2d8f7",
+  "prompts": {},
+  "sessions": {
+    "s_47febc1d06946f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6a25c1bf-1769-420e-a08a-b60bdad2e437",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
