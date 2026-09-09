@@ -40,7 +40,7 @@ on this page, where they name a section.
 - Surface smoothness / quality [tap][edit][OSM]
 - Path width [OSM] *(not harvested; OSM has it on few paths. Useful if it comes, not for now)*
 - Barriers on the way, chicanes (single, double, triple, squeeze), A-frames, kissing gates, bollards and blocks, with the **type and the clearance width in centimetres**. The width is the fact, the type is the hint: a double chicane at 150 cm passes a trailer, one at 90 cm stops a handbike. OpenStreetMap has the model (`barrier=cycle_barrier` + `cycle_barrier=*`, `barrier=bollard|kissing_gate|gate|swing_gate|block`, `maxwidth:physical`, `opening`, `spacing`, `bicycle=*`, `wheelchair=*`) and, for most bollards, no width; a rider measures where OSM is silent, in centimetres against a known reference (road bars about 42 cm, a cargo bike about 65 cm, a trailer about 80 cm). Harvested only from cycleways, paths and tracks, never from car roads, or every bollard in Europe lands on the map [tap][edit][OSM] *(harvest and form: design, not built)*
-- Traffic exposure: derived from road class, speed limit, lanes and cycleway, the input for a route's sensory load; never collected by hand [auto][OSM] *(design, not built)*
+- Traffic exposure: derived from road class, speed limit, lanes and cycleway, and quietness as Scout detects it from rides; the input for a route's sensory load, never collected by hand [auto][OSM] *(being built)*
 - Lit / unlit at night [OSM]
 - One-way / cycling-permitted-against-traffic [OSM] *(on the roadmap, not built)*
 - Signed cycle routes & node networks: the signed routes and numbered junction
@@ -147,7 +147,7 @@ short (owner 2026-09-09).
 - *I rode this* confirmations from other riders, which are what verify a route [tap]
 - A photo of the ride [media]
 - What the route asks of a body, derived along the line from **A** and the geometry we already measure *(design, not built)*: the **narrowest passage** in centimetres and where it is; **turn density**, decisions per kilometre; the share of the line on **signed routes**, from OSM route relations; **traffic exposure** per kilometre, worst stretch named. Predictability, legibility and sensory load are stable qualities of a route, not hazards that perish, which is why they are here and not under **E** [auto]
-- One rider-answered prompt for what tags cannot say, *quiet road?*, on the drawer of a route *(design, not built)* [tap]
+- Whether a road is quiet is detected, never asked: Scout, the ride-file tool, derives it from the ride itself, and the answer lands on the road under **A** as an aggregate fact, no trace kept *(being built)* [auto]
 
 R is a route layer, not a per-road rating. What a road is like (quietness,
 smoothness, surface, lit or not, seasonal closure) is recorded on the road
@@ -295,7 +295,7 @@ coat of arms · a fact or two. **Cycling heritage:** Tour/Classics history · ve
 Name · the line (drawn or GPX) · start · loop or point-to-point · distance · climbing · elevation profile ·
 difficulty · best season · a photo · who proposed it · *I rode this* count · state (unverified → verified) ·
 derived along the line *(design)*: narrowest passage (cm, and where) · turns per km · share on signed routes ·
-traffic exposure per km and its worst stretch · *quiet road?* answers.
+traffic exposure per km and its worst stretch · quiet stretches, as Scout detects them.
 Road qualities (quietness, smoothness, surface, barriers) are per road under **A**, never per route; a route
 only sums them up.
 
