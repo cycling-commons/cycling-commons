@@ -3,7 +3,7 @@
 # Curation & Voting
 
 This is the heart of what makes the Cycling Commons different: **curation over completeness.** The
-Commons doesn't try to list *every* climb that exists — it surfaces **the ones worth your weekend**,
+Commons doesn't try to list *every* climb that exists. It surfaces **the ones worth your weekend**,
 as judged by the riders who know the area. For things that are a matter of taste, the best-of is the
 point; an exhaustive dump helps no one plan a ride.
 
@@ -14,21 +14,23 @@ The single organising principle of the Commons:
 | | Subjective / experiential | Objective / utility |
 |---|---|---|
 | **Examples** | best climbs, bike-friendly stays, finest views, history & culture, top quality rides | road surface, water points, toilets, repair stations, hazards, bike shops |
-| **Goal** | **curated** — the best, ranked | **complete** — as exhaustive as possible |
-| **How** | riders vote on climbs, stays, views & heritage; refreshed in rounds — **routes** verify instead, via rode-it counts plus continuous seasonal recommend-votes on the map drawer | one-tap reports; confirm & decay |
+| **Goal** | **curated**: the best, ranked | **complete**: as exhaustive as possible |
+| **How** | **routes** (live today): rode-it counts plus seasonal recommend-votes on the map drawer. Climbs, stays, views & heritage (design): riders vote, refreshed in rounds | one-tap reports; confirm & decay |
 | **The value is** | the *ranking* | the *coverage* |
 
-Voting makes no sense for a water tap — it's either there or it isn't, and you want them all. Ranking
-is the whole point for a climb — you want the best ten, not all two hundred.
+Voting makes no sense for a water tap: it's either there or it isn't, and you want them all. Ranking
+is the whole point for a climb: you want the best ten, not all two hundred.
 
 ## Regions
 
-Curation happens **per region**. A region is standard public geography — a country, province, or
-municipality — **not** a game shape from any app built on top. Keeping the Commons' regions neutral
-and independent is deliberate: an app's game layer may *map onto* Commons regions, never the reverse.
-That keeps the Commons usable by anyone, decoupled from any one product.
+Curation happens **per region**. A region is standard public geography, a country or one of its
+first-level subdivisions (provinces, states, or the equivalent), **not** a game shape from any app
+built on top. Keeping the Commons' regions neutral and independent is deliberate: an app's game layer
+may *map onto* Commons regions, never the reverse. That keeps the Commons usable by anyone, decoupled
+from any one product.
 
-For each region the Commons surfaces a **best-of** (the map's first view mode, *Best of*):
+For each region the Commons surfaces a **best-of** (the map's *Best of* view mode, one switch away
+from the default *Everything* view):
 
 - the best **climbs**
 - the best **bike-friendly stays**
@@ -37,38 +39,47 @@ For each region the Commons surfaces a **best-of** (the map's first view mode, *
 - the best **quality rides / routes** (routes' best-of is the map's season/bike Best-of ranking, not the seasonal ballot)
 - (extensible: best café stops, best gravel, etc.)
 
-So when you arrive somewhere new, you get a clear, opinionated picture of the best there is — instead
+So when you arrive somewhere new, you get a clear, opinionated picture of the best there is, instead
 of drowning in data.
 
 ## The voting rounds
 
 !!! note "Not live yet"
-    The seasonal ballot rounds described in this section **open after launch**.
-    The `/vote` page shows the design and records nothing. What *is* running
-    today is the route path below — propose → curator review → rode-it
-    verification → seasonal recommend-votes on the map drawer — which feeds the
-    Best-of ranking without a ballot. Everything else in this page (the two
-    strategies, regions, the backlog, integrity) describes shipped behaviour.
+    The seasonal ballot rounds described in this section are design; they are
+    planned to open after launch. The `/vote` page shows the design and records
+    nothing. What *is* running today is the route path below: propose, curator
+    review, rode-it verification, seasonal recommend-votes on the map drawer,
+    which feeds the Best-of ranking without a ballot. Everything else in this
+    page (the two strategies, regions, the backlog, integrity) describes
+    shipped behaviour.
 
 - **Riders vote** on the candidates in each region.
 - **A fresh round opens each season.** Four rounds a year give the Commons a rhythm that follows the
-  riding — a reason to come back as the season turns, and room for new entries to rise.
+  riding: a reason to come back as the season turns, and room for new entries to rise.
 - **Rounds re-rank, they don't reset.** The standing list carries forward and votes shift it. A
   legendary climb is never wiped out by one low-turnout season; it just has to keep earning its place.
 - **These rounds cover climbs, stays, views, and heritage.** Routes sit outside the seasonal ballot:
-  they follow their own **propose → curator moderate → rode-it-verify → seasonal recommend-vote** flow
+  they follow their own **propose, curator moderate, rode-it-verify, seasonal recommend-vote** flow
   on the map drawer, feeding the same season/bike Best-of ranking rather than a ballot round.
 
-## Solving the cold start: seed from popularity, refine by vote
+## Solving the cold start
 
-Empty lists before a voting culture exists would kill the feature. So the Commons seeds the initial
-ranking from **aggregate popularity** — which roads see the most use, derived anonymously from aggregate signals. Votes then layer *loved* on top of *used-a-lot*. Two complementary
-signals, and the list is never blank on day one.
+Empty lists before a voting culture exists would kill the feature.
+
+What runs today: a route's place in the Best-of comes from what riders do on the map, rode-it
+confirmations plus recommend-votes, and nothing else. Nothing in the ranking is derived from usage.
+
+The design for the other lists is to seed an initial ranking from **aggregate popularity** (which
+roads see the most use, derived anonymously through
+[the sensing boundary](governance.md#the-sensing-boundary-how-activity-becomes-a-place-fact)) and
+then let votes layer *loved* on top of *used-a-lot*: two complementary signals, and a list that is
+never blank on day one. That sensing layer is not built. The heatmap the demo map shows is seeded
+sample data, not measured activity.
 
 ## The backlog: nothing is thrown away
 
 The best-of is the **lede**, not the whole library. Every climb, view, and route beyond the
-top list still lives in the Commons as a **backlog** — fully queryable for completists who want it
+top list still lives in the Commons as a **backlog**, fully queryable for completists who want it
 all. The Commons *ranks* data; it never *discards* it.
 
 ## Integrity
@@ -79,5 +90,5 @@ all. The Commons *ranks* data; it never *discards* it.
 - **Provenance without identity** (Manifesto §VIII): the Commons stores that a vote was cast and when,
   never a public record of who voted for what.
 - **You can always see your own.** Your profile lists the route votes you've cast and the places
-  you've confirmed (water potability, "still here?" checks) — a private view for your eyes only, so
+  you've confirmed (water potability, "still here?" checks), a private view for your eyes only, so
   "did I already back this?" never requires guessing.
