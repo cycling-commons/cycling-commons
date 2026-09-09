@@ -23,7 +23,7 @@ final class MediaConsent
      * record has to point at what was actually agreed. v3 records stay valid
      * evidence of the v3 promise.
      */
-    public const string VERSION = 'v4';
+    public const string VERSION = 'v5';
     public const string TEXT_KEY = 'media.consent.contract';
 
     public static function hash(string $text): string

@@ -341,7 +341,7 @@ terms:
   ai_translation: '<b>Traducción automática.</b> Algunas descripciones de lugares vienen de Wikipedia en el idioma local y se traducen automáticamente al inglés. Todas llevan la marca <b>auto-translated</b> allí donde aparecen, porque una traducción automática de un puerto puede estar mal de una forma que se lee perfectamente.'
   ai_checks: '<b>Comprobaciones automáticas.</b> Un programa revisa el catálogo buscando cosas que parecen erróneas, dos fuentes a un metro una de otra, un enlace que ya no responde, y se las pone delante a una persona curadora. Señala; nunca decide.'
   ai_none: '<b>Nada más.</b> Ni chatbot, ni texto generado que hagamos pasar por nuestro, ni decisiones automatizadas sobre ti o tu cuenta, ni elaboración de perfiles. Si eso cambia algún día, esta sección cambia primero.'
-  ai_uploads: '<b>Lo que no puedes subir.</b> Nada de imágenes generadas ni retocadas por IA. La edición normal está bien: recortar, enderezar, levantar las sombras. Inventar o borrar algo que estaba ahí no lo está, y una imagen hecha por un modelo tampoco. El consentimiento que marcas antes de subir lo dice, y es motivo de retirada.'
+  ai_uploads: '<b>Lo que no puedes subir.</b> Nada de imágenes generadas por IA, ni escenas alteradas. La edición normal está bien, con herramientas de IA o sin ellas: recortar, enderezar, ajustar el color, enfocar, quitar el ruido. Inventar o borrar algo que estaba ahí no lo está, y una imagen hecha por un modelo tampoco. El único cambio que pedimos: difumina caras y matrículas antes de subir. El consentimiento que marcas antes de subir lo dice, y es motivo de retirada.'
   ai_stance: 'Con esto no reclamamos el cumplimiento de nada. Las reglas de transparencia del Reglamento europeo de IA empiezan a aplicarse el <b>2 de agosto de 2026</b>, y es discutible hasta dónde alcanzan la descripción de una fuente. Te lo diríamos igualmente, porque un mapa solo vale si puedes distinguir lo que ha puesto una persona.'
   mod_who_h: 'Quién decide'
   mod_who: 'Decide un <b>curador</b>, y un curador es una persona. Los curadores son ciclistas que se presentaron y fueron aceptados, trabajan con un reglamento escrito, y cada decisión queda registrada con su nombre.'
@@ -2062,7 +2062,7 @@ media:
     # La frase vinculante. Su texto exacto se resume criptográficamente en el
     # registro de consentimiento, así que cambiarlo implica subir
     # MediaConsent::VERSION (docs/specs/photo-uploads.md §4).
-    contract: 'Licencio mi(s) foto(s) bajo CC BY-SA 4.0, confirmo que las hice yo, y que muestran un lugar real y no han sido generadas ni alteradas por IA.'
+    contract: 'Licencio mi(s) foto(s) bajo CC BY-SA 4.0, confirmo que las hice yo, que muestran un lugar real y no han sido generadas por IA, y que nada en ellas ha sido alterado salvo difuminar caras y matrículas.'
     read_licence: 'Leer CC BY-SA 4.0'
     read_rules: 'Qué aceptamos y qué no'
     keep_ownership: 'Tú conservas la propiedad — el Commons solo obtiene una licencia para compartirla.'

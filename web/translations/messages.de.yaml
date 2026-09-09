@@ -341,7 +341,7 @@ terms:
   ai_translation: '<b>Maschinelle Übersetzung.</b> Manche Ortsbeschreibungen stammen aus der Wikipedia in der Landessprache und werden automatisch ins Englische übersetzt. Jede davon ist an Ort und Stelle als <b>auto-translated</b> gekennzeichnet, denn eine maschinelle Übersetzung eines Passes kann auf eine Weise falsch sein, die sich völlig richtig liest.'
   ai_checks: '<b>Automatische Prüfungen.</b> Software durchsucht den Katalog nach Dingen, die falsch aussehen, zwei Brunnen im Abstand von einem Meter, ein Link, der nicht mehr aufgeht, und legt sie einer Kuratorin vor. Sie markiert; sie entscheidet nie.'
   ai_none: '<b>Sonst nichts.</b> Kein Chatbot, kein generierter Text, den wir als unseren ausgeben, keine automatisierte Entscheidung über dich oder dein Konto, und kein Profiling. Sollte sich das je ändern, ändert sich zuerst dieser Abschnitt.'
-  ai_uploads: '<b>Was du nicht hochladen darfst.</b> Keine von KI erzeugten oder von KI veränderten Bilder. Normales Bearbeiten ist in Ordnung: zuschneiden, gerade rücken, Schatten aufhellen. Etwas zu erfinden oder wegzunehmen, was da war, ist es nicht, und ein Bild, das ein Modell gemacht hat, auch nicht. Die Einwilligung, die du vor dem Hochladen setzt, sagt das, und es ist ein Grund für eine Entfernung.'
+  ai_uploads: '<b>Was du nicht hochladen darfst.</b> Keine von KI erzeugten Bilder und keine veränderten Szenen. Normales Bearbeiten ist in Ordnung, mit KI-Werkzeugen oder ohne: zuschneiden, gerade rücken, Farben abstimmen, schärfen, entrauschen. Etwas zu erfinden oder wegzunehmen, was da war, ist es nicht, und ein Bild, das ein Modell gemacht hat, auch nicht. Die eine Änderung, um die wir bitten: Gesichter und Kennzeichen vor dem Hochladen unkenntlich machen. Die Einwilligung, die du vor dem Hochladen setzt, sagt das, und es ist ein Grund für die Entfernung.'
   ai_stance: 'Wir behaupten damit keine Konformität mit irgendetwas. Die Transparenzregeln der EU-KI-Verordnung gelten ab dem <b>2. August 2026</b>, und es ist strittig, wie weit sie bis zur Beschreibung eines Wasserhahns reichen. Wir würden es dir so oder so sagen, denn eine Karte taugt nur etwas, wenn du erkennen kannst, was ein Mensch darauf gesetzt hat.'
   mod_who_h: 'Wer entscheidet'
   mod_who: 'Eine <b>Kuratorin</b> oder ein <b>Kurator</b> entscheidet, und das ist ein Mensch. Kuratorinnen und Kuratoren sind Radfahrende, die sich beworben haben und angenommen wurden, sie arbeiten nach einem schriftlichen Regelwerk, und jede Entscheidung wird mit ihrem Namen festgehalten.'
@@ -2542,7 +2542,7 @@ media:
   consent:
     title: 'Bevor du ein Foto hinzufügst'
     intro: 'Dein(e) Foto(s) werden Teil des offenen Commons, damit alle Radfahrenden sie nutzen können. Das geht nur, wenn sie wirklich frei teilbar sind.'
-    contract: 'Ich lizenziere meine Fotos unter CC BY-SA 4.0, ich bestätige, dass ich sie selbst aufgenommen habe, und dass sie einen echten Ort zeigen und nicht von KI erzeugt oder verändert wurden.'
+    contract: 'Ich lizenziere meine Fotos unter CC BY-SA 4.0, ich bestätige, dass ich sie selbst aufgenommen habe, dass sie einen echten Ort zeigen und nicht von KI erzeugt wurden, und dass nichts darin verändert wurde, außer dass Gesichter und Kennzeichen unkenntlich gemacht sind.'
     read_licence: 'CC BY-SA 4.0 lesen'
     read_rules: 'Was wir annehmen, und was nicht'
     keep_ownership: 'Du behältst das Eigentum — das Commons erhält nur eine Lizenz zum Teilen.'

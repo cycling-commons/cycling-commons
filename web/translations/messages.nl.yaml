@@ -341,7 +341,7 @@ terms:
   ai_translation: '<b>Machinevertaling.</b> Sommige plaatsbeschrijvingen komen uit Wikipedia in de plaatselijke taal en worden automatisch naar het Engels vertaald. Elk daarvan is ter plekke gelabeld als <b>auto-translated</b>, want een machinevertaling van een bergpas kan fout zijn op een manier die prima leest.'
   ai_checks: '<b>Automatische controles.</b> Software scant de catalogus op dingen die verkeerd lijken, twee kranen op een meter van elkaar, een link die niet meer werkt, en legt ze voor aan een curator. Ze signaleert; ze beslist nooit.'
   ai_none: '<b>Verder niets.</b> Geen chatbot, geen gegenereerde tekst die we als de onze presenteren, geen geautomatiseerd besluit over jou of je account, en geen profilering. Verandert dat ooit, dan verandert deze paragraaf als eerste.'
-  ai_uploads: '<b>Wat je niet mag uploaden.</b> Geen door AI gemaakte of door AI aangepaste beelden. Gewoon bewerken mag: bijsnijden, rechtzetten, schaduwen ophalen. Iets verzinnen of weghalen dat er stond mag niet, en een plaatje dat een model maakte ook niet. De toestemming die je vóór het uploaden aanvinkt zegt dit, en het is een grond voor verwijdering.'
+  ai_uploads: '<b>Wat je niet mag uploaden.</b> Geen door AI gemaakte beelden, en geen aangepaste scènes. Gewoon bewerken mag, met of zonder AI-gereedschap: bijsnijden, rechtzetten, kleuren bijstellen, verscherpen, ruis weghalen. Iets verzinnen of weghalen dat er stond mag niet, en een plaatje dat een model maakte ook niet. De ene aanpassing die we wél vragen: maak gezichten en kentekens onherkenbaar voordat je uploadt. De toestemming die je vóór het uploaden aanvinkt zegt dit, en het is een grond voor verwijdering.'
   ai_stance: 'We claimen hiermee geen naleving van wat dan ook. De transparantieregels van de Europese AI-verordening gaan op <b>2 augustus 2026</b> gelden, en het valt te betwisten hoe ver ze reiken tot een beschrijving van een drinkwaterkraan. We zouden het je hoe dan ook vertellen, want een kaart is alleen wat waard als je kunt zien wat een mens erop gezet heeft.'
   mod_who_h: 'Wie beslist'
   mod_who: 'Een <b>curator</b> beslist, en een curator is een mens. Curatoren zijn renners die zich hebben aangemeld en zijn aangenomen, ze werken volgens een geschreven reglement, en elke beslissing wordt vastgelegd met hun naam erbij.'
@@ -2539,7 +2539,7 @@ media:
   consent:
     title: 'Voordat je een foto toevoegt'
     intro: 'Je foto(''s) komen in de open Commons zodat elke fietser ze kan gebruiken. Dat werkt alleen als ze echt vrij te delen zijn.'
-    contract: 'Ik geef mijn foto(''s) in licentie onder CC BY-SA 4.0, ik bevestig dat ik ze zelf gemaakt heb, en dat ze een echte plek tonen en niet door AI gemaakt of aangepast zijn.'
+    contract: 'Ik geef mijn foto(''s) in licentie onder CC BY-SA 4.0, ik bevestig dat ik ze zelf gemaakt heb, dat ze een echte plek tonen en niet door AI gemaakt zijn, en dat er niets in is aangepast behalve het onherkenbaar maken van gezichten en kentekens.'
     read_licence: 'Lees CC BY-SA 4.0'
     read_rules: 'Wat we wel en niet accepteren'
     keep_ownership: 'Je blijft eigenaar — de Commons krijgt alleen een licentie om te delen.'
