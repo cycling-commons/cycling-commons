@@ -40,7 +40,6 @@ on this page, where they name a section.
 - Surface smoothness / quality [tap][edit][OSM]
 - Path width [OSM]
 - Barriers on the way, chicanes (single, double, triple, squeeze), A-frames, kissing gates, bollards and blocks, with the **type and the clearance width in centimetres**. The width is the fact, the type is the hint: a double chicane at 150 cm passes a trailer, one at 90 cm stops a handbike. OpenStreetMap has the model (`barrier=cycle_barrier` + `cycle_barrier=*`, `barrier=bollard|kissing_gate|gate|swing_gate|block`, `maxwidth:physical`, `opening`, `spacing`, `bicycle=*`, `wheelchair=*`) and, for most bollards, no width; a rider measures where OSM is silent, in centimetres against a known reference (road bars about 42 cm, a cargo bike about 65 cm, a trailer about 80 cm). Harvested only from cycleways, paths and tracks, never from car roads, or every bollard in Europe lands on the map [tap][edit][OSM] *(harvest and form: design, not built)*
-- Tram tracks, level crossings, cattle grids: permanent, in OSM, shown as a feature of the road rather than as a report that decays [OSM]
 - Traffic exposure: derived from road class, speed limit, lanes and cycleway, the input for a route's sensory load; never collected by hand [auto][OSM] *(design, not built)*
 - Lit / unlit at night [OSM]
 - One-way / cycling-permitted-against-traffic [OSM]
@@ -92,9 +91,14 @@ Sourced from OSM only. The obvious specialist directory for the Netherlands
 - E-bike charging points: design. The harvest takes three kinds from OpenStreetMap, bike shops, repair stations and pumps (`shop=bicycle`, `amenity=bicycle_repair_station`, `amenity=compressed_air`); no charging kind is harvested.
 
 ## E. Hazards & conditions  *(dynamic — needs freshness)*
-A hazard is a point a rider can stand at, that will not be there for ever,
-that another rider can check, and that names no person. Four lines pass that
-test; the rest of what used to sit here moved or went (2026-09-09).
+A hazard is what a rider at speed cannot see in time: a pothole in the shade
+of a descent, a road that is closed round the corner, ice on a north-facing
+bend. It is a point a rider can stand at, that will not be there for ever,
+that another rider can check, and that names no person. What a rider can
+plainly see, tram tracks, a cattle grid, cobbles, is not a hazard and is not
+recorded as one. The Commons serves long rides, and a route that warns of
+fifty places warns of none; the list below is deliberately short and stays
+short (owner 2026-09-09).
 
 - Road-surface problems: potholes, broken surface, loose gravel, ice [tap][edit][safety]
 - Seasonal closures: cols under snow, flood-prone dips, snow gates; the closure lifetime and its expiry are built for these [tap][edit][safety][OSM]
@@ -102,12 +106,12 @@ test; the rest of what used to sit here moved or went (2026-09-09).
 - A blind corner or a crossing without refuge a rider can point at. The form says *junction / crossing* and *bad corner*, never *dangerous*, because one rider's fright is not a fact [tap][edit][safety]
 - Crosswind / fog on an exposed stretch: real on a dam or a col; a stretch, not a pin, so it reads as a quality of the road [tap][edit]
 
-Moved: tram tracks, level crossings and cattle grids are permanent road
-features under **A**; "roads to avoid" is traffic exposure, derived under **A**
-from what OpenStreetMap already carries, not collected. Gone: private and
-no-entry roads, which OSM's `access` tags hold in full and we never copy; and
-dog warnings, which name a household, exactly the personal data about a place
-the moderation standards refuse.
+Moved: "roads to avoid" is traffic exposure, derived under **A** from what
+OpenStreetMap already carries, not collected. Gone: tram tracks, level
+crossings and cattle grids, which a rider sees coming and OSM already maps;
+private and no-entry roads, which OSM's `access` tags hold in full and we
+never copy; and dog warnings, which name a household, exactly the personal
+data about a place the moderation standards refuse.
 
 ## F. Getting there & multimodal
 - Train stations with bike access; bikes-on-train rules [tap][edit][OSM]
@@ -245,7 +249,7 @@ Road type (road / cycleway / gravel path / singletrack) [OSM] · surface materia
 [OSM] · width [OSM] · segregated vs shared · lit / unlit [OSM] · traffic exposure (derived) · barriers
 (chicane single/double/triple/squeeze · A-frame · kissing gate · bollard · block · steps · ford · stile) with
 **clearance width in cm** and its source (OSM `maxwidth:physical` / `opening` / `spacing`, or measured by a
-rider) [OSM] · tram tracks / level crossing / cattle grid [OSM] · one-way / contraflow allowed [OSM] · seasonal access.
+rider) [OSM] · one-way / contraflow allowed [OSM] · seasonal access.
 
 ## B. Water & food — per point
 **Water:** source type (fountain · public tap · cemetery tap · church · spring) · potable? · seasonal (frost
