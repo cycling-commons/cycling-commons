@@ -31,6 +31,9 @@ wiki-dist/
 .env.local
 *.local
 
+web/bin/.phpunit.result.cache
+web/.phpunit.cache/
+
 # Per-deploy runtime config (Mapillary token etc.) — added manually on the server, never committed
 atlas/demo/config.js
 
@@ -91,6 +94,9 @@ docs/specs/Dated/
 
 # Lavish review artifacts (lavish-axi) — generated HTML review surfaces, local only.
 .lavish/
+
+# Kilo local config, agents, skills, review artifacts
+.kilocode/
 
 # Local dev-DB backups (pg_dump snapshots) — never committed, machine-local safety net.
 developers/docker/backups/

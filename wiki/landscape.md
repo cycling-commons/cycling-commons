@@ -10,6 +10,8 @@ with a line through it has shut down.*
 
 Legend: **open** = open data / open source · **closed** = proprietary silo · **mixed** = open base, closed layer. And what a rider pays: **free** · **freemium** (a free tier, the useful part more or less behind a subscription) · **paid**.
 
+And the question this page tries to answer for each one, because it is the only one a shared dataset cares about: **can a fact leave it?** **open licence** = the data itself is openly licensed · **edits go upstream** = what you add lands in OpenStreetMap · **API, restricted** = there is a documented interface, and its terms forbid passing the data on · **no export documented** = the site publishes no API, no download and no data licence. Every verdict links its evidence where a document exists to link; "no export documented" is a statement about what the site publishes, not a claim about what the app can do. Checked 9 September 2026.
+
 <div class="cc-views">
 <input class="cc-views-r" type="radio" name="cc-view" id="cc-view-plot" aria-label="Show the picture" checked>
 <input class="cc-views-r" type="radio" name="cc-view" id="cc-view-table" aria-label="Show the table">
@@ -147,25 +149,25 @@ Legend: **open** = open data / open source · **closed** = proprietary silo · *
 ## Climbs & cols
 Finding, rating and racing climbs, cols, gradients, segment times and KOMs.
 
-- **[Strava](https://www.strava.com/)** (Segments / Local Legends) — closed, freemium. The de-facto global KOM standard everyone benchmarks against; leaderboards increasingly paywalled.
-- **[VeloViewer](https://veloviewer.com/)** — closed, paid. Deep segment/climb analytics on the Strava API (VAM, category, 3D profiles).
-- **[climbfinder](https://climbfinder.com/)** — closed, freemium. The broadest, best-UX European climb-profile database.
-- **[CyclingCols](https://www.cyclingcols.com/)** — closed (community), free. A broad community catalogue of cols across many countries — for riders ticking off climbs one by one.
-- **[myCols](https://mycols.app/)** — closed, free. Worldwide climbs with history/storytelling per ascent.
-- **[PJAMM Cycling](https://pjammcycling.com/)** — closed, freemium. Global steepest/hardest climbs + a proprietary difficulty index (PDI) and Street View.
-- **[salite.ch](https://salite.ch/)** — closed (volunteer), free. Veteran European archive, deep on Italy/Switzerland.
-- **[cols-cyclisme.com](https://www.cols-cyclisme.com/)** — closed, free. The French-speaking community's col reference.
-- **[quaeldich.de](https://www.quaeldich.de/)** — closed (community), free. Rich German-language climb detail (surface, traffic, photos).
-- **[climbbybike.com](https://climbbybike.com/)** — closed, free. One of the earliest large pan-European climb indexes.
-- **[100 Greatest Cycling Climbs](https://www.100climbs.co.uk/)** (Simon Warren) — closed, paid. The canonical UK climb bucket-list (book + app).
-- **[CyclingUp](https://cyclingup.eu/) / [Climb Index Europe](https://www.climbindex.eu/) / [cycloclimbing](https://cycloclimbing.com/)** — closed, free. Smaller volunteer European catalogues.
+- **[Strava](https://www.strava.com/)** (Segments / Local Legends) · closed, freemium · [**API, restricted**](https://www.strava.com/legal/api). Segment leaderboards worldwide. The agreement forbids redistributing what comes out of the API, and a third-party app may not show a rider's activity to anyone but that rider.
+- **[VeloViewer](https://veloviewer.com/)** · closed, paid · [**API, restricted**](https://www.strava.com/legal/api). Segment and climb analytics computed from Strava's API, so its numbers travel on Strava's terms, not its own.
+- **[climbfinder](https://climbfinder.com/)** · closed, freemium · **no export documented**. European climb profiles.
+- **[CyclingCols](https://www.cyclingcols.com/)** · closed (community), free · **no export documented**. A community catalogue of cols across many countries.
+- **[myCols](https://mycols.app/)** · closed, free · **no export documented**. Worldwide climbs, with a history per ascent.
+- **[PJAMM Cycling](https://pjammcycling.com/)** · closed, freemium · **no export documented**. Global climbs, with a proprietary difficulty index (PDI).
+- **[salite.ch](https://salite.ch/)** · closed (volunteer), free · **no export documented**. A European archive, deepest on Italy and Switzerland.
+- **[cols-cyclisme.com](https://www.cols-cyclisme.com/)** · closed, free · **no export documented**. The French-speaking community's col reference.
+- **[quaeldich.de](https://www.quaeldich.de/)** · closed (community), free · **no export documented**. German-language climb detail.
+- **[climbbybike.com](https://climbbybike.com/)** · closed, free · **no export documented**. A pan-European climb index.
+- **[100 Greatest Cycling Climbs](https://www.100climbs.co.uk/)** (Simon Warren) · closed, paid · **no export documented**. A UK climb bucket-list, as a book and an app; GPX files are sold with it.
+- **[CyclingUp](https://cyclingup.eu/) / [Climb Index Europe](https://www.climbindex.eu/) / [cycloclimbing](https://cycloclimbing.com/)** · closed, free · **no export documented**. Volunteer European catalogues. Climb Index Europe does publish [downloads](https://www.climbindex.eu/BTP/btp-downloads.php), but they are climb maps and its own planner software, not the data behind them.
 
-**Fragmentation:** heavily closed; there is **no shared open climb dataset**. Strava's leaderboards are the only near-universal layer (proprietary, paywalled), while a dozen national databases re-catalogue the same cols behind walled gardens.
+**Fragmentation:** twelve catalogues of largely the same European cols, and **not one of them documents a way to get its data out**. The only interface in the section is Strava's, and its agreement exists to stop what comes out of it travelling any further. So each new catalogue starts from zero, re-surveying cols that four other sites already hold.
 
 ## Quality rides & ratings
 Route planning, navigation, ride sharing, and cyclist-experience ratings (quietness, scenery, surface).
 
-- **[Komoot](https://www.komoot.com/)** — closed, freemium. Surface/bike-type routing + a vast community Highlights layer & Trail View.
+- **[Komoot](https://www.komoot.com/)** — closed, freemium. Surface/bike-type routing + a vast community Highlights layer & Trail View. Planning is free anywhere in the world; [navigating, recording, and sending a route to your own Garmin or Wahoo](https://support.komoot.com/hc/en-us/articles/10163258809626-komoot-plans-Maps-and-Premium) need the region unlocked, by a one-time Maps purchase or a Premium subscription. Sold in 2025 to Bending Spoons, which let most of the team go: the terms a silo runs on belong to whoever owns it this year.
 - **[RideWithGPS](https://ridewithgps.com/)** — closed, freemium. Precise planning, cue sheets, club/event tooling.
 - **[Strava Routes / Heatmap](https://www.strava.com/maps/global-heatmap)** — closed, freemium. Routes from aggregated activity; "where cyclists actually ride."
 - **[cycle.travel](https://cycle.travel/)** — mixed (OSM base), free. Genuinely quietness-optimised routing from real traffic data.
@@ -225,7 +227,7 @@ Surface type & quality, gravel/pavé, hazards, closures, traffic/safety, live co
 - **[Gravelmap](https://gravelmap.com/)** — crowdsourced (non-profit), free. The largest *dedicated* unpaved-surface database — but its own silo.
 - **[Trailforks](https://www.trailforks.com/)** — closed (Outside/Pinkbike), freemium. The strongest real-time MTB trail-condition reporting.
 - **[Strava Heatmap / Metro](https://www.strava.com/maps/global-heatmap)** — closed, freemium. Popularity signal — but **no surface-quality info**.
-- **[Bikemap](https://www.bikemap.net/) / [RideWithGPS](https://ridewithgps.com/) / [Komoot](https://www.komoot.com/)** — closed, freemium. Surface display + comfort/popularity routing.
+- **[Bikemap](https://www.bikemap.net/) / [RideWithGPS](https://ridewithgps.com/) / [Komoot](https://www.komoot.com/)** — closed, freemium. Surface display + comfort/popularity routing. Komoot's enhanced surface detail and gradient overlay are [a Premium feature](https://support.komoot.com/hc/en-us/articles/10163258809626-komoot-plans-Maps-and-Premium), so the surface fact itself is what the subscription buys.
 - **[Waze](https://www.waze.com/) / [Google Maps](https://www.google.com/maps)** — closed, free. Real-time closures/hazards — but car-centric, thin on bike detail.
 - **[BikeMaps.org](https://bikemaps.org/)** — open/non-profit, free. Crowd cyclist collisions/near-misses/hazards (academic, sparse).
 - **[OsmAnd](https://osmand.net/)** — open-source core, freemium. Offline surface inspection in the field.
