@@ -101,7 +101,13 @@ recorded as one. The Commons serves long rides, and a route that warns of
 fifty places warns of none; the list below is deliberately short and stays
 short (owner 2026-09-09).
 
-- Road-surface problems: potholes, broken surface, loose gravel, ice [tap][edit][safety]
+The point of a hazard is to be known before the ride. The **ride check** does
+that today: upload a GPX and every hazard on file along the line comes back in
+riding order, with the rest of what the corridor holds; the file is read and
+discarded, nothing is stored. The same for a route drawn in the Commons, rather
+than uploaded, is not built yet.
+
+- Road-surface problems: potholes, broken surface, ice, and gravel or sand washed onto a paved bend, the common trigger on a descent [tap][edit][safety]
 - Seasonal closures: cols under snow, flood-prone dips, snow gates; the closure lifetime and its expiry are built for these [tap][edit][safety][OSM]
 - Construction / temporary closures / diversions, with the detour [tap][edit][safety]
 - One spot a rider can pin: a bend where you cannot see what is coming, or a busy road you must cross in one go with no island in the middle. The form calls these *bad corner* and *junction / crossing*, never *dangerous*: one rider's fright is not a fact [tap][edit][safety]
@@ -125,7 +131,7 @@ short (owner 2026-09-09).
 - Climb surface & whether it's paved/gravel [edit]
 - Difficulty category (HC/1–4) [auto]
 - Named climbs & famous segments [edit]
-- Descents: technicality, hairpin count, surface, danger notes [edit][safety]
+- Descents: technicality, hairpin count, surface [edit]. Gravel or sand on a paved bend is not a note on the climb: it is a hazard pinned on that bend under **E**, so the ride check can warn about it [safety]
 - Per-area relief / total climbing [auto]
 
 ## O. Where to sleep
