@@ -199,6 +199,7 @@ a dynamic `import()` instead, since it loads the library only when a page asks.
 | Test | Asserts |
 |---|---|
 | `testHtmlResponseCarriesCspWithNonce` | Header present on HTML; `default-src 'self'`; `object-src 'none'`; `script-src 'self' 'nonce-…'` and **no** unpkg host; **no** `'unsafe-inline'` in script-src |
+| `testNoPageAllowsInlineScript` | `'unsafe-inline'` absent from `script-src` on `/`, `/map`, `/regions` and `/contributors`, **anywhere in the directive**. It asserts on the directive's tokens, not on a substring of the header: the old check looked for the literal `script-src 'self' 'unsafe-inline'` and so stopped matching the moment a nonce sat between the two, which is the shape that actually turns up. Symfony's web debug toolbar appends `'unsafe-inline'` and a second nonce to whatever policy it finds, which is why a dev page's header carries the token while the test stayed green. If this ever fails, either our own policy grew one, or the profiler started rewriting responses in the test environment, meaning that environment no longer resembles production |
 | `testUnsafeEvalIsScopedToTheMapPage` | `'unsafe-eval'` present on `/map`, absent on `/` |
 | `testWorkerSrcAllowsSameOriginAndBlob` | `worker-src 'self' blob:` on `/map`. MapLibre v6's tile worker is a same-origin module URL; dropping `'self'` blocks every tile and says so only in the console |
 | `testEveryInlineScriptCarriesTheHeaderNonce` | On `/`, `/map`, `/regions`, `/contributors`: every `<script>` without `src` carries exactly the header's nonce |

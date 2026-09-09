@@ -38,7 +38,70 @@ final class CspTest extends WebTestCase
             $csp,
         );
         self::assertStringNotContainsString('unpkg.com', $csp);
-        self::assertStringNotContainsString("script-src 'self' 'unsafe-inline'", $csp, 'script-src must not allow unsafe-inline');
+        self::assertNotContains("'unsafe-inline'", self::scriptSrc($csp), 'script-src must not allow unsafe-inline');
+    }
+
+    /**
+     * Every page, not only the home page, and anywhere in the directive.
+     *
+     * The old check looked for the literal `script-src 'self' 'unsafe-inline'`,
+     * which only matches when the two sit side by side. The shape that actually
+     * turns up has the nonce in between, and the source of it is real: Symfony's
+     * web debug toolbar appends `'unsafe-inline'` plus a nonce of its own to
+     * whatever CSP it finds. That is fine in dev, where it is scoped to the
+     * toolbar's own markup and the browser ignores it anyway once a nonce is
+     * present, and it is why the literal check kept passing while the header on
+     * a running dev page carried the token twice over.
+     *
+     * If this ever fails, the question is which of two things happened: our own
+     * policy grew an `'unsafe-inline'`, which is the bug this guards, or the
+     * profiler started rewriting responses in the test environment too, which
+     * would mean the test environment stopped resembling production.
+     */
+    #[DataProvider('cspPages')]
+    public function testNoPageAllowsInlineScript(string $path): void
+    {
+        $client = static::createClient();
+        $client->request('GET', $path);
+
+        self::assertResponseIsSuccessful();
+        $csp = (string) $client->getResponse()->headers->get('Content-Security-Policy');
+
+        self::assertNotContains(
+            "'unsafe-inline'",
+            self::scriptSrc($csp),
+            $path.": script-src must not allow inline script anywhere in the directive.\n".$csp,
+        );
+    }
+
+    /** @return iterable<string, array{string}> */
+    public static function cspPages(): iterable
+    {
+        yield 'home' => ['/'];
+        yield 'map' => ['/map'];
+        yield 'regions' => ['/regions'];
+        yield 'contributors' => ['/contributors'];
+    }
+
+    /**
+     * The script-src directive's sources, split out of the whole policy.
+     *
+     * Asserting on the tokens rather than on a substring of the header: a
+     * substring check silently stops matching the moment anything is inserted
+     * between the two words it was looking for.
+     *
+     * @return list<string>
+     */
+    private static function scriptSrc(string $csp): array
+    {
+        foreach (explode(';', $csp) as $directive) {
+            $parts = preg_split('/\s+/', trim($directive), -1, \PREG_SPLIT_NO_EMPTY) ?: [];
+            if ('script-src' === ($parts[0] ?? '')) {
+                return array_values(\array_slice($parts, 1));
+            }
+        }
+
+        self::fail('the policy carries no script-src at all: '.$csp);
     }
 
     /**
