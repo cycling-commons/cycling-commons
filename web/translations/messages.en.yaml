@@ -4124,6 +4124,9 @@ admin:
       map_confirmation_stale_months:
         label: "Confirmations go stale after (months)"
         help: "How long a rider's check on a tap, shop, toilet or hazard counts for. Past this the map gives the pin an orange ring, so a rider passing it knows it is worth a look. One check resets the clock. Places that do not change - climbs, viewpoints, history - never go stale."
+      map_item_verify_threshold:
+        label: 'Riders needed to verify a place'
+        help: 'How many riders other than the submitter must confirm a place before it verifies itself and loses its "?" badge. A curator still settles it in one tap. Lower it for quiet regions where two riders would otherwise never stand at the same tap.'
       route_region_active_cap:
         label: 'Active routes per region'
         help: 'How many routes a region may have live at once. A curator approving beyond the cap is blocked and asked to retire something first.'

@@ -92,9 +92,10 @@ final class CuratedReadiness
                FROM item i
               WHERE i.region_id IN (:ids)
                 AND i.state IN '.ItemState::servedSqlTuple()."
-                AND (i.state = 'verified' OR i.source = 'authority'
-                     OR EXISTS (SELECT 1 FROM item_confirmation c
-                                 WHERE c.item_id = i.id AND c.source <> 'form'))
+                -- One definition of verified, shared with the map and the
+                -- public API (owner 2026-09-09). A region earns Best of on
+                -- rows riders have stood at, never on rows a register listed.
+                AND i.state = 'verified'
               GROUP BY i.region_id",
             ['ids' => $regionIds],
             ['ids' => ArrayParameterType::INTEGER],

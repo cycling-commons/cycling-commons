@@ -4103,6 +4103,9 @@ admin:
       map_confirmation_stale_months:
         label: "Bestätigungen veralten nach (Monaten)"
         help: "Wie lange die Kontrolle einer Radfahrerin an einem Wasserhahn, Laden, WC oder einer Gefahr zählt. Danach gibt die Karte der Nadel einen orangen Ring, damit Vorbeifahrende wissen, dass ein Blick lohnt. Eine Kontrolle setzt die Uhr zurück. Orte, die sich nicht ändern - Anstiege, Aussichtspunkte, Geschichte - veralten nie."
+      map_item_verify_threshold:
+        label: 'Radfahrende, die einen Ort bestätigen müssen'
+        help: 'Wie viele Radfahrende außer der einreichenden Person einen Ort bestätigen müssen, bevor er sich selbst bestätigt und sein "?" verliert. Eine Kuratorin oder ein Kurator erledigt das weiterhin mit einem Tippen. Für ruhige Regionen niedriger setzen, wo sonst nie zwei Radfahrende am selben Brunnen stehen.'
       route_region_active_cap:
         label: 'Aktive Routen je Region'
         help: 'Wie viele Routen eine Region gleichzeitig veröffentlicht haben darf. Wer über die Obergrenze hinaus freigibt, wird gestoppt und gebeten, zuerst etwas außer Dienst zu stellen.'

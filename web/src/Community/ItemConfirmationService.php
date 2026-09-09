@@ -14,6 +14,9 @@ use App\Catalog\Entity\ItemConfirmation;
 use App\Catalog\ItemState;
 use App\Catalog\ItemType;
 use App\Entity\User;
+use App\Settings\SettingsProviderInterface;
+use App\Settings\SettingsRegistry;
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -26,9 +29,20 @@ use Doctrine\ORM\EntityManagerInterface;
  */
 final class ItemConfirmationService
 {
+    /**
+     * Stances that vouch for the record rather than warn about it.
+     *
+     * "Not potable" says the water is bad, not that the entry is good, and
+     * "not as described" is a complaint about the surface class we published.
+     * Neither is a rider saying *this is right*, so neither counts towards
+     * verification (docs/specs/moderation-and-contribution.md §10.1).
+     */
+    private const array VOUCHING = [ConfirmationStance::Potable, ConfirmationStance::Exists];
+
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly Connection $db,
+        private readonly SettingsProviderInterface $settings,
     ) {
     }
 
@@ -90,25 +104,44 @@ final class ItemConfirmationService
                 $this->em->persist(new ItemConfirmation((int) $item->getId(), (int) $user->getId(), $stance, $source));
             }
 
-            $this->verifyIfCurator($item, $user, $stance, $source);
+            // The tally below is a DBAL count, so this rider's own row has to
+            // be in the table before it is asked how many there are.
+            $this->em->flush();
+            $this->verifyIfEarned($item, $user, $stance, $source);
         });
     }
 
     /**
-     * A curator's drawer confirmation verifies the item. Form-sourced answers never do.
+     * Promote Unverified to Verified when this confirmation earns it.
+     *
+     * Two ways in, one destination. A curator's own drawer confirmation
+     * settles it outright: three riders should not be needed to agree that a
+     * castle is a castle. Otherwise it takes
+     * `map.item_verify_threshold` independent riders, which is the same
+     * instrument the routes queue uses and the only real check this project
+     * has, since a photo can be generated and a place invented.
+     *
+     * The rule is the SAME whatever published the row. An OpenStreetMap node,
+     * a national register entry and a rider's own pin all start Unverified and
+     * all leave it the same way: somebody stood there (owner 2026-09-09). One
+     * definition of verified, so the pin and the record can never disagree.
+     *
+     * Form-sourced answers never count: a submitter is not a witness to their
+     * own submission.
      *
      * @see docs/specs/moderation-and-contribution.md §10
      */
-    private function verifyIfCurator(Item $item, User $user, ConfirmationStance $stance, ConfirmationSource $source): void
+    private function verifyIfEarned(Item $item, User $user, ConfirmationStance $stance, ConfirmationSource $source): void
     {
         if (ConfirmationSource::Drawer !== $source
             || ItemState::Unverified !== $item->getState()
-            || ConfirmationStance::NotPotable === $stance
-            || ConfirmationStance::NotAsDescribed === $stance) {
+            || !\in_array($stance, self::VOUCHING, true)) {
             return;
         }
+
         $roles = $user->getRoles();
-        if (!\in_array('ROLE_CURATOR', $roles, true) && !\in_array('ROLE_ADMIN', $roles, true)) {
+        $isCurator = \in_array('ROLE_CURATOR', $roles, true) || \in_array('ROLE_ADMIN', $roles, true);
+        if (!$isCurator && $this->vouchingTally($item) < $this->settings->get(SettingsRegistry::MAP_ITEM_VERIFY_THRESHOLD)) {
             return;
         }
 
@@ -119,6 +152,26 @@ final class ItemConfirmationService
             ->setOldValue(ItemState::Unverified->value)
             ->setNewValue(ItemState::Verified->value)
             ->setChangedBy((int) $user->getId()));
+    }
+
+    /**
+     * Riders vouching for this item right now, form answers excluded.
+     *
+     * One row per rider is a database constraint, so a count of rows is a
+     * count of people and the same rider tapping twice can never add up.
+     */
+    private function vouchingTally(Item $item): int
+    {
+        return (int) $this->db->fetchOne(
+            'SELECT COUNT(*) FROM item_confirmation
+              WHERE item_id = :id AND source <> :form AND stance IN (:stances)',
+            [
+                'id' => (int) $item->getId(),
+                'form' => ConfirmationSource::Form->value,
+                'stances' => array_map(static fn (ConfirmationStance $s): string => $s->value, self::VOUCHING),
+            ],
+            ['stances' => ArrayParameterType::STRING],
+        );
     }
 
     /**

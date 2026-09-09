@@ -24,6 +24,15 @@ final class SettingsRegistry
     public const string MAP_CURATED_MIN_BLOCKS = 'map.curated_default_min_blocks';
     public const string MAP_CURATED_MIN_PER_BLOCK = 'map.curated_default_min_per_block';
     public const string MAP_CONFIRMATION_STALE_MONTHS = 'map.confirmation_stale_months';
+    /**
+     * Independent riders who must confirm a place before it verifies itself.
+     *
+     * The counterpart of {@see self::ROUTE_RIDE_VERIFY_THRESHOLD} for places,
+     * and deliberately lower: "I rode this whole route" is a bigger claim than
+     * "this tap is here", and a region thin enough that three riders never
+     * stand at the same fountain would otherwise keep a `?` on it forever.
+     */
+    public const string MAP_ITEM_VERIFY_THRESHOLD = 'map.item_verify_threshold';
     public const string ROUTE_REGION_ACTIVE_CAP = 'route.region_active_cap';
     public const string ROUTE_RIDE_VERIFY_THRESHOLD = 'route.ride_verify_threshold';
     public const string MODERATION_RETENTION_MONTHS = 'moderation.retention_months';
@@ -59,6 +68,7 @@ final class SettingsRegistry
             [self::MAP_CURATED_MIN_BLOCKS, 1, \count(CuratedReadiness::BLOCKS), self::GROUP_MAP],
             [self::MAP_CURATED_MIN_PER_BLOCK, 1, 100, self::GROUP_MAP],
             [self::MAP_CONFIRMATION_STALE_MONTHS, 1, 60, self::GROUP_MAP],
+            [self::MAP_ITEM_VERIFY_THRESHOLD, 1, 20, self::GROUP_MAP],
             [self::ROUTE_REGION_ACTIVE_CAP, 1, 1000, self::GROUP_ROUTES],
             [self::ROUTE_RIDE_VERIFY_THRESHOLD, 1, 100, self::GROUP_ROUTES],
             [self::MODERATION_RETENTION_MONTHS, 1, 120, self::GROUP_MODERATION],

@@ -183,14 +183,35 @@ final class CatalogProviderTest extends KernelTestCase
             self::assertArrayNotHasKey('v', $f['properties'], 'a listing alone does not verify a row');
         }
 
-        // A rider's confirmation does, exactly as for any other row.
+        // Nor does one confirmation, for an authority row or any other. The
+        // tally that earns the state lives in ItemConfirmationService; this
+        // query reads the state and nothing else (owner 2026-09-09).
         $id = (int) $features[0]['properties']['id'];
         $conn->executeStatement(
             "INSERT INTO item_confirmation (item_id, user_id, stance, source, created_at, updated_at) VALUES (:item, 1, 'exists', 'drawer', NOW(), NOW())",
             ['item' => $id],
         );
-        $again = array_values(array_filter($this->payload()['O']['authority']['features'], static fn (array $f): bool => $f['properties']['id'] === $id));
-        self::assertSame(1, $again[0]['properties']['v'] ?? null);
+        self::assertArrayNotHasKey('v', $this->byId($this->payload()['O']['authority']['features'])[$id]);
+
+        $conn->executeStatement("UPDATE item SET state = 'verified' WHERE id = :id", ['id' => $id]);
+        self::assertSame(1, $this->byId($this->payload()['O']['authority']['features'])[$id]['v'] ?? null);
+    }
+
+    /**
+     * Feature properties keyed by item id.
+     *
+     * @param list<array{properties: array<string, mixed>}> $features
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function byId(array $features): array
+    {
+        $out = [];
+        foreach ($features as $f) {
+            $out[(int) $f['properties']['id']] = $f['properties'];
+        }
+
+        return $out;
     }
 
     /**
@@ -462,8 +483,10 @@ final class CatalogProviderTest extends KernelTestCase
             self::assertSame(1, $f['properties']['v']);
         }
 
-        // Demote one to unverified + confirm it: still served (human touch)
-        // and still v:1 (the confirmation is the real signal). Demote another
+        // Demote one to unverified + confirm it: still SERVED, because a human
+        // touched it, and yet NOT flagged verified, because one confirmation is
+        // not the threshold. Serving and verifying are two questions, and this
+        // is the row that proves they are asked separately. Demote another
         // without any touch: it leaves the payload entirely (coverage-only).
         $ids = array_map(static fn (array $f): int => $f['properties']['id'], $this->payload()['D']['features']);
         sort($ids);
@@ -479,24 +502,26 @@ final class CatalogProviderTest extends KernelTestCase
         foreach ($this->payload()['D']['features'] as $f) {
             $byId[$f['properties']['id']] = $f['properties'];
         }
-        self::assertSame(1, $byId[$ids[0]]['v']);          // confirmed → served + real flag
-        self::assertArrayNotHasKey($ids[1], $byId);        // untouched unverified → coverage-only
-        self::assertSame(1, $byId[$ids[2]]['v']);          // still verified
+        self::assertArrayHasKey($ids[0], $byId);               // confirmed → served
+        self::assertArrayNotHasKey('v', $byId[$ids[0]]);       // one confirmation → not verified
+        self::assertArrayNotHasKey($ids[1], $byId);            // untouched unverified → coverage-only
+        self::assertSame(1, $byId[$ids[2]]['v']);              // verified state → the flag
     }
 
     public function testClimbAndSurfaceCarryRealVerifiedFlag(): void
     {
         // Climbs (N) and surface segments (A) serve through their own shapes,
-        // not featureCollection() — they must still carry the SAME real
-        // verified signal (map-and-search.md §12: v:1 = verified state OR ≥1
-        // confirmation), or the map's index mislabels every DB-verified climb
-        // as community. Imported seeds are unverified: no 'v' key (byte-stable).
+        // not featureCollection() — they must still carry the SAME verified
+        // signal (map-and-search.md §12: v:1 = verified state, one definition),
+        // or the map's index mislabels every DB-verified climb as community.
+        // Imported seeds are unverified: no 'v' key (byte-stable).
         self::assertArrayNotHasKey('v', $this->payload()['N'][0]);
         self::assertArrayNotHasKey('v', $this->payload()['A'][0]);
 
         $conn = $this->em->getConnection();
         $conn->executeStatement("UPDATE item SET state = 'verified' WHERE letter = 'N'");
-        // A takes the confirmation branch so both derivation legs are pinned.
+        // A gets a lone confirmation, which is short of the threshold, so this
+        // shape must not invent a flag the featureCollection() leg would deny.
         $segId = $this->payload()['A'][0]['id'];
         $conn->executeStatement(
             'INSERT INTO item_confirmation (item_id, user_id, stance, created_at, updated_at) VALUES (:item, 1, :stance, NOW(), NOW())',
@@ -504,6 +529,9 @@ final class CatalogProviderTest extends KernelTestCase
         );
 
         self::assertSame(1, $this->payload()['N'][0]['v']);
+        self::assertArrayNotHasKey('v', $this->payload()['A'][0]);
+
+        $conn->executeStatement("UPDATE item SET state = 'verified' WHERE id = :id", ['id' => $segId]);
         self::assertSame(1, $this->payload()['A'][0]['v']);
     }
 

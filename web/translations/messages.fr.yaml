@@ -4100,6 +4100,9 @@ admin:
       map_confirmation_stale_months:
         label: "Les confirmations expirent après (mois)"
         help: "Combien de temps compte la vérification d'un point d'eau, d'un magasin, de toilettes ou d'un danger par un cycliste. Au-delà, la carte entoure le repère d'un anneau orange, pour qu'un cycliste qui passe sache qu'il vaut la peine d'y jeter un œil. Une vérification remet le compteur à zéro. Les lieux qui ne changent pas - cols, points de vue, patrimoine - n'expirent jamais."
+      map_item_verify_threshold:
+        label: 'Cyclistes nécessaires pour vérifier un lieu'
+        help: 'Combien de cyclistes autres que la personne qui l''a proposé doivent confirmer un lieu avant qu''il ne se vérifie de lui-même et perde son "?". Un curateur ou une curatrice tranche toujours en un seul geste. Abaissez-le pour les régions calmes où deux cyclistes ne se tiendraient jamais à la même fontaine.'
       route_region_active_cap:
         label: 'Itinéraires actifs par région'
         help: 'Nombre d’itinéraires qu’une région peut afficher simultanément. Un curateur qui approuve au-delà du plafond est bloqué et invité à en retirer un d’abord.'

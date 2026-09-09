@@ -34,8 +34,12 @@ final class PublicItemsProvider
      */
     public function featuresInBbox(?string $letter, array $bbox, int $limit, ?string $tier = null): array
     {
-        // Named once so SELECT and the tier filter cannot disagree; no contributor join.
-        $verified = '(i.state = \'verified\' OR i.source = \'authority\' OR EXISTS (SELECT 1 FROM item_confirmation c WHERE c.item_id = i.id AND c.source <> \'form\'))';
+        // Named once so SELECT and the tier filter cannot disagree; no
+        // contributor join. One definition of verified, shared with the map and
+        // the readiness gate (owner 2026-09-09): the state column, reached by
+        // `map.item_verify_threshold` riders or by one curator. Neither a lone
+        // confirmation nor an `authority` provenance stands in for it any more.
+        $verified = '(i.state = \'verified\')';
 
         $sql = 'SELECT i.id, i.name, i.letter, ST_AsGeoJSON(i.geom) AS geom, '.$verified.' AS verified
                 FROM item i

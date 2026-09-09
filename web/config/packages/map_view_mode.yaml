@@ -38,3 +38,8 @@ parameters:
     # "check it twice a year"; the ageing band sits at half of it, so a
     # six-month dial means fresh for three, ageing for three, then stale.
     map.confirmation_stale_months: 6
+    # Independent riders who must confirm a place before it verifies itself.
+    # A curator still settles it in one tap. Lower than the route threshold on
+    # purpose: "I rode this whole route" is a bigger claim than "this tap is
+    # here", and three riders never meet at one fountain in a quiet region.
+    map.item_verify_threshold: 2

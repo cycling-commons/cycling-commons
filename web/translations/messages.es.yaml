@@ -4130,6 +4130,9 @@ admin:
       map_confirmation_stale_months:
         label: "Las confirmaciones caducan a los (meses)"
         help: "Cuánto tiempo cuenta la comprobación de una fuente, tienda, aseo o peligro por parte de un ciclista. Pasado ese plazo el mapa rodea la chincheta con un anillo naranja, para que quien pase sepa que merece un vistazo. Una comprobación reinicia el contador. Los lugares que no cambian - puertos, miradores, patrimonio - nunca caducan."
+      map_item_verify_threshold:
+        label: 'Ciclistas necesarios para verificar un lugar'
+        help: 'Cuántos ciclistas distintos de quien lo propuso deben confirmar un lugar antes de que se verifique solo y pierda su "?". Una persona curadora lo resuelve igualmente con un solo toque. Bájalo en regiones tranquilas donde dos ciclistas nunca coincidirían en la misma fuente.'
       route_region_active_cap:
         label: 'Rutas activas por región'
         help: 'Cuántas rutas puede tener publicadas a la vez una región. A un curador que apruebe por encima del tope se le bloquea y se le pide que retire algo primero.'

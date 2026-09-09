@@ -142,11 +142,19 @@ final class CatalogProvider
     }
 
     /**
-     * Verified = verified state or a non-`form` confirmation. Never provenance:
-     * an authority row (a register tap) is a place nobody here has stood at
-     * until a rider confirms it, and it wears the dashed "?" pin until then
-     * (catalog-data-model.md §5; owner 2026-09-06, after 3283 RIVM taps drew
-     * the plain pin). The register's authority is its RANK, not a dot.
+     * Verified = `state = verified`, and nothing else (owner 2026-09-09: "we
+     * must draw 1 line else everything gets too confusing"). The pin and the
+     * record now say the same thing, because they read the same column.
+     *
+     * Two things used to short-circuit this query and no longer do. A single
+     * confirmation drew a full pin while the record stayed Unverified, so a
+     * `?` disappearing meant nothing a curator would recognise; the tally that
+     * earns the state lives in `ItemConfirmationService` instead. And
+     * provenance never verified anything: an authority row (a register tap) is
+     * a place nobody here has stood at until a rider confirms it, and it wears
+     * the dashed "?" pin until then (catalog-data-model.md §5; owner
+     * 2026-09-06, after 3283 RIVM taps drew the plain pin). The register's
+     * authority is its RANK, not a dot.
      *
      * @see docs/specs/map-and-search.md §12
      *
@@ -157,7 +165,7 @@ final class CatalogProvider
         // Creator is the earliest type=new submission; harvested rows stay anonymous.
         $sql = 'SELECT i.id, i.name, i.letter, ST_AsGeoJSON(i.geom) AS geom, i.attributes, i.source_ref, i.source, s.name AS prov, i.region_id, dp.provider_key AS pk,
                        contributor.display_name AS by_name, contributor.public_profile AS by_public, contributor.uuid AS by_uuid,
-                       (i.state = \'verified\' OR EXISTS (SELECT 1 FROM item_confirmation c WHERE c.item_id = i.id AND c.source <> \'form\')) AS verified,
+                       (i.state = \'verified\') AS verified,
                        -- docs/specs/moderation-and-contribution.md 6.3: `form` must not reset freshness.
                        (SELECT max(c2.created_at) FROM item_confirmation c2
                          WHERE c2.item_id = i.id AND c2.source <> \'form\') AS last_confirmed

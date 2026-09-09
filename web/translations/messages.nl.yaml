@@ -4100,6 +4100,9 @@ admin:
       map_confirmation_stale_months:
         label: "Bevestigingen verlopen na (maanden)"
         help: "Hoe lang de controle van een fietser op een kraan, winkel, toilet of gevaar meetelt. Daarna geeft de kaart de speld een oranje ring, zodat een fietser die langskomt weet dat het de moeite waard is om te kijken. Eén controle zet de klok terug. Plekken die niet veranderen - beklimmingen, uitzichten, erfgoed - verlopen nooit."
+      map_item_verify_threshold:
+        label: 'Fietsers nodig om een plek te bevestigen'
+        help: 'Hoeveel fietsers behalve de indiener een plek moeten bevestigen voordat die zichzelf bevestigt en zijn "?" verliest. Een curator regelt het nog steeds met één tik. Zet hem lager voor rustige regio''s waar twee fietsers anders nooit bij dezelfde kraan staan.'
       route_region_active_cap:
         label: 'Actieve routes per regio'
         help: 'Hoeveel routes een regio tegelijk live mag hebben. Een curator die boven het plafond goedkeurt, wordt geblokkeerd en gevraagd eerst iets uit roulatie te nemen.'
