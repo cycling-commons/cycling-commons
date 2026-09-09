@@ -1,0 +1,44 @@
+wiki/developers/gis-beyond/index.md
+  s_ed83b79ca2cf56::t_835962b0728b2c 9-10,39-40
+  s_ed83b79ca2cf56::t_1750d332ec8ec7 34,36,38,41,43,45,53
+wiki/developers/gis-beyond/reprojection.md
+  s_ed83b79ca2cf56::t_1750d332ec8ec7 170
+  s_ed83b79ca2cf56::t_835962b0728b2c 14-17
+wiki/developers/gis-beyond/edge-cases.md
+  s_ed83b79ca2cf56::t_2ad39e88b9a00f 15,47-50,69-85,119-127,218-220,278-283,321-342
+  s_ed83b79ca2cf56::t_1750d332ec8ec7 89,131,182,224,277
+wiki/developers/gis-beyond/relations.md
+  s_ed83b79ca2cf56::t_835962b0728b2c 216-219
+  s_ed83b79ca2cf56::t_1750d332ec8ec7 190
+wiki/developers/gis-beyond/geocoding.md
+  s_ed83b79ca2cf56::t_1750d332ec8ec7 166
+  s_ed83b79ca2cf56::t_5eab992bbaf7e6 8-25,37-42,49-55,57-59,121-132,154-162,169,191,198-210,213,216-222
+wiki/developers/gis-beyond/elevation.md
+  s_ed83b79ca2cf56::t_1750d332ec8ec7 273
+  s_ed83b79ca2cf56::t_4a3090d88a073a 5-21,138-139,141-151,154,159,161-162,164-165,172-200,204-206,214,226-229,241-242,244-249,355
+  s_ed83b79ca2cf56::t_6e8e64a419160a 264
+wiki/developers/gis-beyond/routing.md
+  s_ed83b79ca2cf56::t_cebbe851df3f17 117,119-128,137-138,157,172-175,180,211-212,263-266
+  s_ed83b79ca2cf56::t_1750d332ec8ec7 194
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "903e6ba5796fc904d31ba4a7e501eb2e2388aa7d",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_ed83b79ca2cf56": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ab4abb1f-aae3-4b43-a7ef-310a5610a4d6",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
