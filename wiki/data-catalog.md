@@ -156,6 +156,7 @@ than uploaded, is not built yet.
 - Start point, loop or point-to-point, difficulty, the season it is best ridden in [edit]
 - *I rode this* confirmations from other riders, which are what verify a route [tap]
 - A photo of the ride [media]
+- What lies along the route, shown on the route itself without asking: the ride check run over the stored line, so a recommended route opens with its water, coffee stops, toilets, shelters, hazards and surface changes in riding order. The corridor query exists for uploaded files; pointing it at a stored route is the missing step *(not built)* [auto]
 - What the route asks of a body, derived along the line from **A** and the geometry we already measure *(design, not built)*: the **narrowest passage** in centimetres and where it is; **turn density**, decisions per kilometre; the share of the line on **signed routes**, from OSM route relations; **traffic exposure** per kilometre, worst stretch named. Predictability, legibility and sensory load are stable qualities of a route, not hazards that perish, which is why they are here and not under **E** [auto]
 - Whether a road is quiet is detected first, not asked: Scout, the ride-file tool, derives it from the ride itself, and the answer lands on the road under **A** as an aggregate fact, no trace kept *(being built)* [auto]
 - Categories a route can carry, chosen by the proposer and confirmed by the vote: cultural, architecture, scenic, quiet, and the like; a rider filters the region's best by the kind of ride they want *(not built)* [edit][tap]
@@ -305,7 +306,7 @@ coat of arms · a fact or two. **Cycling heritage:** Tour/Classics history · ve
 ## R. Recommended routes: per route
 Name · the line (drawn or GPX) · start · loop or point-to-point · distance · climbing · elevation profile ·
 difficulty · best season · categories (cultural · architecture · scenic · quiet · …, *design*) · a photo · who proposed it · *I rode this* count · state (unverified → verified) ·
-derived along the line *(design)*: narrowest passage (cm, and where) · turns per km · share on signed routes ·
+derived along the line *(design)*: what lies along it in riding order (water · coffee · toilets · shelter · hazards · surface changes) · narrowest passage (cm, and where) · turns per km · share on signed routes ·
 traffic exposure per km and its worst stretch · quiet stretches, as Scout detects them.
 Road qualities (quietness, smoothness, surface, barriers) are per road under **A**, never per route; a route
 only sums them up.
