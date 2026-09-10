@@ -198,6 +198,53 @@ final class CatalogProviderTest extends KernelTestCase
     }
 
     /**
+     * Every served point says who keeps it and how far up the ladder it is
+     * (data-provider-hierarchy.md §6.7.7), computed once in PHP so the pin,
+     * the API and the curator page can never disagree.
+     */
+    public function testServedFeaturesCarryTheirRungAndCustody(): void
+    {
+        $conn = $this->em->getConnection();
+        // Import promotes the fixture rows to verified with nobody standing
+        // there: that is a curator's word, rung 10, and the record is ours.
+        foreach ($this->payload()['D']['features'] as $f) {
+            self::assertSame('ours', $f['properties']['custody']);
+            self::assertSame(10, $f['properties']['rung']);
+        }
+
+        // A register row nobody has confirmed: the registry scope for its
+        // letter makes it specialty, the fresh import makes it a live claim.
+        $conn->executeStatement("UPDATE item SET state = 'unverified', provider_id = (SELECT id FROM data_provider WHERE provider_key = 'wallonie-pivot') WHERE source = 'authority'");
+        $conn->executeStatement('DELETE FROM item_confirmation WHERE item_id IN (SELECT id FROM item WHERE source = \'authority\')');
+        $features = $this->payload()['O']['authority']['features'];
+        self::assertNotEmpty($features);
+        foreach ($features as $f) {
+            self::assertSame('specialty', $f['properties']['custody']);
+            self::assertSame(4, $f['properties']['rung']);
+        }
+
+        // One rider: a witness, but custody stays with the register.
+        $id = (int) $features[0]['properties']['id'];
+        foreach ([1, 2] as $user) {
+            $conn->executeStatement(
+                "INSERT INTO item_confirmation (item_id, user_id, stance, source, created_at, updated_at) VALUES (:item, :user, 'exists', 'drawer', NOW(), NOW())",
+                ['item' => $id, 'user' => $user],
+            );
+            if (1 === $user) {
+                $props = $this->byId($this->payload()['O']['authority']['features'])[$id];
+                self::assertSame(8, $props['rung']);
+                self::assertSame('specialty', $props['custody']);
+            }
+        }
+
+        // Threshold riders and the state flip: the record is ours, rung 9.
+        $conn->executeStatement("UPDATE item SET state = 'verified' WHERE id = :id", ['id' => $id]);
+        $props = $this->byId($this->payload()['O']['authority']['features'])[$id];
+        self::assertSame(9, $props['rung']);
+        self::assertSame('ours', $props['custody']);
+    }
+
+    /**
      * Feature properties keyed by item id.
      *
      * @param list<array{properties: array<string, mixed>}> $features

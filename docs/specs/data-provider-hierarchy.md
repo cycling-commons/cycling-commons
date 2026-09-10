@@ -646,9 +646,11 @@ no container and no database, so the map, the public API, the curator marker
 page and the wiki table can all call it and get one answer. Its inputs are the
 custody tier (`App\Catalog\CustodyTier`: `gross`, `specialty`, `ours`), the
 last upstream sighting (§6.7.6), the count and newest date of the row's
-`item_confirmation` rows, a published witness date (an OpenStreetMap
-`check_date`, a register's dated survey), and the clock. The window is six
-months unless the caller passes another.
+vouching `item_confirmation` rows (`ConfirmationStance::vouching()`, drawer
+only, the same rows the state flip tallies), a published witness date (an
+OpenStreetMap `check_date`, a register's dated survey), the clock, the window
+(`map.confirmation_stale_months`), the threshold (`map.item_verify_threshold`)
+and the receipt behind a verified state (`riders`, `curator` or none).
 
 Ordered by three tie-breaks in this order: the **kind** of evidence, then how
 **many**, then how **recent**. Three kinds, and they are not close. A fossil
@@ -658,27 +660,49 @@ is a human at the point on a known date.
 
 | Rung | Evidence | Badge | Grade |
 | --- | --- | --- | --- |
-| 1 | gross provider, fossil claim | `?` | claimed |
+| 1 | a fossil claim: a gross provider's row, or our own row nobody confirmed | `?` | claimed |
 | 2 | gross provider, live claim | `?` | claimed |
 | 3 | specialty provider, fossil claim | `?` | claimed |
 | 4 | specialty provider, live claim | `?` | attested |
 | 5 | specialty provider with a per-record operational status field (RIVM's `Storing`) | `?` | attested |
 | 6 | a witness that aged out of the window; still a witness, so above every claim | `?` | attested |
 | 7 | a published witness inside the window | none | attested |
-| 8 | one of our riders inside the window, below `map.item_verify_threshold` | `?` | attested |
-| 9 | `map.item_verify_threshold` riders inside the window (moderation-and-contribution.md §10.1) | none | minimum |
-| 10 | a curator | none | minimum |
-| 11 | five or more riders inside the window | none | high |
+| 8 | one rider inside the window, below `map.item_verify_threshold`; custody does not gate this rung | `?` | attested |
+| 9 | the verified state, earned by `map.item_verify_threshold` riders (moderation-and-contribution.md §10.1) | none | minimum |
+| 10 | the verified state, earned by one curator's word, below the threshold | none | minimum |
+| 11 | the verified state, and five or more riders | none | high |
+
+**Rungs 9 to 11 follow the state and never a window.** "If the `?` mark is
+gone, it has verified state" (owner, 2026-09-09) is one rule read in both
+directions: a verified row never gets its badge back, whatever the age of its
+confirmations. The stale ring (moderation-and-contribution.md §10.1a) is the
+freshness signal, the badge is the witness signal, and the two never trade
+places. A raised threshold does not unverify a row for the same reason.
 
 The badge column is `EvidenceRung::showsQuestionBadge()`: the `?` is on exactly
-the rungs with no dated witness inside the window, which is the one sentence of
-§6.7. The grade column is `EvidenceRung::grade()`, the coarse word the public API
+the rungs with no witness on record, which is the one sentence of §6.7. The
+grade column is `EvidenceRung::grade()`, the coarse word the public API
 publishes ahead of the receipt that produced it.
+
+**Custody is read, never judged.** `ItemEvidenceResolver` derives it from the
+row and the registry, in this order: a verified row is ours (the riders, or a
+curator, took it at the threshold); a provider row whose `data_provider.letters`
+carries the row's letter is specialty; any other provider row, and any
+`osm` or `wikidata` row with no registry row of its own, is gross; everything
+else (a rider's, Scout's or a curator's own row) is ours. `imported_at` counts
+as an upstream sighting only on a provider row.
+
+**One resolver, two readers.** `ItemEvidenceResolver::selectSql()` names the
+columns a query must add and `fromRow()` reads them; `CatalogProvider` serves
+the result as `rung` and `custody` on every point and climb in the map payload,
+and the public API publishes the same object as the trust envelope. The ladder
+is never re-derived in SQL or in JavaScript.
 
 Two rungs the function cannot return yet, stated rather than hidden: rung 5
 needs a registry field naming which attribute carries operational state, and
-rung 10 needs a curator argument, which arrives with the API envelope. Neither
-is a gap in the ladder; both are inputs no caller passes today.
+nothing today stores a published witness date for a served row (rung 7 reads
+`attributes.check_date`, which no import fills yet). Neither is a gap in the
+ladder; both are inputs no writer fills today.
 
 ## 7. Citation
 

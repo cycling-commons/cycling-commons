@@ -35,6 +35,9 @@ final class CatalogProvider
         // never holds a table of providers in a constant
         // (data-provider-hierarchy.md §7).
         private readonly ProviderCitations $citations,
+        // Custody and rung for every served point (data-provider-hierarchy.md
+        // §6.7.7), computed here so a pin and the API read one answer.
+        private readonly ItemEvidenceResolver $evidence,
     ) {
     }
 
@@ -158,7 +161,7 @@ final class CatalogProvider
      *
      * @see docs/specs/map-and-search.md §12
      *
-     * @return list<array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null, pk: string|null, region_id: int|null, verified: bool, by_name: string|null, by_public: bool|null, by_uuid: string|null, letter: string, last_confirmed: string|null}>
+     * @return list<array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null, pk: string|null, region_id: int|null, verified: bool, by_name: string|null, by_public: bool|null, by_uuid: string|null, letter: string, last_confirmed: string|null, state: string, imported_at: string|null, ev_provider: bool, ev_scope: bool|null, ev_conf: int|string, ev_last: string|null, ev_witness: string|null}>
      */
     private function itemRows(string $letter, ?string $source = null, ?string $excludeSource = null, ?int $onlyId = null, bool $anyState = false): array
     {
@@ -168,7 +171,8 @@ final class CatalogProvider
                        (i.state = \'verified\') AS verified,
                        -- docs/specs/moderation-and-contribution.md 6.3: `form` must not reset freshness.
                        (SELECT max(c2.created_at) FROM item_confirmation c2
-                         WHERE c2.item_id = i.id AND c2.source <> \'form\') AS last_confirmed
+                         WHERE c2.item_id = i.id AND c2.source <> \'form\') AS last_confirmed,
+                       i.state, i.imported_at, '.ItemEvidenceResolver::selectSql('i').'
                 FROM item i
                 LEFT JOIN world_subdivision s ON s.id = i.subdivision_id
                 -- Which authority published the row, for the citation line in
@@ -208,7 +212,7 @@ final class CatalogProvider
         // docs/specs/catalog-data-model.md §7 — gone from the map; curatedRefs() still claims the OSM ref.
         $sql .= ' AND '.GoneRows::notGoneSql('i');
 
-        /* @var list<array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null, region_id: int|null, verified: bool, by_name: string|null, by_public: bool|null, by_uuid: string|null, letter: string, last_confirmed: string|null}> */
+        /* @var list<array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null, region_id: int|null, verified: bool, by_name: string|null, by_public: bool|null, by_uuid: string|null, letter: string, last_confirmed: string|null, state: string, imported_at: string|null, ev_provider: bool, ev_scope: bool|null, ev_conf: int|string, ev_last: string|null, ev_witness: string|null}> */
         return $this->db->fetchAllAssociative($sql.' ORDER BY i.id', $params);
     }
 
@@ -285,7 +289,7 @@ final class CatalogProvider
      * The per-row mapping shared by the bulk payload and featureForItem(), so
      * a live-inserted feature can never drift from the served one.
      *
-     * @param array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null, pk: string|null, region_id: int|null, verified: bool, by_name: string|null, by_public: bool|null, by_uuid: string|null, letter: string, last_confirmed: string|null} $row
+     * @param array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null, pk: string|null, region_id: int|null, verified: bool, by_name: string|null, by_public: bool|null, by_uuid: string|null, letter: string, last_confirmed: string|null, state: string, imported_at: string|null, ev_provider: bool, ev_scope: bool|null, ev_conf: int|string, ev_last: string|null, ev_witness: string|null} $row
      *
      * @return array{type: string, properties: array<string, mixed>, geometry: mixed}
      */
@@ -319,11 +323,18 @@ final class CatalogProvider
         if ($row['verified']) {
             $props['v'] = 1;
         }
+        $now = new \DateTimeImmutable();
+        // The two axes the pin draws (data-provider-hierarchy.md §6.7): the
+        // border reads `custody`, the badge reads `rung`. Neither is derived
+        // client-side.
+        $evidence = $this->evidence->fromRow($row, $now);
+        $props['rung'] = $evidence->rung;
+        $props['custody'] = $evidence->custody->value;
         // docs/specs/moderation-and-contribution.md §10.1a — key absent when freshness does not apply.
         $type = ItemType::fromLetter((string) $row['letter']);
         if (null !== $type && null !== $row['last_confirmed']) {
             $last = new \DateTimeImmutable((string) $row['last_confirmed']);
-            $state = $this->freshness->state($type, $last, new \DateTimeImmutable());
+            $state = $this->freshness->state($type, $last, $now);
             if (null !== $state) {
                 $props['freshness'] = ['state' => $state, 'lastConfirmed' => $last->format('Y-m-d')];
             }
@@ -360,7 +371,7 @@ final class CatalogProvider
     /**
      * One climb in the map.js shape. Unsealed (`...`) so callers can pass the full served row.
      *
-     * @param array{id: int, name: string, geom: string, attributes: string, source: string, region_id: int|null, verified: bool, ...} $row
+     * @param array{id: int, name: string, geom: string, attributes: string, source: string, region_id: int|null, verified: bool, state: string, imported_at: string|null, ev_provider: bool, ev_scope: bool|null, ev_conf: int|string, ev_last: string|null, ev_witness: string|null, ...} $row
      *
      * @return array<string, mixed>
      */
@@ -379,6 +390,9 @@ final class CatalogProvider
         if ($row['verified']) {
             $climb['v'] = 1;
         }
+        $evidence = $this->evidence->fromRow($row, new \DateTimeImmutable());
+        $climb['rung'] = $evidence->rung;
+        $climb['custody'] = $evidence->custody->value;
         if (null !== $row['region_id']) {
             $climb['rid'] = (int) $row['region_id'];
         }

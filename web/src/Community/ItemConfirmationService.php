@@ -29,16 +29,6 @@ use Doctrine\ORM\EntityManagerInterface;
  */
 final class ItemConfirmationService
 {
-    /**
-     * Stances that vouch for the record rather than warn about it.
-     *
-     * "Not potable" says the water is bad, not that the entry is good, and
-     * "not as described" is a complaint about the surface class we published.
-     * Neither is a rider saying *this is right*, so neither counts towards
-     * verification (docs/specs/moderation-and-contribution.md §10.1).
-     */
-    private const array VOUCHING = [ConfirmationStance::Potable, ConfirmationStance::Exists];
-
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly Connection $db,
@@ -135,7 +125,7 @@ final class ItemConfirmationService
     {
         if (ConfirmationSource::Drawer !== $source
             || ItemState::Unverified !== $item->getState()
-            || !\in_array($stance, self::VOUCHING, true)) {
+            || !\in_array($stance, ConfirmationStance::vouching(), true)) {
             return;
         }
 
@@ -168,7 +158,7 @@ final class ItemConfirmationService
             [
                 'id' => (int) $item->getId(),
                 'form' => ConfirmationSource::Form->value,
-                'stances' => array_map(static fn (ConfirmationStance $s): string => $s->value, self::VOUCHING),
+                'stances' => array_map(static fn (ConfirmationStance $s): string => $s->value, ConfirmationStance::vouching()),
             ],
             ['stances' => ArrayParameterType::STRING],
         );
