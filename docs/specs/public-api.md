@@ -70,6 +70,28 @@ object appears once, as curated, and every feature is marked with its `tier`
 (community vs. curated/verified) so consumers can rank and style accordingly
 ([osm-data-architecture.md §8](osm-data-architecture.md)).
 
+**The trust envelope (built 2026-09-10).** Every item feature carries six
+fields beside `tier`, computed by the same `ItemEvidenceResolver` the map draws
+from ([data-provider-hierarchy.md §6.7.7](data-provider-hierarchy.md)), so the
+API and a pin can never disagree:
+
+| Field | Kind | Meaning |
+|---|---|---|
+| `grade` | derived | `claimed`, `attested`, `minimum` or `high`, the coarse word from the evidence ladder |
+| `custody` | raw | `gross`, `specialty` or `ours`: who keeps the record, never how good it is |
+| `confirmations` | raw | how many riders stood here and vouched, one row per rider |
+| `last_confirmed` | raw | the day of the newest rider confirmation, or null |
+| `last_seen_upstream` | raw | the day the publisher's export last carried a provider row, or null for our own |
+| `verified_by` | raw | `riders`, `curator` or null: the receipt behind a `curated` tier |
+
+The grade is the interface and the receipt is what stops the grade being a lie.
+A consumer that only wants to filter reads `grade`; a consumer that has to
+defend a decision reads the count and the dates. The grade is derived and its
+formula may move; the receipt fields are raw and never do, so a formula change
+is visible to consumers instead of silently repainting their maps. The receipt
+is a count and dates, never a person: the personal-data boundary holds
+([public-api-personal-data-boundary.md](public-api-personal-data-boundary.md)).
+
 ## 2. How we serve it — two transports
 
 The API is split by workload. Dense ambient map layers travel as **vector
@@ -145,7 +167,7 @@ keys yet, `security: []` in the OpenAPI), CORS `Access-Control-Allow-Origin: *`
 (`PublicApiCorsSubscriber`), per-IP `public_api_read` limiter (120/min, own
 pool), ETag + `public` caching with the explicit `^/v1/` PUBLIC_ACCESS entry in
 security.yaml. Responses are built by `Api\V1\PublicItemsProvider` through the
-`ItemFeature` DTO: the DTO half of the
+`ItemFeature` DTO, each feature carrying the trust envelope of §1: the DTO half of the
 [personal-data boundary](public-api-personal-data-boundary.md) is enforced, the
 dedicated Postgres role half stays deferred. The consumer-facing explanation
 lives at `wiki/developers/api/`.

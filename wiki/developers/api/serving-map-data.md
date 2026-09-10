@@ -128,7 +128,11 @@ GET https://cyclingcommons.org/v1/search?bbox=4.30,50.70,4.50,50.90&letter=B&lim
     {
       "type": "Feature",
       "geometry": { "type": "Point", "coordinates": [4.3517, 50.8466] },
-      "properties": { "id": 1042, "letter": "B", "name": "Fontaine du Parc", "tier": "curated" }
+      "properties": {
+        "id": 1042, "letter": "B", "name": "Fontaine du Parc", "tier": "curated",
+        "grade": "minimum", "custody": "ours", "confirmations": 2,
+        "last_confirmed": "2026-08-22", "last_seen_upstream": null, "verified_by": "riders"
+      }
     }
   ],
   "licence": "ODbL-1.0",
@@ -138,8 +142,24 @@ GET https://cyclingcommons.org/v1/search?bbox=4.30,50.70,4.50,50.90&letter=B&lim
 
 The response is a standard GeoJSON `FeatureCollection` with two foreign members, `licence` and
 `attribution`, following the drafted v1 convention. Feature properties are deliberately few:
-`id`, `letter`, `name`, and `tier` (`community` or `curated`, so you can rank or style verified
-items differently). The content type is `application/geo+json`.
+`id`, `letter`, `name`, `tier` (`community` or `curated`, so you can rank or style verified
+items differently), and the trust envelope below. The content type is `application/geo+json`.
+
+**The trust envelope.** Six properties say how much to believe a point, the grade first and the
+receipt behind it, computed by the same code that draws the Commons map's own pins:
+
+| Property | Meaning |
+|----------|---------|
+| `grade` | `claimed` (typed once, nothing dates it), `attested` (a live source republished it, or a dated witness is on record), `minimum` (verified: the threshold of riders, or a curator), `high` (verified, and five or more riders stood here). Derived; the formula may move. |
+| `custody` | Who keeps the record: `gross` (a general provider such as OpenStreetMap), `specialty` (a provider registered for this kind of place in this region), `ours` (the Commons community). Says nothing about quality. |
+| `confirmations` | How many riders stood here and vouched for it, one row per rider. |
+| `last_confirmed` | The day of the newest rider confirmation, or `null`. |
+| `last_seen_upstream` | The day the publisher's export last carried a provider's record, or `null` for our own. |
+| `verified_by` | `riders`, `curator`, or `null` while unverified: the receipt behind a `curated` tier. |
+
+Filter on `grade` if one word is all you need. If you have to defend a decision, read
+`confirmations` and the dates: they are raw facts and never change meaning, so when the grade
+formula moves your map does not silently repaint. The receipt is a count and dates, never a person.
 
 The intended calling pattern is one all-letters request each time the map settles after a pan or
 zoom (debounced), from a sensible minimum zoom (the Commons uses 8 for its own item layers). Do not crawl a country through this endpoint; that is what the exports are for.

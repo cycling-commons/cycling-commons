@@ -620,6 +620,26 @@ components:
           type: array
           items: { $ref: '#/components/schemas/Tier' }
 
+    Grade:
+      type: string
+      enum: [claimed, attested, minimum, high]
+      description: >
+        The coarse trust grade, derived from the evidence ladder
+        (data-provider-hierarchy.md §6.7.7): `claimed` = somebody typed it
+        and nothing dates it; `attested` = a live source republished it,
+        or a dated witness is on record; `minimum` = verified, by the
+        threshold of riders or by a curator; `high` = verified and five or
+        more riders stood here. Derived, so the formula may move; the
+        receipt fields beside it are raw and never do.
+    Custody:
+      type: string
+      enum: [gross, specialty, ours]
+      description: >
+        Who keeps the record: `gross` = a general provider such as
+        OpenStreetMap, `specialty` = a provider registered for this kind of
+        place in this region, `ours` = this community. Says nothing about
+        quality.
+
     Point:
       type: object
       required: [type, coordinates]
@@ -638,7 +658,7 @@ components:
         hydrate against OSM. Letter-specific fields (e.g. `potable` for
         water) appear as plain properties. With `?hydrate=osm` the cached
         OSM subset is merged in under `osm`.
-      required: [letter, tier]
+      required: [letter, tier, grade, custody, confirmations, last_confirmed, last_seen_upstream, verified_by]
       properties:
         osm_ref:
           type: string
@@ -648,6 +668,36 @@ components:
         serviceKind: { type: string, example: fountain }
         tier: { $ref: '#/components/schemas/Tier' }
         name: { type: string, example: 'Fountain · Spa' }
+        grade:
+          $ref: '#/components/schemas/Grade'
+        custody:
+          $ref: '#/components/schemas/Custody'
+        confirmations:
+          type: integer
+          minimum: 0
+          description: >
+            How many riders have stood here and vouched for it, one row per
+            rider. Part of the receipt behind `grade`.
+          example: 2
+        last_confirmed:
+          type: [string, 'null']
+          format: date
+          description: The day of the newest rider confirmation, or null when nobody has stood here.
+          example: '2026-08-22'
+        last_seen_upstream:
+          type: [string, 'null']
+          format: date
+          description: >
+            The day the publisher's export last carried this record, for a
+            record a data provider keeps; null for our own records.
+          example: '2026-09-06'
+        verified_by:
+          type: [string, 'null']
+          enum: [riders, curator, null]
+          description: >
+            The receipt behind a `curated` tier: `riders` when the verify
+            threshold of independent riders stood here, `curator` when one
+            accountable curator's word settled it, null while unverified.
         osm:
           type: object
           description: 'Only with `?hydrate=osm`: the cached OSM subset (name, tags).'

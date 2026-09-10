@@ -9,6 +9,7 @@ namespace App\Api\V1;
 use App\Api\V1\Dto\ItemFeature;
 use App\Catalog\CoverageRetirement;
 use App\Catalog\GoneRows;
+use App\Catalog\ItemEvidenceResolver;
 use App\Catalog\ItemState;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
@@ -21,8 +22,12 @@ use Doctrine\DBAL\ParameterType;
  */
 final class PublicItemsProvider
 {
-    public function __construct(private readonly Connection $db)
-    {
+    public function __construct(
+        private readonly Connection $db,
+        // The same evidence the map draws (data-provider-hierarchy.md §6.7.7),
+        // published as the trust envelope: never re-derived here.
+        private readonly ItemEvidenceResolver $evidence,
+    ) {
     }
 
     /**
@@ -41,7 +46,8 @@ final class PublicItemsProvider
         // confirmation nor an `authority` provenance stands in for it any more.
         $verified = '(i.state = \'verified\')';
 
-        $sql = 'SELECT i.id, i.name, i.letter, ST_AsGeoJSON(i.geom) AS geom, '.$verified.' AS verified
+        $sql = 'SELECT i.id, i.name, i.letter, ST_AsGeoJSON(i.geom) AS geom, '.$verified.' AS verified,
+                       i.state, i.source, i.imported_at, '.ItemEvidenceResolver::selectSql('i').'
                 FROM item i
                 WHERE i.state IN '.ItemState::servedSqlTuple().'
                   AND i.geom && ST_MakeEnvelope(:minLon, :minLat, :maxLon, :maxLat, 4326)';
@@ -72,7 +78,9 @@ final class PublicItemsProvider
                   ORDER BY i.id
                   LIMIT :lim';
 
+        /** @var list<array{id: int|string, name: string, letter: string, geom: string, verified: bool, state: string, source: string, imported_at: string|null, ev_provider: bool, ev_scope: bool|null, ev_conf: int|string, ev_last: string|null, ev_witness: string|null}> $rows */
         $rows = $this->db->fetchAllAssociative($sql, $params, ['lim' => ParameterType::INTEGER]);
+        $now = new \DateTimeImmutable();
 
         $features = [];
         foreach ($rows as $row) {
@@ -87,6 +95,7 @@ final class PublicItemsProvider
                 (string) $row['name'],
                 $row['verified'] ? 'curated' : 'community',
                 $geometry,
+                $this->evidence->fromRow($row, $now),
             );
         }
 
