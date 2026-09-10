@@ -236,13 +236,6 @@
   .t.open{background:var(--spruce);color:var(--paper)} .t.priv{background:var(--clay);color:var(--paper)}
   .open-item h4{font-size:1.05rem;font-weight:700} .open-item p{font-size:.95rem;color:#4a4d40}
 
-  /* curation card */
-  .panel{background:var(--spruce);color:var(--paper);border-radius:8px;padding:clamp(1.6rem,3vw,2.4rem);position:relative;overflow:hidden}
-  /* Caption under the title on the best-of card. The silo panel has no pin,
-     so its h3 still carries the gap above the list. */
-  .panel .pin{display:block;margin:.15rem 0 1.1rem;font-family:var(--mono);font-size:.74rem;letter-spacing:.14em;line-height:1.5;color:var(--paper)}
-  .panel h3{font-family:var(--serif);font-weight:500;font-size:1.5rem;margin-bottom:1.1rem}
-  #curation .panel h3{margin-bottom:0}
   .votable{margin-top:1.6rem}
   .votable .vk{display:block;font-family:var(--mono);font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--clay);margin-bottom:.6rem}
   .votable ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:.5rem}
@@ -251,12 +244,6 @@
      (owner 2026-09-09: "icons do not align with the text... dark brown, not black"). */
   .votable li .q-icon{display:inline-flex;align-items:center;color:#8A6425;line-height:0}
   .votable li svg{width:1.3rem;height:1.3rem;flex:none;display:block}
-  .rank{display:flex;align-items:center;gap:.9rem;padding:.7rem 0;border-bottom:1px solid rgba(239,230,212,.14)}
-  .rank .n{font-family:var(--mono);color:var(--trail);font-size:.85rem;width:1.4rem}
-  .rank .nm{flex:1;font-weight:500}
-  .rank .co{font-family:var(--mono);font-size:.74rem;color:rgba(239,230,212,.72)}
-  .silo-more{display:block;margin-top:1rem;font-family:var(--mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--trail);text-decoration:underline}
-  .silo-more:hover{color:#ff703d}
   .vs{font-family:var(--mono);font-size:.7rem;letter-spacing:.14em;color:var(--trail);margin:1.4rem 0 .4rem;text-align:center}
 
   /* ---------- CURATION: the best-of card, three drafts ----------
@@ -267,22 +254,6 @@
      steepness are all comparable between rows. preserveAspectRatio="none"
      is deliberate: the box stretches with the card, and because every profile
      stretches by the same factor the comparison survives. */
-  .cur{position:relative}
-  .cur .cur-pick{position:absolute;opacity:0;width:0;height:0;pointer-events:none}
-  /* Out of the flow and nearly out of sight: the card must sit exactly where it
-     will sit once a draft is chosen and the switch is deleted. It comes up to
-     full contrast on hover and on keyboard focus, so it is still usable. */
-  .cur .cur-sw{position:absolute;bottom:100%;right:0;display:flex;gap:.3rem;margin:0 0 .45rem;opacity:.18;transition:opacity .2s}
-  .cur .cur-sw:hover,.cur:focus-within .cur-sw{opacity:1}
-  .cur .cur-sw label{font-family:var(--mono);font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;padding:.2rem .5rem;
-    border:1px solid rgba(20,22,14,.3);border-radius:40px;color:var(--clay);cursor:pointer;user-select:none;transition:all .2s}
-  .cur .cur-sw label:hover{border-color:var(--ink);color:var(--ink)}
-  #cur-v1:checked ~ .cur-sw label[for="cur-v1"],#cur-v2:checked ~ .cur-sw label[for="cur-v2"],#cur-v3:checked ~ .cur-sw label[for="cur-v3"]{
-    background:var(--trail);border-color:var(--trail);color:var(--ink)}
-  #cur-v1:focus-visible ~ .cur-sw label[for="cur-v1"],#cur-v2:focus-visible ~ .cur-sw label[for="cur-v2"],#cur-v3:focus-visible ~ .cur-sw label[for="cur-v3"]{
-    outline:2px solid var(--ink);outline-offset:2px}
-  .cur .cur-v{display:none}
-  #cur-v1:checked ~ .cur-v1,#cur-v2:checked ~ .cur-v2,#cur-v3:checked ~ .cur-v3{display:block}
 
   /* the drawn parts, shared by both graphical drafts */
   .cur .fil{fill:rgba(239,230,212,.09)}
@@ -296,17 +267,6 @@
      and read as a different material; the lit ridge above carries the colour. */
   .cur .ramp{fill:rgba(239,230,212,.13)}
 
-  /* v2: four profiles, one under the other, all starting at the same foot.
-     The profile takes the whole row under the name, so the ragged right edge
-     (the length) is read against the same left margin every time. */
-  .cur-v2 .cur-prof{list-style:none;margin:.4rem 0 0;padding:0}
-  .cur-v2 .cur-row{display:grid;grid-template-columns:1.6rem 1fr auto;grid-template-areas:"n nm co" ". sil sil";
-    align-items:baseline;gap:.2rem .7rem;padding:.75rem 0 .85rem;border-bottom:1px solid rgba(239,230,212,.14)}
-  .cur-v2 .cur-row:last-child{border-bottom:none}
-  .cur-v2 .cur-row .n{grid-area:n;font-family:var(--mono);color:var(--trail);font-size:.85rem}
-  .cur-v2 .cur-row .nm{grid-area:nm;font-weight:500;white-space:nowrap}
-  .cur-v2 .cur-row .co{grid-area:co;font-family:var(--mono);font-size:.7rem;color:rgba(239,230,212,.72);white-space:nowrap}
-  .cur-v2 .cur-sil{grid-area:sil;display:block;width:100%;height:clamp(38px,5.5vw,48px);margin-top:.15rem}
 
   /* v3: the same screen on the shared phone. Nothing here restyles the frame;
      it only lays out what is on the glass. */
@@ -353,8 +313,6 @@
   @keyframes curPop{from{opacity:0;transform:translate(40%,-40%) scale(.2)}}
   /* the numbers stay put when the rows get narrow; the profile keeps the room */
   @media(max-width:560px){
-    .cur-v2 .cur-row{grid-template-columns:1.6rem 1fr;grid-template-areas:"n nm" ". co" ". sil";align-items:start}
-    .cur-v2 .cur-row .co{white-space:normal}
     /* three columns, because the area map above has three. A two-column grid
        makes the whole grid-template-areas declaration invalid and every child
        falls back to auto-placement. */
@@ -363,75 +321,7 @@
     .cur-v3 .cur-rest .co{white-space:nowrap;justify-self:end}
   }
 
-  /* ---------- SILO PANEL (fragmentation) ----------
-     Six tiles, one per layer a rider needs today, each walled off from the
-     next: a SOLID border with a hatch is a closed silo, a DASHED one is data
-     that exists but lies scattered across sources. The small opposing tilts
-     say the pieces were never cut to fit together; the funnel under them
-     carries all six into the one open atlas. The list this replaced is kept,
-     commented out, in the markup (owner 2026-09-04). */
-  .silo .silo-grid{display:grid;grid-template-columns:1fr 1fr;gap:.55rem;margin-top:1.25rem;list-style:none}
-  .silo .silo-tile{position:relative;display:grid;grid-template-columns:auto 1fr;grid-template-areas:"ic nm" "ic tag";gap:.15rem .6rem;
-    padding:.62rem .7rem;border-radius:5px;background:rgba(239,230,212,.055);border:1px solid rgba(239,230,212,.22);
-    opacity:0;transform:translate(var(--dx,0),12px);
-    transition:opacity .5s ease,transform .5s cubic-bezier(.2,.7,.3,1),background .25s ease,border-color .25s ease;
-    transition-delay:calc(var(--i) * .07s)}
-  .silo.in .silo-tile{opacity:1;transform:rotate(var(--rot,0deg))}
-  .silo .silo-tile.scat{border-style:dashed}
-  /* the hatch is the wall: only the closed ones carry it */
-  .silo .silo-tile.shut::after{content:"";position:absolute;inset:0;border-radius:4px;pointer-events:none;
-    background:repeating-linear-gradient(135deg,transparent 0 5px,rgba(239,230,212,.06) 5px 6px)}
-  /* hover straightens the tile: the piece a rider is looking at is the only one that lines up */
-  .silo.in .silo-tile:hover{transform:rotate(0deg);background:rgba(239,230,212,.1);border-color:rgba(239,230,212,.4);transition-delay:0s}
-  .silo .silo-tile .q-icon{grid-area:ic;align-self:start;margin-top:.15rem;display:inline-flex;color:var(--glacier)}
-  .silo .silo-tile .q-icon svg{display:block;width:17px;height:17px}
-  /* the shared icon set's glyph half, flipped to a LIGHT silhouette for the dark panel */
-  .silo .silo-tile .q-icon--glyph{width:17px;height:17px;align-items:center;justify-content:center;font-size:.95rem;line-height:1;font-style:normal;
-    font-family:"Apple Color Emoji","Noto Color Emoji","Segoe UI Emoji","Noto Sans Symbols2",system-ui,sans-serif;
-    filter:grayscale(1) brightness(0) invert(.8)}
-  .silo .silo-nm{grid-area:nm;font-size:.84rem;font-weight:500;line-height:1.25}
-  .silo .silo-tag{grid-area:tag;display:flex;align-items:center;gap:.34rem;font-family:var(--mono);font-size:.6rem;
-    letter-spacing:.1em;text-transform:uppercase;color:rgba(239,230,212,.55)}
-  .silo .silo-tag::before{content:"";flex:none;width:11px;height:11px;-webkit-mask:var(--m) center/contain no-repeat;mask:var(--m) center/contain no-repeat}
-  .silo .shut .silo-tag::before{background:var(--ochre);
-    --m:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 10V7a6 6 0 0 1 12 0v3h1a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1h1Zm2 0h8V7a4 4 0 0 0-8 0v3Z'/%3E%3C/svg%3E")}
-  .silo .scat .silo-tag::before{background:var(--glacier);
-    --m:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='5' cy='7' r='2.6'/%3E%3Ccircle cx='18' cy='5' r='2.6'/%3E%3Ccircle cx='11' cy='17' r='2.6'/%3E%3Ccircle cx='20' cy='16' r='2.6'/%3E%3C/svg%3E")}
-  /* the funnel: six strands in, one out. pathLength=1 so every strand draws at
-     the same rate whatever its real length. */
-  .silo .silo-funnel{display:block;width:100%;height:46px;margin:.9rem 0 .1rem}
-  .silo .silo-funnel path{fill:none;stroke:rgba(239,230,212,.32);stroke-width:1;stroke-dasharray:1;stroke-dashoffset:1;vector-effect:non-scaling-stroke}
-  .silo .silo-funnel .out{stroke:var(--trail);stroke-width:1.6}
-  .silo.in .silo-funnel path{animation:siloDraw .85s ease-out .55s forwards}
-  .silo.in .silo-funnel .out{animation-delay:1.05s;animation-duration:.35s}
-  @keyframes siloDraw{to{stroke-dashoffset:0}}
-  .silo .silo-atlas{display:flex;align-items:center;gap:.6rem;padding:.8rem .95rem;border-radius:5px;
-    border:1px solid rgba(255,90,31,.5);background:rgba(255,90,31,.1);color:var(--trail);
-    font-family:var(--mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;line-height:1.4;
-    opacity:0;transform:translateY(10px);transition:opacity .5s ease 1.25s,transform .5s ease 1.25s}
-  .silo.in .silo-atlas{opacity:1;transform:none}
-  .silo .silo-atlas::before{content:"";flex:none;width:12px;height:15px;
-    background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 130'%3E%3Cpath fill='%23FF5A1F' d='M50 8 C31 8 16 23 16 42 C16 68 50 124 50 124 C50 124 84 68 84 42 C84 23 69 8 50 8 Z'/%3E%3C/svg%3E") center/contain no-repeat}
-  /* one column of tiles is narrower than the two words on a tag; go single-file */
-  @media(max-width:420px){.silo .silo-grid{grid-template-columns:1fr}}
 
-  /* ---------- review toggle + the three drafts ---------- */
-  .silo{position:relative}
-  .silo .silo-pick{position:absolute;opacity:0;width:0;height:0;pointer-events:none}
-  /* Same as the curation switch: out of the flow, so the box sits exactly where
-     it will sit once a draft is picked and the switch is deleted, and faint
-     until somebody reaches for it. */
-  .silo .silo-sw{position:absolute;bottom:100%;right:0;display:flex;gap:.3rem;margin:0 0 .45rem;opacity:.18;transition:opacity .2s}
-  .silo .silo-sw:hover,.silo:focus-within .silo-sw{opacity:1}
-  .silo .silo-sw label{font-family:var(--mono);font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;padding:.2rem .5rem;
-    border:1px solid rgba(20,22,14,.3);border-radius:40px;color:var(--clay);cursor:pointer;user-select:none;transition:all .2s}
-  .silo .silo-sw label:hover{border-color:var(--ink);color:var(--ink)}
-  #silo-v1:checked ~ .silo-sw label[for="silo-v1"],#silo-v2:checked ~ .silo-sw label[for="silo-v2"],#silo-v3:checked ~ .silo-sw label[for="silo-v3"]{
-    background:var(--trail);border-color:var(--trail);color:var(--ink)}
-  #silo-v1:focus-visible ~ .silo-sw label[for="silo-v1"],#silo-v2:focus-visible ~ .silo-sw label[for="silo-v2"],#silo-v3:focus-visible ~ .silo-sw label[for="silo-v3"]{
-    outline:2px solid var(--ink);outline-offset:2px}
-  .silo .silo-v{display:none}
-  #silo-v1:checked ~ .silo-v1,#silo-v2:checked ~ .silo-v2,#silo-v3:checked ~ .silo-v3{display:block}
 
   /* ---------- v3: the phone ----------
      No green box: the phone IS the box. Keyframes rather than transitions on
@@ -572,9 +462,6 @@
   .cta-band .btn-ghost:hover{background:var(--paper-deep);border-color:transparent;color:var(--ink)}
 
   @media(prefers-reduced-motion:reduce){.hero .hero-contours{animation:none;clip-path:none}.loop .ring{animation:none}.rv{transition:none;opacity:1;transform:none}
-    .silo .silo-tile{opacity:1;transform:rotate(var(--rot,0deg));transition:background .25s ease,border-color .25s ease}
-    .silo .silo-atlas{opacity:1;transform:none;transition:none}
-    .silo .silo-funnel path{stroke-dashoffset:0;animation:none}
     .silo .ph-app,.silo .ph-dock{opacity:1;animation:none}
     .silo .ph-app.shut .ph-ic,.silo .ph-cc,.silo .ph-cc-nm{animation:none}
     /* nothing plays, so there is nothing to replay */
@@ -683,58 +570,11 @@
       <p class="lead rv" data-d="2" style="margin-top:1.1rem">{{ 'home.frag_lead2'|trans|rich }}</p>
     </div>
     <div class="silo rv" data-d="2">
-      {# REVIEW TOGGLE (owner 2026-09-04): three drafts of this box, side by
-         side, so one can be picked. Pure CSS: the radios sit first so the
-         `:checked ~` selectors below reach both the chips and the variants.
-         Drop the radios, the chips and the two losing variants once chosen. #}
-      <input type="radio" name="silo-pick" id="silo-v1" class="silo-pick">
-      <input type="radio" name="silo-pick" id="silo-v2" class="silo-pick">
-      <input type="radio" name="silo-pick" id="silo-v3" class="silo-pick" checked>
-      <div class="silo-sw" aria-label="Draft"><label for="silo-v1">v1 list</label><label for="silo-v2">v2 tiles</label><label for="silo-v3">v3 phone</label></div>
-
-      {# v1: the list #}
-      <div class="silo-v silo-v1 panel">
-      <h3>{{ 'home.frag_panel_h'|trans }}</h3>
-      <div class="rank"><span class="n">→</span><span class="nm">{{ 'home.frag_climbs'|trans|rich }}</span><span class="co">{{ 'home.frag_climbs_tag'|trans }}</span></div>
-      <div class="rank"><span class="n">→</span><span class="nm">{{ 'home.frag_rides'|trans|rich }}</span><span class="co">{{ 'home.frag_rides_tag'|trans }}</span></div>
-      <div class="rank"><span class="n">→</span><span class="nm">{{ 'home.frag_scenic'|trans }}</span><span class="co">{{ 'home.frag_scenic_tag'|trans }}</span></div>
-      <div class="rank"><span class="n">→</span><span class="nm">{{ 'home.frag_stays'|trans }}</span><span class="co">{{ 'home.frag_stays_tag'|trans }}</span></div>
-      <div class="rank"><span class="n">→</span><span class="nm">{{ 'home.frag_road'|trans }}</span><span class="co">{{ 'home.frag_road_tag'|trans }}</span></div>
-      <div class="rank" style="border:none"><span class="n">→</span><span class="nm">{{ 'home.frag_water'|trans }}</span><span class="co">{{ 'home.frag_water_tag'|trans }}</span></div>
-      <div class="vs" style="font-size:1.1rem;text-align:left">{{ 'home.frag_vs'|trans }}</div>
-      </div>
-
-      {# v2: the tiles. The letters are the catalog's own (ItemType::letter()),
-         so a tile here and a card further down the page carry the same icon. #}
-      <div class="silo-v silo-v2 panel">
-      <h3>{{ 'home.frag_panel_h'|trans }}</h3>
-      <ul class="silo-grid">
-        <li class="silo-tile shut" style="--i:0;--rot:-1.3deg;--dx:-10px">{% include 'partials/_type_icon.html.twig' with {letter: 'N'} only %}<span class="silo-nm">{{ 'home.frag_climbs'|trans|rich }}</span><span class="silo-tag">{{ 'home.frag_climbs_tag'|trans }}</span></li>
-        <li class="silo-tile shut" style="--i:1;--rot:1.1deg;--dx:12px">{% include 'partials/_type_icon.html.twig' with {letter: 'R'} only %}<span class="silo-nm">{{ 'home.frag_rides'|trans|rich }}</span><span class="silo-tag">{{ 'home.frag_rides_tag'|trans }}</span></li>
-        <li class="silo-tile scat" style="--i:2;--rot:1.4deg;--dx:14px">{% include 'partials/_type_icon.html.twig' with {letter: 'P'} only %}<span class="silo-nm">{{ 'home.frag_scenic'|trans }}</span><span class="silo-tag">{{ 'home.frag_scenic_tag'|trans }}</span></li>
-        <li class="silo-tile shut" style="--i:3;--rot:-1.1deg;--dx:-12px">{% include 'partials/_type_icon.html.twig' with {letter: 'O'} only %}<span class="silo-nm">{{ 'home.frag_stays'|trans }}</span><span class="silo-tag">{{ 'home.frag_stays_tag'|trans }}</span></li>
-        <li class="silo-tile scat" style="--i:4;--rot:-1.5deg;--dx:-8px">{% include 'partials/_type_icon.html.twig' with {letter: 'A'} only %}<span class="silo-nm">{{ 'home.frag_road'|trans }}</span><span class="silo-tag">{{ 'home.frag_road_tag'|trans }}</span></li>
-        <li class="silo-tile scat" style="--i:5;--rot:1.2deg;--dx:10px">{% include 'partials/_type_icon.html.twig' with {letter: 'B'} only %}<span class="silo-nm">{{ 'home.frag_water'|trans }}</span><span class="silo-tag">{{ 'home.frag_water_tag'|trans }}</span></li>
-      </ul>
-
-      <svg class="silo-funnel" viewBox="0 0 300 46" preserveAspectRatio="none" aria-hidden="true" focusable="false">
-        <path pathLength="1" d="M18 0 C18 22 150 12 150 34"/>
-        <path pathLength="1" d="M70 0 C70 24 150 16 150 34"/>
-        <path pathLength="1" d="M122 0 C122 26 150 22 150 34"/>
-        <path pathLength="1" d="M178 0 C178 26 150 22 150 34"/>
-        <path pathLength="1" d="M230 0 C230 24 150 16 150 34"/>
-        <path pathLength="1" d="M282 0 C282 22 150 12 150 34"/>
-        <path class="out" pathLength="1" d="M150 34 L150 46"/>
-      </svg>
-
-      <div class="silo-atlas">{{ 'home.frag_vs'|trans }}</div>
-      </div>
-
       {# v3: the phone. "A dozen apps" taken literally: a home screen where
          every layer is its own app, the closed ones padlocked, the scattered
          ones never really installed. Then they all fly into the one app that
          holds them, and that app grows. hero.js measures the flight paths. #}
-      <div class="silo-v silo-v3">
+      <div class="silo-v3">
       <h3>{{ 'home.frag_panel_h'|trans }}</h3>
       <div class="phone">
         <div class="ph-notch"></div>

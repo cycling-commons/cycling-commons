@@ -19,75 +19,20 @@
       </div>
     </div>
 
-    {# REVIEW TOGGLE (owner 2026-09-10): three drafts of the best-of card, the
-       same pure-CSS switch the silo box carries, so one can be picked. The
-       radios sit first so the `:checked ~` selectors reach both the chips and
-       the drafts. Drop the radios, the chips and the two losing drafts once
-       chosen.
+    {# The best-of card, on the phone frame the fragmentation box uses at the
+       top of the page (owner 2026-09-10, picked from three drafts).
 
-       v2 and v3 draw the climb rather than describe it. A climb IS a shape,
-       and "161 m · 9.7%" is a shape nobody can see. Every profile below is
-       generated from the numbers printed beside it: rise = the gain, run =
-       gain ÷ average gradient, and all four share one scale (2.67 km wide,
-       232 m tall). So a longer climb really is drawn wider, a taller one
-       taller, and a steeper one steeper. The vertical exaggeration is 5.3x
-       and uniform, which is what keeps the slopes comparable to each other. #}
+       The climbs are DRAWN, not described: a climb is a shape, and
+       "161 m · 9.7%" is a shape nobody can see. Every profile is generated
+       from the numbers printed beside it, rise from the gain and run from
+       gain over the average gradient, on one scale 2.67 km across and 232 m
+       tall, so a longer climb really is drawn wider, a taller one taller and
+       a steeper one steeper, and the four are comparable to each other rather
+       than each to itself. The vertical exaggeration is 5.3x and uniform,
+       which is what keeps the slopes comparable. #}
     <div class="cur rv" data-d="2">
-      <input type="radio" name="cur-pick" id="cur-v1" class="cur-pick">
-      <input type="radio" name="cur-pick" id="cur-v2" class="cur-pick">
-      <input type="radio" name="cur-pick" id="cur-v3" class="cur-pick" checked>
-      <div class="cur-sw" aria-label="Draft"><label for="cur-v1">v1 list</label><label for="cur-v2">v2 profiles</label><label for="cur-v3">v3 phone</label></div>
-
-      {# v1: the list as it was. #}
-      <div class="cur-v cur-v1 panel">
-        <h3>{{ 'home.cur_panel_h'|trans }}</h3>
-        <span class="pin">{{ 'home.cur_panel_pin'|trans }}</span>
-        <div class="rank"><span class="n">01</span><span class="nm">La Redoute</span><span class="co">△ 161 m · 9.7%</span></div>
-        <div class="rank"><span class="n">02</span><span class="nm">Tier Antoine</span><span class="co">△ 232 m · 8.7%</span></div>
-        <div class="rank"><span class="n">03</span><span class="nm">Mur de Huy</span><span class="co">△ 128 m · 9.3%</span></div>
-        <div class="rank" style="border:none"><span class="n">04</span><span class="nm">Côte de Stockeu</span><span class="co">△ 100 m · 9.0%</span></div>
-        <div class="vs">{{ 'home.cur_voted'|trans }}</div>
-      </div>
-
-      {# v2: four profiles on one scale. The ragged right edge is the length:
-         Tier Antoine runs the full width, Côte de Stockeu stops at 42% of it.
-         The lit segment is the steepest ramp of that climb. #}
-      <div class="cur-v cur-v2 panel">
-        <h3>{{ 'home.cur_panel_h'|trans }}</h3>
-        <span class="pin">{{ 'home.cur_panel_pin'|trans }}</span>
-        <ol class="cur-prof">
-          {% for c in [
-            {n: '01', nm: 'La Redoute',      km: '1.7 km', m: '161 m', pc: '9.7%', mx: '15%',
-             d: 'M0,46 L11.2,42.6 L21.2,37.9 L36.1,26.4 L47.3,19.1 L56,15.8 L62.2,14.1', w: 62.2, s0: 21.2, s1: 36.1},
-            {n: '02', nm: 'Tier Antoine',    km: '2.7 km', m: '232 m', pc: '8.7%', mx: '11%',
-             d: 'M0,46 L22,38.6 L42,29.2 L64,16.1 L82,6.9 L100,0', w: 100, s0: 42, s1: 64},
-            {n: '03', nm: 'Mur de Huy',      km: '1.4 km', m: '128 m', pc: '9.3%', mx: '18%',
-             d: 'M0,46 L12.4,42.9 L22.7,38.9 L31,34.2 L39.2,26.4 L46.5,22.2 L51.6,20.6', w: 51.6, s0: 31, s1: 39.2},
-            {n: '04', nm: 'Côte de Stockeu', km: '1.1 km', m: '100 m', pc: '9.0%', mx: '12%',
-             d: 'M0,46 L8.3,41 L17.5,35.1 L25.8,31.2 L34.2,28.3 L41.7,26.2', w: 41.7, s0: 8.3, s1: 17.5}
-          ] %}
-          <li class="cur-row" style="--i:{{ loop.index0 }}">
-            <span class="n">{{ c.n }}</span>
-            <span class="nm">{{ c.nm }}</span>
-            <span class="co">△ {{ c.m }} · {{ c.pc }} · {{ c.mx }} max</span>
-            <svg class="cur-sil" viewBox="0 0 100 46" preserveAspectRatio="none" aria-hidden="true">
-              <clipPath id="cp{{ loop.index }}"><rect x="{{ c.s0 }}" y="0" width="{{ c.s1 - c.s0 }}" height="46"/></clipPath>
-              <path class="fil" d="{{ c.d }} L{{ c.w }},46 L0,46 Z"/>
-              <path class="ramp" d="{{ c.d }} L{{ c.w }},46 L0,46 Z" clip-path="url(#cp{{ loop.index }})"/>
-              <path class="rdg" d="{{ c.d }}"/>
-              <path class="stp" d="{{ c.d }}" clip-path="url(#cp{{ loop.index }})"/>
-              <line class="base" x1="0" y1="46" x2="{{ c.w }}" y2="46"/>
-            </svg>
-          </li>
-          {% endfor %}
-        </ol>
-        <div class="vs">{{ 'home.cur_voted'|trans }}</div>
-      </div>
-
-      {# v3: the same screen on a phone, the frame the silo box uses at the
-         top of the page. The winning climb is drawn at size; the other three
-         are one ridge each. #}
-      <div class="cur-v cur-v3">
+      {# The winning climb is drawn at size; the other three are one ridge each. #}
+      <div class="cur-v3">
         <h3>{{ 'home.cur_panel_h'|trans }}</h3>
         <div class="phone">
           <div class="ph-notch"></div>
