@@ -339,6 +339,7 @@ final class MapController extends AbstractController
             'compassLabel' => 'd_compass_label', 'compassGroup' => 'd_compass_group',
             'community' => 'd_community', 'unconfirmed' => 'd_unconfirmed', 'showAll' => 'd_show_all',
             'needsCheck' => 'd_needs_check', 'youConfirmed' => 'd_you_confirmed',
+            'providerSurvey' => 'd_provider_survey', 'personalConfirmed' => 'd_personal_confirmed', 'personalReclaimed' => 'd_personal_reclaimed',
             'youAnsweredOnForm' => 'd_you_answered_on_form', 'changeAnswer' => 'd_change_answer',
             'stateField' => 'd_state_field', 'stateSubmitted' => 'd_state_submitted', 'stateUnverified' => 'd_state_unverified',
             'stateVerified' => 'd_state_verified', 'stateRejected' => 'd_state_rejected',

@@ -242,6 +242,16 @@ final class CatalogProviderTest extends KernelTestCase
         $props = $this->byId($this->payload()['O']['authority']['features'])[$id];
         self::assertSame(9, $props['rung']);
         self::assertSame('ours', $props['custody']);
+        self::assertArrayNotHasKey('reclaimed', $props, 'absent until it happened');
+
+        // The register's newer survey takes the record back (data-provider-hierarchy.md
+        // §6.7.2): the border is the provider's again, the rung and state stay,
+        // and the survey date rides the public body for the drawer.
+        $conn->executeStatement("UPDATE item SET custody_reclaimed_at = '2027-01-15 00:00:00' WHERE id = :id", ['id' => $id]);
+        $props = $this->byId($this->payload()['O']['authority']['features'])[$id];
+        self::assertSame('specialty', $props['custody']);
+        self::assertSame(9, $props['rung']);
+        self::assertSame('2027-01-15', $props['reclaimed']);
     }
 
     /**

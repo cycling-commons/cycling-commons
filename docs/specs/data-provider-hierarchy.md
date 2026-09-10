@@ -592,6 +592,19 @@ decide whether to show the line, the body stops being cacheable and the split ha
 bought nothing. That is the "Security touches session" blocker already recorded
 against the page-caching work.
 
+**Built 2026-09-10.** The public half: the map payload carries `reclaimed`
+(the survey date, `YYYY-MM-DD`) on a point only when the register took it
+back, and the drawer body prints `map.d_provider_survey` from it. The private
+half: `GET /items/{id}/mine` (`ItemConfirmationController::mine`) answers
+`{confirmed_at}` for the signed-in rider's own newest drawer confirmation,
+`private, no-store`; for an anonymous request it answers `{confirmed_at: null}`
+before touching the database, and `ItemPersonalNoteTest` proves it with an id
+that exists nowhere. `loadMine()` in `web/assets/map/drawer.js` is gated on the
+signed-in marker, memoised per item id, and paints nothing on failure; it
+prints `map.d_personal_reclaimed` when the rider's date is older than the
+survey and `map.d_personal_confirmed` otherwise. Both sentences state the
+rider's fact; neither subtracts it.
+
 #### 6.7.4 The model: a provider is a warm-up cache
 
 A provider row is a head start, not an answer. It puts a pin on the map so a

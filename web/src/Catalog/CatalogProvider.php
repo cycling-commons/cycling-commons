@@ -330,6 +330,12 @@ final class CatalogProvider
         $evidence = $this->evidence->fromRow($row, $now);
         $props['rung'] = $evidence->rung;
         $props['custody'] = $evidence->custody->value;
+        // The public half of data-provider-hierarchy.md §6.7.3: the day the
+        // provider's survey took the record back, on the cacheable body.
+        // Absent unless it happened, so untouched rows stay byte-stable.
+        if (null !== ($row['ev_reclaimed'] ?? null)) {
+            $props['reclaimed'] = (new \DateTimeImmutable((string) $row['ev_reclaimed']))->format('Y-m-d');
+        }
         // docs/specs/moderation-and-contribution.md §10.1a — key absent when freshness does not apply.
         $type = ItemType::fromLetter((string) $row['letter']);
         if (null !== $type && null !== $row['last_confirmed']) {

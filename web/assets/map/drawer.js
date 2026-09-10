@@ -447,6 +447,12 @@ function buildRecord(layer, f){
   const freshState = f.freshness ? ({fresh:D.freshFresh, ageing:D.freshAgeing, stale:D.freshStale}[f.freshness.state] || escPend(f.freshness.state)) : '';
   const fresh = f.freshness
     ? `<div class="cc-d-fresh ${f.freshness.state}">${freshState} · ${D.lastConfirmed||'last confirmed'} ${f.freshness.lastConfirmed==='this season'?(D.thisSeason||'this season'):escPend(f.freshness.lastConfirmed)}</div>` : '';
+  /* data-provider-hierarchy.md §6.7.3: the provider's survey date is public
+     and rides the cacheable body; the "You confirmed" sentence is a private
+     fragment loadMine() fills in, for a signed-in rider only. */
+  const survey = f.reclaimed
+    ? `<div class="cc-d-fresh cc-d-survey">${tpl(D.providerSurvey||'The register published a newer survey on {when}.',{when:escPend(f.reclaimed)})}</div>` : '';
+  const mine = (f.id!=null && window.CC_CONFIRM_TOKEN) ? `<div class="cc-d-fresh cc-d-mine" id="cc-d-mine-slot" data-item="${f.id}"></div>` : '';
   const diffLabel = f.difficulty?.label ?? (typeof f.difficulty === 'string' ? f.difficulty : undefined);
   const diffScore = f.difficulty?.score ?? null;
   const diff = diffLabel
@@ -722,7 +728,7 @@ function buildRecord(layer, f){
 
   return `<div class="cc-d-head"><span class="cc-d-type" style="--c:${layer.color};color:${txtOn(layer.color)}"><i class="cc-g">${layerGlyph(layer)}</i> ${layer.label}</span>${share}</div>
     <div class="cc-d-name">${escPend(f.name)}</div>${cur}${photo}${desc}${diff}${elev}${len}${grad}
-    <ul class="cc-d-rec">${rows}</ul>${fresh}${up}
+    <ul class="cc-d-rec">${rows}</ul>${fresh}${survey}${mine}${up}
     <div class="cc-d-src">${D.source||'Source'} · ${who || srcLine(f, osmHref)}${
       who ? `<div class="cc-d-prov">${srcLine(f, osmHref)}</div>` : ''}</div>${act}${moderate}${histSlot}${reportLink}`;
 }
@@ -801,6 +807,29 @@ function openHistoryDialog(){
       <ul class="cc-d-hist-list cc-hist-full">${_histCache.map(historyRow).join('')}</ul>
     </div>`;
   dlg.showModal();
+}
+/* The personal sentence (data-provider-hierarchy.md §6.7.3). Never for an
+   anonymous visitor: they hold no confirmations and pay nothing. Memoised per
+   item id, so reopening a drawer costs no request. A failed fetch renders
+   nothing: the drawer is still correct, only shorter. */
+const _mineCache = new Map();
+function loadMine(f){
+  if(f.id==null || !window.CC_CONFIRM_TOKEN) return;
+  const id = f.id;
+  const paint = data => {
+    const slot = document.getElementById('cc-d-mine-slot');
+    if(!slot || String(slot.dataset.item)!==String(id) || !data || !data.confirmed_at) return;
+    const yours = escPend(data.confirmed_at);
+    slot.textContent = '';
+    slot.innerHTML = (f.reclaimed && data.confirmed_at < f.reclaimed)
+      ? tpl(D.personalReclaimed||'You confirmed this on {yours}. The register published a newer survey on {theirs}.', {yours, theirs:escPend(f.reclaimed)})
+      : tpl(D.personalConfirmed||'You confirmed this on {yours}.', {yours});
+  };
+  if(_mineCache.has(id)){ paint(_mineCache.get(id)); return; }
+  fetch('/items/'+id+'/mine', {credentials:'same-origin', headers:{'Accept':'application/json'}})
+    .then(r => r.ok ? r.json() : null)
+    .catch(() => null)
+    .then(data => { if(data) _mineCache.set(id, data); paint(data); });
 }
 // Race-guarded history fetch: myReq vs _historyReq; failure is silent (enhancement).
 function loadItemHistory(itemId){
@@ -974,6 +1003,7 @@ export function renderDrawerBody(layer, f){
     if('new' !== f.pending.type && f.pending.itemId!=null) loadItemHistory(f.pending.itemId);
   } else if(f.id!=null){
     loadItemHistory(f.id);
+    loadMine(f);
   }
   const pl = photoList(f);
   const mainImg = document.querySelector('#drawerBody .cc-d-photo > img');

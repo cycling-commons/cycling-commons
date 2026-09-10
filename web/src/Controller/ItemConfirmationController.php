@@ -58,6 +58,37 @@ final class ItemConfirmationController extends AbstractController
         return $this->json($payload);
     }
 
+    /**
+     * The one sentence of the drawer that is personal: the day this rider
+     * stood here (docs/specs/data-provider-hierarchy.md §6.7.3). Its own
+     * fragment, private and no-store, because a shared cache holding one
+     * rider's sentence and serving it to another is the worst failure this
+     * feature could have. Anonymous visitors hold no confirmations, so the
+     * answer is empty before the database is asked anything; the drawer
+     * never requests it for them either. This is the only route the drawer
+     * calls that reads the session: the drawer body stays cacheable.
+     */
+    #[Route('/items/{id}/mine', name: 'item_mine', requirements: ['id' => '\d+'], methods: ['GET'])]
+    public function mine(int $id): JsonResponse
+    {
+        $response = new JsonResponse(['confirmed_at' => null]);
+        $response->setPrivate();
+        $response->headers->addCacheControlDirective('no-store');
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $response;
+        }
+        $at = $this->em->getConnection()->fetchOne(
+            "SELECT MAX(created_at) FROM item_confirmation WHERE item_id = :item AND user_id = :user AND source <> 'form'",
+            ['item' => $id, 'user' => (int) $user->getId()],
+        );
+        if (\is_string($at) && '' !== $at) {
+            $response->setData(['confirmed_at' => (new \DateTimeImmutable($at))->format('Y-m-d')]);
+        }
+
+        return $response;
+    }
+
     #[Route('/items/{id}/confirm', name: 'item_confirm', requirements: ['id' => '\d+'], methods: ['POST'])]
     public function confirm(int $id, Request $request): JsonResponse
     {
