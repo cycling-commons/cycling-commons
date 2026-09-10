@@ -44,6 +44,13 @@ SPDX-License-Identifier = "LicenseRef-PolyForm-Shield-1.0.0"
 
 # Region/country flag SVGs (drawn in-repo for the world reference bundle).
 [[annotations]]
+# The wiki's marker crops: the map's own pins, rendered by /curator/markers
+# and cropped, under the wiki's licence like the prose around them.
+path = ["wiki/assets/markers/**"]
+SPDX-FileCopyrightText = "© BikeCoders"
+SPDX-License-Identifier = "CC-BY-SA-4.0"
+
+[[annotations]]
 path = ["web/assets/flags/**", "web/public/media/**"]
 SPDX-FileCopyrightText = "© BikeCoders"
 SPDX-License-Identifier = "LicenseRef-PolyForm-Shield-1.0.0"

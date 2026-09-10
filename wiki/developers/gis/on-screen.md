@@ -276,32 +276,47 @@ needing one layer per variant.
 `addCoverage()`'s water-and-food icon is exactly that. Instead of one drop icon for every letter-B
 point, it reads each feature's own `food` and `potable` properties and picks one of five kind glyphs
 (the drawings live in one registry, `KindIcons`, and are minted into map images named
-`kind-b-<kind>`):
+`kind-b-<kind>`), and then reads the feature's `cd`, its OpenStreetMap `check_date`, to choose
+between the plain icon and its twin with the `?` badge (`kind-b-<kind>-q`):
 
 <!-- CODE-FROM web/assets/map/coverage.js -->
 ```js
 const isFood = ['match',['to-string',['get','food']],['true','1','yes'],true,false];
 const isPotable = ['match',['to-string',['get','potable']],['yes','true','1'],true,false];
 const isNotPotable = ['==',['to-string',['get','potable']],'no'];
+```
+
+<!-- CODE-FROM web/assets/map/coverage.js -->
+```js
+const cutoff = witnessCutoff();
+const witnessed = cutoff ? ['>=',['to-string',['coalesce',['get','cd'],'']], cutoff] : false;
+const pick = (plain, badged) => ['case', witnessed, plain, badged];
+const kindPair = kind => pick(kindImageId('B',kind,false), kindImageId('B',kind,true));
+const miniPair = (glyph, suffix) => pick(miniIcon(key, glyph, suffix, false), miniIcon(key, glyph, suffix, true));
 const icon = key==='water'
   ? ['case', isFood,
-      ['case', isPotable, kindImageId('B','food_water'), kindImageId('B','food')],
-      ['case', isPotable, kindImageId('B','tap'), isNotPotable, kindImageId('B','no'), kindImageId('B','unk')]]
+      ['case', isPotable, kindPair('food_water'), kindPair('food')],
+      ['case', isPotable, kindPair('tap'), isNotPotable, kindPair('no'), kindPair('unk')]]
 ```
 
 Read it like nested if/else: is it a food stop? Then the fork-and-knife disc, with a small drop if it
 also gives water. Otherwise a tap: the filled blue drop when `potable` says yes, the barred drop when
-it says `'no'`, and the unfilled drop when it says nothing. One layer, one `icon-image` line, and
+it says `'no'`, and the unfilled drop when it says nothing. Each arm is itself a two-way `case`: the
+plain icon when the point's `cd` is on or after the cutoff the page computed from
+`map.confirmation_stale_months` (a dated witness inside the window), the badged twin otherwise. The
+cutoff and the date are both `YYYY-MM-DD` strings, so a string compare is a date compare, and a page
+that hands over no cutoff keeps the badge on everything. One layer, one `icon-image` line, and
 every one of the hundreds of thousands of letter-B points draws its own correct icon. The D · bike-services layer does the same
-trick on a `kind` property, picking between a shop, station and pump glyph:
+trick on a `kind` property, picking between a shop, station and pump glyph, each again as a
+plain-or-badged pair:
 
 <!-- CODE-FROM web/assets/map/coverage.js -->
 ```js
 ['match',['get','kind'],
-    'shop', miniIcon('services'),
-    'station', miniIcon('services', SERVICE_GLYPH.station, 'station'),
-    'pump', miniIcon('services', SERVICE_GLYPH.pump, 'pump'),
-    miniIcon('services')]
+    'shop', miniPair(),
+    'station', miniPair(SERVICE_GLYPH.station, 'station'),
+    'pump', miniPair(SERVICE_GLYPH.pump, 'pump'),
+    miniPair()]
 ```
 
 Same shape as the water example, `match` on a tile property, one arm per value, a trailing
