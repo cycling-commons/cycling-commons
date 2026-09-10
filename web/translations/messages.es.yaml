@@ -2683,6 +2683,8 @@ map:
   d_osm_closed: 'Cerrado'
   d_osm_gone: 'Ya no existe'
   d_osm_sent: 'Gracias — un curador lo revisará.'
+  d_osm_applied: 'En el mapa. Nadie lo ha confirmado todavía.'
+  d_osm_applied_verified: 'En el mapa, confirmado por ti.'
   d_osm_already: 'Ya enviado — un curador lo está revisando.'
   d_osm_failed: 'No se pudo enviar — inténtalo de nuevo.'
   d_osm_login: 'Inicia sesión para confirmar.'

@@ -2206,6 +2206,8 @@ map:
   d_osm_closed: 'Geschlossen'
   d_osm_gone: 'Nicht mehr vorhanden'
   d_osm_sent: 'Danke — ein Kurator sieht es sich an.'
+  d_osm_applied: 'Auf der Karte. Noch hat es niemand bestätigt.'
+  d_osm_applied_verified: 'Auf der Karte, von dir bestätigt.'
   d_osm_already: 'Bereits gesendet — ein Kurator sieht es sich an.'
   d_osm_failed: 'Konnte nicht gesendet werden — bitte erneut versuchen.'
   d_osm_login: 'Zum Bestätigen bitte anmelden.'

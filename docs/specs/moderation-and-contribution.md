@@ -486,7 +486,9 @@ remembers from a holiday tour may be out of date"). On that same applying
 edit, and only on a row that offers the `exists` stance, the last step shows
 one tick box, OFF by default: "I know this place is there now. Mark it
 confirmed." (`improve.review.confirm_now`, form field `confirmNow`, never
-part of the change set). Ticked, `CatalogContributionService::confirmNow()`
+part of the change set). The box is not offered once the curator's own
+drawer confirmation is already on the row (owner 2026-09-10: a box that asks
+what you already did is noise). Ticked, `CatalogContributionService::confirmNow()`
 records the SAME drawer confirmation the "Still here?" button writes
 (`ItemConfirmationService::record()`, source `drawer`), so the curator's tick
 verifies the row exactly as their click would; the receipt then reads
@@ -494,12 +496,25 @@ verifies the row exactly as their click would; the receipt then reads
 The self-apply also runs when the edit MERGES into the curator's own open
 submission on that place (§7.3b): the merge path skipped it until 2026-09-08,
 so a curator who fixed a place that already carried their description
-suggestion found their own words in the queue (the Shimano stand). Edits
-only, as ever. The box is ignored on an edit that queues, so a rider cannot
-tick past the review, and section 6.3 stands: this is a curator confirming somebody else's
-row, not a submitter counting their own new place. Pinned by
-`CatalogContributionServiceTest::testACuratorsEditCanAlsoConfirmThePlace`
+suggestion found their own words in the queue (the Shimano stand). The box is
+ignored on an edit that queues, so a rider cannot tick past the review.
+Pinned by `CatalogContributionServiceTest::testACuratorsEditCanAlsoConfirmThePlace`
 and its two siblings.
+
+**A curator's own new place, too (owner 2026-09-10: "I do not have to approve
+my own actions").** The same `applyIfCurator()` runs on a curator's NEW place
+at intake, under the same rule the desk button obeys: approval needs the OSM
+question answered (catalog-data-model.md §5b). A place taken from an OSM node
+(`/improve?ref=node/...`) has answered it by construction and applies at once;
+the wizard then reads "Apply change" and offers the same "Mark it confirmed"
+box, whose tick records the same drawer confirmation and verifies the row on
+the curator's word. A place from a bare pin still queues, for everyone,
+because the wizard does not ask the OSM question yet (docs/TODO.md); the
+receipt says "submitted", not "applied", and the box is ignored. Section 6.3
+still holds for riders: a submitter's own form answer never counts. Pinned by
+`testACuratorsNewPlaceFromAnOsmNodeIsAppliedAtOnce`,
+`testACuratorsNewPlaceCanAlsoBeMarkedConfirmed` and
+`testACuratorsNewPlaceWithoutAnOsmAnswerStillQueues`.
 
 ## 2. Intake boundary: `SubmissionDraft`, validate twice
 

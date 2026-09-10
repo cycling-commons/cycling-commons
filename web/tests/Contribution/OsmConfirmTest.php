@@ -11,6 +11,7 @@ use App\Catalog\Entity\Item;
 use App\Catalog\Entity\Submission;
 use App\Catalog\ItemSource;
 use App\Catalog\ItemState;
+use App\Catalog\SubmissionStatus;
 use App\Entity\User;
 use App\Tests\Coverage\CoverageSchema;
 use Doctrine\DBAL\Connection;
@@ -36,7 +37,8 @@ final class OsmConfirmTest extends WebTestCase
     private const REF = 'node/515151';
     private const NAMELESS = 'node/525252';
 
-    private function login(KernelBrowser $client, string $tag): void
+    /** @param list<string> $roles */
+    private function login(KernelBrowser $client, string $tag, array $roles = []): void
     {
         $container = static::getContainer();
         $em = $container->get(EntityManagerInterface::class);
@@ -45,7 +47,11 @@ final class OsmConfirmTest extends WebTestCase
         $user->setDisplayName('One Tap');
         $user->setEmailVerified(true);
         $user->setEmailVerifiedAt(new \DateTimeImmutable());
-        $user->setRoles([]);
+        $user->setRoles($roles);
+        if ([] !== $roles) {
+            $user->setTotpSecret('JBSWY3DPEHPK3PXP');
+            $user->setTwoFaEnabled(true);
+        }
         $user->setPassword($container->get(UserPasswordHasherInterface::class)->hashPassword($user, 'securepass12345!'));
         $em->persist($user);
         $em->flush();
@@ -125,6 +131,36 @@ final class OsmConfirmTest extends WebTestCase
             $em->getRepository(Submission::class)->findOneBy(['itemId' => $item->getId()]),
             'it goes through the ordinary queue — no new moderation mechanic',
         );
+    }
+
+    /**
+     * A curator's own tap does not wait for a curator (owner 2026-09-10: "I
+     * do not have to approve my own actions"). The place comes from an OSM
+     * node, so its OSM question is answered and the intake applies it; the
+     * curator's answer is then their word, the same drawer confirmation their
+     * click on a served pin would write, and the reply carries the pin.
+     */
+    public function testACuratorsTapAppliesAndVerifiesAtOnce(): void
+    {
+        $client = static::createClient();
+        $this->login($client, 'curator', ['ROLE_CURATOR']);
+        $this->seedPois();
+
+        $this->post($client, self::REF, 'potable', $this->mapToken($client));
+
+        self::assertResponseIsSuccessful();
+        /** @var array{ok: bool, applied: bool, verified: bool, item: array{letter: string, feature: array<string, mixed>}|null} $body */
+        $body = json_decode((string) $client->getResponse()->getContent(), true, 512, \JSON_THROW_ON_ERROR);
+        self::assertTrue($body['applied']);
+        self::assertTrue($body['verified']);
+        self::assertSame('B', $body['item']['letter'] ?? null, 'the reply carries the served pin');
+
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        /** @var Item $item */
+        $item = $em->getRepository(Item::class)->findOneBy(['sourceRef' => self::REF]);
+        self::assertSame(ItemState::Verified, $item->getState(), 'accepted and verified on the curator\'s word');
+        $sub = $em->getRepository(Submission::class)->findOneBy(['itemId' => $item->getId()]);
+        self::assertSame(SubmissionStatus::Approved, $sub?->getStatus(), 'through the ordinary queue, decided by the same person');
     }
 
     public function testTheNotPotableAnswerIsRecordedAsItsOwnClaim(): void

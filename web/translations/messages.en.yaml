@@ -2679,6 +2679,8 @@ map:
   d_osm_closed: 'Closed'
   d_osm_gone: 'Not there anymore'
   d_osm_sent: 'Thanks — a curator will review it.'
+  d_osm_applied: 'On the map. Nobody has confirmed it yet.'
+  d_osm_applied_verified: 'On the map, confirmed by you.'
   d_osm_already: 'Already sent — a curator is looking at it.'
   d_osm_failed: 'That could not be sent — try again.'
   d_osm_login: 'Please log in to confirm.'

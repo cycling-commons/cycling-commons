@@ -93,9 +93,35 @@ final class CuratorWizardCopyTest extends WebTestCase
         self::assertStringNotContainsString('name="improve[confirmNow]" checked', $html);
     }
 
+    /**
+     * A box that asks what the curator already did is noise (owner
+     * 2026-09-10): once their own drawer confirmation is on the row, the
+     * wizard stops offering "Mark it confirmed".
+     */
+    public function testACuratorWhoAlreadyConfirmedThePlaceSeesNoBox(): void
+    {
+        $client = static::createClient();
+        $this->login($client, 'wizard-curator-done@example.com', ['ROLE_CURATOR']);
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $item = $this->seedItem();
+        $me = $em->getRepository(User::class)->findOneBy(['email' => 'wizard-curator-done@example.com']);
+        $em->getConnection()->executeStatement(
+            "INSERT INTO item_confirmation (item_id, user_id, stance, source, created_at, updated_at) VALUES (:item, :user, 'exists', 'drawer', NOW(), NOW())",
+            ['item' => $item->getId(), 'user' => (int) $me?->getId()],
+        );
+
+        $client->request('GET', '/improve?item='.$item->getId().'&type=scenic-views');
+        self::assertResponseIsSuccessful();
+        $html = (string) $client->getResponse()->getContent();
+        self::assertStringContainsString('Apply change', $html, 'the edit still applies at once');
+        self::assertStringNotContainsString('Mark it confirmed', $html, 'already confirmed by this curator: nothing to ask');
+    }
+
     public function testACuratorAddingANewPlaceStillReadsTheRiderCopy(): void
     {
-        // A NEW place queues for everyone: the OSM question lives on the queue card.
+        // A NEW place from a bare pin queues even for a curator: the OSM
+        // question lives on the queue card. One taken from an OSM node applies
+        // (CatalogContributionServiceTest::testACuratorsNewPlaceFromAnOsmNodeIsAppliedAtOnce).
         $client = static::createClient();
         $this->login($client, 'wizard-curator-add@example.com', ['ROLE_CURATOR']);
 

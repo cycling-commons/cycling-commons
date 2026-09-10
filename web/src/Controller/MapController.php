@@ -298,6 +298,7 @@ final class MapController extends AbstractController
             'confirmedCurator' => 'd_confirmed_curator', 'confirmedCuratorMany' => 'd_confirmed_curator_many',
             'osmBroken' => 'd_osm_broken', 'osmClosed' => 'd_osm_closed', 'osmGone' => 'd_osm_gone',
             'osmSent' => 'd_osm_sent', 'osmAlready' => 'd_osm_already',
+            'osmApplied' => 'd_osm_applied', 'osmAppliedVerified' => 'd_osm_applied_verified',
             'osmFailed' => 'd_osm_failed', 'osmLogin' => 'd_osm_login',
             'loginConfirm' => 'd_login_confirm',
             'toastLoginConfirm' => 'd_toast_login_confirm', 'toastThanks' => 'd_toast_thanks',

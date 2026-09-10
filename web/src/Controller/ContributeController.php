@@ -243,7 +243,7 @@ final class ContributeController extends AbstractController
                     '_osm_was' => self::osmBaseline($request),
                 ] + $data, $user);
 
-                return $this->renderAddPlace($type, receipt: $receipt);
+                return $this->renderAddPlace($type, receipt: $receipt, fromOsm: true);
             } catch (TooManyRequestsHttpException) {
                 $this->addFlash('error', 'contribute.error.rate_limited');
             } catch (ValidationFailedException $e) {
@@ -253,7 +253,7 @@ final class ContributeController extends AbstractController
             }
         }
 
-        return $this->renderAddPlace($type, form: $form);
+        return $this->renderAddPlace($type, form: $form, fromOsm: true);
     }
 
     /** mode=add arm of /improve. */
@@ -289,7 +289,13 @@ final class ContributeController extends AbstractController
         return $this->renderAddPlace($type, form: $form);
     }
 
-    private function renderAddPlace(ItemType $type, ?ContributionReceipt $receipt = null, ?FormInterface $form = null): Response
+    /**
+     * @param bool $fromOsm the place is taken from an OSM node, so its OSM
+     *                      question is answered and a curator's own
+     *                      submission applies at once
+     *                      (moderation-and-contribution.md §1.6)
+     */
+    private function renderAddPlace(ItemType $type, ?ContributionReceipt $receipt = null, ?FormInterface $form = null, bool $fromOsm = false): Response
     {
         return $this->render('contribute/improve.html.twig', [
             'page_title' => 'meta.improve_title',
@@ -298,6 +304,8 @@ final class ContributeController extends AbstractController
             'item_type' => $type,
             'unbound' => false,
             'add_mode' => true,
+            'from_osm' => $fromOsm,
+            'confirm_offered' => \in_array(ConfirmationStance::Exists, $type->confirmationStances(), true),
             'receipt' => $receipt,
             'form' => $form,
         ]);
@@ -305,7 +313,7 @@ final class ContributeController extends AbstractController
 
     #[Route('/improve', name: 'improve')]
     #[IsGranted('ROLE_USER')]
-    public function improve(Request $request, EntityManagerInterface $em, CoverageRepository $coverage, TranslatorInterface $translator): Response
+    public function improve(Request $request, EntityManagerInterface $em, CoverageRepository $coverage, TranslatorInterface $translator, ItemConfirmationService $confirmations): Response
     {
         // docs/specs/moderation-and-contribution.md §1.4 — non-numeric item is unbound, never a 400.
         $item = null;
@@ -449,7 +457,10 @@ final class ContributeController extends AbstractController
             'item_lat' => $itemLat,
             'item_lng' => $itemLng,
             // The "Mark it confirmed" box needs a row that offers "it exists".
-            'confirm_offered' => \in_array(ConfirmationStance::Exists, ItemConfirmationService::offeredFor($item), true),
+            // A box that asks what the curator already did is noise (owner
+            // 2026-09-10): hidden once their own drawer confirmation is on the row.
+            'confirm_offered' => \in_array(ConfirmationStance::Exists, ItemConfirmationService::offeredFor($item), true)
+                && !($this->getUser() instanceof User && 'drawer' === $confirmations->snapshot($item, $this->getUser())['mineSource']),
             'receipt' => null,
             'form' => $form,
             'current' => $current,

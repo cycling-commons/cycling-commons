@@ -6,9 +6,13 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Catalog\CatalogProvider;
+use App\Catalog\ConfirmationStance;
 use App\Catalog\Entity\Item;
+use App\Catalog\Entity\Submission;
 use App\Catalog\ItemState;
 use App\Catalog\ItemType;
+use App\Community\ItemConfirmationService;
 use App\Contribution\CatalogContributionService;
 use App\Coverage\CoverageRepository;
 use App\Entity\User;
@@ -47,6 +51,8 @@ final class OsmConfirmController extends AbstractController
         private readonly Connection $db,
         private readonly EntityManagerInterface $em,
         private readonly TranslatorInterface $translator,
+        private readonly ItemConfirmationService $confirmations,
+        private readonly CatalogProvider $catalog,
     ) {
     }
 
@@ -187,10 +193,33 @@ final class OsmConfirmController extends AbstractController
             return $this->json(['error' => 'invalid'], 422);
         }
 
+        // A curator's own tap does not wait for a curator (owner 2026-09-10;
+        // moderation-and-contribution.md §1.6): the intake applied it, and
+        // their answer is their word, the same drawer confirmation their click
+        // on a served pin would write. The reply carries the served feature
+        // so the map draws the pin at once.
+        $applied = $receipt->applied;
+        $verified = false;
+        $feature = null;
+        if ($applied && null !== $receipt->submissionId) {
+            $submission = $this->em->find(Submission::class, $receipt->submissionId);
+            $item = null !== $submission && null !== $submission->getItemId() ? $this->em->find(Item::class, $submission->getItemId()) : null;
+            $answer = ConfirmationStance::tryFrom($stance);
+            if (null !== $item && null !== $answer && \in_array($answer, ItemConfirmationService::offeredFor($item), true)) {
+                $this->confirmations->record($item, $user, $answer);
+                $this->em->flush();
+                $verified = ItemState::Verified === $item->getState();
+            }
+            $feature = null !== $item ? $this->catalog->featureForItem((int) $item->getId()) : null;
+        }
+
         return $this->json([
             'ok' => true,
             'reference' => $receipt->reference,
             'stance' => $stance,
+            'applied' => $applied,
+            'verified' => $verified,
+            'item' => $feature,
         ]);
     }
 }

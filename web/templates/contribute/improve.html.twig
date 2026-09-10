@@ -1,7 +1,11 @@
 {# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
 {% extends 'base.html.twig' %}
 {# A curator's own EDIT is applied at once (moderation-and-contribution.md 1.6); a new place still queues. #}
-{% set self_applies = not add_mode|default(false) and is_granted('ROLE_CURATOR') %}
+{# A curator's own edit applies at once; so does their own new place when it
+   comes from an OSM node, its OSM question answered by construction
+   (moderation-and-contribution.md §1.6). A new place from a bare pin still
+   queues, for the OSM question on the queue card. #}
+{% set self_applies = is_granted('ROLE_CURATOR') and (not add_mode|default(false) or from_osm|default(false)) %}
 {% block head_styles %}
 <link rel="stylesheet" href="{{ asset('lib/maplibre-gl/6.8.0/maplibre-gl.css') }}" />
 <style>

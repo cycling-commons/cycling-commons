@@ -2203,6 +2203,8 @@ map:
   d_osm_closed: 'Gesloten'
   d_osm_gone: 'Bestaat niet meer'
   d_osm_sent: 'Bedankt — een curator kijkt ernaar.'
+  d_osm_applied: 'Op de kaart. Nog niemand heeft het bevestigd.'
+  d_osm_applied_verified: 'Op de kaart, door jou bevestigd.'
   d_osm_already: 'Al doorgegeven — een curator kijkt ernaar.'
   d_osm_failed: 'Dat kon niet verstuurd worden — probeer het opnieuw.'
   d_osm_login: 'Log in om te bevestigen.'

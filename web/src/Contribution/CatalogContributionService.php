@@ -26,6 +26,7 @@ use App\Media\Entity\MediaUpload;
 use App\Media\MediaClaimService;
 use App\Media\PhotoAltSuggestion;
 use App\Moderation\ModerationService;
+use App\Moderation\OsmUnansweredException;
 use App\Moderation\OutOfScopeException;
 use App\Service\ContributionReceipt;
 use App\Service\ContributionStubInterface;
@@ -209,8 +210,19 @@ final class CatalogContributionService implements ContributionStubInterface
 
         $submission = $this->submitDraft($draft, SubmissionType::NewItem, $by, $payload);
 
+        // A curator's own new place does not wait for a curator either (owner
+        // 2026-09-10: "I do not have to approve my own actions"), when the
+        // OSM question is already answered, which a place taken from an OSM
+        // node is by construction. The same tick box as on an edit marks it
+        // confirmed, with the same drawer confirmation.
+        $applied = $this->applyIfCurator($submission, $by);
+        $item = $applied && null !== $submission->getItemId() ? $this->em->find(Item::class, $submission->getItemId()) : null;
+        $confirmNow = (bool) ($payload['confirmNow'] ?? false);
+
         return new ContributionReceipt(
             'SUB-'.(string) $submission->getId(), 'add', true, $submission->getCreatedAt(), $submission->getId(),
+            applied: $applied,
+            confirmed: null !== $item && $confirmNow && $this->confirmNow($item, $by),
         );
     }
 
@@ -514,9 +526,9 @@ final class CatalogContributionService implements ContributionStubInterface
             // A curator's edit applies at once here too (1.6): the merge used
             // to skip this, so a curator who fixed a place that already had an
             // open suggestion on it found their own words waiting in the queue
-            // (owner 2026-09-08). Edits only, as below: a revised NEW place
-            // still needs its OSM answer on the queue card.
-            $applied = SubmissionType::Edit === $open->getType() && $this->applyIfCurator($open, $by);
+            // (owner 2026-09-08). A revised NEW place applies on the same
+            // rule as a fresh one: only with its OSM question answered.
+            $applied = $this->applyIfCurator($open, $by);
 
             return new ContributionReceipt(
                 'SUB-'.(string) $open->getId(), 'improve', true, $open->getCreatedAt(), $open->getId(),
@@ -554,13 +566,16 @@ final class CatalogContributionService implements ContributionStubInterface
     }
 
     /**
-     * A curator's own edit does not wait for a curator (owner 2026-09-06: "if
-     * I change anything on an item when I have curator rights I should not
-     * have to approve it"). Not a new mechanic: the SAME approve step the
-     * desk button runs, with the same area check, run at submit time by the
-     * same person. Outside their area the edit queues like anyone's. Only
-     * edits of existing places: a NEW place still needs the OSM question
-     * answered, which lives on the queue card (docs/TODO.md, 2026-09-06).
+     * A curator's own contribution does not wait for a curator (owner
+     * 2026-09-06: "if I change anything on an item when I have curator rights
+     * I should not have to approve it"; 2026-09-10, for a new place: "I do
+     * not have to approve my own actions"). Not a new mechanic: the SAME
+     * approve step the desk button runs, with the same area check and the
+     * same OSM rule, run at submit time by the same person. Outside their
+     * area it queues like anyone's. A new place whose OSM question is still
+     * open queues too, because approval needs that answer
+     * (catalog-data-model.md §5b) and the wizard does not ask it yet; a place
+     * taken from an OSM node has answered it by construction and applies.
      */
     private function applyIfCurator(Submission $submission, User $by): bool
     {
@@ -569,7 +584,7 @@ final class CatalogContributionService implements ContributionStubInterface
         }
         try {
             $this->moderation->decide((int) $submission->getId(), 'approve', $by, null);
-        } catch (OutOfScopeException) {
+        } catch (OutOfScopeException|OsmUnansweredException) {
             return false;
         }
 

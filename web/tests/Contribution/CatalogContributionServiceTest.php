@@ -190,6 +190,76 @@ final class CatalogContributionServiceTest extends KernelTestCase
         self::assertSame('chain tool', $item->getAttributes()['tools'] ?? null, 'the earlier suggestion rode along and is on the item too');
     }
 
+    /**
+     * A curator's own NEW place does not wait either (owner 2026-09-10: "I do
+     * not have to approve my own actions"), when its OSM question is
+     * answered: a place taken from an OSM node has answered it by
+     * construction. The same approve step the desk runs, by the same person.
+     */
+    public function testACuratorsNewPlaceFromAnOsmNodeIsAppliedAtOnce(): void
+    {
+        $this->wallonia();
+
+        $receipt = $this->service->submit('add', [
+            'type' => 'scenic-views',
+            '_osm_ref' => 'node/9'.random_int(100000000, 999999999),
+            'details' => ['name' => 'Point de vue du test'],
+            'lat' => '50.47', 'lng' => '5.86', 'place' => 'Testville',
+        ], $this->curator());
+
+        self::assertTrue($receipt->applied);
+        self::assertFalse($receipt->confirmed, 'applied is not confirmed: the tick box is a separate act');
+        $sub = $this->em->find(Submission::class, $receipt->submissionId);
+        self::assertNotNull($sub);
+        self::assertSame(SubmissionStatus::Approved, $sub->getStatus());
+        $item = $this->em->find(Item::class, (int) $sub->getItemId());
+        self::assertNotNull($item);
+        self::assertSame(ItemState::Unverified, $item->getState(), 'accepted, and still nobody has stood there on record');
+    }
+
+    public function testACuratorsNewPlaceCanAlsoBeMarkedConfirmed(): void
+    {
+        $this->wallonia();
+
+        $receipt = $this->service->submit('add', [
+            'type' => 'scenic-views',
+            '_osm_ref' => 'node/9'.random_int(100000000, 999999999),
+            'details' => ['name' => 'Point de vue confirmé'],
+            'lat' => '50.47', 'lng' => '5.86', 'place' => 'Testville',
+            'confirmNow' => '1',
+        ], $this->curator());
+
+        self::assertTrue($receipt->applied);
+        self::assertTrue($receipt->confirmed);
+        $sub = $this->em->find(Submission::class, $receipt->submissionId);
+        $item = $this->em->find(Item::class, (int) $sub?->getItemId());
+        self::assertNotNull($item);
+        self::assertSame(ItemState::Verified, $item->getState(), 'a curator\'s word settles it, as their drawer click would');
+    }
+
+    /**
+     * A new place from a bare pin still queues, even for a curator: approval
+     * needs the OSM question answered (catalog-data-model.md §5b) and the
+     * wizard does not ask it. The receipt says so by not saying "applied".
+     */
+    public function testACuratorsNewPlaceWithoutAnOsmAnswerStillQueues(): void
+    {
+        $this->wallonia();
+
+        $receipt = $this->service->submit('add', [
+            'type' => 'scenic-views',
+            'details' => ['name' => 'Point de vue sans OSM'],
+            'lat' => '50.47', 'lng' => '5.86', 'place' => 'Testville',
+            'confirmNow' => '1',
+        ], $this->curator());
+
+        self::assertFalse($receipt->applied);
+        self::assertFalse($receipt->confirmed, 'nothing is confirmed on a place that is not yet accepted');
+        $sub = $this->em->find(Submission::class, $receipt->submissionId);
+        self::assertNotNull($sub);
+        self::assertSame(SubmissionStatus::Pending, $sub->getStatus());
+    }
+
     public function testARidersEditStillWaitsForACurator(): void
     {
         $this->wallonia();

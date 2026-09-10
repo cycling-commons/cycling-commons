@@ -309,9 +309,16 @@ export function initCommunity(){
         .then(r=>r.json().then(j=>({ok:r.ok, status:r.status, j})))
         .then(({ok, status, j})=>{
           if(ok || 409===status){
+            // A curator's own tap applied at once (moderation-and-contribution.md
+            // §1.6): say so, and draw the served pin the reply carries.
+            const applied = ok && j && j.applied;
             box.innerHTML=`<span class="cc-osmcf-done">${
               409===status ? (D.osmAlready||'Already sent — a curator is looking at it.')
-                           : (D.osmSent||'Thanks — a curator will review it.')}</span>`;
+              : applied ? (j.verified ? (D.osmAppliedVerified||'On the map, confirmed by you.') : (D.osmApplied||'On the map. Nobody has confirmed it yet.'))
+              : (D.osmSent||'Thanks — a curator will review it.')}</span>`;
+            if(applied && j.item && j.item.feature && LETTER_KEY[j.item.letter]){
+              addCuratedFeature(LETTER_KEY[j.item.letter], j.item.feature);
+            }
             return;
           }
           throw new Error(String(status));
