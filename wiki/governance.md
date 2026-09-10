@@ -3,9 +3,31 @@
 # Governance
 
 The credibility of a commons rests on one question: *can the people who built it quietly enclose it
-later?* If the answer is yes, no one else will build on it and no community will trust it, the exact
-failure that befalls a shared resource when its steward later revokes the API and paywalls access. The Cycling Commons
-is structured so the answer is **no**.
+later?* If yes, nobody will trust it and nobody will build on it. This is how shared resources die:
+the steward who runs the API revokes it one day and puts it behind a paywall. The Cycling Commons is
+built so that enclosure can never be *quiet*.
+
+No licence can make enclosure impossible, and this page will not pretend otherwise:
+
+- ODbL covers the *data*, and only data already published. It cannot force anyone to keep
+  publishing. A bad-faith owner could close the API and the bulk exports together.
+- The platform code is source-available under PolyForm Shield: use it for anything except a
+  competing product. A fork therefore cannot just take the code and run its own service.
+
+What protects the Commons is practical, not legal. Each measure makes enclosure slower, costlier and
+more visible:
+
+- **Published data stays free forever.** ODbL is irrevocable for every copy already released.
+- **Exports on a schedule, not on request.** Anyone can take a complete snapshot at any time.
+  *(Designed, not live yet; this is the first gap to close.)*
+- **Mirrors.** The apps built on the Commons depend on it, so each has a business reason to copy
+  every export, the way OpenStreetMap's planet files are mirrored by many independent parties. When
+  many parties hold the data, closing the source freezes growth; it cannot kill the commons.
+- **A handover of the code, not just the data.** The spin-out (next section) must give the
+  foundation a perpetual licence to the platform, or the community inherits a dataset it cannot run.
+
+The honest answer to the opening question is therefore: enclosure can be made slow, expensive and
+public. Never impossible. The word that matters is *quietly*.
 
 ## Who stewards it
 
@@ -39,29 +61,88 @@ ownership. The commitment, public from the start:
 2. **Architectural separation from day one**: independent data, accounts and API. Bulk exports are
    part of the same design.
 3. **Spin out into an independent foundation** (following established open-data foundation
-   precedents) at a defined milestone: real external contributors, or a
-   threshold of verified data.
+   precedents) at a defined, checkable milestone — whichever comes first: **50 external contributors
+   with a merged contribution**, or **25,000 rider-verified data points**. A milestone that cannot be
+   checked ("when there is a real community") is not a commitment, so the trigger is a number, not a
+   feeling.
+4. **The handover includes the code.** The platform is PolyForm Shield, so a data-only exit is not a
+   real exit: the spin-out package must grant the foundation a perpetual, royalty-free licence to run
+   and maintain the serving stack (or relicense it). Without this clause, commitment 3 would hand
+   over a dataset the community cannot operate.
 
 The public pre-commitment plus the open licence is what makes "we will spin it out" credible rather
-than hollow. The foundation is formalised when there is a community to govern, not before.
+than hollow. The foundation is formalised when there is a community to govern, not before. Of
+everything on this page, shipping the bulk exports would raise credibility most: they are what make
+mirroring possible, and mirrors are what make enclosure expensive. They are not live yet.
 
 ## Ostrom's design principles, applied
 
 The Commons is a deliberate application of Elinor Ostrom's principles for governing common-pool
-resources (see [Manifesto](manifesto.md)). Each maps to a concrete part of the system:
+resources (see [Manifesto](manifesto.md)), as extended to shared data by the knowledge-commons
+literature — chiefly Hess & Ostrom, *Understanding Knowledge as a Commons* (2007). Each maps to a
+concrete part of the system, with a status column so the gap between commitment and achievement stays
+visible:
 
-| Ostrom principle | In the Cycling Commons |
-|------------------|------------------------|
-| **1. Clearly defined boundaries** | Non-personal data only; the firm line between Commons and personal data (Manifesto §I), drawn at the aggregate by [the sensing boundary](#the-sensing-boundary-how-activity-becomes-a-place-fact) |
-| **2. Rules fit local conditions** | Curation is **per region**; the curated target `X` scales with local density |
-| **3. Collective-choice (those affected make the rules)** | The seasonal **voting rounds**: riders rank their own regions. *(Rounds are design, planned to open after launch; the shipped half is routes, which riders verify by riding and rank by seasonal recommend-vote. See [Curation & Voting](curation-and-voting.md))* |
-| **4. Monitoring** | The **freshness model**: timestamps, reporter counts, confirm/decay |
-| **5. Graduated sanctions** | *(aspirational)* Escalating consequences for rule-breaking (warn → restrict → remove), sized to severity and repeat offence rather than a first-strike ban. Aimed at abuse: spam, vote-rigging, vandalism |
-| **6. Cheap conflict resolution** | A fast, low-cost way to settle *good-faith* disagreements (a contested edit, a curation call) without escalation or cost. Adjudication between members, not punishment |
-| **7. Recognised right to organise** | The community's right to self-govern is recognised from outside: the foundation gives it legal standing independent of BikeCoders, and the ODbL fork/exit right means no upstream or platform can deny it |
-| **8. Nested enterprises** | Self-governing regions nested under a coordinating core: rider → regional curators → core stewardship → foundation (see [Regional governance](#regional-governance-subsidiarity-not-hierarchy)) |
+| Ostrom principle | In the Cycling Commons | Status |
+|------------------|------------------------|--------|
+| **1. Clearly defined boundaries** | Non-personal data only; the firm line between Commons and personal data (Manifesto §I), drawn at the aggregate by [the sensing boundary](#the-sensing-boundary-how-activity-becomes-a-place-fact) | *shipped* |
+| **2. Rules fit local conditions** | Curation is **per region**; the curated target `X` scales with local density | *shipped* |
+| **3. Collective-choice (those affected make the rules)** | The seasonal **voting rounds**: riders rank their own regions. *(Rounds are design, planned to open after launch; the shipped half is routes, which riders verify by riding and rank by seasonal recommend-vote. See [Curation & Voting](curation-and-voting.md))* | *partly shipped* |
+| **4. Monitoring** | The **freshness model**: timestamps, reporter counts, confirm/decay | *shipped* |
+| **5. Graduated sanctions** | Escalating consequences for rule-breaking (warn → restrict → remove), sized to severity and repeat offence rather than a first-strike ban. Aimed at abuse: spam, vote-rigging, vandalism. [Pre-committed below](#principles-5-and-6-pre-committed) | *aspirational* (ladder written, untested) |
+| **6. Cheap conflict resolution** | A fast, low-cost way to settle *good-faith* disagreements (a contested edit, a curation call) without escalation or cost. Adjudication between members, not punishment. [Pre-committed below](#principles-5-and-6-pre-committed) | *aspirational* (path defined, unused) |
+| **7. Recognised right to organise** | The community's right to self-govern is recognised from outside: the foundation gives it legal standing independent of BikeCoders, and the ODbL fork/exit right on the data means no upstream can deny it *(the code side needs the spin-out grant: see [The path to independence](#the-path-to-independence))* | *partly shipped* (fork right in force, foundation pending) |
+| **8. Nested enterprises** | Self-governing regions nested under a coordinating core: rider → regional curators → core stewardship → foundation (see [Regional governance](#regional-governance-subsidiarity-not-hierarchy)) | *design* (the structure regions grow into) |
+
+Two caveats keep this honest. First, Ostrom derived her principles from institutions that had *already
+endured*; used here they run the other way, as a compass for building rather than a report of
+achievement — the status column is the ledger of the distance still to travel. Second, principle 1 is
+bent from its original meaning: Ostrom meant the boundaries of the *user community and the resource*,
+while the row above leans on the privacy boundary. Both matter, and for a data commons the question
+"what may enter the pool at all" is simply the one it cannot get wrong. One attribution, too: the bulk
+of today's data descends from OpenStreetMap, itself a working commons of exactly this lineage. The
+Commons inherits that layer rather than governing it; the principles above apply to the curation and
+contributions added on top.
 
 Together these cover the common failure modes of a shared data resource: spam, gaming, and enclosure.
+
+## Principles 5 and 6, pre-committed
+
+Principles 5 and 6 are the two that most distinguish a governed commons from a maintainer's project,
+and the easiest to get wrong, because rules improvised mid-dispute carry the biases of that dispute.
+So the mechanics are written down *now*, while there is no conflict to bias them. The community can
+amend them later through the ordinary collective-choice process (#3); until it exists, these are the
+defaults the steward commits to.
+
+**The escalation ladder (principle 5)** — sized to severity and repeat offence, never a first-strike
+ban:
+
+1. **Warn** — a first minor violation (spammy edit, an aggressive comment): a private note pointing at
+   the rule. No public shaming.
+2. **Restrict** — repeat or serious offence: temporary loss of the capability abused (recommend-votes,
+   curation rights), never of access to the open data itself.
+3. **Remove** — persistent abuse (vote-rigging, vandalism at scale): account removal, contributions
+   redacted where feasible, OSM-style.
+
+Two rules bind the ladder itself: **no retroactive punishment** (conduct is judged by the rules in
+force when it happened), and **every appeal is heard** — the appeal is the first step of the
+adjudication path below, not a favour.
+
+**The adjudication path (principle 6)** — good-faith disagreements (a contested edit, a curation call)
+settle at the lowest competent level, in order:
+
+1. **Between the members involved**: reversion plus a short comment. Most disputes should die here,
+   for free.
+2. **The regional curator(s)**: if the editors still disagree, the region's curator makes the call,
+   and it is recorded — one line, why — so the next dispute starts from precedent instead of zero.
+3. **The core team, as backstop only**: for disputes a region cannot resolve, or that span regions.
+   The core team settles *process*; it does not overrule a region's *judgment* (see
+   [Regional governance](#regional-governance-subsidiarity-not-hierarchy)).
+
+Every ruling lands in a small public log. That log is what keeps adjudication cheap and honest: it
+makes precedent visible, lets regions learn from each other's calls, and is the raw material the
+future foundation will need. And it is the answer to "who monitors the monitors", available before the
+first monitor is needed: the appeal, the log, and eventually the foundation's community.
 
 ## Regional governance: subsidiarity, not hierarchy
 
