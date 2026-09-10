@@ -121,9 +121,20 @@
   }
   var INITIAL_DETAILS = detailsSnapshot();
 
+  /* A move is anything a rider can mean. The threshold used to be 1e-5 degrees,
+     about 1.1 m, which is a whole map tile's worth of nothing at the zoom
+     somebody actually corrects a pin at: at z19 a 4 px nudge travels 0.36 m, so
+     the wizard recorded the new point, showed it in the readout, and then still
+     greyed out Submit and said "Nothing has changed yet" (owner 2026-09-10).
+     1e-7 is about a centimetre, six orders of magnitude above the float noise
+     of an unproject round trip and below any drag a hand can mean. It must stay
+     in step with formatPoint()'s precision on the server: a move too small to
+     survive the recording is not a move. */
+  var MOVED_EPS = 1e-7;
+
   function pinMoved() {
     if (!hasCoords || !WZ.loc || WZ.loc.type !== 'point') return false;
-    return Math.abs(WZ.loc.lat - initLat) > 1e-5 || Math.abs(WZ.loc.lng - initLng) > 1e-5;
+    return Math.abs(WZ.loc.lat - initLat) > MOVED_EPS || Math.abs(WZ.loc.lng - initLng) > MOVED_EPS;
   }
 
   /* Climb route/steepest and surface endpoints live in hidden fields pinMoved() cannot see. */
@@ -216,12 +227,53 @@
     }
   }
 
+  /* A pin released off the map must still end its drag.
+
+     MapLibre's Marker ends a drag on the map's OWN `mouseup`, which the map
+     fires only from a listener on its canvas container. Our Back/Next bar is
+     `position:sticky; bottom:0` over a map taller than the viewport, so a pin
+     dragged downwards is released ON THAT BAR and the map never sees the
+     release. Everything downstream then stalls: `dragend` never fires,
+     `syncLoc()` never runs, the hidden lat/lng still hold the old point, step
+     4 says "Nothing has changed yet" with Submit greyed out, and the marker
+     keeps the `pointer-events:none` its own drag handler set, so it is dead to
+     a second attempt (owner 2026-09-10, /improve?item=46160). The same happens
+     for a release over the drawer, the header, or outside the window.
+
+     Forwarding the release into the canvas container makes MapLibre run its
+     own `_onUp`, so the marker restores itself and fires `dragend` exactly as
+     it does on a release inside the map: one path, no reimplementation of
+     what the library already does. Only a gesture that STARTED on the map is
+     forwarded, so an ordinary click elsewhere on the page is untouched. */
+  function endDragOffMap(m) {
+    var box = m.getCanvasContainer();
+    var fromMap = false;
+    var started = function (e) { fromMap = box.contains(e.target); };
+    var ended = function (e, type) {
+      if (!fromMap) { return; }
+      fromMap = false;
+      if (box.contains(e.target)) { return; }   // the map already had it
+      var pt = e.changedTouches ? e.changedTouches[0] : e;
+      box.dispatchEvent('touchend' === type
+        ? new TouchEvent('touchend', { bubbles: true, cancelable: true, touches: [], changedTouches: [], targetTouches: [] })
+        : new MouseEvent('mouseup', {
+          bubbles: true, cancelable: true, view: window,
+          clientX: pt ? pt.clientX : 0, clientY: pt ? pt.clientY : 0, button: 0, buttons: 0,
+        }));
+    };
+    box.addEventListener('mousedown', started, true);
+    box.addEventListener('touchstart', started, true);
+    document.addEventListener('mouseup', function (e) { ended(e, 'mouseup'); }, true);
+    document.addEventListener('touchend', function (e) { ended(e, 'touchend'); }, true);
+  }
+
   if (LOCATE !== 'off') {
     wmap = makeWizardMap();
   }
 
   if (wmap) {
     window.__ccWizMap = wmap;  // smoke tests: project()/unproject()
+    endDragOffMap(wmap);
     wmap.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
     wmap.addControl(new maplibregl.AttributionControl({ customAttribution: '© OpenStreetMap contributors · ODbL' }), 'bottom-right');
     wmap.on('load', function () {
@@ -1008,6 +1060,12 @@
         row.appendChild(small);
         row.addEventListener('click', function () {
           if (wmap) wmap.flyTo({ center: [lng, lat], zoom: 14 });
+          /* A picked address MOVES the pin, exactly as a pasted coordinate
+             does. Flying the camera alone left the pin where it was, so the
+             rider watched the map arrive somewhere new and the wizard still
+             said nothing had changed (owner 2026-09-10). Climbs pass through
+             with the camera only: placeAt is null there, the line is the item. */
+          if (placeAt) placeAt([lng, lat]);
           if (searchEl) searchEl.value = main;
           var fPlace = fld('place');
           if (fPlace) fPlace.value = main;

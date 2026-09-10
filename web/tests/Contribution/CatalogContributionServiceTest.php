@@ -47,6 +47,17 @@ final class CatalogContributionServiceTest extends KernelTestCase
         return $user;
     }
 
+    /** A plain rider: their edit QUEUES, so the change set is read without the apply path. */
+    private function rider(): User
+    {
+        $user = (new User())->setEmail('rider-'.uniqid('', true).'@test.test');
+        $user->setPassword('x');
+        $this->em->persist($user);
+        $this->em->flush();
+
+        return $user;
+    }
+
     private function curator(): User
     {
         $user = (new User())->setEmail('curator-'.uniqid('', true).'@test.test')->setRoles(['ROLE_CURATOR']);
@@ -616,5 +627,51 @@ final class CatalogContributionServiceTest extends KernelTestCase
 
         $provider = static::getContainer()->get(\App\Catalog\CatalogProvider::class);
         self::assertStringNotContainsString('Côte invisible', $provider->json());
+    }
+
+    /**
+     * A nudge is a correction.
+     *
+     * The move threshold was 1e-5 degrees, about 1.1 m, and the recorded point
+     * was five decimals, also about a metre. Nobody corrects a pin at the zoom
+     * where a metre is small: at z19 a 4 px drag travels 0.36 m, and the wizard
+     * answered "Nothing has changed yet" with Submit greyed out, having already
+     * shown the new coordinates in its own readout (owner 2026-09-10,
+     * reproduced in a real browser on /improve?item=46160). Both numbers are a
+     * centimetre now, and they must stay in step: the recorded string IS the
+     * geometry an approval applies (ModerationService::applyEdit).
+     */
+    public function testASubMetreNudgeIsAChange(): void
+    {
+        $this->wallonia();
+        $item = $this->item('B', '{"type":"Point","coordinates":[5.8600000,50.4700000]}');
+
+        // 0.36 m south-east, the 4 px drag measured at zoom 19.
+        $receipt = $this->service->submit('improve', [
+            '_item_id' => $item->getId(),
+            'lat' => '50.4699968', 'lng' => '5.8600054',
+        ], $this->rider());
+
+        $sub = $this->em->find(Submission::class, $receipt->submissionId);
+        self::assertNotNull($sub);
+        $location = $sub->getChanges()['location'] ?? null;
+        self::assertIsArray($location, 'a sub-metre move is still a move');
+        self::assertNotSame($location['was'], $location['now'],
+            'and it must survive the recording, or a curator approves a point identical to the one it replaces');
+        self::assertSame('50.4700000, 5.8600000', $location['was']);
+        self::assertSame('50.4699968, 5.8600054', $location['now']);
+    }
+
+    /** Reposting the item's own coordinates is not a move, whatever the epsilon. */
+    public function testRepostingTheSamePointIsNotAChange(): void
+    {
+        $this->wallonia();
+        $item = $this->item('B', '{"type":"Point","coordinates":[5.86,50.47]}');
+
+        $this->expectException(ValidationFailedException::class);
+        $this->service->submit('improve', [
+            '_item_id' => $item->getId(),
+            'lat' => '50.47', 'lng' => '5.86',
+        ], $this->rider());
     }
 }

@@ -123,6 +123,55 @@ The mode gate in `improve.js`:
   coordinates *are* the location, and re-tapping the map would throw away the
   precision the rider just supplied. A climb is the exception: there the paste
   is a fly-to only, because one pair cannot say whether it is foot or summit.
+- **Picking a geocoder result drops the pin too** (owner 2026-09-10). The
+  camera and the pin are two different things, and every change test in the
+  wizard reads the pin: `nothingChanged()` compares `WZ.loc` against the item's
+  own position, and the server compares `improve[lat]`/`improve[lng]` against
+  the row's geometry. A result row that only flew the camera therefore left a
+  rider watching the map arrive at a new address and then being told "Nothing
+  has changed yet" on step 4, with Next disabled. Both routes into the search
+  box now end at the same `placeAt()`. `improve[place]` carries the name of the
+  place the rider picked, and is a label the server never diffs; only the pin
+  counts as a location change. The climb exception above still holds, and holds
+  for the same reason: `placeAt` is null on that branch.
+
+- **A nudge is a move** (owner 2026-09-10). "A move" is a change of more than
+  `MOVED_EPS`, **1e-7 degrees, about a centimetre**, and the same number lives
+  on both sides: `pinMoved()` in `improve.js` gates Submit, `pinMoved()` in
+  `CatalogContributionService` decides whether the change set gets a `location`
+  entry. Two thresholds that drift apart would give a rider an enabled Submit
+  and a 422.
+
+  It was 1e-5, about 1.1 m, matched to a `was`/`now` string of five decimals.
+  Nobody corrects a pin at the zoom where a metre is small. Measured in a real
+  browser: at z19 a 4 px drag travels 0.36 m and at z14 the same drag travels
+  11.6 m, so the wizard worked at the default zoom and silently refused exactly
+  the deliberate small correction it exists for. It recorded the new point,
+  showed it in its own readout, and then said "Nothing has changed yet" with
+  Submit greyed out.
+
+  `FORMAT_DECIMALS` is 7 for the same reason and must stay in step with
+  `MOVED_EPS`: the recorded string **is** the geometry an approval applies
+  (`ModerationService::applyEdit`), so a move too small to survive the
+  recording is not a move, and a curator must never approve a point identical
+  to the one it replaces.
+
+- **A pin released off the map still ends its drag** (owner 2026-09-10). A
+  MapLibre `Marker` ends a drag on the MAP's own `mouseup`, which the map fires
+  only from its canvas-container listener. `.navrow`, the Back/Next bar, is
+  `position:sticky; bottom:0` over a map taller than the viewport, so a pin
+  dragged downwards is released **on that bar** and the map never sees it. The
+  drag then never ends: `dragend` does not fire, `syncLoc()` never runs, the
+  hidden fields still hold the old point, step 4 says "Nothing has changed yet"
+  with Submit greyed out, and the marker keeps the `pointer-events: none` its
+  own drag handler set, so it is dead to a second attempt. A release over the
+  drawer, the header or outside the window has the same shape.
+  `endDragOffMap()` in `improve.js` forwards a release that started on the map
+  into the canvas container, so MapLibre runs its own `_onUp` and the marker
+  restores itself and fires `dragend` on the one path the wizard already
+  listens on. It never re-derives the coordinate itself: two ways to end a drag
+  would be two ways to disagree.
+
 - **A coordinate pair is never silently swapped.** `5.86, 50.49` is refused,
   not read as lng-first: guessing would drop the pin in another country while
   looking authoritative. Out-of-range values, a third number, trailing text and

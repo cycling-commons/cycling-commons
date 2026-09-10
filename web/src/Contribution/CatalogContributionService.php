@@ -830,7 +830,31 @@ final class CatalogContributionService implements ContributionStubInterface
     }
 
     /**
-     * True when the pin moved more than ~1 m (wizard reposts the item's coords).
+     * The smallest move a rider can mean, in degrees: about a centimetre.
+     *
+     * It was 1e-5, about 1.1 m, which silently refused the corrections riders
+     * actually make. Nobody corrects a pin at the zoom where a metre is small:
+     * at z19 a 4 px drag travels 0.36 m, and the wizard answered "Nothing has
+     * changed yet" with Submit greyed out, having already shown the new point
+     * in its own readout (owner 2026-09-10). Six orders of magnitude above the
+     * float noise of a project/unproject round trip, and below any drag a hand
+     * can mean. `MOVED_EPS` in improve.js holds the same number: two
+     * thresholds that drift apart give a rider an enabled Submit and a 422.
+     */
+    private const float MOVED_EPS = 1e-7;
+
+    /**
+     * Decimal places on a recorded point, the same step as MOVED_EPS.
+     *
+     * The approved string IS the geometry an approval applies
+     * (ModerationService::applyEdit), so a move too small to survive the
+     * recording must not count as a move, and a curator must never be shown a
+     * `now` identical to its `was`.
+     */
+    private const int FORMAT_DECIMALS = 7;
+
+    /**
+     * True when the pin moved at all (the wizard reposts the item's own coords).
      *
      * @param array<string, mixed> $payload
      */
@@ -840,14 +864,14 @@ final class CatalogContributionService implements ContributionStubInterface
             return false;
         }
 
-        return abs((float) $payload['lat'] - $lat) > 1e-5
-            || abs((float) $payload['lng'] - $lng) > 1e-5;
+        return abs((float) $payload['lat'] - $lat) > self::MOVED_EPS
+            || abs((float) $payload['lng'] - $lng) > self::MOVED_EPS;
     }
 
-    /** Text point for was/now; five decimals is about a metre. */
+    /** Text point for was/now, and the geometry an approval applies. */
     private static function formatPoint(float $lat, float $lng): string
     {
-        return \sprintf('%.5f, %.5f', $lat, $lng);
+        return \sprintf('%.'.self::FORMAT_DECIMALS.'f, %.'.self::FORMAT_DECIMALS.'f', $lat, $lng);
     }
 
     /** Collapse '' / null / [] to null; leave every other value untouched. */
