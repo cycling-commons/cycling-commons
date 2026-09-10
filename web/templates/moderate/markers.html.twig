@@ -1,0 +1,96 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{#
+  The marker grammar, every rung of it, drawn by the rules the map draws
+  (data-provider-hierarchy.md §6.7 and §6.7.7).
+
+  A unit test can prove rung 7 drops its badge. It cannot tell anyone whether
+  eleven rungs are learnable at a glance, and that is the question this page
+  answers. The pins are the real .cc-pin classes from styles/pins.css, the
+  glyph is THE kind set, and the custody, badge and grade of every row come
+  from EvidenceRung, so this page cannot drift from the map. Each pin is
+  drawn twice, on a dark and on a light ground, because the map has both.
+#}
+{% extends 'base.html.twig' %}
+
+{% block head_styles %}
+{% include 'account/_shell_styles.html.twig' %}
+<link rel="stylesheet" href="{{ asset('styles/pins.css') }}">
+<style>
+  .mg-lede{max-width:44rem;font-size:.95rem;line-height:1.6;color:#4a4d40;margin:.4rem 0 1.4rem}
+  .mg-h{font-family:var(--mono);font-size:.82rem;letter-spacing:.18em;text-transform:uppercase;color:var(--clay);margin:1.8rem 0 .6rem}
+  .mg-note{max-width:44rem;font-size:.9rem;line-height:1.6;color:#4a4d40;margin:.3rem 0 .8rem}
+  .mg-sentence{font-family:var(--serif);font-size:1.15rem;margin:.6rem 0 1rem;color:var(--ink)}
+  /* The grid: three borders by two badge states. */
+  .mg-grid{display:grid;grid-template-columns:auto repeat(2,minmax(0,1fr));gap:.4rem;max-width:44rem;align-items:center}
+  .mg-grid .h{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:#595c4d}
+  .mg-grid .rh{font-size:.85rem;color:var(--ink);padding-right:.6rem}
+  /* A pin on the two grounds the map has. The ground colours are the two
+     basemap tones the map's chrome sits on (map.css chrome tokens). */
+  .mg-cell{display:flex;gap:.8rem;align-items:center;justify-content:center;padding:.7rem;border-radius:8px}
+  .mg-dark{background:#1b2a22}
+  .mg-light{background:#e9e2cf}
+  /* The ladder: one row per rung. */
+  .mg-ladder{width:100%;border-collapse:collapse;margin:.4rem 0 1rem}
+  .mg-ladder th{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:#595c4d;text-align:left;padding:.4rem .5rem;border-bottom:1px solid rgba(20,22,14,.18)}
+  .mg-ladder td{padding:.5rem;border-bottom:1px solid rgba(20,22,14,.1);vertical-align:middle;font-size:.9rem;line-height:1.45}
+  .mg-ladder td.n{font-family:var(--mono);font-size:.85rem;color:var(--ink);width:2.5rem}
+  .mg-ladder td.sw{width:4.2rem}
+  .mg-ladder td.sw .mg-cell{padding:.55rem .4rem}
+  .mg-ladder td.g{font-family:var(--mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
+  .mg-ladder tr.np td{opacity:.55}
+  .mg-tag{font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;padding:.2rem .45rem;border-radius:30px;border:1px solid currentColor;color:var(--clay);white-space:nowrap;margin-left:.4rem}
+  .mg-utility{border:1px solid rgba(16,30,22,.14);border-left:3px solid var(--ochre);border-radius:0 9px 9px 0;padding:.9rem 1.1rem;background:var(--paper-deep);margin:1.2rem 0 0;font-size:.9rem;line-height:1.6;color:#4a4d40;max-width:44rem}
+</style>
+{% endblock %}
+
+{% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate_markers'} %}{% endblock %}
+
+{% block body %}
+{# The letter-B tap on the water colour, the same swatch the map key uses. #}
+{% set tap %}<span class="kd">{% include 'partials/_kind_icon.html.twig' with {letter: 'B', kind: 'tap', size: 17, color: '#8FB6A8'} %}</span>{% endset %}
+{% macro pin(border, badge, tap) %}<span class="cc-pin{{ border != 'solid' ? ' ' ~ border : '' }}{{ badge ? ' q' : '' }}" style="--c:#8FB6A8" aria-hidden="true">{{ tap }}</span>{% endmacro %}
+<main class="dwrap">
+  <h1>{{ 'markers.title'|trans }}</h1>
+  <p class="mg-lede">{{ 'markers.lede'|trans }}</p>
+
+  <h2 class="mg-h">{{ 'markers.grid_h'|trans }}</h2>
+  <p class="mg-note">{{ 'markers.grid_t'|trans }}</p>
+  <div class="mg-grid" role="table" aria-label="{{ 'markers.grid_h'|trans }}">
+    <span class="h">{{ 'markers.axis_border'|trans }}</span>
+    <span class="h">{{ 'markers.badge_on'|trans }}</span>
+    <span class="h">{{ 'markers.badge_off'|trans }}</span>
+    {% for custody, border in {gross: 'disc', specialty: 'dashed', ours: 'solid'} %}
+      <span class="rh">{{ ('markers.custody_' ~ custody)|trans }}</span>
+      <span class="mg-cell mg-dark" data-grid="{{ custody }}:q">{{ _self.pin(border, true, tap) }}</span>
+      <span class="mg-cell mg-light" data-grid="{{ custody }}:">{{ _self.pin(border, false, tap) }}</span>
+    {% endfor %}
+  </div>
+  <p class="mg-sentence">{{ 'markers.sentence'|trans }}</p>
+
+  <h2 class="mg-h">{{ 'markers.ladder_h'|trans }}</h2>
+  <p class="mg-note">{{ 'markers.ladder_t'|trans }}</p>
+  <table class="mg-ladder">
+    <thead>
+      <tr>
+        <th>{{ 'markers.col_rung'|trans }}</th>
+        <th>{{ 'markers.col_dark'|trans }}</th>
+        <th>{{ 'markers.col_light'|trans }}</th>
+        <th>{{ 'markers.col_evidence'|trans }}</th>
+        <th>{{ 'markers.col_grade'|trans }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in rows %}
+      <tr data-rung="{{ row.rung }}" data-custody="{{ row.custody }}" data-badge="{{ row.badge ? '?' : '' }}" data-grade="{{ row.grade }}"{% if not row.produced %} class="np"{% endif %}>
+        <td class="n">{{ row.rung }}</td>
+        <td class="sw"><span class="mg-cell mg-dark">{{ _self.pin(row.border, row.badge, tap) }}</span></td>
+        <td class="sw"><span class="mg-cell mg-light">{{ _self.pin(row.border, row.badge, tap) }}</span></td>
+        <td>{{ ('markers.rung_' ~ row.rung)|trans }}{% if not row.produced %}<span class="mg-tag">{{ 'markers.not_produced'|trans }}</span>{% endif %}</td>
+        <td class="g">{{ ('markers.grade_' ~ row.grade)|trans }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <p class="mg-utility">{{ 'markers.utility'|trans }}</p>
+</main>
+{% endblock %}

@@ -11,7 +11,7 @@
    reach it via the account-chip dropdown) — user pages show user tabs only,
    and on moderator pages the labelled group makes the section unmistakable. #}
 {% set active = active|default('contrib') %}
-{% set in_moderation = active in ['moderate', 'moderate_routes', 'moderate_regions', 'moderate_providers', 'moderate_data', 'moderate_takedowns', 'moderate_translations', 'moderate_room', 'moderate_rulebook', 'moderate_history', 'moderate_bugs', 'moderate_reports'] %}
+{% set in_moderation = active in ['moderate', 'moderate_routes', 'moderate_regions', 'moderate_providers', 'moderate_data', 'moderate_takedowns', 'moderate_translations', 'moderate_room', 'moderate_rulebook', 'moderate_history', 'moderate_bugs', 'moderate_reports', 'moderate_markers'] %}
 <header class="dtop">
   <div class="brandblock">
     <a class="brand" href="{{ path('home') }}"><img src="{{ asset('brand/logo-nav.svg') }}" alt="Cycling Commons"></a>
@@ -71,6 +71,9 @@
   <a href="{{ path('moderate_room') }}" class="dtab-mod {{ active == 'moderate_room' ? 'on' : '' }}">{{ 'nav.room'|trans }}{% if mod_room_count %}<span class="dtab-count" title="{{ 'account.mod_room_new'|trans }}">{{ mod_room_count }}</span>{% endif %}</a>
   {# The rulebook, moderators-only (it used to be a public wiki page). #}
   <a href="{{ path('moderate_rulebook') }}" class="dtab-mod {{ active == 'moderate_rulebook' ? 'on' : '' }}">{{ 'nav.rulebook'|trans }}</a>
+  {# The marker grammar, every rung drawn by the map's own rules, checked by
+     eye (data-provider-hierarchy.md §6.7.7). No badge: nothing queues here. #}
+  <a href="{{ path('curator_marker_grammar') }}" class="dtab-mod {{ active == 'moderate_markers' ? 'on' : '' }}">{{ 'markers.title'|trans }}</a>
 </nav>
 {% else %}
 <nav class="dtabs" aria-label="{{ 'account.sections'|trans }}">
