@@ -22,7 +22,8 @@
   .mg-sentence{font-family:var(--serif);font-size:1.15rem;margin:.6rem 0 1rem;color:var(--ink)}
   /* The grid: three borders by two badge states. */
   .mg-grid{display:grid;grid-template-columns:auto repeat(2,minmax(0,1fr));gap:.4rem;max-width:44rem;align-items:center}
-  .mg-grid .h{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:#595c4d}
+  .mg-grid .h{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:#595c4d;padding-right:.6rem}
+  .mg-grid .h:not(:first-child){text-align:center;padding-right:0}
   .mg-grid .rh{font-size:.85rem;color:var(--ink);padding-right:.6rem}
   /* A pin on the two grounds the map has. The ground colours are the two
      basemap tones the map's chrome sits on (map.css chrome tokens). */
@@ -49,8 +50,11 @@
 {# The letter-B tap on the water colour, the same swatch the map key uses. #}
 {% set tap %}<span class="kd">{% include 'partials/_kind_icon.html.twig' with {letter: 'B', kind: 'tap', size: 17, color: '#8FB6A8'} %}</span>{% endset %}
 {% macro pin(border, badge, tap) %}<span class="cc-pin{{ border != 'solid' ? ' ' ~ border : '' }}{{ badge ? ' q' : '' }}" style="--c:#8FB6A8" aria-hidden="true">{{ tap }}</span>{% endmacro %}
-<main class="dwrap">
-  <h1>{{ 'markers.title'|trans }}</h1>
+<div class="dbody dmin" id="main">
+  <div class="mh">
+    <div class="kicker">{{ 'account.menu_moderation'|trans }}</div>
+    <h1>{{ 'markers.title'|trans }}</h1>
+  </div>
   <p class="mg-lede">{{ 'markers.lede'|trans }}</p>
 
   <h2 class="mg-h">{{ 'markers.grid_h'|trans }}</h2>
@@ -92,5 +96,5 @@
     </tbody>
   </table>
   <p class="mg-utility">{{ 'markers.utility'|trans }}</p>
-</main>
+</div>
 {% endblock %}
