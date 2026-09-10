@@ -23,9 +23,7 @@ theme:
   language: en
   logo: assets/logo-nav.svg
   favicon: assets/favicon.svg
-  font:
-    text: Hanken Grotesk
-    code: Spline Sans Mono
+  font: false     # self-hosted: @font-face in stylesheets/extra.css, files in assets/fonts/
   palette:
     # Two schemes + a toggle. `atlas` is the warm paper original; `atlas-dark`
     # is its night counterpart (both defined in stylesheets/extra.css). Each
