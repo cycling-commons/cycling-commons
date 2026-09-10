@@ -72,4 +72,15 @@
     silo.querySelectorAll('.silo-pick').forEach(i=>i.addEventListener('change',()=>requestAnimationFrame(aim)));
     window.addEventListener('resize',aim);
     if(document.fonts&&document.fonts.ready) document.fonts.ready.then(aim);
+
+    /* Replay: take `in` away, force a reflow, put it back. Every step of the
+       sequence hangs off `.silo.in`, so the keyframes restart from the top -
+       the same restart flipping the draft toggle already gets for free. */
+    const replay=silo.querySelector('[data-silo-replay]');
+    if(replay) replay.addEventListener('click',()=>{
+      silo.classList.remove('in');
+      void silo.offsetWidth;
+      aim();
+      silo.classList.add('in');
+    });
   })();

@@ -653,6 +653,8 @@ home:
   frag_water: 'Wasser · Essen · Dienstleistungen'
   frag_water_tag: 'verstreut'
   frag_vs: 'The Commons → ein offener Atlas'
+  frag_atlas: 'Die Cycling Commons<br>ein offener Atlas'
+  frag_replay: 'Nochmal'
   what_kicker: 'DAS PRINZIP'
   what_h2: 'Offene Daten über die Welt — niemals über dich.'
   what_lead: 'Fakten über Orte, niemals über Menschen. Aufgebaut auf OpenStreetMap, an es zurückgegeben.'

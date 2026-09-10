@@ -653,6 +653,8 @@ home:
   frag_water: 'Eau · ravitaillement · services'
   frag_water_tag: 'éparpillé'
   frag_vs: 'Le Commons → un atlas ouvert'
+  frag_atlas: 'Le Cycling Commons<br>un atlas ouvert'
+  frag_replay: 'Rejouer'
   what_kicker: 'LE PRINCIPE'
   what_h2: 'Des données ouvertes sur le monde — jamais sur vous.'
   what_lead: 'Des faits sur les lieux, jamais sur les personnes. Fondé sur OpenStreetMap, reversé à lui.'

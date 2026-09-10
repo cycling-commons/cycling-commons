@@ -451,16 +451,23 @@
   .silo .ph-app.scat .ph-ic::after{content:"";position:absolute;inset:7px;border-radius:9px;
     background:radial-gradient(circle at 20% 30%,currentColor 1.8px,transparent 2.3px),radial-gradient(circle at 75% 20%,currentColor 1.8px,transparent 2.3px),
       radial-gradient(circle at 30% 80%,currentColor 1.8px,transparent 2.3px),radial-gradient(circle at 82% 72%,currentColor 1.8px,transparent 2.3px);opacity:.6}
-  .silo .ph-nm{font-size:.7rem;font-weight:500;line-height:1.2;color:var(--paper);max-width:7rem}
+  .silo .ph-nm{font-size:.72rem;font-weight:500;line-height:1.2;color:var(--paper);max-width:7rem}
   .silo .ph-tag{font-family:var(--mono);font-size:.54rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ochre)}
   .silo .ph-app.scat .ph-tag{color:var(--glacier)}
   /* the one app: the brand mark as an app icon, its name under it */
   .silo .ph-dock{display:flex;flex-direction:column;align-items:center;gap:.6rem;opacity:0;will-change:transform,opacity}
-  .silo .ph-cc{display:block;width:64px;height:64px;border-radius:16px;border:1px solid rgba(239,230,212,.25);
+  .silo .ph-cc{display:grid;place-items:center;overflow:hidden;width:80px;height:80px;border-radius:19px;
+    border:1px solid rgba(239,230,212,.25);
     box-shadow:0 0 0 0 rgba(255,90,31,0),0 10px 20px -10px rgba(0,0,0,.9);transform-origin:50% 100%}
-  .silo .ph-cc-nm{font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--trail);text-align:center;line-height:1.4;max-width:15rem}
-  .silo.in .ph-dock{animation:phDock .5s ease-out .75s forwards,phRise .9s cubic-bezier(.2,.8,.2,1) 2.6s forwards}
-  .silo.in .ph-cc{animation:phGrow 1s cubic-bezier(.3,1.5,.5,1) 2.65s forwards}
+  /* 132%: the pin is 52% of the source square's height, so this brings it to
+     about 68% of the tile. Past ~140% the tail clips on the bottom edge. */
+  /* Nudged up: the mark's geometric centre sits between a heavy round head and
+     a long tail, so centring it leaves the tail crowding the bottom edge and
+     air above (owner 2026-09-10). */
+  .silo .ph-cc img{display:block;width:132%;height:132%;transform:translateY(-7%)}
+  .silo .ph-cc-nm{font-family:var(--mono);font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;color:var(--trail);text-align:center;line-height:1.5;max-width:15rem}
+  .silo.in .ph-dock{animation:phDock .5s ease-out .75s forwards,phRise .9s cubic-bezier(.2,.8,.2,1) 5.8s forwards}
+  .silo.in .ph-cc{animation:phGrow 1s cubic-bezier(.3,1.5,.5,1) 5.85s forwards}
   @keyframes phPop{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:none}}
   @keyframes phJiggle{0%,100%{transform:rotate(0)}25%{transform:rotate(-3deg)}75%{transform:rotate(3deg)}}
   @keyframes phFly{from{opacity:1;transform:none}60%{opacity:.9}to{opacity:0;transform:translate(var(--tx,0),var(--ty,120px)) scale(.15)}}
@@ -469,8 +476,19 @@
   @keyframes phGrow{from{transform:none;box-shadow:0 0 0 0 rgba(255,90,31,0),0 10px 20px -10px rgba(0,0,0,.9)}
     60%{box-shadow:0 0 0 14px rgba(255,90,31,.18),0 10px 20px -10px rgba(0,0,0,.9)}
     to{transform:scale(1.9);box-shadow:0 0 0 0 rgba(255,90,31,0),0 12px 24px -10px rgba(0,0,0,.9)}}
-  .silo.in .ph-cc-nm{animation:phNm .4s ease-out 3.2s both}
+  .silo.in .ph-cc-nm{animation:phNm .4s ease-out 6.4s both}
   @keyframes phNm{from{transform:translateY(-.4rem)}to{transform:translateY(0)}}
+  /* Replay, on the glass. The sequence tells the whole argument in one go and
+     is easy to miss, so it can be asked for again. Hidden until it has run
+     once: a replay button before the first play has nothing to replay. */
+  .silo .ph-replay{display:flex;align-items:center;gap:.4rem;width:fit-content;margin:1.3rem auto .1rem;
+    opacity:0;pointer-events:none;padding:.3rem .7rem;border-radius:40px;cursor:pointer;
+    background:transparent;border:1px solid rgba(239,230,212,.28);color:rgba(239,230,212,.72);
+    font-family:var(--mono);font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;transition:color .2s,border-color .2s}
+  .silo .ph-replay::before{content:"↺";font-size:.85rem;line-height:1}
+  .silo .ph-replay:hover{color:var(--trail);border-color:var(--trail)}
+  .silo.in .ph-replay{animation:phFade .4s ease-out 6.9s forwards}
+  @keyframes phFade{to{opacity:1;pointer-events:auto}}
 
   /* catalog grid */
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem;margin-top:2.6rem}
@@ -708,9 +726,14 @@
           <li class="ph-app scat" style="--i:5;--tint:#2a8f8a"><span class="ph-ic">{% include 'partials/_type_icon.html.twig' with {letter: 'B'} only %}</span><span class="ph-nm">{{ 'home.frag_water'|trans }}</span><span class="ph-tag">{{ 'home.frag_water_tag'|trans }}</span></li>
         </ul>
         <div class="ph-dock">
-          <img class="ph-cc" src="{{ asset('brand/logo-square-mark.svg') }}" alt="" width="64" height="64">
-          <span class="ph-cc-nm">{{ 'home.frag_vs'|trans }}</span>
+          {# The brand mark is cropped INTO its tile rather than redrawn: the
+             square's own ground is --ink, the same colour the screen is, so
+             oversizing it inside an overflow-hidden tile only makes the pin
+             bigger. The asset itself is nobody's to edit from here. #}
+          <span class="ph-cc"><img src="{{ asset('brand/logo-square-mark.svg') }}" alt="" width="80" height="80"></span>
+          <span class="ph-cc-nm">{{ 'home.frag_atlas'|trans|rich }}</span>
         </div>
+        <button type="button" class="ph-replay" data-silo-replay>{{ 'home.frag_replay'|trans }}</button>
       </div>
       </div>
     </div>
