@@ -37,6 +37,12 @@
   .hero-contours path{fill:none;stroke:var(--ride-outer,var(--ochre));stroke-width:1.7;opacity:.85;transition:stroke .6s ease}
   .hero-contours path:nth-child(even){stroke:var(--ride-inner,var(--glacier));opacity:.72;
     filter:drop-shadow(0 0 1.6px rgba(239,230,212,.38))}
+  /* The band sits one full band higher than the coordinates say, less 50 back
+     down (owner 2026-09-10). fill-box makes the percentage resolve against the
+     group's own bounding box, so the first step is literally "up by its own
+     height" and stays true if a path is redrawn; the second is in user units,
+     which this viewBox renders at about 1:1. */
+  .hero-contours .s-band{transform-box:fill-box;transform:translateY(-100%) translateY(50px)}
   /* map-style surface line types — solid road, dashed gravel, dotted path, dash-dot track, long-dash bridleway */
   .hero-contours .s-gravel{stroke-dasharray:13 8}
   .hero-contours .s-path{stroke-dasharray:2 7;stroke-linecap:round}
@@ -551,18 +557,30 @@
     .silo .silo-atlas{opacity:1;transform:none;transition:none}
     .silo .silo-funnel path{stroke-dashoffset:0;animation:none}
     .silo .ph-app,.silo .ph-dock{opacity:1;animation:none}
-    .silo .ph-app.shut .ph-ic,.silo .ph-cc,.silo .ph-cc-nm{animation:none}}
+    .silo .ph-app.shut .ph-ic,.silo .ph-cc,.silo .ph-cc-nm{animation:none}
+    /* nothing plays, so there is nothing to replay */
+    .silo .ph-replay{display:none}
+    /* the profiles are the content, so they stay drawn; only the drawing moves */
+    .cur .cur-sil,.cur .cur-big,.cur .cur-spark{opacity:1;transform:none;animation:none}
+    .cur .ramp,.cur .stp{opacity:1;animation:none}
+    .cur .cur-summit{animation:none}}
 </style>
 {% endblock %}
 {% block body %}
 <!-- ===================== HERO ===================== -->
 <header class="hero">
+  {# The five surface types, in one group so the band can be moved as a band.
+     The paths keep their own coordinates: `.s-band` lifts them by exactly
+     their own height (owner 2026-09-10), which is what transform-box:fill-box
+     makes translateY(-100%) mean. Move a path and the lift follows it. #}
   <svg class="hero-contours" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-    <path class="s-road"   d="M-50,820 C260,774 420,826 700,790 C980,754 1180,810 1500,776"/>
-    <path class="s-gravel" d="M-50,786 C260,740 420,792 700,756 C980,720 1180,776 1500,742"/>
-    <path class="s-path"   d="M-50,752 C260,706 420,758 700,722 C980,686 1180,742 1500,708"/>
-    <path class="s-track"  d="M-50,718 C260,672 420,724 700,688 C980,652 1180,708 1500,674"/>
-    <path class="s-bridle" d="M-50,684 C260,638 420,690 700,654 C980,618 1180,674 1500,640"/>
+    <g class="s-band">
+      <path class="s-road"   d="M-50,820 C260,774 420,826 700,790 C980,754 1180,810 1500,776"/>
+      <path class="s-gravel" d="M-50,786 C260,740 420,792 700,756 C980,720 1180,776 1500,742"/>
+      <path class="s-path"   d="M-50,752 C260,706 420,758 700,722 C980,686 1180,742 1500,708"/>
+      <path class="s-track"  d="M-50,718 C260,672 420,724 700,688 C980,652 1180,708 1500,674"/>
+      <path class="s-bridle" d="M-50,684 C260,638 420,690 700,654 C980,618 1180,674 1500,640"/>
+    </g>
   </svg>
   <div class="hero-glow"></div>
   <div class="corner br">{{ 'home.corner_br'|trans }}</div>
