@@ -23,7 +23,7 @@ Ride-critical drinking water / refill points (fountains, taps, cemetery taps, ca
 | Field | Control | Provenance |
 |---|---|---|
 | Type | select(Public fountain / Drinking tap / Cemetery tap / Public toilet / Café — refill point) | `[OSM]`; Public toilet added 2026-09-05: a tap at a public toilet, the commonest Dutch register case after fountains |
-| Potable? | select(Yes — public supply / Unsigned — use judgement / No / non-potable) | `[tap]` |
+| Potable? | select(Yes (public supply) / Unknown / No / non-potable) | `[tap]`; "Unknown" is a real answer, not a blank: somebody looked and nobody can say. It draws the unfilled drop, the same look a row nobody has spoken about gets. Renamed from "Unsigned — use judgement" 2026-09-10, which described a missing sign rather than the state of our knowledge. A spelling starting with "No" is forbidden here: `ModerationService::stanceFromAnswer()` and `icons.js waterKind()` both prefix-match "No" as non-potable. |
 | Seasonal availability | select(Year-round / Summer only / Frost-shut in winter / Unknown) | `[tap]` |
 | Availability | select(Unknown / Always / Daytime only / Ask or behind a gate) | `[tap]`, filled by the Dutch register's `type` where it has one; the clock badge reads it |
 | Still as mapped? | select(As mapped / Out of order / Closed / Not there anymore) | `[tap]` |

@@ -346,7 +346,7 @@ flowchart TD
     ITEM["A drinking-water point"]
     ITEM --> F1["It exists<br/>objective · checkable<br/>→ gated at X ≈ 2"]
     ITEM --> F2["It is potable<br/>never fully verifiable by us<br/>→ labelled, not gated"]
-    F2 --> LAB(["shown as<br/>“Unsigned — use judgement”"])
+    F2 --> LAB(["shown as<br/>“Unknown”"])
     style F1 fill:#1C3A2A,color:#EFE6D4
     style F2 fill:#C8923A,color:#101E16
 ```
@@ -463,7 +463,7 @@ flowchart TD
     A3 --> Q3
     A4 --> Q3
     Q3{"Is there a claim on it<br/>we cannot actually check?"}
-    Q3 -->|yes| A5["Label it, don't gate it.<br/>e.g. “Unsigned — use judgement”"]
+    Q3 -->|yes| A5["Label it, don't gate it.<br/>e.g. “Unknown”"]
     Q3 -->|no| A6["Gate it at the tier's X."]
     style A4 fill:#FF5A1F,color:#101E16
     style A3 fill:#3E7D8C,color:#EFE6D4

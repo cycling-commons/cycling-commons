@@ -76,7 +76,12 @@ final class CatalogFormRegistry
             ItemType::WaterFood => new ItemFieldSet(
                 fields: [
                     CatalogField::select('type', 'Type', ['Public fountain', 'Drinking tap', 'Cemetery tap', 'Café — refill point']),
-                    CatalogField::select('potable', 'Potable?', ['Yes (public supply)', 'Unsigned — use judgement', 'No / non-potable']),
+                    // "Unknown" is a real answer here, not a blank: a rider or
+                    // a curator looked and nobody can say whether you may
+                    // drink it. It is the same word the three selects below
+                    // use. It must not begin with "No": two readers
+                    // prefix-match that as non-potable (owner 2026-09-10).
+                    CatalogField::select('potable', 'Potable?', ['Yes (public supply)', 'Unknown', 'No / non-potable']),
                     CatalogField::select('seasonal', 'Seasonal availability', ['Year-round', 'Summer only', 'Frost-shut in winter', 'Unknown']),
                     // When in the day it can be used; `seasonal` is the year.
                     // The clock badge reads both (icons.js stateOf), and the

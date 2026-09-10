@@ -282,7 +282,7 @@ or low-density region −1 (seed coverage early, tighten as the community grows)
   provenance, not tap-confirmations.
 - **Config, not constants** — base X and modifiers are tunable per region / launch phase without a deploy.
 - **Risk can live at the field, not the item** — "this fountain exists" (low X) ≠ "this water is potable"
-  (never fully verifiable → *labelled* "Unsigned — use judgement", not gated). See [B-water-food](B-water-food.md).
+  (never fully verifiable → *labelled* "Unknown", not gated). See [B-water-food](B-water-food.md).
 - The numbers above are **starting points (TBD)** — the *structure* (tiers + modifiers + decay) is what's fixed.
 
 **As built today (2026-08-02): X = 1 for every item type.** `CatalogProvider`'s

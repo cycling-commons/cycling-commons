@@ -206,7 +206,7 @@ final class SeedManualCatalogCommand extends Command
                 'letter' => 'B', 'name' => 'Pouhon La Sauvenière · Spa', 'lat' => 50.4851, 'lng' => 5.8983,
                 'ref' => 'manual:pouhon-la-sauveniere-spa',
                 'attributes' => [
-                    'type' => 'Public fountain', 'potable' => 'Yes (public supply)', 'seasonal' => 'Year-round',
+                    'type' => 'Public fountain', 'potable' => 'Unknown', 'seasonal' => 'Year-round',
                     'note' => 'Natural iron-rich mineral spring (pouhon) managed by Ville de Spa — not SWDE tap water; drew European nobility from the 1600s.',
                     'photo' => self::wc('Spa-Source de la Sauvenière (1).jpg', 'Romaine', 'Romaine', 'CC0'),
                 ],
@@ -215,7 +215,7 @@ final class SeedManualCatalogCommand extends Command
                 'letter' => 'B', 'name' => 'Source Barisart · Spa', 'lat' => 50.4745, 'lng' => 5.8627,
                 'ref' => 'manual:source-barisart-spa',
                 'attributes' => [
-                    'type' => 'Public fountain', 'potable' => 'Yes (public supply)', 'seasonal' => 'Year-round',
+                    'type' => 'Public fountain', 'potable' => 'Unknown', 'seasonal' => 'Year-round',
                     'note' => 'Natural mineral spring in the woods south of Spa — not SWDE tap water; part of the historic spring-walk circuit.',
                     'photo' => self::wc('Spa-Source de Barisart (3).jpg', 'Romaine', 'Romaine', 'CC0'),
                 ],
@@ -224,7 +224,7 @@ final class SeedManualCatalogCommand extends Command
                 'letter' => 'B', 'name' => 'Fontaine Nicolay · Stavelot', 'lat' => 50.39249, 'lng' => 5.92637,
                 'ref' => 'manual:fontaine-nicolay-stavelot',
                 'attributes' => [
-                    'type' => 'Public fountain', 'potable' => 'Unsigned — use judgement',
+                    'type' => 'Public fountain', 'potable' => 'Unknown',
                     'note' => 'Rue Neuve, Stavelot old town (on the pavé) — OSM maps the fountain but drinking_water is unset; not yet verified with SWDE.',
                 ],
             ],
@@ -232,7 +232,7 @@ final class SeedManualCatalogCommand extends Command
                 'letter' => 'B', 'name' => 'Fountain · Stavelot centre', 'lat' => 50.39484, 'lng' => 5.92994,
                 'ref' => 'manual:fountain-stavelot-centre',
                 'attributes' => [
-                    'type' => 'Public fountain', 'potable' => 'Unsigned — use judgement',
+                    'type' => 'Public fountain', 'potable' => 'Unknown',
                     'note' => 'Near the abbey, Stavelot — no drinking_water tag in OSM; candidate pending an SWDE potability check.',
                 ],
             ],

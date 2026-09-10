@@ -288,9 +288,9 @@ final class ModerationServiceTest extends KernelTestCase
 
     public function testApprovingWaterWithNoClaimAsksNothingOfNobody(): void
     {
-        // "Unsigned — use judgement" is not a claim either way, so there is
+        // "Unknown" is not a claim either way, so there is
         // nothing to carry across and the map should still ask.
-        [$item, $sub] = $this->seedWater(['potable' => ['was' => null, 'now' => 'Unsigned — use judgement']]);
+        [$item, $sub] = $this->seedWater(['potable' => ['was' => null, 'now' => 'Unknown']]);
         $this->service->decide($sub->getId(), 'approve', $this->curator, null);
 
         /** @var ItemConfirmationService $confirmations */

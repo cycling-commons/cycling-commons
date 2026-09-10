@@ -59,7 +59,11 @@ test('the detail response settles what the tile could not', () => {
 test("a rider's own record uses the form vocabulary", () => {
   assert.equal(waterKind({ potable: 'Yes (public supply)' }), 'tap');
   assert.equal(waterKind({ potable: 'No / non-potable' }), 'no');
+  assert.equal(waterKind({ potable: 'Unknown' }), 'unk');
+  // The pre-2026-09-10 spelling still arrives on tiles published before the rename.
   assert.equal(waterKind({ potable: 'Unsigned — use judgement' }), 'unk');
+  // "Unknown" must never fall into the No branch: an unknown tap is not a bad one.
+  assert.notEqual(waterKind({ potable: 'Unknown' }), 'no');
   assert.equal(waterKind({ type: 'Café — refill point', potable: 'Yes (public supply)' }), 'food_water');
   assert.equal(waterKind({ type: 'Café — refill point' }), 'food');
 });

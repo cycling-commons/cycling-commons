@@ -228,7 +228,7 @@ final class ImproveTest extends WebTestCase
         $client->request('GET', '/improve?item='.$item->getId());
 
         self::assertResponseIsSuccessful();
-        // Water & food keeps the "Unsigned — use judgement" potable option.
+        // Water & food keeps its "Unknown" potable option: a real answer, not a blank.
         self::assertSelectorExists('[name="improve[details][potable]"]');
         self::assertSelectorNotExists('[name="improve[details][pumpValve]"]');
     }

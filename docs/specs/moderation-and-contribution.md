@@ -1112,7 +1112,7 @@ It is recorded as **`source = 'form'`**, and form-sourced rows do not count:
 
 Answering in the drawer later **promotes** the row to `drawer` (the submitter
 has now confirmed it as a rider, and it starts counting); a form answer never
-demotes a real confirmation. "Unsigned — use judgement" is not a claim either
+demotes a real confirmation. "Unknown" is not a claim either
 way and carries nothing, so the map still asks. Only new-item submissions carry
 an answer across — an edit that sets `potable` on somebody else's item is left
 to the ordinary drawer confirmation.

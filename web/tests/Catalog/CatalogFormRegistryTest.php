@@ -103,7 +103,12 @@ final class CatalogFormRegistryTest extends TestCase
         }
 
         self::assertNotNull($potable);
-        self::assertContains('Unsigned — use judgement', $potable->choices);
+        self::assertContains('Unknown', $potable->choices);
+        // Never a spelling starting with "No": ModerationService and icons.js
+        // both prefix-match that as non-potable (owner 2026-09-10).
+        foreach ($potable->choices as $choice) {
+            self::assertSame(str_starts_with($choice, 'No'), 'No / non-potable' === $choice);
+        }
     }
 
     public function testClimbsCarriesEffortFamousForAndApproach(): void

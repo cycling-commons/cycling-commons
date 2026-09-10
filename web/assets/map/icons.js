@@ -53,8 +53,13 @@ export function waterKind(p){
   p=p||{};
   const food = yes(p.food) || p.osmFood===true || p.type==='Café — refill point';
   let pot;
-  if(typeof p.potable==='string' && /^(Yes|No|Unsigned)/.test(p.potable)){   // rider vocabulary wins
-    pot = p.potable.startsWith('Yes') ? true : p.potable.startsWith('No') ? false : undefined;
+  /* Rider vocabulary wins, including its "Unknown": somebody looked and
+     nobody can say, which outranks a stale OSM tag. Un… is tested BEFORE the
+     No branch and matched on those two letters alone. That covers "Unknown"
+     and also the pre-2026-09-10 spelling ("Unsigned…", still on tiles
+     published before the rename), so neither is painted as a bad tap. */
+  if(typeof p.potable==='string' && /^(Yes|No|Un)/.test(p.potable)){
+    pot = /^Un/.test(p.potable) ? undefined : p.potable.startsWith('Yes');
   } else if(p.osmPotable!==undefined){
     pot = p.osmPotable;
   } else if(yes(p.potable)){
