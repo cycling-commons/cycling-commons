@@ -732,8 +732,6 @@ home:
   way_extend_h: 'Faites grandir la plateforme'
   way_build_k: 'Descendance'
   way_build_h: 'Bâtissez sur les données'
-  ecosystem_alt: 'L''écosystème ouvert : regarder, ajouter, curer, étendre, et la descendance bâtie sur les données, autour d''un même globe.'
-  loop_toggle: 'Test :'
 join:
   kicker: 'Participer'
   title: 'Construisez le Commons avec nous.'

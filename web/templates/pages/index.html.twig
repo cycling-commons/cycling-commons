@@ -76,15 +76,6 @@
      the ring. Ride and Add are the two big stops. Below 1000px the ring goes and the stops stack. */
   .hero-inner .wrap{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:clamp(1.5rem,4vw,4rem);align-items:center}
   .loop-col{position:relative}
-  .loop-col .loop,.loop-col .loop-img{display:none}
-  #lv-1:checked ~ .loop-img.v1{display:block}
-  #lv-3:checked ~ .loop{display:block}
-  .loop-switch{display:block;margin:.4rem 0 0 auto;width:max-content;font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(239,230,212,.45)}
-  .loop-switch label{cursor:pointer;text-decoration:underline;text-underline-offset:3px}
-  .loop-switch label:hover{color:var(--trail)}
-  .loop-img{max-width:520px;width:100%;margin-left:auto}
-  .loop-img img{display:block;width:100%;height:auto;border-radius:12px}
-  @media(max-width:999px){.loop-img{margin:1.2rem auto 0}}
   .loop{position:relative;aspect-ratio:1;max-width:476px;width:85%;margin-left:auto}
   .loop svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
   .loop .ring{fill:none;stroke:rgba(239,230,212,.45);stroke-width:.5;stroke-dasharray:1.2 2.2;animation:loop-run 150s linear infinite}
@@ -119,12 +110,40 @@
   .stop.s5{width:28%;left:15.5%;top:32.0%;transform:translate(-50%,-50%)}
   @media(max-width:999px){
     .hero-inner .wrap{grid-template-columns:1fr}
-    #lv-3:checked ~ .loop{aspect-ratio:auto;max-width:none;margin:1.2rem 0 0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.6rem}
+    /* Stacked, the lap needs its own measure: full width made the cards long
+       and thin, and the lap's own 85%-with-an-auto-left-margin left them
+       short of the right gutter (owner 2026-09-10). A capped width, centred,
+       so the air sits AROUND the cards instead of inside them. */
+    .loop{aspect-ratio:auto;max-width:620px;width:100%;margin:1.2rem auto 0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.6rem}
     .loop svg{display:none}
     .stop,.stop.s1,.stop.s2,.stop.s3,.stop.s4,.stop.s5{position:static;transform:none;width:auto}
     .stop.big{width:auto}
   }
-  @media(max-width:520px){.loop{grid-template-columns:1fr}}
+  /* One column, and the lap said as a line: the drawn lap is a circle with an
+     arrow on every stretch, which does not survive being stacked. A chevron in
+     each gap carries the same one thing the circle carried, that these five are
+     an order and not a menu (owner 2026-09-10). Subtle on purpose: it is
+     punctuation between the cards, not a sixth card.
+
+     `:last-of-type` reaches the fifth stop because the stops are the only <a>
+     children; the lap's <svg> is a different type and is display:none here. */
+  /* Five cards in two columns leaves the fifth alone on its row, stuck against
+     the left edge (owner 2026-09-10). It takes the whole row and centres, at
+     exactly one column's width, so the block reads as a block. */
+  @media(min-width:521px) and (max-width:999px){
+    .loop .stop:last-of-type{grid-column:1 / -1;justify-self:center;width:calc(50% - .3rem)}
+  }
+  @media(max-width:520px){
+    .loop{max-width:none;grid-template-columns:1fr;gap:1.5rem}
+    /* relative for the chevron to hang off, and `inset:auto` with it: the lap
+       rules place s1..s5 with left/top, which a static box ignores and a
+       relative box does NOT, so without this each card slides across by its
+       own lap coordinate. */
+    .loop .stop{position:relative;inset:auto}
+    .loop .stop:not(:last-of-type)::after{content:"";position:absolute;left:50%;top:100%;width:9px;height:9px;
+      margin-top:.42rem;transform:translateX(-50%) rotate(45deg);
+      border-right:1.6px solid rgba(239,230,212,.38);border-bottom:1.6px solid rgba(239,230,212,.38)}
+  }
   .hero-inner{position:relative;z-index:10;padding-bottom:clamp(2.5rem,6vw,5rem);padding-top:clamp(2.5rem,5vw,4rem);width:100%}
   /* flex-start, not center: the pin marks the START of the line, so on a narrow
      screen where the eyebrow wraps to two it must stay level with the first
@@ -597,21 +616,7 @@
        (owner 2026-09-08: "only the subtitle, not the follow-up texts"), and
        each links to its page. The ring and arrows are decoration for a
        sighted reader; the stops read as a list to everyone else. #}
-    {# The rendered ecosystem image shows by default; the drawn loop is kept
-       below it (owner 2026-09-08: "hide the current work and place this
-       image in it"), its stops, ring, globe and offspring lines intact. #}
-    {# A tiny test toggle between the two, CSS only (a checked box hides the
-       image and shows the drawn loop), so the page needs no script for it
-       (owner 2026-09-08: "just for testing"). Two radio boxes, two states:
-       the image (1) and the drawn loop (3), the drawn loop first since the
-       owner's pick ("draw with globe. keep version 1 and 3"). Remove the
-       boxes, the switch and the :checked rules when the image goes. #}
     <div class="loop-col">
-    <input type="radio" name="loopv" id="lv-1" class="loop-toggle" hidden>
-    <input type="radio" name="loopv" id="lv-3" class="loop-toggle" hidden checked>
-    <div class="loop-img v1 rv in" data-d="3">
-      <img src="{{ asset('brand/cc-ecosystem-mainpage.webp') }}" alt="{{ 'home.ecosystem_alt'|trans }}" width="800" height="546" decoding="async" fetchpriority="high">
-    </div>
     <div class="loop rv in" data-d="3">
       <svg viewBox="0 0 100 100" aria-hidden="true">
       <defs>
@@ -654,8 +659,6 @@
       <a class="stop s4" href="{{ path('join') }}"><span class="k">{{ 'home.way_extend_k'|trans }}</span><b>{{ 'home.way_extend_h'|trans }}</b></a>
       <a class="stop s5" href="{{ path('developers_api') }}"><span class="k">{{ 'home.way_build_k'|trans }}</span><b>{{ 'home.way_build_h'|trans }}</b></a>
     </div>
-    <div class="loop-switch mono">{{ 'home.loop_toggle'|trans }}
-      <label for="lv-1">1</label> / <label for="lv-3">3</label></div>
     </div>
   </div>
 

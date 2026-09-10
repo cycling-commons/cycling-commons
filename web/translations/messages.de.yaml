@@ -732,8 +732,6 @@ home:
   way_extend_h: 'Lass die Plattform wachsen'
   way_build_k: 'Ableger'
   way_build_h: 'Bau auf den Daten'
-  ecosystem_alt: 'Das offene Ökosystem: schauen, ergänzen, kuratieren, erweitern und Ableger, die auf den Daten aufbauen, rund um einen Globus.'
-  loop_toggle: 'Test:'
 join:
   kicker: 'Mitmachen'
   title: 'Bau The Commons mit uns.'

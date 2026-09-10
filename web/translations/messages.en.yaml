@@ -732,8 +732,6 @@ home:
   way_extend_h: 'Grow the platform'
   way_build_k: 'Offspring'
   way_build_h: 'Build on the data'
-  ecosystem_alt: 'The open ecosystem: watching, adding, curating, extending, and offspring built on the data, all around one globe.'
-  loop_toggle: 'Test:'
 join:
   kicker: 'Get involved'
   title: 'Build the Commons with us.'

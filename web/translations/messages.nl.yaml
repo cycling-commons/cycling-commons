@@ -732,8 +732,6 @@ home:
   way_extend_h: 'Laat het platform groeien'
   way_build_k: 'Nakomelingen'
   way_build_h: 'Bouw op de data'
-  ecosystem_alt: 'Het open ecosysteem: kijken, toevoegen, cureren, uitbreiden, en nakomelingen gebouwd op de data, rond één wereldbol.'
-  loop_toggle: 'Test:'
 join:
   kicker: 'Doe mee'
   title: 'Bouw de Commons met ons.'
