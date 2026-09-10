@@ -1,0 +1,19 @@
+wiki/governance.md
+  s_0f0d3ca1895aee::t_0aecf2b470ce8e 6-30,64-71,74-76,81-105,109-146
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "cad68b199f35bf2f6b186052d422c2a8374d474b",
+  "prompts": {},
+  "sessions": {
+    "s_0f0d3ca1895aee": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4dcab164-5d71-4c41-b932-ab0d05c4e71e",
+        "model": "unknown"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
