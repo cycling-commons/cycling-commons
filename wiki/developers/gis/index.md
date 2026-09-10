@@ -2,6 +2,12 @@
 
 # GIS from scratch
 
+!!! abstract "The short version"
+    Clone the repository, run `make setup` and then `make course-data`, and start at chapter 1. The
+    ten chapters run to about four hours of reading and are meant to be read in order. Every one
+    ends with something to run against your own stack. If you only ever read one, read
+    [chapter 10](pitfalls.md): it is the list of mistakes this project has already made.
+
 This series assumes you have never worked with maps. It takes a competent developer with no GIS
 background to the point where the spatial parts of this repository read as ordinary code, not as a
 foreign specialism. GIS shows up in three places here: in the database (every place, route, and
@@ -23,11 +29,16 @@ explained, the fix is to go back, not to keep pushing forward.
 
 ## One fountain, all the way through
 
-Every chapter from here on opens with the same worked example: a single drinking-water fountain in
-Wallonia, mapped by somebody using OpenStreetMap, on its way to becoming a pixel a rider taps on the
-Cycling Commons map. Following one real thing the whole way through beats sixteen unrelated
-examples, because you can watch it change shape at every stop instead of learning each stop in
-isolation.
+Every chapter from here on opens with the same worked example: the **Pouhon La Sauvenière** in Spa,
+an iron-rich mineral spring that has been running for centuries, on its way to becoming a pixel a
+rider taps on the Cycling Commons map. Following one real thing the whole way through beats sixteen
+unrelated examples, because you can watch it change shape at every stop instead of learning each
+stop in isolation.
+
+"Real" is meant literally. It is
+[`node/6863042080`](https://www.openstreetmap.org/node/6863042080) in OpenStreetMap, and every tag
+this course quotes is one you can read there yourself. When a chapter says the fountain carries nine
+tags and the harvest keeps four of them, open the node and count.
 
 The chapter list below is that journey: chapters 1 to 8 are one stop each. Chapter 9 steps off the
 spine on purpose, because a route is a line rather than a point and the difference is the whole
@@ -81,44 +92,50 @@ Whenever you see that box, read the paragraph above it as background, not as a d
 codebase. It is not a promise that the feature is coming; it is a flag that keeps the page honest
 about what actually runs today versus what's merely useful to understand.
 
+!!! tip "If an exercise does not work"
+    [When an exercise does not work](../troubleshooting.md) collects the failures that
+    actually happen: an empty result, a missing table, a map drawing nothing, a harvest
+    exiting non-zero, an elevation call answering plausibly-shaped zeros.
+
 ## The chapters
 
-Ten chapters, each covering one idea and ending with a slot for a hands-on exercise. The
-*where the fountain is* line tracks the worked example above.
+Ten chapters, each covering one idea and ending with a hands-on exercise. The
+*where the fountain is* line tracks the worked example above, and the minutes are a reading
+estimate, not counting the time you spend running things.
 
-1. [**The Earth is awkward**](coordinates.md): latitude and longitude, why a degree of longitude
+1. [**The Earth is awkward**](coordinates.md) · ~25 min: latitude and longitude, why a degree of longitude
    shrinks toward the poles, what a map projection is and what it costs, and the two coordinate
    systems this project actually uses.
    *The fountain is two numbers, and they don't behave like graph paper.*
-2. [**The shapes**](shapes.md): points, lines, and polygons; GeoJSON, the format they travel in;
+2. [**The shapes**](shapes.md) · ~15 min: points, lines, and polygons; GeoJSON, the format they travel in;
    and why the order of points around a ring matters.
    *Those numbers become a* geometry*: the same kind of value that stores a route or a region.*
-3. [**Metres vs degrees**](metres-vs-degrees.md): the most common beginner mistake in GIS:
+3. [**Metres vs degrees**](metres-vs-degrees.md) · ~15 min: the most common beginner mistake in GIS:
    treating degrees as if they were a unit of distance, and how the database is told to measure real
    ones instead.
    *"Is the fountain within 5 km of me?", which turns out not to be ordinary arithmetic.*
-4. [**Asking spatial questions**](spatial-questions.md): the handful of functions that answer "is
+4. [**Asking spatial questions**](spatial-questions.md) · ~25 min: the handful of functions that answer "is
    this point inside that shape", "how far apart are these two things", and "what's nearby", plus
    why searching by place name is a different kind of problem with its own answer.
    *"Which region is it in?" and "did a rider pass it?" are questions with names.*
-5. [**Making it fast**](making-it-fast.md): why spatial queries need their own kind of index, and
+5. [**Making it fast**](making-it-fast.md) · ~35 min: why spatial queries need their own kind of index, and
    why a query that works fine on a hundred rows can fail once the table holds hundreds of
    thousands.
    *The same questions, asked against 375,000 fountains instead of one.*
-6. [**From OpenStreetMap to our database**](osm-to-database.md): how OpenStreetMap describes the
+6. [**From OpenStreetMap to our database**](osm-to-database.md) · ~25 min: how OpenStreetMap describes the
    world, and the steps that turn that raw, foreign data into rows this project owns.
    *Backwards in time: before it was a row, the fountain was a node in a Geofabrik export.*
-7. [**Tiles**](tiles.md): why a browser can't be handed hundreds of thousands of points at once,
+7. [**Tiles**](tiles.md) · ~40 min: why a browser can't be handed hundreds of thousands of points at once,
    and how they get cut into small, pre-built files a map can fetch instead.
    *The row becomes part of a small pre-cut file the map can fetch instantly.*
-8. [**Putting it on screen**](on-screen.md): how the map library turns a tile into pixels, styles
+8. [**Putting it on screen**](on-screen.md) · ~20 min: how the map library turns a tile into pixels, styles
    them, and lets a rider click or tap on one.
    *The last hop: the fountain is a pixel, and a rider taps it to answer "still here?".*
-9. [**Lines that mean something**](routes.md): why a route is a harder problem than a single
+9. [**Lines that mean something**](routes.md) · ~20 min: why a route is a harder problem than a single
    point, and how this project measures things like surface coverage honestly, without overstating
    its own certainty.
    *Off the spine: a ride is a line, and a line can be asked things a point cannot.*
-10. [**Pitfalls, glossary, where to look**](pitfalls.md): the mistakes that show up again and
+10. [**Pitfalls, glossary, where to look**](pitfalls.md) · ~20 min: the mistakes that show up again and
     again in GIS code, a glossary of every term used across this series, and a table for "I need to
     change X, start here".
     *Not a stop on the journey, the page you come back to.*
@@ -128,8 +145,7 @@ Ten chapters, each covering one idea and ending with a slot for a hands-on exerc
 !!! tip "Hands-on: bring the stack up, then prove it holds the course data"
     Every chapter from here on runs commands against a live dev database. Two make targets get you
     there from a fresh clone: [`building.md`](../../building.md#run-it-locally) has the full "run it
-    locally" instructions (`make setup`), and the stack's own
-    [README](https://github.com/cycling-commons/cycling-commons/blob/main/developers/docker/README.md)
+    locally" instructions (`make setup`), and the stack's own `developers/docker/README.md`
     is the reference for ports, services and troubleshooting.
 
     `make setup` alone is **not enough for this course**. It seeds world reference data and four
@@ -156,11 +172,11 @@ Ten chapters, each covering one idea and ending with a slot for a hands-on exerc
     "
     ```
 
-    <!-- CODE-ILLUSTRATIVE sample output on a stack seeded by `make setup` + `make course-data` -->
+    <!-- CODE-ILLUSTRATIVE SAMPLE-FROM fresh-clone; sample output on a stack seeded by `make setup` + `make course-data` -->
     ```text
      items
     -------
-       814
+       736
     (1 row)
 
      coverage_pois
@@ -170,9 +186,13 @@ Ten chapters, each covering one idea and ending with a slot for a hands-on exerc
     ```
 
     `item` holds this project's own curated rows; `coverage_poi` holds the OpenStreetMap cache
-    chapter 6 explains in full. **814 and 10 are exactly what `make course-data` produces**, so those
+    chapter 6 explains in full. **736 and 10 are exactly what `make course-data` produces**, so those
     two numbers should match on any fresh clone, but they are a floor, not a fixture: import more
-    data and they only grow. What matters right now is that both queries return *some* number
+    data and they only grow. The 736 is smaller than the artifacts the target exports, which is
+    correct: 30 pins are seeded by hand and the three import files carry 790 features, but the
+    catalog's duplicate guard holds out 84 surface segments whose geometry it already has, so 706
+    of them land. [`data-priority.md`](../../data-priority.md) explains why one place gets one row.
+    What matters right now is that both queries return *some* number
     instead of a connection error or `relation "coverage_poi" does not exist`. If either one fails,
     fix that before chapter 1: every exercise later in this series assumes exactly this connection
     and exactly this seed. (`developers/docker/compose.yaml` is also what every later chapter's own

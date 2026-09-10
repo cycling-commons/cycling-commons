@@ -31,6 +31,32 @@ declare which of the two kinds it is, on the line before the fence:
 An unmarked fence fails: the point is that nobody can add a quote without
 deciding which kind it is.
 
+Three more rules, each added because the thing it checks broke while every
+existing gate stayed green:
+
+    SAMPLE-FROM   A CODE-ILLUSTRATIVE block that shows "sample output" must
+                  also say where that output was captured, using one of
+                  fresh-clone / any-install / author-install / network. The
+                  courses promise reproducible exercises, and a count taken on
+                  a machine holding two million harvested rows is a fine thing
+                  to show and a terrible thing to leave looking like something
+                  a fresh clone will print.
+
+    make targets  Every `make <target>` a page tells the reader to run must
+                  exist in the Makefile. Only inside a code span or a fence, so
+                  "make sure" in prose is never a candidate. `course-data` was
+                  renumbered out from under the GIS course in 2026-08 and
+                  nothing noticed for two weeks, because a make recipe is not
+                  quoted code and no gate read it.
+
+    gis-todo      A figure that still carries its drawing brief renders that
+                  brief to the reader. There were two; both are drawn, so any
+                  gis-todo at all now fails.
+
+Numbers in prose are the other thing this gate cannot see, and they are handled
+next door: tools/wiki-numbers.py derives them from the repository into
+wiki/developers/numbers.md, and pages cite that page rather than restating.
+
 Matching is deliberately forgiving about layout and strict about content:
 lines are whitespace-collapsed before comparison, so re-indenting a quote to
 fit the page is fine, but changing an identifier is not. A line consisting of
@@ -68,6 +94,37 @@ FROM = re.compile(r"<!--\s*CODE-FROM\s+(\S+?)\s*-->")
 ILLUSTRATIVE = re.compile(r"<!--\s*CODE-ILLUSTRATIVE\b([^>]*?)-->")
 # an elision stands in for omitted lines; it is not content to verify
 ELISION = re.compile(r"^[\s\-/#*]*(\.\.\.|…)[\s\-/#*]*$")
+
+# Where a printed output was captured. A course that promises reproducible
+# exercises has to say which outputs actually are: a count taken on a machine
+# holding two million harvested rows is a fine thing to show and a terrible
+# thing to leave looking like something a fresh clone will print.
+SAMPLE_ORIGINS = ("fresh-clone", "any-install", "author-install", "network")
+SAMPLE_FROM = re.compile(r"\bSAMPLE-FROM\s+(" + "|".join(SAMPLE_ORIGINS) + r")\b")
+LOOKS_LIKE_OUTPUT = re.compile(r"\bsample output\b", re.I)
+
+# A `make <target>` the reader is told to run. Only inside a code span or a
+# fence, so ordinary prose ("make sure", "make it fast") is never a candidate.
+MAKE_INLINE = re.compile(r"`make\s+([a-z][a-z0-9._-]*)")
+MAKE_FENCED = re.compile(r"^\s*(?:\$\s*)?make\s+([a-z][a-z0-9._-]*)")
+MAKE_RULE = re.compile(r"^([a-zA-Z0-9._/-]+)\s*:(?!=)")
+
+# An unfinished figure renders its own drawing brief to the reader. There were
+# two, F14 and F15; both are drawn, so the allowlist that used to hold them is
+# gone and any gis-todo at all is now a failure.
+
+
+def make_targets() -> set[str]:
+    """Every rule name the root Makefile defines."""
+    names = set()
+    for line in (ROOT / "Makefile").read_text(encoding="utf-8").splitlines():
+        if line.startswith("\t") or not line.strip() or line.lstrip().startswith("#"):
+            continue
+        if m := MAKE_RULE.match(line):
+            names.update(m.group(1).split())
+    names.discard(".PHONY")
+    names.discard(".DEFAULT_GOAL")
+    return names
 
 
 def norm(line: str) -> str:
@@ -134,13 +191,56 @@ def check_quote(src: Path, body: list[str]) -> list[str]:
     return missing
 
 
+def check_make_targets(page: Path, targets: set[str]) -> list[str]:
+    """Every `make <target>` the page tells a reader to run must exist.
+
+    Prose numbers are not the only ungated thing a page can get wrong: a make
+    target is an instruction, and an instruction that fails is worse than a
+    stale sentence. The course-data target was renumbered out from under the
+    GIS course in 2026-08 and nothing noticed for two weeks, because no gate
+    read the Makefile.
+    """
+    out, in_fence = [], False
+    rel = page.relative_to(ROOT)
+    for n, line in enumerate(page.read_text(encoding="utf-8").splitlines(), 1):
+        if FENCE.match(line):
+            in_fence = not in_fence
+            continue
+        found = MAKE_INLINE.findall(line)
+        if in_fence:
+            found += MAKE_FENCED.findall(line)
+        for name in found:
+            if name not in targets:
+                out.append(
+                    f"{rel}:{n}: tells the reader to run `make {name}`, which the "
+                    f"Makefile does not define"
+                )
+    return out
+
+
+def check_placeholder_figures(page: Path) -> list[str]:
+    """A figure that still renders its drawing brief is not finished."""
+    rel = str(page.relative_to(ROOT))
+    out = []
+    for n, line in enumerate(page.read_text(encoding="utf-8").splitlines(), 1):
+        if "gis-todo" in line:
+            out.append(
+                f"{rel}:{n}: unfinished figure. A `gis-todo` block renders its own "
+                f"drawing brief to the reader. Finish the figure, or remove the block"
+            )
+    return out
+
+
 def main() -> int:
     listing = "--list" in sys.argv
     warn_only = "--warn-only" in sys.argv
     problems, counts = [], {"from": 0, "illustrative": 0}
+    targets = make_targets()
 
     for page in wiki_pages():
         rel = page.relative_to(ROOT)
+        problems.extend(check_make_targets(page, targets))
+        problems.extend(check_placeholder_figures(page))
         for lineno, kind, arg, body in fences(page):
             if kind is None:
                 problems.append(
@@ -155,6 +255,15 @@ def main() -> int:
                     problems.append(
                         f"{rel}:{lineno}: CODE-ILLUSTRATIVE needs a short note saying "
                         f"what the example is, so a reader knows it is not our code"
+                    )
+                elif LOOKS_LIKE_OUTPUT.search(arg) and not SAMPLE_FROM.search(arg):
+                    problems.append(
+                        f"{rel}:{lineno}: this block shows sample output but does not say where it "
+                        f"was captured. Add SAMPLE-FROM <"
+                        + "|".join(SAMPLE_ORIGINS) + "> to the marker: "
+                        f"fresh-clone reproduces after `make setup` + `make course-data`, "
+                        f"any-install holds at any data size, author-install needs a real harvest, "
+                        f"network needs the internet"
                     )
                 if listing:
                     print(f"  illustrative  {rel}:{lineno}  ({arg})")

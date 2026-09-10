@@ -203,6 +203,11 @@ returns every point within distance `d` of `g`. A point buffered becomes a circl
 becomes a corridor, a stadium-shaped strip running the whole length of the line, `d` wide on each
 side. A polygon buffered becomes a slightly larger polygon, its outline pushed outward everywhere.
 
+One caveat before you trust the shape: a buffer's curves are not curves. PostGIS approximates each
+one with a fixed number of straight segments, so a buffered point is a many-sided polygon rather
+than a circle. It is close enough for every use here and worth knowing before you compare a buffer's
+area against the circle you pictured.
+
 That second case is exactly how "within 100 m of my ride" stops being a sentence and becomes an
 actual shape you can test other shapes against. `RideCheckService::corridorGroups()` builds its
 corridor this way:
@@ -340,11 +345,10 @@ Photon, not a request that passes through our own backend first.
 **Reverse geocoding**, coordinates in, a place name out, is the direction this project does not
 call. It would be reasonable to expect it: the map already draws a "Near Namur · 40 km" label next to
 a rider's base location, and that label looks exactly like the output of a reverse-geocode call. It
-is not. The region-scoping work's phased implementation plan records
-the actual decision: `base_place`
-is stored as its own column, filled in at the moment a rider picks a town from the forward-search
-results above, specifically so that showing that label later never needs "a live reverse-geocode call
-on every page load." The name travels with the pick; it is never looked up backwards afterward.
+is not. The name is captured forwards, at the moment a rider picks a town, and stored. Course 2's
+[geocoding chapter](../gis-beyond/geocoding.md) has the decision, the column it is stored in, and
+the boundary between "never reverse-geocodes" and the point-to-region lookups this project does run
+in its own PostGIS.
 
 !!! note "Not in the Commons, yet"
     Reverse geocoding, asking "what place is at this coordinate?", is how a "starts near Namur" or
@@ -396,7 +400,7 @@ is what closes that gap.
     WHERE r.name = 'Rondje Super Stockeu' AND i.source_ref = 'manual:cascade-de-coo';
     ```
 
-    <!-- CODE-ILLUSTRATIVE sample output at the time of writing; a re-seeded fixture can move the decimals a little -->
+    <!-- CODE-ILLUSTRATIVE SAMPLE-FROM fresh-clone; sample output; a re-seeded fixture can move the decimals a little -->
     ```text
      dist_m | frac
     --------+-------
@@ -424,7 +428,7 @@ is what closes that gap.
     ORDER BY frac;
     ```
 
-    <!-- CODE-ILLUSTRATIVE sample output at the time of writing; every row is a seeded pin, the decimals move with the seed, the order does not -->
+    <!-- CODE-ILLUSTRATIVE SAMPLE-FROM fresh-clone; sample output; every row is a seeded pin, the decimals move with the seed, the order does not -->
     ```text
                 name             | dist_m | frac
     -----------------------------+--------+-------

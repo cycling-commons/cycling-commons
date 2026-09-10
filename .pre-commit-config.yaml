@@ -115,6 +115,44 @@ repos:
         always_run: true
         pass_filenames: false
 
+      # `make course-data` is the setup step the GIS course tells a reader to
+      # run before chapter 1, so when it breaks, two courses' worth of "Try it"
+      # exercises return nothing. It DID break, for two weeks: the 2026-08-26
+      # letter renumbering updated tools/wallonia/export.py's own main() and
+      # missed the Makefile's inline copy of the same call, which went on
+      # writing water as letter C. GEOMETRY_KIND has no C, the import is one
+      # transaction, and the whole target rolled back before the coverage step.
+      # Nothing noticed, because the drift gate above reads quoted code, not
+      # make recipes, and no test anywhere mentions course-data.
+      #
+      # Three files have to agree and none of them imports another: the
+      # Makefile's recipe, the PHP importer's letter map, and the seed
+      # command. This reads all three, then runs the exporter for real
+      # (stdlib only, committed fixtures, no network, no database, ~2 s) so
+      # the counts in the Makefile's comment are measured rather than
+      # remembered.
+      - id: check-course-data
+        name: make course-data still imports (letters, geometry, counts)
+        entry: tools/check-course-data.py --quiet
+        language: python
+        files: ^(Makefile|web/src/Catalog/Command/.*\.php|tools/wallonia/.*\.py|atlas/demo/.*)$
+        pass_filenames: false
+
+      # The courses quote measurements, and a measurement in a sentence is
+      # invisible to the drift gate above: it reads quoted CODE. So the ones
+      # that CAN be derived from a checkout are derived, once, into
+      # wiki/developers/numbers.md, and pages cite that page. This fails when a
+      # figure moves under it, which is how `check_date` left chapter 6 saying
+      # 32 stored keys in five places and a figure.
+      #
+      # Regenerate rather than hand-edit: tools/wiki-numbers.py --write
+      - id: wiki-numbers
+        name: the numbers page still matches the repository
+        entry: tools/wiki-numbers.py
+        language: python
+        always_run: true
+        pass_filenames: false
+
       # /credits claims that everything the Commons is built on is named there.
       # That claim breaks silently: a dependency lands in composer.json, nobody
       # remembers the page, and the page goes on reading perfectly while being

@@ -7,13 +7,16 @@ answer in under a second. It did not ask where that answer's *raw material* came
 place. Everything chapter 1 through 5 built on top of `coverage_poi` assumed the row already
 existed. It did not always exist. Something had to put it there.
 
-Here is how it really happened. One day, a person stood next to the fountain east of Spa, or looked
-at an aerial photo of the spot, opened an OpenStreetMap editor, dropped a point at roughly
-`50.4894, 5.8792`, and typed `amenity=drinking_water`. Then they saved. That single edit, one
-volunteer, one moment, is the fountain's actual origin as far as any computer is concerned. There
-is no survey office, no national mapping agency, no company that owns this fact. **OpenStreetMap
-(OSM)** is exactly that: a map of the whole world, built from millions of small edits like this one,
-made by volunteers ("mappers") and merged into one shared, freely reusable database.
+Here is how it really happened, and you can check every word of it. Somebody stood next to the
+Pouhon La Sauvenière in Spa, or looked at an aerial photo of the spot, opened an OpenStreetMap
+editor, dropped a point at `50.4851, 5.8983`, and typed `amenity=drinking_water`. Then they saved.
+The node is [`node/6863042080`](https://www.openstreetmap.org/node/6863042080); open it and you will
+find the spring itself, the tags this chapter is about, and the history of every edit anyone has
+made to it. That single edit, one volunteer, one moment, is the fountain's actual origin as far as
+any computer is concerned. There is no survey office, no national mapping agency, no company that
+owns this fact. **OpenStreetMap (OSM)** is exactly that: a map of the whole world, built from
+millions of small edits like this one, made by volunteers ("mappers") and merged into one shared,
+freely reusable database.
 
 Everything this chapter describes is downstream of that one edit. The Geofabrik file, the pipeline,
 the `coverage_poi` row, the tile chapter 7 builds from it, the pixel chapter 8 draws, all of it is a
@@ -39,14 +42,11 @@ That is the whole model. Three primitives, and everything OSM has ever mapped, a
 motorway, a whole country, is built from some combination of them.
 
 !!! note "Not in the Commons, yet"
-    The coverage pipeline this chapter describes reads nodes and ways. It does not read relations.
-    `pipeline/coverage/extract.py::selector_expressions()` builds its filter expressions with an
-    `nw/` prefix, node and way, explicitly, nothing else, and `pipeline/coverage/parse.py`'s
-    `_Collector` class defines a `node()` handler and a `way()` handler and no `relation()` handler at
-    all. A castle or a historic site mapped as a multipolygon relation (roughly 1–3% of matching
-    objects, by the pipeline's own estimate) is invisible to this pipeline today. It is a known,
-    named gap, `docs/specs/coverage-provider.md`'s Open Questions call it an "approved fast-follow
-    with no scheduled plan yet", not an oversight nobody noticed.
+    The coverage pipeline this chapter describes reads nodes and ways. It does not read relations,
+    so a castle or a historic site mapped as a multipolygon relation is invisible to it. That is a
+    known, named gap rather than an oversight, and course 2's
+    [relations chapter](../gis-beyond/relations.md) is the whole account: which two code sites prove
+    the gap, what it costs in objects, and what closing it would take.
 
 <!-- UNANCHORED id=U60 type=absent concept="ingesting OSM relations (e.g. multipolygon buildings/areas) into coverage_poi" -->
 
@@ -129,7 +129,7 @@ contract file, `pipeline/contract/coverage-contract.json`, loaded by
 food, `C` public toilets, `D` bike services, `F` getting there, `G` shelter, `O` where to sleep,
 `P` scenic views, `Q` history & culture, matching the point catalogue in `docs/specs/osm-data-architecture.md` §5, and
 under each letter a list of exact `tag=value` rules. Counted directly from that file, there are 43
-such rules at the time of writing (for example `tourism=hotel`, `tourism=hostel`,
+such rules ([the count is generated](../numbers.md), not typed here; for example `tourism=hotel`, `tourism=hostel`,
 `tourism=camp_site`, … under letter `O` alone) built from 11 distinct tag keys. `extract.py::selector_expressions()` turns every rule into an
 `nw/key=value` osmium expression, `nw` for "node or way", tying back to the previous section's model,
 and de-duplicates them:
@@ -185,7 +185,7 @@ to 35 MB, a 51.7% cut, and the whole row from 517 to 412 bytes on average. At th
 `_SOURCE_DDL` in `pipeline/coverage/load.py`), that difference is not a rounding error: it is
 hundreds of megabytes of tag payload, for keys nothing anywhere ever renders.
 
-The 32 kept keys split into three groups, and it is worth being precise about how they add up,
+The 33 kept keys split into four groups, and it is worth being precise about how they add up,
 because it is easy to double-count:
 
 - **11 selector keys**: `amenity`, `drinking_water`, `historic`, `man_made`, `natural`, `railway`,
@@ -200,17 +200,37 @@ because it is easy to double-count:
   are what a photo of the place can be found under, and the drawer serves them as the citation for
   a picture a rider is looking at (`coverage-provider.md` §7); `wikipedia` is stored and read by
   nothing yet, kept because re-adding a dropped key later needs a full re-harvest of the planet.
+- **1 evidence key**: `check_date`, the date a mapper last stood in front of the thing and confirmed
+  it. The drawer never prints it. `pipeline/coverage/tiles.py` reads it at tile-build time into a
+  `cd` property, and a `cd` inside the freshness window is what lets a coverage pin claim a
+  published witness rather than a bare copied claim. `data-priority.md` is where that ladder is set
+  out.
 
-11 + 17 + 4 = 32. The PHP side of this, `CoverageRepository::TAG_WHITELIST` in
+11 + 17 + 4 + 1 = 33. The PHP side of this, `CoverageRepository::TAG_WHITELIST` in
 `web/src/Coverage/CoverageRepository.php`, the exact set of keys the POI drawer is allowed to render,
 lists **23** entries: the 17 display keys, three of the selector keys (`drinking_water`, `amenity` and
 `shop`, because the pin's colour and the panel's wording have to agree on whether water is potable
 and whether a place is a shop), and the three media keys. Two numbers, both correct, counting
-overlapping things: 32 stored keys in total, 23 of which the drawer's whitelist names
+overlapping things: 33 stored keys in total, 23 of which the drawer's whitelist names
 (`web/tests/Catalog/CoverageContractTest.php` asserts `TAG_WHITELIST ⊆ storedTagKeys`, so the drawer
 can never ask for a key the pipeline already threw away).
 
-`name` is conspicuously not in that list of 32. It is not dropped; it is promoted to its own
+Three numbers, one table. A key can be in more than one set, which is exactly why 11 + 17 + 4 + 1
+and 23 are both correct and describe different things.
+
+| set | what it is for | how many |
+|---|---|---|
+| **selector** | decides whether an object is kept at all, and is re-read at tile-build time to derive the type label | 11 |
+| **drawer** | `TAG_WHITELIST`: the keys the item panel is allowed to render | 23 |
+| **tile-derived** | read into a short tile property rather than shown as text: `amenity`, `check_date`, `drinking_water`, `shop`, `wheelchair` | 5 |
+| **stored** | the union, and the only thing the harvest actually keeps | 33 |
+
+Three keys sit in all three sets (`amenity`, `drinking_water`, `shop`), because the pin's colour,
+the panel's wording and the selector all have to agree about the same fact. One key, `wikipedia`, is
+in none of them: it is stored and read by nothing yet, kept because re-adding a dropped key later
+means re-harvesting the planet.
+
+`name` is conspicuously not in that list of 33. It is not dropped; it is promoted to its own
 dedicated `name` column (next section), so keeping it inside `tags` as well would just be storing the
 same value twice.
 
@@ -224,7 +244,7 @@ would sit awkwardly next to this project's position that the Commons *dataset* i
 ## Landing it
 
 <figure class="gis-fig">
-<svg viewBox="0 0 640 420" role="img" aria-labelledby="f10-t f10-d" xmlns="http://www.w3.org/2000/svg"><title id="f10-t">The coverage pipeline, from Geofabrik file to database row</title><desc id="f10-d">Five stages joined by one-way arrows, wrapping onto two rows the way a line of text does. Row one, left to right: a box labelled Geofabrik .osm.pbf; an arrow into a box labelled extract.py, osmium tags-filter; an arrow into a box labelled parse.py, make rows, narrow tags. From that third box an arrow drops down and runs back left onto row two: a box labelled load.py, COPY and swap, then an arrow into a box labelled coverage_poi, PostGIS table. Every arrow points forward; not one returns to an earlier stage. Above the chain a heading reads: weekly batch, one region at a time, and below it, runs on a schedule, never on a rider's request.</desc><defs><marker id="gis-arrow-f10" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="14" markerHeight="14" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="gis-fill-accent" d="M 0 0 L 10 5 L 0 10 Z"/></marker></defs><text x="20" y="40">Weekly batch, one region at a time</text><text class="gis-label-sm" x="20" y="70">runs on a schedule, never on a rider's request</text><rect class="gis-box" rx="8" x="22" y="96" width="176" height="110"/><text class="gis-label-sm" x="110" y="143" text-anchor="middle">Geofabrik</text><text class="gis-label-mono" x="110" y="175" text-anchor="middle">.osm.pbf</text><line class="gis-accent" x1="200" y1="151" x2="230" y2="151" marker-end="url(#gis-arrow-f10)"/><rect class="gis-box" rx="8" x="232" y="96" width="176" height="110"/><text class="gis-label-mono" x="320" y="127" text-anchor="middle">extract.py</text><text class="gis-label-sm" x="320" y="159" text-anchor="middle">osmium</text><text class="gis-label-sm" x="320" y="189" text-anchor="middle">tags-filter</text><line class="gis-accent" x1="410" y1="151" x2="440" y2="151" marker-end="url(#gis-arrow-f10)"/><rect class="gis-box" rx="8" x="442" y="96" width="176" height="110"/><text class="gis-label-mono" x="530" y="127" text-anchor="middle">parse.py</text><text class="gis-label-sm" x="530" y="159" text-anchor="middle">make rows,</text><text class="gis-label-sm" x="530" y="189" text-anchor="middle">narrow tags</text><path class="gis-accent" d="M 530 206 L 530 246 L 165 246 L 165 286" marker-end="url(#gis-arrow-f10)"/><rect class="gis-box" rx="8" x="77" y="286" width="176" height="110"/><text class="gis-label-mono" x="165" y="333" text-anchor="middle">load.py</text><text class="gis-label-sm" x="165" y="365" text-anchor="middle">COPY + swap</text><line class="gis-accent" x1="255" y1="341" x2="285" y2="341" marker-end="url(#gis-arrow-f10)"/><rect class="gis-box" rx="8" x="287" y="286" width="276" height="110"/><text class="gis-label-mono" x="425" y="333" text-anchor="middle">coverage_poi</text><text class="gis-label-sm" x="425" y="365" text-anchor="middle">PostGIS table</text></svg>
+<svg viewBox="0 0 640 420" role="img" aria-labelledby="f10-t f10-d" xmlns="http://www.w3.org/2000/svg"><title id="f10-t">The coverage pipeline, from Geofabrik file to database row</title><desc id="f10-d">Five stages joined by one-way arrows, wrapping onto two rows the way a line of text does. Row one, left to right: a box labelled Geofabrik .osm.pbf; an arrow into a box labelled extract.py, osmium tags-filter; an arrow into a box labelled parse.py, make rows, narrow tags. From that third box an arrow drops down and runs back left onto row two: a box labelled load.py, COPY and merge, then an arrow into a box labelled coverage_poi, PostGIS table. Every arrow points forward; not one returns to an earlier stage. Above the chain a heading reads: weekly batch, one region at a time, and below it, runs on a schedule, never on a rider's request.</desc><defs><marker id="gis-arrow-f10" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="14" markerHeight="14" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="gis-fill-accent" d="M 0 0 L 10 5 L 0 10 Z"/></marker></defs><text x="20" y="40">Weekly batch, one region at a time</text><text class="gis-label-sm" x="20" y="70">runs on a schedule, never on a rider's request</text><rect class="gis-box" rx="8" x="22" y="96" width="176" height="110"/><text class="gis-label-sm" x="110" y="143" text-anchor="middle">Geofabrik</text><text class="gis-label-mono" x="110" y="175" text-anchor="middle">.osm.pbf</text><line class="gis-accent" x1="200" y1="151" x2="230" y2="151" marker-end="url(#gis-arrow-f10)"/><rect class="gis-box" rx="8" x="232" y="96" width="176" height="110"/><text class="gis-label-mono" x="320" y="127" text-anchor="middle">extract.py</text><text class="gis-label-sm" x="320" y="159" text-anchor="middle">osmium</text><text class="gis-label-sm" x="320" y="189" text-anchor="middle">tags-filter</text><line class="gis-accent" x1="410" y1="151" x2="440" y2="151" marker-end="url(#gis-arrow-f10)"/><rect class="gis-box" rx="8" x="442" y="96" width="176" height="110"/><text class="gis-label-mono" x="530" y="127" text-anchor="middle">parse.py</text><text class="gis-label-sm" x="530" y="159" text-anchor="middle">make rows,</text><text class="gis-label-sm" x="530" y="189" text-anchor="middle">narrow tags</text><path class="gis-accent" d="M 530 206 L 530 246 L 165 246 L 165 286" marker-end="url(#gis-arrow-f10)"/><rect class="gis-box" rx="8" x="77" y="286" width="176" height="110"/><text class="gis-label-mono" x="165" y="333" text-anchor="middle">load.py</text><text class="gis-label-sm" x="165" y="365" text-anchor="middle">COPY + merge</text><line class="gis-accent" x1="255" y1="341" x2="285" y2="341" marker-end="url(#gis-arrow-f10)"/><rect class="gis-box" rx="8" x="287" y="286" width="276" height="110"/><text class="gis-label-mono" x="425" y="333" text-anchor="middle">coverage_poi</text><text class="gis-label-sm" x="425" y="365" text-anchor="middle">PostGIS table</text></svg>
 <figcaption>One Geofabrik extract enters on the left; one <code>coverage_poi</code> row leaves on the
 right. Every arrow points one way, and the whole chain runs on a schedule, never while a rider is
 waiting for a page to load.</figcaption>
@@ -244,7 +264,7 @@ Here is the actual DDL, trimmed to the columns this chapter has been building to
 ```sql
 CREATE TABLE IF NOT EXISTS coverage_poi (
     id            bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    ref           varchar(160) NOT NULL,  -- 'node/61146471' | 'way/…' = item.source_ref format
+    ref           varchar(160) NOT NULL,  -- 'node/6863042080' | 'way/…' = item.source_ref format
     letter        char(1)      NOT NULL,  -- B C D F G O P Q (osm-data-architecture.md §5)
     kind          varchar(16),            -- serviceKind for D (shop|station|pump), NULL otherwise
     name          varchar(255),           -- OSM name tag, NULL when unnamed
@@ -276,21 +296,33 @@ marker location for a POI, not a shape to draw, so every row, node or way alike,
 one kind of geometry the table actually asks for.
 
 <figure class="gis-fig">
-<svg viewBox="0 0 640 950" role="img" aria-labelledby="f11-t f11-d" xmlns="http://www.w3.org/2000/svg"><title id="f11-t">Which of a node's tags survive into the stored row</title><desc id="f11-d">On the left, an OpenStreetMap node drawn as a filled dot and labelled node/61146471, with the seven tags it carries listed beneath it. The first four, amenity=drinking_water, drinking_water=yes, name=Source du Wayai and wheelchair=yes, are in full ink and are bracketed as kept: they are named in the contract's storedTagKeys list of 32 keys. The last three, source=survey, check_date=2024-03-01 and fixme=verify tap, are struck through and greyed, and are bracketed as dropped, not in the 32. Below the list an arrow, labelled parse.py keeps only the contract's keys, leads down into the stored coverage_poi row: ref node/61146471, letter B, name Source du Wayai, geom POINT(5.8792 50.4894), and a tags column carrying only amenity, drinking_water and wheelchair. The struck-through tags reach neither the arrow nor the row. A note underneath records that name gets a column of its own and is never a stored tag.</desc><defs><marker id="gis-arrow-f11" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="14" markerHeight="14" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="gis-fill-accent" d="M 0 0 L 10 5 L 0 10 Z"/></marker></defs><text x="20" y="40">One node, every tag OSM has</text><circle class="gis-ink gis-fill-accent" cx="34" cy="76" r="12"/><text class="gis-label-mono" x="58" y="85">node/61146471</text><text class="gis-label-mono" x="58" y="140">amenity=drinking_water</text><text class="gis-label-mono" x="58" y="180">drinking_water=yes</text><text class="gis-label-mono" x="58" y="220">name=Source du Wayai</text><text class="gis-label-mono" x="58" y="260">wheelchair=yes</text><text class="gis-label-mono gis-fill-glacier" x="58" y="304">source=survey</text><line class="gis-muted" x1="54" y1="296" x2="251" y2="296"/><text class="gis-label-mono gis-fill-glacier" x="58" y="344">check_date=2024-03-01</text><line class="gis-muted" x1="54" y1="336" x2="366" y2="336"/><text class="gis-label-mono gis-fill-glacier" x="58" y="384">fixme=verify tap</text><line class="gis-muted" x1="54" y1="376" x2="294" y2="376"/><path class="gis-accent" d="M 412 116 L 400 116 L 400 272 L 412 272"/><text class="gis-label-sm" x="424" y="172">kept:</text><text class="gis-label-sm" x="424" y="200">storedTagKeys</text><text class="gis-label-sm" x="424" y="228">32 keys</text><path class="gis-muted" d="M 412 284 L 400 284 L 400 396 L 412 396"/><text class="gis-label-sm" x="424" y="326">dropped:</text><text class="gis-label-sm" x="424" y="354">not in the 32</text><line class="gis-accent" x1="60" y1="418" x2="60" y2="492" marker-end="url(#gis-arrow-f11)"/><text class="gis-label-sm" x="88" y="462">parse.py keeps only the contract's keys</text><rect class="gis-box" rx="8" x="20" y="502" width="600" height="396"/><text class="gis-label-sm" x="40" y="538">the stored coverage_poi row</text><line class="gis-muted" x1="20" y1="556" x2="620" y2="556"/><text class="gis-label-sm" x="40" y="592">ref</text><text class="gis-label-mono" x="160" y="592">node/61146471</text><line class="gis-muted" x1="20" y1="610" x2="620" y2="610"/><text class="gis-label-sm" x="40" y="646">letter</text><text class="gis-label-mono" x="160" y="646">B</text><line class="gis-muted" x1="20" y1="664" x2="620" y2="664"/><text class="gis-label-sm" x="40" y="700">name</text><text class="gis-label-mono" x="160" y="700">Source du Wayai</text><line class="gis-muted" x1="20" y1="718" x2="620" y2="718"/><text class="gis-label-sm" x="40" y="754">geom</text><text class="gis-label-mono" x="160" y="754">POINT(5.8792 50.4894)</text><line class="gis-muted" x1="20" y1="772" x2="620" y2="772"/><text class="gis-label-sm" x="40" y="808">tags</text><text class="gis-label-mono" x="160" y="808">{"amenity": "drinking_water",</text><text class="gis-label-mono" x="160" y="840">"drinking_water": "yes",</text><text class="gis-label-mono" x="160" y="872">"wheelchair": "yes"}</text><text class="gis-label-sm" x="20" y="930">name gets a column of its own, never a stored tag</text></svg>
+<svg viewBox="0 0 640 1010" role="img" aria-labelledby="f11-t f11-d" xmlns="http://www.w3.org/2000/svg"><title id="f11-t">Which of a node&#8217;s tags survive into the stored row</title><desc id="f11-d">On the left, the real OpenStreetMap node 6863042080, the Pouhon La Sauveniere in Spa, drawn as a filled dot with the nine tags it carries listed beneath it. The first five, amenity=drinking_water, drinking_water=yes, name=Pouhon La Sauveniere, natural=spring and wikidata=Q27959454, are in full ink and bracketed as kept: each is named in the contract&#8217;s storedTagKeys list of 33 keys. The last four, access=yes, intermittent=no, note=survey drinkable and water_characteristic=ferruginous, are struck through and greyed, and bracketed as dropped, not in the 33. The note tag is worth seeing go: it reads survey colon drinkable, which is one mapper's prose rather than a claim any program reads. Below the list an arrow, labelled parse.py keeps only the contract&#8217;s keys, leads down into the stored coverage_poi row: ref node/6863042080, letter B, name Pouhon La Sauveniere, geom POINT 5.8983 50.4851, and a tags column carrying only amenity, drinking_water, natural and wikidata. The struck-through tags reach neither the arrow nor the row. A note underneath records that name gets a column of its own and is never a stored tag.</desc><defs><marker id="gis-arrow-f11" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="14" markerHeight="14" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="gis-fill-accent" d="M 0 0 L 10 5 L 0 10 Z"/></marker></defs><text x="20" y="40">One real node, every tag OSM has</text><circle class="gis-ink gis-fill-accent" cx="34" cy="76" r="12"/><text class="gis-label-mono" x="58" y="85">node/6863042080</text><text class="gis-label-mono" x="58" y="140">amenity=drinking_water</text><text class="gis-label-mono" x="58" y="180">drinking_water=yes</text><text class="gis-label-mono" x="58" y="220">name=Pouhon La Sauvenière</text><text class="gis-label-mono" x="58" y="260">natural=spring</text><text class="gis-label-mono" x="58" y="300">wikidata=Q27959454</text><text class="gis-label-mono gis-fill-glacier" x="58" y="344">access=yes</text><text class="gis-label-mono gis-fill-glacier" x="58" y="384">intermittent=no</text><text class="gis-label-mono gis-fill-glacier" x="58" y="424">note=survey: drinkable</text><text class="gis-label-mono gis-fill-glacier" x="58" y="464">water_characteristic=ferruginous</text><line class="gis-muted" x1="54" y1="336" x2="186" y2="336"/><line class="gis-muted" x1="54" y1="376" x2="252" y2="376"/><line class="gis-muted" x1="54" y1="416" x2="344" y2="416"/><line class="gis-muted" x1="54" y1="456" x2="476" y2="456"/><path class="gis-accent" d="M 500 116 L 488 116 L 488 312 L 500 312"/><text class="gis-label-sm" x="512" y="206">kept:</text><text class="gis-label-sm" x="512" y="234">storedTagKeys</text><text class="gis-label-sm" x="512" y="262">33 keys</text><path class="gis-muted" d="M 500 320 L 488 320 L 488 476 L 500 476"/><text class="gis-label-sm" x="512" y="402">dropped:</text><text class="gis-label-sm" x="512" y="430">not in the 33</text><line class="gis-accent" x1="60" y1="490" x2="60" y2="456" marker-end="url(#gis-arrow-f11)"/><text class="gis-label-sm" x="88" y="430">parse.py keeps only the contract&#8217;s keys</text><rect class="gis-box" rx="8" x="20" y="470" width="600" height="452"/><text class="gis-label-sm" x="40" y="506">the stored coverage_poi row</text><line class="gis-muted" x1="20" y1="524" x2="620" y2="524"/><text class="gis-label-sm" x="40" y="560">ref</text><text class="gis-label-mono" x="180" y="560">node/6863042080</text><line class="gis-muted" x1="20" y1="578" x2="620" y2="578"/><text class="gis-label-sm" x="40" y="614">letter</text><text class="gis-label-mono" x="180" y="614">B</text><line class="gis-muted" x1="20" y1="632" x2="620" y2="632"/><text class="gis-label-sm" x="40" y="668">name</text><text class="gis-label-mono" x="180" y="668">Pouhon La Sauvenière</text><line class="gis-muted" x1="20" y1="686" x2="620" y2="686"/><text class="gis-label-sm" x="40" y="722">geom</text><text class="gis-label-mono" x="180" y="722">POINT(5.8983 50.4851)</text><line class="gis-muted" x1="20" y1="740" x2="620" y2="740"/><text class="gis-label-sm" x="40" y="776">tags</text><text class="gis-label-mono" x="180" y="776">{"amenity": "drinking_water",</text><text class="gis-label-mono" x="180" y="806">"drinking_water": "yes",</text><text class="gis-label-mono" x="180" y="836">"natural": "spring",</text><text class="gis-label-mono" x="180" y="866">"wikidata": "Q27959454"}</text><text class="gis-label-sm" x="20" y="990">name gets a column of its own, never a stored tag</text></svg>
 <figcaption>What crosses from a node's full tag list into the stored row is a choice made once, at
 parse time, not everything OpenStreetMap happens to have attached to this object, only the keys the
 contract names. The struck-through tags were never on their way to being kept; dropping them is the
-point of this step, not an accident of it.</figcaption>
+point of this step, not an accident of it. The <code>note</code> tag is the one to watch leave. It reads <code>survey: drinkable</code>, which looks like it settles something and settles nothing: it is one mapper&#8217;s prose, with no date, no author and no agreed meaning, and this project never reads it. Whether a water point is drinkable is decided by a named rule over named tags, never by a sentence that happens to contain the word.</figcaption>
 </figure>
 
 `load.py::load_region()` writes a region's rows in one transaction: `COPY` into a staging table,
-check the new row count has not collapsed suspiciously against the previous run (a truncated download
-must never silently wipe a region), then delete and re-insert that region's slice atomically, so a
-reader never sees a half-loaded region mid-swap. That mechanism is worth knowing about, but it is
+decide by geometry which rows this extract actually owns, check the row count has not collapsed
+suspiciously against the previous run (a truncated download must never silently wipe a region), then
+merge the staged rows into `coverage_poi` as a delta. The merge is an upsert on `(ref, letter)`
+guarded by `IS DISTINCT FROM`, so a row that has not changed is not rewritten at all, followed by a
+delete scoped to this extract's own slice for the rows that have disappeared from it. One
+transaction, so a reader never sees a half-loaded region. That mechanism is worth knowing about, but it is
 plumbing this chapter does not need to unpack further, the fountain's own row is the point. It now
 exists as an ordinary row in an ordinary PostGIS table: a Point in EPSG:4326 (chapter 1,
 [`coordinates.md`](coordinates.md)), addressable by every technique chapters 3 through 5 already
 taught, with a small, deliberately incomplete set of tags attached.
+
+<figure class="gis-fig">
+<svg viewBox="0 0 640 800" role="img" aria-labelledby="f16-t f16-d" xmlns="http://www.w3.org/2000/svg"><title id="f16-t">How one region&#8217;s rows are merged into coverage_poi</title><desc id="f16-d">A single downward flow with two side exits, all inside one transaction. At the top, parsed rows are COPYed into a temporary staging table. An arrow down into an ownership filter, which keeps only the rows whose nearest region belongs to this extract&#8217;s own country and drops the rest, with a side note that the neighbouring extract keeps those. An arrow down into a drift check, which compares the staged count against the previous good run and, if it has collapsed by more than forty percent, aborts and rolls everything back, leaving last week&#8217;s slice serving. That abort exits to the side. Otherwise the flow reaches the merge, which splits into two operations on coverage_poi: an upsert on the pair ref and letter, guarded by IS DISTINCT FROM so an unchanged row is not rewritten at all and costs no write, and a delete scoped to this extract&#8217;s own slice, removing rows that have disappeared from it. Both feed the coverage_poi table at the bottom. A bracket down the left side marks the whole diagram as one transaction, so any error anywhere rolls back the lot.</desc><defs><marker id="gis-arrow-f16" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="14" markerHeight="14" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="gis-fill-accent" d="M 0 0 L 10 5 L 0 10 Z"/></marker></defs><path class="gis-accent" d="M 40 60 L 24 60 L 24 700 L 40 700"/><text class="gis-label-sm" x="24" y="40">one transaction</text><text class="gis-label-sm" x="24" y="732">any error here rolls the whole thing back</text><rect class="gis-box" rx="8" x="150" y="60" width="340" height="76"/><text class="gis-label-mono" x="320" y="103" text-anchor="middle">COPY into coverage_poi_staging</text><line class="gis-accent" x1="320" y1="136" x2="320" y2="174" marker-end="url(#gis-arrow-f16)"/><rect class="gis-box" rx="8" x="150" y="176" width="340" height="96"/><text class="gis-label-mono" x="320" y="199" text-anchor="middle">ownership filter</text><text class="gis-label-sm" x="320" y="229" text-anchor="middle">nearest region wins:</text><text class="gis-label-sm" x="320" y="259" text-anchor="middle">keep only this extract's own country</text><path class="gis-muted" stroke-dasharray="5 5" d="M 490 224 L 560 224"/><text class="gis-label-sm" x="500" y="204">dropped:</text><text class="gis-label-sm" x="500" y="254">a neighbour</text><text class="gis-label-sm" x="500" y="284">owns them</text><line class="gis-accent" x1="320" y1="272" x2="320" y2="310" marker-end="url(#gis-arrow-f16)"/><rect class="gis-box" rx="8" x="150" y="312" width="340" height="96"/><text class="gis-label-mono" x="320" y="335" text-anchor="middle">drift check</text><text class="gis-label-sm" x="320" y="365" text-anchor="middle">staged count against the last good run</text><text class="gis-label-sm" x="320" y="395" text-anchor="middle">more than 40% down: abort</text><path class="gis-muted" stroke-dasharray="5 5" d="M 150 360 L 90 360 L 90 420"/><text class="gis-label-sm" x="20" y="450">abort:</text><text class="gis-label-sm" x="20" y="480">last week&#8217;s</text><text class="gis-label-sm" x="20" y="510">slice keeps</text><text class="gis-label-sm" x="20" y="540">serving</text><line class="gis-accent" x1="320" y1="408" x2="320" y2="440" marker-end="url(#gis-arrow-f16)"/><path class="gis-accent" d="M 320 440 L 320 456 M 232 456 L 452 456"/><line class="gis-accent" x1="232" y1="456" x2="232" y2="486" marker-end="url(#gis-arrow-f16)"/><line class="gis-accent" x1="452" y1="456" x2="452" y2="486" marker-end="url(#gis-arrow-f16)"/><rect class="gis-box" rx="8" x="140" y="488" width="190" height="120"/><text class="gis-label-mono" x="235" y="508" text-anchor="middle">UPSERT</text><text class="gis-label-sm" x="235" y="538" text-anchor="middle">on (ref, letter),</text><text class="gis-label-sm" x="235" y="568" text-anchor="middle">guarded by</text><text class="gis-label-sm" x="235" y="598" text-anchor="middle">IS DISTINCT FROM</text><rect class="gis-box" rx="8" x="356" y="488" width="190" height="120"/><text class="gis-label-mono" x="451" y="523" text-anchor="middle">DELETE</text><text class="gis-label-sm" x="451" y="553" text-anchor="middle">scoped to this</text><text class="gis-label-sm" x="451" y="583" text-anchor="middle">extract's own slice</text><text class="gis-label-sm" x="140" y="640">unchanged row:</text><text class="gis-label-sm" x="140" y="668">no write at all</text><text class="gis-label-sm" x="356" y="640">gone from the</text><text class="gis-label-sm" x="356" y="668">extract: removed</text><path class="gis-accent" d="M 232 608 L 232 684 L 300 684" marker-end="url(#gis-arrow-f16)"/><path class="gis-accent" d="M 452 608 L 452 684 L 384 684" marker-end="url(#gis-arrow-f16)"/><rect class="gis-box" rx="8" x="222" y="676" width="196" height="60"/><text class="gis-label-mono" x="320" y="712" text-anchor="middle">coverage_poi</text></svg>
+<figcaption>One region’s rows, from the staging table to the live one, all inside a single
+transaction. The two side exits are the ones worth remembering: a row this extract does not own
+leaves at the filter and a neighbour keeps it, and a suspiciously small run leaves at the drift
+check with last week’s slice still serving. Nothing is deleted and re-inserted; an unchanged row
+is not written at all.</figcaption>
+</figure>
 
 ## Why copy at all
 
@@ -366,7 +398,7 @@ part of a small file a map can actually fetch.
     "
     ```
 
-    <!-- CODE-ILLUSTRATIVE sample output on a stack seeded by `make course-data` -->
+    <!-- CODE-ILLUSTRATIVE SAMPLE-FROM fresh-clone; sample output on a stack seeded by `make course-data` -->
     ```text
      letter |       name       |                        stored_keys
     --------+------------------+------------------------------------------------------------
@@ -376,7 +408,7 @@ part of a small file a map can actually fetch.
 
     Eleven tags in, five stored. `inscription`, `person:date_of_birth`, `email`, `addr:postcode` and
     `building` are gone, none of them appears in
-    `pipeline/contract/coverage-contract.json`'s `storedTagKeys`, the 32-key list `parse.py`'s
+    `pipeline/contract/coverage-contract.json`'s `storedTagKeys`, the 33-key list `parse.py`'s
     `_stored_keys` filter checks every key against at load time. `name` is gone from `tags` too, but
     for a different reason: it is promoted to its own column, so keeping it in the blob as well would
     store it twice.

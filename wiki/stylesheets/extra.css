@@ -165,11 +165,18 @@
          text                  27 units -> 13.8px on a phone, 17.7px on desktop
          text.gis-label-sm     24 units -> 12.3px on a phone, 15.8px on desktop
          text.gis-label-mono   24 units -> same as gis-label-sm
-         figcaption           .6rem     -> 12px everywhere (it is HTML, not SVG)
-       11 CSS px is the legibility floor for this series, so 24 units is the
-       smallest type any figure may use: 24 x 0.5125 = 12.3px clears it, and
-       anything under 21.5 units does not. NEVER set font-size inline on a
-       <text> — use these two classes, or the floor silently breaks.
+         text.gis-label-md     22 units -> 11.3px on a phone, 15.9px on desktop
+         figcaption           .66rem    -> 14.5px everywhere (it is HTML, not SVG)
+       11 CSS px is the legibility floor for this series, so 22 units is the
+       smallest type any figure may use: 22 x 0.5125 = 11.3px clears it, and
+       anything at 21 units or below does not. NEVER set font-size inline on a
+       <text> — use these classes, or the floor silently breaks.
+
+       gis-label-md exists for ONE case: a figure that puts a column of prose
+       beside a drawing rather than under it. There, 24-unit text competes with
+       the drawing for attention and reads as the subject rather than the
+       label. 22 sits it back down without going under the floor. It is the
+       last unit available, so a figure needing smaller type needs less type.
        The caption is deliberately no larger than the smallest in-figure label
        at the narrow viewport; a caption that outsizes the figure's own labels
        inverts the hierarchy and reads as if the figure were an afterthought.
@@ -229,9 +236,23 @@
 }
 .md-typeset .gis-fig figcaption {
   margin-top: .6rem;
-  font-size: .6rem;
+  font-size: .66rem;
   line-height: 1.55;
   color: var(--md-default-fg-color--light);
+}
+
+/* A photograph, not a drawing. Same caption treatment and the same column
+   width as the SVG figures so a page does not change rhythm when one appears,
+   but the image needs its own rules: gis-fig only ever styled `svg`, and a
+   bare <img> would otherwise render at its intrinsic pixel size. The
+   aspect-ratio box holds the space before the file arrives, so a lazily loaded
+   photo cannot shove the paragraph under it down the page as it lands. */
+.md-typeset .gis-fig.gis-photo img {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 0 auto;
+  border-radius: 6px;
 }
 
 /* figure ink — stroke classes (four content colours plus one for guides).
@@ -286,6 +307,7 @@
 .gis-fig text { fill: var(--gis-fg); font-size: 27px; font-family: inherit; }
 .gis-fig text.gis-label-sm { font-size: 24px; fill: var(--md-default-fg-color--light); }
 .gis-fig text.gis-label-mono { font-family: "Spline Sans Mono", monospace; font-size: 24px; }
+.gis-fig text.gis-label-md { font-size: 22px; fill: var(--md-default-fg-color--light); }
 .gis-fig text.gis-halo {
   paint-order: stroke;
   stroke: var(--gis-halo);

@@ -79,7 +79,9 @@ geom          geometry(Point, 4326) NOT NULL, -- nodes as-is; ways centroid at l
 
 because that table only ever holds points. What varies between
 them is the shape kind. What never varies is the first word: nothing in this project's schema is
-declared `geography` anywhere.
+declared `geography` anywhere. Chapter 5 introduces one thing that looks like an exception and is
+not: an *index* built over `(geom::geography)`, which stores the cast's result without changing the
+column's own type.
 
 - **`geometry`** treats the world as a flat plane. Distance, area, "is this point inside that ring",
   all worked out with ordinary planar formulas. Its units are whatever the SRID says, and for 4326
@@ -269,6 +271,11 @@ The fountain now has a position, a shape, and a unit of ground distance it can b
 What is still missing is the vocabulary for asking about it: "is it inside this region", "did a rider
 pass it", "what is nearby." Chapter 4 is that vocabulary.
 
+
+## Further reading
+
+- [PostGIS geography type](https://postgis.net/docs/using_postgis_dbmanagement.html#PostGIS_Geography): when to reach for it, from the manual that implements it.
+
 ## Try it
 
 !!! tip "Hands-on: the same 'within 10 km' question, two answers"
@@ -291,7 +298,7 @@ pass it", "what is nearby." Chapter 4 is that vocabulary.
       AND b.source_ref = 'manual:repair-station-malmedy';
     ```
 
-    <!-- CODE-ILLUSTRATIVE sample output; the coordinates are fixed by the seed -->
+    <!-- CODE-ILLUSTRATIVE SAMPLE-FROM fresh-clone; sample output; the coordinates are fixed by the seed -->
     ```text
      within_10km_naive_degrees | within_10km_geography
     ---------------------------+------------------------
@@ -312,7 +319,7 @@ pass it", "what is nearby." Chapter 4 is that vocabulary.
       AND b.source_ref = 'manual:repair-station-malmedy';
     ```
 
-    <!-- CODE-ILLUSTRATIVE sample output; both pins have fixed seeded coordinates -->
+    <!-- CODE-ILLUSTRATIVE SAMPLE-FROM fresh-clone; sample output; both pins have fixed seeded coordinates -->
     ```text
      real_metres | naive_degrees
     -------------+---------------

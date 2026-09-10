@@ -17,13 +17,7 @@ country-scale line data affordable.
 
 <!-- CODE-ILLUSTRATIVE build the three surface artifacts for every onboarded region (the COVERAGE_REGIONS default in developers/docker/compose.yaml) -->
 ```bash
-REGIONS=europe/belgium,europe/netherlands,europe/germany,europe/luxembourg,europe/france,\
-europe/switzerland,europe/great-britain,europe/ireland-and-northern-ireland,europe/italy,\
-europe/spain,europe/slovenia,africa/rwanda,africa/south-africa,south-america/colombia,\
-south-america/chile,australia-oceania/australia,australia-oceania/new-zealand,asia/japan,\
-north-america/us/california,north-america/us/colorado,north-america/canada/british-columbia,\
-north-america/canada/quebec
-make surface-tiles regions=$REGIONS
+make surface-tiles regions=$(make -s coverage-regions)
 ```
 
 One pass over each region's PBF produces **three artifacts**, because they answer three different
@@ -42,10 +36,6 @@ against roughly 90 KB at z10, and a screen is about sixteen tiles at any zoom. B
 grid answers the planning question instead. The client carries the same floor
 (`CLASSIFIED_MIN_ZOOM`), and a cross-language test pins the two together.
 
-There is **no database at all** in this path. Points go through `coverage_poi` because the serve
-endpoints and the dedupe need SQL; lines need neither, so ways stream from the PBF straight to
-GeoJSONL and on into tippecanoe. That is what makes country-scale line data cheap.
-
 ### Why the "needs recording" arm is not simply every untagged road
 
 An arm holding every untagged road costs about as much as the entire classified layer: measured on
@@ -58,6 +48,7 @@ that came back unpaved:
 | `track` | 88.2 % | **yes** |
 | `path` | 50.1 % | **yes** |
 | `unclassified` | 6.8 % | **yes** |
+| `living_street` | 20.0 % | no |
 | `residential` | 7.2 % | no |
 | `tertiary` | 2.5 % | no |
 | `secondary` | 0.5 % | no |
@@ -71,12 +62,6 @@ that came back unpaved:
 <rect class="gis-fill-accent" x="186" y="399" width="20" height="14"/><text class="gis-label-sm" x="214" y="412">kept: nobody can predict it</text>
 <rect class="gis-fill-glacier" x="430" y="399" width="20" height="14"/><text class="gis-label-sm" x="458" y="412">left off</text></svg>
 <figcaption>Measured on our own Belgian extract: of the ways somebody <strong>has</strong> tagged, this is the share that came back unpaved. A rider sent to record an untagged <code>primary</code> is being sent to confirm asphalt, one tagged primary in a thousand is anything else, and because mappers tag the <em>surprising</em> road first, an untagged one is safer still than its bar suggests. Only <code>track</code>, <code>path</code> and <code>unclassified</code> are kept, which holds the arm to under a third of the bytes while making every line in it a road where riding actually settles something. Note it is <strong>not a threshold</strong>: <code>unclassified</code> is kept at 6.8&nbsp;% while <code>living_street</code> is dropped at 20&nbsp;%. An unclassified road is a rural lane where the answer genuinely varies; a living street is in a town, and its 20&nbsp;% is mostly setts nobody rides for the surface.</figcaption></figure>
-
-A rider sent to record an untagged primary road is being sent to confirm asphalt: one tagged Belgian
-primary in a thousand is anything else. And mappers tag the *surprising* road first, so an untagged
-one of those classes is safer still than its column suggests. Keeping only the unpredictable classes
-holds the arm to under a third of the size **and** makes the prompt sharper: every line left in it is
-a road where riding it actually settles something.
 
 The set is contract data (`surface.todo.highways`), not code, so widening it is a rebuild rather than
 a release.
@@ -123,7 +108,7 @@ Two knobs exist for exactly that:
 make surface-tiles regions=europe/germany ARGS=--extract-only
 
 # Then tile every extract on disk, once, from the PBFs already in the workdir.
-make surface-tiles offline=1 regions=$REGIONS   # every onboarded region, as above
+make surface-tiles offline=1 regions=$(make -s coverage-regions)   # every onboarded region, as above
 ```
 
 - **`ARGS=--extract-only`** stops after the GeoJSONL. Without it, every per-region pass ends in a full
@@ -200,7 +185,7 @@ Published, that would replace the live build of every onboarded country with a
 one-country build, with a zero exit code and nothing in the log. So the run
 **refuses to publish a country set that is a strict subset of the live one**:
 
-<!-- CODE-ILLUSTRATIVE what the guard prints when it refuses (the live set at the time of writing) -->
+<!-- CODE-ILLUSTRATIVE SAMPLE-FROM author-install; sample output, what the guard prints when it refuses (the live set on 2026-09-10) -->
 ```
 refusing to publish 1 countries over the live 19: AU, BE, CA, CH, CL, CO, DE,
 ES, FR, GB, IT, JP, NL, NZ, RW, SI, US, ZA would vanish from the map. Pass
@@ -220,7 +205,7 @@ extracts, no database, its own artifact and manifest:
 
 <!-- CODE-ILLUSTRATIVE build and publish the route-network artifact for every onboarded region -->
 ```bash
-make routes-tiles regions=$REGIONS   # the same full list as the surface build
+make routes-tiles regions=$(make -s coverage-regions)   # the same full list as the surface build
 ```
 
 It differs from the surface build in one structural way: routes are OSM
@@ -240,6 +225,46 @@ a fresh routes run automatically invalidates the surface extracts it would
 change; run `make routes-tiles` first, `make surface-tiles` second, and the
 cache does the rest. A surface run with no way-id files still builds; it says
 so in the log, and the to-do arm is class-gated only.
+
+## Try it
+
+!!! tip "Hands-on: read the manifest before you rebuild anything, and know what the guard protects"
+    Every claim on this page is visible in one file. Read it first, because it is also the file a
+    careless publish overwrites.
+
+    <!-- CODE-ILLUSTRATIVE read the published surface manifest -->
+    ```bash
+    curl -s http://localhost:9100/cc-maps/surface/manifest.json \
+      | jq '{stamp, tiles: (.tiles | keys), counts, countries: (.country_codes | length)}'
+    ```
+
+    <!-- CODE-ILLUSTRATIVE SAMPLE-FROM author-install; sample output on a machine holding all nineteen countries, 2026-09-10 -->
+    ```json
+    {
+      "stamp": "20260814-1512",
+      "tiles": ["classified", "gaps", "todo"],
+      "counts": { "classified": 16470329, "todo": 13924252, "cells": 150767 },
+      "countries": 19
+    }
+    ```
+
+    Three artifacts under `tiles`, which is the design this page opens with: one for the roads whose
+    surface is recorded, one for the roads worth recording, one grid for the emptiness between them.
+    The `counts` are kilometres and cells, not way counts, for the reason the page gives.
+
+    Now look at `countries`. That number is what the shrink guard defends. Build one country and
+    publish it over this, and nineteen become one:
+
+    <!-- CODE-ILLUSTRATIVE build one country without publishing, to see the cost before paying it -->
+    ```bash
+    make surface-tiles regions=europe/luxembourg ARGS=--no-publish
+    ```
+
+    `--no-publish` is honoured on this arm, unlike the coverage point arm, so the build runs to
+    completion and the manifest is untouched. Read the peak-memory line it prints against the
+    numbers in the running section above, then compare the country list it *would* have published
+    with the one you just read. If they differ, publishing is the narrow-run trap, and the guard
+    will say so by name rather than letting the map quietly empty.
 
 ## Where to go deeper
 

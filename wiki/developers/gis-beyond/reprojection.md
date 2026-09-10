@@ -165,6 +165,12 @@ once when an invoice is created rather than every time someone reads the total b
 this codebase — no query, no API response, no tile build — would need to know the source ever spoke
 a different system at all.
 
+
+## Further reading
+
+- [PROJ](https://proj.org/): the library underneath every ST_Transform in any database.
+- [epsg.io](https://epsg.io/): look up any grid this chapter names, including the ones it does not.
+
 ## Try it
 
 !!! tip "Hands-on: three numbers for one pair of climbs"
@@ -179,16 +185,17 @@ a different system at all.
     SELECT
       round(ST_Distance(a.geom, b.geom)::numeric, 6)                                          AS degrees_4326,
       round(ST_Distance(a.geom::geography, b.geom::geography)::numeric, 2)                     AS metres_geography,
-      round(ST_Distance(ST_Transform(a.geom, 31370), ST_Transform(b.geom, 31370))::numeric, 2)  AS metres_lambert72
+      round(ST_Distance(ST_Transform(a.geom, 31370), ST_Transform(b.geom, 31370))::numeric, 2)  AS metres_lambert72,
+      round(ST_Distance(ST_Transform(a.geom, 2154),  ST_Transform(b.geom, 2154))::numeric, 2)   AS metres_lambert93
     FROM item a, item b
     WHERE a.name = 'Côte de la Redoute' AND b.name = 'Cascade de Coo';
     ```
 
-    <!-- CODE-ILLUSTRATIVE sample output; the coordinates are fixed by the seed, so all three numbers hold on any install -->
+    <!-- CODE-ILLUSTRATIVE SAMPLE-FROM fresh-clone; sample output; the coordinates are fixed by the seed, so all four numbers hold on any install -->
     ```text
-     degrees_4326 | metres_geography | metres_lambert72
-    --------------+------------------+------------------
-         0.202974 |         16708.41 |         16707.43
+     degrees_4326 | metres_geography | metres_lambert72 | metres_lambert93
+    --------------+------------------+------------------+------------------
+         0.202974 |         16708.41 |         16707.43 |         16732.70
     ```
 
     Three numbers, one pair of points. `degrees_4326` is meaningless standing alone — 0.2 what? — the
@@ -199,7 +206,15 @@ a different system at all.
     grid's own metre units — and it comes out at 16,707.43, **less than a metre away from the
     `geography` answer over a 16.7 km line**. That closeness is not a coincidence: Lambert 72 is a
     projection tuned specifically to Belgium's own borders, and both these climbs sit well inside
-    them, exactly where a national grid is built to introduce almost no distortion at all. Move the
+    them, exactly where a national grid is built to introduce almost no distortion at all.
+
+    The fourth column is why that sentence needs the words "its own". `metres_lambert93` is the same
+    arithmetic in **France's** national grid, EPSG:2154, over the same two Belgian climbs, and it
+    reads 16,732.70: about **24 metres** long on 16.7 km. Nothing is broken and no error is raised,
+    because a projection will happily give you numbers well outside the region it was fitted to.
+    They are simply worse, quietly, by a factor of twenty-four against the neighbouring grid. A
+    national grid is not a better coordinate system, it is a coordinate system with a catchment, and
+    using one outside its catchment is the commonest way to be precisely wrong. Move the
     same two numbers to a pair of points on opposite sides of the planet and the flat-plane maths
     behind `metres_lambert72` would fall apart long before `metres_geography`'s curved-earth answer
     did — which is the entire reason this project reaches for `geography`, never `ST_Transform`, for

@@ -14,9 +14,10 @@ words it uses to describe what to draw and how.
 
 !!! info "Where this code lives"
     This chapter walks the map's client code, which lives in `web/assets/map/`
-    as **one module per concern** (43 files at the time of writing). `map.js`
-    itself is only the import list, the `CC_*` payload hand-off and the boot
-    sequence, about 300 lines. When this chapter names a function, it names the
+    as **one module per concern**. `map.js` itself is only the import list, the
+    `CC_*` payload hand-off and the boot sequence. How many modules there are,
+    and how long `map.js` runs to, are on the [numbers page](../numbers.md),
+    which is generated from the directory rather than typed here. When this chapter names a function, it names the
     module that holds it, and it is worth knowing the shape before you go
     looking:
 
@@ -32,8 +33,10 @@ words it uses to describe what to draw and how.
     | `search-ui.js`, `places.js` | the search box, Photon calls, deep links |
     | `icons.js`, `mapillary.js`, `panels.js`, … | icon minting, street-level imagery, the rail chrome |
 
-    The map shell and its boot contract are in
-    `docs/specs/map-and-search.md`, §2.
+    That last row is an ellipsis rather than a list because the table names the modules this
+    chapter walks, not every file in the directory. For the complete set, read the directory: it is
+    one module per concern, and the count is on the [numbers page](../numbers.md). The map shell and
+    its boot contract are in `docs/specs/map-and-search.md`, §2.
 
 ## Style, source, layer
 
@@ -91,23 +94,8 @@ archive, fetched once, feeds every one of those icon and heatmap layers. Restyle
 them, change a colour, swap an icon, and nothing is re-fetched. The source does not change; only
 the instruction reading it does.
 
-<figure class="gis-fig gis-todo">
-<p class="gis-todo-h">Figure F15 · to be redrawn</p>
-<p><strong>Must make the reader see:</strong> that one MapLibre source (`coverage`, backed by one
-`.pmtiles` archive) feeds two different layers per catalogue letter and country, a `symbol` icon
-layer and a `heatmap` layer, never a cluster-bubble layer carrying a merged point count; and that
-restyling either layer never re-fetches the source, because both read the same already-loaded
-data.</p>
-<p><strong>Drawing brief:</strong> keep the four-tier vertical flow of the original figure, one
-tile archive (`coverage.pmtiles`) at the top, an arrow down into one source box (`source:
-"coverage"`), fanning out across a horizontal bar into three layer boxes standing side by side (for
-example `water icons` and `water heat`, both on source-layer `b_be`, plus `services icons` on
-`d_be`), each sending its own arrow down into one shared rendered-map panel. In that panel, replace
-the old cluster-bubble circle with a soft blurred patch (the heatmap) sitting under a scatter of
-small individual dot icons (the symbol layer), no bubble, no count label anywhere in the panel.
-Below that, keep the "inside one layer" detail panel opened off the icons layer box by a dashed
-leader, showing its `paint`/`layout` split (`icon-opacity` under paint, `visibility`/`icon-image`
-under layout) exactly as the original figure did, that part does not need to change.</p>
+<figure class="gis-fig">
+<svg viewBox="0 0 640 1010" role="img" aria-labelledby="f15-t f15-d" xmlns="http://www.w3.org/2000/svg"><title id="f15-t">One tile archive, one source, three layers, one rendered map</title><desc id="f15-d">A vertical flow in four tiers. At the top, one box labelled coverage dot pmtiles, the tile archive. An arrow down from it into a single box labelled source coverage, type vector. From that source a horizontal bar fans out into three layer boxes side by side: water icons on source layer b_be, water heat on the same source layer b_be, and services icons on source layer d_be. A dashed leader runs from the water icons box down into a detail panel headed inside one layer, split in two: paint, holding icon-opacity and icon-color, labelled how it looks; and layout, holding visibility and icon-image, labelled whether, and as what. Below that, each of the three layers sends an arrow into one shared panel labelled the rendered map. Inside it a soft blurred patch, the heat surface, sits underneath a scatter of small individual dots, the icons. There is no cluster bubble and no count label anywhere in it. A note records that the heat surface and the icons are separate layers over the same already-loaded source, so restyling either refetches nothing.</desc><defs><marker id="gis-arrow-f15" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="14" markerHeight="14" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="gis-fill-accent" d="M 0 0 L 10 5 L 0 10 Z"/></marker><radialGradient id="f15heat"><stop offset="0%" class="gis-fill-accent" stop-opacity="0.5"/><stop offset="60%" class="gis-fill-accent" stop-opacity="0.18"/><stop offset="100%" class="gis-fill-accent" stop-opacity="0"/></radialGradient></defs><text class="gis-label-sm" x="20" y="30">one archive</text><rect class="gis-box" rx="8" x="212" y="46" width="216" height="76"/><text class="gis-label-mono" x="320" y="89" text-anchor="middle">coverage.pmtiles</text><line class="gis-accent" x1="320" y1="122" x2="320" y2="160" marker-end="url(#gis-arrow-f15)"/><text class="gis-label-sm" x="20" y="196">one source</text><rect class="gis-box" rx="8" x="212" y="162" width="216" height="76"/><text class="gis-label-mono" x="320" y="190" text-anchor="middle">source: "coverage"</text><text class="gis-label-sm" x="320" y="220" text-anchor="middle">type: vector</text><path class="gis-accent" d="M 320 238 L 320 268 M 96 268 L 544 268"/><line class="gis-accent" x1="96" y1="268" x2="96" y2="300" marker-end="url(#gis-arrow-f15)"/><line class="gis-accent" x1="320" y1="268" x2="320" y2="300" marker-end="url(#gis-arrow-f15)"/><line class="gis-accent" x1="544" y1="268" x2="544" y2="300" marker-end="url(#gis-arrow-f15)"/><text class="gis-label-sm" x="20" y="336">three layers</text><rect class="gis-box" rx="8" x="20" y="302" width="152" height="110"/><text class="gis-label-mono" x="96" y="332" text-anchor="middle">water icons</text><text class="gis-label-sm" x="96" y="362" text-anchor="middle">type: symbol</text><text class="gis-label-sm" x="96" y="392" text-anchor="middle">source-layer b_be</text><rect class="gis-box" rx="8" x="244" y="302" width="152" height="110"/><text class="gis-label-mono" x="320" y="332" text-anchor="middle">water heat</text><text class="gis-label-sm" x="320" y="362" text-anchor="middle">type: heatmap</text><text class="gis-label-sm" x="320" y="392" text-anchor="middle">source-layer b_be</text><rect class="gis-box" rx="8" x="468" y="302" width="152" height="110"/><text class="gis-label-mono" x="544" y="332" text-anchor="middle">services icons</text><text class="gis-label-sm" x="544" y="362" text-anchor="middle">type: symbol</text><text class="gis-label-sm" x="544" y="392" text-anchor="middle">source-layer d_be</text><path class="gis-muted" stroke-dasharray="5 5" d="M 96 412 L 96 452"/><rect class="gis-box" rx="8" x="20" y="452" width="380" height="196"/><text class="gis-label-sm" x="40" y="486">inside one layer</text><line class="gis-muted" x1="20" y1="500" x2="400" y2="500"/><text class="gis-label-mono" x="44" y="536">paint</text><text class="gis-label-sm" x="150" y="536">icon-opacity</text><text class="gis-label-sm" x="150" y="566">icon-color</text><text class="gis-label-sm" x="44" y="596">how it looks</text><line class="gis-muted" x1="410" y1="500" x2="410" y2="640"/><text class="gis-label-mono" x="434" y="536">layout</text><text class="gis-label-sm" x="540" y="536">visibility</text><text class="gis-label-sm" x="540" y="566">icon-image</text><text class="gis-label-sm" x="434" y="596">whether, and as what</text><rect class="gis-box" rx="8" x="410" y="452" width="210" height="196"/><path class="gis-accent" d="M 96 648 L 96 684" marker-end="url(#gis-arrow-f15)"/><path class="gis-accent" d="M 320 412 L 320 436 L 630 436 L 630 668 L 320 668 L 320 684" marker-end="url(#gis-arrow-f15)"/><path class="gis-accent" d="M 544 412 L 544 424 L 618 424 L 618 676 L 544 676 L 544 684" marker-end="url(#gis-arrow-f15)"/><text class="gis-label-sm" x="20" y="720">one rendered map</text><rect class="gis-box" rx="8" x="20" y="686" width="600" height="300"/><line class="gis-muted" x1="20" y1="734" x2="620" y2="734"/><ellipse cx="250" cy="912" rx="170" ry="72" fill="url(#f15heat)"/><ellipse cx="430" cy="928" rx="120" ry="52" fill="url(#f15heat)"/><circle class="gis-ink gis-fill-ink" cx="502" cy="939" r="3"/><circle class="gis-ink gis-fill-ink" cx="140" cy="879" r="3"/><circle class="gis-ink gis-fill-ink" cx="375" cy="874" r="3"/><circle class="gis-ink gis-fill-ink" cx="215" cy="925" r="3"/><circle class="gis-ink gis-fill-ink" cx="485" cy="875" r="3"/><circle class="gis-ink gis-fill-ink" cx="116" cy="924" r="3"/><circle class="gis-ink gis-fill-ink" cx="557" cy="893" r="3"/><circle class="gis-ink gis-fill-ink" cx="88" cy="896" r="3"/><circle class="gis-ink gis-fill-ink" cx="353" cy="878" r="3"/><circle class="gis-ink gis-fill-ink" cx="275" cy="904" r="3"/><circle class="gis-ink gis-fill-ink" cx="269" cy="922" r="3"/><circle class="gis-ink gis-fill-ink" cx="545" cy="893" r="3"/><circle class="gis-ink gis-fill-ink" cx="427" cy="883" r="3"/><circle class="gis-ink gis-fill-ink" cx="531" cy="931" r="3"/><circle class="gis-ink gis-fill-ink" cx="405" cy="888" r="3"/><circle class="gis-ink gis-fill-ink" cx="245" cy="910" r="3"/><circle class="gis-ink gis-fill-ink" cx="100" cy="878" r="3"/><circle class="gis-ink gis-fill-ink" cx="127" cy="905" r="3"/><circle class="gis-ink gis-fill-ink" cx="273" cy="913" r="3"/><circle class="gis-ink gis-fill-ink" cx="253" cy="956" r="3"/><circle class="gis-ink gis-fill-ink" cx="409" cy="914" r="3"/><circle class="gis-ink gis-fill-ink" cx="363" cy="889" r="3"/><circle class="gis-ink gis-fill-ink" cx="378" cy="957" r="3"/><circle class="gis-ink gis-fill-ink" cx="493" cy="933" r="3"/><circle class="gis-ink gis-fill-ink" cx="394" cy="926" r="3"/><circle class="gis-ink gis-fill-ink" cx="209" cy="895" r="3"/><circle class="gis-ink gis-fill-ink" cx="265" cy="934" r="3"/><circle class="gis-ink gis-fill-ink" cx="418" cy="960" r="3"/><circle class="gis-ink gis-fill-ink" cx="399" cy="925" r="3"/><circle class="gis-ink gis-fill-ink" cx="292" cy="896" r="3"/><circle class="gis-ink gis-fill-ink" cx="544" cy="916" r="3"/><circle class="gis-ink gis-fill-ink" cx="441" cy="900" r="3"/><circle class="gis-ink gis-fill-ink" cx="447" cy="897" r="3"/><circle class="gis-ink gis-fill-ink" cx="140" cy="910" r="3"/><text class="gis-label-sm" x="40" y="766">no bubble, no count: the heat surface and the icons are</text><text class="gis-label-sm" x="40" y="796">separate layers over the same already-loaded source, so</text><text class="gis-label-sm" x="40" y="826">restyling either one refetches nothing</text></svg>
 <figcaption>One source, many layers, now an icon layer and a heatmap layer per catalogue letter and
 country, never a cluster bubble. Restyling either needs no refetch.</figcaption>
 </figure>
@@ -391,7 +379,7 @@ way to answer "what's here?" except by asking somewhere else.
     "
     ```
 
-    <!-- CODE-ILLUSTRATIVE sample output on a stack seeded by `make course-data`; the versioned tile key differs on every machine -->
+    <!-- CODE-ILLUSTRATIVE SAMPLE-FROM fresh-clone; sample output on a stack seeded by `make course-data`; the versioned tile key differs on every machine -->
     ```text
     CC_COVERAGE_URL = "http:\/\/localhost:9100\/cc-maps\/coverage\/20260723-1429.pmtiles";
      source_layer | count
@@ -423,3 +411,25 @@ way to answer "what's here?" except by asking somewhere else.
     joined by an underscore. If `CC_COVERAGE_URL` prints empty on your machine, no coverage archive
     has been published yet, the row count still works regardless, because it never depended on the
     tile archive existing.
+
+    One step further, and it closes the loop the other way. The query above *predicts* the layer
+    names from the rows. Ask the archive what it actually contains, and the two lists should agree:
+
+    <!-- CODE-ILLUSTRATIVE ask the published archive for its own layer list; needs a published archive -->
+    ```sh
+    docker compose -f developers/docker/compose.yaml exec pipeline \
+      pmtiles show --metadata http://minio:9000/cc-maps/coverage/<stamp>.pmtiles \
+      | python3 -c "import json,sys; m=json.load(sys.stdin); \
+        vl=m.get('vector_layers') or json.loads(m.get('json','{}')).get('vector_layers',[]); \
+        print(len(vl),'layers'); print(sorted(l['id'] for l in vl)[:6])"
+    ```
+
+    <!-- CODE-ILLUSTRATIVE SAMPLE-FROM author-install; sample output on a machine holding all nineteen countries, 2026-09-10 -->
+    ```text
+    152 layers
+    ['b_au', 'b_be', 'b_ca', 'b_ch', 'b_cl', 'b_co']
+    ```
+
+    That is the same naming scheme, read out of the finished file rather than derived from the
+    database, which is the strongest form the claim comes in: a `source-layer` string in your
+    MapLibre call is not a convention this chapter is asking you to trust, it is a key you can list.

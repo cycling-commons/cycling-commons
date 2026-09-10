@@ -40,22 +40,11 @@ seconds to under a second without changing what it returns.
 
 Start with the simplest idea in spatial indexing, because everything else is built on it.
 
-A **bounding box** is the smallest upright rectangle that completely contains a shape. "Upright"
-means its sides run parallel to the axes, it is never rotated to fit the shape more snugly. That
-makes it four numbers and nothing else: the smallest x, the smallest y, the largest x, the largest
-y. For a shape stored in EPSG:4326 (chapter 1, [`coordinates.md`](coordinates.md)) those are degrees
-of longitude and latitude, which is fine, because a box is only ever compared with other boxes
-measured the same way.
-
-Two things make bounding boxes useful.
-
-**They are cheap to compute.** One pass over the shape's coordinates, keeping four running minimums
-and maximums. A region outline with twelve thousand points still reduces to four numbers. And you
-only compute it once: the database stores it and reuses it.
-
-**They are cheap to compare.** Two boxes overlap if, and only if, they overlap on the x axis *and*
-they overlap on the y axis. That is four number comparisons. Compare that with asking whether a
-twelve-thousand-point outline actually contains a given point, which means walking the outline.
+A **bounding box** is the smallest upright rectangle that completely contains a shape: four numbers,
+the smallest and largest x and y, never rotated to fit the shape more snugly. It is cheap twice
+over. Cheap to compute, because a twelve-thousand-point outline reduces to four numbers in one pass
+and the database stores the result. And cheap to compare, because two boxes overlap only if they
+overlap on both axes, which is four comparisons against walking an outline.
 
 Now the part that matters, and that people get backwards:
 
@@ -433,6 +422,12 @@ exists in our database, but somebody mapped that fountain in OpenStreetMap, in a
 looks nothing like ours, and it had to get from there to here. Chapter 6
 ([`osm-to-database.md`](osm-to-database.md)) follows it the whole way.
 
+
+## Further reading
+
+- [PostgreSQL: using EXPLAIN](https://www.postgresql.org/docs/current/using-explain.html): how to read a plan, rather than how to memorise a good one.
+- [PostGIS spatial indexing](https://postgis.net/workshops/postgis-intro/indexing.html): GiST from the introduction that explains it best.
+
 ## Try it
 
 !!! tip "Hands-on: watch Seq Scan become an Index Scan"
@@ -452,7 +447,7 @@ looks nothing like ours, and it had to get from there to here. Chapter 6
                       ST_SetSRID(ST_Point(5.9300, 50.3950), 4326)::geography, 250);
     ```
 
-    <!-- CODE-ILLUSTRATIVE sample output at the time of writing, on an item table of about 5,000 rows, trimmed of Planning/Buffers detail -->
+    <!-- CODE-ILLUSTRATIVE SAMPLE-FROM author-install; sample output measured 2026-09-10, on an item table of about 5,000 rows, trimmed of Planning/Buffers detail -->
     ```text
      Aggregate (actual time=51.541..51.544 rows=1.00 loops=1)
        ->  Seq Scan on item (actual time=26.876..51.524 rows=3.00 loops=1)
@@ -476,7 +471,7 @@ looks nothing like ours, and it had to get from there to here. Chapter 6
     WHERE ST_Intersects(geom, (SELECT b FROM corridor));
     ```
 
-    <!-- CODE-ILLUSTRATIVE sample output on the same table, trimmed of Planning/Buffers detail -->
+    <!-- CODE-ILLUSTRATIVE SAMPLE-FROM author-install; sample output on the same table, trimmed of Planning/Buffers detail -->
     ```text
      Aggregate (actual time=3.555..3.582 rows=1.00 loops=1)
        CTE corridor
@@ -500,7 +495,7 @@ looks nothing like ours, and it had to get from there to here. Chapter 6
         the same way, riding `coverage_poi_geom_idx`. The naive form does not fall back to a
         sequential scan, and the reason is the functional index this chapter introduced:
 
-        <!-- CODE-ILLUSTRATIVE sample output at the time of writing, on a coverage_poi table of about two million rows, trimmed of Planning/Buffers detail -->
+        <!-- CODE-ILLUSTRATIVE SAMPLE-FROM author-install; sample output measured 2026-09-10, on a coverage_poi table of about two million rows, trimmed of Planning/Buffers detail -->
         ```text
          Aggregate (actual time=0.584..0.585 rows=1.00 loops=1)
            ->  Index Scan using coverage_poi_geog_idx on coverage_poi (actual time=0.225..0.581 rows=8.00 loops=1)

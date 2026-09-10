@@ -73,7 +73,7 @@ extra_css:
   # extra_css, so a browser holds the previous copy after an edit and shows a
   # stale sidebar or stale code styling — which reads as "the fix didn't work"
   # rather than "you have an old file". Bump this when extra.css changes.
-  - stylesheets/extra.css?v=21
+  - stylesheets/extra.css?v=23
 
 # Ordered to match the "Start here" list on the wiki home page.
 nav:
@@ -90,6 +90,7 @@ nav:
   - Country onboarding: country-onboarding.md
   - Building the Commons: building.md
   - For developers:
+      - Start here: developers/index.md
       - GIS in CC:
           - Start here: developers/gis/index.md
           - 1 · The Earth is awkward: developers/gis/coordinates.md
@@ -111,14 +112,19 @@ nav:
           - B5 · Elevation and terrain: developers/gis-beyond/elevation.md
           - B6 · Edge cases that bite: developers/gis-beyond/edge-cases.md
       - Data operations:
+          - Start here: developers/data-ops/index.md
           - Harvesting OSM coverage: developers/data-ops/harvesting.md
           - Onboarding a new country: developers/data-ops/onboarding-a-country.md
+          - Elevation, what a DEM gets wrong: developers/data-ops/elevation-dem-concepts.md
           - Building elevation tiles: developers/data-ops/elevation-tiles.md
+          - Measuring a climb: developers/data-ops/measuring-a-climb.md
           - Building road-surface tiles: developers/data-ops/surface-tiles.md
       - Public API:
           - Start here: developers/api/index.md
           - Serving map data: developers/api/serving-map-data.md
           - Worked example, a route planner: developers/api/worked-example-route-planner.md
+      - The numbers these courses quote: developers/numbers.md
+      - When an exercise does not work: developers/troubleshooting.md
 
 markdown_extensions:
   - admonition

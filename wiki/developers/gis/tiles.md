@@ -2,7 +2,8 @@
 
 # Tiles
 
-Germany alone contributes close to **400,000** rows to `coverage_poi` at the time of writing: bike
+Germany alone contributes close to **400,000** rows to `coverage_poi` (measured 2026-09-10; the
+[numbers page](../numbers.md) keeps the current figure): bike
 shops, water fountains, viewpoints, shelters, ruins, one country's worth of the fountain's
 neighbours. Nineteen countries together bring the table to around two million rows (chapter 5,
 [`making-it-fast.md`](making-it-fast.md)), and the planet-wide target for the same table is about 4.7
@@ -78,7 +79,7 @@ It mostly fills otherwise-empty tiles, or adds a few more features to already-sm
 
 **Tiles are identical for every user, so they cache perfectly.** A tile's contents depend only on its
 `z/x/y` address and the data behind it, not on who is asking, what they searched for, or what time
-it is. The exact same `6/32/21.pmtiles` bytes serve every rider who ever looks at that patch of
+it is. The exact same `6/32/21.pbf` bytes serve every rider who ever looks at that patch of
 Belgium, so a cache (a CDN edge, a browser's own disk cache, an intermediate proxy) only ever has to
 fetch and store it once and can then answer every later request itself. Contrast that with `/map/
 coverage/search?q=` (coverage-provider.md §5), which depends on `q` and is cached for a much shorter
@@ -98,7 +99,7 @@ hide one layer, or to know what a particular pixel represents? You cannot, you w
 completely different picture.
 
 A **vector tile** contains the *geometry* and its *properties* instead of a picture: "there is a point
-at this location, and its properties are `{ref: "node/61146471", t: "Drinking water"}`" rather than a
+at this location, and its properties are `{ref: "node/6863042080", t: "Drinking water"}`" rather than a
 pre-rendered dot. The format this project uses is **MVT**, Mapbox Vector Tile, a small, widely-adopted
 binary encoding for exactly this, and the browser decides how to draw it, at the moment it draws it.
 That single difference is what lets the client:
@@ -262,7 +263,9 @@ and nothing is ever merged.** A single point carries exactly one `ridtok`/`cctok
 region and country, so the scope filter (coverage-provider.md §4) is exact for that one point, at any
 zoom, in any country, with no cross-feature union to get wrong and no rendered position that is
 anything other than the point's own coordinate. There is no `point_count` property anywhere in the
-coverage tiles, and there is not meant to be one.
+coverage tiles, and there is not meant to be one. That is checkable rather than assertable, and this
+chapter's Try it checks it: `pmtiles show` lists every property a layer carries, and `point_count` is
+not among them.
 
 Not clustering does not make the original overview problem disappear: a rider still lands on a
 region at roughly z7-z9 (the scope selector's own fit zoom), and thousands of individual points still
@@ -322,32 +325,8 @@ The actual flags, all in `pipeline/coverage/tiles.py::build_pmtiles`:
   genuinely does not fit the budget, so this flag fires for real there and produces exactly the thinned
   density sample the heatmap is built from.
 
-<figure class="gis-fig gis-todo">
-<p class="gis-todo-h">Figure F14 · to be redrawn</p>
-<p><strong>Must make the reader see:</strong> that overview coverage is a smooth density surface built
-from a thinned sample of points, never discrete dots and never a count on a bubble; that it hands off
-to individual icons at z9, where those z9-10 icons are still drawn from the same thinned sample and
-only become the complete set of points at z11 and up; and that the heatmap and the icons are
-scope-filtered on the very same exact per-point tokens, so neither one can ever show anything outside
-the scoped region, there is no cluster, no centroid and no merged count left anywhere in the
-picture.</p>
-<p><strong>Drawing brief:</strong> three panels, stacked top to bottom (640 units is a large-type
-drawing at this width per the site convention, so stack rather than lay panels side by side). Top
-panel labelled <code>z6-8</code>: a soft, single-hue <code>gis-accent</code> blurred surface (a radial
-gradient or several overlapping soft-edged blobs, denser toward the middle) filling most of a region
-outline, with a visibly feathered edge that fades to nothing at the outline's border and nothing drawn
-outside it, no discrete dots, no numbers. Middle panel labelled <code>z9-10</code>: the same region,
-the heatmap fading (lower opacity) while a scattered, visibly sparse set of small
-<code>gis-ink</code> dots appears over it, concentrated where the heatmap was hottest, label this
-panel "thinned sample" so a reader does not mistake the sparseness for the true density. Bottom panel
-labelled <code>z11+</code>: the heatmap gone entirely, the same area now filled with a visibly denser,
-complete set of small dots (several times as many as the middle panel) covering the same hot area plus
-the quieter surrounding ground the middle panel's sample missed. Annotate the boundary between the top
-and middle panels "heat maxzoom 9 / icon minzoom 9, cross-fade" and annotate the boundary between the
-middle and bottom panels "thinned sample densifies to complete by z11". A thin <code>gis-muted</code>
-connector or bracket linking the sparse dots in the middle panel to their denser counterpart in the
-bottom panel would reinforce that it is the same underlying point set becoming visible, not new data
-appearing from nowhere.</p>
+<figure class="gis-fig">
+<svg viewBox="0 0 640 820" role="img" aria-labelledby="f14-t f14-d" xmlns="http://www.w3.org/2000/svg"><title id="f14-t">How coverage is drawn as the map zooms in: heat, then a thinned sample, then every point</title><desc id="f14-d">Three panels stacked top to bottom, each showing the same region outline. The top panel is labelled z6 to 8: a soft blurred density surface fills most of the outline, denser toward the middle and feathering to nothing at the border, with nothing drawn outside it. There are no dots and no numbers anywhere in it. The middle panel is labelled z9 to 10: the same heat surface is still there but much fainter, and a sparse scatter of small dots has appeared over it, concentrated where the heat was hottest. It is labelled thinned sample, so the sparseness is not mistaken for the real density. The bottom panel is labelled z11 and above: the heat surface is gone entirely and the same area now carries several times as many dots, covering the hot area and the quieter ground around it that the middle panel missed. Between the top and middle panels a note reads heat maxzoom 9, icon minzoom 9, cross-fade. Between the middle and bottom panels a note reads the thinned sample densifies to complete by z11. Three dashed connectors run from dots in the middle panel down to the same dots in the bottom panel, showing it is one point set becoming visible rather than new data appearing.</desc><defs><radialGradient id="f14heat"><stop offset="0%" class="gis-fill-accent" stop-opacity="0.55"/><stop offset="55%" class="gis-fill-accent" stop-opacity="0.22"/><stop offset="100%" class="gis-fill-accent" stop-opacity="0"/></radialGradient><clipPath id="f14clip"><path d="M 150 34 C 250 10, 400 18, 470 60 C 530 96, 540 150, 500 182 C 450 222, 300 232, 210 208 C 140 190, 108 140, 118 96 C 124 66, 132 44, 150 34 Z"/></clipPath></defs><g transform="translate(0,0)"><text class="gis-label-mono" x="20" y="28">z6-8</text><text class="gis-label-sm" x="20" y="58">density surface, no dots, no counts</text><path class="gis-muted" d="M 150 34 C 250 10, 400 18, 470 60 C 530 96, 540 150, 500 182 C 450 222, 300 232, 210 208 C 140 190, 108 140, 118 96 C 124 66, 132 44, 150 34 Z"/><g clip-path="url(#f14clip)"><ellipse cx="315" cy="120" rx="170" ry="86" fill="url(#f14heat)"/><ellipse cx="245" cy="100" rx="95" ry="58" fill="url(#f14heat)"/><ellipse cx="385" cy="145" rx="88" ry="52" fill="url(#f14heat)"/></g></g><text class="gis-label-sm" x="20" y="252">heat maxzoom 9 / icon minzoom 9, cross-fade</text><line class="gis-muted" x1="20" y1="262" x2="620" y2="262"/><g transform="translate(0,268)"><text class="gis-label-mono" x="20" y="28">z9-10</text><text class="gis-label-sm" x="20" y="58">same points, thinned sample</text><path class="gis-muted" d="M 150 34 C 250 10, 400 18, 470 60 C 530 96, 540 150, 500 182 C 450 222, 300 232, 210 208 C 140 190, 108 140, 118 96 C 124 66, 132 44, 150 34 Z"/><g opacity="0.34"><g clip-path="url(#f14clip)"><ellipse cx="315" cy="120" rx="170" ry="86" fill="url(#f14heat)"/><ellipse cx="245" cy="100" rx="95" ry="58" fill="url(#f14heat)"/><ellipse cx="385" cy="145" rx="88" ry="52" fill="url(#f14heat)"/></g></g><circle class="gis-ink gis-fill-ink" cx="496.2" cy="135.1" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="413.5" cy="186.2" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="335.3" cy="116.1" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="277.2" cy="46.6" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="256.3" cy="171.7" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="299.4" cy="172.1" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="420.4" cy="172.6" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="336.3" cy="150.0" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="442.9" cy="91.7" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="218.3" cy="117.3" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="351.4" cy="142.4" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="242.5" cy="188.2" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="385.9" cy="179.7" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="219.4" cy="120.2" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="225.9" cy="120.2" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="339.4" cy="126.4" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="409.1" cy="129.9" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="447.2" cy="100.9" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="331.5" cy="138.4" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="366.0" cy="62.9" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="351.3" cy="68.5" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="301.2" cy="81.5" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="146.9" cy="142.8" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="313.0" cy="145.2" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="340.7" cy="40.9" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="380.0" cy="70.7" r="3.2"/></g><text class="gis-label-sm" x="20" y="520">thinned sample densifies to complete by z11</text><line class="gis-muted" x1="20" y1="530" x2="620" y2="530"/><path class="gis-muted" stroke-dasharray="4 5" d="M 496.2 409.1 C 496.2 465.1, 496.2 575.1, 496.2 665.1"/><path class="gis-muted" stroke-dasharray="4 5" d="M 413.5 460.2 C 413.5 516.2, 413.5 626.2, 413.5 716.2"/><path class="gis-muted" stroke-dasharray="4 5" d="M 335.3 390.1 C 335.3 446.1, 335.3 556.1, 335.3 646.1"/><g transform="translate(0,536)"><text class="gis-label-mono" x="20" y="28">z11+</text><text class="gis-label-sm" x="20" y="58">every point in the tile</text><path class="gis-muted" d="M 150 34 C 250 10, 400 18, 470 60 C 530 96, 540 150, 500 182 C 450 222, 300 232, 210 208 C 140 190, 108 140, 118 96 C 124 66, 132 44, 150 34 Z"/><circle class="gis-ink gis-fill-ink" cx="496.2" cy="135.1" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="413.5" cy="186.2" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="335.3" cy="116.1" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="277.2" cy="46.6" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="256.3" cy="171.7" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="299.4" cy="172.1" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="420.4" cy="172.6" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="336.3" cy="150.0" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="442.9" cy="91.7" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="218.3" cy="117.3" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="351.4" cy="142.4" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="242.5" cy="188.2" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="385.9" cy="179.7" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="219.4" cy="120.2" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="225.9" cy="120.2" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="339.4" cy="126.4" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="409.1" cy="129.9" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="447.2" cy="100.9" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="331.5" cy="138.4" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="366.0" cy="62.9" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="351.3" cy="68.5" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="301.2" cy="81.5" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="146.9" cy="142.8" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="313.0" cy="145.2" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="340.7" cy="40.9" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="380.0" cy="70.7" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="260.1" cy="81.0" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="326.9" cy="42.3" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="270.0" cy="78.5" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="248.5" cy="56.8" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="187.8" cy="77.1" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="377.2" cy="189.4" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="341.3" cy="48.2" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="343.7" cy="114.0" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="157.4" cy="112.2" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="159.6" cy="141.3" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="446.0" cy="137.9" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="402.7" cy="165.9" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="478.1" cy="152.1" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="188.3" cy="63.4" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="339.8" cy="105.5" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="361.6" cy="143.4" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="205.6" cy="139.9" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="146.9" cy="105.5" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="299.2" cy="166.3" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="287.7" cy="55.4" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="199.1" cy="108.2" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="459.8" cy="162.0" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="318.3" cy="144.4" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="361.6" cy="50.3" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="437.6" cy="149.0" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="213.2" cy="62.0" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="371.2" cy="66.8" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="305.9" cy="147.9" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="449.0" cy="88.9" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="230.7" cy="196.4" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="492.2" cy="122.9" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="297.7" cy="215.0" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="285.4" cy="88.4" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="199.9" cy="191.0" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="269.6" cy="58.1" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="135.8" cy="138.5" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="449.7" cy="146.2" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="271.0" cy="92.7" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="286.5" cy="171.3" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="288.0" cy="186.2" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="410.0" cy="167.3" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="218.2" cy="104.0" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="329.5" cy="131.7" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="269.1" cy="44.6" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="372.6" cy="167.9" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="342.2" cy="94.7" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="191.8" cy="128.7" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="346.3" cy="56.0" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="412.1" cy="86.2" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="346.8" cy="146.2" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="380.8" cy="194.1" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="290.8" cy="62.8" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="259.3" cy="59.0" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="400.4" cy="141.5" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="197.9" cy="194.4" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="150.6" cy="101.9" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="298.4" cy="209.4" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="316.6" cy="208.8" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="207.0" cy="149.1" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="216.7" cy="126.2" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="343.0" cy="152.5" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="370.4" cy="148.5" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="329.9" cy="117.2" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="285.2" cy="63.1" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="211.4" cy="120.2" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="280.1" cy="183.9" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="392.2" cy="61.4" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="228.1" cy="189.3" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="314.8" cy="145.0" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="165.2" cy="156.6" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="410.6" cy="192.7" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="153.9" cy="92.1" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="273.5" cy="192.4" r="3.2"/><circle class="gis-ink gis-fill-ink" cx="138.2" cy="150.2" r="3.2"/></g></svg>
 <figcaption>Below z9 coverage reads as a density heatmap built from a thinned sample of points, never
 as a count or a cluster; from z9 the same sample starts appearing as individual icons, and by z11 every
 point in the tile is present. Nothing is ever merged and nothing is ever positioned anywhere but its
@@ -496,6 +475,13 @@ that. Chapter 8 (`on-screen.md`) is where it actually appears: MapLibre's model 
 and `source-layer`, and how a rider's click turns a pixel back into the same row this chapter started
 from.
 
+
+## Further reading
+
+- [The PMTiles specification](https://github.com/protomaps/PMTiles/blob/main/spec/v3/spec.md): the archive format, in about ten pages.
+- [tippecanoe](https://github.com/felt/tippecanoe): the tile cutter, and the manual for every flag this chapter quotes.
+- [Mapbox Vector Tile specification](https://github.com/mapbox/vector-tile-spec): what is actually inside one tile.
+
 ## Try it
 
 !!! tip "Hands-on: see the layer list before tippecanoe ever runs"
@@ -511,7 +497,7 @@ from.
     "
     ```
 
-    <!-- CODE-ILLUSTRATIVE sample output on a stack seeded by `make course-data` -->
+    <!-- CODE-ILLUSTRATIVE SAMPLE-FROM fresh-clone; sample output on a stack seeded by `make course-data` -->
     ```text
      letter | country_code | count
     --------+--------------+-------
@@ -524,6 +510,22 @@ from.
      Q      | ZZ           |     2
     (7 rows)
     ```
+
+    Then ask the finished archive what it actually contains, rather than trusting this chapter for
+    it. `pmtiles show` reads the header and metadata over HTTP, so it needs no download:
+
+    <!-- CODE-ILLUSTRATIVE shell command against the dev stack's tile archive; the URL comes from the manifest -->
+    ```sh
+    docker compose -f developers/docker/compose.yaml exec pipeline \
+      pmtiles show http://minio:9000/cc-maps/coverage/<stamp>.pmtiles
+    ```
+
+    That prints the zoom range and the exact `tippecanoe` invocation, both of which this chapter
+    quotes, so the flags above are checkable rather than asserted. To see the properties every
+    feature carries, add `--metadata` and read `vector_layers`. On the author's full nineteen-country
+    index that is 152 layers and nine distinct property names: `acc`, `cctok`, `food`, `kind`, `n`,
+    `potable`, `ref`, `ridtok`, `t`. **`point_count` is not one of them**, which is the no-clustering
+    decision above, visible in the artifact rather than promised in prose.
 
     Seven letters, seven groups, seven layers, `b_zz`, `d_zz`, `f_zz` and so on. `ZZ` is not a
     country: it is what `coalesce` substitutes when `country_code` is `NULL`, and the offline fixture
@@ -539,9 +541,9 @@ from.
         `make coverage-refresh` (chapter 5 covers what it costs: network, a Geofabrik download)
         loads real extracts, and the region boundaries stamp `country_code` for real. On a machine
         with the Benelux extracts loaded, the identical query restricted to those three countries
-        (`WHERE country_code IN ('BE', 'LU', 'NL')`) returns this at the time of writing:
+        (`WHERE country_code IN ('BE', 'LU', 'NL')`) returned this on 2026-09-10:
 
-        <!-- CODE-ILLUSTRATIVE sample output captured on a coverage index of about two million rows, restricted to three countries; the counts are that machine's, the 8 × 3 shape is not -->
+        <!-- CODE-ILLUSTRATIVE SAMPLE-FROM author-install; sample output captured on a coverage index of about two million rows, restricted to three countries; the counts are that machine's, the 8 × 3 shape is not -->
         ```text
          letter | country_code | count
         --------+--------------+-------

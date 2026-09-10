@@ -178,7 +178,7 @@ CREATE TABLE IF NOT EXISTS coverage_source (
 _TABLE_DDL = """
 CREATE TABLE IF NOT EXISTS coverage_poi (
     id            bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    ref           varchar(160) NOT NULL,  -- 'node/61146471' | 'way/…' = item.source_ref format
+    ref           varchar(160) NOT NULL,  -- 'node/6863042080' | 'way/…' = item.source_ref format
     letter        char(1)      NOT NULL,  -- B C D F G O P Q (osm-data-architecture.md §5)
     kind          varchar(16),            -- serviceKind for D (shop|station|pump), NULL otherwise
     name          varchar(255),           -- OSM name tag, NULL when unnamed
@@ -352,13 +352,16 @@ def load_region(
     src_region: str,
     country_code: str | None = None,
 ) -> LoadResult:
-    """Atomically replace one region's slice of coverage_poi.
+    """Atomically merge one region's slice of coverage_poi.
 
-    COPY into a same-shape TEMP staging table, drift-check against the previous
-    run, then in the same transaction: DELETE the src_region slice, INSERT the
-    staging rows, and backfill region_id via ST_Contains over region polygons
-    (coverage-provider.md §3 step 4). A DriftAbort (or any error) rolls
-    the whole swap back, keeping the last good slice.
+    COPY into a same-shape TEMP staging table, drop the staged rows this extract
+    does not own (nearest-region-wins), drift-check against the previous run,
+    then in the same transaction: UPSERT the staging rows on (ref, letter) with
+    an IS DISTINCT FROM guard so an unchanged row is never rewritten, DELETE the
+    rows that have vanished from this extract's own slice, and backfill
+    region_id via ST_Contains over region polygons (coverage-provider.md §3
+    step 4). A DriftAbort (or any error) rolls the whole merge back, keeping the
+    last good slice.
     """
     with conn.transaction():
         with conn.cursor() as cur:

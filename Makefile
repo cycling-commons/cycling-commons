@@ -20,7 +20,7 @@ export DEV_GID ?= $(shell id -g)
 
 # Misc
 .DEFAULT_GOAL = help
-.PHONY        : help up down check-env map-refs start restart build rebuild logs ps sh up-routing up-storage up-all git-status wallonia-data wallonia-export divisions-data tools-test app-install app-serve app-test app-rector app-create-admin app-create-curator test-db-reset pipeline-test coverage-refresh provider-fetch provider-harvest surface-tiles routes-tiles region-probe region-scaffold course-data
+.PHONY        : help up down check-env map-refs start restart build rebuild logs ps sh up-routing up-storage up-all git-status wallonia-data wallonia-export divisions-data tools-test app-install app-serve app-test app-rector app-create-admin app-create-curator test-db-reset pipeline-test coverage-refresh provider-fetch provider-harvest surface-tiles routes-tiles region-probe region-scaffold course-data coverage-regions
 
 help: ## Outputs this help screen
 	@grep -E '(^[a-zA-Z0-9\./_-]+:.*?##.*$$)|(^##)' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}{printf "\033[32m%-18s\033[0m %s\n", $$1, $$2}' | sed -e 's/\[32m##/[33m/'
@@ -59,13 +59,20 @@ setup: ## First-time dev setup: start the stack, install deps, migrate, seed wor
 # wiki/developers/gis-beyond/) therefore comes back empty on a fresh clone.
 # `course-data` fills that gap from data ALREADY COMMITTED to this repo, so it
 # needs no network and no Geofabrik download:
-#   1. app:catalog:seed-manual   — 24 hand-authored pins, letters B–J
+#   1. app:catalog:seed-manual: 30 hand-authored pins across letters
+#      B D E F G N O P Q (11 of them climbs, letter N).
 #   2. the committed atlas/demo fixtures (ODbL/CC-BY), exported as catalog
-#      import artifacts: 351 A surface segments, 289 C water points, 150 E
-#      stays, 11 routes, 6,602 heat points. The climbs layer is deliberately
+#      import artifacts: 351 A surface segments, 289 B water points, 150 O
+#      stays, 11 routes, 6,602 heat points. The climbs LAYER is deliberately
 #      NOT exported — it resolves Wikidata Q-ids over the network and is the
-#      one part of tools/wallonia/export.py that is not offline; the five
-#      manual B pins cover climbs for the course instead.
+#      one part of tools/wallonia/export.py that is not offline; the manual N
+#      pins carry climbs for the course instead.
+#      The import's duplicate guard holds out 84 of those surface segments,
+#      because the Namur fixtures repeat a geometry the guard already holds, so
+#      the three artifacts land 706 rows, not 790, and `item` ends at 736.
+#      Measured on an empty database, 2026-09-10:
+#        item 736 (A 267, B 294, D 4, E 1, F 1, G 4, N 11, O 151, P 2, Q 1)
+#        recommended_route 11, heat_point 6,602, region 0, coverage_poi 10
 #   3. the committed 847-byte OSM fixture, run through the real coverage batch
 #      (`coverage-refresh regions=dev/fixture`) — 10 coverage_poi rows.
 # Two honest gaps, both documented in the course itself:
@@ -77,16 +84,20 @@ setup: ## First-time dev setup: start the stack, install deps, migrate, seed wor
 #   * coverage_poi holds 10 rows, not a real country's ~375k. The chapter-5
 #     Seq Scan → Index Scan contrast still flips at that size, but the
 #     chapter-7 per-country layer table needs a real `make coverage-refresh`.
-# NB the coverage step republishes the MinIO tile manifest. On a machine that
-# already holds a real coverage index, re-run `make coverage-refresh` after
-# this to point the manifest back at it.
+# NB the coverage step republishes the MinIO tile manifest, and there is no way
+# to stop it: `--no-publish` covers the --surface/--routes arms only, so the
+# point arm publishes even when it is passed. On a machine that already holds a
+# real coverage index this leaves the local map serving 10 rows. Put it back
+# with `make coverage-tiles`, which rebuilds and publishes from the rows already
+# in PostGIS (about 5 minutes for two million). NOT `make coverage-refresh`,
+# which would re-harvest every region over the network.
 COURSE_DATA_DIR = web/var/course-data
 course-data: ## Seed the dataset the GIS course exercises query (offline; run once after `make setup`)
-	@echo "→ Seeding the hand-authored demo pins (letters B–J)…"
+	@echo "→ Seeding the hand-authored demo pins (30 pins, letters B D E F G N O P Q)…"
 	@$(DOCKER_COMP) exec -T app php bin/console app:catalog:seed-manual
 	@echo "→ Exporting the offline catalog artifacts from the committed atlas/demo fixtures…"
 	@mkdir -p $(COURSE_DATA_DIR)
-	@PYTHONPATH=tools python3 -c "import pathlib; from wallonia import export; export.OUT = pathlib.Path('$(COURSE_DATA_DIR)'); export.write('surface.json', {'layer': 'surface', 'letter': 'A', 'features': export.surface_features()}); export.write('water.json', {'layer': 'water', 'letter': 'C', 'features': export.water_features()}); export.write('stays-pivot.json', {'layer': 'stays-pivot', 'letter': 'E', 'features': export.pivot_features()}); export.write('routes.json', export.routes_payload()); export.write('heat.json', export.heat_payload())"
+	@PYTHONPATH=tools python3 -c "import pathlib; from wallonia import export; export.OUT = pathlib.Path('$(COURSE_DATA_DIR)'); export.write('surface.json', {'layer': 'surface', 'letter': 'A', 'features': export.surface_features()}); export.write('water.json', {'layer': 'water', 'letter': 'B', 'features': export.water_features()}); export.write('stays-pivot.json', {'layer': 'stays-pivot', 'letter': 'O', 'features': export.pivot_features()}); export.write('routes.json', export.routes_payload()); export.write('heat.json', export.heat_payload())"
 	@echo "→ Importing them into the catalog…"
 	@$(DOCKER_COMP) exec -T app php bin/console app:catalog:import $(patsubst web/%,%,$(COURSE_DATA_DIR))
 	@echo "→ Building coverage_poi from the committed OSM fixture (no network)…"
@@ -273,12 +284,26 @@ wiki-check: ## Verify the wiki builds strict and its code excerpts still match t
 	@.venv-wiki/bin/mkdocs build --strict
 	@tools/check-wiki-spdx.sh
 	@python3 tools/check-wiki-code-drift.py && echo "wiki: build strict OK, SPDX OK, code excerpts match source"
+	@python3 tools/check-course-data.py --quiet && echo "course-data: letters importable, geometry matches, counts measured"
+	@python3 tools/wiki-numbers.py
 
 ## —— 🧱 Coverage batch ————————————————————————————————————————————————————————
 # Whole chain against the dev DB + MinIO (see developers/coverage-batch.md).
 # Fixture run (no network): make coverage-refresh regions=dev/fixture pbf=tests/fixtures/mini.osm.pbf
 # (pbf paths are as seen INSIDE the pipeline container, workdir /app = pipeline/)
 # Bucket creds match the compose defaults; override MINIO_ROOT_USER/PASSWORD if you changed developers/docker/.env.
+# The committed list of onboarded Geofabrik extracts, read out of compose.yaml's
+# own default rather than out of your environment. That distinction is the whole
+# point: a local developers/docker/.env may pin COVERAGE_REGIONS to a single
+# country, and harvesting one country of a bordering set deletes the border rows
+# that country owns, with nothing re-creating them until its neighbour runs. A
+# rider watches a POI vanish for up to a week. So the runbooks say
+# `regions=$(make -s coverage-regions)` instead of pasting the list into three
+# pages that then drift apart.
+coverage-regions: ## Echo the committed COVERAGE_REGIONS default (the full onboarded set)
+	@grep -oE 'COVERAGE_REGIONS:\s*\$$\{COVERAGE_REGIONS:-[^}]+\}' developers/docker/compose.yaml \
+	  | sed -E 's/.*COVERAGE_REGIONS:-//; s/\}$$//'
+
 coverage-refresh: ## Refresh the coverage index + PMTiles (dev: Geofabrik → PostGIS → MinIO)
 	@$(DOCKER_COMP) --profile storage up --detach --wait minio
 	@$(DOCKER_COMP) run --rm \

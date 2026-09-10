@@ -2,6 +2,11 @@
 
 # Beyond this codebase
 
+!!! abstract "The short version"
+    Six short chapters, about seventy-five minutes in total, on the GIS this project does **not**
+    do and why. Same stack as course 1, so if you have run `make setup` and `make course-data` you
+    are ready. Read them in any order; each one stands alone.
+
 The [GIS course](../gis/index.md) has a promise attached to it: everything it teaches exists in this
 repository, and every line of code it quotes is checked against the source automatically. That
 promise is what makes it trustworthy, and it is also what it cannot cover.
@@ -31,33 +36,36 @@ verified quoting as course 1.
 
 ## The chapters
 
-1. [**Reprojection**](reprojection.md): why everything here stays in EPSG:4326, what `ST_Transform`
+1. [**Reprojection**](reprojection.md) · ~10 min: why everything here stays in EPSG:4326, what `ST_Transform`
    is for, and the day you will need it.
-2. [**Relations and complex shapes**](relations.md): the OSM primitive our pipeline skips, and what
+2. [**Relations and complex shapes**](relations.md) · ~10 min: the OSM primitive our pipeline skips, and what
    it costs us today.
-3. [**Geocoding, both directions**](geocoding.md): we search by name through one external
+3. [**Geocoding, both directions**](geocoding.md) · ~10 min: we search by name through one external
    geocoder, resolve points to regions only in our own PostGIS tables, and never ask an external
    service what a coordinate is called. That boundary is a design decision worth understanding.
-4. [**Routing**](routing.md): finding a way from A to B is graph search over a weighted network, not
+4. [**Routing**](routing.md) · ~10 min: finding a way from A to B is graph search over a weighted network, not
    a spatial query. The most commonly confused pair of ideas in this field.
-5. [**Elevation and terrain**](elevation.md): where ascent numbers come from, why two tools disagree
+5. [**Elevation and terrain**](elevation.md) · ~15 min: where ascent numbers come from, why two tools disagree
    about the same ride, and why that is not a bug.
-6. [**Edge cases that bite**](edge-cases.md): the antimeridian, the poles, ring winding, and the
+6. [**Edge cases that bite**](edge-cases.md) · ~20 min: the antimeridian, the poles, ring winding, and the
    other places round-Earth reality breaks flat-plane assumptions.
 
-Every chapter ends with a hands-on exercise you can run against the local Docker stack, the same as
-course 1.
+Every chapter ends with a hands-on exercise, the same as course 1, and most of them run against the
+local Docker stack and nothing else. Two are honest exceptions, each said so on its own page:
+chapter 3's needs the internet, because the geocoder it asks is not something this project hosts,
+and chapter 4's is a conceptual substitute, because there is no routing engine here to demonstrate.
+
+!!! tip "If an exercise does not work"
+    [When an exercise does not work](../troubleshooting.md) collects the failures that
+    actually happen: an empty result, a missing table, a map drawing nothing, a harvest
+    exiting non-zero, an elevation call answering plausibly-shaped zeros.
 
 ## Try it
 
 !!! tip "Hands-on: confirm the stack answers, and that PostGIS ships what this course talks about"
-    This course runs against the same dev stack course 1 does, seeded the same way. If you have not
-    brought one up yet: [`building.md`](../../building.md#run-it-locally) has the "run it locally"
-    instructions (`make setup`), the stack's own
-    [README](https://github.com/cycling-commons/cycling-commons/blob/main/developers/docker/README.md)
-    is the reference for ports and troubleshooting, and `make course-data` — offline, no download —
-    seeds the rows these exercises select. Course 1's
-    [chapter 0 box](../gis/index.md#try-it) walks through both in full.
+    This course runs against the same dev stack course 1 does, seeded the same way: `make setup`
+    then `make course-data`. Course 1's [own Try it box](../gis/index.md#try-it) sets both up and
+    proves they worked, and there is no reason to repeat it here.
 
     Before trusting a course that keeps saying "this function exists but we never call it," check
     both halves of that claim yourself: that the dev stack answers at all, and that `ST_Transform`
@@ -69,7 +77,7 @@ course 1.
     docker compose -f developers/docker/compose.yaml exec db psql -U cc -d cyclingcommons -c "SELECT 1;"
     ```
 
-    <!-- CODE-ILLUSTRATIVE sample output from the dev stack -->
+    <!-- CODE-ILLUSTRATIVE SAMPLE-FROM any-install; sample output from the dev stack -->
     ```text
      ?column?
     ----------
@@ -85,7 +93,7 @@ course 1.
     SELECT proname FROM pg_proc WHERE proname IN ('st_transform', 'st_segmentize') GROUP BY proname;
     ```
 
-    <!-- CODE-ILLUSTRATIVE sample output from the dev stack -->
+    <!-- CODE-ILLUSTRATIVE SAMPLE-FROM any-install; sample output from the dev stack -->
     ```text
         proname
     ---------------
@@ -104,7 +112,7 @@ course 1.
       ST_NPoints(ST_Segmentize(ST_MakeLine(ST_Point(5.69924,50.49222), ST_Point(5.87664,50.39359))::geography, 1000)::geometry) AS segments_every_1km;
     ```
 
-    <!-- CODE-ILLUSTRATIVE sample output; stable for these literal coordinates -->
+    <!-- CODE-ILLUSTRATIVE SAMPLE-FROM any-install; sample output; stable for these literal coordinates -->
     ```text
              transformed_lambert72          | segments_every_1km
     ---------------------------------------------+--------------------

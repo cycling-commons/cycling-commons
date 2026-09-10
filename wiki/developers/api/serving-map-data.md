@@ -37,6 +37,9 @@ it for an hour (the response allows exactly that).
 GET https://cyclingcommons.org/v1/map-config
 ```
 
+The response below is **abridged**: the real payload lists every onboarded country and every
+catalogue letter, not the three of each shown here. Read it for shape, not for contents.
+
 <!-- CODE-ILLUSTRATIVE example response, abridged; the country lists run through every onboarded country and the category list through all letters -->
 ```json
 {
@@ -103,6 +106,11 @@ Field by field:
   colour, glyph, kind (`point`, `line`, or `surface`), and `bestOf` (whether the Commons map's
   Best of view shows this category). Use it to colour markers, build a legend, and reproduce the
   view modes below. Labels are English in the proof of concept; localised labels are a v1 concern.
+  Two things the table does not say outright. The `glyph` is an emoji **fallback**, not the mark
+  the Commons map draws: that is a drawn SVG per type, and an app that ships the emoji will not look
+  like the Commons. And `kind` describes the category, not what `/v1/search` will hand you: that
+  endpoint serves point items only, so a `line` or `surface` category is reachable through the tile
+  archive and never through `search`.
 
 ## `GET /v1/search`: items by viewport
 
@@ -162,7 +170,10 @@ Filter on `grade` if one word is all you need. If you have to defend a decision,
 formula moves your map does not silently repaint. The receipt is a count and dates, never a person.
 
 The intended calling pattern is one all-letters request each time the map settles after a pan or
-zoom (debounced), from a sensible minimum zoom (the Commons uses 8 for its own item layers). Do not crawl a country through this endpoint; that is what the exports are for.
+zoom (debounced), from whatever minimum zoom suits your map. There is no zoom gate to copy from the
+Commons here: its own item layers are not fetched per viewport at all, so pick a floor from this
+endpoint's own limits instead, the 10-degree bbox cap and the `limit` ceiling below. Do not crawl a
+country through this endpoint; that is what the exports are for.
 
 **Errors** are JSON with conventional status codes:
 
@@ -202,6 +213,83 @@ The Commons map offers three views, and the config carries everything needed to 
 - **Cross-origin resource sharing (CORS) is open**: `Access-Control-Allow-Origin: *` on both
   endpoints and on tile reads. GET requests with no custom headers need no preflight, so a browser
   app calls the API with a plain `fetch`.
+
+## Try it
+
+!!! tip "Hands-on: the fountain this whole wiki follows, through the public API"
+    Course 1 tracks one Walloon drinking fountain from an OpenStreetMap node to a pixel. It is
+    reachable from out here too, which is the shortest proof that the API serves the same Commons
+    the map does. Ask for letter `B` over Stavelot:
+
+    <!-- CODE-ILLUSTRATIVE shell command against the dev stack's API -->
+    ```sh
+    curl -s 'http://localhost:8001/v1/search?bbox=5.90,50.35,6.10,50.55&letter=B&limit=3' \
+      | python3 -m json.tool
+    ```
+
+    <!-- CODE-ILLUSTRATIVE SAMPLE-FROM fresh-clone; sample output, first feature only; the id is assigned at seed time and differs per install -->
+    ```json
+    {
+        "type": "Feature",
+        "geometry": { "type": "Point", "coordinates": [5.93, 50.3957] },
+        "properties": {
+            "id": 11005,
+            "letter": "B",
+            "name": "Public fountain \u00b7 Stavelot",
+            "tier": "community",
+            "grade": "claimed",
+            "custody": "ours",
+            "confirmations": 0,
+            "last_confirmed": null,
+            "last_seen_upstream": null,
+            "verified_by": null
+        }
+    }
+    ```
+
+    That is the whole trust envelope on a real feature: seeded by hand, so nobody has stood in front
+    of it since, so `claimed` with an empty receipt. The grade is the summary; the four fields under
+    it are the raw facts that do not move when the formula does.
+
+    Now drop the `letter` and ask what the endpoint will actually return over the whole of Wallonia:
+
+    <!-- CODE-ILLUSTRATIVE shell command; prints the count and the distinct letters -->
+    ```sh
+    curl -s 'http://localhost:8001/v1/search?bbox=4.0,49.5,6.5,51.5&limit=500' \
+      | python3 -c "import json,sys; d=json.load(sys.stdin); \
+        print(len(d['features']), sorted({f['properties']['letter'] for f in d['features']}))"
+    ```
+
+    <!-- CODE-ILLUSTRATIVE SAMPLE-FROM author-install; sample output on a machine with a real harvest, 2026-09-10; the COUNT is that machine's, the LETTER SET is the lesson -->
+    ```text
+    479 ['B', 'D', 'E', 'F', 'G', 'N', 'O', 'P', 'Q']
+    ```
+
+    Nine letters, and the two that are missing are the point: **`A` and `R` never appear**, however
+    large the box. They are the surface and quality-rides categories, whose geometry is lines, and
+    `search` serves points. If your app needs those, it reads the tile archive.
+
+    Finally, meet two of the four errors, so your client handles them before a user does:
+
+    <!-- CODE-ILLUSTRATIVE shell commands that both fail on purpose -->
+    ```sh
+    curl -s 'http://localhost:8001/v1/search?bbox=0,0,20,20'
+    curl -s 'http://localhost:8001/v1/search?bbox=5.9,50.3,6.1,50.5&letter=Z'
+    ```
+
+    <!-- CODE-ILLUSTRATIVE SAMPLE-FROM any-install; sample output, both are HTTP 400 -->
+    ```json
+    {"error":"bbox_too_large","message":"bbox may span at most 10x10 degrees"}
+    {"error":"invalid_letter","message":"letter must be one catalogue letter (see /v1/map-config categories: practical A-M, experiential N-Z), or absent for all"}
+    ```
+
+    Both carry a machine-readable `error` beside the sentence, which is what you branch on. The
+    fifth response worth rehearsing is the `429`: it carries `Retry-After` in seconds, and honouring
+    it is the difference between a well-behaved client and one that gets noticed.
+
+    The behaviour above is pinned by `web/tests/Api/PublicApiV1Test.php`, and the
+    trust envelope specifically by `web/tests/Api/PublicItemsTrustEnvelopeTest.php`, so if an exercise here stops
+    matching, one of those tests is the place the change was supposed to be recorded.
 
 ## The privacy boundary
 

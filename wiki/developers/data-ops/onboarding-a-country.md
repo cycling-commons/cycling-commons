@@ -25,8 +25,8 @@ One sequence for every country. ⚑ marks a human judgment call.
 | 4 | **Export** | `make divisions-data c="XX"` queries Overture and writes one `region-<slug>.geojson` per subdivision **plus** one for the level-2 country outline, in the same run. |
 | 5 | **Seed** | Stage the artifacts, the country outline included, and import them as `Region` rows. |
 | 6 | **Coverage** | Add the Geofabrik region to the harvest, then run it. |
-| 6b | **Elevation** | Check the country's box already has DEM tiles; install them if not. |
-| 6c | **The other tile sets** | Coverage is not the only per-country artifact: build the road-surface and cycle-route tiles too. |
+| 6b | **The other tile sets** | Coverage is not the only per-country artifact: build the road-surface and cycle-route tiles too. Same extracts as step 6, so they follow it directly. |
+| 6c | **Elevation** | Check the country's box already has DEM tiles; install them if not. Runs on the routing host, not this one, which is why it comes last. |
 | 7 | ⚑ **Moderators** | Assign region atoms to moderators. |
 | 8 | **Specs** | Record the rollout. |
 
@@ -58,6 +58,21 @@ exporter keys it on the ISO 3166-1 code. The config block that produced it:
 
 A normal country instead uses `"subtype": "region"` with an ISO-3166-2 → slug map (one entry per
 subdivision), exactly like Belgium's three regions or Germany's sixteen.
+
+## Step 2: scaffold, which emits and never applies
+
+<!-- CODE-ILLUSTRATIVE step 2, emit the config block and label stubs for review -->
+```bash
+make region-scaffold c="NL"            # add flags="--probe-areas" to include measured areas
+```
+
+One property is worth stating plainly, because it is what makes the next step safe: the scaffolder
+**emits, never applies**. It prints a config block and a set of label stubs to standard output and
+writes nothing anywhere. Nothing is committed, no row is created, and running it twice costs
+nothing. That is deliberate, because everything it emits is about to be reviewed by a person, and
+the things step 3 asks you to freeze are permanent.
+
+`tools/divisions/README.md` is the full reference for the emitted shape and every flag.
 
 ## Step 3: what you must freeze by hand
 
@@ -96,7 +111,7 @@ make divisions-data c="NL"                      # -> tools/divisions/out/region-
 mkdir -p web/var/catalog-nl
 cp tools/divisions/out/region-<each-new-slug>.geojson web/var/catalog-nl/   # the subdivisions
 cp tools/divisions/out/region-netherlands.geojson web/var/catalog-nl/       # the L2 country outline
-docker exec cycling-commons-dev-app-1 php -d memory_limit=2G \
+docker compose -f developers/docker/compose.yaml exec -T app php -d memory_limit=2G \
   bin/console app:catalog:import /app/var/catalog-nl
 ```
 
@@ -175,13 +190,7 @@ Then run the harvest with the new country folded into the full list (never one c
 
 <!-- CODE-ILLUSTRATIVE harvest including the new country: every onboarded region (the COVERAGE_REGIONS default in developers/docker/compose.yaml) plus the new extract -->
 ```bash
-REGIONS=europe/belgium,europe/netherlands,europe/germany,europe/luxembourg,europe/france,\
-europe/switzerland,europe/great-britain,europe/ireland-and-northern-ireland,europe/italy,\
-europe/spain,europe/slovenia,africa/rwanda,africa/south-africa,south-america/colombia,\
-south-america/chile,australia-oceania/australia,australia-oceania/new-zealand,asia/japan,\
-north-america/us/california,north-america/us/colorado,north-america/canada/british-columbia,\
-north-america/canada/quebec
-make coverage-refresh regions=$REGIONS,<new-region>
+make coverage-refresh regions=$(make -s coverage-regions),<new-region>
 ```
 
 Then add the new extract to the `COVERAGE_REGIONS` default in `developers/docker/compose.yaml`, or
@@ -191,15 +200,15 @@ Once it completes, the new country's regions appear in the scope selector automa
 region registry is served straight from the `region` table, and its POIs render from the rebuilt
 tiles.
 
-## Step 6c: the other tile sets
+## Step 6b: the other tile sets
 
 Step 6 builds the POI coverage tiles. **Two more tile sets are built per country**, from
 the same Geofabrik extract and taking the same `regions=` list:
 
 <!-- CODE-ILLUSTRATIVE the two builds a new country also needs, over every onboarded region -->
 ```bash
-make routes-tiles  regions=$REGIONS,<new-region>   # cycle-route network + junction numbers, first
-make surface-tiles regions=$REGIONS,<new-region>   # road surface: classified, to-do, gap grid, second
+make routes-tiles  regions=$(make -s coverage-regions),<new-region>   # cycle-route network + junction numbers, first
+make surface-tiles regions=$(make -s coverage-regions),<new-region>   # road surface: classified, to-do, gap grid, second
 ```
 
 Routes first: the routes run writes the per-region way-id sets the surface build reads to make its
@@ -221,7 +230,7 @@ missing one reads as a bug in the layer rather than as work nobody did.
 Both manifests publish a `country_codes` list, so whether a country is covered is a
 question with a factual answer rather than an assumption. Check it before and after.
 
-## Step 6b: elevation
+## Step 6c: elevation
 
 Coverage fills the country with points. **Elevation is what lets a climb in it have a gradient
 profile**, and it is a separate dataset on a separate host, so it is a separate step.
@@ -265,48 +274,100 @@ curl -sG --data-urlencode 'json={"shape":[
 # all zero, or all null    -> not covered, whatever the client thinks
 ```
 
-If it comes back `null`, run the installer **on the Valhalla host**:
+If it comes back `null` or all zeros, the country needs a DEM install, and that procedure is not
+repeated here: [Building elevation tiles](elevation-tiles.md) owns it, steps 4 and 5, along with the
+reasons behind each one. In outline it is `dem-install.sh <continent> <COUNTRY>` on the routing
+host, then a restart of that continent's instance, then the same spread again from outside. Three
+details from that page are worth knowing before you start, because each one has caught somebody:
 
-<!-- CODE-ILLUSTRATIVE the installer, run on the routing host -->
-```bash
-tools/elevation/dem-install.sh africa RWANDA SOUTHAFRICA
-```
-
-It fetches the Copernicus GLO-30 GeoTIFFs, converts them to the `.hgt` format Valhalla's elevation
-service reads, and moves the result into that instance's `elevation_data`. All three stages resume,
-so an interrupted run picks up where it stopped.
-
-**Then restart that continent's instance, or nothing changes.** Valhalla builds its elevation index
-at startup, so a running instance answers `null` for a tile sitting readable in its own mount. Restart
-only the continent you touched: `docker restart valhalla-<continent>`.
+- **The restart is unavoidable**, and it is a real outage for that continent. Valhalla builds its
+  elevation index at startup, so a running instance answers `null` for a tile sitting readable in
+  its own mount.
+- **The whole continent is converted at once**, never per country. Tiles overlap by one row and one
+  column, so a tile cut in isolation gets nodata along two edges.
+- **The conversion runs in a container**, because the routing host has no GDAL on purpose.
 
 !!! tip "If restarting one continent means restarting all six, fix the unit"
-    That instruction is a workaround for a service definition that runs every
-    continent from a single unit. It is worth removing rather than working
-    around: a systemd **template** unit (`valhalla@europe`, `valhalla@asia`,
-    one instance per continent, with port and memory in
-    `/etc/valhalla/<continent>.env`) makes each independent, so an elevation
-    install *or* a tile rebuild costs one continent's downtime instead of the
-    whole box.
-
-    Measured on a six-continent host running template units: **101 s** for a cold
-    start of all six (about 100 GB of tiles, 22,611 elevation tiles), and one
+    That is a workaround for a service definition that runs every continent from a single unit,
+    and it is worth removing rather than working around: a systemd **template** unit
+    (`valhalla@europe`, `valhalla@asia`, one per continent) makes each independent. Measured on a
+    six-continent host running template units: **101 s** for a cold start of all six, and one
     continent could be stopped and started with the other five still answering.
-
-Two details worth knowing rather than rediscovering:
-
-- **The conversion runs in a container.** The routing host has no GDAL on purpose (it is a routing
-  box, not a GIS box), so `osgeo/gdal` supplies the tools for the length of the job and leaves
-  nothing behind. It is CPU-capped, because that host is serving live routing while the conversion
-  runs.
-- **The whole continent is converted at once**, never per country. `.hgt` tiles overlap by one row
-  and one column, so a tile cut in isolation gets nodata along its north and east edges. Cutting
-  every tile from one mosaic of the continent's GeoTIFFs is what gives those edges real values.
 
 !!! warning "Tiles the app never asks for are the same as no tiles"
     The instance must also be named in `ELEVATION_URLS`, or the box falls through to the default and
     the tiles you just installed are never queried. An instance can exist, hold no tiles, *and* be
     unlisted all at once: three ways of being absent, each of them silent.
+
+## Step 7: moderators
+
+Region rows exist; nobody is looking after them. Moderator scope in this project is assigned per
+region atom rather than per country, so a new country's regions start unassigned and its
+submissions queue with no one scoped to see them. Assigning them is a judgement call about people
+rather than a command, which is why it carries the ⚑ in the playbook, and it happens in the curator
+desk rather than here. `docs/specs/moderation-and-contribution.md` is the contract.
+
+Until somebody is scoped, the country is live on the map and invisible in moderation, which is the
+wrong half to leave running.
+
+## Step 8: record the rollout
+
+The last step is writing down what you just decided, because the decisions in steps 1 and 3 are the
+ones a future onboarder will otherwise have to re-derive: which administrative level you chose and
+why, any slug that had to be disambiguated, any exonym that needed a locale-specific fix, and
+anything about the country that did not fit the playbook. Luxembourg's single-region treatment is
+in the specs for exactly this reason, and it is the reason the next micro-state is an hour's work
+rather than a day's.
+
+`tools/divisions/README.md` carries the per-country rollout notes.
+
+## Try it
+
+!!! tip "Hands-on: confirm a country is really onboarded, in two questions"
+    A country is onboarded when its region rows exist and the elevation host answers for its ground.
+    Those are two different machines and two different failure modes, so check them separately. The
+    Netherlands is used here because it is already seeded on any stack that has run the rollout;
+    swap the code for the country you just added.
+
+    First, the rows. One level-2 row for the country outline, and one level-4 row per subdivision:
+
+    <!-- CODE-ILLUSTRATIVE verify the region seeded -->
+    ```sql
+    SELECT slug, country_code, round(area_km2::numeric) AS area_km2, admin_level
+    FROM region WHERE country_code = 'NL' ORDER BY admin_level, slug;
+    ```
+
+    <!-- CODE-ILLUSTRATIVE SAMPLE-FROM author-install; sample output, first five of thirteen rows, 2026-09-10 -->
+    ```text
+        slug     | country_code | area_km2 | admin_level
+    -------------+--------------+----------+-------------
+     netherlands | NL           |    37746 |           2
+     drenthe     | NL           |     2680 |           4
+     flevoland   | NL           |     2413 |           4
+     friesland   | NL           |     3995 |           4
+     gelderland  | NL           |     5137 |           4
+    ```
+
+    Read the `admin_level` column, not the count. Exactly one row must be level 2: that is the
+    country outline every scoped query falls back to, and a country with two of them, or none, is
+    the failure this step exists to catch. The areas are a second, cheaper check: a subdivision
+    coming back at a few square kilometres usually means an outline that failed to close.
+
+    Second, the ground. Ask the elevation instance for a point whose height you already know, and
+    read the answer sceptically:
+
+    <!-- CODE-ILLUSTRATIVE ask the elevation host for one known summit; Signal de Botrange is about 694 m -->
+    ```bash
+    curl -s -X POST "$ELEVATION_URL/height" -H 'Content-Type: application/json' \
+      -d '{"range":false,"shape":[{"lat":50.5010,"lon":6.0940}]}'
+    ```
+
+    A plausible height means tiles are installed and the box is wired. **A `0` is the answer to
+    fear**, and it is why this check names a summit rather than a random point: the endpoint does
+    not error when a tile is missing, it answers zero, and zero is a number that flows all the way
+    through to a published climb reading flat. If you get one, work back through the three silent
+    absences the warning above lists: no tiles, no restart, or the instance not named in
+    `ELEVATION_URLS`.
 
 ## Where to go deeper
 

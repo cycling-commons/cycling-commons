@@ -151,8 +151,15 @@ intersected length per surface, and group by `attributes->>'surface'`.
  WHERE i.letter = 'A'
 ```
 
-One filter matters as much as the buffer itself: rows tagged `Surface unverified` are excluded
-from that query outright, and from everything the rest of this chapter describes. A segment
+One filter matters as much as the buffer itself, and it is one line of the same query:
+
+<!-- CODE-FROM web/src/Catalog/SurfaceProfiler.php -->
+```sql
+               AND i.attributes->>\'surface\' <> \'Surface unverified\'
+```
+
+Rows whose stored surface is that exact string are excluded
+from the query outright, and from everything the rest of this chapter describes. A segment
 someone mapped without recording a usable surface says nothing about what is actually underfoot,
 so it is dropped before it can shift the total either way, a segment that says nothing should not
 get a vote.
@@ -230,25 +237,17 @@ Everything above is about a route that already exists. "Find me a route from A t
 different kind of problem entirely: not a spatial query over stored geometry, but **graph search**
 over a network of road segments with a cost attached to each one (distance, surface, steepness),
 looking for the cheapest path through it. This project does not implement that search itself. It
-asks **Valhalla**, an open-source routing engine the project runs on its own tiles, from two places
-in `web/src/Elevation/`:
+asks **Valhalla**, an open-source routing engine the project runs on its own tiles, from two narrow
+places in `web/src/Elevation/`: one that snaps two clicked points onto the road between them while
+somebody draws a climb, and one that reads ground height under a line for a climb profile.
 
-- `RouteSnapper::snap()` POSTs two points to Valhalla's `/route` endpoint with `costing: bicycle`
-  and gets back the road line between them, decoded from Valhalla's polyline into `[lng, lat]`
-  pairs. The climb editor calls it through `POST /contribute/route` (`RouteController`) so a curator
-  drawing a climb gets the road, not a straight line between two clicks.
-- `ElevationClient::heights()` POSTs a list of points to `/height` and reads ground elevation back,
-  for the climb profiles (`ClimbProfiler`, `POST /contribute/elevation`).
-
-Both answer `null` when `VALHALLA_URL` is unset or the engine is unreachable, never a guess. In the
-dev stack Valhalla is the opt-in `routing` Docker Compose profile (`profiles: ["routing"]`, the
-`valhalla` service in `developers/docker/compose.yaml`), started against a downloaded tile set.
+Both answer `null` rather than a guess when the engine is unreachable. Neither is a route planner.
 
 !!! note "Not in the Commons, yet"
     A rider-facing route planner, "find me a route from A to B" with turn-by-turn directions, is not
-    built. What the application asks Valhalla for is the road between two nearby points and the
-    height of the ground under a line; the graph search happens inside Valhalla, and the product
-    exposes no planner on top of it.
+    built. Course 2's [routing chapter](../gis-beyond/routing.md) is the full account: why graph
+    search is not a spatial query, exactly what the one existing call does and does not do, and what
+    a real planner would take. It is not repeated here.
 
 <!-- UNANCHORED id=U91 type=absent concept="turn-by-turn route computation (A to B) via a routing engine" -->
 
@@ -273,6 +272,11 @@ dev stack Valhalla is the opt-in `routing` Docker Compose profile (`profiles: ["
   snapping a climb's two ends to the road and for reading elevation, never something it builds
   itself. A rider-facing A-to-B planner is not built.
 
+
+## Further reading
+
+- [The GPX 1.1 schema](https://www.topografix.com/GPX/1/1/): the format a rider's upload arrives in.
+
 ## Try it
 
 !!! tip "Hands-on: recompute a stored route's own length"
@@ -289,7 +293,7 @@ dev stack Valhalla is the opt-in `routing` Docker Compose profile (`profiles: ["
     "
     ```
 
-    <!-- CODE-ILLUSTRATIVE sample output at the time of writing; the exact numbers differ per install, the size of the gap does not -->
+    <!-- CODE-ILLUSTRATIVE SAMPLE-FROM author-install; sample output measured 2026-09-10; the exact numbers differ per install, the size of the gap does not -->
     ```text
            name       | distance_m | measured_m | diff_m
     ------------------+------------+------------+--------

@@ -2,9 +2,13 @@
 
 # Relations and complex shapes
 
-**Kind: we do not do it yet.** This is a genuine, named, documented gap. The coverage pipeline reads
-two of OpenStreetMap's three primitives — nodes and ways — and has no code path for the third,
-relations, at all. `docs/specs/coverage-provider.md` calls closing it an approved fast-follow, with
+**Kind: we do not do it yet.** This is a genuine, named, documented gap. The **coverage** pipeline,
+the one that fills `coverage_poi` and everything chapter 6 of course 1 describes, reads two of
+OpenStreetMap's three primitives — nodes and ways — and has no code path for the third, relations,
+at all. Scope that sentence to the coverage pipeline and keep it there: a reader who greps
+`def relation` across the repository will find one, in `pipeline/coverage/routes.py`, which reads
+route relations for the routes tileset. Two pipelines, two answers, and only one of them is this
+chapter's subject. `docs/specs/coverage-provider.md` calls closing it an approved fast-follow, with
 no schedule attached. This chapter is what that gap actually costs, in concrete terms, and roughly
 how big it is.
 
@@ -138,11 +142,11 @@ first place — not against every relation OSM contains, the overwhelming majori
 routes, hiking routes, administrative boundaries) were never going to match a drinking-fountain or
 bike-shop selector regardless of how this pipeline handled relations.
 
-Set against the same document's own corrected planet-wide target — roughly 4.7 million
-`coverage_poi` rows once every configured region is onboarded — a rough, order-of-magnitude read of
-that percentage puts the *currently invisible* count somewhere in the tens of thousands to
-low-hundred-thousands of real-world objects, planet-wide, once every region this project plans to
-cover is actually loaded. That is a genuinely small slice of the whole — well under 3% by
+Set that percentage against the same document's own corrected planet-wide target, roughly 4.7
+million `coverage_poi` rows once every configured region is onboarded, and the arithmetic is worth
+doing rather than gesturing at: 1% of 4.7 million is 47,000 and 3% is 141,000. So the *currently
+invisible* count is somewhere between roughly forty-seven and a hundred and forty thousand
+real-world objects, planet-wide, once every region this project plans to cover is actually loaded. That is a genuinely small slice of the whole — well under 3% by
 construction — but it is not zero, and "some castles," the document's own example, undersells it
 slightly: any feature a mapper chose to represent as an area with a hole, or as more than one
 disconnected outer ring, falls in the same gap, not only historic buildings.
@@ -185,6 +189,12 @@ Nothing in the public record commits this project to either path, or to a date. 
 as an accepted gap, not a hidden one — which is the entire point of flagging it here rather than
 letting a new contributor discover it by noticing a castle is missing and wondering why.
 
+
+## Further reading
+
+- [OSM relations](https://wiki.openstreetmap.org/wiki/Relation): the primitive this pipeline skips, from the project that defines it.
+- [pyosmium](https://osmcode.org/pyosmium/): the reader the pipeline uses, and its area-assembly documentation.
+
 ## Try it
 
 !!! tip "Hands-on: verify the gap yourself, on whatever coverage you have loaded"
@@ -203,7 +213,7 @@ letting a new contributor discover it by noticing a castle is missing and wonder
     GROUP BY 1 ORDER BY 2 DESC;
     ```
 
-    <!-- CODE-ILLUSTRATIVE sample output on a stack seeded by `make course-data`; the counts are that seed's, the two-row shape is not -->
+    <!-- CODE-ILLUSTRATIVE SAMPLE-FROM fresh-clone; sample output on a stack seeded by `make course-data`; the counts are that seed's, the two-row shape is not -->
     ```text
      ref_kind | count
     ----------+-------
@@ -214,7 +224,7 @@ letting a new contributor discover it by noticing a castle is missing and wonder
 
     Two kinds, `node` and `way`, and nothing else. Ten rows here, because `make course-data` builds
     coverage from a small committed OSM fixture so the course runs offline; on a machine that has
-    harvested every onboarded country the same query returns, at the time of writing, roughly 1.6
+    harvested every onboarded country the same query returned, on 2026-09-10, roughly 1.6
     million `node` rows and 440,000 `way` rows across 19 countries, still exactly two kinds. **That
     the list has two entries is the finding; how long each one is is not.** Confirm the third primitive is
     genuinely absent, not merely rare enough to round to zero in a table of whatever size yours is:
@@ -224,7 +234,7 @@ letting a new contributor discover it by noticing a castle is missing and wonder
     SELECT count(*) FROM coverage_poi WHERE ref LIKE 'relation/%';
     ```
 
-    <!-- CODE-ILLUSTRATIVE sample output; zero on any install, at any coverage size -->
+    <!-- CODE-ILLUSTRATIVE SAMPLE-FROM any-install; sample output; zero on any install, at any coverage size -->
     ```text
      count
     -------
@@ -241,7 +251,7 @@ letting a new contributor discover it by noticing a castle is missing and wonder
     SELECT DISTINCT GeometryType(geom) FROM coverage_poi;
     ```
 
-    <!-- CODE-ILLUSTRATIVE sample output; one row on any install, because the column's own type forbids a second -->
+    <!-- CODE-ILLUSTRATIVE SAMPLE-FROM any-install; sample output; one row on any install, because the column's own type forbids a second -->
     ```text
      geometrytype
     --------------

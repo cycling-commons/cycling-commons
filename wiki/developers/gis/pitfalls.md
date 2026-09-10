@@ -22,9 +22,9 @@ genuinely happened somewhere in this codebase's history. Nothing here is invente
 | **A `::geography` cast that silently disables the index** | A query that reads correctly and returns the right answer takes tens of seconds instead of under one; the design note that shipped `RideCheckService`'s rewrite records a real 62-second run (`docs/specs/Dated/2026-07-14-town-search-and-ride-check-design.md`) | The application tables' GiST indexes are built on the bare `geom` column. Casting *that* column to `::geography` compares a value the index knows nothing about, so PostgreSQL falls back to reading and measuring every row, the cost is not the ellipsoid maths, it is that every row now pays for it | Move the cast off the indexed side. Build the corridor once (cast the *other* side to geography, buffer, cast back), then compare the bare column against that one precomputed shape with `ST_Intersects`, the actual rewrite this project shipped. See [`making-it-fast.md`](making-it-fast.md) |
 | **A missing GiST index on a new geometry column** | `EXPLAIN` shows `Seq Scan` on a spatial table; fine and invisible on a seeded development database, ruinous once the table holds real volume | Geometry has no natural order, so an ordinary B-tree index cannot help at all, PostGIS needs `USING GIST (geom)` specifically, and a new geometry column does not get one automatically | Add `CREATE INDEX … USING GIST (geom)` in the same migration that adds the column, the way every searched geometry column in this project already has one. `users.base_point` is the one deliberate exception, nothing ever searches *by* it, so it has no index on purpose, not by omission. See [`making-it-fast.md`](making-it-fast.md) |
 | **An inlined CTE re-parsing geometry per row** | Correct results, still slow, and the query's text gives no hint why, the difference between a fast and a slow version of the same query is a single word | PostgreSQL may inline a `WITH name AS (…)` block instead of computing it once, so an expression like `ST_GeomFromGeoJSON(:geom)` referenced several times gets recomputed, reparsed from a JSON string, at every one of those places, once per row wherever the reference sits inside a `SELECT` list | Write `MATERIALIZED` to force the CTE to compute once and be reused. `RideCheckService::corridorGroups()`'s own comment: "MATERIALIZED is load-bearing: an inlined track CTE re-parses GeoJSON per ST_*; ST_Intersects can use the GIST index." See [`making-it-fast.md`](making-it-fast.md) |
-| **Polygon ring winding order** | PostGIS reads a polygon fine either way; hand the same coordinates to some other renderer or GIS library and a hole gets drawn as a fill, or the reverse | The direction a ring is walked, clockwise or counter-clockwise, is called its winding, and some tools use it as the only signal for "this ring is a hole, not a fill." PostGIS itself is forgiving about it | Be deliberate about winding whenever geometry from this project is handed to a tool that is not PostGIS. Nothing in this codebase currently depends on getting it right, which is exactly why it is easy to forget the rule exists until a non-PostGIS consumer shows up. See [`shapes.md`](shapes.md) |
+| **Polygon ring winding order** | PostGIS reads a polygon fine either way; hand the same coordinates to some other renderer or GIS library and a hole gets drawn as a fill, or the reverse | The direction a ring is walked, clockwise or counter-clockwise, is called its winding, and some tools use it as the only signal for "this ring is a hole, not a fill." PostGIS itself is forgiving about it | Be deliberate about winding whenever geometry from this project is handed to a tool that is not PostGIS. Nothing in this codebase currently depends on getting it right, which is exactly why it is easy to forget the rule exists until a non-PostGIS consumer shows up. See [`shapes.md`](shapes.md) Course 2's [edge cases chapter](../gis-beyond/edge-cases.md) explains where the convention comes from, and that tippecanoe and MapLibre fills both do care about it, so "nothing here depends on it" is about this codebase rather than about GIS. |
 | **Assuming an OSM tag is present** | Code that reads a tag key throws on a missing key, or silently treats "not present" as a confident "no" | OSM tags are a convention followed by volunteers, not a schema enforced by any software, a drinking fountain with no `amenity` tag at all is not a contradiction, and a tag can be spelled inconsistently across mappers and countries | Treat every tag read as optional, and never read absence as a negative answer, only as "nobody recorded this." `pipeline/coverage/parse.py`'s trim to `storedTagKeys` and the whole "tags are not a schema" argument in this chapter's source is the reference case. See [`osm-to-database.md`](osm-to-database.md) |
-| **Antimeridian / dateline wrapping** | A region's bounding box spans the entire globe instead of a thin sliver near ±180° | Longitude wraps from +180 back to −180 at the antimeridian. A naive `min`/`max` union of longitudes breaks the instant a shape's coordinates straddle that seam, the two extreme values end up on opposite sides of the world instead of close together | Handled on both sides, in the shape GeoJSON specifies (RFC 7946 §5.2): a crossing box is written with its **west value greater than its east**, and read the long way round. `RegionRegistryProvider::all()` (`web/src/Catalog/RegionRegistryProvider.php`) normalises through `ST_ShiftLongitude` when a region's raw span exceeds 180°, and `CCScope` (`web/assets/map/scope.js`) unions boxes by keeping whichever direction is narrower and answers every longitude question through helpers that understand the wrapped shape. The case that made it real was not a single region but a union: **no region we ship crosses the seam**, yet New Zealand's country scope is seventeen of them running 166.4°E to 175.8°W, and a naive `min`/`max` turned that into a 355° box containing the planet. It is now 17.7°. Never compare a box by hand: `b[0] <= lng && lng <= b[2]` is false almost everywhere a crossing region actually is. Contract: `docs/specs/map-and-search.md` §4.5a; the risk was named in advance in `docs/specs/Dated/2026-07-19-region-scoping-design.md` §8 risk 11 |
+| **Antimeridian / dateline wrapping** | A region's bounding box spans the entire globe instead of a thin sliver near ±180° | Longitude wraps from +180 back to −180 at the antimeridian. A naive `min`/`max` union of longitudes breaks the instant a shape's coordinates straddle that seam, the two extreme values end up on opposite sides of the world instead of close together | Handled on both sides, in the shape GeoJSON specifies (RFC 7946 §5.2): a crossing box is written with its **west value greater than its east**, and read the long way round. `RegionRegistryProvider::all()` (`web/src/Catalog/RegionRegistryProvider.php`) normalises through `ST_ShiftLongitude` when a region's raw span exceeds 180°, and `CCScope` (`web/assets/map/scope.js`) unions boxes by keeping whichever direction is narrower and answers every longitude question through helpers that understand the wrapped shape. The case that made it real was not a single region but a union: **no region we ship crosses the seam**, yet New Zealand's country scope is seventeen of them running 166.4°E to 175.8°W, and a naive `min`/`max` turned that into a 355° box containing the planet. It is now 17.7°. Never compare a box by hand: `b[0] <= lng && lng <= b[2]` is false almost everywhere a crossing region actually is. Contract: `docs/specs/map-and-search.md` §4.5a; the risk was named in advance in `docs/specs/Dated/2026-07-19-region-scoping-design.md` §8 risk 11 The full account, including the 1e-14 mantissa subtlety and the seventeen-region New Zealand union, is in course 2's [edge cases chapter](../gis-beyond/edge-cases.md). |
 
 <!-- UNANCHORED id=U100 type=general concept="antimeridian / dateline wrapping" -->
 
@@ -71,13 +71,15 @@ involved, read what they import before assuming the whole story is in one place.
 | Add a spatial query (is this point inside/near/along that shape?) | `web/src/Contribution/SpatialResolver.php` (containment), `web/src/Service/BaseAreaResolver.php` (nearby, with real distance), see [`spatial-questions.md`](spatial-questions.md) |
 | Add a geometry column to a new or existing table | A migration declaring the column via the shared `geometry` DBAL type, plus its own `CREATE INDEX … USING GIST (geom)` in the same migration, and `web/src/Catalog/Doctrine/GeometryType.php` if the declaration itself needs to change, see [`coordinates.md`](coordinates.md) and [`making-it-fast.md`](making-it-fast.md) |
 | Change how a spatial query performs at scale | `web/src/Catalog/RideCheckService.php` (`corridorGroups()`, `followedRoutes()`) is the reference rewrite, read its own comments before touching anything else, see [`making-it-fast.md`](making-it-fast.md) |
-| Change what the map draws, or how it's styled | `web/assets/map/`, one module per concern (43 files at the time of writing): `map-init.js` (the map object, controls, basemap labels), `render.js` (which features draw), `coverage.js` (the PMTiles source and its layers), `spotlight.js` (region mask and circle), `osm-pools.js` (clustered dot layers), `picking.js` / `scope-ui.js` (click handling), `drawer.js` (the detail panel). `map.js` itself is only imports plus the boot sequence; see [`on-screen.md`](on-screen.md) |
+| Change what the map draws, or how it's styled | `web/assets/map/`, one module per concern ([how many](../numbers.md)): `map-init.js` (the map object, controls, basemap labels), `render.js` (which features draw), `coverage.js` (the PMTiles source and its layers), `spotlight.js` (region mask and circle), `osm-pools.js` (clustered dot layers), `picking.js` / `scope-ui.js` (click handling), `drawer.js` (the detail panel). `map.js` itself is only imports plus the boot sequence; see [`on-screen.md`](on-screen.md) |
 | Change what comes out of OpenStreetMap (which objects, which tags) | `pipeline/coverage/extract.py` (which objects survive `osmium tags-filter`), `pipeline/coverage/parse.py` (which tag keys survive onto the stored row), and the shared contract, `pipeline/contract/coverage-contract.json` (read by `pipeline/coverage/contract.py::load_contract()`), see [`osm-to-database.md`](osm-to-database.md) |
 | Change how tiles are built (zoom range, clustering, per-country layers) | `pipeline/coverage/tiles.py`, `build_pmtiles()` and `export_geojsonl()`, see [`tiles.md`](tiles.md) |
 | Change which tag keys the item drawer is allowed to show | `web/src/Coverage/CoverageRepository.php`'s `TAG_WHITELIST` constant, which must stay a subset of the contract's `storedTagKeys` (enforced by `web/tests/Catalog/CoverageContractTest.php`), see [`osm-to-database.md`](osm-to-database.md) |
 | Change how a route's surface estimate is computed | `web/src/Catalog/SurfaceProfiler.php` (`profile()`, `recomputeAll()`), triggered by `app:catalog:route-surfaces` (`web/src/Catalog/Command/RouteSurfacesCommand.php`), see [`routes.md`](routes.md) |
 | Change how a GPX upload becomes a stored route | `web/src/Contribution/Gpx/GpxParser.php` (reading the file), `web/src/Contribution/Gpx/TrackProcessor.php` (distance, ascent, simplification), `web/src/Contribution/RouteProposalService.php` (assembling the stored geometry), see [`routes.md`](routes.md) |
 | Change how a rider searches for a place by name | `web/assets/settings/base-location.js` and `search-ui.js`'s `runPhoton()`, both call Photon directly from the browser, allow-listed in `web/src/EventSubscriber/CspSubscriber.php`, see [`spatial-questions.md`](spatial-questions.md) |
+| Change how elevation or gradients are measured | `web/src/Elevation/ClimbProfiler.php` (the window, the percentile, the sample count) and `RouteSnapper.php`; course 2's [elevation chapter](../gis-beyond/elevation.md) for why those thresholds, and the [elevation runbooks](../data-ops/elevation-dem-concepts.md) for the DEM underneath them |
+| Consume Commons tiles or items from your own application | The [Public API course](../api/index.md): `/v1/map-config` for the tile URLs and the category table, `/v1/search` for points, and the [worked example](../api/worked-example-route-planner.md) for a complete MapLibre integration |
 | Change which regions a rider's base point resolves to | `web/src/Service/BaseAreaResolver.php` and `web/src/Catalog/RegionRegistryProvider.php`, see [`spatial-questions.md`](spatial-questions.md) |
 
 ## Glossary
@@ -100,6 +102,11 @@ true match, and guaranteed to also contain some rows that are not matches at all
 
 **Cast (`::geography`)**: a per-expression reinterpretation of a stored value's type, applied for the
 length of one function call rather than changing the column itself. [`metres-vs-degrees.md`](metres-vs-degrees.md)
+
+**`check_date`**: an OpenStreetMap tag holding the day a mapper last stood in front of a thing and
+confirmed it. Kept by the harvest and read at tile-build time into a `cd` property; a dated one
+inside the freshness window is what lets a point claim a published witness rather than a bare copied
+claim. [`osm-to-database.md`](osm-to-database.md)
 
 **Cluster / clustering**: merging nearby points into one feature carrying a count, so a map stays
 readable when zoomed out. Here it happens in one place only: live, in the browser, for the small
@@ -137,6 +144,11 @@ PBF file, instead of the whole planet. [`osm-to-database.md`](osm-to-database.md
 **Forward geocoding**: turning a place name into coordinates; the direction this project actually
 uses, via Photon. [`spatial-questions.md`](spatial-questions.md)
 
+**Functional index**: an index built over the *result of an expression* rather than a bare column,
+such as `(geom::geography)`. A query only uses it when it writes the expression the same way, which
+is why the cast has to appear in the query and not just in your head.
+[`making-it-fast.md`](making-it-fast.md)
+
 **Geocoding**: a text-matching problem with a spatial tiebreak, not a spatial query with text bolted
 on: finding what a place name might refer to, then picking which candidate using location.
 [`spatial-questions.md`](spatial-questions.md)
@@ -167,6 +179,10 @@ XML, an ordered list of `<trkpt>` points. [`routes.md`](routes.md)
 
 **Graph search**: the general kind of problem "find the cheapest route from A to B through a network
 of costed road segments" is; not something this project implements itself. [`routes.md`](routes.md)
+
+**Heatmap**: a smooth density surface drawn from a thinned sample of points, answering "where is
+coverage dense" rather than "here is every fountain". What the low zooms of the coverage archive
+feed, because those tiles are deliberately not a complete list. [`tiles.md`](tiles.md)
 
 **Hit-testing**: answering "what did the rider just click on?" by asking already-rendered geometry in
 the browser, with no request to a server, what `queryRenderedFeatures` does, and only possible because
@@ -243,6 +259,10 @@ whole thing; what a PMTiles client issues to read one tile. [`tiles.md`](tiles.m
 **Raster tile**: a tile that is a finished picture (PNG/JPEG); every visual choice is frozen into the
 pixels at build time. [`tiles.md`](tiles.md)
 
+**`ref`**: the OpenStreetMap element a Commons row points at, written `node/123` or `way/456`. The
+same key and the same meaning in every layer, and the join key that `/improve` and every source link
+use. [`osm-to-database.md`](osm-to-database.md)
+
 **Reference vs fork**: this project's stance on OpenStreetMap data: `coverage_poi` references OSM
 objects by id and exists to serve queries fast, it is never presented as an independent survey or a
 replacement authority. [`osm-to-database.md`](osm-to-database.md)
@@ -253,6 +273,10 @@ relations today. [`osm-to-database.md`](osm-to-database.md)
 
 **Reverse geocoding**: turning coordinates into a place name; this project never calls it, storing a
 place name once at the moment a rider picks it instead. [`spatial-questions.md`](spatial-questions.md)
+
+**`ridtok` / `cctok`**: short per-feature tokens carried in the tiles so the client can tell which
+scope a feature belongs to without a second request. They are scoping identifiers, never anything
+about a person. [`on-screen.md`](on-screen.md)
 
 **Routing**: computing a path between two points through a road network; this project hands it to
 Valhalla (`RouteSnapper` for the road between two points, `ElevationClient` for elevation) rather
@@ -325,6 +349,11 @@ grid. [`tiles.md`](tiles.md)
 **Zoom level**: one level of the tile pyramid; each one covers the same whole world at four times the
 tile count, and four times the resolution, of the level before it. [`tiles.md`](tiles.md)
 
+
+## Further reading
+
+- [RFC 7946 §5.2, antimeridian-crossing bounding boxes](https://datatracker.ietf.org/doc/html/rfc7946#section-5.2): the west-greater-than-east convention, in the spec's own words.
+
 ## Try it
 
 !!! tip "Hands-on: diagnose a real zero-row query"
@@ -340,7 +369,7 @@ tile count, and four times the resolution, of the level before it. [`tiles.md`](
     "
     ```
 
-    <!-- CODE-ILLUSTRATIVE sample output; zero on any install, the swapped point has nothing near it on Earth's dry land -->
+    <!-- CODE-ILLUSTRATIVE SAMPLE-FROM any-install; sample output; zero on any install, the swapped point has nothing near it on Earth's dry land -->
     ```text
      broken_count
     --------------
@@ -363,7 +392,7 @@ tile count, and four times the resolution, of the level before it. [`tiles.md`](
     "
     ```
 
-    <!-- CODE-ILLUSTRATIVE sample output on a stack seeded by `make course-data`; with the Belgian extract loaded the same query returns a few hundred -->
+    <!-- CODE-ILLUSTRATIVE SAMPLE-FROM fresh-clone; sample output on a stack seeded by `make course-data`; with the Belgian extract loaded the same query returns a few hundred -->
     ```text
      fixed_count
     -------------
@@ -378,3 +407,4 @@ tile count, and four times the resolution, of the level before it. [`tiles.md`](
     `::geography`, which is exactly why this trap is so easy to miss under pressure: the query is
     otherwise correct, and correct-looking SQL that quietly returns nothing is the signature this
     whole drill is meant to train you to recognise.
+

@@ -51,6 +51,19 @@ SPDX-FileCopyrightText = "© BikeCoders"
 SPDX-License-Identifier = "CC-BY-SA-4.0"
 
 [[annotations]]
+# Photographs illustrating the wiki. Not ours: each is a third-party file from
+# Wikimedia Commons, kept here rather than hot-linked so a reader's browser
+# never has to talk to a third party to read a page. The licence below is the
+# file's own, taken from Commons' extmetadata, and the page that shows it
+# credits the photographer by name and links the source regardless of whether
+# the licence obliges it.
+#   pouhon-la-sauveniere-spa.jpg  CC0  Romaine
+#     https://commons.wikimedia.org/wiki/File:Spa-Source_de_la_Sauveni%C3%A8re_(1).jpg
+path = ["wiki/assets/photos/**"]
+SPDX-FileCopyrightText = "Romaine, via Wikimedia Commons"
+SPDX-License-Identifier = "CC0-1.0"
+
+[[annotations]]
 path = ["web/assets/flags/**", "web/public/media/**"]
 SPDX-FileCopyrightText = "© BikeCoders"
 SPDX-License-Identifier = "LicenseRef-PolyForm-Shield-1.0.0"

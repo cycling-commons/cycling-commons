@@ -26,6 +26,10 @@ on:
       - 'mkdocs.yml'
       - 'tools/check-wiki-spdx.sh'
       - 'tools/check-wiki-code-drift.py'
+      - 'tools/check-course-data.py'
+      - 'tools/wiki-numbers.py'
+      - 'Makefile'
+      - 'tools/wallonia/**/*.py'
       - '.github/workflows/ci-wiki.yml'
       # quoted-from sources — a change here can invalidate a chapter
       - 'web/**/*.php'
@@ -42,6 +46,10 @@ on:
       - 'mkdocs.yml'
       - 'tools/check-wiki-spdx.sh'
       - 'tools/check-wiki-code-drift.py'
+      - 'tools/check-course-data.py'
+      - 'tools/wiki-numbers.py'
+      - 'Makefile'
+      - 'tools/wallonia/**/*.py'
       - '.github/workflows/ci-wiki.yml'
       - 'web/**/*.php'
       - 'web/**/*.js'
@@ -69,3 +77,17 @@ jobs:
       # names, not to relax the check.
       - name: wiki code excerpts still match the code they quote
         run: python3 tools/check-wiki-code-drift.py
+
+      # The GIS course's setup step. It broke silently for two weeks in
+      # 2026-08 because three files that must agree (the Makefile recipe, the
+      # PHP importer's letter map, the seed command) have no import between
+      # them, and no gate read the recipe. Runs the exporter for real: stdlib
+      # only, committed fixtures, no network and no database.
+      - name: make course-data still imports
+        run: python3 tools/check-course-data.py
+
+      # The courses argue from measurements, and a measurement typed into prose
+      # is the one thing no other gate here can read. numbers.md is generated
+      # from the repository; this fails when a figure has moved under it.
+      - name: the numbers page still matches the repository
+        run: python3 tools/wiki-numbers.py

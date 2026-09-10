@@ -15,9 +15,11 @@ no part in any of this.
 
 !!! note "The operational half lives elsewhere"
 
-    How the rasters are fetched, converted, proven and installed, and why a finer raster is not
-    automatically a better one (the trees are in the data), is
-    [Building elevation tiles](../data-ops/elevation-tiles.md). This chapter is the conceptual
+    Why a finer raster is not automatically a better one, and why the trees are in the data, is
+    [what a DEM gets wrong](../data-ops/elevation-dem-concepts.md); how the rasters are fetched,
+    converted, proven and installed is [Building elevation tiles](../data-ops/elevation-tiles.md);
+    and turning them into a published gradient is
+    [Measuring a climb](../data-ops/measuring-a-climb.md). This chapter is the conceptual
     half: where elevation numbers come from, and why two tools disagree about the same ride.
 
 Course 1's [`routes.md`](../gis/routes.md) already made the general point that a derived spatial
@@ -143,9 +145,10 @@ itself is one you get to choose; one your readers will compare against someone e
 
 The second party outranks the first: **the data**. A 100 m window over a 30 m grid asks for a figure
 across barely three cells, under the four-cell floor the
-[elevation tiles chapter](../data-ops/elevation-tiles.md) derives for GLO-30. Such a window holds on
-short Ardennes climbs and collapses in the Alps, where the Furka comes out near 20% for a road that
-is about 10%. So the window is 250 m, and the published figure is the 95th percentile of the sliding
+[DEM concepts page](../data-ops/elevation-dem-concepts.md) derives for GLO-30. Such a window holds on
+short Ardennes climbs and collapses in the Alps, where the Grimsel, the Susten and the Klausen all
+came out at exactly 35%, three passes reporting one number because all three were hitting a clamp.
+So the window is 250 m, and the published figure is the 95th percentile of the sliding
 windows rather than the steepest of them (`STEEPEST_PERCENTILE`, in the same class), because a
 maximum asks "what is the single worst reading here", which on a surface model is a question about
 the noise rather than the road.
@@ -154,7 +157,7 @@ So the ordering is: **the source constrains the window, the convention only gets
 threshold your readers will compare against someone else's is not free, but a threshold finer than
 your data can answer is not available at all, and matching a convention you cannot actually measure
 just publishes someone else's number with your name on it. The full account, with the measurements,
-is in [Building elevation tiles](../data-ops/elevation-tiles.md#measuring-a-climb-end-to-end).
+is in [Measuring a climb](../data-ops/measuring-a-climb.md).
 
 ## Where that elevation actually comes from
 
@@ -201,17 +204,11 @@ above explains.
 
 ## DEM sources, and the resolution question
 
-Two DEM sources come up repeatedly in this project's own specs, and they are worth knowing by name
-because they are the two most commonly used worldwide, and because this project measured one against
-the other on its own climbs before choosing:
-
-- **SRTM (Shuttle Radar Topography Mission)** — a near-global elevation survey flown by radar from
-  the Space Shuttle in February 2000. It is old by satellite standards but still widely used, at
-  roughly 30-metre resolution between the latitudes it covers, with some gaps (voids) over very
-  mountainous terrain and open water.
-- **Copernicus DEM (GLO-30)** — a newer, higher-quality global DEM built from more recent radar
-  survey data, also at roughly 30-metre resolution, generally cited as filling in SRTM's voids and
-  as the more current default choice today. It is the source this project serves, worldwide.
+**Copernicus GLO-30** is the source this project serves, worldwide, at roughly 30-metre resolution.
+The data-operations course covers what that product is, how it compares with the older SRTM survey
+it replaced, and, more usefully, [why a finer raster is not automatically a more accurate
+one](../data-ops/elevation-dem-concepts.md). That page is the one to read before trusting any
+number a DEM gives you. Here, only the consequence matters.
 
 **Resolution** here means the size of one grid cell — the ground distance a single stored elevation
 value actually represents. A 30-metre DEM reports one elevation figure for every 30x30-metre patch of
@@ -223,9 +220,9 @@ diverge even before any smoothing choice enters the picture: one source is measu
 fixed grid resolution, the other is measuring wherever the rider's own sensor happened to be, as
 often as it happened to sample.
 
-`docs/specs/map-and-search.md` §14 records the pair as "Copernicus GLO-30 / SRTM for elevation",
-and `docs/specs/climb-elevation.md` §1b and §2a are where the two were measured against each other
-on this project's own climbs, GLO-30 winning. The Python pipeline is not on that path at all. Its
+`docs/specs/climb-elevation.md` §1b and §2a are where the two were measured against each other
+on this project's own climbs, GLO-30 winning. Only GLO-30 is served; SRTM is named in the specs as
+the thing it replaced, not as a live fallback. The Python pipeline is not on that path at all. Its
 `/dem` endpoint does no more than check that a DEM directory is mounted in the pipeline container:
 
 <!-- CODE-FROM pipeline/app/main.py -->
@@ -268,6 +265,11 @@ it was originally surveyed at. Neither is "wrong" in the way a bug is wrong. The
 different versions of "how high is this," and a tool that blends or chooses between them is making
 yet another one of the disclosed-or-undisclosed choices this whole chapter has been about.
 
+
+## Further reading
+
+- [Copernicus DEM GLO-30](https://dataspace.copernicus.eu/explore-data/data-collections/copernicus-contributing-missions/collections-description/COP-DEM): the source this project serves.
+
 ## Try it
 
 !!! tip "Hands-on: the threshold IS the answer, on a real route's own stored profile"
@@ -283,7 +285,7 @@ yet another one of the disclosed-or-undisclosed choices this whole chapter has b
     FROM recommended_route WHERE name = 'Rondje Super Stockeu';
     ```
 
-    <!-- CODE-ILLUSTRATIVE sample output, elevation array truncated for the page; the values are seeded, so they hold on any install -->
+    <!-- CODE-ILLUSTRATIVE SAMPLE-FROM fresh-clone; sample output, elevation array truncated for the page; the values are seeded, so they hold on any install -->
     ```text
      ascent_m |                              elev
     ----------+------------------------------------------------------------
@@ -309,7 +311,7 @@ yet another one of the disclosed-or-undisclosed choices this whole chapter has b
     SELECT sum(GREATEST(delta, 0)) AS naive_ascent_m FROM d;
     ```
 
-    <!-- CODE-ILLUSTRATIVE sample output; computed from the seeded profile, so stable on any install -->
+    <!-- CODE-ILLUSTRATIVE SAMPLE-FROM fresh-clone; sample output; computed from the seeded profile, so stable on any install -->
     ```text
      naive_ascent_m
     ----------------
@@ -340,7 +342,7 @@ yet another one of the disclosed-or-undisclosed choices this whole chapter has b
     "
     ```
 
-    <!-- CODE-ILLUSTRATIVE sample output -->
+    <!-- CODE-ILLUSTRATIVE SAMPLE-FROM fresh-clone; sample output -->
     ```text
     threshold=0m ascent=491m
     threshold=5m ascent=481m

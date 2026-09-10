@@ -25,7 +25,7 @@ That is a deliberate choice, and it matters, because the two have opposite rules
   [below](#the-md5-mirror-lag-gotcha)).
 
 The raw files are large; the part we keep is tiny. Four of the onboarded extracts, as cached in the
-pipeline volume at the time of writing (rounded):
+pipeline volume on 2026-08-30 (rounded):
 
 | Geofabrik file | Downloaded | After `osmium tags-filter` |
 |---|---|---|
@@ -72,13 +72,7 @@ make coverage-refresh regions=dev/fixture pbf=tests/fixtures/mini.osm.pbf
 
 <!-- CODE-ILLUSTRATIVE the full harvest: every onboarded region, the COVERAGE_REGIONS default in developers/docker/compose.yaml -->
 ```bash
-REGIONS=europe/belgium,europe/netherlands,europe/germany,europe/luxembourg,europe/france,\
-europe/switzerland,europe/great-britain,europe/ireland-and-northern-ireland,europe/italy,\
-europe/spain,europe/slovenia,africa/rwanda,africa/south-africa,south-america/colombia,\
-south-america/chile,australia-oceania/australia,australia-oceania/new-zealand,asia/japan,\
-north-america/us/california,north-america/us/colorado,north-america/canada/british-columbia,\
-north-america/canada/quebec
-make coverage-refresh regions=$REGIONS
+make coverage-refresh regions=$(make -s coverage-regions)
 ```
 
 !!! warning "Always pass `regions=` explicitly"
@@ -86,15 +80,18 @@ make coverage-refresh regions=$REGIONS
     `developers/docker/.env`, which may pin a **single** country. Since ownership is decided by
     geometry (below), running just one country of a bordering set deletes the border rows that
     country owns and nothing re-creates them until its neighbour runs, a rider watches a POI vanish
-    for up to a week. **Keep every onboarded region in the list**, or pass them all on the CLI. The
-    committed default in `developers/docker/compose.yaml` is the full list; a local override is what
-    shrinks it.
+    for up to a week.
+
+    That is why the command above passes `regions=` from `make -s coverage-regions`, which reads
+    the committed default out of `developers/docker/compose.yaml` and is therefore immune to a local
+    override. Use it rather than pasting a list: three pages used to carry their own copy of the
+    twenty-two extracts, and a copy is a thing that drifts.
 
 One invocation runs the whole chain, per region then once at the end:
 
 1. `fetch_pbf`: download (or skip, cached) the `-latest.osm.pbf`, md5-verified
 2. `osmium tags-filter`: reduce to the contract's selectors
-3. pyosmium parse → **atomic per-region swap** into `coverage_poi`
+3. pyosmium parse → **atomic per-region merge** into `coverage_poi`
 4. per-letter GeoJSONL export → `tippecanoe` → `go-pmtiles` verify → **upload** a versioned
    `coverage/<stamp>.pmtiles` (the stamp is `YYYYMMDD-HHMM`) + `manifest.json` → prune (keep the
    newest 4)
@@ -117,6 +114,13 @@ Geofabrik's extracts **overlap** at borders, so one OSM entity arrives in severa
 Ownership is decided by **geometry, not by which extract ran last**: each staged row is resolved to
 the single nearest region within a small snap tolerance, and an extract keeps the row only if that
 region's country is its own. This is what makes `src_region_id` deterministic (and what unblocks
+<figure class="gis-fig">
+<svg viewBox="0 0 640 470" role="img" aria-labelledby="f18-t f18-d" xmlns="http://www.w3.org/2000/svg"><title id="f18-t">Which extract owns a border point: the nearest region wins</title><desc id="f18-d">Two country extracts drawn as overlapping rectangles, one on the left labelled the Belgian extract and one on the right labelled the Dutch extract, with a hatched band down the middle where they overlap. Geofabrik cuts its extracts with an overlap, so one real object arrives in both. Three points sit in the band. For each one a dashed line runs to the nearest region boundary on either side, and the shorter line decides. The left point is nearer a Belgian region, so the Belgian run keeps it and the Dutch run deletes it. The right point is nearer a Dutch region, so the opposite happens. The middle point is nearer a Dutch region by a small margin and goes the same way, which is the case that used to flip week to week when ownership was decided by whichever extract ran last. A note records that the rule is mutually exclusive, so exactly one extract ever stages a given row, and that a point with no region within the snap distance of any onboarded country is dropped by both.</desc><defs><marker id="gis-arrow-f18" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="gis-fill-accent" d="M 0 0 L 10 5 L 0 10 Z"/></marker><pattern id="f18hatch" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line class="gis-muted" x1="0" y1="0" x2="0" y2="10"/></pattern></defs><rect class="gis-ink" x="30" y="70" width="330" height="230" rx="6"/><rect class="gis-ink" x="280" y="70" width="330" height="230" rx="6"/><rect x="280" y="70" width="80" height="230" fill="url(#f18hatch)"/><text class="gis-label-sm" x="46" y="58">the Belgian extract</text><text class="gis-label-sm" x="466" y="58">the Dutch extract</text><text class="gis-label-sm" x="252" y="330">they overlap here</text><path class="gis-accent" d="M 190 70 L 190 300"/><text class="gis-label-sm" x="96" y="200">a Belgian region</text><path class="gis-accent" d="M 452 70 L 452 300"/><text class="gis-label-sm" x="472" y="200">a Dutch region</text><circle class="gis-ink gis-fill-ink" cx="300" cy="120" r="5"/><path class="gis-muted" stroke-dasharray="4 4" d="M 300 120 L 190 120"/><path class="gis-muted" stroke-dasharray="4 4" d="M 300 120 L 452 120"/><text class="gis-label-sm" x="300" y="106">BE keeps it</text><circle class="gis-ink gis-fill-ink" cx="336" cy="192" r="5"/><path class="gis-muted" stroke-dasharray="4 4" d="M 336 192 L 190 192"/><path class="gis-muted" stroke-dasharray="4 4" d="M 336 192 L 452 192"/><text class="gis-label-sm" x="252" y="178">NL, by a margin</text><circle class="gis-ink gis-fill-ink" cx="352" cy="262" r="5"/><path class="gis-muted" stroke-dasharray="4 4" d="M 352 262 L 190 262"/><path class="gis-muted" stroke-dasharray="4 4" d="M 352 262 L 452 262"/><text class="gis-label-sm" x="352" y="248">NL keeps it</text><line class="gis-muted" x1="20" y1="356" x2="620" y2="356"/><text class="gis-label-sm" x="20" y="390">The shorter dashed line decides, and the other extract&#8217;s run deletes the row. Exactly one</text><text class="gis-label-sm" x="20" y="416">extract ever stages it, so a border point cannot flip week to week the way it did when</text><text class="gis-label-sm" x="20" y="442">ownership went to whichever run happened to finish last.</text></svg>
+<figcaption>The overlap is not a bug in the extracts, it is how Geofabrik cuts them, and it means
+every border object arrives more than once. Deciding by distance rather than by run order is what
+makes the answer the same every week.</figcaption>
+</figure>
+
 partitioning). The full rationale, the measured data, and the nearest-region-wins rule are in
 [coverage-provider.md](https://github.com/cycling-commons/cycling-commons/blob/main/docs/specs/coverage-provider.md)
 (§1 for the ownership rule, §3 for the staging step that applies it).
@@ -128,7 +132,7 @@ partitioning). The full rationale, the measured data, and the nearest-region-win
   one holds it prints `another coverage run holds the advisory lock` and exits with status 2. The
   lock lives with the connection, so a crashed run cannot leave it held.
 - **Drift abort.** If a region's new extract has far fewer rows than last time (more than a 40 %
-  drop), the swap aborts and keeps the last good slice, rather than publishing a gutted country. An
+  drop), the merge aborts and keeps the last good slice, rather than publishing a gutted country. An
   abort means "investigate", not "lower the threshold".
 - **Unseeded-country guard.** Harvesting a country whose regions are not seeded yet fails loudly (the
   ownership filter would otherwise silently drop every row). Onboard the country first; see
@@ -191,34 +195,69 @@ app's migrations (`Version20260906180000`); the pipeline calls it after creating
 the function exists, so a pipeline older or newer than the app is fine and the triggers are there as
 soon as both are.
 
-## Verify a harvest landed
+## Try it
 
-After a run, three read-only checks show how ownership and stamping came out:
+!!! tip "Hands-on: verify a harvest landed, and read the one number that must be zero"
+    Three read-only checks, none of which changes anything, and one of them is a pass/fail rather
+    than a judgement call. Run them after any harvest.
 
-<!-- CODE-ILLUSTRATIVE post-harvest acceptance queries -->
-```sql
--- Per-extract country stamps. Each extract resolves to one country in the
--- pipeline's COUNTRY_BY_REGION map, so one row per extract is the expected
--- shape; a second country with a handful of rows is a border case to look
--- at, not a failure of the run.
-SELECT s.slug, p.country_code, count(*)
-FROM coverage_poi p JOIN coverage_source s ON s.id = p.src_region_id
-GROUP BY 1, 2 ORDER BY 1, 2;
+    <!-- CODE-ILLUSTRATIVE post-harvest acceptance queries -->
+    ```sql
+    -- Per-extract country stamps. Each extract resolves to one country in the
+    -- pipeline's COUNTRY_BY_REGION map, so one row per extract is the expected
+    -- shape; a second country with a handful of rows is a border case to look
+    -- at, not a failure of the run.
+    SELECT s.slug, p.country_code, count(*)
+    FROM coverage_poi p JOIN coverage_source s ON s.id = p.src_region_id
+    GROUP BY 1, 2 ORDER BY 1, 2;
 
--- Every row is region-stamped. MUST be 0.
-SELECT count(*) FROM coverage_poi WHERE region_id IS NULL;
+    -- Every row is region-stamped. MUST be 0.
+    SELECT count(*) FROM coverage_poi WHERE region_id IS NULL;
 
--- Per-source row counts, sanity.
-SELECT s.slug, count(*) FROM coverage_poi p
-JOIN coverage_source s ON s.id = p.src_region_id GROUP BY 1 ORDER BY 2 DESC;
-```
+    -- Per-source row counts, sanity.
+    SELECT s.slug, count(*) FROM coverage_poi p
+    JOIN coverage_source s ON s.id = p.src_region_id GROUP BY 1 ORDER BY 2 DESC;
+    ```
 
-The published artifact and its region list:
+    <!-- CODE-ILLUSTRATIVE SAMPLE-FROM author-install; sample output on a machine holding all nineteen countries, 2026-09-10; the counts are that machine's, the zero is not -->
+    ```text
+     unstamped
+    -----------
+             0
 
-<!-- CODE-ILLUSTRATIVE read the published manifest -->
-```bash
-curl -s http://localhost:9100/cc-maps/coverage/manifest.json | jq '{regions, country_codes, url}'
-```
+          slug      | count
+    ----------------+--------
+     europe/germany | 397082
+     europe/france  | 307725
+     europe/italy   | 269373
+     europe/spain   | 236354
+    ```
+
+    The middle query is the one to read first, and the only one with a right answer: **it must be
+    zero**. A non-zero count means rows landed outside every region polygon, which is either a
+    country that was never onboarded or a boundary that has moved, and either way those rows are
+    invisible to every scoped query on the site. The other two are shape checks: one row per extract
+    in the first, and per-source counts that should look like the countries they name.
+
+    Then read the artifact those rows were published into:
+
+    <!-- CODE-ILLUSTRATIVE read the published manifest -->
+    ```bash
+    curl -s http://localhost:9100/cc-maps/coverage/manifest.json | jq '{regions, country_codes, url}'
+    ```
+
+    <!-- CODE-ILLUSTRATIVE SAMPLE-FROM author-install; sample output, abbreviated: the real lists run to 22 regions and 19 country codes -->
+    ```json
+    {
+      "regions": ["europe/belgium", "europe/netherlands", "..."],
+      "country_codes": ["be", "nl", "..."],
+      "url": "http://localhost:9100/cc-maps/coverage/20260910-1013.pmtiles"
+    }
+    ```
+
+    `regions` is what the harvest ran; `country_codes` is what the map will draw. If a country you
+    just harvested is missing from the second list, the rows landed but the tiles were not rebuilt,
+    and the map will not show them until they are.
 
 ## Where to go deeper
 

@@ -110,17 +110,13 @@ that the tile covering the pole renders badly or looks stretched — there is no
 polar caps are a permanent, structural gap in the addressing scheme, not a quality problem that a
 better projection could fix while keeping the same square-world tiling trick.
 
-**Longitude itself stops meaning anything, exactly at a pole.** Every meridian — every line of
-constant longitude — meets at both poles, by definition; [`coordinates.md`](../gis/coordinates.md)'s
-"parallels never meet, meridians all meet at both ends" already says as much. Push that one step
-further: standing exactly on the North Pole, "which way is east" has no answer, because every
-direction you could face is south. A longitude value at that exact point is not wrong, wasted, or
-in need of rounding — it is a question without a fact to be an answer to. Any code that leans on
-longitude to reliably tell two nearby points apart — sorting by it, differencing it, the antimeridian
-section's min/max trick — degrades continuously as you approach a pole, well before you actually
-reach one, because the real ground distance one degree of longitude represents keeps shrinking by
-`cos(latitude)` the whole way there ([`coordinates.md`](../gis/coordinates.md) covers this shrinkage
-in full) and hits exactly zero only at the pole itself.
+**Longitude itself stops meaning anything, exactly at a pole.** Every meridian meets at both poles,
+so standing on the North Pole, "which way is east" has no answer: every direction is south. A
+longitude there is not wrong, it is a question with no fact to answer it. Any code that leans on
+longitude to tell two nearby points apart, including the antimeridian section's min/max trick,
+degrades continuously on the way there, because the ground distance a degree represents shrinks by
+`cos(latitude)` ([`coordinates.md`](../gis/coordinates.md) covers that in full) and reaches zero
+only at the pole.
 
 This project's data has not reached the point where either of these matters, and the margin is
 worth stating with the real numbers. The northernmost onboarded region is Canada, whose outline
@@ -167,6 +163,13 @@ considers "inside." Two exterior rings both walked counter-clockwise both point 
 outward, away from empty space and into the shape; a hole walked clockwise points its thumb the other
 way, into the emptiness it is cutting out — which is exactly the signal a renderer that trusts
 winding uses to tell "this ring adds area" from "this ring removes it," with nothing else to go on.
+
+<figure class="gis-fig">
+<svg viewBox="0 0 640 420" role="img" aria-labelledby="f17-t f17-d" xmlns="http://www.w3.org/2000/svg"><title id="f17-t">Ring winding: the outer ring and its hole are walked in opposite directions</title><desc id="f17-d">On the left, one polygon drawn as two squares, a large one with a smaller one inside it. The large outer ring is tinted as filled ground and carries arrowheads showing it is walked counter-clockwise. The smaller inner ring is left blank as a hole and carries arrowheads showing it is walked the opposite way, clockwise. A label records that the direction is the only signal some renderers have for telling a fill from a hole. On the right, the shoelace idea: the same two rings reduced to a signed area, positive for the counter-clockwise outer ring and negative for the clockwise inner one, with a note that adding the signed areas gives the real area of the shape, the hole subtracting itself. Underneath, a note records that PostGIS is forgiving about winding and that tippecanoe and MapLibre fills are not, so a ring wound the wrong way draws as a filled block where a hole should be, with no error anywhere.</desc><defs><marker id="gis-arrow-f17" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="gis-fill-accent" d="M 0 0 L 10 5 L 0 10 Z"/></marker></defs><text class="gis-label-sm" x="20" y="34">one polygon, two rings</text><path class="gis-accent gis-fill-accent" d="M 60 250 L 260 250 L 260 60 L 60 60 Z" fill-opacity="0.18"/><path class="gis-accent" d="M 120 190 L 120 120 L 200 120 L 200 190 Z"/><line class="gis-accent" x1="150" y1="250" x2="110" y2="250" marker-end="url(#gis-arrow-f17)"/><line class="gis-accent" x1="60" y1="170" x2="60" y2="130" marker-end="url(#gis-arrow-f17)"/><line class="gis-accent" x1="150" y1="60" x2="200" y2="60" marker-end="url(#gis-arrow-f17)"/><line class="gis-accent" x1="260" y1="150" x2="260" y2="195" marker-end="url(#gis-arrow-f17)"/><line class="gis-accent" x1="160" y1="120" x2="135" y2="120" marker-end="url(#gis-arrow-f17)"/><line class="gis-accent" x1="200" y1="150" x2="200" y2="175" marker-end="url(#gis-arrow-f17)"/><line class="gis-accent" x1="160" y1="190" x2="185" y2="190" marker-end="url(#gis-arrow-f17)"/><line class="gis-accent" x1="120" y1="160" x2="120" y2="138" marker-end="url(#gis-arrow-f17)"/><text class="gis-label-sm" x="60" y="292">outer ring, counter-clockwise: filled</text><text class="gis-label-sm" x="60" y="322">inner ring, clockwise: a hole</text><line class="gis-muted" x1="330" y1="40" x2="330" y2="330"/><text class="gis-label-sm" x="360" y="34">the shoelace, as a sign</text><rect class="gis-box" rx="8" x="360" y="60" width="250" height="86"/><text class="gis-label-mono" x="485" y="100" text-anchor="middle">outer: +area</text><text class="gis-label-sm" x="485" y="130" text-anchor="middle">walked counter-clockwise</text><rect class="gis-box" rx="8" x="360" y="164" width="250" height="86"/><text class="gis-label-mono" x="485" y="204" text-anchor="middle">hole: &#8722;area</text><text class="gis-label-sm" x="485" y="234" text-anchor="middle">walked the other way</text><text class="gis-label-sm" x="360" y="292">add the signed areas and the</text><text class="gis-label-sm" x="360" y="322">hole subtracts itself</text><line class="gis-muted" x1="20" y1="348" x2="620" y2="348"/><text class="gis-label-sm" x="20" y="382">PostGIS is forgiving about winding. tippecanoe and MapLibre fills are not: a ring</text><text class="gis-label-sm" x="20" y="408">wound the wrong way draws as a block where a hole should be, and nothing errors.</text></svg>
+<figcaption>The convention, and the arithmetic behind it. Walk the outer ring one way and the hole
+the other, and the signed areas add up to the real one. This is the only concept in this chapter
+that is genuinely a picture rather than a number, which is why it is worth one.</figcaption>
+</figure>
 
 Two things are worth being precise about, because they explain why "PostGIS is forgiving" and "some
 tools are not" can both be true of the same specification. RFC 7946 itself says a GeoJSON parser
@@ -225,6 +228,13 @@ magnitude larger than a bike ride, and nothing in this project ever draws a chor
 endpoints that far apart and treats it as a path. It is a real trap in general GIS work; it simply
 has no scale at which to bite here.
 
+If a reason to draw such a line ever did arrive, the tool is already installed and already named by
+this course's index: `ST_Segmentize` on a `geography` adds intermediate vertices along the great
+circle, so a two-point line becomes a dense chain that bends the way the sphere does. Cast to
+`geography` first. On a plain `geometry` the same call splits the straight chord into shorter
+straight pieces, which is more vertices describing exactly the wrong path. Nothing in this
+repository calls it; the course-2 index's exercise proves it is there, which is the point.
+
 ## Floating-point comparison of coordinates
 
 **Kind: we already handle this correctly: general knowledge, with real anchors in this codebase.**
@@ -251,9 +261,9 @@ floating-point results honestly:
     assert way.lat == pytest.approx((50.0000 + 50.0000 + 50.0300) / 3, abs=1e-6)
 ```
 
-`pytest.approx(…, abs=1e-6)` asks "is this within a tenth of a millimetre of the expected value" —
-`1e-6` degrees of latitude is roughly a tenth of a millimetre of real ground — rather than "is this
-bit-for-bit identical to it." That is the correct question for a value produced by arithmetic, and
+`pytest.approx(…, abs=1e-6)` asks "is this within about a hand's breadth of the expected value" —
+`1e-6` degrees of latitude is roughly 11 centimetres of real ground, since a degree of latitude
+is about 111,320 m, rather than "is this bit-for-bit identical to it." That is the correct question for a value produced by arithmetic, and
 the test suite asks it deliberately rather than by accident.
 
 The same idea shows up on the browser side for a different reason: not testing a computed result,
@@ -278,9 +288,15 @@ engineering habit — round before you use a float as an identity, and compare f
 rather than `==` — applied in two different places for two different reasons, and both already
 present in this codebase before this chapter ever pointed at them.
 
+
+## Further reading
+
+- [RFC 7946 §3.1.6, polygon ring winding](https://datatracker.ietf.org/doc/html/rfc7946#section-3.1.6): the right-hand rule, stated by the specification.
+- [What every computer scientist should know about floating-point arithmetic](https://docs.oracle.com/cd/E19957-01/806-3568/ncg_goldberg.html): the long version of this chapter's shortest section.
+
 ## Try it
 
-!!! tip "Hands-on: run the naive union CCScope.bbox() produces, on the seam"
+!!! tip "Hands-on: the union a seam-blind Math.min/Math.max produces, and why it is guarded"
     Two onboarded countries, New Zealand and the United States, straddle ±180°, so on a stack that
     has seeded them the live `region` rows trigger this defect. `make course-data` seeds neither, so
     start with the arithmetic itself, which needs no onboarded region at all, only the same two
@@ -295,7 +311,7 @@ present in this codebase before this chapter ever pointed at them.
     FROM lons;
     ```
 
-    <!-- CODE-ILLUSTRATIVE sample output -->
+    <!-- CODE-ILLUSTRATIVE SAMPLE-FROM any-install; sample output -->
     ```text
      naive_west | naive_east | naive_box_width_degrees
     ------------+------------+-------------------------
@@ -315,7 +331,7 @@ present in this codebase before this chapter ever pointed at them.
     FROM shifted;
     ```
 
-    <!-- CODE-ILLUSTRATIVE sample output -->
+    <!-- CODE-ILLUSTRATIVE SAMPLE-FROM any-install; sample output -->
     ```text
      shifted_west | shifted_east | true_box_width_degrees
     --------------+--------------+------------------------
@@ -336,7 +352,7 @@ present in this codebase before this chapter ever pointed at them.
     FROM region WHERE slug IN ('new-zealand', 'united-states');
     ```
 
-    <!-- CODE-ILLUSTRATIVE sample output at the time of writing; the outlines come from Overture, so the decimals may move with a re-import, the shape of the failure does not -->
+    <!-- CODE-ILLUSTRATIVE SAMPLE-FROM author-install; sample output measured 2026-09-10; the outlines come from Overture, so the decimals may move with a re-import, the shape of the failure does not -->
     ```text
          slug      |    w    |   e    | naive_width_degrees
     ---------------+---------+--------+---------------------
@@ -344,5 +360,9 @@ present in this codebase before this chapter ever pointed at them.
      united-states | -179.15 | 179.77 |               358.9
     ```
 
-    Those are the `w` and `e` values `RegionRegistryProvider` publishes as each country's `bbox`,
-    and the width `CCScope.bbox()` inherits: a box that wraps the world to describe a country.
+    Those are the raw `ST_XMin`/`ST_XMax` extents, which is to say exactly what the fix at the top
+    of this chapter exists to replace: a box that wraps the world to describe a country. They are
+    *not* what `RegionRegistryProvider` publishes. Its `CASE` sees a raw span wider than 180°,
+    shifts, and publishes the wrapped pair instead, so the country arrives at the browser already
+    correct. Run the query to see the number the guard is guarding against, not the number the API
+    serves.

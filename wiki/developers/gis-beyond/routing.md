@@ -6,7 +6,7 @@
 chapter is careful to describe exactly, no more and no less. Cycling Commons does not offer
 point-to-point routing to riders. There is no "get me from here to there" feature anywhere a rider
 can reach. Read on for what that would actually take, and for the one place a form of routing
-already quietly exists — in a curator tool, for a different purpose entirely.
+already quietly exists — inside a contribution form, for a different purpose entirely.
 
 ## The idea this field confuses most often
 
@@ -30,7 +30,7 @@ edge carries a **cost** — not necessarily distance. Cost is whatever the routi
 minimise: time, distance, effort, or some blend the engine's profile decides on.
 
 <!-- CODE-ILLUSTRATIVE a minimal graph, not this project's code -->
-```
+```text
 node A --- edge (120 m, paved, flat)        --- node B
 node B --- edge (340 m, gravel, +6% grade)  --- node C
 node B --- edge (200 m, paved, flat)        --- node D
@@ -102,7 +102,7 @@ alone, and more — but the core idea, cheapest path through a weighted graph, i
 
 ## Isochrones
 
-A related, related question is not "what is the cheapest way to get from A to B" but "**everywhere
+A related question is not "what is the cheapest way to get from A to B" but "**everywhere
 I can reach** from A within a given cost" — 20 minutes of riding, say, in every direction. The result
 is usually drawn as a contour on a map, called an **isochrone** ("equal time"). It is built on
 exactly the same graph and the same per-edge costs as ordinary routing — Dijkstra explores outward
@@ -121,8 +121,49 @@ places relate to each other."
     their tiles), and two classes under `web/src/Elevation/` call them. `RouteSnapper` posts to
     `/route` with the `bicycle` costing, and `ElevationClient` posts to `/height`. Both reach the
     instances through `ELEVATION_URL` and the per-continent `ELEVATION_URLS`; in the dev environment
-    those point at host-run instances via `host.docker.internal` (`web/.env`). Neither call plans a
-    ride for anyone.
+    those point at host-run instances via `host.docker.internal` (`web/.env`). The elevation-shaped
+    name on a routing call is not a misprint: one Valhalla instance per continent answers both
+    `/route` and `/height`, and the variable was named for the job that came first. Neither call
+    plans a ride for anyone.
+
+**What that one call actually looks like.** This is the whole request the snapper sends, quoted from
+the class rather than described:
+
+<!-- CODE-FROM web/src/Elevation/RouteSnapper.php -->
+```php
+                'json' => [
+                    'locations' => [
+                        ['lat' => $a[0], 'lon' => $a[1]],
+                        ['lat' => $b[0], 'lon' => $b[1]],
+                    ],
+                    'costing' => 'bicycle',
+```
+
+Two locations, one costing, and `directions_type: none`, because the editor wants the line and
+turn-by-turn prose would be dead weight. That is the entire vocabulary of routing this project
+speaks: no waypoints, no alternatives, no avoid-list, no preferences.
+
+The reply is a trip whose legs each carry an encoded `shape`, which the class decodes into
+coordinate pairs:
+
+<!-- CODE-ILLUSTRATIVE the shape of Valhalla's reply, trimmed to the fields this project reads -->
+```json
+{
+  "trip": {
+    "legs": [
+      {
+        "shape": "ynh~kAgqfp@...",
+        "summary": { "length": 2.14, "time": 402 }
+      }
+    ]
+  }
+}
+```
+
+`shape` is a polyline encoded at six decimal places, not the five most polyline decoders assume, and
+`RouteSnapper::decodePolyline6()` exists for exactly that reason. Everything else in a Valhalla reply,
+the manoeuvres, the narrative, the alternates, is either not requested or not read. Feed the same
+call a costing of `auto` and you would get a driving line; nothing in this project ever does.
 
 The dev stack also carries a separate, opt-in Compose profile for a local Valhalla, which a developer
 can start against a downloaded tile set:
@@ -173,10 +214,10 @@ What this is and is not:
   so it follows the cycleways and greenways some climbs actually ride. But it is still not a route
   *planner*: it answers "which road connects these two points," nothing about cheapest, flattest,
   or nicest.
-- It exists to turn **two curator-clicked points** into a road-following line for a **single new
-  catalog entry** — it is a drawing aid for data entry, not a feature riders can reach.
+- It exists to turn **two clicked points** into a road-following line for a **single new
+  catalog entry** — it is a drawing aid inside a contribution form, not a way to ask for a ride.
 - It degrades honestly when it fails: a straight line between the two points stays on screen, and the
-  curator is told the snap did not work, rather than the tool silently pretending it succeeded.
+  contributor is told the snap did not work, rather than the tool silently pretending it succeeded.
 - It is **guarded like any other JSON endpoint here**: a signed-out caller gets a
   clean `401` rather than a redirect to a login page it cannot render, the `X-CC-Token` header above
   is a stateless CSRF token the server requires, and a per-user limiter caps how much of the shared
@@ -185,9 +226,16 @@ What this is and is not:
 This is a real, working call to a real routing engine, and it would be dishonest to describe this
 chapter's "we do not do it yet" as covering the whole codebase without naming it. But it is also
 nothing like the routing feature this chapter has been describing throughout. A rider cannot ask
-this project to route them anywhere. Nobody outside the curator tools ever sees this call happen.
-It answers exactly one narrow question — "what road probably connects these two points a curator
+this project to route them anywhere. It happens only inside the climb contribution form, and only
+for a signed-in contributor, which `/improve` and the endpoint itself both require (`ROLE_USER`).
+It answers exactly one narrow question — "what road probably connects these two points somebody
 just clicked" — and nothing broader.
+
+
+## Further reading
+
+- [Valhalla documentation](https://valhalla.github.io/valhalla/): the engine this project runs, including the two endpoints it calls.
+- [OSRM](https://project-osrm.org/): the other common open routing engine, for comparison.
 
 ## Try it
 
@@ -200,14 +248,14 @@ just clicked" — and nothing broader.
     git grep -ln "router.project-osrm.org\|valhalla\|osrm" -- web/src web/assets
     ```
 
-    <!-- CODE-ILLUSTRATIVE sample output from this repository -->
+    <!-- CODE-ILLUSTRATIVE SAMPLE-FROM any-install; sample output from this repository -->
     ```text
     web/src/Elevation/ElevationClient.php
     web/src/Elevation/RouteSnapper.php
     ```
 
     Two hits, both server-side and both already named above: the elevation client, and the
-    `RouteSnapper` behind the curator tool's `/contribute/route` proxy. No browser file calls a
+    `RouteSnapper` behind the contribution form's `/contribute/route` proxy. No browser file calls a
     routing engine directly, and nothing under `web/assets/map/`, the map a rider actually uses,
     appears in that list.
 
@@ -229,7 +277,7 @@ just clicked" — and nothing broader.
     ls developers/docker/data/valhalla
     ```
 
-    <!-- CODE-ILLUSTRATIVE sample output from this checkout -->
+    <!-- CODE-ILLUSTRATIVE SAMPLE-FROM any-install; sample output from this checkout -->
     ```text
     ls: cannot access 'developers/docker/data/valhalla': No such file or directory
     ```
@@ -248,7 +296,7 @@ just clicked" — and nothing broader.
     WHERE a.name = 'Côte de la Redoute' AND b.name = 'Mur de Huy';
     ```
 
-    <!-- CODE-ILLUSTRATIVE sample output; both pins have fixed seeded coordinates, so this holds on any install -->
+    <!-- CODE-ILLUSTRATIVE SAMPLE-FROM fresh-clone; sample output; both pins have fixed seeded coordinates, so this holds on any install -->
     ```text
      straight_line_metres
     ----------------------
@@ -263,4 +311,4 @@ just clicked" — and nothing broader.
     Mur de Huy would necessarily come out **larger** than 32,054 m, because a road bends around
     terrain and property lines and a straight line does not, and by how much is precisely the
     graph-search question this chapter opened with, the one this project only ever asks for two
-    curator-clicked points a few kilometres apart, and never for a rider.
+    clicked points a few kilometres apart while somebody draws a climb, and never to plan a ride.

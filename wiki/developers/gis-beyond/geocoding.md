@@ -24,6 +24,19 @@ in advance: the region. What this project does not do is the open-ended version,
 coordinate called", answered by an external service. The rest of this chapter explains what that
 version would cost, and why the project avoids paying it.
 
+| where | the call | what it answers |
+|---|---|---|
+| ride-check, on an uploaded GPX | `RideCheckService::crossedRegions()` | which regions this line passes through |
+| the settings page's base point | `BaseAreaResolver::resolve()` | which regions and countries this point belongs to |
+| every submission | `SpatialResolver::resolve()` | which region contains this point |
+
+Read the third column, not the second. All three answer **at the region level**, fixed in advance,
+because that is the level this project's own polygons are cut at. Reverse geocoding is the
+open-ended version of the same question, where the answer level is whatever the service decides:
+a street, a suburb, a city, a country, chosen by somebody else's idea of what is nearby. That
+difference, not the direction of the arrow, is the reason one is cheap and correct here and the
+other is not.
+
 ## Forward and reverse, defined
 
 **Forward geocoding** takes a name — "Namur," "Rue de la Station," "Cote de la Redoute" — and returns
@@ -133,7 +146,10 @@ project's own `region` rows, not from a live lookup.
 
 The one place this project's own specs admit the gap plainly is route start-towns. The map already
 shows which towns a featured route passes through, but not by reverse-geocoding the track — by a
-hardcoded, name-keyed table that only recognises the small handful of routes it lists by name:
+hardcoded, name-keyed table that only recognises the small handful of routes it lists by name. It
+sits in `map.js`, inside the `CC_*` payload hand-off that chapter 8 of course 1 describes, rather
+than in one of the map modules, because it decorates the seeded route payload before any layer sees
+it:
 
 <!-- CODE-FROM web/assets/map/map.js -->
 ```js
@@ -181,7 +197,7 @@ somebody happened to type in by hand.
       | python3 -c "import json,sys; f=json.load(sys.stdin)['features'][0]; g=f['geometry']['coordinates']; print(f['properties']['name'], f['properties'].get('country'), g)"
     ```
 
-    <!-- CODE-ILLUSTRATIVE sample output from a live call to Photon's public API -->
+    <!-- CODE-ILLUSTRATIVE SAMPLE-FROM network; sample output from a live call to Photon's public API -->
     ```text
     Namur België / Belgique / Belgien [4.8661892, 50.4665284]
     ```
@@ -195,7 +211,7 @@ somebody happened to type in by hand.
     git grep -n "/reverse" -- . ':!wiki'
     ```
 
-    <!-- CODE-ILLUSTRATIVE sample output from this repository -->
+    <!-- CODE-ILLUSTRATIVE SAMPLE-FROM any-install; sample output from this repository -->
     ```text
     tools/wikimedia/climb_audit.py:147:NOMINATIM = "https://nominatim.openstreetmap.org/reverse"
     ```
@@ -208,7 +224,7 @@ somebody happened to type in by hand.
     git grep -n "/reverse" -- web
     ```
 
-    <!-- CODE-ILLUSTRATIVE sample output from this repository; git grep prints nothing and exits non-zero when no line matches -->
+    <!-- CODE-ILLUSTRATIVE SAMPLE-FROM any-install; sample output from this repository; git grep prints nothing and exits non-zero when no line matches -->
     ```text
     (no output, exit status 1: nothing under web/ matches)
     ```
