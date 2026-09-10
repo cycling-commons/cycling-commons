@@ -2684,6 +2684,8 @@ map:
   d_osm_login: 'Please log in to confirm.'
   d_confirmed_one: '{n} rider confirmed'
   d_confirmed_many: '{n} riders confirmed'
+  d_confirmed_curator: 'A curator confirmed'
+  d_confirmed_curator_many: '{n} confirmed, one a curator'
   d_login_confirm: 'Log in to confirm'
   d_toast_login_confirm: 'Please log in to confirm.'
   d_toast_thanks: 'Thanks — recorded.'

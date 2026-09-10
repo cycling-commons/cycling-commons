@@ -10,6 +10,7 @@ use App\Catalog\ConfirmationSource;
 use App\Catalog\ConfirmationStance;
 use App\Catalog\Entity\ChangeHistory;
 use App\Catalog\Entity\Item;
+use App\Catalog\Entity\ItemConfirmation;
 use App\Catalog\ItemSource;
 use App\Catalog\ItemState;
 use App\Community\ItemConfirmationService;
@@ -140,5 +141,61 @@ final class CuratorConfirmationTest extends KernelTestCase
         self::assertSame(ItemState::Verified, $item->getState());
         self::assertCount(0, $this->em()->getRepository(ChangeHistory::class)
             ->findBy(['itemId' => $item->getId(), 'field' => 'state']), 'no second history row');
+    }
+
+    public function testTheCuratorReceiptIsRecordedOnTheRow(): void
+    {
+        // The word itself, written down. Both readers used to infer it from
+        // arithmetic - "verified with fewer rows than the threshold, so a
+        // curator did it" - which names the wrong witness as soon as the
+        // threshold moves or the next rider confirms (owner 2026-09-10).
+        self::bootKernel();
+        $item = $this->item();
+        $curator = $this->user('receipt-confirm@test.test', ['ROLE_CURATOR']);
+
+        $this->service()->record($item, $curator, ConfirmationStance::Exists);
+
+        $row = $this->em()->getRepository(ItemConfirmation::class)
+            ->findOneBy(['itemId' => $item->getId(), 'userId' => $curator->getId()]);
+        self::assertNotNull($row);
+        self::assertTrue($row->isByCurator());
+        self::assertTrue($this->service()->snapshot($item, $curator)['byCurator'],
+            'the drawer needs it to name the stronger witness instead of counting heads');
+    }
+
+    public function testAnOrdinaryRidersRowCarriesNoCuratorReceipt(): void
+    {
+        self::bootKernel();
+        $item = $this->item();
+        $rider = $this->user('plain-receipt@test.test', []);
+
+        $this->service()->record($item, $rider, ConfirmationStance::Exists);
+
+        $row = $this->em()->getRepository(ItemConfirmation::class)
+            ->findOneBy(['itemId' => $item->getId(), 'userId' => $rider->getId()]);
+        self::assertNotNull($row);
+        self::assertFalse($row->isByCurator());
+        self::assertFalse($this->service()->snapshot($item, $rider)['byCurator']);
+    }
+
+    public function testARiderPromotedToCuratorStrengthensTheirNextAnswer(): void
+    {
+        // The receipt is written at the moment of the answer, and the flag
+        // never comes back off - the same rule that keeps a drawer answer
+        // from being demoted to a form one.
+        self::bootKernel();
+        $item = $this->item();
+        $rider = $this->user('promoted-receipt@test.test', []);
+        $this->service()->record($item, $rider, ConfirmationStance::Exists);
+
+        $rider->setRoles(['ROLE_CURATOR']);
+        $this->em()->flush();
+        $this->service()->record($item, $rider, ConfirmationStance::Exists);
+
+        $row = $this->em()->getRepository(ItemConfirmation::class)
+            ->findOneBy(['itemId' => $item->getId(), 'userId' => $rider->getId()]);
+        self::assertNotNull($row);
+        self::assertTrue($row->isByCurator());
+        self::assertSame(ItemState::Verified, $item->getState());
     }
 }

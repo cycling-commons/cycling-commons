@@ -2208,6 +2208,8 @@ map:
   d_osm_login: 'Connectez-vous pour confirmer.'
   d_confirmed_one: '{n} cycliste a confirmé'
   d_confirmed_many: '{n} cyclistes ont confirmé'
+  d_confirmed_curator: 'Un curateur a confirmé'
+  d_confirmed_curator_many: '{n} confirmations, dont un curateur'
   d_login_confirm: 'Connectez-vous pour confirmer'
   d_toast_login_confirm: 'Veuillez vous connecter pour confirmer.'
   d_toast_thanks: 'Merci — enregistré.'

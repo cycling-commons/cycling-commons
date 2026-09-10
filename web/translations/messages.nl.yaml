@@ -2208,6 +2208,8 @@ map:
   d_osm_login: 'Log in om te bevestigen.'
   d_confirmed_one: '{n} renner bevestigde'
   d_confirmed_many: '{n} renners bevestigden'
+  d_confirmed_curator: 'Een curator bevestigde het'
+  d_confirmed_curator_many: '{n} bevestigingen, waarvan een curator'
   d_login_confirm: 'Log in om te bevestigen'
   d_toast_login_confirm: 'Log in om te bevestigen.'
   d_toast_thanks: 'Bedankt — vastgelegd.'

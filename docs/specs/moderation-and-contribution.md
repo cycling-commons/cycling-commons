@@ -1806,6 +1806,29 @@ what verified meant and a rider clearing a badge changed nothing a curator could
 see. `CatalogProvider`, `PublicItemsProvider` and `CuratedReadiness` now all read
 `state = 'verified'` and nothing else (map-and-search.md §12).
 
+**The curator's word is recorded, never inferred** (owner 2026-09-10:
+"curator confirmed, as this is stronger"). `item_confirmation.by_curator` is
+written at the moment of the answer, from the roles the confirmer held then, and
+never comes back off: a rider promoted to curator strengthens their standing
+answer on their next tap, and a demotion cannot rewrite who was standing there.
+`Version20260910170000` adds the column and backfills it from the roles each
+confirmer holds today, which is the only evidence the older rows left.
+
+Two readers used to reconstruct it from arithmetic instead, and both named the
+wrong witness the moment `map.item_verify_threshold` moved or one more rider
+confirmed:
+
+- the drawer counted heads and said "1 rider confirmed" over a curator's
+  answer. It reads `byCurator` off the snapshot now and says "A curator
+  confirmed", or "{n} confirmed, one a curator" once riders stand behind it too
+  (`d_confirmed_curator`, `d_confirmed_curator_many`).
+- `ItemEvidenceResolver` read "verified with fewer rows than the threshold" as a
+  curator's word. A recorded answer now settles `verifiedBy` outright; the count
+  speaks only where no such row exists, which is what a pre-column row and an
+  import-promoted row look like. The **rung** is unchanged either way, because
+  rung 11 is a curator's word AND nothing else and `EvidenceRung` applies that
+  test itself (data-provider-hierarchy.md §6.7.7).
+
 **The rule does not read provenance.** An OpenStreetMap node, a national
 register entry and a rider's own pin all start Unverified and all leave it the
 same way: somebody stood there. `Version20260909210000` swept the rows that had

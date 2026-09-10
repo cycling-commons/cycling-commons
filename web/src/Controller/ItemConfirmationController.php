@@ -118,7 +118,7 @@ final class ItemConfirmationController extends AbstractController
     }
 
     /**
-     * @return array{stances: array<string, int>, total: int, mine: ?string, mineSource: ?string, stanceKind: string}
+     * @return array{stances: array<string, int>, total: int, byCurator: bool, mine: ?string, mineSource: ?string, stanceKind: string}
      */
     private function payload(Item $item, ?User $user): array
     {

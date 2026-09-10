@@ -2211,6 +2211,8 @@ map:
   d_osm_login: 'Zum Bestätigen bitte anmelden.'
   d_confirmed_one: '{n} Fahrer bestätigte'
   d_confirmed_many: '{n} Fahrer bestätigten'
+  d_confirmed_curator: 'Ein Kurator hat es bestätigt'
+  d_confirmed_curator_many: '{n} Bestätigungen, davon ein Kurator'
   d_login_confirm: 'Anmelden zum Bestätigen'
   d_toast_login_confirm: 'Bitte zum Bestätigen anmelden.'
   d_toast_thanks: 'Danke — erfasst.'

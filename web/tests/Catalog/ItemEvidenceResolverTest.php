@@ -47,6 +47,7 @@ final class ItemEvidenceResolverTest extends TestCase
             'ev_provider' => true,
             'ev_scope' => true,
             'ev_conf' => 0,
+            'ev_curator' => false,
             'ev_last' => null,
             'ev_witness' => null,
             'ev_reclaimed' => null,
@@ -154,16 +155,45 @@ final class ItemEvidenceResolverTest extends TestCase
         self::assertFalse($e->badge);
     }
 
-    public function testAVerifiedRowBelowTheThresholdWasACuratorsWord(): void
+    public function testAVerifiedRowCarriesTheCuratorsWordWhenTheRowSaysSo(): void
     {
         $e = $this->resolver()->fromRow(
-            $this->row(['state' => 'verified', 'ev_conf' => 1, 'ev_last' => '2026-08-20 10:00:00']),
+            $this->row(['state' => 'verified', 'ev_conf' => 1, 'ev_curator' => true, 'ev_last' => '2026-08-20 10:00:00']),
             new \DateTimeImmutable(self::NOW),
         );
 
         self::assertSame(11, $e->rung);
         self::assertSame('curator', $e->verifiedBy);
         self::assertSame(CustodyTier::Ours, $e->custody);
+    }
+
+    public function testARecordedCuratorKeepsTheReceiptWhenRidersPileOn(): void
+    {
+        // The receipt names the curator whose word settled it, however many
+        // riders stood there afterwards (owner 2026-09-10). The RUNG still
+        // follows the stronger evidence: rung 11 is a curator's word and
+        // nothing else, so a row at the threshold reads 10.
+        $e = $this->resolver()->fromRow(
+            $this->row(['state' => 'verified', 'ev_conf' => 2, 'ev_curator' => true, 'ev_last' => '2026-08-20 10:00:00']),
+            new \DateTimeImmutable(self::NOW),
+        );
+
+        self::assertSame('curator', $e->verifiedBy);
+        self::assertSame(10, $e->rung);
+    }
+
+    public function testTheCountStillSpeaksWhereNoCuratorRowExists(): void
+    {
+        // Rows verified before the receipt column existed, and rows an import
+        // promoted, carry no by_curator anywhere. Verified below the threshold
+        // still means something other than a rider tally earned it.
+        $e = $this->resolver()->fromRow(
+            $this->row(['state' => 'verified', 'ev_conf' => 0, 'ev_curator' => false]),
+            new \DateTimeImmutable(self::NOW),
+        );
+
+        self::assertSame('curator', $e->verifiedBy);
+        self::assertSame(11, $e->rung);
     }
 
     public function testAPublishedWitnessDateCountsForAGrossRow(): void

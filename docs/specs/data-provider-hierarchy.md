@@ -698,6 +698,17 @@ is a human at the point on a known date.
 | 11 | the verified state, earned by one curator's word, below the threshold | none | minimum |
 | 12 | the verified state, and five or more riders | none | high |
 
+**`verifiedBy` is read, not reconstructed** (owner, 2026-09-10).
+`ItemEvidenceResolver` takes the receipt from `item_confirmation.by_curator`
+(moderation-and-contribution.md §10.1), so a curator's answer keeps naming that
+curator however many riders confirm afterwards. The count still speaks where no
+such row exists, which is what a row verified before the column existed and a
+row an import promoted both look like: verified below the threshold means
+something other than a rider tally earned it. Rung 11 is unaffected by either
+reading, because it tests `verifiedBy === 'curator'` **and** `confirmations <
+threshold`: once the threshold of riders has stood there too, the ladder reads
+the stronger evidence and the row is rung 10 or 12.
+
 Rung 3 is its own rung and never rung 1 (owner, 2026-09-10): a row a rider
 chose to add and a curator accepted is a claim, but never a gross provider's,
 and it is the one cell of the grid, solid paper with the `?`, that no other rung

@@ -46,18 +46,34 @@ class ItemConfirmation
     #[ORM\Column(type: Types::STRING, length: 8, enumType: ConfirmationSource::class, options: ['default' => 'drawer'])]
     private ConfirmationSource $source;
 
+    /**
+     * Was this person a curator when they stood there?
+     *
+     * Recorded, never inferred. A curator's word settles the verified state on
+     * its own (§10.1), and until this column existed the only trace of that
+     * was arithmetic: "verified, but fewer rows than the threshold, so it must
+     * have been a curator". That reading breaks the moment the threshold
+     * moves or a rider adds the next confirmation, and the receipt the drawer
+     * shows would then name the wrong witness.
+     *
+     * @see docs/specs/moderation-and-contribution.md §10.1
+     */
+    #[ORM\Column(name: 'by_curator', type: Types::BOOLEAN, options: ['default' => false])]
+    private bool $byCurator = false;
+
     #[ORM\Column(name: 'created_at', type: Types::DATETIME_IMMUTABLE)]
     private \DateTimeImmutable $createdAt;
 
     #[ORM\Column(name: 'updated_at', type: Types::DATETIME_IMMUTABLE)]
     private \DateTimeImmutable $updatedAt;
 
-    public function __construct(int $itemId, int $userId, ConfirmationStance $stance, ConfirmationSource $source = ConfirmationSource::Drawer)
+    public function __construct(int $itemId, int $userId, ConfirmationStance $stance, ConfirmationSource $source = ConfirmationSource::Drawer, bool $byCurator = false)
     {
         $this->itemId = $itemId;
         $this->userId = $userId;
         $this->stance = $stance;
         $this->source = $source;
+        $this->byCurator = $byCurator;
         $this->createdAt = new \DateTimeImmutable();
         $this->updatedAt = new \DateTimeImmutable();
     }
@@ -103,6 +119,24 @@ class ItemConfirmation
     public function setSource(ConfirmationSource $source): static
     {
         $this->source = $source;
+        $this->updatedAt = new \DateTimeImmutable();
+
+        return $this;
+    }
+
+    public function isByCurator(): bool
+    {
+        return $this->byCurator;
+    }
+
+    /**
+     * A rider promoted to curator strengthens their standing confirmation on
+     * their next answer; the flag never comes back off, on the same rule that
+     * keeps a drawer answer from being demoted to a form one.
+     */
+    public function setByCurator(bool $byCurator): static
+    {
+        $this->byCurator = $this->byCurator || $byCurator;
         $this->updatedAt = new \DateTimeImmutable();
 
         return $this;

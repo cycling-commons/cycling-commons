@@ -56,6 +56,7 @@ final class ItemEvidenceResolver
         return "({$i}.provider_id IS NOT NULL) AS ev_provider,
                 (SELECT jsonb_exists(ev_dp.letters, {$i}.letter) FROM data_provider ev_dp WHERE ev_dp.id = {$i}.provider_id) AS ev_scope,
                 (SELECT COUNT(*) {$witnesses}) AS ev_conf,
+                EXISTS (SELECT 1 {$witnesses} AND ev_c.by_curator) AS ev_curator,
                 (SELECT MAX(ev_c.created_at) {$witnesses}) AS ev_last,
                 COALESCE((SELECT {$i}.attributes->>ev_dp.survey_date_attribute FROM data_provider ev_dp
                            WHERE ev_dp.id = {$i}.provider_id AND ev_dp.survey_date_attribute IS NOT NULL),
@@ -64,14 +65,23 @@ final class ItemEvidenceResolver
     }
 
     /**
-     * @param array{state: string, source: string, imported_at: string|null, ev_provider: bool, ev_scope: bool|null, ev_conf: int|string, ev_last: string|null, ev_witness: string|null, ev_reclaimed: string|null, ...} $row
+     * @param array{state: string, source: string, imported_at: string|null, ev_provider: bool, ev_scope: bool|null, ev_conf: int|string, ev_curator?: bool|null, ev_last: string|null, ev_witness: string|null, ev_reclaimed: string|null, ...} $row
      */
     public function fromRow(array $row, \DateTimeImmutable $now): ItemEvidence
     {
         $threshold = $this->settings->get(SettingsRegistry::MAP_ITEM_VERIFY_THRESHOLD);
         $confirmations = (int) $row['ev_conf'];
+        // Who earned the state. A recorded curator answer
+        // (item_confirmation.by_curator) settles it outright, however many
+        // riders have stood there since: their word is the stronger evidence
+        // and the receipt should name it (owner 2026-09-10). Only where no
+        // such row exists does the count still have to speak. Verified below
+        // the threshold means something other than a rider tally earned it:
+        // a curator, or the import a curator ran. The rung is unaffected
+        // either way: rung 11 is a curator's word AND nothing else, and
+        // EvidenceRung applies that test itself.
         $verifiedBy = ItemState::Verified->value === $row['state']
-            ? ($confirmations >= $threshold ? 'riders' : 'curator')
+            ? (($row['ev_curator'] ?? false) || $confirmations < $threshold ? 'curator' : 'riders')
             : null;
         $provider = (bool) $row['ev_provider'];
         $source = ItemSource::tryFrom($row['source']);

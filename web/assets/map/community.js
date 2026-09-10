@@ -121,7 +121,17 @@ function paintItemConfirm(box, s){
     const primary=CC_CF_NEGATIVE.has(v)?'':' cf-yes';
     return `<button class="cc-cf-btn${primary}${mine}" data-cf-act="${v}"${authed?'':' disabled'}>${l}</button>`;
   }).join('');
-  const total = s.total ? `<span class="cc-cf-total">· ${tpl((s.total===1?D.confirmedOne:D.confirmedMany)||`{n} rider${s.total===1?'':'s'} confirmed`, {n:s.total})}</span>` : '';
+  /* A curator's word settles the state on its own, so the tally names that
+     witness instead of counting heads (owner 2026-09-10). The count still
+     shows when riders stand behind it too: the curator is the stronger
+     evidence, not the only evidence. */
+  const tally = !s.total ? ''
+    : s.byCurator
+      ? (s.total === 1
+          ? (D.confirmedCurator || 'A curator confirmed')
+          : tpl(D.confirmedCuratorMany || '{n} confirmed, one a curator', {n: s.total}))
+      : tpl((s.total===1?D.confirmedOne:D.confirmedMany) || `{n} rider${s.total===1?'':'s'} confirmed`, {n: s.total});
+  const total = tally ? `<span class="cc-cf-total">· ${tally}</span>` : '';
   const mineLabel = s.mine
     ? (defs.find(([v])=>v===s.mine)||[])[1] || s.mine
     : '';

@@ -2688,6 +2688,8 @@ map:
   d_osm_login: 'Inicia sesión para confirmar.'
   d_confirmed_one: '{n} ciclista lo ha confirmado'
   d_confirmed_many: '{n} ciclistas lo han confirmado'
+  d_confirmed_curator: 'Un curador lo ha confirmado'
+  d_confirmed_curator_many: '{n} confirmaciones, una de un curador'
   d_login_confirm: 'Inicia sesión para confirmar'
   d_toast_login_confirm: 'Inicia sesión para confirmar.'
   d_toast_thanks: 'Gracias — registrado.'

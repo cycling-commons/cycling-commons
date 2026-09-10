@@ -81,17 +81,20 @@ final class ItemConfirmationService
             throw new \InvalidArgumentException(sprintf('Stance "%s" is not offered for a %s item.', $stance->value, $item->getLetter()));
         }
 
-        $this->em->wrapInTransaction(function () use ($item, $user, $stance, $source): void {
+        $byCurator = self::isCurator($user);
+
+        $this->em->wrapInTransaction(function () use ($item, $user, $stance, $source, $byCurator): void {
             $existing = $this->em->getRepository(ItemConfirmation::class)
                 ->findOneBy(['itemId' => (int) $item->getId(), 'userId' => (int) $user->getId()]);
 
             if (null !== $existing) {
                 $existing->setStance($stance);
+                $existing->setByCurator($byCurator);
                 if (ConfirmationSource::Drawer === $source) {
                     $existing->setSource($source);
                 }
             } else {
-                $this->em->persist(new ItemConfirmation((int) $item->getId(), (int) $user->getId(), $stance, $source));
+                $this->em->persist(new ItemConfirmation((int) $item->getId(), (int) $user->getId(), $stance, $source, $byCurator));
             }
 
             // The tally below is a DBAL count, so this rider's own row has to
@@ -129,9 +132,7 @@ final class ItemConfirmationService
             return;
         }
 
-        $roles = $user->getRoles();
-        $isCurator = \in_array('ROLE_CURATOR', $roles, true) || \in_array('ROLE_ADMIN', $roles, true);
-        if (!$isCurator && $this->vouchingTally($item) < $this->settings->get(SettingsRegistry::MAP_ITEM_VERIFY_THRESHOLD)) {
+        if (!self::isCurator($user) && $this->vouchingTally($item) < $this->settings->get(SettingsRegistry::MAP_ITEM_VERIFY_THRESHOLD)) {
             return;
         }
 
@@ -142,6 +143,14 @@ final class ItemConfirmationService
             ->setOldValue(ItemState::Unverified->value)
             ->setNewValue(ItemState::Verified->value)
             ->setChangedBy((int) $user->getId()));
+    }
+
+    /** Curator or admin: the two roles whose single word settles the verified state (§10.1). */
+    private static function isCurator(User $user): bool
+    {
+        $roles = $user->getRoles();
+
+        return \in_array('ROLE_CURATOR', $roles, true) || \in_array('ROLE_ADMIN', $roles, true);
     }
 
     /**
@@ -180,7 +189,7 @@ final class ItemConfirmationService
     /**
      * Public tally plus this user's stance. Form-sourced rows are excluded from counts.
      *
-     * @return array{stances: array<string, int>, total: int, mine: ?string, mineSource: ?string}
+     * @return array{stances: array<string, int>, total: int, byCurator: bool, mine: ?string, mineSource: ?string}
      */
     public function snapshot(Item $item, ?User $user): array
     {
@@ -204,6 +213,20 @@ final class ItemConfirmationService
             }
         }
 
+        // A curator's word is the stronger witness, so the drawer names it
+        // instead of counting heads (owner 2026-09-10). Read from the column,
+        // not from the roles a confirmer holds today: the record says who was
+        // standing there, and a later promotion or demotion cannot rewrite it.
+        $byCurator = (bool) $this->db->fetchOne(
+            "SELECT EXISTS (SELECT 1 FROM item_confirmation
+                             WHERE item_id = :id AND source <> 'form' AND by_curator = true AND stance IN (:stances))",
+            ['id' => (int) $item->getId(), 'stances' => array_map(
+                static fn (ConfirmationStance $s): string => $s->value,
+                ConfirmationStance::vouching(),
+            )],
+            ['stances' => ArrayParameterType::STRING],
+        );
+
         $mine = null;
         $mineSource = null;
         if (null !== $user) {
@@ -213,6 +236,6 @@ final class ItemConfirmationService
             $mineSource = $own?->getSource()->value;
         }
 
-        return ['stances' => $stances, 'total' => $total, 'mine' => $mine, 'mineSource' => $mineSource];
+        return ['stances' => $stances, 'total' => $total, 'byCurator' => $byCurator, 'mine' => $mine, 'mineSource' => $mineSource];
     }
 }

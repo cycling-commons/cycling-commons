@@ -292,6 +292,7 @@ final class MapController extends AbstractController
             'waterQ' => 'd_water_q', 'hereQ' => 'd_here_q', 'notPotable' => 'd_not_potable',
             'waterA' => 'd_water_a', 'hereA' => 'd_here_a',
             'confirmHere' => 'd_confirm_here', 'confirmedOne' => 'd_confirmed_one', 'confirmedMany' => 'd_confirmed_many',
+            'confirmedCurator' => 'd_confirmed_curator', 'confirmedCuratorMany' => 'd_confirmed_curator_many',
             'osmBroken' => 'd_osm_broken', 'osmClosed' => 'd_osm_closed', 'osmGone' => 'd_osm_gone',
             'osmSent' => 'd_osm_sent', 'osmAlready' => 'd_osm_already',
             'osmFailed' => 'd_osm_failed', 'osmLogin' => 'd_osm_login',
