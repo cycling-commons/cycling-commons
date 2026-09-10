@@ -229,10 +229,114 @@
   .rank{display:flex;align-items:center;gap:.9rem;padding:.7rem 0;border-bottom:1px solid rgba(239,230,212,.14)}
   .rank .n{font-family:var(--mono);color:var(--trail);font-size:.85rem;width:1.4rem}
   .rank .nm{flex:1;font-weight:500}
-  .rank .co{font-family:var(--mono);font-size:.74rem;color:rgba(239,230,212,.55)}
+  .rank .co{font-family:var(--mono);font-size:.74rem;color:rgba(239,230,212,.72)}
   .silo-more{display:block;margin-top:1rem;font-family:var(--mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--trail);text-decoration:underline}
   .silo-more:hover{color:#ff703d}
   .vs{font-family:var(--mono);font-size:.7rem;letter-spacing:.14em;color:var(--trail);margin:1.4rem 0 .4rem;text-align:center}
+
+  /* ---------- CURATION: the best-of card, three drafts ----------
+     Same pure-CSS switch as the silo box. The drafts differ in one idea: v1
+     names the climbs, v2 and v3 DRAW them. Every path is generated from the
+     numbers printed beside it (rise = gain, run = gain / average gradient) on
+     one shared scale, 2.67 km across and 232 m tall, so length, height and
+     steepness are all comparable between rows. preserveAspectRatio="none"
+     is deliberate: the box stretches with the card, and because every profile
+     stretches by the same factor the comparison survives. */
+  .cur{position:relative}
+  .cur .cur-pick{position:absolute;opacity:0;width:0;height:0;pointer-events:none}
+  /* Out of the flow and nearly out of sight: the card must sit exactly where it
+     will sit once a draft is chosen and the switch is deleted. It comes up to
+     full contrast on hover and on keyboard focus, so it is still usable. */
+  .cur .cur-sw{position:absolute;bottom:100%;right:0;display:flex;gap:.3rem;margin:0 0 .45rem;opacity:.18;transition:opacity .2s}
+  .cur .cur-sw:hover,.cur:focus-within .cur-sw{opacity:1}
+  .cur .cur-sw label{font-family:var(--mono);font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;padding:.2rem .5rem;
+    border:1px solid rgba(20,22,14,.3);border-radius:40px;color:var(--clay);cursor:pointer;user-select:none;transition:all .2s}
+  .cur .cur-sw label:hover{border-color:var(--ink);color:var(--ink)}
+  #cur-v1:checked ~ .cur-sw label[for="cur-v1"],#cur-v2:checked ~ .cur-sw label[for="cur-v2"],#cur-v3:checked ~ .cur-sw label[for="cur-v3"]{
+    background:var(--trail);border-color:var(--trail);color:var(--ink)}
+  #cur-v1:focus-visible ~ .cur-sw label[for="cur-v1"],#cur-v2:focus-visible ~ .cur-sw label[for="cur-v2"],#cur-v3:focus-visible ~ .cur-sw label[for="cur-v3"]{
+    outline:2px solid var(--ink);outline-offset:2px}
+  .cur .cur-v{display:none}
+  #cur-v1:checked ~ .cur-v1,#cur-v2:checked ~ .cur-v2,#cur-v3:checked ~ .cur-v3{display:block}
+
+  /* the drawn parts, shared by both graphical drafts */
+  .cur .fil{fill:rgba(239,230,212,.09)}
+  .cur .rdg{fill:none;stroke:rgba(239,230,212,.62);stroke-width:1.5;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+  /* the steepest ramp of that climb, the one thing lit on the whole shape */
+  .cur .stp{fill:none;stroke:var(--trail);stroke-width:2.4;stroke-linecap:round;vector-effect:non-scaling-stroke}
+  .cur .base{stroke:rgba(239,230,212,.2);stroke-width:1;vector-effect:non-scaling-stroke}
+  /* the steepest ramp as a band under the line: the wall has width, and a 2 px
+     stroke on a 40 px shape is not something a reader finds. A lighter step of
+     the SAME hill rather than an orange wash, which went brown on the spruce
+     and read as a different material; the lit ridge above carries the colour. */
+  .cur .ramp{fill:rgba(239,230,212,.13)}
+
+  /* v2: four profiles, one under the other, all starting at the same foot.
+     The profile takes the whole row under the name, so the ragged right edge
+     (the length) is read against the same left margin every time. */
+  .cur-v2 .cur-prof{list-style:none;margin:.4rem 0 0;padding:0}
+  .cur-v2 .cur-row{display:grid;grid-template-columns:1.6rem 1fr auto;grid-template-areas:"n nm co" ". sil sil";
+    align-items:baseline;gap:.2rem .7rem;padding:.75rem 0 .85rem;border-bottom:1px solid rgba(239,230,212,.14)}
+  .cur-v2 .cur-row:last-child{border-bottom:none}
+  .cur-v2 .cur-row .n{grid-area:n;font-family:var(--mono);color:var(--trail);font-size:.85rem}
+  .cur-v2 .cur-row .nm{grid-area:nm;font-weight:500;white-space:nowrap}
+  .cur-v2 .cur-row .co{grid-area:co;font-family:var(--mono);font-size:.7rem;color:rgba(239,230,212,.72);white-space:nowrap}
+  .cur-v2 .cur-sil{grid-area:sil;display:block;width:100%;height:clamp(38px,5.5vw,48px);margin-top:.15rem}
+
+  /* v3: the same screen on the shared phone. Nothing here restyles the frame;
+     it only lays out what is on the glass. */
+  .cur-v3 .cur-screen{padding:.35rem .15rem 0}
+  .cur-v3 .cur-screen .pin{display:block;margin:1.3rem 0 1rem;font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;
+    line-height:1.5;color:rgba(239,230,212,.8)}
+  .cur-v3 .cur-hero{position:relative;margin:0 0 .9rem}
+  .cur-v3 .cur-big{display:block;width:100%;height:96px}
+  .cur-v3 .cur-summit{position:absolute;top:0;right:0;width:8px;height:8px;border-radius:50%;
+    background:var(--trail);box-shadow:0 0 0 3px rgba(255,90,31,.22);transform:translate(30%,-30%)}
+  .cur-v3 .cur-hero-t{display:flex;flex-wrap:wrap;align-items:baseline;gap:.2rem .6rem;margin-top:.6rem}
+  .cur-v3 .cur-hero-t .n{font-family:var(--mono);color:var(--trail);font-size:.78rem}
+  .cur-v3 .cur-hero-t strong{font-family:var(--serif);font-weight:500;font-size:1.15rem;line-height:1.1;color:var(--paper)}
+  .cur-v3 .cur-hero-t .co{flex-basis:100%;font-family:var(--mono);font-size:.64rem;color:rgba(239,230,212,.75)}
+  .cur-v3 .cur-rest{list-style:none;margin:0;padding:0;border-top:1px solid rgba(239,230,212,.14)}
+  /* Areas, not bare columns, so the narrow layout only has to re-flow them. */
+  .cur-v3 .cur-rest li{display:grid;grid-template-columns:1.4rem minmax(7.4rem,auto) minmax(40px,1fr) auto;
+    grid-template-areas:"n nm sil co";align-items:center;gap:.5rem;
+    padding:.55rem 0;border-bottom:1px solid rgba(239,230,212,.14)}
+  .cur-v3 .cur-rest li:last-child{border-bottom:none}
+  .cur-v3 .cur-rest .n{grid-area:n;font-family:var(--mono);color:var(--trail);font-size:.78rem}
+  .cur-v3 .cur-rest .nm{grid-area:nm;font-weight:500;font-size:.9rem;white-space:nowrap;color:var(--paper)}
+  .cur-v3 .cur-spark{grid-area:sil;display:block;width:100%;height:18px}
+  .cur-v3 .cur-rest .co{grid-area:co;font-family:var(--mono);font-size:.62rem;color:rgba(239,230,212,.72);white-space:nowrap}
+  .cur-v3 .vs{margin:1rem 0 .2rem}
+
+  /* One orchestrated moment: each profile rises into place, the lit ramp and
+     its band a beat later. Keyframes, not transitions, so flipping the toggle
+     replays them the way the phone draft replays.
+
+     NOT a stroke-dasharray draw-on. These ridges carry
+     `vector-effect:non-scaling-stroke`, and a dash pattern is then measured in
+     DEVICE space while `pathLength` normalises USER space: a dasharray of 1
+     becomes a 1 px dash and a 1 px gap on a 280 px line, which renders as a
+     broken line rather than a drawn one. */
+  .cur .cur-sil,.cur .cur-big,.cur .cur-spark{opacity:0;transform:translateY(6px)}
+  .cur.in .cur-sil,.cur.in .cur-big,.cur.in .cur-spark{
+    animation:curRise .55s cubic-bezier(.2,.7,.3,1) forwards;animation-delay:calc(.15s + var(--i,0) * .1s)}
+  .cur .ramp,.cur .stp{opacity:0}
+  .cur.in .ramp,.cur.in .stp{animation:curFade .45s ease-out forwards;animation-delay:calc(.55s + var(--i,0) * .1s)}
+  .cur.in .cur-summit{animation:curPop .4s cubic-bezier(.3,1.5,.5,1) .95s backwards}
+  @keyframes curRise{to{opacity:1;transform:none}}
+  @keyframes curFade{to{opacity:1}}
+  @keyframes curPop{from{opacity:0;transform:translate(40%,-40%) scale(.2)}}
+  /* the numbers stay put when the rows get narrow; the profile keeps the room */
+  @media(max-width:560px){
+    .cur-v2 .cur-row{grid-template-columns:1.6rem 1fr;grid-template-areas:"n nm" ". co" ". sil";align-items:start}
+    .cur-v2 .cur-row .co{white-space:normal}
+    /* three columns, because the area map above has three. A two-column grid
+       makes the whole grid-template-areas declaration invalid and every child
+       falls back to auto-placement. */
+    .cur-v3 .cur-rest li{grid-template-columns:1.4rem 1fr auto;grid-template-areas:"n nm co" ". sil sil";
+      align-items:baseline;gap:.15rem .5rem}
+    .cur-v3 .cur-rest .co{white-space:nowrap;justify-self:end}
+  }
 
   /* ---------- SILO PANEL (fragmentation) ----------
      Six tiles, one per layer a rider needs today, each walled off from the
@@ -289,8 +393,12 @@
   /* ---------- review toggle + the three drafts ---------- */
   .silo{position:relative}
   .silo .silo-pick{position:absolute;opacity:0;width:0;height:0;pointer-events:none}
-  .silo .silo-sw{display:flex;justify-content:flex-end;gap:.3rem;margin:0 0 .8rem}
-  .silo .silo-sw label{font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;padding:.28rem .62rem;
+  /* Same as the curation switch: out of the flow, so the box sits exactly where
+     it will sit once a draft is picked and the switch is deleted, and faint
+     until somebody reaches for it. */
+  .silo .silo-sw{position:absolute;bottom:100%;right:0;display:flex;gap:.3rem;margin:0 0 .45rem;opacity:.18;transition:opacity .2s}
+  .silo .silo-sw:hover,.silo:focus-within .silo-sw{opacity:1}
+  .silo .silo-sw label{font-family:var(--mono);font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;padding:.2rem .5rem;
     border:1px solid rgba(20,22,14,.3);border-radius:40px;color:var(--clay);cursor:pointer;user-select:none;transition:all .2s}
   .silo .silo-sw label:hover{border-color:var(--ink);color:var(--ink)}
   #silo-v1:checked ~ .silo-sw label[for="silo-v1"],#silo-v2:checked ~ .silo-sw label[for="silo-v2"],#silo-v3:checked ~ .silo-sw label[for="silo-v3"]{
@@ -305,26 +413,36 @@
      purpose: an element that goes from display:none to shown restarts its
      keyframes, so flipping the toggle to this draft replays the whole thing.
      Timeline: apps pop in (0.15s+), the locked ones jiggle once (1s), then
-     every app flies into the Commons icon (2.1s+) and that icon climbs into
-     the emptied screen and grows (2.6s). --tx/--ty/--up come from hero.js. */
-  .silo-v3 h3{font-family:var(--serif);font-weight:500;font-size:1.5rem;margin-bottom:1.1rem;color:var(--ink)}
-  .silo .phone{width:min(100%,360px);margin:0 auto;padding:1rem 1rem 1.3rem;border-radius:32px;position:relative;overflow:hidden;
+     every app flies into the Commons icon (4.6s+) and that icon climbs into
+     the emptied screen and grows (5.8s), then Replay appears (6.9s).
+     --tx/--ty/--up come from hero.js.
+
+     The order matters and is not slack: the last app lands at about 5.7s, and
+     the dock may not start climbing before then. Overlap them and the apps are
+     visibly chasing a target that has already left. */
+  /* THE phone caption, above the device and centred over it, in both sections. */
+  .silo-v3 h3,.cur-v3 > h3{font-family:var(--serif);font-weight:500;font-size:1.5rem;margin-bottom:1.1rem;
+    color:var(--ink);text-align:center}
+  /* THE phone frame. The fragmentation box and the best-of card are the same
+     device seen twice, so the frame is defined once and neither section owns
+     it (owner 2026-09-10: the two were drifting into different styles). */
+  .phone{width:min(100%,360px);margin:0 auto;padding:1rem 1rem 1.3rem;border-radius:32px;position:relative;overflow:hidden;
     background:var(--ink);border:1px solid rgba(239,230,212,.28);box-shadow:0 0 0 5px rgba(16,30,22,.55),0 30px 50px -28px rgba(0,0,0,.8)}
-  .silo .ph-notch{width:84px;height:18px;margin:0 auto;border-radius:12px;background:#000;border:1px solid rgba(239,230,212,.18)}
-  .silo .ph-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.1rem .5rem;list-style:none;margin:1.4rem 0 1.6rem;padding:0 .2rem}
+  .ph-notch{width:84px;height:18px;margin:0 auto;border-radius:12px;background:#000;border:1px solid rgba(239,230,212,.18)}
+  .silo .ph-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.1rem .35rem;list-style:none;margin:1.4rem 0 1.6rem;padding:0}
   .silo .ph-app{display:flex;flex-direction:column;align-items:center;text-align:center;gap:.35rem;opacity:0;will-change:transform,opacity}
   .silo.in .ph-app{animation:phPop .45s cubic-bezier(.3,1.4,.5,1) forwards,phFly .75s cubic-bezier(.55,0,.85,.35) forwards;
-    animation-delay:calc(.15s + var(--i) * .08s),calc(2.1s + var(--i) * .07s)}
-  .silo .ph-ic{position:relative;display:inline-flex;align-items:center;justify-content:center;width:62px;height:62px;border-radius:16px;
+    animation-delay:calc(.15s + var(--i) * .08s),calc(var(--fly,4.6s) + var(--i) * .07s)}
+  .silo .ph-ic{position:relative;display:inline-flex;align-items:center;justify-content:center;width:76px;height:76px;border-radius:19px;
     background:linear-gradient(160deg,color-mix(in srgb,var(--tint) 100%,white 18%),var(--tint));color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 8px 16px -8px rgba(0,0,0,.9)}
   .silo .ph-ic .q-icon{display:inline-flex;color:#fff}
-  .silo .ph-ic .q-icon svg{display:block;width:30px;height:30px}
-  .silo .ph-ic .q-icon--glyph{width:30px;height:30px;align-items:center;justify-content:center;font-size:1.55rem;line-height:1;font-style:normal;
+  .silo .ph-ic .q-icon svg{display:block;width:38px;height:38px}
+  .silo .ph-ic .q-icon--glyph{width:38px;height:38px;align-items:center;justify-content:center;font-size:1.95rem;line-height:1;font-style:normal;
     font-family:"Apple Color Emoji","Noto Color Emoji","Segoe UI Emoji","Noto Sans Symbols2",system-ui,sans-serif;filter:grayscale(1) brightness(0) invert(1)}
   /* closed: a padlock badge, and one short jiggle once the icons have landed (the
      "you cannot move these" gesture), three wiggles and then still */
-  .silo .ph-app.shut .ph-ic::after{content:"";position:absolute;top:-7px;right:-7px;width:20px;height:20px;border-radius:50%;background-color:var(--clay);border:2px solid var(--ink);
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23EFE6D4' d='M8 10V8a4 4 0 0 1 8 0v2h.5a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1h-9a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1H8Zm1.6 0h4.8V8a2.4 2.4 0 0 0-4.8 0v2Z'/%3E%3C/svg%3E");background-size:13px;background-position:center;background-repeat:no-repeat}
+  .silo .ph-app.shut .ph-ic::after{content:"";position:absolute;top:-8px;right:-8px;width:24px;height:24px;border-radius:50%;background-color:var(--clay);border:2px solid var(--ink);
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23EFE6D4' d='M8 10V8a4 4 0 0 1 8 0v2h.5a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1h-9a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1H8Zm1.6 0h4.8V8a2.4 2.4 0 0 0-4.8 0v2Z'/%3E%3C/svg%3E");background-size:15px;background-position:center;background-repeat:no-repeat}
   .silo.in .ph-app.shut .ph-ic{animation:phJiggle .22s ease-in-out 3;animation-delay:calc(1s + var(--i) * .05s)}
   /* scattered: never really an app. Dashed ghost of a tile, the glyph half there. */
   .silo .ph-app.scat .ph-ic{background:transparent;border:1.5px dashed color-mix(in srgb,var(--tint) 70%,white 30%);box-shadow:none;color:color-mix(in srgb,var(--tint) 55%,white 45%)}
