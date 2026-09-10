@@ -506,10 +506,10 @@ final class ProviderHarvest
 
     /**
      * Every ref the export carried is a sighting, whatever the loop did with
-     * it. Rung 4 is "the publisher still carries this row", not "the publisher
+     * it. Rung 5 is "the publisher still carries this row", not "the publisher
      * changed it" (data-provider-hierarchy.md §6.7.6), so a row the loop left
      * alone because a rider pin sits at the spot advances too. Without this
-     * an untouched register entry would age out of rung 4 while the register
+     * an untouched register entry would age out of rung 5 while the register
      * republishes it every week.
      *
      * @param list<string> $seen

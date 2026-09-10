@@ -557,7 +557,7 @@ date itself, by the provider's own clock, so `ItemEvidenceResolver` reads
 custody as the provider's from that date until a confirmation newer than it
 lands, and as ours again the moment one does. The state, the rung and the
 confirmations never move with custody: a reclaimed verified tap draws dashed
-with no `?`. The same attribute is the published witness rung 7 reads for a
+with no `?`. The same attribute is the published witness rung 8 reads for a
 provider row. The harvest summary counts `custody reclaimed`. No harvest path
 deletes an `item_confirmation` row, and `CustodyReclaimTest` asserts the count
 before and after; the one deleter in `web/src/` is the curator's purge command,
@@ -649,7 +649,7 @@ three paths:
 
 Two things fall out with no extra column:
 
-- Rung 4 is `imported_at` inside the freshness window.
+- Rung 5 is `imported_at` inside the freshness window.
 - A vanished row simply stops advancing and drops out of rung 4 by itself, so
   upstream removal is a derived fact rather than a number that exists only in
   one run's log. `countVanished()` still reports the count for the desk; nothing
@@ -661,12 +661,12 @@ touched by riders and curators too; `item.osm_checked_at` dates the
 OpenStreetMap link, not the sighting.
 
 Nothing about Best of waits on this (§6.7.0: the rungs never reach Best of).
-What reads this field is rung 4 itself, and therefore how a specialty provider's
+What reads this field is rung 5 itself, and therefore how a specialty provider's
 rows are drawn between harvests.
 
 #### 6.7.7 The ladder
 
-Built 2026-09-10 as `App\Catalog\EvidenceRung::of()`, one pure function with
+Built 2026-09-10 as `App\Catalog\EvidenceRung::of()`, twelve rungs in one pure function with
 no container and no database, so the map, the public API, the curator marker
 page and the wiki table can all call it and get one answer. Its inputs are the
 custody tier (`App\Catalog\CustodyTier`: `gross`, `specialty`, `ours`), the
@@ -685,19 +685,25 @@ is a human at the point on a known date.
 
 | Rung | Evidence | Badge | Grade |
 | --- | --- | --- | --- |
-| 1 | a fossil claim: a gross provider's row, or our own row nobody confirmed | `?` | claimed |
+| 1 | gross provider, fossil claim: typed once, never dated | `?` | claimed |
 | 2 | gross provider, live claim | `?` | claimed |
-| 3 | specialty provider, fossil claim | `?` | claimed |
-| 4 | specialty provider, live claim | `?` | attested |
-| 5 | specialty provider with a per-record operational status field (RIVM's `Storing`) | `?` | attested |
-| 6 | a witness that aged out of the window; still a witness, so above every claim | `?` | attested |
-| 7 | a published witness inside the window | none | attested |
-| 8 | one rider inside the window, below `map.item_verify_threshold`; custody does not gate this rung | `?` | attested |
-| 9 | the verified state, earned by `map.item_verify_threshold` riders (moderation-and-contribution.md §10.1) | none | minimum |
-| 10 | the verified state, earned by one curator's word, below the threshold | none | minimum |
-| 11 | the verified state, and five or more riders | none | high |
+| 3 | our own row: a rider put it here and a curator accepted it, nobody has confirmed it yet | `?` | claimed |
+| 4 | specialty provider, fossil claim | `?` | claimed |
+| 5 | specialty provider, live claim | `?` | attested |
+| 6 | specialty provider with a per-record operational status field (RIVM's `Storing`) | `?` | attested |
+| 7 | a witness that aged out of the window; still a witness, so above every claim | `?` | attested |
+| 8 | a published witness inside the window | none | attested |
+| 9 | one rider inside the window, below `map.item_verify_threshold`; custody does not gate this rung | `?` | attested |
+| 10 | the verified state, earned by `map.item_verify_threshold` riders (moderation-and-contribution.md §10.1) | none | minimum |
+| 11 | the verified state, earned by one curator's word, below the threshold | none | minimum |
+| 12 | the verified state, and five or more riders | none | high |
 
-**Rungs 9 to 11 follow the state and never a window.** "If the `?` mark is
+Rung 3 is its own rung and never rung 1 (owner, 2026-09-10): a row a rider
+chose to add and a curator accepted is a claim, but never a gross provider's,
+and it is the one cell of the grid, solid paper with the `?`, that no other rung
+draws.
+
+**Rungs 10 to 12 follow the state and never a window.** "If the `?` mark is
 gone, it has verified state" (owner, 2026-09-09) is one rule read in both
 directions: a verified row never gets its badge back, whatever the age of its
 confirmations. The stale ring (moderation-and-contribution.md §10.1a) is the
@@ -731,19 +737,19 @@ rather than copying its rules. The DOM pin reads `custody` for its border class
 through `pinClasses()` in `web/assets/map/icons.js`; the coverage symbol layer
 mints every tile icon twice, plain and `-q`, and picks by the tile's `cd`
 against `window.CC_WITNESS_CUTOFF`, the day `map.confirmation_stale_months`
-before now (coverage-provider.md §4). The curator page draws all eleven rungs
+before now (coverage-provider.md §4). The curator page draws all twelve rungs
 on a dark and a light ground, so the grammar is checked by eye and not only
 asserted.
 
-What the eye check found, 2026-09-10: eleven rungs collapse into six looks,
-three borders by two badge states. Rungs 1, 2 and 6 draw alike, so do 3 and 4,
-and so do 9, 10 and 11. That is the design working, not a defect: the pin
+What the eye check found, 2026-09-10: twelve rungs collapse into six looks,
+three borders by two badge states. Rungs 1, 2 and 7 draw alike, so do 4, 5, 6
+and 9, and so do 10, 11 and 12. That is the design working, not a defect: the pin
 answers two questions and only two, and the rung number with its receipt lives
-in the drawer and the public API. A rider learns six marks, not eleven.
+in the drawer and the public API. A rider learns six marks, not twelve.
 
-Two rungs the function cannot return yet, stated rather than hidden: rung 5
+Two rungs the function cannot return yet, stated rather than hidden: rung 6
 needs a registry field naming which attribute carries operational state, and
-nothing today stores a published witness date for a served row (rung 7 reads
+nothing today stores a published witness date for a served row (rung 8 reads
 `attributes.check_date`, which no import fills yet). Neither is a gap in the
 ladder; both are inputs no writer fills today.
 

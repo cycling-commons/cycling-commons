@@ -58,6 +58,9 @@
   .mk-rows{display:flex;flex-direction:column;border:1px solid rgba(16,30,22,.14);border-radius:10px;overflow:hidden;background:var(--paper)}
   .mk-row{display:grid;grid-template-columns:76px 1fr auto;gap:1rem;align-items:center;padding:.85rem 1rem}
   .mk-row + .mk-row{border-top:1px solid rgba(16,30,22,.12)}
+  /* A border row shows its pin twice, with and without the badge. */
+  .mk-row.mk-pair{grid-template-columns:96px 1fr auto}
+  .mk-row.mk-pair .mk-sw{gap:.7rem}
   .mk-sw{display:flex;align-items:center;justify-content:center;gap:.4rem;height:52px;border-radius:8px;background:#DED2B8;position:relative}
   .mk-t strong{display:block;font-weight:600;font-size:.95rem;margin-bottom:.1rem;color:var(--ink)}
   .mk-t span{display:block;font-size:.85rem;line-height:1.5;color:#4a4d40}
@@ -146,18 +149,19 @@
   <h2>{{ 'legend.tiers_h'|trans }}</h2>
   <p class="mk-note">{{ 'legend.tiers_note'|trans }}</p>
   <div class="mk-rows">
-    <div class="mk-row">
-      <div class="mk-sw"><span class="cc-pin disc q lt" style="--c:{{ mkc.B }}" aria-hidden="true">{{ bTap }}</span></div>
+    {# Each border with and without the badge: the whole grid is on the key. #}
+    <div class="mk-row mk-pair">
+      <div class="mk-sw"><span class="cc-pin disc q lt" style="--c:{{ mkc.B }}" aria-hidden="true">{{ bTap }}</span><span class="cc-pin disc lt" style="--c:{{ mkc.B }}" aria-hidden="true">{{ bTap }}</span></div>
       <div class="mk-t"><strong>{{ 'legend.tier_baseline_h'|trans }}</strong><span>{{ 'legend.tier_baseline_t'|trans }}</span></div>
       <span class="mk-tag">{{ 'legend.tag_live'|trans }}</span>
     </div>
-    <div class="mk-row">
-      <div class="mk-sw"><span class="cc-pin dashed q lt" style="--c:{{ mkc.B }}" aria-hidden="true">{{ bTap }}</span></div>
+    <div class="mk-row mk-pair">
+      <div class="mk-sw"><span class="cc-pin dashed q lt" style="--c:{{ mkc.B }}" aria-hidden="true">{{ bTap }}</span><span class="cc-pin dashed lt" style="--c:{{ mkc.B }}" aria-hidden="true">{{ bTap }}</span></div>
       <div class="mk-t"><strong>{{ 'legend.tier_external_h'|trans }}</strong><span>{{ 'legend.tier_external_t'|trans }}</span></div>
       <span class="mk-tag">{{ 'legend.tag_live'|trans }}</span>
     </div>
-    <div class="mk-row">
-      <div class="mk-sw"><span class="cc-pin lt" style="--c:{{ mkc.B }}" aria-hidden="true">{{ bTap }}</span></div>
+    <div class="mk-row mk-pair">
+      <div class="mk-sw"><span class="cc-pin q lt" style="--c:{{ mkc.B }}" aria-hidden="true">{{ bTap }}</span><span class="cc-pin lt" style="--c:{{ mkc.B }}" aria-hidden="true">{{ bTap }}</span></div>
       <div class="mk-t"><strong>{{ 'legend.tier_ours_h'|trans }}</strong><span>{{ 'legend.tier_ours_t'|trans }}</span></div>
       <span class="mk-tag">{{ 'legend.tag_live'|trans }}</span>
     </div>

@@ -493,7 +493,7 @@ manifest's `country_codes`-based client wiring (below).
 | `potable` | B | water kind glyph: `yes` / `no` / absent (nobody said), derived from OSM `drinking_water` and `amenity` tags (data-provider-hierarchy.md §6.3a) |
 | `food` | B | `true` for the shop and eatery half of letter B, absent for the water half; picks the food kind glyph |
 | `acc` | O | stays accessibility filter |
-| `cd` | all (when dated) | OSM `check_date`, only when it is a full `YYYY-MM-DD`, truncated to the day. A witness inside the freshness window drops the `?` badge on the coverage disc (data-provider-hierarchy.md §6.7.7, rung 7); the map compares it as a string to `window.CC_WITNESS_CUTOFF` |
+| `cd` | all (when dated) | OSM `check_date`, only when it is a full `YYYY-MM-DD`, truncated to the day. A witness inside the freshness window drops the `?` badge on the coverage disc (data-provider-hierarchy.md §6.7.7, rung 8); the map compares it as a string to `window.CC_WITNESS_CUTOFF` |
 
 `ref`/`n`/`t`/`ridtok`/`cctok` are the **universal** props (every layer, declared
 as `universalTileProps` in `coverage-contract.json`, consumed by

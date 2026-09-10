@@ -249,7 +249,7 @@ class DataProvider
      * The harvested attribute that carries the provider's per-record survey
      * date (`YYYY-MM-DD`, longer values truncated to the day). NULL means the
      * provider publishes no dates, and a provider with no dates can never
-     * reclaim; it is also the published witness rung 7 reads.
+     * reclaim; it is also the published witness rung 8 reads.
      */
     #[ORM\Column(name: 'survey_date_attribute', type: Types::STRING, length: 64, nullable: true)]
     private ?string $surveyDateAttribute = null;

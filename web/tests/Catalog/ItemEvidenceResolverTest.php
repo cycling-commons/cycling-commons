@@ -61,7 +61,7 @@ final class ItemEvidenceResolverTest extends TestCase
         );
 
         self::assertSame(CustodyTier::Specialty, $e->custody, 'the border is the provider\'s again');
-        self::assertSame(9, $e->rung, 'the state, and the evidence, never moved');
+        self::assertSame(10, $e->rung, 'the state, and the evidence, never moved');
         self::assertFalse($e->badge);
         self::assertSame('riders', $e->verifiedBy);
     }
@@ -87,7 +87,7 @@ final class ItemEvidenceResolverTest extends TestCase
         $e = $this->resolver()->fromRow($this->row(), new \DateTimeImmutable(self::NOW));
 
         self::assertSame(CustodyTier::Specialty, $e->custody);
-        self::assertSame(4, $e->rung);
+        self::assertSame(5, $e->rung);
         self::assertSame('attested', $e->grade);
         self::assertTrue($e->badge);
         self::assertNull($e->verifiedBy);
@@ -124,7 +124,7 @@ final class ItemEvidenceResolverTest extends TestCase
         );
 
         self::assertSame(CustodyTier::Ours, $e->custody);
-        self::assertSame(1, $e->rung);
+        self::assertSame(3, $e->rung);
         self::assertTrue($e->badge);
     }
 
@@ -136,7 +136,7 @@ final class ItemEvidenceResolverTest extends TestCase
         );
 
         self::assertSame(CustodyTier::Specialty, $e->custody, 'one rider does not take custody');
-        self::assertSame(8, $e->rung);
+        self::assertSame(9, $e->rung);
         self::assertSame(1, $e->confirmations);
         self::assertSame('2026-08-20', $e->lastConfirmed?->format('Y-m-d'));
     }
@@ -149,7 +149,7 @@ final class ItemEvidenceResolverTest extends TestCase
         );
 
         self::assertSame(CustodyTier::Ours, $e->custody);
-        self::assertSame(9, $e->rung);
+        self::assertSame(10, $e->rung);
         self::assertSame('riders', $e->verifiedBy);
         self::assertFalse($e->badge);
     }
@@ -161,7 +161,7 @@ final class ItemEvidenceResolverTest extends TestCase
             new \DateTimeImmutable(self::NOW),
         );
 
-        self::assertSame(10, $e->rung);
+        self::assertSame(11, $e->rung);
         self::assertSame('curator', $e->verifiedBy);
         self::assertSame(CustodyTier::Ours, $e->custody);
     }
@@ -173,7 +173,7 @@ final class ItemEvidenceResolverTest extends TestCase
             new \DateTimeImmutable(self::NOW),
         );
 
-        self::assertSame(7, $e->rung);
+        self::assertSame(8, $e->rung);
         self::assertFalse($e->badge);
     }
 
@@ -184,7 +184,7 @@ final class ItemEvidenceResolverTest extends TestCase
             new \DateTimeImmutable(self::NOW),
         );
 
-        self::assertSame(8, $e->rung);
+        self::assertSame(9, $e->rung);
     }
 
     public function testTheSelectFragmentNamesEveryColumnFromRowReads(): void

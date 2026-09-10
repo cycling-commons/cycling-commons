@@ -30,25 +30,26 @@ final class CuratorMarkersController extends AbstractController
 {
     /**
      * The custody each rung is drawn with. The ladder itself does not fix
-     * custody (rung 8 is one rider on a register row as much as on ours), so
+     * custody (rung 9 is one rider on a register row as much as on ours), so
      * the page picks the case each rung is most often seen in.
      */
     private const array CUSTODY = [
         1 => CustodyTier::Gross,
         2 => CustodyTier::Gross,
-        3 => CustodyTier::Specialty,
+        3 => CustodyTier::Ours,
         4 => CustodyTier::Specialty,
         5 => CustodyTier::Specialty,
-        6 => CustodyTier::Gross,
+        6 => CustodyTier::Specialty,
         7 => CustodyTier::Gross,
-        8 => CustodyTier::Specialty,
-        9 => CustodyTier::Ours,
+        8 => CustodyTier::Gross,
+        9 => CustodyTier::Specialty,
         10 => CustodyTier::Ours,
         11 => CustodyTier::Ours,
+        12 => CustodyTier::Ours,
     ];
 
     /** Rungs the resolver cannot produce yet; drawn, and tagged as such. */
-    private const array NOT_PRODUCED = [5];
+    private const array NOT_PRODUCED = [6];
 
     #[Route('/curator/markers', name: 'curator_marker_grammar', methods: ['GET'])]
     #[IsGranted('ROLE_CURATOR')]

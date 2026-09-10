@@ -12,7 +12,7 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 /**
  * The map shell hands the coverage layer one date: a tile point whose
  * `check_date` is on or after it has a witness inside the window and drops
- * the "?" (data-provider-hierarchy.md §6.7.7, rung 7). The window is
+ * the "?" (data-provider-hierarchy.md §6.7.7, rung 8). The window is
  * map.confirmation_stale_months, the same one every other freshness rule
  * reads, so the tiles and the pins age by one clock.
  */

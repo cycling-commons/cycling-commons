@@ -154,9 +154,9 @@ class Item
      *
      * Seeded at construction and rewritten by every harvest that sees the row,
      * including the pass where nothing changed. Read as "last seen upstream",
-     * which is what puts a provider row on rung 4 of the evidence ladder
+     * which is what puts a provider row on rung 5 of the evidence ladder
      * (docs/specs/data-provider-hierarchy.md §6.7.6). A row the publisher has
-     * dropped simply stops advancing and falls off rung 4 on its own, so
+     * dropped simply stops advancing and falls off rung 5 on its own, so
      * upstream removal is derived and needs no second column. Never an
      * auto-retire (docs/specs/catalog-data-model.md §4).
      */

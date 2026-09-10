@@ -285,7 +285,7 @@ record. That is the whole vocabulary, three borders by two badge states:
 | a specialty provider, dashed | ![specialty provider, unwitnessed](assets/markers/grid-specialty-badge.png) | ![specialty provider, witnessed](assets/markers/grid-specialty-plain.png) |
 | ours, solid paper | ![ours, unconfirmed](assets/markers/grid-ours-badge.png) | ![ours, verified](assets/markers/grid-ours-plain.png) |
 
-Behind the badge sits a ladder of eleven rungs, computed once on the server
+Behind the badge sits a ladder of twelve rungs, computed once on the server
 for every served point and read by the map, the public API and the curator
 page alike. It is ordered by the **kind** of evidence first, then how **many**,
 then how **recent**. A *fossil claim* was typed once and carries no date. A
@@ -297,19 +297,20 @@ drift from what the map draws.
 
 | Rung | Dark map | Light map | Evidence | Grade |
 |---|---|---|---|---|
-| 1 | ![rung 1](assets/markers/rung-01-dark.png) | ![rung 1](assets/markers/rung-01-light.png) | a fossil claim: a gross provider's row, or one of our own rows nobody has confirmed | claimed |
+| 1 | ![rung 1](assets/markers/rung-01-dark.png) | ![rung 1](assets/markers/rung-01-light.png) | a fossil claim: a gross provider's row, typed once and never dated | claimed |
 | 2 | ![rung 2](assets/markers/rung-02-dark.png) | ![rung 2](assets/markers/rung-02-light.png) | a gross provider still carries the row: a live claim | claimed |
-| 3 | ![rung 3](assets/markers/rung-03-dark.png) | ![rung 3](assets/markers/rung-03-light.png) | a specialty provider's row with no dates: a fossil claim | claimed |
-| 4 | ![rung 4](assets/markers/rung-04-dark.png) | ![rung 4](assets/markers/rung-04-light.png) | a specialty provider republished the row inside the window: a live claim | attested |
-| 5 | ![rung 5](assets/markers/rung-05-dark.png) | ![rung 5](assets/markers/rung-05-light.png) | a specialty provider with a per-record operational status, such as a register's out-of-order flag (not produced yet: the registry has no field naming that attribute) | attested |
-| 6 | ![rung 6](assets/markers/rung-06-dark.png) | ![rung 6](assets/markers/rung-06-light.png) | a witness that aged out of the window; still a witness, so above every claim, but the badge returns | attested |
-| 7 | ![rung 7](assets/markers/rung-07-dark.png) | ![rung 7](assets/markers/rung-07-light.png) | a published witness inside the window: an OpenStreetMap `check_date` or a register's dated survey | attested |
-| 8 | ![rung 8](assets/markers/rung-08-dark.png) | ![rung 8](assets/markers/rung-08-light.png) | one rider inside the window, below `map.item_verify_threshold`; custody does not gate this rung | attested |
-| 9 | ![rung 9](assets/markers/rung-09-dark.png) | ![rung 9](assets/markers/rung-09-light.png) | verified: the threshold number of riders stood here | minimum |
-| 10 | ![rung 10](assets/markers/rung-10-dark.png) | ![rung 10](assets/markers/rung-10-light.png) | verified: one curator's word, below the threshold | minimum |
-| 11 | ![rung 11](assets/markers/rung-11-dark.png) | ![rung 11](assets/markers/rung-11-light.png) | verified, and five or more riders stood here | high |
+| 3 | ![rung 3](assets/markers/rung-03-dark.png) | ![rung 3](assets/markers/rung-03-light.png) | one of our own rows: a rider put it here and a curator accepted it, and nobody has confirmed it yet | claimed |
+| 4 | ![rung 4](assets/markers/rung-04-dark.png) | ![rung 4](assets/markers/rung-04-light.png) | a specialty provider's row with no dates: a fossil claim | claimed |
+| 5 | ![rung 5](assets/markers/rung-05-dark.png) | ![rung 5](assets/markers/rung-05-light.png) | a specialty provider republished the row inside the window: a live claim | attested |
+| 6 | ![rung 6](assets/markers/rung-06-dark.png) | ![rung 6](assets/markers/rung-06-light.png) | a specialty provider with a per-record operational status, such as a register's out-of-order flag (not produced yet: the registry has no field naming that attribute) | attested |
+| 7 | ![rung 7](assets/markers/rung-07-dark.png) | ![rung 7](assets/markers/rung-07-light.png) | a witness that aged out of the window; still a witness, so above every claim, but the badge returns | attested |
+| 8 | ![rung 8](assets/markers/rung-08-dark.png) | ![rung 8](assets/markers/rung-08-light.png) | a published witness inside the window: an OpenStreetMap `check_date` or a register's dated survey | attested |
+| 9 | ![rung 9](assets/markers/rung-09-dark.png) | ![rung 9](assets/markers/rung-09-light.png) | one rider inside the window, below `map.item_verify_threshold`; custody does not gate this rung | attested |
+| 10 | ![rung 10](assets/markers/rung-10-dark.png) | ![rung 10](assets/markers/rung-10-light.png) | verified: the threshold number of riders stood here | minimum |
+| 11 | ![rung 11](assets/markers/rung-11-dark.png) | ![rung 11](assets/markers/rung-11-light.png) | verified: one curator's word, below the threshold | minimum |
+| 12 | ![rung 12](assets/markers/rung-12-dark.png) | ![rung 12](assets/markers/rung-12-light.png) | verified, and five or more riders stood here | high |
 
-Eleven rungs draw as six looks. That is the pin answering two questions and
+Twelve rungs draw as six looks. That is the pin answering two questions and
 only two; the rung and the receipt behind it (how many riders, when, when the
 register last republished it) are in the place's panel and in the public API,
 where a city that has to defend a decision can read the count and the date
@@ -317,11 +318,11 @@ rather than trust an adjective.
 
 Two facts make the ladder concrete. OpenStreetMap holds 366,887
 `amenity=drinking_water` objects and 21,541 of them, 5.9 %, carry a
-`check_date` (taginfo, 2026-09-09): those are rung 7 while the date is inside
+`check_date` (taginfo, 2026-09-09): those are rung 8 while the date is inside
 the window, and the small disc loses its `?` on the same rule as every other
-border. A Dutch register tap is rung 4, a live claim, for as long as the
+border. A Dutch register tap is rung 5, a live claim, for as long as the
 register's harvest is current; the day the register stops listing it, it falls
-to rung 3 by itself, because the harvest stamps every row it still carries and
+to rung 4 by itself, because the harvest stamps every row it still carries and
 nothing else moves that date.
 
 **The rungs are utility and never reach Best of.** A high rung is fifty riders

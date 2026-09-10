@@ -30,7 +30,7 @@ function lift(name) {
 const ctx = {};
 vm.createContext(ctx);
 vm.runInContext(
-  "const NO_WITNESS=[1,2,3,4,5,6,8];\n" + lift('borderFor') + '\n' + lift('badgeFor') + '\n' + lift('pinClasses')
+  "const NO_WITNESS=[1,2,3,4,5,6,7,9];\n" + lift('borderFor') + '\n' + lift('badgeFor') + '\n' + lift('pinClasses')
   + '\n' + lift('kindImageId') + '\n' + lift('hasWitness'),
   ctx,
 );
@@ -44,10 +44,10 @@ test('the border answers custody and nothing else', () => {
 });
 
 test('the badge answers evidence and nothing else', () => {
-  for (const rung of [1, 2, 3, 4, 5, 6, 8]) {
+  for (const rung of [1, 2, 3, 4, 5, 6, 7, 9]) {
     assert.equal(badgeFor(rung), '?', `rung ${rung} keeps the ?`);
   }
-  for (const rung of [7, 9, 10, 11]) {
+  for (const rung of [8, 10, 11, 12]) {
     assert.equal(badgeFor(rung), '', `rung ${rung} drops the ?`);
   }
 });
@@ -69,10 +69,11 @@ test('pinClasses puts the border and the badge on the element, and nothing about
   // Joined: the array was built in another vm context and deepEqual would
   // reject its foreign Array prototype.
   const classes = props => pinClasses(props).join(' ');
-  assert.equal(classes({ rung: 4, custody: 'specialty' }), 'dashed q');
-  assert.equal(classes({ rung: 9, custody: 'ours' }), '');
+  assert.equal(classes({ rung: 5, custody: 'specialty' }), 'dashed q');
+  assert.equal(classes({ rung: 10, custody: 'ours' }), '');
   assert.equal(classes({ rung: 1, custody: 'gross' }), 'disc q');
-  assert.equal(classes({ rung: 7, custody: 'gross' }), 'disc');
+  assert.equal(classes({ rung: 8, custody: 'gross' }), 'disc');
+  assert.equal(classes({ rung: 3, custody: 'ours' }), 'q', 'our own unconfirmed row: solid paper with the ?');
 });
 
 test('no marker carries a verified dot any more', () => {
@@ -97,7 +98,7 @@ test('a tile point drops the badge only for a dated check_date inside the window
   const cutoff = '2026-03-10';
   assert.equal(hasWitness('2026-08-01', cutoff), true);
   assert.equal(hasWitness('2026-03-10', cutoff), true, 'on the cutoff day is inside');
-  assert.equal(hasWitness('2025-12-31', cutoff), false, 'aged out: the badge returns (rung 6)');
+  assert.equal(hasWitness('2025-12-31', cutoff), false, 'aged out: the badge returns (rung 7)');
   assert.equal(hasWitness(undefined, cutoff), false, 'no check_date: nobody has stood here on record');
   assert.equal(hasWitness('summer', cutoff), false, 'free text is not a date, whatever it sorts as');
   assert.equal(hasWitness('2026', cutoff), false, 'a bare year is not a dated witness');

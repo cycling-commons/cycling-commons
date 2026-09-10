@@ -91,10 +91,14 @@ final class MapKeyTest extends WebTestCase
         self::assertStringNotContainsStringIgnoringCase('paper dot', $crawler->text());
         self::assertStringContainsString('styles/pins', $html, 'the key links the shared pin stylesheet');
         self::assertSame(0, $crawler->filter('.mk-pin')->count(), 'no copied pin class remains');
+        // Every cell of the grid is on the key: each border with and without the badge.
         $tiers = $crawler->filter('.mk-rows')->first();
         self::assertSame(1, $tiers->filter('.cc-pin.disc.q')->count(), 'baseline: small disc, nobody stood there');
+        self::assertSame(1, $tiers->filter('.cc-pin.disc:not(.q)')->count(), 'baseline: small disc, a dated witness on record');
         self::assertSame(1, $tiers->filter('.cc-pin.dashed.q')->count(), 'kept by somebody else: dashed, nobody stood there');
-        self::assertSame(1, $tiers->filter('.cc-pin.q:not(.disc):not(.dashed)')->count(), 'nobody has stood here: the badge on our own border');
+        self::assertSame(1, $tiers->filter('.cc-pin.dashed:not(.q)')->count(), 'kept by somebody else: dashed, a dated witness on record');
+        self::assertSame(1, $tiers->filter('.cc-pin:not(.q):not(.disc):not(.dashed)')->count(), 'ours, verified');
+        self::assertSame(2, $tiers->filter('.cc-pin.q:not(.disc):not(.dashed)')->count(), 'ours with the badge, on the ours row and on the badge row');
         self::assertSame(4, $tiers->filter('.mk-row')->count(), 'four rows: three borders and the one badge');
         self::assertSame(0, $crawler->filter('.cc-pin.cur, .cc-pin.community, .cc-pin.provider')->count(), 'the old one-class tiers are gone');
     }

@@ -117,7 +117,7 @@ final class MapController extends AbstractController
             // docs/specs/coverage-provider.md §4 — null omits the layer.
             'coverage_url' => $coverage->currentTileUrl(),
             'coverage_countries' => $coverage->countryCodes(),
-            // data-provider-hierarchy.md §6.7.7 rung 7: a tile point whose
+            // data-provider-hierarchy.md §6.7.7 rung 8: a tile point whose
             // check_date is on or after this day has a witness inside the
             // window and drops its "?". One clock for tiles and pins.
             'witness_cutoff' => $freshness->staleBefore(new \DateTimeImmutable())->format('Y-m-d'),

@@ -48,15 +48,16 @@ final class MarkerGrammarPageTest extends WebTestCase
         $crawler = $client->request('GET', '/curator/markers');
 
         self::assertResponseIsSuccessful();
-        self::assertCount(11, $crawler->filter('tr[data-rung]'), 'one row per rung, 1 to 11');
-        self::assertCount(7, $crawler->filter('tr[data-badge="?"]'), 'rungs 1 to 6 and 8 keep the ?');
-        self::assertCount(4, $crawler->filter('tr[data-badge=""]'), 'rungs 7, 9, 10 and 11 drop it');
+        self::assertCount(12, $crawler->filter('tr[data-rung]'), 'one row per rung, 1 to 12');
+        self::assertCount(8, $crawler->filter('tr[data-badge="?"]'), 'rungs 1 to 7 and 9 keep the ?');
+        self::assertCount(4, $crawler->filter('tr[data-badge=""]'), 'rungs 8, 10, 11 and 12 drop it');
         // Each row draws the pin twice, on the dark and on the light ground.
-        self::assertCount(2, $crawler->filter('tr[data-rung="4"] .cc-pin.dashed.q'), 'rung 4: a specialty provider, nobody stood there');
+        self::assertCount(2, $crawler->filter('tr[data-rung="5"] .cc-pin.dashed.q'), 'rung 5: a specialty provider, nobody stood there');
         self::assertCount(2, $crawler->filter('tr[data-rung="1"] .cc-pin.disc.q'), 'rung 1: a gross provider, nobody stood there');
-        self::assertCount(2, $crawler->filter('tr[data-rung="9"] .cc-pin:not(.q):not(.dashed):not(.disc)'), 'rung 9: ours, verified, no mark at all');
-        self::assertSame('minimum', $crawler->filter('tr[data-rung="9"]')->attr('data-grade'));
-        self::assertSame('high', $crawler->filter('tr[data-rung="11"]')->attr('data-grade'));
+        self::assertCount(2, $crawler->filter('tr[data-rung="3"] .cc-pin.q:not(.dashed):not(.disc)'), 'rung 3: our own row, solid paper with the ?');
+        self::assertCount(2, $crawler->filter('tr[data-rung="10"] .cc-pin:not(.q):not(.dashed):not(.disc)'), 'rung 10: ours, verified, no mark at all');
+        self::assertSame('minimum', $crawler->filter('tr[data-rung="10"]')->attr('data-grade'));
+        self::assertSame('high', $crawler->filter('tr[data-rung="12"]')->attr('data-grade'));
         // The grid: three borders by two badge states, six cells.
         self::assertCount(6, $crawler->filter('[data-grid]'));
         self::assertCount(1, $crawler->filter('[data-grid="specialty:q"] .cc-pin.dashed.q'));

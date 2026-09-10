@@ -364,6 +364,9 @@
      (community "?", verified dot) silently anchor elsewhere without this. */
   .mkp-sw .cc-pin{position:relative}
   .mkp-sw{display:flex;align-items:center;justify-content:center;gap:.3rem;min-height:42px;border-radius:7px;background:rgb(var(--chrome-fg) / .08)}
+  /* A border row shows its pin twice, with and without the badge. */
+  .mkp-row.mkp-pair{grid-template-columns:84px 1fr}
+  .mkp-row.mkp-pair .mkp-sw{gap:.55rem}
   .mkp-t b{display:block;font-size:.84rem;font-weight:600}
   .mkp-t span{display:block;font-size:.74rem;line-height:1.45;color:rgb(var(--chrome-fg) / .72)}
   .mk-disc{width:22px;height:22px;border-radius:50%;background:var(--c,#3E7D8C);flex:none;

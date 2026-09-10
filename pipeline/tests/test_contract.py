@@ -50,7 +50,7 @@ def test_letter_specific_tile_props():
     # 44% of its rows are shops and eateries that drew a water drop because a
     # letter was all the tile said.
     # `cd` joined every letter on 2026-09-10: a dated OSM `check_date`
-    # is a published witness (data-provider-hierarchy.md §6.7.7, rung 7),
+    # is a published witness (data-provider-hierarchy.md §6.7.7, rung 8),
     # and the badge on a coverage disc reads it.
     assert contract.letters["B"].tile_props == ["potable", "food", "cd"]
     assert contract.letters["D"].tile_props == ["kind", "cd"]

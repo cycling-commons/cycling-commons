@@ -59,7 +59,7 @@ _EXTRA_SQL = {
     # is wheelchair=yes → 'Wheelchair-accessible'. Everything else stays NULL.
     "acc": "'acc', CASE WHEN tags->>'wheelchair' = 'yes' THEN 'Wheelchair-accessible' END",
     # Every letter: a dated OSM check_date is a published witness
-    # (data-provider-hierarchy.md §6.7.7, rung 7), and the coverage disc drops
+    # (data-provider-hierarchy.md §6.7.7, rung 8), and the coverage disc drops
     # its "?" when the date is inside the freshness window. Only a full
     # YYYY-MM-DD survives, truncated to the day: the map compares it to a
     # cutoff as a string, and "summer" or "2023" sorting above an ISO date

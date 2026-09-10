@@ -20,7 +20,7 @@ export function kindImageId(letter, kind, badge){
 /* A tile point has a witness when its `cd` (OSM check_date, YYYY-MM-DD) is
    on or after the cutoff the shell computed from map.confirmation_stale_months
    (window.CC_WITNESS_CUTOFF). Fail closed: no cutoff, no date, or a date
-   that is not a date keeps the badge. Rung 7 is the only rung a coverage
+   that is not a date keeps the badge. Rung 8 is the only rung a coverage
    point can reach without a rider. */
 export function hasWitness(cd, cutoff){
   return typeof cd==='string' && typeof cutoff==='string' && /^\d{4}-\d{2}-\d{2}$/.test(cd) && cd>=cutoff;
@@ -206,7 +206,7 @@ function pinGlyph(layer, props){
    computed once in PHP (ItemEvidenceResolver); this file never derives them,
    so a pin and the API can never disagree. NO_WITNESS mirrors
    EvidenceRung::NO_WITNESS and marker-grammar.test.cjs pins the two together. */
-const NO_WITNESS=[1,2,3,4,5,6,8];
+const NO_WITNESS=[1,2,3,4,5,6,7,9];
 export function borderFor(custody){
   return custody==='specialty' ? 'dashed' : custody==='gross' ? 'disc' : 'solid';
 }
@@ -218,7 +218,7 @@ export function pinClasses(props){
   props=props||{};
   const out=[], border=borderFor(props.custody);
   if(border!=='solid') out.push(border);
-  const rung = props.rung!=null ? props.rung : (props.v ? 9 : undefined);
+  const rung = props.rung!=null ? props.rung : (props.v ? 10 : undefined);
   if(badgeFor(rung)) out.push('q');
   return out;
 }

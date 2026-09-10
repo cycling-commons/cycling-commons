@@ -209,7 +209,7 @@ final class CatalogProviderTest extends KernelTestCase
         // there: that is a curator's word, rung 10, and the record is ours.
         foreach ($this->payload()['D']['features'] as $f) {
             self::assertSame('ours', $f['properties']['custody']);
-            self::assertSame(10, $f['properties']['rung']);
+            self::assertSame(11, $f['properties']['rung']);
         }
 
         // A register row nobody has confirmed: the registry scope for its
@@ -220,7 +220,7 @@ final class CatalogProviderTest extends KernelTestCase
         self::assertNotEmpty($features);
         foreach ($features as $f) {
             self::assertSame('specialty', $f['properties']['custody']);
-            self::assertSame(4, $f['properties']['rung']);
+            self::assertSame(5, $f['properties']['rung']);
         }
 
         // One rider: a witness, but custody stays with the register.
@@ -232,15 +232,15 @@ final class CatalogProviderTest extends KernelTestCase
             );
             if (1 === $user) {
                 $props = $this->byId($this->payload()['O']['authority']['features'])[$id];
-                self::assertSame(8, $props['rung']);
+                self::assertSame(9, $props['rung']);
                 self::assertSame('specialty', $props['custody']);
             }
         }
 
-        // Threshold riders and the state flip: the record is ours, rung 9.
+        // Threshold riders and the state flip: the record is ours, rung 10.
         $conn->executeStatement("UPDATE item SET state = 'verified' WHERE id = :id", ['id' => $id]);
         $props = $this->byId($this->payload()['O']['authority']['features'])[$id];
-        self::assertSame(9, $props['rung']);
+        self::assertSame(10, $props['rung']);
         self::assertSame('ours', $props['custody']);
         self::assertArrayNotHasKey('reclaimed', $props, 'absent until it happened');
 
@@ -250,7 +250,7 @@ final class CatalogProviderTest extends KernelTestCase
         $conn->executeStatement("UPDATE item SET custody_reclaimed_at = '2027-01-15 00:00:00' WHERE id = :id", ['id' => $id]);
         $props = $this->byId($this->payload()['O']['authority']['features'])[$id];
         self::assertSame('specialty', $props['custody']);
-        self::assertSame(9, $props['rung']);
+        self::assertSame(10, $props['rung']);
         self::assertSame('2027-01-15', $props['reclaimed']);
     }
 
