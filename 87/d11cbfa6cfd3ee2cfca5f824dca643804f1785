@@ -1,0 +1,36 @@
+web/src/Api/V1/Dto/ItemFeature.php
+  s_3b3b121fcbab96::t_662fa560d0e08d 9-10,14-18,32,47-52
+wiki/developers/api/serving-map-data.md
+  s_3b3b121fcbab96::t_70c9c3a260fb2a 131-135,145-162
+docs/specs/public-api.md
+  s_3b3b121fcbab96::t_70c9c3a260fb2a 73-94,170
+web/tests/Api/PublicItemsTrustEnvelopeTest.php
+  s_3b3b121fcbab96::t_f2c9f536907c65 1-134
+web/src/Api/V1/PublicItemsProvider.php
+  s_3b3b121fcbab96::t_4823a44063722a 12,25-30,49-50,81,83,98
+web/public/api/openapi.yaml
+  s_3b3b121fcbab96::t_70c9c3a260fb2a 623-642,661,671-700
+web/tests/Api/PublicApiV1Test.php
+  s_3b3b121fcbab96::t_70c9c3a260fb2a 90
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "87d11cbfa6cfd3ee2cfca5f824dca643804f1785",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_3b3b121fcbab96": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "aef68f16-50de-4bc2-b718-847e4744d25a",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
