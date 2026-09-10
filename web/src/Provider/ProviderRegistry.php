@@ -102,6 +102,16 @@ final class ProviderRegistry
         if (\array_key_exists('matchRadiusM', $fields)) {
             $provider->setMatchRadiusM($this->radius($fields['matchRadiusM']));
         }
+        if (\array_key_exists('mayReclaim', $fields)) {
+            $provider->setMayReclaim((bool) $fields['mayReclaim']);
+        }
+        if (\array_key_exists('reclaimMarginDays', $fields)) {
+            $provider->setReclaimMarginDays($this->margin($fields['reclaimMarginDays']));
+        }
+        if (\array_key_exists('surveyDateAttribute', $fields)) {
+            $value = trim((string) ($fields['surveyDateAttribute'] ?? ''));
+            $provider->setSurveyDateAttribute('' === $value ? null : $this->text($value, 'surveyDateAttribute', 64));
+        }
         if (\array_key_exists('promoted', $fields)) {
             $provider->setPromoted((bool) $fields['promoted']);
         }
@@ -240,6 +250,20 @@ final class ProviderRegistry
     }
 
     /**
+     * One day would bounce a pin on every harvest; a year would let a
+     * provider never take anything back.
+     */
+    private function margin(mixed $raw): int
+    {
+        $value = (int) $raw;
+        if ($value < 1 || $value > 365) {
+            throw new ProviderRuleException('provider.error.margin_range');
+        }
+
+        return $value;
+    }
+
+    /**
      * The fields a curator can move, as strings, for the trail.
      *
      * @return array<string, string>
@@ -257,6 +281,9 @@ final class ProviderRegistry
             'blurb' => (string) $p->getBlurb(),
             'rank' => (string) $p->getRank(),
             'matchRadiusM' => (string) $p->getMatchRadiusM(),
+            'mayReclaim' => $p->mayReclaim() ? 'yes' : 'no',
+            'reclaimMarginDays' => (string) $p->getReclaimMarginDays(),
+            'surveyDateAttribute' => (string) $p->getSurveyDateAttribute(),
             'promoted' => $p->isPromoted() ? 'yes' : 'no',
             'enabled' => $p->isEnabled() ? 'yes' : 'no',
         ];

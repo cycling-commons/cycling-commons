@@ -78,7 +78,7 @@ final class PublicItemsProvider
                   ORDER BY i.id
                   LIMIT :lim';
 
-        /** @var list<array{id: int|string, name: string, letter: string, geom: string, verified: bool, state: string, source: string, imported_at: string|null, ev_provider: bool, ev_scope: bool|null, ev_conf: int|string, ev_last: string|null, ev_witness: string|null}> $rows */
+        /** @var list<array{id: int|string, name: string, letter: string, geom: string, verified: bool, state: string, source: string, imported_at: string|null, ev_provider: bool, ev_scope: bool|null, ev_conf: int|string, ev_last: string|null, ev_witness: string|null, ev_reclaimed: string|null}> $rows */
         $rows = $this->db->fetchAllAssociative($sql, $params, ['lim' => ParameterType::INTEGER]);
         $now = new \DateTimeImmutable();
 

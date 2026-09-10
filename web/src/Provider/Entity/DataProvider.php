@@ -227,6 +227,33 @@ class DataProvider
     #[ORM\Column(name: 'last_error', type: Types::TEXT, nullable: true)]
     private ?string $lastError = null;
 
+    /**
+     * Whether this provider may take a record back from the riders at harvest
+     * (docs/specs/data-provider-hierarchy.md §6.7.2). A judgement about the
+     * organisation's field operation, so it lives beside the provider and not
+     * in the rule. Off by default: a provider earns it by showing dated
+     * surveys.
+     */
+    #[ORM\Column(name: 'may_reclaim', type: Types::BOOLEAN)]
+    private bool $mayReclaim = false;
+
+    /**
+     * How many days newer than our newest confirmation the provider's survey
+     * must be before custody moves. One day would bounce a pin on every
+     * harvest.
+     */
+    #[ORM\Column(name: 'reclaim_margin_days', type: Types::INTEGER)]
+    private int $reclaimMarginDays = 30;
+
+    /**
+     * The harvested attribute that carries the provider's per-record survey
+     * date (`YYYY-MM-DD`, longer values truncated to the day). NULL means the
+     * provider publishes no dates, and a provider with no dates can never
+     * reclaim; it is also the published witness rung 7 reads.
+     */
+    #[ORM\Column(name: 'survey_date_attribute', type: Types::STRING, length: 64, nullable: true)]
+    private ?string $surveyDateAttribute = null;
+
     /** Off means "keep the rows, stop refreshing", never "delete the rows". */
     #[ORM\Column(type: Types::BOOLEAN)]
     private bool $enabled = true;
@@ -496,6 +523,36 @@ class DataProvider
         $this->lastRunAt = $at;
         $this->lastCount = $count;
         $this->lastError = $error;
+    }
+
+    public function mayReclaim(): bool
+    {
+        return $this->mayReclaim;
+    }
+
+    public function setMayReclaim(bool $mayReclaim): void
+    {
+        $this->mayReclaim = $mayReclaim;
+    }
+
+    public function getReclaimMarginDays(): int
+    {
+        return $this->reclaimMarginDays;
+    }
+
+    public function setReclaimMarginDays(int $days): void
+    {
+        $this->reclaimMarginDays = $days;
+    }
+
+    public function getSurveyDateAttribute(): ?string
+    {
+        return $this->surveyDateAttribute;
+    }
+
+    public function setSurveyDateAttribute(?string $attribute): void
+    {
+        $this->surveyDateAttribute = $attribute;
     }
 
     public function isEnabled(): bool

@@ -545,6 +545,24 @@ row's custody, its attributes and its freshness. It may never delete a
 confirmation. Read §6.7.4 with this sentence attached, or a later harvest will
 clear rider work in the name of a refresh.
 
+**Built 2026-09-10.** Three settings on the registry row, all on the providers
+desk (§8): `may_reclaim` (off by default), `reclaim_margin_days` (1 to 365, 30
+by default) and `survey_date_attribute`, the harvested attribute that carries
+the provider's per-record survey date. `ProviderHarvest::reclaim()` runs on
+every row the export still carries and writes `item.custody_reclaimed_at` when
+all of these hold: the row is verified, the provider may reclaim, the named
+attribute holds a full `YYYY-MM-DD`, and that date is newer than our newest
+vouching confirmation by at least the margin. What gets written is the survey
+date itself, by the provider's own clock, so `ItemEvidenceResolver` reads
+custody as the provider's from that date until a confirmation newer than it
+lands, and as ours again the moment one does. The state, the rung and the
+confirmations never move with custody: a reclaimed verified tap draws dashed
+with no `?`. The same attribute is the published witness rung 7 reads for a
+provider row. The harvest summary counts `custody reclaimed`. No harvest path
+deletes an `item_confirmation` row, and `CustodyReclaimTest` asserts the count
+before and after; the one deleter in `web/src/` is the curator's purge command,
+which removes the item itself and everything hanging off it.
+
 #### 6.7.3 The drawer says both, and one half of it is personal
 
 When custody returns to a provider the drawer states both facts and subtracts
@@ -751,6 +769,12 @@ containers are filed in docs/TODO.md ("Opened 2026-09-05"). One row is one
 provider in one country for one or more letters: another country's register
 for the same letter is another row with its own endpoint and field map, which
 is why `country_code` and `letters` live on the row and not on the letter.
+
+Since 2026-09-10 the row also carries the three custody settings of §6.7.2:
+whether the provider may take a record back, its margin in days, and the
+attribute that carries its survey date. All three are on the form, refused
+outside their band by the registry like every other field, and recorded in the
+row's history when they move.
 
 `App\Provider\ProviderRegistry` is the only writer and the only place the rules
 live. A rule enforced in the controller is a rule the next caller does not

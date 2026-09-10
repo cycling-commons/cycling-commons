@@ -6,8 +6,10 @@ declare(strict_types=1);
 
 namespace App\Provider;
 
+use App\Catalog\ConfirmationStance;
 use App\Catalog\Entity\Item;
 use App\Catalog\ItemSource;
+use App\Catalog\ItemState;
 use App\Provider\Entity\DataProvider;
 use Doctrine\DBAL\Connection;
 
@@ -80,11 +82,11 @@ final class ProviderHarvest
     /**
      * @param list<array{ref: string, letter: string, name: string, lat: float, lng: float, attributes: array<string, mixed>, country_code?: string|null}> $features
      *
-     * @return array{attached: int, inserted: int, updated: int, moved: int, skipped_rider: int, stale: int, contested: int}
+     * @return array{attached: int, inserted: int, updated: int, moved: int, skipped_rider: int, stale: int, contested: int, reclaimed: int}
      */
     public function apply(DataProvider $provider, array $features, \DateTimeImmutable $now = new \DateTimeImmutable()): array
     {
-        $counts = ['attached' => 0, 'inserted' => 0, 'updated' => 0, 'moved' => 0, 'skipped_rider' => 0, 'stale' => 0, 'contested' => 0];
+        $counts = ['attached' => 0, 'inserted' => 0, 'updated' => 0, 'moved' => 0, 'skipped_rider' => 0, 'stale' => 0, 'contested' => 0, 'reclaimed' => 0];
         // Every ref this run carries, known up front: a row whose ref is not
         // among them and that sits near a ref nobody has is a point that MOVED.
         $refs = array_map(static fn (array $f): string => $f['ref'], $features);
@@ -124,6 +126,9 @@ final class ProviderHarvest
             if (null !== $existing) {
                 $this->updateRow($existing, $feature, $osmRef, $now);
                 ++$counts[$moved ? 'moved' : 'updated'];
+                if ($this->reclaim($provider, $existing, $feature)) {
+                    ++$counts['reclaimed'];
+                }
                 continue;
             }
 
@@ -435,6 +440,68 @@ final class ProviderHarvest
                 'now' => $now->format('Y-m-d H:i:s'),
             ], static fn (mixed $v, string $k): bool => null !== $v || 'osm_ref' === $k, \ARRAY_FILTER_USE_BOTH),
         );
+    }
+
+    /**
+     * Custody moves both ways (data-provider-hierarchy.md §6.7.2), and this
+     * is the only place it moves back. The provider takes a row the riders
+     * verified only when its registry row may, only when it names the
+     * attribute carrying its survey date, and only when that survey is newer
+     * than our newest vouching confirmation by the provider's margin. The
+     * survey date is what gets written, by the provider's own clock, so a
+     * confirmation newer than it hands custody straight back. No confirmation
+     * is read for anything but its date, and none is ever deleted.
+     *
+     * @param array{attributes: array<string, mixed>, ...} $feature
+     */
+    private function reclaim(DataProvider $provider, int $id, array $feature): bool
+    {
+        $attribute = $provider->getSurveyDateAttribute();
+        if (!$provider->mayReclaim() || null === $attribute) {
+            return false;
+        }
+        $survey = self::surveyDate($feature['attributes'][$attribute] ?? null);
+        if (null === $survey) {
+            return false;
+        }
+        $vouching = implode(', ', array_map(static fn (ConfirmationStance $s): string => "'".$s->value."'", ConfirmationStance::vouching()));
+        /** @var array{state: string, reclaimed: string|null, newest: string|null}|false $row */
+        $row = $this->db->fetchAssociative(
+            "SELECT i.state, i.custody_reclaimed_at AS reclaimed,
+                    (SELECT MAX(c.created_at) FROM item_confirmation c
+                      WHERE c.item_id = i.id AND c.source <> 'form' AND c.stance IN ({$vouching})) AS newest
+               FROM item i WHERE i.id = :id",
+            ['id' => $id],
+        );
+        if (false === $row || ItemState::Verified->value !== $row['state'] || null === $row['newest']) {
+            return false;   // nothing the riders hold: nothing to take back
+        }
+        $newest = new \DateTimeImmutable($row['newest']);
+        if (null !== $row['reclaimed'] && new \DateTimeImmutable($row['reclaimed']) >= $newest) {
+            return false;   // already the provider's, until the next confirmation
+        }
+        if ($survey < $newest->modify(\sprintf('+%d days', $provider->getReclaimMarginDays()))) {
+            return false;   // newer, but not by enough to move a pin
+        }
+        $this->db->executeStatement(
+            'UPDATE item SET custody_reclaimed_at = :survey WHERE id = :id',
+            ['id' => $id, 'survey' => $survey->format('Y-m-d H:i:s')],
+        );
+
+        return true;
+    }
+
+    /** A full YYYY-MM-DD, truncated to the day; anything else is not a date. */
+    private static function surveyDate(mixed $raw): ?\DateTimeImmutable
+    {
+        if (!\is_string($raw) || 1 !== preg_match('/^\d{4}-\d{2}-\d{2}/', $raw)) {
+            return null;
+        }
+        try {
+            return new \DateTimeImmutable(substr($raw, 0, 10).' 00:00:00');
+        } catch (\Exception) {
+            return null;
+        }
     }
 
     /**

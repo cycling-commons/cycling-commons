@@ -57,11 +57,14 @@ final class ItemEvidenceResolver
                 (SELECT jsonb_exists(ev_dp.letters, {$i}.letter) FROM data_provider ev_dp WHERE ev_dp.id = {$i}.provider_id) AS ev_scope,
                 (SELECT COUNT(*) {$witnesses}) AS ev_conf,
                 (SELECT MAX(ev_c.created_at) {$witnesses}) AS ev_last,
-                ({$i}.attributes->>'check_date') AS ev_witness";
+                COALESCE((SELECT {$i}.attributes->>ev_dp.survey_date_attribute FROM data_provider ev_dp
+                           WHERE ev_dp.id = {$i}.provider_id AND ev_dp.survey_date_attribute IS NOT NULL),
+                         {$i}.attributes->>'check_date') AS ev_witness,
+                {$i}.custody_reclaimed_at AS ev_reclaimed";
     }
 
     /**
-     * @param array{state: string, source: string, imported_at: string|null, ev_provider: bool, ev_scope: bool|null, ev_conf: int|string, ev_last: string|null, ev_witness: string|null, ...} $row
+     * @param array{state: string, source: string, imported_at: string|null, ev_provider: bool, ev_scope: bool|null, ev_conf: int|string, ev_last: string|null, ev_witness: string|null, ev_reclaimed: string|null, ...} $row
      */
     public function fromRow(array $row, \DateTimeImmutable $now): ItemEvidence
     {
@@ -72,9 +75,15 @@ final class ItemEvidenceResolver
             : null;
         $provider = (bool) $row['ev_provider'];
         $source = ItemSource::tryFrom($row['source']);
+        $lastConfirmed = self::date($row['ev_last']);
+        // Custody moves both ways (§6.7.2): the provider holds a verified row
+        // again from the survey date the harvest wrote, until a confirmation
+        // newer than that date lands. Evidence never moves with it.
+        $reclaimed = self::date($row['ev_reclaimed'] ?? null);
+        $providerHolds = $provider && null !== $reclaimed && (null === $lastConfirmed || $reclaimed >= $lastConfirmed);
 
         $custody = match (true) {
-            null !== $verifiedBy => CustodyTier::Ours,
+            null !== $verifiedBy && !$providerHolds => CustodyTier::Ours,
             $provider => (bool) ($row['ev_scope'] ?? false) ? CustodyTier::Specialty : CustodyTier::Gross,
             \in_array($source, self::MIRRORED_SOURCES, true) => CustodyTier::Gross,
             default => CustodyTier::Ours,
@@ -82,7 +91,6 @@ final class ItemEvidenceResolver
         // imported_at is an upstream sighting only where an upstream exists
         // (§6.7.6); every row carries the column, only a provider row means it.
         $lastSeenUpstream = $provider ? self::date($row['imported_at']) : null;
-        $lastConfirmed = self::date($row['ev_last']);
 
         $rung = EvidenceRung::of(
             $custody,

@@ -49,7 +49,37 @@ final class ItemEvidenceResolverTest extends TestCase
             'ev_conf' => 0,
             'ev_last' => null,
             'ev_witness' => null,
+            'ev_reclaimed' => null,
         ];
+    }
+
+    public function testAProviderHoldsAVerifiedRowAgainFromItsSurveyDate(): void
+    {
+        $e = $this->resolver()->fromRow(
+            $this->row(['state' => 'verified', 'ev_conf' => 2, 'ev_last' => '2026-08-01 10:00:00', 'ev_reclaimed' => '2026-09-05 00:00:00']),
+            new \DateTimeImmutable(self::NOW),
+        );
+
+        self::assertSame(CustodyTier::Specialty, $e->custody, 'the border is the provider\'s again');
+        self::assertSame(9, $e->rung, 'the state, and the evidence, never moved');
+        self::assertFalse($e->badge);
+        self::assertSame('riders', $e->verifiedBy);
+    }
+
+    public function testAConfirmationNewerThanTheSurveyHandsCustodyBack(): void
+    {
+        $e = $this->resolver()->fromRow(
+            $this->row(['state' => 'verified', 'ev_conf' => 3, 'ev_last' => '2026-09-08 10:00:00', 'ev_reclaimed' => '2026-09-05 00:00:00']),
+            new \DateTimeImmutable(self::NOW),
+        );
+
+        self::assertSame(CustodyTier::Ours, $e->custody);
+    }
+
+    public function testTheSelectFragmentReadsTheReclaimDate(): void
+    {
+        self::assertStringContainsString('custody_reclaimed_at AS ev_reclaimed', ItemEvidenceResolver::selectSql('i'));
+        self::assertStringContainsString('survey_date_attribute', ItemEvidenceResolver::selectSql('i'), 'a provider\'s own survey date is the published witness');
     }
 
     public function testARegisterRowInScopeIsSpecialtyAndALiveClaim(): void

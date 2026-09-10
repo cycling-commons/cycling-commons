@@ -112,6 +112,19 @@
               <input type="number" id="pv-radius-{{ p.id }}" name="matchRadiusM" value="{{ p.matchRadiusM }}" min="1" max="5000">
               <p class="pv-note">{{ 'provider.help.match_radius'|trans }}</p></div>
           </div>
+          {# Custody moves both ways (data-provider-hierarchy.md §6.7.2): a
+             per-provider judgement, so it lives here and not in the rule. #}
+          <div class="pv-check">
+            <input type="checkbox" id="pv-reclaim-{{ p.id }}" name="mayReclaim" value="1"{{ p.mayReclaim ? ' checked' : '' }}>
+            <label for="pv-reclaim-{{ p.id }}">{{ 'provider.field.may_reclaim'|trans }}</label>
+          </div>
+          <div class="pv-grid">
+            <div><label for="pv-margin-{{ p.id }}">{{ 'provider.field.reclaim_margin'|trans }}</label>
+              <input type="number" id="pv-margin-{{ p.id }}" name="reclaimMarginDays" value="{{ p.reclaimMarginDays }}" min="1" max="365"></div>
+            <div><label for="pv-survey-{{ p.id }}">{{ 'provider.field.survey_date_attribute'|trans }}</label>
+              <input type="text" id="pv-survey-{{ p.id }}" name="surveyDateAttribute" value="{{ p.surveyDateAttribute }}" maxlength="64"></div>
+          </div>
+          <p class="pv-note">{{ 'provider.help.reclaim'|trans }}</p>
           <div class="pv-check">
             <input type="checkbox" id="pv-on-{{ p.id }}" name="enabled" value="1"{{ p.enabled ? ' checked' : '' }}>
             <label for="pv-on-{{ p.id }}">{{ 'provider.field.enabled'|trans }}</label>

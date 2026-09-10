@@ -163,6 +163,17 @@ class Item
     #[ORM\Column(type: 'datetime_immutable', nullable: true)]
     private ?\DateTimeImmutable $importedAt = null;
 
+    /**
+     * The provider's survey date that took custody of this row back from the
+     * riders (docs/specs/data-provider-hierarchy.md §6.7.2). Written only by
+     * the harvest, and only when the registry row may reclaim and the survey
+     * is newer than our newest confirmation by the provider's margin. Custody
+     * is ours again the moment a confirmation newer than this date lands; the
+     * confirmations themselves are never touched. NULL: never reclaimed.
+     */
+    #[ORM\Column(name: 'custody_reclaimed_at', type: 'datetime_immutable', nullable: true)]
+    private ?\DateTimeImmutable $custodyReclaimedAt = null;
+
     public function __construct()
     {
         $this->createdAt = new \DateTimeImmutable();
@@ -371,6 +382,11 @@ class Item
         $this->importedAt = $importedAt;
 
         return $this;
+    }
+
+    public function getCustodyReclaimedAt(): ?\DateTimeImmutable
+    {
+        return $this->custodyReclaimedAt;
     }
 
     public function getCreatedAt(): \DateTimeImmutable

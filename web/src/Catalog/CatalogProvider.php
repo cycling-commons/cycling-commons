@@ -161,7 +161,7 @@ final class CatalogProvider
      *
      * @see docs/specs/map-and-search.md §12
      *
-     * @return list<array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null, pk: string|null, region_id: int|null, verified: bool, by_name: string|null, by_public: bool|null, by_uuid: string|null, letter: string, last_confirmed: string|null, state: string, imported_at: string|null, ev_provider: bool, ev_scope: bool|null, ev_conf: int|string, ev_last: string|null, ev_witness: string|null}>
+     * @return list<array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null, pk: string|null, region_id: int|null, verified: bool, by_name: string|null, by_public: bool|null, by_uuid: string|null, letter: string, last_confirmed: string|null, state: string, imported_at: string|null, ev_provider: bool, ev_scope: bool|null, ev_conf: int|string, ev_last: string|null, ev_witness: string|null, ev_reclaimed: string|null}>
      */
     private function itemRows(string $letter, ?string $source = null, ?string $excludeSource = null, ?int $onlyId = null, bool $anyState = false): array
     {
@@ -212,7 +212,7 @@ final class CatalogProvider
         // docs/specs/catalog-data-model.md §7 — gone from the map; curatedRefs() still claims the OSM ref.
         $sql .= ' AND '.GoneRows::notGoneSql('i');
 
-        /* @var list<array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null, region_id: int|null, verified: bool, by_name: string|null, by_public: bool|null, by_uuid: string|null, letter: string, last_confirmed: string|null, state: string, imported_at: string|null, ev_provider: bool, ev_scope: bool|null, ev_conf: int|string, ev_last: string|null, ev_witness: string|null}> */
+        /* @var list<array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null, region_id: int|null, verified: bool, by_name: string|null, by_public: bool|null, by_uuid: string|null, letter: string, last_confirmed: string|null, state: string, imported_at: string|null, ev_provider: bool, ev_scope: bool|null, ev_conf: int|string, ev_last: string|null, ev_witness: string|null, ev_reclaimed: string|null}> */
         return $this->db->fetchAllAssociative($sql.' ORDER BY i.id', $params);
     }
 
@@ -289,7 +289,7 @@ final class CatalogProvider
      * The per-row mapping shared by the bulk payload and featureForItem(), so
      * a live-inserted feature can never drift from the served one.
      *
-     * @param array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null, pk: string|null, region_id: int|null, verified: bool, by_name: string|null, by_public: bool|null, by_uuid: string|null, letter: string, last_confirmed: string|null, state: string, imported_at: string|null, ev_provider: bool, ev_scope: bool|null, ev_conf: int|string, ev_last: string|null, ev_witness: string|null} $row
+     * @param array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null, pk: string|null, region_id: int|null, verified: bool, by_name: string|null, by_public: bool|null, by_uuid: string|null, letter: string, last_confirmed: string|null, state: string, imported_at: string|null, ev_provider: bool, ev_scope: bool|null, ev_conf: int|string, ev_last: string|null, ev_witness: string|null, ev_reclaimed: string|null} $row
      *
      * @return array{type: string, properties: array<string, mixed>, geometry: mixed}
      */
@@ -371,7 +371,7 @@ final class CatalogProvider
     /**
      * One climb in the map.js shape. Unsealed (`...`) so callers can pass the full served row.
      *
-     * @param array{id: int, name: string, geom: string, attributes: string, source: string, region_id: int|null, verified: bool, state: string, imported_at: string|null, ev_provider: bool, ev_scope: bool|null, ev_conf: int|string, ev_last: string|null, ev_witness: string|null, ...} $row
+     * @param array{id: int, name: string, geom: string, attributes: string, source: string, region_id: int|null, verified: bool, state: string, imported_at: string|null, ev_provider: bool, ev_scope: bool|null, ev_conf: int|string, ev_last: string|null, ev_witness: string|null, ev_reclaimed: string|null, ...} $row
      *
      * @return array<string, mixed>
      */
