@@ -3,17 +3,14 @@
 # Governance
 
 The credibility of a commons rests on one question: *can the people who built it quietly enclose it
-later?* If yes, nobody will trust it and nobody will build on it. This is how shared resources die:
-the steward who runs the API revokes it one day and puts it behind a paywall. The Cycling Commons is
-built so the answer is **no**: what has been released cannot be taken private at all, code and data
-alike. The only enclosure still open to a steward is stopping the flow of new data, and that cannot
-be done quietly.
+later?* The Cycling Commons is built so the answer is **no** — and so that the map outlives its
+makers. Everything already released, code and data alike, belongs to the commons permanently: no
+future owner, sale, or change of heart can take it back.
 
-Two licences do the first part of the work, and this page is straight about where each one stops:
+Two licences do that work, and this page is straight about where each one stops:
 
-- ODbL covers the *data*, and only data already published. It cannot force anyone to keep
-  publishing. A bad-faith owner could close the API and the bulk exports together; every copy
-  already released would stay free, but new data would stop arriving.
+- ODbL covers the *data*, and only data already published. Every copy released stays free forever;
+  the licence cannot force anyone to publish more.
 - The platform code is free software under the
   [GNU AGPL v3](https://github.com/cycling-commons/cycling-commons/blob/main/LICENSE)
   (`AGPL-3.0-only`). Anyone may take it, run it, change it, and run a rival service on it. What the
@@ -21,11 +18,9 @@ Two licences do the first part of the work, and this page is straight about wher
   runs a modified version as a network service other people use, has to offer those people the
   Corresponding Source. Competition is allowed. Going private is not.
 
-That closes the oldest hole in a project like this, the steward who quietly takes the software in
-house. It does not close every hole. Nobody can put this code behind a wall any more, but a steward
-can still stop *feeding* the pool, and no licence ever written compels someone to keep working. So
-the rest of the protection is practical. Each measure makes enclosure slower, costlier and more
-visible:
+The licences share one limit, worth stating plainly: no licence compels anyone to keep working. A
+steward can always stop feeding the pool. What makes the Commons last anyway is not a defence
+against anyone's bad faith — it is the ordinary condition of something many people already hold:
 
 - **Published data stays free forever.** ODbL is irrevocable for every copy already released.
 - **Published code stays free forever, and so does everything built on it.** The AGPL grant on a
@@ -44,9 +39,11 @@ visible:
   clause AGPL v3 section 7(e) sets aside for it. A fork picks its own name. Everything it needs to
   *run* is already in the grant.
 
-The honest answer to the opening question is therefore: neither the code nor the data can be taken
-private, and past that, enclosure can be made slow, expensive and public. Never impossible. The word
-that matters is *quietly*.
+So the answer to the opening question is not "you would notice if we enclosed it." It is: **the
+steward can be replaced without the map being replaced.** The schema, the accounts, the code and
+every published record keep working for whoever holds them next — a foundation, a community, a
+thousand forks. A builder joining today is not betting on anyone's goodwill lasting. The guarantee
+holds even when goodwill runs out, which is the only kind of guarantee worth building on.
 
 ## Who stewards it
 
@@ -118,7 +115,7 @@ visible:
 | **5. Graduated sanctions** | Escalating consequences for rule-breaking (warn → restrict → remove), sized to severity and repeat offence rather than a first-strike ban. Aimed at abuse: spam, vote-rigging, vandalism. [Pre-committed below](#principles-5-and-6-pre-committed) | *aspirational* (ladder written, untested) |
 | **6. Cheap conflict resolution** | A fast, low-cost way to settle *good-faith* disagreements (a contested edit, a curation call) without escalation or cost. Adjudication between members, not punishment. [Pre-committed below](#principles-5-and-6-pre-committed) | *aspirational* (path defined, unused) |
 | **7. Recognised right to organise** | The community's right to self-govern is recognised from outside: the foundation gives it legal standing independent of BikeCoders, and the exit right is real on both halves at once, ODbL on the data and AGPL-3.0-only on the code, so a community that disagreed with the steward could leave with a working system and no upstream could deny it *(what remains is the foundation itself: see [The path to independence](#the-path-to-independence))* | *partly shipped* (exit right in force on data and code, foundation pending) |
-| **8. Nested enterprises** | Self-governing regions nested under a coordinating core: rider → regional curators → core stewardship → foundation (see [Regional governance](#regional-governance-subsidiarity-not-hierarchy)) | *design* (the structure regions grow into) |
+| **8. Nested enterprises** | Self-governing regions nested under a coordinating core, each level with its own remit: rider (votes the best-of) → regional curators (guard the data, grow the region) → core stewardship (standards, interoperability) → foundation (see [Regional governance](#regional-governance-subsidiarity-not-hierarchy)) | *design* (the structure regions grow into) |
 
 Two caveats keep this honest. First, Ostrom derived her principles from institutions that had *already
 endured*; used here they run the other way, as a compass for building rather than a report of
@@ -172,10 +169,11 @@ first monitor is needed: the appeal, the log, and eventually the foundation's co
 
 ## Regional governance: subsidiarity, not hierarchy
 
-The aim is for each region to govern its own map (its curators, its seasonal rounds, its own sense of
-what the region's best climbs, finest views, and top rides are) nested under a core that keeps the
-regions interoperable. That is principle #8 (nested enterprises) made real: governance, not merely a
-data hierarchy.
+The aim is for each region to govern its own map, with two local roles kept deliberately apart: its
+**curators** guard the data's honesty (proposals, verification, decay), while its **riders' votes** —
+the seasonal rounds — decide what counts as the region's best climbs, finest views, and top rides.
+Regions are nested under a core that keeps them interoperable. That is principle #8 (nested
+enterprises) made real: governance, not merely a data hierarchy.
 
 The line to hold is **subsidiarity**: decisions sit at the lowest competent level, and the higher level
 only handles what the lower one can't. "Supervision to keep regions aligned" can quietly collapse the
@@ -186,9 +184,9 @@ commons. So the division of labour we aim for:
   vote-integrity, cross-region *consistency of process*, and being the backstop for disputes a region
   can't resolve. That is legitimate "supervision."
 - **Region's job = the actual map.** What counts as this region's best climb, finest view, or top ride
-  stays local, and the core team does **not** override it. The moment "alignment" means the core team
-  can overrule a region's *judgment*, it is not a nested commons any more; it is a company with regional
-  moderators.
+  stays local: it is the region's riders who vote it, through the rounds, and the core team does
+  **not** override it. The moment "alignment" means the core team can overrule a region's *vote*, it
+  is not a nested commons any more; it is a company with regional moderators.
 
 "Keep aligned" therefore means aligned **standards**, not aligned **opinions**. Most regions won't have
 a curator community at the start; this is the structure the Commons grows into as local communities
