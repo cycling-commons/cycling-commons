@@ -79,10 +79,12 @@ ownership. The commitment, public from the start:
 2. **Architectural separation from day one**: independent data, accounts and API. Bulk exports are
    part of the same design.
 3. **Spin out into an independent foundation** (following established open-data foundation
-   precedents) at a defined, checkable milestone, whichever comes first: **50 external contributors
-   with a merged contribution**, or **25,000 rider-verified data points**. A milestone that cannot be
-   checked ("when there is a real community") is not a commitment, so the trigger is a number, not a
-   feeling.
+   precedents) at a defined, checkable milestone, whichever comes first: **25 unique external
+   contributors** with a reviewed contribution to the project — code, translation, curation, region
+   writing; or **12,500 rider-backed data points**, where adding and verifying weigh the same. The
+   first number counts skills given to the project, the second active involvement in the dataset. A
+   milestone that cannot be checked ("when there is a real community") is not a commitment, so the
+   trigger is a number, not a feeling.
 4. **The handover includes the code, and the licence has already done that part.** A data-only exit
    would not be a real exit: a community that inherits a dataset it cannot run has inherited very
    little. The perpetual, royalty-free right to run, modify and redistribute the serving stack is
@@ -90,8 +92,13 @@ ownership. The commitment, public from the start:
    everyone else on the same terms. What the spin-out still has to move by
    hand is everything the AGPL does not reach: the domain, the name, the logo and the wordmark (see
    [TRADEMARK.md](https://github.com/cycling-commons/cycling-commons/blob/main/TRADEMARK.md), which
-   already names the stichting as where the marks are going), the accounts, and operational
-   custody of the running service.
+    already names the stichting as where the marks are going), the accounts, and operational
+    custody of the running service.
+5. **The handover waits for a funding runway.** Until the foundation exists, BikeCoders pays the
+   hosting bills; before the keys move, twelve months of those costs stand committed as sponsorship —
+   the commercial citizens and donations. Money is deliberately not a trigger: a foundation that
+   spins out to its biggest donor is a funder-captured company with a nicer name. The trigger says
+   when the community may ask; the runway says the answer can survive being given.
 
 The public pre-commitment plus the open licence is what makes "we will spin it out" credible rather
 than hollow. The foundation is formalised when there is a community to govern, not before. Of
