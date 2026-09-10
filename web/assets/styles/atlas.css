@@ -431,3 +431,25 @@ section.pad+section.pad{padding-top:clamp(2rem,4vw,3rem)}
 /* The report badge: a ringed exclamation mark before every "Report this page" link (owner 2026-09-08). Same shape as the map's .cc-bang. */
 .rep-bang{display:inline-flex;align-items:center;justify-content:center;width:1.15rem;height:1.15rem;margin:0 .35rem 0 0;border-radius:50%;border:1px solid rgba(20,22,14,.45);color:inherit;font-weight:700;font-size:.72rem;line-height:1;vertical-align:middle;text-decoration:none}
 a:hover>.rep-bang{border-color:var(--clay);color:var(--clay)}
+
+/* ── Mobile polish (shared) ───────────────────────────────────────────────
+   Ported from the June branch (9a42375b): the rewrite superseded that
+   branch's drawers and rail (map.css has its own phone behaviour now), but
+   these three guards exist nowhere else in web/.
+
+   `clip`, not `hidden`: hidden turns body into a scroll container, which
+   silently kills the sticky topnav. clip stops a stray fixed width from
+   opening a sideways scrollbar and leaves sticky alone. Older Safari simply
+   keeps the old behaviour — the guard is a safety net, not a feature. */
+@media(max-width:600px){
+  html,body{overflow-x:clip}
+  img,video{max-width:100%;height:auto}
+}
+/* Thumb-sized targets on touch devices — this typeface reads small, and the
+   24px floor is easy to miss at .9rem. Element rules only in the fluid block
+   above: class-based sizing on a page still outranks them. */
+@media(pointer:coarse){
+  .btn{padding:.9rem 1.5rem}
+  .chip{padding:.55rem .9rem}
+  .topnav .links a,.foot .footcol a{padding-top:.4rem;padding-bottom:.4rem}
+}
