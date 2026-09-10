@@ -6,7 +6,7 @@ import { map, flyToPin } from './map-init.js';
 import { showTip, hideTip } from './sheet.js';
 import { layerByKey, active, mode, LETTER_KEY, KEY_LETTER } from './catalog.js';
 import { curScope } from './scope-ui.js';
-import { mintKindIcons, miniIcon, SERVICE_GLYPH, coverageIconId, kindImageId, covIconSizes, DISC_SIZES, DROP_SIZES } from './icons.js';
+import { mintKindIcons, miniIcon, SERVICE_GLYPH, coverageIconId, kindImageId, covIconSizes, DISC_SIZES, DROP_SIZES, witnessCutoff } from './icons.js';
 import { updateCounts, applyStaysAccessFilter } from './render.js';
 import { openDrawer, renderDrawerBody, osmDrawer, waterDrawer, revealPinAt } from './drawer.js';
 import { isPicking } from './picking.js';
@@ -115,17 +115,28 @@ export function addCoverage(){
       const isFood = ['match',['to-string',['get','food']],['true','1','yes'],true,false];
       const isPotable = ['match',['to-string',['get','potable']],['yes','true','1'],true,false];
       const isNotPotable = ['==',['to-string',['get','potable']],'no'];
+      /* Axis 2 on the tile layer (data-provider-hierarchy.md §6.7): a point
+         whose `cd` (OSM check_date) is on or after the shell's cutoff has a
+         witness inside the window and draws the plain icon; every other
+         point draws the "?" twin. The cutoff is a YYYY-MM-DD string and so
+         is `cd`, so a string compare is a date compare. No cutoff from the
+         shell keeps the badge on everything: fail closed. */
+      const cutoff = witnessCutoff();
+      const witnessed = cutoff ? ['>=',['to-string',['coalesce',['get','cd'],'']], cutoff] : false;
+      const pick = (plain, badged) => ['case', witnessed, plain, badged];
+      const kindPair = kind => pick(kindImageId('B',kind,false), kindImageId('B',kind,true));
+      const miniPair = (glyph, suffix) => pick(miniIcon(key, glyph, suffix, false), miniIcon(key, glyph, suffix, true));
       const icon = key==='water'
         ? ['case', isFood,
-            ['case', isPotable, kindImageId('B','food_water'), kindImageId('B','food')],
-            ['case', isPotable, kindImageId('B','tap'), isNotPotable, kindImageId('B','no'), kindImageId('B','unk')]]
+            ['case', isPotable, kindPair('food_water'), kindPair('food')],
+            ['case', isPotable, kindPair('tap'), isNotPotable, kindPair('no'), kindPair('unk')]]
         : key==='services'
           ? ['match',['get','kind'],
-              'shop', miniIcon('services'),
-              'station', miniIcon('services', SERVICE_GLYPH.station, 'station'),
-              'pump', miniIcon('services', SERVICE_GLYPH.pump, 'pump'),
-              miniIcon('services')]
-          : miniIcon(key);
+              'shop', miniPair(),
+              'station', miniPair(SERVICE_GLYPH.station, 'station'),
+              'pump', miniPair(SERVICE_GLYPH.pump, 'pump'),
+              miniPair()]
+          : miniPair();
       const heatId = cc ? key+'-'+cc+'-heat' : key+'-heat';
       // addLayer rejects `filter: null`; omit the key (default = unfiltered).
       const heatSpec={id:heatId, type:'heatmap', source:'coverage', 'source-layer':srcLayer,

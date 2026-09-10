@@ -11,6 +11,7 @@ use App\Catalog\CatalogProvider;
 use App\Catalog\CatalogSchemaProvider;
 use App\Catalog\ChangeHistoryView;
 use App\Catalog\ClosureExpiryService;
+use App\Catalog\ConfirmationFreshness;
 use App\Catalog\ItemType;
 use App\Catalog\KindIcons;
 use App\Catalog\MapTheme;
@@ -56,13 +57,13 @@ final class MapController extends AbstractController
      */
     #[Route('/scout/review', name: 'scout_review')]
     #[IsGranted('ROLE_USER')]
-    public function scoutReview(Request $request, SubmissionQueue $queue, CatalogSchemaProvider $schema, TranslatorInterface $translator, ModerationScopeProvider $scopeProvider, TwoFactorPolicy $twoFactorPolicy, CoverageManifest $coverage, SurfaceManifest $surface, RoutesManifest $routes, RegionRegistryProvider $regions, CatalogProvider $catalogProvider, SettingsProviderInterface $settings): Response
+    public function scoutReview(Request $request, SubmissionQueue $queue, CatalogSchemaProvider $schema, TranslatorInterface $translator, ModerationScopeProvider $scopeProvider, TwoFactorPolicy $twoFactorPolicy, CoverageManifest $coverage, SurfaceManifest $surface, RoutesManifest $routes, RegionRegistryProvider $regions, CatalogProvider $catalogProvider, SettingsProviderInterface $settings, ConfirmationFreshness $freshness): Response
     {
-        return $this->map($request, $queue, $schema, $translator, $scopeProvider, $twoFactorPolicy, $coverage, $surface, $routes, $regions, $catalogProvider, $settings, scoutReview: true);
+        return $this->map($request, $queue, $schema, $translator, $scopeProvider, $twoFactorPolicy, $coverage, $surface, $routes, $regions, $catalogProvider, $settings, $freshness, scoutReview: true);
     }
 
     #[Route('/map', name: 'map')]
-    public function map(Request $request, SubmissionQueue $queue, CatalogSchemaProvider $schema, TranslatorInterface $translator, ModerationScopeProvider $scopeProvider, TwoFactorPolicy $twoFactorPolicy, CoverageManifest $coverage, SurfaceManifest $surface, RoutesManifest $routes, RegionRegistryProvider $regions, CatalogProvider $catalogProvider, SettingsProviderInterface $settings, bool $scoutReview = false): Response
+    public function map(Request $request, SubmissionQueue $queue, CatalogSchemaProvider $schema, TranslatorInterface $translator, ModerationScopeProvider $scopeProvider, TwoFactorPolicy $twoFactorPolicy, CoverageManifest $coverage, SurfaceManifest $surface, RoutesManifest $routes, RegionRegistryProvider $regions, CatalogProvider $catalogProvider, SettingsProviderInterface $settings, ConfirmationFreshness $freshness, bool $scoutReview = false): Response
     {
         // Three bucket round trips, started together instead of one after the
         // other. Read in sequence they add up, and each carries its own
@@ -116,6 +117,10 @@ final class MapController extends AbstractController
             // docs/specs/coverage-provider.md §4 — null omits the layer.
             'coverage_url' => $coverage->currentTileUrl(),
             'coverage_countries' => $coverage->countryCodes(),
+            // data-provider-hierarchy.md §6.7.7 rung 7: a tile point whose
+            // check_date is on or after this day has a witness inside the
+            // window and drops its "?". One clock for tiles and pins.
+            'witness_cutoff' => $freshness->staleBefore(new \DateTimeImmutable())->format('Y-m-d'),
             // docs/specs/coverage-provider.md §4 — surface PMTiles; null omits the control.
             'surface_tiles_url' => $surface->classifiedUrl(),
             'surface_todo_url' => $surface->todoUrl(),

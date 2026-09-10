@@ -46,6 +46,7 @@
 <link rel="stylesheet" href="{{ asset('lib/maplibre-gl/6.8.0/maplibre-gl.css') }}" />
 <link rel="stylesheet" href="{{ asset('styles/fonts.css') }}" />
 <link rel="stylesheet" href="{{ asset('styles/map.css') }}" />
+<link rel="stylesheet" href="{{ asset('styles/pins.css') }}" />
 <link rel="icon" href="/favicon.ico" sizes="32x32" />
 <link rel="icon" type="image/svg+xml" href="{{ asset('brand/logo-favicon.svg') }}" />
 {# No nonce: script-src names the analytics host directly, so neither this file
@@ -785,6 +786,8 @@ window.CC_VENDOR = {{ {
   window.CC_CATALOG_URL = {{ catalog_url|json_encode(constant('JSON_UNESCAPED_SLASHES'))|raw }};
   {# The heat points live off the critical payload; fetched on the first heatmap-On only. #}
   window.CC_HEAT_URL = {{ path('map_heat')|json_encode(constant('JSON_UNESCAPED_SLASHES'))|raw }};
+  {# The witness window for coverage tiles (data-provider-hierarchy.md §6.7.7). #}
+  window.CC_WITNESS_CUTOFF = {{ witness_cutoff|json_encode|raw }};
   {# Seasonal voting go-live (community.voting_live): false hides every vote
      call-to-action on the map. #}
   window.CC_VOTING_LIVE = {{ voting_live|default(false) ? 'true' : 'false' }};

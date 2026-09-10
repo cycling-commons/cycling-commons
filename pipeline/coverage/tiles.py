@@ -58,6 +58,15 @@ _EXTRA_SQL = {
     # vocabulary (map.js applyStaysAccessFilter); the only OSM-derivable member
     # is wheelchair=yes → 'Wheelchair-accessible'. Everything else stays NULL.
     "acc": "'acc', CASE WHEN tags->>'wheelchair' = 'yes' THEN 'Wheelchair-accessible' END",
+    # Every letter: a dated OSM check_date is a published witness
+    # (data-provider-hierarchy.md §6.7.7, rung 7), and the coverage disc drops
+    # its "?" when the date is inside the freshness window. Only a full
+    # YYYY-MM-DD survives, truncated to the day: the map compares it to a
+    # cutoff as a string, and "summer" or "2023" sorting above an ISO date
+    # would drop a badge nobody earned. NULL (stripped) otherwise; 21,541 of
+    # 366,887 drinking_water objects carried the tag (taginfo, 2026-09-09).
+    "cd": ("'cd', CASE WHEN tags->>'check_date' ~ '^\\d{4}-\\d{2}-\\d{2}' "
+           "THEN left(tags->>'check_date', 10) END"),
 }
 
 

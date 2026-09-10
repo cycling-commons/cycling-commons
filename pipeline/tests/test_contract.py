@@ -49,11 +49,14 @@ def test_letter_specific_tile_props():
     # `food` joined `potable` on 2026-09-04: letter B is water AND food, and
     # 44% of its rows are shops and eateries that drew a water drop because a
     # letter was all the tile said.
-    assert contract.letters["B"].tile_props == ["potable", "food"]
-    assert contract.letters["D"].tile_props == ["kind"]
-    assert contract.letters["O"].tile_props == ["acc"]
+    # `cd` joined every letter on 2026-09-10: a dated OSM `check_date`
+    # is a published witness (data-provider-hierarchy.md §6.7.7, rung 7),
+    # and the badge on a coverage disc reads it.
+    assert contract.letters["B"].tile_props == ["potable", "food", "cd"]
+    assert contract.letters["D"].tile_props == ["kind", "cd"]
+    assert contract.letters["O"].tile_props == ["acc", "cd"]
     for letter in ("F", "G", "P", "Q"):
-        assert contract.letters[letter].tile_props == []
+        assert contract.letters[letter].tile_props == ["cd"]
 
 
 def test_universal_tile_props_carry_the_scope_keys():
@@ -192,3 +195,18 @@ def test_rejects_contract_missing_service_kind_key(tmp_path):
     del raw["serviceKind"]
     with pytest.raises(ValueError, match="serviceKind"):
         load_contract(_reload(tmp_path, raw))
+
+
+def test_every_tile_prop_has_its_sql_fragment():
+    # tiles.py::_letter_sql looks each per-letter extra up in _EXTRA_SQL; a
+    # prop the contract lists and the SQL does not know would KeyError at
+    # export time, after the harvest.
+    from coverage.tiles import _EXTRA_SQL
+    from coverage.contract import TILE_DERIVED_TAG_KEYS
+    contract = load_contract()
+    for letter, spec in contract.letters.items():
+        for prop in spec.tile_props:
+            assert prop in _EXTRA_SQL, f"{letter}: tile prop {prop!r} has no SQL fragment"
+    # The witness date is read out of `tags`, so the trim must keep it.
+    assert "check_date" in TILE_DERIVED_TAG_KEYS
+    assert "check_date" in contract.stored_tag_keys

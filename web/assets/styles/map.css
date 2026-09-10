@@ -447,52 +447,15 @@
   .maplibregl-map{font-family:var(--sans)}
   .maplibregl-ctrl-attrib{font-family:var(--mono);font-size:.7rem}
 
-  /* tilted teardrop: the 50% 50% 50% 0 radius makes the drop point down-left (the look we want) with
-     NO rotate — so the glyph inside stays upright on its own (don't rotate .cc-pin or the span) */
-  .cc-pin{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50% 50% 50% 0;background:var(--c);box-shadow:0 3px 8px rgba(16,30,22,.4);border:2px solid var(--paper)}
-  .cc-pin span{font-size:.85rem;line-height:1;font-family:var(--emoji)}
-  /* The kind glyph (KindIcons::set() via icons.js kindSvg): drawn, not typed. */
-  .cc-pin span.kd{display:flex}
-  .cc-kind--glyph{font-family:var(--emoji);font-style:normal}
-  /* The two shared state badges (data-provider-hierarchy.md §6.3, top-left,
-     opposite the "?" and the verified dot): red "!" = not usable right now,
-     ink clock = there, but not always. A child element rather than ::before
-     so the one-off reveal pulse keeps its own pseudo-element. */
-  .cc-pin .cc-st{position:absolute;width:14px;height:14px;top:-6px;left:-6px;border-radius:50%;
-    display:flex;align-items:center;justify-content:center;font:700 10px/14px var(--mono);
-    box-shadow:0 1px 3px rgba(16,30,22,.5)}
-  .cc-pin .cc-st.warn{background:#D92D20;color:#fff}
-  .cc-pin .cc-st.hours{background:#14160E;color:#F3EBD8}
+  /* The pin itself (.cc-pin, its borders, badges and state marks) lives in
+     styles/pins.css, linked beside this file: the key page and the curator
+     marker page draw the same pin from the same rules. */
   /* Every remaining surface that prints a category glyph. Without --emoji these
      draw tofu boxes on any machine whose browser has no colour-emoji font —
      which is silent: the pin still renders, it just says nothing. */
   .cc-g{font-family:var(--emoji);font-style:normal}
   .cc-g svg,.cc-near-k svg,.search-res .sw svg,.cc-d-rec .v svg{vertical-align:-2px}
-  /* "Somebody checked this, but a while ago." The ring replaces the paper
-     border rather than adding a second one: an outline outside the drop shadow
-     read as a selection state, which is what .cur already means. Trail orange,
-     the colour every "your turn" affordance on the site uses. */
-  .cc-pin.stale{border-color:var(--trail);box-shadow:0 3px 8px rgba(16,30,22,.4),0 0 0 1px rgba(255,90,31,.45)}
-  /* Ringed in the pin ink: a bare paper dot vanished on the light basemap (owner 2026-09-08). */
-  .cc-pin.cur::after{content:"";position:absolute;box-sizing:border-box;width:8px;height:8px;background:var(--paper);border:1.5px solid rgb(var(--mark-ink) / .85);border-radius:50%;top:-4px;right:-4px;transform:rotate(45deg)}
-  .cc-pin.pending{border-color:#D92D20;border-width:3px}
-  /* community tier (07-15 decisions B/D): same per-type marker, lighter — no new icon set.
-     !important: MapLibre's Marker._updateOpacity() sets an inline style.opacity on every
-     marker element on each position update (occlusion-fade machinery), which otherwise
-     silently beats this class rule — confirmed live, the dashed border alone rendered. */
-  /* Curated but nobody has checked it yet (docs/specs/photo-uploads.md §5).
-     It must read as OURS first — same colour, glyph and teardrop as any
-     Commons pin — and provisional second, so it stays legible instead of
-     fading into the basemap: ink dashes over a white halo (monochrome reads
-     on any basemap, light or dark — owner 2026-09-01, replacing the ochre
-     dash) plus a small "?" where a verified pin wears its curated dot. The
-     invitation is in the tooltip. */
-  .cc-pin.community{opacity:.95 !important;border:2.5px dashed #14160E;
-    box-shadow:0 0 0 1.5px rgba(255,255,255,.95),0 3px 8px rgba(16,30,22,.4)}
-  .cc-pin.community::after{content:"?";position:absolute;width:13px;height:13px;top:-5px;right:-5px;
-    background:var(--ochre);color:#14160E;border-radius:50%;font-family:var(--mono);font-size:9px;
-    font-weight:700;line-height:13px;text-align:center;box-shadow:0 1px 3px rgba(16,30,22,.5)}
-  /* one-off reveal pin (decision C): community look + the selection pulse */
+  /* one-off reveal pin (decision C): the "?" pin plus the selection pulse */
   .cc-pin.reveal::before{content:"";position:absolute;left:50%;top:50%;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;border:2px solid rgba(255,90,31,.6);animation:cc-pulse 1.25s infinite}
   .cc-mod{margin-top:1rem;border:1px solid rgba(217,45,32,.4);border-left:3px solid #D92D20;border-radius:0 8px 8px 0;padding:.9rem 1rem;background:rgba(217,45,32,.05)}
   .cc-mod-badge{font-family:var(--mono);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--chrome-red);margin-bottom:.5rem}   /* readable red on the dark drawer (was #D92D20) */

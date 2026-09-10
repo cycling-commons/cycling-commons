@@ -493,7 +493,7 @@ export function render(){
             markers.push(rm);
           }
         }
-        const el = pinEl(layer,f.cur,f);
+        const el = pinEl(layer,f);
         el.style.cursor='pointer';
         el.tabIndex=0; el.setAttribute('role','button');
         const summary = featureSummary(f, D);

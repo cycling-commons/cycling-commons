@@ -22,7 +22,10 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const ROOT = path.join(__dirname, '..', '..');
-const css = fs.readFileSync(path.join(ROOT, 'assets/styles/map.css'), 'utf8');
+// The pin itself lives in pins.css (one definition for the map, the key page
+// and the curator marker page); the rest of the chrome in map.css.
+const css = fs.readFileSync(path.join(ROOT, 'assets/styles/map.css'), 'utf8')
+  + '\n' + fs.readFileSync(path.join(ROOT, 'assets/styles/pins.css'), 'utf8');
 const icons = fs.readFileSync(path.join(ROOT, 'assets/map/icons.js'), 'utf8');
 
 /** Normalised font list: lowercase family names, quotes and spacing stripped. */
@@ -73,7 +76,7 @@ test('every DOM surface that prints a layer glyph uses the stack', () => {
     assert.ok(rule, `no rule found for ${selector} (${where})`);
     assert.match(
       rule[1],
-      /font-family:\s*var\(--emoji\)/,
+      /font-family:\s*var\(--emoji[,)]/,
       `${selector} (${where}) prints a category glyph without the emoji stack — it will render a tofu box`,
     );
   }

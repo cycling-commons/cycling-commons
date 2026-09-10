@@ -128,10 +128,11 @@ export function refilterClusters(){
 export function confLeafPin(st, p, co){
   const lngLat=[co[0],co[1]], llo={lat:co[1],lng:co[0]};
   const drawerF = st.info.water ? waterDrawer(p, llo) : osmDrawer(st.layer, p, llo, st.info.src);
-  // docs/specs/map-and-search.md §12 — unconfirmed items get the community pin, not absence.
+  // docs/specs/map-and-search.md §12 — an unconfirmed item gets a pin with
+  // the "?" badge, not absence; the border and badge come from the served
+  // rung and custody (data-provider-hierarchy.md §6.7).
   const verified = !!p.v;
-  const el=pinEl(st.layer, verified, p);
-  if(!verified) el.classList.add('community');
+  const el=pinEl(st.layer, p);
   el.style.cursor='pointer'; el.tabIndex=0; el.setAttribute('role','button');
   const tip = drawerF.name+' · '+drawerF.headline
     + (verified ? '' : ' · '+(D.needsCheck||'not confirmed yet — check it if you ride past'));

@@ -11,7 +11,30 @@ import { escPend, txtOn } from './util.js';
    pins and both legends, so nothing here may define a kind on its own. */
 export const KIND_ICONS = window.CC_KIND_ICONS || {};
 const kindDef = (letter, kind) => (KIND_ICONS[letter] || {})[kind] || null;
-export const kindImageId = (letter, kind) => 'kind-'+letter.toLowerCase()+'-'+kind;
+/* Every tile icon is minted twice, plain and with the "?" badge, because a
+   symbol layer cannot compose a badge at render time the way a DOM pin can.
+   `-q` is the badged twin (data-provider-hierarchy.md §6.7). */
+export function kindImageId(letter, kind, badge){
+  return 'kind-'+letter.toLowerCase()+'-'+kind+(badge?'-q':'');
+}
+/* A tile point has a witness when its `cd` (OSM check_date, YYYY-MM-DD) is
+   on or after the cutoff the shell computed from map.confirmation_stale_months
+   (window.CC_WITNESS_CUTOFF). Fail closed: no cutoff, no date, or a date
+   that is not a date keeps the badge. Rung 7 is the only rung a coverage
+   point can reach without a rider. */
+export function hasWitness(cd, cutoff){
+  return typeof cd==='string' && typeof cutoff==='string' && /^\d{4}-\d{2}-\d{2}$/.test(cd) && cd>=cutoff;
+}
+export const witnessCutoff = () => (typeof window.CC_WITNESS_CUTOFF==='string' ? window.CC_WITNESS_CUTOFF : undefined);
+/* The badge on a minted icon: the same ochre disc and mono "?" the DOM pin
+   wears (map.css .cc-pin.q::after), top-right of the 24-box. */
+function drawBadge(x, S){
+  const r=4.6, cx=24-r-0.4, cy=r+0.4;
+  x.beginPath(); x.arc(cx,cy,r,0,Math.PI*2); x.fillStyle='#C8923A'; x.fill();
+  x.lineWidth=0.8; x.strokeStyle='rgba(20,22,14,.55)'; x.stroke();
+  x.fillStyle='#14160E'; x.font='700 7.2px ui-monospace,Menlo,Consolas,monospace'; x.textAlign='center'; x.textBaseline='middle';
+  x.fillText('?', cx, cy+0.4);
+}
 // Resolve the two colour tokens against a category colour.
 function kindFill(token, color){
   if(token==='@cat') return color;
@@ -79,8 +102,9 @@ export function kindSvg(letter, kind, color, size){
   return escPend(d.glyph||'');
 }
 
-// Mint every path-drawn kind as a map image, `kind-<letter>-<kind>`, in the
-// same 24-box (×2) miniIcon() uses, so kinds and discs share one size ramp.
+// Mint every path-drawn kind as a map image, `kind-<letter>-<kind>` and its
+// badged twin `-q`, in the same 24-box (×2) miniIcon() uses, so kinds and
+// discs share one size ramp.
 export function mintKindIcons(){
   const S=2, D=24*S;
   Object.keys(KIND_ICONS).forEach(letter=>{
@@ -88,15 +112,18 @@ export function mintKindIcons(){
     const color=((key && layerByKey[key])||{}).color||'#6b6f5e';
     Object.keys(KIND_ICONS[letter]).forEach(kind=>{
       const d=KIND_ICONS[letter][kind]; if(!d.paths) return;
-      const id=kindImageId(letter, kind); if(map.hasImage(id)) return;
-      const cv=document.createElement('canvas'); cv.width=D; cv.height=D; const x=cv.getContext('2d');
-      x.scale(S,S);
-      d.paths.forEach(p=>{
-        const path=new Path2D(p.d);
-        x.fillStyle=kindFill(p.fill, color); x.fill(path);
-        if(p.stroke){ x.lineWidth=p.width||1.5; x.lineJoin='round'; x.strokeStyle=p.stroke; x.stroke(path); }
+      [false,true].forEach(badge=>{
+        const id=kindImageId(letter, kind, badge); if(map.hasImage(id)) return;
+        const cv=document.createElement('canvas'); cv.width=D; cv.height=D; const x=cv.getContext('2d');
+        x.scale(S,S);
+        d.paths.forEach(p=>{
+          const path=new Path2D(p.d);
+          x.fillStyle=kindFill(p.fill, color); x.fill(path);
+          if(p.stroke){ x.lineWidth=p.width||1.5; x.lineJoin='round'; x.strokeStyle=p.stroke; x.stroke(path); }
+        });
+        if(badge) drawBadge(x, S);
+        map.addImage(id,{width:D,height:D,data:new Uint8Array(x.getImageData(0,0,D,D).data.buffer)},{pixelRatio:S});
       });
-      map.addImage(id,{width:D,height:D,data:new Uint8Array(x.getImageData(0,0,D,D).data.buffer)},{pixelRatio:S});
     });
   });
 }
@@ -126,9 +153,10 @@ export function layerGlyph(layer, size){
   if(d) return `<svg viewBox="0 0 24 24" width="${size||15}" height="${size||15}" aria-hidden="true"><path fill-rule="evenodd" fill="currentColor" d="${d}"/></svg>`;
   return escPend((layer||{}).icon||'');
 }
-// Unverified disc; `suffix` keeps per-kind cache ids distinct.
-export function miniIcon(key, glyph, suffix){
-  const id='mini-'+key+(suffix?('-'+suffix):'');
+// The small disc of a gross provider; `suffix` keeps per-kind cache ids
+// distinct, `badge` mints the "?" twin (`-q`).
+export function miniIcon(key, glyph, suffix, badge){
+  const id='mini-'+key+(suffix?('-'+suffix):'')+(badge?'-q':'');
   if(map.hasImage(id)) return id;
   const layer=layerByKey[key], color=(layer||{}).color||'#6b6f5e';
   const r=parseInt(color.slice(1,3),16),g=parseInt(color.slice(3,5),16),b=parseInt(color.slice(5,7),16);
@@ -156,6 +184,7 @@ export function miniIcon(key, glyph, suffix){
     for(let i=0;i<gp.length;i+=4){ if(gp[i+3]>25){ gp[i]=dark?255:20; gp[i+1]=dark?255:22; gp[i+2]=dark?255:14; gp[i+3]=255; } }
     gx.putImageData(gd,0,0); x.drawImage(gc,0,0);
   }
+  if(badge){ x.save(); x.scale(S,S); drawBadge(x, S); x.restore(); }
   map.addImage(id,{width:D,height:D,data:new Uint8Array(x.getImageData(0,0,D,D).data.buffer)},{pixelRatio:S});
   return id;
 }
@@ -170,11 +199,34 @@ function pinGlyph(layer, props){
   if(layer.key==='services' && props && props.serviceKind) return SERVICE_GLYPH[props.serviceKind] || layer.icon;
   return layer.icon;
 }
-export function pinEl(layer,cur,props){
+/* The two axes of the marker grammar (data-provider-hierarchy.md §6.7).
+   Border answers who keeps the record, badge answers whether anybody has
+   stood there. One channel each: a mark that carries two meanings is the
+   thing §6.5 forbids. `rung` and `custody` arrive on every served point,
+   computed once in PHP (ItemEvidenceResolver); this file never derives them,
+   so a pin and the API can never disagree. NO_WITNESS mirrors
+   EvidenceRung::NO_WITNESS and marker-grammar.test.cjs pins the two together. */
+const NO_WITNESS=[1,2,3,4,5,6,8];
+export function borderFor(custody){
+  return custody==='specialty' ? 'dashed' : custody==='gross' ? 'disc' : 'solid';
+}
+export function badgeFor(rung){
+  return (rung==null || NO_WITNESS.includes(rung)) ? '?' : '';
+}
+// The classes a pin wears for the two axes; [] is a solid paper border and no badge.
+export function pinClasses(props){
+  props=props||{};
+  const out=[], border=borderFor(props.custody);
+  if(border!=='solid') out.push(border);
+  const rung = props.rung!=null ? props.rung : (props.v ? 9 : undefined);
+  if(badgeFor(rung)) out.push('q');
+  return out;
+}
+export function pinEl(layer,props){
   const d=document.createElement('div');
   // docs/specs/moderation-and-contribution.md §10.1a — stale ring only; no freshness key → no ring.
   const stale = props && props.freshness && props.freshness.state==='stale';
-  d.className='cc-pin'+(cur?' cur':'')+(layer.pendingLayer?' pending':'')+(stale?' stale':''); d.style.setProperty('--c',layer.color);
+  d.className=['cc-pin', ...pinClasses(props), layer.pendingLayer?'pending':'', stale?'stale':''].filter(Boolean).join(' '); d.style.setProperty('--c',layer.color);
   const white = txtOn(layer.color)==='#fff';
   // The shared state badges ride on top of any category's pin (§6.4).
   const badge = stateBadgeHtml(stateOf(props));
@@ -186,15 +238,18 @@ export function pinEl(layer,cur,props){
   d.innerHTML=`<span${white?' style="filter:brightness(0) invert(1)"':''}>${pinGlyph(layer, props)}</span>`+badge; return d;
 }
 
-// Tile icon-image id for the selected-coverage overlay (survives cluster hide).
+// Tile icon-image id for the selected-coverage overlay (survives cluster
+// hide): the same plain-or-badged choice the layer expression makes.
 export function coverageIconId(key, tp){
-  if(key==='water') return kindImageId('B', waterKind(tp));
+  tp=tp||{};
+  const badge = !hasWitness(tp.cd, witnessCutoff());
+  if(key==='water') return kindImageId('B', waterKind(tp), badge);
   if(key==='services'){
-    if(tp.kind==='station') return miniIcon('services', SERVICE_GLYPH.station, 'station');
-    if(tp.kind==='pump') return miniIcon('services', SERVICE_GLYPH.pump, 'pump');
-    return miniIcon('services');
+    if(tp.kind==='station') return miniIcon('services', SERVICE_GLYPH.station, 'station', badge);
+    if(tp.kind==='pump') return miniIcon('services', SERVICE_GLYPH.pump, 'pump', badge);
+    return miniIcon('services', undefined, undefined, badge);
   }
-  return miniIcon(key);
+  return miniIcon(key, undefined, undefined, badge);
 }
 /* icon-size stops at z8/z13/z18 for a coverage icon. Every disc (every
    category, and the food half of letter B) shares one ramp; the drop is

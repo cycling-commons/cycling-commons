@@ -1044,8 +1044,9 @@ let _revealMarker=null;
 export function clearRevealPin(){ if(_revealMarker){ _revealMarker.remove(); _revealMarker=null; } }
 export function revealPinAt(layer, ll){
   clearRevealPin();
-  const el=pinEl(layer, false);
-  el.classList.add('community','reveal');
+  // A hit nobody has confirmed, drawn as ours with the "?" and the pulse.
+  const el=pinEl(layer, {rung:1, custody:'ours'});
+  el.classList.add('reveal');
   _revealMarker=new maplibregl.Marker({element:el, anchor:'bottom'}).setLngLat([ll[1],ll[0]]).addTo(map);
 }
 /* The map wrapper mirrors the drawer's state, because the top-right toolbar

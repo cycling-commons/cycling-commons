@@ -26,7 +26,8 @@
       ],
       "tileProps": [
         "potable",
-        "food"
+        "food",
+        "cd"
       ]
     },
     "C": {
@@ -36,7 +37,9 @@
           "label": "Public toilets"
         }
       ],
-      "tileProps": []
+      "tileProps": [
+        "cd"
+      ]
     },
     "D": {
       "selectors": [
@@ -54,7 +57,8 @@
         }
       ],
       "tileProps": [
-        "kind"
+        "kind",
+        "cd"
       ]
     },
     "F": {
@@ -76,7 +80,9 @@
           "label": "Ferry"
         }
       ],
-      "tileProps": []
+      "tileProps": [
+        "cd"
+      ]
     },
     "G": {
       "selectors": [
@@ -125,7 +131,9 @@
           "label": "Wildlife hide"
         }
       ],
-      "tileProps": []
+      "tileProps": [
+        "cd"
+      ]
     },
     "O": {
       "selectors": [
@@ -163,7 +171,8 @@
         }
       ],
       "tileProps": [
-        "acc"
+        "acc",
+        "cd"
       ]
     },
     "P": {
@@ -181,7 +190,9 @@
           "label": "Waterfall"
         }
       ],
-      "tileProps": []
+      "tileProps": [
+        "cd"
+      ]
     },
     "Q": {
       "selectors": [
@@ -218,7 +229,9 @@
           "label": "Monastery"
         }
       ],
-      "tileProps": []
+      "tileProps": [
+        "cd"
+      ]
     }
   },
   "serviceKind": {
@@ -239,6 +252,7 @@
     "addr:street",
     "amenity",
     "capacity",
+    "check_date",
     "contact:phone",
     "contact:website",
     "description",

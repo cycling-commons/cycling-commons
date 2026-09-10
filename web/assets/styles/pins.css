@@ -1,0 +1,58 @@
+/* SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 */
+/* THE pin. One stylesheet for every surface that draws a place marker: the
+   map (DOM pins), the map key page and the curator marker page. A legend
+   that copies these rules drifts within a month (data-provider-hierarchy.md
+   §6.6), so none does; they link this file.
+
+   Two axes, one mark each (data-provider-hierarchy.md §6.7):
+   - the BORDER answers custody: solid paper = ours, dashed = a specialty
+     provider keeps the record, small disc = a gross provider;
+   - the BADGE answers evidence: "?" = nobody has stood here on record.
+   Absence of the "?" is the verified signal on every border.
+
+   Tokens fall back to the brand literals so a page that does not load
+   map.css (the key page, the curator page) draws the same pin. */
+
+/* tilted teardrop: the 50% 50% 50% 0 radius makes the drop point down-left
+   with NO rotate, so the glyph inside stays upright on its own (never rotate
+   .cc-pin or the span) */
+.cc-pin{position:relative;display:flex;align-items:center;justify-content:center;width:30px;height:30px;flex:none;border-radius:50% 50% 50% 0;background:var(--c);box-shadow:0 3px 8px rgba(16,30,22,.4);border:2px solid var(--paper,#EFE6D4)}
+.cc-pin span{font-size:.85rem;line-height:1;font-family:var(--emoji,"Apple Color Emoji","Noto Color Emoji","Segoe UI Emoji","Noto Sans Symbols2",system-ui,sans-serif)}
+/* The kind glyph (KindIcons::set() via icons.js kindSvg): drawn, not typed. */
+.cc-pin span.kd{display:flex}
+.cc-kind--glyph{font-family:var(--emoji,"Apple Color Emoji","Noto Color Emoji","Segoe UI Emoji","Noto Sans Symbols2",system-ui,sans-serif);font-style:normal}
+/* The two shared state badges (data-provider-hierarchy.md §6.3, top-left,
+   opposite the "?"): red "!" = not usable right now, ink clock = there, but
+   not always. A child element rather than ::before so the map's one-off
+   reveal pulse keeps its own pseudo-element. */
+.cc-pin .cc-st{position:absolute;width:14px;height:14px;top:-6px;left:-6px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font:700 10px/14px var(--mono,"Spline Sans Mono",monospace);
+  box-shadow:0 1px 3px rgba(16,30,22,.5)}
+.cc-pin .cc-st.warn{background:#D92D20;color:#fff}
+.cc-pin .cc-st.hours{background:#14160E;color:#F3EBD8}
+/* "Somebody checked this, but a while ago." The ring replaces the paper
+   border rather than adding a second one: an outline outside the drop shadow
+   reads as a selection state. Trail orange, the colour every "your turn"
+   affordance on the site uses. The stale ring is the freshness signal; the
+   "?" below is the witness signal, and the two never trade places. */
+.cc-pin.stale{border-color:var(--trail,#FF5A1F);box-shadow:0 3px 8px rgba(16,30,22,.4),0 0 0 1px rgba(255,90,31,.45)}
+.cc-pin.pending{border-color:#D92D20;border-width:3px}
+/* Axis 1, the border. Solid paper (the .cc-pin default) = ours. Dashed ink
+   over a white halo = a specialty provider keeps the record: monochrome reads
+   on any basemap, light or dark (owner 2026-09-01). Small disc with a thin
+   ink ring = a gross provider (an OpenStreetMap node, a register with no
+   scope here), the same shape the coverage tiles draw. !important on
+   opacity: MapLibre's Marker._updateOpacity() sets an inline style.opacity
+   on every marker element on each position update, which otherwise silently
+   beats the class rule. */
+.cc-pin.dashed{opacity:.95 !important;border:2.5px dashed #14160E;
+  box-shadow:0 0 0 1.5px rgba(255,255,255,.95),0 3px 8px rgba(16,30,22,.4)}
+.cc-pin.disc{width:22px;height:22px;border-radius:50%;border:1.6px solid rgb(var(--mark-ink,20 22 14) / .85);box-shadow:0 2px 5px rgba(16,30,22,.35)}
+.cc-pin.disc span{font-size:.7rem}
+.cc-pin.disc span.kd svg{width:13px;height:13px}
+/* Axis 2, the badge, and it has exactly one mark: "?" = nobody has stood
+   here on record. Absence of it is the verified signal on every border, so
+   one sentence explains the whole grid. */
+.cc-pin.q::after{content:"?";position:absolute;width:13px;height:13px;top:-5px;right:-5px;
+  background:var(--ochre,#C8923A);color:#14160E;border-radius:50%;font-family:var(--mono,"Spline Sans Mono",monospace);font-size:9px;
+  font-weight:700;line-height:13px;text-align:center;box-shadow:0 1px 3px rgba(16,30,22,.5)}

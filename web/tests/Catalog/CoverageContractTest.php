@@ -96,11 +96,13 @@ final class CoverageContractTest extends TestCase
         // carries two: `potable` (yes / no / absent) and `food`, the shop and
         // eatery half, because the pin draws a kind for each
         // (data-provider-hierarchy.md §6.3a).
-        self::assertSame(['potable', 'food'], $letters['B']['tileProps']);
-        self::assertSame(['kind'], $letters['D']['tileProps']);
-        self::assertSame(['acc'], $letters['O']['tileProps']);
+        // `cd` on every letter: a dated OSM check_date is a published witness
+        // and drops the badge on a coverage disc (data-provider-hierarchy.md §6.7.7).
+        self::assertSame(['potable', 'food', 'cd'], $letters['B']['tileProps']);
+        self::assertSame(['kind', 'cd'], $letters['D']['tileProps']);
+        self::assertSame(['acc', 'cd'], $letters['O']['tileProps']);
         foreach (['F', 'G', 'P', 'Q'] as $letter) {
-            self::assertSame([], $letters[$letter]['tileProps']);
+            self::assertSame(['cd'], $letters[$letter]['tileProps']);
         }
     }
 

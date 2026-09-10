@@ -698,6 +698,24 @@ the result as `rung` and `custody` on every point and climb in the map payload,
 and the public API publishes the same object as the trust envelope. The ladder
 is never re-derived in SQL or in JavaScript.
 
+**The grammar on the map, and the page that checks it.** `styles/pins.css` is
+the one definition of the pin; the map, `/map-key` and the curator page
+`/curator/markers` (`ROLE_CURATOR`, on the moderation bar as Markers) link it
+rather than copying its rules. The DOM pin reads `custody` for its border class
+(`dashed`, `disc`, or none for solid paper) and `rung` for its badge class (`q`)
+through `pinClasses()` in `web/assets/map/icons.js`; the coverage symbol layer
+mints every tile icon twice, plain and `-q`, and picks by the tile's `cd`
+against `window.CC_WITNESS_CUTOFF`, the day `map.confirmation_stale_months`
+before now (coverage-provider.md §4). The curator page draws all eleven rungs
+on a dark and a light ground, so the grammar is checked by eye and not only
+asserted.
+
+What the eye check found, 2026-09-10: eleven rungs collapse into six looks,
+three borders by two badge states. Rungs 1, 2 and 6 draw alike, so do 3 and 4,
+and so do 9, 10 and 11. That is the design working, not a defect: the pin
+answers two questions and only two, and the rung number with its receipt lives
+in the drawer and the public API. A rider learns six marks, not eleven.
+
 Two rungs the function cannot return yet, stated rather than hidden: rung 5
 needs a registry field naming which attribute carries operational state, and
 nothing today stores a published witness date for a served row (rung 7 reads
