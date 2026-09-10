@@ -438,10 +438,10 @@
       {% set bTap %}<span class="kd">{% include 'partials/_kind_icon.html.twig' with {letter: 'B', kind: 'tap', size: 17} %}</span>{% endset %}
       <div class="grp">
         <h3>{{ 'legend.tiers_h'|trans }}</h3>
-        <div class="mkp-row"><span class="mkp-sw"><span class="mk-disc" style="--c:#3E7D8C"><span class="ic">{{ keyIcons['F'].glyph|default('•') }}</span></span></span><div class="mkp-t"><b>{{ 'legend.tier_osm_h'|trans }}</b><span>{{ 'legend.tier_osm_t'|trans }}</span></div></div>
-        <div class="mkp-row"><span class="mkp-sw"><span class="cc-pin community" style="--c:#8FB6A8">{{ bTap }}</span></span><div class="mkp-t"><b>{{ 'legend.tier_community_h'|trans }}</b><span>{{ 'legend.tier_community_t'|trans }}</span></div></div>
+        <div class="mkp-row"><span class="mkp-sw"><span class="cc-pin disc q" style="--c:#8FB6A8">{{ bTap }}</span></span><div class="mkp-t"><b>{{ 'legend.tier_baseline_h'|trans }}</b><span>{{ 'legend.tier_baseline_t'|trans }}</span></div></div>
+        <div class="mkp-row"><span class="mkp-sw"><span class="cc-pin dashed q" style="--c:#8FB6A8">{{ bTap }}</span></span><div class="mkp-t"><b>{{ 'legend.tier_external_h'|trans }}</b><span>{{ 'legend.tier_external_t'|trans }}</span></div></div>
         <div class="mkp-row"><span class="mkp-sw"><span class="cc-pin" style="--c:#8FB6A8">{{ bTap }}</span></span><div class="mkp-t"><b>{{ 'legend.tier_ours_h'|trans }}</b><span>{{ 'legend.tier_ours_t'|trans }}</span></div></div>
-        <div class="mkp-row"><span class="mkp-sw"><span class="cc-pin cur" style="--c:#8FB6A8">{{ bTap }}</span></span><div class="mkp-t"><b>{{ 'legend.tier_verified_h'|trans }}</b><span>{{ 'legend.tier_verified_t'|trans }}</span></div></div>
+        <div class="mkp-row"><span class="mkp-sw"><span class="cc-pin q" style="--c:#8FB6A8">{{ bTap }}</span></span><div class="mkp-t"><b>{{ 'legend.tier_unconfirmed_h'|trans }}</b><span>{{ 'legend.tier_unconfirmed_t'|trans }}</span></div></div>
       </div>
       {# Kinds (data-provider-hierarchy.md §6.3): generated from KindIcons,
          the same definitions the map mints its tile icons from. Only the

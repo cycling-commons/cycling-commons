@@ -56,33 +56,47 @@ final class MapKeyTest extends WebTestCase
     }
 
     /**
-     * Designed marks that the map does not draw yet stay on the page, but
-     * every one of them wears the planned tag (owner 2026-09-01: "with a
-     * small notification waiting implementation"). Since 2026-09-04 that is
-     * the provider tier alone: the two state badges are drawn.
+     * Nothing on the page is planned any more: the provider tier went live
+     * with the marker grammar (data-provider-hierarchy.md §6.7), and the two
+     * state badges before it. A planned tag would promise a mark a rider
+     * cannot find.
      */
-    public function testPlannedMarksAreTaggedOnThePage(): void
+    public function testNoMarkOnThePageIsPlanned(): void
     {
         $client = static::createClient();
         $crawler = $client->request('GET', '/map-key');
         self::assertResponseIsSuccessful();
-
-        self::assertSame(
-            1,
-            $crawler->filter('.mk-tag--plan')->count(),
-            'the provider tier carries the planned tag, and nothing else does',
-        );
-        self::assertStringContainsString(
-            'not on the map yet',
-            (string) $client->getResponse()->getContent(),
-        );
-        // The state badges went live with the pin grammar: no planned tag on them.
+        self::assertSame(0, $crawler->filter('.mk-tag--plan')->count(), 'every mark on the key is on the map');
+        self::assertStringNotContainsString('not on the map yet', (string) $client->getResponse()->getContent());
         foreach (['Out of order', 'Not always reachable'] as $live) {
             $row = $crawler->filter('.mk-row')->reduce(static fn (Crawler $n): bool => str_contains($n->text(), $live));
             self::assertSame(1, $row->count(), "$live has a row");
-            self::assertSame(0, $row->filter('.mk-tag--plan')->count(), "$live is on the map, not planned");
             self::assertSame(1, $row->filter('.cc-st')->count(), "$live shows its badge");
         }
+    }
+
+    /**
+     * The key draws the grammar the map draws (data-provider-hierarchy.md
+     * §6.7): three borders for custody, one badge for evidence, from the one
+     * shared pin stylesheet. The paper dot is gone from the markers, so a key
+     * that still named it would describe a map that does not exist.
+     */
+    public function testTheKeyDrawsTheGrammarAndNeverTheRemovedPaperDot(): void
+    {
+        $client = static::createClient();
+        $crawler = $client->request('GET', '/map-key');
+        self::assertResponseIsSuccessful();
+        $html = (string) $client->getResponse()->getContent();
+
+        self::assertStringNotContainsStringIgnoringCase('paper dot', $crawler->text());
+        self::assertStringContainsString('styles/pins', $html, 'the key links the shared pin stylesheet');
+        self::assertSame(0, $crawler->filter('.mk-pin')->count(), 'no copied pin class remains');
+        $tiers = $crawler->filter('.mk-rows')->first();
+        self::assertSame(1, $tiers->filter('.cc-pin.disc.q')->count(), 'baseline: small disc, nobody stood there');
+        self::assertSame(1, $tiers->filter('.cc-pin.dashed.q')->count(), 'kept by somebody else: dashed, nobody stood there');
+        self::assertSame(1, $tiers->filter('.cc-pin.q:not(.disc):not(.dashed)')->count(), 'nobody has stood here: the badge on our own border');
+        self::assertSame(4, $tiers->filter('.mk-row')->count(), 'four rows: three borders and the one badge');
+        self::assertSame(0, $crawler->filter('.cc-pin.cur, .cc-pin.community, .cc-pin.provider')->count(), 'the old one-class tiers are gone');
     }
 
     /**

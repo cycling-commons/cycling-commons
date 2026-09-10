@@ -45,6 +45,7 @@
 {% set bTap %}<span class="drawn">{% include 'partials/_kind_icon.html.twig' with {letter: 'B', kind: 'tap', size: 16} %}</span>{% endset %}
 
 {% block head_styles %}
+<link rel="stylesheet" href="{{ asset('styles/pins.css') }}">
 <style>
   .mkwrap{max-width:860px}
   .mk-note{color:#4a4d40;font-size:.95rem;max-width:64ch;margin:0 0 1.3rem}
@@ -62,37 +63,18 @@
   .mk-t span{display:block;font-size:.85rem;line-height:1.5;color:#4a4d40}
   .mk-tag{font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;
     padding:.22rem .5rem;border-radius:30px;border:1px solid currentColor;white-space:nowrap;color:var(--spruce)}
-  .mk-tag--plan{color:var(--clay)}
-  .mk-plan-note{border:1px solid rgba(16,30,22,.14);border-left:3px solid var(--ochre);border-radius:0 9px 9px 0;
-    padding:.9rem 1.1rem;background:var(--paper-deep);margin:1.2rem 0 0;font-size:.9rem;line-height:1.6;color:#4a4d40}
   /* The group heading at the site's kicker size, not a footnote (owner 2026-09-09). */
   .mk-grp{font-family:var(--mono);font-size:.82rem;letter-spacing:.18em;text-transform:uppercase;color:var(--clay);margin:1.8rem 0 .6rem}
 
-  /* The pin, drawn as the map draws it (styles/map.css .cc-pin): the
-     50% 50% 50% 0 radius points the drop down-left with NO rotate. */
-  .mk-pin{position:relative;display:flex;align-items:center;justify-content:center;width:30px;height:30px;flex:none;
-    border-radius:50% 50% 50% 0;background:var(--c);box-shadow:0 3px 8px rgba(16,30,22,.4);border:2px solid var(--paper)}
-  .mk-pin .g{font-size:.85rem;line-height:1;font-family:"Apple Color Emoji","Noto Color Emoji","Segoe UI Emoji","Noto Sans Symbols2",system-ui,sans-serif;
+  /* The pin is styles/pins.css, linked above; these are the key page's own
+     glyph helpers on it (the text glyph flattened to ink, the drawn path in
+     the pin's ink colour). */
+  .cc-pin .g{font-size:.85rem;line-height:1;font-family:"Apple Color Emoji","Noto Color Emoji","Segoe UI Emoji","Noto Sans Symbols2",system-ui,sans-serif;
     filter:brightness(0) invert(1)}
-  .mk-pin .drawn{display:flex;color:#fff}
-  .mk-pin.lt .g{filter:brightness(0)}
-  .mk-pin.lt .drawn{color:#20241c}
-  .mk-pin.stale{border-color:var(--trail);box-shadow:0 3px 8px rgba(16,30,22,.4),0 0 0 1px rgba(255,90,31,.45)}
-  .mk-pin.cur::after{content:"";position:absolute;width:6px;height:6px;background:var(--paper);border-radius:50%;top:-3px;right:-3px}
-  .mk-pin.pending{border-color:#D92D20;border-width:3px}
-  /* Monochrome dashes read on any basemap (owner 2026-09-01): a rider's pin
-     is ink dashes over a white halo; the keeper tier inverts them. */
-  .mk-pin.community{border:2.5px dashed #14160E;
-    box-shadow:0 0 0 1.5px rgba(255,255,255,.95),0 3px 8px rgba(16,30,22,.4)}
-  .mk-pin.community::after,.mk-pin.provider::after{content:"?";position:absolute;width:13px;height:13px;top:-5px;right:-5px;
-    background:var(--ochre);color:#14160E;border-radius:50%;font-family:var(--mono);font-size:9px;font-weight:700;line-height:13px;text-align:center}
-  .mk-pin.provider{border:2.5px dashed #FFFFFF;
-    box-shadow:0 0 0 1.5px rgba(20,22,14,.9),0 3px 8px rgba(16,30,22,.4)}
-  /* The two shared state badges, top-left, as map.css .cc-pin .cc-st draws them. */
-  .mk-pin .cc-st{position:absolute;width:14px;height:14px;top:-6px;left:-6px;border-radius:50%;
-    display:flex;align-items:center;justify-content:center;font:700 10px/14px var(--mono);box-shadow:0 1px 3px rgba(16,30,22,.5)}
-  .mk-pin .cc-st.warn{background:#D92D20;color:#fff}
-  .mk-pin .cc-st.hours{background:#14160E;color:#F3EBD8}
+  .cc-pin .drawn{display:flex;color:#fff}
+  .cc-pin.lt .g{filter:brightness(0)}
+  .cc-pin.lt .drawn{color:#20241c}
+  .cc-pin.disc .drawn svg{width:13px;height:13px}
   .mk-kind-sw .cc-kind--glyph{font-family:"Apple Color Emoji","Noto Color Emoji","Segoe UI Emoji","Noto Sans Symbols2",system-ui,sans-serif}
   .mk-disc{width:24px;height:24px;border-radius:50%;background:var(--c);flex:none;
     border:1.6px solid rgba(20,22,14,.85);display:flex;align-items:center;justify-content:center;font-size:.72rem}
@@ -165,28 +147,23 @@
   <p class="mk-note">{{ 'legend.tiers_note'|trans }}</p>
   <div class="mk-rows">
     <div class="mk-row">
-      <div class="mk-sw"><span class="mk-disc" style="--c:{{ mkc.F }}" aria-hidden="true"><span class="g">{{ (cc_type_icons()['F'] ?? {glyph:''}).glyph }}</span></span></div>
-      <div class="mk-t"><strong>{{ 'legend.tier_osm_h'|trans }}</strong><span>{{ 'legend.tier_osm_t'|trans }}</span></div>
+      <div class="mk-sw"><span class="cc-pin disc q lt" style="--c:{{ mkc.B }}" aria-hidden="true">{{ bTap }}</span></div>
+      <div class="mk-t"><strong>{{ 'legend.tier_baseline_h'|trans }}</strong><span>{{ 'legend.tier_baseline_t'|trans }}</span></div>
       <span class="mk-tag">{{ 'legend.tag_live'|trans }}</span>
     </div>
     <div class="mk-row">
-      <div class="mk-sw"><span class="mk-pin provider lt" style="--c:{{ mkc.B }}" aria-hidden="true">{{ bTap }}</span></div>
-      <div class="mk-t"><strong>{{ 'legend.tier_provider_h'|trans }}</strong><span>{{ 'legend.tier_provider_t'|trans }}</span></div>
-      <span class="mk-tag mk-tag--plan">{{ 'legend.tag_plan'|trans }}</span>
-    </div>
-    <div class="mk-row">
-      <div class="mk-sw"><span class="mk-pin community lt" style="--c:{{ mkc.B }}" aria-hidden="true">{{ bTap }}</span></div>
-      <div class="mk-t"><strong>{{ 'legend.tier_community_h'|trans }}</strong><span>{{ 'legend.tier_community_t'|trans }}</span></div>
+      <div class="mk-sw"><span class="cc-pin dashed q lt" style="--c:{{ mkc.B }}" aria-hidden="true">{{ bTap }}</span></div>
+      <div class="mk-t"><strong>{{ 'legend.tier_external_h'|trans }}</strong><span>{{ 'legend.tier_external_t'|trans }}</span></div>
       <span class="mk-tag">{{ 'legend.tag_live'|trans }}</span>
     </div>
     <div class="mk-row">
-      <div class="mk-sw"><span class="mk-pin lt" style="--c:{{ mkc.B }}" aria-hidden="true">{{ bTap }}</span></div>
+      <div class="mk-sw"><span class="cc-pin lt" style="--c:{{ mkc.B }}" aria-hidden="true">{{ bTap }}</span></div>
       <div class="mk-t"><strong>{{ 'legend.tier_ours_h'|trans }}</strong><span>{{ 'legend.tier_ours_t'|trans }}</span></div>
       <span class="mk-tag">{{ 'legend.tag_live'|trans }}</span>
     </div>
     <div class="mk-row">
-      <div class="mk-sw"><span class="mk-pin cur lt" style="--c:{{ mkc.B }}" aria-hidden="true">{{ bTap }}</span></div>
-      <div class="mk-t"><strong>{{ 'legend.tier_verified_h'|trans }}</strong><span>{{ 'legend.tier_verified_t'|trans }}</span></div>
+      <div class="mk-sw"><span class="cc-pin q lt" style="--c:{{ mkc.B }}" aria-hidden="true">{{ bTap }}</span></div>
+      <div class="mk-t"><strong>{{ 'legend.tier_unconfirmed_h'|trans }}</strong><span>{{ 'legend.tier_unconfirmed_t'|trans }}</span></div>
       <span class="mk-tag">{{ 'legend.tag_live'|trans }}</span>
     </div>
   </div>
@@ -210,12 +187,12 @@
   <p class="mk-note">{{ 'legend.state_note'|trans }}</p>
   <div class="mk-rows">
     <div class="mk-row">
-      <div class="mk-sw"><span class="mk-pin stale lt" style="--c:{{ mkc.B }}" aria-hidden="true">{{ bTap }}</span></div>
+      <div class="mk-sw"><span class="cc-pin stale lt" style="--c:{{ mkc.B }}" aria-hidden="true">{{ bTap }}</span></div>
       <div class="mk-t"><strong>{{ 'legend.state_stale_h'|trans }}</strong><span>{{ 'legend.state_stale_t'|trans }}</span></div>
       <span class="mk-tag">{{ 'legend.tag_live'|trans }}</span>
     </div>
     <div class="mk-row">
-      <div class="mk-sw"><span class="mk-pin pending" style="--c:{{ mkc.C }}" aria-hidden="true">{{ mk.glyph('C') }}</span></div>
+      <div class="mk-sw"><span class="cc-pin pending" style="--c:{{ mkc.C }}" aria-hidden="true">{{ mk.glyph('C') }}</span></div>
       <div class="mk-t"><strong>{{ 'legend.state_pending_h'|trans }}</strong><span>{{ 'legend.state_pending_t'|trans }}</span></div>
       <span class="mk-tag">{{ 'legend.tag_live'|trans }}</span>
     </div>
@@ -230,7 +207,7 @@
       <span class="mk-tag">{{ 'legend.tag_live'|trans }}</span>
     </div>
     <div class="mk-row">
-      <div class="mk-sw"><span class="mk-pin cur" style="--c:#05CB63" aria-hidden="true"><span class="g">📷</span></span></div>
+      <div class="mk-sw"><span class="cc-pin" style="--c:#05CB63" aria-hidden="true"><span class="g">📷</span></span></div>
       <div class="mk-t"><strong>{{ 'legend.state_camera_h'|trans }}</strong><span>{{ 'legend.state_camera_t'|trans }}</span></div>
       <span class="mk-tag">{{ 'legend.tag_live'|trans }}</span>
     </div>
@@ -240,17 +217,16 @@
   <p class="mk-note">{{ 'legend.fact_note'|trans }}</p>
   <div class="mk-rows">
     <div class="mk-row">
-      <div class="mk-sw"><span class="mk-pin lt" style="--c:{{ mkc.B }}" aria-hidden="true">{{ bTap }}<b class="cc-st warn">!</b></span></div>
+      <div class="mk-sw"><span class="cc-pin lt" style="--c:{{ mkc.B }}" aria-hidden="true">{{ bTap }}<b class="cc-st warn">!</b></span></div>
       <div class="mk-t"><strong>{{ 'legend.fact_broken_h'|trans }}</strong><span>{{ 'legend.fact_broken_t'|trans }}</span></div>
       <span class="mk-tag">{{ 'legend.tag_live'|trans }}</span>
     </div>
     <div class="mk-row">
-      <div class="mk-sw"><span class="mk-pin lt" style="--c:{{ mkc.B }}" aria-hidden="true">{{ bTap }}<b class="cc-st hours"><svg viewBox="0 0 24 24" width="9" height="9" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="3"/><path d="M12 7v5.5l3.5 2.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></b></span></div>
+      <div class="mk-sw"><span class="cc-pin lt" style="--c:{{ mkc.B }}" aria-hidden="true">{{ bTap }}<b class="cc-st hours"><svg viewBox="0 0 24 24" width="9" height="9" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="3"/><path d="M12 7v5.5l3.5 2.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></b></span></div>
       <div class="mk-t"><strong>{{ 'legend.fact_hours_h'|trans }}</strong><span>{{ 'legend.fact_hours_t'|trans }}</span></div>
       <span class="mk-tag">{{ 'legend.tag_live'|trans }}</span>
     </div>
   </div>
-  <div class="mk-plan-note">{{ 'legend.plan_note'|trans }}</div>
 
   <h2>{{ 'legend.cats_h'|trans }}</h2>
   <p class="mk-note">{{ 'legend.cats_note'|trans }}</p>

@@ -587,25 +587,19 @@ truth, so the `?` stays on it until a dated witness exists, whoever produced tha
 witness. Rider evidence sits outside the cache and survives every refresh
 (§6.7.2).
 
-#### 6.7.5 Known defect: the shipped legend gives registers three answers
+#### 6.7.5 The legend gives a register one answer
 
-Recorded, not yet fixed. The fix lands with the code that draws the grammar
-above, never before it.
-
-| Translation key | Says a public register is |
-| --- | --- |
-| `legend.tier_osm_t` | a small disc, "joined by public registries as they are imported" |
-| `legend.tier_provider_t` | "Full colour, the ? badge" |
-| `legend.tier_community_t` | a dashed border and a `?` badge |
-
-Three answers to one question, in five locales. Under §6.7 there is one answer: a
-register is a small disc when it is gross and dashed when it is specialty, and
-its badge depends only on whether it publishes a dated survey.
-`legend.tier_verified_t` additionally describes the paper dot this ruling
-removes. The legend copy, the key rail in `templates/map/index.html.twig` and
-`templates/pages/map_key.html.twig` all change in the same commit as the markers,
-so the key never describes a map that does not exist.
-
+Built 2026-09-10. Four `legend.tier_*` key pairs, in five locales, describe
+the grammar and nothing else: `tier_baseline` (small disc, a gross provider),
+`tier_external` (dashed, a specialty provider), `tier_ours` (solid paper), and
+`tier_unconfirmed` (the `?` badge, on any of the three). A public register is
+a small disc when it is gross and dashed when it is specialty, and its badge
+depends only on whether a witness is on record. The key rail in
+`templates/map/index.html.twig` and the page `templates/pages/map_key.html.twig`
+draw the four rows with the real `.cc-pin` classes from `styles/pins.css`, and
+`MapKeyTest` fails the build if either names the paper dot or carries a copied
+pin rule. No mark on the key is planned any more: everything it shows, the map
+draws.
 
 #### 6.7.6 `imported_at` is the per-row upstream sighting
 

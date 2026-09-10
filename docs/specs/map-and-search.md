@@ -1160,10 +1160,10 @@ The marks stack four independent signals on one shape, and the key says so in
 two places, sized to their audience:
 
 - **The Key rail panel** (`data-panel="key"`, `#p-key`, title
-  `map.rail_key`). The quick reference while riding: the source tiers
-  (baseline disc, water drop pair, community `?` pin, our pin, verified dot;
-  the dot wears a ring in the pin ink since 2026-09-08, a bare paper dot
-  vanished on the light basemap)
+  `map.rail_key`). The quick reference while riding: the four grammar rows
+  (data-provider-hierarchy.md §6.7: small disc for a gross provider, dashed
+  for a specialty provider, solid paper for ours, and the `?` badge for
+  nobody-has-stood-here, on any border)
   and the state marks (stale ring, cluster bubble, look-here ring). LIVE
   MARKS ONLY: the panel never shows a mark the map does not draw. The
   pending-border row is moderation chrome, gated by `pending_is_curator`
@@ -1177,15 +1177,14 @@ two places, sized to their audience:
 - **The `/map-key` page** (`PageController::mapKey`,
   `LocalizedPath::MAP_KEY`, `pages/map_key.html.twig`, `legend.*` strings,
   all five locales, slug localised per locale). The full story: the four
-  axes (shape = store, fill = category, border = who brought it + state,
-  badge = a fact that survives colour blindness), the tier ladder, the kinds
-  per category (generated from the registry, see below), state marks,
-  per-place fact badges, the category table and every line paint.
-  Designed-but-unbuilt marks (the cycling-keeper tier) stay on the page with
-  a visible "planned" tag (`legend.tag_plan` + `legend.plan_note`): the page
-  may describe a planned mark, but must say it is not drawn yet (owner
-  2026-09-01). The `!` and clock badges left that list on 2026-09-04: they
-  are drawn.
+  axes (shape = disc or teardrop, fill = category, border = who keeps the
+  record plus the moderation and stale states, badge = a fact that survives
+  colour blindness), the four grammar rows, the kinds per category
+  (generated from the registry, see below), state marks, per-place fact
+  badges, the category table and every line paint. Every mark on the page is
+  drawn by the map; nothing on it is planned, and `MapKeyTest` fails the
+  build on a planned tag or on the words "paper dot". Both keys link
+  `styles/pins.css`, the one definition of the pin, and never copy its rules.
 
 The one category-colour table on the website lives in this template and
 mirrors `catalog.js`; a colour change lands in both in the same commit. The
@@ -1203,22 +1202,21 @@ the keys cannot drift. Water & food kinds: drinking tap (blue drop), not for
 drinking (barred drop), nothing said (unfilled drop), food stop (fork and
 knife on the category disc), food stop with water (plus a small drop). Bike
 services: shop, repair stand, pump. The state badges sit top-left, opposite
-the `?` and the verified dot: red `!` = not usable right now (`condition`
+the `?`: red `!` = not usable right now (`condition`
 Out of order or Closed), ink clock = there, but not always (`seasonal`
 Summer only or Frost-shut in winter). `waterKind()` and `stateOf()` in
 `icons.js` are the two rules, shared by every renderer.
 
-Tier semantics pinned here (ruled 2026-09-01, amended 2026-09-04): grey
-FILL no longer means anything on water, potability having moved into the
-kind glyph (the grey drop is gone); bulk registries (e.g. Kadaster, RIVM)
-draw as the imported baseline until riders confirm records here; only a
-cycling-dedicated provider earns the planned keeper tier, whose visibility
-rides on the shared `?` badge (`?` = no rider confirmed yet, everywhere),
-the border only saying who brought the record. Dashed borders are
-MONOCHROME (also ruled 2026-09-01, replacing the ochre dash: it did not
-read on a busy basemap): the community pin wears ink dashes over a white
-halo, and the planned keeper tier wears the same dashes inverted, white
-over ink: legible on any ground, light or dark, without spending a colour.
+Tier semantics pinned here (ruled 2026-09-01, amended 2026-09-04 and
+2026-09-09): grey FILL no longer means anything on water, potability having
+moved into the kind glyph (the grey drop is gone). The border answers
+custody and the badge answers evidence, one mark each
+(data-provider-hierarchy.md §6.7): a register with a registry scope for the
+letter draws dashed, one without draws as the small disc, and either loses
+its `?` only when a witness is on record. Dashed borders are MONOCHROME
+(also ruled 2026-09-01, replacing the ochre dash: it did not read on a busy
+basemap): ink dashes over a white halo, legible on any ground, light or
+dark, without spending a colour. There is no keeper tier and no paper dot.
 
 ## 5. Layer rendering strategy
 
@@ -2262,8 +2260,8 @@ the heatmap back is uncommenting two blocks and nothing else.
 ## 12. Community tier
 
 **The marker grammar this tier is drawn with is specified in
-data-provider-hierarchy.md §6.7** (owner ruling 2026-09-09, pending
-implementation): the border answers custody (small disc for a gross provider,
+data-provider-hierarchy.md §6.7** (owner ruling 2026-09-09, built
+2026-09-10): the border answers custody (small disc for a gross provider,
 dashed for a specialty provider, solid for ours) and the badge answers evidence
 (`?` means nobody has stood here on record). The paper dot that marked verified
 is removed there, because absence of the `?` already says it on every tier.
