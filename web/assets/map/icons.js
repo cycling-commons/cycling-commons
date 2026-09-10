@@ -231,7 +231,10 @@ export function pinEl(layer,props){
   const d=document.createElement('div');
   // docs/specs/moderation-and-contribution.md §10.1a — stale ring only; no freshness key → no ring.
   const stale = props && props.freshness && props.freshness.state==='stale';
-  d.className=['cc-pin', ...pinClasses(props), layer.pendingLayer?'pending':'', stale?'stale':''].filter(Boolean).join(' '); d.style.setProperty('--c',layer.color);
+  // A pending pin is moderation chrome: the red border already says "not
+  // accepted yet", and evidence starts once it is. No badge on top of it.
+  const grammar = layer.pendingLayer ? pinClasses(props).filter(c=>c!=='q') : pinClasses(props);
+  d.className=['cc-pin', ...grammar, layer.pendingLayer?'pending':'', stale?'stale':''].filter(Boolean).join(' '); d.style.setProperty('--c',layer.color);
   const white = txtOn(layer.color)==='#fff';
   // The shared state badges ride on top of any category's pin (§6.4).
   const badge = stateBadgeHtml(stateOf(props));

@@ -1,0 +1,15 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{# One basemap furniture icon, drawn from THE basemap icon set
+   (BasemapIcons::set() via cc_basemap_icons()): the same paths the map mints
+   when the basemap sprite lacks the class, so a legend row can never drift
+   from the mark on the map.
+   Parameters: id (the OSM class), size (px, default 22). Decorative. #}
+{% set bd = cc_basemap_icons()[id] ?? null %}
+{% set sz = size|default(22) %}
+{% if bd %}
+<svg class="cc-basemap" viewBox="0 0 24 24" width="{{ sz }}" height="{{ sz }}" aria-hidden="true">
+  {%- for pth in bd.paths -%}
+    <path d="{{ pth.d }}" fill="{{ pth.fill }}"{% if pth.stroke is defined %} stroke="{{ pth.stroke }}" stroke-width="{{ pth.width|default(1.2) }}" stroke-linejoin="round"{% endif %}/>
+  {%- endfor -%}
+</svg>
+{% endif %}

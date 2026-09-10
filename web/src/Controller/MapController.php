@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Catalog\BasemapIcons;
 use App\Catalog\BikeType;
 use App\Catalog\CatalogProvider;
 use App\Catalog\CatalogSchemaProvider;
@@ -86,6 +87,8 @@ final class MapController extends AbstractController
             'type_icons' => ItemType::iconSet(),
             // The one kind glyph set (KindIcons::set()); icons.js mints tile icons from it.
             'kind_icons' => KindIcons::set(),
+            // The basemap furniture the sprite lacks (BasemapIcons::set()); map-init.js mints it on styleimagemissing.
+            'basemap_icons' => BasemapIcons::set(),
             'map_i18n' => $this->mapI18n($translator),
             'regions' => $regionRows,
             'rider_prefs' => [

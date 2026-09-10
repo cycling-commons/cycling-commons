@@ -116,3 +116,9 @@ test('the shell template emits the cutoff for the tiles', () => {
   const twig = fs.readFileSync(path.join(ROOT, 'templates', 'map', 'index.html.twig'), 'utf8');
   assert.ok(twig.includes('window.CC_WITNESS_CUTOFF'), 'index.html.twig does not emit CC_WITNESS_CUTOFF');
 });
+
+test('a pending pin wears the red border and never the badge', () => {
+  const pinEl = src.match(/export function pinEl\(layer,props\)\{[\s\S]*?\n\}/);
+  assert.ok(pinEl, 'pinEl found');
+  assert.match(pinEl[0], /layer\.pendingLayer \? pinClasses\(props\)\.filter\(c=>c!=='q'\)/, 'the badge is stripped on the pending layer');
+});

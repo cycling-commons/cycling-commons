@@ -38,6 +38,7 @@
     };
     try {
       window.__ccMapInstance = new maplibregl.Map(window.__ccMapOpts);
+      answerMissingImages(window.__ccMapInstance);
     } catch (e) {
       // Any constructor failure ends the map, not just a missing GPU: without
       // an instance map-init.js throws on import and nothing downstream runs.
@@ -46,6 +47,37 @@
       reportNoGpu();
       console.error('MapLibre could not start.', e);
     }
+  }
+
+  /* The basemap asks its sprite for an image named after every point's OSM
+     class, and the sprite lacks most of them: a warning per class, nothing
+     drawn. Answered HERE, the moment the map exists, because the first tiles
+     ask before the module graph has loaded. The classes in the basemap icon
+     registry (BasemapIcons::set(), window.CC_BASEMAP_ICONS) are minted from
+     their paths, 18px in a 24-box at 2x, monochrome with a paper halo; every
+     other missing name gets one blank image, so the console stays quiet and
+     nothing else changes (docs/specs/map-and-search.md §4.7). */
+  function answerMissingImages(map) {
+    var icons = window.CC_BASEMAP_ICONS || {};
+    map.on('styleimagemissing', function (e) {
+      var id = e.id;
+      if (map.hasImage(id)) return;
+      var def = icons[id];
+      if (!def || !def.paths) {
+        map.addImage(id, { width: 1, height: 1, data: new Uint8Array(4) });
+        return;
+      }
+      var S = 2, PX = 18, D = PX * S;
+      var cv = document.createElement('canvas'); cv.width = D; cv.height = D;
+      var x = cv.getContext('2d');
+      x.scale(D / 24, D / 24);
+      def.paths.forEach(function (p) {
+        var path = new Path2D(p.d);
+        if (p.stroke) { x.lineWidth = (p.width || 1.2) * 2; x.lineJoin = 'round'; x.strokeStyle = p.stroke; x.stroke(path); }
+        x.fillStyle = p.fill; x.fill(path);
+      });
+      map.addImage(id, { width: D, height: D, data: new Uint8Array(x.getImageData(0, 0, D, D).data.buffer) }, { pixelRatio: S });
+    });
   }
 
   function boot() {

@@ -16,7 +16,12 @@
 /* tilted teardrop: the 50% 50% 50% 0 radius makes the drop point down-left
    with NO rotate, so the glyph inside stays upright on its own (never rotate
    .cc-pin or the span) */
-.cc-pin{position:relative;display:flex;align-items:center;justify-content:center;width:30px;height:30px;flex:none;border-radius:50% 50% 50% 0;background:var(--c);box-shadow:0 3px 8px rgba(16,30,22,.4);border:2px solid var(--paper,#EFE6D4)}
+.cc-pin{display:flex;align-items:center;justify-content:center;width:30px;height:30px;flex:none;border-radius:50% 50% 50% 0;background:var(--c);box-shadow:0 3px 8px rgba(16,30,22,.4);border:2px solid var(--paper,#EFE6D4)}
+/* The badges hang off the pin, so it must be a containing block. On the map
+   MapLibre already makes every marker position:absolute and places it with a
+   transform; a relative pin there would be laid out in page flow first and
+   drift with every marker added. Only a pin on a page needs this. */
+.cc-pin:not(.maplibregl-marker){position:relative}
 .cc-pin span{font-size:.85rem;line-height:1;font-family:var(--emoji,"Apple Color Emoji","Noto Color Emoji","Segoe UI Emoji","Noto Sans Symbols2",system-ui,sans-serif)}
 /* The kind glyph (KindIcons::set() via icons.js kindSvg): drawn, not typed. */
 .cc-pin span.kd{display:flex}
@@ -56,3 +61,8 @@
 .cc-pin.q::after{content:"?";position:absolute;width:13px;height:13px;top:-5px;right:-5px;
   background:var(--ochre,#C8923A);color:#14160E;border-radius:50%;font-family:var(--mono,"Spline Sans Mono",monospace);font-size:9px;
   font-weight:700;line-height:13px;text-align:center;box-shadow:0 1px 3px rgba(16,30,22,.5)}
+/* The badge on its own, larger, for the key row that explains the mark
+   itself rather than a pin wearing it. */
+.cc-q{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;
+  background:var(--ochre,#C8923A);color:#14160E;font-family:var(--mono,"Spline Sans Mono",monospace);font-size:13px;
+  font-weight:700;line-height:1;box-shadow:0 1px 3px rgba(16,30,22,.5)}

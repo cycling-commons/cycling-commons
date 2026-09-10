@@ -166,7 +166,7 @@
       <span class="mk-tag">{{ 'legend.tag_live'|trans }}</span>
     </div>
     <div class="mk-row">
-      <div class="mk-sw"><span class="cc-pin q lt" style="--c:{{ mkc.B }}" aria-hidden="true">{{ bTap }}</span></div>
+      <div class="mk-sw"><span class="cc-q" aria-hidden="true">?</span></div>
       <div class="mk-t"><strong>{{ 'legend.tier_unconfirmed_h'|trans }}</strong><span>{{ 'legend.tier_unconfirmed_t'|trans }}</span></div>
       <span class="mk-tag">{{ 'legend.tag_live'|trans }}</span>
     </div>
@@ -186,6 +186,18 @@
     {% endfor %}
   </div>
   {% endfor %}
+
+  <h2>{{ 'legend.basemap_h'|trans }}</h2>
+  <p class="mk-note">{{ 'legend.basemap_note'|trans }}</p>
+  <div class="mk-rows">
+    {% for bId, bd in cc_basemap_icons() %}
+    <div class="mk-row mk-basemap" data-basemap="{{ bId }}">
+      <div class="mk-sw" aria-hidden="true">{% include 'partials/_basemap_icon.html.twig' with {id: bId, size: 28} %}</div>
+      <div class="mk-t"><strong>{{ ('legend.basemap_' ~ bId ~ '_h')|trans }}</strong><span>{{ ('legend.basemap_' ~ bId ~ '_t')|trans }}</span></div>
+      <span class="mk-tag">{{ 'legend.tag_live'|trans }}</span>
+    </div>
+    {% endfor %}
+  </div>
 
   <h2>{{ 'legend.state_h'|trans }}</h2>
   <p class="mk-note">{{ 'legend.state_note'|trans }}</p>

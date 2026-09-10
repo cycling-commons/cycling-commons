@@ -4,6 +4,7 @@
 
 namespace App\Tests\Smoke;
 
+use App\Catalog\BasemapIcons;
 use App\Catalog\KindIcons;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\DomCrawler\Crawler;
@@ -98,9 +99,35 @@ final class MapKeyTest extends WebTestCase
         self::assertSame(1, $tiers->filter('.cc-pin.dashed.q')->count(), 'kept by somebody else: dashed, nobody stood there');
         self::assertSame(1, $tiers->filter('.cc-pin.dashed:not(.q)')->count(), 'kept by somebody else: dashed, a dated witness on record');
         self::assertSame(1, $tiers->filter('.cc-pin:not(.q):not(.disc):not(.dashed)')->count(), 'ours, verified');
-        self::assertSame(2, $tiers->filter('.cc-pin.q:not(.disc):not(.dashed)')->count(), 'ours with the badge, on the ours row and on the badge row');
+        self::assertSame(1, $tiers->filter('.cc-pin.q:not(.disc):not(.dashed)')->count(), 'ours with the badge');
+        self::assertSame(1, $tiers->filter('.cc-q')->count(), 'the badge row shows the badge itself, not a pin wearing it');
         self::assertSame(4, $tiers->filter('.mk-row')->count(), 'four rows: three borders and the one badge');
         self::assertSame(0, $crawler->filter('.cc-pin.cur, .cc-pin.community, .cc-pin.provider')->count(), 'the old one-class tiers are gone');
+    }
+
+    /**
+     * The basemap furniture rows are generated from BasemapIcons, the same
+     * registry the map mints from when the basemap sprite lacks the class
+     * (map-and-search.md §4.7), on the page and in the rail panel.
+     */
+    public function testBasemapFurnitureIsGeneratedFromTheRegistry(): void
+    {
+        $expected = array_keys(BasemapIcons::set());
+        sort($expected);
+        $client = static::createClient();
+        $crawler = $client->request('GET', '/map-key');
+        self::assertResponseIsSuccessful();
+        $page = $crawler->filter('.mk-basemap')->each(static fn (Crawler $n): string => (string) $n->attr('data-basemap'));
+        sort($page);
+        self::assertSame($expected, $page);
+        self::assertSame(\count($expected), $crawler->filter('.mk-basemap svg.cc-basemap')->count(), 'every row draws its icon');
+
+        $crawler = $client->request('GET', '/map');
+        self::assertResponseIsSuccessful();
+        $panel = $crawler->filter('#p-key .mk-basemap')->each(static fn (Crawler $n): string => (string) $n->attr('data-basemap'));
+        sort($panel);
+        self::assertSame($expected, $panel);
+        self::assertStringContainsString('window.CC_BASEMAP_ICONS', (string) $client->getResponse()->getContent(), 'the map mints from the same registry');
     }
 
     /**

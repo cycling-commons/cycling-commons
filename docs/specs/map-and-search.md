@@ -1186,6 +1186,21 @@ two places, sized to their audience:
   build on a planned tag or on the words "paper dot". Both keys link
   `styles/pins.css`, the one definition of the pin, and never copy its rules.
 
+**Basemap furniture (2026-09-10).** The liberty style's four POI layers ask
+the OpenFreeMap sprite for an image named after each point's OSM class, and
+the sprite lacks most classes: one console warning per class, nothing drawn.
+`App\Catalog\BasemapIcons::set()` is the one registry of the classes a rider
+reads in passing (bollard, gate, bicycle_parking, cycle_barrier), each a
+monochrome drawing with a paper halo in the 24-box. `map-init.js` answers
+MapLibre's `styleimagemissing` event: a registry class is minted from its
+paths at 18px, every other missing name gets one blank 1x1 image, so the
+console stays quiet and the basemap draws exactly what it drew before plus
+the four. Both keys list them under "From the basemap" through
+`partials/_basemap_icon.html.twig`, generated from the same registry. They
+are not catalogue items: no pin, no drawer, no confirmation, never on the
+ladder. Making them items would put thousands of bollards on the evidence
+ladder for nothing.
+
 The one category-colour table on the website lives in this template and
 mirrors `catalog.js`; a colour change lands in both in the same commit. The
 glyphs come from `cc_type_icons()` (`ItemType::iconSet()`), THE icon set.

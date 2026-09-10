@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Twig;
 
+use App\Catalog\BasemapIcons;
 use App\Catalog\ItemType;
 use App\Catalog\KindIcons;
 use Twig\Extension\AbstractExtension;
@@ -28,6 +29,7 @@ final class TypeIconExtension extends AbstractExtension
         return [
             new TwigFunction('cc_type_icons', static fn (): array => ItemType::iconSet()),
             new TwigFunction('cc_kind_icons', static fn (): array => KindIcons::set()),
+            new TwigFunction('cc_basemap_icons', static fn (): array => BasemapIcons::set()),
         ];
     }
 }
