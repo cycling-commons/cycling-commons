@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /* Cycle-route NETWORK tiles (docs/specs/coverage-provider.md §4,
    docs/specs/route-domain.md): signed corridors + knooppunt numbers from their
    own PMTiles artifact. Off until asked. A corridor click opens the surface

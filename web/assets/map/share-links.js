@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /* The query a share link carries, and how it is read back
    (docs/specs/map-and-search.md §8).
 

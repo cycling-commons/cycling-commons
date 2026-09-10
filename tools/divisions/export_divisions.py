@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 r"""Export official administrative subdivisions from Overture Maps `division_area`
 as region-<slug>.geojson artifacts for App\Catalog\Command\ImportCatalogCommand.
 

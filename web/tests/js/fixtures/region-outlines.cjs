@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 //
 // Simplified region outlines — the ranking geometry `rankByGroundDistance`
 // consumes. Generated from

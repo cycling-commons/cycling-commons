@@ -1,4 +1,4 @@
-{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{# SPDX-License-Identifier: AGPL-3.0-only #}
 {% extends 'base.html.twig' %}
 {% block head_styles %}
 <style>
@@ -67,14 +67,14 @@
     </ul>
 
     <h2><span class="n">5</span>{% trans %}terms.h5_contributions{% endtrans %}</h2>
-    <p>{% trans %}terms.contributions_p1_pre{% endtrans %} <a href="https://github.com/cycling-commons/cycling-commons/blob/main/licenses/COMMONS-TERMS-CLAUSE.md">{% trans %}terms.contributions_p1_link{% endtrans %}</a>{{ 'terms.contributions_p1_mid'|trans|rich }} <a href="{{ path('licenses') }}">{% trans %}terms.contributions_p1_odbl{% endtrans %}</a>{{ 'terms.contributions_p1_mid2'|trans|rich }}{{ 'terms.contributions_p1_mid3'|trans|rich }} <a href="{{ path('licenses') }}">{% trans %}terms.contributions_p1_ccbysa{% endtrans %}</a>{% trans %}terms.contributions_p1_post{% endtrans %}</p>
+    <p>{% trans %}terms.contributions_p1_pre{% endtrans %} <a href="https://github.com/cycling-commons/cycling-commons/blob/main/licenses/COMMONS-TERMS-CLAUSE.md">{% trans %}terms.contributions_p1_link{% endtrans %}</a>{{ 'terms.contributions_p1_mid'|trans|rich }} <a href="{{ path('licenses') }}">{% trans %}terms.contributions_p1_odbl{% endtrans %}</a>{{ 'terms.contributions_p1_mid2'|trans|rich }} <a href="{{ path('licenses') }}">{% trans %}terms.contributions_p1_ccbysa{% endtrans %}</a>{{ 'terms.contributions_p1_mid3'|trans|rich }} <a href="{{ path('licenses') }}">{% trans %}terms.contributions_p1_agpl{% endtrans %}</a>{% trans %}terms.contributions_p1_post{% endtrans %}</p>
     <p>{% trans %}terms.contributions_p2{% endtrans %}</p>
 
     <h2><span class="n">6</span>{% trans %}terms.h6_opendata{% endtrans %}</h2>
     <p>{% trans %}terms.opendata_pre{% endtrans %} <a href="{{ path('licenses') }}">{% trans %}terms.opendata_link{% endtrans %}</a>{% trans %}terms.opendata_mid{% endtrans %} <a href="{{ path('developers') }}">{% trans %}terms.opendata_dev_link{% endtrans %}</a>{% trans %}terms.opendata_post{% endtrans %}</p>
 
     <h2><span class="n">7</span>{% trans %}terms.h7_code{% endtrans %}</h2>
-    <p>{{ 'terms.code_pre'|trans|rich }} <a href="{{ path('licenses') }}">{% trans %}terms.code_link{% endtrans %}</a>{% trans %}terms.code_post{% endtrans %}</p>
+    <p>{{ 'terms.code_pre'|trans|rich }} <a href="{{ path('licenses') }}">{% trans %}terms.code_link{% endtrans %}</a>{{ 'terms.code_post'|trans|rich }} <a href="https://github.com/cycling-commons/cycling-commons/blob/main/TRADEMARK.md">{% trans %}terms.code_brand_link{% endtrans %}</a>{% trans %}terms.code_brand_post{% endtrans %}</p>
 
     <h2><span class="n">8</span>{% trans %}terms.h8_preview{% endtrans %}</h2>
     <div class="banner">{{ 'terms.preview_body'|trans|rich }}</div>

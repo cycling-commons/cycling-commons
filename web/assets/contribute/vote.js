@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /* Vote UI (docs/specs/edit-items/README.md — votability). Rank is the vote
    (docs/specs/route-domain.md). Sample figures are metric-in, converted at
    render (docs/specs/account-and-auth.md §9). */

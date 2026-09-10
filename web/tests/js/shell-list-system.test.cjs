@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 //
 // One list system for every shell page (account-and-auth.md §8,
 // moderation-and-contribution.md §5.2; owner 2026-08-25).

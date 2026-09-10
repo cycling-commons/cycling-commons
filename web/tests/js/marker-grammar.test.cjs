@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 //
 // The marker grammar (docs/specs/data-provider-hierarchy.md §6.7): two axes,
 // one mark each. The border answers custody and nothing else; the badge

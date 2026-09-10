@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 // Mobile hamburger + slide-in drawer. No-ops on pages without a collapsible nav.
 (function () {
   'use strict';

@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Road-surface LINE layer for the coverage plane.
 
 Design: docs/specs/Dated/2026-08-09-surface-line-tiles-design.md, owner-approved

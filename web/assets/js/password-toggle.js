@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 // Show/hide toggle on every password input. No-ops on pages without one.
 (function () {
   'use strict';

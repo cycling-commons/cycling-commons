@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 // Client-side guard for auth forms. UX only — the server re-validates on POST.
 (function () {
   'use strict';

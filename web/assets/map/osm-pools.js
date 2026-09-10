@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /* Curated pool pins and clusters. Uncurated points live on coverage tiles.
    @see docs/specs/map-and-search.md §5 */
 import { map, flyToPin } from './map-init.js';

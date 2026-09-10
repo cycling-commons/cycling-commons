@@ -1,4 +1,4 @@
-<!-- SPDX-License-Identifier: Apache-2.0 -->
+<!-- SPDX-License-Identifier: AGPL-3.0-only -->
 # Wikimedia lookups
 
 ## `commons_photo.py` — a licence-verified photo for a place

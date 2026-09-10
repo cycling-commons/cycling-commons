@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /* Curator-only pending-corrections overlay (docs/specs/route-domain.md §7):
    one colour per correction, numbered stretch endpoints, side list.
    GET /routes/{id}/corrections 403s for non-curators — treated as no

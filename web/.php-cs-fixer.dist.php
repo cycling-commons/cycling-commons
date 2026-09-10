@@ -1,5 +1,5 @@
 <?php
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 $finder = (new PhpCsFixer\Finder())->in(__DIR__.'/src')->in(__DIR__.'/tests');
 return (new PhpCsFixer\Config())
     ->setRiskyAllowed(false)

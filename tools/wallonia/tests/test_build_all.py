@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Unit tests for build_all.py's LAYERS config and run() wiring (no network)."""
 import sys
 import pathlib

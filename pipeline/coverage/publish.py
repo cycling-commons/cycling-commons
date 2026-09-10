@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Publish the coverage PMTiles artifact + manifest to the CC bucket.
 
 Versioned keys (coverage/<YYYYMMDD-HHMM>.pmtiles) so an open reader mid-pan

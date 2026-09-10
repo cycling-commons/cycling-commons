@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Parse a tags-filtered PBF into PoiRow records (coverage-provider.md §3 step 3).
 
 Nodes keep their location; ways are reduced to the mean of their node

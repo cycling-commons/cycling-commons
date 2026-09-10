@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 //
 // Node smoke tests for the map scope model (web/assets/map/scope.js) — the
 // suite the module's dual-export guard exists for (07-20 review finding 8:

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /* Build marker. window.CC_VERSION is emitted from the release tag; this file only paints it. */
 
 (function () {

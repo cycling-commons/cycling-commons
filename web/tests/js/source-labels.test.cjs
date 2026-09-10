@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 //
 // Every ItemSource enum case must have its own drawer label, and `manual`
 // must never share the rider label again.

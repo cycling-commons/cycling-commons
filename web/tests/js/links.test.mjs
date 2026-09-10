@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 //
 // itemLinks() (web/assets/map/links.js): the drawer-side half of the
 // outbound-links shape. Every DESTINATION renders; the url picked for it is

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Outbound links for wikidata-seeded items, as a reviewable artifact.
 
 The `links` attribute's free first fill (docs/TODO.md, owner scope

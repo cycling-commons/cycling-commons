@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Harvest Wallonia OSM layers into atlas/demo/*-osm.js fixtures.
 
 Usage: PYTHONPATH=tools python3 -m wallonia.build_all [layer ...] [--report]

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-License-Identifier: AGPL-3.0-only
 # Translation completeness gate.
 #
 # Fails if any enabled non-default locale's catalog is missing keys (or has

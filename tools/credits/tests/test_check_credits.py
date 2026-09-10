@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Tests for the /credits freshness gate.
 
 The gate's whole value is that it fails when it should. A checker that only

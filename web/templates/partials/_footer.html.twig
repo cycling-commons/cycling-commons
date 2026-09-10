@@ -1,4 +1,4 @@
-{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{# SPDX-License-Identifier: AGPL-3.0-only #}
 {#
   The whole site, in the six groups of /pages (owner 2026-09-08, "header is
   for doing, footer is the whole site"; site-directory.md §5). One rule for
@@ -73,7 +73,13 @@
   {# The colophon LAST: licences and ownership are what this is, not what
      somebody came to the footer to click. Its own class, because it sits
      further down than the gap between the link rows. #}
-  <span class="mono colophon">{{ 'footer.rights'|trans }}</span>
+  {# AGPL section 13: anyone who interacts with this software over a network
+     must be offered its Corresponding Source. The GitHub glyph further down is
+     a place we are, not an offer, and a reader looking for the source should
+     not have to decode an icon to find it. So the offer is here, in words,
+     beside the licence line it belongs to. #}
+  <span class="mono colophon">{{ 'footer.rights'|trans }} ·
+    <a href="https://github.com/cycling-commons/cycling-commons">{{ 'footer.source'|trans }}</a></span>
 
   {#
     Where to find us, below the licences.

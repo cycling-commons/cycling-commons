@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """run.py — the surface and routes runners' orchestration.
 
 These walk the FRESH-extract path deliberately: the cached path was the only

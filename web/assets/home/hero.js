@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /* The landing page's own behaviour: the nav-height custom property, the
    scroll reveal, and the race colouring of the hero contours.
 

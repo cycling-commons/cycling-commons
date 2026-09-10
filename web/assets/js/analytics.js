@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 // Self-hosted Umami: production hosts only, so local/staging is never tracked.
 (function () {
   var PROD = ['cyclingcommons.org', 'www.cyclingcommons.org', 'wiki.cyclingcommons.org'];

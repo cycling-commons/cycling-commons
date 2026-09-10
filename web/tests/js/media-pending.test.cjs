@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 //
 // The wizard's pending state, now that an upload is asynchronous
 // (docs/specs/media-storage-architecture.md §3.3, photo-uploads.md §4).

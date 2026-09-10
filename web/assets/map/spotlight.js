@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /* Region / country / My-area spotlight (docs/specs/map-and-search.md §4.5).
    Shared `_spotReq` race token so a scope switch mid-fetch cannot leave two
    spotlights. Paints progressively: outline first, neighbour tier when it arrives. */

@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Cycling Commons — Python pipeline (dev scaffold).
 
 This is the geospatial/raster/routing tier (OSM import, DEM sampling, Valhalla

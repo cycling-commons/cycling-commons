@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 // Cycling-event calendar — the single source of truth for the "active event"
 // coordinate shown under the logo across the site, and the index hero's
 // ride-line colour/finish. One-day classics are listed before stage races so a

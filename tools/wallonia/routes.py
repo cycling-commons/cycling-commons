@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Add curated NE + center Wallonia quality-rides, traced on real OSM geometry via BRouter.
 
 Appends to atlas/demo/routes-data.js (existing routes preserved byte-for-byte; only new

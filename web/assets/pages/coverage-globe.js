@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /* /coverage?view=globe: the table's numbers as a painted globe (owner
    2026-09-08: "a cool way to visualize the coverage besides a list").
 

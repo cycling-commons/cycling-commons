@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /* Ride-check: "what is along my GPX?" (docs/specs/map-and-search.md §9).
    Own `ridecheck*` sources/layers — render()'s clearDynamic never touches them.
    The server parses the GPX in memory and stores nothing. */

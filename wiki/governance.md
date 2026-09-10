@@ -5,29 +5,48 @@
 The credibility of a commons rests on one question: *can the people who built it quietly enclose it
 later?* If yes, nobody will trust it and nobody will build on it. This is how shared resources die:
 the steward who runs the API revokes it one day and puts it behind a paywall. The Cycling Commons is
-built so that enclosure can never be *quiet*.
+built so the answer is **no**: what has been released cannot be taken private at all, code and data
+alike. The only enclosure still open to a steward is stopping the flow of new data, and that cannot
+be done quietly.
 
-No licence can make enclosure impossible, and this page will not pretend otherwise:
+Two licences do the first part of the work, and this page is straight about where each one stops:
 
 - ODbL covers the *data*, and only data already published. It cannot force anyone to keep
-  publishing. A bad-faith owner could close the API and the bulk exports together.
-- The platform code is source-available under PolyForm Shield: use it for anything except a
-  competing product. A fork therefore cannot just take the code and run its own service.
+  publishing. A bad-faith owner could close the API and the bulk exports together; every copy
+  already released would stay free, but new data would stop arriving.
+- The platform code is free software under the
+  [GNU AGPL v3](https://github.com/cycling-commons/cycling-commons/blob/main/LICENSE)
+  (`AGPL-3.0-only`). Anyone may take it, run it, change it, and run a rival service on it. What the
+  AGPL asks in return is exactly the thing that matters here: whoever distributes the software, or
+  runs a modified version as a network service other people use, has to offer those people the
+  Corresponding Source. Competition is allowed. Going private is not.
 
-What protects the Commons is practical, not legal. Each measure makes enclosure slower, costlier and
-more visible:
+That closes the oldest hole in a project like this, the steward who quietly takes the software in
+house. It does not close every hole. Nobody can put this code behind a wall any more, but a steward
+can still stop *feeding* the pool, and no licence ever written compels someone to keep working. So
+the rest of the protection is practical. Each measure makes enclosure slower, costlier and more
+visible:
 
 - **Published data stays free forever.** ODbL is irrevocable for every copy already released.
+- **Published code stays free forever, and so does everything built on it.** The AGPL grant on a
+  released version cannot be withdrawn, and nobody downstream may add a restriction on top of it. If
+  a future owner relicensed, it would bind future versions only: the last AGPL release would still
+  be there to fork, and every hosted derivative of it would still owe its users the source.
 - **Exports on a schedule, not on request.** Anyone can take a complete snapshot at any time.
   *(Designed, not live yet; this is the first gap to close.)*
 - **Mirrors.** The apps built on the Commons depend on it, so each has a business reason to copy
   every export, the way OpenStreetMap's planet files are mirrored by many independent parties. When
   many parties hold the data, closing the source freezes growth; it cannot kill the commons.
-- **A handover of the code, not just the data.** The spin-out (next section) must give the
-  foundation a perpetual licence to the platform, or the community inherits a dataset it cannot run.
+- **A fork needs nobody's permission.** The code, the schema and the exports together are enough to
+  stand the whole thing up somewhere else. The one thing a fork may not take is the name, the logo
+  and the wordmark: those are reserved, under
+  [TRADEMARK.md](https://github.com/cycling-commons/cycling-commons/blob/main/TRADEMARK.md), by the
+  clause AGPL v3 section 7(e) sets aside for it. A fork picks its own name. Everything it needs to
+  *run* is already in the grant.
 
-The honest answer to the opening question is therefore: enclosure can be made slow, expensive and
-public. Never impossible. The word that matters is *quietly*.
+The honest answer to the opening question is therefore: neither the code nor the data can be taken
+private, and past that, enclosure can be made slow, expensive and public. Never impossible. The word
+that matters is *quietly*.
 
 ## Who stewards it
 
@@ -57,18 +76,25 @@ open sources (OpenStreetMap and the other open datasets the site lists) plus wha
 design adds aggregate activity from the apps built on it as a further seed. But incubation is not
 ownership. The commitment, public from the start:
 
-1. **Open licence from day one**: ODbL. Already in force.
+1. **Open licences from day one**: ODbL for the data, AGPL-3.0 for the code. In force. The code
+   was source-available (PolyForm Shield) until September 2026, and the public history says so
+   plainly.
 2. **Architectural separation from day one**: independent data, accounts and API. Bulk exports are
    part of the same design.
 3. **Spin out into an independent foundation** (following established open-data foundation
-   precedents) at a defined, checkable milestone — whichever comes first: **50 external contributors
+   precedents) at a defined, checkable milestone, whichever comes first: **50 external contributors
    with a merged contribution**, or **25,000 rider-verified data points**. A milestone that cannot be
    checked ("when there is a real community") is not a commitment, so the trigger is a number, not a
    feeling.
-4. **The handover includes the code.** The platform is PolyForm Shield, so a data-only exit is not a
-   real exit: the spin-out package must grant the foundation a perpetual, royalty-free licence to run
-   and maintain the serving stack (or relicense it). Without this clause, commitment 3 would hand
-   over a dataset the community cannot operate.
+4. **The handover includes the code, and the licence has already done that part.** A data-only exit
+   would not be a real exit: a community that inherits a dataset it cannot run has inherited very
+   little. The perpetual, royalty-free right to run, modify and redistribute the serving stack is
+   not a promise waiting to be kept: `AGPL-3.0-only` grants it today, to the foundation and to
+   everyone else on the same terms. What the spin-out still has to move by
+   hand is everything the AGPL does not reach: the domain, the name, the logo and the wordmark (see
+   [TRADEMARK.md](https://github.com/cycling-commons/cycling-commons/blob/main/TRADEMARK.md), which
+   already names the stichting as where the marks are going), the accounts, and operational
+   custody of the running service.
 
 The public pre-commitment plus the open licence is what makes "we will spin it out" credible rather
 than hollow. The foundation is formalised when there is a community to govern, not before. Of
@@ -79,7 +105,7 @@ mirroring possible, and mirrors are what make enclosure expensive. They are not 
 
 The Commons is a deliberate application of Elinor Ostrom's principles for governing common-pool
 resources (see [Manifesto](manifesto.md)), as extended to shared data by the knowledge-commons
-literature — chiefly Hess & Ostrom, *Understanding Knowledge as a Commons* (2007). Each maps to a
+literature, chiefly Hess & Ostrom, *Understanding Knowledge as a Commons* (2007). Each maps to a
 concrete part of the system, with a status column so the gap between commitment and achievement stays
 visible:
 
@@ -91,12 +117,12 @@ visible:
 | **4. Monitoring** | The **freshness model**: timestamps, reporter counts, confirm/decay | *shipped* |
 | **5. Graduated sanctions** | Escalating consequences for rule-breaking (warn → restrict → remove), sized to severity and repeat offence rather than a first-strike ban. Aimed at abuse: spam, vote-rigging, vandalism. [Pre-committed below](#principles-5-and-6-pre-committed) | *aspirational* (ladder written, untested) |
 | **6. Cheap conflict resolution** | A fast, low-cost way to settle *good-faith* disagreements (a contested edit, a curation call) without escalation or cost. Adjudication between members, not punishment. [Pre-committed below](#principles-5-and-6-pre-committed) | *aspirational* (path defined, unused) |
-| **7. Recognised right to organise** | The community's right to self-govern is recognised from outside: the foundation gives it legal standing independent of BikeCoders, and the ODbL fork/exit right on the data means no upstream can deny it *(the code side needs the spin-out grant: see [The path to independence](#the-path-to-independence))* | *partly shipped* (fork right in force, foundation pending) |
+| **7. Recognised right to organise** | The community's right to self-govern is recognised from outside: the foundation gives it legal standing independent of BikeCoders, and the exit right is real on both halves at once, ODbL on the data and AGPL-3.0-only on the code, so a community that disagreed with the steward could leave with a working system and no upstream could deny it *(what remains is the foundation itself: see [The path to independence](#the-path-to-independence))* | *partly shipped* (exit right in force on data and code, foundation pending) |
 | **8. Nested enterprises** | Self-governing regions nested under a coordinating core: rider → regional curators → core stewardship → foundation (see [Regional governance](#regional-governance-subsidiarity-not-hierarchy)) | *design* (the structure regions grow into) |
 
 Two caveats keep this honest. First, Ostrom derived her principles from institutions that had *already
 endured*; used here they run the other way, as a compass for building rather than a report of
-achievement — the status column is the ledger of the distance still to travel. Second, principle 1 is
+achievement: the status column is the ledger of the distance still to travel. Second, principle 1 is
 bent from its original meaning: Ostrom meant the boundaries of the *user community and the resource*,
 while the row above leans on the privacy boundary. Both matter, and for a data commons the question
 "what may enter the pool at all" is simply the one it cannot get wrong. One attribution, too: the bulk
@@ -114,27 +140,27 @@ So the mechanics are written down *now*, while there is no conflict to bias them
 amend them later through the ordinary collective-choice process (#3); until it exists, these are the
 defaults the steward commits to.
 
-**The escalation ladder (principle 5)** — sized to severity and repeat offence, never a first-strike
+**The escalation ladder (principle 5)**, sized to severity and repeat offence, never a first-strike
 ban:
 
-1. **Warn** — a first minor violation (spammy edit, an aggressive comment): a private note pointing at
+1. **Warn**, for a first minor violation (spammy edit, an aggressive comment): a private note pointing at
    the rule. No public shaming.
-2. **Restrict** — repeat or serious offence: temporary loss of the capability abused (recommend-votes,
+2. **Restrict**, for a repeat or serious offence: temporary loss of the capability abused (recommend-votes,
    curation rights), never of access to the open data itself.
-3. **Remove** — persistent abuse (vote-rigging, vandalism at scale): account removal, contributions
+3. **Remove**, for persistent abuse (vote-rigging, vandalism at scale): account removal, contributions
    redacted where feasible, OSM-style.
 
 Two rules bind the ladder itself: **no retroactive punishment** (conduct is judged by the rules in
-force when it happened), and **every appeal is heard** — the appeal is the first step of the
+force when it happened), and **every appeal is heard**: the appeal is the first step of the
 adjudication path below, not a favour.
 
-**The adjudication path (principle 6)** — good-faith disagreements (a contested edit, a curation call)
+**The adjudication path (principle 6)**. Good-faith disagreements (a contested edit, a curation call)
 settle at the lowest competent level, in order:
 
 1. **Between the members involved**: reversion plus a short comment. Most disputes should die here,
    for free.
 2. **The regional curator(s)**: if the editors still disagree, the region's curator makes the call,
-   and it is recorded — one line, why — so the next dispute starts from precedent instead of zero.
+   and it is recorded, one line saying why, so the next dispute starts from precedent instead of zero.
 3. **The core team, as backstop only**: for disputes a region cannot resolve, or that span regions.
    The core team settles *process*; it does not overrule a region's *judgment* (see
    [Regional governance](#regional-governance-subsidiarity-not-hierarchy)).

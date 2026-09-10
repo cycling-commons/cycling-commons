@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /* A page with two views, one URL each, opens on the second when the screen
    is wide enough (owner 2026-09-08: "should open on the globe page if not
    mobile"). Runs in the head, before paint, so the table never flashes

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /* /regions: the world map view, and the list's own small courtesies.
 
    The list is the page; the map is a second way to pick a country (owner

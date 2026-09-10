@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /* Shared contributor-profile fixtures for the prototype.
  * Used by profile.html (public view) and settings.html (the edit interface).
  * Keyed by the slug the map drawer uses (slug of the uploader name).

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 //
 // Node tests for attachPhotos() (web/assets/map/util.js) — the mapping that
 // carries a served feature's photo attributes onto its drawer object

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 // Active-event calendar for .cc-coord / hero theme. Classics before stage races
 // so a classic inside a Grand Tour window still wins. Worlds/Unbound 2026 dates
 // are placeholders.

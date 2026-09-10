@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 // Client half of the rider's date preference (docs/specs/account-and-auth.md §9).
 (function () {
   'use strict';

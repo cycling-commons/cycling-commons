@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 // Account dashboard tab switching. Client-side only when the pane is on this page.
 (function () {
   'use strict';

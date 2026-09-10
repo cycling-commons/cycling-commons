@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /*
   Measure every piece of text on the public pages against the background it is
   actually painted on, and report anything under WCAG AA.

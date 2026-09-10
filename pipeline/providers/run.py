@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Fetch one provider's service and write the file the ingest reads.
 
     python -m providers.run --key rivm-drinkwater --out /tmp/rivm.json

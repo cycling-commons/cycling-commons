@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Well-known climbs per country from Wikidata — and a check on the ones we have.
 
 Two modes, and the second is the one that has already earned its keep.

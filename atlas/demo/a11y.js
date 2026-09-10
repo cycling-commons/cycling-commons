@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 // Accessibility helper — adds a "Skip to content" link as the first focusable
 // element on every page and points it at the main content landmark. Pages here
 // are hand-authored single files with no shared <head>, so this keeps the skip

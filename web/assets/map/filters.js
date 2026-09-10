@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /* Chip-filter rules as pure functions (docs/specs/map-and-search.md §4.3).
    No DOM, no map — so node tests can load this without map-init.js. */
 

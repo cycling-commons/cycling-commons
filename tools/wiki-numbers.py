@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """One source for the numbers the developer courses quote, and a gate on it.
 
 The courses are full of measured facts: 33 stored tag keys, 43 selector rules,

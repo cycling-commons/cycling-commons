@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Publishing the cycle-route network artifact under its own manifest.
 
 Its OWN manifest on purpose: `--routes` and `--surface` are separate

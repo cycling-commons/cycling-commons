@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Attach a representative free-licence Wikimedia Commons photo to each quality-ride in routes-data.js.
 
 For each ride a curated *subject* — a scenic landmark it passes (a citadel, waterfall, dam, abbey,

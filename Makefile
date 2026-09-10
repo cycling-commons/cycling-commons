@@ -1,4 +1,4 @@
-# Cycling Commons — dev stack shortcuts.
+# Cycling Commons: dev stack shortcuts.
 # The compose file lives in developers/docker/; these targets just point at it
 # so you can run `make up` / `make down` from the repo root.
 
@@ -20,12 +20,12 @@ export DEV_GID ?= $(shell id -g)
 
 # Misc
 .DEFAULT_GOAL = help
-.PHONY        : help up down check-env map-refs start restart build rebuild logs ps sh up-routing up-storage up-all git-status wallonia-data wallonia-export divisions-data tools-test app-install app-serve app-test app-rector app-create-admin app-create-curator test-db-reset pipeline-test coverage-refresh provider-fetch provider-harvest surface-tiles routes-tiles region-probe region-scaffold course-data coverage-regions
+.PHONY        : help up down check-env map-refs start restart build rebuild logs ps sh up-routing up-storage up-all git-status wallonia-data wallonia-export divisions-data tools-test app-install app-serve app-test licenses-check app-rector app-create-admin app-create-curator test-db-reset pipeline-test coverage-refresh provider-fetch provider-harvest surface-tiles routes-tiles region-probe region-scaffold course-data coverage-regions
 
 help: ## Outputs this help screen
 	@grep -E '(^[a-zA-Z0-9\./_-]+:.*?##.*$$)|(^##)' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}{printf "\033[32m%-18s\033[0m %s\n", $$1, $$2}' | sed -e 's/\[32m##/[33m/'
 
-## —— 🚲 Stack ————————————————————————————————————————————————————————————————
+## -- 🚲 Stack ----------------------------------------------------------------
 setup: ## First-time dev setup: start the stack, install deps, migrate, seed world data + demo users
 	@$(DOCKER_COMP) up --build --force-recreate --detach --wait
 	@echo "→ Handing the vendor volume to the host user (composer runs non-root below)…"
@@ -45,7 +45,7 @@ setup: ## First-time dev setup: start the stack, install deps, migrate, seed wor
 		--purge-exclusions=world_continent --purge-exclusions=world_country --purge-exclusions=world_subdivision
 	@$(DOCKER_COMP) exec -T app php bin/console cache:clear
 	@echo ""
-	@echo "✔ Setup complete — open http://localhost:$${API_PORT:-8001}"
+	@echo "✔ Setup complete. Open http://localhost:$${API_PORT:-8001}"
 	@echo "  Demo logins (password: password1234):"
 	@echo "    admin@example.test      ROLE_ADMIN   (2FA preset)"
 	@echo "    moderator@example.test  ROLE_CURATOR (2FA preset)"
@@ -64,7 +64,7 @@ setup: ## First-time dev setup: start the stack, install deps, migrate, seed wor
 #   2. the committed atlas/demo fixtures (ODbL/CC-BY), exported as catalog
 #      import artifacts: 351 A surface segments, 289 B water points, 150 O
 #      stays, 11 routes, 6,602 heat points. The climbs LAYER is deliberately
-#      NOT exported — it resolves Wikidata Q-ids over the network and is the
+#      NOT exported: it resolves Wikidata Q-ids over the network and is the
 #      one part of tools/wallonia/export.py that is not offline; the manual N
 #      pins carry climbs for the course instead.
 #      The import's duplicate guard holds out 84 of those surface segments,
@@ -74,7 +74,7 @@ setup: ## First-time dev setup: start the stack, install deps, migrate, seed wor
 #        item 736 (A 267, B 294, D 4, E 1, F 1, G 4, N 11, O 151, P 2, Q 1)
 #        recommended_route 11, heat_point 6,602, region 0, coverage_poi 10
 #   3. the committed 847-byte OSM fixture, run through the real coverage batch
-#      (`coverage-refresh regions=dev/fixture`) — 10 coverage_poi rows.
+#      (`coverage-refresh regions=dev/fixture`): 10 coverage_poi rows.
 # Two honest gaps, both documented in the course itself:
 #   * no `region` rows. Region boundaries come from Overture via
 #     `make divisions-data` (network) and land in a gitignored out/ dir, so
@@ -103,7 +103,7 @@ course-data: ## Seed the dataset the GIS course exercises query (offline; run on
 	@echo "→ Building coverage_poi from the committed OSM fixture (no network)…"
 	@$(MAKE) --no-print-directory coverage-refresh regions=dev/fixture pbf=tests/fixtures/mini.osm.pbf
 	@echo ""
-	@echo "✔ Course dataset ready — the exercises in wiki/developers/gis/ now return rows."
+	@echo "✔ Course dataset ready. The exercises in wiki/developers/gis/ now return rows."
 
 up: ## Start the dev stack in detached mode (recreates stale containers)
 	@$(DOCKER_COMP) up --detach
@@ -115,9 +115,9 @@ up: ## Start the dev stack in detached mode (recreates stale containers)
 #
 # The drift that motivated this (2026-07-26): an app image built before e8007c4
 # kept php's default upload_max_filesize=2M, while the repo declares a 15M GPX
-# limit. Every GPX over 2 MB failed, and the map said "Choose a GPX file first."
-# — a message that reads like a product bug, not a stale image. Non-fatal by
-# design: it is a warning about the environment, never a gate.
+# limit. Every GPX over 2 MB failed, and the map answered "Choose a GPX file
+# first.", which reads like a product bug rather than a stale image.
+# Non-fatal by design: it is a warning about the environment, never a gate.
 check-env: ## Warn when the running app image no longer matches the repo's Dockerfile
 	@declared=$$(grep -oE "maxSize: '[0-9]+M'" web/src/Form/ProposeRouteType.php | grep -oE '[0-9]+' | head -1); \
 	actual=$$($(DOCKER_COMP) exec -T app php -r 'echo (int) ini_get("upload_max_filesize");' 2>/dev/null); \
@@ -133,7 +133,7 @@ start: build up ## Build the images then start the stack
 
 restart: down up ## Recreate the stack from scratch (down + up)
 
-## —— 🐳 Docker ———————————————————————————————————————————————————————————————
+## -- 🐳 Docker ---------------------------------------------------------------
 build: ## Build the images (pulls newer base images)
 	@$(DOCKER_COMP) build --pull
 
@@ -149,7 +149,7 @@ ps: ## Show the status of the stack
 sh: ## Open a shell in a container (default app; make sh c=pipeline)
 	@$(DOCKER_COMP) exec $(or $(c),app) sh
 
-## —— 🗂️  Workspace ———————————————————————————————————————————————————————————
+## -- 🗂️  Workspace -----------------------------------------------------------
 git-status: ## Show git status of this repo + all sibling repos in the workspace
 	@echo "Checking git status for workspace repositories..."
 	@for repo in ../*/ ; do \
@@ -173,7 +173,7 @@ git-status: ## Show git status of this repo + all sibling repos in the workspace
 	done
 	@echo "✅ Check complete."
 
-## —— 🧩 Opt-in profiles ——————————————————————————————————————————————————————
+## -- 🧩 Opt-in profiles ------------------------------------------------------
 up-routing: ## Start the stack + Valhalla (needs prebuilt tiles in ./data/valhalla)
 	@$(DOCKER_COMP) --profile routing up --detach
 
@@ -183,7 +183,7 @@ up-storage: ## Start the stack + MinIO (S3-compatible, ports 9100/9101)
 up-all: ## Start the stack + every opt-in profile (routing + storage)
 	@$(DOCKER_COMP) --profile routing --profile storage up --detach
 
-## —— 🌐 Symfony web app ——————————————————————————————————————————————————————————
+## -- 🌐 Symfony web app ----------------------------------------------------------
 app-install: ## install PHP deps for the Symfony app
 	cd web && composer install
 
@@ -193,8 +193,13 @@ app-serve: ## run the Symfony app locally at http://127.0.0.1:8010
 app-test: ## run the app test suite + static analysis + gates
 	cd web && php bin/phpunit && vendor/bin/phpstan analyse --no-progress && vendor/bin/psalm --no-cache && vendor/bin/php-cs-fixer fix --dry-run --diff && ./tools/check-spdx.sh && ./tools/check-licenses.sh && ./tools/check-translations.sh && ./tools/check-raw-translations.sh
 	$(MAKE) scope-test
+	@# The gates in the web/ chain above stop at web/: the SPDX headers of the
+	@# files there, and the licences of the Composer dependencies. The
+	@# whole-tree pass is a separate target because it needs the network on
+	@# first run, the same split credits-check makes.
+	@echo "licences: run 'make licenses-check' for the whole-tree reuse lint pass"
 
-scope-test: ## run the map scope-model + vendored-parser Node tests (no deps — node:test ships with Node ≥18)
+scope-test: ## run the map scope-model + vendored-parser Node tests (no deps: node:test ships with Node ≥18)
 	node --test web/tests/js/*.test.cjs
 	@# .mjs separately: the vendored Scout FIT reader is an ES module, and the
 	@# .cjs glob above would not load it.
@@ -204,7 +209,7 @@ map-refs: ## check no web/assets/map module still references a binding map.js ow
 	@# Syntax-check as ES MODULES, which is how the browser loads them. Plain
 	@# `node --check foo.js` parses a .js file as CommonJS in this repo (no
 	@# package.json), and that parse accepted a module with a duplicated
-	@# top-level `let` — so the loop reported clean on a file the browser would
+	@# top-level `let`, so the loop reported clean on a file the browser would
 	@# have refused outright. Copying to .mjs is what forces the module parse.
 	@tmp=$$(mktemp -d) || exit 1; \
 	  for f in web/assets/map/*.js; do cp $$f $$tmp/$$(basename $$f .js).mjs || exit 1; done; \
@@ -216,15 +221,16 @@ app-rector: ## apply Rector refactors (advisory; review the diff before committi
 	cd web && vendor/bin/rector process
 
 # The test DB accumulates stray committed rows from out-of-band runs (the DAMA
-# transaction wrapper only guards phpunit-managed runs) — symptom: unique-key
+# transaction wrapper only guards phpunit-managed runs). Symptom: unique-key
 # violations like display_name_canonical=(curator). A clean rebuild needs THREE
-# things migrations alone don't cover: (1) the PostGIS extensions — the docker
-# init script (developers/docker/db/init/01-postgis.sql) only runs on first
-# cluster init, never on a same-cluster drop/recreate; (2) app:world:import —
-# world reference data is seeded out-of-band, not by a migration, and
-# moderator-area tests validate country codes against it; (3) migrations.
+# things migrations alone don't cover: (1) the PostGIS extensions, because the
+# docker init script (developers/docker/db/init/01-postgis.sql) only runs on
+# first cluster init, never on a same-cluster drop/recreate; (2)
+# app:world:import, because world reference data is seeded out-of-band, not by
+# a migration, and moderator-area tests validate country codes against it;
+# (3) migrations.
 TEST_DB_URL = postgresql://cc:cc@db:5432/cyclingcommons_test?serverVersion=18&charset=utf8
-test-db-reset: ## Drop + rebuild the test DB (PostGIS ext, migrations, world data) — fixes stale-row test failures
+test-db-reset: ## Drop + rebuild the test DB (PostGIS ext, migrations, world data): fixes stale-row test failures
 	@echo "→ Dropping and recreating cyclingcommons_test…"
 	@$(DOCKER_COMP) exec -T -e DATABASE_URL='$(TEST_DB_URL)' app php bin/console doctrine:database:drop --force --if-exists
 	@$(DOCKER_COMP) exec -T -e DATABASE_URL='$(TEST_DB_URL)' app php bin/console doctrine:database:create
@@ -234,7 +240,7 @@ test-db-reset: ## Drop + rebuild the test DB (PostGIS ext, migrations, world dat
 	@$(DOCKER_COMP) exec -T -e DATABASE_URL='$(TEST_DB_URL)' app php bin/console doctrine:migrations:migrate --no-interaction
 	@echo "→ Importing world reference data…"
 	@$(DOCKER_COMP) exec -T -e DATABASE_URL='$(TEST_DB_URL)' app php bin/console app:world:import
-	@echo "✔ Test DB rebuilt — run the suite with: make app-test (or docker exec -e APP_ENV=test … php bin/phpunit)"
+	@echo "✔ Test DB rebuilt. Run the suite with: make app-test (or docker exec -e APP_ENV=test … php bin/phpunit)"
 
 app-translations-sync: ## Project new English keys into translation_entry so /translate can see them
 	@$(DOCKER_COMP) exec -T app php bin/console app:translations:sync
@@ -249,14 +255,14 @@ app-create-admin: ## Bootstrap an admin user: make app-create-admin email=you@ex
 app-create-curator: ## Bootstrap a curator user: make app-create-curator email=you@example.com  (prompts for password)
 	cd web && php bin/console app:user:create --role=ROLE_CURATOR $(email)
 
-## —— 🗺️  Wallonia data ————————————————————————————————————————————————————————
+## -- 🗺️  Wallonia data --------------------------------------------------------
 wallonia-data: ## Harvest Wallonia OSM layers into atlas/demo/*-osm.js (one/some: make wallonia-data l="services")
 	@PYTHONPATH=tools python3 -m wallonia.build_all $(l) --report
 
 pivot-data: ## Harvest official Wallonia accommodation (Tourisme Wallonie, CC-BY) into atlas/demo/stays-pivot.js
 	@PYTHONPATH=tools python3 -m wallonia.pivot --report
 
-wallonia-export: ## Export catalog import artifacts (fixtures + cached harvest) to tools/wallonia/out/ — strict cached replay
+wallonia-export: ## Export catalog import artifacts (fixtures + cached harvest) to tools/wallonia/out/ (strict cached replay)
 	cd tools && python3 -m wallonia.export --strict-cache
 
 divisions-data: ## Export region-<slug>.geojson from Overture divisions to tools/divisions/out/ (country: make divisions-data c="BE")
@@ -287,7 +293,20 @@ wiki-check: ## Verify the wiki builds strict and its code excerpts still match t
 	@python3 tools/check-course-data.py --quiet && echo "course-data: letters importable, geometry matches, counts measured"
 	@python3 tools/wiki-numbers.py
 
-## —— 🧱 Coverage batch ————————————————————————————————————————————————————————
+# The machine-checkable half of the licensing. `reuse lint` reads every tracked
+# file and insists it resolves to a licence, either from the file's own SPDX
+# header or from REUSE.toml, and that every identifier the tree uses has its
+# full text in LICENSES/. web/tools/check-spdx.sh is the companion gate and
+# asks the other question: reuse lint asks whether a licence resolves,
+# check-spdx.sh asks whether it is one of ours. This target is the local run of
+# what .github/workflows/reuse.yml runs on every push and pull request.
+# pipx needs nothing installed first and caches the tool, but the first run
+# fetches it, which is why this stays out of `make app-test`.
+licenses-check: ## Verify every tracked file resolves to a licence (reuse lint over the whole tree; first run needs the network)
+	@pipx run reuse lint
+	@echo "licences: every tracked file resolves to a licence in LICENSES/"
+
+## -- 🧱 Coverage batch --------------------------------------------------------
 # Whole chain against the dev DB + MinIO (see developers/coverage-batch.md).
 # Fixture run (no network): make coverage-refresh regions=dev/fixture pbf=tests/fixtures/mini.osm.pbf
 # (pbf paths are as seen INSIDE the pipeline container, workdir /app = pipeline/)
@@ -332,14 +351,14 @@ coverage-tiles: ## Rebuild + publish the coverage PMTiles from the rows already 
 		$(if $(regions),-e COVERAGE_REGIONS=$(regions)) \
 		pipeline python -m coverage.run --tiles-only
 
-# The road-surface LINE layer — three artifacts from one pass over each region's
+# The road-surface LINE layer: three artifacts from one pass over each region's
 # PBF, and NO database at all (Dated/2026-08-09-surface-line-tiles-design.md):
 #   surface.pmtiles        the classified skin (what is under your tyres), z8-13
 #   surface-todo.pmtiles   roads nobody has recorded, in the classes where the
 #                          answer is genuinely unknown (tracks, paths, lanes), z11+
 #   surface-gaps.pmtiles   the same question per ~6 km square, for planning zoom
 # The run PUBLISHES them: three artifacts under one versioned prefix plus a
-# manifest at a stable key, which SurfaceManifest reads server-side — so a
+# manifest at a stable key, which SurfaceManifest reads server-side, so a
 # rebuild goes live within the hour with no config change and no cache clear.
 # `ARGS=--no-publish` builds without uploading (size experiments); `offline=1`
 # uses the PBFs already in the workdir instead of asking Geofabrik.
@@ -358,7 +377,7 @@ surface-tiles: ## Build + publish the road-surface line, to-do and gap-grid PMTi
 # knooppunt numbers, one routes.pmtiles under its own versioned prefix +
 # manifest (RoutesManifest reads it server-side, same contract as the others).
 # ALSO drops the per-region member way-id sets the surface build reads to make
-# its to-do arm route-aware — when rebuilding both, run routes-tiles FIRST and
+# its to-do arm route-aware. When rebuilding both, run routes-tiles FIRST and
 # surface-tiles second, so the surface extracts see fresh way-id files.
 routes-tiles: ## Build + publish the cycle-route network PMTiles (regions=csv)
 	@$(DOCKER_COMP) --profile storage up --detach --wait minio

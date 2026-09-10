@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Unit tests for climbs.py's pure record/attribute assembly (no network)."""
 from wallonia import climbs
 

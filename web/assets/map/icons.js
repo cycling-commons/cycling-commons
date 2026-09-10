@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /* Pins, cluster bubbles, minted tile icons. Idempotent hasImage guards. */
 import { map } from './map-init.js';
 import { layerByKey, TYPE_SVG, KEY_LETTER } from './catalog.js';

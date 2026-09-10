@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 //
 // The basemap asks its sprite for an image per OSM point class, and the
 // sprite lacks most of them: one console warning per class, nothing drawn.

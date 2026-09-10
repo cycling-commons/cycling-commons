@@ -49,11 +49,21 @@ Hazards and closures rot if they never expire. Dynamic data therefore carries a 
 ## Giving back to OpenStreetMap
 
 The Commons **data** is ODbL, the same licence OSM uses, so durable infrastructure facts can flow
-back upstream legally by construction. Three other things travel under their own licences: **media**
-(photos and video) is CC BY-SA 4.0, a creative-works licence, and photographs do not belong in OSM
-anyway; **UI translations** submitted through the site are CC BY-SA 4.0 too; the **software** is
-source-available under PolyForm Shield, which governs the code and has no bearing on the data. All
-four are set out on the [licensing page](https://cyclingcommons.org/licenses).
+back upstream legally by construction. Everything else in the project travels under its own terms,
+and the whole split is worth having in one place, because only the first row below can move when a
+fact moves:
+
+| What | Licence |
+|------|---------|
+| **Data**: the catalog itself, places, climbs, routes, attributes | ODbL 1.0 |
+| **Media**: photos and video | CC BY-SA 4.0 |
+| **Code and interface**: the application, the pipeline, the tooling | AGPL-3.0-only |
+| **UI translations** submitted through the site | AGPL-3.0-only, the same as the interface they are part of |
+| **Wiki prose**, this page included | CC BY-SA 4.0 |
+| **The name, the logo and the wordmark** | reserved, not open: see [TRADEMARK.md](https://github.com/cycling-commons/cycling-commons/blob/main/TRADEMARK.md) |
+
+Photographs do not belong in OSM anyway, and the code licence has no bearing on the data in either
+direction. All six are set out on the [licensing page](https://cyclingcommons.org/licenses).
 
 The intention is that when you add a fact OSM is missing (a water tap, a repair station, a wrong
 surface) the Commons offers to carry it over as **your own** OSM edit: attributed to you, in your
@@ -81,3 +91,10 @@ Ostrom's monitoring-and-conflict-resolution in practice; see [Governance](govern
 Documentation and the site live in this repository. Propose changes by pull request; the docs are
 themselves a commons. Substantive design decisions belong in the wiki so there is a single source of
 truth; please don't fork a topic into a second document.
+
+Every commit needs a **Developer Certificate of Origin** sign-off. `git commit -s` adds the
+`Signed-off-by` line, and a CI check turns a pull request away without one. Signing off says that you
+wrote the change or otherwise have the right to submit it, and that you are content for it to go out
+under the project's licence, `AGPL-3.0-only` for code and CC BY-SA 4.0 for this wiki. It is not a
+copyright assignment. You keep the copyright in what you wrote and grant a non-exclusive licence to
+use it; nobody here is asked to sign their work over to anyone.

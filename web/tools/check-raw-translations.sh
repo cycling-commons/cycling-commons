@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-License-Identifier: AGPL-3.0-only
 # Fails if any tracked Twig template pipes a translation straight into |raw.
 #
 # security-architecture.md §3: "|trans|raw is banned." security-architecture.md

@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Unit tests for route_surfaces.py's pure OSM-tag → surface-class mapper
 (MTB terrain carry-in: real Dirt/Rock categories instead of one vague
 'ground'/'Unpaved' bucket that also silently absorbed surface=rock)."""

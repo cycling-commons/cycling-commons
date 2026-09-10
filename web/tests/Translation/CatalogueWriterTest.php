@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 
 declare(strict_types=1);
 
@@ -83,7 +83,7 @@ final class CatalogueWriterTest extends TestCase
     private function writeEnglishFixture(): void
     {
         file_put_contents($this->scratchEnglishPath(), <<<'YAML'
-            # SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+            # SPDX-License-Identifier: AGPL-3.0-only
             translate:
               consent:
                 contract: 'I agree to license this translation under CC BY-SA 4.0 and confirm this is my own work.'

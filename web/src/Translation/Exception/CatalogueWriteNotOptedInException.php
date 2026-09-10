@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 
 declare(strict_types=1);
 
@@ -17,8 +17,9 @@ namespace App\Translation\Exception;
  * "dev" to the application, and then every rider translation on every
  * non-English locale would be written into the shipped catalogue file rather
  * than a proposal row, with no consent record and nothing for `/moderate` to
- * show. That is CC BY-SA text inside PolyForm source (translations.md §6),
- * and it cannot be un-shipped by rolling back.
+ * show (translations.md §6). Words a rider typed would ship in a release that
+ * nobody reviewed and that they were never asked about, and a rollback does
+ * not un-ship them.
  *
  * So the write needs a second signal that is genuinely independent of the
  * environment: true on a developer's own checkout because that developer put

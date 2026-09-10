@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 //
 // Map chrome theme (map-and-search.md §4.6). The mechanism is one attribute:
 // html[data-map-theme="light"] flips the chrome token values that :root

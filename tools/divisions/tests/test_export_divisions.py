@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Offline unit tests for the Overture divisions exporter.
 
 These drive the pure `build_feature` helper (no network). The live Overture

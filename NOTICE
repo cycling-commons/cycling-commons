@@ -1,11 +1,22 @@
 Cycling Commons
-Copyright 2026 Cycling Commons contributors
+Copyright (C) 2026 BikeCoders and the Cycling Commons contributors
 
-This product is stewarded by BikeCoders (https://bikecoders.life).
+This product is stewarded by BikeCoders (https://bikecoders.life). Contributors
+keep their own copyright and license their work in by sign-off under the
+Developer Certificate of Origin. Nothing is assigned.
 
-This repository's SOFTWARE is source-available under the PolyForm Shield
-License 1.0.0 (see the LICENSE file): you may use it for any purpose except
-providing a product that competes with the Cycling Commons. The code copyright
-is held by BikeCoders as the current steward. The Cycling Commons DATA and
-MEDIA are licensed separately and openly (ODbL / CC BY-SA) and are NOT covered
-by the software license — see the README and the licenses/ directory.
+This repository's SOFTWARE is free software under the GNU Affero General Public
+License, version 3 (AGPL-3.0-only): you may run it, study it, change it and pass
+it on, and if you run a changed version as a network service you must offer its
+users the Corresponding Source of the version they are using (section 13). The
+full text is in the LICENSE file. Xander Koevoet is designated the proxy under
+section 14 of that licence, and may decide whether future versions of the
+licence apply to this program.
+
+The Cycling Commons DATA, MEDIA and WIKI TEXT are licensed separately and
+openly (ODbL 1.0 for the data, CC BY-SA 4.0 for standalone media and for the
+prose in wiki/) and are NOT covered by the software licence. See the README and
+the licenses/ directory.
+
+The name Cycling Commons, the logo and the wordmark are reserved and are covered
+by none of the above. See TRADEMARK.md.

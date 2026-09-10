@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 //
 // The pipeline's surface classes and the client's SURFACE_STYLE must be the
 // same seven names.

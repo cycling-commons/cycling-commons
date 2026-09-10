@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Cycling Commons — Add a climb</title>
-<meta name="description" content="Add a climb to the Commons — search the place, trace the route, and capture surface, traffic and gradient for every kind of rider." />
+<title>Cycling Commons: Add a climb</title>
+<meta name="description" content="Add a climb to the Commons: search the place, trace the route, and capture surface, traffic and gradient for every kind of rider." />
 <link rel="canonical" href="https://cyclingcommons.org/add-climb.html" />
 <link type="text/plain" rel="author" href="https://cyclingcommons.org/humans.txt" />
 <link rel="license" href="https://cyclingcommons.org/licenses.html" />
@@ -13,16 +13,16 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 <meta property="og:site_name" content="Cycling Commons" />
 <meta property="og:type" content="website" />
-<meta property="og:title" content="Cycling Commons — Add a climb" />
-<meta property="og:description" content="Add a climb to the Commons — search the place, trace the route, and capture surface, traffic and gradient for every kind of rider." />
+<meta property="og:title" content="Cycling Commons: Add a climb" />
+<meta property="og:description" content="Add a climb to the Commons: search the place, trace the route, and capture surface, traffic and gradient for every kind of rider." />
 <meta property="og:url" content="https://cyclingcommons.org/add-climb.html" />
 <meta property="og:image" content="https://cyclingcommons.org/brand/og/add-climb.jpg" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
-<meta property="og:image:alt" content="Cycling Commons — Add a climb" />
+<meta property="og:image:alt" content="Cycling Commons: Add a climb" />
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="Cycling Commons — Add a climb" />
-<meta name="twitter:description" content="Add a climb to the Commons — search the place, trace the route, and capture surface, traffic and gradient for every kind of rider." />
+<meta name="twitter:title" content="Cycling Commons: Add a climb" />
+<meta name="twitter:description" content="Add a climb to the Commons: search the place, trace the route, and capture surface, traffic and gradient for every kind of rider." />
 <meta name="twitter:image" content="https://cyclingcommons.org/brand/og/add-climb.jpg" />
 
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css" integrity="sha384-uTttxo/aOKbdE5RlD/SPzSDoDmNvGlUYPjONi2MN/b7c9HPSvW07OIuyP7uL6jxK" crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -172,11 +172,11 @@
 </head>
 <body>
 <div class="top">
-  <div class="brandblock" style="display:flex;flex-direction:column;gap:.28rem;align-items:flex-start;flex:none"><a class="brand" href="index.html"><img src="brand/logo-nav.svg" alt="Cycling Commons" style="height:1.8rem;display:block"></a><div class="brandsub" style="font-family:var(--mono,'Spline Sans Mono',monospace);font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(239,230,212,.55);line-height:1.6;white-space:nowrap"><span class="cc-coord">N 48.87° · E 2.29°</span><br>OPEN ATLAS — EST. 2026</div></div>
+  <div class="brandblock" style="display:flex;flex-direction:column;gap:.28rem;align-items:flex-start;flex:none"><a class="brand" href="index.html"><img src="brand/logo-nav.svg" alt="Cycling Commons" style="height:1.8rem;display:block"></a><div class="brandsub" style="font-family:var(--mono,'Spline Sans Mono',monospace);font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(239,230,212,.55);line-height:1.6;white-space:nowrap"><span class="cc-coord">N 48.87° · E 2.29°</span><br>OPEN ATLAS · EST. 2026</div></div>
   <a class="back" href="map.html">← Back to the map</a>
 </div>
 
-<div style="background:rgba(200,146,58,.16);border-bottom:1px solid rgba(200,146,58,.55);color:#6b5320;text-align:center;padding:.6rem 1rem;font-size:.82rem;line-height:1.4"><b style="color:#B5532E">Demo</b> — a preview of how adding a climb will work. Launching 2026.</div>
+<div style="background:rgba(200,146,58,.16);border-bottom:1px solid rgba(200,146,58,.55);color:#6b5320;text-align:center;padding:.6rem 1rem;font-size:.82rem;line-height:1.4"><b style="color:#B5532E">Demo</b>: a preview of how adding a climb will work. Launching 2026.</div>
 
 <main class="wrap" id="wiz">
   <div class="ey">Add to the atlas</div>
@@ -191,20 +191,20 @@
     <li data-s="5">Submitted</li>
   </ol>
 
-  <!-- STEP 1 — WHERE -->
+  <!-- STEP 1: WHERE -->
   <section class="pane on" data-s="1">
     <h2>Where does it climb?</h2>
     <p class="help">Search for the area, then click the <b>foot</b> of the climb and its <b>summit</b>. We'll draw the line and measure its length.</p>
     <div class="field csearch">
       <label for="placeSearch">Find a place or street</label>
-      <input id="placeSearch" type="search" autocomplete="off" placeholder="e.g. La Redoute, Remouchamps — or a town, col, street…" />
+      <input id="placeSearch" type="search" autocomplete="off" placeholder="e.g. La Redoute, Remouchamps, or a town, col, street…" />
       <div class="csearch-results" id="searchResults" hidden></div>
     </div>
-    <div id="cmap" role="application" aria-label="Map — click the foot then the summit of the climb"></div>
+    <div id="cmap" role="application" aria-label="Map: click the foot then the summit of the climb"></div>
     <div class="readout"><span id="readout">Tap the map to set the foot of the climb.</span><span id="reset" role="button" tabindex="0">Reset</span></div>
   </section>
 
-  <!-- STEP 2 — PROFILE -->
+  <!-- STEP 2: PROFILE -->
   <section class="pane" data-s="2">
     <h2>The profile</h2>
     <p class="help">Length is measured from your line. Add the rest.</p>
@@ -212,11 +212,11 @@
     <div class="field"><label for="fName">Climb name</label><input id="fName" placeholder="e.g. Côte de La Redoute" /></div>
     <div class="two">
       <div class="field"><label for="fLen">Length (km)</label><input id="fLen" type="number" step="0.1" min="0" /></div>
-      <div class="field"><label for="fGain">Elevation gain (m)</label><input id="fGain" type="number" step="1" min="0" placeholder="e.g. 161" /><div class="fhelp">From your computer/GPS — in production this is sampled from an open elevation model (DEM).</div></div>
+      <div class="field"><label for="fGain">Elevation gain (m)</label><input id="fGain" type="number" step="1" min="0" placeholder="e.g. 161" /><div class="fhelp">From your computer/GPS. In production this is sampled from an open elevation model (DEM).</div></div>
     </div>
     <div class="two">
-      <div class="field"><label for="fAvg">Avg gradient</label><input id="fAvg" readonly value="—" /></div>
-      <div class="field"><label for="fMax">Max gradient (%) — optional</label><input id="fMax" type="number" step="0.1" min="0" placeholder="e.g. 20" /></div>
+      <div class="field"><label for="fAvg">Avg gradient</label><input id="fAvg" readonly value="-" /></div>
+      <div class="field"><label for="fMax">Max gradient (%), optional</label><input id="fMax" type="number" step="0.1" min="0" placeholder="e.g. 20" /></div>
     </div>
     <div class="two">
       <div class="field"><label for="fSurface">Surface</label>
@@ -232,7 +232,7 @@
     </div>
   </section>
 
-  <!-- STEP 3 — DETAILS -->
+  <!-- STEP 3: DETAILS -->
   <section class="pane" data-s="3">
     <h2>Details</h2>
     <p class="help">Who's this climb for, and anything riders should know? All optional.</p>
@@ -245,16 +245,16 @@
       <div class="fhelp" id="audienceHint"></div>
     </div>
     <div class="field"><label for="fNote">Note for riders</label><textarea id="fNote" placeholder="Surface changes, a brutal final ramp, the view from the top…"></textarea></div>
-    <div class="field"><label>Add a photo — optional</label>
+    <div class="field"><label>Add a photo, optional</label>
       <div class="drop" onclick="return false"><span class="ic">◳</span>Drop a photo here, or click to choose<br/><small>JPG / PNG · your own photo only</small></div>
-      <div class="notice"><b>Photos are licensed CC BY-SA 4.0.</b> Only upload photos you took or are licensed to share — never images scraped or re-hosted from another site. You keep ownership; this keeps the Commons free of infringement.</div>
+      <div class="notice"><b>Photos are licensed CC BY-SA 4.0.</b> Only upload photos you took or are licensed to share, never images scraped or re-hosted from another site. You keep ownership; this keeps the Commons free of infringement.</div>
     </div>
     <div class="field"><label for="fOsm">Already in OpenStreetMap?</label>
       <select id="fOsm"><option>Unknown</option><option>Yes</option><option>No</option></select>
     </div>
   </section>
 
-  <!-- STEP 4 — REVIEW -->
+  <!-- STEP 4: REVIEW -->
   <section class="pane" data-s="4">
     <h2>Review your climb</h2>
     <p class="help">Check the facts before sending it to the curators.</p>
@@ -262,11 +262,11 @@
     <div class="prov">Your climb goes to a curator's review queue. Approved facts join the Commons under <b>ODbL</b> (data) / <b>CC BY-SA 4.0</b> (media). Provenance is kept; identity is not.</div>
   </section>
 
-  <!-- STEP 5 — SUBMITTED -->
+  <!-- STEP 5: SUBMITTED -->
   <section class="pane submitted" data-s="5">
     <div class="done-ic">◬</div>
     <h2>It's in the queue.</h2>
-    <p>A curator will review <b id="doneName">your climb</b>. If it checks out, it joins the Commons backlog — and becomes eligible for the next voting round. Follow its journey below.</p>
+    <p>A curator will review <b id="doneName">your climb</b>. If it checks out, it joins the Commons backlog and becomes eligible for the next voting round. Follow its journey below.</p>
     <a class="btn btn-g" href="map.html">← Back to the map</a>
   </section>
 
@@ -283,11 +283,11 @@
   <div class="jwrap">
     <div class="ey">How contributions become the atlas</div>
     <h2>The journey of a climb</h2>
-    <p class="jsub">Nothing you add goes live unchecked. Every climb is reviewed, then earns its place — and the best rise through the community's vote, re-ranked each round, never reset.</p>
+    <p class="jsub">Nothing you add goes live unchecked. Every climb is reviewed, then earns its place, and the best rise through the community's vote, re-ranked each round, never reset.</p>
     <div class="spine">
       <div class="jnode" id="youAreHere"><span class="jdot"></span><span class="jt">You</span><span class="jl">You draw &amp; submit the climb</span></div>
       <span class="jarrow">→</span>
-      <div class="jnode"><span class="jdot"></span><span class="jt">Curators</span><span class="jl">Review queue — checked by trusted curators</span></div>
+      <div class="jnode"><span class="jdot"></span><span class="jt">Curators</span><span class="jl">Review queue, checked by trusted curators</span></div>
       <span class="jarrow">→</span>
       <div class="jnode"><span class="jdot"></span><span class="jt">Approved</span><span class="jl">Joins the “Everything” backlog of the Commons</span></div>
       <span class="jarrow">→</span>
@@ -297,13 +297,13 @@
     </div>
     <div class="branch-lead">…or, from review</div>
     <div class="branches">
-      <div class="jbranch"><b>⟲ Needs info</b>A curator sends it back with a question — you refine and resubmit.</div>
-      <div class="jbranch"><b>✕ Rejected</b>Duplicate or not a climb — declined with a reason, nothing lost.</div>
+      <div class="jbranch"><b>⟲ Needs info</b>A curator sends it back with a question, and you refine and resubmit.</div>
+      <div class="jbranch"><b>✕ Rejected</b>Duplicate or not a climb: declined with a reason, nothing lost.</div>
     </div>
   </div>
 </section>
 
-<footer class="foot"><div class="wrap"><span class="mono">CYCLING COMMONS · DATA ODbL 1.0 · MEDIA CC BY-SA 4.0 · CODE POLYFORM SHIELD 1.0.0 · © CONTRIBUTORS + OSM</span><span class="mono"><a href="https://wiki.cyclingcommons.org/">Wiki</a> · <a href="https://wiki.cyclingcommons.org/governance/">Governance</a> · <a href="https://github.com/cycling-commons/cycling-commons">GitHub</a> · <a href="join.html">Get involved</a> · <a href="pages.html">All pages</a> · <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a> · stewarded by <a href="https://bikecoders.life">BikeCoders</a></span></div></footer>
+<footer class="foot"><div class="wrap"><span class="mono">CYCLING COMMONS · CODE AGPL-3.0-only · DATA ODbL 1.0 · MEDIA + WIKI CC BY-SA 4.0 · NAME + LOGO RESERVED · © CONTRIBUTORS + OSM</span><span class="mono"><a href="https://wiki.cyclingcommons.org/">Wiki</a> · <a href="https://wiki.cyclingcommons.org/governance/">Governance</a> · <a href="https://github.com/cycling-commons/cycling-commons">Source code</a> · <a href="join.html">Get involved</a> · <a href="pages.html">All pages</a> · <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a> · stewarded by <a href="https://bikecoders.life">BikeCoders</a></span></div></footer>
 
 <script src="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js" integrity="sha384-5+cfbwT0iiub6VsQAdn6yz16nr6sDiQoHx6tm4O8OVYXHYOxcffFmCJBL0dgdvGp" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script>
@@ -351,7 +351,7 @@
       paint:{'line-color':'#FF5A1F','line-width':4}});
     addRegionBoundary('Wallonia');
   });
-  // region boundary — dim outside the region (spotlight) + dashed outline, beneath the climb line
+  // region boundary: dim outside the region (spotlight) + dashed outline, beneath the climb line
   function addRegionBoundary(name){
     fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(name)}&format=jsonv2&polygon_geojson=1&limit=1`)
       .then(r=>r.json()).then(d=>{
@@ -374,7 +374,7 @@
     drawClimb();
   });
   function mkMarker(ll,glyph,cls){
-    // Inline SVG marker with fixed pixel attributes — robust against the marker
+    // Inline SVG marker with fixed pixel attributes, robust against the marker
     // CSS-sizing quirk. foot = spruce, summit = trail.
     const fill=cls==='summit'?'#FF5A1F':'#1C3A2A';
     const wrap=document.createElement('div'); wrap.className='cc-marker';
@@ -396,7 +396,7 @@
   function setReadout(){
     const el=document.getElementById('readout');
     if(!S.start)       el.textContent='Tap the map to set the foot of the climb.';
-    else if(!S.summit) el.textContent='Foot set — now tap the summit.';
+    else if(!S.summit) el.textContent='Foot set. Now tap the summit.';
     else               el.textContent=`Climb set · ${S.lengthKm?S.lengthKm.toFixed(1)+' km':'measuring…'}`;
   }
   function drawClimb(){
@@ -436,7 +436,7 @@
   resetBtn.addEventListener('click',resetClimb);
   resetBtn.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();resetClimb();}});
 
-  // place search — geocode with Photon (keyless, OSM-based; Nominatim/Photon in production too)
+  // place search: geocode with Photon (keyless, OSM-based; Nominatim/Photon in production too)
   const search=document.getElementById('placeSearch');
   const results=document.getElementById('searchResults');
   let searchT=null;
@@ -458,7 +458,7 @@
   function geocode(q){
     fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=6`)
       .then(r=>r.json()).then(d=>renderResults(d.features||[]))
-      .catch(()=>{ results.innerHTML='<div class="res empty">Search unavailable — click the map instead</div>'; results.hidden=false; });
+      .catch(()=>{ results.innerHTML='<div class="res empty">Search unavailable. Click the map instead</div>'; results.hidden=false; });
   }
   search.addEventListener('input',()=>{
     const q=search.value.trim(); clearTimeout(searchT);
@@ -487,7 +487,7 @@
     S.traffic=document.getElementById('fTraffic').value;
     const np=document.getElementById('namePreview');
     np.textContent=S.name||'Unnamed climb'; np.classList.toggle('empty',!S.name);
-    document.getElementById('fAvg').value = avgGrad()?avgGrad().toFixed(1)+' %':'—';
+    document.getElementById('fAvg').value = avgGrad()?avgGrad().toFixed(1)+' %':'-';
     refreshGate();
   }
   ['fName','fLen','fGain','fMax','fSurface','fSurfaceQ','fTraffic'].forEach(id=>
@@ -495,23 +495,23 @@
 
   /* ---------- step 3: details ---------- */
   // Rough, general gradient feasibility by audience. Handbikes are arm-powered,
-  // so sustained gradients well below leg-powered cycling — surface these.
+  // so sustained gradients sit well below leg-powered cycling. Surface these.
   function updateAudienceHint(){
     const hint=document.getElementById('audienceHint'); if(!hint) return;
     const avg=avgGrad();
     if(S.disciplines.has('Handbike')){
       if(avg>6){
-        hint.innerHTML=`⚠ ${avg.toFixed(1)}% avg is steep for handbikes — most handcyclists sustain ~6% (≈10% on short ramps). Note an accessible alternative if there is one.`;
+        hint.innerHTML=`⚠ ${avg.toFixed(1)}% avg is steep for handbikes: most handcyclists sustain ~6% (≈10% on short ramps). Note an accessible alternative if there is one.`;
         hint.style.color='var(--clay)';
       } else if(avg>0){
-        hint.textContent=`~${avg.toFixed(1)}% avg — within reach for many handcyclists (≈6% sustained is a common comfortable max).`;
+        hint.textContent=`~${avg.toFixed(1)}% avg, within reach for many handcyclists (≈6% sustained is a common comfortable max).`;
         hint.style.color='';
       } else {
         hint.textContent='Handbike: most handcyclists sustain ~6% (≈10% on short ramps).';
         hint.style.color='';
       }
     } else {
-      hint.textContent='Rough gradient ceilings — road & MTB: 15%+ · gravel ~12% (traction) · loaded touring ~10% · handbike ~6%.';
+      hint.textContent='Rough gradient ceilings. Road & MTB: 15%+ · gravel ~12% (traction) · loaded touring ~10% · handbike ~6%.';
       hint.style.color='';
     }
   }
@@ -542,7 +542,7 @@
       <div class="kv"><span>Length</span><span>${len} km</span></div>
       <div class="kv"><span>Elevation gain</span><span>△ ${S.gain} m</span></div>
       <div class="kv"><span>Avg gradient</span><span>${avgGrad().toFixed(1)} %</span></div>
-      <div class="kv"><span>Max gradient</span><span>${S.maxGrad?S.maxGrad+' %':'—'}</span></div>
+      <div class="kv"><span>Max gradient</span><span>${S.maxGrad?S.maxGrad+' %':'-'}</span></div>
       <div class="kv"><span>Surface</span><span>${S.surface} · ${S.surfaceQ}</span></div>
       <div class="kv"><span>Traffic</span><span>${S.traffic}</span></div>
       <div class="kv"><span>Already in OSM?</span><span>${S.osm}</span></div>

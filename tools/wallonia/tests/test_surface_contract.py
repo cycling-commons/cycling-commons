@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Cross-language contract test: every surface label the harvester emits
 (route_surfaces.py's SURF) must have a home in PHP's SurfaceVocabulary::BUCKETS,
 so a rider suggestion never silently falls through to the '?? Mixed' default.

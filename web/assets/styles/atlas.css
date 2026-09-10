@@ -1,4 +1,4 @@
-/* SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 */
+/* SPDX-License-Identifier: AGPL-3.0-only */
 /* Cycling Commons — shared "Riders' Atlas" stylesheet */
 :root{
   --ink:#101E16;--paper:#EFE6D4;--paper-deep:#E2D5BC;--spruce:#1C3A2A;--spruce-lift:#2C5440;
@@ -362,8 +362,8 @@ section.pad+section.pad{padding-top:clamp(2rem,4vw,3rem)}
    taking a line of its own before that. */
 .foot .footver{color:rgba(239,230,212,.6);text-transform:none;letter-spacing:.01em}
 .foot .footver:empty{display:none}
-/* Normal case here too, which is also what lets ODbL, CC BY-SA and PolyForm
-   keep the capitalisation their licences are actually named with. */
+/* Normal case here too, which is also what lets ODbL, CC BY-SA and AGPL keep
+   the capitalisation their licences are actually named with. */
 .foot .colophon{margin-top:1.344rem;text-transform:none;letter-spacing:.02em}  /* 2 × the 0.672rem line-height step */
 /* Where to find us, under the licences. Icons rather than words: a row of
    logos reads faster than any label and stays one line in five languages.

@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Turn repo-path citations in the wiki into links to the source on GitHub.
 
 The GIS course cites files constantly — `web/src/Contribution/SpatialResolver.php`

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 //
 // The view-mode rung rules (map-and-search.md §4.2) and the deep-link lift (§8).
 //

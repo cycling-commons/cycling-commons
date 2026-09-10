@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-License-Identifier: LicenseRef-CyclingCommons-Brand
 """Generate square Cycling Commons logos for avatars / social (e.g. a GitHub org
 icon). Text is outlined to vector paths so the files render without the Bricolage
 web font. Produces three SVGs in atlas/demo/brand/:

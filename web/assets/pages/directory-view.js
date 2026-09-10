@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /* Map / list toggle on the pages directory. The two views are both in the
    page and the toggle is a pair of plain links (?view=map, ?view=list), so
    everything works with no script. This file only makes the switch instant

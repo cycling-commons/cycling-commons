@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-License-Identifier: AGPL-3.0-only
 #
 # Pre-commit wrapper around web/tools/check-translations.sh (the locale-parity
 # gate: every key in messages.en.yaml must exist in fr/nl/de and vice versa).

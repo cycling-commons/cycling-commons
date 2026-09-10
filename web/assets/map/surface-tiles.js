@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /* Road-surface LINE tiles (docs/specs/coverage-provider.md §4): OSM ways from
    their own PMTiles artifact, drawn under curated A items. Off until the rail
    toggle. SURFACE_STYLE is shared with A so a tile line and an A-item of the

@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Coverage batch runner — the weekly per-region job (coverage-provider.md §3).
 
 Per region: download (md5-checked, skipped when unchanged) → osmium tags-filter

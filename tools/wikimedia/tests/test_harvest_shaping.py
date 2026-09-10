@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """What the wikimedia harvest WRITES (no network).
 
 Everything here shapes a row that gets seeded into the catalog and then shown

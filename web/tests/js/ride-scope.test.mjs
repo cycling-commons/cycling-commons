@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 //
 // ride-scope.js: which scope a loaded GPX asks for (docs/specs/map-and-search.md
 // §4.5). A rider who drops a ride while scoped somewhere else sees a drawn track

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /* Dev-only DeepL drafting controls (docs/specs/translations.md §7.1, §7.2).
 
    One panel renders on translate/_form.html.twig, above the translation

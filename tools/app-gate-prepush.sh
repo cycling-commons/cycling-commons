@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-License-Identifier: AGPL-3.0-only
 #
 # pre-push: the whole `make app-test` gate over web/ before code leaves the
 # machine. Same commands, same flags, so the hook and the Makefile cannot

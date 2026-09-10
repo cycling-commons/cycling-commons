@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """The generic authority harvester (docs/specs/data-provider-hierarchy.md §5).
 
 One fetcher, configured per `data_provider` row, replacing the

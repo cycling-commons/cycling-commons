@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 //
 // The route-network layer's build/client agreements, in the same spirit as
 // surface-zooms.test.cjs: the BUILD decides which networks exist and where the

@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Upstream features to the shape `app:providers:harvest` reads.
 
 Everything here is pure: a dict in, a dict out, no network and no database, so

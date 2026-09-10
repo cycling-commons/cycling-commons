@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /* Boots the map from the catalog endpoint (docs/specs/map-and-search.md §2):
    fetch CC_CATALOG_URL, expose window.CC_* globals, stays merge, inject map.js.
    The MapLibre instance is built here before that fetch so the basemap does

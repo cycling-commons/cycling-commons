@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """The Python side of the name-key contract (name_key_cases.json).
 
 web/tests/Catalog/NameKeyContractTest.php asserts the same file from PHP. Both

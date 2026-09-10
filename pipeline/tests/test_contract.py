@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """load_contract() shape + helper tests: the committed coverage-contract.json
 must parse into a valid Contract (coverage-provider.md §7).
 The PHP twin (web/tests/Catalog/CoverageContractTest.php) pins the same file to

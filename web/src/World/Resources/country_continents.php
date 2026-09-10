@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 
 // ISO 3166-1 alpha-2 country code => continent code. Derived from an
 // internal geographic base list; used by app:world:import to link

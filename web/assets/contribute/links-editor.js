@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /* Outbound-links editor (docs/specs/catalog-data-model.md §7).
    Caps here are courtesy; OutboundLinks enforces them server-side. */
 (function () {

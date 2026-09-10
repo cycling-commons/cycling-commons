@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /* Fill the "what else gets sent" block on /report-bug, and the hidden fields
    behind it. docs/specs/contact-and-support.md §5
 

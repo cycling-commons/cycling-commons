@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 
 declare(strict_types=1);
 
@@ -635,8 +635,8 @@ final class TranslateController extends AbstractController
         // CC_CATALOGUE_WRITE opt-in. web/.env commits APP_ENV=dev, so a
         // deployment that lost its server-side override would otherwise
         // take this branch for every rider on every locale and write their
-        // CC BY-SA text into PolyForm source with no consent record and no
-        // proposal row (translations.md §7.1, §6). Without the opt-in this
+        // words straight into the shipped catalogue with no consent record
+        // and no proposal row (translations.md §7.1, §6). Without the opt-in this
         // is false and the rider or curator path below runs exactly as it
         // does in production, which is the correct default everywhere.
         $isDevSubmit = 'dev' === $this->environment && $this->catalogueWriter->isEnabled();

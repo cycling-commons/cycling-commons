@@ -49,7 +49,8 @@ Alternative:
 ## Attribution / footer line
 
 > Cycling Commons is maintained by BikeCoders as a standalone open-data
-> project. Data: Open Database License (ODbL). Built on OpenStreetMap.
+> project. Data: Open Database License (ODbL). Code: GNU AGPL v3
+> (AGPL-3.0-only). Built on OpenStreetMap.
 
 ---
 
@@ -58,11 +59,29 @@ Alternative:
 - The **dataset** holds no personal data. Do not widen this to the whole
   platform; accounts do store an email address. Say "the data" or
   "the Commons", not "we store nothing about you".
-- The **data** is open (ODbL). The **code** is source-available under
-  PolyForm Shield, not open source. Never call the project "open source".
+- **Cycling Commons is open source, and you may say so.** The **data** is open
+  under the Open Database License (ODbL). The **code** is free software under
+  the GNU Affero General Public License v3. Write the identifier as
+  `AGPL-3.0-only`, or spell it out as "the GNU AGPL v3". Never write bare
+  "AGPL-3.0", which is a deprecated identifier, and never "AGPL-3.0-or-later",
+  which is a different promise this project has not made.
+- **These words are wrong, everywhere.** "Source-available", "non-compete",
+  "competing product", "shared but not open", "not OSI open-source". None of
+  them describes this project. Finding one in live copy is a bug: correct it,
+  do not soften it.
+- **The catch, when a reader asks for it, in one line.** Anyone may use, change,
+  fork and even compete with Cycling Commons; if they run a changed version as a
+  service, they owe their users that source. That is the whole of the bargain.
+  Never present it as a restriction on competing, because it is not one.
+- **The name and the logo are reserved, and are never described as open.** The
+  Cycling Commons name, logo and wordmark stay with the project. AGPL v3
+  section 7(e) is the clause that lets a free-software project hold its marks
+  back, and this one does. A fork gets the whole codebase and picks its own
+  name. The rules live in `TRADEMARK.md` at the repo root: link there rather
+  than paraphrasing them.
 - Say "built on OpenStreetMap", and that CC contributes back to it.
 - The free query API and bulk exports are designed, not yet live.
   Do not advertise them as available.
 - Spell out an abbreviation on first use: Open Database License (ODbL),
-  OpenStreetMap (OSM).
+  OpenStreetMap (OSM), GNU Affero General Public License (AGPL).
 - No em-dashes in any copy.

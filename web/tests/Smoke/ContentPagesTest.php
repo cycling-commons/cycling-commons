@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 
 namespace App\Tests\Smoke;
 
@@ -49,8 +49,8 @@ final class ContentPagesTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertSelectorExists('footer.foot');
         self::assertSelectorTextContains('h1', 'The short version');
-        // Fourth licence line: website-submitted UI translations (CC BY-SA),
-        // separate from ODbL data and PolyForm code (translations.md §6).
+        // Fourth licence card: UI translations, AGPL-3.0-only like the code
+        // they render, separate from the ODbL data (translations.md §6).
         self::assertStringContainsString(
             'The UI translations',
             (string) $client->getResponse()->getContent(),

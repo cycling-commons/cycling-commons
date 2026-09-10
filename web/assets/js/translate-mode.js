@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /* Translate mode on the page (docs/specs/translations.md §4.1).
 
    The server wrapped every translated string in invisible marks:

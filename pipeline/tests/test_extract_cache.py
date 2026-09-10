@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """The per-country extract cache — what may be reused, and what must not be.
 
 Adding a country to the surface artifact re-tiles the whole set (PMTiles cannot

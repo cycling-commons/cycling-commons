@@ -1,7 +1,7 @@
 # Normalise line endings: text is stored with LF in the repo, checked out native.
 * text=auto eol=lf
 
-# Binary assets — never normalise or diff as text.
+# Binary assets: never normalise or diff as text.
 *.png   binary
 *.jpg   binary
 *.jpeg  binary
@@ -13,5 +13,10 @@
 *.pmtiles binary
 
 # Verbatim licence texts: don't diff, and keep out of GitHub's language stats.
+# Both directories, because both hold them. LICENSES/ is the REUSE one (the
+# full text of every identifier the tree declares, AGPL-3.0-only included);
+# licenses/ holds the data and media terms. Left out, the uppercase directory's
+# 100-odd kB of legal text counts as project source and skews the language bar.
 licenses/*.txt -diff linguist-vendored
+LICENSES/*.txt -diff linguist-vendored
 LICENSE        -diff

@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-License-Identifier: AGPL-3.0-only
 services:
     App\Tests\Auth\SpyDeletionHook:
         tags: ['app.user_deletion_hook']

@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Map the real road surface ALONG each quality-ride (asphalt / gravel / pavé / RAVeL).
 
 Each ride's loop is routed through BRouter, whose GeoJSON carries the OSM way-tags (incl. `surface=`)

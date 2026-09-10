@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Probe Overture division_area for a country's candidate operating levels.
 
 Onboarding step 1 (tools/divisions/README.md): BEFORE seeding, report

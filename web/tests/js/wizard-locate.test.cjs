@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 //
 // Step 1 of the contribute wizard: the two ways a rider moves a pin, and the
 // one thing both must end in. Every change test downstream reads the PIN, not

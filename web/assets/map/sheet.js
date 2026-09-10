@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /* Mobile snap sheet (peek / half / full) and hover tip.
    @see docs/specs/map-and-search.md §6.6 */
 import { map } from './map-init.js';

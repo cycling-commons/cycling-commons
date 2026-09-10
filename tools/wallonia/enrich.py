@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Enrich harvested features with a Wikipedia description + a Wikimedia Commons photo.
 
 Sources (all cached via overpass.get_json):

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Scenic viewpoints and historical places per country, with verified photos.
 
 Harvests from Wikidata, checks every photo's licence against the Commons API,

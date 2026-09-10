@@ -1,11 +1,11 @@
-<!-- SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 -->
+<!-- SPDX-License-Identifier: AGPL-3.0-only -->
 
-# Translations — catalogue, overlays, and in-site proposals
+# Translations: catalogue, overlays, and in-site proposals
 
 > **Law cited here is listed with its source in [`legal-sources.md`](legal-sources.md).** Article numbers are named in the text; the link goes to the act, because EUR-Lex article anchors do not survive consolidation.
 
 
-**Status:** canonical reference · **implemented**; §3.3, §4.1, §4.2 specified 2026-08-31 and planned in `docs/plans/2026-08-31-translate-mode-and-english-edits.md`; translations.md §3.4 (working protocol) and translations.md §6.1 (open question, undecided) added 2026-09-01; translations.md §7 (DeepL) rewritten 2026-09-01, dev-only bring-your-own-key tool superseding the prior EasyAdmin operator design, built 2026-09-01 (`docs/plans/2026-09-01-deepl-dev-tool.md`) and hardened the same day after review (the `CC_CATALOGUE_WRITE` opt-in, protected keys and the acceptance check on both write paths) · **Audience:** contributors to Cycling Commons
+**Status:** canonical reference · **implemented**; §3.3, §4.1, §4.2 specified 2026-08-31 and planned in `docs/plans/2026-08-31-translate-mode-and-english-edits.md`; translations.md §3.4 (working protocol) and translations.md §6.1 added 2026-09-01 as an open question and **resolved 2026-09-10** by the relicensing of UI translations to AGPL-3.0-only (§6); translations.md §7 (DeepL) rewritten 2026-09-01, dev-only bring-your-own-key tool superseding the prior EasyAdmin operator design, built 2026-09-01 (`docs/plans/2026-09-01-deepl-dev-tool.md`) and hardened the same day after review (the `CC_CATALOGUE_WRITE` opt-in, protected keys and the acceptance check on both write paths) · **Audience:** contributors to Cycling Commons
 
 This document owns how user-facing copy is stored, who may change a
 non-English string from the website, how a curator publishes it, and how
@@ -68,13 +68,15 @@ Rejected alternatives (do not re-propose for v1):
   hook, the “catalogue is code” review, and the deploy-shaped English source.
 - **A separate translator role.** Same bar as contributing a fountain: an
   account is enough to *propose*. Publishing stays with `ROLE_CURATOR`.
-- **Merge approved overlays into `messages.{fr,nl,de,es}.yaml`.** That would
-  mix CC BY-SA rider copy into PolyForm-licensed source (§6). Git YAML stays
-  the developer default; overlays stay the live contributor catalogue.
+- **Merge approved overlays into `messages.{fr,nl,de,es}.yaml`.** Still refused
+  while any row carries the v1 CC BY-SA consent (§6): that grant does not cover
+  shipping the words as AGPL source. Git YAML stays the developer default;
+  overlays stay the live contributor catalogue. §6.1 says what has to happen
+  first for this to become allowed.
 
 ---
 
-## 3. Overlays — how an approved string becomes live
+## 3. Overlays: how an approved string becomes live
 
 YAML remains the **shipped default**. Production may run *ahead* of git for
 individual non-English keys via overlay rows.
@@ -107,7 +109,7 @@ Three tables (names indicative; the migration owns the exact schema).
 Proposals and overlays **foreign-key to a catalogue row**, they do not store
 the English string as the thing you search or join on.
 
-**`translation_entry`** — one row per catalogue key. English lives here as a
+**`translation_entry`** is one row per catalogue key. English lives here as a
 **projection of `messages.en.yaml`**, not as a second source of truth.
 A sync (deploy hook / console command / cache warmup) upserts every English
 key+value from git. The website never writes this table except through that
@@ -127,25 +129,25 @@ sync. Rows are not deleted on a whim: a key removed in git is marked absent
 `/translate` search runs on `translation_entry` (`message_key` and `english`).
 That is the index. Do not full-text-index proposal snapshots for the browser.
 
-**`translation_proposal`** — the queue row.
+**`translation_proposal`** is the queue row.
 
 | Field | Notes |
 |---|---|
 | id | PK |
 | entry_id | FK `translation_entry`, **the link** |
 | locale | `fr` / `nl` / `de` / `es` only |
-| proposed_value | the rider's text — never overwritten by a curator copy-edit |
+| proposed_value | the rider's text, never overwritten by a curator copy-edit |
 | published_value | wording written to the overlay on approve. Null until approved. May differ from `proposed_value` when a curator fixed typos. Reject / needs-info leave this null (a curator edit in the form is discarded). |
-| english_at_submit | copy of `entry.english` at submit time — **audit/drift only**, not the join, not the search index. The curator card compares this to `entry.english` and warns if git has moved. |
+| english_at_submit | copy of `entry.english` at submit time, **audit and drift only**, not the join, not the search index. The curator card compares this to `entry.english` and warns if git has moved. |
 | english_version_at_submit | `entry.english_version` at submit. The card says "made against v2 · English is now v3". |
-| consent_record_id | the CC BY-SA consent (§4, §6). **Null on an `en` row**: English edits are product copy, not a rider grant. |
+| consent_record_id | the translator's licence consent (§4, §6), and the record of **which version** they agreed to, which is what §6.1 keys the git-absorption rule on. **Null on an `en` row**: English edits are product copy, not a rider grant. |
 | submitter_id | FK `users`. Credit is resolved live (`rider#` plus display name only if the profile is public). Do **not** denormalize a display name onto this row (GDPR; account deletion unlinks the person). |
 | status | `pending` / `needs_info` / `approved` / `rejected` |
 | reviewer_id | FK, null until decided |
 | reviewer_note | required on needs-info, optional on reject |
 | created_at / decided_at | |
 
-**`translation_overlay`** — the live override. One row per `(entry_id, locale)`.
+**`translation_overlay`** is the live override. One row per `(entry_id, locale)`.
 
 | Field | Notes |
 |---|---|
@@ -166,7 +168,7 @@ action, audited).
 ### 3.2 Identity is the key, not the English wording
 
 Overlays attach to `translation_entry` (`home.cta_map`), never to “the word
-Map wherever it appears.” The same English can — and already does — exist on
+Map wherever it appears.” The same English can, and already does, exist on
 many keys with different jobs (`nav.map` vs a button vs a heading; `submit` on
 a ballot is not `submit` on a route proposal). Each key has its own overlay
 and its own proposal history. Approving a French string for one does not
@@ -179,7 +181,7 @@ cards must show `message_key` next to English, not English alone.
 If two screens need different translations of the same English, they must be
 **different keys in git**. Do not “fix” that by merging entries that share
 `english`. If one key is wrongly reused in two templates, one overlay will
-change both places — that is a catalogue bug, split the key in YAML, do not
+change both places. That is a catalogue bug: split the key in YAML, do not
 special-case the overlay.
 
 DeepL (translations.md §7) must be given the key (and English) per row, never
@@ -244,18 +246,21 @@ counted.
 
 Seven rules for anyone touching translations across the three environments.
 They follow from the sync mechanics in translations.md §3.3 and the licence
-split in translations.md §6; this section only sequences them into a
+position in translations.md §6; this section only sequences them into a
 procedure.
 
 1. **Ship all five languages in git for a new feature.** The parity gate
    (`web/tools/check-translations.sh`) requires every locale file to carry
    the same key set as English (translations.md §1), so a new key cannot go
    live without `fr`, `nl`, `de` and `es` rows already present in git. This
-   is a genuine burden, and it is the reason translations.md §6.1 is open:
-   for anything beyond a small change, it means either the owner writes the
+   is a genuine burden, and it is the burden translations.md §6.1 was opened
+   over. The licence half of it is settled: a translator's wording may live in
+   git once the v2 consent has shipped, so nothing about the licence keeps the
+   four rows out of a pull request any more. The door is what is left: for
+   anything beyond a small change it still means either the owner writes the
    four translations, or collects them from translators who must then work
    through a pull request (translations.md §2, "Git YAML, contributors, via
-   PR"). That is the wrong door for a non-developer who only wants to fix a
+   PR"), which is the wrong door for a non-developer who only wants to fix a
    sentence.
 2. **Riders translate on production only.** Production's database holds the
    overlay rows that are the live catalogue (translations.md §3); nowhere
@@ -265,7 +270,10 @@ procedure.
    where it was approved, and nothing in the deploy path carries database
    rows between environments. Deploying moves code only, a git clone run
    through `deploy-symfony.sh`; the staging and production workflows never
-   touch each other's database.
+   touch each other's database. translations.md §6.1 answers the want behind
+   this rule: a string that has to be ready on launch day is written in git and
+   rides the release, rather than typed into a staging database that nothing
+   carries forward.
 4. **Before any pull request that edits `messages.en.yaml`, run
    `app:translations:english-export` on production and carry its output
    into that pull request.** Otherwise the next sync finds git disagreeing
@@ -280,10 +288,10 @@ procedure.
    actually revisited.
 6. **A curator's English edit on production is a fast path, not a fork.**
    Reconcile it into git via rule 4. Until then, git and production
-   disagree about that string, on purpose: an in-site English edit is
-   PolyForm product copy, not a rider's CC BY-SA grant (translations.md
-   §6), so there is no licence reason to hold it back from the database
-   while it waits for a pull request.
+   disagree about that string, on purpose: an in-site English edit is our own
+   product copy under the code licence, not a translator's grant
+   (translations.md §6), so there is no licence reason to hold it back from the
+   database while it waits for a pull request.
 7. **After changing English in the YAML, or after pulling a change that
    touches it, run `app:translations:sync`.** Until it runs, `/translate/{id}`
    keeps showing the previous English as the source to translate from, and
@@ -309,7 +317,7 @@ Each row shows: key, English, current live string for the **viewing locale**
 and whether the translation is **stale** (an amber tag, "English changed
 v2 → v3"). A **Stale** chip filters to stale rows (`?stale=1`); stale rows
 sort first in every view. Search is `ILIKE` / trigram on `message_key` and `english` of that
-table — not on `english_at_submit`.
+table, not on `english_at_submit`.
 
 Actions:
 
@@ -325,7 +333,7 @@ Actions:
 `/translate/mine` is the rider's ledger of proposals they submitted
 (pending, needs-info, approved, rejected). Rows are grouped by
 **(locale, key)**; each card is the **latest** version of that pair.
-Clicking the key opens `/translate/mine/{locale}/{id}` — that rider's
+Clicking the key opens `/translate/mine/{locale}/{id}`, that rider's
 full history for the pair, as the same story the curator sees: English,
 the YAML original, then each change oldest-first (first diffs against
 the YAML default; later diffs against the previous live). An open
@@ -345,8 +353,8 @@ language) is not the never-proposed empty state. Pending and needs-info
 link back to the edit form in that proposal's locale, with the pending
 wording in the textarea and a word-level live → proposed diff above it
 (same change block as the curator card). Approved / rejected are
-read-only: the rider's text, the curator note when there is one, and —
-if a curator copy-edited on approve — both original and published.
+read-only: the rider's text, the curator note when there is one, and,
+if a curator copy-edited on approve, both original and published.
 Account deletion still nulls `submitter_id`, so this list exists only
 while the account does. Messages remain the ping; this page is the
 history.
@@ -355,18 +363,20 @@ history.
 form, opened from the page the string is on.
 
 Length: cap `proposed_value` to a generous max (the longest current catalogue
-string plus headroom — state the number in the implementation as a named
+string plus headroom; state the number in the implementation as a named
 constant, not a magic literal). Reject empty strings; a translator who wants
 the YAML default back does not blank the key, they leave it alone.
 
 Submit is refused without an explicit consent tick on the first proposal:
-the rider licenses **this translation** under CC BY-SA 4.0 (§6). Same
-shape as photo consent (photo-uploads.md §4–§5): store a `consent_record`
+the rider licenses **this translation** under the project's translation
+licence, which is AGPL-3.0-only from consent version `v2` and was CC BY-SA 4.0
+under `v1` (§6, §6.1). Same shape as photo consent
+(photo-uploads.md §4–§5): store a `consent_record`
 (wording version + hash) before the proposal row is written. No
 default-true checkbox. **From then on, the given consent is always
 shown.** Once a record exists for the current wording version, later
-keys render a standing notice instead of asking again — "✓ You agreed
-to the translation licence on <date>" — with the contract and the site
+keys render a standing notice instead of asking again, "✓ You agreed
+to the translation licence on <date>", with the contract and the site
 terms one tap away. A new `TranslationConsent::VERSION` brings the tick
 back; never a silent carry-over of stale wording.
 
@@ -613,7 +623,7 @@ approves.
 The queue is a scan: key, locale, status. Queue and History chips switch
 between the open list and `/moderate/translations/history`, including
 when the queue is empty. Clicking the key opens
-`/moderate/translations/{id}` — there is no separate Review / View
+`/moderate/translations/{id}`, and there is no separate Review / View
 button. That history page lists **approved and rejected** groups, one
 card per `(locale, key)`, the **latest** settled version of each, newest
 `createdAt` first, with who submitted. It is not the submissions History
@@ -654,38 +664,47 @@ separate translation-moderator role.
 
 ---
 
-## 6. Licence — CC BY-SA 4.0, not the codebase
+## 6. Licence: UI translations are AGPL-3.0-only
 
-In-site translations are **creative works**, like photographs, not source
-code.
+**Changed 2026-09-10 by the relicensing.** UI translations used to be a
+licence bucket of their own, CC BY-SA 4.0, held deliberately apart from the
+code. They are not any more. A UI translation is now part of the software and
+carries the software's licence, **AGPL-3.0-only**, in the git YAML and in the
+database rows alike. The canonical bucket table is
+[osm-data-architecture.md §3](osm-data-architecture.md); this section is the
+detail for translations and defers to it.
 
 | What | Licence | Where it lives |
 |---|---|---|
-| English keys and English values; developer-shipped locale YAML | PolyForm Shield (the software) | `web/translations/messages.*.yaml` in git |
-| A rider's proposed / approved string | **CC BY-SA 4.0** | `translation_proposal` / `translation_overlay` in the database |
-| A curator's or admin's in-site English edit | **PolyForm Shield** (product copy; owner decision 2026-08-31) | `translation_overlay` with locale `en`, until git absorbs it |
+| English keys and English values; developer-shipped locale YAML | **AGPL-3.0-only** (the software) | `web/translations/messages.*.yaml` in git |
+| A rider's proposed / approved string, granted under consent **v2 or later** | **AGPL-3.0-only** | `translation_proposal` / `translation_overlay` in the database, and git YAML once absorbed |
+| A rider's proposed / approved string, granted under consent **v1** | **CC BY-SA 4.0**, the grant actually given | `translation_proposal` / `translation_overlay` only. See §6.1 |
+| A curator's or admin's in-site English edit | **AGPL-3.0-only** (product copy; owner decision 2026-08-31) | `translation_overlay` with locale `en`, until git absorbs it |
 
 English edits are staff work on product copy, not a rider grant. They need no
-CC BY-SA tick, and `translation_proposal.consent_record_id` is null on an
-`en` row. Because they are PolyForm they **may** go back into
-`messages.en.yaml`: that is what `app:translations:english-export` is for,
-and the sync deletes the overlay once git carries the same words (§3.3). The
-rule below (do not merge overlays into the locale YAML) is unchanged for
-`fr` / `nl` / `de` / `es`.
+consent tick, and `translation_proposal.consent_record_id` is null on an
+`en` row. They **may** go back into `messages.en.yaml`: that is what
+`app:translations:english-export` is for, and the sync deletes the overlay
+once git carries the same words (§3.3).
 
-They are not ODbL (that is map facts) and not PolyForm (that is the app).
-Share-alike and attribution follow CC BY-SA the same way media does: credit
-the Commons (and the translator if they opted into a public profile /
-kept credit; otherwise an anonymous translator). Account deletion unlinks
-the person; the licensed string can stay, same idea as photos
-(account-and-auth.md / photo-uploads.md).
+Translations are not ODbL (that is map facts) and not CC BY-SA (that is the
+media and the wiki). They are the app. What the site actually does about
+credit does not change: credit the Commons, and the translator if they opted
+into a public profile and kept credit, otherwise an anonymous translator.
+Account deletion unlinks the person; the string stays, the same idea as photos
+(account-and-auth.md / photo-uploads.md). What changed is why. For a v2 row
+that credit is a project practice; for a v1 row it is still a CC BY-SA
+obligation, because CC BY-SA requires attribution and that is the grant those
+rows were given under.
 
-**Do not merge overlays back into `messages.{fr,nl,de,es}.yaml`.** That
-would drop CC BY-SA contributor text into PolyForm-licensed source files.
-Git YAML stays the developer default. Overlays stay the live
-contributor catalogue. A backup/export, if one is built, is a **CC BY-SA
-data dump** (separate artifact, licence in the dump), not a git commit of
-those strings into `web/translations/`.
+**The one live constraint is the v1 grant, not the licence family.** A
+translator who ticked the v1 consent granted CC BY-SA 4.0 and nothing else.
+Relicensing the project does not reach backwards into what they agreed to, so
+**rows carrying a v1 consent record still must not be merged into
+`messages.{fr,nl,de,es}.yaml`.** Once §6.1's re-consent has shipped, rows
+carrying v2 are AGPL like the rest of the catalogue and may be absorbed into
+git the same way an English edit is. Until then, git YAML stays the developer
+default and overlays stay the live contributor catalogue.
 
 A DeepL draft is a developer's work product, not a rider's: it is produced on
 the dev environment against that developer's own key, read and reviewed by
@@ -697,94 +716,108 @@ human who stands between the machine output and a reader is still there; it is
 the developer reviewing a git diff before committing, in place of a curator
 reviewing a queue (translations.md §7).
 
-`/licenses` and the contributor terms carry a fourth line next to data /
-media / code: UI translations from the website, CC BY-SA 4.0.
+`/licenses` and the contributor terms no longer carry a separate line for UI
+translations. Translations are code now, so they are covered by the code line,
+AGPL-3.0-only. The buckets those pages list are data (ODbL), media (CC BY-SA
+4.0), wiki prose (CC BY-SA 4.0), code and UI including translations
+(AGPL-3.0-only), and the reserved brand. Any page still showing a fourth
+translations line under CC BY-SA is stale and should be corrected against
+[osm-data-architecture.md §3](osm-data-architecture.md).
 
-### 6.1 Open question: can a rider translation ever move between environments?
+### 6.1 Resolved: a rider translation may move between environments
 
-**Undecided as of 2026-09-01.** The owner asked for the working protocol in
-translations.md §3.4, then found a real hole in the first answer: rule 3
-says a translator can only work on production, but the owner wants
-translators able to work on staging ahead of a feature launch, so
-translations are ready the day it ships. That is impossible today, and the
-missing piece is not a script, it is a licence question. This is
-deliberately left open. Do not re-decide it without reading the reasoning
-below.
+**Decided 2026-09-10 by the relicensing. This was the open question of
+2026-09-01, and it was closed as a side effect of moving the code to AGPL
+rather than by anyone weighing it on its own.** What follows records the
+question, the answer, and the work the answer still leaves to do. Read all
+three before changing anything here.
 
-**The licence facts, which constrain every option.**
+**The question.** The owner asked for the working protocol in
+translations.md §3.4, then found a real hole in the first answer: rule 3 said
+a translator can only work on production, but the owner wants translators able
+to work on staging ahead of a feature launch, so translations are ready the day
+it ships. The blocker was never a script. It was a licence question, because a
+rider's translation and the source tree were two different licences and could
+not be mixed.
 
-- The consent a translator agrees to (`translate.consent.contract`,
-  translations.md §4) grants exactly CC BY-SA 4.0: "I agree to license this
-  translation under CC BY-SA 4.0, and I confirm it is my own work." CC
-  BY-SA carries two obligations, attribution and share-alike; it is not a
-  grant to do anything at all with the work.
-- The Commons therefore cannot redistribute a rider's translation as
-  PolyForm source, because it was never given that right. This is why
-  translations.md §6 keeps the two apart ("Do not merge overlays back into
-  `messages.{fr,nl,de,es}.yaml`"), and it is a legal constraint, not a
-  stylistic preference.
-- A translator who writes wording directly into a pull request is doing a
-  different act under a different licence: translations.md §2's first
-  path, "Git YAML, contributors, via PR." What translations.md §6 forbids
-  is harvesting the live editor's output into that YAML, not a contributor
-  choosing to write YAML from the start. The wrinkle is worth stating
-  plainly: the same person doing the same work is under a different
-  licence depending on which door they used to do it.
+**The answer.** They are one licence now. UI translations are AGPL-3.0-only
+(§6), the same as the catalogue file they would land in, so the wall that made
+this hard is gone. A translation can live in git, move between environments in
+a release like any other YAML, and be edited by a developer in a pull request,
+because all three are the same kind of artifact under the same terms.
 
-**What a fork actually gets.** A fork may use a CC BY-SA dump by complying
-with CC BY-SA, attribution and share-alike; it does not have to retranslate
-from scratch. PolyForm Shield already restricts who may fork the code for
-competing use, so the population free to fork is not the population the
-owner is concerned about here.
+In the vocabulary of the earlier note this is **Path B**: translations ship as
+part of the software. It arrived by a different road. Nobody changed the
+consent wording in order to solve the staging problem; the project relicensed
+for its own reasons and the staging problem stopped existing. The distinction
+matters for what is left to build.
 
-**Path A: keep CC BY-SA and build the dump.** Build an export and import
-pair for the `fr` / `nl` / `de` / `es` overlays as a licensed CC BY-SA
-artifact, exactly what translations.md §6 already anticipates in its own
-words: "A backup/export, if one is built, is a CC BY-SA data dump," a
-separate artifact with the licence in the dump, not a git commit into
-`web/translations/`. Nothing about the deal with contributors changes;
-translations stay out of git. This solves the staging problem: an import
-command reads the dump and writes overlay rows into the target
-environment's database, wherever the dump was produced.
+**What this does not do, and must not be read as doing.**
 
-**Path B: ask for a dual grant.** Change the consent wording so a
-translator grants CC BY-SA to the world, plus a licence to the Commons to
-ship the translation as part of the software. Bump
-`App\Translation\TranslationConsent::VERSION` to `v2`, the single
-re-consent trigger (translations.md §4), which brings the tick back for
-every translator; existing translations keep the `v1` grant and stay
-database-only, exactly as they do today. Translations could then live in
-git. This changes the deal with contributors: some people give freely to a
-commons and would not give the same work to a source-available,
-non-compete product. The wording is worth a lawyer's eye before it goes
-anywhere near a translator.
+- **It does not relicense a translation anyone has already given.** A
+  translator who ticked the v1 consent granted exactly CC BY-SA 4.0: "I agree
+  to license this translation under CC BY-SA 4.0, and I confirm it is my own
+  work." That is the grant that exists. An owner decision about the repository
+  cannot reach back and widen it, and CC BY-SA 4.0's own ShareAlike
+  compatibility route names GPLv3, not AGPLv3, so there is no clean automatic
+  upgrade to lean on either. **Existing v1 rows stay CC BY-SA and stay
+  database-only.**
+- **It does not change what the live editor asks for today.** The form still
+  collects a CC BY-SA tick, because that is what the shipped
+  `App\Translation\TranslationConsent` says. Until the version bump below
+  ships, the code and this spec disagree, and the code is what a translator
+  actually agreed to.
 
-**This is a values decision, not a technical one.** Both paths are
-buildable. The choice is about what the Commons is willing to ask a
-translator to agree to, and it is deliberately left open. Do not build
-either path without this decision being made first, and do not re-litigate
-the reasoning above without reading it.
+**The work this leaves.** Two items, in order, tracked in `docs/TODO.md`:
 
-**A recommendation, not a decision.** From the implementation side, Path A
-is where to start.
+1. **Bump `App\Translation\TranslationConsent::VERSION` to `v2`** with wording
+   that grants AGPL-3.0-only instead of CC BY-SA 4.0. The version bump is the
+   single re-consent trigger (§4), so it brings the tick back for every
+   translator, which is the intended and honest effect: this is a different
+   deal and they should be asked again. The new wording is worth a lawyer's
+   eye before it reaches a translator, for the same reason the old Path B note
+   said so.
+2. **Then, and only then, allow overlays to be absorbed into git.** A row may
+   move into `messages.{fr,nl,de,es}.yaml` when its consent record is v2 or
+   later. A v1 row may not, and the export tooling has to check the record
+   rather than assume. That check is the whole safety mechanism; without it
+   the absorption silently ships CC BY-SA text as AGPL source.
 
-- It solves the problem the owner actually has, translations ready at
-  launch, without asking anyone to renegotiate what they already gave.
-- Path B changes the deal for every contributor, for a benefit
-  (translations living in git) that nobody has asked for on its own merits.
-  Changing the terms of a commons should follow a need that only that
-  change can meet, and this is not one.
-- Path A is reversible. If the dump turns out to be the wrong shape, that
-  is a command to rewrite. A consent version bump is not reversible:
-  contributors who agreed to `v2` cannot be un-asked.
-- translations.md §6 already anticipates the artifact in its own words, so
-  Path A is the direction this document was already pointing.
+**The staging problem, concretely.** With the version bump done, a translator
+works on staging by working in git: the strings ride the release. The export
+and import pair sketched in §3.4 is no longer needed to carry a licence
+boundary across environments, and if it is built anyway it is a convenience,
+not a legal instrument. If it is built before the version bump, it must carry
+v1 rows as CC BY-SA with the licence stated in the file, exactly as the
+earlier Path A note described.
 
-This is a recommendation from the implementation side, not a decision. The
-decision is the owner's, and it stays open.
+**A note for whoever reads this next.** Some people give freely to a commons
+and would not give the same work to a project on other terms. That was the
+honest worry in the original Path B, and relicensing to AGPL does not make it
+disappear; it changes it. AGPL is a free-software licence, so the worry is no
+longer "my work is going somewhere it cannot be taken back out of". It is
+simply that the deal changed after they agreed to it. Asking again, through
+the v2 tick, is the answer to that.
 
-**Sketch: what Path A would look like.** Not specified, not built. Enough
-to judge the shape, nothing more.
+#### 6.1.1 The overlay dump, kept as an optional convenience
+
+The earlier note proposed an export and import pair as the way to carry
+translations across environments without breaking the licence wall. There is
+no wall to work around any more, so the pair is no longer required. The design
+is kept here because it is still the right shape for an operator who wants to
+move overlay rows without a release, and because it is the only written
+description of how such a move should behave.
+
+Two things about it change under §6.1:
+
+- **It is a convenience, not a legal instrument.** Once the v2 consent has
+  shipped, the ordinary way a translation reaches another environment is git.
+- **If it is built before the v2 bump, every row it carries is a v1 CC BY-SA
+  row,** and the file has to say so. After the bump, the dump carries a mix and
+  must record each row's consent version, because that version is what decides
+  whether the row may later be absorbed into git.
+
+**Sketch.** Not specified, not built. Enough to judge the shape, nothing more.
 
 - *Two commands*, in the existing `app:translations:*` style: an export
   that writes the `fr` / `nl` / `de` / `es` overlays of one environment to
@@ -793,15 +826,15 @@ to judge the shape, nothing more.
 - *What a row in the dump has to carry.* The message key and locale, so
   the row lands on the right entry. The wording itself. The
   `english_version` it was made against, so staleness (translations.md
-  §3.3) survives the move rather than resetting silently. Attribution
-  too: CC BY-SA requires credit, and per translations.md §6 and the GDPR
-  rule in translations.md §3.1 that cannot be a denormalised display name
-  baked into the file, so it has to be the rider reference or the
-  anonymous marker, resolved the same way translations.md §4's rider
-  ledger resolves it live.
-- *A licence header in the file itself.* translations.md §6 calls the
-  dump a CC BY-SA artifact; a dump that does not say so in the file is
-  not one.
+  §3.3) survives the move rather than resetting silently. The consent
+  version, per the point above. Attribution too: v1 rows carry a CC BY-SA
+  credit obligation, and per translations.md §6 and the GDPR rule in
+  translations.md §3.1 that cannot be a denormalised display name baked into
+  the file, so it has to be the rider reference or the anonymous marker,
+  resolved the same way translations.md §4's rider ledger resolves it live.
+- *A licence header in the file itself.* A dump that does not state the
+  licence of the rows inside it is not a licensed artifact, whichever licence
+  those rows are under.
 - *A proposal for how this would work.* Not yet specified, not yet built.
   Three positions the owner can accept or reject, not open questions.
 
@@ -844,7 +877,8 @@ to judge the shape, nothing more.
        Suppressing that would hide real work.
 
   This is what would be built, and why each choice falls the way it
-  does. The owner should push back on any of it; none of it is decided.
+  does. The owner should push back on any of it; none of it is decided, and
+  none of it is needed for §6.1's answer to hold.
 
 ---
 
@@ -876,9 +910,11 @@ depends on a server-side override instead. A box that lost that override would
 have been "dev" to the application, and then every rider's translation on every
 non-English locale would have been written into the shipped catalogue file
 rather than a proposal row, with no consent record and nothing for `/moderate`
-to show. That is CC BY-SA text inside PolyForm source (translations.md §6), and
-it cannot be un-shipped by rolling back. The write therefore requires a second
-signal that is genuinely independent of the environment (translations.md §7.1),
+to show. That would ship a rider's words as catalogue source with no consent
+record behind them, and under the v1 grant it would also be CC BY-SA text
+inside AGPL source (translations.md §6). Neither can be un-shipped by rolling
+back. The write therefore requires a second signal that is genuinely
+independent of the environment (translations.md §7.1),
 so a release would have to lose its override AND carry an opt-in nobody set.
 Two configuration gates that fail independently, honestly described as such.
 
@@ -1009,14 +1045,15 @@ fire on the edit that just fixed it, and `english_version` bumps, correctly
 marking the four existing translations of that key stale.
 
 This is allowed for the reason translations.md §6.1 exists in the first
-place: a rider's translation, made through the live editor on production,
-is CC BY-SA 4.0 and cannot ship as PolyForm source (translations.md §6).
-**A developer's is not a rider's.** A developer running DeepL against their
-own key, on their own dev machine, reading the result and committing it, is
-producing the same kind of work product as typing the translation by hand:
+place: a rider's translation, made through the live editor on production under
+the v1 consent, is CC BY-SA 4.0 and cannot ship as AGPL source
+(translations.md §6). **A developer's is not a rider's.** A developer running
+DeepL against their own key, on their own dev machine, reading the result and
+committing it, is producing the same kind of work product as typing the
+translation by hand:
 a contribution to the codebase under the repo's own licence, translations.md
 §2's first write path, "Git YAML, contributors, via PR." No consent tick
-applies, because none is being asked for. No CC BY-SA grant is created,
+applies, because none is being asked for. No rider grant is created at all,
 because nothing here is a rider's live-editor act. There is nothing to
 reconcile against translations.md §6.1, because this path never touches the
 database at all.
@@ -1044,9 +1081,9 @@ the checks:
   is the only person who can act on it. The reason reaches the flash or the
   status line and the log, both.
 
-**This does not reopen translations.md §6.1.** Rider translations made
-through the live editor on production remain CC BY-SA and remain
-database-only, exactly as translations.md §6 and translations.md §6.1
+**This does not disturb translations.md §6.1.** Rider translations already made
+through the live editor on production remain CC BY-SA under their v1 consent and
+remain database-only, exactly as translations.md §6 and translations.md §6.1
 describe. This is a different door, used by different people, for a
 different kind of work, exactly the distinction translations.md §6 already
 draws between a rider's proposal and an in-site English edit. Nothing about
@@ -1134,8 +1171,8 @@ refused as "that key does not exist".
 2. Rider `/translate` propose / update pending.
 3. Curator desk: approve applies overlay; reject / needs-info messages the
    rider.
-4. CC BY-SA consent tick + `consent_record` on submit; overlays never written
-   back into locale YAML.
+4. Consent tick + `consent_record` on submit (CC BY-SA 4.0 as shipped in v1);
+   overlays never written back into locale YAML.
 5. Translate mode on the page (§4.1), English edits by curators (§4.2), and
    English versions with stale flags (§3.3). Specified 2026-08-31; the plan is
    `docs/plans/2026-08-31-translate-mode-and-english-edits.md`.
@@ -1147,18 +1184,19 @@ refused as "that key does not exist".
 **Later:**
 
 - Curator “revert this key to YAML” control (until then: ops runs
-  `app:translations:overlay-delete {locale} {key}` — dry-run by default;
+  `app:translations:overlay-delete {locale} {key}`, dry-run by default;
   `--write` deletes the overlay and invalidates the cache).
 - A rider translation moving between environments (translations.md §6.1):
-  undecided. The licence question has to be settled before this is a
-  script to write.
+  answered 2026-09-10. The licence question that blocked it is settled, and the
+  ordinary answer is git. The remaining work is the consent version bump in
+  §6.1, not a script.
 
 **Out of scope until separately specified:** new locales.
 
 **Per-translator karma** is not a v1 feature. If a later spec adds it, it is
 curator-desk metadata only (“8 of this rider’s last 10 were approved”). It
 must not become a privilege: no auto-approve, no skip-review, no public
-leaderboard, no translator caste. Credit stays the photo pattern — opt-in
+leaderboard, no translator caste. Credit stays the photo pattern: opt-in
 profile, otherwise anonymous. A score that unlocks publishing is the
 translator role coming back through the side door; UI copy is site-wide and
 untrusted.
@@ -1166,6 +1204,7 @@ untrusted.
 **Paying translators** is not a rider feature. If the Commons ever pays for
 copy (a native-speaker pass on Spanish, a bureau dump), that is an
 **operator expense off the website** - same shape as DeepL (translations.md
-§7). The result still goes through `/moderate`, still CC BY-SA, never
-auto-published. Do not
+§7). The result still goes through `/moderate`, and it is commissioned work for
+the software, so it is AGPL-3.0-only like the catalogue, never a rider grant and
+never auto-published. Do not
 put bounties, rates, or karma-to-cash on `/translate`.

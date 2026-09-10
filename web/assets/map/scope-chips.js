@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 //
 // Scope-chip view model (docs/specs/map-and-search.md §4.5): which chips to
 // offer and where they sit. Pure: no DOM, no storage, no map. Ranking helpers

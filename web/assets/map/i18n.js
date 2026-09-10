@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /* Locale bundle + value translation for the map front end.
    A leaf: imports nothing. Pure reads of injected globals plus lookup helpers. */
 

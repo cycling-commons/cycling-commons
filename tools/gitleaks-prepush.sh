@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-License-Identifier: AGPL-3.0-only
 #
 # pre-push secret net: scan the commits being pushed (only the OUTGOING range)
 # with gitleaks before they leave the machine — belt-and-suspenders behind the

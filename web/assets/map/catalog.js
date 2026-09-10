@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /* A–K layer table, towns index, active layers, view mode.
    @see docs/specs/map-and-search.md §4 */
 import { LAYER_L10N } from './i18n.js';

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 // Settings base location (docs/specs/map-and-search.md §4.5): Photon typeahead
 // + radius slider. Map-free — pin-drop is the map page's "Set my area".
 (function () {

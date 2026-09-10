@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-License-Identifier: AGPL-3.0-only
 # Rider photo storage (photo-uploads.md §2, media-storage-architecture.md §2.1).
 #
 # There are deliberately NO storages declared for dev/staging/prod: MediaStorage

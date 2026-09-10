@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-License-Identifier: AGPL-3.0-only
 #
 # Rebuild one continent's Valhalla routing tiles, with Copernicus GLO-30
 # elevation baked into the road grades.

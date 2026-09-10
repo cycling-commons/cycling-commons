@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 // Mobile navigation — adds a hamburger button + slide-in drawer to the site
 // nav on small screens. Self-contained: detects the page's primary nav-links
 // container (the markup varies per page: .nav-links on the landing page,

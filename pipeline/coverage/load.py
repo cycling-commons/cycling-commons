@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """coverage_poi schema bootstrap + per-region atomic load (coverage-provider.md §2-§3).
 
 The table is a pipeline-owned disposable cache: idempotent CREATE at run start,

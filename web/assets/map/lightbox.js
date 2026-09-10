@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /* Photo lightbox and “this photo shows me”.
    @see docs/specs/photo-uploads.md §5, §6c */
 import { escPend, safeHref } from './util.js';

@@ -38,8 +38,9 @@ CI runs all gates on every push: `.github/workflows/ci-app.yml`. Rector (`make a
 
 ## Licensing
 
-- **App code** — [PolyForm Shield 1.0.0](../LICENSE): source-available, non-compete
-- **Data** — [ODbL 1.0](../licenses/COMMONS-DATA-LICENSE.md)
-- **Media** — [CC BY-SA 4.0](../licenses/COMMONS-MEDIA-LICENSE.md)
+- **App code and UI translations** - [AGPL-3.0-only](../LICENSE): free software. Fork it, run it, sell it. If you run a changed version and let people use it over a network, section 13 says those users get your source too.
+- **Data** - [ODbL 1.0](../licenses/COMMONS-DATA-LICENSE.md)
+- **Media** - [CC BY-SA 4.0](../licenses/COMMONS-MEDIA-LICENSE.md)
+- **Name and logo** - [reserved](../TRADEMARK.md), not open licensed. AGPL v3 section 7(e) allows this.
 
 Each vendored package's licence notice is preserved under `vendor/`.

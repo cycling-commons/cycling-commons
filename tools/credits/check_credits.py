@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Keep /credits honest against the dependencies it claims to describe.
 
 The credits page makes one claim: everything the Cycling Commons is built on is

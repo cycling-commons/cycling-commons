@@ -1,0 +1,142 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+#
+# Developer Certificate of Origin 1.1 (https://developercertificate.org/).
+#
+# Every commit in a pull request must carry a `Signed-off-by:` trailer naming
+# its own author. That trailer is how a contributor grants the project a
+# non-exclusive licence to their work, and how they confirm they have the right
+# to grant it.
+#
+# Why a sign-off and not a copyright assignment: Dutch law (art. 2 Auteurswet,
+# and the Wet versterking auteurscontractenrecht in force since 2026-01-01)
+# requires a signed written deed to transfer copyright. A checkbox in a
+# repository cannot do it. A non-exclusive licence needs no deed, so the DCO is
+# the instrument that actually works here.
+#
+# Why it must never be switched off: the sign-off also carries the contributor's
+# agreement to the succession clause in CONTRIBUTING.md, which is what lets the
+# project move to a stichting later without going back to every author for
+# personal consent. A commit merged without a sign-off is a commit that has to
+# be chased down by hand at incorporation.
+name: DCO
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+
+jobs:
+  dco:
+    name: Signed-off-by
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # The whole history, so merge-base can find where this branch left
+          # the base branch. A shallow clone would report unrelated commits.
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Every commit carries its author's sign-off
+        shell: bash
+        env:
+          # Through the environment, never interpolated into the script body:
+          # a branch or title can carry shell metacharacters, a SHA cannot, and
+          # keeping the habit means the next person editing this file is safe
+          # by default.
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+
+          if ! merge_base=$(git merge-base "$BASE_SHA" "$HEAD_SHA" 2>/dev/null); then
+            merge_base="$BASE_SHA"
+          fi
+
+          mapfile -t commits < <(git rev-list --no-merges "$merge_base..$HEAD_SHA")
+
+          if [ "${#commits[@]}" -eq 0 ]; then
+            echo "No non-merge commits in this pull request. Nothing to certify."
+            exit 0
+          fi
+
+          echo "Checking ${#commits[@]} commit(s)."
+          echo
+
+          failed=0
+          for sha in "${commits[@]}"; do
+            short=${sha:0:8}
+            author_name=$(git log -1 --format='%an' "$sha")
+            author_email=$(git log -1 --format='%ae' "$sha")
+            subject=$(git log -1 --format='%s' "$sha")
+
+            signoffs=$(git log -1 --format='%B' "$sha" \
+              | grep -iE '^[[:space:]]*Signed-off-by:[[:space:]]*.+<[^>]+>[[:space:]]*$' || true)
+
+            if [ -z "$signoffs" ]; then
+              echo "::error::$short \"$subject\" has no Signed-off-by trailer."
+              failed=1
+              continue
+            fi
+
+            # The trailer must name the commit's own author. A sign-off in
+            # somebody else's name is a person certifying work that is not
+            # theirs to certify, which is exactly what the DCO forbids.
+            matched=0
+            while IFS= read -r line; do
+              [ -n "$line" ] || continue
+              email=$(printf '%s' "$line" | sed -n 's/.*<\([^>]*\)>.*/\1/p')
+              lower_signed=$(printf '%s' "$email" | tr '[:upper:]' '[:lower:]')
+              lower_author=$(printf '%s' "$author_email" | tr '[:upper:]' '[:lower:]')
+              if [ "$lower_signed" = "$lower_author" ]; then
+                matched=1
+                break
+              fi
+            done <<< "$signoffs"
+
+            if [ "$matched" -eq 0 ]; then
+              echo "::error::$short \"$subject\" is signed off, but not by its author ($author_name <$author_email>)."
+              printf '%s\n' "$signoffs" | sed 's/^/         found: /'
+              failed=1
+              continue
+            fi
+
+            echo "ok   $short  $author_email"
+          done
+
+          if [ "$failed" -ne 0 ]; then
+            cat <<'HELP'
+
+          ------------------------------------------------------------------
+          How to fix this
+          ------------------------------------------------------------------
+          Sign your commits off. The trailer must use your real name and the
+          same email address as the commit author.
+
+            Signed-off-by: Your Name <you@example.com>
+
+          Add it automatically from now on:
+
+            git commit -s -m "your message"
+
+          Fix the most recent commit:
+
+            git commit --amend -s --no-edit
+            git push --force-with-lease
+
+          Fix several commits at once (N = how many):
+
+            git rebase --signoff HEAD~N
+            git push --force-with-lease
+
+          What you are certifying by signing off is the Developer Certificate
+          of Origin 1.1, reproduced in CONTRIBUTING.md and published at
+          https://developercertificate.org/.
+          ------------------------------------------------------------------
+          HELP
+            exit 1
+          fi
+
+          echo
+          echo "All commits certified."

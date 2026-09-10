@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /* Shared edit-item registry for the prototype.
  * One entry per editable feature, keyed by edit-id (a slug of the feature name,
  * or an explicit shared id like 'water-fountain' / 'ride' when several map

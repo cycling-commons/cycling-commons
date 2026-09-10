@@ -1,5 +1,5 @@
 <?php
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 use Rector\Config\RectorConfig;
 
 return RectorConfig::configure()

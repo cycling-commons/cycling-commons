@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 //
 // Node tests for the contribute wizard's review card
 // (web/assets/contribute/review-card.js, docs/plans/2026-08-01-improve-js-i18n.md).

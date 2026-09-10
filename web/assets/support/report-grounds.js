@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /* Which grounds and which extra fields the content-report form shows, as the
    reporter picks what they are reporting and why.
    docs/specs/content-reports.md §5

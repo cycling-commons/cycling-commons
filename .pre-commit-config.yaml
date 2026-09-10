@@ -1,14 +1,17 @@
-# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-License-Identifier: AGPL-3.0-only
 #
 # Local secret-scanning hooks — the FRONT LINE that stops a secret before it
 # reaches the remote (the .github/workflows/secret-scan.yml CI run is only a
 # post-push backstop; GitHub Push Protection is the enforced server-side gate).
-# Install once per clone (installs BOTH hook types via default_install_hook_types):
+# Install once per clone (installs ALL THREE hook types via default_install_hook_types):
 #
 #     pip install pre-commit    # or pipx / brew
 #     pre-commit install
 #
 # Layers:
+#   - prepare-commit-msg : writes the DCO Signed-off-by trailer, so nobody has to
+#                  remember `git commit -s`. It only adds the line; the gate that
+#                  checks it is .github/workflows/dco.yml, on every pull request.
 #   - pre-commit : gitleaks on STAGED changes — blocks the commit before it exists.
 #   - pre-push   : gitleaks on the OUTGOING commit range — catches anything that
 #                  bypassed pre-commit (--no-verify / committed before install),
@@ -19,7 +22,7 @@
 # suite. TruffleHog's value is
 # live-credential *verification* (network calls) — too heavy per-commit, so it
 # runs in CI (--only-verified) instead.
-default_install_hook_types: [pre-commit, pre-push]
+default_install_hook_types: [prepare-commit-msg, pre-commit, pre-push]
 
 repos:
   - repo: https://github.com/gitleaks/gitleaks
@@ -29,6 +32,21 @@ repos:
 
   - repo: local
     hooks:
+      # FIRST because it is the only hook here that writes something rather
+      # than refusing something, and it costs nothing.
+      #
+      # The sign-off is this project's inbound licence grant (CONTRIBUTING.md).
+      # Without it a merged commit has no recorded grant and no agreement to the
+      # stichting succession clause, which turns the handover into a hunt for
+      # every past author. Typing `-s` every time is a rule people keep until
+      # the day they are in a hurry, so the hook types it for them.
+      - id: signoff
+        name: sign-off (DCO trailer on the commit message)
+        entry: tools/signoff-prepare-commit-msg.sh
+        language: script
+        stages: [prepare-commit-msg]
+        always_run: true
+
       - id: gitleaks-prepush
         name: gitleaks (scan commits being pushed)
         entry: tools/gitleaks-prepush.sh

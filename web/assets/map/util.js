@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /* Map helpers: escaping, colour, geometry, photo attach.
    @see docs/specs/security-architecture.md §4.2; docs/specs/photo-uploads.md §5 */
 import { uKm } from './units.js';

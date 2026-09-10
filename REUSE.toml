@@ -1,56 +1,81 @@
 # REUSE (reuse.software) declarations for files that cannot carry their own
-# SPDX header — binaries, data exports, and third-party assets. Everything
-# else declares itself in a first-line SPDX comment (enforced by
-# web/tools/check-spdx.sh and the pre-commit hook).
+# SPDX header, and corrections for files whose header alone would say the wrong
+# thing. Everything else declares itself in a first-line SPDX comment (enforced
+# by web/tools/check-spdx.sh and the pre-commit hook).
 #
-# The full license texts live in LICENSES/; `reuse lint` in CI
+# The full licence texts live in LICENSES/; `reuse lint` in CI
 # (.github/workflows/reuse.yml) fails the build when a file is uncovered.
+#
+# HOW TO READ THIS FILE
+# Later annotations win over earlier ones for the same path, so the file runs
+# general to specific. `precedence = "aggregate"` means an in-file SPDX tag
+# still counts beside the annotation; `precedence = "override"` means the
+# annotation is the whole truth and any in-file tag is ignored. Every block
+# below the catch-all is an override, because each one exists to say "not the
+# default, and here is why".
 version = 1
 SPDX-PackageName = "cycling-commons"
 SPDX-PackageSupplier = "BikeCoders <https://bikecoders.life>"
 SPDX-PackageDownloadLocation = "https://github.com/cycling-commons/cycling-commons"
 
-# ── Catch-all (FIRST on purpose: later annotations override earlier ones) ──
-# Most source files carry their own SPDX-License-Identifier header (enforced
-# by check-spdx.sh) but no per-file copyright line; this supplies the holder
-# and a default license repo-wide, and every group below overrides it where
-# it applies. aggregate = in-file tags still count beside it.
+# ── Catch-all (FIRST on purpose) ─────────────────────────────────────────────
+# Most source files carry their own SPDX-License-Identifier but no per-file
+# copyright line; this supplies the holder and the default licence repo-wide,
+# and every block below overrides it where it applies. `aggregate` is what makes
+# the in-file tag and this copyright line combine instead of compete.
 [[annotations]]
 path = "**"
 precedence = "aggregate"
 SPDX-FileCopyrightText = "© BikeCoders"
-SPDX-License-Identifier = "LicenseRef-PolyForm-Shield-1.0.0"
+SPDX-License-Identifier = "AGPL-3.0-only"
 
-# ── Fonts ────────────────────────────────────────────────────────────────────
-# Three families, all SIL Open Font License 1.1, and the copyright lines are
-# reproduced exactly as their upstream OFL.txt states them.
-#
-# The files served are SUBSETS (latin / latin-ext / vietnamese), and subsetting
-# is modification under the OFL — so §5's Reserved Font Name clause would
-# forbid shipping them under the original names. Checked 2026-08-09 against
-# each family's upstream OFL.txt: NONE of the three declares a Reserved Font
-# Name, so the subsets keep their names.
+# Harvested Wikidata: climb candidates, sides, place lists and item links. The
+# facts are Wikidata's, published CC0, and they are ours only in the sense that
+# we ran the query. Declaring them "© BikeCoders" would claim someone else's
+# database.
 [[annotations]]
-path = "web/assets/fonts/**"
-SPDX-FileCopyrightText = "Copyright 2022 The Bricolage Grotesque Project Authors (https://github.com/ateliertriay/bricolage); Copyright 2021 The Spline Sans Project Authors (https://github.com/SorkinType/SplineSans); Copyright 2022 The Spline Sans Mono Project Authors (https://github.com/SorkinType/SplineSansMono)"
-SPDX-License-Identifier = "OFL-1.1"
+path = "tools/wikimedia/out/**"
+precedence = "override"
+SPDX-FileCopyrightText = "© Wikidata contributors"
+SPDX-License-Identifier = "CC0-1.0"
 
-# ── Brand & imagery ─────────────────────────────────────────────────────────
-# The Cycling Commons brand assets ship with the source but are not code.
+# Verbatim Wikipedia article extracts, kept unedited on purpose so the CC BY-SA
+# attribution stays simple, and rendered on live region pages. Wikipedia prose
+# is CC BY-SA, not CC0 like the Wikidata rows above it.
 [[annotations]]
-path = ["web/assets/brand/**", "web/public/brand/**", "web/public/apple-touch-icon.png", "web/public/favicon.ico", "web/public/site.webmanifest", "atlas/demo/brand/**", "site/brand/**"]
-SPDX-FileCopyrightText = "© BikeCoders"
-SPDX-License-Identifier = "LicenseRef-PolyForm-Shield-1.0.0"
+path = "tools/wikimedia/out/region-context.json"
+precedence = "override"
+SPDX-FileCopyrightText = "© Wikipedia contributors"
+SPDX-License-Identifier = "CC-BY-SA-4.0"
 
-# Region/country flag SVGs (drawn in-repo for the world reference bundle).
+# ── The wiki: prose, not software ────────────────────────────────────────────
+# wiki/ is published at wiki.cyclingcommons.org under CC BY-SA 4.0, the same
+# deal as the media. It is a fifth licence bucket beside code, data, media and
+# brand. Each page also carries its own CC BY-SA header (enforced by
+# tools/check-wiki-spdx.sh); this override stops the catch-all aggregating the
+# code licence onto the prose.
 [[annotations]]
-# The wiki's marker crops: the map's own pins, rendered by /curator/markers
-# and cropped, under the wiki's licence like the prose around them.
-path = ["wiki/assets/markers/**"]
+path = "wiki/**"
+precedence = "override"
 SPDX-FileCopyrightText = "© BikeCoders"
 SPDX-License-Identifier = "CC-BY-SA-4.0"
 
+# The wiki's own stylesheet and scripts are software living inside the prose
+# tree, so they follow the code licence rather than the pages around them.
 [[annotations]]
+path = ["wiki/stylesheets/**", "wiki/javascripts/**"]
+precedence = "override"
+SPDX-FileCopyrightText = "© BikeCoders"
+SPDX-License-Identifier = "AGPL-3.0-only"
+
+# The wiki's marker crops: the map's own pins, rendered by /curator/markers and
+# cropped, under the wiki's licence like the prose around them.
+[[annotations]]
+path = "wiki/assets/markers/**"
+precedence = "override"
+SPDX-FileCopyrightText = "© BikeCoders"
+SPDX-License-Identifier = "CC-BY-SA-4.0"
+
 # Photographs illustrating the wiki. Not ours: each is a third-party file from
 # Wikimedia Commons, kept here rather than hot-linked so a reader's browser
 # never has to talk to a third party to read a page. The licence below is the
@@ -59,16 +84,28 @@ SPDX-License-Identifier = "CC-BY-SA-4.0"
 # the licence obliges it.
 #   pouhon-la-sauveniere-spa.jpg  CC0  Romaine
 #     https://commons.wikimedia.org/wiki/File:Spa-Source_de_la_Sauveni%C3%A8re_(1).jpg
-path = ["wiki/assets/photos/**"]
+[[annotations]]
+path = "wiki/assets/photos/**"
+precedence = "override"
 SPDX-FileCopyrightText = "Romaine, via Wikimedia Commons"
 SPDX-License-Identifier = "CC0-1.0"
 
+# ── Fonts ────────────────────────────────────────────────────────────────────
+# Three families, all SIL Open Font License 1.1, and the copyright lines are
+# reproduced exactly as their upstream OFL.txt states them.
+#
+# The files served are SUBSETS (latin / latin-ext / vietnamese), and subsetting
+# is modification under the OFL, so §5's Reserved Font Name clause would forbid
+# shipping them under the original names. Checked 2026-08-09 against each
+# family's upstream OFL.txt: NONE of the three declares a Reserved Font Name, so
+# the subsets keep their names.
 [[annotations]]
-path = ["web/assets/flags/**", "web/public/media/**"]
-SPDX-FileCopyrightText = "© BikeCoders"
-SPDX-License-Identifier = "LicenseRef-PolyForm-Shield-1.0.0"
+path = ["web/assets/fonts/**", "atlas/demo/fonts/**"]
+precedence = "override"
+SPDX-FileCopyrightText = "Copyright 2022 The Bricolage Grotesque Project Authors (https://github.com/ateliertriay/bricolage); Copyright 2021 The Spline Sans Project Authors (https://github.com/SorkinType/SplineSans); Copyright 2022 The Spline Sans Mono Project Authors (https://github.com/SorkinType/SplineSansMono)"
+SPDX-License-Identifier = "OFL-1.1"
 
-# ── Vendored third-party frontend libraries (self-hosted 2026-08-09) ────────
+# ── Vendored third-party frontend libraries (self-hosted 2026-08-09) ─────────
 # Exact pinned dists, checksum-verified against the registry at vendoring time.
 # MapLibre v6 is ES-module only and its files load each other by relative URL,
 # so it cannot pass through AssetMapper's content hashing and is vendored
@@ -87,31 +124,127 @@ SPDX-License-Identifier = "MIT"
 
 # Scout's FIT reader, copied verbatim from the Scout repository's
 # tools/fit-viewer.html between its own PARSER-START/PARSER-END markers. Same
-# owner as this project, MIT rather than PolyForm — so it stays annotated as
-# what it is, and a re-sync stays a copy rather than a merge.
+# owner as this project, MIT rather than AGPL, so it stays annotated as what it
+# is and a re-sync stays a copy rather than a merge.
 [[annotations]]
 path = ["web/assets/lib/scout-fit.js", "web/tests/fixtures/scout/*"]
 precedence = "override"
 SPDX-FileCopyrightText = "© BikeCoders (Scout)"
 SPDX-License-Identifier = "MIT"
 
-# ── Data exports (ODbL — the open half of the project) ──────────────────────
-# Generated OSM-derived demo/fixture data; ODbL like the database it mirrors.
+# ── Country flags: third-party artwork, not ours ─────────────────────────────
+# 271 SVG flags from flag-icons (https://github.com/lipis/flag-icons) by
+# Panayiotis Lipiridis, MIT. The artwork itself is public domain; the collection
+# and its markup are the upstream project's work. They were previously declared
+# "© BikeCoders" here, which claimed someone else's files. They are not ours,
+# they were never ours, and no licence of ours can be applied to them.
 [[annotations]]
-path = ["atlas/demo/*-osm.js", "atlas/demo/data/**", "web/assets/data/**", "web/tests/fixtures/**", "db/**", "tools/wallonia/fixtures/**", "tools/divisions/fixtures/**", "pipeline/tests/fixtures/**"]
+path = "web/assets/flags/**"
+precedence = "override"
+SPDX-FileCopyrightText = "Copyright (c) 2013 Panayiotis Lipiridis and the flag-icons contributors"
+SPDX-License-Identifier = "MIT"
+
+# The note explaining where the flags come from is our own prose.
+[[annotations]]
+path = "web/assets/flags/README.md"
+precedence = "override"
+SPDX-FileCopyrightText = "© BikeCoders"
+SPDX-License-Identifier = "AGPL-3.0-only"
+
+# ── Standalone media: five Wikimedia Commons photographs ─────────────────────
+# Each photo ships in two sizes (<slug>.jpg large, <slug>-sm.jpg thumbnail) and
+# is copied into three trees (the Symfony app's assets and public root, and the
+# retired atlas demo). Every one is a third-party photograph reused under its
+# own free licence, credited in the drawer at runtime and in MEDIA-CREDITS.md.
+# They were previously declared "© BikeCoders" under the platform licence. Three
+# of the five are CC BY-SA, so that declaration both misattributed the work and
+# ignored a share-alike obligation. The licences below are the photographers'
+# own, taken from Commons.
+#   https://commons.wikimedia.org/wiki/File:Mur_de_Huy_001.jpg
+[[annotations]]
+path = ["web/public/media/mur-de-huy*.jpg", "web/assets/media/mur-de-huy*.jpg", "atlas/demo/media/mur-de-huy*.jpg"]
+precedence = "override"
+SPDX-FileCopyrightText = "Rz98, via Wikimedia Commons"
+SPDX-License-Identifier = "CC-BY-SA-4.0"
+
+#   https://commons.wikimedia.org/wiki/File:Stavelot_Stockeu_Eddy_Merckx_monument.jpg
+[[annotations]]
+path = ["web/public/media/stockeu*.jpg", "web/assets/media/stockeu*.jpg", "atlas/demo/media/stockeu*.jpg"]
+precedence = "override"
+SPDX-FileCopyrightText = "Hoebele, via Wikimedia Commons"
+SPDX-License-Identifier = "CC-BY-SA-4.0"
+
+#   https://commons.wikimedia.org/wiki/File:Abbaye_de_Stavelot.01.jpg
+[[annotations]]
+path = ["web/public/media/stavelot-abbey*.jpg", "web/assets/media/stavelot-abbey*.jpg", "atlas/demo/media/stavelot-abbey*.jpg"]
+precedence = "override"
+SPDX-FileCopyrightText = "Nenea hartia, via Wikimedia Commons"
+SPDX-License-Identifier = "CC-BY-SA-4.0"
+
+#   https://commons.wikimedia.org/wiki/File:Phil_Phil_Phil_on_Côte_de_la_Redoute,_Aywaille,_2011.jpg
+[[annotations]]
+path = ["web/public/media/redoute*.jpg", "web/assets/media/redoute*.jpg", "atlas/demo/media/redoute*.jpg"]
+precedence = "override"
+SPDX-FileCopyrightText = "DimiTalen, via Wikimedia Commons"
+SPDX-License-Identifier = "CC0-1.0"
+
+#   https://commons.wikimedia.org/wiki/File:Signal_de_Botrange_(DSCF6640).jpg
+[[annotations]]
+path = ["web/public/media/botrange*.jpg", "web/assets/media/botrange*.jpg", "atlas/demo/media/botrange*.jpg"]
+precedence = "override"
+SPDX-FileCopyrightText = "Trougnouf (Benoit Brummer), via Wikimedia Commons"
+SPDX-License-Identifier = "CC-BY-4.0"
+
+# ── Data exports (ODbL, the open half of the project) ────────────────────────
+# Generated OSM-derived demo and fixture data; ODbL like the database it
+# mirrors. web/assets/data/ is deliberately absent: races.js there is our own
+# hand-written calendar and regions-data.js carries its own ODbL header, so the
+# directory glob that used to sit here claimed an OSM copyright over first-party
+# code.
+[[annotations]]
+path = ["atlas/demo/*-osm.js", "web/tests/fixtures/catalog/**", "pipeline/tests/fixtures/**"]
+precedence = "override"
 SPDX-FileCopyrightText = "© OpenStreetMap contributors"
 SPDX-License-Identifier = "ODbL-1.0"
 
-# ── The retired HTML demo and static site (pre-Symfony) ─────────────────────
 [[annotations]]
-path = ["atlas/**", "site/**"]
-precedence = "aggregate"
-SPDX-FileCopyrightText = "© BikeCoders"
-SPDX-License-Identifier = "LicenseRef-PolyForm-Shield-1.0.0"
+path = "web/assets/data/regions-data.js"
+precedence = "override"
+SPDX-FileCopyrightText = "© OpenStreetMap contributors"
+SPDX-License-Identifier = "ODbL-1.0"
 
-# ── Config / lockfiles / metadata that carry no creative content ────────────
+# ── The brand: reserved, and deliberately not open ───────────────────────────
+# The logo, the wordmark, their source artwork and the share cards drawn from
+# them. AGPL v3 §7(e) expressly permits declining to grant trademark rights, and
+# this is that declination: the software is free, the mark is not. What is and
+# is not permitted is set out in TRADEMARK.md, and the identifier's text is in
+# LICENSES/LicenseRef-CyclingCommons-Brand.txt.
+#
+# Favicons and application icons are included on purpose. They are pictures of
+# the mark, and licensing a picture of your mark under a free licence gives away
+# the copyright lever that stands behind the trademark one. A fork replaces
+# them, which it has to do anyway because it must carry its own name.
+#
+# site.webmanifest is NOT here: it is a JSON config file naming the icons, not
+# artwork, and a fork needs to edit rather than replace it.
 [[annotations]]
-path = ["**/composer.lock", "**/symfony.lock", "**/*.lock", "**/.gitignore", "**/.gitattributes", "**/.env", "**/.env.*", "**/phpunit.dist.xml", "**/phpstan.dist.neon", "**/psalm.xml", "**/*.neon", "**/.php-cs-fixer.dist.php", "**/importmap.php", "REUSE.toml", ".gitleaks.toml", ".pre-commit-config.yaml", "**/mkdocs.yml", "**/*.yaml", "**/*.yml", "**/*.json", "**/*.cff", "**/*.toml", "**/*.ini", "**/*.txt", "**/*.md", "**/Makefile", "**/Dockerfile", "**/*.conf", "**/*.sql", "**/*.xml", "**/*.editorconfig", "**/.dockerignore"]
-precedence = "aggregate"
+path = [
+  "web/assets/brand/**",
+  "web/public/brand/**",
+  "atlas/demo/brand/**",
+  "web/public/favicon.ico",
+  "web/public/apple-touch-icon.png",
+  "atlas/demo/favicon.ico",
+  "atlas/demo/apple-touch-icon.png",
+  "wiki/assets/favicon.svg",
+  "wiki/assets/logo-nav.svg",
+  "brand-src/gen_logo.py",
+  "brand-src/gen_scout_logo.py",
+  "brand-src/gen_square_logo.py",
+  "brand-src/icon.html",
+  "brand-src/logo-preview.html",
+  "brand-src/og-card.html",
+]
+precedence = "override"
 SPDX-FileCopyrightText = "© BikeCoders"
-SPDX-License-Identifier = "LicenseRef-PolyForm-Shield-1.0.0"
+SPDX-License-Identifier = "LicenseRef-CyclingCommons-Brand"

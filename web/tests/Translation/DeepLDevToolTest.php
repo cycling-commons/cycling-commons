@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 
 declare(strict_types=1);
 
@@ -106,7 +106,10 @@ final class DeepLDevToolTest extends WebTestCase
 
     private function fixtureYaml(string $locale): string
     {
-        return "# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0\ntranslate:\n  deepl_test_key: 'Original {$locale}'\n";
+        // REUSE-IgnoreStart: the identifier below is DATA. It is the header this
+        // test writes INTO a fixture catalogue, not the licence of this file.
+        return "# SPDX-License-Identifier: AGPL-3.0-only\ntranslate:\n  deepl_test_key: 'Original {$locale}'\n";
+        // REUSE-IgnoreEnd
     }
 
     private function createUser(string $email, array $roles = [], ?string $totpSecret = null): User
@@ -709,7 +712,10 @@ final class DeepLDevToolTest extends WebTestCase
 
         file_put_contents(
             $this->scratchPath('en'),
-            "# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0\ntranslate:\n  dev_english_test_key: '{$originalEnglish}'\n",
+            // REUSE-IgnoreStart: the identifier below is DATA. It is the header this
+            // test writes INTO a fixture catalogue, not the licence of this file.
+            "# SPDX-License-Identifier: AGPL-3.0-only\ntranslate:\n  dev_english_test_key: '{$originalEnglish}'\n",
+            // REUSE-IgnoreEnd
         );
 
         return $entry;
@@ -987,7 +993,10 @@ final class DeepLDevToolTest extends WebTestCase
         foreach (self::LOCALES as $locale) {
             file_put_contents(
                 $this->scratchPath($locale),
-                "# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0\ntranslate:\n  consent:\n    contract: 'Original {$locale}'\n",
+                // REUSE-IgnoreStart: the identifier below is DATA. It is the header this
+                // test writes INTO a fixture catalogue, not the licence of this file.
+                "# SPDX-License-Identifier: AGPL-3.0-only\ntranslate:\n  consent:\n    contract: 'Original {$locale}'\n",
+                // REUSE-IgnoreEnd
             );
         }
         $this->useDevTools();

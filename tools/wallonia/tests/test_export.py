@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Unit tests for export.py pure helpers (no network, no cache)."""
 import json
 

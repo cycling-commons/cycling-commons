@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Flag any map module that still references a binding the ENTRY owns.
 
 The split's characteristic failure is a moved function that calls something left

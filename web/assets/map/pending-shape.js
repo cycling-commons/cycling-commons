@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /* Before/after for a proposed climb shape
    (docs/specs/moderation-and-contribution.md §5.2b). One side at a time:
    overlapping lines smear the difference. Overlay owns its own source/layer

@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Tile artifact: coverage_poi → per-(letter, country) GeoJSONL → PMTiles → verification.
 
 One tile layer per osm-data-architecture.md §5 letter, split further by

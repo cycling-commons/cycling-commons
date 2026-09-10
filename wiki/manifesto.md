@@ -47,7 +47,11 @@ afterthought.
 
 **III. Open for everyone.** The data is published under the Open Database Licence (ODbL). Photos,
 video and the written word, this wiki included, are Creative Commons Attribution-ShareAlike 4.0
-(CC BY-SA 4.0), so a picture a rider gives travels as freely as the row it illustrates. A free
+(CC BY-SA 4.0), so a picture a rider gives travels as freely as the row it illustrates. The software
+that serves all of it is free software as well, under the GNU Affero General Public Licence v3
+(AGPL-3.0-only): anyone may run it, study it, change it and fork it, and anyone who offers a changed
+version to others over a network owes them that source in turn. The name, the logo and the wordmark
+are the one thing held back, so a fork rides under its own name. A free
 read API is live in an early, two-endpoint form
 ([cyclingcommons.org/developers/api](https://cyclingcommons.org/developers/api)); bulk exports are
 designed, not yet live. Anyone may build on it, commercial or not.

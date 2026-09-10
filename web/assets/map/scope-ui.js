@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /* Region scope as the map sees it (docs/specs/map-and-search.md §4.5):
    curScope/inScope/scopeToken/scopeLabel, the chip rail, the header, applyScope
    (the one visual update path), and the pan-away widen prompt.

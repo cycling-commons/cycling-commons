@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Find a *verifiably free* Wikimedia Commons photo for a named place.
 
 The point of this tool is the licence check, not the search. It is easy to

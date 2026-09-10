@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 //
 // The map shell: a 48px icon rail plus a 320px drawer that shows ONE section
 // at a time (map-and-search.md §4). These are structural pins over the source

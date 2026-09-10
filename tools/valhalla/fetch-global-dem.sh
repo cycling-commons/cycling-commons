@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-License-Identifier: AGPL-3.0-only
 #
 # Stage Copernicus GLO-30 for every continent, gzipped, one continent at a time.
 # RUNS ON THE VALHALLA HOST.

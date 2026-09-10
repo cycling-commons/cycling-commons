@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 //
 // The map legend collapses on every screen (owner 2026-08-16), and the way it
 // does that is the point of these pins.

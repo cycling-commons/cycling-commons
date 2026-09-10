@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /* Which scope a loaded ride asks for (docs/specs/map-and-search.md §4.5).
    A leaf: no DOM, no map, no storage — the decision alone, so it can be tested. */
 

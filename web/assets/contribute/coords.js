@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /* Coordinate paste for contribute place-search. Refuses a silent lat/lng swap:
    a wrong guess would drop the pin in another country. */
 (function () {

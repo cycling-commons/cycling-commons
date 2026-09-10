@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Offline tests for the onboarding area probe (tools/divisions/README.md step 1).
 
 Pure helpers + file emission via a stub DuckDB connection; the live Overture

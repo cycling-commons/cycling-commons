@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /* MapLibre instance, controls, satellite base, style-ready flag, fly-to-pin,
    right-click coordinates (docs/specs/map-and-search.md §2).
    `map` is adopted from catalog-load.js (built before the catalog fetch). */

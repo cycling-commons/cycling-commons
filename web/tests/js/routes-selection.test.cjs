@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 //
 // Clicking a signed route lights the WHOLE route and dims the rest
 // (owner 2026-08-17, looking at a North Holland screen where a hundred

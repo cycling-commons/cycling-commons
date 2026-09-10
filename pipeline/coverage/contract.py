@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Shared Python/PHP coverage contract (coverage-provider.md §7).
 
 Loads pipeline/contract/coverage-contract.json — the single source of truth for

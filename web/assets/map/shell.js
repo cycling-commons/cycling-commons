@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /* Map shell: icon rail and drawer (docs/specs/map-and-search.md §4).
    One section at a time; the same icon, ✕, or Escape closes it. Ships closed.
    Nothing else opens it. The drawer is a flex sibling of #map, so MapLibre

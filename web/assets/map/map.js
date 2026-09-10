@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /* Map entry (docs/specs/map-and-search.md §4). ES module: catalog-load.js
    injects it once the catalog fetch has populated the CC_* globals. */
 import { I18N, LAYER_L10N, D, tpl, VALUE_TR, trVal, sourceLabel, isRiderSource } from './i18n.js';

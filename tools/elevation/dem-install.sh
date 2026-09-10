@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-License-Identifier: AGPL-3.0-only
 #
 # Install Copernicus GLO-30 elevation for one continent's Valhalla instance.
 # RUNS ON THE VALHALLA HOST. Onboarding playbook step 6b

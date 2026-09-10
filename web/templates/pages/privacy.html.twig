@@ -1,4 +1,4 @@
-{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{# SPDX-License-Identifier: AGPL-3.0-only #}
 {% extends 'base.html.twig' %}
 {#
   `/settings` is behind the firewall, so linking it to a signed-out reader sends
@@ -316,7 +316,7 @@
     <h2>{% trans %}privacy.h_changes{% endtrans %}</h2>
     <p>{% trans %}privacy.changes_body{% endtrans %}</p>
     {# The page promised a new date on change and kept no history, so "we
-       updated it" was unverifiable. The platform is source-available, so the
+       updated it" was unverifiable. The platform is open source, so the
        history already exists in public - this only points at it. The branch in
        the URL is `main` because that is what `symfony-base` becomes at go-live
        (go-live-and-deploy-strategy); until then the link 404s, and so does the

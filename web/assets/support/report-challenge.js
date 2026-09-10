@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /* Solve the proof-of-work on the content-report form, using window.ccPow.
    docs/specs/content-reports.md §5, photo-uploads.md §6c
 

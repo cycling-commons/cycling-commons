@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /* Scout ride review (docs/specs/moderation-and-contribution.md (Scout intake)):
    parse a FIT in the browser, put tags on the map, send one approved tag at a time.
    The ride file is never uploaded — ScoutIntakeController refuses a payload carrying a track. */

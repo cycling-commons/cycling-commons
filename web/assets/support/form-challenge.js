@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /* Solve the proof-of-work on a guarded public form, using window.ccPow.
    docs/specs/contact-and-support.md §3
 

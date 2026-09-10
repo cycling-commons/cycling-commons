@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /* One globe, one shape per country, for the pages that pick or paint
    countries: /regions picks one, /coverage?view=globe paints each by its
    density. MapLibre and the shapes load only when a page asks, from the

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 //
 // The "Add a point" mode button is the TOUCH route to segment control
 // points; right-click stays the pointer route. Two invariants matter and

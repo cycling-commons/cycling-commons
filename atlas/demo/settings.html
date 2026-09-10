@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Cycling Commons — Edit profile</title>
-<meta name="description" content="Edit your contributor profile on the Cycling Commons — identity, privacy, links and preferences. Profiles are opt-in." />
+<title>Cycling Commons: Edit profile</title>
+<meta name="description" content="Edit your contributor profile on the Cycling Commons: identity, privacy, links and preferences. Profiles are opt-in." />
 <meta name="robots" content="noindex" />
 <link rel="canonical" href="https://cyclingcommons.org/settings.html" />
 <link rel="license" href="https://cyclingcommons.org/licenses.html" />
@@ -88,7 +88,7 @@
 </head>
 <body>
 <div class="top">
-  <div class="brandblock" style="display:flex;flex-direction:column;gap:.28rem;align-items:flex-start;flex:none"><a class="brand" href="index.html"><img src="brand/logo-nav.svg" alt="Cycling Commons" style="height:1.8rem;display:block"></a><div class="brandsub" style="font-family:var(--mono,'Spline Sans Mono',monospace);font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(239,230,212,.55);line-height:1.6;white-space:nowrap"><span class="cc-coord">N 48.87° · E 2.29°</span><br>OPEN ATLAS — EST. 2026</div></div>
+  <div class="brandblock" style="display:flex;flex-direction:column;gap:.28rem;align-items:flex-start;flex:none"><a class="brand" href="index.html"><img src="brand/logo-nav.svg" alt="Cycling Commons" style="height:1.8rem;display:block"></a><div class="brandsub" style="font-family:var(--mono,'Spline Sans Mono',monospace);font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(239,230,212,.55);line-height:1.6;white-space:nowrap"><span class="cc-coord">N 48.87° · E 2.29°</span><br>OPEN ATLAS · EST. 2026</div></div>
   <a class="back" id="back-link" href="profile.html">← Back to profile</a>
 </div>
 
@@ -163,22 +163,22 @@
     <div class="submit-row">
       <button class="btn" id="save-btn" type="button">Save profile</button>
       <a class="btn-cancel" id="cancel-link" href="profile.html">Cancel</a>
-      <span class="prov">Demo — this prototype shows the interface and flow; changes aren't stored.</span>
+      <span class="prov">Demo: this prototype shows the interface and flow; changes aren't stored.</span>
     </div>
   </form>
 
   <div class="notice">
-    <b>Profiles are opt-in.</b> Only contributions you choose to show appear publicly — anonymous edits
+    <b>Profiles are opt-in.</b> Only contributions you choose to show appear publicly; anonymous edits
     are never attributed. Data joins the Commons under <b>ODbL 1.0</b>, media under <b>CC BY-SA 4.0</b>.
   </div>
 </div>
 
-<footer class="foot"><div class="fwrap"><span class="mono">CYCLING COMMONS · DATA ODbL 1.0 · MEDIA CC BY-SA 4.0 · CODE POLYFORM SHIELD 1.0.0 · © CONTRIBUTORS + OSM</span><span class="mono"><a href="https://wiki.cyclingcommons.org/">Wiki</a> · <a href="join.html">Get involved</a> · <a href="pages.html">All pages</a> · <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a> · stewarded by <a href="https://bikecoders.life">BikeCoders</a></span></div></footer>
+<footer class="foot"><div class="fwrap"><span class="mono">CYCLING COMMONS · CODE AGPL-3.0-only · DATA ODbL 1.0 · MEDIA + WIKI CC BY-SA 4.0 · NAME + LOGO RESERVED · © CONTRIBUTORS + OSM</span><span class="mono"><a href="https://wiki.cyclingcommons.org/">Wiki</a> · <a href="https://github.com/cycling-commons/cycling-commons">Source code</a> · <a href="join.html">Get involved</a> · <a href="pages.html">All pages</a> · <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a> · stewarded by <a href="https://bikecoders.life">BikeCoders</a></span></div></footer>
 
 <script src="profiles-data.js"></script>
 <script>
   /* Full-page profile editor (prototype). Pre-fills from the shared CC_PROFILES
-     fixture; Save is a mock — it shows a toast and returns to the profile, but
+     fixture; Save is a mock: it shows a toast and returns to the profile, but
      nothing persists. Prototype-only mechanics; the real profile contract is
      docs/specs/account-and-auth.md. */
   const u = new URLSearchParams(location.search).get('u');
@@ -219,11 +219,11 @@
 
   // mock save → toast → return to the profile
   document.getElementById('save-btn').addEventListener('click', () => {
-    toast('Saved — demo, changes aren’t stored');
+    toast('Saved. Demo, changes aren’t stored');
     setTimeout(() => { location.href = profileHref; }, 1100);
   });
 
-  document.title = 'Cycling Commons — Edit ' + P.name;
+  document.title = 'Cycling Commons: Edit ' + P.name;
 </script>
 <script src="a11y.js"></script>
 <script src="races.js"></script>

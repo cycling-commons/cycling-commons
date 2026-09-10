@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /* Unified searchable-item index (docs/specs/map-and-search.md §7.1): every
    curated/DB-backed item once. ITEM_INDEX/IDX_IDS stay private behind readers
    because an ES import cannot reassign them. rebuildItemIndex() rebuilds both. */

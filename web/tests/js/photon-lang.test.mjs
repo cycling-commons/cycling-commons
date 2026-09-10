@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 //
 // Photon speaks default, de, en and fr (map-and-search.md §7.2). A Dutch
 // reader asked for "Antwerpen" and got "Antwerp" (owner, 2026-09-07): the

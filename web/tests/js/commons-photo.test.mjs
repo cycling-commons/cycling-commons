@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 //
 // commons-photo.js: the poll behind the drawer's "Loading image…" spinner
 // (docs/specs/coverage-provider.md §7).

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 //
 // Header/kicker/search-title for the active map scope
 // (docs/specs/map-and-search.md §4.5). Loads as a blocking <script> after

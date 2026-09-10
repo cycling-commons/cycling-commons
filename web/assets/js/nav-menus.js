@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 // Account-chip and language-switcher dropdowns. Closes on outside click, Escape,
 // menu-item choice, or when another menu opens.
 (function () {

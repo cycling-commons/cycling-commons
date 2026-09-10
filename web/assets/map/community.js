@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /* Route community and utility confirmations; curator decide POST.
    @see docs/specs/route-domain.md §6; docs/specs/moderation-and-contribution.md §10 */
 import { I18N, D, tpl, CC_SEASON_LABEL } from './i18n.js';

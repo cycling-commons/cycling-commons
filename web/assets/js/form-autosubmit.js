@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 // data-autosubmit: CSP forbids inline onchange (docs/specs/security-architecture.md §2).
 // requestSubmit() fires submit + constraint validation; submit() is the fallback.
 (function formAutosubmit() {

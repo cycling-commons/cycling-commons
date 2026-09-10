@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 //
 // Rider units (docs/specs/account-and-auth.md §9). Conversion is js/cc-units.js;
 // this wraps the globals for node tests / failed load. Fallback is metric.

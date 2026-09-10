@@ -1,4 +1,4 @@
-{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{# SPDX-License-Identifier: AGPL-3.0-only #}
 {# The one proposal form (translations.md §4, §4.1, §4.2): the full page
    (translate/edit.html.twig) and the chrome-less drawer frame
    (translate/embed.html.twig) both include this, unchanged. There is no
@@ -144,9 +144,9 @@
     {% endif %}
 
     {# The consent block never applies to a dev submit (translations.md
-       §7.3): no CC BY-SA grant is being created, so a tick asking for one,
-       or a line saying one was already given, would be actively misleading
-       for output headed into PolyForm source instead. dev_submit already
+       §7.3): no licence grant is being created at all, so a tick asking for
+       one, or a line saying one was already given, would be actively
+       misleading for output going straight into the catalogue. dev_submit already
        makes `form.consent is defined` false via the createForm() options
        above and $standing null in the controller, so this `not dev_submit`
        is belt and suspenders, not the only thing doing the hiding, but it

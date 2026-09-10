@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /* OSM tag values that are facts rather than prose: a peak's altitude, a
    waterfall's drop, the way a viewpoint faces. Read straight from the harvest
    whitelist (docs/specs/coverage-provider.md §5).

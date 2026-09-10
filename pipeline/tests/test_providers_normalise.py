@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """The generic harvester's normalise step (data-provider-hierarchy.md §5).
 
 No network and no database: the rules that decide what a record IS are worth

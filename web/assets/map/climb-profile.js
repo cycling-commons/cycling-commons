@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /* Full climb profile popup (docs/specs/map-and-search.md §4.3a,
    docs/specs/climb-elevation.md §6). Numbers come from `grad`/`binM`/`footEle`/
    `summitEle` — nothing is re-measured here. */

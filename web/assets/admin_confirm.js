@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 // Confirm destructive admin actions. Forms hook submit (covers Enter); legacy
 // confirm-links hook click. Prompt text is data-confirm from the template.
 (function () {

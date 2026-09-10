@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-License-Identifier: LicenseRef-CyclingCommons-Brand
 """Generate web/assets/brand/scout-logo.svg from the flat-colour Scout raster.
 
 The Scout mark is a pin, three rings and a wordmark in one solid white on one

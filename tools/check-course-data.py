@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Keep `make course-data` honest, because every GIS exercise depends on it.
 
 `course-data` is the one command the GIS course tells a reader to run before

@@ -168,11 +168,11 @@ Article 32 is not on Article 13's mandatory list, and a notice that describes
 what it holds without ever saying how it is guarded reads as though nothing is.
 
 **Four sentences, not seven** (owner, 2026-08-27, revising the first draft).
-The question raised was a fair one: the platform is source-available, so why
-restate the measures at all? Because "read the code" only serves people who read
-PHP, and a rider reading a privacy notice does not. The answer is a short plain
-section that says what is true, plus a line pointing at the source for anyone
-who wants the real thing. The full Art. 32 list is
+The question raised was a fair one: the source is public and anyone may read
+it, so why restate the measures at all? Because "read the code" only serves
+people who read PHP, and a rider reading a privacy notice does not. The answer
+is a short plain section that says what is true, plus a line pointing at the
+source for anyone who wants the real thing. The full Art. 32 list is
 [security-architecture.md](security-architecture.md) 8 and that is canonical.
 
 **Write the four broadly on purpose.** "Two-factor secrets and backup codes are

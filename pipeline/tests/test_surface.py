@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Road-surface line layer (Dated/2026-08-09-surface-line-tiles-design.md)."""
 
 from __future__ import annotations

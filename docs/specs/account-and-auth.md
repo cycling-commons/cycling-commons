@@ -1,4 +1,4 @@
-<!-- SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 -->
+<!-- SPDX-License-Identifier: AGPL-3.0-only -->
 
 # Account & Authentication
 
@@ -1190,9 +1190,10 @@ A pending self-request is what arms the admin **Execute account removal** /
 
 What survives deletion, and why, is stated on the privacy notice rather than
 left implicit: the contributions given to the open map (with provenance), and
-the consent ledger — the evidence that a CC BY-SA licence was granted, kept
-under Art. 17(3)(e) and disclosed under Art. 13(2)(a). Neither identifies the
-person once the `users` row is gone.
+the consent ledger, the evidence that a licence was granted at all (CC BY-SA
+4.0 for a photo; for a translation, whichever consent version the translator
+ticked, translations.md §6), kept under Art. 17(3)(e) and disclosed under
+Art. 13(2)(a). Neither identifies the person once the `users` row is gone.
 
 ---
 

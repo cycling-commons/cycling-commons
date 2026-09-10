@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 //
 // share-links.js: what the Share button copies, and what map.js reads back
 // (docs/specs/map-and-search.md §8).

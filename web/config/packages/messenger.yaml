@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-License-Identifier: AGPL-3.0-only
 #
 # The async tier (media-storage-architecture.md; plan task 1). One bus, one
 # Redis-stream transport, a failure transport - and NO when@prod gating: the

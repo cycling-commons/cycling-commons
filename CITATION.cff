@@ -7,14 +7,18 @@ authors:
   - name: "BikeCoders"
     website: "https://bikecoders.life"
 abstract: >-
-  An open, community-built commons of non-personal cycling data — both the practical (climbs,
+  An open, community-built commons of non-personal cycling data, both the practical (climbs,
   water, bike-friendly stays, road conditions) and the experiential (viewpoints, heritage, quality
-  rides) — distinguished by a curation layer in which riders curate, vote on, and keep it fresh,
-  served by a source-available platform.
+  rides), distinguished by a curation layer in which riders curate, vote on, and keep it fresh,
+  served by a free-software platform.
   Data is licensed under ODbL 1.0, media under CC BY-SA 4.0, and the platform code under the
-  PolyForm Shield License 1.0.0.
+  GNU Affero General Public License version 3 (AGPL-3.0-only).
 repository-code: "https://github.com/cycling-commons/cycling-commons"
 url: "https://cyclingcommons.org"
+# `license` is the licence of the software in this repository. The data
+# (ODbL-1.0) and the media and wiki prose (CC-BY-SA-4.0) are licensed
+# separately and are not covered by it. See README.md.
+license: AGPL-3.0-only
 license-url: "https://github.com/cycling-commons/cycling-commons/blob/main/LICENSE"
 keywords:
   - cycling

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /* Resolve a duplicate finding on the map (?finding=<id>).
  *
  * The data desk can only ask the question flat: two names, two ids, a distance.

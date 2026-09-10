@@ -1,4 +1,4 @@
-<!-- SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 -->
+<!-- SPDX-License-Identifier: AGPL-3.0-only -->
 
 # Where the law we cite actually is
 
@@ -25,12 +25,31 @@ the provision that allows it.
 | GDPR, RGPD, AVG, DSGVO | Regulation (EU) 2016/679, general data protection | <https://eur-lex.europa.eu/eli/reg/2016/679/oj> |
 | DSA | Regulation (EU) 2022/2065, Digital Services Act | <https://eur-lex.europa.eu/eli/reg/2022/2065/oj> |
 | The child-abuse directive | Directive 2011/93/EU | <https://eur-lex.europa.eu/eli/dir/2011/93/oj> |
+| AGPL-3.0-only | GNU Affero General Public License v3, for the code and the interface, translations included | <https://www.gnu.org/licenses/agpl-3.0.html> |
 | ODbL 1.0 | Open Database License, for the data | <https://opendatacommons.org/licenses/odbl/1-0/> |
-| CC BY-SA 4.0 | For media and interface text | <https://creativecommons.org/licenses/by-sa/4.0/> |
+| CC BY-SA 4.0 | For standalone media and for the wiki prose | <https://creativecommons.org/licenses/by-sa/4.0/> |
 
 The GDPR has four names in the five languages this site speaks, and the copy
 uses whichever one a reader of that language would recognise. They are the same
 regulation and they link to the same text.
+
+Two notes on the licence rows, because the mapping has been got wrong before.
+
+**Interface text is code, not media.** The strings on the page, and the
+translations of them, ship in the software and carry the software's licence.
+CC BY-SA covers standalone media (rider photographs and the Wikimedia
+photographs we reuse) and the wiki prose at wiki.cyclingcommons.org. It does
+not cover a button label. See
+[translations.md §6](translations.md) for the translation ledger and the one
+constraint that still applies to strings given under the older consent wording.
+
+**AGPL section 13 is a duty we owe our own users, not only a rule for forks.**
+Anyone interacting with this software over a network must be offered its
+Corresponding Source. The full posture, the bucket table it belongs to, and the
+reserved brand are in
+[osm-data-architecture.md §3](osm-data-architecture.md), which is canonical.
+The licence texts themselves live in `LICENSES/`, and `TRADEMARK.md` covers the
+name and the logo, which are deliberately not open.
 
 ## The articles we lean on, and where
 

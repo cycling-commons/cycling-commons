@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Judge the harvested climb sides, so a human reviews 20 rows instead of 143.
 
 `climb_sides.py` writes candidates and says plainly that it cannot tell a road

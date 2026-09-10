@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """run.py — Geofabrik download step (override, md5 skip, mismatch abort) and
 main() orchestration (stage order, per-region failure isolation, exit code)."""
 import hashlib

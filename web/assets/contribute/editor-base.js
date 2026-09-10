@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /* Satellite + Mapillary coverage for contribute editor maps. Not a reuse of
    map/mapillary.js (that module binds the /map singleton). Click opens
    mapillary.com in a new tab so unsaved geometry is not lost. */

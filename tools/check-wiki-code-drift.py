@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Keep quoted code in the wiki honest against the code it quotes.
 
 The GIS course teaches from real excerpts of this repo. That is the point —

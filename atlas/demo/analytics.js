@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 // Visitor analytics (self-hosted Umami) — loaded ONLY on the production hosts below.
 // On localhost / 127.0.0.1 / file:// / staging it does nothing, so local dev is never tracked.
 // Add prod hostnames here if more are introduced.

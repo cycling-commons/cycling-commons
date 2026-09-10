@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Mechanical pre-screen of the seeded curated rows (B climbs, I scenic, J history).
 
 The owner reads all 199 before launch (docs/TODO.md, "Content review"). Two of

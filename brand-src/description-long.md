@@ -1,7 +1,7 @@
 # Cycling Commons - long description
 
 Full-length text for press pages, partner intros, directory listings,
-and anywhere a real story fits. About 350 words. For shorter blocks,
+and anywhere a real story fits. About 400 words. For shorter blocks,
 use `boilerplate.md`.
 
 ---
@@ -17,9 +17,13 @@ points, bike-friendly stays, hazards and road conditions on one side;
 the viewpoints worth stopping for, the heritage worth a detour, and the
 rides worth doing for their own sake on the other. The data is
 published under the Open Database License (ODbL), free for anyone to
-use, build on, and improve. Even commercial apps can build on the
-Commons and contribute back, but the Commons is independent and built
-to outlive any single app.
+use, build on, and improve. The software behind it is open source
+too, under the GNU Affero General Public License v3 (AGPL-3.0-only):
+anyone can run, study, change and fork the whole platform, and anyone
+who offers a changed version as a service passes the same source on.
+The name and the logo stay with the project, so a fork carries its own.
+Even commercial apps can build on the Commons and contribute back, but
+the Commons is independent and built to outlive any single app.
 
 The problem it answers is simple. Cycling knowledge is scattered:
 climbs in one app, routes in another, places to sleep in a third, road
@@ -43,4 +47,5 @@ on; it is a governed commons, designed so it cannot be enclosed later,
 even by the people who started it.
 
 Cycling Commons is maintained by BikeCoders as a standalone open-data
-project.
+project. Data: Open Database License (ODbL). Code: GNU AGPL v3
+(AGPL-3.0-only).

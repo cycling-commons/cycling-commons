@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 //
 // osm-tags.js: the scenic-view facts OSM holds and the drawer now shows
 // (docs/specs/coverage-provider.md §5). Both helpers exist because OSM values

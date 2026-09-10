@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /* Located-correction picking (docs/specs/route-domain.md §7): the rider marks
    stretches of a route a correction applies to, two clicks per stretch.
    Captured fractions stay in _pickSegs until a successful suggest POST.

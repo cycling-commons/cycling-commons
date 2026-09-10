@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 // Client half of the rider's unit preference (docs/specs/account-and-auth.md §9).
 // Inputs are METRIC (what the app stores and every API returns). Conversion is
 // the last step before a number becomes text — nothing is stored in miles/feet.

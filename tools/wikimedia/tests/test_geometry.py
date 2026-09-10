@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Pure geometry in the wikimedia harvest tools (no network).
 
 These four functions decide where a climb IS. Every one of them fails

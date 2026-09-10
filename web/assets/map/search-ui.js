@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /* Sidebar search: towns, item index, coverage lookup, widen chip.
    @see docs/specs/map-and-search.md §7 */
 import { I18N, D, tpl } from './i18n.js';

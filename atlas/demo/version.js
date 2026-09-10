@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /* Cycling Commons — demo build marker (shown on every page).
  *
  * Maintenance: bump `number` by hand (whole numbers — v1, v2, v3 …) whenever you cut a new demo

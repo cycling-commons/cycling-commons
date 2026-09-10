@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /* The vendored Scout FIT reader, against a real Scout-recorded scenario file.
  *
  * The point of this test is NOT to re-test Scout's parser — Scout has its own

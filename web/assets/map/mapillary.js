@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /* Mapillary street-level imagery (docs/specs/map-and-search.md §10): sequence
    tiles, lazily injected viewer, bottom dock. MLY_ENABLED gates the feature
    on a real token so init can be called unconditionally. */

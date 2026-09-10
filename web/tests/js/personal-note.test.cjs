@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 //
 // The personal sentence of the drawer (data-provider-hierarchy.md §6.7.3):
 // fetched only for a signed-in rider, memoised per item so reopening a

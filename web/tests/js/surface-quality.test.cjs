@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 //
 // The quality channel is agreed by three parties: the CONTRACT names the OSM
 // smoothness values the extractor ships as `sm`, the CLIENT maps each to a

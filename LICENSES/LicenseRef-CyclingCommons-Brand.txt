@@ -1,0 +1,30 @@
+Cycling Commons Brand Assets - All Rights Reserved
+
+Copyright (c) 2026 BikeCoders (https://bikecoders.life)
+
+The files covered by this identifier are the Cycling Commons brand assets: the
+logo, the wordmark, their source artwork, and the derived social and share
+images. They are NOT covered by the AGPL-3.0-only licence that governs the
+Cycling Commons software, and no licence to them is granted by that licence,
+by contributing to this repository, or by receiving a copy of it.
+
+GNU AGPL version 3 section 7(e) expressly permits declining to grant rights
+under trademark law. This is that declination. You have the full freedom the
+AGPL gives you over the software. You have no rights over the marks.
+
+What you may do without asking, and what needs written permission, is set out
+in TRADEMARK.md at the root of this repository. In short:
+
+  Permitted    Referring to the Cycling Commons by name, truthfully, to say
+               what your work is, does, or is derived from.
+
+  Not          Using the name, logo or wordmark to name a fork, a modified
+  permitted    version, a hosted service, a product, a company, a domain or
+  without      an account; using the logo or wordmark as your own icon or
+  permission   avatar; altering either; or implying endorsement.
+
+If you distribute a modified version of the Cycling Commons software, remove
+or replace the files carrying this identifier and give your version its own
+name. The software is yours to fork. The name is not.
+
+Permission requests: info@cyclingcommons.org

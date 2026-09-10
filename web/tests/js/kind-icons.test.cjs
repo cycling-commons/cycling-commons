@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 //
 // The pin grammar (docs/specs/data-provider-hierarchy.md §6.3): kind lives in
 // the glyph, state is two shared badges. waterKind() and stateOf() are the

@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Harvest Wallonia tourist accommodation from the official PIVOT database.
 
 Source: "Les offres touristiques en Wallonie" (Tourisme Wallonie / CGT), published **CC-BY 4.0**

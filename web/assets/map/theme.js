@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /* Map chrome theme toggle (docs/specs/map-and-search.md §4.6).
    html[data-map-theme] carries the palette; this control flips it and persists
    the choice — profile for a logged-in rider (window.CC_MAP_THEME), localStorage

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /* Wizard review-step DOM builders (docs/specs/moderation-and-contribution.md §1).
    No innerHTML: every node is createElement + textContent. textContent cannot
    produce an element, so rider text and catalogue copy stay characters.

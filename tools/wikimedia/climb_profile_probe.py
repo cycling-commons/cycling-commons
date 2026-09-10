@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Print a stored climb's elevation profile, to see WHERE a bad segment is.
 
 `app:climbs:recompute` reports that a climb has a -12% segment. It does not say

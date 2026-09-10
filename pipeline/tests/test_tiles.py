@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """tiles.py — GeoJSONL export shape, tippecanoe build, go-pmtiles verify.
 
 The export test rides the shared `db` conftest fixture (isolated

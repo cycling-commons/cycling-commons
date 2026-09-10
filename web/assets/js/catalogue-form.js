@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /* The dev catalogue form's two safety rails (docs/specs/translations.md §7.3).
 
    The form carries one text field per rider locale and one tick box per

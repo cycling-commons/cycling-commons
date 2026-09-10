@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 //
 // The zoom at which the gap grid hands over to the to-do lines is agreed by
 // three parties, and all three have to say the same number.

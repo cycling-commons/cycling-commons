@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 // Runtime config for the Atlas demo. Copy this file to `config.js` (which is
 // git-ignored) and fill in your own values. On deploy, place config.js on the
 // server manually — it is never committed.

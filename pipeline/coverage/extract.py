@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """osmium tags-filter step (coverage-provider.md §3 step 2).
 
 Reduces a Geofabrik region PBF to the osm-data-architecture.md §5 selector

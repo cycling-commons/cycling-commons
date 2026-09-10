@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Config-driven generic POI harvester: selectors → per-province fetch → dedupe → cap → fixture."""
 import json
 import hashlib

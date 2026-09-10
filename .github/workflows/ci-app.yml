@@ -1,9 +1,9 @@
-# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-License-Identifier: AGPL-3.0-only
 name: App CI
 # pipeline/contract/** is in scope deliberately: web/tests/Catalog/CoverageContractTest.php
 # pins that contract file (serviceKind parity + TAG_WHITELIST subset of storedTagKeys,
 # coverage-provider.md §7). Without this path the guard never runs on the change it
-# exists to catch — editing the contract alone triggered no workflow at all.
+# exists to catch: editing the contract alone triggered no workflow at all.
 on:
   pull_request:
     paths: ['web/**', 'pipeline/contract/**', 'tools/wikimedia/name_key_cases.json', 'Makefile', '.github/workflows/ci-app.yml']
@@ -41,7 +41,7 @@ jobs:
           php-version: '8.4'
           # imagick and redis are hard requires in composer.json (photo
           # processing, and sessions/cache/messenger), and setup-php does not
-          # ship either by default — without them `composer install` fails the
+          # ship either by default. Without them, `composer install` fails the
           # platform check before a single test runs.
           extensions: ctype, iconv, imagick, pdo, pdo_pgsql, redis
           coverage: none
@@ -64,14 +64,14 @@ jobs:
       # translation_entry / overlay rows when they need them.
       - run: php bin/console app:translations:sync --env=test
       # World reference data (continents, countries, ISO 3166-2 subdivisions)
-      # is seeded out-of-band, never by a migration — `make test-db-reset` does
+      # is seeded out-of-band, never by a migration: `make test-db-reset` does
       # exactly this step for the local test DB. The region, country-interest
       # and moderator-area tests validate country codes against those rows, so
       # a database that is migrated but empty of countries fails 24 tests with
       # `"ES" is not a known country code`.
       - run: php bin/console app:world:import --env=test
       - run: php bin/phpunit
-      # Map scope-model smoke tests (07-20 review finding 8) — plain node:test,
+      # Map scope-model smoke tests (07-20 review finding 8): plain node:test,
       # no npm install; the runner image ships Node.
       - run: node --test tests/js/*.test.cjs
       # .mjs separately, exactly as `make scope-test` does: the ES-module tests

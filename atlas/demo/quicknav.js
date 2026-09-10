@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 // Page quick-nav (dev affordance) — a floating panel to jump between prototype
 // pages. Self-contained: injects its own styles and markup, so a single
 //   <script src="quicknav.js"></script>

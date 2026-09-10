@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /* Uncurated OSM coverage from PMTiles (docs/specs/coverage-provider.md §4–§6).
    Gated on COVERAGE_ON — a real CC_COVERAGE_URL plus a loaded pmtiles lib.
    Absent either, every export is a no-op. */

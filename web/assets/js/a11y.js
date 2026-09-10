@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 // Skip-to-content link. Sibling walk skips announcement bars so a flash notice
 // is never stamped id="main" (improve/add-climb wizards have no <main>).
 (function a11y(){

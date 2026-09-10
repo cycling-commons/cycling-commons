@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!-- SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 -->
+<!-- SPDX-License-Identifier: AGPL-3.0-only -->
 <!--
     strictBinaryOperands: Psalm 6 flipped this default to true, which flags
     every int/float mix ("$total / $bins") as InvalidOperand - 53 findings at

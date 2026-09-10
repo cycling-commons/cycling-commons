@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """coverage.load — schema bootstrap + per-region atomic swap, against the dev PostGIS."""
 
 import psycopg

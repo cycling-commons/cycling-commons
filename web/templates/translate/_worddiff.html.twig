@@ -1,4 +1,4 @@
-{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{# SPDX-License-Identifier: AGPL-3.0-only #}
 {%- for s in segments -%}
   {%- if s.type == 'del' -%}<span class="q-was">{{ s.text }}</span>
   {%- elseif s.type == 'ins' -%}<span class="q-now">{{ s.text }}</span>

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-License-Identifier: AGPL-3.0-only
 #
 # Download the latest continent OSM extracts from Geofabrik.
 # RUNS ON THE VALHALLA HOST (or anywhere with disk to spare).

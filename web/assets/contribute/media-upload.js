@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /* Wizard photo uploads (docs/specs/photo-uploads.md §4).
    Async scan: preview the rider's own file; after 30s stop WAITING, keep the
    id, do not abandon the scan. Consent is fail-closed: consentId is set only

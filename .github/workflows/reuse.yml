@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-License-Identifier: AGPL-3.0-only
 #
 # Machine-verifiable per-file licensing (reuse.software): every file in the
 # tree must resolve to a licence, either through its own SPDX header
@@ -8,8 +8,11 @@ name: REUSE compliance
 on:
   push:
     # staging and production are deploy sources; a licence regression must
-    # fail before a release, not after it.
-    branches: [main, staging, production]
+    # fail before a release, not after it. symfony-base is where the work
+    # itself happens, and licence headers get written there one file at a
+    # time, so a half-finished sweep has to fail on the branch that made it
+    # rather than weeks later at the merge.
+    branches: [main, staging, production, symfony-base]
   pull_request:
 
 jobs:

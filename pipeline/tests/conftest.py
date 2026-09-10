@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Shared pytest fixtures for the coverage pipeline suite.
 
 Runs INSIDE the pipeline container (osmium-tool + pyosmium come from the image):

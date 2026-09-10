@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# SPDX-License-Identifier: LicenseRef-CyclingCommons-Brand
 """Generate atlas/demo/brand/logo-nav.svg: the single-line nav wordmark with text
 outlined to vector paths (so it renders without the web font) + the teardrop-O
 mark. Colours are baked for the dark (ink) header.

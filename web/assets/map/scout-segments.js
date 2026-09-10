@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /* Surface stretches from a Scout ride
    (docs/specs/moderation-and-contribution.md (Scout intake)):
    a start/END tap pair plus the track → the line intake accepts and the map draws.

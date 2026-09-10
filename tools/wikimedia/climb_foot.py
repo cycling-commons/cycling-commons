@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Find where a climb STARTS, given its summit and how long it is.
 
 The gap that stopped `climb_candidates.py` from being an importer: Wikidata

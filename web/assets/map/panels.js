@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /* Map panels and chrome (docs/specs/map-and-search.md §4, §4.1, §4.2, §4.3):
    layer list, base picker, legend, chips, Curated facets.
    initChips() must run after initScopeRail()/initAreaNudge() (it fires the
