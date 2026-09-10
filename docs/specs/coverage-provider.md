@@ -1071,6 +1071,21 @@ emptied bucket does not surface as a zero. Measured after: unscoped 0.06 s.
 The migration's one full count took 51 s on dev; on prod expect minutes, in
 the deploy window.
 
+**The recount reaches its bucket through an index (2026-09-10,
+`Version20260910150000`).** `coverage_count_refresh()` addresses a bucket as
+`COALESCE(country_code, '')` and `COALESCE(region_id, 0)`, so a NULL country
+or region is a bucket of its own; that is right, and it is why the plain
+bucket index was never used. The planner walked every row of the letter
+(476 000 for history) and called `coverage_poi_shown()` on the way: 350 ms a
+recount, and a curator's one-tap confirm fires six (owner: "just takes a
+long time", 5.5 s). `coverage_poi_bucket_key_idx` on the same two COALESCE
+expressions plus `letter` makes it 29 ms with the predicate untouched, so
+the rule stays defined once; `coverage_count_install()` creates it wherever
+it creates the other, and `item.source_ref` gets `idx_item_source_ref` for
+the claim lookup inside the predicate. The six recounts of one tap are still
+six; a per-transaction dedupe is the next step if a heavier write path ever
+needs it.
+
 ## Open questions
 
 - **Multipolygon relations** (~1–3 % of objects, e.g. some castles) are not in
