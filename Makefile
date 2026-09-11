@@ -242,6 +242,13 @@ test-db-reset: ## Drop + rebuild the test DB (PostGIS ext, migrations, world dat
 	@$(DOCKER_COMP) exec -T -e DATABASE_URL='$(TEST_DB_URL)' app php bin/console app:world:import
 	@echo "✔ Test DB rebuilt. Run the suite with: make app-test (or docker exec -e APP_ENV=test … php bin/phpunit)"
 
+app-schema-comments: ## Write each table's purpose into the database, so DBeaver and psql show it
+	@$(DOCKER_COMP) exec -T app php bin/console app:schema:comment-tables
+	@echo "  A Doctrine table takes the first paragraph of its entity docblock; the rest"
+	@echo "  are listed in web/config/table_comments.yaml. Idempotent. Run it after a"
+	@echo "  migration and after a coverage harvest, which recreates its tables and drops"
+	@echo "  their comments (docs/specs/dev-environment.md §9)."
+
 app-translations-sync: ## Project new English keys into translation_entry so /translate can see them
 	@$(DOCKER_COMP) exec -T app php bin/console app:translations:sync
 	@echo "  Run this after adding English strings. The pre-commit gate only checks that"

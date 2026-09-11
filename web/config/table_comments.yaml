@@ -1,0 +1,70 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# What each table is for, as a database reader sees it.
+#
+# Most tables do not appear here. A Doctrine-mapped table takes its comment
+# from the first paragraph of its entity class docblock (App\Doctrine\TableComments),
+# so the explanation lives beside the code that defines the columns and can
+# never drift from it. This file carries the rest:
+#
+#   - tables the Python pipeline or a hand-written migration creates, which
+#     have no entity to read a docblock from;
+#   - tables a bundle creates for us;
+#   - the occasional entity whose docblock opens with something that reads
+#     badly on its own in a schema browser. An entry here always wins.
+#
+# Run `bin/console app:schema:comment-tables` to write these into the
+# database. It is idempotent, so run it after every migration and after every
+# pipeline harvest that recreates a coverage table.
+tables:
+    # Pipeline-owned (pipeline/coverage/load.py). Recreated by a harvest.
+    coverage_poi: >-
+        Read-only OpenStreetMap features cached for the map, one row per (ref, letter).
+        Diff-merged by the Python harvest, so nothing hand-written here survives a re-import;
+        our own edits live in `item`.
+    coverage_source: >-
+        One harvested extract (a country or region file), named by slug. Every coverage_poi
+        row points at the source it came from, so a re-import can replace exactly its own rows.
+    coverage_count: >-
+        Kept counts of visible coverage rows per bucket, maintained by database triggers on
+        `item` and `coverage_poi`. It exists so the map's counts endpoint sums a few thousand
+        rows instead of walking two million.
+
+    # Caches of somebody else's data, keyed so a re-harvest cannot destroy them.
+    commons_photo: >-
+        Cached Wikimedia Commons photo metadata, keyed by Commons filename. Deliberately not a
+        column on coverage_poi, which a re-harvest rewrites.
+    wikidata_image: >-
+        Cached Wikidata P18 image lookups, keyed by QID. Stores empty answers too, so a place
+        with no picture is not asked about again.
+    town_summary: >-
+        Cached Wikipedia extract and Wikidata facts for a town, one row per (OpenStreetMap ref,
+        language). `answered` true with no title means "this place has no Wikipedia page".
+    link_verdict: >-
+        Google Safe Browsing verdict for one URL, keyed by a hash of it. A fact about a URL and
+        not about an item, so every item pointing at the same page shares one row and the
+        scheduled re-check sweeps distinct URLs.
+
+    # Hand-written migrations.
+    system_setting: >-
+        Admin-set overrides for editorial thresholds. A key with no row sits at its code default,
+        so this table is empty until somebody changes something.
+    data_provider_change: >-
+        Append-only history of every edit to a data_provider row. `data_provider` says what a
+        provider is now; this says how it got there.
+    github_contributor: >-
+        One GitHub login whose pull requests were merged and approved, with the window of those
+        pull requests. Feeds the contributor count and arrival graph on the governance page.
+
+    # Entities whose docblock does not stand alone.
+    reset_password_request: >-
+        One outstanding password-reset request: a hashed selector, its expiry, and the account it
+        belongs to. Rows are consumed on use and swept when they expire.
+
+    # Created for us by a bundle or an extension.
+    doctrine_migration_versions: >-
+        Doctrine bookkeeping: which migrations this database has run. Never edit by hand.
+    messenger_messages: >-
+        Symfony Messenger queue: jobs waiting to run, being run, or parked as failed. Transient.
+    spatial_ref_sys: >-
+        PostGIS reference table of spatial reference systems (EPSG codes). Owned by the
+        extension, not by us.

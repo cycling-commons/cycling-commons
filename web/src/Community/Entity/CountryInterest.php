@@ -10,7 +10,7 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * Country demand signal. Not tied to a region — most countries have none yet.
+ * Country demand signal. Not tied to a region, because most countries have none yet.
  *
  * @see docs/specs/moderation-and-contribution.md §11
  *

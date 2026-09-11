@@ -507,6 +507,38 @@ REDIS_URL=redis://host.docker.internal:6379
   (3) `app:world:import` (world reference data is seeded out-of-band, and
   moderator-area tests validate country codes against it).
 
+## 9. Schema documentation: every table says what it is for
+
+Open any table in DBeaver, pgAdmin or `psql \d+` and its `Comment` box says
+what the rows are. That is a Postgres `COMMENT ON TABLE`, applied by
+`bin/console app:schema:comment-tables` (`App\Command\SchemaCommentTablesCommand`).
+
+**Where the text comes from.** A Doctrine-mapped table takes the first
+paragraph of its entity class docblock, so the explanation lives beside the
+columns it explains and cannot drift from them. Everything else, the Python
+pipeline's `coverage_*` tables, the caches built by hand-written migrations,
+and the tables a bundle creates for us, is listed in `config/table_comments.yaml`.
+A YAML entry always wins, which is the escape hatch for an entity whose
+docblock opens with something that reads badly on its own.
+
+**Why a command and not a migration.** Doctrine accepts
+`#[ORM\Table(options: ['comment' => ...])]` but only emits it inside a
+CREATE TABLE, and the DBAL 4 comparator ignores comments entirely, so
+`doctrine:migrations:diff` produces nothing for a table that already exists.
+
+**When to run it.** It is idempotent, so a needless run costs one statement
+per table.
+
+- after `doctrine:migrations:migrate`, on every environment;
+- after any coverage harvest, because the pipeline's `CREATE TABLE` drops the
+  comment along with the table.
+
+**The gate.** `App\Doctrine\TableComments::missing()` lists tables in the
+database that nothing explains, `--check` turns that into a non-zero exit, and
+`web/tests/Doctrine/TableCommentsTest.php` fails the suite on it. A new table
+therefore arrives with an explanation or the build says so. The only exempt
+table is PostGIS's own `spatial_ref_sys`.
+
 ## Open questions
 
 - **CONTRIBUTING.md Mailpit paragraph is stale**: it states "the stack does
