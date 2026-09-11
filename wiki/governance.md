@@ -80,7 +80,7 @@ ownership. The commitment, public from the start:
    part of the same design.
 3. **Spin out into an independent foundation** (following established open-data foundation
    precedents) at a defined, checkable milestone, whichever comes first: **25 unique external
-   contributors** with a reviewed contribution to the project — code, translation, curation, region
+   contributors** with a reviewed contribution to the project — code, translation, curation,
    writing; or **12,500 rider-backed data points**, where adding and verifying weigh the same. The
    first number counts skills given to the project, the second active involvement in the dataset. A
    milestone that cannot be checked ("when there is a real community") is not a commitment, so the

@@ -8,6 +8,7 @@ use App\Catalog\ContributorWallProvider;
 use App\Catalog\CoverageStatsProvider;
 use App\Catalog\RegionDirectoryProvider;
 use App\Catalog\RegionSilhouette;
+use App\Community\CommunityProgress;
 use App\Content\ReleaseNotes;
 use App\Entity\User;
 use App\Pagination\Pager;
@@ -235,12 +236,13 @@ final class PageController extends AbstractController
      * @see docs/specs/moderation-and-contribution.md §8
      */
     #[Route(LocalizedPath::ROLES, name: 'roles')]
-    public function roles(): Response
+    public function roles(CommunityProgress $progress): Response
     {
         return $this->render('pages/roles.html.twig', [
             'page_title' => 'meta.roles_title',
             'page_description' => 'meta.roles_description',
             'nav_active' => '',
+            'progress' => $progress->summary(),
         ]);
     }
 

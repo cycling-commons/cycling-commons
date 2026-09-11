@@ -3589,6 +3589,13 @@ roles:
   example_h: 'Cómo funciona'
   example_p: 'Pablo añade una fuente en Girona. Lucía es curadora de Cataluña. La ve en su cola, la revisa y la confirma. Ahora está en el mapa, confirmada por la comunidad.'
   one_account: 'Una cuenta, los dos papeles: todo curador es también colaborador.'
+  progress_h: 'En qué todo esto suma'
+  progress_lead: 'El Commons se incuba en BikeCoders, con la promesa pública de convertirse en una fundación independiente. Dos contadores marcan el camino, leídos en vivo de esta base de datos.'
+  progress_contrib_l: 'colaboradores externos'
+  progress_contrib_def: 'Cuentas únicas con una contribución revisada al proyecto — código, traducción, curatoría o textos — sin cuentas del equipo.'
+  progress_points_l: 'datos respaldados por ciclistas'
+  progress_points_def: 'Lugares que los ciclistas añadieron o confirmaron; cada cuenta cuenta una vez por lugar; añadir y confirmar pesan igual.'
+  progress_gov_link: 'El compromiso completo: gobernanza'
 a11y:
   kicker: 'Accesibilidad'
   title: 'Qué funciona, y qué todavía no.'

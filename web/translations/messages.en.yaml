@@ -3580,6 +3580,13 @@ roles:
   example_h: 'How it works'
   example_p: 'Sam adds a water tap in Bath. Alice curates England. She sees it in her queue, checks it and confirms it. Now it is on the map, confirmed by the community.'
   one_account: 'One account, both roles: every curator is also a contributor.'
+  progress_h: 'What this adds up to'
+  progress_lead: 'The Commons is incubated inside BikeCoders, with a public promise to spin it out to an independent foundation. Two counters mark the way there, read live from this database.'
+  progress_contrib_l: 'external contributors'
+  progress_contrib_def: 'Unique accounts with one reviewed contribution to the project — code, translation, curation or writing — staff accounts excluded.'
+  progress_points_l: 'rider-backed data points'
+  progress_points_def: 'Places riders added or confirmed, each account counting once per place; adding and verifying weigh the same.'
+  progress_gov_link: 'The full commitment: governance'
 a11y:
   kicker: 'Accessibility'
   title: 'What works, and what does not yet.'

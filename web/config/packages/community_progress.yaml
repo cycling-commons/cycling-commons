@@ -1,0 +1,17 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# The spin-out progress counters (wiki/governance.md commitment 3).
+#
+# The targets are the numbers the governance page promises; the test
+# (web/tests/Community/CommunityProgressTest.php) reads the page and fails
+# if either side drifts from the other. staff_emails are the steward
+# accounts and staff_logins their GitHub identities: the page counts
+# "external contributors", so these never count, however much they do.
+# The GitHub sync itself reads GITHUB_REPO / GITHUB_TOKEN — the same pair
+# the bug desk uses (App\Support\GitHubIssues) — with the repo named per
+# environment in .env.staging and .env.prod.
+parameters:
+    app.community_progress.target_contributors: 25
+    app.community_progress.target_data_points: 12500
+    app.community_progress.staff_emails:
+        - development@bikecoders.life
+    app.community_progress.staff_logins: []

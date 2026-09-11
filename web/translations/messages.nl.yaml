@@ -3561,6 +3561,13 @@ roles:
   example_h: 'Zo werkt het'
   example_p: 'Jan voegt een watertappunt toe in Hoorn. Marie is curator van Noord-Holland. Ze ziet het in haar wachtrij, controleert het en bevestigt het. Nu staat het op de kaart, bevestigd door de community.'
   one_account: 'Eén account, beide rollen: elke curator is ook bijdrager.'
+  progress_h: 'Wat dit allemaal oplevert'
+  progress_lead: 'De Commons wordt bij BikeCoders uitgebroed, met de openbare belofte uit te groeien tot een onafhankelijke stichting. Twee tellers markeren de weg, live gelezen uit deze database.'
+  progress_contrib_l: 'externe bijdragers'
+  progress_contrib_def: 'Unieke accounts met één beoordeelde bijdrage aan het project — code, vertaling, curatie of teksten — staffaccounts niet meegerekend.'
+  progress_points_l: 'door rijders gedragen datapunten'
+  progress_points_def: 'Plekken die rijders hebben toegevoegd of bevestigd; elk account telt één keer per plek; toevoegen en bevestigen wegen gelijk.'
+  progress_gov_link: 'De volledige belofte: governance'
 a11y:
   kicker: 'Toegankelijkheid'
   title: 'Wat werkt, en wat nog niet.'

@@ -25,6 +25,13 @@
   .example h2{font-family:var(--mono);font-size:.74rem;letter-spacing:.12em;text-transform:uppercase;color:var(--clay);margin:0 0 .5rem}
   .example p{font-size:1rem;color:#3a3d30;line-height:1.65;margin:0 0 .8rem}
   .example .one{font-size:.9rem;color:#595c4d}
+  .counters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.2rem;margin:.4rem 0 1rem}
+  @media(max-width:720px){.counters{grid-template-columns:1fr}}
+  .counter{background:var(--paper-deep);border-radius:10px;padding:1rem 1.2rem 1.1rem}
+  .counter .n{font-family:var(--serif);font-weight:600;font-size:1.9rem;letter-spacing:-.01em;color:var(--ink)}
+  .counter .n .t{font-size:1.1rem;color:#595c4d;font-weight:500}
+  .counter .l{font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--clay);margin:.1rem 0 .5rem}
+  .counter p{font-size:.88rem;color:#4a4d40;line-height:1.55;margin:0}
 </style>
 {% endblock %}
 
@@ -71,6 +78,26 @@
     <h2>{{ 'roles.example_h'|trans }}</h2>
     <p>{{ 'roles.example_p'|trans }}</p>
     <p class="one">{{ 'roles.one_account'|trans }}</p>
+  </div>
+  {# The spin-out counters (wiki/governance.md commitment 3): the page's two
+     roles, summed. Shown from zero on purpose — a counter that only appears
+     when it is pretty is a marketing widget, not a commitment. #}
+  <div class="example">
+    <h2>{{ 'roles.progress_h'|trans }}</h2>
+    <p>{{ 'roles.progress_lead'|trans }}</p>
+    <div class="counters">
+      <div class="counter">
+        <div class="n">{{ progress.contributors }} <span class="t">/ {{ progress.target_contributors }}</span></div>
+        <div class="l">{{ 'roles.progress_contrib_l'|trans }}</div>
+        <p>{{ 'roles.progress_contrib_def'|trans }}</p>
+      </div>
+      <div class="counter">
+        <div class="n">{{ progress.data_points|number_format }} <span class="t">/ {{ progress.target_data_points|number_format }}</span></div>
+        <div class="l">{{ 'roles.progress_points_l'|trans }}</div>
+        <p>{{ 'roles.progress_points_def'|trans }}</p>
+      </div>
+    </div>
+    <p class="one"><a href="https://wiki.cyclingcommons.org/governance/">{{ 'roles.progress_gov_link'|trans }}</a></p>
   </div>
 </div></section>
 {% endblock %}

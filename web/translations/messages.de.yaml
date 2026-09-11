@@ -3562,6 +3562,13 @@ roles:
   example_h: 'So funktioniert es'
   example_p: 'Jonas trägt in Freiburg einen Wasserhahn ein. Lena kuratiert Baden-Württemberg. Sie sieht ihn in ihrer Warteschlange, prüft ihn und bestätigt ihn. Jetzt ist er auf der Karte, von der Community bestätigt.'
   one_account: 'Ein Konto, beide Rollen: jeder Kurator ist auch Beitragender.'
+  progress_h: 'Worauf das hinausläuft'
+  progress_lead: 'Der Commons wird bei BikeCoders großgezogen, mit dem öffentlichen Versprechen, in eine unabhängige Stiftung überführt zu werden. Zwei Zähler markieren den Weg, live gelesen aus dieser Datenbank.'
+  progress_contrib_l: 'externe Mitwirkende'
+  progress_contrib_def: 'Eindeutige Konten mit einer geprüften Beitragsleistung zum Projekt — Code, Übersetzung, Kuration oder Texte — Staffkonten ausgenommen.'
+  progress_points_l: 'von Fahrerinnen und Fahrern getragene Datenpunkte'
+  progress_points_def: 'Orte, die Fahrende hinzugefügt oder bestätigt haben; jedes Konto zählt pro Ort einmal; Hinzufügen und Bestätigen wiegen gleich.'
+  progress_gov_link: 'Das volle Versprechen: Governance'
 a11y:
   kicker: 'Barrierefreiheit'
   title: 'Was funktioniert, und was noch nicht.'

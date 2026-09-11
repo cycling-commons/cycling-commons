@@ -3554,6 +3554,13 @@ roles:
   example_h: 'Comment ça marche'
   example_p: 'Julien ajoute un point d''eau à Annecy. Camille est curatrice d''Auvergne-Rhône-Alpes. Elle le voit dans sa file, le vérifie et le confirme. Il est maintenant sur la carte, confirmé par la communauté.'
   one_account: 'Un seul compte, les deux rôles : chaque curateur est aussi contributeur.'
+  progress_h: 'Ce que tout cela donne'
+  progress_lead: 'Le Commons est incubé chez BikeCoders, avec la promesse publique de devenir une fondation indépendante. Deux compteurs balisent le chemin, lus en direct de cette base de données.'
+  progress_contrib_l: 'contributeurs externes'
+  progress_contrib_def: 'Comptes uniques ayant une contribution validée au projet — code, traduction, curation ou textes — comptes de l’équipe exclus.'
+  progress_points_l: 'données validées par des cyclistes'
+  progress_points_def: 'Lieux ajoutés ou confirmés par des cyclistes, chaque compte comptant une fois par lieu ; ajouter et confirmer ont le même poids.'
+  progress_gov_link: 'L’engagement complet : gouvernance'
 a11y:
   kicker: 'Accessibilité'
   title: 'Ce qui marche, et ce qui ne marche pas encore.'
