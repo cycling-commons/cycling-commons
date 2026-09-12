@@ -1,0 +1,53 @@
+web/tests/Town/TownRoutesTest.php
+  s_e9b7d39367a2ea::t_bf30d3ecce0dcd 1-90
+web/assets/map/places.js
+  s_e9b7d39367a2ea::t_5c5dacdcb148c3 175-181,183
+  s_e9b7d39367a2ea::t_7d1277df64be06 182
+web/tests/Media/CommonsInfoboxPopulationTest.php
+  s_e9b7d39367a2ea::t_c28f6442251100 1-145
+web/tests/Town/ResolveTownSummaryHandlerTest.php
+  s_e9b7d39367a2ea::t_8ccde561271532 163-182,184-223,225-226,256-257,281
+  s_e9b7d39367a2ea::t_4471c146af2132 183,255
+  s_e9b7d39367a2ea::t_188a52592a3d94 224
+web/translations/messages.en.yaml
+  s_e9b7d39367a2ea::t_28bdfd18bb14ff 2770-2771
+web/translations/messages.es.yaml
+  s_e9b7d39367a2ea::t_28bdfd18bb14ff 2778-2779
+web/src/Controller/TownController.php
+  s_e9b7d39367a2ea::t_2f1cfe23851411 16,58,96-100,105
+web/translations/messages.fr.yaml
+  s_e9b7d39367a2ea::t_28bdfd18bb14ff 2289-2290
+web/src/Town/TownRoutes.php
+  s_e9b7d39367a2ea::t_7d26d4b186e1b6 1-75
+web/src/Media/Commons/CommonsApi.php
+  s_e9b7d39367a2ea::t_819ba141b0ab8e 449-637
+web/src/Town/MessageHandler/ResolveTownSummaryHandler.php
+  s_e9b7d39367a2ea::t_4471c146af2132 138,150-151
+  s_e9b7d39367a2ea::t_e58d3ebde1d170 75,133-137,139-149,152-173
+  s_e9b7d39367a2ea::t_125ff85db513c7 174-175
+web/translations/messages.de.yaml
+  s_e9b7d39367a2ea::t_28bdfd18bb14ff 2297-2298
+web/src/Controller/MapController.php
+  s_e9b7d39367a2ea::t_5c5dacdcb148c3 329
+web/translations/messages.nl.yaml
+  s_e9b7d39367a2ea::t_28bdfd18bb14ff 2294-2295
+docs/specs/map-and-search.md
+  s_e9b7d39367a2ea::t_688127fb1cc588 1900-1915
+  s_e9b7d39367a2ea::t_cdec45782206d4 1853-1855,1858-1899
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "717b8469a8f0729302a3a3af645f9cba5b4b60d2",
+  "prompts": {},
+  "sessions": {
+    "s_e9b7d39367a2ea": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "768f0270-53eb-479e-8318-433176b4f785",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
