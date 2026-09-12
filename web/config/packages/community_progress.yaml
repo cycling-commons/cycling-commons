@@ -3,15 +3,29 @@
 #
 # The targets are the numbers the governance page promises; the test
 # (web/tests/Community/CommunityProgressTest.php) reads the page and fails
-# if either side drifts from the other. staff_emails are the steward
-# accounts and staff_logins their GitHub identities: the page counts
-# "external contributors", so these never count, however much they do.
-# The GitHub sync itself reads GITHUB_REPO / GITHUB_TOKEN — the same pair
-# the bug desk uses (App\Support\GitHubIssues) — with the repo named per
+# if either side drifts from the other.
+#
+# The page counts "external contributors", so the stewards never count,
+# however much they do. Three ways to say who they are, because a steward
+# can be named or granted:
+#   excluded_emails  the site accounts
+#   excluded_logins  their GitHub identities, for commits with no public email
+#   excluded_roles   roles that MAKE somebody a steward. This one is not
+#                    optional bookkeeping: the site half counts any account
+#                    holding a role other than ROLE_USER, so without it
+#                    appointing a moderator would raise the count of external
+#                    contributors by one.
+#
+# The GitHub sync itself reads GITHUB_REPO / GITHUB_TOKEN, the same pair
+# the bug desk uses (App\Support\GitHubIssues), with the repo named per
 # environment in .env.staging and .env.prod.
 parameters:
     app.community_progress.target_contributors: 25
     app.community_progress.target_data_points: 12500
-    app.community_progress.staff_emails:
+    app.community_progress.excluded_emails:
         - development@bikecoders.life
-    app.community_progress.staff_logins: []
+    app.community_progress.excluded_logins:
+        - BikeCodersDev
+    app.community_progress.excluded_roles:
+        - ROLE_ADMIN
+        - ROLE_MODERATOR

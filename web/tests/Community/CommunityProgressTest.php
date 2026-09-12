@@ -82,6 +82,9 @@ final class CommunityProgressTest extends KernelTestCase
         $bob = $this->user('bob@example.test');    // curatorship
         $carol = $this->user('carol@example.test'); // both halves, one person
 
+        // Alice and Bob are curators (role granted)
+        $this->grantRole($alice->getId());
+        $this->grantRole($bob->getId());
         // Bob applied and was accepted for a region: the appointment itself
         // is the reviewed contribution, no decision has to follow it.
         $this->curatorship($bob->getId());
@@ -123,6 +126,48 @@ final class CommunityProgressTest extends KernelTestCase
         self::assertSame(3, $this->progress()->contributors());
     }
 
+    /**
+     * Appointing a moderator must not read as a new external contributor.
+     *
+     * The site half counts any account holding a role other than ROLE_USER,
+     * so without the role exclusion the counter would rise by one every time
+     * the project granted somebody a steward right, which is the opposite of
+     * what the trigger measures. A curator is NOT excluded: curating is the
+     * contribution, and only the steward roles are listed.
+     */
+    public function testAnAccountHoldingAStewardRoleIsNeverAContributor(): void
+    {
+        $curator = $this->user('curator@example.test');
+        $moderator = $this->user('moderator@example.test');
+        $this->grantRole($curator->getId());
+        $this->grantRole($moderator->getId(), 'ROLE_MODERATOR');
+
+        self::assertSame(1, $this->progress()->contributors(), 'the curator counts, the moderator does not');
+    }
+
+    /**
+     * The same rule on the other counter: a steward's own confirmations and
+     * rides are not rider-backed data points either.
+     */
+    public function testAStewardRolesDataPointsAreNotCounted(): void
+    {
+        $moderator = $this->user('moderator@example.test');
+        $this->grantRole($moderator->getId(), 'ROLE_ADMIN');
+        $item = $this->item();
+        $this->confirmation($item->getId(), $moderator->getId());
+
+        self::assertSame(0, $this->progress()->dataPoints());
+    }
+
+    /** With no roles listed, nobody is excluded for holding one. */
+    public function testNoExcludedRolesMeansNobodyIsExcludedByRole(): void
+    {
+        $moderator = $this->user('moderator@example.test');
+        $this->grantRole($moderator->getId(), 'ROLE_MODERATOR');
+
+        self::assertSame(1, $this->progress(staffRoles: [])->contributors());
+    }
+
     public function testTargetsMatchTheGovernancePage(): void
     {
         $page = file_get_contents(__DIR__.'/../../../wiki/governance.md');
@@ -139,8 +184,9 @@ final class CommunityProgressTest extends KernelTestCase
 
     /**
      * @param list<string> $staffLogins
+     * @param list<string> $staffRoles
      */
-    private function progress(array $staffLogins = []): CommunityProgress
+    private function progress(array $staffLogins = [], array $staffRoles = ['ROLE_ADMIN', 'ROLE_MODERATOR']): CommunityProgress
     {
         return new CommunityProgress(
             $this->db,
@@ -148,6 +194,7 @@ final class CommunityProgressTest extends KernelTestCase
             12500,
             ['staff@example.test'],
             $staffLogins,
+            $staffRoles,
         );
     }
 
@@ -210,6 +257,13 @@ final class CommunityProgressTest extends KernelTestCase
             'status' => 'approved',
             'created_at' => '2026-09-10 12:00:00+00',
         ]);
+    }
+
+    private function grantRole(int $userId, string $role = 'ROLE_CURATOR'): void
+    {
+        $user = $this->em->find(User::class, $userId);
+        $user->setRoles([$role]);
+        $this->em->flush();
     }
 
     private function githubLogin(string $login, ?string $email = null): void
