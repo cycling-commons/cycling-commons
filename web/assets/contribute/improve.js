@@ -166,6 +166,16 @@
     refreshGate();
   });
 
+  /* The identity question, where it is asked, must be answered before the
+     step can be left (owner 2026-09-12: "user must choose"). Only once the
+     pin exists, because until then there is nothing to ask about. */
+  function osmUnanswered() {
+    var box = document.getElementById('wz-osmq');
+    var field = document.querySelector('[name$="[osmAnswer]"]');
+
+    return !!(box && !box.hidden && field && '' === field.value);
+  }
+
   function refreshGate() {
     var nextBtn = document.getElementById('nextBtn');
     if (!nextBtn) return;
@@ -175,13 +185,17 @@
     }
     // A climb mid-route or mid-profile is not placed yet: never send a placeholder.
     if (WZ.cur === 1 && LOCATE !== 'off') {
-      nextBtn.disabled = !WZ.loc || !!WZ.locPending;
+      nextBtn.disabled = !WZ.loc || !!WZ.locPending || osmUnanswered();
     } else if (WZ.cur === WZ.last) {
       nextBtn.disabled = nothingChanged() || !!WZ.locPending;
     } else {
       nextBtn.disabled = false;
     }
   }
+
+  // The identity question lives in its own file and has to be able to re-ask
+  // this gate when it is answered.
+  window.CC_WZ_REGATE = refreshGate;
 
   var backBtn = document.getElementById('backBtn');
   var nextBtn = document.getElementById('nextBtn');
@@ -283,6 +297,9 @@
     });
 
     /* Known-places overlay (ADD): nearby coverage so the pin is not a duplicate. */
+    // Below this the dots would be a smear rather than an answer, and the
+    // request would cover more ground than a rider is looking at.
+    var COV_MIN_ZOOM = 11;
     var covLetter = window.CC_ITEM && window.CC_ITEM.letter;
     if (ADD && covLetter && 'N' !== covLetter) {
       var covMarkers = [];
@@ -294,7 +311,19 @@
         if (covNote) covNote.hidden = true;
       };
       var refreshCov = function () {
-        if (wmap.getZoom() < 12) { clearCov(); covLast = null; return; }
+        if (wmap.getZoom() < COV_MIN_ZOOM) {
+          clearCov();
+          covLast = null;
+          // Silence at this distance reads as "nothing is mapped here", which
+          // is the opposite of the truth and exactly the wrong thing to tell
+          // somebody about to add a place.
+          if (covNote && !document.getElementById('wz-osmq')) {
+            covNote.textContent = t('known_zoom');
+            covNote.hidden = false;
+          }
+
+          return;
+        }
         var c = wmap.getCenter();
         var ne = wmap.getBounds().getNorthEast();
         var km = Math.min(5, Math.max(0.5,
@@ -310,17 +339,36 @@
           .then(function (data) {
             if (!data) return;
             clearCov();
+            var ours = 0;
             (data.groups || []).forEach(function (g) {
               if (g.letter !== covLetter) return;
               (g.items || []).forEach(function (p) {
+                // `ll` is [lat, lng] (CoverageRepository::entry); Marker wants
+                // the other order.
+                if (!p.ll || 2 !== p.ll.length) return;
                 var el = document.createElement('div');
-                el.className = 'cc-cov-dot';
+                // Ours versus OpenStreetMap's, because they mean different
+                // things to somebody about to add a place: one is already in
+                // this atlas, the other is a record we have not taken in yet.
+                el.className = p.curated ? 'cc-cov-dot cc-cov-dot--ours' : 'cc-cov-dot';
                 el.textContent = DEFAULTS.icon;
+                var mark = p.curated ? t('known_ours') : '';
+                el.title = p.n ? (mark ? p.n + ' (' + mark + ')' : p.n) : mark;
+                if (p.curated) ours++;
                 covMarkers.push(new maplibregl.Marker({ element: el, anchor: 'center' })
-                  .setLngLat([p.lng, p.lat]).addTo(wmap));
+                  .setLngLat([p.ll[1], p.ll[0]]).addTo(wmap));
               });
             });
-            if (covNote) covNote.hidden = 0 === covMarkers.length;
+            // Only where the identity question is NOT asked. That question
+            // counts a fixed 250 m around the pin; this counts whatever is in
+            // view. Two different numbers about the same worry, on one
+            // screen, is one too many (owner 2026-09-12).
+            if (covNote && !document.getElementById('wz-osmq')) {
+              covNote.textContent = 0 === covMarkers.length
+                ? t('known_none')
+                : t('known_note', { '%count%': String(covMarkers.length), '%ours%': String(ours) });
+              covNote.hidden = false;
+            }
           })
           .catch(function () {});
       };
@@ -655,6 +703,10 @@
           }
         }
         refreshGate();
+        // The point, for anything outside this file that depends on it. The
+        // hidden lat/lng inputs are written with `.value =`, which fires no
+        // event, so a listener has no other way to know the pin moved.
+        document.dispatchEvent(new CustomEvent('cc:loc', { detail: WZ.loc }));
       };
 
       var announceMove = function () {

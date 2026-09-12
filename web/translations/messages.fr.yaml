@@ -2438,6 +2438,16 @@ improve:
     funnel_curator: 'Vous êtes curateur, donc cette modification apparaît tout de suite sur la carte, dans les zones que vous modérez. En dehors, elle attend le curateur de cette zone, comme toute suggestion. Chaque modification est inscrite dans l''historique.'
     funnel_votable: 'Rien n''apparaît immédiatement sur la carte — un curateur le lit d''abord. Une fois validé, cela s''affiche comme un petit point, et le premier cycliste qui confirme que c''est bien là en fait une épingle complète. <b>%type%</b> peut aussi recevoir des votes, et les mieux notés se retrouvent sur la carte best-of.'
     funnel_utility: 'Rien n''apparaît immédiatement sur la carte — un curateur le lit d''abord. Une fois validé, cela s''affiche comme un petit point, et le premier cycliste qui confirme que c''est bien là en fait une épingle complète. <b>%type%</b> est un arrêt pratique : les cyclistes les confirment, ils ne votent jamais pour eux.'
+  osm:
+    heading: 'Est-ce déjà dans OpenStreetMap ?'
+    scope: 'Même type de lieu, dans OpenStreetMap, à moins de %m% m de votre repère.'
+    unnamed: 'Objet sans nom'
+    use_existing: 'Utiliser l''entrée existante'
+    none: 'Pas dans OpenStreetMap'
+    none_hint: 'Rien ne correspond ici : c''est un nouvel enregistrement'
+  waiting:
+    mine: 'Vous avez déjà une modification en attente sur ce lieu. Ce que vous envoyez maintenant y est ajouté, cela reste une seule chose à lire pour un curateur.'
+    other: 'Quelqu''un a proposé une modification de ce lieu le %date%, et aucun curateur ne l''a encore lue. Envoyez la vôtre si elle dit autre chose.'
   nav:
     back: 'Précédent'
     next: 'Suivant'
@@ -2527,7 +2537,10 @@ contribute:
   add:
     title: 'Ajouter un lieu · %type%'
     lead: 'L''atlas manque quelque chose ? Épinglez-le, décrivez-le et envoyez-le aux curateurs.'
-    known_note: 'Les petits points sont des lieux de ce type déjà recensés — vérifiez que le vôtre n''en fait pas partie.'
+    known_note: '%count% lieux de ce type sont déjà cartographiés ici, dont %ours% déjà dans cet atlas. Vérifiez que le vôtre n''en fait pas partie.'
+    known_none: 'Rien de ce type n''est encore cartographié ici.'
+    known_ours: 'déjà dans cet atlas'
+    known_zoom: 'Zoomez pour voir ce qui est déjà cartographié ici.'
   error:
     heading: 'Cette contribution n''a pas pu être envoyée :'
     unknown_attribute: 'Un des champs soumis n''est pas reconnu pour ce type d''élément.'

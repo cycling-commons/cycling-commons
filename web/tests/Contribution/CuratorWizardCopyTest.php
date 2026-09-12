@@ -46,6 +46,79 @@ final class CuratorWizardCopyTest extends WebTestCase
         $client->loginUser($user);
     }
 
+    /**
+     * The form warns that a change is already waiting, and warns only.
+     *
+     * Existence and age, never who and never what: the content is unreviewed
+     * and stays unpublished, and the age is the only part a rider needs to
+     * decide whether to bother (moderation-and-contribution.md §7.3c). The
+     * form underneath still works, because a second rider may have something
+     * genuinely different to say.
+     */
+    public function testTheFormWarnsWhenSomebodyElsesChangeIsWaiting(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $item = $this->seedItem();
+
+        $author = new User();
+        $author->setEmail('waiting-author@example.com');
+        $author->setDisplayName('Somebody Else');
+        $em->persist($author);
+        $em->flush();
+
+        self::seedPending($em, (int) $item->getId(), (int) $author->getId());
+
+        $this->login($client, 'waiting-reader@example.com', []);
+        $client->request('GET', '/improve?item='.$item->getId().'&type=scenic-views');
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('.wiz-waiting');
+        $html = (string) $client->getResponse()->getContent();
+        // Never who, never what.
+        self::assertStringNotContainsString('Somebody Else', $html);
+        self::assertStringNotContainsString('waiting-author@example.com', $html);
+        self::assertStringNotContainsString('Out of order', $html);
+        // Warn, never block.
+        self::assertSelectorExists('form#improve-form');
+    }
+
+    /**
+     * A rider's own waiting change gets the other sentence, never the
+     * stranger's: what they send next is added to it (§7.3b), and telling
+     * them a stranger is waiting would be a lie about their own work.
+     */
+    public function testYourOwnWaitingChangeGetsItsOwnSentence(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $item = $this->seedItem();
+
+        $this->login($client, 'waiting-mine@example.com', []);
+        $me = $em->getRepository(User::class)->findOneBy(['email' => 'waiting-mine@example.com']);
+        self::assertNotNull($me);
+
+        self::seedPending($em, (int) $item->getId(), (int) $me->getId());
+
+        $client->request('GET', '/improve?item='.$item->getId().'&type=scenic-views');
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('.wiz-waiting', 'You already have a change waiting');
+    }
+
+    /** One waiting edit on an item, written straight in: the page only reads it. */
+    private static function seedPending(EntityManagerInterface $em, int $itemId, int $userId): void
+    {
+        $em->getConnection()->executeStatement(
+            "INSERT INTO submission (type, letter, item_id, user_id, status, title, geom, country_code,
+                                     changes, payload, created_at)
+             VALUES ('edit', 'P', :item, :uid, 'pending', 'Viewpoint',
+                     ST_SetSRID(ST_MakePoint(6.027, 50.426), 4326), 'BE',
+                     :changes, '{}', '2026-09-01 12:00:00+00')",
+            ['item' => $itemId, 'uid' => $userId, 'changes' => '{"condition":{"was":null,"now":"Out of order"}}'],
+        );
+    }
+
     private function seedItem(): Item
     {
         $em = static::getContainer()->get(EntityManagerInterface::class);
@@ -117,20 +190,56 @@ final class CuratorWizardCopyTest extends WebTestCase
         self::assertStringNotContainsString('Mark it confirmed', $html, 'already confirmed by this curator: nothing to ask');
     }
 
-    public function testACuratorAddingANewPlaceStillReadsTheRiderCopy(): void
+    /**
+     * A curator adding a place is ASKED whether it is already in
+     * OpenStreetMap, and the page carries both promises.
+     *
+     * Approving a new place needs that answer (catalog-data-model.md §5b), so
+     * whether this one publishes now is not known when the page renders: it
+     * depends on what the curator picks. Both funnels ship and
+     * assets/contribute/osm-answer.js shows whichever the answer makes true.
+     */
+    public function testACuratorAddingANewPlaceIsAskedTheOsmQuestion(): void
     {
-        // A NEW place from a bare pin queues even for a curator: the OSM
-        // question lives on the queue card. One taken from an OSM node applies
-        // (CatalogContributionServiceTest::testACuratorsNewPlaceFromAnOsmNodeIsAppliedAtOnce).
         $client = static::createClient();
         $this->login($client, 'wizard-curator-add@example.com', ['ROLE_CURATOR']);
 
         $client->request('GET', '/improve?type=scenic-views&mode=add');
         self::assertResponseIsSuccessful();
+        self::assertSelectorExists('#wz-osmq');
+        self::assertSelectorExists('[name="improve[osmAnswer]"]');
+        self::assertSelectorExists('script[src*="osm-answer"]');
+        // Both promises, one hidden, for the script to swap.
+        self::assertSelectorExists('#lc-queued');
+        self::assertSelectorExists('#lc-curator[hidden]');
+    }
+
+    /**
+     * A rider is never asked (catalog-data-model.md §5b): the question is not
+     * theirs to settle, and offering it would imply their answer counts.
+     */
+    public function testARiderAddingANewPlaceIsNotAskedTheOsmQuestion(): void
+    {
+        $client = static::createClient();
+        $this->login($client, 'wizard-rider-add@example.com', []);
+
+        $client->request('GET', '/improve?type=scenic-views&mode=add');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorNotExists('#wz-osmq');
+        self::assertSelectorNotExists('#lc-curator');
         $html = (string) $client->getResponse()->getContent();
+        self::assertStringNotContainsString('osm-answer', $html);
         self::assertStringContainsString('Submit for review', $html);
-        self::assertStringNotContainsString('Apply change', $html);
-        self::assertStringNotContainsString('improve[confirmNow]', $html);
+    }
+
+    /** The candidate list is curator-only, like the question it feeds. */
+    public function testTheOsmCandidateEndpointIsCuratorOnly(): void
+    {
+        $client = static::createClient();
+        $this->login($client, 'wizard-rider-nearby@example.com', []);
+
+        $client->request('GET', '/contribute/osm-nearby?type=scenic-views&lat=50.42&lng=6.02');
+        self::assertResponseStatusCodeSame(403);
     }
 
     public function testATickedBoxTurnsTheCuratorsEditIntoAFullPin(): void

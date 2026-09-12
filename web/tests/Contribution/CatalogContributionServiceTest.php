@@ -217,6 +217,200 @@ final class CatalogContributionServiceTest extends KernelTestCase
         self::assertSame(ItemState::Unverified, $item->getState(), 'accepted, and still nobody has stood there on record');
     }
 
+    /**
+     * A curator's own NEW place, answered in the wizard, publishes at once.
+     *
+     * Approval of a new place needs the OpenStreetMap answer first
+     * (catalog-data-model.md §5b). Until the wizard asked for it, a curator's
+     * own place sat in a queue waiting for the curator who had just made it
+     * (owner 2026-09-06). `none` is the answer "not in OpenStreetMap", and it
+     * is an answer: it is what makes the row approvable.
+     */
+    public function testACuratorsNewPlaceIsAppliedWhenTheyAnswerNotInOsm(): void
+    {
+        $this->wallonia();
+
+        $receipt = $this->service->submit('add', [
+            'type' => 'scenic-views',
+            '_osm_answer' => 'none',
+            'details' => ['name' => 'Point de vue hors OSM'],
+            'lat' => '50.47', 'lng' => '5.86', 'place' => 'Testville',
+        ], $this->curator());
+
+        self::assertTrue($receipt->applied, 'the OSM question is answered, so the same approve step runs');
+        $sub = $this->em->find(Submission::class, $receipt->submissionId);
+        self::assertNotNull($sub);
+        self::assertSame(SubmissionStatus::Approved, $sub->getStatus());
+        $item = $this->em->find(Item::class, (int) $sub->getItemId());
+        self::assertNotNull($item);
+        self::assertTrue($item->osmAnswered());
+        self::assertNull($item->getOsmRef(), '"not in OSM" is an answer with no ref, not a blank');
+    }
+
+    /** The other answer: this place IS that OpenStreetMap object. */
+    public function testACuratorsNewPlaceIsAppliedWhenTheyLinkAnOsmObject(): void
+    {
+        $this->wallonia();
+        $ref = 'node/9'.random_int(100000000, 999999999);
+
+        $receipt = $this->service->submit('add', [
+            'type' => 'scenic-views',
+            '_osm_answer' => $ref,
+            'details' => ['name' => 'Point de vue lié'],
+            'lat' => '50.47', 'lng' => '5.86', 'place' => 'Testville',
+        ], $this->curator());
+
+        self::assertTrue($receipt->applied);
+        $sub = $this->em->find(Submission::class, $receipt->submissionId);
+        self::assertNotNull($sub);
+        $item = $this->em->find(Item::class, (int) $sub->getItemId());
+        self::assertNotNull($item);
+        self::assertSame($ref, $item->getOsmRef());
+    }
+
+    /**
+     * Without an answer a curator's new place still queues, which is what it
+     * did before the wizard asked, and is the right refusal: the desk will not
+     * approve a new place nobody has identified.
+     */
+    public function testACuratorsNewPlaceStillQueuesWithNoOsmAnswer(): void
+    {
+        $this->wallonia();
+
+        $receipt = $this->service->submit('add', [
+            'type' => 'scenic-views',
+            'details' => ['name' => 'Point de vue sans réponse'],
+            'lat' => '50.47', 'lng' => '5.86', 'place' => 'Testville',
+        ], $this->curator());
+
+        self::assertFalse($receipt->applied);
+        $sub = $this->em->find(Submission::class, $receipt->submissionId);
+        self::assertNotNull($sub);
+        self::assertSame(SubmissionStatus::Pending, $sub->getStatus());
+    }
+
+    /**
+     * A rider is never asked (catalog-data-model.md §5b), so a rider sending
+     * the field anyway answers nothing and their place queues as before.
+     */
+    public function testARidersOsmAnswerIsIgnored(): void
+    {
+        $this->wallonia();
+
+        $receipt = $this->service->submit('add', [
+            'type' => 'scenic-views',
+            '_osm_answer' => 'none',
+            'details' => ['name' => 'Point de vue du rider'],
+            'lat' => '50.47', 'lng' => '5.86', 'place' => 'Testville',
+        ], $this->rider());
+
+        self::assertFalse($receipt->applied);
+        $sub = $this->em->find(Submission::class, $receipt->submissionId);
+        self::assertNotNull($sub);
+        $item = $this->em->find(Item::class, (int) $sub->getItemId());
+        self::assertNotNull($item);
+        self::assertFalse($item->osmAnswered(), 'a rider cannot answer the identity question');
+    }
+
+    /**
+     * Linking to an object another served row already claims is refused, and
+     * the place queues so a human sees the clash. That is the same
+     * exclusivity the desk applies; without it the wizard would mint the
+     * duplicate the desk exists to remove.
+     */
+    public function testACuratorCannotLinkAnOsmObjectAnotherRowAlreadyClaims(): void
+    {
+        $this->wallonia();
+        $ref = 'node/9'.random_int(100000000, 999999999);
+        $taken = $this->item('P', '{"type":"Point","coordinates":[5.86,50.47]}');
+        $taken->answerOsm($ref);
+        $this->em->flush();
+
+        $receipt = $this->service->submit('add', [
+            'type' => 'scenic-views',
+            '_osm_answer' => $ref,
+            'details' => ['name' => 'Point de vue en double'],
+            'lat' => '50.47', 'lng' => '5.86', 'place' => 'Testville',
+        ], $this->curator());
+
+        self::assertFalse($receipt->applied);
+        $sub = $this->em->find(Submission::class, $receipt->submissionId);
+        self::assertNotNull($sub);
+        $item = $this->em->find(Item::class, (int) $sub->getItemId());
+        self::assertNotNull($item);
+        self::assertFalse($item->osmAnswered(), 'a taken ref is not recorded');
+    }
+
+    /**
+     * Somebody else's waiting change is visible as existence and age.
+     *
+     * With a review backlog two riders can propose the same correction without
+     * either knowing, which costs the second their time and a curator a second
+     * reading of the same change (moderation-and-contribution.md §7.3c).
+     */
+    public function testAnotherRidersPendingChangeIsReportedWithItsAge(): void
+    {
+        $this->wallonia();
+        $item = $this->item('B', '{"type":"Point","coordinates":[5.86,50.47]}');
+        $mine = $this->rider();
+
+        $this->service->submit('improve', [
+            '_item_id' => $item->getId(),
+            'details' => ['condition' => 'Out of order'],
+        ], $this->rider());
+
+        $since = $this->service->otherPendingSince((int) $item->getId(), $mine);
+        self::assertInstanceOf(\DateTimeImmutable::class, $since);
+    }
+
+    /**
+     * Never the reader's own row. That one amends rather than forks, so
+     * calling it a stranger's would be a lie about their own work.
+     */
+    public function testYourOwnPendingChangeIsNotReportedAsSomebodyElses(): void
+    {
+        $this->wallonia();
+        $item = $this->item('B', '{"type":"Point","coordinates":[5.86,50.47]}');
+        $mine = $this->rider();
+
+        $this->service->submit('improve', [
+            '_item_id' => $item->getId(),
+            'details' => ['condition' => 'Out of order'],
+        ], $mine);
+
+        self::assertNull($this->service->otherPendingSince((int) $item->getId(), $mine));
+    }
+
+    /** An item nobody has touched reports nothing. */
+    public function testAnItemWithNoPendingChangeReportsNothing(): void
+    {
+        $this->wallonia();
+        $item = $this->item('B', '{"type":"Point","coordinates":[5.86,50.47]}');
+
+        self::assertNull($this->service->otherPendingSince((int) $item->getId(), $this->rider()));
+    }
+
+    /**
+     * A decided submission is not waiting. The signal exists to say a curator
+     * has not read it yet, so an approved or rejected row must not raise it.
+     */
+    public function testADecidedChangeIsNoLongerWaiting(): void
+    {
+        $this->wallonia();
+        $item = $this->item('B', '{"type":"Point","coordinates":[5.86,50.47]}');
+
+        $receipt = $this->service->submit('improve', [
+            '_item_id' => $item->getId(),
+            'details' => ['condition' => 'Out of order'],
+        ], $this->rider());
+        $sub = $this->em->find(Submission::class, $receipt->submissionId);
+        self::assertNotNull($sub);
+        $sub->setStatus(SubmissionStatus::Approved);
+        $this->em->flush();
+
+        self::assertNull($this->service->otherPendingSince((int) $item->getId(), $this->rider()));
+    }
+
     public function testACuratorsNewPlaceCanAlsoBeMarkedConfirmed(): void
     {
         $this->wallonia();

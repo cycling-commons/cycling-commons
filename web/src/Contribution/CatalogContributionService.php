@@ -10,6 +10,7 @@ use App\Catalog\ConfirmationStance;
 use App\Catalog\Entity\Item;
 use App\Catalog\Entity\Submission;
 use App\Catalog\Import\OsmCandidates;
+use App\Catalog\Import\OsmLinker;
 use App\Catalog\Import\OutboundLinks;
 use App\Catalog\ItemSource;
 use App\Catalog\ItemState;
@@ -60,6 +61,7 @@ final class CatalogContributionService implements ContributionStubInterface
         private readonly OsmCandidates $osmCandidates,
         private readonly ModerationService $moderation,
         private readonly RoleHierarchyInterface $roleHierarchy,
+        private readonly OsmLinker $linker,
         private readonly ItemConfirmationService $confirmations,
     ) {
     }
@@ -211,10 +213,14 @@ final class CatalogContributionService implements ContributionStubInterface
         $submission = $this->submitDraft($draft, SubmissionType::NewItem, $by, $payload);
 
         // A curator's own new place does not wait for a curator either (owner
-        // 2026-09-10: "I do not have to approve my own actions"), when the
-        // OSM question is already answered, which a place taken from an OSM
-        // node is by construction. The same tick box as on an edit marks it
-        // confirmed, with the same drawer confirmation.
+        // 2026-09-10: "I do not have to approve my own actions"). Approval
+        // needs the OSM answer first, so the wizard asks a curator for it and
+        // it is recorded here, before the same approve step an edit runs. A
+        // place taken from an OSM node answered it by construction; a rider is
+        // never asked (catalog-data-model.md §5b) and their place queues as
+        // before. The same tick box as on an edit marks it confirmed, with the
+        // same drawer confirmation.
+        $this->answerOsmIfCurator($submission, $by, $payload['_osm_answer'] ?? null);
         $applied = $this->applyIfCurator($submission, $by);
         $item = $applied && null !== $submission->getItemId() ? $this->em->find(Item::class, $submission->getItemId()) : null;
         $confirmNow = (bool) ($payload['confirmNow'] ?? false);
@@ -577,9 +583,54 @@ final class CatalogContributionService implements ContributionStubInterface
      * (catalog-data-model.md §5b) and the wizard does not ask it yet; a place
      * taken from an OSM node has answered it by construction and applies.
      */
+    /**
+     * Record the curator's answer to "is this already in OpenStreetMap?".
+     *
+     * The question the moderation card asks before it will approve a new place
+     * (catalog-data-model.md §5b), asked in the wizard instead when the person
+     * filling it in is the person who would answer it. `'none'` is the answer
+     * "not in OpenStreetMap", which is an answer and not a blank: it is what
+     * makes the row approvable.
+     *
+     * The same exclusivity guard the desk applies: linking to an object
+     * another served row already claims would mint the duplicate the desk
+     * exists to remove, so a taken ref is simply not recorded and the place
+     * queues, where a human sees the clash.
+     */
+    private function answerOsmIfCurator(Submission $submission, User $by, mixed $answer): void
+    {
+        if (!\is_string($answer) || '' === $answer || !$this->isCurator($by)) {
+            return;
+        }
+        $item = null !== $submission->getItemId() ? $this->em->find(Item::class, $submission->getItemId()) : null;
+        if (null === $item || $item->osmAnswered()) {
+            return;
+        }
+
+        if ('none' === $answer) {
+            $item->answerOsm(null);
+            $this->em->flush();
+
+            return;
+        }
+
+        if (1 !== preg_match('~^(node|way)/\d{1,16}$~', $answer)
+            || $this->linker->refIsTaken($answer, $item->getLetter(), (int) $item->getId())) {
+            return;
+        }
+
+        $item->answerOsm($answer);
+        $this->em->flush();
+    }
+
+    private function isCurator(User $by): bool
+    {
+        return \in_array('ROLE_CURATOR', $this->roleHierarchy->getReachableRoleNames($by->getRoles()), true);
+    }
+
     private function applyIfCurator(Submission $submission, User $by): bool
     {
-        if (!\in_array('ROLE_CURATOR', $this->roleHierarchy->getReachableRoleNames($by->getRoles()), true)) {
+        if (!$this->isCurator($by)) {
             return false;
         }
         try {
@@ -672,6 +723,39 @@ final class CatalogContributionService implements ContributionStubInterface
      *
      * @api
      */
+    /**
+     * When somebody ELSE's change on this item started waiting, or null.
+     *
+     * With a review backlog two riders can propose the same correction without
+     * either knowing, which costs the second their time and a curator a second
+     * reading of the same change. This is what the form needs to warn them
+     * (moderation-and-contribution.md §7.3c).
+     *
+     * **Existence and age, and nothing else.** Never who and never what: the
+     * content is unreviewed and stays unpublished, and the age is the only
+     * part a rider needs to decide whether to bother. Never the rider's own
+     * row either, because that one amends rather than forks ({@see
+     * openSubmissionFor}) and telling them a stranger is waiting would be a
+     * lie about their own work.
+     *
+     * A logged-out reader has no row of their own to exclude, so every waiting
+     * change is somebody else's to them.
+     */
+    public function otherPendingSince(int $itemId, ?User $by): ?\DateTimeImmutable
+    {
+        $filed = $this->em->getConnection()->fetchOne(
+            "SELECT created_at FROM submission
+              WHERE item_id = :item
+                AND status IN ('pending', 'needs_info')
+                AND user_id <> :uid
+              ORDER BY created_at
+              LIMIT 1",
+            ['item' => $itemId, 'uid' => null !== $by ? (int) $by->getId() : 0],
+        );
+
+        return \is_string($filed) ? new \DateTimeImmutable($filed) : null;
+    }
+
     public function openSubmissionFor(int $itemId, User $by): ?Submission
     {
         /* QueryBuilder with scalar enum values; newest first if two open rows exist. */

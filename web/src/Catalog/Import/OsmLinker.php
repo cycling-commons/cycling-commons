@@ -181,6 +181,28 @@ final readonly class OsmLinker
      * duplicate wearing a link. The linker refuses rather than creating one,
      * and the duplicate desk is where that pair gets sorted out.
      */
+    /**
+     * The served row of this letter that already claims that OSM object, if any.
+     *
+     * {@see refIsTaken} answers whether to refuse; this answers who to send
+     * the person to instead. A curator about to add a place that is already
+     * here wants the entry, not a refusal (owner 2026-09-12).
+     */
+    public function claimedBy(string $osmRef, string $letter): ?int
+    {
+        $id = $this->db->fetchOne(
+            'SELECT id FROM item
+              WHERE letter = :letter
+                AND state IN '.ItemState::servedSqlTuple()."
+                AND (osm_ref = :ref OR (source = 'osm' AND source_ref = :ref))
+              ORDER BY id
+              LIMIT 1",
+            ['letter' => $letter, 'ref' => $osmRef],
+        );
+
+        return false === $id ? null : (int) $id;
+    }
+
     public function refIsTaken(string $osmRef, string $letter, int $exceptItemId): bool
     {
         return (bool) $this->db->fetchOne(

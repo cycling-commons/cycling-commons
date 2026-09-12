@@ -1953,6 +1953,16 @@ improve:
     funnel_curator: 'Eres curador, así que este cambio aparece en el mapa de inmediato, dentro de las zonas que moderas. Fuera de ellas espera al curador de esa zona, como cualquier sugerencia. Cada cambio queda registrado en el historial.'
     funnel_votable: 'Nada aparece en el mapa de inmediato — antes lo lee un curador. Cuando pasa, sale como un punto pequeño, y el primer ciclista que confirma que de verdad está ahí lo convierte en una chincheta completa. <b>%type%</b> también se puede votar, y los que mejor valoran los ciclistas acaban en el mapa de lo mejor.'
     funnel_utility: 'Nada aparece en el mapa de inmediato — antes lo lee un curador. Cuando pasa, sale como un punto pequeño, y el primer ciclista que confirma que de verdad está ahí lo convierte en una chincheta completa. <b>%type%</b> es una parada práctica: los ciclistas las confirman, nunca las votan.'
+  osm:
+    heading: '¿Ya está esto en OpenStreetMap?'
+    scope: 'El mismo tipo de lugar, en OpenStreetMap, a menos de %m% m de tu marcador.'
+    unnamed: 'Objeto sin nombre'
+    use_existing: 'Usar la entrada existente'
+    none: 'No está en OpenStreetMap'
+    none_hint: 'Nada coincide aquí: es un registro nuevo'
+  waiting:
+    mine: 'Ya tienes un cambio pendiente en este lugar. Lo que envíes ahora se añade a él, así sigue siendo una sola cosa que leer.'
+    other: 'Alguien propuso un cambio en este lugar el %date%, y ninguna curadora lo ha leído todavía. Envía el tuyo si dice algo distinto.'
   nav:
     back: 'Atrás'
     next: 'Siguiente'
@@ -2042,7 +2052,10 @@ contribute:
   add:
     title: 'Añadir un lugar · %type%'
     lead: '¿Has encontrado algo que le falta al atlas? Ponle una chincheta, descríbelo y envíaselo a los curadores.'
-    known_note: 'Los puntos pequeños son lugares de este tipo ya registrados — comprueba que el tuyo no sea uno de ellos.'
+    known_note: '%count% lugares de este tipo ya están cartografiados aquí, %ours% de ellos ya en este atlas. Comprueba que el tuyo no sea uno de ellos.'
+    known_none: 'Aquí todavía no hay nada de este tipo cartografiado.'
+    known_ours: 'ya en este atlas'
+    known_zoom: 'Acerca el mapa para ver qué hay ya cartografiado aquí.'
   error:
     heading: 'Esto no se ha podido enviar:'
     unknown_attribute: 'Uno de los campos enviados no se reconoce para este tipo de elemento.'

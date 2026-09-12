@@ -2443,6 +2443,16 @@ improve:
     funnel_curator: 'Je bent curator, dus deze wijziging staat meteen op de kaart, binnen de gebieden die je beheert. Daarbuiten wacht ze op de curator van dat gebied, zoals elke suggestie. Elke wijziging wordt in de geschiedenis vastgelegd.'
     funnel_votable: 'Er verschijnt niets meteen op de kaart — een curator leest het eerst. Zodra het erdoor is, verschijnt het als een klein stipje, en de eerste fietser die bevestigt dat het er echt is maakt er een volledige speld van. Op <b>%type%</b> kan ook gestemd worden, en de hoogst gewaardeerde komen op de best-of-kaart.'
     funnel_utility: 'Er verschijnt niets meteen op de kaart — een curator leest het eerst. Zodra het erdoor is, verschijnt het als een klein stipje, en de eerste fietser die bevestigt dat het er echt is maakt er een volledige speld van. <b>%type%</b> is een praktische stop: fietsers bevestigen deze, ze stemmen er nooit op.'
+  osm:
+    heading: 'Staat dit al in OpenStreetMap?'
+    scope: 'Zelfde soort plek, in OpenStreetMap, binnen %m% m van je speld.'
+    unnamed: 'Naamloos object'
+    use_existing: 'Gebruik de bestaande vermelding'
+    none: 'Niet in OpenStreetMap'
+    none_hint: 'Niets past hierbij: dit is een nieuwe vermelding'
+  waiting:
+    mine: 'Je hebt al een wijziging in behandeling op deze plek. Wat je nu stuurt wordt eraan toegevoegd, zo blijft het één ding om te lezen voor een curator.'
+    other: 'Iemand stelde op %date% een wijziging voor op deze plek, en een curator heeft die nog niet gelezen. Stuur die van jou toch als hij iets anders zegt.'
   nav:
     back: 'Terug'
     next: 'Volgende'
@@ -2532,7 +2542,10 @@ contribute:
   add:
     title: 'Een plek toevoegen · %type%'
     lead: 'Mist de atlas iets? Prik het vast, beschrijf het en stuur het naar de curatoren.'
-    known_note: 'Kleine stippen zijn plekken van dit type die al in beeld zijn — controleer of die van jou er niet al tussen staat.'
+    known_note: '%count% plekken van dit type staan hier al op de kaart, waarvan %ours% al in deze atlas. Controleer of die van jou er niet tussen staat.'
+    known_none: 'Hier staat nog niets van dit type op de kaart.'
+    known_ours: 'al in deze atlas'
+    known_zoom: 'Zoom in om te zien wat hier al op de kaart staat.'
   error:
     heading: 'Dit kon niet worden ingediend:'
     unknown_attribute: 'Een van de ingezonden velden wordt niet herkend voor dit itemtype.'

@@ -96,6 +96,13 @@ final class ImproveType extends AbstractType
             ->add('lat', HiddenType::class, ['required' => false])
             ->add('lng', HiddenType::class, ['required' => false])
             ->add('place', HiddenType::class, ['required' => false])
+            // The curator's answer to "is this already in OpenStreetMap?":
+            // an OSM ref, or `none` for "it is not". Hidden because the
+            // choice is a list of candidates near the point, which only
+            // exists once the point does (assets/contribute/osm-answer.js).
+            // A rider is never asked (catalog-data-model.md §5b), and a value
+            // from one is ignored by the service.
+            ->add('osmAnswer', HiddenType::class, ['required' => false])
             ->add('mode', HiddenType::class, ['required' => false])
             // A curator's optional "Mark it confirmed" on their own applied edit (moderation-and-contribution.md §1.6).
             ->add('confirmNow', CheckboxType::class, ['required' => false, 'label' => false])

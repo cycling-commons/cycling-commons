@@ -2446,6 +2446,16 @@ improve:
     funnel_curator: 'Du bist Kurator, deshalb erscheint diese Änderung sofort auf der Karte, innerhalb der Gebiete, die du betreust. Außerhalb wartet sie wie jeder Vorschlag auf den Kurator dieses Gebiets. Jede Änderung wird in der Historie festgehalten.'
     funnel_votable: 'Es erscheint nichts sofort auf der Karte — zuerst liest ein Kurator es. Sobald es durch ist, taucht es als kleiner Punkt auf, und die erste fahrende Person, die bestätigt, dass es wirklich da ist, macht daraus eine vollständige Markierung. Über <b>%type%</b> kann außerdem abgestimmt werden, und die bestbewerteten landen auf der Best-of-Karte.'
     funnel_utility: 'Es erscheint nichts sofort auf der Karte — zuerst liest ein Kurator es. Sobald es durch ist, taucht es als kleiner Punkt auf, und die erste fahrende Person, die bestätigt, dass es wirklich da ist, macht daraus eine vollständige Markierung. <b>%type%</b> ist ein praktischer Halt: Fahrende bestätigen diese, abgestimmt wird darüber nie.'
+  osm:
+    heading: 'Steht das schon in OpenStreetMap?'
+    scope: 'Gleiche Art Ort, in OpenStreetMap, im Umkreis von %m% m um deine Markierung.'
+    unnamed: 'Objekt ohne Namen'
+    use_existing: 'Vorhandenen Eintrag verwenden'
+    none: 'Nicht in OpenStreetMap'
+    none_hint: 'Nichts passt dazu: das ist ein neuer Eintrag'
+  waiting:
+    mine: 'Du hast schon eine Änderung an diesem Ort in der Warteschlange. Was du jetzt sendest, kommt dazu, so bleibt es eine Sache zum Lesen.'
+    other: 'Jemand hat am %date% eine Änderung an diesem Ort vorgeschlagen, und noch niemand hat sie gelesen. Sende deine trotzdem, wenn sie etwas anderes sagt.'
   nav:
     back: 'Zurück'
     next: 'Weiter'
@@ -2535,7 +2545,10 @@ contribute:
   add:
     title: 'Ort hinzufügen · %type%'
     lead: 'Fehlt etwas im Atlas? Setze den Pin, beschreibe es und schicke es an die Kuratoren.'
-    known_note: 'Kleine Punkte sind Orte dieser Art, die bereits erfasst sind — prüfe, ob deiner schon dabei ist.'
+    known_note: '%count% Orte dieser Art sind hier schon erfasst, %ours% davon bereits in diesem Atlas. Prüfe, ob deiner nicht dabei ist.'
+    known_none: 'Hier ist noch nichts dieser Art erfasst.'
+    known_ours: 'schon in diesem Atlas'
+    known_zoom: 'Zoome hinein, um zu sehen, was hier schon erfasst ist.'
   error:
     heading: 'Das konnte nicht eingereicht werden:'
     unknown_attribute: 'Eines der übermittelten Felder ist für diesen Elementtyp nicht bekannt.'

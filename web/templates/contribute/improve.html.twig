@@ -6,6 +6,11 @@
    (moderation-and-contribution.md §1.6). A new place from a bare pin still
    queues, for the OSM question on the queue card. #}
 {% set self_applies = is_granted('ROLE_CURATOR') and (not add_mode|default(false) or from_osm|default(false)) %}
+{# A curator adding a place that did not come from an OSM node is the one
+   case where publishing now depends on something still to be filled in:
+   the identity question (catalog-data-model.md §5b). They are asked it
+   here, and the page's promise follows their answer. #}
+{% set osm_question = is_granted('ROLE_CURATOR') and add_mode|default(false) and not from_osm|default(false) %}
 {% block head_styles %}
 <link rel="stylesheet" href="{{ asset('lib/maplibre-gl/6.8.0/maplibre-gl.css') }}" />
 <style>
@@ -58,6 +63,38 @@
   .field[data-f="width"] input{max-width:22rem}
   .field textarea{border:1.5px solid rgba(20,22,14,.25);border-radius:6px;padding:.7rem;min-height:80px;resize:vertical}
   .field input:focus,.field textarea:focus{border-color:var(--trail)}
+  /* The identity question: a list of choices, one of which is "no". Buttons
+     rather than radios so the name, the distance and the ref can each carry
+     their own weight in one target. */
+  .osmq{margin-top:1.4rem;padding-top:1.2rem;border-top:1px solid rgba(20,22,14,.12)}
+  .osmq h3{font-family:var(--mono);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:#A0472A;margin:0 0 .4rem}
+  /* A warning, not an error: the form underneath it still works. */
+  .wiz-waiting{font-size:.92rem;line-height:1.55;color:#4a4d40;background:var(--paper-deep);
+    border-left:3px solid var(--ochre);border-radius:0 6px 6px 0;padding:.7rem .9rem;margin:0 0 1.2rem;max-width:72ch}
+  .osmq-scope{font-family:var(--mono);font-size:.72rem;letter-spacing:.06em;color:#6d7060;margin:0 0 .8rem}
+  /* Side by side, and never the width of the page: these are a handful of
+     short choices, and a full-bleed row makes each one look like a section.
+     The basis wraps them one per line on a phone without a media query. */
+  #wz-osmq-list{display:flex;flex-wrap:wrap;gap:.5rem}
+  .osmq-opt{display:flex;flex-direction:column;gap:.15rem;text-align:left;
+    flex:1 1 16rem;max-width:22rem;
+    background:var(--paper);border:1px solid rgba(20,22,14,.2);border-radius:8px;
+    padding:.6rem .8rem;cursor:pointer;font:inherit;color:inherit;min-height:44px}
+  .osmq-opt b{font-weight:600}
+  .osmq-opt span{font-family:var(--mono);font-size:.72rem;color:#6d7060}
+  .osmq-opt:hover:not(:disabled){border-color:var(--ink)}
+  .osmq-opt.on{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+  .osmq-opt.on span{color:rgba(239,230,212,.75)}
+  .osmq-opt:disabled{opacity:.55;cursor:not-allowed}
+  /* The one that leaves this form: it is a way out of adding a duplicate,
+     not a third answer. When it is there it is almost always the right move,
+     so it is drawn as the primary action and takes the focus (owner
+     2026-09-12) — but it cannot be a CHOSEN radio, because choosing it
+     navigates away instead of answering the question. */
+  .osmq-opt--existing{text-decoration:none;background:var(--ink);border-color:var(--ink);color:var(--paper)}
+  .osmq-opt--existing b{color:var(--paper)}
+  .osmq-opt--existing span{color:rgba(239,230,212,.75)}
+  .osmq-opt--existing:focus-visible{outline:3px solid var(--trail);outline-offset:2px}
   .field .fhelp{font-family:var(--mono);font-size:.78rem;line-height:1.5;color:#5a5d4d;margin-top:.4rem;text-transform:none;letter-spacing:0}  /* same readable size and AA colour as add-climb (owner 2026-08-25) */
 
   /* Multi-select fields (stays' accessibility) render as the site's orange
@@ -131,6 +168,10 @@
   .cc-pin{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50% 50% 50% 0;background:var(--ink);border:2px solid var(--paper);box-shadow:0 3px 8px rgba(20,22,14,.4)}
   /* known-places overlay (add mode): visual context only, taps pass through */
   .cc-cov-dot{display:flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--paper);border:1.5px solid rgba(20,22,14,.5);font-size:.72rem;opacity:.8;pointer-events:none;box-shadow:0 1px 4px rgba(20,22,14,.25)}
+  /* Already in THIS atlas, as opposed to a record OpenStreetMap holds
+     and we have not taken in. Adding on top of one of these is a
+     duplicate; adding beside the other is often the point. */
+  .cc-cov-dot--ours{background:var(--trail);border-color:var(--ink);opacity:1}
   .covnote{font-family:var(--mono);font-size:.74rem;color:#595c4d;margin-top:.5rem;line-height:1.5}
   /* Why a submission was refused — the wizard used to fail silently. */
   .wiz-errors{border:1.5px solid #8b1a1a;border-left-width:4px;border-radius:0 6px 6px 0;background:rgba(139,26,26,.06);
@@ -482,6 +523,10 @@
     gpu_unsupported: 'map.gpu_unsupported'|trans,
     nav_next: 'improve.nav.next'|trans,
     nav_submit: (self_applies ? 'improve.nav.submit_applies' : 'improve.nav.submit')|trans,
+    known_note: 'contribute.add.known_note'|trans,
+    known_none: 'contribute.add.known_none'|trans,
+    known_ours: 'contribute.add.known_ours'|trans,
+    known_zoom: 'contribute.add.known_zoom'|trans,
     readout_initial: 'improve.step1.readout_initial'|trans,
     readout_point_set: 'improve.step1.readout_point_set'|trans,
     readout_confirm: 'improve.step1.readout_confirm'|trans,
@@ -566,6 +611,16 @@
         {% for e in form.vars.errors %}<li>{{ e.message|trans }}</li>{% endfor %}
       </ul>
     </div>
+  {% endif %}
+
+  {# A change is already waiting on this place. Warn, never block: a second
+     rider may have something genuinely different to say, and a hazard often
+     deserves re-reporting (moderation-and-contribution.md §7.3c). Existence
+     and age only, never who and never what. #}
+  {% if own_pending|default(false) %}
+    <p class="wiz-waiting">{{ 'improve.waiting.mine'|trans }}</p>
+  {% elseif other_pending_since|default(null) %}
+    <p class="wiz-waiting">{{ 'improve.waiting.other'|trans({'%date%': other_pending_since|cc_date}) }}</p>
   {% endif %}
 
   {{ form_start(form, {attr: {id: 'improve-form', novalidate: 'novalidate'}}) }}
@@ -665,6 +720,21 @@
     {% if add_mode|default(false) %}
       {# Unhidden by improve.js when the known-places overlay has dots in view. #}
       <div class="covnote" id="wz-known" hidden>{{ 'contribute.add.known_note'|trans }}</div>
+    {% endif %}
+    {% if osm_question %}
+      {# The question the moderation card asks before it will approve a new
+         place. A curator's own place is approved at submit time, so it is
+         asked here instead of leaving them queued behind themselves. The
+         candidate list needs the point, so osm-answer.js fills it once there
+         is one; riders never see any of this. #}
+      <div class="osmq" id="wz-osmq" hidden>
+        <h3>{{ 'improve.osm.heading'|trans }}</h3>
+        {# What the list IS, in one line rather than a paragraph (owner
+           2026-09-12). Without it "already linked to another entry" reads as
+           a rule about nothing in particular. #}
+        <p class="osmq-scope">{{ 'improve.osm.scope'|trans({'%m%': osm_radius_m}) }}</p>
+        <div id="wz-osmq-list" role="radiogroup" aria-label="{{ 'improve.osm.heading'|trans|e('html_attr') }}"></div>
+      </div>
     {% endif %}
   </section>
 
@@ -865,7 +935,17 @@
        confirm it" — which is the same sentence twice. The type-specific half
        (votable or confirmable) now rides in the funnel line itself. #}
     <div class="lifecycle">
-      {% if self_applies %}
+      {% if osm_question %}
+      {# Both, and osm-answer.js shows whichever the answer makes true. #}
+      <div id="lc-queued">
+        <h3 class="lc-h">{{ 'improve.lifecycle.heading'|trans }}</h3>
+        <p class="lc-funnel">{{ (item_type.isVotable ? 'improve.lifecycle.funnel_votable' : 'improve.lifecycle.funnel_utility')|trans({'%type%': item_type.labelKey|trans})|rich }}</p>
+      </div>
+      <div id="lc-curator" hidden>
+        <h3 class="lc-h">{{ 'improve.lifecycle.heading_curator'|trans }}</h3>
+        <p class="lc-funnel">{{ 'improve.lifecycle.funnel_curator'|trans }}</p>
+      </div>
+      {% elseif self_applies %}
       {# moderation-and-contribution.md 1.6: a curator's own edit is applied at
          once, so the promise must say so, not only the receipt. #}
       <h3 class="lc-h">{{ 'improve.lifecycle.heading_curator'|trans }}</h3>
@@ -939,6 +1019,17 @@
    escaper of its own), so it has to be defined first. #}
 <script src="{{ asset('contribute/links-editor.js') }}"></script>
 <script src="{{ asset('contribute/review-card.js') }}"></script>
+{% if osm_question %}
+{# Fills the identity question from the point, and keeps the page's promise in
+   step with the answer. Curator-only, so a rider never loads it. #}
+<script nonce="{{ csp_nonce() }}">window.CC_OSMQ_I18N = {{ {
+  unnamed: 'improve.osm.unnamed'|trans,
+  use_existing: 'improve.osm.use_existing'|trans,
+  none: 'improve.osm.none'|trans,
+  none_hint: 'improve.osm.none_hint'|trans,
+}|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
+<script src="{{ asset('contribute/osm-answer.js') }}" defer></script>
+{% endif %}
 {# type="module" so this runs after the MapLibre boot module above: improve.js
    creates its wizard map at evaluation time, and v6 has no global until that
    import has resolved. Deferred module scripts run in document order. #}

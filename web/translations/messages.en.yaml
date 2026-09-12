@@ -1942,6 +1942,16 @@ improve:
     funnel_curator: 'You are a curator, so this change goes on the map at once, inside the areas you moderate. Outside them it waits for that area''s curator, like any suggestion. Every change is recorded in the history.'
     funnel_votable: 'Nothing appears on the map straight away — a curator reads it first. Once it passes it shows up as a small dot, and the first rider who confirms it is really there turns it into a full pin. <b>%type%</b> can also be voted on, and the ones riders rate highest end up on the best-of map.'
     funnel_utility: 'Nothing appears on the map straight away — a curator reads it first. Once it passes it shows up as a small dot, and the first rider who confirms it is really there turns it into a full pin. <b>%type%</b> is a practical stop: riders confirm these, they never vote on them.'
+  osm:
+    heading: 'Is this already in OpenStreetMap?'
+    scope: 'Same kind of place, in OpenStreetMap, within %m% m of your pin.'
+    unnamed: 'Unnamed object'
+    use_existing: 'Use the existing entry'
+    none: 'Not in OpenStreetMap'
+    none_hint: 'Nothing here matches: this is a new record'
+  waiting:
+    mine: 'You already have a change waiting on this place. Anything you send now is added to it, so it stays one thing for a curator to read.'
+    other: 'Somebody proposed a change to this place on %date%, and a curator has not read it yet. Send yours anyway if it says something different.'
   nav:
     back: 'Back'
     next: 'Next'
@@ -2031,7 +2041,10 @@ contribute:
   add:
     title: 'Add a place · %type%'
     lead: 'Found something the atlas is missing? Pin it, describe it, and send it to the curators.'
-    known_note: 'Small dots are places of this kind already on file — check yours is not one of them.'
+    known_note: '%count% places of this kind are already mapped here, %ours% of them already in this atlas. Check yours is not one of them.'
+    known_none: 'Nothing of this kind is mapped here yet.'
+    known_ours: 'already in this atlas'
+    known_zoom: 'Zoom in to see what is already mapped here.'
   error:
     heading: 'That could not be submitted:'
     unknown_attribute: 'One of the submitted fields is not recognised for this item type.'

@@ -9,6 +9,7 @@ namespace App\Controller;
 use App\Catalog\CatalogFormRegistry;
 use App\Catalog\ConfirmationStance;
 use App\Catalog\Entity\Item;
+use App\Catalog\Import\OsmLinker;
 use App\Catalog\ItemState;
 use App\Catalog\ItemType;
 use App\Catalog\LocationMode;
@@ -56,6 +57,48 @@ final class ContributeController extends AbstractController
         private readonly CatalogFormRegistry $registry,
         private readonly EntityManagerInterface $em,
     ) {
+    }
+
+    /**
+     * The OSM objects near a point, for the wizard's "is this already in
+     * OpenStreetMap?" question.
+     *
+     * **Curator-only, because only a curator is asked.** Approval of a new
+     * place needs that answer (catalog-data-model.md §5b), and a curator's own
+     * place is approved at submit time, so the question moves into the wizard
+     * for them. A rider never sees it, and this endpoint tells them nothing:
+     * it is the same list the moderation card shows, which is curator-facing.
+     *
+     * A candidate another served row already claims carries that row's
+     * `itemId`. It is returned rather than filtered out, and with the id
+     * rather than a bare flag, because the useful answer to "this is already
+     * here" is the entry itself: the curator opens it instead of adding a
+     * second one (owner 2026-09-12).
+     */
+    #[Route('/contribute/osm-nearby', name: 'contribute_osm_nearby', methods: ['GET'])]
+    #[IsGranted('ROLE_CURATOR')]
+    public function osmNearby(Request $request, OsmLinker $linker): Response
+    {
+        $lat = $request->query->get('lat');
+        $lng = $request->query->get('lng');
+        if (!is_numeric($lat) || !is_numeric($lng)) {
+            return $this->json(['candidates' => []]);
+        }
+
+        // An unknown type falls back to the default rather than 404ing, the
+        // same rule the wizard itself follows: this is a suggestion list, not
+        // an identifier.
+        $letter = ItemType::fromParam((string) $request->query->get('type', ''))->letter();
+        $candidates = array_map(
+            static function (array $c) use ($linker, $letter): array {
+                $itemId = $linker->claimedBy($c['ref'], $letter);
+
+                return $c + ['taken' => null !== $itemId, 'itemId' => $itemId];
+            },
+            $linker->nearby($letter, (float) $lat, (float) $lng),
+        );
+
+        return $this->json(['candidates' => $candidates]);
     }
 
     #[Route('/contribute', name: 'contribute')]
@@ -241,6 +284,10 @@ final class ContributeController extends AbstractController
                        the same vocabularies the form offers, so an OSM value we
                        cannot express is simply absent rather than guessed. */
                     '_osm_was' => self::osmBaseline($request),
+                    // The curator's OSM answer, under the service's own key so
+                    // it cannot be confused with `_osm_ref`, which says this
+                    // place IS that object and carries the dedupe rules.
+                    '_osm_answer' => $data['osmAnswer'] ?? null,
                 ] + $data, $user);
 
                 return $this->renderAddPlace($type, receipt: $receipt, fromOsm: true);
@@ -305,6 +352,9 @@ final class ContributeController extends AbstractController
             'unbound' => false,
             'add_mode' => true,
             'from_osm' => $fromOsm,
+            // The radius the candidate query actually uses, so the line that
+            // tells a curator what the list is cannot drift from it.
+            'osm_radius_m' => OsmLinker::LOOSE_M,
             'confirm_offered' => \in_array(ConfirmationStance::Exists, $type->confirmationStances(), true),
             'receipt' => $receipt,
             'form' => $form,
@@ -447,6 +497,16 @@ final class ContributeController extends AbstractController
             $pendingSubmissionId = false === $found ? null : (int) $found;
         }
 
+        // Two different facts, never merged into one sentence: a change of
+        // your own is amended by what you send next (§7.3b), a stranger's is
+        // a second review of possibly the same thing (§7.3c). Whichever one a
+        // rider gets, the other would read as a lie.
+        $user = $this->getUser();
+        $ownPending = $user instanceof User && null !== $this->contributions->openSubmissionFor((int) $item->getId(), $user);
+        $otherPendingSince = $ownPending
+            ? null
+            : $this->contributions->otherPendingSince((int) $item->getId(), $user instanceof User ? $user : null);
+
         return $this->render('contribute/improve.html.twig', [
             'page_title' => 'meta.improve_title',
             'page_description' => 'meta.improve_description',
@@ -466,6 +526,8 @@ final class ContributeController extends AbstractController
             'current' => $current,
             'own_photo_ids' => $this->ownPhotoIds($current),
             'pending_submission_id' => $pendingSubmissionId,
+            'own_pending' => $ownPending,
+            'other_pending_since' => $otherPendingSince,
         ]);
     }
 

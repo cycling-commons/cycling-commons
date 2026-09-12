@@ -414,6 +414,30 @@ position is a fact about the climb, and only the % needs a gradient to refresh.
 - The control is revealed by `onHistory` only once there is something to take
   back: a permanently dead button teaches nothing.
 
+### 1.2b What is already mapped here, on the locate step
+
+**The wizard's map shows the places of this kind already around the pin**, so
+somebody about to add one can see they are about to add it twice. Fetched from
+`/map/coverage/nearby` on every map move, filtered to the letter being added,
+and it carries both halves of the atlas: rows we hold (`curated: true`, drawn
+in trail green) and OpenStreetMap records we have not taken in (pale). The
+distinction is the useful one for the question being asked, because adding on
+top of one of ours is a duplicate while adding beside the other is often the
+whole point.
+
+**It drew nothing at all until 2026-09-12** (owner: "the map for the add new
+point does not show any of our tile data nor our categories"). The endpoint
+had always answered, with both arms: the overlay read `p.lng` / `p.lat` while
+`CoverageRepository::entry()` emits `ll: [lat, lng]`, so every marker was
+placed at `[undefined, undefined]` and none appeared. Nothing logged, because
+that is not an error MapLibre raises.
+
+**Below zoom 11 it says so** rather than going quiet. An empty map reads as
+"nothing is mapped here", which is the opposite of the truth and exactly the
+wrong thing to tell somebody about to add a place; the note now says to zoom
+in. Above it the note counts what is in view and how many are already ours.
+Climbs are exempt: a climb is a line, and a dot beside it answers nothing.
+
 ### 1.3 Segment carrier
 
 Segment-located types (road surface, `LocationMode::Segment`) POST their drawn
@@ -469,18 +493,52 @@ move and the area check are exactly the ones the desk button would have made.
 Outside the curator's assigned areas the edit queues like anyone's
 (`OutOfScopeException`). The receipt then reads "Change applied" instead of
 "Suggestion submitted" (`ContributionReceipt::$applied`,
-`improve.receipt.applied_*`). Edits only: a NEW place still queues, because
-approval requires the OSM answer (§5b of catalog-data-model.md) and that
-question is asked on the queue card, not in the wizard (docs/TODO.md).
+`improve.receipt.applied_*`).
+
+**A NEW place too, once the wizard asks the identity question**
+(2026-09-12). Approving a new place needs the OSM answer first (§5b of
+catalog-data-model.md), and that question used to be asked only on the queue
+card, so a curator filing their own place queued behind themselves and then
+answered their own question on the desk a moment later (owner 2026-09-06).
+The wizard now asks it on the locate step: `OsmLinker::nearby()` candidates
+for the point, served curator-only by `ContributeController::osmNearby()`,
+plus "Not in OpenStreetMap" as the last choice. A candidate this atlas
+already holds is not offered as a refusal: it carries that row's id from
+`OsmLinker::claimedBy()` and becomes a link to the entry, "Use the existing
+entry", because somebody about to add a place that is already here wants the
+place and not a grey box (owner 2026-09-12). **Answering is required**: the
+locate step's Next stays shut until it is, which is why the question carries
+no "you may skip this" line. One line says what the list is, same kind
+of place and within `OsmLinker::LOOSE_M` of the pin, with the radius passed
+from the constant so the sentence cannot drift from the query (owner
+2026-09-12: a paragraph of explanation went, but "already linked to another
+entry" without the scope reads as a rule about nothing in particular).
+
+The known-places note from §1.2b is suppressed wherever this question is
+asked. That note counts whatever is in the map view; this counts a fixed
+250 m around the pin. Two different numbers about the same worry, on one
+screen, is one too many. The answer rides in the `osmAnswer` form
+field, and `CatalogContributionService::answerOsmIfCurator()` records it
+before `applyIfCurator()` runs, with the desk's own exclusivity guard: a
+taken ref is not recorded and the place queues, where a human sees the clash.
+Unanswered, it queues exactly as before, so the question is an opening and
+never a new barrier. A place taken from an OSM node answered it by
+construction and needs none of this.
+
+**A rider is never asked** (§5b). The block, the script and the endpoint are
+all behind `ROLE_CURATOR`, and an `osmAnswer` sent by a rider is ignored by
+the service rather than trusted.
 
 The promise matches the result (owner 2026-09-07: the admin's own name edit
 went live at once, but the wizard had said "Submit for review"). On an EDIT
 by a user who reaches `ROLE_CURATOR`, the wizard's button reads "Apply
 change" (`improve.nav.submit_applies`) and the lifecycle box reads
 `improve.lifecycle.heading_curator` / `funnel_curator`, which also says an
-edit outside their areas still queues. A new place keeps the rider copy,
-since it queues for everyone. `improve.html.twig` sets `self_applies` once
-at the top. Pinned by `CuratorWizardCopyTest`.
+edit outside their areas still queues. `improve.html.twig` sets
+`self_applies` once at the top. On a curator's ADD the answer is not known
+when the page renders, so both lifecycle blocks ship and
+`assets/contribute/osm-answer.js` shows whichever the answer makes true.
+Pinned by `CuratorWizardCopyTest`.
 
 **Optional "Mark it confirmed"** (owner 2026-09-07: "the Eiffel Tower will be
 there without a French rider confirming it, but a fountain the moderator
@@ -1404,6 +1462,42 @@ the curator's question attached to the abandoned one.
 
 Both halves are pinned by `ImproveBindingTest` — the amend, and the refusal to
 amend anything already decided.
+
+### 7.3c The form says a change is already waiting (built 2026-09-12)
+
+With a review backlog two riders can propose the same correction to the same
+item without either knowing. It costs the second rider their time and a curator
+a second reading of the same change, and until now nobody outside the desk
+could tell: a curator saw every pending row, the rider who filed one saw their
+own, everybody else saw nothing.
+
+**Submission path only.** On the `/improve` form for that item, before ten
+minutes go into it. NEVER near the confirm buttons: confirming is the path
+where duplication is the POINT, and the visible tally there exists to invite
+the second and third rider. The two look alike from outside, which is why this
+is written down.
+
+**Existence and age, never who and never what.** `CatalogContributionService::otherPendingSince()`
+returns one timestamp or null. The content is unreviewed and stays unpublished,
+and the age is the only part a rider needs in order to decide whether to
+bother. Pinned by a test that fails if the author's name, their address or the
+proposed value reaches the page.
+
+**Warn, never block.** The form underneath still works: a second rider may have
+something genuinely different to say, and a hazard often deserves re-reporting.
+
+**Two sentences, never merged.** A rider's own waiting change is amended by
+what they send next (§7.3b), so they are told that; somebody else's is a second
+review of possibly the same thing, so they are told that instead. One generic
+sentence would read as a lie to whichever rider got the wrong one, which is why
+`otherPendingSince()` excludes the reader's own row rather than the caller
+filtering afterwards.
+
+**Open, and the owner's call**: whether to show a count ("2 waiting") rather
+than only that one exists. Built without the count, which is the half both
+answers agree on. The privacy question behind it is the same one: revealing
+that a specific item has activity is thin, but in a small region it plus a
+public contributor wall narrows who.
 
 ### 7.4 Curator → rider messages — M6a
 
