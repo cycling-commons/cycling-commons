@@ -6,6 +6,8 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Blog\BlogLocales;
+use App\Blog\BlogRepository;
 use App\Catalog\RegionRegistryProvider;
 use App\Routing\ActiveLocales;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -61,6 +63,18 @@ final class SitemapController extends AbstractController
         // this list, and both are how somebody finds out the project is alive.
         ['roadmap', 'weekly'],
         ['changelog', 'weekly'],
+        // The machine-readable contract's rendered reference. English-only
+        // content under five localised paths, which is why it is one entry
+        // with alternates like any other page: the URL is per language even
+        // where the words are not.
+        ['developers_api', 'monthly'],
+        // The blog index. Its posts are listed separately, below, because a
+        // post is reachable in some languages and not others.
+        ['blog', 'weekly'],
+        // What the pins and colours on the map mean. A reader searches for
+        // this ("what does the red dashed line mean"), and it is the one page
+        // that explains the map without loading it.
+        ['map_key', 'monthly'],
         ['privacy', 'yearly'],
         ['terms', 'yearly'],
     ];
@@ -69,6 +83,7 @@ final class SitemapController extends AbstractController
         private readonly RouterInterface $router,
         private readonly RegionRegistryProvider $regions,
         private readonly ActiveLocales $activeLocales,
+        private readonly BlogRepository $blog,
     ) {
     }
 
@@ -163,6 +178,25 @@ final class SitemapController extends AbstractController
         // Operational regions only — L2 outlines have no page.
         foreach ($this->regions->all() as $region) {
             $urls[] = $this->entry('region_detail', ['slug' => $region['slug']], 'weekly', '0.6', $locales);
+        }
+
+        // One entry per live post, in the languages that actually serve it.
+        // The blog is written in two languages and read in five, and the
+        // fallback runs one way only (BlogController::post): a reader in any
+        // language gets an English post, but only a Dutch reader gets a
+        // Dutch-only one. Listing a Dutch post under /blog/ would therefore
+        // put a 404 in the sitemap, which is the error this file exists to
+        // avoid.
+        foreach ($this->blog->liveSlugs() as $post) {
+            $reachable = BlogLocales::FALLBACK === $post['locale']
+                ? $locales
+                : array_values(array_intersect($locales, [$post['locale']]));
+            // A post in a language this deployment does not serve has no
+            // address a reader can reach, so it has no sitemap entry either.
+            if ([] === $reachable) {
+                continue;
+            }
+            $urls[] = $this->entry('blog_post', ['slug' => $post['slug']], 'monthly', '0.5', $reachable);
         }
 
         $xml = implode("\n", [

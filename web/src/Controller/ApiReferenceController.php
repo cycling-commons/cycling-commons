@@ -4,6 +4,7 @@
 
 namespace App\Controller;
 
+use App\Api\ApiSurface;
 use App\Routing\LocalePrefix;
 use App\Routing\LocalizedPath;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -25,8 +26,11 @@ use Symfony\Component\Routing\Attribute\Route;
 final class ApiReferenceController extends AbstractController
 {
     #[Route(LocalizedPath::DEVELOPERS_API, name: 'developers_api')]
-    public function __invoke(): Response
+    public function __invoke(ApiSurface $surface): Response
     {
-        return $this->render('pages/developers_api.html.twig');
+        return $this->render('pages/developers_api.html.twig', [
+            'api_live' => $surface->live(),
+            'api_total' => $surface->promised(),
+        ]);
     }
 }

@@ -190,6 +190,19 @@ or field-level changes land in both places, and
 `tests/Smoke/ApiReferenceTest.php` pins the `/developers` teaser page to the
 contract so they cannot drift.
 
+**The page counts itself.** Its banner asserted "Draft contract, API not live
+yet" long after `/v1/map-config` started answering, because the sentence was
+written by hand and nothing could make it wrong (known issue, 2026-09-06). It
+now reads "N of M endpoints answer today", with M the paths in the OpenAPI
+document and N the routes named `api_v1_*` in the router (`App\Api\ApiSurface`,
+pinned by `tests/Smoke/ApiSurfaceTest.php`). Shipping an endpoint updates the
+sentence; nobody has to remember. The same test refuses a live endpoint the
+contract does not describe.
+
+The reference is in `sitemap.xml` from 2026-09-12. Its content is English only
+and its paths are localised in all five, so it is one entry with alternates
+like any other page: the URL is per language even where the words are not.
+
 The developer-facing plain-language explanation (the two transports, both PoC
 endpoints with worked requests, and a full consumer walk-through) lives on the
 wiki under `wiki/developers/api/` (published at

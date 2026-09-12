@@ -2333,6 +2333,9 @@ map:
   d_show_all: 'alle {n} tonen'
   mly_none: 'Geen straatbeeld hier.'
   mly_zoom: 'Zoom in en klik op een groene stip om straatbeeld te openen.'
+api:
+  live_count: '%live% van de %total% endpoints antwoorden vandaag'
+
 improve:
   eyebrow: 'Bijdragen · nieuwe invoer'
   title: 'Verbeter of voeg een plek toe.'

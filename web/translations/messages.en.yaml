@@ -1824,6 +1824,9 @@ vote:
     reference: 'Reference:'
     stub_note: 'Note: the seasonal ballot arrives after launch. Until then this page shows how it will work, and submitting changes nothing.'
     cta: 'See the region →'
+api:
+  live_count: '%live% of %total% endpoints answer today'
+
 improve:
   eyebrow: 'Contribute · new entry'
   title: 'Improve or add a place.'

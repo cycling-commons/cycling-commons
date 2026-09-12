@@ -136,6 +136,33 @@ final class BlogRepository
         return $this->published($locale, $limit);
     }
 
+    /**
+     * Every live post, as slug and written language.
+     *
+     * The sitemap's shape, and the reason it is not `published()`: that one
+     * asks for one language and hydrates whole entities to render them. This
+     * asks for all of them and reads two columns, because a sitemap needs the
+     * address and the language and nothing else.
+     *
+     * @return list<array{slug: string, locale: string}>
+     */
+    public function liveSlugs(): array
+    {
+        /** @var list<array{slug: string, locale: string}> $rows */
+        $rows = $this->em->createQueryBuilder()
+            ->select('p.slug AS slug', 'p.locale AS locale')
+            ->from(BlogPost::class, 'p')
+            ->where('p.status = :live')
+            ->andWhere('p.publishedAt IS NOT NULL')
+            ->orderBy('p.publishedAt', 'DESC')
+            ->addOrderBy('p.id', 'DESC')
+            ->setParameter('live', BlogStatus::Published)
+            ->getQuery()
+            ->getResult();
+
+        return $rows;
+    }
+
     private function liveQuery(string $locale): \Doctrine\ORM\QueryBuilder
     {
         return $this->em->createQueryBuilder()

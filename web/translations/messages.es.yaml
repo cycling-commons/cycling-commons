@@ -1833,6 +1833,9 @@ vote:
     reference: 'Referencia:'
     stub_note: 'Nota: la papeleta estacional llega después del lanzamiento. Hasta entonces esta página enseña cómo funcionará, y enviarla no cambia nada.'
     cta: 'Ver la región →'
+api:
+  live_count: '%live% de %total% puntos finales responden hoy'
+
 improve:
   eyebrow: 'Aportar · entrada nueva'
   title: 'Mejora o añade un lugar.'

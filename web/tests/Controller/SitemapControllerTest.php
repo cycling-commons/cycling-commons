@@ -147,6 +147,94 @@ final class SitemapControllerTest extends WebTestCase
         }
     }
 
+    /**
+     * The blog index and the map key.
+     *
+     * Two pages a reader searches for that the sitemap did not name, so a
+     * crawler could only reach them by following a link from somewhere else.
+     */
+    public function testTheBlogAndMapKeyPagesAreListed(): void
+    {
+        $client = static::createClient();
+        $locs = self::locs(self::sitemapBody($client));
+
+        foreach (['/blog', '/map-key'] as $path) {
+            self::assertContains(
+                'http://localhost'.$path,
+                $locs,
+                sprintf('%s is missing from sitemap.xml', $path),
+            );
+        }
+    }
+
+    /**
+     * Nothing in the sitemap may answer a redirect to the login page.
+     *
+     * `/vote` is behind ROLE_USER, so an anonymous crawler following it gets
+     * 302 to /login, and a sitemap that promises a page it cannot serve is
+     * worse than one that omits it. The rule is not about that one route: any
+     * page put in PAGES that turns out to be guarded fails here.
+     */
+    public function testNoSitemapUrlRedirectsAnAnonymousVisitorToLogin(): void
+    {
+        $client = static::createClient();
+        $client->followRedirects(false);
+
+        foreach (self::locs(self::sitemapBody($client)) as $loc) {
+            $path = parse_url($loc, \PHP_URL_PATH);
+            self::assertIsString($path);
+            $client->request('GET', $path);
+            $response = $client->getResponse();
+            // Only the guarded-page question. A 5xx is a broken page, which is
+            // a different fault with a different owner, and catching it here
+            // would make this test fail for reasons it does not name.
+            if ($response->isRedirection()) {
+                self::assertStringNotContainsString(
+                    '/login',
+                    (string) $response->headers->get('Location'),
+                    "{$loc} is in the sitemap but sends an anonymous visitor to the login page",
+                );
+            }
+        }
+    }
+
+    /**
+     * A post is listed in the languages that actually serve it, and no others.
+     *
+     * The blog is written in two languages and read in five, and the fallback
+     * runs one way only: any reader gets an English post, but only a Dutch
+     * reader gets a Dutch-only one (BlogController::post). Listing the Dutch
+     * post under every prefix would put four 404s in the sitemap, which is the
+     * failure this whole file exists to catch.
+     */
+    public function testEachBlogPostIsListedOnlyWhereItCanBeRead(): void
+    {
+        $client = static::createClient();
+        $db = static::getContainer()->get(Connection::class);
+        self::assertInstanceOf(Connection::class, $db);
+
+        foreach ([['sitemap-test-en', 'en'], ['sitemap-test-nl', 'nl']] as [$slug, $locale]) {
+            $db->executeStatement(
+                "INSERT INTO blog_post (slug, locale, title, body, status, published_at, created_at, updated_at)
+                 VALUES (:slug, :locale, 'Sitemap test', 'Body.', 'published', NOW(), NOW(), NOW())",
+                ['slug' => $slug, 'locale' => $locale],
+            );
+        }
+
+        $locs = self::locs(self::sitemapBody($client));
+
+        // English: reachable from every prefix, so one entry whose canonical
+        // is the unprefixed URL.
+        self::assertContains('http://localhost/blog/sitemap-test-en', $locs);
+
+        // Dutch: the canonical is the Dutch URL, and no other prefix appears.
+        $dutch = array_values(array_filter($locs, static fn (string $l): bool => str_contains($l, 'sitemap-test-nl')));
+        self::assertNotEmpty($dutch, 'the Dutch post is missing from sitemap.xml');
+        foreach ($dutch as $loc) {
+            self::assertStringContainsString('/nl/', $loc, "a Dutch-only post is listed at a URL that 404s: {$loc}");
+        }
+    }
+
     public function testEveryOperationalRegionHasASitemapEntry(): void
     {
         $client = static::createClient();

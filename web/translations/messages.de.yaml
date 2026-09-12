@@ -2336,6 +2336,9 @@ map:
   d_show_all: 'alle {n} anzeigen'
   mly_none: 'Keine Straßenansicht hier.'
   mly_zoom: 'Hineinzoomen und einen grünen Punkt anklicken, um die Straßenansicht zu öffnen.'
+api:
+  live_count: '%live% von %total% Endpunkten antworten heute'
+
 improve:
   eyebrow: 'Beitragen · neuer Eintrag'
   title: 'Einen Ort verbessern oder hinzufügen.'

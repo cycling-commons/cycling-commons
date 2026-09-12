@@ -44,7 +44,11 @@
 <div class="apibar">
   <a href="{{ path('developers') }}">← Cycling Commons · Developers</a>
   <a href="https://wiki.cyclingcommons.org/developers/api/">Integration guide</a>
-  <span class="draft">Draft contract — API not live yet</span>
+  {# What is true, counted from the document below rather than asserted: two
+     of the twelve endpoints answer today (known issue, 2026-09-06). "Not live
+     yet" stopped being true the day /v1/map-config shipped, and a contract
+     page that is wrong about itself is the worst kind. #}
+  <span class="draft">{{ 'api.live_count'|trans({'%live%': api_live, '%total%': api_total}) }}</span>
 </div>
 <div id="redoc"></div>
 <script src="{{ asset('lib/redoc-standalone-2.5.3.js') }}"></script>
