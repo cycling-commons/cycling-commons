@@ -4,10 +4,16 @@
 
 namespace App\Controller;
 
+use App\Catalog\BestOfPreview;
+use App\Catalog\BikeType;
 use App\Catalog\ContributorWallProvider;
 use App\Catalog\CoverageStatsProvider;
+use App\Catalog\DifficultyVocabulary;
+use App\Catalog\ItemType;
 use App\Catalog\RegionDirectoryProvider;
+use App\Catalog\RegionRegistryProvider;
 use App\Catalog\RegionSilhouette;
+use App\Catalog\Season;
 use App\Community\CommunityProgress;
 use App\Content\ReleaseNotes;
 use App\Entity\User;
@@ -329,6 +335,111 @@ final class PageController extends AbstractController
             'region' => $region,
             'silhouette' => $silhouette->forRegion((int) $region['id'], (string) $region['countryCode']),
         ]);
+    }
+
+    /**
+     * What riders rate best, as it will look once the ballot opens.
+     *
+     * **A design preview with invented tallies** (owner 2026-09-12: "for now
+     * like in the demo we need to simulate a page, this can also help us
+     * design the voting specs"). `route_vote` is empty and stays empty until
+     * the ballot ships, so a page built on real counts would be blank
+     * everywhere and could settle nothing. The names are real rows; only the
+     * numbers are made up, and {@see BestOfPreview} derives them from each
+     * row's id so a reload never reshuffles anything.
+     *
+     * Public, unlike `/vote`: the whole point of this one is that somebody who
+     * has not joined can see what the vote produced.
+     *
+     * Every choice is a query parameter and every control a link, the same
+     * rule the sort on /coverage follows: no inline script, no nonce, and a
+     * shared cache can hold each combination (page-caching.md §3.2).
+     */
+    #[Route(LocalizedPath::BEST_OF, name: 'best_of')]
+    public function bestOf(Request $request, BestOfPreview $preview, RegionRegistryProvider $regions): Response
+    {
+        $categories = BestOfPreview::categories();
+        $wanted = (string) $request->query->get('cat', '');
+        $type = ItemType::fromParam('' === $wanted ? $categories[0]->value : $wanted);
+        if (!$type->isVotable()) {
+            $type = $categories[0];
+        }
+
+        $season = Season::tryFrom((string) $request->query->get('season', '')) ?? Season::current(new \DateTimeImmutable());
+
+        // An unknown country is "everywhere" rather than a 404: this is a
+        // browsing control, not an identifier.
+        $cc = strtoupper((string) $request->query->get('cc', ''));
+        $countries = $this->bestOfCountries($regions, $request->getLocale());
+        $cc = \array_key_exists($cc, $countries) ? $cc : null;
+
+        // Comma-separated, because these three are questions with more than
+        // one honest answer: a rider who is happy on gravel or a mountain bike
+        // is asking about both at once (owner 2026-09-12).
+        $bikes = self::pickMany($request, 'bike', BikeType::values());
+        $lengths = self::pickMany($request, 'len', array_keys(BestOfPreview::LENGTHS));
+        $difficulties = self::pickMany($request, 'diff', array_values(DifficultyVocabulary::LABELS));
+
+        return $this->render('pages/best_of.html.twig', [
+            'page_title' => 'meta.best_of_title',
+            'page_description' => 'meta.best_of_description',
+            'nav_active' => 'best_of',
+            'categories' => $categories,
+            'category' => $type,
+            'seasons' => Season::cases(),
+            'season' => $season,
+            'countries' => $countries,
+            'country' => $cc,
+            'bikes' => BikeType::values(),
+            'bike' => $bikes,
+            'difficulties' => array_values(DifficultyVocabulary::LABELS),
+            'difficulty' => $difficulties,
+            'lengths' => array_keys(BestOfPreview::LENGTHS),
+            'length' => $lengths,
+            'ranking' => $preview->ranking($type, $season, $cc, $bikes, $difficulties, null, $lengths),
+            // A country big enough to have regions is asked region by region:
+            // one national top ten flattens the Alps into the Ardennes and
+            // tells a rider near neither of them anything (owner 2026-09-12).
+            'regions' => null === $cc ? null : $preview->byRegion($type, $season, $cc, $bikes, $difficulties, BestOfPreview::TOP_N, $lengths),
+        ]);
+    }
+
+    /**
+     * The values a multi-choice filter was given, keeping only known ones.
+     *
+     * @param list<string> $allowed
+     *
+     * @return list<string>
+     */
+    private static function pickMany(Request $request, string $key, array $allowed): array
+    {
+        $raw = explode(',', (string) $request->query->get($key, ''));
+
+        return array_values(array_unique(array_filter(
+            array_map(trim(...), $raw),
+            static fn (string $v): bool => \in_array($v, $allowed, true),
+        )));
+    }
+
+    /**
+     * The countries the scope picker may offer, code to name.
+     *
+     * Only the ones with an operational region, so a chip never leads to a
+     * list that was always going to be empty.
+     *
+     * @return array<string, string>
+     */
+    private function bestOfCountries(RegionRegistryProvider $regions, string $locale): array
+    {
+        $out = [];
+        foreach ($regions->all() as $region) {
+            $code = (string) $region['countryCode'];
+            // The reader's own language, the same source the world tables use.
+            $out[$code] = \Locale::getDisplayRegion('-'.$code, $locale);
+        }
+        asort($out);
+
+        return $out;
     }
 
     #[Route(LocalizedPath::COVERAGE, name: 'coverage')]

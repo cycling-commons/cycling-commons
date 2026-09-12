@@ -441,6 +441,63 @@ signal; declared suitability does not filter them. Which types count as
 specialty is defined by `BikeType::isSpecialty()`, the single owner of the
 split.
 
+### 8b. `/best`: the public result, simulated first (2026-09-12)
+
+**A public page showing what riders rated best, with invented numbers.** The
+ranking was public data with no page: `/map/best-of` answers to anyone and
+feeds the map's Curated mode, while `/vote` is a login-only preview of the
+BALLOT. So nobody outside could see an outcome, and a search engine could find
+nothing (known issue, 2026-09-06).
+
+`route_vote` is empty and stays empty until the ballot ships, so a page built
+on real counts would be blank in every region and could settle nothing. Owner
+2026-09-12: "for now like in the demo we need to simulate a page, this can
+also help us design the voting specs". `App\Catalog\BestOfPreview` therefore
+serves **real rows with fabricated tallies**, seeded from each row's id so a
+reload never reshuffles anything: a preview whose order moved would teach a
+reader that votes are arriving, which is the one thing it must not imply.
+Every row carries `simulated: true` so no template can forget to say so, and
+the page says it in prose above the list.
+
+**What the preview settled about the ballot.** The five votable types
+(`ItemType::isVotable()`) are the categories. Season is the round. And the
+split that matters: **bike type belongs to the VOTE, not the route**
+(`RouteVote::$bikeType`). "Best on a handbike" is the same roads ranked by
+different people, not a filtered set of roads, which is exactly why it earns
+its own ranking. Difficulty is the opposite case: it is the route's own
+attribute (`DifficultyVocabulary`, stored `{label, score}`), so it filters the
+rows.
+
+Every control is a query parameter and a link, the sort rule from
+page-caching.md §3.2, so the page needs no script for its filters and a shared
+cache holds one body per combination. The scope picker reuses the country
+globe `/regions` and `/coverage` already share, mounted only when asked for.
+
+**A country is read region by region.** A national top ten flattens the Alps
+into Brittany and tells a rider near neither anything, so picking a country
+splits it: `BestOfPreview::byRegion()` returns the regions that HAVE a result
+and, separately, the ones that do not. The quiet ones are named at the foot of
+the page with one control that changes that, because "nobody has voted here
+yet" is an invitation and a silent omission is not. Operational regions only,
+or a country's own L2 outline row would sit inside itself as a link to nothing
+(catalog-data-model.md §2.4).
+
+**The second number is not always "rode it".** A castle is not ridden. The
+signal behind it is the same confirmation either way; only the verb follows
+what the thing is: ridden for climbs and routes, stayed for a bed, been there
+for a view or a heritage site.
+
+**The top three carry what the catalogue holds**, a picture and one line about
+what the thing is, and nothing invented: an item with no note gets no note.
+The photo's credit and licence travel WITH it, because these are CC BY-SA
+files and a card that shows the picture and drops the attribution is a licence
+breach rather than a layout choice (photo-uploads.md §5f). Every row links to
+the thing on the map.
+
+**Deliberately not in `sitemap.xml`** while the numbers are made up: listing it
+would offer a search engine a page of invented results.
+
+
 ## 9. Attribute vocabulary (`recommended_route.attributes`)
 
 The R registry field set (`CatalogFormRegistry::for(ItemType::QualityRides)`)

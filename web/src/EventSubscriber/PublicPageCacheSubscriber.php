@@ -95,6 +95,8 @@ final readonly class PublicPageCacheSubscriber implements EventSubscriberInterfa
         'known_issues',
         'pages',
         'coverage',
+        // Every control on it is a link, so one body per combination.
+        'best_of',
         // The three guarded public forms. They belong here for the same reason
         // as the rest, and they were the last public pages that could not join:
         // each used to mint a single-use proof-of-work challenge into its own

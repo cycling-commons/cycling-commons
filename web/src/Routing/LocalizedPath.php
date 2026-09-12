@@ -122,6 +122,16 @@ final class LocalizedPath
     ];
 
     /** @var array<string, string> */
+    /** The public seasonal result, a design preview until the ballot opens. */
+    public const array BEST_OF = [
+        'en' => '/best',
+        'fr' => '/meilleurs',
+        'nl' => '/beste',
+        'de' => '/beste',
+        'es' => '/mejores',
+    ];
+
+    /** @var array<string, string> */
     public const array COVERAGE = [
         'en' => '/coverage',
         'fr' => '/couverture',

@@ -1,0 +1,277 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{% extends 'base.html.twig' %}
+{% block head_styles %}
+<style>
+  .prev{background:var(--paper-deep);border-left:3px solid var(--ochre);border-radius:0 6px 6px 0;
+    padding:.85rem 1.05rem;margin:0 0 1.6rem;font-size:.92rem;line-height:1.55;color:#4a4d40;max-width:72ch}
+  {# Every control is a link, the same rule /coverage's sort follows: no inline
+     script, no nonce, and a shared cache can hold each combination
+     (page-caching.md §3.2). #}
+  .filters{display:flex;flex-direction:column;gap:.9rem;margin:0 0 1.8rem}
+  .frow{display:flex;align-items:baseline;gap:.5rem;flex-wrap:wrap}
+  .frow > b{font-family:var(--mono);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--clay);flex:0 0 7rem}
+  .frow a{font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;
+    text-decoration:none;padding:.3rem .65rem;border:1px solid rgba(20,22,14,.22);border-radius:30px;color:#595c4d}
+  .frow select{font-family:var(--mono);font-size:.74rem;padding:.32rem .5rem;border-radius:5px;
+    border:1px solid rgba(20,22,14,.22);background:var(--paper);color:inherit;max-width:16rem}
+  .frow a:hover{border-color:var(--ink)}
+  .frow a.on{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+  .frow .chip{font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;
+    padding:.3rem .65rem;border:1px dashed rgba(20,22,14,.35);border-radius:30px;background:transparent;
+    color:#595c4d;cursor:pointer}
+  .frow .chip[aria-pressed="true"]{border-style:solid;background:var(--ink);border-color:var(--ink);color:var(--paper)}
+  .globe{margin:0 0 1.6rem;border:1px solid rgba(20,22,14,.14);border-radius:10px;overflow:hidden}
+  ol.rank{list-style:none;margin:0;padding:0;max-width:56rem}
+  ol.rank li{display:flex;align-items:baseline;gap:.9rem;padding:.75rem .2rem;
+    border-bottom:1px solid rgba(20,22,14,.1)}
+  ol.rank .n{font-family:var(--mono);font-size:.8rem;color:var(--clay);flex:0 0 2rem;text-align:right}
+  ol.rank .nm{flex:1 1 auto;font-size:1rem}
+  {# The two numbers that make a ranking mean anything: how many people voted,
+     and how many rode it. A rank with no count behind it is an assertion. #}
+  ol.rank .ct{font-family:var(--mono);font-size:.72rem;color:#6d7060;white-space:nowrap}
+  {# align-self, or the rule under the name stretches the whole column and
+     reads as a divider rather than a link. #}
+  ol.rank .nm a{align-self:flex-start;color:inherit;text-decoration:none;border-bottom:1px solid rgba(20,22,14,.18)}
+  ol.rank .nm a:hover{border-color:var(--ink)}
+  {# The top three carry what the catalogue holds: a picture and a line about
+     what the thing is. Below them the name is enough. #}
+  {# Three across, because a podium is a comparison and a column is a list
+     (owner 2026-09-12). Under 900px there is no room for three, so they fall
+     back to the same stacked row every other rank uses. #}
+  @media(min-width:900px){
+    {# align-items:start, or the grid stretches all three to the tallest and a
+       card with no photograph becomes a column of whitespace with its counts
+       stranded at the bottom. #}
+    ol.rank.pod3{display:grid;grid-template-columns:repeat(3,1fr);gap:1.2rem;align-items:start;
+      border-bottom:1px solid rgba(20,22,14,.1)}
+    ol.rank.pod3 li{flex-direction:column;align-items:stretch;gap:.45rem;border-bottom:0;padding:.6rem 0 1rem}
+    ol.rank.pod3 .shot{flex:none;width:100%}
+    ol.rank.pod3 .shot img{aspect-ratio:16/10}
+    ol.rank.pod3 .n{text-align:left;flex:none}
+    ol.rank.pod3 .ct{white-space:normal;flex:none}
+    {# The row layout gives .nm a 18rem flex-basis. In this column that basis
+       is a HEIGHT, which is where the empty half of every card came from. #}
+    ol.rank.pod3 li.pod .nm{flex:none}
+  }
+  ol.rank li.pod{align-items:flex-start;padding:.9rem .2rem}
+  {# The name and its line want the room; the counts take what they need and
+     no more, and never wrap. #}
+  ol.rank li.pod .nm{flex:1 1 18rem;min-width:0}
+  ol.rank li.pod .ct{flex:0 0 auto;align-self:flex-start}
+  ol.rank .shot{flex:0 0 7rem;display:block;border-radius:6px;overflow:hidden;background:var(--paper-deep)}
+  ol.rank .shot img{display:block;width:100%;height:auto;aspect-ratio:4/3;object-fit:cover}
+  ol.rank .nm{display:flex;flex-direction:column;gap:.15rem}
+  ol.rank .nm em{font-style:normal;font-size:.88rem;color:#5a5d4d;line-height:1.45}
+  {# Filler reads as filler: greyed and italic, never as a sentence about the
+     place above it. #}
+  ol.rank .nm em.filler{font-style:italic;color:#9a9d8c}
+  .shot--none{display:flex;align-items:center;justify-content:center;aspect-ratio:16/10;
+    background:repeating-linear-gradient(135deg,rgba(20,22,14,.05) 0 8px,rgba(20,22,14,.02) 8px 16px)}
+  .shot--none span{font-family:var(--mono);font-size:1.6rem;color:rgba(20,22,14,.22)}
+  ol.rank .cred{font-family:var(--mono);font-size:.64rem;letter-spacing:.04em;color:#8a8d7c}
+  ol.rank .cred a{color:inherit;border:0;text-decoration:underline}
+  ol.rank .bar{flex:0 0 7rem;height:.4rem;border-radius:3px;background:rgba(20,22,14,.1);overflow:hidden}
+  ol.rank .bar i{display:block;height:100%;background:var(--trail)}
+  @media(max-width:720px){
+    .frow > b{flex:0 0 100%}
+    ol.rank .bar{display:none}
+  }
+  {# On a phone the three columns do not fit: the name was squeezed to one
+     word a line and the counts sat on top of it (owner 2026-09-12). The
+     counts drop to their own line and the text takes the width that frees. #}
+  @media(max-width:640px){
+    ol.rank li{flex-wrap:wrap;gap:.6rem}
+    ol.rank .shot{flex:0 0 4.5rem}
+    ol.rank .nm{flex:1 1 auto;min-width:0}
+    ol.rank li.pod .nm{flex:1 1 8rem}
+    ol.rank .ct{flex:1 0 100%;padding-left:2.6rem}
+    ol.rank .n{flex:0 0 1.4rem}
+  }
+  {# Stacked, not columned. A podium card needs the width: in a 20rem column
+     the name broke to one word a line and the counts landed on the next
+     region (owner 2026-09-12). #}
+  .regions{margin-bottom:2.4rem;max-width:56rem}
+  .rgroup{margin-bottom:1.8rem}
+  .rgroup h2{font-size:1.05rem;margin:0 0 .3rem}
+  .rgroup h2 a{color:inherit;text-decoration:none;border-bottom:1px solid rgba(20,22,14,.2)}
+  .rgroup h2 a:hover{border-color:var(--ink)}
+  .rgroup ol.rank li{padding:.5rem .1rem}
+  {# The regions with nothing yet, and the one control that changes that. #}
+  .quiet{border-top:1px solid rgba(20,22,14,.12);padding-top:1.4rem;max-width:72ch}
+  .quiet h2{font-size:1rem;margin:0 0 .4rem}
+  .quiet p{font-size:.93rem;line-height:1.55;color:#4a4d40;margin:0 0 .8rem}
+  .quiet .qlist a{color:var(--trail)}
+  .empty{font-size:.95rem;color:#6d7060;padding:1.4rem 0}
+</style>
+{% endblock %}
+{% block body %}
+{# One row, one way, wherever it appears. `podium` draws the top three with
+   what the catalogue actually holds about them; the rest are one line each. #}
+{% macro row(r, rank, podium) %}
+  {% set href = r.ref
+      ? path('map') ~ '?ref=' ~ r.ref|url_encode
+      : (r.letter == 'R' ? path('map') ~ '?route=' ~ r.id : path('map') ~ '?item=' ~ r.id) %}
+  {# "Rode it" is wrong for a castle. The second number is the same
+     confirmation either way; only the verb changes with what the thing is. #}
+  {% set verb = r.letter in ['N', 'R'] ? 'best.counts_rode' : (r.letter == 'O' ? 'best.counts_stayed' : 'best.counts_been') %}
+  <li class="{{ podium ? 'pod' }}">
+    <span class="n">{{ rank }}</span>
+    {% if podium %}
+      {% if r.photo %}
+        <a class="shot" href="{{ href }}"><img src="{{ r.photo.sm }}" alt="" loading="lazy" width="112" height="84"></a>
+      {% else %}
+        {# Nothing is drawn here that could be taken for a photograph of this
+           place: a hatched panel with the rank, so the card keeps its shape
+           and says plainly that no picture exists yet. #}
+        <a class="shot shot--none" href="{{ href }}" aria-label="{{ 'best.no_photo'|trans|e('html_attr') }}"><span>{{ rank }}</span></a>
+      {% endif %}
+    {% endif %}
+    <span class="nm">
+      <a href="{{ href }}">{{ r.name }}</a>
+      {% if r.note %}<em>{{ r.note }}</em>
+      {% elseif r.filler %}<em class="filler">{{ r.filler }}</em>{% endif %}
+      {% if podium and r.photo and r.photo.credit %}
+        <small class="cred">{% if r.photo.creditUrl %}<a href="{{ r.photo.creditUrl }}" rel="noopener nofollow">{{ r.photo.credit }}</a>{% else %}{{ r.photo.credit }}{% endif %}{% if r.photo.license %} · {{ r.photo.license }}{% endif %}</small>
+      {% endif %}
+    </span>
+    <span class="ct">{{ verb|trans({'%votes%': r.votes, '%n%': r.rides}) }}</span>
+    {% if not podium %}<span class="bar" aria-hidden="true"><i style="width:{{ r.share }}%"></i></span>{% endif %}
+  </li>
+{% endmacro %}
+{% import _self as best %}
+{# Each chip carries the CURRENT set with itself added or removed, so a link
+   does what a checkbox would and the page still needs no script. #}
+{% macro toggle(chosen, value) %}{{ (value in chosen ? chosen|filter(v => v != value) : chosen|merge([value]))|join(',') }}{% endmacro %}
+{% set q = {season: season.value, cc: country, bike: bike|join(','), diff: difficulty|join(','), len: length|join(',')} %}
+{# The same dark band every other top-level page opens with (.chero, shared
+   in atlas.css), so this one does not read as a different site. #}
+<div class="chero"><div class="wrap">
+  <div class="kicker" style="color:var(--trail)">{% trans %}best.kicker{% endtrans %}</div>
+  <h1 class="disp">{% trans %}best.title{% endtrans %}</h1>
+  <p class="lead" style="color:rgba(239,230,212,.85);margin-top:.8rem">{% trans %}best.lead{% endtrans %}</p>
+</div></div>
+
+<section class="pad"><div class="wrap">
+  {# Said once, loudly, and never removed while the numbers are invented. #}
+  <p class="prev">{% trans %}best.preview{% endtrans %}</p>
+
+  <div class="filters">
+    <div class="frow">
+      <b>{% trans %}best.f_category{% endtrans %}</b>
+      {% for c in categories %}
+        <a class="{{ c == category ? 'on' }}" href="{{ path('best_of', q|merge({cat: c.value})) }}">{{ c.labelKey|trans }}</a>
+      {% endfor %}
+    </div>
+    <div class="frow">
+      <b>{% trans %}best.f_season{% endtrans %}</b>
+      {% for s in seasons %}
+        <a class="{{ s == season ? 'on' }}" href="{{ path('best_of', q|merge({cat: category.value, season: s.value})) }}">{{ ('map.season_' ~ s.value)|trans }}</a>
+      {% endfor %}
+    </div>
+    {# A select, not chips. The country list is every onboarded country and
+       grows with each one; nineteen already wrap to three rows of pills and
+       there is no version of that which stays readable (owner 2026-09-12).
+       A plain GET form, so the page still needs no script and every result is
+       still its own URL. #}
+    <form class="frow" method="get" action="{{ path('best_of') }}" data-scope>
+      <input type="hidden" name="cat" value="{{ category.value }}">
+      <input type="hidden" name="season" value="{{ season.value }}">
+      {% if bike %}<input type="hidden" name="bike" value="{{ bike|join(',') }}">{% endif %}
+      {% if difficulty %}<input type="hidden" name="diff" value="{{ difficulty|join(',') }}">{% endif %}
+      {% if length %}<input type="hidden" name="len" value="{{ length|join(',') }}">{% endif %}
+      <b><label for="f-cc">{% trans %}best.f_where{% endtrans %}</label></b>
+      <select id="f-cc" name="cc">
+        <option value="">{% trans %}best.everywhere{% endtrans %}</option>
+        {% for cc, label in countries %}
+          <option value="{{ cc }}"{{ cc == country ? ' selected' : '' }}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit" class="chip">{% trans %}best.show{% endtrans %}</button>
+      {# Revealed by best-globe.js: without it the button would open nothing. #}
+      <button type="button" class="chip" id="best-globe-toggle" aria-pressed="false" hidden>{% trans %}best.on_globe{% endtrans %}</button>
+      <span hidden>{% for cc, label in countries %}<a data-cc="{{ cc }}" href="{{ path('best_of', q|merge({cat: category.value, cc: cc})) }}">{{ label }}</a>{% endfor %}</span>
+    </form>
+    {% if category.value == 'quality-rides' %}
+      {# Bike type belongs to the VOTE, not the route (RouteVote::$bikeType):
+         the same roads ranked by different people, which is the whole reason
+         a handbike rider's best is worth asking about separately. #}
+      <div class="frow">
+        <b>{% trans %}best.f_bike{% endtrans %}</b>
+        <a class="{{ bike is empty ? 'on' }}" href="{{ path('best_of', q|merge({cat: category.value, bike: null})) }}">{% trans %}best.any_bike{% endtrans %}</a>
+        {% for b in bikes %}
+          <a class="{{ b in bike ? 'on' }}" href="{{ path('best_of', q|merge({cat: category.value, bike: best.toggle(bike, b)|trim})) }}">{{ b }}</a>
+        {% endfor %}
+      </div>
+      <div class="frow">
+        <b>{% trans %}best.f_length{% endtrans %}</b>
+        <a class="{{ length is empty ? 'on' }}" href="{{ path('best_of', q|merge({cat: category.value, len: null})) }}">{% trans %}best.any_length{% endtrans %}</a>
+        {% for l in lengths %}
+          <a class="{{ l in length ? 'on' }}" href="{{ path('best_of', q|merge({cat: category.value, len: best.toggle(length, l)|trim})) }}">{{ ('best.len_' ~ l|lower)|trans }}</a>
+        {% endfor %}
+      </div>
+      <div class="frow">
+        <b>{% trans %}best.f_effort{% endtrans %}</b>
+        <a class="{{ difficulty is empty ? 'on' }}" href="{{ path('best_of', q|merge({cat: category.value, diff: null})) }}">{% trans %}best.any_effort{% endtrans %}</a>
+        {% for d in difficulties %}
+          <a class="{{ d in difficulty ? 'on' }}" href="{{ path('best_of', q|merge({cat: category.value, diff: best.toggle(difficulty, d)|trim})) }}">{{ d }}</a>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+
+  {# The same globe /regions and /coverage use, loaded only when asked for, so
+     a reader who never opens it does not carry MapLibre. #}
+  <div id="best-globe" class="globe" hidden data-zoom="2.4"
+       data-outlines="{{ path('regions_outlines') }}"
+       data-maplibre-js="{{ asset('lib/maplibre-gl/6.8.0/maplibre-gl.mjs') }}"
+       data-maplibre-css="{{ asset('lib/maplibre-gl/6.8.0/maplibre-gl.css') }}"
+       data-style="https://tiles.openfreemap.org/styles/liberty" data-tiles="https://tiles.openfreemap.org/planet"></div>
+
+  {# A country is read region by region: that is the unit a rider rides in,
+     and one national list flattens the Alps into Brittany. Everywhere keeps
+     the single list, because there the country IS the unit. #}
+  {% if regions is not null and regions.ranked is not empty %}
+    <div class="regions">
+      {% for r in regions.ranked %}
+        <section class="rgroup">
+          <h2><a href="{{ path('region_detail', {slug: r.slug}) }}">{{ r.name }}</a></h2>
+          {% if r.top|length > 0 %}
+            <ol class="rank pod3">{% for item in r.top|slice(0, 3) %}{{ best.row(item, loop.index, true) }}{% endfor %}</ol>
+          {% endif %}
+          {% if r.top|length > 3 %}
+            <ol class="rank" start="4">{% for item in r.top|slice(3) %}{{ best.row(item, loop.index + 3, false) }}{% endfor %}</ol>
+          {% endif %}
+        </section>
+      {% endfor %}
+    </div>
+
+    {% if regions.quiet is not empty %}
+      {# Not hidden: "nobody has voted here yet" is an invitation, and a silent
+         omission is not. #}
+      <section class="quiet">
+        <h2>{% trans %}best.quiet_heading{% endtrans %}</h2>
+        <p>{% trans %}best.quiet_body{% endtrans %}</p>
+        <p class="qlist">
+          {% for r in regions.quiet %}
+            <a href="{{ path('region_detail', {slug: r.slug}) }}">{{ r.name }}</a>{{ not loop.last ? ' · ' }}
+          {% endfor %}
+        </p>
+        <p><a class="btn btn-p" href="{{ path('vote') }}">{% trans %}best.quiet_cta{% endtrans %}</a></p>
+      </section>
+    {% endif %}
+  {% elseif ranking is empty %}
+    <p class="empty">{% trans %}best.empty{% endtrans %}</p>
+  {% else %}
+    <ol class="rank pod3">{% for r in ranking|slice(0, 3) %}{{ best.row(r, loop.index, true) }}{% endfor %}</ol>
+    {% if ranking|length > 3 %}
+      <ol class="rank" start="4">{% for r in ranking|slice(3) %}{{ best.row(r, loop.index + 3, false) }}{% endfor %}</ol>
+    {% endif %}
+    <p class="empty">{% trans %}best.after{% endtrans %}</p>
+  {% endif %}
+</div></section>
+{% endblock %}
+{% block body_scripts %}
+<script src="{{ asset('pages/country-globe.js') }}" defer></script>
+<script src="{{ asset('pages/best-globe.js') }}" defer></script>
+{% endblock %}
