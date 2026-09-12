@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Support;
 
+use App\Support\BugStatus;
 use App\Support\Entity\BugReport;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
@@ -31,10 +32,45 @@ final class SeedKnownIssuesCommandTest extends KernelTestCase
         self::assertNotNull($surface);
         self::assertTrue($surface->isPublic());
         self::assertSame('map', $surface->getArea()->value);
-        self::assertStringContainsString('no road', (string) $surface->getPublicBody());
+        // The body is the entry's prose and changes as the issue does, so this
+        // pins what the seed must carry across rather than a sentence: the
+        // status, which is the field a reader of /known-issues sorts by.
+        self::assertNotSame('', (string) $surface->getPublicBody());
+        self::assertSame('resolved', $surface->getStatus()->value);
 
         self::assertSame(0, $tester->execute([]));
         self::assertStringContainsString('0 filed', $tester->getDisplay(), 'a second run files nothing');
+    }
+
+    /**
+     * `--update` replays the file over entries already filed.
+     *
+     * Without it a fixed issue could only stop saying it is broken by hand, in
+     * every environment. With it as the DEFAULT a curator's own wording on the
+     * desk would be overwritten by the next deploy, which is why the plain run
+     * still skips.
+     */
+    public function testUpdateReplaysTheFileOverEntriesAlreadyFiled(): void
+    {
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $tester = new CommandTester((new Application(static::$kernel))->find('app:bugs:seed-known'));
+
+        self::assertSame(0, $tester->execute([]));
+        $title = 'Surfaces view: a road without a surface tag draws nothing';
+        $report = $em->getRepository(BugReport::class)->findOneBy(['publicTitle' => $title]);
+        self::assertNotNull($report);
+
+        // Somebody moves it on the desk; a plain re-run must leave that alone.
+        $report->setStatus(BugStatus::New);
+        $em->flush();
+        self::assertSame(0, $tester->execute([]));
+        $em->refresh($report);
+        self::assertSame('new', $report->getStatus()->value, 'a plain run overwrote a desk edit');
+
+        self::assertSame(0, $tester->execute(['--update' => true]));
+        self::assertStringContainsString('updated', $tester->getDisplay());
+        $em->refresh($report);
+        self::assertSame('resolved', $report->getStatus()->value, 'the file did not reach an entry already filed');
     }
 
     public function testAFileWithABadEntryFilesNothing(): void

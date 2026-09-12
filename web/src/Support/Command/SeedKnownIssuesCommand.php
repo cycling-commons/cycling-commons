@@ -15,6 +15,7 @@ use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -31,6 +32,12 @@ use Symfony\Component\Yaml\Yaml;
  * re-running never overwrites what a curator changed on the desk.
  *
  * @api
+ *
+ * `--update` overwrites those entries instead, which is how a fixed issue
+ * stops saying it is broken: the file is the record, and without a way to
+ * replay it a status could only be changed by hand in every environment.
+ * Opt-in, and never the default, because the skip above is what protects a
+ * curator's own wording on the desk.
  */
 #[AsCommand(name: 'app:bugs:seed-known', description: 'File the known issues listed in config/known_issues.yaml as public bug reports (idempotent)')]
 final class SeedKnownIssuesCommand extends Command
@@ -47,6 +54,7 @@ final class SeedKnownIssuesCommand extends Command
     protected function configure(): void
     {
         $this->addArgument('file', InputArgument::OPTIONAL, 'YAML file to read', $this->defaultFile);
+        $this->addOption('update', null, InputOption::VALUE_NONE, 'Also overwrite the status and text of entries already filed');
     }
 
     #[\Override]
@@ -60,15 +68,23 @@ final class SeedKnownIssuesCommand extends Command
             return Command::FAILURE;
         }
 
+        $update = (bool) $input->getOption('update');
         $seeded = 0;
         $skipped = 0;
+        $updated = 0;
         foreach ($this->entries($file) as $entry) {
-            if ($this->exists($entry['public_title'])) {
+            $report = $this->find($entry['public_title']);
+            if (null !== $report && !$update) {
                 ++$skipped;
                 continue;
             }
-            $report = new BugReport($entry['public_title'], $entry['body']);
-            $report->setPublicTitle($entry['public_title']);
+            if (null !== $report) {
+                ++$updated;
+            } else {
+                $report = new BugReport($entry['public_title'], $entry['body']);
+                $report->setPublicTitle($entry['public_title']);
+                ++$seeded;
+            }
             $report->setPublicBody($entry['body']);
             $report->setSeverity(BugSeverity::from($entry['severity']));
             $report->setArea(BugArea::from($entry['area']));
@@ -76,11 +92,12 @@ final class SeedKnownIssuesCommand extends Command
             $report->setPublic(true);
             $report->setInternalNote('Seeded from config/known_issues.yaml.');
             $this->em->persist($report);
-            ++$seeded;
         }
         $this->em->flush();
 
-        $io->success(sprintf('%d filed, %d already there.', $seeded, $skipped));
+        $io->success($update
+            ? sprintf('%d filed, %d updated.', $seeded, $updated)
+            : sprintf('%d filed, %d already there.', $seeded, $skipped));
 
         return Command::SUCCESS;
     }
@@ -114,8 +131,8 @@ final class SeedKnownIssuesCommand extends Command
         return $out;
     }
 
-    private function exists(string $publicTitle): bool
+    private function find(string $publicTitle): ?BugReport
     {
-        return null !== $this->em->getRepository(BugReport::class)->findOneBy(['publicTitle' => $publicTitle]);
+        return $this->em->getRepository(BugReport::class)->findOneBy(['publicTitle' => $publicTitle]);
     }
 }

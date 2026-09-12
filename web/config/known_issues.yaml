@@ -12,16 +12,17 @@ issues:
   - public_title: 'Surfaces view: a road without a surface tag draws nothing'
     severity: major
     area: map
-    status: planned
+    status: resolved
     body: |
-      In the Surfaces view a classified road that OpenStreetMap carries no surface tag for is drawn as nothing at all, so a stretch of ordinary tarmac can look like a gap in the road.
-      Until the surface layer learns to draw "unknown" in its own colour, read a blank as "no data", not as "no road".
+      In the Surfaces view a classified road that OpenStreetMap carries no surface tag for was drawn as nothing at all, so a stretch of ordinary tarmac could look like a gap in the road.
+      Fixed: an untagged road is its own class now and draws as red dashes, meaning "nobody has recorded this yet". A blank is a blank again.
   - public_title: 'Three Belgian climbs have unconfirmed start and end points'
     severity: minor
     area: map
     status: planned
     body: |
       Côte de la Redoute, Mur de Huy and Côte de Stockeu were drawn from a first pass. Their foot and summit still have to be checked against a reference, and the gradient figures will move a little when they are.
+      One of the three has had that pass: Côte de la Redoute now records that its end is 700 m later than first drawn. Mur de Huy and Côte de Stockeu are still on the first pass.
   - public_title: 'Susten Pass shows a 10% descent inside the climb'
     severity: minor
     area: map
@@ -55,27 +56,43 @@ issues:
     body: |
       The contract at /developers/api describes twelve endpoints. Two answer today: /v1/map-config and /v1/search. The other ten do not exist yet: the item-type catalogue, one item by id, coverage counts, regions and their best-of, the route list, one route and its GPX under /v1, and the write path for contributions.
       A GPX still downloads from /routes/{id}.gpx, outside the versioned API.
+      The reference page now says how far along this is, counted rather than claimed, so the number here cannot go stale.
   - public_title: 'The API reference says the API is not live, and lives outside the site'
     severity: cosmetic
     area: pages
-    status: new
+    status: in_progress
     body: |
-      The banner on /developers/api still reads "Draft contract, API not live yet", while two endpoints answer. The page is English only, sits outside the site chrome, and is not in the sitemap.
+      The banner on /developers/api read "Draft contract, API not live yet" while two endpoints answered.
+      Fixed: it now reads how many of the contract's endpoints answer, counted from the contract and the router rather than written by hand, so shipping an endpoint updates it. The page is also in the sitemap now.
+      Still open: the page is English only and sits outside the site chrome.
   - public_title: 'The sitemap leaves out the blog, its posts, the map key, the API reference and the vote page'
     severity: minor
     area: pages
-    status: new
+    status: resolved
     body: |
-      /sitemap.xml lists the fixed pages and every region, but not the blog index, the blog posts, the map key, the API reference or the vote page. A search engine finds them only by following links.
+      /sitemap.xml listed the fixed pages and every region, but not the blog index, the blog posts, the map key, the API reference or the vote page. A search engine found them only by following links.
+      Fixed: the blog index, the map key, the API reference and every published blog post are listed. A post appears only under the languages that actually serve it, so a Dutch-only post is not promised in four languages that answer 404 for it.
+      The vote page is left out on purpose. It is behind a sign-in, so listing it would send a search engine to a login screen and nothing else. What is actually missing is a public page showing what riders have voted for, which is a page to build rather than a line to add here.
+  - public_title: 'There is no public page showing what riders voted best in a region'
+    severity: minor
+    area: pages
+    status: in_progress
+    body: |
+      The seasonal ranking is public data already: the map's Curated mode reads it, and anyone can fetch it. But it has no page of its own. A reader who has not signed in cannot see what riders rate best anywhere, and a search engine cannot find it at all.
+      The only vote page today is behind a sign-in and says voting is not live yet, which is a preview of the ballot rather than a view of the result.
+      A public design preview now exists at /best, with real places and invented tallies, so the shape can be argued about before the ballot is built. It is not in the sitemap and will not be while the numbers are made up.
   - public_title: 'A town card shows no population when Wikidata has no recent count'
     severity: minor
     area: map
-    status: new
+    status: resolved
     body: |
-      The town card reads its two facts from Wikidata. A count older than 25 years, or undated, is not shown, so a town whose newest Wikidata count is from 1971 shows no Inhabitants line at all, while its Wikipedia box carries a 2025 figure from the national statistics office. The founding date is missing for most towns for the same reason: Wikidata has none.
+      The town card read its two facts from Wikidata alone, and a count older than 25 years, or undated, is not shown. A survey of 100 places across ten countries found Wikidata could answer only 66% of them, and under half of all villages.
+      Fixed: when Wikidata has no count, the figure is read from the Wikipedia article the card already shows. That takes it to 89% of places and 82% of villages. Wikidata still wins whenever it has a recent count, because mixing the two can put a district's population on a village card.
+      Still true for some places: eight of the hundred surveyed have no population in any source, and the founding date is missing for most towns because Wikidata has none.
   - public_title: 'A town card does not list the routes that pass through the town'
     severity: minor
     area: map
-    status: planned
+    status: resolved
     body: |
-      The card lists the races Wikidata ties to a town, but not the signed routes that pass through it: the Westfriese Omringdijk for Hoorn, the Great Divide for Banff. Those live in the map's own routes layer and need geometry, not Wikidata.
+      The card listed the races Wikidata ties to a town, but not the routes that pass through it: the Westfriese Omringdijk for Hoorn, the Great Divide for Banff. Those live in the map's own routes layer and need geometry, not Wikidata.
+      Fixed: the card now lists the recommended routes passing within a kilometre of the town, nearest first, each opening on the map.
