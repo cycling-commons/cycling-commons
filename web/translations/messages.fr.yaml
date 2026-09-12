@@ -3487,6 +3487,7 @@ support:
     internal_note: 'Seuls les curateurs voient ceci. Ce n''est jamais envoyé à la personne qui signale et n''atteint jamais la liste publique, quel que soit le statut.'
     release: 'Corrigé dans'
     release_none: 'Pas encore'
+    release_add: '+ ajouter une version'
     github_open: 'Ouvrir sur GitHub'
     github_opened: 'Ouvert sur GitHub.'
     github_failed: 'GitHub ne l''a pas accepté. Rien n''a changé ici.'

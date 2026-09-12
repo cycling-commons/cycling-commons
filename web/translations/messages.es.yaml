@@ -3522,6 +3522,7 @@ support:
     internal_note: 'Esto solo lo ven las personas curadoras. Nunca se envía a quien informa ni llega a la lista pública, sea cual sea el estado.'
     release: 'Corregido en'
     release_none: 'Todavía no'
+    release_add: '+ añadir una versión'
     github_open: 'Abrir en GitHub'
     github_opened: 'Abierto en GitHub.'
     github_failed: 'GitHub no lo aceptó. Aquí no ha cambiado nada.'

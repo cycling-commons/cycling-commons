@@ -29,7 +29,9 @@
     text-transform:uppercase;color:var(--clay);margin:.9rem 0 .3rem}
   .handle select,.handle textarea{width:100%;font-family:inherit;font-size:.9rem;padding:.5rem .6rem;
     border:1px solid rgba(20,22,14,.22);border-radius:5px;background:var(--paper)}
-  .handle textarea{min-height:5rem;line-height:1.55;resize:vertical}
+  .handle textarea{min-height:7rem;line-height:1.55;resize:vertical}
+  /* Same place as every other desk's save. */
+  .dact{display:flex;justify-content:flex-end;margin-top:1.2rem}
   .reply-cta{font-size:.88rem;color:#4a4d40;margin:.8rem 0}
   .reply-cta a{color:var(--clay);text-decoration:underline;text-underline-offset:3px}
 </style>
@@ -106,10 +108,10 @@
       </select>
 
       <label for="d-note">{{ 'support.inbox.note'|trans }}</label>
-      <textarea id="d-note" name="note" maxlength="500"
+      <textarea id="d-note" name="note" maxlength="500" rows="6"
                 placeholder="{{ 'support.inbox.note_placeholder'|trans }}"></textarea>
 
-      <p><button type="submit" class="btn">{{ 'support.inbox.save'|trans }}</button></p>
+      <p class="dact"><button type="submit" class="btn">{{ 'support.inbox.save'|trans }}</button></p>
     </form>
   </div>
 </div>

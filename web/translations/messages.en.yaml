@@ -3513,6 +3513,7 @@ support:
     internal_note: 'Only curators see this. It is never mailed to the reporter and never reaches the public list, whatever the status.'
     release: 'Fixed in'
     release_none: 'Not yet'
+    release_add: '+ add a release'
     github_open: 'Open on GitHub'
     github_opened: 'Opened on GitHub.'
     github_failed: 'GitHub did not take it. Nothing was changed here.'

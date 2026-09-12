@@ -64,18 +64,24 @@
     text-transform:uppercase;color:var(--clay);margin:.9rem 0 .3rem}
   .decide select,.decide input[type="text"],.decide textarea{width:100%;font-family:inherit;font-size:.9rem;
     padding:.5rem .6rem;border:1px solid rgba(20,22,14,.22);border-radius:5px;background:var(--paper)}
-  .decide textarea{min-height:5rem;line-height:1.55;resize:vertical}
+  /* Tall enough to read a whole report or a whole public description without
+     scrolling inside the box: these fields hold paragraphs, and a three-line
+     window makes a curator scroll to check their own wording (owner
+     2026-09-12). `rows` sets the size; this is the floor under it. */
+  .decide textarea{min-height:9rem;line-height:1.55;resize:vertical}
   .decide .check{display:flex;align-items:flex-start;gap:.5rem;margin:1rem 0}
   .decide .check label{margin:0;font-family:inherit;font-size:.9rem;letter-spacing:0;text-transform:none;color:#3a3d30}
   .warn{background:var(--paper-deep);border-left:2px solid var(--ochre);padding:.85rem 1.05rem;
     border-radius:0 6px 6px 0;font-size:.90rem;color:#4a4d40;line-height:1.55;margin:.9rem 0}
-  /* The internal block has to be distinguishable at a glance from the block
-     that gets mailed. Different ground, and a rule down the side in the same
-     colour as its warning. */
-  .btext.internal{background:rgba(90,39,22,.06);border-left:3px solid var(--clay)}
-  .internal-warn{border-left-color:var(--clay)}
   .decide input[type="text"]{width:100%}
-  .decide textarea[rows="3"]{min-height:4.5rem}
+  /* The save sits where every form's primary action sits, at the end of the
+     row, so the eye finds it in the same place on every desk. */
+  .dact{display:flex;justify-content:flex-end;margin-top:1.2rem}
+  /* Beside the label, not under the field: it is about where the choices come
+     from, which is a question you have while reading the label. */
+  .addrel{float:right;font-family:var(--mono);font-size:.7rem;letter-spacing:.08em;
+    text-transform:none;color:var(--trail);text-decoration:underline}
+  .addrel:hover{color:var(--clay)}
   .req{color:var(--clay);font-weight:700}
   /* auto-fit rather than three fixed columns: at a narrow window they stack on
      their own, with no breakpoint to keep in sync with the sidebar. */
@@ -166,10 +172,11 @@
       </p>
     {% endif %}
 
-    {% if report.internalNote %}
-      <p class="bsec">{{ 'support.bugs.internal'|trans }}</p>
-      <div class="btext md internal">{{ report.internalNote|bug_markdown }}</div>
-    {% endif %}
+    {# The internal note is NOT read back here. It is one of the fields the
+       form below edits, and printing it twice on one screen made a curator
+       read the same sentence, scroll past it, and find it again in a box
+       (owner 2026-09-12). The read-only blocks above are the things nobody
+       here can change: what the reporter wrote. #}
 
     {% if report.outcomeNote %}
       <p class="bsec">{{ 'support.bugs.outcome'|trans }}</p>
@@ -214,10 +221,19 @@
       <div class="drow">
         <div class="dcell">
           <label for="d-internal">{{ 'support.bugs.internal'|trans }}</label>
-          <textarea id="d-internal" name="internal_note" maxlength="4000" rows="3">{{ report.internalNote }}</textarea>
+          <textarea id="d-internal" name="internal_note" maxlength="4000" rows="10">{{ report.internalNote }}</textarea>
         </div>
         <div class="dcell">
-          <label for="d-release">{{ 'support.bugs.release'|trans }}</label>
+          <label for="d-release">{{ 'support.bugs.release'|trans }}
+            {# The list is whatever an admin has recorded, and with none
+               recorded the only choice is "Not yet" with nothing saying why
+               or where tags come from (owner 2026-09-12). Admins only,
+               because the page behind it is theirs; a curator sees the plain
+               label and asks. #}
+            {% if is_granted('ROLE_ADMIN') %}
+              <a class="addrel" href="{{ path('admin_release_tag_new') }}">{{ 'support.bugs.release_add'|trans }}</a>
+            {% endif %}
+          </label>
           {# The releases an admin recorded (/admin, Releases); nothing else is accepted (owner 2026-09-08). #}
           <select id="d-release" name="fix_release">
             <option value="">{{ 'support.bugs.release_none'|trans }}</option>
@@ -235,7 +251,7 @@
          always there and the server still requires it for those two. #}
       <div class="d-reply" data-when="{{ notifying_statuses|join(' ') }}">
         <label for="d-note">{{ 'support.bugs.outcome'|trans }} <span class="req" aria-hidden="true">*</span></label>
-        <textarea id="d-note" name="outcome_note" maxlength="2000" aria-required="true"
+        <textarea id="d-note" name="outcome_note" maxlength="2000" rows="10" aria-required="true"
                   placeholder="{{ 'support.bugs.outcome_placeholder'|trans }}">{{ report.outcomeNote }}</textarea>
       </div>
 
@@ -254,12 +270,12 @@
                placeholder="{{ 'support.bugs.public_title_placeholder'|trans }}">
 
         <label for="d-pbody">{{ 'support.bugs.public_body'|trans }}</label>
-        <textarea id="d-pbody" name="public_body" maxlength="2000" rows="3"
+        <textarea id="d-pbody" name="public_body" maxlength="2000" rows="10"
                   placeholder="{{ 'support.bugs.public_body_placeholder'|trans }}">{{ report.publicBody }}</textarea>
         <p class="warn">{{ 'support.bugs.publish_note'|trans }}</p>
       </div>
 
-      <p><button type="submit" class="btn btn-p">{{ 'support.inbox.save'|trans }}</button></p>
+      <p class="dact"><button type="submit" class="btn btn-p">{{ 'support.inbox.save'|trans }}</button></p>
     </form>
   </div>
 </div>

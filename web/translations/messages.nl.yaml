@@ -3494,6 +3494,7 @@ support:
     internal_note: 'Alleen curatoren zien dit. Het gaat nooit naar de melder en komt nooit op de publieke lijst, wat de status ook is.'
     release: 'Opgelost in'
     release_none: 'Nog niet'
+    release_add: '+ release toevoegen'
     github_open: 'Openen op GitHub'
     github_opened: 'Geopend op GitHub.'
     github_failed: 'GitHub nam het niet aan. Hier is niets veranderd.'

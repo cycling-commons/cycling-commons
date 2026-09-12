@@ -3495,6 +3495,7 @@ support:
     internal_note: 'Das sehen nur Kuratorinnen und Kuratoren. Es geht nie an die meldende Person und nie auf die öffentliche Liste, egal bei welchem Status.'
     release: 'Behoben in'
     release_none: 'Noch nicht'
+    release_add: '+ Release hinzufügen'
     github_open: 'Auf GitHub öffnen'
     github_opened: 'Auf GitHub geöffnet.'
     github_failed: 'GitHub hat es nicht angenommen. Hier wurde nichts geändert.'

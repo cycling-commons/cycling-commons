@@ -44,7 +44,9 @@
     text-transform:uppercase;color:var(--clay);margin:.9rem 0 .3rem}
   .decide select,.decide textarea{width:100%;font-family:inherit;font-size:.9rem;
     padding:.5rem .6rem;border:1px solid rgba(20,22,14,.22);border-radius:5px;background:var(--paper)}
-  .decide textarea{min-height:5rem;line-height:1.55;resize:vertical}
+  .decide textarea{min-height:9rem;line-height:1.55;resize:vertical}
+  /* Same place as every other desk's save. */
+  .dact{display:flex;justify-content:flex-end;margin-top:1.2rem}
   .decide .check{display:flex;align-items:flex-start;gap:.5rem;margin:1rem 0}
   .decide .check label{margin:0;font-family:inherit;font-size:.9rem;letter-spacing:0;text-transform:none;color:#3a3d30}
   .warn{background:var(--paper-deep);border-left:2px solid var(--ochre);padding:.85rem 1.05rem;
@@ -145,7 +147,7 @@
       </select>
 
       <label for="d-note">{{ 'report.desk.field_note'|trans }} <span class="req" aria-hidden="true">*</span></label>
-      <textarea id="d-note" name="note" maxlength="2000"
+      <textarea id="d-note" name="note" maxlength="2000" rows="10"
                 placeholder="{{ 'report.desk.note_placeholder'|trans }}">{{ report.decisionNote }}</textarea>
 
       {% if resolved.author and not report.isAuthorTold %}
@@ -156,7 +158,7 @@
         <p class="warn">{{ 'report.desk.tell_author_note'|trans }}</p>
       {% endif %}
 
-      <p><button type="submit" class="btn btn-p">{{ 'support.inbox.save'|trans }}</button></p>
+      <p class="dact"><button type="submit" class="btn btn-p">{{ 'support.inbox.save'|trans }}</button></p>
     </form>
   </div>
 </div>
