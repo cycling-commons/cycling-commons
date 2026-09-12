@@ -497,8 +497,6 @@ coverage:
   legend_range: '%a% tot %b%'
   legend_none: 'nog niets'
   globe_regions_link: 'Bekijk zijn regio''s →'
-  globe_noscript: 'De wereldbol heeft JavaScript nodig.'
-  globe_noscript_link: 'De tabel toont dezelfde cijfers.'
 
 # Credits — op wie en wat de Commons bouwt. Projectnamen, URL's en
 # licentie-aanduidingen staan in het template; alleen de lopende tekst is vertaald.

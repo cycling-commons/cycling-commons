@@ -978,7 +978,7 @@ total. Zero buckets are dropped, so an OSM-only country shows one word rather
 than four with three noughts.
 
 **A second view, the globe** (owner 2026-09-08: "a cool way to visualize the
-coverage besides a list"). `/coverage?view=globe` shows the same countries on
+coverage besides a list"). The globe shows the same countries on
 the globe the regions page uses (`assets/pages/country-globe.js`, one shape per
 country from `/regions/outlines.json`), each filled by a **density class**:
 `CoverageStatsProvider::densityClasses()` ranks the countries with any
@@ -1144,14 +1144,32 @@ world one colour"). Raising countries by item count was tried and reverted
 the same night ("too much"). The density paint stays as the coverage
 globe's colour.
 
-## Desktop opens on the globe (2026-09-08)
+## Desktop opens on the globe, and it costs one request (2026-09-12)
 
-`/coverage` without a `view` is the table; on a screen 900px or wider a
-head script, `assets/pages/desktop-default-view.js`, replaces the URL with
-`?view=globe` before paint (owner: "should open on the globe page if not
-mobile"). A phone keeps the table and never loads MapLibre; a URL that names
-its view is left alone, which is why the Table chip links `?view=table`
-and not the bare URL (owner: clicking Table "again loads the globe"). The same script is generic (data-param, data-value,
-data-min) and `/regions` does the same in its own script by clicking the
-Globe chip.
+**Both views are in one response, and a class decides which one is on
+screen.** `/coverage` is one URL. The table is what the markup shows on its
+own, because it is the view that works with no JavaScript; a head script,
+`assets/pages/coverage-view.js`, adds `cc-globe` to `<html>` before paint and
+CSS swaps the two. A screen 900px or wider opens on the globe (owner
+2026-09-08: "should open on the globe page if not mobile"), and a `?view=` in
+the URL wins over the width, so the `?view=globe` links already shared still
+open on the globe.
+
+**It used to be two URLs.** The table was `/coverage`, the globe
+`/coverage?view=globe`, and a head script ran `location.replace()` to send a
+wide screen from the first to the second. That cost every desktop reader a
+second request for a page the browser had already been given, which is what
+it looked like from outside (owner 2026-09-12: "loading coverage page
+redirect to view=globe, that should be the default hit, not a redirect").
+Setting a class does the same job with no navigation, so the chips became
+buttons and `/regions`' shape, one page with an in-place switch, is now the
+shape of both pages.
+
+**MapLibre is still only loaded when the globe is shown.** That was the point
+of keeping a phone on the table, and moving the views into one response does
+not change it: `assets/pages/coverage-globe.js` builds the globe on its first
+showing, so a reader who stays on the table never fetches the library. The
+chips are hidden until that script runs, so a reader with no JavaScript is
+never offered a switch that cannot move, which is also what retired the
+page's old noscript paragraph.
 

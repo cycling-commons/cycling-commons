@@ -492,8 +492,6 @@ coverage:
   legend_range: '%a% à %b%'
   legend_none: 'rien encore'
   globe_regions_link: 'Voir ses régions →'
-  globe_noscript: 'Le globe a besoin de JavaScript.'
-  globe_noscript_link: 'Le tableau montre les mêmes chiffres.'
 
 # Crédits — sur qui et quoi le Commons est construit. Les noms de projets, URL
 # et identifiants de licence vivent dans le template ; seule la prose est traduite.

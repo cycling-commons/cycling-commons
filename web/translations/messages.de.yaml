@@ -497,8 +497,6 @@ coverage:
   legend_range: '%a% bis %b%'
   legend_none: 'noch nichts'
   globe_regions_link: 'Seine Regionen ansehen →'
-  globe_noscript: 'Der Globus braucht JavaScript.'
-  globe_noscript_link: 'Die Tabelle zeigt dieselben Zahlen.'
 
 # Credits — worauf die Commons aufbauen. Projektnamen, URLs und
 # Lizenzbezeichnungen stehen im Template; nur der Fließtext ist übersetzt.

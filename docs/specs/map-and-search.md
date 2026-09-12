@@ -543,7 +543,7 @@ for one thing in five languages. Fixed across all five.
   "should open on the globe page if not mobile"),
   (owner: "a map version where you select the country on a world map"; the
   flat map was a chip for an hour and was removed: "remove the map option").
-  The globe: `assets/pages/country-globe.js` (shared with `/coverage?view=globe`,
+  The globe: `assets/pages/country-globe.js` (shared with `/coverage`'s globe view,
   [coverage-provider.md §9.1](coverage-provider.md)) loads the vendored MapLibre
   only when asked, closer on /regions (`data-zoom="2.8"`, so a small country is
   a target a pointer can hit), and draws one shape per country from `GET /regions/outlines.json`

@@ -10,7 +10,7 @@ use App\Catalog\CoverageStatsProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
- * The globe on /coverage?view=globe paints each country by a density class,
+ * The globe on /coverage paints each country by a density class,
  * five equal-count steps of one hue. The steps are decided here, on the
  * server, so the legend and the paint come from one computation.
  */

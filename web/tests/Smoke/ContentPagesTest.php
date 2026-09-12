@@ -91,34 +91,25 @@ final class ContentPagesTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertSelectorExists('footer.foot');
         self::assertSelectorTextContains('h1', 'How complete is the map');
-        // The table view: a table, the two view chips as links (Globe first,
-        // and Table naming its view, since the bare URL forwards a wide
-        // screen to the globe), no globe and no globe script.
-        self::assertSelectorExists('table');
-        self::assertSelectorExists('.viewrow a.chip[aria-current="page"][href$="/coverage?view=table"]');
-        self::assertSelectorExists('.viewrow a.chip[href$="/coverage?view=globe"]');
-        self::assertSelectorExists('script[src*="pages/desktop-default-view"]');
-        self::assertSelectorNotExists('#coverage-globe');
-        self::assertStringNotContainsString('pages/coverage-globe', (string) $client->getResponse()->getContent());
-    }
-
-    public function testCoverageGlobeRenders(): void
-    {
-        $client = static::createClient();
-        $client->request('GET', '/coverage?view=globe');
-        self::assertResponseIsSuccessful();
-        self::assertSelectorTextContains('h1', 'How complete is the map');
-        // The globe view: the box the script paints, the scripts as files, the
-        // Globe chip current, and no table. One card per country waits hidden
-        // with its density class for the paint.
-        self::assertSelectorExists('#coverage-globe[data-ramp][data-outlines]');
+        // One response carries both views. The table is the one the markup
+        // shows on its own, because it is the view that needs no JavaScript;
+        // the globe rides along hidden by CSS until a class says otherwise.
+        self::assertSelectorExists('#cov-table table');
+        self::assertSelectorExists('#cov-globe #coverage-globe[data-ramp][data-outlines]');
+        self::assertSelectorExists('#cov-globe .clegend');
+        // The chips are buttons, not links: pressing one swaps the view in
+        // place. They start hidden, so a reader with no JavaScript is never
+        // offered a switch that cannot move.
+        self::assertSelectorExists('.viewrow[hidden] button.chip[data-view="globe"]');
+        self::assertSelectorExists('.viewrow[hidden] button.chip[data-view="table"]');
+        self::assertSelectorNotExists('.viewrow a.chip');
+        // The head script sets the opening view as a class.
+        self::assertSelectorExists('script[src*="pages/coverage-view"]');
         self::assertSelectorExists('script[src*="pages/country-globe"]');
         self::assertSelectorExists('script[src*="pages/coverage-globe"]');
-        self::assertSelectorExists('.viewrow a.chip.on[aria-current="page"][href$="/coverage?view=globe"]');
-        self::assertSelectorNotExists('table');
-        self::assertSelectorExists('.clegend');
         $html = (string) $client->getResponse()->getContent();
-        self::assertStringNotContainsString('nonce=', $html, 'the globe page must stay nonce-free so a shared cache can hold it');
+        self::assertStringNotContainsString('nonce=', $html, 'the page must stay nonce-free so a shared cache can hold it');
+        // One card per country waits hidden with its density class.
         if (preg_match_all('/class="ccard"[^>]*data-cls="(\d)"/', $html, $m) > 0) {
             foreach ($m[1] as $cls) {
                 self::assertLessThanOrEqual(5, (int) $cls);
@@ -126,13 +117,26 @@ final class ContentPagesTest extends WebTestCase
         }
     }
 
-    public function testCoverageUnknownViewFallsBackToTheTable(): void
+    /**
+     * The view is not a server concern, so every spelling of `?view=` serves
+     * the one page, whole. Which view opens is decided in the browser by
+     * assets/pages/coverage-view.js, which is why a shared `?view=globe`
+     * link still lands on the globe without the server knowing about it.
+     */
+    public function testEveryViewParameterServesTheOnePage(): void
     {
         $client = static::createClient();
-        $client->request('GET', '/coverage?view=pie');
-        self::assertResponseIsSuccessful();
-        self::assertSelectorExists('table');
-        self::assertSelectorNotExists('#coverage-globe');
+
+        foreach (['/coverage', '/coverage?view=globe', '/coverage?view=table', '/coverage?view=pie'] as $path) {
+            $client->request('GET', $path);
+            self::assertResponseIsSuccessful($path);
+            // The hreflang and language-switcher links carry the query
+            // string through, so the bodies are not byte-identical; what must
+            // not vary is which views the page holds.
+            self::assertSelectorExists('#cov-table table', $path);
+            self::assertSelectorExists('#cov-globe #coverage-globe', $path);
+            self::assertSelectorExists('.viewrow[hidden] button.chip[data-view="globe"]', $path);
+        }
     }
 
     public function testPagesRenders(): void
@@ -252,7 +256,7 @@ final class ContentPagesTest extends WebTestCase
     public function testNoPublicPagePrintsAStylesheetAsText(): void
     {
         $client = static::createClient();
-        foreach (['/', '/about', '/contact', '/report-bug', '/report/item/1', '/report', '/pages', '/contributors', '/roadmap', '/known-issues', '/privacy', '/terms', '/accessibility', '/credits', '/licenses', '/developers', '/regions', '/coverage', '/coverage?view=globe', '/join', '/scout', '/map-key'] as $path) {
+        foreach (['/', '/about', '/contact', '/report-bug', '/report/item/1', '/report', '/pages', '/contributors', '/roadmap', '/known-issues', '/privacy', '/terms', '/accessibility', '/credits', '/licenses', '/developers', '/regions', '/coverage', '/join', '/scout', '/map-key'] as $path) {
             $client->request('GET', $path);
             self::assertResponseIsSuccessful($path);
             // The whole document, not the body: a rule that escaped its

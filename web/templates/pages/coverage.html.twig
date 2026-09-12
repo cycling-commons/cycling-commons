@@ -29,11 +29,21 @@
   .tnote{font-size:.90rem;color:#4a4d40;max-width:72ch;margin-top:1.4rem;line-height:1.55;padding-left:1.1rem}
   .tnote li{margin:.3rem 0}
   .viewrow{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;margin:0 0 1rem}
-  /* Links, not buttons: the view is a URL (page-caching.md §3.2), and the
-     active one is ink on paper the way the regions page draws its switch. */
-  .viewrow a.chip{text-decoration:none;color:#595c4d;background:transparent}
-  .viewrow a.chip.on{background:var(--ink);border-color:var(--ink);color:var(--paper)}
-  .viewrow .vhint{font-size:.85rem;color:#6d7060;margin-left:.4rem}
+  /* The markup on its own shows the table, because the table is the view
+     that works with no JavaScript and the globe is not; `cc-globe` on
+     <html>, set before paint by assets/pages/coverage-view.js, swaps in the
+     globe. */
+  #cov-globe{display:none}
+  .cc-globe #cov-globe{display:block}
+  .cc-globe #cov-table{display:none}
+  /* The active chip and the globe's hint follow that same class, so the
+     switch is painted by CSS alone and never twice. */
+  .viewrow .chip{font-family:var(--mono);background:transparent;color:#595c4d}
+  .viewrow .chip[data-view="table"],
+  .cc-globe .viewrow .chip[data-view="globe"]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+  .cc-globe .viewrow .chip[data-view="table"]{background:transparent;border-color:rgba(20,22,14,.25);color:#595c4d}
+  .viewrow .vhint{display:none;font-size:.85rem;color:#6d7060;margin-left:.4rem}
+  .cc-globe .viewrow .vhint{display:inline}
   /* The globe and, beside it, the one card for the country under the
      pointer's last click; stacked below 860px where a side card would be
      two words wide. */
@@ -85,19 +95,17 @@
 {% set none_fill = 'rgba(20,22,14,0.10)' %}
 <section class="pad"><div class="wrap">
   <div class="kicker">{% trans %}coverage.table_kicker{% endtrans %}</div>
-  {# Two views, two URLs (owner 2026-09-08: "2 different pages with chips to
-     choose one or the other"): the chips are links for the same reason the
-     sort is, page-caching.md §3.2. The globe page loads MapLibre from a
-     file; the table page loads nothing. #}
-  <nav class="viewrow" aria-label="{{ 'coverage.table_kicker'|trans|e('html_attr') }}">
-    {# Globe first, then the table, the same order as /regions (owner 2026-09-08). #}
-    <a class="chip{{ view == 'globe' ? ' on' }}" href="{{ path('coverage', {view: 'globe'}) }}"{% if view == 'globe' %} aria-current="page"{% endif %}>{% trans %}coverage.view_globe{% endtrans %}</a>
-    {# ?view=table, not the bare URL: the bare URL is the one a wide screen
-       forwards to the globe, so a click on Table must name its view. #}
-    <a class="chip{{ view == 'table' ? ' on' }}" href="{{ path('coverage', {view: 'table'}) }}"{% if view == 'table' %} aria-current="page"{% endif %}>{% trans %}coverage.view_table{% endtrans %}</a>
-    {% if view == 'globe' %}<span class="vhint">{% trans %}coverage.globe_hint{% endtrans %}</span>{% endif %}
+  {# The chips are buttons: pressing one swaps the view in place and is not
+     a navigation. They start hidden, so a reader with no JavaScript is never
+     offered a switch that cannot move; the script that works them is the
+     script that unhides them. Globe first, then the table, the same order as
+     /regions (owner 2026-09-08). #}
+  <nav class="viewrow" id="coverage-viewrow" aria-label="{{ 'coverage.table_kicker'|trans|e('html_attr') }}" hidden>
+    <button type="button" class="chip" data-view="globe" aria-pressed="false">{% trans %}coverage.view_globe{% endtrans %}</button>
+    <button type="button" class="chip" data-view="table" aria-pressed="true">{% trans %}coverage.view_table{% endtrans %}</button>
+    <span class="vhint">{% trans %}coverage.globe_hint{% endtrans %}</span>
   </nav>
-{% if view == 'globe' %}
+  <div id="cov-globe">
   <div class="cglobe">
     <div id="coverage-globe" class="globe loading"
          data-outlines="{{ path('regions_outlines') }}"
@@ -141,8 +149,8 @@
     {% endfor %}
     <span class="lstep"><i style="background:{{ none_fill }}"></i>{% trans %}coverage.legend_none{% endtrans %}</span>
   </div>
-  <noscript><p class="tnote" style="padding-left:0">{% trans %}coverage.globe_noscript{% endtrans %} <a href="{{ path('coverage') }}">{% trans %}coverage.globe_noscript_link{% endtrans %}</a></p></noscript>
-{% else %}
+  </div>
+  <div id="cov-table">
   <table>
     <tr>
       <th>{% trans %}coverage.th_country{% endtrans %}</th>
@@ -208,7 +216,7 @@
     <li>{{ 'coverage.terms_bars'|trans({'%u%': cc_area_suffix()})|rich }}</li>
     <li>{% trans %}coverage.terms_catalog{% endtrans %}</li>
   </ul>
-{% endif %}
+  </div>
 </div></section>
 
 <section class="pad" style="background:var(--paper-deep)"><div class="wrap">
@@ -222,18 +230,16 @@
 </div></section>
 {% endblock %}
 {% block head_extra %}
-{# The table is the URL without a view; a wide screen goes on to the globe
-   before paint (owner 2026-09-08: "should open on the globe page if not
-   mobile"). A file, not inline, so no nonce; a phone keeps the table. #}
-{% if view != 'globe' %}<script src="{{ asset('pages/desktop-default-view.js') }}" data-param="view" data-value="globe" data-min="900"></script>{% endif %}
+{# Picks the opening view before paint by setting a class on <html>. A file,
+   not inline, so the page needs no CSP nonce. #}
+<script src="{{ asset('pages/coverage-view.js') }}"></script>
 {% endblock %}
 {% block body_scripts %}
-{# Files, not inline, so the page needs no CSP nonce (page-caching.md §3.2);
-   the table carries only the head redirect above. #}
-{% if view == 'globe' %}
+{# Files, not inline, so the page needs no CSP nonce (page-caching.md §3.2).
+   MapLibre itself is fetched by coverage-globe.js only once the globe is on
+   screen, so a phone that stays on the table never pays for it. #}
 <script src="{{ asset('pages/country-globe.js') }}" defer></script>
 <script src="{{ asset('pages/coverage-globe.js') }}" defer></script>
-{% endif %}
 {% endblock %}
 
 

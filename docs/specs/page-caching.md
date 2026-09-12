@@ -270,11 +270,16 @@ siblings are behind `IsGranted('ROLE_USER')`, so a logged-out visitor gets a
 redirect rather than a render. They were never a flood target and are per-rider
 by definition.
 
-`/coverage` is in. Its density sort and its view (the table, or the globe at
-`?view=globe`) are each two URLs with links between them, not a toggle, so the
-page carries no inline script and no nonce; the globe view loads MapLibre and
-its own behaviour from files, and its per-country cards are Twig output. The
-smoke test on the page asserts both views are nonce-free.
+`/coverage` is in. Its density sort is two URLs with links between them, not a
+toggle, so the page carries no inline script and no nonce. Its **view** was
+two URLs as well until 2026-09-12 and is now one: both views ship in one
+response and a class on `<html>` decides which is shown, which cost a wide
+screen a redirect and now costs nothing (coverage-provider.md, "Desktop opens
+on the globe"). That is better for this cache, not worse: one body per sort
+order instead of two per sort order. Every script on the page is still a
+file, MapLibre is fetched only when the globe is actually shown, and the
+per-country cards are Twig output. The smoke test on the page asserts it is
+nonce-free.
 
 ## 7. What it is worth
 

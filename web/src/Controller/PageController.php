@@ -344,10 +344,9 @@ final class PageController extends AbstractController
         $sort = CoverageStatsProvider::SORT_TOTAL === $sort
             ? CoverageStatsProvider::SORT_TOTAL
             : CoverageStatsProvider::SORT_DENSITY;
-        // The same rule for the view: the table, or the globe painted by
-        // density (owner 2026-09-08). Two URLs, two chips that are links, so
-        // both are cached and the table needs no script at all.
-        $view = 'globe' === $request->query->get('view') ? 'globe' : 'table';
+        // The view is not a query parameter. Both views ship in one response
+        // and a class on <html> decides which is shown, so /coverage is one
+        // URL and one cached body per sort order (page-caching.md §3.2).
         $countries = $stats->countries($request->getLocale(), $sort);
 
         return $this->render('pages/coverage.html.twig', [
@@ -359,8 +358,9 @@ final class PageController extends AbstractController
             'sort' => $sort,
             'sort_density' => CoverageStatsProvider::SORT_DENSITY,
             'sort_total' => CoverageStatsProvider::SORT_TOTAL,
-            'view' => $view,
-            'density_classes' => 'globe' === $view ? CoverageStatsProvider::densityClasses($countries) : ['bounds' => [], 'byCode' => []],
+            // A sort of the country list already in memory, not a query, so
+            // the globe half of the response costs nothing to prepare.
+            'density_classes' => CoverageStatsProvider::densityClasses($countries),
             'thinnest' => $stats->thinnestCategories(),
         ]);
     }
