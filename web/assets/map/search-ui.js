@@ -2,7 +2,7 @@
 /* Sidebar search: towns, item index, coverage lookup, widen chip.
    @see docs/specs/map-and-search.md §7 */
 import { I18N, D, tpl } from './i18n.js';
-import { escPend, slug, txtOn, photonLang } from './util.js';
+import { escPend, slug, txtOn, photonLang, COORD_COLOR } from './util.js';
 import { CITIES, layerByKey, LETTER_KEY } from './catalog.js';
 import { inScope, scopeLabel } from './scope-ui.js';
 import { itemIndex, idxIds, rebuildItemIndex, dropPendingFromIndex } from './item-index.js';
@@ -106,12 +106,27 @@ export function initSearchUi(){
       return (D.region||'Region') + (foreign ? ` · ${m.cc}` : '');
     };
     const scopeRow=(m,i)=>`<li role="option"><button data-i="${i}" class="s-scope"><span class="sw" style="background:${SCOPE_COLOR};color:${txtOn(SCOPE_COLOR)}">${m.kind==='country'?'◆':'◇'}</span><span class="snm">${escPend(m.name)}</span><span class="sub">${escPend(scopeSub(m))}</span></button></li>`;
+    /* docs/specs/map-and-search.md §7.4: a pasted pair IS the destination.
+       Right-click on the map copies a spot as "52.367612, 5.239157"
+       (map-init.js), so the search box reads that same text back, through the
+       one parser the contribute wizard uses (contribute/coords.js). */
+    const coordPoint = raw => (window.Cc && window.Cc.parseLatLng) ? window.Cc.parseLatLng(raw) : null;
+    function coordHit(raw){
+      const p=coordPoint(raw); if(!p) return null;
+      const name=window.Cc.formatLatLng(p.lat, p.lng);
+      // No scope test: the rider named the point, so openPlace widens for it.
+      return {name, key:slug(name), kind:D.goToPoint||'Go to this point', badge:'\u2295', color:COORD_COLOR,
+        coord:true, ll:[p.lat, p.lng], go:()=>openPlace(name, {ll:[p.lat, p.lng], point:true})};
+    }
     // docs/specs/map-and-search.md §7.2 — Photon, never Nominatim; silent degrade.
     let _phAbort=null, _phHits=[], _phQ='';
     const PH_BASE='https://photon.komoot.io/api/?limit=6'
       +'&osm_tag=place:city&osm_tag=place:town&osm_tag=place:village&osm_tag=place:hamlet&osm_tag=place:municipality';
     function runPhoton(qRaw){
       const q=qRaw.trim();
+      // An exact point needs no geocoder; an in-flight name lookup must not
+      // land its towns on top of the coordinate row either.
+      if(coordPoint(q)){ if(_phAbort) _phAbort.abort(); _phHits=[]; _phQ=''; return; }
       if(q.length<3){ _phHits=[]; _phQ=''; return; }
       if(_phAbort) _phAbort.abort();
       const ctl=new AbortController(); _phAbort=ctl;
@@ -142,6 +157,7 @@ export function initSearchUi(){
     let _covAbort=null, _covHits=[], _covSQ='';
     function runCoverageSearch(qRaw){
       const q=qRaw.trim();
+      if(coordPoint(q)){ if(_covAbort) _covAbort.abort(); _covHits=[]; _covSQ=''; return; }
       if(!COVERAGE_ON || q.length<2){ _covHits=[]; _covSQ=''; return; }
       if(_covAbort) _covAbort.abort();
       // docs/specs/map-and-search.md §4.5 — fail-closed: unscoped myArea must not fetch global rows.
@@ -200,10 +216,14 @@ export function initSearchUi(){
         const ccs = cur && cur.kind==='myArea' && cur.myArea ? cur.myArea.countryCodes : (cur && cur.countryCode ? [cur.countryCode] : []);
         return !!h.cc && ccs.indexOf(h.cc)!==-1;
       });
-      const groups=scopeHits.length ? [{label:D.scopes||'Scopes', rows:scopeHits.map(s=>({
+      const groups=[];
+      // The typed point leads the list: it is the one row that is certainly what was asked for.
+      const coord=coordHit(sBox.value);
+      if(coord) groups.push({label:D.coordinates||'Coordinates', rows:[coord]});
+      if(scopeHits.length) groups.push({label:D.scopes||'Scopes', rows:scopeHits.map(s=>({
         scope:true, kind:s.kind, name:s.label, cc:s.cc,
         go:()=> s.kind==='country' ? window.CCScope.setCountry(s.cc) : window.CCScope.setRegion(s.slug),
-      }))}] : [];
+      }))});
       if(towns.length) groups.push({label:D.places||'Places', rows:towns});
       Object.keys(byLetter).sort().forEach(L=>groups.push({label:`${L} · ${byLetter[L][0].kind}`, rows:byLetter[L]}));
       const CAP=30;
@@ -220,7 +240,7 @@ export function initSearchUi(){
       if(sBox.getAttribute('aria-expanded')!=='true') sBox.setAttribute('aria-expanded','true');
       const realCount=sMatches.length;
       let widenHtml='';
-      if(window.CCScope && !_worldwide){
+      if(window.CCScope && !_worldwide && !coord){
         // One rung up while there is one; at the widest scope, the whole world,
         // for this search only.
         const nw = window.CCScope.nextWider();

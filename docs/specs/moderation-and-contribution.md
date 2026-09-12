@@ -115,7 +115,9 @@ The mode gate in `improve.js`:
 - **A pasted coordinate pair short-circuits the geocoder.** The map's
   right-click popup copies a spot as `lat, lng`, so the search box has to read
   that back: `web/assets/contribute/coords.js` (`window.Cc.parseLatLng`; it was
-  shared with `add-climb.js` until that wizard was retired on 2026-08-25) parses
+  shared with `add-climb.js` until that wizard was retired on 2026-08-25, and
+  shared since 2026-09-12 with the map's own search box,
+  map-and-search.md §7.4) parses
   `lat, lng`, `50.4920°N 5.8600°E`, `N50.49 E5.86`
   and `geo:`/`@` prefixes, and the query never reaches Photon. The pair is
   shown as a result row before anything moves, so the rider sees what was read

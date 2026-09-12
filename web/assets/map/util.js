@@ -7,6 +7,9 @@ import { uKm } from './units.js';
 export const escPend = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 // docs/specs/security-architecture.md §4.2 — http(s) or site-relative only; else '#'.
 export const safeHref = u => { const s = String(u ?? '').trim(); return (/^https?:\/\//i.test(s) || (s.startsWith('/') && !s.startsWith('//'))) ? escPend(s) : '#'; };
+// docs/specs/map-and-search.md §7.4: a pasted point. The search row's chip and
+// the place card's badge are the same thing and must not drift apart.
+export const COORD_COLOR='#556070';
 export const stars=n=>'★★★★★'.slice(0,n)+'☆☆☆☆☆'.slice(0,5-n);
 export const slug = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
 export function txtOn(hex){

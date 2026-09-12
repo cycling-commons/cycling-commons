@@ -1015,6 +1015,10 @@ window.CC_VENDOR = {{ {
   }|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
 </script>
 <script src="{{ asset('js/cc-units.js') }}"></script>
+{# contribute/coords.js registers window.Cc.parseLatLng. The search box reads
+   a pasted "lat, lng" back (docs/specs/map-and-search.md §7.4). One parser,
+   shared with the contribute wizard. #}
+<script src="{{ asset('contribute/coords.js') }}"></script>
 {# MapLibre GL JS v6 ships ES modules only. The UMD build went with it, and so
    did the `maplibregl` global that every one of our map files reads. This
    inline module restores that global once, and is the ONLY place the library

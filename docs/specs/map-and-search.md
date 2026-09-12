@@ -2019,6 +2019,44 @@ transitions, never per keystroke** — mutating an attribute of the element bein
 IME-composed restarts composition on Android Chrome, re-anchoring the caret at
 0 and reversing typed text ("spa" → "aps").
 
+### 7.4 A pasted coordinate pair (2026-09-12)
+
+Right-click on the map copies the spot as `52.367612, 5.239157`
+(`initCoordPopup`, map-init.js). The search box reads that same text back, so
+the two halves of one gesture meet: copy a point, paste it anywhere, get back
+to it.
+
+- **One parser, no second copy.** `web/assets/contribute/coords.js` registers
+  `window.Cc.parseLatLng` / `formatLatLng`; the map page loads that same
+  classic script (as it already does `contribute/media-upload.js`) and
+  `search-ui.js` reads it off `window.Cc` at call time. Accepted forms are the
+  wizard's (moderation-and-contribution.md, place-search bullet): `lat, lng`,
+  space- or `;`-separated, `52.3676°N 5.2392°E`, `N52.3676 E5.2392`, and
+  `geo:` / `@` prefixes. Latitude must be −90..90 and longitude −180..180.
+- **The order written is the order read.** A bare pair is latitude first. A
+  lat/lng swap is never guessed, because `5.239157, 52.367612` is a real point
+  at sea and a wrong guess drops the rider in another country. Only a
+  hemisphere letter may reorder the pair.
+- **A pair never reaches the network.** `runPhoton()` and
+  `runCoverageSearch()` return early on a parsed pair and abort whatever is
+  still in flight, so a name lookup started one keystroke earlier cannot land
+  its towns on top of the point.
+- **Presentation.** One row in its own `Coordinates` group at the very top,
+  above Scopes, labelled with the six-decimal normalized pair and
+  "Go to this point" (`d_coordinates`, `d_go_to_point`). The row carries no
+  community tier tag, and the widen / "Search everywhere" row is suppressed: a
+  wider reach cannot add a hit to a point that is already exact.
+- **The card says "Coordinates", not "Town".** `openPlace()` takes
+  `meta.point`, which swaps the badge glyph and colour; the colour itself is
+  `COORD_COLOR` in util.js, read by both the search row and the card so the two
+  cannot drift apart.
+- **Picking it is `openPlace()`**, the same opener a geocoded town uses: the
+  camera flies there, the place card lists what the Commons holds nearby, and a
+  point outside the current scope widens transiently (`persist:false`, §4.5).
+  The rider named the coordinate, so it is never filtered away by scope.
+
+Pinned by `tests/js/coord-search.test.cjs`.
+
 ## 8. Deep links
 
 Handled in the map `load` handler; all query-param based (no hash state — §13.1

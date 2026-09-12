@@ -3,7 +3,7 @@
    @see docs/specs/map-and-search.md §6.5, §8 */
 import { modeShows } from './filters.js';
 import { D, tpl } from './i18n.js';
-import { escPend, safeHref, txtOn, haversine, featurePoint } from './util.js';
+import { escPend, safeHref, txtOn, haversine, featurePoint, COORD_COLOR } from './util.js';
 import { uKm, uM } from './units.js';
 import { map, flyToPin } from './map-init.js';
 import { CATALOG, CITIES, active, layerByKey, LETTER_KEY, mode } from './catalog.js';
@@ -97,8 +97,12 @@ function renderPlaceCard(name, meta, near, covGroups){
       }).join('')
     : `<li class="cc-near-empty">${D.nothingHere||'Nothing mapped here yet — be the first to add something.'}</li>`;
   invalidateCoverageDrawer();
+  // A pasted coordinate is a point, not a town (docs/specs/map-and-search.md §7.4).
+  const typeC = meta.point ? COORD_COLOR : '#3E7D8C';
+  const typeL = meta.point ? `\u2295 ${D.coordinates||'Coordinates'}`
+    : `◎ ${meta.t==='City'?(D.city||'City'):(D.town||'Town')}`;
   document.getElementById('drawerBody').innerHTML =
-    `<span class="cc-d-type" style="--c:#3E7D8C;color:#fff">◎ ${meta.t==='City'?(D.city||'City'):(D.town||'Town')}</span>
+    `<span class="cc-d-type" style="--c:${typeC};color:#fff">${typeL}</span>
      <div class="cc-d-name">${escPend(name)}</div>
      ${meta.info?`<div class="cc-city-info">${escPend(meta.info)}</div>`:''}
      ${meta.wiki?`<div class="cc-city-links"><a href="${safeHref(meta.wiki)}" target="_blank" rel="noopener">Wikipedia ↗</a></div>`:''}

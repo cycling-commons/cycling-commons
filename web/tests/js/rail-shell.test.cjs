@@ -170,7 +170,9 @@ test('the widen ladder ends in "Search everywhere", a reach for this search only
   // row of the search list is the one place the whole world is offered, and
   // it widens the SEARCH, never the scope: the row is gated on not already
   // searching worldwide, not on canWiden().
-  assert.ok(/if\(window\.CCScope && !_worldwide\)/.test(searchUi),
+  // `!coord` is the one other reason the row is dropped: a pasted coordinate
+  // pair is already an exact point (map-and-search.md §7.4).
+  assert.ok(/if\(window\.CCScope && !_worldwide && !coord\)/.test(searchUi),
     'the widen row is not gated on the worldwide reach');
   assert.ok(searchUi.includes("I18N.searchEverywhere||'Search everywhere'"), 'no "Search everywhere" rung at the top');
   assert.ok(searchUi.includes('class="search-widen"'), 'no widen row in the results list');

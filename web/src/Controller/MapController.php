@@ -335,6 +335,7 @@ final class MapController extends AbstractController
             'capped' => 'd_capped', 'kmOff' => 'd_km_off', 'nothingWithin' => 'd_nothing_within',
             'alongTrackCovH' => 'd_along_track_cov_h', 'covArmNote' => 'd_cov_arm_note',
             'noMatch' => 'd_no_match', 'places' => 'd_places',
+            'coordinates' => 'd_coordinates', 'goToPoint' => 'd_go_to_point',
             'scopes' => 'd_scopes', 'wholeCountry' => 'd_whole_country', 'region' => 'd_region',
             'scopesMore' => 'd_scopes_more',
             'compassN' => 'd_compass_n', 'compassNe' => 'd_compass_ne',
