@@ -185,8 +185,7 @@ to 35 MB, a 51.7% cut, and the whole row from 517 to 412 bytes on average. At th
 `_SOURCE_DDL` in `pipeline/coverage/load.py`), that difference is not a rounding error: it is
 hundreds of megabytes of tag payload, for keys nothing anywhere ever renders.
 
-The 33 kept keys split into four groups, and it is worth being precise about how they add up,
-because it is easy to double-count:
+The 33 kept keys split into four groups, and they are easy to double-count:
 
 - **11 selector keys**: `amenity`, `drinking_water`, `historic`, `man_made`, `natural`, `railway`,
   `route`, `shelter_type`, `shop`, `tourism`, `waterway`, the same keys the 43 selector rules above

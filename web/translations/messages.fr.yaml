@@ -4654,6 +4654,7 @@ report:
   field_about: 'Qu''est-ce qui ne va pas ?'
   field_about_hint: 'La fiche elle-même, ou l''une de ses images. Choisissez l''image si le texte convient et pas la photo.'
   about_entry: 'La fiche elle-même (%what%)'
+  item_overtakes: '<b>Publier ce que le radar a compté.</b> Scout compte les véhicules qui vous dépassent, et ce nombre reste aujourd''hui dans votre navigateur. Le publier comme mesure du trafic d''une route demande d''abord une conception : ce qui est publié, à quelle précision, et avec votre accord à chaque sortie.'
   about_photo: 'Image %n%'
   choose: 'Choisissez...'
   field_ground: 'Ce qui ne va pas'

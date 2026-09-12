@@ -49,8 +49,7 @@ rode.
 
 ## What this project reads from a GPX file, verified
 
-Before describing anything further, it is worth being precise about what this project's own GPX
-parser actually reads, because it is easy to assume more happens here than does. `GpxParser::parse()`
+This project's own GPX parser reads less than it is easy to assume. `GpxParser::parse()`
 (`web/src/Contribution/Gpx/GpxParser.php`) reads exactly three values off every trackpoint: latitude,
 longitude, and the point's own recorded `<ele>` element, if it has one.
 

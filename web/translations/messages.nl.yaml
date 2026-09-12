@@ -4661,6 +4661,7 @@ report:
   field_about: 'Wat klopt er niet?'
   field_about_hint: 'Het item zelf, of een van de foto''s erop. Kies de foto als de tekst klopt en de foto niet.'
   about_entry: 'Het item zelf (%what%)'
+  item_overtakes: '<b>Publiceren wat de radar telde.</b> Scout telt de voertuigen die je inhalen, en dat getal blijft vandaag in je browser. Het publiceren als maat voor hoe druk een weg is vraagt eerst een ontwerp: wat wordt gepubliceerd, op welke precisie, en met jouw toestemming per rit.'
   about_photo: 'Foto %n%'
   choose: 'Maak een keuze...'
   field_ground: 'Wat is er mis mee'

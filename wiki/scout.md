@@ -38,14 +38,34 @@ optional: skip it and sort it out later.
 
 <!-- CODE-ILLUSTRATIVE mermaid diagram source, rendered by javascripts/diagrams.js -->
 ```mermaid
-flowchart LR
-    RIDE["You tap while riding"] --> FILE["Written into your ride file<br/>(open FIT format)"]
-    FILE --> HOME["At home: open the file<br/>at /scout/review"]
-    HOME --> FIX["Fix what needs fixing:<br/>drag a pin, rename it,<br/>change a mis-tapped type,<br/>attach a photo"]
-    FIX --> SEND["Send the ones you choose"]
-    SEND --> MOD["The same review queue<br/>as every other contribution"]
-    MOD --> MAP(["On the map"])
+---
+config:
+  flowchart:
+    rankSpacing: 18
+    nodeSpacing: 24
+    padding: 4
+    subGraphTitleMargin: {top: 0, bottom: 0}
+---
+flowchart TD
+    subgraph R1[" "]
+        direction LR
+        RIDE["You tap while riding"] --> FILE["Written into your ride file<br/>(open FIT format)"]
+    end
+    subgraph R2[" "]
+        direction LR
+        HOME["At home: open the file<br/>at /scout/review"] --> FIX["Fix what needs fixing:<br/>drag a pin, rename it,<br/>change a mis-tapped type,<br/>attach a photo"]
+    end
+    subgraph R3[" "]
+        direction LR
+        SEND["Send the ones you choose"] --> MOD["The same review queue<br/>as every other contribution"]
+    end
+    R1 --> R2
+    R2 --> R3
+    R3 --> MAP(["On the map"])
     style MAP fill:#FF5A1F,color:#101E16
+    style R1 fill:none,stroke:none
+    style R2 fill:none,stroke:none
+    style R3 fill:none,stroke:none
 ```
 
 Nothing is sent from the road. You open the ride when you get home, look at what
@@ -65,8 +85,7 @@ a new way of judging them ([Contributing](contributing.md),
 
 ## Your ride stays yours
 
-This is the part worth being precise about, because it is a promise about
-*where your data goes*, not a policy we could quietly change later.
+Scout sends the tags you approve. Nothing else leaves your device.
 
 - **The ride file is never uploaded.** The review screen reads it **in your own
   browser**. It is never posted, never stored on a server, and there is nothing

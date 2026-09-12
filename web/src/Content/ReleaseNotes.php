@@ -56,6 +56,7 @@ final class ReleaseNotes
         ['key' => 'roadmap.item_heatmap', 'status' => 'later'],
         ['key' => 'roadmap.item_saved_regions', 'status' => 'later'],
         ['key' => 'roadmap.item_observations', 'status' => 'later'],
+        ['key' => 'roadmap.item_overtakes', 'status' => 'later'],
         ['key' => 'roadmap.item_item_links', 'status' => 'later'],
         ['key' => 'roadmap.item_standing', 'status' => 'later'],
         ['key' => 'roadmap.item_curator_room', 'status' => 'later'],

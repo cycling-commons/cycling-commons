@@ -171,8 +171,8 @@ the other, and the signed areas add up to the real one. This is the only concept
 that is genuinely a picture rather than a number, which is why it is worth one.</figcaption>
 </figure>
 
-Two things are worth being precise about, because they explain why "PostGIS is forgiving" and "some
-tools are not" can both be true of the same specification. RFC 7946 itself says a GeoJSON parser
+Two details explain why "PostGIS is forgiving" and "some tools are not" can both be true of the same
+specification. RFC 7946 itself says a GeoJSON parser
 **should not** reject a geometry purely for having the wrong winding — it is a recommendation for
 producers to follow, not a validity requirement consumers must enforce — and it explicitly allows a
 consumer to use winding as a hint rather than a hard rule. PostGIS takes the permissive reading:
@@ -199,8 +199,8 @@ relation to the real shortest path at all — because near the antipode, the sho
 legitimately run through almost any direction, and a small numerical wobble in a hand-rolled formula
 is enough to flip which one a naive calculation prefers.
 
-This project's own distance answers are not at risk from this, and it is worth being precise about
-*why* rather than just asserting it: nothing in this codebase computes great-circle trigonometry by
+This project's own distance answers are not at risk from this, and the reason is specific rather
+than a reassurance: nothing in this codebase computes great-circle trigonometry by
 hand. Every real distance this project asks PostGIS for goes through a `geography` cast —
 [`metres-vs-degrees.md`](../gis/metres-vs-degrees.md) covers `BaseAreaResolver::resolve()`'s
 `ST_DWithin(r.geom::geography, …, :m)` as the worked example — and PostGIS's own geodesic routines

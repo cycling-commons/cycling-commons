@@ -123,8 +123,7 @@ tagged inconsistently by different mappers. This is that same lesson one level u
 mapper reaches for to represent a feature is not fixed either, and this pipeline currently has an
 opinion about which primitives it is willing to notice.
 
-There is a second, smaller wrinkle worth being precise about, because it shapes what "closing the
-gap" would actually mean. Even a way, which this pipeline *does* read, is not stored as its own
+A second, smaller wrinkle shapes what "closing the gap" would actually mean. Even a way, which this pipeline *does* read, is not stored as its own
 shape today. `coverage_poi.geom` is declared `geometry(Point, 4326) NOT NULL` — a Point, always,
 never a LineString or a Polygon regardless of which primitive produced the row — so a way's real
 outline is thrown away in favour of the plain mean of its member nodes' coordinates, its centroid.

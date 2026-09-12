@@ -334,8 +334,7 @@ votes, a layer on top of the ladder, and only for the experiential types
 
 ## 3 · Risk lives at the field, not the item
 
-This is the part that surprises people, and it is the answer to *"but what about
-potable?"*
+This is the answer to *"but what about potable?"*
 
 **"This fountain exists"** and **"this water is safe to drink"** are two
 different claims with two different risk profiles. They do not share a gate.

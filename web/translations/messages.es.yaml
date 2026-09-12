@@ -4694,6 +4694,7 @@ report:
   field_about: '¿Qué está mal?'
   field_about_hint: 'La ficha en sí, o una de sus imágenes. Elige la imagen si el texto está bien y la foto no.'
   about_entry: 'La ficha en sí (%what%)'
+  item_overtakes: '<b>Publicar lo que contó el radar.</b> Scout cuenta los vehículos que te adelantan, y hoy ese número se queda en tu navegador. Publicarlo como medida de cuánto tráfico tiene una carretera necesita primero un diseño: qué se publica, con qué precisión y con tu permiso en cada salida.'
   about_photo: 'Imagen %n%'
   choose: 'Elige una...'
   field_ground: 'Qué le pasa'

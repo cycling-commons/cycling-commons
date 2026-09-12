@@ -4683,6 +4683,7 @@ report:
   field_about: 'What is wrong?'
   field_about_hint: 'The entry itself, or one of the pictures on it. Pick the picture if the words are fine and the photograph is not.'
   about_entry: 'The entry itself (%what%)'
+  item_overtakes: '<b>What the radar counted, published.</b> Scout counts the vehicles that pass you, and today that number stays in your browser. Publishing it as a measure of how busy a road is needs a design first: what is published, at what precision, and with your say each ride.'
   about_photo: 'Picture %n%'
   choose: 'Choose one...'
   field_ground: 'What is wrong with it'

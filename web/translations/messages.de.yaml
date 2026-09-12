@@ -4662,6 +4662,7 @@ report:
   field_about: 'Was stimmt nicht?'
   field_about_hint: 'Der Eintrag selbst, oder eines der Bilder darauf. Wähle das Bild, wenn der Text passt und die Aufnahme nicht.'
   about_entry: 'Der Eintrag selbst (%what%)'
+  item_overtakes: '<b>Veröffentlichen, was das Radar gezählt hat.</b> Scout zählt die Fahrzeuge, die dich überholen, und diese Zahl bleibt heute in deinem Browser. Sie als Maß dafür zu veröffentlichen, wie befahren eine Straße ist, braucht zuerst einen Entwurf: was veröffentlicht wird, in welcher Genauigkeit und mit deiner Zustimmung pro Fahrt.'
   about_photo: 'Bild %n%'
   choose: 'Bitte wählen...'
   field_ground: 'Was daran falsch ist'
