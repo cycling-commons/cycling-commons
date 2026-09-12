@@ -2767,6 +2767,8 @@ map:
   d_race_via: 'passes through'
   d_race_editions: '{n} editions · last {y}'
   d_race_once: 'last {y}'
+  d_routes_h: 'Routes through here'
+  d_route_km: '{km} km'
   d_report_text: 'Report this text'
   d_wiki_edited: 'Edited by our curators, after Wikipedia CC BY-SA 4.0'
   d_founded: 'Founded'

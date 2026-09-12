@@ -160,6 +160,70 @@ final class ResolveTownSummaryHandlerTest extends KernelTestCase
         $handler(new ResolveTownSummary($ref, $lang, 'EU'));
     }
 
+    /**
+     * No Wikidata count, so the card takes Wikipedia's.
+     *
+     * A third of all places and half of all villages have no P1082 at all
+     * (survey, 2026-09-12), which is what left the Inhabitants line blank
+     * rather than the 25-year gate: only three places in a hundred were
+     * blocked by the gate.
+     */
+    public function testTheCardFallsBackToWikipediaWhenWikidataHasNoCount(): void
+    {
+        $replies = $this->antwerpReplies();
+        $replies['population'] = ['claims' => []];
+
+        $this->handle('node/1', 'nl', $this->routes($replies));
+
+        $row = $this->towns->find('node/1', 'nl');
+        self::assertNotNull($row);
+        self::assertSame(
+            ['n' => 530000, 'year' => 2026],
+            $row['facts']['population'] ?? null,
+            'the infobox figure, read from the article the reader is already being shown',
+        );
+    }
+
+    /**
+     * Wikidata wins whenever it has an answer.
+     *
+     * Mixing the two sources freely is how a district's headcount lands on a
+     * village card: the survey found Rwandan districts and their namesake
+     * towns reported under one name, 319,141 against 82,797. The structured
+     * value is exact, dated and ranked, so it is never overruled by a scrape.
+     */
+    public function testWikidataIsNeverOverruledByTheInfobox(): void
+    {
+        $this->handle('node/1', 'nl', $this->routes($this->antwerpReplies()));
+
+        $row = $this->towns->find('node/1', 'nl');
+        self::assertNotNull($row);
+        self::assertSame(
+            ['n' => 565039, 'year' => 2024],
+            $row['facts']['population'] ?? null,
+            'the Wikidata count, not the 530.000 the canned infobox would have given',
+        );
+    }
+
+    /**
+     * An infobox that cannot be fetched costs the card its Inhabitants line
+     * and nothing else, which is what it showed before this existed.
+     */
+    public function testTheRestOfTheCardSurvivesAFailedInfoboxLookup(): void
+    {
+        $replies = $this->antwerpReplies();
+        $replies['population'] = ['claims' => []];
+        $replies['infobox'] = new MockResponse('', ['http_code' => 503]);
+
+        $this->handle('node/1', 'nl', $this->routes($replies));
+
+        $row = $this->towns->find('node/1', 'nl');
+        self::assertNotNull($row);
+        self::assertArrayNotHasKey('population', $row['facts']);
+        self::assertSame(['year' => 1200, 'precision' => 7], $row['facts']['founded'] ?? null);
+        self::assertSame('Antwerpen is een stad in België.', $row['extract'], 'the paragraph is kept');
+    }
+
     /** A client that answers each source by its host, whatever order the handler asks in. */
     private function antwerp(): MockHttpClient
     {
@@ -188,6 +252,9 @@ final class ResolveTownSummaryHandlerTest extends KernelTestCase
                 ['rank' => 'normal', 'mainsnak' => ['datavalue' => ['value' => ['amount' => '+500000']]]],
                 ['rank' => 'preferred', 'mainsnak' => ['datavalue' => ['value' => ['amount' => '+999999']]], 'qualifiers' => ['P585' => [['datavalue' => ['value' => ['time' => '+1971-01-01T00:00:00Z']]]]]],
             ]]],
+            'infobox' => ['parse' => ['text' => '<table class="infobox"><tr><th>Inwoners (1 jan 2026)</th>'
+                .'<td>530.000 (2600 inw./km²)</td></tr></table>',
+            ]],
             'summary_nl' => ['title' => 'Antwerpen', 'extract' => 'Antwerpen is een stad in België.', 'content_urls' => ['desktop' => ['page' => 'https://nl.wikipedia.org/wiki/Antwerpen_(stad)']]],
             'summary_en' => ['title' => 'Antwerp', 'extract' => 'Antwerp is a city in Belgium.', 'content_urls' => ['desktop' => ['page' => 'https://en.wikipedia.org/wiki/Antwerp']]],
             'sparql' => ['results' => ['bindings' => [
@@ -211,6 +278,7 @@ final class ResolveTownSummaryHandlerTest extends KernelTestCase
                 str_contains($url, 'wbgetclaims') && str_contains($url, 'property=P1082') => 'population',
                 str_contains($url, 'nl.wikipedia.org/api/rest_v1') => 'summary_nl',
                 str_contains($url, 'en.wikipedia.org/api/rest_v1') => 'summary_en',
+                str_contains($url, 'action=parse') => 'infobox',
                 str_contains($url, 'query.wikidata.org') => 'sparql',
                 default => null,
             };

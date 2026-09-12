@@ -2291,6 +2291,8 @@ map:
   d_race_via: 'komt hier langs'
   d_race_editions: '{n} edities · laatste {y}'
   d_race_once: 'laatste {y}'
+  d_routes_h: 'Routes die hier langskomen'
+  d_route_km: '{km} km'
   d_report_text: 'Deze tekst melden'
   d_wiki_edited: 'Bewerkt door onze curatoren, naar Wikipedia CC BY-SA 4.0'
   d_founded: 'Gesticht'

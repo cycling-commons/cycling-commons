@@ -2286,6 +2286,8 @@ map:
   d_race_via: 'passe ici'
   d_race_editions: '{n} éditions · dernière {y}'
   d_race_once: 'dernière {y}'
+  d_routes_h: 'Itinéraires qui passent ici'
+  d_route_km: '{km} km'
   d_report_text: 'Signaler ce texte'
   d_wiki_edited: 'Modifié par nos curateurs, daprès Wikipédia CC BY-SA 4.0'
   d_founded: 'Fondée'

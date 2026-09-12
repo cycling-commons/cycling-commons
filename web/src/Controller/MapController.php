@@ -326,6 +326,7 @@ final class MapController extends AbstractController
             'townLoading' => 'd_town_loading', 'wikiText' => 'd_wiki_text', 'cyclingH' => 'd_cycling_h',
             'raceStart' => 'd_race_start', 'raceFinish' => 'd_race_finish', 'raceStartFinish' => 'd_race_start_finish', 'raceVia' => 'd_race_via',
             'raceEditions' => 'd_race_editions', 'raceOnce' => 'd_race_once',
+            'routesH' => 'd_routes_h', 'routeKm' => 'd_route_km',
             'reportText' => 'd_report_text', 'wikiEdited' => 'd_wiki_edited', 'founded' => 'd_founded', 'inhabitants' => 'd_inhabitants', 'circa' => 'd_circa', 'yearBc' => 'd_year_bc',
             'raceStageStart' => 'd_race_stage_start', 'raceStageFinish' => 'd_race_stage_finish', 'raceStageStartFinish' => 'd_race_stage_start_finish', 'nothingHere' => 'd_nothing_here',
             'kindShop' => 'd_kind_shop', 'kindStation' => 'd_kind_station', 'kindPump' => 'd_kind_pump',

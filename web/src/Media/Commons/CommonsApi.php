@@ -447,6 +447,195 @@ final readonly class CommonsApi
     }
 
     /**
+     * Words that label a headcount in an infobox, by Wikipedia language.
+     *
+     * Not one list: the row is `Inwoners` on nl, `Einwohner` on de, `人口` on
+     * ja. A language with no entry falls back to the English words, which is
+     * right because the English article is the second thing tried.
+     */
+    private const array POPULATION_LABEL = [
+        'nl' => 'inwoner|bevolking',
+        'de' => 'einwohner',
+        'fr' => 'population|habitants',
+        'es' => 'poblaci|habitantes',
+        'it' => 'abitanti|popolazione',
+        'ja' => '人口',
+        'en' => 'population',
+    ];
+
+    /**
+     * Labels whose number is not a headcount.
+     *
+     * Mostly the two other things an infobox counts by head: density, and
+     * money per capita. de.wikipedia's Hamburg carries `Kaufkraft je
+     * Einwohner: 28.931 EUR`, and matching it reports a city of 1.9 million as
+     * a town of 29 thousand.
+     */
+    private const string NOT_POPULATION =
+        'densit|dichtheid|dichte|densidad|密度|hoogte|höhe|altitud|elevation'
+        .'|area|oppervlak|fläche|superficie|面積|inkomen|income|revenu|renta'
+        .'|einkommen|所得|piramide|pyramid|prognose|forecast'
+        .'|kaufkraft|\bbip\b|\bpib\b|\bgdp\b|\bbbp\b'
+        .'|je einwohner|pro einwohner|per inwoner|par habitant|per capita'
+        .'|por habitante|€|\$|£|¥';
+
+    /** A row that answers a `Population (2021)` header with the whole place. */
+    private const string TOTAL_LABEL = 'total|totaal|gesamt|insgesamt|総数|計|municipio|commune|stadt|city|urban';
+
+    /**
+     * The headcount in a Wikipedia article's infobox, or null.
+     *
+     * **Why Wikipedia at all, when Wikidata is structured and this is a
+     * scrape.** Because Wikidata does not have the answer often enough. A
+     * survey of 100 OpenStreetMap places carrying a `wikidata` tag, ten per
+     * country across ten countries and stratified by size (2026-09-12), found
+     * Wikidata could answer 66% of them and only **47% of villages**. The same
+     * places answered 89% and 82% once Wikipedia was allowed to fill the gap.
+     * GeoNames was measured too and rejected: it lifted villages to 55% only,
+     * and disagreed with Wikipedia on a third of the places where both had a
+     * number, because its snapshot is not refreshed per municipality.
+     *
+     * **The fallback, never the answer when Wikidata has one.** The structured
+     * value is exact, dated and ranked; this one is read off a table anybody
+     * may restyle. Keeping Wikidata first also keeps the two from being mixed,
+     * which matters more than it sounds: the survey found Rwandan districts
+     * and their namesake towns reported under one name, 319,141 against
+     * 82,797.
+     *
+     * Section 0 only, which is where the infobox is and about 33 KB rather
+     * than the whole article.
+     *
+     * @return array{n: int, year: ?int}|null
+     *
+     * @throws CommonsUnavailable
+     */
+    public function infoboxPopulation(string $lang, string $title): ?array
+    {
+        if (1 !== preg_match('~^[a-z]{2}$~', $lang)) {
+            throw new \InvalidArgumentException('Not a Wikipedia language code: '.$lang);
+        }
+        $data = $this->get(sprintf('https://%s.wikipedia.org/w/api.php', $lang), [
+            'action' => 'parse',
+            'format' => 'json',
+            'formatversion' => '2',
+            'page' => $title,
+            'prop' => 'text',
+            'section' => '0',
+            'redirects' => '1',
+        ]);
+        $html = $data['parse']['text'] ?? null;
+
+        return \is_string($html) ? self::readPopulation($lang, $html) : null;
+    }
+
+    /**
+     * @return array{n: int, year: ?int}|null
+     */
+    private static function readPopulation(string $lang, string $html): ?array
+    {
+        $labels = self::POPULATION_LABEL[$lang] ?? self::POPULATION_LABEL['en'];
+        preg_match_all('~<tr\b.*?</tr>~si', $html, $rows);
+
+        $armedYear = null;
+        $countdown = 0;
+        foreach ($rows[0] as $row) {
+            preg_match_all('~<t[hd]\b[^>]*>(.*?)</t[hd]>~si', $row, $found);
+            $cells = array_map(self::cellText(...), $found[1]);
+            if ([] === $cells) {
+                continue;
+            }
+            $label = $cells[0];
+
+            // Whichever word comes FIRST owns the row. A label can carry both:
+            // nl.wikipedia stacks "Inwoners - Mannen - Vrouwen -
+            // Bevolkingsdichtheid" over one cell and the count is still the
+            // first thing in it, while "Kaufkraft je Einwohner" is money and
+            // never a headcount.
+            $isPop = preg_match('~'.$labels.'~iu', $label, $m, \PREG_OFFSET_CAPTURE);
+            $isNot = preg_match('~'.self::NOT_POPULATION.'~iu', $label, $n, \PREG_OFFSET_CAPTURE);
+            if (1 === $isNot && (1 !== $isPop || $n[0][1] < $m[0][1])) {
+                continue;
+            }
+
+            if (1 === $isPop) {
+                $year = self::yearIn($label);
+                // From a VALUE cell only. A label never holds the count, and
+                // reading one is how a year becomes a population.
+                foreach (\array_slice($cells, 1) as $cell) {
+                    $count = self::countIn($cell);
+                    if (null !== $count) {
+                        return ['n' => $count, 'year' => $year ?? self::yearIn($cell)];
+                    }
+                }
+                // No value here: the `Population (2021)` header shape, whose
+                // count arrives on one of the next rows.
+                $armedYear = $year;
+                $countdown = 4;
+
+                continue;
+            }
+
+            if ($countdown > 0) {
+                --$countdown;
+                if (1 !== preg_match('~'.self::TOTAL_LABEL.'~iu', $label)) {
+                    continue;
+                }
+                foreach (\array_slice($cells, 1) ?: $cells as $cell) {
+                    $count = self::countIn($cell);
+                    if (null !== $count) {
+                        return ['n' => $count, 'year' => $armedYear ?? self::yearIn($cell)];
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /** One table cell as plain text, footnote markers dropped. */
+    private static function cellText(string $html): string
+    {
+        $html = preg_replace('~<(sup|style)\b.*?</\1>~si', ' ', $html) ?? $html;
+        $text = html_entity_decode(strip_tags($html), \ENT_QUOTES | \ENT_HTML5, 'UTF-8');
+
+        return trim(preg_replace('~\s+~u', ' ', $text) ?? $text);
+    }
+
+    /**
+     * A headcount in this cell, or null.
+     *
+     * Thousands separators differ by language, so 1.234, 1 234 and 1,234 are
+     * all one number. A bare four-digit year is refused: nl.wikipedia labels a
+     * section "Inwoners van jaar tot jaar op 1 januari 1992 tot heden", and
+     * 1992 passes every other test. A village of exactly 1992 people written
+     * without a separator loses here, which is the cheaper mistake.
+     */
+    private static function countIn(string $cell): ?int
+    {
+        if (1 !== preg_match('~\d{1,3}(?:[.,\x{00A0}\x{202F} ]\d{3})+|\b\d{2,}\b~u', $cell, $m)) {
+            return null;
+        }
+        $digits = preg_replace('~\D~', '', $m[0]) ?? '';
+        if ('' === $digits) {
+            return null;
+        }
+        $n = (int) $digits;
+        if ($n < 10 || $n > 40_000_000) {
+            return null;
+        }
+        if ($n >= 1700 && $n <= 2035 && 1 === preg_match('~^\s*\d{4}\s*$~', $cell)) {
+            return null;
+        }
+
+        return $n;
+    }
+
+    private static function yearIn(string $text): ?int
+    {
+        return 1 === preg_match('~\b(19\d\d|20[0-2]\d)\b~', $text, $m) ? (int) $m[1] : null;
+    }
+
+    /**
      * @param array<string, string> $query
      *
      * @return array<string, mixed>

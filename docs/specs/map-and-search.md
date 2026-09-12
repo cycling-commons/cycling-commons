@@ -1850,14 +1850,69 @@ The first reader claims a `town_summary` row for (ref, language) and queues
    2026-09-08): inception (P571) and the newest dated population (P1082, by
    its point-in-time qualifier; a preferred-rank claim wins a tie; an undated
    count, or one older than `CommonsApi::POPULATION_MAX_AGE_YEARS` (25), is
-   dropped: Zwaag's newest Wikidata count is 1971, while its Wikipedia infobox
-   says 3,255 for 2025 from the national statistics office, which Wikidata
-   never got; the national offices are the source to harvest for this, see
-   docs/plans/2026-09-08-town-knowledge-sources.md). Shown as a two-line list above the paragraph,
-   "Founded · c. 1200" and "Inhabitants · 565,039 (2024)", each line only when
-   Wikidata has it; Antwerp has no inception there. Precision travels with the
+   dropped). Shown as a two-line list above the paragraph, "Founded · c. 1200"
+   and "Inhabitants · 565,039 (2024)", each line only when the sources have
+   it; Antwerp has no inception anywhere. Precision travels with the
    year: century and decade precisions (7, 8) read "c.", finer ones read the
    year, and a negative year reads "BC" in the reader's language.
+4a. **The inhabitants line falls back to Wikipedia's infobox**
+   (`CommonsApi::infoboxPopulation()`), on the article the reader is already
+   being shown, and only when Wikidata returned no count at all.
+
+   **Measured before it was built** (2026-09-12). A survey of 100
+   OpenStreetMap places carrying a `wikidata` tag, ten per country across ten
+   countries on five continents, stratified two cities / four towns / four
+   villages:
+
+   | source | all 100 | villages |
+   |---|---|---|
+   | Wikidata, as the card used it | 66% | 47% |
+   | with Wikipedia filling the gap | **89%** | **82%** |
+   | GeoNames instead of Wikipedia | 76% | 55% |
+
+   Three findings decided the shape. First, **the 25-year gate is not the
+   problem**: only 3 places in 100 were blocked by it, while 30 had no P1082
+   at all, so the gate stays. Second, **GeoNames was rejected**: it barely
+   moves villages, and it disagreed with Wikipedia on a third of the places
+   where both had a number, its snapshot not being refreshed per
+   municipality. Third, **Wikidata must keep winning when it has an answer**,
+   because the two sources do not always count the same thing: Rwandan
+   districts and their namesake towns appear under one name, 319,141 against
+   82,797, and a fallback that could overrule the structured value would put a
+   district's headcount on a village card.
+
+   Eight of the hundred have no population in any source, half of them in
+   Rwanda, where only 34 places in the whole country carry a Wikidata link.
+   Zwaag, the village this was reported against, is one of the eight: its
+   Dutch article has no infobox at all, so nothing here rescues it. National
+   statistics offices are still the source that would
+   (docs/plans/2026-09-08-town-knowledge-sources.md).
+
+   The read is section 0 of the rendered article, not the wikitext: de
+   holds its number in a `Metadaten Einwohnerzahl` template and nl and ja pull
+   theirs from Wikidata, so only the rendered table has the resolved figure in
+   every language. Three shapes it must survive, each of which broke an
+   earlier reader: a label that stacks a count and a density over one cell
+   (nl), `Kaufkraft je Einwohner` sitting above `Einwohner` (de), and a
+   `Population (2021)` header whose number is on the `• Total` row beneath it
+   (en). Failure costs the card its inhabitants line and nothing else.
+
+4b. **The recommended routes that pass through the town** (`TownRoutes::near()`,
+   known issue 2026-09-06: "the Westfriese Omringdijk for Hoorn, the Great
+   Divide for Banff"). Ours, not Wikidata's: the race list below says what
+   happened here, this says what a rider can ride from here, and finding it
+   needs geometry rather than a claim. Served rows within
+   `TownRoutes::THROUGH_M` (1 km) of the town's OpenStreetMap node, nearest
+   first, six at most, each linking to `/map?route=<id>`.
+
+   Read fresh on every open, never cached into `town_summary`: that row is
+   keyed by (ref, language) and settled once, which is right for a Wikipedia
+   paragraph and wrong for a layer riders add to, where a route proposed today
+   would wait behind a cache with no expiry. One index scan on a table of
+   thousands. The radius is measured from the node at the town's centre, so it
+   is loose enough to take in a bypass along the edge and tight enough to stop
+   before the next village.
+
 5. The Wikidata query service, once: every cycling race or route that starts
    (P1427), finishes (P1444) or passes (P2825) here, grouped by the race its
    editions are instances of and kept only when that race is a kind of cycling

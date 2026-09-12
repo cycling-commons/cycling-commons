@@ -2294,6 +2294,8 @@ map:
   d_race_via: 'führt hier durch'
   d_race_editions: '{n} Austragungen · zuletzt {y}'
   d_race_once: 'zuletzt {y}'
+  d_routes_h: 'Routen, die hier vorbeiführen'
+  d_route_km: '{km} km'
   d_report_text: 'Diesen Text melden'
   d_wiki_edited: 'Von unseren Kuratoren bearbeitet, nach Wikipedia CC BY-SA 4.0'
   d_founded: 'Gegründet'

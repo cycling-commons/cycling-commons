@@ -72,7 +72,7 @@ final readonly class ResolveTownSummaryHandler
             $langs = \in_array($message->lang, self::LANGS, true) && 'en' !== $message->lang ? [$message->lang, 'en'] : ['en'];
             $text = $this->text($qidRaw, $langs);
             $cycling = $this->cycling($qidRaw, $langs);
-            $facts = $this->facts($qidRaw);
+            $facts = $this->withPopulation($this->facts($qidRaw), $text);
         } catch (TownSourceUnavailable|CommonsUnavailable $e) {
             $this->towns->release($message->osmRef, $message->lang);
             $this->logger->warning('Town summary lookup failed', ['ref' => $message->osmRef, 'lang' => $message->lang, 'why' => $e->getMessage()]);
@@ -128,6 +128,49 @@ final readonly class ResolveTownSummaryHandler
 
             return [];
         }
+    }
+
+    /**
+     * Wikidata's count, or Wikipedia's when Wikidata has none.
+     *
+     * **Wikidata first, always.** Its value is exact, dated and ranked, and
+     * the infobox read is a scrape of a table anybody may restyle. This only
+     * fires when {@see CommonsApi::townFacts()} came back
+     * without a population, which a survey of 100 places across ten countries
+     * (2026-09-12) put at a third of all places and **half of all villages**.
+     * Filling those took the card from 66% answered to 89%, and villages from
+     * 47% to 82%.
+     *
+     * The article is the one the reader is already being shown, so the number
+     * agrees with the paragraph under it and no second lookup is needed.
+     *
+     * Failing costs the card its Inhabitants line and nothing else, which is
+     * what it shows today anyway.
+     *
+     * @param array{founded?: array{year: int, precision: int}, population?: array{n: int, year: ?int}} $facts
+     * @param array{title: string, extract: string, url: string, lang: string}|null                     $text
+     *
+     * @return array{founded?: array{year: int, precision: int}, population?: array{n: int, year: ?int}}
+     */
+    private function withPopulation(array $facts, ?array $text): array
+    {
+        if (isset($facts['population']) || null === $text) {
+            return $facts;
+        }
+
+        try {
+            $found = $this->wiki->infoboxPopulation($text['lang'], $text['title']);
+        } catch (CommonsUnavailable $e) {
+            $this->logger->warning('Wikipedia population lookup failed; the rest of the card is kept', [
+                'title' => $text['title'],
+                'lang' => $text['lang'],
+                'why' => $e->getMessage(),
+            ]);
+
+            return $facts;
+        }
+
+        return null === $found ? $facts : $facts + ['population' => $found];
     }
 
     /**

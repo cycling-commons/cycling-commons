@@ -172,7 +172,15 @@ function townHtml(d, name, meta){
       const label = r.url ? `<a href="${safeHref(r.url)}" target="_blank" rel="noopener">${escPend(r.label)}</a>` : escPend(r.label);
       const when = r.n>1 ? (D.raceEditions||'{n} editions · last {y}').replace('{n}', r.n).replace('{y}', r.last||'') : (r.last ? (D.raceOnce||'last {y}').replace('{y}', r.last) : '');
       return `<li class="cc-town-race">${label}<small>${escPend(relWords(r.rels||[]))}${when?' · '+escPend(when):''}</small></li>`; }).join('')}</ul>` : '';
-  return photo + text + races;
+  /* Routes that pass through here, from OUR layer rather than Wikidata: the
+     races above say what happened here, these say what you can ride from here
+     (known issue, 2026-09-06). Each one opens on the map, where the line is. */
+  const rr = Array.isArray(d.routes) ? d.routes : [];
+  const routes = rr.length ? `<h4 class="cc-near-h">${escPend(D.routesH||'Routes through here')}</h4>
+    <ul class="cc-town-races">${rr.map(r=>{
+      const km = r.distanceM ? tpl(D.routeKm||'{km} km', { km: Math.round(r.distanceM/1000) }) : '';
+      return `<li class="cc-town-race"><a href="${safeHref('/map?route='+encodeURIComponent(r.id))}">${escPend(r.name)}</a>${km?`<small>${escPend(km)}</small>`:''}</li>`; }).join('')}</ul>` : '';
+  return photo + text + races + routes;
 }
 function startTownWatch(name, meta){
   const find = () => document.querySelector(`#drawerBody .cc-town[data-town-ref="${CSS.escape(meta.osm)}"]`);

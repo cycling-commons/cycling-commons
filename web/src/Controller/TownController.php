@@ -13,6 +13,7 @@ use App\Media\Message\ResolveWikidataImage;
 use App\Town\Message\ResolveTownSummary;
 use App\Town\MessageHandler\ResolveTownSummaryHandler;
 use App\Town\OsmElementApi;
+use App\Town\TownRoutes;
 use App\Town\TownSummaryRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -54,6 +55,7 @@ final class TownController extends AbstractController
         RateLimiterFactoryInterface $coveragePhotoLimiter,
         RateLimiterFactoryInterface $coveragePhotoFetchLimiter,
         RateLimiterFactoryInterface $coveragePhotoGlobalLimiter,
+        TownRoutes $routes,
     ): Response {
         if (null !== ($limited = $this->rateLimited($request, $coveragePhotoLimiter))) {
             return $limited;
@@ -91,10 +93,16 @@ final class TownController extends AbstractController
             'license' => 'CC BY-SA 4.0',
         ];
 
+        // Ours, read fresh: a route proposed today should show today, and the
+        // cached half of this row is settled once and never revisited.
+        $lat = $request->query->get('lat');
+        $lng = $request->query->get('lng');
+
         return $this->noStore([
             'state' => 'ready',
             'text' => $text,
             'cycling' => $row['cycling'],
+            'routes' => is_numeric($lat) && is_numeric($lng) ? $routes->near((float) $lat, (float) $lng) : [],
             'facts' => (object) $row['facts'],
             'edited' => $row['edited'],
             'photo' => $this->photo($row['qid'], $continent, $wikidata, $admission, $bus, $budget),
