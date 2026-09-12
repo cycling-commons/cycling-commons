@@ -162,7 +162,9 @@
        declared font-size at two different sizes on the same page. Chapter 1
        shipped with a 640-wide and a 560-wide figure and their 13px labels came
        out 14% apart. Fixing the width at 640 for all sixteen figures makes one
-       type scale correct everywhere.
+       type scale correct everywhere. One exception exists, .gis-fig-wide,
+       and it holds the same on-screen scale by widening the CSS cap in step
+       with the viewBox; the rule for it sits beside .gis-fig below.
 
    (2) The rendered width is clamped ABOVE but not below, so the scale factor
        has a ceiling and a realistic worst case rather than a true floor.
@@ -248,6 +250,26 @@
   width: 100%;
   height: auto;
   margin: 0 auto;
+}
+/* The one width exception, and the arithmetic that keeps it honest. A system
+   map that names four components across a row cannot hold them at 640 units:
+   `OpenStreetMap` alone is 13 monospace characters, about 187 units, so the
+   row runs off the edge and the labels are clipped (F19 on developers/index
+   shipped that way). .gis-fig-wide is 960 units wide and is capped at 31.5rem
+   = 630px, which is 960 x 0.65625, the same scale factor a 640-unit figure
+   gets at 21rem, so 24-unit type still lands at 15.8px and the one type scale
+   in (3) holds across both widths.
+   The svg keeps that 630px as a MIN width and the figure scrolls sideways
+   below it. Shrinking to a 360px phone column instead would render 24-unit
+   type at 8.2px, far under the 11px floor, so a narrow reader pans a
+   full-size drawing rather than reading a shrunken one. Use this only for a
+   whole-system map; a chapter figure belongs at 640. */
+.md-typeset .gis-fig.gis-fig-wide {
+  max-width: 31.5rem;
+  overflow-x: auto;
+}
+.md-typeset .gis-fig.gis-fig-wide svg {
+  min-width: 31.5rem;
 }
 .md-typeset .gis-fig figcaption {
   margin-top: .6rem;
