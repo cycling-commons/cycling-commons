@@ -1,0 +1,27 @@
+web/src/Support/DependencyInjection/ConsumerNameEnvVarProcessor.php
+  s_e9b7d39367a2ea::t_9bcd940497ac68 1-45,47-65,67-71
+  s_e9b7d39367a2ea::t_4e5f55815bde4e 46,66
+web/.env
+  s_e9b7d39367a2ea::t_2bd4fa8675c1c1 288-292
+web/config/packages/messenger.yaml
+  s_e9b7d39367a2ea::t_2bd4fa8675c1c1 40
+  s_e9b7d39367a2ea::t_c804eb6347725e 21-39
+web/tests/Support/DependencyInjection/ConsumerNameEnvVarProcessorTest.php
+  s_e9b7d39367a2ea::t_223d59c6635d16 1-49
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "083138ea352e6b337688902c3392b01ee99e0c5b",
+  "prompts": {},
+  "sessions": {
+    "s_e9b7d39367a2ea": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "768f0270-53eb-479e-8318-433176b4f785",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
