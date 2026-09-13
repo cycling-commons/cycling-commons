@@ -26,6 +26,8 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  * an explanation or the suite says so.
  *
  * @see docs/specs/dev-environment.md §9
+ *
+ * @api
  */
 #[AsCommand(name: 'app:schema:comment-tables', description: 'Write each table\'s purpose into the database as a COMMENT ON TABLE')]
 final class SchemaCommentTablesCommand extends Command

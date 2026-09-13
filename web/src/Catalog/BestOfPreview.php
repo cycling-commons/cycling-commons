@@ -342,7 +342,7 @@ final class BestOfPreview
             'Excepteur sint occaecat cupidatat non proident, sunt in culpa.',
         ];
 
-        return $clauses[$seed % \count($clauses)];
+        return $clauses[abs($seed) % \count($clauses)];
     }
 
     /** @param list<?string> $parts */
@@ -403,7 +403,7 @@ final class BestOfPreview
      * is dropped, the same exclusivity the map applies, or the same castle
      * would rank twice under two names.
      *
-     * @return list<array{id: int|string, name: string, attributes: string|null, ref: string|null}>
+     * @return list<array{id: int|string, name: string, attributes: string|null, ref: string|null, distance_m: int|string|null}>
      */
     private function items(ItemType $type, ?string $countryCode, ?int $regionId = null): array
     {
