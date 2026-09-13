@@ -66,7 +66,7 @@ subdivision), exactly like Belgium's three regions or Germany's sixteen.
 make region-scaffold c="NL"            # add flags="--probe-areas" to include measured areas
 ```
 
-One property is worth stating plainly, because it is what makes the next step safe: the scaffolder
+One property makes the next step safe: the scaffolder
 **emits, never applies**. It prints a config block and a set of label stubs to standard output and
 writes nothing anywhere. Nothing is committed, no row is created, and running it twice costs
 nothing. That is deliberate, because everything it emits is about to be reviewed by a person, and

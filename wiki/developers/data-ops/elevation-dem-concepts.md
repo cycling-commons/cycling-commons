@@ -53,8 +53,7 @@ it makes a fabrication look like a survey.
 
 ## A DEM does not know where the road is
 
-The single most useful thing to understand: **a DEM never produces
-coordinates.** It has no idea a road exists.
+**A DEM never produces coordinates.** It has no idea a road exists.
 
 It is a lookup table. You hand it a latitude and longitude, it returns a height.
 The trajectory, where the climb actually goes, comes from a routing engine,

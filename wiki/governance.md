@@ -18,7 +18,7 @@ Two licences do that work, and this page is straight about where each one stops:
   runs a modified version as a network service other people use, has to offer those people the
   Corresponding Source. Competition is allowed. Going private is not.
 
-The licences share one limit, worth stating plainly: no licence compels anyone to keep working. A
+The licences share one limit: no licence compels anyone to keep working. A
 steward can always stop feeding the pool. What makes the Commons last anyway is not a defence
 against anyone's bad faith — it is the ordinary condition of something many people already hold:
 

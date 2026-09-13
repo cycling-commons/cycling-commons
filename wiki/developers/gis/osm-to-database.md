@@ -283,7 +283,7 @@ performs, now visible as a constraint on the column that receives it. The rest o
 `kind`, `name`, the upstream `osm_version`/`osm_ts`, and the `src_region_id` and `country_code` stamps,
 let later chapters, and chapter 5's own index list, scope a query to one region or country cheaply.
 
-One detail worth pausing on, because it reaches back into chapter 2
+One detail reaches back into chapter 2
 ([`shapes.md`](shapes.md)): `coverage_poi.geom` is declared `geometry(Point, 4326) NOT NULL`, always
 a Point, never a LineString or a Polygon, no matter which OSM primitive the row came from. A node
 keeps its own coordinates unchanged. A way, which chapter 2 would normally expect to become a

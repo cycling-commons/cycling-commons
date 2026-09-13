@@ -74,9 +74,8 @@ off *each end* of the uploaded track, the **privacy end-trim** (route-domain.md 
 stored route never reveals where its proposer actually started or finished. How much comes off is
 derived from a hash of the upload's own bytes, which makes it deterministic for a given file but not
 guessable from the result. Nothing downstream ever sees the untrimmed track; the untrimmed upload
-never reaches storage at all. Note that trimming is not the same operation as *thinning*, which
-happens later and is a different word for a different thing, the distinction matters for `ascent_m`
-below.
+never reaches storage at all. Trimming is not the same operation as *thinning*, which happens later
+and is a different word for a different thing. The distinction matters for `ascent_m` below.
 
 **Distance is the easy one, and it is still a choice.** `TrackProcessor::distanceM()`
 (`web/src/Contribution/Gpx/TrackProcessor.php`) walks the trimmed track and sums the great-circle

@@ -163,8 +163,8 @@ additional_data.elevation  ->  the directory holding the .hgt files
 Copy the tiles there and **restart**. That is all.
 
 **No tile rebuild is needed**, because the elevation service reads that directory
-independently of the routing graph. This is worth stating plainly because the
-opposite is widely assumed, and a rebuild is hours of work.
+independently of the routing graph. A rebuild is hours of work and buys nothing
+here.
 
 A rebuild buys something genuinely different: `build_elevation` bakes grade into
 the *routing* tiles so cycling costs can prefer flatter roads. That is a separate

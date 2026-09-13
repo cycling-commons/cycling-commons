@@ -8,7 +8,7 @@ the short list, in the order the failures actually happen.
 
 ## The exercise returns no rows
 
-The single most common one, and it is usually not a bug in the query.
+Usually not a bug in the query.
 
 `make setup` is **not enough for these courses**. It seeds world reference data and four demo
 accounts, which leaves `item`, `recommended_route` and `heat_point` empty, and leaves `coverage_poi`

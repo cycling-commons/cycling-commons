@@ -414,8 +414,7 @@ reasons:
   real, checkable property of the tiles themselves, not something a filter has to reconstruct at render
   time.
 
-That is worth pausing on, because it is a different *kind* of decision than everything else in this
-chapter. Zoom ranges, `-r1`, the size-budget thinning: all of those are performance and rendering
+That is a different *kind* of decision than everything else in this chapter. Zoom ranges, `-r1`, the size-budget thinning: all of those are performance and rendering
 tuning. The per-country layer split is not. It exists because coverage per country is a real
 distinction a rider cares about (the region-scoping selector lets someone view "just the
 Netherlands"), not because a mixed layer would be slow or oversized. Splitting the layers is a
