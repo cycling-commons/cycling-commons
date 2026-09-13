@@ -6,6 +6,8 @@ declare(strict_types=1);
 
 namespace App\Catalog;
 
+use App\Media\Commons\CommonsFile;
+use App\Media\Commons\CommonsPhotoAdmission;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 
@@ -28,7 +30,7 @@ use Doctrine\DBAL\Connection;
  * vote. `simulated` rides on every row so a template cannot forget to say so.
  *
  * @phpstan-type Photo array{sm: string, credit: ?string, creditUrl: ?string, license: ?string}
- * @phpstan-type Ranked array{id: int, ref: ?string, name: string, kind: string, letter: string, note: ?string, photo: ?Photo, notePlaceholder: bool, photoPlaceholder: bool, filler: ?string, votes: int, rides: int, share: int, simulated: true}
+ * @phpstan-type Ranked array{id: int, ref: ?string, name: string, kind: string, letter: string, note: ?string, photo: ?Photo, notePlaceholder: bool, photoPlaceholder: bool, commonsFile: ?string, filler: string, hue: int, votes: int, rides: int, share: int, simulated: true}
  *
  * @see docs/specs/route-domain.md §8
  *
@@ -40,6 +42,27 @@ final class BestOfPreview
 {
     /** A shortlist is the point: a ranking nobody reads to the end ranks nothing. */
     public const int TOP_N = 10;
+
+    /** Where the placeholder hues start: amber, the warm end of the site's palette. */
+    private const int HUE_FROM = 25;
+
+    /** How far they run: to roughly 175, amber through olive into sage. */
+    private const int HUE_RANGE = 150;
+
+    /** What a winning entry plausibly polls in a first season, at the low end. */
+    private const int LEAD_MIN = 120;
+
+    /** How far above LEAD_MIN a winner can land, so categories do not all share a number. */
+    private const int LEAD_SPREAD = 60;
+
+    /**
+     * What each place down the list keeps of the place above it.
+     *
+     * At 0.82 a ten-deep list runs roughly 140 down to 24: the podium is
+     * clearly a podium and tenth place is clearly not, which is the shape a
+     * ranking has to have before anybody can say whether it reads well.
+     */
+    private const float DECAY = 0.82;
 
     /**
      * How long a ride is, in the three lengths a rider picks between.
@@ -60,8 +83,14 @@ final class BestOfPreview
     /** Asked once: the answer cannot change inside a request. */
     private ?bool $hasCoverage = null;
 
-    public function __construct(private readonly Connection $db)
-    {
+    public function __construct(
+        private readonly Connection $db,
+        // The map drawer's own reader. A place's picture lives in
+        // `commons_photo` and belongs to the place, so a ranking that showed
+        // one from anywhere else would be a second copy to keep in step, and
+        // the credit line is the half that would drift (owner 2026-09-13).
+        private readonly CommonsPhotoAdmission $admission,
+    ) {
     }
 
     /**
@@ -107,6 +136,12 @@ final class BestOfPreview
             ? $this->routes($countryCode, $bikes, $difficulties, $regionId, $lengths)
             : $this->items($type, $countryCode, $regionId);
 
+        // One query for the whole candidate set, not one per row. It answers
+        // only "is there a picture", which is all the ranking needs; the URL
+        // and its credit are read once the list is cut, from the one class
+        // that builds them.
+        $shot = $this->readyFiles($rows);
+
         $ranked = [];
         foreach ($rows as $row) {
             // The bike is BOTH: the route records which bikes it suits
@@ -114,7 +149,7 @@ final class BestOfPreview
             // records which bike the voter rated it on (RouteVote::$bikeType).
             // Picking one narrows the rows AND changes who ranked them, which
             // together is what "best on a handbike" means.
-            $ranked[] = $this->tally($row, $type, $season, $bikes);
+            $ranked[] = $this->tally($row, $type, $season, $bikes, $shot);
         }
 
         // Highest first, and by id when two land on the same number, so the
@@ -122,12 +157,97 @@ final class BestOfPreview
         usort($ranked, static fn (array $a, array $b): int => [$b['votes'], $a['id']] <=> [$a['votes'], $b['id']]);
         $ranked = \array_slice($ranked, 0, self::TOP_N);
 
-        $total = array_sum(array_column($ranked, 'votes')) ?: 1;
+        // Only the ten that survived: a photo lookup per candidate would be
+        // four hundred queries to throw away three hundred and ninety of them.
         foreach ($ranked as $i => $r) {
-            $ranked[$i]['share'] = (int) round(100 * $r['votes'] / $total);
+            if (null !== $r['photo'] || null === $r['commonsFile']) {
+                continue;
+            }
+            $ready = $this->admission->readyPhoto($r['commonsFile']);
+            if (null === $ready || !\is_string($ready['sm'] ?? null)) {
+                continue;
+            }
+            $ranked[$i]['photo'] = [
+                'sm' => $ready['sm'],
+                'credit' => \is_string($ready['credit'] ?? null) ? $ready['credit'] : null,
+                'creditUrl' => \is_string($ready['creditUrl'] ?? null) && '' !== $ready['creditUrl'] ? $ready['creditUrl'] : null,
+                'license' => \is_string($ready['license'] ?? null) ? $ready['license'] : null,
+            ];
+            $ranked[$i]['photoPlaceholder'] = false;
+        }
+
+        // A seeded draw decides the ORDER; it cannot decide the counts. Take
+        // the top ten of a few hundred uniform draws and every row lands
+        // within a few votes of the ceiling, so ten near-identical numbers
+        // and ten identical bars. A real ballot has a shape: the winner
+        // pulls clear, the tail thins. The curve below puts that shape back,
+        // which is the thing this page exists to let somebody judge.
+        $lead = self::LEAD_MIN + abs(crc32('lead:'.$type->value.':'.$season->value)) % self::LEAD_SPREAD;
+        foreach ($ranked as $i => $r) {
+            // Hashed, not taken from the id directly. Catalogue ids arrive in
+            // blocks, so arithmetic on them moves every row by the same step
+            // and the jitter meant to break up the numbers lines them up
+            // instead: ten rows each showing exactly five more riders.
+            $noise = abs(crc32('n:'.$season->value.':'.$r['id']));
+            $votes = max(3, (int) round($lead * self::DECAY ** $i) - $noise % 6);
+            $ranked[$i]['votes'] = $votes;
+            // More people rode it than rated it, always: riding is the
+            // precondition for voting, and most riders never vote.
+            $ranked[$i]['rides'] = (int) round($votes * (1.15 + ($noise >> 5) % 90 / 100));
+        }
+
+        // Against the winner, not against the sum. A share of the ten tops
+        // out near 20%, so every bar would sit near-empty and the winner
+        // would look no different from the rest. Read it as "how close to
+        // first place", which is the question a ranking actually poses.
+        $lead = $ranked[0]['votes'] ?? 1;
+        foreach ($ranked as $i => $r) {
+            $ranked[$i]['share'] = (int) round(100 * $r['votes'] / max(1, $lead));
         }
 
         return $ranked;
+    }
+
+    /**
+     * Which of these rows already have a fetched picture, by Commons file name.
+     *
+     * One statement for the whole candidate set. The alternative is a lookup
+     * per row, which for a five-category page across a country's regions runs
+     * into the thousands, all to decide the order of ten.
+     *
+     * @param list<array{id: int|string, name: string, attributes: string|null, ref: string|null, distance_m: int|string|null}> $rows
+     *
+     * @return array<string, true>
+     */
+    private function readyFiles(array $rows): array
+    {
+        $files = [];
+        foreach ($rows as $row) {
+            $attrs = $row['attributes'] ?? null;
+            if (\is_string($attrs)) {
+                /** @var array<string, mixed> $attrs */
+                $attrs = (array) json_decode($attrs, true, 8, \JSON_THROW_ON_ERROR);
+            }
+            if (!\is_array($attrs)) {
+                continue;
+            }
+            $file = CommonsFile::fromTags($attrs);
+            if (null !== $file) {
+                $files[$file] = true;
+            }
+        }
+        if ([] === $files) {
+            return [];
+        }
+
+        /** @var list<string> $ready */
+        $ready = $this->db->fetchFirstColumn(
+            "SELECT file FROM commons_photo WHERE state = 'ready' AND file IN (:files)",
+            ['files' => array_keys($files)],
+            ['files' => ArrayParameterType::STRING],
+        );
+
+        return array_fill_keys($ready, true);
     }
 
     /**
@@ -208,14 +328,17 @@ final class BestOfPreview
     /**
      * @param array{id: int|string, name: string, attributes?: string|array<string, mixed>|null, ref?: string|null, distance_m?: int|string|null} $row
      * @param list<string>                                                                                                                        $bikes
+     * @param array<string, true>                                                                                                                 $shot  files already fetched
      *
      * @return Ranked
      */
-    private function tally(array $row, ItemType $type, Season $season, array $bikes = []): array
+    private function tally(array $row, ItemType $type, Season $season, array $bikes = [], array $shot = []): array
     {
         $id = (int) $row['id'];
         $seed = crc32($type->value.':'.$season->value.':'.([] === $bikes ? 'any' : implode('+', $bikes)).':'.($row['ref'] ?? (string) $id));
-        $votes = 3 + $seed % 58;                 // 3..60, the range a first season plausibly reaches
+        // An ordering score, not a displayed count: ranking() replaces the
+        // number once the list is cut, so the tail cannot bunch at the top.
+        $votes = 3 + $seed % 58;
         // A curated row outranks a bare OpenStreetMap one, other things equal.
         // Not a thumb on the scale for the look of it: somebody bothered to
         // adopt that place into the catalogue, write a note and add a
@@ -239,6 +362,19 @@ final class BestOfPreview
             $attrs['distanceM'] = $row['distance_m'];
         }
 
+        // A coverage row hands its OpenStreetMap tags over as `attributes`, so
+        // `wikimedia_commons` and `image` arrive here unchanged and the file
+        // name needs no second query to find.
+        $file = CommonsFile::fromTags($attrs);
+        // A photographed place outranks an unphotographed one, for the reason
+        // the curated bonus exists: a podium of three empty panels shows the
+        // layout but not the page, and the page is what there is to judge.
+        // It cannot invent a winner either, since it only moves rows that a
+        // real picture is already sitting in the store for.
+        if (null !== $file && isset($shot[$file])) {
+            $votes += 20;
+        }
+
         return [
             'id' => $id,
             // A coverage row has no catalogue id a link could use, so it
@@ -259,7 +395,18 @@ final class BestOfPreview
             // off as a photograph of this place or a sentence about it.
             'notePlaceholder' => null === $note,
             'photoPlaceholder' => null === $photo,
-            'filler' => null === $note ? self::filler($seed) : null,
+            'commonsFile' => $file,
+            // Always built, never always shown. Down the list it stands in for
+            // a missing note; on the podium it runs under the stored fact,
+            // because a card carrying two words ("castle") has no body and a
+            // body is the part of this layout still to be judged.
+            'filler' => self::filler($seed),
+            // One hue per place, held steady by the same seed, and kept inside
+            // the amber-to-olive band the rest of the site is built from. The
+            // picture panel is the largest thing on a podium card, so three
+            // identical grey rectangles say nothing about how the row reads,
+            // while a full circle of hues puts a purple block on cream paper.
+            'hue' => self::HUE_FROM + abs($seed) % self::HUE_RANGE,
             'votes' => $votes,
             'rides' => $rides,
             'share' => 0,
@@ -340,9 +487,21 @@ final class BestOfPreview
             'Ut enim ad minim veniam, quis nostrud exercitation ullamco.',
             'Duis aute irure dolor in reprehenderit in voluptate velit.',
             'Excepteur sint occaecat cupidatat non proident, sunt in culpa.',
+            'Nemo enim ipsam voluptatem quia voluptas sit aspernatur.',
+            'Neque porro quisquam est qui dolorem ipsum quia dolor sit.',
+            'At vero eos et accusamus et iusto odio dignissimos ducimus.',
         ];
 
-        return $clauses[abs($seed) % \count($clauses)];
+        // Two or three clauses, not one. A single line under a photograph
+        // leaves the card as empty as no line at all, and the length of the
+        // real text is part of what a layout has to survive.
+        $n = \count($clauses);
+        $out = [];
+        for ($i = 0, $take = 2 + abs($seed >> 4) % 2; $i < $take; ++$i) {
+            $out[] = $clauses[abs($seed >> (3 * $i)) % $n];
+        }
+
+        return implode(' ', array_unique($out));
     }
 
     /** @param list<?string> $parts */

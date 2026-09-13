@@ -25,7 +25,11 @@
   ol.rank{list-style:none;margin:0;padding:0;max-width:56rem}
   ol.rank li{display:flex;align-items:baseline;gap:.9rem;padding:.75rem .2rem;
     border-bottom:1px solid rgba(20,22,14,.1)}
-  ol.rank .n{font-family:var(--mono);font-size:.8rem;color:var(--clay);flex:0 0 2rem;text-align:right}
+  {# Left, so every rank starts on the same edge as the one above it. Numerals
+     normally align right to stack their units digits, but here the column is
+     read down the left with the names, and 10 sitting a character left of 9
+     is the break the eye catches (owner 2026-09-13). #}
+  ol.rank .n{font-family:var(--mono);font-size:.8rem;color:var(--clay);flex:0 0 2rem;text-align:left}
   ol.rank .nm{flex:1 1 auto;font-size:1rem}
   {# The two numbers that make a ranking mean anything: how many people voted,
      and how many rode it. A rank with no count behind it is an assertion. #}
@@ -43,13 +47,24 @@
     {# align-items:start, or the grid stretches all three to the tallest and a
        card with no photograph becomes a column of whitespace with its counts
        stranded at the bottom. #}
-    ol.rank.pod3{display:grid;grid-template-columns:repeat(3,1fr);gap:1.2rem;align-items:start;
+    {# A winners' podium, not a list read left to right: first place stands in
+       the middle on the tallest step, second to its left, third to its right
+       and lower again (owner 2026-09-13). The markup stays in rank order, so
+       a screen reader and the printed page still read 1, 2, 3; only the grid
+       places them. The middle column is the widest because the winner is. #}
+    ol.rank.pod3{display:grid;grid-template-columns:1fr 1.18fr 1fr;gap:1.2rem;align-items:start;
       border-bottom:1px solid rgba(20,22,14,.1)}
+    ol.rank.pod3 li:nth-child(1){grid-column:2;grid-row:1;margin-top:0}
+    ol.rank.pod3 li:nth-child(2){grid-column:1;grid-row:1;margin-top:1.7rem}
+    ol.rank.pod3 li:nth-child(3){grid-column:3;grid-row:1;margin-top:3rem}
     ol.rank.pod3 li{flex-direction:column;align-items:stretch;gap:.45rem;border-bottom:0;padding:.6rem 0 1rem}
     ol.rank.pod3 .shot{flex:none;width:100%}
     ol.rank.pod3 .shot img{aspect-ratio:16/10}
-    ol.rank.pod3 .n{text-align:left;flex:none}
+    ol.rank.pod3 .n{flex:none}
     ol.rank.pod3 .ct{white-space:normal;flex:none}
+    {# Full width under the card, not the 7rem stub a list row gives it: in a
+       column there is nothing to sit beside, so a short bar would float. #}
+    ol.rank.pod3 .bar{flex:none;width:100%}
     {# The row layout gives .nm a 18rem flex-basis. In this column that basis
        is a HEIGHT, which is where the empty half of every card came from. #}
     ol.rank.pod3 li.pod .nm{flex:none}
@@ -66,9 +81,15 @@
   {# Filler reads as filler: greyed and italic, never as a sentence about the
      place above it. #}
   ol.rank .nm em.filler{font-style:italic;color:#9a9d8c}
+  /* Two flat bands in the row's own hue. Saturated enough to tell three cards
+     apart at a glance, which a wash within a few percent of the paper colour
+     could not do, and still flat: two bands and a hatch never read as a
+     photograph of anywhere. The hatch on top is what says "empty". */
   .shot--none{display:flex;align-items:center;justify-content:center;aspect-ratio:16/10;
-    background:repeating-linear-gradient(135deg,rgba(20,22,14,.05) 0 8px,rgba(20,22,14,.02) 8px 16px)}
-  .shot--none span{font-family:var(--mono);font-size:1.6rem;color:rgba(20,22,14,.22)}
+    background:
+      repeating-linear-gradient(135deg,rgba(20,22,14,.06) 0 8px,rgba(20,22,14,0) 8px 16px),
+      linear-gradient(160deg,hsl(var(--shot-h,80) 44% 76%) 0 58%,hsl(var(--shot-h,80) 38% 64%) 58% 100%)}
+  .shot--none span{font-family:var(--mono);font-size:1.6rem;color:rgba(20,22,14,.34)}
   ol.rank .cred{font-family:var(--mono);font-size:.64rem;letter-spacing:.04em;color:#8a8d7c}
   ol.rank .cred a{color:inherit;border:0;text-decoration:underline}
   ol.rank .bar{flex:0 0 7rem;height:.4rem;border-radius:3px;background:rgba(20,22,14,.1);overflow:hidden}
@@ -122,21 +143,32 @@
         <a class="shot" href="{{ href }}"><img src="{{ r.photo.sm }}" alt="" loading="lazy" width="112" height="84"></a>
       {% else %}
         {# Nothing is drawn here that could be taken for a photograph of this
-           place: a hatched panel with the rank, so the card keeps its shape
-           and says plainly that no picture exists yet. #}
-        <a class="shot shot--none" href="{{ href }}" aria-label="{{ 'best.no_photo'|trans|e('html_attr') }}"><span>{{ rank }}</span></a>
+           place: a flat two-tone panel carrying the rank. It holds the shape
+           and the weight a picture will have, and its own hue keeps three
+           podium cards from reading as one block, but no arrangement of two
+           colours claims to be a castle. #}
+        <a class="shot shot--none" href="{{ href }}" style="--shot-h:{{ r.hue }}" aria-label="{{ 'best.no_photo'|trans|e('html_attr') }}"><span>{{ rank }}</span></a>
       {% endif %}
     {% endif %}
     <span class="nm">
       <a href="{{ href }}">{{ r.name }}</a>
-      {% if r.note %}<em>{{ r.note }}</em>
-      {% elseif r.filler %}<em class="filler">{{ r.filler }}</em>{% endif %}
+      {% if r.note %}<em>{{ r.note }}</em>{% endif %}
+      {# On the podium the stored fact is a tag, not a body: "castle" is two
+         words under a picture. The filler paragraph is what a description
+         will occupy, marked as filler so it is never read as one. Further
+         down the list there is no room for a body, so filler only stands in
+         where the fact itself is missing. #}
+      {% if podium %}<em class="filler">{{ r.filler }}</em>
+      {% elseif not r.note %}<em class="filler">{{ r.filler }}</em>{% endif %}
       {% if podium and r.photo and r.photo.credit %}
         <small class="cred">{% if r.photo.creditUrl %}<a href="{{ r.photo.creditUrl }}" rel="noopener nofollow">{{ r.photo.credit }}</a>{% else %}{{ r.photo.credit }}{% endif %}{% if r.photo.license %} · {{ r.photo.license }}{% endif %}</small>
       {% endif %}
     </span>
     <span class="ct">{{ verb|trans({'%votes%': r.votes, '%n%': r.rides}) }}</span>
-    {% if not podium %}<span class="bar" aria-hidden="true"><i style="width:{{ r.share }}%"></i></span>{% endif %}
+    {# On the winners too (owner 2026-09-13). The number says how many voted;
+       the bar says how far ahead of the winner they are, and first place
+       reading a full bar is what makes the shorter ones mean anything. #}
+    <span class="bar" aria-hidden="true"><i style="width:{{ r.share }}%"></i></span>
   </li>
 {% endmacro %}
 {% import _self as best %}
