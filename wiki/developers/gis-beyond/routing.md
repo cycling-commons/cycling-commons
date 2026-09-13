@@ -10,9 +10,8 @@ already quietly exists — inside a contribution form, for a different purpose e
 
 ## The idea this field confuses most often
 
-Here is the single most commonly confused pair of ideas in all of GIS, and it is worth stating
-plainly before anything else: **finding a route from A to B is graph search over a weighted
-network. It is not a spatial query.**
+**Finding a route from A to B is graph search over a weighted network. It is not a spatial
+query.**
 
 Everything in course 1's [`spatial-questions.md`](../gis/spatial-questions.md) chapter — `ST_Contains`,
 `ST_DWithin`, `ST_Distance` and the rest — answers a question about the *geometric relationship*

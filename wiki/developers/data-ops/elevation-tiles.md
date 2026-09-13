@@ -4,8 +4,8 @@
 
 The operational half: choosing a source and proving it, converting it into the
 format the routing engine reads, installing it, and onboarding a region end to
-end. Every step here assumes you already know how a DEM lies to you, which is
-the previous page's job.
+end. Every step here builds on the previous page, which covers how a DEM lies to
+you.
 
 !!! info "Read these in order"
 
@@ -74,9 +74,8 @@ Three measures, each earning its place:
 
 ### The downhill-bin trap
 
-It is tempting to treat a bin that reads downhill as proof the source is wrong:
-a climb that descends in its middle sounds impossible. **It is not.** Plenty of
-real climbs go up, drop, and go up again.
+A bin that reads downhill is not proof the source is wrong. Plenty of real
+climbs go up, drop, and go up again.
 
 Côte de la Roche-aux-Faucons is exactly that: it climbs to 228 m, descends to
 185 m over more than a kilometre, then climbs again to 270 m. Our own 17 km
@@ -456,8 +455,8 @@ hours on two separate occasions, each time because a stage finished and nothing
 picked up the next one. The tooling was never the bottleneck. Waiting for a
 person to notice was.
 
-So the work is worth wrapping in a runner. The interesting part is not the loop,
-it is what the loop is allowed to believe.
+So the work is wrapped in a runner. The loop is simple; what the loop is
+allowed to believe is not.
 
 ### An exit code is not evidence
 

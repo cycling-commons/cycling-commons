@@ -89,8 +89,8 @@ Three answers, none of which this project currently needs:
 
 ## The national grids you will meet
 
-None of these are used anywhere in this codebase. They are what you will find *other* people's
-spatial data expressed in, the moment you go looking outside this project.
+None of these are used anywhere in this codebase. Other people's spatial data is commonly
+expressed in them.
 
 **UTM (Universal Transverse Mercator).** The world is sliced into 60 north-south zones, each 6° of
 longitude wide, and each zone gets its own Mercator-style projection centred on its own middle

@@ -289,7 +289,7 @@ details from that page are worth knowing before you start, because each one has 
 
 !!! tip "If restarting one continent means restarting all six, fix the unit"
     That is a workaround for a service definition that runs every continent from a single unit,
-    and it is worth removing rather than working around: a systemd **template** unit
+    and it is removed rather than worked around: a systemd **template** unit
     (`valhalla@europe`, `valhalla@asia`, one per continent) makes each independent. Measured on a
     six-continent host running template units: **101 s** for a cold start of all six, and one
     continent could be stopped and started with the other five still answering.

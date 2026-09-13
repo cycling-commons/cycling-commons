@@ -12,7 +12,7 @@ That is where every problem in this series starts. The fountain itself is simple
 is" into numbers a computer can store, compare, and draw is not. The moment a position becomes
 numbers, the shape of the planet starts leaking into your code, and it keeps leaking for the next
 nine chapters. This one covers the two numbers themselves: what they mean, how they behave, and why
-they do not behave like the coordinates you already know.
+they do not behave like the x and y of a plane.
 
 ## Latitude and longitude
 
@@ -33,7 +33,8 @@ can turn into a distance without asking a second question.</figcaption>
 </figure>
 
 **Longitude** is how far east or west you are. It runs from −180 to +180, with 0 at the **prime
-meridian**, an arbitrary line through Greenwich in London that everybody agreed to use. A line
+meridian**, an arbitrary line through Greenwich in London, fixed by international agreement in
+1884. A line
 joining every point with the same longitude is called a **meridian**. Unlike parallels, meridians
 are not parallel at all. Every one of them is half of a full circle running from the North Pole to
 the South Pole, so all 360 of them meet at both ends.
@@ -71,8 +72,7 @@ this codebase uses it: everything here is decimal degrees, all the way down.
 
 ### The trap: which number comes first
 
-This is the single most common bug in beginner GIS code, and it is worth burning in now, because it
-will bite you at least once anyway.
+The two orders look identical in a variable name, and swapping them does not fail loudly.
 
 **Humans say "lat, long". Most software wants longitude first.**
 

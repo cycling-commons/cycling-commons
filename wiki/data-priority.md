@@ -3,8 +3,8 @@
 # How data earns its place
 
 Everything on the map has a source, a level of trust, and, for some things, a
-ranking. Those are **three separate questions**, and the single most common
-misunderstanding is treating them as one ladder.
+ranking. Those are **three separate questions**, and the mistake this project
+sees most is treating them as one ladder.
 
 They are not. A rider's vote does not "beat" OpenStreetMap. They answer
 different questions entirely:

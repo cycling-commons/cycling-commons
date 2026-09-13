@@ -49,9 +49,9 @@ rode.
 
 ## What this project reads from a GPX file, verified
 
-This project's own GPX parser reads less than it is easy to assume. `GpxParser::parse()`
-(`web/src/Contribution/Gpx/GpxParser.php`) reads exactly three values off every trackpoint: latitude,
-longitude, and the point's own recorded `<ele>` element, if it has one.
+This project's own GPX parser reads three values per trackpoint, and nothing else.
+`GpxParser::parse()` (`web/src/Contribution/Gpx/GpxParser.php`) reads latitude, longitude, and the
+point's own recorded `<ele>` element, if it has one.
 
 <!-- CODE-FROM web/src/Contribution/Gpx/GpxParser.php -->
 ```php
@@ -140,7 +140,7 @@ Same underlying problem, two defensible choices, made for two different purposes
 window. The first is convention: climb databases publish the steepest **100 m**, so a longer window
 reads gentler than every other source describing the same road, and a rider comparing us against a
 site they trust would see us understate a climb they had ridden. A threshold only answerable to
-itself is one you get to choose; one your readers will compare against someone else's is not.
+itself is one you get to choose; one that gets compared against someone else's number is not.
 
 The second party outranks the first: **the data**. A 100 m window over a 30 m grid asks for a figure
 across barely three cells, under the four-cell floor the
@@ -153,7 +153,7 @@ maximum asks "what is the single worst reading here", which on a surface model i
 the noise rather than the road.
 
 So the ordering is: **the source constrains the window, the convention only gets what is left.** A
-threshold your readers will compare against someone else's is not free, but a threshold finer than
+threshold that gets compared against someone else's number is not free, but a threshold finer than
 your data can answer is not available at all, and matching a convention you cannot actually measure
 just publishes someone else's number with your name on it. The full account, with the measurements,
 is in [Measuring a climb](../data-ops/measuring-a-climb.md).

@@ -75,8 +75,7 @@ asks: is there at least one point the two of them have in common?
 That looseness is exactly what makes it useful between shapes of completely different kinds. A point
 and a polygon, a line and a polygon, two polygons, `ST_Intersects` asks the same question of all of
 them, which is why it turns up constantly once a query starts mixing shape types. It is the workhorse
-predicate of this whole chapter, and, worth remembering for chapter 5, it is also the one a spatial
-index can serve directly. Nothing else here gets that for free.
+predicate of this whole chapter, and the one a spatial index can serve directly (chapter 5). Nothing else here gets that for free.
 
 `Catalog/RideCheckService.php`, `RideCheckService::corridorGroups()` uses it twice, once for catalog
 items and once (in the sibling method `followedRoutes()`) for recommended routes:
@@ -252,9 +251,9 @@ sections ago:
 ST_LineLocatePoint((SELECT g FROM track), ST_ClosestPoint(i.geom, (SELECT g FROM track))) AS frac
 ```
 
-It would be tempting to read this inside-out as "first find the point on the track closest to this
-item, then ask how far along that point sits", but that is not quite what happens, and the previous
-section is exactly why: `ST_ClosestPoint(i.geom, track)` returns a point on `i.geom`, the item's own
+Read inside-out, this looks like "first find the point on the track closest to this item, then ask
+how far along that point sits". That is not quite what happens, and the previous section is exactly
+why: `ST_ClosestPoint(i.geom, track)` returns a point on `i.geom`, the item's own
 geometry, which for the ordinary Point fountain is just the fountain's own coordinates handed back
 unchanged. The projection onto the track, finding *where on the line* a given point sits nearest to,
 is done by `ST_LineLocatePoint` itself. Its second argument does not need to already lie on the
@@ -314,8 +313,8 @@ matches the ride.
 
 Every predicate in this chapter starts from coordinates already in hand. But a rider setting their
 base location does not type a latitude and a longitude, they type "Namur." Turning a place name into
-coordinates, or coordinates into a place name, is called **geocoding**, and it is worth being honest
-about what kind of problem it actually is.
+coordinates, or coordinates into a place name, is called **geocoding**. It is a matching problem,
+not a lookup.
 
 It looks spatial, because the result is a pair of coordinates. It is not, mostly. "Namur" is a string.
 Finding out what it might refer to is a text-matching problem: fuzzy, tolerant of misspellings,

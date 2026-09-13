@@ -167,8 +167,7 @@ semantics, chapter 3 is entirely about what those semantics buy you. It has to b
 is computed once per row. The GiST index was built on `i.geom`, so it knows nothing about
 `i.geom::geography`, and it cannot serve a comparison phrased in terms of it.
 
-This is worth saying slowly, because the wrong lesson is easy to take away here. The problem is
-**not** that geography maths is expensive. It is expensive (an ellipsoid distance is real
+The problem is **not** that geography maths is expensive. It is expensive (an ellipsoid distance is real
 trigonometry, much more work than comparing four numbers), but that is not what breaks. The
 problem is that phrasing the comparison in terms of the cast puts it outside what the index knows,
 so *every row in the table* reaches the expensive part. Cheap maths on every row would also be too

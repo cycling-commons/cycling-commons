@@ -15,10 +15,10 @@ The narrower version of the same question, "is the fountain within 5 km of me?",
 both questions share one underlying number, and getting that number wrong breaks both of them the
 same way.
 
-## The bug everybody writes once
+## Degrees are not metres
 
-Here is the shortcut almost everyone reaches for first, because it looks like ordinary unit
-conversion. A degree of latitude is about 111 km, chapter 1 already established that, so 50 km is
+The shortcut looks like ordinary unit conversion, which is why it is taken. A degree of latitude
+is about 111 km, chapter 1 already established that, so 50 km is
 about 50 / 111.32 ≈ **0.45 degrees**. Use that number as a radius, and skip straight to comparing
 coordinates:
 
@@ -146,8 +146,7 @@ freshly-built point.
 
 The obvious guess is that casting only one side leaves `ST_DWithin` comparing a real distance
 against a degree pretending to be one: the bug from the top of this chapter, one layer further down.
-That guess is wrong, and it is worth knowing why, because the truth is a more awkward problem than
-the bug would have been.
+That guess is wrong, and the real problem is more awkward than the bug would have been.
 
 PostGIS registers `geometry → geography` as an **implicit** cast. A cast marked implicit is one
 PostgreSQL is allowed to insert on its own, without being asked. So in a call where only one

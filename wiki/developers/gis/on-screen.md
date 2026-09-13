@@ -55,8 +55,8 @@ background colour, all of it, together. This project does not hand-write one. Lo
       container: 'map', style: 'https://tiles.openfreemap.org/styles/liberty',
 ```
 
-(It sits in `catalog-load.js` rather than in `map-init.js`, where you would expect it, for a
-reason worth knowing: `map-init.js` is inside the module graph that only runs once the map's
+(It sits in `catalog-load.js`, not in `map-init.js` where the name suggests, for a reason:
+`map-init.js` is inside the module graph that only runs once the map's
 ~1 MB catalog has arrived. Constructing the map there meant the basemap, the first thing anybody
 sees, queued behind a payload describing layers drawn much later. Building it before that fetch
 starts lets tiles paint while the catalog is still travelling.)
@@ -188,8 +188,8 @@ and a `tileSize`. MapLibre never parses a shape out of this source at all, it ju
 whichever `{z}/{y}/{x}` image square the viewport needs and places it, which is exactly why `raster`
 sits outside the paint/layout/click-testing story the rest of this chapter tells.
 
-**A clustered `geojson` source** is the fourth kind, and it is worth pausing on because it looks like
-the coverage source but works nothing like it. `setupConfClusters()` builds one of these per bulk-OSM
+**A clustered `geojson` source** is the fourth kind. It looks like the coverage source and works
+nothing like it. `setupConfClusters()` builds one of these per bulk-OSM
 pool, for the confirmed (rider-verified) points:
 
 <!-- CODE-FROM web/assets/map/osm-pools.js -->

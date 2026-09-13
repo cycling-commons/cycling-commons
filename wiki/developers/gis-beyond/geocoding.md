@@ -74,9 +74,8 @@ coordinate and asks for a name back.
 ## Why reverse is genuinely harder
 
 It would be easy to assume reverse geocoding is just forward geocoding run backwards — swap the
-input and output and the same index answers both. It does not work that way, and the reason is worth
-sitting with, because it explains why so much software that offers reverse geocoding still gets it
-wrong at the edges.
+input and output and the same index answers both. It does not work that way. The two directions
+have different hard parts.
 
 Forward geocoding has one hard part: matching a messy string to a specific real place, tolerant of
 misspellings and abbreviations, weighted toward whichever match is more prominent or more likely

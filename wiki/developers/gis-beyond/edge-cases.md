@@ -12,12 +12,11 @@ Each section states its own kind up front, because they are not all the same kin
 
 ## The antimeridian
 
-**Kind: we do it, and the way we do it is worth reading: named as a risk before it was live, live for a while, fixed once it was.**
+**Kind: we do it. Named as a risk before it was live, live for a while, fixed once it was.**
 
-[`pitfalls.md`](../gis/pitfalls.md)'s own row on this is accurate and worth re-reading rather than
-re-deriving: longitude wraps from +180 back to −180, and a naive minimum/maximum union of longitudes
-breaks the instant a shape's coordinates straddle that seam. Here is why that specific piece of
-arithmetic breaks, properly.
+[`pitfalls.md`](../gis/pitfalls.md)'s own row on this is accurate, and this chapter builds on it
+rather than re-deriving it: longitude wraps from +180 back to −180, and a naive minimum/maximum union of longitudes
+breaks the instant a shape's coordinates straddle that seam. Why that arithmetic breaks:
 
 A bounding box's west/east edges are normally just `min(longitudes)` and `max(longitudes)` — an
 ordinary, safe operation on plain numbers, because normally longitude behaves like any other linear
@@ -168,7 +167,7 @@ winding uses to tell "this ring adds area" from "this ring removes it," with not
 <svg viewBox="0 0 640 420" role="img" aria-labelledby="f17-t f17-d" xmlns="http://www.w3.org/2000/svg"><title id="f17-t">Ring winding: the outer ring and its hole are walked in opposite directions</title><desc id="f17-d">On the left, one polygon drawn as two squares, a large one with a smaller one inside it. The large outer ring is tinted as filled ground and carries arrowheads showing it is walked counter-clockwise. The smaller inner ring is left blank as a hole and carries arrowheads showing it is walked the opposite way, clockwise. A label records that the direction is the only signal some renderers have for telling a fill from a hole. On the right, the shoelace idea: the same two rings reduced to a signed area, positive for the counter-clockwise outer ring and negative for the clockwise inner one, with a note that adding the signed areas gives the real area of the shape, the hole subtracting itself. Underneath, a note records that PostGIS is forgiving about winding and that tippecanoe and MapLibre fills are not, so a ring wound the wrong way draws as a filled block where a hole should be, with no error anywhere.</desc><defs><marker id="gis-arrow-f17" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="gis-fill-accent" d="M 0 0 L 10 5 L 0 10 Z"/></marker></defs><text class="gis-label-sm" x="20" y="34">one polygon, two rings</text><path class="gis-accent gis-fill-accent" d="M 60 250 L 260 250 L 260 60 L 60 60 Z" fill-opacity="0.18"/><path class="gis-accent" d="M 120 190 L 120 120 L 200 120 L 200 190 Z"/><line class="gis-accent" x1="150" y1="250" x2="110" y2="250" marker-end="url(#gis-arrow-f17)"/><line class="gis-accent" x1="60" y1="170" x2="60" y2="130" marker-end="url(#gis-arrow-f17)"/><line class="gis-accent" x1="150" y1="60" x2="200" y2="60" marker-end="url(#gis-arrow-f17)"/><line class="gis-accent" x1="260" y1="150" x2="260" y2="195" marker-end="url(#gis-arrow-f17)"/><line class="gis-accent" x1="160" y1="120" x2="135" y2="120" marker-end="url(#gis-arrow-f17)"/><line class="gis-accent" x1="200" y1="150" x2="200" y2="175" marker-end="url(#gis-arrow-f17)"/><line class="gis-accent" x1="160" y1="190" x2="185" y2="190" marker-end="url(#gis-arrow-f17)"/><line class="gis-accent" x1="120" y1="160" x2="120" y2="138" marker-end="url(#gis-arrow-f17)"/><text class="gis-label-sm" x="60" y="292">outer ring, counter-clockwise: filled</text><text class="gis-label-sm" x="60" y="322">inner ring, clockwise: a hole</text><line class="gis-muted" x1="330" y1="40" x2="330" y2="330"/><text class="gis-label-sm" x="360" y="34">the shoelace, as a sign</text><rect class="gis-box" rx="8" x="360" y="60" width="250" height="86"/><text class="gis-label-mono" x="485" y="100" text-anchor="middle">outer: +area</text><text class="gis-label-sm" x="485" y="130" text-anchor="middle">walked counter-clockwise</text><rect class="gis-box" rx="8" x="360" y="164" width="250" height="86"/><text class="gis-label-mono" x="485" y="204" text-anchor="middle">hole: &#8722;area</text><text class="gis-label-sm" x="485" y="234" text-anchor="middle">walked the other way</text><text class="gis-label-sm" x="360" y="292">add the signed areas and the</text><text class="gis-label-sm" x="360" y="322">hole subtracts itself</text><line class="gis-muted" x1="20" y1="348" x2="620" y2="348"/><text class="gis-label-sm" x="20" y="382">PostGIS is forgiving about winding. tippecanoe and MapLibre fills are not: a ring</text><text class="gis-label-sm" x="20" y="408">wound the wrong way draws as a block where a hole should be, and nothing errors.</text></svg>
 <figcaption>The convention, and the arithmetic behind it. Walk the outer ring one way and the hole
 the other, and the signed areas add up to the real one. This is the only concept in this chapter
-that is genuinely a picture rather than a number, which is why it is worth one.</figcaption>
+that is a picture rather than a number.</figcaption>
 </figure>
 
 Two details explain why "PostGIS is forgiving" and "some tools are not" can both be true of the same
@@ -214,9 +213,9 @@ of the circle you get by slicing the sphere through both points and its centre �
 line you would draw connecting them on a flat plot. A straight line from Amsterdam to Tokyo, drawn on
 an ordinary flat map, looks like it cuts through the Middle East; the real shortest flight path arcs
 much further north, closer to the Arctic, because a flat map's "straight" is not the sphere's
-"straight." This matters for anything that infers what lies *between* two far-apart points from
-just the two endpoints — routing engines, and any tool that draws a straight connecting line across
-a genuinely large distance and treats it as meaningful.
+"straight." Anything that infers what lies *between* two far-apart points from just the two
+endpoints is affected: routing engines, and any tool that draws a straight connecting line across a
+genuinely large distance and treats it as meaningful.
 
 It does not matter here, and the reason is structural rather than lucky. [`routes.md`](../gis/routes.md)
 covers how a rider's GPX file becomes a stored LineString: every route this project stores is a dense
@@ -252,8 +251,8 @@ This project's own coverage pipeline produces exactly the kind of arithmetic tha
 `pipeline/coverage/parse.py`'s `way()` handler reduces a way to a single point by averaging its
 member nodes' coordinates — `sum(lons) / len(lons)` — and that division is not guaranteed to land on
 a value you could predict by doing the same sum on paper and rounding. The pipeline's own test suite
-is written with this in mind, and it is worth reading as the reference case for how to test
-floating-point results honestly:
+is written with this in mind, and is the reference case in this repository for testing
+floating-point results:
 
 <!-- CODE-FROM pipeline/tests/test_parse.py -->
 ```python

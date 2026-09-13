@@ -50,8 +50,8 @@ Hazards and closures rot if they never expire. Dynamic data therefore carries a 
 
 The Commons **data** is ODbL, the same licence OSM uses, so durable infrastructure facts can flow
 back upstream legally by construction. Everything else in the project travels under its own terms,
-and the whole split is worth having in one place, because only the first row below can move when a
-fact moves:
+and the whole split sits in one place below, because only the first row can move when a fact
+moves:
 
 | What | Licence |
 |------|---------|
