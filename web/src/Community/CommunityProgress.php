@@ -34,6 +34,8 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
  * email.
  *
  * @see docs/specs/moderation-and-contribution.md
+ *
+ * @api
  */
 final class CommunityProgress
 {

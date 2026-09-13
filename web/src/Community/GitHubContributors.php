@@ -31,6 +31,8 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
  * Staff logins are stored like anyone else — the table is the record, the
  * exclusion is the counting (CommunityProgress), so a login that stops being
  * staff retroactively counts without a re-sync.
+ *
+ * @api
  */
 final class GitHubContributors
 {

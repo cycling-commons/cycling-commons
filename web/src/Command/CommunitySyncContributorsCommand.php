@@ -23,6 +23,8 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  * on login.
  *
  * @see wiki/governance.md commitment 3
+ *
+ * @api
  */
 #[AsCommand(name: 'app:community:sync-contributors', description: 'Sync merged, approved PR authors from GitHub into the contributor table')]
 final class CommunitySyncContributorsCommand extends Command
