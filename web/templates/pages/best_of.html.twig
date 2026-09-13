@@ -81,15 +81,19 @@
   {# Filler reads as filler: greyed and italic, never as a sentence about the
      place above it. #}
   ol.rank .nm em.filler{font-style:italic;color:#9a9d8c}
-  /* Two flat bands in the row's own hue. Saturated enough to tell three cards
-     apart at a glance, which a wash within a few percent of the paper colour
-     could not do, and still flat: two bands and a hatch never read as a
-     photograph of anywhere. The hatch on top is what says "empty". */
-  .shot--none{display:flex;align-items:center;justify-content:center;aspect-ratio:16/10;
+  /* One soft wash in the row's own hue, enough to tell three cards apart and
+     no more. No hard stop anywhere: a crisp diagonal edge drew the eye to the
+     panel, which is the one thing on the card with nothing in it. The faint
+     hatch on top is what says "empty", and two flat tones never read as a
+     photograph of anywhere. */
+  {# Scoped to `ol.rank`, not left as a bare class: `ol.rank .shot` above sets
+     a background too and outweighs a single class, so an unscoped rule here
+     loses and every panel paints the same flat --paper-deep. #}
+  ol.rank .shot--none{display:flex;align-items:center;justify-content:center;aspect-ratio:16/10;
     background:
-      repeating-linear-gradient(135deg,rgba(20,22,14,.06) 0 8px,rgba(20,22,14,0) 8px 16px),
-      linear-gradient(160deg,hsl(var(--shot-h,80) 44% 76%) 0 58%,hsl(var(--shot-h,80) 38% 64%) 58% 100%)}
-  .shot--none span{font-family:var(--mono);font-size:1.6rem;color:rgba(20,22,14,.34)}
+      repeating-linear-gradient(135deg,rgba(20,22,14,.035) 0 9px,rgba(20,22,14,0) 9px 18px),
+      linear-gradient(160deg,hsl(var(--shot-h,45) 34% 82%),hsl(var(--shot-h,45) 31% 74%))}
+  ol.rank .shot--none span{font-family:var(--mono);font-size:1.6rem;color:rgba(20,22,14,.26)}
   ol.rank .cred{font-family:var(--mono);font-size:.64rem;letter-spacing:.04em;color:#8a8d7c}
   ol.rank .cred a{color:inherit;border:0;text-decoration:underline}
   ol.rank .bar{flex:0 0 7rem;height:.4rem;border-radius:3px;background:rgba(20,22,14,.1);overflow:hidden}

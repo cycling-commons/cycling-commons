@@ -44,10 +44,17 @@ final class BestOfPreview
     public const int TOP_N = 10;
 
     /** Where the placeholder hues start: amber, the warm end of the site's palette. */
-    private const int HUE_FROM = 25;
+    private const int HUE_FROM = 22;
 
-    /** How far they run: to roughly 175, amber through olive into sage. */
-    private const int HUE_RANGE = 150;
+    /**
+     * How far they run: to 70, amber through wheat to khaki.
+     *
+     * Stops short of green on purpose. A band reaching into sage produced a
+     * mint card beside two sand ones, which read as a different site rather
+     * than a different place (owner 2026-09-13). Everything here stays inside
+     * the paper-and-clay range the rest of the pages are built from.
+     */
+    private const int HUE_RANGE = 48;
 
     /** What a winning entry plausibly polls in a first season, at the low end. */
     private const int LEAD_MIN = 120;
