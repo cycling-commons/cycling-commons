@@ -18,6 +18,26 @@ framework:
         transports:
             async:
                 dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
+                options:
+                    # A Redis consumer group identifies each reader by name, and
+                    # Symfony's default name is the literal "consumer" for every
+                    # process. Two workers are then ONE consumer: the same entry
+                    # reaches both, both handle it, and the second to finish
+                    # fails with `Could not acknowledge redis message`, because
+                    # the first already took it out of the pending list.
+                    #
+                    # The lost ack is the visible half. The handled-twice is the
+                    # expensive half: two Commons downloads and two bucket
+                    # writes for one photo, and the claim rows only keep that
+                    # from becoming two database rows.
+                    #
+                    # Reproduced 2026-09-13 with three workers against one
+                    # queue: two reported the same failed id. With a name each,
+                    # the same three ran clean. Every launcher therefore sets
+                    # this to something unique per PROCESS, not per host: the
+                    # dev stack's worker and a hand-run `messenger:consume` in
+                    # the app container are two processes and must not share it.
+                    consumer: '%env(consumer_name:MESSENGER_CONSUMER)%'
                 retry_strategy:
                     max_retries: 3
                     delay: 5000
