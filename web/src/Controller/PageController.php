@@ -10,6 +10,7 @@ use App\Catalog\ContributorWallProvider;
 use App\Catalog\CoverageStatsProvider;
 use App\Catalog\DifficultyVocabulary;
 use App\Catalog\ItemType;
+use App\Catalog\OperationalRegions;
 use App\Catalog\RegionDirectoryProvider;
 use App\Catalog\RegionRegistryProvider;
 use App\Catalog\RegionSilhouette;
@@ -113,6 +114,9 @@ final class PageController extends AbstractController
         return $response;
     }
 
+    /** Which rows countryShapes() draws. 2 = operational rows only, not every outline. */
+    private const string SHAPE_RULE = 'v2';
+
     /**
      * The accessibility statement.
      *
@@ -128,7 +132,7 @@ final class PageController extends AbstractController
      * @see docs/specs/contact-and-support.md §4
      */
     /**
-     * One shape per country as GeoJSON, for the world map on /regions (owner
+     * One shape per country as GeoJSON, for the world maps on /regions, /best and /coverage (owner
      * 2026-09-08: "a map version where you select the country on a world map",
      * then "do not show the regions on the map, just the countries"). Each
      * shape is the union of that country's stored `region.outline` rings,
@@ -142,7 +146,11 @@ final class PageController extends AbstractController
     {
         /** @var array{n: int|string, at: string|null} $stamp */
         $stamp = $db->fetchAssociative('SELECT COUNT(*) AS n, MAX(updated_at)::text AS at FROM region WHERE outline IS NOT NULL') ?: ['n' => 0, 'at' => null];
-        $key = 'regions-outlines-'.substr(hash('xxh128', $stamp['n'].'|'.(string) $stamp['at']), 0, 16);
+        // The shape rule is part of the key, not only the data: the key used to
+        // move only when `region` changed, so changing which rows are drawn
+        // left a deploy serving yesterday's whole-country shapes for a day.
+        // Bump SHAPE_RULE whenever countryShapes() draws something different.
+        $key = 'regions-outlines-'.self::SHAPE_RULE.'-'.substr(hash('xxh128', $stamp['n'].'|'.(string) $stamp['at']), 0, 16);
 
         $json = $cache->get($key, function (ItemInterface $item) use ($db): string {
             $item->expiresAfter(86400);
@@ -159,8 +167,20 @@ final class PageController extends AbstractController
     /** The FeatureCollection itself: one Feature per country, `cc` as its property. */
     private function countryShapes(Connection $db): string
     {
+        // Operational rows only, never every row. A country onboarded state by
+        // state also carries its level-2 outline, and unioning that in painted
+        // the whole United States for two states' worth of coverage: a rider
+        // in Ohio saw their state filled in on three pages and found nothing
+        // there (owner 2026-09-14). The predicate picks the deepest level the
+        // country has, so the United States draws California and Colorado,
+        // and Slovenia, which is onboarded as one whole-country region, still
+        // draws the country.
         /** @var list<array{cc: string, outline: string}> $rows */
-        $rows = $db->fetchAllAssociative('SELECT country_code AS cc, outline FROM region WHERE outline IS NOT NULL ORDER BY country_code, slug');
+        $rows = $db->fetchAllAssociative(
+            'SELECT region.country_code AS cc, region.outline FROM region
+              WHERE region.outline IS NOT NULL AND '.OperationalRegions::predicate('region').'
+              ORDER BY region.country_code, region.slug',
+        );
         $parts = [];
         foreach ($rows as $row) {
             // Flat [x,y,x,y,…] per ring, as the scope registry stores it; each ring is one part, never a hole.
