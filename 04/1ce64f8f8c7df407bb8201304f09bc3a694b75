@@ -1,0 +1,63 @@
+web/translations/messages.es.yaml
+  s_d34f17e49b47aa::t_9bcb75c46a78a8 2100,2117-2123
+web/src/Contribution/CatalogContributionService.php
+  s_d34f17e49b47aa::t_adc91a5ac938ea 66,204-207,925-947
+  s_d34f17e49b47aa::t_4ea04e7edf8d67 948-949
+web/templates/contribute/improve.html.twig
+  s_d34f17e49b47aa::t_9bcb75c46a78a8 74-76,727-737,1036-1042
+web/translations/messages.fr.yaml
+  s_d34f17e49b47aa::t_9bcb75c46a78a8 2585,2602-2608
+docs/specs/scenic-views.md
+  s_d34f17e49b47aa::t_a61e3f06d98675 1-2,4,10-12,17,163,165-169
+  s_d34f17e49b47aa::t_d2b6283ccae3a2 6-7,27-96,99-102,104-113,173,175-176
+  s_d34f17e49b47aa::t_3f026a395fdb23 3,5,8-9,13-16,18-26,97-98,103,114-162,164,170-172,174,177-183
+  s_d34f17e49b47aa::t_f5fe1fc5e2419c 184-239
+web/src/Controller/ContributeController.php
+  s_d34f17e49b47aa::t_9bcb75c46a78a8 20-21,80-97
+web/config/services.yaml
+  s_d34f17e49b47aa::t_e0779031a1fed5 124-130
+  s_d34f17e49b47aa::t_9a088e8c8e72d8 191-196
+web/tests/Contribution/ValhallaBikeWayLocatorTest.php
+  s_d34f17e49b47aa::t_a7703a9f23ced1 1-101
+web/assets/contribute/bike-way-check.js
+  s_d34f17e49b47aa::t_11de0e3e563111 32-36,39,41-42
+  s_d34f17e49b47aa::t_9bcb75c46a78a8 1-31,37-38,40,43-63
+web/templates/moderate/_card_styles.html.twig
+  s_d34f17e49b47aa::t_5f400d21e798d5 43-44
+web/templates/moderate/_queue_item.html.twig
+  s_d34f17e49b47aa::t_6e00be25d4451c 64-72
+web/src/Contribution/ValhallaBikeWayLocator.php
+  s_d34f17e49b47aa::t_545babf95ca286 1-107
+web/translations/messages.nl.yaml
+  s_d34f17e49b47aa::t_9bcb75c46a78a8 2590,2607-2613
+web/translations/messages.de.yaml
+  s_d34f17e49b47aa::t_9bcb75c46a78a8 2593,2610-2616
+web/src/Moderation/SubmissionQueue.php
+  s_d34f17e49b47aa::t_6e00be25d4451c 470,538-539,544-559
+  s_d34f17e49b47aa::t_48dd7c2aa2b12d 47,117,457,560-561
+web/tests/Contribution/ScenicBikeWayIntakeTest.php
+  s_d34f17e49b47aa::t_e20319a9dd5891 139
+  s_d34f17e49b47aa::t_7616066699e6d4 1-138,140-149
+web/translations/messages.en.yaml
+  s_d34f17e49b47aa::t_9bcb75c46a78a8 2089,2106-2112
+web/src/Form/ImproveType.php
+  s_d34f17e49b47aa::t_9bcb75c46a78a8 124-130
+web/src/Contribution/BikeWayLocator.php
+  s_d34f17e49b47aa::t_7bad44a4d75adf 1-17
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "041ce64f8f8c7df407bb8201304f09bc3a694b75",
+  "prompts": {},
+  "sessions": {
+    "s_d34f17e49b47aa": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ef901574-ddee-4be4-aa4c-45b023adb0b8",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
