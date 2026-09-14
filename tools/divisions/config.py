@@ -12,7 +12,7 @@ import re
 # Overture Maps release to pin. Regeneration hits the public Overture S3 bucket
 # for this release; bump deliberately (a newer release may shift boundaries —
 # that is a versioned re-import event, slugs/ISO codes stay identity).
-OVERTURE_RELEASE = "2026-06-17.0"
+OVERTURE_RELEASE = "2026-08-19.0"
 
 # division_area GeoParquet glob on the public (anonymous) Overture bucket.
 OVERTURE_DIVISION_AREA = (
