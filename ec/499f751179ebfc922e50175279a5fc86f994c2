@@ -1,0 +1,38 @@
+docs/specs/contact-and-support.md
+  s_d34f17e49b47aa::t_e576b2366e95a3 539-545
+web/translations/messages.fr.yaml
+  s_d34f17e49b47aa::t_73fe24b1f852de 3008,3567
+web/src/Controller/ModerateBugsController.php
+  s_d34f17e49b47aa::t_81d7da6c47d5b7 83-84,114,118,125-126
+web/templates/moderate/bugs.html.twig
+  s_d34f17e49b47aa::t_73fe24b1f852de 115,134-144,164,210
+web/translations/messages.es.yaml
+  s_d34f17e49b47aa::t_73fe24b1f852de 3042,3602
+web/translations/messages.de.yaml
+  s_d34f17e49b47aa::t_73fe24b1f852de 3016,3575
+web/translations/messages.en.yaml
+  s_d34f17e49b47aa::t_73fe24b1f852de 3034,3593
+web/tests/Support/BugDeskFiltersTest.php
+  s_d34f17e49b47aa::t_aee02122348350 57,62,164-187
+  s_d34f17e49b47aa::t_8622455c4f552d 188
+web/src/Support/SupportRepository.php
+  s_d34f17e49b47aa::t_81d7da6c47d5b7 196,204,245,251,272,274-276,312,318
+web/translations/messages.nl.yaml
+  s_d34f17e49b47aa::t_73fe24b1f852de 3015,3574
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "ec499f751179ebfc922e50175279a5fc86f994c2",
+  "prompts": {},
+  "sessions": {
+    "s_d34f17e49b47aa": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ef901574-ddee-4be4-aa4c-45b023adb0b8",
+        "model": "unknown"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
