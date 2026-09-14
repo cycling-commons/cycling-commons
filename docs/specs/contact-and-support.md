@@ -225,9 +225,13 @@ fix helps everybody, including its author. A *wrong* address is refused, because
 the reporter would otherwise wait for an answer that bounced.
 
 **The floating button.** Bottom-right, on **every** page, the map included. It
-was left off the map because the wide pill would crowd that corner; the
-collapsed circle is 42px and the map's bottom-right holds only a 20px
-attribution strip, so it sits 18px above it (`is-mini`). The map is the page a
+is a 42px circle with the bug mark and no visible text, everywhere: a labelled
+pill covered controls in the same corner, the translate bar's "Stop
+translating" among them. "Report a bug" stays in the button as
+visually hidden text, so the button keeps its accessible name, and `title`
+shows it on hover. The map's bottom-right holds a 20px attribution strip, so
+there the circle sits 18px above it (`is-mini`). With translate mode on, the
+circle and its panel sit above the translate bar (`body:has(#tr-bar)`). The map is the page a
 rider is most likely to be on when something breaks, which made it the worst one
 to leave out. `templates/map/index.html.twig` is a standalone document rather
 than an extension of `base.html.twig`, so it includes the partial itself. The
@@ -237,7 +241,7 @@ it. Screenshots by Ctrl+V.
 
 `width:auto` on the container is load-bearing. `atlas.css` carries a site-wide
 `body > * { width: 100% }`, and the button is a direct child of `body`, so
-without it the pill stretches and clips off the left edge. Anything else added
+without it the container stretches and pushes the button off the left edge. Anything else added
 as a fixed element under `body` hits the same trap.
 
 **The draft survives leaving the page, pictures included.** Somebody can write
@@ -786,8 +790,8 @@ Corrections from 2026-08-27, after seeing the first version:
   left its paragraphs the page's dark ink, so the words under the heading were
   nearly unreadable. Confirmations use the same ochre note as everything else.
 * **Calls to action are orange** (`btn btn-p`), like the rest of the site.
-* **The floating button says only what it is.** It used to carry the current
-  path, which made a second competing name for the page.
+* **The floating button is the bug mark alone.** Its name is visually hidden
+  text, not visible text, so it covers nothing in its corner.
 * **The acknowledgement never quotes the sender back.** Anyone can type a
   message and put somebody else's address in the email field, so echoing the
   text would make us a spam reflector. Pinned by

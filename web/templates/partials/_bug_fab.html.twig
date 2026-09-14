@@ -8,17 +8,15 @@
   moment they hit it, which is the only moment they still remember what they
   did.
 
-  The button face says only what it is. It used to carry the current path as
-  well, which made the pill wide enough to clip at the edge of the window and
-  read as a second, competing name for the page (owner 2026-08-27: "bug tool is
-  partly out of view. do not also call it contact"). The path is still shown,
-  inside the panel, under "what gets sent with this", which is where somebody
-  checking what they are about to send will look for it.
+  The button face is the bug mark alone, a circle, on every page. A labelled
+  pill covered controls in the same corner, the translate bar's "Stop
+  translating" among them. The label stays in the markup, visually hidden, so
+  the button keeps its accessible name, and `title` shows it on hover. The
+  current path is shown inside the panel, under "what gets sent with this".
 
-  On the map it renders as the circle alone (`is-mini`), lifted clear of the
-  attribution strip along the bottom edge. The map is the page a rider is most
-  likely to be on when something breaks, so leaving the button off it was the
-  wrong call; only the wide pill was ever the problem.
+  On the map (`is-mini`) the circle is lifted clear of the attribution strip
+  along the bottom edge. With translate mode on it is lifted clear of the
+  translate bar.
 
   Everything here is markup and a style block; behaviour is in
   assets/support/bug-fab.js, because the CSP blocks inline handlers silently.
@@ -38,7 +36,8 @@
      data-area="{{ bug_fab.guessed_area }}"
      hidden>
 
-  <button type="button" class="bugfab-open" aria-expanded="false" aria-controls="cc-bugpanel">
+  <button type="button" class="bugfab-open" aria-expanded="false" aria-controls="cc-bugpanel"
+          title="{{ 'support.fab.open'|trans }}">
     {# The bug mark, drawn, never an emoji (see docs/TODO.md, no emoji icons). #}
     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
          stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -157,20 +156,25 @@
   #cc-bugfab{position:fixed;right:1.1rem;bottom:1.1rem;left:auto;width:auto;max-width:calc(100vw - 2.2rem);
     z-index:900;font-family:var(--sans,system-ui,sans-serif)}
   #cc-bugfab[hidden]{display:none}
-  .bugfab-open{display:inline-flex;align-items:center;gap:.5rem;background:var(--clay);color:var(--paper);
-    border:0;border-radius:999px;padding:.62rem .95rem;cursor:pointer;font-size:.82rem;line-height:1;
+  .bugfab-open{display:inline-flex;align-items:center;justify-content:center;background:var(--clay);color:var(--paper);
+    border:0;border-radius:50%;padding:.7rem;cursor:pointer;line-height:1;
     box-shadow:0 4px 16px rgba(20,22,14,.28)}
   .bugfab-open:hover{background:var(--trail)}
   .bugfab-open:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
-  @media (max-width:640px){.bugfab-label{display:none}.bugfab-open{padding:.7rem;border-radius:50%}}
+  {# Visually hidden, never display:none: it is the button's accessible name. #}
+  .bugfab-label{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;
+    clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
 
-  {# On the map: the circle only, and lifted over the attribution strip that
+  {# Translate mode: the bar is fixed along the bottom edge with its "Stop
+     translating" button at the right, so the circle and its panel sit above it. #}
+  body:has(#tr-bar) #cc-bugfab{bottom:3.6rem}
+  body:has(#tr-bar) .bugfab-panel{bottom:7.1rem}
+
+  {# On the map: lifted over the attribution strip that
      runs along the bottom edge. z-index sits above the map canvas and its
      controls but BELOW the drawer (1100) and the mobile scrim (1540), so an
      open drawer covers it rather than the other way round. #}
   #cc-bugfab.is-mini{bottom:2.4rem;z-index:1050}
-  #cc-bugfab.is-mini .bugfab-label{display:none}
-  #cc-bugfab.is-mini .bugfab-open{padding:.7rem;border-radius:50%}
   #cc-bugfab.is-mini .bugfab-panel{bottom:5.9rem}
 
   .bugfab-panel{position:fixed;right:1.1rem;bottom:4.6rem;width:min(24rem,calc(100vw - 2.2rem));
