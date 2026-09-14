@@ -222,9 +222,9 @@ final class BestOfPreview
      * per row, which for a five-category page across a country's regions runs
      * into the thousands, all to decide the order of ten.
      *
-     * @param list<array{id: int|string, name: string, attributes: string|null, ref: string|null, distance_m: int|string|null}> $rows
+     * @param list<array{id: int|string, name: string, attributes: string|null, ref: string|null, distance_m: int|string|null, lat: float|string|null, lng: float|string|null}> $rows
      *
-     * @return array<string, true>
+     * @return array<string, array{0: float, 1: float}|null> file => where its camera stood, null when unknown
      */
     private function readyFiles(array $rows): array
     {
@@ -247,14 +247,21 @@ final class BestOfPreview
             return [];
         }
 
-        /** @var list<string> $ready */
-        $ready = $this->db->fetchFirstColumn(
-            "SELECT file FROM commons_photo WHERE state = 'ready' AND file IN (:files)",
+        /** @var list<array{file: string, camera_lat: float|string|null, camera_lng: float|string|null}> $ready */
+        $ready = $this->db->fetchAllAssociative(
+            "SELECT file, camera_lat, camera_lng FROM commons_photo WHERE state = 'ready' AND file IN (:files)",
             ['files' => array_keys($files)],
             ['files' => ArrayParameterType::STRING],
         );
 
-        return array_fill_keys($ready, true);
+        $out = [];
+        foreach ($ready as $r) {
+            $out[$r['file']] = is_numeric($r['camera_lat']) && is_numeric($r['camera_lng'])
+                ? [(float) $r['camera_lat'], (float) $r['camera_lng']]
+                : null;
+        }
+
+        return $out;
     }
 
     /**
@@ -328,14 +335,14 @@ final class BestOfPreview
      * @return Ranked
      */
     /**
-     * @param array{id: int|string, name: string, attributes?: string|array<string, mixed>|null, ref?: string|null, distance_m?: int|string|null} $row
+     * @param array{id: int|string, name: string, attributes?: string|array<string, mixed>|null, ref?: string|null, distance_m?: int|string|null, lat?: float|string|null, lng?: float|string|null} $row
      *
      * @return Ranked
      */
     /**
-     * @param array{id: int|string, name: string, attributes?: string|array<string, mixed>|null, ref?: string|null, distance_m?: int|string|null} $row
-     * @param list<string>                                                                                                                        $bikes
-     * @param array<string, true>                                                                                                                 $shot  files already fetched
+     * @param array{id: int|string, name: string, attributes?: string|array<string, mixed>|null, ref?: string|null, distance_m?: int|string|null, lat?: float|string|null, lng?: float|string|null} $row
+     * @param list<string>                                                                                                                                                                          $bikes
+     * @param array<string, array{0: float, 1: float}|null>                                                                                                                                         $shot  files already fetched, with where their camera stood
      *
      * @return Ranked
      */
@@ -373,12 +380,27 @@ final class BestOfPreview
         // `wikimedia_commons` and `image` arrive here unchanged and the file
         // name needs no second query to find.
         $file = CommonsFile::fromTags($attrs);
+
+        // A scenic card shows only a photo taken near its pin, the rule the
+        // map drawer follows (ScenicPhotoRule). A stored photo that fails it
+        // is dropped here, and a cached Commons file that fails it is treated
+        // as no file at all, so it neither earns the bonus below nor is
+        // looked up once the list is cut.
+        if (ScenicPhotoRule::appliesTo($type->letter())) {
+            $lat = is_numeric($row['lat'] ?? null) ? (float) $row['lat'] : null;
+            $lng = is_numeric($row['lng'] ?? null) ? (float) $row['lng'] : null;
+            $attrs = ScenicPhotoRule::filterAttributes($attrs, $lat, $lng);
+            if (null !== $file && !ScenicPhotoRule::allows(['cameraAt' => $shot[$file] ?? null], $lat, $lng)) {
+                $file = null;
+            }
+        }
+
         // A photographed place outranks an unphotographed one, for the reason
         // the curated bonus exists: a podium of three empty panels shows the
         // layout but not the page, and the page is what there is to judge.
         // It cannot invent a winner either, since it only moves rows that a
         // real picture is already sitting in the store for.
-        if (null !== $file && isset($shot[$file])) {
+        if (null !== $file && \array_key_exists($file, $shot)) {
             $votes += 20;
         }
 
@@ -569,12 +591,14 @@ final class BestOfPreview
      * is dropped, the same exclusivity the map applies, or the same castle
      * would rank twice under two names.
      *
-     * @return list<array{id: int|string, name: string, attributes: string|null, ref: string|null, distance_m: int|string|null}>
+     * @return list<array{id: int|string, name: string, attributes: string|null, ref: string|null, distance_m: int|string|null, lat: float|string|null, lng: float|string|null}>
      */
     private function items(ItemType $type, ?string $countryCode, ?int $regionId = null): array
     {
         $letter = $type->letter();
-        $sql = 'SELECT id, name, attributes, NULL AS ref, NULL AS distance_m FROM item
+        $sql = 'SELECT id, name, attributes, NULL AS ref, NULL AS distance_m,
+                       ST_Y(ST_PointOnSurface(geom)) AS lat, ST_X(ST_PointOnSurface(geom)) AS lng
+                  FROM item
                  WHERE letter = :letter
                    AND state IN '.ItemState::servedSqlTuple()."
                    AND name <> ''";
@@ -588,7 +612,8 @@ final class BestOfPreview
             $params['rid'] = $regionId;
         }
 
-        $cov = "SELECT cp.id, cp.name, cp.tags AS attributes, cp.ref, NULL AS distance_m
+        $cov = "SELECT cp.id, cp.name, cp.tags AS attributes, cp.ref, NULL AS distance_m,
+                       ST_Y(cp.geom) AS lat, ST_X(cp.geom) AS lng
                   FROM coverage_poi cp
                  WHERE cp.letter = :letter
                    AND cp.name IS NOT NULL AND cp.name <> ''
@@ -603,7 +628,7 @@ final class BestOfPreview
             $cov .= ' AND cp.region_id = :rid';
         }
 
-        /** @var list<array{id: int|string, name: string, attributes: string|null, ref: string|null, distance_m: int|string|null}> $rows */
+        /** @var list<array{id: int|string, name: string, attributes: string|null, ref: string|null, distance_m: int|string|null, lat: float|string|null, lng: float|string|null}> $rows */
         $rows = $this->db->fetchAllAssociative(
             $this->hasCoverage()
                 ? '('.$sql.' ORDER BY id LIMIT 200) UNION ALL ('.$cov.' ORDER BY cp.id LIMIT 200)'
@@ -634,11 +659,11 @@ final class BestOfPreview
      * @param list<string> $difficulties
      * @param list<string> $lengths
      *
-     * @return list<array{id: int|string, name: string, attributes: string|null, ref: string|null, distance_m: int|string|null}>
+     * @return list<array{id: int|string, name: string, attributes: string|null, ref: string|null, distance_m: int|string|null, lat: float|string|null, lng: float|string|null}>
      */
     private function routes(?string $countryCode, array $bikes, array $difficulties, ?int $regionId = null, array $lengths = []): array
     {
-        $sql = 'SELECT r.id, r.name, r.attributes, NULL AS ref, r.distance_m FROM recommended_route r
+        $sql = 'SELECT r.id, r.name, r.attributes, NULL AS ref, r.distance_m, NULL AS lat, NULL AS lng FROM recommended_route r
                  WHERE r.state IN '.ItemState::servedSqlTuple()."
                    AND r.name <> ''";
         $params = [];
@@ -689,7 +714,7 @@ final class BestOfPreview
             }
         }
 
-        /** @var list<array{id: int|string, name: string, attributes: string|null, ref: string|null, distance_m: int|string|null}> $rows */
+        /** @var list<array{id: int|string, name: string, attributes: string|null, ref: string|null, distance_m: int|string|null, lat: float|string|null, lng: float|string|null}> $rows */
         $rows = $this->db->fetchAllAssociative($sql.' ORDER BY r.id LIMIT 200', $params, $types);
 
         return $rows;

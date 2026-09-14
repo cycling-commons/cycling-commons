@@ -55,6 +55,45 @@ final class CoveragePhotoControllerTest extends WebTestCase
         ), 'a second reader must not create a second row, and so cannot queue a second download');
     }
 
+    /**
+     * A scenic POI shows a photo only when its camera stood near the pin
+     * (ScenicPhotoRule). A ready photo with no camera point, or one taken
+     * 400 m away, answers exactly like a POI with no photo at all.
+     */
+    public function testAScenicPhotoWithNoCameraNearThePinIsNotShown(): void
+    {
+        $client = $this->browser();
+
+        $none = $this->seed(['tourism' => 'viewpoint', 'wikimedia_commons' => 'File:Test no camera.jpg']);
+        $this->readyPhoto('Test no camera.jpg', null);
+        $client->request('GET', "/map/coverage/photo/node/{$none}");
+        self::assertResponseIsSuccessful();
+        self::assertSame(['state' => 'none'], $this->payload($client), 'no camera point is no photo');
+
+        // The seeded pin is 50.55, 5.55; 0.0036 degrees north is about 400 m.
+        $far = $this->seed(['tourism' => 'viewpoint', 'wikimedia_commons' => 'File:Test far camera.jpg']);
+        $this->readyPhoto('Test far camera.jpg', [50.5536, 5.55]);
+        $client->request('GET', "/map/coverage/photo/node/{$far}");
+        self::assertSame(['state' => 'none'], $this->payload($client), 'a camera 400 m away is not the view from here');
+
+        $near = $this->seed(['tourism' => 'viewpoint', 'wikimedia_commons' => 'File:Test near camera.jpg']);
+        $this->readyPhoto('Test near camera.jpg', [50.5509, 5.55]);
+        $client->request('GET', "/map/coverage/photo/node/{$near}");
+        $payload = $this->payload($client);
+        self::assertSame('ready', $payload['state']);
+        self::assertSame([50.5509, 5.55], $payload['cameraAt']);
+    }
+
+    public function testANonScenicPoiShowsItsPhotoWhereverTheCameraStood(): void
+    {
+        $client = $this->browser();
+        $id = $this->seed(['historic' => 'castle', 'wikimedia_commons' => 'File:Test castle.jpg'], 'Q');
+        $this->readyPhoto('Test castle.jpg', null);
+
+        $client->request('GET', "/map/coverage/photo/node/{$id}");
+        self::assertSame('ready', $this->payload($client)['state']);
+    }
+
     public function testUnknownRefIs404(): void
     {
         $client = $this->browser();
@@ -101,8 +140,22 @@ final class CoveragePhotoControllerTest extends WebTestCase
         return $data;
     }
 
+    /** @param array{0: float, 1: float}|null $camera */
+    private function readyPhoto(string $file, ?array $camera): void
+    {
+        /** @var Connection $db */
+        $db = self::getContainer()->get('doctrine.dbal.default_connection');
+        $db->executeStatement(
+            "INSERT INTO commons_photo (file, state, credit, license, storage_bucket, storage_prefix, width, height,
+                                        requested_at, ready_at, camera_lat, camera_lng, camera_checked_at)
+             VALUES (:f, 'ready', 'Somebody', 'CC BY-SA 4.0', 'test-bucket-eu-01', 'published/test/cafe', 1400, 933,
+                     NOW(), NOW(), :lat, :lng, NOW())",
+            ['f' => $file, 'lat' => $camera[0] ?? null, 'lng' => $camera[1] ?? null],
+        );
+    }
+
     /** @param array<string, string> $tags */
-    private function seed(array $tags): int
+    private function seed(array $tags, string $letter = 'P'): int
     {
         /** @var Connection $db */
         $db = self::getContainer()->get('doctrine.dbal.default_connection');
@@ -123,8 +176,8 @@ final class CoveragePhotoControllerTest extends WebTestCase
         );
         $db->executeStatement(
             "INSERT INTO coverage_poi (ref, letter, name, geom, tags, country_code)
-             VALUES (:r, 'P', NULL, ST_SetSRID(ST_MakePoint(5.55, 50.55), 4326), CAST(:t AS jsonb), 'BE')",
-            ['r' => $ref, 't' => json_encode($tags, \JSON_THROW_ON_ERROR)],
+             VALUES (:r, :l, NULL, ST_SetSRID(ST_MakePoint(5.55, 50.55), 4326), CAST(:t AS jsonb), 'BE')",
+            ['r' => $ref, 'l' => $letter, 't' => json_encode($tags, \JSON_THROW_ON_ERROR)],
         );
 
         return $id;

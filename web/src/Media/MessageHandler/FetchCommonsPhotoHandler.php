@@ -146,6 +146,7 @@ final readonly class FetchCommonsPhotoHandler
             $message->file, $bucket, $prefix,
             $info['credit'], $info['creditUser'], $info['license'],
             $photo->width, $photo->height,
+            $info['cameraLat'], $info['cameraLng'],
         );
     }
 }

@@ -125,6 +125,25 @@ final class MediaModerationTest extends KernelTestCase
         self::assertNotNull($row->getDecidedAt());
     }
 
+    /**
+     * How far from the pin the camera stood travels with the approved photo,
+     * because a scenic view shows a rider photo only when it was taken near
+     * its pin (ScenicPhotoRule). Null when the photo carried no GPS.
+     */
+    public function testApprovalCarriesTheCameraDistanceFromThePin(): void
+    {
+        [$item, $submission] = $this->seedEdit();
+        $this->claimedUpload($submission, distanceM: 42);
+        $this->claimedUpload($submission);
+
+        $this->moderation->decide((int) $submission->getId(), 'approve', $this->curator, null);
+        $this->em->clear();
+
+        $photos = $this->em->find(Item::class, $item->getId())?->getAttributes()['photos'] ?? [];
+        self::assertCount(2, $photos);
+        self::assertSame([42, null], array_map(static fn (array $p): mixed => \array_key_exists('distanceM', $p) ? $p['distanceM'] : 'absent', $photos));
+    }
+
     public function testAPhotoWithoutACaptureDateOmitsTheKeyEntirely(): void
     {
         [$item, $submission] = $this->seedEdit();

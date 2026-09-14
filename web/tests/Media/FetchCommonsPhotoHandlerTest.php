@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace App\Tests\Media;
 
 use App\Media\Commons\CommonsApi;
+use App\Media\Commons\CommonsPhotoAdmission;
 use App\Media\Commons\CommonsPhotoRepository;
 use App\Media\Commons\CommonsPhotoState;
 use App\Media\MediaStorage;
@@ -152,6 +153,41 @@ final class FetchCommonsPhotoHandlerTest extends KernelTestCase
         );
     }
 
+    /**
+     * Where the camera stood is kept with the photo and published with it, so
+     * a scenic view can tell a photo of its own view from one taken elsewhere
+     * (ScenicPhotoRule).
+     */
+    public function testTheCameraPointIsStoredAndPublished(): void
+    {
+        $downloads = 0;
+        $this->handle($this->client($this->metadata('CC BY-SA 3.0', [['lat' => 50.41234, 'lon' => 5.81234, 'primary' => true, 'type' => 'camera']]), $downloads));
+
+        $row = $this->row();
+        self::assertSame(50.41234, $row['camera_lat']);
+        self::assertSame(5.81234, $row['camera_lng']);
+        self::assertNotNull($this->cameraCheckedAt(), 'the fetch asked, so the backfill need not');
+
+        /** @var CommonsPhotoAdmission $admission */
+        $admission = self::getContainer()->get(CommonsPhotoAdmission::class);
+        self::assertSame([50.41234, 5.81234], $admission->readyPhoto(self::FILE)['cameraAt'] ?? null);
+    }
+
+    public function testAFileWithNoCameraIsStillCheckedAndPublishesNone(): void
+    {
+        $downloads = 0;
+        $this->handle($this->client($this->metadata('CC BY-SA 3.0'), $downloads));
+
+        self::assertNull($this->row()['camera_lat']);
+        self::assertNotNull($this->cameraCheckedAt());
+
+        /** @var CommonsPhotoAdmission $admission */
+        $admission = self::getContainer()->get(CommonsPhotoAdmission::class);
+        $ready = $admission->readyPhoto(self::FILE);
+        self::assertNotNull($ready);
+        self::assertArrayNotHasKey('cameraAt', $ready);
+    }
+
     public function testARedeliveryOfASettledRowChangesNothing(): void
     {
         $downloads = 0;
@@ -197,17 +233,32 @@ final class FetchCommonsPhotoHandlerTest extends KernelTestCase
         };
     }
 
-    private function metadata(?string $shortName): string
+    /** @param list<array<string, mixed>>|null $coordinates */
+    private function metadata(?string $shortName, ?array $coordinates = null): string
     {
         $extra = ['Artist' => ['value' => '<a href="//commons.wikimedia.org/wiki/User:Jean-Pol_GRANDMONT">Jean-Pol GRANDMONT</a>']];
         if (null !== $shortName) {
             $extra['LicenseShortName'] = ['value' => $shortName];
         }
 
-        return json_encode(['query' => ['pages' => [['imageinfo' => [[
+        $page = ['imageinfo' => [[
             'thumburl' => 'https://upload.wikimedia.org/thumb/Test_handler.jpg',
             'extmetadata' => $extra,
-        ]]]]]], \JSON_THROW_ON_ERROR);
+        ]]];
+        if (null !== $coordinates) {
+            $page['coordinates'] = $coordinates;
+        }
+
+        return json_encode(['query' => ['pages' => [$page]]], \JSON_THROW_ON_ERROR);
+    }
+
+    private function cameraCheckedAt(): ?string
+    {
+        /** @var Connection $db */
+        $db = self::getContainer()->get('doctrine.dbal.default_connection');
+        $at = $db->fetchOne('SELECT camera_checked_at FROM commons_photo WHERE file = :f', ['f' => self::FILE]);
+
+        return \is_string($at) ? $at : null;
     }
 
     private function client(string $metadataJson, int &$downloads): MockHttpClient
@@ -233,7 +284,7 @@ final class FetchCommonsPhotoHandlerTest extends KernelTestCase
         return $bytes;
     }
 
-    /** @return array{file: string, state: string, credit: ?string, credit_user: ?string, license: ?string, storage_bucket: ?string, storage_prefix: ?string, width: ?int, height: ?int} */
+    /** @return array{file: string, state: string, credit: ?string, credit_user: ?string, license: ?string, storage_bucket: ?string, storage_prefix: ?string, width: ?int, height: ?int, camera_lat: ?float, camera_lng: ?float} */
     private function row(): array
     {
         $row = $this->photos->find(self::FILE);

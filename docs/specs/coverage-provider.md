@@ -779,6 +779,17 @@ Rules:
   `cache.coverage_read_limiter` (array adapter under `when@test`, following
   the `ride_check` precedent). Over the limit: 429 JSON
   `{"error":"rate_limited"}`.
+- **Photos on a scenic point follow the camera rule
+  ([scenic-views.md §8](scenic-views.md)).** `GET /map/coverage/photo/{osmType}/{osmId}`
+  resolves the point's Commons file (a `wikimedia_commons`/`image` tag, else the
+  Wikidata P18 cached in `wikidata_image`) and answers `{state: ready|pending|none}`
+  from `CommonsPhotoAdmission`; a ready photo carries `cameraAt` when Commons
+  records where the camera stood (`commons_photo.camera_lat`, `camera_lng`,
+  `camera_checked_at`, [photo-uploads.md §5g](photo-uploads.md)). For a P point
+  a ready photo whose camera is unknown or more than
+  `ScenicPhotoRule::MAX_CAMERA_DISTANCE_M` (250 m) from the point answers
+  `{"state": "none"}`. The curated overlay of `poi/{osmType}/{osmId}` filters a P
+  item's `photo` and `photos` the same way, against the item's own pin.
 - These are **site-internal map endpoints**, not the future public API.
   [osm-data-architecture.md §7](osm-data-architecture.md)'s reference-only
   rule governs the public API; the serving cache may serve OSM fields with

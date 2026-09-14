@@ -173,6 +173,36 @@ final class CoveragePoiDetailTest extends WebTestCase
         self::assertEquals(['potable' => 2, 'not_potable' => 1], $curated['confirmations']);
     }
 
+    /**
+     * The curated overlay of a scenic view carries only the photos whose
+     * camera stood near the item's pin (ScenicPhotoRule), the same filter the
+     * catalog payload applies. A water tap's overlay keeps a far photo.
+     */
+    public function testScenicOverlayDropsPhotosTakenAwayFromThePin(): void
+    {
+        $client = static::createClient();
+        $db = $this->db();
+        self::ensureCoverageSchema($db);
+        // The item pin is 50.4, 5.8; 0.0009 degrees north is about 100 m, 0.0036 about 400 m.
+        $near = ['sm' => 'https://img.test/near.webp', 'cameraAt' => [50.4009, 5.8]];
+        $far = ['sm' => 'https://img.test/far.webp', 'cameraAt' => [50.4036, 5.8]];
+
+        self::insertCoveragePoi($db, ['ref' => 'node/777010', 'letter' => 'P', 'name' => 'Belvédère OSM', 'tags' => ['tourism' => 'viewpoint']]);
+        $scenic = $this->item('node/777010');
+        $scenic->setLetter('P')->setAttributes(['photo' => $far, 'photos' => [$far, $near]]);
+        self::insertCoveragePoi($db, ['ref' => 'node/777011', 'letter' => 'B', 'name' => 'Fontaine photo']);
+        $tap = $this->item('node/777011');
+        $tap->setAttributes(['potable' => 'yes', 'photo' => $far]);
+        static::getContainer()->get(EntityManagerInterface::class)->flush();
+
+        $fields = $this->getJson($client, '/map/coverage/poi/node/777010')['curated']['fields'];
+        self::assertArrayNotHasKey('photo', $fields, 'a photo from 400 m away is not the view from the pin');
+        self::assertSame(['https://img.test/near.webp'], array_column($fields['photos'], 'sm'));
+
+        $fields = $this->getJson($client, '/map/coverage/poi/node/777011')['curated']['fields'];
+        self::assertSame('https://img.test/far.webp', $fields['photo']['sm'] ?? null, 'other letters are unaffected');
+    }
+
     public function testUnservedItemDoesNotOverlay(): void
     {
         $client = static::createClient();

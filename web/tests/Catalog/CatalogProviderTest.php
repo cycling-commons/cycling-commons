@@ -807,4 +807,52 @@ final class CatalogProviderTest extends KernelTestCase
         $db->executeStatement("UPDATE recommended_route SET updated_at = updated_at + interval '1 second' WHERE id = (SELECT min(id) FROM recommended_route)");
         self::assertNotSame($v3, $provider->versionTag(), 'a route update must mint a new version');
     }
+
+    /**
+     * A scenic view serves only the photos whose camera stood near its pin
+     * (ScenicPhotoRule). The same far photo on a water tap is untouched: the
+     * rule is about promising a view, and only a scenic pin promises one.
+     */
+    public function testAScenicViewDropsPhotosTakenAwayFromItsPin(): void
+    {
+        $db = $this->em->getConnection();
+        // 0.0009 degrees of latitude is about 100 m, 0.0036 about 400 m.
+        $near = ['sm' => 'https://img.test/near-sm.webp', 'lg' => 'https://img.test/near-lg.webp', 'cameraAt' => [50.4009, 4.5]];
+        $far = ['sm' => 'https://img.test/far-sm.webp', 'lg' => 'https://img.test/far-lg.webp', 'cameraAt' => [50.4036, 4.5]];
+        $rider = ['sm' => 'https://img.test/rider-sm.webp', 'lg' => 'https://img.test/rider-lg.webp', 'distanceM' => 40];
+        $noGps = ['sm' => 'https://img.test/nogps-sm.webp', 'lg' => 'https://img.test/nogps-lg.webp', 'distanceM' => null];
+
+        $insert = "INSERT INTO item (letter, name, geom, country_code, state, source, source_ref, attributes, created_at, updated_at)
+                   VALUES (:letter, :name, ST_GeomFromText('POINT(4.5 50.4)', 4326), 'BE', 'verified', 'manual', :ref, CAST(:attrs AS jsonb), now(), now())";
+        $db->executeStatement($insert, ['letter' => 'P', 'name' => 'Scenic far test', 'ref' => 'manual:scenic-far',
+            'attrs' => json_encode(['type' => 'Viewpoint', 'photo' => $far], \JSON_THROW_ON_ERROR)]);
+        $db->executeStatement($insert, ['letter' => 'P', 'name' => 'Scenic gallery test', 'ref' => 'manual:scenic-gallery',
+            'attrs' => json_encode(['type' => 'Viewpoint', 'photos' => [$far, $near, $rider, $noGps]], \JSON_THROW_ON_ERROR)]);
+        $db->executeStatement($insert, ['letter' => 'B', 'name' => 'Tap far photo test', 'ref' => 'manual:tap-far',
+            'attrs' => json_encode(['t' => 'Drinking water', 'photo' => $far], \JSON_THROW_ON_ERROR)]);
+
+        $payload = $this->payload();
+        $byName = static function (array $collection, string $name): array {
+            foreach ($collection['features'] as $f) {
+                if ($name === ($f['properties']['n'] ?? null)) {
+                    return $f['properties'];
+                }
+            }
+            self::fail($name.' is not served');
+        };
+
+        $lonely = $byName($payload['P'], 'Scenic far test');
+        self::assertArrayNotHasKey('photo', $lonely, 'a photo from 400 m away is not the view from the pin');
+        self::assertArrayNotHasKey('photos', $lonely);
+
+        $gallery = $byName($payload['P'], 'Scenic gallery test');
+        self::assertSame([$near['sm'], $rider['sm']], array_column($gallery['photos'], 'sm'), 'near cameras and near rider photos stay, in order');
+
+        $tap = $byName($payload['B'], 'Tap far photo test');
+        self::assertSame($far['sm'], $tap['photo']['sm'] ?? null, 'other letters are unaffected');
+
+        $id = (int) $db->fetchOne("SELECT id FROM item WHERE source_ref = 'manual:scenic-far'");
+        $live = static::getContainer()->get(CatalogProvider::class)->featureForItem($id);
+        self::assertArrayNotHasKey('photo', $live['feature']['properties'] ?? [], 'a live insert follows the same rule');
+    }
 }

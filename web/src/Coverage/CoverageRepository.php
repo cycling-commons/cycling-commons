@@ -10,6 +10,7 @@ use App\Catalog\CoverageRetirement;
 use App\Catalog\Entity\Item;
 use App\Catalog\GoneRows;
 use App\Catalog\ItemState;
+use App\Catalog\ScenicPhotoRule;
 use App\Media\Commons\CommonsFile;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
@@ -130,11 +131,12 @@ final class CoverageRepository
     public function detail(string $osmType, int $osmId): ?array
     {
         $ref = $osmType.'/'.$osmId;
-        /** @var array{ref: string, letter: string, kind: string|null, name: string|null, lat: string|float, lng: string|float, tags: string, item_id: int|string|null, item_state: string|null, item_name: string|null, item_attributes: string|null}|false $row */
+        /** @var array{ref: string, letter: string, kind: string|null, name: string|null, lat: string|float, lng: string|float, tags: string, item_id: int|string|null, item_state: string|null, item_name: string|null, item_attributes: string|null, item_letter: string|null, item_lat: string|float|null, item_lng: string|float|null}|false $row */
         $row = $this->db->fetchAssociative(
             'SELECT cp.ref, cp.letter, cp.kind, cp.name,
                     ST_Y(cp.geom) AS lat, ST_X(cp.geom) AS lng, cp.tags,
-                    i.id AS item_id, i.state AS item_state, i.name AS item_name, i.attributes AS item_attributes
+                    i.id AS item_id, i.state AS item_state, i.name AS item_name, i.attributes AS item_attributes,
+                    i.letter AS item_letter, ST_Y(ST_PointOnSurface(i.geom)) AS item_lat, ST_X(ST_PointOnSurface(i.geom)) AS item_lng
              FROM coverage_poi cp
              LEFT JOIN item i ON cp.ref IN (i.source_ref, i.osm_ref) AND i.state IN '.ItemState::servedSqlTuple().'
                  AND NOT (i.letter IN '.CoverageRetirement::lettersSqlTuple().' AND '.CoverageRetirement::untouchedOsmSql('i').')
@@ -167,7 +169,12 @@ final class CoverageRepository
             'photo' => self::photoPossible($tags),
             'curated' => null === $row['item_id']
                 ? null
-                : $this->curatedOverlay((int) $row['item_id'], (string) $row['item_state'], (string) $row['item_name'], (string) $row['item_attributes']),
+                : $this->curatedOverlay(
+                    (int) $row['item_id'], (string) $row['item_state'], (string) $row['item_name'], (string) $row['item_attributes'],
+                    (string) $row['item_letter'],
+                    is_numeric($row['item_lat']) ? (float) $row['item_lat'] : null,
+                    is_numeric($row['item_lng']) ? (float) $row['item_lng'] : null,
+                ),
             'attribution' => self::ATTRIBUTION,
         ];
     }
@@ -438,12 +445,19 @@ final class CoverageRepository
     /**
      * Curated overlay: attributes + name, plus confirmation tallies matching ItemConfirmationService::snapshot().
      *
+     * A scenic view's photos pass ScenicPhotoRule against the item's own pin,
+     * the same filter CatalogProvider applies, so the two ways into the drawer
+     * show the same photos.
+     *
      * @return array{itemId: int, state: string, fields: object, confirmations: object}
      */
-    private function curatedOverlay(int $itemId, string $state, string $name, string $attributesJson): array
+    private function curatedOverlay(int $itemId, string $state, string $name, string $attributesJson, string $letter, ?float $pinLat, ?float $pinLng): array
     {
         /** @var array<string, mixed> $fields */
         $fields = json_decode($attributesJson, true, 512, \JSON_THROW_ON_ERROR);
+        if (ScenicPhotoRule::appliesTo($letter)) {
+            $fields = ScenicPhotoRule::filterAttributes($fields, $pinLat, $pinLng);
+        }
         if ('' !== $name) {
             $fields[Item::NAME_FIELD] = $name;
         }

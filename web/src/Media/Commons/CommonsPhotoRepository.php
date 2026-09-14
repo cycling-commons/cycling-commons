@@ -41,12 +41,12 @@ final readonly class CommonsPhotoRepository
     }
 
     /**
-     * @return array{file: string, state: string, credit: ?string, credit_user: ?string, license: ?string, storage_bucket: ?string, storage_prefix: ?string, width: ?int, height: ?int}|null
+     * @return array{file: string, state: string, credit: ?string, credit_user: ?string, license: ?string, storage_bucket: ?string, storage_prefix: ?string, width: ?int, height: ?int, camera_lat: ?float, camera_lng: ?float}|null
      */
     public function find(string $file): ?array
     {
         $row = $this->db->fetchAssociative(
-            'SELECT file, state, credit, credit_user, license, storage_bucket, storage_prefix, width, height FROM commons_photo WHERE file = :f',
+            'SELECT file, state, credit, credit_user, license, storage_bucket, storage_prefix, width, height, camera_lat, camera_lng FROM commons_photo WHERE file = :f',
             ['f' => $file],
         );
         if (false === $row) {
@@ -66,18 +66,65 @@ final readonly class CommonsPhotoRepository
             'storage_prefix' => null === $row['storage_prefix'] ? null : (string) $row['storage_prefix'],
             'width' => null === $row['width'] ? null : (int) $row['width'],
             'height' => null === $row['height'] ? null : (int) $row['height'],
+            'camera_lat' => null === $row['camera_lat'] ? null : (float) $row['camera_lat'],
+            'camera_lng' => null === $row['camera_lng'] ? null : (float) $row['camera_lng'],
         ];
     }
 
-    public function markReady(string $file, string $bucket, string $prefix, string $credit, ?string $creditUser, string $license, int $width, int $height): void
+    /**
+     * The file is ours now. Every ready row came through CommonsApi::fileInfo(),
+     * which asks for the camera point, so the camera is recorded as checked
+     * here whether or not Commons had one.
+     */
+    public function markReady(string $file, string $bucket, string $prefix, string $credit, ?string $creditUser, string $license, int $width, int $height, ?float $cameraLat = null, ?float $cameraLng = null): void
     {
+        [$cameraLat, $cameraLng] = null === $cameraLat || null === $cameraLng ? [null, null] : [$cameraLat, $cameraLng];
         $this->db->executeStatement(
             'UPDATE commons_photo SET state = :s, storage_bucket = :b, storage_prefix = :p, credit = :c,
-                    credit_user = :u, license = :l, width = :w, height = :h, ready_at = NOW(), failed_reason = NULL
+                    credit_user = :u, license = :l, width = :w, height = :h, ready_at = NOW(), failed_reason = NULL,
+                    camera_lat = :clat, camera_lng = :clng, camera_checked_at = NOW()
              WHERE file = :f',
             ['s' => CommonsPhotoState::Ready->value, 'b' => $bucket, 'p' => $prefix, 'c' => $credit,
-                'u' => $creditUser, 'l' => $license, 'w' => $width, 'h' => $height, 'f' => $file],
+                'u' => $creditUser, 'l' => $license, 'w' => $width, 'h' => $height,
+                'clat' => $cameraLat, 'clng' => $cameraLng, 'f' => $file],
         );
+    }
+
+    /**
+     * Record Commons' answer about where a file's camera stood; null for none.
+     *
+     * Written for the backfill of rows fetched before the camera was asked
+     * for (app:media:backfill-commons-camera). The check time is set either
+     * way, so an answer of "none" is remembered and not asked again.
+     */
+    public function recordCamera(string $file, ?float $lat, ?float $lng): void
+    {
+        [$lat, $lng] = null === $lat || null === $lng ? [null, null] : [$lat, $lng];
+        $this->db->executeStatement(
+            'UPDATE commons_photo SET camera_lat = :lat, camera_lng = :lng, camera_checked_at = NOW() WHERE file = :f',
+            ['lat' => $lat, 'lng' => $lng, 'f' => $file],
+        );
+    }
+
+    /**
+     * Ready files whose camera point was never asked for, or every ready file.
+     *
+     * Only `ready` rows: a pending or failed row asks for the camera when its
+     * fetch runs, and an unusable one is never shown.
+     *
+     * @return list<string>
+     */
+    public function filesForCameraCheck(bool $all = false, ?int $limit = null): array
+    {
+        $sql = 'SELECT file FROM commons_photo WHERE state = :ready'
+            .($all ? '' : ' AND camera_checked_at IS NULL')
+            .' ORDER BY id'
+            .(null === $limit ? '' : ' LIMIT '.max(1, $limit));
+
+        /** @var list<string> $files */
+        $files = $this->db->fetchFirstColumn($sql, ['ready' => CommonsPhotoState::Ready->value]);
+
+        return $files;
     }
 
     /**

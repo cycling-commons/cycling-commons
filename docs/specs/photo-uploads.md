@@ -401,8 +401,10 @@ Nothing public until approved — the rule everywhere else, applied here:
   inside one, every click to enlarge would also untick Keep.
 - **Approve** → uploads flip to `approved`, and the item's `photos[]`
   attribute gains
-  `{id, sm, lg, credit, license: 'CC BY-SA 4.0', takenAt?: 'YYYY-MM'}` per
-  photo. `id` is the upload's own uuid, and it is what takedown, escalation
+  `{id, sm, lg, credit, license: 'CC BY-SA 4.0', distanceM, takenAt?: 'YYYY-MM'}` per
+  photo. `distanceM` is `gps_distance_m`, the metres from the photo's GPS
+  position to the submission pin, or null when it carried none; a scenic view
+  shows the photo only when it is within 250 m (§5g). `id` is the upload's own uuid, and it is what takedown, escalation
   and disposal match on. They used to compare the stored `sm` string against a
   freshly built one, which silently stopped matching each time the address
   moved — `photos/<uuid>/` to `published/<uuid>/<rev>/`, then the `-<cc>-<nn>`
@@ -740,6 +742,41 @@ uploads.
 is deliberately allowed to be narrower (today it lacks `CC BY-SA 3.0 lu`), since
 accepting fewer licences at harvest time only means fewer photos, never a
 mislabelled one.
+
+### 5g. Where the camera stood
+
+A scenic view (letter P) shows a photo only when we know where the camera stood
+and it stood within 250 m of the pin
+([scenic-views.md §8](scenic-views.md), `App\Catalog\ScenicPhotoRule`). Every
+photo entry therefore says where its camera was, when that is known:
+
+- **A rider's photo** carries `distanceM` (§5): metres from its GPS position to
+  the submission pin, or null.
+- **A Commons photo** carries `cameraAt: [lat, lng]` when Commons records a
+  camera point, and no key when it does not. The point is the file's primary
+  coordinate of type `camera`, with at least 3 decimals in each axis;
+  `CommonsApi::fileInfo()` asks for it (`prop=imageinfo|coordinates`,
+  `coprimary=primary`, `coprop=type|globe`) and refuses an `object` coordinate
+  and a round point.
+
+`commons_photo` holds the answer per file:
+
+| column | meaning |
+|---|---|
+| `camera_lat`, `camera_lng` (double precision, nullable) | the camera point; both null when Commons records none |
+| `camera_checked_at` (timestamptz, nullable) | when Commons was asked; null = never asked, set with a null camera = asked, and there is none |
+
+`FetchCommonsPhotoHandler` writes all three with every fetch
+(`CommonsPhotoRepository::markReady()`), and `CommonsPhotoAdmission::readyPhoto()`
+adds `cameraAt` to the published shape, so a coverage point's photo, a town card
+and every entry `app:media:localise-commons` (§5f) writes carry it.
+
+`app:media:backfill-photo-camera` covers what was stored before: it asks Commons
+about every ready row never asked (`CommonsApi::cameraLocations()`, 20 titles per
+POST, the identifying User-Agent, a pause between requests), records every
+answer, and stamps `cameraAt` into item photo entries whose `source` names a
+checked file and `distanceM` into rider entries from `media_upload`. It is a dry
+run unless given `--write`; `--recheck` asks about every ready row again.
 
 ## 6. Disposal & garbage collection
 

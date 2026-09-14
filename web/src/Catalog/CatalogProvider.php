@@ -161,12 +161,14 @@ final class CatalogProvider
      *
      * @see docs/specs/map-and-search.md §12
      *
-     * @return list<array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null, pk: string|null, region_id: int|null, verified: bool, by_name: string|null, by_public: bool|null, by_uuid: string|null, letter: string, last_confirmed: string|null, state: string, imported_at: string|null, ev_provider: bool, ev_scope: bool|null, ev_conf: int|string, ev_last: string|null, ev_witness: string|null, ev_reclaimed: string|null}>
+     * @return list<array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null, pk: string|null, region_id: int|null, verified: bool, by_name: string|null, by_public: bool|null, by_uuid: string|null, letter: string, last_confirmed: string|null, state: string, imported_at: string|null, ev_provider: bool, ev_scope: bool|null, ev_conf: int|string, ev_last: string|null, ev_witness: string|null, ev_reclaimed: string|null, pin_lat: float|string|null, pin_lng: float|string|null}>
      */
     private function itemRows(string $letter, ?string $source = null, ?string $excludeSource = null, ?int $onlyId = null, bool $anyState = false): array
     {
         // Creator is the earliest type=new submission; harvested rows stay anonymous.
         $sql = 'SELECT i.id, i.name, i.letter, ST_AsGeoJSON(i.geom) AS geom, i.attributes, i.source_ref, i.source, s.name AS prov, i.region_id, dp.provider_key AS pk,
+                       -- The pin a scenic photo is measured against (ScenicPhotoRule).
+                       ST_Y(ST_PointOnSurface(i.geom)) AS pin_lat, ST_X(ST_PointOnSurface(i.geom)) AS pin_lng,
                        contributor.display_name AS by_name, contributor.public_profile AS by_public, contributor.uuid AS by_uuid,
                        (i.state = \'verified\') AS verified,
                        -- docs/specs/moderation-and-contribution.md 6.3: `form` must not reset freshness.
@@ -212,7 +214,7 @@ final class CatalogProvider
         // docs/specs/catalog-data-model.md §7 — gone from the map; curatedRefs() still claims the OSM ref.
         $sql .= ' AND '.GoneRows::notGoneSql('i');
 
-        /* @var list<array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null, region_id: int|null, verified: bool, by_name: string|null, by_public: bool|null, by_uuid: string|null, letter: string, last_confirmed: string|null, state: string, imported_at: string|null, ev_provider: bool, ev_scope: bool|null, ev_conf: int|string, ev_last: string|null, ev_witness: string|null, ev_reclaimed: string|null}> */
+        /* @var list<array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null, region_id: int|null, verified: bool, by_name: string|null, by_public: bool|null, by_uuid: string|null, letter: string, last_confirmed: string|null, state: string, imported_at: string|null, ev_provider: bool, ev_scope: bool|null, ev_conf: int|string, ev_last: string|null, ev_witness: string|null, ev_reclaimed: string|null, pin_lat: float|string|null, pin_lng: float|string|null}> */
         return $this->db->fetchAllAssociative($sql.' ORDER BY i.id', $params);
     }
 
@@ -289,13 +291,22 @@ final class CatalogProvider
      * The per-row mapping shared by the bulk payload and featureForItem(), so
      * a live-inserted feature can never drift from the served one.
      *
-     * @param array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null, pk: string|null, region_id: int|null, verified: bool, by_name: string|null, by_public: bool|null, by_uuid: string|null, letter: string, last_confirmed: string|null, state: string, imported_at: string|null, ev_provider: bool, ev_scope: bool|null, ev_conf: int|string, ev_last: string|null, ev_witness: string|null, ev_reclaimed: string|null} $row
+     * @param array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null, pk: string|null, region_id: int|null, verified: bool, by_name: string|null, by_public: bool|null, by_uuid: string|null, letter: string, last_confirmed: string|null, state: string, imported_at: string|null, ev_provider: bool, ev_scope: bool|null, ev_conf: int|string, ev_last: string|null, ev_witness: string|null, ev_reclaimed: string|null, pin_lat: float|string|null, pin_lng: float|string|null} $row
      *
      * @return array{type: string, properties: array<string, mixed>, geometry: mixed}
      */
     private function feature(array $row): array
     {
         $props = $this->decode($row['attributes']);
+        // A scenic view keeps only the photos taken near its pin, so the pin
+        // never promises a view that was photographed somewhere else.
+        if (ScenicPhotoRule::appliesTo($row['letter'])) {
+            $props = ScenicPhotoRule::filterAttributes(
+                $props,
+                is_numeric($row['pin_lat']) ? (float) $row['pin_lat'] : null,
+                is_numeric($row['pin_lng']) ? (float) $row['pin_lng'] : null,
+            );
+        }
         if ('' !== $row['name']) {
             $props['n'] = $row['name'];
         }

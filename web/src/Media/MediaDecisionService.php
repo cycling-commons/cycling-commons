@@ -119,6 +119,11 @@ final class MediaDecisionService
             'lg' => $this->storage->url($bucket, $prefix, 'lg'),
             'credit' => $this->credit($upload),
             'license' => self::LICENSE,
+            // Metres from the photo's GPS position to the submission pin, or
+            // null when it carried none. Only the distance: the position itself
+            // is dropped at intake (photo-uploads.md §3a). A scenic view shows
+            // the photo only when this is within ScenicPhotoRule's reach.
+            'distanceM' => $upload->getGpsDistanceM(),
         ];
         // Only when there is one. An absent key lets the render side fall back
         // to the item's name, which is better than an empty alt and much better

@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Catalog\ScenicPhotoRule;
 use App\Coverage\CoverageRepository;
 use App\Media\Commons\CommonsFile;
 use App\Media\Commons\CommonsPhotoAdmission;
@@ -206,8 +207,19 @@ final class CoverageController extends AbstractController
             }
         }
 
-        return $this->noStore($admission->stateFor($file, $continent,
-            fn (): bool => $this->fetchBudgetAllows($request, $coveragePhotoFetchLimiter, $coveragePhotoGlobalLimiter)));
+        $state = $admission->stateFor($file, $continent,
+            fn (): bool => $this->fetchBudgetAllows($request, $coveragePhotoFetchLimiter, $coveragePhotoGlobalLimiter));
+
+        // A scenic view promises the view from its pin, so its photo is shown
+        // only when the camera stood near that pin. Anything else answers as
+        // if there were no photo, because for this pin there is none.
+        if ('ready' === ($state['state'] ?? null)
+            && ScenicPhotoRule::appliesTo((string) $detail['letter'])
+            && !ScenicPhotoRule::allows($state, $ll[0], $ll[1])) {
+            return $this->noStore(['state' => 'none']);
+        }
+
+        return $this->noStore($state);
     }
 
     /** @param array<string, mixed> $payload */

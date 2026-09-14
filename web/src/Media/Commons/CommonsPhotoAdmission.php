@@ -93,7 +93,7 @@ final readonly class CommonsPhotoAdmission
         $prefix = $row['storage_prefix'];
         $page = str_replace(' ', '_', $file);
 
-        return [
+        $photo = [
             'state' => 'ready',
             'sm' => $this->storage->url($bucket, $prefix, 'sm'),
             'lg' => $this->storage->url($bucket, $prefix, 'lg'),
@@ -104,5 +104,13 @@ final readonly class CommonsPhotoAdmission
             'license' => $row['license'],
             'source' => 'https://commons.wikimedia.org/wiki/File:'.rawurlencode($page),
         ];
+        // Where the camera stood, only when Commons records it. A scenic view
+        // shows the photo only when this is near its pin (ScenicPhotoRule), so
+        // an absent key is a refusal there and means nothing anywhere else.
+        if (null !== $row['camera_lat'] && null !== $row['camera_lng']) {
+            $photo['cameraAt'] = [$row['camera_lat'], $row['camera_lng']];
+        }
+
+        return $photo;
     }
 }

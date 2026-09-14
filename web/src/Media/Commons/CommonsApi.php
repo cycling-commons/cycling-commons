@@ -33,11 +33,19 @@ final readonly class CommonsApi
     ) {
     }
 
+    /** Titles per camera request. Commons accepts 50 without a bot flag; 20 keeps each request small. */
+    public const int CAMERA_BATCH_MAX = 20;
+
+    /** Fewer decimals than this in either axis is a scene centre, not a camera. */
+    private const int CAMERA_MIN_DECIMALS = 3;
+
     /**
-     * Credit, licence and a 1400px rendering URL, or null when the file is not
-     * one we may republish.
+     * Credit, licence, a 1400px rendering URL and where the camera stood, or
+     * null when the file is not one we may republish.
      *
-     * @return array{thumbUrl: string, credit: string, creditUser: ?string, license: string}|null
+     * The camera is null when Commons records none (see camera()).
+     *
+     * @return array{thumbUrl: string, credit: string, creditUser: ?string, license: string, cameraLat: ?float, cameraLng: ?float}|null
      *
      * @throws CommonsUnavailable
      */
@@ -48,15 +56,20 @@ final readonly class CommonsApi
             'format' => 'json',
             'formatversion' => '2',
             'titles' => 'File:'.$file,
-            'prop' => 'imageinfo',
+            'prop' => 'imageinfo|coordinates',
             'iiprop' => 'url|extmetadata',
+            // The file's primary coordinate and its type, so camera() can tell
+            // where the camera stood from where the subject is.
+            'coprimary' => 'primary',
+            'coprop' => 'type|globe',
             // Ask Commons to render the size we would produce anyway. Originals
             // include 200 MB TIFFs, and this bounds the download before
             // PhotoProcessor::MAX_BYTES ever has to refuse one.
             'iiurlwidth' => '1400',
         ]);
 
-        $info = $data['query']['pages'][0]['imageinfo'][0] ?? null;
+        $page = $data['query']['pages'][0] ?? null;
+        $info = \is_array($page) ? ($page['imageinfo'][0] ?? null) : null;
         if (!\is_array($info) || !\is_string($info['thumburl'] ?? null)) {
             return null;
         }
@@ -75,12 +88,150 @@ final readonly class CommonsApi
         $artistRaw = $meta['Artist']['value'] ?? null;
         $artist = \is_string($artistRaw) ? $artistRaw : '';
 
+        $camera = \is_array($page) ? self::camera($page) : null;
+
         return [
             'thumbUrl' => $info['thumburl'],
             'credit' => self::plainCredit($artist),
             'creditUser' => self::commonsUser($artist),
             'license' => $license,
+            'cameraLat' => $camera[0] ?? null,
+            'cameraLng' => $camera[1] ?? null,
         ];
+    }
+
+    /**
+     * Where the camera stood, for up to CAMERA_BATCH_MAX files in one request.
+     *
+     * POST, because twenty long file names in a query string run past what
+     * some proxies accept. Keyed by the name asked for, whatever Commons
+     * normalised it to; a file Commons does not have maps to null.
+     *
+     * @param list<string> $files names without the `File:` prefix
+     *
+     * @return array<string, array{0: float, 1: float}|null>
+     *
+     * @throws CommonsUnavailable
+     */
+    public function cameraLocations(array $files): array
+    {
+        if (\count($files) > self::CAMERA_BATCH_MAX) {
+            throw new \InvalidArgumentException(sprintf('At most %d files per request, got %d.', self::CAMERA_BATCH_MAX, \count($files)));
+        }
+        if ([] === $files) {
+            return [];
+        }
+
+        $form = [
+            'action' => 'query',
+            'format' => 'json',
+            'formatversion' => '2',
+            'titles' => implode('|', array_map(static fn (string $f): string => 'File:'.$f, $files)),
+            'prop' => 'coordinates',
+            'coprimary' => 'primary',
+            'coprop' => 'type|globe',
+            'colimit' => 'max',
+        ];
+
+        $normalised = [];
+        $cameras = [];
+        // Commons pages a long answer with `continue`. One primary coordinate
+        // per file and a limit of 500 make that unreachable for 20 files, but
+        // following it costs nothing and a truncated answer would read as "no
+        // camera" for the files it cut.
+        for ($round = 0, $continue = []; $round < 5; ++$round) {
+            $data = $this->post('https://commons.wikimedia.org/w/api.php', $form + $continue);
+            /** @var list<array{from?: mixed, to?: mixed}> $norm */
+            $norm = \is_array($data['query']['normalized'] ?? null) ? $data['query']['normalized'] : [];
+            foreach ($norm as $n) {
+                if (\is_string($n['from'] ?? null) && \is_string($n['to'] ?? null)) {
+                    $normalised[$n['from']] = $n['to'];
+                }
+            }
+            /** @var list<mixed> $pages */
+            $pages = \is_array($data['query']['pages'] ?? null) ? $data['query']['pages'] : [];
+            foreach ($pages as $page) {
+                if (\is_array($page) && \is_string($page['title'] ?? null)) {
+                    $cameras[$page['title']] ??= self::camera($page);
+                }
+            }
+            if (!\is_array($data['continue'] ?? null)) {
+                break;
+            }
+            /** @var array<string, string> $next */
+            $next = array_filter($data['continue'], is_string(...));
+            $continue = $next;
+        }
+
+        $out = [];
+        foreach ($files as $file) {
+            $title = 'File:'.$file;
+            $out[$file] = $cameras[$normalised[$title] ?? $title] ?? null;
+        }
+
+        return $out;
+    }
+
+    /**
+     * The camera point of one API page, or null.
+     *
+     * Commons stores two kinds of coordinate on a file: `camera` from
+     * {{Location}}, where the photographer stood, and `object` from {{Object
+     * location}}, where the subject is. Only the first says where a rider
+     * would have to stand to see this, so only a primary coordinate of type
+     * camera on Earth counts. A camera point with fewer than
+     * CAMERA_MIN_DECIMALS decimals in either axis is refused too: a satellite
+     * scene of Etna is filed at 37.7, 15, which is a scene centre, not a place
+     * anybody stood (scenic-views.md §2).
+     *
+     * @param array<array-key, mixed> $page
+     *
+     * @return array{0: float, 1: float}|null
+     */
+    private static function camera(array $page): ?array
+    {
+        $coordinates = \is_array($page['coordinates'] ?? null) ? $page['coordinates'] : [];
+        foreach ($coordinates as $c) {
+            if (!\is_array($c) || 'camera' !== ($c['type'] ?? null)) {
+                continue;
+            }
+            if (\array_key_exists('primary', $c) && true !== $c['primary'] && '' !== $c['primary']) {
+                continue;
+            }
+            if (\is_string($c['globe'] ?? null) && 'earth' !== strtolower($c['globe'])) {
+                continue;
+            }
+            $lat = $c['lat'] ?? null;
+            $lng = $c['lon'] ?? null;
+            if (!(\is_int($lat) || \is_float($lat)) || !(\is_int($lng) || \is_float($lng))) {
+                continue;
+            }
+            if (abs($lat) > 90 || abs($lng) > 180) {
+                continue;
+            }
+            if (self::decimals((float) $lat) < self::CAMERA_MIN_DECIMALS || self::decimals((float) $lng) < self::CAMERA_MIN_DECIMALS) {
+                continue;
+            }
+
+            return [(float) $lat, (float) $lng];
+        }
+
+        return null;
+    }
+
+    /**
+     * Decimal places a coordinate was written with, as far as JSON kept them.
+     *
+     * A trailing zero does not survive JSON (50.100 arrives as 50.1), so a
+     * real camera at exactly 50.100 is refused. That costs one file in a
+     * thousand per axis and is the cheaper mistake.
+     */
+    private static function decimals(float $value): int
+    {
+        $text = rtrim(number_format(abs($value), 7, '.', ''), '0');
+        $dot = strpos($text, '.');
+
+        return false === $dot ? 0 : \strlen($text) - $dot - 1;
     }
 
     /**
@@ -650,6 +801,34 @@ final readonly class CommonsApi
                 'headers' => ['User-Agent' => $this->userAgent, 'Accept' => 'application/json'],
                 'timeout' => $timeout,
                 'max_duration' => $maxDuration,
+            ]);
+            if (200 !== $response->getStatusCode()) {
+                throw new CommonsUnavailable('http_'.$response->getStatusCode());
+            }
+
+            return $response->toArray();
+        } catch (CommonsUnavailable $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            throw new CommonsUnavailable($e->getMessage());
+        }
+    }
+
+    /**
+     * @param array<string, string> $form
+     *
+     * @return array<string, mixed>
+     *
+     * @throws CommonsUnavailable
+     */
+    private function post(string $url, array $form): array
+    {
+        try {
+            $response = $this->http->request('POST', $url, [
+                'body' => $form,
+                'headers' => ['User-Agent' => $this->userAgent, 'Accept' => 'application/json'],
+                'timeout' => 15,
+                'max_duration' => 30,
             ]);
             if (200 !== $response->getStatusCode()) {
                 throw new CommonsUnavailable('http_'.$response->getStatusCode());
