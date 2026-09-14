@@ -2,6 +2,7 @@
 /* Item drawer: registry-driven rows, history, open/close.
    @see docs/specs/map-and-search.md §6 */
 import { I18N, D, tpl, trVal, sourceLabel, isRiderSource, DIFF_LABELS } from './i18n.js';
+import { drawerSource, drawerOrigin } from './origin.js';
 import { escPend, safeHref, stars, txtOn, gradColor, DIFF_PURPLE, ccUrl, attachPhotos, haversine } from './util.js';
 import { openClimbProfile } from './climb-profile.js';
 import { uKm, uM, uElev, uKmValue, uElevValue, uDistUnit } from './units.js';
@@ -224,11 +225,11 @@ export function osmDrawer(layer, p, ll, src){
   // licence corrected there is corrected here (data-provider-hierarchy.md §7).
   const provider = providerOf(p);
   const community = isRiderSource(p.srcType);
-  const originLbl = provider ? provider.name : (community?sourceLabel(p.srcType):'OSM');
+  const originLbl = provider ? provider.name : (community?sourceLabel(p.srcType):drawerOrigin(p.srcType, sourceLabel));
   // serviceKind label wins over raw OSM p.t when present.
   const kindLbl = p.serviceKind && ({shop:D.kindShop, station:D.kindStation, pump:D.kindPump}[p.serviceKind] || lbl);
   const typeLbl = kindLbl || p.t || lbl;
-  let rec=[{label:D.type||'Type', value:typeLbl, method: provider ? provider.name : 'OSM'}];
+  let rec=[{label:D.type||'Type', value:typeLbl, method: provider ? provider.name : drawerOrigin(p.srcType, sourceLabel)}];
   if(p.town && layer.letter!=='O') rec.push({label:D.town||'Town', value:p.town});  // docs/specs/coverage-provider.md §2 — no province row when region_id is null (no Wallonia fallback).
   if(p.prov) rec.push({label:D.province||'Province', value:p.prov});
   // Scenic-view facts OSM already holds (docs/specs/coverage-provider.md §5):
@@ -251,7 +252,7 @@ export function osmDrawer(layer, p, ll, src){
   rec = rec.filter(r=>!attrLabels.has(r.label)).concat(attrRows);
   const d={name:p.n||p.t||lbl, headline:typeLbl+' · '+originLbl, cur:!!p.v, geom:{ll:[ll.lat,ll.lng]}, record:rec,
     source: provider?providerSource(provider)
-      :(community?sourceLabel(p.srcType):(src||sourceLabel(p.srcType)||'OpenStreetMap'))};
+      :(community?sourceLabel(p.srcType):drawerSource(p.srcType, src, sourceLabel))};
   // Provenance rides along so srcLine can link Scout.
   if(p.srcType) d.srcType=p.srcType;
   // Carry contributor fields: bulk-OSM layers otherwise drop the rider who added the place.
