@@ -805,8 +805,8 @@ join:
   roles_link: 'Was Beitragende und Kuratoren tun'
   submit_application: 'Als Kurator bewerben'
   flash:
-    region_recorded: 'Notiert. Danke, dass du uns sagst, wo du fährst.'
-    interest_recorded: 'Notiert. Danke.'
+    region_recorded: 'Danke, dass du uns sagst, wo du fährst. Wir prüfen so bald wie möglich, deine Region in die Commons aufzunehmen, und halten dich auf dem Laufenden.'
+    interest_recorded: 'Danke, dass du uns sagst, wo du fährst. Wir prüfen so bald wie möglich, dein Land in die Commons aufzunehmen, und halten dich auf dem Laufenden.'
     application_sent: 'Danke, dass du dich meldest. Schön, dass du da bist.'
   error:
     too_many: 'Das reicht für heute. Versuch es morgen erneut.'

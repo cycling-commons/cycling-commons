@@ -805,8 +805,8 @@ join:
   roles_link: 'Wat bijdragers en curatoren doen'
   submit_application: 'Solliciteer als curator'
   flash:
-    region_recorded: 'Genoteerd. Bedankt dat je ons vertelt waar je rijdt.'
-    interest_recorded: 'Genoteerd. Bedankt.'
+    region_recorded: 'Bedankt dat je ons vertelt waar je rijdt. We kijken zo snel mogelijk naar het toevoegen van jouw regio aan de Commons en houden je op de hoogte.'
+    interest_recorded: 'Bedankt dat je ons vertelt waar je rijdt. We kijken zo snel mogelijk naar het toevoegen van jouw land aan de Commons en houden je op de hoogte.'
     application_sent: 'Bedankt dat je je aanmeldt. Fijn dat je er bent.'
   error:
     too_many: 'Dat is genoeg voor vandaag. Probeer het morgen opnieuw.'

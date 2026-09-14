@@ -807,8 +807,8 @@ join:
   roles_link: 'Qué hacen los colaboradores y los curadores'
   submit_application: 'Solicitar curaduría'
   flash:
-    region_recorded: 'Registrado. Gracias por decirnos por dónde ruedas.'
-    interest_recorded: 'Registrado. Gracias.'
+    region_recorded: 'Gracias por decirnos por dónde ruedas. Estudiaremos cuanto antes cómo incorporar tu región al Commons y te mantendremos informado.'
+    interest_recorded: 'Gracias por decirnos por dónde ruedas. Estudiaremos cuanto antes cómo incorporar tu país al Commons y te mantendremos informado.'
     application_sent: 'Gracias por ofrecerte voluntario. Nos alegra tenerte aquí.'
   error:
     too_many: 'Por hoy es suficiente. Inténtalo mañana.'

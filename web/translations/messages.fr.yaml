@@ -800,8 +800,8 @@ join:
   roles_link: 'Ce que font les contributeurs et les curateurs'
   submit_application: 'Candidater pour curer'
   flash:
-    region_recorded: 'Enregistré. Merci de nous dire où vous roulez.'
-    interest_recorded: 'Enregistré. Merci.'
+    region_recorded: 'Merci de nous dire où vous roulez. Nous étudierons l''arrivée de votre région sur le Commons dès que possible et vous tiendrons au courant.'
+    interest_recorded: 'Merci de nous dire où vous roulez. Nous étudierons l''arrivée de votre pays sur le Commons dès que possible et vous tiendrons au courant.'
     application_sent: 'Merci de vous porter volontaire. Nous sommes heureux de vous compter parmi nous.'
   error:
     too_many: 'Cela suffit pour aujourd''hui. Réessayez demain.'

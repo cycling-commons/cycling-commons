@@ -805,8 +805,8 @@ join:
   roles_link: 'What contributors and curators do'
   submit_application: 'Apply to curate'
   flash:
-    region_recorded: 'Recorded. Thank you for telling us where you ride.'
-    interest_recorded: 'Recorded. Thank you.'
+    region_recorded: 'Thank you for telling us where you ride. We will look into bringing your region onto the Commons as soon as we can, and keep you up to date.'
+    interest_recorded: 'Thank you for telling us where you ride. We will look into bringing your country onto the Commons as soon as we can, and keep you up to date.'
     application_sent: 'Thank you for volunteering. We are glad you are here.'
   error:
     too_many: 'That is enough for today. Try again tomorrow.'
