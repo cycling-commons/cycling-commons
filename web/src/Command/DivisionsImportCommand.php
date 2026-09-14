@@ -100,7 +100,6 @@ final class DivisionsImportCommand extends Command
                 if ('' === trim($line)) {
                     continue;
                 }
-                /** @var mixed $feature */
                 $feature = json_decode($line, true, 512, \JSON_THROW_ON_ERROR);
                 if (!\is_array($feature)) {
                     ++$skipped;
