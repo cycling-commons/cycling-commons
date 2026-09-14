@@ -19,10 +19,11 @@ issues:
   - public_title: 'Three Belgian climbs have unconfirmed start and end points'
     severity: minor
     area: map
-    status: planned
+    status: resolved
     body: |
-      Côte de la Redoute, Mur de Huy and Côte de Stockeu were drawn from a first pass. Their foot and summit still have to be checked against a reference, and the gradient figures will move a little when they are.
-      One of the three has had that pass: Côte de la Redoute now records that its end is 700 m later than first drawn. Mur de Huy and Côte de Stockeu are still on the first pass.
+      Côte de la Redoute, Mur de Huy and Côte de Stockeu were drawn from a first pass, and their foot and summit had not been checked against a reference.
+      Fixed: all three were checked on 2026-09-14 against published climb profiles, and foot height, summit height, length and climb agree. Côte de la Redoute measures 2.0 km with 180 m of climbing, Côte de Stockeu 2.3 km with 226 m, and Mur de Huy 1.4 km at 9.7% with 135 m.
+      Mur de Huy's line also cut the corners of the road, because it was stored with too few points. It now follows the road.
   - public_title: 'Susten Pass shows a 10% descent inside the climb'
     severity: minor
     area: map

@@ -46,7 +46,10 @@ The editor writes the attributes into hidden form fields on `App\Form\ImproveTyp
 from the foot, because a climb's pin is its foot).
 
 **Auto-routing.** Placing or moving foot + summit auto-routes the road between them via
-client-side OSRM (`router.project-osrm.org`), producing `route` and the snapped length;
+`POST /contribute/route` (`App\Elevation\RouteSnapper`, our own Valhalla, `bicycle`
+costing), producing `route` as the full road shape and the snapped length. The map draws
+`route` vertex for vertex, so the stored line is never thinned
+([../climb-elevation.md §7d](../climb-elevation.md));
 the gradient profile (`grad`) is then derived from the routed track by
 `window.Cc.profileFromRoute` in `climb-elevation.js`, which posts up to 200 sampled points
 to **our own** `POST /contribute/elevation` (`App\Elevation\ElevationClient` → Valhalla

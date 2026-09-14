@@ -11,6 +11,7 @@ use App\Catalog\CatalogProvider;
 use App\Catalog\Entity\Item;
 use App\Catalog\FieldKind;
 use App\Catalog\Import\AttributeVocabulary;
+use App\Catalog\Import\ItemUpsert;
 use App\Catalog\ItemSource;
 use App\Catalog\ItemState;
 use App\Catalog\ItemType;
@@ -118,15 +119,8 @@ final class SeedManualCatalogCommandTest extends KernelTestCase
         self::assertGreaterThan(0, $checked, 'the seed must exercise at least one select field');
     }
 
-    /**
-     * C5 data-loss fix: the original C3-T9 seeder dropped the climb LINE
-     * (`route`), the gradient profile (`grad`), the steepest-ramp marker
-     * (`steep`) and collapsed each demo climb's `photos` (plural) gallery
-     * down to nothing. Confirms Mur de Huy — id 11001 on the real dev DB,
-     * the exact pin the user reported as broken — carries all four back,
-     * verbatim from the pre-migration map.js CATALOG (git 8bae43d^).
-     */
-    public function testMurDeHuyCarriesRouteGradSteepAndBothPhotos(): void
+    /** Mur de Huy carries its whole line and its photo gallery, not a stub of either. */
+    public function testMurDeHuyCarriesItsRoadShapeAndBothPhotos(): void
     {
         $this->runSeed()->assertCommandIsSuccessful();
 
@@ -135,17 +129,30 @@ final class SeedManualCatalogCommandTest extends KernelTestCase
         $attrs = $murDeHuy->getAttributes();
 
         self::assertArrayHasKey('route', $attrs);
-        self::assertCount(35, $attrs['route'], 'the full GPS track, not a truncated stub');
-        self::assertSame([50.51656, 5.24049], $attrs['route'][0]);
-
-        self::assertSame([6, 9, 13, 17, 21, 26, 23, 16, 11, 9, 8], $attrs['grad']);
-
-        self::assertSame(['at' => [50.51765, 5.24788], 'pct' => '26%'], $attrs['steep']);
+        // The road shape, point for point: the map draws these vertices as they are (docs/specs/climb-elevation.md §7d).
+        self::assertCount(68, $attrs['route'], 'the full road shape, not a truncated stub');
+        self::assertSame([50.516557, 5.24049], $attrs['route'][0]);
 
         self::assertArrayHasKey('photos', $attrs);
         self::assertCount(2, $attrs['photos'], 'both demo photos, not just one');
         self::assertSame('Hoebele', $attrs['photos'][0]['credit']);
         self::assertSame('Rz98', $attrs['photos'][1]['credit']);
+    }
+
+    /** A seeded climb types no measured value; app:climbs:recompute owns them (docs/specs/climb-elevation.md §7). */
+    public function testNoSeededClimbTypesAMeasuredValue(): void
+    {
+        $this->runSeed()->assertCommandIsSuccessful();
+
+        $climbs = $this->em->getRepository(Item::class)->findBy(['source' => ItemSource::Manual, 'letter' => 'N']);
+        self::assertNotEmpty($climbs);
+        foreach ($climbs as $climb) {
+            $typed = array_intersect(
+                array_keys($climb->getAttributes()),
+                [...ItemUpsert::MEASURED_KEYS, 'headline'],
+            );
+            self::assertSame([], array_values($typed), $climb->getName().' types a measured value');
+        }
     }
 
     public function testEverySeededItemValidatesAgainstItsVocabulary(): void

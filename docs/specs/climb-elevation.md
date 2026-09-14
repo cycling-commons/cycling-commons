@@ -4,13 +4,15 @@
 
 **Status:** canonical reference · **Audience:** contributors to Cycling Commons
 
-> **Partly built** (2026-08-05). The elevation service, the measurement and the
-> catalogue sweep exist: `App\Elevation\ElevationClient` reads
+> **Built** (checked 2026-09-14). `App\Elevation\ElevationClient` reads
 > [§2a](#2a-the-source)'s source through Valhalla, `App\Elevation\ClimbProfiler`
-> is the single implementation of everything in [§3](#3-sampling-and-binning)–[§5](#5-the-steepest-ramp-is-found-not-placed),
+> is the single implementation of everything in [§3](#3-sampling-and-binning)-[§5](#5-the-steepest-ramp-is-found-not-placed),
 > and `app:climbs:recompute` re-measures every climb with a line (dry run by
-> default). **Not yet run against the catalogue** — that is [§7](#7-migration),
-> and it waits on the editorial calls in [§9](#9-owner-decisions-still-open).
+> default). All 283 climbs in the dev catalogue are measured from Copernicus
+> GLO-30 and none stores a `headline`. No seeded climb types a measured value
+> (`testNoSeededClimbTypesAMeasuredValue`), so a freshly seeded climb shows no
+> gradient until `app:climbs:recompute --write` runs.
+> [§9](#9-owner-decisions-still-open) lists the calls left.
 > [§6](#6-the-chart)'s chart is built apart from provenance display.
 
 A rider marks two points — the **foot** and the **summit**. Everything else
@@ -1469,6 +1471,34 @@ named pass in either source and its raced climbs (the Tour du Rwanda's
 Kigali walls) are streets, not features; they need a hand-drawn line each,
 which is the editor's job, not a harvester's.
 
+### 7d. The three Belgian seed climbs, checked against references (2026-09-14)
+
+The hand-authored Belgian climbs in `SeedManualCatalogCommand` are checked
+against published profiles. A foot or summit is right when its height agrees
+within the few metres two elevation models differ by.
+
+| climb | ours (GLO-30) | reference | verdict |
+|---|---|---|---|
+| Côte de la Redoute | 132 → 312 m, 180 m, 2.01 km | myCols 128 → 308 m, 180 m, 2.0 km | agrees |
+| Côte de Stockeu | 278 → 504 m, 226 m, 2.30 km | myCols 277 → 502 m, 225 m, 2.3 km | agrees |
+| Mur de Huy | 72 → 207 m, 135 m, 1.40 km, 9.7% | climbfinder 136 m, 1.4 km, 9.7% | agrees |
+
+PJAMM (1.29 km, 123 m) and Wikipedia (1.3 km, 121 m) put Mur de Huy's foot
+about 100 m higher up the road. Climbfinder is the reference kept, because it
+agrees on all three figures.
+
+**The stored line is drawn vertex for vertex.** `drawClimbLine` sends
+`route` to MapLibre unchanged, so a line stored with too few points cuts
+the corners of the road at high zoom. The seed carries each line as the road
+shape Valhalla returns (`trace_route`, `bicycle` costing, `map_snap`).
+
+A trace of all 283 climb lines through Valhalla on 2026-09-14 found Mur de
+Huy the only one stored sparse (35 points on 1.4 km, up to 6.8 m off the
+road; 68 points after). The other lines are already road shapes. Where a
+harvested line differs from today's trace at the same length, the difference
+is the routing profile (`climb_sides.py` uses road-bike costing), not missing
+points, so those lines stay as they are.
+
 ---
 
 ## 8. Testing
@@ -1490,26 +1520,11 @@ which is the editor's job, not a harvester's.
 
 ## 9. Owner decisions still open
 
-- **Load the GLO-30 tiles on the Valhalla host.** Benelux is downloaded and
-  converted — 26 `.hgt` tiles, 644 MB — but the running
-  instance still answers from EU-DEM, verified 2026-08-04 by comparing its
-  replies against both local tile sets (60/60 samples matched EU-DEM). Until the
-  tiles are in the directory `additional_data.elevation` names, the source
-  decided in [§2a](#2a-the-source) is not the one riders' numbers come from.
-  Note both datasets use identical `N50E005.hgt` filenames and identical file
-  sizes, so **only the timestamp distinguishes them** — copying into the wrong
-  directory fails silently rather than erroring.
-- **Widen the GLO-30 evidence geographically.** Benelux tiles exist and were
-  compared against EU-DEM, but **every seeded climb sits in one tile**
-  (`N50E005`), so that run re-tested the same ground rather than widening it.
-  The Netherlands is the interesting test — the decimation factor changes with
-  latitude — and it needs climbs there to test *with*.
-- **`headline` is still stored and still wrong.** [§4](#4-what-is-measured-and-what-is-stored)
-  retires it, and nothing recomputes it: Roche-aux-Faucons reads
-  `1.5 km · 9% avg` on a line now measured at 4.4 km and 5.6%. The drawer
-  composes its own length so riders do not see it, which is exactly what makes
-  it easy to leave — it is wrong data sitting in the attribute, waiting for
-  something to read it.
+- **Widen the GLO-30 evidence geographically.** The comparison against EU-DEM
+  was run on Belgian climbs in one tile (`N50E005`). Climbs now exist in every
+  onboarded country, the Netherlands included, but the comparison has not been
+  repeated on them. The Netherlands is the interesting test, because the
+  decimation factor changes with latitude.
 - **Recompute cadence** — on submission only, or a periodic sweep as DEM sources
   are updated.
 - **Whether the changed numbers need saying out loud.** The sweep ran on
