@@ -38,6 +38,13 @@
   .tag.st-resolved{background:var(--spruce);color:var(--paper)}
   .tag.st-in_progress,.tag.st-needs_testing{background:var(--ochre);color:var(--ink)}
   .when{font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;color:#6d7060}
+  .tabs{display:flex;gap:.4rem;margin:0 0 1.4rem;flex-wrap:wrap}
+  .tabs a{display:inline-flex;align-items:baseline;gap:.45rem;padding:.45rem .85rem;border-radius:999px;
+    border:1px solid rgba(20,22,14,.2);color:#4a4d40;text-decoration:none;font-size:.9rem;background:var(--paper)}
+  .tabs a:hover{border-color:var(--clay);color:var(--ink)}
+  .tabs a[aria-current="page"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+  .tabs .n{font-family:var(--mono);font-size:.76rem;opacity:.75}
+  .tabnote{font-size:.9rem;color:#6d7060;margin:0 0 1.1rem;line-height:1.6}
   .empty{background:var(--paper-deep);border-left:2px solid var(--ochre);padding:1.1rem 1.3rem;
     border-radius:0 8px 8px 0;font-size:.92rem;color:#4a4d40;line-height:1.6}
   .cta{margin-top:2rem;font-size:.94rem}
@@ -53,9 +60,24 @@
 </div></div>
 
 <section class="pad"><div class="wrap">
+  {# Links, never a script toggle: this page is shared-cached, and a filter a
+     shared cache cannot see in the URL serves one visitor's choice to the next
+     (docs/specs/page-caching.md §3.2). Each tab carries its own count, because
+     a tab that cannot say what is behind it is a tab nobody opens. #}
+  <nav class="tabs" aria-label="{{ 'support.known.tabs_label'|trans|e('html_attr') }}">
+    <a href="{{ path('known_issues') }}"{{ fixed ? '' : ' aria-current="page"' }}>
+      {{ 'support.known.tab_open'|trans }} <span class="n">{{ open_count }}</span>
+    </a>
+    <a href="{{ path('known_issues', {show: 'fixed'}) }}"{{ fixed ? ' aria-current="page"' : '' }}>
+      {{ 'support.known.tab_fixed'|trans }} <span class="n">{{ fixed_count }}</span>
+    </a>
+  </nav>
+
+  {% if fixed %}<p class="tabnote">{{ 'support.known.fixed_note'|trans }}</p>{% endif %}
+
   <div class="issues cc-zebra">
     {% if issues is empty %}
-      <div class="empty">{{ 'support.known.empty'|trans }}</div>
+      <div class="empty">{{ (fixed ? 'support.known.empty_fixed' : 'support.known.empty')|trans }}</div>
     {% else %}
       {% for issue in issues %}
         {# Each issue folds (owner 2026-09-09: "do not show description by
@@ -85,7 +107,9 @@
           </div>
         </details>
       {% endfor %}
-      {% include 'partials/_pager.html.twig' with {pager: pager, route: 'known_issues', params: {}} %}
+      {# The tab travels with the page number, or page 2 of the fixed list is
+         page 2 of the open one. #}
+      {% include 'partials/_pager.html.twig' with {pager: pager, route: 'known_issues', params: fixed ? {show: 'fixed'} : {}} %}
     {% endif %}
 
     <p class="cta">

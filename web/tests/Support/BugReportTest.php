@@ -464,8 +464,17 @@ final class BugReportTest extends WebTestCase
         self::assertStringNotContainsString('Declined thing', $client->request('GET', '/known-issues')->html());
     }
 
-    /** Fixed issues stay on for a while, so nobody re-reports last week's bug. */
-    public function testAResolvedReportStaysOnTheList(): void
+    /**
+     * A fix leaves the open list and lands on the fixed one.
+     *
+     * Owner 2026-09-13, in two steps. First: an entry opens by describing a
+     * fault, and a reader scanning the list takes that fault for a live one
+     * however the entry ends, so a launch list should carry only what is still
+     * wrong. Then: the reason resolved issues used to stay was real, that
+     * somebody who hits last week's bug should find it already answered rather
+     * than file it again. So it moves rather than disappears.
+     */
+    public function testAResolvedReportMovesFromTheOpenListToTheFixedOne(): void
     {
         $client = $this->client();
         $report = new BugReport('Fixed thing', 'body');
@@ -474,7 +483,37 @@ final class BugReportTest extends WebTestCase
         $this->em()->persist($report);
         $this->em()->flush();
 
-        self::assertStringContainsString('Fixed thing', $client->request('GET', '/known-issues')->html());
+        self::assertStringNotContainsString('Fixed thing', $client->request('GET', '/known-issues')->html(),
+            'the open list carries only what is still wrong');
+        self::assertStringContainsString('Fixed thing', $client->request('GET', '/known-issues?show=fixed')->html(),
+            'and the fixed list is where somebody who hit it looks');
+    }
+
+    public function testADeclinedReportIsOnNeitherList(): void
+    {
+        $client = $this->client();
+        $report = new BugReport('Declined for good', 'body');
+        $report->setPublic(true);
+        $report->setStatus(BugStatus::Declined);
+        $this->em()->persist($report);
+        $this->em()->flush();
+
+        self::assertStringNotContainsString('Declined for good', $client->request('GET', '/known-issues')->html());
+        self::assertStringNotContainsString('Declined for good', $client->request('GET', '/known-issues?show=fixed')->html(),
+            '"we are not fixing this" is a conversation with the reporter, not a public notice');
+    }
+
+    public function testAnOpenReportStaysOffTheFixedList(): void
+    {
+        $client = $this->client();
+        $report = new BugReport('Still broken', 'body');
+        $report->setPublic(true);
+        $report->setStatus(BugStatus::InProgress);
+        $this->em()->persist($report);
+        $this->em()->flush();
+
+        self::assertStringContainsString('Still broken', $client->request('GET', '/known-issues')->html());
+        self::assertStringNotContainsString('Still broken', $client->request('GET', '/known-issues?show=fixed')->html());
     }
 
     // -- the outcome mail ------------------------------------------------

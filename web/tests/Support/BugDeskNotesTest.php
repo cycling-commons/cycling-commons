@@ -211,6 +211,10 @@ final class BugDeskNotesTest extends WebTestCase
             'internal_note' => self::SECRET,
             'is_public' => '1',
             'public_title' => 'The map is grey on first load',
+            // Not the helper's `resolved`: a resolved report leaves the public
+            // list entirely, and this test is about what a listed entry says,
+            // not about which entries are listed.
+            'status' => 'in_progress',
         ]);
 
         // Drop the session rather than hitting /logout, which is POST-only

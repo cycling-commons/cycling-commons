@@ -329,45 +329,65 @@ final readonly class SupportRepository
     // -- Bugs, for the public and for the reporter -----------------------
 
     /**
-     * The known-issues list.
+     * What the open list leaves out.
      *
-     * Two conditions, and both are load-bearing. `isPublic` is a curator's
-     * decision, so nothing reaches this list unread. Resolved issues stay on
-     * for a while on purpose: somebody who hits a bug we fixed last week
-     * should find it here and know not to report it again. Declined ones
-     * do not, because "we are not fixing this" is a conversation with the
-     * reporter, not a public notice.
+     * The page answers "what is wrong right now", and an entry that opens by
+     * describing a fault reads as a live fault however it ends (owner
+     * 2026-09-13). Resolved is not gone: it moves to the fixed list, because
+     * the reason it used to stay was a real one, that somebody who hits last
+     * week's bug should find it already answered rather than file it again.
+     * Declined leaves for good. "We are not fixing this" is a conversation
+     * with the reporter, not a public notice.
+     *
+     * @var list<BugStatus>
+     */
+    private const array NOT_OPEN = [BugStatus::Declined, BugStatus::Resolved];
+
+    /**
+     * The known-issues list, open by default and fixed on request.
+     *
+     * `isPublic` is a curator's decision, so nothing reaches either list
+     * unread.
      *
      * @return list<BugReport>
      */
-    public function publicIssues(int $limit, int $offset): array
+    public function publicIssues(int $limit, int $offset, bool $fixed = false): array
     {
-        /** @var list<BugReport> $rows */
-        $rows = $this->em->createQueryBuilder()
+        $qb = $this->em->createQueryBuilder()
             ->select('b')
             ->from(BugReport::class, 'b')
             ->where('b.isPublic = true')
-            ->andWhere('b.status != :declined')
-            ->setParameter('declined', BugStatus::Declined)
             ->orderBy('b.updatedAt', 'DESC')
             ->setMaxResults($limit)
-            ->setFirstResult($offset)
-            ->getQuery()
-            ->getResult();
+            ->setFirstResult($offset);
+
+        /** @var list<BugReport> $rows */
+        $rows = self::narrow($qb, $fixed)->getQuery()->getResult();
 
         return $rows;
     }
 
-    public function countPublicIssues(): int
+    public function countPublicIssues(bool $fixed = false): int
     {
-        return (int) $this->em->createQueryBuilder()
+        $qb = $this->em->createQueryBuilder()
             ->select('COUNT(b.id)')
             ->from(BugReport::class, 'b')
-            ->where('b.isPublic = true')
-            ->andWhere('b.status != :declined')
-            ->setParameter('declined', BugStatus::Declined)
-            ->getQuery()
-            ->getSingleScalarResult();
+            ->where('b.isPublic = true');
+
+        return (int) self::narrow($qb, $fixed)->getQuery()->getSingleScalarResult();
+    }
+
+    /**
+     * Open or fixed, applied in one place so a list and its count cannot drift.
+     *
+     * Two copies of this condition is how a page ends up paginating "12
+     * issues" over a list of nine.
+     */
+    private static function narrow(QueryBuilder $qb, bool $fixed): QueryBuilder
+    {
+        return $fixed
+            ? $qb->andWhere('b.status = :resolved')->setParameter('resolved', BugStatus::Resolved)
+            : $qb->andWhere('b.status NOT IN (:notOpen)')->setParameter('notOpen', self::NOT_OPEN);
     }
 
     /**

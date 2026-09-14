@@ -3513,6 +3513,11 @@ support:
     title: 'Lo que ya sabemos que está roto.'
     lead: 'Cada línea aquí ha sido leída y confirmada por un curador. Si su problema está en esta lista, no hace falta que lo informe.'
     empty: 'Nada en la lista. O todo funciona, o nadie nos lo ha dicho todavía.'
+    tabs_label: 'Qué problemas mostrar'
+    tab_open: 'Aún abiertos'
+    tab_fixed: 'Corregidos'
+    fixed_note: 'Estos ya están hechos. Se quedan aquí para que, si te encuentras con uno, veas que ya se resolvió en vez de volver a informarlo.'
+    empty_fixed: 'Todavía no hay nada corregido.'
     not_here: '¿No es lo que le ha pasado?'
     report_link: 'Cuéntenoslo'
   inbox:

@@ -123,9 +123,14 @@ final class BugReportController extends AbstractController
     #[Route(LocalizedPath::KNOWN_ISSUES, name: 'known_issues', methods: ['GET'])]
     public function knownIssues(Request $request): Response
     {
+        // A link, not a script toggle: this route is shared-cached, and a
+        // filter a shared cache cannot see in the URL serves one visitor's
+        // choice to the next (docs/specs/page-caching.md §3.2).
+        $fixed = 'fixed' === $request->query->getString('show');
+
         $pager = Pager::of(
             $request->query->getInt('page', 1),
-            $this->repository->countPublicIssues(),
+            $this->repository->countPublicIssues($fixed),
             self::PER_PAGE,
         );
 
@@ -134,8 +139,13 @@ final class BugReportController extends AbstractController
             'page_title' => 'meta.known_issues_title',
             'page_description' => 'meta.known_issues_description',
             'nav_active' => '',
-            'issues' => $this->repository->publicIssues($pager['perPage'], $pager['offset']),
+            'issues' => $this->repository->publicIssues($pager['perPage'], $pager['offset'], $fixed),
             'pager' => $pager,
+            'fixed' => $fixed,
+            // Both counts, both tabs, on either tab: a tab that cannot say how
+            // much is behind it is a tab nobody opens.
+            'open_count' => $this->repository->countPublicIssues(),
+            'fixed_count' => $this->repository->countPublicIssues(true),
         ]);
     }
 

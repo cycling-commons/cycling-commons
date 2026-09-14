@@ -677,9 +677,24 @@ capitals is unreadable.
 **Known issues** is public and carries only what a curator has marked public.
 Off by default, always. The list is worth reading only because somebody checked
 every line, and a report written in anger or naming a person must never become a
-public page by accident. Resolved issues stay on for a while so nobody
-re-reports last week's bug; declined ones do not, because "we are not fixing
+public page by accident.
+
+**Two tabs (2026-09-13).** "Still open" is the default and carries only what is
+still wrong: an entry opens by describing a fault, and a reader scanning the
+list takes that fault for a live one however the entry ends, which for a launch
+list is the wrong answer. "Fixed" carries the resolved ones, because the reason
+they used to sit in the one list was a real one, that somebody who hits last
+week's bug should find it already answered rather than file it again. A fix
+moves; it does not disappear. Declined appears on neither: "we are not fixing
 this" is a conversation with the reporter, not a public notice.
+
+The tab is a link carrying `?show=fixed`, never a script toggle, and the pager
+carries it too. The route is shared-cached, so a filter a shared cache cannot
+see in the URL serves one visitor's choice to the next (page-caching.md §3.2).
+Both counts render on both tabs: a tab that cannot say what is behind it is a
+tab nobody opens. `SupportRepository::narrow()` applies the condition for the
+list and the count in one place, because two copies of it is how a page ends up
+paginating twelve issues over a list of nine.
 
 **Seeded known issues** (2026-09-06, owner: "update the buglist with things
 from the todo"). Bugs found in the backlog before anybody filed them belong on

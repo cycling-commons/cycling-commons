@@ -3504,6 +3504,11 @@ support:
     title: 'What we already know is broken.'
     lead: 'Every line here has been read and confirmed by a curator. If your problem is on this list, you do not need to report it.'
     empty: 'Nothing on the list. Either everything works, or nobody has told us yet.'
+    tabs_label: 'Which issues to show'
+    tab_open: 'Still open'
+    tab_fixed: 'Fixed'
+    fixed_note: 'These are done. They stay here so that if you hit one, you can see it was already dealt with rather than report it again.'
+    empty_fixed: 'Nothing fixed yet.'
     not_here: 'Not what you hit?'
     report_link: 'Tell us about it'
   inbox:

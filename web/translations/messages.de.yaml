@@ -3486,6 +3486,11 @@ support:
     title: 'Was wir schon als kaputt kennen.'
     lead: 'Jede Zeile hier wurde von einer Kuratorin oder einem Kurator gelesen und bestätigt. Steht Ihr Problem auf dieser Liste, müssen Sie es nicht melden.'
     empty: 'Nichts auf der Liste. Entweder funktioniert alles, oder es hat uns noch niemand gesagt.'
+    tabs_label: 'Welche Probleme anzeigen'
+    tab_open: 'Noch offen'
+    tab_fixed: 'Behoben'
+    fixed_note: 'Diese sind erledigt. Sie bleiben hier, damit du, wenn du auf eines stößt, siehst, dass es bereits behoben wurde, statt es erneut zu melden.'
+    empty_fixed: 'Noch nichts behoben.'
     not_here: 'Nicht das, was Ihnen begegnet ist?'
     report_link: 'Sagen Sie es uns'
   inbox:

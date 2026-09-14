@@ -3478,6 +3478,11 @@ support:
     title: 'Ce que nous savons déjà cassé.'
     lead: 'Chaque ligne ici a été lue et confirmée par un curateur. Si votre problème est sur cette liste, inutile de le signaler.'
     empty: 'Rien sur la liste. Soit tout fonctionne, soit personne ne nous l''a encore dit.'
+    tabs_label: 'Quels problèmes afficher'
+    tab_open: 'Encore ouverts'
+    tab_fixed: 'Corrigés'
+    fixed_note: 'Ceux-ci sont réglés. Ils restent ici pour que, si vous en rencontrez un, vous voyiez qu''il a déjà été traité plutôt que de le signaler à nouveau.'
+    empty_fixed: 'Rien de corrigé pour le moment.'
     not_here: 'Ce n''est pas ce que vous avez rencontré ?'
     report_link: 'Dites-le-nous'
   inbox:

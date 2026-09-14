@@ -3485,6 +3485,11 @@ support:
     title: 'Wat we al weten dat stuk is.'
     lead: 'Elke regel hier is gelezen en bevestigd door een curator. Staat je probleem op deze lijst, dan hoef je het niet te melden.'
     empty: 'Niets op de lijst. Of alles werkt, of niemand heeft het ons verteld.'
+    tabs_label: 'Welke problemen tonen'
+    tab_open: 'Nog open'
+    tab_fixed: 'Opgelost'
+    fixed_note: 'Deze zijn klaar. Ze blijven hier staan zodat je, als je er een tegenkomt, ziet dat het al is opgelost in plaats van het opnieuw te melden.'
+    empty_fixed: 'Nog niets opgelost.'
     not_here: 'Niet wat jij tegenkwam?'
     report_link: 'Vertel het ons'
   inbox:
