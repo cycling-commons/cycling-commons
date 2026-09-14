@@ -61,6 +61,15 @@
            chip, so a curator sees at a glance whether the question is still
            open, and what the answer was. Open: the chip pops the candidates and
            "Not in OSM"; approve refuses until one is clicked. #}
+        {# A scenic view far from any bike way that the rider says can be
+           reached by bike (scenic-views.md): the curator decides on that claim. #}
+        {% if item.bikeway|default(null) %}
+          <span class="q-bikeway" title="{{ 'contribute.bikeway.heading'|trans }}">
+            {{- item.bikeway.nearestM is null
+                ? ('contribute.bikeway.queue_none'|trans({'%m%': item.bikeway.withinM}))
+                : ('contribute.bikeway.queue_far'|trans({'%d%': item.bikeway.nearestM})) -}}
+          </span>
+        {% endif %}
         {% if item.osm is defined %}
           {% if item.osm.state == 'open' %}
           <details class="q-act q-osm-chip">

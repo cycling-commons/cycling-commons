@@ -2590,6 +2590,7 @@ contribute:
     known_ours: 'schon in diesem Atlas'
     known_zoom: 'Zoome hinein, um zu sehen, was hier schon erfasst ist.'
   error:
+    far_from_bike_way: 'Dieser Punkt ist weit von jedem Weg entfernt, auf dem ein Fahrrad fahren darf. Setze das Häkchen, wenn du weißt, dass man ihn mit dem Fahrrad erreicht.'
     heading: 'Das konnte nicht eingereicht werden:'
     unknown_attribute: 'Eines der übermittelten Felder ist für diesen Elementtyp nicht bekannt.'
     invisible_characters: 'Dieser Text enthält unsichtbare oder Formatierungszeichen, die nicht erlaubt sind.'
@@ -2606,6 +2607,13 @@ contribute:
     invalid_geometry: 'Die gezeichnete Form konnte nicht gelesen werden — zeichne sie neu und versuche es erneut.'
     invalid_links: "Diese Links konnten nicht gelesen werden. Prüfe, ob jede Adresse mit https:// beginnt, und versuche es erneut."
     media_invalid: 'Eines der angehängten Fotos konnte nicht verwendet werden — entferne es und versuche es erneut.'
+  bikeway:
+    heading: 'An einem Radweg?'
+    far: 'Der nächste Weg, auf dem ein Fahrrad fahren darf, ist %d% m von diesem Punkt entfernt. Ein Aussichtspunkt auf der Karte liegt normalerweise höchstens %m% m von einem solchen Weg entfernt.'
+    none: 'Im Umkreis von %m% m gibt es keinen Weg, auf dem ein Fahrrad fahren darf. Ein Aussichtspunkt auf der Karte liegt normalerweise höchstens %m% m von einem solchen Weg entfernt.'
+    overrule: 'Ich weiß, dass man diesen Punkt mit dem Fahrrad erreicht. Trotzdem hinzufügen.'
+    queue_far: 'Weit von einem Radweg: der nächste ist %d% m entfernt. Die fahrende Person sagt, man erreicht ihn mit dem Fahrrad.'
+    queue_none: 'Weit von einem Radweg: keiner im Umkreis von %m% m. Die fahrende Person sagt, man erreicht ihn mit dem Fahrrad.'
 media:
   page:
     title: 'Ein Foto aus dem Commons'

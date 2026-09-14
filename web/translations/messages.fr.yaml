@@ -2582,6 +2582,7 @@ contribute:
     known_ours: 'déjà dans cet atlas'
     known_zoom: 'Zoomez pour voir ce qui est déjà cartographié ici.'
   error:
+    far_from_bike_way: 'Ce point est loin de toute voie où un vélo peut rouler. Cochez la case si vous savez qu''on peut l''atteindre à vélo.'
     heading: 'Cette contribution n''a pas pu être envoyée :'
     unknown_attribute: 'Un des champs soumis n''est pas reconnu pour ce type d''élément.'
     invisible_characters: 'Ce texte contient des caractères invisibles ou de formatage qui ne sont pas autorisés.'
@@ -2598,6 +2599,13 @@ contribute:
     invalid_geometry: 'La forme dessinée n’a pas pu être lue — redessinez-la et réessayez.'
     invalid_links: "Ces liens n'ont pas pu être lus. Vérifiez que chaque adresse commence par https:// et réessayez."
     media_invalid: 'Une des photos jointes n''a pas pu être utilisée — retirez-la et réessayez.'
+  bikeway:
+    heading: 'Le long d''une voie cyclable ?'
+    far: 'La voie la plus proche où un vélo peut rouler est à %d% m de ce point. Un point de vue sur la carte se trouve normalement à moins de %m% m d''une telle voie.'
+    none: 'Aucune voie où un vélo peut rouler à moins de %m% m de ce point. Un point de vue sur la carte se trouve normalement à moins de %m% m d''une telle voie.'
+    overrule: 'Je sais qu''on peut atteindre ce point à vélo. L''ajouter quand même.'
+    queue_far: 'Loin d''une voie cyclable : la plus proche est à %d% m. Le cycliste dit qu''on peut y aller à vélo.'
+    queue_none: 'Loin d''une voie cyclable : aucune à moins de %m% m. Le cycliste dit qu''on peut y aller à vélo.'
 media:
   page:
     title: 'Une photo du Commons'

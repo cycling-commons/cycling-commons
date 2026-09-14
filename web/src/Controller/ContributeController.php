@@ -17,6 +17,8 @@ use App\Catalog\RoadType;
 use App\Catalog\ServiceKind;
 use App\Catalog\SurfaceVocabulary;
 use App\Community\ItemConfirmationService;
+use App\Contribution\BikeWayLocator;
+use App\Contribution\BikeWayReading;
 use App\Contribution\CatalogContributionService;
 use App\Coverage\CoverageRepository;
 use App\Entity\User;
@@ -75,6 +77,24 @@ final class ContributeController extends AbstractController
      * here" is the entry itself: the curator opens it instead of adding a
      * second one (owner 2026-09-12).
      */
+    /**
+     * How far a point is from a way a bike may ride, for the scenic-view
+     * warning in the add form (docs/specs/scenic-views.md). The intake asks the
+     * same question again on submit, so this only decides what the form shows.
+     */
+    #[Route('/contribute/bike-way-near', name: 'contribute_bike_way_near', methods: ['GET'])]
+    #[IsGranted('ROLE_USER')]
+    public function bikeWayNear(Request $request, BikeWayLocator $bikeWays): Response
+    {
+        $lat = $request->query->get('lat');
+        $lng = $request->query->get('lng');
+        if (!is_numeric($lat) || !is_numeric($lng) || abs((float) $lat) > 90 || abs((float) $lng) > 180) {
+            return $this->json(BikeWayReading::unknown()->toArray());
+        }
+
+        return $this->json($bikeWays->nearest((float) $lat, (float) $lng)->toArray());
+    }
+
     #[Route('/contribute/osm-nearby', name: 'contribute_osm_nearby', methods: ['GET'])]
     #[IsGranted('ROLE_CURATOR')]
     public function osmNearby(Request $request, OsmLinker $linker): Response

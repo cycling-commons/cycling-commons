@@ -121,6 +121,13 @@ final class ImproveType extends AbstractType
         if (LocationMode::Segment === $type->locationMode()) {
             $builder->add('segment', HiddenType::class, ['label' => false, 'required' => false]);
         }
+
+        // A new scenic view more than 250 m from a bike way needs the rider to
+        // overrule the warning (scenic-views.md). Present, even empty, marks the
+        // submission as coming from this form, where the rider can be asked.
+        if ($addMode && ItemType::ScenicViews === $type) {
+            $builder->add('bikewayOverride', HiddenType::class, ['label' => false, 'required' => false]);
+        }
     }
 
     /** @param array<string, scalar|list<string>|null> $current */

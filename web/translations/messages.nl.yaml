@@ -2587,6 +2587,7 @@ contribute:
     known_ours: 'al in deze atlas'
     known_zoom: 'Zoom in om te zien wat hier al op de kaart staat.'
   error:
+    far_from_bike_way: 'Dit punt ligt ver van elke weg waar een fiets mag rijden. Vink het vakje aan als je weet dat je er met de fiets kunt komen.'
     heading: 'Dit kon niet worden ingediend:'
     unknown_attribute: 'Een van de ingezonden velden wordt niet herkend voor dit itemtype.'
     invisible_characters: 'Deze tekst bevat onzichtbare of opmaaktekens die niet zijn toegestaan.'
@@ -2603,6 +2604,13 @@ contribute:
     invalid_geometry: 'De getekende vorm kon niet worden gelezen — teken hem opnieuw en probeer het nogmaals.'
     invalid_links: "Deze links konden niet worden gelezen. Controleer of elk adres met https:// begint en probeer opnieuw."
     media_invalid: 'Een van de bijgevoegde foto''s kon niet worden gebruikt — verwijder hem en probeer het opnieuw.'
+  bikeway:
+    heading: 'Langs een fietsweg?'
+    far: 'De dichtstbijzijnde weg waar een fiets mag rijden ligt %d% m van dit punt. Een uitzichtpunt op de kaart ligt normaal binnen %m% m van zo''n weg.'
+    none: 'Er is geen weg waar een fiets mag rijden binnen %m% m van dit punt. Een uitzichtpunt op de kaart ligt normaal binnen %m% m van zo''n weg.'
+    overrule: 'Ik weet dat je hier met de fiets kunt komen. Toch toevoegen.'
+    queue_far: 'Ver van een fietsweg: de dichtstbijzijnde ligt %d% m verder. De fietser zegt dat je er met de fiets kunt komen.'
+    queue_none: 'Ver van een fietsweg: geen binnen %m% m. De fietser zegt dat je er met de fiets kunt komen.'
 media:
   page:
     title: 'Een foto uit de Commons'

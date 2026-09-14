@@ -63,6 +63,7 @@ final class CatalogContributionService implements ContributionStubInterface
         private readonly RoleHierarchyInterface $roleHierarchy,
         private readonly OsmLinker $linker,
         private readonly ItemConfirmationService $confirmations,
+        private readonly BikeWayLocator $bikeWays,
     ) {
     }
 
@@ -199,6 +200,10 @@ final class CatalogContributionService implements ContributionStubInterface
 
         // `via` is the intake channel; only known values are honoured.
         $source = 'scout' === ($payload['via'] ?? null) ? ItemSource::Scout : null;
+
+        if (ItemType::ScenicViews === $type) {
+            $payload['_bikeway'] = $this->bikeWayCheck($payload);
+        }
 
         $draft = new SubmissionDraft(
             type: $type,
@@ -915,6 +920,31 @@ final class CatalogContributionService implements ContributionStubInterface
         } catch (\Throwable) {
             // Fail-open: a background check must not cost the rider the save.
         }
+    }
+
+    /**
+     * A scenic view more than 250 m from a way a bike may ride (docs/specs/scenic-views.md).
+     *
+     * The form sends `bikewayOverride`, and a far view from the form is refused
+     * until the rider overrules the warning: they may know the spot, and
+     * overruling is how the curator learns it is reachable. The reading and the
+     * overrule ride in the submission payload for the moderation card. An intake
+     * without the form (Scout: the rider was on the bike) is recorded, never
+     * refused, and a router that cannot be asked refuses nobody.
+     *
+     * @param array<string, mixed> $payload
+     *
+     * @return array{known: bool, nearestM: ?int, withinM: int, far: bool, overruled: bool}
+     */
+    private function bikeWayCheck(array $payload): array
+    {
+        $reading = $this->bikeWays->nearest((float) $payload['lat'], (float) $payload['lng']);
+        $overruled = '1' === (string) ($payload['bikewayOverride'] ?? '');
+        if ($reading->far() && \array_key_exists('bikewayOverride', $payload) && !$overruled) {
+            $this->reject('contribute.error.far_from_bike_way', 'lat');
+        }
+
+        return $reading->toArray() + ['overruled' => $reading->far() && $overruled];
     }
 
     private function reject(string $message, string $field): never

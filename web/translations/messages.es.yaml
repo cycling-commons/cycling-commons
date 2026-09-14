@@ -2097,6 +2097,7 @@ contribute:
     known_ours: 'ya en este atlas'
     known_zoom: 'Acerca el mapa para ver qué hay ya cartografiado aquí.'
   error:
+    far_from_bike_way: 'Este punto está lejos de cualquier vía por la que pueda circular una bici. Marca la casilla si sabes que se llega en bici.'
     heading: 'Esto no se ha podido enviar:'
     unknown_attribute: 'Uno de los campos enviados no se reconoce para este tipo de elemento.'
     invisible_characters: 'Este texto contiene caracteres invisibles o de formato que no están permitidos.'
@@ -2113,6 +2114,13 @@ contribute:
     invalid_geometry: 'No se ha podido leer la forma dibujada — vuelve a dibujarla e inténtalo otra vez.'
     invalid_links: "No se pudieron leer esos enlaces. Comprueba que cada dirección empieza por https:// e inténtalo de nuevo."
     media_invalid: 'Una de las fotos adjuntas no se ha podido usar — quítala e inténtalo otra vez.'
+  bikeway:
+    heading: '¿Junto a una vía ciclable?'
+    far: 'La vía más cercana por la que puede circular una bici está a %d% m de este punto. Un mirador en el mapa suele estar a menos de %m% m de una vía así.'
+    none: 'No hay ninguna vía por la que pueda circular una bici a menos de %m% m de este punto. Un mirador en el mapa suele estar a menos de %m% m de una vía así.'
+    overrule: 'Sé que a este punto se llega en bici. Añadirlo igualmente.'
+    queue_far: 'Lejos de una vía ciclable: la más cercana está a %d% m. El ciclista dice que se llega en bici.'
+    queue_none: 'Lejos de una vía ciclable: ninguna a menos de %m% m. El ciclista dice que se llega en bici.'
 media:
   page:
     title: 'Una foto del Commons'

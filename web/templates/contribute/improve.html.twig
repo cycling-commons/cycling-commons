@@ -71,6 +71,9 @@
   /* A warning, not an error: the form underneath it still works. */
   .wiz-waiting{font-size:.92rem;line-height:1.55;color:#4a4d40;background:var(--paper-deep);
     border-left:3px solid var(--ochre);border-radius:0 6px 6px 0;padding:.7rem .9rem;margin:0 0 1.2rem;max-width:72ch}
+  .bwq-msg{font-size:.9rem;line-height:1.5;color:#4a4d40;margin:0 0 .6rem}
+  .bwq-ok{display:flex;gap:.5rem;align-items:flex-start;font-size:.9rem;line-height:1.45;color:#14160E}
+  .bwq-ok input{margin-top:.2rem}
   .osmq-scope{font-family:var(--mono);font-size:.72rem;letter-spacing:.06em;color:#6d7060;margin:0 0 .8rem}
   /* Side by side, and never the width of the page: these are a handful of
      short choices, and a full-bleed row makes each one look like a section.
@@ -721,6 +724,17 @@
       {# Unhidden by improve.js when the known-places overlay has dots in view. #}
       <div class="covnote" id="wz-known" hidden>{{ 'contribute.add.known_note'|trans }}</div>
     {% endif %}
+    {% if add_mode|default(false) and item_type.value == 'scenic-views' %}
+      {# A scenic view is a stop along a bike way (scenic-views.md). More than
+         250 m from one, the rider is told and may overrule: they may know the
+         spot, and overruling is how the curator learns it is reachable.
+         bike-way-check.js fills and shows this once the pin is placed. #}
+      <div class="osmq bwq" id="wz-bikeway" hidden>
+        <h3>{{ 'contribute.bikeway.heading'|trans }}</h3>
+        <p class="bwq-msg" id="wz-bikeway-msg" role="status"></p>
+        <label class="bwq-ok"><input type="checkbox" id="wz-bikeway-ok"> {{ 'contribute.bikeway.overrule'|trans }}</label>
+      </div>
+    {% endif %}
     {% if osm_question %}
       {# The question the moderation card asks before it will approve a new
          place. A curator's own place is approved at submit time, so it is
@@ -1019,6 +1033,13 @@
    escaper of its own), so it has to be defined first. #}
 <script src="{{ asset('contribute/links-editor.js') }}"></script>
 <script src="{{ asset('contribute/review-card.js') }}"></script>
+{% if add_mode|default(false) and item_type.value == 'scenic-views' %}
+<script nonce="{{ csp_nonce() }}">window.CC_BIKEWAY_I18N = {{ {
+  far: 'contribute.bikeway.far'|trans,
+  none: 'contribute.bikeway.none'|trans,
+}|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
+<script src="{{ asset('contribute/bike-way-check.js') }}" defer></script>
+{% endif %}
 {% if osm_question %}
 {# Fills the identity question from the point, and keeps the page's promise in
    step with the answer. Curator-only, so a rider never loads it. #}

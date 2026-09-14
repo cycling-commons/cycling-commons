@@ -121,6 +121,13 @@ services:
     # Same Valhalla, same master switch, same per-continent selection — the
     # climb editor's road snapping (replaced the OSRM demo server, whose policy
     # forbids production reliance; external-systems audit 2026-08-09).
+    # The nearest way a bike may ride, for the scenic-view warning (scenic-views.md).
+    App\Contribution\ValhallaBikeWayLocator:
+        arguments:
+            $valhallaUrl: '%env(ELEVATION_URL)%'
+            $endpoints: '@App\Elevation\ElevationEndpoints'
+    App\Contribution\BikeWayLocator: '@App\Contribution\ValhallaBikeWayLocator'
+
     App\Elevation\RouteSnapper:
         arguments:
             $valhallaUrl: '%env(ELEVATION_URL)%'
@@ -181,6 +188,12 @@ services:
 
 when@test:
     services:
+        # Replaced by a fixed reading in ScenicBikeWayIntakeTest, which a
+        # private alias does not allow.
+        App\Contribution\BikeWayLocator:
+            alias: App\Contribution\ValhallaBikeWayLocator
+            public: true
+
         # Fetched directly by the credits tests. `autoconfigure` is NOT
         # optional here: a second definition of the same id REPLACES the first,
         # so without it this loses the `twig.extension` tag and every page

@@ -2086,6 +2086,7 @@ contribute:
     known_ours: 'already in this atlas'
     known_zoom: 'Zoom in to see what is already mapped here.'
   error:
+    far_from_bike_way: 'This spot is far from any way a bike may ride. Tick the box if you know it can be reached by bike.'
     heading: 'That could not be submitted:'
     unknown_attribute: 'One of the submitted fields is not recognised for this item type.'
     invisible_characters: 'This text contains invisible or formatting characters that aren’t allowed.'
@@ -2102,6 +2103,13 @@ contribute:
     invalid_geometry: 'The drawn shape could not be read — redraw it and try again.'
     invalid_links: "Those links could not be read. Check each address starts with https:// and try again."
     media_invalid: 'One of the attached photos could not be used — remove it and try again.'
+  bikeway:
+    heading: 'Along a bike way?'
+    far: 'The nearest way a bike may ride is %d% m from this spot. A scenic view on the map is normally within %m% m of one.'
+    none: 'There is no way a bike may ride within %m% m of this spot. A scenic view on the map is normally within %m% m of one.'
+    overrule: 'I know this spot can be reached by bike. Add it anyway.'
+    queue_far: 'Far from a bike way: the nearest is %d% m away. The rider says it can be reached by bike.'
+    queue_none: 'Far from a bike way: none within %m% m. The rider says it can be reached by bike.'
 media:
   page:
     title: 'A photo from the Commons'
