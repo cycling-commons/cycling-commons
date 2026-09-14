@@ -13,9 +13,14 @@ use App\Media\Entity\MediaUpload;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
- * Apply a submission decision to its photos — not a second moderation path.
+ * Apply a submission decision to its photos, not a second moderation path.
  *
- * @see docs/specs/photo-uploads.md §5, §5c
+ * Every photo is put through PhotoValidator for the item before it is linked:
+ * `refuse` (legal hold) leaves the upload pending and unlinked, `hide` (a
+ * scenic view with no usable distance) links it for a curator to confirm,
+ * `show` links it.
+ *
+ * @see docs/specs/photo-uploads.md §5, §5c, §5h
  *
  * @api
  */
@@ -51,10 +56,13 @@ final class MediaDecisionService
             'submissionId' => (int) $submission->getId(),
             'status' => MediaStatus::Pending,
         ], ['createdAt' => 'ASC']);
-        // Skip legal hold and unpublished rows. @see docs/specs/photo-uploads.md §6d
+        // Skip unpublished rows, and every photo PhotoValidator refuses for this
+        // place (legal hold, photo-uploads.md §6d): they stay pending.
+        $place = new PhotoPlace($item?->getLetter() ?? $submission->getLetter(), null, null);
         $uploads = array_values(array_filter(
             $uploads,
-            static fn (MediaUpload $u): bool => !$u->isEscalated() && $u->hasPublishedObjects(),
+            static fn (MediaUpload $u): bool => $u->hasPublishedObjects()
+                && PhotoValidator::verdict(PhotoFacts::ofUpload($u), $place)->links(),
         ));
         if ([] === $uploads) {
             return null;
@@ -122,9 +130,26 @@ final class MediaDecisionService
             // Metres from the photo's GPS position to the submission pin, or
             // null when it carried none. Only the distance: the position itself
             // is dropped at intake (photo-uploads.md §3a). A scenic view shows
-            // the photo only when this is within ScenicPhotoRule's reach.
+            // the photo only when PhotoValidator::reachM() is within reach.
             'distanceM' => $upload->getGpsDistanceM(),
         ];
+        // The pin that distance was measured to, `[lat, lng]`, when there is a
+        // distance: a pin that moves later adds its move to the distance
+        // (PhotoValidator::reachM()). @see docs/specs/photo-uploads.md §5g
+        $distancePin = $upload->getGpsDistancePin();
+        if (null !== $distancePin) {
+            $photo['distancePin'] = $distancePin;
+        }
+        // Only when a curator confirmed the photo was taken at the pin; a
+        // scenic view then shows it whatever the distance, while the pin
+        // stays where it was confirmed (`confirmedPin`). @see docs/specs/photo-uploads.md §5g
+        if ($upload->isLocationConfirmed()) {
+            $photo['locationConfirmed'] = true;
+            $confirmedPin = $upload->getLocationConfirmedPin();
+            if (null !== $confirmedPin) {
+                $photo['confirmedPin'] = $confirmedPin;
+            }
+        }
         // Only when there is one. An absent key lets the render side fall back
         // to the item's name, which is better than an empty alt and much better
         // than a filename. @see docs/specs/photo-uploads.md §5e

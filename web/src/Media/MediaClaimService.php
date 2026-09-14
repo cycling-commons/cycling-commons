@@ -74,7 +74,7 @@ final class MediaClaimService
             if (null !== $typed && '' === trim((string) $upload->getAltText())) {
                 $upload->setAltText($typed);
             }
-            $upload->resolveGps(GpsDistance::metres($upload->getGpsLat(), $upload->getGpsLng(), $pinLat, $pinLng));
+            $upload->resolveGps(GpsDistance::between($upload->getGpsLat(), $upload->getGpsLng(), $pinLat, $pinLng), $pinLat, $pinLng);
             $this->events->append($upload->getId(), (int) $by->getId(), MediaAction::Claimed);
         }
     }

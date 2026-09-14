@@ -70,6 +70,15 @@
                 : ('contribute.bikeway.queue_far'|trans({'%d%': item.bikeway.nearestM})) -}}
           </span>
         {% endif %}
+        {# A suggested pin move on a scenic view that hides rider photos until a
+           curator confirms them at the new spot (scenic-views.md §8). #}
+        {% if item.photosHiddenByMove|default(0) > 0 %}
+          <span class="q-pinphotos">
+            {{- item.photosHiddenByMove == 1
+                ? ('contribute.pin_photos.queue_one'|trans)
+                : ('contribute.pin_photos.queue_many'|trans({'%n%': item.photosHiddenByMove})) -}}
+          </span>
+        {% endif %}
         {% if item.osm is defined %}
           {% if item.osm.state == 'open' %}
           <details class="q-act q-osm-chip">

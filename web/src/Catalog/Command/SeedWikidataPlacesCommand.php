@@ -11,6 +11,9 @@ use App\Catalog\Import\DuplicateGuard;
 use App\Catalog\Import\ItemUpsert;
 use App\Catalog\ItemSource;
 use App\Catalog\ItemType;
+use App\Media\PhotoFacts;
+use App\Media\PhotoPlace;
+use App\Media\PhotoValidator;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Exception as DBALException;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -24,6 +27,12 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 /**
  * Seed scenic/historical places from a reviewed Wikidata artifact. Always unverified.
  *
+ * Each place's photo is written only when PhotoValidator shows it on that
+ * place; a refused photo is left off (the place is still seeded) and named in
+ * the report with the reason. A scenic view needs the photo's `camera` point
+ * in the artifact, within reach of the pin.
+ *
+ * @see docs/specs/photo-uploads.md §5h
  * @see docs/specs/catalog-data-model.md §3
  *
  * @api
@@ -39,6 +48,9 @@ final class SeedWikidataPlacesCommand extends Command
         'scenic' => ItemType::ScenicViews,
         'history' => ItemType::HistoryCulture,
     ];
+
+    /** @var list<string> photos PhotoValidator refused, one line each */
+    private array $droppedPhotos = [];
 
     public function __construct(
         private readonly Connection $db,
@@ -166,6 +178,13 @@ final class SeedWikidataPlacesCommand extends Command
                 implode("\n  ", $duplicates),
             ));
         }
+        if ([] !== $this->droppedPhotos) {
+            $io->note(sprintf(
+                "Left off %d photo(s) PhotoValidator refused (the places are seeded without them):\n  %s",
+                \count($this->droppedPhotos),
+                implode("\n  ", $this->droppedPhotos),
+            ));
+        }
         if ([] !== $duplicatePlaces) {
             $io->note(sprintf(
                 "Skipped %d place(s) another source already holds:\n  %s",
@@ -197,15 +216,21 @@ final class SeedWikidataPlacesCommand extends Command
      */
     private function seed(array $place, ItemType $type, string $country, bool $dryRun): void
     {
-        /** @var array{file: string, credit: string, user: ?string, license: string} $photo */
+        /** @var array{file: string, credit: string, user: ?string, license: string, camera?: mixed} $photo */
         $photo = $place['photo'];
 
         $attributes = [
             'type' => (string) $place['type'],
-            'photo' => self::commonsPhoto($photo['file'], $photo['credit'], $photo['user'], $photo['license']),
+            'photo' => self::commonsPhoto($photo['file'], $photo['credit'], $photo['user'], $photo['license'], $photo['camera'] ?? null),
         ];
         if ('' !== (string) ($place['note'] ?? '')) {
             $attributes['note'] = (string) $place['note'];
+        }
+
+        $sifted = PhotoValidator::sift($attributes, new PhotoPlace($type->letter(), (float) $place['lat'], (float) $place['lng']));
+        $attributes = $sifted['attributes'];
+        foreach ($sifted['dropped'] as $dropped) {
+            $this->droppedPhotos[] = sprintf('%s (%s): %s', (string) $place['name'], $country, $dropped['verdict']->reason?->value ?? 'refused');
         }
 
         $this->vocabulary->assertValid($type, $attributes);
@@ -262,14 +287,14 @@ final class SeedWikidataPlacesCommand extends Command
     }
 
     /**
-     * @return array{sm: string, lg: string, credit: string, creditUrl: string, license: string, source: string}
+     * @return array<string, mixed> sm, lg, credit, creditUrl, license, source, and cameraAt when the artifact names a camera
      */
-    private static function commonsPhoto(string $file, string $credit, ?string $user, string $license): array
+    private static function commonsPhoto(string $file, string $credit, ?string $user, string $license, mixed $camera): array
     {
         $enc = str_replace(['%21', '%27', '%28', '%29', '%2A'], ['!', "'", '(', ')', '*'], rawurlencode($file));
         $page = str_replace(' ', '_', $file);
 
-        return [
+        $photo = [
             'sm' => "https://commons.wikimedia.org/wiki/Special:FilePath/{$enc}?width=520",
             'lg' => "https://commons.wikimedia.org/wiki/Special:FilePath/{$enc}?width=1400",
             'credit' => $credit,
@@ -279,5 +304,11 @@ final class SeedWikidataPlacesCommand extends Command
             'license' => $license,
             'source' => "https://commons.wikimedia.org/wiki/File:{$page}",
         ];
+        $cameraAt = PhotoFacts::camera($camera);
+        if (null !== $cameraAt) {
+            $photo['cameraAt'] = $cameraAt;
+        }
+
+        return $photo;
     }
 }

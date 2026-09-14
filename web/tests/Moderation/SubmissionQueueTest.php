@@ -6,8 +6,11 @@ declare(strict_types=1);
 
 namespace App\Tests\Moderation;
 
+use App\Catalog\Entity\Item;
 use App\Catalog\Entity\Region;
 use App\Catalog\Entity\Submission;
+use App\Catalog\ItemSource;
+use App\Catalog\ItemState;
 use App\Catalog\SubmissionStatus;
 use App\Catalog\SubmissionType;
 use App\Moderation\ModerationScope;
@@ -323,5 +326,44 @@ final class SubmissionQueueTest extends KernelTestCase
         self::assertNotContains('In C', $titles);
         sort($titles);
         self::assertSame(['In A', 'In B', 'No region'], $titles);
+    }
+
+    /**
+     * A suggested pin move on a scenic view tells the curator how many rider
+     * photos it hides until a curator confirms them (scenic-views.md §8).
+     */
+    public function testAPinMoveOnAScenicViewSaysHowManyRiderPhotosItHides(): void
+    {
+        $here = [50.5, 5.5];
+        $item = (new Item())->setLetter('P')->setName('Queue view')
+            ->setGeom('{"type":"Point","coordinates":[5.5,50.5]}')->setCountryCode('BE')
+            ->setSourceRef('queue-pin-move-'.bin2hex(random_bytes(3)))
+            ->setSource(ItemSource::User)->setState(ItemState::Verified)
+            ->setAttributes(['photos' => [
+                ['id' => 'near', 'sm' => 'x', 'license' => 'CC BY-SA 4.0', 'credit' => '', 'distanceM' => 40, 'distancePin' => $here],
+                ['id' => 'edge', 'sm' => 'x', 'license' => 'CC BY-SA 4.0', 'credit' => '', 'distanceM' => 240, 'distancePin' => $here],
+            ]]);
+        $this->em->persist($item);
+        $this->em->flush();
+
+        $edit = function (string $title, array $changes, string $letter = 'P') use ($item): void {
+            $this->em->persist((new Submission())
+                ->setType(SubmissionType::Edit)->setLetter($letter)->setUserId(7)
+                ->setStatus(SubmissionStatus::Pending)->setTitle($title)
+                ->setGeom('{"type":"Point","coordinates":[5.5,50.5]}')
+                ->setCountryCode('BE')->setItemId($item->getId())
+                ->setChanges($changes)->setPayload([]));
+            $this->em->flush();
+        };
+        // About 20 m north: only the photo 240 m away goes. About 400 m: both.
+        $edit('Small move', ['location' => ['was' => '50.500000, 5.500000', 'now' => '50.500180, 5.500000']]);
+        $edit('Big move', ['location' => ['was' => '50.500000, 5.500000', 'now' => '50.503600, 5.500000']]);
+        $edit('No move', ['name' => ['was' => 'Queue view', 'now' => 'Queue viewpoint']]);
+
+        $rows = array_column($this->queue->pendingForMap(ModerationScope::global()), null, 'title');
+        self::assertSame(1, $rows['Small move']['photosHiddenByMove']);
+        self::assertSame(2, $rows['Big move']['photosHiddenByMove']);
+        self::assertSame(0, $rows['No move']['photosHiddenByMove']);
+        self::assertSame(0, $this->queue->filtered(ModerationScope::global(), null, null, null)[0]['photosHiddenByMove'] ?? null, 'the desk rows carry it too');
     }
 }

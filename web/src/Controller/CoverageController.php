@@ -6,7 +6,6 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Catalog\ScenicPhotoRule;
 use App\Coverage\CoverageRepository;
 use App\Media\Commons\CommonsFile;
 use App\Media\Commons\CommonsPhotoAdmission;
@@ -154,13 +153,12 @@ final class CoverageController extends AbstractController
             return $limited;
         }
 
-        $detail = $coverage->detail($osmType, $osmId);
-        if (null === $detail) {
+        $subject = $coverage->photoSubject($osmType, $osmId);
+        if (null === $subject) {
             throw $this->createNotFoundException('No coverage POI.');
         }
 
-        /** @var array<string, mixed> $tags */
-        $tags = (array) $detail['tags'];
+        $tags = $subject['tags'];
         $file = CommonsFile::fromTags($tags);
 
         // Resolve the continent BEFORE claiming. Claiming first would leave a
@@ -168,9 +166,11 @@ final class CoverageController extends AbstractController
         // resolve, and a later visit from a POI that DOES resolve would find
         // that row already claimed, dispatch nothing, and spin until the poll
         // gives up. Nothing would ever fetch it again.
-        /** @var array{0: float, 1: float} $ll */
-        $ll = $detail['ll'];
+        $ll = $subject['ll'];
         $continent = $continents->resolve($ll[0], $ll[1]);
+        // The served item standing for this POI when there is one: its pin is
+        // what the map draws and its drawer is what asks (photoSubject()).
+        $place = $subject['place'];
         if (null === $continent) {
             // No continent means no bucket, and photo-uploads.md §2 refuses
             // rather than borrowing another continent's. Say `none` rather than
@@ -196,7 +196,7 @@ final class CoverageController extends AbstractController
                     return $this->noStore(['state' => 'none']);
                 }
                 if ($wikidata->claim($qidRaw)) {
-                    $bus->dispatch(new ResolveWikidataImage($qidRaw, $continent));
+                    $bus->dispatch(ResolveWikidataImage::forPlace($qidRaw, $continent, $place));
                 }
 
                 return $this->noStore(['state' => 'pending']);
@@ -207,19 +207,11 @@ final class CoverageController extends AbstractController
             }
         }
 
-        $state = $admission->stateFor($file, $continent,
-            fn (): bool => $this->fetchBudgetAllows($request, $coveragePhotoFetchLimiter, $coveragePhotoGlobalLimiter));
-
-        // A scenic view promises the view from its pin, so its photo is shown
-        // only when the camera stood near that pin. Anything else answers as
-        // if there were no photo, because for this pin there is none.
-        if ('ready' === ($state['state'] ?? null)
-            && ScenicPhotoRule::appliesTo((string) $detail['letter'])
-            && !ScenicPhotoRule::allows($state, $ll[0], $ll[1])) {
-            return $this->noStore(['state' => 'none']);
-        }
-
-        return $this->noStore($state);
+        // Judged against that place (PhotoValidator): a scenic view answers as if
+        // there were no photo when the camera stood elsewhere, because for
+        // this pin there is none, and nothing is downloaded for it.
+        return $this->noStore($admission->stateFor($file, $continent, $place,
+            fn (): bool => $this->fetchBudgetAllows($request, $coveragePhotoFetchLimiter, $coveragePhotoGlobalLimiter)));
     }
 
     /** @param array<string, mixed> $payload */

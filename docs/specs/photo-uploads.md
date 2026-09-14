@@ -192,7 +192,8 @@ Validation the web tier CAN do, in this order, cheapest first:
 - ≤ 15 MB (the GPX-cap precedent), including the `UPLOAD_ERR_*_SIZE` case;
 - the daily rate limit;
 - a **type sniff** via finfo on the leading bytes, never the extension: JPEG,
-  PNG, WebP, HEIC/HEIF, AVIF. This is a courtesy, not proof - it refuses the
+  PNG, WebP, HEIC/HEIF, the formats `PhotoProcessor` decodes, so a format the
+  worker would refuse is refused here first. This is a courtesy, not proof - it refuses the
   obvious wrong thing (a PDF, a ZIP, a video) while the rider is still
   watching, instead of spending a quarantine write and a scan to say the same
   thing a minute later. The real answer is the worker's decode.
@@ -401,10 +402,11 @@ Nothing public until approved — the rule everywhere else, applied here:
   inside one, every click to enlarge would also untick Keep.
 - **Approve** → uploads flip to `approved`, and the item's `photos[]`
   attribute gains
-  `{id, sm, lg, credit, license: 'CC BY-SA 4.0', distanceM, takenAt?: 'YYYY-MM'}` per
+  `{id, sm, lg, credit, license: 'CC BY-SA 4.0', distanceM, locationConfirmed?: true, takenAt?: 'YYYY-MM'}` per
   photo. `distanceM` is `gps_distance_m`, the metres from the photo's GPS
   position to the submission pin, or null when it carried none; a scenic view
-  shows the photo only when it is within 250 m (§5g). `id` is the upload's own uuid, and it is what takedown, escalation
+  shows the photo only when it is within 250 m, or when a curator confirmed it
+  was taken at the pin, which adds `locationConfirmed: true` (§5g). `id` is the upload's own uuid, and it is what takedown, escalation
   and disposal match on. They used to compare the stored `sm` string against a
   freshly built one, which silently stopped matching each time the address
   moved — `photos/<uuid>/` to `published/<uuid>/<rev>/`, then the `-<cc>-<nn>`
@@ -447,7 +449,8 @@ Nothing public until approved — the rule everywhere else, applied here:
   conventions, media-scoped subject:
   `id · media_id (FK) · actor_id (nullable — null = system) · action
   (uploaded | claimed | approved | rejected | credit_anonymized |
-  objects_deleted) · note (nullable) · created_at`, indexed
+  objects_deleted | location_confirmed, and the takedown and escalation
+  actions of §6b to §6d; `App\Media\MediaAction` lists them all) · note (nullable) · created_at`, indexed
   `(media_id, created_at)` like `idx_history_item_time`. Every lifecycle
   transition writes an event — upload, intake claim, each curator decision
   (with the curator's optional note), the deletion hook's credit
@@ -552,8 +555,10 @@ That was leftover rather than a decision, and it cost three things:
 `app:media:localise-commons` ends it. It walks every item whose stored photo
 still points at Wikimedia, reads the filename back out of the URL
 (`CommonsFile`), and puts it through **the same handler a town card uses**:
-same licence gate, same scan, same re-encode, same bucket. Only then does it
-rewrite the row.
+the same `PhotoValidator` check (§5h) judged against the item's own letter and
+pin, same scan, same re-encode, same bucket. It rewrites the row only when
+`PhotoValidator` shows the stored copy on that item; a scenic item whose file
+was photographed elsewhere downloads nothing and keeps its entry as it was.
 
 **Both photo shapes, and the gallery is the one that gets forgotten.** `photo`
 is the legacy singular field the seeders wrote; `photos` is the array a rider's
@@ -571,7 +576,7 @@ attribution to carry.
 | `--limit=N` | a first run worth keeping short |
 | `--letter=Q` | one catalogue letter at a time |
 | `--sleep=MS` | milliseconds after each Wikimedia fetch, **default 1000** |
-| `--recheck-licences` | forget past `no_free_licence` refusals first, so files are judged against the current list |
+| `--recheck-licences` | forget past `licence` refusals first, so files are judged against the current list |
 
 **The pause is not a tuning knob, it is the manners.** Wikimedia gives its
 bandwidth away and asks clients to come one at a time and unhurried. A backfill
@@ -594,9 +599,12 @@ Two rules the command exists to keep:
   looks like a working page. This is why the shape is shared rather than
   written twice: two copies would eventually disagree, and the half that lost
   would be the half nobody was looking at.
-- **A file the licence gate refuses keeps its hotlink.** Linking is not
+- **A file `PhotoValidator` refuses keeps its hotlink.** Linking is not
   republishing, and only one of the two needs permission. Those rows are
-  reported as refused and left exactly as they were.
+  reported with the reason code (`refused (licence)`, `refused (no_author)`,
+  `not shown here (camera_far)`, and so on) and left exactly as they were. Every
+  display filter hides such an entry (§5h), and `app:scenic:prune-photos`
+  removes it from a scenic item.
 
   A refusal is `unusable`, which is terminal because the verdict is about the
   file. That reasoning holds only while OUR list is unchanged, and the first
@@ -726,8 +734,9 @@ the full localisation the same check reports **425 stored photos, all carrying a
 packet, none to do**.
 
 The licence link is the part with a trap under it. The set of licences we
-accept lives in `CommonsApi::FREE_LICENCES`, and the set the caption can turn
-into a deed URL lives in `ccUrl()` in `assets/map/util.js`. Both files said in
+accept lives in `web/src/Media/licences.json`, read by `LicenceUrls`, and the
+set the caption can turn into a deed URL lives in `ccUrl()` in
+`assets/map/util.js`. Both files said in
 prose that they must agree and nothing made them. Adding a licence to the gate
 alone would start us republishing files under it while the caption pointed at
 the generic `Commons:Licensing` index, which lists every licence Commons has
@@ -738,20 +747,21 @@ the JS table rather than restating it. Only that direction is checked: `ccUrl()`
 may know more names than the gate accepts, because it also captions rider
 uploads.
 
-`tools/wikimedia/commons_photo.py` holds a third copy for the harvest side. It
-is deliberately allowed to be narrower (today it lacks `CC BY-SA 3.0 lu`), since
-accepting fewer licences at harvest time only means fewer photos, never a
-mislabelled one.
+`tools/wikimedia/commons_photo.py` reads the same `licences.json` for the
+harvest side (`FREE_LICENCES`), so a harvest accepts exactly the names the app
+accepts; `tools/wikimedia/tests/test_harvest_shaping.py` fails when the Python
+side stops reading that file.
 
 ### 5g. Where the camera stood
 
 A scenic view (letter P) shows a photo only when we know where the camera stood
 and it stood within 250 m of the pin
-([scenic-views.md §8](scenic-views.md), `App\Catalog\ScenicPhotoRule`). Every
+([scenic-views.md §8](scenic-views.md), `App\Media\PhotoValidator`, §5h). Every
 photo entry therefore says where its camera was, when that is known:
 
 - **A rider's photo** carries `distanceM` (§5): metres from its GPS position to
-  the submission pin, or null.
+  the submission pin, or null, and, when there is a distance, `distancePin:
+  [lat, lng]`: the pin it was measured to (see "When the pin moves" below).
 - **A Commons photo** carries `cameraAt: [lat, lng]` when Commons records a
   camera point, and no key when it does not. The point is the file's primary
   coordinate of type `camera`, with at least 3 decimals in each axis;
@@ -777,6 +787,274 @@ POST, the identifying User-Agent, a pause between requests), records every
 answer, and stamps `cameraAt` into item photo entries whose `source` names a
 checked file and `distanceM` into rider entries from `media_upload`. It is a dry
 run unless given `--write`; `--recheck` asks about every ready row again.
+
+#### A curator confirms a rider photo was taken here
+
+The worker reads a rider photo's GPS once, keeps only `gps_distance_m` and
+strips every other piece of metadata from the stored file (§3a). A photo whose
+file carried no GPS can therefore never be measured afterwards, and a scenic
+view hides it. A curator who knows the spot can confirm the photo was taken at
+the pin. That is a named person vouching for the location, and the photo then
+counts as within range at that pin, whatever `gps_distance_m` says. Only rider
+photos: a Commons photo's camera comes from Commons.
+
+`media_upload` records it:
+
+| column | meaning |
+|---|---|
+| `location_confirmed_by` (bigint, nullable) | `users.id` of the curator who confirmed; null = nobody |
+| `location_confirmed_at` (timestamptz, nullable) | when; set together with `location_confirmed_by` |
+| `location_confirmed_pin_lat`, `location_confirmed_pin_lng` (double precision, nullable) | the item pin (`ST_PointOnSurface(item.geom)`) as it stood when the curator confirmed |
+
+`App\Media\PhotoLocationConfirmation::confirm()` does it in one transaction:
+`MediaUpload::confirmLocation()` sets the four columns (only on an approved
+upload attached to an item), the item's `photo` or `photos` entry with the
+upload's `id` gains `locationConfirmed: true` and `confirmedPin: [lat, lng]`
+(which moves the item's `updated_at`, so the catalog payload version moves),
+and `media_moderation_event` gets a `location_confirmed` row with the curator
+as actor (§5b). A photo whose confirmation still shows it at the item's current
+pin keeps its first curator and is not logged again; one the pin has moved out
+of reach of is confirmed anew, with the new curator, pin and event row.
+`MediaDecisionService::describe()` writes `locationConfirmed: true` and
+`confirmedPin` into every entry it builds for a confirmed upload, and leaves
+both keys out otherwise.
+
+#### When the pin moves
+
+A rider photo is measured once, to its submission pin, and its GPS is then
+deleted, so a pin that moves afterwards (an approved edit, a curator's own
+edit, an import or harvest that rewrites `item.geom`) can never be measured
+again. The owner's rule (2026-09-15) is the worst case: the camera stood at
+most (its distance) + (how far the pin now is from the pin it was measured to)
+from the pin now, and a scenic view counts the photo only while that sum is
+within 250 m. A photo 100 m from the old pin stays after a 20 m move (120 m)
+and is hidden after a 200 m move (300 m), until a curator confirms it at the
+new pin. A curator's confirmation puts the camera 0 m from the pin as it stood,
+so it counts like a distance of 0 m: kept while the pin stays within 250 m of
+that pin. Only the straight line from the recorded pin to the pin now counts,
+never the moves on the way. With both a distance and a confirmation, the nearer
+answer counts (`PhotoValidator::reachM()`).
+
+Nothing is rewritten when a pin moves. `media_upload` keeps the pins next to
+the facts:
+
+| column | meaning |
+|---|---|
+| `gps_distance_pin_lat`, `gps_distance_pin_lng` (double precision, nullable) | the submission pin `gps_distance_m` was measured to (`MediaUpload::resolveGps()`, from `MediaClaimService` and `ScanAndReleaseUploadHandler`); null when there is no distance |
+
+and every rider entry carries them as `distancePin` and `confirmedPin`, so
+`PhotoValidator` compares them with the item's pin at every read
+(photo-uploads.md §5h). This
+covers every path that writes `item.geom`, including raw SQL, with no hook in
+any of them. A move below `PhotoValidator::PIN_STILL_M` (1 m) is coordinate
+rounding and counts as none. A move back to where the photo was measured
+counts as none too, because the rule reads where the pin is, not the path it
+took. A rider entry without a pin (none after migration
+`Version20260915090000`) counts as measured at the current pin.
+
+`Version20260915090000` filled the pins in: a distance got its submission's
+point, or the item's pin when no point submission is left; a confirmation got
+the item's pin. It stamped `distancePin` and `confirmedPin` into item entries.
+An item whose pin never moved shows the same photos as before.
+
+**Telling people.** Moving a scenic view's pin can hide photos, so:
+
+- the edit form (`/improve?item=`, riders and curators alike) asks
+  `GET /contribute/pin-move-photos?item=&lat=&lng=` (ROLE_USER,
+  `{withinM, hidden, farthestM}`,
+  `PhotoLocationConfirmation::moveEffect()` over `PhotoValidator::moveEffect()`)
+  each time the pin moves. When `hidden` is 1 or more, a red box in the middle
+  of the edit map says what happens and why
+  (`assets/contribute/pin-move-photos.js`). The consequence is its bold title,
+  "Moving the pin here hides 1 rider photo." or "Moving the pin here hides 3
+  rider photos."; under it, in plain text, why (the lines below) and then
+  what happens next:
+  - to a rider: "It stays hidden until a curator confirms it was taken here."
+    (and the plural);
+  - to a curator, whose edit applies at once: "After you save, open the place
+    on the map and click "Taken here" if it was taken within reach of the new
+    spot." (and the plural);
+  - first, when a hidden photo has a distance (`farthestM`, the largest
+    `reachM()` at the new spot), why the move hides it: "With the pin moved
+    here, the photo may have been taken up to 310 m from it. A scenic view only
+    shows a rider photo taken within 250 m of the pin." (and the plural,
+    "the photos may have been taken ... rider photos");
+- a pending edit that moves the pin carries `photosHiddenByMove`
+  (`SubmissionQueue`), and the map drawer's pending card and the desk row say
+  "This move hides 3 rider photos until a curator confirms they were taken at
+  the new spot.";
+- the curator's hidden-photos block names the reason `pin_moved`: "The pin
+  moved; taken up to 300 m from it", or "The pin moved after a curator
+  confirmed this photo" for a confirmed photo with no GPS.
+
+The count is `PhotoValidator::hiddenByMove()`: the rider entries the verdict
+shows at the current pin and does not show at the proposed one.
+
+Where the curator does it: the map drawer of a scenic view. For a curator
+(`window.CC_IS_CURATOR`), the drawer asks for the rider photos the view hides
+and, when there are any, shows a block under the photos with each thumbnail,
+the reason ("No location in the file", "Taken 540 m from the pin" or "The pin
+moved; taken up to 300 m from it") and a
+**Taken here** button. A click on a thumbnail opens the photo full size in the
+lightbox, so the curator can judge the view before confirming. On success the
+photo joins the open drawer's gallery at once (`assets/map/hidden-photos.js`).
+
+| endpoint | access | answer |
+|---|---|---|
+| `GET /map/item/{id}/hidden-photos` | ROLE_CURATOR with two-factor authentication (2FA) set up | `{photos: [{id, sm, lg, credit, license, alt?, takenAt?, reason, distanceM?}]}`: the entries with an upload `id` that `PhotoValidator` answers `hide` for (§5h), whose upload is approved, published, stored, not under legal hold and on this item. `reason` is the verdict's on the upload row: `pin_moved` when the photo counted until the pin moved (with `distanceM` when the photo has a distance), `no_gps`, or `too_far` with `distanceM`. `distanceM` is `PhotoValidator::reachM()`, the farthest the photo may have been taken from the pin now. An empty list for any other letter, and for a curator outside the item's moderation area. 404 for an unknown item. `Cache-Control: private, no-store`. |
+| `POST /moderate/photo/{uuid}/taken-here` | ROLE_CURATOR, CSRF token id `photo-taken-here` (`window.CC_PHOTO_TAKEN_HERE_TOKEN`, curator block of the map page) | `{ok: true}`. 403 for a bad token or a curator outside the item's moderation area (`ModerationScopeProvider::allowsRegion()` on the item's region); 404 unless the uuid names such an upload on a scenic view. |
+
+`app:scenic:prune-photos` reads `location_confirmed_at`, `gps_distance_m` and
+their pins and does not list a photo the verdict shows for a person
+([scenic-views.md §8](scenic-views.md)).
+
+Tests: `tests/Media/PhotoLocationConfirmationTest.php` (entity, `describe()`
+with both pins, the service, confirming again after a move),
+`tests/Media/PhotoTakenHereEndpointTest.php` (both endpoints: curator, rider,
+other letter, token, moderation area, `pin_moved`),
+`tests/Media/PhotoValidatorTest.php` (the worst-case sum, a pin back where it
+was, an unknown pin, a confirmation counted as 0 m from its pin, `hiddenByMove()`),
+`tests/Contribution/PinMovePhotosEndpointTest.php`,
+`tests/Contribution/ImproveTest.php` (the form's warning box),
+`tests/Moderation/SubmissionQueueTest.php` (`photosHiddenByMove`),
+`tests/Media/MediaPersistenceTest.php`, `tests/js/hidden-photos.test.mjs` (the
+drawer block, the reason, the pending card's line).
+
+### 5h. One photo validator
+
+Every way a photo gets linked to a place, and every page that shows one, asks
+the same function:
+
+```php
+App\Media\PhotoValidator::verdict(PhotoFacts $photo, PhotoPlace $place): PhotoVerdict
+```
+
+Link time and show time therefore cannot disagree: a photo is linked on the
+same answer it is later shown on.
+
+**The facts** (`PhotoFacts`): origin (`commons`, `rider`, `import`), licence
+name, credit, Commons' `NonFree` and `Restrictions` flags, `cameraAt`,
+`distanceM` and `distancePin`, `locationConfirmed` and `confirmedPin`, legal
+hold, upload id. Built from Commons'
+metadata before a download (`PhotoFacts::commons()`), from a `media_upload` row
+(`ofUpload()`), from a `commons_photo` row (`ofCommonsRow()`), or from a stored
+`photo` / `photos` entry (`fromEntry()`: an `id` is a rider's, a Commons URL in
+any field is Commons, anything else is an import).
+
+**The place** (`PhotoPlace`): the catalogue letter and the pin
+(`ST_PointOnSurface(item.geom)`). A Commons photo of an OSM coverage point is
+judged against the served item standing for that point, with its letter and
+pin, and against the point's own letter and position only when no item stands
+for it (`CoverageRepository::photoSubject()`,
+[coverage-provider.md §5](coverage-provider.md)). A town card
+and a route have no letter (`PhotoPlace::unplaced()`).
+
+**The verdict** (`PhotoVerdict`): a `PhotoDecision` and, unless it is `show`, a
+`PhotoReason`:
+
+| decision | meaning |
+|---|---|
+| `show` | link it and show it |
+| `hide` | link it, do not show it. Only a rider photo on a scenic view that is not within reach of the pin: the entry stays on the item for a curator's **Taken here** (photo-uploads.md §5g) |
+| `refuse` | do not link it; a display filter drops an entry already linked |
+
+The checks, in order, first failure wins:
+
+| # | check | reason |
+|---|---|---|
+| 1 | legal hold (§6d) | `legal_hold` |
+| 2 | Commons `NonFree` (or `NonFreeLicense`) set | `non_free` |
+| 3 | Commons `Restrictions` set | `restricted` |
+| 4 | licence not on `LicenceUrls` (`web/src/Media/licences.json`) | `licence` |
+| 5 | not a rider photo, and the credit is empty, the bare platform name `Wikimedia Commons`, or Commons' "no machine-readable author provided" sentence | `no_author` |
+| 6 | scenic view (P), Commons or import: no `cameraAt`, or no pin | `camera_unknown` |
+| 6 | scenic view (P), Commons or import: camera more than 250 m from the pin | `camera_far` |
+| 6 | scenic view (P), rider: `PhotoValidator::reachM()` within 250, from its distance or from its confirmation at 0 m (`show`) | none |
+| 6 | scenic view (P), rider: it counted until the pin moved: confirmed, or `distanceM` within 250, but `reachM()` now over 250 (`hide`) | `pin_moved` |
+| 6 | scenic view (P), rider: `distanceM` null, or measured to a known pin while this place's pin is unknown (`hide`) | `camera_unknown` |
+| 6 | scenic view (P), rider: `distanceM` over 250 at the pin it was measured to (`hide`) | `camera_far` |
+
+A rider photo needs no public name: the rider licenses it to us at upload and
+may keep a private profile. `camera_unknown`, `camera_far` and `pin_moved` are
+about the place (`PhotoReason::concernsPlace()`): the same file may still be
+shown on another place.
+
+`PhotoValidator::reachM($photo, $place)` is the rider sum: `distanceM` plus the
+metres from `distancePin` to the place's pin (0 below `PIN_STILL_M`, 1 m, and 0
+for an entry with no `distancePin`), rounded up to whole metres; null with no
+distance, or with a `distancePin` and no known place pin (photo-uploads.md
+§5g, "When the pin moves"). `PhotoValidator::hiddenByMove($attributes, $from, $to)` counts the
+rider entries the verdict shows at `$from` and not at `$to`. Distances come from `GpsDistance::metres()`, the one haversine
+(mean Earth radius 6,371,008.8 m); `GpsDistance::between()` rounds it to whole
+metres for a rider photo and answers null when either end is missing.
+
+`PhotoValidator::sift($attributes, $place, keepHidden)` puts each `photo` /
+`photos` entry through `verdict()` and returns the attributes with the dropped
+entries taken out, and the list of what was dropped with each verdict. Display
+filters keep `show`; `keepHidden: true` also keeps `hide`.
+
+File checks stay with the bytes: the virus scan, `PhotoProcessor`'s formats,
+size and pixel limits. The upload endpoint's type sniff accepts the formats
+`PhotoProcessor` decodes (§3).
+
+#### Every call site
+
+| path | what it does with the verdict |
+|---|---|
+| `FetchCommonsPhotoHandler` (Commons on demand, harvest, Wikidata P18, localise) | judges `CommonsApi::fileInfo()` against the place carried on `FetchCommonsPhoto` **before** the download. A file refusal marks the row `unusable` with the reason; a place refusal marks it `declined`, keeping credit, licence and camera, with nothing downloaded. `no_file` when Commons has no such file or rendering |
+| `CommonsPhotoAdmission::stateFor()` (`/map/coverage/photo`, the town card) | admits a new file, or reopens a `declined` one when the verdict on its row shows it here; a ready file this place may not show answers `none` |
+| `CommonsPhotoAdmission::admit()` (`ResolveWikidataImageHandler`, `app:commons:harvest-photos`) | the same door: a file declined for a scenic view is not queued again for a place it may not show on |
+| `app:media:localise-commons` | writes our URLs onto the item only on `show`; reports each refusal by its reason |
+| `MediaDecisionService::apply()` (approval) | `refuse` leaves the upload pending and unlinked; `hide` and `show` link it |
+| `MediaTakedownService` (declined or dismissed takedown) | re-attaches only when the verdict links; matched by upload id |
+| `app:media:repair-galleries` | drops an entry the verdict refuses |
+| `app:catalog:seed-wikidata`, `app:catalog:seed-manual`, `app:catalog:import` | write only the photos the verdict shows; print each dropped photo with its reason. A scenic seed needs the photo's `camera` in the artifact |
+| `CatalogProvider` (map payload), `CoverageRepository` (drawer overlay), `BestOfPreview` | `sift()` every item's photos for its letter and pin |
+| `PhotoLocationConfirmation::hiddenPhotos()` | lists the rider entries the verdict hides, with the verdict's reason (photo-uploads.md §5g) |
+| `PhotoLocationConfirmation::hiddenByMove()` (`/contribute/pin-move-photos`), `SubmissionQueue` (`photosHiddenByMove`) | count what a pin move would hide (photo-uploads.md §5g) |
+| `app:scenic:prune-photos`, `app:media:backfill-photo-camera` | count and remove by the same verdict ([scenic-views.md §8](scenic-views.md)) |
+
+**Not a path.** `CatalogContributionService` refuses a contribution whose
+`details` or `extras` carry `photo`, `photos`, `photoFile`, `photoCredit`,
+`photoUser` or `photoLicense` (`contribute.error.photo_field`), on a new place
+and on an edit. No form renders those fields, so the payload was crafted.
+
+#### `commons_photo` states
+
+| state | meaning |
+|---|---|
+| `pending` | a fetch is queued |
+| `ready` | stored in our bucket |
+| `unusable` | refused about the file (`licence`, `no_author`, `non_free`, `restricted`, `no_file`, a `PhotoProcessor` refusal, `infected`); terminal, except that `--recheck-licences` re-queues `licence` |
+| `failed` | our problem (Commons down, no bucket); retried |
+| `declined` | refused for the place that asked (`camera_unknown`, `camera_far`); no stored copy, credit, licence and camera kept, reopened by a place the verdict shows it on |
+
+#### The harvest tools
+
+`tools/wikimedia/commons_photo.py` `usable_photo()` is the Python side of the
+same bar: the licence list read from `licences.json`, an author (the platform
+name and the no-author sentence are none), no `NonFree` / `Restrictions` flag
+(an explicit `false` is no flag). `meta_from_page()` turns one Commons API page
+into the facts it judges, for a single file (`licence_of()`) and for the
+Wallonia batch (`tools/wallonia/enrich.py` `photo_for()`, used by
+`route_images.py` and `climbs.py`), so no harvest matches a licence by
+substring and none credits a photo to "Wikimedia Commons".
+
+Tests: `tests/Media/PhotoValidatorTest.php` (every check and both decisions),
+`tests/Media/FetchCommonsPhotoHandlerTest.php`,
+`tests/Controller/CoveragePhotoControllerTest.php`,
+`tests/Media/WikidataImageTest.php`,
+`tests/Media/HarvestCommonsPhotosCommandTest.php`,
+`tests/Media/LocaliseCommonsPhotosCommandTest.php`,
+`tests/Media/MediaModerationTest.php`, `tests/Media/MediaTakedownTest.php`,
+`tests/Media/MediaGalleryIdentityTest.php`,
+`tests/Command/SeedWikidataPlacesCommandTest.php`,
+`tests/Catalog/SeedManualCatalogCommandTest.php`,
+`tests/Catalog/ImportCatalogCommandTest.php`,
+`tests/Contribution/CatalogContributionServiceTest.php`,
+`tests/Media/MediaUploadEndpointTest.php` (an AV1 Image File Format (AVIF) upload refused at the door),
+`tools/wikimedia/tests/test_harvest_shaping.py`,
+`tools/wallonia/tests/test_enrich_photos.py`.
 
 ## 6. Disposal & garbage collection
 

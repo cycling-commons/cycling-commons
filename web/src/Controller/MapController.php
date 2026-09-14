@@ -13,6 +13,7 @@ use App\Catalog\CatalogSchemaProvider;
 use App\Catalog\ChangeHistoryView;
 use App\Catalog\ClosureExpiryService;
 use App\Catalog\ConfirmationFreshness;
+use App\Catalog\Entity\Item;
 use App\Catalog\ItemType;
 use App\Catalog\KindIcons;
 use App\Catalog\MapTheme;
@@ -26,6 +27,7 @@ use App\Coverage\CoverageManifest;
 use App\Coverage\RoutesManifest;
 use App\Coverage\SurfaceManifest;
 use App\Entity\User;
+use App\Media\PhotoLocationConfirmation;
 use App\Moderation\ModerationScopeProvider;
 use App\Moderation\SubmissionQueue;
 use App\Scout\ScoutTag;
@@ -33,6 +35,7 @@ use App\Security\TwoFactorPolicy;
 use App\Service\BaseAreaResolver;
 use App\Settings\SettingsProviderInterface;
 use App\Settings\SettingsRegistry;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -280,6 +283,11 @@ final class MapController extends AbstractController
             'reportPage' => 'd_report_page',
             'photoAlt' => 'd_photo_alt', 'photoDesc' => 'd_photo_desc', 'photoDistance' => 'd_photo_distance',
             'photoNoGps' => 'd_photo_no_gps', 'photoKeep' => 'd_photo_keep',
+            'photoHiddenTitle' => 'd_photo_hidden_title', 'photoHiddenWhy' => 'd_photo_hidden_why',
+            'photoHiddenNoGps' => 'd_photo_hidden_no_gps', 'photoHiddenTooFar' => 'd_photo_hidden_too_far',
+            'photoHiddenPinMoved' => 'd_photo_hidden_pin_moved', 'photoHiddenPinMovedConfirmed' => 'd_photo_hidden_pin_moved_confirmed',
+            'pinMoveHidesOne' => 'd_pin_move_hides_one', 'pinMoveHidesMany' => 'd_pin_move_hides_many',
+            'photoHiddenTakenHere' => 'd_photo_hidden_taken_here', 'photoHiddenFailed' => 'd_photo_hidden_failed',
             'photoOpen' => 'd_photo_open',
             'anonCredit' => 'anon_credit',
             'photosNone' => 'd_photos_none', 'photosOne' => 'd_photos_one',
@@ -499,6 +507,42 @@ final class MapController extends AbstractController
         $response->headers->set(AbstractSessionListener::NO_AUTO_CACHE_CONTROL_HEADER, 'true');
         $response->setMaxAge(60);
         $response->isNotModified($request);
+
+        return $response;
+    }
+
+    /**
+     * The rider photos a scenic view hides, for the curator's "Taken here" block.
+     *
+     * Curator-only and never cached anywhere: `private, no-store`. A curator
+     * outside the item's moderation area gets an empty list, the same answer as
+     * an item with nothing hidden, so the drawer shows no button that would be
+     * refused. `/map` skips the 2FA setup redirect, so a curator who has not
+     * finished setting it up is refused here, as the map page does.
+     *
+     * @see docs/specs/photo-uploads.md §5g
+     * @see docs/specs/scenic-views.md §8
+     */
+    #[Route('/map/item/{id}/hidden-photos', name: 'map_item_hidden_photos', requirements: ['id' => '\d+'], methods: ['GET'])]
+    #[IsGranted('ROLE_CURATOR')]
+    public function hiddenPhotos(int $id, EntityManagerInterface $em, PhotoLocationConfirmation $confirmation, ModerationScopeProvider $scopeProvider, TwoFactorPolicy $twoFactorPolicy): Response
+    {
+        $user = $this->getUser();
+        if (!$user instanceof User || $twoFactorPolicy->requiresSetup($user)) {
+            throw $this->createAccessDeniedException();
+        }
+        $item = $em->find(Item::class, $id);
+        if (null === $item) {
+            throw $this->createNotFoundException();
+        }
+
+        $photos = $scopeProvider->allowsRegion($scopeProvider->scopeFor($user), $item->getRegionId())
+            ? $confirmation->hiddenPhotos($item)
+            : [];
+
+        $response = new JsonResponse(['photos' => $photos]);
+        $response->headers->set('Cache-Control', 'private, no-store');
+        $response->headers->set(AbstractSessionListener::NO_AUTO_CACHE_CONTROL_HEADER, 'true');
 
         return $response;
     }

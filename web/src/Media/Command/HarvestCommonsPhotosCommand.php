@@ -7,11 +7,11 @@ declare(strict_types=1);
 namespace App\Media\Command;
 
 use App\Media\Commons\CommonsFile;
-use App\Media\Commons\CommonsPhotoRepository;
+use App\Media\Commons\CommonsPhotoAdmission;
 use App\Media\Commons\WikidataImageRepository;
 use App\Media\ContinentResolver;
-use App\Media\Message\FetchCommonsPhoto;
 use App\Media\Message\ResolveWikidataImage;
+use App\Media\PhotoPlace;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -38,9 +38,12 @@ use Symfony\Component\Messenger\MessageBusInterface;
  * letter-Q rows that name a file outright. Wikimedia also asks for a polite
  * pace, which a crowd of page views cannot promise and one command can.
  *
- * The work itself is not done here. This claims rows and queues them, so the
- * fetching, the licence refusals and the bucket writes stay in the one handler
- * that already does them under test.
+ * The work itself is not done here. This admits files through
+ * CommonsPhotoAdmission, the same door the drawer uses, so the fetching,
+ * PhotoValidator's refusals and the bucket writes stay in the one handler that
+ * already does them under test. Each file is admitted for the row that names
+ * it: a file declined for a scenic view is not queued again for a scenic view
+ * it may not show on, and is queued for a row that may show it.
  *
  * @see docs/specs/coverage-provider.md §7
  *
@@ -57,7 +60,7 @@ final class HarvestCommonsPhotosCommand extends Command
 
     public function __construct(
         private readonly Connection $db,
-        private readonly CommonsPhotoRepository $photos,
+        private readonly CommonsPhotoAdmission $admission,
         private readonly WikidataImageRepository $images,
         private readonly ContinentResolver $continents,
         private readonly MessageBusInterface $bus,
@@ -143,31 +146,38 @@ final class HarvestCommonsPhotosCommand extends Command
                 continue;
             }
 
+            $place = PhotoPlace::of($row['letter'], $row['lat'], $row['lon']);
+
             $file = CommonsFile::fromTags($tags);
-            if (null !== $file) {
-                if (null !== $this->photos->find($file)) {
-                    ++$settled;
+            $qid = $tags['wikidata'] ?? null;
+            $qid = \is_string($qid) && 1 === preg_match('~^Q\d+$~', $qid) ? $qid : null;
+            if (null === $file && null !== $qid) {
+                $known = $this->images->find($qid);
+                if (null === $known) {
+                    if (!$dry && $this->images->claim($qid)) {
+                        $this->bus->dispatch(ResolveWikidataImage::forPlace($qid, $continent, $place));
+                    }
+                    ++$queuedQids;
                     continue;
                 }
-                if (!$dry && $this->photos->claim($file)) {
-                    $this->bus->dispatch(new FetchCommonsPhoto($file, $continent));
+                // Answered: the P18 file, if any, is admitted like a tagged one.
+                $file = $known['file'];
+            }
+            if (null === $file) {
+                if (null !== $qid) {
+                    ++$settled;
                 }
-                ++$queuedFiles;
                 continue;
             }
 
-            $qid = $tags['wikidata'] ?? null;
-            if (!\is_string($qid) || 1 !== preg_match('~^Q\d+$~', $qid)) {
-                continue;
-            }
-            if (null !== $this->images->find($qid)) {
+            if (!$this->admission->admissible($file, $place)) {
                 ++$settled;
                 continue;
             }
-            if (!$dry && $this->images->claim($qid)) {
-                $this->bus->dispatch(new ResolveWikidataImage($qid, $continent));
+            if (!$dry) {
+                $this->admission->admit($file, $continent, $place);
             }
-            ++$queuedQids;
+            ++$queuedFiles;
         }
 
         $io->definitionList(

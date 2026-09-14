@@ -13,6 +13,9 @@ use App\Media\Commons\CommonsPhotoState;
 use App\Media\ContinentResolver;
 use App\Media\Message\FetchCommonsPhoto;
 use App\Media\MessageHandler\FetchCommonsPhotoHandler;
+use App\Media\PhotoFacts;
+use App\Media\PhotoPlace;
+use App\Media\PhotoValidator;
 use Doctrine\DBAL\Connection;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -42,16 +45,20 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  * our own `img-src` and nothing on our side had changed.
  *
  * This walks those rows and puts each file through the SAME path a town card
- * uses, handler and all: licence gate first, then download, virus scan,
- * re-encode to three webp sizes, store. Only then is
+ * uses, handler and all: PhotoValidator first, judged against the item's own
+ * letter and pin, then download, virus scan, re-encode to three webp sizes,
+ * store. Only when PhotoValidator shows the stored copy on that item is
  * `item.attributes->photo` rewritten to our URLs, carrying the credit, the
  * uploader's Commons page, the licence and the file's Commons page with it.
  * That last part is not decoration: CC BY-SA is satisfied only while the
  * attribution travels with the copy, which is why the shape comes from
  * {@see CommonsPhotoAdmission::readyPhoto()} rather than being written twice.
  *
- * A file the licence gate refuses is left exactly as it was. We do not
- * republish what we may not republish, and a hotlink is not a copy.
+ * A file PhotoValidator refuses is left exactly as it was, and the report names
+ * the reason (licence, no_author, non_free, camera_far and so on). We do not
+ * republish what we may not republish, and a hotlink is not a copy; a hotlink
+ * a place may not show is hidden by every display filter and removed by
+ * `app:scenic:prune-photos`.
  *
  * Safe to run repeatedly. A row already localised is skipped, and a file we
  * already hold (a coverage POI may have fetched it first) is reused rather
@@ -80,7 +87,7 @@ final class LocaliseCommonsPhotosCommand extends Command
      */
     private const string HOTLINK_SQL = <<<'SQL'
         SELECT id, letter, name, country_code,
-               ST_Y(ST_Centroid(geom)) AS lat, ST_X(ST_Centroid(geom)) AS lng,
+               ST_Y(ST_PointOnSurface(geom)) AS lat, ST_X(ST_PointOnSurface(geom)) AS lng,
                attributes->'photo' AS photo, attributes->'photos' AS photos
         FROM item
         WHERE attributes->'photo'->>'sm' LIKE '%wikimedia.org%'
@@ -114,7 +121,7 @@ final class LocaliseCommonsPhotosCommand extends Command
                 'recheck-licences',
                 null,
                 InputOption::VALUE_NONE,
-                'First forget every past "no free licence" refusal, so files are re-judged against the current list. Only meaningful after LicenceUrls has grown.',
+                'First forget every past licence refusal, so files are re-judged against the current list. Only meaningful after LicenceUrls has grown.',
             )
             ->addOption(
                 'sleep',
@@ -137,7 +144,7 @@ final class LocaliseCommonsPhotosCommand extends Command
         if ((bool) $input->getOption('recheck-licences') && !$dryRun) {
             $forgotten = $this->photos->requeueLicenceRefusals();
             if ($forgotten > 0) {
-                $io->note(sprintf('Forgot %d past "no free licence" refusal%s: they will be judged again.', $forgotten, 1 === $forgotten ? '' : 's'));
+                $io->note(sprintf('Forgot %d past licence refusal%s: they will be judged again.', $forgotten, 1 === $forgotten ? '' : 's'));
             }
         }
 
@@ -167,6 +174,7 @@ final class LocaliseCommonsPhotosCommand extends Command
         $localised = 0;
         $reused = 0;
         $refused = 0;
+        $notHere = 0;
         $unreadable = 0;
         $failed = 0;
 
@@ -175,6 +183,7 @@ final class LocaliseCommonsPhotosCommand extends Command
             $name = (string) ($row['name'] ?? '');
             $label = sprintf('#%d %s', $id, '' === $name ? '(unnamed)' : $name);
             $continent = null;   // resolved once, lazily, and only if something needs fetching
+            $place = PhotoPlace::of($row['letter'], $row['lat'], $row['lng']);
 
             $single = $this->decodePhoto($row['photo']);
             $gallery = $this->decodeGallery($row['photos']);
@@ -210,7 +219,14 @@ final class LocaliseCommonsPhotosCommand extends Command
                 $ready = $this->admission->readyPhoto($file);
                 if (null !== $ready) {
                     // Somebody else's fetch already brought this file in, most
-                    // likely the same photo hanging off a coverage POI.
+                    // likely the same photo hanging off a coverage POI. It is
+                    // still judged against THIS item before it is written.
+                    $verdict = PhotoValidator::verdict(PhotoFacts::fromEntry($ready), $place);
+                    if (!$verdict->shows()) {
+                        ++$notHere;
+                        $io->writeln(sprintf('  <comment>-</comment> %s: %s is ours but not shown here (%s), left as it was', $at, $file, $verdict->reason?->value ?? 'refused'));
+                        continue;
+                    }
                     ++$reused;
                     $io->writeln(sprintf('  <info>=</info> %s: already in our storage', $at));
                 } elseif ($dryRun) {
@@ -231,23 +247,35 @@ final class LocaliseCommonsPhotosCommand extends Command
                         continue;
                     }
 
-                    $this->photos->claim($file);
-                    $this->fetch->__invoke(new FetchCommonsPhoto($file, $continent));
+                    if (!$this->photos->claim($file)) {
+                        // Declined for another place earlier: put it back for this one.
+                        $this->photos->reopen($file);
+                    }
+                    $this->fetch->__invoke(FetchCommonsPhoto::forPlace($file, $continent, $place));
                     self::pause($pause);
 
                     $ready = $this->admission->readyPhoto($file);
                     if (null === $ready) {
                         $state = $this->photos->find($file);
-                        $why = (string) ($state['state'] ?? 'unknown');
-                        if (CommonsPhotoState::Unusable->value === $why) {
-                            // The licence gate said no. The hotlink stays: we may not
-                            // republish the file, and linking to it is not republishing.
+                        $status = (string) ($state['state'] ?? 'unknown');
+                        $why = (string) ($state['failed_reason'] ?? $status);
+                        if (CommonsPhotoState::Unusable->value === $status) {
+                            // PhotoValidator said no about the file. The hotlink stays: we
+                            // may not republish the file, and linking to it is not republishing.
                             ++$refused;
-                            $io->writeln(sprintf('  <comment>-</comment> %s: %s is not ours to republish, left as a link', $at, $file));
+                            $io->writeln(sprintf('  <comment>-</comment> %s: %s refused (%s), left as a link', $at, $file, $why));
+                        } elseif (CommonsPhotoState::Declined->value === $status) {
+                            ++$notHere;
+                            $io->writeln(sprintf('  <comment>-</comment> %s: %s not shown here (%s), nothing downloaded', $at, $file, $why));
                         } else {
                             ++$failed;
                             $io->writeln(sprintf('  <error>x</error> %s: %s could not be fetched (%s)', $at, $file, $why));
                         }
+                        continue;
+                    }
+                    if (!PhotoValidator::verdict(PhotoFacts::fromEntry($ready), $place)->shows()) {
+                        ++$notHere;
+                        $io->writeln(sprintf('  <comment>-</comment> %s: %s is ours but not shown here, left as it was', $at, $file));
                         continue;
                     }
 
@@ -278,7 +306,8 @@ final class LocaliseCommonsPhotosCommand extends Command
         $io->definitionList(
             ['localised' => (string) $localised],
             ['already ours' => (string) $reused],
-            ['refused by the licence gate' => (string) $refused],
+            ['refused (licence, author, Commons flags)' => (string) $refused],
+            ['not shown on this item (scenic camera)' => (string) $notHere],
             ['unreadable URL' => (string) $unreadable],
             ['failed' => (string) $failed],
         );

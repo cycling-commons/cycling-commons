@@ -389,6 +389,53 @@ final class ImportCatalogCommandTest extends KernelTestCase
         self::assertCount(2, $this->em->getRepository(Item::class)->findBy(['sourceRef' => 'node/9001']));
     }
 
+    /**
+     * An imported photo goes through PhotoValidator before it is written: a
+     * non-commercial licence, a platform name for a credit, or a scenic photo
+     * with no camera point is left off, the row is still imported, and the
+     * report names what was dropped.
+     */
+    public function testImportedPhotosPhotoValidatorRefusesAreNotWritten(): void
+    {
+        $dir = sys_get_temp_dir().'/catalog-import-photos-'.getmypid();
+        @mkdir($dir, 0777, true);
+        $photo = static fn (string $licence, string $credit): array => [
+            'sm' => 'https://commons.wikimedia.org/wiki/Special:FilePath/X.jpg?width=520',
+            'lg' => 'https://commons.wikimedia.org/wiki/Special:FilePath/X.jpg?width=1400',
+            'credit' => $credit, 'license' => $licence,
+            'source' => 'https://commons.wikimedia.org/wiki/File:X.jpg',
+        ];
+        $feature = static fn (string $ref, string $name, array $photo): array => [
+            'type' => 'Feature',
+            'properties' => ['t' => 'Abbey', 'n' => $name, 'source' => 'osm', 'ref' => $ref, 'photo' => $photo],
+            'geometry' => ['type' => 'Point', 'coordinates' => [4.5, 50.6 + (int) substr($ref, -1) / 100]],
+        ];
+        file_put_contents($dir.'/history.json', json_encode(['layer' => 'history', 'letter' => 'Q', 'features' => [
+            $feature('node/9101', 'Kept Abbey', $photo('CC BY-SA 4.0', 'Jane Rider')),
+            $feature('node/9102', 'NC Abbey', $photo('CC BY-NC-SA 4.0', 'Jane Rider')),
+            $feature('node/9103', 'Anonymous Abbey', $photo('CC BY-SA 4.0', 'Wikimedia Commons')),
+        ]], \JSON_THROW_ON_ERROR));
+        file_put_contents($dir.'/scenic.json', json_encode(['layer' => 'scenic', 'letter' => 'P', 'features' => [
+            $feature('node/9104', 'Viewpoint With No Camera', $photo('CC BY-SA 4.0', 'Jane Rider')),
+        ]], \JSON_THROW_ON_ERROR));
+
+        $tester = $this->runImport($dir);
+        $tester->assertCommandIsSuccessful();
+
+        $attrs = static fn (Item $i): array => $i->getAttributes();
+        $repo = $this->em->getRepository(Item::class);
+        self::assertArrayHasKey('photo', $attrs($repo->findOneBy(['sourceRef' => 'node/9101']) ?? self::fail('kept row')));
+        foreach (['node/9102', 'node/9103', 'node/9104'] as $ref) {
+            $item = $repo->findOneBy(['sourceRef' => $ref]);
+            self::assertNotNull($item, 'the row is imported');
+            self::assertArrayNotHasKey('photo', $item->getAttributes(), $ref);
+        }
+        $display = preg_replace('~\s+~', ' ', $tester->getDisplay()) ?? '';
+        self::assertStringContainsString('NC Abbey: licence', $display);
+        self::assertStringContainsString('Anonymous Abbey: no_author', $display);
+        self::assertStringContainsString('Viewpoint With No Camera: camera_unknown', $display);
+    }
+
     public function testUnknownAttributeKeyFails(): void
     {
         $tester = $this->runImport($this->fixturesDir('bad-key'));

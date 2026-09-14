@@ -25,6 +25,8 @@ use App\Entity\User;
 use App\Form\ImproveType;
 use App\Form\VoteType;
 use App\Media\Entity\MediaUpload;
+use App\Media\PhotoLocationConfirmation;
+use App\Media\PhotoValidator;
 use App\Routing\LocalePrefix;
 use App\Routing\LocalizedPath;
 use App\Service\ContributionReceipt;
@@ -93,6 +95,30 @@ final class ContributeController extends AbstractController
         }
 
         return $this->json($bikeWays->nearest((float) $lat, (float) $lng)->toArray());
+    }
+
+    /**
+     * How many rider photos an item's scenic view would hide with its pin at
+     * `lat`, `lng`, for the edit form's warning before the move is saved
+     * (docs/specs/scenic-views.md §8). `{hidden: n}`; 0 for any other letter
+     * and for a point that is not one.
+     */
+    #[Route('/contribute/pin-move-photos', name: 'contribute_pin_move_photos', methods: ['GET'])]
+    #[IsGranted('ROLE_USER')]
+    public function pinMovePhotos(Request $request, EntityManagerInterface $em, PhotoLocationConfirmation $confirmation): Response
+    {
+        $item = $em->find(Item::class, $request->query->getInt('item'));
+        if (null === $item) {
+            throw $this->createNotFoundException();
+        }
+        $lat = $request->query->get('lat');
+        $lng = $request->query->get('lng');
+        $none = ['hidden' => 0, 'farthestM' => null, 'withinM' => PhotoValidator::MAX_CAMERA_DISTANCE_M];
+        if (!is_numeric($lat) || !is_numeric($lng) || abs((float) $lat) > 90 || abs((float) $lng) > 180) {
+            return $this->json($none);
+        }
+
+        return $this->json(['withinM' => PhotoValidator::MAX_CAMERA_DISTANCE_M] + $confirmation->moveEffect($item, (float) $lat, (float) $lng) + $none);
     }
 
     #[Route('/contribute/osm-nearby', name: 'contribute_osm_nearby', methods: ['GET'])]
@@ -536,6 +562,8 @@ final class ContributeController extends AbstractController
             'edit_name' => $item->getName(),
             'item_lat' => $itemLat,
             'item_lng' => $itemLng,
+            // A scenic view warns before a pin move that hides rider photos (scenic-views.md §8).
+            'pin_photos_item' => ItemType::ScenicViews === $type ? $item->getId() : null,
             // The "Mark it confirmed" box needs a row that offers "it exists".
             // A box that asks what the curator already did is noise (owner
             // 2026-09-10): hidden once their own drawer confirmation is on the row.

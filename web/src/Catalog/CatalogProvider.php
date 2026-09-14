@@ -7,6 +7,9 @@ declare(strict_types=1);
 namespace App\Catalog;
 
 use App\Catalog\Links\LinkVerdictStore;
+use App\Coverage\CoverageRepository;
+use App\Media\PhotoPlace;
+use App\Media\PhotoValidator;
 use App\Moderation\ModerationScope;
 use App\Provider\ProviderCitations;
 use App\Service\BuildVersion;
@@ -167,7 +170,7 @@ final class CatalogProvider
     {
         // Creator is the earliest type=new submission; harvested rows stay anonymous.
         $sql = 'SELECT i.id, i.name, i.letter, ST_AsGeoJSON(i.geom) AS geom, i.attributes, i.source_ref, i.source, s.name AS prov, i.region_id, dp.provider_key AS pk,
-                       -- The pin a scenic photo is measured against (ScenicPhotoRule).
+                       -- The pin a photo is measured against (PhotoValidator).
                        ST_Y(ST_PointOnSurface(i.geom)) AS pin_lat, ST_X(ST_PointOnSurface(i.geom)) AS pin_lng,
                        contributor.display_name AS by_name, contributor.public_profile AS by_public, contributor.uuid AS by_uuid,
                        (i.state = \'verified\') AS verified,
@@ -253,8 +256,9 @@ final class CatalogProvider
     private function featureCollection(string $letter, ?string $source = null, ?string $excludeSource = null): array
     {
         $features = [];
+        $photoRefs = $this->osmPhotoRefs($letter);
         foreach ($this->itemRows($letter, $source, $excludeSource) as $row) {
-            $features[] = $this->feature($row);
+            $features[] = $this->feature($row, $photoRefs[(int) $row['id']] ?? null);
         }
 
         return ['type' => 'FeatureCollection', 'features' => $features];
@@ -284,28 +288,90 @@ final class CatalogProvider
 
         $rows = $this->itemRows($letter, onlyId: $itemId, anyState: $anyState);
 
-        return [] === $rows ? null : ['letter' => $letter, 'feature' => $this->feature($rows[0])];
+        return [] === $rows ? null : ['letter' => $letter, 'feature' => $this->feature($rows[0], $this->osmPhotoRefs($letter, $itemId)[$itemId] ?? null)];
+    }
+
+    /**
+     * The OSM point whose photo each item's drawer may borrow, keyed by item id.
+     *
+     * An item stands for an OSM point through `source_ref` (materialized from
+     * it) or `osm_ref` (an authority row attached to it): the same link
+     * CoverageRepository::detail() joins on. The point qualifies when
+     * CoverageRepository::photoPossible() says its tags could resolve a
+     * Commons photo, the answer its own drawer gets as `photo`. Each ref is
+     * read from the coverage row detail() reads (lowest letter), so the photo
+     * endpoint later resolves exactly these tags.
+     *
+     * Empty where the pipeline has not created coverage_poi (it is not a
+     * migration table).
+     *
+     * @see docs/specs/coverage-provider.md §7
+     *
+     * @return array<int, string>
+     */
+    private function osmPhotoRefs(string $letter, ?int $onlyId = null): array
+    {
+        if (null === $this->db->fetchOne("SELECT to_regclass('public.coverage_poi')")) {
+            return [];
+        }
+        $params = ['letter' => $letter];
+        $sql = "SELECT i.id, cp.ref, cp.tags
+                FROM item i
+                CROSS JOIN LATERAL (SELECT DISTINCT r FROM unnest(ARRAY[i.source_ref, i.osm_ref]) AS r WHERE r IS NOT NULL) refs
+                JOIN LATERAL (
+                    SELECT c.ref,
+                           jsonb_strip_nulls(jsonb_build_object('wikimedia_commons', c.tags->'wikimedia_commons',
+                                                                'image', c.tags->'image', 'wikidata', c.tags->'wikidata')) AS tags
+                      FROM coverage_poi c
+                     WHERE c.ref = refs.r
+                  ORDER BY c.letter
+                     LIMIT 1
+                ) cp ON true
+                WHERE i.letter = :letter AND i.state IN ".ItemState::servedSqlTuple();
+        if (null !== $onlyId) {
+            $sql .= ' AND i.id = :onlyId';
+            $params['onlyId'] = $onlyId;
+        }
+
+        /** @var list<array{id: int|string, ref: string, tags: string}> $rows */
+        $rows = $this->db->fetchAllAssociative($sql.' ORDER BY i.id, cp.ref = i.source_ref DESC, cp.ref', $params);
+        $refs = [];
+        foreach ($rows as $row) {
+            $id = (int) $row['id'];
+            if (isset($refs[$id])) {
+                continue;
+            }
+            /** @var array<string, mixed> $tags */
+            $tags = json_decode($row['tags'], true, 512, \JSON_THROW_ON_ERROR);
+            if (CoverageRepository::photoPossible($tags)) {
+                $refs[$id] = $row['ref'];
+            }
+        }
+
+        return $refs;
     }
 
     /**
      * The per-row mapping shared by the bulk payload and featureForItem(), so
-     * a live-inserted feature can never drift from the served one.
+     * a live-inserted feature can never drift from the served one. `$photoRef`
+     * is the OSM point whose photo the item may borrow (osmPhotoRefs()).
      *
      * @param array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null, pk: string|null, region_id: int|null, verified: bool, by_name: string|null, by_public: bool|null, by_uuid: string|null, letter: string, last_confirmed: string|null, state: string, imported_at: string|null, ev_provider: bool, ev_scope: bool|null, ev_conf: int|string, ev_last: string|null, ev_witness: string|null, ev_reclaimed: string|null, pin_lat: float|string|null, pin_lng: float|string|null} $row
      *
      * @return array{type: string, properties: array<string, mixed>, geometry: mixed}
      */
-    private function feature(array $row): array
+    private function feature(array $row, ?string $photoRef = null): array
     {
         $props = $this->decode($row['attributes']);
-        // A scenic view keeps only the photos taken near its pin, so the pin
-        // never promises a view that was photographed somewhere else.
-        if (ScenicPhotoRule::appliesTo($row['letter'])) {
-            $props = ScenicPhotoRule::filterAttributes(
-                $props,
-                is_numeric($row['pin_lat']) ? (float) $row['pin_lat'] : null,
-                is_numeric($row['pin_lng']) ? (float) $row['pin_lng'] : null,
-            );
+        // Only the photos PhotoValidator shows on this place: the same answer
+        // every photo got when it was linked, so a scenic pin never promises a
+        // view that was photographed somewhere else.
+        $props = PhotoValidator::sift($props, PhotoPlace::of($row['letter'], $row['pin_lat'], $row['pin_lng']))['attributes'];
+        // No photo of its own: the drawer asks /map/coverage/photo for the OSM
+        // point's, judged against this item's pin (coverage-provider.md §7).
+        // Absent otherwise, so every other row stays byte-stable.
+        if (null !== $photoRef && !\array_key_exists('photo', $props) && !\array_key_exists('photos', $props)) {
+            $props['photoRef'] = $photoRef;
         }
         if ('' !== $row['name']) {
             $props['n'] = $row['name'];

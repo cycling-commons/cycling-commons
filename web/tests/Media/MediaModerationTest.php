@@ -92,7 +92,8 @@ final class MediaModerationTest extends KernelTestCase
             Uuid::v4(), (int) $this->rider->getId(), $consent->getId(), 'EU',
             1200, 900, 4242, $takenAt, bucket: 'test-bucket-eu-01');
         $upload->claim((int) $submission->getId());
-        $upload->resolveGps($distanceM);
+        // Measured to the submission pin.
+        $upload->resolveGps($distanceM, 50.47, 5.86);
         $this->em->persist($upload);
         $this->em->flush();
 
@@ -128,7 +129,7 @@ final class MediaModerationTest extends KernelTestCase
     /**
      * How far from the pin the camera stood travels with the approved photo,
      * because a scenic view shows a rider photo only when it was taken near
-     * its pin (ScenicPhotoRule). Null when the photo carried no GPS.
+     * its pin (PhotoValidator). Null when the photo carried no GPS.
      */
     public function testApprovalCarriesTheCameraDistanceFromThePin(): void
     {
@@ -142,6 +143,44 @@ final class MediaModerationTest extends KernelTestCase
         $photos = $this->em->find(Item::class, $item->getId())?->getAttributes()['photos'] ?? [];
         self::assertCount(2, $photos);
         self::assertSame([42, null], array_map(static fn (array $p): mixed => \array_key_exists('distanceM', $p) ? $p['distanceM'] : 'absent', $photos));
+    }
+
+    /**
+     * On a scenic view a rider photo with no usable distance is hidden, not
+     * refused (PhotoValidator): approval still links it, so a curator can
+     * confirm "Taken here" on the map.
+     */
+    public function testApprovalOnAScenicViewLinksAPhotoItWillNotShowYet(): void
+    {
+        [$item, $submission] = $this->seedEdit();
+        $item->setLetter('P');
+        $submission->setLetter('P');
+        $this->em->flush();
+        $this->claimedUpload($submission);
+
+        $this->moderation->decide((int) $submission->getId(), 'approve', $this->curator, null);
+        $this->em->clear();
+
+        $photos = $this->em->find(Item::class, $item->getId())?->getAttributes()['photos'] ?? [];
+        self::assertCount(1, $photos, 'linked for a curator to confirm');
+    }
+
+    /** A photo under legal hold is refused by PhotoValidator: not linked, not decided. */
+    public function testApprovalLeavesAPhotoUnderLegalHoldAlone(): void
+    {
+        [$item, $submission] = $this->seedEdit();
+        $held = $this->claimedUpload($submission, distanceM: 10);
+        $held->escalate((int) $this->curator->getId(), 'Suspected illegal content.');
+        $this->claimedUpload($submission, distanceM: 20);
+        $this->em->flush();
+
+        $this->moderation->decide((int) $submission->getId(), 'approve', $this->curator, null);
+        $this->em->clear();
+
+        $photos = $this->em->find(Item::class, $item->getId())?->getAttributes()['photos'] ?? [];
+        self::assertCount(1, $photos);
+        self::assertSame(20, $photos[0]['distanceM']);
+        self::assertSame(MediaStatus::Pending, $this->em->find(MediaUpload::class, $held->getId())?->getStatus());
     }
 
     public function testAPhotoWithoutACaptureDateOmitsTheKeyEntirely(): void

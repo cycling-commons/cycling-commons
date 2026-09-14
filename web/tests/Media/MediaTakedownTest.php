@@ -202,6 +202,28 @@ final class MediaTakedownTest extends KernelTestCase
         self::assertSame(UserMessageKind::MediaTakedownDeclined, $messages[0]->getKind());
     }
 
+    /**
+     * Putting a photo back matches the gallery by upload id, like every other
+     * gallery change: an entry for the same upload whose stored URL drifted is
+     * not joined by a second copy.
+     */
+    public function testDecliningDoesNotDuplicateAnEntryWhoseUrlDrifted(): void
+    {
+        $rider = $this->rider('takedown-drift@example.com');
+        $curator = $this->rider('takedown-curator-drift@example.com');
+        $upload = $this->approved($rider);
+
+        $this->takedowns->request($upload, 'Please take it down.');
+        $item = $this->itemOf($upload);
+        $drifted = ['sm' => 'https://old-host.test/sm.webp'] + static::getContainer()->get(MediaDecisionService::class)->describe($upload);
+        $item->setAttributes(['photos' => [$drifted]]);
+        $this->em->flush();
+
+        $this->takedowns->decline($upload, $curator);
+
+        self::assertCount(1, $this->itemOf($upload)->getAttributes()['photos']);
+    }
+
     public function testDecidingTwiceChangesNothingTheSecondTime(): void
     {
         $rider = $this->rider('takedown-twice@example.com');

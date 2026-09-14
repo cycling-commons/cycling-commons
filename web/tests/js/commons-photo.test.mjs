@@ -15,7 +15,7 @@
 
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { watchCommonsPhoto, photoPollDelays } from '../../assets/map/commons-photo.js';
+import { watchCommonsPhoto, photoPollDelays, photoWaitRef } from '../../assets/map/commons-photo.js';
 
 const replies = (states) => {
   let i = 0;
@@ -108,4 +108,25 @@ test('watchJson gives up on an answer that is neither ready nor pending', async 
     { isReady: d => d.state === 'ready', isPending: d => d.state === 'pending' },
     () => { throw new Error('not ready'); }, () => { gaveUp = true; }, { fetchImpl: replies([{ state: 'none' }]), ...noSleep });
   assert.equal(gaveUp, true);
+});
+
+// Which OSM point a drawer waits on. A coverage point says so with `hasPhoto`
+// and its `ref`; a catalog item that stands for an OSM point and has no photo
+// of its own carries `photoRef` (CatalogProvider). Found 2026-09-15: a monument
+// materialized from an OSM point opened with no photo, because the catalog
+// feature had neither key and the drawer never asked.
+test('a coverage point waits on its own ref only when a photo is possible', () => {
+  assert.equal(photoWaitRef({ ref: 'node/1', hasPhoto: 1 }), 'node/1');
+  assert.equal(photoWaitRef({ ref: 'node/1' }), null);
+  assert.equal(photoWaitRef({ hasPhoto: 1 }), null);
+});
+
+test('a catalog item waits on the OSM point it stands for', () => {
+  assert.equal(photoWaitRef({ id: 46156, photoRef: 'way/721040994' }), 'way/721040994');
+  assert.equal(photoWaitRef({ id: 46156 }), null);
+});
+
+test('only an OSM ref is ever asked for', () => {
+  assert.equal(photoWaitRef({ photoRef: '../../admin' }), null);
+  assert.equal(photoWaitRef({ ref: 'relation/5', hasPhoto: 1 }), null);
 });

@@ -20,6 +20,7 @@ use App\Form\ModerationDecisionType;
 use App\Media\Entity\MediaUpload;
 use App\Media\MediaEscalationService;
 use App\Media\MediaTakedownService;
+use App\Media\PhotoLocationConfirmation;
 use App\Media\UrgentWithholdBreaker;
 use App\Moderation\AlreadyDecidedException;
 use App\Moderation\MissingQuestionException;
@@ -38,6 +39,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
@@ -599,6 +601,40 @@ final class ModerateController extends AbstractController
         }
 
         return $this->redirectToRoute('moderate');
+    }
+
+    /**
+     * Confirm a rider photo on a scenic view was taken at the pin.
+     *
+     * The map drawer's "Taken here" button posts here. 404 unless the uuid names
+     * an approved rider photo on a scenic view (letter P) that is not under
+     * legal hold. The write-guard is the item's region, because the confirmation
+     * is about that item's pin.
+     *
+     * @see docs/specs/photo-uploads.md §5g
+     * @see docs/specs/scenic-views.md §8
+     */
+    #[Route('/moderate/photo/{uuid}/taken-here', name: 'moderate_photo_taken_here', methods: ['POST'])]
+    public function photoTakenHere(string $uuid, Request $request, PhotoLocationConfirmation $confirmation): JsonResponse
+    {
+        if (!$this->isCsrfTokenValid('photo-taken-here', (string) $request->request->get('_token'))) {
+            return new JsonResponse(['ok' => false, 'error' => 'invalid_token'], Response::HTTP_FORBIDDEN);
+        }
+
+        $found = $confirmation->confirmable($uuid);
+        if (null === $found) {
+            return new JsonResponse(['ok' => false, 'error' => 'not_found'], Response::HTTP_NOT_FOUND);
+        }
+
+        /** @var User $curator */
+        $curator = $this->getUser();
+        if (!$this->scopeProvider->allowsRegion($this->scopeProvider->scopeFor($curator), $found['item']->getRegionId())) {
+            return new JsonResponse(['ok' => false, 'error' => 'out_of_scope'], Response::HTTP_FORBIDDEN);
+        }
+
+        $confirmation->confirm($found['upload'], $curator);
+
+        return new JsonResponse(['ok' => true]);
     }
 
     /**

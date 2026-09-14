@@ -153,7 +153,7 @@ final readonly class ScanAndReleaseUploadHandler
         }
 
         [$pinLat, $pinLng] = $this->submissionPin($submissionId) ?? [$message->pinLat, $message->pinLng];
-        $upload->resolveGps(GpsDistance::metres($processed->gpsLat, $processed->gpsLng, $pinLat, $pinLng));
+        $upload->resolveGps(GpsDistance::between($processed->gpsLat, $processed->gpsLng, $pinLat, $pinLng), $pinLat, $pinLng);
     }
 
     /**

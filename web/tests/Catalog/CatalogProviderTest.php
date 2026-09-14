@@ -9,6 +9,7 @@ namespace App\Tests\Catalog;
 use App\Catalog\CatalogProvider;
 use App\Entity\User;
 use App\Moderation\ModerationScope;
+use App\Tests\Coverage\CoverageSchema;
 use App\World\Entity\Country;
 use App\World\Entity\Subdivision;
 use Doctrine\ORM\EntityManagerInterface;
@@ -18,6 +19,8 @@ use Symfony\Component\Console\Tester\CommandTester;
 
 final class CatalogProviderTest extends KernelTestCase
 {
+    use CoverageSchema;
+
     private EntityManagerInterface $em;
 
     #[\Override]
@@ -810,17 +813,20 @@ final class CatalogProviderTest extends KernelTestCase
 
     /**
      * A scenic view serves only the photos whose camera stood near its pin
-     * (ScenicPhotoRule). The same far photo on a water tap is untouched: the
-     * rule is about promising a view, and only a scenic pin promises one.
+     * (PhotoValidator). The same far photo on a water tap is untouched: the
+     * rule is about promising a view, and only a scenic pin promises one. A
+     * photo with no licence we accept is served on no letter.
      */
     public function testAScenicViewDropsPhotosTakenAwayFromItsPin(): void
     {
         $db = $this->em->getConnection();
         // 0.0009 degrees of latitude is about 100 m, 0.0036 about 400 m.
-        $near = ['sm' => 'https://img.test/near-sm.webp', 'lg' => 'https://img.test/near-lg.webp', 'cameraAt' => [50.4009, 4.5]];
-        $far = ['sm' => 'https://img.test/far-sm.webp', 'lg' => 'https://img.test/far-lg.webp', 'cameraAt' => [50.4036, 4.5]];
-        $rider = ['sm' => 'https://img.test/rider-sm.webp', 'lg' => 'https://img.test/rider-lg.webp', 'distanceM' => 40];
-        $noGps = ['sm' => 'https://img.test/nogps-sm.webp', 'lg' => 'https://img.test/nogps-lg.webp', 'distanceM' => null];
+        $credited = ['credit' => 'Jane Rider', 'license' => 'CC BY-SA 4.0'];
+        $near = ['sm' => 'https://img.test/near-sm.webp', 'lg' => 'https://img.test/near-lg.webp', 'cameraAt' => [50.4009, 4.5]] + $credited;
+        $far = ['sm' => 'https://img.test/far-sm.webp', 'lg' => 'https://img.test/far-lg.webp', 'cameraAt' => [50.4036, 4.5]] + $credited;
+        $rider = ['id' => 'aaaaaaaa-0000-4000-8000-000000000001', 'sm' => 'https://img.test/rider-sm.webp', 'lg' => 'https://img.test/rider-lg.webp', 'distanceM' => 40, 'credit' => '', 'license' => 'CC BY-SA 4.0'];
+        $noGps = ['id' => 'aaaaaaaa-0000-4000-8000-000000000002', 'sm' => 'https://img.test/nogps-sm.webp', 'lg' => 'https://img.test/nogps-lg.webp', 'distanceM' => null, 'credit' => '', 'license' => 'CC BY-SA 4.0'];
+        $unlicensed = ['sm' => 'https://img.test/nc-sm.webp', 'lg' => 'https://img.test/nc-lg.webp', 'credit' => 'Jane Rider', 'license' => 'CC BY-NC-SA 4.0'];
 
         $insert = "INSERT INTO item (letter, name, geom, country_code, state, source, source_ref, attributes, created_at, updated_at)
                    VALUES (:letter, :name, ST_GeomFromText('POINT(4.5 50.4)', 4326), 'BE', 'verified', 'manual', :ref, CAST(:attrs AS jsonb), now(), now())";
@@ -829,7 +835,7 @@ final class CatalogProviderTest extends KernelTestCase
         $db->executeStatement($insert, ['letter' => 'P', 'name' => 'Scenic gallery test', 'ref' => 'manual:scenic-gallery',
             'attrs' => json_encode(['type' => 'Viewpoint', 'photos' => [$far, $near, $rider, $noGps]], \JSON_THROW_ON_ERROR)]);
         $db->executeStatement($insert, ['letter' => 'B', 'name' => 'Tap far photo test', 'ref' => 'manual:tap-far',
-            'attrs' => json_encode(['t' => 'Drinking water', 'photo' => $far], \JSON_THROW_ON_ERROR)]);
+            'attrs' => json_encode(['t' => 'Drinking water', 'photo' => $far, 'photos' => [$unlicensed]], \JSON_THROW_ON_ERROR)]);
 
         $payload = $this->payload();
         $byName = static function (array $collection, string $name): array {
@@ -849,10 +855,67 @@ final class CatalogProviderTest extends KernelTestCase
         self::assertSame([$near['sm'], $rider['sm']], array_column($gallery['photos'], 'sm'), 'near cameras and near rider photos stay, in order');
 
         $tap = $byName($payload['B'], 'Tap far photo test');
-        self::assertSame($far['sm'], $tap['photo']['sm'] ?? null, 'other letters are unaffected');
+        self::assertSame($far['sm'], $tap['photo']['sm'] ?? null, 'other letters are unaffected by the camera');
+        self::assertArrayNotHasKey('photos', $tap, 'a non-commercial licence is served on no letter');
 
         $id = (int) $db->fetchOne("SELECT id FROM item WHERE source_ref = 'manual:scenic-far'");
         $live = static::getContainer()->get(CatalogProvider::class)->featureForItem($id);
         self::assertArrayNotHasKey('photo', $live['feature']['properties'] ?? [], 'a live insert follows the same rule');
+    }
+
+    /**
+     * A place that stands for an OSM point and has no photo of its own names
+     * that point as `photoRef` when its tags could resolve a Commons photo,
+     * the same test the coverage detail answers `photo` with
+     * (coverage-provider.md §7). The drawer then asks /map/coverage/photo for
+     * it, exactly as it does for the coverage point. Found 2026-09-15: a
+     * monument materialized from an OSM point lost the point's photo.
+     */
+    public function testAPlaceStandingForAnOsmPointNamesThePointsPhoto(): void
+    {
+        $db = $this->em->getConnection();
+        self::ensureCoverageSchema($db);
+        $poi = static function (string $ref, string $letter, array $tags) use ($db): void {
+            $db->executeStatement(
+                "INSERT INTO coverage_poi (ref, letter, name, geom, tags, country_code)
+                 VALUES (:r, :l, 'x', ST_SetSRID(ST_MakePoint(4.5, 50.4), 4326), CAST(:t AS jsonb), 'BE')",
+                ['r' => $ref, 'l' => $letter, 't' => json_encode($tags, \JSON_THROW_ON_ERROR)],
+            );
+        };
+        $item = static function (string $name, string $letter, string $source, string $sourceRef, ?string $osmRef, array $attrs) use ($db): int {
+            $db->executeStatement(
+                "INSERT INTO item (letter, name, geom, country_code, state, source, source_ref, osm_ref, attributes, created_at, updated_at)
+                 VALUES (:l, :n, ST_GeomFromText('POINT(4.5 50.4)', 4326), 'BE', 'verified', :s, :sr, :or, CAST(:a AS jsonb), now(), now())",
+                ['l' => $letter, 'n' => $name, 's' => $source, 'sr' => $sourceRef, 'or' => $osmRef, 'a' => json_encode((object) $attrs, \JSON_THROW_ON_ERROR)],
+            );
+
+            return (int) $db->fetchOne('SELECT id FROM item WHERE name = :n', ['n' => $name]);
+        };
+
+        $poi('way/9101', 'Q', ['historic' => 'memorial', 'wikidata' => 'Q140185900', 'wikimedia_commons' => 'Category:Somewhere']);
+        $poi('node/9102', 'Q', ['historic' => 'castle', 'wikimedia_commons' => 'File:Own photo test.jpg']);
+        $poi('node/9103', 'Q', ['historic' => 'ruins', 'wikimedia_commons' => 'Category:Only a category']);
+        $poi('node/9104', 'B', ['amenity' => 'drinking_water', 'image' => 'File:Twin tap.jpg']);
+
+        $monument = $item('Photo ref monument', 'Q', 'osm', 'way/9101', 'way/9101', []);
+        $castle = $item('Photo ref castle', 'Q', 'osm', 'node/9102', 'node/9102', ['photo' => [
+            'sm' => 'https://img.test/own-sm.webp', 'lg' => 'https://img.test/own-lg.webp', 'credit' => 'Jane Rider', 'license' => 'CC BY-SA 4.0',
+        ]]);
+        $ruins = $item('Photo ref ruins', 'Q', 'osm', 'node/9103', 'node/9103', []);
+        $tap = $item('Photo ref tap', 'B', 'authority', 'rivm-drinkwater:50.4,4.5', 'node/9104', []);
+        $manual = $item('Photo ref manual', 'Q', 'manual', 'manual:photo-ref', null, []);
+
+        $payload = $this->payload();
+        $q = $this->byId($payload['Q']['features']);
+
+        self::assertSame('way/9101', $q[$monument]['photoRef'] ?? null, 'a Wikidata id is enough, as it is for the coverage point');
+        self::assertArrayNotHasKey('photoRef', $q[$castle], 'its own photo always wins');
+        self::assertSame('https://img.test/own-sm.webp', $q[$castle]['photo']['sm'] ?? null);
+        self::assertArrayNotHasKey('photoRef', $q[$ruins], 'a Commons category is not a photo');
+        self::assertArrayNotHasKey('photoRef', $q[$manual], 'no OSM point, nothing to borrow');
+        self::assertSame('node/9104', $this->byId($payload['B']['features'])[$tap]['photoRef'] ?? null, 'the OSM twin of an authority row counts');
+
+        $live = static::getContainer()->get(CatalogProvider::class)->featureForItem($monument);
+        self::assertSame('way/9101', $live['feature']['properties']['photoRef'] ?? null, 'a live insert carries it too');
     }
 }

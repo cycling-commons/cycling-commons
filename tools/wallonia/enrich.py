@@ -4,18 +4,20 @@
 Sources (all cached via overpass.get_json):
   - Wikidata wbgetentities  → P18 image, sitelinks, short description
   - Wikipedia REST summary  → a richer one-paragraph blurb
-  - Commons imageinfo       → photo thumbnail URL + LICENCE + credit (only free licences are kept)
+  - Commons imageinfo       → photo thumbnail URL + LICENCE + credit, kept only when the file clears
+                              wikimedia/commons_photo.usable_photo (the app's licence list, an author, no
+                              Commons non-free or restriction flag)
 """
-import re
 import json
 import hashlib
 import urllib.parse
 import urllib.request
+from wikimedia import commons_photo
+
 from . import overpass
 
 WD_API = "https://www.wikidata.org/w/api.php"
 COMMONS_API = "https://commons.wikimedia.org/w/api.php"
-FREE = ("cc0", "cc by", "cc-by", "public domain", "pd-", "no restrictions", "attribution")
 
 
 def _translate(text, src):
@@ -79,7 +81,7 @@ def _wikipedia_summary(lang, title):
 
 
 def _commons_imageinfo(filenames):
-    """Batch Commons imageinfo → {filename: {thumb, license, artist}} (filename without 'File:')."""
+    """Batch Commons imageinfo → {filename: commons_photo.meta_from_page(...)} (filename without 'File:')."""
     out = {}
     files = ["File:" + f for f in filenames]
     for i in range(0, len(files), 40):
@@ -87,23 +89,31 @@ def _commons_imageinfo(filenames):
                + "&iiurlwidth=520&titles=" + urllib.parse.quote("|".join(files[i:i + 40])))
         d = overpass.get_json(url)
         for pg in ((d or {}).get("query", {}).get("pages", {}) or {}).values():
-            ii = (pg.get("imageinfo") or [{}])[0]
-            em = ii.get("extmetadata", {})
-            title = pg.get("title", "").replace("File:", "")
-            artist = re.sub("<[^>]+>", "", (em.get("Artist", {}) or {}).get("value", "")).strip()
-            out[title] = {"thumb": ii.get("thumburl"),
-                          "license": (em.get("LicenseShortName", {}) or {}).get("value", ""),
-                          "artist": artist}
+            out[pg.get("title", "").replace("File:", "")] = commons_photo.meta_from_page(pg)
     return out
 
 
-def _photo(file, info):
+def photo_for(file, info):
+    """The stored photo for one Commons file, or None when it fails commons_photo.usable_photo.
+
+    `info` is commons_photo.meta_from_page() for the file. The credit is the
+    author Commons states, never a placeholder: a file with no author is not
+    kept, because CC BY-SA without a name cannot be complied with.
+    """
+    if not info or not info.get("thumb"):
+        return None
+    usable = commons_photo.usable_photo(file, info)
+    if usable is None:
+        return None
     enc = urllib.parse.quote(file.replace(" ", "_"))
-    return {"sm": f"https://commons.wikimedia.org/wiki/Special:FilePath/{enc}?width=520",
-            "lg": f"https://commons.wikimedia.org/wiki/Special:FilePath/{enc}?width=1400",
-            "credit": info.get("artist") or "Wikimedia Commons",
-            "license": info.get("license") or "Wikimedia Commons",
-            "source": f"https://commons.wikimedia.org/wiki/File:{enc}"}
+    photo = {"sm": f"https://commons.wikimedia.org/wiki/Special:FilePath/{enc}?width=520",
+             "lg": f"https://commons.wikimedia.org/wiki/Special:FilePath/{enc}?width=1400",
+             "credit": usable["credit"],
+             "license": usable["license"],
+             "source": f"https://commons.wikimedia.org/wiki/File:{enc}"}
+    if usable["user"]:
+        photo["creditUrl"] = "https://commons.wikimedia.org/wiki/User:" + urllib.parse.quote(usable["user"].replace(" ", "_"))
+    return photo
 
 
 def enrich(features):
@@ -147,11 +157,11 @@ def enrich(features):
             props["desc"] = desc
             if translated:
                 props["descTr"] = 1
-        # photo: from Wikidata P18, only if Commons reports a free licence
+        # photo: from Wikidata P18, only if it clears commons_photo.usable_photo
         if ent and ent["image"] in imginfo:
-            info = imginfo[ent["image"]]
-            if info.get("thumb") and any(k in info["license"].lower() for k in FREE):
-                props["photo"] = _photo(ent["image"], info)
+            photo = photo_for(ent["image"], imginfo[ent["image"]])
+            if photo:
+                props["photo"] = photo
         if props.get("desc") or props.get("photo"):
             n += 1
     return n

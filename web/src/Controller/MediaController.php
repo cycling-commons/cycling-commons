@@ -47,11 +47,15 @@ final class MediaController extends AbstractController
 {
     public const string CSRF_INTENTION = 'media-upload';
 
-    /** Leading-byte sniff only — worker decode is the real gate. */
     /** Long enough for a useful sentence, short enough to stay out of the way. */
     private const int ALT_MAX = 300;
 
-    private const array SNIFFED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif', 'image/avif'];
+    /**
+     * Leading-byte sniff only; the worker's decode is the real gate. The same
+     * formats PhotoProcessor decodes (JPEG, PNG, WebP, HEIC/HEIF), so a file
+     * the worker would refuse for its format is refused here first.
+     */
+    private const array SNIFFED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'];
 
     public function __construct(
         private readonly ConsentService $consent,

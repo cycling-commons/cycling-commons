@@ -18,6 +18,23 @@ export function photoPollDelays(){
 }
 
 /**
+ * The OSM point whose Commons photo a drawer waits on, or null.
+ *
+ * A coverage point names itself: `ref`, when its detail said `photo`
+ * (`hasPhoto`). A catalog item that stands for an OSM point and has no photo of
+ * its own names that point as `photoRef` (CatalogProvider), so it borrows the
+ * point's photo through the same endpoint, judged against the item's pin. Only
+ * the two shapes the endpoint routes (`node/…`, `way/…`) are ever asked for.
+ *
+ * @param {{ref?: string, hasPhoto?: unknown, photoRef?: string}} p feature properties
+ * @returns {string|null}
+ */
+export function photoWaitRef(p){
+  const ref = p.photoRef || (p.hasPhoto ? p.ref : null);
+  return typeof ref === 'string' && /^(node|way)\/\d+$/.test(ref) ? ref : null;
+}
+
+/**
  * Poll one POI's cached Commons photo until it is ready, or give up.
  * Calls onReady at most once, or onGiveUp at most once. Never both.
  *

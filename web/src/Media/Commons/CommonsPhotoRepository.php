@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Media\Commons;
 
+use App\Media\PhotoReason;
 use Doctrine\DBAL\Connection;
 
 /**
@@ -41,12 +42,12 @@ final readonly class CommonsPhotoRepository
     }
 
     /**
-     * @return array{file: string, state: string, credit: ?string, credit_user: ?string, license: ?string, storage_bucket: ?string, storage_prefix: ?string, width: ?int, height: ?int, camera_lat: ?float, camera_lng: ?float}|null
+     * @return array{file: string, state: string, failed_reason: ?string, credit: ?string, credit_user: ?string, license: ?string, storage_bucket: ?string, storage_prefix: ?string, width: ?int, height: ?int, camera_lat: ?float, camera_lng: ?float}|null
      */
     public function find(string $file): ?array
     {
         $row = $this->db->fetchAssociative(
-            'SELECT file, state, credit, credit_user, license, storage_bucket, storage_prefix, width, height, camera_lat, camera_lng FROM commons_photo WHERE file = :f',
+            'SELECT file, state, failed_reason, credit, credit_user, license, storage_bucket, storage_prefix, width, height, camera_lat, camera_lng FROM commons_photo WHERE file = :f',
             ['f' => $file],
         );
         if (false === $row) {
@@ -59,6 +60,7 @@ final readonly class CommonsPhotoRepository
         return [
             'file' => (string) $row['file'],
             'state' => (string) $row['state'],
+            'failed_reason' => null === $row['failed_reason'] ? null : (string) $row['failed_reason'],
             'credit' => null === $row['credit'] ? null : (string) $row['credit'],
             'credit_user' => null === $row['credit_user'] ? null : (string) $row['credit_user'],
             'license' => null === $row['license'] ? null : (string) $row['license'],
@@ -128,7 +130,36 @@ final readonly class CommonsPhotoRepository
     }
 
     /**
-     * Forget every "no free licence" verdict, so the gate is asked again.
+     * PhotoValidator refused the file for the place that asked, so nothing was
+     * downloaded. What Commons said is kept, so the refusal is known without
+     * asking again and admit() can tell whether another place may show it.
+     */
+    public function markDeclined(string $file, string $reason, string $credit, ?string $creditUser, string $license, ?float $cameraLat, ?float $cameraLng): void
+    {
+        [$cameraLat, $cameraLng] = null === $cameraLat || null === $cameraLng ? [null, null] : [$cameraLat, $cameraLng];
+        $this->db->executeStatement(
+            'UPDATE commons_photo SET state = :s, failed_reason = :r, credit = :c, credit_user = :u, license = :l,
+                    camera_lat = :clat, camera_lng = :clng, camera_checked_at = NOW()
+             WHERE file = :f',
+            ['s' => CommonsPhotoState::Declined->value, 'r' => substr($reason, 0, 64), 'c' => substr($credit, 0, 255),
+                'u' => $creditUser, 'l' => substr($license, 0, 64), 'clat' => $cameraLat, 'clng' => $cameraLng, 'f' => $file],
+        );
+    }
+
+    /**
+     * Put a declined file back in the queue because a place that may show it
+     * asked. True only for the caller that reopened it, so one dispatch.
+     */
+    public function reopen(string $file): bool
+    {
+        return 1 === $this->db->executeStatement(
+            'UPDATE commons_photo SET state = :pending, failed_reason = NULL, requested_at = NOW() WHERE file = :f AND state = :declined',
+            ['pending' => CommonsPhotoState::Pending->value, 'declined' => CommonsPhotoState::Declined->value, 'f' => $file],
+        );
+    }
+
+    /**
+     * Forget every licence verdict, so the gate is asked again.
      *
      * `unusable` is terminal on purpose: the verdict is about the file, and
      * asking Commons twice gets the same answer. That reasoning holds only
@@ -139,8 +170,9 @@ final readonly class CommonsPhotoRepository
      * have yet. Without this they would have stayed hotlinked forever, with the
      * report calmly saying they were not ours to republish.
      *
-     * Scoped to `no_free_licence`. An `infected` or `decompression_bomb`
-     * verdict is about the bytes and does not change because a list did.
+     * Scoped to the `licence` reason. An `infected` or `decompression_bomb`
+     * verdict is about the bytes, and `no_author` or `non_free` is about the
+     * file page; none of them changes because our list did.
      *
      * @return int rows put back in the queue
      */
@@ -150,7 +182,7 @@ final readonly class CommonsPhotoRepository
         // the callers here count and report it.
         return (int) $this->db->executeStatement(
             'DELETE FROM commons_photo WHERE state = :unusable AND failed_reason = :why',
-            ['unusable' => CommonsPhotoState::Unusable->value, 'why' => 'no_free_licence'],
+            ['unusable' => CommonsPhotoState::Unusable->value, 'why' => PhotoReason::Licence->value],
         );
     }
 

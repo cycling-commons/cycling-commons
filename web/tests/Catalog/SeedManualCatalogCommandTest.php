@@ -139,6 +139,27 @@ final class SeedManualCatalogCommandTest extends KernelTestCase
         self::assertSame('Rz98', $attrs['photos'][1]['credit']);
     }
 
+    /**
+     * A seeded photo goes through PhotoValidator like every other: the two
+     * scenic pins name no camera point, so their photos are left off and the
+     * report says so.
+     */
+    public function testAScenicPinsPhotoWithNoCameraIsLeftOffAndReported(): void
+    {
+        $tester = $this->runSeed();
+        $tester->assertCommandIsSuccessful();
+
+        foreach (['Signal de Botrange', 'Cascade de Coo'] as $name) {
+            $item = $this->em->getRepository(Item::class)->findOneBy(['source' => ItemSource::Manual, 'name' => $name]);
+            self::assertNotNull($item, $name);
+            self::assertArrayNotHasKey('photo', $item->getAttributes(), $name);
+            self::assertArrayNotHasKey('photos', $item->getAttributes(), $name);
+        }
+        $display = preg_replace('~\s+~', ' ', $tester->getDisplay()) ?? '';
+        self::assertStringContainsString('Signal de Botrange: camera_unknown', $display);
+        self::assertStringContainsString('Cascade de Coo: camera_unknown', $display);
+    }
+
     /** A seeded climb types no measured value; app:climbs:recompute owns them (docs/specs/climb-elevation.md §7). */
     public function testNoSeededClimbTypesAMeasuredValue(): void
     {

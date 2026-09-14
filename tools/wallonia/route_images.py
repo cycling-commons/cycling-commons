@@ -2,7 +2,7 @@
 """Attach a representative free-licence Wikimedia Commons photo to each quality-ride in routes-data.js.
 
 For each ride a curated *subject* — a scenic landmark it passes (a citadel, waterfall, dam, abbey,
-moorland…) — is resolved on Wikidata; its P18 image is used only if Commons reports a free licence.
+moorland…), is resolved on Wikidata; its P18 image is used only if it clears wikimedia/commons_photo.usable_photo (enrich.photo_for).
 Existing routes keep any photo they already have. Lossless append (other route fields untouched).
 """
 import json
@@ -44,9 +44,9 @@ def _photo_for(subjects):
         ent = enrich._wikidata_entities([qid]).get(qid)
         if not ent or not ent["image"]:
             continue
-        info = enrich._commons_imageinfo([ent["image"]]).get(ent["image"])
-        if info and info.get("thumb") and any(k in (info["license"] or "").lower() for k in enrich.FREE):
-            return enrich._photo(ent["image"], info), s
+        photo = enrich.photo_for(ent["image"], enrich._commons_imageinfo([ent["image"]]).get(ent["image"]))
+        if photo:
+            return photo, s
     return None, None
 
 

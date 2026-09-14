@@ -20,7 +20,7 @@ use Symfony\Component\HttpClient\Response\MockResponse;
  * Where the camera stood, for photos stored before anybody asked.
  *
  * A scenic view hides every photo whose camera position is unknown
- * (ScenicPhotoRule), so without this backfill every photo fetched before the
+ * (PhotoValidator), so without this backfill every photo fetched before the
  * camera columns existed would vanish from the scenic layer, including the ones
  * taken right at the pin.
  */

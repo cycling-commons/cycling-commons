@@ -8,14 +8,12 @@ namespace App\Media\MessageHandler;
 
 use App\Media\Commons\CommonsApi;
 use App\Media\Commons\CommonsFile;
-use App\Media\Commons\CommonsPhotoRepository;
+use App\Media\Commons\CommonsPhotoAdmission;
 use App\Media\Commons\CommonsUnavailable;
 use App\Media\Commons\WikidataImageRepository;
-use App\Media\Message\FetchCommonsPhoto;
 use App\Media\Message\ResolveWikidataImage;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
-use Symfony\Component\Messenger\MessageBusInterface;
 
 /**
  * The second hop: Wikidata names the file, then Commons is asked for it.
@@ -36,8 +34,7 @@ final readonly class ResolveWikidataImageHandler
     public function __construct(
         private CommonsApi $api,
         private WikidataImageRepository $images,
-        private CommonsPhotoRepository $photos,
-        private MessageBusInterface $bus,
+        private CommonsPhotoAdmission $admission,
         private LoggerInterface $logger,
     ) {
     }
@@ -66,8 +63,10 @@ final readonly class ResolveWikidataImageHandler
         $file = null === $raw ? null : CommonsFile::fromTags(['wikimedia_commons' => 'File:'.$raw]);
         $this->images->record($message->qid, $file);
 
-        if (null !== $file && $this->photos->claim($file)) {
-            $this->bus->dispatch(new FetchCommonsPhoto($file, $message->continent));
+        // Admitted for the place that asked, so a file declined for a scenic
+        // view is not fetched again for it (CommonsPhotoAdmission::admit()).
+        if (null !== $file) {
+            $this->admission->admit($file, $message->continent, $message->place());
         }
     }
 }

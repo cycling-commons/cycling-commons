@@ -8,6 +8,9 @@ namespace App\Catalog;
 
 use App\Media\Commons\CommonsFile;
 use App\Media\Commons\CommonsPhotoAdmission;
+use App\Media\PhotoFacts;
+use App\Media\PhotoPlace;
+use App\Media\PhotoValidator;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 
@@ -224,7 +227,7 @@ final class BestOfPreview
      *
      * @param list<array{id: int|string, name: string, attributes: string|null, ref: string|null, distance_m: int|string|null, lat: float|string|null, lng: float|string|null}> $rows
      *
-     * @return array<string, array{0: float, 1: float}|null> file => where its camera stood, null when unknown
+     * @return array<string, PhotoFacts> file => what the cached copy says about it
      */
     private function readyFiles(array $rows): array
     {
@@ -247,18 +250,16 @@ final class BestOfPreview
             return [];
         }
 
-        /** @var list<array{file: string, camera_lat: float|string|null, camera_lng: float|string|null}> $ready */
+        /** @var list<array{file: string, credit: string|null, license: string|null, camera_lat: float|string|null, camera_lng: float|string|null}> $ready */
         $ready = $this->db->fetchAllAssociative(
-            "SELECT file, camera_lat, camera_lng FROM commons_photo WHERE state = 'ready' AND file IN (:files)",
+            "SELECT file, credit, license, camera_lat, camera_lng FROM commons_photo WHERE state = 'ready' AND file IN (:files)",
             ['files' => array_keys($files)],
             ['files' => ArrayParameterType::STRING],
         );
 
         $out = [];
         foreach ($ready as $r) {
-            $out[$r['file']] = is_numeric($r['camera_lat']) && is_numeric($r['camera_lng'])
-                ? [(float) $r['camera_lat'], (float) $r['camera_lng']]
-                : null;
+            $out[$r['file']] = PhotoFacts::ofCommonsRow($r);
         }
 
         return $out;
@@ -342,7 +343,7 @@ final class BestOfPreview
     /**
      * @param array{id: int|string, name: string, attributes?: string|array<string, mixed>|null, ref?: string|null, distance_m?: int|string|null, lat?: float|string|null, lng?: float|string|null} $row
      * @param list<string>                                                                                                                                                                          $bikes
-     * @param array<string, array{0: float, 1: float}|null>                                                                                                                                         $shot  files already fetched, with where their camera stood
+     * @param array<string, PhotoFacts>                                                                                                                                                             $shot  files already fetched, with what their cached copy says
      *
      * @return Ranked
      */
@@ -381,18 +382,17 @@ final class BestOfPreview
         // name needs no second query to find.
         $file = CommonsFile::fromTags($attrs);
 
-        // A scenic card shows only a photo taken near its pin, the rule the
-        // map drawer follows (ScenicPhotoRule). A stored photo that fails it
-        // is dropped here, and a cached Commons file that fails it is treated
-        // as no file at all, so it neither earns the bonus below nor is
-        // looked up once the list is cut.
-        if (ScenicPhotoRule::appliesTo($type->letter())) {
-            $lat = is_numeric($row['lat'] ?? null) ? (float) $row['lat'] : null;
-            $lng = is_numeric($row['lng'] ?? null) ? (float) $row['lng'] : null;
-            $attrs = ScenicPhotoRule::filterAttributes($attrs, $lat, $lng);
-            if (null !== $file && !ScenicPhotoRule::allows(['cameraAt' => $shot[$file] ?? null], $lat, $lng)) {
-                $file = null;
-            }
+        // A card shows only a photo PhotoValidator shows on this place, the
+        // rule the map drawer follows: on a scenic card, only a photo taken
+        // near its pin. A stored photo that fails it is dropped here, and a
+        // cached Commons file that fails it is treated as no file at all, so
+        // it neither earns the bonus below nor is looked up once the list is
+        // cut. On a scenic card a file not fetched yet has no known camera,
+        // so it is no file either.
+        $place = PhotoPlace::of($type->letter(), $row['lat'] ?? null, $row['lng'] ?? null);
+        $attrs = PhotoValidator::sift($attrs, $place)['attributes'];
+        if (null !== $file && (isset($shot[$file]) ? !PhotoValidator::verdict($shot[$file], $place)->shows() : $place->isScenicView())) {
+            $file = null;
         }
 
         // A photographed place outranks an unphotographed one, for the reason

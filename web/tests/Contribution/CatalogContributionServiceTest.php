@@ -740,6 +740,44 @@ final class CatalogContributionServiceTest extends KernelTestCase
             'nothing was stored, so nothing can carry the url');
     }
 
+    /**
+     * A photo reaches a place only through a path that runs PhotoValidator
+     * (photo-uploads.md §5h). A form field is not one: a crafted
+     * `extras[photo]` or `details[photos]` is refused outright, on an edit and
+     * on a new place, so nothing hotlinked or unlicensed can ride in on the
+     * change set.
+     */
+    public function testAPhotoPostedAsAFieldIsRefused(): void
+    {
+        $this->wallonia();
+        $item = $this->item('B', '{"type":"Point","coordinates":[5.86,50.47]}', ['availability' => 'Always']);
+        $photo = ['sm' => 'https://example.org/x.jpg', 'lg' => 'https://example.org/x.jpg', 'credit' => 'Me', 'license' => 'CC0'];
+
+        foreach ([['extras' => ['photo' => $photo]], ['details' => ['photos' => [$photo]]], ['extras' => ['photoFile' => 'X.jpg']]] as $fields) {
+            try {
+                $this->service->submit('improve', ['_item_id' => $item->getId()] + $fields, $this->curator());
+                self::fail('a photo field must not be accepted on an edit');
+            } catch (ValidationFailedException $e) {
+                self::assertStringContainsString('contribute.error.photo_field', (string) $e->getViolations());
+            }
+        }
+
+        try {
+            $this->service->submit('add', [
+                'type' => 'water-food', 'lat' => 50.47, 'lng' => 5.86,
+                'details' => ['name' => 'A fountain'],
+                'extras' => ['photo' => $photo],
+            ], $this->curator());
+            self::fail('a photo field must not be accepted on a new place');
+        } catch (ValidationFailedException $e) {
+            self::assertStringContainsString('contribute.error.photo_field', (string) $e->getViolations());
+        }
+
+        $this->em->refresh($item);
+        self::assertArrayNotHasKey('photo', $item->getAttributes());
+        self::assertArrayNotHasKey('photos', $item->getAttributes());
+    }
+
     public function testImproveClearingPrefilledAttributeRecordsRemoval(): void
     {
         $item = $this->item('N', '{"type":"Point","coordinates":[5.24,50.51]}', ['surface' => 'Asphalt']);

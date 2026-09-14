@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Controller;
 
+use App\Media\Message\FetchCommonsPhoto;
 use App\Tests\Coverage\CoverageSchema;
 use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
@@ -55,9 +56,52 @@ final class CoveragePhotoControllerTest extends WebTestCase
         ), 'a second reader must not create a second row, and so cannot queue a second download');
     }
 
+    /** The fetch is judged against the place that asked, so the place rides along. */
+    public function testTheFetchCarriesThePlaceThatAsked(): void
+    {
+        $client = $this->browser();
+        $id = $this->seed(['tourism' => 'viewpoint', 'wikimedia_commons' => 'File:Test place.jpg']);
+
+        $client->request('GET', "/map/coverage/photo/node/{$id}");
+
+        /** @var \Symfony\Component\Messenger\Transport\InMemory\InMemoryTransport $transport */
+        $transport = self::getContainer()->get('messenger.transport.async');
+        $sent = array_values(array_filter(
+            array_map(static fn ($e): object => $e->getMessage(), $transport->getSent()),
+            static fn (object $m): bool => $m instanceof FetchCommonsPhoto && 'Test place.jpg' === $m->file,
+        ));
+        self::assertCount(1, $sent);
+        self::assertInstanceOf(FetchCommonsPhoto::class, $sent[0]);
+        self::assertSame('P', $sent[0]->letter);
+        self::assertEqualsWithDelta(50.55, $sent[0]->lat, 0.00001);
+        self::assertEqualsWithDelta(5.55, $sent[0]->lng, 0.00001);
+    }
+
+    /**
+     * A file declined for a scenic view is not asked for again by that view:
+     * the refusal is already known from the row, with no download and no
+     * second Commons call. A place that may show it reopens it.
+     */
+    public function testADeclinedFileStaysDeclinedUntilAPlaceThatMayShowItAsks(): void
+    {
+        $client = $this->browser();
+
+        $scenic = $this->seed(['tourism' => 'viewpoint', 'wikimedia_commons' => 'File:Test declined.jpg']);
+        $this->declinedPhoto('Test declined.jpg', [50.5536, 5.55]);
+        $client->request('GET', "/map/coverage/photo/node/{$scenic}");
+        self::assertSame(['state' => 'none'], $this->payload($client));
+        self::assertSame('declined', $this->state('Test declined.jpg'), 'the scenic view does not reopen it');
+
+        $castle = $this->seed(['historic' => 'castle', 'wikimedia_commons' => 'File:Test declined.jpg', 'name' => 'x'], 'Q');
+        $this->declinedPhoto('Test declined.jpg', [50.5536, 5.55]);
+        $client->request('GET', "/map/coverage/photo/node/{$castle}");
+        self::assertSame('pending', $this->payload($client)['state']);
+        self::assertSame('pending', $this->state('Test declined.jpg'), 'a castle may show it, so it is fetched');
+    }
+
     /**
      * A scenic POI shows a photo only when its camera stood near the pin
-     * (ScenicPhotoRule). A ready photo with no camera point, or one taken
+     * (PhotoValidator). A ready photo with no camera point, or one taken
      * 400 m away, answers exactly like a POI with no photo at all.
      */
     public function testAScenicPhotoWithNoCameraNearThePinIsNotShown(): void
@@ -92,6 +136,38 @@ final class CoveragePhotoControllerTest extends WebTestCase
 
         $client->request('GET', "/map/coverage/photo/node/{$id}");
         self::assertSame('ready', $this->payload($client)['state']);
+    }
+
+    /**
+     * A served item standing for the POI is what the map draws and what the
+     * drawer opens, so the photo is judged against the item's pin and letter,
+     * not the coverage row's. Here the item's pin stands 400 m north of the
+     * OSM point: a camera at the OSM point is not the view from the item.
+     */
+    public function testAPhotoIsJudgedAgainstThePinOfTheItemStandingForThePoi(): void
+    {
+        $client = $this->browser();
+        /** @var Connection $db */
+        $db = self::getContainer()->get('doctrine.dbal.default_connection');
+
+        $far = $this->seed(['tourism' => 'viewpoint', 'wikimedia_commons' => 'File:Test item far.jpg']);
+        $near = $this->seed(['tourism' => 'viewpoint', 'wikimedia_commons' => 'File:Test item near.jpg']);
+        // After both seeds: seed() clears every test photo.
+        $this->readyPhoto('Test item far.jpg', [50.55, 5.55]);
+        $this->readyPhoto('Test item near.jpg', [50.5536, 5.55]);
+        foreach ([$far, $near] as $id) {
+            $db->executeStatement(
+                "INSERT INTO item (letter, name, geom, country_code, state, source, source_ref, osm_ref, attributes, created_at, updated_at)
+                 VALUES ('P', 'Moved viewpoint', ST_GeomFromText('POINT(5.55 50.5536)', 4326), 'BE', 'verified', 'osm', :r, :r, '{}', now(), now())",
+                ['r' => 'node/'.$id],
+            );
+        }
+
+        $client->request('GET', "/map/coverage/photo/node/{$far}");
+        self::assertSame(['state' => 'none'], $this->payload($client), 'the camera stood at the OSM point, 400 m from the item pin');
+
+        $client->request('GET', "/map/coverage/photo/node/{$near}");
+        self::assertSame('ready', $this->payload($client)['state'], 'the camera stood at the item pin');
     }
 
     public function testUnknownRefIs404(): void
@@ -152,6 +228,27 @@ final class CoveragePhotoControllerTest extends WebTestCase
                      NOW(), NOW(), :lat, :lng, NOW())",
             ['f' => $file, 'lat' => $camera[0] ?? null, 'lng' => $camera[1] ?? null],
         );
+    }
+
+    /** @param array{0: float, 1: float} $camera */
+    private function declinedPhoto(string $file, array $camera): void
+    {
+        /** @var Connection $db */
+        $db = self::getContainer()->get('doctrine.dbal.default_connection');
+        $db->executeStatement('DELETE FROM commons_photo WHERE file = :f', ['f' => $file]);
+        $db->executeStatement(
+            "INSERT INTO commons_photo (file, state, failed_reason, credit, license, requested_at, camera_lat, camera_lng, camera_checked_at)
+             VALUES (:f, 'declined', 'camera_far', 'Somebody', 'CC BY-SA 4.0', NOW(), :lat, :lng, NOW())",
+            ['f' => $file, 'lat' => $camera[0], 'lng' => $camera[1]],
+        );
+    }
+
+    private function state(string $file): string
+    {
+        /** @var Connection $db */
+        $db = self::getContainer()->get('doctrine.dbal.default_connection');
+
+        return (string) $db->fetchOne('SELECT state FROM commons_photo WHERE file = :f', ['f' => $file]);
     }
 
     /** @param array<string, string> $tags */

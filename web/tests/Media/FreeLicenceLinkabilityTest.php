@@ -42,7 +42,7 @@ final class FreeLicenceLinkabilityTest extends TestCase
 
         self::assertNotEmpty($linkable, 'ccUrl() was read but no licence names came out: the parser, not the code, is wrong');
 
-        foreach (LicenceUrls::URLS as $licence => $deed) {
+        foreach (LicenceUrls::all() as $licence => $deed) {
             self::assertArrayHasKey(
                 $licence,
                 $linkable,

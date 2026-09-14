@@ -15,6 +15,8 @@ use App\Catalog\ItemType;
 use App\Catalog\OperationalRegions;
 use App\Catalog\ServiceKind;
 use App\Catalog\SurfaceProfiler;
+use App\Media\PhotoPlace;
+use App\Media\PhotoValidator;
 use App\Service\BaseLocationService;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Exception as DBALException;
@@ -28,7 +30,12 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 /**
  * Import catalog export artifacts. Upsert by (source, source_ref, letter); updates never touch lifecycle state.
  *
+ * A feature's `photo` / `photos` are written only when PhotoValidator shows
+ * them on that feature; a refused photo is left off (the row is still
+ * imported) and named in the report with the reason.
+ *
  * @see docs/specs/catalog-data-model.md §8
+ * @see docs/specs/photo-uploads.md §5h
  *
  * @api
  */
@@ -58,6 +65,9 @@ final class ImportCatalogCommand extends Command
      * @var list<string>
      */
     private array $duplicateSkips = [];
+
+    /** @var list<string> photos PhotoValidator refused, one line each */
+    private array $droppedPhotos = [];
 
     public function __construct(
         private readonly Connection $db,
@@ -110,6 +120,13 @@ final class ImportCatalogCommand extends Command
             return Command::FAILURE;
         }
 
+        if ([] !== $this->droppedPhotos) {
+            $io->note(sprintf(
+                "Left off %d photo(s) PhotoValidator refused (the rows are imported without them):\n  %s",
+                \count($this->droppedPhotos),
+                implode("\n  ", $this->droppedPhotos),
+            ));
+        }
         if ([] !== $this->duplicateSkips) {
             $io->note(sprintf(
                 "Skipped %d feature(s) that duplicate a row already in the catalog:\n  %s",
@@ -243,6 +260,13 @@ final class ImportCatalogCommand extends Command
 
                 // OSM pools emit `n`; climbs/surface exporters emit `name`.
                 $name = (string) ($props['n'] ?? $props['name'] ?? '');
+
+                $pin = 'Point' === $geometry['type'] ? $geometry['coordinates'] : [];
+                $sifted = PhotoValidator::sift($attributes, PhotoPlace::of($letter, $pin[1] ?? null, $pin[0] ?? null));
+                $attributes = $sifted['attributes'];
+                foreach ($sifted['dropped'] as $dropped) {
+                    $this->droppedPhotos[] = sprintf('%s: %s', '' === $name ? $source.':'.$ref : $name, $dropped['verdict']->reason?->value ?? 'refused');
+                }
                 $geomJson = json_encode($geometry, \JSON_THROW_ON_ERROR);
 
                 /* One place, one row (catalog-data-model.md §5). A harvest run
@@ -293,6 +317,12 @@ final class ImportCatalogCommand extends Command
             [$source, $ref] = $this->resolveSourceRef($route, $file);
             // docs/specs/route-domain.md §9 — harvest scalar `summer` → stored list `['Summer']`.
             $route['attributes'] = $this->normalizeSeason($route['attributes']);
+            // A route is no catalogue letter's place: only the photo's own checks apply.
+            $sifted = PhotoValidator::sift($route['attributes'], PhotoPlace::unplaced());
+            $route['attributes'] = $sifted['attributes'];
+            foreach ($sifted['dropped'] as $dropped) {
+                $this->droppedPhotos[] = sprintf('%s: %s', $route['name'], $dropped['verdict']->reason?->value ?? 'refused');
+            }
             $this->db->executeStatement(
                 'INSERT INTO recommended_route (name, geom, distance_m, ascent_m, state, source, source_ref, attributes, created_at, updated_at, imported_at)
                  VALUES (:name, ST_SetSRID(ST_GeomFromGeoJSON(:geom), 4326), :dist, :ascent, :state, :source, :ref, :attrs, NOW(), NOW(), NOW())

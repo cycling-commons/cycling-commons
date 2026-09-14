@@ -6,7 +6,7 @@ declare(strict_types=1);
 
 namespace App\Media\Commons;
 
-use App\Media\LicenceUrls;
+use App\Media\PhotoValidator;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
@@ -40,12 +40,17 @@ final readonly class CommonsApi
     private const int CAMERA_MIN_DECIMALS = 3;
 
     /**
-     * Credit, licence, a 1400px rendering URL and where the camera stood, or
-     * null when the file is not one we may republish.
+     * What Commons says about one file: a 1400px rendering URL, the credit,
+     * the uploader, the licence name, Commons' own non-free and restriction
+     * flags, and where the camera stood. Null when Commons has no such file or
+     * no rendering of it.
      *
-     * The camera is null when Commons records none (see camera()).
+     * Nothing is judged here: PhotoValidator decides on these facts before a
+     * byte is downloaded. The licence is the `LicenseShortName` as given ('' for
+     * none); the credit is '' when Commons names no author; the camera is null
+     * when Commons records none (see camera()).
      *
-     * @return array{thumbUrl: string, credit: string, creditUser: ?string, license: string, cameraLat: ?float, cameraLng: ?float}|null
+     * @return array{thumbUrl: string, credit: string, creditUser: ?string, license: string, nonFree: bool, restricted: bool, cameraLat: ?float, cameraLng: ?float}|null
      *
      * @throws CommonsUnavailable
      */
@@ -77,24 +82,27 @@ final readonly class CommonsApi
         $meta = \is_array($info['extmetadata'] ?? null) ? $info['extmetadata'] : [];
         $licenseRaw = $meta['LicenseShortName']['value'] ?? null;
         $license = \is_string($licenseRaw) ? trim($licenseRaw) : '';
-        // Fail closed, and the test is deliberately "can we point at its deed?"
-        // rather than a second list of names: a licence we cannot identify is
-        // one we cannot attribute, and a file we cannot attribute is one we do
-        // not republish (LicenceUrls).
-        if (null === LicenceUrls::urlFor($license)) {
-            return null;
-        }
 
         $artistRaw = $meta['Artist']['value'] ?? null;
         $artist = \is_string($artistRaw) ? $artistRaw : '';
+        $user = self::commonsUser($artist);
+        $credit = self::plainCredit($artist);
+        // Commons writes "No machine-readable author provided. X assumed" into
+        // Artist for old uploads. That sentence is not a name; the uploader it
+        // links to is the one person the file page does name.
+        if (null !== $user && 1 === preg_match(PhotoValidator::NO_AUTHOR, $credit)) {
+            $credit = mb_substr(str_replace('_', ' ', $user), 0, 255);
+        }
 
         $camera = \is_array($page) ? self::camera($page) : null;
 
         return [
             'thumbUrl' => $info['thumburl'],
-            'credit' => self::plainCredit($artist),
-            'creditUser' => self::commonsUser($artist),
+            'credit' => $credit,
+            'creditUser' => $user,
             'license' => $license,
+            'nonFree' => self::flagged($meta['NonFree']['value'] ?? null) || self::flagged($meta['NonFreeLicense']['value'] ?? null),
+            'restricted' => self::flagged($meta['Restrictions']['value'] ?? null),
             'cameraLat' => $camera[0] ?? null,
             'cameraLng' => $camera[1] ?? null,
         ];
@@ -842,13 +850,27 @@ final readonly class CommonsApi
         }
     }
 
-    /** `<a ...>Jean-Pol GRANDMONT</a>` becomes `Jean-Pol GRANDMONT`. */
+    /** `<a ...>Jean-Pol GRANDMONT</a>` becomes `Jean-Pol GRANDMONT`; no author is ''. */
     private static function plainCredit(string $html): string
     {
         $text = trim(html_entity_decode(strip_tags($html), \ENT_QUOTES | \ENT_HTML5, 'UTF-8'));
         $text = trim(preg_replace('~\s+~u', ' ', $text) ?? $text);
 
-        return '' === $text ? 'Wikimedia Commons' : mb_substr($text, 0, 255);
+        return mb_substr($text, 0, 255);
+    }
+
+    /** An extmetadata flag is set when it holds anything but nothing or an explicit false. */
+    private static function flagged(mixed $value): bool
+    {
+        if (\is_bool($value)) {
+            return $value;
+        }
+        if (!\is_string($value) && !\is_int($value)) {
+            return false;
+        }
+        $text = strtolower(trim(strip_tags((string) $value)));
+
+        return !\in_array($text, ['', '0', 'false', 'no'], true);
     }
 
     /** The Commons username behind the Artist link, for the credit URL. */

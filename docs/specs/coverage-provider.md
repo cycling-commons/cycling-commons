@@ -210,7 +210,7 @@ are free text in OSM, so `assets/map/osm-tags.js` refuses anything that is not
 plainly metres instead of guessing — "1200 ft" renders verbatim, never as 1200
 metres. **Existing rows do not gain the tags until the country is re-harvested**
 (§3); this is the first contract change to prove that path.
-| **Media/reference** | 4 | `wikidata`, `wikipedia`, `image`, `wikimedia_commons` | `image`, `wikimedia_commons` and `wikidata` are in `TAG_WHITELIST`: the drawer links the Commons photo and the Wikidata item, and the media pipeline caches a licence-checked copy (`FetchCommonsPhotoHandler`). `wikipedia` is stored, not served. Cost: 19 B/row, about 89 MB planet-wide |
+| **Media/reference** | 4 | `wikidata`, `wikipedia`, `image`, `wikimedia_commons` | `image`, `wikimedia_commons` and `wikidata` are in `TAG_WHITELIST`: the drawer links the Commons photo and the Wikidata item, and the media pipeline caches a copy `PhotoValidator` accepts (`FetchCommonsPhotoHandler`, photo-uploads.md §5h). `wikipedia` is stored, not served. Cost: 19 B/row, about 89 MB planet-wide |
 
 Measured impact of the trim across BE + NL + DE (then 375,078 rows; 377,558 after
 the Luxembourg onboarding): tags payload
@@ -785,11 +785,21 @@ Rules:
   Wikidata P18 cached in `wikidata_image`) and answers `{state: ready|pending|none}`
   from `CommonsPhotoAdmission`; a ready photo carries `cameraAt` when Commons
   records where the camera stood (`commons_photo.camera_lat`, `camera_lng`,
-  `camera_checked_at`, [photo-uploads.md §5g](photo-uploads.md)). For a P point
-  a ready photo whose camera is unknown or more than
-  `ScenicPhotoRule::MAX_CAMERA_DISTANCE_M` (250 m) from the point answers
-  `{"state": "none"}`. The curated overlay of `poi/{osmType}/{osmId}` filters a P
-  item's `photo` and `photos` the same way, against the item's own pin.
+  `camera_checked_at`, [photo-uploads.md §5g](photo-uploads.md)). Every answer
+  is `PhotoValidator::verdict()` for one place
+  ([photo-uploads.md §5h](photo-uploads.md)): the served item standing for the
+  point when there is one (`cp.ref IN (item.source_ref, item.osm_ref)`, the
+  `poi` join), with that item's letter and pin, because the map draws that pin
+  and the drawer opens that item; otherwise the point's own letter and position
+  (`CoverageRepository::photoSubject()`). Commons' licence, author and
+  non-free flags are judged before anything is downloaded, and for a P place a
+  file whose camera is unknown or more than
+  `PhotoValidator::MAX_CAMERA_DISTANCE_M` (250 m) from its pin is not
+  downloaded for it (`commons_photo.state = declined`) and answers
+  `{"state": "none"}`. The fetch message (`FetchCommonsPhoto`,
+  `ResolveWikidataImage`) carries that place's letter and position.
+  The curated overlay of `poi/{osmType}/{osmId}` filters an item's `photo` and
+  `photos` the same way, against the item's own pin.
 - These are **site-internal map endpoints**, not the future public API.
   [osm-data-architecture.md §7](osm-data-architecture.md)'s reference-only
   rule governs the public API; the serving cache may serve OSM fields with
@@ -821,6 +831,24 @@ the data-plane facts it consumes:
   not yet deleted), those objects therefore render from tiles as community
   instead of vanishing entirely. This refinement supersedes the design's
   looser "ships the set of curated refs" wording.
+- **A catalog item borrows its OSM point's photo.** A served item with no
+  `photo`/`photos` of its own (after `PhotoValidator::sift()`) that stands for
+  an OSM point, through `source_ref` or `osm_ref`, carries
+  `photoRef: "<osm ref>"` in its `catalog.json` feature when that point's
+  `coverage_poi` row (lowest letter, the row `poi` reads) passes
+  `CoverageRepository::photoPossible()`, the same test behind `poi`'s `photo`
+  (`CatalogProvider::osmPhotoRefs()`). The key is absent everywhere else, so
+  other features stay byte-identical, and absent when `coverage_poi` does not
+  exist. The drawer (`photoWaitRef()` in `commons-photo.js`) waits on
+  `photoRef`, or on a coverage point's own `ref` when `poi` said `photo`, and
+  polls `/map/coverage/photo/{ref}` for it, which judges the file against the
+  item's pin (§5). Every way into an item drawer (pin click, `?item=`, a
+  search or best-of hit with an item id, a live insert through
+  `featureForItem()`) builds from these properties. An item's own photo always
+  wins: `photoRef` is not emitted beside one, and the drawer shows a photo it
+  holds before it waits on one. `photoRef` follows the payload's `?v=` tag, so
+  a coverage harvest that adds a `wikidata` tag reaches an unchanged item's
+  feature on the next catalog mutation or deploy.
 - `?feature=` deep links resolve against the local (curated) index first, then
   fall back to one `/map/coverage/search` lookup, so coverage POIs stay
   linkable.

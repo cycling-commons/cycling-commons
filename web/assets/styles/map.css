@@ -515,6 +515,8 @@
   .cc-mod-linkflag{font-size:.82rem;line-height:1.5;padding:.5rem .7rem;border-radius:0 5px 5px 0;margin:.45rem 0}
   .cc-mod-linkflag-unsafe{background:rgba(217,45,32,.12);border-left:2px solid #D92D20}
   .cc-mod-linkflag-unknown{background:rgb(var(--chrome-fg) / .07);border-left:2px solid rgb(var(--chrome-fg) / .35)}
+  /* A pending pin move that hides rider photos on a scenic view (scenic-views.md §8). */
+  .cc-mod-pinphotos{font-size:.82rem;line-height:1.5;padding:.5rem .7rem;border-radius:0 5px 5px 0;margin:.45rem 0;background:rgba(217,119,6,.12);border-left:2px solid #D97706}
   .cc-mod-asked-h{font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--chrome-mut);display:block}
   .cc-mod-photos{display:flex;flex-wrap:wrap;gap:.5rem;margin:.5rem 0}
   .cc-mod-photo{display:flex;flex-direction:column;gap:.2rem;width:120px;font-size:.68rem}
@@ -1284,6 +1286,16 @@
   .cc-d-thumbs{display:flex;gap:.4rem;margin-top:.5rem;flex-wrap:wrap}
   .cc-d-thumb{width:54px;height:40px;object-fit:cover;border-radius:4px;cursor:pointer;opacity:.5;border:1px solid rgb(var(--chrome-fg) / .2);transition:opacity .15s,border-color .15s}
   .cc-d-thumb.on,.cc-d-thumb:hover{opacity:1;border-color:var(--chrome-fg-solid)}
+  /* Curator-only: rider photos a scenic view hides (photo-uploads.md §5g). */
+  .cc-d-hidden{margin:.8rem 0 0;padding:.6rem .7rem;border:1px dashed rgb(var(--chrome-fg) / .3);border-radius:8px;background:rgb(var(--chrome-fg) / .03)}
+  .cc-d-hidden-h{font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--chrome-mut)}
+  .cc-d-hidden-why{margin:.3rem 0 .5rem;font-size:.78rem;line-height:1.4;color:rgb(var(--chrome-fg) / .72)}
+  .cc-d-hidden-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.5rem}
+  .cc-d-hidden-row{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
+  .cc-d-hidden-zoom{flex:none}
+  .cc-d-hidden-row img{width:72px;height:54px;object-fit:cover;border-radius:4px;display:block;flex:none}
+  .cc-d-hidden-reason{flex:1 1 8rem;font-size:.78rem;color:rgb(var(--chrome-fg) / .82)}
+  .cc-d-hidden-row .cc-d-taken-here{margin:0}
   .cc-d-link{display:inline-block;margin-left:.35rem;margin-top:.35rem;font-family:var(--mono);font-size:.72rem;letter-spacing:.05em;
     text-transform:uppercase;color:var(--chrome-head);border:1px solid rgba(143,182,168,.5);border-radius:4px;padding:.15rem .45rem;text-decoration:none}
   .cc-d-link:hover{background:var(--chrome-head);color:var(--chrome-bg)}

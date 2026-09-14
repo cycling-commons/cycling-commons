@@ -6,11 +6,13 @@ declare(strict_types=1);
 
 namespace App\Media\Command;
 
-use App\Catalog\ScenicPhotoRule;
 use App\Media\Commons\CommonsApi;
 use App\Media\Commons\CommonsFile;
 use App\Media\Commons\CommonsPhotoRepository;
 use App\Media\Commons\CommonsUnavailable;
+use App\Media\PhotoFacts;
+use App\Media\PhotoPlace;
+use App\Media\PhotoValidator;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -25,7 +27,7 @@ use Symfony\Component\Uid\Uuid;
  * Record where the camera stood for photos stored before anybody asked.
  *
  * A scenic view shows a photo only when its camera stood near the pin
- * (ScenicPhotoRule), and an unknown camera is a refusal. Every Commons photo
+ * (PhotoValidator), and an unknown camera is a refusal. Every Commons photo
  * fetched before `commons_photo.camera_*` existed is therefore hidden on the
  * scenic layer until its camera is known, including the ones taken right at
  * the pin. This command asks.
@@ -140,7 +142,7 @@ final class MediaBackfillPhotoCameraCommand extends Command
             ['not answered' => (string) $failed],
             [($write ? 'item photo entries stamped' : 'item photo entries --write would stamp') => sprintf('%d on %d item%s', $entriesChanged, $itemsChanged, 1 === $itemsChanged ? '' : 's')],
             ['scenic item photos shown / hidden' => sprintf('%d / %d', $scenicShown, $scenicHidden)],
-            ['scenic POIs whose cached photo has a camera within '.ScenicPhotoRule::MAX_CAMERA_DISTANCE_M.' m / not' => sprintf('%d / %d', $poiNear, $poiFar)],
+            ['scenic POIs whose cached photo is shown (camera within '.PhotoValidator::MAX_CAMERA_DISTANCE_M.' m) / not' => sprintf('%d / %d', $poiNear, $poiFar)],
         );
 
         if ($write) {
@@ -218,14 +220,13 @@ final class MediaBackfillPhotoCameraCommand extends Command
                 }
             }
 
-            if (ScenicPhotoRule::appliesTo($row['letter'])) {
-                $lat = is_numeric($row['lat']) ? (float) $row['lat'] : null;
-                $lng = is_numeric($row['lng']) ? (float) $row['lng'] : null;
+            $place = PhotoPlace::of($row['letter'], $row['lat'], $row['lng']);
+            if ($place->isScenicView()) {
                 foreach ([$newSingle, ...($newGallery ?? [])] as $entry) {
                     if (!\is_array($entry)) {
                         continue;
                     }
-                    ScenicPhotoRule::allows($entry, $lat, $lng) ? ++$shown : ++$hidden;
+                    PhotoValidator::verdict(PhotoFacts::fromEntry($entry), $place)->shows() ? ++$shown : ++$hidden;
                 }
             }
 
@@ -347,9 +348,9 @@ final class MediaBackfillPhotoCameraCommand extends Command
         if (null === $this->db->fetchOne("SELECT to_regclass('coverage_poi')")) {
             return [0, 0];
         }
-        /** @var list<array{file: string, lat: float|string, lng: float|string}> $rows */
+        /** @var list<array{file: string, credit: string|null, license: string|null, lat: float|string, lng: float|string}> $rows */
         $rows = $this->db->fetchAllAssociative(
-            "SELECT f.file, ST_Y(cp.geom) AS lat, ST_X(cp.geom) AS lng
+            "SELECT f.file, c.credit, c.license, ST_Y(cp.geom) AS lat, ST_X(cp.geom) AS lng
                FROM coverage_poi cp
                JOIN LATERAL (
                     SELECT COALESCE(
@@ -366,8 +367,8 @@ final class MediaBackfillPhotoCameraCommand extends Command
         $near = 0;
         $far = 0;
         foreach ($rows as $r) {
-            $camera = $known[$r['file']] ?? null;
-            ScenicPhotoRule::allows(['cameraAt' => $camera], (float) $r['lat'], (float) $r['lng']) ? ++$near : ++$far;
+            $facts = PhotoFacts::commons($r['license'], $r['credit'], false, false, $known[$r['file']] ?? null);
+            PhotoValidator::verdict($facts, new PhotoPlace('P', (float) $r['lat'], (float) $r['lng']))->shows() ? ++$near : ++$far;
         }
 
         return [$near, $far];

@@ -223,3 +223,46 @@ def test_a_photo_that_fails_any_part_of_the_bar_is_not_usable():
     assert commons_photo.usable_photo("x.jpg", _meta(restrictions="personality")) is None
     assert commons_photo.usable_photo("x.jpg", _meta(licence_short="All rights reserved")) is None
     assert commons_photo.usable_photo("x.jpg", _meta(artist="", user=None)) is None
+
+
+def test_the_accepted_licences_are_the_apps_one_list():
+    """commons_photo reads the file LicenceUrls reads, so a harvest and the app accept the same names."""
+    import json
+    import pathlib
+
+    web_media = pathlib.Path(__file__).resolve().parents[3] / "web" / "src" / "Media"
+    php = (web_media / "LicenceUrls.php").read_text(encoding="utf-8")
+    assert "__DIR__.'/licences.json'" in php, "LicenceUrls must read the shared licences.json"
+    names = set(json.loads((web_media / "licences.json").read_text(encoding="utf-8")))
+    assert set(commons_photo.FREE_LICENCES.values()) == names
+    assert all(key == value.lower() for key, value in commons_photo.FREE_LICENCES.items())
+
+
+def test_a_non_commercial_or_template_licence_is_never_usable():
+    for licence in ("CC BY-NC-SA 4.0", "CC BY-NC 2.0", "Attribution", "CC BY-ND 4.0"):
+        assert commons_photo.usable_photo("x.jpg", _meta(licence_short=licence)) is None, licence
+
+
+def test_a_jurisdiction_port_the_app_accepts_is_usable():
+    assert commons_photo.usable_photo("x.jpg", _meta(licence_short="CC BY-SA 2.0 be"))["license"] == "CC BY-SA 2.0 be"
+
+
+def test_a_platform_name_is_no_author():
+    assert commons_photo.usable_photo("x.jpg", _meta(artist="Wikimedia Commons", user=None)) is None
+
+
+def test_an_explicitly_false_flag_is_not_a_refusal():
+    assert commons_photo.usable_photo("x.jpg", _meta(non_free="false")) is not None
+
+
+def test_meta_from_page_reads_the_flags_commons_sets():
+    page = {"title": "File:x.jpg", "imageinfo": [{"thumburl": "https://t/x.jpg", "extmetadata": {
+        "LicenseShortName": {"value": "CC BY-SA 4.0"},
+        "Artist": {"value": '<a href="//commons.wikimedia.org/wiki/User:Jane_Rider">Jane Rider</a>'},
+        "NonFree": {"value": "true"},
+    }}]}
+    meta = commons_photo.meta_from_page(page)
+    assert meta["exists"] and meta["artist"] == "Jane Rider" and meta["user"] == "Jane Rider"
+    assert meta["thumb"] == "https://t/x.jpg"
+    assert commons_photo.usable_photo("x.jpg", meta) is None
+    assert commons_photo.meta_from_page({"missing": ""})["exists"] is False

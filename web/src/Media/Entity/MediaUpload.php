@@ -86,6 +86,19 @@ class MediaUpload
     #[ORM\Column(name: 'gps_distance_m', type: Types::INTEGER, nullable: true)]
     private ?int $gpsDistanceM = null;
 
+    /**
+     * The submission pin `gps_distance_m` was measured to; null when there is
+     * no distance. A pin is public, not the rider's position. When the item's
+     * pin moves later, PhotoValidator adds how far it moved to the distance.
+     *
+     * @see docs/specs/photo-uploads.md §5g
+     */
+    #[ORM\Column(name: 'gps_distance_pin_lat', type: Types::FLOAT, nullable: true)]
+    private ?float $gpsDistancePinLat = null;
+
+    #[ORM\Column(name: 'gps_distance_pin_lng', type: Types::FLOAT, nullable: true)]
+    private ?float $gpsDistancePinLng = null;
+
     #[ORM\Column(name: 'submission_id', type: Types::BIGINT, nullable: true)]
     private ?int $submissionId = null;
 
@@ -172,6 +185,34 @@ class MediaUpload
     /** Curator's description before an admin looks. */
     #[ORM\Column(name: 'escalated_reason', type: Types::TEXT, nullable: true)]
     private ?string $escalatedReason = null;
+
+    /**
+     * The curator who confirmed this photo was taken at the pin.
+     *
+     * The file's GPS is stripped at intake (§3), so a photo that carried none
+     * can never be measured afterwards; a named person vouching for the spot
+     * is what makes it count as within range on a scenic view.
+     *
+     * @see docs/specs/photo-uploads.md §5g
+     */
+    #[ORM\Column(name: 'location_confirmed_by', type: Types::BIGINT, nullable: true)]
+    private ?int $locationConfirmedBy = null;
+
+    #[ORM\Column(name: 'location_confirmed_at', type: Types::DATETIMETZ_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $locationConfirmedAt = null;
+
+    /**
+     * The item pin the curator confirmed the photo was taken at. The
+     * confirmation vouches for that pin only: once the pin has moved, a scenic
+     * view no longer counts it (PhotoValidator).
+     *
+     * @see docs/specs/photo-uploads.md §5g
+     */
+    #[ORM\Column(name: 'location_confirmed_pin_lat', type: Types::FLOAT, nullable: true)]
+    private ?float $locationConfirmedPinLat = null;
+
+    #[ORM\Column(name: 'location_confirmed_pin_lng', type: Types::FLOAT, nullable: true)]
+    private ?float $locationConfirmedPinLng = null;
 
     public function __construct(
         Uuid $id,
@@ -334,10 +375,17 @@ class MediaUpload
         $this->submissionId = $submissionId;
     }
 
-    /** Keep pin distance; destroy coordinates. @see docs/specs/photo-uploads.md §3 */
-    public function resolveGps(?int $distanceM): void
+    /**
+     * Keep the pin distance and the pin it was measured to; destroy coordinates.
+     *
+     * @see docs/specs/photo-uploads.md §3, §5g
+     */
+    public function resolveGps(?int $distanceM, ?float $pinLat, ?float $pinLng): void
     {
+        $measured = null !== $distanceM && null !== $pinLat && null !== $pinLng;
         $this->gpsDistanceM = $distanceM;
+        $this->gpsDistancePinLat = $measured ? $pinLat : null;
+        $this->gpsDistancePinLng = $measured ? $pinLng : null;
         $this->gpsLat = null;
         $this->gpsLng = null;
     }
@@ -357,6 +405,54 @@ class MediaUpload
         $this->status = MediaStatus::Approved;
         $this->itemId = $itemId;
         $this->decidedAt = new \DateTimeImmutable();
+    }
+
+    /**
+     * A curator vouches that this photo was taken at the pin, as it stands at
+     * `$pinLat`, `$pinLng`.
+     *
+     * Only an approved photo attached to an item has a pin to be taken at.
+     *
+     * @throws \LogicException when the upload is not approved or has no item
+     *
+     * @see docs/specs/photo-uploads.md §5g
+     */
+    public function confirmLocation(int $curatorId, \DateTimeImmutable $at, float $pinLat, float $pinLng): void
+    {
+        if (MediaStatus::Approved !== $this->status || null === $this->itemId) {
+            throw new \LogicException(\sprintf('Upload %s is not an approved photo on an item, so there is no pin to confirm it was taken at.', $this->id->toRfc4122()));
+        }
+        $this->locationConfirmedBy = $curatorId;
+        $this->locationConfirmedAt = $at;
+        $this->locationConfirmedPinLat = $pinLat;
+        $this->locationConfirmedPinLng = $pinLng;
+    }
+
+    public function isLocationConfirmed(): bool
+    {
+        return null !== $this->locationConfirmedAt;
+    }
+
+    public function getLocationConfirmedBy(): ?int
+    {
+        return $this->locationConfirmedBy;
+    }
+
+    public function getLocationConfirmedAt(): ?\DateTimeImmutable
+    {
+        return $this->locationConfirmedAt;
+    }
+
+    /**
+     * `[lat, lng]` of the pin the confirmation was made at, or null.
+     *
+     * @return array{0: float, 1: float}|null
+     */
+    public function getLocationConfirmedPin(): ?array
+    {
+        return null === $this->locationConfirmedPinLat || null === $this->locationConfirmedPinLng
+            ? null
+            : [$this->locationConfirmedPinLat, $this->locationConfirmedPinLng];
     }
 
     public function reject(): void
@@ -435,6 +531,18 @@ class MediaUpload
     public function getGpsDistanceM(): ?int
     {
         return $this->gpsDistanceM;
+    }
+
+    /**
+     * `[lat, lng]` of the pin `gps_distance_m` was measured to, or null.
+     *
+     * @return array{0: float, 1: float}|null
+     */
+    public function getGpsDistancePin(): ?array
+    {
+        return null === $this->gpsDistancePinLat || null === $this->gpsDistancePinLng
+            ? null
+            : [$this->gpsDistancePinLat, $this->gpsDistancePinLng];
     }
 
     public function getSubmissionId(): ?int

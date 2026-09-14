@@ -175,7 +175,7 @@ final class CoveragePoiDetailTest extends WebTestCase
 
     /**
      * The curated overlay of a scenic view carries only the photos whose
-     * camera stood near the item's pin (ScenicPhotoRule), the same filter the
+     * camera stood near the item's pin (PhotoValidator), the same filter the
      * catalog payload applies. A water tap's overlay keeps a far photo.
      */
     public function testScenicOverlayDropsPhotosTakenAwayFromThePin(): void
@@ -184,8 +184,8 @@ final class CoveragePoiDetailTest extends WebTestCase
         $db = $this->db();
         self::ensureCoverageSchema($db);
         // The item pin is 50.4, 5.8; 0.0009 degrees north is about 100 m, 0.0036 about 400 m.
-        $near = ['sm' => 'https://img.test/near.webp', 'cameraAt' => [50.4009, 5.8]];
-        $far = ['sm' => 'https://img.test/far.webp', 'cameraAt' => [50.4036, 5.8]];
+        $near = ['sm' => 'https://img.test/near.webp', 'cameraAt' => [50.4009, 5.8], 'credit' => 'Jane Rider', 'license' => 'CC BY-SA 4.0'];
+        $far = ['sm' => 'https://img.test/far.webp', 'cameraAt' => [50.4036, 5.8], 'credit' => 'Jane Rider', 'license' => 'CC BY-SA 4.0'];
 
         self::insertCoveragePoi($db, ['ref' => 'node/777010', 'letter' => 'P', 'name' => 'Belvédère OSM', 'tags' => ['tourism' => 'viewpoint']]);
         $scenic = $this->item('node/777010');

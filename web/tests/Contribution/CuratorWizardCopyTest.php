@@ -133,6 +133,37 @@ final class CuratorWizardCopyTest extends WebTestCase
         return $item;
     }
 
+    /**
+     * A pin move that hides rider photos: a rider waits for a curator, and a
+     * curator, whose edit applies at once, is told to confirm the photos
+     * after saving (photo-uploads.md §5g).
+     */
+    public function testThePinPhotosWarningTellsACuratorWhatToDoNext(): void
+    {
+        $client = static::createClient();
+        $this->login($client, 'pin-photos-curator@example.com', ['ROLE_CURATOR']);
+        $item = $this->seedItem();
+
+        $client->request('GET', '/improve?item='.$item->getId().'&type=scenic-views');
+        self::assertResponseIsSuccessful();
+        $html = (string) $client->getResponse()->getContent();
+        self::assertStringContainsString('After you save, open the place on the map and click', $html);
+        self::assertStringNotContainsString('stays hidden until a curator confirms', $html);
+    }
+
+    public function testThePinPhotosWarningTellsARiderACuratorDecides(): void
+    {
+        $client = static::createClient();
+        $this->login($client, 'pin-photos-rider@example.com', []);
+        $item = $this->seedItem();
+
+        $client->request('GET', '/improve?item='.$item->getId().'&type=scenic-views');
+        self::assertResponseIsSuccessful();
+        $html = (string) $client->getResponse()->getContent();
+        self::assertStringContainsString('It stays hidden until a curator confirms it was taken here.', $html);
+        self::assertStringNotContainsString('After you save, open the place on the map', $html);
+    }
+
     public function testARiderIsPromisedAReview(): void
     {
         $client = static::createClient();

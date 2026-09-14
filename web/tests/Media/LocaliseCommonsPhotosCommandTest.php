@@ -109,11 +109,51 @@ final class LocaliseCommonsPhotosCommandTest extends KernelTestCase
 
     public function testAnUnfreeFileKeepsItsHotlink(): void
     {
-        $this->localise('Fair use');
+        $tester = $this->localise('Fair use');
 
         $photo = $this->storedPhoto();
         self::assertSame(self::HOTLINK, $photo['sm'], 'a file we may not republish must stay a link');
         self::assertSame(CommonsPhotoState::Unusable->value, $this->photos->find(self::FILE)['state'] ?? null);
+        self::assertStringContainsString('refused (licence)', $tester->getDisplay());
+    }
+
+    /** Not every refusal is a licence refusal, and the report says which it was. */
+    public function testAFileWithNoAuthorIsReportedAsSuch(): void
+    {
+        $tester = $this->localise('CC BY-SA 3.0', artist: '');
+
+        self::assertSame(self::HOTLINK, $this->storedPhoto()['sm']);
+        self::assertStringContainsString('refused (no_author)', $tester->getDisplay());
+        self::assertStringNotContainsString('refused (licence)', $tester->getDisplay());
+    }
+
+    /**
+     * A scenic view gets our copy only of a photo taken at its pin
+     * (PhotoValidator). A file whose camera stood 400 m away is not
+     * downloaded for it and nothing is written onto the item.
+     */
+    public function testAScenicViewDoesNotLocaliseAPhotoTakenElsewhere(): void
+    {
+        $this->db->executeStatement("UPDATE item SET letter = 'P' WHERE id = :id", ['id' => $this->itemId]);
+        $downloads = 0;
+
+        $tester = $this->localise('CC BY-SA 3.0', [], $downloads, camera: [50.5036, 5.5003]);
+
+        self::assertSame(0, $downloads);
+        self::assertSame(self::HOTLINK, $this->storedPhoto()['sm'], 'nothing is written onto the item');
+        self::assertSame(CommonsPhotoState::Declined->value, $this->photos->find(self::FILE)['state'] ?? null);
+        self::assertStringContainsString('camera_far', $tester->getDisplay());
+    }
+
+    public function testAScenicViewLocalisesAPhotoTakenAtItsPin(): void
+    {
+        $this->db->executeStatement("UPDATE item SET letter = 'P' WHERE id = :id", ['id' => $this->itemId]);
+
+        $this->localise('CC BY-SA 3.0', camera: [50.5009, 5.5003]);
+
+        $photo = $this->storedPhoto();
+        self::assertStringNotContainsString('wikimedia.org', (string) $photo['sm']);
+        self::assertSame([50.5009, 5.5003], $photo['cameraAt']);
     }
 
     /**
@@ -298,9 +338,10 @@ final class LocaliseCommonsPhotosCommandTest extends KernelTestCase
     }
 
     /**
-     * @param array<string, mixed> $options
+     * @param array<string, mixed>           $options
+     * @param array{0: float, 1: float}|null $camera
      */
-    private function localise(string $licence, array $options = [], int &$downloads = 0): CommandTester
+    private function localise(string $licence, array $options = [], int &$downloads = 0, string $artist = '<a href="//commons.wikimedia.org/wiki/User:Somebody_Else">Somebody Else</a>', ?array $camera = null): CommandTester
     {
         $container = self::getContainer();
         /** @var PhotoProcessor $processor */
@@ -313,7 +354,7 @@ final class LocaliseCommonsPhotosCommandTest extends KernelTestCase
         $continents = $container->get(ContinentResolver::class);
 
         $handler = new FetchCommonsPhotoHandler(
-            new CommonsApi($this->client($licence, $downloads), 'CyclingCommons-test/1.0'),
+            new CommonsApi($this->client($licence, $downloads, $artist, $camera), 'CyclingCommons-test/1.0'),
             $this->photos,
             $processor,
             $storage,
@@ -343,7 +384,7 @@ final class LocaliseCommonsPhotosCommandTest extends KernelTestCase
         return $photo;
     }
 
-    /** A single letter-P row in Belgium, carrying exactly the shape the seeders wrote. */
+    /** A single letter-Q row in Belgium, carrying exactly the shape the seeders wrote. */
     private function seedHotlinkedItem(): int
     {
         $photo = json_encode([
@@ -358,7 +399,7 @@ final class LocaliseCommonsPhotosCommandTest extends KernelTestCase
         $this->db->executeStatement(
             <<<'SQL'
                 INSERT INTO item (letter, name, geom, country_code, state, source, source_ref, attributes, created_at, updated_at)
-                VALUES ('P', 'Localise test place', ST_SetSRID(ST_MakePoint(5.5, 50.5), 4326), 'BE', 'unverified',
+                VALUES ('Q', 'Localise test place', ST_SetSRID(ST_MakePoint(5.5, 50.5), 4326), 'BE', 'unverified',
                         'manual', 'localise-test', jsonb_build_object('photo', :photo::jsonb), NOW(), NOW())
                 SQL,
             ['photo' => $photo],
@@ -378,15 +419,20 @@ final class LocaliseCommonsPhotosCommandTest extends KernelTestCase
         };
     }
 
-    private function client(string $licence, int &$downloads): MockHttpClient
+    /** @param array{0: float, 1: float}|null $camera */
+    private function client(string $licence, int &$downloads, string $artist, ?array $camera): MockHttpClient
     {
-        $metadata = json_encode(['query' => ['pages' => [['imageinfo' => [[
+        $page = ['imageinfo' => [[
             'thumburl' => 'https://thumb.wikimedia.org/thumb/Localise_test_subject.jpg',
             'extmetadata' => [
                 'LicenseShortName' => ['value' => $licence],
-                'Artist' => ['value' => '<a href="//commons.wikimedia.org/wiki/User:Somebody_Else">Somebody Else</a>'],
+                'Artist' => ['value' => $artist],
             ],
-        ]]]]]], \JSON_THROW_ON_ERROR);
+        ]]];
+        if (null !== $camera) {
+            $page['coordinates'] = [['lat' => $camera[0], 'lon' => $camera[1], 'primary' => true, 'type' => 'camera']];
+        }
+        $metadata = json_encode(['query' => ['pages' => [$page]]], \JSON_THROW_ON_ERROR);
 
         return new MockHttpClient(static function (string $method, string $url) use ($metadata, &$downloads): MockResponse {
             if (str_contains($url, 'api.php')) {

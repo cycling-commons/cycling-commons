@@ -453,11 +453,18 @@ final class MediaTakedownService
         $item->setAttributes($attributes);
     }
 
-    /** Reattach in the shape approval originally wrote. */
+    /**
+     * Reattach in the shape approval originally wrote, when PhotoValidator
+     * still links it to the item (`show` or `hide`). Matched by upload id
+     * (MediaDecisionService::isEntryFor()), so it is never added twice.
+     */
     private function reattach(MediaUpload $upload): void
     {
         $item = $this->item($upload);
         if (null === $item) {
+            return;
+        }
+        if (!PhotoValidator::verdict(PhotoFacts::ofUpload($upload), new PhotoPlace($item->getLetter(), null, null))->links()) {
             return;
         }
 
@@ -467,7 +474,7 @@ final class MediaTakedownService
         $gallery = \is_array($photos) ? array_values(array_filter($photos, is_array(...))) : [];
 
         foreach ($gallery as $photo) {
-            if (($photo['sm'] ?? null) === $entry['sm']) {
+            if ($this->decisions->isEntryFor($photo, $upload)) {
                 return;
             }
         }

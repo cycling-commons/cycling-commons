@@ -9,6 +9,9 @@ namespace App\Media\Command;
 use App\Catalog\Entity\Item;
 use App\Media\Entity\MediaUpload;
 use App\Media\MediaDecisionService;
+use App\Media\PhotoFacts;
+use App\Media\PhotoPlace;
+use App\Media\PhotoValidator;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -89,6 +92,7 @@ final class MediaRepairGalleriesCommand extends Command
         $repaired = 0;
         $alreadyCorrect = 0;
         $detached = 0;
+        $refused = 0;
         $unresolved = 0;
 
         foreach ($itemIds as $itemId) {
@@ -141,6 +145,16 @@ final class MediaRepairGalleriesCommand extends Command
                     continue;
                 }
 
+                // The same decision approval made: an upload PhotoValidator now
+                // refuses for this item (legal hold) is not kept on it.
+                $verdict = PhotoValidator::verdict(PhotoFacts::ofUpload($upload), new PhotoPlace($item->getLetter(), null, null));
+                if (!$verdict->links()) {
+                    $io->writeln(\sprintf('  item %d: dropping %s - refused (%s)', $itemId, $upload->getId()->toRfc4122(), $verdict->reason?->value ?? 'refused'));
+                    ++$refused;
+                    $changed = true;
+                    continue;
+                }
+
                 // `+` keeps the left-hand values, so the address is rebuilt while
                 // every policy field the entry carried survives - and the key
                 // order comes out matching describe(), keeping payloads stable.
@@ -178,11 +192,12 @@ final class MediaRepairGalleriesCommand extends Command
         }
 
         $io->success(\sprintf(
-            '%d entr(ies) %s, %d already correct, %d detached, %d left alone.',
+            '%d entr(ies) %s, %d already correct, %d detached, %d refused, %d left alone.',
             $repaired,
             $dryRun ? 'would be repaired' : 'repaired',
             $alreadyCorrect,
             $detached,
+            $refused,
             $unresolved,
         ));
 

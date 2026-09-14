@@ -38,4 +38,6 @@ final class MediaAction
     /** Legal hold on / off. @see docs/specs/photo-uploads.md §6d */
     public const string Escalated = 'escalated';
     public const string EscalationReleased = 'escalation_released';
+    /** A curator confirmed the photo was taken at the pin. @see docs/specs/photo-uploads.md §5g */
+    public const string LocationConfirmed = 'location_confirmed';
 }

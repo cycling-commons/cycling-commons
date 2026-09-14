@@ -576,6 +576,33 @@ final class MediaUploadEndpointTest extends WebTestCase
     }
 
     /**
+     * The endpoint accepts only what PhotoProcessor can decode. AVIF is not
+     * one of its formats, so an AVIF is refused at the door with the same
+     * answer rather than accepted and then failed in the worker.
+     */
+    public function testAnAvifIsRefusedAtTheDoor(): void
+    {
+        $client = static::createClient();
+        $this->login($client, 'avif');
+        $token = $this->token($client);
+        $consentId = $this->consentId($client, $token);
+
+        // The ISO-BMFF header that makes a file sniff as image/avif.
+        $path = tempnam(sys_get_temp_dir(), 'ccavif').'.avif';
+        file_put_contents($path, "\x00\x00\x00\x1cftypavif\x00\x00\x00\x00avifmif1miaf".str_repeat("\x00", 64));
+
+        $client->request(
+            'POST', '/media/photos',
+            ['_token' => $token, 'consentId' => $consentId, 'lat' => '50.47', 'lng' => '5.86'],
+            ['photo' => new UploadedFile($path, 'ride.avif', 'image/avif', null, true)],
+        );
+
+        self::assertResponseStatusCodeSame(422);
+        self::assertSame('photo_format', $this->json($client)['error']);
+        self::assertSame(0, $this->storedCount());
+    }
+
+    /**
      * The decode moved, and so did the refusal
      * (docs/specs/media-storage-architecture.md §3.2). The endpoint accepts a
      * file it cannot judge without decoding; the worker is what says no. This

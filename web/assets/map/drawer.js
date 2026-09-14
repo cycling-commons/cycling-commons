@@ -17,7 +17,8 @@ import { clearRouteSelection } from './routes-tiles.js';
 import { clearSelectedCoverageIcon, invalidateCoverageDrawer } from './coverage.js';
 import { osmMetres, osmRefUrl } from './osm-tags.js';
 import { shareQuery } from './share-links.js';
-import { watchCommonsPhoto } from './commons-photo.js';
+import { watchCommonsPhoto, photoWaitRef } from './commons-photo.js';
+import { wantsHiddenPhotos, hiddenPhotosHtml, galleryWithConfirmed, pinMoveHidesHtml } from './hidden-photos.js';
 import { setSurfaceTiles, surfaceTilesVisible, surfaceTilesConfigured } from './surface-tiles.js';
 import { isPicking, cancelPicking } from './picking.js';
 import { openCity, bumpPlaceReq } from './places.js';
@@ -260,7 +261,9 @@ export function osmDrawer(layer, p, ll, src){
   if(p.id!=null) d.id=p.id;          // real DB item id — the edit-bridge's `?item=` target
   else if(p.ref) d.osmRef=p.ref;     // uncurated coverage POI — materialize-on-edit (docs/specs/osm-data-architecture.md §6)
   if(p.n) d.shareName=p.n;           // the mapper's own name; `name` above may be the category word
-  if(p.hasPhoto && p.ref) d.photoPending=p.ref;   // coverage-provider.md §7 - spinner until our own copy exists
+  // coverage-provider.md §7 - spinner until our own copy exists; a catalog item borrows its OSM point's photo (photoRef).
+  const photoRef = photoWaitRef(p);
+  if(photoRef) d.photoPending=photoRef;
   if(p.desc) d.desc=p.desc;
   if(p.descTr) d.descTr=1;
   attachPhotos(d, p);
@@ -367,7 +370,9 @@ export function waterDrawer(p, ll){
   if(p.id!=null) d.id=p.id;          // real DB item id — the edit-bridge's `?item=` target
   else if(p.ref) d.osmRef=p.ref;     // uncurated coverage POI — materialize-on-edit (docs/specs/osm-data-architecture.md §6)
   if(p.n) d.shareName=p.n;           // the mapper's own name; `name` above may be the category word
-  if(p.hasPhoto && p.ref) d.photoPending=p.ref;   // coverage-provider.md §7 - spinner until our own copy exists
+  // coverage-provider.md §7 - spinner until our own copy exists; a catalog item borrows its OSM point's photo (photoRef).
+  const photoRef = photoWaitRef(p);
+  if(photoRef) d.photoPending=photoRef;
   attachPhotos(d, p);
   return d;
 }
@@ -622,7 +627,7 @@ function buildRecord(layer, f){
     /* Curator-only decide chrome; a rider sees a preview of their own pending pin. */
     moderate = window.CC_IS_CURATOR
       ? `<div class="cc-mod" data-id="${escPend(s.id)}">
-      ${badge}${prior}${linkFlag}${body}${diff}${shapeSwitch}${context}${asked}${replied}${modPhotos}
+      ${badge}${prior}${linkFlag}${body}${diff}${pinMoveHidesHtml(s.photosHiddenByMove, D)}${shapeSwitch}${context}${asked}${replied}${modPhotos}
       <textarea class="cc-mod-note" placeholder="${D.modNotePh||'Optional note — a reason, or context…'}"></textarea>
       ${alsoConfirm}
       <div class="cc-mod-acts">
@@ -682,6 +687,9 @@ function buildRecord(layer, f){
   const desc = f.desc ? `<p class="cc-d-desc">${escPend(f.desc)}${f.descTr?` <span class="cc-d-tr">· auto-translated</span>`:''}</p>` : '';
   // History slot: real DB ids only; filled async by loadItemHistory (race-guarded).
   const histSlot = f.id!=null ? `<div class="cc-d-hist" id="cc-d-hist-slot" data-item="${f.id}"></div>` : '';
+  // Curator-only: rider photos this scenic view hides, filled by loadHiddenPhotos (photo-uploads.md §5g).
+  const hiddenSlot = wantsHiddenPhotos(f.letter || layer.letter, f, window.CC_IS_CURATOR)
+    ? `<div id="cc-d-hidden-slot" data-item="${escPend(f.id)}"></div>` : '';
   // OSM source link: the exact node/way whenever we hold its id, and only then
   // a coordinate query. A coverage POI carries `osmRef` (drawer.js sets it from
   // the tile `ref`), so sending a rider to "what is here?" threw away an id we
@@ -728,7 +736,7 @@ function buildRecord(layer, f){
     : '';
 
   return `<div class="cc-d-head"><span class="cc-d-type" style="--c:${layer.color};color:${txtOn(layer.color)}"><i class="cc-g">${layerGlyph(layer)}</i> ${layer.label}</span>${share}</div>
-    <div class="cc-d-name">${escPend(f.name)}</div>${cur}${photo}${desc}${diff}${elev}${len}${grad}
+    <div class="cc-d-name">${escPend(f.name)}</div>${cur}${photo}${hiddenSlot}${desc}${diff}${elev}${len}${grad}
     <ul class="cc-d-rec">${rows}</ul>${fresh}${survey}${mine}${up}
     <div class="cc-d-src">${D.source||'Source'} · ${who || srcLine(f, osmHref)}${
       who ? `<div class="cc-d-prov">${srcLine(f, osmHref)}</div>` : ''}</div>${act}${moderate}${histSlot}${reportLink}`;
@@ -849,6 +857,59 @@ function loadItemHistory(itemId){
       }
     });
 }
+
+/* photo-uploads.md §5g: the rider photos a scenic view hides, for a curator.
+   Never memoised: after "Taken here" the list must be asked again. A failed
+   fetch renders nothing, and the drawer is still correct. */
+let _hiddenReq = 0;
+let _hiddenCtx = null;
+function loadHiddenPhotos(layer, f){
+  const myReq = ++_hiddenReq;
+  _hiddenCtx = null;
+  fetch('/map/item/' + encodeURIComponent(f.id) + '/hidden-photos', {credentials:'same-origin', headers:{'Accept':'application/json'}})
+    .then(r => r.ok ? r.json() : null)
+    .catch(() => null)
+    .then(data => {
+      if(myReq !== _hiddenReq || !data || !Array.isArray(data.photos)) return;
+      const slot = document.getElementById('cc-d-hidden-slot');
+      if(!slot || String(slot.dataset.item) !== String(f.id)) return;
+      _hiddenCtx = {layer, f, photos: data.photos};
+      slot.innerHTML = hiddenPhotosHtml(data.photos, D);
+      // The thumbnail opens the photo full size, as a pending photo does.
+      slot.querySelectorAll('[data-hidden-photo]').forEach(btn => btn.addEventListener('click',
+        () => openLightbox(data.photos, +btn.dataset.hiddenPhoto || 0, f.name)));
+    });
+}
+document.addEventListener('click', (e) => {
+  const btn = e.target && e.target.closest ? e.target.closest('[data-taken-here]') : null;
+  if(!btn || !_hiddenCtx) return;
+  e.preventDefault();
+  const ctx = _hiddenCtx;
+  const uuid = btn.getAttribute('data-taken-here');
+  const photo = ctx.photos.find(p => p && p.id === uuid);
+  if(!photo || !window.CC_PHOTO_TAKEN_HERE_TOKEN) return;
+  btn.disabled = true;
+  const body = new URLSearchParams({_token: window.CC_PHOTO_TAKEN_HERE_TOKEN});
+  fetch('/moderate/photo/' + encodeURIComponent(uuid) + '/taken-here', {
+    method:'POST', credentials:'same-origin', body,
+    headers:{'Accept':'application/json', 'X-Requested-With':'XMLHttpRequest'},
+  })
+    .then(r => r.ok ? r.json() : null)
+    .catch(() => null)
+    .then(data => {
+      if(!data || data.ok !== true){
+        btn.disabled = false;
+        mapToast(D.photoHiddenFailed || 'Could not confirm the photo. Try again.');
+        return;
+      }
+      /* The catalog payload is cached, so the open record learns the photo
+         here; the next payload version carries it for everyone. */
+      ctx.f.photos = galleryWithConfirmed(ctx.f, photo);
+      delete ctx.f.photo;
+      const slot = document.getElementById('cc-d-hidden-slot');
+      if(slot && String(slot.dataset.item) === String(ctx.f.id)) renderDrawerBody(ctx.layer, ctx.f);
+    });
+});
 
 /* Share: delegated copy of the deep link; survives drawer re-render. */
 // History dialog is delegated: the heading is rebuilt on refetch.
@@ -1005,6 +1066,7 @@ export function renderDrawerBody(layer, f){
   } else if(f.id!=null){
     loadItemHistory(f.id);
     loadMine(f);
+    if(wantsHiddenPhotos(f.letter || layer.letter, f, window.CC_IS_CURATOR)) loadHiddenPhotos(layer, f);
   }
   const pl = photoList(f);
   const mainImg = document.querySelector('#drawerBody .cc-d-photo > img');

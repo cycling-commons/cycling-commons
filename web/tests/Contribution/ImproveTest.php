@@ -106,6 +106,31 @@ final class ImproveTest extends WebTestCase
         return $item;
     }
 
+    /**
+     * Editing a scenic view warns, once the pin is dragged, how many rider
+     * photos the new spot hides (scenic-views.md §8). The page carries the box
+     * and the item it asks about; other letters carry neither.
+     */
+    public function testAScenicViewEditCarriesThePinPhotosWarning(): void
+    {
+        $client = static::createClient();
+        $this->loginFreshUser($client, 'pin-photos');
+        $scenic = $this->createItem('P', name: 'A view');
+        $other = $this->createItem('D', name: 'A shop');
+
+        $client->request('GET', '/improve?item='.$scenic->getId());
+        self::assertResponseIsSuccessful();
+        $body = (string) $client->getResponse()->getContent();
+        self::assertStringContainsString('id="wz-pinphotos" data-item="'.$scenic->getId().'"', $body);
+        self::assertStringContainsString('contribute/pin-move-photos', $body);
+        self::assertStringContainsString('Moving the pin here hides %n% rider photos.', $body);
+        self::assertStringContainsString('They stay hidden until a curator confirms they were taken here.', $body);
+
+        $client->request('GET', '/improve?item='.$other->getId());
+        self::assertResponseIsSuccessful();
+        self::assertStringNotContainsString('wz-pinphotos', (string) $client->getResponse()->getContent());
+    }
+
     // ── Auth-gate ────────────────────────────────────────────────────────────
 
     public function testAnonGetImproveRedirectsToLogin(): void

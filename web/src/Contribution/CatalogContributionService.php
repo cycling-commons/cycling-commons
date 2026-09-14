@@ -70,6 +70,14 @@ final class CatalogContributionService implements ContributionStubInterface
     /** Payload keys this service refuses. `photoUrl` is never accepted. */
     private const array REFUSED_KEYS = ['photoUrl'];
 
+    /**
+     * Attribute fields that hold a photo. A photo reaches a place only through
+     * a path that runs PhotoValidator (a rider upload, a Commons fetch, a seed
+     * or an import; photo-uploads.md §5h), never as a typed or crafted field in
+     * `details` or `extras`.
+     */
+    private const array PHOTO_FIELDS = ['photo', 'photos', 'photoFile', 'photoCredit', 'photoUser', 'photoLicense'];
+
     #[\Override]
     public function submit(string $kind, array $payload, ?User $by): ContributionReceipt
     {
@@ -80,6 +88,15 @@ final class CatalogContributionService implements ContributionStubInterface
         // Drop refused keys silently; leftover markup must not fail the submission.
         foreach (self::REFUSED_KEYS as $key) {
             unset($payload[$key]);
+        }
+        // A photo field is refused outright: no form renders one, so it was crafted.
+        foreach (['details', 'extras'] as $group) {
+            $fields = \is_array($payload[$group] ?? null) ? $payload[$group] : [];
+            foreach (self::PHOTO_FIELDS as $key) {
+                if (\array_key_exists($key, $fields)) {
+                    $this->reject('contribute.error.photo_field', $group);
+                }
+            }
         }
 
         return match ($kind) {

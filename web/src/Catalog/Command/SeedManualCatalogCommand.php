@@ -11,6 +11,8 @@ use App\Catalog\Import\DuplicateGuard;
 use App\Catalog\Import\ItemUpsert;
 use App\Catalog\ItemSource;
 use App\Catalog\ItemType;
+use App\Media\PhotoPlace;
+use App\Media\PhotoValidator;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Exception as DBALException;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -23,7 +25,11 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 /**
  * Seed hand-authored hero pins as `source=manual`. Always unverified. Collision-safe against harvested (name, letter).
  *
+ * A pin's photos are written only when PhotoValidator shows them on that pin;
+ * a refused photo is left off and named in the report with the reason.
+ *
  * @see docs/specs/catalog-data-model.md §5
+ * @see docs/specs/photo-uploads.md §5h
  *
  * @api
  */
@@ -400,8 +406,14 @@ final class SeedManualCatalogCommand extends Command
             $this->db->beginTransaction();
             $counts = [];
             $skipped = [];
+            $droppedPhotos = [];
             foreach (self::pins() as $pin) {
                 $type = ItemType::fromParam($pin['letter']);
+                $sifted = PhotoValidator::sift($pin['attributes'], new PhotoPlace($pin['letter'], $pin['lat'], $pin['lng']));
+                $pin['attributes'] = $sifted['attributes'];
+                foreach ($sifted['dropped'] as $dropped) {
+                    $droppedPhotos[] = sprintf('%s: %s', $pin['name'], $dropped['verdict']->reason?->value ?? 'refused');
+                }
                 $this->vocabulary->assertValid($type, $pin['attributes']);
 
                 $held = $this->duplicates->existing(
@@ -442,6 +454,13 @@ final class SeedManualCatalogCommand extends Command
         ksort($counts);
         foreach ($counts as $letter => $count) {
             $io->writeln(sprintf('  %s: %d pin(s)', $letter, $count));
+        }
+        if ([] !== $droppedPhotos) {
+            $io->note(sprintf(
+                "Left off %d photo(s) PhotoValidator refused (the pins are seeded without them):\n  %s",
+                \count($droppedPhotos),
+                implode("\n  ", $droppedPhotos),
+            ));
         }
         if ([] !== $skipped) {
             $io->note(sprintf(

@@ -81,7 +81,7 @@ final class MediaPersistenceTest extends KernelTestCase
         self::assertEqualsWithDelta(50.4917, (float) $found->getGpsLat(), 0.0001);
 
         $found->claim(42);
-        $found->resolveGps(340);
+        $found->resolveGps(340, 50.49, 5.86);
         $this->em->flush();
         $this->em->clear();
 
@@ -89,6 +89,7 @@ final class MediaPersistenceTest extends KernelTestCase
         self::assertNotNull($claimed);
         self::assertSame(42, $claimed->getSubmissionId());
         self::assertSame(340, $claimed->getGpsDistanceM());
+        self::assertSame([50.49, 5.86], $claimed->getGpsDistancePin(), 'the pin it was measured to is kept');
         self::assertNull($claimed->getGpsLat(), 'raw coordinates never survive intake');
         self::assertNull($claimed->getGpsLng(), 'raw coordinates never survive intake');
 

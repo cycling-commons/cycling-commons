@@ -7,11 +7,14 @@ declare(strict_types=1);
 namespace App\Tests\Media;
 
 use App\Media\Commons\CommonsApi;
+use App\Media\Commons\CommonsPhotoAdmission;
 use App\Media\Commons\CommonsPhotoRepository;
 use App\Media\Commons\WikidataImageRepository;
+use App\Media\MediaStorage;
 use App\Media\Message\FetchCommonsPhoto;
 use App\Media\Message\ResolveWikidataImage;
 use App\Media\MessageHandler\ResolveWikidataImageHandler;
+use App\Media\PhotoPlace;
 use Doctrine\DBAL\Connection;
 use Psr\Log\NullLogger;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
@@ -72,6 +75,25 @@ final class WikidataImageTest extends KernelTestCase
         self::assertSame('Test wd hit.jpg', $sent[0]->file);
     }
 
+    public function testTheFetchCarriesThePlaceAndADeclinedFileStaysDeclinedForIt(): void
+    {
+        $sent = [];
+        $this->handle('Q99999906', $this->claims('Test wd view.jpg'), $sent, new PhotoPlace('P', 50.4, 5.8));
+        self::assertCount(1, $sent);
+        self::assertInstanceOf(FetchCommonsPhoto::class, $sent[0]);
+        self::assertSame('P', $sent[0]->letter);
+        self::assertSame(50.4, $sent[0]->lat);
+
+        // The fetch declined it: its camera stood 400 m from this view.
+        $this->photos->markDeclined('Test wd view.jpg', 'camera_far', 'Jane', null, 'CC BY-SA 4.0', 50.4036, 5.8);
+        $again = [];
+        $this->handle('Q99999907', $this->claims('Test wd view.jpg'), $again, new PhotoPlace('P', 50.4, 5.8));
+        self::assertCount(0, $again, 'a second scenic item naming the same file far from its camera queues nothing');
+
+        $this->handle('Q99999908', $this->claims('Test wd view.jpg'), $again, new PhotoPlace('Q', 50.4, 5.8));
+        self::assertCount(1, $again, 'a castle may show it, so it is fetched');
+    }
+
     public function testUnderscoresBecomeSpacesToMatchCommonsFileNames(): void
     {
         $this->handle('Q99999903', $this->claims('Test wd_under score.jpg'));
@@ -103,7 +125,7 @@ final class WikidataImageTest extends KernelTestCase
     }
 
     /** @param list<object> $sent */
-    private function handle(string $qid, MockHttpClient $client, array &$sent = []): void
+    private function handle(string $qid, MockHttpClient $client, array &$sent = [], ?PhotoPlace $place = null): void
     {
         $this->images->claim($qid);
 
@@ -122,14 +144,15 @@ final class WikidataImageTest extends KernelTestCase
             }
         };
 
+        /** @var MediaStorage $storage */
+        $storage = self::getContainer()->get(MediaStorage::class);
         $handler = new ResolveWikidataImageHandler(
             new CommonsApi($client, 'CyclingCommons-test/1.0'),
             $this->images,
-            $this->photos,
-            $bus,
+            new CommonsPhotoAdmission($this->photos, $storage, $bus),
             new NullLogger(),
         );
-        $handler(new ResolveWikidataImage($qid, 'EU'));
+        $handler(ResolveWikidataImage::forPlace($qid, 'EU', $place ?? PhotoPlace::unplaced()));
     }
 
     private function claims(?string $file): MockHttpClient

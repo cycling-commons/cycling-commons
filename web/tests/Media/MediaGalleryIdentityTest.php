@@ -176,6 +176,20 @@ final class MediaGalleryIdentityTest extends KernelTestCase
         self::assertStringContainsString('old-host', $photos[0]['sm']);
     }
 
+    /** A photo under legal hold is refused by PhotoValidator, so a repair does not keep it on the item. */
+    public function testRepairDropsAnEntryPhotoValidatorRefuses(): void
+    {
+        $upload = $this->approved();
+        $this->ageTheEntry($upload, keepId: true);
+        $upload->escalate(1, 'Suspected illegal content.');
+        $this->em->flush();
+
+        $this->runRepair();
+        $this->em->clear();
+
+        self::assertArrayNotHasKey('photos', $this->itemOf($upload)->getAttributes());
+    }
+
     private function runRepair(): int
     {
         $app = new Application(self::$kernel);

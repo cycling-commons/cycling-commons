@@ -10,8 +10,9 @@ use App\Catalog\CoverageRetirement;
 use App\Catalog\Entity\Item;
 use App\Catalog\GoneRows;
 use App\Catalog\ItemState;
-use App\Catalog\ScenicPhotoRule;
 use App\Media\Commons\CommonsFile;
+use App\Media\PhotoPlace;
+use App\Media\PhotoValidator;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
@@ -130,22 +131,8 @@ final class CoverageRepository
      */
     public function detail(string $osmType, int $osmId): ?array
     {
-        $ref = $osmType.'/'.$osmId;
-        /** @var array{ref: string, letter: string, kind: string|null, name: string|null, lat: string|float, lng: string|float, tags: string, item_id: int|string|null, item_state: string|null, item_name: string|null, item_attributes: string|null, item_letter: string|null, item_lat: string|float|null, item_lng: string|float|null}|false $row */
-        $row = $this->db->fetchAssociative(
-            'SELECT cp.ref, cp.letter, cp.kind, cp.name,
-                    ST_Y(cp.geom) AS lat, ST_X(cp.geom) AS lng, cp.tags,
-                    i.id AS item_id, i.state AS item_state, i.name AS item_name, i.attributes AS item_attributes,
-                    i.letter AS item_letter, ST_Y(ST_PointOnSurface(i.geom)) AS item_lat, ST_X(ST_PointOnSurface(i.geom)) AS item_lng
-             FROM coverage_poi cp
-             LEFT JOIN item i ON cp.ref IN (i.source_ref, i.osm_ref) AND i.state IN '.ItemState::servedSqlTuple().'
-                 AND NOT (i.letter IN '.CoverageRetirement::lettersSqlTuple().' AND '.CoverageRetirement::untouchedOsmSql('i').')
-             WHERE cp.ref = :ref
-             ORDER BY cp.letter, i.id
-             LIMIT 1',
-            ['ref' => $ref],
-        );
-        if (false === $row) {
+        $row = $this->detailRow($osmType, $osmId);
+        if (null === $row) {
             return null;
         }
 
@@ -180,6 +167,63 @@ final class CoverageRepository
     }
 
     /**
+     * What the photo endpoint needs for one POI: its tags, where it is, and
+     * the place its photo is judged against.
+     *
+     * That place is the served item standing for the POI when there is one
+     * (the same join as detail()), because the map draws that item's pin and
+     * the drawer opens that item; otherwise the POI itself. A scenic item
+     * whose pin a rider moved is judged where the pin now stands.
+     *
+     * @see docs/specs/coverage-provider.md §7
+     *
+     * @return array{tags: array<string, mixed>, ll: array{0: float, 1: float}, place: PhotoPlace}|null
+     */
+    public function photoSubject(string $osmType, int $osmId): ?array
+    {
+        $row = $this->detailRow($osmType, $osmId);
+        if (null === $row) {
+            return null;
+        }
+
+        /** @var array<string, mixed> $tags */
+        $tags = json_decode($row['tags'], true, 512, \JSON_THROW_ON_ERROR);
+        $ll = [(float) $row['lat'], (float) $row['lng']];
+        $place = null !== $row['item_id'] && is_numeric($row['item_lat']) && is_numeric($row['item_lng'])
+            ? new PhotoPlace((string) $row['item_letter'], (float) $row['item_lat'], (float) $row['item_lng'])
+            : new PhotoPlace($row['letter'], $ll[0], $ll[1]);
+
+        return ['tags' => $tags, 'll' => $ll, 'place' => $place];
+    }
+
+    /**
+     * One coverage row and the served item standing for it, if any.
+     * Curated join matches CatalogProvider::curatedRefs().
+     *
+     * @return array{ref: string, letter: string, kind: string|null, name: string|null, lat: string|float, lng: string|float, tags: string, item_id: int|string|null, item_state: string|null, item_name: string|null, item_attributes: string|null, item_letter: string|null, item_lat: string|float|null, item_lng: string|float|null}|null
+     */
+    private function detailRow(string $osmType, int $osmId): ?array
+    {
+        $ref = $osmType.'/'.$osmId;
+        /** @var array{ref: string, letter: string, kind: string|null, name: string|null, lat: string|float, lng: string|float, tags: string, item_id: int|string|null, item_state: string|null, item_name: string|null, item_attributes: string|null, item_letter: string|null, item_lat: string|float|null, item_lng: string|float|null}|false $row */
+        $row = $this->db->fetchAssociative(
+            'SELECT cp.ref, cp.letter, cp.kind, cp.name,
+                    ST_Y(cp.geom) AS lat, ST_X(cp.geom) AS lng, cp.tags,
+                    i.id AS item_id, i.state AS item_state, i.name AS item_name, i.attributes AS item_attributes,
+                    i.letter AS item_letter, ST_Y(ST_PointOnSurface(i.geom)) AS item_lat, ST_X(ST_PointOnSurface(i.geom)) AS item_lng
+             FROM coverage_poi cp
+             LEFT JOIN item i ON cp.ref IN (i.source_ref, i.osm_ref) AND i.state IN '.ItemState::servedSqlTuple().'
+                 AND NOT (i.letter IN '.CoverageRetirement::lettersSqlTuple().' AND '.CoverageRetirement::untouchedOsmSql('i').')
+             WHERE cp.ref = :ref
+             ORDER BY cp.letter, i.id
+             LIMIT 1',
+            ['ref' => $ref],
+        );
+
+        return false === $row ? null : $row;
+    }
+
+    /**
      * Whether a photo could exist for this POI, which is not the same as
      * whether one is ready.
      *
@@ -189,9 +233,12 @@ final class CoverageRepository
      * never even asks, so being conservative would silently hide 58,497 of the
      * rows most likely to have a picture.
      *
+     * Public because a catalog item that stands for this POI asks the same
+     * question before its drawer borrows the POI's photo (CatalogProvider).
+     *
      * @param array<string, mixed> $tags
      */
-    private static function photoPossible(array $tags): bool
+    public static function photoPossible(array $tags): bool
     {
         if (null !== CommonsFile::fromTags($tags)) {
             return true;
@@ -445,8 +492,8 @@ final class CoverageRepository
     /**
      * Curated overlay: attributes + name, plus confirmation tallies matching ItemConfirmationService::snapshot().
      *
-     * A scenic view's photos pass ScenicPhotoRule against the item's own pin,
-     * the same filter CatalogProvider applies, so the two ways into the drawer
+     * Only the photos PhotoValidator shows against the item's own pin, the
+     * same filter CatalogProvider applies, so the two ways into the drawer
      * show the same photos.
      *
      * @return array{itemId: int, state: string, fields: object, confirmations: object}
@@ -455,9 +502,7 @@ final class CoverageRepository
     {
         /** @var array<string, mixed> $fields */
         $fields = json_decode($attributesJson, true, 512, \JSON_THROW_ON_ERROR);
-        if (ScenicPhotoRule::appliesTo($letter)) {
-            $fields = ScenicPhotoRule::filterAttributes($fields, $pinLat, $pinLng);
-        }
+        $fields = PhotoValidator::sift($fields, new PhotoPlace($letter, $pinLat, $pinLng))['attributes'];
         if ('' !== $name) {
             $fields[Item::NAME_FIELD] = $name;
         }

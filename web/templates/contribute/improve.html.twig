@@ -161,6 +161,13 @@
   .wmap-stage{position:relative}
   .map-hint{position:absolute;top:.8rem;left:50%;transform:translateX(-50%);z-index:5;pointer-events:none;max-width:calc(100% - 2rem);text-align:center;font-family:var(--mono);font-size:.76rem;letter-spacing:.04em;color:var(--ink);background:rgba(239,230,212,.96);border:1px solid rgba(20,22,14,.18);border-radius:999px;padding:.45rem .9rem;box-shadow:0 8px 20px -12px rgba(20,22,14,.6)}
   .map-hint[hidden]{display:none}
+  /* A pin move that hides rider photos: red, in the middle of the map. */
+  .pin-photos{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:calc(100% - 1.6rem);z-index:5;pointer-events:none;max-width:34rem;
+    background:#9E2A1C;color:#fff;border-radius:8px;padding:.6rem .85rem;box-shadow:0 8px 20px -10px rgba(20,22,14,.7)}
+  .pin-photos[hidden]{display:none}
+  .pin-photos-msg{margin:0;font-weight:600;font-size:.9rem;line-height:1.6}
+  .pin-photos-why{margin:.45rem 0 0;font-size:.82rem;line-height:1.6;color:rgba(255,255,255,.92)}
+  .pin-photos-why:empty{display:none}
   .wz-measured{display:flex;flex-wrap:wrap;gap:.6rem 2rem;margin:.8rem 0 0}
   .wz-measured div{display:flex;flex-direction:column;gap:.15rem}
   .wz-measured dt{font-family:var(--mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:#595c4d}
@@ -687,6 +694,19 @@
         {# The next tap, on the map itself; improve.js keeps it in step with the readout. #}
         <div id="wz-mapHint" class="map-hint" aria-hidden="true" hidden>{{ 'improve.step1.readout_climb_foot'|trans }}</div>
       {% endif %}
+      {% if pin_photos_item|default(null) %}
+        {# Moving a scenic view's pin can hide rider photos: a photo counts only
+           while its distance, or 0 m for a curator's "Taken here", plus how far
+           the pin now is from the pin it was recorded at stays within 250 m
+           (scenic-views.md §8).
+           In the middle of the map. pin-move-photos.js asks the
+           server once the pin moves, and shows this only when the answer is
+           one or more. #}
+        <div class="pin-photos" id="wz-pinphotos" data-item="{{ pin_photos_item }}" role="status" hidden>
+          <p class="pin-photos-msg" id="wz-pinphotos-msg"></p>
+          <p class="pin-photos-why" id="wz-pinphotos-why"></p>
+        </div>
+      {% endif %}
     </div>
     <button type="button" id="wzChange" class="btn btn-g" hidden>◎ {{ 'improve.locate.change'|trans }}</button>
     <div class="readout">
@@ -1039,6 +1059,19 @@
   none: 'contribute.bikeway.none'|trans,
 }|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
 <script src="{{ asset('contribute/bike-way-check.js') }}" defer></script>
+{% endif %}
+{% if pin_photos_item|default(null) %}
+{# A curator's edit applies at once, so the warning tells them what to do
+   next instead of waiting for a curator. #}
+<script nonce="{{ csp_nonce() }}">window.CC_PIN_PHOTOS_I18N = {{ {
+  one: 'contribute.pin_photos.one'|trans,
+  many: 'contribute.pin_photos.many'|trans,
+  nextOne: (self_applies ? 'contribute.pin_photos.curator_one' : 'contribute.pin_photos.rider_one')|trans,
+  nextMany: (self_applies ? 'contribute.pin_photos.curator_many' : 'contribute.pin_photos.rider_many')|trans,
+  whyFarOne: 'contribute.pin_photos.why_far_one'|trans,
+  whyFarMany: 'contribute.pin_photos.why_far_many'|trans,
+}|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
+<script src="{{ asset('contribute/pin-move-photos.js') }}" defer></script>
 {% endif %}
 {% if osm_question %}
 {# Fills the identity question from the point, and keeps the page's promise in

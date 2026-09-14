@@ -13,9 +13,9 @@ map with a credit line nobody verified and a licence nobody read. So:
   3. ask the *Commons* API for that exact file's `extmetadata`: the licence
      short name, the licence URL, the artist, and Commons' own
      machine-readable `NonFreeLicense` / `Restrictions` flags,
-  4. accept ONLY a licence in FREE_LICENCES, which is the intersection of
-     "free enough for the Commons dataset" and "a deed URL that
-     `web/assets/map/util.js`'s ccUrl() already maps". Anything else is
+  4. accept ONLY a licence in FREE_LICENCES, which is read from the app's
+     own list (`web/src/Media/licences.json`, the file `LicenceUrls` reads),
+     so a harvest accepts exactly the names the app accepts. Anything else is
      reported as skipped, with the licence it actually carries.
 
 Output is JSON on stdout, one object per requested name, plus a human summary
@@ -36,6 +36,7 @@ from __future__ import annotations
 import argparse
 import html
 import json
+import pathlib
 import re
 import sys
 import time
@@ -44,22 +45,13 @@ import urllib.request
 
 UA = "CyclingCommons-photo-check/1.0 (https://cyclingcommons.org; info@cyclingcommons.org)"
 
-# Licence short names we accept, mapped to the exact string the catalogue
-# stores. The keys are what Commons' extmetadata LicenseShortName reports
-# (lower-cased); the values must stay inside ccUrl()'s table in
-# web/assets/map/util.js, or the drawer's licence link falls back to the
-# generic Commons licensing page.
-FREE_LICENCES = {
-    "cc0": "CC0",
-    "public domain": "Public domain",
-    "cc by 4.0": "CC BY 4.0",
-    "cc by 3.0": "CC BY 3.0",
-    "cc by 2.0": "CC BY 2.0",
-    "cc by-sa 4.0": "CC BY-SA 4.0",
-    "cc by-sa 3.0": "CC BY-SA 3.0",
-    "cc by-sa 2.5": "CC BY-SA 2.5",
-    "cc by-sa 2.0": "CC BY-SA 2.0",
-}
+# The app's one licence list: Commons `LicenseShortName` -> deed URL. PHP reads
+# the same file (App\Media\LicenceUrls), which is why it lives under web/.
+LICENCES_FILE = pathlib.Path(__file__).resolve().parents[2] / "web" / "src" / "Media" / "licences.json"
+
+# Licence short names we accept, keyed by the lower-cased `LicenseShortName`
+# Commons reports and mapped to the exact string the catalogue stores.
+FREE_LICENCES = {name.lower(): name for name in json.loads(LICENCES_FILE.read_text(encoding="utf-8"))}
 
 
 def _get(url: str) -> dict:
@@ -82,10 +74,18 @@ def _commons_user(artist_html: str) -> str | None:
 
 # Commons renders this sentence into Artist for old uploads that never carried
 # a machine-readable author. It is a description of an absence, not a credit,
-# and printing it under a photo on the map would be absurd. Where it names a
-# user we credit that user; where it does not, the file is unusable, because
-# CC BY-SA without a name to attribute cannot be complied with.
-_NO_AUTHOR_BOILERPLATE = re.compile(r"no machine-readable author provided", re.I)
+# and printing it under a photo on the map would be absurd. The bare platform
+# name is no author either. Where Artist links a user we credit that user;
+# where it does not, the file is unusable, because CC BY-SA without a name to
+# attribute cannot be complied with. The same test as PhotoValidator::NO_AUTHOR.
+_NO_AUTHOR_BOILERPLATE = re.compile(r"^\s*wikimedia\s+commons\s*$|no machine-readable author provided", re.I)
+
+
+def _flagged(value) -> bool:
+    """An extmetadata flag is set when it holds anything but nothing or an explicit false."""
+    if isinstance(value, bool):
+        return value
+    return _strip_html(str(value or "")).lower() not in ("", "0", "false", "no")
 
 
 def credit_from(meta: dict) -> tuple[str | None, str | None]:
@@ -107,7 +107,7 @@ def usable_photo(filename: str, meta: dict) -> dict | None:
     its licence is on FREE_LICENCES, and Commons states an author. Every
     harvested photo goes through here, so no harvest can lower it.
     """
-    if not meta["exists"] or meta["non_free"] or meta["restrictions"]:
+    if not meta["exists"] or _flagged(meta["non_free"]) or _flagged(meta["restrictions"]):
         return None
     canonical = FREE_LICENCES.get(meta["licence_short"].strip().lower())
     if canonical is None:
@@ -152,7 +152,15 @@ def licence_of(filename: str) -> dict:
         f"&titles={urllib.parse.quote('File:' + filename)}"
     )
     pages = _get(url).get("query", {}).get("pages", {})
-    page = next(iter(pages.values()), {})
+    return meta_from_page(next(iter(pages.values()), {}))
+
+
+def meta_from_page(page: dict) -> dict:
+    """One API page's imageinfo as the dict usable_photo() judges, plus the rendering URL.
+
+    Shared by every harvest that asks Commons in its own way (a single file
+    here, a batch in tools/wallonia/enrich.py), so they are judged alike.
+    """
     info = (page.get("imageinfo") or [{}])[0]
     meta = info.get("extmetadata", {})
 
@@ -171,10 +179,11 @@ def licence_of(filename: str) -> dict:
         "attribution": _strip_html(field("Attribution")),
         # Commons' own machine-readable "this is NOT free" markers. Either one
         # being set is a hard skip regardless of what the short name says.
-        "non_free": field("NonFreeLicense"),
+        "non_free": field("NonFree") or field("NonFreeLicense"),
         "restrictions": field("Restrictions"),
         "width": info.get("width"),
         "height": info.get("height"),
+        "thumb": info.get("thumburl"),
     }
 
 
@@ -203,7 +212,7 @@ def assess(name: str, qid: str | None = None, filename: str | None = None) -> di
     if not meta["exists"]:
         out["skipped"] = "Commons has no such file"
         return out
-    if meta["non_free"] or meta["restrictions"]:
+    if _flagged(meta["non_free"]) or _flagged(meta["restrictions"]):
         out["skipped"] = (
             "Commons flags it as non-free or restricted "
             f"(NonFreeLicense={meta['non_free']!r}, Restrictions={meta['restrictions']!r})"

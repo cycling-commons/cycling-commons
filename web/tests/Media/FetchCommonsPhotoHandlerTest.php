@@ -13,6 +13,7 @@ use App\Media\Commons\CommonsPhotoState;
 use App\Media\MediaStorage;
 use App\Media\Message\FetchCommonsPhoto;
 use App\Media\MessageHandler\FetchCommonsPhotoHandler;
+use App\Media\PhotoPlace;
 use App\Media\PhotoProcessor;
 use App\Media\Scan\ScanVerdict;
 use App\Media\Scan\VirusScannerInterface;
@@ -53,6 +54,92 @@ final class FetchCommonsPhotoHandlerTest extends KernelTestCase
 
         self::assertSame(0, $downloads, 'the licence gate must run before any bytes are pulled');
         self::assertSame(CommonsPhotoState::Unusable->value, $this->row()['state']);
+        self::assertSame('licence', $this->row()['failed_reason']);
+    }
+
+    public function testAFileNamingNoAuthorIsNeverDownloaded(): void
+    {
+        $downloads = 0;
+        $this->handle($this->client($this->metadata('CC BY-SA 3.0', artist: ''), $downloads));
+
+        self::assertSame(0, $downloads);
+        self::assertSame(CommonsPhotoState::Unusable->value, $this->row()['state']);
+        self::assertSame('no_author', $this->row()['failed_reason'], 'never credited to "Wikimedia Commons"');
+    }
+
+    public function testNoMachineReadableAuthorFallsBackToTheUploader(): void
+    {
+        $downloads = 0;
+        $this->handle($this->client($this->metadata('CC BY-SA 3.0', artist: '<a href="//commons.wikimedia.org/wiki/User:Jane_Rider">No machine-readable author provided. Jane_Rider assumed (based on copyright claims).</a>'), $downloads));
+
+        self::assertSame(1, $downloads);
+        self::assertSame(CommonsPhotoState::Ready->value, $this->row()['state']);
+        self::assertSame('Jane Rider', $this->row()['credit']);
+    }
+
+    public function testCommonsNonFreeAndRestrictionFlagsAreRefusals(): void
+    {
+        $downloads = 0;
+        $this->handle($this->client($this->metadata('CC BY-SA 3.0', extra: ['NonFree' => ['value' => 'true']]), $downloads));
+        self::assertSame(0, $downloads);
+        self::assertSame('non_free', $this->row()['failed_reason']);
+
+        $this->reclaim();
+        $this->handle($this->client($this->metadata('CC BY-SA 3.0', extra: ['Restrictions' => ['value' => 'trademarked']]), $downloads));
+        self::assertSame(0, $downloads);
+        self::assertSame('restricted', $this->row()['failed_reason']);
+    }
+
+    /** A missing file is not a licence refusal, so a licence recheck does not re-queue it. */
+    public function testAMissingFileIsNotALicenceRefusal(): void
+    {
+        $downloads = 0;
+        $this->handle($this->client((string) json_encode(['query' => ['pages' => [['missing' => true]]]]), $downloads));
+
+        self::assertSame(CommonsPhotoState::Unusable->value, $this->row()['state']);
+        self::assertSame('no_file', $this->row()['failed_reason']);
+    }
+
+    /**
+     * A scenic view asking for a file whose camera stood far away costs one
+     * metadata call and no download. The row keeps what Commons said, so the
+     * refusal is known without asking again, and another place may still use
+     * the file (CommonsPhotoAdmission::admit()).
+     */
+    public function testAScenicViewDoesNotDownloadAFileTakenElsewhere(): void
+    {
+        $downloads = 0;
+        $far = [['lat' => 50.43234, 'lon' => 5.81234, 'primary' => true, 'type' => 'camera']];
+        $this->handle($this->client($this->metadata('CC BY-SA 3.0', $far), $downloads), place: new PhotoPlace('P', 50.41234, 5.81234));
+
+        $row = $this->row();
+        self::assertSame(0, $downloads, 'nothing is downloaded for a place that may not show it');
+        self::assertSame(CommonsPhotoState::Declined->value, $row['state']);
+        self::assertSame('camera_far', $row['failed_reason']);
+        self::assertSame('CC BY-SA 3.0', $row['license']);
+        self::assertSame('Jean-Pol GRANDMONT', $row['credit']);
+        self::assertSame(50.43234, $row['camera_lat']);
+        self::assertNull($row['storage_prefix']);
+    }
+
+    public function testAScenicViewDoesNotDownloadAFileWithNoCamera(): void
+    {
+        $downloads = 0;
+        $this->handle($this->client($this->metadata('CC BY-SA 3.0'), $downloads), place: new PhotoPlace('P', 50.41234, 5.81234));
+
+        self::assertSame(0, $downloads);
+        self::assertSame(CommonsPhotoState::Declined->value, $this->row()['state']);
+        self::assertSame('camera_unknown', $this->row()['failed_reason']);
+    }
+
+    public function testAScenicViewDownloadsAFileTakenAtItsPin(): void
+    {
+        $downloads = 0;
+        $near = [['lat' => 50.41244, 'lon' => 5.81234, 'primary' => true, 'type' => 'camera']];
+        $this->handle($this->client($this->metadata('CC BY-SA 3.0', $near), $downloads), place: new PhotoPlace('P', 50.41234, 5.81234));
+
+        self::assertSame(1, $downloads);
+        self::assertSame(CommonsPhotoState::Ready->value, $this->row()['state']);
     }
 
     public function testAFileWithNoLicenceAtAllIsRefused(): void
@@ -156,7 +243,7 @@ final class FetchCommonsPhotoHandlerTest extends KernelTestCase
     /**
      * Where the camera stood is kept with the photo and published with it, so
      * a scenic view can tell a photo of its own view from one taken elsewhere
-     * (ScenicPhotoRule).
+     * (PhotoValidator).
      */
     public function testTheCameraPointIsStoredAndPublished(): void
     {
@@ -198,7 +285,15 @@ final class FetchCommonsPhotoHandlerTest extends KernelTestCase
         self::assertSame(1, $downloads, 'a redelivered message must not re-download');
     }
 
-    private function handle(MockHttpClient $client, ?ScanVerdict $verdict = null): void
+    private function reclaim(): void
+    {
+        /** @var Connection $db */
+        $db = self::getContainer()->get('doctrine.dbal.default_connection');
+        $db->executeStatement('DELETE FROM commons_photo WHERE file = :f', ['f' => self::FILE]);
+        $this->photos->claim(self::FILE);
+    }
+
+    private function handle(MockHttpClient $client, ?ScanVerdict $verdict = null, ?PhotoPlace $place = null): void
     {
         $container = self::getContainer();
         /** @var PhotoProcessor $processor */
@@ -215,7 +310,7 @@ final class FetchCommonsPhotoHandlerTest extends KernelTestCase
             new XmpRights('https://cyclingcommons.example'),
             new NullLogger(),
         );
-        $handler(new FetchCommonsPhoto(self::FILE, 'EU'));
+        $handler(FetchCommonsPhoto::forPlace(self::FILE, 'EU', $place ?? PhotoPlace::unplaced()));
     }
 
     private function scanner(ScanVerdict $verdict): VirusScannerInterface
@@ -233,10 +328,13 @@ final class FetchCommonsPhotoHandlerTest extends KernelTestCase
         };
     }
 
-    /** @param list<array<string, mixed>>|null $coordinates */
-    private function metadata(?string $shortName, ?array $coordinates = null): string
+    /**
+     * @param list<array<string, mixed>>|null $coordinates
+     * @param array<string, mixed>            $extra
+     */
+    private function metadata(?string $shortName, ?array $coordinates = null, string $artist = '<a href="//commons.wikimedia.org/wiki/User:Jean-Pol_GRANDMONT">Jean-Pol GRANDMONT</a>', array $extra = []): string
     {
-        $extra = ['Artist' => ['value' => '<a href="//commons.wikimedia.org/wiki/User:Jean-Pol_GRANDMONT">Jean-Pol GRANDMONT</a>']];
+        $extra['Artist'] = ['value' => $artist];
         if (null !== $shortName) {
             $extra['LicenseShortName'] = ['value' => $shortName];
         }
@@ -284,7 +382,7 @@ final class FetchCommonsPhotoHandlerTest extends KernelTestCase
         return $bytes;
     }
 
-    /** @return array{file: string, state: string, credit: ?string, credit_user: ?string, license: ?string, storage_bucket: ?string, storage_prefix: ?string, width: ?int, height: ?int, camera_lat: ?float, camera_lng: ?float} */
+    /** @return array{file: string, state: string, failed_reason: ?string, credit: ?string, credit_user: ?string, license: ?string, storage_bucket: ?string, storage_prefix: ?string, width: ?int, height: ?int, camera_lat: ?float, camera_lng: ?float} */
     private function row(): array
     {
         $row = $this->photos->find(self::FILE);

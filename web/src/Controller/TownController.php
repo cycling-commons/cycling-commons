@@ -10,6 +10,7 @@ use App\Media\Commons\CommonsPhotoAdmission;
 use App\Media\Commons\WikidataImageRepository;
 use App\Media\ContinentResolver;
 use App\Media\Message\ResolveWikidataImage;
+use App\Media\PhotoPlace;
 use App\Town\Message\ResolveTownSummary;
 use App\Town\MessageHandler\ResolveTownSummaryHandler;
 use App\Town\OsmElementApi;
@@ -138,7 +139,8 @@ final class TownController extends AbstractController
             return ['state' => 'none'];
         }
 
-        return $admission->stateFor($known['file'], $continent, $budget);
+        // A town card is no catalogue place: only the photo's own checks apply.
+        return $admission->stateFor($known['file'], $continent, PhotoPlace::unplaced(), $budget);
     }
 
     /** The reader's language when we have that Wikipedia, else English. */

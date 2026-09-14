@@ -206,7 +206,7 @@ mistakes are easy to make again.
 | Was | Is |
 |---|---|
 | "a display name ... it's all anyone else sees" | A private profile (the default) shows **no** name at all; a public one shows the name, country, join month and contribution counts |
-| "photos or video you upload" | Images only. `MediaController::SNIFFED_TYPES` accepts JPEG, PNG, WebP, HEIC, HEIF, AVIF and no video format |
+| "photos or video you upload" | Images only. `MediaController::SNIFFED_TYPES` accepts JPEG, PNG, WebP, HEIC, HEIF and no video format |
 | Location metadata "stripped" | Stripped **and** a licence packet written back: CC BY-SA 4.0 plus a link to the photo page. Never a name (`XmpRights`) |
 | "public profile and media display" as one consent | Two different promises. Being named is consent and is withdrawable; publication runs on the licence and CC BY-SA 4.0 is **irrevocable** (photo-uploads.md 6b). Withdrawing consent removes the name, not the photo |
 | "you have never seen a cookie banner here and never will" | "there is no cookie banner here", plus: if something ever needed one we would ask rather than assume. A promise about the future we might not keep is worth less than the fact |

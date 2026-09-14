@@ -93,7 +93,7 @@ final class SeedWikidataPlacesCommandTest extends KernelTestCase
 
     public function testTheCommonsPhotoCreditSurvivesIntoTheRow(): void
     {
-        $this->artifact('be', [$this->place('Q1', 'Test Viewpoint')]);
+        $this->artifact('be', [$this->place('Q1', 'Test Viewpoint', camera: [50.1003, 5.1])]);
 
         $this->run_();
 
@@ -104,6 +104,32 @@ final class SeedWikidataPlacesCommandTest extends KernelTestCase
         // photo seeded without its credit is a breach on a public page.
         self::assertStringContainsString('Jane Rider', $attrs);
         self::assertStringContainsString('CC BY-SA 3.0', $attrs);
+    }
+
+    /**
+     * A seed writes a photo only when PhotoValidator shows it on that place,
+     * and says what it dropped. The place itself is still seeded.
+     */
+    public function testAPhotoPhotoValidatorRefusesIsNotWrittenAndIsReported(): void
+    {
+        $noCamera = $this->place('Q11', 'Viewpoint With No Camera');
+        $farCamera = $this->place('Q12', 'Viewpoint Photographed Elsewhere', camera: [50.2, 5.1]);
+        $nonCommercial = $this->place('Q13', 'Castle Under NC', photoLicence: 'CC BY-NC-SA 4.0');
+        $castle = $this->place('Q14', 'Castle With No Camera');
+        $this->artifact('be', [$noCamera, $farCamera], [$nonCommercial, $castle]);
+
+        $tester = $this->run_();
+
+        $tester->assertCommandIsSuccessful();
+        foreach (['Q11', 'Q12', 'Q13'] as $qid) {
+            self::assertSame(1, $this->seededCount('wikidata:'.$qid), 'the place is still seeded');
+            self::assertArrayNotHasKey('photo', $this->attributes('wikidata:'.$qid), $qid);
+        }
+        self::assertArrayHasKey('photo', $this->attributes('wikidata:Q14'), 'a castle is not measured by its camera');
+        $display = $tester->getDisplay();
+        self::assertStringContainsString('Viewpoint With No Camera (BE): camera_unknown', $display);
+        self::assertStringContainsString('Viewpoint Photographed Elsewhere (BE): camera_far', $display);
+        self::assertStringContainsString('Castle Under NC (BE): licence', $display);
     }
 
     public function testABorderPlaceIsSeededOnceAndTheSkipIsExplained(): void
@@ -185,23 +211,39 @@ final class SeedWikidataPlacesCommandTest extends KernelTestCase
         return $tester;
     }
 
-    /** @param list<array<string, mixed>> $scenic */
-    private function artifact(string $cc, array $scenic): void
+    /**
+     * @param list<array<string, mixed>> $scenic
+     * @param list<array<string, mixed>> $history
+     */
+    private function artifact(string $cc, array $scenic, array $history = []): void
     {
         file_put_contents(
             $this->dir.'/places-'.$cc.'.json',
             json_encode([
                 'country' => strtoupper($cc),
                 'scenic' => $scenic,
-                'history' => [],
+                'history' => $history,
             ], \JSON_THROW_ON_ERROR),
         );
     }
 
     /** @return array<string, mixed> */
-    private function place(string $qid, string $name, float $lat = 50.1, float $lng = 5.1): array
+    private function attributes(string $ref): array
     {
-        return [
+        /** @var array<string, mixed> $attrs */
+        $attrs = json_decode((string) $this->db->fetchOne('SELECT attributes FROM item WHERE source_ref = :ref', ['ref' => $ref]), true, 512, \JSON_THROW_ON_ERROR);
+
+        return $attrs;
+    }
+
+    /**
+     * @param array{0: float, 1: float}|null $camera
+     *
+     * @return array<string, mixed>
+     */
+    private function place(string $qid, string $name, float $lat = 50.1, float $lng = 5.1, ?array $camera = null, string $photoLicence = 'CC BY-SA 3.0'): array
+    {
+        $place = [
             'qid' => $qid,
             'name' => $name,
             'type' => 'Viewpoint / high point',
@@ -212,9 +254,14 @@ final class SeedWikidataPlacesCommandTest extends KernelTestCase
                 'file' => 'Fixture.jpg',
                 'credit' => 'Jane Rider',
                 'user' => 'JaneR',
-                'license' => 'CC BY-SA 3.0',
+                'license' => $photoLicence,
             ],
         ];
+        if (null !== $camera) {
+            $place['photo']['camera'] = $camera;
+        }
+
+        return $place;
     }
 
     private function seededCount(?string $ref = null): int

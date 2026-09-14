@@ -12,8 +12,10 @@ use App\Media\Commons\CommonsPhotoState;
 use App\Media\Commons\CommonsUnavailable;
 use App\Media\MediaStorage;
 use App\Media\Message\FetchCommonsPhoto;
+use App\Media\PhotoFacts;
 use App\Media\PhotoProcessor;
 use App\Media\PhotoRejected;
+use App\Media\PhotoValidator;
 use App\Media\Scan\ScannerUnavailable;
 use App\Media\Scan\VirusScannerInterface;
 use App\Media\ShardUnavailable;
@@ -23,10 +25,15 @@ use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Symfony\Component\Uid\Uuid;
 
 /**
- * Metadata, licence gate, download, scan, re-encode with rights, store.
+ * Metadata, PhotoValidator, download, scan, re-encode with rights, store.
  *
- * The order is the design. The licence gate runs before any bytes are pulled,
- * so a file we may not republish costs one metadata call and nothing else. The
+ * The order is the design. PhotoValidator runs on Commons' metadata before any
+ * bytes are pulled, so a file we may not republish, or one the place that asked
+ * may not show, costs one metadata call and nothing else. A refusal about the
+ * file (licence, author, Commons' non-free or restriction flags) is terminal
+ * (`unusable`); a refusal about the place (a scenic view and a camera that is
+ * unknown or far) is `declined`, which keeps what Commons said so another
+ * place can still use the file (CommonsPhotoAdmission::admit()). The
  * scan runs before anything reaches a public bucket, because
  * media-storage-architecture.md §3.1 is fail-closed and somebody else's file is
  * exactly the case that rule exists for. The rights packet is written INTO the
@@ -68,7 +75,21 @@ final readonly class FetchCommonsPhotoHandler
         }
 
         if (null === $info) {
-            $this->photos->markUnusable($message->file, 'no_free_licence');
+            $this->photos->markUnusable($message->file, 'no_file');
+
+            return;
+        }
+
+        $camera = null === $info['cameraLat'] || null === $info['cameraLng'] ? null : [$info['cameraLat'], $info['cameraLng']];
+        $facts = PhotoFacts::commons($info['license'], $info['credit'], $info['nonFree'], $info['restricted'], $camera);
+        $verdict = PhotoValidator::verdict($facts, $message->place());
+        if (!$verdict->shows()) {
+            $reason = $verdict->reason?->value ?? 'refused';
+            if (true === $verdict->reason?->concernsPlace()) {
+                $this->photos->markDeclined($message->file, $reason, $info['credit'], $info['creditUser'], $info['license'], $info['cameraLat'], $info['cameraLng']);
+            } else {
+                $this->photos->markUnusable($message->file, $reason);
+            }
 
             return;
         }

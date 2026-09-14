@@ -17,7 +17,7 @@ use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
  * The best-of cards follow the scenic photo rule the map drawer follows.
  *
  * A podium card for a scenic view with a photo taken elsewhere would make the
- * same false promise the drawer refuses to make (ScenicPhotoRule), for both
+ * same false promise the drawer refuses to make (PhotoValidator), for both
  * halves of the ranking: a curated item's stored photo and a coverage row's
  * cached Commons photo.
  */
@@ -45,7 +45,7 @@ final class BestOfPreviewScenicPhotoTest extends KernelTestCase
         foreach (['Item far' => 50.4036, 'Item near' => 50.4009] as $name => $cameraLat) {
             $db->executeStatement($insert, ['name' => $name, 'rid' => $rid, 'ref' => 'manual:best-'.$name, 'attrs' => json_encode([
                 'type' => 'Viewpoint',
-                'photo' => ['sm' => 'https://img.test/'.rawurlencode($name).'.webp', 'cameraAt' => [$cameraLat, 5.8]],
+                'photo' => ['sm' => 'https://img.test/'.rawurlencode($name).'.webp', 'cameraAt' => [$cameraLat, 5.8], 'credit' => 'Jane Rider', 'license' => 'CC BY-SA 4.0'],
             ], \JSON_THROW_ON_ERROR)]);
         }
 

@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Moderation;
 
+use App\Catalog\Entity\Item;
 use App\Catalog\ItemType;
 use App\Catalog\Links\LinkVerdictStore;
 use App\Catalog\Links\SafeBrowsing;
@@ -14,6 +15,8 @@ use App\Catalog\SubmissionType;
 use App\Contribution\ChangeValue;
 use App\Media\Entity\MediaUpload;
 use App\Media\MediaStorage;
+use App\Media\PhotoPlace;
+use App\Media\PhotoValidator;
 use App\Messaging\UserMessageKind;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
@@ -44,7 +47,7 @@ final class SubmissionQueue
     ) {
     }
 
-    /** @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,whoUuid:string,when:string,body:string,was:string,now:string,status:string,asked:?string,riderReply:?string,priorRejection:?array{when:string,note:?string},photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,shape:?array{before: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}, after: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}},changes:list<array{key:string,was:?string,now:string}>,linkFlag:?string,bikeway:?array{nearestM:?int,withinM:int}}> */
+    /** @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,whoUuid:string,when:string,body:string,was:string,now:string,status:string,asked:?string,riderReply:?string,priorRejection:?array{when:string,note:?string},photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,shape:?array{before: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}, after: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}},changes:list<array{key:string,was:?string,now:string}>,linkFlag:?string,bikeway:?array{nearestM:?int,withinM:int},photosHiddenByMove:int}> */
     public function filtered(ModerationScope $scope, ?string $country, ?string $region, ?string $type, ?string $q = null, int $page = 1, int $perPage = self::PER_PAGE, ?int $byUser = null): array
     {
         [$where, $params] = $this->openFilters($country, $region, $type, $q, $byUser);
@@ -114,7 +117,7 @@ final class SubmissionQueue
     /**
      * Map pending layer: pending only, plus optional `$focusId` for a needs-info pin.
      *
-     * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,whoUuid:string,when:string,body:string,was:string,now:string,status:string,asked:?string,riderReply:?string,priorRejection:?array{when:string,note:?string},photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,shape:?array{before: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}, after: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}},changes:list<array{key:string,was:?string,now:string}>,linkFlag:?string,bikeway:?array{nearestM:?int,withinM:int}}>
+     * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,whoUuid:string,when:string,body:string,was:string,now:string,status:string,asked:?string,riderReply:?string,priorRejection:?array{when:string,note:?string},photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,shape:?array{before: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}, after: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}},changes:list<array{key:string,was:?string,now:string}>,linkFlag:?string,bikeway:?array{nearestM:?int,withinM:int},photosHiddenByMove:int}>
      */
     public function pendingForMap(ModerationScope $scope, ?int $focusId = null): array
     {
@@ -454,7 +457,7 @@ final class SubmissionQueue
      *                                     via $params, never interpolated
      * @param array<string, mixed> $params bound query parameters
      *
-     * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,whoUuid:string,when:string,body:string,was:string,now:string,status:string,asked:?string,riderReply:?string,priorRejection:?array{when:string,note:?string},photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,shape:?array{before: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}, after: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}},changes:list<array{key:string,was:?string,now:string}>,linkFlag:?string,bikeway:?array{nearestM:?int,withinM:int}}>
+     * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,whoUuid:string,when:string,body:string,was:string,now:string,status:string,asked:?string,riderReply:?string,priorRejection:?array{when:string,note:?string},photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,shape:?array{before: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}, after: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}},changes:list<array{key:string,was:?string,now:string}>,linkFlag:?string,bikeway:?array{nearestM:?int,withinM:int},photosHiddenByMove:int}>
      */
     private function rows(ModerationScope $scope, string $where, array $params, ?int $limit = null, int $offset = 0): array
     {
@@ -468,7 +471,8 @@ final class SubmissionQueue
                     ST_Y(s.geom) AS lat, ST_X(s.geom) AS lng, s.user_id, s.created_at, s.changes,
                     COALESCE(s.payload->\'details\'->>\'note\', \'\') AS body,
                     s.payload->\'_bikeway\' AS bikeway,
-                    it.attributes AS item_attributes,
+                    it.attributes AS item_attributes, it.letter AS item_letter,
+                    ST_Y(ST_PointOnSurface(it.geom)) AS item_lat, ST_X(ST_PointOnSurface(it.geom)) AS item_lng,
                     rr.body_text AS rider_reply,
                     u.public_profile, u.display_name, u.uuid AS user_uuid
              FROM submission s LEFT JOIN region r ON r.id = s.region_id
@@ -537,8 +541,44 @@ final class SubmissionQueue
                 'linkFlag' => $linkFlags[(int) $r['id']] ?? null,
                 /* A scenic view far from a bike way that the rider overruled (scenic-views.md). */
                 'bikeway' => self::overruledBikeWay($r['bikeway'] ?? null),
+                /* Rider photos the proposed pin would hide until a curator confirms them (scenic-views.md §8). */
+                'photosHiddenByMove' => self::photosHiddenByMove($r),
             ];
         }, $rows);
+    }
+
+    /**
+     * How many rider photos the item shows now and would no longer show at the
+     * pin this submission proposes: 0 without a `location` change or a target
+     * item. PhotoValidator::hiddenByMove() decides, so only a scenic view hides
+     * any.
+     *
+     * @param array<string, mixed> $r one row of rows()
+     */
+    private static function photosHiddenByMove(array $r): int
+    {
+        if (!\is_string($r['item_attributes'] ?? null) || !is_numeric($r['item_lat'] ?? null) || !is_numeric($r['item_lng'] ?? null)) {
+            return 0;
+        }
+        $changes = json_decode((string) $r['changes'], true);
+        $now = \is_array($changes) && \is_array($changes[Item::LOCATION_FIELD] ?? null) ? ($changes[Item::LOCATION_FIELD]['now'] ?? null) : null;
+        $parts = \is_string($now) ? array_map('trim', explode(',', $now)) : [];
+        if (2 !== \count($parts) || !is_numeric($parts[0]) || !is_numeric($parts[1])) {
+            return 0;
+        }
+        $attributes = json_decode($r['item_attributes'], true);
+        if (!\is_array($attributes)) {
+            return 0;
+        }
+
+        $letter = (string) $r['item_letter'];
+
+        /* @var array<string, mixed> $attributes */
+        return PhotoValidator::hiddenByMove(
+            $attributes,
+            new PhotoPlace($letter, (float) $r['item_lat'], (float) $r['item_lng']),
+            new PhotoPlace($letter, (float) $parts[0], (float) $parts[1]),
+        );
     }
 
     /**
