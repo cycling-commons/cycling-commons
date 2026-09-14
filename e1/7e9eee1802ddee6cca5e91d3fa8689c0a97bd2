@@ -1,0 +1,29 @@
+web/src/Controller/PageController.php
+  s_e9b7d39367a2ea::t_fd2cbec685cc9e 13
+  s_e9b7d39367a2ea::t_a506a66640c6c2 117-119
+  s_e9b7d39367a2ea::t_2a535a3cc6a096 149-153
+  s_e9b7d39367a2ea::t_78048355fc10c6 135,170-177,179-183
+web/tests/Controller/RegionOutlinesTest.php
+  s_e9b7d39367a2ea::t_36439719046ed6 43-113
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "e17e9eee1802ddee6cca5e91d3fa8689c0a97bd2",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_e9b7d39367a2ea": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "768f0270-53eb-479e-8318-433176b4f785",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
