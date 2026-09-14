@@ -257,6 +257,15 @@ open is the two waiting states together (`ReportStatus::open()`). Ordered
 urgent-first, then newest: the legal claims and abuse (`ReportGround::urgent()`,
 owner 2026-09-08: "both abuse and legal should float to the top").
 
+**Filtering** works as on the bugs desk ([contact-and-support.md §9, Filtering](contact-and-support.md)),
+through the same `moderate/_chip_row.html.twig`: a **Status** row and a
+**Category** row (what was reported, `?target=`), each a labelled group with an
+All chip, each chip keeping the other row's choice. `?status=all` leaves the
+open default on purpose. The status numbers follow the chosen category, and
+**Open counts both waiting states**, because that is what the Open chip lists;
+All is `countReports(null, target)`, not the sum of the chips, which would count
+a taken-up report twice. `ReportDeskFiltersTest` pins it.
+
 **The rows** (owner 2026-09-08): a name, one line of orange text with the
 ground, the status and the target ("IT IS ADVERTISING · OPEN · A PLACE ON THE
 MAP", a legal or abuse ground dark red, "no longer on the site" appended when

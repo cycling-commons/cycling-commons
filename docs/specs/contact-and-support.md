@@ -536,6 +536,13 @@ an **All** chip, and the chosen chip carries `aria-current="true"`.
 
 `BugDeskFiltersTest` pins all three.
 
+The row is one partial, `moderate/_chip_row.html.twig`, shared with the reports
+desk ([content-reports.md §9](content-reports.md)). Its labels are
+`moderate.filter.status`, `moderate.filter.category` and `moderate.filter.all`,
+and its layout (`.chiprow`, `.chiplabel`) lives in
+`account/_shell_styles.html.twig`, so a third desk gets the same row by
+including it.
+
 ### The reference, and finding one by it
 
 *(Added 2026-08-28.)*

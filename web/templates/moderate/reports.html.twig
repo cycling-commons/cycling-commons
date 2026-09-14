@@ -18,6 +18,7 @@
    except tie the page to a per-request value (docs/specs/page-caching.md §3.2). #}
 <style>
   .chips{display:flex;gap:.4rem;flex-wrap:wrap;margin:1rem 0 .6rem}
+  .mh + .chiprow{margin-top:1rem}
   .chip{font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;
     padding:.35rem .6rem;border-radius:4px;background:var(--paper-deep);color:#4a4d40;text-decoration:none}
   .chip.on{background:var(--ink);color:var(--paper)}
@@ -53,21 +54,26 @@
     <p class="lede">{{ 'report.desk.lede'|trans({'%takedowns%': path('moderate_takedowns')})|rich }}</p>
   </div>
 
-  <div class="chips">
-    {% for st in statuses %}
-      <a class="chip {{ filter_status == st.value ? 'on' : '' }}"
-         href="{{ path('moderate_reports', {status: st.value}) }}">
-        {{ st.label|trans }}<span class="n">{{ counts[st.value] ?? 0 }}</span>
-      </a>
-    {% endfor %}
-  </div>
-
-  <div class="chips kinds">
-    {% for tg in targets %}
-      <a class="chip {{ filter_target == tg.value ? 'on' : '' }}"
-         href="{{ path('moderate_reports', {target: tg.value}) }}">{{ tg.label|trans }}</a>
-    {% endfor %}
-  </div>
+  {# Two labelled rows (moderate/_chip_row.html.twig), each keeping the
+     other's choice. status=all is how the Open default is left on purpose. #}
+  {% set status_chips = [] %}
+  {% for st in statuses %}
+    {% set status_chips = status_chips|merge([{value: st.value, label: st.label|trans, n: counts[st.value] ?? 0}]) %}
+  {% endfor %}
+  {% set target_chips = [] %}
+  {% for tg in targets %}
+    {% set target_chips = target_chips|merge([{value: tg.value, label: tg.label|trans, n: null}]) %}
+  {% endfor %}
+  {% include 'moderate/_chip_row.html.twig' with {
+    row_id: 'reports-f-status', label: 'moderate.filter.status'|trans, name: 'status',
+    current: filter_status, all_value: 'all', all_n: count_all, chips: status_chips,
+    route: 'moderate_reports', keep: {target: filter_target},
+  } only %}
+  {% include 'moderate/_chip_row.html.twig' with {
+    row_id: 'reports-f-target', label: 'moderate.filter.category'|trans, name: 'target', extra: 'kinds',
+    current: filter_target, all_value: null, all_n: null, chips: target_chips,
+    route: 'moderate_reports', keep: {status: filter_status},
+  } only %}
 
   {% if rows is empty %}
     <div class="empty">{{ 'report.desk.empty'|trans }}</div>

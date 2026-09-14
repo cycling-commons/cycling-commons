@@ -74,6 +74,14 @@
   .mh h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4vw,2.4rem);line-height:1.08;margin:0 0 .4rem;color:var(--ink)}
   .mh .lead{color:#4a4d40;max-width:88ch;font-size:.94rem;line-height:1.55;margin:0}
   .mh .lead a{color:var(--clay);text-decoration:underline;text-underline-offset:2px}
+  /* A labelled row of filter chips on a desk (moderate/_chip_row.html.twig):
+     the label in one fixed column so every row starts at the same x, stacked
+     above its chips on a phone. */
+  .chiprow{display:grid;grid-template-columns:6.5rem 1fr;gap:.2rem .8rem;align-items:start;margin:.6rem 0}
+  .chiplabel{font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;
+    color:#595c4d;padding-top:.45rem}
+  @media(max-width:480px){.chiprow{grid-template-columns:1fr}.chiplabel{padding-top:0}}
+  .chiprow .chips{margin:0}
   /* A section inside a page: a coloured label on a thin rule, with an optional
      count. The same band whether it says "Route proposals" to a rider or
      "Pending corrections" to a curator. */

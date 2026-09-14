@@ -85,6 +85,7 @@ final class BugDeskFiltersTest extends WebTestCase
     private function queryOf(string $href): array
     {
         parse_str((string) parse_url($href, \PHP_URL_QUERY), $q);
+        ksort($q);   // which parameters, not their order in the URL
 
         /* @var array<string, string> $q */
         return $q;
@@ -137,11 +138,11 @@ final class BugDeskFiltersTest extends WebTestCase
         self::assertResponseIsSuccessful();
 
         $status = $this->group($page, 'status');
-        self::assertSame(['status' => 'planned', 'area' => 'map'], $this->queryOf($this->chipHref($status, 'planned')));
-        self::assertSame(['status' => 'all', 'area' => 'map'], $this->queryOf($this->chipHref($status, 'all')));
+        self::assertSame(['area' => 'map', 'status' => 'planned'], $this->queryOf($this->chipHref($status, 'planned')));
+        self::assertSame(['area' => 'map', 'status' => 'all'], $this->queryOf($this->chipHref($status, 'all')));
 
         $area = $this->group($page, 'area');
-        self::assertSame(['status' => 'resolved', 'area' => 'search'], $this->queryOf($this->chipHref($area, 'search')));
+        self::assertSame(['area' => 'search', 'status' => 'resolved'], $this->queryOf($this->chipHref($area, 'search')));
         self::assertSame(['status' => 'resolved'], $this->queryOf($this->chipHref($area, 'all')));
         self::assertSame('true', $area->filter('a.chip[data-value="map"]')->attr('aria-current'));
     }

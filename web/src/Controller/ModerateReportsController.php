@@ -53,6 +53,8 @@ final class ModerateReportsController extends AbstractController
 {
     private const string CSRF_TOKEN_ID = 'report-desk-decide';
     private const int PER_PAGE = 25;
+    /** The status chip that shows every status. */
+    private const string ALL = 'all';
 
     public function __construct(
         private readonly EntityManagerInterface $em,
@@ -65,12 +67,14 @@ final class ModerateReportsController extends AbstractController
     #[Route('/moderate/reports', name: 'moderate_reports', methods: ['GET'])]
     public function index(Request $request): Response
     {
-        $status = ReportStatus::tryFrom((string) $request->query->get('status', ''));
+        $statusParam = (string) $request->query->get('status', '');
+        $status = ReportStatus::tryFrom($statusParam);
         $target = ReportTarget::tryFrom((string) $request->query->get('target', ''));
 
         // Unfiltered means "the ones nobody has answered yet", the same default
-        // the bugs desk and the inbox use.
-        $showing = null === $status && null === $target ? ReportStatus::Open : $status;
+        // the bugs desk and the inbox use. `all` is the explicit "every status",
+        // so that default can be left on purpose.
+        $showing = self::ALL !== $statusParam && null === $status && null === $target ? ReportStatus::Open : $status;
 
         $pager = Pager::of(
             $request->query->getInt('page', 1),
@@ -89,10 +93,11 @@ final class ModerateReportsController extends AbstractController
             'nav_active' => '',
             'active' => 'moderate_reports',
             'rows' => $rows,
-            'counts' => $this->repository->reportCountsByStatus(),
+            'counts' => $this->repository->reportCountsByStatus($target),
+            'count_all' => $this->repository->countReports(null, $target),
             'statuses' => ReportStatus::all(),
             'targets' => ReportTarget::cases(),
-            'filter_status' => $showing?->value,
+            'filter_status' => $showing?->value ?? self::ALL,
             'filter_target' => $target?->value,
             'pager' => $pager,
         ]);

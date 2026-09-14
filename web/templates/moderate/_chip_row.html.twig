@@ -1,0 +1,40 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{#
+  One labelled row of filter chips on a curator desk (bugs, reports).
+  docs/specs/contact-and-support.md §9, "Filtering".
+
+  The row is a group named by its visible label, starts with an All chip, and
+  every chip link carries `keep`: the other row's choice, the search and the
+  order, so picking in one row never drops the other.
+
+  row_id     id of the label, which names the group
+  label      the visible label, already translated
+  name       the query parameter this row sets, also `data-filter`
+  current    the value picked now; for All this equals all_value
+  all_value  what All puts in the URL: 'all', or null to drop the parameter
+  all_n      the count on the All chip, or null for none
+  chips      list of {value, label, n}; n null for no count
+  route      the desk's route
+  keep       parameters every link carries
+  extra      extra class on the chips element
+#}
+{% set _keep = keep|default({}) %}
+<div class="chiprow">
+  <span class="chiplabel" id="{{ row_id }}">{{ label }}</span>
+  <div class="chips {{ extra|default('') }}" data-filter="{{ name }}" role="group" aria-labelledby="{{ row_id }}">
+    {% set _on = current is same as(all_value) %}
+    <a class="chip {{ _on ? 'on' : '' }}" data-value="all"{% if _on %} aria-current="true"{% endif %}
+       href="{{ path(route, _keep|merge({(name): all_value})) }}">
+      {{- 'moderate.filter.all'|trans -}}
+      {%- if all_n is not null %}<span class="n">{{ all_n }}</span>{% endif -%}
+    </a>
+    {% for c in chips %}
+      {% set _on = current == c.value %}
+      <a class="chip {{ _on ? 'on' : '' }}" data-value="{{ c.value }}"{% if _on %} aria-current="true"{% endif %}
+         href="{{ path(route, _keep|merge({(name): c.value})) }}">
+        {{- c.label -}}
+        {%- if c.n is not null %}<span class="n">{{ c.n }}</span>{% endif -%}
+      </a>
+    {% endfor %}
+  </div>
+</div>

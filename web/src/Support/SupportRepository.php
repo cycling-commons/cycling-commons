@@ -42,17 +42,7 @@ final readonly class SupportRepository
             ->select('r')
             ->from(ContentReport::class, 'r');
 
-        if (null !== $status) {
-            // "Open" on the desk means every report still waiting, taken up or not.
-            if (ReportStatus::Open === $status) {
-                $qb->andWhere('r.status IN (:status)')->setParameter('status', ReportStatus::open());
-            } else {
-                $qb->andWhere('r.status = :status')->setParameter('status', $status);
-            }
-        }
-        if (null !== $target) {
-            $qb->andWhere('r.targetType = :target')->setParameter('target', $target);
-        }
+        $this->filterReports($qb, $status, $target);
 
         // Legal grounds first, then newest. This desk sorts where the bug desk
         // deliberately does not, because Article 16 gives the two kinds of
@@ -77,6 +67,17 @@ final readonly class SupportRepository
             ->select('COUNT(r.id)')
             ->from(ContentReport::class, 'r');
 
+        $this->filterReports($qb, $status, $target);
+
+        return (int) $qb->getQuery()->getSingleScalarResult();
+    }
+
+    /**
+     * The one place the reports desk's filters are built, so the rows, the
+     * count and the chip numbers cannot disagree about what matched.
+     */
+    private function filterReports(QueryBuilder $qb, ?ReportStatus $status, ?ReportTarget $target): void
+    {
         if (null !== $status) {
             // "Open" on the desk means every report still waiting, taken up or not.
             if (ReportStatus::Open === $status) {
@@ -88,20 +89,25 @@ final readonly class SupportRepository
         if (null !== $target) {
             $qb->andWhere('r.targetType = :target')->setParameter('target', $target);
         }
-
-        return (int) $qb->getQuery()->getSingleScalarResult();
     }
 
-    /** @return array<string, int> status value => count, for the filter chips */
-    public function reportCountsByStatus(): array
+    /**
+     * Status value => count, for the filter chips, scoped by the chosen
+     * category. Open counts every report still waiting, taken up or not,
+     * because that is what the Open chip lists.
+     *
+     * @return array<string, int>
+     */
+    public function reportCountsByStatus(?ReportTarget $target = null): array
     {
-        /** @var list<array{status: ReportStatus, n: int|string}> $rows */
-        $rows = $this->em->createQueryBuilder()
+        $qb = $this->em->createQueryBuilder()
             ->select('r.status AS status, COUNT(r.id) AS n')
             ->from(ContentReport::class, 'r')
-            ->groupBy('r.status')
-            ->getQuery()
-            ->getResult();
+            ->groupBy('r.status');
+        $this->filterReports($qb, null, $target);
+
+        /** @var list<array{status: ReportStatus, n: int|string}> $rows */
+        $rows = $qb->getQuery()->getResult();
 
         $out = [];
         foreach (ReportStatus::all() as $status) {
@@ -110,6 +116,7 @@ final readonly class SupportRepository
         foreach ($rows as $row) {
             $out[$row['status']->value] = (int) $row['n'];
         }
+        $out[ReportStatus::Open->value] += $out[ReportStatus::InProgress->value];
 
         return $out;
     }
