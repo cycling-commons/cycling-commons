@@ -797,3 +797,67 @@ def test_load_region_clears_stored_osm_candidates_of_its_country_only(db):
     load_region(db, [_row("node/10", "B")], "europe/belgium")
     rows = dict(db.execute("SELECT id, osm_candidates_at IS NOT NULL FROM item ORDER BY id").fetchall())
     assert rows == {1: False, 2: True, 3: True, 4: False}
+
+
+# --- scenic views sit along a bike way (docs/specs/scenic-views.md) -----------
+
+def test_near_way_filter_drops_scenic_points_away_from_a_bike_way(db):
+    ensure_schema(db)
+    # A cycleway along latitude 50.46 from lon 4.85 to 4.87.
+    lines = [[(4.85, 50.46), (4.87, 50.46)]]
+    rows = [
+        _row("node/near", "P", lon=4.86, lat=50.4605, tags={"tourism": "viewpoint"}),   # ~56 m north
+        _row("node/far", "P", lon=4.86, lat=50.4630, tags={"tourism": "viewpoint"}),    # ~330 m north
+        _row("node/tap", "B", lon=4.86, lat=50.4630),                                   # not scenic: untouched
+    ]
+    load_region(db, rows, "europe/belgium", near_ways=({"P": 100.0}, lines))
+    refs = {r[0] for r in db.execute("SELECT ref FROM coverage_poi").fetchall()}
+    assert refs == {"node/near", "node/tap"}
+
+
+def test_without_a_near_way_filter_scenic_points_load_as_before(db):
+    ensure_schema(db)
+    rows = [_row("node/far", "P", lon=4.86, lat=50.4630, tags={"tourism": "viewpoint"})]
+    load_region(db, rows, "europe/belgium")
+    assert db.execute("SELECT count(*) FROM coverage_poi").fetchone()[0] == 1
+
+
+def test_name_or_tags_filter_drops_bare_scenic_points(db):
+    ensure_schema(db)
+    rows = [
+        _row("node/named", "P", tags={"tourism": "viewpoint"}),
+        _row("node/photo", "P", name=None, tags={"tourism": "viewpoint", "image": "https://x.test/v.jpg"}),
+        _row("node/bare", "P", name=None, tags={"tourism": "viewpoint"}),
+        _row("node/blank", "P", name="", tags={"tourism": "viewpoint"}),
+        _row("node/tap", "B", name=None),
+    ]
+    load_region(db, rows, "europe/belgium", name_or_tags={"P": ["image", "wikidata", "wikimedia_commons"]})
+    refs = {r[0] for r in db.execute("SELECT ref FROM coverage_poi").fetchall()}
+    assert refs == {"node/named", "node/photo", "node/tap"}
+
+
+# --- the drift guard watches the letters no rule filters -----------------------
+
+def test_a_rule_may_empty_a_letter_without_tripping_the_drift_guard(db):
+    """A contract rule (nameOrTags, nearWay) dropping a letter's points is the
+    rule working, however many it drops: scenic-views.md §2. The guard is for a
+    broken extract, which shrinks the unfiltered letters too."""
+    ensure_schema(db)
+    rule = {"P": ["image", "wikidata", "wikimedia_commons"]}
+    load_region(db, [_row(f"node/b{i}", "B") for i in range(10)]
+                + [_row(f"node/p{i}", "P", name=None, tags={"tourism": "viewpoint", "image": "x"}) for i in range(30)],
+                "europe/belgium", name_or_tags=rule)
+    load_region(db, [_row(f"node/b{i}", "B") for i in range(10)]
+                + [_row(f"node/p{i}", "P", name=None, tags={"tourism": "viewpoint"}) for i in range(30)],
+                "europe/belgium", name_or_tags=rule)
+    letters = dict(db.execute("SELECT letter, count(*) FROM coverage_poi GROUP BY letter").fetchall())
+    assert letters == {"B": 10}
+
+
+def test_a_broken_extract_still_trips_the_drift_guard_when_rules_are_on(db):
+    ensure_schema(db)
+    rule = {"P": ["image", "wikidata", "wikimedia_commons"]}
+    load_region(db, [_row(f"node/b{i}", "B") for i in range(10)], "europe/belgium", name_or_tags=rule)
+    with pytest.raises(DriftAbort):
+        load_region(db, [_row(f"node/b{i}", "B") for i in range(5)], "europe/belgium", name_or_tags=rule)
+    assert db.execute("SELECT count(*) FROM coverage_poi").fetchone()[0] == 10

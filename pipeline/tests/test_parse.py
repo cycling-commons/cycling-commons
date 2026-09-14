@@ -28,7 +28,7 @@ def test_letter_per_selector_and_no_selector_drops(rows):
     assert letters["node/104"] == {"F"}
     assert letters["node/105"] == {"Q"}
     assert letters["node/106"] == {"G"}
-    assert letters["node/107"] == {"P"}
+    assert "node/107" not in letters          # natural=peak is not scenic: a summit is where no rider is
     assert "node/108" not in letters          # amenity=bench matches no selector
     assert "node/110" not in letters          # untagged way corners never emit
 

@@ -22,7 +22,7 @@ import urllib.request
 import psycopg
 
 from .contract import load_contract
-from .extract import run_extract, run_filter
+from .extract import export_lines, rideable_lines, run_extract, run_filter, run_way_filter
 from .load import apply_session_budget, ensure_schema, load_region, resolve_country
 from .parse import parse_pois
 from .publish import (ROUTES_MANIFEST_KEY, ensure_bucket, prune, prune_routes,
@@ -527,6 +527,11 @@ def main(argv=None) -> int:
                          "2026-08-25 letter renumbering: the tile layers are named "
                          "<letter>_<cc>, so the artifact had to follow the rows). The "
                          "manifest's `regions` is the region list given, as for a full run.")
+    ap.add_argument("--load-only", action="store_true",
+                    help="load the given regions into coverage_poi and stop: no export, no "
+                         "PMTiles, no publish. For loading countries one at a time on a "
+                         "machine short of memory; a single --tiles-only run then builds "
+                         "and publishes the artifact from the whole index.")
     ap.add_argument("--regions",
                     help="csv of Geofabrik regions (default: $COVERAGE_REGIONS or europe/belgium,europe/netherlands,europe/germany,europe/luxembourg,europe/france,europe/switzerland,europe/great-britain,europe/ireland-and-northern-ireland,europe/italy,australia-oceania/australia,asia/japan,north-america/us/california,north-america/us/colorado,europe/spain)")
     args = ap.parse_args(argv)
@@ -560,6 +565,12 @@ def main(argv=None) -> int:
                   "exiting", file=sys.stderr)
             return 2
         ensure_schema(conn)
+        # Letters whose points must sit along a bike way (docs/specs/scenic-views.md).
+        near_rules = {letter: spec.near_way for letter, spec in contract.letters.items() if spec.near_way}
+        if len({(r.within_m, tuple(r.highways), tuple(r.bicycle_tags)) for r in near_rules.values()}) > 1:
+            raise ValueError("near-way rules differ between letters; one way pass serves them all today")
+        # Letters whose points need a name or a photo link (docs/specs/scenic-views.md §2).
+        name_or_tags = {letter: spec.name_or_tags for letter, spec in contract.letters.items() if spec.name_or_tags}
         run_started = time.monotonic()
         timings: list[tuple[str, float, bool]] = []
         for region in ([] if args.tiles_only else regions):
@@ -574,7 +585,15 @@ def main(argv=None) -> int:
                 filtered = workdir / (region.replace("/", "-") + "-filtered.osm.pbf")
                 run_extract(pbf, filtered, contract)
                 rows = parse_pois(filtered, contract, region, country_code)
-                result = load_region(conn, rows, region, country_code)
+                near_ways = None
+                if near_rules:
+                    rule = next(iter(near_rules.values()))
+                    ways = workdir / (region.replace("/", "-") + "-bikeways.osm.pbf")
+                    run_way_filter(pbf, ways, rule)
+                    near_ways = ({letter: r.within_m for letter, r in near_rules.items()},
+                                 rideable_lines(export_lines(ways), rule))
+                result = load_region(conn, rows, region, country_code, near_ways=near_ways,
+                                     name_or_tags=name_or_tags or None)
                 elapsed = time.monotonic() - region_started
                 timings.append((region, elapsed, True))
                 print(f"[coverage] {region}: loaded/updated {result.inserted} rows "
@@ -587,6 +606,10 @@ def main(argv=None) -> int:
                 # region that dies after 40 minutes failed differently from one
                 # that dies in two seconds.
                 print(f"[coverage] {region}: FAILED after {_dur(elapsed)} — {exc}", file=sys.stderr)
+
+        if args.load_only:
+            _print_timings(timings, time.monotonic() - run_started)
+            return 1 if failed else 0
 
         tiles_started = time.monotonic()
         layer_files = export_geojsonl(conn, workdir)

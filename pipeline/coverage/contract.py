@@ -37,9 +37,32 @@ class Selector:
 
 
 @dataclass(frozen=True)
+class NearWay:
+    """A letter whose points must sit along a bike way (docs/specs/scenic-views.md).
+
+    A point stays only within `within_m` of a way a bike may ride: a highway
+    named in `highways`, or any highway tagged bicycle= one of `bicycle_tags`,
+    and never one tagged bicycle=no.
+    """
+
+    within_m: float
+    highways: list[str]
+    bicycle_tags: list[str]
+
+    def rideable(self, tags: dict) -> bool:
+        if "highway" not in tags or tags.get("bicycle") == "no":
+            return False
+        return tags["highway"] in self.highways or tags.get("bicycle") in self.bicycle_tags
+
+
+@dataclass(frozen=True)
 class LetterSpec:
     selectors: list[Selector]
     tile_props: list[str]  # per-letter extras only; ref/n/t are implicit
+    near_way: NearWay | None = None
+    # A point of this letter loads only with a name or one of these tag keys
+    # (docs/specs/scenic-views.md §2). None: no such requirement.
+    name_or_tags: list[str] | None = None
 
 
 @dataclass(frozen=True)
@@ -107,6 +130,27 @@ def _selector(letter: str, entry: object) -> Selector:
     return Selector(tag=tag, key=key, value=value, label=label)
 
 
+def _near_way(letter: str, entry: object) -> NearWay | None:
+    if entry is None:
+        return None
+    if not isinstance(entry, dict) or set(entry) != {"withinM", "highways", "bicycleTags"}:
+        raise ValueError(
+            f"letter {letter}: nearWay must be {{withinM, highways, bicycleTags}}, got {entry!r}")
+    within = entry["withinM"]
+    if not isinstance(within, (int, float)) or within <= 0 or not entry["highways"]:
+        raise ValueError(f"letter {letter}: nearWay needs a positive withinM and at least one highway")
+    return NearWay(within_m=float(within), highways=list(entry["highways"]),
+                   bicycle_tags=list(entry["bicycleTags"]))
+
+
+def _name_or_tags(letter: str, entry: object) -> list[str] | None:
+    if entry is None:
+        return None
+    if not isinstance(entry, list) or not entry or not all(isinstance(k, str) and k for k in entry):
+        raise ValueError(f"letter {letter}: nameOrTags must be a non-empty list of tag keys, got {entry!r}")
+    return sorted(entry)
+
+
 def load_contract(path: pathlib.Path = CONTRACT_PATH) -> Contract:
     """Parse + validate the contract file; raises ValueError on any drift."""
     raw = json.loads(path.read_text(encoding="utf-8"))
@@ -120,6 +164,8 @@ def load_contract(path: pathlib.Path = CONTRACT_PATH) -> Contract:
         letter: LetterSpec(
             selectors=[_selector(letter, entry) for entry in spec["selectors"]],
             tile_props=list(spec.get("tileProps", [])),
+            near_way=_near_way(letter, spec.get("nearWay")),
+            name_or_tags=_name_or_tags(letter, spec.get("nameOrTags")),
         )
         for letter, spec in raw["letters"].items()
     }
@@ -251,6 +297,13 @@ def load_contract(path: pathlib.Path = CONTRACT_PATH) -> Contract:
             f"storedTagKeys drops tile-derived key(s) {missing} — tiles.py::_EXTRA_SQL "
             "reads them back out of tags, so the derived property would always be NULL")
 
+    # A required tag the cache never stores could never be present, so the rule
+    # would drop every unnamed point without saying why.
+    for letter, spec in letters.items():
+        absent = sorted(set(spec.name_or_tags or []) - set(stored))
+        if absent:
+            raise ValueError(
+                f"letter {letter}: nameOrTags names {absent}, which storedTagKeys does not keep")
     return Contract(
         letters=letters,
         service_kind=service_kind,

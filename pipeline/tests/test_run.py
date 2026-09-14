@@ -172,8 +172,11 @@ def test_main_stage_order_and_region_failure_isolation(monkeypatch, tmp_path, ca
         def commit(self):
             pass
 
-    def fake_load_region(conn, rows, region, country_code):
+    def fake_load_region(conn, rows, region, country_code, near_ways=None, name_or_tags=None):
         calls.append(f"load:{region}")
+        # Scenic points must sit along a bike way: the run hands the rule over.
+        assert near_ways is not None and near_ways[0] == {"P": 250.0}
+        assert name_or_tags == {"P": ["image", "wikidata", "wikimedia_commons"]}
         if region == "dev/bad":
             raise DriftAbort("simulated drift: 1 row vs 100 previously")
         return LoadResult(inserted=7, previous=5)
@@ -197,6 +200,8 @@ def test_main_stage_order_and_region_failure_isolation(monkeypatch, tmp_path, ca
     monkeypatch.setattr(
         run, "run_extract", lambda pbf, out, contract: calls.append("extract") or out)
     monkeypatch.setattr(run, "parse_pois", lambda pbf, contract, region, cc: iter(()))
+    monkeypatch.setattr(run, "run_way_filter", lambda pbf, out, rule: calls.append("ways") or out)
+    monkeypatch.setattr(run, "export_lines", lambda path: iter(()))
     monkeypatch.setattr(run, "load_region", fake_load_region)
     monkeypatch.setattr(
         run, "export_geojsonl",
@@ -333,3 +338,49 @@ def test_main_tiles_only_skips_the_harvest_and_still_publishes(monkeypatch, tmp_
     assert not {"resolve", "fetch", "extract", "parse", "load"} & set(calls)
     assert calls == ["schema", "export", "build", "verify", "bucket", "upload", "prune"]
     assert manifests == [{"counts": {"B": 3}, "regions": ["europe/belgium"], "country_codes": ["BE"]}]
+
+
+def test_main_load_only_loads_and_builds_no_tiles(monkeypatch, tmp_path):
+    """--load-only: the regions load, and nothing is exported, built or
+    published. For loading countries one at a time on a machine short of
+    memory, with a single --tiles-only pass at the end."""
+    calls = []
+
+    class FakeResult:
+        def fetchall(self):
+            return [("B", 3)]
+
+        def fetchone(self):
+            return (True,)
+
+    class FakeConn:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+        def execute(self, sql, params=None):
+            return FakeResult()
+
+        def commit(self):
+            pass
+
+    monkeypatch.setenv("COVERAGE_WORKDIR", str(tmp_path))
+    monkeypatch.setattr(run.psycopg, "connect", lambda dsn: FakeConn())
+    monkeypatch.setattr(run, "ensure_schema", lambda conn: calls.append("schema"))
+    monkeypatch.setattr(run, "resolve_country", lambda region: None)
+    monkeypatch.setattr(run, "fetch_pbf", lambda region, workdir: tmp_path / "in.pbf")
+    monkeypatch.setattr(run, "run_extract", lambda pbf, out, contract: out)
+    monkeypatch.setattr(run, "parse_pois", lambda pbf, contract, region, cc: iter(()))
+    monkeypatch.setattr(run, "run_way_filter", lambda pbf, out, rule: out)
+    monkeypatch.setattr(run, "export_lines", lambda path: iter(()))
+    monkeypatch.setattr(run, "load_region",
+                        lambda conn, rows, region, cc, near_ways=None, name_or_tags=None: calls.append("load") or LoadResult(1, 1))
+    for name in ("export_geojsonl", "build_pmtiles", "verify_pmtiles", "ensure_bucket", "upload", "prune"):
+        monkeypatch.setattr(run, name, lambda *a, _n=name, **k: calls.append(_n))
+
+    rc = run.main(["--load-only", "--regions", "europe/belgium"])
+
+    assert rc == 0
+    assert calls == ["schema", "load"]

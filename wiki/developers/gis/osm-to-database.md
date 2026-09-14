@@ -128,9 +128,11 @@ contract file, `pipeline/contract/coverage-contract.json`, loaded by
 `pipeline/coverage/contract.py::load_contract()`: it defines eight catalogue letters, `B` water &
 food, `C` public toilets, `D` bike services, `F` getting there, `G` shelter, `O` where to sleep,
 `P` scenic views, `Q` history & culture, matching the point catalogue in `docs/specs/osm-data-architecture.md` §5, and
-under each letter a list of exact `tag=value` rules. Counted directly from that file, there are 43
+under each letter a list of exact `tag=value` rules. Counted directly from that file, there are 42
 such rules ([the count is generated](../numbers.md), not typed here; for example `tourism=hotel`, `tourism=hostel`,
-`tourism=camp_site`, … under letter `O` alone) built from 11 distinct tag keys. `extract.py::selector_expressions()` turns every rule into an
+`tourism=camp_site`, … under letter `O` alone) built from 10 distinct tag keys. Letter `P` also carries two
+rules that filter after the selection, a name or photo link and a bike way within 250 m
+(`docs/specs/scenic-views.md` §2). `extract.py::selector_expressions()` turns every rule into an
 `nw/key=value` osmium expression, `nw` for "node or way", tying back to the previous section's model,
 and de-duplicates them:
 
@@ -185,16 +187,18 @@ to 35 MB, a 51.7% cut, and the whole row from 517 to 412 bytes on average. At th
 `_SOURCE_DDL` in `pipeline/coverage/load.py`), that difference is not a rounding error: it is
 hundreds of megabytes of tag payload, for keys nothing anywhere ever renders.
 
-The 33 kept keys split into four groups, and they are easy to double-count:
+The 33 kept keys split into five groups, and they are easy to double-count:
 
-- **11 selector keys**: `amenity`, `drinking_water`, `historic`, `man_made`, `natural`, `railway`,
-  `route`, `shelter_type`, `shop`, `tourism`, `waterway`, the same keys the 43 selector rules above
+- **10 selector keys**: `amenity`, `drinking_water`, `historic`, `man_made`, `railway`,
+  `route`, `shelter_type`, `shop`, `tourism`, `waterway`, the same keys the 42 selector rules above
   are built from. They are kept because `pipeline/coverage/tiles.py`'s `_label_case` re-reads them
   at tile-build time to derive the type label a rider sees.
+- **1 key no selector reads**: `natural`. It stays in the stored set because re-adding a dropped key
+  later needs a full re-harvest of the planet.
 - **17 more keys** the item drawer displays: `opening_hours`, `website`, `contact:website`, `url`,
   `phone`, `contact:phone`, `addr:city`, `addr:street`, `addr:housenumber`, `operator`,
   `description`, `wheelchair`, `fee`, `capacity`, and for scenic views `ele`, `direction` and
-  `height` (a peak's altitude, the way a viewpoint faces, how far a waterfall drops).
+  `height` (a viewpoint's altitude, the way it faces, how far a waterfall drops).
 - **4 media/reference keys**: `wikidata`, `wikipedia`, `image`, `wikimedia_commons`. Three of them
   are what a photo of the place can be found under, and the drawer serves them as the citation for
   a picture a rider is looking at (`coverage-provider.md` §7); `wikipedia` is stored and read by
@@ -205,7 +209,7 @@ The 33 kept keys split into four groups, and they are easy to double-count:
   published witness rather than a bare copied claim. `data-priority.md` is where that ladder is set
   out.
 
-11 + 17 + 4 + 1 = 33. The PHP side of this, `CoverageRepository::TAG_WHITELIST` in
+10 + 1 + 17 + 4 + 1 = 33. The PHP side of this, `CoverageRepository::TAG_WHITELIST` in
 `web/src/Coverage/CoverageRepository.php`, the exact set of keys the POI drawer is allowed to render,
 lists **23** entries: the 17 display keys, three of the selector keys (`drinking_water`, `amenity` and
 `shop`, because the pin's colour and the panel's wording have to agree on whether water is potable

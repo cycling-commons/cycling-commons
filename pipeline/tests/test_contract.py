@@ -11,7 +11,7 @@ import pytest
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 
-from coverage.contract import load_contract  # noqa: E402
+from coverage.contract import CONTRACT_PATH, load_contract  # noqa: E402
 
 # Public toilets (added 2026-07-30 as M) became C in the 2026-08-25 renumbering:
 # practical categories A-M, experiential N-Z.
@@ -210,3 +210,62 @@ def test_every_tile_prop_has_its_sql_fragment():
     # The witness date is read out of `tags`, so the trim must keep it.
     assert "check_date" in TILE_DERIVED_TAG_KEYS
     assert "check_date" in contract.stored_tag_keys
+
+
+# --- scenic views sit along a bike way (docs/specs/scenic-views.md) -----------
+
+def test_scenic_selects_no_peaks():
+    """A peak's point is its summit, where no rider is; measured 2026-09-14,
+    at most 5 of 207 Valais peaks sat within 200 m of a bike way."""
+    tags = [s.tag for s in load_contract().letters["P"].selectors]
+    assert "natural=peak" not in tags
+    assert tags == ["tourism=viewpoint", "waterway=waterfall"]
+
+
+def test_scenic_carries_a_near_way_rule_and_no_other_letter_does():
+    letters = load_contract().letters
+    assert letters["P"].near_way is not None
+    assert letters["P"].near_way.within_m == 250
+    assert all(spec.near_way is None for letter, spec in letters.items() if letter != "P")
+
+
+def test_near_way_rideable_is_a_road_a_cycleway_or_a_bike_tagged_path():
+    rule = load_contract().letters["P"].near_way
+    assert rule.rideable({"highway": "tertiary"})
+    assert rule.rideable({"highway": "unclassified", "surface": "gravel"}), "gravel roads count"
+    assert rule.rideable({"highway": "cycleway"})
+    assert rule.rideable({"highway": "track", "bicycle": "designated"})
+    assert rule.rideable({"highway": "path", "bicycle": "yes"})
+    assert not rule.rideable({"highway": "path"}), "a hiking path is not a bike way"
+    assert not rule.rideable({"highway": "footway"})
+    assert not rule.rideable({"highway": "track"})
+    assert not rule.rideable({"highway": "motorway"})
+    assert not rule.rideable({"highway": "tertiary", "bicycle": "no"})
+    assert not rule.rideable({"bicycle": "yes"}), "a bicycle tag without a highway is not a way"
+
+
+def test_rejects_a_malformed_near_way(tmp_path):
+    raw = json.loads(CONTRACT_PATH.read_text(encoding="utf-8"))
+    raw["letters"]["P"]["nearWay"] = {"withinM": 100}
+    bad = tmp_path / "c.json"
+    bad.write_text(json.dumps(raw), encoding="utf-8")
+    with pytest.raises(ValueError, match="nearWay"):
+        load_contract(bad)
+
+
+def test_scenic_requires_a_name_or_a_photo_link():
+    """A bare tourism=viewpoint says someone found a view; it does not say what
+    you see or show it. 2026-09-14: 3 in 4 scenic points in NL and CH had
+    neither a name nor a photo link."""
+    letters = load_contract().letters
+    assert letters["P"].name_or_tags == ["image", "wikidata", "wikimedia_commons"]
+    assert all(spec.name_or_tags is None for letter, spec in letters.items() if letter != "P")
+
+
+def test_rejects_a_name_or_tags_key_not_in_the_stored_tags(tmp_path):
+    raw = json.loads(CONTRACT_PATH.read_text(encoding="utf-8"))
+    raw["letters"]["P"]["nameOrTags"] = ["image", "not_stored"]
+    bad = tmp_path / "c.json"
+    bad.write_text(json.dumps(raw), encoding="utf-8")
+    with pytest.raises(ValueError, match="nameOrTags"):
+        load_contract(bad)

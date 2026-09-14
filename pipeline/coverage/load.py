@@ -346,11 +346,62 @@ def _materialize_operational_regions(cur) -> None:
     cur.execute("ANALYZE region_operational")
 
 
+NEAR_WAY_CELL_DEG = 0.01   # grid cell for choosing which ways to copy in (~0.7-1.1 km)
+
+
+def _apply_near_ways(cur, within: dict[str, float], lines: Iterable[list[tuple[float, float]]]) -> int:
+    """Delete staged points of the given letters with no bike way within their range.
+
+    docs/specs/scenic-views.md: a scenic point stays only along a way a bike may
+    ride. Only ways with a vertex within two grid cells of a staged point of
+    those letters are copied in, so a country's whole road network never lands
+    in the transaction; two cells (at least ~700 m) is far wider than any range.
+    """
+    letters = list(within)
+    cells = {
+        (int(lon // NEAR_WAY_CELL_DEG), int(lat // NEAR_WAY_CELL_DEG))
+        for lon, lat in cur.execute(
+            "SELECT ST_X(geom), ST_Y(geom) FROM coverage_poi_staging WHERE letter = ANY(%s)", (letters,)
+        ).fetchall()
+    }
+    if not cells:
+        return 0
+    near = {(cx + dx, cy + dy) for cx, cy in cells for dx in range(-2, 3) for dy in range(-2, 3)}
+    cur.execute("CREATE TEMP TABLE coverage_near_way (geom geometry(LineString, 4326)) ON COMMIT DROP")
+    with cur.copy("COPY coverage_near_way (geom) FROM STDIN") as copy:
+        for line in lines:
+            if len(line) < 2:
+                continue
+            if any((int(lon // NEAR_WAY_CELL_DEG), int(lat // NEAR_WAY_CELL_DEG)) in near for lon, lat in line):
+                copy.write_row(("SRID=4326;LINESTRING(" + ",".join(f"{lon} {lat}" for lon, lat in line) + ")",))
+    cur.execute("CREATE INDEX ON coverage_near_way USING gist (geom)")
+    cur.execute("ANALYZE coverage_near_way")
+    dropped = 0
+    for letter, metres in within.items():
+        # The bbox pre-filter uses the widest degrees a metre can be (at 72 deg latitude),
+        # so it never excludes a way ST_DWithin would have counted.
+        dropped += cur.execute(
+            """
+            DELETE FROM coverage_poi_staging s
+            WHERE s.letter = %(letter)s
+              AND NOT EXISTS (
+                SELECT 1 FROM coverage_near_way w
+                WHERE w.geom && ST_Expand(s.geom, %(deg)s)
+                  AND ST_DWithin(w.geom::geography, s.geom::geography, %(m)s)
+              )
+            """,
+            {"letter": letter, "m": metres, "deg": metres / 111320.0 / 0.309},
+        ).rowcount
+    return dropped
+
+
 def load_region(
     conn: psycopg.Connection,
     rows: Iterable[PoiRow],
     src_region: str,
     country_code: str | None = None,
+    near_ways: tuple[dict[str, float], Iterable[list[tuple[float, float]]]] | None = None,
+    name_or_tags: dict[str, list[str]] | None = None,
 ) -> LoadResult:
     """Atomically merge one region's slice of coverage_poi.
 
@@ -482,11 +533,40 @@ def load_region(
                     """,
                     {"snap": BOUNDARY_SNAP_DEG, "cc": country_code},
                 )
+            for letter, keys in (name_or_tags or {}).items():
+                # docs/specs/scenic-views.md §2: no name and no photo link says nothing a rider can use.
+                bare = cur.execute(
+                    "DELETE FROM coverage_poi_staging WHERE letter = %s AND COALESCE(name, '') = '' "
+                    "AND NOT jsonb_exists_any(tags, %s)",
+                    (letter, keys),
+                ).rowcount
+                if bare:
+                    print(f"[coverage] {src_region}: {letter} needs a name or one of {keys}: dropped "
+                          f"{bare} staged point(s) with neither", file=sys.stderr)
+            if near_ways is not None:
+                dropped = _apply_near_ways(cur, *near_ways)
+                if dropped:
+                    print(f"[coverage] {src_region}: near-way rule dropped {dropped} staged "
+                          "point(s) with no bike way in range", file=sys.stderr)
             inserted = cur.execute("SELECT count(*) FROM coverage_poi_staging").fetchone()[0]
-            if previous > 0 and inserted < previous * (1 - DRIFT_ABORT_RATIO):
+            # The guard is for a broken extract (a truncated download, a failed
+            # filter), which shrinks every letter. A letter a contract rule
+            # filters (nameOrTags, nearWay) may shrink as far as the rule takes
+            # it, even to nothing, so the guard counts only the other letters
+            # (docs/specs/scenic-views.md §2, coverage-provider.md §3).
+            ruled = sorted(set(name_or_tags or {}) | set((near_ways or ({}, None))[0]))
+            guarded_previous = cur.execute(
+                "SELECT count(*) FROM coverage_poi WHERE src_region_id = %s AND NOT (letter = ANY(%s))",
+                (src_id, ruled),
+            ).fetchone()[0]
+            guarded_inserted = cur.execute(
+                "SELECT count(*) FROM coverage_poi_staging WHERE NOT (letter = ANY(%s))", (ruled,)
+            ).fetchone()[0]
+            if guarded_previous > 0 and guarded_inserted < guarded_previous * (1 - DRIFT_ABORT_RATIO):
                 raise DriftAbort(
                     f"{src_region}: {staged} rows staged, {inserted} after the ownership "
-                    f"filter, vs {previous} previously (more than {DRIFT_ABORT_RATIO:.0%} "
+                    f"filter, vs {previous} previously; {guarded_inserted} vs {guarded_previous} "
+                    f"outside rule-filtered letters {ruled} (more than {DRIFT_ABORT_RATIO:.0%} "
                     "drop) — aborting swap, keeping last good slice."
                 )
             # Diff-merge:

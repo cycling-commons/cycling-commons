@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 """coverage.extract — osmium tags-filter wrapper, over the mini.osm fixture."""
 
+import json
+
 import osmium
 import pytest
 
@@ -47,3 +49,20 @@ def test_run_extract_keeps_selector_subset_only(mini_pbf, contract, tmp_path):
 def test_run_extract_surfaces_osmium_failure(contract, tmp_path):
     with pytest.raises(RuntimeError, match="osmium tags-filter failed"):
         run_extract(tmp_path / "missing.osm.pbf", tmp_path / "out.osm.pbf", contract)
+
+
+# --- bike ways for the scenic near-way rule ----------------------------------
+
+def test_rideable_lines_keeps_bike_ways_only(contract):
+    from coverage.extract import rideable_lines
+
+    def feat(tags, coords):
+        return "\x1e" + json.dumps({"type": "Feature", "properties": tags,
+                                    "geometry": {"type": "LineString", "coordinates": coords}}) + "\n"
+
+    text = (feat({"highway": "cycleway"}, [[4.5, 52.3], [4.51, 52.31]])
+            + feat({"highway": "path"}, [[4.5, 52.3], [4.51, 52.31]])
+            + feat({"highway": "tertiary", "bicycle": "no"}, [[4.5, 52.3], [4.51, 52.31]])
+            + "\x1e{broken\n")
+    lines = list(rideable_lines(text.splitlines(), contract.letters["P"].near_way))
+    assert lines == [[(4.5, 52.3), (4.51, 52.31)]]

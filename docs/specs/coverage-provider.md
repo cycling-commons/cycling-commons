@@ -327,9 +327,15 @@ Per region in `COVERAGE_REGIONS`, independently:
    across every onboarded country, so a border row picks exactly one owner
    regardless of which extract's cut also carries it; a row with no region
    within `BOUNDARY_SNAP_DEG` of *any* onboarded country is dropped outright
-   (not staged at all). Abort if the post-filter row count drops more than the
-   drift ratio below the previous run for the same region
-   (`pipeline/coverage/load.py::DRIFT_ABORT_RATIO`, value `0.4`) — a truncated
+   (not staged at all). The contract rules (`nameOrTags`, then `nearWay`) then
+   remove the staged points they refuse. Abort if the row count drops more than
+   the drift ratio below the previous run for the same region
+   (`pipeline/coverage/load.py::DRIFT_ABORT_RATIO`, value `0.4`), **counted over
+   the letters no contract rule filters**: a rule may shrink its own letter as
+   far as the rule takes it, even to nothing, while a broken extract shrinks the
+   unfiltered letters too and is still caught (2026-09-14: Chile, Slovenia, New
+   Zealand and British Columbia each lost more than 40% of their rows to the
+   scenic rules, with every other letter steady). A truncated
    download must never wipe a region, and the filter itself needs its own
    guard: an unseeded `region` table for the extract's country raises rather
    than silently staging zero rows. Then one transaction:
@@ -844,6 +850,29 @@ source of truth for the mapping both languages need:
 
 - `letters` keys are exactly `B C D F G O P Q` — the
   [osm-data-architecture.md §5](osm-data-architecture.md) point catalogue.
+- A letter may carry **`nearWay`** (`withinM`, `highways`, `bicycleTags`): its
+  points load only within `withinM` metres of a way a bike may ride, a highway
+  named in `highways` or any highway tagged `bicycle=` one of `bicycleTags`, and
+  never one tagged `bicycle=no`. Only P (scenic views) carries it: 250 m, roads
+  including service and gravel, cycleways, and bike-tagged tracks and paths. P
+  selects viewpoints and waterfalls, not peaks. `run.py` filters each region's
+  ways with a third osmium pass (`<region>-bikeways.osm.pbf`), and
+  `load.py::_apply_near_ways` copies the ways near staged P points into a temp
+  table and deletes the staged points with none in range, before the drift
+  guard. Why and the measurements: [scenic-views.md](scenic-views.md).
+- A letter may carry **`nameOrTags`** (a list of tag keys): its points load
+  only with a non-empty `name` or one of those keys in `tags`. Every key must be
+  in `storedTagKeys`, or `load_contract()` refuses the file, because an
+  unstored key could never be present. Only P carries it: `image`, `wikidata`,
+  `wikimedia_commons`. `load_region` applies it to the staged rows before the
+  near-way filter. See [scenic-views.md §2](scenic-views.md), rule 3.
+- The bike-way pass keeps memory flat: `extract.py::export_lines` runs `osmium
+  export` with a disk-based node location index (`sparse_file_array` in a
+  temporary directory), because the in-memory index for Germany's bike ways
+  takes several GB. On a machine short of memory, load countries one at a time
+  with `python -m coverage.run --load-only --regions <region>` (no export, no
+  tiles, no publish) and build the artifact once with `--tiles-only` over the
+  full region list.
 - `storedTagKeys` is the **serve-set**: the only tag keys `parse.py` writes into
   `coverage_poi.tags` (§2 storage policy). Sorted + unique, and validated on
   load — `load_contract()` raises if it drops a selector key, drops a key

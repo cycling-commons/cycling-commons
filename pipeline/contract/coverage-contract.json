@@ -182,14 +182,16 @@
           "label": "Viewpoint"
         },
         {
-          "tag": "natural=peak",
-          "label": "Peak"
-        },
-        {
           "tag": "waterway=waterfall",
           "label": "Waterfall"
         }
       ],
+      "nearWay": {
+        "withinM": 250,
+        "highways": ["trunk", "primary", "secondary", "tertiary", "unclassified", "residential", "living_street", "service", "trunk_link", "primary_link", "secondary_link", "tertiary_link", "cycleway"],
+        "bicycleTags": ["yes", "designated"]
+      },
+      "nameOrTags": ["image", "wikidata", "wikimedia_commons"],
       "tileProps": [
         "cd"
       ]
