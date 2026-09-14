@@ -1,0 +1,417 @@
+web/templates/moderate/_queue_item.html.twig
+  s_d34f17e49b47aa::t_e795d2e5955a5f 73-81
+web/tests/Media/FreeLicenceLinkabilityTest.php
+  s_d34f17e49b47aa::t_00f1a9872f99ca 45
+web/tests/Catalog/SeedManualCatalogCommandTest.php
+  s_d34f17e49b47aa::t_d06bff61177839 142-162
+web/tests/Media/MediaBackfillPhotoCameraCommandTest.php
+  s_d34f17e49b47aa::t_02fcb2dae6c765 23
+web/src/Catalog/Command/PurgeCatalogItemsCommand.php
+  s_d34f17e49b47aa::t_918fa4ff4a3c04 9,52,99-100,104-108
+  s_d34f17e49b47aa::t_edd76fdbc597e1 1-8,10-51,53-98,101-103,109-148,151-170
+  s_d34f17e49b47aa::t_a9dda9a234c5a0 149-150
+web/tests/Catalog/CatalogProviderTest.php
+  s_d34f17e49b47aa::t_b9132fe2ce2b84 12,22-23
+  s_d34f17e49b47aa::t_02fcb2dae6c765 816
+  s_d34f17e49b47aa::t_9440ca2d3cdf01 817-818,824-829,838,858-859
+  s_d34f17e49b47aa::t_188a94345f6472 865-920
+web/src/Media/Commons/CommonsPhotoRepository.php
+  s_d34f17e49b47aa::t_69e93d3dadb62a 142
+  s_d34f17e49b47aa::t_924a284abb814b 9,45,50,63,133-141,143-162,173-175,185
+web/src/Catalog/Command/SeedWikidataPlacesCommand.php
+  s_d34f17e49b47aa::t_4a4c9cecf269ee 14-16,30-35,52-54,181-187,219,224,230-235,290,292,297,307-312
+web/migrations/Version20260914170000.php
+  s_d34f17e49b47aa::t_95a522f2ae4c45 1-53
+web/src/Controller/ContributeController.php
+  s_d34f17e49b47aa::t_e7b871cee668cc 118,121
+  s_d34f17e49b47aa::t_0e237265eeb1ab 565-566
+  s_d34f17e49b47aa::t_0b53c8c42005f9 116
+  s_d34f17e49b47aa::t_5899847f7a21f2 29
+  s_d34f17e49b47aa::t_4637e5ad6e058f 28,100-115,117,119-120
+  s_d34f17e49b47aa::t_84b9c4e0565c77 122-123
+web/src/Controller/MediaController.php
+  s_d34f17e49b47aa::t_e032b1781be7f9 53-58
+web/translations/messages.en.yaml
+  s_d34f17e49b47aa::t_78d09d3aee7e1e 2119
+  s_d34f17e49b47aa::t_41b7a9bfa6df28 2115-2118,2121-2122
+  s_d34f17e49b47aa::t_2e9298d971c42e 2114,2123-2124,2736-2739
+  s_d34f17e49b47aa::t_eba67dd86c712c 2732-2735,2740-2741
+  s_d34f17e49b47aa::t_d829e0689cf5d8 2103
+  s_d34f17e49b47aa::t_73c5eaef488569 2120
+web/tests/Media/MediaPersistenceTest.php
+  s_d34f17e49b47aa::t_c7295ed1363159 84,92
+web/tests/Command/SeedWikidataPlacesCommandTest.php
+  s_d34f17e49b47aa::t_3baf8d543bbf93 96,109-134,214-218,225,231-244,246,257,260-264
+web/tests/Coverage/CoveragePoiDetailTest.php
+  s_d34f17e49b47aa::t_9440ca2d3cdf01 187-188
+  s_d34f17e49b47aa::t_02fcb2dae6c765 178
+web/assets/styles/map.css
+  s_d34f17e49b47aa::t_9d9eb65f664d77 518-519
+  s_d34f17e49b47aa::t_828f749b51b260 1295
+  s_d34f17e49b47aa::t_6c6e12626dae84 1289-1294,1296-1298
+web/src/Media/Commons/CommonsApi.php
+  s_d34f17e49b47aa::t_52e498a81515c8 9,43-46,48-51,53,88-95,101-102,104-105,853,859-873
+web/src/Media/PhotoPlace.php
+  s_d34f17e49b47aa::t_bb1b43a8bd0388 1-52
+web/src/Contribution/CatalogContributionService.php
+  s_d34f17e49b47aa::t_32359f622c6676 73-80,92-99
+  s_d34f17e49b47aa::t_0775232179d460 100
+web/src/Media/Commons/CommonsPhotoAdmission.php
+  s_d34f17e49b47aa::t_fadbf6b022b62a 11-13,17-20,22-24,27-31,49,53,55,61,63,68-69,78-112,151
+tools/wallonia/tests/test_enrich_photos.py
+  s_d34f17e49b47aa::t_35e35759acd879 4,10
+  s_d34f17e49b47aa::t_0a0dde7aa52de4 1-3,5-9,11-34
+tools/wikimedia/commons_photo.py
+  s_d34f17e49b47aa::t_6d22352fa64c9a 16-18,39,48-54,77-88,110,155-163,182,186,215
+web/src/Media/MediaAction.php
+  s_d34f17e49b47aa::t_36bd4eda00b83a 41-42
+web/tests/Media/HarvestCommonsPhotosCommandTest.php
+  s_d34f17e49b47aa::t_d1cd311a7e3d87 1-49,51-62,64-70,72-110
+  s_d34f17e49b47aa::t_71cf270d2924bc 50,63,71
+tools/wikimedia/tests/test_harvest_shaping.py
+  s_d34f17e49b47aa::t_0a0dde7aa52de4 226-268
+web/src/Controller/ModerateController.php
+  s_d34f17e49b47aa::t_4ea86f012e396b 23,42,606-637
+  s_d34f17e49b47aa::t_612de52096dfce 638-639
+web/src/Media/Command/MediaBackfillPhotoCameraCommand.php
+  s_d34f17e49b47aa::t_3e69aaffabf12a 13-15,30,145,223-224,229,351,353,370-371
+web/tests/Contribution/CatalogContributionServiceTest.php
+  s_d34f17e49b47aa::t_e8b52bf324846a 743-766,768-780
+  s_d34f17e49b47aa::t_32359f622c6676 767
+web/src/Catalog/BestOfPreview.php
+  s_d34f17e49b47aa::t_e59fe618b8a13f 390-391,394
+  s_d34f17e49b47aa::t_233520e797ae36 11-13,230,253,255,262,346,385-389,392-393,395
+web/src/Media/PhotoFacts.php
+  s_d34f17e49b47aa::t_ece95eafe5e62c 7,9-10,13,15-18,20-21,29,33,36,40-50,53-54,56-61,63,87-97,100,104,106-108,110,112-113,116-129,132,135-140,143,146-149
+  s_d34f17e49b47aa::t_233520e797ae36 67-69,71,73,75-85
+  s_d34f17e49b47aa::t_c4fc01c4a0c614 22-27,37-38,51-52,98-99,130-131,144-145
+web/tests/Media/PhotoTakenHereEndpointTest.php
+  s_d34f17e49b47aa::t_c7295ed1363159 155-167,170-177,179,181-182
+  s_d34f17e49b47aa::t_c64d09a1847c38 89-90
+  s_d34f17e49b47aa::t_f95c950b3fae8b 1-88,91-154,183-292
+  s_d34f17e49b47aa::t_a0919ceba3cb71 168-169,178,180
+web/src/Catalog/CatalogProvider.php
+  s_d34f17e49b47aa::t_e15a970b4adfc5 10,259,261,291-351,363,370-374
+  s_d34f17e49b47aa::t_d534a5248680c3 11-12,173,366-369
+  s_d34f17e49b47aa::t_1f0ef68b92ed74 356-357
+web/tests/Media/CommonsPhotoUsageTest.php
+  s_d34f17e49b47aa::t_dcab8cdc41d1c9 7,9,13-15,17,19,21-24,27,29-32,35,37-39,42,44,46-51
+web/src/Media/PhotoLocationConfirmation.php
+  s_d34f17e49b47aa::t_e50b897c07617d 130
+  s_d34f17e49b47aa::t_2d6e4724a8e297 24-27,44-46
+  s_d34f17e49b47aa::t_0b53c8c42005f9 228,234
+  s_d34f17e49b47aa::t_079a7e39e748a6 221-227,229-231,237
+  s_d34f17e49b47aa::t_35fcea2aed5d5e 1-12,14-20,28-42,47-51,60-62,64,66,79-81,86-89,251-258
+  s_d34f17e49b47aa::t_583f68a7d5d155 13,90-107,109-118,120,127-129,131,133-134,137-150,152-164,170,175-179,212-213,244-250
+  s_d34f17e49b47aa::t_6c6c661adc8dd4 22-23,43,52-59,63,65,67-78,82-85,121-126,135-136,165-169,171-174,180-183,185-211
+  s_d34f17e49b47aa::t_a04b61afe4ea9b 184
+  s_d34f17e49b47aa::t_4637e5ad6e058f 214-220,232-233,235-236,238-243
+  s_d34f17e49b47aa::t_095f52a26daadd 21,108,119,132,151
+web/src/Media/Message/FetchCommonsPhoto.php
+  s_d34f17e49b47aa::t_60b3913a7f5e63 9-10,19-23,33-35,38-48
+web/tests/Media/MediaModerationTest.php
+  s_d34f17e49b47aa::t_e1e0ea95fafebb 148-185
+  s_d34f17e49b47aa::t_ceb64af95a0103 95-96
+  s_d34f17e49b47aa::t_02fcb2dae6c765 132
+web/tests/Media/FetchCommonsPhotoHandlerTest.php
+  s_d34f17e49b47aa::t_02fcb2dae6c765 246
+  s_d34f17e49b47aa::t_8930a452035b97 16,57-142,288-296,331-335,337,385
+  s_d34f17e49b47aa::t_60b3913a7f5e63 313
+web/src/Media/Command/MediaRepairGalleriesCommand.php
+  s_d34f17e49b47aa::t_02acef243c2979 12-14,95,148-157,195,200
+web/src/Media/MediaDecisionService.php
+  s_d34f17e49b47aa::t_aab820775aa6d4 143,146-147,152
+  s_d34f17e49b47aa::t_e79198ac9a31c8 16,18-23,59-61,64-65
+  s_d34f17e49b47aa::t_608f18f2fd1208 133,136-142,144-145,148-151
+web/migrations/Version20260915090000.php
+  s_d34f17e49b47aa::t_edfd62b80ad953 1-109,111-114,116-142
+  s_d34f17e49b47aa::t_4a2871e01a9bc2 110,115
+web/tests/Media/MediaTakedownTest.php
+  s_d34f17e49b47aa::t_8e371e5835b815 205-226
+web/src/Media/PhotoValidator.php
+  s_d34f17e49b47aa::t_dfe69842b08e6e 230
+  s_d34f17e49b47aa::t_52e498a81515c8 77
+  s_d34f17e49b47aa::t_0b53c8c42005f9 191,196
+  s_d34f17e49b47aa::t_0ad0afc371bd95 168-169,173
+  s_d34f17e49b47aa::t_a5c87f25f64216 161-167,170-172,174-176,183,186-190,192
+  s_d34f17e49b47aa::t_ece95eafe5e62c 1-36,41,49-66,75-76,78-103,105-113,237-283
+  s_d34f17e49b47aa::t_e77eed15709f54 118-129,133-138,140-145,147
+  s_d34f17e49b47aa::t_6c6c661adc8dd4 151-160,177-182,184-185,193-195,197-199
+  s_d34f17e49b47aa::t_2d6e4724a8e297 37-40
+  s_d34f17e49b47aa::t_e8c18d8c9ed8f4 220,231
+  s_d34f17e49b47aa::t_76e97e394483dc 42-48,67-74,104,114-117,130-132,139,146,148-150,200-219,221-229,232-236
+web/src/Media/MessageHandler/FetchCommonsPhotoHandler.php
+  s_d34f17e49b47aa::t_69e93d3dadb62a 15,28,30-36,78-92
+  s_d34f17e49b47aa::t_59ef09524c29b7 18
+web/src/Catalog/Command/ImportCatalogCommand.php
+  s_d34f17e49b47aa::t_3ab36661733779 18-19,33-36,38,69-70,263-269
+  s_d34f17e49b47aa::t_820cb995ad7728 123-129,320-325
+  s_d34f17e49b47aa::t_1c7ce44a5c8a7c 71
+web/src/Media/PhotoOrigin.php
+  s_d34f17e49b47aa::t_bb1b43a8bd0388 1-27
+web/tests/Media/PhotoLocationConfirmationTest.php
+  s_d34f17e49b47aa::t_17f0a35b8b0afd 1-18,20,23-94,96-99,101-105,107-114,116-124,126,128,130-131,148-166,170-187,215-216
+  s_d34f17e49b47aa::t_a0919ceba3cb71 201-202,205,210,212-213
+  s_d34f17e49b47aa::t_8c30dc88376c51 19,21-22,169
+  s_d34f17e49b47aa::t_c64d09a1847c38 95,100,106,115,125,127,129,132-147,167-168,188-200,203-204,206-209,211,214
+web/tests/Media/MediaUploadEndpointTest.php
+  s_d34f17e49b47aa::t_9521aa7dc0cd45 579-604
+  s_d34f17e49b47aa::t_f47f29b86fda6c 578
+tools/wallonia/route_images.py
+  s_d34f17e49b47aa::t_c05da7ac52d586 5
+  s_d34f17e49b47aa::t_caef76c0de06f5 47-49
+web/src/Media/Message/ResolveWikidataImage.php
+  s_d34f17e49b47aa::t_60b3913a7f5e63 9-10,14-16,27-29,32-42
+web/src/Controller/TownController.php
+  s_d34f17e49b47aa::t_3303b32b41983f 13,142-143
+web/translations/messages.fr.yaml
+  s_d34f17e49b47aa::t_41b7a9bfa6df28 2621-2624,2627-2628
+  s_d34f17e49b47aa::t_73c5eaef488569 2626
+  s_d34f17e49b47aa::t_0d308578e5afd1 2186-2188
+  s_d34f17e49b47aa::t_eba67dd86c712c 2185,2193-2194
+  s_d34f17e49b47aa::t_78d09d3aee7e1e 2625
+  s_d34f17e49b47aa::t_d829e0689cf5d8 2609
+  s_d34f17e49b47aa::t_2e9298d971c42e 2189-2192,2620,2629-2630
+web/src/Media/Command/LocaliseCommonsPhotosCommand.php
+  s_d34f17e49b47aa::t_bc7247eea8d57b 16-18,48-50,57-61,90,124,147,177,186,222-229,250-254,260-264,266-269,276-280,309-310
+web/src/Moderation/SubmissionQueue.php
+  s_d34f17e49b47aa::t_3ca608c3f853ad 576
+  s_d34f17e49b47aa::t_aba4f7e99c89e1 9,18-19
+  s_d34f17e49b47aa::t_109b112765c523 50,120,460,474-475,544-545,550-575,577-581
+  s_d34f17e49b47aa::t_0c40039da0e60b 582-583
+web/src/Media/MediaClaimService.php
+  s_d34f17e49b47aa::t_608f18f2fd1208 77
+web/assets/map/hidden-photos.js
+  s_d34f17e49b47aa::t_b0c30db5432466 7,12,23-24,27-33,37-47
+  s_d34f17e49b47aa::t_2e705283bfd02e 53-57
+  s_d34f17e49b47aa::t_1458172f1baf27 1-6,13-22,25-26,34-36,48-52,58-81
+  s_d34f17e49b47aa::t_982480f2536b15 8-11
+web/assets/map/commons-photo.js
+  s_d34f17e49b47aa::t_58a46fe630b4e4 21-36
+  s_d34f17e49b47aa::t_731a5ff1e02afd 20
+web/tests/Controller/CoveragePhotoControllerTest.php
+  s_d34f17e49b47aa::t_7ae6f35707ceb9 155-156
+  s_d34f17e49b47aa::t_d1d8435e595655 9,59-101,104,233-252
+  s_d34f17e49b47aa::t_24fa896b4f6afd 141-154,157-172
+  s_d34f17e49b47aa::t_4c1fca3d218ce9 253
+web/tests/js/commons-photo.test.mjs
+  s_d34f17e49b47aa::t_e54abbc4fca80a 18,112-132
+web/tests/Moderation/SubmissionQueueTest.php
+  s_d34f17e49b47aa::t_cf53fea57751b5 9,12-13,330-367
+  s_d34f17e49b47aa::t_907c108965e749 368
+wiki/developers/numbers.md
+  s_d34f17e49b47aa::t_00ab427b404bb9 28
+web/translations/messages.de.yaml
+  s_d34f17e49b47aa::t_eba67dd86c712c 2193,2201-2202
+  s_d34f17e49b47aa::t_0d308578e5afd1 2194-2196
+  s_d34f17e49b47aa::t_41b7a9bfa6df28 2629-2632,2635-2636
+  s_d34f17e49b47aa::t_2e9298d971c42e 2197-2200,2628,2637-2638
+  s_d34f17e49b47aa::t_78d09d3aee7e1e 2633
+  s_d34f17e49b47aa::t_73c5eaef488569 2634
+  s_d34f17e49b47aa::t_d829e0689cf5d8 2617
+web/src/Controller/CoverageController.php
+  s_d34f17e49b47aa::t_792a8a267df9d3 156-157,161,169,171-173,210
+  s_d34f17e49b47aa::t_3303b32b41983f 199,211-214
+web/src/Catalog/Command/SeedManualCatalogCommand.php
+  s_d34f17e49b47aa::t_854d541ae4e4ac 14-15,28-30,32,409,412-416,458-463
+  s_d34f17e49b47aa::t_1708e8ab9dfcc4 464
+web/src/Media/Entity/MediaUpload.php
+  s_d34f17e49b47aa::t_608f18f2fd1208 89-101,204-216,378-383,385,387-388,411-412,420,427-428,444-457,536-546
+  s_d34f17e49b47aa::t_1a1e0ddac53d04 189-203,410,413-419,421-426,429-443
+  s_d34f17e49b47aa::t_9fee806ee9910a 547
+web/src/Media/licences.json
+  s_d34f17e49b47aa::t_7615c2fae27648 1-15
+web/tests/Media/WikidataImageTest.php
+  s_d34f17e49b47aa::t_065b6259e622d3 10,13,17,78-96,128,147-148,152,155
+docs/specs/privacy-notice.md
+  s_d34f17e49b47aa::t_26405a376e3575 209
+web/assets/map/drawer.js
+  s_d34f17e49b47aa::t_f02cb313fc17e3 21
+  s_d34f17e49b47aa::t_58a46fe630b4e4 20,264-266,373-374
+  s_d34f17e49b47aa::t_14416044876d02 876-878
+  s_d34f17e49b47aa::t_27ee7e051bd4b1 690-692,739,861-875,879-911
+  s_d34f17e49b47aa::t_38556b27b91045 375,630,912-913,1069
+web/tests/Contribution/CuratorWizardCopyTest.php
+  s_d34f17e49b47aa::t_3404f2bf3e1bfb 151,163
+  s_d34f17e49b47aa::t_db2c90ead40468 136-150,152-162,164-166
+web/tests/Contribution/PinMovePhotosEndpointTest.php
+  s_d34f17e49b47aa::t_0c6ca0dcc4d090 96
+  s_d34f17e49b47aa::t_34efb0ccc460c5 82,84-89,97-99
+  s_d34f17e49b47aa::t_d6d5fe2f9715f4 1-72,74-81,83,90-95,100-119
+  s_d34f17e49b47aa::t_3ca608c3f853ad 73
+web/assets/contribute/pin-move-photos.js
+  s_d34f17e49b47aa::t_725460bc1c5a9b 51,53-57
+  s_d34f17e49b47aa::t_73c5eaef488569 44
+  s_d34f17e49b47aa::t_a6d7f4f7451a3c 30,33-36,46-47
+  s_d34f17e49b47aa::t_78d09d3aee7e1e 37-40,42-43,45,58
+  s_d34f17e49b47aa::t_b3de1e7e96aca7 1-3,8-18,21-29,31-32,48-50,52,59-76
+  s_d34f17e49b47aa::t_2d6e4724a8e297 41
+  s_d34f17e49b47aa::t_982480f2536b15 4-7
+  s_d34f17e49b47aa::t_1c25d1c9256f28 19-20
+web/src/Media/Command/HarvestCommonsPhotosCommand.php
+  s_d34f17e49b47aa::t_cf41f04a42b87c 10,14,41-46,63,149-150,152-160,163-168,173,177-178,180
+docs/specs/coverage-provider.md
+  s_d34f17e49b47aa::t_7cf47de172144d 789-795,797,800,834-851
+  s_d34f17e49b47aa::t_26405a376e3575 213,788,796,798-799,801-802
+web/src/Media/PhotoVerdict.php
+  s_d34f17e49b47aa::t_bb1b43a8bd0388 1-40
+web/src/Media/PhotoDecision.php
+  s_d34f17e49b47aa::t_bb1b43a8bd0388 1-27
+web/tests/Contribution/ImproveTest.php
+  s_d34f17e49b47aa::t_59fda66287cb8c 109-124,128-133
+  s_d34f17e49b47aa::t_4a19d35e0005a3 125
+  s_d34f17e49b47aa::t_3404f2bf3e1bfb 126-127
+tools/wallonia/enrich.py
+  s_d34f17e49b47aa::t_caef76c0de06f5 7-9,15-16,84,92,96-107,109-116,160,162-164
+web/src/Controller/MapController.php
+  s_d34f17e49b47aa::t_f02cb313fc17e3 288-289
+  s_d34f17e49b47aa::t_c08e1e1d5d3dc6 30,38,514-545
+  s_d34f17e49b47aa::t_2ef49a36624f42 16
+  s_d34f17e49b47aa::t_eba67dd86c712c 286-287,290
+  s_d34f17e49b47aa::t_692b13a3609bdd 546-549
+web/tests/js/hidden-photos.test.mjs
+  s_d34f17e49b47aa::t_ab06c81e4a0812 54
+  s_d34f17e49b47aa::t_e1d8d1ebe8c4ef 1-8,10,12-26,43-53,55-68
+  s_d34f17e49b47aa::t_8f82349abecf30 9,11,27-42
+web/src/Media/GpsDistance.php
+  s_d34f17e49b47aa::t_55b018c207b406 10-11,14,20-21,23-24,26-40,44
+web/src/Media/MessageHandler/ResolveWikidataImageHandler.php
+  s_d34f17e49b47aa::t_3303b32b41983f 11,37,66-69
+web/tests/Catalog/ImportCatalogCommandTest.php
+  s_d34f17e49b47aa::t_5537611cf341b9 392-438
+web/templates/moderate/_card_styles.html.twig
+  s_d34f17e49b47aa::t_e795d2e5955a5f 45
+web/translations/messages.nl.yaml
+  s_d34f17e49b47aa::t_2e9298d971c42e 2194-2197,2625,2634-2635
+  s_d34f17e49b47aa::t_41b7a9bfa6df28 2626-2629,2632-2633
+  s_d34f17e49b47aa::t_73c5eaef488569 2631
+  s_d34f17e49b47aa::t_0d308578e5afd1 2190-2191,2193
+  s_d34f17e49b47aa::t_eba67dd86c712c 2192,2198-2199
+  s_d34f17e49b47aa::t_d829e0689cf5d8 2614
+  s_d34f17e49b47aa::t_78d09d3aee7e1e 2630
+web/tests/Command/PurgeCatalogItemsCommandTest.php
+  s_d34f17e49b47aa::t_9cb3177210f66e 118-119
+  s_d34f17e49b47aa::t_ae9f91dcc60d26 12,27-28,138-156
+  s_d34f17e49b47aa::t_a76bc4b3a02b38 1-11,13-26,29-117,120-137,157-168
+web/templates/map/index.html.twig
+  s_d34f17e49b47aa::t_be91682a918c95 718-720
+web/translations/messages.es.yaml
+  s_d34f17e49b47aa::t_2e9298d971c42e 2125,2134-2135,2744-2747
+  s_d34f17e49b47aa::t_41b7a9bfa6df28 2126-2129,2132-2133
+  s_d34f17e49b47aa::t_73c5eaef488569 2131
+  s_d34f17e49b47aa::t_0d308578e5afd1 2741-2743
+  s_d34f17e49b47aa::t_d829e0689cf5d8 2114
+  s_d34f17e49b47aa::t_eba67dd86c712c 2740,2748-2749
+  s_d34f17e49b47aa::t_78d09d3aee7e1e 2130
+web/src/Media/MessageHandler/ScanAndReleaseUploadHandler.php
+  s_d34f17e49b47aa::t_608f18f2fd1208 156
+web/src/Catalog/Command/PruneScenicPhotosCommand.php
+  s_d34f17e49b47aa::t_50b66530dff43b 133
+  s_d34f17e49b47aa::t_868bc099178078 192
+  s_d34f17e49b47aa::t_433bb792e34eb7 1-9,11,13,20-31,35,50-51,55-57,61-91,94-100,102-112,114-119,121-122,126-131,136,139-141,145-166,171-178,185-191,194-209,211-216,218-221,223-228,230,232-241,244-250,252-260,262-267,269-271,336-338,341,345,347-349,351,353,355-357,366-367,371,387,405-406,413-415,420-422,431-438,440-442,444,446-448,450-451,454-458,461-463,475-476
+  s_d34f17e49b47aa::t_927b8424c6875c 279
+  s_d34f17e49b47aa::t_e8a75aec437fe5 58-60,125,168-170,391,402-403,410,416-418,426-429,459-460,464-474
+  s_d34f17e49b47aa::t_96c13aa41e3c00 52-54,93,167,231,251,407-409,411-412,419,423-425,430
+  s_d34f17e49b47aa::t_b74b5794e263ca 10,12,14-19,32-34,36-49,92,101,113,120,123-124,132,134-135,137-138,142-144,179-184,210,217,222,229,242-243,268,278,281,309-330,339-340,342-344,346,350,352,354,358-365,368-370,372-386,388-390,392-401,404
+  s_d34f17e49b47aa::t_82ff8771a53ba5 193,261,272-277,280,282-308,331-335,439,443,445,449,452-453
+docs/specs/scenic-views.md
+  s_d34f17e49b47aa::t_47e116e2296704 386
+  s_d34f17e49b47aa::t_9283c659b043d8 213-214
+  s_d34f17e49b47aa::t_dd7bca27f89f4f 208-212,215-218
+  s_d34f17e49b47aa::t_54e4b471b45b16 237-241,243-251,254-257,325-333,357-358,363-371,378,393-394,398-399
+  s_d34f17e49b47aa::t_1cf0029516618b 70-72,272-278,312-313,319,379-383,395
+  s_d34f17e49b47aa::t_5eaf418e9327c2 226
+  s_d34f17e49b47aa::t_54db53a7e627a2 223-225,227
+  s_d34f17e49b47aa::t_28e013220164b7 348-356,359-362,372-377,384-385,387-392
+  s_d34f17e49b47aa::t_aebbfa85fb8264 96-97,151-166,207
+  s_d34f17e49b47aa::t_8d7828e6916aa0 317-318
+  s_d34f17e49b47aa::t_a8bd1c92f737e7 73,80,107,279-283,292-303,307-309,311,314-316
+  s_d34f17e49b47aa::t_151b4fce9ddd25 74-79,252-253,284-291,304-306,310
+web/tests/Media/PhotoValidatorTest.php
+  s_d34f17e49b47aa::t_ec79d3f67d9140 172-195,197-215,222-223,225-226,228,232,246-247
+  s_d34f17e49b47aa::t_04bd3df895a46e 196
+  s_d34f17e49b47aa::t_0c67e18078964c 265-266
+  s_d34f17e49b47aa::t_20db07560c5eb8 271,274-276
+  s_d34f17e49b47aa::t_02c0b5931aa798 272-273,277
+  s_d34f17e49b47aa::t_20ae5c9eeeddd1 248-264,267-270,278-279
+  s_d34f17e49b47aa::t_bca3603c6f1584 1-171,280-341
+  s_d34f17e49b47aa::t_b1fecbd322fa0d 216-221,224,227,229-231,233-245
+web/src/Media/Commons/CommonsPhotoState.php
+  s_d34f17e49b47aa::t_f335fb8e4e182c 17-23,34
+docs/specs/photo-uploads.md
+  s_d34f17e49b47aa::t_c5617e0703bc08 452-453
+  s_d34f17e49b47aa::t_37d926d4c272a5 868-876
+  s_d34f17e49b47aa::t_78d09d3aee7e1e 877-879
+  s_d34f17e49b47aa::t_73c5eaef488569 880-881
+  s_d34f17e49b47aa::t_9fbb931d35db14 405,408-409,791-797,800-806,808-809,840,893-895,901-903,905-906,909-910
+  s_d34f17e49b47aa::t_b1f70c7a519d50 898-900
+  s_d34f17e49b47aa::t_08b85fc6553551 846-847,958,985-986,1013-1014
+  s_d34f17e49b47aa::t_151b4fce9ddd25 815-817,832-836,864,972-973
+  s_d34f17e49b47aa::t_c5361a98e6fd5b 763-764,798-799,807,810-814,818-831,837-839,841-845,848-862,882-892,896-897,904,907-908,911-915,917-921,937-938,945-949,974-975,978-984,987
+  s_d34f17e49b47aa::t_fc4fe47216dd77 863,865
+  s_d34f17e49b47aa::t_b326dcfc73db95 866-867
+  s_d34f17e49b47aa::t_e41b8156685f33 195-196,558-561,579,602,604-607,737-739,750-753,759,922-936,939-944,950-957,959-971,976-977,988-1012,1015-1054,1056-1057
+  s_d34f17e49b47aa::t_5eaf418e9327c2 916
+  s_d34f17e49b47aa::t_b384dd31817902 1055
+  s_d34f17e49b47aa::t_7f6370c27b919c 1058
+web/src/Media/LicenceUrls.php
+  s_d34f17e49b47aa::t_0d91da081f6292 10,12-20,29-30,34-42,50-75,80,86
+web/tests/Media/MediaGalleryIdentityTest.php
+  s_d34f17e49b47aa::t_9085e0dd3ca5db 179-192
+web/src/Coverage/CoverageRepository.php
+  s_d34f17e49b47aa::t_46f779c518e3bb 14-15,495-496,505
+  s_d34f17e49b47aa::t_84821a2496f053 134-135,169-224
+  s_d34f17e49b47aa::t_d862893e2f6abe 236-238,241
+  s_d34f17e49b47aa::t_fbf1611b04c3b5 225
+web/src/Media/Commons/CommonsPhotoUsage.php
+  s_d34f17e49b47aa::t_4bf635e551b881 1-214
+web/src/Media/MediaTakedownService.php
+  s_d34f17e49b47aa::t_169ebcd621891f 456-460,467-469,477
+web/templates/contribute/improve.html.twig
+  s_d34f17e49b47aa::t_8788b5eee37414 699-701
+  s_d34f17e49b47aa::t_78d09d3aee7e1e 1071-1072
+  s_d34f17e49b47aa::t_83e9007f3d8ea9 1067-1070
+  s_d34f17e49b47aa::t_9638e0f2b43ab4 164
+  s_d34f17e49b47aa::t_28acba31f89914 697-698,703-709
+  s_d34f17e49b47aa::t_0e237265eeb1ab 1063,1066,1073-1074
+  s_d34f17e49b47aa::t_d45bf9997b4972 168-169
+  s_d34f17e49b47aa::t_103fb6372c3c68 702
+  s_d34f17e49b47aa::t_dd61e1b36d0fd8 1064-1065
+  s_d34f17e49b47aa::t_290406fe44ecb3 166-167,170
+  s_d34f17e49b47aa::t_02626595bd7daf 165
+  s_d34f17e49b47aa::t_dd39d2f26e96f8 1075
+web/tests/Media/LocaliseCommonsPhotosCommandTest.php
+  s_d34f17e49b47aa::t_a6dcafd398be2f 112,117-139,141-151,153-155,341-342,344,357,387,402,422-423,425,429,431-435
+  s_d34f17e49b47aa::t_bc7247eea8d57b 140,152,156
+web/src/Media/PhotoReason.php
+  s_d34f17e49b47aa::t_6a2b578e6fe2db 43-50,56
+  s_d34f17e49b47aa::t_bb1b43a8bd0388 1-42,51-55,57-58
+web/migrations/Version20260914160000.php
+  s_d34f17e49b47aa::t_579715bfbb937f 1-49
+web/tests/Command/PruneScenicPhotosCommandTest.php
+  s_d34f17e49b47aa::t_1b6433b018b9b8 166,259,363
+  s_d34f17e49b47aa::t_42712e24bd0078 9,11,64,71-72,145-156,182,184-214,230,247,323
+  s_d34f17e49b47aa::t_cbd25be24691bf 291-314
+  s_d34f17e49b47aa::t_e6ef2a0e2afca5 1-8,10,12-17,19-63,65-70,73-93,95-102,106-119,121-144,157-165,167-181,183,215-225,227-229,231-232,250-258,260-263,265-268,271-272,276-278,289-290,315-322,324-362,364-368
+  s_d34f17e49b47aa::t_a8599c987c4bf5 18,94,103-105,120,226,233-246,248-249,279
+  s_d34f17e49b47aa::t_a1442658fb2eda 264,269-270,273-275,280-288
+web/tests/Catalog/BestOfPreviewScenicPhotoTest.php
+  s_d34f17e49b47aa::t_9440ca2d3cdf01 48
+  s_d34f17e49b47aa::t_02fcb2dae6c765 20
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "4f9f66b17592577645716daec3123ab3bf25e09c",
+  "prompts": {},
+  "sessions": {
+    "s_d34f17e49b47aa": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ef901574-ddee-4be4-aa4c-45b023adb0b8",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
