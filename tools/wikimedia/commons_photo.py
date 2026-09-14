@@ -100,6 +100,24 @@ def credit_from(meta: dict) -> tuple[str | None, str | None]:
     return None, "Commons states no author - a credit line would have to be invented"
 
 
+def usable_photo(filename: str, meta: dict) -> dict | None:
+    """The photo record a seed stores, or None when the file fails the bar.
+
+    The bar: the file exists, Commons marks it neither non-free nor restricted,
+    its licence is on FREE_LICENCES, and Commons states an author. Every
+    harvested photo goes through here, so no harvest can lower it.
+    """
+    if not meta["exists"] or meta["non_free"] or meta["restrictions"]:
+        return None
+    canonical = FREE_LICENCES.get(meta["licence_short"].strip().lower())
+    if canonical is None:
+        return None
+    credit, _ = credit_from(meta)
+    if credit is None:
+        return None     # unattributable share-alike is unusable
+    return {"file": filename, "credit": credit, "user": meta["user"], "license": canonical}
+
+
 def resolve_qid(name: str) -> tuple[str | None, str | None]:
     """Name -> (Q-id, its English description) via Wikidata search."""
     url = (

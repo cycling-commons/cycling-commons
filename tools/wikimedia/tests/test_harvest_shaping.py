@@ -202,3 +202,24 @@ def test_the_trailing_place_qualifier_still_comes_off():
 
 def test_two_genuinely_different_names_stay_different():
     assert prescreen_seeded.normalise_name("St Mary's Cathedral") != prescreen_seeded.normalise_name("St Johns Cathedral")
+
+
+# --- one licence bar for every harvested photo -------------------------------
+
+def _meta(**over):
+    base = {"exists": True, "non_free": "", "restrictions": "", "licence_short": "CC BY-SA 4.0",
+            "artist": "Jane Rider", "user": "JaneR"}
+    return {**base, **over}
+
+
+def test_a_free_attributed_photo_is_usable():
+    assert commons_photo.usable_photo("View.jpg", _meta()) == {
+        "file": "View.jpg", "credit": "Jane Rider", "user": "JaneR", "license": "CC BY-SA 4.0"}
+
+
+def test_a_photo_that_fails_any_part_of_the_bar_is_not_usable():
+    assert commons_photo.usable_photo("x.jpg", _meta(exists=False)) is None
+    assert commons_photo.usable_photo("x.jpg", _meta(non_free="1")) is None
+    assert commons_photo.usable_photo("x.jpg", _meta(restrictions="personality")) is None
+    assert commons_photo.usable_photo("x.jpg", _meta(licence_short="All rights reserved")) is None
+    assert commons_photo.usable_photo("x.jpg", _meta(artist="", user=None)) is None

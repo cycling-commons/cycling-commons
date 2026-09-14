@@ -43,7 +43,7 @@ import urllib.request
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
-from commons_photo import FREE_LICENCES, credit_from, licence_of  # noqa: E402
+from commons_photo import licence_of, usable_photo  # noqa: E402
 from divisions.config import COUNTRY_CONFIG  # noqa: E402
 
 # Wikidata returns the Q-id as the label when it can find no name at all. That
@@ -186,15 +186,9 @@ def harvest(cc: str, per_layer: int = 6) -> dict:
                     continue
                 filename = urllib.parse.unquote(
                     b["image"]["value"].rsplit("/", 1)[-1]).replace("_", " ")
-                meta = licence_of(filename)
-                if not meta["exists"] or meta["non_free"] or meta["restrictions"]:
+                photo = usable_photo(filename, licence_of(filename))
+                if photo is None:
                     continue
-                canonical = FREE_LICENCES.get(meta["licence_short"].strip().lower())
-                if canonical is None:
-                    continue
-                credit, _ = credit_from(meta)
-                if credit is None:
-                    continue     # unattributable share-alike is unusable
                 label = b["itemLabel"]["value"]
                 lng, lat = b["coord"]["value"].removeprefix("Point(").removesuffix(")").split()
                 if QID_AS_LABEL.match(label):
@@ -219,12 +213,7 @@ def harvest(cc: str, per_layer: int = 6) -> dict:
                     "lat": round(float(lat), 5),
                     "lng": round(float(lng), 5),
                     "sitelinks": int(b["links"]["value"]),
-                    "photo": {
-                        "file": filename,
-                        "credit": credit,
-                        "user": meta["user"],
-                        "license": canonical,
-                    },
+                    "photo": photo,
                 })
                 time.sleep(0.25)
             time.sleep(0.5)
