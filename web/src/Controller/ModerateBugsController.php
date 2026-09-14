@@ -80,6 +80,8 @@ final class ModerateBugsController extends AbstractController
         $query = trim((string) $request->query->get('q', ''));
         $query = '' !== $query ? mb_substr($query, 0, self::MAX_QUERY) : '';
         $sort = BugSort::fromInput((string) $request->query->get('sort', ''));
+        // Only what is on the public known-issues list. A toggle, not a status.
+        $publicOnly = '1' === (string) $request->query->get('public', '');
 
         // Same default as the inbox: unfiltered means "the new ones", because a
         // desk that opens on the full archive is a desk nobody opens.
@@ -109,18 +111,19 @@ final class ModerateBugsController extends AbstractController
 
         $pager = Pager::of(
             $request->query->getInt('page', 1),
-            $this->repository->countBugs($showing, $area, $query),
+            $this->repository->countBugs($showing, $area, $query, $publicOnly),
             self::PER_PAGE,
         );
 
-        $counts = $this->repository->bugCountsByStatus($area, $query);
+        $counts = $this->repository->bugCountsByStatus($area, $query, $publicOnly);
 
         return $this->render('moderate/bugs.html.twig', [
             'page_title' => 'support.bugs.title',
             'page_description' => 'support.bugs.title',
             'nav_active' => '',
             'active' => 'moderate_bugs',
-            'reports' => $this->repository->bugs($showing, $area, $query, $pager['perPage'], $pager['offset'], $sort),
+            'reports' => $this->repository->bugs($showing, $area, $query, $pager['perPage'], $pager['offset'], $sort, $publicOnly),
+            'public_only' => $publicOnly,
             'counts' => $counts,
             'count_all' => array_sum($counts),
             'statuses' => BugStatus::all(),

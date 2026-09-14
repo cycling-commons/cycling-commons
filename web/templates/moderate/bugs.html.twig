@@ -112,7 +112,7 @@
 
   {# Two labelled rows (moderate/_chip_row.html.twig). status=all is how the
      New default is left on purpose. #}
-  {% set keep = {q: query ?: null, sort: sort != 'newest' ? sort : null} %}
+  {% set keep = {q: query ?: null, sort: sort != 'newest' ? sort : null, public: public_only ? 1 : null} %}
   {% set status_chips = [] %}
   {% for st in statuses %}
     {% set status_chips = status_chips|merge([{value: st.value, label: ('support.bug.status.' ~ st.value)|trans, n: counts[st.value] ?? 0}]) %}
@@ -131,6 +131,17 @@
     current: filter_area, all_value: null, all_n: null, chips: area_chips,
     route: 'moderate_bugs', keep: keep|merge({status: filter_status}),
   } only %}
+  {# A toggle, not a third filter with an All chip: on shows only what is on the
+     public known-issues list, and clicking it again turns it off. #}
+  <div class="chiprow">
+    <span class="chiplabel" id="bugs-f-public">{{ 'moderate.filter.public'|trans }}</span>
+    <div class="chips" data-filter="public" role="group" aria-labelledby="bugs-f-public">
+      <a class="chip {{ public_only ? 'on' : '' }}"{% if public_only %} aria-current="true"{% endif %}
+         href="{{ path('moderate_bugs', keep|merge({status: filter_status, area: filter_area, public: public_only ? null : 1})) }}">
+        {{- 'support.bugs.public_only'|trans -}}
+      </a>
+    </div>
+  </div>
 
   {# The list's own header: what is being shown, and how it is ordered.
      The order is a property OF this list, so it sits on the list rather than
@@ -150,6 +161,7 @@
       {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
       {% if filter_status %}<input type="hidden" name="status" value="{{ filter_status }}">{% endif %}
       {% if filter_area %}<input type="hidden" name="area" value="{{ filter_area }}">{% endif %}
+      {% if public_only %}<input type="hidden" name="public" value="1">{% endif %}
       <label for="bugsort">{{ 'support.bugs.sort_label'|trans }}</label>
       <select id="bugsort" name="sort" data-autosubmit>
         {% for so in sorts %}
@@ -195,7 +207,7 @@
     {% include 'partials/_pager.html.twig' with {
       pager: pager,
       route: 'moderate_bugs',
-      params: {status: filter_status, area: filter_area, q: query ?: null, sort: sort != 'newest' ? sort : null}
+      params: {status: filter_status, area: filter_area, q: query ?: null, sort: sort != 'newest' ? sort : null, public: public_only ? 1 : null}
     } %}
   {% endif %}
 </div>

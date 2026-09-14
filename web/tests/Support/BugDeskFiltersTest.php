@@ -54,11 +54,12 @@ final class BugDeskFiltersTest extends WebTestCase
         return $user;
     }
 
-    private function bug(string $title, BugStatus $status, BugArea $area): BugReport
+    private function bug(string $title, BugStatus $status, BugArea $area, bool $public = false): BugReport
     {
         $report = new BugReport($title, 'Body of '.$title);
         $report->setStatus($status);
         $report->setArea($area);
+        $report->setPublic($public);
         $this->em()->persist($report);
         $this->em()->flush();
 
@@ -159,5 +160,30 @@ final class BugDeskFiltersTest extends WebTestCase
         $status = $this->group($page, 'status');
         self::assertSame('2', trim($status->filter('a.chip[data-value="new"] .n')->text()));
         self::assertSame('2', trim($status->filter('a.chip[data-value="all"] .n')->text()));
+    }
+
+    public function testThePublicToggleListsOnlyWhatIsOnThePublicList(): void
+    {
+        $client = $this->client();
+        $this->bug('Grey map on load', BugStatus::New, BugArea::Map, public: true);
+        $this->bug('Pins jump on zoom', BugStatus::New, BugArea::Map);
+        $client->loginUser($this->curator());
+
+        $off = $client->request('GET', '/moderate/bugs');
+        $toggle = $off->filter('.chips[data-filter="public"] a.chip');
+        self::assertCount(1, $toggle, 'one toggle');
+        self::assertNull($toggle->attr('aria-current'));
+        self::assertSame(['public' => '1', 'status' => 'new'], $this->queryOf((string) $toggle->attr('href')));
+
+        $on = $client->request('GET', '/moderate/bugs?public=1');
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('Grey map on load', $on->text());
+        self::assertStringNotContainsString('Pins jump on zoom', $on->text());
+        self::assertSame('1', trim($this->group($on, 'status')->filter('a.chip[data-value="new"] .n')->text()), 'counts follow the toggle');
+
+        $toggle = $on->filter('.chips[data-filter="public"] a.chip');
+        self::assertSame('true', $toggle->attr('aria-current'));
+        self::assertSame(['status' => 'new'], $this->queryOf((string) $toggle->attr('href')), 'clicking it again turns it off');
+        self::assertSame(['area' => 'map', 'public' => '1', 'status' => 'new'], $this->queryOf($this->chipHref($this->group($on, 'area'), 'map')), 'the other chips keep it');
     }
 }

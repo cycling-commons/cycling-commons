@@ -193,6 +193,7 @@ final readonly class SupportRepository
         int $limit,
         int $offset,
         ?BugSort $sort = null,
+        bool $publicOnly = false,
     ): array {
         $sort ??= BugSort::Newest;
 
@@ -200,7 +201,7 @@ final readonly class SupportRepository
             ->select('b')
             ->from(BugReport::class, 'b');
 
-        $this->filterBugs($qb, $status, $area, $query);
+        $this->filterBugs($qb, $status, $area, $query, $publicOnly);
 
         // Severity is an enum column, so "worst first" is a CASE, not a plain
         // ORDER BY: the stored strings sort alphabetically, which would put
@@ -241,13 +242,13 @@ final readonly class SupportRepository
         return $rows;
     }
 
-    public function countBugs(?BugStatus $status, ?BugArea $area, ?string $query = null): int
+    public function countBugs(?BugStatus $status, ?BugArea $area, ?string $query = null, bool $publicOnly = false): int
     {
         $qb = $this->em->createQueryBuilder()
             ->select('COUNT(b.id)')
             ->from(BugReport::class, 'b');
 
-        $this->filterBugs($qb, $status, $area, $query);
+        $this->filterBugs($qb, $status, $area, $query, $publicOnly);
 
         return (int) $qb->getQuery()->getSingleScalarResult();
     }
@@ -268,8 +269,11 @@ final readonly class SupportRepository
      * `%` and `_` are escaped, so pasting a URL with an underscore in it does
      * not quietly become a wildcard.
      */
-    private function filterBugs(QueryBuilder $qb, ?BugStatus $status, ?BugArea $area, ?string $query): void
+    private function filterBugs(QueryBuilder $qb, ?BugStatus $status, ?BugArea $area, ?string $query, bool $publicOnly = false): void
     {
+        if ($publicOnly) {
+            $qb->andWhere('b.isPublic = true');
+        }
         if (null !== $status) {
             $qb->andWhere('b.status = :status')->setParameter('status', $status);
         }
@@ -305,13 +309,13 @@ final readonly class SupportRepository
      *
      * @return array<string, int>
      */
-    public function bugCountsByStatus(?BugArea $area = null, ?string $query = null): array
+    public function bugCountsByStatus(?BugArea $area = null, ?string $query = null, bool $publicOnly = false): array
     {
         $qb = $this->em->createQueryBuilder()
             ->select('b.status AS status, COUNT(b.id) AS n')
             ->from(BugReport::class, 'b')
             ->groupBy('b.status');
-        $this->filterBugs($qb, null, $area, $query);
+        $this->filterBugs($qb, null, $area, $query, $publicOnly);
 
         /** @var list<array{status: BugStatus, n: int|string}> $rows */
         $rows = $qb->getQuery()->getResult();

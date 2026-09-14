@@ -536,6 +536,13 @@ an **All** chip, and the chosen chip carries `aria-current="true"`.
 
 `BugDeskFiltersTest` pins all three.
 
+**Public list** is a third row with one toggle chip, "Only on the public list"
+(`?public=1`). It is a toggle, not a filter with an All chip: on lists only
+reports with `isPublic`, and clicking it again turns it off. Every other chip,
+the order control and the pager carry it, and the status numbers count only
+public reports while it is on. The search drops it, like the other chips.
+`BugDeskFiltersTest::testThePublicToggleListsOnlyWhatIsOnThePublicList` pins it.
+
 The row is one partial, `moderate/_chip_row.html.twig`, shared with the reports
 desk ([content-reports.md §9](content-reports.md)). Its labels are
 `moderate.filter.status`, `moderate.filter.category` and `moderate.filter.all`,
