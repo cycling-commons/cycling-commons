@@ -51,9 +51,16 @@
         {% for row in rows %}
             {# The scope in words, reused by the row, the detail and both
                  message templates, so all four can never disagree. #}
+            {# An area with no region row reads as itself plus a mark, not as
+               "the whole country": the difference between somebody offering to
+               run Ohio and somebody offering to run the United States is the
+               decision this page exists to make. #}
             {% set scope = row.regionGone
                 ? 'admin.curator.region_gone'|trans
-                : (row.regionName ?: 'join.scope_whole_country'|trans) %}
+                : (row.regionName
+                    ?: (row.requestedArea
+                        ? row.requestedArea ~ ' (' ~ 'join.scope_not_yet'|trans ~ ')'
+                        : 'join.scope_whole_country'|trans)) %}
             <details class="cur-row">
                 <summary>
                     <span class="cur-name">{{ row.user ? row.user.displayName : 'admin.curator.applicant_gone'|trans }}</span>

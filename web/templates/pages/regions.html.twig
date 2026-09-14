@@ -275,6 +275,11 @@
   <script type="application/json" id="cc-countries"
           data-join-href="{{ path('join_country', {cc: 'ZZ'}) }}"
           data-here-label="{{ 'regions.already_here'|trans }}">{{ all_countries|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }}</script>
+  {# The areas inside onboarded countries, so "Ohio" finds somewhere to go.
+     A separate block from the countries: they are looked up the same way but
+     they lead to a different form on the far side, and merging them would
+     mean carrying a discriminator on every row of both. #}
+  <script type="application/json" id="cc-areas">{{ all_areas|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }}</script>
 </div>
 {% endblock %}
 {% block body_scripts %}

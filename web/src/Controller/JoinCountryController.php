@@ -14,6 +14,7 @@ use App\Community\InvalidNoteException;
 use App\Entity\User;
 use App\Routing\LocalePrefix;
 use App\Routing\LocalizedPath;
+use App\World\CuratorScopes;
 use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -44,6 +45,7 @@ final class JoinCountryController extends AbstractController
         string $cc,
         Request $request,
         Connection $db,
+        CuratorScopes $scopes,
         CountryInterestService $interests,
         CuratorApplicationService $applications,
         RateLimiterFactoryInterface $countryInterestLimiter,
@@ -75,7 +77,23 @@ final class JoinCountryController extends AbstractController
 
         if ($request->isMethod('POST')) {
             // Server-known onboarded state picks the branch — never the client payload.
-            $isApplication = $onboarded;
+            // An onboarded country offers BOTH forms now: somebody can put
+            // themselves forward to curate it, and somebody whose own part of
+            // it is uncovered can say so. Until 2026-09-13 the country being
+            // onboarded decided which branch ran, which meant the only way to
+            // ask for Texas was to volunteer to run it.
+            //
+            // The payload picks the branch, and the CSRF token does NOT narrow
+            // that choice: both ids are stateless (config/packages/csrf.yaml),
+            // so one token satisfies either. That is safe here only because
+            // both branches are things this same signed-in rider may do on
+            // this page, so choosing between them wins nothing. What used to
+            // make branch confusion a vulnerability was that the interest
+            // branch was unreachable by design on an onboarded country, and it
+            // is reachable on purpose now. The one branch that is still not
+            // always allowed, an application for a country with no regions, is
+            // refused by CuratorApplications itself and not by this line.
+            $isApplication = 'curator-application' === $request->request->getString('form');
             $tokenId = $isApplication ? 'curator-application' : 'country-interest';
 
             if (!$this->isCsrfTokenValid($tokenId, $request->request->getString('_token'))) {
@@ -111,14 +129,22 @@ final class JoinCountryController extends AbstractController
                     if ('' === trim($about)) {
                         $error = $translator->trans('join.error.about_required');
                     } else {
+                        // The picker carries two kinds of value: the id of a
+                        // region that exists, or `new:<name>` for an area the
+                        // Commons has no row for. The second is the whole
+                        // point of offering it: somebody willing to run Ohio
+                        // is the strongest argument for adding Ohio, and until
+                        // now they could only ask to run the United States.
                         $regionRaw = $request->request->getString('region');
+                        $newArea = str_starts_with($regionRaw, 'new:') ? substr($regionRaw, 4) : '';
                         $applications->submit(
                             $user,
                             $code,
-                            '' === $regionRaw ? null : $request->request->getInt('region'),
+                            '' === $regionRaw || '' !== $newArea ? null : (int) $regionRaw,
                             $request->request->getString('osm'),
                             $about,
                             $request->request->getString('social'),
+                            $newArea,
                         );
                         $this->addFlash('success', $translator->trans('join.flash.application_sent'));
 
@@ -130,8 +156,13 @@ final class JoinCountryController extends AbstractController
                         $code,
                         '1' === $request->request->getString('willing'),
                         $request->request->getString('note'),
+                        $request->request->getString('region_name'),
                     );
-                    $this->addFlash('success', $translator->trans('join.flash.interest_recorded'));
+                    $this->addFlash('success', $translator->trans(
+                        '' === trim($request->request->getString('region_name'))
+                            ? 'join.flash.interest_recorded'
+                            : 'join.flash.region_recorded',
+                    ));
 
                     return $this->redirectToRoute('join_country', ['cc' => $code]);
                 }
@@ -141,6 +172,7 @@ final class JoinCountryController extends AbstractController
                 $key = match ($e->reason) {
                     'already_pending' => 'join.error.already_pending',
                     'not_onboarded' => 'join.error.not_onboarded',
+                    'area_unknown' => 'join.error.area_unknown',
                     'osm_handle_too_long' => 'join.error.osm_handle_too_long',
                     'social_url_invalid' => 'join.error.social_url_invalid',
                     default => null,
@@ -174,8 +206,22 @@ final class JoinCountryController extends AbstractController
             'error' => $error,
             'needs_reauth' => $onboarded && !$this->isGranted('IS_AUTHENTICATED_FULLY'),
             'pending_app' => $onboarded ? $applications->pendingApplication((int) $user->getId(), $code) : null,
+            // The areas of this country the Commons has no region row for, so
+            // somebody can volunteer for one. Only when the country is
+            // onboarded, because that is the only state where the application
+            // form renders at all.
+            // CuratorScopes already leaves out every area onboarded here, by ISO
+            // code: the names never agree ("Bavaria" on the map, "Bayern" in
+            // the reference data), so no comparison belongs in this controller.
+            'unmapped_areas' => $onboarded ? $scopes->forCountry($code) : [],
+            // Arriving from the typeahead with the area already typed once.
+            // A rider who wrote "Ohio" on /regions should not be asked to
+            // write it again on the page they were sent to for that reason.
+            'area_prefill' => trim($request->query->getString('area')),
             'sent' => $request->isMethod('POST') ? [
                 'region' => $request->request->getString('region'),
+                'region_name' => $request->request->getString('region_name'),
+                'note' => $request->request->getString('note'),
                 'osm' => $request->request->getString('osm'),
                 'social' => $request->request->getString('social'),
                 'about' => $request->request->getString('about'),

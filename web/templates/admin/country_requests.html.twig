@@ -1,0 +1,111 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{#
+   Where riders are asking the Commons to reach.
+
+   The demand half of moderation-and-contribution.md §11, which was written and
+   never read until now: rows landed in `country_interest` and nothing showed
+   them, so somebody could ask for their country, or offer to curate it, and
+   nobody ever saw either.
+
+   Sorted by how many people asked, not by when they asked. The page answers
+   "where do we grow next", and that is a question about numbers; a reviewer
+   who wants the newest can open the country and read the dates.
+
+   `<details>`/`<summary>` like the curator applications page, and for the same
+   reasons: one element, keyboard- and screen-reader-native, no script to pass
+   the CSP, and find-in-page opens it.
+#}
+{% extends '@EasyAdmin/page/content.html.twig' %}
+
+{% block content_title %}{{ 'admin.country_requests.title'|trans }}{% endblock %}
+
+{% block main %}
+{# No nonce: style-src is 'self' + 'unsafe-inline', so one does nothing here
+   except tie the page to a per-request value (docs/specs/page-caching.md §3.2). #}
+<style>
+  .creq{border:1px solid rgba(0,0,0,.125);border-radius:.375rem;margin-bottom:.5rem;background:var(--bs-body-bg,#fff)}
+  .creq > summary{cursor:pointer;padding:.7rem .9rem;display:flex;flex-wrap:wrap;align-items:baseline;gap:.6rem;list-style:none}
+  .creq > summary::-webkit-details-marker{display:none}
+  .creq > summary::before{content:'▸';display:inline-block;width:1em;opacity:.55}
+  .creq[open] > summary::before{content:'▾'}
+  .creq .cname{font-weight:600}
+  .creq .cc{font-family:monospace;opacity:.6;font-size:.85em}
+  .creq .num{margin-left:auto;display:flex;gap:.9rem;font-size:.9em}
+  .creq .num b{font-weight:600}
+  .creq .body{padding:0 .9rem .9rem}
+  .creq table{width:100%;font-size:.9em;border-collapse:collapse}
+  .creq th{text-align:left;font-weight:600;padding:.35rem .5rem;border-bottom:1px solid rgba(0,0,0,.12)}
+  .creq td{padding:.35rem .5rem;border-bottom:1px solid rgba(0,0,0,.06);vertical-align:top}
+  .creq .areas{margin-bottom:1.1rem}
+  .creq .whole{opacity:.6;font-style:italic}
+  .creq .yes{color:#1a7f37;font-weight:600}
+  .creq .note{white-space:pre-wrap;overflow-wrap:anywhere}
+  .creq .when{white-space:nowrap;opacity:.7;font-size:.92em}
+  .creq-none{padding:1.1rem 1.3rem;background:var(--bs-body-bg,#fff);border:1px solid rgba(0,0,0,.125);border-radius:.375rem}
+</style>
+
+<p class="text-muted">{{ 'admin.country_requests.intro'|trans }}</p>
+
+{% if countries is empty %}
+  <p class="creq-none">{{ 'admin.country_requests.none'|trans }}</p>
+{% endif %}
+
+{% for c in countries %}
+  <details class="creq">
+    <summary>
+      <span class="cname">{{ c.name }}</span>
+      <span class="cc">{{ c.code }}</span>
+      <span class="num">
+        <span>{{ 'admin.country_requests.asked'|trans({'%n%': c.total}) }}</span>
+        {% if c.willing > 0 %}<span class="yes">{{ 'admin.country_requests.willing'|trans({'%n%': c.willing}) }}</span>{% endif %}
+      </span>
+    </summary>
+    <div class="body">
+      {% if c.areas is not empty %}
+        <table class="areas">
+          <thead><tr>
+            <th>{{ 'admin.country_requests.area'|trans }}</th>
+            <th>{{ 'admin.country_requests.riders'|trans }}</th>
+            <th>{{ 'admin.country_requests.would_curate'|trans }}</th>
+          </tr></thead>
+          <tbody>
+          {% for a in c.areas %}
+            <tr>
+              <td>{{ a.name }}</td>
+              <td>{{ a.total }}</td>
+              <td>{% if a.willing > 0 %}<span class="yes">{{ a.willing }}</span>{% else %}0{% endif %}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      {% endif %}
+
+      <table>
+        <thead><tr>
+          <th>{{ 'admin.country_requests.who'|trans }}</th>
+          <th>{{ 'admin.country_requests.area'|trans }}</th>
+          <th>{{ 'admin.country_requests.note'|trans }}</th>
+          <th>{{ 'admin.country_requests.when'|trans }}</th>
+        </tr></thead>
+        <tbody>
+        {% for p in c.people %}
+          <tr>
+            <td>
+              {# The address is the whole point of a volunteer: a name cannot
+                 be written to. An account without a display name shows the
+                 address alone rather than a placeholder standing in for one. #}
+              {% if p.displayName %}{{ p.displayName }}<br>{% endif %}
+              {% if p.email %}<a href="mailto:{{ p.email }}">{{ p.email }}</a>{% endif %}
+              {% if p.willing %}<br><span class="yes">{{ 'admin.country_requests.would_curate'|trans }}</span>{% endif %}
+            </td>
+            <td>{% if p.regionName %}{{ p.regionName }}{% else %}<span class="whole">{{ 'admin.country_requests.whole_country'|trans }}</span>{% endif %}</td>
+            <td class="note">{{ p.note ?? '' }}</td>
+            <td class="when">{{ p.updatedAt|slice(0, 10) }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </details>
+{% endfor %}
+{% endblock %}

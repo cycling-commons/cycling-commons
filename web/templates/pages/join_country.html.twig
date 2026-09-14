@@ -22,6 +22,14 @@
   .intro .hint{margin:0}
   .intro .btn{white-space:nowrap;text-decoration:none}
   @media(max-width:640px){.intro{grid-template-columns:1fr}.intro .btn{justify-self:start}}
+  /* Its own panel, so the two things this page offers do not read as one long
+     form. The lighter ground says "this one asks less of you" without a second
+     heading level having to say it. */
+  .askregion{background:var(--paper-deep);border-radius:8px;padding:1.3rem 1.4rem;margin:0 0 2.2rem}
+  .askregion h2{font-family:var(--serif);font-size:1.12rem;font-weight:600;margin:0 0 .4rem;color:var(--ink)}
+  .askregion .hint{margin:0 0 1.1rem}
+  .askregion .field:last-of-type{margin-bottom:1rem}
+  .curate-h{font-family:var(--serif);font-size:1.12rem;font-weight:600;margin:0 0 1rem;color:var(--ink)}
   .hint a{color:var(--clay);text-decoration:underline;text-underline-offset:3px}
   .form-error,.flash-error{background:rgba(179,38,30,.1);border-left:3px solid var(--danger);color:var(--danger-ink);padding:.7rem 1rem;border-radius:0 5px 5px 0;font-size:.9rem;margin-bottom:1.4rem}
   .flash-success{background:rgba(44,84,64,.12);border-left:3px solid var(--trail);color:#1f3a2c;padding:.7rem 1rem;border-radius:0 5px 5px 0;font-size:.9rem;margin-bottom:1.4rem}
@@ -52,17 +60,6 @@
 {# The wrap keeps the page's width; only the text column is capped, from the
    left, like the report page (owner 2026-09-08: "smaller, center aligned?"). #}
 <main class="wrap" style="padding-top:2.5rem;padding-bottom:3.5rem"><div style="max-width:760px">
-  {# The "show us your edits" nudge belongs to somebody who is about to apply,
-     not to somebody whose application is already being read. #}
-  {% if onboarded and not pending_app %}
-    {# Two columns (owner 2026-09-08): the words on the left, and on the
-       right one outlined button to the page that explains the roles. #}
-    <div class="intro">
-      <p class="hint">{{ 'join.evidence_hint'|trans }}</p>
-      <a class="btn btn-g" href="{{ path('roles') }}">{{ 'join.roles_link'|trans }}</a>
-    </div>
-  {% endif %}
-
   {% if error %}<p class="form-error" role="alert">{{ error }}</p>{% endif %}
 
   {# Not beside the pending block: that block already thanks them and says what
@@ -73,6 +70,9 @@
 
   {% if not onboarded %}
     <form method="post" data-form="country-interest">
+      {# The form names itself, so the controller does not have to guess from
+         which fields arrived which of the two this is. #}
+      <input type="hidden" name="form" value="country-interest">
       <input type="hidden" name="_token" value="{{ csrf_token('country-interest') }}">
       <div class="field">
         <label for="note">{{ 'join.note_label'|trans }}</label>
@@ -94,7 +94,49 @@
       {{ 'join.message.received'|trans({'%scope%': asked ? asked.name : country.name}) }}
     </p>
   {% else %}
+    {# An onboarded country still has parts nobody covers, and until now the
+       page had nothing for a rider who lives in one: the only form on offer
+       asked them to run the place (owner 2026-09-13, "USA we have states at
+       the region level"). It is first because it asks least. #}
+    <section class="askregion">
+      <h2>{{ 'join.region_ask_h'|trans({'%country%': country.name}) }}</h2>
+      <p class="hint">{{ 'join.region_ask_p'|trans }}</p>
+      <form method="post" data-form="country-interest">
+        <input type="hidden" name="form" value="country-interest">
+        <input type="hidden" name="_token" value="{{ csrf_token('country-interest') }}">
+        <div class="field">
+          <label for="region_name">{{ 'join.region_name_label'|trans }} <span class="req" aria-hidden="true">*</span></label>
+          {# Free text, not the picker below: the area being asked for has no
+             region row yet, which is the reason somebody is asking. #}
+          <input id="region_name" name="region_name" maxlength="120" required
+                 placeholder="{{ 'join.region_name_placeholder'|trans|e('html_attr') }}"
+                 value="{{ sent.region_name|default(area_prefill|default('')) }}">
+        </div>
+        <div class="field">
+          <label for="region_note">{{ 'join.note_label'|trans }}</label>
+          <textarea id="region_note" name="note" maxlength="280">{{ sent.note|default('') }}</textarea>
+        </div>
+        <div class="field check">
+          <label><input type="checkbox" name="willing" value="1"> {{ 'join.willing_label'|trans }}</label>
+        </div>
+        <button type="submit" class="btn btn-g">{{ 'join.submit_region'|trans }}</button>
+      </form>
+    </section>
+
+    <h2 class="curate-h">{{ 'join.curate_h'|trans }}</h2>
+    {# Under the curator heading, not at the top of the page (owner 2026-09-14):
+       it speaks to somebody putting themselves forward, and above the area
+       request it read as a condition for asking about a place. Two columns
+       (owner 2026-09-08): the words on the left, and on the right one outlined
+       button to the page that explains the roles. This branch already means
+       onboarded with no application pending, so it needs no condition of its
+       own. #}
+    <div class="intro">
+      <p class="hint">{{ 'join.evidence_hint'|trans }}</p>
+      <a class="btn btn-g" href="{{ path('roles') }}">{{ 'join.roles_link'|trans }}</a>
+    </div>
     <form method="post" data-form="curator-application">
+      <input type="hidden" name="form" value="curator-application">
       <input type="hidden" name="_token" value="{{ csrf_token('curator-application') }}">
       <div class="field">
         <label for="region">{{ 'join.scope_label'|trans }}</label>
@@ -105,6 +147,18 @@
           {% set picked = sent.region is defined and sent.region is not empty ? sent.region : (wanted ? wanted.id : null) %}
           <option value=""{{ picked ? '' : ' selected' }}>{{ 'join.scope_whole_country'|trans }}</option>
           {% for r in regions %}<option value="{{ r.id }}"{{ picked == r.id ? ' selected' : '' }}>{{ r.name }}</option>{% endfor %}
+          {# Areas the Commons has no region for. Somebody willing to run one
+             is the strongest argument for adding it, and without these the
+             only thing they could volunteer for was the whole country. The
+             `new:` prefix is what tells the controller this is a name and not
+             an id. #}
+          {% if unmapped_areas is not empty %}
+            <optgroup label="{{ 'join.scope_not_yet'|trans|e('html_attr') }}">
+              {% for name in unmapped_areas %}
+                <option value="new:{{ name }}"{{ picked == 'new:' ~ name ? ' selected' : '' }}>{{ name }}</option>
+              {% endfor %}
+            </optgroup>
+          {% endif %}
         </select>
       </div>
       <div class="field">

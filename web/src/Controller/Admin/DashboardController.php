@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace App\Controller\Admin;
 
 use App\Catalog\Entity\Region;
+use App\Community\CountryInterestService;
 use App\Community\CuratorApplicationException;
 use App\Community\CuratorApplicationService;
 use App\Community\CuratorApplicationStatus;
@@ -34,6 +35,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractDashboardController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use Symfony\Component\Intl\Countries;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Translation\TranslatableMessage;
 use Symfony\Component\Uid\Uuid;
@@ -100,6 +102,7 @@ final class DashboardController extends AbstractDashboardController
         yield MenuItem::section(new TranslatableMessage('admin.menu.system'));
         yield MenuItem::linkToRoute(new TranslatableMessage('admin.menu.system_config'), 'fa fa-sliders', 'admin_system_config');
         yield MenuItem::linkToRoute(new TranslatableMessage('admin.menu.curator_applications'), 'fa fa-user-check', 'admin_curator_applications');
+        yield MenuItem::linkToRoute(new TranslatableMessage('admin.menu.country_requests'), 'fa fa-map-pin', 'admin_country_requests');
         yield MenuItem::linkToRoute(new TranslatableMessage('admin.menu.withheld_photos'), 'fa fa-image-slash', 'admin_withheld_photos');
         yield MenuItem::linkToRoute(new TranslatableMessage('admin.menu.moderator_areas'), 'fa fa-map-location-dot', 'admin_moderator_areas_overview');
         yield MenuItem::linkToRoute(new TranslatableMessage('admin.menu.moderation_activity'), 'fa fa-chart-column', 'admin_moderation_activity');
@@ -338,6 +341,7 @@ final class DashboardController extends AbstractDashboardController
                 'evidence' => $applications->evidenceFor($app),
                 'regionName' => $regionName,
                 'regionGone' => $regionGone,
+                'requestedArea' => $app->getRequestedArea(),
                 'standingRoles' => $standingRoles,
                 'standingAreas' => $standingAreas,
             ];
@@ -347,6 +351,64 @@ final class DashboardController extends AbstractDashboardController
             'rows' => $rows,
             'csrf_token_id' => self::CURATOR_APPS_CSRF_TOKEN_ID,
             'pager' => $pager,
+        ]);
+    }
+
+    /**
+     * Where riders are asking the Commons to reach.
+     *
+     * The demand half of §11, which until now was written and never read: rows
+     * landed in `country_interest` and no page showed them, so a rider could
+     * ask and a volunteer could offer and nobody saw either. Admin rather than
+     * curator, because this decides where the project grows next rather than
+     * what happens to one submission.
+     *
+     * Grouped by country and sorted by how many people asked, because that is
+     * the question: not "who wrote in" but "where are the most riders waiting".
+     * The named areas sit under their country, since a country total cannot
+     * say which part of France or the United States is being asked for.
+     *
+     * @see docs/specs/moderation-and-contribution.md §11.1
+     */
+    #[AdminRoute('/country-requests', 'country_requests', options: ['methods' => ['GET']])]
+    public function countryRequests(CountryInterestService $interests): Response
+    {
+        $countries = [];
+        foreach ($interests->requests() as $row) {
+            $cc = $row['countryCode'];
+            $countries[$cc] ??= [
+                'code' => $cc,
+                'name' => Countries::exists($cc) ? Countries::getName($cc) : $cc,
+                'total' => 0,
+                'willing' => 0,
+                'areas' => [],
+                'people' => [],
+            ];
+            ++$countries[$cc]['total'];
+            if ($row['willing']) {
+                ++$countries[$cc]['willing'];
+            }
+            if ('' !== $row['regionName']) {
+                $area = $row['regionName'];
+                $countries[$cc]['areas'][$area] ??= ['name' => $area, 'total' => 0, 'willing' => 0];
+                ++$countries[$cc]['areas'][$area]['total'];
+                if ($row['willing']) {
+                    ++$countries[$cc]['areas'][$area]['willing'];
+                }
+            }
+            $countries[$cc]['people'][] = $row;
+        }
+
+        // Busiest first: the list is read to decide what to do next, and a
+        // country nobody asked for twice is not what that decision turns on.
+        foreach ($countries as $cc => $c) {
+            usort($c['areas'], static fn (array $a, array $b): int => [$b['total'], $a['name']] <=> [$a['total'], $b['name']]);
+            $countries[$cc]['areas'] = $c['areas'];
+        }
+        usort($countries, static fn (array $a, array $b): int => [$b['total'], $a['name']] <=> [$a['total'], $b['name']]);
+
+        return $this->render('admin/country_requests.html.twig', [
+            'countries' => $countries,
         ]);
     }
 

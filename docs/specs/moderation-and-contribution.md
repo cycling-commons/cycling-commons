@@ -2162,10 +2162,26 @@ else.
 Every country is empty at launch, so `/join/{cc}`
 (`App\Controller\JoinCountryController`, `IS_AUTHENTICATED_FULLY`) is the one
 page both signals funnel through: "I want it here" and "I'd curate it". One
-route, two states, decided **server-side by whether the country already has
-any `region` rows** — never by the client-submitted form — because a country
-with no region has nowhere to anchor a submission and nothing to scope a
-curator to.
+route, two forms.
+
+A country with no `region` rows offers only the demand form: there is nowhere
+to anchor a submission and nothing to scope a curator to, and
+`CuratorApplications` refuses an application for such a country whatever the
+payload says.
+
+A country that **is** onboarded offers both. Being on the Commons does not
+mean every part of it is, and for the United States or France the part is the
+only unit that decides anything (owner 2026-09-13: "Or region. f.e. USA we
+have states at the region level"). Until then the branch was chosen by
+`$onboarded` alone, so the only way to ask for an uncovered state was to
+volunteer to run it.
+
+The posted `form` field names which branch runs. The CSRF token does not
+narrow that choice: both ids are stateless (`config/packages/csrf.yaml`), so
+one token satisfies either. That is sound only because both branches are
+things the same signed-in rider may do on this page, so picking between them
+wins nothing. Branch confusion was a vulnerability while the demand branch was
+unreachable by design on an onboarded country; it is reachable on purpose now.
 
 The map rail's one-line invite (`#emptyScopeInvite`,
 `web/assets/map/panels.js`) links here with the country pre-filled whenever
@@ -2186,13 +2202,100 @@ Entity `App\Community\Entity\CountryInterest`, table `country_interest`:
 | `id` | bigint identity | |
 | `user_id` | bigint | no FK (house convention, §5.6) |
 | `country_code` | varchar(2) | ISO 3166-1 alpha-2 |
+| `region_name` | varchar(120), default `''` | the area asked for; `''` is the whole country |
 | `willing_to_curate` | boolean, default false | the contact list for onboarding |
 | `note` | varchar(280), nullable | hardened per §11.3 |
 | `created_at` / `updated_at` | timestamp | |
 
-`UNIQUE (user_id, country_code)`. `CountryInterestService::record()` upserts:
-re-submitting for a country already on file updates `willing_to_curate`/`note`
-and bumps `updated_at` rather than creating a second row.
+`UNIQUE (user_id, country_code, region_name)`.
+`CountryInterestService::record()` upserts: re-submitting for an area already
+on file updates `willing_to_curate`/`note` and bumps `updated_at` rather than
+creating a second row, so the count stays a count of people. One person asking
+for two areas is two signals; asking for one area twice is one.
+
+`region_name` is free text, hardened per §11.3 like the note. It is not a
+foreign key to `region` because the whole point of the signal is somewhere the
+Commons does **not** reach, so the row being asked for does not exist yet. It
+is stored empty rather than null: empty means the country as a whole and is a
+value the unique index can compare, where Postgres treats two nulls as
+distinct and would let one person file the same country twice.
+
+`CountryInterestService::regionCounts($cc)` aggregates the named areas of one
+country, busiest first, excluding the `''` rows: those are already the country
+total, and listing them as an area would count them twice.
+
+Migration `Version20260913200000`.
+
+### 11.1a Which areas are offered: `App\World\CuratorScopes`
+
+Both the typeahead on `/regions` and the scope picker on `/join/{cc}` offer
+areas from `world_division`. Three lists are involved and the design rests on
+keeping them apart:
+
+- what the Commons has **onboarded**: `region` rows, with a curator model,
+  a map and a moderation scope;
+- what we hold a **boundary** for: `world_division`, which a request can be
+  acted on from, because onboarding is promoting a row we already have;
+- anything else, which nobody can act on automatically, and which is a
+  different kind of request (owner 2026-09-13: "User can only ask via this form
+  what we have. If they want something different we can't automate it").
+
+The picker offers the middle list minus the first.
+
+**`world_division`** (migrations `Version20260914010000`, `Version20260914020000`)
+holds every division of Overture's `region` subtype for every country, onboarded
+or not: 3,919 rows across 226 countries, 83 MB, from release 2026-08-19.0. It is
+its own table rather than a status on `region`, because every query against
+`region` means "a region the Commons runs", and a status column would make each
+of them wrong until updated. Unique on `(country_code, subtype,
+COALESCE(iso_code, name))`: the ISO code where there is one, because Malta has
+two councils called Ir-Rabat and a name key merged them; the name only where
+Overture ships no code, as it does for the uninhabited divisions.
+
+Filled by two steps, both bounded in memory:
+
+1. `python -m tools.divisions.export_candidates --out web/var/divisions` writes one
+   NDJSON file per country, one Feature per line, geometry simplified to 0.0005°
+   (about 55 m; Belgium 1.96 MB → 150 KB). It reads each country's box first,
+   without geometry, then queries one country at a time inside it, which lets
+   DuckDB skip every block that cannot overlap. A query over the whole release
+   with geometry in it filled 21 GB of RAM and swap on the first attempt and was
+   killed by a memory guard on the next two (2026-09-14). The box is built from
+   the country's own divisions, not its `country` row, because 31 territories
+   have divisions and no country row. Resumable: a country whose file exists is
+   skipped, and each is written to a `.part` file and renamed when complete.
+2. `bin/console app:divisions:import` reads those files line by line and upserts.
+   It onboards nothing and deletes nothing.
+
+**Excluded by ISO code, never by name.** `region` rows are named in English
+("Bavaria", "Flanders") and the boundary data in the country's own language
+("Bayern", "Vlaanderen"). A name comparison matched none of them: 61 live
+regions were offered again as not yet on the Commons, and a curator could have
+applied for Bayern while Bavaria was live (measured 2026-09-14). Divisions with
+no ISO code are left out for the same reason.
+
+**Size is measured.** A country whose median division is under 500 km² offers
+only itself:
+
+| Country | Divisions | Median | Result |
+|---|---:|---:|---|
+| Slovenia | 212 municipalities | 65 km² | country only |
+| Luxembourg | 12 cantons | 218 km² | country only |
+| Switzerland | 26 cantons | 883 km² | offered |
+| Netherlands | 12 provinces | 3,132 km² | offered |
+
+The line reproduces by measurement the call `tools/divisions/config.py` had made
+by hand for Slovenia and Luxembourg (owner 2026-09-14). The median, not the
+mean, so one huge territory cannot make a country of small divisions look
+curatable, nor one city canton the reverse. Among countries not onboarded, 33
+fall under the line, North Macedonia (median 273 km²) and Montenegro (427 km²)
+among them. Measured 2026-09-14 across onboarded countries, the picker offers
+60 areas: the 49 United States and 11 Canadian divisions not yet onboarded.
+
+An environment where the boundaries have not been loaded offers only countries,
+which is the safe way for the list to be empty. A rider who wants an area that is
+not offered is not blocked: the demand signal's area field is free text and
+reaches the desk as typed.
 
 ### 11.2 `CuratorApplication` — the supply signal
 

@@ -22,6 +22,7 @@ use App\Pagination\Pager;
 use App\Pagination\PageSize;
 use App\Routing\LocalePrefix;
 use App\Routing\LocalizedPath;
+use App\World\CuratorScopes;
 use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -283,7 +284,7 @@ final class PageController extends AbstractController
     }
 
     #[Route(LocalizedPath::REGIONS, name: 'regions')]
-    public function regions(Request $request, RegionDirectoryProvider $directory, Connection $db): Response
+    public function regions(Request $request, RegionDirectoryProvider $directory, Connection $db, CuratorScopes $scopes): Response
     {
         $locale = $request->getLocale();
         $codes = $db->fetchFirstColumn('SELECT iso2 FROM world_country ORDER BY iso2');
@@ -314,6 +315,26 @@ final class PageController extends AbstractController
         $collator = new \Collator($locale);
         usort($allCountries, static fn (array $a, array $b): int => $collator->compare($a['name'], $b['name']));
 
+        // The areas inside countries the Commons already reaches, so somebody
+        // can type "Ohio" and land somewhere. A country being here does not
+        // mean every part of it is, and a box that only knows country names
+        // answers a rider's own region with silence (owner 2026-09-13).
+        //
+        // Onboarded countries only, which is both smaller and honest: the area
+        // form exists only on an onboarded country's page, so every hit here
+        // leads to a form that works, and for the rest the answer is to ask
+        // for the country, which typing its name already does.
+        $allAreas = array_map(
+            static fn (array $a): array => [
+                'name' => $a['name'],
+                'cc' => $a['cc'],
+                'country' => Countries::exists($a['cc'])
+                    ? Countries::getName($a['cc'], $locale)
+                    : $a['cc'],
+            ],
+            $scopes->forCountries(array_keys($onboarded)),
+        );
+
         // A signed-in rider's globe starts turned to their base (owner
         // 2026-09-08). Safe on a cached route: a signed-in response is never
         // marked shareable (PublicPageCacheSubscriber rule 1).
@@ -329,6 +350,7 @@ final class PageController extends AbstractController
             'nav_active' => 'regions',
             'countries' => $directoryList,
             'all_countries' => $allCountries,
+            'all_areas' => $allAreas,
             'home' => $home,
         ]);
     }

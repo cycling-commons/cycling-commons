@@ -10,7 +10,19 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * Country demand signal. Not tied to a region, because most countries have none yet.
+ * Where somebody wants the Commons to reach: a country, or an area inside one.
+ *
+ * **Why the area is free text.** The whole point of the signal is somewhere
+ * the Commons does NOT cover, so there is no `region` row to point a foreign
+ * key at. A rider in Texas is asking for a region that does not exist yet, and
+ * a picker of existing regions cannot express that (owner 2026-09-13: "Or
+ * region. f.e. USA we have states at the region level"). What a curator needs
+ * from this is a name and a count, and text carries both.
+ *
+ * **Why it is stored empty rather than null.** Empty means "the whole
+ * country", and it is a value the unique constraint can compare. Postgres
+ * treats two NULLs as distinct, so a nullable column would let one person file
+ * the same country twice and the count would stop being a count of people.
  *
  * @see docs/specs/moderation-and-contribution.md §11
  *
@@ -18,7 +30,7 @@ use Doctrine\ORM\Mapping as ORM;
  */
 #[ORM\Entity]
 #[ORM\Table(name: 'country_interest')]
-#[ORM\UniqueConstraint(name: 'uniq_country_interest_user_cc', columns: ['user_id', 'country_code'])]
+#[ORM\UniqueConstraint(name: 'uniq_country_interest_user_cc', columns: ['user_id', 'country_code', 'region_name'])]
 class CountryInterest
 {
     #[ORM\Id]
@@ -31,6 +43,10 @@ class CountryInterest
 
     #[ORM\Column(name: 'country_code', type: Types::STRING, length: 2)]
     private string $countryCode;
+
+    /** The area they named, or '' for the country as a whole. */
+    #[ORM\Column(name: 'region_name', type: Types::STRING, length: 120, options: ['default' => ''])]
+    private string $regionName = '';
 
     #[ORM\Column(name: 'willing_to_curate', type: Types::BOOLEAN, options: ['default' => false])]
     private bool $willingToCurate = false;
@@ -50,10 +66,11 @@ class CountryInterest
     #[ORM\Column(name: 'updated_at', type: Types::DATETIME_IMMUTABLE)]
     private \DateTimeImmutable $updatedAt;
 
-    public function __construct(int $userId, string $countryCode)
+    public function __construct(int $userId, string $countryCode, string $regionName = '')
     {
         $this->userId = $userId;
         $this->countryCode = $countryCode;
+        $this->regionName = $regionName;
         $this->createdAt = new \DateTimeImmutable();
         $this->updatedAt = $this->createdAt;
     }
@@ -71,6 +88,17 @@ class CountryInterest
     public function getCountryCode(): string
     {
         return $this->countryCode;
+    }
+
+    public function getRegionName(): string
+    {
+        return $this->regionName;
+    }
+
+    public function setRegionName(string $name): void
+    {
+        $this->regionName = $name;
+        $this->updatedAt = new \DateTimeImmutable();
     }
 
     public function isWillingToCurate(): bool

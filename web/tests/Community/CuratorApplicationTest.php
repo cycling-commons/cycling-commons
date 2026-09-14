@@ -15,6 +15,7 @@ use App\Entity\User;
 use App\Messaging\MessageService;
 use App\Service\AdminActionLogger;
 use App\Service\UserAdminService;
+use App\World\CuratorScopes;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\HttpClient\MockHttpClient;
@@ -76,6 +77,7 @@ final class CuratorApplicationTest extends KernelTestCase
             $c->get(UserAdminService::class),
             $c->get(AdminActionLogger::class),
             $c->get(MessageService::class),
+            $c->get(CuratorScopes::class),
         );
     }
 

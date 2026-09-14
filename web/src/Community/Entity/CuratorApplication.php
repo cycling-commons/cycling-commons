@@ -33,9 +33,21 @@ class CuratorApplication
     #[ORM\Column(name: 'country_code', type: Types::STRING, length: 2)]
     private string $countryCode;
 
-    /** null = whole country; set = one division. */
+    /** null = whole country, or an area with no row yet; set = one division. */
     #[ORM\Column(name: 'requested_region_id', type: Types::BIGINT, nullable: true)]
     private ?int $requestedRegionId = null;
+
+    /**
+     * An area the Commons does not have a `region` row for yet, or ''.
+     *
+     * Somebody willing to run Ohio is the strongest signal for adding Ohio,
+     * and until this column existed they could only ask to run the whole
+     * United States. Text rather than an id for the same reason the demand
+     * signal uses text: the row being volunteered for does not exist, which is
+     * what the application is asking to change.
+     */
+    #[ORM\Column(name: 'requested_area', type: Types::STRING, length: 120, options: ['default' => ''])]
+    private string $requestedArea = '';
 
     #[ORM\Column(name: 'osm_username', type: Types::STRING, length: 64, nullable: true)]
     private ?string $osmUsername = null;
@@ -108,6 +120,16 @@ class CuratorApplication
     public function setRequestedRegionId(?int $id): void
     {
         $this->requestedRegionId = $id;
+    }
+
+    public function getRequestedArea(): string
+    {
+        return $this->requestedArea;
+    }
+
+    public function setRequestedArea(string $area): void
+    {
+        $this->requestedArea = $area;
     }
 
     public function getOsmUsername(): ?string

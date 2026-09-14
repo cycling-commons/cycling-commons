@@ -14,6 +14,7 @@ use App\Messaging\UserMessageKind;
 use App\Moderation\Entity\ModeratorArea;
 use App\Service\AdminActionLogger;
 use App\Service\UserAdminService;
+use App\World\CuratorScopes;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
@@ -37,6 +38,7 @@ final class CuratorApplicationService
         private readonly UserAdminService $users,
         private readonly AdminActionLogger $audit,
         private readonly MessageService $messages,
+        private readonly CuratorScopes $scopes,
     ) {
     }
 
@@ -51,6 +53,7 @@ final class CuratorApplicationService
         ?string $osmUsername,
         string $about,
         ?string $socialUrl = null,
+        string $requestedArea = '',
     ): CuratorApplication {
         $cc = strtoupper(trim($countryCode));
 
@@ -68,6 +71,37 @@ final class CuratorApplicationService
 
         if (null !== $requestedRegionId && $this->regionBelongsToCountry($requestedRegionId, $cc)) {
             $app->setRequestedRegionId($requestedRegionId);
+        }
+
+        // An area with no region row yet, and NOT free text.
+        //
+        // A curator's scope draws a line on the map, and two lines drawn from
+        // whatever somebody typed will sooner or later cross: one applicant
+        // asks for a province, another for a town inside it, and two curators
+        // hold the same ground with no way to say who decides (owner
+        // 2026-09-13). Every country is seeded at one operating level for that
+        // reason (the tessellation invariant, map-and-search.md §4.5a), and a
+        // scope that arrives by name has to respect it too.
+        //
+        // So the name must be one the reference data already holds, and what
+        // is stored is OUR spelling of it rather than the posted string: a
+        // match that then saves the applicant's capitalisation would put two
+        // spellings of one place on the desk. A name that matches nothing is
+        // refused rather than dropped, because silently widening somebody to
+        // the whole country is a scope they did not ask for.
+        $area = trim($requestedArea);
+        if ('' !== $area && null === $app->getRequestedRegionId()) {
+            $known = null;
+            foreach ($this->scopes->forCountry($cc) as $candidate) {
+                if (mb_strtolower($candidate) === mb_strtolower($area)) {
+                    $known = $candidate;
+                    break;
+                }
+            }
+            if (null === $known) {
+                throw new CuratorApplicationException('area_unknown', sprintf('"%s" is not an area we hold a boundary for in %s.', $area, $cc));
+            }
+            $app->setRequestedArea($known);
         }
 
         if (null !== $osmUsername && '' !== trim($osmUsername)) {
