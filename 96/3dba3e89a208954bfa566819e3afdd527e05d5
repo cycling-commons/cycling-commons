@@ -1,0 +1,53 @@
+web/translations/messages.es.yaml
+  s_e9b7d39367a2ea::t_a37d7217e1ab2a 3516
+  s_e9b7d39367a2ea::t_fb91fb60a6f4b2 3517-3520
+web/translations/messages.nl.yaml
+  s_e9b7d39367a2ea::t_a37d7217e1ab2a 3488
+  s_e9b7d39367a2ea::t_d31bb78fe3ce22 3489-3492
+docs/specs/contact-and-support.md
+  s_e9b7d39367a2ea::t_9a94cc41290510 680-688,691-697
+  s_e9b7d39367a2ea::t_1fdd46600d3fcb 698
+web/tests/Support/BugDeskNotesTest.php
+  s_e9b7d39367a2ea::t_d7ff5d097f3709 214-217
+web/src/Controller/BugReportController.php
+  s_e9b7d39367a2ea::t_c58ceda465c543 126-130,133,142,144-148
+web/src/Support/SupportRepository.php
+  s_e9b7d39367a2ea::t_d8a3d8ea480f0a 341-343,345
+  s_e9b7d39367a2ea::t_16f4493f560b2f 332,334-335,344,354,370
+  s_e9b7d39367a2ea::t_eb95b6a485e4d4 336-340,346-350,356,362-365,372,375-390
+web/translations/messages.fr.yaml
+  s_e9b7d39367a2ea::t_a37d7217e1ab2a 3481
+  s_e9b7d39367a2ea::t_dbdbe3fc205205 3482-3485
+web/tests/Support/BugReportTest.php
+  s_e9b7d39367a2ea::t_aa185ae2a2541f 468,470-475,477,486-516
+  s_e9b7d39367a2ea::t_b0eec6746a163a 467,469,476
+web/translations/messages.de.yaml
+  s_e9b7d39367a2ea::t_a37d7217e1ab2a 3489
+  s_e9b7d39367a2ea::t_38543c5c04f618 3490-3493
+web/translations/messages.en.yaml
+  s_e9b7d39367a2ea::t_a37d7217e1ab2a 3507
+  s_e9b7d39367a2ea::t_c580fcd70e1f9a 3508-3511
+web/templates/pages/known_issues.html.twig
+  s_e9b7d39367a2ea::t_2d4a6f78d16e9d 41-47,63-77,80,110-112
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "963dba3e89a208954bfa566819e3afdd527e05d5",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_e9b7d39367a2ea": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "768f0270-53eb-479e-8318-433176b4f785",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
