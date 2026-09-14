@@ -235,6 +235,25 @@
     return { count: spanning.count + same.count, stale: spanning.stale + same.stale };
   }
 
+  /* ---- Edit or Browse, remembered for the tab ----
+     Browse stays on across pages until the translator picks Edit or turns
+     the mode off (translations.md §4.1). sessionStorage, so a new tab starts
+     in Edit. Storage can be missing or throw (private windows, blocked site
+     data); then every page opens in Edit. */
+  var EDITING_KEY = 'cc.translate.editing';
+
+  function startsEditing(storage) {
+    try { return !storage || storage.getItem(EDITING_KEY) !== '0'; } catch (e) { return true; }
+  }
+
+  function rememberEditing(storage, on) {
+    try { if (storage) storage.setItem(EDITING_KEY, on ? '1' : '0'); } catch (e) { /* not remembered */ }
+  }
+
+  function forgetEditing(storage) {
+    try { if (storage) storage.removeItem(EDITING_KEY); } catch (e) { /* nothing to forget */ }
+  }
+
   /* ---- bar and drawer ----
      Everything below touches `document`, so it is wrapped in the same guard
      as the processing pass at the bottom: the Node test (translate-marks.
@@ -243,7 +262,10 @@
      before that guard is reached. */
   if (typeof document === 'undefined') {
     if (typeof module !== 'undefined' && module.exports) {
-      module.exports = { decode: decode, MARK_RE: MARK_RE, findOpenMark: findOpenMark, residualMarks: residualMarks };
+      module.exports = {
+        decode: decode, MARK_RE: MARK_RE, findOpenMark: findOpenMark, residualMarks: residualMarks,
+        startsEditing: startsEditing, rememberEditing: rememberEditing, forgetEditing: forgetEditing,
+      };
     }
     return;
   }
@@ -251,6 +273,8 @@
   var bar = document.getElementById('tr-bar');
   var drawer = document.getElementById('tr-drawer');
   var editing = true;
+  var tabStore = null;
+  try { tabStore = window.sessionStorage; } catch (e) { tabStore = null; }
 
   function setEditing(on) {
     editing = on;
@@ -322,9 +346,17 @@
   });
 
   if (bar) {
-    bar.querySelector('[data-tr-edit]').addEventListener('click', function () { setEditing(true); });
-    bar.querySelector('[data-tr-browse]').addEventListener('click', function () { setEditing(false); });
+    bar.querySelector('[data-tr-edit]').addEventListener('click', function () { setEditing(true); rememberEditing(tabStore, true); });
+    bar.querySelector('[data-tr-browse]').addEventListener('click', function () { setEditing(false); rememberEditing(tabStore, false); });
   }
+  /* Every "Stop translating" form, the bar's and the account menu's, posts on=0
+     to the same URL as the bar's own form. */
+  var modeUrl = bar && bar.querySelector('form') ? bar.querySelector('form').action : null;
+  document.addEventListener('submit', function (ev) {
+    var form = ev.target;
+    var on = form.querySelector && form.querySelector('input[name="on"]');
+    if (modeUrl && form.action === modeUrl && on && on.value === '0') forgetEditing(tabStore);
+  }, true);
   if (drawer) drawer.querySelector('.tr-drawer-close').addEventListener('click', closeDrawer);
 
   if (document.body) {
@@ -333,7 +365,7 @@
       bar.querySelector('[data-tr-count]').textContent = String(stats.count);
       bar.querySelector('[data-tr-stale]').textContent = String(stats.stale);
     }
-    setEditing(true);
+    setEditing(startsEditing(tabStore));
     new MutationObserver(function (records) {
       records.forEach(function (r) {
         for (var i = 0; i < r.addedNodes.length; i++) {

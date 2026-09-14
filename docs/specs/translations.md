@@ -535,7 +535,12 @@ of marked strings, the count of stale ones, an **Edit | Browse** switch, and
 **Off** (posts `on=0`). In *Edit*, a click or Enter on a marked string opens
 the drawer and the link or button under it does not fire; marked strings are
 focusable (`tabindex="0"`, `role="button"`). In *Browse*, links work and
-strings are only underlined. Fresh strings underline grey; stale ones amber.
+strings are only underlined. **Browse stays on from page to page** in the same
+tab until the translator picks Edit: the choice is kept in `sessionStorage`
+(`cc.translate.editing`), so a new tab starts in Edit, and either "Stop
+translating" form (the bar's or the account menu's) clears it, so turning the
+mode on again starts in Edit. Where storage is blocked, every page opens in
+Edit. `translate-browse-sticky.test.cjs` pins it. Fresh strings underline grey; stale ones amber.
 On `/en/` for a rider the bar is not rendered: the mode is inactive there,
 and `/translate` says why.
 
