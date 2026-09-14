@@ -150,9 +150,14 @@ sh: ## Open a shell in a container (default app; make sh c=pipeline)
 	@$(DOCKER_COMP) exec $(or $(c),app) sh
 
 ## -- 🗂️  Workspace -----------------------------------------------------------
-git-status: ## Show git status of this repo + all sibling repos in the workspace
+# The repos this workspace uses: this one, and every repo inside ../BikeCodersLife.
+# Relative, so no machine's home path lands in the repo; override on the command
+# line (make git-status GIT_STATUS_REPOS="./ ../Other/*/").
+GIT_STATUS_REPOS ?= ./ ../BikeCodersLife/*/
+
+git-status: ## Show git status of this repo + the BikeCodersLife repos
 	@echo "Checking git status for workspace repositories..."
-	@for repo in ../*/ ; do \
+	@for repo in $(GIT_STATUS_REPOS) ; do \
 		if [ -d "$$repo/.git" ]; then \
 			STATUS=$$(cd "$$repo" && git status --porcelain); \
 			UNPUSHED=$$(cd "$$repo" && git log @{u}..HEAD 2>/dev/null || echo ""); \
