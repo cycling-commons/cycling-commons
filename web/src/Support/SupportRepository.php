@@ -292,16 +292,22 @@ final readonly class SupportRepository
         ))->setParameter('q', $like);
     }
 
-    /** @return array<string, int> status value => count, for the filter chips */
-    public function bugCountsByStatus(): array
+    /**
+     * Status value => count, for the filter chips. Scoped by the same category
+     * and search as the list, so a chip's number is what clicking it shows.
+     *
+     * @return array<string, int>
+     */
+    public function bugCountsByStatus(?BugArea $area = null, ?string $query = null): array
     {
-        /** @var list<array{status: BugStatus, n: int|string}> $rows */
-        $rows = $this->em->createQueryBuilder()
+        $qb = $this->em->createQueryBuilder()
             ->select('b.status AS status, COUNT(b.id) AS n')
             ->from(BugReport::class, 'b')
-            ->groupBy('b.status')
-            ->getQuery()
-            ->getResult();
+            ->groupBy('b.status');
+        $this->filterBugs($qb, null, $area, $query);
+
+        /** @var list<array{status: BugStatus, n: int|string}> $rows */
+        $rows = $qb->getQuery()->getResult();
 
         $out = [];
         foreach (BugStatus::all() as $status) {

@@ -513,6 +513,25 @@ Reported text renders through `|bug_markdown` (§15), which escapes first and
 sanitises after, and never through `|rich`: the translations profile allows
 links and a class attribute, which a string a stranger typed must not have.
 
+### Filtering
+
+Two chip rows, each a labelled group (`role="group"`, named by its visible
+label): **Status** and **Category** (the report's area). Each row starts with
+an **All** chip, and the chosen chip carries `aria-current="true"`.
+
+- **The desk opens on New.** No `status` in the URL means New, for the reason
+  at the top of this section. `?status=all` is the explicit "every status", so
+  the default can be left on purpose.
+- **A chip keeps the other row's choice.** A status chip carries the category,
+  a category chip carries the status, and both carry the search and the order.
+  So Fixed, then The map, lists fixed map bugs. The category row's All chip
+  drops only the category.
+- **A status chip's number is what clicking it shows.**
+  `SupportRepository::bugCountsByStatus()` counts through the same filter as
+  the list, scoped by the chosen category and search; All is their sum.
+
+`BugDeskFiltersTest` pins all three.
+
 ### The reference, and finding one by it
 
 *(Added 2026-08-28.)*

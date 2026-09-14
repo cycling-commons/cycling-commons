@@ -17,7 +17,14 @@
 {# No nonce: style-src is 'self' + 'unsafe-inline', so one does nothing here
    except tie the page to a per-request value (docs/specs/page-caching.md §3.2). #}
 <style>
-  .chips{display:flex;gap:.4rem;flex-wrap:wrap;margin:1rem 0 .6rem}
+  /* Label beside its chips, one fixed column so both rows start at the same x;
+     stacked above them on a phone. */
+  .chiprow{display:grid;grid-template-columns:6.5rem 1fr;gap:.2rem .8rem;align-items:start;margin:.6rem 0}
+  .bugfind-hint + .chiprow{margin-top:1rem}
+  .chiplabel{font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;
+    color:#595c4d;padding-top:.45rem}
+  @media(max-width:480px){.chiprow{grid-template-columns:1fr}.chiplabel{padding-top:0}}
+  .chips{display:flex;gap:.4rem;flex-wrap:wrap;margin:0}
   .chip{font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;
     padding:.35rem .6rem;border-radius:4px;background:var(--paper-deep);color:#4a4d40;text-decoration:none}
   .chip.on{background:var(--ink);color:var(--paper)}
@@ -109,20 +116,40 @@
   <p class="bugfind-hint" id="bugq-hint">{{ 'support.bugs.search_hint'|trans }}</p>
 
 
-  <div class="chips">
-    {% for st in statuses %}
-      <a class="chip {{ filter_status == st.value ? 'on' : '' }}"
-         href="{{ path('moderate_bugs', {status: st.value, q: query ?: null, sort: sort != 'newest' ? sort : null}) }}">
-        {{ ('support.bug.status.' ~ st.value)|trans }}<span class="n">{{ counts[st.value] ?? 0 }}</span>
+  {# Two labelled rows. A chip in one row keeps what is picked in the other,
+     so "Fixed" then "The map" means fixed map bugs. Each row has an All chip:
+     status=all is how the New default is left on purpose. #}
+  {% set keep = {q: query ?: null, sort: sort != 'newest' ? sort : null} %}
+  <div class="chiprow">
+    <span class="chiplabel" id="bugs-f-status">{{ 'support.bugs.filter_status'|trans }}</span>
+    <div class="chips" data-filter="status" role="group" aria-labelledby="bugs-f-status">
+      <a class="chip {{ filter_status == 'all' ? 'on' : '' }}" data-value="all"
+         {% if filter_status == 'all' %}aria-current="true"{% endif %}
+         href="{{ path('moderate_bugs', {status: 'all', area: filter_area}|merge(keep)) }}">
+        {{ 'support.bugs.filter_all'|trans }}<span class="n">{{ count_all }}</span>
       </a>
-    {% endfor %}
+      {% for st in statuses %}
+        <a class="chip {{ filter_status == st.value ? 'on' : '' }}" data-value="{{ st.value }}"
+           {% if filter_status == st.value %}aria-current="true"{% endif %}
+           href="{{ path('moderate_bugs', {status: st.value, area: filter_area}|merge(keep)) }}">
+          {{ ('support.bug.status.' ~ st.value)|trans }}<span class="n">{{ counts[st.value] ?? 0 }}</span>
+        </a>
+      {% endfor %}
+    </div>
   </div>
 
-  <div class="chips areas">
-    {% for ar in areas %}
-      <a class="chip {{ filter_area == ar.value ? 'on' : '' }}"
-         href="{{ path('moderate_bugs', {area: ar.value, q: query ?: null, sort: sort != 'newest' ? sort : null}) }}">{{ ('support.bug.area.' ~ ar.value)|trans }}</a>
-    {% endfor %}
+  <div class="chiprow">
+    <span class="chiplabel" id="bugs-f-area">{{ 'support.bugs.filter_area'|trans }}</span>
+    <div class="chips areas" data-filter="area" role="group" aria-labelledby="bugs-f-area">
+      <a class="chip {{ filter_area is null ? 'on' : '' }}" data-value="all"
+         {% if filter_area is null %}aria-current="true"{% endif %}
+         href="{{ path('moderate_bugs', {status: filter_status}|merge(keep)) }}">{{ 'support.bugs.filter_all'|trans }}</a>
+      {% for ar in areas %}
+        <a class="chip {{ filter_area == ar.value ? 'on' : '' }}" data-value="{{ ar.value }}"
+           {% if filter_area == ar.value %}aria-current="true"{% endif %}
+           href="{{ path('moderate_bugs', {status: filter_status, area: ar.value}|merge(keep)) }}">{{ ('support.bug.area.' ~ ar.value)|trans }}</a>
+      {% endfor %}
+    </div>
   </div>
 
   {# The list's own header: what is being shown, and how it is ordered.

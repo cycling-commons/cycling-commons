@@ -57,6 +57,8 @@ final class ModerateBugsController extends AbstractController
     private const int PER_PAGE = 25;
     /** Long enough for an error message, short enough that a URL is not a payload. */
     private const int MAX_QUERY = 120;
+    /** The status chip that shows every status. */
+    private const string ALL = 'all';
 
     public function __construct(
         private readonly EntityManagerInterface $em,
@@ -70,7 +72,10 @@ final class ModerateBugsController extends AbstractController
     #[Route('/moderate/bugs', name: 'moderate_bugs', methods: ['GET'])]
     public function index(Request $request): Response
     {
-        $status = BugStatus::tryFrom((string) $request->query->get('status', ''));
+        $statusParam = (string) $request->query->get('status', '');
+        $status = BugStatus::tryFrom($statusParam);
+        // `all` is the explicit "every status", so the New default can be left on purpose.
+        $allStatuses = self::ALL === $statusParam;
         $area = BugArea::tryFrom((string) $request->query->get('area', ''));
         $query = trim((string) $request->query->get('q', ''));
         $query = '' !== $query ? mb_substr($query, 0, self::MAX_QUERY) : '';
@@ -100,7 +105,7 @@ final class ModerateBugsController extends AbstractController
             }
         }
 
-        $showing = !$searching && null === $status && null === $area ? BugStatus::New : $status;
+        $showing = !$allStatuses && !$searching && null === $status && null === $area ? BugStatus::New : $status;
 
         $pager = Pager::of(
             $request->query->getInt('page', 1),
@@ -108,16 +113,19 @@ final class ModerateBugsController extends AbstractController
             self::PER_PAGE,
         );
 
+        $counts = $this->repository->bugCountsByStatus($area, $query);
+
         return $this->render('moderate/bugs.html.twig', [
             'page_title' => 'support.bugs.title',
             'page_description' => 'support.bugs.title',
             'nav_active' => '',
             'active' => 'moderate_bugs',
             'reports' => $this->repository->bugs($showing, $area, $query, $pager['perPage'], $pager['offset'], $sort),
-            'counts' => $this->repository->bugCountsByStatus(),
+            'counts' => $counts,
+            'count_all' => array_sum($counts),
             'statuses' => BugStatus::all(),
             'areas' => BugArea::all(),
-            'filter_status' => $showing?->value,
+            'filter_status' => $showing?->value ?? self::ALL,
             'filter_area' => $area?->value,
             'query' => $query,
             'sorts' => BugSort::all(),
