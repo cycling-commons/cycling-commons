@@ -960,7 +960,9 @@
   .cc-d-rec{list-style:none;margin:1.1rem 0 0;padding:0}
   .cc-d-rec li{display:flex;gap:.8rem;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid rgb(var(--chrome-fg) / .12);font-size:.9rem}
   .cc-d-rec .k{color:rgb(var(--chrome-fg) / .72);font-family:var(--mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;flex:none;max-width:46%}
-  .cc-d-rec .v{text-align:right;font-weight:400;color:rgb(var(--chrome-fg) / .78);line-height:1.5}
+  /* min-width:0 lets the value shrink in the flex row, and a long unbroken
+     web address wraps anywhere instead of running off the drawer (owner 2026-09-15). */
+  .cc-d-rec .v{text-align:right;font-weight:400;color:rgb(var(--chrome-fg) / .78);line-height:1.5;min-width:0;overflow-wrap:anywhere}
   /* A URL value that IS the link: the domain underlined, no separate chip. */
   .cc-d-a{color:inherit;text-decoration:underline;text-underline-offset:2px}
   .cc-d-a:hover{color:var(--chrome-fg-solid)}
@@ -1260,9 +1262,11 @@
   .cc-d-photo{margin:1rem 0 0}
   /* aspect-ratio reserves the box BEFORE the Wikimedia thumb lands, so the
      records/actions below stop jumping when it does (CLS — frontend review
-     2026-08-09 #7). 4/3 approximates the 520w thumbs; object-fit crops the
-     odd portrait instead of stretching it. */
+     2026-08-09 #7). 4/3 approximates the 520w thumbs, and a wide photo fills
+     it. A tall photo (`is-tall`, set on load by drawer.js) is shown whole on a
+     quiet ground instead, so a statue keeps its head. */
   .cc-d-photo>img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:8px;display:block;cursor:zoom-in}
+  .cc-d-photo>img.is-tall{object-fit:contain;background:rgb(var(--chrome-fg) / .06)}
   .cc-d-photo figcaption{font-size:.7rem;color:rgb(var(--chrome-fg) / .68);margin-top:.4rem;font-family:var(--mono);letter-spacing:.02em}
   .cc-d-photo figcaption a{color:rgb(var(--chrome-fg) / .72);text-decoration:underline}
   /* The wait for a cached Wikimedia Commons photo (coverage-provider.md §7).

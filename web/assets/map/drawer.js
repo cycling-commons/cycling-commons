@@ -416,6 +416,19 @@ function waitingPhoto(ref){
     <span role="status">${escPend(D.photoLoading||'Loading image…')}</span>
   </div>`;
 }
+/* A photo taller than it is wide is shown whole in the 4:3 frame rather than
+   cropped to fill it: a statue or a tower loses exactly the part that makes it
+   (owner 2026-09-15, Jan Pieterszoon Coen). Decided on load, because the size
+   is only known then, and again whenever a thumbnail swaps the source. */
+export function isTallPhoto(width, height){
+  return width > 0 && height > width;
+}
+document.addEventListener('load', (e) => {
+  const img = e.target;
+  if(!(img instanceof HTMLImageElement) || !img.parentElement || !img.parentElement.classList.contains('cc-d-photo')) return;
+  img.classList.toggle('is-tall', isTallPhoto(img.naturalWidth, img.naturalHeight));
+}, true);
+
 /* The same <figure> the rider photos use, so a cached Commons photo and a
    rider's upload look like one thing. photoCap already renders credit, licence
    and the Commons link. */

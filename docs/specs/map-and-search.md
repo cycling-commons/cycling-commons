@@ -1649,10 +1649,14 @@ Header: type chip (letter + localized layer label, layer colour), feature name,
 "▲ Best of" badge when `f.cur`. Body: photo (main image + thumbnail
 strip, opening a slideshow lightbox with ‹ › buttons and ←/→ keys, per-photo
 credit linking licence deed + source + author, N/M counter — media rules in
-[edit-items/README.md](edit-items/README.md)); or, when the item has a DB id
+[edit-items/README.md](edit-items/README.md)). The main image sits in a 4:3
+frame: a wide photo fills it, and a photo taller than it is wide (`is-tall`,
+set by `drawer.js` once the image has loaded) is shown whole on a quiet ground
+instead of being cropped, so a statue keeps its head (owner 2026-09-15); or, when the item has a DB id
 and no photo, an **add-photo CTA** deep-linking the improve wizard; description;
 difficulty scale; elevation profile (static SVG, §13.2 upgrades it); gradient
-strip; the record rows (§6.2) with per-row method tags where present; freshness
+strip; the record rows (§6.2) with per-row method tags where present, a long
+unbroken value such as a web address wrapping inside the drawer; freshness
 block (state + last-confirmed) for safety/dynamic items; uploader line
 (public profile link or "shared anonymously"); the **Source line** — the single
 provenance surface, linkifying OpenStreetMap to the object's coordinate query
