@@ -11,7 +11,7 @@ import { updateCounts, applyStaysAccessFilter } from './render.js';
 import { openDrawer, renderDrawerBody, osmDrawer, waterDrawer, revealPinAt } from './drawer.js';
 import { isPicking } from './picking.js';
 import { osmLayers } from './osm-pools.js';
-import { viewDirection, OSM_REF } from './osm-tags.js';
+import { viewDirection, OSM_REF, bikesOnBoard, tileTypeLabel, coverageSourceLayers } from './osm-tags.js';
 
 // Coverage tiles (docs/specs/coverage-provider.md §6). [rail key, lowercase letter]
 // must stay in step with catalog.js LETTER_KEY (covKeysTest.cjs).
@@ -27,7 +27,7 @@ export const COV_SRC={
   history:'OpenStreetMap (historic=castle/fort/ruins/monument/memorial/…)',
   stays:'OpenStreetMap (tourism=camp_site/hostel/guest_house/chalet/hotel/…)',
   shelter:'OpenStreetMap (shelter_type=picnic/weather/field/…)',
-  transit:'OpenStreetMap (railway=station / railway=halt)',
+  transit:'OpenStreetMap (railway=station / railway=halt / amenity=ferry_terminal / route=ferry)',
   toilets:'OpenStreetMap (amenity=toilets)'
 };
 // Curated-ref dedupe (docs/specs/coverage-provider.md §6).
@@ -245,6 +245,10 @@ export function covProps(key, tp, d){
       if(tags.height!=null) p.drop=tags.height;
       if(tags.direction!=null) p.viewDir=viewDirection(tags.direction);
     }
+    if(key==='transit'){
+      const bikes=bikesOnBoard(tags);
+      if(bikes) p.osmBikes=bikes;
+    }
     if(key==='water' && tags.drinking_water==='no') p.osmPotable=false;   // hydrated tag wins over tile boolean
     if(d.curated){
       if(d.curated.itemId!=null) p.id=d.curated.itemId;
@@ -306,8 +310,19 @@ export function openCoverageByRef(ref, letter, ll, name, itemId){
    the ?ref= deep link, which differ only in how they learn the letter and ll. */
 function paintCoverageDetail(key, ref, ll, name, d){
   const layer=layerByKey[key], lo={lng:ll[1], lat:ll[0]};
-  const p=covProps(key, {ref, n:(d&&d.name)||name, kind:d&&d.kind}, d);
-  openDrawer(layer, key==='water' ? waterDrawer(p, lo) : osmDrawer(layer, p, lo, COV_SRC[key]));
+  const tp={ref, n:(d&&d.name)||name, kind:d&&d.kind};
+  const feat=pp=>key==='water' ? waterDrawer(pp, lo) : osmDrawer(layer, pp, lo, COV_SRC[key]);
+  const p=covProps(key, tp, d);
+  openDrawer(layer, feat(p));
+  /* No tile feature opened this drawer, so it has no `t` and the Type row fell
+     back to the layer name ("Getting there" for a ferry). Once the tiles at the
+     point are in, read the label off them and name the type the way a click on
+     the icon does. The drawer that asked (`_covReq`, bumped by every drawer
+     render) is the only one it may touch. */
+  readTileType(key, ref, ll, _covReq, t=>{
+    if(!document.getElementById('drawer').classList.contains('open')) return;
+    renderDrawerBody(layer, feat(covProps(key, Object.assign({}, tp, {t}), d)));
+  });
   // Layer off or Curated-hidden: one temporary pin rather than flipping map mode.
   const drawn = COVERAGE_CCS.some(cc=>{
     const id = cc ? key+'-'+cc+'-cov' : key+'-cov';
@@ -318,6 +333,48 @@ function paintCoverageDetail(key, ref, ll, name, d){
   if(!drawn) revealPinAt(layer, ll);
   else showSelectedCoverageIcon(key, Object.assign({kind:d&&d.kind}, p), lo);
 }
+/* The tile's `t` for one ref, handed to `onLabel` once (tileTypeLabel,
+   osm-tags.js). Tiles are only fetched for a source a visible layer uses, and a
+   point opened by ref often sits on a layer that is off or a mode that hides
+   coverage, so a probe layer per candidate source-layer (a zero-radius circle,
+   filtered to the ref) keeps the tiles at the point coming in; it draws
+   nothing and goes when the lookup ends. The lookup waits for the source's own
+   data events, never a timer, and ends on a hit, when a newer drawer render
+   supersedes request `req`, or when the map settles with no hit. */
+function readTileType(key, ref, ll, req, onLabel){
+  if(!COVERAGE_ON || !map.getSource('coverage') || !OSM_REF.test(String(ref ?? ''))) return;
+  const letter=(COVERAGE_KEYS.find(([k])=>k===key)||[])[1]; if(!letter) return;
+  const cc=window.CCScope && window.CCScope.countryAt ? window.CCScope.countryAt(+ll[0], +ll[1]) : null;
+  const sourceLayers=coverageSourceLayers(letter, COVERAGE_CCS, cc);
+  const refFilter=['==',['get','ref'],ref];
+  const look=()=>{
+    for(const sourceLayer of sourceLayers){
+      const t=tileTypeLabel(map.querySourceFeatures('coverage', {sourceLayer, filter:refFilter}), ref);
+      if(t) return t;
+    }
+    return null;
+  };
+  const probeIds=sourceLayers.map(sl=>'cov-ref-probe-'+sl);
+  const end=()=>{
+    map.off('sourcedata', onData); map.off('idle', onIdle);
+    probeIds.forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
+  };
+  const attempt=()=>{
+    if(req!==_covReq){ end(); return true; }
+    const t=look(); if(!t) return false;
+    end(); onLabel(t); return true;
+  };
+  const onData=e=>{ if(e.sourceId==='coverage') attempt(); };
+  const onIdle=()=>{ if(!attempt()) end(); };
+  if(attempt()) return;
+  probeIds.forEach((id,i)=>{
+    if(!map.getLayer(id)) map.addLayer({id, type:'circle', source:'coverage', 'source-layer':sourceLayers[i],
+      filter:refFilter, paint:{'circle-radius':0, 'circle-opacity':0}});
+  });
+  map.on('sourcedata', onData);
+  map.on('idle', onIdle);
+}
+
 /* ?ref=node/462149319 deep link (docs/specs/map-and-search.md §8). Unlike
    ?feature=<name> this names one POI: thousands of scenic views are called
    "Viewpoint" and none of them could be shared. The detail endpoint is the only

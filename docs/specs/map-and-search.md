@@ -298,6 +298,41 @@ by default and a rider asks for one section at a time.
   rather than claiming a zero it has not verified. **Show all** reads the
   markup's own `.f-match` / `.f-optin` declaration, so a filter group added
   later resets without anybody editing the reset.
+- **The bottom-left corner is the map's own controls** (`initMapControls`,
+  map-init.js), bottom to top: zoom in and out, **Locate me**, and the live zoom
+  badge. The same controls at every screen width. The corner sits above the
+  attribution (`.maplibregl-ctrl-bottom-left{z-index:3}`, map.css): on a narrow
+  map the open attribution spans the whole bottom edge and used to cover the
+  buttons until the rider folded it.
+- **Locate me** (owner decision 2026-09-15) is MapLibre's `GeolocateControl`
+  with `trackUserLocation:false`. One tap asks the browser for permission the
+  first time, reads the position once, flies there (zoom capped at 15) and
+  leaves a blue dot with its accuracy circle; there is no continuous tracking.
+  **The position never leaves the browser**: it goes from
+  `navigator.geolocation` to the camera and the dot, and no request carries it
+  (privacy-notice.md section 2 records the claim and the copy that makes it).
+  The site allows geolocation for its own origin only
+  (`Permissions-Policy: geolocation=(self)`, security-architecture.md §2.1).
+  - **Where the dot lands.** With no feature drawer open, the middle of the
+    map. With one open (and not folded), the same free part a clicked spot uses
+    (`pinOffset()`, §6.1): left of the desktop drawer, or the middle of the half
+    above the phone sheet. `locateOffset()` in util.js decides; the control
+    reads it through a `padding` getter on `fitBoundsOptions`, because MapLibre
+    copies those options at the moment it moves the camera. Padding, not
+    `offset`: MapLibre's `fitBounds` applies an offset twice (once computing the
+    camera, again in the `flyTo` it hands that camera to) and padding once
+    (`offsetAsPadding()`).
+  - **A lookup that does not work is said in words**, as a map toast
+    (`locateErrorMessage()`): a refused permission (browser code 1, including a
+    site blocked in settings) says the site is blocked and to allow it in the
+    browser settings, then reload (`map.locate_denied`); an unavailable
+    position or a timeout says it could not be found (`map.locate_failed`).
+    After a refusal MapLibre greys the button with the title "Location not
+    available".
+  - **Labels** come through the map's `locale` option (`CC_I18N.mapUi`, set in
+    catalog-load.js), under MapLibre's own keys:
+    `GeolocateControl.FindMyLocation` (`map.locate_me`, "Show my location") and
+    `GeolocateControl.LocationNotAvailable` (`map.locate_unavailable`).
 - **The top-right corner is two glass icon buttons:** base map (a flyout with
   Map / Satellite; the flyout markup is a **sibling** of the button, never a
   child, because a nested `<button>` is un-nested by the browser) and
@@ -425,6 +460,16 @@ by default and a rider asks for one section at a time.
   and a mode meaning "someone checked this" cannot carry the one layer where
   nobody has. Best of keeps showing utility coverage dimmed — finding water was
   never an editorial judgement.
+- **A lifted mode is never the rider's mode.** A deep link (§8) and a ride-check
+  row (§9) may lift the mode to show one place, always `persist:false`. A lift
+  from a loaded ride is also undone: Clear puts back the mode from before the
+  ride's first lift, unless the rider picked a mode themselves while the ride was
+  loaded, in which case their pick stays (`createRideModeMemo()`,
+  ride-places.js).
+- **The subtitle under the scope name follows the mode** (`updateSubtitle` in
+  `panels.js`): Best of reads "Best of · season · bikes", Confirmed reads
+  "Confirmed · places somebody checked" (`map.sub_confirmed`), Everything reads
+  "Everything · full catalog". A transient lift (§8, §9) updates it too.
 - **It is called "Best of", not "Curated best-of"** (owner 2026-08-12): Confirmed
   is curated too — a curator verifying a place *is* curation — so putting the
   word on one rung claimed a difference that is not there.
@@ -754,6 +799,19 @@ four returned once the reason they looked broken was fixed:
   one-file edit rather than a way to empty a layer.
 - The accessibility filter applies to the stays dot layer (`setFilter`), the
   clustered confirmed pins, and the legend counts alike.
+- **Shown anyway: one place a ride row opened** (owner decision 2026-09-15).
+  The chips are the rider's own and a ride row never changes them, but a row
+  that opens a place the chips hide must not ring an empty spot. That one place
+  is exempt while its drawer is up: `createShownAnyway()` (filters.js) holds at
+  most one `letter:id` (`placeKey()`), and every renderer that applies a chip
+  reads it: `featureVisible()` through `chipsPass()` (the preference prefilter
+  on routes, the three climb facets) and the stays pool pin through
+  `poolChipsPass()` (accessibility, osm-pools.js). Same drawing path as any
+  other pin, no extra marker. Released when the drawer opens a different place
+  or closes (`openDrawer` / `closeDrawer`), when the ride summary comes back, and
+  on Clear. The exempted place is not counted in the pill's tally while it is
+  drawn. Coverage tile icons need no exemption: a coverage point opened by ref
+  keeps its icon through the `cov-sel` overlay, which no chip filters.
 - **Road surface (A) is an OVERLAY, not a data layer (2026-08-31).** It had a
   row in Data layers *and* a Surfaces switch in Map overlays, one word apart, in
   two different groups. Worse than confusing: they were not independent. The OSM
@@ -1552,7 +1610,10 @@ canvas and makes MapLibre re-measure on every toggle.
   (`preventScroll`, not onto the close button).
 - **Selection halo + centring:** opening a point feature drops a pulsing halo
   at the feature's exact coordinates and calls `flyToPin()` — centre + zoom to
-  ≥ 14 with a `[-150, 0]` offset so the desktop drawer doesn't cover the pin.
+  ≥ 14 with an offset so the drawer doesn't cover the pin (`pinOffset()` in
+  `util.js`): `[-150, 0]` beside the desktop drawer, and on a phone (the 820px
+  layout flip) straight up into the middle of the half above the bottom sheet,
+  which opens at half the screen.
   The halo offset is anchor-aware: `[0,-16]` for bottom-anchored teardrop pins
   (confirmed/curated/pending — the halo rings the icon, not the ground point;
   climbs use the foot vertex), `[0,0]` for centred canvas dots and lines.
@@ -2141,7 +2202,9 @@ is the pending permalink contract):
 | `?pending=<id>` | curator deep link from the /moderate queue: activates the ⚑ layer, opens the submission drawer |
 | `?route=<id>` | opens that R route **selected** (curator Routes desk link): lifts the view mode like `?item=` (above), then highlights + shows the curator corrections overlay. The reveal pin (§12) stays as the fallback when the target is still not drawn. |
 
-The same lift applies to a ride-check row (§9): opening a listed place the rider's mode hides lifts to the lowest rung that draws it, exactly as `?item=` does.
+The same lift applies to a ride-check row (§9), commons places and followed routes alike: opening a listed place the rider's mode hides lifts to the lowest rung that draws it, exactly as `?item=` does. Clear undoes a ride's lift (§4.2).
+
+**A coverage point opened by ref names its type like a click does.** `?ref=`, a coverage search hit and a ride-check coverage row open the drawer from the detail response, which carries tags but not the tile's `t` label, so the Type row fell back to the layer name ("Getting there" for the Enkhuizen - Medemblik ferry, owner-reported 2026-09-15). `paintCoverageDetail()` (coverage.js) then reads `t` for that `ref` out of the coverage tiles (`readTileType()`, `tileTypeLabel()` in osm-tags.js) and re-renders the drawer body with it: "Ferry", "Train station". Tiles are only fetched for a source a visible layer uses, and the point's layer is often off or hidden by the mode, so the lookup adds a zero-radius, filtered circle layer per candidate source-layer (the point's country and `zz`, `coverageSourceLayers()`) until it ends. It waits for the source's `sourcedata` events, never a timer, and ends on a hit, when a newer drawer render supersedes it, or when the map goes idle with no hit (the rider moved on before the tile arrived; the drawer keeps the layer name).
 
 ### 8.1 "Add a climb here": the map is a starting point, not only a reader
 
@@ -2264,12 +2327,21 @@ requirement).
     `cov-sel` overlay keeps the icon drawn at every zoom. There is no ride
     overlay of icons: in a mode that hides coverage the rows are a list until
     one is opened.
-  - Chip filters other than the view mode are not lifted (a stays row hidden by
-    the accessibility chip rings its spot with no pin under it).
+  - **A place the rider's own filter chips hide is shown anyway** (owner
+    decision 2026-09-15): that one place, drawn by its normal renderer, for as
+    long as its drawer is up, with the toast "Shown anyway · your filter hides
+    this place" (`d_toast_shown_anyway`). The chips do not change. When the mode
+    lifts too, one toast carries both reasons ("Shown in Confirmed · Best of
+    hides this place · your filter hides it too", `d_toast_filter_too`). The
+    rule and its release are in §4.3 (`openListed()` in ride-check.js,
+    `showPlaceAnyway()` in render.js). Followed-route rows open the same way.
   - In the drawer, coverage is a separate section under its own heading with a
     provenance note, so uncurated OSM never reads as a verified Commons pick.
   - **Clear** removes the track, releases the listed set (the pools cluster
-    every place again) and restores the rider's scope.
+    every place again) and the place shown anyway, and restores the rider's
+    view mode and scope. The mode goes back to the one from before the ride's
+    first lift; a mode the rider picked while the ride was loaded stays
+    (`createRideModeMemo()`, §4.2). Neither restore is persisted.
 - **The ride sets the scope while it is loaded** (owner 2026-08-23) —
   `check()` also answers **`regions`**: every *operational* region the track
   intersects (`RideCheckService::crossedRegions()`, `OperationalRegions`
@@ -2394,8 +2466,9 @@ the heatmap back is uncommenting two blocks and nothing else.
   decision; §4.3's chip groups came back the same day, the planner did not). It was openly faked: distance chips
   picked the nearest sample loop by km, drew it, and opened a drawer carrying
   the warning "⚠ Faked — the real planner stitches from the heatmap" — honest,
-  but a control that looks like a planner and is not one. The real planner and
-  geolocation remain deferred.
+  but a control that looks like a planner and is not one. The real planner, and
+  starting it from the rider's position, remain deferred; Locate me (§4.0) only
+  centres the map.
 - **The planner's code was deleted on 2026-08-31.** For four weeks after the
   control went, `planner.js` was still imported, still called, still
   `modulepreload`ed on every map view, and still shipped ten translated strings

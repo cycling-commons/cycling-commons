@@ -11,15 +11,15 @@ import { uKm, uM, uElev } from './units.js';
 import { layerGlyph } from './icons.js';
 import { openCoverageByRef, invalidateCoverageDrawer } from './coverage.js';
 import { itemIndex } from './item-index.js';
-import { CATALOG, layerByKey, LETTER_KEY, active } from './catalog.js';
+import { CATALOG, layerByKey, LETTER_KEY, active, mode } from './catalog.js';
 import { sheet } from './sheet.js';
-import { closeDrawer, highlightAt, clearHighlight, setDrawerReturn } from './drawer.js';
+import { closeDrawer, highlightAt, clearHighlight, setDrawerReturn, mapToast } from './drawer.js';
 import { openRouteById, bumpPlaceReq } from './places.js';
 import { rideScopeFor, scopeKey } from './ride-scope.js';
-import { listedPlaceKeys, ringOffset } from './ride-places.js';
+import { listedPlaceKeys, ringOffset, createRideModeMemo } from './ride-places.js';
 import { setListedPlaces, poolPinDrawn } from './osm-pools.js';
-import { liftModeFor } from './panels.js';
-import { render, featureVisible } from './render.js';
+import { liftModeFor, applyMode } from './panels.js';
+import { render, featureVisible, chipsPass, staysAccessible, showPlaceAnyway, releaseShownAnyway } from './render.js';
 
 export function initRideCheck(){
     if(!window.CC_RIDECHECK) return;                       // anonymous: no control rendered
@@ -66,6 +66,31 @@ export function initRideCheck(){
       if(prev && window.CCScope) window.CCScope.set(prev,{persist:false});
       else repaintScopeHeader();
     }
+    /* The view mode works the same way (docs/specs/map-and-search.md §9): a row
+       that lifts it is remembered, and Clear puts the rider's mode back. A mode
+       the rider picks while the ride is loaded is theirs and stays. Never
+       persisted either way (liftModeFor and the restore both pass persist:false). */
+    const rideMode=createRideModeMemo();
+    document.querySelectorAll('#mode button').forEach(b=>b.addEventListener('click',()=>rideMode.riderChose()));
+    function restoreMode(){
+      const back=rideMode.restore(mode());
+      if(back) applyMode(back,{persist:false});
+    }
+    /* Open one listed place so the map really draws it. The view mode lifts
+       with the deep-link rule; a place the rider's own filter chips hide is
+       shown anyway, that one place only, until the drawer moves on or the ride
+       is cleared (showPlaceAnyway in render.js; the chips never change). One
+       toast names every reason the place was hidden. */
+    function openListed(layer, f, go){
+      // Stays are drawn by their pool, whose one chip is accessibility (osm-pools.js).
+      const chipHidden = layer.key==='stays' ? !staysAccessible(f) : !chipsPass(layer, f);
+      if(chipHidden) showPlaceAnyway(layer.letter, f.id);
+      const from=mode();
+      const lifted=liftModeFor(layer, f, chipHidden ? {also:D.toastFilterToo||'your filter hides it too'} : undefined);
+      if(lifted) rideMode.lifted(from, mode());
+      else if(chipHidden) mapToast(D.toastShownAnyway||'Shown anyway · your filter hides this place', {center:true});
+      go();
+    }
     function repaintScopeHeader(){
       if(window.CCScopeHeader) window.CCScopeHeader.paint(window.CC_I18N||{});
     }
@@ -94,6 +119,8 @@ export function initRideCheck(){
       clearOverlay();
       _last=null; _file=null; say('');
       setDrawerReturn(null);
+      releaseShownAnyway(null, null);
+      restoreMode();
       restoreScope();
       if(rideDrawerShowing()) closeDrawer();
     }
@@ -140,7 +167,7 @@ export function initRideCheck(){
       const kColor=(layerByKey.experience||{}).color||'#FF5A1F';
       let html=`<span class="cc-d-type" style="--c:#3A3A33;color:#fff">➜ ${D.rideCheck||'Ride check'}</span>
        <div class="cc-d-name">${D.alongRide||'Along your ride'}</div>
-       <div class="cc-city-info">${uKm(d.distanceKm)}${asc} · ${tpl(D.rideMeta||'within {r} of the track — indication only, nothing stored.', {r:radius})}</div>
+       <div class="cc-city-info">${uKm(d.distanceKm)}${asc} · ${tpl(D.rideMeta||'within {r} of the track', {r:radius})}</div>
        <div class="cc-ride-actions"><button class="cc-ride-btn" id="rcClearBtn" type="button">✕ ${D.clearRide||'Clear ride'}</button></div>`;
       if(d.routes.length){
         html+=`<h4 class="cc-near-h">${D.rideFollows||'Your ride follows'}</h4><ul class="cc-near-list">`
@@ -173,21 +200,26 @@ export function initRideCheck(){
       }
       const body=document.getElementById('drawerBody');
       invalidateCoverageDrawer(); bumpPlaceReq();   // supersede in-flight coverage detail + town nearby
+      releaseShownAnyway(null, null);               // back on the summary: the place shown anyway leaves the map
       body.innerHTML=html;
       document.getElementById('rcClearBtn').onclick=clearRideCheck;
       const groupsByLetter=Object.fromEntries(d.groups.map(g=>[g.letter,g]));
       // One index pass, not one .find() per row.
       const idxByKey=new Map(itemIndex().map(x=>[x.letter+':'+x.id, x]));
-      body.querySelectorAll('[data-rc-route]').forEach(b=>{ b.onclick=()=>openRouteById(b.dataset.rcRoute); });
+      body.querySelectorAll('[data-rc-route]').forEach(b=>{ b.onclick=()=>{
+        const layer=layerByKey.experience, f=layer && layer.features.find(x=>String(x.id)===String(b.dataset.rcRoute));
+        if(layer && f) openListed(layer, f, ()=>openRouteById(b.dataset.rcRoute));
+        else openRouteById(b.dataset.rcRoute);
+      }; });
       body.querySelectorAll('[data-rc-g]').forEach(b=>{
         const it=(groupsByLetter[b.dataset.rcG]||{items:[]}).items[+b.dataset.rcI]; if(!it) return;
         const entry=idxByKey.get(b.dataset.rcG+':'+it.id);
         /* A place the view mode hides lifts the mode with the deep-link rule
-           (docs/specs/map-and-search.md §8), to the lowest rung that draws it. */
+           (docs/specs/map-and-search.md §8), to the lowest rung that draws it;
+           one the chips hide is shown anyway (openListed). */
         b.onclick=()=>{
           if(!entry){ flyToPin([it.ll[1],it.ll[0]]); highlightAt(it.ll); return; }
-          liftModeFor(entry.layer, entry.modeF);
-          entry.go();
+          openListed(entry.layer, entry.modeF, ()=>entry.go());
         };
         b.onmouseenter=()=>highlightAt((entry && entry.ll) || it.ll, ringOffset(pinDrawn(entry), entry && entry.hlOff));
         b.onmouseleave=clearHighlight;
@@ -205,7 +237,8 @@ export function initRideCheck(){
           const k=LETTER_KEY[b.dataset.rcC], layer=k && layerByKey[k];
           if(!it.ref || !layer){ flyToPin([it.ll[1],it.ll[0]]); highlightAt(it.ll); return; }
           showLayer(k);
-          liftModeFor(layer, {});
+          const from=mode();
+          if(liftModeFor(layer, {})) rideMode.lifted(from, mode());
           openCoverageByRef(it.ref, b.dataset.rcC, it.ll, it.name);
         };
         b.onmouseenter=()=>highlightAt(it.ll);

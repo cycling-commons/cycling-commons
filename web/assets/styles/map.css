@@ -449,6 +449,10 @@
   .maplibregl-canvas{filter:none}
   .maplibregl-map{font-family:var(--sans)}
   .maplibregl-ctrl-attrib{font-family:var(--mono);font-size:.7rem}
+  /* On a narrow map the open attribution runs the full width of the bottom
+     edge, over the zoom and Locate me buttons. The buttons stay on top so they
+     can always be tapped; the attribution folds away on its own "i". */
+  .maplibregl-ctrl-bottom-left{z-index:3}
 
   /* The pin itself (.cc-pin, its borders, badges and state marks) lives in
      styles/pins.css, linked beside this file: the key page and the curator

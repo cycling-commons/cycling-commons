@@ -29,7 +29,10 @@ final class SecurityHeadersSubscriber implements EventSubscriberInterface
         $headers = $event->getResponse()->headers;
         $headers->set('X-Content-Type-Options', 'nosniff');
         $headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
-        $headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+        // Geolocation for this origin only: the map's Locate me button reads the
+        // position in the browser and sends it nowhere. Embedding frames and
+        // other origins stay blocked; camera and microphone stay off.
+        $headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(self)');
     }
 
     #[\Override]

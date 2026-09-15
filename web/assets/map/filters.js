@@ -32,6 +32,32 @@ export function narrowingCount(state){
   return n;
 }
 
+/** One place across every renderer, as `letter:id`; null when it has no id. */
+export function placeKey(letter, id){
+  return letter && id != null ? letter + ':' + id : null;
+}
+
+/* docs/specs/map-and-search.md §4.3, §9: a place opened from a ride row that
+   the rider's own chips hide is shown anyway while its drawer is up. One place
+   at a time; the chips themselves never change. `show` and `releaseUnless`
+   answer whether anything changed, so the caller redraws only then. */
+export function createShownAnyway(){
+  let key = null;
+  return {
+    has: k => k != null && k === key,
+    show(k){
+      if(k == null || k === key) return false;
+      key = k;
+      return true;
+    },
+    releaseUnless(k){
+      if(key == null || k === key) return false;
+      key = null;
+      return true;
+    },
+  };
+}
+
 /** True when a climb still matches every chip facet that applies to it. */
 export function climbChipsMatch(f, state){
   return attrMatch(f.sq, state.surface.active, state.surface.all)

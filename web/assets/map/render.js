@@ -13,7 +13,7 @@ import { updateConfMarkers, confShownCount, confTotalCount } from './osm-pools.j
 import { covShownCount, coverageTotal, syncCoverageLayers, covIconFilter,
          COVERAGE_CCS, COVERAGE_ON, COVERAGE_KEYS } from './coverage.js';
 import { openDrawer } from './drawer.js';
-import { attrMatch, narrowingCount, climbChipsMatch, modeShows } from './filters.js';
+import { attrMatch, narrowingCount, climbChipsMatch, modeShows, placeKey, createShownAnyway } from './filters.js';
 
 export const PREFS = window.CC_PREFS || {bikes: [], styles: []};
 
@@ -392,6 +392,32 @@ export function hiddenByFilters(){
   return {filters: narrowingCount(chipState()), hidden: _chipHidden};
 }
 
+/* Whether the rider's filter chips let this catalog feature through: the
+   preference prefilter on routes, the three climb facets on climbs. Scope and
+   view mode are not chips and are judged in featureVisible. */
+export function chipsPass(layer, f){
+  if(layer.key==='experience') return prefMatch(f);
+  // All three share attrMatch's narrowing rule (no hidden predates-attribute climbs).
+  if(layer.key==='climbs') return climbChipsMatch(f, chipState());
+  return true;
+}
+
+/* docs/specs/map-and-search.md §4.3, §9: the one place a ride row opened and
+   the chips hide, shown anyway while its drawer is up. Every renderer that
+   applies a chip reads it (featureVisible here, the stays pin in osm-pools.js).
+   The chips are never touched, so nothing is persisted and the pill still
+   describes the rider's own filters. */
+const _shownAnyway = createShownAnyway();
+export const shownAnyway = (letter, id) => _shownAnyway.has(placeKey(letter, id));
+/** Show one place anyway; redraws when that changed anything. */
+export function showPlaceAnyway(letter, id){
+  if(_shownAnyway.show(placeKey(letter, id))) render();
+}
+/** Release it unless `letter:id` is the place being opened; redraws when released. */
+export function releaseShownAnyway(letter, id){
+  if(_shownAnyway.releaseUnless(placeKey(letter, id))) render();
+}
+
 /* `tally` only from render()'s own walk (each active layer once). */
 export function featureVisible(layer, f, tally){
   /* docs/specs/map-and-search.md (The pending layer is exempt from the region scope) — server-scoped work queue. */
@@ -399,11 +425,7 @@ export function featureVisible(layer, f, tally){
   /* docs/specs/map-and-search.md §4.2 — three rungs: all / confirmed / curated. */
   let show = modeShows(mode(), layer, f);   // filters.js owns the rung rule; one reader for render, legend and deep links
   if(show) show = inScope(f.rid);   // docs/specs/map-and-search.md §4.5 — region scope gate; chips below are the rider's.
-  if(show && layer.key==='experience' && !prefMatch(f)){ show=false; if(tally) tally.hidden++; }
-  if(show && layer.key==='climbs'){
-    // All three share attrMatch's narrowing rule (no hidden predates-attribute climbs).
-    if(!climbChipsMatch(f, chipState())){ show=false; if(tally) tally.hidden++; }
-  }
+  if(show && !chipsPass(layer, f) && !shownAnyway(layer.letter, f.id)){ show=false; if(tally) tally.hidden++; }
   return show;
 }
 // legend count = shown/total: in Curated only confirmed/curated count; in Everything everything does

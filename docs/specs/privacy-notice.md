@@ -44,6 +44,7 @@ Written 2026-08-27, closing `docs/TODO.md` item 5.
 | Uploads scanned, quarantined, EXIF stripped, re-encoded | `ClamAvScanner`, `media.storage.private`, `PhotoProcessor` | |
 | 2FA compulsory for elevated roles | `App\Security\LoginSuccessHandler` | |
 | Strict CSP | `security-architecture.md` 2 | |
+| Locate me reads the position in the browser, only on a tap, and sends it nowhere (`privacy.banner_body`) | `map-init.js` `locateControl()`: MapLibre `GeolocateControl`, one `getCurrentPosition`, no tracking; the position feeds only the camera and the dot. The tiles for the area the camera lands on then load from the basemap hosts in section 3, as they do for any pan, which is why the copy says so. `Permissions-Policy: geolocation=(self)` (`security-architecture.md` 2.1) | any request, log line or stored preference ever carries the position, or tracking is switched on |
 
 ## 3. The two "who sees my data" tables
 

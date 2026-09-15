@@ -8,7 +8,7 @@
 // plainly metres is handed back untouched instead.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { osmMetres, viewDirection, osmRefUrl, OSM_REF } from '../../assets/map/osm-tags.js';
+import { osmMetres, viewDirection, osmRefUrl, OSM_REF, bikesOnBoard, BIKES_ON_BOARD_LABEL } from '../../assets/map/osm-tags.js';
 
 test('metres are read from the shapes OSM actually writes', () => {
   assert.equal(osmMetres('484'), 484);        // Costo Liso, node 12969271187
@@ -69,4 +69,41 @@ test('OSM_REF is not sticky or global, so repeated tests never alternate', () =>
   assert.equal(OSM_REF.flags, '');
   assert.equal(OSM_REF.test('node/1'), true);
   assert.equal(OSM_REF.test('node/1'), true);
+});
+
+// bikesOnBoard: letter F's Bikes on board row (docs/specs/coverage-provider.md §5).
+// OSM writes `bicycle` for whether a bike may come aboard and `bicycle:fee` for
+// whether it costs extra. The drawer shows a row only for a value it can say
+// in plain words; anything else is no row, never a guess.
+test('bike access on board reads the values OSM uses', () => {
+  assert.equal(bikesOnBoard({bicycle:'yes'}), 'allowed');   // way/1078891286 Enkhuizen - Medemblik
+  assert.equal(bikesOnBoard({bicycle:'designated'}), 'allowed');
+  assert.equal(bikesOnBoard({bicycle:'permissive'}), 'allowed');
+  assert.equal(bikesOnBoard({bicycle:' Yes '}), 'allowed');
+  assert.equal(bikesOnBoard({bicycle:'no'}), 'no');
+  assert.equal(bikesOnBoard({bicycle:'dismount'}), 'dismount');
+});
+
+test('a bike fee is added only where a bike may come aboard', () => {
+  assert.equal(bikesOnBoard({bicycle:'yes', 'bicycle:fee':'yes'}), 'allowed_fee');
+  assert.equal(bikesOnBoard({bicycle:'dismount', 'bicycle:fee':'yes'}), 'dismount_fee');
+  assert.equal(bikesOnBoard({bicycle:'no', 'bicycle:fee':'yes'}), 'no');
+  assert.equal(bikesOnBoard({bicycle:'yes', 'bicycle:fee':'no'}), 'allowed');
+});
+
+test('an unknown or absent value gives no row', () => {
+  assert.equal(bikesOnBoard({}), null);
+  assert.equal(bikesOnBoard(null), null);
+  assert.equal(bikesOnBoard({'bicycle:fee':'yes'}), null);   // a fee alone says nothing about access
+  assert.equal(bikesOnBoard({bicycle:'destination'}), null);
+  assert.equal(bikesOnBoard({bicycle:'yes;no'}), null);
+  assert.equal(bikesOnBoard({bicycle:''}), null);
+});
+
+test('every answer has exactly one drawer label key', () => {
+  assert.deepEqual(Object.keys(BIKES_ON_BOARD_LABEL).sort(),
+    ['allowed', 'allowed_fee', 'dismount', 'dismount_fee', 'no']);
+  for (const tags of [{bicycle:'yes'}, {bicycle:'no'}, {bicycle:'dismount', 'bicycle:fee':'yes'}]) {
+    assert.ok(BIKES_ON_BOARD_LABEL[bikesOnBoard(tags)]);
+  }
 });

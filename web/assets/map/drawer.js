@@ -12,10 +12,10 @@ import { layerGlyph, pinEl, waterKind } from './icons.js';
 import { itemLinks } from './links.js';
 import { sheet } from './sheet.js';
 import { openLightbox } from './lightbox.js';
-import { highlightRoute, clearRouteHighlight, showSurfaceSelection, clearSurfaceSelection } from './render.js';
+import { highlightRoute, clearRouteHighlight, showSurfaceSelection, clearSurfaceSelection, releaseShownAnyway } from './render.js';
 import { clearRouteSelection } from './routes-tiles.js';
 import { clearSelectedCoverageIcon, invalidateCoverageDrawer } from './coverage.js';
-import { osmMetres, osmRefUrl } from './osm-tags.js';
+import { osmMetres, osmRefUrl, BIKES_ON_BOARD_LABEL } from './osm-tags.js';
 import { shareQuery } from './share-links.js';
 import { watchCommonsPhoto, photoWaitRef } from './commons-photo.js';
 import { wantsHiddenPhotos, hiddenPhotosHtml, galleryWithConfirmed, pinMoveHidesHtml } from './hidden-photos.js';
@@ -239,6 +239,10 @@ export function osmDrawer(layer, p, ll, src){
   if(p.ele!=null) rec.push({label:D.elevation||'Elevation', value:elevValue(p.ele)});
   if(p.viewDir) rec.push({label:D.viewDirection||'View direction', value:p.viewDir});
   if(p.drop!=null) rec.push({label:D.drop||'Drop', value:elevValue(p.drop)});
+  // Getting-there fact OSM holds (coverage-provider.md §5): whether a bike may
+  // come aboard, in plain words. No row when OSM says nothing we can word.
+  const bikesWords = p.osmBikes && D[BIKES_ON_BOARD_LABEL[p.osmBikes]];
+  if(bikesWords) rec.push({label:D.bikesOnBoard||'Bikes on board', value:bikesWords});
   // The row says WHAT this is (an official register entry) and the method
   // says WHOSE. The wording carried the publisher's name until 2026-09-04,
   // which stopped being true the moment a second authority existed.
@@ -250,7 +254,10 @@ export function osmDrawer(layer, p, ll, src){
   const unmanned = p.serviceKind==='station' || p.serviceKind==='pump';
   const attrRows = schemaRows((layer||{}).letter, p, p.id, unmanned ? {fixed:{openingHours:'24/7'}} : undefined);
   const attrLabels = new Set(attrRows.filter(r=>!r.empty).map(r=>r.label));
-  rec = rec.filter(r=>!attrLabels.has(r.label)).concat(attrRows);
+  // A stored value replaces the OSM fact under the same label; an add prompt
+  // gives way to it, so the drawer never shows a fact and "+ add" side by side.
+  const factLabels = new Set(rec.map(r=>r.label));
+  rec = rec.filter(r=>!attrLabels.has(r.label)).concat(attrRows.filter(r=>!(r.empty && factLabels.has(r.label))));
   const d={name:p.n||p.t||lbl, headline:typeLbl+' · '+originLbl, cur:!!p.cur, geom:{ll:[ll.lat,ll.lng]}, record:rec,
     source: provider?providerSource(provider)
       :(community?sourceLabel(p.srcType):drawerSource(p.srcType, src, sourceLabel))};
@@ -1126,8 +1133,9 @@ export function renderDrawerBody(layer, f){
 export function openDrawer(layer, f){
   // docs/specs/route-domain.md §7 — while picking corrections, do not also open the drawer.
   if(isPicking()) return;
-  clearRevealPin();   
-  clearSelectedCoverageIcon();   
+  clearRevealPin();
+  clearSelectedCoverageIcon();
+  releaseShownAnyway(layer.letter, f.id);   // a place shown anyway stays only while its own drawer is up (map-and-search.md §9)
   invalidateCoverageDrawer(); bumpPlaceReq();   // Invalidate in-flight coverage POI detail and town-card nearby; this render supersedes them.
   if(layer.key==='experience'){
     const i=layer.features.indexOf(f);
@@ -1207,6 +1215,7 @@ export function closeDrawer(){
   clearHighlight();
   clearSelectedCoverageIcon();                        // remove the selected coverage POI's persistent icon overlay
   clearRevealPin();
+  releaseShownAnyway(null, null);                     // the place shown anyway leaves with its drawer
   clearRouteHighlight();
   clearRouteSelection();   // the OSM corridor highlight (routes-tiles.js), not the K layer above
   clearSurfaceSelection();

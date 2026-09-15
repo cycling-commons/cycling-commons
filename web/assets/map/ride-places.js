@@ -30,6 +30,27 @@ export function splitPool(features, letter, listed, visible){
   return { cluster, leaves };
 }
 
+/**
+ * The view mode a loaded ride lifted, so Clear can put the rider's own back,
+ * the way it puts their scope back. `lifted(from, to)` records each lift and
+ * keeps the mode from before the first one; `riderChose()` forgets it, because
+ * a mode the rider picked while the ride was loaded is their choice. `restore`
+ * answers the mode to go back to, or null, and forgets either way. It answers
+ * null too when the mode is no longer the one the ride lifted to.
+ */
+export function createRideModeMemo(){
+  let before = null, liftedTo = null;
+  return {
+    lifted(from, to){ if(before == null) before = from; liftedTo = to; },
+    riderChose(){ before = null; liftedTo = null; },
+    restore(current){
+      const back = before != null && current === liftedTo ? before : null;
+      before = null; liftedTo = null;
+      return back;
+    },
+  };
+}
+
 /** The hover ring's offset: onto the pin body only when a bottom-anchored pin is drawn at the spot. */
 export function ringOffset(pinDrawn, pinOffset){
   return pinDrawn && Array.isArray(pinOffset) ? pinOffset : [0, 0];

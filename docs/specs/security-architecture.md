@@ -67,11 +67,19 @@ rather than being restated here.
 Beside it, `App\EventSubscriber\SecurityHeadersSubscriber` (review 2026-08-16
 finding 4) stamps the baseline hardening trio — `X-Content-Type-Options:
 nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, and a
-`Permissions-Policy` with camera/microphone/geolocation all locked — on
+`Permissions-Policy: camera=(), microphone=(), geolocation=(self)` - on
 **every** main response, explicitly including the non-HTML responses the CSP
 skip above exempts. HSTS is nginx's, not the app's: operations.md §4 has the
 ownership table, `docs/plans/handoffs/2026-08-17-nginx-headers-devops.md` the
 host-side work. Tests: `tests/Security/SecurityHeadersTest.php`.
+
+Camera and microphone are off for every origin. Geolocation is allowed for
+**this origin only** (`(self)`; owner decision 2026-09-15), because the map's
+Locate me button (map-and-search.md §4.0) asks the browser for the rider's
+position. No frame from another origin can ask, and the position never leaves
+the browser: MapLibre's `GeolocateControl` hands it to the camera and the dot,
+and no request carries it. The CSP needs no change for this, since
+`navigator.geolocation` talks to no host.
 
 ### 2.2 The per-request nonce
 

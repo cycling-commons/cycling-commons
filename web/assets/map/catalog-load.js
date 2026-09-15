@@ -36,6 +36,8 @@
       bounds: bb ? [[bb[0], bb[1]], [bb[2], bb[3]]] : [[2.84, 49.45], [6.41, 50.85]],
       fitBoundsOptions: { padding: 24 }, attributionControl: false
     };
+    // MapLibre's own control labels in the site language (Locate me, map-init.js).
+    if (window.CC_I18N && window.CC_I18N.mapUi) window.__ccMapOpts.locale = window.CC_I18N.mapUi;
     try {
       window.__ccMapInstance = new maplibregl.Map(window.__ccMapOpts);
       answerMissingImages(window.__ccMapInstance);

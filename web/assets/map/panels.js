@@ -302,6 +302,8 @@ export function initRailChrome(){
 function updateSubtitle(){
   const sub=document.querySelector('.map-top .sub'); if(!sub) return;
   if(mode()==='all'){ sub.textContent=I18N.subEverything||'Everything · full catalog'; return; }
+  // Confirmed is its own rung, not Best of with the season and bike facets.
+  if(mode()==='confirmed'){ sub.textContent=I18N.subConfirmed||'Confirmed · places somebody checked'; return; }
   // Empty facet = whole vocabulary.
   const seasons=boSeasons(), bikes=boBikes();
   const sTxt = seasons.length ? seasons.map(v=>CC_SEASON_LABEL[v]||v).join(', ')
@@ -389,15 +391,16 @@ export function applyMode(m, {persist}={persist:true}){
    and Best of hides a Verified climb: the drawer opened over a halo with no pin
    and no line under it, and the fresh approval looked "gone" (owner-reported
    2026-08-25). Lift to the lowest rung that draws the target, this visit only,
-   and say so. Returns true when the mode changed. */
-export function liftModeFor(layer, f){
+   and say so. `also` adds a second reason to the same toast (a ride row whose
+   place the filter chips hide too, §9). Returns true when the mode changed. */
+export function liftModeFor(layer, f, {also}={}){
   if(!layer || !f || layer.pendingLayer) return false;
   const to = modeToShow(mode(), layer, f);
   if(!to) return false;
   const label = m => { const b=document.querySelector(`#mode button[data-m="${m}"]`); return b ? b.textContent.trim() : m; };
   const from = label(mode());
   applyMode(to, {persist:false});
-  mapToast(tpl(D.toastModeLift||'Shown in {to} · {from} hides this place', {to: label(to), from}), {center:true});
+  mapToast(tpl(D.toastModeLift||'Shown in {to} · {from} hides this place', {to: label(to), from}) + (also ? ' · '+also : ''), {center:true});
   return true;
 }
 

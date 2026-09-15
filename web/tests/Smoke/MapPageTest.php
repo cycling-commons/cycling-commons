@@ -76,6 +76,12 @@ final class MapPageTest extends WebTestCase
         self::assertSame('Très difficile', $difficulty['choices']['Very hard']);
         $surface = array_values(array_filter($schema['A'], static fn (array $f): bool => 'surface' === $f['key']))[0];
         self::assertSame('Asphalte', $surface['choices']['Asphalt'] ?? null);
+
+        // The OSM Bikes on board row (letter F) carries the field's own label,
+        // so a stored value replaces it instead of standing beside it.
+        $bikes = array_values(array_filter($schema['F'], static fn (array $f): bool => 'bikesOnBoard' === $f['key']))[0];
+        self::assertSame($bikes['label'], $i18n['d']['bikesOnBoard']);
+        self::assertSame('Autorisés, payant', $i18n['d']['bikesAllowedFee']);
     }
 
     public function testMapBootsFromCatalogEndpoint(): void

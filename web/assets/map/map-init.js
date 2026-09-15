@@ -2,6 +2,7 @@
 /* MapLibre instance, controls, satellite base, style-ready flag, fly-to-pin,
    right-click coordinates (docs/specs/map-and-search.md §2).
    `map` is adopted from catalog-load.js (built before the catalog fetch). */
+import { pinOffset, locateOffset, locateErrorMessage, offsetAsPadding } from './util.js';
 
 export const map = (function(){
   if(window.__ccMapInstance) return window.__ccMapInstance;
@@ -37,8 +38,9 @@ export function localiseBasemapLabels(){
   return n;
 }
 
-/** Attribution, navigation and the live zoom readout. */
-export function initMapControls(){
+/** Attribution, navigation, Locate me and the live zoom readout.
+    `toast(msg)` says why a Locate me lookup did not work. */
+export function initMapControls({toast}={}){
   /* The Copernicus programme requires its notice on products derived from the
      DEM, and the climb gradients are exactly that (credits.html.twig carries
      the full wording). It was on /credits and missing here, which is the one
@@ -51,6 +53,7 @@ export function initMapControls(){
     + `(<a href="${creditsUrl}">credits</a>)`
   }),'bottom-right');
   map.addControl(new maplibregl.NavigationControl({showCompass:false}),'bottom-left');
+  map.addControl(locateControl(toast),'bottom-left');
   map.addControl({
     onAdd(m){
       const d=document.createElement('div');
@@ -63,6 +66,33 @@ export function initMapControls(){
     },
     onRemove(){ this._m.off('zoom', this._upd); this._d.remove(); },
   },'bottom-left');
+}
+
+/* Locate me (docs/specs/map-and-search.md §4.0). MapLibre's own control: one
+   tap asks the browser once, flies to a dot at the rider's position and stops;
+   no tracking. The position goes from navigator.geolocation to the camera and
+   the dot and nowhere else: no request carries it. Its label and the "not
+   available" title come from the map's `locale` option (catalog-load.js).
+   `padding` is a getter because MapLibre copies fitBoundsOptions at the moment
+   it moves the camera, and whether a drawer covers part of the map is only
+   known then; it is padding, not an offset, for the reason offsetAsPadding
+   gives. */
+function locateControl(toast){
+  const fitBoundsOptions = {maxZoom:15, duration:1700};
+  Object.defineProperty(fitBoundsOptions, 'padding', {enumerable:true, get(){
+    const d = document.getElementById('drawer');
+    const open = !!d && d.classList.contains('open') && !d.classList.contains('folded');
+    const box = map.getContainer().getBoundingClientRect();
+    return offsetAsPadding(locateOffset(open, window.innerWidth, window.innerHeight, box.top, box.height));
+  }});
+  const ctrl = new maplibregl.GeolocateControl({
+    positionOptions:{enableHighAccuracy:true, timeout:10000},
+    trackUserLocation:false, showUserLocation:true, showAccuracyCircle:true,
+    fitBoundsOptions,
+  });
+  // A refused or failed lookup is said in words, never a silently greyed button.
+  ctrl.on('error', e => { if(toast) toast(locateErrorMessage(e && e.code, window.CC_I18N)); });
+  return ctrl;
 }
 
 /* Satellite base — Esri World Imagery (docs/specs/map-and-search.md §2).
@@ -84,8 +114,10 @@ export function addSatellite(){
   map.addLayer({id:'satellite',type:'raster',source:'satellite',layout:{visibility:'none'}});
 }
 
-export function flyToPin(lngLat){   // centre + slow zoom-in on click; offset left so the drawer doesn't cover it
-  map.flyTo({center:lngLat, zoom:Math.max(map.getZoom(),14), offset:[-150,0], duration:1700, essential:true});
+export function flyToPin(lngLat){   // centre + slow zoom-in on click, in the part of the map the drawer leaves free
+  const box = map.getContainer().getBoundingClientRect();
+  const offset = pinOffset(window.innerWidth, window.innerHeight, box.top, box.height);
+  map.flyTo({center:lngLat, zoom:Math.max(map.getZoom(),14), offset, duration:1700, essential:true});
 }
 
 /* Style-load race: sources cannot be added, and render() must not paint, until MapLibre has the style. */

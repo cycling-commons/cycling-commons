@@ -23,7 +23,7 @@ final class SecurityHeadersTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertResponseHeaderSame('X-Content-Type-Options', 'nosniff');
         self::assertResponseHeaderSame('Referrer-Policy', 'strict-origin-when-cross-origin');
-        self::assertResponseHeaderSame('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+        self::assertResponseHeaderSame('Permissions-Policy', 'camera=(), microphone=(), geolocation=(self)');
     }
 
     public function testJsonResponseCarriesNosniffWithoutCsp(): void

@@ -202,6 +202,8 @@ final class MapController extends AbstractController
         $drawer = [
             'type' => 'd_type', 'location' => 'd_location', 'town' => 'd_town', 'province' => 'd_province', 'listed' => 'd_listed',
             'viewDirection' => 'd_view_direction', 'drop' => 'd_drop',
+            'bikesAllowed' => 'd_bikes_allowed', 'bikesAllowedFee' => 'd_bikes_allowed_fee',
+            'bikesDismount' => 'd_bikes_dismount', 'bikesDismountFee' => 'd_bikes_dismount_fee', 'bikesNotAllowed' => 'd_bikes_not_allowed',
             'status' => 'd_status', 'rating' => 'd_rating', 'website' => 'd_website', 'potable' => 'd_potable',
             'verify' => 'd_verify', 'distance' => 'd_distance', 'startsAt' => 'd_starts_at',
             'townsOnRoute' => 'd_towns_on_route', 'surfaces' => 'd_surfaces', 'submittedBy' => 'd_submitted_by', 'itemToday' => 'd_item_today',
@@ -313,6 +315,7 @@ final class MapController extends AbstractController
             'toastErr' => 'd_toast_err', 'toastLoginRate' => 'd_toast_login_rate', 'toastCurator' => 'd_toast_curator',
             'toastVerified' => 'd_toast_verified', 'toastRecorded' => 'd_toast_recorded',
             'toastModeLift' => 'd_toast_mode_lift',
+            'toastShownAnyway' => 'd_toast_shown_anyway', 'toastFilterToo' => 'd_toast_filter_too',
             'toastLimit' => 'd_toast_limit', 'toastOpenRoute' => 'd_toast_open_route',
             'pickBikeRode' => 'd_pick_bike_rode', 'pickBikeVote' => 'd_pick_bike_vote',
             'undo' => 'd_undo', 'clear' => 'd_clear', 'done' => 'd_done', 'pointSet' => 'd_point_set',
@@ -382,6 +385,7 @@ final class MapController extends AbstractController
             'filtersNarrowing' => $t->trans('map.filters_narrowing'),
             'curated' => $t->trans('map.curated'),
             'subEverything' => $t->trans('map.sub_everything'),
+            'subConfirmed' => $t->trans('map.sub_confirmed'),
             'allBikes' => $t->trans('map.all_bikes'),
             'allSeasons' => $t->trans('map.all_seasons'),
             'overlayOn' => $t->trans('map.overlay_on'),
@@ -438,6 +442,14 @@ final class MapController extends AbstractController
             'mlyLoading' => $t->trans('map.mly_loading'),
             'mlyNone' => $t->trans('map.mly_none'),
             'mlyZoom' => $t->trans('map.mly_zoom'),
+            // Locate me (map-init.js): the toasts, and MapLibre's own control
+            // labels under the keys its `locale` option reads.
+            'locateDenied' => $t->trans('map.locate_denied'),
+            'locateFailed' => $t->trans('map.locate_failed'),
+            'mapUi' => [
+                'GeolocateControl.FindMyLocation' => $t->trans('map.locate_me'),
+                'GeolocateControl.LocationNotAvailable' => $t->trans('map.locate_unavailable'),
+            ],
             'd' => array_map(static fn (string $id): string => $t->trans('map.'.$id), $drawer) + [
                 // Curator duplicate-resolve panel (?finding=<id>). Translated
                 // for everyone rather than gated on the role: the bag is one
@@ -446,6 +458,10 @@ final class MapController extends AbstractController
                 'dupeSamePlace' => $t->trans('moderate_data.q_duplicate'),
                 'dupeKeepThis' => $t->trans('moderate_data.keep_this'),
                 'dupeKeepBoth' => $t->trans('moderate_data.keep_both'),
+                // The F field label itself (CatalogFormRegistry), so the OSM
+                // Bikes on board row and a stored value share one label and
+                // the drawer shows one row, not two.
+                'bikesOnBoard' => $t->trans('Bikes on board'),
             ],
         ];
     }

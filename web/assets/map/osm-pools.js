@@ -7,7 +7,7 @@ import { D } from './i18n.js';
 import { layerByKey, active, mode } from './catalog.js';
 import { inScope } from './scope-ui.js';
 import { mintKindIcons, pinEl, clusterEl } from './icons.js';
-import { staysAccessible } from './render.js';
+import { staysAccessible, shownAnyway } from './render.js';
 import { modeShows } from './filters.js';
 import { splitPool } from './ride-places.js';
 import { openDrawer, osmDrawer, waterDrawer } from './drawer.js';
@@ -72,7 +72,13 @@ export function poolPinDrawn(key, id){
   if(!st || !active.has(key) || id == null) return false;
   const f = st.confirmed.find(x => x.properties && x.properties.id === id);
   if(!f || !poolVisible(f, st.layer)) return false;
-  return !(key==='stays' && !staysAccessible(f.properties));
+  return poolChipsPass(st.layer, key, f.properties);
+}
+/* The one chip a pool pin answers to: stays accessibility. A place shown anyway
+   (render.js showPlaceAnyway, docs/specs/map-and-search.md §9) passes. */
+function poolChipsPass(layer, key, p){
+  if(key!=='stays' || staysAccessible(p)) return true;
+  return shownAnyway((layer||{}).letter, p.id);
 }
 export function setupConfClusters(){
   Object.keys(osmLayers).forEach(key=>{
@@ -185,7 +191,7 @@ export function updateConfMarkers(){
       const co=f.geometry.coordinates, p=f.properties;
       const key = p.cluster ? 'c'+p.cluster_id : 'l'+co[0].toFixed(5)+','+co[1].toFixed(5);
       if(next[key]) continue;
-      if(!p.cluster && st.key==='stays' && !staysAccessible(p)) continue;
+      if(!p.cluster && !poolChipsPass(st.layer, st.key, p)) continue;
       let m=on[key];
       if(!m){
         if(p.cluster){
@@ -211,6 +217,6 @@ export const OSM_BULK = [
   ['history',  window.CC_HISTORY_OSM,  'OpenStreetMap (historic=castle/fort/ruins/monument/memorial/…)'],
   ['stays',    window.CC_STAYS_OSM,    'OpenStreetMap (tourism=camp_site/hostel/guest_house/chalet/hotel/…)'],
   ['shelter',  window.CC_SHELTER_OSM,  'OpenStreetMap (shelter_type=picnic/weather/field/…)'],
-  ['transit',  window.CC_TRANSIT_OSM,  'OpenStreetMap (railway=station / railway=halt)'],
+  ['transit',  window.CC_TRANSIT_OSM,  'OpenStreetMap (railway=station / railway=halt / amenity=ferry_terminal / route=ferry)'],
   ['toilets',  window.CC_TOILETS_OSM,  'OpenStreetMap (amenity=toilets)']
 ];

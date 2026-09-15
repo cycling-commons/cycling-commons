@@ -84,3 +84,41 @@ export function featureSummary(f, D){
    default, de, en and fr; `default` is the place's own name (Antwerpen, not
    Antwerp), which is the right answer for every language Photon lacks. */
 export const photonLang = htmlLang => { const l = String(htmlLang || '').slice(0, 2).toLowerCase(); return ['en', 'fr', 'de'].includes(l) ? l : 'default'; };
+
+/* Where a clicked spot should land: the middle of the map the drawer leaves
+   uncovered, as a MapLibre flyTo offset. On a desktop the drawer sits on the
+   right, so the spot moves left. On a phone (the 820px layout flip) the drawer
+   is a bottom sheet that opens at half the screen, so the spot moves up into
+   the top half instead (owner 2026-09-15: a pin opened from the ride list
+   landed under the sheet). docs/specs/map-and-search.md §6. */
+export function pinOffset(viewportWidth, viewportHeight, mapTop, mapHeight){
+  if(viewportWidth > 820) return [-150, 0];
+  const visibleMiddle = (mapTop + viewportHeight * 0.5) / 2;
+  return [0, Math.round(visibleMiddle - (mapTop + mapHeight / 2))];
+}
+
+/* Where the Locate me dot lands (docs/specs/map-and-search.md §4.0): the middle
+   of the map when no drawer covers any of it, otherwise the same free part a
+   clicked spot uses. */
+export function locateOffset(drawerOpen, viewportWidth, viewportHeight, mapTop, mapHeight){
+  return drawerOpen ? pinOffset(viewportWidth, viewportHeight, mapTop, mapHeight) : [0, 0];
+}
+
+/* A flyTo offset as fitBounds padding that lands the point in the same spot.
+   MapLibre's fitBounds applies an `offset` twice (once when it computes the
+   camera, again in the flyTo it hands that camera to) and `padding` once, so
+   the Locate me camera says where to land as padding: shifting the centre
+   left by 150 px is 300 px of padding on the right. */
+export function offsetAsPadding([x, y]){
+  return {left:Math.max(0, 2*x), right:Math.max(0, -2*x), top:Math.max(0, 2*y), bottom:Math.max(0, -2*y)};
+}
+
+/* The toast for a Locate me lookup that did not work. Code 1 is the browser's
+   PERMISSION_DENIED (the rider said no, or the site is blocked in settings);
+   every other code is a lookup that failed. */
+export function locateErrorMessage(code, strings){
+  const s = strings || {};
+  return code === 1
+    ? (s.locateDenied || 'Location is blocked for this site. Allow it in your browser settings, then reload the page.')
+    : (s.locateFailed || 'Your location could not be found. Try again in a moment.');
+}

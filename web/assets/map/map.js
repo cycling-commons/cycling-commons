@@ -19,7 +19,7 @@ import { render, updateZoomHint } from './render.js';
 import { COVERAGE_ON, addCoverage, widenForDeepLink, featureLL, openCoverageFeatureByName,
          openCoverageByOsmRef, fetchCoverageCounts, covShownCount } from './coverage.js';
 import { addSurfaceTiles, setSurfaceTiles, surfaceTilesVisible } from './surface-tiles.js';
-import { schemaRows, initDrawerChrome } from './drawer.js';
+import { schemaRows, initDrawerChrome, mapToast } from './drawer.js';
 import { refFromShare, idFromShare } from './share-links.js';
 import { initPicking } from './picking.js';
 import { resolveLocalFeature, resolveLocalFeatureById, openFeatureByName, openFeatureById,
@@ -39,7 +39,7 @@ import { layerGlyph } from './icons.js';
   // initViewMode must run after initScope — it reads the active scope.
   initViewMode();
 
-  initMapControls();
+  initMapControls({toast: mapToast});
   initShell();
   initTheme();
 
