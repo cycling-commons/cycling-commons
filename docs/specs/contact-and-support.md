@@ -736,7 +736,8 @@ paginating twelve issues over a list of nine.
 **Seeded known issues** (2026-09-06, owner: "update the buglist with things
 from the todo"). Bugs found in the backlog before anybody filed them belong on
 the public list too, and in every environment alike. They live in
-`web/config/known_issues.yaml` (public title, body, severity, area, status) and
+`web/config/known_issues.yaml` (public title, body, severity, area, status, and
+optional `steps`: how to test it, shown to curators on the bug page) and
 `app:bugs:seed-known` files them through the same `BugReport` entity the desk
 uses, public from the start, with an internal note saying where they came
 from. A public title already present is skipped, so a re-run never overwrites

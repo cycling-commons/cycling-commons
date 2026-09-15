@@ -89,6 +89,8 @@ final class SeedKnownIssuesCommand extends Command
             $report->setSeverity(BugSeverity::from($entry['severity']));
             $report->setArea(BugArea::from($entry['area']));
             $report->setStatus(BugStatus::from($entry['status']));
+            // How to test it: shown to curators on the bug page, not on /known-issues.
+            $report->setSteps($entry['steps']);
             $report->setPublic(true);
             $report->setInternalNote('Seeded from config/known_issues.yaml.');
             $this->em->persist($report);
@@ -103,7 +105,7 @@ final class SeedKnownIssuesCommand extends Command
     }
 
     /**
-     * @return list<array{public_title: string, body: string, severity: string, area: string, status: string}>
+     * @return list<array{public_title: string, body: string, severity: string, area: string, status: string, steps: ?string}>
      */
     private function entries(string $file): array
     {
@@ -125,6 +127,8 @@ final class SeedKnownIssuesCommand extends Command
                 }
                 $entry[$key] = trim($value);
             }
+            $steps = $raw['steps'] ?? null;
+            $entry['steps'] = \is_string($steps) && '' !== trim($steps) ? trim($steps) : null;
             $out[] = $entry;
         }
 

@@ -6,6 +6,7 @@
 # severity: critical | major | minor | cosmetic
 # area: map | search | contributing | photos | routes | account | regions | translations | pages | unsure
 # status: new | planned | in_progress | needs_testing | resolved
+# steps (optional): how to test it, shown to curators on the bug page
 #
 # Filed 2026-09-06 (owner: "update the buglist with things from the todo").
 issues:
@@ -97,3 +98,66 @@ issues:
     body: |
       The card listed the races Wikidata ties to a town, but not the routes that pass through it: the Westfriese Omringdijk for Hoorn, the Great Divide for Banff. Those live in the map's own routes layer and need geometry, not Wikidata.
       Fixed: the card now lists the recommended routes passing within a kilometre of the town, nearest first, each opening on the map.
+  # Filed 2026-09-15 (owner: "add the issues to the known issue tickets with a
+  # good description how to test also").
+  - public_title: 'The "+ add" links on a route open a page with no route fields'
+    severity: minor
+    area: routes
+    status: new
+    body: |
+      In a recommended route's drawer, the "+ add" links beside empty details (quietness, scenic rating, best direction and others) open the general improve page, which has no fields for a route. Routes can only be proposed, and have photos added, through the route form.
+    steps: |
+      1. Open a recommended route with empty details, for example /map?route=24.
+      2. In the drawer, click "+ add" beside "Quietness rating".
+      3. Expected: a form to fill in that detail. Seen: the general improve page, with no route fields.
+  - public_title: 'A photo still being scanned is left out when a curator saves their own change'
+    severity: minor
+    area: photos
+    status: new
+    body: |
+      A curator's own edit to a place, or their own photo on a live route, applies at once. A photo that is still in the virus scan at that moment is not attached, and stays waiting with no decision left that would attach it. The same happens for places and routes.
+    steps: |
+      1. Sign in as a curator.
+      2. Open an existing place on /improve (or a live route on /propose-route?route=<id>) and add a large photo.
+      3. Submit straight away, while the photo still shows it is being checked.
+      4. Expected: the photo appears on the place once the scan ends. Seen: the change is saved, but the photo never shows and stays pending.
+  - public_title: 'In the ride check list, hovering a climb rings the wrong spot'
+    severity: minor
+    area: map
+    status: new
+    body: |
+      Hovering a climb row in the ride check ("along your ride") rings the climb's stored point, not its foot where the pin stands. For climbs whose stored point is not at the foot, such as Mont-le-Soie (about 3 km away), the ring lands next to nothing. The route drawer's climbs list rings the foot correctly.
+    steps: |
+      1. Sign in and load a GPX that rides Mont-le-Soie in the ride check.
+      2. In the results, hover the Mont-le-Soie row.
+      3. Expected: the ring sits on the climb's pin at its foot. Seen: the ring sits about 3 km away.
+  - public_title: 'On an out-and-back route a climb can be missed in "Climbs on this route"'
+    severity: minor
+    area: routes
+    status: new
+    body: |
+      A climb counts on a route only when the route rides it foot to summit. When a route goes up and comes back down the same road, the direction check sees both passes on the same stretch and can read the ascent as a descent, so the climb is left out.
+    steps: |
+      1. Take or propose a route that climbs a listed climb and returns down the same road.
+      2. Open the route on the map and read "Climbs on this route".
+      3. Expected: the climb is listed at the km where the route starts up it. Seen: it may be missing.
+  - public_title: 'A route that crosses a border opens scoped to one country'
+    severity: minor
+    area: routes
+    status: new
+    body: |
+      Opening a route from a link sets the map's scope to the country of the route's first point. A route that crosses into another country is then partly outside the scope, so places along that part are hidden.
+    steps: |
+      1. Open a route that starts in Belgium and crosses into Luxembourg or Germany, for example Liège-Bastogne-Liège via /map?route=<id>.
+      2. Pan along the route past the border.
+      3. Expected: the scope covers every country the route crosses. Seen: places on the far side of the border are hidden.
+  - public_title: 'Liège-Bastogne-Liège rides Mont-le-Soie and Forges downhill in its track'
+    severity: minor
+    area: routes
+    status: new
+    body: |
+      "Climbs on this route" for the proposed Liège-Bastogne-Liège route leaves out Côte de Mont-le-Soie and Côte de Forges, because the route's track rides both from summit to foot. The race climbs them. Either the GPX has a wrong turn there or the climb lines run the wrong way; worth checking both before the route is approved.
+    steps: |
+      1. As a curator, open /map?route=111.
+      2. Read "Climbs on this route" and compare with the race's list of côtes.
+      3. Open Côte de Mont-le-Soie and Côte de Forges and compare their foot and summit with the route's direction of travel.

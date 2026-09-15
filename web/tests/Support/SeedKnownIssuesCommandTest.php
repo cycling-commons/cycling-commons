@@ -73,6 +73,27 @@ final class SeedKnownIssuesCommandTest extends KernelTestCase
         self::assertSame('resolved', $report->getStatus()->value, 'the file did not reach an entry already filed');
     }
 
+    /** An entry may say how to test it; the curator's bug page shows those steps (report.steps). */
+    public function testAnEntryCarriesItsTestSteps(): void
+    {
+        self::bootKernel();
+        $file = sys_get_temp_dir().'/known-issues-steps-'.uniqid('', true).'.yaml';
+        $title = 'Steps entry '.uniqid('', true);
+        file_put_contents($file, "issues:\n  - public_title: '".$title."'\n    severity: minor\n    area: map\n    status: new\n    body: |\n      What is wrong.\n    steps: |\n      1. Open the map.\n      2. Look.\n");
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+
+        try {
+            $tester = new CommandTester((new Application(self::$kernel))->find('app:bugs:seed-known'));
+            self::assertSame(0, $tester->execute(['file' => $file]));
+        } finally {
+            @unlink($file);
+        }
+
+        $report = $em->getRepository(BugReport::class)->findOneBy(['publicTitle' => $title]);
+        self::assertNotNull($report);
+        self::assertSame("1. Open the map.\n2. Look.", $report->getSteps());
+    }
+
     public function testAFileWithABadEntryFilesNothing(): void
     {
         self::bootKernel();
