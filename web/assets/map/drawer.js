@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 /* Item drawer: registry-driven rows, history, open/close.
    @see docs/specs/map-and-search.md §6 */
+import { pickDrawerReturn } from './ride-places.js';
 import { I18N, D, tpl, trVal, sourceLabel, isRiderSource, DIFF_LABELS } from './i18n.js';
 import { drawerSource, drawerOrigin } from './origin.js';
 import { escPend, safeHref, stars, txtOn, gradColor, DIFF_PURPLE, ccUrl, attachPhotos, haversine } from './util.js';
@@ -15,8 +16,9 @@ import { openLightbox } from './lightbox.js';
 import { highlightRoute, clearRouteHighlight, showSurfaceSelection, clearSurfaceSelection, releaseShownAnyway } from './render.js';
 import { clearRouteSelection } from './routes-tiles.js';
 import { clearSelectedCoverageIcon, invalidateCoverageDrawer } from './coverage.js';
-import { osmMetres, osmRefUrl, BIKES_ON_BOARD_LABEL } from './osm-tags.js';
+import { osmMetres, osmRefUrl, BIKES_ON_BOARD_LABEL, bikeSourceText, durationText, FERRY_FACT_LABEL } from './osm-tags.js';
 import { shareQuery } from './share-links.js';
+import { addPhotoHref } from './add-photo.js';
 import { watchCommonsPhoto, photoWaitRef } from './commons-photo.js';
 import { wantsHiddenPhotos, hiddenPhotosHtml, galleryWithConfirmed, pinMoveHidesHtml } from './hidden-photos.js';
 import { setSurfaceTiles, surfaceTilesVisible, surfaceTilesConfigured } from './surface-tiles.js';
@@ -26,6 +28,8 @@ import { CC_VOTABLE, CC_CONFIRMABLE, CC_BREAKABLE, routeCommunityPanel, hydrateR
          hydrateItemConfirm, setPendingShape } from './community.js';
 import { showPendingShape, fitPendingShape, clearPendingShape } from './pending-shape.js';
 import { clearCorrections } from './corrections.js';
+import { routeClimbsSlot } from './route-climbs.js';
+import { hydrateRouteClimbs } from './listed-place.js';
 
 
 // Race-guard: bumped on every openDrawer() so a slow history fetch cannot paint a stale drawer.
@@ -241,8 +245,12 @@ export function osmDrawer(layer, p, ll, src){
   if(p.drop!=null) rec.push({label:D.drop||'Drop', value:elevValue(p.drop)});
   // Getting-there fact OSM holds (coverage-provider.md §5): whether a bike may
   // come aboard, in plain words. No row when OSM says nothing we can word.
+  // An answer inherited from the dock's ferry routes says so (coverage-provider.md §3).
   const bikesWords = p.osmBikes && D[BIKES_ON_BOARD_LABEL[p.osmBikes]];
-  if(bikesWords) rec.push({label:D.bikesOnBoard||'Bikes on board', value:bikesWords});
+  const bikesVia = bikeSourceText({routes:p.osmBikesRoutes||0}, p.osmBikesRouteName, {
+    one:D.fromFerry||'from the ferry {name}', route:D.viaFerryRoute||'via its ferry route', routes:D.viaFerryRoutes||'via its ferry routes'});
+  if(bikesWords) rec.push({label:D.bikesOnBoard||'Bikes on board', value:bikesVia ? bikesWords+' · '+bikesVia : bikesWords});
+  if(p.ferry) rec.push(...ferryRows(p.ferry, p.web));
   // The row says WHAT this is (an official register entry) and the method
   // says WHOSE. The wording carried the publisher's name until 2026-09-04,
   // which stopped being true the moment a second authority existed.
@@ -275,6 +283,26 @@ export function osmDrawer(layer, p, ll, src){
   if(p.descTr) d.descTr=1;
   attachPhotos(d, p);
   return d;
+}
+/* A ferry route's crossing facts as drawer rows (coverage-provider.md §5). Facts
+   a dock borrows from its one ferry route carry the Ferry badge, so they never
+   read as the dock's own; the route's website then gets its own row unless it
+   is the dock's. */
+const FERRY_WORD_FALLBACK = {ferrySeasonal:'Seasonal', ferryAllYear:'All year', ferryPaid:'Paid', ferryFree:'Free'};
+function ferryRows(f, ownWeb){
+  const method = f.borrowed ? escPend(D.ferryBadge||'Ferry') : undefined;
+  const word = token => D[FERRY_FACT_LABEL[token]] || FERRY_WORD_FALLBACK[FERRY_FACT_LABEL[token]];
+  const rows = [];
+  if(f.minutes) rows.push({label:D.crossingTime||'Crossing time', method,
+    value:durationText(f.minutes, {h:D.durationH||'{h} h', min:D.durationMin||'{m} min', hMin:D.durationHMin||'{h} h {m} min'})});
+  const season = f.season ? word(f.season) : f.seasonText;
+  if(season) rows.push({label:D.season||'Season', value:season, method});
+  if(f.hours) rows.push({label:D.serviceHours||'Service hours', value:f.hours, method});
+  if(f.fare) rows.push({label:D.fare||'Fare', value:word(f.fare), method});
+  if(f.borrowed && f.web && f.web !== ownWeb){
+    rows.push({label:D.website||'Website', html:true, method, value:linkValue(f.web, f.web.replace(/^https?:\/\//,'').replace(/\/$/,''))});
+  }
+  return rows;
 }
 // Per-country tap-water links; countries without a vetted reference get none.
 // NL is hidden until Drinkwaterkaart.nl's developer has been asked (owner,
@@ -449,7 +477,8 @@ function buildRecord(layer, f){
   const cur = f.cur ? `<div class="cc-d-cur">▲ ${I18N.curated||'Best of'}</div>` : '';
   const pl = photoList(f);
   // Add-photo CTA only with a real DB id (docs/specs/map-and-search.md §6).
-  const addPhoto = (f.id!=null && layer.key!=='experience') ? `<a class="cc-d-addphoto" href="/improve?item=${f.id}&name=${encodeURIComponent(f.name)}&type=${layer.letter}&add=photo" aria-label="Add a photo of ${escPend(f.name)}">
+  const addPhotoTo = addPhotoHref(layer, f);
+  const addPhoto = addPhotoTo ? `<a class="cc-d-addphoto" href="${addPhotoTo}" aria-label="Add a photo of ${escPend(f.name)}">
     <svg class="cc-ap-cam" viewBox="0 0 48 36" width="42" height="31" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2">
       <rect x="1.5" y="7.5" width="45" height="27" rx="4"/><path d="M16 7.5l3-4h10l3 4" stroke-linejoin="round"/><circle cx="24" cy="21.5" r="8"/><path d="M40.5 13h.01" stroke-width="3" stroke-linecap="round"/>
     </svg>
@@ -508,7 +537,9 @@ function buildRecord(layer, f){
   if(f.id!=null){
     if(layer.key==='experience'){
       // docs/specs/route-domain.md §6 — community panel; GPX download stays.
-      edit = routeCommunityPanel(f.id, f.state);
+      // A route waiting for review (a ?route= preview, map-and-search.md §8)
+      // takes no rides, votes, corrections or downloads until it is live.
+      edit = f.state==='submitted' ? '' : routeCommunityPanel(f.id, f.state);
     } else {
       // f.letter wins: mixed-letter layers must open each item's own form.
       const editQ = `item=${f.id}&name=${encodeURIComponent(f.name)}`
@@ -750,14 +781,14 @@ function buildRecord(layer, f){
      `location.pathname + search`, never the hash, and the server keeps the
      path only (ContentReportController::cleanPath). */
   const reportFrom = encodeURIComponent(location.pathname + location.search);
-  const reportLink = (f.id != null && !layer.pendingLayer)
+  const reportLink = (f.id != null && !layer.pendingLayer && f.state !== 'submitted')
     ? `<p class="cc-d-report"><a href="/report/${reportKind}/${encodeURIComponent(f.id)}?from=${reportFrom}"><span class="cc-bang" aria-hidden="true">!</span>${
         escPend(D.reportPage || 'Report this page')}</a></p>`
     : '';
 
   return `<div class="cc-d-head"><span class="cc-d-type" style="--c:${layer.color};color:${txtOn(layer.color)}"><i class="cc-g">${layerGlyph(layer)}</i> ${layer.label}</span>${share}</div>
     <div class="cc-d-name">${escPend(f.name)}</div>${cur}${photo}${hiddenSlot}${desc}${diff}${elev}${len}${grad}
-    <ul class="cc-d-rec">${rows}</ul>${fresh}${survey}${mine}${up}
+    <ul class="cc-d-rec">${rows}</ul>${layer.key==='experience' ? routeClimbsSlot(f) : ''}${fresh}${survey}${mine}${up}
     <div class="cc-d-src">${D.source||'Source'} · ${who || srcLine(f, osmHref)}${
       who ? `<div class="cc-d-prov">${srcLine(f, osmHref)}</div>` : ''}</div>${act}${moderate}${histSlot}${reportLink}`;
 }
@@ -1060,25 +1091,34 @@ function startPhotoWatch(name){
     () => { const el = find(); if(el) el.remove(); },
     { cancelled: () => !find() });
 }
-/* A view the rider came from and can go back to from any place drawer, such as
-   a loaded ride's summary (docs/specs/map-and-search.md §9). One at a time;
-   null when there is none. */
+/* A view the rider came from and can go back to from a place drawer
+   (docs/specs/map-and-search.md §6.3, §9). `_drawerReturn` lasts while a ride is
+   loaded (its summary); `_drawerHop` is one step back to the list a place was
+   opened from, such as the route whose climbs listed it, and lasts only while
+   that place is on screen. pickDrawerReturn decides which one shows. */
 let _drawerReturn = null;
+let _drawerHop = null;
 export function setDrawerReturn(target){ _drawerReturn = target && typeof target.go === 'function' ? target : null; }
+export function setDrawerHop(target, forKey){
+  _drawerHop = target && typeof target.go === 'function' && forKey ? {...target, forKey} : null;
+}
 export function renderDrawerBody(layer, f){
   const body = document.getElementById('drawerBody');
   body.innerHTML = buildRecord(layer, f);
-  if(_drawerReturn){
+  const pick = pickDrawerReturn(_drawerReturn, _drawerHop, (layer.letter||'')+':'+f.id);
+  if(!pick.keepHop) _drawerHop = null;
+  if(pick.target){
     const back = document.createElement('button');
     back.type = 'button';
     back.className = 'cc-d-return';
-    back.textContent = '\u2039 ' + _drawerReturn.label;
-    const target = _drawerReturn;
-    back.addEventListener('click', () => target.go());
+    back.textContent = '\u2039 ' + pick.target.label;
+    const target = pick.target;
+    back.addEventListener('click', () => { if(target === _drawerHop) _drawerHop = null; target.go(); });
     body.prepend(back);
   }
   startPhotoWatch(f.name);
-  if(layer.key==='experience' && f.id!=null) hydrateRouteCommunity(f.id);
+  if(layer.key==='experience' && f.id!=null && f.state!=='submitted') hydrateRouteCommunity(f.id);
+  if(layer.key==='experience' && f.id!=null) hydrateRouteClimbs(f.id);   // climbs on this route, map-and-search.md §6.3
   if(CC_CONFIRMABLE.has(layer.key) && f.id!=null) hydrateItemConfirm(f.id);
   /* Pending shape: show After first; fit so a moved summit is on screen. */
   const pShape = f.pending && f.pending.shape;

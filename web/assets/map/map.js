@@ -2,7 +2,7 @@
 /* Map entry (docs/specs/map-and-search.md §4). ES module: catalog-load.js
    injects it once the catalog fetch has populated the CC_* globals. */
 import { I18N, LAYER_L10N, D, tpl, VALUE_TR, trVal, sourceLabel, isRiderSource } from './i18n.js';
-import { escPend, pinPoint, wc } from './util.js';
+import { escPend, pinPoint, featureLL, attachPhotos } from './util.js';
 import { uKm } from './units.js';
 import { map, initMapControls, addSatellite, markStyleReady, initCoordPopup,
          localiseBasemapLabels } from './map-init.js';
@@ -16,7 +16,7 @@ import { trimEnds, rebuildItemIndex } from './item-index.js';
 import { sheet, initSheet } from './sheet.js';
 import { initLightbox } from './lightbox.js';
 import { render, updateZoomHint } from './render.js';
-import { COVERAGE_ON, addCoverage, widenForDeepLink, featureLL, openCoverageFeatureByName,
+import { COVERAGE_ON, addCoverage, widenForDeepLink, openCoverageFeatureByName,
          openCoverageByOsmRef, fetchCoverageCounts, covShownCount } from './coverage.js';
 import { addSurfaceTiles, setSurfaceTiles, surfaceTilesVisible } from './surface-tiles.js';
 import { schemaRows, initDrawerChrome, mapToast } from './drawer.js';
@@ -110,7 +110,14 @@ import { layerGlyph } from './icons.js';
       ? Object.assign({}, c, {source: sourceLabel(c.srcType)}) : c);
     layerByKey['climbs'].features = climbSrc;
   }
-  if(window.CC_ROUTES){
+  if(window.CC_ROUTES || window.CC_ROUTE_PREVIEW){
+    /* docs/specs/map-and-search.md §8: a ?route= link to a route waiting for
+       review brings that one route in the page (CC_ROUTE_PREVIEW, MapController),
+       for a curator who may moderate it or the rider who proposed it. It joins
+       the layer for this visit so the link opens it like any other route. */
+    const served = (window.CC_ROUTES && CC_ROUTES.routes) || [];
+    const preview = window.CC_ROUTE_PREVIEW;
+    const routeRows = preview && !served.some(r=>String(r.id)===String(preview.id)) ? served.concat([preview]) : served;
     const RIDE_CITIES={
       'Spa · Sankt Vith':['Spa','Stavelot','Vielsalm','Sankt Vith'],
       'Spa · Coo · Francorchamps':['Spa','Francorchamps','Coo','Stavelot'],
@@ -119,7 +126,7 @@ import { layerGlyph } from './icons.js';
       'Rondje Super Stockeu':['Spa','Stavelot','Coo','Trois-Ponts'],
       'Afternoon Ride':['Spa','Sart','Tiège']
     };
-    layerByKey['experience'].features = CC_ROUTES.routes.map((r,i)=>{
+    layerByKey['experience'].features = routeRows.map(r=>{
       // Demo lookup keyed by ride name. No fallback — unknown routes omit town rows.
       const cities = RIDE_CITIES[r.name];
       // Trim seeded from r.id, not index (docs/specs/route-domain.md §7): stored
@@ -132,7 +139,10 @@ import { layerGlyph } from './icons.js';
       geom:{path:trimEnds(r.loop, startM, endM)}, elev:r.elev, gain:r.gain, difficulty:r.difficulty, uploader:r.uploader,
       cities: cities || [],                                // searchable start/through towns (empty when unknown)
       bikeTypes: Array.isArray(r.bikeTypes) ? r.bikeTypes : [],   // declared suitability (may be empty = undeclared)
-      photo:r.photo||wc('Liège-Bastogne-Liège 2014 Echappée du jour Côte de Wanne.JPG','Les Meloures','Les Meloures','CC BY-SA 3.0'),
+      // The stored photo the server let through PhotoValidator, or none.
+      photo:r.photo,
+      // The gallery an approved rider photo lands in (docs/specs/photo-uploads.md §5i).
+      photos:r.photos,
       source:isRiderSource(r.srcType) ? sourceLabel(r.srcType) : (D.contributedGpx||'Contributed GPX (GPS track only)'),
       // Registry rows only when a rider (or import) actually set the attribute.
       record:(()=>{
@@ -140,6 +150,7 @@ import { layerGlyph } from './icons.js';
           {label:D.distance||'Distance', value:uKm(r.km)}
         ];
         if(r.state === 'unverified') rec.unshift({label:D.status||'Status', value:D.proposedVerify||'Proposed · ride it to verify', warn:true});
+        if(r.state === 'submitted') rec.unshift({label:D.status||'Status', value:D.stateSubmitted||'waiting for review', warn:true});
         if(cities){
           // html:true — builder-constructed markup (cityLink escapes); never on payload-derived values
           // (docs/specs/security-architecture.md §4.2).
@@ -171,7 +182,7 @@ import { layerGlyph } from './icons.js';
         return acc+6371*2*Math.asin(Math.sqrt(h));
       },0);
       if(_km>0.01) rec.unshift({label:D.length||'Length', value:uKm(_km)});
-      return {
+      return attachPhotos({
         id:s.id, rid:s.rid, name:s.name, headline:`${trVal(s.surface)} · ${trVal(s.smoothness)}`, cur:(s.cls!=='paved'), edit:'road-surface',
         geom:{path:s.path}, surfaceClass:s.cls, width:s.width, smoothness:s.smoothness,
         /* Who filed it. Every other layer's drawer names the rider; this shape
@@ -179,10 +190,9 @@ import { layerGlyph } from './icons.js';
            typed. by:0 is a rider who has not made their profile public, and
            reads as "Shared anonymously" rather than as nobody. */
         by:s.by, byName:s.byName, byUuid:s.byUuid, srcType:s.srcType,
-        photo: s.photoFile ? wc(s.photoFile, s.photoCredit, s.photoUser, s.photoLicense) : undefined,
         source:isRiderSource(s.srcType) ? sourceLabel(s.srcType) : 'OSM (surface=*)',
         record:rec
-      };
+      }, s);   // `photo` / `photos` as served, already through PhotoValidator
     });
   }
   populateSurfaceA();

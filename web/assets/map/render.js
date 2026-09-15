@@ -5,7 +5,7 @@ import { map, flyToPin, styleReady } from './map-init.js';
 import { showTip, hideTip } from './sheet.js';
 import { I18N, D, LAYER_L10N, tpl, trVal, DIFF_LABELS, CC_SEASON_LABEL } from './i18n.js';
 import { escPend, safeHref, stars, slug, txtOn, gradColor, DIFF_PURPLE, haversine,
-         featurePoint, pinPoint, currentSeason, ccUrl, wc, featureSummary } from './util.js';
+         featurePoint, pinPoint, currentSeason, ccUrl, featureSummary } from './util.js';
 import { CATALOG, active, layerByKey, mode, LETTER_KEY, KEY_LETTER } from './catalog.js';
 import { inScope, curScope } from './scope-ui.js';
 import { pinEl, miniIcon } from './icons.js';

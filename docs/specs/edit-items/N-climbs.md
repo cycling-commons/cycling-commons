@@ -13,6 +13,15 @@
 ## What it is
 A linear feature (foot → summit) with a gradient profile; the layer that closed databases lock down.
 
+**Where a climb is listed besides its own pin.** A recommended route's drawer lists
+"Climbs on this route": every served climb the route rides for at least 30% of the
+climb's `route` line, foot to summit, in order along the route, with its average
+gradient. The rule (40 m tolerance, share, direction) is in
+[route-domain.md](../route-domain.md) §6.4, the drawer rows in
+[map-and-search.md](../map-and-search.md) §6.3. Because the test reads `route` foot
+first, a climb whose line runs past its summit or starts below its foot changes
+which routes list it.
+
 ## Geometry — the three-point definition
 
 A climb's shape lives in three jsonb attributes (no dedicated schema; validated at the

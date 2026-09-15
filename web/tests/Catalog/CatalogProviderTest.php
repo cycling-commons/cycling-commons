@@ -419,6 +419,63 @@ final class CatalogProviderTest extends KernelTestCase
             'a name may only be shown with a public profile');
     }
 
+    /**
+     * A route's photo is served only when PhotoValidator shows it on the route
+     * (letter R), the same display filter every item's photo passes: a photo
+     * with no usable licence never reaches the drawer, on the served payload
+     * or on a curator's preview of a route waiting for review.
+     */
+    public function testARoutePhotoPhotoValidatorRefusesIsNotServed(): void
+    {
+        $db = $this->em->getConnection();
+        $db->executeStatement(
+            "UPDATE recommended_route SET attributes = jsonb_set(attributes, '{photo,license}', '\"Fair use\"'), updated_at = NOW() + interval '1 second' WHERE name = 'Test loop'",
+        );
+
+        $route = $this->payload()['R'][0];
+        self::assertSame('Test loop', $route['name']);
+        self::assertArrayNotHasKey('photo', $route, 'a refused photo must not be served');
+
+        $db->executeStatement("UPDATE recommended_route SET state = 'submitted' WHERE name = 'Test loop'");
+        $id = (int) $db->fetchOne("SELECT id FROM recommended_route WHERE name = 'Test loop'");
+        $preview = static::getContainer()->get(CatalogProvider::class)->submittedRoute($id);
+        self::assertNotNull($preview);
+        self::assertArrayNotHasKey('photo', $preview['route']);
+    }
+
+    /**
+     * A route's `photos` gallery, where an approved rider photo lands
+     * (photo-uploads.md §5i), is served like its single `photo`.
+     */
+    public function testARoutesPhotoGalleryIsServed(): void
+    {
+        $this->em->getConnection()->executeStatement(
+            "UPDATE recommended_route SET attributes = attributes || '{\"photos\": [{\"id\": \"0b7d2c1e-1111-4a2b-9c3d-000000000001\", \"sm\": \"https://example.test/r-s.webp\", \"lg\": \"https://example.test/r-l.webp\", \"credit\": \"Rider\", \"license\": \"CC BY-SA 4.0\"}]}'::jsonb, updated_at = NOW() + interval '1 second' WHERE name = 'Test loop'",
+        );
+
+        $route = $this->payload()['R'][0];
+        self::assertSame('Test loop', $route['name']);
+        self::assertCount(1, $route['photos'] ?? []);
+        self::assertSame('https://example.test/r-s.webp', $route['photos'][0]['sm']);
+    }
+
+    /** A road surface's photo passes the same filter. */
+    public function testASurfacePhotoPhotoValidatorRefusesIsNotServed(): void
+    {
+        $db = $this->em->getConnection();
+        $db->executeStatement(
+            "INSERT INTO item (letter, name, geom, country_code, state, source, source_ref, attributes, created_at, updated_at)
+             VALUES ('A', 'Photo dijk', ST_GeomFromText('LINESTRING(4.4 50.6, 4.5 50.7)', 4326), 'BE',
+                     'unverified', 'osm', 'way/999002',
+                     '{\"surface\": \"Asphalt\", \"photo\": {\"sm\": \"https://example.test/s.jpg\", \"lg\": \"https://example.test/l.jpg\", \"credit\": \"Tester\", \"license\": \"Fair use\"}, \"photos\": [{\"sm\": \"https://example.test/s2.jpg\", \"lg\": \"https://example.test/l2.jpg\", \"credit\": \"Tester\", \"license\": \"CC0\"}]}',
+                     now(), now())",
+        );
+
+        $segs = array_column($this->payload()['A'], null, 'name');
+        self::assertArrayNotHasKey('photo', $segs['Photo dijk']);
+        self::assertCount(1, $segs['Photo dijk']['photos']);
+    }
+
     public function testRouteShapeAndHeat(): void
     {
         $p = $this->payload();

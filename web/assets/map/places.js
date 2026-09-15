@@ -3,7 +3,7 @@
    @see docs/specs/map-and-search.md §6.5, §8 */
 import { modeShows } from './filters.js';
 import { D, tpl } from './i18n.js';
-import { escPend, safeHref, txtOn, haversine, featurePoint, COORD_COLOR } from './util.js';
+import { escPend, safeHref, txtOn, haversine, featurePoint, COORD_COLOR, drawerFitPadding, pathBounds } from './util.js';
 import { uKm, uM } from './units.js';
 import { map, flyToPin } from './map-init.js';
 import { CATALOG, CITIES, active, layerByKey, LETTER_KEY, mode } from './catalog.js';
@@ -42,9 +42,8 @@ export function openPlace(name, meta){
     let minLat=meta.ll[0],maxLat=meta.ll[0],minLng=meta.ll[1],maxLng=meta.ll[1];
     near.forEach(n=>{ if(!n.e.ll) return; const [la,ln]=n.e.ll;
       if(la<minLat)minLat=la; if(la>maxLat)maxLat=la; if(ln<minLng)minLng=ln; if(ln>maxLng)maxLng=ln; });
-    const mobile=window.innerWidth<=820;
     map.fitBounds([[minLng,minLat],[maxLng,maxLat]],
-      {padding:{top:70, bottom:mobile?300:70, left:70, right:mobile?70:400}, maxZoom:13.5, duration:900, essential:true});
+      {padding:drawerFitPadding(window.innerWidth, window.innerHeight), maxZoom:13.5, duration:900, essential:true});
   } else {
     map.flyTo({center:[meta.ll[1],meta.ll[0]], zoom:12.5, offset:[window.innerWidth<=820?0:-150,0], duration:900, essential:true});
   }
@@ -298,9 +297,13 @@ export function openRouteById(id){
     render();
   }
   openDrawer(layer,f);
-  const p=featurePoint(f); if(p) flyToPin([p[1],p[0]]);
+  // docs/specs/map-and-search.md §8: the whole route, framed clear of the
+  // drawer. Called after any scope widening, so its camera has the last word.
+  const p=featurePoint(f), bounds=pathBounds(f.geom && f.geom.path);
+  if(bounds) map.fitBounds(bounds, {padding:drawerFitPadding(window.innerWidth, window.innerHeight), maxZoom:14, duration:900, essential:true});
+  else if(p) flyToPin([p[1],p[0]]);
   if(!modeShows(mode(), layer, f) && p) revealPinAt(layer, p);  // docs/specs/map-and-search.md §12: reveal, never force-switch
-  showRouteCorrections(id);
+  if(f.state!=='submitted') showRouteCorrections(id);   // a route waiting for review takes no corrections yet
   return true;
 }
 

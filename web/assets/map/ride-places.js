@@ -55,3 +55,14 @@ export function createRideModeMemo(){
 export function ringOffset(pinDrawn, pinOffset){
   return pinDrawn && Array.isArray(pinOffset) ? pinOffset : [0, 0];
 }
+
+/* Which "back" button a place drawer shows (docs/specs/map-and-search.md §6.3,
+   §9). `base` is the lasting return of a loaded ride; `hop` is a one-step
+   return to the list a place was opened from, such as a route's climbs, kept
+   only while that very place (`hop.forKey`, `letter:id`) is on screen. The
+   nearest step back wins. Any other place drops the hop. */
+export function pickDrawerReturn(base, hop, key){
+  if(hop && hop.forKey === key) return { target: hop, keepHop: true };
+  return { target: base || null, keepHop: false };
+}
+

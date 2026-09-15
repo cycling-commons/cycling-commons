@@ -21,6 +21,7 @@ use App\Catalog\MapViewMode;
 use App\Catalog\RegionBoundaryProvider;
 use App\Catalog\RegionRegistryProvider;
 use App\Catalog\RidingStyle;
+use App\Catalog\RouteClimbService;
 use App\Catalog\RouteRankingService;
 use App\Catalog\Season;
 use App\Coverage\CoverageManifest;
@@ -158,6 +159,16 @@ final class MapController extends AbstractController
             $params['pending'] = $queue->ownPendingForMap((int) $user->getId());
         }
 
+        // docs/specs/map-and-search.md §8: `?route=<id>` shows the route it names.
+        // A route waiting for review is not in the catalog payload, so the page
+        // carries that one route, for a curator who may moderate it (the same
+        // gate as the pending payload above) and for the rider who proposed it.
+        $routeId = $request->query->getInt('route');
+        if ($user instanceof User && $routeId > 0 && null !== ($submitted = $catalogProvider->submittedRoute($routeId))
+            && $this->mayPreviewRoute($user, $submitted, $scopeProvider, $twoFactorPolicy)) {
+            $params['route_preview'] = $submitted['route'];
+        }
+
         $params['scout_review'] = $scoutReview;
         // docs/specs/moderation-and-contribution.md (Scout intake) — one vocabulary, shared with the endpoint.
         $offers = [];
@@ -171,6 +182,69 @@ final class MapController extends AbstractController
         $params['scout_details'] = $offers;
 
         return $this->render('map/index.html.twig', $params);
+    }
+
+    /**
+     * Who sees a route waiting for review: a curator who may moderate it (the
+     * gate of the map's pending payload: ROLE_CURATOR, 2FA set up, the route's
+     * region inside their area) and the rider who proposed it.
+     *
+     * @param array{regionId: int|null, proposedBy: int|null, ...} $submitted
+     *
+     * @see docs/specs/map-and-search.md §8
+     */
+    private function mayPreviewRoute(User $user, array $submitted, ModerationScopeProvider $scopeProvider, TwoFactorPolicy $twoFactorPolicy): bool
+    {
+        if ($submitted['proposedBy'] === $user->getId()) {
+            return true;
+        }
+
+        return $this->isGranted('ROLE_CURATOR') && !$twoFactorPolicy->requiresSetup($user)
+            && $scopeProvider->allowsRegion($scopeProvider->scopeFor($user), $submitted['regionId']);
+    }
+
+    /**
+     * The climbs a route rides, in order along it, for the route drawer.
+     *
+     * A live route answers anyone and is cached publicly. A route waiting for
+     * review answers only whoever may preview it, never cached. Anything else
+     * is 404, the same answer as no route at all.
+     *
+     * @see docs/specs/route-domain.md §6.4
+     * @see docs/specs/map-and-search.md §6.3
+     */
+    #[Route('/map/route/{id}/climbs', name: 'map_route_climbs', requirements: ['id' => '\d+'], methods: ['GET'])]
+    public function routeClimbs(int $id, Request $request, RouteClimbService $routeClimbs, CatalogProvider $catalogProvider, ModerationScopeProvider $scopeProvider, TwoFactorPolicy $twoFactorPolicy): Response
+    {
+        $user = $this->getUser();
+        $submitted = $catalogProvider->submittedRoute($id);
+        if (null !== $submitted) {
+            if (!$user instanceof User || !$this->mayPreviewRoute($user, $submitted, $scopeProvider, $twoFactorPolicy)) {
+                throw $this->createNotFoundException();
+            }
+            $climbs = $routeClimbs->climbsOn($id, allowSubmitted: true);
+        } else {
+            $climbs = $routeClimbs->climbsOn($id, allowSubmitted: false);
+        }
+        if (null === $climbs) {
+            throw $this->createNotFoundException();
+        }
+
+        $json = json_encode(['climbs' => $climbs], \JSON_THROW_ON_ERROR | \JSON_UNESCAPED_UNICODE);
+        $response = new JsonResponse($json, Response::HTTP_OK, [], true);
+        $response->headers->set(AbstractSessionListener::NO_AUTO_CACHE_CONTROL_HEADER, 'true');
+        if (null !== $submitted) {
+            $response->headers->set('Cache-Control', 'private, no-store');
+
+            return $response;
+        }
+        $response->setEtag(md5($json));
+        $response->setPublic();
+        // docs/specs/account-and-auth.md §5: public cache; do not let a session cookie downgrade it.
+        $response->setMaxAge(600);
+        $response->isNotModified($request);
+
+        return $response;
     }
 
     /**
@@ -204,6 +278,10 @@ final class MapController extends AbstractController
             'viewDirection' => 'd_view_direction', 'drop' => 'd_drop',
             'bikesAllowed' => 'd_bikes_allowed', 'bikesAllowedFee' => 'd_bikes_allowed_fee',
             'bikesDismount' => 'd_bikes_dismount', 'bikesDismountFee' => 'd_bikes_dismount_fee', 'bikesNotAllowed' => 'd_bikes_not_allowed',
+            'crossingTime' => 'd_crossing_time', 'durationH' => 'd_duration_h', 'durationMin' => 'd_duration_min', 'durationHMin' => 'd_duration_h_min',
+            'season' => 'd_season', 'ferrySeasonal' => 'd_ferry_seasonal', 'ferryAllYear' => 'd_ferry_all_year', 'serviceHours' => 'd_service_hours',
+            'fare' => 'd_fare', 'ferryPaid' => 'd_ferry_paid', 'ferryFree' => 'd_ferry_free', 'ferryBadge' => 'd_ferry_badge',
+            'fromFerry' => 'd_from_ferry', 'viaFerryRoute' => 'd_via_ferry_route', 'viaFerryRoutes' => 'd_via_ferry_routes',
             'status' => 'd_status', 'rating' => 'd_rating', 'website' => 'd_website', 'potable' => 'd_potable',
             'verify' => 'd_verify', 'distance' => 'd_distance', 'startsAt' => 'd_starts_at',
             'townsOnRoute' => 'd_towns_on_route', 'surfaces' => 'd_surfaces', 'submittedBy' => 'd_submitted_by', 'itemToday' => 'd_item_today',
@@ -338,6 +416,8 @@ final class MapController extends AbstractController
             'raceStart' => 'd_race_start', 'raceFinish' => 'd_race_finish', 'raceStartFinish' => 'd_race_start_finish', 'raceVia' => 'd_race_via',
             'raceEditions' => 'd_race_editions', 'raceOnce' => 'd_race_once',
             'routesH' => 'd_routes_h', 'routeKm' => 'd_route_km',
+            // docs/specs/map-and-search.md §6.3: climbs on this route.
+            'routeClimbsH' => 'd_route_climbs_h', 'routeClimbAt' => 'd_route_climb_at',
             'reportText' => 'd_report_text', 'wikiEdited' => 'd_wiki_edited', 'founded' => 'd_founded', 'inhabitants' => 'd_inhabitants', 'circa' => 'd_circa', 'yearBc' => 'd_year_bc',
             'raceStageStart' => 'd_race_stage_start', 'raceStageFinish' => 'd_race_stage_finish', 'raceStageStartFinish' => 'd_race_stage_start_finish', 'nothingHere' => 'd_nothing_here',
             'kindShop' => 'd_kind_shop', 'kindStation' => 'd_kind_station', 'kindPump' => 'd_kind_pump',
@@ -480,7 +560,7 @@ final class MapController extends AbstractController
         $response = new JsonResponse($json, Response::HTTP_OK, [], true);
         $response->setEtag(md5($json));
         $response->setPublic();
-        // docs/specs/account-and-auth.md §5 — public cache; do not let a session cookie downgrade it.
+        // docs/specs/account-and-auth.md §5: public cache; do not let a session cookie downgrade it.
         $response->headers->set(AbstractSessionListener::NO_AUTO_CACHE_CONTROL_HEADER, 'true');
         $response->setMaxAge(3600);
         $response->isNotModified($request);
@@ -519,7 +599,7 @@ final class MapController extends AbstractController
         $response = new JsonResponse($json, Response::HTTP_OK, [], true);
         $response->setEtag(md5($json));
         $response->setPublic();
-        // docs/specs/account-and-auth.md §5 — public cache; do not let a session cookie downgrade it.
+        // docs/specs/account-and-auth.md §5: public cache; do not let a session cookie downgrade it.
         $response->headers->set(AbstractSessionListener::NO_AUTO_CACHE_CONTROL_HEADER, 'true');
         $response->setMaxAge(60);
         $response->isNotModified($request);
@@ -613,7 +693,7 @@ final class MapController extends AbstractController
         $response = new JsonResponse($json, Response::HTTP_OK, [], true);
         $response->setEtag(md5($json));
         $response->setPublic();
-        // docs/specs/account-and-auth.md §5 — public cache; do not let a session cookie downgrade it.
+        // docs/specs/account-and-auth.md §5: public cache; do not let a session cookie downgrade it.
         $response->headers->set(AbstractSessionListener::NO_AUTO_CACHE_CONTROL_HEADER, 'true');
         $response->setMaxAge(300);
         $response->isNotModified($request);
@@ -637,7 +717,7 @@ final class MapController extends AbstractController
         $response = new JsonResponse($json, Response::HTTP_OK, [], true);
         $response->setEtag(md5($json));
         $response->setPublic();
-        // docs/specs/account-and-auth.md §5 — public cache; do not let a session cookie downgrade it.
+        // docs/specs/account-and-auth.md §5: public cache; do not let a session cookie downgrade it.
         $response->headers->set(AbstractSessionListener::NO_AUTO_CACHE_CONTROL_HEADER, 'true');
         $response->setMaxAge(3600);
         $response->isNotModified($request);
@@ -674,7 +754,7 @@ final class MapController extends AbstractController
         $response = new JsonResponse($json, Response::HTTP_OK, [], true);
         $response->setEtag(md5($json));
         $response->setPublic();
-        // docs/specs/account-and-auth.md §5 — public cache; do not let a session cookie downgrade it.
+        // docs/specs/account-and-auth.md §5: public cache; do not let a session cookie downgrade it.
         $response->headers->set(AbstractSessionListener::NO_AUTO_CACHE_CONTROL_HEADER, 'true');
         $response->setMaxAge(3600);
         $response->isNotModified($request);

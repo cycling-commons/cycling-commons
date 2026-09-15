@@ -480,7 +480,9 @@ final class CatalogProvider
     {
         $segments = [];
         foreach ($this->itemRows('A') as $row) {
-            $seg = ['id' => (int) $row['id'], 'name' => $row['name'], 'srcType' => $row['source']] + $this->decode($row['attributes']);
+            // Only the photos PhotoValidator shows on this segment, as feature() does.
+            $attrs = PhotoValidator::sift($this->decode($row['attributes']), PhotoPlace::of($row['letter'], $row['pin_lat'], $row['pin_lng']))['attributes'];
+            $seg = ['id' => (int) $row['id'], 'name' => $row['name'], 'srcType' => $row['source']] + $attrs;
             // Derive `cls` at serve time; a stored cls is never second-guessed.
             if (!isset($seg['cls'])) {
                 $cls = SurfaceVocabulary::tileClassFor(\is_string($seg['surface'] ?? null) ? $seg['surface'] : null);
@@ -536,62 +538,105 @@ final class CatalogProvider
      */
     private function routes(): array
     {
-        /** @var list<array{id: int, name: string, geom: string, distance_m: int, ascent_m: int, attributes: string, source: string, state: string, region_id: int|null}> $rows */
+        /** @var list<array{id: int, name: string, geom: string, distance_m: int, ascent_m: int, attributes: string, source: string, state: string, region_id: int|null, pin_lat: float|string|null, pin_lng: float|string|null}> $rows */
         $rows = $this->db->fetchAllAssociative(
-            'SELECT id, name, ST_AsGeoJSON(geom) AS geom, distance_m, ascent_m, attributes, source, state, region_id
+            'SELECT id, name, ST_AsGeoJSON(geom) AS geom, distance_m, ascent_m, attributes, source, state, region_id,
+                    ST_Y(ST_PointOnSurface(geom)) AS pin_lat, ST_X(ST_PointOnSurface(geom)) AS pin_lng
              FROM recommended_route WHERE state IN '.ItemState::servedSqlTuple().' ORDER BY id',
         );
 
-        $routes = [];
-        foreach ($rows as $row) {
-            $attrs = $this->decode($row['attributes']);
-            $route = ['id' => (int) $row['id'], 'name' => $row['name'], 'srcType' => $row['source']];
-            $route['state'] = (string) $row['state'];
-            // docs/specs/map-and-search.md §4.5
-            if (null !== $row['region_id']) {
-                $route['rid'] = (int) $row['region_id'];
-            }
-            if (isset($attrs['season'])) {
-                $route['season'] = $attrs['season'];
-            }
-            // Force float: PHP `/` yields int for even km; the fixture serializes 87.0.
-            $route['km'] = (float) ($row['distance_m'] / 1000);
-            if (isset($attrs['start'])) {
-                $route['start'] = $attrs['start'];
-            }
-            /** @var array{coordinates: list<array{0: float, 1: float}>} $geo */
-            $geo = $this->decode($row['geom']);
-            $route['loop'] = $this->flip($geo['coordinates']);
-            if (isset($attrs['elev'])) {
-                $route['elev'] = $attrs['elev'];
-            }
-            $route['gain'] = $row['ascent_m'];
-            foreach ([
-                'difficulty', 'uploader', 'photo',
-                'dominantSurface', 'surfaces', 'note', 'quietness', 'scenic', 'friendliness',
-                'bikeTypes', 'gradientLimited', 'bestDirection',
-            ] as $key) {
-                if (isset($attrs[$key])) {
-                    $route[$key] = $attrs[$key];
-                }
-            }
-            // docs/specs/route-domain.md §9 — one canonical shape on every serving path.
-            $canonicalDifficulty = DifficultyVocabulary::canonical($attrs['difficulty'] ?? null);
-            if (null !== $canonicalDifficulty) {
-                $route['difficulty'] = $canonicalDifficulty;
-            } else {
-                unset($route['difficulty']);
-            }
-            $canonicalBikeTypes = BikeTypeVocabulary::normalize($attrs['bikeTypes'] ?? null);
-            if ([] !== $canonicalBikeTypes) {
-                $route['bikeTypes'] = $canonicalBikeTypes;
-            } else {
-                unset($route['bikeTypes']);
-            }
-            $routes[] = $route;
+        return array_map($this->routeFromRow(...), $rows);
+    }
+
+    /**
+     * One route waiting for review, in the CC_ROUTES.routes shape, with who
+     * proposed it and its region so the caller can decide who may see it.
+     * Null when the id names no submitted route. The map's `?route=` link
+     * shows it (docs/specs/map-and-search.md §8); the catalog payload never
+     * carries it.
+     *
+     * @return array{route: array<string, mixed>, regionId: int|null, proposedBy: int|null}|null
+     */
+    public function submittedRoute(int $id): ?array
+    {
+        /** @var array{id: int, name: string, geom: string, distance_m: int, ascent_m: int, attributes: string, source: string, state: string, region_id: int|null, proposed_by: int|null, pin_lat: float|string|null, pin_lng: float|string|null}|false $row */
+        $row = $this->db->fetchAssociative(
+            "SELECT id, name, ST_AsGeoJSON(geom) AS geom, distance_m, ascent_m, attributes, source, state, region_id, proposed_by,
+                    ST_Y(ST_PointOnSurface(geom)) AS pin_lat, ST_X(ST_PointOnSurface(geom)) AS pin_lng
+             FROM recommended_route WHERE id = :id AND state = 'submitted'",
+            ['id' => $id],
+        );
+        if (false === $row) {
+            return null;
         }
 
-        return $routes;
+        $proposedBy = $row['proposed_by'];
+        unset($row['proposed_by']);
+
+        return [
+            'route' => $this->routeFromRow($row),
+            'regionId' => null === $row['region_id'] ? null : (int) $row['region_id'],
+            'proposedBy' => null === $proposedBy ? null : (int) $proposedBy,
+        ];
+    }
+
+    /**
+     * @param array{id: int, name: string, geom: string, distance_m: int, ascent_m: int, attributes: string, source: string, state: string, region_id: int|null, pin_lat: float|string|null, pin_lng: float|string|null} $row
+     *
+     * @return array<string, mixed>
+     */
+    private function routeFromRow(array $row): array
+    {
+        // Only the photos PhotoValidator shows on this route: letter R at a
+        // point on its line (PhotoPlace::route()), the place its photos were
+        // judged against when they were linked.
+        $attrs = PhotoValidator::sift($this->decode($row['attributes']), PhotoPlace::route($row['pin_lat'], $row['pin_lng']))['attributes'];
+        $route = ['id' => (int) $row['id'], 'name' => $row['name'], 'srcType' => $row['source']];
+        $route['state'] = (string) $row['state'];
+        // docs/specs/map-and-search.md §4.5
+        if (null !== $row['region_id']) {
+            $route['rid'] = (int) $row['region_id'];
+        }
+        if (isset($attrs['season'])) {
+            $route['season'] = $attrs['season'];
+        }
+        // Force float: PHP `/` yields int for even km; the fixture serializes 87.0.
+        $route['km'] = (float) ($row['distance_m'] / 1000);
+        if (isset($attrs['start'])) {
+            $route['start'] = $attrs['start'];
+        }
+        /** @var array{coordinates: list<array{0: float, 1: float}>} $geo */
+        $geo = $this->decode($row['geom']);
+        $route['loop'] = $this->flip($geo['coordinates']);
+        if (isset($attrs['elev'])) {
+            $route['elev'] = $attrs['elev'];
+        }
+        $route['gain'] = $row['ascent_m'];
+        foreach ([
+            // `photos`: the gallery rider photos land in on approval (photo-uploads.md §5i).
+            'difficulty', 'uploader', 'photo', 'photos',
+            'dominantSurface', 'surfaces', 'note', 'quietness', 'scenic', 'friendliness',
+            'bikeTypes', 'gradientLimited', 'bestDirection',
+        ] as $key) {
+            if (isset($attrs[$key])) {
+                $route[$key] = $attrs[$key];
+            }
+        }
+        // docs/specs/route-domain.md §9: one canonical shape on every serving path.
+        $canonicalDifficulty = DifficultyVocabulary::canonical($attrs['difficulty'] ?? null);
+        if (null !== $canonicalDifficulty) {
+            $route['difficulty'] = $canonicalDifficulty;
+        } else {
+            unset($route['difficulty']);
+        }
+        $canonicalBikeTypes = BikeTypeVocabulary::normalize($attrs['bikeTypes'] ?? null);
+        if ([] !== $canonicalBikeTypes) {
+            $route['bikeTypes'] = $canonicalBikeTypes;
+        } else {
+            unset($route['bikeTypes']);
+        }
+
+        return $route;
     }
 
     /**

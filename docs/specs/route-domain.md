@@ -21,8 +21,9 @@ carve-out from the generic item funnel is described in
 1. **A route is a curated composition, not an atomic map feature.** A ridden
    track plus editorial metadata. Riders *seed* supply (GPX proposal) but
    curators *own* it: they approve, edit metadata, and retire. Riders never
-   edit route data — rider signal arrives as votes, ride confirmations, and
-   moderated correction suggestions. This also permanently retires the
+   edit route data: rider signal arrives as votes, ride confirmations,
+   moderated correction suggestions, and photos, which arrive as a photo
+   correction (route-domain.md §4.5). This also permanently retires the
    route-id/item-id collision bug class (`/improve` refuses `type=R`).
 2. **Purpose-built pipeline.** The route domain reuses nothing from the item
    `Submission`/`ModerationService` pipeline. Proposals are `RecommendedRoute`
@@ -32,7 +33,10 @@ carve-out from the generic item funnel is described in
    tension with — the later owner principle "one way to moderate regardless
    of content type" ([photo-uploads.md](photo-uploads.md) §5c). Reconciling
    the two is an open owner decision for whenever route moderation is next
-   redesigned; neither document silently overrides the other.
+   redesigned; neither document silently overrides the other. Rider photos
+   hold to the later principle within the route domain: they add no
+   mechanic of their own and ride the route's approve / reject and a
+   correction's done / dismiss (photo-uploads.md §5i).
 3. **Bounded supply.** A configurable ceiling on *active* routes per region;
    a full region admits a new route only by retiring one. Approve-freely /
    show-top-N was rejected: an approved-but-invisible route confuses
@@ -109,7 +113,7 @@ Deskside display pseudonymizes contributors (`rider#<hash>`,
 | Column | Type / constraint |
 |---|---|
 | `route_id`, `user_id` | bigint (no FK) |
-| `reason` | `RouteSuggestionReason` enum: `broken-track / trim-privacy / duplicate / not-rideable / other` |
+| `reason` | `RouteSuggestionReason` enum: `broken-track / trim-privacy / duplicate / not-rideable / other / photo` (`photo` only from the route photo form, route-domain.md §4.5; its photos are `media_upload` rows with `route_suggestion_id`) |
 | `note` | text, nullable, ≤ 2000 chars (`RouteCommunityService::NOTE_MAX_LENGTH`) — stored raw, HTML-escaped on desk render |
 | `segments` | jsonb, nullable — located stretches (route-domain.md §7) |
 | `status` | `RouteSuggestionStatus` enum: `pending / done / dismissed` |
@@ -235,6 +239,29 @@ are consumed for `ascent_m`, not persisted in the geometry). `distance_m`
 therefore reflects the trimmed track. The GPX download (route-domain.md §6)
 serves exactly this stored geometry, without elevation.
 
+### 4.5 Photos: with a proposal, and for a live route
+
+`/propose-route` is the one form for routes, and it takes rider photos the
+way the `/improve` wizard does (same uploader, consent, limits and validator;
+the contract is photo-uploads.md §5i):
+
+- **With a proposal.** A photo fieldset sits under the route details. The
+  photos are claimed by the new route inside the proposal's transaction and
+  decided with it: approving the proposal attaches the ticked photos to
+  `attributes.photos`, rejecting it rejects them.
+- **For a live route.** `/propose-route?route=<id>` (`ROLE_USER`, SERVED
+  routes only, anything else is 404) renders the same form with photos and a
+  note only, because riders never edit a route's data (§1). Sending it creates
+  a `route_suggestion` with reason **`photo`** carrying the photos
+  (`App\Contribution\RoutePhotoService`, consuming the `route_suggest`
+  limiter, §10); it needs at least one photo. Marking the correction done on
+  the desk attaches the ticked photos, dismissing it rejects them. A curator's
+  own photos, within their areas, are marked done at once and appear on the
+  route immediately. The map drawer's add-photo prompt for a route with no
+  photo links here (map-and-search.md §6). The drawer's JSON
+  `POST /routes/{id}/suggest` refuses reason `photo` (422 `invalid_reason`):
+  a photo correction carries photos, so it comes through this form.
+
 ## 5. Desk moderation — `/moderate/routes`
 
 Locale-prefixed, `ROLE_CURATOR` (`App\Controller\RouteModerateController`),
@@ -248,9 +275,12 @@ directly (`App\Moderation\RouteQueue`).
   The shell's ROUTES tab badge counts proposals **plus** pending corrections,
   so a waiting correction is never invisible.
 - **Decisions happen only on the detail page** (the review surface: trimmed
-  track on a map, metadata, distance/ascent, pseudonymized proposer, region
-  count vs cap): approve / reject (note) / retire (note required) per the
-  route-domain.md §3 guards.
+  track on a map, metadata, distance/ascent, proposer, region count vs cap):
+  approve / reject (note) / retire (note required) per the route-domain.md §3
+  guards. The metadata table's "Proposed by" row names the proposer's display
+  name and links it to their rider profile (`/riders/{uuid}`) only when the
+  rider made that profile public; otherwise it says the profile is not public
+  (owner 2026-09-15).
 - **Curator metadata edit**: registry-driven form (same field definitions as
   the proposal form, route-domain.md §9); every changed field appends one
   `route_change_history` row with the route's *actual* old value; unchanged
@@ -260,6 +290,11 @@ directly (`App\Moderation\RouteQueue`).
 - **Corrections**: listed against their route with a located-stretch count
   (`jsonb_array_length(segments)`); curator marks done / dismissed (each
   messages the rider) or Trashes spam (hard delete, no message).
+- **Photos**: a proposal's pending photos show on its detail page inside the
+  decision form, a photo correction's on its card, each with its distance to
+  the route, its month and a **Keep** box ticked by default. Approve or done
+  keeps the ticked photos and rejects the rest; reject or dismiss rejects them
+  all; Trash purges them (photo-uploads.md §5i).
 - The desk shows a measured-vs-declared surface hint:
   `SurfaceVocabulary::suggestFromProfile()` folds the measured A-layer
   profile to the coarse Asphalt/Mixed/Gravel buckets (`SurfaceVocabulary::BUCKETS`).
@@ -295,6 +330,8 @@ Endpoints (unlocalized paths, `App\Controller\RouteCommunityController` +
 
 Any other route state → 404 (defence-in-depth: non-SERVED routes are never
 served, so the drawer can't open for them anyway).
+
+`GET /map/route/{id}/climbs`, the climbs a route rides, is public for a SERVED route; its rule and access are in route-domain.md §6.4.
 
 ### 6.1 The JSON-API auth pattern
 
@@ -350,6 +387,47 @@ Ride/vote counts and per-user state come only from the authenticated,
 uncached `/community` fetch on drawer-open; best-of is a separate public
 endpoint (route-domain.md §8). Community writes therefore never invalidate
 the bulk payload.
+
+### 6.4 Climbs on a route: the rule
+
+A climb (letter N) is a line from foot to summit (`attributes.route`, see
+[edit-items/N-climbs.md](edit-items/N-climbs.md)). It is listed on a route when
+the route really rides it, measured in PostGIS against the route's stored
+geometry (owner decision 2026-09-15):
+
+- **Served climbs only**, by the catalog payload's rules: a served state
+  (`ItemState::servedSqlTuple()`) and not reported gone (`GoneRows`).
+- **Tolerance 40 m** (`RouteClimbService::TOLERANCE_M`): the climb line is cut
+  with a 40 m geography buffer around the route, so a GPX recorded a few metres
+  off the mapped road still matches. On the Belgian dev routes 30 m and 50 m
+  gave the same lists.
+- **Share at least 30%** (`MIN_SHARE = 0.3`): the length of the climb line
+  inside the buffer over the climb line's own length. A race route often rides
+  only part of a climb: Liège-Bastogne-Liège takes half of the Côte de Stockeu
+  (owner 2026-09-15). A road the route only crosses shares a few dozen metres;
+  passing near the foot is not riding it.
+- **Foot to summit only.** The shared part's points, read foot to summit, are
+  located on the route (`ST_LineLocatePoint`); the climb counts when they move
+  forward along the route (`ridesFootToSummit()`: each step votes with its
+  length, and a step of more than half the route is the seam of a loop, read the
+  short way round). A route that rides the climb downhill passes it but does not
+  climb it, and is not listed.
+- **km along** is where the route joins the shared part from the foot side
+  (its route fraction times the route's geodesic length), which is the foot
+  itself when the route rides the whole climb. Rows are ordered by it, one
+  decimal in the payload.
+
+Access: a SERVED route answers anyone, `Cache-Control: public, max-age=600`
+with an ETag. A route waiting for review answers only whoever may preview it on
+the map (map-and-search.md §8: a curator who may moderate its region, with 2FA
+set up, or the rider who proposed it; `MapController::mayPreviewRoute`),
+`private, no-store`. Anything else is 404. The list is not in
+`/map/catalog.json` (route-domain.md §6.3): it is per route and only needed
+when a drawer opens.
+
+Known limit: a route that rides the same road up and down (out and back)
+locates both passes to one of them, so the direction test can read the ascent
+as a descent.
 
 ## 7. Located corrections (stretches on a suggestion)
 

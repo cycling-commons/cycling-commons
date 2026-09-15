@@ -6,20 +6,21 @@
    `cov-sel` overlay. The server parses the GPX in memory and stores nothing. */
 import { map, flyToPin } from './map-init.js';
 import { I18N, D, tpl } from './i18n.js';
-import { escPend, txtOn } from './util.js';
+import { escPend, txtOn, drawerFitPadding } from './util.js';
 import { uKm, uM, uElev } from './units.js';
 import { layerGlyph } from './icons.js';
 import { openCoverageByRef, invalidateCoverageDrawer } from './coverage.js';
 import { itemIndex } from './item-index.js';
 import { CATALOG, layerByKey, LETTER_KEY, active, mode } from './catalog.js';
 import { sheet } from './sheet.js';
-import { closeDrawer, highlightAt, clearHighlight, setDrawerReturn, mapToast } from './drawer.js';
+import { closeDrawer, highlightAt, clearHighlight, setDrawerReturn } from './drawer.js';
 import { openRouteById, bumpPlaceReq } from './places.js';
 import { rideScopeFor, scopeKey } from './ride-scope.js';
 import { listedPlaceKeys, ringOffset, createRideModeMemo } from './ride-places.js';
-import { setListedPlaces, poolPinDrawn } from './osm-pools.js';
+import { setListedPlaces } from './osm-pools.js';
 import { liftModeFor, applyMode } from './panels.js';
-import { render, featureVisible, chipsPass, staysAccessible, showPlaceAnyway, releaseShownAnyway } from './render.js';
+import { render, releaseShownAnyway } from './render.js';
+import { openListedPlace, listedPinDrawn } from './listed-place.js';
 
 export function initRideCheck(){
     if(!window.CC_RIDECHECK) return;                       // anonymous: no control rendered
@@ -76,20 +77,12 @@ export function initRideCheck(){
       const back=rideMode.restore(mode());
       if(back) applyMode(back,{persist:false});
     }
-    /* Open one listed place so the map really draws it. The view mode lifts
-       with the deep-link rule; a place the rider's own filter chips hide is
-       shown anyway, that one place only, until the drawer moves on or the ride
-       is cleared (showPlaceAnyway in render.js; the chips never change). One
-       toast names every reason the place was hidden. */
+    /* Open one listed place so the map really draws it (openListedPlace in
+       listed-place.js: the mode lifts with the deep-link rule, a place the chips
+       hide is shown anyway). A lift is remembered so Clear puts the mode back. */
     function openListed(layer, f, go){
-      // Stays are drawn by their pool, whose one chip is accessibility (osm-pools.js).
-      const chipHidden = layer.key==='stays' ? !staysAccessible(f) : !chipsPass(layer, f);
-      if(chipHidden) showPlaceAnyway(layer.letter, f.id);
-      const from=mode();
-      const lifted=liftModeFor(layer, f, chipHidden ? {also:D.toastFilterToo||'your filter hides it too'} : undefined);
-      if(lifted) rideMode.lifted(from, mode());
-      else if(chipHidden) mapToast(D.toastShownAnyway||'Shown anyway · your filter hides this place', {center:true});
-      go();
+      const from=openListedPlace(layer, f, go);
+      if(from!=null) rideMode.lifted(from, mode());
     }
     function repaintScopeHeader(){
       if(window.CCScopeHeader) window.CCScopeHeader.paint(window.CC_I18N||{});
@@ -102,13 +95,6 @@ export function initRideCheck(){
       if(el) el.textContent=el.textContent+' · '+(I18N.rcScopeFromRide||'from your ride');
     }
 
-    /* Whether the normal map draws a bottom-anchored pin for this index entry
-       right now, so the hover ring may sit on the pin body. */
-    function pinDrawn(entry){
-      if(!entry || !entry.layer) return false;
-      if(entry.poolKey) return poolPinDrawn(entry.poolKey, entry.id);
-      return active.has(entry.layer.key) && featureVisible(entry.layer, entry.modeF||{});
-    }
     function showLayer(k){
       if(active.has(k)) return;
       active.add(k);
@@ -154,10 +140,9 @@ export function initRideCheck(){
         paint:{'line-color':'#3A3A33','line-width':4,'line-opacity':1,'line-dasharray':[2,1.6]}});
       let minLat=90,maxLat=-90,minLng=180,maxLng=-180;
       d.track.forEach(p=>{ if(p[0]<minLat)minLat=p[0]; if(p[0]>maxLat)maxLat=p[0]; if(p[1]<minLng)minLng=p[1]; if(p[1]>maxLng)maxLng=p[1]; });
-      // Drawer-aware framing, same as openPlace.
-      const mobile=window.innerWidth<=820;
+      // Drawer-aware framing, same as openPlace and a ?route= link.
       map.fitBounds([[minLng,minLat],[maxLng,maxLat]],
-        {padding:{top:70, bottom:mobile?300:70, left:70, right:mobile?70:400}, duration:900, essential:true});
+        {padding:drawerFitPadding(window.innerWidth, window.innerHeight), duration:900, essential:true});
       renderRideDrawer(d);
     }
     function renderRideDrawer(d){
@@ -221,7 +206,7 @@ export function initRideCheck(){
           if(!entry){ flyToPin([it.ll[1],it.ll[0]]); highlightAt(it.ll); return; }
           openListed(entry.layer, entry.modeF, ()=>entry.go());
         };
-        b.onmouseenter=()=>highlightAt((entry && entry.ll) || it.ll, ringOffset(pinDrawn(entry), entry && entry.hlOff));
+        b.onmouseenter=()=>highlightAt((entry && entry.ll) || it.ll, ringOffset(listedPinDrawn(entry), entry && entry.hlOff));
         b.onmouseleave=clearHighlight;
       });
       const covByLetter=Object.fromEntries(cov.map(g=>[g.letter,g]));

@@ -1721,7 +1721,15 @@ credit linking licence deed + source + author, N/M counter — media rules in
 frame: a wide photo fills it, and a photo taller than it is wide (`is-tall`,
 set by `drawer.js` once the image has loaded) is shown whole on a quiet ground
 instead of being cropped, so a statue keeps its head (owner 2026-09-15); or, when the item has a DB id
-and no photo, an **add-photo CTA** deep-linking the improve wizard; description;
+and no photo, an **add-photo CTA** deep-linking the improve wizard on the
+photo step, or, for a live recommended route, its photo form
+`/propose-route?route=<id>` (route-domain.md §4.5; none for a route still
+waiting for review). The link is `addPhotoHref()` in `assets/map/add-photo.js`. The photo
+is only ever what the payload serves: an item's, a road surface's and a
+recommended route's `photo` / `photos`, each put through
+`PhotoValidator::sift()` on the server (photo-uploads.md §5h) and served from
+our own photo store (photo-uploads.md §5f). The front end builds no photo URL
+of its own and adds no stand-in: a route with no photo shows no photo; description;
 difficulty scale; elevation profile (static SVG, §13.2 upgrades it); gradient
 strip; the record rows (§6.2) with per-row method tags where present, a long
 unbroken value such as a web address wrapping inside the drawer; freshness
@@ -1842,6 +1850,31 @@ Footer actions are per-type:
 | Confirmable utilities (`CC_CONFIRMABLE = {water, services, hazards, transit, shelter}`) with DB id | confirmation panel (potability / "still here?"), hydrated async — contract in [moderation-and-contribution.md](moderation-and-contribution.md) |
 | K route | community panel (rode-it / typed vote / suggest-a-correction / `⤓ Download GPX` from `GET /routes/{id}.gpx`) — contract in [route-domain.md](route-domain.md); riders never get an edit link |
 | Pending submission (curators) | moderation card (approve / needs-info / reject, A/R arm-then-Enter keyboard flow) — [moderation-and-contribution.md](moderation-and-contribution.md) |
+
+**Climbs on this route** (route drawer, owner decision 2026-09-15). Under the
+route's attribute rows, a route with a DB id gets a section "Climbs on this
+route" (`d_route_climbs_h`): every climb (letter N) the route really rides, in
+order along the route, one row each reading `Name · km 112 · ▲ 8.7% avg`. The
+km is the distance along the route in the rider's unit, whole units
+(`d_route_climb_at`, `{u} {n}`); the gradient is the climb's average
+(`avgGradient`), its headline figure, the one the climb drawer and hover line
+lead with. The list is fetched when the drawer opens from
+`GET /map/route/{id}/climbs` (the rule and access are in
+[route-domain.md](route-domain.md) §6.4), so the cached catalog payload does not
+grow; a route that rides no climb shows no section, and a failed fetch shows
+nothing. A route waiting for review (a `?route=` preview, §8) gets the list too,
+for whoever may preview it. The rows use the one drawing path: nothing draws a
+pin of its own. Click opens the climb through its item-index entry
+(`entry.go()`), with the mode lift and "shown anyway" rule of a ride-check row
+(§9, `openListedPlace()` in `listed-place.js`), after moving the scope to the
+climb's country when the scope hides it (`widenForDeepLink`); hover rings the
+climb's pin at its foot with `highlightAt`. Code: `route-climbs.js` writes the
+rows, `hydrateRouteClimbs()` in `listed-place.js` fetches and wires them.
+The climb drawer opened from a row starts with a **‹ route name** button that
+reopens the route and its list (`setDrawerHop` in `drawer.js`). It is a one-step
+return: it shows only while that climb is on screen, any other place drops it,
+and it wins over a loaded ride's "‹ Ride summary" for that one drawer
+(`pickDrawerReturn` in `ride-places.js`, §9).
 
 **No id ⇒ no edit/add links**: the edit-bridge only ever binds to a real DB
 item id — a name-slug guess is never a faithful target.
@@ -2200,7 +2233,7 @@ is the pending permalink contract):
 
 **Both id params may carry a readable tail:** `?item=482/cote-de-wanne`, `?ref=node/462149319/roche-aux-faucons`. The id is everything before the first `/` after it (`idFromShare` / `refFromShare` in `share-links.js`); the slug is discarded on read. A renamed place, a hand-trimmed link and every bare-id link already sent out all open the same point. Slashes stay unencoded in the query value, because a `%2F` in the middle defeats the reason the slug is there.
 | `?pending=<id>` | curator deep link from the /moderate queue: activates the ⚑ layer, opens the submission drawer |
-| `?route=<id>` | opens that R route **selected** (curator Routes desk link): lifts the view mode like `?item=` (above), then highlights + shows the curator corrections overlay. The reveal pin (§12) stays as the fallback when the target is still not drawn. |
+| `?route=<id>` | opens that R route **selected** (curator Routes desk link, a rider's proposals, the town card): moves the scope to the country of the route's first point when it is outside the scope (`widenForDeepLink`, `featureLL` in util.js reads a line's first point), lifts the view mode like `?item=` (above), opens the drawer, and frames the **whole route** clear of the drawer (`fitBounds` with `drawerFitPadding` and `pathBounds`, util.js: 400 px on the right on a desktop, the half-screen sheet on a phone; max zoom 14), then highlights it and shows the curator corrections overlay. The route's camera runs after the scope's own fit, so it has the last word. **A route waiting for review** is not in the catalog payload: when the link names one, `MapController` puts that one route in the page as `window.CC_ROUTE_PREVIEW` (`CatalogProvider::submittedRoute`), for a curator whose moderation scope covers its region (the same 2FA-complete gate as the pending payload) and for the rider who proposed it, and for nobody else. It joins the routes layer for that visit with a "Status: waiting for review" row and no ride, vote, correction, download or report controls, because none of those endpoints take a route that is not live. The reveal pin (§12) stays as the fallback when the target is still not drawn. Owner-reported 2026-09-15: the Routes desk's "Open this route on the map" for route 111 left the map on North Holland. |
 
 The same lift applies to a ride-check row (§9), commons places and followed routes alike: opening a listed place the rider's mode hides lifts to the lowest rung that draws it, exactly as `?item=` does. Clear undoes a ride's lift (§4.2).
 
@@ -2313,8 +2346,9 @@ requirement).
     loaded (§5, `setListedPlaces()`), so none folds into a count bubble along
     the track. Hover rings the place's own spot (`highlightAt`), on the pin body
     (`[0,-16]`) only when a bottom-anchored pin is really drawn there
-    (`poolPinDrawn()` for pools, `featureVisible()` for other layers,
-    `ringOffset()` in `ride-places.js`), otherwise on the exact point. Click
+    (`listedPinDrawn()` in `listed-place.js`: `poolPinDrawn()` for pools,
+    `featureVisible()` for other layers; `ringOffset()` in `ride-places.js`),
+    otherwise on the exact point. Click
     lifts the view mode with the deep-link rule (§8, `liftModeFor` and
     `modeToShow`: the lowest rung that draws the place, this visit only, with
     the toast; nothing moves when the current mode already draws it), then
@@ -2333,7 +2367,7 @@ requirement).
     this place" (`d_toast_shown_anyway`). The chips do not change. When the mode
     lifts too, one toast carries both reasons ("Shown in Confirmed · Best of
     hides this place · your filter hides it too", `d_toast_filter_too`). The
-    rule and its release are in §4.3 (`openListed()` in ride-check.js,
+    rule and its release are in §4.3 (`openListedPlace()` in listed-place.js,
     `showPlaceAnyway()` in render.js). Followed-route rows open the same way.
   - In the drawer, coverage is a separate section under its own heading with a
     provenance note, so uncurated OSM never reads as a verified Commons pick.

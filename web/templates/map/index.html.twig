@@ -704,6 +704,11 @@ window.CC_VENDOR = {{ {
      never is_granted() here: a setup-pending curator holds the role but not
      the capability (the 2FA policy applies in exactly one place). #}
   {% if pending_is_curator|default(false) %}window.CC_IS_CURATOR = true;{% endif %}
+  {# A route waiting for review that `?route=` names, for a curator who may
+     moderate it or the rider who proposed it (MapController,
+     docs/specs/map-and-search.md §8). Never part of the catalog payload. #}
+  {% if route_preview is defined %}window.CC_ROUTE_PREVIEW = {{ route_preview|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
+  {% endif %}
   window.CC_PENDING = {{ pending|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
   {# Places approved as "Not there anymore" — the curator ghost layer, so a
      rebuilt place can be found and reactivated via the ordinary edit form.

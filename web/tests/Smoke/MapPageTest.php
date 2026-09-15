@@ -82,6 +82,14 @@ final class MapPageTest extends WebTestCase
         $bikes = array_values(array_filter($schema['F'], static fn (array $f): bool => 'bikesOnBoard' === $f['key']))[0];
         self::assertSame($bikes['label'], $i18n['d']['bikesOnBoard']);
         self::assertSame('Autorisés, payant', $i18n['d']['bikesAllowedFee']);
+        // A ferry route's facts, and where a dock's inherited answer came from
+        // (coverage-provider.md §5): every token osm-tags.js names has a string.
+        foreach (['crossingTime', 'durationH', 'durationMin', 'durationHMin', 'season', 'ferrySeasonal', 'ferryAllYear',
+            'serviceHours', 'fare', 'ferryPaid', 'ferryFree', 'ferryBadge', 'fromFerry', 'viaFerryRoute', 'viaFerryRoutes'] as $key) {
+            self::assertNotSame('', $i18n['d'][$key] ?? '', $key);
+            self::assertStringNotContainsString('map.d_', $i18n['d'][$key], $key.' is translated');
+        }
+        self::assertSame('selon le bac {name}', $i18n['d']['fromFerry']);
     }
 
     public function testMapBootsFromCatalogEndpoint(): void

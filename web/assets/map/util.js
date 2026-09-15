@@ -28,6 +28,18 @@ export function haversine(a,b){ const R=6371,d=Math.PI/180;
   const x=Math.sin((b[0]-a[0])*d/2)**2 + Math.cos(a[0]*d)*Math.cos(b[0]*d)*Math.sin((b[1]-a[1])*d/2)**2;
   return 2*R*Math.asin(Math.sqrt(x)); }
 export function featurePoint(f){ return (f.geom&&f.geom.ll) || (f.route&&f.route[0]) || (f.geom&&f.geom.path&&f.geom.path[0]) || null; }
+// [lat, lng] of a catalogue feature, whichever shape it carries: a pool
+// feature's own point, a GeoJSON point, or featurePoint() for a climb, a
+// surface stretch or a route (its first point), so a deep link to a line can
+// move the scope to the line's country (docs/specs/map-and-search.md §8).
+export function featureLL(f){
+  if(!f) return null;
+  if(Array.isArray(f.ll) && f.ll.length===2) return [+f.ll[0], +f.ll[1]];
+  const c=f.geometry && f.geometry.coordinates;
+  if(Array.isArray(c) && c.length>=2 && typeof c[0]==='number') return [+c[1], +c[0]];
+  const p=featurePoint(f);
+  return Array.isArray(p) && p.length>=2 ? [+p[0], +p[1]] : null;
+}
 // Pin at the foot (`route[0]`); featurePoint() prefers the stored summit. One helper, both readers.
 export function pinPoint(f){ return (f.route&&f.route[0]) || (f.geom&&f.geom.ll) || (f.geom&&f.geom.path&&f.geom.path[0]) || null; }
 export function currentSeason(){ const m=new Date().getMonth()+1; return m>=3&&m<=5?'spring':m>=6&&m<=8?'summer':m>=9&&m<=11?'autumn':'winter'; }
@@ -47,13 +59,6 @@ export const ccUrl = lic => ({
   'CC BY-SA 2.0 be':'https://creativecommons.org/licenses/by-sa/2.0/be/',
   'CC BY-SA 2.0 de':'https://creativecommons.org/licenses/by-sa/2.0/de/'
 }[lic] || 'https://commons.wikimedia.org/wiki/Commons:Licensing');
-export const wc = (file, credit, user, license) => {
-  const enc = encodeURIComponent(file), page = file.replace(/ /g,'_');
-  return { sm:`https://commons.wikimedia.org/wiki/Special:FilePath/${enc}?width=520`,
-           lg:`https://commons.wikimedia.org/wiki/Special:FilePath/${enc}?width=1400`,
-           credit, creditUrl: user ? `https://commons.wikimedia.org/wiki/User:${user.replace(/ /g,'_')}` : '',
-           license, source:`https://commons.wikimedia.org/wiki/File:${page}` };
-};
 
 // docs/specs/photo-uploads.md §5 — `photos[]` (gallery) and legacy singular `photo`; JSON strings parsed; drop unparseable.
 export function attachPhotos(target, props){
@@ -95,6 +100,27 @@ export function pinOffset(viewportWidth, viewportHeight, mapTop, mapHeight){
   if(viewportWidth > 820) return [-150, 0];
   const visibleMiddle = (mapTop + viewportHeight * 0.5) / 2;
   return [0, Math.round(visibleMiddle - (mapTop + mapHeight / 2))];
+}
+
+/* fitBounds padding that frames a shape (a route, a ride, a town and its
+   neighbours) in the part of the map the drawer leaves free: clear of the
+   right-hand panel on a desktop, above the bottom sheet on a phone, which
+   opens at half the screen (pinOffset). docs/specs/map-and-search.md §6, §8. */
+export function drawerFitPadding(viewportWidth, viewportHeight){
+  if(viewportWidth > 820) return {top:70, bottom:70, left:70, right:400};
+  return {top:70, bottom:Math.max(300, Math.round(viewportHeight * 0.5) + 16), left:70, right:70};
+}
+
+/* [[west, south], [east, north]] of a path of [lat, lng] points, as fitBounds
+   takes it; null when the path has no usable point. */
+export function pathBounds(path){
+  if(!Array.isArray(path) || !path.length) return null;
+  let s=90, n=-90, w=180, e=-180;
+  for(const p of path){
+    if(!Array.isArray(p) || !Number.isFinite(p[0]) || !Number.isFinite(p[1])) return null;
+    if(p[0]<s) s=p[0]; if(p[0]>n) n=p[0]; if(p[1]<w) w=p[1]; if(p[1]>e) e=p[1];
+  }
+  return [[w, s], [e, n]];
 }
 
 /* Where the Locate me dot lands (docs/specs/map-and-search.md §4.0): the middle
