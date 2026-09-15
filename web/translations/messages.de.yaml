@@ -2331,6 +2331,7 @@ map:
   d_kind_station: 'Selbstbedienungsstation'
   d_kind_pump: 'Öffentliche Pumpe'
   d_along_ride: 'Entlang deiner Tour'
+  d_ride_summary: 'Tourübersicht'
   d_ride_meta: 'im Umkreis von {r} des Tracks — nur zur Orientierung, nichts gespeichert.'
   d_clear_ride: 'Tour entfernen'
   d_ride_follows: 'Deine Tour folgt'

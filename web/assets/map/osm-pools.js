@@ -9,6 +9,7 @@ import { inScope } from './scope-ui.js';
 import { mintKindIcons, pinEl, clusterEl } from './icons.js';
 import { staysAccessible } from './render.js';
 import { modeShows } from './filters.js';
+import { splitPool } from './ride-places.js';
 import { openDrawer, osmDrawer, waterDrawer } from './drawer.js';
 
 export function addWaterOsm(){
@@ -49,6 +50,30 @@ export function addOsmDots(key, data, srcDesc){
   osmLayers[key]={data, src:srcDesc};
 }
 export const confState = {};
+
+/* Places a loaded ride check lists (docs/specs/map-and-search.md §9), as
+   `letter:id`. The pool keeps them out of its clustered source and draws each
+   as its own leaf pin, so none folds into a count bubble along the track. Layer
+   counts read `st.confirmed`, never the source, so they do not move. Empty when
+   no ride is loaded. */
+let _listed = new Set();
+export function setListedPlaces(keys){
+  _listed = new Set(keys || []);
+  refilterClusters();
+  updateConfMarkers();
+}
+function poolSplit(st){
+  return splitPool(st.confirmed, st.layer ? st.layer.letter : '', _listed, f => poolVisible(f, st.layer));
+}
+const clusterData = st => ({type:'FeatureCollection', features: poolSplit(st).cluster});
+/** Whether the pool draws a leaf pin for this place right now (layer on, mode and scope showing it). */
+export function poolPinDrawn(key, id){
+  const st = confState[key+'-conf'];
+  if(!st || !active.has(key) || id == null) return false;
+  const f = st.confirmed.find(x => x.properties && x.properties.id === id);
+  if(!f || !poolVisible(f, st.layer)) return false;
+  return !(key==='stays' && !staysAccessible(f.properties));
+}
 export function setupConfClusters(){
   Object.keys(osmLayers).forEach(key=>{
     const info=osmLayers[key]; if(!info || !info.data) return;
@@ -56,10 +81,10 @@ export function setupConfClusters(){
     const curated = info.data.features;
     const srcId=key+'-conf';
     if(!curated.length || map.getSource(srcId)) return;
-    map.addSource(srcId,{type:'geojson', cluster:true, clusterRadius:48, clusterMaxZoom:13,
-      data:{type:'FeatureCollection', features:curated.filter(f => poolVisible(f, layerByKey[key]))}});
+    const st={key, layer:layerByKey[key], info, onScreen:{}, confirmed:curated};
+    map.addSource(srcId,{type:'geojson', cluster:true, clusterRadius:48, clusterMaxZoom:13, data:clusterData(st)});
     map.addLayer({id:srcId+'-hit', type:'circle', source:srcId, paint:{'circle-radius':0,'circle-opacity':0}});
-    confState[srcId]={key, layer:layerByKey[key], info, onScreen:{}, confirmed:curated};
+    confState[srcId]=st;
   });
 }
 // Join an approved item into its pool without reload. Idempotent by id; replace on edit.
@@ -76,7 +101,7 @@ export function addCuratedFeature(key, feature){
   if(st){
     st.confirmed = info.data.features;
     const src = map.getSource(srcId);
-    if(src) src.setData({type:'FeatureCollection', features: st.confirmed.filter(f => poolVisible(f, st.layer))});
+    if(src) src.setData(clusterData(st));
   } else {
     setupConfClusters();
   }
@@ -112,7 +137,7 @@ export function refreshPools(){
     st.info = info;
     st.confirmed = data.features;
     const src = map.getSource(srcId);
-    if(src) src.setData({type:'FeatureCollection', features: data.features.filter(f => poolVisible(f, st.layer))});
+    if(src) src.setData(clusterData(st));
     for(const m in st.onScreen) st.onScreen[m].remove();
     st.onScreen = {};
   });
@@ -125,7 +150,7 @@ export function refreshPools(){
 export function refilterClusters(){
   Object.keys(confState).forEach(srcId=>{
     const st=confState[srcId], src=map.getSource(srcId);
-    if(src) src.setData({type:'FeatureCollection', features:st.confirmed.filter(f => poolVisible(f, st.layer))});
+    if(src) src.setData(clusterData(st));
   });
 }
 export function confLeafPin(st, p, co){
@@ -154,7 +179,8 @@ export function updateConfMarkers(){
     const st=confState[srcId], on=st.onScreen;
     if(!active.has(st.key)){ for(const k in on) on[k].remove(); st.onScreen={}; return; }
     if(!map.getSource(srcId) || !map.isSourceLoaded(srcId)) return;
-    const feats=map.querySourceFeatures(srcId), next={};
+    // The listed places join the source's own features and pass the same leaf-pin code.
+    const feats=map.querySourceFeatures(srcId).concat(_listed.size ? poolSplit(st).leaves : []), next={};
     for(const f of feats){
       const co=f.geometry.coordinates, p=f.properties;
       const key = p.cluster ? 'c'+p.cluster_id : 'l'+co[0].toFixed(5)+','+co[1].toFixed(5);

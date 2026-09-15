@@ -338,7 +338,7 @@ final class MapController extends AbstractController
             'reportText' => 'd_report_text', 'wikiEdited' => 'd_wiki_edited', 'founded' => 'd_founded', 'inhabitants' => 'd_inhabitants', 'circa' => 'd_circa', 'yearBc' => 'd_year_bc',
             'raceStageStart' => 'd_race_stage_start', 'raceStageFinish' => 'd_race_stage_finish', 'raceStageStartFinish' => 'd_race_stage_start_finish', 'nothingHere' => 'd_nothing_here',
             'kindShop' => 'd_kind_shop', 'kindStation' => 'd_kind_station', 'kindPump' => 'd_kind_pump',
-            'rideCheck' => 'd_ride_check',
+            'rideCheck' => 'd_ride_check', 'rideSummary' => 'd_ride_summary',
             'alongRide' => 'd_along_ride', 'rideMeta' => 'd_ride_meta', 'clearRide' => 'd_clear_ride',
             'rideFollows' => 'd_ride_follows', 'kmShared' => 'd_km_shared', 'alongTrackH' => 'd_along_track_h',
             'capped' => 'd_capped', 'kmOff' => 'd_km_off', 'nothingWithin' => 'd_nothing_within',

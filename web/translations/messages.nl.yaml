@@ -2328,6 +2328,7 @@ map:
   d_kind_station: 'Zelfbedieningsstation'
   d_kind_pump: 'Openbare pomp'
   d_along_ride: 'Langs je rit'
+  d_ride_summary: 'Ritoverzicht'
   d_ride_meta: 'binnen {r} van de track — enkel indicatie, niets opgeslagen.'
   d_clear_ride: 'Rit wissen'
   d_ride_follows: 'Je rit volgt'

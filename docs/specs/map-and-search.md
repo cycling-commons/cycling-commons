@@ -1256,7 +1256,14 @@ dark, without spending a colour. There is no keeper tier and no paper dot.
   **Confirmed** points (`p.c`) are excluded from the dot layers and promoted to
   clustered DOM icon pins (`setupConfClusters()`: count bubbles at low zoom →
   leaf pins when spread; cluster/leaf reconciliation runs only on
-  `moveend`/`idle`, never per animation frame).
+  `moveend`/`idle`, never per animation frame). **While a ride check is
+  loaded (§9) the places it lists never cluster:** `setListedPlaces()` hands
+  the pools a set of `letter:id`, `splitPool()` (`ride-places.js`) keeps those
+  features out of the clustered source, and `updateConfMarkers()` draws each
+  through the same `confLeafPin()` leaf code, still judged by `poolVisible()`
+  (scope and view mode) and the stays accessibility rule. Layer counts read
+  the pool's own features, not the source, so they do not move. Clear hands
+  back an empty set.
 - **A · Road surface** renders **consolidated**: ONE GeoJSON source for all
   segments + one shared cream casing layer + **one line layer per surface
   class** — MapLibre cannot data-drive `line-dasharray`, so dash/cap vary per
@@ -2134,6 +2141,8 @@ is the pending permalink contract):
 | `?pending=<id>` | curator deep link from the /moderate queue: activates the ⚑ layer, opens the submission drawer |
 | `?route=<id>` | opens that R route **selected** (curator Routes desk link): lifts the view mode like `?item=` (above), then highlights + shows the curator corrections overlay. The reveal pin (§12) stays as the fallback when the target is still not drawn. |
 
+The same lift applies to a ride-check row (§9): opening a listed place the rider's mode hides lifts to the lowest rung that draws it, exactly as `?item=` does.
+
 ### 8.1 "Add a climb here": the map is a starting point, not only a reader
 
 *(owner asked 2026-08-14: "how do we add a new climb via the map as a normal
@@ -2215,25 +2224,52 @@ requirement).
   (`RideCheckService::corridorCoverage()`) runs the *same* MATERIALIZED
   corridor over `coverage_poi`, limited to utility letters
   `COVERAGE_LETTERS = {B, D, F, G}` (water, bike services, transport, shelter).
-  **Deduped against served curated items** on `(source_ref, letter)` — if a
-  rider already curated an OSM entity it shows once, as the curated pick, never
-  in both arms. `coverage_poi` and `item` are co-located on CC's own cluster, so
-  the dedup stays a local join. Same grouping/ordering/`MAX_PER_LETTER` shape as
+  **Minus every point a served item claims**, by the one claim rule the map's
+  tile dedupe uses (`App\Catalog\ClaimedOsmRefs`, which
+  `CatalogProvider::curatedRefs()` also reads): a served item claims a ref
+  through its `source_ref` (an OSM-materialized row that is more than an
+  untouched import), a way its segment spans, or its `osm_ref` (the OSM twin of
+  an authority row, e.g. a registry tap). A place shows once, in the commons
+  arm, never in both. `coverage_poi` and `item` are co-located on CC's own
+  cluster, so the claim stays a local subquery.
+- **The commons arm lists what the map payload serves:** besides the served
+  states, `corridorGroups()` drops an untouched OSM import
+  (`CoverageRetirement`, its point is the coverage tile's) and a row reported
+  gone (`GoneRows`), the same exclusions as `CatalogProvider::itemRows()`. Same grouping/ordering/`MAX_PER_LETTER` shape as
   the curated arm (shared `groupByLetter()`). Coverage items additionally carry
   their `ref`: `id` there is a `coverage_poi` row id and no endpoint accepts one,
   so the `ref` is what lets a result row be opened at all
   (`/map/coverage/poi/{ref}`). The curated arm addresses items by id and carries
   no `ref`.
-- **Coverage rendering** (`web/assets/map/ride-check.js`) — the coverage arm gets
-  its **own `ridecheck-cov` symbol overlay** along the track, drawn with the
-  small coverage icons and the `cov-sel` size ramp, so curated (bigger spot pin)
-  vs open coverage (smaller icon) stay visually distinct. The overlay is
-  deliberately independent of the coverage tile layers' on/off state, the region
-  scope and the view mode: an uploaded ride routinely leaves the rider's scope,
-  so relying on the tiles would list refill points the rider cannot see. It is
-  torn down by Clear together with the track. In the drawer, coverage is a
-  separate section under its own heading with a provenance note, so uncurated
-  OSM never reads as a verified Commons pick; rows call `openCoverageByRef()`.
+- **One drawing path** (owner decision 2026-09-15). `ride-check.js` draws
+  only the track (`ridecheck`, `ridecheck-case`) and steers the normal map;
+  every place it lists is drawn by the map's own renderers, under the map's
+  own rules (scope, view mode, OSM-twin dedupe), and opened by the map's own
+  click handlers.
+  - **Commons rows.** A pool place is a leaf pin for as long as the ride is
+    loaded (§5, `setListedPlaces()`), so none folds into a count bubble along
+    the track. Hover rings the place's own spot (`highlightAt`), on the pin body
+    (`[0,-16]`) only when a bottom-anchored pin is really drawn there
+    (`poolPinDrawn()` for pools, `featureVisible()` for other layers,
+    `ringOffset()` in `ride-places.js`), otherwise on the exact point. Click
+    lifts the view mode with the deep-link rule (§8, `liftModeFor` and
+    `modeToShow`: the lowest rung that draws the place, this visit only, with
+    the toast; nothing moves when the current mode already draws it), then
+    opens the place through its index entry, which turns its layer on.
+  - **Coverage rows.** A listed point is the normal coverage tile icon. Hover
+    rings its exact spot. Click turns its layer on, lifts the view mode the
+    same way (a coverage point carries no confirmation, so `modeShows` judges
+    it as `{}`: Confirmed lifts to Everything, Best of and Everything already
+    draw utility coverage), and opens it through `openCoverageByRef()`, whose
+    `cov-sel` overlay keeps the icon drawn at every zoom. There is no ride
+    overlay of icons: in a mode that hides coverage the rows are a list until
+    one is opened.
+  - Chip filters other than the view mode are not lifted (a stays row hidden by
+    the accessibility chip rings its spot with no pin under it).
+  - In the drawer, coverage is a separate section under its own heading with a
+    provenance note, so uncurated OSM never reads as a verified Commons pick.
+  - **Clear** removes the track, releases the listed set (the pools cluster
+    every place again) and restores the rider's scope.
 - **The ride sets the scope while it is loaded** (owner 2026-08-23) —
   `check()` also answers **`regions`**: every *operational* region the track
   intersects (`RideCheckService::crossedRegions()`, `OperationalRegions`
@@ -2245,8 +2281,10 @@ requirement).
     of them. §4.5's scope is a set of region ids, so a ride across three
     provinces keeps every kilometre inside the scope rather than picking a
     winner and leaving the last stretch unscoped.
-  - regions in **two countries** → `everywhere`. There is no region scope that
-    spans them, and half a scoped ride is worse than a wide one.
+  - regions in **two or more countries** → the same `region` scope holding
+    every crossed region, with no single `countryCode`. A region scope is a set
+    of ids and may span a border, so the ride stays whole without widening to
+    Everywhere.
   - **no regions** (a ride outside every onboarded country) → the rider's scope
     is left exactly as it was; there is nothing better to move it to.
 
@@ -2267,7 +2305,11 @@ requirement).
   styling: per-letter group headers, "name — km 23.4 · 80 m off" rows, followed
   routes with shared km, Clear button). **Closing the drawer keeps the track
   overlay**; the panel status shows "X km · results · clear" to re-open or tear
-  down. Radius change re-posts; a new file replaces the previous overlay.
+  down. While a ride is loaded, every place drawer (opened from a row or by
+  clicking a pin or icon on the map) starts with a **‹ Ride summary** button
+  that brings the summary back (`setDrawerReturn` in `drawer.js`, drawn by
+  `renderDrawerBody`, `d_ride_summary`); Clear removes it (owner 2026-09-15).
+  Radius change re-posts; a new file replaces the previous overlay.
   Ride-check owns the **`.cc-ride-*`** CSS namespace (it once collided with
   the route-community `.cc-rc-*`). Errors surface as translated inline
   messages.

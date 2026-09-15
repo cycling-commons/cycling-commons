@@ -1053,8 +1053,23 @@ function startPhotoWatch(name){
     () => { const el = find(); if(el) el.remove(); },
     { cancelled: () => !find() });
 }
+/* A view the rider came from and can go back to from any place drawer, such as
+   a loaded ride's summary (docs/specs/map-and-search.md §9). One at a time;
+   null when there is none. */
+let _drawerReturn = null;
+export function setDrawerReturn(target){ _drawerReturn = target && typeof target.go === 'function' ? target : null; }
 export function renderDrawerBody(layer, f){
-  document.getElementById('drawerBody').innerHTML = buildRecord(layer, f);
+  const body = document.getElementById('drawerBody');
+  body.innerHTML = buildRecord(layer, f);
+  if(_drawerReturn){
+    const back = document.createElement('button');
+    back.type = 'button';
+    back.className = 'cc-d-return';
+    back.textContent = '\u2039 ' + _drawerReturn.label;
+    const target = _drawerReturn;
+    back.addEventListener('click', () => target.go());
+    body.prepend(back);
+  }
   startPhotoWatch(f.name);
   if(layer.key==='experience' && f.id!=null) hydrateRouteCommunity(f.id);
   if(CC_CONFIRMABLE.has(layer.key) && f.id!=null) hydrateItemConfirm(f.id);

@@ -54,6 +54,7 @@ export function buildItemIndex(){
       verified: f.state ? f.state==='verified' : !!(f.v || f.cur),
       hlOff: layer.kind==='point' ? [0,-16] : [0,0],   // bottom-anchored pins: pulse on the pin body
       pend:f.pending?String(f.pending.id):undefined,
+      layer, modeF:f,   // what filters.js modeShows() judges, so a row can lift the view mode to it
       go:()=>openLocalFeature(layer,f)});   // exact feature, not a name re-lookup
   }));
   (window.CC_STAYS_AUTHORITY && CC_STAYS_AUTHORITY.features || []).forEach(f=>{ const p=f.properties;
@@ -64,6 +65,7 @@ export function buildItemIndex(){
       rid:p.rid,
       verified:!!p.v,
       hlOff:[0,-16],
+      layer, modeF:p,
       go:()=>openStayAuthority(f)});
   });
   /* DB-backed items in bulk-OSM pools (id present). Raw OSM stays a live /map/coverage/search lookup. */
@@ -77,6 +79,7 @@ export function buildItemIndex(){
         // Every leaf pin is a bottom-anchored teardrop now, confirmed or not
         // (map-and-search.md §6.4), so the pulse sits on the pin body for both.
         verified:!!p.v, hlOff:[0,-16],
+        layer, modeF:p, poolKey:key,
         go:()=>openPoolFeature(key, f)});
     });
   });

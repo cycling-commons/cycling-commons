@@ -1259,6 +1259,10 @@
   .cc-up a{color:var(--chrome-head);text-decoration:underline}
   .cc-d-desc{font-size:.92rem;line-height:1.55;color:rgb(var(--chrome-fg) / .82);margin:.9rem 0 .2rem}
   .cc-d-tr{font-family:var(--mono);font-size:.7rem;letter-spacing:.04em;color:rgb(var(--chrome-fg) / .65);text-transform:uppercase}
+  /* The way back to a view the drawer was opened from, such as a loaded ride's summary. */
+  .cc-d-return{display:inline-block;margin:0 0 .7rem;padding:.25rem .55rem;border:1px solid rgb(var(--chrome-fg) / .25);border-radius:4px;background:none;
+    color:var(--chrome-head);font-family:var(--mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;cursor:pointer}
+  .cc-d-return:hover,.cc-d-return:focus-visible{background:rgb(var(--chrome-fg) / .08)}
   .cc-d-photo{margin:1rem 0 0}
   /* aspect-ratio reserves the box BEFORE the Wikimedia thumb lands, so the
      records/actions below stop jumping when it does (CLS — frontend review

@@ -833,6 +833,10 @@ the data-plane facts it consumes:
   not yet deleted), those objects therefore render from tiles as community
   instead of vanishing entirely. This refinement supersedes the design's
   looser "ships the set of curated refs" wording.
+  The claim rule itself lives in one place, `App\Catalog\ClaimedOsmRefs`:
+  `curatedRefs()` reads its SELECT, and the ride check's coverage arm
+  (map-and-search.md §9) excludes the same refs, so a point hidden on the map
+  is never listed along a ride either.
 - **A catalog item borrows its OSM point's photo.** A served item with no
   `photo`/`photos` of its own (after `PhotoValidator::sift()`) that stands for
   an OSM point, through `source_ref` or `osm_ref`, carries

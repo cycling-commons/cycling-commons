@@ -2323,6 +2323,7 @@ map:
   d_kind_station: 'Station libre-service'
   d_kind_pump: 'Pompe publique'
   d_along_ride: 'Le long de votre parcours'
+  d_ride_summary: 'Résumé du parcours'
   d_ride_meta: 'à moins de {r} de la trace — simple indication, rien n''est conservé.'
   d_clear_ride: 'Effacer le parcours'
   d_ride_follows: 'Votre parcours suit'

@@ -94,6 +94,9 @@ final class RideCheckService
      */
     private function corridorGroups(string $geoJson, int $radiusM, float $rawM): array
     {
+        // The rows the map payload serves (CatalogProvider::itemRows()): an
+        // untouched OSM import is the coverage tiles' point, and a row reported
+        // gone is served nowhere. The ride lists a place where the map draws it.
         // MATERIALIZED is load-bearing: an inlined track CTE re-parses GeoJSON per ST_*; ST_Intersects can use the GIST index.
         /** @var list<array{id: int|string, letter: string, name: string, geom: string, dist_m: string|float, frac: string|float}> $rows */
         $rows = $this->db->fetchAllAssociative(
@@ -105,6 +108,8 @@ final class RideCheckService
              FROM item i
              WHERE i.letter <> \'A\'
                AND i.state IN '.ItemState::servedSqlTuple().'
+               AND NOT (i.letter IN '.CoverageRetirement::lettersSqlTuple().' AND '.CoverageRetirement::untouchedOsmSql('i').')
+               AND '.GoneRows::notGoneSql('i').'
                AND ST_Intersects(i.geom, (SELECT b FROM corridor))
              ORDER BY frac, i.id',
             ['geom' => $geoJson, 'radius' => $radiusM],
@@ -114,7 +119,7 @@ final class RideCheckService
     }
 
     /**
-     * Open coverage_poi utilities in the same corridor, deduped against served curated items on (source_ref, letter).
+     * Open coverage_poi utilities in the same corridor, minus every point a served item claims (ClaimedOsmRefs, the same rule the map's tile dedupe uses).
      *
      * @return list<array{letter: string, items: list<array{id: int, name: string, ll: array{0: float, 1: float}, distM: int, alongKm: float, ref: string}>, truncated: bool}>
      */
@@ -131,11 +136,7 @@ final class RideCheckService
              FROM coverage_poi cp
              WHERE cp.letter IN ('.$letters.')
                AND ST_Intersects(cp.geom, (SELECT b FROM corridor))
-               AND NOT EXISTS (
-                   SELECT 1 FROM item d
-                   WHERE d.source_ref = cp.ref AND d.letter = cp.letter
-                     AND d.state IN '.ItemState::servedSqlTuple().'
-               )
+               AND NOT '.ClaimedOsmRefs::claimedSql('cp.ref').'
              ORDER BY frac, cp.id',
             ['geom' => $geoJson, 'radius' => $radiusM],
         );

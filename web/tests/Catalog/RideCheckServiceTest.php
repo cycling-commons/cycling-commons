@@ -8,6 +8,7 @@ namespace App\Tests\Catalog;
 
 use App\Catalog\Entity\Item;
 use App\Catalog\Entity\RecommendedRoute;
+use App\Catalog\GoneRows;
 use App\Catalog\ItemSource;
 use App\Catalog\ItemState;
 use App\Catalog\RideCheckService;
@@ -77,7 +78,8 @@ final class RideCheckServiceTest extends KernelTestCase
         return json_encode(['type' => 'LineString', 'coordinates' => $coords], \JSON_THROW_ON_ERROR);
     }
 
-    private function seedItem(string $letter, string $name, string $geomJson, string $ref, ItemState $state = ItemState::Unverified): int
+    /** An OSM-sourced item, Verified by default: an untouched unverified import is the coverage tiles' point, not a payload row (CoverageRetirement). */
+    private function seedItem(string $letter, string $name, string $geomJson, string $ref, ItemState $state = ItemState::Verified): int
     {
         $em = static::getContainer()->get(EntityManagerInterface::class);
         $item = (new Item())->setLetter($letter)->setName($name)
@@ -318,7 +320,7 @@ final class RideCheckServiceTest extends KernelTestCase
         // 'node/dup': a served curated item exists for the same ref+letter → the
         // coverage POI is hidden (curated wins). 'node/keep': the only item for
         // that ref is retired (not served) → the coverage POI still shows.
-        $this->seedItem('B', 'Curated fountain', self::point(50.40045, 5.8050), 'dup', ItemState::Unverified);
+        $this->seedItem('B', 'Curated fountain', self::point(50.40045, 5.8050), 'dup', ItemState::Verified);
         $this->seedItem('B', 'Retired fountain', self::point(50.40045, 5.8250), 'keep', ItemState::Retired);
         self::insertCoveragePoi($this->db(), ['letter' => 'B', 'name' => 'OSM dup fountain', 'lat' => 50.40045, 'lng' => 5.8050, 'ref' => 'node/dup']);
         self::insertCoveragePoi($this->db(), ['letter' => 'B', 'name' => 'OSM keep fountain', 'lat' => 50.40045, 'lng' => 5.8250, 'ref' => 'node/keep']);
@@ -338,6 +340,81 @@ final class RideCheckServiceTest extends KernelTestCase
         self::assertContains('Curated fountain', $curatedNames);
     }
 
+    public function testCoverageTwinOfAnAuthorityRowIsNotListedAgain(): void
+    {
+        self::ensureCoverageSchema($this->db());
+        // A registry tap (authority row) standing for an OSM tap through
+        // osm_ref: the map draws the registry pin and hides the OSM icon, so
+        // the ride check lists the tap once, in the commons arm.
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $tap = (new Item())->setLetter('B')->setName('Registry tap')
+            ->setGeom(self::point(50.40040, 5.8100))->setCountryCode('NL')
+            ->setState(ItemState::Unverified)->setSource(ItemSource::Authority)
+            ->setSourceRef('rivm-drinkwater:50.4004,5.8100')
+            ->setOsmRef('node/rc-twin')
+            ->setAttributes([]);
+        $em->persist($tap);
+        $em->flush();
+        self::insertCoveragePoi($this->db(), ['letter' => 'B', 'name' => 'OSM twin tap', 'lat' => 50.40045, 'lng' => 5.8101, 'ref' => 'node/rc-twin']);
+        self::insertCoveragePoi($this->db(), ['letter' => 'B', 'name' => 'OSM lone tap', 'lat' => 50.40045, 'lng' => 5.8200, 'ref' => 'node/rc-lone']);
+
+        $result = $this->service()->check(self::ride(), 250);
+
+        $coverage = self::coverageNames($result);
+        self::assertNotContains('OSM twin tap', $coverage, 'a coverage point claimed through osm_ref is not listed');
+        self::assertContains('OSM lone tap', $coverage);
+        $commons = [];
+        foreach ($result['groups'] as $group) {
+            foreach ($group['items'] as $item) {
+                $commons[] = $item['id'];
+            }
+        }
+        self::assertContains((int) $tap->getId(), $commons, 'the registry tap itself is listed');
+    }
+
+    public function testAnUntouchedOsmImportListsAsCoverageNotCommons(): void
+    {
+        self::ensureCoverageSchema($this->db());
+        // An imported OSM row nobody touched is not on the map payload: the
+        // coverage tile serves that point (coverage-provider.md §9). The ride
+        // check lists it where the map draws it, once.
+        $this->seedItem('B', 'Untouched import', self::point(50.40045, 5.8050), 'rc-untouched', ItemState::Unverified);
+        self::insertCoveragePoi($this->db(), ['letter' => 'B', 'name' => 'OSM untouched tap', 'lat' => 50.40045, 'lng' => 5.8050, 'ref' => 'node/rc-untouched']);
+
+        $result = $this->service()->check(self::ride(), 250);
+
+        $commons = [];
+        foreach ($result['groups'] as $group) {
+            foreach ($group['items'] as $item) {
+                $commons[] = $item['name'];
+            }
+        }
+        self::assertNotContains('Untouched import', $commons);
+        self::assertContains('OSM untouched tap', self::coverageNames($result));
+    }
+
+    public function testARowReportedGoneIsNotListedAndStillClaimsItsTwin(): void
+    {
+        self::ensureCoverageSchema($this->db());
+        $id = $this->seedItem('B', 'Gone fountain', self::point(50.40045, 5.8050), 'rc-gone', ItemState::Verified);
+        $this->db()->executeStatement(
+            "UPDATE item SET attributes = jsonb_build_object('condition', CAST(:c AS text)) WHERE id = :id",
+            ['c' => GoneRows::CONDITION, 'id' => $id],
+        );
+        self::insertCoveragePoi($this->db(), ['letter' => 'B', 'name' => 'OSM gone tap', 'lat' => 50.40045, 'lng' => 5.8050, 'ref' => 'node/rc-gone']);
+
+        $result = $this->service()->check(self::ride(), 250);
+
+        $commons = [];
+        foreach ($result['groups'] as $group) {
+            foreach ($group['items'] as $item) {
+                $commons[] = $item['name'];
+            }
+        }
+        self::assertNotContains('Gone fountain', $commons, 'a row reported gone is served nowhere');
+        self::assertNotContains('OSM gone tap', self::coverageNames($result), 'its twin stays claimed, as on the map');
+    }
+
     /**
      * A region the track passes through, as a box around the test ride's
      * latitude. `admin_level` decides operationality: the deepest level a
@@ -353,7 +430,7 @@ final class RideCheckServiceTest extends KernelTestCase
                 $cc, strtoupper(substr($slug, 0, 5)), $adminLevel],
         );
 
-        return (int) $db->lastInsertId('region_id_seq');
+        return (int) $db->lastInsertId();
     }
 
     public function testTheRideNamesEveryRegionItCrosses(): void

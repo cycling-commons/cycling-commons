@@ -1,23 +1,25 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 /* Ride-check: "what is along my GPX?" (docs/specs/map-and-search.md §9).
-   Own `ridecheck*` sources/layers — render()'s clearDynamic never touches them.
-   The server parses the GPX in memory and stores nothing. */
+   Draws only the track (`ridecheck`, `ridecheck-case`; render()'s clearDynamic
+   never touches them). The places it lists are drawn by the normal map: pool
+   pins through osm-pools.js, coverage icons through the coverage tiles and the
+   `cov-sel` overlay. The server parses the GPX in memory and stores nothing. */
 import { map, flyToPin } from './map-init.js';
 import { I18N, D, tpl } from './i18n.js';
 import { escPend, txtOn } from './util.js';
 import { uKm, uM, uElev } from './units.js';
-import { coverageIconId, covIconSizes, layerGlyph } from './icons.js';
+import { layerGlyph } from './icons.js';
 import { openCoverageByRef, invalidateCoverageDrawer } from './coverage.js';
 import { itemIndex } from './item-index.js';
-import { CATALOG, layerByKey } from './catalog.js';
+import { CATALOG, layerByKey, LETTER_KEY, active } from './catalog.js';
 import { sheet } from './sheet.js';
-import { closeDrawer, highlightAt, clearHighlight } from './drawer.js';
+import { closeDrawer, highlightAt, clearHighlight, setDrawerReturn } from './drawer.js';
 import { openRouteById, bumpPlaceReq } from './places.js';
 import { rideScopeFor, scopeKey } from './ride-scope.js';
-
-// Coverage letters ride-check surfaces (utility B/D/F/G). Experiential O/P/Q
-// stay on the curated arm.
-const COV_KEY={B:'water', D:'services', F:'transit', G:'shelter'};
+import { listedPlaceKeys, ringOffset } from './ride-places.js';
+import { setListedPlaces, poolPinDrawn } from './osm-pools.js';
+import { liftModeFor } from './panels.js';
+import { render, featureVisible } from './render.js';
 
 export function initRideCheck(){
     if(!window.CC_RIDECHECK) return;                       // anonymous: no control rendered
@@ -36,8 +38,9 @@ export function initRideCheck(){
     });
     function rideDrawerShowing(){ return !!document.getElementById('rcClearBtn'); }
     function clearOverlay(){
-      ['ridecheck','ridecheck-case','ridecheck-cov'].forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
-      ['ridecheck','ridecheck-cov'].forEach(id=>{ if(map.getSource(id)) map.removeSource(id); });
+      ['ridecheck','ridecheck-case'].forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
+      if(map.getSource('ridecheck')) map.removeSource('ridecheck');
+      setListedPlaces([]);                                  // the pools cluster every place again
       clearHighlight();
     }
     /* The ride decides the scope while it is loaded (docs/specs/map-and-search.md
@@ -74,35 +77,23 @@ export function initRideCheck(){
       if(el) el.textContent=el.textContent+' · '+(I18N.rcScopeFromRide||'from your ride');
     }
 
-    /* Corridor coverage as its own overlay (docs/specs/map-and-search.md §9),
-       not the coverage tiles: a ride may leave the rider's region, the layer
-       may be off, and Curated hides experiential letters. Same icons and
-       `_s8`/`_s13`/`_s18` ramp as cov-sel, so they stay smaller than curated pins. */
-    function drawCoverageOverlay(d){
-      const groups=d.coverage||[];
-      const features=[];
-      groups.forEach(g=>{
-        const key=COV_KEY[g.letter]; if(!key) return;
-        const [s8,s13,s18]=covIconSizes(key,{});
-        g.items.forEach(it=>{
-          // Same shape as a tile feature's props; potability/kind unknown
-          // here, so a water hit draws as the unknown-tap kind.
-          features.push({type:'Feature',
-            geometry:{type:'Point',coordinates:[it.ll[1],it.ll[0]]},
-            properties:{_icon:coverageIconId(key,{}), _s8:s8, _s13:s13, _s18:s18}});
-        });
-      });
-      if(!features.length) return;
-      map.addSource('ridecheck-cov',{type:'geojson',data:{type:'FeatureCollection',features}});
-      map.addLayer({id:'ridecheck-cov',type:'symbol',source:'ridecheck-cov',
-        layout:{'icon-image':['get','_icon'],'icon-allow-overlap':true,
-          // One zoom interpolate (MapLibre forbids two), same as cov-sel-icon.
-          'icon-size':['interpolate',['linear'],['zoom'],
-            8,['get','_s8'],13,['get','_s13'],18,['get','_s18']]}});
+    /* Whether the normal map draws a bottom-anchored pin for this index entry
+       right now, so the hover ring may sit on the pin body. */
+    function pinDrawn(entry){
+      if(!entry || !entry.layer) return false;
+      if(entry.poolKey) return poolPinDrawn(entry.poolKey, entry.id);
+      return active.has(entry.layer.key) && featureVisible(entry.layer, entry.modeF||{});
+    }
+    function showLayer(k){
+      if(active.has(k)) return;
+      active.add(k);
+      const t=document.querySelector(`#layers .layer[data-key="${k}"]`); if(t) t.classList.remove('off');
+      render();
     }
     function clearRideCheck(){
       clearOverlay();
       _last=null; _file=null; say('');
+      setDrawerReturn(null);
       restoreScope();
       if(rideDrawerShowing()) closeDrawer();
     }
@@ -120,9 +111,12 @@ export function initRideCheck(){
     function renderRideCheck(d){
       clearOverlay();
       _last=d;
+      // Every place opened from here offers the way back to this summary.
+      setDrawerReturn({label:D.rideSummary||'Ride summary', go:()=>{ if(_last) renderRideDrawer(_last); }});
       // Before the fitBounds below: cc:scopechange re-fits to the scope bbox,
       // and the ride's own framing must have the last word.
       applyRideScope(d.regions);
+      setListedPlaces(listedPlaceKeys(d.groups));
       const coords=d.track.map(p=>[p[1],p[0]]);            // [lat,lng] → [lng,lat]
       map.addSource('ridecheck',{type:'geojson',data:{type:'Feature',properties:{},geometry:{type:'LineString',coordinates:coords}}});
       map.addLayer({id:'ridecheck-case',type:'line',source:'ridecheck',
@@ -137,7 +131,6 @@ export function initRideCheck(){
       const mobile=window.innerWidth<=820;
       map.fitBounds([[minLng,minLat],[maxLng,maxLat]],
         {padding:{top:70, bottom:mobile?300:70, left:70, right:mobile?70:400}, duration:900, essential:true});
-      drawCoverageOverlay(d);
       renderRideDrawer(d);
     }
     function renderRideDrawer(d){
@@ -189,15 +182,32 @@ export function initRideCheck(){
       body.querySelectorAll('[data-rc-g]').forEach(b=>{
         const it=(groupsByLetter[b.dataset.rcG]||{items:[]}).items[+b.dataset.rcI]; if(!it) return;
         const entry=idxByKey.get(b.dataset.rcG+':'+it.id);
-        b.onclick=()=>{ if(entry) entry.go(); else { flyToPin([it.ll[1],it.ll[0]]); highlightAt(it.ll); } };
-        b.onmouseenter=()=>highlightAt(it.ll, entry && entry.hlOff);
+        /* A place the view mode hides lifts the mode with the deep-link rule
+           (docs/specs/map-and-search.md §8), to the lowest rung that draws it. */
+        b.onclick=()=>{
+          if(!entry){ flyToPin([it.ll[1],it.ll[0]]); highlightAt(it.ll); return; }
+          liftModeFor(entry.layer, entry.modeF);
+          entry.go();
+        };
+        b.onmouseenter=()=>highlightAt((entry && entry.ll) || it.ll, ringOffset(pinDrawn(entry), entry && entry.hlOff));
         b.onmouseleave=clearHighlight;
       });
       const covByLetter=Object.fromEntries(cov.map(g=>[g.letter,g]));
       body.querySelectorAll('[data-rc-c]').forEach(b=>{
         const it=(covByLetter[b.dataset.rcC]||{items:[]}).items[+b.dataset.rcI]; if(!it) return;
-        // openCoverageByRef still opens a minimal drawer on 404; no-ref falls back to fly.
-        b.onclick=()=>{ if(it.ref) openCoverageByRef(it.ref, b.dataset.rcC, it.ll, it.name); else { flyToPin([it.ll[1],it.ll[0]]); highlightAt(it.ll); } };
+        /* The point is a normal coverage tile icon. Its layer comes on and the
+           view mode lifts to one that draws coverage (a coverage point carries
+           no confirmation, so modeShows judges it as `{}`), then the drawer
+           opens through openCoverageByRef, whose `cov-sel` overlay keeps the
+           icon drawn. openCoverageByRef still opens a minimal drawer on 404;
+           no ref falls back to fly. */
+        b.onclick=()=>{
+          const k=LETTER_KEY[b.dataset.rcC], layer=k && layerByKey[k];
+          if(!it.ref || !layer){ flyToPin([it.ll[1],it.ll[0]]); highlightAt(it.ll); return; }
+          showLayer(k);
+          liftModeFor(layer, {});
+          openCoverageByRef(it.ref, b.dataset.rcC, it.ll, it.name);
+        };
         b.onmouseenter=()=>highlightAt(it.ll);
         b.onmouseleave=clearHighlight;
       });

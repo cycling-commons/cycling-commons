@@ -2878,6 +2878,7 @@ map:
   d_kind_station: 'Estación de autoservicio'
   d_kind_pump: 'Inflador público'
   d_along_ride: 'A lo largo de tu salida'
+  d_ride_summary: 'Resumen de la salida'
   d_ride_meta: 'a menos de {r} del track — solo orientativo, no se guarda nada.'
   d_clear_ride: 'Quitar la salida'
   d_ride_follows: 'Tu salida sigue'

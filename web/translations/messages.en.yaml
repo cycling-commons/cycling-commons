@@ -2870,6 +2870,7 @@ map:
   d_kind_station: 'Self-service station'
   d_kind_pump: 'Public pump'
   d_along_ride: 'Along your ride'
+  d_ride_summary: 'Ride summary'
   d_ride_meta: 'within {r} of the track — indication only, nothing stored.'
   d_clear_ride: 'Clear ride'
   d_ride_follows: 'Your ride follows'

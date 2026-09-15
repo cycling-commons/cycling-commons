@@ -222,7 +222,7 @@ final class CatalogProvider
     }
 
     /**
-     * OSM refs the payload serves, for client-side tile dedupe. Mirrors itemRows() so a dropped row is not also suppressed in tiles.
+     * OSM refs the payload serves, for client-side tile dedupe. The claim rule is ClaimedOsmRefs, which mirrors itemRows() so a dropped row is not also suppressed in tiles.
      *
      * @see docs/specs/osm-data-architecture.md §8
      * @see docs/specs/coverage-provider.md §6
@@ -231,20 +231,8 @@ final class CatalogProvider
      */
     private function curatedRefs(): array
     {
-        $refs = "SELECT DISTINCT i.source_ref AS ref FROM item i WHERE i.source = 'osm' AND i.state IN ".ItemState::servedSqlTuple()
-            .' AND NOT (i.letter IN '.CoverageRetirement::lettersSqlTuple()
-            .' AND '.CoverageRetirement::untouchedOsmSql('i').')';
-        // Also every way a served segment spans. jsonb_exists(), not `?` — DBAL treats `?` as a placeholder.
-        $spanned = "SELECT DISTINCT jsonb_array_elements_text(i.attributes->'waysSpanned') AS ref"
-            ." FROM item i WHERE jsonb_exists(i.attributes, 'waysSpanned') AND i.state IN ".ItemState::servedSqlTuple();
-        // And the OSM twin of every served row that has one: an authority row
-        // attached to a tap (data-provider-hierarchy.md §4.1) is served as a
-        // pin, so the tap's tile drop must go, exactly as CoverageRepository
-        // joins `cp.ref IN (i.source_ref, i.osm_ref)` on the server.
-        $twins = 'SELECT DISTINCT i.osm_ref AS ref FROM item i WHERE i.osm_ref IS NOT NULL AND i.state IN '.ItemState::servedSqlTuple();
-
         /* @var list<string> */
-        return $this->db->fetchFirstColumn('SELECT ref FROM ('.$refs.' UNION '.$spanned.' UNION '.$twins.') AS u ORDER BY ref');
+        return $this->db->fetchFirstColumn('SELECT ref FROM ('.ClaimedOsmRefs::selectSql().') AS u ORDER BY ref');
     }
 
     /**
