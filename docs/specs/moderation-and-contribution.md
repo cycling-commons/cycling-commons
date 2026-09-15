@@ -158,6 +158,13 @@ The mode gate in `improve.js`:
   recording is not a move, and a curator must never approve a point identical
   to the one it replaces.
 
+- **Reset puts an existing place's pin back at its saved spot** (owner
+  2026-09-15). On an edit of a point place (not an add), Reset moves the pin
+  back to the item's own position (`CC_ITEM`), not to a suggested `?lat=`, and
+  never leaves the map empty. The move is one Undo step, so Undo returns the
+  pin to where it was dragged. The form and the pin-photos warning
+  (photo-uploads.md §5g) follow the pin both ways. An add still clears the pin.
+
 - **A pin released off the map still ends its drag** (owner 2026-09-10). A
   MapLibre `Marker` ends a drag on the MAP's own `mouseup`, which the map fires
   only from its canvas-container listener. `.navrow`, the Back/Next bar, is

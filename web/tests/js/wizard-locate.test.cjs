@@ -130,3 +130,13 @@ test('the browser and the server agree on what a move is', () => {
   // string IS the geometry ModerationService::applyEdit writes back.
   assert.match(php, /private const int FORMAT_DECIMALS = 7;/);
 });
+
+test('Reset on a place that already has a spot puts the pin back at its saved spot', () => {
+  const at = js.indexOf("wzReset.addEventListener('click', function () {\n          pushHistory();");
+  assert.ok(at > -1, 'the point Reset handler not found');
+  const body = js.slice(at, js.indexOf('placed.forEach(function (m) { m.remove(); });', at));
+  assert.match(body, /!ADD && hasCoords && LOCATE === 'point'/, 'only an existing place, never a new one');
+  assert.match(body, /_itemPos\.lat/, 'the saved spot, not a suggested ?lat=');
+  assert.match(body, /placed\[0\]\.setLngLat\(saved\)/, 'the same marker moves back; it is not removed');
+  assert.match(body, /syncLoc\(\);\s*return;/, 'the form and the pin-photos warning learn the pin moved back');
+});

@@ -1056,6 +1056,18 @@
       if (wzReset) {
         wzReset.addEventListener('click', function () {
           pushHistory();
+          // A place that already has a spot goes back to its saved spot: an
+          // empty map would ask to place the pin all over again. Undo still
+          // returns to the move.
+          var saved = (typeof _itemPos.lat === 'number' && typeof _itemPos.lng === 'number')
+            ? [_itemPos.lng, _itemPos.lat] : [initLng, initLat];
+          if (!ADD && hasCoords && LOCATE === 'point' && placed.length) {
+            placed.slice(1).forEach(function (m) { m.remove(); });
+            placed.length = 1;
+            placed[0].setLngLat(saved);
+            syncLoc();
+            return;
+          }
           placed.forEach(function (m) { m.remove(); });
           placed.length = 0;
           ctrls.forEach(function (c) { c.remove(); });
