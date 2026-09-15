@@ -231,6 +231,8 @@
           "label": "Monastery"
         }
       ],
+      "nameOrTags": ["image", "wikidata", "wikimedia_commons"],
+      "excludeTagValues": {"memorial": ["bench", "blue_plaque", "ghost_bike", "grave", "plaque", "stolperstein", "tomb"]},
       "tileProps": [
         "cd"
       ]
@@ -266,6 +268,7 @@
     "historic",
     "image",
     "man_made",
+    "memorial",
     "natural",
     "opening_hours",
     "operator",

@@ -259,7 +259,37 @@ def test_scenic_requires_a_name_or_a_photo_link():
     neither a name nor a photo link."""
     letters = load_contract().letters
     assert letters["P"].name_or_tags == ["image", "wikidata", "wikimedia_commons"]
-    assert all(spec.name_or_tags is None for letter, spec in letters.items() if letter != "P")
+    assert all(spec.name_or_tags is None for letter, spec in letters.items() if letter not in {"P", "Q"})
+
+
+def test_history_requires_a_name_or_a_photo_link_and_drops_small_memorials():
+    """History & culture is the biggest layer: 478,720 points on 2026-09-15.
+    In NL an unnamed memorial or burial mound, a Stolperstein or a plaque is
+    not a place to ride to (docs/specs/coverage-provider.md §3)."""
+    letters = load_contract().letters
+    assert letters["Q"].name_or_tags == ["image", "wikidata", "wikimedia_commons"]
+    assert letters["Q"].exclude_tag_values == {
+        "memorial": ["bench", "blue_plaque", "ghost_bike", "grave", "plaque", "stolperstein", "tomb"]}
+    assert all(spec.exclude_tag_values is None for letter, spec in letters.items() if letter != "Q")
+    assert "memorial" in load_contract().stored_tag_keys
+
+
+def test_rejects_an_exclude_tag_values_key_not_in_the_stored_tags(tmp_path):
+    raw = json.loads(CONTRACT_PATH.read_text(encoding="utf-8"))
+    raw["letters"]["Q"]["excludeTagValues"] = {"not_stored": ["x"]}
+    bad = tmp_path / "c.json"
+    bad.write_text(json.dumps(raw), encoding="utf-8")
+    with pytest.raises(ValueError, match="excludeTagValues"):
+        load_contract(bad)
+
+
+def test_rejects_a_malformed_exclude_tag_values(tmp_path):
+    raw = json.loads(CONTRACT_PATH.read_text(encoding="utf-8"))
+    raw["letters"]["Q"]["excludeTagValues"] = {"memorial": []}
+    bad = tmp_path / "c.json"
+    bad.write_text(json.dumps(raw), encoding="utf-8")
+    with pytest.raises(ValueError, match="excludeTagValues"):
+        load_contract(bad)
 
 
 def test_rejects_a_name_or_tags_key_not_in_the_stored_tags(tmp_path):

@@ -836,6 +836,24 @@ def test_name_or_tags_filter_drops_bare_scenic_points(db):
     assert refs == {"node/named", "node/photo", "node/tap"}
 
 
+def test_exclude_tag_values_drops_a_point_only_when_every_value_is_excluded(db):
+    ensure_schema(db)
+    rows = [
+        _row("node/war", "Q", tags={"historic": "memorial", "memorial": "war_memorial"}),
+        _row("node/stone", "Q", tags={"historic": "memorial", "memorial": "stolperstein"}),
+        _row("node/plaque", "Q", tags={"historic": "memorial", "memorial": " plaque ; bench"}),
+        _row("node/statue", "Q", tags={"historic": "memorial", "memorial": "plaque;statue"}),
+        _row("node/plain", "Q", tags={"historic": "memorial"}),
+        _row("node/empty", "Q", tags={"historic": "memorial", "memorial": ""}),
+        _row("node/castle", "Q", tags={"historic": "castle"}),
+        _row("node/tap", "B", tags={"amenity": "drinking_water", "memorial": "plaque"}),
+    ]
+    load_region(db, rows, "europe/belgium",
+                exclude_tag_values={"Q": {"memorial": ["bench", "plaque", "stolperstein"]}})
+    refs = {r[0] for r in db.execute("SELECT ref FROM coverage_poi").fetchall()}
+    assert refs == {"node/war", "node/statue", "node/plain", "node/empty", "node/castle", "node/tap"}
+
+
 # --- the drift guard watches the letters no rule filters -----------------------
 
 def test_a_rule_may_empty_a_letter_without_tripping_the_drift_guard(db):
@@ -850,6 +868,19 @@ def test_a_rule_may_empty_a_letter_without_tripping_the_drift_guard(db):
     load_region(db, [_row(f"node/b{i}", "B") for i in range(10)]
                 + [_row(f"node/p{i}", "P", name=None, tags={"tourism": "viewpoint"}) for i in range(30)],
                 "europe/belgium", name_or_tags=rule)
+    letters = dict(db.execute("SELECT letter, count(*) FROM coverage_poi GROUP BY letter").fetchall())
+    assert letters == {"B": 10}
+
+
+def test_an_exclude_rule_may_shrink_its_letter_without_tripping_the_drift_guard(db):
+    ensure_schema(db)
+    rule = {"Q": {"memorial": ["stolperstein"]}}
+    load_region(db, [_row(f"node/b{i}", "B") for i in range(10)]
+                + [_row(f"node/q{i}", "Q", tags={"historic": "memorial"}) for i in range(30)],
+                "europe/belgium", exclude_tag_values=rule)
+    load_region(db, [_row(f"node/b{i}", "B") for i in range(10)]
+                + [_row(f"node/q{i}", "Q", tags={"historic": "memorial", "memorial": "stolperstein"}) for i in range(30)],
+                "europe/belgium", exclude_tag_values=rule)
     letters = dict(db.execute("SELECT letter, count(*) FROM coverage_poi GROUP BY letter").fetchall())
     assert letters == {"B": 10}
 

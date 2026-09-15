@@ -63,6 +63,10 @@ class LetterSpec:
     # A point of this letter loads only with a name or one of these tag keys
     # (docs/specs/scenic-views.md §2). None: no such requirement.
     name_or_tags: list[str] | None = None
+    # A point of this letter does not load when a tag's values (`;`-separated)
+    # are all in its list: a Stolperstein or a plaque is a memorial, not a place
+    # to ride to (docs/specs/coverage-provider.md §3). None: no such rule.
+    exclude_tag_values: dict[str, list[str]] | None = None
 
 
 @dataclass(frozen=True)
@@ -151,6 +155,19 @@ def _name_or_tags(letter: str, entry: object) -> list[str] | None:
     return sorted(entry)
 
 
+def _exclude_tag_values(letter: str, entry: object) -> dict[str, list[str]] | None:
+    if entry is None:
+        return None
+    if not isinstance(entry, dict) or not entry or not all(
+        isinstance(key, str) and key and isinstance(values, list) and values
+        and all(isinstance(v, str) and v for v in values)
+        for key, values in entry.items()
+    ):
+        raise ValueError(
+            f"letter {letter}: excludeTagValues must map tag keys to non-empty lists of values, got {entry!r}")
+    return {key: sorted(values) for key, values in sorted(entry.items())}
+
+
 def load_contract(path: pathlib.Path = CONTRACT_PATH) -> Contract:
     """Parse + validate the contract file; raises ValueError on any drift."""
     raw = json.loads(path.read_text(encoding="utf-8"))
@@ -166,6 +183,7 @@ def load_contract(path: pathlib.Path = CONTRACT_PATH) -> Contract:
             tile_props=list(spec.get("tileProps", [])),
             near_way=_near_way(letter, spec.get("nearWay")),
             name_or_tags=_name_or_tags(letter, spec.get("nameOrTags")),
+            exclude_tag_values=_exclude_tag_values(letter, spec.get("excludeTagValues")),
         )
         for letter, spec in raw["letters"].items()
     }
@@ -304,6 +322,10 @@ def load_contract(path: pathlib.Path = CONTRACT_PATH) -> Contract:
         if absent:
             raise ValueError(
                 f"letter {letter}: nameOrTags names {absent}, which storedTagKeys does not keep")
+        absent = sorted(set(spec.exclude_tag_values or {}) - set(stored))
+        if absent:
+            raise ValueError(
+                f"letter {letter}: excludeTagValues names {absent}, which storedTagKeys does not keep")
     return Contract(
         letters=letters,
         service_kind=service_kind,

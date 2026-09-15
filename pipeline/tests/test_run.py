@@ -172,11 +172,15 @@ def test_main_stage_order_and_region_failure_isolation(monkeypatch, tmp_path, ca
         def commit(self):
             pass
 
-    def fake_load_region(conn, rows, region, country_code, near_ways=None, name_or_tags=None):
+    def fake_load_region(conn, rows, region, country_code, near_ways=None, name_or_tags=None,
+                         exclude_tag_values=None):
         calls.append(f"load:{region}")
         # Scenic points must sit along a bike way: the run hands the rule over.
         assert near_ways is not None and near_ways[0] == {"P": 250.0}
-        assert name_or_tags == {"P": ["image", "wikidata", "wikimedia_commons"]}
+        assert name_or_tags == {"P": ["image", "wikidata", "wikimedia_commons"],
+                                "Q": ["image", "wikidata", "wikimedia_commons"]}
+        assert exclude_tag_values == {"Q": {"memorial": [
+            "bench", "blue_plaque", "ghost_bike", "grave", "plaque", "stolperstein", "tomb"]}}
         if region == "dev/bad":
             raise DriftAbort("simulated drift: 1 row vs 100 previously")
         return LoadResult(inserted=7, previous=5)
@@ -376,7 +380,7 @@ def test_main_load_only_loads_and_builds_no_tiles(monkeypatch, tmp_path):
     monkeypatch.setattr(run, "run_way_filter", lambda pbf, out, rule: out)
     monkeypatch.setattr(run, "export_lines", lambda path: iter(()))
     monkeypatch.setattr(run, "load_region",
-                        lambda conn, rows, region, cc, near_ways=None, name_or_tags=None: calls.append("load") or LoadResult(1, 1))
+                        lambda conn, rows, region, cc, near_ways=None, name_or_tags=None, exclude_tag_values=None: calls.append("load") or LoadResult(1, 1))
     for name in ("export_geojsonl", "build_pmtiles", "verify_pmtiles", "ensure_bucket", "upload", "prune"):
         monkeypatch.setattr(run, name, lambda *a, _n=name, **k: calls.append(_n))
 

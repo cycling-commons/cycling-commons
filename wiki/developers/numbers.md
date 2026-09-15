@@ -23,7 +23,7 @@ stale without the build saying so.
 |---|---|---|---|
 | `catalog-letters` | **12** | editable catalog types, each with one letter | `web/src/Catalog/ItemType.php` |
 | `selector-rules` | **42** | OSM tag rules that decide whether an object is worth keeping | `pipeline/contract/coverage-contract.json` |
-| `stored-tag-keys` | **33** | tag keys the harvest keeps on a coverage row; every other key is dropped at parse time | `pipeline/contract/coverage-contract.json` |
+| `stored-tag-keys` | **34** | tag keys the harvest keeps on a coverage row; every other key is dropped at parse time | `pipeline/contract/coverage-contract.json` |
 | `drawer-tag-whitelist` | **23** | of those keys the POI drawer is allowed to render | `web/src/Coverage/CoverageRepository.php` |
 | `map-modules` | **45** | JavaScript modules the map is split into | `web/assets/map/` |
 | `map-js-lines` | **312** | lines in `map.js` itself, which is imports plus the boot sequence | `web/assets/map/map.js` |

@@ -402,6 +402,7 @@ def load_region(
     country_code: str | None = None,
     near_ways: tuple[dict[str, float], Iterable[list[tuple[float, float]]]] | None = None,
     name_or_tags: dict[str, list[str]] | None = None,
+    exclude_tag_values: dict[str, dict[str, list[str]]] | None = None,
 ) -> LoadResult:
     """Atomically merge one region's slice of coverage_poi.
 
@@ -543,6 +544,21 @@ def load_region(
                 if bare:
                     print(f"[coverage] {src_region}: {letter} needs a name or one of {keys}: dropped "
                           f"{bare} staged point(s) with neither", file=sys.stderr)
+            for letter, rules in (exclude_tag_values or {}).items():
+                for key, values in rules.items():
+                    # docs/specs/coverage-provider.md §3: a point goes only when
+                    # every one of its `;`-separated values is excluded, so a
+                    # "plaque;statue" memorial stays for its statue.
+                    small = cur.execute(
+                        "DELETE FROM coverage_poi_staging s WHERE s.letter = %s "
+                        "AND btrim(COALESCE(s.tags ->> %s, '')) <> '' "
+                        "AND NOT EXISTS (SELECT 1 FROM unnest(string_to_array(s.tags ->> %s, ';')) v "
+                        "WHERE btrim(v) <> ALL(%s))",
+                        (letter, key, key, values),
+                    ).rowcount
+                    if small:
+                        print(f"[coverage] {src_region}: {letter} leaves out {key}={values}: dropped "
+                              f"{small} staged point(s)", file=sys.stderr)
             if near_ways is not None:
                 dropped = _apply_near_ways(cur, *near_ways)
                 if dropped:
@@ -551,10 +567,11 @@ def load_region(
             inserted = cur.execute("SELECT count(*) FROM coverage_poi_staging").fetchone()[0]
             # The guard is for a broken extract (a truncated download, a failed
             # filter), which shrinks every letter. A letter a contract rule
-            # filters (nameOrTags, nearWay) may shrink as far as the rule takes
-            # it, even to nothing, so the guard counts only the other letters
-            # (docs/specs/scenic-views.md §2, coverage-provider.md §3).
-            ruled = sorted(set(name_or_tags or {}) | set((near_ways or ({}, None))[0]))
+            # filters (nameOrTags, excludeTagValues, nearWay) may shrink as far
+            # as the rule takes it, even to nothing, so the guard counts only
+            # the other letters (docs/specs/scenic-views.md §2, coverage-provider.md §3).
+            ruled = sorted(set(name_or_tags or {}) | set(exclude_tag_values or {})
+                           | set((near_ways or ({}, None))[0]))
             guarded_previous = cur.execute(
                 "SELECT count(*) FROM coverage_poi WHERE src_region_id = %s AND NOT (letter = ANY(%s))",
                 (src_id, ruled),

@@ -571,6 +571,9 @@ def main(argv=None) -> int:
             raise ValueError("near-way rules differ between letters; one way pass serves them all today")
         # Letters whose points need a name or a photo link (docs/specs/scenic-views.md §2).
         name_or_tags = {letter: spec.name_or_tags for letter, spec in contract.letters.items() if spec.name_or_tags}
+        # Letters that leave out points of certain tag values (docs/specs/coverage-provider.md §3).
+        exclude_tag_values = {letter: spec.exclude_tag_values
+                              for letter, spec in contract.letters.items() if spec.exclude_tag_values}
         run_started = time.monotonic()
         timings: list[tuple[str, float, bool]] = []
         for region in ([] if args.tiles_only else regions):
@@ -593,7 +596,8 @@ def main(argv=None) -> int:
                     near_ways = ({letter: r.within_m for letter, r in near_rules.items()},
                                  rideable_lines(export_lines(ways), rule))
                 result = load_region(conn, rows, region, country_code, near_ways=near_ways,
-                                     name_or_tags=name_or_tags or None)
+                                     name_or_tags=name_or_tags or None,
+                                     exclude_tag_values=exclude_tag_values or None)
                 elapsed = time.monotonic() - region_started
                 timings.append((region, elapsed, True))
                 print(f"[coverage] {region}: loaded/updated {result.inserted} rows "

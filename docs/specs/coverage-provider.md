@@ -193,12 +193,14 @@ The serve-set is three groups:
 | Group | Count | Keys | Read by |
 |---|---|---|---|
 | **Selectors** | 11 | `amenity`, `drinking_water`, `historic`, `man_made`, `natural`, `railway`, `route`, `shelter_type`, `shop`, `tourism`, `waterway` | Classification (letter + `serviceKind`); `tiles.py::_label_case` re-reads them at tile-build time |
+| **Rules** | 1 | `memorial` | `load.py` `excludeTagValues`: Q leaves out small memorials (§7) |
 | **Display** | 17 | `opening_hours`, `website`, `contact:website`, `url`, `phone`, `contact:phone`, `addr:city`, `addr:street`, `addr:housenumber`, `operator`, `description`, `wheelchair`, `fee`, `capacity`, `ele`, `direction`, `height` | `CoverageRepository::TAG_WHITELIST` — exactly what the drawer renders (§5). `wheelchair`/`drinking_water` also feed tile props (§4) |
 
 `TAG_WHITELIST` has **23** entries: the 17 display keys, three selectors the
 drawer also renders (`amenity`, `shop`, `drinking_water`), and three media keys
 (`image`, `wikimedia_commons`, `wikidata`). Those six are counted in their own
-rows, so the three groups sum to 11 + 17 + 4 = **32** distinct keys.
+rows, so these groups and `check_date` (§4, the `cd` tile prop) sum to
+11 + 1 + 17 + 4 + 1 = **34** distinct keys.
 
 `ele`, `direction` and `height` were added on 2026-08-21 for the scenic-view
 letter (P), where OSM's own record is often richer than what the drawer showed:
@@ -327,8 +329,8 @@ Per region in `COVERAGE_REGIONS`, independently:
    across every onboarded country, so a border row picks exactly one owner
    regardless of which extract's cut also carries it; a row with no region
    within `BOUNDARY_SNAP_DEG` of *any* onboarded country is dropped outright
-   (not staged at all). The contract rules (`nameOrTags`, then `nearWay`) then
-   remove the staged points they refuse. Abort if the row count drops more than
+   (not staged at all). The contract rules (`nameOrTags`, then
+   `excludeTagValues`, then `nearWay`) then remove the staged points they refuse. Abort if the row count drops more than
    the drift ratio below the previous run for the same region
    (`pipeline/coverage/load.py::DRIFT_ABORT_RATIO`, value `0.4`), **counted over
    the letters no contract rule filters**: a rule may shrink its own letter as
@@ -902,9 +904,23 @@ source of truth for the mapping both languages need:
 - A letter may carry **`nameOrTags`** (a list of tag keys): its points load
   only with a non-empty `name` or one of those keys in `tags`. Every key must be
   in `storedTagKeys`, or `load_contract()` refuses the file, because an
-  unstored key could never be present. Only P carries it: `image`, `wikidata`,
-  `wikimedia_commons`. `load_region` applies it to the staged rows before the
-  near-way filter. See [scenic-views.md §2](scenic-views.md), rule 3.
+  unstored key could never be present. P (scenic views) and Q (history and
+  culture) carry it: `image`, `wikidata`, `wikimedia_commons`. `load_region`
+  applies it to the staged rows before the near-way filter. See
+  [scenic-views.md §2](scenic-views.md), rule 3.
+- A letter may carry **`excludeTagValues`** (a map of tag key to values): a
+  point does not load when that tag is set and **every** one of its
+  `;`-separated values is in the list, so `memorial=plaque;statue` stays for its
+  statue. Every key must be in `storedTagKeys`. Only Q carries it:
+  `memorial` = `bench`, `blue_plaque`, `ghost_bike`, `grave`, `plaque`,
+  `stolperstein`, `tomb`. A Stolperstein or a plaque is a memorial, not a place
+  to ride to (owner 2026-09-15). `load_region` applies it after `nameOrTags`,
+  and a letter it filters is left out of the drift guard like the other rules.
+  Measured on the Netherlands (2026-09-15), History and culture went from 9,056
+  points to 3,400: 4,033 had no name and no photo link (mostly unnamed
+  memorials and burial mounds), and 1,623 named small memorials followed
+  (1,254 Stolpersteine, 350 plaques). Castles, forts, manors and monasteries
+  hardly change; Veteranenmonument (`memorial=war_memorial`) stays.
 - The bike-way pass keeps memory flat: `extract.py::export_lines` runs `osmium
   export` with a disk-based node location index (`sparse_file_array` in a
   temporary directory), because the in-memory index for Germany's bike ways
