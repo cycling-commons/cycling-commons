@@ -2,7 +2,7 @@
 //
 // The drawer names where a row came from, not where its layer usually comes
 // from. The Matterhorn, a Wikidata row in the scenic layer, read "Source ·
-// OpenStreetMap (tourism=viewpoint / natural=peak / waterway=waterfall)",
+// OpenStreetMap (tourism=viewpoint / waterway=waterfall)",
 // because the layer's OSM citation won over the row's own source.
 'use strict';
 
@@ -12,7 +12,7 @@ import { drawerSource, drawerOrigin } from '../../assets/map/origin.js';
 
 const LABELS = { osm: 'OpenStreetMap', wikidata: 'Wikidata' };
 const label = (raw) => LABELS[raw] || null;
-const SCENIC_OSM = 'OpenStreetMap (tourism=viewpoint / natural=peak / waterway=waterfall)';
+const SCENIC_OSM = 'OpenStreetMap (tourism=viewpoint / waterway=waterfall)';
 
 test('a Wikidata row in an OSM layer says Wikidata', () => {
   assert.equal(drawerSource('wikidata', SCENIC_OSM, label), 'Wikidata');

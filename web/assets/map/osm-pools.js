@@ -8,6 +8,7 @@ import { layerByKey, active, mode } from './catalog.js';
 import { inScope } from './scope-ui.js';
 import { mintKindIcons, pinEl, clusterEl } from './icons.js';
 import { staysAccessible } from './render.js';
+import { modeShows } from './filters.js';
 import { openDrawer, osmDrawer, waterDrawer } from './drawer.js';
 
 export function addWaterOsm(){
@@ -16,18 +17,20 @@ export function addWaterOsm(){
   mintKindIcons();
 }
 
-// docs/specs/map-and-search.md §4.2, §4.5 — scope + Confirmed (`v`/`cur`); Best of / Everything draw the whole pool.
-export function poolVisible(f){
+// docs/specs/map-and-search.md §4.2, §4.5: scope, then the same view-mode rule
+// as every other pin (modeShows). Best of draws only the picks (`cur`) on an
+// experiential layer, so a verified monument is Confirmed, not Best of.
+export function poolVisible(f, layer){
   const p = f.properties || {};
   if(!inScope(p.rid)) return false;
-  return mode() !== 'confirmed' || !!p.v || !!p.cur;
+  return modeShows(mode(), layer || {}, p);
 }
 
 export function confShownCount(key){
   const st = confState[key+'-conf'];
   if(!st) return 0;
 
-  return st.confirmed.filter(poolVisible).length;
+  return st.confirmed.filter(f => poolVisible(f, st.layer)).length;
 }
 
 // Scope only, never mode — a total that shrank with the filter would read n/n.
@@ -54,7 +57,7 @@ export function setupConfClusters(){
     const srcId=key+'-conf';
     if(!curated.length || map.getSource(srcId)) return;
     map.addSource(srcId,{type:'geojson', cluster:true, clusterRadius:48, clusterMaxZoom:13,
-      data:{type:'FeatureCollection', features:curated.filter(poolVisible)}});
+      data:{type:'FeatureCollection', features:curated.filter(f => poolVisible(f, layerByKey[key]))}});
     map.addLayer({id:srcId+'-hit', type:'circle', source:srcId, paint:{'circle-radius':0,'circle-opacity':0}});
     confState[srcId]={key, layer:layerByKey[key], info, onScreen:{}, confirmed:curated};
   });
@@ -73,7 +76,7 @@ export function addCuratedFeature(key, feature){
   if(st){
     st.confirmed = info.data.features;
     const src = map.getSource(srcId);
-    if(src) src.setData({type:'FeatureCollection', features: st.confirmed.filter(poolVisible)});
+    if(src) src.setData({type:'FeatureCollection', features: st.confirmed.filter(f => poolVisible(f, st.layer))});
   } else {
     setupConfClusters();
   }
@@ -109,7 +112,7 @@ export function refreshPools(){
     st.info = info;
     st.confirmed = data.features;
     const src = map.getSource(srcId);
-    if(src) src.setData({type:'FeatureCollection', features: data.features.filter(poolVisible)});
+    if(src) src.setData({type:'FeatureCollection', features: data.features.filter(f => poolVisible(f, st.layer))});
     for(const m in st.onScreen) st.onScreen[m].remove();
     st.onScreen = {};
   });
@@ -122,7 +125,7 @@ export function refreshPools(){
 export function refilterClusters(){
   Object.keys(confState).forEach(srcId=>{
     const st=confState[srcId], src=map.getSource(srcId);
-    if(src) src.setData({type:'FeatureCollection', features:st.confirmed.filter(poolVisible)});
+    if(src) src.setData({type:'FeatureCollection', features:st.confirmed.filter(f => poolVisible(f, st.layer))});
   });
 }
 export function confLeafPin(st, p, co){
@@ -178,7 +181,7 @@ export function updateConfMarkers(){
 
 export const OSM_BULK = [
   ['services', window.CC_SERVICES_OSM, 'OpenStreetMap (shop=bicycle / amenity=bicycle_repair_station / compressed_air)'],
-  ['scenic',   window.CC_SCENIC_OSM,   'OpenStreetMap (tourism=viewpoint / natural=peak / waterway=waterfall)'],
+  ['scenic',   window.CC_SCENIC_OSM,   'OpenStreetMap (tourism=viewpoint / waterway=waterfall)'],
   ['history',  window.CC_HISTORY_OSM,  'OpenStreetMap (historic=castle/fort/ruins/monument/memorial/…)'],
   ['stays',    window.CC_STAYS_OSM,    'OpenStreetMap (tourism=camp_site/hostel/guest_house/chalet/hotel/…)'],
   ['shelter',  window.CC_SHELTER_OSM,  'OpenStreetMap (shelter_type=picnic/weather/field/…)'],

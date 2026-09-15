@@ -431,7 +431,10 @@ by default and a rider asks for one section at a time.
 - The first rung's axis is **votability**, not verification — see the funnel in
   [edit-items/README.md](edit-items/README.md#item-lifecycle-and-votability).
 - **Experiential layers** (`layer.exp`: climbs, stays, scenic, history) filter
-  to `f.cur` in Curated; utility layers always draw their confirmed pins, and
+  to `f.cur` in Curated. The curated pool pins (`osm-pools.js` `poolVisible`,
+  our own items clustered per layer) ask the same `modeShows()` as every other
+  pin, so a verified place that nobody picked draws in Confirmed, not in Best
+  of (owner 2026-09-15, Veteranenmonument); utility layers always draw their confirmed pins, and
   their unverified OSM dots draw only in Everything (this gate changes under
   §12). **R routes** honour a server-computed best-of: Curated mode fetches
   `GET /map/best-of` for the active *(season, bike)* facet (`#boSeason` /
