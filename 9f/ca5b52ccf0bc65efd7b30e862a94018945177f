@@ -1,0 +1,156 @@
+web/tests/js/ride-mode-restore.test.mjs
+  s_d34f17e49b47aa::t_2eba0c1d46c1b4 1-51
+web/translations/messages.de.yaml
+  s_d34f17e49b47aa::t_d005cea9833e35 162
+  s_d34f17e49b47aa::t_0abd1d45503aa7 2343
+  s_d34f17e49b47aa::t_d568891b5e6ebf 1936
+  s_d34f17e49b47aa::t_94c86b76c7a128 2271-2272,2368-2371
+  s_d34f17e49b47aa::t_e0d196338847ca 131
+  s_d34f17e49b47aa::t_babffe053167f9 2045-2049
+docs/specs/operations.md
+  s_d34f17e49b47aa::t_01b1936239dfbb 346
+web/tests/js/tile-type-label.test.mjs
+  s_d34f17e49b47aa::t_757f2da9ee9644 1-45
+web/assets/map/ride-places.js
+  s_d34f17e49b47aa::t_761d357ceb1d79 33-53
+docs/specs/privacy-notice.md
+  s_d34f17e49b47aa::t_e839a645f22c49 47
+web/translations/messages.es.yaml
+  s_d34f17e49b47aa::t_babffe053167f9 2592-2596
+  s_d34f17e49b47aa::t_94c86b76c7a128 2818-2819,2915-2918
+  s_d34f17e49b47aa::t_d005cea9833e35 163
+  s_d34f17e49b47aa::t_e0d196338847ca 132
+  s_d34f17e49b47aa::t_0abd1d45503aa7 2890
+  s_d34f17e49b47aa::t_d568891b5e6ebf 2483
+web/translations/messages.nl.yaml
+  s_d34f17e49b47aa::t_d005cea9833e35 162
+  s_d34f17e49b47aa::t_babffe053167f9 2042-2046
+  s_d34f17e49b47aa::t_94c86b76c7a128 2268-2269,2365-2368
+  s_d34f17e49b47aa::t_d568891b5e6ebf 1933
+  s_d34f17e49b47aa::t_0abd1d45503aa7 2340
+  s_d34f17e49b47aa::t_e0d196338847ca 131
+web/assets/map/catalog-load.js
+  s_d34f17e49b47aa::t_875a158c158055 39-40
+web/assets/map/util.js
+  s_d34f17e49b47aa::t_8623a69f25052e 107-115
+  s_d34f17e49b47aa::t_a9c3232392f7fc 87-98
+  s_d34f17e49b47aa::t_6fbcf43cada8a5 99-106,116-124
+web/tests/js/locate-me.test.mjs
+  s_d34f17e49b47aa::t_963666a789f4b3 22-30
+  s_d34f17e49b47aa::t_e274dbb08a978f 9
+  s_d34f17e49b47aa::t_e16c2f1ab980ca 1-8,10-21,31-42
+web/assets/map/ride-check.js
+  s_d34f17e49b47aa::t_0abd1d45503aa7 170
+  s_d34f17e49b47aa::t_3990509355f3a7 240-241
+  s_d34f17e49b47aa::t_00fa4688b7c585 203
+  s_d34f17e49b47aa::t_77e20ebe7f85f7 209-210,212-213
+  s_d34f17e49b47aa::t_370658678a7616 69-83,87-93
+  s_d34f17e49b47aa::t_96dfad703383cc 218-219
+  s_d34f17e49b47aa::t_cab130e7ffa073 122-123
+  s_d34f17e49b47aa::t_b9d7e1509dff70 211,222
+  s_d34f17e49b47aa::t_b3200bd0518d74 14,16,19,21-22
+  s_d34f17e49b47aa::t_f623e95500e4a3 84-86
+web/assets/map/map-init.js
+  s_d34f17e49b47aa::t_776d878771d308 117-120
+  s_d34f17e49b47aa::t_2a708838cb74a4 56
+  s_d34f17e49b47aa::t_5632741c2e8a2d 71-75,77,80-81,83-85,87-97
+  s_d34f17e49b47aa::t_47d9fb81ebe961 5
+  s_d34f17e49b47aa::t_f9af37b3db538d 76,78-79,82,86
+  s_d34f17e49b47aa::t_dff46897b00857 41-43
+web/tests/js/osm-tags.test.mjs
+  s_d34f17e49b47aa::t_9518ab565fcfe6 11,73-109
+web/tests/js/pin-offset.test.mjs
+  s_d34f17e49b47aa::t_a9c3232392f7fc 1-23
+web/src/Controller/MapController.php
+  s_d34f17e49b47aa::t_babffe053167f9 206
+  s_d34f17e49b47aa::t_d568891b5e6ebf 388
+  s_d34f17e49b47aa::t_629df3465f358c 205,461-464
+  s_d34f17e49b47aa::t_487ba9fdf1515c 318,445-452
+web/assets/map/filters.js
+  s_d34f17e49b47aa::t_c6e95d7c90f222 35-60
+web/assets/map/coverage.js
+  s_d34f17e49b47aa::t_84fc91d6270636 313-321,323-325
+  s_d34f17e49b47aa::t_c3c00d59de15f7 14
+  s_d34f17e49b47aa::t_61899632a29ce0 322
+  s_d34f17e49b47aa::t_babffe053167f9 248-250
+  s_d34f17e49b47aa::t_12bbee366ac5a6 30
+  s_d34f17e49b47aa::t_52300b1dc7a8e4 251,336-377
+web/tests/js/shown-anyway.test.mjs
+  s_d34f17e49b47aa::t_5f31b9aec6fd81 1-49
+web/tests/Smoke/MapPageTest.php
+  s_d34f17e49b47aa::t_5ffe6d1bc6c0b6 79-84
+web/assets/map/map.js
+  s_d34f17e49b47aa::t_7d2d8222f6a12c 22,42
+web/assets/map/osm-tags.js
+  s_d34f17e49b47aa::t_babffe053167f9 76
+  s_d34f17e49b47aa::t_e20c5595bb5d94 34,62-75,77-83
+  s_d34f17e49b47aa::t_c9aaf4cbc6ea5b 35-61
+docs/specs/security-architecture.md
+  s_d34f17e49b47aa::t_01b1936239dfbb 70,76-82
+  s_d34f17e49b47aa::t_01323c09c1aa6c 83
+web/translations/messages.en.yaml
+  s_d34f17e49b47aa::t_babffe053167f9 2584-2588
+  s_d34f17e49b47aa::t_e0d196338847ca 131
+  s_d34f17e49b47aa::t_d005cea9833e35 162
+  s_d34f17e49b47aa::t_d568891b5e6ebf 2475
+  s_d34f17e49b47aa::t_94c86b76c7a128 2810-2811,2907-2910
+  s_d34f17e49b47aa::t_0abd1d45503aa7 2882
+web/tests/Security/SecurityHeadersTest.php
+  s_d34f17e49b47aa::t_ddb192884affea 26
+web/assets/map/osm-pools.js
+  s_d34f17e49b47aa::t_7323b694d1c11e 10
+  s_d34f17e49b47aa::t_b9d4339b0cb715 194
+  s_d34f17e49b47aa::t_60ed0ac46dedc0 75-78,80-81
+  s_d34f17e49b47aa::t_12bbee366ac5a6 220
+  s_d34f17e49b47aa::t_11dc8cb242739f 79
+web/assets/map/panels.js
+  s_d34f17e49b47aa::t_d568891b5e6ebf 305-306
+  s_d34f17e49b47aa::t_33775dca109eb6 403
+  s_d34f17e49b47aa::t_e00b1a1d16cd7e 394-396
+web/translations/messages.fr.yaml
+  s_d34f17e49b47aa::t_d568891b5e6ebf 1928
+  s_d34f17e49b47aa::t_94c86b76c7a128 2263-2264,2360-2363
+  s_d34f17e49b47aa::t_e0d196338847ca 129
+  s_d34f17e49b47aa::t_d005cea9833e35 160
+  s_d34f17e49b47aa::t_babffe053167f9 2037-2041
+  s_d34f17e49b47aa::t_0abd1d45503aa7 2335
+web/src/EventSubscriber/SecurityHeadersSubscriber.php
+  s_d34f17e49b47aa::t_ddb192884affea 32-35
+web/assets/map/drawer.js
+  s_d34f17e49b47aa::t_73276464f33e17 1136-1138
+  s_d34f17e49b47aa::t_aaac988b5bd81d 1218
+  s_d34f17e49b47aa::t_e960ccc8367d0c 15
+  s_d34f17e49b47aa::t_babffe053167f9 18,242-245,257-260
+web/assets/map/render.js
+  s_d34f17e49b47aa::t_8d56b012344fe2 395-420
+  s_d34f17e49b47aa::t_293a6675d59f9f 428
+  s_d34f17e49b47aa::t_8499d2ef509f0f 16
+web/assets/styles/map.css
+  s_d34f17e49b47aa::t_0616cd32c40442 452-455
+docs/specs/map-and-search.md
+  s_d34f17e49b47aa::t_daa6faf93c7e69 2341-2344
+  s_d34f17e49b47aa::t_b1d15728748c66 2469-2471
+  s_d34f17e49b47aa::t_370f04d2ae4fd9 2330-2337
+  s_d34f17e49b47aa::t_aa96ae9f3cdceb 802-814
+  s_d34f17e49b47aa::t_90d104dca7e4ed 463-468
+  s_d34f17e49b47aa::t_496859e6102165 2205-2207
+  s_d34f17e49b47aa::t_2d3b33092840c7 469-472
+  s_d34f17e49b47aa::t_d4a8b70a93b0b0 1613-1616
+  s_d34f17e49b47aa::t_34388c50f923a4 301-335
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "9fca5b52ccf0bc65efd7b30e862a94018945177f",
+  "prompts": {},
+  "sessions": {
+    "s_d34f17e49b47aa": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ef901574-ddee-4be4-aa4c-45b023adb0b8",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
