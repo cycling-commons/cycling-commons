@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace App\Media;
 
 use App\Catalog\Entity\Item;
+use App\Catalog\Entity\RecommendedRoute;
 use App\Catalog\Entity\Submission;
 use App\Entity\User;
 use App\Media\Entity\MediaUpload;
@@ -20,7 +21,10 @@ use Doctrine\ORM\EntityManagerInterface;
  * scenic view with no usable distance) links it for a curator to confirm,
  * `show` links it.
  *
- * @see docs/specs/photo-uploads.md §5, §5c, §5h
+ * A recommended route's photos take the same decision through
+ * applyToRoute(): the route's own approve, reject, done or dismiss.
+ *
+ * @see docs/specs/photo-uploads.md §5, §5c, §5h, §5i
  *
  * @api
  */
@@ -56,17 +60,64 @@ final class MediaDecisionService
             'submissionId' => (int) $submission->getId(),
             'status' => MediaStatus::Pending,
         ], ['createdAt' => 'ASC']);
+        $place = new PhotoPlace($item?->getLetter() ?? $submission->getLetter(), null, null);
+        $attached = $this->decide($uploads, $place, $decision, $curator, $note, $rejectMediaIds, $item?->getId());
+
+        return null === $item ? null : $this->attach($item, $attached);
+    }
+
+    /**
+     * The same decision for the photos sent for a recommended route: with its
+     * proposal (`$suggestionId` null) when the proposal is approved or
+     * rejected, or with one photo correction when it is marked done or
+     * dismissed. Approved photos land in the route's `attributes.photos`, judged
+     * by PhotoValidator as letter R at the route's pin.
+     *
+     * `approve` and `done` attach; `reject` and `dismissed` reject every photo.
+     *
+     * @param list<string> $rejectMediaIds
+     *
+     * @return array{old: mixed, new: list<array<string, mixed>>}|null
+     *
+     * @see docs/specs/photo-uploads.md §5i
+     */
+    public function applyToRoute(
+        RecommendedRoute $route,
+        ?int $suggestionId,
+        string $decision,
+        User $curator,
+        ?string $note,
+        array $rejectMediaIds = [],
+    ): ?array {
+        $uploads = $this->em->getRepository(MediaUpload::class)->findBy([
+            'routeId' => (int) $route->getId(),
+            'routeSuggestionId' => $suggestionId,
+            'status' => MediaStatus::Pending,
+        ], ['createdAt' => 'ASC']);
+        $rejectAll = \in_array($decision, ['reject', 'dismissed'], true);
+        $attached = $this->decide($uploads, PhotoPlace::route(null, null), $rejectAll ? 'reject' : 'approve', $curator, $note, $rejectMediaIds, null);
+
+        return $this->attach($route, $attached);
+    }
+
+    /**
+     * Put each pending, published upload through PhotoValidator and the
+     * decision; answer the gallery entries of the approved ones.
+     *
+     * @param list<MediaUpload> $uploads
+     * @param list<string>      $rejectMediaIds
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function decide(array $uploads, PhotoPlace $place, string $decision, User $curator, ?string $note, array $rejectMediaIds, ?int $itemId): array
+    {
         // Skip unpublished rows, and every photo PhotoValidator refuses for this
         // place (legal hold, photo-uploads.md §6d): they stay pending.
-        $place = new PhotoPlace($item?->getLetter() ?? $submission->getLetter(), null, null);
         $uploads = array_values(array_filter(
             $uploads,
             static fn (MediaUpload $u): bool => $u->hasPublishedObjects()
                 && PhotoValidator::verdict(PhotoFacts::ofUpload($u), $place)->links(),
         ));
-        if ([] === $uploads) {
-            return null;
-        }
 
         $unticked = array_flip(array_map(strval(...), $rejectMediaIds));
         $curatorId = (int) $curator->getId();
@@ -80,23 +131,35 @@ final class MediaDecisionService
                 continue;
             }
 
-            $upload->approve($item?->getId());
+            $upload->approve($itemId);
             $this->events->append($upload->getId(), $curatorId, MediaAction::Approved, $note);
             $attached[] = $this->describe($upload);
         }
 
-        if (null === $item || [] === $attached) {
+        return $attached;
+    }
+
+    /**
+     * Append approved entries to a gallery.
+     *
+     * @param list<array<string, mixed>> $attached
+     *
+     * @return array{old: mixed, new: list<array<string, mixed>>}|null
+     */
+    private function attach(Item|RecommendedRoute $holder, array $attached): ?array
+    {
+        if ([] === $attached) {
             return null;
         }
 
-        $attributes = $item->getAttributes();
+        $attributes = $holder->getAttributes();
         $old = $attributes['photos'] ?? ($attributes['photo'] ?? null);
 
         $gallery = self::existingGallery($attributes);
         // Migrate the legacy singular into photos[]; map.js would shadow one if both remain.
         unset($attributes['photo']);
         $attributes['photos'] = [...$gallery, ...$attached];
-        $item->setAttributes($attributes);
+        $holder->setAttributes($attributes);
 
         return ['old' => $old, 'new' => $attributes['photos']];
     }

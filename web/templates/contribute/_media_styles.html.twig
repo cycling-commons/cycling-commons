@@ -1,0 +1,84 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{#
+  The rider photo uploader's look: drop zone, upload queue chips, consent
+  notice and consent modal (docs/specs/photo-uploads.md §4). Shared by every
+  page that mounts contribute/media-upload.js, so the uploader looks the same
+  wherever a photo is added. Include it inside a <style> block.
+#}
+  /* upload queue + consent */
+  .ulq{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.8rem}
+  /* The description field. Full width on its own line: a chip is a name and a
+     progress bar, and an input squeezed beside them is unusable on a phone,
+     which is where most photos are added. */
+  .ulq .chip{flex-wrap:wrap}
+  /* The description is a SENTENCE somebody writes, so it gets the site's field
+     conventions and not the chip's. It sat at .72rem with a chip's padding,
+     which is a caption size on a box you are meant to type a line of prose
+     into, and under the 0.90rem floor every other piece of running text on the
+     site keeps (owner, 2026-08-30). Same size, padding, border and radius as
+     the inputs on /contact and /report. */
+  .ulq .chip-alt{flex:1 0 100%;margin-top:.5rem}
+  .ulq .chip-alt input{width:100%;font-family:var(--sans);font-size:.95rem;padding:.6rem .7rem;
+    color:var(--ink);border:1px solid rgba(20,22,14,.24);border-radius:5px;background:var(--paper)}
+  .ulq .chip-alt input:focus-visible{outline:2px solid var(--clay);outline-offset:1px}
+  .ulq .chip-alt.saved input{border-color:var(--glacier)}
+  .ulq .chip{font-family:var(--mono);font-size:.7rem;letter-spacing:.04em;padding:.3rem .5rem;border-radius:5px;background:var(--paper-deep);border:1px solid rgba(20,22,14,.18);display:flex;align-items:center;gap:.35rem}
+  .ulq .chip .dot{width:6px;height:6px;border-radius:50%;background:var(--ochre)}
+
+  /* modal */
+  .modal{position:fixed;inset:0;background:rgba(16,30,22,.55);z-index:2000;display:none;align-items:center;justify-content:center;padding:1.2rem}
+  .modal.open{display:flex}
+  .modal .box{background:var(--paper);border-radius:12px;max-width:460px;padding:1.6rem 1.7rem;box-shadow:0 24px 60px -18px rgba(0,0,0,.5)}
+  .modal h3{font-family:var(--serif);font-weight:600;font-size:1.3rem;margin-bottom:.6rem}
+  .modal p{font-size:.9rem;color:#4a4d40;line-height:1.55;margin-bottom:.8rem}
+  .modal .rules{background:var(--paper-deep);border-radius:8px;padding:.8rem 1rem;font-size:.84rem;line-height:1.55;margin-bottom:1rem}
+  .modal label.ok-check{display:flex;gap:.6rem;align-items:flex-start;font-size:.88rem;cursor:pointer;margin-bottom:.5rem}
+  /* Outside the label, on its own line: reading the licence must not tick the box. */
+  .modal .consent-licence{margin:0 0 1.1rem;padding-left:1.55rem;font-size:.84rem}
+  .modal .consent-licence a{color:var(--clay);text-decoration:underline}
+  .modal .mrow{display:flex;gap:.7rem;justify-content:flex-end}
+  .modal .mrow button{font-family:var(--sans);font-weight:700;font-size:.92rem;padding:.6rem 1.2rem;border-radius:6px;cursor:pointer;border:1.5px solid transparent}
+  .modal .b-ok{background:var(--trail);color:var(--ink)}.modal .b-ok[disabled]{opacity:.45;cursor:not-allowed}
+  .modal .b-cancel{background:none;border-color:rgba(20,22,14,.25);color:var(--ink)}
+  .modal .thanks-big{text-align:center}
+  .modal .thanks-big .ic{font-size:2.6rem}.modal .thanks-big h3{font-size:1.6rem;margin-top:.4rem}
+  .modal .demo-note{font-size:.90rem;color:#595c4d;margin-top:.4rem}
+
+  /* drop zone */
+  .drop{border:1.5px dashed rgba(20,22,14,.3);border-radius:10px;padding:2rem;text-align:center;color:#595c4d;cursor:pointer}
+  .drop:hover{border-color:var(--trail);color:var(--ink)}
+  .drop .ic{font-size:1.6rem;display:block;margin-bottom:.5rem}
+  /* real uploads (docs/specs/photo-uploads.md §4) */
+  .drop.over{border-color:var(--trail);background:var(--paper-deep)}
+  /* Empty until consent exists — the contract is put to the rider when they
+     drop a photo, not as a gate in front of the drop zone. */
+  .consent-gate{margin:.6rem 0 1rem}
+  .consent-gate:empty{margin:0}
+  .consent-ok{font-size:.86rem;line-height:1.5;color:#3f6b3f}
+  .consent-when{font-family:var(--mono);font-size:.68rem;color:#595c4d}
+  .consent-more{display:inline-block;margin-left:.35rem}
+  .consent-more summary{cursor:pointer;font-size:.78rem;color:var(--clay)}
+  .consent-err{color:#a3342b;font-size:.85rem;margin:.5rem 0}
+  .ulq .chip.up{display:inline-flex;align-items:center;gap:.45rem;max-width:100%}
+  .chip-thumb img{width:34px;height:34px;object-fit:cover;border-radius:4px;display:block}
+  .chip-name{max-width:12rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .chip-bar{position:relative;width:78px;height:4px;border-radius:2px;background:rgba(20,22,14,.15);overflow:hidden}
+  .chip-bar i{position:absolute;inset:0 auto 0 0;display:block;background:var(--trail);transition:width .15s linear}
+  .chip.indeterminate .chip-bar i{width:40%!important;animation:chip-pulse 1.1s ease-in-out infinite}
+  @keyframes chip-pulse{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}
+  .chip.failed{border-color:#a3342b;color:#a3342b}
+  .chip-err{font-size:.72rem}
+  /* The wait between "received" and "on the map"
+     (media-storage-architecture.md §3.3). Two states, deliberately different
+     in weight: `checking` is live and breathes, `waiting` is settled and
+     still, because the rider has been told they can move on. Neither is an
+     error, so neither borrows the failed colour. */
+  .chip-note{font-size:.72rem;color:#595c4d;white-space:nowrap}
+  .chip.checking{border-color:var(--glacier)}
+  .chip.checking .chip-thumb img{opacity:.62;animation:chip-breathe 1.6s ease-in-out infinite}
+  .chip.waiting{border-color:rgba(20,22,14,.22)}
+  .chip.waiting .chip-thumb img{opacity:.72}
+  @keyframes chip-breathe{0%,100%{opacity:.62}50%{opacity:.95}}
+  @media(prefers-reduced-motion:reduce){.chip.checking .chip-thumb img{animation:none}}
+  .chip-x{border:0;background:none;cursor:pointer;font-size:1rem;line-height:1;color:#595c4d}
+  @media(prefers-reduced-motion:reduce){.chip.indeterminate .chip-bar i{animation:none}}

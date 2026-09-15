@@ -404,7 +404,15 @@
       return (errors && errors[reason]) || (errors && errors.unknown) || 'Upload failed.';
     }
 
+    /* Where the photo is for. A page with no improve[lat]/[lng] pin (a route)
+       passes options.pin, answering {lat, lng} or null. */
+    var pinSource = options && options.pin;
     function pin(key) {
+      if (pinSource) {
+        var at = pinSource();
+        var v = at && at[key];
+        return v != null && isFinite(parseFloat(v)) ? String(parseFloat(v)) : null;
+      }
       var field = document.querySelector('[name="improve[' + key + ']"]');
       var value = field && field.value;
       return value !== '' && value != null && isFinite(parseFloat(value)) ? String(parseFloat(value)) : null;

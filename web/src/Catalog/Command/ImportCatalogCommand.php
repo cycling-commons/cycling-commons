@@ -15,6 +15,7 @@ use App\Catalog\ItemType;
 use App\Catalog\OperationalRegions;
 use App\Catalog\ServiceKind;
 use App\Catalog\SurfaceProfiler;
+use App\Media\Commons\CommonsFile;
 use App\Media\PhotoPlace;
 use App\Media\PhotoValidator;
 use App\Service\BaseLocationService;
@@ -255,6 +256,7 @@ final class ImportCatalogCommand extends Command
                     }
                 }
                 $this->vocabulary->assertValid($type, $attributes);
+                $attributes = self::foldSurfacePhoto($attributes);
 
                 [$source, $ref] = $this->resolveSourceRef($props, $file);
 
@@ -305,6 +307,33 @@ final class ImportCatalogCommand extends Command
         return $total;
     }
 
+    /**
+     * A road surface artifact names its Commons photo in four flat keys; the
+     * row stores the one `photo` entry every place carries
+     * (CommonsFile::hotlinkEntry()), so PhotoValidator judges it below and
+     * `app:media:localise-commons` can make it ours. The flat keys are not
+     * stored.
+     *
+     * @param array<string, mixed> $attributes
+     *
+     * @return array<string, mixed>
+     */
+    private static function foldSurfacePhoto(array $attributes): array
+    {
+        $file = $attributes['photoFile'] ?? null;
+        if (\is_string($file) && '' !== trim($file) && !\array_key_exists('photo', $attributes)) {
+            $attributes['photo'] = CommonsFile::hotlinkEntry(
+                trim($file),
+                \is_string($attributes['photoCredit'] ?? null) ? $attributes['photoCredit'] : '',
+                \is_string($attributes['photoUser'] ?? null) ? $attributes['photoUser'] : null,
+                \is_string($attributes['photoLicense'] ?? null) ? $attributes['photoLicense'] : '',
+            );
+        }
+        unset($attributes['photoFile'], $attributes['photoCredit'], $attributes['photoUser'], $attributes['photoLicense']);
+
+        return $attributes;
+    }
+
     private function importRoutes(string $dir, SymfonyStyle $io): int
     {
         $file = $dir.'/routes.json';
@@ -317,8 +346,8 @@ final class ImportCatalogCommand extends Command
             [$source, $ref] = $this->resolveSourceRef($route, $file);
             // docs/specs/route-domain.md §9 — harvest scalar `summer` → stored list `['Summer']`.
             $route['attributes'] = $this->normalizeSeason($route['attributes']);
-            // A route is no catalogue letter's place: only the photo's own checks apply.
-            $sifted = PhotoValidator::sift($route['attributes'], PhotoPlace::unplaced());
+            // A route is letter R; its pin is not stored yet, and R has no pin check.
+            $sifted = PhotoValidator::sift($route['attributes'], PhotoPlace::route(null, null));
             $route['attributes'] = $sifted['attributes'];
             foreach ($sifted['dropped'] as $dropped) {
                 $this->droppedPhotos[] = sprintf('%s: %s', $route['name'], null !== $dropped['verdict']->reason ? $dropped['verdict']->reason->value : 'refused');

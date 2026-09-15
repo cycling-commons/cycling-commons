@@ -436,6 +436,54 @@ final class ImportCatalogCommandTest extends KernelTestCase
         self::assertStringContainsString('Viewpoint With No Camera: camera_unknown', $display);
     }
 
+    /**
+     * A road surface names its Commons photo in four flat keys (`photoFile`,
+     * `photoCredit`, `photoUser`, `photoLicense`). The import stores them as
+     * the one `photo` entry every other place carries, so the photo passes
+     * PhotoValidator here and `app:media:localise-commons` later, and no flat
+     * key reaches the drawer to be turned into a hotlink.
+     */
+    public function testASurfacePhotoFileIsStoredAsAPhotoEntry(): void
+    {
+        $dir = sys_get_temp_dir().'/catalog-import-surface-photo-'.getmypid();
+        @mkdir($dir, 0777, true);
+        $segment = static fn (string $ref, string $name, string $licence): array => [
+            'type' => 'Feature',
+            'properties' => [
+                'surface' => 'Asphalt', 'cls' => 'cycleway', 'name' => $name, 'source' => 'osm', 'ref' => $ref,
+                'photoFile' => 'Charleroi-ravel.jpg', 'photoCredit' => 'Bronstein', 'photoUser' => 'Bronstein', 'photoLicense' => $licence,
+            ],
+            'geometry' => ['type' => 'LineString', 'coordinates' => [[4.2, 50.1], [4.3, 50.2]]],
+        ];
+        file_put_contents($dir.'/surface.json', json_encode(['layer' => 'surface', 'letter' => 'A', 'features' => [
+            $segment('way/9201', 'Photo RAVeL', 'CC BY-SA 4.0'),
+            $segment('way/9202', 'NC RAVeL', 'CC BY-NC-SA 4.0'),
+        ]], \JSON_THROW_ON_ERROR));
+
+        $tester = $this->runImport($dir);
+        $tester->assertCommandIsSuccessful();
+
+        $repo = $this->em->getRepository(Item::class);
+        $kept = ($repo->findOneBy(['sourceRef' => 'way/9201']) ?? self::fail('kept row'))->getAttributes();
+        // jsonb keeps its own key order, so the entry is compared as a map.
+        self::assertEquals([
+            'sm' => 'https://commons.wikimedia.org/wiki/Special:FilePath/Charleroi-ravel.jpg?width=520',
+            'lg' => 'https://commons.wikimedia.org/wiki/Special:FilePath/Charleroi-ravel.jpg?width=1400',
+            'credit' => 'Bronstein',
+            'creditUrl' => 'https://commons.wikimedia.org/wiki/User:Bronstein',
+            'license' => 'CC BY-SA 4.0',
+            'source' => 'https://commons.wikimedia.org/wiki/File:Charleroi-ravel.jpg',
+        ], $kept['photo'] ?? null);
+        foreach (['photoFile', 'photoCredit', 'photoUser', 'photoLicense'] as $flat) {
+            self::assertArrayNotHasKey($flat, $kept);
+        }
+
+        $refused = ($repo->findOneBy(['sourceRef' => 'way/9202']) ?? self::fail('refused row'))->getAttributes();
+        self::assertArrayNotHasKey('photo', $refused);
+        self::assertArrayNotHasKey('photoFile', $refused);
+        self::assertStringContainsString('NC RAVeL: licence', preg_replace('~\s+~', ' ', $tester->getDisplay()) ?? '');
+    }
+
     public function testUnknownAttributeKeyFails(): void
     {
         $tester = $this->runImport($this->fixturesDir('bad-key'));

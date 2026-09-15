@@ -20,6 +20,7 @@ use App\Media\MediaEventLog;
 use App\Media\MediaStatus;
 use App\Media\MediaStorage;
 use App\Media\Message\ScanAndReleaseUpload;
+use App\Media\PhotoGallery;
 use App\Media\PhotoProcessor;
 use App\Media\ShardUnavailable;
 use Doctrine\ORM\EntityManagerInterface;
@@ -65,6 +66,7 @@ final class MediaController extends AbstractController
         private readonly EntityManagerInterface $em,
         private readonly MessageBusInterface $bus,
         private readonly MediaDecisionService $decisions,
+        private readonly PhotoGallery $gallery,
         private readonly CatalogContributionService $contributions,
     ) {
     }
@@ -313,13 +315,8 @@ final class MediaController extends AbstractController
      */
     private function syncGalleryAlt(MediaUpload $upload, ?string $alt): void
     {
-        $itemId = $upload->getItemId();
-        if (null === $itemId) {
-            return;
-        }
-
-        $item = $this->em->find(Item::class, $itemId);
-        if (!$item instanceof Item) {
+        $item = $this->gallery->holderOf($upload);
+        if (null === $item) {
             return;
         }
 

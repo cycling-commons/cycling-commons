@@ -6,7 +6,6 @@ declare(strict_types=1);
 
 namespace App\Media;
 
-use App\Catalog\Entity\Item;
 use App\Entity\User;
 use App\Media\Entity\MediaUpload;
 use App\Moderation\EscalationAlert;
@@ -30,6 +29,7 @@ final class MediaEscalationService
         private readonly EntityManagerInterface $em,
         private readonly MediaEventLog $events,
         private readonly MediaDecisionService $decisions,
+        private readonly PhotoGallery $gallery,
         private readonly EscalationAlert $alert,
     ) {
     }
@@ -119,11 +119,7 @@ final class MediaEscalationService
     /** Off the map at once — same sm-URL detach as takedown. */
     private function detachFromItem(MediaUpload $upload): void
     {
-        $itemId = $upload->getItemId();
-        if (null === $itemId) {
-            return;
-        }
-        $item = $this->em->find(Item::class, $itemId);
+        $item = $this->gallery->holderOf($upload);
         if (null === $item) {
             return;
         }
@@ -147,11 +143,6 @@ final class MediaEscalationService
 
     private function itemName(MediaUpload $upload): string
     {
-        $itemId = $upload->getItemId();
-        if (null === $itemId) {
-            return '';
-        }
-
-        return $this->em->find(Item::class, $itemId)?->getName() ?? '';
+        return $this->gallery->holderOf($upload)?->getName() ?? '';
     }
 }

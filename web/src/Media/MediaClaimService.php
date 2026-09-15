@@ -6,6 +6,8 @@ declare(strict_types=1);
 
 namespace App\Media;
 
+use App\Catalog\Entity\RecommendedRoute;
+use App\Catalog\Entity\RouteSuggestion;
 use App\Catalog\Entity\Submission;
 use App\Entity\User;
 use App\Media\Entity\MediaUpload;
@@ -13,9 +15,9 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Uid\Uuid;
 
 /**
- * Bind uploads to a submission; compute pin distance and destroy GPS.
+ * Bind uploads to a submission or a route; compute pin distance and destroy GPS.
  *
- * @see docs/specs/photo-uploads.md §3
+ * @see docs/specs/photo-uploads.md §3, §5i
  *
  * @api
  */
@@ -31,15 +33,6 @@ final class MediaClaimService
 
     public function claim(mixed $rawMediaIds, User $by, Submission $submission, mixed $rawAlts = null): void
     {
-        $ids = self::parse($rawMediaIds);
-        if ([] === $ids) {
-            return;
-        }
-        $alts = self::parseAlts($rawAlts);
-        if (\count($ids) > self::MAX_PER_SUBMISSION) {
-            throw new \InvalidArgumentException(\sprintf('A submission carries at most %d photos, %d given.', self::MAX_PER_SUBMISSION, \count($ids)));
-        }
-
         $submissionId = (int) $submission->getId();
         $pinLat = null;
         $pinLng = null;
@@ -47,6 +40,66 @@ final class MediaClaimService
         if (\is_array($geom) && isset($geom['coordinates'][0], $geom['coordinates'][1])) {
             $pinLng = (float) $geom['coordinates'][0];
             $pinLat = (float) $geom['coordinates'][1];
+        }
+
+        $this->bind($rawMediaIds, $by, $rawAlts, static function (MediaUpload $upload) use ($submissionId, $pinLat, $pinLng): array {
+            $upload->claim($submissionId);
+
+            return [$pinLat, $pinLng];
+        });
+    }
+
+    /**
+     * Bind uploads to a recommended route: its proposal (`$suggestion` null)
+     * or a photo correction on it. Same checks, same cap, same GPS rule as a
+     * submission, except that the distance is measured to the nearest point
+     * of the route's line, and that point is the pin it was measured to.
+     *
+     * @see docs/specs/photo-uploads.md §5i
+     */
+    public function claimForRoute(mixed $rawMediaIds, User $by, RecommendedRoute $route, ?RouteSuggestion $suggestion, mixed $rawAlts = null): void
+    {
+        $routeId = (int) $route->getId();
+        $suggestionId = $suggestion?->getId();
+        $line = self::lineOf($route);
+
+        $this->bind($rawMediaIds, $by, $rawAlts, static function (MediaUpload $upload) use ($routeId, $suggestionId, $line): array {
+            $upload->claimForRoute($routeId, $suggestionId);
+            $lat = $upload->getGpsLat();
+            $lng = $upload->getGpsLng();
+            $pin = null === $lat || null === $lng ? null : GpsDistance::nearestOnLine($lat, $lng, $line);
+
+            return null === $pin ? [null, null] : $pin;
+        });
+    }
+
+    /**
+     * GeoJSON coordinates of a route's stored line, or none.
+     *
+     * @return list<mixed>
+     *
+     * @api
+     */
+    public static function lineOf(RecommendedRoute $route): array
+    {
+        $geom = json_decode((string) $route->getGeom(), true);
+        $coords = \is_array($geom) ? ($geom['coordinates'] ?? null) : null;
+
+        return \is_array($coords) ? array_values($coords) : [];
+    }
+
+    /**
+     * @param callable(MediaUpload): array{0: ?float, 1: ?float} $attach binds one upload and answers the pin to measure it to
+     */
+    private function bind(mixed $rawMediaIds, User $by, mixed $rawAlts, callable $attach): void
+    {
+        $ids = self::parse($rawMediaIds);
+        if ([] === $ids) {
+            return;
+        }
+        $alts = self::parseAlts($rawAlts);
+        if (\count($ids) > self::MAX_PER_SUBMISSION) {
+            throw new \InvalidArgumentException(\sprintf('A submission carries at most %d photos, %d given.', self::MAX_PER_SUBMISSION, \count($ids)));
         }
 
         foreach ($ids as $id) {
@@ -58,14 +111,14 @@ final class MediaClaimService
             if (!\in_array($upload->getStatus(), [MediaStatus::Pending, MediaStatus::PendingScan], true)) {
                 throw new \InvalidArgumentException(\sprintf('Upload %s is already decided.', $id->toRfc4122()));
             }
-            if (null !== $upload->getSubmissionId()) {
+            if ($upload->isClaimed()) {
                 throw new \InvalidArgumentException(\sprintf('Upload %s already belongs to a submission.', $id->toRfc4122()));
             }
             if ($upload->getUserId() !== (int) $by->getId()) {
                 throw new \InvalidArgumentException(\sprintf('Upload %s belongs to another rider.', $id->toRfc4122()));
             }
 
-            $upload->claim($submissionId);
+            [$pinLat, $pinLng] = $attach($upload);
             // The description typed in the wizard normally lands through its
             // own request; when that request lost to the page moving on, the
             // copy in the submission is the one that survives. Never over a

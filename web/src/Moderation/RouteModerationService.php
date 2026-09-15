@@ -12,6 +12,8 @@ use App\Catalog\Entity\RouteSuggestion;
 use App\Catalog\ItemState;
 use App\Catalog\RouteSuggestionStatus;
 use App\Entity\User;
+use App\Media\MediaDecisionService;
+use App\Media\MediaDisposalService;
 use App\Messaging\MessageService;
 use App\Messaging\UserMessageKind;
 use App\Service\AdminActionLogger;
@@ -21,6 +23,10 @@ use Doctrine\ORM\EntityManagerInterface;
 
 /**
  * Write-path for route moderation. Region cap is enforced on approve.
+ *
+ * The photos sent with a proposal or a photo correction ride the same
+ * decision (MediaDecisionService::applyToRoute(), photo-uploads.md §5i): no
+ * second moderation mechanic for them.
  *
  * @see docs/specs/route-domain.md §5.1
  * @see docs/specs/moderation-and-contribution.md §7.2
@@ -35,6 +41,8 @@ final class RouteModerationService
         private readonly MessageService $messages,
         private readonly AdminActionLogger $adminLog,
         private readonly ModerationScopeProvider $scopeProvider,
+        private readonly MediaDecisionService $mediaDecisions,
+        private readonly MediaDisposalService $mediaDisposal,
     ) {
     }
 
@@ -45,9 +53,12 @@ final class RouteModerationService
         }
     }
 
-    public function approve(int $routeId, User $curator): RecommendedRoute
+    /**
+     * @param list<string> $rejectMediaIds photos the curator unticked (photo-uploads.md §5 per-photo decisions)
+     */
+    public function approve(int $routeId, User $curator, array $rejectMediaIds = []): RecommendedRoute
     {
-        return $this->em->wrapInTransaction(function () use ($routeId, $curator): RecommendedRoute {
+        return $this->em->wrapInTransaction(function () use ($routeId, $curator, $rejectMediaIds): RecommendedRoute {
             $route = $this->load($routeId);
             $this->assertInScope($curator, $route->getRegionId());
             if (ItemState::Submitted !== $route->getState()) {
@@ -58,6 +69,7 @@ final class RouteModerationService
                 throw new RegionFullException(sprintf('Region %s is at the active-route cap.', $route->getRegionId() ?? 'none'));
             }
             $this->transition($route, ItemState::Unverified, $curator);
+            $this->decidePhotos($route, null, 'approve', $curator, null, $rejectMediaIds);
             $this->notifyProposer($route, UserMessageKind::RouteApproved, null);
 
             return $route;
@@ -73,6 +85,7 @@ final class RouteModerationService
                 throw new \LogicException('Only a submitted route can be rejected.');
             }
             $this->transition($route, ItemState::Rejected, $curator, $note);
+            $this->decidePhotos($route, null, 'reject', $curator, $note);
             $this->notifyProposer($route, UserMessageKind::RouteRejected, $note);
 
             return $route;
@@ -127,13 +140,16 @@ final class RouteModerationService
         });
     }
 
-    public function resolveSuggestion(int $suggestionId, RouteSuggestionStatus $status, User $curator): RouteSuggestion
+    /**
+     * @param list<string> $rejectMediaIds photos of a photo correction the curator unticked
+     */
+    public function resolveSuggestion(int $suggestionId, RouteSuggestionStatus $status, User $curator, array $rejectMediaIds = []): RouteSuggestion
     {
         if (RouteSuggestionStatus::Pending === $status) {
             throw new \LogicException('Resolution must be done or dismissed.');
         }
 
-        return $this->em->wrapInTransaction(function () use ($suggestionId, $status, $curator): RouteSuggestion {
+        return $this->em->wrapInTransaction(function () use ($suggestionId, $status, $curator, $rejectMediaIds): RouteSuggestion {
             $s = $this->em->find(RouteSuggestion::class, $suggestionId);
             if (null === $s) {
                 throw new \InvalidArgumentException(sprintf('Suggestion %d not found.', $suggestionId));
@@ -144,6 +160,13 @@ final class RouteModerationService
                 throw new \LogicException('Suggestion already resolved.');
             }
             $s->resolve($status, $curator->getId());
+            if (null !== $route) {
+                $this->decidePhotos($route, (int) $s->getId(), $status->value, $curator, null, $rejectMediaIds);
+            }
+            // A curator's own correction applied at once owes nobody a message.
+            if ($s->getUserId() === $curator->getId()) {
+                return $s;
+            }
 
             $routeName = $route?->getName() ?? sprintf('route-%d', $s->getRouteId());
             $kind = RouteSuggestionStatus::Done === $status ? UserMessageKind::CorrectionDone : UserMessageKind::CorrectionDismissed;
@@ -173,6 +196,7 @@ final class RouteModerationService
             $this->assertInScope($curator, $route?->getRegionId());
 
             $this->adminLog->log($curator, TrashActions::TrashCorrection, null, sprintf('suggestion %d on route %d', $id, $s->getRouteId()));
+            $this->mediaDisposal->purgeForRoute($s->getRouteId(), $id);
             $this->em->remove($s);
         });
     }
@@ -193,6 +217,7 @@ final class RouteModerationService
 
             // Content-free: a submitted name is unvetted free text (docs/specs/moderation-and-contribution.md §6).
             $this->adminLog->log($curator, TrashActions::TrashRouteProposal, null, sprintf('route %d state=%s', $routeId, $route->getState()->value));
+            $this->mediaDisposal->purgeForRoute($routeId, null);
             $this->em->remove($route);
         });
     }
@@ -217,6 +242,20 @@ final class RouteModerationService
         }
 
         return (int) $qb->executeQuery()->fetchOne();
+    }
+
+    /**
+     * Apply a route decision to its photos and record the gallery change in
+     * the route's own history, the way an item's `change_history` records it.
+     *
+     * @param list<string> $rejectMediaIds
+     */
+    private function decidePhotos(RecommendedRoute $route, ?int $suggestionId, string $decision, User $curator, ?string $note, array $rejectMediaIds = []): void
+    {
+        $change = $this->mediaDecisions->applyToRoute($route, $suggestionId, $decision, $curator, $note, $rejectMediaIds);
+        if (null !== $change) {
+            $this->em->persist(new RouteChangeHistory((int) $route->getId(), 'photos', $change['old'], $change['new'], $curator->getId()));
+        }
     }
 
     private function transition(RecommendedRoute $route, ItemState $to, User $curator, ?string $note = null): void

@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace App\Media;
 
 use App\Catalog\Entity\Item;
+use App\Catalog\Entity\RecommendedRoute;
 use App\Entity\User;
 use App\Media\Entity\MediaUpload;
 use App\Messaging\MessageService;
@@ -60,6 +61,7 @@ final class MediaTakedownService
         private readonly MediaEventLog $events,
         private readonly MediaDisposalService $disposal,
         private readonly MediaDecisionService $decisions,
+        private readonly PhotoGallery $gallery,
         private readonly MessageService $messages,
         private readonly UrgentWithholdBreaker $breaker,
         #[Autowire('%kernel.secret%')]
@@ -464,7 +466,7 @@ final class MediaTakedownService
         if (null === $item) {
             return;
         }
-        if (!PhotoValidator::verdict(PhotoFacts::ofUpload($upload), new PhotoPlace($item->getLetter(), null, null))->links()) {
+        if (!PhotoValidator::verdict(PhotoFacts::ofUpload($upload), new PhotoPlace(PhotoGallery::letterOf($item), null, null))->links()) {
             return;
         }
 
@@ -484,11 +486,10 @@ final class MediaTakedownService
         $item->setAttributes($attributes);
     }
 
-    private function item(MediaUpload $upload): ?Item
+    /** The item or route the photo is published on (PhotoGallery, photo-uploads.md §5i). */
+    private function item(MediaUpload $upload): Item|RecommendedRoute|null
     {
-        $itemId = $upload->getItemId();
-
-        return null !== $itemId ? $this->em->find(Item::class, $itemId) : null;
+        return $this->gallery->holderOf($upload);
     }
 
     /** Notify the uploader; no-op if the account is already gone. */

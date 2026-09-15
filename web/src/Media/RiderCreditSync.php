@@ -6,7 +6,6 @@ declare(strict_types=1);
 
 namespace App\Media;
 
-use App\Catalog\Entity\Item;
 use App\Entity\User;
 use App\Media\Entity\MediaUpload;
 use Doctrine\ORM\EntityManagerInterface;
@@ -43,6 +42,7 @@ final class RiderCreditSync
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly MediaDecisionService $decisions,
+        private readonly PhotoGallery $gallery,
     ) {
     }
 
@@ -77,12 +77,7 @@ final class RiderCreditSync
      */
     private function restamp(MediaUpload $upload, string $credit): int
     {
-        $itemId = $upload->getItemId();
-        if (null === $itemId) {
-            return 0;
-        }
-
-        $item = $this->em->find(Item::class, $itemId);
+        $item = $this->gallery->holderOf($upload);
         if (null === $item) {
             return 0;
         }

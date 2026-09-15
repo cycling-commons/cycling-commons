@@ -6,7 +6,6 @@ declare(strict_types=1);
 
 namespace App\Media;
 
-use App\Catalog\Entity\Item;
 use App\Entity\User;
 use App\Media\Entity\MediaUpload;
 use App\Moderation\RetentionService;
@@ -30,6 +29,7 @@ final class MediaDisposalService
         private readonly EntityManagerInterface $em,
         private readonly MediaStorage $storage,
         private readonly MediaDecisionService $decisions,
+        private readonly PhotoGallery $gallery,
         private readonly MediaEventLog $events,
         private readonly RetentionService $retention,
         private readonly ClockInterface $clock,
@@ -85,7 +85,7 @@ final class MediaDisposalService
         /** @var list<MediaUpload> $orphans */
         $orphans = $this->em->createQuery(
             'SELECT m FROM '.MediaUpload::class.' m
-             WHERE m.status IN (:pending) AND m.submissionId IS NULL AND m.createdAt < :cutoff',
+             WHERE m.status IN (:pending) AND m.submissionId IS NULL AND m.routeId IS NULL AND m.createdAt < :cutoff',
         )
             ->setParameter('pending', [MediaStatus::Pending, MediaStatus::PendingScan])
             ->setParameter('cutoff', $cutoff)
@@ -131,6 +131,23 @@ final class MediaDisposalService
         return \count($uploads);
     }
 
+    /**
+     * Trash of a route proposal (`$suggestionId` null: the photos sent with
+     * the proposal) or of one photo correction: everything now, in the
+     * caller's transaction.
+     *
+     * @see docs/specs/photo-uploads.md §5i
+     */
+    public function purgeForRoute(int $routeId, ?int $suggestionId): int
+    {
+        $uploads = $this->em->getRepository(MediaUpload::class)->findBy(['routeId' => $routeId, 'routeSuggestionId' => $suggestionId]);
+        foreach ($uploads as $upload) {
+            $this->purge($upload);
+        }
+
+        return \count($uploads);
+    }
+
     /** Account deletion: drop unmoderated work; anonymize approved credit. @see docs/specs/photo-uploads.md §6 */
     public function anonymizeFor(User $user): void
     {
@@ -158,11 +175,7 @@ final class MediaDisposalService
     /** Clear gallery credit matched on the sm URL. */
     private function clearCredit(MediaUpload $upload): void
     {
-        $itemId = $upload->getItemId();
-        if (null === $itemId) {
-            return;
-        }
-        $item = $this->em->find(Item::class, $itemId);
+        $item = $this->gallery->holderOf($upload);
         if (null === $item) {
             return;
         }

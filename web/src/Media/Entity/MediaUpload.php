@@ -26,6 +26,8 @@ use Symfony\Component\Uid\Uuid;
 #[ORM\Index(name: 'idx_media_submission', columns: ['submission_id'])]
 #[ORM\Index(name: 'idx_media_takedown_reporter', columns: ['takedown_reporter_hash'], options: ['where' => 'takedown_reporter_hash IS NOT NULL'])]
 #[ORM\Index(name: 'idx_media_item', columns: ['item_id'])]
+#[ORM\Index(name: 'idx_media_route', columns: ['route_id'])]
+#[ORM\Index(name: 'idx_media_route_suggestion', columns: ['route_suggestion_id'])]
 class MediaUpload
 {
     #[ORM\Id]
@@ -101,6 +103,19 @@ class MediaUpload
 
     #[ORM\Column(name: 'submission_id', type: Types::BIGINT, nullable: true)]
     private ?int $submissionId = null;
+
+    /**
+     * Recommended route this photo was sent for, and lives on once approved:
+     * the route counterpart of `item_id` (a route is not an item).
+     *
+     * @see docs/specs/photo-uploads.md §5i
+     */
+    #[ORM\Column(name: 'route_id', type: Types::BIGINT, nullable: true)]
+    private ?int $routeId = null;
+
+    /** The photo correction this photo came with; null when it came with the route proposal. @see docs/specs/photo-uploads.md §5i */
+    #[ORM\Column(name: 'route_suggestion_id', type: Types::BIGINT, nullable: true)]
+    private ?int $routeSuggestionId = null;
 
     /** Item this photo belongs to after approval. @see docs/specs/photo-uploads.md §6 */
     #[ORM\Column(name: 'item_id', type: Types::BIGINT, nullable: true)]
@@ -376,6 +391,24 @@ class MediaUpload
     }
 
     /**
+     * Claimed by a recommended route: its proposal (`$suggestionId` null) or a
+     * photo correction on it.
+     *
+     * @see docs/specs/photo-uploads.md §5i
+     */
+    public function claimForRoute(int $routeId, ?int $suggestionId): void
+    {
+        $this->routeId = $routeId;
+        $this->routeSuggestionId = $suggestionId;
+    }
+
+    /** Bound to a submission or to a route: no longer an orphan, and never again claimable. */
+    public function isClaimed(): bool
+    {
+        return null !== $this->submissionId || null !== $this->routeId;
+    }
+
+    /**
      * Keep the pin distance and the pin it was measured to; destroy coordinates.
      *
      * @see docs/specs/photo-uploads.md §3, §5g
@@ -393,7 +426,7 @@ class MediaUpload
     /** Store GPS on an unclaimed row only. @see docs/specs/photo-uploads.md §3 */
     public function rememberGps(?float $lat, ?float $lng): void
     {
-        if (null !== $this->submissionId) {
+        if ($this->isClaimed()) {
             throw new \LogicException('Coordinates must never be written onto a claimed upload.');
         }
         $this->gpsLat = $lat;
@@ -548,6 +581,16 @@ class MediaUpload
     public function getSubmissionId(): ?int
     {
         return $this->submissionId;
+    }
+
+    public function getRouteId(): ?int
+    {
+        return $this->routeId;
+    }
+
+    public function getRouteSuggestionId(): ?int
+    {
+        return $this->routeSuggestionId;
     }
 
     /** Trimmed, or null: an empty string must never reach the `alt` attribute. */

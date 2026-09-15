@@ -560,6 +560,30 @@ pin, same scan, same re-encode, same bucket. It rewrites the row only when
 `PhotoValidator` shows the stored copy on that item; a scenic item whose file
 was photographed elsewhere downloads nothing and keeps its entry as it was.
 
+**Recommended routes go through the same run.** The route harvest
+(`tools/wallonia/route_images.py`) names a Commons file per route and
+`app:catalog:import` stores it as `Special:FilePath` URLs on
+`recommended_route.attributes->photo`, the same shape the seeders write on items, so a
+route drawer's photo went blank behind `img-src` the same way. The command
+walks `item` first and `recommended_route` after it, one loop and one handler
+for both. A route is judged as **letter R** (`ItemType::QualityRides`, the letter
+the map payload serves routes under) at **`ST_PointOnSurface(geom)`**, the
+point its region is joined on (`PhotoPlace::route()`). R is not a scenic view,
+so a route's photo passes or fails on the file's own checks (licence, author,
+Commons flags). The continent comes from the route's region's `country_code`,
+then from that point. Routes are reported as `route #33 Namur · Meuse & the
+Citadels`, and `--letter=R` walks the routes alone.
+
+**A route keeps no hotlink.** Where an item keeps a refused entry as a link
+(below), a route's refused or not-shown entry, or one whose URL names no
+Commons file, is **taken off the route** and counted under `taken off a route`:
+the owner's rule is that every photo on a place is served from our own photo
+store (2026-09-14/15), and a route has no display-side stand-in to fall back on.
+A fetch that failed on our side (`failed`: Commons down, no bucket) is kept for
+the next run on both. A dropped file keeps its `commons_photo` row and verdict,
+but the route no longer names it, so `--recheck-licences` cannot bring it back
+to that route.
+
 **Both photo shapes, and the gallery is the one that gets forgotten.** `photo`
 is the legacy singular field the seeders wrote; `photos` is the array a rider's
 uploads live in (§5), and `SeedManualCatalogCommand` used it for the
@@ -574,7 +598,7 @@ attribution to carry.
 |---|---|
 | `--dry-run` | report what would be fetched, write nothing, claim nothing |
 | `--limit=N` | a first run worth keeping short |
-| `--letter=Q` | one catalogue letter at a time |
+| `--letter=Q` | one catalogue letter at a time; `R` walks the recommended routes |
 | `--sleep=MS` | milliseconds after each Wikimedia fetch, **default 1000** |
 | `--recheck-licences` | forget past `licence` refusals first, so files are judged against the current list |
 
@@ -599,7 +623,8 @@ Two rules the command exists to keep:
   looks like a working page. This is why the shape is shared rather than
   written twice: two copies would eventually disagree, and the half that lost
   would be the half nobody was looking at.
-- **A file `PhotoValidator` refuses keeps its hotlink.** Linking is not
+- **On an item, a file `PhotoValidator` refuses keeps its hotlink** (a route
+  drops it, above). Linking is not
   republishing, and only one of the two needs permission. Those rows are
   reported with the reason code (`refused (licence)`, `refused (no_author)`,
   `not shown here (camera_far)`, and so on) and left exactly as they were. Every
@@ -946,8 +971,12 @@ any field is Commons, anything else is an import).
 judged against the served item standing for that point, with its letter and
 pin, and against the point's own letter and position only when no item stands
 for it (`CoverageRepository::photoSubject()`,
-[coverage-provider.md §5](coverage-provider.md)). A town card
-and a route have no letter (`PhotoPlace::unplaced()`).
+[coverage-provider.md §5](coverage-provider.md)). A town card has no letter
+(`PhotoPlace::unplaced()`). A recommended route is letter R, the letter the map
+payload serves routes under, at `ST_PointOnSurface(recommended_route.geom)`
+(`PhotoPlace::route()`); `app:catalog:import` writes a route before its pin is
+stored and judges it as R with no pin, which gives the same verdict because R
+has no pin check.
 
 **The verdict** (`PhotoVerdict`): a `PhotoDecision` and, unless it is `show`, a
 `PhotoReason`:
@@ -1004,12 +1033,12 @@ size and pixel limits. The upload endpoint's type sniff accepts the formats
 | `FetchCommonsPhotoHandler` (Commons on demand, harvest, Wikidata P18, localise) | judges `CommonsApi::fileInfo()` against the place carried on `FetchCommonsPhoto` **before** the download. A file refusal marks the row `unusable` with the reason; a place refusal marks it `declined`, keeping credit, licence and camera, with nothing downloaded. `no_file` when Commons has no such file or rendering |
 | `CommonsPhotoAdmission::stateFor()` (`/map/coverage/photo`, the town card) | admits a new file, or reopens a `declined` one when the verdict on its row shows it here; a ready file this place may not show answers `none` |
 | `CommonsPhotoAdmission::admit()` (`ResolveWikidataImageHandler`, `app:commons:harvest-photos`) | the same door: a file declined for a scenic view is not queued again for a place it may not show on |
-| `app:media:localise-commons` | writes our URLs onto the item only on `show`; reports each refusal by its reason |
+| `app:media:localise-commons` | writes our URLs onto the item or route only on `show`; reports each refusal by its reason; an item keeps a refused entry as a link, a route has it taken off (§5f) |
 | `MediaDecisionService::apply()` (approval) | `refuse` leaves the upload pending and unlinked; `hide` and `show` link it |
 | `MediaTakedownService` (declined or dismissed takedown) | re-attaches only when the verdict links; matched by upload id |
 | `app:media:repair-galleries` | drops an entry the verdict refuses |
-| `app:catalog:seed-wikidata`, `app:catalog:seed-manual`, `app:catalog:import` | write only the photos the verdict shows; print each dropped photo with its reason. A scenic seed needs the photo's `camera` in the artifact |
-| `CatalogProvider` (map payload), `CoverageRepository` (drawer overlay), `BestOfPreview` | `sift()` every item's photos for its letter and pin |
+| `app:catalog:seed-wikidata`, `app:catalog:seed-manual`, `app:catalog:import` | write only the photos the verdict shows; print each dropped photo with its reason. A scenic seed needs the photo's `camera` in the artifact. A road surface artifact's flat `photoFile`, `photoCredit`, `photoUser`, `photoLicense` are stored as one `photo` entry (`CommonsFile::hotlinkEntry()`, the shape all three write) before the verdict, and the flat keys are not stored |
+| `CatalogProvider` (map payload), `CoverageRepository` (drawer overlay), `BestOfPreview` | `sift()` every item's photos for its letter and pin: point features, road surface segments, and recommended routes (the served `R` rows and a curator's `?route=` preview of a submitted route) |
 | `PhotoLocationConfirmation::hiddenPhotos()` | lists the rider entries the verdict hides, with the verdict's reason (photo-uploads.md §5g) |
 | `PhotoLocationConfirmation::hiddenByMove()` (`/contribute/pin-move-photos`), `SubmissionQueue` (`photosHiddenByMove`) | count what a pin move would hide (photo-uploads.md §5g) |
 | `app:scenic:prune-photos`, `app:media:backfill-photo-camera` | count and remove by the same verdict ([scenic-views.md §8](scenic-views.md)) |
@@ -1047,6 +1076,7 @@ Tests: `tests/Media/PhotoValidatorTest.php` (every check and both decisions),
 `tests/Media/HarvestCommonsPhotosCommandTest.php`,
 `tests/Media/LocaliseCommonsPhotosCommandTest.php`,
 `tests/Media/MediaModerationTest.php`, `tests/Media/MediaTakedownTest.php`,
+`tests/Media/RoutePhotoTest.php`, `tests/Contribution/RoutePhotoFlowTest.php`,
 `tests/Media/MediaGalleryIdentityTest.php`,
 `tests/Command/SeedWikidataPlacesCommandTest.php`,
 `tests/Catalog/SeedManualCatalogCommandTest.php`,
@@ -1055,6 +1085,88 @@ Tests: `tests/Media/PhotoValidatorTest.php` (every check and both decisions),
 `tests/Media/MediaUploadEndpointTest.php` (an AV1 Image File Format (AVIF) upload refused at the door),
 `tools/wikimedia/tests/test_harvest_shaping.py`,
 `tools/wallonia/tests/test_enrich_photos.py`.
+
+### 5i. Photos on a recommended route
+
+A recommended route (`recommended_route`, letter R) is not an item and its
+proposal is not a `submission` (route-domain.md §1), so a rider photo of a
+route cannot ride the item pipeline. It rides the route's own decisions
+instead, through the same upload, consent, limits and validator as a photo on
+a place. There is still one way to moderate (§5c): a route photo adds what is
+judged, never how.
+
+**Where a photo can be attached.** On `/propose-route`, the one form for
+routes (route-domain.md §4.5):
+
+- with a **new proposal**: the photo fieldset under the route details; and
+- for a **live route** (`unverified` or `verified`), at
+  `/propose-route?route=<id>`: photos and a note, nothing else, because
+  riders never edit a route's data. The map drawer's add-photo prompt links
+  there for a route with no photo (map-and-search.md §6). A route still
+  waiting for review has no photo form of its own.
+
+Both mount `contribute/media-upload.js` with the wizard's ids and bag
+(`contribute/_media_config.html.twig`, `_media_styles.html.twig`): consent is
+fail-closed and stored before the first upload (§4), the cap is 6, the
+endpoint is `POST /media/photos` with its limiter and type sniff (§3). Only
+the pin differs. A live route sends `ST_PointOnSurface(geom)`. A new proposal
+has no stored line yet, so `contribute/route-photos.js` reads the middle track
+point of the GPX file the rider chose, a point on the route that is never its
+start or finish (route-domain.md §4.3); until a GPX is chosen the upload is
+refused with "choose the GPX file first". Submit is held while a photo is
+uploading or checking.
+
+**Claim.** `MediaClaimService::claimForRoute()` runs the same checks as
+`claim()` (pending or pending_scan, unclaimed, the caller's own, at most 6)
+and stamps `media_upload.route_id`, plus `route_suggestion_id` when the photos
+came as a photo correction. A route has no single pin, so the photo's GPS is
+measured to the **nearest point of the route's line**
+(`GpsDistance::nearestOnLine()`), and that point is recorded as the pin the
+distance was measured to (§5g); the coordinates are then destroyed as usual.
+A photo still quarantined at claim time gets the same measurement from the
+worker (`ScanAndReleaseUploadHandler`). A proposal claims inside its intake
+transaction; a bad id refuses the whole proposal
+(`contribute.error.media_invalid`). A route-claimed upload is never an orphan
+(§6).
+
+**Approval.** `MediaDecisionService::applyToRoute()` is `apply()` for a route:
+every pending, published photo goes through `PhotoValidator::verdict()` as
+letter R (`PhotoPlace::route()`), a refused one stays pending, and each
+approved one is appended to the route's `attributes.photos` in the §5 shape
+(`{id, sm, lg, credit, license, distanceM, distancePin?, alt?, takenAt?}`),
+moving a legacy single `photo` into the gallery. The decision that carries it
+is the route's own (`RouteModerationService`):
+
+| Photos sent with | Attached by | Rejected by |
+|---|---|---|
+| the proposal (`route_suggestion_id` null) | approving the proposal | rejecting it |
+| a photo correction | marking the correction **done** | dismissing it |
+
+The desk shows each pending photo on its proposal (detail page) or its
+correction card with its distance to the route and month, and a **Keep** box,
+ticked by default; an unticked photo is rejected when the proposal is approved
+or the correction is marked done (the per-photo decision of §5). The gallery
+change is written to `route_change_history` (field `photos`), the route's
+counterpart of the item's `change_history`. An approved upload keeps
+`route_id` and has no `item_id`.
+
+**A curator's own photos** on a live route apply at once, the rule a
+curator's own place edit follows (moderation-and-contribution.md §1.6): the
+photo correction is created and marked done by the same curator, with no
+message to themselves. Outside the curator's areas it waits on the desk. A
+curator's own route **proposal** still waits for a decision: approving a route
+is also a region-cap decision (route-domain.md §5.1).
+
+**After approval** a route photo is a photo like any other. `PhotoGallery`
+answers which row carries an upload's gallery entry (`item_id`, or `route_id`
+once approved), and takedown (§6b, §6c), escalation (§6d), account deletion
+(§6), credit restamping and the description sync (§5e) all read it, so a
+route photo is withdrawn, anonymised or re-credited exactly like a photo on a
+place. The photo page links to the route on the map (`?route=<id>`). Trashing
+a proposal or a correction purges its photos at once
+(`MediaDisposalService::purgeForRoute()`), the Trash semantics of §6. The
+map payload serves the route's `photos` alongside `photo`
+(`CatalogProvider`), sifted as every other gallery.
 
 ## 6. Disposal & garbage collection
 
@@ -1068,7 +1180,7 @@ restate that machinery; it defines only what those classes MEAN for media
 objects, plus the one media-only class:
 
 - **Orphans (media-only class)** — `pending` rows with no `submission_id`
-  older than **7 days** (nothing to moderate ever arrived) → objects + row
+  and no `route_id` (§5i) older than **7 days** (nothing to moderate ever arrived) → objects + row
   deleted, **and the event log with them**. §5b's "events survive garbage
   collection" covers the rejected tombstone, whose row is kept precisely so
   its history has something to hang on; an orphan was never moderated, so a
@@ -1077,7 +1189,8 @@ objects, plus the one media-only class:
 - **Rejected** — follows the standard retention window
   (`moderation.retention_months`); when it lapses, the bucket objects are
   deleted and the row is kept as a tombstone (audit).
-- **Trashed** — when a submission is Trashed, its photos follow Trash
+- **Trashed:** when a submission, a route proposal or a route correction
+  (§5i) is Trashed, its photos follow Trash
   semantics *exactly*: bucket objects, `media_upload` rows, AND their
   `media_moderation_event` rows are hard-deleted **immediately** — no
   retention window, and no content survives, consistent with Trash's

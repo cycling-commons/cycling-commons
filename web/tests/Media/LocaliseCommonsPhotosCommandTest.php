@@ -33,7 +33,7 @@ use Symfony\Component\HttpClient\Response\MockResponse;
  * the attribution: CC BY-SA is satisfied only while credit, the uploader and
  * the licence travel with our copy, so a localised row that lost them would be
  * a licence breach that looks like a working page. Second, the refusal: a file
- * the licence gate rejects must keep its hotlink rather than be copied into our
+ * the licence gate rejects on an item must keep its hotlink rather than be copied into our
  * bucket, because linking is not republishing and only one of the two needs
  * permission.
  */
@@ -299,6 +299,141 @@ final class LocaliseCommonsPhotosCommandTest extends KernelTestCase
         self::assertArrayNotHasKey('source', $mine);
     }
 
+    /**
+     * A recommended route goes through the same door as an item: our copy,
+     * attribution intact, judged as letter R at a point on its line.
+     */
+    public function testARouteHotlinkBecomesOurs(): void
+    {
+        $routeId = $this->seedHotlinkedRoute();
+
+        try {
+            $tester = $this->localise('CC BY-SA 3.0');
+
+            $photo = $this->storedRoutePhoto($routeId);
+            self::assertIsArray($photo, $tester->getDisplay());
+            self::assertStringNotContainsString('wikimedia.org', (string) $photo['sm'], $tester->getDisplay());
+            self::assertStringEndsWith('/sm.webp', (string) $photo['sm']);
+            self::assertSame('CC BY-SA 3.0', $photo['license']);
+            self::assertStringContainsString('commons.wikimedia.org/wiki/User:', (string) $photo['creditUrl']);
+            self::assertStringContainsString('commons.wikimedia.org/wiki/File:', (string) $photo['source']);
+            self::assertArrayNotHasKey('state', $photo);
+            self::assertStringContainsString('route #'.$routeId, $tester->getDisplay());
+        } finally {
+            $this->deleteRoute($routeId);
+        }
+    }
+
+    /**
+     * A route never keeps a hotlink: a file PhotoValidator refuses is taken
+     * off the route and reported, so its drawer shows no photo rather than a
+     * blocked one.
+     */
+    public function testARefusedRouteFileIsDroppedNotLeftAsALink(): void
+    {
+        $routeId = $this->seedHotlinkedRoute();
+
+        try {
+            $tester = $this->localise('Fair use');
+
+            self::assertNull($this->storedRoutePhoto($routeId), 'the hotlink must be gone from the route');
+            self::assertStringContainsString('refused (licence), dropped', $tester->getDisplay());
+            // The item beside it keeps its link, as items always have.
+            self::assertSame(self::HOTLINK, $this->storedPhoto()['sm']);
+        } finally {
+            $this->deleteRoute($routeId);
+        }
+    }
+
+    /** A refused gallery entry on a route goes; the rider's own upload beside it stays. */
+    public function testARefusedRouteGalleryEntryIsDroppedAndTheRestKept(): void
+    {
+        $routeId = $this->seedHotlinkedRoute();
+        $this->db->executeStatement(
+            "UPDATE recommended_route SET attributes = (attributes - 'photo') || jsonb_build_object('photos', :g::jsonb) WHERE id = :id",
+            ['g' => json_encode([
+                ['sm' => self::HOTLINK, 'lg' => self::HOTLINK, 'credit' => 'Somebody Else', 'license' => 'CC BY-SA 3.0'],
+                ['id' => 'aaaaaaaa-0000-4000-8000-000000000001', 'sm' => 'http://media.test/img/eu-01/published/rider/r1/sm.webp', 'lg' => 'http://media.test/img/eu-01/published/rider/r1/lg.webp', 'credit' => 'XanderK', 'license' => 'CC BY-SA 4.0'],
+            ], \JSON_THROW_ON_ERROR), 'id' => $routeId],
+        );
+
+        try {
+            $this->localise('Fair use');
+
+            $raw = $this->db->fetchOne("SELECT attributes->'photos' FROM recommended_route WHERE id = :id", ['id' => $routeId]);
+            /** @var list<array<string, mixed>> $gallery */
+            $gallery = json_decode((string) $raw, true, 512, \JSON_THROW_ON_ERROR);
+            self::assertCount(1, $gallery);
+            self::assertSame('aaaaaaaa-0000-4000-8000-000000000001', $gallery[0]['id']);
+        } finally {
+            $this->deleteRoute($routeId);
+        }
+    }
+
+    /** Routes are letter R, so `--letter=R` walks the routes and leaves items alone. */
+    public function testLetterRWalksOnlyTheRoutes(): void
+    {
+        $routeId = $this->seedHotlinkedRoute();
+
+        try {
+            $this->localise('CC BY-SA 3.0', ['--letter' => 'R']);
+
+            self::assertStringNotContainsString('wikimedia.org', (string) ($this->storedRoutePhoto($routeId)['sm'] ?? ''));
+            self::assertSame(self::HOTLINK, $this->storedPhoto()['sm'], 'a letter-Q item is not a route');
+        } finally {
+            $this->deleteRoute($routeId);
+        }
+    }
+
+    /** A route in a Belgian region, carrying the hotlink shape the route harvest wrote. */
+    private function seedHotlinkedRoute(): int
+    {
+        $this->db->executeStatement(
+            "INSERT INTO region (slug, name, geom, country_code, created_at, updated_at)
+             VALUES ('localise-test-region', 'Localise test region',
+                     ST_SetSRID(ST_GeomFromText('MULTIPOLYGON(((5.4 50.4, 5.6 50.4, 5.6 50.6, 5.4 50.6, 5.4 50.4)))'), 4326), 'BE', NOW(), NOW())",
+        );
+        $regionId = (int) $this->db->lastInsertId();
+
+        $photo = json_encode([
+            'sm' => self::HOTLINK.'?width=520',
+            'lg' => self::HOTLINK.'?width=1400',
+            'credit' => 'Somebody Else',
+            'source' => 'https://commons.wikimedia.org/wiki/File:Localise_test_subject.jpg',
+            'license' => 'CC BY-SA 3.0',
+        ], \JSON_THROW_ON_ERROR);
+
+        $this->db->executeStatement(
+            <<<'SQL'
+                INSERT INTO recommended_route (name, geom, distance_m, ascent_m, region_id, state, source, source_ref, attributes, created_at, updated_at)
+                VALUES ('Localise test route', ST_SetSRID(ST_GeomFromText('LINESTRING(5.5 50.5, 5.51 50.51)'), 4326), 1400, 10, :region,
+                        'unverified', 'manual', 'localise-test-route', jsonb_build_object('photo', :photo::jsonb), NOW(), NOW())
+                SQL,
+            ['photo' => $photo, 'region' => $regionId],
+        );
+
+        return (int) $this->db->lastInsertId();
+    }
+
+    private function deleteRoute(int $routeId): void
+    {
+        $this->db->executeStatement('DELETE FROM recommended_route WHERE id = :id', ['id' => $routeId]);
+        $this->db->executeStatement("DELETE FROM region WHERE slug = 'localise-test-region'");
+    }
+
+    /** @return array<string, mixed>|null */
+    private function storedRoutePhoto(int $routeId): ?array
+    {
+        $raw = $this->db->fetchOne("SELECT attributes->'photo' FROM recommended_route WHERE id = :id", ['id' => $routeId]);
+        if (null === $raw || false === $raw) {
+            return null;
+        }
+        /** @var array<string, mixed> $photo */
+        $photo = json_decode((string) $raw, true, 512, \JSON_THROW_ON_ERROR);
+
+        return $photo;
+    }
+
     /** One hotlinked Commons photo and one rider upload, in that order. */
     private function giveItAGallery(): void
     {
@@ -405,7 +540,7 @@ final class LocaliseCommonsPhotosCommandTest extends KernelTestCase
             ['photo' => $photo],
         );
 
-        return (int) $this->db->lastInsertId('item_id_seq');
+        return (int) $this->db->lastInsertId();
     }
 
     private function scanner(): VirusScannerInterface

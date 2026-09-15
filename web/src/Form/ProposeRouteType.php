@@ -12,6 +12,7 @@ use App\Catalog\SurfaceVocabulary;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
+use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -22,9 +23,15 @@ use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\Validator\Constraints\Regex;
 
 /**
- * Route-proposal form: GPX plus R metadata. File content is validated later.
+ * Route-proposal form: GPX plus R metadata plus rider photos. File content is
+ * validated later.
  *
- * @see docs/specs/route-domain.md §4.1
+ * With `route_photos` it is the same page's form for a live route: photos and
+ * a note, nothing else, because riders never edit a route's data
+ * (route-domain.md §1).
+ *
+ * @see docs/specs/route-domain.md §4.1, §4.5
+ * @see docs/specs/photo-uploads.md §5i
  */
 final class ProposeRouteType extends AbstractType
 {
@@ -32,6 +39,23 @@ final class ProposeRouteType extends AbstractType
     #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
+        // Upload ids from media-upload.js, claimed on submit (photo-uploads.md §4, §5i).
+        $builder
+            ->add('mediaIds', HiddenType::class, ['required' => false])
+            ->add('mediaAlts', HiddenType::class, ['required' => false])
+            ->add('note', TextareaType::class, [
+                'label' => false,
+                'required' => false,
+                'constraints' => [
+                    new Length(max: 2000, maxMessage: 'propose_route.error.note_too_long'),
+                    CatalogFieldConstraints::noSuspiciousCharacters(),
+                    new Regex(pattern: '/\p{Cf}/u', match: false, message: 'contribute.error.invisible_characters'),
+                ],
+            ]);
+        if (true === $options['route_photos']) {
+            return;
+        }
+
         $builder
             ->add('gpx', FileType::class, [
                 'label' => false,
@@ -70,15 +94,6 @@ final class ProposeRouteType extends AbstractType
                 'label' => false,
                 'choices' => array_combine(SurfaceVocabulary::DECLARABLE, SurfaceVocabulary::DECLARABLE),
             ])
-            ->add('note', TextareaType::class, [
-                'label' => false,
-                'required' => false,
-                'constraints' => [
-                    new Length(max: 2000, maxMessage: 'propose_route.error.note_too_long'),
-                    CatalogFieldConstraints::noSuspiciousCharacters(),
-                    new Regex(pattern: '/\p{Cf}/u', match: false, message: 'contribute.error.invisible_characters'),
-                ],
-            ])
             ->add('bikeTypes', ChoiceType::class, [
                 'label' => false,
                 'required' => false,
@@ -100,6 +115,8 @@ final class ProposeRouteType extends AbstractType
     {
         $resolver->setDefaults([
             'data_class' => null,
+            'route_photos' => false,
         ]);
+        $resolver->setAllowedTypes('route_photos', 'bool');
     }
 }

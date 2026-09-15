@@ -44,6 +44,30 @@ final class CommonsFile
         return null;
     }
 
+    /**
+     * The stored photo entry a seed or an import writes for a Commons file:
+     * `Special:FilePath` URLs plus the attribution, the shape parse() reads
+     * back and `app:media:localise-commons` replaces with our own copy.
+     *
+     * @return array{sm: string, lg: string, credit: string, creditUrl: string, license: string, source: string}
+     */
+    public static function hotlinkEntry(string $file, string $credit, ?string $user, string $license): array
+    {
+        $enc = str_replace(['%21', '%27', '%28', '%29', '%2A'], ['!', "'", '(', ')', '*'], rawurlencode($file));
+        $page = str_replace(' ', '_', $file);
+
+        return [
+            'sm' => "https://commons.wikimedia.org/wiki/Special:FilePath/{$enc}?width=520",
+            'lg' => "https://commons.wikimedia.org/wiki/Special:FilePath/{$enc}?width=1400",
+            'credit' => $credit,
+            'creditUrl' => null !== $user && '' !== $user
+                ? 'https://commons.wikimedia.org/wiki/User:'.str_replace(' ', '_', $user)
+                : '',
+            'license' => $license,
+            'source' => "https://commons.wikimedia.org/wiki/File:{$page}",
+        ];
+    }
+
     private static function parse(string $raw): ?string
     {
         if (preg_match('~^File:(.+)$~u', $raw, $m)) {

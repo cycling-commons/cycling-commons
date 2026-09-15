@@ -148,6 +148,29 @@ final class RouteModerateTest extends WebTestCase
         self::assertSelectorTextContains('[data-region-cap]', '0 / 30');
     }
 
+    /** The review page names who proposed the route, linked to their profile only when it is public. */
+    public function testDetailLinksTheProposersPublicProfile(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $route = $this->submittedRoute($em);
+        $proposer = $em->find(User::class, $route->getProposedBy());
+        self::assertInstanceOf(User::class, $proposer);
+        $proposer->setDisplayName('Route Rider');
+        $em->flush();
+
+        $client->loginUser($this->curator());
+        $client->request('GET', '/moderate/routes/'.$route->getId());
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('.rd-meta', 'Route Rider');
+        self::assertSelectorNotExists('.rd-meta a[href*="/riders/"]');
+
+        $proposer->setPublicProfile(true);
+        $em->flush();
+        $client->request('GET', '/moderate/routes/'.$route->getId());
+        self::assertSelectorExists('.rd-meta a[href$="/riders/'.$proposer->getUuid().'"]');
+    }
+
     public function testCuratorEditsRouteNoteViaTheDetailForm(): void
     {
         $client = static::createClient();

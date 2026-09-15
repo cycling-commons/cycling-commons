@@ -106,8 +106,12 @@ test('the strings exist in all five locales', () => {
   }
 });
 
-test('both mount points ship the poll url and the pending strings', () => {
-  for (const tpl of ['templates/contribute/improve.html.twig', 'templates/map/index.html.twig']) {
+test('every mount point ships the poll url and the pending strings', () => {
+  // The contribute forms (/improve, /propose-route) share one bag.
+  for (const tpl of ['templates/contribute/improve.html.twig', 'templates/contribute/propose_route.html.twig']) {
+    assert.match(read(tpl), /include 'contribute\/_media_config\.html\.twig'/, `${tpl} does not include the shared uploader bag`);
+  }
+  for (const tpl of ['templates/contribute/_media_config.html.twig', 'templates/map/index.html.twig']) {
     const twig = read(tpl);
     assert.match(twig, /stateUrl: path\('media_photos_state', \{id: '__ID__'\}\)/, `${tpl} has no poll url`);
     assert.match(twig, /checking: 'media\.pending\.checking'\|trans/, `${tpl} is missing the checking string`);

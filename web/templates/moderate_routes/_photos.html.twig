@@ -1,0 +1,29 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{#
+  Pending rider photos on a route decision (docs/specs/photo-uploads.md §5,
+  §5i): the photo with its harvested context and a Keep box, ticked by
+  default. Rendered INSIDE the decision's form: approving (or marking a photo
+  correction done) keeps the ticked photos and rejects the unticked ones;
+  rejecting (or dismissing) rejects them all. The thumbnail link sits outside
+  the label, so opening the full photo never unticks Keep.
+
+  Parameters:
+    photos   list    {id, sm, lg, takenAt, distanceM}
+    form_id  string  optional: the id of the decision form, when this list
+                     renders outside it (HTML form= association)
+#}
+{% if photos is not empty %}
+<div class="q-photos rq-photos">
+  {% for p in photos %}
+    <figure class="q-photo">
+      <a href="{{ p.lg }}" target="_blank" rel="noopener"><img src="{{ p.sm }}" alt="{{ 'moderate.media.alt'|trans }}" loading="lazy" width="110" height="82"></a>
+      <figcaption>
+        {%- if p.distanceM is not null %}{{ 'moderate_routes.photos.distance'|trans({'%v%': p.distanceM|cc_m}) }}{% else %}{{ 'moderate.media.no_gps'|trans }}{% endif -%}
+        {%- if p.takenAt %} &middot; {{ p.takenAt }}{% endif -%}
+      </figcaption>
+      <input type="hidden" name="photo_ids[]" value="{{ p.id }}"{% if form_id is defined and form_id %} form="{{ form_id }}"{% endif %}>
+      <label class="rq-keep"><input type="checkbox" name="photo_keep[]" value="{{ p.id }}" checked{% if form_id is defined and form_id %} form="{{ form_id }}"{% endif %}> {{ 'moderate_routes.photos.keep'|trans }}</label>
+    </figure>
+  {% endfor %}
+</div>
+{% endif %}

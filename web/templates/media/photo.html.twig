@@ -83,7 +83,7 @@
     <p class="photo-links">
       <a href="{{ photo.orig }}" download>{{ 'media.page.download_original'|trans }}</a>
       {% if photo.item %}
-        <a href="{{ path('map') }}?feature={{ photo.item.name|url_encode }}">{{ 'media.page.see_place'|trans({'%name%': photo.item.name}) }}</a>
+        <a href="{{ path('map') }}?{{ photo.item.mapQuery }}">{{ 'media.page.see_place'|trans({'%name%': photo.item.name}) }}</a>
       {% endif %}
     </p>
 

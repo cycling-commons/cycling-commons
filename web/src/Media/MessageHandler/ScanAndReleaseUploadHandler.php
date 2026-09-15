@@ -6,11 +6,13 @@ declare(strict_types=1);
 
 namespace App\Media\MessageHandler;
 
+use App\Catalog\Entity\RecommendedRoute;
 use App\Catalog\Entity\Submission;
 use App\Media\ContinentResolver;
 use App\Media\Entity\MediaUpload;
 use App\Media\GpsDistance;
 use App\Media\MediaAction;
+use App\Media\MediaClaimService;
 use App\Media\MediaEventLog;
 use App\Media\MediaStorage;
 use App\Media\Message\ScanAndReleaseUpload;
@@ -145,6 +147,22 @@ final readonly class ScanAndReleaseUploadHandler
     /** GPS → distance, then destroy. @see docs/specs/photo-uploads.md §3 */
     private function resolveCoordinates(MediaUpload $upload, ProcessedPhoto $processed, ScanAndReleaseUpload $message): void
     {
+        $routeId = $upload->getRouteId();
+        if (null !== $routeId) {
+            // A route has no single pin: the nearest point of its line (photo-uploads.md §5i).
+            $route = $this->em->find(RecommendedRoute::class, $routeId);
+            $pin = null === $route || null === $processed->gpsLat || null === $processed->gpsLng
+                ? null
+                : GpsDistance::nearestOnLine($processed->gpsLat, $processed->gpsLng, MediaClaimService::lineOf($route));
+            $upload->resolveGps(
+                null === $pin ? null : GpsDistance::between($processed->gpsLat, $processed->gpsLng, $pin[0], $pin[1]),
+                $pin[0] ?? null,
+                $pin[1] ?? null,
+            );
+
+            return;
+        }
+
         $submissionId = $upload->getSubmissionId();
         if (null === $submissionId) {
             $upload->rememberGps($processed->gpsLat, $processed->gpsLng);

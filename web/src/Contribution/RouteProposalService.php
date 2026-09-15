@@ -15,6 +15,7 @@ use App\Catalog\SurfaceProfiler;
 use App\Contribution\Gpx\GpxParser;
 use App\Contribution\Gpx\TrackProcessor;
 use App\Entity\User;
+use App\Media\MediaClaimService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
@@ -42,11 +43,12 @@ final class RouteProposalService
         private readonly RegionResolver $regions,
         private readonly SurfaceProfiler $profiler,
         private readonly RateLimiterFactoryInterface $routeProposeLimiter,
+        private readonly MediaClaimService $claims,
     ) {
     }
 
     /**
-     * @param array<string, mixed> $meta form data (rName + META_KEYS)
+     * @param array<string, mixed> $meta form data (rName + META_KEYS, and the photos' mediaIds/mediaAlts)
      *
      * @throws TooManyRequestsHttpException over the daily proposal limit
      * @throws \InvalidArgumentException    validation failure (message = translation key)
@@ -126,9 +128,18 @@ final class RouteProposalService
             ->setProposedBy($user->getId())
             ->setImportedAt(null);
 
-        $this->em->persist($route);
-        $this->em->flush();
+        // Photos ride the proposal's own transaction and its decision (photo-uploads.md §5i).
+        return $this->em->wrapInTransaction(function () use ($route, $meta, $user): RecommendedRoute {
+            $this->em->persist($route);
+            $this->em->flush();
+            try {
+                $this->claims->claimForRoute($meta['mediaIds'] ?? null, $user, $route, null, $meta['mediaAlts'] ?? null);
+            } catch (\InvalidArgumentException) {
+                throw new \InvalidArgumentException('contribute.error.media_invalid');
+            }
+            $this->em->flush();
 
-        return $route;
+            return $route;
+        });
     }
 }

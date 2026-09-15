@@ -114,7 +114,7 @@ final class RouteModerateController extends AbstractController
 
         try {
             match ($data['decision']) {
-                'approve' => $this->moderation->approve($id, $curator),
+                'approve' => $this->moderation->approve($id, $curator, self::untickedPhotos($request)),
                 'reject' => $this->moderation->reject($id, $curator, $note),
                 'retire' => $this->moderation->retire($id, $curator, (string) $note),
                 default => throw new \InvalidArgumentException('bad decision'),
@@ -144,7 +144,7 @@ final class RouteModerateController extends AbstractController
             return $this->redirectToRoute('moderate_routes');
         }
         try {
-            $this->moderation->resolveSuggestion((int) $request->request->get('suggestion_id'), $status, $curator);
+            $this->moderation->resolveSuggestion((int) $request->request->get('suggestion_id'), $status, $curator, self::untickedPhotos($request));
             $this->addFlash('success', 'moderate_routes.flash.suggestion_resolved');
         } catch (OutOfScopeException) {
             throw $this->createAccessDeniedException('Out of moderation scope.');
@@ -159,8 +159,9 @@ final class RouteModerateController extends AbstractController
     public function detail(int $id, \Doctrine\DBAL\Connection $db): Response
     {
         $row = $db->fetchAssociative(
-            'SELECT id, name, ST_AsGeoJSON(geom) AS geom, distance_m, ascent_m, region_id, attributes, state
-             FROM recommended_route WHERE id = :id',
+            'SELECT r.id, r.name, ST_AsGeoJSON(r.geom) AS geom, r.distance_m, r.ascent_m, r.region_id, r.attributes, r.state,
+                    u.display_name AS proposer_name, u.uuid AS proposer_uuid, u.public_profile AS proposer_public
+             FROM recommended_route r LEFT JOIN users u ON u.id = r.proposed_by WHERE r.id = :id',
             ['id' => $id],
         );
         $servedValues = array_map(static fn (ItemState $s): string => $s->value, ItemState::SERVED);
@@ -210,6 +211,12 @@ final class RouteModerateController extends AbstractController
                 'id' => $id, 'name' => (string) $row['name'], 'geom' => $row['geom'],
                 'km' => round(((int) $row['distance_m']) / 1000, 1), 'ascent' => $row['ascent_m'],
                 'regionId' => $row['region_id'], 'state' => $row['state'], 'attributes' => $attrs,
+                // Who proposed it. The public profile is linked only when the rider made it public.
+                'proposer' => null === $row['proposer_name'] ? null : [
+                    'name' => (string) $row['proposer_name'],
+                    'uuid' => null !== $row['proposer_uuid'] ? (string) $row['proposer_uuid'] : null,
+                    'public' => (bool) $row['proposer_public'],
+                ],
             ],
             'active_in_region' => $this->moderation->activeCountForRegion(null === $row['region_id'] ? null : (int) $row['region_id']),
             'region_cap' => $this->moderation->regionCap(),
@@ -218,6 +225,7 @@ final class RouteModerateController extends AbstractController
             'edit_form' => $editForm->createView(),
             'retire_form' => $retireForm?->createView(),
             'decision_form' => $decisionForm?->createView(),
+            'proposal_photos' => 'submitted' === $row['state'] ? $this->queue->proposalPhotos($id) : [],
             'page_title' => 'moderate_routes.meta_title',
             'page_description' => 'moderate_routes.meta_description',
             'mod_scope_names' => $this->scopeProvider->describe($user, $scope),
@@ -281,6 +289,20 @@ final class RouteModerateController extends AbstractController
         }
 
         return $this->redirectToRoute('moderate_routes');
+    }
+
+    /**
+     * The photos on a decision the curator unticked: every `photo_ids[]` not
+     * also sent as `photo_keep[]` (photo-uploads.md §5 per-photo decisions).
+     *
+     * @return list<string>
+     */
+    private static function untickedPhotos(Request $request): array
+    {
+        $all = array_filter($request->request->all('photo_ids'), is_string(...));
+        $kept = array_filter($request->request->all('photo_keep'), is_string(...));
+
+        return array_values(array_diff($all, $kept));
     }
 
     private function validateCsrf(Request $request, string $id): void

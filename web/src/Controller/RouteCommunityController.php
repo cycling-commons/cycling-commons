@@ -121,7 +121,8 @@ final class RouteCommunityController extends AbstractController
         $route = $this->activeRoute($id);
 
         $reason = RouteSuggestionReason::tryFrom((string) $request->request->get('reason'));
-        if (null === $reason) {
+        // A photo correction carries photos, so it comes through the route's photo form (route-domain.md §4.5).
+        if (null === $reason || RouteSuggestionReason::Photo === $reason) {
             return $this->json(['error' => 'invalid_reason'], 422);
         }
         $note = $request->request->get('note');

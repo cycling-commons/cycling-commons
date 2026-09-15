@@ -7,9 +7,9 @@ declare(strict_types=1);
 namespace App\Catalog;
 
 /**
- * Preset correction reasons on a route drawer.
+ * Preset correction reasons on a route drawer, plus the photo correction.
  *
- * @see docs/specs/route-domain.md §7
+ * @see docs/specs/route-domain.md §4.5, §7
  */
 enum RouteSuggestionReason: string
 {
@@ -18,6 +18,11 @@ enum RouteSuggestionReason: string
     case Duplicate = 'duplicate';
     case NotRideable = 'not-rideable';
     case Other = 'other';
+    /**
+     * Photos for the route, sent on `/propose-route?route=<id>`, never through
+     * the drawer's correction endpoint (route-domain.md §4.5).
+     */
+    case Photo = 'photo';
 
     /**
      * @return list<string>

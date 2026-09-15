@@ -11,6 +11,7 @@ use App\Catalog\Import\DuplicateGuard;
 use App\Catalog\Import\ItemUpsert;
 use App\Catalog\ItemSource;
 use App\Catalog\ItemType;
+use App\Media\Commons\CommonsFile;
 use App\Media\PhotoFacts;
 use App\Media\PhotoPlace;
 use App\Media\PhotoValidator;
@@ -291,19 +292,7 @@ final class SeedWikidataPlacesCommand extends Command
      */
     private static function commonsPhoto(string $file, string $credit, ?string $user, string $license, mixed $camera): array
     {
-        $enc = str_replace(['%21', '%27', '%28', '%29', '%2A'], ['!', "'", '(', ')', '*'], rawurlencode($file));
-        $page = str_replace(' ', '_', $file);
-
-        $photo = [
-            'sm' => "https://commons.wikimedia.org/wiki/Special:FilePath/{$enc}?width=520",
-            'lg' => "https://commons.wikimedia.org/wiki/Special:FilePath/{$enc}?width=1400",
-            'credit' => $credit,
-            'creditUrl' => null !== $user && '' !== $user
-                ? 'https://commons.wikimedia.org/wiki/User:'.str_replace(' ', '_', $user)
-                : '',
-            'license' => $license,
-            'source' => "https://commons.wikimedia.org/wiki/File:{$page}",
-        ];
+        $photo = CommonsFile::hotlinkEntry($file, $credit, $user, $license);
         $cameraAt = PhotoFacts::camera($camera);
         if (null !== $cameraAt) {
             $photo['cameraAt'] = $cameraAt;

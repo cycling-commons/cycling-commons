@@ -6,13 +6,13 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Catalog\Entity\Item;
 use App\Entity\User;
 use App\Media\Entity\MediaUpload;
 use App\Media\MediaDecisionService;
 use App\Media\MediaStatus;
 use App\Media\MediaStorage;
 use App\Media\PhotoAttribution;
+use App\Media\PhotoGallery;
 use App\Media\XmpRights;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -32,6 +32,7 @@ final class PhotoPageController extends AbstractController
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly MediaStorage $storage,
+        private readonly PhotoGallery $gallery,
     ) {
     }
 
@@ -131,15 +132,15 @@ final class PhotoPageController extends AbstractController
             && (int) $viewer->getId() === $upload->getUserId();
     }
 
-    /** @return array{id: int, name: string}|null */
+    /**
+     * The place or route the photo is published on, and the map query that opens it.
+     *
+     * @return array{id: int, name: string, mapQuery: string}|null
+     */
     private function item(MediaUpload $upload): ?array
     {
-        $itemId = $upload->getItemId();
-        if (null === $itemId) {
-            return null;
-        }
-        $item = $this->em->find(Item::class, $itemId);
+        $holder = $this->gallery->holderOf($upload);
 
-        return null !== $item ? ['id' => (int) $item->getId(), 'name' => $item->getName()] : null;
+        return null !== $holder ? ['id' => (int) $holder->getId(), 'name' => $holder->getName(), 'mapQuery' => PhotoGallery::mapQuery($holder)] : null;
     }
 }

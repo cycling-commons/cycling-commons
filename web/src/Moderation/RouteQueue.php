@@ -7,8 +7,11 @@ declare(strict_types=1);
 namespace App\Moderation;
 
 use App\Catalog\ItemState;
+use App\Media\Entity\MediaUpload;
+use App\Media\MediaStorage;
 use App\Settings\SettingsProviderInterface;
 use App\Settings\SettingsRegistry;
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 
 /**
@@ -26,6 +29,7 @@ final class RouteQueue
     public function __construct(
         private readonly Connection $db,
         private readonly SettingsProviderInterface $settings,
+        private readonly MediaStorage $mediaStorage,
     ) {
     }
 
@@ -85,16 +89,72 @@ final class RouteQueue
         $params['lim'] = max(1, $perPage);
         $params['off'] = self::offset($page, $perPage);
 
+        $rows = $this->db->fetchAllAssociative($sql, $params, $types);
+        $photos = $this->photosBy('route_suggestion_id', array_map(static fn (array $row): int => (int) $row['id'], $rows));
+
         return array_map(static fn (array $row): array => [
             'id' => (int) $row['id'],
             'routeId' => (int) $row['route_id'],
+            'photos' => $photos[(int) $row['id']] ?? [],
             'routeName' => (string) $row['route_name'],
             'reason' => (string) $row['reason'],
             'note' => $row['note'],
             'who' => 'rider#'.substr(hash('crc32b', 'cc-sub-'.$row['user_id']), 0, 4),
             'when' => RelativeTime::ago(new \DateTimeImmutable((string) $row['created_at']), new \DateTimeImmutable()),
             'segmentCount' => (int) $row['seg_count'],
-        ], $this->db->fetchAllAssociative($sql, $params, $types));
+        ], $rows);
+    }
+
+    /**
+     * The pending photos sent with a route's proposal, for its detail page.
+     *
+     * @return list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>
+     *
+     * @see docs/specs/photo-uploads.md §5i
+     */
+    public function proposalPhotos(int $routeId): array
+    {
+        return $this->photosBy('route_id', [$routeId], 'AND route_suggestion_id IS NULL')[$routeId] ?? [];
+    }
+
+    /**
+     * Pending, published photos keyed by the claiming column: `sm` thumbnail,
+     * `lg` lightbox, never `orig`, the same card shape the item queue serves
+     * (SubmissionQueue, photo-uploads.md §5).
+     *
+     * @param 'route_id'|'route_suggestion_id' $column
+     * @param list<int>                        $ids
+     *
+     * @return array<int, list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>>
+     */
+    private function photosBy(string $column, array $ids, string $extra = ''): array
+    {
+        if ([] === $ids) {
+            return [];
+        }
+        $rows = $this->db->fetchAllAssociative(
+            "SELECT id, {$column} AS owner, storage_bucket, revision, taken_at, gps_distance_m
+             FROM media_upload
+             WHERE status = 'pending' AND revision IS NOT NULL AND {$column} IN (:ids) {$extra}
+             ORDER BY created_at ASC, id ASC",
+            ['ids' => $ids],
+            ['ids' => ArrayParameterType::INTEGER],
+        );
+
+        $out = [];
+        foreach ($rows as $row) {
+            $id = (string) $row['id'];
+            $prefix = MediaUpload::prefixFor($id, (string) $row['revision']);
+            $out[(int) $row['owner']][] = [
+                'id' => $id,
+                'sm' => $this->mediaStorage->url((string) $row['storage_bucket'], $prefix, 'sm'),
+                'lg' => $this->mediaStorage->url((string) $row['storage_bucket'], $prefix, 'lg'),
+                'takenAt' => null !== $row['taken_at'] ? (new \DateTimeImmutable((string) $row['taken_at']))->format('Y-m') : null,
+                'distanceM' => null !== $row['gps_distance_m'] ? (int) $row['gps_distance_m'] : null,
+            ];
+        }
+
+        return $out;
     }
 
     /**

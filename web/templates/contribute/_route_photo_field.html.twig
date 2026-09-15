@@ -1,0 +1,27 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{#
+  The photo fieldset of /propose-route, both for a new proposal and for a live
+  route (docs/specs/photo-uploads.md §5i). The element ids are the ones
+  contribute/media-upload.js addresses, the same as on /improve.
+
+  Parameters:
+    form  FormView  ProposeRouteType, carrying mediaIds and mediaAlts
+    help    string  optional translation key for the line under the legend
+    legend  string  optional translation key for the legend (default: optional photos)
+#}
+<fieldset>
+  <legend>{{ (legend|default('propose_route.photos_label'))|trans }}</legend>
+  {% if help is defined and help %}<p class="help">{{ help|trans }}</p>{% endif %}
+  {# Consent gate, filled by media-upload.js: fail-closed until the server has
+     a consent record (docs/specs/photo-uploads.md §4). #}
+  <div class="consent-gate" id="media-consent"></div>
+  <input type="file" id="file-photo" accept="image/jpeg,image/png,image/webp,image/heic" multiple hidden>
+  <div class="drop" id="drop-photo" role="button" tabindex="0" aria-controls="file-photo">
+    <span class="ic">◳</span>{{ 'improve.step3.photo_drop'|trans }}<br/>
+    <small>{{ 'improve.step3.photo_types'|trans }}</small>
+  </div>
+  <div class="ulq" id="q-photo"></div>
+  {{ form_widget(form.mediaIds) }}
+  {{ form_widget(form.mediaAlts) }}
+  {{ form_errors(form.mediaIds) }}
+</fieldset>

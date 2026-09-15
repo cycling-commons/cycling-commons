@@ -11,6 +11,7 @@ use App\Catalog\Import\DuplicateGuard;
 use App\Catalog\Import\ItemUpsert;
 use App\Catalog\ItemSource;
 use App\Catalog\ItemType;
+use App\Media\Commons\CommonsFile;
 use App\Media\PhotoPlace;
 use App\Media\PhotoValidator;
 use Doctrine\DBAL\Connection;
@@ -517,22 +518,12 @@ final class SeedManualCatalogCommand extends Command
     }
 
     /**
-     * Wikimedia Commons photo URLs matching map.js `wc()`.
+     * A Commons photo entry (CommonsFile::hotlinkEntry()).
      *
      * @return array{sm: string, lg: string, credit: string, creditUrl: string, license: string, source: string}
      */
     private static function wc(string $file, string $credit, ?string $user, string $license): array
     {
-        $enc = str_replace(['%21', '%27', '%28', '%29', '%2A'], ['!', "'", '(', ')', '*'], rawurlencode($file));
-        $page = str_replace(' ', '_', $file);
-
-        return [
-            'sm' => "https://commons.wikimedia.org/wiki/Special:FilePath/{$enc}?width=520",
-            'lg' => "https://commons.wikimedia.org/wiki/Special:FilePath/{$enc}?width=1400",
-            'credit' => $credit,
-            'creditUrl' => null !== $user ? 'https://commons.wikimedia.org/wiki/User:'.str_replace(' ', '_', $user) : '',
-            'license' => $license,
-            'source' => "https://commons.wikimedia.org/wiki/File:{$page}",
-        ];
+        return CommonsFile::hotlinkEntry($file, $credit, $user, $license);
     }
 }

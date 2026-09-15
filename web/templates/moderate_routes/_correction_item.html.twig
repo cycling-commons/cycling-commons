@@ -13,7 +13,7 @@
   WHEN-to-use copy plus a ticked acknowledgement inside it.
 
   Parameters:
-    s           array — correction row (id, routeId, routeName, reason, note, segmentCount)
+    s           array: correction row (id, routeId, routeName, reason, note, segmentCount, photos)
     show_route  bool  — link the route's name (overview); false on a route's own page
 #}
 <div class="q-item q-item--corr" data-item-id="c{{ s.id }}" data-suggestion-id="{{ s.id }}">
@@ -37,7 +37,7 @@
        not destroy anything. Trash keeps its place LAST, after the verbs a
        curator reaches for far more often. #}
     <div class="q-acts">
-      <form method="post" action="{{ path('moderate_routes_suggestion') }}">
+      <form method="post" action="{{ path('moderate_routes_suggestion') }}" id="rs-done-{{ s.id }}">
         <input type="hidden" name="_token" value="{{ csrf_token('route-suggestion') }}">
         <input type="hidden" name="suggestion_id" value="{{ s.id }}">
         <input type="hidden" name="status" value="done">
@@ -90,4 +90,7 @@
   {% if s.note %}
     <p class="q-body">{{ s.note }}</p>
   {% endif %}
+  {# A photo correction's photos: Done keeps the ticked ones, Dismiss rejects
+     them all (docs/specs/photo-uploads.md §5i). #}
+  {% include 'moderate_routes/_photos.html.twig' with {photos: s.photos|default([]), form_id: 'rs-done-' ~ s.id} %}
 </div>

@@ -6,7 +6,7 @@
 
 - **Catalog layer:** R · Quality rides
 - **Map depiction:** line, icon ★, colour #FF5A1F (brand orange); `unverified` routes carry a **"proposed"** badge
-- **Editable:** **no — curator-only.** R is the deliberate exception to the every-type-has-an-edit-flow rule: a route is a *curated composition*, not an atomic map feature. Riders **propose**, **vote**, **confirm rides**, **download GPX**, and **suggest corrections** — they never edit route data. Design source of truth: [`../route-domain.md`](../route-domain.md).
+- **Editable:** **no, curator-only.** R is the deliberate exception to the every-type-has-an-edit-flow rule: a route is a *curated composition*, not an atomic map feature. Riders **propose**, **vote**, **confirm rides**, **download GPX**, **suggest corrections** and **add photos** (`/propose-route?route=<id>`, a moderated photo correction, [`../route-domain.md`](../route-domain.md) §4.5); they never edit route data. Design source of truth: [`../route-domain.md`](../route-domain.md).
 - **Lifecycle:** route-specific state machine (NOT the shared item funnel): `submitted` (rider proposal) → curator desk approval → `unverified` ("proposed" on the map) → X independent **"I rode this"** confirmations → `verified` (votable) · plus `rejected` and `retired`. A configurable **per-region cap (~30 active routes)** bounds supply; a full region admits a new route only by retiring a weaker one.
 
 ## What it is

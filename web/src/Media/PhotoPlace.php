@@ -13,7 +13,8 @@ use App\Catalog\ItemType;
  *
  * The pin is the point an item's photos are measured against,
  * `ST_PointOnSurface(item.geom)`, or a coverage point's own position. Either
- * half may be unknown; a town card has no letter at all (unplaced()).
+ * half may be unknown; a town card has no letter at all (unplaced()), and a
+ * recommended route is letter R at a point on its line (route()).
  *
  * @see docs/specs/photo-uploads.md §5h
  *
@@ -32,6 +33,18 @@ final readonly class PhotoPlace
     public static function unplaced(): self
     {
         return new self(null, null, null);
+    }
+
+    /**
+     * A recommended route (`recommended_route`): catalogue letter R, the letter
+     * the map payload serves routes under (ItemType::QualityRides), and the
+     * pin `ST_PointOnSurface(geom)`, the point a route's region is joined on.
+     * Either half of the pin may be unknown, as in an import that has not
+     * written the geometry yet.
+     */
+    public static function route(mixed $lat, mixed $lng): self
+    {
+        return self::of(ItemType::QualityRides->letter(), $lat, $lng);
     }
 
     /** From loosely typed row values, as the database hands them over. */
