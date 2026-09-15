@@ -270,8 +270,20 @@ def test_history_requires_a_name_or_a_photo_link_and_drops_small_memorials():
     assert letters["Q"].name_or_tags == ["image", "wikidata", "wikimedia_commons"]
     assert letters["Q"].exclude_tag_values == {
         "memorial": ["bench", "blue_plaque", "ghost_bike", "grave", "plaque", "stolperstein", "tomb"]}
-    assert all(spec.exclude_tag_values is None for letter, spec in letters.items() if letter != "Q")
+    assert all(spec.exclude_tag_values is None for letter, spec in letters.items() if letter not in {"F", "Q"})
     assert "memorial" in load_contract().stored_tag_keys
+
+
+def test_getting_there_leaves_out_heritage_railways_and_keeps_the_bike_tags():
+    """A museum tram stop is a day out, not a way to get somewhere with a bike:
+    node/521261183 Medemblik is railway=station usage=tourism. In the NL
+    extract 44 F points carry usage=tourism and 3 usage=leisure. The bike tags
+    are what the drawer's Bikes on board row reads (coverage-provider.md §5):
+    368 of 580 NL ferry routes carry `bicycle`."""
+    contract = load_contract()
+    assert contract.letters["F"].exclude_tag_values == {"usage": ["leisure", "tourism"]}
+    assert contract.letters["F"].name_or_tags is None
+    assert {"bicycle", "bicycle:fee", "usage"} <= set(contract.stored_tag_keys)
 
 
 def test_rejects_an_exclude_tag_values_key_not_in_the_stored_tags(tmp_path):

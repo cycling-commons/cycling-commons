@@ -224,7 +224,7 @@ a deliberate decision: every addition widens ingestion and the cache.
 | **D · Bike shop** | point | `shop=bicycle` | Staffed; real opening hours apply |
 | **D · Self-service station** | point | `amenity=bicycle_repair_station` | Unmanned; **inherently 24/7** |
 | **D · Public pump** | point | `amenity=compressed_air` | Unmanned; 24/7 |
-| F · Getting there | point | `railway=station`, `railway=halt`, `amenity=ferry_terminal`, `route=ferry` | Ferries are route-critical crossings in this region. `route=ferry` ways reduce to the crossing midpoint (legitimately over water); the terminal is the land-side dock |
+| F · Getting there | point | `railway=station`, `railway=halt`, `amenity=ferry_terminal`, `route=ferry` | Ferries are route-critical crossings in this region. `route=ferry` ways reduce to the crossing midpoint (legitimately over water); the terminal is the land-side dock. A point tagged `usage=tourism` or `usage=leisure` (a heritage railway) is left out ([coverage-provider.md §7](coverage-provider.md)) |
 | G · Shelter | point | `shelter_type=picnic_shelter/weather_shelter/field_shelter/lean_to/basic_hut/gazebo/pavilion/rock_shelter/sun_shelter/wildlife_hide/dugout` (typed shelters only; bare `amenity=shelter` and `shelter_type=public_transport` bus stops stay out) | |
 | O · Where to sleep | point | `tourism=hotel/hostel/guest_house/chalet/camp_site/…` | |
 | P · Scenic views | point | `tourism=viewpoint`, `natural=peak`, `waterway=waterfall` | |

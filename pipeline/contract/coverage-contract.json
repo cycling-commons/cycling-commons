@@ -80,6 +80,7 @@
           "label": "Ferry"
         }
       ],
+      "excludeTagValues": {"usage": ["leisure", "tourism"]},
       "tileProps": [
         "cd"
       ]
@@ -255,6 +256,8 @@
     "addr:housenumber",
     "addr:street",
     "amenity",
+    "bicycle",
+    "bicycle:fee",
     "capacity",
     "check_date",
     "contact:phone",
@@ -279,6 +282,7 @@
     "shop",
     "tourism",
     "url",
+    "usage",
     "waterway",
     "website",
     "wheelchair",

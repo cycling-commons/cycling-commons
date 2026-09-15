@@ -15,6 +15,17 @@ Multimodal access points — stations with bikes-on-train, the gateway to the cl
 
 ## Read view (drawer "current details")
 - Type · Line · Bikes on train
+- **Bikes on board from OSM.** An uncurated F point shows a Bikes on board row
+  when OSM tags `bicycle` on it, in plain words: `yes`, `designated` or
+  `permissive` read "Allowed", `no` reads "Not allowed", `dismount` reads "Walk
+  your bike", and `bicycle:fee=yes` adds "with a fee" where a bike may come
+  aboard. Any other value, or no `bicycle` tag, gives no row
+  ([coverage-provider.md §5](../coverage-provider.md)). A stored Bikes on board
+  value on a curated item takes the row's place. OSM carries the tag on ferries,
+  not stations: in the Netherlands extract 368 of 580 ferry routes and 28 of 884
+  ferry terminals have it, and no station does. Step-free access, bike parking,
+  lift or ramp and bike ticket have no OSM source in the harvest and stay
+  community fields.
 
 ## Edit form  (`improve.html?item=aywaille-station`)
 ### Fix details
@@ -41,4 +52,8 @@ Location metadata (EXIF GPS) is stripped from uploaded photos before storage —
 
 ## Implementation
 - **Demo:** registry entry `aywaille-station` in `atlas/demo/edit-items.js` (hand-picked fixture data).
-- **Production:** OSM railway=station + operator (SNCB) info + community edits.
+- **Production:** OSM `railway=station`, `railway=halt`, `amenity=ferry_terminal`
+  and `route=ferry` with their `bicycle` and `bicycle:fee` tags, plus community
+  edits. Heritage railways (`usage=tourism` or `usage=leisure`, such as the
+  Museumstoomtram Hoorn-Medemblik) are left out: they are a day out, not a way
+  to get somewhere ([coverage-provider.md §7](../coverage-provider.md)).

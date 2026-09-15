@@ -65,6 +65,10 @@ final class CoverageRepository
         // but the whitelist is per-tag, not per-letter, so a peak reached
         // through any other letter shows the same fact rather than hiding it.
         'ele', 'direction', 'height',
+        // Getting-there detail (letter F): whether a bike may come on board a
+        // ferry or train, and whether it costs extra. The drawer turns them
+        // into its Bikes on board row (web/assets/map/osm-tags.js).
+        'bicycle', 'bicycle:fee',
         // What a photo of this place might be found under
         // (coverage-provider.md §7). Served as well as read here, because they
         // are the citation for a picture a rider is looking at.

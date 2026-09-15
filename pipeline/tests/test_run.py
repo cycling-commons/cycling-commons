@@ -179,7 +179,8 @@ def test_main_stage_order_and_region_failure_isolation(monkeypatch, tmp_path, ca
         assert near_ways is not None and near_ways[0] == {"P": 250.0}
         assert name_or_tags == {"P": ["image", "wikidata", "wikimedia_commons"],
                                 "Q": ["image", "wikidata", "wikimedia_commons"]}
-        assert exclude_tag_values == {"Q": {"memorial": [
+        assert exclude_tag_values == {"F": {"usage": ["leisure", "tourism"]},
+                                      "Q": {"memorial": [
             "bench", "blue_plaque", "ghost_bike", "grave", "plaque", "stolperstein", "tomb"]}}
         if region == "dev/bad":
             raise DriftAbort("simulated drift: 1 row vs 100 previously")

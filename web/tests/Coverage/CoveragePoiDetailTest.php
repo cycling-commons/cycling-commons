@@ -116,6 +116,24 @@ final class CoveragePoiDetailTest extends WebTestCase
         self::assertSame('© OpenStreetMap contributors (ODbL)', $data['attribution']);
     }
 
+    public function testFerryServesItsBikeTags(): void
+    {
+        $client = static::createClient();
+        $db = $this->db();
+        self::ensureCoverageSchema($db);
+        // The drawer's Bikes on board row for letter F reads `bicycle` and
+        // `bicycle:fee` (coverage-provider.md §5). `usage` is stored for the
+        // harvest's heritage-railway rule only and stays on the server.
+        self::insertCoveragePoi($db, [
+            'ref' => 'way/1078891286', 'letter' => 'F', 'name' => 'Enkhuizen - Medemblik',
+            'tags' => ['route' => 'ferry', 'bicycle' => 'yes', 'bicycle:fee' => 'yes', 'usage' => 'tourism'],
+        ]);
+
+        $data = $this->getJson($client, '/map/coverage/poi/way/1078891286');
+        self::assertResponseIsSuccessful();
+        self::assertEquals(['bicycle' => 'yes', 'bicycle:fee' => 'yes'], $data['tags']);
+    }
+
     public function testWayRefResolves(): void
     {
         $client = static::createClient();

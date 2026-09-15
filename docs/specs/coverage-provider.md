@@ -193,14 +193,14 @@ The serve-set is three groups:
 | Group | Count | Keys | Read by |
 |---|---|---|---|
 | **Selectors** | 11 | `amenity`, `drinking_water`, `historic`, `man_made`, `natural`, `railway`, `route`, `shelter_type`, `shop`, `tourism`, `waterway` | Classification (letter + `serviceKind`); `tiles.py::_label_case` re-reads them at tile-build time |
-| **Rules** | 1 | `memorial` | `load.py` `excludeTagValues`: Q leaves out small memorials (§7) |
-| **Display** | 17 | `opening_hours`, `website`, `contact:website`, `url`, `phone`, `contact:phone`, `addr:city`, `addr:street`, `addr:housenumber`, `operator`, `description`, `wheelchair`, `fee`, `capacity`, `ele`, `direction`, `height` | `CoverageRepository::TAG_WHITELIST` — exactly what the drawer renders (§5). `wheelchair`/`drinking_water` also feed tile props (§4) |
+| **Rules** | 2 | `memorial`, `usage` | `load.py` `excludeTagValues`: Q leaves out small memorials, F leaves out heritage railways (§7) |
+| **Display** | 19 | `opening_hours`, `website`, `contact:website`, `url`, `phone`, `contact:phone`, `addr:city`, `addr:street`, `addr:housenumber`, `operator`, `description`, `wheelchair`, `fee`, `capacity`, `ele`, `direction`, `height`, `bicycle`, `bicycle:fee` | `CoverageRepository::TAG_WHITELIST`: exactly what the drawer renders (§5). `wheelchair`/`drinking_water` also feed tile props (§4) |
 
-`TAG_WHITELIST` has **23** entries: the 17 display keys, three selectors the
+`TAG_WHITELIST` has **25** entries: the 19 display keys, three selectors the
 drawer also renders (`amenity`, `shop`, `drinking_water`), and three media keys
 (`image`, `wikimedia_commons`, `wikidata`). Those six are counted in their own
 rows, so these groups and `check_date` (§4, the `cd` tile prop) sum to
-11 + 1 + 17 + 4 + 1 = **34** distinct keys.
+11 + 2 + 19 + 4 + 1 = **37** distinct keys.
 
 `ele`, `direction` and `height` were added on 2026-08-21 for the scenic-view
 letter (P), where OSM's own record is often richer than what the drawer showed:
@@ -212,6 +212,12 @@ are free text in OSM, so `assets/map/osm-tags.js` refuses anything that is not
 plainly metres instead of guessing — "1200 ft" renders verbatim, never as 1200
 metres. **Existing rows do not gain the tags until the country is re-harvested**
 (§3); this is the first contract change to prove that path.
+
+`bicycle` and `bicycle:fee` are there for Getting there (F): whether a bike may
+come aboard a ferry or train, and whether it costs extra. The drawer reads them
+for F only and words them in its Bikes on board row (§5). OSM carries them on
+ferries far more than on stations: in the Netherlands extract 368 of 580 ferry
+routes and 28 of 884 ferry terminals carry `bicycle`, and no station does.
 | **Media/reference** | 4 | `wikidata`, `wikipedia`, `image`, `wikimedia_commons` | `image`, `wikimedia_commons` and `wikidata` are in `TAG_WHITELIST`: the drawer links the Commons photo and the Wikidata item, and the media pipeline caches a copy `PhotoValidator` accepts (`FetchCommonsPhotoHandler`, photo-uploads.md §5h). `wikipedia` is stored, not served. Cost: 19 B/row, about 89 MB planet-wide |
 
 Measured impact of the trim across BE + NL + DE (then 375,078 rows; 377,558 after
@@ -802,6 +808,15 @@ Rules:
   `ResolveWikidataImage`) carries that place's letter and position.
   The curated overlay of `poi/{osmType}/{osmId}` filters an item's `photo` and
   `photos` the same way, against the item's own pin.
+- **Getting there shows whether a bike may come aboard.** For letter F the
+  drawer turns `bicycle` and `bicycle:fee` into a Bikes on board row
+  (`bikesOnBoard` in `assets/map/osm-tags.js`, the one place that holds the
+  vocabulary): `yes`, `designated` and `permissive` read "Allowed", `no` reads
+  "Not allowed", `dismount` reads "Walk your bike", and `bicycle:fee=yes` adds
+  "with a fee" to the first and the last. Any other value, or no `bicycle` tag,
+  gives no row. The row carries the F field label "Bikes on board"
+  (`CatalogFormRegistry`), so a curated item's stored value takes its place and
+  an empty "+ add" prompt gives way to it.
 - These are **site-internal map endpoints**, not the future public API.
   [osm-data-architecture.md §7](osm-data-architecture.md)'s reference-only
   rule governs the public API; the serving cache may serve OSM fields with
@@ -915,10 +930,13 @@ source of truth for the mapping both languages need:
 - A letter may carry **`excludeTagValues`** (a map of tag key to values): a
   point does not load when that tag is set and **every** one of its
   `;`-separated values is in the list, so `memorial=plaque;statue` stays for its
-  statue. Every key must be in `storedTagKeys`. Only Q carries it:
+  statue. Every key must be in `storedTagKeys`. Q and F carry it. Q:
   `memorial` = `bench`, `blue_plaque`, `ghost_bike`, `grave`, `plaque`,
   `stolperstein`, `tomb`. A Stolperstein or a plaque is a memorial, not a place
-  to ride to (owner 2026-09-15). `load_region` applies it after `nameOrTags`,
+  to ride to (owner 2026-09-15). F: `usage` = `leisure`, `tourism`. A heritage
+  railway such as the Museumstoomtram Hoorn-Medemblik (node/521261183,
+  `railway=station`, `usage=tourism`) is a day out, not a way to get somewhere
+  (owner 2026-09-15). `load_region` applies it after `nameOrTags`,
   and a letter it filters is left out of the drift guard like the other rules.
   Measured on the Netherlands (2026-09-15), History and culture went from 9,056
   points to 3,400: 4,033 had no name and no photo link (mostly unnamed
