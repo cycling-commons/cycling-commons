@@ -412,7 +412,7 @@ final class SeedManualCatalogCommand extends Command
                 $sifted = PhotoValidator::sift($pin['attributes'], new PhotoPlace($pin['letter'], $pin['lat'], $pin['lng']));
                 $pin['attributes'] = $sifted['attributes'];
                 foreach ($sifted['dropped'] as $dropped) {
-                    $droppedPhotos[] = sprintf('%s: %s', $pin['name'], $dropped['verdict']->reason?->value ?? 'refused');
+                    $droppedPhotos[] = sprintf('%s: %s', $pin['name'], null !== $dropped['verdict']->reason ? $dropped['verdict']->reason->value : 'refused');
                 }
                 $this->vocabulary->assertValid($type, $pin['attributes']);
 

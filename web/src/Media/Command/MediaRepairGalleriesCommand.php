@@ -149,7 +149,7 @@ final class MediaRepairGalleriesCommand extends Command
                 // refuses for this item (legal hold) is not kept on it.
                 $verdict = PhotoValidator::verdict(PhotoFacts::ofUpload($upload), new PhotoPlace($item->getLetter(), null, null));
                 if (!$verdict->links()) {
-                    $io->writeln(\sprintf('  item %d: dropping %s - refused (%s)', $itemId, $upload->getId()->toRfc4122(), $verdict->reason?->value ?? 'refused'));
+                    $io->writeln(\sprintf('  item %d: dropping %s - refused (%s)', $itemId, $upload->getId()->toRfc4122(), null !== $verdict->reason ? $verdict->reason->value : 'refused'));
                     ++$refused;
                     $changed = true;
                     continue;

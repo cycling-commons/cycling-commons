@@ -265,7 +265,7 @@ final class ImportCatalogCommand extends Command
                 $sifted = PhotoValidator::sift($attributes, PhotoPlace::of($letter, $pin[1] ?? null, $pin[0] ?? null));
                 $attributes = $sifted['attributes'];
                 foreach ($sifted['dropped'] as $dropped) {
-                    $this->droppedPhotos[] = sprintf('%s: %s', '' === $name ? $source.':'.$ref : $name, $dropped['verdict']->reason?->value ?? 'refused');
+                    $this->droppedPhotos[] = sprintf('%s: %s', '' === $name ? $source.':'.$ref : $name, null !== $dropped['verdict']->reason ? $dropped['verdict']->reason->value : 'refused');
                 }
                 $geomJson = json_encode($geometry, \JSON_THROW_ON_ERROR);
 
@@ -321,7 +321,7 @@ final class ImportCatalogCommand extends Command
             $sifted = PhotoValidator::sift($route['attributes'], PhotoPlace::unplaced());
             $route['attributes'] = $sifted['attributes'];
             foreach ($sifted['dropped'] as $dropped) {
-                $this->droppedPhotos[] = sprintf('%s: %s', $route['name'], $dropped['verdict']->reason?->value ?? 'refused');
+                $this->droppedPhotos[] = sprintf('%s: %s', $route['name'], null !== $dropped['verdict']->reason ? $dropped['verdict']->reason->value : 'refused');
             }
             $this->db->executeStatement(
                 'INSERT INTO recommended_route (name, geom, distance_m, ascent_m, state, source, source_ref, attributes, created_at, updated_at, imported_at)

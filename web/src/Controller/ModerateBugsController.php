@@ -128,7 +128,7 @@ final class ModerateBugsController extends AbstractController
             'count_all' => array_sum($counts),
             'statuses' => BugStatus::all(),
             'areas' => BugArea::all(),
-            'filter_status' => $showing?->value ?? self::ALL,
+            'filter_status' => (null !== $showing ? $showing->value : self::ALL),
             'filter_area' => $area?->value,
             'query' => $query,
             'sorts' => BugSort::all(),

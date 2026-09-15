@@ -84,7 +84,7 @@ final readonly class FetchCommonsPhotoHandler
         $facts = PhotoFacts::commons($info['license'], $info['credit'], $info['nonFree'], $info['restricted'], $camera);
         $verdict = PhotoValidator::verdict($facts, $message->place());
         if (!$verdict->shows()) {
-            $reason = $verdict->reason?->value ?? 'refused';
+            $reason = (null !== $verdict->reason ? $verdict->reason->value : 'refused');
             if (true === $verdict->reason?->concernsPlace()) {
                 $this->photos->markDeclined($message->file, $reason, $info['credit'], $info['creditUser'], $info['license'], $info['cameraLat'], $info['cameraLng']);
             } else {

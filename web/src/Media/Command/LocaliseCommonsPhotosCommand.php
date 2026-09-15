@@ -224,7 +224,7 @@ final class LocaliseCommonsPhotosCommand extends Command
                     $verdict = PhotoValidator::verdict(PhotoFacts::fromEntry($ready), $place);
                     if (!$verdict->shows()) {
                         ++$notHere;
-                        $io->writeln(sprintf('  <comment>-</comment> %s: %s is ours but not shown here (%s), left as it was', $at, $file, $verdict->reason?->value ?? 'refused'));
+                        $io->writeln(sprintf('  <comment>-</comment> %s: %s is ours but not shown here (%s), left as it was', $at, $file, null !== $verdict->reason ? $verdict->reason->value : 'refused'));
                         continue;
                     }
                     ++$reused;

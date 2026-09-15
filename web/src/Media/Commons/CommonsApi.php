@@ -94,7 +94,7 @@ final readonly class CommonsApi
             $credit = mb_substr(str_replace('_', ' ', $user), 0, 255);
         }
 
-        $camera = \is_array($page) ? self::camera($page) : null;
+        $camera = self::camera($page);
 
         return [
             'thumbUrl' => $info['thumburl'],

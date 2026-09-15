@@ -97,7 +97,7 @@ final class ModerateReportsController extends AbstractController
             'count_all' => $this->repository->countReports(null, $target),
             'statuses' => ReportStatus::all(),
             'targets' => ReportTarget::cases(),
-            'filter_status' => $showing?->value ?? self::ALL,
+            'filter_status' => (null !== $showing ? $showing->value : self::ALL),
             'filter_target' => $target?->value,
             'pager' => $pager,
         ]);

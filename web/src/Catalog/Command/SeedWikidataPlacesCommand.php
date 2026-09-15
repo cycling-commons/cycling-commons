@@ -230,7 +230,7 @@ final class SeedWikidataPlacesCommand extends Command
         $sifted = PhotoValidator::sift($attributes, new PhotoPlace($type->letter(), (float) $place['lat'], (float) $place['lng']));
         $attributes = $sifted['attributes'];
         foreach ($sifted['dropped'] as $dropped) {
-            $this->droppedPhotos[] = sprintf('%s (%s): %s', (string) $place['name'], $country, $dropped['verdict']->reason?->value ?? 'refused');
+            $this->droppedPhotos[] = sprintf('%s (%s): %s', (string) $place['name'], $country, null !== $dropped['verdict']->reason ? $dropped['verdict']->reason->value : 'refused');
         }
 
         $this->vocabulary->assertValid($type, $attributes);
