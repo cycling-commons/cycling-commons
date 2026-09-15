@@ -196,7 +196,7 @@ import { layerGlyph } from './icons.js';
       return {
         id:p.id, rid:p.rid, name:p.n||(LAYER_L10N.hazards||'Hazard'), unnamed:!named,
         headline:bits.join(' · ')||(named?(LAYER_L10N.hazards||'Hazards & conditions'):''),
-        cur:!!p.v, geom:{ll:[c[1], c[0]]},
+        cur:false, geom:{ll:[c[1], c[0]]},
         record:schemaRows('E', p, p.id),
         photo:photo,
         source:sourceLabel(p.srcType) || (D.communityReport||'Community report'),

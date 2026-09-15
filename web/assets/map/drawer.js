@@ -251,7 +251,7 @@ export function osmDrawer(layer, p, ll, src){
   const attrRows = schemaRows((layer||{}).letter, p, p.id, unmanned ? {fixed:{openingHours:'24/7'}} : undefined);
   const attrLabels = new Set(attrRows.filter(r=>!r.empty).map(r=>r.label));
   rec = rec.filter(r=>!attrLabels.has(r.label)).concat(attrRows);
-  const d={name:p.n||p.t||lbl, headline:typeLbl+' · '+originLbl, cur:!!p.v, geom:{ll:[ll.lat,ll.lng]}, record:rec,
+  const d={name:p.n||p.t||lbl, headline:typeLbl+' · '+originLbl, cur:!!p.cur, geom:{ll:[ll.lat,ll.lng]}, record:rec,
     source: provider?providerSource(provider)
       :(community?sourceLabel(p.srcType):drawerSource(p.srcType, src, sourceLabel))};
   // Provenance rides along so srcLine can link Scout.
@@ -355,7 +355,7 @@ export function waterDrawer(p, ll){
     : kind==='food_water' ? (D.headlineFood||'food stop')+' + '+(D.headlineDrinking||'drinking water')
     : (D.headlineDrinking||'drinking water');
   const origin = provider ? provider.name : (community?sourceLabel(p.srcType):'OSM');
-  const d={name:p.n||p.t||(food ? osmKindLabel(p) : (D.drinkingWater||'Drinking water')), headline:headline+' · '+origin, cur:!!p.v, geom:{ll:[ll.lat,ll.lng]},
+  const d={name:p.n||p.t||(food ? osmKindLabel(p) : (D.drinkingWater||'Drinking water')), headline:headline+' · '+origin, cur:!!p.cur, geom:{ll:[ll.lat,ll.lng]},
     waterKind:kind,
     record:rec,
     // Names what the row ACTUALLY carries, tag by tag. It printed
